@@ -19,6 +19,7 @@ Contents
 
 * `Introduction`_
 * `Features`_
+* `Installation`_
 * `High-level interface`_
 * `Low-level interface`_
 
@@ -31,23 +32,14 @@ intended to be a complete wrapping of the HDF5 1.6 API, while the high-
 level component supports Python-style object-oriented access to HDF5 files, 
 datasets and groups.
 
-Requires
---------
-- Unix-like environment (created/tested on 32-bit Intel linux)
-- Numpy 1.0.3 or higher
-- HDF5 1.6.5 or higher (1.8 is untested)
-- Pyrex 0.9.6.4 or higher
-
-Installation
-------------
-See the file "INSTALL.txt"
-
 Documentation
 -------------
 Extensive documentation is available through docstrings, as well as in 
-HTML format on the web and in the "docs/" directory in this distribution.  
-This document is an overview of some of the package's features and 
-highlights.
+`HTML format on the web`__ and in the "docs/" directory in this 
+distribution.  This document is an overview of some of the package's 
+features and highlights.
+
+__ http://h5py.alfven.org
 
 Features
 ========
@@ -101,6 +93,41 @@ Features
 - No additional layers of abstraction beyond the HDF5 and Numpy conventions.
   I like PyTables a lot, but I don't speak database-ese. :) There are also 
   no new datatypes; just the built-in Numpy ones.
+
+
+Installation
+============
+Since this is an early release of h5py, only installation from source is
+currently supported.  However, Python's distutils makes this relatively
+painless, assuming you have correctly installed the prerequisite packages.
+If possible, it's strongly recommended you use the versions of these 
+packages provided by your operating system's package manager/finder.
+
+Requires
+--------
+- Unix-like environment (created/tested on 32-bit Intel linux)
+- Numpy_ 1.0.3 or higher
+- HDF5_ 1.6.5 or higher (1.8 is untested)
+- Pyrex_ 0.9.6.4 or higher
+- gcc (to compile Python extensions)
+
+.. _Numpy: http://numpy.scipy.org/
+.. _HDF5: http://hdf.ncsa.uiuc.edu/
+.. _Pyrex: http://www.cosc.canterbury.ac.nz/greg.ewing/python/Pyrex/
+
+Procedure
+---------
+1.  Unpack the tarball and cd to the resulting directory
+2.  Run ``python setup.py build`` to build the package
+3.  Run ``python setup.py test`` to run unit tests (optional)
+4.  Run ``sudo python setup.py install`` to install into your main Python
+    package directory.
+
+Bugs
+----
+I expect there are many. :) A FAQ page will soon be created at the project
+hosting wiki (http://h5py.googlecode.com); check there.  You can open
+a ticket there or email me at "h5py" at the domain "alfven dot org".
 
 
 High-level interface

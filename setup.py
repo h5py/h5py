@@ -91,8 +91,9 @@ class dev(Command):
         pass
 
     def run(self):
-        buildobj = self.distribution.get_command_obj('build')
-        buildobj.run()
+        if self.doc:
+            buildobj = self.distribution.get_command_obj('build')
+            buildobj.run()
         
         if self.doc:
             retval = os.spawnlp(os.P_WAIT, 'epydoc', '-q', '--html', '-o', 'docs/',
