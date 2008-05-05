@@ -1,0 +1,25 @@
+Installation of h5py
+====================
+
+Requires:
+---------
+* A Unix/Linux environment
+* Python 2.5
+* Pyrex
+  http://www.cosc.canterbury.ac.nz/greg.ewing/python/Pyrex/
+* HDF5 1.6.5 or higher (1.8 untested)
+
+Installation
+------------
+
+1.  Unpack the tarball and cd to the resulting directory
+2.  Run ``python setup.py build`` to build the package
+3.  [optional] Run ``python setup.py test`` to run unit tests
+4.  Run ``sudo python setup.py install`` to install into your main Python
+    package directory.
+
+Bugs
+----
+I expect there are many. :) You can start a ticket at h5py.googlecode.com, or
+email me ("h5py" at the domain "alfven dot org").  h5py is very new and still
+under development.
