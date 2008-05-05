@@ -36,7 +36,7 @@
     to the version string; again mainly for development.
 """
 
-__revision__ = "$Id"
+__revision__ = "$Id$"
 
 from distutils.cmd import Command
 from distutils.errors import DistutilsError, DistutilsExecError
@@ -52,7 +52,7 @@ delattr(os, 'link') # goodbye!
 # === Global constants ========================================================
 
 NAME = 'h5py'
-VERSION = '0.1.0a'
+VERSION = '0.1.0'
 REVISION = "$Rev: 0$"
 
 # === Custom extensions for distutils =========================================
