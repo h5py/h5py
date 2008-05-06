@@ -49,6 +49,11 @@ import sys
 # fails under a wide variety of network filesystems under Linux.
 delattr(os, 'link') # goodbye!
 
+try:
+    os.remove('MANIFEST') # why the hell are we caching this information
+except OSError:
+    pass
+
 # === Global constants ========================================================
 
 NAME = 'h5py'

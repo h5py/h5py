@@ -57,7 +57,7 @@ cdef class GroupStat:
     """
     cdef public object fileno  # will be a 2-tuple
     cdef public object objno   # will be a 2-tuple
-    cdef public unsigned nlink
+    cdef public int nlink
     cdef public int type
     cdef public time_t mtime
     cdef public size_t linklen
@@ -222,7 +222,7 @@ def get_objinfo(hid_t loc_id, char* name, int follow_link=1):
     statobj = GroupStat()
     statobj.fileno = (stat.fileno[0], stat.fileno[1])
     statobj.objno = (stat.objno[0], stat.objno[1])
-    statobj.nlink = stat.nlink
+    statobj.nlink = <int>stat.nlink
     statobj.type = <int>stat.type
     statobj.mtime = stat.mtime
     statobj.linklen = stat.linklen
