@@ -57,7 +57,7 @@ cdef class GroupStat:
     """
     cdef public object fileno  # will be a 2-tuple
     cdef public object objno   # will be a 2-tuple
-    cdef public int nlink
+    cdef public unsigned int nlink
     cdef public int type
     cdef public time_t mtime
     cdef public size_t linklen
@@ -222,7 +222,7 @@ def get_objinfo(hid_t loc_id, char* name, int follow_link=1):
     statobj = GroupStat()
     statobj.fileno = (stat.fileno[0], stat.fileno[1])
     statobj.objno = (stat.objno[0], stat.objno[1])
-    statobj.nlink = <int>stat.nlink
+    statobj.nlink = stat.nlink
     statobj.type = <int>stat.type
     statobj.mtime = stat.mtime
     statobj.linklen = stat.linklen
@@ -259,7 +259,9 @@ def iterate(hid_t loc_id, char* name, object func, object data=None, int startid
 
         You can also start at an arbitrary member by specifying its 
         (zero-based) index.  The return value is the index of the last 
-        group member processed.
+        group member successfully processed; if there are three elements 
+        (indices 0, 1, 2) and the last one raises StopIteration, the return
+        value is 1.
 
         Your function:
         1.  Should accept three arguments: the (INT) id of the group, the 
@@ -278,11 +280,14 @@ def iterate(hid_t loc_id, char* name, object func, object data=None, int startid
 
     retval = H5Giterate(loc_id, name, &i, <H5G_iterate_t>iter_cb_helper, int_tpl)
 
+    if retval == 1:  # user bailed out
+        i = i -1
+
     if retval < 0:
         if len(int_tpl[2]) != 0:
             raise int_tpl[2][0]
         raise GroupError("Error occured during iteration")
-    return i-2
+    return i-1
 
 # === Custom extensions =======================================================
 
@@ -346,7 +351,8 @@ def py_exists(hid_t group_id, char* name, int follow_link=1):
     """ (INT group_id, STRING name, BOOL follow_link=True) => BOOL exists
 
         Determine if a named member exists in the given group.  If follow_link
-        is True (default), symbolic links will be dereferenced.
+        is True (default), symbolic links will be dereferenced. Note this
+        function will not raise GroupError, even if the group ID is bad.
     """
     cdef int retval
     retval = H5Gget_objinfo(group_id, name, follow_link, NULL)

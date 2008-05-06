@@ -34,7 +34,7 @@ cdef extern from "hdf5.h":
   ctypedef struct H5G_stat_t:
     unsigned long fileno[2]
     unsigned long objno[2]
-    unsigned nlink
+    unsigned int nlink
     H5G_obj_t type              # new in HDF5 1.6
     time_t mtime
     size_t linklen

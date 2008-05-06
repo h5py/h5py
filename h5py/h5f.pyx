@@ -46,7 +46,7 @@ CLOSE_STRONG = H5F_CLOSE_STRONG
 CLOSE_DEFAULT = H5F_CLOSE_DEFAULT
 CLOSE_MAPPER = {H5F_CLOSE_WEAK: 'WEAK', H5F_CLOSE_SEMI: 'SEMI', 
                 H5F_CLOSE_STRONG: 'STRONG', H5F_CLOSE_DEFAULT: 'DEFAULT'}
-CLOSE_MAPER = DDict(CLOSE_MAPPER)
+CLOSE_MAPPER = DDict(CLOSE_MAPPER)
 
 # === File operations =========================================================
 

@@ -67,6 +67,11 @@ int attributes(char* filename){
     if(H5Awrite(aid, H5T_NATIVE_INT, &val4)<0) goto out;
     if(H5Aclose(aid)<0) goto out;
 
+    if(H5Gcreate(gid, "Subgroup1", -1)<0) goto out;
+    if(H5Gcreate(gid, "Subgroup2", -1)<0) goto out;
+    if(H5Gcreate(gid, "Subgroup3", -1)<0) goto out;
+
+
     retval = 0;  /* got here == success */
 
     out:
