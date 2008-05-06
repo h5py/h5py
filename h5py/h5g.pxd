@@ -19,7 +19,7 @@ from h5 cimport hid_t, hbool_t, herr_t, htri_t, hsize_t, hssize_t, hvl_t
 
 cdef extern from "hdf5.h":
 
-  cdef enum H5G_link_t:
+  ctypedef enum H5G_link_t:
     H5G_LINK_ERROR      = -1,
     H5G_LINK_HARD       = 0,
     H5G_LINK_SOFT       = 1

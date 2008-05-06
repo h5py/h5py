@@ -30,7 +30,6 @@ cdef extern from "hdf5.h":
   int H5P_FILE_ACCESS 
   int H5P_DATASET_CREATE 
   int H5P_DATASET_XFER 
-  int H5P_MOUNT      
 
   # --- Property list operations ----------------------------------------------
   # General operations

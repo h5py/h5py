@@ -230,12 +230,14 @@ def iterate(hid_t loc_id, object func, object data=None, unsigned int startidx=0
     int_tpl = (func, data,[])
 
     retval = H5Aiterate(loc_id, &i, <H5A_operator_t>iter_cb, int_tpl)
+    if retval == 1:
+        i = i - 1  # user bailed out
 
     if retval < 0:
         if len(int_tpl[2]) != 0:
             raise int_tpl[2][0]
         raise H5AttributeError("Error occured during iteration")
-    return i-2
+    return i-1
 
 # === Python extensions =======================================================
 
