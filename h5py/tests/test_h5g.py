@@ -135,23 +135,20 @@ class TestH5G(unittest.TestCase):
             namelist.append(name)
 
         namelist = []
-        n = h5g.iterate(self.obj, '.', iterate_all, namelist)
+        h5g.iterate(self.obj, '.', iterate_all, namelist)
         self.assertEqual(namelist, TEST_GROUPS)
-        self.assertEqual(n, len(TEST_GROUPS)-1)
 
         namelist = []
-        n = h5g.iterate(self.obj, '.', iterate_two, namelist)
+        h5g.iterate(self.obj, '.', iterate_two, namelist)
         self.assertEqual(namelist, TEST_GROUPS[0:2])
-        self.assertEqual(n, 1)
 
         namelist = []
         self.assertRaises(RuntimeError, h5g.iterate, self.obj, '.', iterate_fault, namelist)
         self.assertEqual(namelist, TEST_GROUPS[0:2])
         
         namelist = []
-        n = h5g.iterate(self.obj, '.', iterate_two, namelist, 1)
+        h5g.iterate(self.obj, '.', iterate_two, namelist, 1)
         self.assertEqual(namelist, TEST_GROUPS[1:3])
-        self.assertEqual(n, 2)
 
     def test_py_listnames(self):
 

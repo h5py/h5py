@@ -280,14 +280,10 @@ def iterate(hid_t loc_id, char* name, object func, object data=None, int startid
 
     retval = H5Giterate(loc_id, name, &i, <H5G_iterate_t>iter_cb_helper, int_tpl)
 
-    if retval == 1:  # user bailed out
-        i = i -1
-
     if retval < 0:
         if len(int_tpl[2]) != 0:
             raise int_tpl[2][0]
         raise GroupError("Error occured during iteration")
-    return i-1
 
 # === Custom extensions =======================================================
 
