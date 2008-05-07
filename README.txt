@@ -107,9 +107,12 @@ Requires
 --------
 - Unix-like environment (created/tested on 32-bit Intel linux)
 - Numpy_ 1.0.3 or higher
-- HDF5_ 1.6.5 or higher (1.8 is untested)
+- HDF5_ 1.6.5 or higher (1.8 support experimental)
 - Pyrex_ 0.9.6.4 or higher
 - gcc (to compile Python extensions)
+
+You might also need to install "libc6-dev" if it's not included by default
+with your OS.  If you get compile-time errors about "limits.h", this is why.
 
 .. _Numpy: http://numpy.scipy.org/
 .. _HDF5: http://hdf.ncsa.uiuc.edu/

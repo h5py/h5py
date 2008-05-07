@@ -31,9 +31,14 @@ TYPE_DATASPACE = H5I_GROUP
 TYPE_DATASET = H5I_DATASET
 TYPE_ATTR = H5I_ATTR
 TYPE_REFERENCE = H5I_REFERENCE
+TYPE_GENPROP_CLS = H5I_GENPROP_CLS
+TYPE_GENPROP_LST = H5I_GENPROP_LST
+TYPE_DATATYPE = H5I_DATATYPE
+
 TYPE_MAPPER = { H5I_BADID: 'BAD ID', H5I_FILE: 'FILE', H5I_GROUP: 'GROUP',
                  H5I_DATASET: 'DATASET', H5I_ATTR: 'ATTRIBUTE', 
-                 H5I_REFERENCE: 'REFERENCE' }
+                 H5I_REFERENCE: 'REFERENCE', H5I_GENPROP_CLS: 'PROPERTY LIST CLASS',
+                 H5I_GENPROP_LST: 'PROPERTY LIST', H5I_DATATYPE: 'DATATYPE' }
 TYPE_MAPPER = DDict(TYPE_MAPPER)
 
 # === Introspection API =======================================================
@@ -53,15 +58,16 @@ def get_name(hid_t obj_id):
 
         Determine (a) name of an HDF5 object.  Because an object has as many
         names as there are hard links to it, this may not be unique.  If the
-        object does not have a name (transient datatypes, etc.), the 
-        return value is None.
+        object does not have a name (transient datatypes, etc.), OR IF THE
+        IDENTIFIER IS INVALID, the  return value is None.  Raises H5Error
+        if there is an internal error.
     """
     cdef size_t namelen
     cdef char* name
 
     namelen = H5Iget_name(obj_id, NULL, 0)
     if namelen < 0:
-        raise H5TypeError("Failed to determine name of object %d" % obj_id)
+        raise H5Error("Failed to determine name of object %d" % obj_id)
     if namelen == 0:
         return None
 

@@ -818,7 +818,8 @@ def py_dtype_to_h5t(numpy.dtype dtype_in):
         # Otherwise it's just a compound type
         else:
             type_out = create(H5T_COMPOUND, length)
-            for name, (dt, offset) in dtype_in.fields.iteritems():
+            for name in dtype_in.names:
+                dt, offset = dtype_in.fields[name]
                 tmp = py_dtype_to_h5t(dt)
                 try:
                     insert(type_out, name, offset, tmp)

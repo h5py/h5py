@@ -15,10 +15,13 @@ import sys
 import test_h5a
 import test_h5f
 import test_h5g
+import test_h5i
+import test_h5d
 
 from h5py import h5a, h5f, h5g, h5d, h5s, h5i, h5z, h5p
 
-TEST_CASES = (test_h5a.TestH5A, test_h5f.TestH5F, test_h5g.TestH5G)
+TEST_CASES = (test_h5a.TestH5A, test_h5f.TestH5F, test_h5g.TestH5G,
+              test_h5i.TestH5I, test_h5d.TestH5D)
 
 def buildsuite(cases):
 
