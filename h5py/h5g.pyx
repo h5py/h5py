@@ -213,7 +213,7 @@ def get_objinfo(hid_t loc_id, char* name, int follow_link=1):
     """
     cdef int retval
     cdef H5G_stat_t stat
-    cdef object statobj
+    cdef GroupStat statobj
 
     retval = H5Gget_objinfo(loc_id, name, follow_link, &stat)
     if retval < 0:
@@ -223,7 +223,7 @@ def get_objinfo(hid_t loc_id, char* name, int follow_link=1):
     statobj.fileno = (stat.fileno[0], stat.fileno[1])
     statobj.objno = (stat.objno[0], stat.objno[1])
     statobj.nlink = stat.nlink
-    statobj.type = <int>stat.type
+    statobj.type = stat.type
     statobj.mtime = stat.mtime
     statobj.linklen = stat.linklen
 
@@ -256,12 +256,8 @@ def iterate(hid_t loc_id, char* name, object func, object data=None, int startid
         Iterate an arbitrary Python function over a group.  Note that the
         group is specified by a parent and a name; if you have a group
         identifier and want to iterate over it; pass in "." for the name.
-
         You can also start at an arbitrary member by specifying its 
-        (zero-based) index.  The return value is the index of the last 
-        group member successfully processed; if there are three elements 
-        (indices 0, 1, 2) and the last one raises StopIteration, the return
-        value is 1.
+        (zero-based) index.
 
         Your function:
         1.  Should accept three arguments: the (INT) id of the group, the 
