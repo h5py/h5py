@@ -20,7 +20,7 @@ from h5  cimport hid_t
 
 import h5
 from h5 import DDict
-from errors import H5TypeError
+from errors import H5Error
 
 # === Public constants and data structures ====================================
 
@@ -58,15 +58,16 @@ def get_name(hid_t obj_id):
 
         Determine (a) name of an HDF5 object.  Because an object has as many
         names as there are hard links to it, this may not be unique.  If the
-        object does not have a name (transient datatypes, etc.), OR IF THE
-        IDENTIFIER IS INVALID, the  return value is None.  Raises H5Error
-        if there is an internal error.
+        object does not have a name (transient datatypes, etc.), the return
+        value is None.  If the identifier is invalid, raises H5Error.
     """
     cdef size_t namelen
     cdef char* name
 
     namelen = H5Iget_name(obj_id, NULL, 0)
-    if namelen < 0:
+
+    # H5Iget_type call is a workaround for changed behavior 1.6 to 1.8
+    if namelen < 0 or (H5I_BADID == H5Iget_type(obj_id)): 
         raise H5Error("Failed to determine name of object %d" % obj_id)
     if namelen == 0:
         return None

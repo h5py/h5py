@@ -13,7 +13,7 @@ import unittest
 import os
 
 import h5py
-from h5py import h5f, h5g, h5i
+from h5py import h5f, h5g, h5i, h5t
 from h5py.errors import H5Error
 
 HDFNAME = os.path.join(os.path.dirname(h5py.__file__), 'tests/data/attributes.hdf5')
@@ -36,5 +36,15 @@ class TestH5I(unittest.TestCase):
 
     def test_get_name(self):
         self.assertEqual(h5i.get_name(self.obj), '/Group')
-        self.assertEqual(h5i.get_name(-1), None)
+        self.assertEqual(h5i.get_name(h5t.STD_I8LE), None)
+        self.assertRaises(H5Error, h5i.get_name, -1)
+
+
+
+
+
+
+
+
+
 
