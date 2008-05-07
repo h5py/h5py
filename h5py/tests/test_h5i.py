@@ -37,7 +37,7 @@ class TestH5I(unittest.TestCase):
     def test_get_name(self):
         self.assertEqual(h5i.get_name(self.obj), '/Group')
         self.assertEqual(h5i.get_name(h5t.STD_I8LE), None)
-        self.assertRaises(H5Error, h5i.get_name, -1)
+        self.assertEqual(h5i.get_name(-1), None)
 
 
 
