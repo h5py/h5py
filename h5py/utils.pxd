@@ -11,6 +11,7 @@
 #-
 
 from h5 cimport hid_t, hsize_t
+from numpy cimport ndarray
 
 cdef extern from "utils.h":
 
@@ -18,3 +19,6 @@ cdef extern from "utils.h":
     hid_t create_ieee_complex128(char byteorder, char* real_name, char* img_name)
     hsize_t* tuple_to_dims(object tpl)
     object dims_to_tuple(hsize_t* dims, hsize_t rank)
+
+    int check_numpy_read(ndarray arr, hid_t space_id)
+    int check_numpy_write(ndarray arr, hid_t space_id)

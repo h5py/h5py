@@ -28,7 +28,8 @@ from h5  cimport herr_t, hid_t, size_t, hsize_t, htri_t
 from h5s cimport H5Sclose, H5S_ALL, H5S_UNLIMITED
 from h5t cimport H5Tclose
 from h5p cimport H5P_DEFAULT
-from numpy cimport ndarray, import_array
+from numpy cimport ndarray, import_array, PyArray_DATA
+from utils cimport check_numpy_read, check_numpy_write
 
 # Runtime imports
 import h5
@@ -127,28 +128,34 @@ def read(hid_t dset_id, hid_t mspace_id, hid_t fspace_id, ndarray arr_obj, hid_t
         flexibility, you can specify dataspaces for the file and the Numpy
         object. Keyword plist may be a dataset transfer property list.
 
+        The provided Numpy array must be writable, C-contiguous, and own
+        its data.  If this is not the case, ValueError will be raised and the 
+        read will fail.
+
         It is your responsibility to ensure that the memory dataspace
-        provided is compatible with the shape of the Numpy array.  It is also
-        up to you to ensure that the Numpy array's dtype is conversion-
-        compatible with the file's datatype. 
-
-        The given Numpy array *must* be C-contiguous, writable and aligned 
-        ("NPY_BEHAVED").  This is not currently checked; anything else may
-        crash Python.
-
+        provided is compatible with the shape of the Numpy array.  Since a
+        wide variety of dataspace configurations are possible, this is not
+        checked.  You can easily crash Python by reading in data from too
+        large a dataspace.
+        
         For a friendlier version of this function, try py_read_slab().
     """
     cdef hid_t mtype_id
     cdef herr_t retval
+    cdef int array_ok
     mtype_id = 0
 
     try:
         mtype_id = h5t.py_dtype_to_h5t(arr_obj.dtype)
-        retval = H5Dread(dset_id, mtype_id, mspace_id, fspace_id, plist, <void*>arr_obj.data)
+        array_ok = check_numpy_write(arr_obj, -1)
+        if array_ok <= 0:
+            raise ValueError("Numpy array is not set up correctly.")
+
+        retval = H5Dread(dset_id, mtype_id, mspace_id, fspace_id, plist, PyArray_DATA(arr_obj))
         if retval < 0:
             raise DatasetError("Error reading from dataset %d" % dset_id)
     finally:
-        if mtype_id:
+        if mtype_id != 0:
             H5Tclose(mtype_id)
         
 def write(hid_t dset_id, hid_t mspace_id, hid_t fspace_id, ndarray arr_obj, hid_t plist=H5P_DEFAULT):
@@ -156,18 +163,25 @@ def write(hid_t dset_id, hid_t mspace_id, hid_t fspace_id, ndarray arr_obj, hid_
           INT plist=H5P_DEFAULT )
 
         Write data from a Numpy array to an HDF5 dataset. Keyword plist may be 
-        a dataset transfer property list.  All the caveats in h5d.read() apply 
-        here as well, in particular the restrictions on the data area of the 
-        Numpy array.
+        a dataset transfer property list.
+
+        The provided Numpy array must be C-contiguous, and own its data.  If 
+        this is not the case, ValueError will be raised and the read will fail.
 
         For a friendlier version of this function, try py_write_slab()
     """
     cdef hid_t mtype_id
     cdef herr_t retval
+    cdef int array_ok
     mtype_id = 0
+
     try:
         mtype_id = h5t.py_dtype_to_h5t(arr_obj.dtype)
-        retval = H5Dwrite(dset_id, mtype_id, mspace_id, fspace_id, plist, <void*>arr_obj.data)
+        array_ok = check_numpy_read(arr_obj, -1)
+        if array_ok <= 0:
+            raise ValueError("Numpy array is not set up correctly.")
+
+        retval = H5Dwrite(dset_id, mtype_id, mspace_id, fspace_id, plist, PyArray_DATA(arr_obj))
         if retval < 0:
             raise DatasetError("Error writing to dataset %d" % dset_id)
     finally:

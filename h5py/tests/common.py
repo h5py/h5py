@@ -13,7 +13,7 @@
 import tempfile
 import os
 import shutil
-from h5py import h5f
+from h5py import h5f, h5p
 
 def getcopy(filename):
     """ Create a temporary working copy of "filename". Return is a 2-tuple
@@ -21,7 +21,12 @@ def getcopy(filename):
     """
     newname = tempfile.mktemp('.hdf5')
     shutil.copy(filename, newname)
+
+    plist = h5p.create(h5p.CLASS_FILE_ACCESS)
+    h5p.set_fclose_degree(plist, h5f.CLOSE_STRONG)
     fid = h5f.open(newname, h5f.ACC_RDWR)
+    h5p.close(plist)
+
     return (fid, newname)
 
 def deletecopy(fid, newname):

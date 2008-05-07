@@ -20,7 +20,6 @@
     is imported at the top of every h5* sub-module.  Initializes the
     library and defines common version info, classes and functions.
 """
-
 from h5e cimport H5Eset_auto, H5E_walk_t, H5Ewalk, H5E_error_t, \
                       H5E_WALK_DOWNWARD
 

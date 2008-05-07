@@ -17,11 +17,14 @@
 """
 
 # Pyrex compile-time imports
+cimport h5
 from defs_c   cimport malloc, free
 from h5  cimport herr_t, hid_t
 from h5p cimport H5P_DEFAULT
 from h5t cimport H5Tclose
-from numpy cimport ndarray, import_array
+from h5s cimport H5Sclose
+from numpy cimport ndarray, import_array, PyArray_DATA
+from utils cimport check_numpy_read, check_numpy_write
 
 # Runtime imports
 import h5
@@ -95,42 +98,67 @@ def read(hid_t attr_id, ndarray arr_obj):
         
         Read the attribute data into the given Numpy array.  Note that the 
         Numpy array must have the same shape as the HDF5 attribute, and a 
-        conversion-compatible datatype.  It must also be writable and
-        C-contiguous.  This is not currently checked.
+        conversion-compatible datatype.
+
+        The Numpy array must be writable, C-contiguous and own its data.  If
+        this is not the case, ValueError will be raised and the read will fail.
     """
     cdef hid_t mtype_id
+    cdef hid_t space_id
     cdef herr_t retval
+    cdef int array_ok
     mtype_id = 0
+    space_id = 0
 
     try:
         mtype_id = h5t.py_dtype_to_h5t(arr_obj.dtype)
-        retval = H5Aread(attr_id, mtype_id, <void*>arr_obj.data)
+        space_id = get_space(attr_id)
+        array_ok = check_numpy_write(arr_obj, space_id)
+        if array_ok <= 0:
+            raise ValueError("Numpy array is not set up correctly.")
+
+        retval = H5Aread(attr_id, mtype_id, PyArray_DATA(arr_obj))
         if retval < 0:
             raise H5AttributeError("Error reading from attribute %d" % attr_id)
     finally:
-        if mtype_id:
+        if mtype_id != 0:
             H5Tclose(mtype_id)
+        if space_id != 0:
+            H5Sclose(space_id)
 
 def write(hid_t attr_id, ndarray arr_obj):
     """ (INT attr_id, NDARRAY arr_obj)
 
         Write the contents of a Numpy array too the attribute.  Note that the 
         Numpy array must have the same shape as the HDF5 attribute, and a 
-        conversion-compatible datatype.  The Numpy array must also be
-        C-contiguous; this is not currently checked.
+        conversion-compatible datatype.  
+
+        The Numpy array must be C-contiguous and own its data.  If this is not
+        the case, ValueError will be raised and the write will fail.
     """
     
     cdef hid_t mtype_id
+    cdef hid_t space_id
     cdef herr_t retval
+    cdef int array_ok
     mtype_id = 0
+    space_id = 0
+
     try:
         mtype_id = h5t.py_dtype_to_h5t(arr_obj.dtype)
-        retval = H5Awrite(attr_id, mtype_id, <void*>arr_obj.data)
+        space_id = get_space(attr_id)
+        array_ok = check_numpy_read(arr_obj, space_id)
+        if array_ok <= 0:
+            raise ValueError("Given Numpy array is not set up correctly.")
+
+        retval = H5Awrite(attr_id, mtype_id, PyArray_DATA(arr_obj))
         if retval < 0:
             raise H5AttributeError("Error writing to attribute %d" % attr_id)
     finally:
-        if mtype_id:
+        if mtype_id != 0:
             H5Tclose(mtype_id)
+        if space_id != 0:
+            H5Sclose(space_id)
 
 # === Attribute inspection ====================================================
 

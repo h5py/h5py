@@ -11,7 +11,7 @@
 #-
 
 import unittest
-from numpy import array, ndarray, dtype, all
+from numpy import array, ndarray, dtype, all, ones
 import os
 
 from h5py import h5a
@@ -50,6 +50,7 @@ class TestH5A(unittest.TestCase):
         obj = h5g.open(fid, OBJECTNAME)
         for name, (value, dt, shape) in NEW_ATTRIBUTES.iteritems():
             arr_ref = array(value, dtype=dt)
+            arr_fail = ones((15,15), dtype=dt)
 
             sid = h5s.create(h5s.CLASS_SCALAR)
             tid = h5t.py_dtype_to_h5t(dt)
@@ -57,6 +58,7 @@ class TestH5A(unittest.TestCase):
             aid = h5a.create(obj, name, tid, sid)
             self.assert_(self.is_attr(aid))
             h5a.write(aid, arr_ref)
+            self.assertRaises(ValueError, h5a.write, aid, arr_fail)
             h5a.close(aid)
 
             arr_val = h5a.py_get(obj,name)
@@ -100,12 +102,19 @@ class TestH5A(unittest.TestCase):
     def test_read(self):
         for name in ATTRIBUTES:
             value, dt, shape = ATTRIBUTES[name]
+
             aid = h5a.open_name(self.obj, name)
             arr_holder = ndarray(shape, dtype=dt)
             arr_reference = array(value, dtype=dt)
+
+            if len(shape) != 0:
+                arr_fail = ndarray((), dtype=dt)
+                self.assertRaises(ValueError, h5a.read, aid, arr_fail)
+
             h5a.read(aid, arr_holder)
             self.assert_( all(arr_holder == arr_reference),
                 errstr(arr_reference, arr_holder, 'Attr "%s"):\n' % name, ))
+
             h5a.close(aid)
         
     # h5a.write is done by test_create_write

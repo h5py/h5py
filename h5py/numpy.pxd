@@ -96,4 +96,9 @@ cdef extern from "numpy/arrayobject.h":
   # The NumPy initialization function
   void import_array()
 
+  void* PyArray_DATA(ndarray arr)
+
+
+
+
 

@@ -19,7 +19,6 @@ from defs_c cimport size_t
 # Common structs and types from HDF5
 cdef extern from "hdf5.h":
 
-
   ctypedef int hid_t  # In H5Ipublic.h
   ctypedef int hbool_t
   ctypedef int herr_t
@@ -41,5 +40,4 @@ cdef extern from "hdf5.h":
                           unsigned *relnum )
   herr_t H5check_version(unsigned majnum, unsigned minnum,
                          unsigned relnum )
-
 

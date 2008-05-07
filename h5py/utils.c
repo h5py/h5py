@@ -25,19 +25,6 @@
 #include "hdf5.h"
 
 
-/* Check to make sure we can reliably copy data from this array. */
-int check_array(PyObject* arr){
-
-    if(!PyArray_Check(arr)) return 0;
-
-    if(!PyArray_ISCONTIGUOUS(arr)) return 0;
-
-    if(!PyArray_ISBEHAVED(arr)) return 0;
-
-    return 1;
-
-}
-
 /* Convert an hsize_t array to a Python tuple of long ints.
    Returns None on failure
 */
@@ -106,6 +93,79 @@ hsize_t* tuple_to_dims(PyObject* tpl){
       if(dims!=NULL) free(dims);
       return NULL;
 }
+
+/* The functions
+
+    - check_numpy_write(PyObject* arr, hid_t dataspace)
+    - check_numpy_read(PyObject* arr, hid_t dataspace)
+
+   test whether or not a given array object is suitable for reading or writing.
+   If dataspace id is positive, it will be checked for compatibility with
+   the array object's shape.
+
+   Return values:
+    1:  Can read/write
+    0:  Can't read/write
+   -1:  Failed to determine (i.e. either the array or the space object is bad)
+*/
+int check_numpy(PyArrayObject* arr, hid_t space_id, int write){
+
+    int required_flags;
+    hsize_t arr_rank;
+    hsize_t space_rank;
+    hsize_t *space_dims = NULL;
+    int i;
+
+    required_flags = NPY_C_CONTIGUOUS | NPY_OWNDATA;
+    /* That's not how you spell "writable" */
+    if(write) required_flags = required_flags | NPY_WRITEABLE;  
+
+    int retval = 0;  /* Default = not OK */
+
+    if(!(arr->flags & required_flags)) goto out;
+
+    if(space_id > 0){
+
+        arr_rank = arr->nd;
+        space_rank = H5Sget_simple_extent_ndims(space_id);
+
+        if(space_rank < 0) goto failed;
+        if( arr_rank != space_rank) goto out;
+
+        space_dims = (hsize_t*)malloc(sizeof(hsize_t)*space_rank);
+        space_rank = H5Sget_simple_extent_dims(space_id, space_dims, NULL);
+        if(space_rank < 0) goto failed;
+
+        for(i=0; i<space_rank; i++){
+            if(write){
+                if(PyArray_DIM(arr,i) < space_dims[i]) goto out;
+            } else {
+                if(PyArray_DIM(arr,i) > space_dims[i]) goto out;
+            }
+        }
+
+    }
+
+    retval = 1;  /* got here == success */
+
+  out:
+    if(space_dims != NULL) free(space_dims);
+    return retval; 
+
+  failed:
+    /* could optionally print an error message */
+    if(space_dims != NULL) free(space_dims);
+    return -1;
+}
+
+int check_numpy_write(PyArrayObject* arr, hid_t space_id){
+    return check_numpy(arr, space_id, 1);
+}
+
+int check_numpy_read(PyArrayObject* arr, hid_t space_id){
+    return check_numpy(arr, space_id, 0);
+}
+
 
 /* Rewritten versions of create_ieee_complex64/128 from Pytables, to support 
    standard array-interface typecodes and variable names for real/imag parts.  
