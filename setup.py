@@ -60,9 +60,10 @@ NAME = 'h5py'
 VERSION = '0.1.0'
 REVISION = "$Rev: 0$"
 
-# If you have your HDF5 *.h files, etc somewhere not in /usr/include or
-# /usr/local/include, add that path here.
+# If you have your HDF5 *.h files and libraries somewhere not in /usr or
+# /usr/local, add that path here.
 custom_include_dirs = []    # = ["/some/other/path", "/an/other/path"]
+custom_library_dirs = []
 
 # === Custom extensions for distutils =========================================
 
@@ -183,13 +184,18 @@ pyx_src_path = 'h5py'
 pyx_extra_src = ['utils.c']         # C source files required for Pyrex code
 pyx_libraries = ['hdf5']            # Libraries to link into Pyrex code
 
-# Compile-time include dirs for Pyrex code
+# Compile-time include and library dirs for Pyrex code
 pyx_include = [numpy.get_include()] 
 pyx_include.extend(['/usr/include', '/usr/local/include'])
 pyx_include.extend(custom_include_dirs)
+pyx_library_dirs = ['/usr/lib', '/usr/local/lib']
+pyx_library_dirs.extend(custom_library_dirs)
 
 # Additional compiler flags for Pyrex code
 pyx_extra_args = ['-Wno-unused', '-DH5_USE_16_API']
+
+extra_link_args = []
+extra_compile_args = pyx_extra_args
 
 
 # === Setup implementation ====================================================
@@ -206,7 +212,9 @@ for module_name in pyx_modules:
             sources, 
             include_dirs = pyx_include, 
             libraries = pyx_libraries,
-            extra_compile_args = pyx_extra_args
+            library_dirs = pyx_library_dirs, 
+            extra_compile_args = extra_compile_args,
+            extra_link_args = extra_link_args
         )
     )
 

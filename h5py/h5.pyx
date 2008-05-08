@@ -42,7 +42,11 @@ def _getversionastuple():
 
     return (major, minor, release)
     
-hdf5version = _getversionastuple()
+HDF5_VERS_TPL = _getversionastuple()
+HDF5_VERS = "%d.%d.%d" % HDF5_VERS_TPL
+
+API_VERS = '1.6'
+API_VERS_TPL = (1,6)
 
 def cycle():
     """ ()
