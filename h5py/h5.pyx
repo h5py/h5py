@@ -14,14 +14,18 @@
 """
     Private initialization module for the h5* family of modules.
 
-    ** Not for public use. **
-
     Common module for the HDF5 low-level interface library.  This module
     is imported at the top of every h5* sub-module.  Initializes the
     library and defines common version info, classes and functions.
+
+    Library version and API information lives here:
+    - HDF5_VERS, HDF5_VERS_TPL:  Library version
+    - API_VERS, API_VERS_TPL:  API version (1.6 or 1.8) used to compile
 """
 from h5e cimport H5Eset_auto, H5E_walk_t, H5Ewalk, H5E_error_t, \
                       H5E_WALK_DOWNWARD
+
+from errors import H5LibraryError
 
 # Activate the library
 H5open()
@@ -29,8 +33,11 @@ H5open()
 # Disable automatic error printing to stderr
 H5Eset_auto(NULL, NULL)
 
-def _getversionastuple():
+def get_libversion():
+    """ () => TUPLE (major, minor, release)
 
+        Retrieve the HDF5 library version as a 3-tuple.
+    """
     cdef unsigned int major
     cdef unsigned int minor
     cdef unsigned int release
@@ -38,30 +45,26 @@ def _getversionastuple():
     
     retval = H5get_libversion(&major, &minor, &release)
     if retval < 0:
-        raise RuntimeError("Error determining HDF5 library version")
+        raise H5LibraryError("Error determining HDF5 library version.")
 
     return (major, minor, release)
     
-HDF5_VERS_TPL = _getversionastuple()
+#: HDF5 library version as a 3-tuple (major, minor, release), e.g. (1,6,5)
+HDF5_VERS_TPL = get_libversion()        
+
+#: HDF5 library version as a string "major.minor.release", e.g. "1.6.5"
 HDF5_VERS = "%d.%d.%d" % HDF5_VERS_TPL
 
+#: API version used to compile, as a string "major.minor", e.g. "1.6"
 API_VERS = '1.6'
+
+#: API version used to compile, as a 2-tuple (major, minor), e.g. (1,6)
 API_VERS_TPL = (1,6)
-
-def cycle():
-    """ ()
-
-        Force the HDF5 library to close all open objects and files, and re-
-        initialize the library.
-    """
-    cdef herr_t retval
-    H5close()
-    retval = H5open()
-    if retval < 0:
-        raise RuntimeError("Failed to re-initialize the HDF5 library")
 
 
 class DDict(dict):
+    """ Internal class.
+    """
     def __missing__(self, key):
         return '*INVALID* (%s)' % str(key)
 
@@ -81,7 +84,10 @@ cdef herr_t walk_cb(int n, H5E_error_t *err_desc, data):
     return 0
 
 def get_error_string():
+    """ Internal function; don't use directly.
 
+        Get the HDF5 error stack contents as a string.
+    """
     elist = []
 
     H5Ewalk(H5E_WALK_DOWNWARD, walk_cb, elist)

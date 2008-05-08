@@ -24,9 +24,7 @@ class H5LibraryError(H5Error):
         arglist = list(args)
         if len(arglist) == 0:
             arglist = [""]
-        msg = arglist[0]
-        msg += "\n"+get_error_string()
-        arglist[0] = msg
+        arglist[0] = arglist[0] + "\n" + get_error_string()
         args = tuple(arglist)
         H5Error.__init__(self, *args, **kwds)
 

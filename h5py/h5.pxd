@@ -40,4 +40,8 @@ cdef extern from "hdf5.h":
                           unsigned *relnum )
   herr_t H5check_version(unsigned majnum, unsigned minnum,
                          unsigned relnum )
+  herr_t H5garbage_collect()
+
+
+
 
