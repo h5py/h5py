@@ -1,0 +1,14 @@
+Goals for 1.0:
+==============
+
+*  1.6 API coverage
+*  Unit tests for every component, including highlevel operations
+*  Buildable with 1.8.X in compatibility mode
+
+Additional goals for 2.0:
+=========================
+
+*  1.6 and 1.8 API coverage
+*  Switchable between 1.6 and 1.8 API (at compile-time)
+*  Windows compatibility
+
