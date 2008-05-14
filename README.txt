@@ -4,12 +4,12 @@ Copyright (c) 2008 Andrew Collette
 http://h5py.alfven.org
 mail: "h5py" at the domain "alfven dot org"
 
-Version 0.1.0
+Version 0.1.1
 
 DISCLAIMER
 ==========
 
-This is the first release of h5py.  Many functions are untested, and it's 
+This is an early release of h5py.  Many functions are untested, and it's 
 quite possible that both the high- and low-level APIs will change in the 
 future.  Also, it hasn't been tested on platforms other than 32-bit x86 
 Linux.  For these reasons, you should treat it as an alpha.

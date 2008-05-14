@@ -57,7 +57,7 @@ except OSError:
 # === Global constants ========================================================
 
 NAME = 'h5py'
-VERSION = '0.1.0'
+VERSION = '0.1.1'
 REVISION = "$Rev: 0$"
 
 # If you have your HDF5 *.h files and libraries somewhere not in /usr or
