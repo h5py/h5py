@@ -14,7 +14,7 @@
 # license is available at licenses/pytables.txt, in the distribution root
 # directory.
 
-from defs_c cimport size_t, time_t
+from defs_c cimport size_t, time_t, ssize_t
 from h5 cimport hid_t, hbool_t, herr_t, htri_t, hsize_t, hssize_t, hvl_t
 
 cdef extern from "hdf5.h":
@@ -35,6 +35,14 @@ cdef extern from "hdf5.h":
     H5F_CLOSE_STRONG = 2,
     H5F_CLOSE_DEFAULT = 3
 
+  int H5F_OBJ_FILE
+  int H5F_OBJ_DATASET
+  int H5F_OBJ_GROUP
+  int H5F_OBJ_DATATYPE
+  int H5F_OBJ_ATTR
+  int H5F_OBJ_ALL
+  int H5F_OBJ_LOCAL
+
   # --- File operations -------------------------------------------------------
   hid_t  H5Fcreate(char *filename, unsigned int flags,
                    hid_t create_plist, hid_t access_plist)
@@ -42,5 +50,24 @@ cdef extern from "hdf5.h":
   herr_t H5Fclose (hid_t file_id)
   htri_t H5Fis_hdf5(char *name)
   herr_t H5Fflush(hid_t object_id, H5F_scope_t scope)
+
+  hid_t     H5Freopen(hid_t file_id)
+  herr_t    H5Fmount(hid_t loc_id, char *name, hid_t child_id, hid_t plist_id)
+  herr_t    H5Funmount(hid_t loc_id, char *name)
+  herr_t    H5Fget_filesize(hid_t file_id, hsize_t *size)
+  hid_t     H5Fget_create_plist(hid_t file_id  )
+  hid_t     H5Fget_access_plist(hid_t file_id) 
+  hssize_t  H5Fget_freespace(hid_t file_id)
+  ssize_t   H5Fget_name(hid_t obj_id, char *name, size_t size)
+  int       H5Fget_obj_count(hid_t file_id, unsigned int types)
+  int       H5Fget_obj_ids(hid_t file_id, unsigned int types, int max_objs, hid_t *obj_id_list)
+
+
+
+
+
+
+
+
 
 

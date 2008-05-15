@@ -1,10 +1,21 @@
 README for the "h5py" Python/HDF5 interface
 ===========================================
 Copyright (c) 2008 Andrew Collette
-http://h5py.alfven.org
-mail: "h5py" at the domain "alfven dot org"
+* http://h5py.alfven.org
+* mail: "h5py" at the domain "alfven dot org"
 
 Version 0.1.1
+
+Introduction
+============
+
+The h5py package provides both a high- and low-level interface to the 
+`NCSA HDF5 library`__ from Python.  The low-level interface is
+intended to be a complete wrapping of the HDF5 1.6 API, while the high-
+level component supports Python-style object-oriented access to HDF5 files, 
+datasets and groups.
+
+__ http://hdf.ncsa.uiuc.edu
 
 DISCLAIMER
 ==========
@@ -22,15 +33,6 @@ Contents
 * `Installation`_
 * `High-level interface`_
 * `Low-level interface`_
-
-Introduction
-============
-
-The h5py package provides both a high- and low-level interface to the NCSA
-HDF5 library (hdf.ncsa.uiuc.edu) from Python.  The low-level interface is
-intended to be a complete wrapping of the HDF5 1.6 API, while the high-
-level component supports Python-style object-oriented access to HDF5 files, 
-datasets and groups.
 
 Documentation
 -------------
@@ -62,7 +64,7 @@ Features
     H5E     Errors          Python exceptions
     =====   ==============  =================
 
-  See the section "Low-level interface" below for a better overview.
+  See the section `Low-level interface`_ below for a better overview.
 
 - Calls that fail will raise exceptions; no more checking return values.
   Wrapper functions have been carefully designed to provide a Pythonic

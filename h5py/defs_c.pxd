@@ -31,3 +31,9 @@ cdef extern from "string.h":
 
 cdef extern from "time.h":
   ctypedef int time_t
+
+cdef extern from "unistd.h":
+  ctypedef long ssize_t
+
+
+
