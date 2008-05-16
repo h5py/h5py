@@ -18,8 +18,10 @@
 from defs_c   cimport size_t, malloc, free
 from h5  cimport hid_t
 
+# Runtime imports
 import h5
 from h5 import DDict
+from errors import IdentifierError
 
 # === Public constants and data structures ====================================
 
@@ -40,7 +42,7 @@ TYPE_MAPPER = { H5I_BADID: 'BAD ID', H5I_FILE: 'FILE', H5I_GROUP: 'GROUP',
                  H5I_GENPROP_LST: 'PROPERTY LIST', H5I_DATATYPE: 'DATATYPE' }
 TYPE_MAPPER = DDict(TYPE_MAPPER)
 
-# === Introspection API =======================================================
+# === Identifier API ==========================================================
 
 def get_type(hid_t obj_id):
     """ (INT obj_id) => INT type_code
@@ -74,6 +76,52 @@ def get_name(hid_t obj_id):
     free(name)
 
     return retstring
+
+def get_file_id(hid_t obj_id):
+    """ (INT obj_id) => INT file_id
+
+        Obtain an identifier for the file in which this object resides,
+        re-opening the file if necessary.
+    """
+    cdef hid_t fid
+    fid = H5Iget_file_id(obj_id)
+    if fid < 0:
+        raise IdentifierError("Failed to determine file id for object %d" % obj_id)
+    return fid
+
+def inc_ref(hid_t obj_id):
+    """ (INT obj_id)
+
+        Increment the reference count for the given object.
+    """
+    cdef int retval
+    retval = H5Iinc_ref(obj_id)
+    if retval < 0:
+        raise IdentifierError("Failed to increment reference count of object %d" % obj_id)
+
+def get_ref(hid_t obj_id):
+    """ (INT obj_id)
+
+        Retrieve the reference count for the given object.
+    """
+    cdef int retval
+    retval = H5Iget_ref(obj_id)
+    if retval < 0:
+        raise IdentifierError("Failed to determine reference count of object %d" % obj_id)
+    return retval
+
+def dec_ref(hid_t obj_id):
+    """ (INT obj_id)
+
+        Decrement the reference count for the given object.
+    """
+    cdef int retval
+    retval = H5Idec_ref(obj_id)
+    if retval < 0:
+        raise IdentifierError("Failed to decrement reference count of object %d" % obj_id)
+
+
+
 
     
 

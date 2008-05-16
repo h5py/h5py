@@ -15,7 +15,7 @@
 # directory.
 
 from defs_c cimport size_t, time_t
-from h5 cimport hid_t, hbool_t, herr_t, htri_t, hsize_t, hssize_t, hvl_t
+from h5 cimport hid_t, hbool_t, herr_t, htri_t, hsize_t, hssize_t, hvl_t, haddr_t
 
 cdef extern from "hdf5.h":
 
@@ -59,13 +59,30 @@ cdef extern from "hdf5.h":
   herr_t    H5Dclose(hid_t dset_id)
 
   hid_t     H5Dget_space(hid_t dset_id)
+  herr_t    H5Dget_space_status(hid_t dset_id, H5D_space_status_t *status)
   hid_t     H5Dget_type(hid_t dset_id)
   hid_t     H5Dget_create_plist(hid_t dataset_id)
+  
+  haddr_t   H5Dget_offset(hid_t dset_id)
+  hsize_t   H5Dget_storage_size(hid_t dset_id)
 
   herr_t    H5Dread(hid_t dset_id, hid_t mem_type_id, hid_t mem_space_id,
                   hid_t file_space_id, hid_t plist_id, void *buf)
-  herr_t    H5Dwrite(hid_t dset_id, hid_t mem_type, hid_t mem_space, hid_t file_space, hid_t xfer_plist, void* buf)
+  herr_t    H5Dwrite(hid_t dset_id, hid_t mem_type, hid_t mem_space, hid_t 
+                        file_space, hid_t xfer_plist, void* buf)
 
-  herr_t H5Dvlen_reclaim(hid_t type_id, hid_t space_id, hid_t plist_id,
-                         void *buf)
+  herr_t    H5Dextend(hid_t dataset_id, hsize_t *size)
+
+  # These are not for the external API
+  herr_t    H5Dfill(void *fill, hid_t fill_type_id, void *buf, 
+                    hid_t buf_type_id, hid_t space_id  )
+  herr_t    H5Dvlen_get_buf_size(hid_t dset_id, hid_t type_id, hid_t space_id, hsize_t *size)
+  herr_t    H5Dvlen_reclaim(hid_t type_id, hid_t space_id, hid_t plist, void *buf)
+  ctypedef  herr_t (*H5D_operator_t)(void *elem, hid_t type_id, unsigned ndim,
+				    hsize_t *point, void *operator_data)
+  herr_t    H5Diterate(void *buf, hid_t type_id, hid_t space_id, 
+                        H5D_operator_t operator, void* operator_data)
+
+
+
 

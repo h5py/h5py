@@ -24,12 +24,12 @@
 
 # Pyrex compile-time imports
 from defs_c   cimport malloc, free
-from h5  cimport herr_t, hid_t, size_t, hsize_t, htri_t
+from h5  cimport herr_t, hid_t, size_t, hsize_t, htri_t, haddr_t
 from h5s cimport H5Sclose, H5S_ALL, H5S_UNLIMITED
 from h5t cimport H5Tclose
 from h5p cimport H5P_DEFAULT
 from numpy cimport ndarray, import_array, PyArray_DATA
-from utils cimport check_numpy_read, check_numpy_write
+from utils cimport check_numpy_read, check_numpy_write, tuple_to_dims
 
 # Runtime imports
 import h5
@@ -188,6 +188,40 @@ def write(hid_t dset_id, hid_t mspace_id, hid_t fspace_id, ndarray arr_obj, hid_
         if mtype_id:
             H5Tclose(mtype_id)
 
+def extend(hid_t dset_id, object shape):
+    """ (INT dset_id, TUPLE shape)
+
+        Extend the given dataset so it's at least as big as "shape".  Note that
+        the ability to extend a dataset depends on how its maximum dimensions
+        were set up when it was created. See the docstring for the API function
+        h5s.create_simple for more information.
+    """
+    cdef hsize_t* dims
+    cdef int rank
+    cdef hid_t space_id
+    cdef herr_t retval
+    space_id = 0
+    dims = NULL
+
+    try:
+        space_id = get_space(dset_id)
+        rank = h5s.get_simple_extent_ndims(space_id)
+        if len(shape) != rank:
+            raise ValueError("Tuple rank must match dataspace rank %d; got %s" % (rank, repr(shape)))
+
+        dims = tuple_to_dims(shape)
+        if dims == NULL:
+            raise ValueError("Invalid tuple supplied: %s" % repr(shape))
+
+        retval = H5Dextend(dset_id, dims)
+        if retval < 0:
+            raise DatasetError("Failed to extend dataset %d" % dset_id)
+    finally:
+        if space_id != 0:
+            H5Sclose(space_id)
+        if dims != NULL:
+            free(dims)
+
 # === Dataset inspection ======================================================
 
 def get_space(hid_t dset_id):
@@ -201,6 +235,19 @@ def get_space(hid_t dset_id):
     if space_id < 0:
         raise DatasetError("Error retrieving space of dataset %d" % dset_id)
     return space_id
+
+def get_space_status(hid_t dset_id):
+    """ (INT dset_id) => INT space_status_code
+
+        Determine if space has been allocated for a dataset.  Return value is
+        one of SPACE_STATUS_*.
+    """
+    cdef H5D_space_status_t status
+    cdef herr_t retval
+    retval = H5Dget_space_status(dset_id, &status)
+    if retval < 0:
+        raise DatasetError("Error determining allocation status of dataset %d" % dset_id)
+    return <int>status
 
 def get_type(hid_t dset_id):
     """ (INT dset_id) => INT type_id
@@ -225,6 +272,28 @@ def get_create_plist(hid_t dset_id):
     if plist < 0:
         raise DatasetError("Error retrieving creation property list for dataset %d" % dset_id)
     return plist
+
+def get_offset(hid_t dset_id):
+    """ (INT dset_id) => LONG offset
+
+        Get the offset of this dataset in the file, in bytes.
+    """
+    cdef haddr_t retval
+    retval = H5Dget_offset(dset_id)
+    if retval < 0:
+        raise DatasetError("Error determining file offset of dataset %d" % dset_id)
+    return <long long>retval
+
+def get_storage_size(hid_t dset_id):
+    """ (INT dset_id) => LONG storage_size
+
+        Determine the amount of file space required for a dataset.  Note this
+        only counts the space which has actually been allocated; it may even
+        be zero.  Because of this, this function will never raise an exception.
+    """
+    cdef hsize_t retval
+    retval = H5Dget_storage_size(dset_id)
+    return retval
 
 # === Python extensions =======================================================
 

@@ -27,6 +27,7 @@ cdef extern from "hdf5.h":
   # such an unsigned long long type.
   ctypedef long long hsize_t
   ctypedef signed long long hssize_t
+  ctypedef signed long long haddr_t  # I suppose this must be signed as well...
 
   ctypedef struct hvl_t:
     size_t len                 # Length of VL data (in base type units)

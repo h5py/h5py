@@ -14,7 +14,7 @@
 # license is available in the file licenses/hdf5.txt in the distribution
 # root directory.
 
-from defs_c cimport size_t, time_t
+from defs_c cimport size_t, time_t, ssize_t
 from h5 cimport hid_t, hbool_t, herr_t, htri_t, hsize_t, hssize_t, hvl_t
 
 cdef extern from "hdf5.h":
@@ -36,5 +36,8 @@ cdef extern from "hdf5.h":
 
   # --- Reflection ------------------------------------------------------------
   H5I_type_t H5Iget_type(hid_t obj_id)
-  size_t H5Iget_name( hid_t obj_id, char *name, size_t size  )
-
+  ssize_t    H5Iget_name( hid_t obj_id, char *name, size_t size)
+  hid_t      H5Iget_file_id(hid_t obj_id)
+  int        H5Idec_ref(hid_t obj_id)
+  int        H5Iget_ref(hid_t obj_id)
+  int        H5Iinc_ref(hid_t obj_id)

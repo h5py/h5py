@@ -152,7 +152,7 @@ def mount(hid_t loc_id, char* name, hid_t file_id, hid_t plist_id=H5P_DEFAULT):
 def unmount(hid_t loc_id, char* name):
     """ (INT loc_id, STRING name)
 
-        Unmount a file, mounted as "name" under group loc_id
+        Unmount a file, mounted as "name" under group loc_id.
     """
     cdef herr_t retval
     retval = H5Funmount(loc_id, name)

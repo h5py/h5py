@@ -150,7 +150,7 @@ def move(hid_t loc_id, char* current_name, char* new_name, hid_t remote_id=-1):
     if retval < 0:
         raise GroupError('Failed to move %d=>"%s" to %d=>"%s"' % (loc_id, current_name, remote_id, new_name))
 
-# === Member inspection and iteration =========================================
+# === Member inspection =======================================================
 
 def get_num_objs(hid_t loc_id):
     """ (INT loc_id) => INT number_of_objects
@@ -280,6 +280,66 @@ def iterate(hid_t loc_id, char* name, object func, object data=None, int startid
         if len(int_tpl[2]) != 0:
             raise int_tpl[2][0]
         raise GroupError("Error occured during iteration")
+
+def get_linkval(hid_t loc_id, char* name):
+    """ (INT loc_id, STRING name) => STRING link_value
+
+        Retrieve the value of the given symbolic link.
+    """
+    cdef char* value
+    cdef herr_t retval  
+    cdef H5G_stat_t statbuf
+    value = NULL
+
+    retval = H5Gget_objinfo(loc_id, name, 0, &statbuf)
+    if retval < 0:
+        raise GroupError('Can\'t stat "%s" under group %d' % (name, loc_id))
+
+    if statbuf.type != H5G_LINK:
+        raise GroupError('"%s" is not a symbolic link (type is %s)' % (name, OBJ_MAPPER[statbuf.type]))
+
+    value = <char*>malloc(statbuf.linklen+1)
+    retval = H5Gget_linkval(loc_id, name, statbuf.linklen+1, value)
+    if retval < 0:
+        free(value)
+        raise GroupError('Failed to determine link value for "%s"' % name)
+
+    pvalue = value
+    free(value)
+    return pvalue
+
+def set_comment(hid_t loc_id, char* name, char* comment):
+    """ (INT loc_id, STRING name, STRING comment)
+
+        Set the comment on a group member.
+    """
+    cdef herr_t retval
+    retval = H5Gset_comment(loc_id, name, comment)
+    if retval < 0:
+        raise GroupError('Failed to set comment on member "%s" of group %d' % (name, loc_id))
+
+def get_comment(hid_t loc_id, char* name):
+    """ (INT loc_id, STRING name) => STRING comment
+
+        Retrieve the comment for a group member.
+    """
+    cdef int cmnt_len
+    cdef char* cmnt
+    cmnt = NULL
+
+    cmnt_len = H5Gget_comment(loc_id, name, 0, NULL)
+    if cmnt_len < 0:
+        raise GroupError('Failed to get comment for member "%s" of group %d' % (name, loc_id))
+
+    cmnt = <char*>malloc(cmnt_len+1)
+    cmnt_len = H5Gget_comment(loc_id, name, cmnt_len+1, cmnt)
+    if cmnt_len < 0:
+        free(cmnt)
+        raise GroupError('Failed to get comment for member "%s" of group %d' % (name, loc_id))
+
+    p_cmnt = cmnt
+    free(cmnt)
+    return p_cmnt
 
 # === Custom extensions =======================================================
 

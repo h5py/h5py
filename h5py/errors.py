@@ -55,6 +55,8 @@ class FilterError(H5LibraryError):
 class H5TypeError(H5LibraryError):
     pass
 
+class IdentifierError(H5LibraryError):
+    pass
 
 
 
