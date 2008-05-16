@@ -39,6 +39,29 @@ cdef extern from "hdf5.h":
   herr_t H5Pclose(hid_t plist_id)
   htri_t H5Pequal( hid_t id1, hid_t id2  )
 
+  # File creation properties
+  herr_t H5Pget_version(hid_t plist, unsigned int *super_, unsigned int* freelist, 
+                        unsigned int *stab, unsigned int *shhdr)
+  herr_t H5Pset_userblock(hid_t plist, hsize_t size)
+  herr_t H5Pget_userblock(hid_t plist, hsize_t * size)
+  herr_t H5Pset_sizes(hid_t plist, size_t sizeof_addr, size_t sizeof_size)
+  herr_t H5Pget_sizes(hid_t plist, size_t *sizeof_addr, size_t *sizeof_size)
+  herr_t H5Pset_sym_k(hid_t plist, unsigned int ik, unsigned int lk)
+  herr_t H5Pget_sym_k(hid_t plist, unsigned int *ik, unsigned int *lk)
+  herr_t H5Pset_istore_k(hid_t plist, unsigned int ik)
+  herr_t H5Pget_istore_k(hid_t plist, unsigned int *ik  )
+
+  # File access
+  herr_t    H5Pset_fclose_degree(hid_t fapl_id, H5F_close_degree_t fc_degree)
+  herr_t    H5Pget_fclose_degree(hid_t fapl_id, H5F_close_degree_t *fc_degree)
+  herr_t    H5Pset_fapl_core( hid_t fapl_id, size_t increment, hbool_t backing_store)
+  herr_t    H5Pget_fapl_core( hid_t fapl_id, size_t *increment, hbool_t *backing_store)
+  herr_t    H5Pset_fapl_family ( hid_t fapl_id,  hsize_t memb_size, hid_t memb_fapl_id  )
+  herr_t    H5Pget_fapl_family ( hid_t fapl_id, hsize_t *memb_size, hid_t *memb_fapl_id  )
+  herr_t    H5Pset_family_offset ( hid_t fapl_id, hsize_t offset)
+  herr_t    H5Pget_family_offset ( hid_t fapl_id, hsize_t *offset)
+  herr_t    H5Pset_fapl_log(hid_t fapl_id, char *logfile, unsigned int flags, size_t buf_size)
+
   # Dataset creation properties
   herr_t        H5Pset_layout(hid_t plist, H5D_layout_t layout )
   H5D_layout_t  H5Pget_layout(hid_t plist)
@@ -68,10 +91,7 @@ cdef extern from "hdf5.h":
   herr_t        H5Pset_fletcher32(hid_t plist)
   herr_t        H5Pset_shuffle(hid_t plist_id)
   herr_t        H5Pset_szip(hid_t plist, unsigned int options_mask, unsigned int pixels_per_block)
-                # external files not implemented
 
-  # File access
-  herr_t    H5Pset_fclose_degree(hid_t fapl_id, H5F_close_degree_t fc_degree)
 
   # Transfer properties
   herr_t    H5Pset_edc_check(hid_t plist, H5Z_EDC_t check)

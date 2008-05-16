@@ -67,6 +67,7 @@ from utils cimport create_ieee_complex64, create_ieee_complex128,\
 
 # Runtime imports
 import h5
+from h5 import DDict
 from errors import DatatypeError, ConversionError
 import sys
 
@@ -91,11 +92,13 @@ CLASS_MAPPER = {H5T_NO_CLASS: "ERROR", H5T_INTEGER: "INTEGER", H5T_FLOAT: "FLOAT
                 H5T_TIME: "TIME", H5T_STRING: "STRING", H5T_BITFIELD: "BITFIELD",
                 H5T_OPAQUE: "OPAQUE", H5T_COMPOUND: "COMPOUND", H5T_REFERENCE: "REFERENCE",
                 H5T_ENUM: "ENUM", H5T_VLEN: "VLEN", H5T_ARRAY: "ARRAY"}
+CLASS_MAPPER = DDict(CLASS_MAPPER)
 
 # Enumeration H5T_sign_t
 SIGN_NONE   = H5T_SGN_NONE
 SIGN_2      = H5T_SGN_2
 SIGN_MAPPER = {H5T_SGN_NONE: "UNSIGNED", H5T_SGN_2: "SIGNED"}
+SIGN_MAPPER = DDict(SIGN_MAPPER)
 
 # Enumeration H5T_order_t
 ORDER_LE    = H5T_ORDER_LE
@@ -103,7 +106,9 @@ ORDER_BE    = H5T_ORDER_BE
 ORDER_VAX   = H5T_ORDER_VAX
 ORDER_NONE  = H5T_ORDER_NONE
 ORDER_MAPPER = {H5T_ORDER_LE: "LITTLE-ENDIAN", H5T_ORDER_BE: "BIG-ENDIAN",
-                H5T_ORDER_VAX: "VAX MIXED-ENDIAN" }
+                H5T_ORDER_VAX: "VAX MIXED-ENDIAN", H5T_ORDER_NONE: "NONE" }
+ORDER_MAPPER = DDict(ORDER_MAPPER)
+
 if sys.byteorder == "little":    # Custom python addition
     pyORDER_NATIVE = H5T_ORDER_LE
 else:
@@ -177,6 +182,27 @@ def open(hid_t group_id, char* name):
         raise DatatypeError('Failed to open datatype "%s" on group %d' % (name, group_id))
     return retval
 
+def commit(hid_t loc_id, char* name, hid_t type_id):
+    """ (INT group_id, STRING name, INT type_id)
+
+        Commit a transient datatype to a named datatype in a file.
+    """
+    cdef herr_t retval
+    retval = H5Tcommit(loc_id, name, type_id)
+    if retval < 0:
+        raise DatatypeError("Failed to commit datatype %d under group %d with name '%s'" % (type_id, loc_id, name))
+
+def committed(hid_t type_id):
+    """ (INT type_id) => BOOL is_comitted
+
+        Determine if a given type object is named (T) or transient (F).
+    """
+    cdef htri_t retval
+    retval = H5Tcommitted(type_id)
+    if retval < 0:
+        raise DatatypeError("Failed to determine status of datatype %d" % type_id)
+    return bool(retval)
+
 def copy(hid_t type_id):
     """ (INT type_id) => INT new_type_id
 
@@ -189,13 +215,28 @@ def copy(hid_t type_id):
         raise DatatypeError("Failed to copy datatype %d" % type_id)
     return retval
 
-def close(hid_t type_id):
-    " (INT type_id) "
-    
-    cdef herr_t retval
-    retval = H5Tclose(type_id)
+def equal(hid_t typeid_1, hid_t typeid_2):
+    """ (INT typeid_1, INT typeid_2) => BOOL types_are_equal
+
+        Test whether two identifiers point to the same datatype object.  Note
+        this does NOT perform any kind of logical comparison.
+    """
+    cdef htri_t retval
+    retval = H5Tequal(typeid_1, typeid_2)
     if retval < 0:
-        raise DatatypeError("Failed to close datatype %d" % type_id)
+        raise DatatypeError("Failed to test datatypes for equality: %d and %d" % (typeid_1, typeid_2))
+    return bool(retval)
+
+def lock(hid_t type_id):
+    """ (INT type_id)
+
+        Lock a datatype, which makes it immutable and indestructible.  Once
+        locked, it can't be unlocked.
+    """
+    cdef herr_t retval
+    retval = H5Tlock(type_id)
+    if retval < 0:
+        raise DatatypeError("Failed to lock datatype %d" % type_id)
 
 def get_class(hid_t type_id):
     """ (INT type_id) => INT class
@@ -208,6 +249,17 @@ def get_class(hid_t type_id):
     if classtype < 0:
         raise DatatypeError("Failed to determine class of datatype %d" % type_id)
     return classtype
+
+def get_size(hid_t type_id):
+    """ (INT type_id) => INT size
+
+        Determine the total size of a datatype, in bytes.
+    """
+    cdef size_t retval
+    retval = H5Tget_size(type_id)
+    if retval == 0:
+        raise DatatypeError("Can't determine size of datatype %d (got 0)" % type_id)
+    return retval
 
 def get_super(hid_t type_id):
     """ (INT type_id) => INT super_type_id
@@ -233,41 +285,18 @@ def detect_class(hid_t type_id, int classtype):
         raise DatatypeError("Couldn't inspect datatype %d for class %s" % (type_id, str(classtype)))
     return bool(retval)
 
-def commit(hid_t loc_id, char* name, hid_t type_id):
-    """ (INT group_id, STRING name, INT type_id)
 
-        Commit a transient datatype to a named datatype in a file.
-    """
+def close(hid_t type_id):
+    " (INT type_id) "
+    
     cdef herr_t retval
-    retval = H5Tcommit(loc_id, name, type_id)
+    retval = H5Tclose(type_id)
     if retval < 0:
-        raise DatatypeError("Failed to commit datatype %d under group %d with name '%s'" % (type_id, loc_id, name))
-
-def committed(hid_t type_id):
-    """ (INT type_id) => BOOL is_comitted
-
-        Determine if a given type object is named (T) or transient (F).
-    """
-    cdef htri_t retval
-    retval = H5Tcommitted(type_id)
-    if retval < 0:
-        raise DatatypeError("Failed to determine status of datatype %d" % type_id)
-    return bool(retval)
+        raise DatatypeError("Failed to close datatype %d" % type_id)
 
 # === Atomic datatype operations ==============================================
 #     H5Tget_size, H5Tset_size, H5Tget_order, H5Tset_order, H5Tget_precision, \
 #     H5Tset_precision, H5Tget_offset, H5Tset_offset, H5Tget_sign, H5Tset_sign
-
-def get_size(hid_t type_id):
-    """ (INT type_id) => INT size_in_bytes
-
-        Obtain the total size of the datatype in bytes.
-    """
-    cdef size_t retval
-    retval = H5Tget_size(type_id)
-    if retval == 0:
-        raise DatatypeError("Failed to get size of datatype %d" % type_id)
-    return retval
 
 def set_size(hid_t type_id, size_t size):
     """ (INT type_id, INT size)

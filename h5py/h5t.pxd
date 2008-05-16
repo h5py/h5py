@@ -52,6 +52,12 @@ cdef extern from "hdf5.h":
     H5T_SGN_2            = 1,   # two's complement
     H5T_NSGN             = 2    # this must be last!
 
+  # Atomic datatype padding
+  cdef enum H5T_pad_t:
+    H5T_PAD_ZERO        = 0,
+    H5T_PAD_ONE         = 1,
+    H5T_PAD_BACKGROUND  = 2
+
   # HDF5 type classes
   cdef enum H5T_class_t:
     H5T_NO_CLASS         = -1,  # error
@@ -123,25 +129,36 @@ cdef extern from "hdf5.h":
   herr_t        H5Tcommit(hid_t loc_id, char* name, hid_t type)
   htri_t        H5Tcommitted(hid_t type)
   hid_t         H5Tcopy(hid_t type_id)
+  htri_t        H5Tequal(hid_t type_id1, hid_t type_id2  )
+  herr_t        H5Tlock(hid_t type_id  )
   H5T_class_t   H5Tget_class(hid_t type_id)
+  size_t        H5Tget_size(hid_t type_id  )
   hid_t         H5Tget_super(hid_t type)
   htri_t        H5Tdetect_class(hid_t type_id, H5T_class_t dtype_class)
   herr_t        H5Tclose(hid_t type_id)
-  herr_t        H5Tconvert(hid_t src_id, hid_t dst_id, size_t nelmts, void *buf, void *background, hid_t plist_id  )
+
+  # Not for public API
+  #hid_t         H5Tget_native_type(hid_t type_id, H5T_direction_t direction)
+  herr_t        H5Tconvert(hid_t src_id, hid_t dst_id, size_t nelmts, void *buf, void *background, hid_t plist_id)
 
   # Atomic datatypes
-  size_t        H5Tget_size(hid_t type_id)
   herr_t        H5Tset_size(hid_t type_id, size_t size)
+
   H5T_order_t   H5Tget_order(hid_t type_id)
   herr_t        H5Tset_order(hid_t type_id, H5T_order_t order)
+
   hsize_t       H5Tget_precision(hid_t type_id)
   herr_t        H5Tset_precision(hid_t type_id, size_t prec)
+
   int           H5Tget_offset(hid_t type_id)
   herr_t        H5Tset_offset(hid_t type_id, size_t offset)
-                # missing: get_pad
-                # missing: set_pad
+
+  herr_t        H5Tget_pad(hid_t type_id, H5T_pad_t * lsb, H5T_pad_t * msb  )
+  herr_t        H5Tset_pad(hid_t type_id, H5T_pad_t lsb, H5T_pad_t msb  )
+
   H5T_sign_t    H5Tget_sign(hid_t type_id)
   herr_t        H5Tset_sign(hid_t type_id, H5T_sign_t sign)
+
                 # missing: bunch of floating-point crap nobody uses
                 # missing: g/s strpad
 
