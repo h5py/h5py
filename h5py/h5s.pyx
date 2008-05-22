@@ -20,7 +20,7 @@
 
 # Pyrex compile-time imports
 from defs_c   cimport malloc, free
-from h5  cimport herr_t, hid_t, size_t, hsize_t
+from h5  cimport herr_t, htri_t, hid_t, size_t, hsize_t, hssize_t
 from utils cimport tuple_to_dims, dims_to_tuple
 
 # Runtime imports
@@ -83,6 +83,19 @@ def create(int class_code):
         raise DataspaceError("Failed to create dataspace of class %d" %d)
     return retval
 
+def copy(hid_t space_id):
+    """ (INT space_id) => INT new_space_id
+
+        Create a new copy of an existing dataspace.
+    """
+    cdef hid_t retval
+    retval = H5Scopy(space_id)
+    if retval < 0:
+        raise DataspaceError("Failed to copy dataspace %d" % space_id)
+    return retval
+
+# === Simple dataspaces =======================================================
+
 def create_simple(object dims_tpl, object max_dims_tpl=None):
     """ (TUPLE dims_tpl, TUPLE max_dims_tpl) => INT new_space_id
 
@@ -124,6 +137,59 @@ def create_simple(object dims_tpl, object max_dims_tpl=None):
             free(max_dims)
 
     return space_id
+
+def is_simple(hid_t space_id):
+    """ (INT space_id) => BOOL is_simple
+
+        Determine if an existing dataspace is "simple".  This function is
+        rather silly, as all HDF5 dataspaces are (currently) simple.
+    """
+    cdef htri_t retval
+    retval = H5Sis_simple(space_id)
+    if retval < 0:
+        raise DataspaceError("Failed to determine simplicity of dataspace %d" % space_id)
+    return bool(retval)
+
+def offset_simple(hid_t space_id, object offset):
+    """ (INT space_id, TUPLE offset or None)
+
+        Set the offset of a dataspace.  The length of the given tuple must
+        match the rank of the dataspace; ValueError will be raised otherwise.
+        If None is provided instead of a tuple, the offsets on all axes 
+        will be set to 0.
+    """
+    cdef htri_t simple
+    cdef int rank
+    cdef hssize_t *dims
+    cdef herr_t retval
+    dims = NULL
+
+    try:
+        simple = H5Sis_simple(space_id)
+        if simple < 0:
+            raise DataspaceError("%d is not a simple dataspace" % space_id)
+
+        if offset is None:
+            dims = NULL
+        else:
+            rank = H5Sget_simple_extent_ndims(space_id)
+            if rank < 0:
+                raise DataspaceError("Can't determine rank of dataspace %d" % space_id)
+
+            if len(offset) != rank:
+                raise ValueError("Length of offset tuple must match dataspace rank %d (got %s)" % (rank, repr(offset)))
+
+            # why the hell are they using hssize_t?
+            dims = <hssize_t*>malloc(sizeof(hssize_t)*rank)
+            for i from 0<=i<rank:
+                dims[i] = offset[i]
+
+        retval = H5Soffset_simple(space_id, dims)
+        if retval < 0:
+            raise DataspaceError("Failed to set offset on dataspace %d" % space_id)
+    finally:
+        if dims != NULL:
+            free(dims)
 
 def get_simple_extent_ndims(hid_t space_id):
     """ (INT space_id) => INT rank
@@ -171,6 +237,17 @@ def get_simple_extent_dims(hid_t space_id, int maxdims=0):
 
     return dims_tpl
     
+def get_simple_extent_npoints(hid_t space_id):
+    """ (INT space_id) => LONG npoints
+
+        Determine the total number of elements in a dataspace.
+    """
+    cdef hssize_t retval
+    retval = H5Sget_simple_extent_npoints(space_id)
+    if retval < 0:
+        raise DataspaceError("Failed to determine number of points in dataspace %d" % space_id)
+    return retval
+
 def get_simple_extent_type(hid_t space_id):
     """ (INT space_id) => INT class_code
 

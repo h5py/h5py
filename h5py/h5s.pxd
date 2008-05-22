@@ -54,17 +54,51 @@ cdef extern from "hdf5.h":
     H5S_SEL_N		= 4	        #/*THIS MUST BE LAST		*/
 
 
-  # --- Dataspace operations --------------------------------------------------
-  hid_t H5Screate(H5S_class_t type)
-  hid_t H5Screate_simple(int rank, hsize_t dims[], hsize_t maxdims[])
-  int H5Sget_simple_extent_ndims(hid_t space_id)
-  int H5Sget_simple_extent_dims(hid_t space_id, hsize_t dims[],
-                                hsize_t maxdims[])
+  # --- Basic operations ------------------------------------------------------
+  hid_t     H5Screate(H5S_class_t type)
+  hid_t     H5Scopy(hid_t space_id  )
+  herr_t    H5Sclose(hid_t space_id)
+
+  # --- Simple dataspace operations -------------------------------------------
+  hid_t     H5Screate_simple(int rank, hsize_t dims[], hsize_t maxdims[])
+  htri_t    H5Sis_simple(hid_t space_id)
+  herr_t    H5Soffset_simple(hid_t space_id, hssize_t *offset  )
+
+  int       H5Sget_simple_extent_ndims(hid_t space_id)
+  int       H5Sget_simple_extent_dims(hid_t space_id, hsize_t dims[], hsize_t maxdims[])
+  hssize_t  H5Sget_simple_extent_npoints(hid_t space_id)
+  H5S_class_t H5Sget_simple_extent_type(hid_t space_id)
+
+  # --- Extents ---------------------------------------------------------------
+  herr_t    H5Sextent_copy(hid_t dest_space_id, hid_t source_space_id  )
+  herr_t    H5Sset_extent_simple(hid_t space_id, int rank, 
+                hsize_t *current_size, hsize_t *maximum_size  )
+  herr_t    H5Sset_extent_none(hid_t space_id)
+
+  # --- Dataspace selection ---------------------------------------------------
+  H5S_sel_type H5Sget_select_type(hid_t space_id)
+  hssize_t  H5Sget_select_npoints(hid_t space_id)
+  hssize_t  H5Sget_select_hyper_nblocks(hid_t space_id  )
+  herr_t    H5Sget_select_hyper_blocklist(hid_t space_id, 
+                hsize_t startblock, hsize_t numblocks, hsize_t *buf  )
+  hssize_t  H5Sget_select_elem_npoints(hid_t space_id  )
+  herr_t    H5Sget_select_elem_pointlist(hid_t space_id, hsize_t startpoint, 
+                hsize_t numpoints, hsize_t *buf)
+  herr_t    H5Sget_select_bounds(hid_t space_id, hsize_t *start, hsize_t *end)
+
+  herr_t    H5Sselect_elements(hid_t space_id, H5S_seloper_t op, 
+                size_t num_elements, hsize_t *coord[] )
+  herr_t    H5Sselect_all(hid_t space_id)
+  herr_t    H5Sselect_none(hid_t space_id)
+  htri_t    H5Sselect_valid(hid_t space_id)
+
   herr_t H5Sselect_hyperslab(hid_t space_id, H5S_seloper_t op,
                              hsize_t start[], hsize_t _stride[],
                              hsize_t count[], hsize_t _block[])
-  herr_t H5Sclose(hid_t space_id)
-  herr_t H5Sget_select_bounds(hid_t space_id, hsize_t *start, hsize_t *end)
-  herr_t H5Sselect_none(hid_t space_id)
-  H5S_class_t H5Sget_simple_extent_type(hid_t space_id)
+
+
+
+
+
+
 
