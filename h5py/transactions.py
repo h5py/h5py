@@ -113,6 +113,8 @@ class TransactionManager(object):
         """
         self.stack = None
         self.ptr = None
+        if max_size < 1:
+            raise ValueError("Stack size must be at least 1 (got %d)" % max_size)
         self.max_size = max_size
 
     def _check(self):
@@ -225,8 +227,47 @@ class TransactionManager(object):
 
 
 
+class LockManger(object):
 
+    """
+        Trivial locking class.
+    """
+
+    def __init__(self):
+        self.locks = set()
+
+    def is_locked(self, item):
+        return item in self.locks
+
+    def lock(self, item):
+
+        if item in self.locks:
+            return False
+        self.locks.add(item)
+        return True
+
+    def release(self, item):
         
+        if not item in self.locks:
+            raise ValueError("%s is not locked" % item)
+        self.locks.remove(item)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
