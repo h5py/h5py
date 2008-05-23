@@ -48,6 +48,7 @@ import cmd
 import random
 import string
 import numpy
+import posixpath
 
 import h5f
 import h5g
@@ -57,6 +58,122 @@ import h5t
 import h5a
 import h5p
 from errors import H5Error
+
+from transactions import Action, TransactionManager, TransactionStateError
+
+# === Base classes / context manager support ==================================
+
+class NamedObject(object):
+
+    """ Base class for objects which reside in HDF5 files.  Among other things,
+        any named object is a valid context manager for Python's "with"
+        statement, capable of tracking transactions in HDF5 files.
+    """
+
+    def __init__(self):
+        self.manager = None
+        self._auto = False
+
+    def __enter__(self):
+        """ Put the object in transaction mode.  If no transaction manager is
+            currently associated with the object, create one.
+
+            Please don't call this manually.
+        """
+        stat = h5g.get_objinfo(self.id, '.')
+        token = (stat.fileno, stat.objno)
+
+        if self.manager is None:
+            self.manager = TransactionManager()
+        
+        self.manager.lock(token)
+        self._auto = True
+        return self.manager
+
+    def __exit__(self, type_, value, tb):
+        """ Exit transaction mode.
+
+            Please don't call this manually.
+        """
+        if type_ is None:
+            self.manager.commit()
+        else:
+            self.manager.rollback()
+
+        stat = h5g.get_objinfo(self.id, '.')
+        token = (stat.fileno, stat.objno)
+
+        self.manager.unlock(token)
+        self.manager = None
+        self._auto = False
+
+    def begin_transaction(self, manager=None):
+        """ Manually put the object into "transaction" mode.  Every API call 
+            which can affect the underlying HDF5 state is recorded, and can 
+            be reversed.  If the object is already in transaction mode, raises
+            TransactionStateError.
+
+            The return value is a TransactionManager instance, which provides 
+            methods like commit(), rollback(), etc.
+        
+            You can optionally use an existing transaction manager.  This lets 
+            you track changes across multiple objects, with automatic 
+            interlocking to prevent double access to HDF5 entities through 
+            multiple Python objects.
+
+            As an alternative to manually beginning and ending transactions,
+            you can use any object of this class as the context manager in a 
+            Python "with" statement.
+        """
+        if self._auto:
+            raise TransactionStateError('No manual control inside a "with" block.')
+
+        if self.manager is not None:
+            raise TransactionStateError("Transaction already in progress.")
+
+        self.manager = manager
+        return self.__enter__()
+
+    def end_transaction(self):
+        """ Take the object out of "transaction" mode.  Implicitly commits any
+            pending actions.  Raises TransactionStateError if the object is not
+            in transaction mode.
+        """
+        if self._auto:
+            raise TransactionStateError('No manual control inside a "with" block.')
+        if self.manager is None:
+            raise TransactionStateError("No transaction in progress.")
+
+        self.__exit__(None, None, None)
+
+class WithWrapper(object):
+
+    """ Create a single context manager out of many named objects, all sharing
+        the same transaction manager.
+    """
+
+    def __init__(self, *objs):
+        self.objs = objs
+
+    def __enter__(self):
+        mgr = TransactionManger
+
+        for obj in objs:
+            obj.manager = mgr
+            obj.__enter__()
+            
+        return mgr
+
+    def __exit__(self, type_, value, tb):
+        return any(obj.__exit__(type_, value, tb) for obj in objs)
+
+def many(*args):
+    """ Enables tracking of multiple named objects in Python's "with" statement.
+        with_many(obj1, obj2, ...)
+    """
+    c_mgr = WithWrapper(*args)
+    return c_mgr
+
 
 # === Main classes (Dataset/Group/File) =======================================
 

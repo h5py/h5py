@@ -6,17 +6,7 @@ class TransactionError(StandardError):
     pass
 
 class TransactionStateError(TransactionError):
-    """ Illegal state change inside an Action object.
-    """
-    pass
-
-class NotTransactableError(TransactionError):
-    """ A non-transactable operation was attempted while in transaction mode.
-    """
-    pass
-
-class DeadTransactionError(TransactionError):
-    """ A transactable operation was attempted while not in transaction mode.
+    """ Attempted an operation which doesn't make sense in the current context.
     """
     pass
 
@@ -59,6 +49,9 @@ class Action(object):
             do:     Perform some kind of atomic operation
             undo:   Completely reverse the effects of the "do" operation.
             commit: Clean up any temporary data created by the "do" operation.
+
+            Any return value from the callable is ignored.  It must not raise
+            an exception.
 
         """
         self.name = name
@@ -106,68 +99,114 @@ class Action(object):
 
 class TransactionManager(object):
 
-    active = property(lambda self: self.stack is not None)
+    """ Provides locking and transaction support, via a stack of Action objects.
+ 
+        Objects of this class are designed to manage access to a set of
+        resources, manipulated by calling functions or bound methods.  It
+        implements two conceptually different interfaces:
+
+        1. Locking
+        Since a single transaction manager can process commands affecting a
+        variety of objects, you can "lock" an object by providing an identifing
+        token (which could even be the object itself) via the function lock().
+        Attempting to lock an object twice will raise ValueError.
+
+        2. Transactions
+        Transactions are implemented via a stack of Action objects.  Add actions
+        to the manager via do().  Each action is immediately performed when
+        this method is called.  At any time you can call commit(), to purge the
+        stack, or rollback() to reverse all changes up to the last commit().
+        Additionally, by calling undo() and redo(), you can manually walk the
+        object through the entire stack of transaction states.
+
+    """
+
+    # Pointer states:
+    # None:     uninitialized
+    # 0:        off the bottom of the stack
+    # <double>: index of an action on the stack
 
     def __init__(self, max_size=None):
-        """ Create a new transaction manager, inactive by default.
+        """ Create a new transaction manager.  The optional max_size keyword
+            indicates the maximum allowed stack size.  When this limit is 
+            reached, the oldest action is committed and discarded when a new
+            action is added.
         """
-        self.stack = None
+        self.stack = {}
+        self.locks = set()
         self.ptr = None
-        if max_size < 1:
+        if max_size is not None and max_size < 1:
             raise ValueError("Stack size must be at least 1 (got %d)" % max_size)
         self.max_size = max_size
 
-    def _check(self):
-        if not self.active:
-            raise DeadTransactionError("No current transaction.")
+    # --- Locking code --------------------------------------------------------
 
-    def begin(self):
-        """ Begin a new transaction.  Implicitly commits any pending actions.
+    def is_locked(self, item):
+        """ Determine if this resource is currently locked.
         """
-        if self.active:
-            self.commit()
-        self.stack = {}
-        self.ptr = None
+        return item in self.locks
+
+    def lock(self, item):
+        """ Lock a resource.  Raises ValueError if it's already locked.
+        """
+        if item in self.locks:
+            raise ValueError('%s is already locked for transactions.' % str(item))
+        self.locks.add(item)
+
+    def unlock(self, item):
+        """ Release a resource.  Raises ValueError if it's already locked.
+        """
+        if not item in self.locks:
+            raise ValueError("%s is not locked for transactions." % item)
+        self.locks.remove(item)
+
+    # --- Transactions code ---------------------------------------------------
 
     def commit(self):
-        """ Commit every action which is in the "done" state, and destroy
+        """ Commit every action which is in the "done" state, and reset
             the stack.
         """ 
-        self._check()
         for t in sorted(self.stack):
             action = self.stack[t]
             if action.state == Action.DONE:
                 action.commit()
-        self.stack = None
+        self.stack = {}
         self.ptr = None
     
     def rollback(self):
-        """ Undo every action which is in the "done" state, and destroy
+        """ Undo every action which is in the "done" state, and reset
             the stack.
         """
-        self._check()
         for t in sorted(self.stack, reverse=True):
             action = self.stack[t]
             if action.state == Action.DONE:
                 action.undo()
-        self.stack = None
+        self.stack = {}
         self.ptr = None
         
-    def at_top(self):
-        """ Check if the pointer is at the top of the stack.
+    def can_redo(self):
+        """ Determine if the stack/pointer system is capable of redoing the
+            next action on the stack.  Fails if the pointer is None or at
+            the top of the stack.
         """
-        self._check()
-        if len(self.stack) == 0 or self.ptr == max(self.stack):
-            return True
-        return False
+        if self.ptr is None:
+            return False
+        assert self.ptr in self.stack or self.ptr == 0
 
-    def at_bottom(self):
-        """ Check if the pointer is at the bottom of the stack.
+        if self.ptr == max(self.stack):
+            return False
+        return True
+
+    def can_undo(self):
+        """ Determine if the stack/pointer system is capable of undoing the
+            action currently pointed at.  Fails if the pointer is None, or
+            off the bottom of the stack.
         """
-        self._check()
-        if len(self.stack) == 0 or self.ptr == min(self.stack):
-            return True
-        return False
+        if self.ptr is None or self.ptr == 0:
+            return False
+        assert self.ptr in self.stack
+
+        return True
 
     def do(self, action):
         """ Perform the given action and add it to the stack.  Implicitly
@@ -176,16 +215,17 @@ class TransactionManager(object):
             max_size, commit and discard the oldest action.
 
             The action's do() method is called before any modification is 
-            made to the stack.
+            made to the stack; if it raises an exception this won't trash
+            the object.
         """
-        self._check()
         action.do()
 
-        if self.ptr is not None:
-            for t in sorted(self.stack):
-                if t > self.ptr:
-                    assert self.stack[t].state == Action.READY
-                    del self.stack[t]
+        assert len(self.stack) == 0 or self.ptr in self.stack
+
+        for t in sorted(self.stack):
+            if t > self.ptr:
+                assert self.stack[t].state == Action.READY
+                del self.stack[t]
 
         key = time.time()
         self.stack[key] = action
@@ -199,74 +239,29 @@ class TransactionManager(object):
     def undo(self):
         """ Undo the action targeted by the current pointer, and move the
             pointer down one level on the stack.  Does nothing if the pointer 
-            is None or off the bottom of the stack.
+            system isn't ready for an Undo.
         """
-        self._check()
-        if self.ptr is not None and self.ptr >= 0:
+        if self.can_undo():
             self.stack[self.ptr].undo()
             keys = sorted(self.stack)
             idx = keys.index(self.ptr)
-            if self.at_bottom():
-                self.ptr = -1
+            if idx == 0:
+                self.ptr = 0
             else:
                 self.ptr = keys[idx-1]
 
     def redo(self):
         """ Increment the pointer and redo the resulting action.  Does nothing
-            if the pointer is already at the top of the stack, or is None.
+            if the pointer system isn't ready for a Redo.
         """
-        self._check()
-        if not self.at_top() and self.ptr is not None:
+        if self.can_redo():
             keys = sorted(self.stack)
-            if self.ptr < 0:
+            if self.ptr == 0:
                 self.ptr = min(keys)
             else:
                 idx = keys.index(self.ptr)
                 self.ptr = keys[idx+1]
             self.stack[self.ptr].do()
-
-
-
-class LockManger(object):
-
-    """
-        Trivial locking class.
-    """
-
-    def __init__(self):
-        self.locks = set()
-
-    def is_locked(self, item):
-        return item in self.locks
-
-    def lock(self, item):
-
-        if item in self.locks:
-            return False
-        self.locks.add(item)
-        return True
-
-    def release(self, item):
-        
-        if not item in self.locks:
-            raise ValueError("%s is not locked" % item)
-        self.locks.remove(item)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
