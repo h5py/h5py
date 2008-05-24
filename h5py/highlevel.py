@@ -48,7 +48,6 @@ import cmd
 import random
 import string
 import numpy
-import posixpath
 
 import h5f
 import h5g
@@ -59,226 +58,60 @@ import h5a
 import h5p
 from errors import H5Error
 
-from transactions import Action, TransactionManager, TransactionStateError, \
-                         IllegalTransactionError
-
-def tempname(prefix=""):
-    return prefix+"".join(random.sample(string.ascii_letters))
-
-# === Base classes / context manager support ==================================
-
-class BaseNamed(object):
-
-    """ Base class for objects which reside in HDF5 files.  Among other things,
-        any named object is a valid context manager for Python's "with"
-        statement, capable of tracking transactions in HDF5 files.
-    """
-
-    def _set_manager(self, val):
-        self._manager = val
-        if hasattr(self, 'attrs'):
-            self.attrs.manager = val
-    
-    def _get_manager(self):
-        return self._manager
-
-    manager = property(_get_manager, _set_manager)
-
-    def __init__(self):
-        self.manager = None
-        self._tr_active = False  # transaction active?
-
-    def __enter__(self):
-        """ Put the object in transaction mode.  If no transaction manager is
-            currently associated with the object, create one.
-
-            Please don't call this manually.
-        """
-        if self._tr_active:
-            raise TransactionStateError("A transaction is already in progress.")
-
-        stat = h5g.get_objinfo(self.id, '.')
-        token = (stat.fileno, stat.objno)
-
-        if self.manager is None:
-            self.manager = TransactionManager()
-        
-        self.manager.lock(token)
-        self._tr_active = True
-        return self.manager
-
-    def __exit__(self, type_, value, tb):
-        """ Exit transaction mode.  Commits or rolls back, depending on the
-            given exception state, but does not destroy the transaction manager.
-
-            Please don't call this manually.
-        """
-        if not self._tr_active:
-            raise TransactionStateError("Exited transaction mode with no transaction in progress")
-
-        if type_ is None:
-            self.manager.commit()
-        else:
-            self.manager.rollback()
-
-        stat = h5g.get_objinfo(self.id, '.')
-        token = (stat.fileno, stat.objno)
-
-        self.manager.unlock(token)
-        self._tr_active = False
-
-    def begin_transaction(self, manager=None):
-        """ Manually put the object into "transaction" mode.  Every API call 
-            which can affect the underlying HDF5 state is recorded, and can 
-            be reversed.  If the object is already in transaction mode, raises
-            TransactionStateError.
-
-            The return value is a TransactionManager instance, which provides 
-            methods like commit(), rollback(), etc.
-        
-            You can optionally use an existing transaction manager.  This lets 
-            you track changes across multiple objects, with automatic 
-            interlocking to prevent double access to HDF5 entities through 
-            multiple Python objects.
-
-            As an alternative to manually beginning and ending transactions,
-            you can use any object of this class as the context manager in a 
-            Python "with" statement.
-        """
-        self.manager = manager
-        return self.__enter__()
-
-    def end_transaction(self):
-        """ Take the object out of "transaction" mode.  Implicitly commits any
-            pending actions.  Raises TransactionStateError if the object is not
-            in transaction mode.  Never call this inside a "with" block.
-        """
-        self.__exit__(None, None, None)
-
-class WithWrapper(object):
-
-    """ Create a single context manager out of many named objects, all sharing
-        the same transaction manager.
-    """
-
-    def __init__(self, *objs):
-        self.objs = objs
-
-    def __enter__(self):
-        mgr = TransactionManger
-
-        for obj in objs:
-            obj.manager = mgr
-            obj.__enter__()
-            
-        return mgr
-
-    def __exit__(self, type_, value, tb):
-        return all(obj.__exit__(type_, value, tb) for obj in objs)
-
-def many(*args):
-    """ Enables tracking of multiple named objects in Python's "with" statement.
-        with_many(obj1, obj2, ...)
-    """
-    c_mgr = WithWrapper(*args)
-    return c_mgr
-
-
 # === Main classes (Dataset/Group/File) =======================================
 
-class Dataset(BaseNamed):
+class Dataset(object):
 
     """ High-level interface to an HDF5 dataset
 
-        TODO: rework this
+        A Dataset object is designed to permit "Numpy-like" access to the 
+        underlying HDF5 dataset.  It supports array-style indexing, which 
+        returns Numpy ndarrays.  For the case of arrays containing compound
+        data, it also allows a "compound mask" to be set, allowing you to 
+        only extract elements which match names in the mask.  The underlying
+        array can also be written to using the indexing syntax.
+
+        HDF5 attribute access is provided through the property obj.attrs.  See
+        the AttributeManager class documentation for more information.
+
+        Read-only properties:
+        names       Compound fields defined in this object (tuple or None)
+        names_mask  Current mask controlling compound access (tuple or None)
+        shape       Tuple containing array dimensions
+        dtype       A Numpy dtype representing the array data-type.
+
+        Writable properties:
+        force_native    
+            Returned data will be automatically converted
+            to the native platform byte order
+
+        force_string_length     
+            Variable-length strings will be converted to
+            Numpy strings of this length.
     """
 
     # --- Properties (Dataset) ------------------------------------------------
 
-    def _get_byteorder(self):
-        return self._byteorder
-
-    def _set_byteorder(self, val):
-        valid = [None, '<', '>', '=']
-        if not val in valid:
-            raise ValueError("Byte order must be one of %s (got %s)" % (", ".join(valid), str(val)))
-
-        if not self._tr_active:
-            self._byteorder = val
-        else:
-            backup = self._byteorder
-            action = Action("Set byte order to " + str(val), 
-                    (setattr, (self, '_byteorder', val), {}),
-                    (setattr, (self, '_byteorder', backup), ()),
-                    None)
-            self.manager.do(action)
-
-    def _get_string_length(self):
-        return self._string_length
+    def _set_native(self, val):
+        self._force_native = bool(val) if val is not None else None
 
     def _set_string_length(self, val):
-        if val is not None and val < 1:
-            raise ValueError("String length must be at least 1.")
+        self._string_length = val
 
-        if not self._tr_active:
-            self._string_length = val
-        else:
-            backup = self._string_length
-            action = Action("Set string length to "+str(val),
-                    (setattr, (self, '_string_length', val), {}),
-                    (setattr, (self, '_string_length', backup), ()),
-                    None)
+    names_mask = property(lambda self: self._fields)
+    names = property(lambda self: self.dtype.names)
 
-    def _get_names_mask(self):
-        return self._fields
-
-    def _set_names_mask(self, iterable):
-        """ Determine which fields of a compound datatype will be read. Only 
-            compound fields whose names match those provided by the given 
-            iterable will be read.  Any given names which do not exist in the
-            HDF5 compound type are simply ignored.
-
-            If the argument is a single string, it will be correctly processed
-            (i.e. not exploded).
-        """
-        if iterable == None:
-            val = None
-        else:
-            if isinstance(iterable, basestring):
-                iterable = (iterable,)    # not 'i','t','e','r','a','b','l','e'
-            val = tuple(iterable)
-
-        if not self._tr_active:
-            self._fields = val
-        else:
-            backup = self._string_length
-            action = Action("Set names mask to \"%s\"" % str(val),
-                    (setattr, (self, '_fields', val), {}),
-                    (setattr, (self, '_fields', backup), ()),
-                    None)
-
-
-    #: Byte order for data read/written by this object; can be None, <, >, =.
-    byteorder = property(_get_byteorder, _set_byteorder)
-
-    #: Convert vlen strings to fixed-width: None or >= 1.
-    string_length = property(_get_string_length, _set_string_length)
-
-    #: Restrict I/0 to these fields.  None, iterable of strings, or single string.
-    names_mask = property(_get_names_mask, _set_names_mask)
-
-    #: Numpy-style shape tuple for this dataset. Readonly.
     shape = property(lambda self: h5d.py_shape(self.id))
-
-    #: Numpy dtype representing dataset's type. Readonly.
     dtype = property(lambda self: h5d.py_dtype(self.id))
 
-    #: Attribute manager; see AttributeManager docstring.
+    force_native = property(lambda self: self._force_native, _set_native)
+    force_string_length = property(lambda self: self._string_length, _set_string_length)
+
     attrs = property(lambda self: self._attrs)
 
     # --- Public interface (Dataset) ------------------------------------------
 
-    def __init__(self, group, name, create=False,
+    def __init__(self, group, name, create=False, force=False,
                     data=None, dtype=None, shape=None, 
                     chunks=None, compression=None, shuffle=False, fletcher32=False):
         """ Create a new Dataset object.  There are two modes of operation:
@@ -294,7 +127,11 @@ class Dataset(BaseNamed):
                 "dtype" (Numpy dtype object) and "shape" (tuple of dimensions).
                 Chunks/compression/shuffle/fletcher32 can also be specified.
 
-                If a dataset of the same name already exists, creation fails.
+                By default, creating a dataset will fail if another of the
+                same name already exists. If you specify force=True, any 
+                existing dataset will be unlinked, and the new one created.
+                This is as close as possible to an atomic operation; if the 
+                dataset creation fails, the old dataset isn't destroyed.
 
             Creation keywords (* is default):
 
@@ -303,33 +140,32 @@ class Dataset(BaseNamed):
             shuffle:       Use the shuffle filter? (requires compression) T/F*
             fletcher32:    Enable Fletcher32 error detection? T/F*
         """
-        BaseNamed.__init__(self)
         if create:
-            if not group._tr_active:
+            if force and h5g.py_exists(group.id,name):
+                tmpname = 'h5py_temp_' + ''.join(random.sample(string.ascii_letters, 30))
+                tmpid = h5d.py_create(group.id, tmpname, data, shape, 
+                                    chunks, compression, shuffle, fletcher32)
+                h5g.unlink(group.id, name)
+                h5g.link(group.id, tmpname, name)
+                h5g.unlink(group.id, tmpname)
+
+            else:
                 self.id = h5d.py_create(group.id, name, data, shape, 
                                         chunks, compression, shuffle, fletcher32)
-            else:
-                action = Action("Create dataset \"%s\"" % name,
-                        (h5d.py_create, (group.id, name, data, shape, chunks,
-                                         compression, shuffle, fletcher32), {}),
-                        (h5g.unlink, (group.id, name), {}),
-                        None)
-                group.manager.do(action)
-
         else:
             if any((data,dtype,shape,chunks,compression,shuffle,fletcher32)):
                 raise ValueError('You cannot specify keywords when opening a dataset.')
             self.id = h5d.open(group.id, name)
 
-        self._attrs = AttributeManager(self)
         self._fields = None
-        self._byteorder = None
-        self._string_length = None
+        self._attrs = AttributeManager(self)
+        self.force_native = None
+        self.force_string_length = None
 
     def __getitem__(self, *args):
         """ Read a slice from the underlying HDF5 array.  Currently only
             numerical slices are supported; for recarray-style access consider
-            using the names_mask property.
+            using set_names_mask().
         """
         if any( [isinstance(x, basestring) for x in args] ):
             raise TypeError("Slices must be numbers; recarray-style indexing is not yet supported.")
@@ -346,34 +182,36 @@ class Dataset(BaseNamed):
             and the Numpy array's datatype must be convertible to the HDF5
             array's datatype.
         """
-        val = args[-1]
-        slices = args[0:len(args)-1]
-        start, count, stride = _slices_to_tuples(slices)
-        if not self._tr_active:
-            h5d.py_write_slab(self.id, val, start, stride)
+        start, count, stride = _slices_to_tuples(args[0:len(args)-1])
+        h5d.py_write_slab(self.id, args[-1], start, stride)
+
+    def set_names_mask(self, iterable=None):
+        """ Determine which fields of a compound datatype will be read. Only 
+            compound fields whose names match those provided by the given 
+            iterable will be read.  Any given names which do not exist in the
+            HDF5 compound type are simply ignored.
+
+            If the argument is a single string, it will be correctly processed
+            (i.e. not exploded).
+        """
+        if iterable == None:
+            self._fields = None
         else:
-            backup = h5d.py_read_slab(self.id, start, count, stride)
-            action = Action("Write slice",
-                            (h5d.py_write_slab, (self.id, val, start, stride), {}),
-                            (h5d.py_write_slab, (self.id, backup, start, stride), {}),
-                            None )
-            self.manager.do(action)
+            if isinstance(iterable, basestring):
+                iterable = (iterable,)    # not 'i','t','e','r','a','b','l','e'
+            self._fields = tuple(iterable)
 
     def close(self):
         """ Force the HDF5 library to close and free this object.  You 
             shouldn't need to do this in normal operation; HDF5 objects are 
             automatically closed when their Python counterparts are deallocated.
         """
-        if self._tr_active:
-            raise IllegalTransactionError("close() is not a transactable operation.")
         h5d.close(self.id)
 
     def __del__(self):
         try:
-            if self._tr_active:
-                self.manager.commit()
             h5d.close(self.id)
-        except:
+        except H5Error:
             pass
 
     def __str__(self):
@@ -382,7 +220,7 @@ class Dataset(BaseNamed):
     def __repr__(self):
         return self.__str__()
 
-class Group(BaseNamed):
+class Group(object):
     """ Represents an HDF5 group object
 
         Group members are accessed through dictionary-style syntax.  Iterating
@@ -420,17 +258,9 @@ class Group(BaseNamed):
             raising an exception if it doesn't exist.  If "create" is True,
             create a new HDF5 group and link it into the parent group.
         """
-        BaseNamed.__init__(self)
         self.id = 0
         if create:
-            if not parent_object._tr_active:
-                self.id = h5g.create(parent_object.id, name)
-            else:
-                action = Action('Create group "%s"' % name,
-                        (h5g.create, (parent_object.id, name), {}),
-                        (h5g.unlink, (parent_object.id, name), {}),
-                        None)
-                parent_object.manager.do(action)
+            self.id = h5g.create(parent_object.id, name)
         else:
             self.id = h5g.open(parent_object.id, name)
         
@@ -440,10 +270,7 @@ class Group(BaseNamed):
     def __delitem__(self, name):
         """ Unlink a member from the HDF5 group.
         """
-        if not self._tr_active:
-            h5g.unlink(self.id, name)
-        else:
-            raise IllegalTransactionError("Deleting members is not (yet) a transactable operation.")
+        h5g.unlink(self.id, name)
 
     def __setitem__(self, name, obj):
         """ Add the given object to the group.  Here are the rules:
@@ -458,26 +285,22 @@ class Group(BaseNamed):
                 dtype.
         """
         if isinstance(obj, Group) or isinstance(obj, Dataset):
-            objname = h5i.get_name(obj.id)
-            if not self._tr_active:
-                h5g.link(self.id, name, objname, link_type=h5g.LINK_HARD)
-            else:
-                action = Action('Create link "%s"' % name,
-                            (h5g.link, (self.id, name, objname), {}),
-                            (h5g.unlink, (self.id, name), {}),
-                             None )
-                self.manager.do(action)
+            h5g.link(self.id, name, h5i.get_name(obj.id), link_type=h5g.LINK_HARD)
 
-        else:
-            if not isinstance(obj, numpy.ndarray):
-                obj = numpy.array(obj)
-
+        elif isinstance(obj, numpy.ndarray):
             if h5t.py_can_convert_dtype(obj.dtype):
-                # Dataset creation is automatically recorded
                 dset = Dataset(self, name, data=obj, create=True, force=True)
                 dset.close()
             else:
                 raise ValueError("Don't know how to store data of this type in a dataset: " + repr(obj.dtype))
+
+        else:
+            arr = numpy.array(obj)
+            if h5t.py_can_convert_dtype(arr.dtype):
+                dset = Dataset(self, name, data=arr, create=True, force=True)
+                dset.close()
+            else:
+                raise ValueError("Don't know how to store data of this type in a dataset: " + repr(arr.dtype))
 
     def __getitem__(self, name):
         """ Retrive the Group or Dataset object.  If the Dataset is scalar,
@@ -511,15 +334,12 @@ class Group(BaseNamed):
             have to use this, as these objects are automatically closed when
             their Python equivalents are deallocated.
         """
-        if not self._tr_active:
-            h5g.close(self.id)
-        else:
-            raise IllegalTransactionError("Can't close group while transaction is active.")
+        h5g.close(self.id)
 
     def __del__(self):
         try:
             h5g.close(self.id)
-        except:
+        except H5Error:
             pass
 
     def __str__(self):
@@ -554,7 +374,6 @@ class File(Group):
             If "noclobber" is specified, file truncation (w/w+) will fail if 
             the file already exists.  Note this is NOT the default.
         """
-        BaseNamed.__init__(self)
         if not mode in self._modes:
             raise ValueError("Invalid mode; must be one of %s" % ', '.join(self._modes))
               
@@ -576,7 +395,6 @@ class File(Group):
         self.filename = name
         self.mode = mode
         self.noclobber = noclobber
-        self.attrs = AttributeManager(self)
 
     def close(self):
         """ Close this HDF5 object.  Note that any further access to objects
@@ -625,7 +443,6 @@ class AttributeManager(object):
     """
     def __init__(self, parent_object):
         self.id = parent_object.id
-        self.manager = None
 
     def __getitem__(self, name):
         obj = h5a.py_get(self.id, name)
@@ -636,42 +453,12 @@ class AttributeManager(object):
     def __setitem__(self, name, value):
         if not isinstance(value, numpy.ndarray):
             value = numpy.array(value)
-
-        def set_attribute(objid, name, newval):
-            backup = None
-            if h5a.py_exists(objid, name):
-                backup = h5a.py_get(objid, name)
-                h5a.delete(objid, name)
-            try:
-                h5a.py_set(objid, name, value)
-            except:
-                if backup is not None:
-                    h5a.py_set(objid, name, backup)
-                raise
-
-        if self.manager is not None:
-            set_attribute(self.id, name, value)
-        else:
-            if h5a.py_exists(self.id, name):
-                backup = h5a.py_get(self.id, name)
-                undo = (set_attribute, (self.id, name, backup), {})
-            else:
-                undo = (h5a.delete, (self.id, name), {})
-
-            action = Action("Set attribute \"%s\"" % name,
-                        (set_attribute, (self.id, name, value), {}),
-                        undo,
-                        None)
+        if h5a.py_exists(self.id, name):
+            h5a.delete(self.id, name)
+        h5a.py_set(self.id, name, value)
 
     def __delitem__(self, name):
-        if self.manager is None:
-            h5a.delete(self.id, name)
-        else:
-            backup = h5a.py_get(self.id, name)
-            action = Action("Delete \"%s\"" % name,
-                        (h5a.delete, (self.id, name) ,{}),
-                        (h5a.py_set, (self.id, name, backup), {}),
-                        None)
+        h5a.delete(self.id, name)
 
     def __len__(self):
         return h5a.get_num_attrs(self.id)
@@ -686,7 +473,7 @@ class AttributeManager(object):
     def __str__(self):
         return "Attributes: "+', '.join(['"%s"' % x for x in self])
 
-class NamedType(BaseNamed):
+class NamedType(object):
 
     """ Represents a named datatype, stored in a file.  
 
