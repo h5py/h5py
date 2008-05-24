@@ -690,27 +690,8 @@ def py_set_complex_names(char* real_name=NULL, char* imag_name=NULL):
         raise ValueError("Must be called with no arguments or exactly 2: STRING real_name, STRING imag_name")
 
     
-def py_h5t_to_dtype(hid_t type_id, object force_native=False, int force_string_length=-1, object compound_fields=None):
-    """ (INT type_id, BOOL force_native=False, INT force_string_length=-1,
-            TUPLE compound_fields=None) 
-        => INT type_id
-
-        Produce a Numpy dtype of the same general kind as an HDF5 datatype.
-        Note that the result is *NOT* guaranteed to be memory-compatible with
-        the HDF5 type; for that use py_dtype_to_h5t.  
-
-        If force_native is True, all byte-orders in the returned dtype will be
-        in native order. Variable-length (VLEN) strings are currently not
-        supported, but by providing a value for <force_string_length> they
-        can be converted to fixed-length strings compatible with Numpy.
-
-        If compound_fields is provided, it must be a tuple of names which 
-        correspond to fields in the HDF5 object.  Only HDF5 field names which
-        are present in this tuple will be copied, and will be inserted into the
-        dtype in the order that they appear in the tuple.  Fields which are
-        not present in the HDF5 type are discarded.  As a side effect, this
-        disables automatic conversion of compound types to complex numbers,
-        even if they have the appropriate names.
+def py_h5t_to_dtype(hid_t type_id, object byteorder=None, int string_length=-1, object compound_fields=None):
+    """ TODO: rework this.
     """
     cdef int classtype
     cdef int sign
@@ -735,10 +716,10 @@ def py_h5t_to_dtype(hid_t type_id, object force_native=False, int force_string_l
 
     elif classtype == H5T_STRING:
         if is_variable_str(type_id):
-            if force_string_length <= 0:
+            if string_length <= 0:
                 raise ConversionError("Variable-length strings are unsupported; try using a fixed size via force_string_length")
             else:
-                size = force_string_length
+                size = string_length
         else:
             size = get_size(type_id)
         typeobj = dtype("|S" + str(size))
@@ -755,7 +736,7 @@ def py_h5t_to_dtype(hid_t type_id, object force_native=False, int force_string_l
             tmp_id = get_member_type(type_id, i)
             try:
                 tmp_name = get_member_name(type_id, i)
-                field_list.append( (tmp_name, py_h5t_to_dtype(tmp_id, force_native, force_string_length)) )
+                field_list.append( (tmp_name, py_h5t_to_dtype(tmp_id, byteorder, string_length)) )
             finally:
                 H5Tclose(tmp_id)
 
@@ -805,8 +786,8 @@ def py_h5t_to_dtype(hid_t type_id, object force_native=False, int force_string_l
     else:
         raise ConversionError('Unsupported datatype class "%s"' % CLASS_MAPPER[classtype])
 
-    if force_native:
-        return typeobj.newbyteorder('=')
+    if byteorder is not None:
+        return typeobj.newbyteorder(byteorder)
     return typeobj
 
 def py_dtype_to_h5t(numpy.dtype dtype_in):

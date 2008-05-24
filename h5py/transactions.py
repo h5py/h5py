@@ -10,6 +10,10 @@ class TransactionStateError(TransactionError):
     """
     pass
 
+class IllegalTransactionError(TransactionError):
+    pass
+
+
 class Action(object):
 
     """ Represents the smallest component of a transaction.
