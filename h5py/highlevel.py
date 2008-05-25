@@ -728,55 +728,103 @@ def _open_arbitrary(group_obj, name):
 
     raise NotImplementedError('Object type "%s" unsupported by the high-level interface.' % h5g.OBJ_MAPPER[info.type])
 
-def _slices_to_tuples(args):
-    """ Turns a series of slice objects into the start, count, stride tuples
-        expected by py_read/py_write
+def slicer(shape, args):
+    """ Processes arguments to __getitem__ methods.  
+    
+        shape:  Dataset shape (tuple)
+        args:   Raw __getitem__ args; integers, slices or strings in any order.
+        
+        Returns 4-tuple:
+        (start, count, stride, names)
+        Start/count/stride are guaranteed not to be None.
+        Names will either be None or a list of non-zero length.
     """
 
-    startlist = []
-    countlist = []
-    stridelist = []
+    if not isinstance(args, tuple):
+        args = (args,)
+
+    rank = len(shape)
     
-    if len(args) == 1 and isinstance(args[0], tuple):
-        args = args[0]
+    def checkdim(dim):
+        if not dim < rank:
+            raise ValueError("Too many slices (dataset is rank-%d)" % rank)
 
+    start = []
+    count = []
+    stride = []
+    rawslices = []
+    names = []
+
+    dim = 0
     for arg in args:
+        if isinstance(arg, int) or isinstance(arg, long):
+            checkdim(dim)
+            start.append(arg)
+            count.append(1)
+            stride.append(1)
+            dim += 1
 
-        if isinstance(arg, slice):
+        elif isinstance(arg, slice):
+            checkdim(dim)
 
+            # Slice indices() method clips, so do it the hard way...
+
+            # Start
             if arg.start is None:
-                start=0
+                ss=0
             else:
                 if arg.start < 0:
                     raise ValueError("Negative dimensions are not allowed")
-                start=arg.start
+                ss=arg.start
 
+            # Step
             if arg.step is None:
-                step = 1
+                st = 1
             else:
-                if arg.step < 0:
-                    raise ValueError("Negative step sizes are not allowed")
-                step = arg.step
+                if arg.step <= 0:
+                    raise ValueError("Only positive step sizes allowed")
+                st = arg.step
 
-            startlist.append(start)
-            stridelist.append(step)
-
+            # Count
             if arg.stop is None:
-                countlist.append(None)
+                cc = shape[dim]/st
             else:
                 if arg.stop < 0:
                     raise ValueError("Negative dimensions are not allowed")
-                count = (arg.stop-start)/step
-                if count == 0:
-                    raise ValueError("Zero-length selections are not allowed")
-                countlist.append(count)
+                cc = (arg.stop-ss)/st
+            if cc == 0:
+                raise ValueError("Zero-length selections are not allowed")
 
+            start.append(ss)
+            stride.append(st)
+            count.append(cc)
+            rawslices.append(arg)
+            dim += 1
+
+        elif isinstance(arg, str):
+            names.append(arg)
+            
         else:
-            startlist.append(arg)
-            countlist.append(1)
-            stridelist.append(1)
+            raise TypeError("Unsupported slice type (must be int/long/slice/str): %s" % repr(arg))
 
-    return (tuple(startlist), tuple(countlist), tuple(stridelist))
+    if len(names) == 0:
+        names = None
+    else:
+        names = tuple(names)
+
+    nslices = len(count)
+
+    # Check for lone ":"
+    if nslices == len(rawslices) == 1:
+        slice_ = rawslices[0]
+        if slice_.stop == None and slice_.step == None and slice_.stop == None:
+            return ((0,)*rank, shape, (1,)*rank, names)
+
+    if nslices != rank:
+        raise ValueError("Not enough slices (%d); dataset is rank-%d" % (nslices, rank))
+
+    return (tuple(start), tuple(count), tuple(stride), names)
+
 
 #: Command-line HDF5 file "shell": browse(name) (or browse() for last file).
 browse = _H5Browse()
