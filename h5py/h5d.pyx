@@ -25,7 +25,7 @@
 # Pyrex compile-time imports
 from defs_c   cimport malloc, free
 from h5  cimport herr_t, hid_t, size_t, hsize_t, htri_t, haddr_t
-from h5s cimport H5Sclose, H5S_ALL, H5S_UNLIMITED
+from h5s cimport H5Sclose, H5S_ALL, H5S_UNLIMITED, H5S_SCALAR, H5S_SIMPLE
 from h5t cimport H5Tclose
 from h5p cimport H5P_DEFAULT
 from numpy cimport ndarray, import_array, PyArray_DATA
@@ -373,29 +373,26 @@ def py_create(hid_t parent_id, char* name, object data=None, object dtype=None,
 
     return dset_id
 
-def py_read_slab(hid_t ds_id, object start=None, object count=None, 
+def py_read_slab(hid_t ds_id, object start, object count, 
                  object stride=None, **kwds):
-    """ (INT ds_id, TUPLE start, TUPLE count, TUPLE stride=None, **kwds)
+    """ (INT ds_id, TUPLE start, TUPLE count, TUPLE stride=None,
+            STRING byteorder=None, TUPLE compound_names=None, 
+            TUPLE complex_names=None)
         => NDARRAY numpy_array_out
     
         Read a hyperslab from an existing HDF5 dataset, and return it as a
         Numpy array. Dimensions are specified by:
 
         start:  Tuple of integers indicating the start of the selection.
-                If None, the selection starts at the dataspace origin (0,0,..)
+
         count:  Tuple of integers indicating how many elements to read.
-                If None, the selection will extend from <start> to the end of
-                the dataset.  Any of the members can also be None.
+
         stride: Pitch of the selection.  Data points at <start> are always
-                selected.  If None, 1 will be used for all axes.
+                selected.  If None (default), the HDF5 library default of "1" 
+                will be used for all axes.
 
-        Any of the members of start/count/stride may also be None, in which
-        case the origin, full extent, and a stride of 1 will be inserted
-        respectively.
-
-        Any additional keywords (**kwds) are passed to the function which maps 
-        HDF5 types to Numpy dtypes; see the docstring for h5t.py_h5t_to_dtype.
-        These include force_native, compound_fields, and force_string_length.
+        Keywords byteorder, compound_names, and complex_names are passed to
+        the datatype conversion function, py_h5t_to_dtype.
 
         As is customary when slicing into Numpy array objects, no dimensions 
         with length 1 are present in the returned array.  Additionally, if the
@@ -418,81 +415,63 @@ def py_read_slab(hid_t ds_id, object start=None, object count=None,
         type_id = get_type(ds_id)
         dtype = h5t.py_h5t_to_dtype(type_id, **kwds)
 
-        # File dataspace
         file_space = get_space(ds_id)
-
-        rank = h5s.get_simple_extent_ndims(file_space)
-        file_shape = h5s.get_simple_extent_dims(file_space)
-
-        # Validate arguments and create ones that weren't given
-        if start is None:
-            start = (0,)*rank
-        else:
-            if len(start) != rank:
-                raise ValueError("Length of 'start' tuple must match dataset rank %d (got '%s')" % (rank, repr(start)))
-
-        if count is None:
-            count = []
-            for i from 0<=i<rank:
-                count.append(file_shape[i] - start[i])
-            count = tuple(count)
-        else:
-            if len(count) != rank:
-                raise ValueError("Length of 'count' tuple must match dataset rank %d (got '%s')" % (rank, repr(count)))
-
-            countlist = list(count)
-            for i from 0<=i<rank:
-                if count[i] is None:
-                    countlist[i] = file_shape[i] - start[i]
-                else:
-                    countlist[i] = count[i]
-            count = tuple(countlist)
-
-        if stride is not None:      # Note that h5s.select_hyperslab allows None for stride
-            if len(stride) != rank:
-                raise ValueError("Length of 'stride' tuple must match dataset rank %d (got '%s')" % (rank, repr(stride)))
-
-        # Initialize Numpy array, and an HDF5 dataspace of the same size
-        npy_countlist = []
-        for i from 0<=i<len(count):
-            if count[i] != 0 and count[i] != 1:  # No singlet dimensions
-                npy_countlist.append(count[i])
-        npy_count = tuple(npy_countlist)
-
-        arr = ndarray(npy_count, dtype=dtype)
-        mem_space = h5s.create_simple(npy_count)
-            
         space_type = h5s.get_simple_extent_type(file_space)
-        if space_type == h5s.CLASS_SIMPLE:
-            h5s.select_hyperslab(file_space, start, count, stride)
-            read(ds_id, mem_space, file_space, arr)
-        elif space_type == h5s.CLASS_SCALAR:
+        
+        if space_type == H5S_SCALAR:
+
+            # This probably indicates a logic error in the caller's program;
+            # don't just ignore it.
+            for item in (start, count, stride):
+                if item is not None and item != ():
+                    raise ValueError("For a scalar dataset, start/count/stride must be None or ().")
+
+            arr = ndarray( (), dtype=dtype)
             read(ds_id, H5S_ALL, H5S_ALL, arr)
+
+        elif space_type == H5S_SIMPLE:
+
+            # Attempt hyperslab selection on the dataset file space. 
+            # The selection function performs validation of start/count/stride.
+            h5s.select_hyperslab(file_space, start, count, stride)
+
+            # Initialize Numpy array; no singlet dimensions allowed.
+            npy_count = []
+            for i from 0<=i<len(count):
+                if count[i] != 0 and count[i] != 1:
+                    npy_count.append(count[i])
+            npy_count = tuple(npy_count)
+            arr = ndarray(npy_count, dtype=dtype)
+
+            mem_space = h5s.create_simple(npy_count)
+            read(ds_id, mem_space, file_space, arr)
+
         else:
             raise ValueError("Dataspace type %d is unsupported" % space_type)
 
     finally:
         # ignore return values on cleanup
-        if mem_space:
+        if mem_space != 0:
             H5Sclose(mem_space)
-        if file_space:
+        if file_space != 0:
             H5Sclose(file_space)
-        if type_id:
+        if type_id != 0:
             H5Tclose(type_id)
 
     return arr
 
-def py_write_slab(hid_t ds_id, ndarray arr_obj, object start=None, object stride=None):
+def py_write_slab(hid_t ds_id, ndarray arr, object start, object stride=None):
     """ (INT ds_id, NDARRAY arr_obj, TUPLE start, TUPLE stride=None)
 
         Write the entire contents of a Numpy array into an HDF5 dataset.
         The size of the given array must fit within the dataspace of the
         HDF5 dataset.
 
-        start:  Tuple of integers giving offset for write.  If None, the
-                dataspace origin (0,0,...) will be used.
+        start:  Tuple of integers giving offset for write.
+
         stride: Pitch of write in dataset.  The elements of "start" are always
-                selected.  If None, 1 will be used for all dimensions.
+                selected.  If None, the HDF5 library default value "1" will be 
+                used for all dimensions.
 
         The underlying function depends on write access to the data area of the
         Numpy array.  See the caveats in h5d.write.
@@ -504,39 +483,40 @@ def py_write_slab(hid_t ds_id, ndarray arr_obj, object start=None, object stride
     cdef hid_t mem_space
     cdef hid_t file_space
     cdef int rank
+
     mem_space  = 0
     file_space = 0
 
     count = arr_obj.shape
 
     try:
-        mem_space = h5s.create_simple(count)
         file_space = get_space(ds_id)
-
-        rank = h5s.get_simple_extent_ndims(ds_id)
-        file_shape = h5s.get_simple_extent_dims(ds_id)
-
-        if len(count) != rank:
-            raise ValueError("Numpy array must have same rank as the HDF5 dataset")
-
-        if start is None:
-            start = (0,)*rank
-        else:
-            if len(start) != rank:
-                raise ValueError("Length of 'start' tuple must match dataset rank %d (got '%s')" % (rank, repr(start)))
+        space_type = h5s.get_simple_extent_type(file_space)
         
-        if stride is not None:
-            if len(stride) != rank:
-                raise ValueError("Length of 'stride' tuple must match dataset rank %d (got '%s')" % (rank, repr(stride)))
+        if space_type == H5S_SCALAR:
 
-        h5s.select_hyperslab(file_space, start, count, stride)
-        write(ds_id, mem_space, file_space, arr_obj)
+            for item in (start, count, stride):
+                if item is not None and item != ():
+                    raise ValueError("For a scalar dataset, start/count/stride must be None or ().")
+            write(ds_id, H5S_ALL, H5S_ALL, arr)
+
+        elif space_type == H5S_SIMPLE:
+
+            # Attempt hyperslab selection on the dataset file space. 
+            # The selection function performs validation of start/count/stride.
+            h5s.select_hyperslab(file_space, start, count, stride)
+            mem_space = h5s.create_simple(count)
+
+            write(ds_id, mem_space, file_space, arr)
+
+        else:
+            raise ValueError("Dataspace type %d is unsupported" % space_type)
 
     finally:
         # ignore return values on cleanup
-        if mem_space:
+        if mem_space != 0:
             H5Sclose(mem_space)
-        if file_space:
+        if file_space != 0:
             H5Sclose(file_space)
 
 def py_shape(hid_t dset_id):
