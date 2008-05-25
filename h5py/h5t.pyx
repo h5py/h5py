@@ -45,11 +45,9 @@
     and field names (by default) "r" and "i".  Complex numbers can be auto-
     recovered from HDF5 objects provided they match this format and have
     compatible field names.  Since other people may have named their fields
-    e.g. "img" and "real", these names can be changed.  The function
-    py_set_complex_names(real_name, imaginary_name) allows you to select at
-    runtime what names are used to read in and write out complex-compound
-    objects.  To turn off this behavior completely, simply call 
-    py_set_complex_names with no arguments.
+    e.g. "img" and "real", these names can be changed.  The API functions
+    py_dtype_to_h5t and py_h5t_to_dtype take arguments which specify these
+    names.
 
 """
 
@@ -667,31 +665,74 @@ _complex_map = { "<c8": H5T_IEEE_F32LE, "<c16": H5T_IEEE_F64LE, ">c8": H5T_IEEE_
 _order_map = { H5T_ORDER_NONE: '|', H5T_ORDER_LE: '<', H5T_ORDER_BE: '>'}
 _sign_map  = { H5T_SGN_NONE: 'u', H5T_SGN_2: 'i' }
 
-_complex_names = ('r','i')
+DEFAULT_COMPLEX_NAMES = ('r','i')
+VALID_BYTEORDERS = ('<','>','=')
 
-# For an HDF5 compound object to be considered complex, the following must be
-# true:
+# For an HDF5 compound object to be considered complex, at least the following 
+# must be true:
 # (1) Must have exactly two fields
 # (2) Both must be IEEE floating-point, of the same precision and byteorder
-# (3) The field names must match the contents of _complex_names
 
-def py_set_complex_names(char* real_name=NULL, char* imag_name=NULL):
-    """ (STRING real_name, STRING imag_name) or ()
-
-        Sets the field names used to read and write complex numbers from HDF5
-        compound datatypes.  To disable all complex conversion, call with no
-        arguments.
+def _validate_complex(item):
+    """ Common validation function for complex names, which must be 2-tuples
+        containing strings.
     """
-    if real_name == NULL and imag_name == NULL:
-        _complex_names = None
-    elif real_name != NULL and imag_name != NULL:
-        _complex_names = (real_name, imag_name)
-    else:
-        raise ValueError("Must be called with no arguments or exactly 2: STRING real_name, STRING imag_name")
+    if not isinstance(item, tuple) or len(item) != 2 or \
+      not isinstance(item[0], str) or not isinstance(item[1], str):
+        raise ValueError("Complex names must be given a 2-tuples of strings: (real, img)")
 
+def _validate_byteorder(item):
+    """ Common validation function for byte orders, which must be <, > or =.
+    """
+    if not item in VALID_BYTEORDERS:
+        raise ValueError("Byte order must be one of "+", ".join(VALID_BYTEORDERS))
     
-def py_h5t_to_dtype(hid_t type_id, object byteorder=None, int string_length=-1, object compound_fields=None):
-    """ TODO: rework this.
+def _validate_names(names):
+    """ Common validation function for compound object field names, which must
+        be tuples of strings.
+    """
+    if isinstance(item, tuple):
+        bad = False
+        for x in names:
+            if not isinstance(name, str):
+                bad = True
+                break
+        if not bad:
+            return
+    raise ValueError("Compound names must be given as a tuple of strings.")
+
+
+def py_h5t_to_dtype(hid_t type_id, object byteorder=None, 
+                        object compound_names=None, object complex_names=None):
+    """ (INT type_id, STRING byteorder=None, TUPLE compound_names=None.
+         TUPLE complex_names=None)
+        => DTYPE
+
+        Create a Numpy dtype object as similar as possible to the given HDF5
+        datatype object.  The result is not guaranteed to be memory-compatible
+        with the original datatype object.
+
+        Optional arguments:
+
+        byteorder:  
+            None or one of <, >, =.  Coerce the byte order of the resulting
+            dtype object.  "None" preserves the original HDF5 byte order.  
+            This option IS applied to subtypes of arrays and compound types.
+
+        compound_names:
+            None or a tuple indicating which fields of a compound type to 
+            preserve in the output.  Fields in the new dtype will be listed 
+            in the order that they appear here.  Specifying a field which 
+            doesn't appear in the HDF5 type raises ValueError.  This option
+            IS NOT applied to subtypes of a compound type, but IS applied to
+            subtypes of arrays.
+
+        complex_names:
+            Specifies when and how to interpret HDF5 compound datatypes as 
+            Python complex numbers.  May be None or a tuple with strings 
+            (real name, img name).  "None" indicates the default mapping of
+            ("r", "i").  To turn this off, set to the empty tuple "()".
+            This option IS applied to subtypes of arrays and compound types.
     """
     cdef int classtype
     cdef int sign
@@ -700,6 +741,21 @@ def py_h5t_to_dtype(hid_t type_id, object byteorder=None, int string_length=-1, 
     cdef int nfields
     cdef int i
     cdef hid_t tmp_id
+
+    # Argument validation and defaults
+
+    if byteorder is not None: 
+        _validate_byteorder(byteorder)
+
+    if compound_names is not None:
+        _validate_names(compound_names)
+
+    if complex_names is None:
+        complex_names = DEFAULT_COMPLEX_NAMES
+    elif complex_names != (): 
+        _validate_complex(complex_names)
+
+    # End argument validation
 
     classtype = get_class(type_id)
     
@@ -716,10 +772,7 @@ def py_h5t_to_dtype(hid_t type_id, object byteorder=None, int string_length=-1, 
 
     elif classtype == H5T_STRING:
         if is_variable_str(type_id):
-            if string_length <= 0:
-                raise ConversionError("Variable-length strings are unsupported; try using a fixed size via force_string_length")
-            else:
-                size = string_length
+            raise ConversionError("Variable-length strings are not supported.")
         else:
             size = get_size(type_id)
         typeobj = dtype("|S" + str(size))
@@ -729,6 +782,12 @@ def py_h5t_to_dtype(hid_t type_id, object byteorder=None, int string_length=-1, 
         typeobj = dtype("|V" + str(size))
 
     elif classtype == H5T_COMPOUND:
+        # 1. Read field names and put them in a list
+        # 2. If a subset of names are requested, check to 
+        #       make sure they exist and use that list instead.
+        # 3. Alternately, if the type only has two fields, 
+        #       see if we should convert it as a complex number.
+
         nfields = get_nmembers(type_id)
         field_list = []
 
@@ -736,26 +795,31 @@ def py_h5t_to_dtype(hid_t type_id, object byteorder=None, int string_length=-1, 
             tmp_id = get_member_type(type_id, i)
             try:
                 tmp_name = get_member_name(type_id, i)
-                field_list.append( (tmp_name, py_h5t_to_dtype(tmp_id, byteorder, string_length)) )
+                field_list.append( (
+                                    tmp_name, 
+                                    py_h5t_to_dtype(tmp_id, byteorder,
+                                      None, complex_names)
+                                 ) )
             finally:
                 H5Tclose(tmp_id)
 
-        if compound_fields is not None:
-            # If only specific fields are requested, provide them
-            # in the order specified
-            name_dict = dict(field_list)
-            field_list = []
-            for name in compound_fields:
-                if name in name_dict:
-                    field_list.append((name, name_dict[name]))
+        if compound_names is not None:
+            # Validate the requested fields
+            requested = set(compound_names)
+            present = set(field_list)
+            missing = requested - present
+            if len(missing) > 0:
+                raise ValueError("The following fields are not present in the given compound type:\n" + 
+                                 ", ".join(missing) )
+            field_list = compound_names
             
         elif len(field_list) == 2:
             # Special case: complex type.  Note this changes "field_list" to a string.
-            if _complex_names is not None                       and \
+            if complex_names is not None and complex_names != () and \
                field_list[0][1].str     == field_list[1][1].str and \
                field_list[0][1].str[1]  == 'f'                  and \
-               field_list[0][0].lower() == _complex_names[0]    and \
-               field_list[1][0].lower() == _complex_names[1]:
+               field_list[0][0].lower() == complex_names[0]     and \
+               field_list[1][0].lower() == complex_names[1]:
 
                     bstring = field_list[0][1].str
                     blen = int(bstring[2:])
@@ -770,14 +834,15 @@ def py_h5t_to_dtype(hid_t type_id, object byteorder=None, int string_length=-1, 
         super_tid = H5Tget_super(type_id)
         try:
             edct = py_enum_to_dict(type_id)
-            typeobj = py_attach_enum(edct, py_h5t_to_dtype(super_tid))
+            # Superclass must be an integer, so only provide byteorder.
+            typeobj = py_attach_enum(edct, py_h5t_to_dtype(super_tid, byteorder))
         finally:
             H5Tclose(super_tid)
 
     elif classtype == H5T_ARRAY:
         super_tid = get_super(type_id)
         try:
-            base_dtype = py_h5t_to_dtype(super_tid)
+            base_dtype = py_h5t_to_dtype(super_tid, byteorder, compound_names, complex_names)
         finally:
             H5Tclose(super_tid)
         shape = get_array_dims(type_id)
@@ -790,16 +855,22 @@ def py_h5t_to_dtype(hid_t type_id, object byteorder=None, int string_length=-1, 
         return typeobj.newbyteorder(byteorder)
     return typeobj
 
-def py_dtype_to_h5t(numpy.dtype dtype_in):
-    """ ( DTYPE dtype_in ) => INT type_id
+def py_dtype_to_h5t(numpy.dtype dtype_in, object complex_names=None):
+    """ ( DTYPE dtype_in, TUPLE complex_names=None) => INT type_id
 
         Given a Numpy dtype object, generate a byte-for-byte memory-compatible
         HDF5 transient datatype object.
+
+        complex_names:
+            Specifies when and how to interpret Python complex numbers as
+            HDF5 compound datatypes.  May be None or a tuple with strings 
+            (real name, img name).  "None" indicates the default mapping of
+            ("r", "i"). This option is also applied to subtypes of arrays 
+            and compound types.
     """
     cdef hid_t type_out
     cdef hid_t tmp
     cdef hid_t basetype
-    cdef object names
     cdef int retval
 
     cdef char* type_str
@@ -808,6 +879,11 @@ def py_dtype_to_h5t(numpy.dtype dtype_in):
     cdef int length
 
     type_out = -1
+
+    if complex_names is None:
+        complex_names = DEFAULT_COMPLEX_NAMES
+    else: 
+        _validate_complex(complex_names)
 
     type_str = dtype_in.str
     kind = type_str[1]
@@ -830,7 +906,7 @@ def py_dtype_to_h5t(numpy.dtype dtype_in):
             type_out = create(H5T_COMPOUND, length)
             for name in dtype_in.names:
                 dt, offset = dtype_in.fields[name]
-                tmp = py_dtype_to_h5t(dt)
+                tmp = py_dtype_to_h5t(dt, complex_names)
                 try:
                     insert(type_out, name, offset, tmp)
                 finally:
@@ -845,8 +921,6 @@ def py_dtype_to_h5t(numpy.dtype dtype_in):
 
     # Complex numbers are stored as HDF5 structs, with names defined at runtime
     elif kind == c'c':
-        if _complex_names is None:
-            raise ConversionError("Support for writing complex numbers is turned off.  Use py_set_complex_names to turn it back on.")
 
         if length == 8:
             type_out = create_ieee_complex64(byteorder, _complex_names[0], _complex_names[1])
@@ -862,7 +936,7 @@ def py_dtype_to_h5t(numpy.dtype dtype_in):
     elif kind == c'V':
 
         if dtype_in.subdtype:
-            basetype = py_dtype_to_h5t(dtype_in.subdtype[0])
+            basetype = py_dtype_to_h5t(dtype_in.subdtype[0], complex_names)
             try:
                 type_out = array_create(basetype, dtype_in.subdtype[1])
             finally:
@@ -950,13 +1024,18 @@ def py_list_compound_names(hid_t type_in):
 
     return qlist
 
-def py_can_convert_dtype(object dt):
+def py_can_convert_dtype(object dt, object complex_names=None):
+    """ (DTYPE dt, TUPLE complex_names=None) => BOOL can_convert
 
+        Test whether the given Numpy dtype can be converted to the appropriate
+        memory-compatible HDF5 datatype.  complex_names works as in the
+        function h5t.py_dtype_to_h5t.
+    """
     cdef hid_t tid
     tid = 0
     can_convert = False
     try:
-        tid = py_dtype_to_h5t(dt)
+        tid = py_dtype_to_h5t(dt, complex_names)
         can_convert = True
     except ConversionError:
         pass
