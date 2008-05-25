@@ -767,7 +767,7 @@ def slicer(shape, args):
         elif isinstance(arg, slice):
             checkdim(dim)
 
-            # Slice indices() method clips, so do it the hard way...
+            # slice.indices() method clips, so do it the hard way...
 
             # Start
             if arg.start is None:

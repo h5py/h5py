@@ -567,6 +567,13 @@ def py_dtype(hid_t dset_id):
             H5Tclose(type_id)
     return dtype_out
 
+def py_patch(hid_t ds_source, hid_t ds_sink, hid_t space_id):
+    """ (INT ds_source, INT ds_sink, INT space_id)
+
+        Transfer selected elements from one dataset to another.
+        Not yet implemented.
+    """
+    pass
 
 
 
