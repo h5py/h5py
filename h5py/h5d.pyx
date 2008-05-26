@@ -551,29 +551,99 @@ def py_rank(hid_t dset_id):
             H5Sclose(space_id)
     return rank
 
-def py_dtype(hid_t dset_id):
-    """ (INT dset_id) => DTYPE numpy_dtype
+def py_dtype(hid_t dset_id, **kwds):
+    """ (INT dset_id, **kwds) => DTYPE numpy_dtype
 
         Get the datatype of an HDF5 dataset, converted to a Numpy dtype.
+        Keywords are passed to py_h5t_to_dtype.
     """
     cdef hid_t type_id
     type_id = 0
     dtype_out = None
     try:
         type_id = get_type(dset_id)
-        dtype_out = h5t.py_h5t_to_dtype(type_id)
+        dtype_out = h5t.py_h5t_to_dtype(type_id, **kwds)
     finally:
         if type_id:
             H5Tclose(type_id)
     return dtype_out
 
-def py_patch(hid_t ds_source, hid_t ds_sink, hid_t space_id):
-    """ (INT ds_source, INT ds_sink, INT space_id)
+def py_patch(hid_t ds_source, hid_t ds_sink, hid_t transfer_space):
+    """ (INT ds_source, INT ds_sink, INT transfer_space)
 
-        Transfer selected elements from one dataset to another.
-        Not yet implemented.
+        Transfer selected elements from one dataset to another.  The transfer
+        selection must be compatible with both the source and sink datasets, or
+        an exception will be raised. 
+
+        This function will allocate a memory buffer large enough to hold the
+        entire selection at once.  Looping and memory limitation constraints 
+        are the caller's responsibility.
     """
-    pass
+    cdef hid_t source_space
+    cdef hid_t sink_space
+    cdef hid_t mem_space
+    cdef hid_t source_type
+    cdef void* xfer_buf
+
+    cdef hssize_t npoints
+    cdef size_t type_size
+    cdef herr_t retval
+
+    source_space = 0    
+    sink_space = 0
+    mem_space = 0
+    source_type = 0
+    xfer_buf = NULL
+
+    try:
+        source_space = get_space(ds_source)
+        sink_space = get_space(sink)
+        source_type = get_type(source)
+
+        npoints = h5s.get_select_npoints(space_id)
+        type_size = h5t.get_size(source_type)
+
+        mem_space = h5s.create_simple((npoints,))
+        h5s.select_all(mem_space)
+
+        # This assumes that reading into a contiguous buffer and then writing
+        # out again to the same selection preserves the arrangement of data
+        # elements.  I think this is a reasonable assumption.
+
+        xfer_buf = malloc(npoints*type_size)
+
+        # Let the HDF5 library do dataspace validation; the worst that can
+        # happen is that the write will fail after taking a while to read.
+
+        retval = H5Dread(ds_source, source_type, mem_space, transfer_space, H5P_DEFAULT, xfer_buf)
+        if retval < 0:
+            raise DatasetError("Source read failed.")
+
+        retval = H5Dwrite(ds_sink, source_type, mem_space, transfer_space, H5P_DEFAULT, xfer_buf)
+        if retval < 0:
+            raise DatasetError("Sink write failed.")
+
+    finally:
+        if source_space != 0:
+            H5Sclose(source_space)
+        if sink_space != 0:
+            H5Sclose(sink_space)
+        if mem_space != 0:
+            H5Sclose(mem_space)
+        if source_type != 0:
+            H5Tclose(source_type)
+        if xfer_buf != NULL:
+            free(xfer_buf)
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -284,12 +284,16 @@ def detect_class(hid_t type_id, int classtype):
     return bool(retval)
 
 
-def close(hid_t type_id):
-    " (INT type_id) "
-    
+def close(hid_t type_id, int force=0):
+    """ (INT type_id, BOOL force=False)
+
+        Close this datatype.  If "force" is True, ignore any errors.  Useful
+        for exception handlers, when you're not sure if you've got an immutable
+        datatype.
+    """
     cdef herr_t retval
     retval = H5Tclose(type_id)
-    if retval < 0:
+    if retval < 0 and force:
         raise DatatypeError("Failed to close datatype %d" % type_id)
 
 # === Atomic datatype operations ==============================================
