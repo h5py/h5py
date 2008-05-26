@@ -16,7 +16,7 @@ class DatasetProxy(object):
     def begin_proxy(self):
 
 
-        if self.proxy_id is not None:
+        if self.proxy_active():
             raise ProxyError("Already proxying.")
 
         fid = 0
@@ -53,9 +53,14 @@ class DatasetProxy(object):
         self._proxy_space = space_id
         self._proxy_id = proxy_id
 
+    def proxy_active(self):
+        if hasattr(self, '_proxy_id') and self._proxy_id is not None:
+            return True
+        return False
+
     def end_proxy(self):
 
-        if not hasattr(self, '_proxy_id') or self._proxy_id is None:
+        if not self.proxy_active():
             raise ProxyError("Not proxying.")
 
         h5s.close(self._proxy_space)
@@ -67,11 +72,11 @@ class DatasetProxy(object):
     def _read(self, start, count, stride=None, **kwds):
         """ Dataset read access.  In direct mode, simply reads data from 
             self.id.  In proxy mode, reads unmodified data from self.id and
-            modified sections from self._proxy_id)
+            modified sections from self._proxy_id.
 
             Don't call this directly.
         """
-        if self.proxy_id is None:
+        if not self.proxy_active():
             return h5d.py_read_slab(self.id, start, count, stride, **kwds)
 
         else:
@@ -119,7 +124,7 @@ class DatasetProxy(object):
 
     def _write(self, arr, start, stride=None):
         
-        if self.proxy_id is None:
+        if not self.proxy_active():
             h5d.py_write_slab(self.id, arr, start, stride)
         
         else:
@@ -132,15 +137,17 @@ class DatasetProxy(object):
 
     def commit(self):
 
-        h5d.py_patch(self._proxy_id, self.id, self._proxy_space)
-        h5s.select_none(self._proxy_space)
+        if self.proxy_active():
+            h5d.py_patch(self._proxy_id, self.id, self._proxy_space)
+            h5s.select_none(self._proxy_space)
 
     def rollback(self):
 
-        # Proxy file doesn't shrink, but space will be re-used.
-        # Worst case == proxy file is size of the original dataset, sans
-        # compression
-        h5s.select_none(self._proxy_space)
+        if self.proxy_active():
+            # Proxy file doesn't shrink, but space will be re-used.
+            # Worst case == proxy file is size of the original dataset, sans
+            # compression
+            h5s.select_none(self._proxy_space)
             
         
 

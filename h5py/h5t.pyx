@@ -695,9 +695,9 @@ def _validate_names(names):
     """ Common validation function for compound object field names, which must
         be tuples of strings.
     """
-    if isinstance(item, tuple):
+    if isinstance(names, tuple):
         bad = False
-        for x in names:
+        for name in names:
             if not isinstance(name, str):
                 bad = True
                 break
@@ -746,6 +746,8 @@ def py_h5t_to_dtype(hid_t type_id, object byteorder=None,
     cdef int i
     cdef hid_t tmp_id
 
+    typeobj = None
+
     # Argument validation and defaults
 
     if byteorder is not None: 
@@ -786,51 +788,51 @@ def py_h5t_to_dtype(hid_t type_id, object byteorder=None,
         typeobj = dtype("|V" + str(size))
 
     elif classtype == H5T_COMPOUND:
-        # 1. Read field names and put them in a list
-        # 2. If a subset of names are requested, check to 
-        #       make sure they exist and use that list instead.
-        # 3. Alternately, if the type only has two fields, 
-        #       see if we should convert it as a complex number.
+
 
         nfields = get_nmembers(type_id)
-        field_list = []
+        field_names = []
+        field_types = []
 
+        # First step: read field names and their Numpy dtypes into 
+        # two separate arrays.
         for i from 0 <= i < nfields:
             tmp_id = get_member_type(type_id, i)
             try:
                 tmp_name = get_member_name(type_id, i)
-                field_list.append( (
-                                    tmp_name, 
-                                    py_h5t_to_dtype(tmp_id, byteorder,
-                                      None, complex_names)
-                                 ) )
+                field_names.append(tmp_name)
+                field_types.append(py_h5t_to_dtype(tmp_id, byteorder,
+                                        None, complex_names))
             finally:
                 H5Tclose(tmp_id)
 
+
+        # 1. Only a particular (ordered) subset is requested
         if compound_names is not None:
+            dt_list = []
             # Validate the requested fields
-            requested = set(compound_names)
-            present = set(field_list)
-            missing = requested - present
-            if len(missing) > 0:
-                raise ValueError("The following fields are not present in the given compound type:\n" + 
-                                 ", ".join(missing) )
-            field_list = compound_names
+            for name in compound_names:
+                try:
+                    idx = field_names.index(name)
+                except ValueError:
+                    raise ValueError('Field "%s" not found. Valid fields are:\n%s' % (name, ", ".join(field_names)))
+                dt_list.append( (name, field_types[idx]) )
             
-        elif len(field_list) == 2:
-            # Special case: complex type.  Note this changes "field_list" to a string.
-            if complex_names is not None and complex_names != () and \
-               field_list[0][1].str     == field_list[1][1].str and \
-               field_list[0][1].str[1]  == 'f'                  and \
-               field_list[0][0].lower() == complex_names[0]     and \
-               field_list[1][0].lower() == complex_names[1]:
+            typeobj = dtype(dt_list)
 
-                    bstring = field_list[0][1].str
-                    blen = int(bstring[2:])
-                    nstring = bstring[0] + "c" + str(2*blen)
-                    field_list = nstring
+        # 2. Check if it should be converted to a complex number
+        elif len(field_names) == 2 and tuple(field_names) == complex_names and \
+          field_types[0] == field_types[1] and field_types[0].kind == 'f':
 
-        typeobj = dtype(field_list)
+            bstring = field_types[0].str
+            blen = int(bstring[2:])
+            nstring = bstring[0] + "c" + str(2*blen)
+
+            typeobj = dtype(nstring)
+
+        # 3. Read all fields of the compound type, in HDF5 order.
+        else:
+            typeobj = dtype(zip(field_names, field_types))
 
     elif classtype == H5T_ENUM:
         # Enumerated types are treated as their parent type, with an additional
@@ -851,12 +853,12 @@ def py_h5t_to_dtype(hid_t type_id, object byteorder=None,
             H5Tclose(super_tid)
         shape = get_array_dims(type_id)
         typeobj = dtype( (base_dtype, shape) )
-
     else:
         raise ConversionError('Unsupported datatype class "%s"' % CLASS_MAPPER[classtype])
 
     if byteorder is not None:
         return typeobj.newbyteorder(byteorder)
+
     return typeobj
 
 def py_dtype_to_h5t(numpy.dtype dtype_in, object complex_names=None):

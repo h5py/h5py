@@ -66,47 +66,46 @@ class Dataset(object):
 
         A Dataset object is designed to permit "Numpy-like" access to the 
         underlying HDF5 dataset.  It supports array-style indexing, which 
-        returns Numpy ndarrays.  For the case of arrays containing compound
-        data, it also allows a "compound mask" to be set, allowing you to 
-        only extract elements which match names in the mask.  The underlying
-        array can also be written to using the indexing syntax.
+        returns Numpy ndarrays.  "Extended-recarray" slicing is also possible;
+        specify the names of fields you want along with the numerical slices.
+        The underlying array can also be written to using the indexing syntax.
 
         HDF5 attribute access is provided through the property obj.attrs.  See
         the AttributeManager class documentation for more information.
 
         Read-only properties:
-        names       Compound fields defined in this object (tuple or None)
-        names_mask  Current mask controlling compound access (tuple or None)
         shape       Tuple containing array dimensions
         dtype       A Numpy dtype representing the array data-type.
 
         Writable properties:
-        force_native    
-            Returned data will be automatically converted
-            to the native platform byte order
-
-        force_string_length     
-            Variable-length strings will be converted to
-            Numpy strings of this length.
+        cnames:     HDF5 compound names used for complex I/O
     """
 
     # --- Properties (Dataset) ------------------------------------------------
 
-    def _set_native(self, val):
-        self._force_native = bool(val) if val is not None else None
-
-    def _set_string_length(self, val):
-        self._string_length = val
-
-    names_mask = property(lambda self: self._fields)
-    names = property(lambda self: self.dtype.names)
-
+    #: Numpy-style shape tuple giving dataset dimensions
     shape = property(lambda self: h5d.py_shape(self.id))
+
+    #: Numpy dtype representing the datatype
     dtype = property(lambda self: h5d.py_dtype(self.id))
 
-    force_native = property(lambda self: self._force_native, _set_native)
-    force_string_length = property(lambda self: self._string_length, _set_string_length)
+    def _set_byteorder(self, order):
+        if order is not None:
+            h5t._validate_byteorder(order)
+        self._byteorder = order
+    
+    #: Set to <, > or = to coerce I/0 to a particular byteorder, or None to use default.
+    byteorder = property(lambda self: self._byteorder, _set_byteorder)
 
+    def _set_cnames(self, names):
+        if names is not None:
+            h5t._validate_complex(names)
+        self._cnames = names
+
+    #: Set to (realname, imgname) to control I/O of Python complex numbers.
+    cnames = property(lambda self: self._cnames, _set_cnames)
+
+    #: Provides access to HDF5 attributes. See AttributeManager docstring.
     attrs = property(lambda self: self._attrs)
 
     # --- Public interface (Dataset) ------------------------------------------
@@ -157,49 +156,41 @@ class Dataset(object):
                 raise ValueError('You cannot specify keywords when opening a dataset.')
             self.id = h5d.open(group.id, name)
 
-        self._fields = None
         self._attrs = AttributeManager(self)
-        self.force_native = None
-        self.force_string_length = None
+        self._byteorder = None
+        self._cnames = None
 
-    def __getitem__(self, *args):
-        """ Read a slice from the underlying HDF5 array.  Currently only
-            numerical slices are supported; for recarray-style access consider
-            using set_names_mask().
+    def __getitem__(self, args):
+        """ Read a slice from the underlying HDF5 array.  Takes slices and
+            recarray-style field names (more than one is allowed!) in any
+            order.  Examples:
+
+            ds[0,0:15,:] => (1 x 14 x <all) slice on 3-dimensional dataset.
+
+            ds[:] => All elements, regardless of dimension.
+
+            ds[0:3, 1:4, "a", "b"] => (3 x 3) slice, only including compound
+                                      elements "a" and "b".
         """
-        if any( [isinstance(x, basestring) for x in args] ):
-            raise TypeError("Slices must be numbers; recarray-style indexing is not yet supported.")
+        start, count, stride, names = slicer(self.shape, args)
 
-        start, count, stride = _slices_to_tuples(args)
+        return h5d.py_read_slab(self.id, start, count, stride,
+                                byteorder = self._byteorder, 
+                                compound_names = names,
+                                complex_names = self._cnames)
 
-        return h5d.py_read_slab(self.id, start, count, stride, 
-                                compound_fields=self.names_mask,
-                                force_native=self.force_native)
-
-    def __setitem__(self, *args):
+    def __setitem__(self, args):
         """ Write to the underlying array from an existing Numpy array.  The
             shape of the Numpy array must match the shape of the selection,
             and the Numpy array's datatype must be convertible to the HDF5
             array's datatype.
         """
-        start, count, stride = _slices_to_tuples(args[0:len(args)-1])
+        val = args[-1]
+        start, count, stride, names = slicer(val.shape, args[:-1])
+        if names is not None:
+            raise ValueError("Field names are not allowed for write.")
+
         h5d.py_write_slab(self.id, args[-1], start, stride)
-
-    def set_names_mask(self, iterable=None):
-        """ Determine which fields of a compound datatype will be read. Only 
-            compound fields whose names match those provided by the given 
-            iterable will be read.  Any given names which do not exist in the
-            HDF5 compound type are simply ignored.
-
-            If the argument is a single string, it will be correctly processed
-            (i.e. not exploded).
-        """
-        if iterable == None:
-            self._fields = None
-        else:
-            if isinstance(iterable, basestring):
-                iterable = (iterable,)    # not 'i','t','e','r','a','b','l','e'
-            self._fields = tuple(iterable)
 
     def close(self):
         """ Force the HDF5 library to close and free this object.  You 
@@ -814,10 +805,12 @@ def slicer(shape, args):
 
     nslices = len(count)
 
-    # Check for lone ":"
+    # Check for lone ":" or no numeric slices, which in Numpy means the whole thing.
     if nslices == len(rawslices) == 1:
         slice_ = rawslices[0]
         if slice_.stop == None and slice_.step == None and slice_.stop == None:
+            return ((0,)*rank, shape, (1,)*rank, names)
+    if nslices == 0:
             return ((0,)*rank, shape, (1,)*rank, names)
 
     if nslices != rank:

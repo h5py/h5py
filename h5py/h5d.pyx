@@ -375,11 +375,13 @@ def py_create(hid_t parent_id, char* name, object data=None, object dtype=None,
 
 def py_read_slab(hid_t ds_id, object start, object count, 
                  object stride=None, **kwds):
-    """ (INT ds_id, TUPLE start, TUPLE count, TUPLE stride=None,
-            STRING byteorder=None, TUPLE compound_names=None, 
-            TUPLE complex_names=None)
+    """ (INT ds_id, TUPLE start, TUPLE count, TUPLE stride=None, **kwds)
         => NDARRAY numpy_array_out
     
+        Keywords allowed:
+            STRING byteorder=None, TUPLE compound_names=None, 
+            TUPLE complex_names=None
+
         Read a hyperslab from an existing HDF5 dataset, and return it as a
         Numpy array. Dimensions are specified by:
 
