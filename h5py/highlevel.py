@@ -110,7 +110,7 @@ class Dataset(object):
 
     # --- Public interface (Dataset) ------------------------------------------
 
-    def __init__(self, group, name, create=False, force=False,
+    def __init__(self, group, name, create=False,
                     data=None, dtype=None, shape=None, 
                     chunks=None, compression=None, shuffle=False, fletcher32=False):
         """ Create a new Dataset object.  There are two modes of operation:
@@ -126,11 +126,8 @@ class Dataset(object):
                 "dtype" (Numpy dtype object) and "shape" (tuple of dimensions).
                 Chunks/compression/shuffle/fletcher32 can also be specified.
 
-                By default, creating a dataset will fail if another of the
-                same name already exists. If you specify force=True, any 
-                existing dataset will be unlinked, and the new one created.
-                This is as close as possible to an atomic operation; if the 
-                dataset creation fails, the old dataset isn't destroyed.
+                Creating a dataset will fail if another of the same name
+                already exists.
 
             Creation keywords (* is default):
 
@@ -140,17 +137,8 @@ class Dataset(object):
             fletcher32:    Enable Fletcher32 error detection? T/F*
         """
         if create:
-            if force and h5g.py_exists(group.id,name):
-                tmpname = 'h5py_temp_' + ''.join(random.sample(string.ascii_letters, 30))
-                tmpid = h5d.py_create(group.id, tmpname, data, shape, 
+            self.id = h5d.py_create(group.id, name, data, shape, 
                                     chunks, compression, shuffle, fletcher32)
-                h5g.unlink(group.id, name)
-                h5g.link(group.id, tmpname, name)
-                h5g.unlink(group.id, tmpname)
-
-            else:
-                self.id = h5d.py_create(group.id, name, data, shape, 
-                                        chunks, compression, shuffle, fletcher32)
         else:
             if any((data,dtype,shape,chunks,compression,shuffle,fletcher32)):
                 raise ValueError('You cannot specify keywords when opening a dataset.')
@@ -174,10 +162,20 @@ class Dataset(object):
         """
         start, count, stride, names = slicer(self.shape, args)
 
-        return h5d.py_read_slab(self.id, start, count, stride,
-                                byteorder = self._byteorder, 
-                                compound_names = names,
-                                complex_names = self._cnames)
+        if names is not None and self.dtype.names is None:
+            raise ValueError('This dataset has no named fields (requested "%s")' % ", ".join(names))
+
+        tid = 0
+        try:
+            tid = h5d.get_type(self.id)
+            dt = h5t.py_h5t_to_dtype(tid, byteorder=self._byteorder,
+                                     compound_names=names,
+                                     complex_names=self._cnames)
+        finally:
+            if tid != 0:
+                h5t.close(tid, force=True)
+
+        return h5d.py_read_slab(self.id, start, count, stride, dtype=dt)
 
     def __setitem__(self, args):
         """ Write to the underlying array from an existing Numpy array.  The
@@ -280,7 +278,7 @@ class Group(object):
 
         elif isinstance(obj, numpy.ndarray):
             if h5t.py_can_convert_dtype(obj.dtype):
-                dset = Dataset(self, name, data=obj, create=True, force=True)
+                dset = Dataset(self, name, data=obj, create=True)
                 dset.close()
             else:
                 raise ValueError("Don't know how to store data of this type in a dataset: " + repr(obj.dtype))
@@ -288,7 +286,7 @@ class Group(object):
         else:
             arr = numpy.array(obj)
             if h5t.py_can_convert_dtype(arr.dtype):
-                dset = Dataset(self, name, data=arr, create=True, force=True)
+                dset = Dataset(self, name, data=arr, create=True)
                 dset.close()
             else:
                 raise ValueError("Don't know how to store data of this type in a dataset: " + repr(arr.dtype))
@@ -299,7 +297,7 @@ class Group(object):
         """
         retval = _open_arbitrary(self, name)
         if isinstance(retval, Dataset) and retval.shape == ():
-            value = h5d.py_read_slab(retval.id, ())
+            value = h5d.py_read_slab(retval.id, (), ())
             value = value.astype(value.dtype.type)
             retval.close()
             return value
@@ -736,27 +734,55 @@ def slicer(shape, args):
 
     rank = len(shape)
     
-    def checkdim(dim):
-        if not dim < rank:
-            raise ValueError("Too many slices (dataset is rank-%d)" % rank)
+    slices = []     # Holds both slice objects and integer indices.
+    names = []      # Field names (strings)
+
+    # Sort slice-like arguments from strings
+    for arg in args:
+        if isinstance(arg, int) or isinstance(arg, long) or isinstance(arg, slice):
+            slices.append(arg)
+        elif isinstance(arg, str):
+            names.append(arg)
+        else:
+            raise TypeError("Unsupported slice type (must be int/long/slice/str): %s" % repr(arg))
+
+    # If there are no names, this is interpreted to mean "all names."  So
+    # return None instead of an empty sequence.
+    if len(names) == 0:
+        names = None
+    else:
+        names = tuple(names)
+
+    # Check for special cases
+
+    # 1. No numeric slices == full dataspace
+    if len(slices) == 0:
+            return ((0,)*rank, shape, (1,)*rank, names)
+
+    # 2. Single numeric slice ":" == full dataspace
+    if len(slices) == 1 and isinstance(slices[0], slice):
+        slice_ = slices[0]
+        if slice_.stop == None and slice_.step == None and slice_.stop == None:
+            return ((0,)*rank, shape, (1,)*rank, names)
+
+    # Validate slices
+    if len(slices) != rank:
+        raise ValueError("Number of numeric slices must match dataset rank (%d)" % rank)
 
     start = []
     count = []
     stride = []
-    rawslices = []
-    names = []
 
-    dim = 0
-    for arg in args:
+    # Parse slices to assemble hyperslab start/count/stride tuples
+    for dim, arg in enumerate(slices):
         if isinstance(arg, int) or isinstance(arg, long):
-            checkdim(dim)
+            if arg < 0:
+                raise ValueError("Negative indices are not allowed.")
             start.append(arg)
             count.append(1)
             stride.append(1)
-            dim += 1
 
         elif isinstance(arg, slice):
-            checkdim(dim)
 
             # slice.indices() method clips, so do it the hard way...
 
@@ -768,7 +794,7 @@ def slicer(shape, args):
                     raise ValueError("Negative dimensions are not allowed")
                 ss=arg.start
 
-            # Step
+            # Stride
             if arg.step is None:
                 st = 1
             else:
@@ -789,32 +815,7 @@ def slicer(shape, args):
             start.append(ss)
             stride.append(st)
             count.append(cc)
-            rawslices.append(arg)
-            dim += 1
-
-        elif isinstance(arg, str):
-            names.append(arg)
-            
-        else:
-            raise TypeError("Unsupported slice type (must be int/long/slice/str): %s" % repr(arg))
-
-    if len(names) == 0:
-        names = None
-    else:
-        names = tuple(names)
-
-    nslices = len(count)
-
-    # Check for lone ":" or no numeric slices, which in Numpy means the whole thing.
-    if nslices == len(rawslices) == 1:
-        slice_ = rawslices[0]
-        if slice_.stop == None and slice_.step == None and slice_.stop == None:
-            return ((0,)*rank, shape, (1,)*rank, names)
-    if nslices == 0:
-            return ((0,)*rank, shape, (1,)*rank, names)
-
-    if nslices != rank:
-        raise ValueError("Not enough slices (%d); dataset is rank-%d" % (nslices, rank))
+            slices.append(arg)
 
     return (tuple(start), tuple(count), tuple(stride), names)
 

@@ -58,7 +58,8 @@ class H5TypeError(H5LibraryError):
 class IdentifierError(H5LibraryError):
     pass
 
-
+class H5ReferenceError(H5LibraryError):
+    pass
 
 
 

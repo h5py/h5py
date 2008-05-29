@@ -78,20 +78,21 @@ cdef extern from "hdf5.h":
   # --- Dataspace selection ---------------------------------------------------
   H5S_sel_type H5Sget_select_type(hid_t space_id)
   hssize_t  H5Sget_select_npoints(hid_t space_id)
-  hssize_t  H5Sget_select_hyper_nblocks(hid_t space_id  )
-  herr_t    H5Sget_select_hyper_blocklist(hid_t space_id, 
-                hsize_t startblock, hsize_t numblocks, hsize_t *buf  )
-  hssize_t  H5Sget_select_elem_npoints(hid_t space_id  )
-  herr_t    H5Sget_select_elem_pointlist(hid_t space_id, hsize_t startpoint, 
-                hsize_t numpoints, hsize_t *buf)
   herr_t    H5Sget_select_bounds(hid_t space_id, hsize_t *start, hsize_t *end)
 
-  herr_t    H5Sselect_elements(hid_t space_id, H5S_seloper_t op, 
-                size_t num_elements, hsize_t *coord[] )
   herr_t    H5Sselect_all(hid_t space_id)
   herr_t    H5Sselect_none(hid_t space_id)
   htri_t    H5Sselect_valid(hid_t space_id)
 
+  hssize_t  H5Sget_select_elem_npoints(hid_t space_id  )
+  herr_t    H5Sget_select_elem_pointlist(hid_t space_id, hsize_t startpoint, 
+                hsize_t numpoints, hsize_t *buf)
+  herr_t    H5Sselect_elements(hid_t space_id, H5S_seloper_t op, 
+                size_t num_elements, hsize_t *coord[] )
+
+  hssize_t  H5Sget_select_hyper_nblocks(hid_t space_id  )
+  herr_t    H5Sget_select_hyper_blocklist(hid_t space_id, 
+                hsize_t startblock, hsize_t numblocks, hsize_t *buf  )
   herr_t H5Sselect_hyperslab(hid_t space_id, H5S_seloper_t op,
                              hsize_t start[], hsize_t _stride[],
                              hsize_t count[], hsize_t _block[])

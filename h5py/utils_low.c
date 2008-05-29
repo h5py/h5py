@@ -21,9 +21,26 @@
 
 #include "Python.h"
 #include "numpy/arrayobject.h"
-#include "utils.h"
+#include "utils_low.h"
 #include "hdf5.h"
 
+/* Wrapper for malloc(size) */
+void* emalloc(size_t size){
+
+    void *retval = NULL;
+
+    if(size==0) return NULL;
+    if(size<0){
+		PyErr_SetString(PyExc_RuntimeError, ".");
+    }
+
+    retval = malloc(size);
+    if(retval == NULL){
+        PyErr_SetString(PyExc_RuntimeError, ".");
+    }
+
+    return retval;
+}
 
 /* Convert an hsize_t array to a Python tuple of long ints.
    Returns None on failure

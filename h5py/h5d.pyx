@@ -374,13 +374,10 @@ def py_create(hid_t parent_id, char* name, object data=None, object dtype=None,
     return dset_id
 
 def py_read_slab(hid_t ds_id, object start, object count, 
-                 object stride=None, **kwds):
-    """ (INT ds_id, TUPLE start, TUPLE count, TUPLE stride=None, **kwds)
+                 object stride=None, dtype=None):
+    """ (INT ds_id, TUPLE start, TUPLE count, TUPLE stride=None, 
+         DTYPE dtype=None)
         => NDARRAY numpy_array_out
-    
-        Keywords allowed:
-            STRING byteorder=None, TUPLE compound_names=None, 
-            TUPLE complex_names=None
 
         Read a hyperslab from an existing HDF5 dataset, and return it as a
         Numpy array. Dimensions are specified by:
@@ -393,8 +390,10 @@ def py_read_slab(hid_t ds_id, object start, object count,
                 selected.  If None (default), the HDF5 library default of "1" 
                 will be used for all axes.
 
-        Keywords byteorder, compound_names, and complex_names are passed to
-        the datatype conversion function, py_h5t_to_dtype.
+        If a Numpy dtype object is passed in through "dtype", it will be used
+        as the type object for the returned array, and the library will attempt
+        to convert between datatypes during the read operation.  If no
+        automatic conversion path exists, an exception will be raised.
 
         As is customary when slicing into Numpy array objects, no dimensions 
         with length 1 are present in the returned array.  Additionally, if the
@@ -414,8 +413,9 @@ def py_read_slab(hid_t ds_id, object start, object count,
 
     try:
         # Obtain the Numpy dtype of the array
-        type_id = get_type(ds_id)
-        dtype = h5t.py_h5t_to_dtype(type_id, **kwds)
+        if dtype is None:
+            type_id = get_type(ds_id)
+            dtype = h5t.py_h5t_to_dtype(type_id)
 
         file_space = get_space(ds_id)
         space_type = h5s.get_simple_extent_type(file_space)
@@ -553,18 +553,17 @@ def py_rank(hid_t dset_id):
             H5Sclose(space_id)
     return rank
 
-def py_dtype(hid_t dset_id, **kwds):
-    """ (INT dset_id, **kwds) => DTYPE numpy_dtype
+def py_dtype(hid_t dset_id):
+    """ (INT dset_id) => DTYPE numpy_dtype
 
         Get the datatype of an HDF5 dataset, converted to a Numpy dtype.
-        Keywords are passed to py_h5t_to_dtype.
     """
     cdef hid_t type_id
     type_id = 0
     dtype_out = None
     try:
         type_id = get_type(dset_id)
-        dtype_out = h5t.py_h5t_to_dtype(type_id, **kwds)
+        dtype_out = h5t.py_h5t_to_dtype(type_id)
     finally:
         if type_id:
             H5Tclose(type_id)

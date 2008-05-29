@@ -10,7 +10,6 @@
 # 
 #-
 
-
 """
     Low-level interface to the "H5S" family of data-space functions.
 
@@ -19,9 +18,9 @@
 """
 
 # Pyrex compile-time imports
-from defs_c   cimport malloc, free
+from defs_c   cimport malloc, free, memcpy
 from h5  cimport herr_t, htri_t, hid_t, size_t, hsize_t, hssize_t
-from utils cimport tuple_to_dims, dims_to_tuple
+from utils cimport tuple_to_dims, dims_to_tuple, emalloc
 
 # Runtime imports
 import h5
@@ -59,6 +58,17 @@ CLASS_SIMPLE   = H5S_SIMPLE
 CLASS_MAPPER = {H5S_NO_CLASS: 'NO CLASS', H5S_SCALAR: 'SCALAR',
                 H5S_SIMPLE: 'SIMPLE'}
 CLASS_MAPPER = DDict(CLASS_MAPPER)
+
+#enum H5S_sel_type
+SEL_ERROR = H5S_SEL_ERROR
+SEL_NON = H5S_SEL_NONE
+SEL_POINTS = H5S_SEL_POINTS
+SEL_HYPERSLABS = H5S_SEL_HYPERSLABS
+SEL_ALL = H5S_SEL_ALL
+SEL_MAPPER = {H5S_SEL_ERROR: 'ERROR', H5S_SEL_NONE: 'NONE', 
+              H5S_SEL_POINTS: 'POINTS', H5S_SEL_HYPERSLABS: 'HYPERSLABS',
+              H5S_SEL_ALL: 'ALL'}
+SEL_MAPPER = DDict(SEL_MAPPER) 
 
 # === Basic dataspace operations ==============================================
 
@@ -150,13 +160,12 @@ def is_simple(hid_t space_id):
         raise DataspaceError("Failed to determine simplicity of dataspace %d" % space_id)
     return bool(retval)
 
-def offset_simple(hid_t space_id, object offset):
-    """ (INT space_id, TUPLE offset or None)
+def offset_simple(hid_t space_id, object offset=None):
+    """ (INT space_id, TUPLE offset=None)
 
         Set the offset of a dataspace.  The length of the given tuple must
         match the rank of the dataspace; ValueError will be raised otherwise.
-        If None is provided instead of a tuple, the offsets on all axes 
-        will be set to 0.
+        If None is provided (default), the offsets on all axes will be set to 0.
     """
     cdef htri_t simple
     cdef int rank
@@ -259,7 +268,323 @@ def get_simple_extent_type(hid_t space_id):
         raise DataspaceError("Can't determine type of dataspace %d" % space_id)
     return retval
 
-# === Dataspace manipulation ==================================================
+# === Extents =================================================================
+
+def extent_copy(hid_t dest_id, hid_t source_id):
+    """ (INT dest_id, INT source_id)
+
+        Copy one dataspace's extent to another, changing its type if necessary.
+    """
+    cdef herr_t retval
+    retval = H5Sextent_copy(dest_id, source_id)
+    if retval < 0:
+        raise DataspaceError("Can't copy extent (%d to %d)" % (source_id, dest_id))
+
+def set_extent_simple(hid_t space_id, object dims_tpl, object max_dims_tpl=None):
+    """ (INT space_id, TUPLE dims_tpl, TUPLE max_dims_tpl=None)
+
+        Reset the dataspace extent, via a tuple of new dimensions.  Every
+        element of dims_tpl must be a positive integer.  You can also specify
+        the maximum dataspace size, via the tuple max_dims.  The special
+        integer h5s.SPACE_UNLIMITED, as an element of max_dims, indicates an
+        unlimited dimension.
+    """
+    cdef int rank
+    cdef hsize_t* dims
+    cdef hsize_t* max_dims
+    cdef herr_t retval
+    dims = NULL
+    max_dims = NULL
+
+    rank = len(dims_tpl)
+    if max_dims_tpl is not None and len(max_dims_tpl) != rank:
+        raise ValueError("Dims/max dims tuples must be the same rank: %s vs %s" % (repr(dims_tpl),repr(max_dims_tpl)))
+
+    try:
+        dims = tuple_to_dims(dims_tpl)
+        if dims == NULL:
+            raise ValueError("Bad dimensions tuple: %s" % repr(dims_tpl))
+
+        if max_dims_tpl is not None:
+            max_dims = tuple_to_dims(max_dims_tpl)
+            if max_dims == NULL:
+                raise ValueError("Bad max dimensions tuple: %s" % repr(max_dims_tpl))
+
+        retval = H5Sset_extent_simple(space_id, rank, dims, max_dims)
+
+        if retval < 0:
+            raise DataspaceError("Failed to reset extent to %s on space %d" % (str(dims_tpl), space_id))
+    finally:
+        if dims != NULL:
+            free(dims)
+        if max_dims != NULL:
+            free(max_dims)
+
+def set_extent_none(hid_t space_id):
+    """ (INT space_id)
+
+        Remove the dataspace extent; class changes to h5s.CLASS_NO_CLASS.
+    """
+    cdef herr_t retval
+    retval = H5Sset_extent_non(space_id)
+    if retval < 0:
+        raise DataspaceError("Failed to remove extent from dataspace %d" % space_id)
+
+# === General selection operations ============================================
+
+def get_select_type(hid_t space_id):
+    """ (INT space_id) => INT select_code
+
+        Determine selection type.  Return values are:
+        SEL_NONE:       No selection.
+        SEL_ALL:        All points selected
+        SEL_POINTS:     Point-by-point element selection in use
+        SEL_HYPERSLABS: Hyperslab selection in use
+    """
+    cdef int sel_code
+    sel_code = <int>H5Sget_select_type(space_id)
+    if sel_code < 0:
+        raise DataspaceError("Failed to determine selection type of dataspace %d" % space_id)
+    return sel_code
+
+def get_select_npoints(hid_t space_id):
+    """ (INT space_id) => LONG npoints
+
+        Determine the total number of points currently selected.  Works for
+        all selection techniques.
+    """
+    cdef hssize_t retval
+    retval = H5Sget_select_npoints(space_id)
+    if retval < 0:
+        raise DataspaceError("Failed to determine number of selected points in dataspace %d" % space_id)
+    return retval
+
+def get_select_bounds(hid_t space_id):
+    """ (INT space_id) => (TUPLE start, TUPLE end)
+
+        Determine the bounding box which exactly contains the current
+        selection.
+    """
+    cdef int rank
+    cdef herr_t retval
+    cdef hsize_t *start
+    cdef hsize_t *end
+    start = NULL
+    end = NULL
+
+    rank = H5Sget_simple_extent_ndims(space_id)
+    if rank < 0:
+        raise DataspaceError("Failed to enumerate dimensions of %d for bounding box." % space_id)
+
+    start = <hsize_t*>malloc(sizeof(hsize_t)*rank)
+    end = <hsize_t*>malloc(sizeof(hsize_t)*rank)
+
+    try:
+        retval = H5Sget_select_bounds(space_id, start, end)
+        if retval < 0:
+            raise DataspaceError("Failed to determine bounding box for space %d" % space_id)
+
+        start_tpl = dims_to_tuple(start, rank)
+        end_tpl = dims_to_tuple(end, rank)
+        if start_tpl == None or end_tpl == None:
+            raise RuntimeError("Failed to construct return tuples.")
+
+    finally:
+        free(start)
+        free(end)
+
+    return (start_tpl, end_tpl)
+
+def select_all(hid_t space_id):
+    """ (INT space_id)
+
+        Select all points in the dataspace.
+    """
+    cdef herr_t retval
+    retval = H5Sselect_all(space_id)
+    if retval < 0:
+        raise DataspaceError("select_all failed on dataspace %d" % space_id)
+
+def select_none(hid_t space_id):
+    """ (INT space_id)
+
+        Deselect entire dataspace.
+    """
+    cdef herr_t retval
+    retval = H5Sselect_none(space_id)
+    if retval < 0:
+        raise DataspaceError("select_none failed on dataspace %d" % space_id)
+
+def select_valid(hid_t space_id):
+    """ (INT space_id) => BOOL select_valid
+        
+        Determine if the current selection falls within the dataspace extent.
+    """
+    cdef htri_t retval
+    retval = H5Sselect_valid(space_id)
+    if retval < 0:
+        raise DataspaceError("Failed to determine selection status on dataspace %d" % space_id)
+    return bool(retval)
+
+# === Point selection functions ===============================================
+
+def get_select_elem_npoints(hid_t space_id):
+    """ (INT space_id) => LONG npoints
+
+        Determine the number of elements selected in point-selection mode.
+    """
+    cdef hssize_t retval
+    retval = H5Sget_select_elem_npoints(space_id)
+    if retval < 0:
+        raise DataspaceError("Failed to count element-selection npoints in space %d" % space_id)
+    return retval
+
+def get_select_elem_pointlist(hid_t space_id):
+    """ (INT space_id) => LIST elements_list
+
+        Get a list of all selected elements, in point-selection mode.
+        List entries <rank>-length tuples containing point coordinates.
+    """
+    cdef herr_t retval
+    cdef int rank
+    cdef hssize_t npoints
+    cdef hsize_t *buf
+    cdef int i_point
+    cdef int i_entry
+
+    npoints = H5Sget_select_elem_npoints(space_id)
+    if npoints < 0:
+        raise DataspaceError("Failed to enumerate points for pointlist, space %d" % space_id)
+    elif npoints == 0:
+        return []
+
+    rank = H5Sget_simple_extent_ndims(space_id)
+    if rank < 0:
+        raise DataspaceError("Failed to determine rank of space %d" % space_id)
+    
+    buf = <hsize_t*>malloc(sizeof(hsize_t)*rank*npoints)
+
+    try:
+        retval = H5Sget_select_elem_pointlist(space_id, 0, <hsize_t>npoints, buf)
+        if retval < 0:
+            raise DataspaceError("Failed to retrieve pointlist for dataspace %d" % space_id)
+
+        retlist = []
+        for i_point from 0<=i_point<npoints:
+            tmp_tpl = []
+            for i_entry from 0<=i_entry<rank:
+                tmp_tpl.append( long( buf[i_point*rank + i_entry] ) )
+            retlist.append(tuple(tmp_tpl))
+
+    finally:
+        free(buf)
+
+    return retlist
+
+def select_elements(hid_t space_id, object coord_list, int op=H5S_SELECT_SET):
+    """ (INT space_id, LIST coord_list, INT op=SELECT_SET)
+
+        Select elements using a list of points.  List entries should be
+        <rank>-length tuples containing point coordinates.
+    """
+    cdef herr_t retval          # Result of API call
+    cdef size_t nelements       # Number of point coordinates
+    cdef hsize_t *coords        # Contiguous 2D array nelements x rank x sizeof(hsize_t)
+    cdef size_t element_size    # Size of a point record: sizeof(hsize_t)*rank
+
+    cdef int rank
+    cdef int i_point
+    cdef int i_entry
+    coords = NULL
+
+    rank = H5Sget_simple_extent_ndims(space_id)
+    if rank < 0:
+        raise DataspaceError("Failed to determine rank of space %d" % space_id)
+
+    nelements = len(coord_list)
+    element_size = sizeof(hsize_t)*rank
+
+    # HDF5 docs say this has to be a contiguous 2D array
+    coords = <hsize_t*>malloc(element_size*nelements)
+
+    try:
+        for i_point from 0<=i_point<nelements:
+
+            tpl = coord_list[i_point]
+            if len(tpl) != rank:
+                raise ValueError("All coordinate entries must be length-%d" % rank)
+
+            for i_entry from 0<=i_entry<rank:
+                coords[(i_point*rank) + i_entry] = tpl[i_entry]
+
+        retval = H5Sselect_elements(space_id, <H5S_seloper_t>op, nelements, <hsize_t**>coords)
+        if retval < 0:
+            raise DataspaceError("Failed to select point list on dataspace %d" % space_id)
+    finally:
+        if coords != NULL:
+            free(coords)
+
+# === Hyperslab selection functions ===========================================
+
+def get_select_hyper_nblocks(hid_t space_id):
+    """ (INT space_id) => LONG nblocks
+
+        Get the number of hyperslab blocks currently selected.
+    """
+    cdef hssize_t nblocks
+    nblocks = H5Sget_select_hyper_nblocks(space_id)
+    if nblocks < 0:
+        raise DataspaceError("Failed to enumerate selected hyperslab blocks in space %d" % space_id)
+    return nblocks
+
+def get_select_hyper_blocklist(hid_t space_id):
+    """ (INT space_id) => LIST hyperslab_blocks
+
+        Get a Python list containing selected hyperslab blocks.
+        List entries are 2-tuples in the form:
+            ( corner_coordinate, opposite_coordinate )
+        where corner_coordinate and opposite_coordinate are <rank>-length
+        tuples.
+    """
+    cdef hssize_t nblocks
+    cdef herr_t retval
+    cdef hsize_t *buf
+
+    cdef int rank
+    cdef int i_block
+    cdef int i_entry
+
+    rank = H5Sget_simple_extent_ndims(space_id)
+    if rank < 0:
+        raise DataspaceError("Failed to determine rank of space %d" % space_id)
+
+    nblocks = H5Sget_select_hyper_nblocks(space_id)
+    if nblocks < 0:
+        raise DataspaceError("Failed to enumerate block selection on space %d" % space_id)
+
+    buf = <hsize_t*>malloc(sizeof(hsize_t)*2*rank*nblocks)
+    
+    try:
+        retval = H5Sget_select_hyper_blocklist(space_id, 0, nblocks, buf)
+        if retval < 0:
+            raise DataspaceError("Failed to retrieve list of hyperslab blocks from space %d" % space_id)
+
+        outlist = []
+        for i_block from 0<=i_block<nblocks:
+            corner_list = []
+            opposite_list = []
+            for i_entry from 0<=i_entry<(2*rank):
+                entry = long(buf[ i_block*(2*rank) + i_entry])
+                if i_entry < rank:
+                    corner_list.append(entry)
+                else:
+                    opposite_list.append(entry)
+            outlist.append( (tuple(corner_list), tuple(opposite_list)) )
+    finally:
+        free(buf)
+
+    return outlist
+    
 
 def select_hyperslab(hid_t space_id, object start, object count, 
     object stride=None, object block=None, int op=H5S_SELECT_SET):
