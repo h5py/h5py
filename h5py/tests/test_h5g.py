@@ -36,7 +36,7 @@ class TestH5G(unittest.TestCase):
         h5f.close(self.fid)
 
     def is_grp(self, item):
-        return h5i.get_type(item) == h5i.TYPE_GROUP
+        return h5i.get_type(item) == h5i.GROUP
 
     def test_open_close(self):
         for name in TEST_GROUPS:
@@ -59,7 +59,16 @@ class TestH5G(unittest.TestCase):
 
         deletecopy(fid, filename)
 
-    def test_link_unlink_move(self):
+    def test_link_unlink_move_linkval(self):
+        fid, filename = getcopy(HDFNAME)
+        obj = h5g.open(fid, OBJECTNAME)
+
+        # symlink
+        h5g.link(obj, TEST_GROUPS[1], NEW_LINK_NAME, h5g.LINK_SOFT)
+        self.assertEqual(h5g.get_objinfo(obj, NEW_LINK_NAME, follow_link=False).type, h5g.LINK)
+        self.assertEqual(h5g.get_linkval(obj, NEW_LINK_NAME), TEST_GROUPS[1])
+
+        deletecopy(fid, filename)
         fid, filename = getcopy(HDFNAME)
         obj = h5g.open(fid, OBJECTNAME)
 
@@ -76,10 +85,12 @@ class TestH5G(unittest.TestCase):
         h5g.link(obj, TEST_GROUPS[0], NEW_LINK_NAME, h5g.LINK_HARD, rgid)
         self.assert_( h5g.py_exists(rgid, NEW_LINK_NAME) )
     
+        # remote unlink
         h5g.unlink(rgid, NEW_LINK_NAME)
         self.assert_( not h5g.py_exists(rgid, NEW_LINK_NAME) )
         h5g.close(rgid)
 
+        # move
         h5g.move(obj, TEST_GROUPS[2], NEW_LINK_NAME)
         self.assert_(h5g.py_exists(obj, NEW_LINK_NAME))
         self.assert_(not h5g.py_exists(obj, TEST_GROUPS[2]))
@@ -87,6 +98,7 @@ class TestH5G(unittest.TestCase):
         self.assertRaises(GroupError, h5g.move, obj, 'Ghost group', 'blah')
         self.assertRaises(GroupError, h5g.unlink, obj, 'Some other name')
         self.assertRaises(GroupError, h5g.link, obj, 'Ghost group', 'blah') 
+        self.assertRaises(GroupError, h5g.get_linkval, -1, "foobar")
 
         h5g.close(obj)
 
@@ -101,7 +113,7 @@ class TestH5G(unittest.TestCase):
 
         for idx, name in enumerate(TEST_GROUPS):
             self.assertEqual(h5g.get_objname_by_idx(self.obj, idx), name)
-            self.assertEqual(h5g.get_objtype_by_idx(self.obj, idx), h5g.OBJ_GROUP)
+            self.assertEqual(h5g.get_objtype_by_idx(self.obj, idx), h5g.GROUP)
 
         self.assertRaises(GroupError, h5g.get_objname_by_idx, self.obj, -1)
         self.assertRaises(GroupError, h5g.get_objtype_by_idx, self.obj, -1)
@@ -112,7 +124,7 @@ class TestH5G(unittest.TestCase):
         retval.fileno
         retval.objno
         self.assertEqual(retval.nlink, 1)
-        self.assertEqual(retval.type, h5g.OBJ_GROUP)
+        self.assertEqual(retval.type, h5g.GROUP)
         retval.mtime
         retval.linklen
 
@@ -149,6 +161,19 @@ class TestH5G(unittest.TestCase):
         namelist = []
         h5g.iterate(self.obj, '.', iterate_two, namelist, 1)
         self.assertEqual(namelist, TEST_GROUPS[1:3])
+
+    def test_get_set_comment(self):
+
+        fid, filename = getcopy(HDFNAME)
+        obj = h5g.open(fid, OBJECTNAME)
+
+        h5g.set_comment(obj, TEST_GROUPS[0], "This is a comment.")
+        self.assertEqual(h5g.get_comment(obj, TEST_GROUPS[0]), "This is a comment.")
+
+        self.assertRaises(GroupError, h5g.set_comment, -1, "foo", "bar")
+        self.assertRaises(GroupError, h5g.get_comment, -1, "foo")
+
+        deletecopy(fid, filename)
 
     def test_py_listnames(self):
 

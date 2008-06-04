@@ -24,19 +24,23 @@
 #include "utils_low.h"
 #include "hdf5.h"
 
-/* Wrapper for malloc(size) */
+/* Wrapper for malloc(size) with the following behavior:
+   1. Always returns NULL for emalloc(0)
+   2. Raises RuntimeError for emalloc(size<0)
+   3. Raises RuntimeError if allocation fails (malloc returns NULL)
+*/
 void* emalloc(size_t size){
 
     void *retval = NULL;
 
     if(size==0) return NULL;
     if(size<0){
-		PyErr_SetString(PyExc_RuntimeError, ".");
+		PyErr_SetString(PyExc_RuntimeError, "Attempted negative malloc (h5py emalloc)");
     }
 
     retval = malloc(size);
     if(retval == NULL){
-        PyErr_SetString(PyExc_RuntimeError, ".");
+        PyErr_SetString(PyExc_RuntimeError, "Memory allocation failed (h5py emalloc)");
     }
 
     return retval;

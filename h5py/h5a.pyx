@@ -18,7 +18,7 @@
 
 # Pyrex compile-time imports
 cimport h5
-from defs_c   cimport malloc, free
+from defs_c cimport malloc, free
 from h5  cimport herr_t, hid_t
 from h5p cimport H5P_DEFAULT
 from h5t cimport H5Tclose
@@ -50,7 +50,7 @@ def create(hid_t loc_id, char* name, hid_t type_id, hid_t space_id):
     return retval
 
 def open_idx(hid_t loc_id, unsigned int idx):
-    """ (INT loc_id, UINT index) => INT attr_id
+    """ (INT loc_id, UINT idx) => INT attr_id
 
         Open an exisiting attribute on an object, by zero-based index.
     """
@@ -180,7 +180,6 @@ def get_name(hid_t attr_id):
     """
     cdef int blen
     cdef char* buf
-    cdef object strout
     buf = NULL
 
     blen = H5Aget_name(attr_id, 0, NULL)

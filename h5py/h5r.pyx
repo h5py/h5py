@@ -15,14 +15,16 @@ from h5g cimport H5G_obj_t
 
 # Runtime imports
 import h5
+from h5 import DDict
 from errors import H5ReferenceError
 
 # === Public constants and data structures ====================================
 
-TYPE_OBJECT = H5R_OBJECT
-TYPE_REGION = H5R_DATASET_REGION
-TYPE_MAPPER = {H5R_OBJECT: 'OBJECT',  H5R_DATASET_REGION: 'DATASET REGION' }
-TYPE_MAPPER = DDict(TYPE_MAPPER)
+OBJECT = H5R_OBJECT
+REGION = H5R_DATASET_REGION
+
+PY_TYPE = {H5R_OBJECT: 'OBJECT',  H5R_DATASET_REGION: 'DATASET REGION' }
+PY_TYPE = DDict(PY_TYPE)
 
 cdef union ref_u:
     hobj_ref_t         obj_ref

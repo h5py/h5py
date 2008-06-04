@@ -74,43 +74,33 @@ H5Eset_auto(NULL,NULL)
 # === Public constants and data structures ====================================
 
 # Enumeration H5T_class_t
-CLASS_NO_CLASS  = H5T_NO_CLASS
-CLASS_INTEGER   = H5T_INTEGER
-CLASS_FLOAT     = H5T_FLOAT
-CLASS_TIME      = H5T_TIME
-CLASS_STRING    = H5T_STRING
-CLASS_BITFIELD  = H5T_BITFIELD
-CLASS_OPAQUE    = H5T_OPAQUE
-CLASS_COMPOUND  = H5T_COMPOUND
-CLASS_REFERENCE = H5T_REFERENCE
-CLASS_ENUM      = H5T_ENUM
-CLASS_VLEN      = H5T_VLEN
-CLASS_ARRAY     = H5T_ARRAY
-CLASS_MAPPER = {H5T_NO_CLASS: "ERROR", H5T_INTEGER: "INTEGER", H5T_FLOAT: "FLOAT",
-                H5T_TIME: "TIME", H5T_STRING: "STRING", H5T_BITFIELD: "BITFIELD",
-                H5T_OPAQUE: "OPAQUE", H5T_COMPOUND: "COMPOUND", H5T_REFERENCE: "REFERENCE",
-                H5T_ENUM: "ENUM", H5T_VLEN: "VLEN", H5T_ARRAY: "ARRAY"}
-CLASS_MAPPER = DDict(CLASS_MAPPER)
+NO_CLASS  = H5T_NO_CLASS
+INTEGER   = H5T_INTEGER
+FLOAT     = H5T_FLOAT
+TIME      = H5T_TIME
+STRING    = H5T_STRING
+BITFIELD  = H5T_BITFIELD
+OPAQUE    = H5T_OPAQUE
+COMPOUND  = H5T_COMPOUND
+REFERENCE = H5T_REFERENCE
+ENUM      = H5T_ENUM
+VLEN      = H5T_VLEN
+ARRAY     = H5T_ARRAY
 
 # Enumeration H5T_sign_t
-SIGN_NONE   = H5T_SGN_NONE
-SIGN_2      = H5T_SGN_2
-SIGN_MAPPER = {H5T_SGN_NONE: "UNSIGNED", H5T_SGN_2: "SIGNED"}
-SIGN_MAPPER = DDict(SIGN_MAPPER)
+SGN_NONE   = H5T_SGN_NONE
+SGN_2      = H5T_SGN_2
 
 # Enumeration H5T_order_t
 ORDER_LE    = H5T_ORDER_LE
 ORDER_BE    = H5T_ORDER_BE
 ORDER_VAX   = H5T_ORDER_VAX
 ORDER_NONE  = H5T_ORDER_NONE
-ORDER_MAPPER = {H5T_ORDER_LE: "LITTLE-ENDIAN", H5T_ORDER_BE: "BIG-ENDIAN",
-                H5T_ORDER_VAX: "VAX MIXED-ENDIAN", H5T_ORDER_NONE: "NONE" }
-ORDER_MAPPER = DDict(ORDER_MAPPER)
 
 if sys.byteorder == "little":    # Custom python addition
-    pyORDER_NATIVE = H5T_ORDER_LE
+    ORDER_NATIVE = H5T_ORDER_LE
 else:
-    pyORDER_NATIVE = H5T_ORDER_BE
+    ORDER_NATIVE = H5T_ORDER_BE
 
 # --- Built-in HDF5 datatypes -------------------------------------------------
 
@@ -160,8 +150,8 @@ CSTRING = H5T_C_S1
 def create(int classtype, size_t size):
     """ (INT class, INT size) => INT type_id
         
-        Create a new HDF5 type object.  Legal values are CLASS_COMPOUND, 
-        CLASS_OPAQUE, CLASS_ENUM
+        Create a new HDF5 type object.  Legal values are COMPOUND, 
+        OPAQUE, ENUM
     """
     cdef hid_t retval
     retval = H5Tcreate(<H5T_class_t>classtype, size)
@@ -239,7 +229,7 @@ def lock(hid_t type_id):
 def get_class(hid_t type_id):
     """ (INT type_id) => INT class
 
-        Get <type_id>'s class, one of h5t.CLASS_*
+        Get <type_id>'s class.
     """
 
     cdef int classtype
@@ -394,8 +384,7 @@ def get_member_class(hid_t type_id, int member):
     """ (INT type_id, INT member_index) => INT class
 
         Determine the datatype class of the member of a compound type,
-        identified by its index (must be 0 <= idx <= nmembers).  Returns
-        one of h5t.CLASS_*
+        identified by its index (must be 0 <= idx <= nmembers).
     """
 
     cdef int retval
@@ -854,7 +843,7 @@ def py_h5t_to_dtype(hid_t type_id, object byteorder=None,
         shape = get_array_dims(type_id)
         typeobj = dtype( (base_dtype, shape) )
     else:
-        raise ConversionError('Unsupported datatype class "%s"' % CLASS_MAPPER[classtype])
+        raise ConversionError('Unsupported datatype class "%s"' % PY_NAMES[classtype])
 
     if byteorder is not None:
         return typeobj.newbyteorder(byteorder)
@@ -1051,8 +1040,16 @@ def py_can_convert_dtype(object dt, object complex_names=None):
 
     return can_convert
 
+PY_SIGN = DDict({H5T_SGN_NONE: "UNSIGNED", H5T_SGN_2: "SIGNED"})
 
+PY_CLASS = DDict({ H5T_NO_CLASS: "ERROR", H5T_INTEGER: "INTEGER", 
+                    H5T_FLOAT: "FLOAT", H5T_TIME: "TIME", H5T_STRING: "STRING", 
+                    H5T_BITFIELD: "BITFIELD", H5T_OPAQUE: "OPAQUE", 
+                    H5T_COMPOUND: "COMPOUND", H5T_REFERENCE: "REFERENCE",
+                    H5T_ENUM: "ENUM", H5T_VLEN: "VLEN", H5T_ARRAY: "ARRAY" })
 
+PY_ORDER = DDict({ H5T_ORDER_LE: "LITTLE-ENDIAN", H5T_ORDER_BE: "BIG-ENDIAN",
+                    H5T_ORDER_VAX: "VAX MIXED-ENDIAN", H5T_ORDER_NONE: "NONE" })
 
 
 

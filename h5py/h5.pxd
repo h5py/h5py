@@ -33,6 +33,8 @@ cdef extern from "hdf5.h":
     size_t len                 # Length of VL data (in base type units)
     void *p                    # Pointer to VL data
 
+  int HADDR_UNDEF
+
   herr_t H5open()
   herr_t H5close()
 

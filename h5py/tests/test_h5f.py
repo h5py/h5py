@@ -15,7 +15,7 @@ import tempfile
 import os
 
 import h5py
-from h5py import h5f, h5i
+from h5py import h5f, h5i, h5p
 from h5py.errors import FileError
 from common import getcopy, deletecopy, errstr
 
@@ -23,11 +23,17 @@ HDFNAME = os.path.join(os.path.dirname(h5py.__file__), 'tests/data/attributes.hd
 
 class TestH5F(unittest.TestCase):
 
+    def setUp(self):
+        self.fid = h5f.open(HDFNAME, h5f.ACC_RDONLY)
+
+    def tearDown(self):
+        h5f.close(self.fid)
+
     def test_open_close(self):
-        fid = h5f.open(HDFNAME)
-        self.assertEqual(h5i.get_type(fid), h5i.TYPE_FILE)
+        fid = h5f.open(HDFNAME, h5f.ACC_RDONLY)
+        self.assertEqual(h5i.get_type(fid), h5i.FILE)
         h5f.close(fid)
-        self.assertEqual(h5i.get_type(fid), h5i.TYPE_BADID)
+        self.assertEqual(h5i.get_type(fid), h5i.BADID)
 
         self.assertRaises(FileError, h5f.open, 'SOME OTHER NAME')
         self.assertRaises(FileError, h5f.close, -1)
@@ -35,16 +41,16 @@ class TestH5F(unittest.TestCase):
     def test_create(self):
         name = tempfile.mktemp('.hdf5')
         fid = h5f.create(name)
-        self.assertEqual(h5i.get_type(fid), h5i.TYPE_FILE)
+        self.assertEqual(h5i.get_type(fid), h5i.FILE)
         h5f.close(fid)
         self.assertRaises(FileError, h5f.create, name, h5f.ACC_EXCL)
         os.unlink(name)
 
     def test_flush(self):
-        fid = h5f.open(HDFNAME, h5f.ACC_RDWR)
+        fid, fname = getcopy(HDFNAME)
         h5f.flush(fid)
         self.assertRaises(FileError, h5f.flush, -1)
-        h5f.close(fid)
+        deletecopy(fid, fname)
 
     def test_is_hdf5(self):
         fd, name = tempfile.mkstemp('.hdf5')
@@ -56,9 +62,39 @@ class TestH5F(unittest.TestCase):
 
         self.assert_(h5f.is_hdf5(HDFNAME))
 
+    def test_get_filesize(self):
 
+        self.assertEqual(h5f.get_filesize(self.fid), os.stat(HDFNAME).st_size)
+        self.assertRaises(FileError, h5f.get_filesize, -1)
 
+    def test_get_create_plist(self):
+        cplist = h5f.get_create_plist(self.fid)
+        self.assert_(h5p.equal(h5p.get_class(cplist), h5p.FILE_CREATE))
+        h5p.close(cplist)
+        self.assertRaises(FileError, h5f.get_create_plist, -1)
 
+    def test_get_access_plist(self):
+        aplist = h5f.get_access_plist(self.fid)
+        self.assert_(h5p.equal(h5p.get_class(aplist), h5p.FILE_ACCESS))
+        h5p.close(aplist)
+        self.assertRaises(FileError, h5f.get_access_plist, -1)
+
+    def test_get_freespace(self):
+        self.assert_(h5f.get_freespace(self.fid) >= 0)
+        self.assertRaises(FileError, h5f.get_freespace, -1)
+
+    def test_get_name(self):
+        self.assertEqual(h5f.get_name(self.fid), HDFNAME)
+        self.assertRaises(FileError, h5f.get_name, -1)
+
+    def test_get_obj_count(self):
+        self.assert_(h5f.get_obj_count(self.fid, h5f.OBJ_ALL) >= 0)
+        self.assertRaises(FileError, h5f.get_obj_count, -1, h5f.OBJ_ALL)
+    
+    def test_get_obj_ids(self):
+        idlist = h5f.get_obj_ids(self.fid, h5f.OBJ_ALL)
+        self.assert_(isinstance(idlist, list))
+        self.assertRaises(FileError, h5f.get_obj_ids, -1, h5f.OBJ_ALL)
 
 
 

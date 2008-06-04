@@ -22,7 +22,7 @@ def getcopy(filename):
     newname = tempfile.mktemp('.hdf5')
     shutil.copy(filename, newname)
 
-    plist = h5p.create(h5p.CLASS_FILE_ACCESS)
+    plist = h5p.create(h5p.FILE_ACCESS)
     h5p.set_fclose_degree(plist, h5f.CLOSE_STRONG)
     fid = h5f.open(newname, h5f.ACC_RDWR)
     h5p.close(plist)

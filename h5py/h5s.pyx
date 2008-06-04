@@ -27,7 +27,6 @@ import h5
 from h5 import DDict
 from errors import DataspaceError
 
-
 # === Public constants and data structures ====================================
 
 #enum H5S_seloper_t:
@@ -41,34 +40,21 @@ SELECT_NOTA     = H5S_SELECT_NOTA
 SELECT_APPEND   = H5S_SELECT_APPEND
 SELECT_PREPEND  = H5S_SELECT_PREPEND
 SELECT_INVALID  = H5S_SELECT_INVALID 
-SELECT_MAPPER = {H5S_SELECT_NOOP: 'NO-OP', H5S_SELECT_SET: 'SET', H5S_SELECT_OR: 'OR',
-                 H5S_SELECT_AND: 'AND', H5S_SELECT_XOR: 'XOR', H5S_SELECT_NOTB: 'NOTB',
-                 H5S_SELECT_NOTA: 'NOTA', H5S_SELECT_APPEND: 'APPEND',
-                 H5S_SELECT_PREPEND: 'PREPEND', H5S_SELECT_INVALID: 'INVALID' }
-SELECT_MAPPER = DDict(SELECT_MAPPER)
 
-SPACE_ALL       = H5S_ALL
-SPACE_UNLIMITED = H5S_UNLIMITED
-SPACE_MAPPER = DDict({H5S_ALL: 'ALL', H5S_UNLIMITED: 'UNLIMITED'})
+ALL       = H5S_ALL
+UNLIMITED = H5S_UNLIMITED
 
 #enum H5S_class_t
-CLASS_NO_CLASS = H5S_NO_CLASS
-CLASS_SCALAR   = H5S_SCALAR
-CLASS_SIMPLE   = H5S_SIMPLE
-CLASS_MAPPER = {H5S_NO_CLASS: 'NO CLASS', H5S_SCALAR: 'SCALAR',
-                H5S_SIMPLE: 'SIMPLE'}
-CLASS_MAPPER = DDict(CLASS_MAPPER)
+NO_CLASS = H5S_NO_CLASS
+SCALAR   = H5S_SCALAR
+SIMPLE   = H5S_SIMPLE
 
 #enum H5S_sel_type
-SEL_ERROR = H5S_SEL_ERROR
-SEL_NON = H5S_SEL_NONE
-SEL_POINTS = H5S_SEL_POINTS
-SEL_HYPERSLABS = H5S_SEL_HYPERSLABS
-SEL_ALL = H5S_SEL_ALL
-SEL_MAPPER = {H5S_SEL_ERROR: 'ERROR', H5S_SEL_NONE: 'NONE', 
-              H5S_SEL_POINTS: 'POINTS', H5S_SEL_HYPERSLABS: 'HYPERSLABS',
-              H5S_SEL_ALL: 'ALL'}
-SEL_MAPPER = DDict(SEL_MAPPER) 
+SEL_ERROR       = H5S_SEL_ERROR
+SEL_NONE        = H5S_SEL_NONE
+SEL_POINTS      = H5S_SEL_POINTS
+SEL_HYPERSLABS  = H5S_SEL_HYPERSLABS
+SEL_ALL         = H5S_SEL_ALL
 
 # === Basic dataspace operations ==============================================
 
@@ -653,6 +639,25 @@ def select_hyperslab(hid_t space_id, object start, object count,
             free(stride_array)
         if block_array != NULL:
             free(block_array)
+
+# === Python extensions =======================================================
+
+PY_CLASS = DDict({H5S_ALL: 'ALL', H5S_UNLIMITED: 'UNLIMITED',
+            H5S_NO_CLASS: 'NO CLASS', H5S_SCALAR: 'CLASS SCALAR',
+            H5S_SIMPLE: 'CLASS SIMPLE'})
+PY_SEL = DDict({ H5S_SEL_ERROR: 'SELECTION ERROR', H5S_SEL_NONE: 'SELECT NONE', 
+            H5S_SEL_POINTS: 'POINT SELECTION', 
+            H5S_SEL_HYPERSLABS: 'HYPERSLAB SELECTION',
+            H5S_SEL_ALL: 'SELECT ALL' })
+
+PY_SELECT = DDict({ H5S_SELECT_NOOP: 'NO-OP SELECT', 
+                    H5S_SELECT_SET: 'SET SELECT', 
+                    H5S_SELECT_OR: 'OR SELECT',
+                    H5S_SELECT_AND: 'AND SELECT', H5S_SELECT_XOR: 'XOR SELECT', 
+                    H5S_SELECT_NOTB: 'NOTB SELECT', H5S_SELECT_NOTA: 'NOTA SELECT', 
+                    H5S_SELECT_APPEND: 'APPEND SELECTION',
+                    H5S_SELECT_PREPEND: 'PREPEND SELECTION', 
+                    H5S_SELECT_INVALID: 'INVALID SELECTION' })
 
 
 

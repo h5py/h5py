@@ -32,22 +32,14 @@ ACC_TRUNC   = H5F_ACC_TRUNC
 ACC_EXCL    = H5F_ACC_EXCL
 ACC_RDWR    = H5F_ACC_RDWR
 ACC_RDONLY  = H5F_ACC_RDONLY
-ACC_MAPPER  = {H5F_ACC_TRUNC: 'TRUNCATE', H5F_ACC_EXCL: 'EXCLUSIVE',
-               H5F_ACC_RDWR: 'READ-WRITE', H5F_ACC_RDONLY: 'READ-ONLY' }
-ACC_MAPPER  = DDict(ACC_MAPPER)
 
 SCOPE_LOCAL     = H5F_SCOPE_LOCAL
 SCOPE_GLOBAL    = H5F_SCOPE_GLOBAL
-SCOPE_MAPPER    = {H5F_SCOPE_LOCAL: 'LOCAL SCOPE', H5F_SCOPE_GLOBAL: 'GLOBAL SCOPE'}
-SCOPE_MAPPER    = DDict(SCOPE_MAPPER)
 
 CLOSE_WEAK = H5F_CLOSE_WEAK
 CLOSE_SEMI = H5F_CLOSE_SEMI
 CLOSE_STRONG = H5F_CLOSE_STRONG
 CLOSE_DEFAULT = H5F_CLOSE_DEFAULT
-CLOSE_MAPPER = {H5F_CLOSE_WEAK: 'WEAK', H5F_CLOSE_SEMI: 'SEMI', 
-                H5F_CLOSE_STRONG: 'STRONG', H5F_CLOSE_DEFAULT: 'DEFAULT'}
-CLOSE_MAPPER = DDict(CLOSE_MAPPER)
 
 OBJ_FILE    = H5F_OBJ_FILE
 OBJ_DATASET = H5F_OBJ_DATASET
@@ -56,10 +48,6 @@ OBJ_DATATYPE = H5F_OBJ_DATATYPE
 OBJ_ATTR    = H5F_OBJ_ATTR
 OBJ_ALL     = H5F_OBJ_ALL
 OBJ_LOCAL   = H5F_OBJ_LOCAL
-OBJ_MAPPER = {H5F_OBJ_FILE: 'FILE', H5F_OBJ_DATASET: 'DATASET',
-              H5F_OBJ_GROUP: 'GROUP', H5F_OBJ_DATATYPE: 'DATATYPE',
-              H5F_OBJ_ATTR: 'ATTRIBUTE', H5F_OBJ_ALL: 'ALL', H5F_OBJ_LOCAL: 'LOCAL'}
-OBJ_MAPPER = DDict(OBJ_MAPPER)
 
 # === File operations =========================================================
 
@@ -255,26 +243,45 @@ def get_obj_ids(hid_t file_id, int types):
         specific identifier.
 
     """
+    cdef int count
     cdef int retval
     cdef hid_t *obj_list
     cdef int i
+
     obj_list = NULL
     py_obj_list = []
 
     try:
-        retval = H5Fget_obj_ids(file_id, types, -1, obj_list)
+        count = H5Fget_obj_count(file_id, types)
+        if count < 0:
+            raise FileError("Failed to count open identifiers.")
+
+        obj_list = <hid_t*>malloc(sizeof(hid_t)*count)
+        retval = H5Fget_obj_ids(file_id, types, count, obj_list)
         if retval < 0:
             raise FileError("Failed to enumerate open objects of types %d in file %d" % (types, file_id))
 
-        for i from 0<=i<retval:
-            py_obj_list[i] = obj_list[i]
+        for i from 0<=i<count:
+            py_obj_list.append(obj_list[i])
     finally:
-        if obj_list != NULL:
-            free(obj_list)
+        free(obj_list)
 
     return py_obj_list
 
+# === Python extensions =======================================================
 
+PY_SCOPE = DDict({  H5F_SCOPE_LOCAL: 'LOCAL SCOPE', 
+                    H5F_SCOPE_GLOBAL: 'GLOBAL SCOPE' })
+PY_CLOSE = DDict({ H5F_CLOSE_WEAK: 'CLOSE WEAK', 
+                    H5F_CLOSE_SEMI: 'CLOSE SEMI', 
+                    H5F_CLOSE_STRONG: 'CLOSE STRONG', 
+                    H5F_CLOSE_DEFAULT: 'DEFAULT CLOSE STRENGTH' })
+PY_OBJ = DDict({ H5F_OBJ_FILE: 'FILE', H5F_OBJ_DATASET: 'DATASET',
+                H5F_OBJ_GROUP: 'GROUP', H5F_OBJ_DATATYPE: 'DATATYPE',
+                H5F_OBJ_ATTR: 'ATTRIBUTE', H5F_OBJ_ALL: 'ALL', 
+                H5F_OBJ_LOCAL: 'LOCAL' })
+PY_ACC = DDict({ H5F_ACC_TRUNC: 'TRUNCATE', H5F_ACC_EXCL: 'EXCLUSIVE ACCESS',
+                 H5F_ACC_RDWR: 'READ-WRITE', H5F_ACC_RDONLY: 'READ-ONLY' })
 
 
 

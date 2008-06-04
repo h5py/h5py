@@ -26,22 +26,16 @@ from errors import GroupError
 # === Public constants and data structures ====================================
 
 # Enumerated object types for groups "H5G_obj_t"
-OBJ_UNKNOWN  = H5G_UNKNOWN
-OBJ_LINK     = H5G_LINK
-OBJ_GROUP    = H5G_GROUP
-OBJ_DATASET  = H5G_DATASET
-OBJ_DATATYPE = H5G_TYPE
-OBJ_MAPPER = { H5G_UNKNOWN: "UNKNOWN", H5G_LINK: "LINK", H5G_GROUP: "GROUP",
-                 H5G_DATASET: "DATASET", H5G_TYPE: "DATATYPE" }
-OBJ_MAPPER = DDict(OBJ_MAPPER)
+UNKNOWN  = H5G_UNKNOWN
+LINK     = H5G_LINK
+GROUP    = H5G_GROUP
+DATASET  = H5G_DATASET
+DATATYPE = H5G_TYPE
 
 # Enumerated link types "H5G_link_t"
 LINK_ERROR = H5G_LINK_ERROR
 LINK_HARD  = H5G_LINK_HARD
 LINK_SOFT  = H5G_LINK_SOFT
-LINK_MAPPER = { H5G_LINK_ERROR: "ERROR", H5G_LINK_HARD: "HARDLINK", 
-                H5G_LINK_SOFT: "SOFTLINK" }
-LINK_MAPPER = DDict(LINK_MAPPER)
 
 cdef class GroupStat:
     """ Represents the H5G_stat_t structure containing group member info.
@@ -191,7 +185,11 @@ def get_objtype_by_idx(hid_t loc_id, hsize_t idx):
     """ (INT loc_id, INT idx) => INT object_type_code
 
         Get the type of an object attached to a group, given its zero-based
-        index.  Return value is one of the OBJ_* constants.
+        index.  Possible return values are:
+            - LINK
+            - GROUP
+            - DATASET
+            - DATATYPE
     """
     cdef int retval
 
@@ -296,7 +294,7 @@ def get_linkval(hid_t loc_id, char* name):
         raise GroupError('Can\'t stat "%s" under group %d' % (name, loc_id))
 
     if statbuf.type != H5G_LINK:
-        raise GroupError('"%s" is not a symbolic link (type is %s)' % (name, OBJ_MAPPER[statbuf.type]))
+        raise GroupError('"%s" is not a symbolic link (type is %s)' % (name, PY_NAMES[statbuf.type]))
 
     value = <char*>malloc(statbuf.linklen+1)
     retval = H5Gget_linkval(loc_id, name, statbuf.linklen+1, value)
@@ -412,7 +410,11 @@ def py_exists(hid_t group_id, char* name, int follow_link=1):
         return False
     return True
 
-
+PY_TYPE = DDict({H5G_UNKNOWN: "UNKNOWN OBJ TYPE", 
+            H5G_LINK: "LINK", H5G_GROUP: "GROUP",
+            H5G_DATASET: "DATASET", H5G_TYPE: "DATATYPE" })
+PY_LINK = DDict({H5G_LINK_ERROR: "ERROR", H5G_LINK_HARD: "HARDLINK", 
+                H5G_LINK_SOFT: "SOFTLINK" })
 
 
 

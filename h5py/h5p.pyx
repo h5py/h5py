@@ -30,19 +30,14 @@ from errors import PropertyError, ConversionError
 
 # === Public constants and data structures ====================================
 
-# Property list classes (I'm surprised there's no enum for this)
-CLASS_NO_CLASS       = H5P_NO_CLASS
-CLASS_FILE_CREATE    = H5P_FILE_CREATE
-CLASS_FILE_ACCESS    = H5P_FILE_ACCESS
-CLASS_DATASET_CREATE = H5P_DATASET_CREATE
-CLASS_DATASET_XFER   = H5P_DATASET_XFER
+# Property list classes
+NO_CLASS       = H5P_NO_CLASS
+FILE_CREATE    = H5P_FILE_CREATE
+FILE_ACCESS    = H5P_FILE_ACCESS
+DATASET_CREATE = H5P_DATASET_CREATE
+DATASET_XFER   = H5P_DATASET_XFER
 
-CLASS_MAPPER = { H5P_NO_CLASS: 'ERROR', H5P_FILE_CREATE: 'FILE CREATION',
-                  H5P_FILE_ACCESS: 'FILE ACCESS', H5P_DATASET_CREATE: 'DATASET CREATION',
-                  H5P_DATASET_XFER: 'DATASET TRANSFER'}
-CLASS_MAPPER = DDict(CLASS_MAPPER)
-
-DEFAULT = H5P_DEFAULT # not really a "class"
+DEFAULT = H5P_DEFAULT
 
 # === Generic property list operations ========================================
 
@@ -391,6 +386,10 @@ def py_has_filter(hid_t plist, int filter_class):
         return False
     return True
     
+PY_CLASS = DDict({ H5P_NO_CLASS: 'ERROR', H5P_FILE_CREATE: 'FILE CREATION',
+            H5P_FILE_ACCESS: 'FILE ACCESS', H5P_DATASET_CREATE: 'DATASET CREATION',
+            H5P_DATASET_XFER: 'DATASET TRANSFER', H5P_DEFAULT: 'DEFAULT'})
+
     
 
     

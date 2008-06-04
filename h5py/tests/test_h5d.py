@@ -48,9 +48,9 @@ class TestH5D(unittest.TestCase):
 
     def test_open_close(self):
         h5d.close(self.did)
-        self.assertEqual(h5i.get_type(self.did), h5i.TYPE_BADID)
+        self.assertEqual(h5i.get_type(self.did), h5i.BADID)
         self.did = h5d.open(self.fid, "CompoundChunked")
-        self.assertEqual(h5i.get_type(self.did), h5i.TYPE_DATASET)
+        self.assertEqual(h5i.get_type(self.did), h5i.DATASET)
 
         self.assertRaises(DatasetError, h5d.open, self.fid, "Something else")
         self.assertRaises(DatasetError, h5d.close, -1)
@@ -58,11 +58,11 @@ class TestH5D(unittest.TestCase):
     def test_read(self):
         array = numpy.ndarray(SHAPE, dtype=DTYPE)
 
-        h5d.read(self.did, h5s.SPACE_ALL, h5s.SPACE_ALL, array)
+        h5d.read(self.did, h5s.ALL, h5s.ALL, array)
         for name in DTYPE.fields:
             self.assert_(numpy.all(array[name] == basearray[name]), "%s::\n%s\n!=\n%s" % (name, array[name], basearray[name]))
 
-        self.assertRaises(DatasetError, h5d.read, -1, h5s.SPACE_ALL, h5s.SPACE_ALL, array)
+        self.assertRaises(DatasetError, h5d.read, -1, h5s.ALL, h5s.ALL, array)
 
     def test_get_space(self):
         sid = h5d.get_space(self.did)
@@ -73,11 +73,24 @@ class TestH5D(unittest.TestCase):
             h5s.close(sid)
         self.assertRaises(DatasetError, h5d.get_space, -1)
 
+    def test_get_space_status(self):
+        status = h5d.get_space_status(self.did)
+        self.assert_(status in h5d.PY_SPACE_STATUS)
+        self.assertRaises(DatasetError, h5d.get_space_status, -1)
+
+    def test_get_offset(self):
+        # Chunked datasets have no offset.  New test dset needed.
+        self.assertRaises(DatasetError, h5d.get_offset, -1)
+
+    def test_get_storage_size(self):
+        # This function can't intentionally raise an exception.
+        self.assert_(h5d.get_storage_size(self.did) >= 0)
+
     def test_get_type(self):
         # We're not testing datatype conversion here; that's for test_h5t
         tid = h5d.get_type(self.did)
         try:
-            self.assertEqual(h5i.get_type(tid), h5i.TYPE_DATATYPE)
+            self.assertEqual(h5i.get_type(tid), h5i.DATATYPE)
         finally:
             h5t.close(tid)
         self.assertRaises(DatasetError, h5d.get_type, -1)
@@ -85,7 +98,7 @@ class TestH5D(unittest.TestCase):
     def test_get_create_plist(self):
         pid = h5d.get_create_plist(self.did)
         try:
-            self.assertEqual(h5i.get_type(pid), h5i.TYPE_GENPROP_LST)
+            self.assertEqual(h5i.get_type(pid), h5i.GENPROP_LST)
         finally:
             h5p.close(pid)
 

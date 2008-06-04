@@ -24,7 +24,7 @@
 
 # Pyrex compile-time imports
 from defs_c   cimport malloc, free
-from h5  cimport herr_t, hid_t, size_t, hsize_t, htri_t, haddr_t
+from h5  cimport herr_t, hid_t, size_t, hsize_t, htri_t, haddr_t, HADDR_UNDEF
 from h5s cimport H5Sclose, H5S_ALL, H5S_UNLIMITED, H5S_SCALAR, H5S_SIMPLE
 from h5t cimport H5Tclose
 from h5p cimport H5P_DEFAULT
@@ -42,44 +42,26 @@ import_array()
 
 # === Public constants and data structures ====================================
 
-LAYOUT_COMPACT = H5D_COMPACT
-LAYOUT_CONTIGUOUS = H5D_CONTIGUOUS
-LAYOUT_CHUNKED = H5D_CHUNKED
-LAYOUT_MAPPER = { H5D_COMPACT: 'COMPACT', H5D_CONTIGUOUS: 'CONTIGUOUS',
-                  H5D_CHUNKED: 'CHUNKED'}
-LAYOUT_MAPPER = DDict(LAYOUT_MAPPER)
+COMPACT     = H5D_COMPACT
+CONTIGUOUS  = H5D_CONTIGUOUS
+CHUNKED     = H5D_CHUNKED
 
 ALLOC_TIME_DEFAULT  = H5D_ALLOC_TIME_DEFAULT
 ALLOC_TIME_LATE     = H5D_ALLOC_TIME_LATE
 ALLOC_TIME_EARLY    = H5D_ALLOC_TIME_EARLY
 ALLOC_TIME_INCR     = H5D_ALLOC_TIME_INCR
-ALLOC_TIME_MAPPER = { H5D_ALLOC_TIME_DEFAULT: 'DEFAULT', H5D_ALLOC_TIME_LATE:'LATE',
-                      H5D_ALLOC_TIME_EARLY: 'EARLY', H5D_ALLOC_TIME_INCR: 'INCR'}
-ALLOC_TIME_MAPPER = DDict(ALLOC_TIME_MAPPER)
 
 SPACE_STATUS_NOT_ALLOCATED  = H5D_SPACE_STATUS_NOT_ALLOCATED
 SPACE_STATUS_PART_ALLOCATED = H5D_SPACE_STATUS_PART_ALLOCATED
 SPACE_STATUS_ALLOCATED      = H5D_SPACE_STATUS_ALLOCATED
-SPACE_STATUS_MAPPER = { H5D_SPACE_STATUS_NOT_ALLOCATED: 'NOT ALLOCATED', 
-                        H5D_SPACE_STATUS_PART_ALLOCATED: 'PARTIALLY ALLOCATED',
-                        H5D_SPACE_STATUS_ALLOCATED: 'ALLOCATED'}
-SPACE_STATUS_MAPPER = DDict(SPACE_STATUS_MAPPER)
 
 FILL_TIME_ALLOC = H5D_FILL_TIME_ALLOC
 FILL_TIME_NEVER = H5D_FILL_TIME_NEVER
 FILL_TIME_IFSET = H5D_FILL_TIME_IFSET
-FILL_TIME_MAPPER = { H5D_FILL_TIME_ALLOC: 'ALLOCATION TIME',
-                     H5D_FILL_TIME_NEVER: 'NEVER',
-                     H5D_FILL_TIME_IFSET: 'IF SET' }
-FILL_TIME_MAPPER = DDict(FILL_TIME_MAPPER)
 
 FILL_VALUE_UNDEFINED    = H5D_FILL_VALUE_UNDEFINED
 FILL_VALUE_DEFAULT      = H5D_FILL_VALUE_DEFAULT
 FILL_VALUE_USER_DEFINED = H5D_FILL_VALUE_USER_DEFINED
-FILL_VALUE_MAPPER = { H5D_FILL_VALUE_UNDEFINED: 'UNDEFINED',
-                      H5D_FILL_VALUE_DEFAULT: 'DEFAULT',
-                      H5D_FILL_VALUE_USER_DEFINED: 'USER-DEFINED' }
-FILL_VALUE_MAPPER = DDict(FILL_VALUE_MAPPER)
 
 # === Basic dataset operations ================================================
 
@@ -280,9 +262,9 @@ def get_offset(hid_t dset_id):
     """
     cdef haddr_t retval
     retval = H5Dget_offset(dset_id)
-    if retval < 0:
+    if retval == HADDR_UNDEF:
         raise DatasetError("Error determining file offset of dataset %d" % dset_id)
-    return <long long>retval
+    return retval
 
 def get_storage_size(hid_t dset_id):
     """ (INT dset_id) => LONG storage_size
@@ -635,6 +617,23 @@ def py_patch(hid_t ds_source, hid_t ds_sink, hid_t transfer_space):
             H5Tclose(source_type)
         if xfer_buf != NULL:
             free(xfer_buf)
+
+PY_LAYOUT = DDict({ H5D_COMPACT: 'COMPACT LAYOUT', 
+               H5D_CONTIGUOUS: 'CONTIGUOUS LAYOUT',
+               H5D_CHUNKED: 'CHUNKED LAYOUT'})
+PY_ALLOC_TIME = DDict({ H5D_ALLOC_TIME_DEFAULT: 'DEFAULT ALLOC TIME', 
+                        H5D_ALLOC_TIME_LATE:'LATE ALLOC TIME',
+                        H5D_ALLOC_TIME_EARLY: 'EARLY ALLOC TIME', 
+                        H5D_ALLOC_TIME_INCR: 'INCR ALLOC TIME' })
+PY_SPACE_STATUS = DDict({ H5D_SPACE_STATUS_NOT_ALLOCATED: 'SPACE NOT ALLOCATED', 
+                    H5D_SPACE_STATUS_PART_ALLOCATED: 'SPACE PARTIALLY ALLOCATED',
+                    H5D_SPACE_STATUS_ALLOCATED: 'SPACE FULLY ALLOCATED'})
+PY_FILL_TIME = DDict({ H5D_FILL_TIME_ALLOC: 'FILL AT ALLOCATION TIME',
+                        H5D_FILL_TIME_NEVER: 'NEVER FILL',
+                        H5D_FILL_TIME_IFSET: 'FILL IF SET'})
+PY_FILL_VALUE = DDict({H5D_FILL_VALUE_UNDEFINED: 'UNDEFINED FILL VALUE',
+                        H5D_FILL_VALUE_DEFAULT: 'DEFAULT FILL VALUE',
+                        H5D_FILL_VALUE_USER_DEFINED: 'USER-DEFINED FILL VALUE'})
 
 
 

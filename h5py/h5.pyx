@@ -70,16 +70,15 @@ class DDict(dict):
 
 # === Error functions =========================================================
 
-cdef herr_t walk_cb(int n, H5E_error_t *err_desc, data):
+cdef herr_t walk_cb(int n, H5E_error_t *err_desc, elist):
 
-    cdef object hstring
     hstring = err_desc.desc
     if len(hstring) == 0:
         hstring = "Error"
     else:
         hstring = '"'+hstring.capitalize()+'"'
 
-    data.append("    "+str(n)+": "+hstring+" at "+err_desc.func_name)
+    elist.append("    "+str(n)+": "+hstring+" at "+err_desc.func_name)
 
     return 0
 
