@@ -97,6 +97,15 @@ ORDER_BE    = H5T_ORDER_BE
 ORDER_VAX   = H5T_ORDER_VAX
 ORDER_NONE  = H5T_ORDER_NONE
 
+DIR_DEFAULT = H5T_DIR_DEFAULT
+DIR_ASCEND  = H5T_DIR_ASCEND
+DIR_DESCEND = H5T_DIR_DESCEND
+
+STR_NULLTERM = H5T_STR_NULLTERM
+STR_NULLPAD  = H5T_STR_NULLPAD
+STR_SPACEPAD = H5T_STR_SPACEPAD
+
+
 if sys.byteorder == "little":    # Custom python addition
     ORDER_NATIVE = H5T_ORDER_LE
 else:
@@ -261,6 +270,23 @@ def get_super(hid_t type_id):
         raise DatatypeError("Can't determine base datatype of %d" % type_id)
     return stype
 
+def get_native_type(hid_t type_id, int direction):
+    """ (INT type_id, INT direction) => INT new_type_id
+
+        Determine the native C equivalent for the given datatype.  Legal values
+        for "direction" are:
+          DIR_DEFAULT
+          DIR_ASCEND
+          DIR_DESCEND
+        These determine which direction the list of native datatypes is
+        searched; see the HDF5 docs for a definitive list.
+    """
+    cdef hid_t retval
+    retval = H5Tget_native_type(type_id, <H5T_direction_t>direction)
+    if retval < 0:
+        raise DatatypeError("Can't determine native equivalent of %d" % type_id)
+    return retval
+
 def detect_class(hid_t type_id, int classtype):
     """ (INT type_id, INT class) => BOOL class_is_present
 
@@ -305,8 +331,10 @@ def set_size(hid_t type_id, size_t size):
 def get_order(hid_t type_id):
     """ (INT type_id) => INT order
 
-        Obtain the byte order of the datatype; one of h5t.ORDER_* or
-        h5t.pyORDER_NATIVE
+        Obtain the byte order of the datatype; one of:
+         ORDER_LE
+         ORDER_BE
+         ORDER_NATIVE
     """
     cdef int order
     order = <int>H5Tget_order(type_id)
@@ -317,8 +345,10 @@ def get_order(hid_t type_id):
 def set_order(hid_t type_id, int order):
     """ (INT type_id, INT order)
 
-        Set the byte order of the datatype. <order> must be one of 
-        h5t.ORDER_* or h5t.pyORDER_NATIVE
+        Set the byte order of the datatype. "order" must be one of
+         ORDER_LE
+         ORDER_BE
+         ORDER_NATIVE
     """
     cdef herr_t retval
     retval = H5Tset_order(type_id, <H5T_order_t>order)
@@ -328,7 +358,9 @@ def set_order(hid_t type_id, int order):
 def get_sign(hid_t type_id):
     """ (INT type_id) => INT sign
 
-        Obtain the "signedness" of the datatype; one of h5t.SIGN_*
+        Obtain the "signedness" of the datatype; one of:
+          SGN_NONE:  Unsigned
+          SGN_2:     Signed 2's complement
     """
     cdef int retval
     retval = <int>H5Tget_sign(type_id)
@@ -339,12 +371,15 @@ def get_sign(hid_t type_id):
 def set_sign(hid_t type_id, int sign):
     """ (INT type_id, INT sign)
 
-        Set the "signedness" of the datatype; one of h5t.SIGN_*
+        Set the "signedness" of the datatype; one of:
+          SGN_NONE:  Unsigned
+          SGN_2:     Signed 2's complement
     """
     cdef herr_t retval
     retval = H5Tset_sign(type_id, <H5T_sign_t>sign)
     if retval < 0:
         raise DatatypeError("Failed to set sign of datatype %d" % type_id)
+
 
 def is_variable_str(hid_t type_id):
     """ (INT type_id) => BOOL is_variable
@@ -429,9 +464,8 @@ def get_member_offset(hid_t type_id, int member):
         library, this function will never raise an exception.  It returns
         0 on failure; be careful as this is also a legal offset value.
     """
-    cdef size_t offset
-    offset = H5Tget_member_offset(type_id, member)
-    return offset
+    return H5Tget_member_offset(type_id, member)
+
 
 def get_member_type(hid_t type_id, int member):
     """ (INT type_id, INT member_index) => INT type_id
@@ -475,7 +509,6 @@ def pack(hid_t type_id):
 # array_create
 # get_array_ndims
 # get_array_dims
-
 
 
 def array_create(hid_t base, object dims_tpl):

@@ -38,7 +38,7 @@ cdef extern from "hdf5.h":
     H5T_NATIVE_LDOUBLE
 
   # Byte orders
-  cdef enum H5T_order_t:
+  ctypedef enum H5T_order_t:
     H5T_ORDER_ERROR      = -1,  # error
     H5T_ORDER_LE         = 0,   # little endian
     H5T_ORDER_BE         = 1,   # bit endian
@@ -46,14 +46,30 @@ cdef extern from "hdf5.h":
     H5T_ORDER_NONE       = 3    # no particular order (strings, bits,..)
 
   # HDF5 signed enums
-  cdef enum H5T_sign_t:
+  ctypedef enum H5T_sign_t:
     H5T_SGN_ERROR        = -1,  # error
     H5T_SGN_NONE         = 0,   # this is an unsigned type
     H5T_SGN_2            = 1,   # two's complement
     H5T_NSGN             = 2    # this must be last!
 
+  ctypedef enum H5T_norm_t:
+    H5T_NORM_ERROR       = -1,
+    H5T_NORM_IMPLIED     = 0,
+    H5T_NORM_MSBSET      = 1,
+    H5T_NORM_NONE        = 2
+
+  ctypedef enum H5T_cset_t:
+    H5T_CSET_ERROR       = -1,
+    H5T_CSET_ASCII       = 0
+
+  ctypedef enum H5T_str_t:
+    H5T_STR_ERROR        = -1,
+    H5T_STR_NULLTERM     = 0,
+    H5T_STR_NULLPAD      = 1,
+    H5T_STR_SPACEPAD     = 2
+
   # Atomic datatype padding
-  cdef enum H5T_pad_t:
+  ctypedef enum H5T_pad_t:
     H5T_PAD_ZERO        = 0,
     H5T_PAD_ONE         = 1,
     H5T_PAD_BACKGROUND  = 2
@@ -122,6 +138,11 @@ cdef extern from "hdf5.h":
     H5T_UNIX_D32BE
     H5T_UNIX_D64BE
 
+  cdef enum H5T_direction_t:
+    H5T_DIR_DEFAULT,
+    H5T_DIR_ASCEND,
+    H5T_DIR_DESCEND
+
  # --- Datatype operations ---------------------------------------------------
   # General operations
   hid_t         H5Tcreate(H5T_class_t type, size_t size)
@@ -137,8 +158,8 @@ cdef extern from "hdf5.h":
   htri_t        H5Tdetect_class(hid_t type_id, H5T_class_t dtype_class)
   herr_t        H5Tclose(hid_t type_id)
 
+  hid_t         H5Tget_native_type(hid_t type_id, H5T_direction_t direction)
   # Not for public API
-  #hid_t         H5Tget_native_type(hid_t type_id, H5T_direction_t direction)
   herr_t        H5Tconvert(hid_t src_id, hid_t dst_id, size_t nelmts, void *buf, void *background, hid_t plist_id)
 
   # Atomic datatypes
@@ -159,8 +180,21 @@ cdef extern from "hdf5.h":
   H5T_sign_t    H5Tget_sign(hid_t type_id)
   herr_t        H5Tset_sign(hid_t type_id, H5T_sign_t sign)
 
-                # missing: bunch of floating-point crap nobody uses
-                # missing: g/s strpad
+  herr_t        H5Tget_fields(hid_t type_id, size_t *spos, size_t *epos, 
+                                size_t *esize, size_t *mpos, size_t *msize  )
+  herr_t        H5Tset_fields(hid_t type_id, size_t spos, size_t epos, 
+                                size_t esize, size_t mpos, size_t msize  )
+
+  size_t        H5Tget_ebias(hid_t type_id)
+  herr_t        H5Tset_ebias(hid_t type_id, size_t ebias)
+  H5T_norm_t    H5Tget_norm(hid_t type_id)
+  herr_t        H5Tset_norm(hid_t type_id, H5T_norm_t norm)
+  H5T_pad_t     H5Tget_inpad(hid_t type_id)
+  herr_t        H5Tset_inpad(hid_t type_id, H5T_pad_t inpad)
+  H5T_cset_t    H5Tget_cset(hid_t type_id)
+  herr_t        H5Tset_cset(hid_t type_id, H5T_cset_t cset)
+  H5T_str_t     H5Tget_strpad(hid_t type_id)
+  herr_t        H5Tset_strpad(hid_t type_id, H5T_str_t strpad)
 
   # VLENs
   hid_t     H5Tvlen_create(hid_t base_type_id)
@@ -171,7 +205,6 @@ cdef extern from "hdf5.h":
   H5T_class_t   H5Tget_member_class(hid_t type_id, int member_no)
   char*         H5Tget_member_name(hid_t type_id, unsigned membno)
   hid_t         H5Tget_member_type(hid_t type_id, unsigned membno)
-  #hid_t         H5Tget_native_type(hid_t type_id, H5T_direction_t direction)
   int           H5Tget_member_offset(hid_t type_id, int membno)
   int           H5Tget_member_index(hid_t type_id, char* name)
   herr_t        H5Tinsert(hid_t parent_id, char *name, size_t offset,
