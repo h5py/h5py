@@ -24,14 +24,17 @@
 """
 from h5e cimport H5Eset_auto, H5E_walk_t, H5Ewalk, H5E_error_t, \
                       H5E_WALK_DOWNWARD
-
+from h5t cimport H5Tset_overflow
 from errors import H5LibraryError
 
-# Activate the library
+# === Library init ============================================================
+
 H5open()
 
 # Disable automatic error printing to stderr
 H5Eset_auto(NULL, NULL)
+
+# === API =====================================================================
 
 def get_libversion():
     """ () => TUPLE (major, minor, release)

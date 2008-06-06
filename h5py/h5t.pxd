@@ -159,8 +159,11 @@ cdef extern from "hdf5.h":
   herr_t        H5Tclose(hid_t type_id)
 
   hid_t         H5Tget_native_type(hid_t type_id, H5T_direction_t direction)
+
   # Not for public API
-  herr_t        H5Tconvert(hid_t src_id, hid_t dst_id, size_t nelmts, void *buf, void *background, hid_t plist_id)
+  herr_t        H5Tconvert(hid_t src_id, hid_t dst_id, size_t nelmts, void *buf, void *background, hid_t plist_id) except *
+  ctypedef herr_t  (*H5T_overflow_t)(hid_t src_id, hid_t dst_id, void *src_buf, void *dst_buf) except -1
+  herr_t        H5Tset_overflow(H5T_overflow_t func)
 
   # Atomic datatypes
   herr_t        H5Tset_size(hid_t type_id, size_t size)
@@ -217,8 +220,6 @@ cdef extern from "hdf5.h":
   herr_t    H5Tenum_nameof( hid_t type, void *value, char *name, size_t size  )
   herr_t    H5Tenum_valueof( hid_t type, char *name, void *value  )
   herr_t    H5Tget_member_value(hid_t type,  unsigned int memb_no, void *value  )
-  #char*     H5Tget_member_name(hid_t type_id, unsigned field_idx  )
-  #int       H5Tget_member_index(hid_t type_id, char * field_name  )
 
   # Array data types
   hid_t H5Tarray_create(hid_t base_id, int ndims, hsize_t dims[], int perm[])

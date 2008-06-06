@@ -587,38 +587,100 @@ def enum_create(hid_t base_id):
         raise DatatypeError("Failed to create enum of class %d" % base_id)
     return retval
 
+cdef void _enum_convert(hid_t type_id, long long *buf, int reverse) except *:
+    # Convert the long long value in "buf" to the native representation
+    # of type_id.  Conversion performed in-place, DatatypeError raised
+    # on failure.
+    # Reverse: zero => llong->type; nonzero => type->llong
+    cdef hid_t basetype
+    cdef herr_t retval
+    cdef H5T_class_t class_code
+
+    class_code = H5Tget_class(type_id)
+    if class_code != H5T_ENUM:
+        raise DatatypeError("Type %d is not of class ENUM")
+
+    basetype = H5Tget_super(type_id)
+    if basetype < 0:
+        raise DatatypeError("Failed to determine base type of datatype %d" % type_id)
+
+    try:
+        if not reverse:
+            retval = H5Tconvert(H5T_NATIVE_LLONG, basetype, 1, buf, NULL, H5P_DEFAULT)
+        else:
+            retval = H5Tconvert(basetype, H5T_NATIVE_LLONG, 1, buf, NULL, H5P_DEFAULT)
+        if retval < 0:
+            raise DatatypeError("Failed to convert enum value")
+    finally:
+        H5Tclose(basetype)
+
 def enum_insert(hid_t type_id, char* name, long long value):
     """ (INT type_id, STRING name, INT/LONG value)
 
         Define a new member of an enumerated type.  <value> will be
-        automatically converted to the base type defined for this enum.
+        automatically converted to the base type defined for this enum.  If
+        the conversion results in overflow, the value will be silently clipped.
     """
     cdef herr_t retval
     cdef hid_t ptype
-    cdef long long *data_ptr
+    cdef long long buf
     ptype = 0
 
-    data_ptr = <long long*>malloc(sizeof(long long))
     try:
-        data_ptr[0] = value
-        ptype = H5Tget_super(type_id)
-        retval = H5Tconvert(H5T_NATIVE_LLONG, ptype, 1, data_ptr, NULL, H5P_DEFAULT)
-        if retval < 0:
-            raise DatatypeError("Can't preconvert integer for enum insert")
-        retval = H5Tenum_insert(type_id, name, data_ptr)
+        buf = value
+        _enum_convert(type_id, &buf, 0)
+        retval = H5Tenum_insert(type_id, name, &buf)
         if retval < 0:
             raise DatatypeError("Failed to insert '%s' (value %d) into enum %d" % (name, value, type_id))
     finally:
         if ptype:
             H5Tclose(ptype)
-        free(data_ptr)
 
-#  herr_t    H5Tget_member_value(hid_t type  unsigned memb_no, void *value  )
+def enum_nameof(hid_t type_id, long long value):
+    """ (INT type_id, LLONG value) => STRING name
+
+        Determine the name associated with the given value.  Due to a
+        limitation of the HDF5 library, this can only retrieve names up to
+        1023 characters; otherwise, DatatypeError is raised.
+    """
+    cdef herr_t retval
+    cdef char* name
+    cdef long long buf
+
+    name = <char*>malloc(1024)
+
+    try:
+        buf = value
+        _enum_convert(type_id, &buf, 0)
+        retval = H5Tenum_nameof(type_id, &buf, name, 1024)
+        if retval < 0:
+            raise DatatypeError("Failed to determine enum name of %d" % value)
+        retstring = name
+
+    finally:
+        free(name)
+
+    return retstring
+
+def enum_valueof(hid_t type_id, char* name):
+    """ (INT type_id, STRING name) => LONG value)
+
+        Get the value associated with an enum name.
+    """
+    cdef herr_t retval
+    cdef long long buf
+
+    retval = H5Tenum_valueof(type_id, name, &buf)
+    if retval < 0:
+        raise DatatypeError("Failed to recover value of %s" % name)
+
+    _enum_convert(type_id, &buf, 1)
+    return buf
+
 def get_member_value(hid_t type_id, unsigned int idx):
     """ (INT type_id, UINT index) => LONG value
 
-        Determine the value for the member at <index> of enumerated type
-        <type_id>
+        Determine the value for the member at the given zero-based index.
     """
     cdef herr_t retval
     cdef hid_t ptype
