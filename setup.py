@@ -177,7 +177,7 @@ except ImportError:
 ext_exten = '.pyx'
 
 # Pyrex extension modules
-pyx_modules = ['h5' , 'h5f', 'h5g', 'h5s', 'h5t', 
+pyx_modules = ['h5e', 'h5' , 'h5f', 'h5g', 'h5s', 'h5t',  
                'h5d', 'h5a', 'h5p', 'h5z', 'h5i', 'h5r']
 
 pyx_src_path = 'h5py'

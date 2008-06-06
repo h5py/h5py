@@ -32,8 +32,42 @@ cdef extern from "hdf5.h":
     char    *desc           # /*optional supplied description      */
 
   # --- Error handling --------------------------------------------------------
-  herr_t    H5Eset_auto(void* opt1, void* opt2)
+
+
+  ctypedef enum H5E_major_t:
+    H5E_NONE_MAJOR       = 0,
+    H5E_ARGS,
+    H5E_RESOURCE,
+    H5E_INTERNAL,
+    H5E_FILE,
+    H5E_IO,
+    H5E_FUNC,
+    H5E_ATOM,
+    H5E_CACHE,
+    H5E_BTREE,
+    H5E_SYM,
+    H5E_HEAP,
+    H5E_OHDR,
+    H5E_DATATYPE,
+    H5E_DATASPACE,
+    H5E_DATASET,
+    H5E_STORAGE,
+    H5E_PLIST,
+    H5E_ATTR,
+    H5E_PLINE,
+    H5E_EFL,
+    H5E_REFERENCE,
+    H5E_VFL,
+    H5E_TBBT,
+    H5E_TST,
+    H5E_RS,
+    H5E_ERROR,
+    H5E_SLIST
+
+  char      *H5Eget_major(H5E_major_t n)
+  ctypedef herr_t (*H5E_auto_t)(void *client_data)
+  herr_t    H5Eset_auto(H5E_auto_t func, void *client_data )
+
   ctypedef herr_t (*H5E_walk_t)(int n, H5E_error_t *err_desc, client_data)  
   herr_t    H5Ewalk(H5E_direction_t direction, H5E_walk_t func, client_data  )
-
 
