@@ -73,8 +73,9 @@ class DDict(dict):
 
 # === Error functions =========================================================
 
-cdef herr_t walk_cb(int n, H5E_error_t *err_desc, elist):
+cdef herr_t walk_cb(int n, H5E_error_t *err_desc, void* elist_in):
 
+    elist = <object>elist_in
     hstring = err_desc.desc
     if len(hstring) == 0:
         hstring = "Error"
@@ -92,7 +93,7 @@ def get_error_string():
     """
     elist = []
 
-    H5Ewalk(H5E_WALK_DOWNWARD, walk_cb, elist)
+    H5Ewalk(H5E_WALK_DOWNWARD, walk_cb, <void*>elist)
 
     if len(elist) == 0:
         return ""
