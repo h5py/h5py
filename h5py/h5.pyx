@@ -22,20 +22,18 @@
     - HDF5_VERS, HDF5_VERS_TPL:  Library version
     - API_VERS, API_VERS_TPL:  API version (1.6 or 1.8) used to compile
 """
-from h5t cimport H5Tset_overflow
-from errors import H5LibraryError
 
-import h5e
+from h5e cimport _enable_exceptions
 
 # === Library init ============================================================
 
-_hdf5_imported = False
-def import_hdf5():
-    global _hdf5_imported
-    if not _hdf5_imported:
-        H5open()
-        h5e._enable_exceptions()
-        _hdf5_imported = False
+cdef int import_hdf5() except -1:
+    if H5open() < 0:
+        raise RuntimeError("Failed to initialize the HDF5 library.")
+    _enable_exceptions()
+    return 0
+
+import_hdf5()
 
 # === API =====================================================================
 
@@ -49,9 +47,7 @@ def get_libversion():
     cdef unsigned int release
     cdef herr_t retval
     
-    retval = H5get_libversion(&major, &minor, &release)
-    if retval < 0:
-        raise H5LibraryError("Error determining HDF5 library version.")
+    H5get_libversion(&major, &minor, &release)
 
     return (major, minor, release)
     

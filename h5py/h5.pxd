@@ -35,15 +35,12 @@ cdef extern from "hdf5.h":
 
   int HADDR_UNDEF
 
-  herr_t H5open()
-  herr_t H5close()
+  herr_t H5open() except *
+  herr_t H5close() except *
 
   # --- Version functions -----------------------------------------------------
   herr_t H5get_libversion(unsigned *majnum, unsigned *minnum,
-                          unsigned *relnum )
-  herr_t H5check_version(unsigned majnum, unsigned minnum,
-                         unsigned relnum )
-  herr_t H5garbage_collect()
+                          unsigned *relnum ) except *
 
 
 

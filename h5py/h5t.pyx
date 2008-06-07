@@ -69,8 +69,6 @@ from h5 import DDict
 from errors import DatatypeError, ConversionError
 import sys
 
-H5Eset_auto(NULL,NULL)
-
 # === Public constants and data structures ====================================
 
 # Enumeration H5T_class_t

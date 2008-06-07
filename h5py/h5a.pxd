@@ -30,7 +30,7 @@ cdef extern from "hdf5.h":
   herr_t    H5Awrite(hid_t attr_id, hid_t mem_type_id, void *buf  ) except *
 
   int       H5Aget_num_attrs(hid_t loc_id) except *
-  ssize_t    H5Aget_name(hid_t attr_id, size_t buf_size, char *buf) except *
+  ssize_t   H5Aget_name(hid_t attr_id, size_t buf_size, char *buf) except *
   hid_t     H5Aget_space(hid_t attr_id) except *
   hid_t     H5Aget_type(hid_t attr_id) except *
 

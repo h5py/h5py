@@ -55,10 +55,10 @@ cdef extern from "hdf5.h":
 
     #  Argument errors 
     H5E_UNINITIALIZED,          # information is unitialized
-    H5E_UNSUPPORTED,            # feature is unsupported:   NotImplementedError
-    H5E_BADTYPE,                # incorrect type found      TypeError
-    H5E_BADRANGE,               # argument out of range     ValueError
-    H5E_BADVALUE,               # bad value for argument    ValueError
+    H5E_UNSUPPORTED,            # feature is unsupported
+    H5E_BADTYPE,                # incorrect type found
+    H5E_BADRANGE,               # argument out of range
+    H5E_BADVALUE,               # bad value for argument
 
     #  Resource errors 
     H5E_NOSPACE,                # no space available for allocation
@@ -81,7 +81,7 @@ cdef extern from "hdf5.h":
     H5E_TRUNCATED,              # file has been truncated                    
     H5E_MOUNT,			        # file mount error			     
 
-    #  Generic low-level file I/O errors        All IOError
+    #  Generic low-level file I/O errors
     H5E_SEEKERROR,              # seek failed                                
     H5E_READERROR,              # read failed                                
     H5E_WRITEERROR,             # write failed                               
@@ -192,6 +192,8 @@ cdef extern from "hdf5.h":
 
 
   char      *H5Eget_major(H5E_major_t n)
+  char      *H5Eget_minor(H5E_minor_t n)
+  herr_t    H5Eclear()
   ctypedef herr_t (*H5E_auto_t)(void *client_data)
   herr_t    H5Eset_auto(H5E_auto_t func, void *client_data )
   herr_t    H5Eget_auto(H5E_auto_t *func, void** client_data)
@@ -199,10 +201,13 @@ cdef extern from "hdf5.h":
   herr_t    H5Ewalk(H5E_direction_t direction, H5E_walk_t func, void* client_data  )
 
 # Custom error-handling functions
-cdef public:
-    ctypedef H5E_auto_t err_c
-    cdef err_c pause_errors() except NULL
-    cdef int resume_errors(err_c cookie) except -1
+
+ctypedef H5E_auto_t err_c
+cdef int _enable_exceptions() except -1
+cdef int _disable_exceptions() except -1
+
+cdef err_c pause_errors() except NULL
+cdef int resume_errors(err_c cookie) except -1
 
 
 

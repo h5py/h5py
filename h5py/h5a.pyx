@@ -32,7 +32,6 @@ import h5t
 import h5s
 from errors import H5AttributeError
 
-h5.import_hdf5()
 import_array()
 
 # === General attribute operations ============================================
@@ -61,7 +60,11 @@ def open_name(hid_t loc_id, char* name):
     return H5Aopen_name(loc_id, name)
 
 def close(hid_t attr_id, int force=0):
-    """ (INT attr_id)
+    """ (INT attr_id, BOOL force=0)
+
+        Close this attribute and release resources.  If "force" is True,
+        ignore any errors encountered when closing (e.g. when calling in
+        a finally clause or destructor).
     """
     cdef err_c cookie
     if force:
@@ -288,7 +291,7 @@ def py_shape(hid_t attr_id):
     sid = 0
     
     try:
-        sid = H5Sget_space(attr_id)
+        sid = H5Aget_space(attr_id)
         tpl = h5s.get_simple_extent_dims(sid)
     finally:
         cookie = pause_errors()
