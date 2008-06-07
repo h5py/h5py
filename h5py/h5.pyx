@@ -22,17 +22,20 @@
     - HDF5_VERS, HDF5_VERS_TPL:  Library version
     - API_VERS, API_VERS_TPL:  API version (1.6 or 1.8) used to compile
 """
-from h5e cimport H5Eset_auto, H5E_walk_t, H5Ewalk, H5E_error_t, \
-                      H5E_WALK_DOWNWARD
 from h5t cimport H5Tset_overflow
 from errors import H5LibraryError
 
+import h5e
+
 # === Library init ============================================================
 
-H5open()
-
-# Disable automatic error printing to stderr
-H5Eset_auto(NULL, NULL)
+_hdf5_imported = False
+def import_hdf5():
+    global _hdf5_imported
+    if not _hdf5_imported:
+        H5open()
+        h5e._enable_exceptions()
+        _hdf5_imported = False
 
 # === API =====================================================================
 
@@ -70,32 +73,4 @@ class DDict(dict):
     """
     def __missing__(self, key):
         return '*INVALID* (%s)' % str(key)
-
-# === Error functions =========================================================
-
-cdef herr_t walk_cb(int n, H5E_error_t *err_desc, void* elist_in):
-
-    elist = <object>elist_in
-    hstring = err_desc.desc
-    if len(hstring) == 0:
-        hstring = "Error"
-    else:
-        hstring = '"'+hstring.capitalize()+'"'
-
-    elist.append("    "+str(n)+": "+hstring+" at "+err_desc.func_name)
-
-    return 0
-
-def get_error_string():
-    """ Internal function; don't use directly.
-
-        Get the HDF5 error stack contents as a string.
-    """
-    elist = []
-
-    H5Ewalk(H5E_WALK_DOWNWARD, walk_cb, <void*>elist)
-
-    if len(elist) == 0:
-        return ""
-    return "HDF5 error stack:\n" + '\n'.join(elist)
 

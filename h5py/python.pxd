@@ -64,6 +64,18 @@ cdef extern from "Python.h":
   int PyObject_Compare(object o1, object o2)
   int PyObject_AsReadBuffer(object obj, void **buffer, Py_ssize_t *buffer_len)
 
+  # Exception handling (manual)
+  ctypedef extern class __builtin__.BaseException [object PyBaseExceptionObject]:
+    cdef object dict
+    cdef object args
+    cdef object message
+
+  void* PyExc_Exception   # Not allowed to declare objects "extern C" (why not?)
+  void PyErr_SetString(object type_, char* msg)
+  void PyErr_SetNone(object type_)
+
+  object PyErr_NewException(char* name, object base, object dict_)
+
 
 
 

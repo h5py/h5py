@@ -10,8 +10,6 @@
 # 
 #-
 
-from h5 import get_error_string
-
 class H5Error(StandardError):
     pass
 
@@ -19,14 +17,7 @@ class ConversionError(H5Error):
     pass
 
 class H5LibraryError(H5Error):
-
-    def __init__(self, *args, **kwds):
-        arglist = list(args)
-        if len(arglist) == 0:
-            arglist = [""]
-        arglist[0] = arglist[0] + "\n" + get_error_string()
-        args = tuple(arglist)
-        H5Error.__init__(self, *args, **kwds)
+    pass
 
 class FileError(H5LibraryError):
     pass

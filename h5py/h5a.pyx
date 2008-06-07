@@ -17,7 +17,6 @@
 """
 
 # Pyrex compile-time imports
-cimport h5
 from defs_c cimport malloc, free
 from h5  cimport herr_t, hid_t
 from h5p cimport H5P_DEFAULT
@@ -25,6 +24,7 @@ from h5t cimport H5Tclose
 from h5s cimport H5Sclose
 from numpy cimport ndarray, import_array, PyArray_DATA
 from utils cimport check_numpy_read, check_numpy_write
+from h5e cimport err_c, pause_errors, resume_errors
 
 # Runtime imports
 import h5
@@ -32,6 +32,7 @@ import h5t
 import h5s
 from errors import H5AttributeError
 
+h5.import_hdf5()
 import_array()
 
 # === General attribute operations ============================================
@@ -43,53 +44,39 @@ def create(hid_t loc_id, char* name, hid_t type_id, hid_t space_id):
         HDF5 datatype and dataspace.  For a friendlier version of this function
         try py_create().
     """
-    cdef hid_t retval
-    retval = H5Acreate(loc_id, name, type_id, space_id, H5P_DEFAULT)
-    if retval < 0:
-        raise H5AttributeError("Failed to create attribute '%s' on object %d" % (name, loc_id))
-    return retval
+    return H5Acreate(loc_id, name, type_id, space_id, H5P_DEFAULT)
 
 def open_idx(hid_t loc_id, unsigned int idx):
     """ (INT loc_id, UINT idx) => INT attr_id
 
         Open an exisiting attribute on an object, by zero-based index.
     """
-    cdef hid_t retval
-    retval = H5Aopen_idx(loc_id, idx)
-    if retval < 0:
-        raise H5AttributeError("Failed to open attribute at index %d on object %d" % (idx, loc_id))
-    return retval
+    return H5Aopen_idx(loc_id, idx)
 
 def open_name(hid_t loc_id, char* name):
     """ (INT loc_id, STRING name) => INT attr_id
 
         Open an existing attribute on an object, by name.
     """
-    cdef hid_t retval
-    retval = H5Aopen_name(loc_id, name)
-    if retval < 0:
-        raise H5AttributeError("Failed to open attribute '%s' on object %d" % (name, loc_id))
-    return retval
+    return H5Aopen_name(loc_id, name)
 
-def close(hid_t attr_id):
+def close(hid_t attr_id, int force=0):
     """ (INT attr_id)
     """
-    cdef hid_t retval
-    retval = H5Aclose(attr_id)
-    if retval < 0:
-        raise H5AttributeError("Failed to close attribute %d" % attr_id)
-
+    cdef err_c cookie
+    if force:
+        cookie = pause_errors()
+        H5Aclose(attr_id)
+        resume_errors(cookie)
+    else:
+        H5Aclose(attr_id)
 
 def delete(hid_t loc_id, char* name):
     """ (INT loc_id, STRING name)
 
         Remove an attribute from an object.
     """
-    cdef herr_t retval
-    retval = H5Adelete(loc_id, name)
-    if retval < 0:
-        raise H5AttributeError("Failed delete attribute '%s' on object %d" % (name, loc_id))
-
+    H5Adelete(loc_id, name)
 
 # === Attribute I/O ===========================================================
 
@@ -107,6 +94,7 @@ def read(hid_t attr_id, ndarray arr_obj):
     cdef hid_t space_id
     cdef herr_t retval
     cdef int array_ok
+    cdef err_c cookie
     mtype_id = 0
     space_id = 0
 
@@ -117,14 +105,13 @@ def read(hid_t attr_id, ndarray arr_obj):
         if array_ok <= 0:
             raise ValueError("Numpy array is not set up correctly.")
 
-        retval = H5Aread(attr_id, mtype_id, PyArray_DATA(arr_obj))
-        if retval < 0:
-            raise H5AttributeError("Error reading from attribute %d" % attr_id)
+        H5Aread(attr_id, mtype_id, PyArray_DATA(arr_obj))
+
     finally:
-        if mtype_id != 0:
-            H5Tclose(mtype_id)
-        if space_id != 0:
-            H5Sclose(space_id)
+        cookie = pause_errors()
+        H5Tclose(mtype_id)
+        H5Sclose(space_id)
+        resume_errors(cookie)
 
 def write(hid_t attr_id, ndarray arr_obj):
     """ (INT attr_id, NDARRAY arr_obj)
@@ -141,6 +128,7 @@ def write(hid_t attr_id, ndarray arr_obj):
     cdef hid_t space_id
     cdef herr_t retval
     cdef int array_ok
+    cdef err_c cookie
     mtype_id = 0
     space_id = 0
 
@@ -151,14 +139,13 @@ def write(hid_t attr_id, ndarray arr_obj):
         if array_ok <= 0:
             raise ValueError("Given Numpy array is not set up correctly.")
 
-        retval = H5Awrite(attr_id, mtype_id, PyArray_DATA(arr_obj))
-        if retval < 0:
-            raise H5AttributeError("Error writing to attribute %d" % attr_id)
+        H5Awrite(attr_id, mtype_id, PyArray_DATA(arr_obj))
+
     finally:
-        if mtype_id != 0:
-            H5Tclose(mtype_id)
-        if space_id != 0:
-            H5Sclose(space_id)
+        cookie = pause_errors()
+        H5Tclose(mtype_id)
+        H5Sclose(space_id)
+        resume_errors(cookie)
 
 # === Attribute inspection ====================================================
 
@@ -167,11 +154,7 @@ def get_num_attrs(hid_t loc_id):
 
         Determine the number of attributes attached to an HDF5 object.
     """
-    cdef int retval
-    retval = H5Aget_num_attrs(loc_id)
-    if retval < 0:
-        raise H5AttributeError("Failed to enumerate attributes of object %d" % loc_id)
-    return retval
+    return H5Aget_num_attrs(loc_id)
 
 def get_name(hid_t attr_id):
     """ (INT attr_id) => STRING name
@@ -182,14 +165,13 @@ def get_name(hid_t attr_id):
     cdef char* buf
     buf = NULL
 
-    blen = H5Aget_name(attr_id, 0, NULL)
-    if blen < 0:
-        raise H5AttributeError("Failed to get name of attribute %d" % attr_id)
-    
-    buf = <char*>malloc(sizeof(char)*blen+1)
-    blen = H5Aget_name(attr_id, blen+1, buf)
-    strout = buf
-    free(buf)
+    try:
+        blen = H5Aget_name(attr_id, 0, NULL)
+        buf = <char*>malloc(sizeof(char)*blen+1)
+        blen = H5Aget_name(attr_id, blen+1, buf)
+        strout = buf
+    finally:
+        free(buf)
 
     return strout
 
@@ -198,22 +180,14 @@ def get_space(hid_t attr_id):
 
         Create and return a copy of the attribute's dataspace.
     """
-    cdef hid_t retval
-    retval = H5Aget_space(attr_id)
-    if retval < 0:
-        raise H5AttributeError("Failed to retrieve dataspace of attribute %d" % attr_id)
-    return retval
+    return H5Aget_space(attr_id)
 
 def get_type(hid_t attr_id):
     """ (INT attr_id) => INT type_id
 
         Create and return a copy of the attribute's datatype.
     """
-    cdef hid_t retval
-    retval = H5Aget_type(attr_id)
-    if retval < 0:
-        raise H5AttributeError("Failed to retrieve datatype of attribute %d" % attr_id)
-    return retval
+    return H5Aget_type(attr_id)
 
 
 cdef herr_t iter_cb(hid_t loc_id, char *attr_name, object int_tpl):
@@ -260,7 +234,6 @@ def iterate(hid_t loc_id, object func, object data=None, unsigned int startidx=0
     if retval < 0:
         if len(int_tpl[2]) != 0:
             raise int_tpl[2][0]
-        raise H5AttributeError("Error occured during iteration")
 
 # === Python extensions =======================================================
 
@@ -287,6 +260,7 @@ def py_create(hid_t loc_id, char* name, object dtype_in, object shape):
     cdef hid_t sid
     cdef hid_t type_id
     cdef hid_t aid
+    cdef err_c cookie
     sid = 0
     type_id = 0
 
@@ -296,11 +270,12 @@ def py_create(hid_t loc_id, char* name, object dtype_in, object shape):
 
         aid = create(loc_id, name, type_id, sid)
     finally:
+        cookie = pause_errors()
         if sid:
-            h5s.close(sid)
+            H5Sclose(sid)
         if type_id:
             H5Tclose(type_id)
-
+        resume_errors(cookie)
     return aid
 
 def py_shape(hid_t attr_id):
@@ -309,14 +284,17 @@ def py_shape(hid_t attr_id):
         Retrieve the dataspace of this attribute, as a Numpy-style shape tuple.
     """
     cdef hid_t sid
+    cdef err_c cookie
     sid = 0
     
     try:
-        sid = get_space(attr_id)
+        sid = H5Sget_space(attr_id)
         tpl = h5s.get_simple_extent_dims(sid)
     finally:
+        cookie = pause_errors()
         if sid:
-            h5s.close(sid)
+            H5Sclose(sid)
+        resume_errors(cookie)
     return tpl
 
 def py_dtype(hid_t attr_id):
@@ -383,8 +361,14 @@ def py_exists(hid_t parent_id, char* name):
         py_set().
     """
     cdef hid_t attr_id
-    response = None
+    cdef err_c cookie
+    attr_id = 0
+    
+
+    cookie = pause_errors()
     attr_id = H5Aopen_name(parent_id, name)
+    resume_errors(cookie)
+
     if attr_id < 0:
         response = False
     else:

@@ -16,6 +16,9 @@
    distribution root directory.
 */
 
+#ifndef H5PY_UTILS_LOW
+#define H5PY_UTILS_LOW
+
 #include "Python.h"
 #include "hdf5.h"
 #include "numpy/arrayobject.h"
@@ -29,4 +32,6 @@ PyObject* dims_to_tuple(hsize_t* dims, hsize_t rank);
 
 int check_numpy_read(PyArrayObject* arr, hid_t space_id);
 int check_numpy_write(PyArrayObject* arr, hid_t space_id);
+
+#endif
 
