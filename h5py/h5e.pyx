@@ -28,21 +28,22 @@ class ConversionError(StandardError):
     """
     pass
 
-class FileError(H5Error):
-    """ HDF5 logical file error (H5E_FILE)
-    """
-    pass
+# --- New classes -------------------------------------------------------------
 
-class GroupError(H5Error):
-    pass
+# H5E_ARGS => ValueError
 
-class DataspaceError(H5Error):
-    """ H5E_DATASPACE
+class ResourceError(H5Error):
+    """ H5E_RESOURCE
     """
     pass
 
 class DatatypeError(H5Error):
     """ H5E_DATATYPE
+    """
+    pass
+
+class DataspaceError(H5Error):
+    """ H5E_DATASPACE
     """
     pass
 
@@ -56,6 +57,7 @@ class PropertyError(H5Error):
     """
     pass
 
+
 class H5AttributeError(H5Error):
     """ H5E_ATTR
     """
@@ -66,10 +68,9 @@ class FilterError(H5Error):
     """
     pass
 
-class IdentifierError(H5Error):
-    pass
-
 class H5ReferenceError(H5Error):
+    """ H5E_REFERENCE
+    """
     pass
 
 
@@ -79,6 +80,14 @@ cdef class H5ErrorStackElement:
     """
         Represents an entry in the HDF5 error stack.
         Loosely modeled on the H5E_error_t struct.
+
+        Atributes
+        maj_num:    INT major error number
+        min_num:    INT minor error number
+        func_name:  STRING name of failing function
+        file_name:  STRING name of file in which error occurreed
+        line:       UINT line number at which error occured
+        desc:       STRING description of error
     """
     cdef readonly int maj_num
     cdef readonly int min_num
@@ -110,13 +119,25 @@ cdef herr_t walk_cb(int n, H5E_error_t *err_desc, void* stack_in):
     return 0
 
 def get_error_stack():
+    """ () => LIST error_stack
 
+        Retrieve the HDF5 error stack as a list of ErrorStackElement objects,
+        with the most recent call (the deepest one) listed last.
+    """
     stack = []
     H5Ewalk(H5E_WALK_DOWNWARD, walk_cb, <void*>stack)
     return stack
 
 def get_error_string():
-    """ Return the HDF5 error stack as a single string.
+    """ () => STRING error_stack
+
+        Return a string representation of the current error condition.
+        Format is one line of the format 
+            '<Description> (<Function name>: <error type>)'
+
+        If the stack is more than one level deep, this is followed by n lines
+        of the format:
+            '    n: "<Description>" at <function name>'
     """
     cdef int stacklen
     cdef H5ErrorStackElement el
@@ -140,24 +161,49 @@ def get_error_string():
 
     return msg
 
+def clear():
+    """ ()
+
+        Clear the error stack.
+    """
+    H5Eclear()
+
 def get_major(int error):
     """ (INT error) => STRING description
+
+        Get a description associated with an HDF5 minor error code.
     """
     return H5E_get_major(<H5E_major_t>error)
 
 def get_minor(int error):
     """ (INT error) => STRING description
+
+        Get a description associated with an HDF5 minor error code.
     """
     return H5E_get_minor(<H5E_minor_t>error)
 
 def get_error(int error):
     """ (INT errno) => STRING description
+
+        Get a full description for an "errno"-style HDF5 error code.
     """
     cdef int mj
     cdef int mn
     mn = error % 1000
     mj = (error-mn)/1000
     return "%s: %s" % (H5E_get_major(<H5E_major_t>mj), H5E_get_minor(<H5E_minor_t>mn))
+
+def split_error(int error):
+    """ (INT errno) => (INT major, INT minor)
+
+        Convenience function to split an "errno"-style HDF5 error code into
+        its major and minor components.  It's recommended you use this
+        function instead of doing it yourself, as the "encoding" may change
+        in the future.
+    """
+    cdef int mn
+    mn = error % 1000
+    return ((error-mn)/1000, mn)
 
 # === Automatic exception API =================================================
 
@@ -184,21 +230,18 @@ cdef herr_t err_callback(void* client_data):
     mj = err_struct.maj_num
     mn = err_struct.min_num
 
-    # Highest priority: really bad errors
-    if mn == H5E_UNSUPPORTED:
-        exc = NotImplementedError
-    elif mj == H5E_IO:
+    # File-related errors traditionally raise IOError.
+    # Also raise IOError for low-level disk I/O errors
+    if mj == H5E_FILE or mj == H5E_IO:
         exc = IOError
 
-    # Map function argument exceptions to native Python exceptions.
-    # H5E_BADTYPE does not raise TypeError as this is too easily confused
-    # with the results of Pyrex auto-validation.
+    # All errors which result from illegal function arguments
     elif mj == H5E_ARGS:
         exc = ValueError
 
     # Major errors which map to new h5e exception classes
-    elif mj == H5E_FILE:
-        exc = FileError
+    elif mj == H5E_RESOURCE:
+        exc = ResourceError
     elif mj == H5E_DATATYPE:
         exc = DatatypeError
     elif mj == H5E_DATASPACE:
@@ -206,7 +249,7 @@ cdef herr_t err_callback(void* client_data):
     elif mj == H5E_DATASET:
         exc = DatasetError
     elif mj == H5E_PLIST:
-        exc = PropertyListError
+        exc = PropertyError
     elif mj == H5E_ATTR:
         exc = H5AttributeError
     elif mj == H5E_PLINE:
@@ -214,7 +257,7 @@ cdef herr_t err_callback(void* client_data):
     elif mj == H5E_REFERENCE:
         exc = H5ReferenceError
 
-    # Catchall: base H5Error
+    # Catchall: base H5Error.  
     else:
         exc = H5Error
 

@@ -23,11 +23,11 @@
 """
 
 # Pyrex compile-time imports
-from h5  cimport herr_t, hid_t, size_t, hsize_t, htri_t, haddr_t, HADDR_UNDEF
+from h5  cimport hid_t, size_t, hsize_t, hssize_t
 from h5s cimport H5Sclose, H5S_ALL, H5S_UNLIMITED, H5S_SCALAR, H5S_SIMPLE
 from h5t cimport PY_H5Tclose
 from h5p cimport H5P_DEFAULT, H5Pclose
-from numpy cimport ndarray, PyArray_DATA
+from numpy cimport import_array, ndarray, PyArray_DATA
 from utils cimport  check_numpy_read, check_numpy_write, \
                     convert_tuple, \
                     emalloc, efree
@@ -37,6 +37,8 @@ import h5
 from h5 import DDict
 import h5t
 import h5s
+
+import_array()
 
 # === Public constants and data structures ====================================
 
@@ -110,7 +112,6 @@ def read(hid_t dset_id, hid_t mspace_id, hid_t fspace_id, ndarray arr_obj, hid_t
         For a friendlier version of this function, try py_read_slab().
     """
     cdef hid_t mtype_id
-    cdef herr_t retval
     cdef int array_ok
     mtype_id = 0
 
@@ -139,7 +140,6 @@ def write(hid_t dset_id, hid_t mspace_id, hid_t fspace_id, ndarray arr_obj, hid_
         For a friendlier version of this function, try py_write_slab()
     """
     cdef hid_t mtype_id
-    cdef herr_t retval
     cdef int array_ok
     mtype_id = 0
 
@@ -166,7 +166,6 @@ def extend(hid_t dset_id, object shape):
     cdef hsize_t* dims
     cdef int rank
     cdef hid_t space_id
-    cdef herr_t retval
     space_id = 0
     dims = NULL
 
@@ -529,7 +528,6 @@ def py_patch(hid_t ds_source, hid_t ds_sink, hid_t transfer_space):
 
     cdef hssize_t npoints
     cdef size_t type_size
-    cdef herr_t retval
 
     source_space = 0    
     sink_space = 0

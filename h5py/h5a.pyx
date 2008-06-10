@@ -22,7 +22,7 @@ from h5p cimport H5P_DEFAULT
 from h5t cimport PY_H5Tclose
 from h5s cimport H5Sclose
 
-from numpy cimport ndarray, PyArray_DATA
+from numpy cimport import_array, ndarray, PyArray_DATA
 from utils cimport  check_numpy_read, check_numpy_write, \
                     emalloc, efree
 
@@ -30,6 +30,8 @@ from utils cimport  check_numpy_read, check_numpy_write, \
 import h5
 import h5t
 import h5s
+
+import_array()
 
 # === General attribute operations ============================================
 

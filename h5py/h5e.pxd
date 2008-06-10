@@ -14,42 +14,43 @@
 # license is available in the file licenses/hdf5.txt in the distribution
 # root directory.
 
-from defs_c cimport size_t, time_t
-from h5 cimport hid_t, hbool_t, herr_t, htri_t, hsize_t, hssize_t, hvl_t
+from h5 cimport herr_t
 from python cimport BaseException, PyErr_SetNone
 
 cdef extern from "hdf5.h":
 
+  # Major error numbers
   ctypedef enum H5E_major_t:
-    H5E_NONE_MAJOR       = 0,
-    H5E_ARGS,
-    H5E_RESOURCE,
-    H5E_INTERNAL,
-    H5E_FILE,
-    H5E_IO,
-    H5E_FUNC,
-    H5E_ATOM,
-    H5E_CACHE,
-    H5E_BTREE,
-    H5E_SYM,
-    H5E_HEAP,
-    H5E_OHDR,
-    H5E_DATATYPE,
-    H5E_DATASPACE,
-    H5E_DATASET,
-    H5E_STORAGE,
-    H5E_PLIST,
-    H5E_ATTR,
-    H5E_PLINE,
-    H5E_EFL,
-    H5E_REFERENCE,
-    H5E_VFL,
-    H5E_TBBT,
-    H5E_TST,
-    H5E_RS,
-    H5E_ERROR,
-    H5E_SLIST
+    H5E_NONE_MAJOR       = 0,   # special zero, no error                     
+    H5E_ARGS,                   # invalid arguments to routine               
+    H5E_RESOURCE,               # resource unavailable                       
+    H5E_INTERNAL,               #  Internal error (too specific to document)
+    H5E_FILE,                   # file Accessability                         
+    H5E_IO,                     # Low-level I/O                              
+    H5E_FUNC,                   # function Entry/Exit                        
+    H5E_ATOM,                   # object Atom                                
+    H5E_CACHE,                  # object Cache                               
+    H5E_BTREE,                  # B-Tree Node                                
+    H5E_SYM,                    # symbol Table                               
+    H5E_HEAP,                   # Heap                                       
+    H5E_OHDR,                   # object Header                              
+    H5E_DATATYPE,               # Datatype                                   
+    H5E_DATASPACE,              # Dataspace                                  
+    H5E_DATASET,                # Dataset                                    
+    H5E_STORAGE,                # data storage                               
+    H5E_PLIST,                  # Property lists                             
+    H5E_ATTR,                   # Attribute                                  
+    H5E_PLINE,                  # Data filters                               
+    H5E_EFL,                    # External file list                         
+    H5E_REFERENCE,              # References                                 
+    H5E_VFL,                    # Virtual File Layer                 
+    H5E_TBBT,                   # Threaded, Balanced, Binary Trees           
+    H5E_TST,                    # Ternary Search Trees                       
+    H5E_RS,                     # Reference Counted Strings                  
+    H5E_ERROR,                  # Error API                                  
+    H5E_SLIST                   # Skip Lists                                 
 
+  # Minor error numbers
   ctypedef enum H5E_minor_t:
     H5E_NONE_MINOR       = 0
 
@@ -75,18 +76,18 @@ cdef extern from "hdf5.h":
     H5E_FILEOPEN,               # file already open                          
     H5E_CANTCREATE,             # Can't create file                          
     H5E_CANTOPENFILE,           # Can't open file                            
-    H5E_CANTCLOSEFILE,          # Can't close file			     
+    H5E_CANTCLOSEFILE,          # Can't close file                 
     H5E_NOTHDF5,                # not an HDF5 format file                    
     H5E_BADFILE,                # bad file ID accessed                       
     H5E_TRUNCATED,              # file has been truncated                    
-    H5E_MOUNT,			        # file mount error			     
+    H5E_MOUNT,                    # file mount error                 
 
     #  Generic low-level file I/O errors
     H5E_SEEKERROR,              # seek failed                                
     H5E_READERROR,              # read failed                                
     H5E_WRITEERROR,             # write failed                               
     H5E_CLOSEERROR,             # close failed                               
-    H5E_OVERFLOW,		        # address overflowed			     
+    H5E_OVERFLOW,                # address overflowed                 
     H5E_FCNTL,                  # file fcntl failed                          
 
     #  Function entry/exit interface errors 
@@ -136,8 +137,8 @@ cdef extern from "hdf5.h":
     H5E_CANTCLOSEOBJ,           # Can't close object                         
     H5E_COMPLEN,                # name component is too long                 
     H5E_LINK,                   # link count failure                         
-    H5E_SLINK,			        # symbolic link error			     
-    H5E_PATH,			        # Problem with path to object		     
+    H5E_SLINK,                    # symbolic link error                 
+    H5E_PATH,                    # Problem with path to object             
 
     #  Datatype conversion errors 
     H5E_CANTCONVERT,            # Can't convert datatypes  TypeError?
@@ -157,14 +158,14 @@ cdef extern from "hdf5.h":
     H5E_DUPCLASS,               # Duplicate class name in parent class       
 
     #  Parallel errors 
-    H5E_MPI,			        # some MPI function failed		     
-    H5E_MPIERRSTR,		        # MPI Error String 			     
+    H5E_MPI,                    # some MPI function failed             
+    H5E_MPIERRSTR,                # MPI Error String                  
 
     #  Heap errors 
-    H5E_CANTRESTORE,		    # Can't restore condition                    
+    H5E_CANTRESTORE,            # Can't restore condition                    
 
     #  TBBT errors 
-    H5E_CANTMAKETREE,		    # Can't create TBBT tree                     
+    H5E_CANTMAKETREE,            # Can't create TBBT tree                     
 
     #  I/O pipeline errors 
     H5E_NOFILTER,               # requested filter is not available          
@@ -174,7 +175,7 @@ cdef extern from "hdf5.h":
     H5E_NOENCODER,              #  Filter present, but encoding disabled     
 
     #  System level errors 
-    H5E_SYSERRSTR               #  System error message			     
+    H5E_SYSERRSTR               #  System error message                 
 
   cdef enum H5E_direction_t:
     H5E_WALK_UPWARD    = 0  # begin deep, end at API function    
@@ -193,9 +194,9 @@ cdef extern from "hdf5.h":
 
   char      *H5Eget_major(H5E_major_t n)
   char      *H5Eget_minor(H5E_minor_t n)
-  herr_t    H5Eclear()
+  herr_t    H5Eclear() except *
   ctypedef herr_t (*H5E_auto_t)(void *client_data)
-  herr_t    H5Eset_auto(H5E_auto_t func, void *client_data )
+  herr_t    H5Eset_auto(H5E_auto_t func, void *client_data)
   herr_t    H5Eget_auto(H5E_auto_t *func, void** client_data)
   ctypedef herr_t (*H5E_walk_t)(int n, H5E_error_t *err_desc, void* client_data)  
   herr_t    H5Ewalk(H5E_direction_t direction, H5E_walk_t func, void* client_data  )
