@@ -53,22 +53,37 @@
 
 
 # Pyrex compile-time imports
-from defs_c   cimport malloc, free
+from defs_c cimport free
 from h5  cimport herr_t, hid_t, size_t, hsize_t, htri_t
-from h5e cimport H5Eset_auto
-from python cimport PyTuple_New, PyTuple_SetItem, Py_INCREF
 from h5p cimport H5P_DEFAULT
-cimport numpy
-from numpy cimport dtype
-from utils cimport create_ieee_complex64, create_ieee_complex128,\
-                        tuple_to_dims, dims_to_tuple
+from h5e cimport err_c, pause_errors, resume_errors
+from numpy cimport dtype, ndarray
+
+from utils cimport  emalloc, efree, \
+                    create_ieee_complex64, create_ieee_complex128, \
+                    require_tuple, convert_dims, convert_tuple
 
 # Runtime imports
 import h5
 from h5 import DDict
-from errors import DatatypeError, ConversionError
+from h5e import ConversionError
 import sys
 
+# === Custom C API ============================================================
+
+cdef herr_t PY_H5Tclose(hid_t type_id) except *:
+    # Unconditionally close a datatype, ignoring all errors.
+
+    cdef err_c cookie
+    cdef herr_t retval
+    cookie = pause_errors()
+    try:
+        retval = H5Tclose(type_id)
+    finally:
+        resume_errors(cookie)
+
+    return retval
+    
 # === Public constants and data structures ====================================
 
 # Enumeration H5T_class_t
@@ -150,7 +165,7 @@ NATIVE_INT64 = H5T_NATIVE_INT64
 NATIVE_UINT64 = H5T_NATIVE_UINT64
 
 # Null terminated (C) string type
-CSTRING = H5T_C_S1
+C_S1 = H5T_C_S1
 
 # === General datatype operations =============================================
 
@@ -160,55 +175,35 @@ def create(int classtype, size_t size):
         Create a new HDF5 type object.  Legal values are COMPOUND, 
         OPAQUE, ENUM
     """
-    cdef hid_t retval
-    retval = H5Tcreate(<H5T_class_t>classtype, size)
-    if retval < 0:
-        raise DatatypeError("Failed to create datatype of class %s, size %d" % (str(classtype), size))
-    return retval
+    return H5Tcreate(<H5T_class_t>classtype, size)
 
 def open(hid_t group_id, char* name):
     """ (INT group_id, STRING name) => INT type_id
 
         Open a named datatype from a file.
     """
-    cdef hid_t retval
-    retval = H5Topen(group_id, name)
-    if retval < 0:
-        raise DatatypeError('Failed to open datatype "%s" on group %d' % (name, group_id))
-    return retval
+    return H5Topen(group_id, name)
 
 def commit(hid_t loc_id, char* name, hid_t type_id):
     """ (INT group_id, STRING name, INT type_id)
 
         Commit a transient datatype to a named datatype in a file.
     """
-    cdef herr_t retval
-    retval = H5Tcommit(loc_id, name, type_id)
-    if retval < 0:
-        raise DatatypeError("Failed to commit datatype %d under group %d with name '%s'" % (type_id, loc_id, name))
+    return H5Tcommit(loc_id, name, type_id)
 
 def committed(hid_t type_id):
     """ (INT type_id) => BOOL is_comitted
 
         Determine if a given type object is named (T) or transient (F).
     """
-    cdef htri_t retval
-    retval = H5Tcommitted(type_id)
-    if retval < 0:
-        raise DatatypeError("Failed to determine status of datatype %d" % type_id)
-    return bool(retval)
+    return H5Tcommitted(type_id)
 
 def copy(hid_t type_id):
     """ (INT type_id) => INT new_type_id
 
         Copy an existing HDF type object.
     """
-    
-    cdef hid_t retval
-    retval = H5Tcopy(type_id)
-    if retval < 0:
-        raise DatatypeError("Failed to copy datatype %d" % type_id)
-    return retval
+    return H5Tcopy(type_id)
 
 def equal(hid_t typeid_1, hid_t typeid_2):
     """ (INT typeid_1, INT typeid_2) => BOOL types_are_equal
@@ -216,11 +211,7 @@ def equal(hid_t typeid_1, hid_t typeid_2):
         Test whether two identifiers point to the same datatype object.  Note
         this does NOT perform any kind of logical comparison.
     """
-    cdef htri_t retval
-    retval = H5Tequal(typeid_1, typeid_2)
-    if retval < 0:
-        raise DatatypeError("Failed to test datatypes for equality: %d and %d" % (typeid_1, typeid_2))
-    return bool(retval)
+    return bool(H5Tequal(typeid_1, typeid_2))
 
 def lock(hid_t type_id):
     """ (INT type_id)
@@ -228,45 +219,28 @@ def lock(hid_t type_id):
         Lock a datatype, which makes it immutable and indestructible.  Once
         locked, it can't be unlocked.
     """
-    cdef herr_t retval
-    retval = H5Tlock(type_id)
-    if retval < 0:
-        raise DatatypeError("Failed to lock datatype %d" % type_id)
+    H5Tlock(type_id)
 
 def get_class(hid_t type_id):
     """ (INT type_id) => INT class
 
         Get <type_id>'s class.
     """
-
-    cdef int classtype
-    classtype = <int>H5Tget_class(type_id)
-    if classtype < 0:
-        raise DatatypeError("Failed to determine class of datatype %d" % type_id)
-    return classtype
+    return <int>H5Tget_class(type_id)
 
 def get_size(hid_t type_id):
     """ (INT type_id) => INT size
 
         Determine the total size of a datatype, in bytes.
     """
-    cdef size_t retval
-    retval = H5Tget_size(type_id)
-    if retval == 0:
-        raise DatatypeError("Can't determine size of datatype %d (got 0)" % type_id)
-    return retval
+    return H5Tget_size(type_id)
 
 def get_super(hid_t type_id):
     """ (INT type_id) => INT super_type_id
 
         Determine the parent type of an array or enumeration datatype.
     """
-
-    cdef hid_t stype
-    stype = H5Tget_super(type_id)
-    if stype < 0:
-        raise DatatypeError("Can't determine base datatype of %d" % type_id)
-    return stype
+    return H5Tget_super(type_id)
 
 def get_native_type(hid_t type_id, int direction):
     """ (INT type_id, INT direction) => INT new_type_id
@@ -279,24 +253,14 @@ def get_native_type(hid_t type_id, int direction):
         These determine which direction the list of native datatypes is
         searched; see the HDF5 docs for a definitive list.
     """
-    cdef hid_t retval
-    retval = H5Tget_native_type(type_id, <H5T_direction_t>direction)
-    if retval < 0:
-        raise DatatypeError("Can't determine native equivalent of %d" % type_id)
-    return retval
+    return H5Tget_native_type(type_id, <H5T_direction_t>direction)
 
 def detect_class(hid_t type_id, int classtype):
     """ (INT type_id, INT class) => BOOL class_is_present
 
         Determine if a member of class <class> exists in <type_id>
     """
-
-    cdef htri_t retval
-    retval = H5Tdetect_class(type_id, <H5T_class_t>classtype)
-    if retval < 0:
-        raise DatatypeError("Couldn't inspect datatype %d for class %s" % (type_id, str(classtype)))
-    return bool(retval)
-
+    return bool(H5Tdetect_class(type_id, <H5T_class_t>classtype))
 
 def close(hid_t type_id, int force=0):
     """ (INT type_id, BOOL force=False)
@@ -305,10 +269,10 @@ def close(hid_t type_id, int force=0):
         for exception handlers, when you're not sure if you've got an immutable
         datatype.
     """
-    cdef herr_t retval
-    retval = H5Tclose(type_id)
-    if retval < 0 and force:
-        raise DatatypeError("Failed to close datatype %d" % type_id)
+    if force:
+        PY_H5Tclose(type_id)
+    else:
+        H5Tclose(type_id)
 
 # === Atomic datatype operations ==============================================
 #     H5Tget_size, H5Tset_size, H5Tget_order, H5Tset_order, H5Tget_precision, \
@@ -320,11 +284,7 @@ def set_size(hid_t type_id, size_t size):
         Set the total size of the datatype, in bytes.  Useful mostly for
         string types.
     """
-    cdef herr_t retval
-    retval = H5Tset_size(type_id, size)
-    if retval < 0:
-        raise DatatypeError("Failed to set size of datatype %d to %s" % (type_id, size))
-    return retval
+    H5Tset_size(type_id, size)
 
 def get_order(hid_t type_id):
     """ (INT type_id) => INT order
@@ -334,11 +294,7 @@ def get_order(hid_t type_id):
          ORDER_BE
          ORDER_NATIVE
     """
-    cdef int order
-    order = <int>H5Tget_order(type_id)
-    if order < 0:
-        raise DatatypeError("Failed to determine order of datatype %d" % type_id)
-    return order
+    return <int>H5Tget_order(type_id)
 
 def set_order(hid_t type_id, int order):
     """ (INT type_id, INT order)
@@ -348,10 +304,7 @@ def set_order(hid_t type_id, int order):
          ORDER_BE
          ORDER_NATIVE
     """
-    cdef herr_t retval
-    retval = H5Tset_order(type_id, <H5T_order_t>order)
-    if retval < 0:
-        raise DatatypeError("Failed to set order of datatype %d" % type_id)
+    H5Tset_order(type_id, <H5T_order_t>order)
 
 def get_sign(hid_t type_id):
     """ (INT type_id) => INT sign
@@ -360,11 +313,7 @@ def get_sign(hid_t type_id):
           SGN_NONE:  Unsigned
           SGN_2:     Signed 2's complement
     """
-    cdef int retval
-    retval = <int>H5Tget_sign(type_id)
-    if retval < 0:
-        raise DatatypeError("Failed to get sign of datatype %d" % type_id)
-    return retval
+    return <int>H5Tget_sign(type_id)
 
 def set_sign(hid_t type_id, int sign):
     """ (INT type_id, INT sign)
@@ -373,11 +322,7 @@ def set_sign(hid_t type_id, int sign):
           SGN_NONE:  Unsigned
           SGN_2:     Signed 2's complement
     """
-    cdef herr_t retval
-    retval = H5Tset_sign(type_id, <H5T_sign_t>sign)
-    if retval < 0:
-        raise DatatypeError("Failed to set sign of datatype %d" % type_id)
-
+    H5Tset_sign(type_id, <H5T_sign_t>sign)
 
 def is_variable_str(hid_t type_id):
     """ (INT type_id) => BOOL is_variable
@@ -386,11 +331,7 @@ def is_variable_str(hid_t type_id):
         Please note that reading/writing data in this format is impossible;
         only fixed-length strings are currently supported.
     """
-    cdef htri_t retval
-    retval = H5Tis_variable_str(type_id)
-    if retval < 0:
-        raise DatatypeError("Failed to inspect type %d" % type_id)
-    return bool(retval)
+    return bool(H5Tis_variable_str(type_id))
 
 # === Compound datatype operations ============================================
 # get_nmembers
@@ -407,11 +348,7 @@ def get_nmembers(hid_t type_id):
 
         Determine the number of members in a compound or enumerated type.
     """
-    cdef int retval
-    retval = H5Tget_nmembers(type_id)
-    if retval < 0:
-        raise DatatypeError("Failed to determine members of datatype %d" % type_id)
-    return retval
+    return H5Tget_nmembers(type_id)
 
 def get_member_class(hid_t type_id, int member):
     """ (INT type_id, INT member_index) => INT class
@@ -419,11 +356,8 @@ def get_member_class(hid_t type_id, int member):
         Determine the datatype class of the member of a compound type,
         identified by its index (must be 0 <= idx <= nmembers).
     """
+    return H5Tget_member_class(type_id, member)
 
-    cdef int retval
-    retval = H5Tget_member_class(type_id, member)
-    if retval < 0:
-        raise DatatypeError()
     
 def get_member_name(hid_t type_id, int member):
     """ (INT type_id, INT member_index) => STRING name
@@ -433,14 +367,17 @@ def get_member_name(hid_t type_id, int member):
     """
 
     cdef char* name
-    cdef object pyname
-    name = NULL
+
     name = H5Tget_member_name(type_id, member)
-    if name != NULL:
+    if name == NULL:
+        raise RuntimeError("Failed to catch exception in get_member_name()")
+    try:
         pyname = name
+    finally:
         free(name)
-        return pyname
-    raise DatatypeError()
+
+    return pyname
+
 
 def get_member_index(hid_t type_id, char* name):
     """ (INT type_id, STRING name) => INT index
@@ -448,11 +385,7 @@ def get_member_index(hid_t type_id, char* name):
         Determine the index of a member of a compound or enumerated datatype
         identified by a string name.
     """
-    cdef int retval
-    retval = H5Tget_member_index(type_id, name)
-    if retval < 0:
-        raise DatatypeError("Failed to determine index of field '%' in datatype %d" % (name, type_id))
-    return retval
+    return H5Tget_member_index(type_id, name)
 
 def get_member_offset(hid_t type_id, int member):
     """ (INT type_id, INT member_index) => INT offset
@@ -471,12 +404,7 @@ def get_member_type(hid_t type_id, int member):
         Create a copy of a member of a compound datatype, identified by its
         index.  You are responsible for closing it when finished.
     """
-    cdef hid_t retval
-    retval = H5Tget_member_type(type_id, member)
-    if retval < 0:
-        raise DataTypeError
-    return retval
-
+    return H5Tget_member_type(type_id, member)
 
 def insert(hid_t type_id, char* name, size_t offset, hid_t field_id):
     """ (INT compound_type_id, STRING name, INT offset, INT member_type)
@@ -485,10 +413,7 @@ def insert(hid_t type_id, char* name, size_t offset, hid_t field_id):
         datatype.  <offset> is  the offset in bytes from the beginning of the
         compound type.
     """
-    cdef herr_t retval
-    retval = H5Tinsert(type_id, name, offset, field_id)
-    if retval < 0:
-        raise DatatypeError("Failed to insert field %s into compound type" % name)
+    H5Tinsert(type_id, name, offset, field_id)
 
 def pack(hid_t type_id):
     """ (INT type_id)
@@ -496,12 +421,7 @@ def pack(hid_t type_id):
         Recursively removes padding (introduced on account of e.g. compiler
         alignment rules) from a compound datatype.
     """
-
-    cdef herr_t retval
-    retval = H5Tpack(type_id)
-    if retval < 0:
-        raise DatatypeError("Failed to pack datatype %d" % type_id)
-    return retval
+    H5Tpack(type_id)
 
 # === Array datatype operations ===============================================
 # array_create
@@ -516,54 +436,44 @@ def array_create(hid_t base, object dims_tpl):
         dimensions given via a tuple of non-negative integers.  "Unlimited" 
         dimensions are not allowed.
     """
-    cdef int rank
+    cdef hsize_t rank
     cdef hsize_t *dims
-    cdef hid_t type_id
+    dims = NULL
+
+    require_tuple(dims_tpl, 0, -1, "dims_tpl")
     rank = len(dims_tpl)
+    dims = <hsize_t*>emalloc(sizeof(hsize_t)*rank)
 
-    dims = tuple_to_dims(dims_tpl)
-    if dims == NULL:
-        raise ValueError("Invalid dimensions tuple: %s" % str(dims_tpl))
-    type_id = H5Tarray_create(base, rank, dims, NULL)
-    free(dims)
-
-    if type_id < 0:
-        raise DatatypeError("Failed to create datatype based on %d, dimensions %s" % (base, str(dims_tpl)))
-    return type_id
+    try:
+        convert_tuple(dims_tpl, dims, rank)
+        return H5Tarray_create(base, rank, dims, NULL)
+    finally:
+        efree(dims)
 
 def get_array_ndims(hid_t type_id):
     """ (INT type_id) => INT rank
 
         Get the rank of the given array datatype.
     """
-    cdef int n
-    n = H5Tget_array_ndims(type_id)
-    if n < 0:
-        raise DatatypeError("Failed to determine rank of array datatype %d" % type_id)
-    return n
+    return H5Tget_array_ndims(type_id)
 
 def get_array_dims(hid_t type_id):
     """ (INT type_id) => TUPLE dimensions
 
         Get the dimensions of the given array datatype as a tuple of integers.
     """
-    cdef int rank   
+    cdef hsize_t rank   
     cdef hsize_t* dims
-    cdef object dims_tpl
     dims = NULL
 
     rank = H5Tget_array_dims(type_id, NULL, NULL)
-    if rank < 0:
-        raise DatatypeError("Failed to determine dimensions of datatype %d" % type_id)
+    dims = <hsize_t*>emalloc(sizeof(hsize_t)*rank)
+    try:
+        H5Tget_array_dims(type_id, dims, NULL)
+        return convert_dims(dims, rank)
+    finally:
+        efree(dims)
 
-    dims = <hsize_t*>malloc(sizeof(hsize_t)*rank)
-    rank = H5Tget_array_dims(type_id, dims, NULL)
-    dims_tpl = dims_to_tuple(dims, rank)
-    free(dims)
-    if dims_tpl is None:
-        raise DatatypeError("Failed to determine dimensions of datatype %d: tuple conversion error" % type_id)
-
-    return dims_tpl
 
 # === Enumeration datatypes ===================================================
 #  hid_t     H5Tenum_create(hid_t base_id)
@@ -579,11 +489,7 @@ def enum_create(hid_t base_id):
 
         Create a new enumerated type based on parent type <base_type_id>
     """
-    cdef hid_t retval
-    retval = H5Tenum_create(base_id)
-    if retval < 0:
-        raise DatatypeError("Failed to create enum of class %d" % base_id)
-    return retval
+    return H5Tenum_create(base_id)
 
 cdef void _enum_convert(hid_t type_id, long long *buf, int reverse) except *:
     # Convert the long long value in "buf" to the native representation
@@ -627,38 +533,34 @@ def enum_insert(hid_t type_id, char* name, long long value):
     try:
         buf = value
         _enum_convert(type_id, &buf, 0)
-        retval = H5Tenum_insert(type_id, name, &buf)
-        if retval < 0:
-            raise DatatypeError("Failed to insert '%s' (value %d) into enum %d" % (name, value, type_id))
+        return H5Tenum_insert(type_id, name, &buf)
     finally:
         if ptype:
-            H5Tclose(ptype)
+            PY_H5Tclose(ptype)
 
 def enum_nameof(hid_t type_id, long long value):
     """ (INT type_id, LLONG value) => STRING name
 
         Determine the name associated with the given value.  Due to a
         limitation of the HDF5 library, this can only retrieve names up to
-        1023 characters; otherwise, DatatypeError is raised.
+        1023 characters.
     """
     cdef herr_t retval
     cdef char* name
     cdef long long buf
 
-    name = <char*>malloc(1024)
+    name = <char*>emalloc(1024)
 
     try:
         buf = value
         _enum_convert(type_id, &buf, 0)
         retval = H5Tenum_nameof(type_id, &buf, name, 1024)
-        if retval < 0:
-            raise DatatypeError("Failed to determine enum name of %d" % value)
+        if retval < 0:  # not sure whether H5Tenum_nameof will actually log an error
+            raise RuntimeError("Failed to determine enum name of %d" % value)
         retstring = name
-
+        return retstring
     finally:
-        free(name)
-
-    return retstring
+        efree(name)
 
 def enum_valueof(hid_t type_id, char* name):
     """ (INT type_id, STRING name) => LONG value)
@@ -668,11 +570,9 @@ def enum_valueof(hid_t type_id, char* name):
     cdef herr_t retval
     cdef long long buf
 
-    retval = H5Tenum_valueof(type_id, name, &buf)
-    if retval < 0:
-        raise DatatypeError("Failed to recover value of %s" % name)
-
+    H5Tenum_valueof(type_id, name, &buf)
     _enum_convert(type_id, &buf, 1)
+
     return buf
 
 def get_member_value(hid_t type_id, unsigned int idx):
@@ -682,26 +582,17 @@ def get_member_value(hid_t type_id, unsigned int idx):
     """
     cdef herr_t retval
     cdef hid_t ptype
-    cdef long long *data_ptr
-    data_ptr = <long long*>malloc(sizeof(long long))
+    cdef long long val
+    ptype = 0
 
     try:
         ptype = H5Tget_super(type_id)
-        if ptype < 0:
-            raise DatatypeError("Failed to get parent type of enum %d" % type_id)
-
-        retval = H5Tget_member_value(type_id, idx, data_ptr)
-        if retval < 0:
-            raise DatatypeError("Failed to obtain value of element %d of enum %d" % (idx, type_id))
-
-        retval = H5Tconvert(ptype, H5T_NATIVE_LLONG, 1, data_ptr, NULL, H5P_DEFAULT)
-        if retval < 0:
-            raise DatatypeError("Failed to postconvert integer for enum retrieval")
+        H5Tget_member_value(type_id, idx, &val)
+        H5Tconvert(ptype, H5T_NATIVE_LLONG, 1, &val, NULL, H5P_DEFAULT)
+        return val
     finally:
-        H5Tclose(ptype)
-        interm = data_ptr[0]
-        free(data_ptr)
-    return interm
+        if ptype:
+            PY_H5Tclose(ptype)
 
 # === Opaque datatypes ========================================================
 
@@ -710,11 +601,7 @@ def set_tag(hid_t type_id, char* tag):
 
         Set the a string describing the contents of an opaque datatype
     """
-    cdef herr_t retval
-    retval = H5Tset_tag(type_id, tag)
-    if retval < 0:
-        raise DatatypeError("Failed to set opaque data tag '%s' on type %d" % (tag, type_id))
-    return retval
+    H5Tset_tag(type_id, tag)
 
 def get_tag(hid_t type_id):
     """ (INT type_id) => STRING tag
@@ -722,16 +609,15 @@ def get_tag(hid_t type_id):
         Get the tag associated with an opaque datatype
     """
     cdef char* buf
-    cdef object tag
     buf = NULL
 
     buf = H5Tget_tag(type_id)
     if buf == NULL:
-        raise DatatypeError("Failed to get opaque data tag for type %d" % type_id)
+        raise RuntimeError("Failed to raise exception on H5Tget_tag")
     tag = buf
     free(buf)
-    return tag
 
+    return tag
 
 # === Custom Python additions =================================================
 
@@ -886,7 +772,7 @@ def py_h5t_to_dtype(hid_t type_id, object byteorder=None,
                 field_types.append(py_h5t_to_dtype(tmp_id, byteorder,
                                         None, complex_names))
             finally:
-                H5Tclose(tmp_id)
+                PY_H5Tclose(tmp_id)
 
 
         # 1. Only a particular (ordered) subset is requested
@@ -925,14 +811,14 @@ def py_h5t_to_dtype(hid_t type_id, object byteorder=None,
             # Superclass must be an integer, so only provide byteorder.
             typeobj = py_attach_enum(edct, py_h5t_to_dtype(super_tid, byteorder))
         finally:
-            H5Tclose(super_tid)
+            PY_H5Tclose(super_tid)
 
     elif classtype == H5T_ARRAY:
         super_tid = get_super(type_id)
         try:
             base_dtype = py_h5t_to_dtype(super_tid, byteorder, compound_names, complex_names)
         finally:
-            H5Tclose(super_tid)
+            PY_H5Tclose(super_tid)
         shape = get_array_dims(type_id)
         typeobj = dtype( (base_dtype, shape) )
     else:
@@ -943,7 +829,7 @@ def py_h5t_to_dtype(hid_t type_id, object byteorder=None,
 
     return typeobj
 
-def py_dtype_to_h5t(numpy.dtype dtype_in, object complex_names=None):
+def py_dtype_to_h5t(dtype dtype_in, object complex_names=None):
     """ ( DTYPE dtype_in, TUPLE complex_names=None) => INT type_id
 
         Given a Numpy dtype object, generate a byte-for-byte memory-compatible
@@ -1028,7 +914,7 @@ def py_dtype_to_h5t(numpy.dtype dtype_in, object complex_names=None):
             try:
                 type_out = array_create(basetype, dtype_in.subdtype[1])
             finally:
-                H5Tclose(basetype)
+                PY_H5Tclose(basetype)
         else:
             type_out = create(H5T_OPAQUE, length)
                 
@@ -1081,7 +967,7 @@ def py_attach_enum(object enumdict, object basetype):
     """
     return dtype( (basetype, [( (enumdict, 'enum'), basetype )] ) )
 
-def py_recover_enum(numpy.dtype dtype_in):
+def py_recover_enum(dtype dtype_in):
     """ (DTYPE dtype_with_enum) => DICT enum
 
         Extract the enum dictionary from a Numpy dtype object
@@ -1129,7 +1015,7 @@ def py_can_convert_dtype(object dt, object complex_names=None):
         pass
 
     if tid:
-        H5Tclose(tid)
+        PY_H5Tclose(tid)
 
     return can_convert
 

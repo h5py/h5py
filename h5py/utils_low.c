@@ -26,8 +26,8 @@
 
 /* Wrapper for malloc(size) with the following behavior:
    1. Always returns NULL for emalloc(0)
-   2. Raises RuntimeError for emalloc(size<0)
-   3. Raises RuntimeError if allocation fails (malloc returns NULL)
+   2. Raises RuntimeError for emalloc(size<0) and returns NULL
+   3. Raises RuntimeError if allocation fails and returns NULL
 */
 void* emalloc(size_t size){
 
@@ -46,10 +46,17 @@ void* emalloc(size_t size){
     return retval;
 }
 
-/* Convert an hsize_t array to a Python tuple of long ints.
-   Returns None on failure
+/* Counterpart to emalloc.  For the moment, just a wrapper for free().
 */
-PyObject* dims_to_tuple(hsize_t* dims, hsize_t rank) {
+void efree(void* ptr){
+    free(ptr);
+}
+
+/* Convert an hsize_t array to a Python tuple of long ints.
+   Returns NULL on failure, and raises an exception (either propagates
+   an exception from the conversion, or raises RuntimeError).
+*/
+PyObject* convert_dims(hsize_t* dims, hsize_t rank) {
 
     PyObject* tpl;
     PyObject* plong;
@@ -66,33 +73,34 @@ PyObject* dims_to_tuple(hsize_t* dims, hsize_t rank) {
         PyTuple_SET_ITEM(tpl, i, plong); /* steals reference */
     }
     
-    Py_INCREF(tpl);
     return tpl;
 
     err:
     Py_XDECREF(tpl);
-    Py_INCREF(Py_None);
-    return Py_None;
+    if(!PyErr_Occurred()){
+        PyErr_SetString(PyExc_RuntimeError, "Failed to convert hsize_t array to tuple.");
+    }
+    return NULL;
 }
 
-/* Convert a Python tuple to a malloc'ed hsize_t array 
-   Returns NULL on failure
+/* Convert a Python tuple to an hsize_t array.  You must allocate
+   the array yourself and pass both it and the size to this function.
+   Returns 0 on success, -1 on failure and raises an exception.
 */
-hsize_t* tuple_to_dims(PyObject* tpl){
+int convert_tuple(PyObject* tpl, hsize_t *dims, hsize_t rank_in){
 
+    PyObject* temp = NULL;
     int rank;
-    hsize_t* dims;
-    PyObject* temp;
     int i;
-    dims = NULL;
-    temp = NULL;
 
     if(tpl == NULL) goto err;
     if(!PyTuple_Check(tpl)) goto err;
 
     rank = (int)PyTuple_GET_SIZE(tpl);
-
-    dims = (hsize_t*)malloc(sizeof(hsize_t)*rank);
+    if(rank != rank_in) {
+        PyErr_SetString(PyExc_RuntimeError, "Allocated space does not match tuple length");
+        goto err;
+    }
 
     for(i=0; i<rank; i++){
         temp = PyTuple_GetItem(tpl, i);
@@ -108,11 +116,13 @@ hsize_t* tuple_to_dims(PyObject* tpl){
             goto err;
     }
 
-    return dims;
+    return 0;
 
     err:
-      if(dims!=NULL) free(dims);
-      return NULL;
+    if(!PyErr_Occurred()){
+        PyErr_SetString(PyExc_ValueError, "Illegal argument (must be a tuple of numbers).");
+    }
+    return -1;
 }
 
 /* The functions

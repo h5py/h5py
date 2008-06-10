@@ -145,89 +145,101 @@ cdef extern from "hdf5.h":
 
  # --- Datatype operations ---------------------------------------------------
   # General operations
-  hid_t         H5Tcreate(H5T_class_t type, size_t size)
-  hid_t         H5Topen(hid_t loc, char* name)
-  herr_t        H5Tcommit(hid_t loc_id, char* name, hid_t type)
-  htri_t        H5Tcommitted(hid_t type)
-  hid_t         H5Tcopy(hid_t type_id)
-  htri_t        H5Tequal(hid_t type_id1, hid_t type_id2  )
-  herr_t        H5Tlock(hid_t type_id  )
-  H5T_class_t   H5Tget_class(hid_t type_id)
-  size_t        H5Tget_size(hid_t type_id  )
-  hid_t         H5Tget_super(hid_t type)
-  htri_t        H5Tdetect_class(hid_t type_id, H5T_class_t dtype_class)
-  herr_t        H5Tclose(hid_t type_id)
+  hid_t         H5Tcreate(H5T_class_t type, size_t size) except *
+  hid_t         H5Topen(hid_t loc, char* name) except *
+  herr_t        H5Tcommit(hid_t loc_id, char* name, hid_t type) except *
+  htri_t        H5Tcommitted(hid_t type) except *
+  hid_t         H5Tcopy(hid_t type_id) except *
+  htri_t        H5Tequal(hid_t type_id1, hid_t type_id2  ) except *
+  herr_t        H5Tlock(hid_t type_id) except *
+  H5T_class_t   H5Tget_class(hid_t type_id) except *
+  size_t        H5Tget_size(hid_t type_id) except? 0
+  hid_t         H5Tget_super(hid_t type) except *
+  htri_t        H5Tdetect_class(hid_t type_id, H5T_class_t dtype_class) except *
+  herr_t        H5Tclose(hid_t type_id) except *
 
-  hid_t         H5Tget_native_type(hid_t type_id, H5T_direction_t direction)
+  hid_t         H5Tget_native_type(hid_t type_id, H5T_direction_t direction) except *
 
   # Not for public API
   herr_t        H5Tconvert(hid_t src_id, hid_t dst_id, size_t nelmts, void *buf, void *background, hid_t plist_id) except *
   ctypedef herr_t  (*H5T_overflow_t)(hid_t src_id, hid_t dst_id, void *src_buf, void *dst_buf) except -1
-  herr_t        H5Tset_overflow(H5T_overflow_t func)
+  herr_t        H5Tset_overflow(H5T_overflow_t func) except *
 
   # Atomic datatypes
-  herr_t        H5Tset_size(hid_t type_id, size_t size)
+  herr_t        H5Tset_size(hid_t type_id, size_t size) except *
 
-  H5T_order_t   H5Tget_order(hid_t type_id)
-  herr_t        H5Tset_order(hid_t type_id, H5T_order_t order)
+  H5T_order_t   H5Tget_order(hid_t type_id) except *
+  herr_t        H5Tset_order(hid_t type_id, H5T_order_t order) except *
 
-  hsize_t       H5Tget_precision(hid_t type_id)
-  herr_t        H5Tset_precision(hid_t type_id, size_t prec)
+  hsize_t       H5Tget_precision(hid_t type_id) except? 0
+  herr_t        H5Tset_precision(hid_t type_id, size_t prec) except *
 
-  int           H5Tget_offset(hid_t type_id)
-  herr_t        H5Tset_offset(hid_t type_id, size_t offset)
+  int           H5Tget_offset(hid_t type_id) except *
+  herr_t        H5Tset_offset(hid_t type_id, size_t offset) except *
 
-  herr_t        H5Tget_pad(hid_t type_id, H5T_pad_t * lsb, H5T_pad_t * msb  )
-  herr_t        H5Tset_pad(hid_t type_id, H5T_pad_t lsb, H5T_pad_t msb  )
+  herr_t        H5Tget_pad(hid_t type_id, H5T_pad_t * lsb, H5T_pad_t * msb  ) except *
+  herr_t        H5Tset_pad(hid_t type_id, H5T_pad_t lsb, H5T_pad_t msb  ) except *
 
-  H5T_sign_t    H5Tget_sign(hid_t type_id)
-  herr_t        H5Tset_sign(hid_t type_id, H5T_sign_t sign)
+  H5T_sign_t    H5Tget_sign(hid_t type_id) except *
+  herr_t        H5Tset_sign(hid_t type_id, H5T_sign_t sign) except *
 
   herr_t        H5Tget_fields(hid_t type_id, size_t *spos, size_t *epos, 
-                                size_t *esize, size_t *mpos, size_t *msize  )
+                                size_t *esize, size_t *mpos, size_t *msize  ) except *
   herr_t        H5Tset_fields(hid_t type_id, size_t spos, size_t epos, 
-                                size_t esize, size_t mpos, size_t msize  )
+                                size_t esize, size_t mpos, size_t msize  ) except *
 
-  size_t        H5Tget_ebias(hid_t type_id)
-  herr_t        H5Tset_ebias(hid_t type_id, size_t ebias)
-  H5T_norm_t    H5Tget_norm(hid_t type_id)
-  herr_t        H5Tset_norm(hid_t type_id, H5T_norm_t norm)
-  H5T_pad_t     H5Tget_inpad(hid_t type_id)
-  herr_t        H5Tset_inpad(hid_t type_id, H5T_pad_t inpad)
-  H5T_cset_t    H5Tget_cset(hid_t type_id)
-  herr_t        H5Tset_cset(hid_t type_id, H5T_cset_t cset)
-  H5T_str_t     H5Tget_strpad(hid_t type_id)
-  herr_t        H5Tset_strpad(hid_t type_id, H5T_str_t strpad)
+  size_t        H5Tget_ebias(hid_t type_id) except? 0
+  herr_t        H5Tset_ebias(hid_t type_id, size_t ebias) except *
+  H5T_norm_t    H5Tget_norm(hid_t type_id) except *
+  herr_t        H5Tset_norm(hid_t type_id, H5T_norm_t norm) except *
+  H5T_pad_t     H5Tget_inpad(hid_t type_id) except *
+  herr_t        H5Tset_inpad(hid_t type_id, H5T_pad_t inpad) except *
+  H5T_cset_t    H5Tget_cset(hid_t type_id) except *
+  herr_t        H5Tset_cset(hid_t type_id, H5T_cset_t cset) except *
+  H5T_str_t     H5Tget_strpad(hid_t type_id) except *
+  herr_t        H5Tset_strpad(hid_t type_id, H5T_str_t strpad) except *
 
   # VLENs
-  hid_t     H5Tvlen_create(hid_t base_type_id)
-  htri_t    H5Tis_variable_str(hid_t dtype_id)
+  hid_t     H5Tvlen_create(hid_t base_type_id) except *
+  htri_t    H5Tis_variable_str(hid_t dtype_id) except *
 
   # Compound data types
-  int           H5Tget_nmembers(hid_t type_id)
-  H5T_class_t   H5Tget_member_class(hid_t type_id, int member_no)
-  char*         H5Tget_member_name(hid_t type_id, unsigned membno)
-  hid_t         H5Tget_member_type(hid_t type_id, unsigned membno)
-  int           H5Tget_member_offset(hid_t type_id, int membno)
-  int           H5Tget_member_index(hid_t type_id, char* name)
+  int           H5Tget_nmembers(hid_t type_id) except *
+  H5T_class_t   H5Tget_member_class(hid_t type_id, int member_no) except *
+  char*         H5Tget_member_name(hid_t type_id, unsigned membno) except? NULL
+  hid_t         H5Tget_member_type(hid_t type_id, unsigned membno) except *
+  int           H5Tget_member_offset(hid_t type_id, int membno) except *
+  int           H5Tget_member_index(hid_t type_id, char* name) except *
   herr_t        H5Tinsert(hid_t parent_id, char *name, size_t offset,
-                   hid_t member_id)
-  herr_t        H5Tpack(hid_t type_id)
+                   hid_t member_id) except *
+  herr_t        H5Tpack(hid_t type_id) except *
 
   # Enumerated types
-  hid_t     H5Tenum_create(hid_t base_id)
-  herr_t    H5Tenum_insert(hid_t type, char *name, void *value)
-  herr_t    H5Tenum_nameof( hid_t type, void *value, char *name, size_t size  )
-  herr_t    H5Tenum_valueof( hid_t type, char *name, void *value  )
-  herr_t    H5Tget_member_value(hid_t type,  unsigned int memb_no, void *value  )
+  hid_t     H5Tenum_create(hid_t base_id) except *
+  herr_t    H5Tenum_insert(hid_t type, char *name, void *value) except *
+  herr_t    H5Tenum_nameof( hid_t type, void *value, char *name, size_t size  ) except *
+  herr_t    H5Tenum_valueof( hid_t type, char *name, void *value  ) except *
+  herr_t    H5Tget_member_value(hid_t type,  unsigned int memb_no, void *value  ) except *
 
   # Array data types
-  hid_t H5Tarray_create(hid_t base_id, int ndims, hsize_t dims[], int perm[])
-  int   H5Tget_array_ndims(hid_t type_id)
-  int   H5Tget_array_dims(hid_t type_id, hsize_t dims[], int perm[])
+  hid_t H5Tarray_create(hid_t base_id, int ndims, hsize_t dims[], int perm[]) except *
+  int   H5Tget_array_ndims(hid_t type_id) except *
+  int   H5Tget_array_dims(hid_t type_id, hsize_t dims[], int perm[]) except *
 
   # Opaque data types
-  herr_t    H5Tset_tag(hid_t type_id, char* tag)
-  char*     H5Tget_tag(hid_t type_id)
+  herr_t    H5Tset_tag(hid_t type_id, char* tag) except *
+  char*     H5Tget_tag(hid_t type_id) except? NULL
+
+# === Custom C API ============================================================
+
+# Close the datatype, ignoring all errors.
+cdef herr_t PY_H5Tclose(hid_t type_id) except *
+
+
+
+
+
+
+
 
 

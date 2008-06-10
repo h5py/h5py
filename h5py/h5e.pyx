@@ -10,22 +10,26 @@
 # 
 #-
 
-from python cimport PyExc_Exception, PyErr_SetString
+from python cimport PyErr_SetObject
 
 # === Public exception hierarchy ==============================================
 
-class H5Error(StandardError):
-    """ Base class for internal HDF5 library exceptions
+class H5Error(EnvironmentError):
+    """ Base class for internal HDF5 library exceptions.
+        Subclass of EnvironmentError; errno is computed from the HDF5 major
+        and minor error numbers:
+            1000*(major number) + minor number
     """
     pass
 
 class ConversionError(StandardError):
     """ Indicates error on Python side of dtype transformation.
+        Subclass of StandardError, as this is not a library problem.
     """
     pass
 
 class FileError(H5Error):
-    """ HDF5 file I/0 error
+    """ HDF5 logical file error (H5E_FILE)
     """
     pass
 
@@ -33,21 +37,33 @@ class GroupError(H5Error):
     pass
 
 class DataspaceError(H5Error):
+    """ H5E_DATASPACE
+    """
     pass
 
 class DatatypeError(H5Error):
+    """ H5E_DATATYPE
+    """
     pass
 
 class DatasetError(H5Error):
+    """ H5E_DATASET
+    """
     pass
 
 class PropertyError(H5Error):
+    """ H5E_PLIST
+    """
     pass
 
 class H5AttributeError(H5Error):
+    """ H5E_ATTR
+    """
     pass
 
 class FilterError(H5Error):
+    """ H5E_PLINE
+    """
     pass
 
 class IdentifierError(H5Error):
@@ -75,6 +91,7 @@ cdef class H5ErrorStackElement:
         return '%2d:%2d "%s" at %s (%s: %s)' % (self.maj_num, self.min_num,
                 self.desc, self.func_name, H5Eget_major(<H5E_major_t>self.maj_num),
                 H5Eget_minor(<H5E_minor_t>self.min_num) )
+
 cdef herr_t walk_cb(int n, H5E_error_t *err_desc, void* stack_in):
     # Callback function to extract elements from the HDF5 error stack
 
@@ -116,13 +133,31 @@ def get_error_string():
         if stacklen > 1:
             msg = msg + "\nHDF5 Error Stack:"
             for i from 0<=i<stacklen:
-                msg = msg + '\n' + str(stack[i])
-                #el = stack[i]
-                #msg = msg + '\n    %d: "%s" at %s' % \
-                #            (i, el.desc.capitalize(), el.func_name)
+                #msg = msg + '\n' + str(stack[i])
+                el = stack[i]
+                msg = msg + '\n    %d: "%s" at %s' % \
+                            (i, el.desc.capitalize(), el.func_name)
 
     return msg
 
+def get_major(int error):
+    """ (INT error) => STRING description
+    """
+    return H5E_get_major(<H5E_major_t>error)
+
+def get_minor(int error):
+    """ (INT error) => STRING description
+    """
+    return H5E_get_minor(<H5E_minor_t>error)
+
+def get_error(int error):
+    """ (INT errno) => STRING description
+    """
+    cdef int mj
+    cdef int mn
+    mn = error % 1000
+    mj = (error-mn)/1000
+    return "%s: %s" % (H5E_get_major(<H5E_major_t>mj), H5E_get_minor(<H5E_minor_t>mn))
 
 # === Automatic exception API =================================================
 
@@ -158,8 +193,7 @@ cdef herr_t err_callback(void* client_data):
     # Map function argument exceptions to native Python exceptions.
     # H5E_BADTYPE does not raise TypeError as this is too easily confused
     # with the results of Pyrex auto-validation.
-    elif mj == H5E_ARGS and (mn == H5E_BADRANGE or mn == H5E_BADVALUE \
-                             or mn == H5E_BADTYPE):
+    elif mj == H5E_ARGS:
         exc = ValueError
 
     # Major errors which map to new h5e exception classes
@@ -185,7 +219,10 @@ cdef herr_t err_callback(void* client_data):
         exc = H5Error
 
     msg = get_error_string()
-    PyErr_SetString(exc, msg)
+    if issubclass(exc, EnvironmentError):
+        PyErr_SetObject(exc, (1000*mj + mn, msg))
+    else:
+        PyErr_SetObject(exc, msg)
 
     return 1
 
@@ -201,7 +238,7 @@ cdef int _disable_exceptions() except -1:
         raise RuntimeError("Failed to unregister HDF5 exception callback.")
     return 0
 
-cdef err_c pause_errors() except NULL:
+cdef err_c pause_errors() except? NULL:
     # Temporarily disable automatic exception handling, and return a cookie
     # which can later be used to re-enable it.
     cdef err_c cookie
@@ -226,30 +263,6 @@ cdef int resume_errors(err_c cookie) except -1:
         raise RuntimeError("Failed to clear error stack.")
 
     return 0
-
-# --- temporary test functions ---
-
-cdef extern from "hdf5.h":
-  htri_t H5Pexist( hid_t id,  char *name) except *
-  herr_t H5Tclose(hid_t type_id  ) except *
-  hid_t H5T_STD_I8LE
-
-def test_error():
-    H5Pexist(-1, "foobar")
-
-def test_2():
-    H5Tclose(H5T_STD_I8LE)
-
-cdef void ctest3() except *:
-    PyErr_SetString(Foobar, "foo")
-
-def test_3():
-    ctest3()
-
-
-
-
-
 
 
 

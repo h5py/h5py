@@ -24,6 +24,7 @@
 """
 
 from h5e cimport _enable_exceptions
+from numpy cimport import_array
 
 # === Library init ============================================================
 
@@ -34,6 +35,7 @@ cdef int import_hdf5() except -1:
     return 0
 
 import_hdf5()
+import_array()
 
 # === API =====================================================================
 

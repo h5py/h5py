@@ -73,7 +73,7 @@ cdef extern from "Python.h":
   void* PyExc_Exception   # Not allowed to declare objects "extern C" (why not?)
   void PyErr_SetString(object type_, char* msg)
   void PyErr_SetNone(object type_)
-
+  void PyErr_SetObject(object type_, object args)
   object PyErr_NewException(char* name, object base, object dict_)
 
 

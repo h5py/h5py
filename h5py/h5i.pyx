@@ -15,13 +15,13 @@
 """
 
 # Pyrex compile-time imports
-from defs_c   cimport size_t, malloc, free
+from defs_c cimport size_t
 from h5  cimport hid_t
+from utils cimport emalloc, efree
 
 # Runtime imports
 import h5
 from h5 import DDict
-from errors import IdentifierError
 
 # === Public constants and data structures ====================================
 
@@ -49,32 +49,28 @@ def get_type(hid_t obj_id):
         Determine the type of an arbitrary HDF5 object.  The return value is
         always one of TYPE_*; if the ID is invalid, TYPE_BADID is returned.
     """
-    cdef int retval
-    retval = <int>H5Iget_type(obj_id)
-    return retval
+    return <int>H5Iget_type(obj_id)
 
 def get_name(hid_t obj_id):
     """ (INT obj_id) => STRING name or None
 
         Determine (a) name of an HDF5 object.  Because an object has as many
-        names as there are hard links to it, this may not be unique.  If the
-        object does not have a name (transient datatypes, etc.), or if the
-        identifier is invalid, returns None.
+        names as there are hard links to it, this may not be unique.
     """
     cdef int namelen
     cdef char* name
 
     namelen = <int>H5Iget_name(obj_id, NULL, 0)
-
     if namelen <= 0:
-        return None
+        raise RuntimeError("Failed to raise exception at get_name")
 
-    name = <char*>malloc(namelen+1)
-    namelen = H5Iget_name(obj_id, name, namelen+1)
-    retstring = name
-    free(name)
-
-    return retstring
+    name = <char*>emalloc(sizeof(char)*(namelen+1))
+    try:
+        H5Iget_name(obj_id, name, namelen+1)
+        pystring = name
+        return pystring
+    finally:
+        efree(name)
 
 def get_file_id(hid_t obj_id):
     """ (INT obj_id) => INT file_id
@@ -82,42 +78,28 @@ def get_file_id(hid_t obj_id):
         Obtain an identifier for the file in which this object resides,
         re-opening the file if necessary.
     """
-    cdef hid_t fid
-    fid = H5Iget_file_id(obj_id)
-    if fid < 0:
-        raise IdentifierError("Failed to determine file id for object %d" % obj_id)
-    return fid
+    return H5Iget_file_id(obj_id)
 
 def inc_ref(hid_t obj_id):
     """ (INT obj_id)
 
         Increment the reference count for the given object.
     """
-    cdef int retval
-    retval = H5Iinc_ref(obj_id)
-    if retval < 0:
-        raise IdentifierError("Failed to increment reference count of object %d" % obj_id)
+    H5Iinc_ref(obj_id)
 
 def get_ref(hid_t obj_id):
     """ (INT obj_id)
 
         Retrieve the reference count for the given object.
     """
-    cdef int retval
-    retval = H5Iget_ref(obj_id)
-    if retval < 0:
-        raise IdentifierError("Failed to determine reference count of object %d" % obj_id)
-    return retval
+    return H5Iget_ref(obj_id)
 
 def dec_ref(hid_t obj_id):
     """ (INT obj_id)
 
         Decrement the reference count for the given object.
     """
-    cdef int retval
-    retval = H5Idec_ref(obj_id)
-    if retval < 0:
-        raise IdentifierError("Failed to decrement reference count of object %d" % obj_id)
+    H5Idec_ref(obj_id)
 
 
 

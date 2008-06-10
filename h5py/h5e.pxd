@@ -206,7 +206,7 @@ ctypedef H5E_auto_t err_c
 cdef int _enable_exceptions() except -1
 cdef int _disable_exceptions() except -1
 
-cdef err_c pause_errors() except NULL
+cdef err_c pause_errors() except? NULL
 cdef int resume_errors(err_c cookie) except -1
 
 

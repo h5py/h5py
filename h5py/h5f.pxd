@@ -45,22 +45,22 @@ cdef extern from "hdf5.h":
 
   # --- File operations -------------------------------------------------------
   hid_t  H5Fcreate(char *filename, unsigned int flags,
-                   hid_t create_plist, hid_t access_plist)
-  hid_t  H5Fopen(char *name, unsigned flags, hid_t access_id)
-  herr_t H5Fclose (hid_t file_id)
-  htri_t H5Fis_hdf5(char *name)
-  herr_t H5Fflush(hid_t object_id, H5F_scope_t scope)
+                   hid_t create_plist, hid_t access_plist) except *
+  hid_t  H5Fopen(char *name, unsigned flags, hid_t access_id) except *
+  herr_t H5Fclose (hid_t file_id) except *
+  htri_t H5Fis_hdf5(char *name) except *
+  herr_t H5Fflush(hid_t object_id, H5F_scope_t scope) except *
 
-  hid_t     H5Freopen(hid_t file_id)
-  herr_t    H5Fmount(hid_t loc_id, char *name, hid_t child_id, hid_t plist_id)
-  herr_t    H5Funmount(hid_t loc_id, char *name)
-  herr_t    H5Fget_filesize(hid_t file_id, hsize_t *size)
-  hid_t     H5Fget_create_plist(hid_t file_id  )
-  hid_t     H5Fget_access_plist(hid_t file_id) 
-  hssize_t  H5Fget_freespace(hid_t file_id)
-  ssize_t   H5Fget_name(hid_t obj_id, char *name, size_t size)
-  int       H5Fget_obj_count(hid_t file_id, unsigned int types)
-  int       H5Fget_obj_ids(hid_t file_id, unsigned int types, int max_objs, hid_t *obj_id_list)
+  hid_t     H5Freopen(hid_t file_id) except *
+  herr_t    H5Fmount(hid_t loc_id, char *name, hid_t child_id, hid_t plist_id) except *
+  herr_t    H5Funmount(hid_t loc_id, char *name) except *
+  herr_t    H5Fget_filesize(hid_t file_id, hsize_t *size) except *
+  hid_t     H5Fget_create_plist(hid_t file_id  ) except *
+  hid_t     H5Fget_access_plist(hid_t file_id)  except *
+  hssize_t  H5Fget_freespace(hid_t file_id) except *
+  ssize_t   H5Fget_name(hid_t obj_id, char *name, size_t size) except *
+  int       H5Fget_obj_count(hid_t file_id, unsigned int types) except *
+  int       H5Fget_obj_ids(hid_t file_id, unsigned int types, int max_objs, hid_t *obj_id_list) except *
 
 
 

@@ -178,7 +178,7 @@ ext_exten = '.pyx'
 
 # Pyrex extension modules
 pyx_modules = ['h5e', 'h5' , 'h5f', 'h5g', 'h5s', 'h5t',  
-               'h5d', 'h5a', 'h5p', 'h5z', 'h5i', 'h5r']
+               'h5d', 'h5a', 'h5p', 'h5z', 'h5i', 'h5r', 'utils']
 
 pyx_src_path = 'h5py'
 pyx_extra_src = ['utils_low.c']         # C source files required for Pyrex code

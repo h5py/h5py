@@ -51,8 +51,8 @@ cdef extern from "hdf5.h":
         H5Z_NO_EDC          = 2 
 
     # --- Filter API ----------------------------------------------------------
-    htri_t H5Zfilter_avail(H5Z_filter_t id_)
-    herr_t H5Zget_filter_info(H5Z_filter_t filter_, unsigned int *filter_config_flags)
+    htri_t H5Zfilter_avail(H5Z_filter_t id_) except *
+    herr_t H5Zget_filter_info(H5Z_filter_t filter_, unsigned int *filter_config_flags) except *
 
 
 

@@ -15,13 +15,13 @@
 """
 
 # Pyrex compile-time imports
-from defs_c   cimport malloc, free, time_t
+from defs_c cimport time_t
 from h5  cimport herr_t, hid_t, size_t, hsize_t
+from utils cimport emalloc, efree
 
 # Runtime imports
 import h5
 from h5 import DDict
-from errors import GroupError
 
 # === Public constants and data structures ====================================
 
@@ -64,21 +64,12 @@ def open(hid_t loc_id, char* name):
 
         Open an existing HDF5 group, attached to some other group.
     """
-    cdef herr_t retval
-    
-    retval = H5Gopen(loc_id, name)
-    if retval < 0:
-        raise GroupError("Failed to open group %s at %d" % (name, loc_id))
-    return retval
+    return H5Gopen(loc_id, name)
 
 def close(hid_t group_id):
     """ (INT group_id)
     """
-    cdef herr_t retval
-
-    retval = H5Gclose(group_id)
-    if retval < 0:
-        raise GroupError("Can't close group %d" % group_id)
+    H5Gclose(group_id)
 
 def create(hid_t loc_id, char* name, int size_hint=-1):
     """ (INT loc_id, STRING name, INT size_hint=-1)
@@ -86,12 +77,7 @@ def create(hid_t loc_id, char* name, int size_hint=-1):
         Create a new group named "name", under a parent group identified by
         "loc_id".  See the HDF5 documentation for the meaning of size_hint.
     """
-    cdef herr_t retval
-    
-    retval = H5Gcreate(loc_id, name, size_hint)
-    if retval < 0:
-        raise GroupError("Can't create group %s under %d" % (name, loc_id))
-    return retval
+    return H5Gcreate(loc_id, name, size_hint)
 
 # === Group member management =================================================
 
@@ -108,26 +94,17 @@ def link(hid_t loc_id, char* current_name, char* new_name, int link_type=H5G_LIN
         Hard links are created by default (link_type=LINK_HARD).  To create a
         symbolic link, pass in link_type=LINK_SOFT.
     """
-    cdef herr_t retval
-    
     if remote_id < 0:
         remote_id = loc_id
 
-    retval = H5Glink2(loc_id, current_name, <H5G_link_t>link_type, remote_id, new_name)
-    if retval < 0:
-        raise GroupError('Failed to link %d=>"%s" to %d=>"%s"' % (loc_id, current_name, remote_id, new_name))
+    H5Glink2(loc_id, current_name, <H5G_link_t>link_type, remote_id, new_name)
 
 def unlink(hid_t loc_id, char* name):
     """ (INT loc_id, STRING name)
 
         Remove a link to an object from the given group.
     """
-    cdef herr_t retval
-
-    retval = H5Gunlink(loc_id, name)
-    if retval < 0:
-        raise GroupError("Failed to unlink member '%s' from group %d" % (name, loc_id))
-
+    H5Gunlink(loc_id, name)
 
 def move(hid_t loc_id, char* current_name, char* new_name, hid_t remote_id=-1):
     """ (INT loc_id, STRING current_name, STRING new_name, INT new_group_id=-1)
@@ -136,13 +113,10 @@ def move(hid_t loc_id, char* current_name, char* new_name, hid_t remote_id=-1):
         current_name.  The new name of the link is new_name.  You can create
         the link in a different group by passing its identifier to remote_id.
     """
-    cdef int retval
     if remote_id < 0:
         remote_id = loc_id
+    H5Gmove2(loc_id, current_name, remote_id, new_name)
 
-    retval = H5Gmove2(loc_id, current_name, remote_id, new_name)
-    if retval < 0:
-        raise GroupError('Failed to move %d=>"%s" to %d=>"%s"' % (loc_id, current_name, remote_id, new_name))
 
 # === Member inspection =======================================================
 
@@ -152,12 +126,7 @@ def get_num_objs(hid_t loc_id):
         Get the number of objects attached to a given group.
     """
     cdef hsize_t size
-    cdef herr_t retval
-    
-    retval = H5Gget_num_objs(loc_id, &size)
-    if retval < 0:
-        raise GroupError("Group enumeration failed: %d" % loc_id)
-
+    H5Gget_num_objs(loc_id, &size)
     return size
 
 def get_objname_by_idx(hid_t loc_id, hsize_t idx):
@@ -165,21 +134,21 @@ def get_objname_by_idx(hid_t loc_id, hsize_t idx):
 
         Get the name of a group member given its zero-based index.
     """
-    cdef int retval
+    cdef int size
     cdef char* buf
-    cdef object pystring
+    buf = NULL
 
-    retval = H5Gget_objname_by_idx(loc_id, idx, NULL, 0)
-    if retval < 0:
-        raise GroupError("Error accessing element %d of group %d" % (idx, loc_id))
-    elif retval == 0:
-        return None
-    else:
-        buf = <char*>malloc(retval+1)
-        retval = H5Gget_objname_by_idx(loc_id, idx, buf, retval+1)
+    size = H5Gget_objname_by_idx(loc_id, idx, NULL, 0)
+    if retval <= 0:
+        raise RuntimeError("Failed to raise exception at get_objname_by_idx.")
+
+    buf = <char*>emalloc(sizeof(char)*(retval+1))
+    try:
+        H5Gget_objname_by_idx(loc_id, idx, buf, retval+1)
         pystring = buf
-        free(buf)
         return pystring
+    finally:
+        efree(buf)
 
 def get_objtype_by_idx(hid_t loc_id, hsize_t idx):
     """ (INT loc_id, INT idx) => INT object_type_code
@@ -191,13 +160,7 @@ def get_objtype_by_idx(hid_t loc_id, hsize_t idx):
             - DATASET
             - DATATYPE
     """
-    cdef int retval
-
-    retval = H5Gget_objtype_by_idx(loc_id, idx)
-    if retval < 0:
-        raise GroupError("Error accessing element %d of group %d" % (idx, loc_id))
-
-    return retval
+    return H5Gget_objtype_by_idx(loc_id, idx)
 
 def get_objinfo(hid_t loc_id, char* name, int follow_link=1):
     """ (INT loc_id, STRING name, BOOL follow_link=True)
@@ -209,13 +172,10 @@ def get_objinfo(hid_t loc_id, char* name, int follow_link=1):
         and the object is a symbolic link, the information returned describes 
         its target.  Otherwise the information describes the link itself.
     """
-    cdef int retval
     cdef H5G_stat_t stat
     cdef GroupStat statobj
 
-    retval = H5Gget_objinfo(loc_id, name, follow_link, &stat)
-    if retval < 0:
-        raise GroupError("Can't stat member \"%s\" of group %d" % (name, loc_id))
+    H5Gget_objinfo(loc_id, name, follow_link, &stat)
 
     statobj = GroupStat()
     statobj.fileno = (stat.fileno[0], stat.fileno[1])
@@ -228,10 +188,6 @@ def get_objinfo(hid_t loc_id, char* name, int follow_link=1):
     return statobj
 
 cdef herr_t iter_cb_helper(hid_t gid, char *name, object int_tpl):
-
-    cdef object func
-    cdef object data
-    cdef object outval
 
     func = int_tpl[0]
     data = int_tpl[1]
@@ -285,36 +241,31 @@ def get_linkval(hid_t loc_id, char* name):
         Retrieve the value of the given symbolic link.
     """
     cdef char* value
-    cdef herr_t retval  
     cdef H5G_stat_t statbuf
     value = NULL
 
-    retval = H5Gget_objinfo(loc_id, name, 0, &statbuf)
-    if retval < 0:
-        raise GroupError('Can\'t stat "%s" under group %d' % (name, loc_id))
+    H5Gget_objinfo(loc_id, name, 0, &statbuf)
 
     if statbuf.type != H5G_LINK:
-        raise GroupError('"%s" is not a symbolic link (type is %s)' % (name, PY_NAMES[statbuf.type]))
+        raise ValueError('"%s" is not a symbolic link.' % name)
 
-    value = <char*>malloc(statbuf.linklen+1)
-    retval = H5Gget_linkval(loc_id, name, statbuf.linklen+1, value)
-    if retval < 0:
-        free(value)
-        raise GroupError('Failed to determine link value for "%s"' % name)
+    value = <char*>emalloc(sizeof(char)*(statbuf.linklen+1))
+    try:
+        H5Gget_linkval(loc_id, name, statbuf.linklen+1, value)
+        pyvalue = value
+        return pyvalue
 
-    pvalue = value
-    free(value)
-    return pvalue
+    finally:
+        efree(value)
+
 
 def set_comment(hid_t loc_id, char* name, char* comment):
     """ (INT loc_id, STRING name, STRING comment)
 
         Set the comment on a group member.
     """
-    cdef herr_t retval
-    retval = H5Gset_comment(loc_id, name, comment)
-    if retval < 0:
-        raise GroupError('Failed to set comment on member "%s" of group %d' % (name, loc_id))
+    H5Gset_comment(loc_id, name, comment)
+
 
 def get_comment(hid_t loc_id, char* name):
     """ (INT loc_id, STRING name) => STRING comment
@@ -327,17 +278,15 @@ def get_comment(hid_t loc_id, char* name):
 
     cmnt_len = H5Gget_comment(loc_id, name, 0, NULL)
     if cmnt_len < 0:
-        raise GroupError('Failed to get comment for member "%s" of group %d' % (name, loc_id))
+        raise RuntimeError("Failed to raise exception at get_comment")
 
-    cmnt = <char*>malloc(cmnt_len+1)
-    cmnt_len = H5Gget_comment(loc_id, name, cmnt_len+1, cmnt)
-    if cmnt_len < 0:
-        free(cmnt)
-        raise GroupError('Failed to get comment for member "%s" of group %d' % (name, loc_id))
-
-    p_cmnt = cmnt
-    free(cmnt)
-    return p_cmnt
+    cmnt = <char*>emalloc(sizeof(char)*(cmnt_len+1))
+    try:
+        H5Gget_comment(loc_id, name, cmnt_len+1, cmnt)
+        py_cmnt = cmnt
+        return py_cmnt
+    finally:
+        efree(cmnt)
 
 # === Custom extensions =======================================================
 
@@ -347,10 +296,9 @@ def py_listnames(hid_t group_id):
         Create a Python list of the object names directly attached to a group.
     """
     cdef int nitems
-    cdef object thelist
     cdef int i
 
-    thelist = []
+    namelist = []
     nitems = get_num_objs(group_id)
 
     for i from 0 <= i < nitems:
@@ -378,7 +326,7 @@ cdef class _GroupIterator:
         nobjs = -1
         H5Gget_num_objs(self.gid, &nobjs)
         if nobjs != self.nitems:
-            raise GroupError("Group length changed during iteration")
+            raise RuntimeError("Group length changed during iteration")
         if self.idx >= self.nitems:
             raise StopIteration()
         name = get_objname_by_idx(self.gid, self.idx)
@@ -404,9 +352,9 @@ def py_exists(hid_t group_id, char* name, int follow_link=1):
         is True (default), symbolic links will be dereferenced. Note this
         function will not raise GroupError, even if the group ID is bad.
     """
-    cdef int retval
-    retval = H5Gget_objinfo(group_id, name, follow_link, NULL)
-    if retval < 0:
+    try:
+        H5Gget_objinfo(group_id, name, follow_link, NULL)
+    except:
         return False
     return True
 

@@ -23,22 +23,20 @@
 """
 
 # Pyrex compile-time imports
-from defs_c   cimport malloc, free
 from h5  cimport herr_t, hid_t, size_t, hsize_t, htri_t, haddr_t, HADDR_UNDEF
 from h5s cimport H5Sclose, H5S_ALL, H5S_UNLIMITED, H5S_SCALAR, H5S_SIMPLE
-from h5t cimport H5Tclose
-from h5p cimport H5P_DEFAULT
-from numpy cimport ndarray, import_array, PyArray_DATA
-from utils cimport check_numpy_read, check_numpy_write, tuple_to_dims
+from h5t cimport PY_H5Tclose
+from h5p cimport H5P_DEFAULT, H5Pclose
+from numpy cimport ndarray, PyArray_DATA
+from utils cimport  check_numpy_read, check_numpy_write, \
+                    convert_tuple, \
+                    emalloc, efree
 
 # Runtime imports
 import h5
 from h5 import DDict
-from errors import DatasetError
 import h5t
 import h5s
-
-import_array()
 
 # === Public constants and data structures ====================================
 
@@ -75,30 +73,19 @@ def create(int loc_id, char* name, hid_t type_id, hid_t space_id, hid_t plist=H5
 
         For a friendlier version of this function, try py_create()
     """
-    cdef hid_t dataset_id
-    dataset_id = H5Dcreate(loc_id, name, type_id, space_id, plist)
-    if dataset_id < 0:
-        raise DatasetError('Failed to create dataset "%s" under %d' % (name, loc_id))
-    return dataset_id
+    return H5Dcreate(loc_id, name, type_id, space_id, plist)
 
 def open(hid_t loc_id, char* name):
     """ (INT loc_id, STRING name) => INT dataset_id
 
         Open an existing dataset attached to a group or file object, by name.
     """
-    cdef hid_t dset_id
-    dset_id = H5Dopen(loc_id, name)
-    if dset_id < 0:
-        raise DatasetError('Failed to open dataset "%s" under %d' % (name, loc_id))
-    return dset_id
+    return H5Dopen(loc_id, name)
 
 def close(hid_t dset_id):
     """ (INT dset_id)
     """
-    cdef herr_t retval
-    retval = H5Dclose(dset_id)
-    if retval < 0:
-        raise DatasetError("Failed to close dataset %d" % dset_id)
+    H5Dclose(dset_id)
 
 # === Dataset I/O =============================================================
 
@@ -133,12 +120,11 @@ def read(hid_t dset_id, hid_t mspace_id, hid_t fspace_id, ndarray arr_obj, hid_t
         if array_ok <= 0:
             raise ValueError("Numpy array is not set up correctly.")
 
-        retval = H5Dread(dset_id, mtype_id, mspace_id, fspace_id, plist, PyArray_DATA(arr_obj))
-        if retval < 0:
-            raise DatasetError("Error reading from dataset %d" % dset_id)
+        H5Dread(dset_id, mtype_id, mspace_id, fspace_id, plist, PyArray_DATA(arr_obj))
+
     finally:
         if mtype_id != 0:
-            H5Tclose(mtype_id)
+            PY_H5Tclose(mtype_id)
         
 def write(hid_t dset_id, hid_t mspace_id, hid_t fspace_id, ndarray arr_obj, hid_t plist=H5P_DEFAULT):
     """ ( INT dset_id, INT mspace_id, INT fspace_id, NDARRAY arr_obj, 
@@ -163,12 +149,11 @@ def write(hid_t dset_id, hid_t mspace_id, hid_t fspace_id, ndarray arr_obj, hid_
         if array_ok <= 0:
             raise ValueError("Numpy array is not set up correctly.")
 
-        retval = H5Dwrite(dset_id, mtype_id, mspace_id, fspace_id, plist, PyArray_DATA(arr_obj))
-        if retval < 0:
-            raise DatasetError("Error writing to dataset %d" % dset_id)
+        H5Dwrite(dset_id, mtype_id, mspace_id, fspace_id, plist, PyArray_DATA(arr_obj))
+
     finally:
         if mtype_id:
-            H5Tclose(mtype_id)
+            PY_H5Tclose(mtype_id)
 
 def extend(hid_t dset_id, object shape):
     """ (INT dset_id, TUPLE shape)
@@ -186,23 +171,18 @@ def extend(hid_t dset_id, object shape):
     dims = NULL
 
     try:
-        space_id = get_space(dset_id)
-        rank = h5s.get_simple_extent_ndims(space_id)
-        if len(shape) != rank:
-            raise ValueError("Tuple rank must match dataspace rank %d; got %s" % (rank, repr(shape)))
+        space_id = H5Dget_space(dset_id)
+        rank = H5Sget_simple_extent_ndims(space_id)
 
-        dims = tuple_to_dims(shape)
-        if dims == NULL:
-            raise ValueError("Invalid tuple supplied: %s" % repr(shape))
+        require_tuple(shape, 0, rank, "shape")
+        dims = <hsize_t*>emalloc(sizeof(hsize_t)*rank)
+        convert_tuple(shape, dims, rank)
+        H5Dextend(dset_id, dims)
 
-        retval = H5Dextend(dset_id, dims)
-        if retval < 0:
-            raise DatasetError("Failed to extend dataset %d" % dset_id)
     finally:
-        if space_id != 0:
+        efree(dims)
+        if space_id:
             H5Sclose(space_id)
-        if dims != NULL:
-            free(dims)
 
 # === Dataset inspection ======================================================
 
@@ -212,11 +192,7 @@ def get_space(hid_t dset_id):
         Create and return a new copy of the dataspace for this dataset.  You're
         responsible for closing it.
     """
-    cdef hid_t space_id
-    space_id = H5Dget_space(dset_id)
-    if space_id < 0:
-        raise DatasetError("Error retrieving space of dataset %d" % dset_id)
-    return space_id
+    return H5Dget_space(dset_id)
 
 def get_space_status(hid_t dset_id):
     """ (INT dset_id) => INT space_status_code
@@ -225,10 +201,7 @@ def get_space_status(hid_t dset_id):
         one of SPACE_STATUS_*.
     """
     cdef H5D_space_status_t status
-    cdef herr_t retval
-    retval = H5Dget_space_status(dset_id, &status)
-    if retval < 0:
-        raise DatasetError("Error determining allocation status of dataset %d" % dset_id)
+    H5Dget_space_status(dset_id, &status)
     return <int>status
 
 def get_type(hid_t dset_id):
@@ -237,11 +210,7 @@ def get_type(hid_t dset_id):
         Create and return a new copy of the datatype for this dataset.You're
         responsible for closing it.
     """
-    cdef hid_t type_id
-    type_id = H5Dget_type(dset_id)
-    if type_id < 0:
-        raise DatasetError("Error retrieving type of dataset %d" % dset_id)
-    return type_id
+    return H5Dget_type(dset_id)
 
 def get_create_plist(hid_t dset_id):
     """ (INT dset_id) => INT property_list_id
@@ -249,22 +218,14 @@ def get_create_plist(hid_t dset_id):
         Create a new copy of the dataset creation property list used when this
         dataset was created.  You're responsible for closing it.
     """
-    cdef hid_t plist
-    plist = H5Dget_create_plist(dset_id)
-    if plist < 0:
-        raise DatasetError("Error retrieving creation property list for dataset %d" % dset_id)
-    return plist
+    return H5Dget_create_plist(dset_id)
 
 def get_offset(hid_t dset_id):
     """ (INT dset_id) => LONG offset
 
         Get the offset of this dataset in the file, in bytes.
     """
-    cdef haddr_t retval
-    retval = H5Dget_offset(dset_id)
-    if retval == HADDR_UNDEF:
-        raise DatasetError("Error determining file offset of dataset %d" % dset_id)
-    return retval
+    return H5Dget_offset(dset_id)
 
 def get_storage_size(hid_t dset_id):
     """ (INT dset_id) => LONG storage_size
@@ -273,9 +234,7 @@ def get_storage_size(hid_t dset_id):
         only counts the space which has actually been allocated; it may even
         be zero.  Because of this, this function will never raise an exception.
     """
-    cdef hsize_t retval
-    retval = H5Dget_storage_size(dset_id)
-    return retval
+    return H5Dget_storage_size(dset_id)
 
 # === Python extensions =======================================================
 
@@ -349,7 +308,7 @@ def py_create(hid_t parent_id, char* name, object data=None, object dtype=None,
         if space_id:
             H5Sclose(space_id)
         if type_id:
-            H5Tclose(type_id)
+            PY_H5Tclose(type_id)
         if plist:
             H5Pclose(plist)
 
@@ -435,12 +394,12 @@ def py_read_slab(hid_t ds_id, object start, object count,
 
     finally:
         # ignore return values on cleanup
-        if mem_space != 0:
+        if mem_space:
             H5Sclose(mem_space)
-        if file_space != 0:
+        if file_space:
             H5Sclose(file_space)
-        if type_id != 0:
-            H5Tclose(type_id)
+        if type_id:
+            PY_H5Tclose(type_id)
 
     return arr
 
@@ -498,9 +457,9 @@ def py_write_slab(hid_t ds_id, ndarray arr, object start, object stride=None):
 
     finally:
         # ignore return values on cleanup
-        if mem_space != 0:
+        if mem_space:
             H5Sclose(mem_space)
-        if file_space != 0:
+        if file_space:
             H5Sclose(file_space)
 
 def py_shape(hid_t dset_id):
@@ -548,7 +507,7 @@ def py_dtype(hid_t dset_id):
         dtype_out = h5t.py_h5t_to_dtype(type_id)
     finally:
         if type_id:
-            H5Tclose(type_id)
+            PY_H5Tclose(type_id)
     return dtype_out
 
 def py_patch(hid_t ds_source, hid_t ds_sink, hid_t transfer_space):
@@ -593,30 +552,25 @@ def py_patch(hid_t ds_source, hid_t ds_sink, hid_t transfer_space):
         # out again to the same selection preserves the arrangement of data
         # elements.  I think this is a reasonable assumption.
 
-        xfer_buf = malloc(npoints*type_size)
+        xfer_buf = emalloc(npoints*type_size)
 
         # Let the HDF5 library do dataspace validation; the worst that can
         # happen is that the write will fail after taking a while to read.
 
-        retval = H5Dread(ds_source, source_type, mem_space, transfer_space, H5P_DEFAULT, xfer_buf)
-        if retval < 0:
-            raise DatasetError("Source read failed.")
-
-        retval = H5Dwrite(ds_sink, source_type, mem_space, transfer_space, H5P_DEFAULT, xfer_buf)
-        if retval < 0:
-            raise DatasetError("Sink write failed.")
+        H5Dread(ds_source, source_type, mem_space, transfer_space, H5P_DEFAULT, xfer_buf)
+        H5Dwrite(ds_sink, source_type, mem_space, transfer_space, H5P_DEFAULT, xfer_buf)
 
     finally:
-        if source_space != 0:
+        if source_space:
             H5Sclose(source_space)
-        if sink_space != 0:
+        if sink_space:
             H5Sclose(sink_space)
-        if mem_space != 0:
+        if mem_space:
             H5Sclose(mem_space)
-        if source_type != 0:
-            H5Tclose(source_type)
+        if source_type:
+            PY_H5Tclose(source_type)
         if xfer_buf != NULL:
-            free(xfer_buf)
+            efree(xfer_buf)
 
 PY_LAYOUT = DDict({ H5D_COMPACT: 'COMPACT LAYOUT', 
                H5D_CONTIGUOUS: 'CONTIGUOUS LAYOUT',

@@ -68,8 +68,8 @@ class TestH5A(unittest.TestCase):
         h5g.close(obj)
         deletecopy(fid, filename)
         
-        self.assertRaises(TypeError, h5a.create, -1, "FOOBAR", -1, -1)
-        self.assertRaises(TypeError, h5a.write, -1, arr_ref)
+        self.assertRaises(ValueError, h5a.create, -1, "FOOBAR", -1, -1)
+        self.assertRaises(ValueError, h5a.write, -1, arr_ref)
 
     def test_open_idx(self):
         for idx, name in enumerate(ATTRIBUTES_ORDER):
@@ -77,7 +77,7 @@ class TestH5A(unittest.TestCase):
             self.assert_(self.is_attr(aid), "Open: index %d" % idx)
             h5a.close(aid)
     
-        self.assertRaises(TypeError, h5a.open_idx, -1, 0)
+        self.assertRaises(ValueError, h5a.open_idx, -1, 0)
 
     def test_open_name(self):
         for name in ATTRIBUTES:
@@ -85,7 +85,7 @@ class TestH5A(unittest.TestCase):
             self.assert_(self.is_attr(aid), 'Open: name "%s"' % name)
             h5a.close(aid)
 
-        self.assertRaises(TypeError, h5a.open_name, -1, "foo")
+        self.assertRaises(ValueError, h5a.open_name, -1, "foo")
 
     def test_close(self):
         aid = h5a.open_idx(self.obj, 0)
@@ -93,7 +93,7 @@ class TestH5A(unittest.TestCase):
         h5a.close(aid)
         self.assert_(not self.is_attr(aid))
     
-        self.assertRaises(TypeError, h5a.close, -1)
+        self.assertRaises(ValueError, h5a.close, -1)
 
     def test_delete(self):
         fid, filename = getcopy(HDFNAME)
@@ -103,7 +103,7 @@ class TestH5A(unittest.TestCase):
         self.assert_(not h5a.py_exists(obj, ATTRIBUTES_ORDER[0]))
         deletecopy(fid, filename)
 
-        self.assertRaises(TypeError, h5a.delete, -1, "foo")
+        self.assertRaises(ValueError, h5a.delete, -1, "foo")
 
     # === Attribute I/O =======================================================
 
@@ -125,7 +125,7 @@ class TestH5A(unittest.TestCase):
 
             h5a.close(aid)
         
-        self.assertRaises(TypeError, h5a.read, -1, arr_holder)
+        self.assertRaises(ValueError, h5a.read, -1, arr_holder)
 
     # h5a.write is done by test_create_write
 
@@ -134,7 +134,7 @@ class TestH5A(unittest.TestCase):
     def test_get_num_attrs(self):
         n = h5a.get_num_attrs(self.obj)
         self.assertEqual(n, len(ATTRIBUTES))
-        self.assertRaises(H5Error, h5a.get_num_attrs, -1)
+        self.assertRaises(ValueError, h5a.get_num_attrs, -1)
 
     def test_get_name(self):
     
@@ -144,7 +144,7 @@ class TestH5A(unittest.TestCase):
             self.assertEqual(supposed_name, name)
             h5a.close(aid)
 
-        self.assertRaises(TypeError, h5a.get_name, -1)
+        self.assertRaises(ValueError, h5a.get_name, -1)
 
     def test_get_space(self):
 
@@ -156,7 +156,7 @@ class TestH5A(unittest.TestCase):
             h5s.close(sid)
             h5a.close(aid)
 
-        self.assertRaises(TypeError, h5a.get_space, -1)
+        self.assertRaises(ValueError, h5a.get_space, -1)
 
     def test_get_type(self):
 
@@ -168,7 +168,7 @@ class TestH5A(unittest.TestCase):
             h5t.close(tid)
             h5a.close(aid)
 
-        self.assertRaises(TypeError, h5a.get_type, -1)
+        self.assertRaises(ValueError, h5a.get_type, -1)
 
     def test_iterate(self):
 
@@ -201,14 +201,14 @@ class TestH5A(unittest.TestCase):
         h5a.iterate(self.obj, iterate_two, namelist, 1)
         self.assertEqual(namelist, ATTRIBUTES_ORDER[1:3])
 
-        self.assertRaises(TypeError, h5a.iterate, -1, iterate_two, namelist)
+        self.assertRaises(ValueError, h5a.iterate, -1, iterate_two, namelist)
 
 
     # === Python extensions ===================================================
 
     def test_py_listattrs(self):
         self.assertEqual(h5a.py_listattrs(self.obj), ATTRIBUTES_ORDER)
-        self.assertRaises(TypeError, h5a.py_listattrs, -1)
+        self.assertRaises(ValueError, h5a.py_listattrs, -1)
 
     def test_py_shape(self):
         
@@ -217,7 +217,7 @@ class TestH5A(unittest.TestCase):
             retshape = h5a.py_shape(aid)
             self.assertEqual(retshape, shape) 
             h5a.close(aid)
-        self.assertRaises(TypeError, h5a.py_shape, -1)
+        self.assertRaises(ValueError, h5a.py_shape, -1)
 
     def test_py_dtype(self):
 
@@ -225,7 +225,7 @@ class TestH5A(unittest.TestCase):
             aid = h5a.open_name(self.obj, name)
             self.assertEqual(h5a.py_dtype(aid),dt)
             h5a.close(aid)
-        self.assertRaises(TypeError, h5a.py_dtype, -1)
+        self.assertRaises(ValueError, h5a.py_dtype, -1)
 
     def test_py_get(self):
 
@@ -234,7 +234,7 @@ class TestH5A(unittest.TestCase):
             arr_returned = h5a.py_get(self.obj, name)
             self.assert_(all(arr_returned == arr_reference), 
                 errstr(arr_reference, arr_returned))
-        self.assertRaises(TypeError, h5a.py_get, -1, "foo")
+        self.assertRaises(ValueError, h5a.py_get, -1, "foo")
 
     def test_py_set(self):
 
@@ -249,7 +249,7 @@ class TestH5A(unittest.TestCase):
         h5g.close(obj)
         deletecopy(fid, filename)
 
-        self.assertRaises(TypeError, h5a.py_set, -1, "foo", arr_reference)
+        self.assertRaises(ValueError, h5a.py_set, -1, "foo", arr_reference)
 
 
     def test_py_exists(self):

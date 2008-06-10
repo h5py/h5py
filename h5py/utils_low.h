@@ -27,12 +27,14 @@
 hid_t create_ieee_complex64(const char byteorder, const char* real_name, const char* img_name);
 hid_t create_ieee_complex128(const char byteorder, const char* real_name, const char* img_name);
 
-
-hsize_t* tuple_to_dims(PyObject* tpl);
-PyObject* dims_to_tuple(hsize_t* dims, hsize_t rank);
+int convert_tuple(PyObject* tpl, hsize_t *dims, hsize_t rank);
+PyObject* convert_dims(hsize_t* dims, hsize_t rank);
 
 int check_numpy_read(PyArrayObject* arr, hid_t space_id);
 int check_numpy_write(PyArrayObject* arr, hid_t space_id);
+
+void* emalloc(size_t size);
+void efree(void* ptr);
 
 #endif
 

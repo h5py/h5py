@@ -17,22 +17,19 @@
 """
 
 # Pyrex compile-time imports
-from defs_c cimport malloc, free
 from h5  cimport herr_t, hid_t
 from h5p cimport H5P_DEFAULT
-from h5t cimport H5Tclose
+from h5t cimport PY_H5Tclose
 from h5s cimport H5Sclose
-from numpy cimport ndarray, import_array, PyArray_DATA
-from utils cimport check_numpy_read, check_numpy_write
-from h5e cimport err_c, pause_errors, resume_errors
+
+from numpy cimport ndarray, PyArray_DATA
+from utils cimport  check_numpy_read, check_numpy_write, \
+                    emalloc, efree
 
 # Runtime imports
 import h5
 import h5t
 import h5s
-from errors import H5AttributeError
-
-import_array()
 
 # === General attribute operations ============================================
 
@@ -59,20 +56,12 @@ def open_name(hid_t loc_id, char* name):
     """
     return H5Aopen_name(loc_id, name)
 
-def close(hid_t attr_id, int force=0):
-    """ (INT attr_id, BOOL force=0)
+def close(hid_t attr_id):
+    """ (INT attr_id)
 
-        Close this attribute and release resources.  If "force" is True,
-        ignore any errors encountered when closing (e.g. when calling in
-        a finally clause or destructor).
+        Close this attribute and release resources.
     """
-    cdef err_c cookie
-    if force:
-        cookie = pause_errors()
-        H5Aclose(attr_id)
-        resume_errors(cookie)
-    else:
-        H5Aclose(attr_id)
+    H5Aclose(attr_id)
 
 def delete(hid_t loc_id, char* name):
     """ (INT loc_id, STRING name)
@@ -95,9 +84,7 @@ def read(hid_t attr_id, ndarray arr_obj):
     """
     cdef hid_t mtype_id
     cdef hid_t space_id
-    cdef herr_t retval
     cdef int array_ok
-    cdef err_c cookie
     mtype_id = 0
     space_id = 0
 
@@ -111,10 +98,10 @@ def read(hid_t attr_id, ndarray arr_obj):
         H5Aread(attr_id, mtype_id, PyArray_DATA(arr_obj))
 
     finally:
-        cookie = pause_errors()
-        H5Tclose(mtype_id)
-        H5Sclose(space_id)
-        resume_errors(cookie)
+        if mtype_id:
+            PY_H5Tclose(mtype_id)
+        if space_id:
+            H5Sclose(space_id)
 
 def write(hid_t attr_id, ndarray arr_obj):
     """ (INT attr_id, NDARRAY arr_obj)
@@ -129,9 +116,7 @@ def write(hid_t attr_id, ndarray arr_obj):
     
     cdef hid_t mtype_id
     cdef hid_t space_id
-    cdef herr_t retval
     cdef int array_ok
-    cdef err_c cookie
     mtype_id = 0
     space_id = 0
 
@@ -145,10 +130,10 @@ def write(hid_t attr_id, ndarray arr_obj):
         H5Awrite(attr_id, mtype_id, PyArray_DATA(arr_obj))
 
     finally:
-        cookie = pause_errors()
-        H5Tclose(mtype_id)
-        H5Sclose(space_id)
-        resume_errors(cookie)
+        if mtype_id:
+            PY_H5Tclose(mtype_id)
+        if space_id:
+            H5Sclose(space_id)
 
 # === Attribute inspection ====================================================
 
@@ -170,11 +155,11 @@ def get_name(hid_t attr_id):
 
     try:
         blen = H5Aget_name(attr_id, 0, NULL)
-        buf = <char*>malloc(sizeof(char)*blen+1)
+        buf = <char*>emalloc(sizeof(char)*blen+1)
         blen = H5Aget_name(attr_id, blen+1, buf)
         strout = buf
     finally:
-        free(buf)
+        efree(buf)
 
     return strout
 
@@ -263,7 +248,6 @@ def py_create(hid_t loc_id, char* name, object dtype_in, object shape):
     cdef hid_t sid
     cdef hid_t type_id
     cdef hid_t aid
-    cdef err_c cookie
     sid = 0
     type_id = 0
 
@@ -271,15 +255,14 @@ def py_create(hid_t loc_id, char* name, object dtype_in, object shape):
         sid = h5s.create_simple(shape)
         type_id = h5t.py_dtype_to_h5t(dtype_in)
 
-        aid = create(loc_id, name, type_id, sid)
+        return create(loc_id, name, type_id, sid)
+
     finally:
-        cookie = pause_errors()
         if sid:
             H5Sclose(sid)
         if type_id:
-            H5Tclose(type_id)
-        resume_errors(cookie)
-    return aid
+            PY_H5Tclose(type_id)
+
 
 def py_shape(hid_t attr_id):
     """ (INT attr_id) => TUPLE shape
@@ -287,18 +270,15 @@ def py_shape(hid_t attr_id):
         Retrieve the dataspace of this attribute, as a Numpy-style shape tuple.
     """
     cdef hid_t sid
-    cdef err_c cookie
     sid = 0
     
     try:
         sid = H5Aget_space(attr_id)
-        tpl = h5s.get_simple_extent_dims(sid)
+        return h5s.get_simple_extent_dims(sid)
+
     finally:
-        cookie = pause_errors()
         if sid:
             H5Sclose(sid)
-        resume_errors(cookie)
-    return tpl
 
 def py_dtype(hid_t attr_id):
     """ (INT attr_id) => DTYPE numpy_dtype
@@ -313,11 +293,10 @@ def py_dtype(hid_t attr_id):
     
     try:
         type_id = get_type(attr_id)
-        dtype_out = h5t.py_h5t_to_dtype(type_id)
+        return h5t.py_h5t_to_dtype(type_id)
     finally:
         if type_id:
-            H5Tclose(type_id)
-    return dtype_out
+            PY_H5Tclose(type_id)
 
 def py_get(hid_t parent_id, char* name):
     """ (INT parent_id, STRING name)
@@ -326,16 +305,17 @@ def py_get(hid_t parent_id, char* name):
         A 0-dimensional array is returned in the case of a scalar attribute.
     """
     cdef hid_t attr_id
-    attr_id = open_name(parent_id, name)
+    attr_id = H5Aopen_name(parent_id, name)
     try:
         space = py_shape(attr_id)
         dtype = py_dtype(attr_id)
 
         arr = ndarray(space, dtype=dtype)
         read(attr_id, arr)
+        return arr
+
     finally:
         H5Aclose(attr_id)
-    return arr
 
 def py_set(hid_t parent_id, char* name, ndarray arr):
     """ (INT parent_id, STRING name, NDARRAY arr)
@@ -346,7 +326,6 @@ def py_set(hid_t parent_id, char* name, ndarray arr):
         attribute of the same name already exists.
     """
     cdef hid_t attr_id
-    attr_id = 0
     attr_id = py_create(parent_id, name, arr.dtype, arr.shape)
     try:
         write(attr_id, arr)
@@ -364,21 +343,14 @@ def py_exists(hid_t parent_id, char* name):
         py_set().
     """
     cdef hid_t attr_id
-    cdef err_c cookie
-    attr_id = 0
     
+    try:
+        attr_id = H5Aopen_name(parent_id, name)
+    except:
+        return False
 
-    cookie = pause_errors()
-    attr_id = H5Aopen_name(parent_id, name)
-    resume_errors(cookie)
-
-    if attr_id < 0:
-        response = False
-    else:
-        response = True
-        H5Aclose(attr_id)
-
-    return response
+    H5Aclose(attr_id)
+    return True
 
 
 

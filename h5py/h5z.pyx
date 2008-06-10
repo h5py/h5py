@@ -21,7 +21,6 @@ from h5  cimport herr_t, htri_t
 # Runtime imports
 import h5
 from h5 import DDict
-from errors import FilterError
 
 # === Public constants and data structures ====================================
 
@@ -58,19 +57,12 @@ NO_EDC      = H5Z_NO_EDC
 
 def filter_avail(int filter_id):
 
-    cdef htri_t retval
-    retval = H5Zfilter_avail(<H5Z_filter_t>filter_id)
-    if retval < 0:
-        raise FilterError("Can't determine availability of filter %d" % filter_id)
-    return bool(retval)
+    return bool(H5Zfilter_avail(<H5Z_filter_t>filter_id))
 
 def get_filter_info(int filter_id):
 
-    cdef herr_t retval
     cdef unsigned int flags
-    retval = H5Zget_filter_info(<H5Z_filter_t>filter_id, &flags)
-    if retval < 0:
-        raise FilterError("Can't determine flags of filter %d" % filter_id)
+    H5Zget_filter_info(<H5Z_filter_t>filter_id, &flags)
     return flags
 
 # === Python extensions =======================================================

@@ -16,7 +16,6 @@ from h5g cimport H5G_obj_t
 # Runtime imports
 import h5
 from h5 import DDict
-from errors import H5ReferenceError
 
 # === Public constants and data structures ====================================
 
@@ -58,17 +57,12 @@ def create(hid_t loc_id, char* name, int ref_type, hid_t space_id=-1):
 
         Create a new reference, either to an object or a dataset region.
     """
-    cdef herr_t retval
     cdef Reference ref
-
     ref = Reference()
 
-    retval = H5Rcreate(&ref.ref, loc_id, name, <H5R_type_t>ref_type, space_id)
-
-    if retval < 0:
-        raise H5ReferenceError("Failed to create reference on %d (\"%s\") type %d." % (loc_id, name, ref_type))
-
+    H5Rcreate(&ref.ref, loc_id, name, <H5R_type_t>ref_type, space_id)
     ref.typecode = ref_type
+
     return ref
 
 def dereference(hid_t obj_id, Reference ref):
@@ -78,12 +72,7 @@ def dereference(hid_t obj_id, Reference ref):
         parameter "obj_id" may be the file ID or the ID of any object which
         lives in the file.
     """
-    cdef hid_t retval
-    retval = H5Rdereference(obj_id, <H5R_type_t>ref.typecode, &ref.ref)
-    if retval < 0:
-        raise H5ReferenceError("Failed to dereference.")
-
-    return retval
+    return H5Rdereference(obj_id, <H5R_type_t>ref.typecode, &ref.ref)
 
 def get_region(hid_t container_id, Reference ref):
     """ (INT container_id, Reference ref) => INT dataspace_id
@@ -95,11 +84,7 @@ def get_region(hid_t container_id, Reference ref):
 
         The given reference object must be of type TYPE_REGION.
     """
-    cdef hid_t space_id
-    space_id = H5Rget_region(container_id, <H5R_type_t>ref.typecode, &ref.ref)
-    if space_id < 0:
-        raise H5ReferenceError("Failed to retrieve region.")
-    return space_id
+    return H5Rget_region(container_id, <H5R_type_t>ref.typecode, &ref.ref)
 
 def get_obj_type(hid_t container_id, Reference ref):
     """ (INT container_id, Reference ref) => INT obj_code
@@ -113,11 +98,7 @@ def get_obj_type(hid_t container_id, Reference ref):
         h5g.OBJ_DATASET     Dataset
         h5g.OBJ_TYPE        Named datatype
     """
-    cdef int retval
-    retval = <int>H5Rget_obj_type(container_id, <H5R_type_t>ref.typecode, &ref.ref)
-    if retval < 0:
-        raise H5ReferenceError("Failed to determine object type.")
-    return retval
+    return <int>H5Rget_obj_type(container_id, <H5R_type_t>ref.typecode, &ref.ref)
 
 
 
