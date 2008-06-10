@@ -139,12 +139,12 @@ def get_objname_by_idx(hid_t loc_id, hsize_t idx):
     buf = NULL
 
     size = H5Gget_objname_by_idx(loc_id, idx, NULL, 0)
-    if retval <= 0:
+    if size <= 0:
         raise RuntimeError("Failed to raise exception at get_objname_by_idx.")
 
-    buf = <char*>emalloc(sizeof(char)*(retval+1))
+    buf = <char*>emalloc(sizeof(char)*(size+1))
     try:
-        H5Gget_objname_by_idx(loc_id, idx, buf, retval+1)
+        H5Gget_objname_by_idx(loc_id, idx, buf, size+1)
         pystring = buf
         return pystring
     finally:
@@ -160,7 +160,14 @@ def get_objtype_by_idx(hid_t loc_id, hsize_t idx):
             - DATASET
             - DATATYPE
     """
-    return H5Gget_objtype_by_idx(loc_id, idx)
+    # What seems to be a bug in the HDF5 library prevents an error callback
+    # for an out-of-range index, although -1 is returned.  Interestingly,
+    # passing an invalid loc_id does raise an error.
+    cdef herr_t retval
+    retval = H5Gget_objtype_by_idx(loc_id, idx)
+    if retval < 0:
+        raise ValueError("Invalid argument.")
+    return retval
 
 def get_objinfo(hid_t loc_id, char* name, int follow_link=1):
     """ (INT loc_id, STRING name, BOOL follow_link=True)

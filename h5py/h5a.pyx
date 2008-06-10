@@ -44,11 +44,16 @@ def create(hid_t loc_id, char* name, hid_t type_id, hid_t space_id):
     """
     return H5Acreate(loc_id, name, type_id, space_id, H5P_DEFAULT)
 
-def open_idx(hid_t loc_id, unsigned int idx):
+def open_idx(hid_t loc_id, int idx):
     """ (INT loc_id, UINT idx) => INT attr_id
 
         Open an exisiting attribute on an object, by zero-based index.
     """
+    # If the argument is declared UINT and someone passes in -1, the Pyrex
+    # layer happily converts it to something like 2**32 -1, which crashes the
+    # HDF5 library.
+    if idx < 0:
+        raise ValueError("Index must be a non-negative integer.")
     return H5Aopen_idx(loc_id, idx)
 
 def open_name(hid_t loc_id, char* name):

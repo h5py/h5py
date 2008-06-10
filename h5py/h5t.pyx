@@ -266,8 +266,7 @@ def close(hid_t type_id, int force=0):
     """ (INT type_id, BOOL force=False)
 
         Close this datatype.  If "force" is True, ignore any errors.  Useful
-        for exception handlers, when you're not sure if you've got an immutable
-        datatype.
+        when you're not sure if you've got an immutable datatype.
     """
     if force:
         PY_H5Tclose(type_id)
@@ -516,7 +515,7 @@ cdef void _enum_convert(hid_t type_id, long long *buf, int reverse) except *:
         if retval < 0:
             raise DatatypeError("Failed to convert enum value")
     finally:
-        H5Tclose(basetype)
+        PY_H5Tclose(basetype)
 
 def enum_insert(hid_t type_id, char* name, long long value):
     """ (INT type_id, STRING name, INT/LONG value)
@@ -884,7 +883,7 @@ def py_dtype_to_h5t(dtype dtype_in, object complex_names=None):
                 try:
                     insert(type_out, name, offset, tmp)
                 finally:
-                    H5Tclose(tmp)
+                    PY_H5Tclose(tmp)
 
     # Integers and floats map directly to HDF5 atomic types
     elif kind == c'u' or kind  == c'i' or kind == c'f': 

@@ -55,13 +55,18 @@ def get_name(hid_t obj_id):
     """ (INT obj_id) => STRING name or None
 
         Determine (a) name of an HDF5 object.  Because an object has as many
-        names as there are hard links to it, this may not be unique.
+        names as there are hard links to it, this may not be unique.  If
+        the identifier is valid but is not associated with a name, returns
+        None.
     """
     cdef int namelen
     cdef char* name
 
     namelen = <int>H5Iget_name(obj_id, NULL, 0)
-    if namelen <= 0:
+    if namelen == 0:
+        return None
+
+    if namelen < 0:
         raise RuntimeError("Failed to raise exception at get_name")
 
     name = <char*>emalloc(sizeof(char)*(namelen+1))

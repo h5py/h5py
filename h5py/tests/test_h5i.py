@@ -14,7 +14,7 @@ import os
 
 import h5py
 from h5py import h5f, h5g, h5i, h5t
-from h5py.errors import H5Error, IdentifierError
+from h5py.h5e import H5Error
 
 HDFNAME = os.path.join(os.path.dirname(h5py.__file__), 'tests/data/attributes.hdf5')
 OBJECTNAME = 'Group'
@@ -42,7 +42,7 @@ class TestH5I(unittest.TestCase):
     def test_get_file_id(self):
         nfid = h5i.get_file_id(self.obj)
         self.assertEqual(nfid, self.fid)
-        self.assertRaises(IdentifierError, h5i.get_file_id, -1)
+        self.assertRaises(H5Error, h5i.get_file_id, -1)
 
     def test_refs(self):
         refcnt = h5i.get_ref(self.obj)
@@ -54,9 +54,9 @@ class TestH5I(unittest.TestCase):
         h5i.dec_ref(self.obj)
         self.assertEqual(h5i.get_ref(self.obj), refcnt)
 
-        self.assertRaises(IdentifierError, h5i.get_ref, -1)
-        self.assertRaises(IdentifierError, h5i.inc_ref, -1)
-        self.assertRaises(IdentifierError, h5i.dec_ref, -1)
+        self.assertRaises(H5Error, h5i.get_ref, -1)
+        self.assertRaises(H5Error, h5i.inc_ref, -1)
+        self.assertRaises(H5Error, h5i.dec_ref, -1)
 
 
 

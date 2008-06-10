@@ -221,6 +221,7 @@ cdef herr_t err_callback(void* client_data):
     # Can't use the standard Pyrex raise because then the traceback
     # points here!
 
+    print "Error callback"
     cdef H5E_error_t err_struct
     cdef H5E_major_t mj
     cdef H5E_minor_t mn

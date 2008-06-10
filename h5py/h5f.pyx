@@ -156,9 +156,9 @@ def get_name(hid_t obj_id):
     name = NULL
 
     size = H5Fget_name(obj_id, NULL, 0)
-    name = <char*>emalloc(sizeof(char)*(retval+1))
+    name = <char*>emalloc(sizeof(char)*(size+1))
     try:    
-        H5Fget_name(obj_id, name, retval+1)
+        H5Fget_name(obj_id, name, size+1)
         pname = name
         return pname
     finally:
