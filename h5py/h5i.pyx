@@ -45,7 +45,8 @@ def get_type(hid_t obj_id):
     """ (INT obj_id) => INT type_code
 
         Determine the type of an arbitrary HDF5 object.  The return value is
-        always one of TYPE_*; if the ID is invalid, TYPE_BADID is returned.
+        always one of the type constants defined in this module. 
+        If the ID is invalid, BADID is returned.
     """
     return <int>H5Iget_type(obj_id)
 
@@ -54,18 +55,16 @@ def get_name(hid_t obj_id):
 
         Determine (a) name of an HDF5 object.  Because an object has as many
         names as there are hard links to it, this may not be unique.  If
-        the identifier is valid but is not associated with a name, returns
+        the identifier is invalid or is not associated with a name, returns
         None.
     """
     cdef int namelen
     cdef char* name
 
     namelen = <int>H5Iget_name(obj_id, NULL, 0)
+    assert namelen >= 0
     if namelen == 0:
         return None
-
-    if namelen < 0:
-        raise RuntimeError("Failed to raise exception at get_name")
 
     name = <char*>emalloc(sizeof(char)*(namelen+1))
     try:

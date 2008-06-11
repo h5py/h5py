@@ -131,13 +131,18 @@ def get_objname_by_idx(hid_t loc_id, hsize_t idx):
     """ (INT loc_id, INT idx) => STRING object_name
 
         Get the name of a group member given its zero-based index.
+
+        Due to a bug in the HDF5 library, the only possible exception
+        raised by this function is ValueError.
     """
     cdef int size
     cdef char* buf
     buf = NULL
 
+    # This function does not properly raise an exception
     size = H5Gget_objname_by_idx(loc_id, idx, NULL, 0)
-    assert size > 0
+    if size < 0:
+        raise ValueError("Invalid argument")
 
     buf = <char*>emalloc(sizeof(char)*(size+1))
     try:
@@ -156,10 +161,11 @@ def get_objtype_by_idx(hid_t loc_id, hsize_t idx):
             - GROUP
             - DATASET
             - DATATYPE
+
+        Due to a bug in the HDF5 library, the only possible exception 
+        raised by this function is ValueError.
     """
-    # What seems to be a bug in the HDF5 library prevents an error callback
-    # for an out-of-range index, although -1 is returned.  Interestingly,
-    # passing an invalid loc_id does raise an error.
+    # This function does not properly raise an exception
     cdef herr_t retval
     retval = H5Gget_objtype_by_idx(loc_id, idx)
     if retval < 0:
@@ -305,9 +311,9 @@ def py_listnames(hid_t group_id):
     nitems = get_num_objs(group_id)
 
     for i from 0 <= i < nitems:
-        thelist.append(get_objname_by_idx(group_id, i))
+        namelist.append(get_objname_by_idx(group_id, i))
 
-    return thelist
+    return namelist
 
 cdef class _GroupIterator:
 
@@ -353,12 +359,10 @@ def py_exists(hid_t group_id, char* name, int follow_link=1):
 
         Determine if a named member exists in the given group.  If follow_link
         is True (default), symbolic links will be dereferenced. Note this
-        function will not raise an exception, unless the group ID is bad.
+        function will not raise an exception.
     """
     try:
         H5Gget_objinfo(group_id, name, follow_link, NULL)
-    except ValueError:
-        raise
     except:
         return False
     return True

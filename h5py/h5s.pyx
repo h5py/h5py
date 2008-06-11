@@ -64,8 +64,8 @@ def close(hid_t space_id):
 def create(int class_code):
     """ (INT class_code) => INT new_space_id
 
-        Create a new HDF5 dataspace object, of the given class.  Legal values
-        are CLASS_SCALAR and CLASS_SIMPLE.
+        Create a new HDF5 dataspace object, of the given class.  
+        Legal values are SCALAR and SIMPLE.
     """
     return H5Screate(<H5S_class_t>class_code)
 
@@ -127,6 +127,7 @@ def offset_simple(hid_t space_id, object offset=None):
         the offsets on all axes will be set to 0.
     """
     cdef int rank
+    cdef int i
     cdef hssize_t *dims
     dims = NULL
 
@@ -136,12 +137,16 @@ def offset_simple(hid_t space_id, object offset=None):
 
         rank = H5Sget_simple_extent_ndims(space_id)
         
-        if offset is None:
-            dims = NULL
-        else:
-            require_tuple(offset, 0, rank, "offset")
-            dims = <hssize_t*>emalloc(sizeof(hssize_t)*rank)
+        require_tuple(offset, 1, rank, "offset")
+        dims = <hssize_t*>emalloc(sizeof(hssize_t)*rank)
+        if(offset is not None):
             convert_tuple(offset, <hsize_t*>dims, rank)
+        else:
+            # The HDF5 docs say passing in NULL resets the offset to 0.  
+            # Instead it raises an exception.  Imagine my surprise. We'll 
+            # do this manually.
+            for i from 0<=i<rank:
+                dims[i] = 0
 
         H5Soffset_simple(space_id, dims)
 
@@ -189,7 +194,7 @@ def get_simple_extent_npoints(hid_t space_id):
 def get_simple_extent_type(hid_t space_id):
     """ (INT space_id) => INT class_code
 
-        Class code is either CLASS_SCALAR or CLASS_SIMPLE.
+        Class code is either SCALAR or SIMPLE.
     """
     return <int>H5Sget_simple_extent_type(space_id)
 
@@ -208,7 +213,7 @@ def set_extent_simple(hid_t space_id, object dims_tpl, object max_dims_tpl=None)
         Reset the dataspace extent, via a tuple of new dimensions.  Every
         element of dims_tpl must be a positive integer.  You can also specify
         the maximum dataspace size, via the tuple max_dims.  The special
-        integer SPACE_UNLIMITED, as an element of max_dims, indicates an
+        integer UNLIMITED, as an element of max_dims, indicates an
         unlimited dimension.
     """
     cdef int rank
@@ -240,7 +245,7 @@ def set_extent_none(hid_t space_id):
 
         Remove the dataspace extent; class changes to h5s.CLASS_NO_CLASS.
     """
-    H5Sset_extent_non(space_id)
+    H5Sset_extent_none(space_id)
 
 # === General selection operations ============================================
 
@@ -361,6 +366,7 @@ def select_elements(hid_t space_id, object coord_list, int op=H5S_SELECT_SET):
 
         Select elements using a list of points.  List entries should be
         <rank>-length tuples containing point coordinates.
+        A zero-length list is apparently not allowed.
     """
     cdef size_t nelements       # Number of point coordinates
     cdef hsize_t *coords        # Contiguous 2D array nelements x rank x sizeof(hsize_t)

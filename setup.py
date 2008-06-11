@@ -44,6 +44,8 @@ from distutils.core import setup
 from distutils.extension import Extension
 import os
 import sys
+import shutil
+import fnmatch
 
 # Distutils tries to use hard links when building source distributions, which 
 # fails under a wide variety of network filesystems under Linux.
@@ -90,17 +92,28 @@ class dev(Command):
     description = "Developer commands (--doc, --readme=<file>)"
     user_options = [('doc','d','Rebuild documentation'),
                     ('readme=','r','Rebuild HTML readme file'),
-                    ('inspect', 'i', 'Don\'t use this.')]
+                    ('clean', 'c', 'Remove built files and Pyrex temp files.')]
     boolean_options = ['doc', 'inspect']
 
     def initialize_options(self):
         self.doc = False
         self.readme = False
+        self.clean = False
 
     def finalize_options(self):
         pass
 
     def run(self):
+        if self.clean:
+            try:
+                shutil.rmtree('build')
+            except OSError:
+                pass
+            fnames = [os.path.join('h5py',x) for x in os.listdir('h5py') if 
+                      (fnmatch.fnmatch(x,'h5*.c') or fnmatch.fnmatch(x, '*.dep'))]
+            for name in fnames:
+                os.remove(name)
+
         if self.doc:
             buildobj = self.distribution.get_command_obj('build')
             buildobj.run()
