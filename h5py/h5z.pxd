@@ -10,7 +10,7 @@
 # 
 #-
 
-from h5 cimport herr_t, htri_t
+include "std_defs.pxi"
 
 cdef extern from "hdf5.h":
 

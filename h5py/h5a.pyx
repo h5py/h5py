@@ -12,12 +12,9 @@
 
 """
     Provides access to the low-level HDF5 "H5A" attribute interface.
-
-    Functions in this module will raise errors.H5AttributeError.
 """
 
 # Pyrex compile-time imports
-from h5  cimport herr_t, hid_t
 from h5p cimport H5P_DEFAULT
 from h5t cimport PY_H5Tclose
 from h5s cimport H5Sclose
@@ -87,20 +84,17 @@ def read(hid_t attr_id, ndarray arr_obj):
         conversion-compatible datatype.
 
         The Numpy array must be writable, C-contiguous and own its data.  If
-        this is not the case, ValueError will be raised and the read will fail.
+        this is not the case, an ValueError is raised and the read fails.
     """
     cdef hid_t mtype_id
     cdef hid_t space_id
-    cdef int array_ok
     mtype_id = 0
     space_id = 0
 
     try:
         mtype_id = h5t.py_dtype_to_h5t(arr_obj.dtype)
-        space_id = get_space(attr_id)
-        array_ok = check_numpy_write(arr_obj, space_id)
-        if array_ok <= 0:
-            raise ValueError("Numpy array is not set up correctly.")
+        space_id = H5Aget_space(attr_id)
+        check_numpy_write(arr_obj, space_id)
 
         H5Aread(attr_id, mtype_id, PyArray_DATA(arr_obj))
 
@@ -123,16 +117,13 @@ def write(hid_t attr_id, ndarray arr_obj):
     
     cdef hid_t mtype_id
     cdef hid_t space_id
-    cdef int array_ok
     mtype_id = 0
     space_id = 0
 
     try:
         mtype_id = h5t.py_dtype_to_h5t(arr_obj.dtype)
-        space_id = get_space(attr_id)
-        array_ok = check_numpy_read(arr_obj, space_id)
-        if array_ok <= 0:
-            raise ValueError("Given Numpy array is not set up correctly.")
+        space_id = H5Aget_space(attr_id)
+        check_numpy_read(arr_obj, space_id)
 
         H5Awrite(attr_id, mtype_id, PyArray_DATA(arr_obj))
 
@@ -202,7 +193,7 @@ cdef herr_t iter_cb(hid_t loc_id, char *attr_name, object int_tpl):
     return 0
 
 
-def iterate(hid_t loc_id, object func, object data=None, unsigned int startidx=0):
+def iterate(hid_t loc_id, object func, object data=None, int startidx=0):
     """ (INT loc_id, FUNCTION func, OBJECT data=None, UINT startidx=0)
         => INT last_attribute_index
 
@@ -220,6 +211,8 @@ def iterate(hid_t loc_id, object func, object data=None, unsigned int startidx=0
     """
     cdef unsigned int i
     cdef herr_t retval
+    if startidx < 0:
+        raise ValueError("Starting index must be a non-negative integer.")
     i = startidx
 
     int_tpl = (func, data,[])
@@ -299,7 +292,7 @@ def py_dtype(hid_t attr_id):
     type_id = 0
     
     try:
-        type_id = get_type(attr_id)
+        type_id = H5Aget_type(attr_id)
         return h5t.py_h5t_to_dtype(type_id)
     finally:
         if type_id:

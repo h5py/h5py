@@ -14,8 +14,7 @@
 # license is available at licenses/pytables.txt, in the distribution root
 # directory.
 
-from defs_c cimport size_t, time_t
-from h5 cimport hid_t, hbool_t, herr_t, htri_t, hsize_t, hssize_t, hvl_t
+include "std_defs.pxi"
 
 cdef extern from "hdf5.h":
 
@@ -44,13 +43,13 @@ cdef extern from "hdf5.h":
   hid_t  H5Gcreate(hid_t loc_id, char *name, size_t size_hint ) except *
   hid_t  H5Gopen(hid_t loc_id, char *name ) except *
   herr_t H5Gclose(hid_t group_id) except *
-  herr_t H5Glink (hid_t file_id, H5G_link_t link_type,
-                  char *current_name, char *new_name) except *
+#  herr_t H5Glink (hid_t file_id, H5G_link_t link_type,
+#                  char *current_name, char *new_name) except *
   herr_t H5Glink2( hid_t curr_loc_id, char *current_name, 
                    H5G_link_t link_type, hid_t new_loc_id, char *new_name ) except *
 
   herr_t H5Gunlink (hid_t file_id, char *name) except *
-  herr_t H5Gmove(hid_t loc_id, char *src, char *dst) except *
+#  herr_t H5Gmove(hid_t loc_id, char *src, char *dst) except *
   herr_t H5Gmove2(hid_t src_loc_id, char *src_name,
                   hid_t dst_loc_id, char *dst_name ) except *
   herr_t H5Gget_num_objs(hid_t loc_id, hsize_t*  num_obj) except *

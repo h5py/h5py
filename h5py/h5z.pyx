@@ -15,9 +15,6 @@
     Filter API and constants
 """
 
-# Pyrex compile-time imports
-from h5  cimport herr_t, htri_t
-
 # Runtime imports
 import h5
 from h5 import DDict

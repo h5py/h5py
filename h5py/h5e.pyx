@@ -10,6 +10,12 @@
 # 
 #-
 
+"""
+    Provides a Python exception hierarchy modeled on HDF5 major error numbers,
+    and exports a C interface which automatically raises exceptions when
+    an error is detected in the HDF5 library.
+"""
+
 from python cimport PyErr_SetObject
 
 # === Public exception hierarchy ==============================================
@@ -31,6 +37,20 @@ class ConversionError(StandardError):
 # --- New classes -------------------------------------------------------------
 
 # H5E_ARGS => ValueError
+
+class FileError(H5Error, IOError):
+    """ H5E_FILE
+
+        Subclass of both H5Error and IOError.
+    """
+    pass
+
+class H5IOError(H5Error, IOError):
+    """ H5E_IO
+
+        Subclass of both H5Error and IOError.
+    """
+    pass
 
 class ResourceError(H5Error):
     """ H5E_RESOURCE
@@ -221,7 +241,6 @@ cdef herr_t err_callback(void* client_data):
     # Can't use the standard Pyrex raise because then the traceback
     # points here!
 
-    print "Error callback"
     cdef H5E_error_t err_struct
     cdef H5E_major_t mj
     cdef H5E_minor_t mn
@@ -232,9 +251,12 @@ cdef herr_t err_callback(void* client_data):
     mn = err_struct.min_num
 
     # File-related errors traditionally raise IOError.
-    # Also raise IOError for low-level disk I/O errors
-    if mj == H5E_FILE or mj == H5E_IO:
-        exc = IOError
+    # These exceptions are both subclasses of H5Error
+    # and IOError.
+    if mj == H5E_FILE:
+        exc = FileError
+    elif mj == H5E_IO:
+        exc = H5IOError
 
     # All errors which result from illegal function arguments
     elif mj == H5E_ARGS:

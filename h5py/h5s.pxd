@@ -18,12 +18,12 @@
 # license is available in the file licenses/hdf5.txt in the distribution
 # root directory.
 
-from defs_c cimport size_t, time_t
-from h5 cimport hid_t, hbool_t, herr_t, htri_t, hsize_t, hssize_t, hvl_t
+include "std_defs.pxi"
 
 cdef extern from "hdf5.h":
 
-  int H5S_ALL, H5S_UNLIMITED, H5S_MAX_RANK
+  int H5S_ALL, H5S_MAX_RANK
+  hsize_t H5S_UNLIMITED
 
   # Codes for defining selections
   ctypedef enum H5S_seloper_t:
@@ -88,7 +88,7 @@ cdef extern from "hdf5.h":
   herr_t    H5Sget_select_elem_pointlist(hid_t space_id, hsize_t startpoint, 
                 hsize_t numpoints, hsize_t *buf) except *
   herr_t    H5Sselect_elements(hid_t space_id, H5S_seloper_t op, 
-                size_t num_elements, hsize_t *coord[] ) except *
+                size_t num_elements, hsize_t **coord) except *
 
   hssize_t  H5Sget_select_hyper_nblocks(hid_t space_id  ) except *
   herr_t    H5Sget_select_hyper_blocklist(hid_t space_id, 

@@ -136,8 +136,7 @@ int convert_tuple(PyObject* tpl, hsize_t *dims, hsize_t rank_in){
 
    Return values:
     1:  Can read/write
-    0:  Can't read/write
-   -1:  Failed to determine (i.e. either the array or the space object is bad)
+    0: Failed (Python error raised.)
 */
 int check_numpy(PyArrayObject* arr, hid_t space_id, int write){
 
@@ -147,21 +146,32 @@ int check_numpy(PyArrayObject* arr, hid_t space_id, int write){
     hsize_t *space_dims = NULL;
     int i;
 
-    required_flags = NPY_C_CONTIGUOUS | NPY_OWNDATA;
-    /* That's not how you spell "writable" */
-    if(write) required_flags = required_flags | NPY_WRITEABLE;  
+    /* Validate array flags */
 
-    int retval = 0;  /* Default = not OK */
+    if(write){
+        if(!(arr->flags & (NPY_C_CONTIGUOUS | NPY_OWNDATA | NPY_WRITEABLE))){
+            PyErr_SetString(PyExc_ValueError, "Array must be writable, C-contiguous and own its data.");
+            goto failed;
+        } 
+    } else {
+        if(!(arr->flags & (NPY_C_CONTIGUOUS | NPY_OWNDATA))){
+            PyErr_SetString(PyExc_ValueError, "Array must be C-contiguous and own its data.");
+            goto failed;
+        }
+    }
 
-    if(!(arr->flags & required_flags)) goto out;
+    /* Validate dataspace compatibility, if it's provided. */
 
     if(space_id > 0){
 
         arr_rank = arr->nd;
         space_rank = H5Sget_simple_extent_ndims(space_id);
-
         if(space_rank < 0) goto failed;
-        if( arr_rank != space_rank) goto out;
+
+        if( arr_rank != space_rank){
+            PyErr_SetString(PyExc_ValueError, "Numpy array rank must match dataspace rank.");
+            goto failed;
+        }
 
         space_dims = (hsize_t*)malloc(sizeof(hsize_t)*space_rank);
         space_rank = H5Sget_simple_extent_dims(space_id, space_dims, NULL);
@@ -169,24 +179,28 @@ int check_numpy(PyArrayObject* arr, hid_t space_id, int write){
 
         for(i=0; i<space_rank; i++){
             if(write){
-                if(PyArray_DIM(arr,i) < space_dims[i]) goto out;
+                if(PyArray_DIM(arr,i) < space_dims[i]){
+                    PyErr_SetString(PyExc_ValueError, "Array dimensions incompatible with dataspace.");
+                    goto failed;
+                }
             } else {
-                if(PyArray_DIM(arr,i) > space_dims[i]) goto out;
-            }
-        }
+                if(PyArray_DIM(arr,i) > space_dims[i]) {
+                    PyErr_SetString(PyExc_ValueError, "Array dimensions incompatible with dataspace.");
+                    goto failed;
+                }
+            } /* if(write) */
+        } /* for */
+    } /* if(space_id > 0) */
 
-    }
-
-    retval = 1;  /* got here == success */
-
-  out:
-    if(space_dims != NULL) free(space_dims);
-    return retval; 
+  free(space_dims);
+  return 1;
 
   failed:
-    /* could optionally print an error message */
-    if(space_dims != NULL) free(space_dims);
-    return -1;
+    free(space_dims);
+    if(!PyErr_Occurred()){
+        PyErr_SetString(PyExc_ValueError, "Numpy array is incompatible.");
+    }
+    return 0;
 }
 
 int check_numpy_write(PyArrayObject* arr, hid_t space_id){
@@ -201,7 +215,7 @@ int check_numpy_read(PyArrayObject* arr, hid_t space_id){
 /* Rewritten versions of create_ieee_complex64/128 from Pytables, to support 
    standard array-interface typecodes and variable names for real/imag parts.  
    Also removed unneeded datatype copying.
-   Both return -1 on failure.
+   Both return -1 on failure, and raise Python exceptions.
 */
 hid_t create_ieee_complex64(const char byteorder, const char* real_name, const char* img_name) {
   hid_t float_id = -1;
@@ -217,8 +231,10 @@ hid_t create_ieee_complex64(const char byteorder, const char* real_name, const c
     float_id = H5T_IEEE_F32BE;
   else if (byteorder == '=' || byteorder == '|')
     float_id = H5T_NATIVE_FLOAT;
-  else
+  else {
+    PyErr_SetString(PyExc_ValueError, "Byte order must be one of <, > or |");
     goto err;
+  }
 
   retval = H5Tinsert(complex_id, real_name, HOFFSET(npy_complex64, real), float_id);
   if(retval<0) goto err;
@@ -229,6 +245,9 @@ hid_t create_ieee_complex64(const char byteorder, const char* real_name, const c
   return complex_id;
 
   err:
+    if(!PyErr_Occurred()){
+        PyErr_SetString(PyExc_RuntimeError, "Failed to propagate exception at create_ieee_complex64.");
+    }
     if(complex_id > 0)
         H5Tclose(complex_id);
     return -1;
@@ -248,8 +267,10 @@ hid_t create_ieee_complex128(const char byteorder, const char* real_name, const 
     float_id = H5T_IEEE_F64BE;
   else if (byteorder == '=' || byteorder == '|')
     float_id = H5T_NATIVE_DOUBLE;
-  else
+  else {
+    PyErr_SetString(PyExc_ValueError, "Byte order must be one of <, > or |");
     goto err;
+  }
 
   retval = H5Tinsert(complex_id, real_name, HOFFSET(npy_complex128, real), float_id);
   if(retval<0) goto err;
@@ -260,6 +281,9 @@ hid_t create_ieee_complex128(const char byteorder, const char* real_name, const 
   return complex_id;
 
   err:
+    if(!PyErr_Occurred()){
+        PyErr_SetString(PyExc_RuntimeError, "Failed to propagate exception at create_ieee_complex128.");
+    }
     if(complex_id > 0)
         H5Tclose(complex_id);
     return -1;

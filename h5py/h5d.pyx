@@ -23,9 +23,10 @@
 """
 
 # Pyrex compile-time imports
-from h5  cimport hid_t, size_t, hsize_t, hssize_t
-from h5s cimport H5Sclose, H5S_ALL, H5S_UNLIMITED, H5S_SCALAR, H5S_SIMPLE
-from h5t cimport PY_H5Tclose
+from h5s cimport H5S_ALL, H5S_UNLIMITED, H5S_SCALAR, H5S_SIMPLE, \
+                    H5Sget_simple_extent_type, H5Sclose, H5Sselect_all, \
+                    H5Sget_simple_extent_ndims, H5Sget_select_npoints
+from h5t cimport PY_H5Tclose, H5Tget_size
 from h5p cimport H5P_DEFAULT, H5Pclose
 from numpy cimport import_array, ndarray, PyArray_DATA
 from utils cimport  check_numpy_read, check_numpy_write, \
@@ -91,9 +92,10 @@ def close(hid_t dset_id):
 
 # === Dataset I/O =============================================================
 
-def read(hid_t dset_id, hid_t mspace_id, hid_t fspace_id, ndarray arr_obj, hid_t plist=H5P_DEFAULT):
+def read(hid_t dset_id, hid_t mspace_id, hid_t fspace_id, ndarray arr_obj, 
+                                                    hid_t plist=H5P_DEFAULT):
     """ ( INT dset_id, INT mspace_id, INT fspace_id, NDARRAY arr_obj, 
-          INT plist=H5P_DEFAULT )
+          INT plist=H5P_DEFAULT)
 
         Read data from an HDF5 dataset into a Numpy array.  For maximum 
         flexibility, you can specify dataspaces for the file and the Numpy
@@ -112,22 +114,20 @@ def read(hid_t dset_id, hid_t mspace_id, hid_t fspace_id, ndarray arr_obj, hid_t
         For a friendlier version of this function, try py_read_slab().
     """
     cdef hid_t mtype_id
-    cdef int array_ok
     mtype_id = 0
 
     try:
         mtype_id = h5t.py_dtype_to_h5t(arr_obj.dtype)
-        array_ok = check_numpy_write(arr_obj, -1)
-        if array_ok <= 0:
-            raise ValueError("Numpy array is not set up correctly.")
+        check_numpy_write(arr_obj, -1)
 
         H5Dread(dset_id, mtype_id, mspace_id, fspace_id, plist, PyArray_DATA(arr_obj))
 
     finally:
-        if mtype_id != 0:
+        if mtype_id:
             PY_H5Tclose(mtype_id)
         
-def write(hid_t dset_id, hid_t mspace_id, hid_t fspace_id, ndarray arr_obj, hid_t plist=H5P_DEFAULT):
+def write(hid_t dset_id, hid_t mspace_id, hid_t fspace_id, ndarray arr_obj, 
+                                                    hid_t plist=H5P_DEFAULT):
     """ ( INT dset_id, INT mspace_id, INT fspace_id, NDARRAY arr_obj, 
           INT plist=H5P_DEFAULT )
 
@@ -140,14 +140,11 @@ def write(hid_t dset_id, hid_t mspace_id, hid_t fspace_id, ndarray arr_obj, hid_
         For a friendlier version of this function, try py_write_slab()
     """
     cdef hid_t mtype_id
-    cdef int array_ok
     mtype_id = 0
 
     try:
         mtype_id = h5t.py_dtype_to_h5t(arr_obj.dtype)
-        array_ok = check_numpy_read(arr_obj, -1)
-        if array_ok <= 0:
-            raise ValueError("Numpy array is not set up correctly.")
+        check_numpy_read(arr_obj, -1)
 
         H5Dwrite(dset_id, mtype_id, mspace_id, fspace_id, plist, PyArray_DATA(arr_obj))
 
@@ -188,16 +185,19 @@ def extend(hid_t dset_id, object shape):
 def get_space(hid_t dset_id):
     """ (INT dset_id) => INT space_id
 
-        Create and return a new copy of the dataspace for this dataset.  You're
-        responsible for closing it.
+        Create and return a new copy of the dataspace for this dataset.  
+        You're responsible for closing it.
     """
     return H5Dget_space(dset_id)
 
 def get_space_status(hid_t dset_id):
     """ (INT dset_id) => INT space_status_code
 
-        Determine if space has been allocated for a dataset.  Return value is
-        one of SPACE_STATUS_*.
+        Determine if space has been allocated for a dataset.  
+        Return value is one of:
+            SPACE_STATUS_NOT_ALLOCATED
+            SPACE_STATUS_PART_ALLOCATED
+            SPACE_STATUS_ALLOCATED 
     """
     cdef H5D_space_status_t status
     H5Dget_space_status(dset_id, &status)
@@ -206,8 +206,8 @@ def get_space_status(hid_t dset_id):
 def get_type(hid_t dset_id):
     """ (INT dset_id) => INT type_id
 
-        Create and return a new copy of the datatype for this dataset.You're
-        responsible for closing it.
+        Create and return a new copy of the datatype for this dataset.
+        You're responsible for closing it.
     """
     return H5Dget_type(dset_id)
 
@@ -231,7 +231,7 @@ def get_storage_size(hid_t dset_id):
 
         Determine the amount of file space required for a dataset.  Note this
         only counts the space which has actually been allocated; it may even
-        be zero.  Because of this, this function will never raise an exception.
+        be zero.
     """
     return H5Dget_storage_size(dset_id)
 
@@ -252,14 +252,14 @@ def py_create(hid_t parent_id, char* name, object data=None, object dtype=None,
 
         This function also works for scalar arrays; providing a "shape" tuple 
         of () or a 0-dimensional array for "data" will result in a scalar 
-        (h5s.CLASS_SCALAR) dataspace for the new dataset, rather than a 
-        slab (h5s.CLASS_SIMPLE).
+        (h5s.SCALAR) dataspace for the new dataset, rather than a slab
+        (h5s.SIMPLE).
 
-        Additional options:
-        chunks          A tuple containing chunk sizes, or None
-        compression     Enable DEFLATE compression at this level (0-9), or None
-        shuffle         Enable/disable shuffle filter (default disabled)
-        fletcher32      Enable/disable Fletcher32 error detection (default disabled)
+        Additional options (* is default):
+        chunks          A tuple containing chunk sizes, or *None
+        compression     Enable DEFLATE compression at this level (0-9) or *None
+        shuffle         Enable/*disable shuffle filter
+        fletcher32      Enable/*disable Fletcher32 error detection
     """
     cdef hid_t dset_id
     cdef hid_t type_id
@@ -279,7 +279,7 @@ def py_create(hid_t parent_id, char* name, object data=None, object dtype=None,
 
     try:
         if len(shape) == 0:
-            space_id = h5s.create(h5s.CLASS_SCALAR)  # let's be explicit
+            space_id = h5s.create(H5S_SCALAR)  # let's be explicit
         else:
             space_id = h5s.create_simple(shape)
 
@@ -354,11 +354,11 @@ def py_read_slab(hid_t ds_id, object start, object count,
     try:
         # Obtain the Numpy dtype of the array
         if dtype is None:
-            type_id = get_type(ds_id)
+            type_id = H5Dget_type(ds_id)
             dtype = h5t.py_h5t_to_dtype(type_id)
 
-        file_space = get_space(ds_id)
-        space_type = h5s.get_simple_extent_type(file_space)
+        file_space = H5Dget_space(ds_id)
+        space_type = H5Sget_simple_extent_type(file_space)
         
         if space_type == H5S_SCALAR:
 
@@ -389,10 +389,9 @@ def py_read_slab(hid_t ds_id, object start, object count,
             read(ds_id, mem_space, file_space, arr)
 
         else:
-            raise ValueError("Dataspace type %d is unsupported" % space_type)
+            raise NotImplementedError("Dataspace type %d is unsupported" % space_type)
 
     finally:
-        # ignore return values on cleanup
         if mem_space:
             H5Sclose(mem_space)
         if file_space:
@@ -432,8 +431,8 @@ def py_write_slab(hid_t ds_id, ndarray arr, object start, object stride=None):
     count = arr_obj.shape
 
     try:
-        file_space = get_space(ds_id)
-        space_type = h5s.get_simple_extent_type(file_space)
+        file_space = H5Dget_space(ds_id)
+        space_type = H5Sget_simple_extent_type(file_space)
         
         if space_type == H5S_SCALAR:
 
@@ -455,7 +454,6 @@ def py_write_slab(hid_t ds_id, ndarray arr, object start, object stride=None):
             raise ValueError("Dataspace type %d is unsupported" % space_type)
 
     finally:
-        # ignore return values on cleanup
         if mem_space:
             H5Sclose(mem_space)
         if file_space:
@@ -468,14 +466,14 @@ def py_shape(hid_t dset_id):
     """
     cdef int space_id
     space_id = 0
-    shape = None
+
     try:
-        space_id = get_space(dset_id)
+        space_id = H5Dget_space(dset_id)
         shape = h5s.get_simple_extent_dims(space_id)
+        return shape
     finally:
         if space_id:
             H5Sclose(space_id)
-    return shape
 
 def py_rank(hid_t dset_id):
     """ (INT dset_id) => INT rank
@@ -484,14 +482,13 @@ def py_rank(hid_t dset_id):
     """
     cdef int space_id
     space_id = 0
-    rank = None
+
     try:
-        space_id = get_space(dset_id)
-        rank = h5s.get_simple_extent_ndims(space_id)
+        space_id = H5Dget_space(dset_id)
+        return H5Sget_simple_extent_ndims(space_id)
     finally:
         if space_id:
             H5Sclose(space_id)
-    return rank
 
 def py_dtype(hid_t dset_id):
     """ (INT dset_id) => DTYPE numpy_dtype
@@ -500,14 +497,13 @@ def py_dtype(hid_t dset_id):
     """
     cdef hid_t type_id
     type_id = 0
-    dtype_out = None
+
     try:
-        type_id = get_type(dset_id)
-        dtype_out = h5t.py_h5t_to_dtype(type_id)
+        type_id = H5Dget_type(dset_id)
+        return h5t.py_h5t_to_dtype(type_id)
     finally:
         if type_id:
             PY_H5Tclose(type_id)
-    return dtype_out
 
 def py_patch(hid_t ds_source, hid_t ds_sink, hid_t transfer_space):
     """ (INT ds_source, INT ds_sink, INT transfer_space)
@@ -520,7 +516,7 @@ def py_patch(hid_t ds_source, hid_t ds_sink, hid_t transfer_space):
         entire selection at once.  Looping and memory limitation constraints 
         are the caller's responsibility.
     """
-    cdef hid_t source_space
+    cdef hid_t source_space 
     cdef hid_t sink_space
     cdef hid_t mem_space
     cdef hid_t source_type
@@ -536,15 +532,15 @@ def py_patch(hid_t ds_source, hid_t ds_sink, hid_t transfer_space):
     xfer_buf = NULL
 
     try:
-        source_space = get_space(ds_source)
-        sink_space = get_space(sink)
-        source_type = get_type(source)
+        source_space = H5Dget_space(ds_source)
+        sink_space = H5Dget_space(sink)
+        source_type = H5Dget_type(source)
 
-        npoints = h5s.get_select_npoints(space_id)
-        type_size = h5t.get_size(source_type)
+        npoints = H5Sget_select_npoints(space_id)
+        type_size = H5Tget_size(source_type)
 
         mem_space = h5s.create_simple((npoints,))
-        h5s.select_all(mem_space)
+        H5Sselect_all(mem_space)
 
         # This assumes that reading into a contiguous buffer and then writing
         # out again to the same selection preserves the arrangement of data
@@ -559,6 +555,7 @@ def py_patch(hid_t ds_source, hid_t ds_sink, hid_t transfer_space):
         H5Dwrite(ds_sink, source_type, mem_space, transfer_space, H5P_DEFAULT, xfer_buf)
 
     finally:
+        efree(xfer_buf)
         if source_space:
             H5Sclose(source_space)
         if sink_space:
@@ -567,8 +564,7 @@ def py_patch(hid_t ds_source, hid_t ds_sink, hid_t transfer_space):
             H5Sclose(mem_space)
         if source_type:
             PY_H5Tclose(source_type)
-        if xfer_buf != NULL:
-            efree(xfer_buf)
+
 
 PY_LAYOUT = DDict({ H5D_COMPACT: 'COMPACT LAYOUT', 
                H5D_CONTIGUOUS: 'CONTIGUOUS LAYOUT',

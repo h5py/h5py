@@ -15,8 +15,6 @@
 """
 
 # Pyrex compile-time imports
-from defs_c cimport size_t
-from h5  cimport hid_t
 from utils cimport emalloc, efree
 
 # Runtime imports

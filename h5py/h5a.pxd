@@ -14,8 +14,7 @@
 # license is available at licenses/pytables.txt, in the distribution root
 # directory.
 
-from defs_c  cimport size_t, ssize_t
-from h5 cimport hid_t, herr_t
+include "std_defs.pxi"
 
 cdef extern from "hdf5.h":
 

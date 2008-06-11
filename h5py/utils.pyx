@@ -10,7 +10,7 @@
 # 
 #-
 
-from python cimport PyTuple_Check
+from python cimport PyTuple_Check, PyList_Check
 
 cdef int require_tuple(object tpl, int none_allowed, int size, char* name) except -1:
     # Ensure that tpl is in fact a tuple, or None if none_allowed is nonzero.
@@ -29,3 +29,25 @@ cdef int require_tuple(object tpl, int none_allowed, int size, char* name) excep
         nmsg = " or None"
 
     raise ValueError("%s must be a tuple%s%s." % (name, smsg, nmsg))
+
+cdef int require_list(object lst, int none_allowed, int size, char* name) except -1:
+    # Counterpart of require_tuple, for lists
+
+    if (lst is None and none_allowed) or \
+      ( PyList_Check(lst) and (size < 0 or len(lst) == size)):
+        return 1
+
+    nmsg = ""
+    smsg = ""
+    if size >= 0:
+        smsg = " of size %d" % size
+    if none_allowed:
+        nmsg = " or None"
+
+    raise ValueError("%s must be a list%s%s." % (name, smsg, nmsg))
+
+
+
+
+
+

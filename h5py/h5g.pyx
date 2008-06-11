@@ -15,8 +15,6 @@
 """
 
 # Pyrex compile-time imports
-from defs_c cimport time_t
-from h5  cimport herr_t, hid_t, size_t, hsize_t
 from utils cimport emalloc, efree
 
 # Runtime imports
@@ -139,8 +137,7 @@ def get_objname_by_idx(hid_t loc_id, hsize_t idx):
     buf = NULL
 
     size = H5Gget_objname_by_idx(loc_id, idx, NULL, 0)
-    if size <= 0:
-        raise RuntimeError("Failed to raise exception at get_objname_by_idx.")
+    assert size > 0
 
     buf = <char*>emalloc(sizeof(char)*(size+1))
     try:
@@ -284,8 +281,7 @@ def get_comment(hid_t loc_id, char* name):
     cmnt = NULL
 
     cmnt_len = H5Gget_comment(loc_id, name, 0, NULL)
-    if cmnt_len < 0:
-        raise RuntimeError("Failed to raise exception at get_comment")
+    assert cmnt_len > 0
 
     cmnt = <char*>emalloc(sizeof(char)*(cmnt_len+1))
     try:
@@ -357,10 +353,12 @@ def py_exists(hid_t group_id, char* name, int follow_link=1):
 
         Determine if a named member exists in the given group.  If follow_link
         is True (default), symbolic links will be dereferenced. Note this
-        function will not raise GroupError, even if the group ID is bad.
+        function will not raise an exception, unless the group ID is bad.
     """
     try:
         H5Gget_objinfo(group_id, name, follow_link, NULL)
+    except ValueError:
+        raise
     except:
         return False
     return True

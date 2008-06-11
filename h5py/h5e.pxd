@@ -14,8 +14,7 @@
 # license is available in the file licenses/hdf5.txt in the distribution
 # root directory.
 
-from h5 cimport herr_t
-from python cimport BaseException, PyErr_SetNone
+include "std_defs.pxi"
 
 cdef extern from "hdf5.h":
 

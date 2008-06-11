@@ -16,8 +16,6 @@
 """
 
 # Pyrex compile-time imports
-from defs_c cimport size_t
-from h5  cimport herr_t, hid_t, htri_t, herr_t, hsize_t
 from h5d cimport H5D_layout_t
 from h5z cimport H5Z_filter_t
 

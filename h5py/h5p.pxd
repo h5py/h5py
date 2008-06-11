@@ -14,8 +14,8 @@
 # license is available at licenses/pytables.txt, in the distribution root
 # directory.
 
-from defs_c   cimport size_t, time_t
-from h5  cimport hid_t, hbool_t, herr_t, htri_t, hsize_t, hssize_t, hvl_t
+include "std_defs.pxi"
+
 from h5d cimport H5D_layout_t, H5D_fill_value_t, H5D_fill_time_t, H5D_alloc_time_t
 from h5z cimport H5Z_filter_t, H5Z_EDC_t
 from h5f cimport H5F_close_degree_t

@@ -10,8 +10,8 @@
 # 
 #-
 
-from defs_c cimport size_t
-from h5 cimport hid_t, herr_t, haddr_t
+include "std_defs.pxi"
+
 from h5g cimport H5G_obj_t
 
 cdef extern from "hdf5.h":

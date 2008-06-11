@@ -44,6 +44,7 @@ cdef extern from "Python.h":
 
   # Functions for lists
   int PyList_Append(object list, object item)
+  int PyList_Check(object list_)
 
   # Functions for tuples
   object PyTuple_New(int)

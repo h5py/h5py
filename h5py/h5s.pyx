@@ -18,8 +18,7 @@
 """
 
 # Pyrex compile-time imports
-from h5  cimport herr_t, htri_t, hid_t, size_t, hsize_t, hssize_t
-from utils cimport  require_tuple, convert_dims, convert_tuple, \
+from utils cimport  require_tuple, require_list, convert_dims, convert_tuple, \
                     emalloc, efree
 
 # Runtime imports
@@ -365,20 +364,21 @@ def select_elements(hid_t space_id, object coord_list, int op=H5S_SELECT_SET):
     """
     cdef size_t nelements       # Number of point coordinates
     cdef hsize_t *coords        # Contiguous 2D array nelements x rank x sizeof(hsize_t)
-    cdef size_t element_size    # Size of a point record: sizeof(hsize_t)*rank
 
     cdef int rank
     cdef int i_point
     cdef int i_entry
     coords = NULL
 
+    require_list(coord_list, 0, -1, "coord_list")
+    nelements = len(coord_list)
+
     rank = H5Sget_simple_extent_ndims(space_id)
 
-    nelements = len(coord_list)
-    element_size = sizeof(hsize_t)*rank
-
-    # HDF5 docs say this has to be a contiguous 2D array
-    coords = <hsize_t*>emalloc(element_size*nelements)
+    # HDF5 expects the coordinates array to be a static, contiguous
+    # array.  We'll simulate that by malloc'ing a contiguous chunk
+    # and using pointer arithmetic to initialize it.
+    coords = <hsize_t*>emalloc(sizeof(hsize_t)*rank*nelements)
 
     try:
         for i_point from 0<=i_point<nelements:

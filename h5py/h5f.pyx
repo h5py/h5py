@@ -15,7 +15,6 @@
 """
 
 # Pyrex compile-time imports
-from h5  cimport herr_t, hid_t, htri_t, hssize_t
 from h5p cimport H5P_DEFAULT
 from utils cimport emalloc, efree
 
@@ -33,8 +32,8 @@ ACC_RDONLY  = H5F_ACC_RDONLY
 SCOPE_LOCAL     = H5F_SCOPE_LOCAL
 SCOPE_GLOBAL    = H5F_SCOPE_GLOBAL
 
-CLOSE_WEAK = H5F_CLOSE_WEAK
-CLOSE_SEMI = H5F_CLOSE_SEMI
+CLOSE_WEAK  = H5F_CLOSE_WEAK
+CLOSE_SEMI  = H5F_CLOSE_SEMI
 CLOSE_STRONG = H5F_CLOSE_STRONG
 CLOSE_DEFAULT = H5F_CLOSE_DEFAULT
 
@@ -62,7 +61,8 @@ def close(hid_t file_id):
     """
     H5Fclose(file_id)
 
-def create(char* name, int flags=H5F_ACC_TRUNC, hid_t create_id=H5P_DEFAULT, hid_t access_id=H5P_DEFAULT):
+def create(char* name, int flags=H5F_ACC_TRUNC, hid_t create_id=H5P_DEFAULT, 
+                                                hid_t access_id=H5P_DEFAULT):
     """ (STRING name, INT flags=ACC_TRUNC, INT create_id=H5P_DEFAULT,
             INT access_id=H5P_DEFAULT)
         => INT file_id
@@ -99,7 +99,7 @@ def reopen(hid_t file_id):
     return H5Freopen(file_id)
 
 def mount(hid_t loc_id, char* name, hid_t file_id, hid_t plist_id=H5P_DEFAULT):
-    """ (INT loc_id, STRING name, INT file_id, INT, plist_id=H5P_DEFAULT)
+    """ (INT loc_id, STRING name, INT file_id, INT plist_id=H5P_DEFAULT)
     
         Mount an open file as "name" under group loc_id.  If present, plist_id 
         is a mount property list.
@@ -183,29 +183,26 @@ def get_obj_ids(hid_t file_id, int types):
         OBJ_FILE | OBJ_ATTR).  The special value OBJ_ALL matches all object
         types, and OBJ_LOCAL will only match objects opened through this
         specific identifier.
-
     """
     cdef int count
-    cdef int retval
     cdef hid_t *obj_list
     cdef int i
-
     obj_list = NULL
-    py_obj_list = []
 
+    py_obj_list = []
     try:
         count = H5Fget_obj_count(file_id, types)
-
         obj_list = <hid_t*>emalloc(sizeof(hid_t)*count)
-        H5Fget_obj_ids(file_id, types, count, obj_list)
 
+        H5Fget_obj_ids(file_id, types, count, obj_list)
         for i from 0<=i<count:
             py_obj_list.append(obj_list[i])
+        return py_obj_list
 
     finally:
         efree(obj_list)
 
-    return py_obj_list
+
 
 # === Python extensions =======================================================
 
