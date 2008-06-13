@@ -18,37 +18,49 @@
     dtype objects.  Constants are also defined in this module for a variety
     of HDF5 native types and classes. Points of interest:
 
-    (1) Enumerations
-    There is no native Numpy or Python type for enumerations.  Since an
-    enumerated type is simply a mapping between string names and integer
-    values, I have implemented enum support through dictionaries.  An HDF5
-    H5T_ENUM type is converted to the appropriate Numpy integer type (e.g.
-    <u4, etc.), and a dictionary mapping names to values is also generated.
-    Since dtype objects cannot be subclassed (why?) and have no provision
-    for directly attached metadata, the dtype is given a single named field 
-    ("enum") and the dictionary stored in the metadata for that field. An
-    example dtype declaration for this is:
+    1. Translation
+
+        The functions py_translate_h5t and py_translate_dtype do the heavy
+        lifting required to go between HDF5 datatype objects and Numpy dtypes.
+
+        Since the HDF5 library can represent a greater range of types than
+        Numpy, the conversion is asymmetric.  Attempting to convert an HDF5
+        type to a Numpy dtype will result in a dtype object which matches
+        as closely as possible.  In contrast, converting from a Numpy dtype
+        to an HDF5 type will always result in a precise, byte-compatible 
+        description of the Numpy data layout.
+
+    2. Complex numbers
+
+        Since HDF5 has no native complex types, and the native Numpy
+        representation is a struct with two floating-point members, complex
+        numbers are saved as HDF5 compound objects.
+
+        These compound objects have exactly two fields, with IEEE 32- or 64-
+        bit format, and default names "r" and "i".  Since other conventions
+        exist for field naming, and in fact may be essential for compatibility
+        with external tools, new names can be specified as arguments to
+        both py_translate_* functions.
+
+    3. Enumerations
+
+        There is no native Numpy or Python type for enumerations.  Since an
+        enumerated type is simply a mapping between string names and integer
+        values, I have implemented enum support through dictionaries.  
+
+        An HDF5 H5T_ENUM type is converted to the appropriate Numpy integer 
+        type (e.g. <u4, etc.), and a dictionary mapping names to values is also 
+        generated. This dictionary is attached to the dtype object via the
+        functions py_enum_attach and py_enum_recover.
+
+        The exact dtype declaration is given below; howeve, the py_enum*
+        functions should encapsulate almost all meaningful operations.
 
         enum_dict = {'RED': 0L, 'GREEN': 1L}
 
         dtype( ('<i4', [ ( (enum_dict, 'enum'),   '<i4' )] ) )
                   ^             ^         ^         ^
              (main type)  (metadata) (field name) (field type)
-
-    The functions py_attach_enum and py_recover_enum simplify the attachment
-    and recovery of enumeration dictionaries from integer dtype objects.
-
-    (2) Complex numbers
-    Since HDF5 has no native complex types defined, and the native Numpy
-    representation is a struct with two floating-point members, complex
-    numbers are saved as HDF5 compound objects with IEEE 32/64 floating point
-    and field names (by default) "r" and "i".  Complex numbers can be auto-
-    recovered from HDF5 objects provided they match this format and have
-    compatible field names.  Since other people may have named their fields
-    e.g. "img" and "real", these names can be changed.  The API functions
-    py_dtype_to_h5t and py_h5t_to_dtype take arguments which specify these
-    names.
-
 """
 
 # Pyrex compile-time imports
@@ -57,7 +69,7 @@ from h5p cimport H5P_DEFAULT
 from h5e cimport err_c, pause_errors, resume_errors
 from numpy cimport dtype, ndarray
 
-from utils cimport  emalloc, efree, \
+from utils cimport  emalloc, efree, pybool, \
                     create_ieee_complex64, create_ieee_complex128, \
                     require_tuple, convert_dims, convert_tuple
 
@@ -209,7 +221,7 @@ def equal(hid_t typeid_1, hid_t typeid_2):
         Test whether two identifiers point to the same datatype object.  
         Note this does NOT perform any kind of logical comparison.
     """
-    return bool(H5Tequal(typeid_1, typeid_2))
+    return pybool(H5Tequal(typeid_1, typeid_2))
 
 def lock(hid_t type_id):
     """ (INT type_id)
@@ -262,7 +274,7 @@ def detect_class(hid_t type_id, int classtype):
         Determine if a member of the given class exists in a compound
         datatype.  The search is recursive.
     """
-    return bool(H5Tdetect_class(type_id, <H5T_class_t>classtype))
+    return pybool(H5Tdetect_class(type_id, <H5T_class_t>classtype))
 
 def close(hid_t type_id, int force=1):
     """ (INT type_id, BOOL force=True)
@@ -332,7 +344,7 @@ def is_variable_str(hid_t type_id):
         Please note that reading/writing data in this format is impossible;
         only fixed-length strings are currently supported.
     """
-    return bool(H5Tis_variable_str(type_id))
+    return pybool(H5Tis_variable_str(type_id))
 
 # === Compound datatype operations ============================================
 
@@ -640,15 +652,16 @@ def _validate_names(names):
     raise ValueError("Compound names must be given as a tuple of strings.")
 
 
-def py_h5t_to_dtype(hid_t type_id, object byteorder=None, 
+def py_translate_h5t(hid_t type_id, object byteorder=None, 
                         object compound_names=None, object complex_names=None):
     """ (INT type_id, STRING byteorder=None, TUPLE compound_names=None.
          TUPLE complex_names=None)
         => DTYPE
 
         Create a Numpy dtype object as similar as possible to the given HDF5
-        datatype object.  The result is not guaranteed to be memory-compatible
-        with the original datatype object.
+        datatype object.  The result is guaranteed to be logically compatible
+        with the original object, with no loss of precision, but may not
+        implement the same memory layout as the HDF5 type.
 
         Optional arguments:
 
@@ -734,7 +747,7 @@ def py_h5t_to_dtype(hid_t type_id, object byteorder=None,
             try:
                 tmp_name = get_member_name(type_id, i)
                 field_names.append(tmp_name)
-                field_types.append(py_h5t_to_dtype(tmp_id, byteorder,
+                field_types.append(py_translate_h5t(tmp_id, byteorder,
                                         None, complex_names))
             finally:
                 PY_H5Tclose(tmp_id)
@@ -772,16 +785,16 @@ def py_h5t_to_dtype(hid_t type_id, object byteorder=None,
         # enum field entry carrying a dictionary as metadata
         super_tid = H5Tget_super(type_id)
         try:
-            edct = py_enum_to_dict(type_id)
+            edct = py_translate_enum(type_id)
             # Superclass must be an integer, so only provide byteorder.
-            typeobj = py_attach_enum(edct, py_h5t_to_dtype(super_tid, byteorder))
+            typeobj = py_enum_attach(edct, py_translate_h5t(super_tid, byteorder))
         finally:
             PY_H5Tclose(super_tid)
 
     elif classtype == H5T_ARRAY:
         super_tid = get_super(type_id)
         try:
-            base_dtype = py_h5t_to_dtype(super_tid, byteorder, compound_names, complex_names)
+            base_dtype = py_translate_h5t(super_tid, byteorder, compound_names, complex_names)
         finally:
             PY_H5Tclose(super_tid)
         shape = get_array_dims(type_id)
@@ -794,7 +807,7 @@ def py_h5t_to_dtype(hid_t type_id, object byteorder=None,
 
     return typeobj
 
-def py_dtype_to_h5t(dtype dtype_in not None, object complex_names=None):
+def py_translate_dtype(dtype dtype_in not None, object complex_names=None):
     """ ( DTYPE dtype_in, TUPLE complex_names=None) => INT type_id
 
         Given a Numpy dtype object, generate a byte-for-byte memory-compatible
@@ -838,14 +851,14 @@ def py_dtype_to_h5t(dtype dtype_in not None, object complex_names=None):
         # Check for enumerated type first
         if (kind == c'u' or kind == c'i') and len(names) == 1 and names[0] == 'enum':
             basetype = _code_map[dtype_in.str]
-            type_out = py_dict_to_enum(py_recover_enum(dtype_in), basetype)
+            type_out = py_translate_dict(py_enum_recover(dtype_in), basetype)
 
         # Otherwise it's just a compound type
         else:
             type_out = create(H5T_COMPOUND, length)
             for name in dtype_in.names:
                 dt, offset = dtype_in.fields[name]
-                tmp = py_dtype_to_h5t(dt, complex_names)
+                tmp = py_translate_dtype(dt, complex_names)
                 try:
                     insert(type_out, name, offset, tmp)
                 finally:
@@ -875,7 +888,7 @@ def py_dtype_to_h5t(dtype dtype_in not None, object complex_names=None):
     elif kind == c'V':
 
         if dtype_in.subdtype:
-            basetype = py_dtype_to_h5t(dtype_in.subdtype[0], complex_names)
+            basetype = py_translate_dtype(dtype_in.subdtype[0], complex_names)
             try:
                 type_out = array_create(basetype, dtype_in.subdtype[1])
             finally:
@@ -894,7 +907,7 @@ def py_dtype_to_h5t(dtype dtype_in not None, object complex_names=None):
     return type_out
 
 
-def py_enum_to_dict(hid_t type_id):
+def py_translate_enum(hid_t type_id):
     """ (INT type_id) => DICT enum
         
         Produce a dictionary in the format [STRING] => LONG from
@@ -911,11 +924,11 @@ def py_enum_to_dict(hid_t type_id):
 
     return dictout
 
-def py_dict_to_enum(object enumdict, hid_t basetype):
-    """ (DICT enum, INT base_type_id) => INT new_type_id
+def py_translate_dict(object enumdict, hid_t basetype):
+    """ (DICT enumdict, INT basetype) => INT new_type_id
 
-        Create a new HDF5 enumeration from a Python dictionary in the format
-        [string name] => long value, and an HDF5 base type
+        Create a new HDF5 enumeration from a Python dictionary in the 
+        format [string name] => long value, and an HDF5 base type.
     """
     cdef hid_t type_id
     type_id = enum_create(basetype)
@@ -924,18 +937,19 @@ def py_dict_to_enum(object enumdict, hid_t basetype):
 
     return type_id
 
-def py_attach_enum(object enumdict, object basetype):
+def py_enum_attach(object enumdict, object base_dtype):
     """ (DICT enum, DTYPE base_dtype) => DTYPE new_dtype
 
         Convert a Python dictionary in the format [string] => integer to a 
-        Numpy dtype with associated enum dictionary.
+        Numpy dtype with associated enum dictionary.  Returns a new
+        dtype object; does not mutate the original.
     """
-    return dtype( (basetype, [( (enumdict, 'enum'), basetype )] ) )
+    return dtype( (base_dtype, [( (enumdict, 'enum'), base_dtype )] ) )
 
-def py_recover_enum(dtype dtype_in):
+def py_enum_recover(dtype dtype_in):
     """ (DTYPE dtype_with_enum) => DICT enum
 
-        Extract the enum dictionary from a Numpy dtype object
+        Get the enum dictionary from a Numpy dtype object.
     """
     cdef object names
     names = dtype_in.names
@@ -949,8 +963,8 @@ def py_recover_enum(dtype dtype_in):
 def py_list_compound_names(hid_t type_in):
     """ (INT type_id) => LIST compound_names
    
-        Obtain a Python list of member names for a compound or enumeration
-        type.
+        Obtain a Python list of member names for a compound or
+        enumeration type.
     """
     cdef int nmem
     cdef int i
@@ -968,21 +982,22 @@ def py_can_convert_dtype(object dt, object complex_names=None):
 
         Test whether the given Numpy dtype can be converted to the appropriate
         memory-compatible HDF5 datatype.  complex_names works as in the
-        function h5t.py_dtype_to_h5t.
+        function h5t.py_translate_dtype.
     """
     cdef hid_t tid
     tid = 0
-    can_convert = False
+
+    retval = None
     try:
-        tid = py_dtype_to_h5t(dt, complex_names)
-        can_convert = True
+        tid = py_translate_dtype(dt, complex_names)
+        retval = True
     except ValueError:
-        pass
+        retval = False
 
     if tid:
         PY_H5Tclose(tid)
 
-    return can_convert
+    return retval
 
 PY_SIGN = DDict({H5T_SGN_NONE: "UNSIGNED", H5T_SGN_2: "SIGNED"})
 

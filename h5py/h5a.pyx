@@ -92,7 +92,7 @@ def read(hid_t attr_id, ndarray arr_obj):
     space_id = 0
 
     try:
-        mtype_id = h5t.py_dtype_to_h5t(arr_obj.dtype)
+        mtype_id = h5t.py_translate_dtype(arr_obj.dtype)
         space_id = H5Aget_space(attr_id)
         check_numpy_write(arr_obj, space_id)
 
@@ -121,7 +121,7 @@ def write(hid_t attr_id, ndarray arr_obj):
     space_id = 0
 
     try:
-        mtype_id = h5t.py_dtype_to_h5t(arr_obj.dtype)
+        mtype_id = h5t.py_translate_dtype(arr_obj.dtype)
         space_id = H5Aget_space(attr_id)
         check_numpy_read(arr_obj, space_id)
 
@@ -254,7 +254,7 @@ def py_create(hid_t loc_id, char* name, object dtype_in, object shape):
 
     try:
         sid = h5s.create_simple(shape)
-        type_id = h5t.py_dtype_to_h5t(dtype_in)
+        type_id = h5t.py_translate_dtype(dtype_in)
 
         return create(loc_id, name, type_id, sid)
 
@@ -294,7 +294,7 @@ def py_dtype(hid_t attr_id):
     
     try:
         type_id = H5Aget_type(attr_id)
-        return h5t.py_h5t_to_dtype(type_id)
+        return h5t.py_translate_h5t(type_id)
     finally:
         if type_id:
             PY_H5Tclose(type_id)

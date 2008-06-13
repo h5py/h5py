@@ -15,7 +15,7 @@
     Filter API and constants
 """
 # Pyrex compile-time imports
-include "std_inline.pyx"
+from utils cimport pybool
 
 # Runtime imports
 import h5

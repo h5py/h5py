@@ -50,6 +50,13 @@ cdef int require_list(object lst, int none_allowed, int size, char* name) except
     PyErr_SetString(ValueError, msg)
     return -1
 
+cdef object pybool(long long val):
+    # It seems Pyrex's bool() actually returns some sort of int.
+    # This is OK for C, but ugly in Python.
+    if val:
+        return True
+    return False
+
 
 
 

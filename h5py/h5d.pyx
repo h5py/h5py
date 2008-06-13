@@ -117,7 +117,7 @@ def read(hid_t dset_id, hid_t mspace_id, hid_t fspace_id, ndarray arr_obj,
     mtype_id = 0
 
     try:
-        mtype_id = h5t.py_dtype_to_h5t(arr_obj.dtype)
+        mtype_id = h5t.py_translate_dtype(arr_obj.dtype)
         check_numpy_write(arr_obj, -1)
 
         H5Dread(dset_id, mtype_id, mspace_id, fspace_id, plist, PyArray_DATA(arr_obj))
@@ -143,7 +143,7 @@ def write(hid_t dset_id, hid_t mspace_id, hid_t fspace_id, ndarray arr_obj,
     mtype_id = 0
 
     try:
-        mtype_id = h5t.py_dtype_to_h5t(arr_obj.dtype)
+        mtype_id = h5t.py_translate_dtype(arr_obj.dtype)
         check_numpy_read(arr_obj, -1)
 
         H5Dwrite(dset_id, mtype_id, mspace_id, fspace_id, plist, PyArray_DATA(arr_obj))
@@ -282,7 +282,7 @@ def py_create(hid_t parent_id, char* name, object data=None, object dtype=None,
         else:
             space_id = h5s.create_simple(shape)
 
-        type_id = h5t.py_dtype_to_h5t(dtype)
+        type_id = h5t.py_translate_dtype(dtype)
     
         if( chunks or compression or shuffle or fletcher32):
             plist = h5p.create(H5P_DATASET_CREATE)
@@ -354,7 +354,7 @@ def py_read_slab(hid_t ds_id, object start, object count,
         # Obtain the Numpy dtype of the array
         if dtype is None:
             type_id = H5Dget_type(ds_id)
-            dtype = h5t.py_h5t_to_dtype(type_id)
+            dtype = h5t.py_translate_h5t(type_id)
 
         file_space = H5Dget_space(ds_id)
         space_type = H5Sget_simple_extent_type(file_space)
@@ -499,7 +499,7 @@ def py_dtype(hid_t dset_id):
 
     try:
         type_id = H5Dget_type(dset_id)
-        return h5t.py_h5t_to_dtype(type_id)
+        return h5t.py_translate_h5t(type_id)
     finally:
         if type_id:
             PY_H5Tclose(type_id)

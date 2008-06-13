@@ -205,7 +205,7 @@ pyx_library_dirs = ['/usr/lib', '/usr/local/lib']
 pyx_library_dirs.extend(custom_library_dirs)
 
 # Additional compiler flags for Pyrex code
-pyx_extra_args = ['-Wno-unused', '-DH5_USE_16_API']
+pyx_extra_args = ['-Wno-unused', '-Wno-uninitialized', '-DH5_USE_16_API']
 
 extra_link_args = []
 extra_compile_args = pyx_extra_args

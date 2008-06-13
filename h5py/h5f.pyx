@@ -16,7 +16,7 @@
 
 # Pyrex compile-time imports
 from h5p cimport H5P_DEFAULT
-from utils cimport emalloc, efree
+from utils cimport emalloc, efree, pybool
 
 # Runtime imports
 import h5
@@ -95,7 +95,7 @@ def is_hdf5(char* name):
         Determine if a given file is an HDF5 file.  Note this raises an 
         exception if the file doesn't exist.
     """
-    return bool(H5Fis_hdf5(name))
+    return pybool(H5Fis_hdf5(name))
 
 def reopen(hid_t file_id):
     """ (INT file_id) => INT new_file_id

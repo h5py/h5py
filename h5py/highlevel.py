@@ -56,7 +56,7 @@ import h5d
 import h5t
 import h5a
 import h5p
-from errors import H5Error
+from h5e import H5Error
 
 # === Main classes (Dataset/Group/File) =======================================
 
@@ -78,7 +78,8 @@ class Dataset(object):
         dtype       A Numpy dtype representing the array data-type.
 
         Writable properties:
-        cnames:     HDF5 compound names used for complex I/O
+        cnames:     HDF5 compound names used for complex I/O.  This can be
+                    None, (), or a 2-tuple with ("realname", "imgname").
     """
 
     # --- Properties (Dataset) ------------------------------------------------
@@ -110,24 +111,25 @@ class Dataset(object):
 
     # --- Public interface (Dataset) ------------------------------------------
 
-    def __init__(self, group, name, create=False,
+    def __init__(self, group, name,
                     data=None, dtype=None, shape=None, 
                     chunks=None, compression=None, shuffle=False, fletcher32=False):
         """ Create a new Dataset object.  There are two modes of operation:
 
             1.  Open an existing dataset
-                If "create" is false, open an existing dataset.  An exception
-                will be raised if it doesn't exist.
+                If you only supply the required parameters "group" and "name",
+                the object will attempt to open an existing HDF5 dataset.
 
             2.  Create a dataset
-                If "create" is True, create a new dataset.  You must supply
-                *either* "data", which must be a Numpy array from which the 
-                shape, dtype and initial contents will be determined, or *both* 
-                "dtype" (Numpy dtype object) and "shape" (tuple of dimensions).
-                Chunks/compression/shuffle/fletcher32 can also be specified.
+                You can supply either:
+                - Keyword "data"; a Numpy array from which the shape, dtype and
+                    initial contents will be determined.
+                - Both "dtype" (Numpy dtype object) and "shape" (tuple of 
+                    dimensions).
 
-                Creating a dataset will fail if another of the same name
-                already exists.
+            Creating a dataset will fail if another of the same name already 
+            exists.  Also, chunks/compression/shuffle/fletcher32 may only be
+            specified when creating a dataset.
 
             Creation keywords (* is default):
 
@@ -136,13 +138,13 @@ class Dataset(object):
             shuffle:       Use the shuffle filter? (requires compression) T/F*
             fletcher32:    Enable Fletcher32 error detection? T/F*
         """
-        if create:
-            self.id = h5d.py_create(group.id, name, data, shape, 
-                                    chunks, compression, shuffle, fletcher32)
-        else:
+        if data is None and dtype is None and shape is None:
             if any((data,dtype,shape,chunks,compression,shuffle,fletcher32)):
                 raise ValueError('You cannot specify keywords when opening a dataset.')
             self.id = h5d.open(group.id, name)
+        else:
+            self.id = h5d.py_create(group.id, name, data, shape, 
+                                    chunks, compression, shuffle, fletcher32)
 
         self._attrs = AttributeManager(self)
         self._byteorder = None
@@ -158,24 +160,27 @@ class Dataset(object):
             ds[:] => All elements, regardless of dimension.
 
             ds[0:3, 1:4, "a", "b"] => (3 x 3) slice, only including compound
-                                      elements "a" and "b".
+                                      elements "a" and "b", in that order.
         """
         start, count, stride, names = slicer(self.shape, args)
 
         if names is not None and self.dtype.names is None:
-            raise ValueError('This dataset has no named fields (requested "%s")' % ", ".join(names))
-
+            raise ValueError('This dataset has no named fields.')
         tid = 0
         try:
             tid = h5d.get_type(self.id)
-            dt = h5t.py_h5t_to_dtype(tid, byteorder=self._byteorder,
+            dt = h5t.py_translate_h5t(tid, byteorder=self._byteorder,
                                      compound_names=names,
                                      complex_names=self._cnames)
         finally:
             if tid != 0:
-                h5t.close(tid, force=True)
+                h5t.close(tid)
 
-        return h5d.py_read_slab(self.id, start, count, stride, dtype=dt)
+        arr = h5d.py_read_slab(self.id, start, count, stride, dtype=dt)
+        if names is not None and len(names) == 1:
+            # Match Numpy convention for recarray indexing
+            return arr[names[0]]
+        return arr
 
     def __setitem__(self, args):
         """ Write to the underlying array from an existing Numpy array.  The
@@ -191,17 +196,15 @@ class Dataset(object):
         h5d.py_write_slab(self.id, args[-1], start, stride)
 
     def close(self):
-        """ Force the HDF5 library to close and free this object.  You 
-            shouldn't need to do this in normal operation; HDF5 objects are 
-            automatically closed when their Python counterparts are deallocated.
+        """ Force the HDF5 library to close and free this object. This
+            will be called automatically when the object is garbage collected,
+            if it hasn't already.
         """
         h5d.close(self.id)
 
     def __del__(self):
-        try:
+        if h5i.get_type(self.id) == h5i.DATASET:
             h5d.close(self.id)
-        except H5Error:
-            pass
 
     def __str__(self):
         return 'Dataset: '+str(self.shape)+'  '+repr(self.dtype)
@@ -224,7 +227,7 @@ class Group(object):
           the special case of a scalar dataset, a Numpy array scalar is
           returned.
 
-        - Setting items: See the __setitem__ docstring; the rules are:
+        - Setting items:
             1. Existing Group or Dataset: create a hard link in this group
             2. Numpy array: create a new dataset here, overwriting any old one
             3. Anything else: try to create a Numpy array.  Also works with
@@ -238,6 +241,9 @@ class Group(object):
         - len(obj) returns the number of group members
     """
 
+    #: Provides access to HDF5 attributes. See AttributeManager docstring.
+    attrs = property(lambda self: self._attrs)
+
     # --- Public interface (Group) --------------------------------------------
 
     def __init__(self, parent_object, name, create=False):
@@ -247,14 +253,13 @@ class Group(object):
             raising an exception if it doesn't exist.  If "create" is True,
             create a new HDF5 group and link it into the parent group.
         """
-        self.id = 0
         if create:
             self.id = h5g.create(parent_object.id, name)
         else:
             self.id = h5g.open(parent_object.id, name)
         
         #: Group attribute access (dictionary-style)
-        self.attrs = AttributeManager(self)
+        self._attrs = AttributeManager(self)
 
     def __delitem__(self, name):
         """ Unlink a member from the HDF5 group.
@@ -276,20 +281,15 @@ class Group(object):
         if isinstance(obj, Group) or isinstance(obj, Dataset):
             h5g.link(self.id, name, h5i.get_name(obj.id), link_type=h5g.LINK_HARD)
 
-        elif isinstance(obj, numpy.ndarray):
+        else:
+            if not isinstance(obj, numpy.ndarray):
+                obj = numpy.array(obj)
             if h5t.py_can_convert_dtype(obj.dtype):
-                dset = Dataset(self, name, data=obj, create=True)
+                dset = Dataset(self, name, data=obj)
                 dset.close()
             else:
                 raise ValueError("Don't know how to store data of this type in a dataset: " + repr(obj.dtype))
 
-        else:
-            arr = numpy.array(obj)
-            if h5t.py_can_convert_dtype(arr.dtype):
-                dset = Dataset(self, name, data=arr, create=True)
-                dset.close()
-            else:
-                raise ValueError("Don't know how to store data of this type in a dataset: " + repr(arr.dtype))
 
     def __getitem__(self, name):
         """ Retrive the Group or Dataset object.  If the Dataset is scalar,
@@ -326,10 +326,8 @@ class Group(object):
         h5g.close(self.id)
 
     def __del__(self):
-        try:
+        if h5i.get_type(self.id) == h5i.GROUP:
             h5g.close(self.id)
-        except H5Error:
-            pass
 
     def __str__(self):
         return 'Group (%d members): ' % self.nmembers + ', '.join(['"%s"' % name for name in self])
@@ -341,13 +339,16 @@ class File(Group):
 
     """ Represents an HDF5 file on disk.
 
+        Created with standard Python syntax File(name, mode), where mode may be
+        one of r, r+, w, w+, a.
+
         File objects inherit from Group objects; Group-like methods all
         operate on the HDF5 root group ('/').  Like Python file objects, you
         must close the file ("obj.close()") when you're done with it.
     """
 
     _modes = ('r','r+','w','w+','a')
-                      
+
     # --- Public interface (File) ---------------------------------------------
 
     def __init__(self, name, mode, noclobber=False):
@@ -366,19 +367,22 @@ class File(Group):
         if not mode in self._modes:
             raise ValueError("Invalid mode; must be one of %s" % ', '.join(self._modes))
               
-        plist = h5p.create(h5p.CLASS_FILE_ACCESS)
+        plist = h5p.create(h5p.FILE_ACCESS)
         try:
             h5p.set_fclose_degree(plist, h5f.CLOSE_STRONG)
             if mode == 'r':
-                self.id = h5f.open(name, h5f.ACC_RDONLY, access_id=plist)
+                self.fid = h5f.open(name, h5f.ACC_RDONLY, access_id=plist)
             elif 'r' in mode or 'a' in mode:
-                self.id = h5f.open(name, h5f.ACC_RDWR, access_id=plist)
+                self.fid = h5f.open(name, h5f.ACC_RDWR, access_id=plist)
             elif noclobber:
-                self.id = h5f.create(name, h5f.ACC_EXCL, access_id=plist)
+                self.fid = h5f.create(name, h5f.ACC_EXCL, access_id=plist)
             else:
-                self.id = h5f.create(name, h5f.ACC_TRUNC, access_id=plist)
+                self.fid = h5f.create(name, h5f.ACC_TRUNC, access_id=plist)
         finally:
             h5p.close(plist)
+
+        self.id = self.fid  # So the Group constructor can find it.
+        Group.__init__(self, self, '/')
 
         # For __str__ and __repr__
         self.filename = name
@@ -389,12 +393,16 @@ class File(Group):
         """ Close this HDF5 object.  Note that any further access to objects
             defined in this file will raise an exception.
         """
-        h5f.close(self.id)
+        if h5i.get_type(self.fid) != h5i.FILE:
+            raise IOError("File is already closed.")
+
+        Group.close(self)
+        h5f.close(self.fid)
 
     def flush(self):
         """ Instruct the HDF5 library to flush disk buffers for this file.
         """
-        h5f.flush(self.id)
+        h5f.flush(self.fid)
 
     def __del__(self):
         """ This docstring is here to remind you that THE HDF5 FILE IS NOT 
@@ -453,7 +461,8 @@ class AttributeManager(object):
         return h5a.get_num_attrs(self.id)
 
     def __iter__(self):
-        return h5a.py_listattrs(self.id)
+        for name in h5a.py_listattrs(self.id):
+            yield name
 
     def iteritems(self):
         for name in self:
@@ -467,19 +476,19 @@ class NamedType(object):
     """ Represents a named datatype, stored in a file.  
 
         HDF5 datatypes are typically represented by their Numpy dtype
-        equivalents; this class exists mainly to provide access to attributes
+        equivalents; this class exists only to provide access to attributes
         stored on HDF5 named types.  Properties:
 
         dtype:   Equivalent Numpy dtype for this HDF5 type
         attrs:   AttributeManager instance for attribute access
 
-        Mutating the returned dtype object has no effect on the underlying
-        HDF5 datatype.
+        Like dtype objects, these are immutable; the worst you can do it
+        unlink them from their parent group.
     """ 
         
     def _get_dtype(self):
         if self._dtype is None:
-            self._dtype = h5t.py_h5t_to_dtype(self.id)
+            self._dtype = h5t.py_translate_h5t(self.id)
         return self._dtype
 
     dtype = property(_get_dtype)
@@ -499,7 +508,7 @@ class NamedType(object):
 
         if dtype is not None:
             dtype = numpy.dtype(dtype)
-            tid = h5t.py_dtype_to_h5t(dtype)
+            tid = h5t.py_translate_dtype(dtype)
             try:
                 h5t.commit(group.id, name, tid)
             finally:
@@ -509,18 +518,16 @@ class NamedType(object):
         self.attrs = AttributeManager(self)
 
     def close(self):
-        """ Force the library to close this object.  Not ordinarily required.
+        """ Force the library to close this object.  It will still exist
+            in the file.
         """
         if self.id is not None:
             h5t.close(self.id)
+            self.id = None
 
     def __del__(self):
         if self.id is not None:
-            try:
-                h5t.close(self.id)
-            except H5Error:
-                pass
-    
+            h5t.close(self.id)
 
 
 # === Browsing and interactivity ==============================================
@@ -614,7 +621,7 @@ class _H5Cmd(cmd.Cmd):
         for name in self.group:
             outstring = name
             type_code = h5g.get_objinfo(self.group.id, name).type
-            if type_code == h5g.OBJ_GROUP:
+            if type_code == h5g.GROUP:
                 outstring += "/"
 
             if extended:
@@ -664,7 +671,7 @@ class _H5Cmd(cmd.Cmd):
 
     def complete_cd(self, text, line, begidx, endidx):
         return [x for x in self.group if x.find(text)==0 \
-                    and h5g.get_objinfo(self.group.id,x).type == h5g.OBJ_GROUP]
+                    and h5g.get_objinfo(self.group.id,x).type == h5g.GROUP]
 
     def help_cd(self):
         print ""
@@ -706,16 +713,16 @@ def _open_arbitrary(group_obj, name):
     """
     info = h5g.get_objinfo(group_obj.id, name)
 
-    if info.type == h5g.OBJ_GROUP:      # group
+    if info.type == h5g.GROUP:      # group
         return Group(group_obj, name)
 
-    elif info.type == h5g.OBJ_DATASET:  # dataset
+    elif info.type == h5g.DATASET:  # dataset
         return Dataset(group_obj, name)
 
-    elif info.type == h5g.OBJ_DATATYPE: # named type
+    elif info.type == h5g.DATATYPE: # named type
         return NamedDatatype(group_obj, name)
 
-    raise NotImplementedError('Object type "%s" unsupported by the high-level interface.' % h5g.OBJ_MAPPER[info.type])
+    raise NotImplementedError('Object type "%s" unsupported by the high-level interface.' % h5g.PY_TYPE[info.type])
 
 def slicer(shape, args):
     """ Processes arguments to __getitem__ methods.  
@@ -815,7 +822,6 @@ def slicer(shape, args):
             start.append(ss)
             stride.append(st)
             count.append(cc)
-            slices.append(arg)
 
     return (tuple(start), tuple(count), tuple(stride), names)
 

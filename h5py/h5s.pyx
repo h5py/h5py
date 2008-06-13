@@ -12,14 +12,11 @@
 
 """
     Low-level interface to the "H5S" family of data-space functions.
-
-    This module is incomplete; it currently only implements hyperslab and 
-    scalar operations.
 """
 
 # Pyrex compile-time imports
 from utils cimport  require_tuple, require_list, convert_dims, convert_tuple, \
-                    emalloc, efree
+                    emalloc, efree, pybool
 
 # Runtime imports
 import h5
@@ -118,7 +115,7 @@ def is_simple(hid_t space_id):
         Determine if an existing dataspace is "simple" (including scalar
         dataspaces). Currently all HDF5 dataspaces are simple.
     """
-    return bool(H5Sis_simple(space_id))
+    return pybool(H5Sis_simple(space_id))
 
 def offset_simple(hid_t space_id, object offset=None):
     """ (INT space_id, TUPLE offset=None)
@@ -317,7 +314,7 @@ def select_valid(hid_t space_id):
         
         Determine if the current selection falls within the dataspace extent.
     """
-    return bool(H5Sselect_valid(space_id))
+    return pybool(H5Sselect_valid(space_id))
 
 # === Point selection functions ===============================================
 

@@ -36,4 +36,5 @@ cdef extern from "utils_low.h":
 
 cdef int require_tuple(object tpl, int none_allowed, int size, char* name) except -1
 cdef int require_list(object lst, int none_allowed, int size, char* name) except -1
+cdef object pybool(long long val)
 

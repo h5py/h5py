@@ -54,7 +54,7 @@ class TestH5A(unittest.TestCase):
             arr_fail = ones((15,15), dtype=dt)
 
             sid = h5s.create(h5s.SCALAR)
-            tid = h5t.py_dtype_to_h5t(dt)
+            tid = h5t.py_translate_dtype(dt)
 
             aid = h5a.create(obj, name, tid, sid)
             self.assert_(self.is_attr(aid))
@@ -163,7 +163,7 @@ class TestH5A(unittest.TestCase):
         for name, (value, dt, shape) in ATTRIBUTES.iteritems():
             aid = h5a.open_name(self.obj, name)
             tid = h5a.get_type(aid)
-            supposed_dtype = h5t.py_h5t_to_dtype(tid)
+            supposed_dtype = h5t.py_translate_h5t(tid)
             self.assertEqual(supposed_dtype, dt)
             h5t.close(tid)
             h5a.close(aid)

@@ -20,7 +20,7 @@ from h5d cimport H5D_layout_t
 from h5z cimport H5Z_filter_t
 
 from utils cimport  require_tuple, convert_dims, convert_tuple, \
-                    emalloc, efree
+                    emalloc, efree, pybool
 
 # Runtime imports
 import h5
@@ -77,7 +77,7 @@ def equal(hid_t plist1, hid_t plist2):
 
         Compare two existing property lists or classes for equality.
     """
-    return bool(H5Pequal(plist1, plist2))
+    return pybool(H5Pequal(plist1, plist2))
 
 # === File creation ===========================================================
 
