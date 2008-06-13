@@ -12,15 +12,11 @@
 
 
 """
-    Private initialization module for the h5* family of modules.
-
-    Common module for the HDF5 low-level interface library.  This module
-    is imported at the top of every h5* sub-module.  Initializes the
-    library and defines common version info, classes and functions.
+    Common module for the HDF5 low-level interface library.  
 
     Library version and API information lives here:
     - HDF5_VERS, HDF5_VERS_TPL:  Library version
-    - API_VERS, API_VERS_TPL:  API version (1.6 or 1.8) used to compile
+    - API_VERS, API_VERS_TPL:  API version (1.6 or 1.8) used to compile h5py.
 """
 
 from h5e cimport _enable_exceptions

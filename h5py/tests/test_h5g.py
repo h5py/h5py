@@ -46,7 +46,7 @@ class TestH5G(unittest.TestCase):
             self.assert_(not self.is_grp(gid))
         
         self.assertRaises(H5Error, h5g.open, self.obj, 'Some other group')
-        self.assertRaises(ValueError, h5g.close, -1)
+        self.assertRaises(H5Error, h5g.close, -1)
 
     def test_create(self):
         fid, filename = getcopy(HDFNAME)
@@ -98,7 +98,7 @@ class TestH5G(unittest.TestCase):
         self.assertRaises(H5Error, h5g.move, obj, 'Ghost group', 'blah')
         self.assertRaises(H5Error, h5g.unlink, obj, 'Some other name')
         self.assertRaises(H5Error, h5g.link, obj, 'Ghost group', 'blah') 
-        self.assertRaises(ValueError, h5g.get_linkval, -1, "foobar")
+        self.assertRaises(H5Error, h5g.get_linkval, -1, "foobar")
 
         h5g.close(obj)
 
@@ -107,7 +107,7 @@ class TestH5G(unittest.TestCase):
     def test_get_num_objs(self):
 
         self.assertEqual(h5g.get_num_objs(self.obj), 3)
-        self.assertRaises(ValueError, h5g.get_num_objs, -1)
+        self.assertRaises(H5Error, h5g.get_num_objs, -1)
 
     def test_objname_objtype(self):
 
@@ -115,8 +115,8 @@ class TestH5G(unittest.TestCase):
             self.assertEqual(h5g.get_objname_by_idx(self.obj, idx), name)
             self.assertEqual(h5g.get_objtype_by_idx(self.obj, idx), h5g.GROUP)
 
-        self.assertRaises(ValueError, h5g.get_objname_by_idx, self.obj, -1)
-        self.assertRaises(ValueError, h5g.get_objtype_by_idx, self.obj, -1)
+        self.assertRaises(H5Error, h5g.get_objname_by_idx, self.obj, -1)
+        self.assertRaises(H5Error, h5g.get_objtype_by_idx, self.obj, -1)
 
     def test_get_objinfo(self):
 
@@ -128,7 +128,7 @@ class TestH5G(unittest.TestCase):
         retval.mtime
         retval.linklen
 
-        self.assertRaises(ValueError, h5g.get_objinfo, self.obj, 'Something else')
+        self.assertRaises(H5Error, h5g.get_objinfo, self.obj, 'Something else')
 
 
     def test_iterate(self):
@@ -170,15 +170,15 @@ class TestH5G(unittest.TestCase):
         h5g.set_comment(obj, TEST_GROUPS[0], "This is a comment.")
         self.assertEqual(h5g.get_comment(obj, TEST_GROUPS[0]), "This is a comment.")
 
-        self.assertRaises(ValueError, h5g.set_comment, -1, "foo", "bar")
-        self.assertRaises(ValueError, h5g.get_comment, -1, "foo")
+        self.assertRaises(H5Error, h5g.set_comment, -1, "foo", "bar")
+        self.assertRaises(H5Error, h5g.get_comment, -1, "foo")
 
         deletecopy(fid, filename)
 
     def test_py_listnames(self):
 
         self.assertEqual(h5g.py_listnames(self.obj), TEST_GROUPS)
-        self.assertRaises(ValueError, h5g.py_listnames, -1)
+        self.assertRaises(H5Error, h5g.py_listnames, -1)
 
     def test_py_iternames(self):
 
@@ -186,7 +186,7 @@ class TestH5G(unittest.TestCase):
         self.assertEqual(list(iterator), TEST_GROUPS)
         #self.assertRaises(StopIteration, iterator.next()) bug in unittest
         
-        self.assertRaises(ValueError, h5g.py_iternames, -1)
+        self.assertRaises(H5Error, h5g.py_iternames, -1)
 
     def test_py_exists(self):
 

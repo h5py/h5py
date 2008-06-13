@@ -45,8 +45,8 @@ def get_type(hid_t obj_id):
     """ (INT obj_id) => INT type_code
 
         Determine the type of an arbitrary HDF5 object.  The return value is
-        always one of the type constants defined in this module. 
-        If the ID is invalid, BADID is returned.
+        always one of the type constants defined in this module; if the ID is 
+        invalid, BADID is returned.
     """
     return <int>H5Iget_type(obj_id)
 

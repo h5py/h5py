@@ -81,11 +81,12 @@ def copy(hid_t space_id):
 def create_simple(object dims_tpl, object max_dims_tpl=None):
     """ (TUPLE dims_tpl, TUPLE max_dims_tpl) => INT new_space_id
 
-        Create a simple (slab) dataspace from a tuple of dimensions.  Every
-        element of dims_tpl must be a positive integer.  You can also specify
-        the maximum dataspace size, via the tuple max_dims.  The special
-        integer SPACE_UNLIMITED, as an element of max_dims, indicates an
-        unlimited dimension.
+        Create a simple (slab) dataspace from a tuple of dimensions.  
+        Every element of dims_tpl must be a positive integer.  
+
+        You can optionally specify the maximum dataspace size. The 
+        special value UNLIMITED, as an element of max_dims, indicates 
+        an unlimited dimension.
     """
     cdef int rank
     cdef hsize_t* dims
@@ -114,8 +115,8 @@ def create_simple(object dims_tpl, object max_dims_tpl=None):
 def is_simple(hid_t space_id):
     """ (INT space_id) => BOOL is_simple
 
-        Determine if an existing dataspace is "simple".  This function is
-        rather silly, as all HDF5 dataspaces are (currently) simple.
+        Determine if an existing dataspace is "simple" (including scalar
+        dataspaces). Currently all HDF5 dataspaces are simple.
     """
     return bool(H5Sis_simple(space_id))
 
@@ -210,11 +211,12 @@ def extent_copy(hid_t dest_id, hid_t source_id):
 def set_extent_simple(hid_t space_id, object dims_tpl, object max_dims_tpl=None):
     """ (INT space_id, TUPLE dims_tpl, TUPLE max_dims_tpl=None)
 
-        Reset the dataspace extent, via a tuple of new dimensions.  Every
-        element of dims_tpl must be a positive integer.  You can also specify
-        the maximum dataspace size, via the tuple max_dims.  The special
-        integer UNLIMITED, as an element of max_dims, indicates an
-        unlimited dimension.
+        Reset the dataspace extent via a tuple of dimensions.  
+        Every element of dims_tpl must be a positive integer.  
+
+        You can optionally specify the maximum dataspace size. The 
+        special value UNLIMITED, as an element of max_dims, indicates 
+        an unlimited dimension.
     """
     cdef int rank
     cdef hsize_t* dims
@@ -243,7 +245,7 @@ def set_extent_simple(hid_t space_id, object dims_tpl, object max_dims_tpl=None)
 def set_extent_none(hid_t space_id):
     """ (INT space_id)
 
-        Remove the dataspace extent; class changes to h5s.CLASS_NO_CLASS.
+        Remove the dataspace extent; class changes to NO_CLASS.
     """
     H5Sset_extent_none(space_id)
 
@@ -263,16 +265,16 @@ def get_select_type(hid_t space_id):
 def get_select_npoints(hid_t space_id):
     """ (INT space_id) => LONG npoints
 
-        Determine the total number of points currently selected.  Works for
-        all selection techniques.
+        Determine the total number of points currently selected.  
+        Works for all selection techniques.
     """
     return H5Sget_select_npoints(space_id)
 
 def get_select_bounds(hid_t space_id):
     """ (INT space_id) => (TUPLE start, TUPLE end)
 
-        Determine the bounding box which exactly contains the current
-        selection.
+        Determine the bounding box which exactly contains 
+        the current selection.
     """
     cdef int rank
     cdef hsize_t *start
@@ -365,11 +367,11 @@ def select_elements(hid_t space_id, object coord_list, int op=H5S_SELECT_SET):
     """ (INT space_id, LIST coord_list, INT op=SELECT_SET)
 
         Select elements using a list of points.  List entries should be
-        <rank>-length tuples containing point coordinates.
-        A zero-length list is apparently not allowed.
+        tuples containing point coordinates. A zero-length list is 
+        apparently not allowed by the HDF5 library.
     """
-    cdef size_t nelements       # Number of point coordinates
-    cdef hsize_t *coords        # Contiguous 2D array nelements x rank x sizeof(hsize_t)
+    cdef size_t nelements   # Number of point coordinates
+    cdef hsize_t *coords    # Contiguous 2D array nelements x rank x sizeof(hsize_t)
 
     cdef int rank
     cdef int i_point
@@ -381,7 +383,8 @@ def select_elements(hid_t space_id, object coord_list, int op=H5S_SELECT_SET):
 
     rank = H5Sget_simple_extent_ndims(space_id)
 
-    # HDF5 expects the coordinates array to be a static, contiguous
+    # The docs say this should be an hsize_t**, but it seems that
+    # HDF5 expects the coordinates to be a static, contiguous
     # array.  We'll simulate that by malloc'ing a contiguous chunk
     # and using pointer arithmetic to initialize it.
     coords = <hsize_t*>emalloc(sizeof(hsize_t)*rank*nelements)

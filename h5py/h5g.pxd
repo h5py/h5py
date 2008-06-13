@@ -56,7 +56,7 @@ cdef extern from "hdf5.h":
   int    H5Gget_objname_by_idx(hid_t loc_id, hsize_t idx, char *name, size_t size ) except *
   int    H5Gget_objtype_by_idx(hid_t loc_id, hsize_t idx ) except *
 
-  ctypedef herr_t (*H5G_iterate_t)(hid_t group, char *name, op_data)
+  ctypedef herr_t (*H5G_iterate_t)(hid_t group, char *name, op_data) except -1
   herr_t H5Giterate(hid_t loc_id, char *name, int *idx, H5G_iterate_t operator, operator_data  ) except *
   herr_t H5Gget_objinfo(hid_t loc_id, char* name, int follow_link, H5G_stat_t *statbuf) except *
 

@@ -14,6 +14,8 @@
 """
     Filter API and constants
 """
+# Pyrex compile-time imports
+include "std_inline.pyx"
 
 # Runtime imports
 import h5
@@ -30,7 +32,6 @@ FILTER_FLETCHER32 = H5Z_FILTER_FLETCHER32
 FILTER_SZIP     = H5Z_FILTER_SZIP
 FILTER_RESERVED = H5Z_FILTER_RESERVED
 FILTER_MAX      = H5Z_FILTER_MAX
-FILTER_NMAX     = H5Z_MAX_NFILTERS
 
 FLAG_DEFMASK    = H5Z_FLAG_DEFMASK
 FLAG_MANDATORY  = H5Z_FLAG_MANDATORY
@@ -39,7 +40,11 @@ FLAG_INVMASK    = H5Z_FLAG_INVMASK
 FLAG_REVERSE    = H5Z_FLAG_REVERSE
 FLAG_SKIP_EDC   = H5Z_FLAG_SKIP_EDC
 
-#skip SZIP options
+SZIP_ALLOW_K13_OPTION_MASK  = H5_SZIP_ALLOW_K13_OPTION_MASK   #1
+SZIP_CHIP_OPTION_MASK       = H5_SZIP_CHIP_OPTION_MASK        #2
+SZIP_EC_OPTION_MASK         = H5_SZIP_EC_OPTION_MASK          #4
+SZIP_NN_OPTION_MASK         = H5_SZIP_NN_OPTION_MASK          #32
+SZIP_MAX_PIXELS_PER_BLOCK   = H5_SZIP_MAX_PIXELS_PER_BLOCK    #32
 
 FILTER_CONFIG_ENCODE_ENABLED = H5Z_FILTER_CONFIG_ENCODE_ENABLED
 FILTER_CONFIG_DECODE_ENABLED = H5Z_FILTER_CONFIG_DECODE_ENABLED
@@ -49,15 +54,36 @@ DISABLE_EDC = H5Z_DISABLE_EDC
 ENABLE_EDC  = H5Z_ENABLE_EDC
 NO_EDC      = H5Z_NO_EDC
 
-
 # === Filter API  =============================================================
 
-def filter_avail(int filter_id):
+def filter_avail(int filter_code):
+    """ (INT filter_code) => BOOL available
 
-    return bool(H5Zfilter_avail(<H5Z_filter_t>filter_id))
+        Determine if the given filter is available to the library.
 
-def get_filter_info(int filter_id):
+        The filter code should be one of:
+            FILTER_DEFLATE
+            FILTER_SHUFFLE
+            FILTER_FLETCHER32
+            FILTER_SZIP
+    """
+    return pybool(H5Zfilter_avail(<H5Z_filter_t>filter_code))
 
+def get_filter_info(int filter_code):
+    """ (INT filter_code) => INT filter_flags
+
+        Retrieve a bitfield with information about the given filter.
+
+        The filter code should be one of:
+            FILTER_DEFLATE
+            FILTER_SHUFFLE
+            FILTER_FLETCHER32
+            FILTER_SZIP
+
+        Valid bitmasks for use with the returned bitfield are:
+          FILTER_CONFIG_ENCODE_ENABLED
+          FILTER_CONFIG_DECODE_ENABLED
+    """
     cdef unsigned int flags
     H5Zget_filter_info(<H5Z_filter_t>filter_id, &flags)
     return flags

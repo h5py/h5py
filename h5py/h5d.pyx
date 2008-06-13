@@ -156,9 +156,8 @@ def extend(hid_t dset_id, object shape):
     """ (INT dset_id, TUPLE shape)
 
         Extend the given dataset so it's at least as big as "shape".  Note that
-        the ability to extend a dataset depends on how its maximum dimensions
-        were set up when it was created. See the docstring for the API function
-        h5s.create_simple for more information.
+        a dataset may only be extended up to the maximum dimensions of its
+        dataspace, which are fixed when the dataset is created.
     """
     cdef hsize_t* dims
     cdef int rank

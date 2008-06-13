@@ -14,6 +14,11 @@
     Provides a Python exception hierarchy modeled on HDF5 major error numbers,
     and exports a C interface which automatically raises exceptions when
     an error is detected in the HDF5 library.
+
+    Each exception class is associated with an HDF5 major error number.  Since
+    the HDF5 library determines which error number is issued, it also
+    determines which exception class is raised.  The choice is occasionally
+    surprising, and not well documented in the library itself.
 """
 
 from python cimport PyErr_SetObject
@@ -28,78 +33,179 @@ class H5Error(EnvironmentError):
     """
     pass
 
-class ConversionError(StandardError):
-    """ Indicates error on Python side of dtype transformation.
-        Subclass of StandardError, as this is not a library problem.
-    """
-    pass
-
 # --- New classes -------------------------------------------------------------
 
-# H5E_ARGS => ValueError
-
-class FileError(H5Error, IOError):
-    """ H5E_FILE
-
-        Subclass of both H5Error and IOError.
-    """
+           
+#    H5E_ARGS,                   # invalid arguments to routine
+class ArgsError(H5Error):
+    """ H5E_ARGS """
     pass
-
-class H5IOError(H5Error, IOError):
-    """ H5E_IO
-
-        Subclass of both H5Error and IOError.
-    """
-    pass
-
+        
+#    H5E_RESOURCE,               # resource unavailable   
 class ResourceError(H5Error):
-    """ H5E_RESOURCE
-    """
+    """ H5E_RESOURCE """
+    pass
+                    
+#   H5E_INTERNAL,               #  Internal error (too specific to document)
+class InternalError(H5Error):
+    """ H5E_INTERNAL """
     pass
 
+#    H5E_FILE,                   # file Accessability       
+class FileError(H5Error):
+    """ H5E_FILE """
+    pass
+                  
+#    H5E_IO,                     # Low-level I/O                      
+class LowLevelIOError(H5Error):
+    """ H5E_IO """
+    pass
+        
+#    H5E_FUNC,                   # function Entry/Exit     
+class FuncError(H5Error):
+    """ H5E_FUNC """
+    pass
+                   
+#    H5E_ATOM,                   # object Atom         
+class AtomError(H5Error):
+    """ H5E_ATOM """
+    pass
+                       
+#   H5E_CACHE,                  # object Cache        
+class CacheError(H5Error):
+    """ H5E_CACHE """
+    pass
+                       
+#   H5E_BTREE,                  # B-Tree Node           
+class BtreeError(H5Error):
+    """ H5E_BTREE """
+    pass
+                     
+#    H5E_SYM,                    # symbol Table         
+class SymbolError(H5Error):
+    """ H5E_SYM """
+    pass
+                      
+#   H5E_HEAP,                   # Heap  
+class HeapError(H5Error):
+    """ H5E_HEAP """
+    pass
+                                     
+#    H5E_OHDR,                   # object Header     
+class ObjectHeaderError(H5Error):
+    """ H5E_OHDR """
+    pass
+                         
+#    H5E_DATATYPE,               # Datatype    
 class DatatypeError(H5Error):
-    """ H5E_DATATYPE
-    """
+    """ H5E_DATATYPE """
     pass
-
+                               
+#    H5E_DATASPACE,              # Dataspace                      
 class DataspaceError(H5Error):
-    """ H5E_DATASPACE
-    """
+    """ H5E_DATASPACE """
     pass
-
+            
+#    H5E_DATASET,                # Dataset                        
 class DatasetError(H5Error):
-    """ H5E_DATASET
-    """
+    """ H5E_DATASET """
     pass
-
+            
+#    H5E_STORAGE,                # data storage                
+class StorageError(H5Error):
+    """ H5E_STORAGE """
+    pass
+               
+#    H5E_PLIST,                  # Property lists                  
 class PropertyError(H5Error):
-    """ H5E_PLIST
-    """
+    """ H5E_PLIST """
     pass
-
-
-class H5AttributeError(H5Error):
-    """ H5E_ATTR
-    """
+           
+#    H5E_ATTR,                   # Attribute     
+class AttrError(H5Error):
+    """ H5E_ATTR """
     pass
-
+                             
+#    H5E_PLINE,                  # Data filters       
 class FilterError(H5Error):
-    """ H5E_PLINE
-    """
+    """ H5E_PLINE """
+    pass
+                        
+#    H5E_EFL,                    # External file list                         
+class FileListError(H5Error):
+    """ H5E_EFL """
     pass
 
-class H5ReferenceError(H5Error):
-    """ H5E_REFERENCE
-    """
+#    H5E_REFERENCE,              # References          
+class RefError(H5Error):
+    """ H5E_REFERENCE """
+    pass
+                       
+#    H5E_VFL,                    # Virtual File Layer        
+class VirtualFileError(H5Error):
+    """ H5E_VFL """
+    pass
+         
+#    H5E_TBBT,                   # Threaded, Balanced, Binary Trees         
+class TBBTError(H5Error):
+    """ H5E_TBBT """
+    pass
+  
+#    H5E_TST,                    # Ternary Search Trees                       
+class TSTError(H5Error):
+    """ H5E_TST """
     pass
 
+#    H5E_RS,                     # Reference Counted Strings        
+class RSError(H5Error):
+    """ H5E_RS """
+    pass
+          
+#    H5E_ERROR,                  # Error API                    
+class ErrorError(H5Error):
+    """ H5E_ERROR """
+    pass
+              
+#    H5E_SLIST                   # Skip Lists        
+class SkipListError(H5Error):
+    """ H5E_SLIST """
+    pass  
+
+_exceptions = {
+    H5E_ARGS: ArgsError,
+    H5E_RESOURCE: ResourceError,
+    H5E_INTERNAL: InternalError,
+    H5E_FILE: FileError,
+    H5E_IO: LowLevelIOError,
+    H5E_FUNC: FuncError,
+    H5E_ATOM: AtomError,
+    H5E_CACHE: CacheError,
+    H5E_BTREE: BtreeError,
+    H5E_SYM: SymbolError,
+    H5E_HEAP: HeapError,
+    H5E_OHDR: ObjectHeaderError,
+    H5E_DATATYPE: DatatypeError,
+    H5E_DATASPACE: DataspaceError,
+    H5E_DATASET: DatasetError,
+    H5E_STORAGE: StorageError,
+    H5E_PLIST: PropertyError,
+    H5E_ATTR: AttrError,
+    H5E_PLINE: FilterError,
+    H5E_EFL: FileListError,
+    H5E_REFERENCE: RefError,
+    H5E_VFL: VirtualFileError,
+    H5E_TBBT: TBBTError,
+    H5E_TST: TSTError,
+    H5E_RS: RSError,
+    H5E_ERROR: ErrorError,
+    H5E_SLIST: SkipListError}
 
 # === Error stack inspection ==================================================
 
-cdef class H5ErrorStackElement:
+cdef class ErrorStackElement:
     """
         Represents an entry in the HDF5 error stack.
-        Loosely modeled on the H5E_error_t struct.
+        Modeled on the H5E_error_t struct.  All parameters are read-only.
 
         Atributes
         maj_num:    INT major error number
@@ -125,9 +231,9 @@ cdef herr_t walk_cb(int n, H5E_error_t *err_desc, void* stack_in):
     # Callback function to extract elements from the HDF5 error stack
 
     stack = <object>stack_in
-    cdef H5ErrorStackElement element
+    cdef ErrorStackElement element
 
-    element = H5ErrorStackElement()
+    element = ErrorStackElement()
     element.maj_num = err_desc.maj_num
     element.min_num = err_desc.min_num
     element.func_name = err_desc.func_name
@@ -138,7 +244,7 @@ cdef herr_t walk_cb(int n, H5E_error_t *err_desc, void* stack_in):
 
     return 0
 
-def get_error_stack():
+def error_stack():
     """ () => LIST error_stack
 
         Retrieve the HDF5 error stack as a list of ErrorStackElement objects,
@@ -148,7 +254,7 @@ def get_error_stack():
     H5Ewalk(H5E_WALK_DOWNWARD, walk_cb, <void*>stack)
     return stack
 
-def get_error_string():
+def error_string():
     """ () => STRING error_stack
 
         Return a string representation of the current error condition.
@@ -160,17 +266,16 @@ def get_error_string():
             '    n: "<Description>" at <function name>'
     """
     cdef int stacklen
-    cdef H5ErrorStackElement el
+    cdef ErrorStackElement el
 
-    stack = get_error_stack()
+    stack = error_stack()
     stacklen = len(stack)
 
     if stacklen == 0:
         msg = "Unspecified HDF5 error"
     else:
         el = stack[0]
-        msg = "%s (%s: %s)" % (el.desc.capitalize(), el.func_name, 
-                                H5Eget_major(<H5E_major_t>el.maj_num))
+        msg = "%s (%s)" % (el.desc.capitalize(), el.func_name)
         if stacklen > 1:
             msg = msg + "\nHDF5 Error Stack:"
             for i from 0<=i<stacklen:
@@ -250,45 +355,9 @@ cdef herr_t err_callback(void* client_data):
     mj = err_struct.maj_num
     mn = err_struct.min_num
 
-    # File-related errors traditionally raise IOError.
-    # These exceptions are both subclasses of H5Error
-    # and IOError.
-    if mj == H5E_FILE:
-        exc = FileError
-    elif mj == H5E_IO:
-        exc = H5IOError
-
-    # All errors which result from illegal function arguments
-    elif mj == H5E_ARGS:
-        exc = ValueError
-
-    # Major errors which map to new h5e exception classes
-    elif mj == H5E_RESOURCE:
-        exc = ResourceError
-    elif mj == H5E_DATATYPE:
-        exc = DatatypeError
-    elif mj == H5E_DATASPACE:
-        exc = DataspaceError
-    elif mj == H5E_DATASET:
-        exc = DatasetError
-    elif mj == H5E_PLIST:
-        exc = PropertyError
-    elif mj == H5E_ATTR:
-        exc = H5AttributeError
-    elif mj == H5E_PLINE:
-        exc = FilterError
-    elif mj == H5E_REFERENCE:
-        exc = H5ReferenceError
-
-    # Catchall: base H5Error.  
-    else:
-        exc = H5Error
-
-    msg = get_error_string()
-    if issubclass(exc, EnvironmentError):
-        PyErr_SetObject(exc, (1000*mj + mn, msg))
-    else:
-        PyErr_SetObject(exc, msg)
+    exc = _exceptions.get(mj, H5Error)
+    msg = error_string()
+    PyErr_SetObject(exc, (1000*mj + mn, msg))
 
     return 1
 

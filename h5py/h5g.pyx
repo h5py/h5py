@@ -20,6 +20,7 @@ from utils cimport emalloc, efree
 # Runtime imports
 import h5
 from h5 import DDict
+from h5e import H5Error
 
 # === Public constants and data structures ====================================
 
@@ -38,21 +39,22 @@ LINK_SOFT  = H5G_LINK_SOFT
 cdef class GroupStat:
     """ Represents the H5G_stat_t structure containing group member info.
 
-        Fields:
-        fileno -> 2-tuple uniquely* identifying the current file
-        objno  -> 2-tuple uniquely* identifying this object
-        nlink  -> Number of hard links to this object
-        mtime  -> Modification time of this object (flaky)
+        Fields (read-only):
+        fileno  ->  2-tuple uniquely* identifying the current file
+        objno   ->  2-tuple uniquely* identifying this object
+        nlink   ->  Number of hard links to this object
+        mtime   ->  Modification time of this object
+        linklen ->  Length of the symbolic link name, or 0 if not a link.
 
         *"Uniquely identifying" means unique among currently open files, 
         not universally unique.
     """
-    cdef public object fileno  # will be a 2-tuple
-    cdef public object objno   # will be a 2-tuple
-    cdef public unsigned int nlink
-    cdef public int type
-    cdef public time_t mtime
-    cdef public size_t linklen
+    cdef readonly object fileno  # will be a 2-tuple
+    cdef readonly object objno   # will be a 2-tuple
+    cdef readonly unsigned int nlink
+    cdef readonly int type
+    cdef readonly time_t mtime
+    cdef readonly size_t linklen
 
 
 # === Basic group management ==================================================
@@ -72,8 +74,9 @@ def close(hid_t group_id):
 def create(hid_t loc_id, char* name, int size_hint=-1):
     """ (INT loc_id, STRING name, INT size_hint=-1)
 
-        Create a new group named "name", under a parent group identified by
-        "loc_id".  See the HDF5 documentation for the meaning of size_hint.
+        Create a new group, under a given parent group.  If given, size_hint
+        is an estimate of the space to reserve (in bytes) for group member
+        names.
     """
     return H5Gcreate(loc_id, name, size_hint)
 
@@ -83,14 +86,13 @@ def link(hid_t loc_id, char* current_name, char* new_name, int link_type=H5G_LIN
     """ ( INT loc_id, STRING current_name, STRING new_name, 
           INT link_type=LINK_HARD, INT remote_id=-1) 
 
-        Create a new hard or soft link.  The link target (object the link will
-        point to) is identified by its parent group "loc_id", and the string
-        current_name.  The name of the new link is new_name.  If you want to
-        create the link in another group, pass its identifier through
-        remote_id.
+        Create a new hard or soft link.  loc_id and current_name identify
+        the link target (object the link will point to).  The new link is
+        identified by new_name and (optionally) another group id "remote_id".
 
-        Hard links are created by default (link_type=LINK_HARD).  To create a
-        symbolic link, pass in link_type=LINK_SOFT.
+        Link types are:
+            LINK_HARD:  Hard link to existing object (default)
+            LINK_SOFT:  Symbolic link; link target need not exist.
     """
     if remote_id < 0:
         remote_id = loc_id
@@ -105,11 +107,11 @@ def unlink(hid_t loc_id, char* name):
     H5Gunlink(loc_id, name)
 
 def move(hid_t loc_id, char* current_name, char* new_name, hid_t remote_id=-1):
-    """ (INT loc_id, STRING current_name, STRING new_name, INT new_group_id=-1)
+    """ (INT loc_id, STRING current_name, STRING new_name, INT remote_id=-1)
 
-        Relink an object, identified by its parent group loc_id and string
-        current_name.  The new name of the link is new_name.  You can create
-        the link in a different group by passing its identifier to remote_id.
+        Relink an object.  loc_id and current_name identify the object.
+        new_name and (optionally) another group id "remote_id" determine
+        where it should be moved.
     """
     if remote_id < 0:
         remote_id = loc_id
@@ -132,8 +134,8 @@ def get_objname_by_idx(hid_t loc_id, hsize_t idx):
 
         Get the name of a group member given its zero-based index.
 
-        Due to a bug in the HDF5 library, the only possible exception
-        raised by this function is ValueError.
+        Due to a limitation of the HDF5 library, the generic exception
+        H5Error (errno 1) is raised if the idx parameter is out-of-range.
     """
     cdef int size
     cdef char* buf
@@ -142,7 +144,7 @@ def get_objname_by_idx(hid_t loc_id, hsize_t idx):
     # This function does not properly raise an exception
     size = H5Gget_objname_by_idx(loc_id, idx, NULL, 0)
     if size < 0:
-        raise ValueError("Invalid argument")
+        raise H5Error((1,"Invalid argument"))
 
     buf = <char*>emalloc(sizeof(char)*(size+1))
     try:
@@ -162,14 +164,14 @@ def get_objtype_by_idx(hid_t loc_id, hsize_t idx):
             - DATASET
             - DATATYPE
 
-        Due to a bug in the HDF5 library, the only possible exception 
-        raised by this function is ValueError.
+        Due to a limitation of the HDF5 library, the generic exception
+        H5Error (errno 1) is raised if the idx parameter is out-of-range.
     """
     # This function does not properly raise an exception
     cdef herr_t retval
     retval = H5Gget_objtype_by_idx(loc_id, idx)
     if retval < 0:
-        raise ValueError("Invalid argument.")
+        raise H5Error((0,"Invalid argument."))
     return retval
 
 def get_objinfo(hid_t loc_id, char* name, int follow_link=1):
@@ -197,19 +199,18 @@ def get_objinfo(hid_t loc_id, char* name, int follow_link=1):
 
     return statobj
 
-cdef herr_t iter_cb_helper(hid_t gid, char *name, object int_tpl):
+cdef herr_t iter_cb_helper(hid_t gid, char *name, object int_tpl) except -1:
+    # Callback function for H5Giterate
 
     func = int_tpl[0]
     data = int_tpl[1]
-    exc_list = int_tpl[2]
 
+    # An unhandled exception (anything except StopIteration) will 
+    # cause Pyrex to immediately return -1, which stops H5Giterate.
     try:
         func(gid, name, data)
     except StopIteration:
         return 1
-    except Exception, e:
-        exc_list.append(e)
-        return -1
 
     return 0
 
@@ -232,18 +233,14 @@ def iterate(hid_t loc_id, char* name, object func, object data=None, int startid
             exception is propagated.
     """
     cdef int i
-    cdef herr_t retval
+
+    if startidx < 0:
+        raise ValueError("Starting index must be non-negative.")
 
     i = startidx
+    int_tpl = (func, data)
 
-    int_tpl = (func, data, [])
-
-    retval = H5Giterate(loc_id, name, &i, <H5G_iterate_t>iter_cb_helper, int_tpl)
-
-    if retval < 0:
-        if len(int_tpl[2]) != 0:
-            raise int_tpl[2][0]
-        raise GroupError("Error occured during iteration")
+    H5Giterate(loc_id, name, &i, <H5G_iterate_t>iter_cb_helper, int_tpl)
 
 def get_linkval(hid_t loc_id, char* name):
     """ (INT loc_id, STRING name) => STRING link_value
@@ -287,7 +284,7 @@ def get_comment(hid_t loc_id, char* name):
     cmnt = NULL
 
     cmnt_len = H5Gget_comment(loc_id, name, 0, NULL)
-    assert cmnt_len > 0
+    assert cmnt_len >= 0
 
     cmnt = <char*>emalloc(sizeof(char)*(cmnt_len+1))
     try:
@@ -359,11 +356,11 @@ def py_exists(hid_t group_id, char* name, int follow_link=1):
 
         Determine if a named member exists in the given group.  If follow_link
         is True (default), symbolic links will be dereferenced. Note this
-        function will not raise an exception.
+        function will not raise an exception if group_id is invalid.
     """
     try:
         H5Gget_objinfo(group_id, name, follow_link, NULL)
-    except:
+    except H5Error:
         return False
     return True
 

@@ -67,19 +67,25 @@ def create(char* name, int flags=H5F_ACC_TRUNC, hid_t create_id=H5P_DEFAULT,
             INT access_id=H5P_DEFAULT)
         => INT file_id
 
-        Create a new HDF5 file.  Keyword "flags" may be either ACC_TRUNC, in
-        which case any existing file will be destroyed, or ACC_EXCL, which
-        will force the creation to fail if the file already exists.
-        Keywords create_id and access_id may be dataset creation and access
-        property lists, respectively.
+        Create a new HDF5 file.  Keyword "flags" may be either:
+            ACC_TRUNC:  Truncate an existing file, discarding its data
+            ACC_EXCL:   Fail if a conflicting file exists
+
+        To keep the behavior in line with that of Python's built-in functions,
+        the default is ACC_TRUNC.  Be careful! Keywords create_id and 
+        access_id  may be file creation and access property lists, 
+        respectively.
     """
     return H5Fcreate(name, flags, create_id, access_id)
 
 def flush(hid_t file_id, int scope=H5F_SCOPE_LOCAL):
     """ (INT file_id, INT scope=SCOPE_LOCAL)
 
-        Tell the HDF5 library to flush file buffers to disk.  See the HDF5
-        docs for the meaning of the scope keyword.
+        Tell the HDF5 library to flush file buffers to disk.  file_id may
+        be the file identifier, or the identifier of any object residing in
+        the file.  Keyword "scope" may be:
+            SCOPE_LOCAL:    Flush only the given file
+            SCOPE_GLOBAL:   Flush the entire virtual file
     """
     H5Fflush(file_id, <H5F_scope_t>scope)
 
@@ -116,9 +122,10 @@ def unmount(hid_t loc_id, char* name):
 # === File inspection =========================================================
 
 def get_filesize(hid_t file_id):
-    """ (INT file_id) => LONG size_in_bytes
+    """ (INT file_id) => LONG size
 
-        Determine the total size of the HDF5 file, including the user block.
+        Determine the total size (in bytes) of the HDF5 file, 
+        including any user block.
     """
     cdef hsize_t size
     H5Fget_filesize(file_id, &size)
@@ -156,6 +163,7 @@ def get_name(hid_t obj_id):
     name = NULL
 
     size = H5Fget_name(obj_id, NULL, 0)
+    assert size >= 0
     name = <char*>emalloc(sizeof(char)*(size+1))
     try:    
         H5Fget_name(obj_id, name, size+1)
@@ -201,7 +209,6 @@ def get_obj_ids(hid_t file_id, int types):
 
     finally:
         efree(obj_list)
-
 
 
 # === Python extensions =======================================================

@@ -26,7 +26,6 @@ from utils cimport  require_tuple, convert_dims, convert_tuple, \
 import h5
 import h5t
 from h5 import DDict
-from h5e import ConversionError
 
 # === Public constants and data structures ====================================
 
@@ -36,6 +35,7 @@ FILE_CREATE    = H5P_FILE_CREATE
 FILE_ACCESS    = H5P_FILE_ACCESS
 DATASET_CREATE = H5P_DATASET_CREATE
 DATASET_XFER   = H5P_DATASET_XFER
+MOUNT          = H5P_MOUNT
 
 DEFAULT = H5P_DEFAULT
 
@@ -44,8 +44,12 @@ DEFAULT = H5P_DEFAULT
 def create(hid_t cls_id):
     """ (INT cls_id) => INT property_list_id
     
-        Create a new property list as an instance of a class, which should be
-        one of CLASS_*.
+        Create a new property list as an instance of a class; classes are:
+            FILE_CREATE
+            FILE_ACCESS
+            DATASET_CREATE
+            DATASET_XFER
+            MOUNT
     """
     return H5Pcreate(cls_id)
 
@@ -64,14 +68,14 @@ def close(hid_t plist):
 def get_class(hid_t plist):
     """ (INT plist) => INT class_code
 
-        Determine the class of a property list object (one of CLASS_*).
+        Determine the class of a property list object.
     """
     return H5Pget_class(plist)
 
 def equal(hid_t plist1, hid_t plist2):
     """ (INT plist1, INT plist2) => BOOL lists_are_equal
 
-        Compare two existing property lists for equality.
+        Compare two existing property lists or classes for equality.
     """
     return bool(H5Pequal(plist1, plist2))
 
@@ -97,13 +101,13 @@ def get_version(hid_t plist):
 
     return (super_, freelist, stab, shhdr)
 
-def set_userblock(hid_t plist, long size):
-    """ (INT plist, LONG size)    [File creation]
+def set_userblock(hid_t plist, hsize_t size):
+    """ (INT plist, INT/LONG size)    [File creation]
 
-        Set the file user block size, in bytes.  Must be a power of 2, and at
-        least 512.
+        Set the file user block size, in bytes.  
+        Must be a power of 2, and at least 512.
     """
-    H5Pset_userblock(plist, <hsize_t>size)
+    H5Pset_userblock(plist, size)
 
 def get_userblock(hid_t plist):
     """ (INT plist) => LONG size    [File creation]
@@ -117,16 +121,16 @@ def get_userblock(hid_t plist):
 def set_sizes(hid_t plist, size_t addr, size_t size):
     """ (INT plist, INT addr, INT size)    [File creation]
 
-        Set the addressing offsets and lengths for objects in an HDF5 file, in
-        bytes.
+        Set the addressing offsets and lengths for objects 
+        in an HDF5 file, in bytes.
     """
     H5Pset_sizes(plist, addr, size)
 
 def get_sizes(hid_t plist):
     """ (INT plist) => TUPLE sizes    [File creation]
 
-        Determine addressing offsets and lengths for objects in an HDF5 file, in
-        bytes.  Return value is a 2-tuple with values:
+        Determine addressing offsets and lengths for objects in an 
+        HDF5 file, in bytes.  Return value is a 2-tuple with values:
 
         0:  UINT Address offsets
         1:  UINT Lengths
@@ -176,9 +180,9 @@ def set_layout(hid_t plist, int layout_code):
     """ (INT plist, INT layout_code)    [Dataset creation]
 
         Set dataset storage strategy; legal values are:
-        * h5d.LAYOUT_COMPACT
-        * h5d.LAYOUT_CONTIGUOUS
-        * h5d.LAYOUT_CHUNKED
+        * h5d.COMPACT
+        * h5d.CONTIGUOUS
+        * h5d.CHUNKED
     """
     H5Pset_layout(plist, <H5D_layout_t>layout_code)
     
@@ -186,17 +190,17 @@ def get_layout(hid_t plist):
     """ (INT plist) => INT layout_code   [Dataset creation]
 
         Determine the storage strategy of a dataset; legal values are:
-        * h5d.LAYOUT_COMPACT
-        * h5d.LAYOUT_CONTIGUOUS
-        * h5d.LAYOUT_CHUNKED
+        * h5d.COMPACT
+        * h5d.CONTIGUOUS
+        * h5d.CHUNKED
     """
     return <int>H5Pget_layout(plist)
 
 def set_chunk(hid_t plist, object chunksize):
     """ (INT plist_id, TUPLE chunksize)    [Dataset creation]
 
-        Set the dataset chunk size.  It's up to you to provide values which
-        are compatible with your dataset.
+        Set the dataset chunk size.  It's up to you to provide 
+        values which are compatible with your dataset.
     """
     cdef herr_t retval
     cdef int rank
@@ -222,6 +226,7 @@ def get_chunk(hid_t plist):
     cdef hsize_t *dims
 
     rank = H5Pget_chunk(plist, 0, NULL)
+    assert rank >= 0
     dims = <hsize_t*>emalloc(sizeof(hsize_t)*rank)
 
     try:
@@ -236,7 +241,8 @@ def get_chunk(hid_t plist):
 def set_deflate(hid_t plist, unsigned int level=5):
     """ (INT plist_id, UINT level=5)    [Dataset creation]
 
-        Enable DEFLATE (gzip) compression, at the given level (0-9, default 5).
+        Enable DEFLATE (gzip) compression, at the given level.
+        Valid levels are 0-9, default is 5.
     """
     H5Pset_deflate(plist, level)
     

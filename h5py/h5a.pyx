@@ -153,6 +153,7 @@ def get_name(hid_t attr_id):
 
     try:
         blen = H5Aget_name(attr_id, 0, NULL)
+        assert blen >= 0
         buf = <char*>emalloc(sizeof(char)*blen+1)
         blen = H5Aget_name(attr_id, blen+1, buf)
         strout = buf

@@ -25,11 +25,12 @@ cdef extern from "hdf5.h":
   int H5P_DEFAULT
 
   # Property list classes
-  int H5P_NO_CLASS
-  int H5P_FILE_CREATE 
-  int H5P_FILE_ACCESS 
-  int H5P_DATASET_CREATE 
-  int H5P_DATASET_XFER 
+  hid_t H5P_NO_CLASS
+  hid_t H5P_FILE_CREATE 
+  hid_t H5P_FILE_ACCESS 
+  hid_t H5P_DATASET_CREATE 
+  hid_t H5P_DATASET_XFER 
+  hid_t H5P_MOUNT
 
   # --- Property list operations ----------------------------------------------
   # General operations
