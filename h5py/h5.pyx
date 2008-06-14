@@ -20,6 +20,7 @@
 """
 
 from h5e cimport _enable_exceptions
+from h5i cimport H5Iinc_ref, H5Idec_ref, H5Iget_ref, H5Iget_type, H5I_BADID
 
 # === Library init ============================================================
 
@@ -65,4 +66,69 @@ class DDict(dict):
     """
     def __missing__(self, key):
         return '*INVALID* (%s)' % str(key)
+
+# === Identifier wrappers =====================================================
+
+cdef class ObjectID:
+        
+    def __cinit__(self, hid_t id):
+        """ Object init; simply records the given ID. """
+        self.id = id
+
+    def __dealloc__(self):
+        """ Automatically decrefs the ID, if it's valid. """
+        if H5Iget_type(self.id) != H5I_BADID:
+            H5Idec_ref(self.id)
+
+    def __copy__(self):
+        """ Create a new instance and incref the ID. """
+        copy = type(self)(self.id)
+        H5Iinc_ref(self.id)
+        return copy
+
+    def __str__(self):
+        if H5Iget_type(self.id) != H5I_BADID:
+            ref = str(H5Iget_ref(self.id))
+        else:
+            ref = "INVALID"
+
+        return "%d [%s] %s" % (self.id, ref, self.__class__.__name__)
+
+cdef class FileID(ObjectID):
+
+    def close(self):
+        # todo: recursive close of all open ids
+        if H5Iget_type(self.id) != H5I_BADID:
+            H5Fclose(self.id)
+
+cdef class TypeID(ObjectID):
+
+    def __dealloc__(self):
+        """ For type objects, we have to intercept the damn "can't close
+            an immutable type" BS.  Conveniently, there's no way to check
+            if a type is immutable.
+        """
+        if H5Iget_type(self.id) != H5I_BADID:
+            try:
+                H5Idec_ref(self.id)
+            except EnvironmentError:
+                pass
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
