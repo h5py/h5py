@@ -48,37 +48,8 @@ cdef class ObjectID:
     """ Base wrapper class for HDF5 object identifiers """
     cdef readonly hid_t id
 
-cdef class FileID(ObjectID):
-    """ File identifier """
-
-cdef class GroupID(ObjectID):
-    """ Group identifier """
-    pass
-
-cdef class SpaceID(ObjectID):
-    """ Dataspace identifier """
-    pass
-
-cdef class DatasetID(ObjectID):
-    """ Dataset identifier """
-    pass
-
-cdef class TypeID(ObjectID):
-    """ Datatype identifier """
-    pass
-
-cdef class AttrID(ObjectID):
-    """ Attribute identifier """
-    pass
-
-cdef class PropID(ObjectID):
-    """ Property list (class or instance) identifier """
-    pass
-
-
-
-
-
+cdef class LockableID(ObjectID):
+    cdef readonly int _locked
 
 
 

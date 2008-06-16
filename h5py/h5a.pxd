@@ -15,6 +15,10 @@
 # directory.
 
 include "std_defs.pxi"
+from h5 cimport ObjectID
+
+cdef class AttrID(ObjectID):
+    pass
 
 cdef extern from "hdf5.h":
 
@@ -35,7 +39,6 @@ cdef extern from "hdf5.h":
 
   ctypedef herr_t (*H5A_operator_t)(hid_t loc_id, char *attr_name, operator_data)
   herr_t    H5Aiterate(hid_t loc_id, unsigned * idx, H5A_operator_t op, op_data) except *
-
 
 
 

@@ -94,6 +94,12 @@ cdef herr_t PY_H5Tclose(hid_t type_id) except *:
 
     return retval
     
+cdef object lockid(hid_t id_in):
+    cdef TypeID tid
+    tid = TypeID(id_in)
+    tid._locked = 1
+    return tid
+
 # === Public constants and data structures ====================================
 
 # Enumeration H5T_class_t
@@ -137,45 +143,45 @@ else:
 # --- Built-in HDF5 datatypes -------------------------------------------------
 
 # IEEE floating-point
-IEEE_F32LE = H5T_IEEE_F32LE
-IEEE_F32BE = H5T_IEEE_F32BE
-IEEE_F64LE = H5T_IEEE_F64LE 
-IEEE_F64BE = H5T_IEEE_F64BE
+IEEE_F32LE = lockid(H5T_IEEE_F32LE)
+IEEE_F32BE = lockid(H5T_IEEE_F32BE)
+IEEE_F64LE = lockid(H5T_IEEE_F64LE)
+IEEE_F64BE = lockid(H5T_IEEE_F64BE)
 
 # Signed 2's complement integer types
-STD_I8LE  = H5T_STD_I8LE
-STD_I16LE = H5T_STD_I16LE
-STD_I32LE = H5T_STD_I32LE
-STD_I64LE = H5T_STD_I64LE
+STD_I8LE  = lockid(H5T_STD_I8LE)
+STD_I16LE = lockid(H5T_STD_I16LE)
+STD_I32LE = lockid(H5T_STD_I32LE)
+STD_I64LE = lockid(H5T_STD_I64LE)
 
-STD_I8BE  = H5T_STD_I8BE
-STD_I16BE = H5T_STD_I16BE
-STD_I32BE = H5T_STD_I32BE
-STD_I64BE = H5T_STD_I64BE
+STD_I8BE  = lockid(H5T_STD_I8BE)
+STD_I16BE = lockid(H5T_STD_I16BE)
+STD_I32BE = lockid(H5T_STD_I32BE)
+STD_I64BE = lockid(H5T_STD_I64BE)
 
 # Unsigned integers
-STD_U8LE  = H5T_STD_U8LE
-STD_U16LE = H5T_STD_U16LE
-STD_U32LE = H5T_STD_U32LE
-STD_U64LE = H5T_STD_U64LE
+STD_U8LE  = lockid(H5T_STD_U8LE)
+STD_U16LE = lockid(H5T_STD_U16LE)
+STD_U32LE = lockid(H5T_STD_U32LE)
+STD_U64LE = lockid(H5T_STD_U64LE)
 
-STD_U8BE  = H5T_STD_U8BE
-STD_U16BE = H5T_STD_U16BE
-STD_U32BE = H5T_STD_U32BE
-STD_U64BE = H5T_STD_U64BE
+STD_U8BE  = lockid(H5T_STD_U8BE)
+STD_U16BE = lockid(H5T_STD_U16BE)
+STD_U32BE = lockid(H5T_STD_U32BE)
+STD_U64BE = lockid(H5T_STD_U64BE)
 
 # Native integer types by bytesize
-NATIVE_INT8 = H5T_NATIVE_INT8
-NATIVE_UINT8 = H5T_NATIVE_UINT8
-NATIVE_INT16 = H5T_NATIVE_INT16
-NATIVE_UINT16 = H5T_NATIVE_UINT16
-NATIVE_INT32 = H5T_NATIVE_INT32
-NATIVE_UINT32 = H5T_NATIVE_UINT32
-NATIVE_INT64 = H5T_NATIVE_INT64
-NATIVE_UINT64 = H5T_NATIVE_UINT64
+NATIVE_INT8 = lockid(H5T_NATIVE_INT8)
+NATIVE_UINT8 = lockid(H5T_NATIVE_UINT8)
+NATIVE_INT16 = lockid(H5T_NATIVE_INT16)
+NATIVE_UINT16 = lockid(H5T_NATIVE_UINT16)
+NATIVE_INT32 = lockid(H5T_NATIVE_INT32)
+NATIVE_UINT32 = lockid(H5T_NATIVE_UINT32)
+NATIVE_INT64 = lockid(H5T_NATIVE_INT64)
+NATIVE_UINT64 = lockid(H5T_NATIVE_UINT64)
 
 # Null terminated (C) string type
-C_S1 = H5T_C_S1
+C_S1 = lockid(H5T_C_S1)
 
 # === General datatype operations =============================================
 
@@ -185,257 +191,17 @@ def create(int classtype, size_t size):
         Create a new HDF5 type object.  Legal values are 
         COMPOUND, OPAQUE, and ENUM.
     """
-    return H5Tcreate(<H5T_class_t>classtype, size)
+    return TypeID(H5Tcreate(<H5T_class_t>classtype, size))
 
-def open(hid_t group_id, char* name):
-    """ (INT group_id, STRING name) => INT type_id
+def open(ObjectID group not None, char* name):
+    """ (ObjectID group, STRING name) => TypeID
 
         Open a named datatype from a file.
     """
-    return H5Topen(group_id, name)
+    return TypeID(H5Topen(group.id, name))
 
-def commit(hid_t loc_id, char* name, hid_t type_id):
-    """ (INT group_id, STRING name, INT type_id)
-
-        Commit a transient datatype to a named datatype in a file.
-    """
-    return H5Tcommit(loc_id, name, type_id)
-
-def committed(hid_t type_id):
-    """ (INT type_id) => BOOL is_comitted
-
-        Determine if a given type object is named (T) or transient (F).
-    """
-    return H5Tcommitted(type_id)
-
-def copy(hid_t type_id):
-    """ (INT type_id) => INT new_type_id
-
-        Copy an existing HDF type object.
-    """
-    return H5Tcopy(type_id)
-
-def equal(hid_t typeid_1, hid_t typeid_2):
-    """ (INT typeid_1, INT typeid_2) => BOOL types_are_equal
-
-        Test whether two identifiers point to the same datatype object.  
-        Note this does NOT perform any kind of logical comparison.
-    """
-    return pybool(H5Tequal(typeid_1, typeid_2))
-
-def lock(hid_t type_id):
-    """ (INT type_id)
-
-        Lock a datatype, which makes it immutable and indestructible.
-        Once locked, it can't be unlocked.
-    """
-    H5Tlock(type_id)
-
-def get_class(hid_t type_id):
-    """ (INT type_id) => INT class
-
-        Determine the datatype's class.
-    """
-    return <int>H5Tget_class(type_id)
-
-def get_size(hid_t type_id):
-    """ (INT type_id) => INT size
-
-        Determine the total size of a datatype, in bytes.
-    """
-    return H5Tget_size(type_id)
-
-def get_super(hid_t type_id):
-    """ (INT type_id) => INT super_type_id
-
-        Determine the parent type of an array or enumeration datatype.
-    """
-    return H5Tget_super(type_id)
-
-def get_native_type(hid_t type_id, int direction):
-    """ (INT type_id, INT direction) => INT new_type_id
-
-        Determine the native C equivalent for the given datatype.
-        Legal values for "direction" are:
-          DIR_DEFAULT
-          DIR_ASCEND
-          DIR_DESCEND
-        These determine which direction the list of native datatypes is
-        searched; see the HDF5 docs for a definitive list.
-
-        The returned datatype is always a copy one of NATIVE_*, and must
-        eventually be closed.
-    """
-    return H5Tget_native_type(type_id, <H5T_direction_t>direction)
-
-def detect_class(hid_t type_id, int classtype):
-    """ (INT type_id, INT class) => BOOL class_is_present
-
-        Determine if a member of the given class exists in a compound
-        datatype.  The search is recursive.
-    """
-    return pybool(H5Tdetect_class(type_id, <H5T_class_t>classtype))
-
-def close(hid_t type_id, int force=1):
-    """ (INT type_id, BOOL force=True)
-
-        Close this datatype.  If "force" is True (default), ignore errors 
-        commonly associated with attempting to close immutable types.
-    """
-    try:
-        H5Tclose(type_id)
-    except ArgsError, e:
-        if not (force and e.errno == 1005):  # ArgsError, bad value
-            raise
-
-# === Atomic datatype operations ==============================================
-
-
-def set_size(hid_t type_id, size_t size):
-    """ (INT type_id, INT size)
-
-        Set the total size of the datatype, in bytes.  Useful mostly for
-        string types.
-    """
-    H5Tset_size(type_id, size)
-
-def get_order(hid_t type_id):
-    """ (INT type_id) => INT order
-
-        Obtain the byte order of the datatype; one of:
-         ORDER_LE
-         ORDER_BE
-         ORDER_NATIVE
-    """
-    return <int>H5Tget_order(type_id)
-
-def set_order(hid_t type_id, int order):
-    """ (INT type_id, INT order)
-
-        Set the byte order of the datatype. "order" must be one of
-         ORDER_LE
-         ORDER_BE
-         ORDER_NATIVE
-    """
-    H5Tset_order(type_id, <H5T_order_t>order)
-
-def get_sign(hid_t type_id):
-    """ (INT type_id) => INT sign
-
-        Obtain the "signedness" of the datatype; one of:
-          SGN_NONE:  Unsigned
-          SGN_2:     Signed 2's complement
-    """
-    return <int>H5Tget_sign(type_id)
-
-def set_sign(hid_t type_id, int sign):
-    """ (INT type_id, INT sign)
-
-        Set the "signedness" of the datatype; one of:
-          SGN_NONE:  Unsigned
-          SGN_2:     Signed 2's complement
-    """
-    H5Tset_sign(type_id, <H5T_sign_t>sign)
-
-def is_variable_str(hid_t type_id):
-    """ (INT type_id) => BOOL is_variable
-
-        Determine if the given string datatype is a variable-length string.
-        Please note that reading/writing data in this format is impossible;
-        only fixed-length strings are currently supported.
-    """
-    return pybool(H5Tis_variable_str(type_id))
-
-# === Compound datatype operations ============================================
-
-
-def get_nmembers(hid_t type_id):
-    """ (INT type_id) => INT number_of_members
-
-        Determine the number of members in a compound or enumerated type.
-    """
-    return H5Tget_nmembers(type_id)
-
-def get_member_class(hid_t type_id, int member):
-    """ (INT type_id, INT member) => INT class
-
-        Determine the datatype class of the member of a compound type,
-        identified by its index (0 <= member < nmembers).
-    """
-    if member < 0:
-        raise ValueError("Member index must be non-negative.")
-    return H5Tget_member_class(type_id, member)
-
-    
-def get_member_name(hid_t type_id, int member):
-    """ (INT type_id, INT member) => STRING name
-    
-        Determine the name of a member of a compound or enumerated type,
-        identified by its index (0 <= member < nmembers).
-    """
-    cdef char* name
-    name = NULL
-
-    if member < 0:
-        raise ValueError("Member index must be non-negative.")
-
-    try:
-        name = H5Tget_member_name(type_id, member)
-        assert name != NULL
-        pyname = name
-    finally:
-        free(name)
-
-    return pyname
-
-def get_member_index(hid_t type_id, char* name):
-    """ (INT type_id, STRING name) => INT index
-
-        Determine the index of a member of a compound or enumerated datatype
-        identified by a string name.
-    """
-    return H5Tget_member_index(type_id, name)
-
-def get_member_offset(hid_t type_id, int member):
-    """ (INT type_id, INT member_index) => INT offset
-
-        Determine the offset, in bytes, of the beginning of the specified
-        member of a compound datatype.
-    """
-    return H5Tget_member_offset(type_id, member)
-
-
-def get_member_type(hid_t type_id, int member):
-    """ (INT type_id, INT member_index) => INT type_id
-
-        Create a copy of a member of a compound datatype, identified by its
-        index.  You are responsible for closing it when finished.
-    """
-    if member < 0:
-        raise ValueError("Member index must be non-negative.")
-    return H5Tget_member_type(type_id, member)
-
-def insert(hid_t type_id, char* name, size_t offset, hid_t field_id):
-    """ (INT compound_type_id, STRING name, INT offset, INT member_type)
-
-        Add a named member datatype to a compound datatype.  The parameter
-        offset indicates the offset from the start of the compound datatype,
-        in bytes.
-    """
-    H5Tinsert(type_id, name, offset, field_id)
-
-def pack(hid_t type_id):
-    """ (INT type_id)
-
-        Recursively removes padding (introduced on account of e.g. compiler
-        alignment rules) from a compound datatype.
-    """
-    H5Tpack(type_id)
-
-# === Array datatype operations ===============================================
-
-def array_create(hid_t base, object dims_tpl):
-    """ (INT base_type_id, TUPLE dimensions)
+def array_create(TypeID base not None, object dims_tpl):
+    """ (TypeID base, TUPLE dimensions)
 
         Create a new array datatype, of parent type <base_type_id> and
         dimensions given via a tuple of non-negative integers.  "Unlimited" 
@@ -451,65 +217,307 @@ def array_create(hid_t base, object dims_tpl):
 
     try:
         convert_tuple(dims_tpl, dims, rank)
-        return H5Tarray_create(base, rank, dims, NULL)
+        return H5Tarray_create(base.id, rank, dims, NULL)
     finally:
         efree(dims)
 
-def get_array_ndims(hid_t type_id):
-    """ (INT type_id) => INT rank
+def enum_create(TypeID base not None):
+    """ (TypeID base) => INT new_type_id
 
-        Get the rank of the given array datatype.
+        Create a new enumerated type based on an (integer) parent type.
     """
-    return H5Tget_array_ndims(type_id)
+    return H5Tenum_create(base.id)
 
-def get_array_dims(hid_t type_id):
-    """ (INT type_id) => TUPLE dimensions
+# === XXXX ====
 
-        Get the dimensions of the given array datatype as a tuple of integers.
+cdef class TypeID(LockableID):
+
     """
-    cdef hsize_t rank   
-    cdef hsize_t* dims
-    dims = NULL
+        Represents an HDF5 datatype identifier.
+    """
 
-    rank = H5Tget_array_dims(type_id, NULL, NULL)
-    dims = <hsize_t*>emalloc(sizeof(hsize_t)*rank)
-    try:
-        H5Tget_array_dims(type_id, dims, NULL)
-        return convert_dims(dims, rank)
-    finally:
-        efree(dims)
+    def commit(self, ObjectID group not None, char* name):
+        """ (ObjectID group, STRING name)
+
+            Commit this (transient) datatype to a named datatype in a file.
+        """
+        return H5Tcommit(group.id, name, self.id)
+
+    def committed(self):
+        """ () => BOOL is_comitted
+
+            Determine if a given type object is named (T) or transient (F).
+        """
+        return pybool(H5Tcommitted(self.id))
+
+    def copy(self):
+        """ () => TypeID
+
+            Create a copy of this type object.
+        """
+        return TypeID(H5Tcopy(self.id))
+
+    def equal(self, TypeID typeid):
+        """ (TypeID typeid) => BOOL
+
+            Test whether two identifiers point to the same datatype object.  
+            Note this does NOT perform any kind of logical comparison.
+        """
+        return pybool(H5Tequal(self.id, typeid.id))
+
+    def lock(self):
+        """ (self)
+
+            Lock a datatype, which makes it immutable and indestructible.
+            Once locked, it can't be unlocked.
+        """
+        H5Tlock(self.id)
+        self._locked = 1
+
+    def get_class():
+        """ () => INT classcode
+
+            Determine the datatype's class code.
+        """
+        return <int>H5Tget_class(self.id)
+
+    def get_size(self):
+        """ () => INT size
+
+            Determine the total size of a datatype, in bytes.
+        """
+        return H5Tget_size(self.id)
+
+    def get_super(self):
+        """ () => TypeID
+
+            Determine the parent type of an array or enumeration datatype.
+        """
+        return TypeID(H5Tget_super(self.id))
+
+    def get_native_type(self, int direction=H5T_DIR_DEFAULT):
+        """ (INT direction) => INT new_type_id
+
+            Determine the native C equivalent for the given datatype.
+            Legal values for "direction" are:
+              DIR_DEFAULT*
+              DIR_ASCEND
+              DIR_DESCEND
+            These determine which direction the list of native datatypes is
+            searched; see the HDF5 docs for a definitive list.
+
+            The returned datatype is always an unlocked copy one of NATIVE_*.
+        """
+        return TypeID(H5Tget_native_type(self.id, <H5T_direction_t>direction))
+
+    def detect_class(self, int classtype):
+        """ (INT class) => BOOL class_is_present
+
+            Determine if a member of the given class exists in a compound
+            datatype.  The search is recursive.
+        """
+        return pybool(H5Tdetect_class(self.id, <H5T_class_t>classtype))
+
+    def close(self):
+        """ Close this datatype.  If it's locked, nothing happens.
+        """
+        if not self._locked:
+            H5Tclose(type_id)
+
+# === Atomic datatype operations ==============================================
+
+
+    def set_size(self, size_t size):
+        """ (INT size)
+
+            Set the total size of the datatype, in bytes.  Useful mostly for
+            string types.
+        """
+        H5Tset_size(self.id, size)
+
+    def get_order(self)
+        """ () => INT order
+
+            Obtain the byte order of the datatype; one of:
+             ORDER_LE
+             ORDER_BE
+             ORDER_NATIVE
+        """
+        return <int>H5Tget_order(self.id)
+
+    def set_order(self, int order):
+        """ (INT type_id, INT order)
+
+            Set the byte order of the datatype. "order" must be one of
+             ORDER_LE
+             ORDER_BE
+             ORDER_NATIVE
+        """
+        H5Tset_order(self.id, <H5T_order_t>order)
+
+    def get_sign(self):
+        """ (INT type_id) => INT sign
+
+            Obtain the "signedness" of the datatype; one of:
+              SGN_NONE:  Unsigned
+              SGN_2:     Signed 2's complement
+        """
+        return <int>H5Tget_sign(self.id)
+
+    def set_sign(self, int sign):
+        """ (INT sign)
+
+            Set the "signedness" of the datatype; one of:
+              SGN_NONE:  Unsigned
+              SGN_2:     Signed 2's complement
+        """
+        H5Tset_sign(self.id <H5T_sign_t>sign)
+
+    def is_variable_str(self):
+        """ () => BOOL is_variable
+
+            Determine if the given string datatype is a variable-length string.
+            Please note that reading/writing data in this format is impossible;
+            only fixed-length strings are currently supported.
+        """
+        return pybool(H5Tis_variable_str(self.id))
+
+# === Compound datatype operations ============================================
+
+
+    def get_nmembers(self):
+        """ () => INT number_of_members
+
+            Determine the number of members in a compound or enumerated type.
+        """
+        return H5Tget_nmembers(self.id)
+
+    def get_member_class(self, int member):
+        """ (INT member) => INT class
+
+            Determine the datatype class of the member of a compound type,
+            identified by its index (0 <= member < nmembers).
+        """
+        if member < 0:
+            raise ValueError("Member index must be non-negative.")
+        return H5Tget_member_class(self.id, member)
+
+    
+    def get_member_name(self, int member):
+        """ (INT member) => STRING name
+        
+            Determine the name of a member of a compound or enumerated type,
+            identified by its index (0 <= member < nmembers).
+        """
+        cdef char* name
+        name = NULL
+
+        if member < 0:
+            raise ValueError("Member index must be non-negative.")
+
+        try:
+            name = H5Tget_member_name(self.id, member)
+            assert name != NULL
+            pyname = name
+        finally:
+            free(name)
+
+        return pyname
+
+    def get_member_index(self, char* name):
+        """ (STRING name) => INT index
+
+            Determine the index of a member of a compound or enumerated datatype
+            identified by a string name.
+        """
+        return H5Tget_member_index(self.id, name)
+
+    def get_member_offset(self, int member):
+        """ (INT member_index) => INT offset
+
+            Determine the offset, in bytes, of the beginning of the specified
+            member of a compound datatype.
+        """
+        return H5Tget_member_offset(self.id, member)
+
+    def get_member_type(self, int member):
+        """ (INT member_index) => INT type_id
+
+            Create a copy of a member of a compound datatype, identified by its
+            index.
+        """
+        if member < 0:
+            raise ValueError("Member index must be non-negative.")
+        return TypeID(H5Tget_member_type(self.id, member))
+
+    def insert(self, char* name, size_t offset, TypeID field not None):
+        """ (STRING name, INT offset, TypeID field)
+
+            Add a named member datatype to a compound datatype.  The parameter
+            offset indicates the offset from the start of the compound datatype,
+            in bytes.
+        """
+        H5Tinsert(self.id, name, offset, field.id)
+
+    def pack(self):
+        """ ()
+
+            Recursively removes padding (introduced on account of e.g. compiler
+            alignment rules) from a compound datatype.
+        """
+        H5Tpack(self.id)
+
+# === Array datatype operations ===============================================
+
+    def get_array_ndims(self):
+        """ () => INT rank
+
+            Get the rank of the given array datatype.
+        """
+        return H5Tget_array_ndims(self.id)
+
+    def get_array_dims(self):
+        """ (INT type_id) => TUPLE dimensions
+
+            Get the dimensions of the given array datatype as a tuple of integers.
+        """
+        cdef hsize_t rank   
+        cdef hsize_t* dims
+        dims = NULL
+
+        rank = H5Tget_array_dims(self.id, NULL, NULL)
+        dims = <hsize_t*>emalloc(sizeof(hsize_t)*rank)
+        try:
+            H5Tget_array_dims(self.id, dims, NULL)
+            return convert_dims(dims, rank)
+        finally:
+            efree(dims)
 
 # === Enumeration datatypes ===================================================
 
-def enum_create(hid_t base_id):
-    """ (INT base_type_id) => INT new_type_id
 
-        Create a new enumerated type based on parent type <base_type_id>
-    """
-    return H5Tenum_create(base_id)
+    cdef int enum_convert(hid_t type_id, long long *buf, int reverse) except -1:
+        # Convert the long long value in "buf" to the native representation
+        # of type_id.  Conversion performed in-place.
+        # Reverse: false => llong->type; true => type->llong
 
-cdef int enum_convert(hid_t type_id, long long *buf, int reverse) except -1:
-    # Convert the long long value in "buf" to the native representation
-    # of type_id.  Conversion performed in-place.
-    # Reverse: false => llong->type; true => type->llong
+        cdef hid_t basetype
+        cdef H5T_class_t class_code
 
-    cdef hid_t basetype
-    cdef H5T_class_t class_code
+        class_code = H5Tget_class(type_id)
+        if class_code != H5T_ENUM:
+            raise ValueError("Type %d is not of class ENUM" % type_id)
 
-    class_code = H5Tget_class(type_id)
-    if class_code != H5T_ENUM:
-        raise ValueError("Type %d is not of class ENUM" % type_id)
+        basetype = H5Tget_super(type_id)
+        assert basetype > 0
 
-    basetype = H5Tget_super(type_id)
-    assert basetype > 0
-
-    try:
-        if not reverse:
-            H5Tconvert(H5T_NATIVE_LLONG, basetype, 1, buf, NULL, H5P_DEFAULT)
-        else:
-            H5Tconvert(basetype, H5T_NATIVE_LLONG, 1, buf, NULL, H5P_DEFAULT)
-    finally:
-        PY_H5Tclose(basetype)
+        try:
+            if not reverse:
+                H5Tconvert(H5T_NATIVE_LLONG, basetype, 1, buf, NULL, H5P_DEFAULT)
+            else:
+                H5Tconvert(basetype, H5T_NATIVE_LLONG, 1, buf, NULL, H5P_DEFAULT)
+        finally:
+            PY_H5Tclose(basetype)
 
 def enum_insert(hid_t type_id, char* name, long long value):
     """ (INT type_id, STRING name, INT/LONG value)

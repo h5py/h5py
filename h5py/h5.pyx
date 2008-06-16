@@ -94,28 +94,26 @@ cdef class ObjectID:
 
         return "%d [%s] %s" % (self.id, ref, self.__class__.__name__)
 
-cdef class FileID(ObjectID):
-
-    def close(self):
-        # todo: recursive close of all open ids
-        if H5Iget_type(self.id) != H5I_BADID:
-            H5Fclose(self.id)
-
-cdef class TypeID(ObjectID):
+cdef class LockableID(ObjectID):
 
     def __dealloc__(self):
-        """ For type objects, we have to intercept the damn "can't close
-            an immutable type" BS.  Conveniently, there's no way to check
-            if a type is immutable.
-        """
+        if not self._locked and H5Iget_type(self.id) != H5I_BADID:
+            H5Idec_ref(self.id)
+
+    def __copy__(self):
+        return type(self)(self.id)
+
+    def __str__(self):
         if H5Iget_type(self.id) != H5I_BADID:
-            try:
-                H5Idec_ref(self.id)
-            except EnvironmentError:
-                pass
+            ref = str(H5Iget_ref(self.id))
+        else:
+            ref = "INVALID"
+        if self._locked:
+            lstr = "locked"
+        else:
+            lstr = "unlocked"
 
-
-
+        return "%d [%s] (%s) %s" % (self.id, ref, lstr, self.__class__.__name__)
 
 
 

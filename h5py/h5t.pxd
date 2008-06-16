@@ -15,6 +15,10 @@
 # directory.
 
 include "std_defs.pxi"
+from h5 cimport LockableID
+
+cdef class TypeID(LockableID):
+    pass
 
 cdef extern from "hdf5.h":
 

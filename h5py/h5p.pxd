@@ -15,6 +15,31 @@
 # directory.
 
 include "std_defs.pxi"
+from h5 cimport ObjectID
+
+cdef class PropID(ObjectID):
+    pass
+
+cdef class PropClassID(PropID):
+    pass
+
+cdef class PropInstanceID(PropID):
+    pass
+
+cdef class PropDCID(PropInstanceID):
+    pass
+
+cdef class PropDXID(PropInstanceID):
+    pass
+
+cdef class PropFCID(PropInstanceID):
+    pass
+
+cdef class PropFAID(PropInstanceID):
+    pass
+
+cdef class PropMID(PropInstanceID):
+    pass
 
 from h5d cimport H5D_layout_t, H5D_fill_value_t, H5D_fill_time_t, H5D_alloc_time_t
 from h5z cimport H5Z_filter_t, H5Z_EDC_t

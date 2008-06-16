@@ -15,6 +15,7 @@
 """
 
 # Pyrex compile-time imports
+from h5 cimport ObjectID
 from h5g cimport H5G_obj_t
 
 # Runtime imports
@@ -55,8 +56,8 @@ cdef class Reference:
 
 # === Reference API ===========================================================
 
-def create(hid_t loc_id, char* name, int ref_type, hid_t space_id=-1):
-    """ (INT loc_id, STRING name, INT ref_type, INT space_id=0)
+def create(ObjectID loc_id not None, char* name, int ref_type, SpaceID space=None):
+    """ (ObjectID loc_id, STRING name, INT ref_type, SpaceID space=None)
         => ReferenceObject ref
 
         Create a new reference. The value of ref_type detemines the kind
@@ -70,26 +71,31 @@ def create(hid_t loc_id, char* name, int ref_type, hid_t space_id=-1):
                     name identify the dataset; the selection on space_id
                     identifies the region.
     """
+    cdef hid_t space_id
     cdef Reference ref
     ref = Reference()
+    if space is None:
+        space_id = -1
+    else:
+        space_id = space.id
 
-    H5Rcreate(&ref.ref, loc_id, name, <H5R_type_t>ref_type, space_id)
+    H5Rcreate(&ref.ref, loc_id.id, name, <H5R_type_t>ref_type, space_id)
     ref.typecode = ref_type
 
     return ref
 
-def dereference(hid_t file_id, Reference ref):
-    """ (INT file_id, ReferenceObject ref) => INT obj_id
+def dereference(ObjectID file_id not None, Reference ref):
+    """ (ObjectID file_id, ReferenceObject ref) => INT obj_id
 
         Open the object pointed to by "ref" and return its identifier.
         The containing file must be provided via file_id, which can be
         a file identifier or an identifier for any object which lives
         in the file.
     """
-    return H5Rdereference(file_id, <H5R_type_t>ref.typecode, &ref.ref)
+    return H5Rdereference(file_id.id, <H5R_type_t>ref.typecode, &ref.ref)
 
-def get_region(hid_t dataset_id, Reference ref):
-    """ (INT dataset_id, Reference ref) => INT dataspace_id
+def get_region(ObjectID dataset_id not None, Reference ref):
+    """ (ObjectID dataset_id, Reference ref) => INT dataspace_id
 
         Retrieve the dataspace selection pointed to by a reference.
         Returns a copy of the dataset's dataspace, with the appropriate
@@ -97,10 +103,10 @@ def get_region(hid_t dataset_id, Reference ref):
 
         The given reference object must be of type DATASET_REGION.
     """
-    return H5Rget_region(dataset_id, <H5R_type_t>ref.typecode, &ref.ref)
+    return H5Rget_region(dataset_id.id, <H5R_type_t>ref.typecode, &ref.ref)
 
-def get_obj_type(hid_t ds_id, Reference ref):
-    """ (INT ds_id, Reference ref) => INT obj_code
+def get_obj_type(Object ID ds_id not None, Reference ref):
+    """ (ObjectID ds_id, Reference ref) => INT obj_code
 
         Determine what type of object an object reference points to.  The
         reference may be either type OBJECT or DATASET_REGION.  For 
@@ -114,7 +120,7 @@ def get_obj_type(hid_t ds_id, Reference ref):
         h5g.DATASET     Dataset
         h5g.TYPE        Named datatype
     """
-    return <int>H5Rget_obj_type(ds_id, <H5R_type_t>ref.typecode, &ref.ref)
+    return <int>H5Rget_obj_type(ds_id.id, <H5R_type_t>ref.typecode, &ref.ref)
 
 
 

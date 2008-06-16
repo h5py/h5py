@@ -19,6 +19,10 @@
 # root directory.
 
 include "std_defs.pxi"
+from h5s cimport ObjectID
+
+cdef class SpaceID(ObjectID):
+    pass
 
 cdef extern from "hdf5.h":
 

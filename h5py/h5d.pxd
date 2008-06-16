@@ -15,6 +15,10 @@
 # directory.
 
 include "std_defs.pxi"
+from h5 cimport ObjectID
+
+cdef class DatasetID(ObjectID):
+    pass
 
 cdef extern from "hdf5.h":
 
