@@ -15,7 +15,6 @@
 """
 
 # Pyrex compile-time imports
-from h5 cimport ObjectID
 from h5g cimport H5G_obj_t
 
 # Runtime imports
@@ -105,7 +104,7 @@ def get_region(ObjectID dataset_id not None, Reference ref):
     """
     return H5Rget_region(dataset_id.id, <H5R_type_t>ref.typecode, &ref.ref)
 
-def get_obj_type(Object ID ds_id not None, Reference ref):
+def get_obj_type(ObjectID ds_id not None, Reference ref):
     """ (ObjectID ds_id, Reference ref) => INT obj_code
 
         Determine what type of object an object reference points to.  The

@@ -19,7 +19,7 @@
 # root directory.
 
 include "std_defs.pxi"
-from h5s cimport ObjectID
+from h5 cimport class ObjectID
 
 cdef class SpaceID(ObjectID):
     pass

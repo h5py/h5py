@@ -19,18 +19,7 @@
     - API_VERS, API_VERS_TPL:  API version (1.6 or 1.8) used to compile h5py.
 """
 
-from h5e cimport _enable_exceptions
-from h5i cimport H5Iinc_ref, H5Idec_ref, H5Iget_ref, H5Iget_type, H5I_BADID
 
-# === Library init ============================================================
-
-cdef int import_hdf5() except -1:
-    if H5open() < 0:
-        raise RuntimeError("Failed to initialize the HDF5 library.")
-    _enable_exceptions()
-    return 0
-
-import_hdf5()
 
 # === API =====================================================================
 
@@ -116,6 +105,13 @@ cdef class LockableID(ObjectID):
         return "%d [%s] (%s) %s" % (self.id, ref, lstr, self.__class__.__name__)
 
 
+# === Library init ============================================================
+
+cdef int import_hdf5() except -1:
+    if H5open() < 0:
+        raise RuntimeError("Failed to initialize the HDF5 library.")
+    _enable_exceptions()
+    return 0
 
 
 

@@ -38,8 +38,7 @@ def create(ObjectID loc_id not None, char* name, TypeID type_id not None,
         => INT attr_id
 
         Create a new attribute attached to a parent object, specifiying an 
-        HDF5 datatype and dataspace.  For a friendlier version of this function
-        try py_create().
+        HDF5 datatype and dataspace.
     """
     return AttrID(H5Acreate(loc_id.id, name, type_id.id, space_id.id, H5P_DEFAULT))
 

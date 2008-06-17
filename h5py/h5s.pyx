@@ -186,7 +186,7 @@ cdef class SpaceID(ObjectID):
         finally:
             efree(dims)
     
-    def get_simple_extent_npoints(self)):
+    def get_simple_extent_npoints(self):
         """ () => LONG npoints
 
             Determine the total number of elements in a dataspace.
@@ -202,7 +202,7 @@ cdef class SpaceID(ObjectID):
 
 # === Extents =================================================================
 
-    def extent_copy(self, SpaceID source_id not None)
+    def extent_copy(self, SpaceID source_id not None):
         """ (SpaceID source_id)
 
             Replace this dataspace's extent with another's, changing its
@@ -454,7 +454,7 @@ cdef class SpaceID(ObjectID):
         finally:
             efree(buf)
 
-    return outlist
+        return outlist
     
 
     def select_hyperslab(self, object start, object count, 

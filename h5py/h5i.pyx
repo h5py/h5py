@@ -15,8 +15,6 @@
 """
 
 # Pyrex compile-time imports
-from h5 cimport ObjectID
-from h5f cimport FileID
 from utils cimport emalloc, efree
 
 # Runtime imports

@@ -30,12 +30,12 @@ from h5 import DDict
 # === Public constants and data structures ====================================
 
 # Property list classes
-NO_CLASS       = PropClassID(H5P_NO_CLASS)
-FILE_CREATE    = PropClassID(H5P_FILE_CREATE)
-FILE_ACCESS    = PropClassID(H5P_FILE_ACCESS)
-DATASET_CREATE = PropClassID(H5P_DATASET_CREATE)
-DATASET_XFER   = PropClassID(H5P_DATASET_XFER)
-MOUNT          = PropClassID(H5P_MOUNT)
+NO_CLASS       = PropImmutableClassID(H5P_NO_CLASS)
+FILE_CREATE    = PropImmutableClassID(H5P_FILE_CREATE)
+FILE_ACCESS    = PropImmutableClassID(H5P_FILE_ACCESS)
+DATASET_CREATE = PropImmutableClassID(H5P_DATASET_CREATE)
+DATASET_XFER   = PropImmutableClassID(H5P_DATASET_XFER)
+MOUNT          = PropImmutableClassID(H5P_MOUNT)
 
 DEFAULT = PropID(H5P_DEFAULT)
 
@@ -45,7 +45,39 @@ _classmapper = { H5P_FILE_CREATE: PropFCID,
                  H5P_DATASET_XFER: PropDXID,
                  H5P_MOUNT: PropMID }
 
-# === Generic property list operations ========================================
+# === C API and extension types ===============================================
+
+cdef hid_t pdefault(PropID pid):
+
+    if pid is None:
+        return <hid_t>H5P_DEFAULT
+    
+    return pid.id
+
+cdef class PropID(ObjectID):
+    
+    """ Base class for all operations which are valid on both property list 
+        instances and classes.
+    """
+    pass
+
+# === Property list HDF5 classes ==============================================
+
+cdef class PropClassID(PropID):
+    pass
+
+cdef class PropImmutableClassID(PropClassID):
+
+    """
+        Represents property list class objects.
+        These are not automatically closed.
+        This is a hack until custom classes can be implemented.
+    """
+
+    def __dealloc__(self):
+        pass
+
+# === Property list HDF5 instances ============================================
 
 def create(PropClassID cls not None):
     """ (PropClassID cls) => PropID
@@ -64,21 +96,10 @@ def create(PropClassID cls not None):
 
     return type_(H5Pcreate(cls.id))
 
-cdef class PropClassID(PropID):
+cdef class PropInstanceID(PropID):
 
     """
-        Represents property list class objects.
-        These are not automatically closed.
-        This is a hack until custom classes can be implemented.
-    """
-
-    def __dealloc__(self):
-        pass
-
-cdef class PropInstanceID(ObjectID):
-
-    """
-        Base class for property list objects
+        Base class for property list instance objects
     """
 
     def copy(self):
@@ -91,7 +112,7 @@ cdef class PropInstanceID(ObjectID):
     def close(self):
         H5Pclose(self.id)
 
-    def get_class():
+    def get_class(self):
         """ () => PropClassID
 
             Determine the class of a property list object.
@@ -113,7 +134,7 @@ cdef class PropFCID(PropInstanceID):
         Represents a file creation property list
     """
 
-    def get_version():
+    def get_version(self):
         """ () => TUPLE version_info
 
             Determine version information of various file attributes. 
@@ -152,7 +173,7 @@ cdef class PropFCID(PropInstanceID):
         return size
 
     def set_sizes(self, size_t addr, size_t size):
-        """ (INT addr, INT size)
+        """ (UINT addr, UINT size)
 
             Set the addressing offsets and lengths for objects 
             in an HDF5 file, in bytes.
@@ -223,7 +244,7 @@ cdef class PropDCID(PropInstanceID):
             * h5d.CONTIGUOUS
             * h5d.CHUNKED
         """
-        H5Pset_layout(self.id, <H5D_layout_t>layout_code)
+        H5Pset_layout(self.id, layout_code)
     
     def get_layout(self):
         """ () => INT layout_code   [Dataset creation]
@@ -301,7 +322,7 @@ cdef class PropDCID(PropInstanceID):
         H5Pset_shuffle(self.id)
 
     def set_szip(self, unsigned int options, unsigned int pixels_per_block):
-        """ (INT plist, UINT options, UINT pixels_per_block)   [Dataset creation]
+        """ (UINT options, UINT pixels_per_block)   [Dataset creation]
 
             Enable SZIP compression.  See the HDF5 docs for argument meanings, and
             general restrictions on use of the SZIP format.
@@ -309,7 +330,7 @@ cdef class PropDCID(PropInstanceID):
         H5Pset_szip(self.id, options, pixels_per_block)
 
     def remove_filter(self, int filter_class):
-        """ (INT plist, INT filter_class)    [Dataset creation]
+        """ (INT filter_class)    [Dataset creation]
 
             Remove a filter from the pipeline.  The class code is one of 
             h5z.FILTER_*.

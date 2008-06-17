@@ -285,7 +285,7 @@ cdef class GroupID(ObjectID):
 
             Set the comment on a group member.
         """
-        H5Gset_comment(self.id name, comment)
+        H5Gset_comment(self.id, name, comment)
 
 
     def get_comment(self, char* name):

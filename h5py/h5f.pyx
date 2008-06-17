@@ -91,7 +91,7 @@ def is_hdf5(char* name):
     return pybool(H5Fis_hdf5(name))
 
 def mount(ObjectID loc_id not None, char* name, FileID file_id not None, 
-          PropID mountlist=None)
+          PropID mountlist=None):
     """ (ObjectID loc_id, STRING name, FileID file_id, PropID mountlist=None)
     
         Mount an open file as "name" under group loc_id.  If present, mountlist

@@ -15,10 +15,17 @@
 # directory.
 
 include "std_defs.pxi"
-from h5 cimport ObjectID
+from h5 cimport class ObjectID
 
 cdef class DatasetID(ObjectID):
     pass
+
+from h5t cimport class TypeID
+from h5s cimport class SpaceID
+from h5p cimport class PropID, pdefault
+from numpy cimport class ndarray
+
+
 
 cdef extern from "hdf5.h":
 

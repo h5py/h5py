@@ -11,7 +11,8 @@
 #-
 
 include "std_defs.pxi"
-
+from h5 cimport class ObjectID
+from h5s cimport class SpaceID
 from h5g cimport H5G_obj_t
 
 cdef extern from "hdf5.h":

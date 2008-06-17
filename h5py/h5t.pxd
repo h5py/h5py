@@ -15,11 +15,12 @@
 # directory.
 
 include "std_defs.pxi"
-from h5 cimport LockableID
+from h5 cimport class ObjectID, class LockableID
 
 cdef class TypeID(LockableID):
-    pass
 
+    cdef int enum_convert(self, long long *buf, int reverse) except -1
+ 
 cdef extern from "hdf5.h":
 
   cdef enum:

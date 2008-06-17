@@ -15,7 +15,7 @@
 # directory.
 
 include "std_defs.pxi"
-from h5 cimport ObjectID
+from h5 cimport class ObjectID
 
 cdef class FileID(ObjectID):
     pass

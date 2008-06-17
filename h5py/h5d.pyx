@@ -23,15 +23,12 @@
 """
 
 # Pyrex compile-time imports
-from h5t cimport TypeID
-from h5s cimport SpaceID
-from h5p cimport PropID, pdefault
 from h5s cimport H5S_ALL, H5S_UNLIMITED, H5S_SCALAR, H5S_SIMPLE, \
                     H5Sget_simple_extent_type, H5Sclose, H5Sselect_all, \
                     H5Sget_simple_extent_ndims, H5Sget_select_npoints
 from h5t cimport PY_H5Tclose, H5Tget_size
 from h5p cimport H5P_DEFAULT, H5Pclose
-from numpy cimport import_array, ndarray, PyArray_DATA
+from numpy cimport import_array, PyArray_DATA
 from utils cimport  check_numpy_read, check_numpy_write, \
                     convert_tuple, \
                     emalloc, efree
@@ -72,7 +69,7 @@ FILL_VALUE_USER_DEFINED = H5D_FILL_VALUE_USER_DEFINED
 def create(ObjectID loc_id not None, char* name, TypeID type_id not None, 
             SpaceID space_id not None, PropID plist=None):
     """ (ObjectID loc_id, STRING name, TypeID type_id, SpaceID space_id,
-          PropID plist=None ) 
+         PropID plist=None ) 
         => DatasetID
 
         Create a new dataset under an HDF5 file or group id.  Keyword plist 
@@ -146,7 +143,7 @@ cdef class DatasetID(ObjectID):
             
             For a friendlier version of this function, try py_read_slab().
         """
-        cdef hid_t mtype_id
+        cdef TypeID mtype_id
         cdef hid_t plist_id
         plist_id = pdefault(plist)
         mtype_id = 0
@@ -174,7 +171,7 @@ cdef class DatasetID(ObjectID):
 
             For a friendlier version of this function, try py_write_slab()
         """
-        cdef hid_t mtype_id
+        cdef TypeID mtype_id
         cdef hid_t plist_id
         plist_id = pdefault(plist)
         mtype_id = 0

@@ -15,39 +15,101 @@
 # directory.
 
 include "std_defs.pxi"
-from h5 cimport ObjectID
+from h5 cimport class ObjectID
 
 cdef class PropID(ObjectID):
+    """ Base class for all property lists """
     pass
 
 cdef class PropClassID(PropID):
+    """ Represents an HDF5 property list class """
+    pass
+
+cdef class PropImmutableClassID(PropClassID):
+    """ Special case of an HDF5 property list class, which isn't
+        automatically closed.  These are used for the built-in
+        classes.
+    """
     pass
 
 cdef class PropInstanceID(PropID):
+    """ Represents an instance of a property list class (i.e. an actual list
+        which can be passed on to other API functions).
+    """
     pass
 
 cdef class PropDCID(PropInstanceID):
+    """ Dataset creation property list """
     pass
 
 cdef class PropDXID(PropInstanceID):
+    """ Dataset transfer property list """
     pass
 
 cdef class PropFCID(PropInstanceID):
+    """ File creation property list """
     pass
 
 cdef class PropFAID(PropInstanceID):
+    """ File access property list """
     pass
 
 cdef class PropMID(PropInstanceID):
+    """ Mount property list """
     pass
 
-from h5d cimport H5D_layout_t, H5D_fill_value_t, H5D_fill_time_t, H5D_alloc_time_t
-from h5z cimport H5Z_filter_t, H5Z_EDC_t
-from h5f cimport H5F_close_degree_t
+cdef hid_t pdefault(PropID pid)
 
 cdef extern from "hdf5.h":
 
   int H5P_DEFAULT
+
+  ctypedef int H5Z_filter_t
+
+  # HDF5 layouts
+  ctypedef enum H5D_layout_t:
+    H5D_LAYOUT_ERROR    = -1,
+    H5D_COMPACT         = 0,    # raw data is very small
+    H5D_CONTIGUOUS      = 1,    # the default
+    H5D_CHUNKED         = 2,    # slow and fancy
+    H5D_NLAYOUTS        = 3     # this one must be last!
+
+  ctypedef enum H5D_alloc_time_t:
+    H5D_ALLOC_TIME_ERROR	=-1,
+    H5D_ALLOC_TIME_DEFAULT  =0,
+    H5D_ALLOC_TIME_EARLY	=1,
+    H5D_ALLOC_TIME_LATE	    =2,
+    H5D_ALLOC_TIME_INCR	    =3
+
+  ctypedef enum H5D_space_status_t:
+    H5D_SPACE_STATUS_ERROR	        =-1,
+    H5D_SPACE_STATUS_NOT_ALLOCATED	=0,
+    H5D_SPACE_STATUS_PART_ALLOCATED	=1,
+    H5D_SPACE_STATUS_ALLOCATED		=2
+
+  ctypedef enum H5D_fill_time_t:
+    H5D_FILL_TIME_ERROR	=-1,
+    H5D_FILL_TIME_ALLOC =0,
+    H5D_FILL_TIME_NEVER	=1,
+    H5D_FILL_TIME_IFSET	=2
+
+  ctypedef enum H5D_fill_value_t:
+    H5D_FILL_VALUE_ERROR        =-1,
+    H5D_FILL_VALUE_UNDEFINED    =0,
+    H5D_FILL_VALUE_DEFAULT      =1,
+    H5D_FILL_VALUE_USER_DEFINED =2
+
+  cdef enum H5Z_EDC_t:
+    H5Z_ERROR_EDC       = -1,
+    H5Z_DISABLE_EDC     = 0,
+    H5Z_ENABLE_EDC      = 1,
+    H5Z_NO_EDC          = 2 
+
+  cdef enum H5F_close_degree_t:
+    H5F_CLOSE_WEAK  = 0,
+    H5F_CLOSE_SEMI  = 1,
+    H5F_CLOSE_STRONG = 2,
+    H5F_CLOSE_DEFAULT = 3
 
   # Property list classes
   hid_t H5P_NO_CLASS
@@ -89,7 +151,7 @@ cdef extern from "hdf5.h":
   herr_t    H5Pset_fapl_log(hid_t fapl_id, char *logfile, unsigned int flags, size_t buf_size) except *
 
   # Dataset creation properties
-  herr_t        H5Pset_layout(hid_t plist, H5D_layout_t layout) except *
+  herr_t        H5Pset_layout(hid_t plist, int layout) except *
   H5D_layout_t  H5Pget_layout(hid_t plist) except *
   herr_t        H5Pset_chunk(hid_t plist, int ndims, hsize_t * dim) except *
   int           H5Pget_chunk(hid_t plist, int max_ndims, hsize_t * dims  ) except *
