@@ -15,6 +15,7 @@
 """
 
 # Pyrex compile-time imports
+from h5f cimport FileID
 from utils cimport emalloc, efree
 
 # Runtime imports
@@ -51,7 +52,7 @@ def get_type(ObjectID obj not None):
     return <int>H5Iget_type(obj.id)
 
 def get_name(ObjectID obj not None):
-    """ (ObjectID obj) => STRING name or None
+    """ (ObjectID obj) => STRING name, or None
 
         Determine (a) name of an HDF5 object.  Because an object has as many
         names as there are hard links to it, this may not be unique.  If
@@ -77,10 +78,10 @@ def get_name(ObjectID obj not None):
 def get_file_id(ObjectID obj not None):
     """ (ObjectID obj) => FileID
 
-        Obtain an identifier for the file in which this object resides,
-        re-opening the file if necessary.
+        Obtain an identifier for the file in which this object resides.
     """
-    return ObjectID(H5Iget_file_id(obj.id))
+    # TODO: does the library function correctly increment the ref count?
+    return FileID(H5Iget_file_id(obj.id))
 
 def inc_ref(ObjectID obj not None):
     """ (ObjectID obj)

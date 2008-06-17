@@ -22,7 +22,7 @@ cdef class DatasetID(ObjectID):
 
 from h5t cimport class TypeID
 from h5s cimport class SpaceID
-from h5p cimport class PropID, pdefault
+from h5p cimport class PropID, PropDCID, PropDXID, pdefault
 from numpy cimport class ndarray
 
 

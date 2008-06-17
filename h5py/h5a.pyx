@@ -16,7 +16,7 @@
 
 # Pyrex compile-time imports
 from h5p cimport H5P_DEFAULT
-from h5t cimport TypeID, PY_H5Tclose
+from h5t cimport TypeID
 from h5s cimport SpaceID, H5Sclose
 
 from numpy cimport import_array, ndarray, PyArray_DATA
@@ -32,17 +32,17 @@ import_array()
 
 # === General attribute operations ============================================
 
-def create(ObjectID loc_id not None, char* name, TypeID type_id not None, 
-            SpaceID space_id not None):
-    """ (ObjectID loc_id, STRING name, TypeID type_id, SpaceID space_id) 
+def create(ObjectID loc not None, char* name, TypeID tid not None, 
+            SpaceID space not None):
+    """ (ObjectID loc, STRING name, TypeID tid, SpaceID space) 
         => INT attr_id
 
         Create a new attribute attached to a parent object, specifiying an 
         HDF5 datatype and dataspace.
     """
-    return AttrID(H5Acreate(loc_id.id, name, type_id.id, space_id.id, H5P_DEFAULT))
+    return AttrID(H5Acreate(loc.id, name, tid.id, space.id, H5P_DEFAULT))
 
-def open_idx(ObjectID loc_id not None, int idx):
+def open_idx(ObjectID loc not None, int idx):
     """ (ObjectID loc_id, UINT idx) => INT attr_id
 
         Open an exisiting attribute on an object, by zero-based index.
@@ -52,54 +52,43 @@ def open_idx(ObjectID loc_id not None, int idx):
     # HDF5 library.
     if idx < 0:
         raise ValueError("Index must be a non-negative integer.")
-    return AttrID(H5Aopen_idx(loc_id.id, idx))
+    return AttrID(H5Aopen_idx(loc.id, idx))
 
-def open_name(ObjectID loc_id not None, char* name):
-    """ (ObjectID loc_id, STRING name) => INT attr_id
+def open_name(ObjectID loc not None, char* name):
+    """ (ObjectID loc, STRING name) => INT attr_id
 
         Open an existing attribute on an object, by name.
     """
-    return AttrID(H5Aopen_name(loc_id.id, name))
+    return AttrID(H5Aopen_name(loc.id, name))
 
-def close(AttrID attr_id not None):
-    """ (AttrID attr_id)
-
-        Close this attribute and release resources.
-    """
-    H5Aclose(attr_id.id)
-
-def delete(ObjectID loc_id not None, char* name):
-    """ (ObjectID loc_id, STRING name)
+def delete(ObjectID loc not None, char* name):
+    """ (ObjectID loc, STRING name)
 
         Remove an attribute from an object.
     """
-    H5Adelete(loc_id.id, name)
+    H5Adelete(loc.id, name)
 
-def get_num_attrs(ObjectID loc_id not None):
-    """ (ObjectID loc_id) => INT number_of_attributes
+def get_num_attrs(ObjectID loc not None):
+    """ (ObjectID loc) => INT number_of_attributes
 
         Determine the number of attributes attached to an HDF5 object.
     """
-    return H5Aget_num_attrs(loc_id.id)
+    return H5Aget_num_attrs(loc.id)
 
-cdef herr_t iter_cb(hid_t loc_id, char *attr_name, object int_tpl):
-
-    func = int_tpl[0]
-    data = int_tpl[1]
-    exc_list = int_tpl[2]
+cdef herr_t iter_cb(hid_t loc_id, char *attr_name, object int_tpl) except -1:
+    # Iteration callback.  Returns 0 under normal execution, +1 to stop early
+    # if StopIteration is raised, and -1 if any other exception occurrs.
+    loc, func, data = int_tpl
 
     try:
-        func(loc_id, attr_name, data)
+        func(loc, attr_name, data)
     except StopIteration:
         return 1
-    except Exception, e:
-        exc_list.append(e)
-        return -1
 
     return 0
 
-def iterate(ObjectID loc_id not None, object func, object data=None, int startidx=0):
-    """ (ObjectID loc_id, FUNCTION func, OBJECT data=None, UINT startidx=0)
+def iterate(ObjectID loc not None, object func, object data=None, int startidx=0):
+    """ (ObjectID loc, FUNCTION func, OBJECT data=None, UINT startidx=0)
         => INT last_attribute_index
 
         Iterate an arbitrary Python function over the attributes attached
@@ -107,26 +96,21 @@ def iterate(ObjectID loc_id not None, object func, object data=None, int startid
         specifying its (zero-based) index.
 
         Your function:
-        1.  Should accept three arguments: the (INT) id of the parent object, 
-            the (STRING) name of the attribute, and an arbitary Python object
+        1.  Should accept three arguments: the ObjectID for the parent object, 
+            the (STRING) name of the attribute, and an arbitrary Python object
             you provide as data.  Any return value is ignored.
         2.  Raise StopIteration to bail out before all attributes are processed.
         3.  Raising anything else immediately aborts iteration, and the
             exception is propagated.
     """
     cdef unsigned int i
-    cdef herr_t retval
     if startidx < 0:
         raise ValueError("Starting index must be a non-negative integer.")
     i = startidx
 
-    int_tpl = (func, data,[])
+    int_tpl = (loc, func, data)
 
-    retval = H5Aiterate(loc_id.id, &i, <H5A_operator_t>iter_cb, int_tpl)
-
-    if retval < 0:
-        if len(int_tpl[2]) != 0:
-            raise int_tpl[2][0]
+    H5Aiterate(loc.id, &i, <H5A_operator_t>iter_cb, int_tpl)
 
 # === Attribute class & methods ===============================================
 
@@ -155,14 +139,14 @@ cdef class AttrID(ObjectID):
             """ Retrieve the dataspace of this attribute, as a Numpy-style 
                 shape tuple.
             """
-            cdef hid_t sid
-            sid = 0
+            cdef SpaceID space
+            space = None
             try:
-                sid = H5Aget_space(self.id)
-                return h5s.get_simple_extent_dims(sid)
+                space = self.get_space()
+                return space.get_simple_extent_dims()
             finally:
-                if sid:
-                    H5Sclose(sid)
+                if space is not None:
+                    space.close()
 
     property dtype:
         def __get__(self):
@@ -171,15 +155,23 @@ cdef class AttrID(ObjectID):
                 the underlying HDF5 datatype, but is appropriate for use in e.g. the 
                 read() and write() functions defined in this module.
             """
-            cdef hid_t type_id
-            type_id = 0
-            
+            cdef TypeID tid
+            tid = None
             try:
-                type_id = H5Aget_type(self.id)
-                return h5t.py_translate_h5t(type_id)
+                tid = self.get_type()
+                return h5t.py_translate_h5t(tid)
             finally:
-                if type_id:
-                    PY_H5Tclose(type_id)
+                if tid is not None:
+                    tid.close()
+
+    def close(self):
+        """ ()
+
+            Close this attribute and release resources.  You don't need to
+            call this manually; attributes are automatically destroyed when
+            their Python wrappers are freed.
+        """
+        H5Aclose(self.id)
 
     def read(self, ndarray arr_obj not None):
         """ (NDARRAY arr_obj)
@@ -191,25 +183,24 @@ cdef class AttrID(ObjectID):
             The Numpy array must be writable, C-contiguous and own its data.  If
             this is not the case, an ValueError is raised and the read fails.
         """
-        cdef hid_t attr_id
-        cdef hid_t mtype_id
+        cdef TypeID mtype
         cdef hid_t space_id
-        attr_id = self.id
-        mtype_id = 0
+        mtype = None
         space_id = 0
 
         try:
-            mtype_id = h5t.py_translate_dtype(arr_obj.dtype)
-            space_id = H5Aget_space(attr_id)
+            space_id = H5Aget_space(self.id)
             check_numpy_write(arr_obj, space_id)
 
-            H5Aread(attr_id, mtype_id, PyArray_DATA(arr_obj))
+            mtype = h5t.py_translate_dtype(arr_obj.dtype)
+
+            H5Aread(self.id, mtype.id, PyArray_DATA(arr_obj))
 
         finally:
-            if mtype_id:
-                PY_H5Tclose(mtype_id)
             if space_id:
                 H5Sclose(space_id)
+            if mtype is not None:
+                mtype.close()
 
     def write(self, ndarray arr_obj not None):
         """ (NDARRAY arr_obj)
@@ -221,42 +212,38 @@ cdef class AttrID(ObjectID):
             The Numpy array must be C-contiguous and own its data.  If this is not
             the case, ValueError will be raised and the write will fail.
         """
-        cdef hid_t attr_id
-        cdef hid_t mtype_id
+        cdef TypeID mtype
         cdef hid_t space_id
-        attr_id = self.id
-        mtype_id = 0
+        mtype_id = None
         space_id = 0
 
         try:
-            mtype_id = h5t.py_translate_dtype(arr_obj.dtype)
-            space_id = H5Aget_space(attr_id)
+            space_id = H5Aget_space(self.id)
             check_numpy_read(arr_obj, space_id)
+            mtype = h5t.py_translate_dtype(arr_obj.dtype)
 
-            H5Awrite(attr_id, mtype_id, PyArray_DATA(arr_obj))
+            H5Awrite(self.id, mtype_id, PyArray_DATA(arr_obj))
 
         finally:
-            if mtype_id:
-                PY_H5Tclose(mtype_id)
             if space_id:
                 H5Sclose(space_id)
+            if mtype is not None:
+                mtype.close()
 
     def get_name(self):
         """ () => STRING name
 
             Determine the name of an attribute, given its identifier.
         """
-        cdef hid_t attr_id
         cdef int blen
         cdef char* buf
-        attr_id = self.id
         buf = NULL
 
         try:
-            blen = H5Aget_name(attr_id, 0, NULL)
+            blen = H5Aget_name(self.id, 0, NULL)
             assert blen >= 0
             buf = <char*>emalloc(sizeof(char)*blen+1)
-            blen = H5Aget_name(attr_id, blen+1, buf)
+            blen = H5Aget_name(self.id, blen+1, buf)
             strout = buf
         finally:
             efree(buf)

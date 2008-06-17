@@ -18,6 +18,7 @@ include "std_defs.pxi"
 from h5 cimport class ObjectID
 
 cdef class TypeID(ObjectID):
+    cdef object _complex_names
 
     cdef int enum_convert(self, long long *buf, int reverse) except -1
  
@@ -233,11 +234,6 @@ cdef extern from "hdf5.h":
   # Opaque data types
   herr_t    H5Tset_tag(hid_t type_id, char* tag) except *
   char*     H5Tget_tag(hid_t type_id) except? NULL
-
-# === Custom C API ============================================================
-
-# Close the datatype, ignoring all errors.
-cdef herr_t PY_H5Tclose(hid_t type_id) except *
 
 
 

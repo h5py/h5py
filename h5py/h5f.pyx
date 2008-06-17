@@ -15,7 +15,7 @@
 """
 
 # Pyrex compile-time imports
-from h5p cimport PropID, pdefault, H5P_DEFAULT
+from h5p cimport PropFCID, PropFAID, PropMID, pdefault, H5P_DEFAULT
 from utils cimport emalloc, efree, pybool
 
 # Runtime imports
@@ -47,26 +47,21 @@ OBJ_LOCAL   = H5F_OBJ_LOCAL
 
 # === File operations =========================================================
 
-def open(char* name, unsigned int flags=H5F_ACC_RDWR, ):
-    """ (STRING name, UINT flags=ACC_RDWR, PropID accesslist=None)
+def open(char* name, unsigned int flags=H5F_ACC_RDWR, PropFAID accesslist=None):
+    """ (STRING name, UINT flags=ACC_RDWR, PropFAID accesslist=None)
         => FileID
 
         Open an existing HDF5 file.  Keyword "flags" may be ACC_RWDR or
-        ACC_RDONLY.
+        ACC_RDONLY.  Accesslist may be a file access property list.
     """
     cdef hid_t plist_id
     plist_id = pdefault(accesslist)
-    return FileID(H5Fopen(name, flags, accesslist))
+    return FileID(H5Fopen(name, flags, plist_id))
 
-def close(FileID file_id):
-    """ (FileID file_id)
-    """
-    H5Fclose(file_id.id)
-
-def create(char* name, int flags=H5F_ACC_TRUNC, PropID createlist=None,
-                                                PropID accesslist=None):
-    """ (STRING name, INT flags=ACC_TRUNC, PropID createlist=None,
-                                           PropID accesslist=None)
+def create(char* name, int flags=H5F_ACC_TRUNC, PropFCID createlist=None,
+                                                PropFAID accesslist=None):
+    """ (STRING name, INT flags=ACC_TRUNC, PropFCID createlist=None,
+                                           PropFAID accesslist=None)
         => FileID
 
         Create a new HDF5 file.  Keyword "flags" may be either:
@@ -90,26 +85,37 @@ def is_hdf5(char* name):
     """
     return pybool(H5Fis_hdf5(name))
 
-def mount(ObjectID loc_id not None, char* name, FileID file_id not None, 
-          PropID mountlist=None):
-    """ (ObjectID loc_id, STRING name, FileID file_id, PropID mountlist=None)
+def flush(ObjectID obj, int scope=H5F_SCOPE_LOCAL):
+    """ (ObjectID obj, INT scope=SCOPE_LOCAL)
+
+        Tell the HDF5 library to flush file buffers to disk.  "obj" may
+        be the file identifier, or the identifier of any object residing in
+        the file.  Keyword "scope" may be:
+            SCOPE_LOCAL:    Flush only the given file
+            SCOPE_GLOBAL:   Flush the entire virtual file
+    """
+    H5Fflush(obj.id, <H5F_scope_t>scope)
+
+def mount(ObjectID loc not None, char* name, FileID fid not None, 
+          PropMID mountlist=None):
+    """ (ObjectID loc, STRING name, FileID fid, PropMID mountlist=None)
     
         Mount an open file as "name" under group loc_id.  If present, mountlist
         is a mount property list.
     """
     cdef hid_t plist_id
     plist_id = pdefault(mountlist)
-    H5Fmount(loc_id.id, name, file_id.id, plist_id)
+    H5Fmount(loc.id, name, fid.id, plist_id)
     
-def unmount(ObjectID loc_id not None, char* name):
-    """ (ObjectID loc_id, STRING name)
+def unmount(ObjectID loc not None, char* name):
+    """ (ObjectID loc, STRING name)
 
         Unmount a file, mounted as "name" under group loc_id.
     """
-    H5Funmount(loc_id.id, name)
+    H5Funmount(loc.id, name)
 
-def get_name(ObjectID obj_id not None):
-    """ (INT obj_id) => STRING file_name
+def get_name(ObjectID obj not None):
+    """ (ObjectID obj) => STRING file_name
         
         Determine the name of the file in which the specified object resides.
     """
@@ -117,11 +123,11 @@ def get_name(ObjectID obj_id not None):
     cdef char* name
     name = NULL
 
-    size = H5Fget_name(obj_id.id, NULL, 0)
+    size = H5Fget_name(obj.id, NULL, 0)
     assert size >= 0
     name = <char*>emalloc(sizeof(char)*(size+1))
     try:    
-        H5Fget_name(obj_id.id, name, size+1)
+        H5Fget_name(obj.id, name, size+1)
         pname = name
         return pname
     finally:
@@ -135,22 +141,23 @@ cdef class FileID(ObjectID):
         Represents an HDF5 file identifier.
     """
 
-    def flush(self, int scope=H5F_SCOPE_LOCAL):
-        """ (INT scope=SCOPE_LOCAL)
+    def close(self):
+        """ ()
 
-            Tell the HDF5 library to flush file buffers to disk.  file_id may
-            be the file identifier, or the identifier of any object residing in
-            the file.  Keyword "scope" may be:
-                SCOPE_LOCAL:    Flush only the given file
-                SCOPE_GLOBAL:   Flush the entire virtual file
+            Terminate access through this identifier.  Note that depending on
+            what property list settings were used to open the file, the
+            physical file might not be closed until all remaining open
+            identifiers are freed.  
         """
-        H5Fflush(self.id, <H5F_scope_t>scope)
+        H5Fclose(self.id)
 
 
     def reopen(self):
-        """ () => INT new_file_id
+        """ () => FileID
 
             Retrieve another identifier for a file (which must still be open).
+            The new identifier is guaranteed to neither be mounted nor contain
+            a mounted file.
         """
         return FileID(H5Freopen(self.id))
 
@@ -189,26 +196,29 @@ cdef class FileID(ObjectID):
         return H5Fget_freespace(self.id)
 
 
-    
     def get_obj_count(self, int types=H5F_OBJ_ALL):
         """ (INT types=OBJ_ALL) => INT n_objs
 
             Get the number of open objects in the file.  The value of "types" 
             may be one of h5f.OBJ_*, or any bitwise combination (e.g. 
-            OBJ_FILE | OBJ_ATTR).  The special value OBJ_ALL matches all object
-            types, and OBJ_LOCAL will only match objects opened through this
-            specific identifier.
+            OBJ_FILE | OBJ_ATTR).  
+
+            The special value OBJ_ALL matches all object types, and 
+            OBJ_LOCAL will only match objects opened through this specific 
+            identifier.
         """
         return H5Fget_obj_count(self.id, types)
 
     def get_obj_ids(self, int types=H5F_OBJ_ALL):
         """ (INT types=OBJ_ALL) => LIST open_ids
 
-            Get a list of identifiers for open objects in the file.  The value of 
-            "types" may be one of h5f.OBJ_*, or any bitwise combination (e.g. 
-            OBJ_FILE | OBJ_ATTR).  The special value OBJ_ALL matches all object
-            types, and OBJ_LOCAL will only match objects opened through this
-            specific identifier.
+            Get a list of identifiers for open objects in the file.  The value 
+            of "types" may be one of h5f.OBJ_*, or any bitwise combination (e.g. 
+            OBJ_FILE | OBJ_ATTR). 
+
+            The special value OBJ_ALL matches all object types, and 
+            OBJ_LOCAL will only match objects opened through this specific 
+            identifier. 
         """
         cdef int count
         cdef hid_t *obj_list

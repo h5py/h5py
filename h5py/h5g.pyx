@@ -58,45 +58,39 @@ cdef class GroupStat:
 
 # === Basic group management ==================================================
 
-def open(ObjectID loc_id not None, char* name):
-    """ (ObjectID loc_id, STRING name)
+def open(ObjectID loc not None, char* name):
+    """ (ObjectID loc, STRING name) => GroupID
 
         Open an existing HDF5 group, attached to some other group.
     """
-    return GroupID(H5Gopen(loc_id.id, name))
+    return GroupID(H5Gopen(loc.id, name))
 
-def close(GroupID group_id not None):
-    """ (GroupID group_id)
-    """
-    H5Gclose(group_id.id)
-
-def create(ObjectID loc_id not None, char* name, int size_hint=-1):
-    """ (ObjectID loc_id, STRING name, INT size_hint=-1)
+def create(ObjectID loc not None, char* name, int size_hint=-1):
+    """ (ObjectID loc, STRING name, INT size_hint=-1) => GroupID
 
         Create a new group, under a given parent group.  If given, size_hint
         is an estimate of the space to reserve (in bytes) for group member
         names.
     """
-    return GroupID(H5Gcreate(loc_id.id, name, size_hint))
+    return GroupID(H5Gcreate(loc.id, name, size_hint))
 
 cdef herr_t iter_cb_helper(hid_t gid, char *name, object int_tpl) except -1:
     # Callback function for H5Giterate
 
-    func = int_tpl[0]
-    data = int_tpl[1]
+    loc, func, data = int_tpl
 
     # An unhandled exception (anything except StopIteration) will 
     # cause Pyrex to immediately return -1, which stops H5Giterate.
     try:
-        func(gid, name, data)
+        func(loc, name, data)
     except StopIteration:
         return 1
 
     return 0
 
-def iterate(GroupID loc_id not None, char* name, object func, object data=None, 
+def iterate(GroupID loc not None, char* name, object func, object data=None, 
             int startidx=0):
-    """ (GroupID loc_id, STRING name, FUNCTION func, OBJECT data=None, 
+    """ (GroupID loc, STRING name, FUNCTION func, OBJECT data=None, 
             UINT startidx=0) => INT last_index_processed
 
         Iterate an arbitrary Python function over a group.  Note that the
@@ -106,7 +100,7 @@ def iterate(GroupID loc_id not None, char* name, object func, object data=None,
         (zero-based) index.
 
         Your function:
-        1.  Should accept three arguments: the (INT) id of the group, the 
+        1.  Should accept three arguments: the GroupID of the group, the 
             (STRING) name of the member, and an arbitary Python object you 
             provide as data.  Any return value is ignored.
         2.  Raise StopIteration to bail out before all members are processed.
@@ -114,14 +108,13 @@ def iterate(GroupID loc_id not None, char* name, object func, object data=None,
             exception is propagated.
     """
     cdef int i
-
     if startidx < 0:
         raise ValueError("Starting index must be non-negative.")
-
     i = startidx
-    int_tpl = (func, data)
 
-    H5Giterate(loc_id.id, name, &i, <H5G_iterate_t>iter_cb_helper, int_tpl)
+    int_tpl = (loc, func, data)
+
+    H5Giterate(loc.id, name, &i, <H5G_iterate_t>iter_cb_helper, int_tpl)
 
 # === Group member management =================================================
 
@@ -131,10 +124,19 @@ cdef class GroupID(ObjectID):
         Represents an HDF5 group identifier
     """
 
+    def close(self):
+        """ ()
+
+            Terminate access through this identifier.  You shouldn't have to
+            call this manually; group identifiers are automatically released
+            when their Python wrappers are freed.
+        """
+        H5Gclose(self.id)
+
     def link(self, char* current_name, char* new_name, 
              int link_type=H5G_LINK_HARD, GroupID remote=None):
-        """ ( STRING current_name, STRING new_name, 
-              INT link_type=LINK_HARD, GroupID remote=None)
+        """ (STRING current_name, STRING new_name, INT link_type=LINK_HARD, 
+             GroupID remote=None)
 
             Create a new hard or soft link.  current_name identifies
             the link target (object the link will point to).  The new link is
@@ -153,17 +155,16 @@ cdef class GroupID(ObjectID):
         H5Glink2(self.id, current_name, <H5G_link_t>link_type, remote_id, new_name)
 
     def unlink(self, char* name):
-        """ (INT loc_id, STRING name)
+        """ (STRING name)
 
-            Remove a link to an object from this group
+            Remove a link to an object from this group.
         """
         H5Gunlink(self.id, name)
 
     def move(self, char* current_name, char* new_name, GroupID remote=None):
-        """ (INT loc_id, STRING current_name, STRING new_name, 
-                GroupID remote=None)
+        """ (STRING current_name, STRING new_name, GroupID remote=None)
 
-            Relink an object.  loc_id and current_name identify the object.
+            Relink an object.  current_name identifies the object.
             new_name and (optionally) another group "remote" determine
             where it should be moved.
         """
@@ -230,14 +231,15 @@ cdef class GroupID(ObjectID):
         return retval
 
     def get_objinfo(self, char* name, int follow_link=1):
-        """ (STRING name, BOOL follow_link=True)
-            => GroupStat object
+        """ (STRING name, BOOL follow_link=True) => GroupStat object
 
-            Obtain information about an arbitrary object attached to a group. The
-            return value is a GroupStat object; see that class's docstring
-            for a description of its attributes.  If follow_link is True (default)
-            and the object is a symbolic link, the information returned describes 
-            its target.  Otherwise the information describes the link itself.
+            Obtain information about an arbitrary object attached to a group. 
+            The return value is a GroupStat object; see that class's docstring
+            for a description of its attributes.  
+
+            If follow_link is True (default) and the object is a symbolic link, 
+            the information returned describes its target.  Otherwise the 
+            information describes the link itself.
         """
         cdef H5G_stat_t stat
         cdef GroupStat statobj
@@ -278,14 +280,12 @@ cdef class GroupID(ObjectID):
         finally:
             efree(value)
 
-
     def set_comment(self, char* name, char* comment):
         """ (STRING name, STRING comment)
 
             Set the comment on a group member.
         """
         H5Gset_comment(self.id, name, comment)
-
 
     def get_comment(self, char* name):
         """ (STRING name) => STRING comment

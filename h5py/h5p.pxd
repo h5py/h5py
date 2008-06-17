@@ -22,13 +22,8 @@ cdef class PropID(ObjectID):
     pass
 
 cdef class PropClassID(PropID):
-    """ Represents an HDF5 property list class """
-    pass
-
-cdef class PropImmutableClassID(PropClassID):
-    """ Special case of an HDF5 property list class, which isn't
-        automatically closed.  These are used for the built-in
-        classes.
+    """ Represents an HDF5 property list class.  These can be either (locked)
+        library-defined classes or user-created classes.
     """
     pass
 

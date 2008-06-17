@@ -79,19 +79,6 @@ from h5 import DDict, ArgsError
 import sys
 
 # === Custom C API ============================================================
-
-cdef herr_t PY_H5Tclose(hid_t type_id) except *:
-    # Unconditionally close a datatype, ignoring all errors.
-
-    cdef err_c cookie
-    cdef herr_t retval
-    cookie = pause_errors()
-    try:
-        retval = H5Tclose(type_id)
-    finally:
-        resume_errors(cookie)
-
-    return retval
     
 cdef object lockid(hid_t id_in):
     cdef TypeID tid
@@ -182,12 +169,30 @@ NATIVE_UINT64 = lockid(H5T_NATIVE_UINT64)
 # Null terminated (C) string type
 C_S1 = lockid(H5T_C_S1)
 
+# Map array protocol strings to their HDF5 atomic equivalents
+# Not sure why LE/BE versions of I8/U8 exist; I'll include them anyway.
+_code_map = {
+    "<i1": STD_I8LE, "<i2": STD_I16LE, "<i4": STD_I32LE, "<i8": STD_I64LE,
+    ">i1": STD_I8BE, ">i2": STD_I16BE, ">i4": STD_I32BE, ">i8": STD_I64BE,
+    "|i1": NATIVE_INT8, "|u1": NATIVE_UINT8, 
+    "<u1": STD_U8LE, "<u2": STD_U16LE, "<u4": STD_U32LE, "<u8": STD_U64LE,
+    ">u1": STD_U8BE, ">u2": STD_U16BE, ">u4": STD_U32BE, ">u8": STD_U64BE,
+    "<f4": IEEE_F32LE, "<f8": IEEE_F64LE, ">f4": IEEE_F32BE, ">f8": IEEE_F64BE 
+            }
+
+# Intermediate mapping which takes complex types to their components
+_complex_map = { "<c8": IEEE_F32LE, "<c16": IEEE_F64LE, 
+                 ">c8": IEEE_F32BE, ">c16": IEEE_F64BE }
+
+_order_map = { H5T_ORDER_NONE: '|', H5T_ORDER_LE: '<', H5T_ORDER_BE: '>'}
+_sign_map  = { H5T_SGN_NONE: 'u', H5T_SGN_2: 'i' }
+
 # === General datatype operations =============================================
 
 def create(int classtype, size_t size):
-    """ (INT class, INT size) => INT type_id
+    """ (INT classtype, INT size) => TypeID
         
-        Create a new HDF5 type object.  Legal values are 
+        Create a new HDF5 type object.  Legal class values are 
         COMPOUND, OPAQUE, and ENUM.
     """
     # If it's not one of these, the library SEGFAULTS. Thanks, guys.
@@ -225,11 +230,11 @@ def array_create(TypeID base not None, object dims_tpl):
         efree(dims)
 
 def enum_create(TypeID base not None):
-    """ (TypeID base) => INT new_type_id
+    """ (TypeID base) => TypeID new_enum
 
         Create a new enumerated type based on an (integer) parent type.
     """
-    return H5Tenum_create(base.id)
+    return TypeID(H5Tenum_create(base.id))
 
 # === XXXX ====
 
@@ -237,7 +242,27 @@ cdef class TypeID(ObjectID):
 
     """
         Represents an HDF5 datatype identifier.
+
+        Python properties:
+        dtype:          Numpy representation of the datatype.
     """
+
+    def __init__(self, hid_t id_):
+        self._complex_names = ('r', 'i')
+
+    property complex_names:
+        def __get__(self):
+            return self._complex_names
+        def __set__(self, item):
+            require_tuple(item, 0, -1, "complex_names")
+
+            if len(item) != 0 or len(item) != 2:
+                raise ValueError("complex_names must be either () or a 2-tuple")
+            for entry in item:
+                if not isinstance(entry, str):
+                    raise ValueError("complex_names must be a 2-tuple of strings")
+
+            self._complex_names = item
 
     def commit(self, ObjectID group not None, char* name):
         """ (ObjectID group, STRING name)
@@ -269,9 +294,9 @@ cdef class TypeID(ObjectID):
         return pybool(H5Tequal(self.id, typeid.id))
 
     def lock(self):
-        """ (self)
+        """ ()
 
-            Lock a datatype, which makes it immutable and indestructible.
+            Lock this datatype, which makes it immutable and indestructible.
             Once locked, it can't be unlocked.
         """
         H5Tlock(self.id)
@@ -299,7 +324,7 @@ cdef class TypeID(ObjectID):
         return TypeID(H5Tget_super(self.id))
 
     def get_native_type(self, int direction=H5T_DIR_DEFAULT):
-        """ (INT direction) => INT new_type_id
+        """ (INT direction=DIR_DEFAULT) => TypeID
 
             Determine the native C equivalent for the given datatype.
             Legal values for "direction" are:
@@ -309,12 +334,12 @@ cdef class TypeID(ObjectID):
             These determine which direction the list of native datatypes is
             searched; see the HDF5 docs for a definitive list.
 
-            The returned datatype is always an unlocked copy of one of NATIVE_*.
+            The returned datatype is always an unlocked copy of one of NATIVE_*
         """
         return TypeID(H5Tget_native_type(self.id, <H5T_direction_t>direction))
 
     def detect_class(self, int classtype):
-        """ (INT class) => BOOL class_is_present
+        """ (INT classtype) => BOOL class_is_present
 
             Determine if a member of the given class exists in a compound
             datatype.  The search is recursive.
@@ -325,16 +350,14 @@ cdef class TypeID(ObjectID):
         """ Close this datatype.  If it's locked, nothing happens.
         """
         if not self._locked:
-            H5Tclose(type_id)
+            H5Tclose(self.id)
 
-# === Atomic datatype operations ==============================================
-
+    # === Atomic datatype operations ==========================================
 
     def set_size(self, size_t size):
-        """ (INT size)
+        """ (UINT size)
 
-            Set the total size of the datatype, in bytes.  Useful mostly for
-            string types.
+            Set the total size of the datatype, in bytes.
         """
         H5Tset_size(self.id, size)
 
@@ -349,9 +372,9 @@ cdef class TypeID(ObjectID):
         return <int>H5Tget_order(self.id)
 
     def set_order(self, int order):
-        """ (INT type_id, INT order)
+        """ (INT order)
 
-            Set the byte order of the datatype. "order" must be one of
+            Set the byte order of the datatype; must be one of
              ORDER_LE
              ORDER_BE
              ORDER_NATIVE
@@ -359,7 +382,7 @@ cdef class TypeID(ObjectID):
         H5Tset_order(self.id, <H5T_order_t>order)
 
     def get_sign(self):
-        """ (INT type_id) => INT sign
+        """ () => INT sign
 
             Obtain the "signedness" of the datatype; one of:
               SGN_NONE:  Unsigned
@@ -385,8 +408,7 @@ cdef class TypeID(ObjectID):
         """
         return pybool(H5Tis_variable_str(self.id))
 
-# === Compound datatype operations ============================================
-
+    # === Compound datatype operations ========================================
 
     def get_nmembers(self):
         """ () => INT number_of_members
@@ -405,7 +427,6 @@ cdef class TypeID(ObjectID):
             raise ValueError("Member index must be non-negative.")
         return H5Tget_member_class(self.id, member)
 
-    
     def get_member_name(self, int member):
         """ (INT member) => STRING name
         
@@ -436,7 +457,7 @@ cdef class TypeID(ObjectID):
         return H5Tget_member_index(self.id, name)
 
     def get_member_offset(self, int member):
-        """ (INT member_index) => INT offset
+        """ (INT member) => INT offset
 
             Determine the offset, in bytes, of the beginning of the specified
             member of a compound datatype.
@@ -444,7 +465,7 @@ cdef class TypeID(ObjectID):
         return H5Tget_member_offset(self.id, member)
 
     def get_member_type(self, int member):
-        """ (INT member_index) => INT type_id
+        """ (INT member) => TypeID
 
             Create a copy of a member of a compound datatype, identified by its
             index.
@@ -454,7 +475,7 @@ cdef class TypeID(ObjectID):
         return TypeID(H5Tget_member_type(self.id, member))
 
     def insert(self, char* name, size_t offset, TypeID field not None):
-        """ (STRING name, INT offset, TypeID field)
+        """ (STRING name, UINT offset, TypeID field)
 
             Add a named member datatype to a compound datatype.  The parameter
             offset indicates the offset from the start of the compound datatype,
@@ -470,7 +491,7 @@ cdef class TypeID(ObjectID):
         """
         H5Tpack(self.id)
 
-# === Array datatype operations ===============================================
+    # === Array datatype operations ===========================================
 
     def get_array_ndims(self):
         """ () => INT rank
@@ -480,9 +501,10 @@ cdef class TypeID(ObjectID):
         return H5Tget_array_ndims(self.id)
 
     def get_array_dims(self):
-        """ (INT type_id) => TUPLE dimensions
+        """ () => TUPLE dimensions
 
-            Get the dimensions of the given array datatype as a tuple of integers.
+            Get the dimensions of the given array datatype as
+            a tuple of integers.
         """
         cdef hsize_t rank   
         cdef hsize_t* dims
@@ -496,12 +518,11 @@ cdef class TypeID(ObjectID):
         finally:
             efree(dims)
 
-# === Enumeration datatypes ===================================================
-
+    # === Enumeration datatypes ===============================================
 
     cdef int enum_convert(self, long long *buf, int reverse) except -1:
         # Convert the long long value in "buf" to the native representation
-        # of this (enumerated type).  Conversion performed in-place.
+        # of this (enumerated) type.  Conversion performed in-place.
         # Reverse: false => llong->type; true => type->llong
 
         cdef hid_t basetype
@@ -520,7 +541,7 @@ cdef class TypeID(ObjectID):
             else:
                 H5Tconvert(basetype, H5T_NATIVE_LLONG, 1, buf, NULL, H5P_DEFAULT)
         finally:
-            PY_H5Tclose(basetype)
+            H5Tclose(basetype)
 
     def enum_insert(self, char* name, long long value):
         """ (STRING name, INT/LONG value)
@@ -550,13 +571,12 @@ cdef class TypeID(ObjectID):
         buf = value
         self.enum_convert(&buf, 0)
         retval = H5Tenum_nameof(self.id, &buf, name, 1024)
-        if retval < 0:  # not sure whether H5Tenum_nameof will actually log an error
-            raise RuntimeError("Failed to determine enum name of %d" % value)
+        assert retval >= 0
         retstring = name
         return retstring
 
     def enum_valueof(self, char* name):
-        """ (STRING name) => LONG value)
+        """ (STRING name) => LONG value
 
             Get the value associated with an enum name.
         """
@@ -583,8 +603,7 @@ cdef class TypeID(ObjectID):
         self.enum_convert(&val, 1)
         return val
 
-# === Opaque datatypes ========================================================
-
+    # === Opaque datatypes ====================================================
 
     def set_tag(self, char* tag):
         """ (STRING tag)
@@ -609,6 +628,189 @@ cdef class TypeID(ObjectID):
         finally:
             free(buf)
 
+    def py_dtype(self):
+        """ ()
+
+            Create a Numpy dtype object as similar as possible to the given 
+            HDF5 datatype object.  The result is guaranteed to be logically 
+            compatible with the original object, with no loss of precision, 
+            but may not implement the same memory layout as the HDF5 type.
+        """
+        cdef TypeID tmp_type
+        cdef H5T_class_t classtype
+        classtype = self.get_class()
+        
+        if classtype == H5T_INTEGER:
+            typeobj = dtype( _order_map[self.get_order()] + 
+                             _sign_map[self.get_sign()] + str(self.get_size()) )
+
+        elif classtype == H5T_FLOAT:
+            typeobj = dtype( _order_map[self.get_order()] + 
+                            "f" + str(self.get_size()) )
+
+        elif classtype == H5T_STRING:
+            if self.is_variable_str():
+                raise ValueError("Variable-length strings are not supported.")
+
+            typeobj = dtype("|S" + str(self.get_size()))
+
+        elif classtype == H5T_OPAQUE:
+            typeobj = dtype("|V" + str(self.get_size()))
+
+        elif classtype == H5T_COMPOUND:
+
+            nfields = self.get_nmembers()
+            field_names = []
+            field_types = []
+
+            # First step: read field names and their Numpy dtypes into 
+            # two separate arrays.
+            for i from 0 <= i < nfields:
+                tmp_type = self.get_member_type(i)
+                tmp_type.complex_names = self.complex_names
+                try:
+                    field_names.append(self.get_member_name(i))
+                    field_types.append(tmp_type.py_dtype())
+                finally:
+                    tmp_type.close()
+
+            # 1. Check if it should be converted to a complex number
+            if len(field_names) == 2                    and \
+               tuple(field_names) == self.complex_names and \
+               field_types[0] == field_types[1]         and \
+               field_types[0].kind == 'f':
+
+                bstring = field_types[0].str
+                blen = int(bstring[2:])
+                nstring = bstring[0] + "c" + str(2*blen)
+                typeobj = dtype(nstring)
+
+            # 2. Otherwise, read all fields of the compound type, in HDF5 order.
+            else:
+                typeobj = dtype(zip(field_names, field_types))
+
+        elif classtype == H5T_ENUM:
+            # Have to recover enum dictionaries manually.
+            tmp_type = self.get_super()
+            try:
+                typeobj = tmp_type.py_dtype()
+            finally:
+                tmp_type.close()
+
+        elif classtype == H5T_ARRAY:
+            tmp_type = self.get_super()
+            tmp_type.complex_names = self.complex_names
+            try:
+                base_dtype = tmp_type.py_dtype()
+            finally:
+                tmp_type.close()
+            shape = tid.get_array_dims()
+            typeobj = dtype( (base_dtype, shape) )
+
+        else:
+            raise ValueError('Unsupported datatype class "%s"' % PY_NAMES[classtype])
+
+        return typeobj
+
+# === Python extension functions ==============================================
+
+
+def py_create(dtype dt not None, object complex_names=None):
+    """ ( DTYPE dt, TUPLE complex_names=None, DICT enum=None) => TypeID
+
+        Given a Numpy dtype object, generate a byte-for-byte memory-compatible
+        HDF5 datatype object.  The result is guaranteed to be transient and
+        unlocked.
+
+        complex_names:
+            Specifies when and how to interpret Python complex numbers as
+            HDF5 compound datatypes.  May be None or a tuple with strings 
+            (real name, img name).  "None" indicates the default mapping of
+            ("r", "i"). This option is also applied to subtypes of arrays 
+            and compound types.
+    """
+    cdef TypeID otype
+    cdef TypeID base
+    cdef TypeID tmp
+    cdef dtype dt_tmp
+    cdef char kind
+    cdef char byteorder
+    cdef int length
+
+    otype = None
+
+    if complex_names is None:
+        complex_names = DEFAULT_COMPLEX_NAMES
+    else: 
+        _validate_complex(complex_names)
+
+    kind = dt.kind
+    byteorder = dt.byteorder
+    length = int(dt.str[2:])  # is there a better way to do this?
+    names = dt.names
+        
+    # Check for an enum dict first
+    if enum is not None:
+        if kind != c'i' and kind != c'u':
+            raise ValueError("Enumerated types may only have integer bases.")
+    
+        otype = enum_create(_code_map[dt.str])
+
+        for key in sorted(enum):
+            otype.enum_insert(key, enum[key])
+
+    # Anything with field names is considered to be a compound type
+    elif names is not None:
+        otype = create(H5T_COMPOUND, length)
+        for name in names:
+            dt_tmp, offset = dt.fields[name]
+            tmp = py_create(dt_tmp, complex_names)
+            try:
+                otype.insert(name, offset, tmp)
+            finally:
+                tmp.close()
+
+    # Integers and floats map directly to HDF5 atomic types
+    elif kind == c'u' or kind  == c'i' or kind == c'f': 
+        try:
+            otype =  _code_map[dt.str].copy()
+        except KeyError:
+            raise ValueError("Failed to find '%s' in atomic code map" % dt.str)
+
+    # Complex numbers are stored as HDF5 structs, with names defined at runtime
+    elif kind == c'c':
+
+        if length == 8:
+            otype = TypeID(create_ieee_complex64(byteorder, _complex_names[0], _complex_names[1]))
+        elif length == 16:
+            otype = TypeID(create_ieee_complex128(byteorder, _complex_names[0], _complex_names[1]))
+        else:
+            raise ValueError("Unsupported length %d for complex dtype: %s" % (length, repr(dt)))
+
+    # Opaque/array types are differentiated by the presence of a subdtype
+    elif kind == c'V':
+
+        if dt.subdtype:
+            dt_tmp, shape = dt.subdtype
+            base = py_create(dt_tmp, complex_names)
+            try:
+                otype = array_create(base, shape)
+            finally:
+                base.close()
+        else:
+            otype = create(H5T_OPAQUE, length)
+                
+    # Strings are assumed to be stored C-style.
+    elif kind == c'S':
+        otype = TypeID(H5Tcopy(H5T_C_S1))
+        otype.set_size(length)
+
+    else:
+        raise ValueError("No conversion path for dtype: %s" % repr(dt))
+
+    if complex_names is not None:
+        otype.complex_names = complex_names
+    return otype
 
 
 

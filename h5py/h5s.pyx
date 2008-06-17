@@ -98,10 +98,24 @@ def create_simple(object dims_tpl, object max_dims_tpl=None):
 cdef class SpaceID(ObjectID):
 
     """
-        Represents a dataspace identifier
+        Represents a dataspace identifier.
+
+        Python extensions (readonly):
+
+        shape
     """
 
+    property shape:
+        def __get__(self):
+            return self.get_simple_extent_dims()
+
     def close(self):
+        """ ()
+
+            Terminate access through this identifier.  You shouldn't have to
+            call this manually; dataspace objects are automatically destroyed
+            when their Python wrappers are freed.
+        """
         H5Sclose(self.id)
 
     def copy(self):
@@ -134,7 +148,7 @@ cdef class SpaceID(ObjectID):
         dims = NULL
 
         try:
-            if not self.is_simple():
+            if not H5Sis_simple(self.id):
                 raise ValueError("%d is not a simple dataspace" % space_id)
 
             rank = H5Sget_simple_extent_ndims(self.id)
@@ -163,10 +177,10 @@ cdef class SpaceID(ObjectID):
         return H5Sget_simple_extent_ndims(self.id)
 
     def get_simple_extent_dims(self, int maxdims=0):
-        """ (INT space_id, BOOL maxdims=False) => TUPLE shape
+        """ (BOOL maxdims=False) => TUPLE shape
 
-            Determine the shape of a "simple" (slab) dataspace.  If "maxdims" is
-            True, retrieve the maximum dataspace size instead.
+            Determine the shape of a "simple" (slab) dataspace.  If "maxdims" 
+            is True, retrieve the maximum dataspace size instead.
         """
         cdef int rank
         cdef hsize_t* dims
@@ -200,10 +214,10 @@ cdef class SpaceID(ObjectID):
         """
         return <int>H5Sget_simple_extent_type(self.id)
 
-# === Extents =================================================================
+    # === Extents =============================================================
 
-    def extent_copy(self, SpaceID source_id not None):
-        """ (SpaceID source_id)
+    def extent_copy(self, SpaceID source not None):
+        """ (SpaceID source)
 
             Replace this dataspace's extent with another's, changing its
             typecode if necessary.
@@ -211,7 +225,7 @@ cdef class SpaceID(ObjectID):
         H5Sextent_copy(self.id, source.id)
 
     def set_extent_simple(self, object dims_tpl, object max_dims_tpl=None):
-        """ (INT space_id, TUPLE dims_tpl, TUPLE max_dims_tpl=None)
+        """ (TUPLE dims_tpl, TUPLE max_dims_tpl=None)
 
             Reset the dataspace extent via a tuple of dimensions.  
             Every element of dims_tpl must be a positive integer.  
@@ -245,13 +259,13 @@ cdef class SpaceID(ObjectID):
             efree(max_dims)
 
     def set_extent_none(self):
-        """ (INT space_id)
+        """ ()
 
             Remove the dataspace extent; typecode changes to NO_CLASS.
         """
         H5Sset_extent_none(self.id)
 
-# === General selection operations ============================================
+    # === General selection operations ========================================
 
     def get_select_type(self):
         """ () => INT select_code
@@ -321,7 +335,7 @@ cdef class SpaceID(ObjectID):
         """
         return pybool(H5Sselect_valid(self.id))
 
-# === Point selection functions ===============================================
+    # === Point selection functions ===========================================
 
     def get_select_elem_npoints(self):
         """ () => LONG npoints
@@ -406,7 +420,7 @@ cdef class SpaceID(ObjectID):
         finally:
             efree(coords)
 
-# === Hyperslab selection functions ===========================================
+    # === Hyperslab selection functions =======================================
 
     def get_select_hyper_nblocks(self):
         """ () => LONG nblocks
@@ -457,10 +471,10 @@ cdef class SpaceID(ObjectID):
         return outlist
     
 
-    def select_hyperslab(self, object start, object count, 
-        object stride=None, object block=None, int op=H5S_SELECT_SET):
-        """ (INT space_id, TUPLE start, TUPLE count, TUPLE stride=None, 
-                TUPLE block=None, INT op=SELECT_SET)
+    def select_hyperslab(self, object start, object count, object stride=None, 
+                         object block=None, int op=H5S_SELECT_SET):
+        """ (TUPLE start, TUPLE count, TUPLE stride=None, TUPLE block=None, 
+             INT op=SELECT_SET)
          
             Select a block region from an existing dataspace.  See the HDF5
             documentation for the meaning of the "block" and "op" keywords.

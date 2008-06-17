@@ -38,7 +38,7 @@ cdef extern from "hdf5.h":
   hid_t     H5Aget_space(hid_t attr_id) except *
   hid_t     H5Aget_type(hid_t attr_id) except *
 
-  ctypedef herr_t (*H5A_operator_t)(hid_t loc_id, char *attr_name, operator_data)
+  ctypedef herr_t (*H5A_operator_t)(hid_t loc_id, char *attr_name, operator_data) except -1
   herr_t    H5Aiterate(hid_t loc_id, unsigned * idx, H5A_operator_t op, op_data) except *
 
 

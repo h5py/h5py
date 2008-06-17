@@ -26,8 +26,6 @@
 from h5s cimport H5S_ALL, H5S_UNLIMITED, H5S_SCALAR, H5S_SIMPLE, \
                     H5Sget_simple_extent_type, H5Sclose, H5Sselect_all, \
                     H5Sget_simple_extent_ndims, H5Sget_select_npoints
-from h5t cimport PY_H5Tclose, H5Tget_size
-from h5p cimport H5P_DEFAULT, H5Pclose
 from numpy cimport import_array, PyArray_DATA
 from utils cimport  check_numpy_read, check_numpy_write, \
                     convert_tuple, \
@@ -66,10 +64,10 @@ FILL_VALUE_USER_DEFINED = H5D_FILL_VALUE_USER_DEFINED
 
 # === Basic dataset operations ================================================
 
-def create(ObjectID loc_id not None, char* name, TypeID type_id not None, 
-            SpaceID space_id not None, PropID plist=None):
-    """ (ObjectID loc_id, STRING name, TypeID type_id, SpaceID space_id,
-         PropID plist=None ) 
+def create(ObjectID loc not None, char* name, TypeID tid not None, 
+            SpaceID space not None, PropDCID plist=None):
+    """ (ObjectID loc, STRING name, TypeID tid, SpaceID space,
+         PropDCID plist=None ) 
         => DatasetID
 
         Create a new dataset under an HDF5 file or group id.  Keyword plist 
@@ -79,19 +77,16 @@ def create(ObjectID loc_id not None, char* name, TypeID type_id not None,
     """
     cdef hid_t plist_id
     plist_id = pdefault(plist)
-    return DatasetID(H5Dcreate(loc_id.id, name, type_id.id, space_id.id, plist_id))
+    return DatasetID(H5Dcreate(loc.id, name, tid.id, space.id, plist_id))
 
-def open(ObjectID loc_id not None, char* name):
-    """ (ObjectID loc_id, STRING name) => DatasetID
+def open(ObjectID loc not None, char* name):
+    """ (ObjectID loc, STRING name) => DatasetID
 
         Open an existing dataset attached to a group or file object, by name.
     """
-    return DatasetID(H5Dopen(loc_id, name))
+    return DatasetID(H5Dopen(loc.id, name))
 
-def close(DatasetID dset_id not None):
-    """ (DatasetID dset_id)
-    """
-    H5Dclose(dset_id.id)
+
 
 # === Dataset I/O =============================================================
 
@@ -110,22 +105,20 @@ cdef class DatasetID(ObjectID):
         shape:  Numpy-style shape tuple representing the dataspace
         rank:   Integer giving dataset rank
     """
-    property dtype:
-        def __get__(self):
-            pass
 
-    property shape:
-        def __get__(self):
-            pass
+    def close(self):
+        """ ()
 
-    property rank:
-        def __get__(self):
-            pass
+            Terminate access through this identifier.  You shouldn't have to
+            call this manually; Dataset objects are automatically destroyed
+            when their Python wrappers are freed.
+        """
+        H5Dclose(self.id)
 
-    def read(self, SpaceID mspace_id not None, SpaceID fspace_id not None, 
-                   ndarray arr_obj not None, PropID plist=None):
-        """ (SpaceID mspace_id, SpaceID fspace_id, NDARRAY arr_obj, 
-             PropID plist=None)
+    def read(self, SpaceID mspace not None, SpaceID fspace not None, 
+                   ndarray arr_obj not None, PropDXID plist=None):
+        """ (SpaceID mspace, SpaceID fspace, NDARRAY arr_obj, 
+             PropDXID plist=None)
 
             Read data from an HDF5 dataset into a Numpy array.  For maximum 
             flexibility, you can specify dataspaces for the file and the Numpy
@@ -143,48 +136,48 @@ cdef class DatasetID(ObjectID):
             
             For a friendlier version of this function, try py_read_slab().
         """
-        cdef TypeID mtype_id
+        cdef TypeID mtype
         cdef hid_t plist_id
+        mtype = None
         plist_id = pdefault(plist)
-        mtype_id = 0
 
         try:
-            mtype_id = h5t.py_translate_dtype(arr_obj.dtype)
+            mtype = h5t.py_translate_dtype(arr_obj.dtype)
             check_numpy_write(arr_obj, -1)
 
-            H5Dread(self.id, mtype_id.id, mspace_id.id, fspace_id.id, plist_id, PyArray_DATA(arr_obj))
+            H5Dread(self.id, mtype.id, mspace.id, fspace.id, plist_id, PyArray_DATA(arr_obj))
 
         finally:
-            if mtype_id:
-                PY_H5Tclose(mtype_id)
+            if mtype is not None:
+                mtype.close()
         
-    def write(self, SpaceID mspace_id not None, SpaceID fspace_id not None, 
-                    ndarray arr_obj not None, PropID plist=None):
-        """ (SpaceID mspace_id, SpaceID fspace_id, NDARRAY arr_obj, 
-             PropID plist=None)
+    def write(self, SpaceID mspace not None, SpaceID fspace not None, 
+                    ndarray arr_obj not None, PropDXID plist=None):
+        """ (SpaceID mspace, SpaceID fspace, NDARRAY arr_obj, PropDXID plist=None)
 
-            Write data from a Numpy array to an HDF5 dataset. Keyword plist may be 
-            a dataset transfer property list.
+            Write data from a Numpy array to an HDF5 dataset. Keyword plist may 
+            be a dataset transfer property list.
 
-            The provided Numpy array must be C-contiguous, and own its data.  If 
-            this is not the case, ValueError will be raised and the read will fail.
+            The provided Numpy array must be C-contiguous, and own its data.  
+            If this is not the case, ValueError will be raised and the read 
+            will fail.
 
             For a friendlier version of this function, try py_write_slab()
         """
-        cdef TypeID mtype_id
+        cdef TypeID mtype
         cdef hid_t plist_id
+        mtype = None
         plist_id = pdefault(plist)
-        mtype_id = 0
 
         try:
-            mtype_id = h5t.py_translate_dtype(arr_obj.dtype)
+            mtype = h5t.py_translate_dtype(arr_obj.dtype)
             check_numpy_read(arr_obj, -1)
 
-            H5Dwrite(self.id, mtype_id.id, mspace_id.id, fspace_id.id, plist_id, PyArray_DATA(arr_obj))
+            H5Dwrite(self.id, mtype.id, mspace.id, fspace.id, plist_id, PyArray_DATA(arr_obj))
 
         finally:
-            if mtype_id:
-                PY_H5Tclose(mtype_id)
+            if mtype_id is not None:
+                mtype.close()
 
     def extend(self, object shape):
         """ (TUPLE shape)
@@ -193,22 +186,21 @@ cdef class DatasetID(ObjectID):
             that a dataset may only be extended up to the maximum dimensions of 
             its dataspace, which are fixed when the dataset is created.
         """
-        cdef hid_t dset_id
-        cdef hsize_t* dims
         cdef int rank
         cdef hid_t space_id
-        dset_id = self.id
+        cdef hsize_t* dims
         space_id = 0
         dims = NULL
 
         try:
-            space_id = H5Dget_space(dset_id)
+            space_id = H5Dget_space(self.id)
             rank = H5Sget_simple_extent_ndims(space_id)
 
             require_tuple(shape, 0, rank, "shape")
+
             dims = <hsize_t*>emalloc(sizeof(hsize_t)*rank)
             convert_tuple(shape, dims, rank)
-            H5Dextend(dset_id, dims)
+            H5Dextend(self.id, dims)
 
         finally:
             efree(dims)
@@ -216,7 +208,7 @@ cdef class DatasetID(ObjectID):
                 H5Sclose(space_id)
 
     def get_space(self):
-        """ () => SpaceID space_id
+        """ () => SpaceID
 
             Create and return a new copy of the dataspace for this dataset.
         """
@@ -240,7 +232,7 @@ cdef class DatasetID(ObjectID):
 
             Create and return a new copy of the datatype for this dataset.
         """
-        return TypeID(H5Dget_type(dset_id))
+        return TypeID(H5Dget_type(self.id))
 
     def get_create_plist(self):
         """ () => PropDSCreateID
@@ -248,7 +240,7 @@ cdef class DatasetID(ObjectID):
             Create a new copy of the dataset creation property list used when 
             this dataset was created.
         """
-        return PropDSCreateID(H5Dget_create_plist(self.id))
+        return PropDCID(H5Dget_create_plist(self.id))
 
     def get_offset(self):
         """ () => LONG offset
@@ -257,7 +249,7 @@ cdef class DatasetID(ObjectID):
         """
         return H5Dget_offset(self.id)
 
-    def get_storage_size(hid_t dset_id):
+    def get_storage_size(self):
         """ () => LONG storage_size
 
             Determine the amount of file space required for a dataset.  Note this

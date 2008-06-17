@@ -22,8 +22,6 @@ from utils cimport  require_tuple, convert_dims, convert_tuple, \
 
 # Runtime imports
 import h5
-import h5t
-from h5 import DDict
 
 cdef object lockid(hid_t id_in):
     cdef PropClassID pid
@@ -104,6 +102,12 @@ cdef class PropInstanceID(PropID):
         return type(self)(H5Pcopy(self.id))
 
     def close(self):
+        """ ()
+    
+            Terminate access through this identifier.  You shouldn't have to
+            do this manually, as propery lists are automatically deleted when
+            their Python wrappers are freed.
+        """
         H5Pclose(self.id)
 
     def get_class(self):
@@ -125,7 +129,11 @@ cdef class PropInstanceID(PropID):
 cdef class PropFCID(PropInstanceID):
 
     """
-        Represents a file creation property list
+        Represents a file creation property list.
+
+        Each property list entry is associated with a Python object property,
+        in addition to the HDF5 set/get pair.  The set/get docstrings are
+        authoritative.
     """
 
     def get_version(self):
@@ -149,6 +157,10 @@ cdef class PropFCID(PropInstanceID):
 
         return (super_, freelist, stab, shhdr)
 
+    property version:
+        def __get__(self):
+            return self.get_version()
+
     def set_userblock(self, hsize_t size):
         """ (INT/LONG size)
 
@@ -165,6 +177,12 @@ cdef class PropFCID(PropInstanceID):
         cdef hsize_t size
         H5Pget_userblock(self.id, &size)
         return size
+
+    property userblock:
+        def __get__(self):
+            return self.get_userblock()
+        def __set__(self, val):
+            self.set_userblock(val)
 
     def set_sizes(self, size_t addr, size_t size):
         """ (UINT addr, UINT size)
@@ -188,6 +206,14 @@ cdef class PropFCID(PropInstanceID):
         H5Pget_sizes(self.id, &addr, &size)
         return (addr, size)
 
+    property sizes:
+        def __get__(self):
+            return self.get_sizes()
+        def __set__(self, tpl):
+            require_tuple(tpl, 0, 2, "value")
+            a, b = tpl
+            self.set_sizes(a,b)
+
     def set_sym_k(self, unsigned int ik, unsigned int lk):
         """ (INT ik, INT lk)
 
@@ -206,6 +232,14 @@ cdef class PropFCID(PropInstanceID):
         H5Pget_sym_k(self.id, &ik, &lk)
         return (ik, lk)
 
+    property sym_k:
+        def __get__(self):
+            return self.get_sym_k()
+        def __set__(self, tpl):
+            require_tuple(tpl, 0, 2, "value")
+            a, b = tpl
+            self.set_sym_k(a,b)
+
     def set_istore_k(self, unsigned int ik):
         """ (UINT ik)    [File creation]
 
@@ -222,6 +256,12 @@ cdef class PropFCID(PropInstanceID):
         H5Pget_istore_k(self.id, &ik)
         return ik
 
+    property istore_k:
+        def __get__(self):
+            return self.get_istore_k()
+        def __set__(self, a):
+            self.set_istore_k(a)
+
 # === Dataset creation properties =============================================
 
 cdef class PropDCID(PropInstanceID):
@@ -231,7 +271,7 @@ cdef class PropDCID(PropInstanceID):
     """
 
     def set_layout(self, int layout_code):
-        """ (INT layout_code)    [Dataset creation]
+        """ (INT layout_code)
 
             Set dataset storage strategy; legal values are:
             * h5d.COMPACT
@@ -241,7 +281,7 @@ cdef class PropDCID(PropInstanceID):
         H5Pset_layout(self.id, layout_code)
     
     def get_layout(self):
-        """ () => INT layout_code   [Dataset creation]
+        """ () => INT layout_code
 
             Determine the storage strategy of a dataset; legal values are:
             * h5d.COMPACT
@@ -250,13 +290,18 @@ cdef class PropDCID(PropInstanceID):
         """
         return <int>H5Pget_layout(self.id)
 
+    property layout:
+        def __get__(self):
+            return self.get_layout()
+        def __set__(self, val):
+            self.set_layout(val)
+
     def set_chunk(self, object chunksize):
-        """ (INT plist_id, TUPLE chunksize)    [Dataset creation]
+        """ (TUPLE chunksize)
 
             Set the dataset chunk size.  It's up to you to provide 
             values which are compatible with your dataset.
         """
-        cdef herr_t retval
         cdef int rank
         cdef hsize_t* dims
         dims = NULL
@@ -290,10 +335,18 @@ cdef class PropDCID(PropInstanceID):
         finally:
             efree(dims)
 
-# === Filter functions ========================================================
+    property chunk:
+        def __get__(self):
+            return self.get_chunk()
+        def __set__(self, val):
+            self.set_chunk(val)
 
+    # === Filter functions ====================================================
+    # These do not have Python properties because the order of addition is
+    # important, and no get_* functions are provided by HDF5.
+    
     def set_deflate(self, unsigned int level=5):
-        """ (UINT level=5)    [Dataset creation]
+        """ (UINT level=5)
 
             Enable DEFLATE (gzip) compression, at the given level.
             Valid levels are 0-9, default is 5.
@@ -301,30 +354,30 @@ cdef class PropDCID(PropInstanceID):
         H5Pset_deflate(self.id, level)
     
     def set_fletcher32(self):
-        """ ()    [Dataset creation]
+        """ ()
 
-            Enable Fletcher32 error correction on an existing list.
+            Enable Fletcher32 error correction on this list.
         """
         H5Pset_fletcher32(self.id)
 
     def set_shuffle(self):
-        """ ()    [Dataset creation]
+        """ ()
 
-            Enable to use of the shuffle filter.  Use this immediately before the
-            DEFLATE filter to increase the compression ratio.
+            Enable to use of the shuffle filter.  Use this immediately before 
+            the DEFLATE filter to increase the compression ratio.
         """
         H5Pset_shuffle(self.id)
 
     def set_szip(self, unsigned int options, unsigned int pixels_per_block):
-        """ (UINT options, UINT pixels_per_block)   [Dataset creation]
+        """ (UINT options, UINT pixels_per_block)
 
-            Enable SZIP compression.  See the HDF5 docs for argument meanings, and
-            general restrictions on use of the SZIP format.
+            Enable SZIP compression.  See the HDF5 docs for argument meanings, 
+            and general restrictions on use of the SZIP format.
         """
         H5Pset_szip(self.id, options, pixels_per_block)
 
     def remove_filter(self, int filter_class):
-        """ (INT filter_class)    [Dataset creation]
+        """ (INT filter_class)
 
             Remove a filter from the pipeline.  The class code is one of 
             h5z.FILTER_*.
@@ -342,9 +395,8 @@ cdef class PropFAID(PropInstanceID):
     def set_fclose_degree(self, int close_degree):
         """ (INT close_degree)
 
-            Set the file-close degree, which determines the library behavior when
-            a file is closed when objects are still open.  See the HDF5 docs for 
-            a full explanation.  Legal values:
+            Set the file-close degree, which determines library behavior when
+            a file is closed when objects are still open.  Legal values:
 
             * h5f.CLOSE_WEAK
             * h5f.CLOSE_SEMI
@@ -353,7 +405,26 @@ cdef class PropFAID(PropInstanceID):
         """
         H5Pset_fclose_degree(self.id, <H5F_close_degree_t>close_degree)
 
+    def get_fclose_degree(self):
+        """ () => INT close_degree
 
+            Get the file-close degree, which determines library behavior when
+            a file is closed when objects are still open.  Legal values:
+
+            * h5f.CLOSE_WEAK
+            * h5f.CLOSE_SEMI
+            * h5f.CLOSE_STRONG
+            * h5f.CLOSE_DEFAULT
+        """
+        cdef H5F_close_degree_t deg
+        H5Pget_fclose_degree(self.id, &deg)
+        return deg
+
+    property fclose_degree:
+        def __get__(self):
+            return self.get_fclose_degree()
+        def __set__(self,val):
+            self.set_fclose_degree(val)
     
 
 
