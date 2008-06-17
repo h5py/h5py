@@ -16,9 +16,10 @@
 
 include "std_defs.pxi"
 from h5 cimport ObjectID
+from numpy cimport class ndarray
+
 cdef class AttrID(ObjectID):
     pass
-from numpy cimport class ndarray
 
 cdef extern from "hdf5.h":
 

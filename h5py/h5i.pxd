@@ -16,7 +16,7 @@
 
 include "std_defs.pxi"
 from h5 cimport class ObjectID
-from h5f cimport class FileID
+#from h5f cimport class FileID
 
 cdef extern from "hdf5.h":
 

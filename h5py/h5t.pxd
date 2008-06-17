@@ -15,9 +15,9 @@
 # directory.
 
 include "std_defs.pxi"
-from h5 cimport class ObjectID, class LockableID
+from h5 cimport class ObjectID
 
-cdef class TypeID(LockableID):
+cdef class TypeID(ObjectID):
 
     cdef int enum_convert(self, long long *buf, int reverse) except -1
  

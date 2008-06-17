@@ -16,8 +16,6 @@
 """
 
 # Pyrex compile-time imports
-from h5d cimport H5D_layout_t
-from h5z cimport H5Z_filter_t
 
 from utils cimport  require_tuple, convert_dims, convert_tuple, \
                     emalloc, efree, pybool
@@ -27,17 +25,24 @@ import h5
 import h5t
 from h5 import DDict
 
+cdef object lockid(hid_t id_in):
+    cdef PropClassID pid
+    pid = PropClassID(id_in)
+    pid._locked = 1
+    return pid
+
 # === Public constants and data structures ====================================
 
 # Property list classes
-NO_CLASS       = PropImmutableClassID(H5P_NO_CLASS)
-FILE_CREATE    = PropImmutableClassID(H5P_FILE_CREATE)
-FILE_ACCESS    = PropImmutableClassID(H5P_FILE_ACCESS)
-DATASET_CREATE = PropImmutableClassID(H5P_DATASET_CREATE)
-DATASET_XFER   = PropImmutableClassID(H5P_DATASET_XFER)
-MOUNT          = PropImmutableClassID(H5P_MOUNT)
+# These need to be locked, as the library won't let you close them.
+NO_CLASS       = lockid(H5P_NO_CLASS)
+FILE_CREATE    = lockid(H5P_FILE_CREATE)
+FILE_ACCESS    = lockid(H5P_FILE_ACCESS)
+DATASET_CREATE = lockid(H5P_DATASET_CREATE)
+DATASET_XFER   = lockid(H5P_DATASET_XFER)
+MOUNT          = lockid(H5P_MOUNT)
 
-DEFAULT = PropID(H5P_DEFAULT)
+DEFAULT = lockid(H5P_DEFAULT)  # really 0 but whatever
 
 _classmapper = { H5P_FILE_CREATE: PropFCID,
                  H5P_FILE_ACCESS: PropFAID,
@@ -65,17 +70,6 @@ cdef class PropID(ObjectID):
 
 cdef class PropClassID(PropID):
     pass
-
-cdef class PropImmutableClassID(PropClassID):
-
-    """
-        Represents property list class objects.
-        These are not automatically closed.
-        This is a hack until custom classes can be implemented.
-    """
-
-    def __dealloc__(self):
-        pass
 
 # === Property list HDF5 instances ============================================
 

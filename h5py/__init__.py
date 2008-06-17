@@ -23,7 +23,6 @@ __doc__ = \
 """
 
 import utils, h5, h5f, h5g, h5s, h5t, h5d, h5a, h5p, h5z, h5i
-import tests
 import version
 
 __doc__ = __doc__ % version.version

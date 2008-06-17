@@ -66,7 +66,7 @@
 # Pyrex compile-time imports
 from defs_c cimport free
 from h5p cimport H5P_DEFAULT
-from h5e cimport err_c, pause_errors, resume_errors
+from h5 cimport err_c, pause_errors, resume_errors
 from numpy cimport dtype, ndarray
 
 from utils cimport  emalloc, efree, pybool, \
@@ -75,8 +75,7 @@ from utils cimport  emalloc, efree, pybool, \
 
 # Runtime imports
 import h5
-from h5 import DDict
-from h5e import ArgsError
+from h5 import DDict, ArgsError
 import sys
 
 # === Custom C API ============================================================
@@ -191,6 +190,10 @@ def create(int classtype, size_t size):
         Create a new HDF5 type object.  Legal values are 
         COMPOUND, OPAQUE, and ENUM.
     """
+    # If it's not one of these, the library SEGFAULTS. Thanks, guys.
+    if classtype != H5T_COMPOUND and classtype != H5T_OPAQUE and \
+        classtype != H5T_ENUM:
+        raise ValueError("Class must be COMPOUND, OPAQUE or ENUM")
     return TypeID(H5Tcreate(<H5T_class_t>classtype, size))
 
 def open(ObjectID group not None, char* name):
@@ -230,7 +233,7 @@ def enum_create(TypeID base not None):
 
 # === XXXX ====
 
-cdef class TypeID(LockableID):
+cdef class TypeID(ObjectID):
 
     """
         Represents an HDF5 datatype identifier.

@@ -19,8 +19,7 @@ from utils cimport emalloc, efree
 
 # Runtime imports
 import h5
-from h5 import DDict
-from h5e import H5Error
+from h5 import DDict, H5Error
 
 # === Public constants and data structures ====================================
 

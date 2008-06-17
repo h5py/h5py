@@ -80,7 +80,7 @@ def get_file_id(ObjectID obj not None):
         Obtain an identifier for the file in which this object resides,
         re-opening the file if necessary.
     """
-    return FileID(H5Iget_file_id(obj.id))
+    return ObjectID(H5Iget_file_id(obj.id))
 
 def inc_ref(ObjectID obj not None):
     """ (ObjectID obj)
