@@ -81,6 +81,9 @@ cdef class ObjectID:
 
         return "%d [%s] (%s) %s" % (self.id, ref, lstr, self.__class__.__name__)
 
+    def __repr__(self):
+        return self.__str__()
+
 # === Automatic error handling ================================================
 
 

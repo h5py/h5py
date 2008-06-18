@@ -16,7 +16,7 @@
 
 # Pyrex compile-time imports
 from h5p cimport H5P_DEFAULT
-from h5t cimport TypeID
+from h5t cimport TypeID, typewrap
 from h5s cimport SpaceID, H5Sclose
 
 from numpy cimport import_array, ndarray, PyArray_DATA
@@ -262,7 +262,7 @@ cdef class AttrID(ObjectID):
 
             Create and return a copy of the attribute's datatype.
         """
-        return TypeID(H5Aget_type(self.id))
+        return typewrap(H5Aget_type(self.id))
 
 
 

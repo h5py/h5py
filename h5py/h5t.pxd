@@ -20,7 +20,26 @@ from h5 cimport class ObjectID
 cdef class TypeID(ObjectID):
     cdef object _complex_names
 
+cdef class TypeAtomicID(TypeID):
+    pass
+
+cdef class TypeCompositeID(TypeID):
+    pass
+
+cdef class TypeEnumID(TypeCompositeID):
+
     cdef int enum_convert(self, long long *buf, int reverse) except -1
+
+cdef class TypeCompoundID(TypeCompositeID):
+    pass
+
+cdef class TypeArrayID(TypeID):
+    pass
+
+cdef class TypeOpaqueID(TypeID):
+    pass
+
+cdef object typewrap(hid_t id_)
  
 cdef extern from "hdf5.h":
 

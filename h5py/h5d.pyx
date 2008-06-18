@@ -232,7 +232,7 @@ cdef class DatasetID(ObjectID):
 
             Create and return a new copy of the datatype for this dataset.
         """
-        return TypeID(H5Dget_type(self.id))
+        return typewrap(H5Dget_type(self.id))
 
     def get_create_plist(self):
         """ () => PropDSCreateID
