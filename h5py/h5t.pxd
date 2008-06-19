@@ -20,8 +20,42 @@ from h5 cimport class ObjectID
 cdef class TypeID(ObjectID):
     cdef object _complex_names
 
+    cdef object py_dtype(self)
+
+# --- Top-level classes ---
+
+cdef class TypeArrayID(TypeID):
+    pass
+
+cdef class TypeOpaqueID(TypeID):
+    pass
+
+cdef class TypeStringID(TypeID):
+    # Both vlen and fixed-len strings
+    pass
+
+cdef class TypeVlenID(TypeID):
+    # Non-string vlens
+    pass
+
+cdef class TypeTimeID(TypeID):
+    pass
+
+cdef class TypeBitfieldID(TypeID):
+    pass
+
+# --- Numeric atomic types ---
+
 cdef class TypeAtomicID(TypeID):
     pass
+
+cdef class TypeIntegerID(TypeAtomicID):
+    pass
+
+cdef class TypeFloatID(TypeAtomicID):
+    pass
+
+# --- Enums & compound types ---
 
 cdef class TypeCompositeID(TypeID):
     pass
@@ -33,11 +67,6 @@ cdef class TypeEnumID(TypeCompositeID):
 cdef class TypeCompoundID(TypeCompositeID):
     pass
 
-cdef class TypeArrayID(TypeID):
-    pass
-
-cdef class TypeOpaqueID(TypeID):
-    pass
 
 cdef object typewrap(hid_t id_)
  

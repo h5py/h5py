@@ -63,10 +63,11 @@ cdef class ObjectID:
             H5Idec_ref(self.id)
 
     def __copy__(self):
-        """ Create a new instance and incref the ID. """
+        """ Create another object wrapper which points to the same id. """
         copy = type(self)(self.id)
-        if not self._locked:
+        if H5Iget_type(self.id) != H5I_BADID and not self._locked:
             H5Iinc_ref(self.id)
+        copy._locked = self._locked
         return copy
 
     def __str__(self):
