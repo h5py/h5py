@@ -44,6 +44,9 @@ cdef class TypeTimeID(TypeID):
 cdef class TypeBitfieldID(TypeID):
     pass
 
+cdef class TypeReferenceID(TypeID):
+    pass
+
 # --- Numeric atomic types ---
 
 cdef class TypeAtomicID(TypeID):
@@ -70,25 +73,11 @@ cdef class TypeCompoundID(TypeCompositeID):
 
 cdef object typewrap(hid_t id_)
  
+# === HDF5 imports ============================================================
+
 cdef extern from "hdf5.h":
 
-  cdef enum:
-    H5T_C_S1
-    H5T_NATIVE_B8
-    H5T_NATIVE_CHAR
-    H5T_NATIVE_SCHAR
-    H5T_NATIVE_UCHAR
-    H5T_NATIVE_SHORT
-    H5T_NATIVE_USHORT
-    H5T_NATIVE_INT
-    H5T_NATIVE_UINT
-    H5T_NATIVE_LONG
-    H5T_NATIVE_ULONG
-    H5T_NATIVE_LLONG
-    H5T_NATIVE_ULLONG
-    H5T_NATIVE_FLOAT
-    H5T_NATIVE_DOUBLE
-    H5T_NATIVE_LDOUBLE
+  # --- Enumerated constants --------------------------------------------------
 
   # Byte orders
   ctypedef enum H5T_order_t:
@@ -143,6 +132,31 @@ cdef extern from "hdf5.h":
     H5T_ARRAY            = 10,  # array types
     H5T_NCLASSES                # this must be last
 
+  # Native search direction
+  cdef enum H5T_direction_t:
+    H5T_DIR_DEFAULT,
+    H5T_DIR_ASCEND,
+    H5T_DIR_DESCEND
+
+  # --- Predefined datatypes --------------------------------------------------
+
+  cdef enum:
+    H5T_NATIVE_B8
+    H5T_NATIVE_CHAR
+    H5T_NATIVE_SCHAR
+    H5T_NATIVE_UCHAR
+    H5T_NATIVE_SHORT
+    H5T_NATIVE_USHORT
+    H5T_NATIVE_INT
+    H5T_NATIVE_UINT
+    H5T_NATIVE_LONG
+    H5T_NATIVE_ULONG
+    H5T_NATIVE_LLONG
+    H5T_NATIVE_ULLONG
+    H5T_NATIVE_FLOAT
+    H5T_NATIVE_DOUBLE
+    H5T_NATIVE_LDOUBLE
+
   # "Standard" types
   cdef enum:
     H5T_STD_I8LE
@@ -184,19 +198,25 @@ cdef extern from "hdf5.h":
     H5T_NATIVE_INT64
     H5T_NATIVE_UINT64
 
-  # Types which are particular to UNIX (for Time types)
+  # Unix time types
   cdef enum:
     H5T_UNIX_D32LE
     H5T_UNIX_D64LE
     H5T_UNIX_D32BE
     H5T_UNIX_D64BE
 
-  cdef enum H5T_direction_t:
-    H5T_DIR_DEFAULT,
-    H5T_DIR_ASCEND,
-    H5T_DIR_DESCEND
+  # String types
+  cdef enum:
+    H5T_FORTRAN_S1
+    H5T_C_S1
 
- # --- Datatype operations ---------------------------------------------------
+  # References
+  cdef enum:
+    H5T_STD_REF_OBJ
+    H5T_STD_REF_DSETREG
+
+  # --- Datatype operations ---------------------------------------------------
+
   # General operations
   hid_t         H5Tcreate(H5T_class_t type, size_t size) except *
   hid_t         H5Topen(hid_t loc, char* name) except *

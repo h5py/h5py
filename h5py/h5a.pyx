@@ -156,13 +156,8 @@ cdef class AttrID(ObjectID):
                 read() and write() functions defined in this module.
             """
             cdef TypeID tid
-            tid = None
-            try:
-                tid = self.get_type()
-                return h5t.py_translate_h5t(tid)
-            finally:
-                if tid is not None:
-                    tid.close()
+            tid = typewrap(H5Tget_type(self.id))
+            return tid.py_dtype()
 
     def close(self):
         """ ()
@@ -222,7 +217,7 @@ cdef class AttrID(ObjectID):
             check_numpy_read(arr_obj, space_id)
             mtype = h5t.py_translate_dtype(arr_obj.dtype)
 
-            H5Awrite(self.id, mtype_id, PyArray_DATA(arr_obj))
+            H5Awrite(self.id, mtype.id, PyArray_DATA(arr_obj))
 
         finally:
             if space_id:

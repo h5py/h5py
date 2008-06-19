@@ -78,6 +78,46 @@ import h5
 from h5 import DDict, ArgsError
 import sys
 
+# === Custom C API ============================================================
+    
+cdef object typewrap(hid_t id_):
+
+    cdef H5T_class_t cls
+    cls = H5Tget_class(id_)
+
+    if cls == H5T_INTEGER:
+        pcls = TypeIntegerID
+    elif cls == H5T_FLOAT:
+        pcls = TypeFloatID
+    elif cls == H5T_TIME:
+        pcls = TypeTimeID
+    elif cls == H5T_STRING:
+        pcls = TypeStringID
+    elif cls == H5T_BITFIELD:
+        pcls = TypeBitfieldID
+    elif cls == H5T_OPAQUE:
+        pcls = TypeOpaqueID
+    elif cls == H5T_COMPOUND:
+        pcls = TypeCompoundID
+    elif cls == H5T_REFERENCE:
+        pcls = TypeReferenceID
+    elif cls == H5T_ENUM:
+        pcls = TypeEnumID
+    elif cls == H5T_VLEN:
+        pcls = TypeVlenID
+    elif cls == H5T_ARRAY:
+        pcls = TypeArrayID
+    else:
+        pcls = TypeID
+
+    return pcls(id_)
+
+cdef object lockid(hid_t id_in):
+    cdef TypeID tid
+    tid = typewrap(id_in)
+    tid._locked = 1
+    return tid
+
 # === Public constants and data structures ====================================
 
 # Enumeration H5T_class_t
@@ -108,10 +148,23 @@ DIR_DEFAULT = H5T_DIR_DEFAULT
 DIR_ASCEND  = H5T_DIR_ASCEND
 DIR_DESCEND = H5T_DIR_DESCEND
 
+# Enumeration H5T_str_t
 STR_NULLTERM = H5T_STR_NULLTERM
 STR_NULLPAD  = H5T_STR_NULLPAD
 STR_SPACEPAD = H5T_STR_SPACEPAD
 
+# Enumeration H5T_norm_t
+NORM_IMPLIED = H5T_NORM_IMPLIED
+NORM_MSBSET = H5T_NORM_MSBSET
+NORM_NONE = H5T_NORM_NONE
+
+# Enumeration H5T_cset_t:
+CSET_ASCII = H5T_CSET_ASCII
+
+# Enumeration H5T_pad_t:
+PAD_ZERO = H5T_PAD_ZERO
+PAD_ONE = H5T_PAD_ONE
+PAD_BACKGROUND = H5T_PAD_BACKGROUND
 
 if sys.byteorder == "little":    # Custom python addition
     ORDER_NATIVE = H5T_ORDER_LE
@@ -158,8 +211,19 @@ NATIVE_UINT32 = lockid(H5T_NATIVE_UINT32)
 NATIVE_INT64 = lockid(H5T_NATIVE_INT64)
 NATIVE_UINT64 = lockid(H5T_NATIVE_UINT64)
 
-# Null terminated (C) string type
+# Unix time types
+UNIX_D32LE = lockid(H5T_UNIX_D32LE)
+UNIX_D64LE = lockid(H5T_UNIX_D64LE)
+UNIX_D32BE = lockid(H5T_UNIX_D32BE)
+UNIX_D64BE = lockid(H5T_UNIX_D64BE)
+
+# Reference types
+STD_REF_OBJ = lockid(H5T_STD_REF_OBJ)
+STD_REF_DSETREG = lockid(H5T_STD_REF_DSETREG)
+
+# Null terminated (C) and Fortran string types
 C_S1 = lockid(H5T_C_S1)
+FORTRAN_S1 = lockid(H5T_FORTRAN_S1)
 
 # Map array protocol strings to their HDF5 atomic equivalents
 # Not sure why LE/BE versions of I8/U8 exist; I'll include them anyway.
@@ -179,45 +243,7 @@ _complex_map = { "<c8": IEEE_F32LE, "<c16": IEEE_F64LE,
 _order_map = { H5T_ORDER_NONE: '|', H5T_ORDER_LE: '<', H5T_ORDER_BE: '>'}
 _sign_map  = { H5T_SGN_NONE: 'u', H5T_SGN_2: 'i' }
 
-# === Custom C API ============================================================
-    
-cdef object typewrap(hid_t id_):
 
-    cdef H5T_class_t cls
-    cls = H5Tget_class(id_)
-
-    if cls == H5T_INTEGER:
-        pcls = TypeIntegerID
-    elif cls == H5T_FLOAT:
-        pcls = TypeFloatID
-    elif cls == H5T_TIME:
-        pcls = TypeTimeID
-    elif cls == H5T_STRING:
-        pcls = TypeStringID
-    elif cls == H5T_BITFIELD:
-        pcls = TypeBitfieldID
-    elif cls == H5T_OPAQUE:
-        pcls = TypeOpaqueID
-    elif cls == H5T_COMPOUND:
-        pcls = TypeCompoundID
-    elif cls == H5T_REFERENCE:
-        pcls = TypeReferenceID
-    elif cls == H5T_ENUM:
-        pcls = TypeEnumID
-    elif cls == H5T_VLEN:
-        pcls = TypeVlenID
-    elif cls == H5T_ARRAY:
-        pcls = TypeArrayID
-    else:
-        pcls = TypeID
-
-    return pcls(id_)
-
-cdef object lockid(hid_t id_in):
-    cdef TypeID tid
-    tid = typewrap(id_in)
-    tid._locked = 1
-    return tid
 
 # === General datatype operations =============================================
 
@@ -268,6 +294,16 @@ def enum_create(TypeID base not None):
     """
     return typewrap(H5Tenum_create(base.id))
 
+def vlen_create(TypeID base not None):
+    """ (TypeID base) => TypeID
+
+        Create a new variable-length datatype, using any HDF5 type as a base.
+
+        Although the Python interface can manipulate these types, there is no
+        provision for reading/writing VLEN data.
+    """
+    return typewrap(H5Tvlen_create(base.id))
+
 # === Base type class =========================================================
 
 cdef class TypeID(ObjectID):
@@ -275,9 +311,6 @@ cdef class TypeID(ObjectID):
     """
         Represents an HDF5 datatype identifier, and encapsulates common
         operations.
-
-        Python properties:
-        dtype:          Numpy representation of the datatype.
     """
 
     def __init__(self, hid_t id_):
@@ -289,6 +322,9 @@ cdef class TypeID(ObjectID):
         return cpy
 
     property py_complex_names:
+        """ Either () or a 2-tuple (real, imag) determining how complex types
+            are read/written using HDF5 compound types.
+        """
         def __get__(self):
             return self._complex_names
         def __set__(self, item):
@@ -301,7 +337,8 @@ cdef class TypeID(ObjectID):
             self._complex_names = item
 
     property dtype:
-        """ Obtain a Numpy-style dtype object """
+        """ A Numpy-style dtype object representing this object.
+        """
         def __get__(self):
             return self.py_dtype()
 
@@ -460,6 +497,7 @@ cdef class TypeOpaqueID(TypeID):
         """ (STRING tag)
 
             Set a string describing the contents of an opaque datatype.
+            Limited to 256 characters.
         """
         H5Tset_tag(self.id, tag)
 
@@ -554,6 +592,58 @@ cdef class TypeAtomicID(TypeID):
         """
         H5Tset_order(self.id, <H5T_order_t>order)
 
+    def get_precision(self):
+        """ () => UINT precision
+
+            Get the number of significant bits (excludes padding).
+        """
+        return H5Tget_precision(self.id)
+
+    def set_precision(self, size_t precision):
+        """ (UINT precision)
+            
+            Set the number of significant bits (excludes padding).
+        """
+        H5Tset_precision(self.id, precision)
+
+    def get_offset(self):
+        """ () => INT offset
+
+            Get the offset of the first significant bit.
+        """
+        return H5Tget_offset(self.id)
+
+    def set_offset(self, size_t offset):
+        """ (UINT offset)
+
+            Set the offset of the first significant bit.
+        """
+        H5Tset_offset(self.id, offset)
+
+    def get_pad(self):
+        """ () => (INT lsb_pad_code, INT msb_pad_code)
+
+            Determine the padding type.  Possible values are:
+                PAD_ZERO
+                PAD_ONE
+                PAD_BACKGROUND
+        """
+        cdef H5T_pad_t lsb
+        cdef H5T_pad_t msb
+        H5Tget_pad(self.id, &lsb, &msb)
+        return (<int>lsb, <int>msb)
+
+    def set_pad(self, int lsb, int msb):
+        """ (INT lsb_pad_code, INT msb_pad_code)
+
+            Set the padding type.  Possible values are:
+                PAD_ZERO
+                PAD_ONE
+                PAD_BACKGROUND
+        """
+        H5Tset_pad(self.id, <H5T_pad_t>lsb, <H5T_pad_t>msb)
+
+
 cdef class TypeIntegerID(TypeAtomicID):
 
     """
@@ -583,11 +673,91 @@ cdef class TypeIntegerID(TypeAtomicID):
         return dtype( _order_map[self.get_order()] + 
                       _sign_map[self.get_sign()] + str(self.get_size()) )
 
+
 cdef class TypeFloatID(TypeAtomicID):
 
     """
         Floating-point datatypes
     """
+
+    def get_fields(self):
+        """ () => TUPLE field_info
+
+            Get information about floating-point bit fields.  See the HDF5
+            docs for a better description.  Tuple has to following members:
+                0: UINT spos
+                1: UINT epos
+                2: UINT esize
+                3: UINT mpos
+                4: UINT msize
+        """
+        cdef size_t spos, epos, esize, mpos, msize
+        H5Tget_fields(self.id, &spos, &epos, &esize, &mpos, &msize)
+        return (spos, epos, esize, mpos, msize)
+
+    def set_fields(self, size_t spos, size_t epos, size_t esize, 
+                          size_t mpos, size_t msize):
+        """ (UINT spos, UINT epos, UINT esize, UINT mpos, UINT msize)
+
+            Set floating-point bit fields.  Refer to the HDF5 docs for
+            argument definitions.
+        """
+        H5Tset_fields(self.id, spos, epos, esize, mpos, msize)
+
+    def get_ebias(self):
+        """ () => UINT ebias
+
+            Get the exponent bias.
+        """
+        return H5Tget_ebias(self.id)
+
+    def set_ebias(self, size_t ebias):
+        """ (UINT ebias)
+
+            Set the exponent bias.
+        """
+        H5Tset_ebias(self.id, ebias)
+
+    def get_norm(self):
+        """ () => INT normalization_code
+
+            Get the normalization strategy.  Legal values are:
+                NORM_IMPLIED
+                NORM_MSBSET
+                NORM_NONE
+        """
+        return <int>H5Tget_norm(self.id)
+
+    def set_norm(self, int norm):
+        """ (INT normalization_code)
+
+            Set the normalization strategy.  Legal values are:
+                NORM_IMPLIED
+                NORM_MSBSET
+                NORM_NONE
+        """
+        H5Tset_norm(self.id, <H5T_norm_t>norm)
+
+    def get_inpad(self):
+        """ () => INT pad_code
+
+            Determine the internal padding strategy.  Legal values are:
+                PAD_ZERO
+                PAD_ONE
+                PAD_BACKGROUND
+        """
+        return <int>H5Tget_inpad(self.id)
+
+    def set_inpad(self, int pad_code):
+        """ (INT pad_code)
+
+            Set the internal padding strategy.  Legal values are:
+                PAD_ZERO
+                PAD_ONE
+                PAD_BACKGROUND
+        """
+        H5Tset_inpad(self.id, <H5T_pad_t>pad_code)
+
     cdef object py_dtype(self):
         # Translation function for floating-point types
         return dtype( _order_map[self.get_order()] + "f" + 

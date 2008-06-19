@@ -22,6 +22,12 @@ from utils cimport  require_tuple, require_list, convert_dims, convert_tuple, \
 import h5
 from h5 import DDict
 
+cdef object lockid(hid_t id_):
+    cdef SpaceID space
+    space = SpaceID(id_)
+    space._locked = 1
+    return space
+
 # === Public constants and data structures ====================================
 
 #enum H5S_seloper_t:
@@ -36,7 +42,8 @@ SELECT_APPEND   = H5S_SELECT_APPEND
 SELECT_PREPEND  = H5S_SELECT_PREPEND
 SELECT_INVALID  = H5S_SELECT_INVALID 
 
-ALL       = H5S_ALL
+ALL = lockid(H5S_ALL)   # This is accepted in lieu of an actual identifier
+                        # in functions like H5Dread, so wrap it.
 UNLIMITED = H5S_UNLIMITED
 
 #enum H5S_class_t
@@ -99,13 +106,11 @@ cdef class SpaceID(ObjectID):
 
     """
         Represents a dataspace identifier.
-
-        Python extensions (readonly):
-
-        shape
     """
 
     property shape:
+        """ Numpy-style shape tuple representing dimensions.  () == scalar.
+        """
         def __get__(self):
             return self.get_simple_extent_dims()
 
@@ -125,7 +130,7 @@ cdef class SpaceID(ObjectID):
         """
         return SpaceID(H5Scopy(self.id))
 
-# === Simple dataspaces =======================================================
+    # === Simple dataspaces ===================================================
 
     def is_simple(self):
         """ () => BOOL is_simple
