@@ -336,7 +336,7 @@ cdef class PropDCID(PropInstanceID):
         return H5Pget_nfilters(self.id)
 
     def set_filter(self, int filter_code, unsigned int flags=0, object values=None):
-        """ (INT filter_code, UINT flags=0, LIST values=None)
+        """ (INT filter_code, UINT flags=0, TUPLE values=None)
 
             Set a filter in the pipeline.  Params are:
             filter_code:
@@ -345,14 +345,14 @@ cdef class PropDCID(PropInstanceID):
                 h5z.FILTER_FLETCHER32
                 h5z.FILTER_SZIP
             flags:  Bit flags (h5z.FLAG_*) setting filter properties
-            values: List of UINTS giving auxiliary data for the filter.
+            values: TUPLE of UINTS giving auxiliary data for the filter.
         """
         cdef size_t nelements
         cdef unsigned int *cd_values
         cdef int i
         cd_values = NULL
 
-        require_list(values, 1, -1, "values")
+        require_tuple(values, 1, -1, "values")
         
         try:
             if values is None or len(values) == 0:
@@ -384,9 +384,10 @@ cdef class PropDCID(PropInstanceID):
             Tuple entries are:
             0: INT filter code (h5z.FILTER_*)
             1: UINT flags (h5z.FLAG_*)
-            2: LIST of UINT values; filter aux data (16 values max)
+            2: TUPLE of UINT values; filter aux data (16 values max)
             3: STRING name of filter (256 chars max)
         """
+        cdef list vlist
         cdef int filter_code
         cdef unsigned int flags
         cdef size_t nelements
@@ -405,7 +406,7 @@ cdef class PropDCID(PropInstanceID):
         for i from 0<=i<nelements:
             vlist.append(cd_values[i])
 
-        return (filter_code, flags, vlist, name)
+        return (filter_code, flags, tuple(vlist), name)
 
     def get_filter_by_id(self, int filter_code):
         """ (INT filter_code) => TUPLE filter_info
@@ -415,9 +416,10 @@ cdef class PropDCID(PropInstanceID):
 
             Tuple entries are:
             0: UINT flags (h5z.FLAG_*)
-            1: LIST of UINT values; filter aux data (16 values max)
+            1: TUPLE of UINT values; filter aux data (16 values max)
             2: STRING name of filter (256 chars max)
         """
+        cdef list vlist
         cdef unsigned int flags
         cdef size_t nelements
         cdef unsigned int cd_values[16]
@@ -432,7 +434,7 @@ cdef class PropDCID(PropInstanceID):
         for i from 0<=i<nelements:
             vlist.append(cd_values[i])
 
-        return (flags, vlist, name)
+        return (flags, tuple(vlist), name)
 
     def remove_filter(self, int filter_class):
         """ (INT filter_class)

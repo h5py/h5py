@@ -317,7 +317,9 @@ cdef class TypeID(ObjectID):
         self._complex_names = ('r', 'i')
 
     def __copy__(self):
+        cdef TypeID cpy
         cpy = ObjectID.__copy__(self)
+        assert typecheck(cpy, TypeID), "TypeID copy encounted invalid type"
         cpy._complex_names = self._complex_names
         return cpy
 
@@ -865,6 +867,8 @@ cdef class TypeCompoundID(TypeCompositeID):
     cdef object py_dtype(self):
 
         cdef TypeID tmp_type
+        cdef list field_names
+        cdef list field_types
         nfields = self.get_nmembers()
         field_names = []
         field_types = []

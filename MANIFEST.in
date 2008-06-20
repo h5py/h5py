@@ -1,9 +1,9 @@
 include MANIFEST.in
 include LICENSE.txt
 include README.txt
+include VERSION.txt
 include docs.cfg
-recursive-include h5py *.py *.pyx *.pxd
-recursive-include h5py utils.c utils.h *.hdf5
+recursive-include h5py *.py *.pyx *.pxd *.h *.c *.hdf5
 recursive-include licenses *
 recursive-include docs *
 

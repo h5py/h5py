@@ -17,6 +17,8 @@
     Library version and API information lives here:
     - HDF5_VERS, HDF5_VERS_TPL:  Library version
     - API_VERS, API_VERS_TPL:  API version (1.6 or 1.8) used to compile h5py.
+
+    All exception classes and error handling functions are also in this module.
 """
 from python cimport PyErr_SetObject
 
@@ -52,10 +54,10 @@ class DDict(dict):
 
 cdef class ObjectID:
         
-    def __cinit__(self, hid_t id):
+    def __cinit__(self, hid_t id_):
         """ Object init; simply records the given ID. """
         self._locked = 0
-        self.id = id
+        self.id = id_
 
     def __dealloc__(self):
         """ Automatically decrefs the ID, if it's valid. """
@@ -64,7 +66,9 @@ cdef class ObjectID:
 
     def __copy__(self):
         """ Create another object wrapper which points to the same id. """
+        cdef ObjectID copy
         copy = type(self)(self.id)
+        assert typecheck(copy, ObjectID), "ObjectID copy encountered invalid type"
         if H5Iget_type(self.id) != H5I_BADID and not self._locked:
             H5Iinc_ref(self.id)
         copy._locked = self._locked
@@ -270,7 +274,7 @@ _exceptions = {
 cdef class ErrorStackElement:
     """
         Represents an entry in the HDF5 error stack.
-        Modeled on the H5E_error_t struct.  All parameters are read-only.
+        Modeled on the H5E_error_t struct.  All properties are read-only.
 
         Atributes
         maj_num:    INT major error number
@@ -363,14 +367,14 @@ def get_major(int error):
 
         Get a description associated with an HDF5 minor error code.
     """
-    return H5E_get_major(<H5E_major_t>error)
+    return H5Eget_major(<H5E_major_t>error)
 
 def get_minor(int error):
     """ (INT error) => STRING description
 
         Get a description associated with an HDF5 minor error code.
     """
-    return H5E_get_minor(<H5E_minor_t>error)
+    return H5Eget_minor(<H5E_minor_t>error)
 
 def get_error(int error):
     """ (INT errno) => STRING description
@@ -381,7 +385,7 @@ def get_error(int error):
     cdef int mn
     mn = error % 1000
     mj = (error-mn)/1000
-    return "%s: %s" % (H5E_get_major(<H5E_major_t>mj), H5E_get_minor(<H5E_minor_t>mn))
+    return "%s: %s" % (H5Eget_major(<H5E_major_t>mj), H5Eget_minor(<H5E_minor_t>mn))
 
 def split_error(int error):
     """ (INT errno) => (INT major, INT minor)

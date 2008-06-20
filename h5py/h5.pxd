@@ -249,9 +249,9 @@ cdef int resume_errors(err_c cookie) except -1
 
 cdef class ObjectID:
     """ Base wrapper class for HDF5 object identifiers """
+    cdef object __weakref__
     cdef readonly hid_t id
     cdef readonly int _locked
-
 
 
 
