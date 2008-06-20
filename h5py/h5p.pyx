@@ -18,7 +18,7 @@
 # Pyrex compile-time imports
 
 from utils cimport  require_tuple, convert_dims, convert_tuple, \
-                    emalloc, efree, pybool
+                    emalloc, efree, pybool, require_list
 
 # Runtime imports
 import h5
@@ -130,10 +130,6 @@ cdef class PropFCID(PropInstanceID):
 
     """
         Represents a file creation property list.
-
-        Each property list entry is associated with a Python object property,
-        in addition to the HDF5 set/get pair.  The set/get docstrings are
-        authoritative.
     """
 
     def get_version(self):
@@ -157,9 +153,6 @@ cdef class PropFCID(PropInstanceID):
 
         return (super_, freelist, stab, shhdr)
 
-    property version:
-        def __get__(self):
-            return self.get_version()
 
     def set_userblock(self, hsize_t size):
         """ (INT/LONG size)
@@ -177,12 +170,6 @@ cdef class PropFCID(PropInstanceID):
         cdef hsize_t size
         H5Pget_userblock(self.id, &size)
         return size
-
-    property userblock:
-        def __get__(self):
-            return self.get_userblock()
-        def __set__(self, val):
-            self.set_userblock(val)
 
     def set_sizes(self, size_t addr, size_t size):
         """ (UINT addr, UINT size)
@@ -206,14 +193,6 @@ cdef class PropFCID(PropInstanceID):
         H5Pget_sizes(self.id, &addr, &size)
         return (addr, size)
 
-    property sizes:
-        def __get__(self):
-            return self.get_sizes()
-        def __set__(self, tpl):
-            require_tuple(tpl, 0, 2, "value")
-            a, b = tpl
-            self.set_sizes(a,b)
-
     def set_sym_k(self, unsigned int ik, unsigned int lk):
         """ (INT ik, INT lk)
 
@@ -232,14 +211,6 @@ cdef class PropFCID(PropInstanceID):
         H5Pget_sym_k(self.id, &ik, &lk)
         return (ik, lk)
 
-    property sym_k:
-        def __get__(self):
-            return self.get_sym_k()
-        def __set__(self, tpl):
-            require_tuple(tpl, 0, 2, "value")
-            a, b = tpl
-            self.set_sym_k(a,b)
-
     def set_istore_k(self, unsigned int ik):
         """ (UINT ik)    [File creation]
 
@@ -255,12 +226,6 @@ cdef class PropFCID(PropInstanceID):
         cdef unsigned int ik
         H5Pget_istore_k(self.id, &ik)
         return ik
-
-    property istore_k:
-        def __get__(self):
-            return self.get_istore_k()
-        def __set__(self, a):
-            self.set_istore_k(a)
 
 # === Dataset creation properties =============================================
 
@@ -290,11 +255,6 @@ cdef class PropDCID(PropInstanceID):
         """
         return <int>H5Pget_layout(self.id)
 
-    property layout:
-        def __get__(self):
-            return self.get_layout()
-        def __set__(self, val):
-            self.set_layout(val)
 
     def set_chunk(self, object chunksize):
         """ (TUPLE chunksize)
@@ -335,15 +295,7 @@ cdef class PropDCID(PropInstanceID):
         finally:
             efree(dims)
 
-    property chunk:
-        def __get__(self):
-            return self.get_chunk()
-        def __set__(self, val):
-            self.set_chunk(val)
-
     # === Filter functions ====================================================
-    # These do not have Python properties because the order of addition is
-    # important, and no get_* functions are provided by HDF5.
     
     def set_deflate(self, unsigned int level=5):
         """ (UINT level=5)
@@ -375,6 +327,112 @@ cdef class PropDCID(PropInstanceID):
             and general restrictions on use of the SZIP format.
         """
         H5Pset_szip(self.id, options, pixels_per_block)
+
+    def get_nfilters(self):
+        """ () => INT
+
+            Determine the number of filters in the pipeline.
+        """
+        return H5Pget_nfilters(self.id)
+
+    def set_filter(self, int filter_code, unsigned int flags=0, object values=None):
+        """ (INT filter_code, UINT flags=0, LIST values=None)
+
+            Set a filter in the pipeline.  Params are:
+            filter_code:
+                h5z.FILTER_DEFLATE
+                h5z.FILTER_SHUFFLE
+                h5z.FILTER_FLETCHER32
+                h5z.FILTER_SZIP
+            flags:  Bit flags (h5z.FLAG_*) setting filter properties
+            values: List of UINTS giving auxiliary data for the filter.
+        """
+        cdef size_t nelements
+        cdef unsigned int *cd_values
+        cdef int i
+        cd_values = NULL
+
+        require_list(values, 1, -1, "values")
+        
+        try:
+            if values is None or len(values) == 0:
+                nelements = 0
+                cd_values = NULL
+            else:
+                nelements = len(values)
+                cd_values = <unsigned int*>emalloc(sizeof(unsigned int)*nelements)
+
+                for i from 0<=i<nelements:
+                    cd_values[i] = int(values[i])
+            
+            H5Pset_filter(self.id, <H5Z_filter_t>filter_code, flags, nelements, cd_values)
+        finally:
+            efree(cd_values)
+
+    def all_filters_avail(self):
+        """ () => BOOL
+
+            Determine if all the filters in the pipelist are available to
+            the library.
+        """
+        return pybool(H5Pall_filters_avail(self.id))
+
+    def get_filter(self, int filter_idx):
+        """ (UINT filter_idx) => TUPLE filter_info
+
+            Get information about a filter, identified by its index.
+            Tuple entries are:
+            0: INT filter code (h5z.FILTER_*)
+            1: UINT flags (h5z.FLAG_*)
+            2: LIST of UINT values; filter aux data (16 values max)
+            3: STRING name of filter (256 chars max)
+        """
+        cdef int filter_code
+        cdef unsigned int flags
+        cdef size_t nelements
+        cdef unsigned int cd_values[16]
+        cdef char name[257]
+        cdef int i
+        nelements = 16 # HDF5 library actually complains if this is too big.
+
+        if filter_idx < 0:
+            raise ValueError("Filter index must be a non-negative integer")
+
+        filter_code = <int>H5Pget_filter(self.id, filter_idx, &flags, &nelements, cd_values, 256, name)
+        name[256] = c'\0'  # in case it's > 256 chars
+
+        vlist = []
+        for i from 0<=i<nelements:
+            vlist.append(cd_values[i])
+
+        return (filter_code, flags, vlist, name)
+
+    def get_filter_by_id(self, int filter_code):
+        """ (INT filter_code) => TUPLE filter_info
+
+            Get information about a filter, identified by its code (one
+            of h5z.FILTER_*)
+
+            Tuple entries are:
+            0: UINT flags (h5z.FLAG_*)
+            1: LIST of UINT values; filter aux data (16 values max)
+            2: STRING name of filter (256 chars max)
+        """
+        cdef unsigned int flags
+        cdef size_t nelements
+        cdef unsigned int cd_values[16]
+        cdef char name[257]
+        cdef int i
+        nelements = 16 # HDF5 library actually complains if this is too big.
+
+        H5Pget_filter_by_id(self.id, <H5Z_filter_t>filter_code, &flags, &nelements, cd_values, 256, name)
+        name[256] = c'\0'  # in case it's > 256 chars
+
+        vlist = []
+        for i from 0<=i<nelements:
+            vlist.append(cd_values[i])
+
+        return (flags, vlist, name)
 
     def remove_filter(self, int filter_class):
         """ (INT filter_class)
@@ -420,18 +478,59 @@ cdef class PropFAID(PropInstanceID):
         H5Pget_fclose_degree(self.id, &deg)
         return deg
 
-    property fclose_degree:
-        def __get__(self):
-            return self.get_fclose_degree()
-        def __set__(self,val):
-            self.set_fclose_degree(val)
-    
+    def set_fapl_core(self, size_t increment=1024*1024, hbool_t backing_store=0):
+        """ (UINT increment=1M, BOOL backing_store=False)
 
+            Use the CORE (memory-resident) file driver.
+            increment:      Chunk size for new memory requests (default 1 meg)
+            backing_store:  If True, write the memory contents to disk when
+                            the file is closed.
+        """
+        H5Pset_fapl_core(self.id, increment, backing_store)
 
+    def get_fapl_core(self):
+        """ () => TUPLE core_settings
 
+            Determine settings for the CORE (memory-resident) file driver.
+            Tuple entries are:
+            0: UINT "increment": Chunk size for new memory requests
+            1: BOOL "backing_store": If True, write the memory contents to 
+                                     disk when the file is closed.
+        """
+        cdef size_t increment
+        cdef hbool_t backing_store
+        H5Pget_fapl_core(self.id, &increment, &backing_store)
+        return (increment, pybool(backing_store))
 
+    def set_fapl_family(self, hsize_t memb_size, PropID memb_fapl=None):
+        """ (UINT memb_size, PropFAID memb_fapl=None)
 
+            Set up the family driver.
+            memb_size:  Member file size
+            memb_fapl:  File access property list for each member access
+        """
+        cdef hid_t plist_id
+        plist_id = pdefault(memb_fapl)
+        H5Pset_fapl(self.id, memb_size, plist_id)
 
+    def get_fapl_family(self):
+        """ () => TUPLE info
+
+            Determine family driver settings. Tuple values are:
+            0: UINT memb_size
+            1: PropFAID memb_fapl or None
+        """
+        cdef hid_t mfapl_id
+        cdef hsize_t msize
+        cdef PropFAID plist
+        plist = None
+
+        H5Pget_fapl_family(self.id, &msize, &mfapl_id)
+
+        if mfapl_id > 0:
+            plist = PropFAID(mfapl_id)
+
+        return (msize, plist)
 
 
 

@@ -110,7 +110,8 @@ class dev(Command):
             except OSError:
                 pass
             fnames = [os.path.join('h5py',x) for x in os.listdir('h5py') if 
-                      (fnmatch.fnmatch(x,'h5*.c') or fnmatch.fnmatch(x, '*.dep'))]
+                      (fnmatch.fnmatch(x,'h5*.c') or fnmatch.fnmatch(x, '*.dep')
+                       or fnmatch.fnmatch(x, 'utils.c'))]
             for name in fnames:
                 os.remove(name)
 
