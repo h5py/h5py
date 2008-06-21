@@ -13,30 +13,36 @@
 #-
 
 """
-    Setup script for the h5py package.  All commands take the usual distutils
-    options, like --home, etc.  Pyrex is not required for installation.
+    Setup script for the h5py package.  
+
+    All commands take the usual distutils options, like --home, etc.  Pyrex is
+    not required for installation, but will be invoked if the .c files are
+    missing or the option --pyrex (or --pyrex-only) is used.
 
     To build:
-    python setup.py build [--pyrex]
-        --pyrex:    Perform Pyrex recompilation of all .pyx files.
+    python setup.py build
 
     To install:
-    sudo python setup.py install [--pyrex]
+    sudo python setup.py install
 
     To run the test suite locally (won't install anything):
-    python setup.py test [--pyrex]
+    python setup.py test
 
     Advanced developer options:
-    python setup.py dev [--pyrex] [--doc] [--clean] [--readme=<name.html>]
+    python setup.py dev [--doc] [--clean] [--readme=<name.html>]
         --doc:      Rebuild HTML documentation (requires epydoc)
         --clean:    Wipe out build/ and Pyrex-created .c, .dep files
         --readme:   Compile the RST readme file into an HTML fragment
+
+    Universal options:
+        --pyrex         Have Pyrex recompile the *.pyx files
+        --pyrex-only    Have Pyrex recompile the *.pyx files, and stop.
 """
 
 # === Global constants ========================================================
 
 NAME = 'h5py'
-MIN_PYREX = '0.9.6.4'
+MIN_PYREX = '0.9.8.4'  # for compile_multiple
 MIN_NUMPY = '1.0.3'
 
 # If you have your HDF5 *.h files and libraries somewhere not in /usr or
@@ -44,7 +50,7 @@ MIN_NUMPY = '1.0.3'
 custom_include_dirs = []    # = ["/some/other/path", "/an/other/path"]
 custom_library_dirs = []
 
-# === Initial setup ===========================================================
+# === Initial imports and utilities ===========================================
 
 from distutils.cmd import Command
 from distutils.errors import DistutilsError, DistutilsExecError
@@ -53,33 +59,36 @@ from distutils.extension import Extension
 import os
 import sys
 import shutil
-import fnmatch
 
 # Distutils tries to use hard links when building source distributions, which 
 # fails under a wide variety of network filesystems under Linux.
 delattr(os, 'link') # goodbye!
 
-try:
-    os.remove('MANIFEST') # why the hell are we caching this information
-except OSError:
-    pass
-
-# === Parse extra command line arguments ======================================
-
-ENABLE_PYREX = False
-for arg in sys.argv[:]:
-    if arg.find('--pyrex') == 0:
-        ENABLE_PYREX = True
-        sys.argv.remove(arg)
-
-# === Attempt imports =========================================================
-
-def fatal(instring):
+def fatal(instring, code=1):
     print >> sys.stderr, "Fatal: "+instring
-    exit(2)
+    exit(code)
 
 def warn(instring):
     print >> sys.stderr, "Warning: "+instring
+
+# === Parse command line arguments ============================================
+
+ENABLE_PYREX = False
+PYREX_ONLY = False
+for arg in sys.argv[:]:
+    if arg == '--pyrex':
+        ENABLE_PYREX = True
+        sys.argv.remove(arg)
+    if arg == '--pyrex-only':
+        ENABLE_PYREX = True
+        PYREX_ONLY = True
+        sys.argv.remove(arg)
+
+if 'sdist' in sys.argv and os.path.exists('MANIFEST'):
+    warn("Cleaning up stale MANIFEST file")
+    os.remove('MANIFEST')
+
+# === Required imports ========================================================
 
 # Check Python version (2.5 or greater required)
 if not (sys.version_info[0] == 2 and sys.version_info[1] >= 5):
@@ -90,35 +99,17 @@ try:
     import numpy
     if numpy.version.version < MIN_NUMPY:
         fatal("Numpy version %s is out of date (>= %s needed)" % (numpy.version.version, MIN_NUMPY))
+
 except ImportError:
-    fatal("Numpy (version >= %s) is required" % MIN_NUMPY)
+    fatal("Numpy not installed (version >= %s required)" % MIN_NUMPY)
 
-# Enable Pyrex only if requested, unless it's unavailable or out of date
-USE_PYREX = False
-CMD_CLASS = {}
-EXT_EXTEN = '.c'
-if ENABLE_PYREX:
-    try:
-        from Pyrex.Compiler.Main import Version
-        from Pyrex.Distutils import build_ext
+# === Versioning ==============================================================
 
-        if Version.version >= MIN_PYREX:
-            CMD_CLASS = {'build_ext': build_ext}
-            EXT_EXTEN = '.pyx'
-            USE_PYREX = True
-        else:
-            warn("Pyrex disabled; old version %s detected (min %s)" % (Version.version, MIN_PYREX))
-
-    except ImportError:
-        pass
-
-# === Versioning setup ========================================================
-
-# 1. Read in version from VERSION.txt file
+# 1. Read version from VERSION.txt file into VERSION global
 # 2. Write it to h5py/version.py
 # 3. Copy README into h5py/version.py as docstring
 
-vers_in = open('VERSION.txt')
+vers_in = open('VERSION.txt', 'r')
 VERSION = vers_in.read().strip()
 vers_out = open(os.path.join(NAME,'version.py'),'w')
 rdfile = open('README.txt','r')
@@ -127,6 +118,68 @@ vers_out.write('"""\nPackage "h5py" extended information\n\n%s"""\nversion = "%s
 rdfile.close()
 vers_out.close()
 vers_in.close()
+
+# === Setup configuration & Pyrex options =====================================
+
+# Pyrex extension modules
+pyx_modules = ['h5' , 'h5f', 'h5g', 'h5s', 'h5t', 'h5d',
+               'h5a', 'h5p', 'h5z', 'h5i', 'h5r', 'utils']
+
+pyx_src_path = 'h5py'
+pyx_extra_src = ['utils_low.c']     # C source files required for Pyrex code
+pyx_libraries = ['hdf5']            # Libraries to link into Pyrex code
+
+# Compile-time include and library dirs for Pyrex code
+pyx_include = [numpy.get_include()] 
+pyx_include.extend(['/usr/include', '/usr/local/include'])
+pyx_include.extend(custom_include_dirs)
+pyx_library_dirs = ['/usr/lib', '/usr/local/lib']
+pyx_library_dirs.extend(custom_library_dirs)
+
+# Additional compiler flags for Pyrex code
+pyx_extra_args = ['-Wno-unused', '-Wno-uninitialized', '-DH5_USE_16_API']
+
+extra_link_args = []
+extra_compile_args = pyx_extra_args
+
+# Pyrex source files (without extension)
+pyrex_sources = [os.path.join(pyx_src_path, x) for x in pyx_modules]
+
+# Enable Pyrex if requested or needed
+if ENABLE_PYREX or not all([os.path.exists(x+'.c') for x in pyrex_sources]):
+    try:
+        from Pyrex.Compiler.Main import Version
+
+        if Version.version >= MIN_PYREX:
+            from Pyrex.Compiler.Main import compile_multiple, CompilationOptions
+            results = compile_multiple( [x+'.pyx' for x in pyrex_sources], CompilationOptions(verbose=True))
+            if results.num_errors != 0:
+                fatal("%d Pyrex compilation errors encountered; aborting." % results.num_errors)
+            if PYREX_ONLY:
+                exit(0)
+        else:
+            fatal("Old Pyrex version %s detected (min %s)" % (Version.version, MIN_PYREX))
+
+    except ImportError:
+        fatal("Pyrex recompilation required, but Pyrex not installed.")
+
+# Create extensions
+pyx_extensions = []
+for module_name in pyx_modules:
+    sources  = [os.path.join(pyx_src_path, module_name) +'.c']
+    sources += [os.path.join(pyx_src_path, x) for x in pyx_extra_src]
+
+    pyx_extensions.append(
+        Extension( 
+            NAME+'.'+module_name,
+            sources, 
+            include_dirs = pyx_include, 
+            libraries = pyx_libraries,
+            library_dirs = pyx_library_dirs, 
+            extra_compile_args = extra_compile_args,
+            extra_link_args = extra_link_args
+        )
+    )
 
 # === Custom extensions for distutils =========================================
 
@@ -150,11 +203,11 @@ class test(Command):
         sys.path = oldpath
 
 class dev(Command):
-    description = "Developer commands (--doc, --readme=<file>)"
+    description = "Developer commands (--doc, --clean, --readme=<file>)"
     user_options = [('doc','d','Rebuild documentation'),
-                    ('readme=','r','Compile <readme>.html file from README.txt'),
+                    ('readme=','r','Compile HTML file from README.txt'),
                     ('clean', 'c', 'Remove built files and Pyrex temp files.')]
-    boolean_options = ['doc', 'inspect']
+    boolean_options = ['doc']
 
     def initialize_options(self):
         self.doc = False
@@ -170,9 +223,10 @@ class dev(Command):
                 shutil.rmtree('build')
             except OSError:
                 pass
-            fnames = [os.path.join('h5py',x) for x in os.listdir('h5py') if 
-                      (fnmatch.fnmatch(x,'h5*.c') or fnmatch.fnmatch(x, '*.dep')
-                       or fnmatch.fnmatch(x, 'utils.c'))]
+            fnames = [ x+'.dep' for x in pyrex_sources ] + \
+                     [ x+'.c' for x in pyrex_sources ] + \
+                     [ 'MANIFEST', os.path.join(pyx_src_path, 'version.py')]
+
             for name in fnames:
                 os.remove(name)
 
@@ -196,51 +250,7 @@ class dev(Command):
             fh.close()
 
 # Add these to the command class dictionary for setup()
-CMD_CLASS.update({'dev': dev, 'test': test})
-
-# === Setup configuration =====================================================
-
-# Pyrex extension modules
-pyx_modules = ['h5' , 'h5f', 'h5g', 'h5s', 'h5t', 'h5d',
-               'h5a', 'h5p', 'h5z', 'h5i', 'h5r', 'utils']
-
-pyx_src_path = 'h5py'
-pyx_extra_src = ['utils_low.c']     # C source files required for Pyrex code
-pyx_libraries = ['hdf5']            # Libraries to link into Pyrex code
-
-# Compile-time include and library dirs for Pyrex code
-pyx_include = [numpy.get_include()] 
-pyx_include.extend(['/usr/include', '/usr/local/include'])
-pyx_include.extend(custom_include_dirs)
-pyx_library_dirs = ['/usr/lib', '/usr/local/lib']
-pyx_library_dirs.extend(custom_library_dirs)
-
-# Additional compiler flags for Pyrex code
-pyx_extra_args = ['-Wno-unused', '-Wno-uninitialized', '-DH5_USE_16_API']
-
-extra_link_args = []
-extra_compile_args = pyx_extra_args
-
-
-# === Setup implementation ====================================================
-
-# Create extensions
-pyx_extensions = []
-for module_name in pyx_modules:
-    sources  = [os.path.join(pyx_src_path, module_name) + EXT_EXTEN]
-    sources += [os.path.join(pyx_src_path, x) for x in pyx_extra_src]
-
-    pyx_extensions.append(
-        Extension( 
-            NAME+'.'+module_name,
-            sources, 
-            include_dirs = pyx_include, 
-            libraries = pyx_libraries,
-            library_dirs = pyx_library_dirs, 
-            extra_compile_args = extra_compile_args,
-            extra_link_args = extra_link_args
-        )
-    )
+CMD_CLASS = {'dev': dev, 'test': test}
 
 
 # Run setup
