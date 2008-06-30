@@ -131,14 +131,16 @@ cdef class AttrID(ObjectID):
         shape:  A Numpy-style shape tuple representing the dataspace
     """
     property name:
+        """ The attribute's name
+        """
         def __get__(self):
             return self.get_name()
 
     property shape:
+        """ A Numpy-style shape tuple representing the attribute dataspace.
+        """
         def __get__(self):
-            """ Retrieve the dataspace of this attribute, as a Numpy-style 
-                shape tuple.
-            """
+
             cdef SpaceID space
             space = None
             try:
@@ -149,14 +151,12 @@ cdef class AttrID(ObjectID):
                     space.close()
 
     property dtype:
+        """ A Numpy-stype dtype object representing the attribute's datatype
+        """
         def __get__(self):
-            """ Obtain the data-type of this attribute as a Numpy dtype.  Note that the
-                resulting dtype is not guaranteed to be byte-for-byte compatible with
-                the underlying HDF5 datatype, but is appropriate for use in e.g. the 
-                read() and write() functions defined in this module.
-            """
+
             cdef TypeID tid
-            tid = typewrap(H5Tget_type(self.id))
+            tid = typewrap(H5Aget_type(self.id))
             return tid.py_dtype()
 
     def close(self):
@@ -170,13 +170,13 @@ cdef class AttrID(ObjectID):
 
     def read(self, ndarray arr_obj not None):
         """ (NDARRAY arr_obj)
-            
+
             Read the attribute data into the given Numpy array.  Note that the 
             Numpy array must have the same shape as the HDF5 attribute, and a 
             conversion-compatible datatype.
 
-            The Numpy array must be writable, C-contiguous and own its data.  If
-            this is not the case, an ValueError is raised and the read fails.
+            The Numpy array must be writable, C-contiguous and own its data.
+            If this is not the case, an ValueError is raised and the read fails.
         """
         cdef TypeID mtype
         cdef hid_t space_id
@@ -187,7 +187,7 @@ cdef class AttrID(ObjectID):
             space_id = H5Aget_space(self.id)
             check_numpy_write(arr_obj, space_id)
 
-            mtype = h5t.py_translate_dtype(arr_obj.dtype)
+            mtype = h5t.py_create(arr_obj.dtype)
 
             H5Aread(self.id, mtype.id, PyArray_DATA(arr_obj))
 
@@ -200,12 +200,12 @@ cdef class AttrID(ObjectID):
     def write(self, ndarray arr_obj not None):
         """ (NDARRAY arr_obj)
 
-            Write the contents of a Numpy array too the attribute.  Note that the 
-            Numpy array must have the same shape as the HDF5 attribute, and a 
-            conversion-compatible datatype.  
+            Write the contents of a Numpy array too the attribute.  Note that
+            the Numpy array must have the same shape as the HDF5 attribute, and
+            a conversion-compatible datatype.  
 
-            The Numpy array must be C-contiguous and own its data.  If this is not
-            the case, ValueError will be raised and the write will fail.
+            The Numpy array must be C-contiguous and own its data.  If this is
+            not the case, ValueError will be raised and the write will fail.
         """
         cdef TypeID mtype
         cdef hid_t space_id
@@ -215,7 +215,7 @@ cdef class AttrID(ObjectID):
         try:
             space_id = H5Aget_space(self.id)
             check_numpy_read(arr_obj, space_id)
-            mtype = h5t.py_translate_dtype(arr_obj.dtype)
+            mtype = h5t.py_create(arr_obj.dtype)
 
             H5Awrite(self.id, mtype.id, PyArray_DATA(arr_obj))
 

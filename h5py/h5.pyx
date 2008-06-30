@@ -74,6 +74,21 @@ cdef class ObjectID:
         copy._locked = self._locked
         return copy
 
+    def __richcmp__(self, object other, int how):
+        """ Supports only == and != """
+
+        if how == 2 or how == 3:
+            
+            if not hasattr(other, 'id'):
+                return False
+            eq = isinstance(other, type(self)) and self.id == other.id
+
+            if how == 2:
+                return eq
+            return not eq
+
+        raise TypeError("Only equality comparisons are supported.")
+
     def __str__(self):
         if H5Iget_type(self.id) != H5I_BADID:
             ref = str(H5Iget_ref(self.id))

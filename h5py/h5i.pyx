@@ -63,10 +63,10 @@ def get_name(ObjectID obj not None):
     cdef char* name
 
     namelen = <int>H5Iget_name(obj.id, NULL, 0)
-    assert namelen >= 0
     if namelen == 0:
         return None
 
+    assert namelen > 0
     name = <char*>emalloc(sizeof(char)*(namelen+1))
     try:
         H5Iget_name(obj.id, name, namelen+1)
@@ -80,7 +80,6 @@ def get_file_id(ObjectID obj not None):
 
         Obtain an identifier for the file in which this object resides.
     """
-    # TODO: does the library function correctly increment the ref count?
     return FileID(H5Iget_file_id(obj.id))
 
 def inc_ref(ObjectID obj not None):
@@ -98,10 +97,6 @@ def get_ref(ObjectID obj not None):
     """ (ObjectID obj)
 
         Retrieve the reference count for the given object.
-
-        This function is provided for debugging only.  Reference counting
-        is automatically synchronized with Python, and you can easily break
-        ObjectID instances by abusing this function.
     """
     return H5Iget_ref(obj.id)
 

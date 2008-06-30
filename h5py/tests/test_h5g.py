@@ -9,6 +9,7 @@
 # $Date$
 # 
 #-
+from __future__ import with_statement
 
 import unittest
 import tempfile
@@ -16,9 +17,9 @@ import os
 
 import h5py
 from h5py import h5f, h5g, h5i
-from h5py.h5e import H5Error
+from h5py.h5 import H5Error
 
-from common import getcopy, deletecopy
+from common import HCopy
 
 HDFNAME = os.path.join(os.path.dirname(h5py.__file__), 'tests/data/attributes.hdf5')
 OBJECTNAME = 'Group'
@@ -32,104 +33,89 @@ class TestH5G(unittest.TestCase):
         self.obj = h5g.open(self.fid, OBJECTNAME)
 
     def tearDown(self):
-        h5g.close(self.obj)
-        h5f.close(self.fid)
+        self.obj.close()
+        self.fid.close()
 
     def is_grp(self, item):
         return h5i.get_type(item) == h5i.GROUP
 
     def test_open_close(self):
         for name in TEST_GROUPS:
-            gid = h5g.open(self.obj, name)
-            self.assert_(self.is_grp(gid))
-            h5g.close(gid)
-            self.assert_(not self.is_grp(gid))
+            grp = h5g.open(self.obj, name)
+            self.assert_(self.is_grp(grp))
+            grp.close()
+            self.assert_(not self.is_grp(grp))
         
         self.assertRaises(H5Error, h5g.open, self.obj, 'Some other group')
-        self.assertRaises(H5Error, h5g.close, -1)
 
     def test_create(self):
-        fid, filename = getcopy(HDFNAME)
-        obj = h5g.open(fid, OBJECTNAME)
 
-        gid = h5g.create(obj, 'New group')
-        h5g.close(gid)
-        self.assert_(h5g.py_exists(obj, 'New group'))
-        self.assertRaises(H5Error, h5g.create, obj, 'New group')
+        with HCopy(HDFNAME) as fid:
 
-        deletecopy(fid, filename)
+            obj = h5g.open(fid, OBJECTNAME)
+            grp = h5g.create(obj, 'New group')
+            grp.close()
+            self.assert_(obj.py_exists('New group'))
 
     def test_link_unlink_move_linkval(self):
-        fid, filename = getcopy(HDFNAME)
-        obj = h5g.open(fid, OBJECTNAME)
 
-        # symlink
-        h5g.link(obj, TEST_GROUPS[1], NEW_LINK_NAME, h5g.LINK_SOFT)
-        self.assertEqual(h5g.get_objinfo(obj, NEW_LINK_NAME, follow_link=False).type, h5g.LINK)
-        self.assertEqual(h5g.get_linkval(obj, NEW_LINK_NAME), TEST_GROUPS[1])
+        with HCopy(HDFNAME) as fid:
 
-        deletecopy(fid, filename)
-        fid, filename = getcopy(HDFNAME)
-        obj = h5g.open(fid, OBJECTNAME)
+            obj = h5g.open(fid, OBJECTNAME)
 
-        # local link
-        h5g.link(obj, TEST_GROUPS[1], NEW_LINK_NAME, h5g.LINK_HARD)
-        self.assert_( h5g.py_exists(obj, NEW_LINK_NAME) )
+            # symlink
+            obj.link(TEST_GROUPS[1], NEW_LINK_NAME, h5g.LINK_SOFT)
+            self.assertEqual(obj.get_objinfo(NEW_LINK_NAME, follow_link=False).type, h5g.LINK)
+            self.assertEqual(obj.get_linkval(NEW_LINK_NAME), TEST_GROUPS[1])
 
-        # test local unlink
-        h5g.unlink(obj, NEW_LINK_NAME)
-        self.assert_(not h5g.py_exists(obj, NEW_LINK_NAME))
+        with HCopy(HDFNAME) as fid:
 
-        # remote link
-        rgid = h5g.open(obj, TEST_GROUPS[0])
-        h5g.link(obj, TEST_GROUPS[0], NEW_LINK_NAME, h5g.LINK_HARD, rgid)
-        self.assert_( h5g.py_exists(rgid, NEW_LINK_NAME) )
-    
-        # remote unlink
-        h5g.unlink(rgid, NEW_LINK_NAME)
-        self.assert_( not h5g.py_exists(rgid, NEW_LINK_NAME) )
-        h5g.close(rgid)
+            obj = h5g.open(fid, OBJECTNAME)
 
-        # move
-        h5g.move(obj, TEST_GROUPS[2], NEW_LINK_NAME)
-        self.assert_(h5g.py_exists(obj, NEW_LINK_NAME))
-        self.assert_(not h5g.py_exists(obj, TEST_GROUPS[2]))
+            # local link
+            obj.link(TEST_GROUPS[1], NEW_LINK_NAME, h5g.LINK_HARD)
+            self.assert_( obj.py_exists(NEW_LINK_NAME) )
 
-        self.assertRaises(H5Error, h5g.move, obj, 'Ghost group', 'blah')
-        self.assertRaises(H5Error, h5g.unlink, obj, 'Some other name')
-        self.assertRaises(H5Error, h5g.link, obj, 'Ghost group', 'blah') 
-        self.assertRaises(H5Error, h5g.get_linkval, -1, "foobar")
+            # test local unlink
+            obj.unlink(NEW_LINK_NAME)
+            self.assert_(not obj.py_exists(NEW_LINK_NAME))
 
-        h5g.close(obj)
+            # remote link
+            rgrp = h5g.open(obj, TEST_GROUPS[0])
+            obj.link(TEST_GROUPS[0], NEW_LINK_NAME, h5g.LINK_HARD, rgrp)
+            self.assert_( rgrp.py_exists(NEW_LINK_NAME) )
+        
+            # remote unlink
+            rgrp.unlink(NEW_LINK_NAME)
+            self.assert_( not rgrp.py_exists(NEW_LINK_NAME) )
 
-        deletecopy(fid, filename)
+            # move
+            obj.move( TEST_GROUPS[2], NEW_LINK_NAME)
+            self.assert_(obj.py_exists(NEW_LINK_NAME))
+            self.assert_(not obj.py_exists(TEST_GROUPS[2]))
+
 
     def test_get_num_objs(self):
 
-        self.assertEqual(h5g.get_num_objs(self.obj), 3)
-        self.assertRaises(H5Error, h5g.get_num_objs, -1)
+        self.assertEqual(self.obj.get_num_objs(), 3)
+
 
     def test_objname_objtype(self):
 
         for idx, name in enumerate(TEST_GROUPS):
-            self.assertEqual(h5g.get_objname_by_idx(self.obj, idx), name)
-            self.assertEqual(h5g.get_objtype_by_idx(self.obj, idx), h5g.GROUP)
+            self.assertEqual(self.obj.get_objname_by_idx(idx), name)
+            self.assertEqual(self.obj.get_objtype_by_idx(idx), h5g.GROUP)
 
-        self.assertRaises(H5Error, h5g.get_objname_by_idx, self.obj, -1)
-        self.assertRaises(H5Error, h5g.get_objtype_by_idx, self.obj, -1)
 
     def test_get_objinfo(self):
 
-        retval = h5g.get_objinfo(self.obj, '.')
+        retval = self.obj.get_objinfo('.')
         retval.fileno
         retval.objno
         self.assertEqual(retval.nlink, 1)
         self.assertEqual(retval.type, h5g.GROUP)
         retval.mtime
         retval.linklen
-
-        self.assertRaises(H5Error, h5g.get_objinfo, self.obj, 'Something else')
-
 
     def test_iterate(self):
 
@@ -164,34 +150,18 @@ class TestH5G(unittest.TestCase):
 
     def test_get_set_comment(self):
 
-        fid, filename = getcopy(HDFNAME)
-        obj = h5g.open(fid, OBJECTNAME)
+        with HCopy(HDFNAME) as fid:
 
-        h5g.set_comment(obj, TEST_GROUPS[0], "This is a comment.")
-        self.assertEqual(h5g.get_comment(obj, TEST_GROUPS[0]), "This is a comment.")
+            obj = h5g.open(fid, OBJECTNAME)
 
-        self.assertRaises(H5Error, h5g.set_comment, -1, "foo", "bar")
-        self.assertRaises(H5Error, h5g.get_comment, -1, "foo")
+            obj.set_comment(TEST_GROUPS[0], "This is a comment.")
+            self.assertEqual(obj.get_comment(TEST_GROUPS[0]), "This is a comment.")
 
-        deletecopy(fid, filename)
-
-    def test_py_listnames(self):
-
-        self.assertEqual(h5g.py_listnames(self.obj), TEST_GROUPS)
-        self.assertRaises(H5Error, h5g.py_listnames, -1)
-
-    def test_py_iternames(self):
-
-        iterator = h5g.py_iternames(self.obj)
-        self.assertEqual(list(iterator), TEST_GROUPS)
-        #self.assertRaises(StopIteration, iterator.next()) bug in unittest
-        
-        self.assertRaises(H5Error, h5g.py_iternames, -1)
 
     def test_py_exists(self):
 
-        self.assert_(h5g.py_exists(self.obj, TEST_GROUPS[0]))
-        self.assert_(not h5g.py_exists(self.obj, 'Something else'))
+        self.assert_(self.obj.py_exists(TEST_GROUPS[0]))
+        self.assert_(not self.obj.py_exists('Something else'))
 
 
 

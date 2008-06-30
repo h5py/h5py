@@ -102,10 +102,15 @@ def create_simple(object dims_tpl, object max_dims_tpl=None):
         efree(dims)
         efree(max_dims)
 
+# === H5S class API ===========================================================
+
 cdef class SpaceID(ObjectID):
 
     """
         Represents a dataspace identifier.
+
+        Properties:
+        shape:  Numpy-style shape tuple with dimensions.
     """
 
     property shape:
@@ -336,7 +341,8 @@ cdef class SpaceID(ObjectID):
     def select_valid(self):
         """ () => BOOL select_valid
             
-            Determine if the current selection falls within the dataspace extent.
+            Determine if the current selection falls within
+            the dataspace extent.
         """
         return pybool(H5Sselect_valid(self.id))
 

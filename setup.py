@@ -35,8 +35,9 @@
         --readme:   Compile the RST readme file into an HTML fragment
 
     Universal options:
-        --pyrex         Have Pyrex recompile the *.pyx files
-        --pyrex-only    Have Pyrex recompile the *.pyx files, and stop.
+        --pyrex         Have Pyrex recompile changed *.pyx files
+        --pyrex-only    Have Pyrex recompile changed *.pyx files, and stop.
+        --pyrex-force   Recompile all *.pyx files, regardless of timestamps
 """
 
 # === Global constants ========================================================
@@ -75,6 +76,8 @@ def warn(instring):
 
 ENABLE_PYREX = False
 PYREX_ONLY = False
+PYREX_FORCE = False
+DEV_MODE = False
 for arg in sys.argv[:]:
     if arg == '--pyrex':
         ENABLE_PYREX = True
@@ -83,6 +86,13 @@ for arg in sys.argv[:]:
         ENABLE_PYREX = True
         PYREX_ONLY = True
         sys.argv.remove(arg)
+    if arg == '--pyrex-force':
+        ENABLE_PYREX=True
+        PYREX_FORCE = True
+        sys.argv.remove(arg)
+
+if "dev" in sys.argv:
+    DEV_MODE = True
 
 if 'sdist' in sys.argv and os.path.exists('MANIFEST'):
     warn("Cleaning up stale MANIFEST file")
@@ -152,9 +162,15 @@ if ENABLE_PYREX or not all([os.path.exists(x+'.c') for x in pyrex_sources]):
 
         if Version.version >= MIN_PYREX:
             from Pyrex.Compiler.Main import compile_multiple, CompilationOptions
-            results = compile_multiple( [x+'.pyx' for x in pyrex_sources], CompilationOptions(verbose=True))
+
+            opts = CompilationOptions(verbose=True, timestamps=(not PYREX_FORCE))
+            results = compile_multiple( [x+'.pyx' for x in pyrex_sources], opts)
+
             if results.num_errors != 0:
-                fatal("%d Pyrex compilation errors encountered; aborting." % results.num_errors)
+                if DEV_MODE:
+                    warn("%d Pyrex compilation errors encountered." % results.num_errors)
+                else:
+                    fatal("%d Pyrex compilation errors encountered; aborting." % results.num_errors)
             if PYREX_ONLY:
                 exit(0)
         else:
@@ -228,7 +244,10 @@ class dev(Command):
                      [ 'MANIFEST', os.path.join(pyx_src_path, 'version.py')]
 
             for name in fnames:
-                os.remove(name)
+                try:
+                    os.remove(name)
+                except OSError:
+                    pass
 
         if self.doc:
             buildobj = self.distribution.get_command_obj('build')

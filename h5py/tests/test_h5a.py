@@ -9,17 +9,17 @@
 # $Date$
 # 
 #-
+from __future__ import with_statement
 
 import unittest
 from numpy import array, ndarray, dtype, all, ones
 import os
 
-import h5py
-from h5py import h5a
-from h5py import h5f, h5g, h5i, h5t, h5s
-from h5py.h5e import H5Error
+from common import HCopy, errstr
 
-from common import getcopy, deletecopy, errstr
+import h5py
+from h5py import h5, h5a, h5f, h5g, h5i, h5t, h5s
+from h5py.h5 import H5Error
 
 
 HDFNAME = os.path.join(os.path.dirname(h5py.__file__), 'tests/data/attributes.hdf5')
@@ -38,72 +38,70 @@ class TestH5A(unittest.TestCase):
         self.obj = h5g.open(self.fid, OBJECTNAME)
 
     def tearDown(self):
-        h5g.close(self.obj)
-        h5f.close(self.fid)
+        self.obj.close()
+        self.fid.close()
 
-    def is_attr(self, aid):
-        return (h5i.get_type(aid) == h5i.ATTR)
+    def is_attr(self, attr):
+        return (h5i.get_type(attr) == h5i.ATTR)
 
     # === General attribute operations ========================================
 
     def test_create_write(self):
-        fid, filename = getcopy(HDFNAME)
-        obj = h5g.open(fid, OBJECTNAME)
-        for name, (value, dt, shape) in NEW_ATTRIBUTES.iteritems():
-            arr_ref = array(value, dtype=dt)
-            arr_fail = ones((15,15), dtype=dt)
 
-            sid = h5s.create(h5s.SCALAR)
-            tid = h5t.py_translate_dtype(dt)
+        with HCopy(HDFNAME) as fid:
+            obj = h5g.open(fid, OBJECTNAME)
+            for name, (value, dt, shape) in NEW_ATTRIBUTES.iteritems():
+                arr_ref = array(value, dtype=dt)
+                arr_fail = ones((15,15), dtype=dt)
 
-            aid = h5a.create(obj, name, tid, sid)
-            self.assert_(self.is_attr(aid))
-            h5a.write(aid, arr_ref)
-            self.assertRaises(ValueError, h5a.write, aid, arr_fail)
-            h5a.close(aid)
+                space = h5s.create(h5s.SCALAR)
+                htype = h5t.py_create(dt)
 
-            arr_val = h5a.py_get(obj,name)
-            self.assert_(all(arr_val == arr_ref), errstr(arr_val, arr_ref))
-            h5s.close(sid)
-        h5g.close(obj)
-        deletecopy(fid, filename)
-        
-        self.assertRaises(H5Error, h5a.create, -1, "FOOBAR", -1, -1)
-        self.assertRaises(H5Error, h5a.write, -1, arr_ref)
+                attr = h5a.create(obj, name, htype, space)
+                self.assert_(self.is_attr(attr))
+                attr.write(arr_ref)
+                self.assertRaises(ValueError, attr.write, arr_fail)
+                attr.close()
+
+                attr = h5a.open_name(obj, name)
+                dt = attr.dtype
+                shape = attr.shape
+                arr_val = ndarray(shape, dtype=dt)
+                attr.read(arr_val)
+                attr.close()
+                self.assert_(all(arr_val == arr_ref), errstr(arr_val, arr_ref))
+
+            obj.close()
 
     def test_open_idx(self):
         for idx, name in enumerate(ATTRIBUTES_ORDER):
-            aid = h5a.open_idx(self.obj, idx)
-            self.assert_(self.is_attr(aid), "Open: index %d" % idx)
-            h5a.close(aid)
-    
-        self.assertRaises(H5Error, h5a.open_idx, -1, 0)
+            attr = h5a.open_idx(self.obj, idx)
+            self.assert_(self.is_attr(attr), "Open: index %d" % idx)
+            attr.close()
 
     def test_open_name(self):
         for name in ATTRIBUTES:
-            aid = h5a.open_name(self.obj, name)
-            self.assert_(self.is_attr(aid), 'Open: name "%s"' % name)
-            h5a.close(aid)
-
-        self.assertRaises(H5Error, h5a.open_name, -1, "foo")
+            attr = h5a.open_name(self.obj, name)
+            self.assert_(self.is_attr(attr), 'Open: name "%s"' % name)
+            attr.close()
 
     def test_close(self):
-        aid = h5a.open_idx(self.obj, 0)
-        self.assert_(self.is_attr(aid))
-        h5a.close(aid)
-        self.assert_(not self.is_attr(aid))
-    
-        self.assertRaises(H5Error, h5a.close, -1)
+        attr = h5a.open_idx(self.obj, 0)
+        self.assert_(self.is_attr(attr))
+        attr.close()
+        self.assert_(not self.is_attr(attr))
 
     def test_delete(self):
-        fid, filename = getcopy(HDFNAME)
-        obj = h5g.open(fid, OBJECTNAME)
-        self.assert_(h5a.py_exists(obj, ATTRIBUTES_ORDER[0]))
-        h5a.delete(obj, ATTRIBUTES_ORDER[0])
-        self.assert_(not h5a.py_exists(obj, ATTRIBUTES_ORDER[0]))
-        deletecopy(fid, filename)
+        with HCopy(HDFNAME) as fid:
+            obj = h5g.open(fid, OBJECTNAME)
 
-        self.assertRaises(H5Error, h5a.delete, -1, "foo")
+            attr = h5a.open_name(obj, ATTRIBUTES_ORDER[0])
+            self.assert_(self.is_attr(attr))
+            attr.close()
+
+            h5a.delete(obj, ATTRIBUTES_ORDER[0])
+            self.assertRaises(H5Error, h5a.open_name, obj, ATTRIBUTES_ORDER[0])
+
 
     # === Attribute I/O =======================================================
 
@@ -111,64 +109,46 @@ class TestH5A(unittest.TestCase):
         for name in ATTRIBUTES:
             value, dt, shape = ATTRIBUTES[name]
 
-            aid = h5a.open_name(self.obj, name)
+            attr = h5a.open_name(self.obj, name)
             arr_holder = ndarray(shape, dtype=dt)
             arr_reference = array(value, dtype=dt)
 
-            if len(shape) != 0:
-                arr_fail = ndarray((), dtype=dt)
-                self.assertRaises(ValueError, h5a.read, aid, arr_fail)
+            self.assertEqual(attr.shape, shape)
+            self.assertEqual(attr.dtype, dt)
 
-            h5a.read(aid, arr_holder)
+            attr.read(arr_holder)
             self.assert_( all(arr_holder == arr_reference),
                 errstr(arr_reference, arr_holder, 'Attr "%s"):\n' % name, ))
 
-            h5a.close(aid)
-        
-        self.assertRaises(H5Error, h5a.read, -1, arr_holder)
+            attr.close()
 
-    # h5a.write is done by test_create_write
+    # write is done by test_create_write
 
     # === Attribute inspection ================================================
 
     def test_get_num_attrs(self):
         n = h5a.get_num_attrs(self.obj)
         self.assertEqual(n, len(ATTRIBUTES))
-        self.assertRaises(H5Error, h5a.get_num_attrs, -1)
 
     def test_get_name(self):
     
         for name in ATTRIBUTES:
-            aid = h5a.open_name(self.obj, name)
-            supposed_name = h5a.get_name(aid)
-            self.assertEqual(supposed_name, name)
-            h5a.close(aid)
-
-        self.assertRaises(H5Error, h5a.get_name, -1)
+            attr = h5a.open_name(self.obj, name)
+            self.assertEqual(attr.get_name(), name)
 
     def test_get_space(self):
 
         for name, (value, dt, shape) in ATTRIBUTES.iteritems():
-            aid = h5a.open_name(self.obj, name)
-            sid = h5a.get_space(aid)
-            shape_tpl = h5s.get_simple_extent_dims(sid)
+            attr = h5a.open_name(self.obj, name)
+            space = attr.get_space()
+            shape_tpl = space.get_simple_extent_dims()
             self.assertEqual(shape_tpl, shape)
-            h5s.close(sid)
-            h5a.close(aid)
-
-        self.assertRaises(H5Error, h5a.get_space, -1)
 
     def test_get_type(self):
 
         for name, (value, dt, shape) in ATTRIBUTES.iteritems():
-            aid = h5a.open_name(self.obj, name)
-            tid = h5a.get_type(aid)
-            supposed_dtype = h5t.py_translate_h5t(tid)
-            self.assertEqual(supposed_dtype, dt)
-            h5t.close(tid)
-            h5a.close(aid)
-
-        self.assertRaises(H5Error, h5a.get_type, -1)
+            attr = h5a.open_name(self.obj, name)
+            htype = attr.get_type()
 
     def test_iterate(self):
 
@@ -201,65 +181,6 @@ class TestH5A(unittest.TestCase):
         h5a.iterate(self.obj, iterate_two, namelist, 1)
         self.assertEqual(namelist, ATTRIBUTES_ORDER[1:3])
 
-        self.assertRaises(H5Error, h5a.iterate, -1, iterate_two, namelist)
-
-
-    # === Python extensions ===================================================
-
-    def test_py_listattrs(self):
-        self.assertEqual(h5a.py_listattrs(self.obj), ATTRIBUTES_ORDER)
-        self.assertRaises(H5Error, h5a.py_listattrs, -1)
-
-    def test_py_shape(self):
-        
-        for name, (value, dt, shape) in ATTRIBUTES.iteritems():
-            aid = h5a.open_name(self.obj, name)
-            retshape = h5a.py_shape(aid)
-            self.assertEqual(retshape, shape) 
-            h5a.close(aid)
-        self.assertRaises(H5Error, h5a.py_shape, -1)
-
-    def test_py_dtype(self):
-
-        for name, (value, dt, shape) in ATTRIBUTES.iteritems():
-            aid = h5a.open_name(self.obj, name)
-            self.assertEqual(h5a.py_dtype(aid),dt)
-            h5a.close(aid)
-        self.assertRaises(H5Error, h5a.py_dtype, -1)
-
-    def test_py_get(self):
-
-        for name, (value, dt, shape) in ATTRIBUTES.iteritems():
-            arr_reference = array(value, dtype=dt)
-            arr_returned = h5a.py_get(self.obj, name)
-            self.assert_(all(arr_returned == arr_reference), 
-                errstr(arr_reference, arr_returned))
-        self.assertRaises(H5Error, h5a.py_get, -1, "foo")
-
-    def test_py_set(self):
-
-        fid, filename = getcopy(HDFNAME)
-        obj = h5g.open(fid, OBJECTNAME)
-
-        for name, (value, dt, shape) in NEW_ATTRIBUTES.iteritems():
-            arr_reference = array(value, dtype=dt)
-            h5a.py_set(obj, name, arr_reference)
-            arr_ret = h5a.py_get(obj, name)
-            self.assert_( all( arr_ret == arr_reference), errstr(arr_ret, arr_reference))
-        h5g.close(obj)
-        deletecopy(fid, filename)
-
-        self.assertRaises(H5Error, h5a.py_set, -1, "foo", arr_reference)
-
-
-    def test_py_exists(self):
-
-        for name in ATTRIBUTES:
-            self.assert_(h5a.py_exists(self.obj, name), name)
-
-        self.assert_(not h5a.py_exists(self.obj, 'SOME OTHER ATTRIBUTE') )
-            
-        # py_exists will never intentionally raise an exception
 
 
 

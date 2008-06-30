@@ -9,14 +9,16 @@
 # $Date$
 # 
 #-
+from __future__ import with_statement
 
 import unittest
 import os
 import numpy
+from common import HCopy
 
 import h5py
 from h5py import h5f, h5d, h5i, h5s, h5t, h5p
-from h5py.h5e import H5Error
+from h5py.h5 import H5Error
 
 HDFNAME = os.path.join(os.path.dirname(h5py.__file__), 'tests/data/smpl_compound_chunked.hdf5')
 DTYPE = numpy.dtype([('a_name','>i4'),
@@ -40,95 +42,51 @@ class TestH5D(unittest.TestCase):
 
     def setUp(self):
         self.fid = h5f.open(HDFNAME, h5f.ACC_RDONLY)
-        self.did = h5d.open(self.fid, "CompoundChunked")
+        self.dset = h5d.open(self.fid, "CompoundChunked")
 
     def tearDown(self):
-        h5d.close(self.did)
-        h5f.close(self.fid)
+        self.dset.close()
+        self.fid.close()
 
     def test_open_close(self):
-        h5d.close(self.did)
-        self.assertEqual(h5i.get_type(self.did), h5i.BADID)
-        self.did = h5d.open(self.fid, "CompoundChunked")
-        self.assertEqual(h5i.get_type(self.did), h5i.DATASET)
-
-        self.assertRaises(H5Error, h5d.open, self.fid, "Something else")
-        self.assertRaises(H5Error, h5d.close, -1)
+        with HCopy(HDFNAME) as fid:
+            dset = h5d.open(fid, "CompoundChunked")
+            self.assertEqual(h5i.get_type(dset), h5i.DATASET)
+            dset.close()
+            self.assertEqual(h5i.get_type(dset), h5i.BADID)
 
     def test_read(self):
         array = numpy.ndarray(SHAPE, dtype=DTYPE)
 
-        h5d.read(self.did, h5s.ALL, h5s.ALL, array)
+        self.dset.read(h5s.ALL, h5s.ALL, array)
         for name in DTYPE.fields:
             self.assert_(numpy.all(array[name] == basearray[name]), "%s::\n%s\n!=\n%s" % (name, array[name], basearray[name]))
 
-        self.assertRaises(H5Error, h5d.read, -1, h5s.ALL, h5s.ALL, array)
-
     def test_get_space(self):
-        sid = h5d.get_space(self.did)
-        try:
-            shape = h5s.get_simple_extent_dims(sid)
-            self.assertEqual(shape, SHAPE)
-        finally:
-            h5s.close(sid)
-        self.assertRaises(H5Error, h5d.get_space, -1)
+        space = self.dset.get_space()
+        self.assertEqual(space.get_simple_extent_dims(), SHAPE)
 
     def test_get_space_status(self):
-        status = h5d.get_space_status(self.did)
-        self.assert_(status in h5d.PY_SPACE_STATUS)
-        self.assertRaises(H5Error, h5d.get_space_status, -1)
+        status = self.dset.get_space_status()
+        self.assert_(status > 0)
 
-    def test_get_offset(self):
-        # Chunked datasets have no offset.  New test dset needed.
-        self.assertRaises(H5Error, h5d.get_offset, -1)
+    # Chunked datasets have no offset.  New test dset needed.
+    #
+    #def test_get_offset(self):
+    #    pass
 
     def test_get_storage_size(self):
-        # This function can't intentionally raise an exception.
-        self.assert_(h5d.get_storage_size(self.did) >= 0)
+        self.assert_(self.dset.get_storage_size() >= 0)
 
     def test_get_type(self):
-        # We're not testing datatype conversion here; that's for test_h5t
-        tid = h5d.get_type(self.did)
-        try:
-            self.assertEqual(h5i.get_type(tid), h5i.DATATYPE)
-        finally:
-            h5t.close(tid)
-        self.assertRaises(H5Error, h5d.get_type, -1)
+        self.assertEqual(self.dset.get_type().dtype, DTYPE)
 
     def test_get_create_plist(self):
-        pid = h5d.get_create_plist(self.did)
-        try:
-            self.assertEqual(h5i.get_type(pid), h5i.GENPROP_LST)
-        finally:
-            h5p.close(pid)
+        pid = self.dset.get_create_plist()
+        self.assertEqual(h5i.get_type(pid), h5i.GENPROP_LST)
 
-        self.assertRaises(H5Error, h5d.get_create_plist, -1)
-
-    def test_py_shape(self):
-        self.assertEqual(h5d.py_shape(self.did), SHAPE)
-        self.assertRaises(H5Error, h5d.py_shape, -1)
-
-    def test_py_rank(self):
-        self.assertEqual(h5d.py_rank(self.did), 1)
-        self.assertRaises(H5Error, h5d.py_rank, -1)
-
-    def test_py_dtype(self):
-        self.assertEqual(type(h5d.py_dtype(self.did)), numpy.dtype)
-        self.assertRaises(H5Error, h5d.py_dtype, -1)
-        
-        
-
-
-
-
-
-
-
-
-
-
-
-
-    
-
+    def test_py(self):
+        self.assertEqual(self.dset.dtype, DTYPE)
+        self.assertEqual(self.dset.shape, SHAPE)
+        self.assertEqual(self.dset.rank, len(SHAPE))
 

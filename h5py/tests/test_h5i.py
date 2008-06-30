@@ -14,7 +14,7 @@ import os
 
 import h5py
 from h5py import h5f, h5g, h5i, h5t
-from h5py.h5e import H5Error
+from h5py.h5 import H5Error
 
 HDFNAME = os.path.join(os.path.dirname(h5py.__file__), 'tests/data/attributes.hdf5')
 OBJECTNAME = 'Group'
@@ -26,23 +26,21 @@ class TestH5I(unittest.TestCase):
         self.obj = h5g.open(self.fid, OBJECTNAME)
 
     def tearDown(self):
-        h5g.close(self.obj)
-        h5f.close(self.fid)
+        self.obj.close()
+        self.fid.close()
+
 
     def test_get_type(self):
         self.assertEqual(h5i.get_type(self.fid), h5i.FILE)
         self.assertEqual(h5i.get_type(self.obj), h5i.GROUP)
-        self.assertEqual(h5i.get_type(-1), h5i.BADID)
 
     def test_get_name(self):
         self.assertEqual(h5i.get_name(self.obj), '/Group')
         self.assertEqual(h5i.get_name(h5t.STD_I8LE), None)
-        self.assertEqual(h5i.get_name(-1), None)
 
     def test_get_file_id(self):
         nfid = h5i.get_file_id(self.obj)
         self.assertEqual(nfid, self.fid)
-        self.assertRaises(H5Error, h5i.get_file_id, -1)
 
     def test_refs(self):
         refcnt = h5i.get_ref(self.obj)
@@ -53,10 +51,6 @@ class TestH5I(unittest.TestCase):
 
         h5i.dec_ref(self.obj)
         self.assertEqual(h5i.get_ref(self.obj), refcnt)
-
-        self.assertRaises(H5Error, h5i.get_ref, -1)
-        self.assertRaises(H5Error, h5i.inc_ref, -1)
-        self.assertRaises(H5Error, h5i.dec_ref, -1)
 
 
 

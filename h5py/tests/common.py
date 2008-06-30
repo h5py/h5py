@@ -15,23 +15,35 @@ import os
 import shutil
 from h5py import h5f, h5p
 
-def getcopy(filename):
-    """ Create a temporary working copy of "filename". Return is a 2-tuple
-        containing (HDF5 file id, file name)
+class HCopy(object):
+
     """
-    newname = tempfile.mktemp('.hdf5')
-    shutil.copy(filename, newname)
+        Use:
 
-    plist = h5p.create(h5p.FILE_ACCESS)
-    h5p.set_fclose_degree(plist, h5f.CLOSE_STRONG)
-    fid = h5f.open(newname, h5f.ACC_RDWR)
-    h5p.close(plist)
+        from __future__ import with_statement
 
-    return (fid, newname)
+        with HCopy(filename) as fid:
+            fid.frob()
+            obj = h5g.open(fid, whatever)
+            ...
+    """
+    def __init__(self, filename):
+        self.filename = filename
+        self.tmpname = None
 
-def deletecopy(fid, newname):
-    h5f.close(fid)
-    os.unlink(newname)
+    def __enter__(self):
+        self.tmpname = tempfile.mktemp('.hdf5')
+        shutil.copy(self.filename, self.tmpname)
+
+        plist = h5p.create(h5p.FILE_ACCESS)
+        plist.set_fclose_degree(h5f.CLOSE_STRONG)
+        self.fid = h5f.open(self.tmpname, h5f.ACC_RDWR)
+        plist.close()
+        return self.fid
+
+    def __exit__(self, *args):
+        self.fid.close()
+        os.unlink(self.tmpname)
 
 def errstr(arg1, arg2, msg=''):
     """ Used to mimic assertEqual-style auto-repr, where assertEqual doesn't

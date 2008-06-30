@@ -15,7 +15,7 @@
 """
 
 # Pyrex compile-time imports
-from h5p cimport PropFCID, PropFAID, PropMID, pdefault, H5P_DEFAULT
+from h5p cimport propwrap, pdefault, PropFAID, PropFCID, PropMID
 from utils cimport emalloc, efree, pybool
 
 # Runtime imports
@@ -85,7 +85,7 @@ def is_hdf5(char* name):
     """
     return pybool(H5Fis_hdf5(name))
 
-def flush(ObjectID obj, int scope=H5F_SCOPE_LOCAL):
+def flush(ObjectID obj not None, int scope=H5F_SCOPE_LOCAL):
     """ (ObjectID obj, INT scope=SCOPE_LOCAL)
 
         Tell the HDF5 library to flush file buffers to disk.  "obj" may
@@ -133,7 +133,74 @@ def get_name(ObjectID obj not None):
     finally:
         efree(name)
 
-# === XXXX ===
+def get_obj_count(object where=OBJ_ALL, int types=H5F_OBJ_ALL):
+    """ (OBJECT where=OBJ_ALL, types=OBJ_ALL) => INT n_objs
+
+        Get the number of open objects.
+
+        where:  Either a FileID instance representing an HDF5 file, or the
+                special constant OBJ_ALL, to count objects in all files.
+
+        type:   Specify what kinds of object to include.  May be one of OBJ_*, 
+                or any bitwise combination (e.g. OBJ_FILE | OBJ_ATTR).  
+
+                The special value OBJ_ALL matches all object types, and 
+                OBJ_LOCAL will only match objects opened through a specific 
+                identifier.
+    """
+    cdef hid_t where_id
+    if typecheck(where, FileID):
+        where_id = where.id
+    elif typecheck(where, int) or typecheck(where, long):
+        where_id = where
+    else:
+        raise TypeError("Location must be a FileID or OBJ_ALL.")
+
+    return H5Fget_obj_count(where_id, types)
+
+def get_obj_ids(object where=OBJ_ALL, int types=H5F_OBJ_ALL):
+    """ (OBJECT where=OBJ_ALL, types=OBJ_ALL) => LIST open_ids
+
+        Get a list of identifier instances for open objects.
+
+        where:  Either a FileID instance representing an HDF5 file, or the
+                special constant OBJ_ALL, to list objects in all files.
+
+        type:   Specify what kinds of object to include.  May be one of OBJ_*, 
+                or any bitwise combination (e.g. OBJ_FILE | OBJ_ATTR).  
+
+                The special value OBJ_ALL matches all object types, and 
+                OBJ_LOCAL will only match objects opened through a specific 
+                identifier.
+    """
+    cdef int count
+    cdef int i
+    cdef hid_t where_id
+    cdef hid_t *obj_list
+    cdef list py_obj_list
+    obj_list = NULL
+    py_obj_list = []
+
+    if typecheck(where, FileID):
+        where_id = where.id
+    elif typecheck(where, int) or typecheck(where, long):
+        where_id = where
+    else:
+        raise TypeError("Location must be a FileID or OBJ_ALL.")
+
+    try:
+        count = H5Fget_obj_count(where_id, types)
+        obj_list = <hid_t*>emalloc(sizeof(hid_t)*count)
+
+        H5Fget_obj_ids(where_id, types, count, obj_list)
+        for i from 0<=i<count:
+            py_obj_list.append(obj_list[i])
+        return py_obj_list
+
+    finally:
+        efree(obj_list)
+
+# === FileID implementation ===================================================
 
 cdef class FileID(ObjectID):
 
@@ -177,7 +244,7 @@ cdef class FileID(ObjectID):
 
             Retrieve a copy of the property list used to create this file.
         """
-        return PropFCID(H5Fget_create_plist(self.id))
+        return propwrap(H5Fget_create_plist(self.id))
 
     def get_access_plist(self):
         """ () => PropFAID
@@ -185,58 +252,18 @@ cdef class FileID(ObjectID):
             Retrieve a copy of the property list which manages access 
             to this file.
         """
-        return PropFAID(H5Fget_access_plist(self.id))
+        return propwrap(H5Fget_access_plist(self.id))
 
     def get_freespace(self):
-        """ () => LONG free space
+        """ () => LONG freespace
 
-            Determine the amount of free space in this file.  Note that this only
-            tracks free space until the file is closed.
+            Determine the amount of free space in this file.  Note that this
+            only tracks free space until the file is closed.
         """
         return H5Fget_freespace(self.id)
 
 
-    def get_obj_count(self, int types=H5F_OBJ_ALL):
-        """ (INT types=OBJ_ALL) => INT n_objs
 
-            Get the number of open objects in the file.  The value of "types" 
-            may be one of h5f.OBJ_*, or any bitwise combination (e.g. 
-            OBJ_FILE | OBJ_ATTR).  
-
-            The special value OBJ_ALL matches all object types, and 
-            OBJ_LOCAL will only match objects opened through this specific 
-            identifier.
-        """
-        return H5Fget_obj_count(self.id, types)
-
-    def get_obj_ids(self, int types=H5F_OBJ_ALL):
-        """ (INT types=OBJ_ALL) => LIST open_ids
-
-            Get a list of identifiers for open objects in the file.  The value 
-            of "types" may be one of h5f.OBJ_*, or any bitwise combination (e.g. 
-            OBJ_FILE | OBJ_ATTR). 
-
-            The special value OBJ_ALL matches all object types, and 
-            OBJ_LOCAL will only match objects opened through this specific 
-            identifier. 
-        """
-        cdef int count
-        cdef hid_t *obj_list
-        cdef int i
-        obj_list = NULL
-
-        py_obj_list = []
-        try:
-            count = H5Fget_obj_count(self.id, types)
-            obj_list = <hid_t*>emalloc(sizeof(hid_t)*count)
-
-            H5Fget_obj_ids(self.id, types, count, obj_list)
-            for i from 0<=i<count:
-                py_obj_list.append(obj_list[i])
-            return py_obj_list
-
-        finally:
-            efree(obj_list)
 
 
 

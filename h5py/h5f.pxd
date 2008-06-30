@@ -23,8 +23,13 @@ cdef class FileID(ObjectID):
 cdef extern from "hdf5.h":
 
   # File constants
-  int H5F_ACC_TRUNC, H5F_ACC_RDONLY, H5F_ACC_RDWR, H5F_ACC_EXCL
-  int H5F_ACC_DEBUG, H5F_ACC_CREAT
+  cdef enum:
+    H5F_ACC_TRUNC
+    H5F_ACC_RDONLY
+    H5F_ACC_RDWR
+    H5F_ACC_EXCL
+    H5F_ACC_DEBUG
+    H5F_ACC_CREAT
 
   # The difference between a single file and a set of mounted files
   cdef enum H5F_scope_t:

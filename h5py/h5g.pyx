@@ -179,7 +179,7 @@ cdef class GroupID(ObjectID):
     def get_num_objs(self):
         """ () => INT number_of_objects
 
-            Get the number of objects attached to a given group.
+            Get the number of objects directly attached to a given group.
         """
         cdef hsize_t size
         H5Gget_num_objs(self.id, &size)
@@ -227,7 +227,7 @@ cdef class GroupID(ObjectID):
         cdef herr_t retval
         retval = H5Gget_objtype_by_idx(self.id, idx)
         if retval < 0:
-            raise H5Error((0,"Invalid argument."))
+            raise H5Error((1,"Invalid argument."))
         return retval
 
     def get_objinfo(self, char* name, int follow_link=1):
@@ -260,7 +260,7 @@ cdef class GroupID(ObjectID):
     def get_linkval(self, char* name):
         """ (STRING name) => STRING link_value
 
-            Retrieve the value of the given symbolic link.
+            Retrieve the value (target name) of a symbolic link.
         """
         cdef char* value
         cdef H5G_stat_t statbuf
@@ -306,4 +306,13 @@ cdef class GroupID(ObjectID):
             return py_cmnt
         finally:
             efree(cmnt)
+
+    def py_exists(self, char* name):
+
+        try:
+            self.get_objinfo(name)
+        except H5Error:
+            return False    
+        return True
+
 

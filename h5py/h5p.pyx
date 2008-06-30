@@ -23,53 +23,60 @@ from utils cimport  require_tuple, convert_dims, convert_tuple, \
 # Runtime imports
 import h5
 
-cdef object lockid(hid_t id_in):
-    cdef PropClassID pid
-    pid = PropClassID(id_in)
-    pid._locked = 1
-    return pid
-
-# === Public constants and data structures ====================================
-
-# Property list classes
-# These need to be locked, as the library won't let you close them.
-NO_CLASS       = lockid(H5P_NO_CLASS)
-FILE_CREATE    = lockid(H5P_FILE_CREATE)
-FILE_ACCESS    = lockid(H5P_FILE_ACCESS)
-DATASET_CREATE = lockid(H5P_DATASET_CREATE)
-DATASET_XFER   = lockid(H5P_DATASET_XFER)
-MOUNT          = lockid(H5P_MOUNT)
-
-DEFAULT = lockid(H5P_DEFAULT)  # really 0 but whatever
-
-_classmapper = { H5P_FILE_CREATE: PropFCID,
-                 H5P_FILE_ACCESS: PropFAID,
-                 H5P_DATASET_CREATE: PropDCID,
-                 H5P_DATASET_XFER: PropDXID,
-                 H5P_MOUNT: PropMID }
-
-# === C API and extension types ===============================================
+# === C API ===================================================================
 
 cdef hid_t pdefault(PropID pid):
 
     if pid is None:
         return <hid_t>H5P_DEFAULT
-    
     return pid.id
 
-cdef class PropID(ObjectID):
-    
-    """ Base class for all operations which are valid on both property list 
-        instances and classes.
-    """
-    pass
+cdef object propwrap(hid_t id_in):
 
-# === Property list HDF5 classes ==============================================
+    clsid = H5Pget_class(id_in)
+    try:
+        if H5Pequal(clsid, H5P_FILE_CREATE):
+            pcls = PropFCID
+        elif H5Pequal(clsid, H5P_FILE_ACCESS):
+            pcls = PropFAID
+        elif H5Pequal(clsid, H5P_DATASET_CREATE):
+            pcls = PropDCID
+        elif H5Pequal(clsid, H5P_DATASET_XFER):
+            pcls = PropDXID
+        elif H5Pequal(clsid, H5P_MOUNT):
+            pcls = PropMID
+        else:
+            raise ValueError("No class found for ID %d" % id_in)
 
-cdef class PropClassID(PropID):
-    pass
+        return pcls(id_in)
+    finally:
+        H5Pclose_class(clsid)
 
-# === Property list HDF5 instances ============================================
+cdef object lockcls(hid_t id_in):
+    cdef PropClassID pid
+    pid = PropClassID(id_in)
+    pid._locked = 1
+    return pid
+
+
+# === Public constants and data structures ====================================
+
+# Property list classes
+# These need to be locked, as the library won't let you close them.
+NO_CLASS       = lockcls(H5P_NO_CLASS)
+FILE_CREATE    = lockcls(H5P_FILE_CREATE)
+FILE_ACCESS    = lockcls(H5P_FILE_ACCESS)
+DATASET_CREATE = lockcls(H5P_DATASET_CREATE)
+DATASET_XFER   = lockcls(H5P_DATASET_XFER)
+MOUNT          = lockcls(H5P_MOUNT)
+
+DEFAULT = None   # In the HDF5 header files this is actually 0, which is an
+                 # invalid identifier.  The new strategy for default options
+                 # is to make them all None, to better match the Python style
+                 # for keyword arguments.
+
+
+# === Property list functional API ============================================
 
 def create(PropClassID cls not None):
     """ (PropClassID cls) => PropID
@@ -81,21 +88,30 @@ def create(PropClassID cls not None):
             DATASET_XFER
             MOUNT
     """
-    try:
-        type_ = _classmapper[cls.id]
-    except KeyError:
-        raise ValueError("Invalid class")
+    cdef hid_t newid
+    newid = H5Pcreate(cls.id)
+    return propwrap(newid)
 
-    return type_(H5Pcreate(cls.id))
+# === Class API ===============================================================
+
+cdef class PropID(ObjectID):
+
+    def equal(self, PropID plist not None):
+        """ (PropID plist) => BOOL
+
+            Compare this property list (or class) to another for equality.
+        """
+        return pybool(H5Pequal(self.id, plist.id))
 
 cdef class PropInstanceID(PropID):
 
     """
-        Base class for property list instance objects
+        Base class for property list instance objects.  Provides methods which
+        are common across all HDF5 property list classes.
     """
 
     def copy(self):
-        """ () => PropList new_property_list_id
+        """ () => PropList newid
 
             Create a new copy of an existing property list object.
         """
@@ -117,12 +133,6 @@ cdef class PropInstanceID(PropID):
         """
         return PropClassID(H5Pget_class(self.id))
 
-    def equal(self, PropID plist not None):
-        """ (PropID plist) => BOOL
-
-            Compare this property list to another for equality.
-        """
-        return pybool(H5Pequal(self.id, plist.id))
 
 # === File creation ===========================================================
 
@@ -180,7 +190,7 @@ cdef class PropFCID(PropInstanceID):
         H5Pset_sizes(self.id, addr, size)
 
     def get_sizes(self):
-        """ () => TUPLE sizes    [File creation]
+        """ () => TUPLE sizes
 
             Determine addressing offsets and lengths for objects in an 
             HDF5 file, in bytes.  Return value is a 2-tuple with values:
@@ -212,14 +222,14 @@ cdef class PropFCID(PropInstanceID):
         return (ik, lk)
 
     def set_istore_k(self, unsigned int ik):
-        """ (UINT ik)    [File creation]
+        """ (UINT ik)
 
             See hdf5 docs for H5Pset_istore_k.
         """
         H5Pset_istore_k(self.id, ik)
     
     def get_istore_k(self):
-        """ () => UINT ik    [File creation]
+        """ () => UINT ik
 
             See HDF5 docs for H5Pget_istore_k
         """
@@ -232,16 +242,16 @@ cdef class PropFCID(PropInstanceID):
 cdef class PropDCID(PropInstanceID):
 
     """
-        Represents a dataset creation property list
+        Represents a dataset creation property list.
     """
 
     def set_layout(self, int layout_code):
         """ (INT layout_code)
 
             Set dataset storage strategy; legal values are:
-            * h5d.COMPACT
-            * h5d.CONTIGUOUS
-            * h5d.CHUNKED
+                h5d.COMPACT
+                h5d.CONTIGUOUS
+                h5d.CHUNKED
         """
         H5Pset_layout(self.id, layout_code)
     
@@ -249,9 +259,9 @@ cdef class PropDCID(PropInstanceID):
         """ () => INT layout_code
 
             Determine the storage strategy of a dataset; legal values are:
-            * h5d.COMPACT
-            * h5d.CONTIGUOUS
-            * h5d.CHUNKED
+                h5d.COMPACT
+                h5d.CONTIGUOUS
+                h5d.CHUNKED
         """
         return <int>H5Pget_layout(self.id)
 
@@ -277,7 +287,7 @@ cdef class PropDCID(PropInstanceID):
             efree(dims)
     
     def get_chunk(self):
-        """ () => TUPLE chunk_dimensions    [Dataset creation]
+        """ () => TUPLE chunk_dimensions
 
             Obtain the dataset chunk size, as a tuple.
         """
@@ -339,12 +349,15 @@ cdef class PropDCID(PropInstanceID):
         """ (INT filter_code, UINT flags=0, TUPLE values=None)
 
             Set a filter in the pipeline.  Params are:
+
             filter_code:
                 h5z.FILTER_DEFLATE
                 h5z.FILTER_SHUFFLE
                 h5z.FILTER_FLETCHER32
                 h5z.FILTER_SZIP
+
             flags:  Bit flags (h5z.FLAG_*) setting filter properties
+
             values: TUPLE of UINTS giving auxiliary data for the filter.
         """
         cdef size_t nelements
@@ -381,6 +394,7 @@ cdef class PropDCID(PropInstanceID):
         """ (UINT filter_idx) => TUPLE filter_info
 
             Get information about a filter, identified by its index.
+
             Tuple entries are:
             0: INT filter code (h5z.FILTER_*)
             1: UINT flags (h5z.FLAG_*)

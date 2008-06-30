@@ -54,6 +54,7 @@ cdef class PropMID(PropInstanceID):
     pass
 
 cdef hid_t pdefault(PropID pid)
+cdef object propwrap(hid_t id_in)
 
 cdef extern from "hdf5.h":
 
@@ -121,6 +122,7 @@ cdef extern from "hdf5.h":
   int    H5Pget_class(hid_t plist_id) except *
   herr_t H5Pclose(hid_t plist_id) except *
   htri_t H5Pequal( hid_t id1, hid_t id2  ) except *
+  herr_t H5Pclose_class(hid_t id) except *
 
   # File creation properties
   herr_t H5Pget_version(hid_t plist, unsigned int *super_, unsigned int* freelist, 
