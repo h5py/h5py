@@ -10,7 +10,6 @@
 # 
 #-
 
-import copy
 import numpy
 
 from h5py import h5, h5f, h5g, h5s, h5t, h5d, h5a, h5p, h5z, h5i
@@ -19,8 +18,13 @@ from utils_hl import slicer
 
 class Group(object):
 
-    #: Provides access to HDF5 attributes. See AttributeManager docstring.
-    attrs = property(lambda self: self._attrs)
+    """ Represents an HDF5 group.
+
+        Iterating over a group yields the names of its members.
+    """
+
+    attrs = property(lambda self: self._attrs,
+        doc = "Provides access to HDF5 attributes. See AttributeManager.")
 
     def __init__(self, parent_object, name, create=False):
         """ Create a new Group object, from a parent object and a name.
@@ -45,6 +49,9 @@ class Group(object):
             2. If "obj" is a Numpy ndarray, it is converted to a dataset
                 object, with default settings (contiguous storage, etc.).
 
+            3. If "obj is a Numpy dtype object or Datatype instance, commit
+                a copy of the datatype as a named datatype in the file.
+
             3. If "obj" is anything else, attempt to convert it to an ndarray
                 and store it.  Scalar values are stored as scalar datasets.
                 Raise ValueError if we can't understand the resulting array 
@@ -52,6 +59,12 @@ class Group(object):
         """
         if isinstance(obj, Group) or isinstance(obj, Dataset):
             self.id.link(name, h5i.get_name(obj.id), link_type=h5g.LINK_HARD)
+        elif isinstance(obj, numpy.dtype):
+            htype = h5t.py_create(obj)
+            htype.commit(self.id, name)
+        elif isinstance(obj, Datatype):
+            htype = obj.id.copy()
+            htype.commit(self.id, name)
         else:
             if not isinstance(obj, numpy.ndarray):
                 obj = numpy.array(obj)
@@ -59,8 +72,10 @@ class Group(object):
             dset.close()
 
     def __getitem__(self, name):
-        """ Open an object attached to this group. """
+        """ Open an object attached to this group. 
 
+            Currently can open groups, datasets, and named types.
+        """
         info = self.id.get_objinfo(name)
 
         if info.type == h5g.DATASET:
@@ -101,15 +116,18 @@ class File(Group):
 
     """ Represents an HDF5 file on disk.
 
-        Created with standard Python syntax File(name, mode), where mode may be
-        one of r, r+, w, w+, a.
+        Created with standard Python syntax File(name, mode).
+        Legal modes: r, r+, w, w+, a.
 
         File objects inherit from Group objects; Group-like methods all
         operate on the HDF5 root group ('/').  Like Python file objects, you
         must close the file ("obj.close()") when you're done with it.
     """
-    name = property(lambda self: self._name)
-    mode = property(lambda self: self._mode)
+
+    name = property(lambda self: self._name,
+        doc = "File name on disk")
+    mode = property(lambda self: self._mode,
+        doc = "Python mode used to open file")
 
     _modes = ('r','r+','w','w+','a')
 
@@ -155,6 +173,8 @@ class File(Group):
         self.fid.close()
 
     def flush(self):
+        """ Tell the HDF5 library to flush its buffers.
+        """
         h5f.flush(self.fid)
 
     def __str__(self):
@@ -175,7 +195,7 @@ class Dataset(object):
         doc = "Numpy dtype representing the datatype")
 
     attrs = property(lambda self: self._attrs,
-        doc = "Provides access to HDF5 attributes")
+        doc = "Provides access to HDF5 attributes. See AttributeManager.")
 
     def __init__(self, group, name,
                     data=None, dtype=None, shape=None, 
@@ -239,14 +259,18 @@ class Dataset(object):
     def __getitem__(self, args):
         """ Read a slice from the underlying HDF5 array.  Takes slices and
             recarray-style field names (more than one is allowed!) in any
-            order.  Examples:
+            order.
 
-            ds[0,0:15,:] => (1 x 14 x <all) slice on 3-dimensional dataset.
+            For a compound dataset ds, with shape (10,10,5) and fields "a", "b" 
+            and "c", the following are all legal subscripts:
 
-            ds[:] => All elements, regardless of dimension.
-
-            ds[0:3, 1:4, "a", "b"] => (3 x 3) slice, only including compound
-                                      elements "a" and "b", in that order.
+            ds[1,2,3]
+            ds[1,2,:]
+            ds[...,3]
+            ds[1]
+            ds[:]
+            ds[1,2,3,"a"]
+            ds[0:5:2, 0:6:3, 0:2, "a", "b"]
         """
         start, count, stride, names = slicer(self.shape, args)
 
@@ -256,15 +280,24 @@ class Dataset(object):
         htype = self.id.get_type()
         if len(names) > 0:
             if htype.get_class() == h5t.COMPOUND:
-                mtype = h5t.create(h5t.COMPOUND)
+
+                subtypes = {}
+                for idx in range(htype.get_nmembers()):
+                    subtypes[htype.get_member_name(idx)] = htype.get_member_type(idx)
+
+                for name in names:
+                    if name not in subtypes:
+                        raise ValueError("Field %s does not appear in this type." % name)
+
+                insertlist = [(name, subtypes[name].get_size()) for name in names]
+                totalsize = sum([x[1] for x in insertlist])
+
+                mtype = h5t.create(h5t.COMPOUND, totalsize)
 
                 offset = 0
-                for idx in range(htype.get_nmembers()):
-                    hname = htype.get_member_name(idx)
-                    if hname in names:
-                        subtype = h5type.get_member_type(idx)
-                        mtype.insert(hname, offset, subtype)
-                        offset += subtype.get_size()
+                for name, size in insertlist:
+                    mtype.insert(name, offset, subtypes[name])
+                    offset += size
             else:
                 raise ValueError("This dataset has no named fields.")
         else:
@@ -377,8 +410,18 @@ class AttributeManager(object):
     def __str__(self):
         return "Attributes: "+', '.join(['"%s"' % x for x in self])
 
+class Datatype(object):
 
+    """
+        Represents an HDF5 datatype.
 
+        These intentionally only represent named types.
+    """
+
+    dtype = property(lambda self: self.id.dtype)
+
+    def __init__(grp, name):
+        self.id = h5t.open(grp.id, name)
 
 
 
