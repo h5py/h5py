@@ -22,7 +22,8 @@ __doc__ = \
     See the docstring for the "version" module for a longer introduction.
 """
 
-import utils, h5, h5f, h5g, h5s, h5t, h5d, h5a, h5p, h5z, h5i
+import utils, h5, h5f, h5g, h5s, h5t, h5d, h5a, h5p, h5z, h5i, highlevel
 import version
 
 __doc__ = __doc__ % version.version
+

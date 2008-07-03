@@ -112,6 +112,26 @@ def iterate(ObjectID loc not None, object func, object data=None, int startidx=0
 
     H5Aiterate(loc.id, &i, <H5A_operator_t>iter_cb, int_tpl)
 
+cdef herr_t list_cb(hid_t loc_id, char *attr_name, object listin):
+    
+    cdef list thelist
+    thelist = listin
+
+    thelist.append(attr_name)
+    return 0
+
+def py_listattrs(ObjectID loc not None):
+    """ (ObjectID loc) => LIST attr_names
+
+        Get a list of the names of the attributes attached to an object.
+    """
+    cdef list retlist
+    cdef unsigned int i
+    i = 0
+    retlist = []
+    H5Aiterate(loc.id, &i, <H5A_operator_t>list_cb, retlist)
+    return retlist
+
 # === Attribute class & methods ===============================================
 
 cdef class AttrID(ObjectID):

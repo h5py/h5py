@@ -61,11 +61,16 @@ cdef class ObjectID:
 
     def __dealloc__(self):
         """ Automatically decrefs the ID, if it's valid. """
+        print "Dealloc"
         if (not self._locked) and (H5Iget_type(self.id) != H5I_BADID):
             H5Idec_ref(self.id)
 
     def __copy__(self):
-        """ Create another object wrapper which points to the same id. """
+        """ Create another object wrapper which points to the same id. 
+
+            WARNING: Locks (i.e. datatype lock() methods) do NOT work correctly
+            across copies.
+        """
         cdef ObjectID copy
         copy = type(self)(self.id)
         assert typecheck(copy, ObjectID), "ObjectID copy encountered invalid type"

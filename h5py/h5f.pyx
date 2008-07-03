@@ -77,14 +77,6 @@ def create(char* name, int flags=H5F_ACC_TRUNC, PropFCID createlist=None,
     access_id = pdefault(accesslist)
     return FileID(H5Fcreate(name, flags, create_id, access_id))
 
-def is_hdf5(char* name):
-    """ (STRING name) => BOOL is_hdf5
-
-        Determine if a given file is an HDF5 file.  Note this raises an 
-        exception if the file doesn't exist.
-    """
-    return pybool(H5Fis_hdf5(name))
-
 def flush(ObjectID obj not None, int scope=H5F_SCOPE_LOCAL):
     """ (ObjectID obj, INT scope=SCOPE_LOCAL)
 
@@ -95,6 +87,14 @@ def flush(ObjectID obj not None, int scope=H5F_SCOPE_LOCAL):
             SCOPE_GLOBAL:   Flush the entire virtual file
     """
     H5Fflush(obj.id, <H5F_scope_t>scope)
+
+def is_hdf5(char* name):
+    """ (STRING name) => BOOL is_hdf5
+
+        Determine if a given file is an HDF5 file.  Note this raises an 
+        exception if the file doesn't exist.
+    """
+    return pybool(H5Fis_hdf5(name))
 
 def mount(ObjectID loc not None, char* name, FileID fid not None, 
           PropMID mountlist=None):
@@ -207,6 +207,10 @@ cdef class FileID(ObjectID):
     """ 
         Represents an HDF5 file identifier.
     """
+    property name:
+        """ File name on disk (according to h5f.get_name()) """
+        def __get__(self):
+            return get_name(self)
 
     def close(self):
         """ ()

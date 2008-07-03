@@ -181,7 +181,29 @@ class TestH5A(unittest.TestCase):
         h5a.iterate(self.obj, iterate_two, namelist, 1)
         self.assertEqual(namelist, ATTRIBUTES_ORDER[1:3])
 
+    def test_prop_name(self):
+        
+        for name in ATTRIBUTES:
+            attr = h5a.open_name(self.obj, name)
+            self.assertEqual(attr.name, name)
 
+    def test_prop_shape(self):
+
+        for name, (val, dt, shape) in ATTRIBUTES.iteritems():
+            attr = h5a.open_name(self.obj, name)
+            self.assertEqual(attr.shape, shape)
+
+    def test_prop_dtype(self):
+
+        for name, (val, dt, shape) in ATTRIBUTES.iteritems():
+            attr = h5a.open_name(self.obj, name)
+            self.assertEqual(attr.dtype, dt)
+
+    def test_py_listattrs(self):
+
+        attrlist = h5a.py_listattrs(self.obj)
+
+        self.assertEqual(attrlist, ATTRIBUTES_ORDER)
 
 
 

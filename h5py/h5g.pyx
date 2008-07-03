@@ -55,6 +55,33 @@ cdef class GroupStat:
     cdef readonly time_t mtime
     cdef readonly size_t linklen
 
+cdef class GroupIter:
+
+    """
+        Iterator over the names of group members.  After this iterator is
+        exhausted, it releases its reference to the group ID.
+    """
+
+    cdef unsigned long idx
+    cdef unsigned long nobjs
+    cdef GroupID grp
+
+    def __init__(self, GroupID grp not None):
+        self.idx = 0
+        self.grp = grp
+        self.nobjs = grp.get_num_objs()
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        if self.idx == self.nobjs:
+            self.grp = None
+            raise StopIteration
+        
+        retval = self.grp.get_objname_by_idx(self.idx)
+        self.idx = self.idx + 1
+        return retval
 
 # === Basic group management ==================================================
 
@@ -314,5 +341,12 @@ cdef class GroupID(ObjectID):
         except H5Error:
             return False    
         return True
+
+    def py_iter(self):
+        """ () => ITERATOR
+
+            Return an iterator over the names of group members.
+        """
+        return GroupIter(self)
 
 

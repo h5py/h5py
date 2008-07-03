@@ -63,7 +63,7 @@ SEL_ALL         = H5S_SEL_ALL
 def create(int class_code):
     """ (INT class_code) => SpaceID
 
-        Create a new HDF5 dataspace object, of the given class.  
+        Create a new HDF5 dataspace object, of the given class.
         Legal values are SCALAR and SIMPLE.
     """
     return SpaceID(H5Screate(<H5S_class_t>class_code))

@@ -88,26 +88,6 @@ def get_filter_info(int filter_code):
     H5Zget_filter_info(<H5Z_filter_t>filter_id, &flags)
     return flags
 
-# === Python extensions =======================================================
-
-PY_FILTER = DDict({ H5Z_FILTER_ERROR: 'ERROR', H5Z_FILTER_NONE: 'NONE',
-            H5Z_FILTER_ALL: 'ALL', H5Z_FILTER_DEFLATE: 'DEFLATE',
-            H5Z_FILTER_SHUFFLE: 'SHUFFLE', H5Z_FILTER_FLETCHER32: 'FLETCHER32',
-            H5Z_FILTER_SZIP: 'SZIP', H5Z_FILTER_RESERVED: 'RESERVED'})
-
-PY_FLAG = DDict({ H5Z_FLAG_DEFMASK: 'DEFMASK', H5Z_FLAG_MANDATORY: 'MANDATORY',
-            H5Z_FLAG_OPTIONAL: 'OPTIONAL', H5Z_FLAG_INVMASK: 'INVMASK',
-            H5Z_FLAG_REVERSE: 'REVERSE', H5Z_FLAG_SKIP_EDC: 'SKIP EDC' })
-
-PY_FILTER_CONFIG = DDict({H5Z_FILTER_CONFIG_ENCODE_ENABLED: 'ENCODE ENABLED',
-                        H5Z_FILTER_CONFIG_DECODE_ENABLED: 'ENCODE DISABLED'})
-
-PY_EDC   = DDict({H5Z_ERROR_EDC: 'ERROR', H5Z_DISABLE_EDC: 'DISABLE EDC',
-                    H5Z_ENABLE_EDC: 'ENABLE EDC', H5Z_NO_EDC: 'NO EDC' })
-
-
-
-
 
 
 

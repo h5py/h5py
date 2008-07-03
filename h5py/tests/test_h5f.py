@@ -91,6 +91,8 @@ class TestH5F(unittest.TestCase):
         self.assert_(isinstance(idlist, list))
         self.assertRaises(H5Error, h5f.get_obj_ids, -1, h5f.OBJ_ALL)
 
+    def test_py(self):
+        self.assertEqual(self.fid.name, HDFNAME)
 
 
 

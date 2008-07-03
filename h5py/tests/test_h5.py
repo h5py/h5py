@@ -21,6 +21,5 @@ class TestH5(unittest.TestCase):
 
         self.assertEqual(tpl, h5.HDF5_VERS_TPL)
         self.assertEqual("%d.%d.%d" % tpl, h5.HDF5_VERS)
-        self.assertEqual(h5.API_VERS, '1.6')
-        self.assertEqual(h5.API_VERS_TPL, (1,6))
-
+        h5.API_VERS
+        h5.API_VERS_TPL

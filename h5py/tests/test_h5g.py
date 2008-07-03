@@ -163,7 +163,10 @@ class TestH5G(unittest.TestCase):
         self.assert_(self.obj.py_exists(TEST_GROUPS[0]))
         self.assert_(not self.obj.py_exists('Something else'))
 
-
+    def test_py_iter(self):
+        
+        namelist = list(self.obj.py_iter())
+        self.assertEqual(namelist, TEST_GROUPS)
 
     
 
