@@ -14,6 +14,7 @@
 # license is available at licenses/pytables.txt, in the distribution root
 # directory.
 
+include "conditions.pxi"
 from defs_c cimport size_t, ssize_t
 
 # Common structs and types from HDF5

@@ -9,8 +9,6 @@
 # $Date$
 # 
 #-
-
-
 """
     Common module for the HDF5 low-level interface library.  
 
@@ -19,8 +17,20 @@
     - API_VERS, API_VERS_TPL:  API version (1.6 or 1.8) used to compile h5py.
 
     All exception classes and error handling functions are also in this module.
+
+    This module is designed to be imported before any other h5py module is
+    executed.  It opens the library and enables debug logging, if required.
 """
+
+include "conditions.pxi"
 from python cimport PyErr_SetObject
+
+# Logging is only enabled when compiled with H5PY_DEBUG nonzero
+IF H5PY_DEBUG:
+    import logging
+    logger = logging.getLogger('h5py')
+    logger.setLevel(H5PY_DEBUG)
+    logger.addHandler(logging.StreamHandler())
 
 # === API =====================================================================
 
@@ -38,10 +48,10 @@ def get_libversion():
 
     return (major, minor, release)
     
-HDF5_VERS_TPL = get_libversion()        
-HDF5_VERS = "%d.%d.%d" % HDF5_VERS_TPL
-API_VERS = '1.6'
-API_VERS_TPL = (1,6)
+hdf5_version_tuple = get_libversion()        
+hdf5_version = "%d.%d.%d" % hdf5_version_tuple
+api_version_tuple = (H5PY_API_MAJ, H5PY_API_MIN)
+api_version = H5PY_API
 
 
 class DDict(dict):
@@ -54,14 +64,24 @@ class DDict(dict):
 
 cdef class ObjectID:
         
+    property _valid:
+        """ Indicates whether or not this identifier points to an HDF5 object.
+        """
+        def __get__(self):
+            return H5Iget_type(self.id) != H5I_BADID
+
     def __cinit__(self, hid_t id_):
         """ Object init; simply records the given ID. """
         self._locked = 0
         self.id = id_
+        IF H5PY_DEBUG:
+            logger.debug("+ %s" % str(self))
 
     def __dealloc__(self):
         """ Automatically decrefs the ID, if it's valid. """
-        if (not self._locked) and (H5Iget_type(self.id) != H5I_BADID):
+        IF H5PY_DEBUG:
+            logger.debug("- %s" % str(self))
+        if (not self._locked) and self._valid:
             H5Idec_ref(self.id)
 
     def __copy__(self):
@@ -73,9 +93,11 @@ cdef class ObjectID:
         cdef ObjectID copy
         copy = type(self)(self.id)
         assert typecheck(copy, ObjectID), "ObjectID copy encountered invalid type"
-        if H5Iget_type(self.id) != H5I_BADID and not self._locked:
+        if self._valid and not self._locked:
             H5Iinc_ref(self.id)
         copy._locked = self._locked
+        IF H5PY_DEBUG:
+            logger.debug("c %s" % str(self))
         return copy
 
     def __richcmp__(self, object other, int how):
@@ -94,10 +116,11 @@ cdef class ObjectID:
         raise TypeError("Only equality comparisons are supported.")
 
     def __str__(self):
-        if H5Iget_type(self.id) != H5I_BADID:
+        if self._valid:
             ref = str(H5Iget_ref(self.id))
         else:
             ref = "INVALID"
+
         if self._locked:
             lstr = "locked"
         else:
@@ -107,8 +130,6 @@ cdef class ObjectID:
 
     def __repr__(self):
         return self.__str__()
-
-# === Automatic error handling ================================================
 
 
 # === Public exception hierarchy ==============================================

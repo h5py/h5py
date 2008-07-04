@@ -183,7 +183,7 @@ cdef class DatasetID(ObjectID):
             H5Dwrite(self.id, mtype.id, mspace.id, fspace.id, plist_id, PyArray_DATA(arr_obj))
 
         finally:
-            if mtype_id is not None:
+            if mtype is not None:
                 mtype.close()
 
     def extend(self, object shape):

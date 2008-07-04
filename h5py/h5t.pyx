@@ -14,6 +14,8 @@
     HDF5 "H5T" data-type API
 """
 
+include "conditions.pxi"
+
 # Pyrex compile-time imports
 from defs_c cimport free
 from h5p cimport H5P_DEFAULT
@@ -297,6 +299,9 @@ cdef class TypeID(ObjectID):
 
     cdef object py_dtype(self):
         raise NotImplementedError("Don't know how to convert %s objects to Numpy" % self.__class__.__name__)
+
+    def __repr__(self):
+        return str(self)+" "+str(self.dtype)
 
     def commit(self, ObjectID group not None, char* name):
         """ (ObjectID group, STRING name)
@@ -623,7 +628,6 @@ cdef class TypeIntegerID(TypeAtomicID):
         # Translation function for integer types
         return dtype( _order_map[self.get_order()] + 
                       _sign_map[self.get_sign()] + str(self.get_size()) )
-
 
 cdef class TypeFloatID(TypeAtomicID):
 
@@ -1053,6 +1057,12 @@ def py_create(dtype dt not None, object complex_names=None, enum=None):
 
     if complex_names is not None:
         otype.complex_names = complex_names
+
+    IF H5PY_DEBUG:
+        import logging
+        logger = logging.getLogger('h5py')
+        logger.info( "H5T create: %s\n"
+                     "         => %s"  % (str(dt), repr(otype)))
     return otype
 
 

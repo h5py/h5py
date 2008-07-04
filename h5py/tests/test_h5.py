@@ -19,7 +19,7 @@ class TestH5(unittest.TestCase):
         # For 1.6 API
         tpl = h5.get_libversion()
 
-        self.assertEqual(tpl, h5.HDF5_VERS_TPL)
-        self.assertEqual("%d.%d.%d" % tpl, h5.HDF5_VERS)
-        h5.API_VERS
-        h5.API_VERS_TPL
+        self.assertEqual(tpl, h5.hdf5_version_tuple)
+        self.assertEqual("%d.%d.%d" % tpl, h5.hdf5_version)
+        h5.api_version
+        h5.api_version_tuple

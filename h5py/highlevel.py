@@ -13,10 +13,18 @@
 import numpy
 
 from h5py import h5, h5f, h5g, h5s, h5t, h5d, h5a, h5p, h5z, h5i
-from utils_hl import slicer
+from h5py.h5 import H5Error
+from utils_hl import slicer, hbasename
 
+class HLObject(object):
 
-class Group(object):
+    name = property(lambda self: h5i.get_name(self.id),
+        doc = "Name of this object in the HDF5 file.  Not necessarily unique.")
+
+    def __repr__(self):
+        return str(self)
+
+class Group(HLObject):
 
     """ Represents an HDF5 group.
 
@@ -41,35 +49,36 @@ class Group(object):
         self._attrs = AttributeManager(self)
 
     def __setitem__(self, name, obj):
-        """ Add the given object to the group.  Here are the rules:
+        """ Add the given object to the group.  The action taken depends on
+            the type of object assigned:
 
-            1. If "obj" is a Dataset or Group object, a hard link is created
-                in this group which points to the given object.
+            1. Named HDF5 object (Dataset, Group, Datatype):
+                A hard link is created in this group which points to the
+                given object.
 
-            2. If "obj" is a Numpy ndarray, it is converted to a dataset
-                object, with default settings (contiguous storage, etc.).
+            2. Numpy ndarray:
+                The array is converted to a dataset object, with default
+                settings (contiguous storage, etc.).
 
-            3. If "obj is a Numpy dtype object or Datatype instance, commit
-                a copy of the datatype as a named datatype in the file.
+            3. Numpy dtype:
+                Commit a copy of the datatype as a named datatype in the file.
 
-            3. If "obj" is anything else, attempt to convert it to an ndarray
-                and store it.  Scalar values are stored as scalar datasets.
-                Raise ValueError if we can't understand the resulting array 
-                dtype.
+            4. Anything else:
+                Attempt to convert it to an ndarray and store it.  Scalar
+                values are stored as scalar datasets. Raise ValueError if we
+                can't understand the resulting array dtype.
         """
-        if isinstance(obj, Group) or isinstance(obj, Dataset):
+        if isinstance(obj, Group) or isinstance(obj, Dataset) or isinstance(obj, Datatype):
             self.id.link(name, h5i.get_name(obj.id), link_type=h5g.LINK_HARD)
+
         elif isinstance(obj, numpy.dtype):
             htype = h5t.py_create(obj)
             htype.commit(self.id, name)
-        elif isinstance(obj, Datatype):
-            htype = obj.id.copy()
-            htype.commit(self.id, name)
+
         else:
             if not isinstance(obj, numpy.ndarray):
                 obj = numpy.array(obj)
-            dset = Dataset(self, name, data=obj)
-            dset.close()
+            Dataset(self, name, data=obj)
 
     def __getitem__(self, name):
         """ Open an object attached to this group. 
@@ -80,8 +89,6 @@ class Group(object):
 
         if info.type == h5g.DATASET:
             dset = Dataset(self, name)
-            if dset.shape == ():
-                return dset[...]
             return dset
 
         elif info.type == h5g.GROUP:
@@ -103,21 +110,21 @@ class Group(object):
         return self.id.py_iter()
 
     def __str__(self):
-        return 'Group (%d members): ' % len(self) + ', '.join(['"%s"' % name for name in self])
-
-    def __repr__(self):
-        return str(self)
+        if self.id._valid:
+            return 'Group "%s" (%d members): %s' % (hbasename(self.name),
+                    len(self), ', '.join(['"%s"' % name for name in self]))
+        return "Closed group"
 
     def iteritems(self):
         for name in self:
-            return (name, self[name])
+            yield (name, self[name])
 
 class File(Group):
 
     """ Represents an HDF5 file on disk.
 
         Created with standard Python syntax File(name, mode).
-        Legal modes: r, r+, w, w+, a.
+        Legal modes: r, r+, w, w+, a  (default 'r')
 
         File objects inherit from Group objects; Group-like methods all
         operate on the HDF5 root group ('/').  Like Python file objects, you
@@ -133,7 +140,7 @@ class File(Group):
 
     # --- Public interface (File) ---------------------------------------------
 
-    def __init__(self, name, mode, noclobber=False):
+    def __init__(self, name, mode='r', noclobber=False):
         """ Create a new file object.  
 
             Valid modes (like Python's file() modes) are: 
@@ -178,12 +185,11 @@ class File(Group):
         h5f.flush(self.fid)
 
     def __str__(self):
-        return 'File "%s", root members: %s' % (self.name, ', '.join(['"%s"' % name for name in self]))
+        if self.id._valid:
+            return 'File "%s", root members: %s' % (self.name, ', '.join(['"%s"' % name for name in self]))
+        return "Closed file (%s)" % self.name
 
-    def __repr_(self):
-        return str(self)
-
-class Dataset(object):
+class Dataset(HLObject):
 
     """ High-level interface to an HDF5 dataset
     """
@@ -196,6 +202,15 @@ class Dataset(object):
 
     attrs = property(lambda self: self._attrs,
         doc = "Provides access to HDF5 attributes. See AttributeManager.")
+
+    def _getval(self):
+        arr = self[...]
+        if arr.shape == ():
+            return numpy.asscalar(arr)
+        return arr
+
+    value = property(_getval,
+        doc = "The entire dataset, as an array or scalar depending on the shape.")
 
     def __init__(self, group, name,
                     data=None, dtype=None, shape=None, 
@@ -304,7 +319,10 @@ class Dataset(object):
             mtype = htype
 
         fspace = self.id.get_space()
-        fspace.select_hyperslab(start, count, stride)
+        if fspace.get_simple_extent_type() == h5s.SCALAR:
+            fspace.select_all()
+        else:
+            fspace.select_hyperslab(start, count, stride)
         mspace = h5s.create_simple(count)
 
         arr = numpy.ndarray(count, mtype.dtype)
@@ -339,12 +357,12 @@ class Dataset(object):
         self.id.write(mspace, fspace, array(val))
 
     def __str__(self):
-        return 'Dataset: '+str(self.shape)+'  '+repr(self.dtype)
+        if self.id._valid:
+            return 'Dataset "%s": %s %s' % (hbasename(self.name),
+                    str(self.shape), repr(self.dtype))
+        return "Closed dataset"
 
-    def __repr__(self):
-        return str(self)
-
-class AttributeManager(object):
+class AttributeManager(HLObject):
 
     """ Allows dictionary-style access to an HDF5 object's attributes.
 
@@ -390,7 +408,7 @@ class AttributeManager(object):
             h5a.delete(self.id, name)
         except H5Error:
             pass
-        attr = h5a.py_create(self.id, name, htype, space)
+        attr = h5a.create(self.id, name, htype, space)
         attr.write(value)
 
     def __delitem__(self, name):
@@ -408,9 +426,21 @@ class AttributeManager(object):
             yield (name, self[name])
 
     def __str__(self):
-        return "Attributes: "+', '.join(['"%s"' % x for x in self])
+        if self.id._valid:
+            rstr = 'Attributes of "%s": ' % hbasename(self.name)
+            if len(self) == 0:
+                rstr += '(none)'
+            else:
+                rstr += ', '.join(['"%s"' % x for x in self])
+        else:
+            rstr = "Attributes of closed object."
 
-class Datatype(object):
+        return rstr
+
+    def __repr__(self):
+        return str(self)
+
+class Datatype(HLObject):
 
     """
         Represents an HDF5 datatype.
@@ -423,7 +453,15 @@ class Datatype(object):
     def __init__(grp, name):
         self.id = h5t.open(grp.id, name)
 
+    def __str__(self):
+        if self.id._valid:
+            return "Named datatype object (%s)" % str(self.dtype)
+        return "Closed datatype object"
 
+# Browser component.  This is here to prevent issues with circular imports
+from browse import _H5Browser
+
+browse = _H5Browser()
 
 
 

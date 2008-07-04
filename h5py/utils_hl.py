@@ -2,6 +2,15 @@
 """
     Utility functions for high-level modules.
 """
+from posixpath import basename, normpath
+
+def hbasename(name):
+    """ Basename function with more readable handling of trailing slashes"""
+    bname = normpath(name)
+    bname = basename(bname)
+    if bname == '':
+        bname = '/'
+    return bname
 
 def slicer(shape, args):
     """ Parse a tuple containing Numpy-style extended slices.
