@@ -188,11 +188,15 @@ DEF H5PY_DEBUG = %d
 DEF H5PY_API = "%d.%d"
 """ % (AUTO_HDR, API_VERS[0], API_VERS[1], DEBUG_LEVEL,API_VERS[0], API_VERS[1])
 
-cond_file = open(cond_path,'r')
-cond_present = cond_file.read()
-cond_file.close()
-if cond_present != cond:
+try:
+    cond_file = open(cond_path,'r')
+    cond_present = cond_file.read()
+    cond_file.close()
+    if cond_present != cond:
+        ENABLE_PYREX = True
+except IOError:
     ENABLE_PYREX = True
+    cond_present = ""
 
 # If for some reason the .c files are missing, Pyrex is required.
 if not all([os.path.exists(x+'.c') for x in pyrex_sources]):

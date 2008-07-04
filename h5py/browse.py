@@ -11,12 +11,16 @@
 #-
 
 import cmd
+from getopt import gnu_getopt
 import os
-import posixpath
 from utils_hl import hbasename
+from posixpath import join, basename, dirname, normpath, isabs
 
 from h5py.highlevel import File, Group, Dataset, Datatype
 from h5py import h5g
+
+NAMES = {h5g.DATASET: "Dataset", h5g.GROUP: "Group", h5g.TYPE: "Named Type"}
+LS_FORMAT = " %-10s    %-10s"
 
 class _H5Browser(cmd.Cmd):
 
@@ -71,15 +75,7 @@ class _H5Browser(cmd.Cmd):
         """ Correctly interpret the given path fragment, relative to the
             current path.
         """
-        apath = posixpath.join(self.path, path)
-        apath = posixpath.normpath(apath)
-        return apath
-
-    def get_candidates(path, criterion=lambda grp, name: True):
-        """ Get a list of candidates, in the group pointed to by
-            "path", which satisfy a particular criterion.
-        """
-        pass
+        return normpath(join(self.path,path))
 
     def do_exit(self, line):
         return True
@@ -94,12 +90,10 @@ class _H5Browser(cmd.Cmd):
         path = line.strip()
         if path == '': path = '/'
         path = self.abspath(path)
-        dname = posixpath.dirname(path)
-        bname = posixpath.basename(path)
-        print dname, bname
+        dname = dirname(path)
+        bname = basename(path)
         try:
-            pgrp = self.file[dname]
-            if bname != '' and not pgrp.id.get_objinfo(bname).type == h5g.GROUP:
+            if bname != '' and not self.file[dname].id.get_objinfo(bname).type == h5g.GROUP:
                 self._error('"%s" is not an HDF5 group' % bname)
             else:
                 self.path = path
@@ -108,30 +102,47 @@ class _H5Browser(cmd.Cmd):
 
     def complete_cd(self, text, line, begidx, endidx):
         text = text.strip()
-        grpname = posixpath.join(self.path,posixpath.dirname(text))
-        targetname = posixpath.basename(text)
+        grpname = self.abspath(dirname(text))
+        targetname = basename(text)
 
-        try:
-            grp = self.file[grpname]
-            return [posixpath.join(grpname,x) for x in grp \
-                        if x.find(targetname) == 0 and \
-                        grp.id.get_objinfo(x).type == h5g.GROUP]
-        except:
-            return []
-
+        grp = self.file[grpname]
+        rval = [join(grpname,x) for x in grp \
+                    if x.find(targetname) == 0 and \
+                    grp.id.get_objinfo(x).type == h5g.GROUP]
+        return rval
+    
     def do_ls(self, line):
         """ List contents of the specified group, or this one """
 
-        line = line.strip()
-        if line == '':
+        LONG_STYLE = False
+        try:
+            opts, args = gnu_getopt(line.split(), 'l')
+        except GetoptError, e:
+            self._error(e.msg.capitalize())
+            return
+
+        if '-l' in [ opt[0] for opt in opts]:
+            LONG_STYLE = True
+        if len(args) == 0:
             grpname = self.path
+        elif len(args) == 1:
+            grpname = self.abspath(args[0])
         else:
-            grpname = posixpath.join(self.path, line)
+            self._error("Too many arguments")
+            return
 
         try:
             grp = self.file[grpname]
+            if LONG_STYLE:
+                print LS_FORMAT % ("Name", "Type")
+                print LS_FORMAT % ("----", "----")
             for name in grp:
-                print name
+                typecode = grp.id.get_objinfo(name).type
+                pname = name if typecode != h5g.GROUP else name+'/'
+                if LONG_STYLE:
+                    print LS_FORMAT % (pname, NAMES[typecode])
+                else:
+                    print pname
         except:
             self._error('Can\'t list contents of group "%s"' % hbasename(grpname))
 
