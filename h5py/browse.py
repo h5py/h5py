@@ -142,7 +142,7 @@ class _H5Browser(Cmd, object):
                     print pname
         except:
             raise CmdError('Can\'t list contents of group "%s"' % hbasename(grpname))
-
+        
     def do_info(self, line):
 
         opts, args = gnu_getopt(shlex.split(line),'')

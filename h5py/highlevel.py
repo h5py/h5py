@@ -18,6 +18,8 @@ from h5py.h5 import H5Error
 from utils_hl import slicer, hbasename, strhdr, strlist
 from browse import _H5Browser
 
+__all__ = ["File", "Group", "Dataset", "Datatype"]
+
 try:
     # For interactive File.browse() capability
     import readline
@@ -126,10 +128,29 @@ class Group(HLObject):
         for name in self:
             yield (name, self[name])
 
-    def desc(self):
-        """ Extended description of this group, as a string.
+    def create_group(self, name):
+        """ Create and return a subgroup.
+        """
+        return Group(self, name, create=True)
 
-            print grp.desc()  # contains newlines
+    def create_dataset(self, name, **kwds):
+        """ Create and return a dataset.  Keyword arguments:
+
+            You must specify either "data", or both "type" and "shape".
+             data:     Numpy array from which the dataset will be constructed
+             type:     Numpy dtype giving the datatype
+             shape:    Numpy-style shape tuple giving the dataspace
+
+            Additional options (* is default):
+             chunks:        Tuple of chunk dimensions or None*
+             compression:   DEFLATE (gzip) compression level, int or None*
+             shuffle:       Use the shuffle filter? (requires compression) T/F*
+             fletcher32:    Enable Fletcher32 error detection? T/F*
+        """
+        return Dataset(self, name, **kwds)
+
+    def desc(self):
+        """ Extended (multi-line) description of this group, as a string.
         """
 
         outstr = 'Group "%s" in file "%s":' % \
@@ -219,7 +240,7 @@ class File(Group):
 
     def browse(self, dict=None):
         """ Open a command line shell to browse this file. If dict is not
-            specified, any imported object will be placed in the caller's
+            specified, any imported objects will be placed in the caller's
             global() dictionary.
         """
         if dict is None:
@@ -232,7 +253,6 @@ class File(Group):
 
         # The following is an ugly hack to prevent readline from mixing the cmd
         # session with IPython's session.  Is there a better way to do this?
-        hist = None
         if readline:
             hist = gethist()
             readline.clear_history()
@@ -241,7 +261,7 @@ class File(Group):
         try:
             browser = _H5Browser(self, self._path, importdict=dict)
         finally:
-            if hist:
+            if readline:
                 self._rlhist.extend(gethist())
                 readline.clear_history()
                 for x in hist:

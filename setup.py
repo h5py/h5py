@@ -269,11 +269,13 @@ class test(Command):
         buildobj = self.distribution.get_command_obj('build')
         buildobj.run()
         oldpath = sys.path
-        sys.path = [os.path.abspath(buildobj.build_lib)] + oldpath
-        import h5py.tests
-        if not h5py.tests.runtests():
-            raise DistutilsError("Unit tests failed.")
-        sys.path = oldpath
+        try:
+            sys.path = [os.path.abspath(buildobj.build_lib)] + oldpath
+            import h5py.tests
+            if not h5py.tests.runtests():
+                raise DistutilsError("Unit tests failed.")
+        finally:
+            sys.path = oldpath
 
 class dev(Command):
     description = "Developer commands (--doc, --clean, --readme=<file>)"
