@@ -10,6 +10,11 @@
 # 
 #-
 
+"""
+    Simple command-line browser program, designed to be called by a File
+    instance.
+"""
+
 from cmd import Cmd
 from posixpath import join, basename, dirname, normpath, isabs
 from getopt import gnu_getopt, GetoptError
@@ -138,6 +143,29 @@ class _H5Browser(Cmd, object):
         except:
             raise CmdError('Can\'t list contents of group "%s"' % hbasename(grpname))
 
+    def do_info(self, line):
+
+        opts, args = gnu_getopt(shlex.split(line),'')
+
+        for arg in args:
+            name = self.abspath(arg)
+            try:
+                obj = self.file[name]
+                print obj.desc()
+            except:
+                raise CmdError("Can't get info on object \"%s\"" % hbasename(name))
+
+    def complete_info(self, text, line, begidx, endidx):
+        text = text.strip()
+        grpname = self.abspath(dirname(text))
+        targetname = basename(text)
+
+        grp = self.file[grpname]
+        rval = [join(grpname,x) for x in grp \
+                    if x.find(targetname) == 0]
+        return rval
+
+
     def do_import(self, line):
         """ import name [as python_name] 
  import name1 name2 name3 name4 ...
@@ -165,7 +193,7 @@ class _H5Browser(Cmd, object):
             try:
                 obj = self.file[hname]
             except Exception, e:
-                raise CmdError("Can't import %s: %s" % (name, e.args[0].splitlines()[0]))
+                raise CmdError("Can't import %s" % pyname)
 
             if len(re.sub('[A-Za-z_][A-Za-z0-9_]*','',pyname)) != 0:
                 raise CmdError("%s is not a valid Python identifier" % pyname)
@@ -191,15 +219,6 @@ class _H5Browser(Cmd, object):
 
     def complete_ls(self, *args):
         return self.complete_cd(*args)
-
-
-
-
-
-
-
-
-
 
 
 

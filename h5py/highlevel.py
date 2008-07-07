@@ -9,13 +9,13 @@
 # $Date$
 # 
 #-
-
+import os
 import numpy
 import inspect
 
 from h5py import h5, h5f, h5g, h5s, h5t, h5d, h5a, h5p, h5z, h5i
 from h5py.h5 import H5Error
-from utils_hl import slicer, hbasename
+from utils_hl import slicer, hbasename, strhdr, strlist
 from browse import _H5Browser
 
 try:
@@ -119,14 +119,32 @@ class Group(HLObject):
 
     def __str__(self):
         if self.id._valid:
-            return 'Group "%s" (%d members): %s' % (hbasename(self.name),
-                    len(self), ', '.join(['"%s"' % name for name in self]))
+            return 'Group "%s" (%d members)' % (hbasename(self.name), len(self))
         return "Closed group"
 
     def iteritems(self):
         for name in self:
             yield (name, self[name])
 
+    def desc(self):
+        """ Extended description of this group, as a string.
+
+            print grp.desc()  # contains newlines
+        """
+
+        outstr = 'Group "%s" in file "%s":' % \
+                (hbasename(h5i.get_name(self.id)), os.path.basename(h5f.get_name(self.id)))
+        outstr = strhdr(outstr)
+        infodct = {"Members": len(self)}
+        grpinfo = self.id.get_objinfo('.')
+        infodct["mtime"] = grpinfo.mtime
+        outstr += strlist([(name, infodct[name]) for name in ("Members", "mtime")])
+        
+        cmnt = self.id.get_comment('.')
+        if cmnt != '':
+            outstr += '\nComment:\n'+cmnt
+        return outstr
+        
 class File(Group):
 
     """ Represents an HDF5 file on disk.
@@ -186,7 +204,7 @@ class File(Group):
     def close(self):
         """ Close this HDF5 file.  All open identifiers will become invalid.
         """
-        self.id.close()
+        self.id._close()
         self.fid.close()
 
     def flush(self):
@@ -200,14 +218,15 @@ class File(Group):
         return "Closed file (%s)" % self.name
 
     def browse(self, dict=None):
-        """ Browse this file. If no import dict is provided, will seize the
-            caller's global dictionary.
+        """ Open a command line shell to browse this file. If dict is not
+            specified, any imported object will be placed in the caller's
+            global() dictionary.
         """
         if dict is None:
             dict = inspect.currentframe().f_back.f_globals
 
         def gethist():
-            rlhist = [readline.get_history_item(x) for x in xrange(readline.get_current_history_length())]
+            rlhist = [readline.get_history_item(x) for x in xrange(readline.get_current_history_length()+1)]
             rlhist = [x for x in rlhist if x is not None]
             return rlhist
 

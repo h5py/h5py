@@ -115,3 +115,18 @@ def slicer(shape, args):
 
     return (tuple(start), tuple(count), tuple(stride), tuple(names))
 
+def strhdr(line, char='-'):
+    """ Print a line followed by an ASCII-art underline """
+    return line + "\n%s\n" % (char*len(line))
+
+def strlist(lst, keywidth=10):
+    """ Print a list of (key: value) pairs, with column alignment. """
+    format = "%-"+str(keywidth)+"s %s\n"
+
+    outstr = ''
+    for key, val in lst:
+        outstr += format % (key+':',val)
+
+    return outstr
+
+
