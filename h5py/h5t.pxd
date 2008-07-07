@@ -18,7 +18,6 @@ include "std_defs.pxi"
 from h5 cimport class ObjectID
 
 cdef class TypeID(ObjectID):
-    cdef object _complex_names
 
     cdef object py_dtype(self)
 

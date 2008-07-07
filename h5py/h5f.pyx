@@ -16,6 +16,12 @@
 
 # Pyrex compile-time imports
 from h5p cimport propwrap, pdefault, PropFAID, PropFCID, PropMID
+from h5t cimport typewrap
+from h5a cimport AttrID
+from h5d cimport DatasetID
+from h5g cimport GroupID
+from h5i cimport H5Iget_type, H5Iinc_ref, H5I_type_t, \
+                 H5I_FILE, H5I_GROUP, H5I_ATTR, H5I_DATASET, H5I_DATATYPE
 from utils cimport emalloc, efree, pybool
 
 # Runtime imports
@@ -158,6 +164,29 @@ def get_obj_count(object where=OBJ_ALL, int types=H5F_OBJ_ALL):
 
     return H5Fget_obj_count(where_id, types)
 
+cdef object wrap_identifier(hid_t ident):
+    # Support function for get_obj_ids
+
+    cdef H5I_type_t typecode
+    cdef ObjectID obj
+    typecode = H5Iget_type(ident)
+    if typecode == H5I_FILE:
+        obj = FileID(ident)
+    elif typecode == H5I_DATASET:
+        obj = DatasetID(ident)
+    elif typecode == H5I_GROUP:
+        obj = GroupID(ident)
+    elif typecode == H5I_ATTR:
+        obj = AttrID(ident)
+    elif typecode == H5I_DATATYPE:
+        obj = typewrap(ident)
+    else:
+        raise ValueError("Unrecognized type code %d" % typecode)
+
+    # The HDF5 function doesn't seem to inc_ref these identifiers.
+    H5Iinc_ref(ident)
+    return obj
+
 def get_obj_ids(object where=OBJ_ALL, int types=H5F_OBJ_ALL):
     """ (OBJECT where=OBJ_ALL, types=OBJ_ALL) => LIST open_ids
 
@@ -194,7 +223,7 @@ def get_obj_ids(object where=OBJ_ALL, int types=H5F_OBJ_ALL):
 
         H5Fget_obj_ids(where_id, types, count, obj_list)
         for i from 0<=i<count:
-            py_obj_list.append(obj_list[i])
+            py_obj_list.append(wrap_identifier(obj_list[i]))
         return py_obj_list
 
     finally:
@@ -222,7 +251,6 @@ cdef class FileID(ObjectID):
         """
         H5Fclose(self.id)
 
-
     def reopen(self):
         """ () => FileID
 
@@ -231,7 +259,6 @@ cdef class FileID(ObjectID):
             a mounted file.
         """
         return FileID(H5Freopen(self.id))
-
 
     def get_filesize(self):
         """ () => LONG size
@@ -267,10 +294,3 @@ cdef class FileID(ObjectID):
         return H5Fget_freespace(self.id)
 
 
-
-
-
-
-
-
-    

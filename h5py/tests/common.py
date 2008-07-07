@@ -38,7 +38,6 @@ class HCopy(object):
         plist = h5p.create(h5p.FILE_ACCESS)
         plist.set_fclose_degree(h5f.CLOSE_STRONG)
         self.fid = h5f.open(self.tmpname, h5f.ACC_RDWR)
-        plist.close()
         return self.fid
 
     def __exit__(self, *args):

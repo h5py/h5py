@@ -15,7 +15,7 @@
 # directory.
 
 include "conditions.pxi"
-from defs_c cimport size_t, ssize_t
+from defs_c cimport size_t, ssize_t, malloc, free
 
 # Common structs and types from HDF5
 cdef extern from "hdf5.h":
@@ -227,7 +227,6 @@ cdef extern from "hdf5.h":
 
   # --- Error handling --------------------------------------------------------
 
-
   char      *H5Eget_major(H5E_major_t n)
   char      *H5Eget_minor(H5E_minor_t n)
   herr_t    H5Eclear() except *
@@ -236,6 +235,10 @@ cdef extern from "hdf5.h":
   herr_t    H5Eget_auto(H5E_auto_t *func, void** client_data)
   ctypedef herr_t (*H5E_walk_t)(int n, H5E_error_t *err_desc, void* client_data)  
   herr_t    H5Ewalk(H5E_direction_t direction, H5E_walk_t func, void* client_data  )
+
+  int       H5Fget_obj_count(hid_t file_id, unsigned int types) except *
+  int       H5Fget_obj_ids(hid_t file_id, unsigned int types, int max_objs, hid_t *obj_id_list) except *
+  int       H5F_OBJ_ALL
 
 # === Custom C extensions =====================================================
 

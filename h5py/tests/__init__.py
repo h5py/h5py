@@ -14,13 +14,13 @@ import unittest
 import sys
 import test_h5a, test_h5d, test_h5f, \
        test_h5g, test_h5i, test_h5p, \
-       test_h5s, test_h5
+       test_h5s, test_h5t, test_h5
 
-from h5py import h5a, h5f, h5g, h5d, h5s, h5i, h5z, h5p
+from h5py import *
 
 TEST_CASES = (test_h5a.TestH5A, test_h5d.TestH5D, test_h5f.TestH5F, 
               test_h5g.TestH5G, test_h5i.TestH5I, test_h5p.TestH5P,
-              test_h5s.TestH5S, test_h5.TestH5)
+              test_h5s.TestH5S, test_h5t.TestH5T, test_h5.TestH5)
 
 def buildsuite(cases):
 

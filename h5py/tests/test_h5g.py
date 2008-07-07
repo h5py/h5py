@@ -33,7 +33,7 @@ class TestH5G(unittest.TestCase):
         self.obj = h5g.open(self.fid, OBJECTNAME)
 
     def tearDown(self):
-        self.obj.close()
+        self.obj._close()
         self.fid.close()
 
     def is_grp(self, item):
@@ -43,7 +43,7 @@ class TestH5G(unittest.TestCase):
         for name in TEST_GROUPS:
             grp = h5g.open(self.obj, name)
             self.assert_(self.is_grp(grp))
-            grp.close()
+            grp._close()
             self.assert_(not self.is_grp(grp))
         
         self.assertRaises(H5Error, h5g.open, self.obj, 'Some other group')
@@ -54,7 +54,7 @@ class TestH5G(unittest.TestCase):
 
             obj = h5g.open(fid, OBJECTNAME)
             grp = h5g.create(obj, 'New group')
-            grp.close()
+            grp._close()
             self.assert_(obj.py_exists('New group'))
 
     def test_link_unlink_move_linkval(self):

@@ -151,7 +151,7 @@ cdef class GroupID(ObjectID):
         Represents an HDF5 group identifier
     """
 
-    def close(self):
+    def _close(self):
         """ ()
 
             Terminate access through this identifier.  You shouldn't have to

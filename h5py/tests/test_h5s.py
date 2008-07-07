@@ -25,7 +25,7 @@ class TestH5S(unittest.TestCase):
     def test_create_close(self):
         sid = h5s.create(h5s.SCALAR)
         self.assertEqual(h5i.get_type(sid), h5i.DATASPACE)
-        sid.close()
+        sid._close()
         self.assertEqual(h5i.get_type(sid), h5i.BADID)
 
         self.assertRaises(H5Error, h5s.create, -1)

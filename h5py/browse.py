@@ -10,66 +10,54 @@
 # 
 #-
 
-import cmd
-from getopt import gnu_getopt
-import os
-from utils_hl import hbasename
+from cmd import Cmd
 from posixpath import join, basename, dirname, normpath, isabs
+from getopt import gnu_getopt, GetoptError
+import shlex
+import os
+import re
+import sys
 
-from h5py.highlevel import File, Group, Dataset, Datatype
+from utils_hl import hbasename
+
+
 from h5py import h5g
 
 NAMES = {h5g.DATASET: "Dataset", h5g.GROUP: "Group", h5g.TYPE: "Named Type"}
-LS_FORMAT = " %-10s    %-10s"
+LS_FORMAT = " %-20s    %-10s"
 
-class _H5Browser(cmd.Cmd):
+class CmdError(StandardError):
+    pass
+
+# Why the hell doesn't Cmd inherit from object?  Properties don't work!
+class _H5Browser(Cmd, object):
 
     """
         HDF5 file browser class which holds state between sessions.
     """
+    def _setpath(self, path):
+        self.prompt = "HDF5: %s> " % (hbasename(path))
+        self._path = path
 
-    def __init__(self):
-        """ Create a new browser instance.
-        """
-        cmd.Cmd.__init__(self)
-        self.path = '/'
-        self.known_paths = {}
-        self.file = None #: Holds a File instance while executing, the file name otherwise.
+    path = property(lambda self: self._path, _setpath)
 
-    def __call__(self, what=None, mode='r', importdict=None):
+    def __init__(self, fileobj, path=None, importdict=None):
         """ Browse the file, putting any imported names into importdict. """
+        Cmd.__init__(self)
+        self.file = fileobj
 
-        if what is None:
-            if self.file is None:
-                raise ValueError("Either a file name or File object must be supplied.")
-            else:
-                self.file = File(self.file, mode=mode)
-
-        elif isinstance(what, File):
-            self.file = what
-
-        elif isinstance(what, str):
-            self.file = File(what, mode=mode)
-
-        else:
-            raise ValueError("Only a string file name or an File object may be supplied.")
-
-        # Now self.file is a File object, no matter what
-
-        try:
-            self.path = self.known_paths[os.path.abspath(self.file.name)]
-        except KeyError:
-            self.path = '/'
+        self.path = path if path is not None else '/'
 
         self.importdict = importdict
         self.cmdloop('Browsing "%s". Type "help" for commands, "exit" to exit.' % os.path.basename(self.file.name))
-        self.importdict = None  # don't hold a reference to this between browse sessions
 
-        self.known_paths[os.path.abspath(self.file.name)] = self.path
-        self.file = self.file.name
-
-    def _error(self, msg):
-        print "Error: "+str(msg)
+    def onecmd(self, line):
+        retval = False
+        try:
+            retval = Cmd.onecmd(self, line)
+        except (CmdError, GetoptError), e:
+            print "Error: "+e.args[0]
+        return retval
 
     def abspath(self, path):
         """ Correctly interpret the given path fragment, relative to the
@@ -78,27 +66,34 @@ class _H5Browser(cmd.Cmd):
         return normpath(join(self.path,path))
 
     def do_exit(self, line):
+        """ Exit back to Python """
         return True
 
     def do_EOF(self, line):
+        """ (Ctrl-D) Exit back to Python """
         return True
 
     def do_pwd(self, line):
+        """ Print name of current group """
         print self.path
 
     def do_cd(self, line):
-        path = line.strip()
-        if path == '': path = '/'
+        """ cd [group] """
+        args = shlex.split(line)
+        if len(args) > 1:
+            raise CmdError("Too many arguments")
+        path = args[0] if len(args) == 1 else ''
+
         path = self.abspath(path)
         dname = dirname(path)
         bname = basename(path)
         try:
             if bname != '' and not self.file[dname].id.get_objinfo(bname).type == h5g.GROUP:
-                self._error('"%s" is not an HDF5 group' % bname)
+                raise CmdError('"%s" is not an HDF5 group' % bname)
             else:
                 self.path = path
         except:
-            self._error('Can\'t open group "%s"' % path)
+            raise CmdError('Can\'t open group "%s"' % path)
 
     def complete_cd(self, text, line, begidx, endidx):
         text = text.strip()
@@ -110,16 +105,12 @@ class _H5Browser(cmd.Cmd):
                     if x.find(targetname) == 0 and \
                     grp.id.get_objinfo(x).type == h5g.GROUP]
         return rval
-    
+
     def do_ls(self, line):
-        """ List contents of the specified group, or this one """
+        """ ls [-l] [group] """
 
         LONG_STYLE = False
-        try:
-            opts, args = gnu_getopt(line.split(), 'l')
-        except GetoptError, e:
-            self._error(e.msg.capitalize())
-            return
+        opts, args = gnu_getopt(shlex.split(line), 'l')
 
         if '-l' in [ opt[0] for opt in opts]:
             LONG_STYLE = True
@@ -134,6 +125,7 @@ class _H5Browser(cmd.Cmd):
         try:
             grp = self.file[grpname]
             if LONG_STYLE:
+                print 'Group "%s" in file "%s":' % (hbasename(grpname), os.path.basename(self.file.name))
                 print LS_FORMAT % ("Name", "Type")
                 print LS_FORMAT % ("----", "----")
             for name in grp:
@@ -144,7 +136,58 @@ class _H5Browser(cmd.Cmd):
                 else:
                     print pname
         except:
-            self._error('Can\'t list contents of group "%s"' % hbasename(grpname))
+            raise CmdError('Can\'t list contents of group "%s"' % hbasename(grpname))
+
+    def do_import(self, line):
+        """ import name [as python_name] 
+ import name1 name2 name3 name4 ...
+        """
+        if self.importdict is None:
+            raise CmdError("No import dictionary provided")
+
+        opts, args = gnu_getopt(shlex.split(line),'')
+        
+        pynames = []
+        hnames = []
+
+        importdict = {}   # [Python name] => HDF5 object
+
+        if len(args) == 3 and args[1] == 'as':
+            pynames.append(args[2])
+            hnames.append(args[0])
+        else:
+            for arg in args:
+                absname = self.abspath(arg)
+                pynames.append(basename(absname))
+                hnames.append(absname)
+
+        for pyname, hname in zip(pynames, hnames):
+            try:
+                obj = self.file[hname]
+            except Exception, e:
+                raise CmdError("Can't import %s: %s" % (name, e.args[0].splitlines()[0]))
+
+            if len(re.sub('[A-Za-z_][A-Za-z0-9_]*','',pyname)) != 0:
+                raise CmdError("%s is not a valid Python identifier" % pyname)
+
+            if pyname in self.importdict:
+                if not raw_input("Name %s already in use. Really import (y/N)?  " % pyname).strip().lower().startswith('y'):
+                    continue
+
+            importdict[pyname] = obj
+
+        self.importdict.update(importdict)
+
+    def complete_import(self, text, line, begidx, endidx):
+        text = text.strip()
+        grpname = self.abspath(dirname(text))
+        targetname = basename(text)
+
+        grp = self.file[grpname]
+        rval = [join(grpname,x) for x in grp \
+                    if x.find(targetname) == 0]
+        return rval
+
 
     def complete_ls(self, *args):
         return self.complete_cd(*args)

@@ -25,6 +25,8 @@
 include "conditions.pxi"
 from python cimport PyErr_SetObject
 
+import atexit
+
 # Logging is only enabled when compiled with H5PY_DEBUG nonzero
 IF H5PY_DEBUG:
     import logging
@@ -53,6 +55,15 @@ hdf5_version = "%d.%d.%d" % hdf5_version_tuple
 api_version_tuple = (H5PY_API_MAJ, H5PY_API_MIN)
 api_version = H5PY_API
 
+def _close():
+    """ Internal function; do not call unless you want to lose all your data.
+    """
+    H5close()
+
+def _open():
+    """ Internal function; do not call unless you want to lose all your data.
+    """
+    H5open()
 
 class DDict(dict):
     """ Internal class.
@@ -119,14 +130,14 @@ cdef class ObjectID:
         if self._valid:
             ref = str(H5Iget_ref(self.id))
         else:
-            ref = "INVALID"
+            ref = "X"
 
         if self._locked:
-            lstr = "locked"
+            lstr = "L"
         else:
-            lstr = "unlocked"
+            lstr = "U"
 
-        return "%d [%s] (%s) %s" % (self.id, ref, lstr, self.__class__.__name__)
+        return "%9d [%s] (%s) %s" % (self.id, ref, lstr, self.__class__.__name__)
 
     def __repr__(self):
         return self.__str__()
@@ -513,10 +524,34 @@ cdef int resume_errors(err_c cookie) except -1:
 
 # === Library init ============================================================
 
+def _exithack():
+    """ Internal function; do not call unless you want to lose all your data.
+    """
+    # If any identifiers have reference counts > 1 when the library closes,
+    # it freaks out and dumps a message to stderr.  So we have Python dec_ref
+    # everything when the interpreter's about to exit.
+
+    cdef int count
+    cdef int i
+    cdef hid_t *objs
+
+    count = H5Fget_obj_count(H5F_OBJ_ALL, H5F_OBJ_ALL)
+    
+    if count > 0:
+        objs = <hid_t*>malloc(sizeof(hid_t)*count)
+        try:
+            H5Fget_obj_ids(H5F_OBJ_ALL, H5F_OBJ_ALL, count, objs)
+            for i from 0<=i<count:
+                while H5Iget_ref(objs[i]) > 1:
+                    H5Idec_ref(objs[i])
+        finally:
+            free(objs)
+
 cdef int import_hdf5() except -1:
     if H5open() < 0:
         raise RuntimeError("Failed to initialize the HDF5 library.")
     _enable_exceptions()
+    atexit.register(_exithack)
     return 0
 
 import_hdf5()

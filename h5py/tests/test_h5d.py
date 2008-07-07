@@ -45,14 +45,14 @@ class TestH5D(unittest.TestCase):
         self.dset = h5d.open(self.fid, "CompoundChunked")
 
     def tearDown(self):
-        self.dset.close()
+        self.dset._close()
         self.fid.close()
 
     def test_open_close(self):
         with HCopy(HDFNAME) as fid:
             dset = h5d.open(fid, "CompoundChunked")
             self.assertEqual(h5i.get_type(dset), h5i.DATASET)
-            dset.close()
+            dset._close()
             self.assertEqual(h5i.get_type(dset), h5i.BADID)
 
     def test_read(self):

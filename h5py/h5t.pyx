@@ -73,6 +73,8 @@ cdef object lockid(hid_t id_in):
 
 # === Public constants and data structures ====================================
 
+_complex_names = ('r','i')
+
 # Enumeration H5T_class_t
 NO_CLASS  = H5T_NO_CLASS
 INTEGER   = H5T_INTEGER
@@ -201,15 +203,16 @@ _sign_map  = { H5T_SGN_NONE: 'u', H5T_SGN_2: 'i' }
 # === General datatype operations =============================================
 
 def create(int classtype, size_t size):
-    """ (INT classtype, INT size) => TypeID
+    """ (INT classtype, UINT size) => TypeID
         
         Create a new HDF5 type object.  Legal class values are 
-        COMPOUND, OPAQUE, and ENUM.
+        COMPOUND and OPAQUE.  Use enum_create for enums.
     """
     # If it's not one of these, the library SEGFAULTS. Thanks, guys.
-    if classtype != H5T_COMPOUND and classtype != H5T_OPAQUE and \
-        classtype != H5T_ENUM:
-        raise ValueError("Class must be COMPOUND, OPAQUE or ENUM")
+    # Also, creating ENUM types doesn't work right.
+    if classtype != H5T_COMPOUND and classtype != H5T_OPAQUE:
+        raise ValueError("Class must be COMPOUND or OPAQUE.")
+
     return typewrap(H5Tcreate(<H5T_class_t>classtype, size))
 
 def open(ObjectID group not None, char* name):
@@ -266,30 +269,11 @@ cdef class TypeID(ObjectID):
         operations.
     """
 
-    def __init__(self, hid_t id_):
-        self._complex_names = ('r', 'i')
-
     def __copy__(self):
         cdef TypeID cpy
         cpy = ObjectID.__copy__(self)
         assert typecheck(cpy, TypeID), "TypeID copy encounted invalid type"
-        cpy._complex_names = self._complex_names
         return cpy
-
-    property complex_names:
-        """ Either () or a 2-tuple (real, imag) determining how complex types
-            are read/written using HDF5 compound types.
-        """
-        def __get__(self):
-            return self._complex_names
-        def __set__(self, item):
-            if not typecheck(item, tuple) or (len(item) != 0 and len(item) != 2):
-                raise ValueError("py_complex_names must be either () or a 2-tuple of strings")
-            for entry in item:
-                if not typecheck(entry, str):
-                    raise ValueError("py_complex_names must be a 2-tuple of strings")
-
-            self._complex_names = item
 
     property dtype:
         """ A Numpy-style dtype object representing this object.
@@ -301,7 +285,12 @@ cdef class TypeID(ObjectID):
         raise NotImplementedError("Don't know how to convert %s objects to Numpy" % self.__class__.__name__)
 
     def __repr__(self):
-        return str(self)+" "+str(self.dtype)
+        try:
+            dts = str(self.dtype)
+        except:
+            dts = "(Numpy type unknown)"
+
+        return str(self)+" "+dts
 
     def commit(self, ObjectID group not None, char* name):
         """ (ObjectID group, STRING name)
@@ -327,8 +316,8 @@ cdef class TypeID(ObjectID):
     def equal(self, TypeID typeid):
         """ (TypeID typeid) => BOOL
 
-            Test whether two identifiers point to the same datatype object.  
-            Note this does NOT perform any kind of logical comparison.
+            Test whether two identifiers refer to the same datatype.  Seems
+            to perform a logical comparison.
         """
         return pybool(H5Tequal(self.id, typeid.id))
 
@@ -369,21 +358,6 @@ cdef class TypeID(ObjectID):
         """
         return typewrap(H5Tget_super(self.id))
 
-    def get_native_type(self, int direction=H5T_DIR_DEFAULT):
-        """ (INT direction=DIR_DEFAULT) => TypeID
-
-            Determine the native C equivalent for the given datatype.
-            Legal values for "direction" are:
-              DIR_DEFAULT*
-              DIR_ASCEND
-              DIR_DESCEND
-            These determine which direction the list of native datatypes is
-            searched; see the HDF5 docs for a definitive list.
-
-            The returned datatype is always an unlocked copy of one of NATIVE_*
-        """
-        return typewrap(H5Tget_native_type(self.id, <H5T_direction_t>direction))
-
     def detect_class(self, int classtype):
         """ (INT classtype) => BOOL class_is_present
 
@@ -392,8 +366,11 @@ cdef class TypeID(ObjectID):
         """
         return pybool(H5Tdetect_class(self.id, <H5T_class_t>classtype))
 
-    def close(self):
+    def _close(self):
         """ Close this datatype.  If it's locked, nothing happens.
+
+            You shouldn't ordinarily need to call this function; datatype
+            objects are automatically closed when they're deallocated.
         """
         if not self._locked:
             H5Tclose(self.id)
@@ -436,11 +413,9 @@ cdef class TypeArrayID(TypeID):
         # Numpy translation function for array types
         cdef TypeID tmp_type
         tmp_type = self.get_super()
-        tmp_type.complex_names = self.complex_names
-        try:
-            base_dtype = tmp_type.py_dtype()
-        finally:
-            tmp_type.close()
+
+        base_dtype = tmp_type.py_dtype()
+
         shape = self.get_array_dims()
         return dtype( (base_dtype, shape) )
 
@@ -493,6 +468,42 @@ cdef class TypeStringID(TypeID):
             only fixed-length strings are currently supported.
         """
         return pybool(H5Tis_variable_str(self.id))
+
+    def get_cset(self):
+        """ () => INT character_set
+
+            Retrieve the character set used for a string.  Currently only
+            CSET_ASCII is supported.
+        """
+        return <int>H5Tget_cset(self.id)
+
+    def set_cset(self, int cset):
+        """ (INT character_set)
+
+            Set the character set used for a string.  Currently only
+            CSET_ASCII is supported.
+        """
+        H5Tset_cset(self.id, <H5T_cset_t>cset)
+
+    def get_strpad(self):
+        """ () => INT padding_type
+
+            Get the padding type.  Legal values are:
+             STR_NULLTERM:  NULL termination only (C style)
+             STR_NULLPAD:   Pad buffer with NULLs
+             STR_SPACEPAD:  Pad buffer with spaces (FORTRAN style)
+        """
+        return <int>H5Tget_strpad(self.id)
+
+    def set_strpad(self, int pad):
+        """ (INT pad)
+
+            Set the padding type.  Legal values are:
+             STR_NULLTERM:  NULL termination only (C style)
+             STR_NULLPAD:   Pad buffer with NULLs
+             STR_SPACEPAD:  Pad buffer with spaces (FORTRAN style)
+        """
+        H5Tset_strpad(self.id, <H5T_str_t>pad)
 
     cdef object py_dtype(self):
         # Numpy translation function for string types
@@ -833,16 +844,13 @@ cdef class TypeCompoundID(TypeCompositeID):
         # two separate arrays.
         for i from 0 <= i < nfields:
             tmp_type = self.get_member_type(i)
-            tmp_type.complex_names = self.complex_names
-            try:
-                field_names.append(self.get_member_name(i))
-                field_types.append(tmp_type.py_dtype())
-            finally:
-                tmp_type.close()
+            field_names.append(self.get_member_name(i))
+            field_types.append(tmp_type.py_dtype())
+
 
         # 1. Check if it should be converted to a complex number
         if len(field_names) == 2                     and \
-            tuple(field_names) == self.complex_names and \
+            tuple(field_names) == _complex_names     and \
             field_types[0] == field_types[1]         and \
             field_types[0].kind == 'f':
 
@@ -947,41 +955,56 @@ cdef class TypeEnumID(TypeCompositeID):
         return val
 
     cdef object py_dtype(self):
-        # Translation function for enum types; 
+        # Translation function for enum types
+
         cdef TypeID tmp_type
         tmp_type = self.get_super()
-        try:
-            typeobj = tmp_type.py_dtype()
-        finally:
-            tmp_type.close()
+        typeobj = tmp_type.py_dtype()
+
         return typeobj
 
 # === Python extension functions ==============================================
 
 
-def py_create(dtype dt not None, object complex_names=None, enum=None):
-    """ ( DTYPE dt, TUPLE complex_names=None, DICT enum=None) => TypeID
+
+def py_complex_names(object realname=None, object imgname=None, reset=False):
+    """ (STRING realname=None, STRING imgname=None, reset=False)
+
+        Set the real and imaginary strings used to translate complex
+        numbers to and from HDF5 compound types.
+
+        Both realname and imgname must be supplied, or both can be omitted to
+        disable conversion completely.  Call with reset=True to reset to the
+        default pair ('r','i').
+    """
+    global _complex_names
+    if not ((realname is None and imgname is None) or \
+            (isinstance(realname, str) and isinstance(imgname, str))):
+        raise ValueError("Realname and imgname must both be specified, or both omitted.")
+
+    if reset:
+        _complex_names = ('r','i')
+    else:
+        if realname is None:
+            _complex_names = None
+        else:
+            _complex_names = (realname, imgname)
+    
+def py_create(object dtype_in, enum=None):
+    """ ( OBJECT dt, DICT enum=None) => TypeID
 
         Given a Numpy dtype object, generate a byte-for-byte memory-compatible
         HDF5 datatype object.  The result is guaranteed to be transient and
-        unlocked.
-
-        complex_names:
-            Specifies when and how to interpret Python complex numbers as
-            HDF5 compound datatypes.  May be None or a tuple with strings
-            (real name, img name).  "None" indicates the default mapping of
-            ("r", "i").
-
-            This option is applied recursively to subtypes of arrays and
-            compound types.  Additionally, these names are stored in the
-            returned HDF5 type object.
+        unlocked. Argument dtype_in may be a dtype object, or anything which
+        can be converted to a dtype.
 
         enum:
-            A dictionary mapping names to integer values.  If the type being
-            converted is an integer (kind i/u), the resulting HDF5 type will
-            be an enumeration with that base type, and the given values.
-            Ignored for all other types.
+            A optional dictionary mapping names to integer values.  If the
+            type being converted is an integer (Numpy kind i/u), the resulting 
+            HDF5 type will be an enumeration with that base type, and the 
+            given values. Ignored for all other types.
     """
+    cdef dtype dt
     cdef TypeID otype
     cdef TypeID base
     cdef TypeID tmp
@@ -990,9 +1013,8 @@ def py_create(dtype dt not None, object complex_names=None, enum=None):
     cdef char byteorder
     cdef int length
 
+    dt = dtype(dtype_in)
     otype = None
-
-    _complex_names = ('r','i')
 
     kind = dt.kind
     byteorder = dt.byteorder
@@ -1003,13 +1025,11 @@ def py_create(dtype dt not None, object complex_names=None, enum=None):
     # Void types with field names are considered to be compound
     if kind == c'V' and names is not None:
         otype = create(H5T_COMPOUND, length)
+
         for name in names:
             dt_tmp, offset = dt.fields[name]
-            tmp = py_create(dt_tmp, complex_names)
-            try:
-                otype.insert(name, offset, tmp)
-            finally:
-                tmp.close()
+            tmp = py_create(dt_tmp)
+            otype.insert(name, offset, tmp)
 
     # Enums may be created out of integer types
     elif (kind == c'u' or kind == c'i') and enum is not None:
@@ -1027,6 +1047,9 @@ def py_create(dtype dt not None, object complex_names=None, enum=None):
     # Complex numbers are stored as HDF5 structs, with names defined at runtime
     elif kind == c'c':
 
+        if _complex_names is None:
+            raise ValueError("Complex conversion is currently disabled.  Use py_complex_names to re-enable.")
+
         if length == 8:
             otype = typewrap(create_ieee_complex64(byteorder, _complex_names[0], _complex_names[1]))
         elif length == 16:
@@ -1038,12 +1061,11 @@ def py_create(dtype dt not None, object complex_names=None, enum=None):
     elif kind == c'V':
 
         if dt.subdtype:
+
             dt_tmp, shape = dt.subdtype
-            base = py_create(dt_tmp, complex_names)
-            try:
-                otype = array_create(base, shape)
-            finally:
-                base.close()
+            base = py_create(dt_tmp)
+            otype = array_create(base, shape)
+
         else:
             otype = create(H5T_OPAQUE, length)
                 
@@ -1054,9 +1076,6 @@ def py_create(dtype dt not None, object complex_names=None, enum=None):
 
     else:
         raise ValueError("No conversion path for dtype: %s" % repr(dt))
-
-    if complex_names is not None:
-        otype.complex_names = complex_names
 
     IF H5PY_DEBUG:
         import logging

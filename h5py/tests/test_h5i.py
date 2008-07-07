@@ -26,7 +26,7 @@ class TestH5I(unittest.TestCase):
         self.obj = h5g.open(self.fid, OBJECTNAME)
 
     def tearDown(self):
-        self.obj.close()
+        self.obj._close()
         self.fid.close()
 
 

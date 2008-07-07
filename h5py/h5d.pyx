@@ -116,7 +116,7 @@ cdef class DatasetID(ObjectID):
             sid = self.get_space()
             return sid.get_simple_extent_ndims()
 
-    def close(self):
+    def _close(self):
         """ ()
 
             Terminate access through this identifier.  You shouldn't have to
@@ -146,18 +146,13 @@ cdef class DatasetID(ObjectID):
         """
         cdef TypeID mtype
         cdef hid_t plist_id
-        mtype = None
         plist_id = pdefault(plist)
 
-        try:
-            mtype = h5t.py_create(arr_obj.dtype)
-            check_numpy_write(arr_obj, -1)
+        mtype = h5t.py_create(arr_obj.dtype)
+        check_numpy_write(arr_obj, -1)
 
-            H5Dread(self.id, mtype.id, mspace.id, fspace.id, plist_id, PyArray_DATA(arr_obj))
+        H5Dread(self.id, mtype.id, mspace.id, fspace.id, plist_id, PyArray_DATA(arr_obj))
 
-        finally:
-            if mtype is not None:
-                mtype.close()
         
     def write(self, SpaceID mspace not None, SpaceID fspace not None, 
                     ndarray arr_obj not None, PropDXID plist=None):
@@ -173,18 +168,12 @@ cdef class DatasetID(ObjectID):
         """
         cdef TypeID mtype
         cdef hid_t plist_id
-        mtype = None
         plist_id = pdefault(plist)
 
-        try:
-            mtype = h5t.py_create(arr_obj.dtype)
-            check_numpy_read(arr_obj, -1)
+        mtype = h5t.py_create(arr_obj.dtype)
+        check_numpy_read(arr_obj, -1)
 
-            H5Dwrite(self.id, mtype.id, mspace.id, fspace.id, plist_id, PyArray_DATA(arr_obj))
-
-        finally:
-            if mtype is not None:
-                mtype.close()
+        H5Dwrite(self.id, mtype.id, mspace.id, fspace.id, plist_id, PyArray_DATA(arr_obj))
 
     def extend(self, object shape):
         """ (TUPLE shape)

@@ -11,10 +11,18 @@
 #-
 
 import numpy
+import inspect
 
 from h5py import h5, h5f, h5g, h5s, h5t, h5d, h5a, h5p, h5z, h5i
 from h5py.h5 import H5Error
 from utils_hl import slicer, hbasename
+from browse import _H5Browser
+
+try:
+    # For interactive File.browse() capability
+    import readline
+except ImportError:
+    readline = None
 
 class HLObject(object):
 
@@ -172,6 +180,8 @@ class File(Group):
     
         self._name = name
         self._mode = mode
+        self._path = None
+        self._rlhist = []  # for readline nonsense
 
     def close(self):
         """ Close this HDF5 file.  All open identifiers will become invalid.
@@ -188,6 +198,36 @@ class File(Group):
         if self.id._valid:
             return 'File "%s", root members: %s' % (self.name, ', '.join(['"%s"' % name for name in self]))
         return "Closed file (%s)" % self.name
+
+    def browse(self, dict=None):
+        """ Browse this file. If no import dict is provided, will seize the
+            caller's global dictionary.
+        """
+        if dict is None:
+            dict = inspect.currentframe().f_back.f_globals
+
+        def gethist():
+            rlhist = [readline.get_history_item(x) for x in xrange(readline.get_current_history_length())]
+            rlhist = [x for x in rlhist if x is not None]
+            return rlhist
+
+        # The following is an ugly hack to prevent readline from mixing the cmd
+        # session with IPython's session.  Is there a better way to do this?
+        hist = None
+        if readline:
+            hist = gethist()
+            readline.clear_history()
+            for x in self._rlhist:
+                readline.add_history(x)
+        try:
+            browser = _H5Browser(self, self._path, importdict=dict)
+        finally:
+            if hist:
+                self._rlhist.extend(gethist())
+                readline.clear_history()
+                for x in hist:
+                    readline.add_history(x)
+        self._path = browser.path
 
 class Dataset(HLObject):
 
@@ -457,11 +497,6 @@ class Datatype(HLObject):
         if self.id._valid:
             return "Named datatype object (%s)" % str(self.dtype)
         return "Closed datatype object"
-
-# Browser component.  This is here to prevent issues with circular imports
-from browse import _H5Browser
-
-browse = _H5Browser()
 
 
 

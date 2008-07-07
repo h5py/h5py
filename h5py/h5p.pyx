@@ -117,7 +117,7 @@ cdef class PropInstanceID(PropID):
         """
         return type(self)(H5Pcopy(self.id))
 
-    def close(self):
+    def _close(self):
         """ ()
     
             Terminate access through this identifier.  You shouldn't have to

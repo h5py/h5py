@@ -38,7 +38,7 @@ class TestH5A(unittest.TestCase):
         self.obj = h5g.open(self.fid, OBJECTNAME)
 
     def tearDown(self):
-        self.obj.close()
+        self.obj._close()
         self.fid.close()
 
     def is_attr(self, attr):
@@ -61,34 +61,28 @@ class TestH5A(unittest.TestCase):
                 self.assert_(self.is_attr(attr))
                 attr.write(arr_ref)
                 self.assertRaises(ValueError, attr.write, arr_fail)
-                attr.close()
 
                 attr = h5a.open_name(obj, name)
                 dt = attr.dtype
                 shape = attr.shape
                 arr_val = ndarray(shape, dtype=dt)
                 attr.read(arr_val)
-                attr.close()
                 self.assert_(all(arr_val == arr_ref), errstr(arr_val, arr_ref))
-
-            obj.close()
 
     def test_open_idx(self):
         for idx, name in enumerate(ATTRIBUTES_ORDER):
             attr = h5a.open_idx(self.obj, idx)
             self.assert_(self.is_attr(attr), "Open: index %d" % idx)
-            attr.close()
 
     def test_open_name(self):
         for name in ATTRIBUTES:
             attr = h5a.open_name(self.obj, name)
             self.assert_(self.is_attr(attr), 'Open: name "%s"' % name)
-            attr.close()
 
     def test_close(self):
         attr = h5a.open_idx(self.obj, 0)
         self.assert_(self.is_attr(attr))
-        attr.close()
+        attr._close()
         self.assert_(not self.is_attr(attr))
 
     def test_delete(self):
@@ -97,7 +91,7 @@ class TestH5A(unittest.TestCase):
 
             attr = h5a.open_name(obj, ATTRIBUTES_ORDER[0])
             self.assert_(self.is_attr(attr))
-            attr.close()
+            del attr
 
             h5a.delete(obj, ATTRIBUTES_ORDER[0])
             self.assertRaises(H5Error, h5a.open_name, obj, ATTRIBUTES_ORDER[0])
@@ -119,8 +113,6 @@ class TestH5A(unittest.TestCase):
             attr.read(arr_holder)
             self.assert_( all(arr_holder == arr_reference),
                 errstr(arr_reference, arr_holder, 'Attr "%s"):\n' % name, ))
-
-            attr.close()
 
     # write is done by test_create_write
 

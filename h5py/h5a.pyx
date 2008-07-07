@@ -162,13 +162,8 @@ cdef class AttrID(ObjectID):
         def __get__(self):
 
             cdef SpaceID space
-            space = None
-            try:
-                space = self.get_space()
-                return space.get_simple_extent_dims()
-            finally:
-                if space is not None:
-                    space.close()
+            space = self.get_space()
+            return space.get_simple_extent_dims()
 
     property dtype:
         """ A Numpy-stype dtype object representing the attribute's datatype
@@ -179,7 +174,7 @@ cdef class AttrID(ObjectID):
             tid = typewrap(H5Aget_type(self.id))
             return tid.py_dtype()
 
-    def close(self):
+    def _close(self):
         """ ()
 
             Close this attribute and release resources.  You don't need to
@@ -200,7 +195,6 @@ cdef class AttrID(ObjectID):
         """
         cdef TypeID mtype
         cdef hid_t space_id
-        mtype = None
         space_id = 0
 
         try:
@@ -214,8 +208,6 @@ cdef class AttrID(ObjectID):
         finally:
             if space_id:
                 H5Sclose(space_id)
-            if mtype is not None:
-                mtype.close()
 
     def write(self, ndarray arr_obj not None):
         """ (NDARRAY arr_obj)
@@ -229,7 +221,6 @@ cdef class AttrID(ObjectID):
         """
         cdef TypeID mtype
         cdef hid_t space_id
-        mtype_id = None
         space_id = 0
 
         try:
@@ -242,8 +233,6 @@ cdef class AttrID(ObjectID):
         finally:
             if space_id:
                 H5Sclose(space_id)
-            if mtype is not None:
-                mtype.close()
 
     def get_name(self):
         """ () => STRING name

@@ -119,7 +119,7 @@ cdef class SpaceID(ObjectID):
         def __get__(self):
             return self.get_simple_extent_dims()
 
-    def close(self):
+    def _close(self):
         """ ()
 
             Terminate access through this identifier.  You shouldn't have to
