@@ -19,13 +19,11 @@
     Useful things defined here:
     
       hdf5_version:         String with library version (e.g. "1.6.5")
-      hdf5_version_tuple:   Tuple form of the version (e.g. (1,6,5))
+      hdf5_version_tuple:   3-tuple form of the version (e.g. (1,6,5))
       api_version:          String form of the API used (e.g. "1.6")
-      api_version_tuple:    Tuple form of the version (e.g. (1,6))
+      api_version_tuple:    2-tuple form of the version (e.g. (1,6))
 
     All exception classes and error handling functions are also in this module.
-
-
 """
 
 include "conditions.pxi"
@@ -74,7 +72,23 @@ def _open():
 # === Identifier wrappers =====================================================
 
 cdef class ObjectID:
-        
+
+    """
+        Base class for all HDF5 identifiers.
+
+        This is an extremely thin object layer, which makes dealing with
+        HDF5 identifiers a less frustrating experience.  It synchronizes
+        Python object reference counts with their HDF5 counterparts, so that
+        HDF5 identifiers are automatically closed when they become unreachable.
+
+        The only (known) HDF5 property which can problematic is locked objects;
+        there is no way to determine whether or not an HDF5 object is locked
+        or not, without trying an operation and having it fail.  A "lock" flag
+        is maintained on the Python side, and is set by methods like
+        TypeID.lock(), but this is not tracked across copies.  Until HDF5
+        provides something like H5Tis_locked(), this will not be fixed.
+    """
+
     property _valid:
         """ Indicates whether or not this identifier points to an HDF5 object.
         """

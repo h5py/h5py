@@ -10,14 +10,4 @@
 # 
 #-
 
-import unittest
-import os
-import tempfile
-from numpy import all
-
-import h5py
-from h5py.highlevel import *
-
-
-class TestHighlevel(unittest.TestCase):
-    pass
+# empty for now

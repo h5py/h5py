@@ -12,10 +12,14 @@
 
 """
     H5R API for object and region references.
+
+    Functions in this module are not well tested.
 """
 
 # Pyrex compile-time imports
 from h5g cimport H5G_obj_t
+from h5f cimport wrap_identifier
+from h5s cimport SpaceID
 
 # Runtime imports
 import h5
@@ -58,13 +62,14 @@ def create(ObjectID loc not None, char* name, int ref_type, SpaceID space=None):
         Create a new reference. The value of ref_type detemines the kind
         of reference created:
 
-        - OBJECT    Reference to an object in an HDF5 file.  Parameters loc_id
-                    and name identify the object; space_id is unused.
+        - OBJECT
+            Reference to an object in an HDF5 file.  Parameters loc
+            and name identify the object; space is unused.
 
         - DATASET_REGION    
-                    Reference to a dataset region.  Parameters loc_id and
-                    name identify the dataset; the selection on space_id
-                    identifies the region.
+            Reference to a dataset region.  Parameters loc and
+            name identify the dataset; the selection on space
+            identifies the region.
     """
     cdef hid_t space_id
     cdef Reference ref
@@ -87,7 +92,7 @@ def dereference(ObjectID fid not None, Reference ref):
         a file identifier or an identifier for any object which lives
         in the file.
     """
-    return H5Rdereference(fid.id, <H5R_type_t>ref.typecode, &ref.ref)
+    return wrap_identifier(H5Rdereference(fid.id, <H5R_type_t>ref.typecode, &ref.ref))
 
 def get_region(ObjectID dataset not None, Reference ref):
     """ (ObjectID dataset, Reference ref) => INT dataspace_id
@@ -98,7 +103,7 @@ def get_region(ObjectID dataset not None, Reference ref):
 
         The given reference object must be of type DATASET_REGION.
     """
-    return H5Rget_region(dataset.id, <H5R_type_t>ref.typecode, &ref.ref)
+    return SpaceID(H5Rget_region(dataset.id, <H5R_type_t>ref.typecode, &ref.ref))
 
 def get_obj_type(ObjectID ds not None, Reference ref):
     """ (ObjectID ds, Reference ref) => INT obj_code

@@ -96,6 +96,10 @@ def create(PropClassID cls not None):
 
 cdef class PropID(ObjectID):
 
+    """
+        Base class for all property lists and classes
+    """
+
     def equal(self, PropID plist not None):
         """ (PropID plist) => BOOL
 

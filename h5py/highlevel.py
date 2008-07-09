@@ -23,7 +23,7 @@
     A strong emphasis has been placed on reasonable automatic conversion from
     Python types to their HDF5 equivalents.  Setting and retrieving HDF5 data
     is almost always handled by a simple assignment.  For example, you can
-    create an initialize and HDF5 dataset simply by assigning a Numpy array
+    create an initialize an HDF5 dataset simply by assigning a Numpy array
     to a group:
 
         group["name"] = numpy.ones((10,50), dtype='<i2')
@@ -48,7 +48,8 @@ from h5py.h5 import H5Error
 from utils_hl import slicer, hbasename, strhdr, strlist
 from browse import _H5Browser
 
-__all__ = ["File", "Group", "Dataset", "Datatype"]
+__all__ = ["HLObject", "File", "Group", "Dataset",
+           "Datatype", "AttributeManager"]
 
 try:
     # For interactive File.browse() capability
@@ -372,7 +373,10 @@ class Dataset(HLObject):
     def __init__(self, group, name,
                     data=None, dtype=None, shape=None, 
                     chunks=None, compression=None, shuffle=False, fletcher32=False):
-        """ Create a new Dataset object.  There are two modes of operation:
+        """ Create a Dataset object.  You might find it easier to use the
+            Group methods: Group["name"] or Group.create_dataset().
+
+            There are two modes of operation for this constructor:
 
             1.  Open an existing dataset
                 If you only supply the required parameters "group" and "name",
@@ -523,7 +527,7 @@ class AttributeManager(object):
 
     """ Allows dictionary-style access to an HDF5 object's attributes.
 
-        These come attached to HDF5 objects as Obj.attrs.  You should never
+        These come attached to HDF5 objects as <obj>.attrs.  There's no need to
         create one yourself.
 
         Like the members of groups, attributes are accessed using dict-style
@@ -539,7 +543,8 @@ class AttributeManager(object):
     """
 
     def __init__(self, parent):
-
+        """ Private constructor; you should not create these.
+        """
         self.id = parent.id
 
     def __getitem__(self, name):
@@ -602,14 +607,23 @@ class Datatype(HLObject):
         Represents an HDF5 named datatype.
 
         These intentionally only represent named types, and exist mainly so
-        that you can access their attributes.
+        that you can access their attributes.  The property Datatype.dtype
+        provides a Numpy dtype equivalent.
 
-        The property Datatype.dtype provides a Numpy dtype equivalent.
+        They're produced only by indexing into a Group object; you can't create
+        one manually.  To create a named datatype in a file:
+
+            group["name"] = <Numpy dtype object> | <Datatype object>*
+
+            * will create hard link to an existing type
     """
 
-    dtype = property(lambda self: self.id.dtype)
+    dtype = property(lambda self: self.id.dtype,
+        doc = "Numpy dtype equivalent for this datatype")
 
     def __init__(grp, name):
+        """ Private constructor; you should not create these.
+        """
         self.id = h5t.open(grp.id, name)
 
     def __str__(self):

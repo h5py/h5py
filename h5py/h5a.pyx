@@ -157,7 +157,7 @@ cdef class AttrID(ObjectID):
             return self.get_name()
 
     property shape:
-        """ A Numpy-style shape tuple representing the attribute dataspace.
+        """ A Numpy-style shape tuple representing the attribute's dataspace.
         """
         def __get__(self):
 

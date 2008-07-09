@@ -76,7 +76,8 @@ cdef class GroupIter:
 
     def __next__(self):
         if self.idx == self.nobjs:
-            self.grp = None
+            if self.grp is not None:
+                self.grp = None
             raise StopIteration
         
         retval = self.grp.get_objname_by_idx(self.idx)
@@ -149,6 +150,10 @@ cdef class GroupID(ObjectID):
 
     """
         Represents an HDF5 group identifier
+
+        Python extensions:
+        py_exists(name, [typecode]):    Determine if a group member exists
+        py_iter():      Return an iterator over member names
     """
 
     def _close(self):
@@ -334,13 +339,23 @@ cdef class GroupID(ObjectID):
         finally:
             efree(cmnt)
 
-    def py_exists(self, char* name):
+    def py_exists(self, char* name, int typecode=-1):
+        """ (STRING name, INT typecode=-1)
 
+            Determine if a group member of the given name and (optional)
+            type is present.  Typecode may be one of 
+                - LINK
+                - GROUP
+                - DATASET
+                - DATATYPE
+        """
         try:
-            self.get_objinfo(name)
+            info = self.get_objinfo(name)
+            if (typecode == -1) or (info.type == typecode):
+                return True
+            return False
         except H5Error:
             return False    
-        return True
 
     def py_iter(self):
         """ () => ITERATOR

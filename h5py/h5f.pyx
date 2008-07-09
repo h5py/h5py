@@ -234,7 +234,15 @@ cdef class FileID(ObjectID):
 
     """ 
         Represents an HDF5 file identifier.
+
+        These objects wrap a small portion of the H5F interface; all the
+        H5F functions which can take arbitrary objects in addition to
+        file identifiers are provided as functions in the h5f module.
+
+        Properties:
+        name:   File name on disk
     """
+
     property name:
         """ File name on disk (according to h5f.get_name()) """
         def __get__(self):

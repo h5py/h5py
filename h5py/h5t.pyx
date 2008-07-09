@@ -12,6 +12,42 @@
 
 """
     HDF5 "H5T" data-type API
+
+    This module contains the datatype identifier class TypeID, and its
+    subclasses which represent things like integer/float/compound identifiers.
+    The majority of the H5T API is presented as methods on these identifiers.
+
+    1. Translating between Numpy dtypes and HDF5 type objects
+
+        All identifier classes have a property "dtype", returning a Numpy
+        dtype which as closely as possible matches the HDF5 type.
+
+        The module function py_create is the complement to this property, and
+        is the standard way to translate Numpy dtypes to HDF5 type identifiers.
+        Unlike the dtype property, HDF5 datatypes returned by this function are
+        guaranteed to be binary-compatible with their Numpy dtype counterparts
+
+    2. Complex numbers
+
+        Complex number support has been refactored in this version of h5py.
+        HDF5 has no native concept of a complex number.  Numpy complex types
+        are translated to two-element compound types with two floating-point
+        fields. When a two-element compound type is encountered in a file with
+        compatible field names, it is treated as a complex type.
+
+        The names for these fields are taken from a global, which can be set
+        via the module function py_complex_names(realname, imgname).
+
+    3. Enumerated types
+
+        Native support for "dtype-encoded" enums has been dropped, as it proved
+        to be too unwieldy.  Enumerated types are read from HDF5 files as
+        Numpy integers (kind i or u).
+
+        You can get at the fields of an enum through the standard HDF5 API
+        calls, which are presented as methods of class TypeEnumID.
+        Additionally, the py_create function allows you to create HDF5
+        enumerated types by passing in a dictionary along with a Numpy dtype.
 """
 
 include "conditions.pxi"
@@ -264,8 +300,7 @@ def vlen_create(TypeID base not None):
 cdef class TypeID(ObjectID):
 
     """
-        Represents an HDF5 datatype identifier, and encapsulates common
-        operations.
+        Base class for type identifiers (implements common operations)
     """
 
     def __copy__(self):
@@ -373,7 +408,6 @@ cdef class TypeID(ObjectID):
         """
         if not self._locked:
             H5Tclose(self.id)
-
 
 # === Top-level classes (inherit directly from TypeID) ========================
 
@@ -537,7 +571,7 @@ cdef class TypeBitfieldID(TypeID):
 cdef class TypeAtomicID(TypeID):
 
     """
-        Represents an atomic datatype (float or integer).
+        Base class for atomic datatypes (float or integer)
     """
 
     def get_order(self):
@@ -613,7 +647,7 @@ cdef class TypeAtomicID(TypeID):
 cdef class TypeIntegerID(TypeAtomicID):
 
     """
-        Integer atomic types
+        Integer atomic datatypes
     """
 
     def get_sign(self):
@@ -642,7 +676,7 @@ cdef class TypeIntegerID(TypeAtomicID):
 cdef class TypeFloatID(TypeAtomicID):
 
     """
-        Floating-point datatypes
+        Floating-point atomic datatypes
     """
 
     def get_fields(self):
@@ -734,7 +768,7 @@ cdef class TypeFloatID(TypeAtomicID):
 cdef class TypeCompositeID(TypeID):
 
     """
-        Encapsulates operations common to both enumerated and compound types.
+        Base class for enumerated and compound types.
     """
 
     def get_nmembers(self):
@@ -958,13 +992,9 @@ cdef class TypeEnumID(TypeCompositeID):
 
         cdef TypeID tmp_type
         tmp_type = self.get_super()
-        typeobj = tmp_type.py_dtype()
-
-        return typeobj
+        return tmp_type.py_dtype()
 
 # === Python extension functions ==============================================
-
-
 
 def py_complex_names(object realname=None, object imgname=None, reset=False):
     """ (STRING realname=None, STRING imgname=None, reset=False)
@@ -990,12 +1020,14 @@ def py_complex_names(object realname=None, object imgname=None, reset=False):
             _complex_names = (realname, imgname)
     
 def py_create(object dtype_in, enum=None):
-    """ ( OBJECT dt, DICT enum=None) => TypeID
+    """ (OBJECT dtype_in, DICT enum=None) => TypeID
 
         Given a Numpy dtype object, generate a byte-for-byte memory-compatible
         HDF5 datatype object.  The result is guaranteed to be transient and
-        unlocked. Argument dtype_in may be a dtype object, or anything which
-        can be converted to a dtype.
+        unlocked.
+
+        Argument dtype_in may be a dtype object, or anything which can be
+        converted to a dtype, including strings like '<i4'.
 
         enum:
             A optional dictionary mapping names to integer values.  If the
