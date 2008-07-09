@@ -197,6 +197,10 @@ class TestH5A(unittest.TestCase):
 
         self.assertEqual(attrlist, ATTRIBUTES_ORDER)
 
+    def test_py_exists(self):
+
+        self.assert_(h5a.py_exists(self.obj, ATTRIBUTES_ORDER[0]))
+        self.assert_(not h5a.py_exists(self.obj, "Something else"))
 
 
 

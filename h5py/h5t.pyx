@@ -48,6 +48,11 @@
         calls, which are presented as methods of class TypeEnumID.
         Additionally, the py_create function allows you to create HDF5
         enumerated types by passing in a dictionary along with a Numpy dtype.
+
+    4. Variable-length types
+
+        VLEN types, including VLEN strings, are not currently supported.
+        This may eventually change.
 """
 
 include "conditions.pxi"

@@ -21,7 +21,7 @@ from h5s cimport SpaceID, H5Sclose
 
 from numpy cimport import_array, ndarray, PyArray_DATA
 from utils cimport  check_numpy_read, check_numpy_write, \
-                    emalloc, efree
+                    emalloc, efree, pybool
 
 # Runtime imports
 import h5
@@ -132,6 +132,25 @@ def py_listattrs(ObjectID loc not None):
     H5Aiterate(loc.id, &i, <H5A_operator_t>list_cb, retlist)
     return retlist
 
+cdef herr_t cb_exist(hid_t loc_id, char* attr_name, object ref_name):
+
+    if ref_name == attr_name:
+        return 1
+    return 0
+
+def py_exists(ObjectID loc not None, object ref_name):
+    """ (ObjectID loc, STRING ref_name)
+
+        Determine if an attribute named "ref_name" is attached to this object.
+    """
+    cdef unsigned int i
+    cdef herr_t retval
+    i=0
+
+    retval = H5Aiterate(loc.id, &i, <H5A_operator_t>cb_exist, ref_name)
+    
+    return pybool(retval)
+        
 # === Attribute class & methods ===============================================
 
 cdef class AttrID(ObjectID):

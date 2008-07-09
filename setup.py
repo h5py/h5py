@@ -82,10 +82,10 @@ def warn(instring):
 
 # === Parse command line arguments ============================================
 
-ENABLE_PYREX = False
-PYREX_ONLY = False
-PYREX_FORCE = False
-PYREX_FORCE_OFF = False
+ENABLE_PYREX = False        # Flag: Pyrex must be run
+PYREX_ONLY = False          # Flag: Run Pyrex, but don't perform build
+PYREX_FORCE = False         # Flag: Disable Pyrex timestamp checking
+PYREX_FORCE_OFF = False     # Flag: Don't run Pyrex, no matter what
 
 API_VERS = (1,6)
 DEBUG_LEVEL = 0
@@ -106,6 +106,7 @@ for arg in sys.argv[:]:
         PYREX_FORCE_OFF = True
         sys.argv.remove(arg)
     elif arg.find('--api=') == 0:
+        ENABLE_PYREX=True
         api = arg[6:]
         if api == '16':
             API_VERS = (1,6)
@@ -113,6 +114,7 @@ for arg in sys.argv[:]:
             fatal('Unrecognized API version "%s" (only "16" currently allowed)' % api)
         sys.argv.remove(arg)
     elif arg.find('--debug=') == 0:
+        ENABLE_PYREX=True
         DEBUG_LEVEL = int(arg[8:])
         sys.argv.remove(arg)
 
@@ -177,9 +179,22 @@ extra_compile_args = pyx_extra_args
 # Pyrex source files (without extension)
 pyrex_sources = [os.path.join(pyx_src_path, x) for x in pyx_modules]
 
-# Check if the conditions.pxi file is up-to-date
-cond_path = os.path.join(pyx_src_path, 'conditions.pxi')
-cond = \
+# If for some reason the .c files are missing, Pyrex is required.
+if not all([os.path.exists(x+'.c') for x in pyrex_sources]):
+    ENABLE_PYREX = True
+
+if ENABLE_PYREX and not PYREX_FORCE_OFF:
+    print "Running Pyrex..."
+
+    try:
+        from Pyrex.Compiler.Main import Version
+
+        if Version.version >= MIN_PYREX:
+            from Pyrex.Compiler.Main import compile_multiple, CompilationOptions
+
+            # Check if the conditions.pxi file is up-to-date
+            cond_path = os.path.join(pyx_src_path, 'conditions.pxi')
+            cond = \
 """
 %s
 
@@ -189,27 +204,12 @@ DEF H5PY_DEBUG = %d
 DEF H5PY_API = "%d.%d"
 """ % (AUTO_HDR, API_VERS[0], API_VERS[1], DEBUG_LEVEL,API_VERS[0], API_VERS[1])
 
-try:
-    cond_file = open(cond_path,'r')
-    cond_present = cond_file.read()
-    cond_file.close()
-    if cond_present != cond:
-        ENABLE_PYREX = True
-except IOError:
-    ENABLE_PYREX = True
-    cond_present = ""
-
-# If for some reason the .c files are missing, Pyrex is required.
-if not all([os.path.exists(x+'.c') for x in pyrex_sources]):
-    ENABLE_PYREX = True
-
-if ENABLE_PYREX and not PYREX_FORCE_OFF:
-    print "Running Pyrex..."
-    try:
-        from Pyrex.Compiler.Main import Version
-
-        if Version.version >= MIN_PYREX:
-            from Pyrex.Compiler.Main import compile_multiple, CompilationOptions
+            try:
+                cond_file = open(cond_path,'r')
+                cond_present = cond_file.read()
+                cond_file.close()
+            except IOError:
+                cond_present = ""
 
             # If we regenerate the file every time, Pyrex's timestamp checking
             # is useless.  So only replace it if it's out of date.

@@ -3,7 +3,7 @@ include LICENSE.txt
 include README.txt
 include VERSION.txt
 include docs.cfg
-recursive-include h5py *.py *.pyx *.pxd *.h *.c *.hdf5
+recursive-include h5py *.py *.pyx *.pxd *.pxi *.h *.c *.hdf5
 recursive-include licenses *
 recursive-include docs *
 

@@ -90,13 +90,13 @@ class Group(HLObject):
 
         The len() of a group is the number of members, and iterating over a
         group yields the names of its members, in arbitary library-defined
-        order.
+        order.  They also support the __contains__ syntax ("if name in group").
 
         Subgroups and datasets can be created via the convenience functions
         create_group and create_dataset, as well as by calling the appropriate
         class constructor.
 
-        Group attributes are accessed via Group.attrs; see the docstring for
+        Group attributes are accessed via group.attrs; see the docstring for
         the AttributeManager class.
     """
 
@@ -133,6 +133,15 @@ class Group(HLObject):
                 Attempt to convert it to an ndarray and store it.  Scalar
                 values are stored as scalar datasets. Raise ValueError if we
                 can't understand the resulting array dtype.
+            
+            If a group member of the same name already exists, the assignment
+            will fail.  You can check by using the Python __contains__ syntax:
+
+                if "name" in grp:
+                    del grp["name"]
+                grp["name"] = <whatever>
+
+            This limitation is intentional, and may be lifted in the future.
         """
         if isinstance(obj, Group) or isinstance(obj, Dataset) or isinstance(obj, Datatype):
             self.id.link(name, h5i.get_name(obj.id), link_type=h5g.LINK_HARD)
@@ -170,17 +179,19 @@ class Group(HLObject):
         self.id.unlink(name)
 
     def __len__(self):
+        """ Number of members attached to this group """
         return self.id.get_num_objs()
 
+    def __contains__(self, name):
+        """ Test if a member name exists """
+        return self.id.py_exists(name)
+
     def __iter__(self):
+        """ Iterate over member names """
         return self.id.py_iter()
 
-    def __str__(self):
-        if self.id._valid:
-            return 'Group "%s" (%d members)' % (hbasename(self.name), len(self))
-        return "Closed group"
-
     def iteritems(self):
+        """ Iterate over the group members as (name, value) pairs """
         for name in self:
             yield (name, self[name])
 
@@ -224,6 +235,12 @@ class Group(HLObject):
             outstr += '\nComment:\n'+cmnt
         return outstr
         
+    def __str__(self):
+        if self.id._valid:
+            return 'Group "%s" (%d members)' % (hbasename(self.name), len(self))
+        return "Closed group"
+
+
 class File(Group):
 
     """ Represents an HDF5 file on disk.
@@ -373,7 +390,7 @@ class Dataset(HLObject):
     def __init__(self, group, name,
                     data=None, dtype=None, shape=None, 
                     chunks=None, compression=None, shuffle=False, fletcher32=False):
-        """ Create a Dataset object.  You might find it easier to use the
+        """ Construct a Dataset object.  You might find it easier to use the
             Group methods: Group["name"] or Group.create_dataset().
 
             There are two modes of operation for this constructor:
@@ -383,7 +400,7 @@ class Dataset(HLObject):
                 the object will attempt to open an existing HDF5 dataset.
 
             2.  Create a dataset
-                You can supply either:
+                You supply "group", "name" and either:
                 - Keyword "data"; a Numpy array from which the shape, dtype and
                     initial contents will be determined.
                 - Both "dtype" (Numpy dtype object) and "shape" (tuple of 
@@ -433,12 +450,12 @@ class Dataset(HLObject):
         self._attrs = AttributeManager(self)
 
     def __getitem__(self, args):
-        """ Read a slice from the underlying HDF5 array.  Takes slices and
+        """ Read a slice from the HDF5 dataset.  Takes slices and
             recarray-style field names (more than one is allowed!) in any
             order.
 
             For a compound dataset ds, with shape (10,10,5) and fields "a", "b" 
-            and "c", the following are all legal subscripts:
+            and "c", the following are all legal syntax:
 
             ds[1,2,3]
             ds[1,2,:]
@@ -446,7 +463,7 @@ class Dataset(HLObject):
             ds[1]
             ds[:]
             ds[1,2,3,"a"]
-            ds[0:5:2, 0:6:3, 0:2, "a", "b"]
+            ds[0:5:2, ..., 0:2, "a", "b"]
         """
         start, count, stride, names = slicer(self.shape, args)
 
@@ -496,10 +513,9 @@ class Dataset(HLObject):
         return arr
 
     def __setitem__(self, args):
-        """ Write to the underlying array from an existing Numpy array.  The
-            shape of the Numpy array must match the shape of the selection,
-            and the Numpy array's datatype must be convertible to the HDF5
-            array's datatype.
+        """ Write to the HDF5 dataset from an Numpy array.  The shape of the
+            Numpy array must match the shape of the selection, and the Numpy
+            array's datatype must be convertible to the HDF5 datatype.
         """
         val = args[-1]
         args = args[0:-1]
@@ -539,7 +555,13 @@ class AttributeManager(object):
         array.  Non-scalar data is always returned as an ndarray.
 
         The len() of this object is the number of attributes; iterating over
-        it yields the attribute names.
+        it yields the attribute names.  They also support the __contains__
+        syntax ("if name in obj.attrs...").
+
+        Unlike groups, writing to an attribute will overwrite an existing
+        attribute of the same name.  This is not a transacted operation; you
+        can lose data if you try to assign an object which h5py doesn't
+        understand.
     """
 
     def __init__(self, parent):
@@ -548,6 +570,10 @@ class AttributeManager(object):
         self.id = parent.id
 
     def __getitem__(self, name):
+        """ Read the value of an attribute.  If the attribute is scalar, it
+            will be returned as a Numpy scalar.  Otherwise, it will be returned
+            as a Numpy ndarray.
+        """
         attr = h5a.open_name(self.id, name)
 
         arr = numpy.ndarray(attr.shape, dtype=attr.dtype)
@@ -558,33 +584,47 @@ class AttributeManager(object):
         return arr
 
     def __setitem__(self, name, value):
+        """ Set the value of an attribute, overwriting any previous value.
+            The value you provide must be convertible to a Numpy array or
+            scalar.  If it's not, the action is aborted with no data loss.
+
+            Any existing value is destroyed just before the call to h5a.create.
+            If the creation fails, the data is not recoverable.
+        """
         if not isinstance(value, numpy.ndarray):
             value = numpy.array(value)
 
         space = h5s.create_simple(value.shape)
         htype = h5t.py_create(value.dtype)
 
-        # TODO: some kind of transaction safeguard here
-        try:
+        # TODO: some kind of transactions safeguard
+        if name in self:
             h5a.delete(self.id, name)
-        except H5Error:
-            pass
+
         attr = h5a.create(self.id, name, htype, space)
         attr.write(value)
 
     def __delitem__(self, name):
+        """ Delete an attribute (which must already exist). """
         h5a.delete(self.id, name)
 
     def __len__(self):
+        """ Number of attributes attached to the object. """
         return h5a.get_num_attrs(self.id)
 
     def __iter__(self):
+        """ Iterate over the names of attributes. """
         for name in h5a.py_listattrs(self.id):
             yield name
 
     def iteritems(self):
+        """ Iterate over (name, value) tuples. """
         for name in self:
             yield (name, self[name])
+
+    def __contains__(self, name):
+        """ Determine if an attribute exists, by name. """
+        return h5a.py_exists(self.id, name)
 
     def __str__(self):
         if self.id._valid:

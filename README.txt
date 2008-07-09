@@ -7,6 +7,10 @@ Copyright (c) 2008 Andrew Collette
 
 Version 0.2.0
 
+* `Introduction`_
+* `Features`_
+* `Installation`_
+
 Introduction
 ============
 
