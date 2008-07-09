@@ -12,14 +12,20 @@
 """
     Common module for the HDF5 low-level interface library.  
 
-    Library version and API information lives here:
-    - HDF5_VERS, HDF5_VERS_TPL:  Library version
-    - API_VERS, API_VERS_TPL:  API version (1.6 or 1.8) used to compile h5py.
+    This is an internal module which is designed to set up the library and
+    enable HDF5 exception handline.  It also enables debug logging, if the
+    library has been compiled with a nonzero debugging level.
+
+    Useful things defined here:
+    
+      hdf5_version:         String with library version (e.g. "1.6.5")
+      hdf5_version_tuple:   Tuple form of the version (e.g. (1,6,5))
+      api_version:          String form of the API used (e.g. "1.6")
+      api_version_tuple:    Tuple form of the version (e.g. (1,6))
 
     All exception classes and error handling functions are also in this module.
 
-    This module is designed to be imported before any other h5py module is
-    executed.  It opens the library and enables debug logging, if required.
+
 """
 
 include "conditions.pxi"
@@ -64,12 +70,6 @@ def _open():
     """ Internal function; do not call unless you want to lose all your data.
     """
     H5open()
-
-class DDict(dict):
-    """ Internal class.
-    """
-    def __missing__(self, key):
-        return '*INVALID* (%s)' % str(key)
 
 # === Identifier wrappers =====================================================
 

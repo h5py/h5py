@@ -1,4 +1,4 @@
-Copyright Notice and Statement for the h5py Project:
+Copyright Notice and Statement for the h5py Project
 
 Copyright (c) 2008 Andrew Collette
 http://h5py.alfven.org

@@ -19,15 +19,11 @@ from h5g cimport H5G_obj_t
 
 # Runtime imports
 import h5
-from h5 import DDict
 
 # === Public constants and data structures ====================================
 
 OBJECT = H5R_OBJECT
 DATASET_REGION = H5R_DATASET_REGION
-
-PY_TYPE = {H5R_OBJECT: 'OBJECT',  H5R_DATASET_REGION: 'DATASET REGION' }
-PY_TYPE = DDict(PY_TYPE)
 
 cdef union ref_u:
     hobj_ref_t         obj_ref

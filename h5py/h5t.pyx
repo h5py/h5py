@@ -28,7 +28,6 @@ from utils cimport  emalloc, efree, pybool, \
 
 # Runtime imports
 import h5
-from h5 import DDict, ArgsError
 import sys
 
 # === Custom C API ============================================================

@@ -20,7 +20,6 @@ from utils cimport  require_tuple, require_list, convert_dims, convert_tuple, \
 
 # Runtime imports
 import h5
-from h5 import DDict
 
 cdef object lockid(hid_t id_):
     cdef SpaceID space

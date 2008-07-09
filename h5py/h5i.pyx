@@ -20,7 +20,6 @@ from utils cimport emalloc, efree
 
 # Runtime imports
 import h5
-from h5 import DDict
 
 # === Public constants and data structures ====================================
 
@@ -34,11 +33,6 @@ REFERENCE   = H5I_REFERENCE
 GENPROP_CLS = H5I_GENPROP_CLS
 GENPROP_LST = H5I_GENPROP_LST
 DATATYPE    = H5I_DATATYPE
-
-PY_TYPE = DDict({ H5I_BADID: 'BAD ID', H5I_FILE: 'FILE', H5I_GROUP: 'GROUP',
-            H5I_DATASET: 'DATASET', H5I_ATTR: 'ATTRIBUTE', 
-            H5I_REFERENCE: 'REFERENCE', H5I_GENPROP_CLS: 'PROPERTY LIST CLASS',
-            H5I_GENPROP_LST: 'PROPERTY LIST', H5I_DATATYPE: 'DATATYPE' })
 
 # === Identifier API ==========================================================
 

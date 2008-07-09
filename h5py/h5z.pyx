@@ -19,7 +19,6 @@ from utils cimport pybool
 
 # Runtime imports
 import h5
-from h5 import DDict
 
 # === Public constants and data structures ====================================
 

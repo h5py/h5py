@@ -48,6 +48,10 @@ def slicer(shape, args):
         else:
             slices.append(entry)
 
+    # If only named fields are provided
+    if len(slices) == 0:
+        slices = [Ellipsis]
+
     start = []
     count = []
     stride = []

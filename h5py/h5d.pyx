@@ -25,7 +25,6 @@ from utils cimport  check_numpy_read, check_numpy_write, \
 
 # Runtime imports
 import h5
-from h5 import DDict
 import h5t
 import h5s
 

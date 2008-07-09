@@ -9,6 +9,36 @@
 # $Date$
 # 
 #-
+
+"""
+    Provides high-level Python objects for HDF5 files, groups, and datasets.  
+
+    Groups provide dictionary-like access to and iteration over their members.
+    File objects implicitly perform these operations on the root ('/') group.
+
+    Datasets support full Numpy-style slicing and partial I/0, including
+    recarray-style access to named fields.  A minimal Numpy interface is
+    included, with shape and dtype properties.
+
+    A strong emphasis has been placed on reasonable automatic conversion from
+    Python types to their HDF5 equivalents.  Setting and retrieving HDF5 data
+    is almost always handled by a simple assignment.  For example, you can
+    create an initialize and HDF5 dataset simply by assigning a Numpy array
+    to a group:
+
+        group["name"] = numpy.ones((10,50), dtype='<i2')
+
+    To make it easier to get data in and out of Python, a simple command-line
+    shell comes attached to all File objects via the method File.browse().
+    You can explore an HDF5 file, and import datasets, groups, and named
+    types into your main interactive Python session.
+
+    Although it's not required to use this high-level interface, the full power
+    of the h5py low-level library wrapping is available for these objects.
+    Each highlevel object carries an identifier object (obj.id), which can be
+    used by h5py.h5* functions or methods.
+"""
+
 import os
 import numpy
 import inspect
@@ -28,8 +58,20 @@ except ImportError:
 
 class HLObject(object):
 
+    """
+        Base class for high-level interface objects.
+
+        All objects of this class support the following properties:
+
+        id:     Low-level identifer, compatible with the h5py.h5* modules.
+        name:   (Some) name of this object in the HDF5 file.
+        attrs:  HDF5 attributes of this object.  See the AttributeManager docs.
+    """
+
     name = property(lambda self: h5i.get_name(self.id),
         doc = "Name of this object in the HDF5 file.  Not necessarily unique.")
+    attrs = property(lambda self: self._attrs,
+        doc = "Provides access to HDF5 attributes. See AttributeManager.")
 
     def __repr__(self):
         return str(self)
@@ -38,11 +80,24 @@ class Group(HLObject):
 
     """ Represents an HDF5 group.
 
-        Iterating over a group yields the names of its members.
-    """
+        Group(parent, name, create=False)
 
-    attrs = property(lambda self: self._attrs,
-        doc = "Provides access to HDF5 attributes. See AttributeManager.")
+        Group members can be accessed dictionary-style (Group["name"]).  HDF5
+        objects can be automatically created in the group by assigning Numpy
+        arrays, dtypes, or other Group, Dataset or Datatype objects with this
+        syntax.  See the __setitem__ docstring for a complete list.
+
+        The len() of a group is the number of members, and iterating over a
+        group yields the names of its members, in arbitary library-defined
+        order.
+
+        Subgroups and datasets can be created via the convenience functions
+        create_group and create_dataset, as well as by calling the appropriate
+        class constructor.
+
+        Group attributes are accessed via Group.attrs; see the docstring for
+        the AttributeManager class.
+    """
 
     def __init__(self, parent_object, name, create=False):
         """ Create a new Group object, from a parent object and a name.
@@ -130,6 +185,8 @@ class Group(HLObject):
 
     def create_group(self, name):
         """ Create and return a subgroup.
+
+            Fails if the group already exists.
         """
         return Group(self, name, create=True)
 
@@ -137,15 +194,15 @@ class Group(HLObject):
         """ Create and return a dataset.  Keyword arguments:
 
             You must specify either "data", or both "type" and "shape".
-             data:     Numpy array from which the dataset will be constructed
+             data:     Numpy array from which the dataset is constructed
              type:     Numpy dtype giving the datatype
              shape:    Numpy-style shape tuple giving the dataspace
 
             Additional options (* is default):
              chunks:        Tuple of chunk dimensions or None*
              compression:   DEFLATE (gzip) compression level, int or None*
-             shuffle:       Use the shuffle filter? (requires compression) T/F*
-             fletcher32:    Enable Fletcher32 error detection? T/F*
+             shuffle:       Use the shuffle filter (needs compression) T/F*
+             fletcher32:    Enable Fletcher32 error detection T/F*
         """
         return Dataset(self, name, **kwds)
 
@@ -170,12 +227,19 @@ class File(Group):
 
     """ Represents an HDF5 file on disk.
 
+        File(name, mode='r', noclobber=False)
+
         Created with standard Python syntax File(name, mode).
         Legal modes: r, r+, w, w+, a  (default 'r')
 
         File objects inherit from Group objects; Group-like methods all
         operate on the HDF5 root group ('/').  Like Python file objects, you
         must close the file ("obj.close()") when you're done with it.
+
+        The special method browse() will open a command shell, allowing you
+        to browse the file and import objects into the interactive Python
+        session.  If the readline module is available, this includes things
+        like command history and tab completion.
     """
 
     name = property(lambda self: self._name,
@@ -223,7 +287,7 @@ class File(Group):
         self._rlhist = []  # for readline nonsense
 
     def close(self):
-        """ Close this HDF5 file.  All open identifiers will become invalid.
+        """ Close this HDF5 file.  All open objects will be invalidated.
         """
         self.id._close()
         self.fid.close()
@@ -243,6 +307,10 @@ class File(Group):
             specified, any imported objects will be placed in the caller's
             global() dictionary.
         """
+        if not self.id._valid:
+            print "Can't browse: this file is closed."
+            return
+
         if dict is None:
             dict = inspect.currentframe().f_back.f_globals
 
@@ -270,7 +338,20 @@ class File(Group):
 
 class Dataset(HLObject):
 
-    """ High-level interface to an HDF5 dataset
+    """ High-level interface to an HDF5 dataset.
+
+        Dataset(group, name, data=None, dtype=None, shape=None, **kwds)
+
+        Datasets behave superficially like Numpy arrays.  The full Numpy
+        slicing syntax, including recarray indexing of named fields (even
+        more than one), is supported.  The object returned is always a
+        Numpy ndarray.
+
+        Additionally, the following properties are provided:
+          shape:    Numpy-style shape tuple of dimsensions
+          dtype:    Numpy dtype representing the datatype
+          value:    Copy of the full dataset, as either a Numpy array or a
+                     Numpy/Python scalar, depending on the shape.
     """
 
     shape = property(lambda self: self.id.shape,
@@ -278,9 +359,6 @@ class Dataset(HLObject):
 
     dtype = property(lambda self: self.id.dtype,
         doc = "Numpy dtype representing the datatype")
-
-    attrs = property(lambda self: self._attrs,
-        doc = "Provides access to HDF5 attributes. See AttributeManager.")
 
     def _getval(self):
         arr = self[...]
@@ -441,26 +519,25 @@ class Dataset(HLObject):
                     str(self.shape), repr(self.dtype))
         return "Closed dataset"
 
-class AttributeManager(HLObject):
+class AttributeManager(object):
 
     """ Allows dictionary-style access to an HDF5 object's attributes.
 
-        You should never have to create one of these; they come attached to
-        Group, Dataset and NamedType objects as "obj.attrs".
+        These come attached to HDF5 objects as Obj.attrs.  You should never
+        create one yourself.
 
-        - Access existing attributes with "obj.attrs['attr_name']".  If the
-          attribute is scalar, a scalar value is returned, else an ndarray.
+        Like the members of groups, attributes are accessed using dict-style
+        syntax.  Anything which can be reasonably converted to a Numpy array or
+        Numpy scalar can be stored.
 
-        - Set attributes with "obj.attrs['attr_name'] = value".  Note that
-          this will overwrite an existing attribute.
+        Since attributes are typically used for small scalar values, acessing
+        a scalar attribute returns a Numpy/Python scalar, not an 0-dimensional
+        array.  Non-scalar data is always returned as an ndarray.
 
-        - Delete attributes with "del obj.attrs['attr_name']".
-
-        - Iterating over obj.attrs yields the names of the attributes. The
-          method iteritems() yields (name, value) pairs.
-        
-        - len(obj.attrs) returns the number of attributes.
+        The len() of this object is the number of attributes; iterating over
+        it yields the attribute names.
     """
+
     def __init__(self, parent):
 
         self.id = parent.id
@@ -506,7 +583,7 @@ class AttributeManager(HLObject):
 
     def __str__(self):
         if self.id._valid:
-            rstr = 'Attributes of "%s": ' % hbasename(self.name)
+            rstr = 'Attributes of "%s": ' % hbasename(h5i.get_name(self.id))
             if len(self) == 0:
                 rstr += '(none)'
             else:
@@ -522,9 +599,12 @@ class AttributeManager(HLObject):
 class Datatype(HLObject):
 
     """
-        Represents an HDF5 datatype.
+        Represents an HDF5 named datatype.
 
-        These intentionally only represent named types.
+        These intentionally only represent named types, and exist mainly so
+        that you can access their attributes.
+
+        The property Datatype.dtype provides a Numpy dtype equivalent.
     """
 
     dtype = property(lambda self: self.id.dtype)

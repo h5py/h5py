@@ -30,9 +30,10 @@
     python setup.py test
 
     Additional options (for all modes):
-        --pyrex         Have Pyrex recompile changed *.pyx files.
-        --pyrex-only    Have Pyrex recompile changed *.pyx files, and stop.
-        --pyrex-force   Recompile all *.pyx files, regardless of timestamps.
+        --pyrex         Have Pyrex recompile changed pyx files.
+        --pyrex-only    Have Pyrex recompile changed pyx files, and stop.
+        --pyrex-force   Recompile all pyx files, regardless of timestamps.
+        --no-pyrex      Don't run Pyrex, no matter what
 
         --api=<n>       Specifies API version.  Only "16" is currently allowed.
         --debug=<n>     If nonzero, compile in debug mode.  The number is
@@ -84,10 +85,10 @@ def warn(instring):
 ENABLE_PYREX = False
 PYREX_ONLY = False
 PYREX_FORCE = False
+PYREX_FORCE_OFF = False
 
 API_VERS = (1,6)
 DEBUG_LEVEL = 0
-DEV_MODE = False
 
 for arg in sys.argv[:]:
     if arg == '--pyrex':
@@ -101,6 +102,9 @@ for arg in sys.argv[:]:
         ENABLE_PYREX=True
         PYREX_FORCE = True
         sys.argv.remove(arg)
+    elif arg == '--no-pyrex':
+        PYREX_FORCE_OFF = True
+        sys.argv.remove(arg)
     elif arg.find('--api=') == 0:
         api = arg[6:]
         if api == '16':
@@ -111,9 +115,6 @@ for arg in sys.argv[:]:
     elif arg.find('--debug=') == 0:
         DEBUG_LEVEL = int(arg[8:])
         sys.argv.remove(arg)
-
-if "dev" in sys.argv:
-    DEV_MODE = True
 
 if 'sdist' in sys.argv and os.path.exists('MANIFEST'):
     warn("Cleaning up stale MANIFEST file")
@@ -202,7 +203,7 @@ except IOError:
 if not all([os.path.exists(x+'.c') for x in pyrex_sources]):
     ENABLE_PYREX = True
 
-if ENABLE_PYREX:
+if ENABLE_PYREX and not PYREX_FORCE_OFF:
     print "Running Pyrex..."
     try:
         from Pyrex.Compiler.Main import Version
@@ -222,10 +223,7 @@ if ENABLE_PYREX:
             results = compile_multiple( [x+'.pyx' for x in pyrex_sources], opts)
 
             if results.num_errors != 0:
-                if DEV_MODE:
-                    warn("%d Pyrex compilation errors encountered." % results.num_errors)
-                else:
-                    fatal("%d Pyrex compilation errors encountered; aborting." % results.num_errors)
+                fatal("%d Pyrex compilation errors encountered; aborting." % results.num_errors)
             if PYREX_ONLY:
                 exit(0)
         else:
@@ -234,7 +232,7 @@ if ENABLE_PYREX:
     except ImportError:
         fatal("Pyrex recompilation required, but Pyrex not installed.")
 else:
-    print "Pyrex not required, skipping."
+    print "Skipping Pyrex..."
 
 # Create extensions
 pyx_extensions = []

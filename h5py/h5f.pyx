@@ -26,7 +26,6 @@ from utils cimport emalloc, efree, pybool
 
 # Runtime imports
 import h5
-from h5 import DDict
 
 # === Public constants and data structures ====================================
 

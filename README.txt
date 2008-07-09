@@ -114,6 +114,18 @@ Procedure
 4.  Run ``sudo python setup.py install`` to install into your main Python
     package directory.
 
+Additional options
+------------------
+ --pyrex         Have Pyrex recompile changed pyx files.
+ --pyrex-only    Have Pyrex recompile changed pyx files, and stop.
+ --pyrex-force   Recompile all pyx files, regardless of timestamps.
+ --no-pyrex      Don't run Pyrex, no matter what
+
+ --api=<n>       Specifies API version.  Only --api=16 is currently allowed.
+ --debug=<n>     If nonzero, compile in debug mode.  The number is
+                 interpreted as a logging-module level number.  Requires
+                 Pyrex for recompilation.
+
 Bugs
 ----
 I expect there are still a few. :) A FAQ page will soon be created at the
