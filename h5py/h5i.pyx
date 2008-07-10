@@ -20,6 +20,7 @@ from utils cimport emalloc, efree
 
 # Runtime imports
 import h5
+from h5 import H5Error
 
 # === Public constants and data structures ====================================
 
@@ -56,7 +57,11 @@ def get_name(ObjectID obj not None):
     cdef int namelen
     cdef char* name
 
-    namelen = <int>H5Iget_name(obj.id, NULL, 0)
+    try:
+        namelen = <int>H5Iget_name(obj.id, NULL, 0)
+    except H5Error:  # Later library versions raise an exception here
+        return None
+
     if namelen == 0:
         return None
 

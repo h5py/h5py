@@ -104,14 +104,18 @@ def create(ObjectID loc not None, char* name, int size_hint=-1):
 
 cdef herr_t iter_cb_helper(hid_t gid, char *name, object int_tpl) except -1:
     # Callback function for H5Giterate
+    # Automatic exception propagation breaks in 1.8 for some reason, so
+    # stuff the exception into a mutable object.
 
-    loc, func, data = int_tpl
+    cdef list err_list
+    loc, func, data, err_list = int_tpl
 
-    # An unhandled exception (anything except StopIteration) will 
-    # cause Pyrex to immediately return -1, which stops H5Giterate.
     try:
         func(loc, name, data)
     except StopIteration:
+        return 1
+    except Exception, e:
+        err_list.append(e)
         return 1
 
     return 0
@@ -136,13 +140,19 @@ def iterate(GroupID loc not None, char* name, object func, object data=None,
             exception is propagated.
     """
     cdef int i
+    cdef list err_list
+    err_list = []
+
     if startidx < 0:
         raise ValueError("Starting index must be non-negative.")
     i = startidx
 
-    int_tpl = (loc, func, data)
+    int_tpl = (loc, func, data, err_list)
 
     H5Giterate(loc.id, name, &i, <H5G_iterate_t>iter_cb_helper, int_tpl)
+
+    if len(err_list) > 0:
+        raise err_list[0]
 
 # === Group member management =================================================
 

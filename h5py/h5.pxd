@@ -80,7 +80,7 @@ cdef extern from "hdf5.h":
     H5E_EFL,                    # External file list                         
     H5E_REFERENCE,              # References                                 
     H5E_VFL,                    # Virtual File Layer                 
-    H5E_TBBT,                   # Threaded, Balanced, Binary Trees           
+#   H5E_TBBT,                   # Threaded, Balanced, Binary Trees (removed)
     H5E_TST,                    # Ternary Search Trees                       
     H5E_RS,                     # Reference Counted Strings                  
     H5E_ERROR,                  # Error API                                  

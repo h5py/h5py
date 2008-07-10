@@ -15,7 +15,7 @@
 """
 
 # Pyrex compile-time imports
-from h5p cimport propwrap, pdefault, PropFAID, PropFCID, PropMID
+from h5p cimport propwrap, pdefault, PropFAID, PropFCID, H5P_DEFAULT
 from h5t cimport typewrap
 from h5a cimport AttrID
 from h5d cimport DatasetID
@@ -101,16 +101,12 @@ def is_hdf5(char* name):
     """
     return pybool(H5Fis_hdf5(name))
 
-def mount(ObjectID loc not None, char* name, FileID fid not None, 
-          PropMID mountlist=None):
-    """ (ObjectID loc, STRING name, FileID fid, PropMID mountlist=None)
+def mount(ObjectID loc not None, char* name, FileID fid not None):
+    """ (ObjectID loc, STRING name, FileID fid)
     
-        Mount an open file as "name" under group loc_id.  If present, mountlist
-        is a mount property list.
+        Mount an open file as "name" under group loc_id.
     """
-    cdef hid_t plist_id
-    plist_id = pdefault(mountlist)
-    H5Fmount(loc.id, name, fid.id, plist_id)
+    H5Fmount(loc.id, name, fid.id, H5P_DEFAULT)
     
 def unmount(ObjectID loc not None, char* name):
     """ (ObjectID loc, STRING name)

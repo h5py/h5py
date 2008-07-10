@@ -43,8 +43,6 @@ cdef object propwrap(hid_t id_in):
             pcls = PropDCID
         elif H5Pequal(clsid, H5P_DATASET_XFER):
             pcls = PropDXID
-        elif H5Pequal(clsid, H5P_MOUNT):
-            pcls = PropMID
         else:
             raise ValueError("No class found for ID %d" % id_in)
 
@@ -68,7 +66,7 @@ FILE_CREATE    = lockcls(H5P_FILE_CREATE)
 FILE_ACCESS    = lockcls(H5P_FILE_ACCESS)
 DATASET_CREATE = lockcls(H5P_DATASET_CREATE)
 DATASET_XFER   = lockcls(H5P_DATASET_XFER)
-MOUNT          = lockcls(H5P_MOUNT)
+# MOUNT renamed in 1.8.X; removed for now
 
 DEFAULT = None   # In the HDF5 header files this is actually 0, which is an
                  # invalid identifier.  The new strategy for default options
@@ -86,7 +84,6 @@ def create(PropClassID cls not None):
             FILE_ACCESS
             DATASET_CREATE
             DATASET_XFER
-            MOUNT
     """
     cdef hid_t newid
     newid = H5Pcreate(cls.id)

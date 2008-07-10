@@ -35,6 +35,7 @@
         --pyrex-force   Recompile all pyx files, regardless of timestamps.
         --no-pyrex      Don't run Pyrex, no matter what
 
+        --hdf5=path     Use alternate HDF5 directory (contains bin, include, lib)
         --api=<n>       Specifies API version.  Only "16" is currently allowed.
         --debug=<n>     If nonzero, compile in debug mode.  The number is
                         interpreted as a logging-module level number.
@@ -89,6 +90,7 @@ PYREX_FORCE_OFF = False     # Flag: Don't run Pyrex, no matter what
 
 API_VERS = (1,6)
 DEBUG_LEVEL = 0
+HDF5_DIR = None
 
 for arg in sys.argv[:]:
     if arg == '--pyrex':
@@ -116,6 +118,12 @@ for arg in sys.argv[:]:
     elif arg.find('--debug=') == 0:
         ENABLE_PYREX=True
         DEBUG_LEVEL = int(arg[8:])
+        sys.argv.remove(arg)
+    elif arg.find('--hdf5=') == 0:
+        splitarg = arg.split('=',1)
+        if len(splitarg) != 2:
+            fatal("HDF5 directory not understood (wants --hdf5=/path/to/hdf5)")
+        HDF5_DIR = splitarg[1]
         sys.argv.remove(arg)
 
 if 'sdist' in sys.argv and os.path.exists('MANIFEST'):
@@ -164,11 +172,19 @@ pyx_extra_src = ['utils_low.c']     # C source files required for Pyrex code
 pyx_libraries = ['hdf5']            # Libraries to link into Pyrex code
 
 # Compile-time include and library dirs for Pyrex code
-pyx_include = [numpy.get_include()] 
-pyx_include.extend(['/usr/include', '/usr/local/include'])
-pyx_include.extend(custom_include_dirs)
-pyx_library_dirs = ['/usr/lib', '/usr/local/lib']
-pyx_library_dirs.extend(custom_library_dirs)
+pyx_include = [numpy.get_include()]
+if HDF5_DIR is None:
+    pyx_include.extend(['/usr/include', '/usr/local/include'])
+    pyx_include.extend(custom_include_dirs)
+else:
+    pyx_include.extend([os.path.join(HDF5_DIR,'include')])
+
+
+if HDF5_DIR is None:
+    pyx_library_dirs = ['/usr/lib', '/usr/local/lib']
+    pyx_library_dirs.extend(custom_library_dirs)
+else:
+    pyx_library_dirs = [os.path.join(HDF5_DIR, 'lib')]
 
 # Additional compiler flags for Pyrex code
 pyx_extra_args = ['-Wno-unused', '-Wno-uninitialized', '-DH5_USE_16_API']
@@ -246,7 +262,8 @@ for module_name in pyx_modules:
             sources, 
             include_dirs = pyx_include, 
             libraries = pyx_libraries,
-            library_dirs = pyx_library_dirs, 
+            library_dirs = pyx_library_dirs,
+            runtime_library_dirs = pyx_library_dirs,
             extra_compile_args = extra_compile_args,
             extra_link_args = extra_link_args
         )

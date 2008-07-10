@@ -234,8 +234,6 @@ cdef extern from "hdf5.h":
 
   # Not for public API
   herr_t        H5Tconvert(hid_t src_id, hid_t dst_id, size_t nelmts, void *buf, void *background, hid_t plist_id) except *
-  ctypedef herr_t  (*H5T_overflow_t)(hid_t src_id, hid_t dst_id, void *src_buf, void *dst_buf) except -1
-  herr_t        H5Tset_overflow(H5T_overflow_t func) except *
 
   # Atomic datatypes
   herr_t        H5Tset_size(hid_t type_id, size_t size) except *

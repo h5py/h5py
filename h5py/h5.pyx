@@ -280,11 +280,8 @@ class VirtualFileError(H5Error):
     """ H5E_VFL """
     pass
          
-#    H5E_TBBT,                   # Threaded, Balanced, Binary Trees         
-class TBBTError(H5Error):
-    """ H5E_TBBT """
-    pass
-  
+# H5E_TBBT removed; does not appear in 1.8.X
+
 #    H5E_TST,                    # Ternary Search Trees                       
 class TSTError(H5Error):
     """ H5E_TST """
@@ -328,7 +325,6 @@ _exceptions = {
     H5E_EFL: FileListError,
     H5E_REFERENCE: RefError,
     H5E_VFL: VirtualFileError,
-    H5E_TBBT: TBBTError,
     H5E_TST: TSTError,
     H5E_RS: RSError,
     H5E_ERROR: ErrorError,

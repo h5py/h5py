@@ -5,7 +5,7 @@ Copyright (c) 2008 Andrew Collette
 * http://h5py.alfven.org
 * mail: "h5py" at the domain "alfven dot org"
 
-Version 0.2.0
+**Version 0.2.0**
 
 * `Introduction`_
 * `Features`_
@@ -35,7 +35,7 @@ Extensive documentation is available through docstrings, as well as in
 distribution.  This document is an overview of some of the package's 
 features and highlights.
 
-__ http://h5py.alfven.org
+__ http://h5py.alfven.org/docs
 
 Features
 ========
@@ -101,6 +101,7 @@ be painful to install manually.
 Requires
 --------
 - Unix-like environment (created/tested on 32-bit Intel linux)
+- Python with headers for development ("python-dev")
 - Numpy_ 1.0.3 or higher
 - HDF5_ 1.6.5 or higher (1.8 support experimental)
 - A working compiler for distutils
@@ -125,6 +126,7 @@ Additional options
  --pyrex-force   Recompile all pyx files, regardless of timestamps.
  --no-pyrex      Don't run Pyrex, no matter what
 
+ --hdf5=path     Use alternate HDF5 directory (contains bin, include, lib)
  --api=<n>       Specifies API version.  Only --api=16 is currently allowed.
  --debug=<n>     If nonzero, compile in debug mode.  The number is
                  interpreted as a logging-module level number.  Requires

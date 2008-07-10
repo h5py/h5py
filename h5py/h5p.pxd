@@ -49,10 +49,6 @@ cdef class PropFAID(PropInstanceID):
     """ File access property list """
     pass
 
-cdef class PropMID(PropInstanceID):
-    """ Mount property list """
-    pass
-
 cdef hid_t pdefault(PropID pid)
 cdef object propwrap(hid_t id_in)
 
@@ -113,7 +109,6 @@ cdef extern from "hdf5.h":
   hid_t H5P_FILE_ACCESS 
   hid_t H5P_DATASET_CREATE 
   hid_t H5P_DATASET_XFER 
-  hid_t H5P_MOUNT
 
   # --- Property list operations ----------------------------------------------
   # General operations
