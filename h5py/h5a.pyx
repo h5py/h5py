@@ -12,6 +12,10 @@
 
 """
     Provides access to the low-level HDF5 "H5A" attribute interface.
+
+    Python extensions:
+    py_listattrs(ObjectID)          Get a list of attribute names
+    py_exists(ObjectID, STRING)     Test if a named attribute exists
 """
 
 # Pyrex compile-time imports
@@ -121,7 +125,7 @@ cdef herr_t list_cb(hid_t loc_id, char *attr_name, object listin):
     return 0
 
 def py_listattrs(ObjectID loc not None):
-    """ (ObjectID loc) => LIST attr_names
+    """ (ObjectID loc) => LIST
 
         Get a list of the names of the attributes attached to an object.
     """
@@ -139,7 +143,7 @@ cdef herr_t cb_exist(hid_t loc_id, char* attr_name, object ref_name):
     return 0
 
 def py_exists(ObjectID loc not None, object ref_name):
-    """ (ObjectID loc, STRING ref_name)
+    """ (ObjectID loc, STRING ref_name) => BOOL
 
         Determine if an attribute named "ref_name" is attached to this object.
     """

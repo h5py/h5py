@@ -33,6 +33,7 @@ def buildsuite(cases):
 def runtests():
     suite = buildsuite(TEST_CASES)
     retval = unittest.TextTestRunner(verbosity=3).run(suite)
+    print "=== Tested HDF5 %s (%s API) ===" % (h5.hdf5_version, h5.api_version)
     return retval.wasSuccessful()
 
 def autotest():

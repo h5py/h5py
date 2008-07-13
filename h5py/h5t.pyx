@@ -571,6 +571,13 @@ cdef class TypeBitfieldID(TypeID):
     """
     pass
 
+cdef class TypeReferenceID(TypeID):
+
+    """
+        HDF5 object or region reference
+    """
+    pass
+
 # === Numeric classes (integers and floats) ===================================
 
 cdef class TypeAtomicID(TypeID):

@@ -36,7 +36,7 @@
         --no-pyrex      Don't run Pyrex, no matter what
 
         --hdf5=path     Use alternate HDF5 directory (contains bin, include, lib)
-        --api=<n>       Specifies API version.  Only "16" is currently allowed.
+        --api=<n>       Specifies API version.  Only "16" is currently useful.
         --debug=<n>     If nonzero, compile in debug mode.  The number is
                         interpreted as a logging-module level number.
 
@@ -50,6 +50,8 @@
 # === Global constants ========================================================
 
 NAME = 'h5py'
+VERSION = '0.2.0'
+
 MIN_PYREX = '0.9.8.4'  # for compile_multiple
 MIN_NUMPY = '1.0.3'
 
@@ -69,6 +71,8 @@ from distutils.extension import Extension
 import os
 import sys
 import shutil
+import subprocess
+import re
 
 # Distutils tries to use hard links when building source distributions, which 
 # fails under a wide variety of network filesystems under Linux.
@@ -112,8 +116,11 @@ for arg in sys.argv[:]:
         api = arg[6:]
         if api == '16':
             API_VERS = (1,6)
+        elif api == '18':
+            API_VERS = (1,8)
+            warn('1.8.X API is only partially implemented')
         else:
-            fatal('Unrecognized API version "%s" (only "16" currently allowed)' % api)
+            fatal('Unrecognized API version "%s" (only "16", "18" currently allowed)' % api)
         sys.argv.remove(arg)
     elif arg.find('--debug=') == 0:
         ENABLE_PYREX=True
@@ -144,23 +151,7 @@ try:
 
 except ImportError:
     fatal("Numpy not installed (version >= %s required)" % MIN_NUMPY)
-
-# === Versioning ==============================================================
-
-# 1. Read version from VERSION.txt file into VERSION global
-# 2. Write it to h5py/version.py
-# 3. Copy README into h5py/version.py as docstring
-
-vers_in = open('VERSION.txt', 'r')
-VERSION = vers_in.read().strip()
-vers_out = open(os.path.join(NAME,'version.py'),'w')
-rdfile = open('README.txt','r')
-vers_out.write(AUTO_HDR+'\n')
-vers_out.write('"""\nPackage "h5py" extended information\n\n%s"""\nversion = "%s"\n\n' % (rdfile.read(), VERSION))
-rdfile.close()
-vers_out.close()
-vers_in.close()
-
+        
 # === Setup configuration & Pyrex options =====================================
 
 # Pyrex extension modules
@@ -214,11 +205,15 @@ if ENABLE_PYREX and not PYREX_FORCE_OFF:
 """
 %s
 
+DEF H5PY_VERSION = "%s"
 DEF H5PY_API_MAJ = %d
 DEF H5PY_API_MIN = %d
 DEF H5PY_DEBUG = %d
-DEF H5PY_API = "%d.%d"
-""" % (AUTO_HDR, API_VERS[0], API_VERS[1], DEBUG_LEVEL,API_VERS[0], API_VERS[1])
+
+DEF H5PY_16API = %d
+DEF H5PY_18API = %d
+""" % (AUTO_HDR, VERSION, API_VERS[0], API_VERS[1], DEBUG_LEVEL,
+       1 if API_VERS==(1,6) else 0, 1 if API_VERS==(1,8) else 0)
 
             try:
                 cond_file = open(cond_path,'r')
@@ -315,7 +310,7 @@ class dev(Command):
                 pass
             fnames = [ x+'.dep' for x in pyrex_sources ] + \
                      [ x+'.c' for x in pyrex_sources ] + \
-                     [ 'MANIFEST', os.path.join(pyx_src_path, 'version.py')]
+                     [ 'MANIFEST']
 
             for name in fnames:
                 try:

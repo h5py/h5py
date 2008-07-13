@@ -10,7 +10,7 @@
 # 
 #-
 """
-    Common module for the HDF5 low-level interface library.  
+    Common support and versioning module for the h5py HDF5 interface.
 
     This is an internal module which is designed to set up the library and
     enable HDF5 exception handline.  It also enables debug logging, if the
@@ -18,8 +18,12 @@
 
     Useful things defined here:
     
+      version               String with h5py version (e.g. "0.2.0")
+      version_tuple         3-tuple with h5py version (e.g. (0, 2, 0))
+
       hdf5_version:         String with library version (e.g. "1.6.5")
       hdf5_version_tuple:   3-tuple form of the version (e.g. (1,6,5))
+
       api_version:          String form of the API used (e.g. "1.6")
       api_version_tuple:    2-tuple form of the version (e.g. (1,6))
 
@@ -53,11 +57,18 @@ def get_libversion():
     H5get_libversion(&major, &minor, &release)
 
     return (major, minor, release)
-    
+
+
 hdf5_version_tuple = get_libversion()        
 hdf5_version = "%d.%d.%d" % hdf5_version_tuple
 api_version_tuple = (H5PY_API_MAJ, H5PY_API_MIN)
-api_version = H5PY_API
+api_version = "%d.%d" % api_version_tuple
+
+version = H5PY_VERSION
+version_tuple = []   # no list comprehensions in Pyrex
+for _x in version.split('.'):
+    version_tuple.append(int(_x))
+version_tuple = tuple(version_tuple)
 
 def _close():
     """ Internal function; do not call unless you want to lose all your data.
@@ -87,6 +98,9 @@ cdef class ObjectID:
         is maintained on the Python side, and is set by methods like
         TypeID.lock(), but this is not tracked across copies.  Until HDF5
         provides something like H5Tis_locked(), this will not be fixed.
+
+        The truth value of an ObjectID (i.e. bool(obj_id)) indicates whether
+        the underlying HDF5 identifier is valid.
     """
 
     property _valid:
@@ -94,6 +108,10 @@ cdef class ObjectID:
         """
         def __get__(self):
             return H5Iget_type(self.id) != H5I_BADID
+
+    def __nonzero__(self):
+        """ Truth value for object identifiers (like _valid)"""
+        return H5Iget_type(self.id) != H5I_BADID
 
     def __cinit__(self, hid_t id_):
         """ Object init; simply records the given ID. """

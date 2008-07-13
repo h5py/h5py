@@ -11,8 +11,7 @@
 #-
 
 """
-    Simple command-line browser program, designed to be called by a File
-    instance.
+    Internal module which provides the guts of the File.browse() method
 """
 
 from cmd import Cmd
@@ -24,7 +23,6 @@ import re
 import sys
 
 from utils_hl import hbasename
-
 
 from h5py import h5g
 

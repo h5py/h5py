@@ -37,6 +37,9 @@
     of the h5py low-level library wrapping is available for these objects.
     Each highlevel object carries an identifier object (obj.id), which can be
     used by h5py.h5* functions or methods.
+
+    It is safe to import this module using "from h5py.highlevel import *", but
+    bear in mind the function "open" will shadow the builtin "open" if you do.
 """
 
 import os
@@ -49,13 +52,28 @@ from utils_hl import slicer, hbasename, strhdr, strlist
 from browse import _H5Browser
 
 __all__ = ["HLObject", "File", "Group", "Dataset",
-           "Datatype", "AttributeManager"]
+           "Datatype", "AttributeManager", "open"]
 
 try:
     # For interactive File.browse() capability
     import readline
 except ImportError:
     readline = None
+
+def open(filename, mode='r'):
+    """ Open a file.  Supports the following modes:
+
+         r      Read-only, file must exist
+         w      Create, truncating if already exists
+         w-     Create, failing if already exists
+         a      Open r/w, creating if necessary; don't truncate
+         r+     Read-write, file must exist
+
+        The returned file object supports the Python 2.5 "with" statement.
+        It will close itself at the end of a "with" block, regardless of
+        exceptions raised.
+    """
+    return File(filename, mode)
 
 class HLObject(object):
 
@@ -184,11 +202,11 @@ class Group(HLObject):
 
     def __contains__(self, name):
         """ Test if a member name exists """
-        return self.id.py_exists(name)
+        return name in self.id
 
     def __iter__(self):
         """ Iterate over member names """
-        return self.id.py_iter()
+        return self.id.__iter__()
 
     def iteritems(self):
         """ Iterate over the group members as (name, value) pairs """
@@ -248,7 +266,7 @@ class File(Group):
         File(name, mode='r', noclobber=False)
 
         Created with standard Python syntax File(name, mode).
-        Legal modes: r, r+, w, w+, a  (default 'r')
+        Legal modes: r, r+, w, a  (default 'r')
 
         File objects inherit from Group objects; Group-like methods all
         operate on the HDF5 root group ('/').  Like Python file objects, you
@@ -265,36 +283,30 @@ class File(Group):
     mode = property(lambda self: self._mode,
         doc = "Python mode used to open file")
 
-    _modes = ('r','r+','w','w+','a')
-
     # --- Public interface (File) ---------------------------------------------
 
-    def __init__(self, name, mode='r', noclobber=False):
+    def __init__(self, name, mode='r'):
         """ Create a new file object.  
 
             Valid modes (like Python's file() modes) are: 
             - 'r'   Readonly, file must exist
             - 'r+'  Read/write, file must exist
-            - 'w'   Write, create/truncate file
-            - 'w+'  Read/write, create/truncate file
+            - 'w'   Create file, truncate if exists
+            - 'w-'  Create file, fail if exists
             - 'a'   Read/write, file must exist (='r+')
-
-            If "noclobber" is specified, file truncation (w/w+) will fail if 
-            the file already exists.  Note this is NOT the default.
         """
-        if not mode in self._modes:
-            raise ValueError("Invalid mode; must be one of %s" % ', '.join(self._modes))
-
         plist = h5p.create(h5p.FILE_ACCESS)
         plist.set_fclose_degree(h5f.CLOSE_STRONG)
         if mode == 'r':
             self.fid = h5f.open(name, h5f.ACC_RDONLY, accesslist=plist)
-        elif 'r' in mode or 'a' in mode:
+        elif mode == 'r+' or mode == 'a':
             self.fid = h5f.open(name, h5f.ACC_RDWR, accesslist=plist)
-        elif noclobber:
+        elif mode == 'w-':
             self.fid = h5f.create(name, h5f.ACC_EXCL, accesslist=plist)
-        else:
+        elif mode == 'w':
             self.fid = h5f.create(name, h5f.ACC_TRUNC, accesslist=plist)
+        else:
+            raise ValueError("Invalid mode; must be one of r, r+, w, w-, a")
 
         self.id = self.fid  # So the Group constructor can find it.
         Group.__init__(self, self, '/')
@@ -315,6 +327,13 @@ class File(Group):
         """
         h5f.flush(self.fid)
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self,*args):
+        if self.id._valid:
+            self.close()
+        
     def __str__(self):
         if self.id._valid:
             return 'File "%s", root members: %s' % (self.name, ', '.join(['"%s"' % name for name in self]))
@@ -661,10 +680,11 @@ class Datatype(HLObject):
     dtype = property(lambda self: self.id.dtype,
         doc = "Numpy dtype equivalent for this datatype")
 
-    def __init__(grp, name):
+    def __init__(self, grp, name):
         """ Private constructor; you should not create these.
         """
         self.id = h5t.open(grp.id, name)
+        self._attrs = AttributeManager(self)
 
     def __str__(self):
         if self.id._valid:

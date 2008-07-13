@@ -50,19 +50,20 @@ def get_name(ObjectID obj not None):
     """ (ObjectID obj) => STRING name, or None
 
         Determine (a) name of an HDF5 object.  Because an object has as many
-        names as there are hard links to it, this may not be unique.  If
-        the identifier is invalid or is not associated with a name, returns
-        None.
+        names as there are hard links to it, this may not be unique.
+
+        If the identifier is invalid or is not associated with a name
+        (in the case of transient datatypes, dataspaces, etc), returns None.
     """
     cdef int namelen
     cdef char* name
 
     try:
         namelen = <int>H5Iget_name(obj.id, NULL, 0)
-    except H5Error:  # Later library versions raise an exception here
+    except H5Error:
         return None
 
-    if namelen == 0:
+    if namelen == 0:    # 1.6.5 doesn't raise an exception
         return None
 
     assert namelen > 0
@@ -93,7 +94,7 @@ def inc_ref(ObjectID obj not None):
     H5Iinc_ref(obj.id)
 
 def get_ref(ObjectID obj not None):
-    """ (ObjectID obj)
+    """ (ObjectID obj) => INT
 
         Retrieve the reference count for the given object.
     """

@@ -55,7 +55,7 @@ class TestH5G(unittest.TestCase):
             obj = h5g.open(fid, OBJECTNAME)
             grp = h5g.create(obj, 'New group')
             grp._close()
-            self.assert_(obj.py_exists('New group'))
+            self.assert_('New group' in obj)
 
     def test_link_unlink_move_linkval(self):
 
@@ -74,25 +74,25 @@ class TestH5G(unittest.TestCase):
 
             # local link
             obj.link(TEST_GROUPS[1], NEW_LINK_NAME, h5g.LINK_HARD)
-            self.assert_( obj.py_exists(NEW_LINK_NAME) )
+            self.assert_( NEW_LINK_NAME in obj )
 
             # test local unlink
             obj.unlink(NEW_LINK_NAME)
-            self.assert_(not obj.py_exists(NEW_LINK_NAME))
+            self.assert_(not NEW_LINK_NAME in obj)
 
             # remote link
             rgrp = h5g.open(obj, TEST_GROUPS[0])
             obj.link(TEST_GROUPS[0], NEW_LINK_NAME, h5g.LINK_HARD, rgrp)
-            self.assert_( rgrp.py_exists(NEW_LINK_NAME) )
+            self.assert_( NEW_LINK_NAME in rgrp )
         
             # remote unlink
             rgrp.unlink(NEW_LINK_NAME)
-            self.assert_( not rgrp.py_exists(NEW_LINK_NAME) )
+            self.assert_( not NEW_LINK_NAME in rgrp )
 
             # move
             obj.move( TEST_GROUPS[2], NEW_LINK_NAME)
-            self.assert_(obj.py_exists(NEW_LINK_NAME))
-            self.assert_(not obj.py_exists(TEST_GROUPS[2]))
+            self.assert_(NEW_LINK_NAME in obj)
+            self.assert_(not TEST_GROUPS[2] in obj)
 
 
     def test_get_num_objs(self):
@@ -158,14 +158,14 @@ class TestH5G(unittest.TestCase):
             self.assertEqual(obj.get_comment(TEST_GROUPS[0]), "This is a comment.")
 
 
-    def test_py_exists(self):
+    def test_py_contains(self):
 
-        self.assert_(self.obj.py_exists(TEST_GROUPS[0]))
-        self.assert_(not self.obj.py_exists('Something else'))
+        self.assert_(TEST_GROUPS[0] in self.obj)
+        self.assert_(not 'Something else' in self.obj)
 
     def test_py_iter(self):
         
-        namelist = list(self.obj.py_iter())
+        namelist = list(self.obj)
         self.assertEqual(namelist, TEST_GROUPS)
 
     

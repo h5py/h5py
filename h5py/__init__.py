@@ -19,11 +19,12 @@ __doc__ = \
 
     Version %s
 
-    See the docstring for the "version" module for a longer introduction.
+    HDF5 %s (using %s API)
 """
 
-import utils, h5, h5f, h5g, h5s, h5t, h5d, h5a, h5p, h5z, h5i, highlevel
-import version
+import utils, h5, h5a, h5d, h5f, h5g, h5i, h5p, h5r, h5s, h5t, h5z, highlevel
 
-__doc__ = __doc__ % version.version
+__doc__ = __doc__ % (h5.version, h5.hdf5_version, h5.api_version)
 
+__all__ = ['h5', 'h5f', 'h5g', 'h5s', 'h5t', 'h5d', 'h5a', 'h5p',
+           'h5z', 'h5i', 'highlevel']

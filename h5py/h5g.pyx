@@ -20,6 +20,7 @@ from utils cimport emalloc, efree
 # Runtime imports
 import h5
 from h5 import H5Error
+import h5i
 
 # === Public constants and data structures ====================================
 
@@ -83,6 +84,7 @@ cdef class GroupIter:
         retval = self.grp.get_objname_by_idx(self.idx)
         self.idx = self.idx + 1
         return retval
+
 
 # === Basic group management ==================================================
 
@@ -162,8 +164,10 @@ cdef class GroupID(ObjectID):
         Represents an HDF5 group identifier
 
         Python extensions:
-        py_exists(name, [typecode]):    Determine if a group member exists
-        py_iter():      Return an iterator over member names
+
+        __contains__(name)   Test for group member ("if name in grpid")
+        __iter__             Get an iterator over member names
+        __len__              Number of members in this group; len(grpid) = N
     """
 
     def _close(self):
@@ -349,29 +353,24 @@ cdef class GroupID(ObjectID):
         finally:
             efree(cmnt)
 
-    def py_exists(self, char* name, int typecode=-1):
-        """ (STRING name, INT typecode=-1)
+    # === Special methods =====================================================
 
-            Determine if a group member of the given name and (optional)
-            type is present.  Typecode may be one of 
-                - LINK
-                - GROUP
-                - DATASET
-                - DATATYPE
+    def __contains__(self, char* name):
+        """ (STRING name)
+
+            Determine if a group member of the given name is present
         """
         try:
             info = self.get_objinfo(name)
-            if (typecode == -1) or (info.type == typecode):
-                return True
-            return False
+            return True
         except H5Error:
             return False    
 
-    def py_iter(self):
-        """ () => ITERATOR
-
-            Return an iterator over the names of group members.
-        """
+    def __iter__(self):
+        """ Return an iterator over the names of group members. """
         return GroupIter(self)
 
+    def __len__(self):
+        """ Number of group members """
+        return self.get_num_objs()
 

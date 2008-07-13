@@ -17,15 +17,14 @@
 include "std_defs.pxi"
 from h5 cimport class ObjectID
 
-cdef class DatasetID(ObjectID):
-    pass
-
 from h5t cimport class TypeID, typewrap
 from h5s cimport class SpaceID
 from h5p cimport class PropID, pdefault, propwrap, PropDCID, PropDXID
 from numpy cimport class ndarray
 
 
+cdef class DatasetID(ObjectID):
+    cdef object _dtype
 
 cdef extern from "hdf5.h":
 

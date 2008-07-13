@@ -97,13 +97,17 @@ cdef class DatasetID(ObjectID):
     property dtype:
         """ Numpy-style dtype object representing the dataset type """
         def __get__(self):
+            # Dataset type can't change
             cdef TypeID tid
-            tid = self.get_type()
-            return tid.dtype
+            if self._dtype is None:
+                tid = self.get_type()
+                self._dtype = tid.dtype
+            return self._dtype
 
     property shape:
         """ Numpy-stype shape tuple representing the dataspace """
         def __get__(self):
+            # Shape can change (DatasetID.extend), so don't cache it
             cdef SpaceID sid
             sid = self.get_space()
             return sid.get_simple_extent_dims()
