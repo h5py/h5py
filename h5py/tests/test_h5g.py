@@ -9,32 +9,28 @@
 # $Date$
 # 
 #-
-from __future__ import with_statement
 
-import unittest
-import tempfile
-import os
+from common import TestBase
 
-import h5py
-from h5py import h5f, h5g, h5i
+from h5py import *
 from h5py.h5 import H5Error
 
-from common import HCopy
-
-HDFNAME = os.path.join(os.path.dirname(h5py.__file__), 'tests/data/attributes.hdf5')
+HDFNAME = 'attributes.hdf5'
 OBJECTNAME = 'Group'
 TEST_GROUPS = ['Subgroup1','Subgroup2','Subgroup3']
 NEW_LINK_NAME = 'Link name'
 
-class TestH5G(unittest.TestCase):
+class TestH5G(TestBase):
+
+    HDFNAME = HDFNAME
 
     def setUp(self):
-        self.fid = h5f.open(HDFNAME, h5f.ACC_RDONLY)
+        TestBase.setUp(self)
         self.obj = h5g.open(self.fid, OBJECTNAME)
 
     def tearDown(self):
         self.obj._close()
-        self.fid.close()
+        TestBase.tearDown(self)
 
     def is_grp(self, item):
         return h5i.get_type(item) == h5i.GROUP
@@ -50,49 +46,45 @@ class TestH5G(unittest.TestCase):
 
     def test_create(self):
 
-        with HCopy(HDFNAME) as fid:
+        obj = h5g.open(self.fid, OBJECTNAME)
+        grp = h5g.create(obj, 'New group')
+        grp._close()
+        self.assert_('New group' in obj)
 
-            obj = h5g.open(fid, OBJECTNAME)
-            grp = h5g.create(obj, 'New group')
-            grp._close()
-            self.assert_('New group' in obj)
+    def test_link_A(self):
 
-    def test_link_unlink_move_linkval(self):
+        obj = h5g.open(self.fid, OBJECTNAME)
 
-        with HCopy(HDFNAME) as fid:
+        # symlink
+        obj.link(TEST_GROUPS[1], NEW_LINK_NAME, h5g.LINK_SOFT)
+        self.assertEqual(obj.get_objinfo(NEW_LINK_NAME, follow_link=False).type, h5g.LINK)
+        self.assertEqual(obj.get_linkval(NEW_LINK_NAME), TEST_GROUPS[1])
 
-            obj = h5g.open(fid, OBJECTNAME)
+    def test_link_B(self):
 
-            # symlink
-            obj.link(TEST_GROUPS[1], NEW_LINK_NAME, h5g.LINK_SOFT)
-            self.assertEqual(obj.get_objinfo(NEW_LINK_NAME, follow_link=False).type, h5g.LINK)
-            self.assertEqual(obj.get_linkval(NEW_LINK_NAME), TEST_GROUPS[1])
+        obj = h5g.open(self.fid, OBJECTNAME)
 
-        with HCopy(HDFNAME) as fid:
+        # local link
+        obj.link(TEST_GROUPS[1], NEW_LINK_NAME, h5g.LINK_HARD)
+        self.assert_( NEW_LINK_NAME in obj )
 
-            obj = h5g.open(fid, OBJECTNAME)
+        # test local unlink
+        obj.unlink(NEW_LINK_NAME)
+        self.assert_(not NEW_LINK_NAME in obj)
 
-            # local link
-            obj.link(TEST_GROUPS[1], NEW_LINK_NAME, h5g.LINK_HARD)
-            self.assert_( NEW_LINK_NAME in obj )
+        # remote link
+        rgrp = h5g.open(obj, TEST_GROUPS[0])
+        obj.link(TEST_GROUPS[0], NEW_LINK_NAME, h5g.LINK_HARD, rgrp)
+        self.assert_( NEW_LINK_NAME in rgrp )
+    
+        # remote unlink
+        rgrp.unlink(NEW_LINK_NAME)
+        self.assert_( not NEW_LINK_NAME in rgrp )
 
-            # test local unlink
-            obj.unlink(NEW_LINK_NAME)
-            self.assert_(not NEW_LINK_NAME in obj)
-
-            # remote link
-            rgrp = h5g.open(obj, TEST_GROUPS[0])
-            obj.link(TEST_GROUPS[0], NEW_LINK_NAME, h5g.LINK_HARD, rgrp)
-            self.assert_( NEW_LINK_NAME in rgrp )
-        
-            # remote unlink
-            rgrp.unlink(NEW_LINK_NAME)
-            self.assert_( not NEW_LINK_NAME in rgrp )
-
-            # move
-            obj.move( TEST_GROUPS[2], NEW_LINK_NAME)
-            self.assert_(NEW_LINK_NAME in obj)
-            self.assert_(not TEST_GROUPS[2] in obj)
+        # move
+        obj.move( TEST_GROUPS[2], NEW_LINK_NAME)
+        self.assert_(NEW_LINK_NAME in obj)
+        self.assert_(not TEST_GROUPS[2] in obj)
 
 
     def test_get_num_objs(self):
@@ -150,12 +142,10 @@ class TestH5G(unittest.TestCase):
 
     def test_get_set_comment(self):
 
-        with HCopy(HDFNAME) as fid:
+        obj = h5g.open(self.fid, OBJECTNAME)
 
-            obj = h5g.open(fid, OBJECTNAME)
-
-            obj.set_comment(TEST_GROUPS[0], "This is a comment.")
-            self.assertEqual(obj.get_comment(TEST_GROUPS[0]), "This is a comment.")
+        obj.set_comment(TEST_GROUPS[0], "This is a comment.")
+        self.assertEqual(obj.get_comment(TEST_GROUPS[0]), "This is a comment.")
 
 
     def test_py_contains(self):

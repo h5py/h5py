@@ -10,43 +10,39 @@
 # 
 #-
 
+import unittest
 import tempfile
 import os
+from os.path import join, dirname
 import shutil
 from h5py import h5f, h5p
+import h5py
 
-class HCopy(object):
+DATADIR = join(dirname(h5py.__file__), 'tests/data')
+
+class TestBase(unittest.TestCase):
 
     """
-        Use:
-
-        from __future__ import with_statement
-
-        with HCopy(filename) as fid:
-            fid.frob()
-            obj = h5g.open(fid, whatever)
-            ...
+        Base test for unit test classes which deal with a particular
+        HDF5 file.  These should declare a class-level attribute HDFNAME
+        representing the appropriate file.  This should be a basename; the
+        TestBase class will figure out the correct directory.
     """
-    def __init__(self, filename):
-        self.filename = filename
-        self.tmpname = None
 
-    def __enter__(self):
-        self.tmpname = tempfile.mktemp('.hdf5')
-        shutil.copy(self.filename, self.tmpname)
+    def __init__(self, *args, **kwds):
+        unittest.TestCase.__init__(self, *args, **kwds)
+        self.HDFNAME = join(DATADIR, self.HDFNAME) # resolve absolute location
+
+    def setUp(self):
+        newname = tempfile.mktemp('.hdf5')
+        shutil.copy(self.HDFNAME, newname)
 
         plist = h5p.create(h5p.FILE_ACCESS)
         plist.set_fclose_degree(h5f.CLOSE_STRONG)
-        self.fid = h5f.open(self.tmpname, h5f.ACC_RDWR)
-        return self.fid
+        self.fid = h5f.open(newname, h5f.ACC_RDWR, accesslist=plist)
+        self.fname = newname
 
-    def __exit__(self, *args):
+    def tearDown(self):
         self.fid.close()
-        os.unlink(self.tmpname)
-
-def errstr(arg1, arg2, msg=''):
-    """ Used to mimic assertEqual-style auto-repr, where assertEqual doesn't
-        work (i.e. for Numpy arrays where all() must be used)
-    """
-    return msg+'%s != %s' % (repr(arg1), repr(arg2))
+        os.unlink(self.fname)
 

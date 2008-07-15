@@ -992,7 +992,7 @@ cdef class TypeEnumID(TypeCompositeID):
         cdef long long val
         ptype = 0
 
-        if index < 0:
+        if idx < 0:
             raise ValueError("Index must be non-negative.")
 
         H5Tget_member_value(self.id, idx, &val)

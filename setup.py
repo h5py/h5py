@@ -118,7 +118,7 @@ for arg in sys.argv[:]:
             API_VERS = (1,6)
         elif api == '18':
             API_VERS = (1,8)
-            warn('1.8.X API is only partially implemented')
+            warn('1.8.X API is still under development')
         else:
             fatal('Unrecognized API version "%s" (only "16", "18" currently allowed)' % api)
         sys.argv.remove(arg)

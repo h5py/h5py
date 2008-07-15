@@ -10,26 +10,22 @@
 # 
 #-
 
-import unittest
-import tempfile
+import numpy
 import os
+import tempfile
+from common import TestBase
 
-import h5py
-from h5py import h5f, h5i, h5p
+from h5py import *
 from h5py.h5 import H5Error
 
-HDFNAME = os.path.join(os.path.dirname(h5py.__file__), 'tests/data/attributes.hdf5')
+HDFNAME = 'attributes.hdf5'
 
-class TestH5F(unittest.TestCase):
+class TestH5F(TestBase):
 
-    def setUp(self):
-        self.fid = h5f.open(HDFNAME, h5f.ACC_RDONLY)
-
-    def tearDown(self):
-        self.fid.close()
+    HDFNAME = HDFNAME
 
     def test_open_close(self):
-        fid = h5f.open(HDFNAME, h5f.ACC_RDONLY)
+        fid = h5f.open(self.HDFNAME, h5f.ACC_RDONLY)
         self.assertEqual(h5i.get_type(fid), h5i.FILE)
         fid.close()
         self.assertEqual(h5i.get_type(fid), h5i.BADID)
@@ -63,10 +59,10 @@ class TestH5F(unittest.TestCase):
             except OSError:
                 pass
 
-        self.assert_(h5f.is_hdf5(HDFNAME))
+        self.assert_(h5f.is_hdf5(self.fname))
 
     def test_get_filesize(self):
-        self.assertEqual(self.fid.get_filesize(), os.stat(HDFNAME).st_size)
+        self.assertEqual(self.fid.get_filesize(), os.stat(self.fname).st_size)
 
     def test_get_create_plist(self):
         cplist = self.fid.get_create_plist()
@@ -80,7 +76,7 @@ class TestH5F(unittest.TestCase):
         self.assert_(self.fid.get_freespace() >= 0)
 
     def test_get_name(self):
-        self.assertEqual(h5f.get_name(self.fid), HDFNAME)
+        self.assertEqual(h5f.get_name(self.fid), self.fname)
 
     def test_get_obj_count(self):
         self.assert_(h5f.get_obj_count(self.fid, h5f.OBJ_ALL) >= 0)
@@ -92,7 +88,7 @@ class TestH5F(unittest.TestCase):
         self.assertRaises(H5Error, h5f.get_obj_ids, -1, h5f.OBJ_ALL)
 
     def test_py(self):
-        self.assertEqual(self.fid.name, HDFNAME)
+        self.assertEqual(self.fid.name, self.fname)
 
 
 

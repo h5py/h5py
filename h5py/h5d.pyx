@@ -20,6 +20,7 @@ from h5s cimport H5S_ALL, H5S_UNLIMITED, H5S_SCALAR, H5S_SIMPLE, \
                     H5Sget_simple_extent_ndims, H5Sget_select_npoints
 from numpy cimport import_array, PyArray_DATA
 from utils cimport  check_numpy_read, check_numpy_write, \
+                    require_tuple, \
                     convert_tuple, \
                     emalloc, efree
 
@@ -244,7 +245,8 @@ cdef class DatasetID(ObjectID):
     def get_offset(self):
         """ () => LONG offset
 
-            Get the offset of this dataset in the file, in bytes.
+            Get the offset of this dataset in the file, in bytes, or -1 if
+            it can't be determined.
         """
         return H5Dget_offset(self.id)
 

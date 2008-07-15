@@ -9,20 +9,17 @@
 # $Date$
 # 
 #-
-from __future__ import with_statement
 
-import unittest
 from numpy import array, ndarray, dtype, all, ones
-import os
 
-from common import HCopy, errstr
+from common import TestBase
 
-import h5py
-from h5py import h5, h5a, h5f, h5g, h5i, h5t, h5s
+from h5py import *
 from h5py.h5 import H5Error
 
+# === attributes.hdf5 description ===
 
-HDFNAME = os.path.join(os.path.dirname(h5py.__file__), 'tests/data/attributes.hdf5')
+HDFNAME = 'attributes.hdf5'
 OBJECTNAME = 'Group'
 ATTRIBUTES = {  'String Attribute': ("This is a string.", dtype('S18'), ()),
                 'Integer': (42, dtype('<i4'), ()),
@@ -31,15 +28,17 @@ ATTRIBUTES = {  'String Attribute': ("This is a string.", dtype('S18'), ()),
 ATTRIBUTES_ORDER = ['String Attribute', 'Integer', 'Integer Array', 'Byte']
 NEW_ATTRIBUTES = {'New float': ( 3.14, dtype('<f4'), ()) }
 
-class TestH5A(unittest.TestCase):
+class TestH5A(TestBase):
+
+    HDFNAME = HDFNAME
 
     def setUp(self):
-        self.fid = h5f.open(HDFNAME, h5f.ACC_RDONLY)
+        TestBase.setUp(self)
         self.obj = h5g.open(self.fid, OBJECTNAME)
 
     def tearDown(self):
         self.obj._close()
-        self.fid.close()
+        TestBase.tearDown(self)
 
     def is_attr(self, attr):
         return (h5i.get_type(attr) == h5i.ATTR)
@@ -48,26 +47,25 @@ class TestH5A(unittest.TestCase):
 
     def test_create_write(self):
 
-        with HCopy(HDFNAME) as fid:
-            obj = h5g.open(fid, OBJECTNAME)
-            for name, (value, dt, shape) in NEW_ATTRIBUTES.iteritems():
-                arr_ref = array(value, dtype=dt)
-                arr_fail = ones((15,15), dtype=dt)
+        obj = h5g.open(self.fid, OBJECTNAME)
+        for name, (value, dt, shape) in NEW_ATTRIBUTES.iteritems():
+            arr_ref = array(value, dtype=dt)
+            arr_fail = ones((15,15), dtype=dt)
 
-                space = h5s.create(h5s.SCALAR)
-                htype = h5t.py_create(dt)
+            space = h5s.create(h5s.SCALAR)
+            htype = h5t.py_create(dt)
 
-                attr = h5a.create(obj, name, htype, space)
-                self.assert_(self.is_attr(attr))
-                attr.write(arr_ref)
-                self.assertRaises(ValueError, attr.write, arr_fail)
+            attr = h5a.create(obj, name, htype, space)
+            self.assert_(self.is_attr(attr))
+            attr.write(arr_ref)
+            self.assertRaises(ValueError, attr.write, arr_fail)
 
-                attr = h5a.open_name(obj, name)
-                dt = attr.dtype
-                shape = attr.shape
-                arr_val = ndarray(shape, dtype=dt)
-                attr.read(arr_val)
-                self.assert_(all(arr_val == arr_ref), errstr(arr_val, arr_ref))
+            attr = h5a.open_name(obj, name)
+            dt = attr.dtype
+            shape = attr.shape
+            arr_val = ndarray(shape, dtype=dt)
+            attr.read(arr_val)
+            self.assert_(all(arr_val == arr_ref))
 
     def test_open_idx(self):
         for idx, name in enumerate(ATTRIBUTES_ORDER):
@@ -86,15 +84,15 @@ class TestH5A(unittest.TestCase):
         self.assert_(not self.is_attr(attr))
 
     def test_delete(self):
-        with HCopy(HDFNAME) as fid:
-            obj = h5g.open(fid, OBJECTNAME)
 
-            attr = h5a.open_name(obj, ATTRIBUTES_ORDER[0])
-            self.assert_(self.is_attr(attr))
-            del attr
+        obj = h5g.open(self.fid, OBJECTNAME)
 
-            h5a.delete(obj, ATTRIBUTES_ORDER[0])
-            self.assertRaises(H5Error, h5a.open_name, obj, ATTRIBUTES_ORDER[0])
+        attr = h5a.open_name(obj, ATTRIBUTES_ORDER[0])
+        self.assert_(self.is_attr(attr))
+        del attr
+
+        h5a.delete(obj, ATTRIBUTES_ORDER[0])
+        self.assertRaises(H5Error, h5a.open_name, obj, ATTRIBUTES_ORDER[0])
 
 
     # === Attribute I/O =======================================================
@@ -111,8 +109,7 @@ class TestH5A(unittest.TestCase):
             self.assertEqual(attr.dtype, dt)
 
             attr.read(arr_holder)
-            self.assert_( all(arr_holder == arr_reference),
-                errstr(arr_reference, arr_holder, 'Attr "%s"):\n' % name, ))
+            self.assert_( all(arr_holder == arr_reference) )
 
     # write is done by test_create_write
 

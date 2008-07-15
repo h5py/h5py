@@ -11,10 +11,11 @@
 #-
 
 import unittest
+import tempfile
+import os
 from numpy import dtype
 
-import h5py
-from h5py import h5t, h5i
+from h5py import *
 from h5py.h5 import H5Error
 
 kind_map = {'i': h5t.TypeIntegerID, 'u': h5t.TypeIntegerID, 'f': h5t.TypeFloatID,
@@ -45,6 +46,30 @@ class TestH5T(unittest.TestCase):
         
         self.assertRaises(ValueError, h5t.create, h5t.ARRAY, 4)
     
+    def test_open_commit_committed(self):
+        plist = h5p.create(h5p.FILE_ACCESS)
+        plist.set_fclose_degree(h5f.CLOSE_STRONG)
+        fname = tempfile.mktemp('.hdf5')
+        fid = h5f.create(fname, h5f.ACC_TRUNC, accesslist=plist)
+        try:
+            root = h5g.open(fid, '/')
+            htype = h5t.STD_I32LE.copy()
+            self.assert_(not htype.committed())
+            htype.commit(root, "NamedType")
+            self.assert_(htype.committed())
+            del htype
+            htype = h5t.open(root, "NamedType")
+            self.assert_(htype.equal(h5t.STD_I32LE))
+        finally:
+            fid.close()
+            os.unlink(fname)
+
+    def test_close(self):
+        htype = h5t.STD_I32LE.copy()
+        self.assert_(htype)
+        htype._close()
+        self.assert_(not htype)
+
     def test_copy(self):
 
         for x in simple_types:
@@ -120,7 +145,61 @@ class TestH5T(unittest.TestCase):
         self.assertEqual(htype.get_order(), h5t.ORDER_BE)
         self.assertEqual(htype.get_sign(), h5t.SGN_NONE)
 
-    
+    def test_setget_tag(self):
+        htype = h5t.create(h5t.OPAQUE, 40)
+        htype.set_tag("FOOBAR")
+        self.assertEqual(htype.get_tag(), "FOOBAR")
+        
+    def test_array(self):
+        htype = h5t.array_create(h5t.STD_I32LE,(4,5))
+        self.assertEqual(htype.get_array_ndims(), 2)
+        self.assertEqual(htype.get_array_dims(), (4,5))
+        self.assertEqual(htype.dtype, dtype(('<i4',(4,5))))
+
+    def test_enum(self):
+        names = ("A", "B", "Name3", "Name with space", " 12A-d878dd&%2 0-1!** ")
+        values = (1,2,3.0, -999, 30004.0)
+        valuedict = {}
+        htype = h5t.enum_create(h5t.STD_I32LE)
+
+        for idx, (name, value) in enumerate(zip(names, values)):
+            htype.enum_insert(name, value)
+            valuedict[name] = value
+            self.assertEqual(htype.get_member_value(idx), value)
+
+        for name, value in valuedict.iteritems():
+            self.assertEqual(htype.enum_valueof(name), value)
+            self.assertEqual(htype.enum_nameof(value), name)
+
+        self.assertEqual(htype.get_nmembers(), len(names))
+
+    def test_compound(self):
+        names = ("A", "B", "Name3", "Name with space", " 12A-d878dd&%2 0-1!** ")
+        types = (h5t.STD_I8LE, h5t.IEEE_F32BE, h5t.STD_U16BE, h5t.C_S1.copy(), h5t.FORTRAN_S1.copy())
+        types[3].set_size(8)
+        types[4].set_size(8)
+        classcodes = (h5t.INTEGER, h5t.FLOAT, h5t.INTEGER, h5t.STRING, h5t.STRING)
+        
+        # Align all on 128-bit (16-byte) boundaries
+        offsets = tuple(x*16 for x in xrange(len(names)))
+        total_len = 16*len(names)
+        htype = h5t.create(h5t.COMPOUND, total_len)
+
+        for idx, name in enumerate(names):
+            htype.insert(name, offsets[idx], types[idx])
+        
+        for idx, name in enumerate(names):
+            self.assertEqual(htype.get_member_name(idx), name)
+            self.assertEqual(htype.get_member_class(idx), classcodes[idx])
+            self.assertEqual(htype.get_member_index(name), idx)
+            self.assertEqual(htype.get_member_offset(idx), offsets[idx])
+            self.assert_(htype.get_member_type(idx).equal(types[idx]))
+
+        self.assertEqual(htype.get_size(), total_len)
+        htype.pack()
+        self.assert_(htype.get_size() < total_len)
+        self.assertEqual(htype.get_nmembers(), len(names))
+
     # === Tests for py_create =================================================
 
     def test_py_create_simple(self):

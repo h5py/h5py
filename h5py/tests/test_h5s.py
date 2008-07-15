@@ -12,15 +12,13 @@
 
 import unittest
 
-import h5py
-from h5py import h5s, h5i
+from h5py import *
 from h5py.h5 import H5Error
 
 spaces = [(10,10), (1,1), (1,), ()]
 max_spaces = [(10,10), (3,4), (h5s.UNLIMITED,), ()]
 
 class TestH5S(unittest.TestCase):
-
 
     def test_create_close(self):
         sid = h5s.create(h5s.SCALAR)

@@ -12,8 +12,11 @@
 
 import unittest
 
-import h5py
-from h5py import h5p, h5i
+from h5py import *
+from h5py.h5 import H5Error
+
+HDFNAME = 'attributes.hdf5'
 
 class TestH5P(unittest.TestCase):
     pass
+

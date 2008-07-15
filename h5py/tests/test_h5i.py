@@ -9,26 +9,26 @@
 # $Date$
 # 
 #-
-import unittest
-import os
 
-import h5py
-from h5py import h5f, h5g, h5i, h5t
+from common import TestBase
+
+from h5py import *
 from h5py.h5 import H5Error
 
-HDFNAME = os.path.join(os.path.dirname(h5py.__file__), 'tests/data/attributes.hdf5')
+HDFNAME = 'attributes.hdf5'
 OBJECTNAME = 'Group'
 
-class TestH5I(unittest.TestCase):
+class TestH5I(TestBase):
+
+    HDFNAME = HDFNAME
 
     def setUp(self):
-        self.fid = h5f.open(HDFNAME, h5f.ACC_RDONLY)
+        TestBase.setUp(self)
         self.obj = h5g.open(self.fid, OBJECTNAME)
 
     def tearDown(self):
         self.obj._close()
-        self.fid.close()
-
+        TestBase.tearDown(self)
 
     def test_get_type(self):
         self.assertEqual(h5i.get_type(self.fid), h5i.FILE)
