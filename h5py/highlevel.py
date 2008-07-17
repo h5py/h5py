@@ -38,8 +38,8 @@
     Each highlevel object carries an identifier object (obj.id), which can be
     used by h5py.h5* functions or methods.
 
-    It is safe to import this module using "from h5py.highlevel import *", but
-    bear in mind the function "open" will shadow the builtin "open" if you do.
+    It is safe to import this module using "from h5py.highlevel import *"; it
+    will export only the major classes.
 """
 
 import os
@@ -52,28 +52,13 @@ from utils_hl import slicer, hbasename, strhdr, strlist
 from browse import _H5Browser
 
 __all__ = ["HLObject", "File", "Group", "Dataset",
-           "Datatype", "AttributeManager", "open"]
+           "Datatype", "AttributeManager"]
 
 try:
     # For interactive File.browse() capability
     import readline
 except ImportError:
     readline = None
-
-def open(filename, mode='r'):
-    """ Open a file.  Supports the following modes:
-
-         r      Read-only, file must exist
-         w      Create, truncating if already exists
-         w-     Create, failing if already exists
-         a      Open r/w, creating if necessary; don't truncate
-         r+     Read-write, file must exist
-
-        The returned file object supports the Python 2.5 "with" statement.
-        It will close itself at the end of a "with" block, regardless of
-        exceptions raised.
-    """
-    return File(filename, mode)
 
 class HLObject(object):
 
@@ -266,7 +251,7 @@ class File(Group):
         File(name, mode='r', noclobber=False)
 
         Created with standard Python syntax File(name, mode).
-        Legal modes: r, r+, w, a  (default 'r')
+        Legal modes: r, r+, w, w-, a  (default 'r')
 
         File objects inherit from Group objects; Group-like methods all
         operate on the HDF5 root group ('/').  Like Python file objects, you
@@ -276,6 +261,15 @@ class File(Group):
         to browse the file and import objects into the interactive Python
         session.  If the readline module is available, this includes things
         like command history and tab completion.
+
+        This object supports the Python context manager protocol, when used
+        in a "with" block:
+            with File(...) as f:
+                ... do stuff with f...
+            # end block
+       
+        The file will be closed at the end of the block, regardless of any
+        exceptions raised. 
     """
 
     name = property(lambda self: self._name,
@@ -298,13 +292,13 @@ class File(Group):
         plist = h5p.create(h5p.FILE_ACCESS)
         plist.set_fclose_degree(h5f.CLOSE_STRONG)
         if mode == 'r':
-            self.fid = h5f.open(name, h5f.ACC_RDONLY, accesslist=plist)
+            self.fid = h5f.open(name, h5f.ACC_RDONLY, fapl=plist)
         elif mode == 'r+' or mode == 'a':
-            self.fid = h5f.open(name, h5f.ACC_RDWR, accesslist=plist)
+            self.fid = h5f.open(name, h5f.ACC_RDWR, fapl=plist)
         elif mode == 'w-':
-            self.fid = h5f.create(name, h5f.ACC_EXCL, accesslist=plist)
+            self.fid = h5f.create(name, h5f.ACC_EXCL, fapl=plist)
         elif mode == 'w':
-            self.fid = h5f.create(name, h5f.ACC_TRUNC, accesslist=plist)
+            self.fid = h5f.create(name, h5f.ACC_TRUNC, fapl=plist)
         else:
             raise ValueError("Invalid mode; must be one of r, r+, w, w-, a")
 
@@ -531,26 +525,28 @@ class Dataset(HLObject):
             return arr[names[0]]
         return arr
 
-    def __setitem__(self, args):
+    def __setitem__(self, args, val):
         """ Write to the HDF5 dataset from an Numpy array.  The shape of the
             Numpy array must match the shape of the selection, and the Numpy
             array's datatype must be convertible to the HDF5 datatype.
         """
-        val = args[-1]
-        args = args[0:-1]
 
         start, count, stride, names = slicer(self.shape, args)
         if len(names) != 0:
             raise ValueError("Field name selections are not allowed for write.")
 
         if count != val.shape:
-            raise ValueError("Selection shape (%s) must match target shape (%s)" % (str(count), str(val.shape)))
+            # Allow assignments (1,10) => (10,)
+            if numpy.product(count) != numpy.product(val.shape):
+                raise ValueError("Selection shape (%s) must match target shape (%s)" % (str(count), str(val.shape)))
+            else:
+                val = val.reshape(count)
 
         fspace = self.id.get_space()
         fspace.select_hyperslab(start, count, stride)
         mspace = h5s.create_simple(val.shape)
 
-        self.id.write(mspace, fspace, array(val))
+        self.id.write(mspace, fspace, numpy.array(val))
 
     def __str__(self):
         if self.id._valid:

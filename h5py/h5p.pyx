@@ -459,6 +459,29 @@ cdef class PropDCID(PropInstanceID):
         """
         H5Premove_filter(self.id, <H5Z_filter_t>filter_class)
 
+    def set_fill_time(self, int fill_code):
+        """ (INT fill_code)
+
+            Set the fill time.  Legal values are:
+             h5d.FILL_TIME_ALLOC
+             h5d.FILL_TIME_NEVER
+             h5d.FILL_TIME_IFSET
+        """
+        H5Pset_fill_time(self.id, fill_time)
+
+    def fill_value_defined(self):
+        """ () => INT fill_status
+
+            Determine the status of the dataset fill value.  Return values are:
+              h5d.FILL_VALUE_UNDEFINED
+              h5d.FILL_VALUE_DEFAULT
+              h5d.FILL_VALUE_USER_DEFINED
+        """
+        cdef H5D_fill_value_t val
+        H5Pfill_value_defined(self.id, &val)
+        return <int>val
+
+
 # === File access =============================================================
 
 cdef class PropFAID(PropInstanceID):
@@ -549,7 +572,13 @@ cdef class PropFAID(PropInstanceID):
 
         return (msize, plist)
 
+    def set_fapl_log(self, char* logfile, unsigned int flags, size_t buf_size):
+        """ (STRING logfile, UINT flags, UINT buf_size)
 
+            Enable the use of the logging driver.  See the HDF5 documentation
+            for details.  Flag constants are stored in module h5fd.
+        """
+        H5Pset_fapl_log(self.id, logfile, flags, buf_size)
 
 
 

@@ -97,7 +97,7 @@ class TestH5D(TestBase):
         root = h5g.open(self.fid, '/')
         space = h5s.create_simple((10,20),(15,20))
         htype = h5t.STD_I32LE
-        dset = h5d.create(root, 'NewDataset', htype, space, plist=plist)
+        dset = h5d.create(root, 'NewDataset', htype, space, dcpl=plist)
         self.assertEqual(dset.shape, (10,20))
         dset.extend((15,20))
         self.assertEqual(dset.shape, (15,20))

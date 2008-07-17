@@ -39,7 +39,7 @@ class TestBase(unittest.TestCase):
 
         plist = h5p.create(h5p.FILE_ACCESS)
         plist.set_fclose_degree(h5f.CLOSE_STRONG)
-        self.fid = h5f.open(newname, h5f.ACC_RDWR, accesslist=plist)
+        self.fid = h5f.open(newname, h5f.ACC_RDWR, fapl=plist)
         self.fname = newname
 
     def tearDown(self):

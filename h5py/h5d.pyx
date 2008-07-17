@@ -23,6 +23,7 @@ from utils cimport  check_numpy_read, check_numpy_write, \
                     require_tuple, \
                     convert_tuple, \
                     emalloc, efree
+from h5 cimport HADDR_UNDEF
 
 # Runtime imports
 import h5
@@ -57,17 +58,15 @@ FILL_VALUE_USER_DEFINED = H5D_FILL_VALUE_USER_DEFINED
 # === Basic dataset operations ================================================
 
 def create(ObjectID loc not None, char* name, TypeID tid not None, 
-            SpaceID space not None, PropDCID plist=None):
+            SpaceID space not None, PropDCID dcpl=None):
     """ (ObjectID loc, STRING name, TypeID tid, SpaceID space,
-         PropDCID plist=None ) 
+         PropDCID dcpl=None ) 
         => DatasetID
 
-        Create a new dataset under an HDF5 file or group.  Keyword plist 
+        Create a new dataset under an HDF5 file or group.  Keyword dcpl
         may be a dataset creation property list.
     """
-    cdef hid_t plist_id
-    plist_id = pdefault(plist)
-    return DatasetID(H5Dcreate(loc.id, name, tid.id, space.id, plist_id))
+    return DatasetID(H5Dcreate(loc.id, name, tid.id, space.id, pdefault(dcpl)))
 
 def open(ObjectID loc not None, char* name):
     """ (ObjectID loc, STRING name) => DatasetID
@@ -96,9 +95,9 @@ cdef class DatasetID(ObjectID):
     """
 
     property dtype:
-        """ Numpy-style dtype object representing the dataset type """
+        """ Numpy dtype object representing the dataset type """
         def __get__(self):
-            # Dataset type can't change
+            # Dataset type can't change            
             cdef TypeID tid
             if self._dtype is None:
                 tid = self.get_type()
@@ -106,7 +105,7 @@ cdef class DatasetID(ObjectID):
             return self._dtype
 
     property shape:
-        """ Numpy-stype shape tuple representing the dataspace """
+        """ Numpy-style shape tuple representing the dataspace """
         def __get__(self):
             # Shape can change (DatasetID.extend), so don't cache it
             cdef SpaceID sid
@@ -130,13 +129,13 @@ cdef class DatasetID(ObjectID):
         H5Dclose(self.id)
 
     def read(self, SpaceID mspace not None, SpaceID fspace not None, 
-                   ndarray arr_obj not None, PropDXID plist=None):
+                   ndarray arr_obj not None, PropDXID dxpl=None):
         """ (SpaceID mspace, SpaceID fspace, NDARRAY arr_obj, 
-             PropDXID plist=None)
+             PropDXID dxpl=None)
 
             Read data from an HDF5 dataset into a Numpy array.  For maximum 
             flexibility, you can specify dataspaces for the file and the Numpy
-            object. Keyword plist may be a dataset transfer property list.
+            object. Keyword dxpl may be a dataset transfer property list.
 
             The provided Numpy array must be writable, C-contiguous, and own
             its data.  If this is not the case, ValueError will be raised and 
@@ -149,21 +148,19 @@ cdef class DatasetID(ObjectID):
             large a dataspace.
         """
         cdef TypeID mtype
-        cdef hid_t plist_id
-        plist_id = pdefault(plist)
 
         mtype = h5t.py_create(arr_obj.dtype)
         check_numpy_write(arr_obj, -1)
 
-        H5Dread(self.id, mtype.id, mspace.id, fspace.id, plist_id, PyArray_DATA(arr_obj))
+        H5Dread(self.id, mtype.id, mspace.id, fspace.id, pdefault(dxpl), PyArray_DATA(arr_obj))
 
         
     def write(self, SpaceID mspace not None, SpaceID fspace not None, 
-                    ndarray arr_obj not None, PropDXID plist=None):
+                    ndarray arr_obj not None, PropDXID dxpl=None):
         """ (SpaceID mspace, SpaceID fspace, NDARRAY arr_obj, 
-             PropDXID plist=None)
+             PropDXID dxpl=None)
 
-            Write data from a Numpy array to an HDF5 dataset. Keyword plist may 
+            Write data from a Numpy array to an HDF5 dataset. Keyword dxpl may 
             be a dataset transfer property list.
 
             The provided Numpy array must be C-contiguous, and own its data.  
@@ -171,13 +168,11 @@ cdef class DatasetID(ObjectID):
             will fail.
         """
         cdef TypeID mtype
-        cdef hid_t plist_id
-        plist_id = pdefault(plist)
 
         mtype = h5t.py_create(arr_obj.dtype)
         check_numpy_read(arr_obj, -1)
 
-        H5Dwrite(self.id, mtype.id, mspace.id, fspace.id, plist_id, PyArray_DATA(arr_obj))
+        H5Dwrite(self.id, mtype.id, mspace.id, fspace.id, pdefault(dxpl), PyArray_DATA(arr_obj))
 
     def extend(self, object shape):
         """ (TUPLE shape)
@@ -243,12 +238,18 @@ cdef class DatasetID(ObjectID):
         return propwrap(H5Dget_create_plist(self.id))
 
     def get_offset(self):
-        """ () => LONG offset
+        """ () => LONG offset or None
 
-            Get the offset of this dataset in the file, in bytes, or -1 if
-            it can't be determined.
+            Get the offset of this dataset in the file, in bytes, or None if
+            it doesn't have one.  This is always the case for datasets which
+            use chunked storage, compact datasets, and datasets for which space
+            has not yet been allocated in the file.
         """
-        return H5Dget_offset(self.id)
+        cdef haddr_t offset
+        offset = H5Dget_offset(self.id)
+        if offset == HADDR_UNDEF:
+            return None
+        return offset
 
     def get_storage_size(self):
         """ () => LONG storage_size

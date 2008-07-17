@@ -10,7 +10,9 @@
 # 
 #-
 
-from python cimport PyTuple_Check, PyList_Check, PyErr_SetString
+from python cimport PyTuple_Check, PyList_Check, PyErr_SetString, Py_INCREF
+from numpy cimport ndarray, NPY_WRITEABLE, NPY_ALIGNED, \
+                            NPY_C_CONTIGUOUS, PyArray_FROM_OF
 
 cdef int require_tuple(object tpl, int none_allowed, int size, char* name) except -1:
     # Ensure that tpl is in fact a tuple, or None if none_allowed is nonzero.
@@ -36,7 +38,7 @@ cdef int require_list(object lst, int none_allowed, int size, char* name) except
     # Counterpart of require_tuple, for lists
 
     if (lst is None and none_allowed) or \
-      ( PyList_Check(lst) and (size < 0 or len(lst) == size)):
+      (PyList_Check(lst) and (size < 0 or len(lst) == size)):
         return 1
 
     nmsg = ""
@@ -56,8 +58,6 @@ cdef object pybool(long long val):
     if val:
         return True
     return False
-
-
 
 
 

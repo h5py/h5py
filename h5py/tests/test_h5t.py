@@ -50,7 +50,7 @@ class TestH5T(unittest.TestCase):
         plist = h5p.create(h5p.FILE_ACCESS)
         plist.set_fclose_degree(h5f.CLOSE_STRONG)
         fname = tempfile.mktemp('.hdf5')
-        fid = h5f.create(fname, h5f.ACC_TRUNC, accesslist=plist)
+        fid = h5f.create(fname, h5f.ACC_TRUNC, fapl=plist)
         try:
             root = h5g.open(fid, '/')
             htype = h5t.STD_I32LE.copy()

@@ -61,6 +61,9 @@ cdef extern from "numpy/arrayobject.h":
     NPY_UINT8, NPY_UINT16, NPY_UINT32, NPY_UINT64,
     NPY_FLOAT32, NPY_FLOAT64, NPY_COMPLEX64, NPY_COMPLEX128
 
+  cdef enum:
+    NPY_WRITEABLE, NPY_ALIGNED, NPY_C_CONTIGUOUS
+
   # Classes
   ctypedef extern class numpy.dtype [object PyArray_Descr]:
     cdef int type_num, elsize, alignment
@@ -85,6 +88,8 @@ cdef extern from "numpy/arrayobject.h":
     double imag
 
   # Functions
+  object PyArray_FROM_OF(object arr, int requirements)
+
   object PyArray_GETITEM(object arr, void *itemptr)
   int PyArray_SETITEM(object arr, void *itemptr, object obj)
   dtype PyArray_DescrFromType(int type)

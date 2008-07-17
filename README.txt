@@ -126,8 +126,8 @@ Additional options
  --pyrex-force   Recompile all pyx files, regardless of timestamps.
  --no-pyrex      Don't run Pyrex, no matter what
 
- --hdf5=path     Use alternate HDF5 directory (contains bin, include, lib)
- --api=<n>       Specifies API version.  Only --api=16 is currently allowed.
+ --hdf5=path     Use alternate HDF5 directory (containing bin, include, lib)
+ --api=<n>       Specifies API version.  Only --api=16 is currently useful.
  --debug=<n>     If nonzero, compile in debug mode.  The number is
                  interpreted as a logging-module level number.  Requires
                  Pyrex for recompilation.

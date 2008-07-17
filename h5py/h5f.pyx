@@ -52,21 +52,19 @@ OBJ_LOCAL   = H5F_OBJ_LOCAL
 
 # === File operations =========================================================
 
-def open(char* name, unsigned int flags=H5F_ACC_RDWR, PropFAID accesslist=None):
-    """ (STRING name, UINT flags=ACC_RDWR, PropFAID accesslist=None)
+def open(char* name, unsigned int flags=H5F_ACC_RDWR, PropFAID fapl=None):
+    """ (STRING name, UINT flags=ACC_RDWR, PropFAID fapl=None)
         => FileID
 
         Open an existing HDF5 file.  Keyword "flags" may be ACC_RWDR or
-        ACC_RDONLY.  Accesslist may be a file access property list.
+        ACC_RDONLY.  Keyword fapl may be a file access property list.
     """
-    cdef hid_t plist_id
-    plist_id = pdefault(accesslist)
-    return FileID(H5Fopen(name, flags, plist_id))
+    return FileID(H5Fopen(name, flags, pdefault(fapl)))
 
-def create(char* name, int flags=H5F_ACC_TRUNC, PropFCID createlist=None,
-                                                PropFAID accesslist=None):
-    """ (STRING name, INT flags=ACC_TRUNC, PropFCID createlist=None,
-                                           PropFAID accesslist=None)
+def create(char* name, int flags=H5F_ACC_TRUNC, PropFCID fcpl=None,
+                                                PropFAID fapl=None):
+    """ (STRING name, INT flags=ACC_TRUNC, PropFCID fcpl=None,
+                                           PropFAID fapl=None)
         => FileID
 
         Create a new HDF5 file.  Keyword "flags" may be either:
@@ -76,11 +74,7 @@ def create(char* name, int flags=H5F_ACC_TRUNC, PropFCID createlist=None,
         To keep the behavior in line with that of Python's built-in functions,
         the default is ACC_TRUNC.  Be careful!
     """
-    cdef hid_t create_id
-    cdef hid_t access_id
-    create_id = pdefault(createlist)
-    access_id = pdefault(accesslist)
-    return FileID(H5Fcreate(name, flags, create_id, access_id))
+    return FileID(H5Fcreate(name, flags, pdefault(fcpl), pdefault(fapl)))
 
 def flush(ObjectID obj not None, int scope=H5F_SCOPE_LOCAL):
     """ (ObjectID obj, INT scope=SCOPE_LOCAL)

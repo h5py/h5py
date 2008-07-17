@@ -103,6 +103,17 @@ cdef extern from "hdf5.h":
     H5F_CLOSE_STRONG = 2,
     H5F_CLOSE_DEFAULT = 3
 
+  ctypedef enum H5FD_mem_t:
+    H5FD_MEM_NOLIST	= -1,
+    H5FD_MEM_DEFAULT	= 0,
+    H5FD_MEM_SUPER      = 1,
+    H5FD_MEM_BTREE      = 2,
+    H5FD_MEM_DRAW       = 3,
+    H5FD_MEM_GHEAP      = 4,
+    H5FD_MEM_LHEAP      = 5,
+    H5FD_MEM_OHDR       = 6,
+    H5FD_MEM_NTYPES
+
   # Property list classes
   hid_t H5P_NO_CLASS
   hid_t H5P_FILE_CREATE 
@@ -141,6 +152,8 @@ cdef extern from "hdf5.h":
   herr_t    H5Pset_family_offset ( hid_t fapl_id, hsize_t offset) except *
   herr_t    H5Pget_family_offset ( hid_t fapl_id, hsize_t *offset) except *
   herr_t    H5Pset_fapl_log(hid_t fapl_id, char *logfile, unsigned int flags, size_t buf_size) except *
+  herr_t    H5Pset_fapl_multi(hid_t fapl_id, H5FD_mem_t *memb_map, hid_t *memb_fapl,
+                char **memb_name, haddr_t *memb_addr, hbool_t relax) 
 
   # Dataset creation properties
   herr_t        H5Pset_layout(hid_t plist, int layout) except *
