@@ -11,8 +11,6 @@
 #-
 
 from python cimport PyTuple_Check, PyList_Check, PyErr_SetString, Py_INCREF
-from numpy cimport ndarray, NPY_WRITEABLE, NPY_ALIGNED, \
-                            NPY_C_CONTIGUOUS, PyArray_FROM_OF
 
 cdef int require_tuple(object tpl, int none_allowed, int size, char* name) except -1:
     # Ensure that tpl is in fact a tuple, or None if none_allowed is nonzero.

@@ -20,6 +20,9 @@ import h5py
 
 DATADIR = join(dirname(h5py.__file__), 'tests/data')
 
+def getfullpath(name):
+    return join(DATADIR, name)
+
 class TestBase(unittest.TestCase):
 
     """
@@ -31,7 +34,7 @@ class TestBase(unittest.TestCase):
 
     def __init__(self, *args, **kwds):
         unittest.TestCase.__init__(self, *args, **kwds)
-        self.HDFNAME = join(DATADIR, self.HDFNAME) # resolve absolute location
+        self.HDFNAME = getfullpath(self.HDFNAME) # resolve absolute location
 
     def setUp(self):
         newname = tempfile.mktemp('.hdf5')

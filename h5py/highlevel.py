@@ -80,6 +80,9 @@ class HLObject(object):
     def __repr__(self):
         return str(self)
 
+    def __nonzero__(self):
+        return self.id.__nonzero__()
+
 class Group(HLObject):
 
     """ Represents an HDF5 group.
@@ -147,7 +150,7 @@ class Group(HLObject):
             This limitation is intentional, and may be lifted in the future.
         """
         if isinstance(obj, Group) or isinstance(obj, Dataset) or isinstance(obj, Datatype):
-            self.id.link(name, h5i.get_name(obj.id), link_type=h5g.LINK_HARD)
+            self.id.link(h5i.get_name(obj.id), name, link_type=h5g.LINK_HARD)
 
         elif isinstance(obj, numpy.dtype):
             htype = h5t.py_create(obj)
@@ -166,8 +169,7 @@ class Group(HLObject):
         info = self.id.get_objinfo(name)
 
         if info.type == h5g.DATASET:
-            dset = Dataset(self, name)
-            return dset
+            return Dataset(self, name)
 
         elif info.type == h5g.GROUP:
             return Group(self, name)
@@ -205,15 +207,15 @@ class Group(HLObject):
         """
         return Group(self, name, create=True)
 
-    def create_dataset(self, name, **kwds):
-        """ Create and return a dataset.  Keyword arguments:
+    def create_dataset(self, name, *args, **kwds):
+        """ Create and return a dataset.  Arguments, in order:
 
             You must specify either "data", or both "type" and "shape".
              data:     Numpy array from which the dataset is constructed
-             type:     Numpy dtype giving the datatype
+             dtype:    Numpy dtype giving the datatype
              shape:    Numpy-style shape tuple giving the dataspace
 
-            Additional options (* is default):
+            Additional keyword options (* is default):
              chunks:        Tuple of chunk dimensions or None*
              compression:   DEFLATE (gzip) compression level, int or None*
              shuffle:       Use the shuffle filter (needs compression) T/F*
@@ -248,10 +250,9 @@ class File(Group):
 
     """ Represents an HDF5 file on disk.
 
-        File(name, mode='r', noclobber=False)
+        File(name, mode='a')
 
-        Created with standard Python syntax File(name, mode).
-        Legal modes: r, r+, w, w-, a  (default 'r')
+        Legal modes: r, r+, w, w-, a (default)
 
         File objects inherit from Group objects; Group-like methods all
         operate on the HDF5 root group ('/').  Like Python file objects, you
@@ -264,6 +265,7 @@ class File(Group):
 
         This object supports the Python context manager protocol, when used
         in a "with" block:
+
             with File(...) as f:
                 ... do stuff with f...
             # end block
@@ -279,26 +281,31 @@ class File(Group):
 
     # --- Public interface (File) ---------------------------------------------
 
-    def __init__(self, name, mode='r'):
+    def __init__(self, name, mode='a'):
         """ Create a new file object.  
 
             Valid modes (like Python's file() modes) are: 
-            - 'r'   Readonly, file must exist
-            - 'r+'  Read/write, file must exist
-            - 'w'   Create file, truncate if exists
-            - 'w-'  Create file, fail if exists
-            - 'a'   Read/write, file must exist (='r+')
+            - r   Readonly, file must exist
+            - r+  Read/write, file must exist
+            - w   Create file, truncate if exists
+            - w-  Create file, fail if exists
+            - a   Read/write if exists, create otherwise (default)
         """
         plist = h5p.create(h5p.FILE_ACCESS)
         plist.set_fclose_degree(h5f.CLOSE_STRONG)
         if mode == 'r':
             self.fid = h5f.open(name, h5f.ACC_RDONLY, fapl=plist)
-        elif mode == 'r+' or mode == 'a':
+        elif mode == 'r+':
             self.fid = h5f.open(name, h5f.ACC_RDWR, fapl=plist)
         elif mode == 'w-':
             self.fid = h5f.create(name, h5f.ACC_EXCL, fapl=plist)
         elif mode == 'w':
             self.fid = h5f.create(name, h5f.ACC_TRUNC, fapl=plist)
+        elif mode == 'a':
+            if not os.path.exists(name):
+                self.fid = h5f.create(name, h5f.ACC_EXCL, fapl=plist)
+            else:
+                self.fid = h5f.open(name, h5f.ACC_RDWR, fapl=plist)
         else:
             raise ValueError("Invalid mode; must be one of r, r+, w, w-, a")
 
@@ -435,7 +442,7 @@ class Dataset(HLObject):
                 raise ValueError('You cannot specify keywords when opening a dataset.')
             self.id = h5d.open(group.id, name)
         else:
-            if ((data is None) and not (shape and dtype)) or \
+            if ((data is None) and (shape is None and dtype is None)) or \
                ((data is not None) and (shape or dtype)):
                 raise ValueError("Either data or both shape and dtype must be specified.")
             
@@ -522,8 +529,8 @@ class Dataset(HLObject):
 
         if len(names) == 1:
             # Match Numpy convention for recarray indexing
-            return arr[names[0]]
-        return arr
+            return arr[names[0]].squeeze()
+        return arr.squeeze()
 
     def __setitem__(self, args, val):
         """ Write to the HDF5 dataset from an Numpy array.  The shape of the
@@ -538,7 +545,7 @@ class Dataset(HLObject):
         if count != val.shape:
             # Allow assignments (1,10) => (10,)
             if numpy.product(count) != numpy.product(val.shape):
-                raise ValueError("Selection shape (%s) must match target shape (%s)" % (str(count), str(val.shape)))
+                raise ValueError("Selection (%s) must be compatible with target (%s)" % (str(count), str(val.shape)))
             else:
                 val = val.reshape(count)
 

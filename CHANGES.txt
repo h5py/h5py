@@ -1,0 +1,36 @@
+Version 0.2.1
+=============
+
+General:
+--------
+  - Moved version info into h5py.h5 module
+  - Stub added for 1.8 API conditional compilation
+  - Rewrote unit test framework to correctly use unittest methods
+  - Remove VERSION.txt, add CHANGES.txt
+
+Low-level:
+----------
+  - Normalize keyword naming for property list arguments
+  - Change h5g.GroupID Python extensions to special methods
+  - Additional property list methods
+  - New module h5fd for constants used by property lists
+
+High-level
+----------
+  - Fix Dataset __setitem__ goof (thanks D. Brooks)
+  - Fix issues with singlet dimensions
+  - Fix broken hardlinking in Group __setitem__
+  - Fix off-by-one bug in extended slicing
+  - Add context manager methods to File object (for "with" statement)
+  - Replace File "noclobber" keyword with new mode "w-"
+  - Change default File mode to "a"
+  - Missing self argument to Datatype constructor
+  - Add unit tests for highlevel module
+
+Version 0.2.0
+=============
+
+- Switch to object-based identifiers
+- Officially support compilation with HDF5 1.8.X
+- Redesign high-level component
+- Add more Numpy-like slicing behavior

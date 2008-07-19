@@ -50,7 +50,7 @@
 # === Global constants ========================================================
 
 NAME = 'h5py'
-VERSION = '0.2.0'
+VERSION = '0.2.1'
 
 MIN_PYREX = '0.9.8.4'  # for compile_multiple
 MIN_NUMPY = '1.0.3'
@@ -71,8 +71,6 @@ from distutils.extension import Extension
 import os
 import sys
 import shutil
-import subprocess
-import re
 
 # Distutils tries to use hard links when building source distributions, which 
 # fails under a wide variety of network filesystems under Linux.

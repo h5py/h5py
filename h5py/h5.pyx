@@ -110,8 +110,8 @@ cdef class ObjectID:
             return H5Iget_type(self.id) != H5I_BADID
 
     def __nonzero__(self):
-        """ Truth value for object identifiers (like _valid)"""
-        return H5Iget_type(self.id) != H5I_BADID
+        """ Truth value for object identifiers (like _valid) """
+        return self._valid
 
     def __cinit__(self, hid_t id_):
         """ Object init; simply records the given ID. """

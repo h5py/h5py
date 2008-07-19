@@ -3,6 +3,7 @@
     Utility functions for high-level modules.
 """
 from posixpath import basename, normpath
+import numpy
 
 def hbasename(name):
     """ Basename function with more readable handling of trailing slashes"""
@@ -97,6 +98,8 @@ def slicer(shape, args):
                 if arg.stop < 0:
                     raise ValueError("Negative dimensions are not allowed")
                 cc = (arg.stop-ss)/st
+                if ((arg.stop-ss) % st) != 0:
+                    cc += 1   # Be careful with integer division!
             if cc == 0:
                 raise ValueError("Zero-length selections are not allowed")
 

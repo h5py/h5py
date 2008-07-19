@@ -5,7 +5,7 @@ Copyright (c) 2008 Andrew Collette
 * http://h5py.alfven.org
 * mail: "h5py" at the domain "alfven dot org"
 
-**Version 0.2.0**
+**Version 0.2.1**
 
 * `Introduction`_
 * `Features`_
