@@ -106,6 +106,9 @@ class Group(HLObject):
         the AttributeManager class.
     """
 
+    names = property(lambda self: tuple(self),
+        doc = "Tuple of group member names")
+
     def __init__(self, parent_object, name, create=False):
         """ Create a new Group object, from a parent object and a name.
 
@@ -208,20 +211,23 @@ class Group(HLObject):
         return Group(self, name, create=True)
 
     def create_dataset(self, name, *args, **kwds):
-        """ Create and return a dataset.  Arguments, in order:
+        """ Create and return a new dataset, attached to this group.
 
-            You must specify either "data", or both "type" and "shape".
-             data:     Numpy array from which the dataset is constructed
-             dtype:    Numpy dtype giving the datatype
-             shape:    Numpy-style shape tuple giving the dataspace
+            create_dataset(name, shape, [dtype=<Numpy dtype>], **kwds)
+            create_dataset(name, data=<Numpy array>, **kwds)
 
-            Additional keyword options (* is default):
-             chunks:        Tuple of chunk dimensions or None*
-             compression:   DEFLATE (gzip) compression level, int or None*
-             shuffle:       Use the shuffle filter (needs compression) T/F*
-             fletcher32:    Enable Fletcher32 error detection T/F*
+            If "dtype" is not specified, the default is single-precision
+            floating point, with native byte order ("=f4").
+
+            Creating a dataset will fail if another of the same name already 
+            exists. Additional keywords are:
+
+            chunks:        Tuple of chunk dimensions or None*
+            compression:   DEFLATE (gzip) compression level, int or None*
+            shuffle:       Use the shuffle filter? (requires compression) T/F*
+            fletcher32:    Enable Fletcher32 error detection? T/F*
         """
-        return Dataset(self, name, **kwds)
+        return Dataset(self, name, *args, **kwds)
 
     def desc(self):
         """ Extended (multi-line) description of this group, as a string.
@@ -241,9 +247,10 @@ class Group(HLObject):
         return outstr
         
     def __str__(self):
-        if self.id._valid:
+        try:
             return 'Group "%s" (%d members)' % (hbasename(self.name), len(self))
-        return "Closed group"
+        except:
+            return "Invalid group"
 
 
 class File(Group):
@@ -336,9 +343,10 @@ class File(Group):
             self.close()
         
     def __str__(self):
-        if self.id._valid:
+        try:
             return 'File "%s", root members: %s' % (self.name, ', '.join(['"%s"' % name for name in self]))
-        return "Closed file (%s)" % self.name
+        except:
+            return "Invalid file"
 
     def browse(self, dict=None):
         """ Open a command line shell to browse this file. If dict is not
@@ -408,54 +416,61 @@ class Dataset(HLObject):
         doc = "The entire dataset, as an array or scalar depending on the shape.")
 
     def __init__(self, group, name,
-                    data=None, dtype=None, shape=None, 
+                    shape=None, dtype=None, data=None,
                     chunks=None, compression=None, shuffle=False, fletcher32=False):
         """ Construct a Dataset object.  You might find it easier to use the
             Group methods: Group["name"] or Group.create_dataset().
 
             There are two modes of operation for this constructor:
 
-            1.  Open an existing dataset
-                If you only supply the required parameters "group" and "name",
-                the object will attempt to open an existing HDF5 dataset.
+            1.  Open an existing dataset:
+                  Dataset(group, name)
 
-            2.  Create a dataset
-                You supply "group", "name" and either:
-                - Keyword "data"; a Numpy array from which the shape, dtype and
-                    initial contents will be determined.
-                - Both "dtype" (Numpy dtype object) and "shape" (tuple of 
-                    dimensions).
+            2.  Create a dataset:
+                  Dataset(group, name, shape, [dtype=<Numpy dtype>], **kwds)
+                or
+                  Dataset(group, name, data=<Numpy array>, **kwds)
+
+                  If "dtype" is not specified, the default is single-precision
+                  floating point, with native byte order ("=f4").
 
             Creating a dataset will fail if another of the same name already 
             exists.  Also, chunks/compression/shuffle/fletcher32 may only be
             specified when creating a dataset.
 
-            Creation keywords (* is default):
+            Creation keywords (* is default); "chunks" is required for all:
 
             chunks:        Tuple of chunk dimensions or None*
             compression:   DEFLATE (gzip) compression level, int or None*
             shuffle:       Use the shuffle filter? (requires compression) T/F*
             fletcher32:    Enable Fletcher32 error detection? T/F*
         """
-        if data is None and dtype is None and shape is None:
+        if data is None and shape is None:
             if any((data,dtype,shape,chunks,compression,shuffle,fletcher32)):
                 raise ValueError('You cannot specify keywords when opening a dataset.')
             self.id = h5d.open(group.id, name)
         else:
-            if ((data is None) and (shape is None and dtype is None)) or \
-               ((data is not None) and (shape or dtype)):
-                raise ValueError("Either data or both shape and dtype must be specified.")
+            if ((data is None) and (shape is None)) or \
+               ((data is not None) and (shape is not None)):
+                raise ValueError("*Either* data *or* the shape must be specified.")
             
             if data is not None:
                 shape = data.shape
                 dtype = data.dtype
+            else:
+                if dtype is None:
+                    dtype = "=f4"
+            
+            dtype = numpy.dtype(dtype)
 
             plist = h5p.create(h5p.DATASET_CREATE)
             if chunks:
-                plist.set_chunks(chunks)
+                plist.set_chunk(chunks)
             if shuffle:
                 plist.set_shuffle()
-            if compression:
+            if compression is not None:
+                if compression is True:  # prevent accidental abuse
+                    compression = 6
                 plist.set_deflate(compression)
             if fletcher32:
                 plist.set_fletcher32()
@@ -542,6 +557,8 @@ class Dataset(HLObject):
         if len(names) != 0:
             raise ValueError("Field name selections are not allowed for write.")
 
+        val = numpy.array(val, dtype=self.dtype)
+
         if count != val.shape:
             # Allow assignments (1,10) => (10,)
             if numpy.product(count) != numpy.product(val.shape):
@@ -556,10 +573,11 @@ class Dataset(HLObject):
         self.id.write(mspace, fspace, numpy.array(val))
 
     def __str__(self):
-        if self.id._valid:
+        try:
             return 'Dataset "%s": %s %s' % (hbasename(self.name),
                     str(self.shape), repr(self.dtype))
-        return "Closed dataset"
+        except:
+            return "Invalid dataset"
 
 class AttributeManager(object):
 
@@ -585,6 +603,9 @@ class AttributeManager(object):
         can lose data if you try to assign an object which h5py doesn't
         understand.
     """
+
+    names = property(lambda self: tuple(self),
+        doc = "Tuple of attribute names")
 
     def __init__(self, parent):
         """ Private constructor; you should not create these.
@@ -649,16 +670,15 @@ class AttributeManager(object):
         return h5a.py_exists(self.id, name)
 
     def __str__(self):
-        if self.id._valid:
+        try:
             rstr = 'Attributes of "%s": ' % hbasename(h5i.get_name(self.id))
             if len(self) == 0:
                 rstr += '(none)'
             else:
                 rstr += ', '.join(['"%s"' % x for x in self])
-        else:
-            rstr = "Attributes of closed object."
-
-        return rstr
+            return rstr
+        except:
+            return "Invalid attributes object"
 
     def __repr__(self):
         return str(self)
@@ -690,9 +710,10 @@ class Datatype(HLObject):
         self._attrs = AttributeManager(self)
 
     def __str__(self):
-        if self.id._valid:
+        try:
             return "Named datatype object (%s)" % str(self.dtype)
-        return "Closed datatype object"
+        except:
+            return "Invalid datatype object"
 
 
 

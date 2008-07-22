@@ -1,15 +1,31 @@
+Version 0.2.2
+=============
+
+Low-level
+---------
+  - Fix segfault related to H5Pget_filter_by_idx
+
+High-level
+----------
+  - Fix Dataset single-value indexing
+  - Fix chunk values not working for Dataset creation
+  - Rearrange Dataset __init__ keywords to better match Numpy convention
+  - Add unit tests for extended Dataset options
+  - Catch all exceptions in highlevel __str__ methods
+  - Add names property for Group, AttributeManager objects
+
 Version 0.2.1
 =============
 
-General:
---------
+General
+-------
   - Moved version info into h5py.h5 module
   - Stub added for 1.8 API conditional compilation
   - Rewrote unit test framework to correctly use unittest methods
   - Remove VERSION.txt, add CHANGES.txt
 
-Low-level:
-----------
+Low-level
+---------
   - Normalize keyword naming for property list arguments
   - Change h5g.GroupID Python extensions to special methods
   - Additional property list methods

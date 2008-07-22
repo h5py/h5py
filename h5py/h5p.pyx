@@ -414,7 +414,8 @@ cdef class PropDCID(PropInstanceID):
         if filter_idx < 0:
             raise ValueError("Filter index must be a non-negative integer")
 
-        filter_code = <int>H5Pget_filter(self.id, filter_idx, &flags, &nelements, cd_values, 256, name)
+        filter_code = <int>H5Pget_filter(self.id, filter_idx, &flags,
+                                         &nelements, cd_values, 256, name)
         name[256] = c'\0'  # in case it's > 256 chars
 
         vlist = []
@@ -423,11 +424,25 @@ cdef class PropDCID(PropInstanceID):
 
         return (filter_code, flags, tuple(vlist), name)
 
+    def _has_filter(self, int filter_code):
+        """ (INT filter_code)
+
+            Slow & stupid method to determine if a filter is used in this
+            property list.  Used because the HDF5 function H5Pget_filter_by_id
+            is broken.
+        """
+        cdef int nfilters
+        nfilters = self.get_nfilters()
+        for i from 0<=i<nfilters:
+            if self.get_filter(i)[0] == filter_code:
+                return True
+        return False
+
     def get_filter_by_id(self, int filter_code):
-        """ (INT filter_code) => TUPLE filter_info
+        """ (INT filter_code) => TUPLE filter_info or None
 
             Get information about a filter, identified by its code (one
-            of h5z.FILTER_*)
+            of h5z.FILTER_*).  If the filter doesn't exist, returns None.
 
             Tuple entries are:
             0: UINT flags (h5z.FLAG_*)
@@ -439,11 +454,18 @@ cdef class PropDCID(PropInstanceID):
         cdef size_t nelements
         cdef unsigned int cd_values[16]
         cdef char name[257]
+        cdef herr_t retval
         cdef int i
         nelements = 16 # HDF5 library actually complains if this is too big.
 
-        H5Pget_filter_by_id(self.id, <H5Z_filter_t>filter_code, &flags, &nelements, cd_values, 256, name)
-        name[256] = c'\0'  # in case it's > 256 chars
+        if not self._has_filter(filter_code):
+            return None
+
+        retval = H5Pget_filter_by_id(self.id, <H5Z_filter_t>filter_code,
+                                     &flags, &nelements, cd_values, 256, name)
+        assert nelements <= 16
+
+        name[256] = c'\0'  # In case HDF5 doesn't terminate it properly
 
         vlist = []
         for i from 0<=i<nelements:

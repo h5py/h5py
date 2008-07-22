@@ -53,13 +53,13 @@ def slicer(shape, args):
     if len(slices) == 0:
         slices = [Ellipsis]
 
+    # Hack to allow Numpy-style row indexing
+    if len(slices) == 1 and slices[0] != Ellipsis:
+        slices.append(Ellipsis)
+
     start = []
     count = []
     stride = []
-
-    # Hack to allow Numpy-style row indexing
-    if len(slices) == 1 and slices[0] != Ellipsis:
-        args.append(Ellipsis)
 
     # Expand integers and ellipsis arguments to slices
     for dim, arg in enumerate(slices):

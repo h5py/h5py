@@ -36,12 +36,10 @@ TYPES1 = \
 
 TYPES2 = ["|S1", "|S2", "|S33", "|V1", "|V2", "|V33"]
 
-TYPES3 = [[(x, numpy.dtype(x)) for x in TYPES1]]
 
-TYPES = TYPES1 + TYPES2 + TYPES3
+TYPES = TYPES1 + TYPES2
 
 SHAPES = [(), (1,), (10,5), (1,10), (10,1), (100,1,100), (51,2,1025)]
-
 
  
 class TestFile(unittest.TestCase):
@@ -165,11 +163,14 @@ class TestDataset(unittest.TestCase):
         self.f.close()
         os.unlink(self.fname)
 
-    def test_Dataset_create_simple(self):
+    def test_Dataset_create(self):
         
         print ''
 
-        for shape in SHAPES:
+        shapes = [(), (1,), (10,5), (1,10), (10,1), (100,1,100), (51,2,1025)]
+        chunks = [None, (1,), (10,1), (1,1),  (1,1),  (50,1,100), (51,2,25)]
+
+        for shape, chunk in zip(shapes, chunks):
             for dt in TYPES:
                 print "    Creating %.20s %.40s" % (shape, dt)
                 dt = numpy.dtype(dt)
@@ -177,6 +178,16 @@ class TestDataset(unittest.TestCase):
                 self.assertEqual(d.shape, shape)
                 self.assertEqual(d.dtype, dt)
                 del self.f["NewDataset"]
+
+                if chunk is not None:
+                    print "        With chunk %s" % (chunk,)
+                    d = Dataset(self.f, "NewDataset", dtype=dt, shape=shape,
+                                chunks=chunk, shuffle=True, compression=6,
+                                fletcher32=True)
+                    self.assertEqual(d.shape, shape)
+                    self.assertEqual(d.dtype, dt)
+                    del self.f["NewDataset"]
+             
                 if 'V' not in dt.kind:
                     srcarr = numpy.ones(shape, dtype=dt)
                     d = Dataset(self.f, "NewDataset", data=srcarr)
@@ -184,7 +195,7 @@ class TestDataset(unittest.TestCase):
                     self.assertEqual(d.dtype, dt)
                     self.assert_(numpy.all(d.value == srcarr))
                     del self.f["NewDataset"]               
-            
+
     def test_Dataset_slicing(self):
 
         print ''
@@ -194,7 +205,7 @@ class TestDataset(unittest.TestCase):
         slices += [ s[9,9,49], s[9,:,49], s[9,:,:] ]
         slices += [ s[0, ..., 49], s[...], s[..., 49], s[9,...] ]
         slices += [ s[0:7:2,0:9:3,15:43:5], s[2:8:2,...] ]
-
+        slices += [ s[0], s[1], s[9], s[:] ] # Numpy convention
 
         for dt in TYPES1:
 

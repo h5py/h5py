@@ -177,7 +177,7 @@ cdef extern from "hdf5.h":
                               unsigned int *cd_values, size_t namelen, char name[]  ) except *
   herr_t        H5Pget_filter_by_id( hid_t plist_id, H5Z_filter_t filter, 
                                      unsigned int *flags, size_t *cd_nelmts, 
-                                     unsigned int cd_values[], size_t namelen, char name[]  ) except *
+                                     unsigned int cd_values[], size_t namelen, char name[]) except *
   herr_t        H5Pmodify_filter(hid_t plist, H5Z_filter_t filter, unsigned int flags,
                                  size_t cd_nelmts, unsigned int cd_values[]  ) except *
   herr_t        H5Premove_filter(hid_t plist, H5Z_filter_t filter  ) except *
