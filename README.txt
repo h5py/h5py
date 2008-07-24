@@ -5,11 +5,10 @@ Copyright (c) 2008 Andrew Collette
 * http://h5py.alfven.org
 * mail: "h5py" at the domain "alfven dot org"
 
-**Version 0.2.1**
+**Version 0.2.2**
 
 * `Introduction`_
 * `Features`_
-* `Installation`_
 
 Introduction
 ============
@@ -86,51 +85,6 @@ Low-Level
     - The majority of the HDF5 C-API documentation is still valid for the
       h5py interface
 
-Installation
-============
-
-The h5py package is designed to be installed from source.  You will need
-Python and a C compiler, for distutils to build the extensions.  Pyrex_ is
-not required unless you want to change compile-time options, like the
-debugging level.
-
-It's strongly recommended you use the versions of these packages provided
-by your operating system's package manager/finder.  In particular, HDF5 can
-be painful to install manually.
-
-Requires
---------
-- Unix-like environment (created/tested on 32-bit Intel linux)
-- Python with headers for development ("python-dev")
-- Numpy_ 1.0.3 or higher
-- HDF5_ 1.6.5 or higher (1.8 support experimental)
-- A working compiler for distutils
-- (Optionally) Pyrex_ 0.9.8.4 or higher
-
-.. _Numpy: http://numpy.scipy.org/
-.. _HDF5: http://hdf.ncsa.uiuc.edu/
-.. _Pyrex: http://www.cosc.canterbury.ac.nz/greg.ewing/python/Pyrex/
-
-Procedure
----------
-1.  Unpack the tarball and cd to the resulting directory
-2.  Run ``python setup.py build`` to build the package
-3.  Run ``python setup.py test`` to run unit tests (optional)
-4.  Run ``sudo python setup.py install`` to install into your main Python
-    package directory.
-
-Additional options
-------------------
- --pyrex         Have Pyrex recompile changed pyx files.
- --pyrex-only    Have Pyrex recompile changed pyx files, and stop.
- --pyrex-force   Recompile all pyx files, regardless of timestamps.
- --no-pyrex      Don't run Pyrex, no matter what
-
- --hdf5=path     Use alternate HDF5 directory (containing bin, include, lib)
- --api=<n>       Specifies API version.  Only --api=16 is currently useful.
- --debug=<n>     If nonzero, compile in debug mode.  The number is
-                 interpreted as a logging-module level number.  Requires
-                 Pyrex for recompilation.
 
 Bugs
 ----

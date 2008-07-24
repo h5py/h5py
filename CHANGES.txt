@@ -1,12 +1,7 @@
 Version 0.2.2
 =============
 
-Low-level
----------
   - Fix segfault related to H5Pget_filter_by_idx
-
-High-level
-----------
   - Fix Dataset single-value indexing
   - Fix chunk values not working for Dataset creation
   - Rearrange Dataset __init__ keywords to better match Numpy convention

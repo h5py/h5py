@@ -50,7 +50,7 @@
 # === Global constants ========================================================
 
 NAME = 'h5py'
-VERSION = '0.2.1'
+VERSION = '0.2.2'
 
 MIN_PYREX = '0.9.8.4'  # for compile_multiple
 MIN_NUMPY = '1.0.3'
@@ -74,7 +74,8 @@ import shutil
 
 # Distutils tries to use hard links when building source distributions, which 
 # fails under a wide variety of network filesystems under Linux.
-delattr(os, 'link') # goodbye!
+if hasattr(os, 'link'):
+    delattr(os, 'link') # goodbye!
 
 def fatal(instring, code=1):
     print >> sys.stderr, "Fatal: "+instring
