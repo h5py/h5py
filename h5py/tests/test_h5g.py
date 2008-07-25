@@ -57,7 +57,7 @@ class TestH5G(TestBase):
 
         # symlink
         obj.link(TEST_GROUPS[1], NEW_LINK_NAME, h5g.LINK_SOFT)
-        self.assertEqual(obj.get_objinfo(NEW_LINK_NAME, follow_link=False).type, h5g.LINK)
+        self.assertEqual(h5g.get_objinfo(obj, NEW_LINK_NAME, follow_link=False).type, h5g.LINK)
         self.assertEqual(obj.get_linkval(NEW_LINK_NAME), TEST_GROUPS[1])
 
     def test_link_B(self):
@@ -101,7 +101,7 @@ class TestH5G(TestBase):
 
     def test_get_objinfo(self):
 
-        retval = self.obj.get_objinfo('.')
+        retval = h5g.get_objinfo(self.obj)
         retval.fileno
         retval.objno
         self.assertEqual(retval.nlink, 1)

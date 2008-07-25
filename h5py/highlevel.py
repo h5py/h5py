@@ -41,17 +41,21 @@
     It is safe to import this module using "from h5py.highlevel import *"; it
     will export only the major classes.
 """
+from __future__ import with_statement
 
 import os
 import numpy
 import inspect
+import threading
+from weakref import WeakValueDictionary
 
 from h5py import h5, h5f, h5g, h5s, h5t, h5d, h5a, h5p, h5z, h5i
 from h5py.h5 import H5Error
 from utils_hl import slicer, hbasename, strhdr, strlist
 from browse import _H5Browser
 
-__all__ = ["HLObject", "File", "Group", "Dataset",
+
+__all__ = ["LockableObject", "HLObject", "File", "Group", "Dataset",
            "Datatype", "AttributeManager"]
 
 try:
@@ -60,7 +64,48 @@ try:
 except ImportError:
     readline = None
 
-class HLObject(object):
+class LockableObject(object):
+
+    """
+        Base class which provides rudimentary locking support.
+    """
+
+    __locks = WeakValueDictionary()   # Key => RLock object
+    __locks_lock = threading.RLock()
+
+    def _get_lock(self):
+        """ Get an reentrant lock object appropriate for this object.
+
+            Returns the same lock for each unique underlying HDF5 object:
+             1. For named objects, use fileno/objno as key (guaranteed unique)
+             2. For transient objects, use the HDF5 integer identifier
+
+            This has the following limitations:
+             1. File objects can be locked, but this is not very useful because
+                there's no obvious way to represent the dependency relationship
+                between files and the objects they contain.
+
+             2. In cases where different transient identifiers refer to the
+                same object, it will not be properly locked.  Currently no
+                high-level objects are transient.
+
+            Note this function does NOT acquire the lock.
+        """
+        with self.__locks_lock:
+            #print "Locking %d" % self.id.id
+            name = h5i.get_name(self.id)
+            if name is None:
+                key = self.id.id
+            else:
+                info = h5g.get_objinfo(self.id)
+                key = (info.fileno, info.objno)
+
+            return self.__locks.setdefault(key, threading.RLock())
+
+    lock = property(_get_lock,
+        doc = "A threading.RLock instance associated with this HDF5 structure")
+
+class HLObject(LockableObject):
 
     """
         Base class for high-level interface objects.
@@ -116,13 +161,14 @@ class Group(HLObject):
             raising an exception if it doesn't exist.  If "create" is True,
             create a new HDF5 group and link it into the parent group.
         """
-        if create:
-            self.id = h5g.create(parent_object.id, name)
-        else:
-            self.id = h5g.open(parent_object.id, name)
+        with parent_object.lock:
+            if create:
+                self.id = h5g.create(parent_object.id, name)
+            else:
+                self.id = h5g.open(parent_object.id, name)
 
-        self._attrs = AttributeManager(self)
-
+            self._attrs = AttributeManager(self)
+    
     def __setitem__(self, name, obj):
         """ Add the given object to the group.  The action taken depends on
             the type of object assigned:
@@ -152,35 +198,37 @@ class Group(HLObject):
 
             This limitation is intentional, and may be lifted in the future.
         """
-        if isinstance(obj, Group) or isinstance(obj, Dataset) or isinstance(obj, Datatype):
-            self.id.link(h5i.get_name(obj.id), name, link_type=h5g.LINK_HARD)
+        with self.lock:
+            if isinstance(obj, Group) or isinstance(obj, Dataset) or isinstance(obj, Datatype):
+                self.id.link(h5i.get_name(obj.id), name, link_type=h5g.LINK_HARD)
 
-        elif isinstance(obj, numpy.dtype):
-            htype = h5t.py_create(obj)
-            htype.commit(self.id, name)
+            elif isinstance(obj, numpy.dtype):
+                htype = h5t.py_create(obj)
+                htype.commit(self.id, name)
 
-        else:
-            if not isinstance(obj, numpy.ndarray):
-                obj = numpy.array(obj)
-            Dataset(self, name, data=obj)
+            else:
+                if not isinstance(obj, numpy.ndarray):
+                    obj = numpy.array(obj)
+                Dataset(self, name, data=obj)
 
     def __getitem__(self, name):
         """ Open an object attached to this group. 
 
             Currently can open groups, datasets, and named types.
         """
-        info = self.id.get_objinfo(name)
+        with self.lock:
+            info = h5g.get_objinfo(self.id, name)
 
-        if info.type == h5g.DATASET:
-            return Dataset(self, name)
+            if info.type == h5g.DATASET:
+                return Dataset(self, name)
 
-        elif info.type == h5g.GROUP:
-            return Group(self, name)
+            elif info.type == h5g.GROUP:
+                return Group(self, name)
 
-        elif info.type == h5g.TYPE:
-            return Datatype(self, name)
+            elif info.type == h5g.TYPE:
+                return Datatype(self, name)
 
-        raise ValueError("Don't know how to open object of type %d" % info.type)
+            raise ValueError("Don't know how to open object of type %d" % info.type)
 
     def __delitem__(self, name):
         """ Delete (unlink) an item from this group. """
@@ -200,8 +248,9 @@ class Group(HLObject):
 
     def iteritems(self):
         """ Iterate over the group members as (name, value) pairs """
-        for name in self:
-            yield (name, self[name])
+        with self.lock:
+            for name in self:
+                yield (name, self[name])
 
     def create_group(self, name):
         """ Create and return a subgroup.
@@ -229,28 +278,30 @@ class Group(HLObject):
         """
         return Dataset(self, name, *args, **kwds)
 
+
     def desc(self):
         """ Extended (multi-line) description of this group, as a string.
         """
-
-        outstr = 'Group "%s" in file "%s":' % \
-                (hbasename(h5i.get_name(self.id)), os.path.basename(h5f.get_name(self.id)))
-        outstr = strhdr(outstr)
-        infodct = {"Members": len(self)}
-        grpinfo = self.id.get_objinfo('.')
-        infodct["mtime"] = grpinfo.mtime
-        outstr += strlist([(name, infodct[name]) for name in ("Members", "mtime")])
-        
-        cmnt = self.id.get_comment('.')
-        if cmnt != '':
-            outstr += '\nComment:\n'+cmnt
-        return outstr
+        with self.lock:
+            outstr = 'Group "%s" in file "%s":' % \
+                    (hbasename(h5i.get_name(self.id)), os.path.basename(h5f.get_name(self.id)))
+            outstr = strhdr(outstr)
+            infodct = {"Members": len(self)}
+            grpinfo = h5g.get_objinfo(self.id, '.')
+            infodct["mtime"] = grpinfo.mtime
+            outstr += strlist([(name, infodct[name]) for name in ("Members", "mtime")])
+            
+            cmnt = self.id.get_comment('.')
+            if cmnt != '':
+                outstr += '\nComment:\n'+cmnt
+            return outstr
         
     def __str__(self):
-        try:
-            return 'Group "%s" (%d members)' % (hbasename(self.name), len(self))
-        except:
-            return "Invalid group"
+        with self.lock:
+            try:
+                return 'Group "%s" (%d members)' % (hbasename(self.name), len(self))
+            except:
+                return "Invalid group"
 
 
 class File(Group):
@@ -318,7 +369,7 @@ class File(Group):
 
         self.id = self.fid  # So the Group constructor can find it.
         Group.__init__(self, self, '/')
-    
+
         self._name = name
         self._mode = mode
         self._path = None
@@ -327,8 +378,9 @@ class File(Group):
     def close(self):
         """ Close this HDF5 file.  All open objects will be invalidated.
         """
-        self.id._close()
-        self.fid.close()
+        with self.lock:
+            self.id._close()
+            self.fid.close()
 
     def flush(self):
         """ Tell the HDF5 library to flush its buffers.
@@ -339,14 +391,16 @@ class File(Group):
         return self
 
     def __exit__(self,*args):
-        if self.id._valid:
-            self.close()
-        
+        with self.lock:
+            if self.id._valid:
+                self.close()
+            
     def __str__(self):
-        try:
-            return 'File "%s", root members: %s' % (self.name, ', '.join(['"%s"' % name for name in self]))
-        except:
-            return "Invalid file"
+        with self.lock:
+            try:
+                return 'File "%s", root members: %s' % (self.name, ', '.join(['"%s"' % name for name in self]))
+            except:
+                return "Invalid file"
 
     def browse(self, dict=None):
         """ Open a command line shell to browse this file. If dict is not
@@ -407,10 +461,11 @@ class Dataset(HLObject):
         doc = "Numpy dtype representing the datatype")
 
     def _getval(self):
-        arr = self[...]
-        if arr.shape == ():
-            return numpy.asscalar(arr)
-        return arr
+        with self.lock:
+            arr = self[...]
+            if arr.shape == ():
+                return numpy.asscalar(arr)
+            return arr
 
     value = property(_getval,
         doc = "The entire dataset, as an array or scalar depending on the shape.")
@@ -445,44 +500,45 @@ class Dataset(HLObject):
             shuffle:       Use the shuffle filter? (requires compression) T/F*
             fletcher32:    Enable Fletcher32 error detection? T/F*
         """
-        if data is None and shape is None:
-            if any((data,dtype,shape,chunks,compression,shuffle,fletcher32)):
-                raise ValueError('You cannot specify keywords when opening a dataset.')
-            self.id = h5d.open(group.id, name)
-        else:
-            if ((data is None) and (shape is None)) or \
-               ((data is not None) and (shape is not None)):
-                raise ValueError("*Either* data *or* the shape must be specified.")
-            
-            if data is not None:
-                shape = data.shape
-                dtype = data.dtype
+        with group.lock:
+            if data is None and shape is None:
+                if any((data,dtype,shape,chunks,compression,shuffle,fletcher32)):
+                    raise ValueError('You cannot specify keywords when opening a dataset.')
+                self.id = h5d.open(group.id, name)
             else:
-                if dtype is None:
-                    dtype = "=f4"
-            
-            dtype = numpy.dtype(dtype)
+                if ((data is None) and (shape is None)) or \
+                   ((data is not None) and (shape is not None)):
+                    raise ValueError("*Either* data *or* the shape must be specified.")
+                
+                if data is not None:
+                    shape = data.shape
+                    dtype = data.dtype
+                else:
+                    if dtype is None:
+                        dtype = "=f4"
+                
+                dtype = numpy.dtype(dtype)
 
-            plist = h5p.create(h5p.DATASET_CREATE)
-            if chunks:
-                plist.set_chunk(chunks)
-            if shuffle:
-                plist.set_shuffle()
-            if compression is not None:
-                if compression is True:  # prevent accidental abuse
-                    compression = 6
-                plist.set_deflate(compression)
-            if fletcher32:
-                plist.set_fletcher32()
+                plist = h5p.create(h5p.DATASET_CREATE)
+                if chunks:
+                    plist.set_chunk(chunks)
+                if shuffle:
+                    plist.set_shuffle()
+                if compression is not None:
+                    if compression is True:  # prevent accidental abuse
+                        compression = 6
+                    plist.set_deflate(compression)
+                if fletcher32:
+                    plist.set_fletcher32()
 
-            space_id = h5s.create_simple(shape)
-            type_id = h5t.py_create(dtype)
+                space_id = h5s.create_simple(shape)
+                type_id = h5t.py_create(dtype)
 
-            self.id = h5d.create(group.id, name, type_id, space_id, plist)
-            if data is not None:
-                self.id.write(h5s.ALL, h5s.ALL, data)
+                self.id = h5d.create(group.id, name, type_id, space_id, plist)
+                if data is not None:
+                    self.id.write(h5s.ALL, h5s.ALL, data)
 
-        self._attrs = AttributeManager(self)
+            self._attrs = AttributeManager(self)
 
     def __getitem__(self, args):
         """ Read a slice from the HDF5 dataset.  Takes slices and
@@ -500,86 +556,88 @@ class Dataset(HLObject):
             ds[1,2,3,"a"]
             ds[0:5:2, ..., 0:2, "a", "b"]
         """
-        start, count, stride, names = slicer(self.shape, args)
+        with self.lock:
+            start, count, stride, names = slicer(self.shape, args)
 
-        if not (len(start) == len(count) == len(stride) == self.id.rank):
-            raise ValueError("Indices do not match dataset rank (%d)" % self.id.rank)
+            if not (len(start) == len(count) == len(stride) == self.id.rank):
+                raise ValueError("Indices do not match dataset rank (%d)" % self.id.rank)
 
-        htype = self.id.get_type()
-        if len(names) > 0:
-            if htype.get_class() == h5t.COMPOUND:
+            htype = self.id.get_type()
+            if len(names) > 0:
+                if htype.get_class() == h5t.COMPOUND:
 
-                subtypes = {}
-                for idx in range(htype.get_nmembers()):
-                    subtypes[htype.get_member_name(idx)] = htype.get_member_type(idx)
+                    subtypes = {}
+                    for idx in range(htype.get_nmembers()):
+                        subtypes[htype.get_member_name(idx)] = htype.get_member_type(idx)
 
-                for name in names:
-                    if name not in subtypes:
-                        raise ValueError("Field %s does not appear in this type." % name)
+                    for name in names:
+                        if name not in subtypes:
+                            raise ValueError("Field %s does not appear in this type." % name)
 
-                insertlist = [(name, subtypes[name].get_size()) for name in names]
-                totalsize = sum([x[1] for x in insertlist])
+                    insertlist = [(name, subtypes[name].get_size()) for name in names]
+                    totalsize = sum([x[1] for x in insertlist])
 
-                mtype = h5t.create(h5t.COMPOUND, totalsize)
+                    mtype = h5t.create(h5t.COMPOUND, totalsize)
 
-                offset = 0
-                for name, size in insertlist:
-                    mtype.insert(name, offset, subtypes[name])
-                    offset += size
+                    offset = 0
+                    for name, size in insertlist:
+                        mtype.insert(name, offset, subtypes[name])
+                        offset += size
+                else:
+                    raise ValueError("This dataset has no named fields.")
             else:
-                raise ValueError("This dataset has no named fields.")
-        else:
-            mtype = htype
+                mtype = htype
 
-        fspace = self.id.get_space()
-        if fspace.get_simple_extent_type() == h5s.SCALAR:
-            fspace.select_all()
-        else:
-            fspace.select_hyperslab(start, count, stride)
-        mspace = h5s.create_simple(count)
+            fspace = self.id.get_space()
+            if fspace.get_simple_extent_type() == h5s.SCALAR:
+                fspace.select_all()
+            else:
+                fspace.select_hyperslab(start, count, stride)
+            mspace = h5s.create_simple(count)
 
-        arr = numpy.ndarray(count, mtype.dtype)
+            arr = numpy.ndarray(count, mtype.dtype)
 
-        self.id.read(mspace, fspace, arr)
+            self.id.read(mspace, fspace, arr)
 
-        if len(names) == 1:
-            # Match Numpy convention for recarray indexing
-            return arr[names[0]].squeeze()
-        return arr.squeeze()
+            if len(names) == 1:
+                # Match Numpy convention for recarray indexing
+                return arr[names[0]].squeeze()
+            return arr.squeeze()
 
     def __setitem__(self, args, val):
         """ Write to the HDF5 dataset from an Numpy array.  The shape of the
             Numpy array must match the shape of the selection, and the Numpy
             array's datatype must be convertible to the HDF5 datatype.
         """
+        with self.lock:
+            start, count, stride, names = slicer(self.shape, args)
+            if len(names) != 0:
+                raise ValueError("Field name selections are not allowed for write.")
 
-        start, count, stride, names = slicer(self.shape, args)
-        if len(names) != 0:
-            raise ValueError("Field name selections are not allowed for write.")
+            val = numpy.array(val, dtype=self.dtype)
 
-        val = numpy.array(val, dtype=self.dtype)
+            if count != val.shape:
+                # Allow assignments (1,10) => (10,)
+                if numpy.product(count) != numpy.product(val.shape):
+                    raise ValueError("Selection (%s) must be compatible with target (%s)" % (str(count), str(val.shape)))
+                else:
+                    val = val.reshape(count)
 
-        if count != val.shape:
-            # Allow assignments (1,10) => (10,)
-            if numpy.product(count) != numpy.product(val.shape):
-                raise ValueError("Selection (%s) must be compatible with target (%s)" % (str(count), str(val.shape)))
-            else:
-                val = val.reshape(count)
+            fspace = self.id.get_space()
+            fspace.select_hyperslab(start, count, stride)
+            mspace = h5s.create_simple(val.shape)
 
-        fspace = self.id.get_space()
-        fspace.select_hyperslab(start, count, stride)
-        mspace = h5s.create_simple(val.shape)
-
-        self.id.write(mspace, fspace, numpy.array(val))
+            self.id.write(mspace, fspace, numpy.array(val))
 
     def __str__(self):
-        try:
-            return 'Dataset "%s": %s %s' % (hbasename(self.name),
-                    str(self.shape), repr(self.dtype))
-        except:
-            return "Invalid dataset"
+        with self.lock:
+            try:
+                return 'Dataset "%s": %s %s' % (hbasename(self.name),
+                        str(self.shape), repr(self.dtype))
+            except:
+                return "Invalid dataset"
 
-class AttributeManager(object):
+class AttributeManager(LockableObject):
 
     """ Allows dictionary-style access to an HDF5 object's attributes.
 
@@ -617,14 +675,15 @@ class AttributeManager(object):
             will be returned as a Numpy scalar.  Otherwise, it will be returned
             as a Numpy ndarray.
         """
-        attr = h5a.open_name(self.id, name)
+        with self.lock:
+            attr = h5a.open_name(self.id, name)
 
-        arr = numpy.ndarray(attr.shape, dtype=attr.dtype)
-        attr.read(arr)
+            arr = numpy.ndarray(attr.shape, dtype=attr.dtype)
+            attr.read(arr)
 
-        if len(arr.shape) == 0:
-            return numpy.asscalar(arr)
-        return arr
+            if len(arr.shape) == 0:
+                return numpy.asscalar(arr)
+            return arr
 
     def __setitem__(self, name, value):
         """ Set the value of an attribute, overwriting any previous value.
@@ -634,18 +693,19 @@ class AttributeManager(object):
             Any existing value is destroyed just before the call to h5a.create.
             If the creation fails, the data is not recoverable.
         """
-        if not isinstance(value, numpy.ndarray):
-            value = numpy.array(value)
+        with self.lock:
+            if not isinstance(value, numpy.ndarray):
+                value = numpy.array(value)
 
-        space = h5s.create_simple(value.shape)
-        htype = h5t.py_create(value.dtype)
+            space = h5s.create_simple(value.shape)
+            htype = h5t.py_create(value.dtype)
 
-        # TODO: some kind of transactions safeguard
-        if name in self:
-            h5a.delete(self.id, name)
+            # TODO: some kind of transactions safeguard
+            if name in self:
+                h5a.delete(self.id, name)
 
-        attr = h5a.create(self.id, name, htype, space)
-        attr.write(value)
+            attr = h5a.create(self.id, name, htype, space)
+            attr.write(value)
 
     def __delitem__(self, name):
         """ Delete an attribute (which must already exist). """
@@ -655,30 +715,34 @@ class AttributeManager(object):
         """ Number of attributes attached to the object. """
         return h5a.get_num_attrs(self.id)
 
+
     def __iter__(self):
         """ Iterate over the names of attributes. """
-        for name in h5a.py_listattrs(self.id):
-            yield name
+        with self.lock:
+            for name in h5a.py_listattrs(self.id):
+                yield name
 
     def iteritems(self):
         """ Iterate over (name, value) tuples. """
-        for name in self:
-            yield (name, self[name])
+        with self.lock:
+            for name in self:
+                yield (name, self[name])
 
     def __contains__(self, name):
         """ Determine if an attribute exists, by name. """
         return h5a.py_exists(self.id, name)
 
     def __str__(self):
-        try:
-            rstr = 'Attributes of "%s": ' % hbasename(h5i.get_name(self.id))
-            if len(self) == 0:
-                rstr += '(none)'
-            else:
-                rstr += ', '.join(['"%s"' % x for x in self])
-            return rstr
-        except:
-            return "Invalid attributes object"
+        with self.lock:
+            try:
+                rstr = 'Attributes of "%s": ' % hbasename(h5i.get_name(self.id))
+                if len(self) == 0:
+                    rstr += '(none)'
+                else:
+                    rstr += ', '.join(['"%s"' % x for x in self])
+                return rstr
+            except:
+                return "Invalid attributes object"
 
     def __repr__(self):
         return str(self)
@@ -706,14 +770,16 @@ class Datatype(HLObject):
     def __init__(self, grp, name):
         """ Private constructor; you should not create these.
         """
-        self.id = h5t.open(grp.id, name)
-        self._attrs = AttributeManager(self)
+        with grp.lock:
+            self.id = h5t.open(grp.id, name)
+            self._attrs = AttributeManager(self)
 
     def __str__(self):
-        try:
-            return "Named datatype object (%s)" % str(self.dtype)
-        except:
-            return "Invalid datatype object"
+        with self.lock:
+            try:
+                return "Named datatype object (%s)" % str(self.dtype)
+            except:
+                return "Invalid datatype object"
 
 
 

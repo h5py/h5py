@@ -156,6 +156,35 @@ def iterate(GroupID loc not None, char* name, object func, object data=None,
     if len(err_list) > 0:
         raise err_list[0]
 
+def get_objinfo(ObjectID obj not None, object name='.', int follow_link=1):
+    """ (ObjectID obj, STRING name='.', BOOL follow_link=True) => GroupStat object
+
+        Obtain information about a named object.  If "name" is provided,
+        "obj" is taken to be a GroupID object containing the target.
+        The return value is a GroupStat object; see that class's docstring
+        for a description of its attributes.  
+
+        If follow_link is True (default) and the object is a symbolic link, 
+        the information returned describes its target.  Otherwise the 
+        information describes the link itself.
+    """
+    cdef H5G_stat_t stat
+    cdef GroupStat statobj
+    cdef char* _name
+    _name = name
+
+    H5Gget_objinfo(obj.id, _name, follow_link, &stat)
+
+    statobj = GroupStat()
+    statobj.fileno = (stat.fileno[0], stat.fileno[1])
+    statobj.objno = (stat.objno[0], stat.objno[1])
+    statobj.nlink = stat.nlink
+    statobj.type = stat.type
+    statobj.mtime = stat.mtime
+    statobj.linklen = stat.linklen
+
+    return statobj
+
 # === Group member management =================================================
 
 cdef class GroupID(ObjectID):
@@ -276,32 +305,6 @@ cdef class GroupID(ObjectID):
             raise H5Error((1,"Invalid argument."))
         return retval
 
-    def get_objinfo(self, char* name, int follow_link=1):
-        """ (STRING name, BOOL follow_link=True) => GroupStat object
-
-            Obtain information about an arbitrary object attached to a group. 
-            The return value is a GroupStat object; see that class's docstring
-            for a description of its attributes.  
-
-            If follow_link is True (default) and the object is a symbolic link, 
-            the information returned describes its target.  Otherwise the 
-            information describes the link itself.
-        """
-        cdef H5G_stat_t stat
-        cdef GroupStat statobj
-
-        H5Gget_objinfo(self.id, name, follow_link, &stat)
-
-        statobj = GroupStat()
-        statobj.fileno = (stat.fileno[0], stat.fileno[1])
-        statobj.objno = (stat.objno[0], stat.objno[1])
-        statobj.nlink = stat.nlink
-        statobj.type = stat.type
-        statobj.mtime = stat.mtime
-        statobj.linklen = stat.linklen
-
-        return statobj
-
 
     def get_linkval(self, char* name):
         """ (STRING name) => STRING link_value
@@ -361,7 +364,7 @@ cdef class GroupID(ObjectID):
             Determine if a group member of the given name is present
         """
         try:
-            info = self.get_objinfo(name)
+            info = get_objinfo(self,name)
             return True
         except H5Error:
             return False    

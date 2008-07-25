@@ -2,6 +2,8 @@
 """
     Utility functions for high-level modules.
 """
+from __future__ import with_statement
+
 from posixpath import basename, normpath
 import numpy
 
@@ -135,5 +137,10 @@ def strlist(lst, keywidth=10):
         outstr += format % (key+':',val)
 
     return outstr
+
+
+
+
+
 
 

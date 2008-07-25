@@ -91,7 +91,7 @@ class _H5Browser(Cmd, object):
         dname = dirname(path)
         bname = basename(path)
         try:
-            if bname != '' and not self.file[dname].id.get_objinfo(bname).type == h5g.GROUP:
+            if bname != '' and not h5g.get_objinfo(self.file[dname].id, bname).type == h5g.GROUP:
                 raise CmdError('"%s" is not an HDF5 group' % bname)
             else:
                 self.path = path
@@ -106,7 +106,7 @@ class _H5Browser(Cmd, object):
         grp = self.file[grpname]
         rval = [join(grpname,x) for x in grp \
                     if x.find(targetname) == 0 and \
-                    grp.id.get_objinfo(x).type == h5g.GROUP]
+                    h5g.get_objinfo(grp.id,x).type == h5g.GROUP]
         return rval
 
     def do_ls(self, line):
@@ -132,7 +132,7 @@ class _H5Browser(Cmd, object):
                 print LS_FORMAT % ("Name", "Type")
                 print LS_FORMAT % ("----", "----")
             for name in grp:
-                typecode = grp.id.get_objinfo(name).type
+                typecode = h5g.get_objinfo(grp.id, name).type
                 pname = name if typecode != h5g.GROUP else name+'/'
                 if LONG_STYLE:
                     print LS_FORMAT % (pname, NAMES[typecode])

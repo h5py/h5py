@@ -353,8 +353,8 @@ class TestGroup(unittest.TestCase):
     
         # test hard linking
         self.f["DS1"] = self.f["DS"]
-        info1 = self.f.id.get_objinfo("DS")
-        info2 = self.f.id.get_objinfo("DS1")
+        info1 = h5g.get_objinfo(self.f.id,"DS")
+        info2 = h5g.get_objinfo(self.f.id,"DS1")
         self.assertEqual(info1.fileno, info2.fileno)
         self.assertEqual(info1.objno, info2.objno)
 
