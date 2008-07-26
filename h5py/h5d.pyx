@@ -15,10 +15,11 @@
 """
 
 # Pyrex compile-time imports
+from h5 cimport standard_richcmp
 from h5s cimport H5S_ALL, H5S_UNLIMITED, H5S_SCALAR, H5S_SIMPLE, \
                     H5Sget_simple_extent_type, H5Sclose, H5Sselect_all, \
                     H5Sget_simple_extent_ndims, H5Sget_select_npoints
-from numpy cimport import_array, PyArray_DATA
+from numpy cimport import_array, PyArray_DATA, NPY_WRITEABLE
 from utils cimport  check_numpy_read, check_numpy_write, \
                     require_tuple, \
                     convert_tuple, \
@@ -29,6 +30,7 @@ from h5 cimport HADDR_UNDEF
 import h5
 import h5t
 import h5s
+import h5g
 
 import_array()
 
@@ -75,6 +77,30 @@ def open(ObjectID loc not None, char* name):
     """
     return DatasetID(H5Dopen(loc.id, name))
 
+# --- Proxy functions for safe(r) threading -----------------------------------
+
+# It's not legal to call PyErr_Occurred() with nogil, so we can't use
+# the standard except * syntax.  Trap negative return numbers and convert them
+# to something Pyrex can recognize.
+
+cdef int H5PY_H5Dread(hid_t dset_id, hid_t mem_type_id, hid_t mem_space_id,
+                  hid_t file_space_id, hid_t plist_id, void *buf) nogil except -1:
+
+    cdef herr_t retval
+    retval = H5Dread(dset_id, mem_type_id,mem_space_id, file_space_id,
+                        plist_id, buf)
+    if retval < 0:
+        return -1
+    return retval
+
+cdef int H5PY_H5Dwrite(hid_t dset_id, hid_t mem_type, hid_t mem_space, hid_t 
+                        file_space, hid_t xfer_plist, void* buf) nogil except -1:
+    cdef herr_t retval
+    retval = H5Dwrite(dset_id, mem_type, mem_space, file_space,
+                        xfer_plist, buf)
+    if retval < 0:
+        return -1
+    return retval
 
 # === Dataset I/O =============================================================
 
@@ -146,14 +172,38 @@ cdef class DatasetID(ObjectID):
             wide variety of dataspace configurations are possible, this is not
             checked.  You can easily crash Python by reading in data from too
             large a dataspace.
+
+            The actual read is non-blocking; the array object is temporarily
+            marked read-only, but attempting to mutate it in another thread
+            is a bad idea.  Also, this DatasetID object acquires its own lock
+            (obj.pylock) until the operation completes.
         """
         cdef TypeID mtype
+        cdef hid_t self_id, mtype_id, mspace_id, fspace_id, plist_id
+        cdef void* data
+        cdef int oldflags
 
-        mtype = h5t.py_create(arr_obj.dtype)
-        check_numpy_write(arr_obj, -1)
+        self.pylock.acquire()
+        try:
+            oldflags = arr_obj.flags
+            arr_obj.flags = oldflags & (~NPY_WRITEABLE) # Wish-it-was-a-mutex approach
 
-        H5Dread(self.id, mtype.id, mspace.id, fspace.id, pdefault(dxpl), PyArray_DATA(arr_obj))
+            mtype = h5t.py_create(arr_obj.dtype)
+            check_numpy_write(arr_obj, -1)
 
+            self_id = self.id
+            mtype_id = mtype.id
+            mspace_id = mspace.id
+            fspace_id = fspace.id
+            plist_id = pdefault(dxpl)
+            data = PyArray_DATA(arr_obj)
+
+            with nogil:
+                H5PY_H5Dread(self_id, mtype_id, mspace_id, fspace_id, plist_id, data)
+
+        finally:
+            arr_obj.flags = oldflags
+            self.pylock.release()
         
     def write(self, SpaceID mspace not None, SpaceID fspace not None, 
                     ndarray arr_obj not None, PropDXID dxpl=None):
@@ -166,13 +216,38 @@ cdef class DatasetID(ObjectID):
             The provided Numpy array must be C-contiguous, and own its data.  
             If this is not the case, ValueError will be raised and the read 
             will fail.
+
+            The actual write is non-blocking; the array object is temporarily
+            marked read-only, but attempting to mutate it in another thread
+            is a bad idea.  Also, this DatasetID object acquires its own lock
+            (obj.pylock) until the operation completes.
         """
         cdef TypeID mtype
+        cdef hid_t self_id, mtype_id, mspace_id, fspace_id, plist_id
+        cdef void* data
+        cdef int oldflags
 
-        mtype = h5t.py_create(arr_obj.dtype)
-        check_numpy_read(arr_obj, -1)
+        self.pylock.acquire()
+        try:
+            oldflags = arr_obj.flags
+            arr_obj.flags = oldflags & (~NPY_WRITEABLE) # Wish-it-was-a-mutex approach
 
-        H5Dwrite(self.id, mtype.id, mspace.id, fspace.id, pdefault(dxpl), PyArray_DATA(arr_obj))
+            mtype = h5t.py_create(arr_obj.dtype)
+            check_numpy_read(arr_obj, -1)
+
+            self_id = self.id
+            mtype_id = mtype.id
+            mspace_id = mspace.id
+            fspace_id = fspace.id
+            plist_id = pdefault(dxpl)
+            data = PyArray_DATA(arr_obj)
+
+            with nogil:
+                H5PY_H5Dwrite(self_id, mtype_id, mspace_id, fspace_id, plist_id, data)
+
+        finally:
+            arr_obj.flags = oldflags
+            self.pylock.release()
 
     def extend(self, object shape):
         """ (TUPLE shape)
@@ -260,5 +335,13 @@ cdef class DatasetID(ObjectID):
         """
         return H5Dget_storage_size(self.id)
 
+    def __richcmp__(self, object other, int how):
+        return standard_richcmp(self, other, how)
+
+    def __hash__(self):
+        if self._hash is None:
+            info = h5g.get_objinfo(self)
+            self._hash = hash( (info.fileno, info.objno) )
+        return self._hash
 
 

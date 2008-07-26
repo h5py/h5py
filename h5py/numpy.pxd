@@ -94,6 +94,7 @@ cdef extern from "numpy/arrayobject.h":
   int PyArray_SETITEM(object arr, void *itemptr, object obj)
   dtype PyArray_DescrFromType(int type)
   object PyArray_Scalar(void *data, dtype descr, object base)
+  long PyArray_NBYTES(object arr)
 
   int PyArray_CheckScalar(object sclr)
   void PyArray_ScalarAsCtype(object sclr, void* ptr)

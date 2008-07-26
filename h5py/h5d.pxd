@@ -76,10 +76,13 @@ cdef extern from "hdf5.h":
   haddr_t   H5Dget_offset(hid_t dset_id) except *
   hsize_t   H5Dget_storage_size(hid_t dset_id) except? 0
 
+  # These must have their return values checked manually.  The functions
+  # H5PY_H5Dread and H5PY_HDwrite return -1 specifically, for use when
+  # the GIL is released and PyErr_Occurred() is inadvisable.
   herr_t    H5Dread(hid_t dset_id, hid_t mem_type_id, hid_t mem_space_id,
-                  hid_t file_space_id, hid_t plist_id, void *buf) except *
+                  hid_t file_space_id, hid_t plist_id, void *buf) nogil
   herr_t    H5Dwrite(hid_t dset_id, hid_t mem_type, hid_t mem_space, hid_t 
-                        file_space, hid_t xfer_plist, void* buf) except *
+                        file_space, hid_t xfer_plist, void* buf) nogil
 
   herr_t    H5Dextend(hid_t dataset_id, hsize_t *size) except *
 

@@ -249,14 +249,22 @@ cdef int _disable_exceptions() except -1
 cdef err_c pause_errors() except? NULL
 cdef int resume_errors(err_c cookie) except -1
 
-# === Custom identifier wrappers ==============================================
+cdef object standard_richcmp(object self, object other, int how)
+
+cdef class H5PYConfig:
+
+    cdef object _rlock_type         # RLock constructor or compatible
+    cdef object _complex_names      # ('r','i')
+    cdef public object _lockdict    # Weakref dict for RLock instances
 
 cdef class ObjectID:
     """ Base wrapper class for HDF5 object identifiers """
     cdef object __weakref__
     cdef readonly hid_t id
     cdef readonly int _locked
-
+    cdef H5PYConfig _cfg        # Used to cache a reference to the global config object
+    cdef object _hash           # Used by subclasses to cache a hash value,
+                                # which may be expensive to compute.
 
 
 

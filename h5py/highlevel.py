@@ -70,40 +70,8 @@ class LockableObject(object):
         Base class which provides rudimentary locking support.
     """
 
-    __locks = WeakValueDictionary()   # Key => RLock object
-    __locks_lock = threading.RLock()
-
-    def _get_lock(self):
-        """ Get an reentrant lock object appropriate for this object.
-
-            Returns the same lock for each unique underlying HDF5 object:
-             1. For named objects, use fileno/objno as key (guaranteed unique)
-             2. For transient objects, use the HDF5 integer identifier
-
-            This has the following limitations:
-             1. File objects can be locked, but this is not very useful because
-                there's no obvious way to represent the dependency relationship
-                between files and the objects they contain.
-
-             2. In cases where different transient identifiers refer to the
-                same object, it will not be properly locked.  Currently no
-                high-level objects are transient.
-
-            Note this function does NOT acquire the lock.
-        """
-        with self.__locks_lock:
-            #print "Locking %d" % self.id.id
-            name = h5i.get_name(self.id)
-            if name is None:
-                key = self.id.id
-            else:
-                info = h5g.get_objinfo(self.id)
-                key = (info.fileno, info.objno)
-
-            return self.__locks.setdefault(key, threading.RLock())
-
-    lock = property(_get_lock,
-        doc = "A threading.RLock instance associated with this HDF5 structure")
+    lock = property(lambda self: self.id.pylock,
+        doc = "A reentrant lock associated with this HDF5 structure")
 
 class HLObject(LockableObject):
 

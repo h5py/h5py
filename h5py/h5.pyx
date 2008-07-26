@@ -34,6 +34,8 @@ include "conditions.pxi"
 from python cimport PyErr_SetObject
 
 import atexit
+import threading
+from weakref import WeakKeyDictionary
 
 # Logging is only enabled when compiled with H5PY_DEBUG nonzero
 IF H5PY_DEBUG:
@@ -80,7 +82,78 @@ def _open():
     """
     H5open()
 
-# === Identifier wrappers =====================================================
+cdef class H5PYConfig:
+
+    """
+        Global configuration object for the h5py package.
+    """
+
+    def __init__(self):
+        self._lockdict = WeakKeyDictionary()  # ObjectID weakref => RLock instance
+        self._complex_names = ('r','i')
+        self.RLock = threading.RLock
+
+    property RLock:
+        """ Callable returning a reentrant lock (default is threading.RLock).
+            
+            Whatever you provide must support the Python context manager
+            protocol, and provide the methods acquire() and release().  It
+            also MUST be reentrant, or dataset reads/writes will deadlock.
+        """
+        def __get__(self):
+            return self._rlock_type
+
+        def __set__(self, val):
+            testlock = val()
+            if not (hasattr(testlock, 'acquire') and hasattr(testlock, 'release') and\
+                    hasattr(testlock, '__enter__') and hasattr(testlock, '__exit__')):
+                raise ValueError("Generated locks must provide __enter__, __exit__, acquire, release")
+            self._rlock_type = val
+            self._lockdict.clear()
+
+    property complex_names:
+        """ Tuple (real, img) indicating names used to save complex types.
+        """
+        def __get__(self):
+            return self._complex_names
+
+        def __set__(self, val):
+            # TODO: validation
+            self._complex_names = val
+
+    def _get_lock(self, ObjectID key not None):
+        """ (ObjectID key) => LOCK 
+
+            Obtain a reentrant lock instance.  Guaranteed to be the same lock
+            for the same key.  Keys are kept as weak references; when they
+            disappear, so do the lock objects.
+        """
+        # ObjectID instances which are both equal and hash to the same value
+        # are guaranteed to point to the same underlying HDF5 object.
+        lock = self._lockdict.get(key, None)
+        if lock is None:
+            lock = self._rlock_type()
+            self._lockdict[key] = lock
+        return lock
+
+config = H5PYConfig()
+
+cdef object standard_richcmp(object self, object other, int how):
+    # This needs to be shared because of weird CPython quirks involving
+    # subclasses and the __hash__ method.
+
+    if how == 2 or how == 3:
+        
+        if not typecheck(self, ObjectID) and typecheck(other, ObjectID):
+            return NotImplemented
+
+        eq = (hash(self) == hash(other))
+
+        if how == 2:
+            return eq
+        return not eq
+
+    return NotImplemented
 
 cdef class ObjectID:
 
@@ -101,6 +174,16 @@ cdef class ObjectID:
 
         The truth value of an ObjectID (i.e. bool(obj_id)) indicates whether
         the underlying HDF5 identifier is valid.
+
+        Rudimentary thread safety is provided by the property pylock, which is
+        an RLock instance shared by objects that point to the same underlying
+        HDF5 structure.  In multithreaded programs, you should acquire this
+        lock before modifying the structure.  Locks have no relationship;
+        locking a file does not prevent access to its objects, nor a group to
+        its members.
+
+        ObjectID subclasses which release the GIL (e.g. around blocking I/O
+        operations) will lock themselves first.
     """
 
     property _valid:
@@ -108,6 +191,15 @@ cdef class ObjectID:
         """
         def __get__(self):
             return H5Iget_type(self.id) != H5I_BADID
+
+    property pylock:
+        """ RLock or equivalent for threads.  The same lock is returned for
+            equal objects (objects which point to the same HDF5 structure).
+        """
+        def __get__(self):
+            if self._cfg is None:
+                self._cfg = config
+            return self._cfg._get_lock(self)
 
     def __nonzero__(self):
         """ Truth value for object identifiers (like _valid) """
@@ -145,18 +237,13 @@ cdef class ObjectID:
 
     def __richcmp__(self, object other, int how):
         """ Supports only == and != """
+        return standard_richcmp(self, other, how)
 
-        if how == 2 or how == 3:
-            
-            if not hasattr(other, 'id'):
-                return False
-            eq = isinstance(other, type(self)) and self.id == other.id
-
-            if how == 2:
-                return eq
-            return not eq
-
-        raise TypeError("Only equality comparisons are supported.")
+    def __hash__(self):
+        """ Hash method defaults to the identifer, as this cannot change over
+            the life of the object.
+        """
+        return self.id
 
     def __str__(self):
         if self._valid:
@@ -174,10 +261,9 @@ cdef class ObjectID:
     def __repr__(self):
         return self.__str__()
 
-
 # === Public exception hierarchy ==============================================
 
-class H5Error(EnvironmentError):
+class H5Error(Exception):
     """ Base class for internal HDF5 library exceptions.
         Subclass of EnvironmentError; errno is computed from the HDF5 major
         and minor error numbers:
@@ -488,12 +574,13 @@ cdef herr_t extract_cb(int n, H5E_error_t *err_desc, void* data_in):
     err_struct.min_num = err_desc.min_num
     return 1
     
-cdef herr_t err_callback(void* client_data):
+cdef herr_t err_callback(void* client_data) with gil:
     # Callback which sets Python exception based on the current error stack.
 
     # Can't use the standard Pyrex raise because then the traceback
-    # points here!
-
+    # points here.  MUST be "with gil" as it can be called by nogil HDF5
+    # routines.
+    
     cdef H5E_error_t err_struct
     cdef H5E_major_t mj
     cdef H5E_minor_t mn

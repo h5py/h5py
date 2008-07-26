@@ -13,9 +13,12 @@
 """
     Low-level HDF5 "H5G" group interface.
 """
+include "conditions.pxi"
 
 # Pyrex compile-time imports
 from utils cimport emalloc, efree
+from h5 cimport standard_richcmp
+from h5p cimport H5P_DEFAULT
 
 # Runtime imports
 import h5
@@ -103,6 +106,10 @@ def create(ObjectID loc not None, char* name, int size_hint=-1):
         names.
     """
     return GroupID(H5Gcreate(loc.id, name, size_hint))
+
+IF H5PY_18API:
+   def create_anon(ObjectID loc not None):
+        return GroupID(H5Gcreate_anon(loc.id, H5P_DEFAULT, H5P_DEFAULT))
 
 cdef herr_t iter_cb_helper(hid_t gid, char *name, object int_tpl) except -1:
     # Callback function for H5Giterate
@@ -376,4 +383,13 @@ cdef class GroupID(ObjectID):
     def __len__(self):
         """ Number of group members """
         return self.get_num_objs()
+
+    def __richcmp__(self, object other, int how):
+        return standard_richcmp(self, other, how)
+
+    def __hash__(self):
+        if self._hash is None:
+            info = get_objinfo(self)
+            self._hash = hash( (info.fileno, info.objno) )
+        return self._hash
 

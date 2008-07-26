@@ -14,6 +14,7 @@
 # license is available at licenses/pytables.txt, in the distribution root
 # directory.
 
+include "conditions.pxi"
 include "std_defs.pxi"
 from h5 cimport class ObjectID
 
@@ -67,5 +68,8 @@ cdef extern from "hdf5.h":
   herr_t H5Gget_linkval(hid_t loc_id, char *name, size_t size, char *value) except *
   herr_t H5Gset_comment(hid_t loc_id, char *name, char *comment ) except *
   int H5Gget_comment(hid_t loc_id, char *name, size_t bufsize, char *comment ) except *
+
+  IF H5PY_18API:
+    hid_t H5Gcreate_anon( hid_t loc_id, hid_t gcpl_id, hid_t gapl_id  ) except *
 
 

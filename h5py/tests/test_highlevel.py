@@ -241,6 +241,14 @@ class TestDataset(unittest.TestCase):
                 f.close()
                 os.unlink(fname)   
 
+    def test_Dataset_exceptions(self):
+        # These trigger exceptions in H5Dread
+        ref = numpy.ones((10,10), dtype='<i4')
+        dsid = self.f.create_dataset('ds', data=ref)
+        arr = numpy.ndarray((10,10), dtype='|S6') # incompatible datatype
+        self.assertRaises(H5Error, dsid.id.read, h5s.ALL, h5s.ALL, arr)
+        # or it'll segfault...
+
 class TestGroup(unittest.TestCase):
 
     def setUp(self):
