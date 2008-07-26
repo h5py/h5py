@@ -44,8 +44,6 @@ IF H5PY_DEBUG:
     logger.setLevel(H5PY_DEBUG)
     logger.addHandler(logging.StreamHandler())
 
-# === API =====================================================================
-
 def get_libversion():
     """ () => TUPLE (major, minor, release)
 
@@ -60,6 +58,7 @@ def get_libversion():
 
     return (major, minor, release)
 
+# --- Public versioning info ---
 
 hdf5_version_tuple = get_libversion()        
 hdf5_version = "%d.%d.%d" % hdf5_version_tuple
@@ -495,8 +494,8 @@ def error_string():
         Format is one line of the format 
             '<Description> (<Function name>: <error type>)'
 
-        If the stack is more than one level deep, this is followed by n lines
-        of the format:
+        If the stack is more than one level deep, this is followed by a
+        header and then n lines of the format:
             '    n: "<Description>" at <function name>'
     """
     cdef int stacklen
@@ -541,29 +540,6 @@ def get_minor(int error):
     """
     return H5Eget_minor(<H5E_minor_t>error)
 
-def get_error(int error):
-    """ (INT errno) => STRING description
-
-        Get a full description for an "errno"-style HDF5 error code.
-    """
-    cdef int mj
-    cdef int mn
-    mn = error % 1000
-    mj = (error-mn)/1000
-    return "%s: %s" % (H5Eget_major(<H5E_major_t>mj), H5Eget_minor(<H5E_minor_t>mn))
-
-def split_error(int error):
-    """ (INT errno) => (INT major, INT minor)
-
-        Convenience function to split an "errno"-style HDF5 error code into
-        its major and minor components.  It's recommended you use this
-        function instead of doing it yourself, as the "encoding" may change
-        in the future.
-    """
-    cdef int mn
-    mn = error % 1000
-    return ((error-mn)/1000, mn)
-
 # === Automatic exception API =================================================
 
 cdef herr_t extract_cb(int n, H5E_error_t *err_desc, void* data_in):
@@ -583,19 +559,15 @@ cdef herr_t err_callback(void* client_data) with gil:
     
     cdef H5E_error_t err_struct
     cdef H5E_major_t mj
-    cdef H5E_minor_t mn
 
     # Determine the error numbers for the first entry on the stack.
     H5Ewalk(H5E_WALK_UPWARD, extract_cb, &err_struct)
     mj = err_struct.maj_num
-    mn = err_struct.min_num
 
     exc = _exceptions.get(mj, H5Error)
-    if exc == ErrorError:
-        exc = H5Error
 
     msg = error_string()
-    PyErr_SetObject(exc, (1000*mj + mn, msg))
+    PyErr_SetObject(exc, msg)
 
     return 1
 
