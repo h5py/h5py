@@ -303,10 +303,11 @@ class dev(Command):
 
     def run(self):
         if self.clean:
-            try:
-                shutil.rmtree('build')
-            except OSError:
-                pass
+            for x in ('build','docs/html'):
+                try:
+                    shutil.rmtree(x)
+                except OSError:
+                    pass
             fnames = [ x+'.dep' for x in pyrex_sources ] + \
                      [ x+'.c' for x in pyrex_sources ] + \
                      [ 'MANIFEST']
@@ -320,9 +321,12 @@ class dev(Command):
         if self.doc:
             buildobj = self.distribution.get_command_obj('build')
             buildobj.run()
+            if not os.path.exists('docs/html'):
+                os.mkdir('docs', 0755)
+                os.mkdir('docs/html', 0755)
 
             retval = os.spawnlp(os.P_WAIT, 'epydoc', '-q', '--html',
-                        '-o', 'docs/', '--config', 'docs.cfg', 
+                        '-o', 'docs/html', '--config', 'docs.cfg', 
                         os.path.join(buildobj.build_lib, NAME) )
             if retval != 0:
                 raise DistutilsExecError("Could not run epydoc to build documentation.")

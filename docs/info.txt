@@ -1,0 +1,75 @@
+
+
+Threading
+=========
+
+All h5py routines are thread-safe in the sense that they are implemented in
+C, and (with a few exceptions) hold the global intepreter lock until they
+finish.  From the standpoint of a Python programmer, they are atomic operations;
+the execution of all threads blocks until they complete.  This means you
+can call the same method on the same object from two different threads, and the
+two calls will execute serially without interfering with one another.
+
+Additionally, each ObjectID instance provides a reentrant lock via the property
+"pylock".  If you acquire this lock, the HDF5 structure you've got hold of
+is guaranteed not to be modified by another thread until you release it.  This
+is the case even your HDF5 structure is "pointed to" by different ObjectID
+instances.
+ 
+Non-Blocking Routines
+---------------------
+
+A few methods will release the global interpreter lock around I/O operations
+which can take a long time to complete.  These methods always acquire their
+own "pylock" lock before beginning.  They are still thread-safe in that
+multiple threads attempting to run the same routine will execute serially,
+although threads that do other things can run unimpeded.
+
+The following operations will release the GIL:
+    
+    * DatasetID.read
+    * DatasetID.write
+
+Customizing Locks
+-----------------
+
+Because applications that use h5py may have their own threading systems, the
+type of lock used is settable at runtime.  The settable property
+h5.config.RLock determines the lock class used.  This can be set to any
+callable which produces a reentrant lock.  It must implement the following
+methods:
+
+    __enter__(), __exit__()     For the Python context manager protocol
+    acquire(), release()        For manual lock management
+
+The default lock type is the native Python threading.RLock, but h5py makes no
+assumptions about the behavior or implementation of locks beyond reentrance and
+the existence of the four required methods above.
+
+ObjectID Hashing
+----------------
+
+H5py uses a global weak-reference dictionary to keep track of which lock goes
+with which ObjectID instance.  For this to work, there must be a way to
+identify which ObjectID instances point to the same HDF5 structure.  Two rules
+make this possible:
+
+    A. ObjectID instances which point to the same HDF5 structure must both
+       have the same hash() value.
+    B. ObjectID instances which point to the same HDF5 structure must evauluate
+       as equal.
+
+For named objects like datasets, groups, and files, the hash is derived from
+properties like fileno and objno, which are guaranteed by the library to be
+unique among open files.  For all other objects, the HDF5 identifier determines
+uniqueness.
+
+
+
+
+
+
+
+
+
+

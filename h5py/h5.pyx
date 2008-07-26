@@ -193,7 +193,7 @@ cdef class ObjectID:
 
     property pylock:
         """ RLock or equivalent for threads.  The same lock is returned for
-            equal objects (objects which point to the same HDF5 structure).
+            objects which point to the same HDF5 structure.
         """
         def __get__(self):
             if self._cfg is None:
