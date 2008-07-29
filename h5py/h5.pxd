@@ -253,16 +253,15 @@ cdef object standard_richcmp(object self, object other, int how)
 
 cdef class H5PYConfig:
 
-    cdef object _rlock_type         # RLock constructor or compatible
     cdef object _complex_names      # ('r','i')
-    cdef public object _lockdict    # Weakref dict for RLock instances
+    cdef object _lock               # Primary HDF5 Interface Lock (PHIL)
+    cdef readonly object compile_opts
 
 cdef class ObjectID:
     """ Base wrapper class for HDF5 object identifiers """
     cdef object __weakref__
     cdef readonly hid_t id
     cdef readonly int _locked
-    cdef H5PYConfig _cfg        # Used to cache a reference to the global config object
     cdef object _hash           # Used by subclasses to cache a hash value,
                                 # which may be expensive to compute.
 

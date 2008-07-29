@@ -94,6 +94,7 @@ PYREX_FORCE_OFF = False     # Flag: Don't run Pyrex, no matter what
 API_VERS = (1,6)
 DEBUG_LEVEL = 0
 HDF5_DIR = None
+IO_NONBLOCK = False
 
 for arg in sys.argv[:]:
     if arg == '--pyrex':
@@ -123,13 +124,20 @@ for arg in sys.argv[:]:
         sys.argv.remove(arg)
     elif arg.find('--debug=') == 0:
         ENABLE_PYREX=True
-        DEBUG_LEVEL = int(arg[8:])
+        try:
+            DEBUG_LEVEL = int(arg[8:])
+        except:
+            fatal('Debuglevel not understood (wants --debug=<n>)')
         sys.argv.remove(arg)
     elif arg.find('--hdf5=') == 0:
         splitarg = arg.split('=',1)
         if len(splitarg) != 2:
             fatal("HDF5 directory not understood (wants --hdf5=/path/to/hdf5)")
         HDF5_DIR = splitarg[1]
+        sys.argv.remove(arg)
+    elif arg.find('--io-nonblock') == 0:
+        ENABLE_PYREX=True
+        IO_NONBLOCK = True
         sys.argv.remove(arg)
 
 if 'sdist' in sys.argv and os.path.exists('MANIFEST'):
@@ -211,8 +219,10 @@ DEF H5PY_DEBUG = %d
 
 DEF H5PY_16API = %d
 DEF H5PY_18API = %d
+
+DEF H5PY_NONBLOCK = %d
 """ % (AUTO_HDR, VERSION, API_VERS[0], API_VERS[1], DEBUG_LEVEL,
-       1 if API_VERS==(1,6) else 0, 1 if API_VERS==(1,8) else 0)
+       1 if API_VERS==(1,6) else 0, 1 if API_VERS==(1,8) else 0, int(IO_NONBLOCK))
 
             try:
                 cond_file = open(cond_path,'r')

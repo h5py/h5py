@@ -49,7 +49,7 @@ import inspect
 import threading
 from weakref import WeakValueDictionary
 
-from h5py import h5, h5f, h5g, h5s, h5t, h5d, h5a, h5p, h5z, h5i
+from h5py import h5, h5f, h5g, h5s, h5t, h5d, h5a, h5p, h5z, h5i, config
 from h5py.h5 import H5Error
 from utils_hl import slicer, hbasename, strhdr, strlist
 from browse import _H5Browser
@@ -70,8 +70,8 @@ class LockableObject(object):
         Base class which provides rudimentary locking support.
     """
 
-    lock = property(lambda self: self.id.pylock,
-        doc = "A reentrant lock associated with this HDF5 structure")
+    lock = property(lambda self: config.lock,
+        doc = "A reentrant lock for thread-safe use of this object")
 
 class HLObject(LockableObject):
 

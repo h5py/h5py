@@ -13,6 +13,7 @@
 """
     Provides access to the low-level HDF5 "H5D" dataset interface.
 """
+include "conditions.pxi"
 
 # Pyrex compile-time imports
 from h5 cimport standard_richcmp
@@ -31,6 +32,7 @@ import h5
 import h5t
 import h5s
 import h5g
+from h5 import _config as config
 
 import_array()
 
@@ -183,28 +185,30 @@ cdef class DatasetID(ObjectID):
         cdef void* data
         cdef int oldflags
 
-        self.pylock.acquire()
-        try:
+        mtype = h5t.py_create(arr_obj.dtype)
+        check_numpy_write(arr_obj, -1)
+
+        self_id = self.id
+        mtype_id = mtype.id
+        mspace_id = mspace.id
+        fspace_id = fspace.id
+        plist_id = pdefault(dxpl)
+        data = PyArray_DATA(arr_obj)
+
+        IF H5PY_NONBLOCK:
+            lock = config.lock
+            lock.acquire()
             oldflags = arr_obj.flags
             arr_obj.flags = oldflags & (~NPY_WRITEABLE) # Wish-it-was-a-mutex approach
+            try:
+                with nogil:
+                    H5PY_H5Dread(self_id, mtype_id, mspace_id, fspace_id, plist_id, data)
+            finally:
+                arr_obj.flags = oldflags
+                lock.release()
+        ELSE:
+            H5PY_H5Dread(self_id, mtype_id, mspace_id, fspace_id, plist_id, data)
 
-            mtype = h5t.py_create(arr_obj.dtype)
-            check_numpy_write(arr_obj, -1)
-
-            self_id = self.id
-            mtype_id = mtype.id
-            mspace_id = mspace.id
-            fspace_id = fspace.id
-            plist_id = pdefault(dxpl)
-            data = PyArray_DATA(arr_obj)
-
-            with nogil:
-                H5PY_H5Dread(self_id, mtype_id, mspace_id, fspace_id, plist_id, data)
-
-        finally:
-            arr_obj.flags = oldflags
-            self.pylock.release()
-        
     def write(self, SpaceID mspace not None, SpaceID fspace not None, 
                     ndarray arr_obj not None, PropDXID dxpl=None):
         """ (SpaceID mspace, SpaceID fspace, NDARRAY arr_obj, 
@@ -227,27 +231,29 @@ cdef class DatasetID(ObjectID):
         cdef void* data
         cdef int oldflags
 
-        self.pylock.acquire()
-        try:
+        mtype = h5t.py_create(arr_obj.dtype)
+        check_numpy_read(arr_obj, -1)
+
+        self_id = self.id
+        mtype_id = mtype.id
+        mspace_id = mspace.id
+        fspace_id = fspace.id
+        plist_id = pdefault(dxpl)
+        data = PyArray_DATA(arr_obj)
+
+        IF H5PY_NONBLOCK:
+            lock = config.lock
+            lock.acquire()
             oldflags = arr_obj.flags
             arr_obj.flags = oldflags & (~NPY_WRITEABLE) # Wish-it-was-a-mutex approach
-
-            mtype = h5t.py_create(arr_obj.dtype)
-            check_numpy_read(arr_obj, -1)
-
-            self_id = self.id
-            mtype_id = mtype.id
-            mspace_id = mspace.id
-            fspace_id = fspace.id
-            plist_id = pdefault(dxpl)
-            data = PyArray_DATA(arr_obj)
-
-            with nogil:
-                H5PY_H5Dwrite(self_id, mtype_id, mspace_id, fspace_id, plist_id, data)
-
-        finally:
-            arr_obj.flags = oldflags
-            self.pylock.release()
+            try:
+                with nogil:
+                    H5PY_H5Dwrite(self_id, mtype_id, mspace_id, fspace_id, plist_id, data)
+            finally:
+                arr_obj.flags = oldflags
+                lock.release()
+        ELSE:
+            H5PY_H5Dwrite(self_id, mtype_id, mspace_id, fspace_id, plist_id, data)
 
     def extend(self, object shape):
         """ (TUPLE shape)

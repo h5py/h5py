@@ -58,19 +58,6 @@ def get_libversion():
 
     return (major, minor, release)
 
-# --- Public versioning info ---
-
-hdf5_version_tuple = get_libversion()        
-hdf5_version = "%d.%d.%d" % hdf5_version_tuple
-api_version_tuple = (H5PY_API_MAJ, H5PY_API_MIN)
-api_version = "%d.%d" % api_version_tuple
-
-version = H5PY_VERSION
-version_tuple = []   # no list comprehensions in Pyrex
-for _x in version.split('.'):
-    version_tuple.append(int(_x))
-version_tuple = tuple(version_tuple)
-
 def _close():
     """ Internal function; do not call unless you want to lose all your data.
     """
@@ -85,17 +72,22 @@ cdef class H5PYConfig:
 
     """
         Global configuration object for the h5py package.
+
+        Properties:
+        lock            Global reentrant lock for threading
+        RLock           Constructor for lock
+        compile_opts    Dictionary of compile-time flags
     """
 
     def __init__(self):
-        self._lockdict = WeakKeyDictionary()  # ObjectID weakref => RLock instance
         self._complex_names = ('r','i')
-        self.RLock = threading.RLock
+        self.compile_opts = {'IO_NONBLOCK': H5PY_NONBLOCK}
+        self.lock = threading.RLock()  # Use the property to double-check its behavior
 
-    property RLock:
-        """ Callable returning a reentrant lock (default is threading.RLock).
+    property lock:
+        """ Reentrant lock for threading (default is threading.RLock()).
             
-            Whatever you provide must support the Python context manager
+            Whatever you provide MUST support the Python context manager
             protocol, and provide the methods acquire() and release().  It
             also MUST be reentrant, or dataset reads/writes will deadlock.
         """
@@ -103,12 +95,15 @@ cdef class H5PYConfig:
             return self._rlock_type
 
         def __set__(self, val):
-            testlock = val()
-            if not (hasattr(testlock, 'acquire') and hasattr(testlock, 'release') and\
-                    hasattr(testlock, '__enter__') and hasattr(testlock, '__exit__')):
+            if not (hasattr(val, 'acquire') and hasattr(val, 'release') and\
+                    hasattr(val, '__enter__') and hasattr(val, '__exit__')):
                 raise ValueError("Generated locks must provide __enter__, __exit__, acquire, release")
-            self._rlock_type = val
-            self._lockdict.clear()
+            current_lock = self._lock
+            current_lock.acquire()
+            try:
+                self._lock = val
+            finally:
+                current_lock.release()
 
     property complex_names:
         """ Tuple (real, img) indicating names used to save complex types.
@@ -120,22 +115,7 @@ cdef class H5PYConfig:
             # TODO: validation
             self._complex_names = val
 
-    def _get_lock(self, ObjectID key not None):
-        """ (ObjectID key) => LOCK 
 
-            Obtain a reentrant lock instance.  Guaranteed to be the same lock
-            for the same key.  Keys are kept as weak references; when they
-            disappear, so do the lock objects.
-        """
-        # ObjectID instances which are both equal and hash to the same value
-        # are guaranteed to point to the same underlying HDF5 object.
-        lock = self._lockdict.get(key, None)
-        if lock is None:
-            lock = self._rlock_type()
-            self._lockdict[key] = lock
-        return lock
-
-config = H5PYConfig()
 
 cdef object standard_richcmp(object self, object other, int how):
     # This needs to be shared because of weird CPython quirks involving
@@ -173,16 +153,6 @@ cdef class ObjectID:
 
         The truth value of an ObjectID (i.e. bool(obj_id)) indicates whether
         the underlying HDF5 identifier is valid.
-
-        Rudimentary thread safety is provided by the property pylock, which is
-        an RLock instance shared by objects that point to the same underlying
-        HDF5 structure.  In multithreaded programs, you should acquire this
-        lock before modifying the structure.  Locks have no relationship;
-        locking a file does not prevent access to its objects, nor a group to
-        its members.
-
-        ObjectID subclasses which release the GIL (e.g. around blocking I/O
-        operations) will lock themselves first.
     """
 
     property _valid:
@@ -190,15 +160,6 @@ cdef class ObjectID:
         """
         def __get__(self):
             return H5Iget_type(self.id) != H5I_BADID
-
-    property pylock:
-        """ RLock or equivalent for threads.  The same lock is returned for
-            objects which point to the same HDF5 structure.
-        """
-        def __get__(self):
-            if self._cfg is None:
-                self._cfg = config
-            return self._cfg._get_lock(self)
 
     def __nonzero__(self):
         """ Truth value for object identifiers (like _valid) """
@@ -642,11 +603,21 @@ cdef int import_hdf5() except -1:
     return 0
 
 import_hdf5()
+ 
+# --- Public versioning info ---
 
+hdf5_version_tuple = get_libversion()        
+hdf5_version = "%d.%d.%d" % hdf5_version_tuple
+api_version_tuple = (H5PY_API_MAJ, H5PY_API_MIN)
+api_version = "%d.%d" % api_version_tuple
 
+version = H5PY_VERSION
+version_tuple = []   # no list comprehensions in Pyrex
+for _x in version.split('.'):
+    version_tuple.append(int(_x))
+version_tuple = tuple(version_tuple)
 
-
-
+_config = H5PYConfig()
 
 
 
