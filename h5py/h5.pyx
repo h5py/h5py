@@ -82,7 +82,7 @@ cdef class H5PYConfig:
     def __init__(self):
         self._complex_names = ('r','i')
         self.compile_opts = {'IO_NONBLOCK': H5PY_NONBLOCK}
-        self.lock = threading.RLock()  # Use the property to double-check its behavior
+        self._lock = threading.RLock()
 
     property lock:
         """ Reentrant lock for threading (default is threading.RLock()).
@@ -92,7 +92,7 @@ cdef class H5PYConfig:
             also MUST be reentrant, or dataset reads/writes will deadlock.
         """
         def __get__(self):
-            return self._rlock_type
+            return self._lock
 
         def __set__(self, val):
             if not (hasattr(val, 'acquire') and hasattr(val, 'release') and\

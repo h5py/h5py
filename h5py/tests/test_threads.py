@@ -79,13 +79,13 @@ class TestThreads(unittest.TestCase):
 
         self.fname = tempfile.mktemp('.hdf5')
         self.f = File(self.fname, 'w')
-        self.old_lock = h5py.config.RLock
-        h5py.config.RLock = LOCKTYPE
+        self.old_lock = h5py.config.lock
+        h5py.config.lock = LOCKTYPE()
 
     def tearDown(self):
         self.f.close()
         os.unlink(self.fname)
-        h5py.config.RLock = self.old_lock
+        h5py.config.lock = self.old_lock
 
     def test_hl_pos(self):
 
@@ -119,10 +119,10 @@ class TestThreads(unittest.TestCase):
 
     def test_hl_neg(self):
 
-        oldlock = h5py.config.RLock
+        oldlock = h5py.config.lock
         try:
             # Force the threads to operate in reverse order, by defeating locks
-            h5py.config.RLock = dummy_threading.RLock
+            h5py.config.lock = dummy_threading.RLock()
             
             reclist = []
 
@@ -152,7 +152,7 @@ class TestThreads(unittest.TestCase):
             self.assertEqual(reclist, ['D','C','B','A'])
             self.assert_(numpy.all(dset.value == numpy.ones(SHAPE)*1.0))
         finally:
-            h5py.config.RLock = oldlock
+            h5py.config.lock = oldlock
 
     def test_nonblock(self):
         # Ensure low-level I/O blocking behavior
@@ -193,12 +193,19 @@ class TestThreads(unittest.TestCase):
             writethread.start()
             time.sleep(2)       # give it more than enough time to finish, if it ignores the lock
             exit_lock_time = time.time()
-        time.sleep(0.1)
+            time.sleep(2)
         writethread.join()
 
         if h5py.config.compile_opts['IO_NONBLOCK']:
+            # With non-blocking I/O, the library will double-check that the
+            # global lock isn't held, to prevent more than one thread from
+            # calling into the HDF5 API.
             self.assert_(writethread.timestop > exit_lock_time)
         else:
+            # In blocking mode, the GIL ensures that only one thread at a time
+            # can access the HDF5 library.  Therefore the library ignores the
+            # state of the soft lock.  If this were a real program, the author
+            # of "writethread" should acquire the lock first.
             self.assert_(writethread.timestop < exit_lock_time)
 
 
