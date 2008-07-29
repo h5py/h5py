@@ -13,8 +13,8 @@ other thread can execute.  Native-Python routines like those in h5py.highlevel
 enforce thread safety through the use of reentrant locks.
 
 Since HDF5 does not (yet) provide concurrency support for threads, the same
-global lock is used for all objects.  It is available in the low-level
-component as h5.config.lock, and comes attached to all high-level objects
+global lock is used for all objects.  It is available on the global config
+object as h5.config.lock, and comes attached to all high-level objects
 (Dataset, etc.) as "<obj>.lock".  
 
 You are encouraged to use this locking mechanism for blocks of Python
