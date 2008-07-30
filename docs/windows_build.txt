@@ -29,7 +29,7 @@ ftp://ftp.hdfgroup.org/lib-external/zlib/1.2/bin/windows/zlib123-vs2005.zip
    This is available from Microsoft's web site.
    
 Create import library
-1. Open a terminal and cd to C:\h181\lib
+1. Open a terminal and cd to C:\h181\dll
 2. Run "pexports hdf5dll.dll > hdf5dll.def" to get the list of HDF5 exports
 3. Run "dlltool -D hdf5dll.dll -d hdf5dll.def -l hdf5dll.dll.a" to create
    an import library that MinGW can handle.
