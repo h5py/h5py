@@ -13,7 +13,7 @@ from __future__ import with_statement
 
 from h5py import config
 
-# Decorator utility for threads
+# Decorator utility for low-level thread safety
 from functools import update_wrapper
 def h5sync(func):
     

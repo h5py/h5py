@@ -3,52 +3,30 @@
 Threading
 =========
 
-All h5py routines are intended to be thread-safe. In this context "thread-safe"
-means that if a method is called on an object by one thread, no other thread
-can execute the same method on the same object until the first one finishes.
+Threading is an issue in h5py because HDF5 doesn't support thread-level
+concurrency.  Some versions of HDF5 are not even thread-safe.  The package
+tries to hide as much of these problems as possible using a combination of
+the GIL and Python-side reentrant locks.
 
-Most routines are written in C, and accomplish this by holding the global
-interpreter lock (GIL) until they finish, automatically guaranteeing that no
-other thread can execute.  Native-Python routines like those in h5py.highlevel
-enforce thread safety through the use of reentrant locks.
+High-level
+----------
 
-Since HDF5 does not (yet) provide concurrency support for threads, the same
-global lock is used for all objects.  It is available on the global config
-object as h5.config.lock, and comes attached to all high-level objects
-(Dataset, etc.) as "<obj>.lock".  
+The objects in h5py.highlevel (File, Dataset, etc) are always thread-safe.  You
+don't need to do any explicit locking, regardless of how the library is
+configured.
 
-You are encouraged to use this locking mechanism for blocks of Python
-statements that need to be executed in a thread-safe manner (i.e. atomically).
+Low-level
+---------
 
-A few examples are:
+The low-level API (h5py.h5*) is also thread-safe, unless you use the
+experimental non-blocking option to compile h5py.  Then, and only then, you
+must acquire a global lock before calling into the low-level API.  This lock
+is available on the global configuration object at "h5py.config.lock".  The
+decorator "h5sync" in h5py.extras can wrap functions to do this automatically.
 
-    # Example 1 (h5py.highlevel API)
-    def fiddle_with_data(ds):  # ds is a highlevel.Dataset object
-        with ds.lock:
-            ds[0,0] = 4.0
-            ds[1,2] = 8.0
-            ... more stuff ...
-        # lock released at end of block
 
-    # Example 2 (h5py.h5* API)
-    def write_some_data(shared_file, data_array):
-
-        with h5.config.lock:
-            dset = h5d.open(shared_file, "dsname")
-            dset.write(h5s.ALL, h5s.ALL, data_array)
-
-    # Example 3 (using a decorator)
-
-    from h5py.extras import h5sync
-
-    @h5sync  # Does exactly the same thing as "with" in example 2
-    def write_some_data(shared_file, data_array):
-
-        dset = h5d.open(shared_file, "dsname")
-        dset.write(h5s.ALL, h5s.ALL, data_array)
-    
-Non-Blocking Routines
----------------------
+More about Non-Blocking Routines
+--------------------------------
 
 By default, all low-level HDF5 routines will lock the entire interpreter
 until they complete, even in the case of lengthy I/O operations.  This is
@@ -77,13 +55,14 @@ The following operations will release the GIL during I/O:
     * DatasetID.write
 
 
-Customizing Locks
------------------
+Customizing the lock type
+-------------------------
 
-Because applications that use h5py may have their own threading systems, the
-lock used is settable at runtime.  The lock is stored as settable property
-"h5py.config.lock" and should be a lock instance (not a constructor) which
-provides the following methods:
+Applications that use h5py may have their own threading systems.  Since the
+h5py locks are acquired and released alongside application code, you can
+set the type of lock used internally by h5py.  The lock is stored as settable
+property "h5py.config.lock" and should be a lock instance (not a constructor)
+which provides the following methods:
 
     __enter__(), __exit__()     For the Python context manager protocol
     acquire(), release()        For manual lock management
@@ -91,27 +70,6 @@ provides the following methods:
 The default lock type is the native Python threading.RLock, but h5py makes no
 assumptions about the behavior or implementation of locks beyond reentrance and
 the existence of the four required methods above.
-
-todo: make this a new section
-
-ObjectID Hashing
-----------------
-
-H5py uses a global weak-reference dictionary to keep track of which lock goes
-with which ObjectID instance.  For this to work, there must be a way to
-identify which ObjectID instances point to the same HDF5 structure.  Two rules
-make this possible:
-
-    A. ObjectID instances which point to the same HDF5 structure must both
-       have the same hash() value.
-    B. ObjectID instances which point to the same HDF5 structure must evauluate
-       as equal.
-
-For named objects like datasets, groups, and files, the hash is derived from
-properties like fileno and objno, which are guaranteed by the library to be
-unique among open files.  For all other objects, the HDF5 identifier determines
-uniqueness.
-
 
 
 

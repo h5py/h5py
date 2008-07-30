@@ -43,7 +43,7 @@ class WriterThread(Thread):
     def run(self):
         # Try to fill the dataset with our values
 
-        with self.dset.lock:
+        with self.dset._lock:
             if self.next_thread is not None:
                 self.next_thread.start()    # Try to make the next thread steal the dataset
                 time.sleep(self.sleeptime)  # Make sure it has a chance to misbehave

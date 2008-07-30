@@ -70,8 +70,8 @@ class LockableObject(object):
         Base class which provides rudimentary locking support.
     """
 
-    lock = property(lambda self: config.lock,
-        doc = "A reentrant lock for thread-safe use of this object")
+    _lock = property(lambda self: config.lock,
+        doc = "A reentrant lock for internal thread safety")
 
 class HLObject(LockableObject):
 
@@ -129,7 +129,7 @@ class Group(HLObject):
             raising an exception if it doesn't exist.  If "create" is True,
             create a new HDF5 group and link it into the parent group.
         """
-        with parent_object.lock:
+        with parent_object._lock:
             if create:
                 self.id = h5g.create(parent_object.id, name)
             else:
@@ -166,7 +166,7 @@ class Group(HLObject):
 
             This limitation is intentional, and may be lifted in the future.
         """
-        with self.lock:
+        with self._lock:
             if isinstance(obj, Group) or isinstance(obj, Dataset) or isinstance(obj, Datatype):
                 self.id.link(h5i.get_name(obj.id), name, link_type=h5g.LINK_HARD)
 
@@ -184,7 +184,7 @@ class Group(HLObject):
 
             Currently can open groups, datasets, and named types.
         """
-        with self.lock:
+        with self._lock:
             info = h5g.get_objinfo(self.id, name)
 
             if info.type == h5g.DATASET:
@@ -216,7 +216,7 @@ class Group(HLObject):
 
     def iteritems(self):
         """ Iterate over the group members as (name, value) pairs """
-        with self.lock:
+        with self._lock:
             for name in self:
                 yield (name, self[name])
 
@@ -250,7 +250,7 @@ class Group(HLObject):
     def desc(self):
         """ Extended (multi-line) description of this group, as a string.
         """
-        with self.lock:
+        with self._lock:
             outstr = 'Group "%s" in file "%s":' % \
                     (hbasename(h5i.get_name(self.id)), os.path.basename(h5f.get_name(self.id)))
             outstr = strhdr(outstr)
@@ -265,7 +265,7 @@ class Group(HLObject):
             return outstr
         
     def __str__(self):
-        with self.lock:
+        with self._lock:
             try:
                 return 'Group "%s" (%d members)' % (hbasename(self.name), len(self))
             except:
@@ -346,7 +346,7 @@ class File(Group):
     def close(self):
         """ Close this HDF5 file.  All open objects will be invalidated.
         """
-        with self.lock:
+        with self._lock:
             self.id._close()
             self.fid.close()
 
@@ -359,12 +359,12 @@ class File(Group):
         return self
 
     def __exit__(self,*args):
-        with self.lock:
+        with self._lock:
             if self.id._valid:
                 self.close()
             
     def __str__(self):
-        with self.lock:
+        with self._lock:
             try:
                 return 'File "%s", root members: %s' % (self.name, ', '.join(['"%s"' % name for name in self]))
             except:
@@ -429,7 +429,7 @@ class Dataset(HLObject):
         doc = "Numpy dtype representing the datatype")
 
     def _getval(self):
-        with self.lock:
+        with self._lock:
             arr = self[...]
             if arr.shape == ():
                 return numpy.asscalar(arr)
@@ -468,7 +468,7 @@ class Dataset(HLObject):
             shuffle:       Use the shuffle filter? (requires compression) T/F*
             fletcher32:    Enable Fletcher32 error detection? T/F*
         """
-        with group.lock:
+        with group._lock:
             if data is None and shape is None:
                 if any((data,dtype,shape,chunks,compression,shuffle,fletcher32)):
                     raise ValueError('You cannot specify keywords when opening a dataset.')
@@ -524,7 +524,7 @@ class Dataset(HLObject):
             ds[1,2,3,"a"]
             ds[0:5:2, ..., 0:2, "a", "b"]
         """
-        with self.lock:
+        with self._lock:
             start, count, stride, names = slicer(self.shape, args)
 
             if not (len(start) == len(count) == len(stride) == self.id.rank):
@@ -577,7 +577,7 @@ class Dataset(HLObject):
             Numpy array must match the shape of the selection, and the Numpy
             array's datatype must be convertible to the HDF5 datatype.
         """
-        with self.lock:
+        with self._lock:
             start, count, stride, names = slicer(self.shape, args)
             if len(names) != 0:
                 raise ValueError("Field name selections are not allowed for write.")
@@ -598,7 +598,7 @@ class Dataset(HLObject):
             self.id.write(mspace, fspace, numpy.array(val))
 
     def __str__(self):
-        with self.lock:
+        with self._lock:
             try:
                 return 'Dataset "%s": %s %s' % (hbasename(self.name),
                         str(self.shape), repr(self.dtype))
@@ -643,7 +643,7 @@ class AttributeManager(LockableObject):
             will be returned as a Numpy scalar.  Otherwise, it will be returned
             as a Numpy ndarray.
         """
-        with self.lock:
+        with self._lock:
             attr = h5a.open_name(self.id, name)
 
             arr = numpy.ndarray(attr.shape, dtype=attr.dtype)
@@ -661,7 +661,7 @@ class AttributeManager(LockableObject):
             Any existing value is destroyed just before the call to h5a.create.
             If the creation fails, the data is not recoverable.
         """
-        with self.lock:
+        with self._lock:
             if not isinstance(value, numpy.ndarray):
                 value = numpy.array(value)
 
@@ -686,13 +686,13 @@ class AttributeManager(LockableObject):
 
     def __iter__(self):
         """ Iterate over the names of attributes. """
-        with self.lock:
+        with self._lock:
             for name in h5a.py_listattrs(self.id):
                 yield name
 
     def iteritems(self):
         """ Iterate over (name, value) tuples. """
-        with self.lock:
+        with self._lock:
             for name in self:
                 yield (name, self[name])
 
@@ -701,7 +701,7 @@ class AttributeManager(LockableObject):
         return h5a.py_exists(self.id, name)
 
     def __str__(self):
-        with self.lock:
+        with self._lock:
             try:
                 rstr = 'Attributes of "%s": ' % hbasename(h5i.get_name(self.id))
                 if len(self) == 0:
@@ -738,12 +738,12 @@ class Datatype(HLObject):
     def __init__(self, grp, name):
         """ Private constructor; you should not create these.
         """
-        with grp.lock:
+        with grp._lock:
             self.id = h5t.open(grp.id, name)
             self._attrs = AttributeManager(self)
 
     def __str__(self):
-        with self.lock:
+        with self._lock:
             try:
                 return "Named datatype object (%s)" % str(self.dtype)
             except:
