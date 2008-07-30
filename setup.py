@@ -179,7 +179,7 @@ if os.name == 'nt':
     include_dirs = [numpy.get_include(), op.join(opts.HDF5_DIR, 'include')]
     library_dirs = [op.join(opts.HDF5_DIR, 'dll2')]  # Must contain only "hdf5dll.dll.a"
     runtime_dirs = []
-    extra_compile_args = ['-DH5_USE_16_API', '-D_HDF5USEDLL_']
+    extra_compile_args = ['-DH5_USE_16_API', '-D_HDF5USEDLL_', '-DH5_SIZEOF_SSIZE_T=4']
     extra_link_args = []
 
 else:
