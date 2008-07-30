@@ -64,8 +64,10 @@ set the type of lock used internally by h5py.  The lock is stored as settable
 property "h5py.config.lock" and should be a lock instance (not a constructor)
 which provides the following methods:
 
-    __enter__(), __exit__()     For the Python context manager protocol
-    acquire(), release()        For manual lock management
+    * __enter__
+    * __exit__
+    * acquire
+    * release
 
 The default lock type is the native Python threading.RLock, but h5py makes no
 assumptions about the behavior or implementation of locks beyond reentrance and
