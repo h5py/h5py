@@ -280,10 +280,11 @@ for module in modules:
 
 class test(Command):
     description = "Build %s and run unit tests" % NAME
-    user_options = []
+    user_options = [('sections=','s','Comma separated list of tests ("-" prefix to NOT run)')]
 
     def initialize_options(self):
-        pass
+        self.sections = None
+
     def finalize_options(self):
         pass
 
@@ -294,7 +295,7 @@ class test(Command):
         try:
             sys.path = [op.abspath(buildobj.build_lib)] + oldpath
             import h5py.tests
-            if not h5py.tests.runtests():
+            if not h5py.tests.runtests(None if self.sections is None else tuple(self.sections.split(','))):
                 raise DistutilsError("Unit tests failed.")
         finally:
             sys.path = oldpath
@@ -317,7 +318,7 @@ class dev(Command):
 
     def run(self):
         if self.clean:
-            for x in ('build','docs/html'):
+            for x in ('build','docs/api-html', 'docs/manual-html'):
                 try:
                     shutil.rmtree(x)
                 except OSError:
@@ -335,15 +336,22 @@ class dev(Command):
         if self.doc:
             buildobj = self.distribution.get_command_obj('build')
             buildobj.run()
-            if not op.exists('docs/html'):
-                os.mkdir('docs', 0755)
-                os.mkdir('docs/html', 0755)
+            for x in ('docs', 'docs/api-html'):
+                if not op.exists(x):
+                    os.mkdir(x, 0755)
 
             retval = os.spawnlp(os.P_WAIT, 'epydoc', '-q', '--html',
-                        '-o', 'docs/html', '--config', 'docs.cfg', 
+                        '-o', 'docs/api-html', '--config', 'docs.cfg', 
                         os.path.join(buildobj.build_lib, NAME) )
             if retval != 0:
-                raise DistutilsExecError("Could not run epydoc to build documentation.")
+                warn("Could not run epydoc to build documentation.")
+
+
+            retval = os.system("cd docs; make html")
+            if retval != 0:
+                warn("Could not run Sphinx doc generator")
+            else:
+                shutil.copytree('docs/build/html', 'docs/manual-html')
 
         if self.readme:
             import docutils.core

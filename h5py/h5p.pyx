@@ -140,7 +140,7 @@ cdef class PropInstanceID(PropID):
 cdef class PropFCID(PropInstanceID):
 
     """
-        Represents a file creation property list.
+        File creation property list.
     """
 
     def get_version(self):
@@ -243,7 +243,7 @@ cdef class PropFCID(PropInstanceID):
 cdef class PropDCID(PropInstanceID):
 
     """
-        Represents a dataset creation property list.
+        Dataset creation property list.
     """
 
     def set_layout(self, int layout_code):
@@ -459,6 +459,7 @@ cdef class PropDCID(PropInstanceID):
         nelements = 16 # HDF5 library actually complains if this is too big.
 
         if not self._has_filter(filter_code):
+            # Avoid library segfault
             return None
 
         retval = H5Pget_filter_by_id(self.id, <H5Z_filter_t>filter_code,
@@ -509,7 +510,7 @@ cdef class PropDCID(PropInstanceID):
 cdef class PropFAID(PropInstanceID):
 
     """
-        Represents a file access property list
+        File access property list
     """
 
     def set_fclose_degree(self, int close_degree):
@@ -601,6 +602,66 @@ cdef class PropFAID(PropInstanceID):
             for details.  Flag constants are stored in module h5fd.
         """
         H5Pset_fapl_log(self.id, logfile, flags, buf_size)
+
+    def set_fapl_sec2(self):
+        """ ()
+
+            Select the "section-2" driver (h5fd.SEC2).
+        """
+        H5Pset_fapl_sec2(self.id)
+
+    def set_fapl_stdio(self):
+        """ ()
+
+            Select the "stdio" driver (h5fd.STDIO)
+        """
+        H5Pset_fapl_stdio(self.id)
+
+    def get_driver(self):
+        """ () => INT driver code
+
+            Return an integer identifier for the driver used by this list.
+            Although HDF5 implements these as full-fledged objects, they are
+            treated as integers by Python.  Built-in drivers identifiers are
+            listed in module h5fd; they are:
+                CORE
+                FAMILY
+                LOG
+                MPIO
+                MULTI
+                SEC2
+                STDIO
+        """
+        return H5Pget_driver(self.id)
+
+    def set_cache(self, int mdc, int rdcc, size_t rdcc_nbytes, double rdcc_w0):
+        """ (INT mdc, INT rdcc, UINT rdcc_nbytes, DOUBLE rdcc_w0)
+
+            Set the metadata (mdc) and raw data chunk (rdcc) cache properties.
+            See the HDF5 docs for a full explanation.
+        """
+        H5Pset_cache(self.id, mdc, rdcc, rdcc_nbytes, rdcc_w0)
+
+    def get_cache(self):
+        """ () => TUPLE cache info
+
+            Get the metadata and raw data chunk cache settings.  See the HDF5
+            docs for element definitions.  Return is a 4-tuple with entries:
+
+            1. INT mdc              Number of metadata objects
+            2. INT rdcc             Number of raw data chunks
+            3. UINT rdcc_nbytes     Size of raw data cache
+            4. DOUBLE rdcc_w0       Preemption policy for data cache.
+        """
+        cdef int mdc, rdcc
+        cdef size_t rdcc_nbytes
+        cdef double w0
+
+        H5Pget_cache(self.id, &mdc, &rdcc, &rdcc_nbytes, &w0)
+        return (mdc, rdcc, rdcc_nbytes, w0)
+
+
+
 
 
 

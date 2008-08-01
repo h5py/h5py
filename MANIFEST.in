@@ -6,5 +6,6 @@ include CHANGES.txt
 include docs.cfg
 recursive-include h5py *.py *.pyx *.pxd *.pxi *.h *.c *.hdf5
 recursive-include licenses *
-recursive-include docs *
+recursive-include docs/html *
+include docs/API.html
 

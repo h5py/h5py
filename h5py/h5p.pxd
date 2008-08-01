@@ -154,6 +154,13 @@ cdef extern from "hdf5.h":
   herr_t    H5Pset_fapl_log(hid_t fapl_id, char *logfile, unsigned int flags, size_t buf_size) except *
   herr_t    H5Pset_fapl_multi(hid_t fapl_id, H5FD_mem_t *memb_map, hid_t *memb_fapl,
                 char **memb_name, haddr_t *memb_addr, hbool_t relax) 
+  herr_t H5Pset_cache(hid_t plist_id, int mdc_nelmts, int rdcc_nelmts,
+                      size_t rdcc_nbytes, double rdcc_w0) except *
+  herr_t H5Pget_cache(hid_t plist_id, int *mdc_nelmts, int *rdcc_nelmts,
+                      size_t *rdcc_nbytes, double *rdcc_w0) except *
+  herr_t H5Pset_fapl_sec2(hid_t fapl_id) except *
+  herr_t H5Pset_fapl_stdio(hid_t fapl_id) except *
+  hid_t  H5Pget_driver(hid_t fapl_id) except *
 
   # Dataset creation properties
   herr_t        H5Pset_layout(hid_t plist, int layout) except *
@@ -191,8 +198,6 @@ cdef extern from "hdf5.h":
   H5Z_EDC_t H5Pget_edc_check(hid_t plist) except *
 
   # Other properties
-  herr_t H5Pset_cache(hid_t plist_id, int mdc_nelmts, int rdcc_nelmts,
-                      size_t rdcc_nbytes, double rdcc_w0) except *
   herr_t H5Pset_sieve_buf_size(hid_t fapl_id, hsize_t size) except *
   herr_t H5Pset_fapl_log(hid_t fapl_id, char *logfile,
                          unsigned int flags, size_t buf_size) except *

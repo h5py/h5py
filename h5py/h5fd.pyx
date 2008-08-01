@@ -24,6 +24,16 @@ MEM_LHEAP = H5FD_MEM_LHEAP
 MEM_OHDR = H5FD_MEM_OHDR
 MEM_NTYPES = H5FD_MEM_NTYPES
 
+# === Driver types ============================================================
+
+CORE = H5FD_CORE
+FAMILY = H5FD_FAMILY
+LOG = H5FD_LOG
+MPIO = H5FD_MPIO
+MULTI = H5FD_MULTI
+SEC2 = H5FD_SEC2
+STDIO = H5FD_STDIO  
+
 # === Logging driver ==========================================================
 
 LOG_LOC_READ  = H5FD_LOG_LOC_READ   # 0x0001
