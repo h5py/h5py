@@ -59,6 +59,17 @@ cdef class GroupStat:
     cdef readonly time_t mtime
     cdef readonly size_t linklen
 
+    def __str__(self):
+        return \
+"""
+fileno %s
+objno %s
+nlink %d
+typecode %d
+mtime %d
+linklen %d
+""" % (self.fileno, self.objno, self.nlink, self.type, self.mtime, self.linklen)
+
 cdef class GroupIter:
 
     """
@@ -87,7 +98,6 @@ cdef class GroupIter:
         retval = self.grp.get_objname_by_idx(self.idx)
         self.idx = self.idx + 1
         return retval
-
 
 # === Basic group management ==================================================
 
@@ -317,6 +327,7 @@ cdef class GroupID(ObjectID):
         """ (STRING name) => STRING link_value
 
             Retrieve the value (target name) of a symbolic link.
+            Limited to 2048 characters on Windows.
         """
         cdef char* value
         cdef H5G_stat_t statbuf
@@ -327,12 +338,16 @@ cdef class GroupID(ObjectID):
         if statbuf.type != H5G_LINK:
             raise ValueError('"%s" is not a symbolic link.' % name)
 
-        value = <char*>emalloc(sizeof(char)*(statbuf.linklen+1))
+        IF UNAME_SYSNAME == "Windows":
+            linklen = 2049  # Windows statbuf.linklen seems broken
+        ELSE:
+            linklen = statbuf.linklen+1
+        value = <char*>emalloc(sizeof(char)*linklen)
         try:
-            H5Gget_linkval(self.id, name, statbuf.linklen+1, value)
+            H5Gget_linkval(self.id, name, linklen, value)
+            value[linklen-1] = c'\0'  # in case HDF5 doesn't null terminate on Windows
             pyvalue = value
             return pyvalue
-
         finally:
             efree(value)
 
