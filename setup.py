@@ -187,7 +187,7 @@ else:
     extra_link_args = []
 
     package_data = {'h5py': ['*.pyx'],
-                   'h5py.tests': ['data/*.hdf5']},
+                   'h5py.tests': ['data/*.hdf5']}
 
 # If for some reason the .c files are missing, Pyrex is required.
 cfiles = [op.join(src_path, x+'.c') for x in modules]
