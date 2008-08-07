@@ -156,7 +156,7 @@ extra_src = ['utils_low.c']
 # Where these live, relative to setup.py
 src_path = 'h5py'
 
-# Platform-dependent arguments to setup()
+# Platform-dependent arguments to setup() or Extension()
 if os.name == 'nt':
 
     if opts.HDF5_DIR is None:
@@ -168,6 +168,10 @@ if os.name == 'nt':
     runtime_dirs = []
     extra_compile_args = ['-DH5_USE_16_API', '-D_HDF5USEDLL_', '-DH5_SIZEOF_SSIZE_T=4']
     extra_link_args = []
+    package_data = {'h5py': ['*.pyx', '*.dll', 
+                                'Microsoft.VC90.CRT/*.manifest',
+                                'Microsoft.VC90.CRT/*.dll'],
+                   'h5py.tests': ['data/*.hdf5']}
 
 else:
 
@@ -181,6 +185,9 @@ else:
     runtime_dirs = library_dirs
     extra_compile_args = ['-DH5_USE_16_API', '-Wno-unused', '-Wno-uninitialized']
     extra_link_args = []
+
+    package_data = {'h5py': ['*.pyx'],
+                   'h5py.tests': ['data/*.hdf5']},
 
 # If for some reason the .c files are missing, Pyrex is required.
 cfiles = [op.join(src_path, x+'.c') for x in modules]
@@ -350,6 +357,7 @@ else:
 #for key in sorted(opts.__dict__):
 #    print "%-20s %s" % (key, opts.__dict__[key])
 
+
 # Run setup
 setup(
   name = NAME,
@@ -357,8 +365,7 @@ setup(
   author = 'Andrew Collette',
   url = 'h5py.alfven.org',
   packages = ['h5py','h5py.tests'],
-  package_data = {'h5py': ['*.pyx'],  # so source is available for tracebacks
-                  'h5py.tests': ['data/*.hdf5']},  # Should be / even on Windows
+  package_data = package_data,
   ext_modules = extensions,
   requires = ['numpy (>=1.0.3)'],
   provides = ['h5py'],
