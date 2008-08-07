@@ -29,28 +29,13 @@
     To run the test suite locally (won't install anything):
     python setup.py test
 
-    Additional options (for all modes):
-        --pyrex         Have Pyrex recompile changed pyx files.
-        --pyrex-only    Have Pyrex recompile changed pyx files, and stop.
-        --pyrex-force   Recompile all pyx files, regardless of timestamps.
-        --no-pyrex      Don't run Pyrex, no matter what
-
-        --hdf5=path     Use alternate HDF5 directory (contains bin, include, lib)
-        --api=<n>       Specifies API version.  Only "16" is currently useful.
-        --debug=<n>     If nonzero, compile in debug mode.  The number is
-                        interpreted as a logging-module level number.
-
-    Advanced developer options:
-    python setup.py dev [--doc] [--clean] [--readme=<name.html>]
-        --doc:      Rebuild HTML documentation (requires epydoc)
-        --clean:    Wipe out build/ and Pyrex-created .c, .dep files
-        --readme:   Compile the RST readme file into an HTML fragment
+    See INSTALL.txt or the h5py manual for additional build options.
 """
 
 # === Global constants ========================================================
 
 NAME = 'h5py'
-VERSION = '0.2.2'
+VERSION = '0.3.0'
 
 MIN_PYREX = '0.9.8.4'  # for compile_multiple
 MIN_NUMPY = '1.0.3'
@@ -138,9 +123,11 @@ for arg in sys.argv[:]:
         opts.IO_NONBLOCK = True
         sys.argv.remove(arg)
 
-if 'sdist' in sys.argv and os.path.exists('MANIFEST'):
-    warn("Cleaning up stale MANIFEST file")
-    os.remove('MANIFEST')
+if 'sdist' in sys.argv:
+    if os.path.exists('MANIFEST'):
+        warn("Cleaning up stale MANIFEST file")
+        os.remove('MANIFEST')
+    shutil.copyfile(reduce(op.join, ('docs', 'source', 'build.rst')), 'INSTALL.txt')
 
 # === Required imports ========================================================
 
@@ -304,7 +291,6 @@ class dev(Command):
 
     description = "Developer commands (--doc, --clean, --readme=<file>)"
     user_options = [('doc','d','Rebuild documentation'),
-                    ('readme=','r','Compile HTML file from README.txt'),
                     ('clean', 'c', 'Remove built files and Pyrex temp files.')]
     boolean_options = ['doc']
 
@@ -352,15 +338,6 @@ class dev(Command):
                 warn("Could not run Sphinx doc generator")
             else:
                 shutil.copytree('docs/build/html', 'docs/manual-html')
-
-        if self.readme:
-            import docutils.core
-            fh = open('README.txt','r')
-            parts = docutils.core.publish_parts(fh.read(),writer_name='html')
-            fh.close()
-            fh = open(self.readme,'w')
-            fh.write(parts['body'])
-            fh.close()
 
 # New commands for setup (e.g. "python setup.py test")
 if os.name == 'nt':

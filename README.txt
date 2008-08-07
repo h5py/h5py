@@ -2,24 +2,18 @@ README for the "h5py" Python/HDF5 interface
 ===========================================
 Copyright (c) 2008 Andrew Collette
 
-* http://h5py.alfven.org
+Version 0.3.0
+
+* http://h5py.alfven.org        Main site, docs
+* http://h5py.googlecode.com    Downloads, FAQ and bug tracker
+
 * mail: "h5py" at the domain "alfven dot org"
 
-**Version 0.2.2**
-
-* `Introduction`_
-* `Features`_
-
-Introduction
-============
-
 The h5py package provides both a high- and low-level interface to the 
-`NCSA HDF5 library`__ from Python.  The low-level interface is
+HDF5 library from Python.  The low-level interface is
 intended to be a complete wrapping of the HDF5 1.6 API, while the high-
 level component supports Python-style object-oriented access to HDF5 files, 
 datasets and groups.
-
-__ http://hdf.ncsa.uiuc.edu
 
 The goal of this package is not to provide yet another scientific data
 model. It is an attempt to create as straightforward a binding as possible
@@ -27,14 +21,18 @@ to the existing HDF5 API and abstractions, so that Python programs can
 easily deal with HDF5 files and exchange data with other HDF5-aware
 applications.
 
+Quick installation
+------------------
+On Unix-like systems with gcc and distutils, run "python setup.py build"
+followed by "sudo python setup.py install".  See INSTALL.txt or the online
+guide at h5py.alfven.org for more details.
+
 Documentation
 -------------
 Extensive documentation is available through docstrings, as well as in 
-`HTML format on the web`__ and in the "docs/" directory in the 
+HTML format on the web and in the "docs/" directory in the 
 distribution.  This document is an overview of some of the package's 
 features and highlights.
-
-__ http://h5py.alfven.org/docs
 
 Features
 ========
@@ -84,7 +82,6 @@ Low-Level
       obviously wrong; you don't need to learn a totally new API
     - The majority of the HDF5 C-API documentation is still valid for the
       h5py interface
-
 
 Bugs
 ----

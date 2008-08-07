@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # h5py documentation build configuration file, created by
-# sphinx-quickstart on Wed Jul 30 15:11:11 2008.
+# sphinx-quickstart on Tue Aug  5 14:14:15 2008.
 #
 # This file is execfile()d with the current directory set to its containing dir.
 #
@@ -23,7 +23,7 @@ import sys, os
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = []
+extensions = ['sphinx.ext.autodoc']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

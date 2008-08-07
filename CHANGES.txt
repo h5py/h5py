@@ -1,7 +1,24 @@
-Version 0.2.3
+Version 0.3.0
 =============
 
+General
+-------
+  - Now compiles on Windows; installer available
+  - Sphinx-based manual started
+
+Low-level
+---------
+  - Threading infrastructure & non-blocking I/O patch
+  - Threading unit tests
+  - New module h5fd for constants needed by h5p
   - Moved get_objinfo out of GroupID into h5g, as it accepts datasets, etc.
+  - Work around for 1.8.1 Windows misbehavior: statbuf.linklen always 0
+  - ObjectID instances can be hashed and compared sanely
+  - New global configuration object "h5py.config"
+
+High-level
+----------
+  - All methods are now thread-safe
 
 Version 0.2.2
 =============

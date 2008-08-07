@@ -40,6 +40,9 @@
 
     It is safe to import this module using "from h5py.highlevel import *"; it
     will export only the major classes.
+
+    Everything in this module is thread-safe, regardless of the HDF5
+    configuration or compile options.
 """
 from __future__ import with_statement
 
