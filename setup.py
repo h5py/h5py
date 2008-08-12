@@ -249,7 +249,8 @@ DEF H5PY_NONBLOCK = %(IO_NONBLOCK)d
     except ImportError:
         fatal("Pyrex recompilation required, but Pyrex not installed.")
 else:
-    print "Skipping Pyrex..."
+    pass
+    #print "Skipping Pyrex..."
 
 # One extension is built for each module
 extensions = []
@@ -344,6 +345,8 @@ class dev(Command):
             if retval != 0:
                 warn("Could not run Sphinx doc generator")
             else:
+                if op.exists('docs/manual-html'):
+                    shutil.rmtree('docs/manual-html')
                 shutil.copytree('docs/build/html', 'docs/manual-html')
 
 # New commands for setup (e.g. "python setup.py test")
@@ -358,17 +361,51 @@ else:
 #    print "%-20s %s" % (key, opts.__dict__[key])
 
 
-# Run setup
+cls_txt = \
+"""
+Development Status :: 4 - Beta
+Intended Audience :: Developers
+Intended Audience :: Information Technology
+Intended Audience :: Science/Research
+License :: OSI Approved :: BSD License
+Programming Language :: Python
+Topic :: Scientific/Engineering
+Topic :: Software Development :: Libraries :: Python Modules
+Operating System :: Unix
+Operating System :: POSIX :: Linux
+Operating System :: MacOS :: MacOS X
+Operating System :: Microsoft :: Windows
+"""
+
+short_desc = "General-purpose Python bindings for the HDF5 library"
+
+long_desc = \
+"""
+The h5py package provides both a high- and low-level interface to the HDF5
+library from Python. The low-level interface is intended to be a complete
+wrapping of the HDF5 API, while the high-level component supports Python-style
+object-oriented access to HDF5 files, datasets and groups.
+
+A strong emphasis on automatic conversion between Python (Numpy) datatypes and
+data structures and their HDF5 equivalents vastly simplifies the process of
+reading and writing data from Python. 
+"""
+
 setup(
   name = NAME,
   version = VERSION,
+  description = short_desc,
+  long_description = long_desc,
+  classifiers = [x for x in cls_txt.split("\n") if x],
   author = 'Andrew Collette',
+  author_email = '"h5py" at the domain "alfven.org"',
+  maintainer = 'Andrew Collette',
+  maintainer_email = '"h5py" at the domain "alfven.org"',
   url = 'h5py.alfven.org',
   packages = ['h5py','h5py.tests'],
   package_data = package_data,
   ext_modules = extensions,
   requires = ['numpy (>=1.0.3)'],
-  provides = ['h5py'],
   cmdclass = CMD_CLASS
 )
 

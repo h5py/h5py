@@ -74,18 +74,18 @@ cdef class H5PYConfig:
         Global configuration object for the h5py package.
 
         Properties:
-        lock            Global reentrant lock for threading
-        RLock           Constructor for lock
+        lock            Global reentrant lock for threading support
         compile_opts    Dictionary of compile-time flags
     """
 
     def __init__(self):
         self._complex_names = ('r','i')
-        self.compile_opts = {'IO_NONBLOCK': H5PY_NONBLOCK}
+        self.compile_opts = {'IO_NONBLOCK': H5PY_NONBLOCK,
+                             'DEBUG': H5PY_DEBUG}
         self._lock = threading.RLock()
 
     property lock:
-        """ Reentrant lock for threading (default is threading.RLock()).
+        """ Reentrant lock instance; default is threading.RLock().
             
             Whatever you provide MUST support the Python context manager
             protocol, and provide the methods acquire() and release().  It
@@ -106,7 +106,7 @@ cdef class H5PYConfig:
                 current_lock.release()
 
     property complex_names:
-        """ Tuple (real, img) indicating names used to save complex types.
+        """ Unused
         """
         def __get__(self):
             return self._complex_names

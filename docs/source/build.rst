@@ -118,13 +118,13 @@ Compile h5py
     If you get the message "DLL import failed: configuration incorrect" or
     some variant, you need to install the package
     "Microsoft Visual C++ 2005 SP1 Redistributable" from Microsoft's
-    web site.  This is needed by the pre-built HDF5 library for some
-    reason.
+    web site.  This is because the pre-compiled HDF5 library requires
+    a specific C runtime library distributed with Visual Studio.
 
 5. Install via ``python setup.py install --hdf5=C:\hdf5``.
 
-After you're done, you can delete the ``C:\hdf5`` directory.  It isn't needed at
-runtime.
+After you're done, you can delete the ``C:\hdf5`` and ``C:\h5py`` directories.
+They aren't needed at runtime.
 
 
 

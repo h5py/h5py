@@ -1,6 +1,4 @@
-.. h5py documentation master file, created by sphinx-quickstart on Tue Aug  5 14:14:15 2008.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+
 
 Python bindings for the HDF5 library
 ====================================
@@ -23,11 +21,13 @@ Important links:
     * `Main project page`__
     * `Auto-generated API docs`__
     * `Google Code development page`__
+    * `Windows installers`__
     * Mail: "h5py" at the domain "alfven" dot "org"
 
 __ http://h5py.alfven.org
-__ http://h5py.alfven.org/docs
+__ http://h5py.alfven.org/docs/
 __ http://h5py.googlecode.com
+__ http://h5py.alfven.org/windows/
 
 Contents:
 
@@ -37,11 +37,4 @@ Contents:
     build
     threads
 
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
 

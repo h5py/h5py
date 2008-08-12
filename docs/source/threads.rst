@@ -29,7 +29,8 @@ Non-Blocking Routines
 
 By default, all low-level HDF5 routines will lock the entire interpreter
 until they complete, even in the case of lengthy I/O operations.  This is
-unnecessarily restrictive, as it means even non-HDF5 threads cannot execute.
+unnecessarily restrictive, as it means even non-HDF5 threads cannot execute
+while a lengthy HDF5 read or write is in progress.
 
 When the package is compiled with the option ``--io-nonblock``, a few C methods
 involving I/O will release the global interpreter lock.  These methods always
@@ -42,11 +43,13 @@ However, this defeats the thread safety provided by the GIL.  If another thread
 skips acquiring the HDF5 lock and blindly calls a low-level HDF5 routine while
 such I/O is in progress, the results are undefined.  In the worst case,
 irreversible data corruption and/or a crash of the interpreter is possible.
-Therefore, it's very important to always acquire the global HDF5 lock before
-calling into the h5py.h5* API when all the following are true:
 
-    1. More than one thread is performing HDF5 operations
-    2. Non-blocking I/O is enabled
+**You must acquire the global lock (h5py.config.lock) when all the following
+are true:**
+
+    1. You are using the low-level (h5py.h5*) API
+    2. More than one thread is performing HDF5 operations
+    3. Non-blocking I/O (``--io-nonblock``) is enabled
 
 This is not an issue for the h5py.highlevel components (Dataset, Group,
 File objects, etc.) as they acquire the lock automatically.

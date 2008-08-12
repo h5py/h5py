@@ -51,8 +51,8 @@
 
     4. Variable-length types
 
-        VLEN types, including VLEN strings, are not currently supported.
-        This may eventually change.
+        VLEN types can be manipulated, but reading and writing data in VLEN
+        format is not supported.  This applies to VLEN strings as well.
 """
 
 include "conditions.pxi"

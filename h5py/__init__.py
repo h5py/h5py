@@ -14,7 +14,7 @@
 
 __doc__ = \
 """
-    This is the h5py package, a Python interface to the NCSA HDF5 
+    This is the h5py package, a Python interface to the HDF5 
     scientific data format.
 
     Version %s
