@@ -36,5 +36,5 @@ Contents:
 
     build
     threads
-
+    licenses
 
