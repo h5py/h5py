@@ -84,7 +84,7 @@ def get_filter_info(int filter_code):
          FILTER_CONFIG_DECODE_ENABLED
     """
     cdef unsigned int flags
-    H5Zget_filter_info(<H5Z_filter_t>filter_id, &flags)
+    H5Zget_filter_info(<H5Z_filter_t>filter_code, &flags)
     return flags
 
 
