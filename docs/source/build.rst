@@ -63,9 +63,9 @@ Installing on Windows
 =====================
 
 **It's strongly recommended that you use the pre-built .exe installer.**  It
-will install h5py, a private copy of HDF5 1.8.1 with ZLIB and SZIP compression
-enabled, and the proper C runtime dependencies.  You must have the following
-already installed:
+will install h5py, a private copy of HDF5 1.8.1 with ZLIB and (optionally)
+SZIP compression enabled, and the proper C runtime dependencies.  You must have
+the following already installed:
 
 - Python 2.5
 - Numpy_ 1.0.3 or higher
@@ -98,7 +98,8 @@ Get HDF5 and create import file
    contain ``include`` and ``dll``, among other things.
 3. Open a command prompt in ``C:\hdf5\dll`` and run
    ``pexports hdf5dll.dll > hdf5dll.def``
-4. Create the directory ``C:\hdf5\dll2`` and move ``hdf5dll.def`` there
+4. Run ``dlltool -D hdf5dll.dll -d hdf5dll.def -l hdf5dll.dll.a``
+5. Create the directory ``C:\hdf5\dll2`` and move ``hdf5dll.dll.a`` there
 
 Compile h5py
 ------------

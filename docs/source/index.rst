@@ -35,6 +35,7 @@ Contents:
     :maxdepth: 2
 
     build
+    quick
     threads
     licenses
 
