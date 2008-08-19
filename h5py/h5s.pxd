@@ -20,6 +20,7 @@
 
 include "std_defs.pxi"
 from h5 cimport class ObjectID
+from numpy cimport ndarray
 
 cdef class SpaceID(ObjectID):
     pass

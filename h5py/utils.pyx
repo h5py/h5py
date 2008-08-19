@@ -11,7 +11,58 @@
 #-
 
 from python cimport PyTuple_Check, PyList_Check, PyErr_SetString, Py_INCREF
+from numpy cimport import_array, NPY_UINT16, NPY_UINT32, NPY_UINT64, \
+                   npy_intp, PyArray_SimpleNew, PyArray_ContiguousFromAny, \
+                    PyArray_FROM_OTF, NPY_CONTIGUOUS, NPY_NOTSWAPPED, \
+                    NPY_FORCECAST
 
+import_array()
+
+cdef object create_numpy_hsize(int rank, hsize_t* dims):
+    # Create an empty Numpy array which can hold HDF5 hsize_t entries
+
+    cdef int typecode
+    cdef npy_intp* dims_npy
+    cdef ndarray arr
+    cdef int i
+
+    if sizeof(hsize_t) == 2:
+        typecode = NPY_UINT16
+    elif sizeof(hsize_t) == 4:
+        typecode = NPY_UINT32
+    elif sizeof(hsize_t) == 8:
+        typecode = NPY_UINT64
+    else:
+        raise RuntimeError("Can't map hsize_t %d to Numpy typecode" % sizeof(hsize_t))
+
+    dims_npy = <npy_intp*>emalloc(sizeof(npy_intp)*rank)
+
+    try:
+        for i from 0<=i<rank:
+            dims_npy[i] = dims[i]
+        arr = PyArray_SimpleNew(rank, dims_npy, typecode)
+    finally:
+        efree(dims_npy)
+
+    return arr
+
+cdef object create_hsize_array(object arr):
+    # Create a NumPy array of hsize_t uints initialized to an existing array
+
+    cdef int typecode
+    cdef ndarray outarr
+
+    if sizeof(hsize_t) == 2:
+        typecode = NPY_UINT16
+    elif sizeof(hsize_t) == 4:
+        typecode = NPY_UINT32
+    elif sizeof(hsize_t) == 8:
+        typecode = NPY_UINT64
+    else:
+        raise RuntimeError("Can't map hsize_t %d to Numpy typecode" % sizeof(hsize_t))
+
+    return PyArray_FROM_OTF(arr, typecode, NPY_CONTIGUOUS | NPY_NOTSWAPPED | NPY_FORCECAST)
+    
 cdef int require_tuple(object tpl, int none_allowed, int size, char* name) except -1:
     # Ensure that tpl is in fact a tuple, or None if none_allowed is nonzero.
     # If size >= 0, also ensure that the length matches.

@@ -3,6 +3,7 @@
     Utility functions for high-level modules.
 """
 from __future__ import with_statement
+from h5py import h5s
 
 from posixpath import basename, normpath
 import numpy
@@ -15,56 +16,55 @@ def hbasename(name):
         bname = '/'
     return bname
 
-def slicer(shape, args):
-    """ Parse a tuple containing Numpy-style extended slices.
-        Shape should be a Numpy-style shape tuple.
+def slice_select(space, args):
+    """ Perform a selection on the given HDF5 dataspace, using a tuple
+        of Python extended slice objects.  The dataspace may be scalar or
+        simple.  The slice argument may be:
 
-        Arguments may contain:
+        0-tuple:
+            Entire dataspace selected (compatible with scalar)
 
-        1. Integer/long indices
-        2. Slice objects
-        3. Exactly one ellipsis object
-        4. Strings representing field names (zero or more, in any order)
+        1-tuple:
+            1. A single Ellipsis: entire dataspace selected
+            2. A NumPy array: element-wise selection
+            3. A single integer or slice (row-broadcasting)
 
-        Return is a 4-tuple containing sub-tuples:
-        (start, count, stride, names)
+        n-tuple:
+            1. slice objects
+            2. Ellipsis objects
+            3. Integers
 
-        start:  tuple with starting indices
-        count:  how many elements to select along each axis
-        stride: selection pitch for each axis
-        names:  field names (i.e. for compound types)
+        The return value is the appropriate memory dataspace to use.
     """
 
+    if len(args) == 0 or (len(args) == 1 and args[0] is Ellipsis):
+        space.select_all()
+        return space.copy()
+
+    if len(args) == 1:
+        argval = args[0]
+
+        if isinstance(argval, numpy.ndarray):
+            # Catch element-wise selection
+            indices = numpy.transpose(argval.nonzero())
+            space.select_elements(indices)
+            return h5s.create_simple((len(indices),))
+
+        # Single-index obj[0] access is always equivalent to obj[0,...].
+        # Pack it back up and send it to the hyperslab machinery
+        args = (argval, Ellipsis)
+
+    # Proceed to hyperslab selection
+
+    shape = space.shape
     rank = len(shape)
-
-    if not isinstance(args, tuple):
-        args = (args,)
-    args = list(args)
-
-    slices = []
-    names = []
-
-    # Sort arguments
-    for entry in args[:]:
-        if isinstance(entry, str):
-            names.append(entry)
-        else:
-            slices.append(entry)
-
-    # If only named fields are provided
-    if len(slices) == 0:
-        slices = [Ellipsis]
-
-    # Hack to allow Numpy-style row indexing
-    if len(slices) == 1 and slices[0] != Ellipsis:
-        slices.append(Ellipsis)
 
     start = []
     count = []
     stride = []
 
     # Expand integers and ellipsis arguments to slices
-    for dim, arg in enumerate(slices):
+    for dim, arg in enumerate(args):
 
         if isinstance(arg, int) or isinstance(arg, long):
             if arg < 0:
@@ -110,7 +110,7 @@ def slicer(shape, args):
             count.append(cc)
 
         elif arg == Ellipsis:
-            nslices = rank-(len(slices)-1)
+            nslices = rank-(len(args)-1)
             if nslices <= 0:
                 continue
             for x in range(nslices):
@@ -122,7 +122,8 @@ def slicer(shape, args):
         else:
             raise ValueError("Bad slice type %s" % repr(arg))
 
-    return (tuple(start), tuple(count), tuple(stride), tuple(names))
+    space.select_hyperslab(tuple(start), tuple(count), tuple(stride))
+    return h5s.create_simple(tuple(count))
 
 def strhdr(line, char='-'):
     """ Print a line followed by an ASCII-art underline """

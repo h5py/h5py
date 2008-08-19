@@ -62,7 +62,8 @@ cdef extern from "numpy/arrayobject.h":
     NPY_FLOAT32, NPY_FLOAT64, NPY_COMPLEX64, NPY_COMPLEX128
 
   cdef enum:
-    NPY_WRITEABLE, NPY_ALIGNED, NPY_C_CONTIGUOUS
+    NPY_WRITEABLE, NPY_ALIGNED, NPY_C_CONTIGUOUS, NPY_CONTIGUOUS,
+    NPY_FORCECAST, NPY_NOTSWAPPED
 
   # Classes
   ctypedef extern class numpy.dtype [object PyArray_Descr]:
@@ -98,6 +99,9 @@ cdef extern from "numpy/arrayobject.h":
 
   int PyArray_CheckScalar(object sclr)
   void PyArray_ScalarAsCtype(object sclr, void* ptr)
+  object PyArray_SimpleNew(int nd, npy_intp* dims, int typenum)
+  object PyArray_ContiguousFromAny(object arr, int typenum, int min_depth, int max_depth)
+  object PyArray_FROM_OTF(object arr, int typenum, int requirements)
 
   # The NumPy initialization function
   void import_array()

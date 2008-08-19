@@ -16,7 +16,7 @@
 
 # Pyrex compile-time imports
 from utils cimport  require_tuple, require_list, convert_dims, convert_tuple, \
-                    emalloc, efree, pybool
+                    emalloc, efree, pybool, create_numpy_hsize, create_hsize_array
 
 # Runtime imports
 import h5
@@ -355,80 +355,56 @@ cdef class SpaceID(ObjectID):
         return H5Sget_select_elem_npoints(self.id)
 
     def get_select_elem_pointlist(self):
-        """ () => LIST elements_list
+        """ () => NDARRAY elements_list
 
-            Get a list of all selected elements, in point-selection mode.
-            List entries are <rank>-length tuples containing point coordinates.
+            Get a list of all selected elements.  Return is a Numpy array of
+            unsigned ints, with shape (<npoints>, <space rank).
         """
-        cdef int rank
-        cdef hssize_t npoints
-        cdef hsize_t *buf
-        cdef int i_point
-        cdef int i_entry
+        cdef hsize_t dims[2]
+        cdef ndarray buf
 
-        npoints = H5Sget_select_elem_npoints(self.id)
-        if npoints == 0:
-            return []
+        dims[0] = H5Sget_select_elem_npoints(self.id)
+        dims[1] = H5Sget_simple_extent_ndims(self.id)
 
-        rank = H5Sget_simple_extent_ndims(self.id)
-        
-        buf = <hsize_t*>emalloc(sizeof(hsize_t)*rank*npoints)
+        buf = create_numpy_hsize(2, dims)
 
-        try:
-            H5Sget_select_elem_pointlist(self.id, 0, <hsize_t>npoints, buf)
+        H5Sget_select_elem_pointlist(self.id, 0, dims[0], <hsize_t*>buf.data)
 
-            retlist = []
-            for i_point from 0<=i_point<npoints:
-                tmp_tpl = []
-                for i_entry from 0<=i_entry<rank:
-                    tmp_tpl.append( long( buf[i_point*rank + i_entry] ) )
-                retlist.append(tuple(tmp_tpl))
+        return buf
 
-        finally:
-            efree(buf)
+    def select_elements(self, object coords, int op=H5S_SELECT_SET):
+        """ (SEQUENCE coords, INT op=SELECT_SET)
 
-        return retlist
+            Select elements by specifying coordinates points.  The argument
+            "coords" may be an ndarray or any nested sequence which can be
+            converted to an array of uints with the shape:
 
-    def select_elements(self, object coord_list, int op=H5S_SELECT_SET):
-        """ (LIST coord_list, INT op=SELECT_SET)
+                (<npoints>, <space rank>)
+            
+            Examples:
+                >>> obj.shape
+                (10, 10)
+                >>> obj.select_elements([(1,2), (3,4), (5,9)])
 
-            Select elements using a list of points.  List entries should be
-            tuples containing point coordinates. A zero-length list is 
-            apparently not allowed by the HDF5 library.
+            A zero-length selection (i.e. shape (0, <rank>)) is not allowed by
+            the HDF5 library.  
         """
-        cdef size_t nelements   # Number of point coordinates
-        cdef hsize_t *coords    # Contiguous 2D array nelements x rank x sizeof(hsize_t)
+        cdef ndarray hcoords
+        cdef size_t nelements
 
-        cdef int rank
-        cdef int i_point
-        cdef int i_entry
-        coords = NULL
+        # The docs say the selection list should be an hsize_t**, but it seems
+        # that HDF5 expects the coordinates to be a static, contiguous
+        # array.  We simulate that by creating a contiguous NumPy array of
+        # a compatible type and initializing it to the input.
 
-        require_list(coord_list, 0, -1, "coord_list")
-        nelements = len(coord_list)
+        hcoords = create_hsize_array(coords)
 
-        rank = H5Sget_simple_extent_ndims(self.id)
+        if hcoords.nd != 2 or hcoords.dimensions[1] != H5Sget_simple_extent_ndims(self.id):
+            raise ValueError("Coordinate array must have shape (<npoints>, %d)" % self.get_simple_extent_ndims())
 
-        # The docs say this should be an hsize_t**, but it seems that
-        # HDF5 expects the coordinates to be a static, contiguous
-        # array.  We'll simulate that by malloc'ing a contiguous chunk
-        # and using pointer arithmetic to initialize it.
-        coords = <hsize_t*>emalloc(sizeof(hsize_t)*rank*nelements)
+        nelements = hcoords.dimensions[0]
 
-        try:
-            for i_point from 0<=i_point<nelements:
-
-                tpl = coord_list[i_point]
-                lmsg = "List element %d" % i_point
-                require_tuple(tpl, 0, rank, lmsg)
-
-                for i_entry from 0<=i_entry<rank:
-                    coords[(i_point*rank) + i_entry] = tpl[i_entry]
-
-            H5Sselect_elements(self.id, <H5S_seloper_t>op, nelements, <hsize_t**>coords)
-
-        finally:
-            efree(coords)
+        H5Sselect_elements(self.id, <H5S_seloper_t>op, nelements, <hsize_t**>hcoords.data)
 
     # === Hyperslab selection functions =======================================
 
@@ -440,46 +416,30 @@ cdef class SpaceID(ObjectID):
         return H5Sget_select_hyper_nblocks(self.id)
 
     def get_select_hyper_blocklist(self):
-        """ () => LIST hyperslab_blocks
+        """ () => NDARRAY hyperslab_blocks
 
-            Get a Python list containing selected hyperslab blocks.
-            List entries are 2-tuples in the form:
-                ( corner_coordinate, opposite_coordinate )
-            where corner_coordinate and opposite_coordinate are <rank>-length
-            tuples.
+            Get the current hyperslab selection.  The returned array has shape
+
+                (<npoints>, 2, <rank>)
+
+            and can be interpreted as a nested sequence:
+
+                [ (corner_coordinate_1, opposite_coordinate_1), ... ]
+
+            with length equal to the total number of blocks.
         """
-        cdef hssize_t nblocks
-        cdef herr_t retval
-        cdef hsize_t *buf
+        cdef hsize_t dims[3]  # 0=nblocks 1=(#2), 2=rank
+        cdef ndarray buf
 
-        cdef int rank
-        cdef int i_block
-        cdef int i_entry
+        dims[0] = H5Sget_select_hyper_nblocks(self.id)
+        dims[1] = 2
+        dims[2] = H5Sget_simple_extent_ndims(self.id)
 
-        rank = H5Sget_simple_extent_ndims(self.id)
-        nblocks = H5Sget_select_hyper_nblocks(self.id)
+        buf = create_numpy_hsize(3, dims)
 
-        buf = <hsize_t*>emalloc(sizeof(hsize_t)*2*rank*nblocks)
-        
-        try:
-            H5Sget_select_hyper_blocklist(self.id, 0, nblocks, buf)
+        H5Sget_select_hyper_blocklist(self.id, 0, dims[0], <hsize_t*>buf.data)
 
-            outlist = []
-            for i_block from 0<=i_block<nblocks:
-                corner_list = []
-                opposite_list = []
-                for i_entry from 0<=i_entry<(2*rank):
-                    entry = long(buf[ i_block*(2*rank) + i_entry])
-                    if i_entry < rank:
-                        corner_list.append(entry)
-                    else:
-                        opposite_list.append(entry)
-                outlist.append( (tuple(corner_list), tuple(opposite_list)) )
-        finally:
-            efree(buf)
-
-        return outlist
-    
+        return buf
 
     def select_hyperslab(self, object start, object count, object stride=None, 
                          object block=None, int op=H5S_SELECT_SET):

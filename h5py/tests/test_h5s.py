@@ -11,6 +11,7 @@
 #-
 
 import unittest
+import numpy
 
 from h5py import *
 from h5py.h5 import H5Error
@@ -129,12 +130,12 @@ class TestH5S(unittest.TestCase):
 
     def test_elements(self):
 
-        pointlist= [(0,0), (15,98), (4,17), (67,32)] 
+        pointlist= numpy.array([(0,0), (15,98), (4,17), (67,32)])
         sid = h5s.create_simple((100,100))
 
         sid.select_elements(pointlist)
         self.assertEqual(sid.get_select_elem_npoints(), len(pointlist))
-        self.assertEqual(sid.get_select_elem_pointlist(), pointlist)
+        self.assert_(numpy.all(sid.get_select_elem_pointlist() == pointlist))
 
     def test_get_blocks(self):
 
@@ -147,7 +148,7 @@ class TestH5S(unittest.TestCase):
 
         self.assertEqual(sid.get_select_hyper_nblocks(), 2)
         blocklist = sid.get_select_hyper_blocklist()
-        self.assertEqual(blocklist, [( (0,0), (4,4) ), ( (50,60), (62,76) )])
+        self.assert_(numpy.all(blocklist == numpy.array([( (0,0), (4,4) ), ( (50,60), (62,76) )])))
 
     def test_py(self):
     

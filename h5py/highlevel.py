@@ -50,11 +50,10 @@ import os
 import numpy
 import inspect
 import threading
-from weakref import WeakValueDictionary
 
 from h5py import h5, h5f, h5g, h5s, h5t, h5d, h5a, h5p, h5z, h5i, config
 from h5py.h5 import H5Error
-from utils_hl import slicer, hbasename, strhdr, strlist
+from utils_hl import slice_select, hbasename, strhdr, strlist
 from browse import _H5Browser
 
 
@@ -528,46 +527,35 @@ class Dataset(HLObject):
             ds[0:5:2, ..., 0:2, "a", "b"]
         """
         with self._lock:
-            start, count, stride, names = slicer(self.shape, args)
 
-            if not (len(start) == len(count) == len(stride) == self.id.rank):
-                raise ValueError("Indices do not match dataset rank (%d)" % self.id.rank)
+            args = args if isinstance(args, tuple) else (args,)
 
-            htype = self.id.get_type()
-            if len(names) > 0:
-                if htype.get_class() == h5t.COMPOUND:
-
-                    subtypes = {}
-                    for idx in range(htype.get_nmembers()):
-                        subtypes[htype.get_member_name(idx)] = htype.get_member_type(idx)
-
-                    for name in names:
-                        if name not in subtypes:
-                            raise ValueError("Field %s does not appear in this type." % name)
-
-                    insertlist = [(name, subtypes[name].get_size()) for name in names]
-                    totalsize = sum([x[1] for x in insertlist])
-
-                    mtype = h5t.create(h5t.COMPOUND, totalsize)
-
-                    offset = 0
-                    for name, size in insertlist:
-                        mtype.insert(name, offset, subtypes[name])
-                        offset += size
-                else:
-                    raise ValueError("This dataset has no named fields.")
-            else:
-                mtype = htype
+            # Sort field indices from the slicing
+            names = tuple(x for x in args if isinstance(x, str))
+            slices = tuple(x for x in args if not isinstance(x, str))
 
             fspace = self.id.get_space()
-            if fspace.get_simple_extent_type() == h5s.SCALAR:
-                fspace.select_all()
+
+            # Perform selection on the dataset and retrieve the
+            # dataspace for NumPy to use
+            mspace = slice_select(fspace, slices)
+
+            # Create NumPy datatype for read, using the named type restrictions
+            basetype = self.id.dtype
+            
+            if len(names) == 0:
+                new_dtype = basetype
             else:
-                fspace.select_hyperslab(start, count, stride)
-            mspace = h5s.create_simple(count)
+                for name in names:
+                    if not name in basetype.names:
+                        raise ValueError("Field %s does not appear in this type." % name)
 
-            arr = numpy.ndarray(count, mtype.dtype)
+                new_dtype = numpy.dtype([(name, basetype.fields[name]) for name in names])
 
+            # Create the holder array
+            arr = numpy.ndarray(mspace.shape, new_dtype)
+
+            # Perform the actual read
             self.id.read(mspace, fspace, arr)
 
             if len(names) == 1:
@@ -575,30 +563,35 @@ class Dataset(HLObject):
                 return arr[names[0]].squeeze()
             return arr.squeeze()
 
+
     def __setitem__(self, args, val):
         """ Write to the HDF5 dataset from an Numpy array.  The shape of the
             Numpy array must match the shape of the selection, and the Numpy
             array's datatype must be convertible to the HDF5 datatype.
         """
         with self._lock:
-            start, count, stride, names = slicer(self.shape, args)
+
+            args = args if isinstance(args, tuple) else (args,)
+
+            # Sort field indices from the slicing
+            names = tuple(x for x in args if isinstance(x, str))
+            slices = tuple(x for x in args if not isinstance(x, str))
+
             if len(names) != 0:
-                raise ValueError("Field name selections are not allowed for write.")
+                raise NotImplementedError("Field name selections are not yet allowed for write.")
 
-            val = numpy.array(val, dtype=self.dtype)
-
-            if count != val.shape:
-                # Allow assignments (1,10) => (10,)
-                if numpy.product(count) != numpy.product(val.shape):
-                    raise ValueError("Selection (%s) must be compatible with target (%s)" % (str(count), str(val.shape)))
-                else:
-                    val = val.reshape(count)
+            val = numpy.array(val)  # So that you can assign scalars, sequences
 
             fspace = self.id.get_space()
-            fspace.select_hyperslab(start, count, stride)
-            mspace = h5s.create_simple(val.shape)
 
-            self.id.write(mspace, fspace, numpy.array(val))
+            if val.shape == ():
+                mspace = h5s.create(h5s.SCALAR)
+            else:
+                mspace = h5s.create_simple(val.shape)
+
+            slice_select(fspace, args)
+
+            self.id.write(mspace, fspace, val)
 
     def __str__(self):
         with self._lock:
