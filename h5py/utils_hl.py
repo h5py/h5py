@@ -16,6 +16,33 @@ def hbasename(name):
         bname = '/'
     return bname
 
+class FlatIndexer(object):
+
+    """
+        Utility class which encapsulates a 1-D selection into an n-D array.
+
+    """
+
+    def __init__(self, shape, args):
+        """ Shape must be a tuple; args must be iterable.
+        """
+        try:
+            args = iter(args)
+        except TypeError:
+            args = (args,)
+
+        points = []
+
+        for arg in args:
+            if isinstance(arg, slice):
+                points.extend(xrange(*arg.indices(numpy.product(shape))))
+            elif isinstance(arg, int) or isinstance(arg, long):
+                points.append(arg)
+            else:
+                raise ValueError("Illegal index (ints, longs or slices only)")
+
+        self.coords = numpy.array([numpy.unravel_index(x, shape) for x in points])
+
 def slice_select(space, args):
     """ Perform a selection on the given HDF5 dataspace, using a tuple
         of Python extended slice objects.  The dataspace may be scalar or
@@ -26,8 +53,9 @@ def slice_select(space, args):
 
         1-tuple:
             1. A single Ellipsis: entire dataspace selected
-            2. A NumPy array: element-wise selection
-            3. A single integer or slice (row-broadcasting)
+            2. A single integer or slice (row-broadcasting)
+            3. A NumPy array: element-wise selection
+            4. A FlatIndexer instance containing a coordinate list
 
         n-tuple:
             1. slice objects
@@ -49,6 +77,11 @@ def slice_select(space, args):
             indices = numpy.transpose(argval.nonzero())
             space.select_elements(indices)
             return h5s.create_simple((len(indices),))
+
+        if isinstance(argval, FlatIndexer):
+            space.select_elements(argval.coords)
+            npoints = space.get_select_elem_npoints()
+            return h5s.create_simple((npoints,))
 
         # Single-index obj[0] access is always equivalent to obj[0,...].
         # Pack it back up and send it to the hyperslab machinery

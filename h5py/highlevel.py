@@ -53,7 +53,7 @@ import threading
 
 from h5py import h5, h5f, h5g, h5s, h5t, h5d, h5a, h5p, h5z, h5i, config
 from h5py.h5 import H5Error
-from utils_hl import slice_select, hbasename, strhdr, strlist
+from utils_hl import slice_select, hbasename, strhdr, strlist, FlatIndexer
 from browse import _H5Browser
 
 
@@ -406,6 +406,63 @@ class File(Group):
                     readline.add_history(x)
         self._path = browser.path
 
+class FlatIndexProxy(object):
+
+    """
+        Utility class which allows 1-D indexing of datasets.
+
+        These come attached to Dataset objects as <obj>.flat.  They behave
+        like 1-D arrays; you can slice into them and assign to slices like
+        NumPy flatiter objects.  However, they are not iterable.
+
+        In addition to single indices and slices, you can also provide an
+        iterable which yields indices and slices.  The returned array will
+        be the union of these selections, in the order they were presented,
+        with duplicate entries skipped.
+
+        Examples:  (let dset be of shape (10,10))
+            >>> dset.flat[10]       # Equivalent to dset[1,0]
+            >>> dset.flat[5:15]     # Note you can't do this with dset[x,y]
+            >>> dset.flat[0,1,3,2]  # First 4 elements, in the specified order
+
+        Caveats:  At the HDF5 level, this works by explicitly listing the set
+        of points to be accessed.  For large, regularly strided selections,
+        you should use the standard n-D slicing syntax, which is significantly
+        faster.
+    """
+    
+    def __init__(self, dset):
+        self._dset = dset
+
+    def __getitem__(self, args):
+        """ Read from the dataset, treating it as a 1-D (C-contiguous) array.
+
+            Allowed slicing mechanisms:
+                1. Ints/longs
+                2. Extended slices
+                3. Sequences of ints/extended slices (e.g. flat[0,1,2])
+
+            Subsets which result in a single element are returned as scalars.
+        """
+        indexer = FlatIndexer(self._dset.shape, args)
+        arr = self._dset[indexer]
+
+        # These match the way NumPy behaves
+        if arr.shape == ():
+            return numpy.asscalar(arr)
+        return arr.newbyteorder('=')
+
+    def __setitem__(self, args, val):
+        """ Write to the dataset, treating it as a 1-D (C-contiguous) array.
+
+            Allowed slicing mechanisms:
+                1. Ints/longs
+                2. Extended slices
+                3. Sequences of ints/extended slices (e.g. flat[0,1,2])
+        """
+        indexer = FlatIndexer(self._dset.shape, args)
+        self._dset[indexer] = val
+
 class Dataset(HLObject):
 
     """ High-level interface to an HDF5 dataset.
@@ -430,6 +487,9 @@ class Dataset(HLObject):
     dtype = property(lambda self: self.id.dtype,
         doc = "Numpy dtype representing the datatype")
 
+    flat = property(lambda self: FlatIndexProxy(self),
+        doc = "1-D read/write slicing access to the dataset.  Not iterable.")
+
     def _getval(self):
         with self._lock:
             arr = self[...]
@@ -442,7 +502,8 @@ class Dataset(HLObject):
 
     def __init__(self, group, name,
                     shape=None, dtype=None, data=None,
-                    chunks=None, compression=None, shuffle=False, fletcher32=False):
+                    chunks=None, compression=None, shuffle=False,
+                    fletcher32=False, maxshape=None):
         """ Construct a Dataset object.  You might find it easier to use the
             Group methods: Group["name"] or Group.create_dataset().
 
@@ -469,6 +530,11 @@ class Dataset(HLObject):
             compression:   DEFLATE (gzip) compression level, int or None*
             shuffle:       Use the shuffle filter? (requires compression) T/F*
             fletcher32:    Enable Fletcher32 error detection? T/F*
+
+            maxshape:      Tuple giving dataset maximum dimensions.  You can
+                           grow each axis up to this limit using extend(). For
+                           an unlimited axis, provide None.  Can only be used
+                           with chunks.
         """
         with group._lock:
             if data is None and shape is None:
@@ -501,7 +567,10 @@ class Dataset(HLObject):
                 if fletcher32:
                     plist.set_fletcher32()
 
-                space_id = h5s.create_simple(shape)
+                if maxshape is not None:
+                    maxshape = tuple(x if x is not None else h5s.UNLIMITED for x in maxshape)
+
+                space_id = h5s.create_simple(shape, maxshape)
                 type_id = h5t.py_create(dtype)
 
                 self.id = h5d.create(group.id, name, type_id, space_id, plist)
@@ -509,6 +578,34 @@ class Dataset(HLObject):
                     self.id.write(h5s.ALL, h5s.ALL, data)
 
             self._attrs = AttributeManager(self)
+
+    def extend(self, shape):
+        """ Resize the dataset so it's at least as big as "shape".
+
+            Note that the new shape must be compatible with the "maxshape"
+            argument provided when the dataset was created.  Also, the rank of
+            the dataset cannot be changed.
+        """
+        with self._lock:
+            self.id.extend(shape)
+
+    def __len__(self):
+        """ The size of the first axis.  TypeError if scalar.
+        """
+        shape = self.shape
+        if len(shape) == 0:
+            raise TypeError("Attempt to take len() of scalar dataset")
+        return shape[0]
+
+    def __iter__(self):
+        """ Iterate over the first axis.  TypeError if scalar.  Modifications
+            to the yielded data are *NOT* recorded.
+        """
+        shape = self.shape
+        if len(shape) == 0:
+            raise TypeError("Can't iterate over a scalar dataset")
+        for i in xrange(shape[0]):
+            yield self[i]
 
     def __getitem__(self, args):
         """ Read a slice from the HDF5 dataset.  Takes slices and
@@ -560,12 +657,11 @@ class Dataset(HLObject):
 
             if len(names) == 1:
                 # Match Numpy convention for recarray indexing
-                return arr[names[0]].squeeze()
+                arr = arr[names[0]]
             return arr.squeeze()
 
-
     def __setitem__(self, args, val):
-        """ Write to the HDF5 dataset from an Numpy array.  The shape of the
+        """ Write to the HDF5 dataset from a Numpy array.  The shape of the
             Numpy array must match the shape of the selection, and the Numpy
             array's datatype must be convertible to the HDF5 datatype.
         """
@@ -652,7 +748,7 @@ class AttributeManager(LockableObject):
     def __setitem__(self, name, value):
         """ Set the value of an attribute, overwriting any previous value.
             The value you provide must be convertible to a Numpy array or
-            scalar.  If it's not, the action is aborted with no data loss.
+            scalar.
 
             Any existing value is destroyed just before the call to h5a.create.
             If the creation fails, the data is not recoverable.

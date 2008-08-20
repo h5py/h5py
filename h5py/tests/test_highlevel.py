@@ -196,6 +196,57 @@ class TestDataset(unittest.TestCase):
                     self.assert_(numpy.all(d.value == srcarr))
                     del self.f["NewDataset"]               
 
+    def test_Dataset_extend(self):
+
+        print ""
+
+        init_shapes = [(100,), (100,100), (150,100)]
+        max_shapes = [(200,), (200,200), (None, 100)]
+        chunks = [(10,), (10,10), (10,10)]
+
+        final_shapes = {(100,): [ (150,), (200,) ],
+                        (100,100): [(200,100), (200,200)],
+                        (150,100): [ (200,100), (300,100), (500,100)] }
+
+        illegal_shapes = {(100,): [(250,)], (100,100): [(250,100), (250,250)],
+                          (150,100): [(200,150)] }
+
+        for shape, maxshape, chunk in zip(init_shapes, max_shapes, chunks):
+            srcarr = numpy.arange(numpy.product(shape)).reshape(shape)
+            if "DS" in self.f:
+                del self.f["DS"]
+            ds = self.f.create_dataset("DS", data=srcarr, maxshape=maxshape, chunks=chunk)
+
+            self.assertEqual(ds.shape, shape)
+
+            for final_shape in final_shapes[shape]:
+                print "    Extending %s to %s" % (shape, final_shape)
+                newarr = numpy.arange(numpy.product(final_shape)).reshape(final_shape)
+                ds.extend(final_shape)
+                ds[...] = newarr
+                self.assertEqual(ds.shape, final_shape)
+                self.assert_(numpy.all(ds[...] == newarr))
+
+            for illegal_shape in illegal_shapes[shape]:
+                self.assertRaises(H5Error, ds.extend, illegal_shape)
+        
+    def test_Dataset_len_iter(self):
+
+        arr1 = numpy.arange(100).reshape((10,10))
+        arr2 = numpy.ones(())
+
+        d1 = self.f.create_dataset("D1", data=arr1)
+        d2 = self.f.create_dataset("D2", data=arr2)
+
+        self.assertEqual(len(arr1), len(d1))
+        self.assertRaises(TypeError, d2, len)
+
+        for idx, (hval, nval) in enumerate(zip(d1, arr1)):
+            self.assert_(numpy.all(hval == nval))
+        
+        self.assertEqual(idx+1, len(arr1))
+        self.assertRaises(TypeError, list, d2)
+
     def test_Dataset_slicing(self):
 
         print ''
@@ -207,7 +258,7 @@ class TestDataset(unittest.TestCase):
         slices += [ s[0:7:2,0:9:3,15:43:5], s[2:8:2,...] ]
         slices += [ s[0], s[1], s[9], s[:] ] # Numpy convention
         slices += [ numpy.random.random((10,10,50)) > 0.5 ]  # Truth array
-        
+       
         for dt in TYPES1:
 
             srcarr = numpy.arange(10*10*50, dtype=dt).reshape(10,10,50)
@@ -238,6 +289,58 @@ class TestDataset(unittest.TestCase):
                     d[argtpl] = srcarr[argtpl]
                     self.assert_(numpy.all(d.value == srcarr))
                     
+            finally:
+                f.close()
+                os.unlink(fname)   
+
+    def test_Dataset_flat(self):
+
+        print ""
+
+        s = SliceFreezer()
+
+        flatindexing = [0, 1, 45, 355]
+        flatindexing += [s[0:500:2], s[0:644], s[3:99], s[35:655:3]]
+        flatindexing += [s[:45:], s[::3], s[:78:4]]
+
+        extended = [ (0,1,3,2) ]
+
+        for dt in TYPES1:
+
+            srcarr = numpy.arange(10*10*20, dtype=dt).reshape(10,10,20)
+            srcarr = srcarr + numpy.sin(srcarr)
+
+            fname = tempfile.mktemp('.hdf5')
+            f = File(fname, 'w')
+            try:
+                d = Dataset(f, "NewDataset", data=srcarr)
+                self.assertEqual(d.shape, srcarr.shape)
+                self.assertEqual(d.dtype, srcarr.dtype)
+                for idx in flatindexing:
+                    print "    Checking flat read %.20s %s" % (dt, idx)
+                    hresult = d.flat[idx]
+                    nresult = srcarr.flat[idx]
+                    if hasattr(hresult, 'shape'):
+                        self.assertEqual(hresult.shape, nresult.shape)
+                        self.assertEqual(hresult.dtype, nresult.dtype)
+                        self.assert_(numpy.all(hresult == nresult), "%s\n%s" % (hresult, nresult))
+                    else:
+                        self.assertEqual(hresult, numpy.asscalar(nresult))
+
+                del f["NewDataset"]
+                d = Dataset(f, "NewDataset", data=srcarr)
+                for idx in flatindexing:
+                    print "    Checking flat write %.20s %s" % (dt, idx)
+                    srcarr.flat[idx] = numpy.cos(srcarr.flat[idx])
+                    d.flat[idx] = srcarr.flat[idx]
+                    self.assert_(numpy.all(d.value == srcarr))
+
+                del f["NewDataset"]
+                d = Dataset(f, "NewDataset", data=srcarr)
+                for seq in extended:
+                    subset = d.flat[seq]
+                    for idx, entry in enumerate(seq):
+                        self.assertEqual(subset[idx], srcarr.flat[entry])
             finally:
                 f.close()
                 os.unlink(fname)   
