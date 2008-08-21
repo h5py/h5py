@@ -170,6 +170,10 @@ class TestDataset(unittest.TestCase):
         shapes = [(), (1,), (10,5), (1,10), (10,1), (100,1,100), (51,2,1025)]
         chunks = [None, (1,), (10,1), (1,1),  (1,1),  (50,1,100), (51,2,25)]
 
+        # Test auto-chunk creation for each
+        shapes += shapes
+        chunks += [None]*len(chunks)
+
         for shape, chunk in zip(shapes, chunks):
             for dt in TYPES:
                 print "    Creating %.20s %.40s" % (shape, dt)
@@ -179,7 +183,7 @@ class TestDataset(unittest.TestCase):
                 self.assertEqual(d.dtype, dt)
                 del self.f["NewDataset"]
 
-                if chunk is not None:
+                if shape != ():
                     print "        With chunk %s" % (chunk,)
                     d = Dataset(self.f, "NewDataset", dtype=dt, shape=shape,
                                 chunks=chunk, shuffle=True, compression=6,

@@ -53,7 +53,8 @@ import threading
 
 from h5py import h5, h5f, h5g, h5s, h5t, h5d, h5a, h5p, h5z, h5i, config
 from h5py.h5 import H5Error
-from utils_hl import slice_select, hbasename, strhdr, strlist, FlatIndexer
+from utils_hl import slice_select, hbasename, strhdr, strlist, FlatIndexer, \
+                     guess_chunk
 from browse import _H5Browser
 
 
@@ -524,7 +525,7 @@ class Dataset(HLObject):
             exists.  Also, chunks/compression/shuffle/fletcher32 may only be
             specified when creating a dataset.
 
-            Creation keywords (* is default); "chunks" is required for all:
+            Creation keywords (* is default):
 
             chunks:        Tuple of chunk dimensions or None*
             compression:   DEFLATE (gzip) compression level, int or None*
@@ -533,8 +534,11 @@ class Dataset(HLObject):
 
             maxshape:      Tuple giving dataset maximum dimensions.  You can
                            grow each axis up to this limit using extend(). For
-                           an unlimited axis, provide None.  Can only be used
-                           with chunks.
+                           an unlimited axis, provide None.  Requires chunks.
+
+            All these options require chunking.  If a chunk tuple is not
+            provided, the constructor will guess an appropriate chunk shape.
+            Please note none of these are allowed for scalar datasets.
         """
         with group._lock:
             if data is None and shape is None:
@@ -555,8 +559,14 @@ class Dataset(HLObject):
                 
                 dtype = numpy.dtype(dtype)
 
+                if any((compression, shuffle, fletcher32, maxshape)) and chunks is None:
+                    chunks = guess_chunk(shape, dtype.itemsize)
+
+                if chunks is not None and shape == ():
+                    raise ValueError("Filter options cannot be used with scalar datasets.")
+
                 plist = h5p.create(h5p.DATASET_CREATE)
-                if chunks:
+                if chunks is not None:
                     plist.set_chunk(chunks)
                 if shuffle:
                     plist.set_shuffle()

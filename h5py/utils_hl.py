@@ -8,6 +8,10 @@ from h5py import h5s
 from posixpath import basename, normpath
 import numpy
 
+CHUNK_BASE = 16*1024    # Multiplier by which chunks are adjusted
+MIN_CHUNK = 8*1024      # Soft lower limit (8k)
+MAX_CHUNK = 1024*1024   # Hard upper limit (1M)
+
 def hbasename(name):
     """ Basename function with more readable handling of trailing slashes"""
     bname = normpath(name)
@@ -15,6 +19,48 @@ def hbasename(name):
     if bname == '':
         bname = '/'
     return bname
+
+def guess_chunk(shape, typesize):
+    """ Guess an appropriate chunk layout for a dataset, given its shape and
+        the size of each element in bytes.  Will allocate chunks only as large
+        as MAX_SIZE.  Chunks are generally close to some power-of-2 fraction of
+        each axis, slightly favoring bigger values for the last index.
+    """
+
+    ndims = len(shape)
+    if ndims == 0:
+        raise ValueError("Chunks not allowed for scalar datasets.")
+
+    chunks = numpy.array(shape, dtype='=f8')
+
+    # Determine the optimal chunk size in bytes using a PyTables expression.
+    # This is kept as a float.
+    dset_size = numpy.product(chunks)*typesize
+    target_size = CHUNK_BASE * (2**numpy.log10(dset_size/(1024.*1024)))
+
+    if target_size > MAX_CHUNK:
+        target_size = MAX_CHUNK
+    elif target_size < MIN_CHUNK:
+        target_size = MIN_CHUNK
+
+    idx = 0
+    while True:
+        # Repeatedly loop over the axes, dividing them by 2.  Stop when:
+        # 1a. We're smaller than the target chunk size, OR
+        # 1b. We're within 50% of the target chunk size, AND
+        #  2. The chunk is smaller than the maximum chunk size
+
+        chunk_bytes = numpy.product(chunks)*typesize
+
+        if (chunk_bytes < target_size or \
+         abs(chunk_bytes-target_size)/target_size < 0.5) and \
+         chunk_bytes < MAX_CHUNK:
+            break
+
+        chunks[idx%ndims] = numpy.ceil(chunks[idx%ndims] / 2.0)
+        idx += 1
+
+    return tuple(long(x) for x in chunks)
 
 class FlatIndexer(object):
 
