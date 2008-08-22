@@ -16,6 +16,7 @@
 
 include "std_defs.pxi"
 from h5 cimport class ObjectID
+from numpy cimport ndarray, import_array
 
 cdef class PropID(ObjectID):
     """ Base class for all property lists """

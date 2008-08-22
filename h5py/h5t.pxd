@@ -76,6 +76,8 @@ cdef object typewrap(hid_t id_)
 
 cdef extern from "hdf5.h":
 
+  hid_t H5P_DEFAULT
+
   # --- Enumerated constants --------------------------------------------------
 
   # Byte orders

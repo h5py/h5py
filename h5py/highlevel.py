@@ -246,6 +246,13 @@ class Group(HLObject):
             compression:   DEFLATE (gzip) compression level, int or None*
             shuffle:       Use the shuffle filter? (requires compression) T/F*
             fletcher32:    Enable Fletcher32 error detection? T/F*
+            maxshape:      Tuple giving dataset maximum dimensions or None*.
+                           You can grow each axis up to this limit using
+                           extend().  For each unlimited axis, provide None.
+
+            All these options require chunking.  If a chunk tuple is not
+            provided, the constructor will guess an appropriate chunk shape.
+            Please note none of these are allowed for scalar datasets.
         """
         return Dataset(self, name, *args, **kwds)
 
@@ -531,10 +538,9 @@ class Dataset(HLObject):
             compression:   DEFLATE (gzip) compression level, int or None*
             shuffle:       Use the shuffle filter? (requires compression) T/F*
             fletcher32:    Enable Fletcher32 error detection? T/F*
-
-            maxshape:      Tuple giving dataset maximum dimensions.  You can
-                           grow each axis up to this limit using extend(). For
-                           an unlimited axis, provide None.  Requires chunks.
+            maxshape:      Tuple giving dataset maximum dimensions or None*.
+                           You can grow each axis up to this limit using
+                           extend().  For each unlimited axis, provide None.
 
             All these options require chunking.  If a chunk tuple is not
             provided, the constructor will guess an appropriate chunk shape.

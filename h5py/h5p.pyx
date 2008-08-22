@@ -18,10 +18,17 @@
 # Pyrex compile-time imports
 
 from utils cimport  require_tuple, convert_dims, convert_tuple, \
-                    emalloc, efree, pybool, require_list
+                    emalloc, efree, pybool, require_list, \
+                    check_numpy_write, check_numpy_read
+
+from h5t cimport TypeID
 
 # Runtime imports
 import h5
+import h5t
+import numpy
+
+import_array()
 
 # === C API ===================================================================
 
@@ -305,6 +312,32 @@ cdef class PropDCID(PropInstanceID):
             return tpl
         finally:
             efree(dims)
+
+    def set_fill_value(self, ndarray value not None):
+        """ (NDARRAY value)
+
+            Set the dataset fill value.  The object provided should be an
+            0-dimensional NumPy array; otherwise, the value will be read from
+            the first element.
+        """
+        cdef TypeID tid
+
+        check_numpy_read(value, -1)
+        tid = h5t.py_create(value.dtype)        
+        H5Pset_fill_value(self.id, tid.id, value.data)
+
+    def get_fill_value(self, ndarray value not None):
+        """ (NDARRAY value)
+
+            Read the dataset fill value into a NumPy array.  It will be
+            converted to match the array dtype.  If the array has nonzero
+            rank, only the first element will contain the value.
+        """
+        cdef TypeID tid
+
+        check_numpy_write(value, -1)
+        tid = h5t.py_create(value.dtype)
+        H5Pget_fill_value(self.id, tid.id, value.data)
 
     # === Filter functions ====================================================
     

@@ -22,6 +22,8 @@ from h5py import *
 sections = {'h5a': test_h5a.TestH5A, 'h5d': test_h5d.TestH5D,
             'h5f': test_h5f.TestH5F, 'h5g': test_h5g.TestH5G,
             'h5i': test_h5i.TestH5I, 'h5p': test_h5p.TestH5P,
+            'h5p.fcid': test_h5p.TestFCID, 'h5p.faid': test_h5p.TestFAID,
+            'h5p.dcid': test_h5p.TestDCID, 'h5p.dxid': test_h5p.TestDXID,
             'h5s': test_h5s.TestH5S, 'h5t': test_h5t.TestH5T,
             'h5': test_h5.TestH5,
             'File': test_highlevel.TestFile,
@@ -29,8 +31,9 @@ sections = {'h5a': test_h5a.TestH5A, 'h5d': test_h5d.TestH5D,
             'Dataset': test_highlevel.TestDataset,
             'threads': test_threads.TestThreads }
 
-order = ('h5a', 'h5d', 'h5f', 'h5g', 'h5i', 'h5p', 'h5s', 'h5', 'File', 'Group',
-         'Dataset', 'threads')
+order = ('h5a', 'h5d', 'h5f', 'h5g', 'h5i', 'h5p', 'h5p.fcid', 'h5p.faid',
+         'h5p.dcid', 'h5p.dxid', 'h5s', 'h5', 'File', 'Group', 'Dataset',
+         'threads')
 
 def buildsuite(cases):
     """ cases should be an iterable of TestCase subclasses """

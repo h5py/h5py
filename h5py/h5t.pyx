@@ -59,7 +59,6 @@ include "conditions.pxi"
 
 # Pyrex compile-time imports
 from defs_c cimport free
-from h5p cimport H5P_DEFAULT
 from h5 cimport err_c, pause_errors, resume_errors
 from numpy cimport dtype, ndarray
 
