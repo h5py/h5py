@@ -73,136 +73,128 @@ class FlatIndexer(object):
         """ Shape must be a tuple; args must be iterable.
         """
         try:
-            args = iter(args)
+            args = tuple(iter(args))
         except TypeError:
             args = (args,)
 
         points = []
 
+        scalarok = False
         for arg in args:
             if isinstance(arg, slice):
                 points.extend(xrange(*arg.indices(numpy.product(shape))))
-            elif isinstance(arg, int) or isinstance(arg, long):
-                points.append(arg)
             else:
-                raise ValueError("Illegal index (ints, longs or slices only)")
+                try:
+                    points.append(long(arg))
+                except TypeError:
+                    raise ValueError("Illegal index (ints, longs or slices only)")
+                scalarok = True
 
         self.coords = numpy.array([numpy.unravel_index(x, shape) for x in points])
+
+        # A scalar value should result for a single integer index.
+        self.scalar = True if scalarok and len(args) == 1 else False
+
 
 def slice_select(space, args):
     """ Perform a selection on the given HDF5 dataspace, using a tuple
         of Python extended slice objects.  The dataspace may be scalar or
-        simple.  The slice argument may be:
+        simple.  The following selection mechanisms are implemented:
 
-        0-tuple:
-            Entire dataspace selected (compatible with scalar)
+        1. select_all:
+            0-tuple
+            1-tuple containing Ellipsis
 
-        1-tuple:
-            1. A single Ellipsis: entire dataspace selected
-            2. A single integer or slice (row-broadcasting)
-            3. A NumPy array: element-wise selection
-            4. A FlatIndexer instance containing a coordinate list
+        2. Hyperslab selection
+            n-tuple (n>1) containing slice/integer/Ellipsis objects
 
-        n-tuple:
-            1. slice objects
-            2. Ellipsis objects
-            3. Integers
+        3. Discrete element selection
+            1-tuple containing boolean array or FlatIndexer
 
-        The return value is the appropriate memory dataspace to use.
+        The return value is a 2-tuple:
+        1. Appropriate memory dataspace to use for new array
+        2. Boolean indicating if the slice should result in a scalar quantity
     """
 
     if len(args) == 0 or (len(args) == 1 and args[0] is Ellipsis):
         space.select_all()
-        return space.copy()
+        return space.copy(), False
 
     if len(args) == 1:
         argval = args[0]
 
         if isinstance(argval, numpy.ndarray):
-            # Catch element-wise selection
+            # Boolean array indexing is handled by discrete element selection
+            # It never results in a scalar value
             indices = numpy.transpose(argval.nonzero())
             space.select_elements(indices)
-            return h5s.create_simple((len(indices),))
+            return h5s.create_simple((len(indices),)), False
 
         if isinstance(argval, FlatIndexer):
+            # Flat indexing also uses discrete selection
+            # Scalar determination is made by the indexer
             space.select_elements(argval.coords)
             npoints = space.get_select_elem_npoints()
-            return h5s.create_simple((npoints,))
-
-        # Single-index obj[0] access is always equivalent to obj[0,...].
-        # Pack it back up and send it to the hyperslab machinery
-        args = (argval, Ellipsis)
+            return h5s.create_simple((npoints,)), argval.scalar
 
     # Proceed to hyperslab selection
 
     shape = space.shape
     rank = len(shape)
 
+    # First expand (at most 1) ellipsis object
+
+    n_el = list(args).count(Ellipsis)
+    if n_el > 1:
+        raise ValueError("Only one ellipsis may be used.")
+    elif n_el == 0 and len(args) != rank:
+        args = args + (Ellipsis,)  # Simple version of NumPy broadcasting
+
+    final_args = []
+    n_args = len(args)
+
+    for idx, arg in enumerate(args):
+
+        if arg == Ellipsis:
+            final_args.extend( (slice(None,None,None),)*(rank-n_args+1) )
+        else:
+            final_args.append(arg)
+
+    # Step through the expanded argument list and handle each axis
+
     start = []
     count = []
     stride = []
+    simple = []
+    for idx, (length, exp) in enumerate(zip(shape,final_args)):
 
-    # Expand integers and ellipsis arguments to slices
-    for dim, arg in enumerate(args):
-
-        if isinstance(arg, int) or isinstance(arg, long):
-            if arg < 0:
-                raise ValueError("Negative indices are not allowed.")
-            start.append(arg)
-            count.append(1)
-            stride.append(1)
-
-        elif isinstance(arg, slice):
-
-            # slice.indices() method clips, so do it the hard way...
-
-            # Start
-            if arg.start is None:
-                ss=0
-            else:
-                if arg.start < 0:
-                    raise ValueError("Negative dimensions are not allowed")
-                ss=arg.start
-
-            # Stride
-            if arg.step is None:
-                st = 1
-            else:
-                if arg.step <= 0:
-                    raise ValueError("Only positive step sizes allowed")
-                st = arg.step
-
-            # Count
-            if arg.stop is None:
-                cc = shape[dim]/st
-            else:
-                if arg.stop < 0:
-                    raise ValueError("Negative dimensions are not allowed")
-                cc = (arg.stop-ss)/st
-                if ((arg.stop-ss) % st) != 0:
-                    cc += 1   # Be careful with integer division!
-            if cc == 0:
-                raise ValueError("Zero-length selections are not allowed")
-
-            start.append(ss)
-            stride.append(st)
-            count.append(cc)
-
-        elif arg == Ellipsis:
-            nslices = rank-(len(args)-1)
-            if nslices <= 0:
-                continue
-            for x in range(nslices):
-                idx = dim+x
-                start.append(0)
-                count.append(shape[dim+x])
-                stride.append(1)
-
+        if isinstance(exp, slice):
+            start_, stop_, step_ = exp.indices(length)
+            count_ = (stop_-start_)//step_
+            if (stop_-start_) % step_ != 0:
+                count_ += 1
+            simple_ = False
         else:
-            raise ValueError("Bad slice type %s" % repr(arg))
+            try:
+                exp = long(exp)
+            except TypeError:
+                raise TypeError("Illegal index on axis %d: %r" % (idx, exp))
+
+            if exp > length-1:
+                raise IndexError('Index %d out of bounds: "%d" (should be <= %d)' % (idx, exp, length-1))
+
+            start_ = exp
+            step_ = 1
+            count_ = 1
+            simple_ = True
+
+        start.append(start_)
+        count.append(count_)
+        stride.append(step_)
+        simple.append(simple_)
 
     space.select_hyperslab(tuple(start), tuple(count), tuple(stride))
-    return h5s.create_simple(tuple(count))
+    return h5s.create_simple(tuple(count)), all(simple)
 
 def strhdr(line, char='-'):
     """ Print a line followed by an ASCII-art underline """

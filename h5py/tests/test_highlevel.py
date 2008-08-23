@@ -260,9 +260,9 @@ class TestDataset(unittest.TestCase):
         slices += [ s[9,9,49], s[9,:,49], s[9,:,:] ]
         slices += [ s[0, ..., 49], s[...], s[..., 49], s[9,...] ]
         slices += [ s[0:7:2,0:9:3,15:43:5], s[2:8:2,...] ]
-        slices += [ s[0], s[1], s[9], s[:] ] # Numpy convention
+        slices += [ s[0], s[1], s[9], s[0,0], s[4,5], s[:] ]
+        slices += [ s[3,...], s[3,2,...] ]
         slices += [ numpy.random.random((10,10,50)) > 0.5 ]  # Truth array
-       
         for dt in TYPES1:
 
             srcarr = numpy.arange(10*10*50, dtype=dt).reshape(10,10,50)
@@ -280,8 +280,11 @@ class TestDataset(unittest.TestCase):
                     print "    Checking read %.20s %s" % (dt, argtpl if not isinstance(argtpl, numpy.ndarray) else 'ARRAY')
                     hresult = d[argtpl]
                     nresult = srcarr[argtpl]
-                    self.assertEqual(hresult.shape, nresult.shape)
-                    self.assertEqual(hresult.dtype, nresult.dtype)
+                    if isinstance(nresult, numpy.ndarray):
+                        self.assertEqual(hresult.shape, nresult.shape)
+                        self.assertEqual(hresult.dtype, nresult.dtype)
+                    else:
+                        self.assert_(not isinstance(hresult, numpy.ndarray))
                     self.assert_(numpy.all(hresult == nresult))
 
                 del f["NewDataset"]
@@ -324,12 +327,12 @@ class TestDataset(unittest.TestCase):
                     print "    Checking flat read %.20s %s" % (dt, idx)
                     hresult = d.flat[idx]
                     nresult = srcarr.flat[idx]
-                    if hasattr(hresult, 'shape'):
+                    if isinstance(nresult, numpy.ndarray):
                         self.assertEqual(hresult.shape, nresult.shape)
                         self.assertEqual(hresult.dtype, nresult.dtype)
-                        self.assert_(numpy.all(hresult == nresult), "%s\n%s" % (hresult, nresult))
                     else:
-                        self.assertEqual(hresult, numpy.asscalar(nresult))
+                        self.assert_(not isinstance(hresult, numpy.ndarray))
+                    self.assert_(numpy.all(hresult == nresult), "%s\n%s" % (hresult, nresult))
 
                 del f["NewDataset"]
                 d = Dataset(f, "NewDataset", data=srcarr)

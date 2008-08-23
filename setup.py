@@ -116,7 +116,7 @@ for arg in sys.argv[:]:
         splitarg = arg.split('=',1)
         if len(splitarg) != 2:
             fatal("HDF5 directory not understood (wants --hdf5=/path/to/hdf5)")
-        opts.HDF5_DIR = splitarg[1]
+        opts.HDF5_DIR = op.abspath(splitarg[1])
         sys.argv.remove(arg)
     elif arg.find('--io-nonblock') == 0:
         opts.ENABLE_PYREX=True

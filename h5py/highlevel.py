@@ -455,10 +455,8 @@ class FlatIndexProxy(object):
         indexer = FlatIndexer(self._dset.shape, args)
         arr = self._dset[indexer]
 
-        # These match the way NumPy behaves
-        if arr.shape == ():
-            return numpy.asscalar(arr)
-        return arr.newbyteorder('=')
+        # NumPy does not respect the byteorder when slicing with .flat
+        return arr#.newbyteorder('=')
 
     def __setitem__(self, args, val):
         """ Write to the dataset, treating it as a 1-D (C-contiguous) array.
@@ -649,9 +647,10 @@ class Dataset(HLObject):
 
             fspace = self.id.get_space()
 
-            # Perform selection on the dataset and retrieve the
-            # dataspace for NumPy to use
-            mspace = slice_select(fspace, slices)
+            # Perform selection on the dataset.  This returns
+            # 1. The proper HDF5 memory dataspace to use for the read
+            # 2. A flag which indicates if the result should be a scalar
+            mspace, scalar_result = slice_select(fspace, slices)
 
             # Create NumPy datatype for read, using the named type restrictions
             basetype = self.id.dtype
@@ -671,10 +670,13 @@ class Dataset(HLObject):
             # Perform the actual read
             self.id.read(mspace, fspace, arr)
 
+            # Match NumPy conventions
             if len(names) == 1:
-                # Match Numpy convention for recarray indexing
-                arr = arr[names[0]]
-            return arr.squeeze()
+                arr = arr[names[0]]     # Single-field recarray convention
+            arr = arr.squeeze()         # No "1" dimensions
+            if scalar_result:
+                arr = numpy.asscalar(arr)   # Scalar if slicing rules say it is
+            return arr
 
     def __setitem__(self, args, val):
         """ Write to the HDF5 dataset from a Numpy array.  The shape of the
