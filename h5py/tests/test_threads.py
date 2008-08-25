@@ -230,12 +230,13 @@ class TestThreads(unittest.TestCase):
         thread_b = SleeperThread(1)
 
         thread_a.start()
+        time.sleep(0.2)
         thread_b.start()
 
         thread_a.join()
         thread_b.join()
 
-        self.assert_(thread_a.time < thread_b.time)
+        self.assert_(thread_a.time < thread_b.time, "%f :: %f" % (thread_a.time, thread_b.time))
         
         @h5sync
         def thisismyname(foo):

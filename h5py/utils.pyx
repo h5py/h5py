@@ -18,6 +18,24 @@ from numpy cimport import_array, NPY_UINT16, NPY_UINT32, NPY_UINT64, \
 
 import_array()
 
+cdef int convert_tuple(object tpl, hsize_t *dims, hsize_t rank) except -1:
+    # Convert a Python tuple to an hsize_t array.  You must allocate
+    # the array yourself and pass both it and the size to this function.
+    # Returns 0 on success, -1 on failure and raises an exception.
+    cdef int i
+
+    if len(tpl) != rank:
+        raise ValueError("Tuple length incompatible with array")
+    
+    try:
+        for i from 0<=i<rank:
+            dims[i] = long(tpl[i])
+    except TypeError:
+        raise TypeError("Can't convert element %d (%s) to a long" % (i, tpl[i]))
+
+    return 0
+    
+
 cdef object create_numpy_hsize(int rank, hsize_t* dims):
     # Create an empty Numpy array which can hold HDF5 hsize_t entries
 

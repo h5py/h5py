@@ -84,47 +84,6 @@ PyObject* convert_dims(hsize_t* dims, hsize_t rank) {
     return NULL;
 }
 
-/* Convert a Python tuple to an hsize_t array.  You must allocate
-   the array yourself and pass both it and the size to this function.
-   Returns 0 on success, -1 on failure and raises an exception.
-*/
-int convert_tuple(PyObject* tpl, hsize_t *dims, hsize_t rank_in){
-
-    PyObject* temp = NULL;
-    int rank;
-    int i;
-
-    if(tpl == NULL) goto err;
-    if(!PyTuple_Check(tpl)) goto err;
-
-    rank = (int)PyTuple_GET_SIZE(tpl);
-    if(rank != rank_in) {
-        PyErr_SetString(PyExc_RuntimeError, "Allocated space does not match tuple length");
-        goto err;
-    }
-
-    for(i=0; i<rank; i++){
-        temp = PyTuple_GetItem(tpl, i);
-        if(temp == NULL) goto err;
-        
-        if PyLong_Check(temp)
-            dims[i] = (hsize_t)PyLong_AsLong(temp);
-        else if PyInt_Check(temp)
-            dims[i] = (hsize_t)PyLong_AsLong(temp);
-        else if PyFloat_Check(temp)
-            dims[i] = (hsize_t)PyFloat_AsDouble(temp);
-        else
-            goto err;
-    }
-
-    return 0;
-
-    err:
-    if(!PyErr_Occurred()){
-        PyErr_SetString(PyExc_ValueError, "Illegal argument (must be a tuple of numbers).");
-    }
-    return -1;
-}
 
 /* The functions
 

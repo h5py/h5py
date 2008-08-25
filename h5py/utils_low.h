@@ -27,7 +27,6 @@
 hid_t create_ieee_complex64(const char byteorder, const char* real_name, const char* img_name);
 hid_t create_ieee_complex128(const char byteorder, const char* real_name, const char* img_name);
 
-int convert_tuple(PyObject* tpl, hsize_t *dims, hsize_t rank);
 PyObject* convert_dims(hsize_t* dims, hsize_t rank);
 
 int check_numpy_read(PyArrayObject* arr, hid_t space_id);
