@@ -72,6 +72,9 @@ class FlatIndexer(object):
     def __init__(self, shape, args):
         """ Shape must be a tuple; args must be iterable.
         """
+        if shape == ():
+            raise TypeError("Can't slice into a scalar array.")
+
         try:
             args = tuple(iter(args))
         except TypeError:
@@ -117,8 +120,12 @@ def slice_select(space, args):
     """
 
     if len(args) == 0 or (len(args) == 1 and args[0] is Ellipsis):
+        # The only safe way to access a scalar dataspace
         space.select_all()
         return space.copy(), False
+    else:
+        if space.get_simple_extent_type() == h5s.SCALAR:
+            raise TypeError('Can\'t slice a scalar dataset (only fields and "..." allowed)')
 
     if len(args) == 1:
         argval = args[0]

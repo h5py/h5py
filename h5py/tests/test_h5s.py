@@ -16,8 +16,8 @@ import numpy
 from h5py import *
 from h5py.h5 import H5Error
 
-spaces = [(10,10), (1,1), (1,), ()]
-max_spaces = [(10,10), (3,4), (h5s.UNLIMITED,), ()]
+spaces = [(10,10), (1,1), (1,), (), (2**40,)]
+max_spaces = [(10,10), (3,4), (h5s.UNLIMITED,), (), (2**41,)]
 
 class TestH5S(unittest.TestCase):
 

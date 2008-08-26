@@ -216,33 +216,51 @@ class TestThreads(unittest.TestCase):
 
         class SleeperThread(Thread):
 
-            def __init__(self, sleeptime):
+            def __init__(self, sleeptime, next_thread):
                 Thread.__init__(self)
                 self.sleeptime = sleeptime
                 self.time = 0
+                self.next_thread = next_thread
 
             @h5sync
             def run(self):
-                time.sleep(self.sleeptime)
+                if self.next_thread is not None:
+                    self.next_thread.start()  # We should already hold the lock
+                time.sleep(self.sleeptime/2.0)
                 self.time = time.time()
+                time.sleep(self.sleeptime/2.0)
 
-        thread_a = SleeperThread(2)
-        thread_b = SleeperThread(1)
+        def run_dec(real_lock):
+            oldlock = h5py.config.lock
+            try:
+                if not real_lock:
+                    h5py.config.lock = dummy_threading.RLock()
 
-        thread_a.start()
-        time.sleep(0.2)
-        thread_b.start()
+                thread_b = SleeperThread(1, None)       # last thread
+                thread_a = SleeperThread(2, thread_b)   # first thread
 
-        thread_a.join()
-        thread_b.join()
+                thread_a.start()
 
-        self.assert_(thread_a.time < thread_b.time, "%f :: %f" % (thread_a.time, thread_b.time))
-        
+                thread_a.join()
+                thread_b.join()
+
+                if real_lock:
+                    self.assert_(thread_a.time < thread_b.time, "%f !< %f" % (thread_a.time, thread_b.time))
+                else:
+                    self.assert_(thread_a.time > thread_b.time, "%f !> %f" % (thread_a.time, thread_b.time))
+            finally:
+                h5py.config.lock = oldlock
+
+        run_dec(True)
+        run_dec(False)
+
         @h5sync
         def thisismyname(foo):
+            """ I'm a docstring! """
             pass
         
         self.assertEqual(thisismyname.__name__, "thisismyname")
+        self.assertEqual(thisismyname.__doc__, " I'm a docstring! ")
 
 
 

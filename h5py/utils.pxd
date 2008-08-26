@@ -20,8 +20,6 @@ cdef extern from "utils_low.h":
     hid_t create_ieee_complex64(char byteorder, char* real_name, char* img_name) except -1
     hid_t create_ieee_complex128(char byteorder, char* real_name, char* img_name) except -1
 
-    # Tuple conversion
-    object convert_dims(hsize_t* dims, hsize_t rank) # automatic except
 
     # Numpy array validation
     int check_numpy_read(ndarray arr, hid_t space_id) except 0
@@ -34,9 +32,24 @@ cdef extern from "utils_low.h":
 # === Custom API ==============================================================
 
 cdef int convert_tuple(object tuple, hsize_t *dims, hsize_t rank) except -1
+cdef object convert_dims(hsize_t* dims, hsize_t rank)
+
 cdef int require_tuple(object tpl, int none_allowed, int size, char* name) except -1
 cdef int require_list(object lst, int none_allowed, int size, char* name) except -1
+
 cdef object pybool(long long val)
 cdef object create_numpy_hsize(int rank, hsize_t* dims)
 cdef object create_hsize_array(object arr)
+
+
+
+
+
+
+
+
+
+
+
+
 

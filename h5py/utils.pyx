@@ -29,11 +29,23 @@ cdef int convert_tuple(object tpl, hsize_t *dims, hsize_t rank) except -1:
     
     try:
         for i from 0<=i<rank:
-            dims[i] = long(tpl[i])
+            dims[i] = tpl[i]
     except TypeError:
-        raise TypeError("Can't convert element %d (%s) to a long" % (i, tpl[i]))
+        raise TypeError("Can't convert element %d (%s) to hsize_t" % (i, tpl[i]))
 
     return 0
+    
+cdef object convert_dims(hsize_t* dims, hsize_t rank):
+    # Convert an hsize_t array to a Python tuple of long ints.
+
+    cdef list dims_list
+    cdef int i
+    dims_list = []
+
+    for i from 0<=i<rank:
+        dims_list.append(dims[i])
+
+    return tuple(dims_list)
     
 
 cdef object create_numpy_hsize(int rank, hsize_t* dims):

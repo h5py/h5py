@@ -53,36 +53,6 @@ void efree(void* ptr){
     free(ptr);
 }
 
-/* Convert an hsize_t array to a Python tuple of long ints.
-   Returns NULL on failure, and raises an exception (either propagates
-   an exception from the conversion, or raises RuntimeError).
-*/
-PyObject* convert_dims(hsize_t* dims, hsize_t rank) {
-
-    PyObject* tpl;
-    PyObject* plong;
-    int i;
-    tpl = NULL;
-    plong = NULL;
-    
-    tpl = PyTuple_New(rank);
-    if(tpl == NULL) goto err;
-
-    for(i=0; i<rank; i++){
-        plong = PyLong_FromLong((long) dims[i]);
-        if(plong == NULL) goto err;
-        PyTuple_SET_ITEM(tpl, i, plong); /* steals reference */
-    }
-    
-    return tpl;
-
-    err:
-    Py_XDECREF(tpl);
-    if(!PyErr_Occurred()){
-        PyErr_SetString(PyExc_RuntimeError, "Failed to convert hsize_t array to tuple.");
-    }
-    return NULL;
-}
 
 
 /* The functions

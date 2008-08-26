@@ -662,7 +662,7 @@ class Dataset(HLObject):
                     if not name in basetype.names:
                         raise ValueError("Field %s does not appear in this type." % name)
 
-                new_dtype = numpy.dtype([(name, basetype.fields[name]) for name in names])
+                new_dtype = numpy.dtype([(name, basetype.fields[name][0]) for name in names])
 
             # Create the holder array
             arr = numpy.ndarray(mspace.shape, new_dtype)
