@@ -176,11 +176,30 @@ def slice_select(space, args):
     for idx, (length, exp) in enumerate(zip(shape,final_args)):
 
         if isinstance(exp, slice):
-            start_, stop_, step_ = exp.indices(length)
+
+            # slice.indices() method is limited to long ints
+
+            start_, stop_, step_ = exp.start, exp.stop, exp.step
+            start_ = 0 if start_ is None else int(start_)
+            stop_ = length if stop_ is None else int(stop_)
+            step_ = 1 if step_ is None else int(step_)
+
+            if start_ < 0:
+                raise ValueError("Negative start index not allowed (got %d)" % start_)
+            if step_ < 1:
+                raise ValueError("Step must be >= 1 (got %d)" % step_)
+            if stop_ < 0:
+                raise ValueError("Negative stop index not allowed (got %d)" % stop_)
+
             count_ = (stop_-start_)//step_
             if (stop_-start_) % step_ != 0:
                 count_ += 1
+
+            if start_+count_ > length:
+                raise ValueError("Selection out of bounds on axis %d" % idx)
+
             simple_ = False
+
         else:
             try:
                 exp = long(exp)
@@ -201,7 +220,12 @@ def slice_select(space, args):
         simple.append(simple_)
 
     space.select_hyperslab(tuple(start), tuple(count), tuple(stride))
-    return h5s.create_simple(tuple(count)), all(simple)
+
+    # According to the NumPy rules, dimensions which are specified as an int
+    # do not result in a length-1 axis.
+    mem_shape = tuple(x for x, smpl in zip(count, simple) if not smpl) 
+
+    return h5s.create_simple(mem_shape), all(simple)
 
 def strhdr(line, char='-'):
     """ Print a line followed by an ASCII-art underline """

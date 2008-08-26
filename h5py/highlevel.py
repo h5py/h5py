@@ -673,7 +673,7 @@ class Dataset(HLObject):
             # Match NumPy conventions
             if len(names) == 1:
                 arr = arr[names[0]]     # Single-field recarray convention
-            arr = arr.squeeze()         # No "1" dimensions
+
             if scalar_result:
                 arr = numpy.asscalar(arr)   # Scalar if slicing rules say it is
             return arr
