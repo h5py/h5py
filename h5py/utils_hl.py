@@ -68,11 +68,17 @@ class CoordsList(object):
         Wrapper class for efficient access to sequences of sparse or
         irregular coordinates.  Construct from either a single index
         (a rank-length sequence of numbers), or a sequence of such
-        indices.
+        indices:
+
+        CoordsList( (0,1,4) )               # Single index
+        CoordsList( [ (1,2,3), (7,8,9) ] )  # Multiple indices
     """
 
     def __init__(self, points):
         """ Create a new list of explicitly selected points.
+
+            CoordsList( (0,1,4) )               # Single index
+            CoordsList( [ (1,2,3), (7,8,9) ] )  # Multiple indices
         """
 
         try:
@@ -80,6 +86,8 @@ class CoordsList(object):
         except ValueError:
             raise ValueError("Selection should be an index or a sequence of equal-rank indices")
 
+        if len(self.coords) == 0:
+            raise ValueError("Selection may not be empty")
 
 def slice_select(space, args):
     """ Perform a selection on the given HDF5 dataspace, using a tuple
@@ -119,6 +127,8 @@ def slice_select(space, args):
             # Boolean array indexing is handled by discrete element selection
             # It never results in a scalar value
             indices = numpy.transpose(argval.nonzero())
+            if len(indices) == 0:
+                raise ValueError("Selection may not be empty")
             space.select_elements(indices)
             return h5s.create_simple((len(indices),)), False
 

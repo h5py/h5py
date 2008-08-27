@@ -332,6 +332,33 @@ class TestDataset(unittest.TestCase):
                 f.close()
                 os.unlink(fname)   
 
+    def test_Dataset_coords(self):
+
+        space = (100,100)
+
+        # These need to be increasing to make it easy to compare to the
+        # NumPy reference array, which uses a boolean mask.
+        selections = [0,1,15,101,102, 557, 664, 1024,9999]
+
+        arr = numpy.arange(10000).reshape(space)
+        
+        dset = self.f.create_dataset('dset', data=arr)
+
+        # Scalar selections
+        for x in selections:
+            sel = CoordsList(numpy.unravel_index(x,space))
+            self.assertEqual(dset[sel], arr.flat[x])
+            self.assert_(not isinstance(dset[sel], numpy.ndarray))
+
+        # Coordinate list selection
+        sel = CoordsList([numpy.unravel_index(x,space) for x in selections])
+
+        npy_sel = numpy.zeros(space, dtype='bool')
+        for x in selections:
+            npy_sel.flat[x] = True
+
+        self.assert_(numpy.all(dset[sel] == arr[npy_sel]))
+        self.assert_(isinstance(dset[sel], numpy.ndarray))
 
     def test_Dataset_exceptions(self):
         # These trigger exceptions in H5Dread
