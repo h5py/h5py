@@ -271,7 +271,7 @@ class TestDataset(unittest.TestCase):
                 print "    Testing base 2**%d" % numpy.log2(base)
 
                 empty = numpy.zeros(shp)
-                data = numpy.arange(numpy.product(shp)).reshape(shp)
+                data = numpy.arange(numpy.product(shp), dtype='=f4').reshape(shp)
 
                 dset[slc] = empty
                 arr = dset[slc]
@@ -332,57 +332,6 @@ class TestDataset(unittest.TestCase):
                 f.close()
                 os.unlink(fname)   
 
-    def test_Dataset_flat(self):
-        return
-        print ""
-
-        s = SliceFreezer()
-
-        flatindexing = [0, 1, 45, 355]
-        flatindexing += [s[0:500:2], s[0:644], s[3:99], s[35:655:3]]
-        flatindexing += [s[:45:], s[::3], s[:78:4]]
-
-        extended = [ (0,1,3,2) ]
-
-        for dt in TYPES1:
-
-            srcarr = numpy.arange(10*10*20, dtype=dt).reshape(10,10,20)
-            srcarr = srcarr + numpy.sin(srcarr)
-
-            fname = tempfile.mktemp('.hdf5')
-            f = File(fname, 'w')
-            try:
-                d = Dataset(f, "NewDataset", data=srcarr)
-                self.assertEqual(d.shape, srcarr.shape)
-                self.assertEqual(d.dtype, srcarr.dtype)
-                for idx in flatindexing:
-                    print "    Checking flat read %.20s %s" % (dt, idx)
-                    hresult = d.flat[idx]
-                    nresult = srcarr.flat[idx]
-                    if isinstance(nresult, numpy.ndarray):
-                        self.assertEqual(hresult.shape, nresult.shape)
-                        self.assertEqual(hresult.dtype, nresult.dtype)
-                    else:
-                        self.assert_(not isinstance(hresult, numpy.ndarray))
-                    self.assert_(numpy.all(hresult == nresult), "%s\n%s" % (hresult, nresult))
-
-                del f["NewDataset"]
-                d = Dataset(f, "NewDataset", data=srcarr)
-                for idx in flatindexing:
-                    print "    Checking flat write %.20s %s" % (dt, idx)
-                    srcarr.flat[idx] = numpy.cos(srcarr.flat[idx])
-                    d.flat[idx] = srcarr.flat[idx]
-                    self.assert_(numpy.all(d.value == srcarr))
-
-                del f["NewDataset"]
-                d = Dataset(f, "NewDataset", data=srcarr)
-                for seq in extended:
-                    subset = d.flat[seq]
-                    for idx, entry in enumerate(seq):
-                        self.assertEqual(subset[idx], srcarr.flat[entry])
-            finally:
-                f.close()
-                os.unlink(fname)   
 
     def test_Dataset_exceptions(self):
         # These trigger exceptions in H5Dread

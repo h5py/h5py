@@ -53,13 +53,13 @@ import threading
 
 from h5py import h5, h5f, h5g, h5s, h5t, h5d, h5a, h5p, h5z, h5i, config
 from h5py.h5 import H5Error
-from utils_hl import slice_select, hbasename, strhdr, strlist, FlatIndexer, \
-                     guess_chunk
+from utils_hl import slice_select, hbasename, strhdr, strlist, guess_chunk
+from utils_hl import CoordsList
 from browse import _H5Browser
 
 
-__all__ = ["LockableObject", "HLObject", "File", "Group", "Dataset",
-           "Datatype", "AttributeManager"]
+__all__ = ["File", "Group", "Dataset",
+           "Datatype", "AttributeManager", "CoordsList"]
 
 try:
     # For interactive File.browse() capability
@@ -414,60 +414,6 @@ class File(Group):
                     readline.add_history(x)
         self._path = browser.path
 
-class FlatIndexProxy(object):
-
-    """
-        Utility class which allows 1-D indexing of datasets.
-
-        These come attached to Dataset objects as <obj>.flat.  They behave
-        like 1-D arrays; you can slice into them and assign to slices like
-        NumPy flatiter objects.  However, they are not iterable.
-
-        In addition to single indices and slices, you can also provide an
-        iterable which yields indices and slices.  The returned array will
-        be the union of these selections, in the order they were presented,
-        with duplicate entries skipped.
-
-        Examples:  (let dset be of shape (10,10))
-            >>> dset.flat[10]       # Equivalent to dset[1,0]
-            >>> dset.flat[5:15]     # Note you can't do this with dset[x,y]
-            >>> dset.flat[0,1,3,2]  # First 4 elements, in the specified order
-
-        Caveats:  At the HDF5 level, this works by explicitly listing the set
-        of points to be accessed.  For large, regularly strided selections,
-        you should use the standard n-D slicing syntax, which is significantly
-        faster.
-    """
-    
-    def __init__(self, dset):
-        self._dset = dset
-
-    def __getitem__(self, args):
-        """ Read from the dataset, treating it as a 1-D (C-contiguous) array.
-
-            Allowed slicing mechanisms:
-                1. Ints/longs
-                2. Extended slices
-                3. Sequences of ints/extended slices (e.g. flat[0,1,2])
-
-            Subsets which result in a single element are returned as scalars.
-        """
-        indexer = FlatIndexer(self._dset.shape, args)
-        arr = self._dset[indexer]
-
-        # NumPy does not respect the byteorder when slicing with .flat
-        return arr#.newbyteorder('=')
-
-    def __setitem__(self, args, val):
-        """ Write to the dataset, treating it as a 1-D (C-contiguous) array.
-
-            Allowed slicing mechanisms:
-                1. Ints/longs
-                2. Extended slices
-                3. Sequences of ints/extended slices (e.g. flat[0,1,2])
-        """
-        indexer = FlatIndexer(self._dset.shape, args)
-        self._dset[indexer] = val
 
 class Dataset(HLObject):
 
@@ -492,9 +438,6 @@ class Dataset(HLObject):
 
     dtype = property(lambda self: self.id.dtype,
         doc = "Numpy dtype representing the datatype")
-
-    flat = property(lambda self: FlatIndexProxy(self),
-        doc = "1-D read/write slicing access to the dataset.  Not iterable.")
 
     def _getval(self):
         with self._lock:
@@ -636,6 +579,16 @@ class Dataset(HLObject):
             ds[:]
             ds[1,2,3,"a"]
             ds[0:5:2, ..., 0:2, "a", "b"]
+
+            Also supports:
+
+            * Boolean array indexing (True/False)
+            * Discrete point selection via CoordsList instance
+
+            Beware; these last two techniques work by explicitly enumerating
+            the points to be selected.  In the worst case, the selection list
+            for a boolean array can be every point in the dataset, with a 
+            2x to 3x memory overhead.
         """
         with self._lock:
 

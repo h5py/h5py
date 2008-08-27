@@ -62,41 +62,23 @@ def guess_chunk(shape, typesize):
 
     return tuple(long(x) for x in chunks)
 
-class FlatIndexer(object):
+class CoordsList(object):
 
     """
-        Utility class which encapsulates a 1-D selection into an n-D array.
-
+        Wrapper class for efficient access to sequences of sparse or
+        irregular coordinates.  Construct from either a single index
+        (a rank-length sequence of numbers), or a sequence of such
+        indices.
     """
 
-    def __init__(self, shape, args):
-        """ Shape must be a tuple; args must be iterable.
+    def __init__(self, points):
+        """ Create a new list of explicitly selected points.
         """
-        if shape == ():
-            raise TypeError("Can't slice into a scalar array.")
 
         try:
-            args = tuple(iter(args))
-        except TypeError:
-            args = (args,)
-
-        points = []
-
-        scalarok = False
-        for arg in args:
-            if isinstance(arg, slice):
-                points.extend(xrange(*arg.indices(numpy.product(shape))))
-            else:
-                try:
-                    points.append(long(arg))
-                except TypeError:
-                    raise ValueError("Illegal index (ints, longs or slices only)")
-                scalarok = True
-
-        self.coords = numpy.array([numpy.unravel_index(x, shape) for x in points])
-
-        # A scalar value should result for a single integer index.
-        self.scalar = True if scalarok and len(args) == 1 else False
+            self.coords = numpy.asarray(points, dtype='=u8')
+        except ValueError:
+            raise ValueError("Selection should be an index or a sequence of equal-rank indices")
 
 
 def slice_select(space, args):
@@ -119,6 +101,9 @@ def slice_select(space, args):
         2. Boolean indicating if the slice should result in a scalar quantity
     """
 
+    shape = space.shape
+    rank = len(shape)
+
     if len(args) == 0 or (len(args) == 1 and args[0] is Ellipsis):
         # The only safe way to access a scalar dataspace
         space.select_all()
@@ -137,17 +122,20 @@ def slice_select(space, args):
             space.select_elements(indices)
             return h5s.create_simple((len(indices),)), False
 
-        if isinstance(argval, FlatIndexer):
-            # Flat indexing also uses discrete selection
-            # Scalar determination is made by the indexer
+        if isinstance(argval, CoordsList):
+            # Coords indexing also uses discrete selection
+            c_ndim = argval.coords.ndim
+            if c_ndim != rank:
+                if c_ndim == 1:
+                    argval.coords.resize((1,len(argval.coords)))
+                else:
+                    raise ValueError("Coordinate list must contain %d-rank indices (not %d-rank)" % (rank, c_ndim))
+
             space.select_elements(argval.coords)
             npoints = space.get_select_elem_npoints()
-            return h5s.create_simple((npoints,)), argval.scalar
+            return h5s.create_simple((npoints,)), len(argval.coords) == 1
 
     # Proceed to hyperslab selection
-
-    shape = space.shape
-    rank = len(shape)
 
     # First expand (at most 1) ellipsis object
 
