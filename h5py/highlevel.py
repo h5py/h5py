@@ -567,22 +567,11 @@ class Dataset(HLObject):
     def __getitem__(self, args):
         """ Read a slice from the HDF5 dataset.  Takes slices and
             recarray-style field names (more than one is allowed!) in any
-            order.
-
-            For a compound dataset ds, with shape (10,10,5) and fields "a", "b" 
-            and "c", the following are all legal syntax:
-
-            ds[1,2,3]
-            ds[1,2,:]
-            ds[...,3]
-            ds[1]
-            ds[:]
-            ds[1,2,3,"a"]
-            ds[0:5:2, ..., 0:2, "a", "b"]
+            order.  Obeys basic NumPy broadcasting rules.
 
             Also supports:
 
-            * Boolean array indexing (True/False)
+            * Boolean "mask" array indexing
             * Discrete point selection via CoordsList instance
 
             Beware; these last two techniques work by explicitly enumerating
@@ -654,9 +643,9 @@ class Dataset(HLObject):
             if val.shape == ():
                 mspace = h5s.create(h5s.SCALAR)
             else:
-                mspace = h5s.create_simple(val.shape)
+                mspace = h5s.create_simple(val.shape, (h5s.UNLIMITED,)*len(val.shape))
 
-            slice_select(fspace, args)
+            result, scalar = slice_select(fspace, args)
 
             self.id.write(mspace, fspace, val)
 

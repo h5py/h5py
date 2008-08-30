@@ -10,9 +10,17 @@ Python and a C compiler, for distutils to build the extensions.  Pyrex_ is
 required only if you want to change compile-time options, like the
 debugging level.
 
-It's strongly recommended you use the versions of these packages provided
-by your operating system's package manager/finder.  In particular, HDF5 can
-be painful to install manually.
+Getting HDF5
+------------
+
+HDF5 versions 1.6.5 and later are supported, including 1.8.X.  Since h5py
+consists of multiple modules, HDF5 *must* be available as a dynamic library.
+**The best solution is to install HDF5 via a package manager.**
+`The HDF Group`__ provides several "dumb" (untar in "/") binary distributions
+for Linux, but traditionally only static libraries for Mac.  Mac OS-X users
+should use something like Fink, or compile HDF5 from source.
+
+__ http://www.hdfgroup.com/HDF5
 
 Requires
 --------
@@ -24,7 +32,7 @@ Requires
 - (Optionally) Pyrex_ 0.9.8.4 or higher
 
 .. _Numpy: http://numpy.scipy.org/
-.. _HDF5: http://www.hdfgroup.com/HDF5/
+.. _HDF5: http://www.hdfgroup.com/HDF5
 .. _Pyrex: http://www.cosc.canterbury.ac.nz/greg.ewing/python/Pyrex/
 
 Procedure

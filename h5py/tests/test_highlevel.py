@@ -295,6 +295,7 @@ class TestDataset(unittest.TestCase):
         slices += [ s[0], s[1], s[9], s[0,0], s[4,5], s[:] ]
         slices += [ s[3,...], s[3,2,...] ]
         slices += [ numpy.random.random((10,10,50)) > 0.5 ]  # Truth array
+        slices += [ s[0,0,0:0], s[1:1,:,:], numpy.zeros((10,10,50),dtype='bool')] # Empty selections
         for dt in TYPES1:
 
             srcarr = numpy.arange(10*10*50, dtype=dt).reshape(10,10,50)
@@ -339,6 +340,7 @@ class TestDataset(unittest.TestCase):
         # These need to be increasing to make it easy to compare to the
         # NumPy reference array, which uses a boolean mask.
         selections = [0,1,15,101,102, 557, 664, 1024,9999]
+        selections_list = [ selections, []]  # empty selection
 
         arr = numpy.arange(10000).reshape(space)
         
@@ -350,15 +352,20 @@ class TestDataset(unittest.TestCase):
             self.assertEqual(dset[sel], arr.flat[x])
             self.assert_(not isinstance(dset[sel], numpy.ndarray))
 
-        # Coordinate list selection
-        sel = CoordsList([numpy.unravel_index(x,space) for x in selections])
+        for lst in selections_list:
+            # Coordinate list selection
+            sel = CoordsList([numpy.unravel_index(x,space) for x in lst])
 
-        npy_sel = numpy.zeros(space, dtype='bool')
-        for x in selections:
-            npy_sel.flat[x] = True
+            npy_sel = numpy.zeros(space, dtype='bool')
+            for x in lst:
+                npy_sel.flat[x] = True
 
-        self.assert_(numpy.all(dset[sel] == arr[npy_sel]))
-        self.assert_(isinstance(dset[sel], numpy.ndarray))
+            hresult = dset[sel]
+            nresult = arr[npy_sel]
+            self.assert_(numpy.all(hresult == nresult))
+            self.assert_(isinstance(hresult, numpy.ndarray))
+            self.assertEqual(hresult.dtype, nresult.dtype)
+            self.assertEqual(hresult.shape, nresult.shape)
 
     def test_Dataset_exceptions(self):
         # These trigger exceptions in H5Dread

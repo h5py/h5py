@@ -1,6 +1,8 @@
-****************
-Datasets in HDF5
-****************
+.. _Datasets:
+
+**************
+Using Datasets
+**************
 
 Datasets are where most of the information in an HDF5 file resides.  Like
 NumPy arrays, they are homogenous collections of data elements, with an
@@ -35,9 +37,9 @@ of datasets are immutable.
 Creating a dataset
 ==================
 
-There are two ways to create a dataset, with nearly identical syntax.  The
-recommended procedure is to use a method on the Group object in which the
-dataset will be stored:
+There are two ways to explicitly create a dataset, with nearly identical
+syntax.  The recommended procedure is to use a method on the Group object in
+which the dataset will be stored:
 
     >>> dset = grp.create_dataset("Dataset Name", ...options...)
 
@@ -116,16 +118,199 @@ taken for both methods.  Default values are in *italics*.
     size of each axis.  You can provide a value of "None" for any axis to
     indicate that the maximum size of that dimension is unlimited.
 
+Automatic creation
+------------------
 
-Slicing and data access
+If you've already got a NumPy array you want to store, you can let h5py guess
+these options for you.  Simply assign the array to a Group entry:
+
+    >>> arr = numpy.ones((100,100), dtype='=f8')
+    >>> my_group["MyDataset"] = arr
+
+The object you provide doesn't even have to be an ndarray; if it isn't, h5py
+will create an intermediate NumPy representation before storing it.
+The resulting dataset is stored contiguously, with no compression or chunking.
+
+.. note::
+    Arrays are auto-created using the NumPy ``asarray`` function.  This means
+    that if you try to create a dataset from a string, you'll get a *scalar*
+    dataset containing the string itself!  To get a char array, pass in
+    something like ``numpy.fromstring(mystring, '|S1')`` instead.
+
+
+Data Access and Slicing
 =======================
 
-A subset of the NumPy extended slicing is supported.  Slice specifications are
-translated directly to HDF5 *hyperslab* selections, and are are a fast and
-efficient way to access data in the file.
+A subset of the NumPy indexing techniques is supported, including the
+traditional extended-slice syntax, named-field access, and boolean arrays.
+Discrete coordinate selection are also supported via an special indexer class.
 
+Properties
+----------
 
+Like Numpy arrays, Dataset objects have attributes named "shape" and "dtype":
 
+    >>> dset.dtype
+    dtype('complex64')
+    >>> dset.shape
+    (4L, 5L)
+
+Slicing access
+--------------
+
+The best way to get at data is to use the traditional NumPy extended-slicing
+syntax.   Slice specifications are translated directly to HDF5 *hyperslab*
+selections, and are are a fast and efficient way to access data in the file.
+The following slicing arguments are recognized:
+
+    * Numbers: anything that can be converted to a Python long
+    * Slice objects: please note negative values are not allowed
+    * Field names, in the case of compound data
+    * At most one ``Ellipsis`` (``...``) object
+
+Here are a few examples (output omitted)
+
+    >>> dset = f.create_dataset("MyDataset", data=numpy.ones((10,10,10),'=f8'))
+    >>> dset[0,0,0]
+    >>> dset[0,2:10,1:9:3]
+    >>> dset[0,...]
+    >>> dset[:,::2,5]
+
+Simple array broadcasting is also supported:
+
+    >>> dset[0]   # Equivalent to dset[0,...]
+
+For compound data, you can specify multiple field names alongside the
+numeric slices:
+
+    >>> dset["FieldA"]
+    >>> dset[0,:,4:5, "FieldA", "FieldB"]
+    >>> dset[0, ..., "FieldC"]
+
+Advanced indexing
+-----------------
+
+Boolean "mask" arrays can also be used to specify a selection.  The result of
+this operation is a 1-D array with elements arranged in the standard NumPy
+(C-style) order:
+
+    >>> arr = numpy.random.random((10,10))
+    >>> dset = f.create_dataset("MyDataset", data=arr)
+    >>> result = dset[arr > 0.5]
+
+If you have a set of discrete points you want to access, you may not want to go
+through the overhead of creating a boolean mask.  This is especially the case
+for large datasets, where even a byte-valued mask may not fit in memory.  You
+can pass a list of points to the dataset selector via a custom "CoordsList"
+instance:
+
+    >>> mycoords = [ (0,0), (3,4), (7,8), (3,5), (4,5) ]
+    >>> coords_list = CoordsList(mycoords)
+    >>> result = dset[coords_list]
+
+Like boolean-array indexing, the result is a 1-D array.  The order in which
+points are selected is preserved.
+
+.. note::
+    These two techniques rely on an HDF5 construct which explicitly enumerates the
+    points to be selected.  It's very flexible but most appropriate for 
+    reasonably-sized (or sparse) selections.  The coordinate list takes at
+    least 8*<rank> bytes per point, and may need to be internally copied.  For
+    example, it takes 40MB to express a 1-million point selection on a rank-3
+    array.  Be careful, especially with boolean masks.
+
+Value attribute and scalar datasets
+-----------------------------------
+
+HDF5 allows you to store "scalar" datasets.  These have the shape "()".  You
+can use the syntax ``dset[...]`` to recover the value as an 0-dimensional
+array.  Also, the special attribute ``value`` will return a scalar for an 0-dim
+array, and a full n-dimensional array for all other cases:
+
+    >>> f["ArrayDS"] = numpy.ones((2,2))
+    >>> f["ScalarDS"] = 1.0
+    >>> f["ArrayDS"].value
+    array([[ 1.,  1.],
+           [ 1.,  1.]])
+    >>> f["ScalarDS"].value
+    1.0
+
+Extending Datasets
+------------------
+
+If the dataset is created with the *maxshape* option set, you can later expand
+its size.  Simply call the *extend* method:
+
+    >>> dset = f.create_dataset("MyDataset", (5,5), maxshape=(None,None))
+    >>> dset.shape
+    (5, 5)
+    >>> dset.extend((15,20))
+    >>> dset.shape
+    (15, 20)
+
+More on Datatypes
+=================
+
+Storing compound data
+---------------------
+
+You can store "compound" data (struct-like, using named fields) using the Numpy
+facility for compound data types.  For example, suppose we have data that takes
+the form of (temperature, voltage) pairs::
+
+    >>> import numpy
+    >>> mydtype = numpy.dtype([('temp','=f4'),('voltage','=f8')])
+    >>> dset = f.create_dataset("MyDataset", (20,30), mydtype)
+    >>> dset
+    Dataset "MyDataset": (20L, 30L) dtype([('temp', '<f4'), ('voltage', '<f8')])
+    
+These types may contain any supported type, and be arbitrarily nested.
+
+.. _supported:
+
+Supported types
+-----------------
+
+The HDF5 type system is mostly a superset of its NumPy equivalent.  The
+following are the NumPy types currently supported by the interface:
+
+    ========    ==========  ==========  ===============================
+    Datatype    NumPy kind  HDF5 class  Notes
+    ========    ==========  ==========  ===============================
+    Integer     i, u        INTEGER
+    Float       f           FLOAT
+    Complex     c           COMPOUND    Stored as an HDF5 struct
+    Array       V           ARRAY       NumPy array with "subdtype"
+    Opaque      V           OPAQUE      Stored as HDF5 fixed-length opaque
+    Compound    V           COMPOUND    May be arbitarily nested
+    String      S           STRING      Stored as HDF5 fixed-length C-style strings
+    ========    ==========  ==========  ===============================
+
+Byte order is always preserved.  The following additional features are known
+not to be supported:
+
+    * Read/write HDF5 variable-length (VLEN) data
+
+      No obvious way exists to handle variable-length data in NumPy.
+
+    * NumPy object types (dtype "O")
+
+      This could potentially be solved by pickling, but requires low-level
+      VLEN infrastructure.
+
+    * HDF5 enums
+
+      There's no NumPy dtype support for enums.  Enum data is read as plain
+      integer data.  However, the low-level conversion routine
+      ``h5t.py_create`` can create an HDF5 enum from a integer dtype and a
+      dictionary of names.
+    
+    * HDF5 "time" datatype
+
+      This datatype is deprecated, and has no close NumPy equivalent.
+
+    
+     
 
 
 

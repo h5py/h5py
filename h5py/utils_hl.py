@@ -74,6 +74,9 @@ class CoordsList(object):
         CoordsList( [ (1,2,3), (7,8,9) ] )  # Multiple indices
     """
 
+    npoints = property(lambda self: len(self.coords),
+        doc = "Number of selected points")
+
     def __init__(self, points):
         """ Create a new list of explicitly selected points.
 
@@ -87,7 +90,12 @@ class CoordsList(object):
             raise ValueError("Selection should be an index or a sequence of equal-rank indices")
 
         if len(self.coords) == 0:
-            raise ValueError("Selection may not be empty")
+            pass # This will be caught at index-time
+        elif self.coords.ndim == 1:
+            self.coords.resize((1,len(self.coords)))
+        elif self.coords.ndim != 2:
+            raise ValueError("Selection should be an index or a sequence of equal-rank indices")
+
 
 def slice_select(space, args):
     """ Perform a selection on the given HDF5 dataspace, using a tuple
@@ -108,9 +116,9 @@ def slice_select(space, args):
         1. Appropriate memory dataspace to use for new array
         2. Boolean indicating if the slice should result in a scalar quantity
     """
-
     shape = space.shape
     rank = len(shape)
+    space.set_extent_simple(shape, (h5s.UNLIMITED,)*rank)
 
     if len(args) == 0 or (len(args) == 1 and args[0] is Ellipsis):
         # The only safe way to access a scalar dataspace
@@ -128,22 +136,22 @@ def slice_select(space, args):
             # It never results in a scalar value
             indices = numpy.transpose(argval.nonzero())
             if len(indices) == 0:
-                raise ValueError("Selection may not be empty")
-            space.select_elements(indices)
-            return h5s.create_simple((len(indices),)), False
+                space.select_none()
+            else:
+                space.select_elements(indices)
+            return h5s.create_simple((len(indices),), (h5s.UNLIMITED,)), False
 
         if isinstance(argval, CoordsList):
             # Coords indexing also uses discrete selection
-            c_ndim = argval.coords.ndim
-            if c_ndim != rank:
-                if c_ndim == 1:
-                    argval.coords.resize((1,len(argval.coords)))
-                else:
-                    raise ValueError("Coordinate list must contain %d-rank indices (not %d-rank)" % (rank, c_ndim))
-
-            space.select_elements(argval.coords)
-            npoints = space.get_select_elem_npoints()
-            return h5s.create_simple((npoints,)), len(argval.coords) == 1
+            if len(argval.coords) == 0:
+                space.select_none()
+                npoints = 0
+            elif argval.coords.ndim != 2 or argval.coords.shape[1] != rank:
+                raise ValueError("Coordinate list incompatible with %d-rank dataset" % rank)
+            else:
+                space.select_elements(argval.coords)
+                npoints = space.get_select_elem_npoints()
+            return h5s.create_simple((npoints,), (h5s.UNLIMITED,)), len(argval.coords) == 1
 
     # Proceed to hyperslab selection
 
@@ -223,7 +231,7 @@ def slice_select(space, args):
     # do not result in a length-1 axis.
     mem_shape = tuple(x for x, smpl in zip(count, simple) if not smpl) 
 
-    return h5s.create_simple(mem_shape), all(simple)
+    return h5s.create_simple(mem_shape, (h5s.UNLIMITED,)*len(mem_shape)), all(simple)
 
 def strhdr(line, char='-'):
     """ Print a line followed by an ASCII-art underline """

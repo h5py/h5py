@@ -36,6 +36,7 @@ Contents:
 
     build
     quick
+    datasets
     low
     threads
     licenses

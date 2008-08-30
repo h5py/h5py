@@ -34,7 +34,7 @@ Identifier wrapping
 -------------------
 
 No matter how complete, a library full of C functions is not very fun to use.
-Additionally, since HDF5 identifiers are natively handled as integers, their
+Additionally, since HDF5 identifiers are natively expressed as integers, their
 lifespan must be manually tracked by the library user.  This quickly becomes
 impossible for applications of even a moderate size; errors will lead to
 resource leaks or (in the worst case) accidentally invalidating identifiers.
@@ -45,11 +45,22 @@ for an integer identifier, which allows Python reference counting to manage
 the lifespan of the identifer.  When no more references exist to the Python
 object, the HDF5 identifier is automatically closed.
 
+    >>> from h5py import h5s
+    >>> sid = h5s.create_simple( (2,3) )
+    >>> sid
+    67108866 [1] (U) SpaceID
+    >>> sid.id
+    67108866
+
 A side benefit is that many HDF5 functions take an identifier as their first
-argument.  They are naturally expressed as methods on an identifier object.
+argument.  These are naturally expressed as methods on an identifier object.
 For example, the HDF5 function``H5Dwrite`` becomes the method
 ``h5d.DatasetID.write``.  Code using this technique is easier to write and
 maintain.
+
+    >>> sid.select_hyperslab((0,0),(2,2))
+    >>> sid.get_select_bounds()
+    ((0L, 0L), (1L, 1L))
 
 State & Hashing
 ---------------
@@ -60,9 +71,27 @@ itself.  A side effect of this is that the hash and equality operations on
 ObjectID instances are determined by the status of the underlying HDF5 object.
 For example, if two GroupID objects with different HDF5 integer identifiers
 point to the same group, they will have identical hashes and compare equal.
-Among other things, this means that if you can use
-ObjectID/GroupID/DatasetID/etc. instances as keys in a dictionary.
+Among other things, this means that you can reliably use identifiers as keys
+in a dictionary.
 
+    >>> from h5py import h5f, h5g
+    >>> fid = h5f.open('foo.hdf5')
+    >>> grp1 = h5g.open(fid, '/')
+    >>> grp2 = h5g.open(fid, '/')
+    >>> grp1.id == grp2.id
+    False
+    >>> grp1 == grp2
+    True
+    >>> hash(grp1) == hash(grp2)
+    True
+    >>> x = {grp1: "The root group"}
+    >>> x[grp2]
+    'The root group'
+
+.. note::
+    Currently all subclasses of ObjectID are hashable, including "transient"
+    identifiers like datatypes.  A future version may restrict hashing to
+    "committed", file-resident objects.
 
 Data Conversion
 ===============
@@ -76,11 +105,35 @@ is good mapping between NumPy dtypes and HDF5 basic types.
 The actual conversion between datatypes is performed by the optimised routines
 inside the HDF5 library; all h5py does is provide the mapping between NumPy
 and HDF5 type objects.  Because the HDF5 typing system is more comprehensive
-than the NumPy system, this is an asymmetrical process. While translating
-from ``NumPy => HDF5`` always results in a bit-for-bit identical description,
-the reverse process ``HDF5 => NumPy`` cannot be guaranteed to result in an
-exact description.  In the vast majority of cases, this does not matter; HDF5
-can natively auto-convert a huge variety of representations.
+than the NumPy system, this is an asymmetrical process. 
+
+Translating from an HDF5 datatype object to a dtype results in the closest
+standard NumPy representation of the datatype:
+
+    >>> from h5py import h5t
+    >>> h5t.STD_I32LE
+    50331712 [1] (L) TypeIntegerID int32
+    >>> h5t.STD_I32LE.dtype 
+    dtype('int32')
+
+In the vast majority of cases the two datatypes will have exactly identical
+binary layouts, but not always.  For example, an HDF5 integer can have
+additional leading or trailing padding, which has no NumPy equivalent.  In
+this case the dtype will capture the logical intent of the type (as a 32-bit
+signed integer), but not its layout.
+
+The reverse transformation (NumPy type to HDF5 type) is handled by a separate
+function.  It's guaranteed to result in an exact, binary-compatible
+representation:
+
+    >>> tid = h5t.py_create('=u8')
+    >>> tid
+    50331956 [1] (U) TypeIntegerID uint64
+
+The HDF5 library contains translation routines which can handle almost any
+conversion between types of the same class, including odd precisions and
+padding combinations.  This process is entirely transparent to the user.
+
 
 API Versioning
 ==============
