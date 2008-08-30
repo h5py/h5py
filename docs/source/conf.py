@@ -44,7 +44,7 @@ copyright = '2008, Andrew Collette'
 # The short X.Y version.
 version = '0.3'
 # The full version, including alpha/beta/rc tags.
-release = '0.3.0'
+release = '0.3.1'
 
 # There are two options for replacing |today|: either, you set today to some
 # non-false value, then it is used:
@@ -122,10 +122,10 @@ html_last_updated_fmt = '%b %d, %Y'
 #html_additional_pages = {}
 
 # If false, no module index is generated.
-#html_use_modindex = True
+html_use_modindex = False
 
 # If false, no index is generated.
-#html_use_index = True
+html_use_index = False
 
 # If true, the index is split into individual pages for each letter.
 #html_split_index = False

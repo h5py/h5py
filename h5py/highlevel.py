@@ -64,6 +64,8 @@ __all__ = ["File", "Group", "Dataset",
 try:
     # For interactive File.browse() capability
     import readline
+    if not hasattr(readline, 'get_current_history_length'):
+        readline = None
 except ImportError:
     readline = None
 
@@ -419,7 +421,7 @@ class Dataset(HLObject):
 
     """ High-level interface to an HDF5 dataset.
 
-        Dataset(group, name, data=None, dtype=None, shape=None, **kwds)
+        Dataset(group, name, shape=None, dtype=None, data=None, **kwds)
 
         Datasets behave superficially like Numpy arrays.  The full Numpy
         slicing syntax, including recarray indexing of named fields (even

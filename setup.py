@@ -35,7 +35,7 @@
 # === Global constants ========================================================
 
 NAME = 'h5py'
-VERSION = '0.3.0'
+VERSION = '0.3.1'
 
 MIN_PYREX = '0.9.8.4'  # for compile_multiple
 MIN_NUMPY = '1.0.3'

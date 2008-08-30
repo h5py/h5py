@@ -117,10 +117,6 @@ def create(ObjectID loc not None, char* name, int size_hint=-1):
     """
     return GroupID(H5Gcreate(loc.id, name, size_hint))
 
-IF H5PY_18API:
-   def create_anon(ObjectID loc not None):
-        return GroupID(H5Gcreate_anon(loc.id, H5P_DEFAULT, H5P_DEFAULT))
-
 cdef herr_t iter_cb_helper(hid_t gid, char *name, object int_tpl) except -1:
     # Callback function for H5Giterate
     # Automatic exception propagation breaks in 1.8 for some reason, so
