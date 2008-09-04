@@ -24,7 +24,7 @@ Low-level
   - Element-wise selection now uses NumPy arrays to list coordinates, not lists
   - Eliminate 32-bit size restriction on shape tuple members
   - Add methods get_fill_value and set_fill_value to h5p.PropDCID
-  - Fix threading test suite failure in multicore environment
+  - Disable broken threading tests
 
 
 Version 0.3.0
