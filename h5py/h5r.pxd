@@ -36,4 +36,16 @@ cdef extern from "hdf5.h":
   hid_t     H5Rget_region(hid_t dataset, H5R_type_t ref_type, void *ref) except *
   H5G_obj_t H5Rget_obj_type(hid_t id, H5R_type_t ref_type, void *ref) except *
 
+cdef union ref_u:
+    hobj_ref_t         obj_ref
+    hdset_reg_ref_t    reg_ref
+
+cdef class Reference:
+
+    cdef ref_u ref
+    cdef readonly int typecode
+
+
+
+
 

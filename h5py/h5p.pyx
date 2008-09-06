@@ -339,6 +339,34 @@ cdef class PropDCID(PropInstanceID):
         tid = h5t.py_create(value.dtype)
         H5Pget_fill_value(self.id, tid.id, value.data)
 
+    def set_fill_time(self, int fill_time):
+        """ (INT fill_time)
+
+            Define when fill values are written to the dataset.  Legal
+            values (defined in module h5d) are:
+
+            h5d.FILL_TIME_ALLOC    Write fill values at storage allocation time
+            h5d.FILL_TIME_NEVER    Never write fill values
+            h5d.FILL_TIME_IFSET    Write fill values at allocation time only
+                                   if a user-defined value is being used.
+        """
+        H5Pset_fill_time(self.id, <H5D_fill_time_t>fill_time)
+
+    def get_fill_time(self):
+        """ () => INT
+
+            Determine when fill values are written to the dataset.  Legal
+            values (defined in module h5d) are:
+
+            h5d.FILL_TIME_ALLOC    Write fill values at storage allocation time
+            h5d.FILL_TIME_NEVER    Never write fill values
+            h5d.FILL_TIME_IFSET    Write fill values at allocation time only
+                                   if a user-defined value is being used.
+        """
+        cdef H5D_fill_time_t fill_time
+        H5Pget_fill_time(self.id, &fill_time)
+        return <int>fill_time
+
     # === Filter functions ====================================================
     
     def set_deflate(self, unsigned int level=5):
@@ -514,16 +542,6 @@ cdef class PropDCID(PropInstanceID):
             h5z.FILTER_*.
         """
         H5Premove_filter(self.id, <H5Z_filter_t>filter_class)
-
-    def set_fill_time(self, int fill_code):
-        """ (INT fill_code)
-
-            Set the fill time.  Legal values are:
-             h5d.FILL_TIME_ALLOC
-             h5d.FILL_TIME_NEVER
-             h5d.FILL_TIME_IFSET
-        """
-        H5Pset_fill_time(self.id, fill_time)
 
     def fill_value_defined(self):
         """ () => INT fill_status

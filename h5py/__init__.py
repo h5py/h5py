@@ -30,6 +30,11 @@ from highlevel import File, Group, Dataset, Datatype, AttributeManager, CoordsLi
 
 __doc__ = __doc__ % (h5.version, h5.hdf5_version, h5.api_version)
 
-__all__ = ['h5', 'h5f', 'h5g', 'h5s', 'h5t', 'h5d', 'h5a', 'h5p',
+__all__ = ['h5', 'h5f', 'h5g', 'h5s', 'h5t', 'h5d', 'h5a', 'h5p', 'h5r',
            'h5z', 'h5i', 'File', 'Group', 'Dataset',
            'Datatype', 'AttributeManager', 'CoordsList']
+
+if h5.api_version_tuple >= (1,8):
+    import h5o, h5l
+    __all__ += ['h5l', 'h5o']
+

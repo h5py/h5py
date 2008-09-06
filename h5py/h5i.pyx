@@ -54,6 +54,8 @@ def get_name(ObjectID obj not None):
 
         If the identifier is invalid or is not associated with a name
         (in the case of transient datatypes, dataspaces, etc), returns None.
+
+        For some reason, this does not work on dereferenced objects.
     """
     cdef int namelen
     cdef char* name

@@ -8,7 +8,7 @@ lib_base = op.abspath(op.join(op.curdir, '..'))
 libs = [''] + [' --hdf5='+op.join(lib_base, x) for x in libnames]
 
 # Experimental non-blocking I/O
-nonblock = ['',' --io-nonblock']
+nonblock = ['']
 
 # API versions
 api = [' --api=16', ' --api=18']

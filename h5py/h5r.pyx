@@ -29,29 +29,6 @@ import h5
 OBJECT = H5R_OBJECT
 DATASET_REGION = H5R_DATASET_REGION
 
-cdef union ref_u:
-    hobj_ref_t         obj_ref
-    hdset_reg_ref_t    reg_ref
-
-cdef class Reference:
-
-    """ 
-        Represents an HDF5 reference.
-
-        Objects of this class are created exclusively by the library and 
-        cannot be modified.  The read-only attribute "typecode" determines 
-        whether the reference is to an object in an HDF5 file (OBJECT) 
-        or a dataset region (DATASET_REGION).
-    """
-
-    cdef ref_u ref
-    cdef readonly int typecode
-
-    def __str__(self):
-        return "HDF5 reference (type %s)" % PY_TYPE[self.typecode]
-
-    def __repr__(self):
-        return self.__str__()
 
 # === Reference API ===========================================================
 
@@ -63,12 +40,12 @@ def create(ObjectID loc not None, char* name, int ref_type, SpaceID space=None):
         of reference created:
 
         - OBJECT
-            Reference to an object in an HDF5 file.  Parameters loc
-            and name identify the object; space is unused.
+            Reference to an object in an HDF5 file.  Parameters "loc"
+            and "name" identify the object; "space" is unused.
 
         - DATASET_REGION    
-            Reference to a dataset region.  Parameters loc and
-            name identify the dataset; the selection on space
+            Reference to a dataset region.  Parameters "loc" and
+            "name" identify the dataset; the selection on "space"
             identifies the region.
     """
     cdef hid_t space_id
@@ -84,43 +61,70 @@ def create(ObjectID loc not None, char* name, int ref_type, SpaceID space=None):
 
     return ref
 
-def dereference(ObjectID fid not None, Reference ref):
-    """ (ObjectID fid, ReferenceObject ref) => INT obj_id
+cdef class Reference:
 
-        Open the object pointed to by "ref" and return its identifier.
-        The containing file must be provided via fid, which can be
-        a file identifier or an identifier for any object which lives
-        in the file.
+    """ 
+        Represents an HDF5 reference.
+
+        Objects of this class are created exclusively by the library and 
+        cannot be modified.  The read-only attribute "typecode" determines 
+        whether the reference is to an object in an HDF5 file (OBJECT) 
+        or a dataset region (DATASET_REGION).
     """
-    return wrap_identifier(H5Rdereference(fid.id, <H5R_type_t>ref.typecode, &ref.ref))
 
-def get_region(ObjectID dataset not None, Reference ref):
-    """ (ObjectID dataset, Reference ref) => INT dataspace_id
+    def dereference(self, ObjectID id not None):
+        """ (ObjectID id) => ObjectID obj_id
 
-        Retrieve the dataspace selection pointed to by a reference.
-        Returns a copy of the dataset's dataspace, with the appropriate
-        elements selected.
+            Open the object pointed to by this reference and return its
+            identifier.  The file identifier (or the identifier for any object
+            in the file) must also be provided.
 
-        The given reference object must be of type DATASET_REGION.
-    """
-    return SpaceID(H5Rget_region(dataset.id, <H5R_type_t>ref.typecode, &ref.ref))
+            The reference type may be either OBJECT or DATASET_REGION.
+        """
+        return wrap_identifier(H5Rdereference(id.id, <H5R_type_t>self.typecode, &self.ref))
 
-def get_obj_type(ObjectID ds not None, Reference ref):
-    """ (ObjectID ds, Reference ref) => INT obj_code
+    def get_region(self, ObjectID id not None):
+        """ (ObjectID id) => SpaceID dataspace_id
 
-        Determine what type of object an object reference points to.  The
-        reference may be either type OBJECT or DATASET_REGION.  For 
-        DATASET_REGION, the parameter ds must be either the dataset 
-        identifier, or the identifier for the object within which the
-        dataset is contained.
-        
-        The return value is one of:
-        h5g.LINK        Symbolic link
-        h5g.GROUP       Group
-        h5g.DATASET     Dataset
-        h5g.TYPE        Named datatype
-    """
-    return <int>H5Rget_obj_type(ds.id, <H5R_type_t>ref.typecode, &ref.ref)
+            Retrieve the dataspace selection pointed to by this reference.
+            Returns a copy of the dataset's dataspace, with the appropriate
+            elements selected.  The file identifier or the identifier of any
+            object in the file (including the dataset itself) must also be
+            provided.
+
+            The reference object must be of type DATASET_REGION.
+        """
+        return SpaceID(H5Rget_region(id.id, <H5R_type_t>self.typecode, &self.ref))
+
+    def get_obj_type(self, ObjectID id not None):
+        """ (ObjectID id) => INT obj_code
+
+            Determine what type of object this eference points to.  The
+            reference may be either type OBJECT or DATASET_REGION.  The file
+            identifier or the identifier of any object in the file must also
+            be provided.
+
+            The return value is one of:
+            h5g.LINK        Symbolic link
+            h5g.GROUP       Group
+            h5g.DATASET     Dataset
+            h5g.TYPE        Named datatype
+        """
+        return <int>H5Rget_obj_type(id.id, <H5R_type_t>self.typecode, &self.ref)
+
+    def __str__(self):
+        if self.typecode == H5R_OBJECT:
+            return "HDF5 object reference"
+        elif self.typecode == H5R_DATASET_REGION:
+            return "HDF5 dataset region reference"
+
+        return "Unknown HDF5 reference"
+
+    def __repr__(self):
+        return self.__str__()
+
+
+
 
 
 

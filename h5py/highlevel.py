@@ -50,6 +50,7 @@ import os
 import numpy
 import inspect
 import threading
+import sys
 
 from h5py import h5, h5f, h5g, h5s, h5t, h5d, h5a, h5p, h5z, h5i, config
 from h5py.h5 import H5Error
@@ -477,7 +478,7 @@ class Dataset(HLObject):
 
             Creation keywords (* is default):
 
-            chunks:        Tuple of chunk dimensions or None*
+            chunks:        Tuple of chunk dimensions, True, or None*
             compression:   DEFLATE (gzip) compression level, int or None*
             shuffle:       Use the shuffle filter? (requires compression) T/F*
             fletcher32:    Enable Fletcher32 error detection? T/F*
@@ -508,7 +509,8 @@ class Dataset(HLObject):
                 
                 dtype = numpy.dtype(dtype)
 
-                if any((compression, shuffle, fletcher32, maxshape)) and chunks is None:
+                if chunks is True or \
+                   (any((compression, shuffle, fletcher32, maxshape)) and chunks is None):
                     chunks = guess_chunk(shape, dtype.itemsize)
 
                 if chunks is not None and shape == ():
@@ -554,6 +556,9 @@ class Dataset(HLObject):
         shape = self.shape
         if len(shape) == 0:
             raise TypeError("Attempt to take len() of scalar dataset")
+        size = shape[0]
+        if size > sys.maxint:
+            raise OverflowError("Dataset length is larger than Python's len() function can handle")
         return shape[0]
 
     def __iter__(self):
