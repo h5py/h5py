@@ -21,6 +21,9 @@ import h5
 
 cdef class ObjInfo:
 
+    cdef H5O_info_t infostruct
+    cdef object __weakref__
+
     property fileno:
         def __get__(self):
             return self.infostruct.fileno
@@ -33,8 +36,6 @@ cdef class ObjInfo:
     property rc:
         def __get__(self):
             return self.infostruct.rc
-
-    cdef H5O_info_t infostruct
 
     def __copy__(self):
         cdef ObjInfo newcopy
@@ -52,31 +53,36 @@ def get_info(ObjectID obj not None):
     H5Oget_info(obj.id, &info.infostruct)
     return info
 
-cdef class _Triplet:
+cdef class _CBWrapper:
 
     cdef object func
     cdef object exc
+    cdef object retval
     cdef ObjInfo objinfo
 
     def __init__(self, func):
         self.func = func
         self.exc = None
+        self.retval = None
         self.objinfo = ObjInfo()
 
-cdef herr_t iter_cb(hid_t obj, char* name, H5O_info_t *info, void* data):
+cdef herr_t visit_cb(hid_t obj, char* name, H5O_info_t *info, void* data):
 
-    cdef _Triplet triplet
-    triplet = <_Triplet>data
+    cdef _CBWrapper wrapper
+    wrapper = <_CBWrapper>data
 
-    triplet.objinfo.infostruct = info[0]
+    wrapper.objinfo.infostruct = info[0]
 
     try:
-        retval = triplet.func(name, triplet.objinfo)
-    except BaseException, e:   # The exception MUST be propagated
-        triplet.exc = e
+        retval = wrapper.func(name, wrapper.objinfo)
+    except StopIteration:
+        return 1
+    except BaseException, e:   # The exception MUST be trapped, including SystemExit
+        wrapper.exc = e
         return 1
 
     if retval is not None:
+        wrapper.retval = retval
         return 1
 
     return 0
@@ -94,19 +100,28 @@ def visit(ObjectID obj not None, object func, int idx_type=H5_INDEX_NAME,
         where "name" is (a) name relative to the starting group, and "info" is
         an ObjInfo instance describing each object.  Please note the same
         ObjInfo instance is provided call to call, with its values mutated.
-        Don't store references to it; use the copy module instead:
+        Don't store references to it; use the copy module instead.
 
-            mylist.append(info)             # WRONG
-            mylist.append(copy.copy(info))  # RIGHT
+        Your callable should also conform to the following behavior:
+
+        1. Return None for normal iteration; raise StopIteration to cancel
+           and return None from h5o.visit.
+
+        2. Returning a value other than None cancels iteration and immediately
+           returns that value from h5o.visit.
+
+        3. Raising any other exception aborts iteration; the exception will
+           be correctly propagated.
     """
-    cdef _Triplet triplet
-    triplet = _Triplet(func)
+    cdef _CBWrapper wrapper
+    wrapper = _CBWrapper(func)
 
-    H5Ovisit(obj.id, <H5_index_t>idx_type, <H5_iter_order_t>order, iter_cb, <void*>triplet)
+    H5Ovisit(obj.id, <H5_index_t>idx_type, <H5_iter_order_t>order, visit_cb, <void*>wrapper)
 
-    if triplet.exc is not None:
-        raise triplet.exc
+    if wrapper.exc is not None:
+        raise wrapper.exc
 
+    return wrapper.retval  # None or custom value
     
 
 

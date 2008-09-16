@@ -52,12 +52,27 @@ cdef class GroupStat:
         *"Uniquely identifying" means unique among currently open files, 
         not universally unique.
     """
-    cdef readonly object fileno  # will be a 2-tuple
-    cdef readonly object objno   # will be a 2-tuple
-    cdef readonly unsigned int nlink
-    cdef readonly int type
-    cdef readonly time_t mtime
-    cdef readonly size_t linklen
+    cdef H5G_stat_t infostruct
+    cdef object __weakref__
+
+    property fileno:
+        def __get__(self):
+            return (self.infostruct.fileno[0], self.infostruct.fileno[1])
+    property objno:
+        def __get__(self):
+            return (self.infostruct.objno[0], self.infostruct.objno[1])
+    property nlink:
+        def __get__(self):
+            return self.infostruct.nlink
+    property type:
+        def __get__(self):
+            return self.infostruct.type
+    property mtime:
+        def __get__(self):
+            return self.infostruct.mtime
+    property linklen:
+        def __get__(self):
+            return self.infostruct.linklen
 
     def __str__(self):
         return \
@@ -181,20 +196,12 @@ def get_objinfo(ObjectID obj not None, object name='.', int follow_link=1):
         the information returned describes its target.  Otherwise the 
         information describes the link itself.
     """
-    cdef H5G_stat_t stat
     cdef GroupStat statobj
+    statobj = GroupStat()
     cdef char* _name
     _name = name
 
-    H5Gget_objinfo(obj.id, _name, follow_link, &stat)
-
-    statobj = GroupStat()
-    statobj.fileno = (stat.fileno[0], stat.fileno[1])
-    statobj.objno = (stat.objno[0], stat.objno[1])
-    statobj.nlink = stat.nlink
-    statobj.type = stat.type
-    statobj.mtime = stat.mtime
-    statobj.linklen = stat.linklen
+    H5Gget_objinfo(obj.id, _name, follow_link, &statobj.infostruct)
 
     return statobj
 
