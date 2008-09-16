@@ -19,3 +19,13 @@ from h5 cimport hid_t, hbool_t, herr_t, htri_t, hsize_t, \
                 hssize_t, haddr_t, hvl_t
 
 from defs_c cimport size_t, time_t, ssize_t
+
+cdef extern from "stdint.h":
+  ctypedef signed char int8_t
+  ctypedef unsigned char uint8_t
+  ctypedef signed int int16_t
+  ctypedef unsigned int uint16_t
+  ctypedef signed long int int32_t
+  ctypedef unsigned long int uint32_t
+  ctypedef signed long long int int64_t
+  ctypedef signed long long int uint64_t 

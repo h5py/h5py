@@ -80,7 +80,7 @@ cdef extern from "hdf5.h":
   herr_t H5Ovisit(hid_t obj_id, H5_index_t idx_type, H5_iter_order_t order,
                     H5O_iterate_t op, void *op_data) except *
 
-  herr_t H5Oget_info(hid_t loc_id, H5O_info_t *oinfo)
+  herr_t H5Oget_info(hid_t loc_id, H5O_info_t *oinfo) except *
 
 
 

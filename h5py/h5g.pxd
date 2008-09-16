@@ -19,6 +19,9 @@ include "std_defs.pxi"
 from h5 cimport class ObjectID
 
 cdef class GroupID(ObjectID):
+
+    IF H5PY_18API:
+        cdef readonly object links
     pass
 
 cdef extern from "hdf5.h":

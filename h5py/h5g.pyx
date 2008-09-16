@@ -19,6 +19,8 @@ include "conditions.pxi"
 from utils cimport emalloc, efree
 from h5 cimport standard_richcmp
 from h5p cimport H5P_DEFAULT
+IF H5PY_18API:
+    from h5l cimport LinkProxy
 
 # Runtime imports
 import h5
@@ -217,7 +219,16 @@ cdef class GroupID(ObjectID):
         __contains__(name)   Test for group member ("if name in grpid")
         __iter__             Get an iterator over member names
         __len__              Number of members in this group; len(grpid) = N
+
+        If HDF5 1.8.X is used, the attribute "links" contains a proxy object
+        providing access to the H5L family of routines.  See the docs
+        for h5py.h5l.LinkProxy for more information.
+
     """
+
+    IF H5PY_18API:
+        def __init__(self, hid_t id_):
+            self.links = LinkProxy(id_)
 
     def _close(self):
         """ ()
