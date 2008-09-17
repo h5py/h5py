@@ -53,7 +53,7 @@ def get_info(ObjectID obj not None):
     H5Oget_info(obj.id, &info.infostruct)
     return info
 
-cdef class _CBWrapper:
+cdef class _Visit_Data:
 
     cdef object func
     cdef object exc
@@ -68,8 +68,8 @@ cdef class _CBWrapper:
 
 cdef herr_t visit_cb(hid_t obj, char* name, H5O_info_t *info, void* data):
 
-    cdef _CBWrapper wrapper
-    wrapper = <_CBWrapper>data
+    cdef _Visit_Data wrapper
+    wrapper = <_Visit_Data>data
 
     wrapper.objinfo.infostruct = info[0]
 
@@ -113,8 +113,8 @@ def visit(ObjectID obj not None, object func, int idx_type=H5_INDEX_NAME,
         3. Raising any other exception aborts iteration; the exception will
            be correctly propagated.
     """
-    cdef _CBWrapper wrapper
-    wrapper = _CBWrapper(func)
+    cdef _Visit_Data wrapper
+    wrapper = _Visit_Data(func)
 
     H5Ovisit(obj.id, <H5_index_t>idx_type, <H5_iter_order_t>order, visit_cb, <void*>wrapper)
 
