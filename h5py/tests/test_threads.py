@@ -22,7 +22,6 @@ import time
 
 from h5py import *
 from h5py.h5 import H5Error
-from h5py.extras import h5sync
 import h5py
 
 LOCKTYPE = threading.RLock
@@ -211,59 +210,6 @@ class TestThreads(unittest.TestCase):
             # of "writethread" should acquire the lock first.
             self.assert_(writethread.timestop < exit_lock_time)
 
-
-    def test_decorator(self):
-
-        time1 = 0
-        time2 = 0
-
-        class SleeperThread(Thread):
-
-            def __init__(self, sleeptime, next_thread):
-                Thread.__init__(self)
-                self.sleeptime = sleeptime
-                self.time = 0
-                self.next_thread = next_thread
-
-            @h5sync
-            def run(self):
-                if self.next_thread is not None:
-                    self.next_thread.start()  # We should already hold the lock
-                time.sleep(self.sleeptime/2.0)
-                self.time = time.time()
-                time.sleep(self.sleeptime/2.0)
-
-        def run_dec(real_lock):
-            oldlock = h5py.config.lock
-            try:
-                if not real_lock:
-                    h5py.config.lock = dummy_threading.RLock()
-
-                thread_b = SleeperThread(1, None)       # last thread
-                thread_a = SleeperThread(2, thread_b)   # first thread
-
-                thread_a.start()
-
-                thread_a.join()
-                thread_b.join()
-
-                if real_lock:
-                    self.assert_(thread_a.time < thread_b.time, "%f !< %f" % (thread_a.time, thread_b.time))
-                else:
-                    self.assert_(thread_a.time > thread_b.time, "%f !> %f" % (thread_a.time, thread_b.time))
-            finally:
-                h5py.config.lock = oldlock
-
-        run_dec(True)
-        run_dec(False)
-
-        @h5sync
-        def thisismyname(foo):
-            """ I'm a docstring! """
-            pass
-        
-        self.assertEqual(thisismyname.__name__, "thisismyname")
-        self.assertEqual(thisismyname.__doc__, " I'm a docstring! ")
 
 
 
