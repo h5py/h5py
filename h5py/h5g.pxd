@@ -14,7 +14,6 @@
 # license is available at licenses/pytables.txt, in the distribution root
 # directory.
 
-include "conditions.pxi"
 include "std_defs.pxi"
 from h5 cimport class ObjectID
 
@@ -51,13 +50,10 @@ cdef extern from "hdf5.h":
   hid_t  H5Gcreate(hid_t loc_id, char *name, size_t size_hint ) except *
   hid_t  H5Gopen(hid_t loc_id, char *name ) except *
   herr_t H5Gclose(hid_t group_id) except *
-#  herr_t H5Glink (hid_t file_id, H5G_link_t link_type,
-#                  char *current_name, char *new_name) except *
   herr_t H5Glink2( hid_t curr_loc_id, char *current_name, 
                    H5G_link_t link_type, hid_t new_loc_id, char *new_name ) except *
 
   herr_t H5Gunlink (hid_t file_id, char *name) except *
-#  herr_t H5Gmove(hid_t loc_id, char *src, char *dst) except *
   herr_t H5Gmove2(hid_t src_loc_id, char *src_name,
                   hid_t dst_loc_id, char *dst_name ) except *
   herr_t H5Gget_num_objs(hid_t loc_id, hsize_t*  num_obj) except *
@@ -72,7 +68,34 @@ cdef extern from "hdf5.h":
   herr_t H5Gset_comment(hid_t loc_id, char *name, char *comment ) except *
   int H5Gget_comment(hid_t loc_id, char *name, size_t bufsize, char *comment ) except *
 
+  # --- New 1.8.X functions ---------------------------------------------------
+
   IF H5PY_18API:
+    ctypedef enum H5G_storage_type_t:
+        H5G_STORAGE_TYPE_UNKNOWN = -1,
+        H5G_STORAGE_TYPE_SYMBOL_TABLE,
+        H5G_STORAGE_TYPE_COMPACT,
+        H5G_STORAGE_TYPE_DENSE 
+   
+    ctypedef struct H5G_info_t:
+        H5G_storage_type_t 	storage_type
+        hsize_t 	 nlinks
+        long int     max_corder  # FIXME: not really long int
+
     hid_t H5Gcreate_anon( hid_t loc_id, hid_t gcpl_id, hid_t gapl_id  ) except *
+    hid_t H5Gcreate2(hid_t loc_id, char *name, hid_t lcpl_id, hid_t gcpl_id, hid_t gapl_id) except *
+    hid_t H5Gopen2( hid_t loc_id, char * name, hid_t gapl_id  ) except *
+    herr_t H5Gget_info( hid_t group_id, H5G_info_t *group_info  ) except *
+    herr_t H5Gget_info_by_name( hid_t loc_id, char *group_name, H5G_info_t *group_info, hid_t lapl_id  ) except *
+
+
+
+
+
+
+
+
+
+
 
 

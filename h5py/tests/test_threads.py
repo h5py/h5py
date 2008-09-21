@@ -178,7 +178,7 @@ class TestThreads(unittest.TestCase):
         if write_time < DELAY:
             raise Exception("Write was too fast to test blocking (%f sec; need %f)" % (write_time, DELAY))
 
-        if h5py.config.compile_opts['IO_NONBLOCK']:
+        if h5py.config.THREADS:
             self.assert_(thread_b.time < thread_a.timestop, "%f !< %f" % (thread_b.time, thread_a.timestop))
         else:
             self.assert_(thread_b.time > thread_a.timestop, "%f !> %f" % (thread_b.time, thread_a.timestop))
@@ -199,7 +199,7 @@ class TestThreads(unittest.TestCase):
             time.sleep(2)
         writethread.join()
 
-        if h5py.config.compile_opts['IO_NONBLOCK']:
+        if h5py.config.THREADS:
             # With non-blocking I/O, the library will double-check that the
             # global lock isn't held, to prevent more than one thread from
             # calling into the HDF5 API.

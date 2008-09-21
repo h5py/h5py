@@ -71,8 +71,8 @@ opts.PYREX_ONLY = False          # Flag: Run Pyrex, but don't perform build
 opts.PYREX_FORCE = False         # Flag: Disable Pyrex timestamp checking
 opts.PYREX_FORCE_OFF = False     # Flag: Don't run Pyrex, no matter what
 
-opts.API_MAJ = 1                 # API interface version (not library version)
-opts.API_MIN = 6
+opts.API_16 = True               # Include 1.6.X-specific functions
+opts.API_18 = False              # Include new 1.8.X functions
 opts.DEBUG_LEVEL = 0             # Logging-module number, 0 to turn off
 opts.HDF5_DIR = None             # Custom HDF5 directory, or None
 opts.IO_NONBLOCK = False         # Experimental non-blocking I/O
@@ -95,15 +95,13 @@ for arg in sys.argv[:]:
     elif arg.find('--api=') == 0:
         opts.ENABLE_PYREX=True
         api = arg[6:]
-        if api == '16':
-            opts.API_MAJ = 1
-            opts.API_MIN = 6
-        elif api == '18':
-            opts.API_MAJ = 1
-            opts.API_MIN = 8
-            warn('1.8.X API is still under development')
-        else:
-            fatal('Unrecognized API version "%s" (only "16", "18" currently allowed)' % api)
+        api = api.split(',')
+        if not all(x in ("16","18") for x in api):
+            fatal('Illegal option to --api (legal values are "16" and "18")')
+        if not ("16" in api or "18" in api):
+            fatal("At least one of 1.6 or 1.8 compatibility must be specified.")
+        opts.API_16 = "16" in api
+        opts.API_18 = "18" in api
         sys.argv.remove(arg)
     elif arg.find('--debug=') == 0:
         opts.ENABLE_PYREX=True
@@ -122,6 +120,9 @@ for arg in sys.argv[:]:
         opts.ENABLE_PYREX=True
         opts.IO_NONBLOCK = True
         sys.argv.remove(arg)
+
+opts.API_MAJ = 1
+opts.API_MIN = 8 if opts.API_18 else 6
 
 if 'sdist' in sys.argv:
     if os.path.exists('MANIFEST'):
@@ -218,8 +219,8 @@ DEF H5PY_API_MAJ = %(API_MAJ)d
 DEF H5PY_API_MIN = %(API_MIN)d
 DEF H5PY_DEBUG = %(DEBUG_LEVEL)d
 
-DEF H5PY_16API = H5PY_API_MIN == 6
-DEF H5PY_18API = H5PY_API_MIN == 8
+DEF H5PY_16API = %(API_16)d
+DEF H5PY_18API = %(API_18)d
 
 DEF H5PY_NONBLOCK = %(IO_NONBLOCK)d
 """ \
@@ -235,6 +236,7 @@ DEF H5PY_NONBLOCK = %(IO_NONBLOCK)d
             # is useless.  So only replace it if it's out of date.
             if cond_present != cond:
                 print "Replacing conditions file..."
+                print cond
                 cond_file = open(cond_path,'w')
                 cond_file.write(cond)
                 cond_file.close()

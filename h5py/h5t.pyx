@@ -53,14 +53,16 @@
 
         VLEN types can be manipulated, but reading and writing data in VLEN
         format is not supported.  This applies to VLEN strings as well.
+
+    5. Datatypes can be pickled if HDF5 1.8.X is available.
 """
 
-include "conditions.pxi"
+include "config.pxi"
 
 # Pyrex compile-time imports
-from defs_c cimport free
 from h5 cimport err_c, pause_errors, resume_errors
 from numpy cimport dtype, ndarray
+from python cimport PyString_FromStringAndSize
 
 from utils cimport  emalloc, efree, pybool, \
                     create_ieee_complex64, create_ieee_complex128, \
@@ -299,6 +301,17 @@ def vlen_create(TypeID base not None):
     """
     return typewrap(H5Tvlen_create(base.id))
 
+IF H5PY_18API:
+    def decode(buf):
+        """ (STRING buf) => TypeID
+
+            Unserialize an HDF5 type.  Bear in mind that you can also use the
+            Python pickle/unpickle machinery to do this.
+        """
+        cdef char* buf_
+        buf_ = buf
+        return typewrap(H5Tdecode(<unsigned char*>buf_))
+
 # === Base type class =========================================================
 
 cdef class TypeID(ObjectID):
@@ -310,7 +323,6 @@ cdef class TypeID(ObjectID):
     def __copy__(self):
         cdef TypeID cpy
         cpy = ObjectID.__copy__(self)
-        assert typecheck(cpy, TypeID), "TypeID copy encounted invalid type"
         return cpy
 
     property dtype:
@@ -412,6 +424,40 @@ cdef class TypeID(ObjectID):
         """
         if not self._locked:
             H5Tclose(self.id)
+
+    IF H5PY_18API:
+        def encode(self):
+            """ () => STRING
+
+                Serialize an HDF5 type.  Bear in mind you can also use the
+                native Python pickle/unpickle machinery to do this.  The
+                returned string may contain binary values, including NULLs.
+            """
+            cdef size_t nalloc
+            cdef char* buf
+            buf = NULL
+            nalloc = 0
+
+            H5Tencode(self.id, NULL, &nalloc)
+            buf = <char*>emalloc(sizeof(char)*nalloc)
+            try:
+                H5Tencode(self.id, <unsigned char*>buf, &nalloc)
+                pystr = PyString_FromStringAndSize(buf, nalloc)
+            finally:
+                efree(buf)
+
+            return pystr
+
+    IF H5PY_18API:
+        # Enable pickling
+
+        def __reduce__(self):
+            return (type(self), (-1,), self.encode())
+
+        def __setstate__(self, state):
+            cdef char* buf
+            buf = state
+            self.id = H5Tdecode(<unsigned char*>buf)
 
 # === Top-level classes (inherit directly from TypeID) ========================
 

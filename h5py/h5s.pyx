@@ -13,10 +13,12 @@
 """
     Low-level interface to the "H5S" family of data-space functions.
 """
+include "std_code.pxi"
 
 # Pyrex compile-time imports
 from utils cimport  require_tuple, require_list, convert_dims, convert_tuple, \
                     emalloc, efree, pybool, create_numpy_hsize, create_hsize_array
+from python cimport PyString_FromStringAndSize
 
 # Runtime imports
 import h5
@@ -67,6 +69,7 @@ def create(int class_code):
     """
     return SpaceID(H5Screate(<H5S_class_t>class_code))
 
+@sync
 def create_simple(object dims_tpl, object max_dims_tpl=None):
     """ (TUPLE dims_tpl, TUPLE max_dims_tpl) => INT new_space_id
 
@@ -101,6 +104,17 @@ def create_simple(object dims_tpl, object max_dims_tpl=None):
         efree(dims)
         efree(max_dims)
 
+IF H5PY_18API:
+    def decode(buf):
+        """ (STRING buf) => SpaceID
+
+            Unserialize a dataspace.  Bear in mind you can also use the native
+            Python pickling machinery to do this.
+        """
+        cdef char* buf_
+        buf_ = buf
+        return SpaceID(H5Sdecode(buf_))
+
 # === H5S class API ===========================================================
 
 cdef class SpaceID(ObjectID):
@@ -134,6 +148,39 @@ cdef class SpaceID(ObjectID):
         """
         return SpaceID(H5Scopy(self.id))
 
+    IF H5PY_18API:
+        def encode(self):
+            """ () => STRING
+
+                Serialize a dataspace, including its selection.  Bear in mind you
+                can also use the native Python pickling machinery to do this.
+            """
+            cdef void* buf
+            cdef size_t nalloc
+            buf = NULL
+            nalloc = 0
+
+            H5Sencode(self.id, NULL, &nalloc)
+            buf = emalloc(nalloc)
+            try:
+                H5Sencode(self.id, buf, &nalloc)
+                pystr = PyString_FromStringAndSize(<char*>buf, nalloc)
+            finally:
+                efree(buf)
+
+            return pystr
+
+    IF H5PY_18API:
+        # Enable pickling
+
+        def __reduce__(self):
+            return (type(self), (-1,), self.encode())
+
+        def __setstate__(self, state):
+            cdef char* buf
+            buf = state
+            self.id = H5Sdecode(buf)
+
     # === Simple dataspaces ===================================================
 
     def is_simple(self):
@@ -158,7 +205,7 @@ cdef class SpaceID(ObjectID):
 
         try:
             if not H5Sis_simple(self.id):
-                raise ValueError("%d is not a simple dataspace" % space_id)
+                raise ValueError("%d is not a simple dataspace" % self.id)
 
             rank = H5Sget_simple_extent_ndims(self.id)
             

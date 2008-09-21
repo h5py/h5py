@@ -625,7 +625,7 @@ cdef class PropFAID(PropInstanceID):
         """
         cdef hid_t plist_id
         plist_id = pdefault(memb_fapl)
-        H5Pset_fapl(self.id, memb_size, plist_id)
+        H5Pset_fapl_family(self.id, memb_size, plist_id)
 
     def get_fapl_family(self):
         """ () => TUPLE info

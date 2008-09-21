@@ -18,6 +18,8 @@
     py_exists(ObjectID, STRING)     Test if a named attribute exists
 """
 
+include "std_code.pxi"
+
 # Pyrex compile-time imports
 from h5p cimport H5P_DEFAULT
 from h5t cimport TypeID, typewrap

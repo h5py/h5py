@@ -18,6 +18,7 @@
 # license is available in the file licenses/hdf5.txt in the distribution
 # root directory.
 
+include "config.pxi"
 include "std_defs.pxi"
 from h5 cimport class ObjectID
 from numpy cimport ndarray
@@ -102,7 +103,9 @@ cdef extern from "hdf5.h":
                              hsize_t start[], hsize_t _stride[],
                              hsize_t count[], hsize_t _block[]) except *
 
-
+  IF H5PY_18API:
+    herr_t  H5Sencode(hid_t obj_id, void *buf, size_t *nalloc)
+    hid_t   H5Sdecode(void *buf)
 
 
 

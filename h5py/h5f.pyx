@@ -146,9 +146,9 @@ def get_obj_count(object where=OBJ_ALL, int types=H5F_OBJ_ALL):
                 identifier.
     """
     cdef hid_t where_id
-    if typecheck(where, FileID):
+    if isinstance(where, FileID):
         where_id = where.id
-    elif typecheck(where, int) or typecheck(where, long):
+    elif isinstance(where, int) or isinstance(where, long):
         where_id = where
     else:
         raise TypeError("Location must be a FileID or OBJ_ALL.")
@@ -201,9 +201,9 @@ def get_obj_ids(object where=OBJ_ALL, int types=H5F_OBJ_ALL):
     obj_list = NULL
     py_obj_list = []
 
-    if typecheck(where, FileID):
+    if isinstance(where, FileID):
         where_id = where.id
-    elif typecheck(where, int) or typecheck(where, long):
+    elif isinstance(where, int) or isinstance(where, long):
         where_id = where
     else:
         raise TypeError("Location must be a FileID or OBJ_ALL.")

@@ -14,6 +14,7 @@
 # license is available at licenses/pytables.txt, in the distribution root
 # directory.
 
+include "config.pxi"
 include "std_defs.pxi"
 from h5 cimport class ObjectID
 
@@ -302,9 +303,9 @@ cdef extern from "hdf5.h":
   herr_t    H5Tset_tag(hid_t type_id, char* tag) except *
   char*     H5Tget_tag(hid_t type_id) except? NULL
 
-
-
-
+  IF H5PY_18API:
+    hid_t H5Tdecode(unsigned char *buf) except *
+    herr_t H5Tencode(hid_t obj_id, unsigned char *buf, size_t *nalloc) except *
 
 
 

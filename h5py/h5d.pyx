@@ -13,7 +13,7 @@
 """
     Provides access to the low-level HDF5 "H5D" dataset interface.
 """
-include "conditions.pxi"
+include "std_code.pxi"
 
 # Pyrex compile-time imports
 from h5 cimport standard_richcmp
@@ -156,6 +156,7 @@ cdef class DatasetID(ObjectID):
         """
         H5Dclose(self.id)
 
+    @sync
     def read(self, SpaceID mspace not None, SpaceID fspace not None, 
                    ndarray arr_obj not None, PropDXID dxpl=None):
         """ (SpaceID mspace, SpaceID fspace, NDARRAY arr_obj, 
@@ -177,8 +178,8 @@ cdef class DatasetID(ObjectID):
 
             The actual read is non-blocking; the array object is temporarily
             marked read-only, but attempting to mutate it in another thread
-            is a bad idea.  Also, this DatasetID object acquires its own lock
-            (obj.pylock) until the operation completes.
+            is a bad idea.  All HDF5 API calls are locked until the read
+            completes.
         """
         cdef TypeID mtype
         cdef hid_t self_id, mtype_id, mspace_id, fspace_id, plist_id
@@ -195,20 +196,14 @@ cdef class DatasetID(ObjectID):
         plist_id = pdefault(dxpl)
         data = PyArray_DATA(arr_obj)
 
-        IF H5PY_NONBLOCK:
-            lock = config.lock
-            lock.acquire()
-            oldflags = arr_obj.flags
-            arr_obj.flags = oldflags & (~NPY_WRITEABLE) # Wish-it-was-a-mutex approach
-            try:
-                with nogil:
-                    H5PY_H5Dread(self_id, mtype_id, mspace_id, fspace_id, plist_id, data)
-            finally:
-                arr_obj.flags = oldflags
-                lock.release()
-        ELSE:
-            H5PY_H5Dread(self_id, mtype_id, mspace_id, fspace_id, plist_id, data)
+        arr_obj.flags &= (~NPY_WRITEABLE) # Wish-it-was-a-mutex approach
+        try:
+            with nogil:
+                H5PY_H5Dread(self_id, mtype_id, mspace_id, fspace_id, plist_id, data)
+        finally:
+            arr_obj.flags |= NPY_WRITEABLE
 
+    @sync
     def write(self, SpaceID mspace not None, SpaceID fspace not None, 
                     ndarray arr_obj not None, PropDXID dxpl=None):
         """ (SpaceID mspace, SpaceID fspace, NDARRAY arr_obj, 
@@ -223,8 +218,8 @@ cdef class DatasetID(ObjectID):
 
             The actual write is non-blocking; the array object is temporarily
             marked read-only, but attempting to mutate it in another thread
-            is a bad idea.  Also, this DatasetID object acquires its own lock
-            (obj.pylock) until the operation completes.
+            is a bad idea.  All HDF5 API calls are locked until the write
+            completes.
         """
         cdef TypeID mtype
         cdef hid_t self_id, mtype_id, mspace_id, fspace_id, plist_id
@@ -241,19 +236,12 @@ cdef class DatasetID(ObjectID):
         plist_id = pdefault(dxpl)
         data = PyArray_DATA(arr_obj)
 
-        IF H5PY_NONBLOCK:
-            lock = config.lock
-            lock.acquire()
-            oldflags = arr_obj.flags
-            arr_obj.flags = oldflags & (~NPY_WRITEABLE) # Wish-it-was-a-mutex approach
-            try:
-                with nogil:
-                    H5PY_H5Dwrite(self_id, mtype_id, mspace_id, fspace_id, plist_id, data)
-            finally:
-                arr_obj.flags = oldflags
-                lock.release()
-        ELSE:
-            H5PY_H5Dwrite(self_id, mtype_id, mspace_id, fspace_id, plist_id, data)
+        arr_obj.flags &= (~NPY_WRITEABLE) # Wish-it-was-a-mutex approach
+        try:
+            with nogil:
+                H5PY_H5Dwrite(self_id, mtype_id, mspace_id, fspace_id, plist_id, data)
+        finally:
+            arr_obj.flags |= NPY_WRITEABLE
 
     def extend(self, object shape):
         """ (TUPLE shape)

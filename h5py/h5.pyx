@@ -30,7 +30,7 @@
     All exception classes and error handling functions are also in this module.
 """
 
-include "conditions.pxi"
+include "config.pxi"
 from python cimport PyErr_SetObject
 
 import atexit
@@ -40,9 +40,10 @@ from weakref import WeakKeyDictionary
 # Logging is only enabled when compiled with H5PY_DEBUG nonzero
 IF H5PY_DEBUG:
     import logging
-    logger = logging.getLogger('h5py')
+    logger = logging.getLogger('h5py')  # Set up the root logger
     logger.setLevel(H5PY_DEBUG)
     logger.addHandler(logging.StreamHandler())
+    log_ident = logging.getLogger('h5py.identifiers')
 
 def get_libversion():
     """ () => TUPLE (major, minor, release)
@@ -79,9 +80,12 @@ cdef class H5PYConfig:
     """
 
     def __init__(self):
+        global logger
         self._complex_names = ('r','i')
-        self.compile_opts = {'IO_NONBLOCK': H5PY_NONBLOCK,
-                             'DEBUG': H5PY_DEBUG}
+        self.API_16 = H5PY_16API
+        self.API_18 = H5PY_18API
+        self.DEBUG = H5PY_DEBUG
+        self.THREADS = H5PY_THREADS
         self._lock = threading.RLock()
 
     property lock:
@@ -123,7 +127,7 @@ cdef object standard_richcmp(object self, object other, int how):
 
     if how == 2 or how == 3:
         
-        if not typecheck(self, ObjectID) and typecheck(other, ObjectID):
+        if not isinstance(self, ObjectID) and isinstance(other, ObjectID):
             return NotImplemented
 
         eq = (hash(self) == hash(other))
@@ -170,12 +174,12 @@ cdef class ObjectID:
         self._locked = 0
         self.id = id_
         IF H5PY_DEBUG:
-            logger.debug("+ %s" % str(self))
+            log_ident.debug("+ %s" % str(self))
 
     def __dealloc__(self):
         """ Automatically decrefs the ID, if it's valid. """
         IF H5PY_DEBUG:
-            logger.debug("- %s" % str(self))
+            log_ident.debug("- %s" % str(self))
         if (not self._locked) and self._valid:
             H5Idec_ref(self.id)
 
@@ -187,12 +191,12 @@ cdef class ObjectID:
         """
         cdef ObjectID copy
         copy = type(self)(self.id)
-        assert typecheck(copy, ObjectID), "ObjectID copy encountered invalid type"
+        assert isinstance(copy, ObjectID), "ObjectID copy encountered invalid type"
         if self._valid and not self._locked:
             H5Iinc_ref(self.id)
         copy._locked = self._locked
         IF H5PY_DEBUG:
-            logger.debug("c %s" % str(self))
+            log_ident.debug("c %s" % str(self))
         return copy
 
     def __richcmp__(self, object other, int how):
@@ -608,14 +612,11 @@ import_hdf5()
 
 hdf5_version_tuple = get_libversion()        
 hdf5_version = "%d.%d.%d" % hdf5_version_tuple
-api_version_tuple = (H5PY_API_MAJ, H5PY_API_MIN)
+api_version_tuple = (int(H5PY_API/10), H5PY_API%10)
 api_version = "%d.%d" % api_version_tuple
 
 version = H5PY_VERSION
-version_tuple = []   # no list comprehensions in Pyrex
-for _x in version.split('.'):
-    version_tuple.append(int(_x))
-version_tuple = tuple(version_tuple)
+version_tuple = tuple([int(x) for x in version.split('.')])
 
 _config = H5PYConfig()
 

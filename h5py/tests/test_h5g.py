@@ -39,8 +39,9 @@ class TestH5G(TestBase):
         for name in TEST_GROUPS:
             grp = h5g.open(self.obj, name)
             self.assert_(self.is_grp(grp))
+            pr = str(grp)
             grp._close()
-            self.assert_(not self.is_grp(grp))
+            self.assert_(not self.is_grp(grp), pr+"::"+str(grp))
         
         self.assertRaises(H5Error, h5g.open, self.obj, 'Some other group')
 

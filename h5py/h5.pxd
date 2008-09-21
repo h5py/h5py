@@ -14,21 +14,9 @@
 # license is available at licenses/pytables.txt, in the distribution root
 # directory.
 
-include "conditions.pxi"
-from defs_c cimport size_t, ssize_t, malloc, free
+include "std_defs.pxi"
 
-# Common structs and types from HDF5
 cdef extern from "hdf5.h":
-
-  ctypedef int hid_t  # In H5Ipublic.h
-  ctypedef int hbool_t
-  ctypedef int herr_t
-  ctypedef int htri_t
-  # hsize_t should be unsigned, but Windows platform does not support
-  # such an unsigned long long type.
-  ctypedef long long hsize_t
-  ctypedef signed long long hssize_t
-  ctypedef signed long long haddr_t  # I suppose this must be signed as well...
 
   ctypedef struct hvl_t:
     size_t len                 # Length of VL data (in base type units)
@@ -255,7 +243,10 @@ cdef class H5PYConfig:
 
     cdef object _complex_names      # ('r','i')
     cdef object _lock               # Primary HDF5 Interface Lock (PHIL)
-    cdef readonly object compile_opts
+    cdef readonly object API_16
+    cdef readonly object API_18
+    cdef readonly object DEBUG
+    cdef readonly object THREADS
 
 cdef class ObjectID:
     """ Base wrapper class for HDF5 object identifiers """
