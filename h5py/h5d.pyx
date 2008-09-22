@@ -16,7 +16,6 @@
 include "std_code.pxi"
 
 # Pyrex compile-time imports
-from h5 cimport standard_richcmp
 from h5s cimport H5S_ALL, H5S_UNLIMITED, H5S_SCALAR, H5S_SIMPLE, \
                     H5Sget_simple_extent_type, H5Sclose, H5Sselect_all, \
                     H5Sget_simple_extent_ndims, H5Sget_select_npoints
@@ -30,8 +29,6 @@ from h5 cimport HADDR_UNDEF
 # Runtime imports
 import h5
 import h5t
-import h5s
-import h5g
 
 import_array()
 
@@ -338,13 +335,5 @@ cdef class DatasetID(ObjectID):
         """
         return H5Dget_storage_size(self.id)
 
-    def __richcmp__(self, object other, int how):
-        return standard_richcmp(self, other, how)
-
-    def __hash__(self):
-        if self._hash is None:
-            info = h5g.get_objinfo(self)
-            self._hash = hash( (info.fileno, info.objno) )
-        return self._hash
 
 

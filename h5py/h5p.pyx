@@ -17,6 +17,7 @@
 
 # Pyrex compile-time imports
 
+from h5 cimport standard_richcmp
 from utils cimport  require_tuple, convert_dims, convert_tuple, \
                     emalloc, efree, pybool, require_list, \
                     check_numpy_write, check_numpy_read
@@ -31,6 +32,17 @@ import numpy
 import_array()
 
 # === C API ===================================================================
+
+cdef class PropClassID(PropID):
+
+    def __richcmp__(self, object other, int how):
+        return standard_richcmp(self, other, how)
+
+    def __hash__(self):
+        """ Since classes are library-created and immutable, they are uniquely
+            identified by their HDF5 identifiers.
+        """
+        return hash(self.id)
 
 cdef hid_t pdefault(PropID pid):
 

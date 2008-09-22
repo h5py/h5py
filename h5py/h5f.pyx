@@ -16,7 +16,6 @@
 include "std_code.pxi"
 
 # Pyrex compile-time imports
-from h5 cimport standard_richcmp
 from h5p cimport propwrap, pdefault, PropFAID, PropFCID, H5P_DEFAULT
 from h5t cimport typewrap
 from h5a cimport AttrID
@@ -28,7 +27,6 @@ from utils cimport emalloc, efree, pybool
 
 # Runtime imports
 import h5
-import h5g
 
 # === Public constants and data structures ====================================
 
@@ -307,16 +305,6 @@ cdef class FileID(ObjectID):
             only tracks free space until the file is closed.
         """
         return H5Fget_freespace(self.id)
-    
-    def __richcmp__(self, object other, int how):
-        return standard_richcmp(self, other, how)
-
-    def __hash__(self):
-        # Obtain the file number from the root group metadata
-        if self._hash is None:
-            info = h5g.get_objinfo(self)
-            self._hash = hash(info.fileno)
-        return self._hash
 
 
 

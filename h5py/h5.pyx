@@ -48,24 +48,64 @@ IF H5PY_DEBUG:
     log_threads = logging.getLogger('h5py.threads')
 
 
+def loglevel(lev):
+    """ (INT lev)
+        
+        Shortcut to set the logging level on all library streams.
+        Does nothing if not built in debug mode.
+    """
+    IF H5PY_DEBUG:
+        for x in ('h5py.identifiers', 'h5py.functions', 'h5py.threads'):
+            l = logging.getLogger(x)
+            l.setLevel(lev)
+    ELSE:
+        pass
+
 # --- C extensions and classes ------------------------------------------------
 
 cdef object standard_richcmp(object self, object other, int how):
-    # This needs to be shared because of weird CPython quirks involving
-    # subclasses and the __hash__ method.
+    # HDF5 object identity is determined by comparing hash values.  In the
+    # absence of a logical comparision method (for example, TypeId.equal()),
+    # this hash-based identity is used for comparison.
+    
+    # Subject to:
+    # 1. Both must be of the same type
+    # 2. Both must be hashable
+    # 3. Only == and != comparisons are supported
+    #
+    # Otherwise NotImplemented is returned, for Python's fallback mechanics.
 
-    if how == 2 or how == 3:
-        
-        if not isinstance(self, ObjectID) and isinstance(other, ObjectID):
-            return NotImplemented
+    if how != 2 and how != 3:
+        return NotImplemented
 
+    if not type(self) == type(other) and isinstance(self, ObjectID):
+        return NotImplemented   # Can't compare across types
+
+    try:
         eq = (hash(self) == hash(other))
+    except TypeError:
+        return NotImplemented   # Can't compare unhashable instances
 
-        if how == 2:
-            return eq
-        return not eq
+    if how == 2:
+        return eq
+    return not eq
 
-    return NotImplemented
+cdef object obj_hash(ObjectID obj):
+    # Try to compute the hash of the given file-resident object, raising
+    # TypeError if it can't be done.
+    
+    # This is a counterpart to standard_richcmp.
+
+    cdef H5G_stat_t stat
+
+    phil.acquire()
+    try:
+        H5Gget_objinfo(obj.id, '.', 0, &stat)
+        return hash((stat.fileno[0], stat.fileno[1], stat.objno[0], stat.objno[1]))
+    except:
+        raise TypeError("Objects of class %s cannot be hashed" % obj.__class__.__name__)
+    finally:
+        phil.release()
 
 cdef class H5PYConfig:
 
@@ -190,38 +230,45 @@ cdef class ObjectID:
             across copies.
         """
         cdef ObjectID copy
-        copy = type(self)(self.id)
-        assert isinstance(copy, ObjectID), "ObjectID copy encountered invalid type"
-        if self._valid and not self._locked:
-            H5Iinc_ref(self.id)
-        copy._locked = self._locked
-        IF H5PY_DEBUG:
-            log_ident.debug("c %s" % str(self))
-        return copy
+        phil.acquire()
+        try:
+            copy = type(self)(self.id)
+            if self._valid and not self._locked:
+                H5Iinc_ref(self.id)
+            copy._locked = self._locked
+            IF H5PY_DEBUG:
+                log_ident.debug("c %s" % str(self))
+            return copy
+        finally:
+            phil.release()
 
     def __richcmp__(self, object other, int how):
         """ Supports only == and != """
         return standard_richcmp(self, other, how)
 
     def __hash__(self):
-        """ Hash method defaults to the identifer, as this cannot change over
-            the life of the object.
+        """ By default HDF5 objects are hashed based on their file and object
+            numbers.  Objects which are not file-resident cannot be hashed.
         """
-        return self.id
+        if self._hash is None:
+            self._hash = obj_hash(self)
+        return self._hash
 
-    
     def __str__(self):
-        ref = str(H5Iget_ref(self.id)) if self._valid else "X"
-        lck = "L" if self._locked else "U"
-
-        return "%s [%s] (%s) %d" % (self.__class__.__name__, ref, lck, self.id)
+        phil.acquire()
+        try:
+            ref = str(H5Iget_ref(self.id)) if self._valid else "X"
+            lck = "L" if self._locked else "U"
+            return "%s [%s] (%s) %d" % (self.__class__.__name__, ref, lck, self.id)
+        finally:
+            phil.release()
 
     def __repr__(self):
         return self.__str__()
 
 # === HDF5 "H5" API ===========================================================
 
-
+@sync
 def get_libversion():
     """ () => TUPLE (major, minor, release)
 
@@ -236,13 +283,13 @@ def get_libversion():
 
     return (major, minor, release)
 
-
+@sync
 def _close():
     """ Internal function; do not call unless you want to lose all your data.
     """
     H5close()
 
-
+@sync
 def _open():
     """ Internal function; do not call unless you want to lose all your data.
     """
@@ -253,9 +300,6 @@ def _open():
 
 class H5Error(Exception):
     """ Base class for internal HDF5 library exceptions.
-        Subclass of EnvironmentError; errno is computed from the HDF5 major
-        and minor error numbers:
-            1000*(major number) + minor number
     """
     pass
 
@@ -444,7 +488,7 @@ cdef class ErrorStackElement:
     cdef readonly unsigned int line
     cdef readonly object desc
 
-    
+    @sync
     def __str__(self):
         return '%2d:%2d "%s" at %s (%s: %s)' % (self.maj_num, self.min_num,
                 self.desc, self.func_name, H5Eget_major(<H5E_major_t>self.maj_num),
@@ -467,7 +511,7 @@ cdef herr_t walk_cb(int n, H5E_error_t *err_desc, void* stack_in):
 
     return 0
 
-
+@sync
 def error_stack():
     """ () => LIST error_stack
 
@@ -478,7 +522,7 @@ def error_stack():
     H5Ewalk(H5E_WALK_DOWNWARD, walk_cb, <void*>stack)
     return stack
 
-
+@nosync
 def error_string():
     """ () => STRING error_stack
 
@@ -511,7 +555,7 @@ def error_string():
 
     return msg
 
-
+@sync
 def clear():
     """ ()
 
@@ -565,7 +609,7 @@ cdef int _disable_exceptions() except -1:
 
 # === Library init ============================================================
 
-
+@sync
 def _exithack():
     """ Internal function; do not call unless you want to lose all your data.
     """

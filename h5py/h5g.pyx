@@ -120,6 +120,7 @@ cdef class GroupIter:
 
 # COMPAT: 1.8 update
 IF H5PY_18API:
+    @sync
     def open(ObjectID loc not None, char* name, PropID gapl=None):
         """ (ObjectID loc, STRING name, PropGAID gapl=None)
 
@@ -127,6 +128,7 @@ IF H5PY_18API:
         """
         return GroupID(H5Gopen2(loc.id, name, pdefault(gapl)))
 ELSE:
+    @sync
     def open(ObjectID loc not None, char* name):
         """ (ObjectID loc, STRING name) => GroupID
 
@@ -136,6 +138,7 @@ ELSE:
 
 # COMPAT: 1.8 update
 IF H5PY_18API:
+    @sync
     def create(ObjectID loc not None, char* name, PropID lcpl=None,
                PropID gcpl=None, PropID gapl=None):
         """ (ObjectID loc, STRING name, PropLCID lcpl=None, PropGCID gcpl=None,
@@ -147,6 +150,7 @@ IF H5PY_18API:
                                                 pdefault(gcpl),
                                                 pdefault(gapl)))
 ELSE:
+    @sync
     def create(ObjectID loc not None, char* name, int size_hint=-1):
         """ (ObjectID loc, STRING name, INT size_hint=-1) => GroupID
 
@@ -176,6 +180,7 @@ cdef herr_t iter_cb_helper(hid_t gid, char *name, object int_tpl) except -1:
 
 # COMPAT: 1.8 deprecation
 IF H5PY_16API:
+    @sync
     def iterate(GroupID loc not None, char* name, object func, object data=None, 
                 int startidx=0):
         """ (GroupID loc, STRING name, FUNCTION func, OBJECT data=None, 
@@ -212,6 +217,7 @@ IF H5PY_16API:
 
 # COMPAT: 1.8 deprecation
 IF H5PY_16API:
+    @sync
     def get_objinfo(ObjectID obj not None, object name='.', int follow_link=1):
         """ (ObjectID obj, STRING name='.', BOOL follow_link=True) => GroupStat object
 
@@ -256,6 +262,7 @@ cdef class GroupID(ObjectID):
         def __init__(self, hid_t id_):
             self.links = LinkProxy(id_)
 
+    @sync
     def _close(self):
         """ ()
 
@@ -269,6 +276,7 @@ cdef class GroupID(ObjectID):
 
     # COMPAT: 1.8 deprecation
     IF H5PY_16API:
+        @sync
         def link(self, char* current_name, char* new_name, 
                  int link_type=H5G_LINK_HARD, GroupID remote=None):
             """ (STRING current_name, STRING new_name, INT link_type=LINK_HARD, 
@@ -292,6 +300,7 @@ cdef class GroupID(ObjectID):
 
     # COMPAT: 1.8 deprecation
     IF H5PY_16API:
+        @sync
         def unlink(self, char* name):
             """ (STRING name)
 
@@ -301,6 +310,7 @@ cdef class GroupID(ObjectID):
    
     # COMPAT: 1.8 deprecation 
     IF H5PY_16API:
+        @sync
         def move(self, char* current_name, char* new_name, GroupID remote=None):
             """ (STRING current_name, STRING new_name, GroupID remote=None)
 
@@ -318,6 +328,7 @@ cdef class GroupID(ObjectID):
 
     # COMPAT: 1.8 deprecation
     IF H5PY_16API:
+        @sync
         def get_num_objs(self):
             """ () => INT number_of_objects
 
@@ -329,6 +340,7 @@ cdef class GroupID(ObjectID):
 
     # COMPAT: 1.8 deprecation
     IF H5PY_16API:
+        @sync
         def get_objname_by_idx(self, hsize_t idx):
             """ (INT idx) => STRING object_name
 
@@ -356,6 +368,7 @@ cdef class GroupID(ObjectID):
 
     # COMPAT: 1.8 deprecation
     IF H5PY_16API:
+        @sync
         def get_objtype_by_idx(self, hsize_t idx):
             """ (INT idx) => INT object_type_code
 
@@ -378,6 +391,7 @@ cdef class GroupID(ObjectID):
 
     # COMPAT: 1.8 deprecation
     IF H5PY_16API:
+        @sync
         def get_linkval(self, char* name):
             """ (STRING name) => STRING link_value
 
@@ -408,6 +422,7 @@ cdef class GroupID(ObjectID):
 
     # COMPAT: 1.8 deprecation
     IF H5PY_16API:
+        @sync
         def set_comment(self, char* name, char* comment):
             """ (STRING name, STRING comment)
 
@@ -417,6 +432,7 @@ cdef class GroupID(ObjectID):
 
     # COMPAT: 1.8 deprecation
     IF H5PY_16API:
+        @sync
         def get_comment(self, char* name):
             """ (STRING name) => STRING comment
 
@@ -439,6 +455,7 @@ cdef class GroupID(ObjectID):
 
     # === Special methods =====================================================
 
+    @sync
     def __contains__(self, char* name):
         """ (STRING name)
 
@@ -450,25 +467,16 @@ cdef class GroupID(ObjectID):
         except H5Error:
             return False    
 
+    @nosync
     def __iter__(self):
         """ Return an iterator over the names of group members. """
         return GroupIter(self)
 
+    @sync
     def __len__(self):
         """ Number of group members """
         cdef hsize_t size
         H5Gget_num_objs(self.id, &size)
         return size
 
-    def __richcmp__(self, object other, int how):
-        return standard_richcmp(self, other, how)
-
-    def __hash__(self):
-        if self._hash is None:
-            IF H5PY_16API:
-                info = get_objinfo(self)
-                self._hash = hash( (info.fileno, info.objno) )
-            ELSE:
-                self._hash = self.id
-        return self._hash
 

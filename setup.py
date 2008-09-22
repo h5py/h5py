@@ -47,7 +47,7 @@ from distutils.command.sdist import sdist
 
 # Basic package options
 NAME = 'h5py'
-VERSION = '0.3.1'
+VERSION = '0.4.0'
 MIN_NUMPY = '1.0.3'
 MIN_CYTHON = '0.9.8.1'
 KNOWN_API = (16,18)    # Legal API levels (1.8.X or 1.6.X)

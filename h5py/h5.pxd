@@ -18,11 +18,6 @@ include "std_defs.pxi"
 
 # === Custom C extensions =====================================================
 
-cdef int _enable_exceptions() except -1
-cdef int _disable_exceptions() except -1
-
-cdef object standard_richcmp(object self, object other, int how)
-
 cdef class PHIL:
 
     cdef object lock
@@ -36,8 +31,7 @@ cpdef PHIL get_phil()
 
 cdef class H5PYConfig:
 
-    # Global 
-    cdef object _complex_names      # ('r','i')
+    cdef object _complex_names
     cdef readonly object API_16
     cdef readonly object API_18
     cdef readonly object DEBUG
@@ -50,6 +44,9 @@ cdef class ObjectID:
     cdef readonly int _locked
     cdef object _hash           # Used by subclasses to cache a hash value,
                                 # which may be expensive to compute.
+
+cdef object standard_richcmp(object self, object other, int how)
+cdef object obj_hash(ObjectID obj)
 
 # === HDF5 API ================================================================
 
@@ -64,7 +61,14 @@ cdef extern from "hdf5.h":
   herr_t H5open() except *
   herr_t H5close() except *
 
+  # For object hashing
 
+  ctypedef struct H5G_stat_t:
+    unsigned long fileno[2]
+    unsigned long objno[2]
+
+  herr_t H5Gget_objinfo(hid_t loc_id, char* name, int follow_link, H5G_stat_t *statbuf) except *
+ 
   # --- Reflection ------------------------------------------------------------
   ctypedef enum H5I_type_t:
     H5I_BADID        = -1

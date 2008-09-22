@@ -17,8 +17,8 @@ include "config.pxi"
 
 # Defines the following decorators:
 #
-# sync:     Acquire PHIL for this function, and log function entry and lock
-#           acquisition in debug mode
+# sync:     Acquire PHIL for this function, and log function entry  in
+#           debug mode.
 # nosync:   Don't acquire PHIL, but log function entry in debug mode.
 #
 
