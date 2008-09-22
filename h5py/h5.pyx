@@ -40,10 +40,13 @@ import threading
 # Logging is only enabled when compiled with H5PY_DEBUG nonzero
 IF H5PY_DEBUG:
     import logging
-    logger = logging.getLogger('h5py')  # Set up the root logger
-    logger.setLevel(H5PY_DEBUG)
-    logger.addHandler(logging.StreamHandler())
+    for x in ('h5py.identifiers', 'h5py.functions', 'h5py.threads'):
+        l = logging.getLogger(x)
+        l.setLevel(H5PY_DEBUG)
+        l.addHandler(logging.StreamHandler())
     log_ident = logging.getLogger('h5py.identifiers')
+    log_threads = logging.getLogger('h5py.threads')
+
 
 # --- C extensions and classes ------------------------------------------------
 
@@ -82,34 +85,39 @@ cdef class PHIL:
         The Primary HDF5 Interface Lock (PHIL) is a global reentrant lock
         which manages access to the library.  HDF5 is not guaranteed to 
         be thread-safe, and certain callbacks in h5py can execute arbitrary
-        threaded Python code.  Therefore, in threading mode all routines
-        acquire this lock first.  With threading support disabled, the
-        object's methods do nothing.
+        threaded Python code, defeating the normal GIL-based protection for
+        extension modules.  Therefore, in threading mode all routines
+        acquire this lock first.  When h5py is built without thread awareness,
+        all locking methods are no-ops.
     """
 
     IF H5PY_THREADS:
         def __init__(self):
             self.lock = threading.RLock()
-        cpdef int __enter__(self) except -1:
+        cpdef bint __enter__(self) except -1:
             self.lock.acquire()
             return 0
-        cpdef int __exit__(self,a,b,c) except -1:
+        cpdef bint __exit__(self,a,b,c) except -1:
             self.lock.release()
             return 0
-        cpdef int acquire(self) except -1:
-            self.lock.acquire()
-            return 0
-        cpdef int release(self) except -1:
+        cpdef bint acquire(self, int blocking=1) except -1:
+            cdef bint rval = self.lock.acquire(blocking)
+            IF H5PY_DEBUG:
+                log_threads.debug('> PHIL acquired')
+            return rval
+        cpdef bint release(self) except -1:
             self.lock.release()
+            IF H5PY_DEBUG:
+                log_threads.debug('< PHIL released')
             return 0
     ELSE:
-        cpdef int __enter__(self) except -1:
+        cpdef bint __enter__(self) except -1:
             return 0
-        cpdef int __exit__(self,a,b,c) except -1:
+        cpdef bint __exit__(self,a,b,c) except -1:
             return 0
-        cpdef int acquire(self) except -1:
-            return 0
-        cpdef int release(self) except -1:
+        cpdef bint acquire(self, int blocking=1) except -1:
+            return 1
+        cpdef bint release(self) except -1:
             return 0      
 
 cdef PHIL phil = PHIL()
@@ -206,7 +214,7 @@ cdef class ObjectID:
         ref = str(H5Iget_ref(self.id)) if self._valid else "X"
         lck = "L" if self._locked else "U"
 
-        return "%9d [%s] (%s) %s" % (self.id, ref, lck, self.__class__.__name__)
+        return "%s [%s] (%s) %d" % (self.__class__.__name__, ref, lck, self.id)
 
     def __repr__(self):
         return self.__str__()
@@ -600,7 +608,7 @@ api_version = "%d.%d" % api_version_tuple
 version = H5PY_VERSION
 version_tuple = tuple([int(x) for x in version.split('.')])
 
-_config = H5PYConfig()
+config = H5PYConfig()
 
 
 

@@ -32,7 +32,6 @@ def h5sync(logger=None):
             def wrap(*args, **kwds):
                 with phil:
                     return func(*args, **kwds)
-
             uw_apply(wrap, func)
             return wrap
 
@@ -44,10 +43,13 @@ def h5sync(logger=None):
 
             def wrap(*args, **kwds):
                 logger.debug("$ Threadsafe function entry: %s" % func.__name__)
-                with phil:
-                    logger.debug("> Acquired lock on %s" % func.__name__)
-                    retval = func(*args, **kwds)
-                logger.debug("< Released lock on %s" % func.__name__)
+                try:
+                    with phil:
+                        retval = func(*args, **kwds)
+                except:
+                    logger.debug("! Exception in %s" % func.__name__)
+                    raise
+                logger.debug("# Threadsafe function exit: %s" % func.__name__)
                 return retval
 
             uw_apply(wrap, func)
@@ -61,8 +63,13 @@ def h5sync_dummy(logger):
 
         def wrap(*args, **kwds):
             logger.debug("$ Function entry: %s" % func.__name__)
-            return func(*args, **kwds)
-
+            try:
+                retval = func(*args, **kwds)
+            except:
+                logger.debug("! Exception in %s" % func.__name__)
+                raise
+            logger.debug("# Function exit: %s" % func.__name__)
+            return retval
         uw_apply(wrap, func)
         return wrap
 

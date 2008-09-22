@@ -22,7 +22,6 @@ __doc__ = \
     HDF5 %s (using %s API)
 """
 
-from h5 import _config as config
 import utils, h5, h5a, h5d, h5f, h5g, h5i, h5p, h5r, h5s, h5t, h5z, highlevel
 
 from highlevel import File, Group, Dataset, Datatype, AttributeManager, CoordsList

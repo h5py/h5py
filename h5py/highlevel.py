@@ -52,7 +52,7 @@ import inspect
 import threading
 import sys
 
-from h5py import h5, h5f, h5g, h5s, h5t, h5d, h5a, h5p, h5z, h5i, config
+from h5py import h5, h5f, h5g, h5s, h5t, h5d, h5a, h5p, h5z, h5i
 from h5py.h5 import H5Error
 from utils_hl import slice_select, hbasename, strhdr, strlist, guess_chunk
 from utils_hl import CoordsList
@@ -76,8 +76,7 @@ class LockableObject(object):
         Base class which provides rudimentary locking support.
     """
 
-    _lock = property(lambda self: config.lock,
-        doc = "A reentrant lock for internal thread safety")
+    _lock = h5.get_phil()
 
 class HLObject(LockableObject):
 

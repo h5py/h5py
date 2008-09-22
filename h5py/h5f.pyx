@@ -13,6 +13,7 @@
 """
     Low-level operations on HDF5 file objects.
 """
+include "std_code.pxi"
 
 # Pyrex compile-time imports
 from h5 cimport standard_richcmp
@@ -54,6 +55,7 @@ OBJ_LOCAL   = H5F_OBJ_LOCAL
 
 # === File operations =========================================================
 
+@sync
 def open(char* name, unsigned int flags=H5F_ACC_RDWR, PropFAID fapl=None):
     """ (STRING name, UINT flags=ACC_RDWR, PropFAID fapl=None)
         => FileID
@@ -63,6 +65,7 @@ def open(char* name, unsigned int flags=H5F_ACC_RDWR, PropFAID fapl=None):
     """
     return FileID(H5Fopen(name, flags, pdefault(fapl)))
 
+@sync
 def create(char* name, int flags=H5F_ACC_TRUNC, PropFCID fcpl=None,
                                                 PropFAID fapl=None):
     """ (STRING name, INT flags=ACC_TRUNC, PropFCID fcpl=None,
@@ -78,6 +81,7 @@ def create(char* name, int flags=H5F_ACC_TRUNC, PropFCID fcpl=None,
     """
     return FileID(H5Fcreate(name, flags, pdefault(fcpl), pdefault(fapl)))
 
+@sync
 def flush(ObjectID obj not None, int scope=H5F_SCOPE_LOCAL):
     """ (ObjectID obj, INT scope=SCOPE_LOCAL)
 
@@ -89,6 +93,7 @@ def flush(ObjectID obj not None, int scope=H5F_SCOPE_LOCAL):
     """
     H5Fflush(obj.id, <H5F_scope_t>scope)
 
+@sync
 def is_hdf5(char* name):
     """ (STRING name) => BOOL is_hdf5
 
@@ -97,13 +102,15 @@ def is_hdf5(char* name):
     """
     return pybool(H5Fis_hdf5(name))
 
+@sync
 def mount(ObjectID loc not None, char* name, FileID fid not None):
     """ (ObjectID loc, STRING name, FileID fid)
     
         Mount an open file as "name" under group loc_id.
     """
     H5Fmount(loc.id, name, fid.id, H5P_DEFAULT)
-    
+
+@sync
 def unmount(ObjectID loc not None, char* name):
     """ (ObjectID loc, STRING name)
 
@@ -111,6 +118,7 @@ def unmount(ObjectID loc not None, char* name):
     """
     H5Funmount(loc.id, name)
 
+@sync
 def get_name(ObjectID obj not None):
     """ (ObjectID obj) => STRING file_name
         
@@ -130,6 +138,7 @@ def get_name(ObjectID obj not None):
     finally:
         efree(name)
 
+@sync
 def get_obj_count(object where=OBJ_ALL, int types=H5F_OBJ_ALL):
     """ (OBJECT where=OBJ_ALL, types=OBJ_ALL) => INT n_objs
 
@@ -178,6 +187,7 @@ cdef object wrap_identifier(hid_t ident):
     H5Iinc_ref(ident)
     return obj
 
+@sync
 def get_obj_ids(object where=OBJ_ALL, int types=H5F_OBJ_ALL):
     """ (OBJECT where=OBJ_ALL, types=OBJ_ALL) => LIST open_ids
 
@@ -240,6 +250,7 @@ cdef class FileID(ObjectID):
         def __get__(self):
             return get_name(self)
 
+    @sync
     def close(self):
         """ ()
 
@@ -250,6 +261,7 @@ cdef class FileID(ObjectID):
         """
         H5Fclose(self.id)
 
+    @sync
     def reopen(self):
         """ () => FileID
 
@@ -259,6 +271,7 @@ cdef class FileID(ObjectID):
         """
         return FileID(H5Freopen(self.id))
 
+    @sync
     def get_filesize(self):
         """ () => LONG size
 
@@ -269,6 +282,7 @@ cdef class FileID(ObjectID):
         H5Fget_filesize(self.id, &size)
         return size
 
+    @sync
     def get_create_plist(self):
         """ () => PropFCID
 
@@ -276,6 +290,7 @@ cdef class FileID(ObjectID):
         """
         return propwrap(H5Fget_create_plist(self.id))
 
+    @sync
     def get_access_plist(self):
         """ () => PropFAID
 
@@ -284,6 +299,7 @@ cdef class FileID(ObjectID):
         """
         return propwrap(H5Fget_access_plist(self.id))
 
+    @sync
     def get_freespace(self):
         """ () => LONG freespace
 

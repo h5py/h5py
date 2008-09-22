@@ -306,7 +306,7 @@ class test(cybuild):
         cybuild.finalize_options(self)
 
     def run(self):
-        self._explicit_only = True
+        self._explicit_only = True  # Ignore config.pxi disagreement unless --cython
         cybuild.run(self)
         oldpath = sys.path
         try:

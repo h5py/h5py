@@ -27,10 +27,10 @@ cdef class PHIL:
 
     cdef object lock
 
-    cpdef int __enter__(self) except -1
-    cpdef int __exit__(self, a, b, c) except -1
-    cpdef int acquire(self) except -1
-    cpdef int release(self) except -1
+    cpdef bint __enter__(self) except -1
+    cpdef bint __exit__(self, a, b, c) except -1
+    cpdef bint acquire(self, int blocking=*) except -1
+    cpdef bint release(self) except -1
 
 cpdef PHIL get_phil()
 
