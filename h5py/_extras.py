@@ -12,10 +12,10 @@
 from __future__ import with_statement
 
 import logging
-from h5py import config
-
-# Decorator utility for low-level thread safety
 from functools import update_wrapper
+
+from h5py.h5 import get_phil
+phil = get_phil()
 
 def uw_apply(wrap, func):
     # Cython methods don't have a "module" attribute for some reason
@@ -30,7 +30,7 @@ def h5sync(logger=None):
         def sync_simple(func):
             
             def wrap(*args, **kwds):
-                with config.lock:
+                with phil:
                     return func(*args, **kwds)
 
             uw_apply(wrap, func)
@@ -44,7 +44,7 @@ def h5sync(logger=None):
 
             def wrap(*args, **kwds):
                 logger.debug("$ Threadsafe function entry: %s" % func.__name__)
-                with config.lock:
+                with phil:
                     logger.debug("> Acquired lock on %s" % func.__name__)
                     retval = func(*args, **kwds)
                 logger.debug("< Released lock on %s" % func.__name__)

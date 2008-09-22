@@ -15,19 +15,35 @@
 
 include "config.pxi"
 
-# Set up synchronization decorator for threads
-IF H5PY_THREADS:
-    from _extras import h5sync
-    IF H5PY_DEBUG:
-        import logging
+# Defines the following decorators:
+#
+# sync:     Acquire PHIL for this function, and log function entry and lock
+#           acquisition in debug mode
+# nosync:   Don't acquire PHIL, but log function entry in debug mode.
+#
+
+IF H5PY_DEBUG:
+    import logging
+    from _extras import h5sync_dummy
+    nosync = h5sync_dummy(logging.getLogger('h5py.functions'))
+
+    IF H5PY_THREADS:
+        from _extras import h5sync
         sync = h5sync(logging.getLogger('h5py.functions'))
     ELSE:
-        sync = h5sync()
+        sync = nosync
+
 ELSE:
-    IF H5PY_DEBUG:
-        import logging
-        from _extras import h5sync_dummy
-        sync = h5sync_dummy(logging.getLogger('h5py.functions'))
+    cdef inline object nosync(object func):
+        return func
+
+    IF H5PY_THREADS:
+        from _extras import h5sync
+        sync = h5sync()
     ELSE:
         cdef inline object sync(object func):
             return func
+
+
+
+

@@ -60,7 +60,7 @@
 include "config.pxi"
 
 # Pyrex compile-time imports
-from h5 cimport err_c, pause_errors, resume_errors
+from h5 cimport PHIL, get_phil
 from numpy cimport dtype, ndarray
 from python cimport PyString_FromStringAndSize
 
@@ -71,6 +71,11 @@ from utils cimport  emalloc, efree, pybool, \
 # Runtime imports
 import h5
 import sys
+
+cdef PHIL phil
+phil = get_phil()
+phil.acquire()
+phil.release()
 
 # === Custom C API ============================================================
     

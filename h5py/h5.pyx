@@ -35,7 +35,7 @@ from python cimport PyErr_SetObject
 
 import atexit
 import threading
-from weakref import WeakKeyDictionary
+# --- Module init -------------------------------------------------------------
 
 # Logging is only enabled when compiled with H5PY_DEBUG nonzero
 IF H5PY_DEBUG:
@@ -45,81 +45,7 @@ IF H5PY_DEBUG:
     logger.addHandler(logging.StreamHandler())
     log_ident = logging.getLogger('h5py.identifiers')
 
-def get_libversion():
-    """ () => TUPLE (major, minor, release)
-
-        Retrieve the HDF5 library version as a 3-tuple.
-    """
-    cdef unsigned int major
-    cdef unsigned int minor
-    cdef unsigned int release
-    cdef herr_t retval
-    
-    H5get_libversion(&major, &minor, &release)
-
-    return (major, minor, release)
-
-def _close():
-    """ Internal function; do not call unless you want to lose all your data.
-    """
-    H5close()
-
-def _open():
-    """ Internal function; do not call unless you want to lose all your data.
-    """
-    H5open()
-
-cdef class H5PYConfig:
-
-    """
-        Global configuration object for the h5py package.
-
-        Properties:
-        lock            Global reentrant lock for threading support
-        compile_opts    Dictionary of compile-time flags
-    """
-
-    def __init__(self):
-        global logger
-        self._complex_names = ('r','i')
-        self.API_16 = H5PY_16API
-        self.API_18 = H5PY_18API
-        self.DEBUG = H5PY_DEBUG
-        self.THREADS = H5PY_THREADS
-        self._lock = threading.RLock()
-
-    property lock:
-        """ Reentrant lock instance; default is threading.RLock().
-            
-            Whatever you provide MUST support the Python context manager
-            protocol, and provide the methods acquire() and release().  It
-            also MUST be reentrant, or dataset reads/writes will deadlock.
-        """
-        def __get__(self):
-            return self._lock
-
-        def __set__(self, val):
-            if not (hasattr(val, 'acquire') and hasattr(val, 'release') and\
-                    hasattr(val, '__enter__') and hasattr(val, '__exit__')):
-                raise ValueError("Generated locks must provide __enter__, __exit__, acquire, release")
-            current_lock = self._lock
-            current_lock.acquire()
-            try:
-                self._lock = val
-            finally:
-                current_lock.release()
-
-    property complex_names:
-        """ Unused
-        """
-        def __get__(self):
-            return self._complex_names
-
-        def __set__(self, val):
-            # TODO: validation
-            self._complex_names = val
-
-
+# --- C extensions and classes ------------------------------------------------
 
 cdef object standard_richcmp(object self, object other, int how):
     # This needs to be shared because of weird CPython quirks involving
@@ -137,6 +63,62 @@ cdef object standard_richcmp(object self, object other, int how):
         return not eq
 
     return NotImplemented
+
+cdef class H5PYConfig:
+
+    """
+        Global configuration object for the h5py package.
+    """
+
+    def __init__(self):
+        self.API_16 = H5PY_16API
+        self.API_18 = H5PY_18API
+        self.DEBUG = H5PY_DEBUG
+        self.THREADS = H5PY_THREADS
+
+cdef class PHIL:
+
+    """
+        The Primary HDF5 Interface Lock (PHIL) is a global reentrant lock
+        which manages access to the library.  HDF5 is not guaranteed to 
+        be thread-safe, and certain callbacks in h5py can execute arbitrary
+        threaded Python code.  Therefore, in threading mode all routines
+        acquire this lock first.  With threading support disabled, the
+        object's methods do nothing.
+    """
+
+    IF H5PY_THREADS:
+        def __init__(self):
+            self.lock = threading.RLock()
+        cpdef int __enter__(self) except -1:
+            self.lock.acquire()
+            return 0
+        cpdef int __exit__(self,a,b,c) except -1:
+            self.lock.release()
+            return 0
+        cpdef int acquire(self) except -1:
+            self.lock.acquire()
+            return 0
+        cpdef int release(self) except -1:
+            self.lock.release()
+            return 0
+    ELSE:
+        cpdef int __enter__(self) except -1:
+            return 0
+        cpdef int __exit__(self,a,b,c) except -1:
+            return 0
+        cpdef int acquire(self) except -1:
+            return 0
+        cpdef int release(self) except -1:
+            return 0      
+
+cdef PHIL phil = PHIL()
+cpdef PHIL get_phil():
+    """ Obtain a reference to the PHIL. """
+    return phil
+
+# Now that the PHIL is defined we can import the decorator
+include "std_code.pxi"
 
 cdef class ObjectID:
 
@@ -163,8 +145,13 @@ cdef class ObjectID:
         """ Indicates whether or not this identifier points to an HDF5 object.
         """
         def __get__(self):
-            return H5Iget_type(self.id) != H5I_BADID
+            phil.acquire()
+            try:
+                return H5Iget_type(self.id) != H5I_BADID
+            finally:
+                phil.release()
 
+    
     def __nonzero__(self):
         """ Truth value for object identifiers (like _valid) """
         return self._valid
@@ -178,11 +165,16 @@ cdef class ObjectID:
 
     def __dealloc__(self):
         """ Automatically decrefs the ID, if it's valid. """
-        IF H5PY_DEBUG:
-            log_ident.debug("- %s" % str(self))
-        if (not self._locked) and self._valid:
-            H5Idec_ref(self.id)
+        phil.acquire()
+        try:
+            IF H5PY_DEBUG:
+                log_ident.debug("- %s" % str(self))
+            if (not self._locked) and self._valid:
+                H5Idec_ref(self.id)
+        finally:
+            phil.release()
 
+    
     def __copy__(self):
         """ Create another object wrapper which points to the same id. 
 
@@ -209,21 +201,45 @@ cdef class ObjectID:
         """
         return self.id
 
+    
     def __str__(self):
-        if self._valid:
-            ref = str(H5Iget_ref(self.id))
-        else:
-            ref = "X"
+        ref = str(H5Iget_ref(self.id)) if self._valid else "X"
+        lck = "L" if self._locked else "U"
 
-        if self._locked:
-            lstr = "L"
-        else:
-            lstr = "U"
-
-        return "%9d [%s] (%s) %s" % (self.id, ref, lstr, self.__class__.__name__)
+        return "%9d [%s] (%s) %s" % (self.id, ref, lck, self.__class__.__name__)
 
     def __repr__(self):
         return self.__str__()
+
+# === HDF5 "H5" API ===========================================================
+
+
+def get_libversion():
+    """ () => TUPLE (major, minor, release)
+
+        Retrieve the HDF5 library version as a 3-tuple.
+    """
+    cdef unsigned int major
+    cdef unsigned int minor
+    cdef unsigned int release
+    cdef herr_t retval
+    
+    H5get_libversion(&major, &minor, &release)
+
+    return (major, minor, release)
+
+
+def _close():
+    """ Internal function; do not call unless you want to lose all your data.
+    """
+    H5close()
+
+
+def _open():
+    """ Internal function; do not call unless you want to lose all your data.
+    """
+    H5open()
+
 
 # === Public exception hierarchy ==============================================
 
@@ -420,6 +436,7 @@ cdef class ErrorStackElement:
     cdef readonly unsigned int line
     cdef readonly object desc
 
+    
     def __str__(self):
         return '%2d:%2d "%s" at %s (%s: %s)' % (self.maj_num, self.min_num,
                 self.desc, self.func_name, H5Eget_major(<H5E_major_t>self.maj_num),
@@ -442,6 +459,7 @@ cdef herr_t walk_cb(int n, H5E_error_t *err_desc, void* stack_in):
 
     return 0
 
+
 def error_stack():
     """ () => LIST error_stack
 
@@ -451,6 +469,7 @@ def error_stack():
     stack = []
     H5Ewalk(H5E_WALK_DOWNWARD, walk_cb, <void*>stack)
     return stack
+
 
 def error_string():
     """ () => STRING error_stack
@@ -484,26 +503,13 @@ def error_string():
 
     return msg
 
+
 def clear():
     """ ()
 
         Clear the error stack.
     """
     H5Eclear()
-
-def get_major(int error):
-    """ (INT error) => STRING description
-
-        Get a description associated with an HDF5 minor error code.
-    """
-    return H5Eget_major(<H5E_major_t>error)
-
-def get_minor(int error):
-    """ (INT error) => STRING description
-
-        Get a description associated with an HDF5 minor error code.
-    """
-    return H5Eget_minor(<H5E_minor_t>error)
 
 # === Automatic exception API =================================================
 
@@ -520,7 +526,8 @@ cdef herr_t err_callback(void* client_data) with gil:
 
     # Can't use the standard Pyrex raise because then the traceback
     # points here.  MUST be "with gil" as it can be called by nogil HDF5
-    # routines.
+    # routines.  By definition any function for which this can be called
+    # already holds the PHIL.
     
     cdef H5E_error_t err_struct
     cdef H5E_major_t mj
@@ -548,33 +555,8 @@ cdef int _disable_exceptions() except -1:
         raise RuntimeError("Failed to unregister HDF5 exception callback.")
     return 0
 
-cdef err_c pause_errors() except? NULL:
-    # Temporarily disable automatic exception handling, and return a cookie
-    # which can later be used to re-enable it.
-    cdef err_c cookie
-    cdef void* whatever
-    cookie = NULL
-
-    if H5Eget_auto(&cookie, &whatever) < 0:
-        raise RuntimeError("Failed to retrieve the current error handler.")
-
-    if H5Eset_auto(NULL, NULL) < 0:
-        raise RuntimeError("Failed to temporarily disable error handling.")
-
-    return cookie
-
-cdef int resume_errors(err_c cookie) except -1:
-    # Resume automatic exception handling, using a cookie from a previous
-    # call to pause_errors().  Also clears the error stack.
-    if H5Eset_auto(cookie, NULL) < 0:
-        raise RuntimeError("Failed to re-enable error handling.")
-    
-    if H5Eclear() < 0:
-        raise RuntimeError("Failed to clear error stack.")
-
-    return 0
-
 # === Library init ============================================================
+
 
 def _exithack():
     """ Internal function; do not call unless you want to lose all your data.
@@ -619,7 +601,6 @@ version = H5PY_VERSION
 version_tuple = tuple([int(x) for x in version.split('.')])
 
 _config = H5PYConfig()
-
 
 
 

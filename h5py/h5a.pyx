@@ -38,6 +38,7 @@ import_array()
 
 # === General attribute operations ============================================
 
+@sync
 def create(ObjectID loc not None, char* name, TypeID tid not None, 
             SpaceID space not None):
     """ (ObjectID loc, STRING name, TypeID tid, SpaceID space) 
@@ -48,6 +49,7 @@ def create(ObjectID loc not None, char* name, TypeID tid not None,
     """
     return AttrID(H5Acreate(loc.id, name, tid.id, space.id, H5P_DEFAULT))
 
+@sync
 def open_idx(ObjectID loc not None, int idx):
     """ (ObjectID loc_id, UINT idx) => INT attr_id
 
@@ -60,6 +62,7 @@ def open_idx(ObjectID loc not None, int idx):
         raise ValueError("Index must be a non-negative integer.")
     return AttrID(H5Aopen_idx(loc.id, idx))
 
+@sync
 def open_name(ObjectID loc not None, char* name):
     """ (ObjectID loc, STRING name) => INT attr_id
 
@@ -67,6 +70,7 @@ def open_name(ObjectID loc not None, char* name):
     """
     return AttrID(H5Aopen_name(loc.id, name))
 
+@sync
 def delete(ObjectID loc not None, char* name):
     """ (ObjectID loc, STRING name)
 
@@ -74,6 +78,7 @@ def delete(ObjectID loc not None, char* name):
     """
     H5Adelete(loc.id, name)
 
+@sync
 def get_num_attrs(ObjectID loc not None):
     """ (ObjectID loc) => INT number_of_attributes
 
@@ -93,6 +98,7 @@ cdef herr_t iter_cb(hid_t loc_id, char *attr_name, object int_tpl) except -1:
 
     return 0
 
+@sync
 def iterate(ObjectID loc not None, object func, object data=None, int startidx=0):
     """ (ObjectID loc, FUNCTION func, OBJECT data=None, UINT startidx=0)
         => INT last_attribute_index
@@ -126,6 +132,7 @@ cdef herr_t list_cb(hid_t loc_id, char *attr_name, object listin):
     thelist.append(attr_name)
     return 0
 
+@sync
 def py_listattrs(ObjectID loc not None):
     """ (ObjectID loc) => LIST
 
@@ -144,6 +151,7 @@ cdef herr_t cb_exist(hid_t loc_id, char* attr_name, object ref_name):
         return 1
     return 0
 
+@sync
 def py_exists(ObjectID loc not None, object ref_name):
     """ (ObjectID loc, STRING ref_name) => BOOL
 
@@ -196,9 +204,10 @@ cdef class AttrID(ObjectID):
         def __get__(self):
 
             cdef TypeID tid
-            tid = typewrap(H5Aget_type(self.id))
+            tid = self.get_type()
             return tid.py_dtype()
 
+    @sync
     def _close(self):
         """ ()
 
@@ -208,6 +217,7 @@ cdef class AttrID(ObjectID):
         """
         H5Aclose(self.id)
 
+    @sync
     def read(self, ndarray arr_obj not None):
         """ (NDARRAY arr_obj)
 
@@ -234,6 +244,7 @@ cdef class AttrID(ObjectID):
             if space_id:
                 H5Sclose(space_id)
 
+    @sync
     def write(self, ndarray arr_obj not None):
         """ (NDARRAY arr_obj)
 
@@ -259,6 +270,7 @@ cdef class AttrID(ObjectID):
             if space_id:
                 H5Sclose(space_id)
 
+    @sync
     def get_name(self):
         """ () => STRING name
 
@@ -279,6 +291,7 @@ cdef class AttrID(ObjectID):
 
         return strout
 
+    @sync
     def get_space(self):
         """ () => INT space_id
 
@@ -286,8 +299,9 @@ cdef class AttrID(ObjectID):
         """
         return SpaceID(H5Aget_space(self.id))
 
+    @sync
     def get_type(self):
-        """ () => INT type_id
+        """ () => TypeID
 
             Create and return a copy of the attribute's datatype.
         """
