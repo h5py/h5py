@@ -217,7 +217,7 @@ DEF H5PY_THREADS = %(THREADS)d  # Enable thread-safety and non-blocking reads
         pxi_str %= {"VERSION": VERSION, "API_MAX": max(self.api),
                     "API_16": 16 in self.api, "API_18": 18 in self.api,
                     "DEBUG": 10 if self.diag else 0, "THREADS": self.threads,
-                    "HDF5": HDF5}
+                    "HDF5": "Default" if HDF5 is None else HDF5}
 
         return pxi_str
 
@@ -257,7 +257,7 @@ DEF H5PY_THREADS = %(THREADS)d  # Enable thread-safety and non-blocking reads
         if self.cython or recompile_all:
             print "Running Cython..."
             try:
-                from Cython.Compiler.Main import Version, compile, CompilationOptions
+                from Cython.Compiler.Main import Version, compile, compile_multiple, CompilationOptions
                 from Cython.Distutils import build_ext
             except ImportError:
                 fatal("Cython recompilation required, but Cython not installed.")
@@ -270,22 +270,29 @@ DEF H5PY_THREADS = %(THREADS)d  # Enable thread-safety and non-blocking reads
             print "  Diagnostic mode: %s" % ('yes' if self.diag else 'no')
             print "  HDF5: %s" % ('default' if HDF5 is None else HDF5)
 
-            cyopts = CompilationOptions(verbose=False)
 
             # Build each extension
             # This should be a single call to compile_multiple, but it's
             # broken in Cython 0.9.8.1.1
-            for module in modules:
-                pyx_path = op.join(SRC_PATH,module+'.pyx')
-                c_path = op.join(SRC_PATH,module+'.c')
-                if not op.exists(c_path) or \
-                   os.stat(pyx_path).st_mtime > os.stat(c_path).st_mtime or \
-                   recompile_all or\
-                   self.force:
-                    print "Cythoning %s" % pyx_path
-                    result = compile(pyx_path, cyopts)
-                    if result.num_errors != 0:
-                        fatal("Cython error; aborting.")
+            if 1:
+                cyopts = CompilationOptions(verbose=False)
+                for module in modules:
+                    pyx_path = op.join(SRC_PATH,module+'.pyx')
+                    c_path = op.join(SRC_PATH,module+'.c')
+                    if not op.exists(c_path) or \
+                       os.stat(pyx_path).st_mtime > os.stat(c_path).st_mtime or \
+                       recompile_all or\
+                       self.force:
+                        print "Cythoning %s" % pyx_path
+                        result = compile(pyx_path, cyopts)
+                        if result.num_errors != 0:
+                            fatal("Cython error; aborting.")
+            else:
+                cyopts = CompilationOptions(verbose=True, timestamps=True)
+                modpaths = [op.join(SRC_PATH, x+'.pyx') for x in modules]
+                result = compile_multiple(modpaths, cyopts)
+                if result.num_errors != 0:
+                    fatal("%d Cython errors; aborting" % result.num_errors)
 
         if self.cython_only:
             exit(0)

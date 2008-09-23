@@ -14,11 +14,16 @@
 """
     Filter API and constants
 """
-# Pyrex compile-time imports
-from utils cimport pybool
 
-# Runtime imports
-import h5
+include "config.pxi"
+include "sync.pxi"
+
+# Pyrex compile-time imports
+from h5 cimport init_hdf5
+
+# Initialization
+init_hdf5()
+
 
 # === Public constants and data structures ====================================
 
@@ -66,7 +71,7 @@ def filter_avail(int filter_code):
          FILTER_FLETCHER32
          FILTER_SZIP
     """
-    return pybool(H5Zfilter_avail(<H5Z_filter_t>filter_code))
+    return <bint>H5Zfilter_avail(<H5Z_filter_t>filter_code)
 
 def get_filter_info(int filter_code):
     """ (INT filter_code) => INT filter_flags

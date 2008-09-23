@@ -12,29 +12,25 @@
 
 """
     Provides access to the low-level HDF5 "H5A" attribute interface.
-
-    Python extensions:
-    py_listattrs(ObjectID)          Get a list of attribute names
-    py_exists(ObjectID, STRING)     Test if a named attribute exists
 """
 
-include "std_code.pxi"
+include "config.pxi"
+include "sync.pxi"
 
-# Pyrex compile-time imports
-from h5p cimport H5P_DEFAULT
+# Compile-time imports
+from h5 cimport init_hdf5
 from h5t cimport TypeID, typewrap
-from h5s cimport SpaceID, H5Sclose
-
+from h5s cimport SpaceID
 from numpy cimport import_array, ndarray, PyArray_DATA
 from utils cimport  check_numpy_read, check_numpy_write, \
-                    emalloc, efree, pybool
+                    emalloc, efree
+
+# Initialization
+init_hdf5()
+import_array()
 
 # Runtime imports
-import h5
 import h5t
-import h5s
-
-import_array()
 
 # === General attribute operations ============================================
 
@@ -163,7 +159,7 @@ def py_exists(ObjectID loc not None, object ref_name):
 
     retval = H5Aiterate(loc.id, &i, <H5A_operator_t>cb_exist, ref_name)
     
-    return pybool(retval)
+    return <bint>retval
         
 # === Attribute class & methods ===============================================
 

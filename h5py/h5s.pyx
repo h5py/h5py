@@ -13,15 +13,19 @@
 """
     Low-level interface to the "H5S" family of data-space functions.
 """
-include "std_code.pxi"
+
+include "config.pxi"
+include "sync.pxi"
 
 # Pyrex compile-time imports
+from h5 cimport init_hdf5
 from utils cimport  require_tuple, require_list, convert_dims, convert_tuple, \
-                    emalloc, efree, pybool, create_numpy_hsize, create_hsize_array
+                    emalloc, efree, create_numpy_hsize, create_hsize_array
+from numpy cimport ndarray
 from python cimport PyString_FromStringAndSize
 
-# Runtime imports
-import h5
+# Initialization
+init_hdf5()
 
 cdef object lockid(hid_t id_):
     cdef SpaceID space
@@ -189,7 +193,7 @@ cdef class SpaceID(ObjectID):
             Determine if an existing dataspace is "simple" (including scalar
             dataspaces). Currently all HDF5 dataspaces are simple.
         """
-        return pybool(H5Sis_simple(self.id))
+        return <bint>(H5Sis_simple(self.id))
 
     def offset_simple(self, object offset=None):
         """ (TUPLE offset=None)
@@ -390,7 +394,7 @@ cdef class SpaceID(ObjectID):
             Determine if the current selection falls within
             the dataspace extent.
         """
-        return pybool(H5Sselect_valid(self.id))
+        return <bint>(H5Sselect_valid(self.id))
 
     # === Point selection functions ===========================================
 

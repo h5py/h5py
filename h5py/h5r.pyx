@@ -16,13 +16,17 @@
     Functions in this module are not well tested.
 """
 
+include "config.pxi"
+include "sync.pxi"
+
 # Pyrex compile-time imports
-from h5g cimport H5G_obj_t
+from h5 cimport init_hdf5, ObjectID
 from h5f cimport wrap_identifier
 from h5s cimport SpaceID
 
-# Runtime imports
-import h5
+# Initialization
+init_hdf5()
+
 
 # === Public constants and data structures ====================================
 

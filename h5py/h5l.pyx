@@ -15,11 +15,11 @@ from utils cimport pybool
     API for the "H5L" family of link-related operations
 """
 
+include "config.pxi"
+include "sync.pxi"
 
-cdef extern from "hdf5.h":
-
-  int   H5Iinc_ref(hid_t obj_id) except *    
-  int   H5P_DEFAULT
+from h5 cimport init_hdf5
+init_hdf5()
 
 cdef class LinkProxy(ObjectID):
 
@@ -28,7 +28,7 @@ cdef class LinkProxy(ObjectID):
 
         These come attached to GroupID objects as "obj.links".  Since every
         H5L function operates on at least one group, the methods provided
-        operate on their parent group operator.  For example:
+        operate on their parent group identifier.  For example:
 
         >>> g = h5g.open(fid, '/')
         >>> g.links.exists("MyGroup")
@@ -41,10 +41,12 @@ cdef class LinkProxy(ObjectID):
     def __cinit__(self, hid_t id_):
         # At this point the ObjectID constructor has already been called.
 
+        # The identifier in question is the hid_t for the parent GroupID.
         # We need to manually incref the identifier because it's now
-        # shared by both this object and its parent GroupID object.
+        # shared by both this object and the parent.
         H5Iinc_ref(self.id)
 
+    @sync
     def exists(self, char* name):
         """ (STRING name) => BOOL
 

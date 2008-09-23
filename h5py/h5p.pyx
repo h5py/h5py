@@ -15,21 +15,23 @@
     HDF5 property list interface.
 """
 
-# Pyrex compile-time imports
+include "config.pxi"
+include "sync.pxi"
 
-from h5 cimport standard_richcmp
+# Compile-time imports
+from h5 cimport init_hdf5, standard_richcmp
 from utils cimport  require_tuple, convert_dims, convert_tuple, \
-                    emalloc, efree, pybool, require_list, \
+                    emalloc, efree, require_list, \
                     check_numpy_write, check_numpy_read
-
+from numpy cimport ndarray, import_array
 from h5t cimport TypeID
 
-# Runtime imports
-import h5
-import h5t
-import numpy
-
+# Initialization
+init_hdf5()
 import_array()
+
+# Runtime imports
+import h5t
 
 # === C API ===================================================================
 
@@ -121,7 +123,7 @@ cdef class PropID(ObjectID):
 
             Compare this property list (or class) to another for equality.
         """
-        return pybool(H5Pequal(self.id, plist.id))
+        return <bint>(H5Pequal(self.id, plist.id))
 
 cdef class PropInstanceID(PropID):
 
@@ -462,7 +464,7 @@ cdef class PropDCID(PropInstanceID):
             Determine if all the filters in the pipelist are available to
             the library.
         """
-        return pybool(H5Pall_filters_avail(self.id))
+        return <bint>(H5Pall_filters_avail(self.id))
 
     def get_filter(self, int filter_idx):
         """ (UINT filter_idx) => TUPLE filter_info
@@ -626,7 +628,7 @@ cdef class PropFAID(PropInstanceID):
         cdef size_t increment
         cdef hbool_t backing_store
         H5Pget_fapl_core(self.id, &increment, &backing_store)
-        return (increment, pybool(backing_store))
+        return (increment, <bint>(backing_store))
 
     def set_fapl_family(self, hsize_t memb_size, PropID memb_fapl=None):
         """ (UINT memb_size, PropFAID memb_fapl=None)

@@ -10,12 +10,19 @@
 # 
 #-
 
+include "config.pxi"
+include "sync.pxi"
+
+# Compile-time imports
+from h5 cimport init_hdf5
 from python cimport PyTuple_Check, PyList_Check, PyErr_SetString, Py_INCREF
 from numpy cimport import_array, NPY_UINT16, NPY_UINT32, NPY_UINT64, \
                    npy_intp, PyArray_SimpleNew, PyArray_ContiguousFromAny, \
                     PyArray_FROM_OTF, NPY_CONTIGUOUS, NPY_NOTSWAPPED, \
                     NPY_FORCECAST
 
+# Initialization
+init_hdf5()
 import_array()
 
 cdef int convert_tuple(object tpl, hsize_t *dims, hsize_t rank) except -1:
@@ -131,12 +138,6 @@ cdef int require_list(object lst, int none_allowed, int size, char* name) except
     PyErr_SetString(ValueError, msg)
     return -1
 
-cdef object pybool(long long val):
-    # It seems Pyrex's bool() actually returns some sort of int.
-    # This is OK for C, but ugly in Python.
-    if val:
-        return True
-    return False
 
 
 

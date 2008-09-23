@@ -10,14 +10,18 @@
 # 
 #-
 
+include "config.pxi"
+include "sync.pxi"
+
 # Module for the new "H5O" functions introduced in HDF5 1.8.0.  Not even
 # built with API compatibility level below 1.8.
 
 # Pyrex compile-time imports
+from h5 cimport init_hdf5
 from h5f cimport wrap_identifier
 
-# Runtime imports
-import h5
+# Initialization
+init_hdf5()
 
 cdef class ObjInfo:
 

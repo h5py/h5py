@@ -13,19 +13,23 @@
 """
     Low-level HDF5 "H5G" group interface.
 """
-include "std_code.pxi"
 
-# Pyrex compile-time imports
+include "config.pxi"
+include "sync.pxi"
+
+# Compile-time imports
+from h5 cimport init_hdf5, standard_richcmp
 from utils cimport emalloc, efree
-from h5 cimport standard_richcmp
-from h5p cimport H5P_DEFAULT, PropID, pdefault
+from h5p cimport PropID, pdefault
 IF H5PY_18API:
     from h5l cimport LinkProxy
 
+# Initialization
+init_hdf5()
+
 # Runtime imports
-import h5
 from h5 import H5Error
-import h5i
+
 
 # === Public constants and data structures ====================================
 
@@ -347,7 +351,7 @@ cdef class GroupID(ObjectID):
                 Get the name of a group member given its zero-based index.
 
                 Due to a limitation of the HDF5 library, the generic exception
-                H5Error (errno 1) is raised if the idx parameter is out-of-range.
+                H5Error is raised if the idx parameter is out-of-range.
             """
             cdef int size
             cdef char* buf
@@ -356,7 +360,7 @@ cdef class GroupID(ObjectID):
             # This function does not properly raise an exception
             size = H5Gget_objname_by_idx(self.id, idx, NULL, 0)
             if size < 0:
-                raise H5Error((1,"Invalid argument"))
+                raise H5Error("Invalid index")
 
             buf = <char*>emalloc(sizeof(char)*(size+1))
             try:
@@ -380,13 +384,13 @@ cdef class GroupID(ObjectID):
                     - DATATYPE
 
                 Due to a limitation of the HDF5 library, the generic exception
-                H5Error (errno 1) is raised if the idx parameter is out-of-range.
+                H5Error is raised if the idx parameter is out-of-range.
             """
             # This function does not properly raise an exception
             cdef herr_t retval
             retval = H5Gget_objtype_by_idx(self.id, idx)
             if retval < 0:
-                raise H5Error((1,"Invalid argument."))
+                raise H5Error("Invalid index")
             return retval
 
     # COMPAT: 1.8 deprecation

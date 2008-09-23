@@ -58,24 +58,23 @@
 """
 
 include "config.pxi"
+include "sync.pxi"
 
 # Pyrex compile-time imports
-from h5 cimport PHIL, get_phil
+from h5 cimport init_hdf5, PHIL, get_phil
 from numpy cimport dtype, ndarray
 from python cimport PyString_FromStringAndSize
 
-from utils cimport  emalloc, efree, pybool, \
+from utils cimport  emalloc, efree, \
                     create_ieee_complex64, create_ieee_complex128, \
                     require_tuple, convert_dims, convert_tuple
 
+# Initialization
+init_hdf5()
+
 # Runtime imports
-import h5
 import sys
 
-cdef PHIL phil
-phil = get_phil()
-phil.acquire()
-phil.release()
 
 # === Custom C API ============================================================
     
@@ -359,7 +358,7 @@ cdef class TypeID(ObjectID):
 
             Determine if a given type object is named (T) or transient (F).
         """
-        return pybool(H5Tcommitted(self.id))
+        return <bint>(H5Tcommitted(self.id))
 
     def copy(self):
         """ () => TypeID
@@ -374,7 +373,7 @@ cdef class TypeID(ObjectID):
             Test whether two identifiers refer to the same datatype.  Seems
             to perform a logical comparison.
         """
-        return pybool(H5Tequal(self.id, typeid.id))
+        return <bint>(H5Tequal(self.id, typeid.id))
 
     def lock(self):
         """ ()
@@ -419,7 +418,7 @@ cdef class TypeID(ObjectID):
             Determine if a member of the given class exists in a compound
             datatype.  The search is recursive.
         """
-        return pybool(H5Tdetect_class(self.id, <H5T_class_t>classtype))
+        return <bint>(H5Tdetect_class(self.id, <H5T_class_t>classtype))
 
     def _close(self):
         """ Close this datatype.  If it's locked, nothing happens.
@@ -555,7 +554,7 @@ cdef class TypeStringID(TypeID):
             Please note that reading/writing data in this format is impossible;
             only fixed-length strings are currently supported.
         """
-        return pybool(H5Tis_variable_str(self.id))
+        return <bint>(H5Tis_variable_str(self.id))
 
     def get_cset(self):
         """ () => INT character_set

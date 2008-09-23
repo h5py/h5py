@@ -13,24 +13,25 @@
 """
     Provides access to the low-level HDF5 "H5D" dataset interface.
 """
-include "std_code.pxi"
 
-# Pyrex compile-time imports
-from h5s cimport H5S_ALL, H5S_UNLIMITED, H5S_SCALAR, H5S_SIMPLE, \
-                    H5Sget_simple_extent_type, H5Sclose, H5Sselect_all, \
-                    H5Sget_simple_extent_ndims, H5Sget_select_npoints
-from numpy cimport import_array, PyArray_DATA, NPY_WRITEABLE
+include "config.pxi"
+include "sync.pxi"
+
+# Compile-time imports
+from h5 cimport init_hdf5
+from numpy cimport ndarray, import_array, PyArray_DATA, NPY_WRITEABLE
 from utils cimport  check_numpy_read, check_numpy_write, \
-                    require_tuple, \
-                    convert_tuple, \
-                    emalloc, efree
-from h5 cimport HADDR_UNDEF
+                    require_tuple, convert_tuple, emalloc, efree
+from h5t cimport TypeID, typewrap
+from h5s cimport SpaceID
+from h5p cimport PropID, propwrap, pdefault
+
+# Initialization
+init_hdf5()
+import_array()
 
 # Runtime imports
-import h5
 import h5t
-
-import_array()
 
 # === Public constants and data structures ====================================
 
@@ -59,7 +60,7 @@ FILL_VALUE_USER_DEFINED = H5D_FILL_VALUE_USER_DEFINED
 
 @sync
 def create(ObjectID loc not None, char* name, TypeID tid not None, 
-            SpaceID space not None, PropDCID dcpl=None):
+            SpaceID space not None, PropID dcpl=None):
     """ (ObjectID loc, STRING name, TypeID tid, SpaceID space,
          PropDCID dcpl=None ) 
         => DatasetID
@@ -157,7 +158,7 @@ cdef class DatasetID(ObjectID):
 
     @sync
     def read(self, SpaceID mspace not None, SpaceID fspace not None, 
-                   ndarray arr_obj not None, PropDXID dxpl=None):
+                   ndarray arr_obj not None, PropID dxpl=None):
         """ (SpaceID mspace, SpaceID fspace, NDARRAY arr_obj, 
              PropDXID dxpl=None)
 
@@ -204,7 +205,7 @@ cdef class DatasetID(ObjectID):
 
     @sync
     def write(self, SpaceID mspace not None, SpaceID fspace not None, 
-                    ndarray arr_obj not None, PropDXID dxpl=None):
+                    ndarray arr_obj not None, PropID dxpl=None):
         """ (SpaceID mspace, SpaceID fspace, NDARRAY arr_obj, 
              PropDXID dxpl=None)
 

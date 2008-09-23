@@ -9,6 +9,7 @@
 # $Date$
 # 
 #-
+
 """
     Common support and versioning module for the h5py HDF5 interface.
 
@@ -31,19 +32,33 @@
 """
 
 include "config.pxi"
+
 from python cimport PyErr_SetObject
 
 import atexit
 import threading
-# --- Module init -------------------------------------------------------------
 
-# Logging is only enabled when compiled with H5PY_DEBUG nonzero
+cdef class H5PYConfig:
+
+    """
+        Provides runtime access to the library compilation options.
+    """
+
+    def __init__(self):
+        self.API_16 = H5PY_16API
+        self.API_18 = H5PY_18API
+        self.DEBUG = H5PY_DEBUG
+        self.THREADS = H5PY_THREADS
+
+# === Bootstrap diagnostics and threading, before decorator is defined ===
+
 IF H5PY_DEBUG:
     import logging
-    for x in ('h5py.identifiers', 'h5py.functions', 'h5py.threads'):
+    for x in ('h5py.library', 'h5py.identifiers', 'h5py.functions', 'h5py.threads'):
         l = logging.getLogger(x)
         l.setLevel(H5PY_DEBUG)
         l.addHandler(logging.StreamHandler())
+    log_lib = logging.getLogger('h5py.library')
     log_ident = logging.getLogger('h5py.identifiers')
     log_threads = logging.getLogger('h5py.threads')
 
@@ -60,64 +75,6 @@ def loglevel(lev):
             l.setLevel(lev)
     ELSE:
         pass
-
-# --- C extensions and classes ------------------------------------------------
-
-cdef object standard_richcmp(object self, object other, int how):
-    # HDF5 object identity is determined by comparing hash values.  In the
-    # absence of a logical comparision method (for example, TypeId.equal()),
-    # this hash-based identity is used for comparison.
-    
-    # Subject to:
-    # 1. Both must be of the same type
-    # 2. Both must be hashable
-    # 3. Only == and != comparisons are supported
-    #
-    # Otherwise NotImplemented is returned, for Python's fallback mechanics.
-
-    if how != 2 and how != 3:
-        return NotImplemented
-
-    if not type(self) == type(other) and isinstance(self, ObjectID):
-        return NotImplemented   # Can't compare across types
-
-    try:
-        eq = (hash(self) == hash(other))
-    except TypeError:
-        return NotImplemented   # Can't compare unhashable instances
-
-    if how == 2:
-        return eq
-    return not eq
-
-cdef object obj_hash(ObjectID obj):
-    # Try to compute the hash of the given file-resident object, raising
-    # TypeError if it can't be done.
-    
-    # This is a counterpart to standard_richcmp.
-
-    cdef H5G_stat_t stat
-
-    phil.acquire()
-    try:
-        H5Gget_objinfo(obj.id, '.', 0, &stat)
-        return hash((stat.fileno[0], stat.fileno[1], stat.objno[0], stat.objno[1]))
-    except:
-        raise TypeError("Objects of class %s cannot be hashed" % obj.__class__.__name__)
-    finally:
-        phil.release()
-
-cdef class H5PYConfig:
-
-    """
-        Global configuration object for the h5py package.
-    """
-
-    def __init__(self):
-        self.API_16 = H5PY_16API
-        self.API_18 = H5PY_18API
-        self.DEBUG = H5PY_DEBUG
-        self.THREADS = H5PY_THREADS
 
 cdef class PHIL:
 
@@ -165,8 +122,55 @@ cpdef PHIL get_phil():
     """ Obtain a reference to the PHIL. """
     return phil
 
-# Now that the PHIL is defined we can import the decorator
-include "std_code.pxi"
+# Everything required for the decorator is now defined
+
+include "sync.pxi"
+
+# === Public C API for object identifiers =====================================
+
+cdef object standard_richcmp(object self, object other, int how):
+    # HDF5 object identity is determined by comparing hash values.  In the
+    # absence of a logical comparision method (for example, TypeId.equal()),
+    # this hash-based identity is used for comparison.
+    
+    # Subject to:
+    # 1. Both must be of the same type
+    # 2. Both must be hashable
+    # 3. Only == and != comparisons are supported
+    #
+    # Otherwise NotImplemented is returned, for Python's fallback mechanics.
+
+    if how != 2 and how != 3:
+        return NotImplemented
+
+    if not type(self) == type(other) and isinstance(self, ObjectID):
+        return NotImplemented   # Can't compare across types
+
+    try:
+        eq = (hash(self) == hash(other))
+    except TypeError:
+        return NotImplemented   # Can't compare unhashable instances
+
+    if how == 2:
+        return eq
+    return not eq
+
+cdef object obj_hash(ObjectID obj):
+    # Try to compute the hash of the given file-resident object, raising
+    # TypeError if it can't be done.
+    
+    # This is a counterpart to standard_richcmp.
+
+    cdef H5G_stat_t stat
+
+    phil.acquire()
+    try:
+        H5Gget_objinfo(obj.id, '.', 0, &stat)
+        return hash((stat.fileno[0], stat.fileno[1], stat.objno[0], stat.objno[1]))
+    except:
+        raise TypeError("Objects of class %s cannot be hashed" % obj.__class__.__name__)
+    finally:
+        phil.release()
 
 cdef class ObjectID:
 
@@ -303,9 +307,6 @@ class H5Error(Exception):
     """
     pass
 
-# --- New classes -------------------------------------------------------------
-
-           
 #    H5E_ARGS,                   # invalid arguments to routine
 class ArgsError(H5Error):
     """ H5E_ARGS """
@@ -415,8 +416,6 @@ class RefError(H5Error):
 class VirtualFileError(H5Error):
     """ H5E_VFL """
     pass
-         
-# H5E_TBBT removed; does not appear in 1.8.X
 
 #    H5E_TST,                    # Ternary Search Trees                       
 class TSTError(H5Error):
@@ -438,7 +437,7 @@ class SkipListError(H5Error):
     """ H5E_SLIST """
     pass  
 
-_exceptions = {
+cdef dict _exceptions = {
     H5E_ARGS: ArgsError,
     H5E_RESOURCE: ResourceError,
     H5E_INTERNAL: InternalError,
@@ -633,16 +632,25 @@ def _exithack():
         finally:
             free(objs)
 
-cdef int import_hdf5() except -1:
-    if H5open() < 0:
-        raise RuntimeError("Failed to initialize the HDF5 library.")
-    _enable_exceptions()
-    atexit.register(_exithack)
+cdef int _hdf5_inited = 0
+
+cdef int init_hdf5() except -1:
+    # Initialize the library and set register Python callbacks for exception
+    # handling.  Safe to call more than once.
+
+    if not _hdf5_inited:
+        IF H5PY_DEBUG:
+            log_lib.info("* Initializing h5py library")
+        if H5open() < 0:
+            raise RuntimeError("Failed to initialize the HDF5 library.")
+        _enable_exceptions()
+        atexit.register(_exithack)
+        _hdf5_inited = 1
     return 0
 
-import_hdf5()
+init_hdf5()
  
-# --- Public versioning info ---
+# === Module init =============================================================
 
 hdf5_version_tuple = get_libversion()        
 hdf5_version = "%d.%d.%d" % hdf5_version_tuple

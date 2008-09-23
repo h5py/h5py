@@ -10,8 +10,11 @@
 # 
 #-
 
-# Common, stateless code safe for inclusion in each .pyx file.  Also brings
-# in config.pxi.
+# Header file which goes as the first line in all .pyx files.  Currently its
+# main function is to help simplify the .pxi-based import fiasco.
+
+# hdr_pxd already brought in hdf5 and stdlib defines.  So we just need to
+# include the configs, and define things like synchronization decorators.
 
 include "config.pxi"
 
@@ -43,7 +46,3 @@ ELSE:
     ELSE:
         cdef inline object sync(object func):
             return func
-
-
-
-
