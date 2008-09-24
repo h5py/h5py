@@ -22,16 +22,13 @@ from h5 cimport init_hdf5
 from numpy cimport ndarray, import_array, PyArray_DATA, NPY_WRITEABLE
 from utils cimport  check_numpy_read, check_numpy_write, \
                     require_tuple, convert_tuple, emalloc, efree
-from h5t cimport TypeID, typewrap
+from h5t cimport TypeID, typewrap, py_create
 from h5s cimport SpaceID
 from h5p cimport PropID, propwrap, pdefault
 
 # Initialization
 init_hdf5()
 import_array()
-
-# Runtime imports
-import h5t
 
 # === Public constants and data structures ====================================
 
@@ -55,6 +52,7 @@ FILL_TIME_IFSET = H5D_FILL_TIME_IFSET
 FILL_VALUE_UNDEFINED    = H5D_FILL_VALUE_UNDEFINED
 FILL_VALUE_DEFAULT      = H5D_FILL_VALUE_DEFAULT
 FILL_VALUE_USER_DEFINED = H5D_FILL_VALUE_USER_DEFINED
+
 
 # === Basic dataset operations ================================================
 
@@ -119,6 +117,9 @@ cdef class DatasetID(ObjectID):
         dtype:  Numpy dtype representing the dataset type
         shape:  Numpy-style shape tuple representing the dataspace
         rank:   Integer giving dataset rank
+
+        Hashable: Yes, if not anonymous
+        Equality: HDF5 identity if not anonymous, otherwise Python default
     """
 
     property dtype:
@@ -186,7 +187,7 @@ cdef class DatasetID(ObjectID):
         cdef void* data
         cdef int oldflags
 
-        mtype = h5t.py_create(arr_obj.dtype)
+        mtype = py_create(arr_obj.dtype)
         check_numpy_write(arr_obj, -1)
 
         self_id = self.id
@@ -226,7 +227,7 @@ cdef class DatasetID(ObjectID):
         cdef void* data
         cdef int oldflags
 
-        mtype = h5t.py_create(arr_obj.dtype)
+        mtype = py_create(arr_obj.dtype)
         check_numpy_read(arr_obj, -1)
 
         self_id = self.id

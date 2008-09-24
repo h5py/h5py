@@ -66,7 +66,15 @@ cdef class TypeEnumID(TypeCompositeID):
 cdef class TypeCompoundID(TypeCompositeID):
     pass
 
+# === C API for other modules =================================================
+
 cdef object typewrap(hid_t id_)
+cpdef object py_create(object dtype, object enum_vals=*)
+
+
+
+
+
 
 
 

@@ -25,7 +25,8 @@ cpdef PHIL get_phil()
 
 cdef class H5PYConfig:
 
-    cdef object _complex_names
+    cdef object _r_name
+    cdef object _i_name
     cdef readonly object API_16
     cdef readonly object API_18
     cdef readonly object DEBUG
@@ -38,8 +39,7 @@ cdef class ObjectID:
     cdef readonly int _locked
     cdef object _hash
 
-cdef object standard_richcmp(object self, object other, int how)
-cdef object obj_hash(ObjectID obj)
+# Library init.  Safe to call more than once.
 cdef int init_hdf5() except -1
 
 

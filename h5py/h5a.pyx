@@ -19,18 +19,15 @@ include "sync.pxi"
 
 # Compile-time imports
 from h5 cimport init_hdf5
-from h5t cimport TypeID, typewrap
+from h5t cimport TypeID, typewrap, py_create
 from h5s cimport SpaceID
 from numpy cimport import_array, ndarray, PyArray_DATA
-from utils cimport  check_numpy_read, check_numpy_write, \
-                    emalloc, efree
+from utils cimport check_numpy_read, check_numpy_write, emalloc, efree
 
 # Initialization
 init_hdf5()
 import_array()
 
-# Runtime imports
-import h5t
 
 # === General attribute operations ============================================
 
@@ -38,7 +35,7 @@ import h5t
 def create(ObjectID loc not None, char* name, TypeID tid not None, 
             SpaceID space not None):
     """ (ObjectID loc, STRING name, TypeID tid, SpaceID space) 
-        => INT attr_id
+        => AttrID
 
         Create a new attribute attached to a parent object, specifiying an 
         HDF5 datatype and dataspace.
@@ -47,7 +44,7 @@ def create(ObjectID loc not None, char* name, TypeID tid not None,
 
 @sync
 def open_idx(ObjectID loc not None, int idx):
-    """ (ObjectID loc_id, UINT idx) => INT attr_id
+    """ (ObjectID loc_id, UINT idx) => AttrID
 
         Open an exisiting attribute on an object, by zero-based index.
     """
@@ -60,7 +57,7 @@ def open_idx(ObjectID loc not None, int idx):
 
 @sync
 def open_name(ObjectID loc not None, char* name):
-    """ (ObjectID loc, STRING name) => INT attr_id
+    """ (ObjectID loc, STRING name) => AttrID
 
         Open an existing attribute on an object, by name.
     """
@@ -178,6 +175,9 @@ cdef class AttrID(ObjectID):
         name:   The attribute's name
         dtype:  A Numpy dtype representing this attribute's type
         shape:  A Numpy-style shape tuple representing the dataspace
+
+        Hashable: No
+        Equality: Python default
     """
     property name:
         """ The attribute's name
@@ -232,7 +232,7 @@ cdef class AttrID(ObjectID):
             space_id = H5Aget_space(self.id)
             check_numpy_write(arr_obj, space_id)
 
-            mtype = h5t.py_create(arr_obj.dtype)
+            mtype = py_create(arr_obj.dtype)
 
             H5Aread(self.id, mtype.id, PyArray_DATA(arr_obj))
 
@@ -258,7 +258,7 @@ cdef class AttrID(ObjectID):
         try:
             space_id = H5Aget_space(self.id)
             check_numpy_read(arr_obj, space_id)
-            mtype = h5t.py_create(arr_obj.dtype)
+            mtype = py_create(arr_obj.dtype)
 
             H5Awrite(self.id, mtype.id, PyArray_DATA(arr_obj))
 

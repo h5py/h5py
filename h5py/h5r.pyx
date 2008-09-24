@@ -36,6 +36,7 @@ DATASET_REGION = H5R_DATASET_REGION
 
 # === Reference API ===========================================================
 
+@sync
 def create(ObjectID loc not None, char* name, int ref_type, SpaceID space=None):
     """ (ObjectID loc, STRING name, INT ref_type, SpaceID space=None)
         => ReferenceObject ref
@@ -76,6 +77,7 @@ cdef class Reference:
         or a dataset region (DATASET_REGION).
     """
 
+    @sync
     def dereference(self, ObjectID id not None):
         """ (ObjectID id) => ObjectID obj_id
 
@@ -87,6 +89,7 @@ cdef class Reference:
         """
         return wrap_identifier(H5Rdereference(id.id, <H5R_type_t>self.typecode, &self.ref))
 
+    @sync
     def get_region(self, ObjectID id not None):
         """ (ObjectID id) => SpaceID dataspace_id
 
@@ -100,6 +103,7 @@ cdef class Reference:
         """
         return SpaceID(H5Rget_region(id.id, <H5R_type_t>self.typecode, &self.ref))
 
+    @sync
     def get_obj_type(self, ObjectID id not None):
         """ (ObjectID id) => INT obj_code
 
@@ -116,6 +120,7 @@ cdef class Reference:
         """
         return <int>H5Rget_obj_type(id.id, <H5R_type_t>self.typecode, &self.ref)
 
+    @nosync
     def __str__(self):
         if self.typecode == H5R_OBJECT:
             return "HDF5 object reference"

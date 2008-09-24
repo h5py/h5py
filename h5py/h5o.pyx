@@ -17,7 +17,7 @@ include "sync.pxi"
 # built with API compatibility level below 1.8.
 
 # Pyrex compile-time imports
-from h5 cimport init_hdf5
+from h5 cimport init_hdf5, ObjectID
 from h5f cimport wrap_identifier
 
 # Initialization
@@ -47,6 +47,7 @@ cdef class ObjInfo:
         newcopy.infostruct = self.infostruct
         return newcopy
 
+@sync
 def get_info(ObjectID obj not None):
     """ (ObjectID obj) => ObjInfo
     """
@@ -91,7 +92,7 @@ cdef herr_t visit_cb(hid_t obj, char* name, H5O_info_t *info, void* data):
 
     return 0
  
-
+@sync
 def visit(ObjectID obj not None, object func, int idx_type=H5_INDEX_NAME,
           int order=H5_ITER_NATIVE):
     """ (ObjectID obj, CALLABLE func, INT idx_type=, INT order=)

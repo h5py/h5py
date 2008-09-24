@@ -18,7 +18,7 @@ include "config.pxi"
 include "sync.pxi"
 
 # Compile-time imports
-from h5 cimport init_hdf5, standard_richcmp
+from h5 cimport init_hdf5
 from utils cimport emalloc, efree
 from h5p cimport PropID, pdefault
 IF H5PY_18API:
@@ -260,6 +260,8 @@ cdef class GroupID(ObjectID):
         providing access to the H5L family of routines.  See the docs
         for h5py.h5l.LinkProxy for more information.
 
+        Hashable: Yes, unless anonymous
+        Equality: HDF5 object identity if not anonymous, or NotImplemented
     """
 
     IF H5PY_18API:

@@ -10,20 +10,16 @@
 # 
 #-
 
-# Header file which goes as the first line in all .pyx files.  Currently its
-# main function is to help simplify the .pxi-based import fiasco.
+# Header file which defines decorators for thread safety and debug logging.
+# Intended to be included in the beginning of module .pyx files.
 
-# hdr_pxd already brought in hdf5 and stdlib defines.  So we just need to
-# include the configs, and define things like synchronization decorators.
-
-include "config.pxi"
-
-# Defines the following decorators:
-#
 # sync:     Acquire PHIL for this function, and log function entry  in
 #           debug mode.
 # nosync:   Don't acquire PHIL, but log function entry in debug mode.
-#
+
+
+include "config.pxi"    # For H5PY_* defines
+
 
 IF H5PY_DEBUG:
     import logging
@@ -46,3 +42,5 @@ ELSE:
     ELSE:
         cdef inline object sync(object func):
             return func
+
+

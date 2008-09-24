@@ -58,8 +58,10 @@ DISABLE_EDC = H5Z_DISABLE_EDC
 ENABLE_EDC  = H5Z_ENABLE_EDC
 NO_EDC      = H5Z_NO_EDC
 
+
 # === Filter API  =============================================================
 
+@sync
 def filter_avail(int filter_code):
     """ (INT filter_code) => BOOL available
 
@@ -73,6 +75,7 @@ def filter_avail(int filter_code):
     """
     return <bint>H5Zfilter_avail(<H5Z_filter_t>filter_code)
 
+@sync
 def get_filter_info(int filter_code):
     """ (INT filter_code) => INT filter_flags
 

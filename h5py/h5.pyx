@@ -33,7 +33,7 @@
 
 include "config.pxi"
 
-from python cimport PyErr_SetObject
+from python_exc cimport PyErr_SetString
 
 import atexit
 import threading
@@ -49,6 +49,41 @@ cdef class H5PYConfig:
         self.API_18 = H5PY_18API
         self.DEBUG = H5PY_DEBUG
         self.THREADS = H5PY_THREADS
+        self._r_name = 'r'
+        self._i_name = 'i'
+
+    property complex_names:
+        """ Settable 2-tuple controlling how complex numbers are saved.
+        """
+
+        def __get__(self):
+            return (self._r_name, self._i_name)
+
+        def __set__(self, val):
+            try:
+                r = val[0]
+                i = val[1]
+                if not (isinstance(r, str) and isinstance(i, str)):
+                    raise TypeError
+            except Exception:
+                raise TypeError("complex_names must be a 2-tuple (real, img)")
+            self._r_name = r
+            self._i_name = i
+
+    def __repr__(self):
+        rstr =  \
+"""\
+Summary of h5py config
+======================
+1.6 API: %s
+1.8 API: %s
+Thread-aware: %s
+Diagnostic mode: %s
+Complex names: %s"""
+
+        rstr %= (bool(self.API_16), bool(self.API_18), bool(self.THREADS),
+                 bool(self.DEBUG), self.complex_names)
+        return rstr
 
 # === Bootstrap diagnostics and threading, before decorator is defined ===
 
@@ -118,6 +153,7 @@ cdef class PHIL:
             return 0      
 
 cdef PHIL phil = PHIL()
+
 cpdef PHIL get_phil():
     """ Obtain a reference to the PHIL. """
     return phil
@@ -127,50 +163,6 @@ cpdef PHIL get_phil():
 include "sync.pxi"
 
 # === Public C API for object identifiers =====================================
-
-cdef object standard_richcmp(object self, object other, int how):
-    # HDF5 object identity is determined by comparing hash values.  In the
-    # absence of a logical comparision method (for example, TypeId.equal()),
-    # this hash-based identity is used for comparison.
-    
-    # Subject to:
-    # 1. Both must be of the same type
-    # 2. Both must be hashable
-    # 3. Only == and != comparisons are supported
-    #
-    # Otherwise NotImplemented is returned, for Python's fallback mechanics.
-
-    if how != 2 and how != 3:
-        return NotImplemented
-
-    if not type(self) == type(other) and isinstance(self, ObjectID):
-        return NotImplemented   # Can't compare across types
-
-    try:
-        eq = (hash(self) == hash(other))
-    except TypeError:
-        return NotImplemented   # Can't compare unhashable instances
-
-    if how == 2:
-        return eq
-    return not eq
-
-cdef object obj_hash(ObjectID obj):
-    # Try to compute the hash of the given file-resident object, raising
-    # TypeError if it can't be done.
-    
-    # This is a counterpart to standard_richcmp.
-
-    cdef H5G_stat_t stat
-
-    phil.acquire()
-    try:
-        H5Gget_objinfo(obj.id, '.', 0, &stat)
-        return hash((stat.fileno[0], stat.fileno[1], stat.objno[0], stat.objno[1]))
-    except:
-        raise TypeError("Objects of class %s cannot be hashed" % obj.__class__.__name__)
-    finally:
-        phil.release()
 
 cdef class ObjectID:
 
@@ -247,18 +239,46 @@ cdef class ObjectID:
             phil.release()
 
     def __richcmp__(self, object other, int how):
-        """ Supports only == and != """
-        return standard_richcmp(self, other, how)
+        """ Basic comparison for HDF5 objects.  Implements only equality:
+
+            1. Mismatched types always NOT EQUAL
+            2. Try to compare object hashes
+            3. If unhashable, compare identifiers
+        """
+        cdef bint truthval = 0
+
+        if how != 2 and how != 3:
+            return NotImplemented
+
+        if isinstance(other, ObjectID) and type(self) == type(other):
+            try:
+                truthval = hash(self) == hash(other)
+            except TypeError:
+                truthval = self.id == other.id
+
+        if how == 2:
+            return truthval
+        return not truthval
 
     def __hash__(self):
-        """ By default HDF5 objects are hashed based on their file and object
-            numbers.  Objects which are not file-resident cannot be hashed.
+        """ Default hash is computed from the object header, which requires
+            a file-resident object.  TypeError if this can't be done.
         """
+        cdef H5G_stat_t stat
+
         if self._hash is None:
-            self._hash = obj_hash(self)
+            phil.acquire()
+            try:
+                H5Gget_objinfo(self.id, '.', 0, &stat)
+                self._hash = hash((stat.fileno[0], stat.fileno[1], stat.objno[0], stat.objno[1]))
+            except Exception:
+                raise TypeError("Objects of class %s cannot be hashed" % self.__class__.__name__)
+            finally:
+                phil.release()
+
         return self._hash
 
-    def __str__(self):
+    def __repr__(self):
         phil.acquire()
         try:
             ref = str(H5Iget_ref(self.id)) if self._valid else "X"
@@ -267,8 +287,6 @@ cdef class ObjectID:
         finally:
             phil.release()
 
-    def __repr__(self):
-        return self.__str__()
 
 # === HDF5 "H5" API ===========================================================
 
@@ -521,8 +539,7 @@ def error_stack():
     H5Ewalk(H5E_WALK_DOWNWARD, walk_cb, <void*>stack)
     return stack
 
-@nosync
-def error_string():
+cpdef object error_string():
     """ () => STRING error_stack
 
         Return a string representation of the current error condition.
@@ -587,24 +604,16 @@ cdef herr_t err_callback(void* client_data) with gil:
     H5Ewalk(H5E_WALK_UPWARD, extract_cb, &err_struct)
     mj = err_struct.maj_num
 
-    exc = _exceptions.get(mj, H5Error)
+    try:
+        exc = _exceptions[mj]
+    except:
+        exc = H5Error
 
     msg = error_string()
-    PyErr_SetObject(exc, msg)
+    PyErr_SetString(exc, msg)
 
     return 1
 
-cdef int _enable_exceptions() except -1:
-    # Enable automatic exception handling, by registering the above callback
-    if H5Eset_auto(err_callback, NULL) < 0:
-        raise RuntimeError("Failed to register HDF5 exception callback.")
-    return 0
-
-cdef int _disable_exceptions() except -1:
-    # Disable automatic exception handling
-    if H5Eset_auto(NULL, NULL) < 0:
-        raise RuntimeError("Failed to unregister HDF5 exception callback.")
-    return 0
 
 # === Library init ============================================================
 
@@ -632,20 +641,23 @@ def _exithack():
         finally:
             free(objs)
 
-cdef int _hdf5_inited = 0
+cdef int hdf5_inited = 0
 
 cdef int init_hdf5() except -1:
     # Initialize the library and set register Python callbacks for exception
     # handling.  Safe to call more than once.
+    global hdf5_inited
 
-    if not _hdf5_inited:
+    if not hdf5_inited:
         IF H5PY_DEBUG:
             log_lib.info("* Initializing h5py library")
         if H5open() < 0:
             raise RuntimeError("Failed to initialize the HDF5 library.")
-        _enable_exceptions()
+        if H5Eset_auto(err_callback, NULL) < 0:
+            raise RuntimeError("Failed to register HDF5 exception callback.")
         atexit.register(_exithack)
-        _hdf5_inited = 1
+        hdf5_inited = 1
+
     return 0
 
 init_hdf5()

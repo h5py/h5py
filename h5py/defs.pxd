@@ -12,7 +12,15 @@
 
 # This file provides all external libraries for h5py.
 
+# Originally each HDF5 subsection was attached to its own .pxd file, but this
+# proved much too complicated as the definitions are interdependent.
+
+# This file contains code or comments from the HDF5 library, as well as some
+# PyTables definitions.  Licenses for both these packages are located in 
+# the "licenses" folder in the distribution root directory.
+
 include "config.pxi"  # Needed for H5PY_*API defines
+
 
 # === Standard C library types and functions ==================================
 
@@ -45,6 +53,7 @@ cdef extern from "stdint.h":
   ctypedef signed long long int int64_t
   ctypedef signed long long int uint64_t 
 
+
 # === H5 - Common definitions and library functions ===========================
 
 cdef extern from "hdf5.h":
@@ -70,6 +79,22 @@ cdef extern from "hdf5.h":
 
   herr_t H5get_libversion(unsigned *majnum, unsigned *minnum,
                           unsigned *relnum ) except *
+
+  # New in 1.8.X
+  IF H5PY_18API:
+
+    ctypedef enum H5_iter_order_t:
+      H5_ITER_UNKNOWN = -1,       # Unknown order
+      H5_ITER_INC,                # Increasing order
+      H5_ITER_DEC,                # Decreasing order
+      H5_ITER_NATIVE,             # No particular order, whatever is fastest
+      H5_ITER_N                   # Number of iteration orders
+
+    ctypedef enum H5_index_t:
+      H5_INDEX_UNKNOWN = -1,      # Unknown index type     
+      H5_INDEX_NAME,              # Index on names      
+      H5_INDEX_CRT_ORDER,         # Index on creation order    
+      H5_INDEX_N                  # Number of indices defined    
 
 
 # === H5E - Error handling API ================================================
@@ -135,58 +160,35 @@ cdef extern from "hdf5.h":
   herr_t    H5Ewalk(H5E_direction_t direction, H5E_walk_t func, void* client_data)
 
 
-# === H5A - Attributes API ====================================================
-
-cdef extern from "hdf5.h":
-
-  hid_t     H5Acreate(hid_t loc_id, char *name, hid_t type_id, hid_t space_id, hid_t create_plist) except *
-  hid_t     H5Aopen_idx(hid_t loc_id, unsigned int idx) except *
-  hid_t     H5Aopen_name(hid_t loc_id, char *name) except *
-  herr_t    H5Aclose(hid_t attr_id) except *
-  herr_t    H5Adelete(hid_t loc_id, char *name) except *
-
-  herr_t    H5Aread(hid_t attr_id, hid_t mem_type_id, void *buf) except *
-  herr_t    H5Awrite(hid_t attr_id, hid_t mem_type_id, void *buf  ) except *
-
-  int       H5Aget_num_attrs(hid_t loc_id) except *
-  ssize_t   H5Aget_name(hid_t attr_id, size_t buf_size, char *buf) except *
-  hid_t     H5Aget_space(hid_t attr_id) except *
-  hid_t     H5Aget_type(hid_t attr_id) except *
-
-  ctypedef herr_t (*H5A_operator_t)(hid_t loc_id, char *attr_name, operator_data) except -1
-  herr_t    H5Aiterate(hid_t loc_id, unsigned * idx, H5A_operator_t op, op_data) except *
-
-
 # === H5D - Dataset API =======================================================
 
 cdef extern from "hdf5.h":
 
-  # HDF5 layouts
   ctypedef enum H5D_layout_t:
     H5D_LAYOUT_ERROR    = -1,
-    H5D_COMPACT         = 0,    # raw data is very small
-    H5D_CONTIGUOUS      = 1,    # the default
-    H5D_CHUNKED         = 2,    # slow and fancy
-    H5D_NLAYOUTS        = 3     # this one must be last!
+    H5D_COMPACT         = 0,
+    H5D_CONTIGUOUS      = 1,
+    H5D_CHUNKED         = 2,
+    H5D_NLAYOUTS        = 3
 
   ctypedef enum H5D_alloc_time_t:
-    H5D_ALLOC_TIME_ERROR	=-1,
+    H5D_ALLOC_TIME_ERROR    =-1,
     H5D_ALLOC_TIME_DEFAULT  =0,
-    H5D_ALLOC_TIME_EARLY	=1,
-    H5D_ALLOC_TIME_LATE	    =2,
-    H5D_ALLOC_TIME_INCR	    =3
+    H5D_ALLOC_TIME_EARLY    =1,
+    H5D_ALLOC_TIME_LATE        =2,
+    H5D_ALLOC_TIME_INCR        =3
 
   ctypedef enum H5D_space_status_t:
-    H5D_SPACE_STATUS_ERROR	        =-1,
-    H5D_SPACE_STATUS_NOT_ALLOCATED	=0,
-    H5D_SPACE_STATUS_PART_ALLOCATED	=1,
-    H5D_SPACE_STATUS_ALLOCATED		=2
+    H5D_SPACE_STATUS_ERROR            =-1,
+    H5D_SPACE_STATUS_NOT_ALLOCATED    =0,
+    H5D_SPACE_STATUS_PART_ALLOCATED    =1,
+    H5D_SPACE_STATUS_ALLOCATED        =2
 
   ctypedef enum H5D_fill_time_t:
-    H5D_FILL_TIME_ERROR	=-1,
+    H5D_FILL_TIME_ERROR    =-1,
     H5D_FILL_TIME_ALLOC =0,
-    H5D_FILL_TIME_NEVER	=1,
-    H5D_FILL_TIME_IFSET	=2
+    H5D_FILL_TIME_NEVER    =1,
+    H5D_FILL_TIME_IFSET    =2
 
   ctypedef enum H5D_fill_value_t:
     H5D_FILL_VALUE_ERROR        =-1,
@@ -224,8 +226,9 @@ cdef extern from "hdf5.h":
                                     hid_t space_id, hsize_t *size) except *
   herr_t    H5Dvlen_reclaim(hid_t type_id, hid_t space_id, 
                             hid_t plist, void *buf) except *
+
   ctypedef  herr_t (*H5D_operator_t)(void *elem, hid_t type_id, unsigned ndim,
-				    hsize_t *point, void *operator_data)
+                    hsize_t *point, void *operator_data)
   herr_t    H5Diterate(void *buf, hid_t type_id, hid_t space_id, 
                         H5D_operator_t operator, void* operator_data) except *
 
@@ -287,8 +290,8 @@ cdef extern from "hdf5.h":
 cdef extern from "hdf5.h":
 
   ctypedef enum H5FD_mem_t:
-    H5FD_MEM_NOLIST	= -1,
-    H5FD_MEM_DEFAULT	= 0,
+    H5FD_MEM_NOLIST    = -1,
+    H5FD_MEM_DEFAULT    = 0,
     H5FD_MEM_SUPER      = 1,
     H5FD_MEM_BTREE      = 2,
     H5FD_MEM_DRAW       = 3,
@@ -298,7 +301,7 @@ cdef extern from "hdf5.h":
     H5FD_MEM_NTYPES
 
   # HDF5 uses a clever scheme wherein these are actually init() calls
-  # Hopefully Pyrex won't have a problem with this.
+  # Hopefully Cython won't have a problem with this.
   # Thankfully they are defined but -1 if unavailable
   hid_t H5FD_CORE
   hid_t H5FD_FAMILY
@@ -389,6 +392,7 @@ cdef extern from "hdf5.h":
 
   # New extensions in 1.8.X
   IF H5PY_18API:
+
     ctypedef enum H5G_storage_type_t:
         H5G_STORAGE_TYPE_UNKNOWN = -1,
         H5G_STORAGE_TYPE_SYMBOL_TABLE,
@@ -396,15 +400,16 @@ cdef extern from "hdf5.h":
         H5G_STORAGE_TYPE_DENSE 
    
     ctypedef struct H5G_info_t:
-        H5G_storage_type_t 	storage_type
-        hsize_t 	 nlinks
-        long int     max_corder  # FIXME: not really long int
+        H5G_storage_type_t     storage_type
+        hsize_t     nlinks
+        int64_t     max_corder
 
-    hid_t H5Gcreate_anon( hid_t loc_id, hid_t gcpl_id, hid_t gapl_id  ) except *
-    hid_t H5Gcreate2(hid_t loc_id, char *name, hid_t lcpl_id, hid_t gcpl_id, hid_t gapl_id) except *
-    hid_t H5Gopen2( hid_t loc_id, char * name, hid_t gapl_id  ) except *
-    herr_t H5Gget_info( hid_t group_id, H5G_info_t *group_info  ) except *
-    herr_t H5Gget_info_by_name( hid_t loc_id, char *group_name, H5G_info_t *group_info, hid_t lapl_id  ) except *
+    hid_t   H5Gcreate_anon( hid_t loc_id, hid_t gcpl_id, hid_t gapl_id) except *
+    hid_t   H5Gcreate2(hid_t loc_id, char *name, hid_t lcpl_id, hid_t gcpl_id, hid_t gapl_id) except *
+    hid_t   H5Gopen2( hid_t loc_id, char * name, hid_t gapl_id) except *
+    herr_t  H5Gget_info( hid_t group_id, H5G_info_t *group_info) except *
+    herr_t  H5Gget_info_by_name( hid_t loc_id, char *group_name, H5G_info_t *group_info, hid_t lapl_id) except *
+    hid_t   H5Gget_create_plist(hid_t group_id) except *
 
 
 # === H5I - Identifier and reflection interface ===============================
@@ -478,16 +483,7 @@ IF H5PY_18API:
       ctypedef herr_t (*H5L_iterate_t) (hid_t group, char *name, H5L_info_t *info,
                         void *op_data)
 
-      ctypedef enum H5_index_t:
-        H5_INDEX_NAME,
-        H5_INDEX_CRT_ORDER
-
-      ctypedef enum H5_iter_order_t:
-         H5_ITER_INC,      # Increasing order
-         H5_ITER_DEC,     # Decreasing order
-         H5_ITER_NATIVE  # Fastest available order
-
-     # API
+      # Links API
 
       herr_t H5Lmove(hid_t src_loc, char *src_name, hid_t dst_loc,
         char *dst_name, hid_t lcpl_id, hid_t lapl_id) except *
@@ -543,13 +539,16 @@ IF H5PY_18API:
 # === H5O - General object operations (1.8.X only) ============================
 
 IF H5PY_18API:
+
     cdef extern from "hdf5.h":
 
+      ctypedef uint32_t H5O_msg_crt_idx_t
+
       ctypedef enum H5O_type_t:
-        H5O_TYPE_UNKNOWN = -1,      #	Unknown object type		
-        H5O_TYPE_GROUP,	            #   Object is a group		
-        H5O_TYPE_DATASET,		    #   Object is a dataset		
-        H5O_TYPE_NAMED_DATATYPE,    #   Object is a named data type	
+        H5O_TYPE_UNKNOWN = -1,      #    Unknown object type        
+        H5O_TYPE_GROUP,                #   Object is a group        
+        H5O_TYPE_DATASET,            #   Object is a dataset        
+        H5O_TYPE_NAMED_DATATYPE,    #   Object is a named data type    
         H5O_TYPE_NTYPES             #   Number of different object types (must be last!) 
 
       # --- Components for the H5O_info_t struct ----------------------------------
@@ -573,12 +572,12 @@ IF H5PY_18API:
         mesg mesg
 
       ctypedef struct H5_ih_info_t:
-        hsize_t     index_size,  # /* btree and/or list */
+        hsize_t     index_size,  # btree and/or list
         hsize_t     heap_size
 
       cdef struct meta_size:
-        H5_ih_info_t   obj,    #        /* v1/v2 B-tree & local/fractal heap for groups, B-tree for chunked datasets */
-        H5_ih_info_t   attr    #        /* v2 B-tree & heap for attributes */
+        H5_ih_info_t   obj,    #        v1/v2 B-tree & local/fractal heap for groups, B-tree for chunked datasets
+        H5_ih_info_t   attr    #        v2 B-tree & heap for attributes
 
       ctypedef struct H5O_info_t:
         unsigned long   fileno         #  File number that object is located in 
@@ -593,15 +592,6 @@ IF H5PY_18API:
         hdr           hdr
         meta_size     meta_size
 
-      ctypedef enum H5_index_t:
-        H5_INDEX_NAME,
-        H5_INDEX_CRT_ORDER
-
-      ctypedef enum H5_iter_order_t:
-         H5_ITER_INC,      # Increasing order
-         H5_ITER_DEC,     # Decreasing order
-         H5_ITER_NATIVE  # Fastest available order
-
       ctypedef herr_t (*H5O_iterate_t)(hid_t obj, char *name, H5O_info_t *info,
                         void *op_data)
 
@@ -609,6 +599,7 @@ IF H5PY_18API:
                         H5O_iterate_t op, void *op_data) except *
 
       herr_t H5Oget_info(hid_t loc_id, H5O_info_t *oinfo) except *
+
 
 # === H5P - Property list API =================================================
 
@@ -627,23 +618,23 @@ cdef extern from "hdf5.h":
     H5D_NLAYOUTS        = 3     # this one must be last!
 
   ctypedef enum H5D_alloc_time_t:
-    H5D_ALLOC_TIME_ERROR	=-1,
+    H5D_ALLOC_TIME_ERROR    =-1,
     H5D_ALLOC_TIME_DEFAULT  =0,
-    H5D_ALLOC_TIME_EARLY	=1,
-    H5D_ALLOC_TIME_LATE	    =2,
-    H5D_ALLOC_TIME_INCR	    =3
+    H5D_ALLOC_TIME_EARLY    =1,
+    H5D_ALLOC_TIME_LATE        =2,
+    H5D_ALLOC_TIME_INCR        =3
 
   ctypedef enum H5D_space_status_t:
-    H5D_SPACE_STATUS_ERROR	        =-1,
-    H5D_SPACE_STATUS_NOT_ALLOCATED	=0,
-    H5D_SPACE_STATUS_PART_ALLOCATED	=1,
-    H5D_SPACE_STATUS_ALLOCATED		=2
+    H5D_SPACE_STATUS_ERROR            =-1,
+    H5D_SPACE_STATUS_NOT_ALLOCATED    =0,
+    H5D_SPACE_STATUS_PART_ALLOCATED    =1,
+    H5D_SPACE_STATUS_ALLOCATED        =2
 
   ctypedef enum H5D_fill_time_t:
-    H5D_FILL_TIME_ERROR	=-1,
+    H5D_FILL_TIME_ERROR    =-1,
     H5D_FILL_TIME_ALLOC =0,
-    H5D_FILL_TIME_NEVER	=1,
-    H5D_FILL_TIME_IFSET	=2
+    H5D_FILL_TIME_NEVER    =1,
+    H5D_FILL_TIME_IFSET    =2
 
   ctypedef enum H5D_fill_value_t:
     H5D_FILL_VALUE_ERROR        =-1,
@@ -664,8 +655,8 @@ cdef extern from "hdf5.h":
     H5F_CLOSE_DEFAULT = 3
 
   ctypedef enum H5FD_mem_t:
-    H5FD_MEM_NOLIST	= -1,
-    H5FD_MEM_DEFAULT	= 0,
+    H5FD_MEM_NOLIST    = -1,
+    H5FD_MEM_DEFAULT    = 0,
     H5FD_MEM_SUPER      = 1,
     H5FD_MEM_BTREE      = 2,
     H5FD_MEM_DRAW       = 3,
@@ -807,19 +798,19 @@ cdef extern from "hdf5.h":
     H5S_SELECT_INVALID    # Must be the last one
 
   ctypedef enum H5S_class_t:
-    H5S_NO_CLASS         = -1,  #/*error                                      */
-    H5S_SCALAR           = 0,   #/*scalar variable                            */
-    H5S_SIMPLE           = 1,   #/*simple data space                          */
+    H5S_NO_CLASS         = -1,  #/*error                                     
+    H5S_SCALAR           = 0,   #/*scalar variable                           
+    H5S_SIMPLE           = 1,   #/*simple data space                         
     # no longer defined in 1.8
-    #H5S_COMPLEX          = 2    #/*complex data space                         */
+    #H5S_COMPLEX          = 2    #/*complex data space                        
 
   ctypedef enum H5S_sel_type:
-    H5S_SEL_ERROR	= -1, 	    #/* Error			*/
-    H5S_SEL_NONE	= 0,        #/* Nothing selected 		*/
-    H5S_SEL_POINTS	= 1,        #/* Sequence of points selected	*/
-    H5S_SEL_HYPERSLABS  = 2,    #/* "New-style" hyperslab selection defined	*/
-    H5S_SEL_ALL		= 3,        #/* Entire extent selected	*/
-    H5S_SEL_N		= 4	        #/*THIS MUST BE LAST		*/
+    H5S_SEL_ERROR    = -1,         #Error           
+    H5S_SEL_NONE    = 0,        #Nothing selected        
+    H5S_SEL_POINTS    = 1,        #Sequence of points selected   
+    H5S_SEL_HYPERSLABS  = 2,    #"New-style" hyperslab selection defined   
+    H5S_SEL_ALL        = 3,        #Entire extent selected   
+    H5S_SEL_N        = 4            #/*THIS MUST BE LAST       
 
 
   # Basic operations
@@ -1145,10 +1136,38 @@ cdef extern from "hdf5.h":
         H5Z_ENABLE_EDC      = 1,
         H5Z_NO_EDC          = 2 
 
-    # --- Filter API ----------------------------------------------------------
     htri_t H5Zfilter_avail(H5Z_filter_t id_) except *
     herr_t H5Zget_filter_info(H5Z_filter_t filter_, unsigned int *filter_config_flags) except *
 
+
+# === H5A - Attributes API ====================================================
+
+cdef extern from "hdf5.h":
+
+  hid_t     H5Acreate(hid_t loc_id, char *name, hid_t type_id, hid_t space_id, hid_t create_plist) except *
+  hid_t     H5Aopen_idx(hid_t loc_id, unsigned int idx) except *
+  hid_t     H5Aopen_name(hid_t loc_id, char *name) except *
+  herr_t    H5Aclose(hid_t attr_id) except *
+  herr_t    H5Adelete(hid_t loc_id, char *name) except *
+
+  herr_t    H5Aread(hid_t attr_id, hid_t mem_type_id, void *buf) except *
+  herr_t    H5Awrite(hid_t attr_id, hid_t mem_type_id, void *buf  ) except *
+
+  int       H5Aget_num_attrs(hid_t loc_id) except *
+  ssize_t   H5Aget_name(hid_t attr_id, size_t buf_size, char *buf) except *
+  hid_t     H5Aget_space(hid_t attr_id) except *
+  hid_t     H5Aget_type(hid_t attr_id) except *
+
+  ctypedef herr_t (*H5A_operator_t)(hid_t loc_id, char *attr_name, operator_data) except -1
+  herr_t    H5Aiterate(hid_t loc_id, unsigned * idx, H5A_operator_t op, op_data) except *
+
+  IF H5PY_18API:
+
+    ctypedef struct H5A_info_t:
+      hbool_t corder_valid          # Indicate if creation order is valid
+      H5O_msg_crt_idx_t corder      # Creation order
+      H5T_cset_t        cset        # Character set of attribute name
+      hsize_t           data_size   # Size of raw data
 
 
 

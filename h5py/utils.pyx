@@ -15,7 +15,8 @@ include "sync.pxi"
 
 # Compile-time imports
 from h5 cimport init_hdf5
-from python cimport PyTuple_Check, PyList_Check, PyErr_SetString, Py_INCREF
+from python_exc cimport PyErr_SetString
+
 from numpy cimport import_array, NPY_UINT16, NPY_UINT32, NPY_UINT64, \
                    npy_intp, PyArray_SimpleNew, PyArray_ContiguousFromAny, \
                     PyArray_FROM_OTF, NPY_CONTIGUOUS, NPY_NOTSWAPPED, \
@@ -106,7 +107,7 @@ cdef int require_tuple(object tpl, int none_allowed, int size, char* name) excep
     # Otherwise raises ValueError
 
     if (tpl is None and none_allowed) or \
-      ( PyTuple_Check(tpl) and (size < 0 or len(tpl) == size)):
+      (isinstance(tpl, tuple) and (size < 0 or len(tpl) == size)):
         return 1
 
     nmsg = ""
@@ -124,7 +125,7 @@ cdef int require_list(object lst, int none_allowed, int size, char* name) except
     # Counterpart of require_tuple, for lists
 
     if (lst is None and none_allowed) or \
-      (PyList_Check(lst) and (size < 0 or len(lst) == size)):
+      (isinstance(lst, list) and (size < 0 or len(lst) == size)):
         return 1
 
     nmsg = ""

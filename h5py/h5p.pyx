@@ -19,32 +19,19 @@ include "config.pxi"
 include "sync.pxi"
 
 # Compile-time imports
-from h5 cimport init_hdf5, standard_richcmp
+from h5 cimport init_hdf5
 from utils cimport  require_tuple, convert_dims, convert_tuple, \
                     emalloc, efree, require_list, \
                     check_numpy_write, check_numpy_read
 from numpy cimport ndarray, import_array
-from h5t cimport TypeID
+from h5t cimport TypeID, py_create
 
 # Initialization
 init_hdf5()
 import_array()
 
-# Runtime imports
-import h5t
 
 # === C API ===================================================================
-
-cdef class PropClassID(PropID):
-
-    def __richcmp__(self, object other, int how):
-        return standard_richcmp(self, other, how)
-
-    def __hash__(self):
-        """ Since classes are library-created and immutable, they are uniquely
-            identified by their HDF5 identifiers.
-        """
-        return hash(self.id)
 
 cdef hid_t pdefault(PropID pid):
 
@@ -97,6 +84,7 @@ DEFAULT = None   # In the HDF5 header files this is actually 0, which is an
 
 # === Property list functional API ============================================
 
+@sync
 def create(PropClassID cls not None):
     """ (PropClassID cls) => PropID
     
@@ -118,6 +106,7 @@ cdef class PropID(ObjectID):
         Base class for all property lists and classes
     """
 
+    @sync
     def equal(self, PropID plist not None):
         """ (PropID plist) => BOOL
 
@@ -125,13 +114,49 @@ cdef class PropID(ObjectID):
         """
         return <bint>(H5Pequal(self.id, plist.id))
 
+    def __richcmp__(self, object other, int how):
+        cdef bint truthval = 0
+        if how != 2 and how != 3:
+            return NotImplemented
+        if type(self) == type(other):
+            truthval = self.equal(other)
+        
+        if how == 2:
+            return truthval
+        return not truthval
+
+    def __hash__(self):
+        raise TypeError("Property lists are unhashable")
+
+cdef class PropClassID(PropID):
+
+    """
+        An HDF5 property list class.
+
+        Hashable: Yes, by identifier
+        Equality: Logical H5P comparison
+    """
+
+    def __richcmp__(self, object other, int how):
+        return PropID.__richcmp__(self, other, how)
+
+    def __hash__(self):
+        """ Since classes are library-created and immutable, they are uniquely
+            identified by their HDF5 identifiers.
+        """
+        return hash(self.id)
+
 cdef class PropInstanceID(PropID):
 
     """
         Base class for property list instance objects.  Provides methods which
         are common across all HDF5 property list classes.
+
+        Hashable: No
+        Equality: Logical H5P comparison
     """
 
+    @sync
     def copy(self):
         """ () => PropList newid
 
@@ -139,6 +164,7 @@ cdef class PropInstanceID(PropID):
         """
         return type(self)(H5Pcopy(self.id))
 
+    @sync
     def _close(self):
         """ ()
     
@@ -148,6 +174,7 @@ cdef class PropInstanceID(PropID):
         """
         H5Pclose(self.id)
 
+    @sync
     def get_class(self):
         """ () => PropClassID
 
@@ -164,6 +191,7 @@ cdef class PropFCID(PropInstanceID):
         File creation property list.
     """
 
+    @sync
     def get_version(self):
         """ () => TUPLE version_info
 
@@ -185,7 +213,7 @@ cdef class PropFCID(PropInstanceID):
 
         return (super_, freelist, stab, shhdr)
 
-
+    @sync
     def set_userblock(self, hsize_t size):
         """ (INT/LONG size)
 
@@ -194,6 +222,7 @@ cdef class PropFCID(PropInstanceID):
         """
         H5Pset_userblock(self.id, size)
 
+    @sync
     def get_userblock(self):
         """ () => LONG size
 
@@ -203,6 +232,7 @@ cdef class PropFCID(PropInstanceID):
         H5Pget_userblock(self.id, &size)
         return size
 
+    @sync
     def set_sizes(self, size_t addr, size_t size):
         """ (UINT addr, UINT size)
 
@@ -211,6 +241,7 @@ cdef class PropFCID(PropInstanceID):
         """
         H5Pset_sizes(self.id, addr, size)
 
+    @sync
     def get_sizes(self):
         """ () => TUPLE sizes
 
@@ -225,6 +256,7 @@ cdef class PropFCID(PropInstanceID):
         H5Pget_sizes(self.id, &addr, &size)
         return (addr, size)
 
+    @sync
     def set_sym_k(self, unsigned int ik, unsigned int lk):
         """ (INT ik, INT lk)
 
@@ -232,6 +264,7 @@ cdef class PropFCID(PropInstanceID):
         """
         H5Pset_sym_k(self.id, ik, lk)
 
+    @sync
     def get_sym_k(self):
         """ () => TUPLE settings
 
@@ -243,6 +276,7 @@ cdef class PropFCID(PropInstanceID):
         H5Pget_sym_k(self.id, &ik, &lk)
         return (ik, lk)
 
+    @sync
     def set_istore_k(self, unsigned int ik):
         """ (UINT ik)
 
@@ -250,6 +284,7 @@ cdef class PropFCID(PropInstanceID):
         """
         H5Pset_istore_k(self.id, ik)
     
+    @sync
     def get_istore_k(self):
         """ () => UINT ik
 
@@ -267,6 +302,7 @@ cdef class PropDCID(PropInstanceID):
         Dataset creation property list.
     """
 
+    @sync
     def set_layout(self, int layout_code):
         """ (INT layout_code)
 
@@ -277,6 +313,7 @@ cdef class PropDCID(PropInstanceID):
         """
         H5Pset_layout(self.id, layout_code)
     
+    @sync
     def get_layout(self):
         """ () => INT layout_code
 
@@ -287,7 +324,7 @@ cdef class PropDCID(PropInstanceID):
         """
         return <int>H5Pget_layout(self.id)
 
-
+    @sync
     def set_chunk(self, object chunksize):
         """ (TUPLE chunksize)
 
@@ -307,7 +344,8 @@ cdef class PropDCID(PropInstanceID):
             H5Pset_chunk(self.id, rank, dims)
         finally:
             efree(dims)
-    
+
+    @sync
     def get_chunk(self):
         """ () => TUPLE chunk_dimensions
 
@@ -327,6 +365,7 @@ cdef class PropDCID(PropInstanceID):
         finally:
             efree(dims)
 
+    @sync
     def set_fill_value(self, ndarray value not None):
         """ (NDARRAY value)
 
@@ -337,9 +376,10 @@ cdef class PropDCID(PropInstanceID):
         cdef TypeID tid
 
         check_numpy_read(value, -1)
-        tid = h5t.py_create(value.dtype)        
+        tid = py_create(value.dtype)        
         H5Pset_fill_value(self.id, tid.id, value.data)
 
+    @sync
     def get_fill_value(self, ndarray value not None):
         """ (NDARRAY value)
 
@@ -350,9 +390,10 @@ cdef class PropDCID(PropInstanceID):
         cdef TypeID tid
 
         check_numpy_write(value, -1)
-        tid = h5t.py_create(value.dtype)
+        tid = py_create(value.dtype)
         H5Pget_fill_value(self.id, tid.id, value.data)
 
+    @sync
     def set_fill_time(self, int fill_time):
         """ (INT fill_time)
 
@@ -366,6 +407,7 @@ cdef class PropDCID(PropInstanceID):
         """
         H5Pset_fill_time(self.id, <H5D_fill_time_t>fill_time)
 
+    @sync
     def get_fill_time(self):
         """ () => INT
 
@@ -381,8 +423,10 @@ cdef class PropDCID(PropInstanceID):
         H5Pget_fill_time(self.id, &fill_time)
         return <int>fill_time
 
+
     # === Filter functions ====================================================
     
+    @sync
     def set_deflate(self, unsigned int level=5):
         """ (UINT level=5)
 
@@ -390,7 +434,8 @@ cdef class PropDCID(PropInstanceID):
             Valid levels are 0-9, default is 5.
         """
         H5Pset_deflate(self.id, level)
-    
+
+    @sync
     def set_fletcher32(self):
         """ ()
 
@@ -398,6 +443,7 @@ cdef class PropDCID(PropInstanceID):
         """
         H5Pset_fletcher32(self.id)
 
+    @sync
     def set_shuffle(self):
         """ ()
 
@@ -406,6 +452,7 @@ cdef class PropDCID(PropInstanceID):
         """
         H5Pset_shuffle(self.id)
 
+    @sync
     def set_szip(self, unsigned int options, unsigned int pixels_per_block):
         """ (UINT options, UINT pixels_per_block)
 
@@ -414,6 +461,7 @@ cdef class PropDCID(PropInstanceID):
         """
         H5Pset_szip(self.id, options, pixels_per_block)
 
+    @sync
     def get_nfilters(self):
         """ () => INT
 
@@ -421,6 +469,7 @@ cdef class PropDCID(PropInstanceID):
         """
         return H5Pget_nfilters(self.id)
 
+    @sync
     def set_filter(self, int filter_code, unsigned int flags=0, object values=None):
         """ (INT filter_code, UINT flags=0, TUPLE values=None)
 
@@ -458,6 +507,7 @@ cdef class PropDCID(PropInstanceID):
         finally:
             efree(cd_values)
 
+    @sync
     def all_filters_avail(self):
         """ () => BOOL
 
@@ -466,6 +516,7 @@ cdef class PropDCID(PropInstanceID):
         """
         return <bint>(H5Pall_filters_avail(self.id))
 
+    @sync
     def get_filter(self, int filter_idx):
         """ (UINT filter_idx) => TUPLE filter_info
 
@@ -499,6 +550,7 @@ cdef class PropDCID(PropInstanceID):
 
         return (filter_code, flags, tuple(vlist), name)
 
+    @sync
     def _has_filter(self, int filter_code):
         """ (INT filter_code)
 
@@ -513,6 +565,7 @@ cdef class PropDCID(PropInstanceID):
                 return True
         return False
 
+    @sync
     def get_filter_by_id(self, int filter_code):
         """ (INT filter_code) => TUPLE filter_info or None
 
@@ -549,6 +602,7 @@ cdef class PropDCID(PropInstanceID):
 
         return (flags, tuple(vlist), name)
 
+    @sync
     def remove_filter(self, int filter_class):
         """ (INT filter_class)
 
@@ -557,6 +611,7 @@ cdef class PropDCID(PropInstanceID):
         """
         H5Premove_filter(self.id, <H5Z_filter_t>filter_class)
 
+    @sync
     def fill_value_defined(self):
         """ () => INT fill_status
 
@@ -578,6 +633,7 @@ cdef class PropFAID(PropInstanceID):
         File access property list
     """
 
+    @sync
     def set_fclose_degree(self, int close_degree):
         """ (INT close_degree)
 
@@ -591,6 +647,7 @@ cdef class PropFAID(PropInstanceID):
         """
         H5Pset_fclose_degree(self.id, <H5F_close_degree_t>close_degree)
 
+    @sync
     def get_fclose_degree(self):
         """ () => INT close_degree
 
@@ -606,6 +663,7 @@ cdef class PropFAID(PropInstanceID):
         H5Pget_fclose_degree(self.id, &deg)
         return deg
 
+    @sync
     def set_fapl_core(self, size_t increment=1024*1024, hbool_t backing_store=0):
         """ (UINT increment=1M, BOOL backing_store=False)
 
@@ -616,6 +674,7 @@ cdef class PropFAID(PropInstanceID):
         """
         H5Pset_fapl_core(self.id, increment, backing_store)
 
+    @sync
     def get_fapl_core(self):
         """ () => TUPLE core_settings
 
@@ -630,6 +689,7 @@ cdef class PropFAID(PropInstanceID):
         H5Pget_fapl_core(self.id, &increment, &backing_store)
         return (increment, <bint>(backing_store))
 
+    @sync
     def set_fapl_family(self, hsize_t memb_size, PropID memb_fapl=None):
         """ (UINT memb_size, PropFAID memb_fapl=None)
 
@@ -641,6 +701,7 @@ cdef class PropFAID(PropInstanceID):
         plist_id = pdefault(memb_fapl)
         H5Pset_fapl_family(self.id, memb_size, plist_id)
 
+    @sync
     def get_fapl_family(self):
         """ () => TUPLE info
 
@@ -660,6 +721,7 @@ cdef class PropFAID(PropInstanceID):
 
         return (msize, plist)
 
+    @sync
     def set_fapl_log(self, char* logfile, unsigned int flags, size_t buf_size):
         """ (STRING logfile, UINT flags, UINT buf_size)
 
@@ -668,6 +730,7 @@ cdef class PropFAID(PropInstanceID):
         """
         H5Pset_fapl_log(self.id, logfile, flags, buf_size)
 
+    @sync
     def set_fapl_sec2(self):
         """ ()
 
@@ -675,6 +738,7 @@ cdef class PropFAID(PropInstanceID):
         """
         H5Pset_fapl_sec2(self.id)
 
+    @sync
     def set_fapl_stdio(self):
         """ ()
 
@@ -682,6 +746,7 @@ cdef class PropFAID(PropInstanceID):
         """
         H5Pset_fapl_stdio(self.id)
 
+    @sync
     def get_driver(self):
         """ () => INT driver code
 
@@ -699,6 +764,7 @@ cdef class PropFAID(PropInstanceID):
         """
         return H5Pget_driver(self.id)
 
+    @sync
     def set_cache(self, int mdc, int rdcc, size_t rdcc_nbytes, double rdcc_w0):
         """ (INT mdc, INT rdcc, UINT rdcc_nbytes, DOUBLE rdcc_w0)
 
@@ -707,6 +773,7 @@ cdef class PropFAID(PropInstanceID):
         """
         H5Pset_cache(self.id, mdc, rdcc, rdcc_nbytes, rdcc_w0)
 
+    @sync
     def get_cache(self):
         """ () => TUPLE cache info
 

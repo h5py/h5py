@@ -243,6 +243,9 @@ cdef class FileID(ObjectID):
 
         Properties:
         name:   File name on disk
+
+        Hashable: Yes, always
+        Equality: HDF5 object identity
     """
 
     property name:

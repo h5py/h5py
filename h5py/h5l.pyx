@@ -9,7 +9,6 @@
 # $Date$
 # 
 #-
-from utils cimport pybool
 
 """
     API for the "H5L" family of link-related operations
@@ -36,6 +35,8 @@ cdef class LinkProxy(ObjectID):
         >>> g.links.exists("FooBar")
         False
 
+        Hashable: No
+        Equality: Undefined
     """
 
     def __cinit__(self, hid_t id_):
@@ -46,13 +47,19 @@ cdef class LinkProxy(ObjectID):
         # shared by both this object and the parent.
         H5Iinc_ref(self.id)
 
+    def __richcmp__(self, object other, int how):
+        return NotImplemented
+
+    def __hash__(self):
+        raise TypeError("Link proxies are unhashable; use the parent group instead.")
+
     @sync
     def exists(self, char* name):
         """ (STRING name) => BOOL
 
             Check if a link of the specified name exists in this group.
         """
-        return pybool(H5Lexists(self.id, name, H5P_DEFAULT))
+        return <bint>(H5Lexists(self.id, name, H5P_DEFAULT))
 
 
 
