@@ -14,12 +14,6 @@ include "defs.pxd"
 
 from numpy cimport ndarray
 
-cdef extern from "utils_low.h":
-
-    # Python to HDF5 complex conversion
-    hid_t create_ieee_complex64(char byteorder, char* real_name, char* img_name) except -1
-    hid_t create_ieee_complex128(char byteorder, char* real_name, char* img_name) except -1
-
 # === Custom API ==============================================================
 
 # Memory handling

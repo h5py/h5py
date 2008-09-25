@@ -56,9 +56,6 @@ MODULES = {16:  ['h5', 'h5f', 'h5g', 'h5s', 'h5t', 'h5d', 'h5a', 'h5p', 'h5z',
            18:  ['h5', 'h5f', 'h5g', 'h5s', 'h5t', 'h5d', 'h5a', 'h5p', 'h5z',
                  'h5i', 'h5r', 'h5fd', 'utils', 'h5o', 'h5l']}
 
-# C source files required for all modules
-EXTRA_SRC = ['utils_low.c']
-
 def fatal(instring, code=1):
     print >> sys.stderr, "Fatal: "+instring
     exit(code)
@@ -236,7 +233,7 @@ DEF H5PY_THREADS = %(THREADS)d  # Enable thread-safety and non-blocking reads
         creator = ExtensionCreator(self.hdf5)
         modules = sorted(MODULES[max(self.api)])
         self.distribution.ext_modules = \
-            [creator.create_extension(x, EXTRA_SRC) for x in modules]
+            [creator.create_extension(x) for x in modules]
 
         # Necessary because Cython doesn't detect changes to the .pxi
         recompile_all = False

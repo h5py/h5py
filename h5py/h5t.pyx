@@ -66,7 +66,6 @@ from numpy cimport dtype, ndarray
 from python_string cimport PyString_FromStringAndSize
 
 from utils cimport  emalloc, efree, \
-                    create_ieee_complex64, create_ieee_complex128, \
                     require_tuple, convert_dims, convert_tuple
 
 # Initialization
@@ -1158,14 +1157,25 @@ cpdef object py_create(object dtype_in, object enum_vals=None):
             HDF5 type will be an enumeration with that base type, and the 
             given values. Ignored for all other types.
     """
-    cdef dtype dt
-    cdef TypeID otype
-    cdef TypeID base
+    global _code_map
+
+    cdef dtype dt       # The dtype we'll be converting
+    cdef TypeID otype   # The output TypeID
+
+    cdef hid_t tid, tid_sub
+
     cdef TypeID tmp
-    cdef dtype dt_tmp
+
+    # For compound types
+    cdef dtype dt_tmp   
+    cdef size_t offset
+
     cdef char kind
     cdef char byteorder
     cdef int length
+    
+
+    cdef size_t c_size, c_off_r, c_off_i
 
     dt = dtype(dtype_in)
     otype = None
@@ -1178,12 +1188,15 @@ cpdef object py_create(object dtype_in, object enum_vals=None):
 
     # Void types with field names are considered to be compound
     if kind == c'V' and names is not None:
-        otype = create(H5T_COMPOUND, length)
+        
+        tid = H5Tcreate(H5T_COMPOUND, length)
 
         for name in names:
             dt_tmp, offset = dt.fields[name]
             tmp = py_create(dt_tmp)
-            otype.insert(name, offset, tmp)
+            H5Tinsert(tid, name, offset, tmp.id)
+
+        otype = TypeCompoundID(tid)
 
     # Enums may be created out of integer types
     elif (kind == c'u' or kind == c'i') and enum_vals is not None:
@@ -1202,11 +1215,33 @@ cpdef object py_create(object dtype_in, object enum_vals=None):
     elif kind == c'c':
 
         if length == 8:
-            otype = typewrap(create_ieee_complex64(byteorder, cfg._r_name, cfg._i_name))
+            c_size = h5py_size_n64
+            c_off_r = h5py_offset_n64_real
+            c_off_i = h5py_offset_n64_imag
+            if byteorder == c'<':
+                tid_sub = H5T_IEEE_F32LE
+            elif byteorder == c'>':
+                tid_sub = H5T_IEEE_F32BE
+            else:
+                tid_sub = H5T_NATIVE_FLOAT
         elif length == 16:
-            otype = typewrap(create_ieee_complex128(byteorder, cfg._r_name, cfg._i_name))
+            c_size = h5py_size_n128
+            c_off_r = h5py_offset_n128_real
+            c_off_i = h5py_offset_n128_imag
+            if byteorder == c'<':
+                tid_sub = H5T_IEEE_F64LE
+            elif byteorder == c'>':
+                tid_sub = H5T_IEEE_F64BE
+            else:
+                tid_sub = H5T_NATIVE_DOUBLE
         else:
             raise ValueError("Unsupported length %d for complex dtype: %s" % (length, repr(dt)))
+
+        tid = H5Tcreate(H5T_COMPOUND, c_size)
+        H5Tinsert(tid, cfg._r_name, c_off_r, tid_sub)
+        H5Tinsert(tid, cfg._i_name, c_off_i, tid_sub)
+
+        otype = TypeCompoundID(tid)
 
     # Opaque/array types are differentiated by the presence of a subdtype
     elif kind == c'V':
