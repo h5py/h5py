@@ -20,15 +20,14 @@ cdef extern from "utils_low.h":
     hid_t create_ieee_complex64(char byteorder, char* real_name, char* img_name) except -1
     hid_t create_ieee_complex128(char byteorder, char* real_name, char* img_name) except -1
 
-    # Numpy array validation
-    int check_numpy_read(ndarray arr, hid_t space_id) except 0
-    int check_numpy_write(ndarray arr, hid_t space_id) except 0
-
-    # Memory handling
-    void* emalloc(size_t size) except? NULL
-    void efree(void* ptr)
-
 # === Custom API ==============================================================
+
+# Memory handling
+cdef void* emalloc(size_t size) except? NULL
+cdef void efree(void* ptr)
+
+cdef int check_numpy_read(ndarray arr, hid_t space_id=*) except -1
+cdef int check_numpy_write(ndarray arr, hid_t space_id=*) except -1
 
 cdef int convert_tuple(object tuple, hsize_t *dims, hsize_t rank) except -1
 cdef object convert_dims(hsize_t* dims, hsize_t rank)

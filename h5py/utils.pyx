@@ -17,14 +17,110 @@ include "sync.pxi"
 from h5 cimport init_hdf5
 from python_exc cimport PyErr_SetString
 
-from numpy cimport import_array, NPY_UINT16, NPY_UINT32, NPY_UINT64, \
-                   npy_intp, PyArray_SimpleNew, PyArray_ContiguousFromAny, \
-                    PyArray_FROM_OTF, NPY_CONTIGUOUS, NPY_NOTSWAPPED, \
-                    NPY_FORCECAST
+from numpy cimport ndarray, import_array, \
+                    NPY_UINT16, NPY_UINT32, NPY_UINT64,  npy_intp, \
+                    PyArray_SimpleNew, PyArray_ContiguousFromAny, \
+                    PyArray_FROM_OTF, PyArray_DIM, \
+                    NPY_CONTIGUOUS, NPY_NOTSWAPPED, NPY_FORCECAST, \
+                    NPY_C_CONTIGUOUS, NPY_OWNDATA, NPY_WRITEABLE
+
 
 # Initialization
 init_hdf5()
 import_array()
+
+
+# === Exception-aware memory allocation =======================================
+
+cdef void* emalloc(size_t size) except? NULL:
+    # Wrapper for malloc(size) with the following behavior:
+    # 1. Always returns NULL for emalloc(0)
+    # 2. Raises RuntimeError for emalloc(size<0) and returns NULL
+    # 3. Raises RuntimeError if allocation fails and returns NULL
+
+    cdef void *retval = NULL
+
+    if size < 0:
+        PyErr_SetString(RuntimeError, "Attempted negative malloc")
+        return NULL
+    elif size > 0:
+        retval = malloc(size)
+        if retval == NULL:
+            errmsg = "Can't malloc %d bytes" % size
+            PyErr_SetString(MemoryError, errmsg)
+            return NULL
+    else:
+        return NULL
+
+    return retval
+
+cdef void efree(void* what):
+    free(what)
+
+
+# === Testing of NumPy arrays =================================================
+
+cdef int check_numpy(ndarray arr, hid_t space_id, int write):
+    # -1 if exception, NOT AUTOMATICALLY CHECKED
+
+    cdef int required_flags
+    cdef hsize_t arr_rank
+    cdef hsize_t space_rank
+    cdef hsize_t *space_dims = NULL
+    cdef int i
+
+    if arr is None:
+        PyErr_SetString(TypeError, "Array is None")
+        return -1
+
+    # Validate array flags
+
+    if write:
+        if not (arr.flags & (NPY_C_CONTIGUOUS | NPY_OWNDATA | NPY_WRITEABLE)):
+            PyErr_SetString(TypeError, "Array must be writable, C-contiguous and own its data.")
+            return -1
+    else:
+        if not (arr.flags & (NPY_C_CONTIGUOUS | NPY_OWNDATA)):
+            PyErr_SetString(TypeError, "Array must be C-contiguous and own its data.")
+            return -1
+
+    # Validate dataspace compatibility, if it's provided
+
+    if space_id > 0:
+
+        arr_rank = arr.nd
+        space_rank = H5Sget_simple_extent_ndims(space_id)
+
+        if arr_rank != space_rank:
+            err_msg = "Numpy array rank %d must match dataspace rank %d." % (arr_rank, space_rank)
+            PyErr_SetString(TypeError, err_msg)
+            return -1
+
+        space_dims = <hsize_t*>malloc(sizeof(hsize_t)*space_rank)
+        try:
+            space_rank = H5Sget_simple_extent_dims(space_id, space_dims, NULL)
+
+            for i from 0 < i < space_rank:
+
+                if write:
+                    if PyArray_DIM(arr,i) < space_dims[i]:
+                        PyErr_SetString(TypeError, "Array dimensions incompatible with dataspace.")
+                        return -1
+                else:
+                    if PyArray_DIM(arr,i) > space_dims[i]:
+                        PyErr_SetString(TypeError, "Array dimensions incompatible with dataspace.")
+                        return -1
+        finally:
+            free(space_dims)
+    return 1
+
+cdef int check_numpy_write(ndarray arr, hid_t space_id=-1) except -1:
+    return check_numpy(arr, space_id, 1)
+
+cdef int check_numpy_read(ndarray arr, hid_t space_id=-1) except -1:
+    return check_numpy(arr, space_id, 0)
+
+# === Conversion between HDF5 buffers and tuples ==============================
 
 cdef int convert_tuple(object tpl, hsize_t *dims, hsize_t rank) except -1:
     # Convert a Python tuple to an hsize_t array.  You must allocate
@@ -100,7 +196,10 @@ cdef object create_hsize_array(object arr):
         raise RuntimeError("Can't map hsize_t %d to Numpy typecode" % sizeof(hsize_t))
 
     return PyArray_FROM_OTF(arr, typecode, NPY_CONTIGUOUS | NPY_NOTSWAPPED | NPY_FORCECAST)
-    
+
+
+# === Argument testing ========================================================
+
 cdef int require_tuple(object tpl, int none_allowed, int size, char* name) except -1:
     # Ensure that tpl is in fact a tuple, or None if none_allowed is nonzero.
     # If size >= 0, also ensure that the length matches.
@@ -110,12 +209,8 @@ cdef int require_tuple(object tpl, int none_allowed, int size, char* name) excep
       (isinstance(tpl, tuple) and (size < 0 or len(tpl) == size)):
         return 1
 
-    nmsg = ""
-    smsg = ""
-    if size >= 0:
-        smsg = " of size %d" % size
-    if none_allowed:
-        nmsg = " or None"
+    nmsg = "" if size < 0 else " of size %d" % size
+    smsg = "" if not none_allowed else " or None"
 
     msg = "%s must be a tuple%s%s." % (name, smsg, nmsg)
     PyErr_SetString(ValueError, msg)
@@ -128,12 +223,8 @@ cdef int require_list(object lst, int none_allowed, int size, char* name) except
       (isinstance(lst, list) and (size < 0 or len(lst) == size)):
         return 1
 
-    nmsg = ""
-    smsg = ""
-    if size >= 0:
-        smsg = " of size %d" % size
-    if none_allowed:
-        nmsg = " or None"
+    nmsg = "" if size < 0 else " of size %d" % size
+    smsg = "" if not none_allowed else " or None"
 
     msg = "%s must be a list%s%s." % (name, smsg, nmsg)
     PyErr_SetString(ValueError, msg)

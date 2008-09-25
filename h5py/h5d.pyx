@@ -21,7 +21,7 @@ include "sync.pxi"
 from h5 cimport init_hdf5
 from numpy cimport ndarray, import_array, PyArray_DATA, NPY_WRITEABLE
 from utils cimport  check_numpy_read, check_numpy_write, \
-                    require_tuple, convert_tuple, emalloc, efree
+                    convert_tuple, emalloc, efree
 from h5t cimport TypeID, typewrap, py_create
 from h5s cimport SpaceID
 from h5p cimport PropID, propwrap, pdefault
@@ -245,7 +245,7 @@ cdef class DatasetID(ObjectID):
             arr_obj.flags |= NPY_WRITEABLE
 
     @sync
-    def extend(self, object shape):
+    def extend(self, tuple shape):
         """ (TUPLE shape)
 
             Extend the given dataset so it's at least as big as "shape".  Note 
@@ -262,7 +262,8 @@ cdef class DatasetID(ObjectID):
             space_id = H5Dget_space(self.id)
             rank = H5Sget_simple_extent_ndims(space_id)
 
-            require_tuple(shape, 0, rank, "shape")
+            if len(shape) != rank:
+                raise TypeError("New shape length (%d) must match dataset rank (%d)" % (len(shape), rank))
 
             dims = <hsize_t*>emalloc(sizeof(hsize_t)*rank)
             convert_tuple(shape, dims, rank)

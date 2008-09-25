@@ -63,7 +63,7 @@ cdef extern from "numpy/arrayobject.h":
 
   cdef enum:
     NPY_WRITEABLE, NPY_ALIGNED, NPY_C_CONTIGUOUS, NPY_CONTIGUOUS,
-    NPY_FORCECAST, NPY_NOTSWAPPED
+    NPY_FORCECAST, NPY_NOTSWAPPED, NPY_OWNDATA
 
   # Classes
   ctypedef extern class numpy.dtype [object PyArray_Descr]:
@@ -89,6 +89,7 @@ cdef extern from "numpy/arrayobject.h":
     double imag
 
   # Functions
+  int PyArray_DIM(ndarray arr, int i)
   object PyArray_FROM_OF(object arr, int requirements)
 
   object PyArray_GETITEM(object arr, void *itemptr)

@@ -16,20 +16,17 @@
     Setup script for the h5py package.  
 
     All commands take the usual distutils options, like --home, etc.  Cython is
-    not required for installation, but will be invoked if the .c files are
-    missing, one of the --pyrex options is used, or if a non-default API 
-    version or debug level is requested.
+    not required for installation, but will be invoked if one of the --cython
+    options is used, or if non-default options are specified for the build.
 
     To build:
-    python setup.py build
+    python setup.py build [--help for additional options]
 
     To install:
     sudo python setup.py install
 
     To run the test suite locally (won't install anything):
     python setup.py test
-
-    See INSTALL.txt or the h5py manual for additional build options.
 """
 
 import os
@@ -37,8 +34,7 @@ import sys
 import shutil
 import os.path as op
 
-from distutils.cmd import Command
-from distutils.errors import DistutilsError, DistutilsExecError
+from distutils.errors import DistutilsError
 from distutils.core import setup
 from distutils.extension import Extension
 from distutils.command.build import build 
@@ -49,11 +45,10 @@ from distutils.command.sdist import sdist
 NAME = 'h5py'
 VERSION = '0.4.0'
 MIN_NUMPY = '1.0.3'
-MIN_CYTHON = '0.9.8.1'
+MIN_CYTHON = '0.9.8.1.1'
 KNOWN_API = (16,18)    # Legal API levels (1.8.X or 1.6.X)
 SRC_PATH = 'h5py'      # Name of directory with .pyx files
 CMD_CLASS = {}         # Custom command classes for setup()
-HDF5 = None            # Custom HDF5 directory.
 
 # The list of modules depends on max API version
 MODULES = {16:  ['h5', 'h5f', 'h5g', 'h5s', 'h5t', 'h5d', 'h5a', 'h5p', 'h5z',
@@ -85,66 +80,58 @@ try:
 except ImportError:
     fatal("Numpy not installed (version >= %s required)" % MIN_NUMPY)
 
-for arg in sys.argv[:]:
-    if arg.find('--hdf5=') == 0:
-        splitarg = arg.split('=',1)
-        if len(splitarg) != 2:
-            fatal("HDF5 directory not understood (wants --hdf5=/path/to/hdf5)")
-        path = op.abspath(splitarg[1])
-        if not op.exists(path):
-            fatal("HDF5 path is illegal: %s" % path)
-        HDF5 = path
-        sys.argv.remove(arg)
-        
+    
 # === Platform-dependent compiler config ======================================
 
-if os.name == 'nt':
-    if HDF5 is None:
-        fatal("On Windows, HDF5 directory must be specified.")
 
-    libraries = ['hdf5dll']
-    include_dirs = [numpy.get_include(), op.join(HDF5, 'include')]
-    library_dirs = [op.join(HDF5, 'dll2')]  # Must contain only "hdf5dll.dll.a"
-    runtime_dirs = []
-    extra_compile_args = ['-DH5_USE_16_API', '-D_HDF5USEDLL_', '-DH5_SIZEOF_SSIZE_T=4']
-    extra_link_args = []
-    package_data = {'h5py': ['*.pyx', '*.dll', 
-                                    'Microsoft.VC90.CRT/*.manifest',
-                                    'Microsoft.VC90.CRT/*.dll'],
-                       'h5py.tests': ['data/*.hdf5']}
+class ExtensionCreator(object):
 
-else:   # Assume Unix-like
-
-    libraries = ['hdf5']
-    if HDF5 is None:
-        include_dirs = [numpy.get_include(), '/usr/include', '/usr/local/include']
-        library_dirs = ['/usr/lib/', '/usr/local/lib']
-    else:
-        include_dirs = [numpy.get_include(), op.join(HDF5, 'include')]
-        library_dirs = [op.join(HDF5, 'lib')]
-    runtime_dirs = library_dirs
-    extra_compile_args = ['-DH5_USE_16_API', '-Wno-unused', '-Wno-uninitialized']
-    extra_link_args = []
-
-    package_data = {'h5py': ['*.pyx'],
-                   'h5py.tests': ['data/*.hdf5']}
-
-# The actual extensions themselves are created at runtime, as the list of
-# modules depends on command-line options.
-def create_extension(name):
-    """ Create a distutils Extension object for the given module.  Uses the
-        globals in this file for things like the include directory.
+    """ Figures out what include/library dirs are appropriate, and
+        serves as a factory for Extension instances.  This is in a
+        class as opposed to module code since the HDF5 location
+        isn't known until runtime.
     """
-    sources = [op.join(SRC_PATH, name+'.c')]+[op.join(SRC_PATH,x) for x in EXTRA_SRC]
-    ext = Extension(NAME+'.'+name,
-                        sources, 
-                        include_dirs = include_dirs, 
-                        libraries = libraries,
-                        library_dirs = library_dirs,
-                        runtime_library_dirs = runtime_dirs,
-                        extra_compile_args = extra_compile_args,
-                        extra_link_args = extra_link_args)
-    return ext
+
+    def __init__(self, hdf5_loc=None):
+        if os.name == 'nt':
+            if hdf5_loc is None:
+                fatal("On Windows, HDF5 directory must be specified.")
+
+            self.libraries = ['hdf5dll']
+            self.include_dirs = [numpy.get_include(), op.join(hdf5_loc, 'include')]
+            self.library_dirs = [op.join(hdf5_loc, 'dll2')]  # Must contain only "hdf5dll.dll.a"
+            self.runtime_dirs = []
+            self.extra_compile_args = ['-DH5_USE_16_API', '-D_HDF5USEDLL_', '-DH5_SIZEOF_SSIZE_T=4']
+            self.extra_link_args = []
+
+        else:
+            self.libraries = ['hdf5']
+            if hdf5_loc is None:
+                self.include_dirs = [numpy.get_include(), '/usr/include', '/usr/local/include']
+                self.library_dirs = ['/usr/lib/', '/usr/local/lib']
+            else:
+                self.include_dirs = [numpy.get_include(), op.join(hdf5_loc, 'include')]
+                self.library_dirs = [op.join(hdf5_loc, 'lib')]
+            self.runtime_dirs = self.library_dirs
+            self.extra_compile_args = ['-DH5_USE_16_API', '-Wno-unused', '-Wno-uninitialized']
+            self.extra_link_args = []
+
+    
+    def create_extension(self, name, extra_src=[]):
+        """ Create a distutils Extension object for the given module.  A list
+            of C source files to be included in the compilation can also be
+            provided.
+        """
+        sources = [op.join(SRC_PATH, name+'.c')]+[op.join(SRC_PATH,x) for x in extra_src]
+        ext = Extension(NAME+'.'+name,
+                            sources, 
+                            include_dirs = self.include_dirs, 
+                            libraries = self.libraries,
+                            library_dirs = self.library_dirs,
+                            runtime_library_dirs = self.runtime_dirs,
+                            extra_compile_args = self.extra_compile_args,
+                            extra_link_args = self.extra_link_args)
+        return ext
 
 
 # === Custom extensions for distutils =========================================
@@ -159,35 +146,48 @@ class cybuild(build):
         build.  The advantage is that Cython is run on all files before
         building begins, and is only run when the distribution is actually
         being built (and not, for example, when "sdist" is called for).
+
+        It also populates the list of extension modules at runtime, as this
+        can be changed by some of the command-line options.
     """
 
     user_options = build.user_options + \
                     [('cython','y','Run Cython'),
                      ('cython-only','Y', 'Run Cython and stop'),
-                     ('diag', 'd','Enable library logging'),
+                     ('hdf5=', '5', 'Custom location for HDF5'),
+                     ('diag', 'd','Enable library debug logging'),
                      ('api=', 'a', 'Set API levels (--api=16,18)'),
-                     ('threads', 't', 'Thread-aware')]
-    boolean_options = build.boolean_options + ['cython', 'threads','diag']
+                     ('threads', 't', 'Make library thread-aware')]
+    boolean_options = build.boolean_options + ['cython', 'cython-only', 'threads','diag']
 
     def initialize_options(self):
-        self.cython = False
-        self.cython_only = False
-        self.threads = False
-        self.api = (16,)
-        self.diag = False
-        self._explicit_only = False     # Hack for test subclass
+        """ Specify safe defaults for command-line options. """
+        self.hdf5 = None                # None or a string with the HDF5 dir
+        self.cython = False             # T/F
+        self.cython_only = False        # T/F
+        self.threads = False            # T/F
+        self.api = None                 # None or a tuple (e.g. (16,18))
+        self.diag = False               # T/F
+        self._explicit_only = False     # T/F: Hack for test subclass
         build.initialize_options(self)
 
     def finalize_options(self):
+        """ Validate provided options and ensure consistency.  Note this is
+            only run if at least one option is specified!
+        """
+        if self.hdf5 is not None:
+            self.hdf5 = op.abspath(self.hdf5)
+            if not op.exists(self.hdf5):
+                fatal('Specified HDF5 directory "%s" does not exist' % self.hdf5)
 
         if self.cython_only or  \
-           self.api != (16,) or \
+           self.api is not None or \
            self.threads or \
            self.diag:
             self.cython = True
 
         # Validate API levels
-        if self.api != (16,):
+        if self.api is not None:
             try:
                 self.api = tuple(int(x) for x in self.api.split(',') if len(x) > 0)
                 if len(self.api) == 0 or not all(x in KNOWN_API for x in self.api):
@@ -198,7 +198,7 @@ class cybuild(build):
         build.finalize_options(self)
 
     def _get_pxi(self):
-        """ Get the configuration .pxi for the current options. """
+        """ Generate a Cython .pxi file reflecting the current options. """
 
         pxi_str = \
 """# This file is automatically generated.  Do not edit.
@@ -214,17 +214,29 @@ DEF H5PY_DEBUG = %(DEBUG)d    # Logging-level number, or 0 to disable
 
 DEF H5PY_THREADS = %(THREADS)d  # Enable thread-safety and non-blocking reads
 """
-        pxi_str %= {"VERSION": VERSION, "API_MAX": max(self.api),
+        return pxi_str % {"VERSION": VERSION, "API_MAX": max(self.api),
                     "API_16": 16 in self.api, "API_18": 18 in self.api,
                     "DEBUG": 10 if self.diag else 0, "THREADS": self.threads,
-                    "HDF5": "Default" if HDF5 is None else HDF5}
-
-        return pxi_str
+                    "HDF5": "Default" if self.hdf5 is None else self.hdf5}
 
     def run(self, *args, **kwds):
+        """ Called to perform the actual compilation.  This performs the
+            following steps:
 
-        modules = MODULES[max(self.api)]
-        self.distribution.ext_modules = [create_extension(x) for x in modules]
+            1. Generate a list of C extension modules for the compiler
+            2. Compare the run-time options with a currently-existing .pxi
+               file, and determine if a Cython recompile is required
+            3. If necessary, recompile all Cython files
+            4. Hand control over to the distutils C build
+        """
+
+        if self.api is None:
+            self.api = (min(KNOWN_API),)
+
+        creator = ExtensionCreator(self.hdf5)
+        modules = sorted(MODULES[max(self.api)])
+        self.distribution.ext_modules = \
+            [creator.create_extension(x, EXTRA_SRC) for x in modules]
 
         # Necessary because Cython doesn't detect changes to the .pxi
         recompile_all = False
@@ -255,21 +267,19 @@ DEF H5PY_THREADS = %(THREADS)d  # Enable thread-safety and non-blocking reads
                 f.close()
 
         if self.cython or recompile_all:
-            print "Running Cython..."
             try:
                 from Cython.Compiler.Main import Version, compile, compile_multiple, CompilationOptions
-                from Cython.Distutils import build_ext
             except ImportError:
-                fatal("Cython recompilation required, but Cython not installed.")
+                fatal("Cython recompilation required, but Cython >=%s not installed." % MIN_CYTHON)
 
             if Version.version < MIN_CYTHON:
                 fatal("Old Cython version detected; at least %s required" % MIN_CYTHON)
 
+            print "Running Cython (%s)..." % Version.version
             print "  API levels: %s" % ','.join(str(x) for x in self.api)
             print "  Thread-aware: %s" % ('yes' if self.threads else 'no')
             print "  Diagnostic mode: %s" % ('yes' if self.diag else 'no')
-            print "  HDF5: %s" % ('default' if HDF5 is None else HDF5)
-
+            print "  HDF5: %s" % ('default' if self.hdf5 is None else self.hdf5)
 
             # Build each extension
             # This should be a single call to compile_multiple, but it's
@@ -300,6 +310,11 @@ DEF H5PY_THREADS = %(THREADS)d  # Enable thread-safety and non-blocking reads
         build.run(self, *args, **kwds)
 
 class test(cybuild):
+
+    """ Run unit tests.  As a special case, won't run Cython unless --cython
+        or --cython-only are specified.
+    """
+
     description = "Build and run unit tests"
     user_options = cybuild.user_options + \
                    [('sections=','s','Comma separated list of tests ("-" prefix to NOT run)')]
@@ -309,7 +324,6 @@ class test(cybuild):
         cybuild.initialize_options(self)
 
     def finalize_options(self):
-        pass
         cybuild.finalize_options(self)
 
     def run(self):
@@ -332,6 +346,7 @@ class doc(cybuild):
 
     def run(self):
 
+        self._explicit_only = True
         cybuild.run(self)
 
         for x in ('docs', 'docs/api-html'):
@@ -355,20 +370,36 @@ class doc(cybuild):
 
 class cyclean(clean):
 
+    """ Standard distutils clean extended to clean up Cython-generated files.
+    """
+
+    user_options = clean.user_options + \
+                   [('doc','d','Also destroy compiled documentation')]
+    boolean_options = clean.boolean_options + ['doc']
+
+    def initialize_options(self):
+        self.doc = False
+        clean.initialize_options(self)
+
+    def finalize_options(self):
+        clean.finalize_options(self)
+
     def run(self):
         
         allmodules = set()
         for x in MODULES.values():
             allmodules.update(x)
 
-        for x in ('build','docs/api-html', 'docs/manual-html'):
-            try:
-                shutil.rmtree(x)
-            except OSError:
-                pass
+        if self.doc:
+            for x in ('docs/api-html', 'docs/manual-html') :
+                try:
+                    shutil.rmtree(x)
+                except OSError:
+                    pass
+
         fnames = [ op.join(SRC_PATH, x+'.dep') for x in allmodules ] + \
                  [ op.join(SRC_PATH, x+'.c') for x in allmodules ] + \
-                 [ 'MANIFEST']
+                 [ op.join(SRC_PATH, 'config.pxi')]
 
         for name in fnames:
             try:
@@ -379,6 +410,8 @@ class cyclean(clean):
         clean.run(self)
 
 class new_sdist(sdist):
+
+    """ Version of sdist that doesn't cache the MANIFEST file """
 
     def run(self):
         if os.path.exists('MANIFEST'):
@@ -424,6 +457,16 @@ A strong emphasis on automatic conversion between Python (Numpy) datatypes and
 data structures and their HDF5 equivalents vastly simplifies the process of
 reading and writing data from Python. 
 """
+
+# Windows requires a custom C runtime
+if os.name == 'nt':
+    package_data = {'h5py': ['*.pyx', '*.dll', 
+                            'Microsoft.VC90.CRT/*.manifest',
+                            'Microsoft.VC90.CRT/*.dll'],
+                       'h5py.tests': ['data/*.hdf5']}
+else:
+    package_data = {'h5py': ['*.pyx'],
+                   'h5py.tests': ['data/*.hdf5']}
 
 setup(
   name = NAME,

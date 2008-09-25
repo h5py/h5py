@@ -53,6 +53,16 @@ cdef extern from "stdint.h":
   ctypedef signed long long int int64_t
   ctypedef signed long long int uint64_t 
 
+# === Compatibility definitions and macros for h5py ===========================
+
+#cdef extern from "compat.h":
+
+#  size_t h5py_size_n64
+#  size_t h5py_size_n128
+#  size_t h5py_offset_n64_real
+#  size_t h5py_offset_n64_imag
+#  size_t h5py_offset_n128_real
+#  size_t h5py_offset_n128_imag
 
 # === H5 - Common definitions and library functions ===========================
 

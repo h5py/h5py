@@ -58,7 +58,7 @@ class TestH5A(TestBase):
             attr = h5a.create(obj, name, htype, space)
             self.assert_(self.is_attr(attr))
             attr.write(arr_ref)
-            self.assertRaises(ValueError, attr.write, arr_fail)
+            self.assertRaises(TypeError, attr.write, arr_fail)
 
             attr = h5a.open_name(obj, name)
             dt = attr.dtype
