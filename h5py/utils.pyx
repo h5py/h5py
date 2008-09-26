@@ -140,14 +140,14 @@ cdef int convert_tuple(object tpl, hsize_t *dims, hsize_t rank) except -1:
     return 0
     
 cdef object convert_dims(hsize_t* dims, hsize_t rank):
-    # Convert an hsize_t array to a Python tuple of long ints.
+    # Convert an hsize_t array to a Python tuple of ints.
 
     cdef list dims_list
     cdef int i
     dims_list = []
 
     for i from 0<=i<rank:
-        dims_list.append(dims[i])
+        dims_list.append(int(dims[i]))
 
     return tuple(dims_list)
     
@@ -215,21 +215,5 @@ cdef int require_tuple(object tpl, int none_allowed, int size, char* name) excep
     msg = "%s must be a tuple%s%s." % (name, smsg, nmsg)
     PyErr_SetString(ValueError, msg)
     return -1
-
-cdef int require_list(object lst, int none_allowed, int size, char* name) except -1:
-    # Counterpart of require_tuple, for lists
-
-    if (lst is None and none_allowed) or \
-      (isinstance(lst, list) and (size < 0 or len(lst) == size)):
-        return 1
-
-    nmsg = "" if size < 0 else " of size %d" % size
-    smsg = "" if not none_allowed else " or None"
-
-    msg = "%s must be a list%s%s." % (name, smsg, nmsg)
-    PyErr_SetString(ValueError, msg)
-    return -1
-
-
 
 

@@ -21,9 +21,7 @@ include "sync.pxi"
 from h5 cimport init_hdf5
 from h5p cimport propwrap, pdefault, PropFAID, PropFCID
 from h5t cimport typewrap
-from h5a cimport AttrID
-from h5d cimport DatasetID
-from h5g cimport GroupID
+from h5i cimport wrap_identifier
 from utils cimport emalloc, efree
 
 # Initialization
@@ -163,28 +161,6 @@ def get_obj_count(object where=OBJ_ALL, int types=H5F_OBJ_ALL):
 
     return H5Fget_obj_count(where_id, types)
 
-cdef object wrap_identifier(hid_t ident):
-    # Support function for get_obj_ids
-    # TODO: move this to H5I
-
-    cdef H5I_type_t typecode
-    cdef ObjectID obj
-    typecode = H5Iget_type(ident)
-    if typecode == H5I_FILE:
-        obj = FileID(ident)
-    elif typecode == H5I_DATASET:
-        obj = DatasetID(ident)
-    elif typecode == H5I_GROUP:
-        obj = GroupID(ident)
-    elif typecode == H5I_ATTR:
-        obj = AttrID(ident)
-    elif typecode == H5I_DATATYPE:
-        obj = typewrap(ident)
-    else:
-        raise ValueError("Unrecognized type code %d" % typecode)
-
-    return obj
-
 @sync
 def get_obj_ids(object where=OBJ_ALL, int types=H5F_OBJ_ALL):
     """ (OBJECT where=OBJ_ALL, types=OBJ_ALL) => LIST open_ids
@@ -204,17 +180,16 @@ def get_obj_ids(object where=OBJ_ALL, int types=H5F_OBJ_ALL):
     cdef int count
     cdef int i
     cdef hid_t where_id
-    cdef hid_t *obj_list
-    cdef list py_obj_list
-    obj_list = NULL
-    py_obj_list = []
+    cdef hid_t *obj_list = NULL
+    cdef list py_obj_list = []
 
     if isinstance(where, FileID):
         where_id = where.id
-    elif isinstance(where, int) or isinstance(where, long):
-        where_id = where
     else:
-        raise TypeError("Location must be a FileID or OBJ_ALL.")
+        try:
+            where_id = int(where)
+        except TypeError:
+            raise TypeError("Location must be a FileID or OBJ_ALL.")
 
     try:
         count = H5Fget_obj_count(where_id, types)
@@ -230,6 +205,7 @@ def get_obj_ids(object where=OBJ_ALL, int types=H5F_OBJ_ALL):
     finally:
         efree(obj_list)
 
+
 # === FileID implementation ===================================================
 
 cdef class FileID(ObjectID):
@@ -244,8 +220,8 @@ cdef class FileID(ObjectID):
         Properties:
         name:   File name on disk
 
-        Hashable: Yes, always
-        Equality: HDF5 object identity
+        Hashable: Yes, unique to the file (but not the access mode)
+        Equality: Hash comparison
     """
 
     property name:

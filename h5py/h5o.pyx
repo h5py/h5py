@@ -18,7 +18,7 @@ include "sync.pxi"
 
 # Pyrex compile-time imports
 from h5 cimport init_hdf5, ObjectID
-from h5f cimport wrap_identifier
+from h5i cimport wrap_identifier
 
 # Initialization
 init_hdf5()

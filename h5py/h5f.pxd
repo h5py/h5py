@@ -17,8 +17,4 @@ from h5 cimport class ObjectID
 cdef class FileID(ObjectID):
     pass
 
-# Internal h5py function to wrap file-resident identifiers
-# TODO: move this to h5i
-cdef object wrap_identifier(hid_t ident)
-
 

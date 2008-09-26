@@ -41,7 +41,7 @@ import threading
 cdef class H5PYConfig:
 
     """
-        Provides runtime access to the library compilation options.
+        Provides runtime access to global library settings.
     """
 
     def __init__(self):
@@ -557,7 +557,7 @@ cpdef object error_string():
     stacklen = len(stack)
 
     if stacklen == 0:
-        msg = "Unspecified HDF5 error"
+        msg = "No HDF5 error recorded"
     else:
         el = stack[0]
         msg = "%s (%s)" % (el.desc.capitalize(), el.func_name)
@@ -592,10 +592,9 @@ cdef herr_t extract_cb(int n, H5E_error_t *err_desc, void* data_in):
 cdef herr_t err_callback(void* client_data) with gil:
     # Callback which sets Python exception based on the current error stack.
 
-    # Can't use the standard Pyrex raise because then the traceback
-    # points here.  MUST be "with gil" as it can be called by nogil HDF5
-    # routines.  By definition any function for which this can be called
-    # already holds the PHIL.
+    # MUST be "with gil" as it can be called by nogil HDF5 routines.
+    # By definition any function for which this can be called already
+    # holds the PHIL.
     
     cdef H5E_error_t err_struct
     cdef H5E_major_t mj
@@ -606,11 +605,11 @@ cdef herr_t err_callback(void* client_data) with gil:
 
     try:
         exc = _exceptions[mj]
-    except:
+    except KeyError:
         exc = H5Error
 
     msg = error_string()
-    PyErr_SetString(exc, msg)
+    PyErr_SetString(exc, msg)  # Can't use "raise" or the traceback points here
 
     return 1
 

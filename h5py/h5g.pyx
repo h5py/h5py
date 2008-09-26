@@ -261,7 +261,7 @@ cdef class GroupID(ObjectID):
         for h5py.h5l.LinkProxy for more information.
 
         Hashable: Yes, unless anonymous
-        Equality: HDF5 object identity if not anonymous, or NotImplemented
+        Equality: True HDF5 identity unless anonymous
     """
 
     IF H5PY_18API:

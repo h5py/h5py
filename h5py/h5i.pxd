@@ -12,3 +12,6 @@
 
 include "defs.pxd"
 
+from h5 cimport ObjectID
+
+cdef ObjectID wrap_identifier(hid_t ident)

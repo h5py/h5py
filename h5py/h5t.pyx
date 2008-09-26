@@ -314,7 +314,7 @@ cdef class TypeID(ObjectID):
     """
         Base class for type identifiers (implements common operations)
 
-        Hashable: If locked and committed; in HDF5 1.8.X, also if only locked
+        Hashable: If committed; in HDF5 1.8.X, also if locked
         Equality: Logical H5T comparison
     """
 

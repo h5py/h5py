@@ -20,6 +20,12 @@ include "sync.pxi"
 # Pyrex compile-time imports
 from h5 cimport init_hdf5, ObjectID
 from h5f cimport FileID
+from h5d cimport DatasetID
+from h5g cimport GroupID
+from h5a cimport AttrID
+from h5t cimport typewrap
+from h5p cimport propwrap
+
 from utils cimport emalloc, efree
 
 init_hdf5()
@@ -39,6 +45,29 @@ REFERENCE   = H5I_REFERENCE
 GENPROP_CLS = H5I_GENPROP_CLS
 GENPROP_LST = H5I_GENPROP_LST
 DATATYPE    = H5I_DATATYPE
+
+cdef ObjectID wrap_identifier(hid_t ident):
+
+    cdef H5I_type_t typecode
+    cdef ObjectID obj
+
+    typecode = H5Iget_type(ident)
+    if typecode == H5I_FILE:
+        obj = FileID(ident)
+    elif typecode == H5I_DATASET:
+        obj = DatasetID(ident)
+    elif typecode == H5I_GROUP:
+        obj = GroupID(ident)
+    elif typecode == H5I_ATTR:
+        obj = AttrID(ident)
+    elif typecode == H5I_DATATYPE:
+        obj = typewrap(ident)
+    elif typecode == H5I_GENPROP_LST:
+        obj = propwrap(ident)
+    else:
+        raise ValueError("Unrecognized type code %d" % typecode)
+
+    return obj
 
 # === Identifier API ==========================================================
 

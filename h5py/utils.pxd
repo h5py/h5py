@@ -14,9 +14,6 @@ include "defs.pxd"
 
 from numpy cimport ndarray
 
-# === Custom API ==============================================================
-
-# Memory handling
 cdef void* emalloc(size_t size) except? NULL
 cdef void efree(void* ptr)
 
@@ -27,7 +24,6 @@ cdef int convert_tuple(object tuple, hsize_t *dims, hsize_t rank) except -1
 cdef object convert_dims(hsize_t* dims, hsize_t rank)
 
 cdef int require_tuple(object tpl, int none_allowed, int size, char* name) except -1
-cdef int require_list(object lst, int none_allowed, int size, char* name) except -1
 
 cdef object create_numpy_hsize(int rank, hsize_t* dims)
 cdef object create_hsize_array(object arr)

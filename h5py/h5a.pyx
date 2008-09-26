@@ -50,7 +50,7 @@ def open_idx(ObjectID loc not None, int idx):
     """
     # If the argument is declared UINT and someone passes in -1, the Pyrex
     # layer happily converts it to something like 2**32 -1, which crashes the
-    # HDF5 library.
+    # 1.6.5 version HDF5 library.
     if idx < 0:
         raise ValueError("Index must be a non-negative integer.")
     return AttrID(H5Aopen_idx(loc.id, idx))
@@ -177,7 +177,7 @@ cdef class AttrID(ObjectID):
         shape:  A Numpy-style shape tuple representing the dataspace
 
         Hashable: No
-        Equality: Python default
+        Equality: Identifier comparison
     """
     property name:
         """ The attribute's name

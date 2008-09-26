@@ -21,7 +21,7 @@ include "sync.pxi"
 # Compile-time imports
 from h5 cimport init_hdf5
 from utils cimport  require_tuple, convert_dims, convert_tuple, \
-                    emalloc, efree, require_list, \
+                    emalloc, efree, \
                     check_numpy_write, check_numpy_read
 from numpy cimport ndarray, import_array
 from h5t cimport TypeID, py_create

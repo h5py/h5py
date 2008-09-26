@@ -19,7 +19,7 @@ include "sync.pxi"
 
 # Pyrex compile-time imports
 from h5 cimport init_hdf5
-from utils cimport  require_tuple, require_list, convert_dims, convert_tuple, \
+from utils cimport  require_tuple, convert_dims, convert_tuple, \
                     emalloc, efree, create_numpy_hsize, create_hsize_array
 from numpy cimport ndarray
 from python_string cimport PyString_FromStringAndSize
@@ -86,10 +86,8 @@ def create_simple(object dims_tpl, object max_dims_tpl=None):
         an unlimited dimension.
     """
     cdef int rank
-    cdef hsize_t* dims
-    cdef hsize_t* max_dims
-    dims = NULL
-    max_dims = NULL
+    cdef hsize_t* dims = NULL
+    cdef hsize_t* max_dims = NULL
 
     require_tuple(dims_tpl, 0, -1, "dims_tpl")
     rank = len(dims_tpl)
@@ -117,8 +115,7 @@ IF H5PY_18API:
             Unserialize a dataspace.  Bear in mind you can also use the native
             Python pickling machinery to do this.
         """
-        cdef char* buf_
-        buf_ = buf
+        cdef char* buf_ = buf
         return SpaceID(H5Sdecode(buf_))
 
 # === H5S class API ===========================================================
@@ -167,10 +164,8 @@ cdef class SpaceID(ObjectID):
                 Serialize a dataspace, including its selection.  Bear in mind you
                 can also use the native Python pickling machinery to do this.
             """
-            cdef void* buf
-            cdef size_t nalloc
-            buf = NULL
-            nalloc = 0
+            cdef void* buf = NULL
+            cdef size_t nalloc = 0
 
             H5Sencode(self.id, NULL, &nalloc)
             buf = emalloc(nalloc)
@@ -191,8 +186,7 @@ cdef class SpaceID(ObjectID):
 
         @sync
         def __setstate__(self, state):
-            cdef char* buf
-            buf = state
+            cdef char* buf = state
             self.id = H5Sdecode(buf)
 
     # === Simple dataspaces ===================================================
@@ -216,8 +210,7 @@ cdef class SpaceID(ObjectID):
         """
         cdef int rank
         cdef int i
-        cdef hssize_t *dims
-        dims = NULL
+        cdef hssize_t *dims = NULL
 
         try:
             if not H5Sis_simple(self.id):
@@ -257,8 +250,7 @@ cdef class SpaceID(ObjectID):
             is True, retrieve the maximum dataspace size instead.
         """
         cdef int rank
-        cdef hsize_t* dims
-        dims = NULL
+        cdef hsize_t* dims = NULL
 
         rank = H5Sget_simple_extent_dims(self.id, NULL, NULL)
 
@@ -313,10 +305,8 @@ cdef class SpaceID(ObjectID):
             an unlimited dimension.
         """
         cdef int rank
-        cdef hsize_t* dims
-        cdef hsize_t* max_dims
-        dims = NULL
-        max_dims = NULL
+        cdef hsize_t* dims = NULL
+        cdef hsize_t* max_dims = NULL
 
         require_tuple(dims_tpl, 0, -1, "dims_tpl")
         rank = len(dims_tpl)
@@ -375,10 +365,8 @@ cdef class SpaceID(ObjectID):
             the current selection.
         """
         cdef int rank
-        cdef hsize_t *start
-        cdef hsize_t *end
-        start = NULL
-        end = NULL
+        cdef hsize_t *start = NULL
+        cdef hsize_t *end = NULL
 
         rank = H5Sget_simple_extent_ndims(self.id)
 
@@ -532,15 +520,10 @@ cdef class SpaceID(ObjectID):
             documentation for the meaning of the "block" and "op" keywords.
         """
         cdef int rank
-        cdef hsize_t* start_array
-        cdef hsize_t* count_array
-        cdef hsize_t* stride_array
-        cdef hsize_t* block_array
-
-        start_array = NULL
-        count_array = NULL
-        stride_array = NULL
-        block_array = NULL
+        cdef hsize_t* start_array = NULL
+        cdef hsize_t* count_array = NULL
+        cdef hsize_t* stride_array = NULL
+        cdef hsize_t* block_array = NULL
 
         # Dataspace rank.  All provided tuples must match this.
         rank = H5Sget_simple_extent_ndims(self.id)

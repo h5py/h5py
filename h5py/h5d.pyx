@@ -54,7 +54,7 @@ FILL_VALUE_DEFAULT      = H5D_FILL_VALUE_DEFAULT
 FILL_VALUE_USER_DEFINED = H5D_FILL_VALUE_USER_DEFINED
 
 
-# === Basic dataset operations ================================================
+# === Dataset operations ======================================================
 
 @sync
 def create(ObjectID loc not None, char* name, TypeID tid not None, 
@@ -80,7 +80,7 @@ def open(ObjectID loc not None, char* name):
 
 # It's not legal to call PyErr_Occurred() with nogil, so we can't use
 # the standard except * syntax.  Trap negative return numbers and convert them
-# to something Pyrex can recognize.
+# to something Cython can recognize.
 
 cdef int H5PY_H5Dread(hid_t dset_id, hid_t mem_type_id, hid_t mem_space_id,
                   hid_t file_space_id, hid_t plist_id, void *buf) nogil except -1:
@@ -101,7 +101,6 @@ cdef int H5PY_H5Dwrite(hid_t dset_id, hid_t mem_type, hid_t mem_space, hid_t
         return -1
     return retval
 
-# === Dataset I/O =============================================================
 
 cdef class DatasetID(ObjectID):
 
@@ -118,8 +117,8 @@ cdef class DatasetID(ObjectID):
         shape:  Numpy-style shape tuple representing the dataspace
         rank:   Integer giving dataset rank
 
-        Hashable: Yes, if not anonymous
-        Equality: HDF5 identity if not anonymous, otherwise Python default
+        Hashable: Yes, unless anonymous
+        Equality: True HDF5 identity if unless anonymous
     """
 
     property dtype:
@@ -199,7 +198,10 @@ cdef class DatasetID(ObjectID):
 
         arr_obj.flags &= (~NPY_WRITEABLE) # Wish-it-was-a-mutex approach
         try:
-            with nogil:
+            IF H5PY_THREADS:
+                with nogil:
+                    H5PY_H5Dread(self_id, mtype_id, mspace_id, fspace_id, plist_id, data)
+            ELSE:
                 H5PY_H5Dread(self_id, mtype_id, mspace_id, fspace_id, plist_id, data)
         finally:
             arr_obj.flags |= NPY_WRITEABLE
@@ -239,7 +241,10 @@ cdef class DatasetID(ObjectID):
 
         arr_obj.flags &= (~NPY_WRITEABLE) # Wish-it-was-a-mutex approach
         try:
-            with nogil:
+            IF H5PY_THREADS:
+                with nogil:
+                    H5PY_H5Dwrite(self_id, mtype_id, mspace_id, fspace_id, plist_id, data)
+            ELSE:
                 H5PY_H5Dwrite(self_id, mtype_id, mspace_id, fspace_id, plist_id, data)
         finally:
             arr_obj.flags |= NPY_WRITEABLE
