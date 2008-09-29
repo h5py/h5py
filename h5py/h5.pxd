@@ -32,6 +32,8 @@ cdef class H5PYConfig:
     cdef readonly object DEBUG
     cdef readonly object THREADS
 
+cpdef H5PYConfig get_config()
+
 cdef class ObjectID:
 
     cdef object __weakref__

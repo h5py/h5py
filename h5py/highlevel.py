@@ -58,6 +58,9 @@ from utils_hl import slice_select, hbasename, strhdr, strlist, guess_chunk
 from utils_hl import CoordsList
 from browse import _H5Browser
 
+config = h5.get_config()
+if config.API_18:
+    from h5py import h5o, h5l
 
 __all__ = ["File", "Group", "Dataset",
            "Datatype", "AttributeManager", "CoordsList"]
@@ -275,7 +278,29 @@ class Group(HLObject):
             if cmnt != '':
                 outstr += '\nComment:\n'+cmnt
             return outstr
-        
+
+    def visit(self, func):
+        """ Recursively iterate a function or callable object over the file,
+            calling it exactly once with each object name.  Return None to
+            continue iteration, or anything else to immediately return that
+            value.
+
+            Example:
+            # List the entire contents of the file
+            >>> list_of_names = []
+            >>> grp.visit(list_of_names.append)
+
+            Only available with HDF5 1.8.X.
+        """
+        if not config.API_18:
+            raise NotImplementedError("This feature is only available with HDF5 1.8.0 and later")
+    
+        with self._lock:
+            def call_proxy(name, info):
+                return func(name)
+
+            return h5o.visit(self.id, call_proxy)
+
     def __str__(self):
         with self._lock:
             try:

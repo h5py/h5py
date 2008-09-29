@@ -12,6 +12,8 @@
 # 
 #-
 
+from __future__ import with_statement
+
 """
     Setup script for the h5py package.  
 
@@ -32,6 +34,8 @@
 import os
 import sys
 import shutil
+import commands
+import pickle
 import os.path as op
 
 from distutils.errors import DistutilsError
@@ -135,56 +139,72 @@ class ExtensionCreator(object):
 
 class cybuild(build):
 
-    """ Cython-aware subclass of the distutils build command
-
-        It handles the h5py-centric configuration for the build processing,
-        generating the compile-time definitions file "config.pxi" and
-        running Cython before handing control over to the native distutils
-        build.  The advantage is that Cython is run on all files before
-        building begins, and is only run when the distribution is actually
-        being built (and not, for example, when "sdist" is called for).
-
-        It also populates the list of extension modules at runtime, as this
-        can be changed by some of the command-line options.
+    """ Cython-aware builder
     """
 
     user_options = build.user_options + \
-                    [('cython','y','Run Cython'),
-                     ('cython-only','Y', 'Run Cython and stop'),
-                     ('hdf5=', '5', 'Custom location for HDF5'),
-                     ('diag', 'd','Enable library debug logging'),
+                    [('hdf5=', '5', 'Custom location for HDF5'),
                      ('api=', 'a', 'Set API levels (--api=16,18)'),
+                     ('cython','y','Run Cython'),
+                     ('cython-only','Y', 'Run Cython and stop'),
+                     ('diag', 'd','Enable library debug logging'),
                      ('threads', 't', 'Make library thread-aware')]
+
     boolean_options = build.boolean_options + ['cython', 'cython-only', 'threads','diag']
 
-    def initialize_options(self):
-        """ Specify safe defaults for command-line options. """
-        self.hdf5 = None                # None or a string with the HDF5 dir
-        self.cython = False             # T/F
-        self.cython_only = False        # T/F
-        self.threads = False            # T/F
-        self.api = None                 # None or a tuple (e.g. (16,18))
-        self.diag = False               # T/F
-        self._explicit_only = False     # T/F: Hack for test subclass
-        build.initialize_options(self)
 
-    def finalize_options(self):
-        """ Validate provided options and ensure consistency.  Note this is
-            only run if at least one option is specified!
+    def get_hdf5_version(self):
+        """ Try to determine the installed HDF5 version and return a tuple
+            containing the appropriate API levels, or None if it can't be
+            determined.
         """
         if self.hdf5 is not None:
+            cmd = reduce(op.join, (self.hdf5, 'bin', 'h5cc'))+" -showconfig"
+        else:
+            cmd = "h5cc -showconfig"
+        output = commands.getoutput(cmd)
+        l = output.find("HDF5 Version")
+        if l > 0:
+            if output[l:l+30].find('1.8') > 0:
+                return (16,18)
+            elif output[l:l+30].find('1.6') > 0:
+                return (16,)
+        return None
+
+    def initialize_options(self):
+        build.initialize_options(self)
+        self._default = True
+
+        # Build options
+        self.hdf5 = None
+        self.api = None
+
+        # Cython (config) options
+        self.cython = False
+        self.cython_only = False
+        self.diag = False
+        self.threads = False
+
+
+    def finalize_options(self):
+
+        build.finalize_options(self)
+
+        if self.hdf5 is not None:
+            self._default = False
             self.hdf5 = op.abspath(self.hdf5)
             if not op.exists(self.hdf5):
                 fatal('Specified HDF5 directory "%s" does not exist' % self.hdf5)
 
-        if self.cython_only or  \
-           self.api is not None or \
-           self.threads or \
-           self.diag:
-            self.cython = True
-
-        # Validate API levels
-        if self.api is not None:
+        if self.api is None:
+            # Try to guess the installed HDF5 version
+            self.api = self.get_hdf5_version()
+            if self.api is None:
+                warn("Can't determine HDF5 version, assuming 1.6 (use --api= to override)")
+                self.api = (16,)
+        else:
+            # User specified the API levels
+            self._default = False
             try:
                 self.api = tuple(int(x) for x in self.api.split(',') if len(x) > 0)
                 if len(self.api) == 0 or not all(x in KNOWN_API for x in self.api):
@@ -192,9 +212,38 @@ class cybuild(build):
             except Exception:
                 fatal('Illegal option %s to --api= (legal values are %s)' % (self.api, ','.join(str(x) for x in KNOWN_API)))
 
-        build.finalize_options(self)
+        if self.cython_only or self.diag or self.threads:
+            self._default = False
+            self.cython = True
 
-    def _get_pxi(self):
+    def run(self):
+
+        if self._default and op.exists('buildconf.pickle'):
+            # Read extensions info from pickle file
+            print "=> Using existing build configuration"
+            with open('buildconf.pickle','r') as f:
+                modules, extensions = pickle.load(f)
+        else:
+            print "=> Creating new build configuration"
+
+            modules = MODULES[max(self.api)]
+            creator = ExtensionCreator(self.hdf5)
+            extensions = [creator.create_extension(x) for x in modules]            
+            with open('buildconf.pickle','w') as f:
+                pickle.dump((modules, extensions), f)
+
+        self.distribution.ext_modules = extensions
+
+        # Rebuild the C source files if necessary
+        if self.cython:
+            self.compile_cython(modules)
+            if self.cython_only:
+                exit(0)
+
+        # Hand over control to distutils
+        build.run(self)
+
+    def get_pxi(self):
         """ Generate a Cython .pxi file reflecting the current options. """
 
         pxi_str = \
@@ -216,95 +265,73 @@ DEF H5PY_THREADS = %(THREADS)d  # Enable thread-safety and non-blocking reads
                     "DEBUG": 10 if self.diag else 0, "THREADS": self.threads,
                     "HDF5": "Default" if self.hdf5 is None else self.hdf5}
 
-    def run(self, *args, **kwds):
-        """ Called to perform the actual compilation.  This performs the
-            following steps:
-
-            1. Generate a list of C extension modules for the compiler
-            2. Compare the run-time options with a currently-existing .pxi
-               file, and determine if a Cython recompile is required
-            3. If necessary, recompile all Cython files
-            4. Hand control over to the distutils C build
+    def compile_cython(self, modules):
+        """ If needed, regenerate the C source files for the build process
         """
 
-        if self.api is None:
-            self.api = (min(KNOWN_API),)
+        try:
+            from Cython.Compiler.Main import Version, compile, compile_multiple, CompilationOptions
+        except ImportError:
+            fatal("Cython recompilation required, but Cython >=%s not installed." % MIN_CYTHON)
 
-        creator = ExtensionCreator(self.hdf5)
-        modules = sorted(MODULES[max(self.api)])
-        self.distribution.ext_modules = \
-            [creator.create_extension(x) for x in modules]
+        if Version.version < MIN_CYTHON:
+            fatal("Old Cython version detected; at least %s required" % MIN_CYTHON)
+
+        print "Running Cython (%s)..." % Version.version
+        print "  API levels: %s" % ','.join(str(x) for x in self.api)
+        print "  Thread-aware: %s" % ('yes' if self.threads else 'no')
+        print "  Diagnostic mode: %s" % ('yes' if self.diag else 'no')
+        print "  HDF5: %s" % ('default' if self.hdf5 is None else self.hdf5)
 
         # Necessary because Cython doesn't detect changes to the .pxi
         recompile_all = False
 
         # Check if the config.pxi file needs to be updated for the given
         # command-line options.
-        if self.cython or not self._explicit_only:
-            pxi_path = op.join(SRC_PATH, 'config.pxi')
-            pxi = self._get_pxi()
-            if not op.exists(pxi_path):
-                try:
-                    f = open(pxi_path, 'w')
-                    f.write(pxi)
-                    f.close()
-                except IOError:
-                    fatal('Failed write to "%s"' % pxi_path)
-                recompile_all = True
-            else:
-                try:
-                    f = open(pxi_path, 'r+')
-                except IOError:
-                    fatal("Can't read file %s" % pxi_path)
-                if f.read() != pxi:
-                    f.close()
-                    f = open(pxi_path, 'w')
-                    f.write(pxi)
-                    recompile_all = True
-                f.close()
-
-        if self.cython or recompile_all:
+        pxi_path = op.join(SRC_PATH, 'config.pxi')
+        pxi = self.get_pxi()
+        if not op.exists(pxi_path):
             try:
-                from Cython.Compiler.Main import Version, compile, compile_multiple, CompilationOptions
-            except ImportError:
-                fatal("Cython recompilation required, but Cython >=%s not installed." % MIN_CYTHON)
+                f = open(pxi_path, 'w')
+                f.write(pxi)
+                f.close()
+            except IOError:
+                fatal('Failed write to "%s"' % pxi_path)
+            recompile_all = True
+        else:
+            try:
+                f = open(pxi_path, 'r+')
+            except IOError:
+                fatal("Can't read file %s" % pxi_path)
+            if f.read() != pxi:
+                f.close()
+                f = open(pxi_path, 'w')
+                f.write(pxi)
+                recompile_all = True
+            f.close()
 
-            if Version.version < MIN_CYTHON:
-                fatal("Old Cython version detected; at least %s required" % MIN_CYTHON)
-
-            print "Running Cython (%s)..." % Version.version
-            print "  API levels: %s" % ','.join(str(x) for x in self.api)
-            print "  Thread-aware: %s" % ('yes' if self.threads else 'no')
-            print "  Diagnostic mode: %s" % ('yes' if self.diag else 'no')
-            print "  HDF5: %s" % ('default' if self.hdf5 is None else self.hdf5)
-
-            # Build each extension
-            # This should be a single call to compile_multiple, but it's
-            # broken in Cython 0.9.8.1.1
-            if 1:
-                cyopts = CompilationOptions(verbose=False)
-                for module in modules:
-                    pyx_path = op.join(SRC_PATH,module+'.pyx')
-                    c_path = op.join(SRC_PATH,module+'.c')
-                    if not op.exists(c_path) or \
-                       os.stat(pyx_path).st_mtime > os.stat(c_path).st_mtime or \
-                       recompile_all or\
-                       self.force:
-                        print "Cythoning %s" % pyx_path
-                        result = compile(pyx_path, cyopts)
-                        if result.num_errors != 0:
-                            fatal("Cython error; aborting.")
-            else:
-                cyopts = CompilationOptions(verbose=True, timestamps=True)
-                modpaths = [op.join(SRC_PATH, x+'.pyx') for x in modules]
-                result = compile_multiple(modpaths, cyopts)
-                if result.num_errors != 0:
-                    fatal("%d Cython errors; aborting" % result.num_errors)
-
-        if self.cython_only:
-            exit(0)
-
-        build.run(self, *args, **kwds)
+        # Build each extension
+        # This should be a single call to compile_multiple, but it's
+        # broken in Cython 0.9.8.1.1
+        if 1:
+            cyopts = CompilationOptions(verbose=False)
+            for module in modules:
+                pyx_path = op.join(SRC_PATH,module+'.pyx')
+                c_path = op.join(SRC_PATH,module+'.c')
+                if not op.exists(c_path) or \
+                   os.stat(pyx_path).st_mtime > os.stat(c_path).st_mtime or \
+                   recompile_all or\
+                   self.force:
+                    print "Cythoning %s" % pyx_path
+                    result = compile(pyx_path, cyopts)
+                    if result.num_errors != 0:
+                        fatal("Cython error; aborting.")
+        else:
+            cyopts = CompilationOptions(verbose=True, timestamps=True)
+            modpaths = [op.join(SRC_PATH, x+'.pyx') for x in modules]
+            result = compile_multiple(modpaths, cyopts)
+            if result.num_errors != 0:
+                fatal("%d Cython errors; aborting" % result.num_errors)
 
 class test(cybuild):
 
@@ -324,7 +351,6 @@ class test(cybuild):
         cybuild.finalize_options(self)
 
     def run(self):
-        self._explicit_only = True  # Ignore config.pxi disagreement unless --cython
         cybuild.run(self)
         oldpath = sys.path
         try:

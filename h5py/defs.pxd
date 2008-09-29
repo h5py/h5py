@@ -452,164 +452,202 @@ cdef extern from "hdf5.h":
 
 IF H5PY_18API:
 
-    cdef extern from "hdf5.h":
+  cdef extern from "hdf5.h":
 
-      # TODO: put both versions in h5t.pxd
-      ctypedef enum H5T_cset_t:
-        H5T_CSET_ERROR       = -1,  #
-        H5T_CSET_ASCII       = 0,   # US ASCII
-        H5T_CSET_UTF8        = 1,   # UTF-8 Unicode encoding
+    # TODO: put both versions in h5t.pxd
+    ctypedef enum H5T_cset_t:
+      H5T_CSET_ERROR       = -1,  #
+      H5T_CSET_ASCII       = 0,   # US ASCII
+      H5T_CSET_UTF8        = 1,   # UTF-8 Unicode encoding
 
-      unsigned int H5L_MAX_LINK_NAME_LEN #  ((uint32_t) (-1)) (4GB - 1)
+    unsigned int H5L_MAX_LINK_NAME_LEN #  ((uint32_t) (-1)) (4GB - 1)
 
-      # Link class types.
-      # * Values less than 64 are reserved for the HDF5 library's internal use.
-      # * Values 64 to 255 are for "user-defined" link class types; these types are
-      # * defined by HDF5 but their behavior can be overridden by users.
-      # * Users who want to create new classes of links should contact the HDF5
-      # * development team at hdfhelp@ncsa.uiuc.edu .
-      # * These values can never change because they appear in HDF5 files. 
-      # 
-      ctypedef enum H5L_type_t:
-        H5L_TYPE_ERROR = (-1),      #  Invalid link type id         
-        H5L_TYPE_HARD = 0,          #  Hard link id                 
-        H5L_TYPE_SOFT = 1,          #  Soft link id                 
-        H5L_TYPE_EXTERNAL = 64,     #  External link id             
-        H5L_TYPE_MAX = 255          #  Maximum link type id         
+    # Link class types.
+    # * Values less than 64 are reserved for the HDF5 library's internal use.
+    # * Values 64 to 255 are for "user-defined" link class types; these types are
+    # * defined by HDF5 but their behavior can be overridden by users.
+    # * Users who want to create new classes of links should contact the HDF5
+    # * development team at hdfhelp@ncsa.uiuc.edu .
+    # * These values can never change because they appear in HDF5 files. 
+    # 
+    ctypedef enum H5L_type_t:
+      H5L_TYPE_ERROR = (-1),      #  Invalid link type id         
+      H5L_TYPE_HARD = 0,          #  Hard link id                 
+      H5L_TYPE_SOFT = 1,          #  Soft link id                 
+      H5L_TYPE_EXTERNAL = 64,     #  External link id             
+      H5L_TYPE_MAX = 255          #  Maximum link type id         
 
-      #  Information struct for link (for H5Lget_info/H5Lget_info_by_idx)
-      cdef union _add_u:
-        haddr_t address   #  Address hard link points to    
-        size_t val_size   #  Size of a soft link or UD link value 
+    #  Information struct for link (for H5Lget_info/H5Lget_info_by_idx)
+    cdef union _add_u:
+      haddr_t address   #  Address hard link points to    
+      size_t val_size   #  Size of a soft link or UD link value 
 
-      ctypedef struct H5L_info_t:
-        H5L_type_t  type            #  Type of link                   
-        hbool_t     corder_valid    #  Indicate if creation order is valid 
-        int64_t     corder          #  Creation order                 
-        H5T_cset_t  cset            #  Character set of link name     
-        _add_u u
+    ctypedef struct H5L_info_t:
+      H5L_type_t  type            #  Type of link                   
+      hbool_t     corder_valid    #  Indicate if creation order is valid 
+      int64_t     corder          #  Creation order                 
+      H5T_cset_t  cset            #  Character set of link name     
+      _add_u u
 
-      #  Prototype for H5Literate/H5Literate_by_name() operator 
-      ctypedef herr_t (*H5L_iterate_t) (hid_t group, char *name, H5L_info_t *info,
-                        void *op_data)
+    #  Prototype for H5Literate/H5Literate_by_name() operator 
+    ctypedef herr_t (*H5L_iterate_t) (hid_t group, char *name, H5L_info_t *info,
+                      void *op_data)
 
-      # Links API
+    # Links API
 
-      herr_t H5Lmove(hid_t src_loc, char *src_name, hid_t dst_loc,
-        char *dst_name, hid_t lcpl_id, hid_t lapl_id) except *
+    herr_t H5Lmove(hid_t src_loc, char *src_name, hid_t dst_loc,
+      char *dst_name, hid_t lcpl_id, hid_t lapl_id) except *
 
-      herr_t H5Lcopy(hid_t src_loc, char *src_name, hid_t dst_loc,
-        char *dst_name, hid_t lcpl_id, hid_t lapl_id) except *
+    herr_t H5Lcopy(hid_t src_loc, char *src_name, hid_t dst_loc,
+      char *dst_name, hid_t lcpl_id, hid_t lapl_id) except *
 
-      herr_t H5Lcreate_hard(hid_t cur_loc, char *cur_name,
-        hid_t dst_loc, char *dst_name, hid_t lcpl_id, hid_t lapl_id) except *
+    herr_t H5Lcreate_hard(hid_t cur_loc, char *cur_name,
+      hid_t dst_loc, char *dst_name, hid_t lcpl_id, hid_t lapl_id) except *
 
-      herr_t H5Lcreate_soft(char *link_target, hid_t link_loc_id,
-        char *link_name, hid_t lcpl_id, hid_t lapl_id) except *
+    herr_t H5Lcreate_soft(char *link_target, hid_t link_loc_id,
+      char *link_name, hid_t lcpl_id, hid_t lapl_id) except *
 
-      herr_t H5Ldelete(hid_t loc_id, char *name, hid_t lapl_id) except *
+    herr_t H5Ldelete(hid_t loc_id, char *name, hid_t lapl_id) except *
 
-      herr_t H5Ldelete_by_idx(hid_t loc_id, char *group_name,
-        H5_index_t idx_type, H5_iter_order_t order, hsize_t n, hid_t lapl_id) except *
+    herr_t H5Ldelete_by_idx(hid_t loc_id, char *group_name,
+      H5_index_t idx_type, H5_iter_order_t order, hsize_t n, hid_t lapl_id) except *
 
-      herr_t H5Lget_val(hid_t loc_id, char *name, void *bufout,
-        size_t size, hid_t lapl_id) except *
+    herr_t H5Lget_val(hid_t loc_id, char *name, void *bufout,
+      size_t size, hid_t lapl_id) except *
 
-      herr_t H5Lget_val_by_idx(hid_t loc_id, char *group_name,
-        H5_index_t idx_type, H5_iter_order_t order, hsize_t n,
-        void *bufout, size_t size, hid_t lapl_id) except *
+    herr_t H5Lget_val_by_idx(hid_t loc_id, char *group_name,
+      H5_index_t idx_type, H5_iter_order_t order, hsize_t n,
+      void *bufout, size_t size, hid_t lapl_id) except *
 
-      htri_t H5Lexists(hid_t loc_id, char *name, hid_t lapl_id) except *
+    htri_t H5Lexists(hid_t loc_id, char *name, hid_t lapl_id) except *
 
-      herr_t H5Lget_info(hid_t loc_id, char *name,
-        H5L_info_t *linfo, hid_t lapl_id) except *
+    herr_t H5Lget_info(hid_t loc_id, char *name,
+      H5L_info_t *linfo, hid_t lapl_id) except *
 
-      herr_t H5Lget_info_by_idx(hid_t loc_id, char *group_name,
-        H5_index_t idx_type, H5_iter_order_t order, hsize_t n,
-        H5L_info_t *linfo, hid_t lapl_id) except *
+    herr_t H5Lget_info_by_idx(hid_t loc_id, char *group_name,
+      H5_index_t idx_type, H5_iter_order_t order, hsize_t n,
+      H5L_info_t *linfo, hid_t lapl_id) except *
 
-      ssize_t H5Lget_name_by_idx(hid_t loc_id, char *group_name,
-        H5_index_t idx_type, H5_iter_order_t order, hsize_t n,
-        char *name, size_t size, hid_t lapl_id) except *
+    ssize_t H5Lget_name_by_idx(hid_t loc_id, char *group_name,
+      H5_index_t idx_type, H5_iter_order_t order, hsize_t n,
+      char *name, size_t size, hid_t lapl_id) except *
 
-      herr_t H5Literate(hid_t grp_id, H5_index_t idx_type,
-        H5_iter_order_t order, hsize_t *idx, H5L_iterate_t op, void *op_data) except *
+    herr_t H5Literate(hid_t grp_id, H5_index_t idx_type,
+      H5_iter_order_t order, hsize_t *idx, H5L_iterate_t op, void *op_data) except *
 
-      herr_t H5Literate_by_name(hid_t loc_id, char *group_name,
-        H5_index_t idx_type, H5_iter_order_t order, hsize_t *idx,
-        H5L_iterate_t op, void *op_data, hid_t lapl_id) except *
+    herr_t H5Literate_by_name(hid_t loc_id, char *group_name,
+      H5_index_t idx_type, H5_iter_order_t order, hsize_t *idx,
+      H5L_iterate_t op, void *op_data, hid_t lapl_id) except *
 
-      herr_t H5Lvisit(hid_t grp_id, H5_index_t idx_type, H5_iter_order_t order,
-        H5L_iterate_t op, void *op_data) except *
+    herr_t H5Lvisit(hid_t grp_id, H5_index_t idx_type, H5_iter_order_t order,
+      H5L_iterate_t op, void *op_data) except *
 
-      herr_t H5Lvisit_by_name(hid_t loc_id, char *group_name,
-        H5_index_t idx_type, H5_iter_order_t order, H5L_iterate_t op,
-        void *op_data, hid_t lapl_id) except *
+    herr_t H5Lvisit_by_name(hid_t loc_id, char *group_name,
+      H5_index_t idx_type, H5_iter_order_t order, H5L_iterate_t op,
+      void *op_data, hid_t lapl_id) except *
 
 # === H5O - General object operations (1.8.X only) ============================
 
 IF H5PY_18API:
 
-    cdef extern from "hdf5.h":
+  cdef extern from "hdf5.h":
 
-      ctypedef uint32_t H5O_msg_crt_idx_t
+    ctypedef uint32_t H5O_msg_crt_idx_t
 
-      ctypedef enum H5O_type_t:
-        H5O_TYPE_UNKNOWN = -1,      #    Unknown object type        
-        H5O_TYPE_GROUP,                #   Object is a group        
-        H5O_TYPE_DATASET,            #   Object is a dataset        
-        H5O_TYPE_NAMED_DATATYPE,    #   Object is a named data type    
-        H5O_TYPE_NTYPES             #   Number of different object types (must be last!) 
+    ctypedef enum H5O_type_t:
+      H5O_TYPE_UNKNOWN = -1,      # Unknown object type        
+      H5O_TYPE_GROUP,             # Object is a group        
+      H5O_TYPE_DATASET,           # Object is a dataset        
+      H5O_TYPE_NAMED_DATATYPE,    # Object is a named data type    
+      H5O_TYPE_NTYPES             # Number of different object types (must be last!) 
 
-      # --- Components for the H5O_info_t struct ----------------------------------
+    unsigned int H5O_COPY_SHALLOW_HIERARCHY_FLAG    # (0x0001u) Copy only immediate members
+    unsigned int H5O_COPY_EXPAND_SOFT_LINK_FLAG     # (0x0002u) Expand soft links into new objects
+    unsigned int H5O_COPY_EXPAND_EXT_LINK_FLAG      # (0x0004u) Expand external links into new objects
+    unsigned int H5O_COPY_EXPAND_REFERENCE_FLAG     # (0x0008u) Copy objects that are pointed by references
+    unsigned int H5O_COPY_WITHOUT_ATTR_FLAG         # (0x0010u) Copy object without copying attributes
+    unsigned int H5O_COPY_PRESERVE_NULL_FLAG        # (0x0020u) Copy NULL messages (empty space)
+    unsigned int H5O_COPY_ALL                       # (0x003Fu) All object copying flags (for internal checking)
 
-      cdef struct space:
-        hsize_t total           #  Total space for storing object header in file 
-        hsize_t meta            #  Space within header for object header metadata information 
-        hsize_t mesg            #  Space within header for actual message information 
-        hsize_t free            #  Free space within object header 
+    # --- Components for the H5O_info_t struct ----------------------------------
 
-      cdef struct mesg:
-        unsigned long present   #  Flags to indicate presence of message type in header 
-        unsigned long shared    #  Flags to indicate message type is shared in header 
+    cdef struct space:
+      hsize_t total           #  Total space for storing object header in file 
+      hsize_t meta            #  Space within header for object header metadata information 
+      hsize_t mesg            #  Space within header for actual message information 
+      hsize_t free            #  Free space within object header 
 
-      cdef struct hdr:
-        unsigned version        #  Version number of header format in file 
-        unsigned nmesgs         #  Number of object header messages 
-        unsigned nchunks        #  Number of object header chunks 
-        unsigned flags          #  Object header status flags 
-        space space
-        mesg mesg
+    cdef struct mesg:
+      unsigned long present   #  Flags to indicate presence of message type in header 
+      unsigned long shared    #  Flags to indicate message type is shared in header 
 
-      ctypedef struct H5_ih_info_t:
-        hsize_t     index_size,  # btree and/or list
-        hsize_t     heap_size
+    cdef struct hdr:
+      unsigned version        #  Version number of header format in file 
+      unsigned nmesgs         #  Number of object header messages 
+      unsigned nchunks        #  Number of object header chunks 
+      unsigned flags          #  Object header status flags 
+      space space
+      mesg mesg
 
-      cdef struct meta_size:
-        H5_ih_info_t   obj,    #        v1/v2 B-tree & local/fractal heap for groups, B-tree for chunked datasets
-        H5_ih_info_t   attr    #        v2 B-tree & heap for attributes
+    ctypedef struct H5_ih_info_t:
+      hsize_t     index_size,  # btree and/or list
+      hsize_t     heap_size
 
-      ctypedef struct H5O_info_t:
-        unsigned long   fileno         #  File number that object is located in 
-        haddr_t         addr           #  Object address in file    
-        H5O_type_t      type           #  Basic object type (group, dataset, etc.) 
-        unsigned         rc            #  Reference count of object    
-        time_t        atime            #  Access time            
-        time_t        mtime            #  Modification time        
-        time_t        ctime            #  Change time            
-        time_t        btime            #  Birth time            
-        hsize_t         num_attrs      #  # of attributes attached to object 
-        hdr           hdr
-        meta_size     meta_size
+    cdef struct meta_size:
+      H5_ih_info_t   obj,    #        v1/v2 B-tree & local/fractal heap for groups, B-tree for chunked datasets
+      H5_ih_info_t   attr    #        v2 B-tree & heap for attributes
 
-      ctypedef herr_t (*H5O_iterate_t)(hid_t obj, char *name, H5O_info_t *info,
-                        void *op_data)
+    ctypedef struct H5O_info_t:
+      unsigned long   fileno      #  File number that object is located in 
+      haddr_t         addr        #  Object address in file    
+      H5O_type_t      type        #  Basic object type (group, dataset, etc.) 
+      unsigned        rc          #  Reference count of object    
+      time_t          atime       #  Access time            
+      time_t          mtime       #  Modification time        
+      time_t          ctime       #  Change time            
+      time_t          btime       #  Birth time            
+      hsize_t         num_attrs   #  # of attributes attached to object 
+      hdr             hdr
+      meta_size       meta_size
 
-      herr_t H5Ovisit(hid_t obj_id, H5_index_t idx_type, H5_iter_order_t order,
-                        H5O_iterate_t op, void *op_data) except *
+    # --- H5O API -------------------------------------------------------------
 
-      herr_t H5Oget_info(hid_t loc_id, H5O_info_t *oinfo) except *
+    hid_t H5Oopen(hid_t loc_id, char *name, hid_t lapl_id) except *
+    hid_t H5Oopen_by_addr(hid_t loc_id, haddr_t addr) except *
+    hid_t H5Oopen_by_idx(hid_t loc_id, char *group_name,
+            H5_index_t idx_type, H5_iter_order_t order, hsize_t n, hid_t lapl_id) except *
 
+    herr_t H5Oget_info(hid_t loc_id, H5O_info_t *oinfo) except *
+    herr_t H5Oget_info_by_name(hid_t loc_id, char *name, H5O_info_t *oinfo,
+              hid_t lapl_id) except *
+    herr_t H5Oget_info_by_idx(hid_t loc_id, char *group_name,
+            H5_index_t idx_type, H5_iter_order_t order, hsize_t n, H5O_info_t *oinfo,
+            hid_t lapl_id) except *
+
+    herr_t H5Olink(hid_t obj_id, hid_t new_loc_id, char *new_name,
+            hid_t lcpl_id, hid_t lapl_id) except *
+    herr_t H5Ocopy(hid_t src_loc_id, char *src_name, hid_t dst_loc_id,
+            char *dst_name, hid_t ocpypl_id, hid_t lcpl_id) except *
+
+    herr_t H5Oincr_refcount(hid_t object_id) except *
+    herr_t H5Odecr_refcount(hid_t object_id) except *
+
+    herr_t H5Oset_comment(hid_t obj_id, char *comment) except *
+    herr_t H5Oset_comment_by_name(hid_t loc_id, char *name,
+            char *comment, hid_t lapl_id) except *
+    ssize_t H5Oget_comment(hid_t obj_id, char *comment, size_t bufsize) except *
+    ssize_t H5Oget_comment_by_name(hid_t loc_id, char *name,
+              char *comment, size_t bufsize, hid_t lapl_id) except *
+
+    ctypedef herr_t (*H5O_iterate_t)(hid_t obj, char *name, H5O_info_t *info,
+                      void *op_data)
+
+    herr_t H5Ovisit(hid_t obj_id, H5_index_t idx_type, H5_iter_order_t order,
+            H5O_iterate_t op, void *op_data) except *
+    herr_t H5Ovisit_by_name(hid_t loc_id, char *obj_name,
+            H5_index_t idx_type, H5_iter_order_t order, H5O_iterate_t op,
+            void *op_data, hid_t lapl_id) except *
+    herr_t H5Oclose(hid_t object_id) except *
 
 # === H5P - Property list API =================================================
 

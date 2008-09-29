@@ -38,6 +38,14 @@ from python_exc cimport PyErr_SetString
 import atexit
 import threading
 
+IF H5PY_18API:
+    ITER_INC    = H5_ITER_INC     # Increasing order
+    ITER_DEC    = H5_ITER_DEC     # Decreasing order
+    ITER_NATIVE = H5_ITER_NATIVE  # No particular order, whatever is fastest
+
+    INDEX_NAME      = H5_INDEX_NAME       # Index on names      
+    INDEX_CRT_ORDER = H5_INDEX_CRT_ORDER  # Index on creation order    
+
 cdef class H5PYConfig:
 
     """
@@ -84,6 +92,12 @@ Complex names: %s"""
         rstr %= (bool(self.API_16), bool(self.API_18), bool(self.THREADS),
                  bool(self.DEBUG), self.complex_names)
         return rstr
+
+cdef H5PYConfig cfg = H5PYConfig()
+
+cpdef H5PYConfig get_config():
+    """ Get a reference to the global library configuration object """
+    return cfg
 
 # === Bootstrap diagnostics and threading, before decorator is defined ===
 
@@ -670,8 +684,6 @@ api_version = "%d.%d" % api_version_tuple
 
 version = H5PY_VERSION
 version_tuple = tuple([int(x) for x in version.split('.')])
-
-config = H5PYConfig()
 
 
 
