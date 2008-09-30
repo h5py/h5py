@@ -50,7 +50,6 @@ NAME = 'h5py'
 VERSION = '0.4.0'
 MIN_NUMPY = '1.0.3'
 MIN_CYTHON = '0.9.8.1.1'
-KNOWN_API = (16,18)    # Legal API levels (1.8.X or 1.6.X)
 SRC_PATH = 'h5py'      # Name of directory with .pyx files
 CMD_CLASS = {}         # Custom command classes for setup()
 
@@ -66,6 +65,7 @@ def fatal(instring, code=1):
 
 def warn(instring):
     print >> sys.stderr, "Warning: "+instring
+
 
 # === Required imports ========================================================
 
@@ -124,7 +124,7 @@ class ExtensionCreator(object):
             provided.
         """
         sources = [op.join(SRC_PATH, name+'.c')]+[op.join(SRC_PATH,x) for x in extra_src]
-        ext = Extension(NAME+'.'+name,
+        return Extension(NAME+'.'+name,
                             sources, 
                             include_dirs = self.include_dirs, 
                             libraries = self.libraries,
@@ -132,7 +132,6 @@ class ExtensionCreator(object):
                             runtime_library_dirs = self.runtime_dirs,
                             extra_compile_args = self.extra_compile_args,
                             extra_link_args = self.extra_link_args)
-        return ext
 
 
 # === Custom extensions for distutils =========================================
@@ -144,7 +143,7 @@ class cybuild(build):
 
     user_options = build.user_options + \
                     [('hdf5=', '5', 'Custom location for HDF5'),
-                     ('api=', 'a', 'Set API levels (--api=16,18)'),
+                     ('api=', 'a', 'Set API levels (--api=16 or --api=18)'),
                      ('cython','y','Run Cython'),
                      ('cython-only','Y', 'Run Cython and stop'),
                      ('diag', 'd','Enable library debug logging'),
@@ -166,9 +165,9 @@ class cybuild(build):
         l = output.find("HDF5 Version")
         if l > 0:
             if output[l:l+30].find('1.8') > 0:
-                return (16,18)
+                return 18
             elif output[l:l+30].find('1.6') > 0:
-                return (16,)
+                return 16
         return None
 
     def initialize_options(self):
@@ -190,6 +189,10 @@ class cybuild(build):
 
         build.finalize_options(self)
 
+        if self.cython_only or self.diag or self.threads or self.api or self.hdf5:
+            self._default = False
+            self.cython = True
+
         if self.hdf5 is not None:
             self._default = False
             self.hdf5 = op.abspath(self.hdf5)
@@ -201,20 +204,16 @@ class cybuild(build):
             self.api = self.get_hdf5_version()
             if self.api is None:
                 warn("Can't determine HDF5 version, assuming 1.6 (use --api= to override)")
-                self.api = (16,)
+                self.api = 16
         else:
             # User specified the API levels
             self._default = False
             try:
-                self.api = tuple(int(x) for x in self.api.split(',') if len(x) > 0)
-                if len(self.api) == 0 or not all(x in KNOWN_API for x in self.api):
+                self.api = int(self.api)
+                if self.api not in (16,18):
                     raise Exception
             except Exception:
                 fatal('Illegal option %s to --api= (legal values are %s)' % (self.api, ','.join(str(x) for x in KNOWN_API)))
-
-        if self.cython_only or self.diag or self.threads:
-            self._default = False
-            self.cython = True
 
     def run(self):
 
@@ -226,7 +225,7 @@ class cybuild(build):
         else:
             print "=> Creating new build configuration"
 
-            modules = MODULES[max(self.api)]
+            modules = MODULES[self.api]
             creator = ExtensionCreator(self.hdf5)
             extensions = [creator.create_extension(x) for x in modules]            
             with open('buildconf.pickle','w') as f:
@@ -253,20 +252,20 @@ class cybuild(build):
 DEF H5PY_VERSION = "%(VERSION)s"
 
 DEF H5PY_API = %(API_MAX)d     # Highest API level (i.e. 18 or 16)
-DEF H5PY_16API = %(API_16)d    # 1.6.X API available
+DEF H5PY_16API = %(API_16)d    # 1.6.X API available (always true, for now)
 DEF H5PY_18API = %(API_18)d    # 1.8.X API available
 
 DEF H5PY_DEBUG = %(DEBUG)d    # Logging-level number, or 0 to disable
 
 DEF H5PY_THREADS = %(THREADS)d  # Enable thread-safety and non-blocking reads
 """
-        return pxi_str % {"VERSION": VERSION, "API_MAX": max(self.api),
-                    "API_16": 16 in self.api, "API_18": 18 in self.api,
+        return pxi_str % {"VERSION": VERSION, "API_MAX": self.api,
+                    "API_16": True, "API_18": self.api == 18,
                     "DEBUG": 10 if self.diag else 0, "THREADS": self.threads,
                     "HDF5": "Default" if self.hdf5 is None else self.hdf5}
 
     def compile_cython(self, modules):
-        """ If needed, regenerate the C source files for the build process
+        """ Regenerate the C source files for the build process.
         """
 
         try:
@@ -278,7 +277,7 @@ DEF H5PY_THREADS = %(THREADS)d  # Enable thread-safety and non-blocking reads
             fatal("Old Cython version detected; at least %s required" % MIN_CYTHON)
 
         print "Running Cython (%s)..." % Version.version
-        print "  API levels: %s" % ','.join(str(x) for x in self.api)
+        print "  API level: %d" % self.api
         print "  Thread-aware: %s" % ('yes' if self.threads else 'no')
         print "  Diagnostic mode: %s" % ('yes' if self.diag else 'no')
         print "  HDF5: %s" % ('default' if self.hdf5 is None else self.hdf5)
@@ -335,11 +334,9 @@ DEF H5PY_THREADS = %(THREADS)d  # Enable thread-safety and non-blocking reads
 
 class test(cybuild):
 
-    """ Run unit tests.  As a special case, won't run Cython unless --cython
-        or --cython-only are specified.
-    """
+    """ Run unit tests """
 
-    description = "Build and run unit tests"
+    description = "Run unit tests in-place"
     user_options = cybuild.user_options + \
                    [('sections=','s','Comma separated list of tests ("-" prefix to NOT run)')]
 
@@ -393,8 +390,7 @@ class doc(cybuild):
 
 class cyclean(clean):
 
-    """ Standard distutils clean extended to clean up Cython-generated files.
-    """
+    """ Distutils clean extended to clean up Cython-generated files """
 
     user_options = clean.user_options + \
                    [('doc','d','Also destroy compiled documentation')]

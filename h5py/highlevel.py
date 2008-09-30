@@ -281,11 +281,15 @@ class Group(HLObject):
 
     def visit(self, func):
         """ Recursively iterate a function or callable object over the file,
-            calling it exactly once with each object name.  Return None to
-            continue iteration, or anything else to immediately return that
-            value.
+            calling it exactly once for each object with the signature:
+
+                func(<name>) => <None or return value>
+
+            Returning None continues iteration, returning anything else stops
+            and immediately returns that value from Group.visit.
 
             Example:
+
             # List the entire contents of the file
             >>> list_of_names = []
             >>> grp.visit(list_of_names.append)
@@ -300,6 +304,27 @@ class Group(HLObject):
                 return func(name)
 
             return h5o.visit(self.id, call_proxy)
+
+    def visititems(self, func):
+        """ Recursively iterate a function or callable object over the file,
+            calling it exactly once for each object, with the signature::
+    
+                func(<name>, <object instance>) => <None or return value>
+
+            Returning None continues iteration, returning anything else stops
+            and immediately returns that value from Group.visit.
+
+            Only available with HDF5 1.8.X.
+        """
+        if not config.API_18:
+            raise NotImplementedError("This feature is only available with HDF5 1.8.0 and later")
+
+        with self._lock:
+            def call_proxy(name, info):
+                return func(name, self[name])
+
+            return h5o.visit(self.id, call_proxy)
+
 
     def __str__(self):
         with self._lock:

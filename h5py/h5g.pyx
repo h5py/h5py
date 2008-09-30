@@ -182,66 +182,63 @@ cdef herr_t iter_cb_helper(hid_t gid, char *name, object int_tpl) except -1:
 
     return 0
 
-# COMPAT: 1.8 deprecation
-IF H5PY_16API:
-    @sync
-    def iterate(GroupID loc not None, char* name, object func, object data=None, 
-                int startidx=0):
-        """ (GroupID loc, STRING name, FUNCTION func, OBJECT data=None, 
-                UINT startidx=0) => INT last_index_processed
+@sync
+def iterate(GroupID loc not None, char* name, object func, object data=None, 
+            int startidx=0):
+    """ (GroupID loc, STRING name, FUNCTION func, OBJECT data=None, 
+            UINT startidx=0) => INT last_index_processed
 
-            Iterate an arbitrary Python function over a group.  Note that the
-            group is specified by a parent and a name; if you have a group
-            identifier and want to iterate over it; pass in "." for the name.
-            You can also start at an arbitrary member by specifying its 
-            (zero-based) index.
+        Iterate an arbitrary Python function over a group.  Note that the
+        group is specified by a parent and a name; if you have a group
+        identifier and want to iterate over it; pass in "." for the name.
+        You can also start at an arbitrary member by specifying its 
+        (zero-based) index.
 
-            Your function:
-            1.  Should accept three arguments: the GroupID of the group, the 
-                (STRING) name of the member, and an arbitary Python object you 
-                provide as data.  Any return value is ignored.
-            2.  Raise StopIteration to bail out before all members are processed.
-            3.  Raising anything else immediately aborts iteration, and the
-                exception is propagated.
-        """
-        cdef int i
-        cdef list err_list
-        err_list = []
+        Your function:
+        1.  Should accept three arguments: the GroupID of the group, the 
+            (STRING) name of the member, and an arbitary Python object you 
+            provide as data.  Any return value is ignored.
+        2.  Raise StopIteration to bail out before all members are processed.
+        3.  Raising anything else immediately aborts iteration, and the
+            exception is propagated.
+    """
+    cdef int i
+    cdef list err_list
+    err_list = []
 
-        if startidx < 0:
-            raise ValueError("Starting index must be non-negative.")
-        i = startidx
+    if startidx < 0:
+        raise ValueError("Starting index must be non-negative.")
+    i = startidx
 
-        int_tpl = (loc, func, data, err_list)
+    int_tpl = (loc, func, data, err_list)
 
-        H5Giterate(loc.id, name, &i, <H5G_iterate_t>iter_cb_helper, int_tpl)
+    H5Giterate(loc.id, name, &i, <H5G_iterate_t>iter_cb_helper, int_tpl)
 
-        if len(err_list) > 0:
-            raise err_list[0]
+    if len(err_list) > 0:
+        raise err_list[0]
 
-# COMPAT: 1.8 deprecation
-IF H5PY_16API:
-    @sync
-    def get_objinfo(ObjectID obj not None, object name='.', int follow_link=1):
-        """ (ObjectID obj, STRING name='.', BOOL follow_link=True) => GroupStat object
 
-            Obtain information about a named object.  If "name" is provided,
-            "obj" is taken to be a GroupID object containing the target.
-            The return value is a GroupStat object; see that class's docstring
-            for a description of its attributes.  
+@sync
+def get_objinfo(ObjectID obj not None, object name='.', int follow_link=1):
+    """ (ObjectID obj, STRING name='.', BOOL follow_link=True) => GroupStat object
 
-            If follow_link is True (default) and the object is a symbolic link, 
-            the information returned describes its target.  Otherwise the 
-            information describes the link itself.
-        """
-        cdef GroupStat statobj
-        statobj = GroupStat()
-        cdef char* _name
-        _name = name
+        Obtain information about a named object.  If "name" is provided,
+        "obj" is taken to be a GroupID object containing the target.
+        The return value is a GroupStat object; see that class's docstring
+        for a description of its attributes.  
 
-        H5Gget_objinfo(obj.id, _name, follow_link, &statobj.infostruct)
+        If follow_link is True (default) and the object is a symbolic link, 
+        the information returned describes its target.  Otherwise the 
+        information describes the link itself.
+    """
+    cdef GroupStat statobj
+    statobj = GroupStat()
+    cdef char* _name
+    _name = name
 
-        return statobj
+    H5Gget_objinfo(obj.id, _name, follow_link, &statobj.infostruct)
+
+    return statobj
 
 # === Group member management =================================================
 
@@ -280,184 +277,173 @@ cdef class GroupID(ObjectID):
         IF H5PY_18API:
             H5Gclose(self.id)  # extra ref in the LinkProxy
 
-    # COMPAT: 1.8 deprecation
-    IF H5PY_16API:
-        @sync
-        def link(self, char* current_name, char* new_name, 
-                 int link_type=H5G_LINK_HARD, GroupID remote=None):
-            """ (STRING current_name, STRING new_name, INT link_type=LINK_HARD, 
-                 GroupID remote=None)
 
-                Create a new hard or soft link.  current_name identifies
-                the link target (object the link will point to).  The new link is
-                identified by new_name and (optionally) another group "remote".
+    @sync
+    def link(self, char* current_name, char* new_name, 
+             int link_type=H5G_LINK_HARD, GroupID remote=None):
+        """ (STRING current_name, STRING new_name, INT link_type=LINK_HARD, 
+             GroupID remote=None)
 
-                Link types are:
-                    LINK_HARD:  Hard link to existing object (default)
-                    LINK_SOFT:  Symbolic link; link target need not exist.
-            """
-            cdef hid_t remote_id
-            if remote is None:
-                remote_id = self.id
-            else:
-                remote_id = remote.id
+            Create a new hard or soft link.  current_name identifies
+            the link target (object the link will point to).  The new link is
+            identified by new_name and (optionally) another group "remote".
 
-            H5Glink2(self.id, current_name, <H5G_link_t>link_type, remote_id, new_name)
+            Link types are:
+                LINK_HARD:  Hard link to existing object (default)
+                LINK_SOFT:  Symbolic link; link target need not exist.
+        """
+        cdef hid_t remote_id
+        if remote is None:
+            remote_id = self.id
+        else:
+            remote_id = remote.id
 
-    # COMPAT: 1.8 deprecation
-    IF H5PY_16API:
-        @sync
-        def unlink(self, char* name):
-            """ (STRING name)
+        H5Glink2(self.id, current_name, <H5G_link_t>link_type, remote_id, new_name)
 
-                Remove a link to an object from this group.
-            """
-            H5Gunlink(self.id, name)
+
+    @sync
+    def unlink(self, char* name):
+        """ (STRING name)
+
+            Remove a link to an object from this group.
+        """
+        H5Gunlink(self.id, name)
    
-    # COMPAT: 1.8 deprecation 
-    IF H5PY_16API:
-        @sync
-        def move(self, char* current_name, char* new_name, GroupID remote=None):
-            """ (STRING current_name, STRING new_name, GroupID remote=None)
 
-                Relink an object.  current_name identifies the object.
-                new_name and (optionally) another group "remote" determine
-                where it should be moved.
-            """
-            cdef hid_t remote_id
-            if remote is None:
-                remote_id = self.id
-            else:
-                remote_id = remote.id
+    @sync
+    def move(self, char* current_name, char* new_name, GroupID remote=None):
+        """ (STRING current_name, STRING new_name, GroupID remote=None)
 
-            H5Gmove2(self.id, current_name, remote_id, new_name)
+            Relink an object.  current_name identifies the object.
+            new_name and (optionally) another group "remote" determine
+            where it should be moved.
+        """
+        cdef hid_t remote_id
+        if remote is None:
+            remote_id = self.id
+        else:
+            remote_id = remote.id
 
-    # COMPAT: 1.8 deprecation
-    IF H5PY_16API:
-        @sync
-        def get_num_objs(self):
-            """ () => INT number_of_objects
+        H5Gmove2(self.id, current_name, remote_id, new_name)
 
-                Get the number of objects directly attached to a given group.
-            """
-            cdef hsize_t size
-            H5Gget_num_objs(self.id, &size)
-            return size
 
-    # COMPAT: 1.8 deprecation
-    IF H5PY_16API:
-        @sync
-        def get_objname_by_idx(self, hsize_t idx):
-            """ (INT idx) => STRING object_name
+    @sync
+    def get_num_objs(self):
+        """ () => INT number_of_objects
 
-                Get the name of a group member given its zero-based index.
+            Get the number of objects directly attached to a given group.
+        """
+        cdef hsize_t size
+        H5Gget_num_objs(self.id, &size)
+        return size
 
-                Due to a limitation of the HDF5 library, the generic exception
-                H5Error is raised if the idx parameter is out-of-range.
-            """
-            cdef int size
-            cdef char* buf
-            buf = NULL
 
-            # This function does not properly raise an exception
-            size = H5Gget_objname_by_idx(self.id, idx, NULL, 0)
-            if size < 0:
-                raise H5Error("Invalid index")
+    @sync
+    def get_objname_by_idx(self, hsize_t idx):
+        """ (INT idx) => STRING object_name
 
-            buf = <char*>emalloc(sizeof(char)*(size+1))
-            try:
-                H5Gget_objname_by_idx(self.id, idx, buf, size+1)
-                pystring = buf
-                return pystring
-            finally:
-                efree(buf)
+            Get the name of a group member given its zero-based index.
 
-    # COMPAT: 1.8 deprecation
-    IF H5PY_16API:
-        @sync
-        def get_objtype_by_idx(self, hsize_t idx):
-            """ (INT idx) => INT object_type_code
+            Due to a limitation of the HDF5 library, the generic exception
+            H5Error is raised if the idx parameter is out-of-range.
+        """
+        cdef int size
+        cdef char* buf
+        buf = NULL
 
-                Get the type of an object attached to a group, given its zero-based
-                index.  Possible return values are:
-                    - LINK
-                    - GROUP
-                    - DATASET
-                    - DATATYPE
+        # This function does not properly raise an exception
+        size = H5Gget_objname_by_idx(self.id, idx, NULL, 0)
+        if size < 0:
+            raise H5Error("Invalid index")
 
-                Due to a limitation of the HDF5 library, the generic exception
-                H5Error is raised if the idx parameter is out-of-range.
-            """
-            # This function does not properly raise an exception
-            cdef herr_t retval
-            retval = H5Gget_objtype_by_idx(self.id, idx)
-            if retval < 0:
-                raise H5Error("Invalid index")
-            return retval
+        buf = <char*>emalloc(sizeof(char)*(size+1))
+        try:
+            H5Gget_objname_by_idx(self.id, idx, buf, size+1)
+            pystring = buf
+            return pystring
+        finally:
+            efree(buf)
 
-    # COMPAT: 1.8 deprecation
-    IF H5PY_16API:
-        @sync
-        def get_linkval(self, char* name):
-            """ (STRING name) => STRING link_value
 
-                Retrieve the value (target name) of a symbolic link.
-                Limited to 2048 characters on Windows.
-            """
-            cdef char* value
-            cdef H5G_stat_t statbuf
-            value = NULL
+    @sync
+    def get_objtype_by_idx(self, hsize_t idx):
+        """ (INT idx) => INT object_type_code
 
-            H5Gget_objinfo(self.id, name, 0, &statbuf)
+            Get the type of an object attached to a group, given its zero-based
+            index.  Possible return values are:
+                - LINK
+                - GROUP
+                - DATASET
+                - DATATYPE
 
-            if statbuf.type != H5G_LINK:
-                raise ValueError('"%s" is not a symbolic link.' % name)
+            Due to a limitation of the HDF5 library, the generic exception
+            H5Error is raised if the idx parameter is out-of-range.
+        """
+        # This function does not properly raise an exception
+        cdef herr_t retval
+        retval = H5Gget_objtype_by_idx(self.id, idx)
+        if retval < 0:
+            raise H5Error("Invalid index")
+        return retval
 
-            IF UNAME_SYSNAME == "Windows":
-                linklen = 2049  # Windows statbuf.linklen seems broken
-            ELSE:
-                linklen = statbuf.linklen+1
-            value = <char*>emalloc(sizeof(char)*linklen)
-            try:
-                H5Gget_linkval(self.id, name, linklen, value)
-                value[linklen-1] = c'\0'  # in case HDF5 doesn't null terminate on Windows
-                pyvalue = value
-                return pyvalue
-            finally:
-                efree(value)
 
-    # COMPAT: 1.8 deprecation
-    IF H5PY_16API:
-        @sync
-        def set_comment(self, char* name, char* comment):
-            """ (STRING name, STRING comment)
+    @sync
+    def get_linkval(self, char* name):
+        """ (STRING name) => STRING link_value
 
-                Set the comment on a group member.
-            """
-            H5Gset_comment(self.id, name, comment)
+            Retrieve the value (target name) of a symbolic link.
+            Limited to 2048 characters on Windows.
+        """
+        cdef char* value
+        cdef H5G_stat_t statbuf
+        value = NULL
 
-    # COMPAT: 1.8 deprecation
-    IF H5PY_16API:
-        @sync
-        def get_comment(self, char* name):
-            """ (STRING name) => STRING comment
+        H5Gget_objinfo(self.id, name, 0, &statbuf)
 
-                Retrieve the comment for a group member.
-            """
-            cdef int cmnt_len
-            cdef char* cmnt
-            cmnt = NULL
+        if statbuf.type != H5G_LINK:
+            raise ValueError('"%s" is not a symbolic link.' % name)
 
-            cmnt_len = H5Gget_comment(self.id, name, 0, NULL)
-            assert cmnt_len >= 0
+        IF UNAME_SYSNAME == "Windows":
+            linklen = 2049  # Windows statbuf.linklen seems broken
+        ELSE:
+            linklen = statbuf.linklen+1
+        value = <char*>emalloc(sizeof(char)*linklen)
+        try:
+            H5Gget_linkval(self.id, name, linklen, value)
+            value[linklen-1] = c'\0'  # in case HDF5 doesn't null terminate on Windows
+            pyvalue = value
+            return pyvalue
+        finally:
+            efree(value)
 
-            cmnt = <char*>emalloc(sizeof(char)*(cmnt_len+1))
-            try:
-                H5Gget_comment(self.id, name, cmnt_len+1, cmnt)
-                py_cmnt = cmnt
-                return py_cmnt
-            finally:
-                efree(cmnt)
+    @sync
+    def set_comment(self, char* name, char* comment):
+        """ (STRING name, STRING comment)
+
+            Set the comment on a group member.
+        """
+        H5Gset_comment(self.id, name, comment)
+
+    @sync
+    def get_comment(self, char* name):
+        """ (STRING name) => STRING comment
+
+            Retrieve the comment for a group member.
+        """
+        cdef int cmnt_len
+        cdef char* cmnt
+        cmnt = NULL
+
+        cmnt_len = H5Gget_comment(self.id, name, 0, NULL)
+        assert cmnt_len >= 0
+
+        cmnt = <char*>emalloc(sizeof(char)*(cmnt_len+1))
+        try:
+            H5Gget_comment(self.id, name, cmnt_len+1, cmnt)
+            py_cmnt = cmnt
+            return py_cmnt
+        finally:
+            efree(cmnt)
 
     # === Special methods =====================================================
 
