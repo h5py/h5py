@@ -189,7 +189,8 @@ class cybuild(build):
 
         build.finalize_options(self)
 
-        if self.cython_only or self.diag or self.threads or self.api or self.hdf5:
+        if any((self.cython, self.cython_only, self.diag, self.threads,
+                self.api, self.hdf5)):
             self._default = False
             self.cython = True
 
@@ -235,7 +236,7 @@ class cybuild(build):
 
         # Rebuild the C source files if necessary
         if self.cython:
-            self.compile_cython(modules)
+            self.compile_cython(sorted(modules))
             if self.cython_only:
                 exit(0)
 

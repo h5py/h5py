@@ -491,7 +491,7 @@ IF H5PY_18API:
 
     #  Prototype for H5Literate/H5Literate_by_name() operator 
     ctypedef herr_t (*H5L_iterate_t) (hid_t group, char *name, H5L_info_t *info,
-                      void *op_data)
+                      void *op_data) except 2
 
     # Links API
 
@@ -545,6 +545,13 @@ IF H5PY_18API:
     herr_t H5Lvisit_by_name(hid_t loc_id, char *group_name,
       H5_index_t idx_type, H5_iter_order_t order, H5L_iterate_t op,
       void *op_data, hid_t lapl_id) except *
+
+    herr_t H5Lunpack_elink_val(void *ext_linkval, size_t link_size,
+        unsigned *flags, char **filename, char **obj_path) except *
+
+    herr_t H5Lcreate_external(char *file_name, char *obj_name,
+        hid_t link_loc_id, char *link_name, hid_t lcpl_id, hid_t lapl_id) except *
+
 
 # === H5O - General object operations (1.8.X only) ============================
 
@@ -640,13 +647,14 @@ IF H5PY_18API:
               char *comment, size_t bufsize, hid_t lapl_id) except *
 
     ctypedef herr_t (*H5O_iterate_t)(hid_t obj, char *name, H5O_info_t *info,
-                      void *op_data)
+                      void *op_data) except 2
 
     herr_t H5Ovisit(hid_t obj_id, H5_index_t idx_type, H5_iter_order_t order,
             H5O_iterate_t op, void *op_data) except *
     herr_t H5Ovisit_by_name(hid_t loc_id, char *obj_name,
             H5_index_t idx_type, H5_iter_order_t order, H5O_iterate_t op,
             void *op_data, hid_t lapl_id) except *
+
     herr_t H5Oclose(hid_t object_id) except *
 
 # === H5P - Property list API =================================================
@@ -1216,6 +1224,12 @@ cdef extern from "hdf5.h":
       H5O_msg_crt_idx_t corder      # Creation order
       H5T_cset_t        cset        # Character set of attribute name
       hsize_t           data_size   # Size of raw data
+
+    herr_t H5Aopen(hid_t obj_id, char *attr_name, hid_t aapl_id) 
+    herr_t H5Aopen_by_name( hid_t loc_id, char *obj_name, char *attr_name,
+        hid_t aapl_id, hid_t lapl_id) 
+    herr_t H5Aopen_by_idx(hid_t loc_id, char *obj_name, H5_index_t idx_type,
+        H5_iter_order_t order, hsize_t n, hid_t aapl_id, hid_t lapl_id) 
 
 
 

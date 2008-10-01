@@ -19,6 +19,7 @@ include "sync.pxi"
 # Pyrex compile-time imports
 from h5 cimport init_hdf5, ObjectID
 from h5i cimport wrap_identifier
+from h5p cimport PropID, pdefault
 
 # Initialization
 init_hdf5()
@@ -58,77 +59,59 @@ def get_info(ObjectID obj not None):
     H5Oget_info(obj.id, &info.infostruct)
     return info
 
-cdef class _Visit_Data:
+
+# === Visit routines ==========================================================
+
+cdef class _ObjectVisitor:
 
     cdef object func
-    cdef object exc
     cdef object retval
     cdef ObjInfo objinfo
 
     def __init__(self, func):
         self.func = func
-        self.exc = None
         self.retval = None
         self.objinfo = ObjInfo()
 
-cdef herr_t visit_cb(hid_t obj, char* name, H5O_info_t *info, void* data):
+cdef herr_t cb_obj_iterate(hid_t obj, char* name, H5O_info_t *info, void* data) except 2:
 
-    cdef _Visit_Data wrapper
-    wrapper = <_Visit_Data>data
+    cdef _ObjectVisitor visit
+    visit = <_ObjectVisitor>data
 
-    wrapper.objinfo.infostruct = info[0]
+    visit.objinfo.infostruct = info[0]
 
-    try:
-        retval = wrapper.func(name, wrapper.objinfo)
-    except StopIteration:
-        return 1
-    except BaseException, e:   # The exception MUST be trapped, including SystemExit
-        wrapper.exc = e
-        return 1
+    visit.retval = visit.func(name, visit.objinfo)
 
-    if retval is not None:
-        wrapper.retval = retval
-        return 1
-
-    return 0
+    if (visit.retval is None) or (not visit.retval):
+        return 0
+    return 1
  
 @sync
-def visit(ObjectID obj not None, object func, int idx_type=H5_INDEX_NAME,
-          int order=H5_ITER_NATIVE):
-    """ (ObjectID obj, CALLABLE func, INT idx_type=, INT order=)
+def visit(ObjectID loc not None, object func, *,
+          int idx_type=H5_INDEX_NAME, int order=H5_ITER_NATIVE,
+          char* name=".", PropID lapl=None):
+    """ (ObjectID loc, CALLABLE func, **kwds) => <Return value from func>
 
-        Recursively iterate a function or callable object over this group's
-        contents.  Your callable should match the signature:
+        Iterate a function or callable object over all objects below the
+        specified one.  Your callable should conform to the signature:
 
-            func(name, info)
+            func(STRING name, ObjInfo info) => Result
 
-        where "name" is (a) name relative to the starting group, and "info" is
-        an ObjInfo instance describing each object.  Please note the same
-        ObjInfo instance is provided call to call, with its values mutated.
-        Don't store references to it; use the copy module instead.
+        Returning None or a logical False continues iteration; returning
+        anything else aborts iteration and returns that value.
 
-        Your callable should also conform to the following behavior:
-
-        1. Return None for normal iteration; raise StopIteration to cancel
-           and return None from h5o.visit.
-
-        2. Returning a value other than None cancels iteration and immediately
-           returns that value from h5o.visit.
-
-        3. Raising any other exception aborts iteration; the exception will
-           be correctly propagated.
+        Keyword-only arguments:
+        * STRING name ("."):            Visit a subgroup of "loc" instead
+        * PropLAID lapl (None):          Control how "name" is interpreted
+        * INT idx_type (h5.INDEX_NAME):  What indexing strategy to use
+        * INT order (h5.ITER_NATIVE):    Order in which iteration occurs
     """
-    cdef _Visit_Data wrapper
-    wrapper = _Visit_Data(func)
+    cdef _ObjectVisitor visit = _ObjectVisitor()
 
-    H5Ovisit(obj.id, <H5_index_t>idx_type, <H5_iter_order_t>order, visit_cb, <void*>wrapper)
+    H5Ovisit_by_name(loc.id, name, <H5_index_t>idx_type,
+        <H5_iter_order_t>order, cb_obj_iterate, <void*>visit, pdefault(lapl))
 
-    if wrapper.exc is not None:
-        raise wrapper.exc
-
-    return wrapper.retval  # None or custom value
-    
-
+    return visit.retval
 
 
 

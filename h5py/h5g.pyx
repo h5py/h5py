@@ -155,14 +155,12 @@ IF H5PY_18API:
                                                 pdefault(gapl)))
 ELSE:
     @sync
-    def create(ObjectID loc not None, char* name, int size_hint=-1):
-        """ (ObjectID loc, STRING name, INT size_hint=-1) => GroupID
+    def create(ObjectID loc not None, char* name):
+        """ (ObjectID loc, STRING name) => GroupID
 
-            Create a new group, under a given parent group.  If given, size_hint
-            is an estimate of the space to reserve (in bytes) for group member
-            names.
+            Create a new group, under a given parent group.
         """
-        return GroupID(H5Gcreate(loc.id, name, size_hint))
+        return GroupID(H5Gcreate(loc.id, name, -1))
 
 cdef herr_t iter_cb_helper(hid_t gid, char *name, object int_tpl) except -1:
     # Callback function for H5Giterate

@@ -21,6 +21,7 @@ include "sync.pxi"
 from h5 cimport init_hdf5
 from h5t cimport TypeID, typewrap, py_create
 from h5s cimport SpaceID
+from h5p cimport PropID, pdefault
 from numpy cimport import_array, ndarray, PyArray_DATA
 from utils cimport check_numpy_read, check_numpy_write, emalloc, efree
 
@@ -42,26 +43,50 @@ def create(ObjectID loc not None, char* name, TypeID tid not None,
     """
     return AttrID(H5Acreate(loc.id, name, tid.id, space.id, H5P_DEFAULT))
 
-@sync
-def open_idx(ObjectID loc not None, int idx):
-    """ (ObjectID loc_id, UINT idx) => AttrID
+IF H5PY_18API:
+    @sync
+    def open(ObjectID loc not None, char* name=NULL, int idx=-1, *,
+            char* obj_name='.', int idx_type=H5_INDEX_NAME, int order=H5_ITER_NATIVE,
+            PropID lapl=None):
+        """
+            (ObjectID loc, STRING name=NULL, INT order=-1, **kwds)
+            => AttrID
+       
+            Open an attribute attached to an existing object.  You must specify
+            exactly one of either name or idx.
 
-        Open an exisiting attribute on an object, by zero-based index.
-    """
-    # If the argument is declared UINT and someone passes in -1, the Pyrex
-    # layer happily converts it to something like 2**32 -1, which crashes the
-    # 1.6.5 version HDF5 library.
-    if idx < 0:
-        raise ValueError("Index must be a non-negative integer.")
-    return AttrID(H5Aopen_idx(loc.id, idx))
+            Keyword-only arguments:
+            * STRING obj_name (NULL):       Attribute is attached to this group member
+            * PropID lapl (None):           Controls how "obj_name" is interpreted
+            * INT idx_type (h5.INDEX_NAME)  Controls how idx is interpreted
+            * INT order (h5.ITER_NATIVE)    Controls how idx is interpreted
+        """
+        if (name == NULL and idx < 0) or (name != NULL and idx >= 0):
+            raise ValueError("Exactly one of name or idx must be specified")
 
-@sync
-def open_name(ObjectID loc not None, char* name):
-    """ (ObjectID loc, STRING name) => AttrID
+        if name != NULL:
+            return AttrID(H5Aopen_by_name(loc.id, obj_name, name,
+                            H5P_DEFAULT, pdefault(lapl)))
+        else:
+            return AttrID(H5Aopen_by_idx(loc.id, obj_name,
+                <H5_index_t>idx_type, <H5_iter_order_t>order, idx,
+                H5P_DEFAULT, pdefault(lapl)))
 
-        Open an existing attribute on an object, by name.
-    """
-    return AttrID(H5Aopen_name(loc.id, name))
+ELSE:
+    @sync
+    def open(ObjectID loc not None, char* name=NULL, int idx=-1):
+        """ (ObjectID loc, STRING name=NULL, INT idx=-1) => AttrID
+
+            Open an attribute attached to an existing object.  You must specify
+            exactly one of either name or idx.
+        """
+        if (name == NULL and idx < 0) or (name != NULL and idx >= 0):
+            raise ValueError("Exactly one of name or idx must be specified")
+
+        if name != NULL:
+            return AttrID(H5Aopen_name(loc.id, name))
+        else:
+            return AttrID(H5Aopen_idx(loc.id, idx))
 
 @sync
 def delete(ObjectID loc not None, char* name):
