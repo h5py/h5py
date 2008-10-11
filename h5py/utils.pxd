@@ -17,8 +17,8 @@ from numpy cimport ndarray
 cdef void* emalloc(size_t size) except? NULL
 cdef void efree(void* ptr)
 
-cdef int check_numpy_read(ndarray arr, hid_t space_id=*) except -1
-cdef int check_numpy_write(ndarray arr, hid_t space_id=*) except -1
+cpdef int check_numpy_read(ndarray arr, hid_t space_id=*) except -1
+cpdef int check_numpy_write(ndarray arr, hid_t space_id=*) except -1
 
 cdef int convert_tuple(object tuple, hsize_t *dims, hsize_t rank) except -1
 cdef object convert_dims(hsize_t* dims, hsize_t rank)

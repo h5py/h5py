@@ -60,7 +60,7 @@ class TestH5A(TestBase):
             attr.write(arr_ref)
             self.assertRaises(TypeError, attr.write, arr_fail)
 
-            attr = h5a.open_name(obj, name)
+            attr = h5a.open(obj, name)
             dt = attr.dtype
             shape = attr.shape
             arr_val = ndarray(shape, dtype=dt)
@@ -69,16 +69,16 @@ class TestH5A(TestBase):
 
     def test_open_idx(self):
         for idx, name in enumerate(ATTRIBUTES_ORDER):
-            attr = h5a.open_idx(self.obj, idx)
+            attr = h5a.open(self.obj, idx=idx)
             self.assert_(self.is_attr(attr), "Open: index %d" % idx)
 
-    def test_open_name(self):
+    def test_open(self):
         for name in ATTRIBUTES:
-            attr = h5a.open_name(self.obj, name)
+            attr = h5a.open(self.obj, name)
             self.assert_(self.is_attr(attr), 'Open: name "%s"' % name)
 
     def test_close(self):
-        attr = h5a.open_idx(self.obj, 0)
+        attr = h5a.open(self.obj, idx=0)
         self.assert_(self.is_attr(attr))
         attr._close()
         self.assert_(not self.is_attr(attr))
@@ -87,12 +87,12 @@ class TestH5A(TestBase):
 
         obj = h5g.open(self.fid, OBJECTNAME)
 
-        attr = h5a.open_name(obj, ATTRIBUTES_ORDER[0])
+        attr = h5a.open(obj, ATTRIBUTES_ORDER[0])
         self.assert_(self.is_attr(attr))
         del attr
 
         h5a.delete(obj, ATTRIBUTES_ORDER[0])
-        self.assertRaises(H5Error, h5a.open_name, obj, ATTRIBUTES_ORDER[0])
+        self.assertRaises(H5Error, h5a.open, obj, ATTRIBUTES_ORDER[0])
 
 
     # === Attribute I/O =======================================================
@@ -101,7 +101,7 @@ class TestH5A(TestBase):
         for name in ATTRIBUTES:
             value, dt, shape = ATTRIBUTES[name]
 
-            attr = h5a.open_name(self.obj, name)
+            attr = h5a.open(self.obj, name)
             arr_holder = ndarray(shape, dtype=dt)
             arr_reference = array(value, dtype=dt)
 
@@ -122,13 +122,13 @@ class TestH5A(TestBase):
     def test_get_name(self):
     
         for name in ATTRIBUTES:
-            attr = h5a.open_name(self.obj, name)
+            attr = h5a.open(self.obj, name)
             self.assertEqual(attr.get_name(), name)
 
     def test_get_space(self):
 
         for name, (value, dt, shape) in ATTRIBUTES.iteritems():
-            attr = h5a.open_name(self.obj, name)
+            attr = h5a.open(self.obj, name)
             space = attr.get_space()
             shape_tpl = space.get_simple_extent_dims()
             self.assertEqual(shape_tpl, shape)
@@ -136,7 +136,7 @@ class TestH5A(TestBase):
     def test_get_type(self):
 
         for name, (value, dt, shape) in ATTRIBUTES.iteritems():
-            attr = h5a.open_name(self.obj, name)
+            attr = h5a.open(self.obj, name)
             htype = attr.get_type()
 
     def test_iterate(self):
@@ -173,19 +173,19 @@ class TestH5A(TestBase):
     def test_prop_name(self):
         
         for name in ATTRIBUTES:
-            attr = h5a.open_name(self.obj, name)
+            attr = h5a.open(self.obj, name)
             self.assertEqual(attr.name, name)
 
     def test_prop_shape(self):
 
         for name, (val, dt, shape) in ATTRIBUTES.iteritems():
-            attr = h5a.open_name(self.obj, name)
+            attr = h5a.open(self.obj, name)
             self.assertEqual(attr.shape, shape)
 
     def test_prop_dtype(self):
 
         for name, (val, dt, shape) in ATTRIBUTES.iteritems():
-            attr = h5a.open_name(self.obj, name)
+            attr = h5a.open(self.obj, name)
             self.assertEqual(attr.dtype, dt)
 
     def test_py_listattrs(self):

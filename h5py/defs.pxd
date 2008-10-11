@@ -392,8 +392,8 @@ cdef extern from "hdf5.h":
   int    H5Gget_objname_by_idx(hid_t loc_id, hsize_t idx, char *name, size_t size ) except *
   int    H5Gget_objtype_by_idx(hid_t loc_id, hsize_t idx ) except *
 
-  ctypedef herr_t (*H5G_iterate_t)(hid_t group, char *name, op_data) except -1
-  herr_t H5Giterate(hid_t loc_id, char *name, int *idx, H5G_iterate_t operator, operator_data  ) except *
+  ctypedef herr_t (*H5G_iterate_t)(hid_t group, char *name, void* op_data) except 2
+  herr_t H5Giterate(hid_t loc_id, char *name, int *idx, H5G_iterate_t operator, void* data) except *
   herr_t H5Gget_objinfo(hid_t loc_id, char* name, int follow_link, H5G_stat_t *statbuf) except *
 
   herr_t H5Gget_linkval(hid_t loc_id, char *name, size_t size, char *value) except *
@@ -1214,8 +1214,8 @@ cdef extern from "hdf5.h":
   hid_t     H5Aget_space(hid_t attr_id) except *
   hid_t     H5Aget_type(hid_t attr_id) except *
 
-  ctypedef herr_t (*H5A_operator_t)(hid_t loc_id, char *attr_name, operator_data) except -1
-  herr_t    H5Aiterate(hid_t loc_id, unsigned * idx, H5A_operator_t op, op_data) except *
+  ctypedef herr_t (*H5A_operator_t)(hid_t loc_id, char *attr_name, void* operator_data) except 2
+  herr_t    H5Aiterate(hid_t loc_id, unsigned * idx, H5A_operator_t op, void* op_data) except *
 
   IF H5PY_18API:
 
@@ -1225,11 +1225,29 @@ cdef extern from "hdf5.h":
       H5T_cset_t        cset        # Character set of attribute name
       hsize_t           data_size   # Size of raw data
 
-    herr_t H5Aopen(hid_t obj_id, char *attr_name, hid_t aapl_id) 
+    hid_t H5Acreate_by_name(hid_t loc_id, char *obj_name, char *attr_name,
+        hid_t type_id, hid_t space_id, hid_t acpl_id, hid_t aapl_id, hid_t lapl_id) except *
+ 
+    herr_t H5Aopen(hid_t obj_id, char *attr_name, hid_t aapl_id) except *
     herr_t H5Aopen_by_name( hid_t loc_id, char *obj_name, char *attr_name,
-        hid_t aapl_id, hid_t lapl_id) 
+        hid_t aapl_id, hid_t lapl_id) except *
     herr_t H5Aopen_by_idx(hid_t loc_id, char *obj_name, H5_index_t idx_type,
-        H5_iter_order_t order, hsize_t n, hid_t aapl_id, hid_t lapl_id) 
+        H5_iter_order_t order, hsize_t n, hid_t aapl_id, hid_t lapl_id) except *
+    htri_t H5Aexists_by_name( hid_t loc_id, char *obj_name, char *attr_name,
+                                hid_t lapl_id) except *
+    htri_t H5Aexists(hid_t obj_id, char *attr_name) except *
+
+    herr_t H5Arename(hid_t loc_id, char *old_attr_name, char *new_attr_name) except *
+    herr_t H5Arename_by_name(hid_t loc_id, char *obj_name, char *old_attr_name,
+            char *new_attr_name, hid_t lapl_id) except *
+
+    herr_t H5Aget_info( hid_t attr_id, H5A_info_t *ainfo) except *
+    herr_t H5Aget_info_by_name(hid_t loc_id, char *obj_name, char *attr_name,
+                                H5A_info_t *ainfo, hid_t lapl_id) except *
+    herr_t H5Aget_info_by_idx(hid_t loc_id, char *obj_name, H5_index_t idx_type,
+              H5_iter_order_t order, hsize_t n, H5A_info_t *ainfo, hid_t lapl_id) except *
+
+
 
 
 

@@ -153,9 +153,8 @@ class cybuild(build):
 
 
     def get_hdf5_version(self):
-        """ Try to determine the installed HDF5 version and return a tuple
-            containing the appropriate API levels, or None if it can't be
-            determined.
+        """ Try to determine the installed HDF5 version and return either
+            16 or 18, or None if it can't be determined.
         """
         if self.hdf5 is not None:
             cmd = reduce(op.join, (self.hdf5, 'bin', 'h5cc'))+" -showconfig"
@@ -207,7 +206,7 @@ class cybuild(build):
                 warn("Can't determine HDF5 version, assuming 1.6 (use --api= to override)")
                 self.api = 16
         else:
-            # User specified the API levels
+            # User specified the API level
             self._default = False
             try:
                 self.api = int(self.api)

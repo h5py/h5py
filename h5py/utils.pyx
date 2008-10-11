@@ -22,7 +22,7 @@ from numpy cimport ndarray, import_array, \
                     PyArray_SimpleNew, PyArray_ContiguousFromAny, \
                     PyArray_FROM_OTF, PyArray_DIM, \
                     NPY_CONTIGUOUS, NPY_NOTSWAPPED, NPY_FORCECAST, \
-                    NPY_C_CONTIGUOUS, NPY_OWNDATA, NPY_WRITEABLE
+                    NPY_C_CONTIGUOUS, NPY_WRITEABLE
 
 
 # Initialization
@@ -76,12 +76,12 @@ cdef int check_numpy(ndarray arr, hid_t space_id, int write):
     # Validate array flags
 
     if write:
-        if not (arr.flags & (NPY_C_CONTIGUOUS | NPY_OWNDATA | NPY_WRITEABLE)):
-            PyErr_SetString(TypeError, "Array must be writable, C-contiguous and own its data.")
+        if not (arr.flags & NPY_C_CONTIGUOUS and arr.flags & NPY_WRITEABLE):
+            PyErr_SetString(TypeError, "Array must be C-contiguous and writable")
             return -1
     else:
-        if not (arr.flags & (NPY_C_CONTIGUOUS | NPY_OWNDATA)):
-            PyErr_SetString(TypeError, "Array must be C-contiguous and own its data.")
+        if not (arr.flags & NPY_C_CONTIGUOUS):
+            PyErr_SetString(TypeError, "Array must be C-contiguous")
             return -1
 
     # Validate dataspace compatibility, if it's provided
@@ -114,10 +114,10 @@ cdef int check_numpy(ndarray arr, hid_t space_id, int write):
             free(space_dims)
     return 1
 
-cdef int check_numpy_write(ndarray arr, hid_t space_id=-1) except -1:
+cpdef int check_numpy_write(ndarray arr, hid_t space_id=-1) except -1:
     return check_numpy(arr, space_id, 1)
 
-cdef int check_numpy_read(ndarray arr, hid_t space_id=-1) except -1:
+cpdef int check_numpy_read(ndarray arr, hid_t space_id=-1) except -1:
     return check_numpy(arr, space_id, 0)
 
 # === Conversion between HDF5 buffers and tuples ==============================

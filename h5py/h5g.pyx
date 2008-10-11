@@ -112,8 +112,7 @@ cdef class GroupIter:
 
     def __next__(self):
         if self.idx == self.nobjs:
-            if self.grp is not None:
-                self.grp = None
+            self.grp = None
             raise StopIteration
         
         retval = self.grp.get_objname_by_idx(self.idx)
@@ -122,7 +121,6 @@ cdef class GroupIter:
 
 # === Basic group management ==================================================
 
-# COMPAT: 1.8 update
 IF H5PY_18API:
     @sync
     def open(ObjectID loc not None, char* name, PropID gapl=None):
@@ -140,7 +138,7 @@ ELSE:
         """
         return GroupID(H5Gopen(loc.id, name))
 
-# COMPAT: 1.8 update
+
 IF H5PY_18API:
     @sync
     def create(ObjectID loc not None, char* name, PropID lcpl=None,
@@ -162,59 +160,51 @@ ELSE:
         """
         return GroupID(H5Gcreate(loc.id, name, -1))
 
-cdef herr_t iter_cb_helper(hid_t gid, char *name, object int_tpl) except -1:
-    # Callback function for H5Giterate
-    # Automatic exception propagation breaks in 1.8 for some reason, so
-    # stuff the exception into a mutable object.
+cdef class _GroupVisitor:
 
-    cdef list err_list
-    loc, func, data, err_list = int_tpl
+    cdef object func
+    cdef object retval
 
-    try:
-        func(loc, name, data)
-    except StopIteration:
+    def __init__(self, func):
+        self.func = func
+        self.retval = None
+
+cdef herr_t cb_group_iter(hid_t gid, char *name, void* vis_in) except 2:
+
+    cdef _GroupVisitor vis = <_GroupVisitor>vis_in
+
+    vis.retval = vis.func(name)
+
+    if vis.retval is not None:
         return 1
-    except Exception, e:
-        err_list.append(e)
-        return 1
-
     return 0
 
 @sync
-def iterate(GroupID loc not None, char* name, object func, object data=None, 
-            int startidx=0):
-    """ (GroupID loc, STRING name, FUNCTION func, OBJECT data=None, 
-            UINT startidx=0) => INT last_index_processed
+def iterate(GroupID loc not None, object func, int startidx=0, *,
+            char* obj_name='.'):
+    """ (GroupID loc, CALLABLE func, UINT startidx=0, **kwds)
+        => Return value from func
 
-        Iterate an arbitrary Python function over a group.  Note that the
-        group is specified by a parent and a name; if you have a group
-        identifier and want to iterate over it; pass in "." for the name.
-        You can also start at an arbitrary member by specifying its 
-        (zero-based) index.
+        Iterate a callable (function, method or callable object) over the
+        members of a group.  Your callable should have the signature:
 
-        Your function:
-        1.  Should accept three arguments: the GroupID of the group, the 
-            (STRING) name of the member, and an arbitary Python object you 
-            provide as data.  Any return value is ignored.
-        2.  Raise StopIteration to bail out before all members are processed.
-        3.  Raising anything else immediately aborts iteration, and the
-            exception is propagated.
+            func(STRING name) => Result
+
+        Returning None continues iteration; returning anything else aborts
+        iteration and returns that value.
+
+        Keywords:
+        * STRING obj_name (".")     Iterate over this subgroup instead
     """
-    cdef int i
-    cdef list err_list
-    err_list = []
-
     if startidx < 0:
-        raise ValueError("Starting index must be non-negative.")
-    i = startidx
+        raise ValueError("Starting index must be non-negative")
 
-    int_tpl = (loc, func, data, err_list)
+    cdef int i = startidx
+    cdef _GroupVisitor vis = _GroupVisitor(func)
 
-    H5Giterate(loc.id, name, &i, <H5G_iterate_t>iter_cb_helper, int_tpl)
+    H5Giterate(loc.id, obj_name, &i, <H5G_iterate_t>cb_group_iter, <void*>vis)
 
-    if len(err_list) > 0:
-        raise err_list[0]
-
+    return vis.retval
 
 @sync
 def get_objinfo(ObjectID obj not None, object name='.', int follow_link=1):
@@ -451,11 +441,14 @@ cdef class GroupID(ObjectID):
 
             Determine if a group member of the given name is present
         """
-        try:
-            H5Gget_objinfo(self.id, name, 1, NULL)
-            return True
-        except H5Error:
-            return False    
+        IF H5PY_18API:
+            return <bint>H5Lexists(self.id, name, H5P_DEFAULT)
+        ELSE:
+            try:
+                H5Gget_objinfo(self.id, name, 1, NULL)
+                return True
+            except H5Error:
+                return False    
 
     @nosync
     def __iter__(self):

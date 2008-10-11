@@ -73,6 +73,7 @@ try:
 except ImportError:
     readline = None
 
+
 class LockableObject(object):
 
     """
@@ -80,6 +81,7 @@ class LockableObject(object):
     """
 
     _lock = h5.get_phil()
+
 
 class HLObject(LockableObject):
 
@@ -98,11 +100,9 @@ class HLObject(LockableObject):
     attrs = property(lambda self: self._attrs,
         doc = "Provides access to HDF5 attributes. See AttributeManager.")
 
-    def __repr__(self):
-        return str(self)
-
     def __nonzero__(self):
         return self.id.__nonzero__()
+
 
 class Group(HLObject):
 
@@ -126,9 +126,6 @@ class Group(HLObject):
         Group attributes are accessed via group.attrs; see the docstring for
         the AttributeManager class.
     """
-
-    names = property(lambda self: tuple(self),
-        doc = "Tuple of group member names")
 
     def __init__(self, parent_object, name, create=False):
         """ Create a new Group object, from a parent object and a name.
@@ -183,9 +180,7 @@ class Group(HLObject):
                 htype.commit(self.id, name)
 
             else:
-                if not isinstance(obj, numpy.ndarray):
-                    obj = numpy.array(obj)
-                Dataset(self, name, data=obj)
+                self.create_dataset(name, data=obj)
 
     def __getitem__(self, name):
         """ Open an object attached to this group. 
@@ -221,12 +216,6 @@ class Group(HLObject):
     def __iter__(self):
         """ Iterate over member names """
         return self.id.__iter__()
-
-    def iteritems(self):
-        """ Iterate over the group members as (name, value) pairs """
-        with self._lock:
-            for name in self:
-                yield (name, self[name])
 
     def create_group(self, name):
         """ Create and return a subgroup.
@@ -279,20 +268,60 @@ class Group(HLObject):
                 outstr += '\nComment:\n'+cmnt
             return outstr
 
-    def visit(self, func):
-        """ Recursively iterate a function or callable object over the file,
-            calling it exactly once for each object with the signature:
+    # Dictionary compatibility methods
 
-                func(<name>) => <None or return value>
+    def listnames(self):
+        """ Get a list containing member names """
+        with self._lock:
+            return list(self)
+
+    def iternames(self):
+        """ Get an iterator over member names """
+        with self._lock:
+            return iter(self)
+
+    def listobjects(self):
+        """ Get a list containing member objects """
+        with self._lock:
+            return [self[x] for x in self]
+
+    def iterobjects(self):
+        """ Get an iterator over member objects """
+        with self._lock:
+            for x in self:
+                yield self[x]
+
+    def listitems(self):
+        """ Get a list of tuples containing (name, object) pairs """
+        with self._lock:
+            return [(x, self[x]) for x in self]
+
+    def iteritems(self):
+        """ Get an iterator over (name, object) pairs """
+        with self._lock:
+            for x in self:
+                yield (x, self[x])
+
+    # New 1.8.X methods
+
+    def visit(self, func):
+        """ Recursively visit all names in this group and subgroups.
+
+            You supply a callable (function, method or callable object); it
+            will be called exactly once for each link in this group and every
+            group below it. Your callable must conform to the signature:
+
+                func(<member name>) => <None or return value>
 
             Returning None continues iteration, returning anything else stops
-            and immediately returns that value from Group.visit.
+            and immediately returns that value from the visit method.
 
             Example:
 
             # List the entire contents of the file
+            >>> f = File("foo.hdf5")
             >>> list_of_names = []
-            >>> grp.visit(list_of_names.append)
+            >>> f.visit(list_of_names.append)
 
             Only available with HDF5 1.8.X.
         """
@@ -306,14 +335,28 @@ class Group(HLObject):
             return h5o.visit(self.id, call_proxy)
 
     def visititems(self, func):
-        """ Recursively iterate a function or callable object over the file,
-            calling it exactly once for each object, with the signature::
-    
-                func(<name>, <object instance>) => <None or return value>
+        """ Recursively visit names and objects in this group and subgroups.
+
+            You supply a callable (function, method or callable object); it
+            will be called exactly once for each link in this group and every
+            group below it. Your callable must conform to the signature:
+
+                func(<member name>, <object>) => <None or return value>
 
             Returning None continues iteration, returning anything else stops
-            and immediately returns that value from Group.visit.
+            and immediately returns that value from the visit method.
 
+            Example:
+
+            # Get a list of all datasets in the file
+            >>> mylist = []
+            >>> def func(name, obj):
+            ...     if isinstance(obj, Dataset):
+            ...         mylist.append(name)
+            ...
+            >>> f = File('foo.hdf5')
+            >>> f.visititems(func)
+   
             Only available with HDF5 1.8.X.
         """
         if not config.API_18:
@@ -325,8 +368,7 @@ class Group(HLObject):
 
             return h5o.visit(self.id, call_proxy)
 
-
-    def __str__(self):
+    def __repr__(self):
         with self._lock:
             try:
                 return 'Group "%s" (%d members)' % (hbasename(self.name), len(self))
@@ -425,10 +467,10 @@ class File(Group):
             if self.id._valid:
                 self.close()
             
-    def __str__(self):
+    def __repr__(self):
         with self._lock:
             try:
-                return 'File "%s", root members: %s' % (self.name, ', '.join(['"%s"' % name for name in self]))
+                return 'File "%s", %d root members' % (self.name, len(self))
             except:
                 return "Invalid file"
 
@@ -545,19 +587,28 @@ class Dataset(HLObject):
                     raise ValueError('You cannot specify keywords when opening a dataset.')
                 self.id = h5d.open(group.id, name)
             else:
-                if ((data is None) and (shape is None)) or \
-                   ((data is not None) and (shape is not None)):
-                    raise ValueError("*Either* data *or* the shape must be specified.")
-                
+                # Convert data to a C-contiguous ndarray
                 if data is not None:
+                    data = numpy.asarray(data, order="C")
+
+                # Validate shape
+                if shape is None and data is None:
+                    raise ValueError("Either data or shape must be specified")
+                elif shape is None and data is not None:
                     shape = data.shape
+                elif shape is not None and data is not None:
+                    if numpy.product(shape) != numpy.product(data.shape):
+                        raise ValueError("Shape tuple is incompatible with data")
+
+                # Validate dtype
+                if dtype is None and data is None:
+                    dtype = numpy.dtype("=f4")
+                elif dtype is None and data is not None:
                     dtype = data.dtype
                 else:
-                    if dtype is None:
-                        dtype = "=f4"
-                
-                dtype = numpy.dtype(dtype)
+                    dtype = numpy.dtype(dtype)
 
+                # Generate chunks if necessary
                 if chunks is True or \
                    (any((compression, shuffle, fletcher32, maxshape)) and chunks is None):
                     chunks = guess_chunk(shape, dtype.itemsize)
@@ -571,7 +622,7 @@ class Dataset(HLObject):
                 if shuffle:
                     plist.set_shuffle()
                 if compression is not None:
-                    if compression is True:  # prevent accidental abuse
+                    if compression is True:
                         compression = 6
                     plist.set_deflate(compression)
                 if fletcher32:
@@ -602,12 +653,16 @@ class Dataset(HLObject):
     def __len__(self):
         """ The size of the first axis.  TypeError if scalar.
         """
+        size = self.len()
+        if size > sys.maxint:
+            raise OverflowError("Value too big for Python's __len__; use Dataset.len() instead.")
+        return size
+
+    def len(self):
+        """ The size of the first axis.  TypeError if scalar. """
         shape = self.shape
         if len(shape) == 0:
             raise TypeError("Attempt to take len() of scalar dataset")
-        size = shape[0]
-        if size > sys.maxint:
-            raise OverflowError("Dataset length is larger than Python's len() function can handle")
         return shape[0]
 
     def __iter__(self):
@@ -663,7 +718,7 @@ class Dataset(HLObject):
                 new_dtype = numpy.dtype([(name, basetype.fields[name][0]) for name in names])
 
             # Create the holder array
-            arr = numpy.ndarray(mspace.shape, new_dtype)
+            arr = numpy.ndarray(mspace.shape, new_dtype, order='C')
 
             # Perform the actual read
             self.id.read(mspace, fspace, arr)
@@ -692,7 +747,7 @@ class Dataset(HLObject):
             if len(names) != 0:
                 raise NotImplementedError("Field name selections are not yet allowed for write.")
 
-            val = numpy.array(val)  # So that you can assign scalars, sequences
+            val = numpy.asarray(val, order='C')
 
             fspace = self.id.get_space()
 
@@ -705,11 +760,11 @@ class Dataset(HLObject):
 
             self.id.write(mspace, fspace, val)
 
-    def __str__(self):
+    def __repr__(self):
         with self._lock:
             try:
-                return 'Dataset "%s": %s %s' % (hbasename(self.name),
-                        str(self.shape), repr(self.dtype))
+                return 'Dataset "%s": %s %s' % \
+                    (hbasename(self.name), self.shape, self.dtype.str)
             except:
                 return "Invalid dataset"
 
@@ -752,9 +807,9 @@ class AttributeManager(LockableObject):
             as a Numpy ndarray.
         """
         with self._lock:
-            attr = h5a.open_name(self.id, name)
+            attr = h5a.open(self.id, name)
 
-            arr = numpy.ndarray(attr.shape, dtype=attr.dtype)
+            arr = numpy.ndarray(attr.shape, dtype=attr.dtype, order='C')
             attr.read(arr)
 
             if len(arr.shape) == 0:
@@ -770,8 +825,7 @@ class AttributeManager(LockableObject):
             If the creation fails, the data is not recoverable.
         """
         with self._lock:
-            if not isinstance(value, numpy.ndarray):
-                value = numpy.array(value)
+            value = numpy.asarray(value, order='C')
 
             space = h5s.create_simple(value.shape)
             htype = h5t.py_create(value.dtype)
@@ -789,8 +843,8 @@ class AttributeManager(LockableObject):
 
     def __len__(self):
         """ Number of attributes attached to the object. """
+        # I expect we will not have more than 2**32 attributes
         return h5a.get_num_attrs(self.id)
-
 
     def __iter__(self):
         """ Iterate over the names of attributes. """
@@ -806,22 +860,16 @@ class AttributeManager(LockableObject):
 
     def __contains__(self, name):
         """ Determine if an attribute exists, by name. """
-        return h5a.py_exists(self.id, name)
+        return h5a.exists(self.id, name)
 
-    def __str__(self):
+    def __repr__(self):
         with self._lock:
             try:
-                rstr = 'Attributes of "%s": ' % hbasename(h5i.get_name(self.id))
-                if len(self) == 0:
-                    rstr += '(none)'
-                else:
-                    rstr += ', '.join(['"%s"' % x for x in self])
-                return rstr
+                return 'Attributes of "%s" (%d)' % \
+                    (hbasename(h5i.get_name(self.id)), len(self))
             except:
                 return "Invalid attributes object"
 
-    def __repr__(self):
-        return str(self)
 
 class Datatype(HLObject):
 
@@ -850,10 +898,10 @@ class Datatype(HLObject):
             self.id = h5t.open(grp.id, name)
             self._attrs = AttributeManager(self)
 
-    def __str__(self):
+    def __repr__(self):
         with self._lock:
             try:
-                return "Named datatype object (%s)" % str(self.dtype)
+                return "Named datatype object (%s)" % self.dtype.str
             except:
                 return "Invalid datatype object"
 
