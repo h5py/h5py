@@ -10,20 +10,27 @@
 # 
 #-
 
+import os
 import unittest
 import tempfile
-import os
-from os.path import join, dirname
+import os.path as op
 import shutil
-from h5py import h5f, h5p
+from h5py import h5f, h5p, h5
 import h5py
 
-DATADIR = join(dirname(h5py.__file__), 'tests/data')
+DATADIR = op.join(op.dirname(h5py.__file__), 'tests/data')
 
 def getfullpath(name):
-    return join(DATADIR, name)
+    return op.abspath(op.join(DATADIR, name))
 
-class TestBase(unittest.TestCase):
+def api_18(func):
+    """Decorator to enable 1.8.X-only API functions"""
+    if h5.get_config().API_18:
+        return func
+    return None
+
+
+class HDF5TestCase(unittest.TestCase):
 
     """
         Base test for unit test classes which deal with a particular
@@ -32,20 +39,31 @@ class TestBase(unittest.TestCase):
         TestBase class will figure out the correct directory.
     """
 
-    def __init__(self, *args, **kwds):
-        unittest.TestCase.__init__(self, *args, **kwds)
-        self.HDFNAME = getfullpath(self.HDFNAME) # resolve absolute location
+    h5py_verbosity = 0
 
-    def setUp(self):
+    def output(self, ipt):
+        """Print to stdout, only if verbosity levels so requires"""
+        if self.h5py_verbosity >= 3:
+            print ipt
+
+    def setup_fid(self, hdfname):
+        """Open a copy of an HDF5 file and set its identifier as self.fid"""
+        hdfname = getfullpath(hdfname)
         newname = tempfile.mktemp('.hdf5')
-        shutil.copy(self.HDFNAME, newname)
+        shutil.copy(hdfname, newname)
 
         plist = h5p.create(h5p.FILE_ACCESS)
         plist.set_fclose_degree(h5f.CLOSE_STRONG)
         self.fid = h5f.open(newname, h5f.ACC_RDWR, fapl=plist)
         self.fname = newname
+        self.src_fname = hdfname
 
-    def tearDown(self):
+    def teardown_fid(self):
+        """Close the HDF5 file copy and delete it"""
         self.fid.close()
         os.unlink(self.fname)
+
+
+
+    
 

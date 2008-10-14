@@ -20,7 +20,7 @@ import numpy
 from h5py.highlevel import *
 from h5py import *
 from h5py.h5 import H5Error
-from common import getfullpath
+from common import getfullpath, HDF5TestCase
 
 class SliceFreezer(object):
     def __getitem__(self, args):
@@ -42,7 +42,7 @@ TYPES = TYPES1 + TYPES2
 SHAPES = [(), (1,), (10,5), (1,10), (10,1), (100,1,100), (51,2,1025)]
 
  
-class TestFile(unittest.TestCase):
+class TestFile(HDF5TestCase):
 
     def setUp(self):
         newname = tempfile.mktemp('.hdf5')
@@ -152,7 +152,7 @@ class TestFile(unittest.TestCase):
             grp.id._close()
             str(grp.attrs)
 
-class TestDataset(unittest.TestCase):
+class TestDataset(HDF5TestCase):
 
     def setUp(self):
 
@@ -165,7 +165,7 @@ class TestDataset(unittest.TestCase):
 
     def test_Dataset_create(self):
         
-        print ''
+        self.output('')
 
         shapes = [(), (1,), (10,5), (1,10), (10,1), (100,1,100), (51,2,1025)]
         chunks = [None, (1,), (10,1), (1,1),  (1,1),  (50,1,100), (51,2,25)]
@@ -176,7 +176,7 @@ class TestDataset(unittest.TestCase):
 
         for shape, chunk in zip(shapes, chunks):
             for dt in TYPES:
-                print "    Creating %.20s %.40s" % (shape, dt)
+                self.output("    Creating %.20s %.40s" % (shape, dt))
                 dt = numpy.dtype(dt)
                 d = Dataset(self.f, "NewDataset", dtype=dt, shape=shape)
                 self.assertEqual(d.shape, shape)
@@ -184,7 +184,7 @@ class TestDataset(unittest.TestCase):
                 del self.f["NewDataset"]
 
                 if shape != ():
-                    print "        With chunk %s" % (chunk,)
+                    self.output("        With chunk %s" % (chunk,))
                     d = Dataset(self.f, "NewDataset", dtype=dt, shape=shape,
                                 chunks=chunk, shuffle=True, compression=6,
                                 fletcher32=True)
@@ -202,7 +202,7 @@ class TestDataset(unittest.TestCase):
 
     def test_Dataset_extend(self):
 
-        print ""
+        self.output("")
 
         init_shapes = [(100,), (100,100), (150,100)]
         max_shapes = [(200,), (200,200), (None, 100)]
@@ -224,7 +224,7 @@ class TestDataset(unittest.TestCase):
             self.assertEqual(ds.shape, shape)
 
             for final_shape in final_shapes[shape]:
-                print "    Extending %s to %s" % (shape, final_shape)
+                self.output("    Extending %s to %s" % (shape, final_shape))
                 newarr = numpy.arange(numpy.product(final_shape)).reshape(final_shape)
                 ds.extend(final_shape)
                 ds[...] = newarr
@@ -252,7 +252,7 @@ class TestDataset(unittest.TestCase):
         self.assertRaises(TypeError, list, d2)
 
     def test_Dataset_bigslice(self):
-        print ""
+        self.output("")
 
         s = SliceFreezer()
 
@@ -268,7 +268,7 @@ class TestDataset(unittest.TestCase):
             dset = self.f.create_dataset("dset", (2**62, 2**62), '=f4', maxshape=(None,None))
 
             for shp, slc in zip(shapes, slices):
-                print "    Testing base 2**%d" % numpy.log2(base)
+                self.output("    Testing base 2**%d" % numpy.log2(base))
 
                 empty = numpy.zeros(shp)
                 data = numpy.arange(numpy.product(shp), dtype='=f4').reshape(shp)
@@ -284,7 +284,7 @@ class TestDataset(unittest.TestCase):
         
     def test_Dataset_slicing(self):
 
-        print ''
+        self.output('')
 
         s = SliceFreezer()
         slices = [s[0,0,0], s[0,0,:], s[0,:,0], s[0,:,:]]
@@ -310,7 +310,7 @@ class TestDataset(unittest.TestCase):
                 self.assertEqual(d.dtype, srcarr.dtype)
                 for argtpl in slices:
                     # Test read
-                    print "    Checking read %.20s %s" % (dt, argtpl if not isinstance(argtpl, numpy.ndarray) else 'ARRAY')
+                    self.output("    Checking read %.20s %s" % (dt, argtpl if not isinstance(argtpl, numpy.ndarray) else 'ARRAY'))
                     hresult = d[argtpl]
                     nresult = srcarr[argtpl]
                     if isinstance(nresult, numpy.ndarray):
@@ -324,7 +324,7 @@ class TestDataset(unittest.TestCase):
                 d = Dataset(f, "NewDataset", data=srcarr)
                 for argtpl in slices:
                     # Test assignment
-                    print "    Checking write %.20s %s" % (dt, argtpl if not isinstance(argtpl, numpy.ndarray) else 'ARRAY')
+                    self.output("    Checking write %.20s %s" % (dt, argtpl if not isinstance(argtpl, numpy.ndarray) else 'ARRAY'))
                     srcarr[argtpl] = numpy.cos(srcarr[argtpl])
                     d[argtpl] = srcarr[argtpl]
                     self.assert_(numpy.all(d.value == srcarr))
@@ -375,7 +375,7 @@ class TestDataset(unittest.TestCase):
         self.assertRaises(H5Error, dsid.id.read, h5s.ALL, h5s.ALL, arr)
         # or it'll segfault...
 
-class TestGroup(unittest.TestCase):
+class TestGroup(HDF5TestCase):
 
     def setUp(self):
 
@@ -446,11 +446,11 @@ class TestGroup(unittest.TestCase):
     def test_Group_setgetitem(self):
         # Also tests named types
 
-        print ''
+        self.output('')
         for shape in SHAPES:
             for dt in TYPES1:
 
-                print "    Assigning %s %s" % (dt, shape)
+                self.output("    Assigning %s %s" % (dt, shape))
 
                 # test arbitrary datasets
                 dt_obj = numpy.dtype(dt)       

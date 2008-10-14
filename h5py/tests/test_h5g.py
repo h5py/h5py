@@ -10,7 +10,7 @@
 # 
 #-
 
-from common import TestBase
+from common import HDF5TestCase
 
 from h5py import *
 from h5py.h5 import H5Error
@@ -20,17 +20,16 @@ OBJECTNAME = 'Group'
 TEST_GROUPS = ['Subgroup1','Subgroup2','Subgroup3']
 NEW_LINK_NAME = 'Link name'
 
-class TestH5G(TestBase):
+class TestH5G(HDF5TestCase):
 
-    HDFNAME = HDFNAME
 
     def setUp(self):
-        TestBase.setUp(self)
+        self.setup_fid(HDFNAME)
         self.obj = h5g.open(self.fid, OBJECTNAME)
 
     def tearDown(self):
         self.obj._close()
-        TestBase.tearDown(self)
+        self.teardown_fid()
 
     def is_grp(self, item):
         return h5i.get_type(item) == h5i.GROUP
@@ -112,34 +111,22 @@ class TestH5G(TestBase):
 
     def test_iterate(self):
 
-        def iterate_all(id, name, namelist):
-            namelist.append(name)
-
-        def iterate_two(id, name, namelist):
-            if len(namelist) == 2:
-                raise StopIteration
-            namelist.append(name)
-
-        def iterate_fault(id, name, namelist):
-            if len(namelist) == 2:
-                raise RuntimeError("Intentional fault")
-            namelist.append(name)
-
         namelist = []
-        h5g.iterate(self.obj, '.', iterate_all, namelist)
+        h5g.iterate(self.obj, namelist.append)
         self.assertEqual(namelist, TEST_GROUPS)
 
         namelist = []
-        h5g.iterate(self.obj, '.', iterate_two, namelist)
+        def iterate_two(name):
+            if len(namelist) == 2:
+                return True
+            namelist.append(name)
+        result = h5g.iterate(self.obj, iterate_two)
         self.assertEqual(namelist, TEST_GROUPS[0:2])
+        self.assert_(result is True)
 
-        namelist = []
-        self.assertRaises(RuntimeError, h5g.iterate, self.obj, '.', iterate_fault, namelist)
-        self.assertEqual(namelist, TEST_GROUPS[0:2])
-        
-        namelist = []
-        h5g.iterate(self.obj, '.', iterate_two, namelist, 1)
-        self.assertEqual(namelist, TEST_GROUPS[1:3])
+        def iter_fault(name):
+            raise RuntimeError
+        self.assertRaises(RuntimeError, h5g.iterate, self.obj, iter_fault)
 
     def test_get_set_comment(self):
 

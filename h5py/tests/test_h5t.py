@@ -32,9 +32,6 @@ simple_types = \
 
 class TestH5T(unittest.TestCase):
 
-    def tearDown(self):
-        h5t.py_complex_names(reset=True)
-
     def test_create(self):
         types = {h5t.COMPOUND: h5t.TypeCompoundID, h5t.OPAQUE: h5t.TypeOpaqueID}
         sizes = (1,4,256)
@@ -77,7 +74,7 @@ class TestH5T(unittest.TestCase):
             htype2 = htype.copy()
             self.assertEqual(htype.dtype, htype2.dtype)
             self.assert_(htype is not htype2)
-            self.assert_(htype != htype2)
+            self.assert_(htype == htype2)
 
     def test_equal(self):
 
@@ -215,7 +212,7 @@ class TestH5T(unittest.TestCase):
         enum_bases = [ x for x in simple_types if 'i' in x or 'u' in x]
         for x in enum_bases:
             dt = dtype(x)
-            htype = h5t.py_create(dt, enum=enum)
+            htype = h5t.py_create(dt, enum_vals=enum)
             self.assertEqual(type(htype), h5t.TypeEnumID)
             self.assertEqual(dt, htype.dtype)
             for name, val in enum.iteritems():
@@ -253,10 +250,12 @@ class TestH5T(unittest.TestCase):
                  (' Re!#@$%\t\tREALr\neal ^;;;"<>? ', ' \t*&^  . ^@IMGI        MG!~\t\n\r') ]
 
         complex_types = [x for x in simple_types if 'c' in x]
+        config = h5.get_config()
 
+        oldnames = config.complex_names
         try:
             for name in names:
-                h5t.py_complex_names(name[0], name[1])
+                config.complex_names = name
                 for ctype in complex_types:
                     dt = dtype(ctype)
                     htype = h5t.py_create(dt)
@@ -265,8 +264,7 @@ class TestH5T(unittest.TestCase):
                     self.assertEqual(htype.get_member_name(0), name[0])
                     self.assertEqual(htype.get_member_name(1), name[1])
         finally:
-            h5t.py_complex_names(reset=True)
-
+            config.complex_names = oldnames
 
 
 

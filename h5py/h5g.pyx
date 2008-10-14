@@ -18,7 +18,7 @@ include "config.pxi"
 include "sync.pxi"
 
 # Compile-time imports
-from h5 cimport init_hdf5
+from h5 cimport init_hdf5, SmartStruct
 from utils cimport emalloc, efree
 from h5p cimport PropID, pdefault
 IF H5PY_18API:
@@ -45,21 +45,23 @@ LINK_ERROR = H5G_LINK_ERROR
 LINK_HARD  = H5G_LINK_HARD
 LINK_SOFT  = H5G_LINK_SOFT
 
-cdef class GroupStat:
-    """ Represents the H5G_stat_t structure containing group member info.
+cdef class GroupStat(SmartStruct):
+    """Represents the H5G_stat_t structure containing group member info.
 
-        Fields (read-only):
-        fileno  ->  2-tuple uniquely* identifying the current file
-        objno   ->  2-tuple uniquely* identifying this object
-        nlink   ->  Number of hard links to this object
-        mtime   ->  Modification time of this object
-        linklen ->  Length of the symbolic link name, or 0 if not a link.
+    Fields (read-only):
+    fileno  ->  2-tuple uniquely* identifying the current file
+    objno   ->  2-tuple uniquely* identifying this object
+    nlink   ->  Number of hard links to this object
+    mtime   ->  Modification time of this object
+    linklen ->  Length of the symbolic link name, or 0 if not a link.
 
-        *"Uniquely identifying" means unique among currently open files, 
-        not universally unique.
+    *"Uniquely identifying" means unique among currently open files, 
+    not universally unique.
+
+    Hashable: Yes
+    Equality: Yes
     """
     cdef H5G_stat_t infostruct
-    cdef object __weakref__
 
     property fileno:
         def __get__(self):
@@ -80,16 +82,9 @@ cdef class GroupStat:
         def __get__(self):
             return self.infostruct.linklen
 
-    def __str__(self):
-        return \
-"""
-fileno %s
-objno %s
-nlink %d
-typecode %d
-mtime %d
-linklen %d
-""" % (self.fileno, self.objno, self.nlink, self.type, self.mtime, self.linklen)
+    def _hash(self):
+        return hash((self.fileno, self.objno, self.nlink, self.type, self.mtime, self.linklen))
+
 
 cdef class GroupIter:
 

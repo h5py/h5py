@@ -10,7 +10,7 @@
 # 
 #-
 
-from common import TestBase
+from common import HDF5TestCase
 
 from h5py import *
 from h5py.h5 import H5Error
@@ -18,17 +18,16 @@ from h5py.h5 import H5Error
 HDFNAME = 'attributes.hdf5'
 OBJECTNAME = 'Group'
 
-class TestH5I(TestBase):
+class TestH5I(HDF5TestCase):
 
-    HDFNAME = HDFNAME
 
     def setUp(self):
-        TestBase.setUp(self)
+        self.setup_fid(HDFNAME)
         self.obj = h5g.open(self.fid, OBJECTNAME)
 
     def tearDown(self):
         self.obj._close()
-        TestBase.tearDown(self)
+        self.teardown_fid()
 
     def test_get_type(self):
         self.assertEqual(h5i.get_type(self.fid), h5i.FILE)

@@ -12,7 +12,7 @@
 
 from numpy import array, ndarray, dtype, all, ones
 
-from common import TestBase
+from common import HDF5TestCase, api_18
 
 from h5py import *
 from h5py.h5 import H5Error
@@ -28,17 +28,16 @@ ATTRIBUTES = {  'String Attribute': ("This is a string.", dtype('S18'), ()),
 ATTRIBUTES_ORDER = ['String Attribute', 'Integer', 'Integer Array', 'Byte']
 NEW_ATTRIBUTES = {'New float': ( 3.14, dtype('<f4'), ()) }
 
-class TestH5A(TestBase):
 
-    HDFNAME = HDFNAME
+class TestH5A(HDF5TestCase):
 
     def setUp(self):
-        TestBase.setUp(self)
+        self.setup_fid(HDFNAME)
         self.obj = h5g.open(self.fid, OBJECTNAME)
 
     def tearDown(self):
         self.obj._close()
-        TestBase.tearDown(self)
+        self.teardown_fid()
 
     def is_attr(self, attr):
         return (h5i.get_type(attr) == h5i.ATTR)
@@ -67,18 +66,56 @@ class TestH5A(TestBase):
             attr.read(arr_val)
             self.assert_(all(arr_val == arr_ref))
 
+    @api_18
+    def test_create_18(self):
+
+        space = h5s.create(h5s.SCALAR)
+        htype = h5t.py_create('=f4')
+
+        attr = h5a.create(self.fid, "New Attribute", htype, space, obj_name="Group")
+        self.assert_(h5a.exists(self.fid, "New Attribute", obj_name="Group"))
+
+
     def test_open_idx(self):
         for idx, name in enumerate(ATTRIBUTES_ORDER):
-            attr = h5a.open(self.obj, idx=idx)
+            attr = h5a.open(self.obj, index=idx)
             self.assert_(self.is_attr(attr), "Open: index %d" % idx)
 
-    def test_open(self):
+    def test_open_name(self):
         for name in ATTRIBUTES:
             attr = h5a.open(self.obj, name)
             self.assert_(self.is_attr(attr), 'Open: name "%s"' % name)
 
+    @api_18
+    def test_open_name_18(self):
+        for name in ATTRIBUTES:
+            attr = h5a.open(self.fid, name, obj_name=OBJECTNAME)
+            self.assert_(self.is_attr(attr))
+
+    @api_18
+    def test_rename_18(self):
+        h5a.rename(self.obj, ATTRIBUTES_ORDER[0], "NewName1")
+        self.assert_(h5a.exists(self.obj, "NewName1"))
+        self.assert_(not h5a.exists(self.obj, ATTRIBUTES_ORDER[0]))
+    
+        h5a.rename(self.fid, ATTRIBUTES_ORDER[1], "NewName2", obj_name=OBJECTNAME)
+        self.assert_(h5a.exists(self.obj, "NewName2"))
+        self.assert_(not h5a.exists(self.obj, ATTRIBUTES_ORDER[1]))
+           
+    @api_18
+    def test_get_info_18(self):
+        info = h5a.get_info(self.obj, ATTRIBUTES_ORDER[0])
+        info.corder_valid
+        info.corder
+        info.cset
+        info.data_size
+
+        h5a.get_info(self.fid, ATTRIBUTES_ORDER[0], obj_name=OBJECTNAME)
+        h5a.get_info(self.obj, index=1)
+        h5a.get_info(self.fid, index=1, obj_name=OBJECTNAME)
+
     def test_close(self):
-        attr = h5a.open(self.obj, idx=0)
+        attr = h5a.open(self.obj, index=0)
         self.assert_(self.is_attr(attr))
         attr._close()
         self.assert_(not self.is_attr(attr))
@@ -141,34 +178,23 @@ class TestH5A(TestBase):
 
     def test_iterate(self):
 
-        def iterate_all(id, name, namelist):
-            namelist.append(name)
-
-        def iterate_two(id, name, namelist):
-            if len(namelist) == 2:
-                raise StopIteration
-            namelist.append(name)
-
-        def iterate_fault(id, name, namelist):
-            if len(namelist) == 2:
-                raise RuntimeError("Intentional fault")
-            namelist.append(name)
-
         namelist = []
-        h5a.iterate(self.obj, iterate_all, namelist)
+        result = h5a.iterate(self.obj, namelist.append)
         self.assertEqual(namelist, ATTRIBUTES_ORDER)
+        self.assert_(result is None)
 
         namelist = []
-        h5a.iterate(self.obj, iterate_two, namelist)
+        def iterate_two(name):
+            if len(namelist) >= 2:
+                return True
+            namelist.append(name)
+        result = h5a.iterate(self.obj, iterate_two)
         self.assertEqual(namelist, ATTRIBUTES_ORDER[0:2])
+        self.assert_(result is True)
 
-        namelist = []
-        self.assertRaises(RuntimeError, h5a.iterate, self.obj, iterate_fault, namelist)
-        self.assertEqual(namelist, ATTRIBUTES_ORDER[0:2])
-        
-        namelist = []
-        h5a.iterate(self.obj, iterate_two, namelist, 1)
-        self.assertEqual(namelist, ATTRIBUTES_ORDER[1:3])
+        def iter_fault(name):
+            raise RuntimeError
+        self.assertRaises(RuntimeError, h5a.iterate, self.obj, iter_fault)
 
     def test_prop_name(self):
         
@@ -194,11 +220,14 @@ class TestH5A(TestBase):
 
         self.assertEqual(attrlist, ATTRIBUTES_ORDER)
 
-    def test_py_exists(self):
+    def test_exists(self):
 
-        self.assert_(h5a.py_exists(self.obj, ATTRIBUTES_ORDER[0]))
-        self.assert_(not h5a.py_exists(self.obj, "Something else"))
+        self.assert_(h5a.exists(self.obj, ATTRIBUTES_ORDER[0]))
+        self.assert_(not h5a.exists(self.obj, "Something else"))
 
+    @api_18
+    def test_exists_18(self):
+        self.assert_(h5a.exists(self.fid, ATTRIBUTES_ORDER[0], obj_name=OBJECTNAME))
 
 
 

@@ -41,6 +41,9 @@ cdef class ObjectID:
     cdef readonly int _locked
     cdef object _hash
 
+cdef class SmartStruct:
+    cdef object __weakref__
+
 # Library init.  Safe to call more than once.
 cdef int init_hdf5() except -1
 

@@ -50,8 +50,7 @@ cdef class ObjInfo:
 
 @sync
 def get_info(ObjectID obj not None):
-    """ (ObjectID obj) => ObjInfo
-    """
+    """(ObjectID obj) => ObjInfo"""
 
     cdef ObjInfo info
     info = ObjInfo()
@@ -90,23 +89,23 @@ cdef herr_t cb_obj_iterate(hid_t obj, char* name, H5O_info_t *info, void* data) 
 def visit(ObjectID loc not None, object func, *,
           int idx_type=H5_INDEX_NAME, int order=H5_ITER_NATIVE,
           char* name=".", PropID lapl=None):
-    """ (ObjectID loc, CALLABLE func, **kwds) => <Return value from func>
+    """(ObjectID loc, CALLABLE func, **kwds) => <Return value from func>
 
-        Iterate a function or callable object over all objects below the
-        specified one.  Your callable should conform to the signature:
+    Iterate a function or callable object over all objects below the
+    specified one.  Your callable should conform to the signature:
 
-            func(STRING name, ObjInfo info) => Result
+        func(STRING name, ObjInfo info) => Result
 
-        Returning None or a logical False continues iteration; returning
-        anything else aborts iteration and returns that value.
+    Returning None or a logical False continues iteration; returning
+    anything else aborts iteration and returns that value.
 
-        Keyword-only arguments:
-        * STRING name ("."):            Visit a subgroup of "loc" instead
-        * PropLAID lapl (None):          Control how "name" is interpreted
-        * INT idx_type (h5.INDEX_NAME):  What indexing strategy to use
-        * INT order (h5.ITER_NATIVE):    Order in which iteration occurs
+    Keyword-only arguments:
+    * STRING name ("."):            Visit a subgroup of "loc" instead
+    * PropLAID lapl (None):          Control how "name" is interpreted
+    * INT idx_type (h5.INDEX_NAME):  What indexing strategy to use
+    * INT order (h5.ITER_NATIVE):    Order in which iteration occurs
     """
-    cdef _ObjectVisitor visit = _ObjectVisitor()
+    cdef _ObjectVisitor visit = _ObjectVisitor(func)
 
     H5Ovisit_by_name(loc.id, name, <H5_index_t>idx_type,
         <H5_iter_order_t>order, cb_obj_iterate, <void*>visit, pdefault(lapl))

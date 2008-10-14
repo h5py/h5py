@@ -11,7 +11,7 @@
 #-
 
 import numpy
-from common import TestBase
+from common import HDF5TestCase
 
 from h5py import *
 from h5py.h5 import H5Error
@@ -34,17 +34,16 @@ for i in range(SHAPE[0]):
     basearray[i]["f_name"][:] = numpy.array((1024.9637*i,)*10)
     basearray[i]["g_name"] = 109
 
-class TestH5D(TestBase):
+class TestH5D(HDF5TestCase):
 
-    HDFNAME = HDFNAME
 
     def setUp(self):
-        TestBase.setUp(self)
+        self.setup_fid(HDFNAME)
         self.dset = h5d.open(self.fid, "CompoundChunked")
 
     def tearDown(self):
         self.dset._close()
-        TestBase.tearDown(self)
+        self.teardown_fid()
 
     def test_open_close(self):
         dset = h5d.open(self.fid, "CompoundChunked")

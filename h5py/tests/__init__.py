@@ -12,11 +12,13 @@
 
 import unittest
 import sys
-import test_h5a, test_h5d, test_h5f, \
-       test_h5g, test_h5i, test_h5p, \
-       test_h5s, test_h5t, test_h5, \
-       test_h5r, \
-       test_highlevel, test_threads
+
+from common import HDF5TestCase
+import  test_h5a, test_h5d, test_h5f,\
+        test_h5g, test_h5i, test_h5p,\
+        test_h5s, test_h5t, test_h5,\
+        test_h5r,\
+        test_highlevel, test_threads, test_utils
 
 from h5py import *
 
@@ -31,36 +33,42 @@ sections = {'h5a': test_h5a.TestH5A, 'h5d': test_h5d.TestH5D,
             'File': test_highlevel.TestFile,
             'Group': test_highlevel.TestGroup,
             'Dataset': test_highlevel.TestDataset,
-            'threads': test_threads.TestThreads }
+            'threads': test_threads.TestThreads,
+            'utils': test_utils.TestUtils }
 
-order = ('h5a', 'h5d', 'h5f', 'h5g', 'h5i', 'h5r', 'h5p', 'h5p.fcid', 'h5p.faid',
-         'h5p.dcid', 'h5p.dxid', 'h5s', 'h5', 'File', 'Group', 'Dataset',
-         'threads')
+def runtests(requests=None, verbosity=1):
+    """Run unit tests
 
-def buildsuite(cases):
-    """ cases should be an iterable of TestCase subclasses """
-    loader = unittest.TestLoader()
-    suite = unittest.TestSuite()
-    for test_case in cases:
-        suite.addTests(loader.loadTestsFromTestCase(test_case))
-    return suite
+    Requests: iterable of test section names to run. Prefix with '-'
+    to explicitly disable.  Example:
+        ('h5a', 'h5g', 'File'), or ('-h5t', '-h5g')
 
-def runtests(requests=None):
+    Verbosity: TextTestRunner verbosity level.  Level 4 prints additional
+    h5py-specific information.
+    """
     if requests is None:
         requests = ()
     excluded = [x[1:] for x in requests if len(x) >=2 and x.find('-') == 0]
     included = [x for x in requests if x.find('-') != 0]
 
-    cases = order if len(included) is 0 else included
+    cases = tuple(sections) if len(included) is 0 else included
     cases = [x for x in cases if x not in excluded]
     try:
         cases = [sections[x] for x in cases]
     except KeyError, e:
         raise RuntimeError('Test "%s" is unknown' % e.args[0])
 
-    suite = buildsuite(cases)
-    retval = unittest.TextTestRunner(verbosity=3).run(suite)
-    print "=== Tested HDF5 %s (%s API) ===" % (h5.hdf5_version, h5.api_version)
+    HDF5TestCase.h5py_verbosity = verbosity
+    
+    loader = unittest.TestLoader()
+    suite = unittest.TestSuite()
+    for case in sorted(cases):
+        suite.addTests(loader.loadTestsFromTestCase(case))
+
+    retval = unittest.TextTestRunner(verbosity=verbosity).run(suite)
+
+    if verbosity >= 1:
+        print "=== Tested HDF5 %s (%s API) ===" % (h5.hdf5_version, h5.api_version)
     return retval.wasSuccessful()
 
 def autotest():

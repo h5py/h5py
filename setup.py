@@ -44,6 +44,7 @@ from distutils.extension import Extension
 from distutils.command.build import build 
 from distutils.command.clean import clean
 from distutils.command.sdist import sdist
+from distutils.cmd import Command
 
 # Basic package options
 NAME = 'h5py'
@@ -332,42 +333,51 @@ DEF H5PY_THREADS = %(THREADS)d  # Enable thread-safety and non-blocking reads
             if result.num_errors != 0:
                 fatal("%d Cython errors; aborting" % result.num_errors)
 
-class test(cybuild):
+class test(Command):
 
     """ Run unit tests """
 
     description = "Run unit tests in-place"
-    user_options = cybuild.user_options + \
-                   [('sections=','s','Comma separated list of tests ("-" prefix to NOT run)')]
+    user_options = [('sections=','s','Comma separated list of tests ("-" prefix to NOT run)'),
+                    ('detail=', 'd', 'Level of output detail (0-3, default 1)')]
 
     def initialize_options(self):
         self.sections = None
-        cybuild.initialize_options(self)
+        self.output = False
+        self.detail = 1
 
     def finalize_options(self):
-        cybuild.finalize_options(self)
+        self.detail = int(self.detail)
 
     def run(self):
-        cybuild.run(self)
+
+        buildobj = self.distribution.get_command_obj('build')
+        buildobj.run()
         oldpath = sys.path
         try:
-            sys.path = [op.abspath(self.build_lib)] + oldpath
+            sys.path = [op.abspath(buildobj.build_lib)] + oldpath
             import h5py.tests
-            if not h5py.tests.runtests(None if self.sections is None else tuple(self.sections.split(','))):
+            if not h5py.tests.runtests(None if self.sections is None else tuple(self.sections.split(',')), self.detail):
                 raise DistutilsError("Unit tests failed.")
         finally:
             sys.path = oldpath
 
-class doc(cybuild):
+class doc(Command):
 
     """ Regenerate documentation.  Unix only, requires epydoc/sphinx. """
 
     description = "Rebuild documentation"
 
+    user_options = []
+    def initialize_options(self):
+        pass
+    def finalize_options(self):
+        pass
+
     def run(self):
 
-        self._explicit_only = True
-        cybuild.run(self)
+        buildobj = self.distribution.get_command_obj('build')
+        buildobj.run()
 
         for x in ('docs', 'docs/api-html'):
             if not op.exists(x):
@@ -375,7 +385,7 @@ class doc(cybuild):
 
         retval = os.spawnlp(os.P_WAIT, 'epydoc', '-q', '--html',
                     '-o', 'docs/api-html', '--config', 'docs.cfg', 
-                    os.path.join(self.build_lib, NAME) )
+                    os.path.join(buildobj.build_lib, NAME) )
         if retval != 0:
             warn("Could not run epydoc to build documentation.")
 

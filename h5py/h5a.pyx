@@ -18,7 +18,7 @@ include "config.pxi"
 include "sync.pxi"
 
 # Compile-time imports
-from h5 cimport init_hdf5
+from h5 cimport init_hdf5, SmartStruct
 from h5t cimport TypeID, typewrap, py_create
 from h5s cimport SpaceID
 from h5p cimport PropID, pdefault
@@ -43,7 +43,7 @@ IF H5PY_18API:
         Create a new attribute, attached to an existing object.
 
         Keywords:
-        * STRING obj_name (".")     Attach attribute to this group member
+        * STRING obj_name (".")     Attach attribute to this group member instead
         * PropID lapl (None)        Determines how obj_name is interpreted
         """
 
@@ -67,8 +67,8 @@ ELSE:
 IF H5PY_18API:
     @sync
     def open(ObjectID loc not None, char* name=NULL, int index=-1, *,
-            char* obj_name='.', int index_type=H5_INDEX_NAME, int order=H5_ITER_NATIVE,
-            PropID lapl=None):
+        char* obj_name='.', int index_type=H5_INDEX_NAME, int order=H5_ITER_NATIVE,
+        PropID lapl=None):
         """(ObjectID loc, STRING name=, INT index=, **kwds) => AttrID
        
         Open an attribute attached to an existing object.  You must specify
@@ -203,14 +203,14 @@ def iterate(ObjectID loc not None, object func, int index=0):
     attributes attached to this object.  You callable should have the
     signature:
 
-        func(STRING name, *args) => Result
+        func(STRING name) => Result
 
     Returning None continues iteration; returning anything else aborts
     iteration and returns that value.
 
-    The parameter *args will make your code forward-compatible with the
-    1.8.X version of this function, which supplies additional arguments
-    to the callback.
+    Tip: To make your code forward-compatible with later versions of this
+    function (which supply more information to the callback), add an
+    additional *args parameter.
     """
     if index < 0:
         raise ValueError("Starting index must be a non-negative integer.")
@@ -237,7 +237,7 @@ def py_listattrs(ObjectID loc not None):
 
 
 IF H5PY_18API:
-    cdef class AttrInfo:
+    cdef class AttrInfo(SmartStruct):
 
         cdef H5A_info_t info
 
@@ -257,6 +257,9 @@ IF H5PY_18API:
             """Size of raw data"""
             def __get__(self):
                 return self.info.data_size
+
+        def _hash(self):
+            return hash((self.corder_valid, self.corder, self.cset, self.data_size))
 
     @sync
     def get_info(ObjectID loc not None, char* name=NULL, int index=-1, *,
@@ -350,8 +353,8 @@ cdef class AttrID(ObjectID):
         Numpy array must have the same shape as the HDF5 attribute, and a 
         conversion-compatible datatype.
 
-        The Numpy array must be writable, C-contiguous and own its data.
-        If this is not the case, an ValueError is raised and the read fails.
+        The Numpy array must be writable and C-contiguous.  If this is not
+        the case, the read will fail with an exception.
         """
         cdef TypeID mtype
         cdef hid_t space_id
@@ -377,8 +380,8 @@ cdef class AttrID(ObjectID):
         the Numpy array must have the same shape as the HDF5 attribute, and
         a conversion-compatible datatype.  
 
-        The Numpy array must be C-contiguous and own its data.  If this is
-        not the case, ValueError will be raised and the write will fail.
+        The Numpy array must be C-contiguous.  If this is not the case, 
+        the write will fail with an exception.
         """
         cdef TypeID mtype
         cdef hid_t space_id

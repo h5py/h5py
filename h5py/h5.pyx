@@ -37,6 +37,7 @@ from python_exc cimport PyErr_SetString
 
 import atexit
 import threading
+import inspect
 
 IF H5PY_18API:
     ITER_INC    = H5_ITER_INC     # Increasing order
@@ -45,6 +46,42 @@ IF H5PY_18API:
 
     INDEX_NAME      = H5_INDEX_NAME       # Index on names      
     INDEX_CRT_ORDER = H5_INDEX_CRT_ORDER  # Index on creation order    
+
+cdef class SmartStruct:
+
+    """ Provides basic mechanics for structs """
+    
+    def _hash(self):
+        raise TypeError("%s instances are unhashable" % self.__class__.__name__)
+
+    def __hash__(self):
+        # This is forwarded so that I don't have to reimplement __richcmp__ everywhere
+        return self._hash()
+
+    def __richcmp__(self, object other, int how):
+        """Equality based on hash"""
+        cdef bint truthval = 0
+
+        if how != 2 and how != 3:
+            return NotImplemented
+
+        if isinstance(other, type(self)):
+            try:
+                truthval = hash(self) == hash(other)
+            except TypeError:
+                pass
+
+        if how == 2:
+            return truthval
+        return not truthval
+
+    def __repr__(self):
+        """ Prints a header followed by a list of public property values """
+        ostr = "=== %s ===\n%s"
+        attrnames = [x[0] for x in inspect.getmembers(self) if not x[0].startswith('_')]
+        attrstring = "\n".join(["%s: %s" % (x, getattr(self, x)) for x in attrnames])
+        ostr %= (self.__class__.__name__, attrstring)
+        return ostr
 
 cdef class H5PYConfig:
 

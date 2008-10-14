@@ -40,16 +40,13 @@ cdef void* emalloc(size_t size) except? NULL:
 
     cdef void *retval = NULL
 
-    if size < 0:
-        PyErr_SetString(RuntimeError, "Attempted negative malloc")
+    if size == 0:
         return NULL
-    elif size > 0:
-        retval = malloc(size)
-        if retval == NULL:
-            errmsg = "Can't malloc %d bytes" % size
-            PyErr_SetString(MemoryError, errmsg)
-            return NULL
-    else:
+
+    retval = malloc(size)
+    if retval == NULL:
+        errmsg = "Can't malloc %d bytes" % size
+        PyErr_SetString(MemoryError, errmsg)
         return NULL
 
     return retval
@@ -57,6 +54,13 @@ cdef void* emalloc(size_t size) except? NULL:
 cdef void efree(void* what):
     free(what)
 
+def _test_emalloc(size_t size):
+    """Stub to simplify unit tests"""
+    cdef void* mem
+    mem = emalloc(size)
+    if size == 0:
+        assert mem == NULL
+    efree(mem)
 
 # === Testing of NumPy arrays =================================================
 
@@ -104,11 +108,11 @@ cdef int check_numpy(ndarray arr, hid_t space_id, int write):
 
                 if write:
                     if PyArray_DIM(arr,i) < space_dims[i]:
-                        PyErr_SetString(TypeError, "Array dimensions incompatible with dataspace.")
+                        PyErr_SetString(TypeError, "Array dimensions are too small for the dataspace.")
                         return -1
                 else:
                     if PyArray_DIM(arr,i) > space_dims[i]:
-                        PyErr_SetString(TypeError, "Array dimensions incompatible with dataspace.")
+                        PyErr_SetString(TypeError, "Array dimensions are too large for the dataspace.")
                         return -1
         finally:
             free(space_dims)
