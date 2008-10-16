@@ -78,6 +78,7 @@ import h5
 cdef H5PYConfig cfg = get_config()
 cdef PHIL phil = get_phil()
 
+
 # === Custom C API ============================================================
 
 cdef TypeID typewrap(hid_t id_):
@@ -1329,6 +1330,5 @@ cpdef TypeID py_create(object dtype_in, dict enum_vals=None):
             raise TypeError("No conversion path for dtype: %s" % repr(dt))
     finally:
         phil.release()
-
 
 

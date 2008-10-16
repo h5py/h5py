@@ -398,20 +398,18 @@ class doc(Command):
                 shutil.rmtree('docs/manual-html')
             shutil.copytree('docs/build/html', 'docs/manual-html')
 
-class cyclean(clean):
+class cyclean(Command):
 
-    """ Distutils clean extended to clean up Cython-generated files """
+    """ Clean up Cython-generated files and build cache"""
 
-    user_options = clean.user_options + \
-                   [('doc','d','Also destroy compiled documentation')]
-    boolean_options = clean.boolean_options + ['doc']
+    user_options = [('doc','d','Also destroy compiled documentation')]
+    boolean_options = ['doc']
 
     def initialize_options(self):
         self.doc = False
-        clean.initialize_options(self)
 
     def finalize_options(self):
-        clean.finalize_options(self)
+        pass
 
     def run(self):
         
@@ -419,12 +417,16 @@ class cyclean(clean):
         for x in MODULES.values():
             allmodules.update(x)
 
+        dirs = ['build']
+
         if self.doc:
-            for x in ('docs/api-html', 'docs/manual-html') :
-                try:
-                    shutil.rmtree(x)
-                except OSError:
-                    pass
+            dirs += ['docs/api-html', 'docs/manual-html']
+
+        for x in dirs:
+            try:
+                shutil.rmtree(x)
+            except OSError:
+                pass
 
         fnames = [ op.join(SRC_PATH, x+'.dep') for x in allmodules ] + \
                  [ op.join(SRC_PATH, x+'.c') for x in allmodules ] + \
@@ -436,7 +438,6 @@ class cyclean(clean):
             except OSError:
                 pass
 
-        clean.run(self)
 
 class new_sdist(sdist):
 

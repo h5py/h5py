@@ -83,7 +83,6 @@ class TestH5D(HDF5TestCase):
         space = h5s.create_simple((10,20))
         htype = h5t.STD_I32LE
         dset = h5d.create(root, 'NewDataset', htype, space)
-        del dset
         dset = h5d.open(root, 'NewDataset')
         self.assertEqual(dset.dtype, htype.dtype)
         self.assertEqual(dset.shape, space.shape)

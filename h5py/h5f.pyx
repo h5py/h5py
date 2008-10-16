@@ -60,6 +60,9 @@ def open(char* name, unsigned int flags=H5F_ACC_RDWR, PropFAID fapl=None):
         Open an existing HDF5 file.  Keyword "flags" may be ACC_RWDR or
         ACC_RDONLY.  Keyword fapl may be a file access property list.
     """
+    IF H5PY_DEBUG:
+        import logging
+        logging.getLogger('h5py.library').info('* Opening file %s' % name)
     return FileID(H5Fopen(name, flags, pdefault(fapl)))
 
 @sync
@@ -76,6 +79,9 @@ def create(char* name, int flags=H5F_ACC_TRUNC, PropFCID fcpl=None,
         To keep the behavior in line with that of Python's built-in functions,
         the default is ACC_TRUNC.  Be careful!
     """
+    IF H5PY_DEBUG:
+        import logging
+        logging.getLogger('h5py.library').info('* Creating file %s' % name)
     return FileID(H5Fcreate(name, flags, pdefault(fcpl), pdefault(fapl)))
 
 @sync
@@ -238,6 +244,9 @@ cdef class FileID(ObjectID):
             physical file might not be closed until all remaining open
             identifiers are freed.  
         """
+        IF H5PY_DEBUG:
+            import logging
+            logging.getLogger('h5py.library').info('* Closing file %s' % self.name)
         H5Fclose(self.id)
 
     @sync

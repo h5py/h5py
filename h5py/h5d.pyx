@@ -13,7 +13,6 @@
 """
     Provides access to the low-level HDF5 "H5D" dataset interface.
 """
-
 include "config.pxi"
 include "sync.pxi"
 
@@ -27,8 +26,8 @@ from h5s cimport SpaceID
 from h5p cimport PropID, propwrap, pdefault
 
 # Initialization
-init_hdf5()
 import_array()
+init_hdf5()
 
 # === Public constants and data structures ====================================
 

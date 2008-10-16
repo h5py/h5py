@@ -19,14 +19,14 @@
 
     Useful things defined here:
     
-      version               String with h5py version (e.g. "0.2.0")
-      version_tuple         3-tuple with h5py version (e.g. (0, 2, 0))
+    version               String with h5py version (e.g. "0.2.0")
+    version_tuple         3-tuple with h5py version (e.g. (0, 2, 0))
 
-      hdf5_version:         String with library version (e.g. "1.6.5")
-      hdf5_version_tuple:   3-tuple form of the version (e.g. (1,6,5))
+    hdf5_version:         String with library version (e.g. "1.6.5")
+    hdf5_version_tuple:   3-tuple form of the version (e.g. (1,6,5))
 
-      api_version:          String form of the API used (e.g. "1.6")
-      api_version_tuple:    2-tuple form of the version (e.g. (1,6))
+    api_version:          String form of the API used (e.g. "1.6")
+    api_version_tuple:    2-tuple form of the version (e.g. (1,6))
 
     All exception classes and error handling functions are also in this module.
 """
@@ -78,8 +78,7 @@ cdef class SmartStruct:
     def __repr__(self):
         """ Prints a header followed by a list of public property values """
         ostr = "=== %s ===\n%s"
-        attrnames = [x[0] for x in inspect.getmembers(self) if not x[0].startswith('_')]
-        attrstring = "\n".join(["%s: %s" % (x, getattr(self, x)) for x in attrnames])
+        attrstring = ["%s: %s" % x for x in inspect.getmembers(self) if not x[0].startswith('_')]
         ostr %= (self.__class__.__name__, attrstring)
         return ostr
 
@@ -172,6 +171,9 @@ cdef class PHIL:
         extension modules.  Therefore, in threading mode all routines
         acquire this lock first.  When h5py is built without thread awareness,
         all locking methods are no-ops.
+
+        This object supports the context manager protocol ("with" statement)
+        in addition to the methods acquire() and release().
     """
 
     IF H5PY_THREADS:
@@ -207,6 +209,7 @@ cdef PHIL phil = PHIL()
 
 cpdef PHIL get_phil():
     """ Obtain a reference to the PHIL. """
+    global phil
     return phil
 
 # Everything required for the decorator is now defined
@@ -255,7 +258,9 @@ cdef class ObjectID:
         """ Object init; simply records the given ID. """
         self._locked = 0
         self.id = id_
-        IF H5PY_DEBUG:
+
+    IF H5PY_DEBUG:
+        def __init__(self, hid_t id_):
             log_ident.debug("+ %s" % str(self))
 
     def __dealloc__(self):
@@ -301,7 +306,7 @@ cdef class ObjectID:
         if how != 2 and how != 3:
             return NotImplemented
 
-        if isinstance(other, ObjectID) and type(self) == type(other):
+        if isinstance(other, type(self)):
             try:
                 truthval = hash(self) == hash(other)
             except TypeError:
@@ -667,13 +672,15 @@ cdef herr_t err_callback(void* client_data) with gil:
 
 # === Library init ============================================================
 
-@sync
 def _exithack():
     """ Internal function; do not call unless you want to lose all your data.
     """
     # If any identifiers have reference counts > 1 when the library closes,
     # it freaks out and dumps a message to stderr.  So we have Python dec_ref
     # everything when the interpreter's about to exit.
+
+    IF H5PY_DEBUG:
+        log_lib.info("* h5py is shutting down")
 
     cdef int count
     cdef int i
@@ -691,10 +698,10 @@ def _exithack():
         finally:
             free(objs)
 
-cdef int hdf5_inited = 0
+hdf5_inited = 0
 
 cdef int init_hdf5() except -1:
-    # Initialize the library and set register Python callbacks for exception
+    # Initialize the library and register Python callbacks for exception
     # handling.  Safe to call more than once.
     global hdf5_inited
 
@@ -721,7 +728,6 @@ api_version = "%d.%d" % api_version_tuple
 
 version = H5PY_VERSION
 version_tuple = tuple([int(x) for x in version.split('.')])
-
 
 
 

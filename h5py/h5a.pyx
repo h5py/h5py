@@ -26,8 +26,8 @@ from numpy cimport import_array, ndarray, PyArray_DATA
 from utils cimport check_numpy_read, check_numpy_write, emalloc, efree
 
 # Initialization
-init_hdf5()
 import_array()
+init_hdf5()
 
 
 # === General attribute operations ============================================
@@ -209,7 +209,7 @@ def iterate(ObjectID loc not None, object func, int index=0):
     iteration and returns that value.
 
     Tip: To make your code forward-compatible with later versions of this
-    function (which supply more information to the callback), add an
+    function (which supply more arguments to the callback), add an
     additional *args parameter.
     """
     if index < 0:

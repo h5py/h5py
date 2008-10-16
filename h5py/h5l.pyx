@@ -130,10 +130,10 @@ cdef class LinkProxy(ObjectID):
     def create_hard(self, char* new_name, GroupID cur_loc not None,
         char* cur_name, PropID lcpl=None, PropID lapl=None):
         """ (STRING new_name, GroupID cur_loc, STRING cur_name,
-             PropLCID lcpl=None, PropLAID lapl=None)
+        PropID lcpl=None, PropID lapl=None)
 
-            Create a new hard link in this group pointing to an existing link
-            in another group.
+        Create a new hard link in this group pointing to an existing link
+        in another group.
         """
         H5Lcreate_hard(cur_loc.id, cur_name, self.id, new_name,
             pdefault(lcpl), pdefault(lapl))
@@ -141,21 +141,31 @@ cdef class LinkProxy(ObjectID):
     @sync
     def create_soft(self, char* new_name, char* target,
         PropID lcpl=None, PropID lapl=None):
-        """ (STRING new_name, STRING target, PropLCID lcpl=None,
-             PropLAID lapl=None)
+        """(STRING new_name, STRING target, PropID lcpl=None, PropID lapl=None)
 
-            Create a new soft link in this group, with the given string value.
-            The link target does not need to exist.
+        Create a new soft link in this group, with the given string value.
+        The link target does not need to exist.
         """
         H5Lcreate_soft(target, self.id, new_name,
             pdefault(lcpl), pdefault(lapl))
 
     @sync
-    def get_val(self, char* name, PropID lapl=None):
-        """ (STRING name, PropLAID lapl=None) => STRING or TUPLE(file, obj)
+    def create_external(self, char* link_name, char* file_name, char* obj_name,
+        PropID lcpl=None, PropID lapl=None):
+        """(STRING link_name, STRING file_name, STRING obj_name,
+        PropLCID lcpl=None, PropLAID lapl=None)
 
-            Get the string value of a soft link, or a 2-tuple representing
-            the contents of an external link.
+        Create a new external link, pointing to an object in another file.
+        """
+        H5Lcreate_external(file_name, obj_name, self.id, link_name,
+            pdefault(lcpl), pdefault(lapl))
+
+    @sync
+    def get_val(self, char* name, PropID lapl=None):
+        """(STRING name, PropLAID lapl=None) => STRING or TUPLE(file, obj)
+
+        Get the string value of a soft link, or a 2-tuple representing
+        the contents of an external link.
         """
         cdef hid_t plist = pdefault(lapl)
         cdef H5L_info_t info
@@ -184,17 +194,6 @@ cdef class LinkProxy(ObjectID):
         return py_retval
 
     @sync
-    def create_external(self, char* link_name, char* file_name, char* obj_name,
-        PropID lcpl=None, PropID lapl=None):
-        """ (STRING link_name, STRING file_name, STRING obj_name,
-             PropLCID lcpl=None, PropLAID lapl=None)
-
-            Create a new external link, pointing to an object in another file.
-        """
-        H5Lcreate_external(file_name, obj_name, self.id, link_name,
-            pdefault(lcpl), pdefault(lapl))
-
-    @sync
     def exists(self, char* name):
         """ (STRING name) => BOOL
 
@@ -203,10 +202,12 @@ cdef class LinkProxy(ObjectID):
         return <bint>(H5Lexists(self.id, name, H5P_DEFAULT))
 
     @sync
-    def get_info(self, char* name, PropID lapl=None):
-        """ (STRING name, PropLAID lapl=None) => LinkInfo instance
+    def get_info(self, char* name, int index=-1, *, PropID lapl=None):
+        """(STRING name=, INT index=, **kwds) => LinkInfo instance
 
-            Get information about a link in this group.
+        Get information about a link, either by name or its index.
+
+        Keywords:
         """
         cdef LinkInfo info = LinkInfo()
         H5Lget_info(self.id, name, &info.infostruct, pdefault(lapl))
@@ -215,26 +216,26 @@ cdef class LinkProxy(ObjectID):
     @sync
     def visit(self, object func, *,
               int idx_type=H5_INDEX_NAME, int order=H5_ITER_NATIVE,
-              char* name='.', PropID lapl=None):
-        """ (CALLABLE func, **kwds) => <Return value from func>
+              char* obj_name='.', PropID lapl=None):
+        """(CALLABLE func, **kwds) => <Return value from func>
 
-            Iterate a function or callable object over all groups below this
-            one.  Your callable should conform to the signature:
+        Iterate a function or callable object over all groups below this
+        one.  Your callable should conform to the signature:
 
-                func(STRING name, LinkInfo info) => Result
+            func(STRING name, LinkInfo info) => Result
 
-            Returning None or a logical False continues iteration; returning
-            anything else aborts iteration and returns that value.
+        Returning None or a logical False continues iteration; returning
+        anything else aborts iteration and returns that value.
 
-            Keyword-only arguments:
-            * STRING name ("."):             Visit a subgroup instead
-            * PropLAID lapl (None):          Controls how "name" is interpreted
-            * INT idx_type (h5.INDEX_NAME):  What indexing strategy to use
-            * INT order (h5.ITER_NATIVE):    Order in which iteration occurs
+        Keyword-only arguments:
+        * STRING obj_name ("."):         Visit a subgroup instead
+        * PropLAID lapl (None):          Controls how "obj_name" is interpreted
+        * INT idx_type (h5.INDEX_NAME):  What indexing strategy to use
+        * INT order (h5.ITER_NATIVE):    Order in which iteration occurs
         """
         cdef _LinkVisitor it = _LinkVisitor(func)
 
-        H5Lvisit_by_name(self.id, name, <H5_index_t>idx_type,
+        H5Lvisit_by_name(self.id, obj_name, <H5_index_t>idx_type,
             <H5_iter_order_t>order, cb_link_iterate, <void*>it, pdefault(lapl))
 
         return it.retval
