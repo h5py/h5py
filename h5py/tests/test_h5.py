@@ -14,12 +14,4 @@ import unittest
 from h5py import h5
 
 class TestH5(unittest.TestCase):
-
-    def test_version(self):
-        # For 1.6 API
-        tpl = h5.get_libversion()
-
-        self.assertEqual(tpl, h5.hdf5_version_tuple)
-        self.assertEqual("%d.%d.%d" % tpl, h5.hdf5_version)
-        h5.api_version
-        h5.api_version_tuple
+    pass

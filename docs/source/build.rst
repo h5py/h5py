@@ -42,6 +42,8 @@ Procedure
 3.  Run ``python setup.py test`` to run unit tests in-place (optional)
 4.  Run ``sudo python setup.py install`` to install into your main Python
     package directory.
+5.  ``cd`` out of the installation directory before importing h5py, to prevent
+    Python from trying to run from the source folder.
 
 Additional options
 ------------------

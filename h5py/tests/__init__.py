@@ -68,7 +68,7 @@ def runtests(requests=None, verbosity=1):
     retval = unittest.TextTestRunner(verbosity=verbosity).run(suite)
 
     if verbosity >= 1:
-        print "=== Tested HDF5 %s (%s API) ===" % (h5.hdf5_version, h5.api_version)
+        print "=== Tested HDF5 %s (%s API) ===" % (version.hdf5_version, version.api_version)
     return retval.wasSuccessful()
 
 def autotest():

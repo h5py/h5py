@@ -721,13 +721,9 @@ init_hdf5()
  
 # === Module init =============================================================
 
-hdf5_version_tuple = get_libversion()        
-hdf5_version = "%d.%d.%d" % hdf5_version_tuple
-api_version_tuple = (int(H5PY_API/10), H5PY_API%10)
-api_version = "%d.%d" % api_version_tuple
-
-version = H5PY_VERSION
-version_tuple = tuple([int(x) for x in version.split('.')])
+_hdf5_version_tuple = get_libversion()        
+_api_version_tuple = (int(H5PY_API/10), H5PY_API%10)
+_version_tuple = tuple([int(x) for x in H5PY_VERSION.split('.')])
 
 
 
