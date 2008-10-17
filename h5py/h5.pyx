@@ -17,17 +17,6 @@ __doc__ = \
     enable HDF5 exception handline.  It also enables debug logging, if the
     library has been compiled with a nonzero debugging level.
 
-    Useful things defined here:
-    
-    version               String with h5py version (e.g. "0.2.0")
-    version_tuple         3-tuple with h5py version (e.g. (0, 2, 0))
-
-    hdf5_version:         String with library version (e.g. "1.6.5")
-    hdf5_version_tuple:   3-tuple form of the version (e.g. (1,6,5))
-
-    api_version:          String form of the API used (e.g. "1.6")
-    api_version_tuple:    2-tuple form of the version (e.g. (1,6))
-
     All exception classes and error handling functions are also in this module.
 """
 
