@@ -292,9 +292,10 @@ cdef class DatasetID(ObjectID):
 
             Determine if space has been allocated for a dataset.  
             Return value is one of:
-                SPACE_STATUS_NOT_ALLOCATED
-                SPACE_STATUS_PART_ALLOCATED
-                SPACE_STATUS_ALLOCATED 
+
+            * SPACE_STATUS_NOT_ALLOCATED
+            * SPACE_STATUS_PART_ALLOCATED
+            * SPACE_STATUS_ALLOCATED 
         """
         cdef H5D_space_status_t status
         H5Dget_space_status(self.id, &status)

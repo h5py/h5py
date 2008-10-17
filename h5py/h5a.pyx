@@ -10,10 +10,11 @@
 # 
 #-
 
-
+__doc__=\
 """
     Provides access to the low-level HDF5 "H5A" attribute interface.
 """
+__all__ = ['create','AttrID']
 
 include "config.pxi"
 include "sync.pxi"
@@ -212,7 +213,7 @@ def iterate(ObjectID loc not None, object func, int index=0):
 
     Tip: To make your code forward-compatible with later versions of this
     function (which supply more arguments to the callback), add an
-    additional *args parameter.
+    additional ``*args`` parameter.
     """
     if index < 0:
         raise ValueError("Starting index must be a non-negative integer.")

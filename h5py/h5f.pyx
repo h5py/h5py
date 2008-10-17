@@ -57,8 +57,12 @@ def open(char* name, unsigned int flags=H5F_ACC_RDWR, PropFAID fapl=None):
     """ (STRING name, UINT flags=ACC_RDWR, PropFAID fapl=None)
         => FileID
 
-        Open an existing HDF5 file.  Keyword "flags" may be ACC_RWDR or
-        ACC_RDONLY.  Keyword fapl may be a file access property list.
+        Open an existing HDF5 file.  Keyword "flags" may be:
+
+        * ACC_RWDR or
+        * ACC_RDONLY.
+
+        Keyword fapl may be a file access property list.
     """
     IF H5PY_DEBUG:
         import logging
@@ -72,9 +76,10 @@ def create(char* name, int flags=H5F_ACC_TRUNC, PropFCID fcpl=None,
                                            PropFAID fapl=None)
         => FileID
 
-        Create a new HDF5 file.  Keyword "flags" may be either:
-            ACC_TRUNC:  Truncate an existing file, discarding its data
-            ACC_EXCL:   Fail if a conflicting file exists
+        Create a new HDF5 file.  Keyword "flags" may be:
+
+        * ACC_TRUNC:  Truncate an existing file, discarding its data
+        * ACC_EXCL:   Fail if a conflicting file exists
 
         To keep the behavior in line with that of Python's built-in functions,
         the default is ACC_TRUNC.  Be careful!
@@ -91,8 +96,9 @@ def flush(ObjectID obj not None, int scope=H5F_SCOPE_LOCAL):
         Tell the HDF5 library to flush file buffers to disk.  "obj" may
         be the file identifier, or the identifier of any object residing in
         the file.  Keyword "scope" may be:
-            SCOPE_LOCAL:    Flush only the given file
-            SCOPE_GLOBAL:   Flush the entire virtual file
+
+        * SCOPE_LOCAL:    Flush only the given file
+        * SCOPE_GLOBAL:   Flush the entire virtual file
     """
     H5Fflush(obj.id, <H5F_scope_t>scope)
 
@@ -147,10 +153,10 @@ def get_obj_count(object where=OBJ_ALL, int types=H5F_OBJ_ALL):
 
         Get the number of open objects.
 
-        where:  Either a FileID instance representing an HDF5 file, or the
-                special constant OBJ_ALL, to count objects in all files.
+        * where:  Either a FileID instance representing an HDF5 file, or the
+                  special constant OBJ_ALL, to count objects in all files.
 
-        type:   Specify what kinds of object to include.  May be one of OBJ_*, 
+        * type: Specify what kinds of object to include.  May be one of OBJ_*, 
                 or any bitwise combination (e.g. OBJ_FILE | OBJ_ATTR).  
 
                 The special value OBJ_ALL matches all object types, and 
@@ -224,10 +230,11 @@ cdef class FileID(ObjectID):
         file identifiers are provided as functions in the h5f module.
 
         Properties:
-        name:   File name on disk
+        * name:   File name on disk
 
-        Hashable: Yes, unique to the file (but not the access mode)
-        Equality: Hash comparison
+        Behavior:
+        * Hashable: Yes, unique to the file (but not the access mode)
+        * Equality: Hash comparison
     """
 
     property name:

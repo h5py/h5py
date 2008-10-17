@@ -1,0 +1,7 @@
+Module H5
+=========
+
+.. automodule:: h5py.h5
+    :members:
+.. autoclass:: ObjectID
+

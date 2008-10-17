@@ -7,8 +7,6 @@ calls into HDF5 directly.  A lot of effort has been put into making even this
 component useful in a Python context.  It provides the most general interface
 to HDF5, including the vast majority of the C library.
 
-The definitive documentation for this level is available through docstrings.
-`Auto-generated HTML documentation`__ based on these is available.
 You'll probably also find the `official HDF5 documentation`__ useful as a guide
 to how the library itself operates.  In particular, the HDF5 User Guide is
 an excellent description of each major component.
@@ -16,6 +14,23 @@ an excellent description of each major component.
 __ http://h5py.alfven.org/docs
 __ http://hdf.ncsa.uiuc.edu/HDF5/doc/index.html
 
+Low-level API reference
+=======================
+
+.. toctree::
+    :maxdepth: 2
+
+    low/h5
+    low/h5a
+    low/h5d
+    low/h5f
+    low/h5g
+    low/h5i
+    low/h5p
+    low/h5r
+    low/h5s
+    low/h5t
+    low/h5z
 
 Library organization
 ====================
