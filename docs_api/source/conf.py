@@ -12,6 +12,9 @@
 # serve to show the default value.
 
 import sys, os
+pth = os.getenv('H5PY_PATH', None)
+if pth is not None:
+    sys.path[:] = [pth]+sys.path
 
 # If your extensions are in another directory, add it here. If the directory
 # is relative to the documentation root, use os.path.abspath to make it

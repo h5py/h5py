@@ -8,7 +8,6 @@ recursive-include h5py *.py *.pyx *.pxd *.pxi *.h *.c *.hdf5
 recursive-include licenses *
 recursive-include docs/manual-html *
 recursive-include docs/api-html *
-include docs/API.html
 include docs/Manual.html
-
+include docs/API.html
 

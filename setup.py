@@ -378,35 +378,35 @@ class doc(Command):
 
         buildobj = self.distribution.get_command_obj('build')
         buildobj.run()
+        pth = op.abspath(buildobj.build_lib)
 
-        for x in ('docs', 'docs/api-html'):
-            if not op.exists(x):
-                os.mkdir(x, 0755)
+        for x in ('docs/manual-html', 'docs/api-html',
+                  'docs/build', 'docs_api/build'):
+            if op.exists(x):
+                shutil.rmtree(x)
 
-        retval = os.spawnlp(os.P_WAIT, 'epydoc', '-q', '--html',
-                    '-o', 'docs/api-html', '--config', 'docs.cfg', 
-                    os.path.join(buildobj.build_lib, NAME) )
+        cmd1 = "cd docs; make html"
+        cmd2 = "export H5PY_PATH=%s; cd docs_api; make html" % pth
+
+        retval = os.system(cmd1)
         if retval != 0:
-            warn("Could not run epydoc to build documentation.")
-
-
-        retval = os.system("cd docs; make html")
+            fatal("Can't build manual")
+        retval = os.system(cmd2)
         if retval != 0:
-            warn("Could not run Sphinx doc generator")
-        else:
-            if op.exists('docs/manual-html'):
-                shutil.rmtree('docs/manual-html')
-            shutil.copytree('docs/build/html', 'docs/manual-html')
+            fatal("Can't build API documentation")
+
+        shutil.copytree('docs/build/html', 'docs/manual-html')
+        shutil.copytree('docs_api/build/html', 'docs/api-html')
+
 
 class cyclean(Command):
 
     """ Clean up Cython-generated files and build cache"""
 
-    user_options = [('doc','d','Also destroy compiled documentation')]
-    boolean_options = ['doc']
+    user_options = []
 
     def initialize_options(self):
-        self.doc = False
+        pass
 
     def finalize_options(self):
         pass
@@ -418,9 +418,6 @@ class cyclean(Command):
             allmodules.update(x)
 
         dirs = ['build']
-
-        if self.doc:
-            dirs += ['docs/api-html', 'docs/manual-html']
 
         for x in dirs:
             try:
