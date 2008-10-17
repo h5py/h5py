@@ -9,7 +9,7 @@
 # $Date$
 # 
 #-
-
+__doc__ = \
 """
     Provides access to the low-level HDF5 "H5D" dataset interface.
 """

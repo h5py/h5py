@@ -9,7 +9,7 @@
 # $Date$
 # 
 #-
-
+__doc__ = \
 """
     Low-level interface to the "H5S" family of data-space functions.
 """

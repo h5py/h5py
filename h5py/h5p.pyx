@@ -9,8 +9,7 @@
 # $Date$
 # 
 #-
-
-
+__doc__ = \
 """
     HDF5 property list interface.
 """

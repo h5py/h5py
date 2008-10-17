@@ -9,7 +9,7 @@
 # $Date$
 # 
 #-
-
+__doc__ = \
 """
     HDF5 "H5T" data-type API
 

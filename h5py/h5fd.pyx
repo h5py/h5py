@@ -12,7 +12,7 @@
 
 # This file contains code or comments from the HDF5 library.  See the file
 # licenses/hdf5.txt for the full HDF5 software license.
-print 'FD'
+
 include "config.pxi"
 include "sync.pxi"
 

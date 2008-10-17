@@ -9,7 +9,7 @@
 # $Date$
 # 
 #-
-
+__doc__ = \
 """
     API for the "H5L" family of link-related operations
 """

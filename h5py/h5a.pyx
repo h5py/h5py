@@ -10,12 +10,14 @@
 # 
 #-
 
+
 """
     Provides access to the low-level HDF5 "H5A" attribute interface.
 """
 
 include "config.pxi"
 include "sync.pxi"
+
 
 # Compile-time imports
 from h5 cimport init_hdf5, SmartStruct
@@ -305,14 +307,8 @@ cdef class AttrID(ObjectID):
         functions which always take an attribute instance as the first
         argument are presented as methods of this class.  
 
-        Properties:
-
-        name:   The attribute's name
-        dtype:  A Numpy dtype representing this attribute's type
-        shape:  A Numpy-style shape tuple representing the dataspace
-
-        Hashable: No
-        Equality: Identifier comparison
+        * Hashable: No
+        * Equality: Identifier comparison
     """
     property name:
         """The attribute's name"""

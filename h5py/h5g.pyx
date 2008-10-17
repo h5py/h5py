@@ -9,7 +9,7 @@
 # $Date$
 # 
 #-
-
+__doc__ = \
 """
     Low-level HDF5 "H5G" group interface.
 """

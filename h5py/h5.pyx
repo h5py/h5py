@@ -9,7 +9,7 @@
 # $Date$
 # 
 #-
-
+__doc__ = \
 """
     Common support and versioning module for the h5py HDF5 interface.
 
@@ -119,14 +119,16 @@ cdef class H5PYConfig:
 """\
 Summary of h5py config
 ======================
+HDF5: %s
 1.6 API: %s
 1.8 API: %s
 Thread-aware: %s
 Diagnostic mode: %s
 Complex names: %s"""
 
-        rstr %= (bool(self.API_16), bool(self.API_18), bool(self.THREADS),
-                 bool(self.DEBUG), self.complex_names)
+        rstr %= ("%d.%d.%d" % get_libversion(), bool(self.API_16),
+                bool(self.API_18), bool(self.THREADS), bool(self.DEBUG),
+                self.complex_names)
         return rstr
 
 cdef H5PYConfig cfg = H5PYConfig()

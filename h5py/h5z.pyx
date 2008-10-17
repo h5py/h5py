@@ -10,7 +10,7 @@
 # 
 #-
 
-
+__doc__ = \
 """
     Filter API and constants
 """
