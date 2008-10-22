@@ -54,15 +54,17 @@ OBJ_LOCAL   = H5F_OBJ_LOCAL
 
 @sync
 def open(char* name, unsigned int flags=H5F_ACC_RDWR, PropFAID fapl=None):
-    """ (STRING name, UINT flags=ACC_RDWR, PropFAID fapl=None)
-        => FileID
+    """(STRING name, UINT flags=ACC_RDWR, PropFAID fapl=None) => FileID
 
-        Open an existing HDF5 file.  Keyword "flags" may be:
+    Open an existing HDF5 file.  Keyword "flags" may be:
 
-        * ACC_RWDR or
-        * ACC_RDONLY.
+    ACC_RDWR
+        Open in read-write mode
 
-        Keyword fapl may be a file access property list.
+    ACC_RDONLY
+        Open in readonly mode
+
+    Keyword fapl may be a file access property list.
     """
     IF H5PY_DEBUG:
         import logging
@@ -72,17 +74,19 @@ def open(char* name, unsigned int flags=H5F_ACC_RDWR, PropFAID fapl=None):
 @sync
 def create(char* name, int flags=H5F_ACC_TRUNC, PropFCID fcpl=None,
                                                 PropFAID fapl=None):
-    """ (STRING name, INT flags=ACC_TRUNC, PropFCID fcpl=None,
-                                           PropFAID fapl=None)
-        => FileID
+    """(STRING name, INT flags=ACC_TRUNC, PropFCID fcpl=None,
+    PropFAID fapl=None) => FileID
 
-        Create a new HDF5 file.  Keyword "flags" may be:
+    Create a new HDF5 file.  Keyword "flags" may be:
 
-        * ACC_TRUNC:  Truncate an existing file, discarding its data
-        * ACC_EXCL:   Fail if a conflicting file exists
+    ACC_TRUNC
+        Truncate an existing file, discarding its data
 
-        To keep the behavior in line with that of Python's built-in functions,
-        the default is ACC_TRUNC.  Be careful!
+    ACC_EXCL
+        Fail if a conflicting file exists
+
+    To keep the behavior in line with that of Python's built-in functions,
+    the default is ACC_TRUNC.  Be careful!
     """
     IF H5PY_DEBUG:
         import logging
@@ -91,47 +95,50 @@ def create(char* name, int flags=H5F_ACC_TRUNC, PropFCID fcpl=None,
 
 @sync
 def flush(ObjectID obj not None, int scope=H5F_SCOPE_LOCAL):
-    """ (ObjectID obj, INT scope=SCOPE_LOCAL)
+    """(ObjectID obj, INT scope=SCOPE_LOCAL)
 
-        Tell the HDF5 library to flush file buffers to disk.  "obj" may
-        be the file identifier, or the identifier of any object residing in
-        the file.  Keyword "scope" may be:
+    Tell the HDF5 library to flush file buffers to disk.  "obj" may
+    be the file identifier, or the identifier of any object residing in
+    the file.  Keyword "scope" may be:
 
-        * SCOPE_LOCAL:    Flush only the given file
-        * SCOPE_GLOBAL:   Flush the entire virtual file
+    SCOPE_LOCAL
+        Flush only the given file
+
+    SCOPE_GLOBAL
+        Flush the entire virtual file
     """
     H5Fflush(obj.id, <H5F_scope_t>scope)
 
 @sync
 def is_hdf5(char* name):
-    """ (STRING name) => BOOL is_hdf5
+    """(STRING name) => BOOL
 
-        Determine if a given file is an HDF5 file.  Note this raises an 
-        exception if the file doesn't exist.
+    Determine if a given file is an HDF5 file.  Note this raises an 
+    exception if the file doesn't exist.
     """
     return <bint>(H5Fis_hdf5(name))
 
 @sync
 def mount(ObjectID loc not None, char* name, FileID fid not None):
-    """ (ObjectID loc, STRING name, FileID fid)
-    
-        Mount an open file as "name" under group loc_id.
+    """(ObjectID loc, STRING name, FileID fid)
+
+    Mount an open file as "name" under group loc_id.
     """
     H5Fmount(loc.id, name, fid.id, H5P_DEFAULT)
 
 @sync
 def unmount(ObjectID loc not None, char* name):
-    """ (ObjectID loc, STRING name)
+    """(ObjectID loc, STRING name)
 
-        Unmount a file, mounted as "name" under group loc_id.
+    Unmount a file, mounted as "name" under group loc_id.
     """
     H5Funmount(loc.id, name)
 
 @sync
 def get_name(ObjectID obj not None):
-    """ (ObjectID obj) => STRING file_name
-        
-        Determine the name of the file in which the specified object resides.
+    """(ObjectID obj) => STRING
+    
+    Determine the name of the file in which the specified object resides.
     """
     cdef ssize_t size
     cdef char* name
@@ -149,21 +156,21 @@ def get_name(ObjectID obj not None):
 
 @sync
 def get_obj_count(object where=OBJ_ALL, int types=H5F_OBJ_ALL):
-    """ (OBJECT where=OBJ_ALL, types=OBJ_ALL) => INT n_objs
+    """(OBJECT where=OBJ_ALL, types=OBJ_ALL) => INT
 
-        Get the number of open objects.
+    Get the number of open objects.
 
-        where:
-            Either a FileID instance representing an HDF5 file, or the
-            special constant OBJ_ALL, to count objects in all files.
+    where
+        Either a FileID instance representing an HDF5 file, or the
+        special constant OBJ_ALL, to count objects in all files.
 
-        type:
-            Specify what kinds of object to include.  May be one of OBJ_*, 
-            or any bitwise combination (e.g. OBJ_FILE | OBJ_ATTR).  
+    type
+        Specify what kinds of object to include.  May be one of OBJ_*, 
+        or any bitwise combination (e.g. OBJ_FILE | OBJ_ATTR).  
 
-            The special value OBJ_ALL matches all object types, and 
-            OBJ_LOCAL will only match objects opened through a specific 
-            identifier.
+        The special value OBJ_ALL matches all object types, and 
+        OBJ_LOCAL will only match objects opened through a specific 
+        identifier.
     """
     cdef hid_t where_id
     if isinstance(where, FileID):
@@ -177,21 +184,21 @@ def get_obj_count(object where=OBJ_ALL, int types=H5F_OBJ_ALL):
 
 @sync
 def get_obj_ids(object where=OBJ_ALL, int types=H5F_OBJ_ALL):
-    """ (OBJECT where=OBJ_ALL, types=OBJ_ALL) => LIST open_ids
+    """(OBJECT where=OBJ_ALL, types=OBJ_ALL) => LIST
 
-        Get a list of identifier instances for open objects.
+    Get a list of identifier instances for open objects.
 
-        where:
-            Either a FileID instance representing an HDF5 file, or the
-            special constant OBJ_ALL, to list objects in all files.
+    where
+        Either a FileID instance representing an HDF5 file, or the
+        special constant OBJ_ALL, to list objects in all files.
 
-        type:   
-            Specify what kinds of object to include.  May be one of OBJ_*, 
-            or any bitwise combination (e.g. OBJ_FILE | OBJ_ATTR).  
+    type
+        Specify what kinds of object to include.  May be one of OBJ_*, 
+        or any bitwise combination (e.g. OBJ_FILE | OBJ_ATTR).  
 
-            The special value OBJ_ALL matches all object types, and 
-            OBJ_LOCAL will only match objects opened through a specific 
-            identifier.
+        The special value OBJ_ALL matches all object types, and 
+        OBJ_LOCAL will only match objects opened through a specific 
+        identifier.
     """
     cdef int count
     cdef int i
@@ -250,12 +257,12 @@ cdef class FileID(ObjectID):
 
     @sync
     def close(self):
-        """ ()
+        """()
 
-            Terminate access through this identifier.  Note that depending on
-            what property list settings were used to open the file, the
-            physical file might not be closed until all remaining open
-            identifiers are freed.  
+        Terminate access through this identifier.  Note that depending on
+        what property list settings were used to open the file, the
+        physical file might not be closed until all remaining open
+        identifiers are freed.  
         """
         IF H5PY_DEBUG:
             import logging
@@ -264,20 +271,20 @@ cdef class FileID(ObjectID):
 
     @sync
     def reopen(self):
-        """ () => FileID
+        """() => FileID
 
-            Retrieve another identifier for a file (which must still be open).
-            The new identifier is guaranteed to neither be mounted nor contain
-            a mounted file.
+        Retrieve another identifier for a file (which must still be open).
+        The new identifier is guaranteed to neither be mounted nor contain
+        a mounted file.
         """
         return FileID(H5Freopen(self.id))
 
     @sync
     def get_filesize(self):
-        """ () => LONG size
+        """() => LONG size
 
-            Determine the total size (in bytes) of the HDF5 file, 
-            including any user block.
+        Determine the total size (in bytes) of the HDF5 file, 
+        including any user block.
         """
         cdef hsize_t size
         H5Fget_filesize(self.id, &size)
@@ -285,27 +292,28 @@ cdef class FileID(ObjectID):
 
     @sync
     def get_create_plist(self):
-        """ () => PropFCID
+        """() => PropFCID
 
-            Retrieve a copy of the property list used to create this file.
+        Retrieve a copy of the file creation property list used to
+        create this file.
         """
         return propwrap(H5Fget_create_plist(self.id))
 
     @sync
     def get_access_plist(self):
-        """ () => PropFAID
+        """() => PropFAID
 
-            Retrieve a copy of the property list which manages access 
-            to this file.
+        Retrieve a copy of the file access property list which manages access 
+        to this file.
         """
         return propwrap(H5Fget_access_plist(self.id))
 
     @sync
     def get_freespace(self):
-        """ () => LONG freespace
+        """() => LONG freespace
 
-            Determine the amount of free space in this file.  Note that this
-            only tracks free space until the file is closed.
+        Determine the amount of free space in this file.  Note that this
+        only tracks free space until the file is closed.
         """
         return H5Fget_freespace(self.id)
 

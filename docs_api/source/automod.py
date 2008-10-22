@@ -43,8 +43,8 @@ const_pattern = r"(?:^|\s+)\W?%s[\):\.,]?\.?(?:$|\s+)" % const_only
 
 # These match the regexp but are not valid constants
 const_exclude = r"HDF5|API|H5|H5A|H5D|H5F|H5P|H5Z|" + \
-                r"\sINT\s|\sUINT\s|\sSTRING\s|LONG|PHIL|GIL|TUPLE|LIST|FORTRAN|" +\
-                r"\sBOOL\s|\sNULL\s|\sNOT\s"
+                r"INT\s|UINT|STRING|LONG|PHIL|GIL|TUPLE|LIST|FORTRAN|" +\
+                r"BOOL|NULL|\sNOT\s"
 
 def replace_constant(instring, mod, match):
     """ Callback for re.sub, to generate the ReST for a constant in-place """
@@ -62,7 +62,7 @@ def replace_constant(instring, mod, match):
         target = '%s.%s' % (mod, target)
 
     rpl = ':data:`%s <%s>`' % (display, target)
-    print rpl
+    #print rpl
     return re.sub(const_only, rpl, matchstring)
 
 
@@ -86,7 +86,7 @@ def setup(spx):
                 final_lines.append(line)
 
         # Resolve class names, constants and modules
-        print name
+        #print name
         if hasattr(obj, 'im_class'):
             mod = obj.im_class.__module__
         elif hasattr(obj, '__module__'):

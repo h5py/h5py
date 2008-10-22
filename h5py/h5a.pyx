@@ -333,7 +333,7 @@ IF H5PY_18API:
         INT index_type (h5.INDEX_NAME)
             Which index to use
 
-        INT order (h5.ORDER_NATIVE)
+        INT order (h5.ITER_NATIVE)
             Index order to use
         """
         if index < 0:

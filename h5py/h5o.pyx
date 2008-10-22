@@ -21,6 +21,7 @@ from h5 cimport init_hdf5, ObjectID, SmartStruct
 from h5g cimport GroupID
 from h5i cimport wrap_identifier
 from h5p cimport PropID, pdefault
+from utils cimport emalloc, efree
 
 # Initialization
 init_hdf5()
@@ -122,15 +123,39 @@ cdef class ObjInfo(_ObjInfo):
         return newcopy
 
 @sync
-def get_info(ObjectID obj not None):
-    """(ObjectID obj) => ObjInfo"""
+def get_info(ObjectID loc not None, char* name=NULL, int index=-1, *,
+        char* obj_name='.', int index_type=H5_INDEX_NAME, int order=H5_ITER_NATIVE,
+        PropID lapl=None):
+    """(ObjectID loc, STRING name=, INT index=, **kwds) => ObjInfo
 
+    Get information describing an object in an HDF5 file.  Provide the object
+    itself, or the containing group and exactly one of "name" or "index".
+
+    STRING obj_name (".")
+        When "index" is specified, look in this subgroup instead.
+        Otherwise ignored.
+
+    PropID lapl (None)
+        Link access property list
+
+    INT index_type (h5.INDEX_NAME)
+
+    INT order (h5.ITER_NATIVE)
+    """
     cdef ObjInfo info
     info = ObjInfo()
 
-    H5Oget_info(obj.id, &info.infostruct)
-    return info
+    if name != NULL and index >= 0:
+        raise TypeError("At most one of name or index may be specified")
+    elif name != NULL and index < 0:
+        H5Oget_info_by_name(loc.id, name, &info.infostruct, pdefault(lapl)) 
+    elif name == NULL and index >= 0:
+        H5Oget_info_by_idx(loc.id, obj_name, <H5_index_t>index_type,
+            <H5_iter_order_t>order, index, &info.infostruct, pdefault(lapl))
+    else: 
+        H5Oget_info(loc.id, &info.infostruct)
 
+    return info
 
 # === General object operations ===============================================
 
@@ -167,6 +192,48 @@ def copy(GroupID src_loc not None, char* src_name, GroupID dst_loc not None,
     """
     H5Ocopy(src_loc.id, src_name, dst_loc.id, dst_name, pdefault(copypl),
         pdefault(lcpl))
+
+@sync
+def set_comment(ObjectID loc not None, char* comment, *, char* obj_name=".",
+    PropID lapl=None):
+    """(ObjectID loc, STRING comment, **kwds)
+
+    Set the comment for any-file resident object.  Keywords:
+
+    STRING obj_name (".")
+        Set comment on this group member instead
+
+    PropID lapl (None)
+        Link access property list
+    """
+    H5Oset_comment_by_name(loc.id, obj_name, comment, pdefault(lapl))
+
+
+@sync
+def get_comment(ObjectID loc not None, char* comment, *, char* obj_name=".",
+    PropID lapl=None):
+    """(ObjectID loc, STRING comment, **kwds)
+
+    Get the comment for any-file resident object.  Keywords:
+
+    STRING obj_name (".")
+        Set comment on this group member instead
+
+    PropID lapl (None)
+        Link access property list
+    """
+    cdef ssize_t size
+    cdef char* buf
+
+    size = H5Oget_comment_by_name(loc.id, obj_name, NULL, 0, pdefault(lapl))
+    buf = <char*>emalloc(size+1)
+    try:
+        H5Oget_comment_by_name(loc.id, obj_name, buf, size+1, pdefault(lapl))
+        pstring = buf
+    finally:
+        efree(buf)
+
+    return pstring
 
 # === Visit routines ==========================================================
 
@@ -221,15 +288,22 @@ def visit(ObjectID loc not None, object func, *,
         func(STRING name, ObjInfo info) => Result
 
     Returning None or a logical False continues iteration; returning
-    anything else aborts iteration and returns that value.
+    anything else aborts iteration and returns that value.  Keywords:
 
-    Keyword-only arguments:
+    BOOL info (False)
+        Callbask is func(STRING, Objinfo)
 
-    * BOOL info (False)              Callbask is func(STRING, Objinfo)
-    * STRING obj_name ("."):         Visit a subgroup of "loc" instead
-    * PropLAID lapl (None):          Control how "obj_name" is interpreted
-    * INT idx_type (h5.INDEX_NAME):  What indexing strategy to use
-    * INT order (h5.ITER_NATIVE):    Order in which iteration occurs
+    STRING obj_name (".")
+        Visit a subgroup of "loc" instead
+
+    PropLAID lapl (None)
+        Control how "obj_name" is interpreted
+
+    INT idx_type (h5.INDEX_NAME)
+        What indexing strategy to use
+
+    INT order (h5.ITER_NATIVE)
+        Order in which iteration occurs
     """
     cdef _ObjectVisitor visit = _ObjectVisitor(func)
     cdef H5O_iterate_t cfunc

@@ -101,14 +101,14 @@ cdef class LinkProxy(ObjectID):
         H5L function operates on at least one group, the methods provided
         operate on their parent group identifier.  For example::
 
-        >>> g = h5g.open(fid, '/')
-        >>> g.links.exists("MyGroup")
-        True
-        >>> g.links.exists("FooBar")
-        False
+            >>> g = h5g.open(fid, '/')
+            >>> g.links.exists("MyGroup")
+            True
+            >>> g.links.exists("FooBar")
+            False
 
-        Hashable: No
-        Equality: Undefined
+        * Hashable: No
+        * Equality: Undefined
     """
 
     def __cinit__(self, hid_t id_):
@@ -219,24 +219,29 @@ cdef class LinkProxy(ObjectID):
         """(CALLABLE func, **kwds) => <Return value from func>
 
         Iterate a function or callable object over all groups below this
-        one.  Your callable should conform to the signature:
+        one.  Your callable should conform to the signature::
 
             func(STRING name) => Result
 
-        or if the keyword argument "info" is True:
+        or if the keyword argument "info" is True::
 
             func(STRING name, LinkInfo info) => Result
 
         Returning None or a logical False continues iteration; returning
         anything else aborts iteration and returns that value.
 
-        Keyword-only arguments:
+        BOOL info (False)
+            Provide a LinkInfo instance to callback
 
-        * BOOL info (False)              Provide a LinkInfo instance to callback
-        * STRING obj_name ("."):         Visit a subgroup instead
-        * PropLAID lapl (None):          Controls how "obj_name" is interpreted
-        * INT idx_type (h5.INDEX_NAME):  What indexing strategy to use
-        * INT order (h5.ITER_NATIVE):    Order in which iteration occurs
+        STRING obj_name (".")
+            Visit this subgroup instead
+
+        PropLAID lapl (None)
+            Link access property list for "obj_name"
+
+        INT idx_type (h5.INDEX_NAME)
+
+        INT order (h5.ITER_NATIVE)
         """
         cdef _LinkVisitor it = _LinkVisitor(func)
         cdef H5L_iterate_t cfunc

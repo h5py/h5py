@@ -200,14 +200,7 @@ class cybuild(build):
             if not op.exists(self.hdf5):
                 fatal('Specified HDF5 directory "%s" does not exist' % self.hdf5)
 
-        if self.api is None:
-            # Try to guess the installed HDF5 version
-            self.api = self.get_hdf5_version()
-            if self.api is None:
-                warn("Can't determine HDF5 version, assuming 1.6 (use --api= to override)")
-                self.api = 16
-        else:
-            # User specified the API level
+        if self.api is not None:
             self._default = False
             try:
                 self.api = int(self.api)
@@ -225,6 +218,12 @@ class cybuild(build):
                 modules, extensions = pickle.load(f)
         else:
             print "=> Creating new build configuration"
+
+            # Try to guess the installed HDF5 version
+            self.api = self.get_hdf5_version()
+            if self.api is None:
+                warn("Can't determine HDF5 version, assuming 1.6 (use --api= to override)")
+                self.api = 16
 
             modules = MODULES[self.api]
             creator = ExtensionCreator(self.hdf5)
@@ -427,7 +426,7 @@ class cyclean(Command):
 
         fnames = [ op.join(SRC_PATH, x+'.dep') for x in allmodules ] + \
                  [ op.join(SRC_PATH, x+'.c') for x in allmodules ] + \
-                 [ op.join(SRC_PATH, 'config.pxi')]
+                 [ op.join(SRC_PATH, 'config.pxi'), 'buildconf.pickle']
 
         for name in fnames:
             try:

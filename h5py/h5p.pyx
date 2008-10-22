@@ -85,13 +85,14 @@ DEFAULT = None   # In the HDF5 header files this is actually 0, which is an
 
 @sync
 def create(PropClassID cls not None):
-    """ (PropClassID cls) => PropID
+    """(PropClassID cls) => PropID
     
-        Create a new property list as an instance of a class; classes are:
-            FILE_CREATE
-            FILE_ACCESS
-            DATASET_CREATE
-            DATASET_XFER
+    Create a new property list as an instance of a class; classes are:
+
+    - FILE_CREATE
+    - FILE_ACCESS
+    - DATASET_CREATE
+    - DATASET_XFER
     """
     cdef hid_t newid
     newid = H5Pcreate(cls.id)
@@ -107,9 +108,9 @@ cdef class PropID(ObjectID):
 
     @sync
     def equal(self, PropID plist not None):
-        """ (PropID plist) => BOOL
+        """(PropID plist) => BOOL
 
-            Compare this property list (or class) to another for equality.
+        Compare this property list (or class) to another for equality.
         """
         return <bint>(H5Pequal(self.id, plist.id))
 
@@ -132,8 +133,8 @@ cdef class PropClassID(PropID):
     """
         An HDF5 property list class.
 
-        Hashable: Yes, by identifier
-        Equality: Logical H5P comparison
+        * Hashable: Yes, by identifier
+        * Equality: Logical H5P comparison
     """
 
     def __richcmp__(self, object other, int how):
@@ -151,33 +152,33 @@ cdef class PropInstanceID(PropID):
         Base class for property list instance objects.  Provides methods which
         are common across all HDF5 property list classes.
 
-        Hashable: No
-        Equality: Logical H5P comparison
+        * Hashable: No
+        * Equality: Logical H5P comparison
     """
 
     @sync
     def copy(self):
-        """ () => PropList newid
+        """() => PropList newid
 
-            Create a new copy of an existing property list object.
+         Create a new copy of an existing property list object.
         """
         return type(self)(H5Pcopy(self.id))
 
     @sync
     def _close(self):
-        """ ()
+        """()
     
-            Terminate access through this identifier.  You shouldn't have to
-            do this manually, as propery lists are automatically deleted when
-            their Python wrappers are freed.
+        Terminate access through this identifier.  You shouldn't have to
+        do this manually, as propery lists are automatically deleted when
+        their Python wrappers are freed.
         """
         H5Pclose(self.id)
 
     @sync
     def get_class(self):
-        """ () => PropClassID
+        """() => PropClassID
 
-            Determine the class of a property list object.
+        Determine the class of a property list object.
         """
         return PropClassID(H5Pget_class(self.id))
 
@@ -192,15 +193,15 @@ cdef class PropFCID(PropInstanceID):
 
     @sync
     def get_version(self):
-        """ () => TUPLE version_info
+        """() => TUPLE version_info
 
-            Determine version information of various file attributes. 
-            Elements are:
+        Determine version information of various file attributes. 
+        Elements are:
 
-            0:  UINT Super block version number
-            1:  UINT Freelist version number
-            2:  UINT Symbol table version number
-            3:  UINT Shared object header version number
+        0.  UINT Super block version number
+        1.  UINT Freelist version number
+        2.  UINT Symbol table version number
+        3.  UINT Shared object header version number
         """
         cdef herr_t retval
         cdef unsigned int super_
@@ -214,18 +215,18 @@ cdef class PropFCID(PropInstanceID):
 
     @sync
     def set_userblock(self, hsize_t size):
-        """ (INT/LONG size)
+        """(INT/LONG size)
 
-            Set the file user block size, in bytes.  
-            Must be a power of 2, and at least 512.
+        Set the file user block size, in bytes.  
+        Must be a power of 2, and at least 512.
         """
         H5Pset_userblock(self.id, size)
 
     @sync
     def get_userblock(self):
-        """ () => LONG size
+        """() => LONG size
 
-            Determine the user block size, in bytes.
+        Determine the user block size, in bytes.
         """
         cdef hsize_t size
         H5Pget_userblock(self.id, &size)
@@ -233,22 +234,22 @@ cdef class PropFCID(PropInstanceID):
 
     @sync
     def set_sizes(self, size_t addr, size_t size):
-        """ (UINT addr, UINT size)
+        """(UINT addr, UINT size)
 
-            Set the addressing offsets and lengths for objects 
-            in an HDF5 file, in bytes.
+        Set the addressing offsets and lengths for objects 
+        in an HDF5 file, in bytes.
         """
         H5Pset_sizes(self.id, addr, size)
 
     @sync
     def get_sizes(self):
-        """ () => TUPLE sizes
+        """() => TUPLE sizes
 
-            Determine addressing offsets and lengths for objects in an 
-            HDF5 file, in bytes.  Return value is a 2-tuple with values:
+        Determine addressing offsets and lengths for objects in an 
+        HDF5 file, in bytes.  Return value is a 2-tuple with values:
 
-            0:  UINT Address offsets
-            1:  UINT Lengths
+        0.  UINT Address offsets
+        1.  UINT Lengths
         """
         cdef size_t addr
         cdef size_t size
@@ -257,18 +258,18 @@ cdef class PropFCID(PropInstanceID):
 
     @sync
     def set_sym_k(self, unsigned int ik, unsigned int lk):
-        """ (INT ik, INT lk)
+        """(INT ik, INT lk)
 
-            Symbol table node settings.  See the HDF5 docs for H5Pset_sym_k.
+        Symbol table node settings.  See the HDF5 docs for H5Pset_sym_k.
         """
         H5Pset_sym_k(self.id, ik, lk)
 
     @sync
     def get_sym_k(self):
-        """ () => TUPLE settings
+        """() => TUPLE settings
 
-            Determine symbol table node settings.  See the HDF5 docs for
-            H5Pget_sym_k.  Return is a 2-tuple (ik, lk).
+        Determine symbol table node settings.  See the HDF5 docs for
+        H5Pget_sym_k.  Return is a 2-tuple (ik, lk).
         """
         cdef unsigned int ik
         cdef unsigned int lk
@@ -277,17 +278,17 @@ cdef class PropFCID(PropInstanceID):
 
     @sync
     def set_istore_k(self, unsigned int ik):
-        """ (UINT ik)
+        """(UINT ik)
 
-            See hdf5 docs for H5Pset_istore_k.
+        See hdf5 docs for H5Pset_istore_k.
         """
         H5Pset_istore_k(self.id, ik)
     
     @sync
     def get_istore_k(self):
-        """ () => UINT ik
+        """() => UINT ik
 
-            See HDF5 docs for H5Pget_istore_k
+        See HDF5 docs for H5Pget_istore_k
         """
         cdef unsigned int ik
         H5Pget_istore_k(self.id, &ik)
@@ -303,32 +304,34 @@ cdef class PropDCID(PropInstanceID):
 
     @sync
     def set_layout(self, int layout_code):
-        """ (INT layout_code)
+        """(INT layout_code)
 
-            Set dataset storage strategy; legal values are:
-                h5d.COMPACT
-                h5d.CONTIGUOUS
-                h5d.CHUNKED
+        Set dataset storage strategy; legal values are:
+
+        - h5d.COMPACT
+        - h5d.CONTIGUOUS
+        - h5d.CHUNKED
         """
         H5Pset_layout(self.id, layout_code)
     
     @sync
     def get_layout(self):
-        """ () => INT layout_code
+        """() => INT layout_code
 
-            Determine the storage strategy of a dataset; legal values are:
-                h5d.COMPACT
-                h5d.CONTIGUOUS
-                h5d.CHUNKED
+        Determine the storage strategy of a dataset; legal values are:
+
+        - h5d.COMPACT
+        - h5d.CONTIGUOUS
+        - h5d.CHUNKED
         """
         return <int>H5Pget_layout(self.id)
 
     @sync
     def set_chunk(self, object chunksize):
-        """ (TUPLE chunksize)
+        """(TUPLE chunksize)
 
-            Set the dataset chunk size.  It's up to you to provide 
-            values which are compatible with your dataset.
+        Set the dataset chunk size.  It's up to you to provide 
+        values which are compatible with your dataset.
         """
         cdef int rank
         cdef hsize_t* dims
@@ -346,9 +349,9 @@ cdef class PropDCID(PropInstanceID):
 
     @sync
     def get_chunk(self):
-        """ () => TUPLE chunk_dimensions
+        """() => TUPLE chunk_dimensions
 
-            Obtain the dataset chunk size, as a tuple.
+        Obtain the dataset chunk size, as a tuple.
         """
         cdef int rank
         cdef hsize_t *dims
@@ -366,11 +369,11 @@ cdef class PropDCID(PropInstanceID):
 
     @sync
     def set_fill_value(self, ndarray value not None):
-        """ (NDARRAY value)
+        """(NDARRAY value)
 
-            Set the dataset fill value.  The object provided should be an
-            0-dimensional NumPy array; otherwise, the value will be read from
-            the first element.
+        Set the dataset fill value.  The object provided should be an
+        0-dimensional NumPy array; otherwise, the value will be read from
+        the first element.
         """
         cdef TypeID tid
 
@@ -380,11 +383,11 @@ cdef class PropDCID(PropInstanceID):
 
     @sync
     def get_fill_value(self, ndarray value not None):
-        """ (NDARRAY value)
+        """(NDARRAY value)
 
-            Read the dataset fill value into a NumPy array.  It will be
-            converted to match the array dtype.  If the array has nonzero
-            rank, only the first element will contain the value.
+        Read the dataset fill value into a NumPy array.  It will be
+        converted to match the array dtype.  If the array has nonzero
+        rank, only the first element will contain the value.
         """
         cdef TypeID tid
 
@@ -394,15 +397,14 @@ cdef class PropDCID(PropInstanceID):
 
     @sync
     def set_fill_time(self, int fill_time):
-        """ (INT fill_time)
+        """(INT fill_time)
 
-            Define when fill values are written to the dataset.  Legal
-            values (defined in module h5d) are:
+        Define when fill values are written to the dataset.  Legal
+        values (defined in module h5d) are:
 
-            h5d.FILL_TIME_ALLOC    Write fill values at storage allocation time
-            h5d.FILL_TIME_NEVER    Never write fill values
-            h5d.FILL_TIME_IFSET    Write fill values at allocation time only
-                                   if a user-defined value is being used.
+        - h5d.FILL_TIME_ALLOC
+        - h5d.FILL_TIME_NEVER
+        - h5d.FILL_TIME_IFSET
         """
         H5Pset_fill_time(self.id, <H5D_fill_time_t>fill_time)
 
@@ -410,13 +412,12 @@ cdef class PropDCID(PropInstanceID):
     def get_fill_time(self):
         """ () => INT
 
-            Determine when fill values are written to the dataset.  Legal
-            values (defined in module h5d) are:
+        Determine when fill values are written to the dataset.  Legal
+        values (defined in module h5d) are:
 
-            h5d.FILL_TIME_ALLOC    Write fill values at storage allocation time
-            h5d.FILL_TIME_NEVER    Never write fill values
-            h5d.FILL_TIME_IFSET    Write fill values at allocation time only
-                                   if a user-defined value is being used.
+        - h5d.FILL_TIME_ALLOC
+        - h5d.FILL_TIME_NEVER
+        - h5d.FILL_TIME_IFSET
         """
         cdef H5D_fill_time_t fill_time
         H5Pget_fill_time(self.id, &fill_time)
@@ -427,62 +428,66 @@ cdef class PropDCID(PropInstanceID):
     
     @sync
     def set_deflate(self, unsigned int level=5):
-        """ (UINT level=5)
+        """(UINT level=5)
 
-            Enable DEFLATE (gzip) compression, at the given level.
-            Valid levels are 0-9, default is 5.
+        Enable deflate (gzip) compression, at the given level.
+        Valid levels are 0-9, default is 5.
         """
         H5Pset_deflate(self.id, level)
 
     @sync
     def set_fletcher32(self):
-        """ ()
+        """()
 
-            Enable Fletcher32 error correction on this list.
+        Enable Fletcher32 error correction on this list.
         """
         H5Pset_fletcher32(self.id)
 
     @sync
     def set_shuffle(self):
-        """ ()
+        """()
 
-            Enable to use of the shuffle filter.  Use this immediately before 
-            the DEFLATE filter to increase the compression ratio.
+        Enable to use of the shuffle filter.  Use this immediately before 
+        the deflate filter to increase the compression ratio.
         """
         H5Pset_shuffle(self.id)
 
     @sync
     def set_szip(self, unsigned int options, unsigned int pixels_per_block):
-        """ (UINT options, UINT pixels_per_block)
+        """(UINT options, UINT pixels_per_block)
 
-            Enable SZIP compression.  See the HDF5 docs for argument meanings, 
-            and general restrictions on use of the SZIP format.
+        Enable SZIP compression.  See the HDF5 docs for argument meanings, 
+        and general restrictions on use of the SZIP format.
         """
         H5Pset_szip(self.id, options, pixels_per_block)
 
     @sync
     def get_nfilters(self):
-        """ () => INT
+        """() => INT
 
-            Determine the number of filters in the pipeline.
+        Determine the number of filters in the pipeline.
         """
         return H5Pget_nfilters(self.id)
 
     @sync
     def set_filter(self, int filter_code, unsigned int flags=0, object values=None):
-        """ (INT filter_code, UINT flags=0, TUPLE values=None)
+        """(INT filter_code, UINT flags=0, TUPLE values=None)
 
-            Set a filter in the pipeline.  Params are:
+        Set a filter in the pipeline.  Params are:
 
-            filter_code:
-                h5z.FILTER_DEFLATE
-                h5z.FILTER_SHUFFLE
-                h5z.FILTER_FLETCHER32
-                h5z.FILTER_SZIP
+        filter_code
+            One of the following:
 
-            flags:  Bit flags (h5z.FLAG_*) setting filter properties
+            - h5z.FILTER_DEFLATE
+            - h5z.FILTER_SHUFFLE
+            - h5z.FILTER_FLETCHER32
+            - h5z.FILTER_SZIP
 
-            values: TUPLE of UINTS giving auxiliary data for the filter.
+        flags
+            Bit flags (h5z.FLAG_*) setting filter properties
+
+        values
+            TUPLE of UINTs giving auxiliary data for the filter
         """
         cdef size_t nelements
         cdef unsigned int *cd_values
@@ -508,24 +513,24 @@ cdef class PropDCID(PropInstanceID):
 
     @sync
     def all_filters_avail(self):
-        """ () => BOOL
+        """() => BOOL
 
-            Determine if all the filters in the pipelist are available to
-            the library.
+        Determine if all the filters in the pipelist are available to
+        the library.
         """
         return <bint>(H5Pall_filters_avail(self.id))
 
     @sync
     def get_filter(self, int filter_idx):
-        """ (UINT filter_idx) => TUPLE filter_info
+        """(UINT filter_idx) => TUPLE filter_info
 
-            Get information about a filter, identified by its index.
+        Get information about a filter, identified by its index.  Tuple
+        elements are:
 
-            Tuple entries are:
-            0: INT filter code (h5z.FILTER_*)
-            1: UINT flags (h5z.FLAG_*)
-            2: TUPLE of UINT values; filter aux data (16 values max)
-            3: STRING name of filter (256 chars max)
+        0. INT filter code (h5z.FILTER_*)
+        1. UINT flags (h5z.FLAG_*)
+        2. TUPLE of UINT values; filter aux data (16 values max)
+        3. STRING name of filter (256 chars max)
         """
         cdef list vlist
         cdef int filter_code
@@ -551,11 +556,11 @@ cdef class PropDCID(PropInstanceID):
 
     @sync
     def _has_filter(self, int filter_code):
-        """ (INT filter_code)
+        """(INT filter_code)
 
-            Slow & stupid method to determine if a filter is used in this
-            property list.  Used because the HDF5 function H5Pget_filter_by_id
-            is broken.
+        Slow & stupid method to determine if a filter is used in this
+        property list.  Used because the HDF5 function H5Pget_filter_by_id
+        is broken.
         """
         cdef int nfilters
         nfilters = self.get_nfilters()
@@ -566,15 +571,15 @@ cdef class PropDCID(PropInstanceID):
 
     @sync
     def get_filter_by_id(self, int filter_code):
-        """ (INT filter_code) => TUPLE filter_info or None
+        """(INT filter_code) => TUPLE filter_info or None
 
-            Get information about a filter, identified by its code (one
-            of h5z.FILTER_*).  If the filter doesn't exist, returns None.
+        Get information about a filter, identified by its code (one
+        of h5z.FILTER_*).  If the filter doesn't exist, returns None.
+        Tuple elements are:
 
-            Tuple entries are:
-            0: UINT flags (h5z.FLAG_*)
-            1: TUPLE of UINT values; filter aux data (16 values max)
-            2: STRING name of filter (256 chars max)
+        0. UINT flags (h5z.FLAG_*)
+        1. TUPLE of UINT values; filter aux data (16 values max)
+        2. STRING name of filter (256 chars max)
         """
         cdef list vlist
         cdef unsigned int flags
@@ -603,21 +608,22 @@ cdef class PropDCID(PropInstanceID):
 
     @sync
     def remove_filter(self, int filter_class):
-        """ (INT filter_class)
+        """(INT filter_class)
 
-            Remove a filter from the pipeline.  The class code is one of 
-            h5z.FILTER_*.
+        Remove a filter from the pipeline.  The class code is one of 
+        h5z.FILTER_*.
         """
         H5Premove_filter(self.id, <H5Z_filter_t>filter_class)
 
     @sync
     def fill_value_defined(self):
-        """ () => INT fill_status
+        """() => INT fill_status
 
-            Determine the status of the dataset fill value.  Return values are:
-              h5d.FILL_VALUE_UNDEFINED
-              h5d.FILL_VALUE_DEFAULT
-              h5d.FILL_VALUE_USER_DEFINED
+        Determine the status of the dataset fill value.  Return values are:
+
+        - h5d.FILL_VALUE_UNDEFINED
+        - h5d.FILL_VALUE_DEFAULT
+        - h5d.FILL_VALUE_USER_DEFINED
         """
         cdef H5D_fill_value_t val
         H5Pfill_value_defined(self.id, &val)
@@ -634,29 +640,29 @@ cdef class PropFAID(PropInstanceID):
 
     @sync
     def set_fclose_degree(self, int close_degree):
-        """ (INT close_degree)
+        """(INT close_degree)
 
-            Set the file-close degree, which determines library behavior when
-            a file is closed when objects are still open.  Legal values:
+        Set the file-close degree, which determines library behavior when
+        a file is closed when objects are still open.  Legal values:
 
-            * h5f.CLOSE_WEAK
-            * h5f.CLOSE_SEMI
-            * h5f.CLOSE_STRONG
-            * h5f.CLOSE_DEFAULT
+        * h5f.CLOSE_WEAK
+        * h5f.CLOSE_SEMI
+        * h5f.CLOSE_STRONG
+        * h5f.CLOSE_DEFAULT
         """
         H5Pset_fclose_degree(self.id, <H5F_close_degree_t>close_degree)
 
     @sync
     def get_fclose_degree(self):
-        """ () => INT close_degree
+        """() => INT close_degree
+        - h5fd.
+        Get the file-close degree, which determines library behavior when
+        a file is closed when objects are still open.  Legal values:
 
-            Get the file-close degree, which determines library behavior when
-            a file is closed when objects are still open.  Legal values:
-
-            * h5f.CLOSE_WEAK
-            * h5f.CLOSE_SEMI
-            * h5f.CLOSE_STRONG
-            * h5f.CLOSE_DEFAULT
+        * h5f.CLOSE_WEAK
+        * h5f.CLOSE_SEMI
+        * h5f.CLOSE_STRONG
+        * h5f.CLOSE_DEFAULT
         """
         cdef H5F_close_degree_t deg
         H5Pget_fclose_degree(self.id, &deg)
@@ -664,24 +670,29 @@ cdef class PropFAID(PropInstanceID):
 
     @sync
     def set_fapl_core(self, size_t increment=1024*1024, hbool_t backing_store=0):
-        """ (UINT increment=1M, BOOL backing_store=False)
+        """(UINT increment=1M, BOOL backing_store=False)
 
-            Use the CORE (memory-resident) file driver.
-            increment:      Chunk size for new memory requests (default 1 meg)
-            backing_store:  If True, write the memory contents to disk when
-                            the file is closed.
+        Use the h5fd.CORE (memory-resident) file driver.
+
+        increment
+            Chunk size for new memory requests (default 1 meg)
+
+        backing_store
+            If True, write the memory contents to disk when
+            the file is closed.
         """
         H5Pset_fapl_core(self.id, increment, backing_store)
 
     @sync
     def get_fapl_core(self):
-        """ () => TUPLE core_settings
+        """() => TUPLE core_settings
 
-            Determine settings for the CORE (memory-resident) file driver.
-            Tuple entries are:
-            0: UINT "increment": Chunk size for new memory requests
-            1: BOOL "backing_store": If True, write the memory contents to 
-                                     disk when the file is closed.
+        Determine settings for the h5fd.CORE (memory-resident) file driver.
+        Tuple elements are:
+
+        0. UINT "increment": Chunk size for new memory requests
+        1. BOOL "backing_store": If True, write the memory contents to 
+           disk when the file is closed.
         """
         cdef size_t increment
         cdef hbool_t backing_store
@@ -690,11 +701,15 @@ cdef class PropFAID(PropInstanceID):
 
     @sync
     def set_fapl_family(self, hsize_t memb_size, PropID memb_fapl=None):
-        """ (UINT memb_size, PropFAID memb_fapl=None)
+        """(UINT memb_size, PropFAID memb_fapl=None)
 
-            Set up the family driver.
-            memb_size:  Member file size
-            memb_fapl:  File access property list for each member access
+        Set up the family driver.
+
+        memb_size
+            Member file size
+
+        memb_fapl
+            File access property list for each member access
         """
         cdef hid_t plist_id
         plist_id = pdefault(memb_fapl)
@@ -702,11 +717,12 @@ cdef class PropFAID(PropInstanceID):
 
     @sync
     def get_fapl_family(self):
-        """ () => TUPLE info
+        """() => TUPLE info
 
-            Determine family driver settings. Tuple values are:
-            0: UINT memb_size
-            1: PropFAID memb_fapl or None
+        Determine family driver settings. Tuple values are:
+
+        0. UINT memb_size
+        1. PropFAID memb_fapl or None
         """
         cdef hid_t mfapl_id
         cdef hsize_t msize
@@ -722,67 +738,68 @@ cdef class PropFAID(PropInstanceID):
 
     @sync
     def set_fapl_log(self, char* logfile, unsigned int flags, size_t buf_size):
-        """ (STRING logfile, UINT flags, UINT buf_size)
+        """(STRING logfile, UINT flags, UINT buf_size)
 
-            Enable the use of the logging driver.  See the HDF5 documentation
-            for details.  Flag constants are stored in module h5fd.
+        Enable the use of the logging driver.  See the HDF5 documentation
+        for details.  Flag constants are stored in module h5fd.
         """
         H5Pset_fapl_log(self.id, logfile, flags, buf_size)
 
     @sync
     def set_fapl_sec2(self):
-        """ ()
+        """()
 
-            Select the "section-2" driver (h5fd.SEC2).
+        Select the "section-2" driver (h5fd.SEC2).
         """
         H5Pset_fapl_sec2(self.id)
 
     @sync
     def set_fapl_stdio(self):
-        """ ()
+        """()
 
-            Select the "stdio" driver (h5fd.STDIO)
+        Select the "stdio" driver (h5fd.STDIO)
         """
         H5Pset_fapl_stdio(self.id)
 
     @sync
     def get_driver(self):
-        """ () => INT driver code
+        """() => INT driver code
 
-            Return an integer identifier for the driver used by this list.
-            Although HDF5 implements these as full-fledged objects, they are
-            treated as integers by Python.  Built-in drivers identifiers are
-            listed in module h5fd; they are:
-                CORE
-                FAMILY
-                LOG
-                MPIO
-                MULTI
-                SEC2
-                STDIO
+        Return an integer identifier for the driver used by this list.
+        Although HDF5 implements these as full-fledged objects, they are
+        treated as integers by Python.  Built-in drivers identifiers are
+        listed in module h5fd; they are:
+
+        - h5fd.CORE
+        - h5fd.FAMILY
+        - h5fd.LOG
+        - h5fd.MPIO
+        - h5fd.MULTI
+        - h5fd.SEC2
+        - h5fd.STDIO
         """
         return H5Pget_driver(self.id)
 
     @sync
     def set_cache(self, int mdc, int rdcc, size_t rdcc_nbytes, double rdcc_w0):
-        """ (INT mdc, INT rdcc, UINT rdcc_nbytes, DOUBLE rdcc_w0)
+        """(INT mdc, INT rdcc, UINT rdcc_nbytes, DOUBLE rdcc_w0)
 
-            Set the metadata (mdc) and raw data chunk (rdcc) cache properties.
-            See the HDF5 docs for a full explanation.
+        Set the metadata (mdc) and raw data chunk (rdcc) cache properties.
+        See the HDF5 docs for a full explanation.
         """
         H5Pset_cache(self.id, mdc, rdcc, rdcc_nbytes, rdcc_w0)
 
     @sync
     def get_cache(self):
-        """ () => TUPLE cache info
+        """() => TUPLE cache info
 
-            Get the metadata and raw data chunk cache settings.  See the HDF5
-            docs for element definitions.  Return is a 4-tuple with entries:
+        Get the metadata and raw data chunk cache settings.  See the HDF5
+        docs for element definitions.  Return is a 4-tuple with entries:
 
-            1. INT mdc              Number of metadata objects
-            2. INT rdcc             Number of raw data chunks
-            3. UINT rdcc_nbytes     Size of raw data cache
-            4. DOUBLE rdcc_w0       Preemption policy for data cache.
+        1. INT mdc:              Number of metadata objects
+        2. INT rdcc:             Number of raw data chunks
+        3. UINT rdcc_nbytes:     Size of raw data cache
+        4. DOUBLE rdcc_w0:       Preemption policy for data cache.
         """
         cdef int mdc, rdcc
         cdef size_t rdcc_nbytes
