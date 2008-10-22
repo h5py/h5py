@@ -849,7 +849,12 @@ class AttributeManager(LockableObject):
     def __iter__(self):
         """ Iterate over the names of attributes. """
         with self._lock:
-            for name in h5a.py_listattrs(self.id):
+            attrlist = []
+            def iter_cb(name, *args):
+                attrlist.append(name)
+            h5a.iterate(self.id, iter_cb)
+
+            for name in attrlist:
                 yield name
 
     def iteritems(self):

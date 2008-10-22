@@ -12,8 +12,6 @@
 __doc__ = \
 """
     H5R API for object and region references.
-
-    Functions in this module are not well tested.
 """
 
 include "config.pxi"
@@ -38,20 +36,20 @@ DATASET_REGION = H5R_DATASET_REGION
 
 @sync
 def create(ObjectID loc not None, char* name, int ref_type, SpaceID space=None):
-    """ (ObjectID loc, STRING name, INT ref_type, SpaceID space=None)
-        => ReferenceObject ref
+    """(ObjectID loc, STRING name, INT ref_type, SpaceID space=None)
+    => ReferenceObject ref
 
-        Create a new reference. The value of ref_type detemines the kind
-        of reference created:
+    Create a new reference. The value of ref_type detemines the kind
+    of reference created:
 
-        - OBJECT
-            Reference to an object in an HDF5 file.  Parameters "loc"
-            and "name" identify the object; "space" is unused.
+    OBJECT
+        Reference to an object in an HDF5 file.  Parameters "loc"
+        and "name" identify the object; "space" is unused.
 
-        - DATASET_REGION    
-            Reference to a dataset region.  Parameters "loc" and
-            "name" identify the dataset; the selection on "space"
-            identifies the region.
+    DATASET_REGION    
+        Reference to a dataset region.  Parameters "loc" and
+        "name" identify the dataset; the selection on "space"
+        identifies the region.
     """
     cdef hid_t space_id
     cdef Reference ref
@@ -79,44 +77,45 @@ cdef class Reference:
 
     @sync
     def dereference(self, ObjectID id not None):
-        """ (ObjectID id) => ObjectID obj_id
+        """(ObjectID id) => ObjectID
 
-            Open the object pointed to by this reference and return its
-            identifier.  The file identifier (or the identifier for any object
-            in the file) must also be provided.
+        Open the object pointed to by this reference and return its
+        identifier.  The file identifier (or the identifier for any object
+        in the file) must also be provided.
 
-            The reference type may be either OBJECT or DATASET_REGION.
+        The reference type may be either OBJECT or DATASET_REGION.
         """
         return wrap_identifier(H5Rdereference(id.id, <H5R_type_t>self.typecode, &self.ref))
 
     @sync
     def get_region(self, ObjectID id not None):
-        """ (ObjectID id) => SpaceID dataspace_id
+        """(ObjectID id) => SpaceID
 
-            Retrieve the dataspace selection pointed to by this reference.
-            Returns a copy of the dataset's dataspace, with the appropriate
-            elements selected.  The file identifier or the identifier of any
-            object in the file (including the dataset itself) must also be
-            provided.
+        Retrieve the dataspace selection pointed to by this reference.
+        Returns a copy of the dataset's dataspace, with the appropriate
+        elements selected.  The file identifier or the identifier of any
+        object in the file (including the dataset itself) must also be
+        provided.
 
-            The reference object must be of type DATASET_REGION.
+        The reference object must be of type DATASET_REGION.
         """
         return SpaceID(H5Rget_region(id.id, <H5R_type_t>self.typecode, &self.ref))
 
     @sync
     def get_obj_type(self, ObjectID id not None):
-        """ (ObjectID id) => INT obj_code
+        """(ObjectID id) => INT obj_code
 
-            Determine what type of object this eference points to.  The
-            reference may be either type OBJECT or DATASET_REGION.  The file
-            identifier or the identifier of any object in the file must also
-            be provided.
+        Determine what type of object this eference points to.  The
+        reference may be either type OBJECT or DATASET_REGION.  The file
+        identifier or the identifier of any object in the file must also
+        be provided.
 
-            The return value is one of:
-            h5g.LINK        Symbolic link
-            h5g.GROUP       Group
-            h5g.DATASET     Dataset
-            h5g.TYPE        Named datatype
+        The return value is one of:
+
+        - h5g.LINK
+        - h5g.GROUP
+        - h5g.DATASET
+        - h5g.TYPE
         """
         return <int>H5Rget_obj_type(id.id, <H5R_type_t>self.typecode, &self.ref)
 

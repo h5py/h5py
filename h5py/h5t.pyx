@@ -51,8 +51,8 @@ __doc__ = \
 
     4. Variable-length types
 
-       VLEN datatype objects can be manipulated, but reading and writing data
-       in VLEN format is not supported.  This applies to VLEN strings as well.
+       "VLEN" datatype objects can be manipulated, but reading and writing data
+       in vlen format is not supported.  This applies to vlen strings as well.
 
     5. Datatypes can be pickled if HDF5 1.8.X is available.
 """
@@ -238,10 +238,10 @@ cdef dict _sign_map  = { H5T_SGN_NONE: 'u', H5T_SGN_2: 'i' }
 
 @sync
 def create(int classtype, size_t size):
-    """ (INT classtype, UINT size) => TypeID
+    """(INT classtype, UINT size) => TypeID
         
-        Create a new HDF5 type object.  Legal class values are 
-        COMPOUND and OPAQUE.  Use enum_create for enums.
+    Create a new HDF5 type object.  Legal class values are 
+    COMPOUND and OPAQUE.  Use enum_create for enums.
     """
 
     # HDF5 versions 1.6.X segfault with anything else
@@ -252,19 +252,19 @@ def create(int classtype, size_t size):
 
 @sync
 def open(ObjectID group not None, char* name):
-    """ (ObjectID group, STRING name) => TypeID
+    """(ObjectID group, STRING name) => TypeID
 
-        Open a named datatype from a file.
+    Open a named datatype from a file.
     """
     return typewrap(H5Topen(group.id, name))
 
 @sync
 def array_create(TypeID base not None, object dims_tpl):
-    """ (TypeID base, TUPLE dimensions) => TypeArrayID
+    """(TypeID base, TUPLE dimensions) => TypeArrayID
 
-        Create a new array datatype, using and HDF5 parent type and
-        dimensions given via a tuple of positive integers.  "Unlimited" 
-        dimensions are not allowed.
+    Create a new array datatype, using and HDF5 parent type and
+    dimensions given via a tuple of positive integers.  "Unlimited" 
+    dimensions are not allowed.
     """
     cdef hsize_t rank
     cdef hsize_t *dims = NULL
@@ -281,30 +281,30 @@ def array_create(TypeID base not None, object dims_tpl):
 
 @sync
 def enum_create(TypeID base not None):
-    """ (TypeID base) => TypeID
+    """(TypeID base) => TypeID
 
-        Create a new enumerated type based on an (integer) parent type.
+    Create a new enumerated type based on an (integer) parent type.
     """
     return typewrap(H5Tenum_create(base.id))
 
 @sync
 def vlen_create(TypeID base not None):
-    """ (TypeID base) => TypeID
+    """(TypeID base) => TypeID
 
-        Create a new variable-length datatype, using any HDF5 type as a base.
+    Create a new variable-length datatype, using any HDF5 type as a base.
 
-        Although the Python interface can manipulate these types, there is no
-        provision for reading/writing VLEN data.
+    Although the Python interface can manipulate these types, there is no
+    provision for reading/writing vlen data.
     """
     return typewrap(H5Tvlen_create(base.id))
 
 IF H5PY_18API:
     @sync
     def decode(char* buf):
-        """ (STRING buf) => TypeID
+        """(STRING buf) => TypeID
 
-            Unserialize an HDF5 type.  You can also do this with the native
-            Python pickling machinery.
+        Unserialize an HDF5 type.  You can also do this with the native
+        Python pickling machinery.
         """
         return typewrap(H5Tdecode(<unsigned char*>buf))
 
@@ -315,8 +315,8 @@ cdef class TypeID(ObjectID):
     """
         Base class for type identifiers (implements common operations)
 
-        Hashable: If committed; in HDF5 1.8.X, also if locked
-        Equality: Logical H5T comparison
+        * Hashable: If committed; in HDF5 1.8.X, also if locked
+        * Equality: Logical H5T comparison
     """
 
     def __hash__(self):
@@ -370,60 +370,60 @@ cdef class TypeID(ObjectID):
 
     @sync
     def commit(self, ObjectID group not None, char* name):
-        """ (ObjectID group, STRING name)
+        """(ObjectID group, STRING name)
 
-            Commit this (transient) datatype to a named datatype in a file.
+        Commit this (transient) datatype to a named datatype in a file.
         """
         H5Tcommit(group.id, name, self.id)
 
     @sync
     def committed(self):
-        """ () => BOOL is_comitted
+        """() => BOOL is_comitted
 
-            Determine if a given type object is named (T) or transient (F).
+        Determine if a given type object is named (T) or transient (F).
         """
         return <bint>(H5Tcommitted(self.id))
 
     @sync
     def copy(self):
-        """ () => TypeID
+        """() => TypeID
 
-            Create a copy of this type object.
+        Create a copy of this type object.
         """
         return typewrap(H5Tcopy(self.id))
 
     @sync
     def equal(self, TypeID typeid):
-        """ (TypeID typeid) => BOOL
+        """(TypeID typeid) => BOOL
 
-            Logical comparison between datatypes.  Also called by
-            Python's "==" operator.
+        Logical comparison between datatypes.  Also called by
+        Python's "==" operator.
         """
         return <bint>(H5Tequal(self.id, typeid.id))
 
     @sync
     def lock(self):
-        """ ()
+        """()
 
-            Lock this datatype, which makes it immutable and indestructible.
-            Once locked, it can't be unlocked.
+        Lock this datatype, which makes it immutable and indestructible.
+        Once locked, it can't be unlocked.
         """
         H5Tlock(self.id)
         self._locked = 1
 
     @sync
     def get_class(self):
-        """ () => INT classcode
+        """() => INT classcode
 
-            Determine the datatype's class code.
+        Determine the datatype's class code.
         """
         return <int>H5Tget_class(self.id)
 
     @sync
     def set_size(self, size_t size):
-        """ (UINT size)
+        """(UINT size)
 
-            Set the total size of the datatype, in bytes.
+        Set the total size of the datatype, in bytes.
         """
         H5Tset_size(self.id, size)
 
@@ -437,27 +437,29 @@ cdef class TypeID(ObjectID):
 
     @sync
     def get_super(self):
-        """ () => TypeID
+        """() => TypeID
 
-            Determine the parent type of an array, enumeration or vlen datatype.
+        Determine the parent type of an array, enumeration or vlen datatype.
         """
         return typewrap(H5Tget_super(self.id))
 
     @sync
     def detect_class(self, int classtype):
-        """ (INT classtype) => BOOL class_is_present
+        """(INT classtype) => BOOL class_is_present
 
-            Determine if a member of the given class exists in a compound
-            datatype.  The search is recursive.
+        Determine if a member of the given class exists in a compound
+        datatype.  The search is recursive.
         """
         return <bint>(H5Tdetect_class(self.id, <H5T_class_t>classtype))
 
     @sync
     def _close(self):
-        """ Close this datatype.  If it's locked, nothing happens.
+        """()
 
-            You shouldn't ordinarily need to call this function; datatype
-            objects are automatically closed when they're deallocated.
+        Close this datatype.  If it's locked, nothing happens.
+
+        You shouldn't ordinarily need to call this function; datatype
+        objects are automatically closed when they're deallocated.
         """
         if not self._locked:
             H5Tclose(self.id)
@@ -465,11 +467,11 @@ cdef class TypeID(ObjectID):
     IF H5PY_18API:
         @sync
         def encode(self):
-            """ () => STRING
+            """() => STRING
 
-                Serialize an HDF5 type.  Bear in mind you can also use the
-                native Python pickle/unpickle machinery to do this.  The
-                returned string may contain binary values, including NULLs.
+            Serialize an HDF5 type.  Bear in mind you can also use the
+            native Python pickle/unpickle machinery to do this.  The
+            returned string may contain binary values, including NULLs.
             """
             cdef size_t nalloc = 0
             cdef char* buf = NULL
@@ -505,18 +507,18 @@ cdef class TypeArrayID(TypeID):
 
     @sync
     def get_array_ndims(self):
-        """ () => INT rank
+        """() => INT rank
 
-            Get the rank of the given array datatype.
+        Get the rank of the given array datatype.
         """
         return H5Tget_array_ndims(self.id)
 
     @sync
     def get_array_dims(self):
-        """ () => TUPLE dimensions
+        """() => TUPLE dimensions
 
-            Get the dimensions of the given array datatype as
-            a tuple of integers.
+        Get the dimensions of the given array datatype as
+        a tuple of integers.
         """
         cdef hsize_t rank   
         cdef hsize_t* dims = NULL
@@ -548,18 +550,18 @@ cdef class TypeOpaqueID(TypeID):
 
     @sync
     def set_tag(self, char* tag):
-        """ (STRING tag)
+        """(STRING tag)
 
-            Set a string describing the contents of an opaque datatype.
-            Limited to 256 characters.
+        Set a string describing the contents of an opaque datatype.
+        Limited to 256 characters.
         """
         H5Tset_tag(self.id, tag)
 
     @sync
     def get_tag(self):
-        """ () => STRING tag
+        """() => STRING tag
 
-            Get the tag associated with an opaque datatype.
+        Get the tag associated with an opaque datatype.
         """
         cdef char* buf = NULL
 
@@ -583,49 +585,61 @@ cdef class TypeStringID(TypeID):
 
     @sync
     def is_variable_str(self):
-        """ () => BOOL is_variable
+        """() => BOOL is_variable
 
-            Determine if the given string datatype is a variable-length string.
-            Please note that reading/writing data in this format is impossible;
-            only fixed-length strings are currently supported.
+        Determine if the given string datatype is a variable-length string.
+        Please note that reading/writing data in this format is impossible;
+        only fixed-length strings are currently supported.
         """
         return <bint>(H5Tis_variable_str(self.id))
 
     @sync
     def get_cset(self):
-        """ () => INT character_set
+        """() => INT character_set
 
-            Retrieve the character set used for a string.
+        Retrieve the character set used for a string.
         """
         return <int>H5Tget_cset(self.id)
 
     @sync
     def set_cset(self, int cset):
-        """ (INT character_set)
+        """(INT character_set)
 
-            Set the character set used for a string.
+        Set the character set used for a string.
         """
         H5Tset_cset(self.id, <H5T_cset_t>cset)
 
     @sync
     def get_strpad(self):
-        """ () => INT padding_type
+        """() => INT padding_type
 
-            Get the padding type.  Legal values are:
-             STR_NULLTERM:  NULL termination only (C style)
-             STR_NULLPAD:   Pad buffer with NULLs
-             STR_SPACEPAD:  Pad buffer with spaces (FORTRAN style)
+        Get the padding type.  Legal values are:
+
+        STR_NULLTERM
+            NULL termination only (C style)
+
+        STR_NULLPAD
+            Pad buffer with NULLs
+
+        STR_SPACEPAD
+            Pad buffer with spaces (FORTRAN style)
         """
         return <int>H5Tget_strpad(self.id)
 
     @sync
     def set_strpad(self, int pad):
-        """ (INT pad)
+        """(INT pad)
 
-            Set the padding type.  Legal values are:
-             STR_NULLTERM:  NULL termination only (C style)
-             STR_NULLPAD:   Pad buffer with NULLs
-             STR_SPACEPAD:  Pad buffer with spaces (FORTRAN style)
+        Set the padding type.  Legal values are:
+
+        STR_NULLTERM
+            NULL termination only (C style)
+
+        STR_NULLPAD
+            Pad buffer with NULLs
+
+        STR_SPACEPAD
+            Pad buffer with spaces (FORTRAN style)
         """
         H5Tset_strpad(self.id, <H5T_str_t>pad)
 
@@ -675,64 +689,67 @@ cdef class TypeAtomicID(TypeID):
 
     @sync
     def get_order(self):
-        """ () => INT order
+        """() => INT order
 
-            Obtain the byte order of the datatype; one of:
-             ORDER_LE
-             ORDER_BE
+        Obtain the byte order of the datatype; one of:
+
+        - ORDER_LE
+        - ORDER_BE
         """
         return <int>H5Tget_order(self.id)
 
     @sync
     def set_order(self, int order):
-        """ (INT order)
+        """(INT order)
 
-            Set the byte order of the datatype; must be one of
-             ORDER_LE
-             ORDER_BE
+        Set the byte order of the datatype; one of:
+
+        - ORDER_LE
+        - ORDER_BE
         """
         H5Tset_order(self.id, <H5T_order_t>order)
 
     @sync
     def get_precision(self):
-        """ () => UINT precision
+        """() => UINT precision
 
-            Get the number of significant bits (excludes padding).
+        Get the number of significant bits (excludes padding).
         """
         return H5Tget_precision(self.id)
 
     @sync
     def set_precision(self, size_t precision):
-        """ (UINT precision)
+        """(UINT precision)
             
-            Set the number of significant bits (excludes padding).
+        Set the number of significant bits (excludes padding).
         """
         H5Tset_precision(self.id, precision)
 
     @sync
     def get_offset(self):
-        """ () => INT offset
+        """() => INT offset
 
-            Get the offset of the first significant bit.
+        Get the offset of the first significant bit.
         """
         return H5Tget_offset(self.id)
 
     @sync
     def set_offset(self, size_t offset):
-        """ (UINT offset)
+        """(UINT offset)
 
-            Set the offset of the first significant bit.
+        Set the offset of the first significant bit.
         """
         H5Tset_offset(self.id, offset)
 
     @sync
     def get_pad(self):
-        """ () => (INT lsb_pad_code, INT msb_pad_code)
+        """() => (INT lsb_pad_code, INT msb_pad_code)
 
-            Determine the padding type.  Possible values are:
-             PAD_ZERO
-             PAD_ONE
-             PAD_BACKGROUND
+        Determine the padding type.  Possible values are:
+
+        - PAD_ZERO
+        - PAD_ONE
+        - PAD_BACKGROUND
         """
         cdef H5T_pad_t lsb
         cdef H5T_pad_t msb
@@ -741,12 +758,13 @@ cdef class TypeAtomicID(TypeID):
 
     @sync
     def set_pad(self, int lsb, int msb):
-        """ (INT lsb_pad_code, INT msb_pad_code)
+        """(INT lsb_pad_code, INT msb_pad_code)
 
-            Set the padding type.  Possible values are:
-             PAD_ZERO
-             PAD_ONE
-             PAD_BACKGROUND
+        Set the padding type.  Possible values are:
+
+        - PAD_ZERO
+        - PAD_ONE
+        - PAD_BACKGROUND
         """
         H5Tset_pad(self.id, <H5T_pad_t>lsb, <H5T_pad_t>msb)
 
@@ -759,21 +777,29 @@ cdef class TypeIntegerID(TypeAtomicID):
 
     @sync
     def get_sign(self):
-        """ () => INT sign
+        """() => INT sign
 
-            Get the "signedness" of the datatype; one of:
-              SGN_NONE:  Unsigned
-              SGN_2:     Signed 2's complement
+        Get the "signedness" of the datatype; one of:
+
+        SGN_NONE
+            Unsigned
+
+        SGN_2
+            Signed 2's complement
         """
         return <int>H5Tget_sign(self.id)
 
     @sync
     def set_sign(self, int sign):
-        """ (INT sign)
+        """(INT sign)
 
-            Set the "signedness" of the datatype; one of:
-              SGN_NONE:  Unsigned
-              SGN_2:     Signed 2's complement
+        Set the "signedness" of the datatype; one of:
+
+        SGN_NONE
+            Unsigned
+
+        SGN_2
+            Signed 2's complement
         """
         H5Tset_sign(self.id, <H5T_sign_t>sign)
 
@@ -791,15 +817,16 @@ cdef class TypeFloatID(TypeAtomicID):
 
     @sync
     def get_fields(self):
-        """ () => TUPLE field_info
+        """() => TUPLE field_info
 
-            Get information about floating-point bit fields.  See the HDF5
-            docs for a better description.  Tuple has to following members:
-             0: UINT spos
-             1: UINT epos
-             2: UINT esize
-             3: UINT mpos
-             4: UINT msize
+        Get information about floating-point bit fields.  See the HDF5
+        docs for a full description.  Tuple has the following members:
+
+        0. UINT spos
+        1. UINT epos
+        2. UINT esize
+        3. UINT mpos
+        4. UINT msize
         """
         cdef size_t spos, epos, esize, mpos, msize
         H5Tget_fields(self.id, &spos, &epos, &esize, &mpos, &msize)
@@ -808,70 +835,74 @@ cdef class TypeFloatID(TypeAtomicID):
     @sync
     def set_fields(self, size_t spos, size_t epos, size_t esize, 
                           size_t mpos, size_t msize):
-        """ (UINT spos, UINT epos, UINT esize, UINT mpos, UINT msize)
+        """(UINT spos, UINT epos, UINT esize, UINT mpos, UINT msize)
 
-            Set floating-point bit fields.  Refer to the HDF5 docs for
-            argument definitions.
+        Set floating-point bit fields.  Refer to the HDF5 docs for
+        argument definitions.
         """
         H5Tset_fields(self.id, spos, epos, esize, mpos, msize)
 
     @sync
     def get_ebias(self):
-        """ () => UINT ebias
+        """() => UINT ebias
 
-            Get the exponent bias.
+        Get the exponent bias.
         """
         return H5Tget_ebias(self.id)
 
     @sync
     def set_ebias(self, size_t ebias):
-        """ (UINT ebias)
+        """(UINT ebias)
 
-            Set the exponent bias.
+        Set the exponent bias.
         """
         H5Tset_ebias(self.id, ebias)
 
     @sync
     def get_norm(self):
-        """ () => INT normalization_code
+        """() => INT normalization_code
 
-            Get the normalization strategy.  Legal values are:
-             NORM_IMPLIED
-             NORM_MSBSET
-             NORM_NONE
+        Get the normalization strategy.  Legal values are:
+
+        - NORM_IMPLIED
+        - NORM_MSBSET
+        - NORM_NONE
         """
         return <int>H5Tget_norm(self.id)
 
     @sync
     def set_norm(self, int norm):
-        """ (INT normalization_code)
+        """(INT normalization_code)
 
-            Set the normalization strategy.  Legal values are:
-             NORM_IMPLIED
-             NORM_MSBSET
-             NORM_NONE
+        Set the normalization strategy.  Legal values are:
+
+        - NORM_IMPLIED
+        - NORM_MSBSET
+        - NORM_NONE
         """
         H5Tset_norm(self.id, <H5T_norm_t>norm)
 
     @sync
     def get_inpad(self):
-        """ () => INT pad_code
+        """() => INT pad_code
 
-            Determine the internal padding strategy.  Legal values are:
-             PAD_ZERO
-             PAD_ONE
-             PAD_BACKGROUND
+        Determine the internal padding strategy.  Legal values are:
+
+        - PAD_ZERO
+        - PAD_ONE
+        - PAD_BACKGROUND
         """
         return <int>H5Tget_inpad(self.id)
 
     @sync
     def set_inpad(self, int pad_code):
-        """ (INT pad_code)
+        """(INT pad_code)
 
-            Set the internal padding strategy.  Legal values are:
-             PAD_ZERO
-             PAD_ONE
-             PAD_BACKGROUND
+        Set the internal padding strategy.  Legal values are:
+
+        - PAD_ZERO
+        - PAD_ONE
+        - PAD_BACKGROUND
         """
         H5Tset_inpad(self.id, <H5T_pad_t>pad_code)
 
@@ -891,18 +922,18 @@ cdef class TypeCompositeID(TypeID):
 
     @sync
     def get_nmembers(self):
-        """ () => INT number_of_members
+        """() => INT number_of_members
 
-            Determine the number of members in a compound or enumerated type.
+        Determine the number of members in a compound or enumerated type.
         """
         return H5Tget_nmembers(self.id)
 
     @sync
     def get_member_name(self, int member):
-        """ (INT member) => STRING name
+        """(INT member) => STRING name
         
-            Determine the name of a member of a compound or enumerated type,
-            identified by its index (0 <= member < nmembers).
+        Determine the name of a member of a compound or enumerated type,
+        identified by its index (0 <= member < nmembers).
         """
         cdef char* name
         name = NULL
@@ -921,10 +952,10 @@ cdef class TypeCompositeID(TypeID):
 
     @sync
     def get_member_index(self, char* name):
-        """ (STRING name) => INT index
+        """(STRING name) => INT index
 
-            Determine the index of a member of a compound or enumerated datatype
-            identified by a string name.
+        Determine the index of a member of a compound or enumerated datatype
+        identified by a string name.
         """
         return H5Tget_member_index(self.id, name)
 
@@ -938,10 +969,10 @@ cdef class TypeCompoundID(TypeCompositeID):
 
     @sync
     def get_member_class(self, int member):
-        """ (INT member) => INT class
+        """(INT member) => INT class
 
-            Determine the datatype class of the member of a compound type,
-            identified by its index (0 <= member < nmembers).
+        Determine the datatype class of the member of a compound type,
+        identified by its index (0 <= member < nmembers).
         """
         if member < 0:
             raise ValueError("Member index must be non-negative.")
@@ -950,10 +981,10 @@ cdef class TypeCompoundID(TypeCompositeID):
 
     @sync
     def get_member_offset(self, int member):
-        """ (INT member) => INT offset
+        """(INT member) => INT offset
 
-            Determine the offset, in bytes, of the beginning of the specified
-            member of a compound datatype.
+        Determine the offset, in bytes, of the beginning of the specified
+        member of a compound datatype.
         """
         if member < 0:
             raise ValueError("Member index must be non-negative.")
@@ -961,10 +992,10 @@ cdef class TypeCompoundID(TypeCompositeID):
 
     @sync
     def get_member_type(self, int member):
-        """ (INT member) => TypeID
+        """(INT member) => TypeID
 
-            Create a copy of a member of a compound datatype, identified by its
-            index.
+        Create a copy of a member of a compound datatype, identified by its
+        index.
         """
         if member < 0:
             raise ValueError("Member index must be non-negative.")
@@ -972,20 +1003,20 @@ cdef class TypeCompoundID(TypeCompositeID):
 
     @sync
     def insert(self, char* name, size_t offset, TypeID field not None):
-        """ (STRING name, UINT offset, TypeID field)
+        """(STRING name, UINT offset, TypeID field)
 
-            Add a named member datatype to a compound datatype.  The parameter
-            offset indicates the offset from the start of the compound datatype,
-            in bytes.
+        Add a named member datatype to a compound datatype.  The parameter
+        offset indicates the offset from the start of the compound datatype,
+        in bytes.
         """
         H5Tinsert(self.id, name, offset, field.id)
 
     @sync
     def pack(self):
-        """ ()
+        """()
 
-            Recursively removes padding (introduced on account of e.g. compiler
-            alignment rules) from a compound datatype.
+        Recursively removes padding (introduced on account of e.g. compiler
+        alignment rules) from a compound datatype.
         """
         H5Tpack(self.id)
 
@@ -1055,12 +1086,12 @@ cdef class TypeEnumID(TypeCompositeID):
 
     @sync
     def enum_insert(self, char* name, long long value):
-        """ (STRING name, INT/LONG value)
+        """(STRING name, INT/LONG value)
 
-            Define a new member of an enumerated type.  The value will be
-            automatically converted to the base type defined for this enum.  If
-            the conversion results in overflow, the value will be silently 
-            clipped.
+        Define a new member of an enumerated type.  The value will be
+        automatically converted to the base type defined for this enum.  If
+        the conversion results in overflow, the value will be silently 
+        clipped.
         """
         cdef long long buf
 
@@ -1070,11 +1101,11 @@ cdef class TypeEnumID(TypeCompositeID):
 
     @sync
     def enum_nameof(self, long long value):
-        """ (LLONG value) => STRING name
+        """(LONG value) => STRING name
 
-            Determine the name associated with the given value.  Due to a
-            limitation of the HDF5 library, this can only retrieve names up to
-            1023 characters in length.
+        Determine the name associated with the given value.  Due to a
+        limitation of the HDF5 library, this can only retrieve names up to
+        1023 characters in length.
         """
         cdef herr_t retval
         cdef char name[1024]
@@ -1089,9 +1120,9 @@ cdef class TypeEnumID(TypeCompositeID):
 
     @sync
     def enum_valueof(self, char* name):
-        """ (STRING name) => LONG value
+        """(STRING name) => LONG value
 
-            Get the value associated with an enum name.
+        Get the value associated with an enum name.
         """
         cdef long long buf
 
@@ -1101,9 +1132,9 @@ cdef class TypeEnumID(TypeCompositeID):
 
     @sync
     def get_member_value(self, int idx):
-        """ (UINT index) => LONG value
+        """(UINT index) => LONG value
 
-            Determine the value for the member at the given zero-based index.
+        Determine the value for the member at the given zero-based index.
         """
         cdef herr_t retval
         cdef hid_t ptype
@@ -1274,20 +1305,20 @@ cdef TypeCompoundID _c_compound(dtype dt):
 
 
 cpdef TypeID py_create(object dtype_in, dict enum_vals=None):
-    """ (OBJECT dtype_in, DICT enum_vals=None) => TypeID
+    """(OBJECT dtype_in, DICT enum_vals=None) => TypeID
 
-        Given a Numpy dtype object, generate a byte-for-byte memory-compatible
-        HDF5 datatype object.  The result is guaranteed to be transient and
-        unlocked.
+    Given a Numpy dtype object, generate a byte-for-byte memory-compatible
+    HDF5 datatype object.  The result is guaranteed to be transient and
+    unlocked.
 
-        Argument dtype_in may be a dtype object, or anything which can be
-        converted to a dtype, including strings like '<i4'.
+    Argument dtype_in may be a dtype object, or anything which can be
+    converted to a dtype, including strings like '<i4'.
 
-        enum_vals:
-            A optional dictionary mapping names to integer values.  If the
-            type being converted is an integer (Numpy kind i/u), the resulting 
-            HDF5 type will be an enumeration with that base type, and the 
-            given values. Ignored for all other types.
+    enum_vals
+        A optional dictionary mapping names to integer values.  If the
+        type being converted is an integer (Numpy kind i/u), the resulting 
+        HDF5 type will be an enumeration with that base type, and the 
+        given values. Ignored for all other types.
     """
     cdef dtype dt = dtype(dtype_in)
     cdef char kind = dt.kind

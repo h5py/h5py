@@ -43,6 +43,7 @@ cdef class ObjectID:
 
 cdef class SmartStruct:
     cdef object __weakref__
+    cdef object _title
 
 # Library init.  Safe to call more than once.
 cdef int init_hdf5() except -1

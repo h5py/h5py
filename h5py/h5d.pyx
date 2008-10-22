@@ -116,8 +116,8 @@ cdef class DatasetID(ObjectID):
         shape:  Numpy-style shape tuple representing the dataspace
         rank:   Integer giving dataset rank
 
-        Hashable: Yes, unless anonymous
-        Equality: True HDF5 identity if unless anonymous
+        * Hashable: Yes, unless anonymous
+        * Equality: True HDF5 identity if unless anonymous
     """
 
     property dtype:
@@ -165,9 +165,9 @@ cdef class DatasetID(ObjectID):
             flexibility, you can specify dataspaces for the file and the Numpy
             object. Keyword dxpl may be a dataset transfer property list.
 
-            The provided Numpy array must be writable, C-contiguous, and own
-            its data.  If this is not the case, ValueError will be raised and 
-            the read will fail.
+            The provided Numpy array must be writable and C-contiguous.  If
+            this is not the case, ValueError will be raised and the read will
+            fail.
 
             It is your responsibility to ensure that the memory dataspace
             provided is compatible with the shape of the Numpy array.  Since a
@@ -214,9 +214,8 @@ cdef class DatasetID(ObjectID):
             Write data from a Numpy array to an HDF5 dataset. Keyword dxpl may 
             be a dataset transfer property list.
 
-            The provided Numpy array must be C-contiguous, and own its data.  
-            If this is not the case, ValueError will be raised and the read 
-            will fail.
+            The provided Numpy array must be C-contiguous.  If this is not the
+            case, ValueError will be raised and the read will fail.
 
             The actual write is non-blocking; the array object is temporarily
             marked read-only, but attempting to mutate it in another thread

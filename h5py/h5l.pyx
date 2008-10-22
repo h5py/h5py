@@ -17,7 +17,7 @@ __doc__ = \
 include "config.pxi"
 include "sync.pxi"
 
-from h5 cimport init_hdf5
+from h5 cimport init_hdf5, SmartStruct
 from h5p cimport PropID, pdefault
 from h5g cimport GroupID
 from utils cimport emalloc, efree
@@ -31,10 +31,9 @@ TYPE_HARD = H5L_TYPE_HARD
 TYPE_SOFT = H5L_TYPE_SOFT      
 TYPE_EXTERNAL = H5L_TYPE_EXTERNAL     
 
-cdef class LinkInfo:
+cdef class LinkInfo(SmartStruct):
 
     cdef H5L_info_t infostruct
-    cdef object __weakref__
 
     property type:
         """ Integer type code for link (h5l.TYPE_*) """
@@ -60,14 +59,6 @@ cdef class LinkInfo:
             else:
                 return self.infostruct.u.val_size
 
-    def __repr__(self):
-        typenames = {H5L_TYPE_HARD: "HARD", H5L_TYPE_SOFT: "SOFT",
-                     H5L_TYPE_EXTERNAL: "EXTERNAL"}
-        cset_names = {H5T_CSET_ASCII: "ASCII", H5T_CSET_UTF8: "UTF8"}
-        return "LinkInfo (%s, element %d, cset %s)" % \
-            (typenames.get(self.type, "UNKNOWN"), self.corder,
-            cset_names.get(self.cset, "UNKNOWN"))
-
 cdef class _LinkVisitor:
 
     """ Helper class for iteration callback """
@@ -86,12 +77,20 @@ cdef herr_t cb_link_iterate(hid_t grp, char* name, H5L_info_t *istruct, void* da
 
     cdef _LinkVisitor it = <_LinkVisitor?>data
     it.info.infostruct = istruct[0]
-
     it.retval = it.func(name, it.info)
-
     if (it.retval is None) or (not it.retval):
         return 0
     return 1
+
+cdef herr_t cb_link_simple(hid_t grp, char* name, H5L_info_t *istruct, void* data) except 2:
+    # Simplified iteration callback which only provides the name
+
+    cdef _LinkVisitor it = <_LinkVisitor?>data
+    it.retval = it.func(name)
+    if (it.retval is None) or (not it.retval):
+        return 0
+    return 1
+
 
 cdef class LinkProxy(ObjectID):
 
@@ -100,7 +99,7 @@ cdef class LinkProxy(ObjectID):
 
         These come attached to GroupID objects as "obj.links".  Since every
         H5L function operates on at least one group, the methods provided
-        operate on their parent group identifier.  For example:
+        operate on their parent group identifier.  For example::
 
         >>> g = h5g.open(fid, '/')
         >>> g.links.exists("MyGroup")
@@ -216,11 +215,15 @@ cdef class LinkProxy(ObjectID):
     @sync
     def visit(self, object func, *,
               int idx_type=H5_INDEX_NAME, int order=H5_ITER_NATIVE,
-              char* obj_name='.', PropID lapl=None):
+              char* obj_name='.', PropID lapl=None, bint info=0):
         """(CALLABLE func, **kwds) => <Return value from func>
 
         Iterate a function or callable object over all groups below this
         one.  Your callable should conform to the signature:
+
+            func(STRING name) => Result
+
+        or if the keyword argument "info" is True:
 
             func(STRING name, LinkInfo info) => Result
 
@@ -228,15 +231,23 @@ cdef class LinkProxy(ObjectID):
         anything else aborts iteration and returns that value.
 
         Keyword-only arguments:
+
+        * BOOL info (False)              Provide a LinkInfo instance to callback
         * STRING obj_name ("."):         Visit a subgroup instead
         * PropLAID lapl (None):          Controls how "obj_name" is interpreted
         * INT idx_type (h5.INDEX_NAME):  What indexing strategy to use
         * INT order (h5.ITER_NATIVE):    Order in which iteration occurs
         """
         cdef _LinkVisitor it = _LinkVisitor(func)
+        cdef H5L_iterate_t cfunc
+
+        if info:
+            cfunc = cb_link_iterate
+        else:
+            cfunc = cb_link_simple
 
         H5Lvisit_by_name(self.id, obj_name, <H5_index_t>idx_type,
-            <H5_iter_order_t>order, cb_link_iterate, <void*>it, pdefault(lapl))
+            <H5_iter_order_t>order, cfunc, <void*>it, pdefault(lapl))
 
         return it.retval
 

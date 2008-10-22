@@ -2,6 +2,34 @@ Module H5
 =========
 
 .. automodule:: h5py.h5
-    :members:
-.. autoclass:: ObjectID
 
+Library API
+-----------
+
+.. autofunction:: get_config
+.. autofunction:: get_phil
+.. autofunction:: loglevel
+.. autofunction:: get_libversion
+
+
+Base classes for library
+------------------------
+
+.. autoclass:: ObjectID
+.. autoclass:: H5Error
+.. autoclass:: H5PYConfig
+.. autoclass:: PHIL
+
+
+Error handling routines
+-----------------------
+
+Keep in mind that errors are already handled by Python exceptions.  These
+functions exist for low-level inspection of the HDF5 error stack.
+
+.. autofunction:: error_stack
+.. autofunction:: error_string
+.. autofunction:: clear
+
+.. autoclass:: ErrorStackElement
+    :members:

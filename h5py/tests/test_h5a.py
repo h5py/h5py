@@ -179,12 +179,12 @@ class TestH5A(HDF5TestCase):
     def test_iterate(self):
 
         namelist = []
-        result = h5a.iterate(self.obj, namelist.append)
+        result = h5a.iterate(self.obj, lambda name, *args: namelist.append(name))
         self.assertEqual(namelist, ATTRIBUTES_ORDER)
         self.assert_(result is None)
 
         namelist = []
-        def iterate_two(name):
+        def iterate_two(name, *args):
             if len(namelist) >= 2:
                 return True
             namelist.append(name)
@@ -192,7 +192,7 @@ class TestH5A(HDF5TestCase):
         self.assertEqual(namelist, ATTRIBUTES_ORDER[0:2])
         self.assert_(result is True)
 
-        def iter_fault(name):
+        def iter_fault(name, *args):
             raise RuntimeError
         self.assertRaises(RuntimeError, h5a.iterate, self.obj, iter_fault)
 
@@ -213,12 +213,6 @@ class TestH5A(HDF5TestCase):
         for name, (val, dt, shape) in ATTRIBUTES.iteritems():
             attr = h5a.open(self.obj, name)
             self.assertEqual(attr.dtype, dt)
-
-    def test_py_listattrs(self):
-
-        attrlist = h5a.py_listattrs(self.obj)
-
-        self.assertEqual(attrlist, ATTRIBUTES_ORDER)
 
     def test_exists(self):
 

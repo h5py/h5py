@@ -63,33 +63,34 @@ NO_EDC      = H5Z_NO_EDC
 
 @sync
 def filter_avail(int filter_code):
-    """ (INT filter_code) => BOOL available
+    """(INT filter_code) => BOOL
 
-        Determine if the given filter is available to the library.
+    Determine if the given filter is available to the library. The
+    filter code should be one of:
 
-        The filter code should be one of:
-         FILTER_DEFLATE
-         FILTER_SHUFFLE
-         FILTER_FLETCHER32
-         FILTER_SZIP
+    - FILTER_DEFLATE
+    - FILTER_SHUFFLE
+    - FILTER_FLETCHER32
+    - FILTER_SZIP
     """
     return <bint>H5Zfilter_avail(<H5Z_filter_t>filter_code)
 
 @sync
 def get_filter_info(int filter_code):
-    """ (INT filter_code) => INT filter_flags
+    """(INT filter_code) => INT filter_flags
 
-        Retrieve a bitfield with information about the given filter.
+    Retrieve a bitfield with information about the given filter. The
+    filter code should be one of:
 
-        The filter code should be one of:
-         FILTER_DEFLATE
-         FILTER_SHUFFLE
-         FILTER_FLETCHER32
-         FILTER_SZIP
+    - FILTER_DEFLATE
+    - FILTER_SHUFFLE
+    - FILTER_FLETCHER32
+    - FILTER_SZIP
 
-        Valid bitmasks for use with the returned bitfield are:
-         FILTER_CONFIG_ENCODE_ENABLED
-         FILTER_CONFIG_DECODE_ENABLED
+    Valid bitmasks for use with the returned bitfield are:
+
+    - FILTER_CONFIG_ENCODE_ENABLED
+    - FILTER_CONFIG_DECODE_ENABLED
     """
     cdef unsigned int flags
     H5Zget_filter_info(<H5Z_filter_t>filter_code, &flags)

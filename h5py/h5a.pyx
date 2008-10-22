@@ -14,7 +14,6 @@ __doc__=\
 """
     Provides access to the low-level HDF5 "H5A" attribute interface.
 """
-__all__ = ['create','AttrID']
 
 include "config.pxi"
 include "sync.pxi"
@@ -43,11 +42,13 @@ IF H5PY_18API:
         SpaceID space not None, *, char* obj_name='.', PropID lapl=None):
         """(ObjectID loc, STRING name, TypeID tid, SpaceID space, **kwds) => AttrID
             
-        Create a new attribute, attached to an existing object.
+        Create a new attribute, attached to an existing object.  Keywords:
 
-        Keywords:
-        * STRING obj_name (".")     Attach attribute to this group member instead
-        * PropID lapl (None)        Determines how obj_name is interpreted
+        STRING obj_name (".")
+            Attach attribute to this group member instead
+
+        PropID lapl (None)
+            Link access property list for obj_name
         """
 
         return AttrID(H5Acreate_by_name(loc.id, obj_name, name, tid.id,
@@ -75,13 +76,18 @@ IF H5PY_18API:
         """(ObjectID loc, STRING name=, INT index=, **kwds) => AttrID
        
         Open an attribute attached to an existing object.  You must specify
-        exactly one of either name or idx.
+        exactly one of either name or idx.  Keywords are:
 
-        Keyword-only arguments:
-        * STRING obj_name ("."):         Attribute is attached to this group member
-        * PropID lapl (None):            Controls how "obj_name" is interpreted
-        * INT index_type (h5.INDEX_NAME) Controls how idx is interpreted
-        * INT order (h5.ITER_NATIVE)     Controls how idx is interpreted
+        STRING obj_name (".")
+            Attribute is attached to this group member
+
+        PropID lapl (None)
+            Link access property list for obj_name
+
+        INT index_type (h5.INDEX_NAME)
+
+        INT order (h5.ITER_NATIVE)
+
         """
         if (name == NULL and index < 0) or (name != NULL and index >= 0):
             raise TypeError("Exactly one of name or idx must be specified")
@@ -116,19 +122,19 @@ ELSE:
 IF H5PY_18API:
     @sync
     def exists(ObjectID loc not None, char* name, *,
-                char* obj_name=NULL, PropID lapl=None):
+                char* obj_name=".", PropID lapl=None):
         """(ObjectID loc, STRING name, **kwds) => BOOL
 
-        Determine if an attribute is attached to this object.
+        Determine if an attribute is attached to this object.  Keywords:
 
-        Keywords:
-        * STRING obj_name:  Look for attributes attached to this group member
-        * PropID lapl:      Determines how "obj_name" is interpreted
+        STRING obj_name (".")
+            Look for attributes attached to this group member
+        
+        PropID lapl (None):
+            Link access property list for obj_name
         """
-        if obj_name is NULL:
-            return <bint>H5Aexists(loc.id, name)
-        else:
-            return <bint>H5Aexists_by_name(loc.id, obj_name, name, pdefault(lapl))
+        return <bint>H5Aexists_by_name(loc.id, obj_name, name, pdefault(lapl))
+
 ELSE:
     cdef herr_t cb_exist(hid_t loc_id, char* attr_name, void* ref_name) except 2:
 
@@ -140,7 +146,7 @@ ELSE:
     def exists(ObjectID loc not None, char* name):
         """(ObjectID loc, STRING name) => BOOL
 
-        Determine if an attribute named "ref_name" is attached to this object.
+        Determine if an attribute named "name" is attached to this object.
         """
         cdef unsigned int i=0
 
@@ -155,21 +161,52 @@ IF H5PY_18API:
         char* obj_name='.', PropID lapl=None):
         """(ObjectID loc, STRING name, STRING new_name, **kwds)
 
-        Rename an attribute.
+        Rename an attribute.  Keywords:
 
-        Keywords:
-        * STRING obj_name (".")     Attribute is attached to this group member
-        * PropID lapl (None)        Determines how obj_name is interpreted
+        STRING obj_name (".")
+            Attribute is attached to this group member
+
+        PropID lapl (None)
+            Link access property list for obj_name
         """
         H5Arename_by_name(loc.id, obj_name, name, new_name, pdefault(lapl))
 
-@sync
-def delete(ObjectID loc not None, char* name):
-    """(ObjectID loc, STRING name)
+IF H5PY_18API:
+    @sync
+    def delete(ObjectID loc not None, char* name=NULL, int index=-1, *,
+        char* obj_name='.', int index_type=H5_INDEX_NAME, int order=H5_ITER_NATIVE,
+        PropID lapl=None):
+        """(ObjectID loc, STRING name=, INT index=, **kwds)
 
-    Remove an attribute from an object.
-    """
-    H5Adelete(loc.id, name)
+        Remove an attribute from an object.  Specify exactly one of "name"
+        or "index". Keyword-only arguments:
+
+        STRING obj_name (".")
+            Attribute is attached to this group member
+
+        PropID lapl (None)
+            Link access property list for obj_name
+
+        INT index_type (h5.INDEX_NAME)
+
+        INT order (h5.ITER_NATIVE)
+        """
+        if name != NULL and index < 0:
+            H5Adelete_by_name(loc.id, obj_name, name, pdefault(lapl))
+        elif name == NULL and index >= 0:
+            H5Adelete_by_idx(loc.id, obj_name, <H5_index_t>index_type,
+                <H5_iter_order_t>order, index, pdefault(lapl))
+        else:
+            raise TypeError("Exactly one of index or name must be specified.")
+
+ELSE:
+    @sync
+    def delete(ObjectID loc not None, char* name):
+        """(ObjectID loc, STRING name)
+
+        Remove an attribute from an object.
+        """
+        H5Adelete(loc.id, name)
 
 @sync
 def get_num_attrs(ObjectID loc not None):
@@ -178,65 +215,6 @@ def get_num_attrs(ObjectID loc not None):
     Determine the number of attributes attached to an HDF5 object.
     """
     return H5Aget_num_attrs(loc.id)
-
-cdef class _AttrVisitor:
-
-    cdef object func
-    cdef object retval
-
-    def __init__(self, func):
-        self.func = func
-        self.retval = None
-
-cdef herr_t cb_attr_iter(hid_t loc_id, char* attr_name, void* vis_in) except 2:
-
-    cdef _AttrVisitor vis = <_AttrVisitor>vis_in
-
-    vis.retval = vis.func(attr_name)
-
-    if vis.retval is not None:
-        return 1
-    return 0
-
-@sync
-def iterate(ObjectID loc not None, object func, int index=0):
-    """(ObjectID loc, CALLABLE func, INT index=0) => <Return value from func>
-
-    Iterate a callable (function, method or callable object) over the
-    attributes attached to this object.  You callable should have the
-    signature:
-
-        func(STRING name) => Result
-
-    Returning None continues iteration; returning anything else aborts
-    iteration and returns that value.
-
-    Tip: To make your code forward-compatible with later versions of this
-    function (which supply more arguments to the callback), add an
-    additional ``*args`` parameter.
-    """
-    if index < 0:
-        raise ValueError("Starting index must be a non-negative integer.")
-
-    cdef unsigned int i = index
-    cdef _AttrVisitor vis = _AttrVisitor(func)
-
-    H5Aiterate(loc.id, &i, <H5A_operator_t>cb_attr_iter, <void*>vis)
-
-    return vis.retval
-
-
-@sync
-def py_listattrs(ObjectID loc not None):
-    """(ObjectID loc) => LIST
-
-    Get a list of the names of the attributes attached to an object.
-    """
-    retlist = []
-    iterate(loc, retlist.append)
-    return retlist
-
-
 
 
 IF H5PY_18API:
@@ -276,11 +254,19 @@ IF H5PY_18API:
         2. If you have the parent object, supply it and exactly one of
            either name or index.
 
-        Keywords:
-        * STRING obj_name (".")             Use this group member instead
-        * PropID lapl (None)                How "obj_name" is resolved
-        * INT index_type (h5.INDEX_NAME)    Which index to use
-        * INT order (h5.ITER_NATIVE)        What order the index is in
+        Keyword-only arguments:
+
+        STRING obj_name (".")
+            Use this group member instead
+
+        PropID lapl (None)
+            Link access property list for obj_name
+
+        INT index_type (h5.INDEX_NAME)
+            Which index to use
+
+        INT order (h5.ITER_NATIVE)
+            What order the index is in
         """
         cdef AttrInfo info = AttrInfo()
 
@@ -296,6 +282,110 @@ IF H5PY_18API:
 
         return info
 
+# === Iteration routines ======================================================
+
+cdef class _AttrVisitor:
+    cdef object func
+    cdef object retval
+    def __init__(self, func):
+        self.func = func
+        self.retval = None
+
+IF H5PY_18API:
+
+    cdef herr_t cb_attr_iter(hid_t loc_id, char* attr_name, H5A_info_t *ainfo, void* vis_in) except 2:
+        cdef _AttrVisitor vis = <_AttrVisitor>vis_in
+        cdef AttrInfo info = AttrInfo()
+        info.info = ainfo[0]
+        vis.retval = vis.func(attr_name, info)
+        if vis.retval is not None:
+            return 1
+        return 0
+
+    cdef herr_t cb_attr_simple(hid_t loc_id, char* attr_name, H5A_info_t *ainfo, void* vis_in) except 2:
+        cdef _AttrVisitor vis = <_AttrVisitor>vis_in
+        vis.retval = vis.func(attr_name)
+        if vis.retval is not None:
+            return 1
+        return 0
+
+    @sync
+    def iterate(ObjectID loc not None, object func, int index=0, *,
+        int index_type=H5_INDEX_NAME, int order=H5_ITER_NATIVE, bint info=0):
+        """(ObjectID loc, CALLABLE func, INT index=0, **kwds) => <Return value from func>
+
+        Iterate a callable (function, method or callable object) over the
+        attributes attached to this object.  You callable should have the
+        signature::
+
+            func(STRING name) => Result
+
+        or if the keyword argument "info" is True::
+
+            func(STRING name, AttrInfo info) => Result
+
+        Returning None continues iteration; returning anything else aborts
+        iteration and returns that value.  Keywords:
+        
+        BOOL info (False)
+            Callback is func(STRING name, AttrInfo info), not func(STRING name)
+
+        INT index_type (h5.INDEX_NAME)
+            Which index to use
+
+        INT order (h5.ORDER_NATIVE)
+            Index order to use
+        """
+        if index < 0:
+            raise ValueError("Starting index must be a non-negative integer.")
+
+        cdef hsize_t i = index
+        cdef _AttrVisitor vis = _AttrVisitor(func)
+        cdef H5A_operator2_t cfunc
+
+        if info:
+            cfunc = cb_attr_iter
+        else:
+            cfunc = cb_attr_simple
+
+        H5Aiterate2(loc.id, <H5_index_t>index_type, <H5_iter_order_t>order,
+            &i, cfunc, <void*>vis)
+
+        return vis.retval
+
+ELSE:
+
+    cdef herr_t cb_attr_iter(hid_t loc_id, char* attr_name, void* vis_in) except 2:
+        cdef _AttrVisitor vis = <_AttrVisitor>vis_in
+        vis.retval = vis.func(attr_name)
+        if vis.retval is not None:
+            return 1
+        return 0
+
+    @sync
+    def iterate(ObjectID loc not None, object func, int index=0):
+        """(ObjectID loc, CALLABLE func, INT index=0) => <Return value from func>
+
+        Iterate a callable (function, method or callable object) over the
+        attributes attached to this object.  You callable should have the
+        signature::
+
+            func(STRING name) => Result
+
+        Returning None continues iteration; returning anything else aborts
+        iteration and returns that value.
+        """
+        if index < 0:
+            raise ValueError("Starting index must be a non-negative integer.")
+
+        cdef unsigned int i = index
+        cdef _AttrVisitor vis = _AttrVisitor(func)
+
+        H5Aiterate(loc.id, &i, <H5A_operator_t>cb_attr_iter, <void*>vis)
+
+        return vis.retval
+
+
 # === Attribute class & methods ===============================================
 
 cdef class AttrID(ObjectID):
@@ -304,13 +394,14 @@ cdef class AttrID(ObjectID):
         Logical representation of an HDF5 attribute identifier.
 
         Objects of this class can be used in any HDF5 function call
-        which expects an attribute identifier.  Additionally, all H5A*
+        which expects an attribute identifier.  Additionally, all ``H5A*``
         functions which always take an attribute instance as the first
         argument are presented as methods of this class.  
 
         * Hashable: No
         * Equality: Identifier comparison
     """
+
     property name:
         """The attribute's name"""
         def __get__(self):
@@ -343,8 +434,8 @@ cdef class AttrID(ObjectID):
         H5Aclose(self.id)
 
     @sync
-    def read(self, ndarray arr_obj not None):
-        """(NDARRAY arr_obj)
+    def read(self, ndarray arr not None):
+        """(NDARRAY arr)
 
         Read the attribute data into the given Numpy array.  Note that the 
         Numpy array must have the same shape as the HDF5 attribute, and a 
@@ -359,19 +450,19 @@ cdef class AttrID(ObjectID):
 
         try:
             space_id = H5Aget_space(self.id)
-            check_numpy_write(arr_obj, space_id)
+            check_numpy_write(arr, space_id)
 
-            mtype = py_create(arr_obj.dtype)
+            mtype = py_create(arr.dtype)
 
-            H5Aread(self.id, mtype.id, PyArray_DATA(arr_obj))
+            H5Aread(self.id, mtype.id, PyArray_DATA(arr))
 
         finally:
             if space_id:
                 H5Sclose(space_id)
 
     @sync
-    def write(self, ndarray arr_obj not None):
-        """(NDARRAY arr_obj)
+    def write(self, ndarray arr not None):
+        """(NDARRAY arr)
 
         Write the contents of a Numpy array too the attribute.  Note that
         the Numpy array must have the same shape as the HDF5 attribute, and
@@ -386,10 +477,10 @@ cdef class AttrID(ObjectID):
 
         try:
             space_id = H5Aget_space(self.id)
-            check_numpy_read(arr_obj, space_id)
-            mtype = py_create(arr_obj.dtype)
+            check_numpy_read(arr, space_id)
+            mtype = py_create(arr.dtype)
 
-            H5Awrite(self.id, mtype.id, PyArray_DATA(arr_obj))
+            H5Awrite(self.id, mtype.id, PyArray_DATA(arr))
 
         finally:
             if space_id:
@@ -399,7 +490,7 @@ cdef class AttrID(ObjectID):
     def get_name(self):
         """() => STRING name
 
-        Determine the name of an attribute, given its identifier.
+        Determine the name of this attribute.
         """
         cdef int blen
         cdef char* buf
@@ -432,8 +523,13 @@ cdef class AttrID(ObjectID):
         """
         return typewrap(H5Aget_type(self.id))
 
+    @sync
+    def get_storage_size(self):
+        """() => INT
 
-
+        Get the amount of storage required for this attribute.
+        """
+        return H5Aget_storage_size(self.id)
 
 
 

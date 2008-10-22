@@ -68,11 +68,6 @@ class TestUtils(HDF5TestCase):
         carr.flags['WRITEABLE'] = False
         self.assertRaises(TypeError, utils.check_numpy_write, carr)
 
-    def test_emalloc(self):
-        
-        utils._test_emalloc(1024)
-        utils._test_emalloc(0)
-        self.assertRaises(MemoryError, utils._test_emalloc, sys.maxint)
 
 
 

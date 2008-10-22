@@ -49,17 +49,18 @@ cdef class GroupStat(SmartStruct):
     """Represents the H5G_stat_t structure containing group member info.
 
     Fields (read-only):
-    fileno  ->  2-tuple uniquely* identifying the current file
-    objno   ->  2-tuple uniquely* identifying this object
-    nlink   ->  Number of hard links to this object
-    mtime   ->  Modification time of this object
-    linklen ->  Length of the symbolic link name, or 0 if not a link.
 
-    *"Uniquely identifying" means unique among currently open files, 
+    * fileno:   2-tuple uniquely identifying the current file
+    * objno:    2-tuple uniquely identifying this object
+    * nlink:    Number of hard links to this object
+    * mtime:    Modification time of this object
+    * linklen:  Length of the symbolic link name, or 0 if not a link.
+
+    "Uniquely identifying" means unique among currently open files, 
     not universally unique.
 
-    Hashable: Yes
-    Equality: Yes
+    * Hashable: Yes
+    * Equality: Yes
     """
     cdef H5G_stat_t infostruct
 
@@ -119,17 +120,17 @@ cdef class GroupIter:
 IF H5PY_18API:
     @sync
     def open(ObjectID loc not None, char* name, PropID gapl=None):
-        """ (ObjectID loc, STRING name, PropGAID gapl=None)
+        """(ObjectID loc, STRING name, PropGAID gapl=None)
 
-            Open an existing HDF5 group, attached to some other group.
+        Open an existing HDF5 group, attached to some other group.
         """
         return GroupID(H5Gopen2(loc.id, name, pdefault(gapl)))
 ELSE:
     @sync
     def open(ObjectID loc not None, char* name):
-        """ (ObjectID loc, STRING name) => GroupID
+        """(ObjectID loc, STRING name) => GroupID
 
-            Open an existing HDF5 group, attached to some other group.
+        Open an existing HDF5 group, attached to some other group.
         """
         return GroupID(H5Gopen(loc.id, name))
 
@@ -138,10 +139,10 @@ IF H5PY_18API:
     @sync
     def create(ObjectID loc not None, char* name, PropID lcpl=None,
                PropID gcpl=None, PropID gapl=None):
-        """ (ObjectID loc, STRING name, PropLCID lcpl=None, PropGCID gcpl=None,
-             PropGAID gapl=None) => GroupID
+        """(ObjectID loc, STRING name, PropLCID lcpl=None, PropGCID gcpl=None,
+        PropGAID gapl=None) => GroupID
 
-            Create a new group, under a given parent group.
+        Create a new group, under a given parent group.
         """
         return GroupID(H5Gcreate2(loc.id, name, pdefault(lcpl),
                                                 pdefault(gcpl),
@@ -149,9 +150,9 @@ IF H5PY_18API:
 ELSE:
     @sync
     def create(ObjectID loc not None, char* name):
-        """ (ObjectID loc, STRING name) => GroupID
+        """(ObjectID loc, STRING name) => GroupID
 
-            Create a new group, under a given parent group.
+        Create a new group, under a given parent group.
         """
         return GroupID(H5Gcreate(loc.id, name, -1))
 
@@ -181,15 +182,15 @@ def iterate(GroupID loc not None, object func, int startidx=0, *,
         => Return value from func
 
         Iterate a callable (function, method or callable object) over the
-        members of a group.  Your callable should have the signature:
+        members of a group.  Your callable should have the signature::
 
             func(STRING name) => Result
 
         Returning None continues iteration; returning anything else aborts
-        iteration and returns that value.
+        iteration and returns that value. Keywords:
 
-        Keywords:
-        * STRING obj_name (".")     Iterate over this subgroup instead
+        STRING obj_name (".")
+            Iterate over this subgroup instead
     """
     if startidx < 0:
         raise ValueError("Starting index must be non-negative")
@@ -203,16 +204,16 @@ def iterate(GroupID loc not None, object func, int startidx=0, *,
 
 @sync
 def get_objinfo(ObjectID obj not None, object name='.', int follow_link=1):
-    """ (ObjectID obj, STRING name='.', BOOL follow_link=True) => GroupStat object
+    """(ObjectID obj, STRING name='.', BOOL follow_link=True) => GroupStat object
 
-        Obtain information about a named object.  If "name" is provided,
-        "obj" is taken to be a GroupID object containing the target.
-        The return value is a GroupStat object; see that class's docstring
-        for a description of its attributes.  
+    Obtain information about a named object.  If "name" is provided,
+    "obj" is taken to be a GroupID object containing the target.
+    The return value is a GroupStat object; see that class's docstring
+    for a description of its attributes.  
 
-        If follow_link is True (default) and the object is a symbolic link, 
-        the information returned describes its target.  Otherwise the 
-        information describes the link itself.
+    If follow_link is True (default) and the object is a symbolic link, 
+    the information returned describes its target.  Otherwise the 
+    information describes the link itself.
     """
     cdef GroupStat statobj
     statobj = GroupStat()
@@ -232,16 +233,21 @@ cdef class GroupID(ObjectID):
 
         Python extensions:
 
-        __contains__(name)   Test for group member ("if name in grpid")
-        __iter__             Get an iterator over member names
-        __len__              Number of members in this group; len(grpid) = N
+        __contains__
+            Test for group member ("if name in grpid")
+
+        __iter__
+            Get an iterator over member names
+
+        __len__
+            Number of members in this group; len(grpid) = N
 
         If HDF5 1.8.X is used, the attribute "links" contains a proxy object
         providing access to the H5L family of routines.  See the docs
         for h5py.h5l.LinkProxy for more information.
 
-        Hashable: Yes, unless anonymous
-        Equality: True HDF5 identity unless anonymous
+        * Hashable: Yes, unless anonymous
+        * Equality: True HDF5 identity unless anonymous
     """
 
     IF H5PY_18API:
@@ -250,11 +256,11 @@ cdef class GroupID(ObjectID):
 
     @sync
     def _close(self):
-        """ ()
+        """()
 
-            Terminate access through this identifier.  You shouldn't have to
-            call this manually; group identifiers are automatically released
-            when their Python wrappers are freed.
+        Terminate access through this identifier.  You shouldn't have to
+        call this manually; group identifiers are automatically released
+        when their Python wrappers are freed.
         """
         H5Gclose(self.id)
         IF H5PY_18API:
@@ -264,16 +270,20 @@ cdef class GroupID(ObjectID):
     @sync
     def link(self, char* current_name, char* new_name, 
              int link_type=H5G_LINK_HARD, GroupID remote=None):
-        """ (STRING current_name, STRING new_name, INT link_type=LINK_HARD, 
-             GroupID remote=None)
+        """(STRING current_name, STRING new_name, INT link_type=LINK_HARD, 
+        GroupID remote=None)
 
-            Create a new hard or soft link.  current_name identifies
-            the link target (object the link will point to).  The new link is
-            identified by new_name and (optionally) another group "remote".
+        Create a new hard or soft link.  current_name identifies
+        the link target (object the link will point to).  The new link is
+        identified by new_name and (optionally) another group "remote".
 
-            Link types are:
-                LINK_HARD:  Hard link to existing object (default)
-                LINK_SOFT:  Symbolic link; link target need not exist.
+        Link types are:
+
+        LINK_HARD
+            Hard link to existing object (default)
+
+        LINK_SOFT
+            Symbolic link; link target need not exist.
         """
         cdef hid_t remote_id
         if remote is None:
@@ -286,20 +296,20 @@ cdef class GroupID(ObjectID):
 
     @sync
     def unlink(self, char* name):
-        """ (STRING name)
+        """(STRING name)
 
-            Remove a link to an object from this group.
+        Remove a link to an object from this group.
         """
         H5Gunlink(self.id, name)
    
 
     @sync
     def move(self, char* current_name, char* new_name, GroupID remote=None):
-        """ (STRING current_name, STRING new_name, GroupID remote=None)
+        """(STRING current_name, STRING new_name, GroupID remote=None)
 
-            Relink an object.  current_name identifies the object.
-            new_name and (optionally) another group "remote" determine
-            where it should be moved.
+        Relink an object.  current_name identifies the object.
+        new_name and (optionally) another group "remote" determine
+        where it should be moved.
         """
         cdef hid_t remote_id
         if remote is None:
@@ -312,9 +322,9 @@ cdef class GroupID(ObjectID):
 
     @sync
     def get_num_objs(self):
-        """ () => INT number_of_objects
+        """() => INT number_of_objects
 
-            Get the number of objects directly attached to a given group.
+        Get the number of objects directly attached to a given group.
         """
         cdef hsize_t size
         H5Gget_num_objs(self.id, &size)
@@ -323,12 +333,12 @@ cdef class GroupID(ObjectID):
 
     @sync
     def get_objname_by_idx(self, hsize_t idx):
-        """ (INT idx) => STRING object_name
+        """(INT idx) => STRING
 
-            Get the name of a group member given its zero-based index.
+        Get the name of a group member given its zero-based index.
 
-            Due to a limitation of the HDF5 library, the generic exception
-            H5Error is raised if the idx parameter is out-of-range.
+        Due to a limitation of the HDF5 library, the generic exception
+        H5Error is raised if the idx parameter is out-of-range.
         """
         cdef int size
         cdef char* buf
@@ -350,17 +360,18 @@ cdef class GroupID(ObjectID):
 
     @sync
     def get_objtype_by_idx(self, hsize_t idx):
-        """ (INT idx) => INT object_type_code
+        """(INT idx) => INT object_type_code
 
-            Get the type of an object attached to a group, given its zero-based
-            index.  Possible return values are:
-                - LINK
-                - GROUP
-                - DATASET
-                - DATATYPE
+        Get the type of an object attached to a group, given its zero-based
+        index.  Possible return values are:
 
-            Due to a limitation of the HDF5 library, the generic exception
-            H5Error is raised if the idx parameter is out-of-range.
+        - LINK
+        - GROUP
+        - DATASET
+        - TYPE
+
+        Due to a limitation of the HDF5 library, the generic exception
+        H5Error is raised if the idx parameter is out-of-range.
         """
         # This function does not properly raise an exception
         cdef herr_t retval
@@ -372,10 +383,10 @@ cdef class GroupID(ObjectID):
 
     @sync
     def get_linkval(self, char* name):
-        """ (STRING name) => STRING link_value
+        """(STRING name) => STRING link_value
 
-            Retrieve the value (target name) of a symbolic link.
-            Limited to 2048 characters on Windows.
+        Retrieve the value (target name) of a symbolic link.
+        Limited to 2048 characters on Windows.
         """
         cdef char* value
         cdef H5G_stat_t statbuf
@@ -401,17 +412,17 @@ cdef class GroupID(ObjectID):
 
     @sync
     def set_comment(self, char* name, char* comment):
-        """ (STRING name, STRING comment)
+        """(STRING name, STRING comment)
 
-            Set the comment on a group member.
+        Set the comment on a group member.
         """
         H5Gset_comment(self.id, name, comment)
 
     @sync
     def get_comment(self, char* name):
-        """ (STRING name) => STRING comment
+        """(STRING name) => STRING comment
 
-            Retrieve the comment for a group member.
+        Retrieve the comment for a group member.
         """
         cdef int cmnt_len
         cdef char* cmnt
@@ -432,9 +443,9 @@ cdef class GroupID(ObjectID):
 
     @sync
     def __contains__(self, char* name):
-        """ (STRING name)
+        """(STRING name)
 
-            Determine if a group member of the given name is present
+        Determine if a group member of the given name is present
         """
         IF H5PY_18API:
             return <bint>H5Lexists(self.id, name, H5P_DEFAULT)

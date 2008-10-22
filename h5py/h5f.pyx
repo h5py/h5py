@@ -153,15 +153,17 @@ def get_obj_count(object where=OBJ_ALL, int types=H5F_OBJ_ALL):
 
         Get the number of open objects.
 
-        * where:  Either a FileID instance representing an HDF5 file, or the
-                  special constant OBJ_ALL, to count objects in all files.
+        where:
+            Either a FileID instance representing an HDF5 file, or the
+            special constant OBJ_ALL, to count objects in all files.
 
-        * type: Specify what kinds of object to include.  May be one of OBJ_*, 
-                or any bitwise combination (e.g. OBJ_FILE | OBJ_ATTR).  
+        type:
+            Specify what kinds of object to include.  May be one of OBJ_*, 
+            or any bitwise combination (e.g. OBJ_FILE | OBJ_ATTR).  
 
-                The special value OBJ_ALL matches all object types, and 
-                OBJ_LOCAL will only match objects opened through a specific 
-                identifier.
+            The special value OBJ_ALL matches all object types, and 
+            OBJ_LOCAL will only match objects opened through a specific 
+            identifier.
     """
     cdef hid_t where_id
     if isinstance(where, FileID):
@@ -179,15 +181,17 @@ def get_obj_ids(object where=OBJ_ALL, int types=H5F_OBJ_ALL):
 
         Get a list of identifier instances for open objects.
 
-        where:  Either a FileID instance representing an HDF5 file, or the
-                special constant OBJ_ALL, to list objects in all files.
+        where:
+            Either a FileID instance representing an HDF5 file, or the
+            special constant OBJ_ALL, to list objects in all files.
 
-        type:   Specify what kinds of object to include.  May be one of OBJ_*, 
-                or any bitwise combination (e.g. OBJ_FILE | OBJ_ATTR).  
+        type:   
+            Specify what kinds of object to include.  May be one of OBJ_*, 
+            or any bitwise combination (e.g. OBJ_FILE | OBJ_ATTR).  
 
-                The special value OBJ_ALL matches all object types, and 
-                OBJ_LOCAL will only match objects opened through a specific 
-                identifier.
+            The special value OBJ_ALL matches all object types, and 
+            OBJ_LOCAL will only match objects opened through a specific 
+            identifier.
     """
     cdef int count
     cdef int i
@@ -230,9 +234,11 @@ cdef class FileID(ObjectID):
         file identifiers are provided as functions in the h5f module.
 
         Properties:
+
         * name:   File name on disk
 
         Behavior:
+
         * Hashable: Yes, unique to the file (but not the access mode)
         * Equality: Hash comparison
     """

@@ -2,46 +2,216 @@ Module H5T
 ==========
 
 .. automodule:: h5py.h5t
+
+Functional API
+--------------
+
+.. autofunction:: py_create
+.. autofunction:: create
+.. autofunction:: open
+.. autofunction:: array_create
+.. autofunction:: enum_create
+.. autofunction:: vlen_create
+.. autofunction:: decode
+
+Type classes
+------------
+
+.. autoclass:: TypeID
     :members:
+
+Atomic classes
+~~~~~~~~~~~~~~
+
+Atomic types are integers and floats.  Much of the functionality for each is
+inherited from the base class :class:`TypeAtomicID`.
+
+.. autoclass:: TypeAtomicID
+    :show-inheritance:
+    :members:
+    
+.. autoclass:: TypeIntegerID
+    :show-inheritance:
+    :members:
+
+.. autoclass:: TypeFloatID
+    :show-inheritance:
+    :members:
+
+Strings
+~~~~~~~
+
+.. autoclass:: TypeStringID
+    :show-inheritance:
+    :members:
+
+Compound Types
+~~~~~~~~~~~~~~
+
+Traditional compound type (like NumPy record type) and enumerated types share
+a base class, :class:`TypeCompositeID`.
+
+.. autoclass:: TypeCompositeID
+    :show-inheritance:
+    :members:
+
+.. autoclass:: TypeCompoundID
+    :show-inheritance:
+    :members:
+
+.. autoclass:: TypeEnumID
+    :show-inheritance:
+    :members:
+
+Other types
+~~~~~~~~~~~
+
+.. autoclass:: TypeArrayID
+    :show-inheritance:
+    :members:
+
+.. autoclass:: TypeOpaqueID
+    :show-inheritance:
+    :members:
+
+.. autoclass:: TypeVlenID
+    :show-inheritance:
+    :members:
+
+.. autoclass:: TypeBitfieldID
+    :show-inheritance:
+    :members:
+
+.. autoclass:: TypeReferenceID
+    :show-inheritance:
+    :members:
+
+Predefined Datatypes
+--------------------
+
+These locked types are pre-allocated by the library.
+
+Floating-point
+~~~~~~~~~~~~~~
+
+.. data:: IEEE_F32LE
+.. data:: IEEE_F32BE
+.. data:: IEEE_F64LE
+.. data:: IEEE_F64BE
+
+Integer types
+~~~~~~~~~~~~~
+
+.. data:: STD_I8LE
+.. data:: STD_I16LE
+.. data:: STD_I32LE
+.. data:: STD_I64LE
+
+.. data:: STD_I8BE
+.. data:: STD_I16BE
+.. data:: STD_I32BE
+.. data:: STD_I64BE
+
+.. data:: STD_U8LE
+.. data:: STD_U16LE
+.. data:: STD_U32LE
+.. data:: STD_U64LE
+
+.. data:: STD_U8BE
+.. data:: STD_U16BE
+.. data:: STD_U32BE
+.. data:: STD_U64BE
+
+.. data:: NATIVE_INT8
+.. data:: NATIVE_UINT8
+.. data:: NATIVE_INT16
+.. data:: NATIVE_UINT16
+.. data:: NATIVE_INT32
+.. data:: NATIVE_UINT32
+.. data:: NATIVE_INT64
+.. data:: NATIVE_UINT64
+.. data:: NATIVE_FLOAT
+.. data:: NATIVE_DOUBLE 
+
+Other types
+~~~~~~~~~~~
+
+
+.. data:: STD_REF_OBJ
+
+    Object reference
+
+.. data:: STD_REF_DSETREG
+
+    Dataset region reference
+
+.. data:: C_S1
+
+    Null-terminated fixed-length string
+
+.. data:: FORTRAN_S1
+
+    Zero-padded fixed-length string
+    
 
 Module constants
 ----------------
 
-::
+Datatype class codes
+~~~~~~~~~~~~~~~~~~~~
 
-    NO_CLASS  = H5T_NO_CLASS
-    INTEGER   = H5T_INTEGER
-    FLOAT     = H5T_FLOAT
-    TIME      = H5T_TIME
-    STRING    = H5T_STRING
-    BITFIELD  = H5T_BITFIELD
-    OPAQUE    = H5T_OPAQUE
-    COMPOUND  = H5T_COMPOUND
-    REFERENCE = H5T_REFERENCE
-    ENUM      = H5T_ENUM
-    VLEN      = H5T_VLEN
-    ARRAY     = H5T_ARRAY
+.. data:: NO_CLASS
+.. data:: INTEGER
+.. data:: FLOAT
+.. data:: TIME
+.. data:: STRING
+.. data:: BITFIELD
+.. data:: OPAQUE
+.. data:: COMPOUND
+.. data:: REFERENCE
+.. data:: ENUM
+.. data:: VLEN
+.. data:: ARRAY
 
-    # Enumeration H5T_sign_t
-    SGN_NONE   = H5T_SGN_NONE
-    SGN_2      = H5T_SGN_2
+API Constants
+~~~~~~~~~~~~~
 
-    # Enumeration H5T_order_t
-    ORDER_LE    = H5T_ORDER_LE
-    ORDER_BE    = H5T_ORDER_BE
-    ORDER_VAX   = H5T_ORDER_VAX
-    ORDER_NONE  = H5T_ORDER_NONE
+.. data:: SGN_NONE
+.. data:: SGN_2
 
-    DIR_DEFAULT = H5T_DIR_DEFAULT
-    DIR_ASCEND  = H5T_DIR_ASCEND
-    DIR_DESCEND = H5T_DIR_DESCEND
+.. data:: ORDER_LE
+.. data:: ORDER_BE
+.. data:: ORDER_VAX
+.. data:: ORDER_NONE
+.. data:: ORDER_NATIVE
 
-    # Enumeration H5T_str_t
-    STR_NULLTERM = H5T_STR_NULLTERM
-    STR_NULLPAD  = H5T_STR_NULLPAD
-    STR_SPACEPAD = H5T_STR_SPACEPAD
+.. data:: DIR_DEFAULT
+.. data:: DIR_ASCEND
+.. data:: DIR_DESCEND
 
-    # Enumeration H5T_norm_t
-    NORM_IMPLIED = H5T_NORM_IMPLIED
-    NORM_MSBSET = H5T_NORM_MSBSET
-    NORM_NONE = H5T_NORM_NONE
+.. data:: STR_NULLTERM
+.. data:: STR_NULLPAD
+.. data:: STR_SPACEPAD
+
+.. data:: NORM_IMPLIED
+.. data:: NORM_MSBSET
+.. data:: NORM_NONE
+
+.. data:: CSET_ASCII
+
+.. data:: PAD_ZERO
+.. data:: PAD_ONE
+.. data:: PAD_BACKGROUND
+
+
+
+
+
+
+
+
+
+
+
+
+

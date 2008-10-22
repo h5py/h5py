@@ -20,7 +20,7 @@ phil = get_phil()
 def uw_apply(wrap, func):
     # Cython methods don't have a "module" attribute for some reason
     if hasattr(func, '__module__'):
-        update_wrapper(wrap, func)
+        update_wrapper(wrap, func, assigned=('__module__', '__name__', '__doc__'))
     else:
         update_wrapper(wrap, func, assigned=('__name__','__doc__'))
 

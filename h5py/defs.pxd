@@ -578,17 +578,17 @@ IF H5PY_18API:
 
     # --- Components for the H5O_info_t struct ----------------------------------
 
-    cdef struct space:
+    ctypedef struct space:
       hsize_t total           #  Total space for storing object header in file 
       hsize_t meta            #  Space within header for object header metadata information 
       hsize_t mesg            #  Space within header for actual message information 
       hsize_t free            #  Free space within object header 
 
-    cdef struct mesg:
+    ctypedef struct mesg:
       unsigned long present   #  Flags to indicate presence of message type in header 
       unsigned long shared    #  Flags to indicate message type is shared in header 
 
-    cdef struct hdr:
+    ctypedef struct hdr:
       unsigned version        #  Version number of header format in file 
       unsigned nmesgs         #  Number of object header messages 
       unsigned nchunks        #  Number of object header chunks 
@@ -1225,6 +1225,11 @@ cdef extern from "hdf5.h":
       H5T_cset_t        cset        # Character set of attribute name
       hsize_t           data_size   # Size of raw data
 
+    herr_t  H5Adelete_by_name(hid_t loc_id, char *obj_name, char *attr_name,
+                hid_t lapl_id) except *
+    herr_t  H5Adelete_by_idx(hid_t loc_id, char *obj_name, H5_index_t idx_type,
+                H5_iter_order_t order, hsize_t n, hid_t lapl_id) except *
+
     hid_t H5Acreate_by_name(hid_t loc_id, char *obj_name, char *attr_name,
         hid_t type_id, hid_t space_id, hid_t acpl_id, hid_t aapl_id, hid_t lapl_id) except *
  
@@ -1247,7 +1252,11 @@ cdef extern from "hdf5.h":
     herr_t H5Aget_info_by_idx(hid_t loc_id, char *obj_name, H5_index_t idx_type,
               H5_iter_order_t order, hsize_t n, H5A_info_t *ainfo, hid_t lapl_id) except *
 
+    ctypedef herr_t (*H5A_operator2_t)(hid_t location_id, char *attr_name,
+            H5A_info_t *ainfo, void *op_data) except 2
+    herr_t H5Aiterate2(hid_t obj_id, H5_index_t idx_type, H5_iter_order_t order,
+            hsize_t *n, H5A_operator2_t op, void *op_data) except *
 
-
+    hsize_t H5Aget_storage_size(hid_t attr_id) except *
 
 

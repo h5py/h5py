@@ -14,7 +14,7 @@ __doc__ = \
     Common support and versioning module for the h5py HDF5 interface.
 
     This is an internal module which is designed to set up the library and
-    enable HDF5 exception handline.  It also enables debug logging, if the
+    enables HDF5 exception handling.  It also enables debug logging, if the
     library has been compiled with a nonzero debugging level.
 
     All exception classes and error handling functions are also in this module.
@@ -26,7 +26,6 @@ from python_exc cimport PyErr_SetString
 
 import atexit
 import threading
-import inspect
 
 IF H5PY_18API:
     ITER_INC    = H5_ITER_INC     # Increasing order
@@ -48,7 +47,7 @@ cdef class SmartStruct:
         return self._hash()
 
     def __richcmp__(self, object other, int how):
-        """Equality based on hash"""
+        """Equality based on hash.  If unhashable, NotImplemented."""
         cdef bint truthval = 0
 
         if how != 2 and how != 3:
@@ -58,18 +57,20 @@ cdef class SmartStruct:
             try:
                 truthval = hash(self) == hash(other)
             except TypeError:
-                pass
+                return NotImplemented
 
         if how == 2:
             return truthval
         return not truthval
 
-    def __repr__(self):
-        """ Prints a header followed by a list of public property values """
-        ostr = "=== %s ===\n%s"
-        attrstring = ["%s: %s" % x for x in inspect.getmembers(self) if not x[0].startswith('_')]
-        ostr %= (self.__class__.__name__, attrstring)
-        return ostr
+    def __str__(self):
+        """Format "name: value" pairs recursively for public attributes"""
+        mems = dict([(x, str(getattr(self, x))) for x in dir(self) if not x.startswith('_')])
+        for x in mems:
+            if isinstance(getattr(self,x), SmartStruct):
+                mems[x] = "\n"+"\n".join(["    "+y for y in mems[x].split("\n")[1:]])
+        hdr = "=== %s ===\n" % self.__class__.__name__ if self._title is None else self._title
+        return hdr+"\n".join(["%s: %s" % (name, mems[name]) for name in sorted(mems)])
 
 cdef class H5PYConfig:
 
@@ -123,7 +124,10 @@ Complex names: %s"""
 cdef H5PYConfig cfg = H5PYConfig()
 
 cpdef H5PYConfig get_config():
-    """ Get a reference to the global library configuration object """
+    """() => H5PYConfig
+
+    Get a reference to the global library configuration object
+    """
     return cfg
 
 # === Bootstrap diagnostics and threading, before decorator is defined ===
@@ -163,8 +167,8 @@ cdef class PHIL:
         acquire this lock first.  When h5py is built without thread awareness,
         all locking methods are no-ops.
 
-        This object supports the context manager protocol ("with" statement)
-        in addition to the methods acquire() and release().
+        You should NOT use this object in your code.  It's internal to the
+        library.
     """
 
     IF H5PY_THREADS:
@@ -199,7 +203,10 @@ cdef class PHIL:
 cdef PHIL phil = PHIL()
 
 cpdef PHIL get_phil():
-    """ Obtain a reference to the PHIL. """
+    """() => PHIL
+
+    Obtain a reference to the PHIL.
+    """
     global phil
     return phil
 
@@ -537,13 +544,14 @@ cdef class ErrorStackElement:
         Represents an entry in the HDF5 error stack.
         Modeled on the H5E_error_t struct.  All properties are read-only.
 
-        Atributes
-        maj_num:    INT major error number
-        min_num:    INT minor error number
-        func_name:  STRING name of failing function
-        file_name:  STRING name of file in which error occurreed
-        line:       UINT line number at which error occured
-        desc:       STRING description of error
+        Attributes:
+
+        * maj_num:    INT major error number
+        * min_num:    INT minor error number
+        * func_name:  STRING name of failing function
+        * file_name:  STRING name of file in which error occurreed
+        * line:       UINT line number at which error occured
+        * desc:       STRING description of error
     """
     cdef readonly int maj_num
     cdef readonly int min_num
@@ -590,11 +598,13 @@ cpdef object error_string():
     """ () => STRING error_stack
 
         Return a string representation of the current error condition.
-        Format is one line of the format 
+        Format is one line of the format::
+
             '<Description> (<Function name>: <error type>)'
 
         If the stack is more than one level deep, this is followed by a
-        header and then n lines of the format:
+        header and then n lines of the format::
+
             '    n: "<Description>" at <function name>'
     """
     cdef int stacklen
