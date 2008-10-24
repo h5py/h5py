@@ -42,12 +42,12 @@ IF H5PY_18API:
         SpaceID space not None, *, char* obj_name='.', PropID lapl=None):
         """(ObjectID loc, STRING name, TypeID tid, SpaceID space, **kwds) => AttrID
             
-        Create a new attribute, attached to an existing object.  Keywords:
+        Create a new attribute, attached to an existing object.
 
-        STRING obj_name (".")
+        + STRING obj_name (".")
             Attach attribute to this group member instead
 
-        PropID lapl (None)
+        + PropID lapl
             Link access property list for obj_name
         """
 
@@ -181,15 +181,15 @@ IF H5PY_18API:
         Remove an attribute from an object.  Specify exactly one of "name"
         or "index". Keyword-only arguments:
 
-        STRING obj_name (".")
+        + STRING obj_name (".")
             Attribute is attached to this group member
 
-        PropID lapl (None)
+        + PropID lapl (None)
             Link access property list for obj_name
 
-        INT index_type (h5.INDEX_NAME)
+        + INT index_type (h5.INDEX_NAME)
 
-        INT order (h5.ITER_NATIVE)
+        + INT order (h5.ITER_NATIVE)
         """
         if name != NULL and index < 0:
             H5Adelete_by_name(loc.id, obj_name, name, pdefault(lapl))
@@ -254,18 +254,16 @@ IF H5PY_18API:
         2. If you have the parent object, supply it and exactly one of
            either name or index.
 
-        Keyword-only arguments:
-
-        STRING obj_name (".")
+        + STRING obj_name (".")
             Use this group member instead
 
-        PropID lapl (None)
+        + PropID lapl (None)
             Link access property list for obj_name
 
-        INT index_type (h5.INDEX_NAME)
+        + INT index_type (h5.INDEX_NAME)
             Which index to use
 
-        INT order (h5.ITER_NATIVE)
+        + INT order (h5.ITER_NATIVE)
             What order the index is in
         """
         cdef AttrInfo info = AttrInfo()
@@ -523,13 +521,14 @@ cdef class AttrID(ObjectID):
         """
         return typewrap(H5Aget_type(self.id))
 
-    @sync
-    def get_storage_size(self):
-        """() => INT
+    IF H5PY_18API:
+        @sync
+        def get_storage_size(self):
+            """() => INT
 
-        Get the amount of storage required for this attribute.
-        """
-        return H5Aget_storage_size(self.id)
+            Get the amount of storage required for this attribute.
+            """
+            return H5Aget_storage_size(self.id)
 
 
 

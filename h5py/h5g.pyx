@@ -117,36 +117,26 @@ cdef class GroupIter:
 
 # === Basic group management ==================================================
 
-IF H5PY_18API:
-    @sync
-    def open(ObjectID loc not None, char* name, PropID gapl=None):
-        """(ObjectID loc, STRING name, PropGAID gapl=None)
+@sync
+def open(ObjectID loc not None, char* name):
+    """(ObjectID loc, STRING name) => GroupID
 
-        Open an existing HDF5 group, attached to some other group.
-        """
-        return GroupID(H5Gopen2(loc.id, name, pdefault(gapl)))
-ELSE:
-    @sync
-    def open(ObjectID loc not None, char* name):
-        """(ObjectID loc, STRING name) => GroupID
-
-        Open an existing HDF5 group, attached to some other group.
-        """
-        return GroupID(H5Gopen(loc.id, name))
-
+    Open an existing HDF5 group, attached to some other group.
+    """
+    return GroupID(H5Gopen(loc.id, name))
 
 IF H5PY_18API:
     @sync
     def create(ObjectID loc not None, char* name, PropID lcpl=None,
                PropID gcpl=None, PropID gapl=None):
-        """(ObjectID loc, STRING name, PropLCID lcpl=None, PropGCID gcpl=None,
-        PropGAID gapl=None) => GroupID
+        """(ObjectID loc, STRING name, PropLCID lcpl=None, PropGCID gcpl=None)
+        => GroupID
 
         Create a new group, under a given parent group.
         """
         return GroupID(H5Gcreate2(loc.id, name, pdefault(lcpl),
                                                 pdefault(gcpl),
-                                                pdefault(gapl)))
+                                                H5P_DEFAULT))
 ELSE:
     @sync
     def create(ObjectID loc not None, char* name):

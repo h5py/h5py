@@ -30,6 +30,7 @@ cdef extern from "stdlib.h":
   void free(void *ptr)
 
 cdef extern from "string.h":
+  size_t strlen(char* s)
   char *strchr(char *s, int c)
   char *strcpy(char *dest, char *src)
   char *strncpy(char *dest, char *src, size_t n)
@@ -88,7 +89,7 @@ cdef extern from "hdf5.h":
   herr_t H5close() except *
 
   herr_t H5get_libversion(unsigned *majnum, unsigned *minnum,
-                          unsigned *relnum ) except *
+                          unsigned *relnum) except *
 
   # New in 1.8.X
   IF H5PY_18API:
@@ -231,7 +232,7 @@ cdef extern from "hdf5.h":
   herr_t    H5Dextend(hid_t dataset_id, hsize_t *size) except *
 
   herr_t    H5Dfill(void *fill, hid_t fill_type_id, void *buf, 
-                    hid_t buf_type_id, hid_t space_id  ) except *
+                    hid_t buf_type_id, hid_t space_id ) except *
   herr_t    H5Dvlen_get_buf_size(hid_t dset_id, hid_t type_id, 
                                     hid_t space_id, hsize_t *size) except *
   herr_t    H5Dvlen_reclaim(hid_t type_id, hid_t space_id, 
@@ -287,7 +288,7 @@ cdef extern from "hdf5.h":
   herr_t    H5Fmount(hid_t loc_id, char *name, hid_t child_id, hid_t plist_id) except *
   herr_t    H5Funmount(hid_t loc_id, char *name) except *
   herr_t    H5Fget_filesize(hid_t file_id, hsize_t *size) except *
-  hid_t     H5Fget_create_plist(hid_t file_id  ) except *
+  hid_t     H5Fget_create_plist(hid_t file_id ) except *
   hid_t     H5Fget_access_plist(hid_t file_id)  except *
   hssize_t  H5Fget_freespace(hid_t file_id) except *
   ssize_t   H5Fget_name(hid_t obj_id, char *name, size_t size) except *
@@ -379,26 +380,26 @@ cdef extern from "hdf5.h":
     size_t linklen
     #H5O_stat_t ohdr            # Object header information. New in HDF5 1.6
 
-  hid_t  H5Gcreate(hid_t loc_id, char *name, size_t size_hint ) except *
-  hid_t  H5Gopen(hid_t loc_id, char *name ) except *
+  hid_t  H5Gcreate(hid_t loc_id, char *name, size_t size_hint) except *
+  hid_t  H5Gopen(hid_t loc_id, char *name) except *
   herr_t H5Gclose(hid_t group_id) except *
   herr_t H5Glink2( hid_t curr_loc_id, char *current_name, 
-                   H5G_link_t link_type, hid_t new_loc_id, char *new_name ) except *
+                   H5G_link_t link_type, hid_t new_loc_id, char *new_name) except *
 
   herr_t H5Gunlink (hid_t file_id, char *name) except *
   herr_t H5Gmove2(hid_t src_loc_id, char *src_name,
-                  hid_t dst_loc_id, char *dst_name ) except *
+                  hid_t dst_loc_id, char *dst_name) except *
   herr_t H5Gget_num_objs(hid_t loc_id, hsize_t*  num_obj) except *
-  int    H5Gget_objname_by_idx(hid_t loc_id, hsize_t idx, char *name, size_t size ) except *
-  int    H5Gget_objtype_by_idx(hid_t loc_id, hsize_t idx ) except *
+  int    H5Gget_objname_by_idx(hid_t loc_id, hsize_t idx, char *name, size_t size) except *
+  int    H5Gget_objtype_by_idx(hid_t loc_id, hsize_t idx) except *
 
   ctypedef herr_t (*H5G_iterate_t)(hid_t group, char *name, void* op_data) except 2
   herr_t H5Giterate(hid_t loc_id, char *name, int *idx, H5G_iterate_t operator, void* data) except *
   herr_t H5Gget_objinfo(hid_t loc_id, char* name, int follow_link, H5G_stat_t *statbuf) except *
 
   herr_t H5Gget_linkval(hid_t loc_id, char *name, size_t size, char *value) except *
-  herr_t H5Gset_comment(hid_t loc_id, char *name, char *comment ) except *
-  int H5Gget_comment(hid_t loc_id, char *name, size_t bufsize, char *comment ) except *
+  herr_t H5Gset_comment(hid_t loc_id, char *name, char *comment) except *
+  int H5Gget_comment(hid_t loc_id, char *name, size_t bufsize, char *comment) except *
 
   # New extensions in 1.8.X
   IF H5PY_18API:
@@ -727,13 +728,19 @@ cdef extern from "hdf5.h":
   hid_t H5P_FILE_ACCESS 
   hid_t H5P_DATASET_CREATE 
   hid_t H5P_DATASET_XFER 
+  IF H5PY_18API:
+    hid_t H5P_OBJECT_CREATE
+    hid_t H5P_OBJECT_COPY
+    hid_t H5P_LINK_CREATE
+    hid_t H5P_LINK_ACCESS
+    hid_t H5P_GROUP_CREATE
 
   # General operations
   hid_t  H5Pcreate(hid_t plist_id) except *
   hid_t  H5Pcopy(hid_t plist_id) except *
   int    H5Pget_class(hid_t plist_id) except *
   herr_t H5Pclose(hid_t plist_id) except *
-  htri_t H5Pequal( hid_t id1, hid_t id2  ) except *
+  htri_t H5Pequal( hid_t id1, hid_t id2 ) except *
   herr_t H5Pclose_class(hid_t id) except *
 
   # File creation properties
@@ -753,8 +760,8 @@ cdef extern from "hdf5.h":
   herr_t    H5Pget_fclose_degree(hid_t fapl_id, H5F_close_degree_t *fc_degree) except *
   herr_t    H5Pset_fapl_core( hid_t fapl_id, size_t increment, hbool_t backing_store) except *
   herr_t    H5Pget_fapl_core( hid_t fapl_id, size_t *increment, hbool_t *backing_store) except *
-  herr_t    H5Pset_fapl_family ( hid_t fapl_id,  hsize_t memb_size, hid_t memb_fapl_id  ) except *
-  herr_t    H5Pget_fapl_family ( hid_t fapl_id, hsize_t *memb_size, hid_t *memb_fapl_id  ) except *
+  herr_t    H5Pset_fapl_family ( hid_t fapl_id,  hsize_t memb_size, hid_t memb_fapl_id ) except *
+  herr_t    H5Pget_fapl_family ( hid_t fapl_id, hsize_t *memb_size, hid_t *memb_fapl_id ) except *
   herr_t    H5Pset_family_offset ( hid_t fapl_id, hsize_t offset) except *
   herr_t    H5Pget_family_offset ( hid_t fapl_id, hsize_t *offset) except *
   herr_t    H5Pset_fapl_log(hid_t fapl_id, char *logfile, unsigned int flags, size_t buf_size) except *
@@ -772,28 +779,28 @@ cdef extern from "hdf5.h":
   herr_t        H5Pset_layout(hid_t plist, int layout) except *
   H5D_layout_t  H5Pget_layout(hid_t plist) except *
   herr_t        H5Pset_chunk(hid_t plist, int ndims, hsize_t * dim) except *
-  int           H5Pget_chunk(hid_t plist, int max_ndims, hsize_t * dims  ) except *
+  int           H5Pget_chunk(hid_t plist, int max_ndims, hsize_t * dims ) except *
   herr_t        H5Pset_deflate( hid_t plist, int level) except *
-  herr_t        H5Pset_fill_value(hid_t plist_id, hid_t type_id, void *value  ) except *
-  herr_t        H5Pget_fill_value(hid_t plist_id, hid_t type_id, void *value  ) except *
-  herr_t        H5Pfill_value_defined(hid_t plist_id, H5D_fill_value_t *status  ) except *
-  herr_t        H5Pset_fill_time(hid_t plist_id, H5D_fill_time_t fill_time  ) except *
-  herr_t        H5Pget_fill_time(hid_t plist_id, H5D_fill_time_t *fill_time  ) except *
-  herr_t        H5Pset_alloc_time(hid_t plist_id, H5D_alloc_time_t alloc_time  ) except *
-  herr_t        H5Pget_alloc_time(hid_t plist_id, H5D_alloc_time_t *alloc_time  ) except *
+  herr_t        H5Pset_fill_value(hid_t plist_id, hid_t type_id, void *value ) except *
+  herr_t        H5Pget_fill_value(hid_t plist_id, hid_t type_id, void *value ) except *
+  herr_t        H5Pfill_value_defined(hid_t plist_id, H5D_fill_value_t *status ) except *
+  herr_t        H5Pset_fill_time(hid_t plist_id, H5D_fill_time_t fill_time ) except *
+  herr_t        H5Pget_fill_time(hid_t plist_id, H5D_fill_time_t *fill_time ) except *
+  herr_t        H5Pset_alloc_time(hid_t plist_id, H5D_alloc_time_t alloc_time ) except *
+  herr_t        H5Pget_alloc_time(hid_t plist_id, H5D_alloc_time_t *alloc_time ) except *
   herr_t        H5Pset_filter(hid_t plist, H5Z_filter_t filter, unsigned int flags,
-                              size_t cd_nelmts, unsigned int cd_values[]  ) except *
+                              size_t cd_nelmts, unsigned int cd_values[] ) except *
   htri_t        H5Pall_filters_avail(hid_t dcpl_id) except *
   int           H5Pget_nfilters(hid_t plist) except *
   H5Z_filter_t  H5Pget_filter(hid_t plist, unsigned int filter_number, 
                               unsigned int *flags, size_t *cd_nelmts, 
-                              unsigned int *cd_values, size_t namelen, char name[]  ) except *
+                              unsigned int *cd_values, size_t namelen, char name[] ) except *
   herr_t        H5Pget_filter_by_id( hid_t plist_id, H5Z_filter_t filter, 
                                      unsigned int *flags, size_t *cd_nelmts, 
                                      unsigned int cd_values[], size_t namelen, char name[]) except *
   herr_t        H5Pmodify_filter(hid_t plist, H5Z_filter_t filter, unsigned int flags,
-                                 size_t cd_nelmts, unsigned int cd_values[]  ) except *
-  herr_t        H5Premove_filter(hid_t plist, H5Z_filter_t filter  ) except *
+                                 size_t cd_nelmts, unsigned int cd_values[] ) except *
+  herr_t        H5Premove_filter(hid_t plist, H5Z_filter_t filter ) except *
   herr_t        H5Pset_fletcher32(hid_t plist) except *
   herr_t        H5Pset_shuffle(hid_t plist_id) except *
   herr_t        H5Pset_szip(hid_t plist, unsigned int options_mask, unsigned int pixels_per_block) except *
@@ -807,6 +814,32 @@ cdef extern from "hdf5.h":
   herr_t H5Pset_sieve_buf_size(hid_t fapl_id, hsize_t size) except *
   herr_t H5Pset_fapl_log(hid_t fapl_id, char *logfile,
                          unsigned int flags, size_t buf_size) except *
+
+  # New in 1.8
+  IF H5PY_18API:
+
+    herr_t H5Pset_nlinks(hid_t plist_id, size_t nlinks) except *
+    herr_t H5Pget_nlinks(hid_t plist_id, size_t *nlinks) except *
+    herr_t H5Pset_elink_prefix(hid_t plist_id, char *prefix) except *
+    ssize_t H5Pget_elink_prefix(hid_t plist_id, char *prefix, size_t size) except *
+
+    herr_t H5Pset_create_intermediate_group(hid_t plist_id, unsigned crt_intmd) except *
+    herr_t H5Pget_create_intermediate_group(hid_t plist_id, unsigned *crt_intmd) except *
+
+    herr_t H5Pset_copy_object(hid_t plist_id, unsigned crt_intmd) except *
+    herr_t H5Pget_copy_object(hid_t plist_id, unsigned *crt_intmd) except *
+
+    herr_t H5Pset_char_encoding(hid_t plist_id, H5T_cset_t encoding) except *
+    herr_t H5Pget_char_encoding(hid_t plist_id, H5T_cset_t *encoding) except *
+
+    herr_t H5Pset_local_heap_size_hint(hid_t plist_id, size_t size_hint) except *
+    herr_t H5Pget_local_heap_size_hint(hid_t plist_id, size_t *size_hint) except *
+    herr_t H5Pset_link_phase_change(hid_t plist_id, unsigned max_compact, unsigned min_dense) except *
+    herr_t H5Pget_link_phase_change(hid_t plist_id, unsigned *max_compact , unsigned *min_dense) except *
+    herr_t H5Pset_est_link_info(hid_t plist_id, unsigned est_num_entries, unsigned est_name_len) except *
+    herr_t H5Pget_est_link_info(hid_t plist_id, unsigned *est_num_entries , unsigned *est_name_len) except *
+    herr_t H5Pset_link_creation_order(hid_t plist_id, unsigned crt_order_flags) except *
+    herr_t H5Pget_link_creation_order(hid_t plist_id, unsigned *crt_order_flags) except *
 
 
 # === H5R - Reference API =====================================================
@@ -871,13 +904,13 @@ cdef extern from "hdf5.h":
 
   # Basic operations
   hid_t     H5Screate(H5S_class_t type) except *
-  hid_t     H5Scopy(hid_t space_id  ) except *
+  hid_t     H5Scopy(hid_t space_id ) except *
   herr_t    H5Sclose(hid_t space_id) except *
 
   # Simple dataspace operations
   hid_t     H5Screate_simple(int rank, hsize_t dims[], hsize_t maxdims[]) except *
   htri_t    H5Sis_simple(hid_t space_id) except *
-  herr_t    H5Soffset_simple(hid_t space_id, hssize_t *offset  ) except *
+  herr_t    H5Soffset_simple(hid_t space_id, hssize_t *offset ) except *
 
   int       H5Sget_simple_extent_ndims(hid_t space_id) except *
   int       H5Sget_simple_extent_dims(hid_t space_id, hsize_t dims[], hsize_t maxdims[]) except *
@@ -885,9 +918,9 @@ cdef extern from "hdf5.h":
   H5S_class_t H5Sget_simple_extent_type(hid_t space_id) except *
 
   # Extents
-  herr_t    H5Sextent_copy(hid_t dest_space_id, hid_t source_space_id  ) except *
+  herr_t    H5Sextent_copy(hid_t dest_space_id, hid_t source_space_id ) except *
   herr_t    H5Sset_extent_simple(hid_t space_id, int rank, 
-                hsize_t *current_size, hsize_t *maximum_size  ) except *
+                hsize_t *current_size, hsize_t *maximum_size ) except *
   herr_t    H5Sset_extent_none(hid_t space_id) except *
 
   # Dataspace selection
@@ -905,9 +938,9 @@ cdef extern from "hdf5.h":
   herr_t    H5Sselect_elements(hid_t space_id, H5S_seloper_t op, 
                 size_t num_elements, hsize_t **coord) except *
 
-  hssize_t  H5Sget_select_hyper_nblocks(hid_t space_id  ) except *
+  hssize_t  H5Sget_select_hyper_nblocks(hid_t space_id ) except *
   herr_t    H5Sget_select_hyper_blocklist(hid_t space_id, 
-                hsize_t startblock, hsize_t numblocks, hsize_t *buf  ) except *
+                hsize_t startblock, hsize_t numblocks, hsize_t *buf ) except *
   herr_t H5Sselect_hyperslab(hid_t space_id, H5S_seloper_t op,
                              hsize_t start[], hsize_t _stride[],
                              hsize_t count[], hsize_t _block[]) except *
@@ -1069,7 +1102,7 @@ cdef extern from "hdf5.h":
   herr_t        H5Tcommit(hid_t loc_id, char* name, hid_t type) except *
   htri_t        H5Tcommitted(hid_t type) except *
   hid_t         H5Tcopy(hid_t type_id) except *
-  htri_t        H5Tequal(hid_t type_id1, hid_t type_id2  ) except *
+  htri_t        H5Tequal(hid_t type_id1, hid_t type_id2 ) except *
   herr_t        H5Tlock(hid_t type_id) except *
   H5T_class_t   H5Tget_class(hid_t type_id) except *
   size_t        H5Tget_size(hid_t type_id) except? 0
@@ -1094,16 +1127,16 @@ cdef extern from "hdf5.h":
   int           H5Tget_offset(hid_t type_id) except *
   herr_t        H5Tset_offset(hid_t type_id, size_t offset) except *
 
-  herr_t        H5Tget_pad(hid_t type_id, H5T_pad_t * lsb, H5T_pad_t * msb  ) except *
-  herr_t        H5Tset_pad(hid_t type_id, H5T_pad_t lsb, H5T_pad_t msb  ) except *
+  herr_t        H5Tget_pad(hid_t type_id, H5T_pad_t * lsb, H5T_pad_t * msb ) except *
+  herr_t        H5Tset_pad(hid_t type_id, H5T_pad_t lsb, H5T_pad_t msb ) except *
 
   H5T_sign_t    H5Tget_sign(hid_t type_id) except *
   herr_t        H5Tset_sign(hid_t type_id, H5T_sign_t sign) except *
 
   herr_t        H5Tget_fields(hid_t type_id, size_t *spos, size_t *epos, 
-                                size_t *esize, size_t *mpos, size_t *msize  ) except *
+                                size_t *esize, size_t *mpos, size_t *msize ) except *
   herr_t        H5Tset_fields(hid_t type_id, size_t spos, size_t epos, 
-                                size_t esize, size_t mpos, size_t msize  ) except *
+                                size_t esize, size_t mpos, size_t msize ) except *
 
   size_t        H5Tget_ebias(hid_t type_id) except? 0
   herr_t        H5Tset_ebias(hid_t type_id, size_t ebias) except *
@@ -1134,9 +1167,9 @@ cdef extern from "hdf5.h":
   # Enumerated types
   hid_t     H5Tenum_create(hid_t base_id) except *
   herr_t    H5Tenum_insert(hid_t type, char *name, void *value) except *
-  herr_t    H5Tenum_nameof( hid_t type, void *value, char *name, size_t size  ) except *
-  herr_t    H5Tenum_valueof( hid_t type, char *name, void *value  ) except *
-  herr_t    H5Tget_member_value(hid_t type,  unsigned int memb_no, void *value  ) except *
+  herr_t    H5Tenum_nameof( hid_t type, void *value, char *name, size_t size ) except *
+  herr_t    H5Tenum_valueof( hid_t type, char *name, void *value ) except *
+  herr_t    H5Tget_member_value(hid_t type,  unsigned int memb_no, void *value ) except *
 
   # Array data types
   hid_t H5Tarray_create(hid_t base_id, int ndims, hsize_t dims[], int perm[]) except *
@@ -1151,6 +1184,8 @@ cdef extern from "hdf5.h":
     hid_t H5Tdecode(unsigned char *buf) except *
     herr_t H5Tencode(hid_t obj_id, unsigned char *buf, size_t *nalloc) except *
 
+    herr_t H5Tcommit2(hid_t loc_id, char *name, hid_t dtype_id, hid_t lcpl_id,
+            hid_t tcpl_id, hid_t tapl_id) 
 
 # === H5Z - Filters ===========================================================
 
@@ -1207,7 +1242,7 @@ cdef extern from "hdf5.h":
   herr_t    H5Adelete(hid_t loc_id, char *name) except *
 
   herr_t    H5Aread(hid_t attr_id, hid_t mem_type_id, void *buf) except *
-  herr_t    H5Awrite(hid_t attr_id, hid_t mem_type_id, void *buf  ) except *
+  herr_t    H5Awrite(hid_t attr_id, hid_t mem_type_id, void *buf ) except *
 
   int       H5Aget_num_attrs(hid_t loc_id) except *
   ssize_t   H5Aget_name(hid_t attr_id, size_t buf_size, char *buf) except *

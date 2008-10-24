@@ -207,7 +207,7 @@ class cybuild(build):
                 if self.api not in (16,18):
                     raise Exception
             except Exception:
-                fatal('Illegal option %s to --api= (legal values are %s)' % (self.api, ','.join(str(x) for x in KNOWN_API)))
+                fatal('Illegal option %s to --api= (legal values are 16,18)' % self.api)
 
     def run(self):
 
@@ -220,10 +220,11 @@ class cybuild(build):
             print "=> Creating new build configuration"
 
             # Try to guess the installed HDF5 version
-            self.api = self.get_hdf5_version()
             if self.api is None:
-                warn("Can't determine HDF5 version, assuming 1.6 (use --api= to override)")
-                self.api = 16
+                self.api = self.get_hdf5_version()
+                if self.api is None:
+                    warn("Can't determine HDF5 version, assuming 1.6 (use --api= to override)")
+                    self.api = 16
 
             modules = MODULES[self.api]
             creator = ExtensionCreator(self.hdf5)

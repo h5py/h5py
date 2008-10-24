@@ -25,6 +25,8 @@ File objects
 Module constants
 ----------------
 
+.. _ref.h5f.ACC:
+
 File access flags
 ~~~~~~~~~~~~~~~~~
 
@@ -44,16 +46,29 @@ File access flags
 
     Open in read-only mode
 
-Other constants
-~~~~~~~~~~~~~~~
+
+.. _ref.h5f.CLOSE:
+
+File close strength
+~~~~~~~~~~~~~~~~~~~
 
 .. data:: CLOSE_WEAK
 .. data:: CLOSE_SEMI
 .. data:: CLOSE_STRONG
 .. data:: CLOSE_DEFAULT
 
+.. _ref.h5f.SCOPE:
+
+File scope
+~~~~~~~~~~
+
 .. data:: SCOPE_LOCAL
 .. data:: SCOPE_GLOBAL
+
+.. _ref.h5f.OBJ:
+
+Object types
+~~~~~~~~~~~~
 
 .. data:: OBJ_FILE
 .. data:: OBJ_DATASET

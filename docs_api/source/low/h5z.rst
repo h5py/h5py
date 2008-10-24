@@ -7,6 +7,8 @@ Module H5Z
 Module constants
 ----------------
 
+.. _ref.h5z.FILTER:
+
 Predefined filters
 ~~~~~~~~~~~~~~~~~~
 
@@ -17,6 +19,7 @@ Predefined filters
 .. data:: FILTER_FLETCHER32
 .. data:: FILTER_SZIP
 
+.. _ref.h5z.FLAG:
 
 Filter flags
 ~~~~~~~~~~~~
@@ -27,6 +30,8 @@ Filter flags
 .. data:: FLAG_INVMASK
 .. data:: FLAG_REVERSE
 .. data:: FLAG_SKIP_EDC
+
+.. _ref.h5z.SZIP:
 
 SZIP-specific options
 ~~~~~~~~~~~~~~~~~~~~~

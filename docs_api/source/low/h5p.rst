@@ -23,6 +23,14 @@ Base classes
     :show-inheritance:
     :members:
 
+.. autoclass:: PropCreateID
+    :show-inheritance:
+    :members:
+
+.. autoclass:: PropCopyID
+    :show-inheritance:
+    :members:
+
 File creation
 -------------
 
@@ -44,11 +52,36 @@ Dataset creation
     :show-inheritance:
     :members:
 
+
+Link creation (1.8 only)
+------------------------
+
+.. autoclass:: PropLCID
+    :show-inheritance:
+    :members:
+
+
+Link access (1.8 only)
+----------------------
+
+.. autoclass:: PropLAID
+    :show-inheritance:
+    :members:
+
+
+Group creation (1.8 only)
+-------------------------
+
+.. autoclass:: PropGCID
+    :show-inheritance:
+    :members:
+
+
 Module constants
 ----------------
 
-Predfined classes (all versions)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Predefined classes (all versions)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. data:: DEFAULT
 .. data:: FILE_CREATE
@@ -60,7 +93,10 @@ Predfined classes (all versions)
 Predefined classes (HDF5 1.8.X only)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-(none yet)
+.. data:: OBJECT_COPY
+.. data:: LINK_CREATE
+.. data:: LINK_ACCESS
+.. data:: GROUP_CREATE
 
 
 

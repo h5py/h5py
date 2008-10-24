@@ -14,10 +14,10 @@ class_types = { "ObjectID": "h5py.h5.ObjectID",
                 "FileID": "h5py.h5f.FileID",
                 "DatasetID": "h5py.h5d.DatasetID",
                 "TypeID": "h5py.h5t.TypeID",
-                "dataset creation property list": "h5py.h5p.PropDCID",
-                "dataset access property list": "h5py.h5p.PropDAID",
-                "file creation property list": "h5py.h5p.PropFCID",
-                "file access property list": "h5py.h5p.PropFAID"}
+                "[Dd]ataset creation property list": "h5py.h5p.PropDCID",
+                "[Dd]ataset access property list": "h5py.h5p.PropDAID",
+                "[Ff]ile creation property list": "h5py.h5p.PropFCID",
+                "[Ff]ile access property list": "h5py.h5p.PropFAID"}
 
 
 def mkclass(ipt, cls):
@@ -39,12 +39,14 @@ def replaceall(instring, rdict):
 const_only = r"(?:h5[a-z]{0,2}\.)?[A-Z_][A-Z0-9_]+"
 
 # Constant name embeddded in context (whitespace, parens, etc.)
-const_pattern = r"(?:^|\s+)\W?%s[\):\.,]?\.?(?:$|\s+)" % const_only
+const_pattern = r"(?:^|\s+)\W?%s\*?\W?\.?(?:$|\s+)" % const_only
+
+const_category = r"%s\*" % const_only
 
 # These match the regexp but are not valid constants
 const_exclude = r"HDF5|API|H5|H5A|H5D|H5F|H5P|H5Z|" + \
                 r"INT\s|UINT|STRING|LONG|PHIL|GIL|TUPLE|LIST|FORTRAN|" +\
-                r"BOOL|NULL|\sNOT\s"
+                r"BOOL|NULL|\sNOT\s|\sSZIP\s"
 
 def replace_constant(instring, mod, match):
     """ Callback for re.sub, to generate the ReST for a constant in-place """
@@ -54,19 +56,56 @@ def replace_constant(instring, mod, match):
     if re.search(const_exclude, matchstring):
         return matchstring
 
-    display = re.findall(const_only, matchstring)[0]
+    if re.search(const_category, matchstring):
+        display = re.findall(const_category, matchstring)[0]
+        target = display[0:-2]
+        target = 'ref.'+target if 'h5' in target else 'ref.%s.%s' % (mod.split('.')[-1], target)
+        rpl = ':ref:`%s <%s>`' % (display, target)
+        #print rpl
+        return re.sub(const_category, rpl, matchstring)
+    else:  
+        display = re.findall(const_only, matchstring)[0]
+        target = display
+        target = 'h5py.'+target if 'h5' in target else '%s.%s' % (mod, target)
+        rpl = ':data:`%s <%s>`' % (display, target)
+        return re.sub(const_only, rpl, matchstring)
+
+
+# --- Resolve inline references to modules ---
+
+mod_pattern = re.compile(r"\s+(?!h5py)(?P<name>h5[a-z]{1,2})\W?(?:$|\s+)"
+    
+module_pattern = r"\s+h5[a-z]{1,2}\W?(?:$|\s+)"
+module_only = r"h5[a-z]{1,2}"
+module_exclude = r"h5py"
+
+def replace_module(instring, match):
+
+    matchstring = instring[match.start():match.end()]
+
+    if re.search(module_exclude, matchstring):
+        return matchstring
+
+    display = re.findall(module_only, matchstring)[0]
     target = display
-    if 'h5' in target:
-        target = 'h5py.%s' % target
-    else:
-        target = '%s.%s' % (mod, target)
 
-    rpl = ':data:`%s <%s>`' % (display, target)
+    rpl = ':mod:`%s <%s>`' % (display, 'h5py.'+target)
     #print rpl
-    return re.sub(const_only, rpl, matchstring)
+    return re.sub(module_only, rpl, matchstring)
 
+# --- Resolve parameter lists
+
+param_pattern = re.compile(r"^\s*\+\s+(?P<desc>[^\s\(].*[^\s\)])(?:\s+\((?P<default>[^\s\(].*[^\s\)])\))?$")
+
+def replace_param(instring, match):
+
+    desc, default = match.group('desc'), match.group('default')
+    default = ' (%s) ' % default if default is not None else ''
+
+    return ":param %s:%s" % (desc, default)
 
 # --- Sphinx extension code ---
+
 
 def setup(spx):
 
@@ -94,7 +133,10 @@ def setup(spx):
         else:
             mod = ".".join(name.split('.')[0:2])  # i.e. "h5py.h5z"
         lines[:] = [re.sub(const_pattern, partial(replace_constant, x, mod), x) for x in final_lines]
+        lines[:] = [re.sub(module_pattern, partial(replace_module, x), x) for x in lines]
+        lines[:] = [re.sub(param_pattern, partial(replace_param, x), x) for x in lines]
         lines[:] = [replaceall(x, replacements) for x in lines]
+        #print "\n".join(lines)
 
     def proc_sig(app, what, name, obj, options, signature, return_annotation):
         """ Auto-generate function signatures from docstrings """

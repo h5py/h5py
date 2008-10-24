@@ -18,6 +18,8 @@ include "defs.pxd"
 
 from h5 cimport ObjectID
 
+# --- Base classes ---
+
 cdef class PropID(ObjectID):
     """ Base class for all property lists """
     pass
@@ -34,21 +36,53 @@ cdef class PropInstanceID(PropID):
     """
     pass
 
-cdef class PropDCID(PropInstanceID):
+cdef class PropCreateID(PropInstanceID):
+    """ Base class for all object creation lists.
+
+        Also includes string character set methods.
+    """
+    pass
+
+cdef class PropCopyID(PropInstanceID):
+    """ Property list for copying objects (as in h5o.copy) """
+
+# --- Object creation ---
+
+cdef class PropDCID(PropCreateID):
     """ Dataset creation property list """
+    pass
+
+cdef class PropFCID(PropCreateID):
+    """ File creation property list """
+    pass
+
+
+# --- Object access ---
+
+cdef class PropFAID(PropInstanceID):
+    """ File access property list """
     pass
 
 cdef class PropDXID(PropInstanceID):
     """ Dataset transfer property list """
     pass
 
-cdef class PropFCID(PropInstanceID):
-    """ File creation property list """
-    pass
 
-cdef class PropFAID(PropInstanceID):
-    """ File access property list """
-    pass
+# --- New in 1.8 ---
+
+IF H5PY_18API:
+
+    cdef class PropLCID(PropCreateID):
+        """ Link creation property list """
+        pass
+
+    cdef class PropLAID(PropInstanceID):
+        """ Link access property list """
+        cdef char* _buf
+
+    cdef class PropGCID(PropCreateID):
+        """ Group creation property list """
+        pass
 
 cdef hid_t pdefault(PropID pid)
 cdef object propwrap(hid_t id_in)
