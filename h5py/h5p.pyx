@@ -245,7 +245,7 @@ cdef class PropCopyID(PropInstanceID):
             """(UINT flags)
 
             Set flags for object copying process.  Legal flags are
-            from the h5o.COPY_* family:
+            from the h5o.COPY* family:
 
             h5o.COPY_SHALLOW_HIERARCHY_FLAG
                 Copy only immediate members of a group.
@@ -268,7 +268,7 @@ cdef class PropCopyID(PropInstanceID):
         def get_copy_object(self):
             """() => UINT flags
 
-            Get copy process flags. Legal flags are h5o.COPY_*.
+            Get copy process flags. Legal flags are h5o.COPY*.
             """
             cdef unsigned int flags
             H5Pget_copy_object(self.id, &flags)

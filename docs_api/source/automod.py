@@ -6,105 +6,179 @@
 import re
 from functools import partial
 
+# === Regexp replacement machinery ============================================
 
-# --- Literal replacements for common class names ---
+role_expr = re.compile(r"(:.+:(?:`.+`)?)")
 
-class_types = { "ObjectID": "h5py.h5.ObjectID",
+def safe_replace(istr, expr, rpl):
+    """ Perform a role-safe replacement of all occurances of "expr", using
+        the callable "rpl".
+    """
+    outparts = []
+    for part in role_expr.split(istr):
+        if not role_expr.search(part):
+            part = expr.sub(rpl, part)
+        outparts.append(part)
+    return "".join(outparts)
+
+
+# === Replace literal class names =============================================
+
+class_base = r"""
+(?P<pre>
+  \W+
+)
+(?P<name>%s)
+(?P<post>
+  \W+
+)
+"""
+
+class_exprs = { "ObjectID": "h5py.h5.ObjectID",
                 "GroupID": "h5py.h5g.GroupID",
                 "FileID": "h5py.h5f.FileID",
                 "DatasetID": "h5py.h5d.DatasetID",
                 "TypeID": "h5py.h5t.TypeID",
                 "[Dd]ataset creation property list": "h5py.h5p.PropDCID",
-                "[Dd]ataset access property list": "h5py.h5p.PropDAID",
+                "[Dd]ataset transfer property list": "h5py.h5p.PropDXID",
                 "[Ff]ile creation property list": "h5py.h5p.PropFCID",
-                "[Ff]ile access property list": "h5py.h5p.PropFAID"}
+                "[Ff]ile access property list": "h5py.h5p.PropFAID",
+                "[Ll]ink access property list": "h5py.h5p.PropLAID",
+                "[Ll]ink creation property list": "h5py.h5p.PropLCID",
+                "[Gg]roup creation property list": "h5py.h5p.PropGCID"}
 
 
-def mkclass(ipt, cls):
-    return ":class:`%s <%s>`" % (ipt, cls)
+class_exprs = dict( 
+    (re.compile(class_base % x.replace(" ",r"\s"), re.VERBOSE), y) \
+    for x, y in class_exprs.iteritems() )
 
-replacements = {}
-replacements.update((x, mkclass(x,y)) for x, y in class_types.items())
+def replace_class(istr):
 
-def replaceall(instring, rdict):
-    for orig, new in rdict.iteritems():
-        instring = instring.replace(orig, new)
-    return instring
+    def rpl(target, match):
+        pre, name, post = match.group('pre', 'name', 'post')
+        return '%s:class:`%s <%s>`%s' % (pre, name, target, post)
+
+    for expr, target in class_exprs.iteritems():
+        rpl2 = partial(rpl, target)
+        istr = safe_replace(istr, expr, rpl2)
+
+    return istr
+
+# === Replace constant and category expressions ===============================
+
+# e.g. h5f.OBJ_ALL -> :data:`h5f.OBJ_ALL <h5py.h5f.OBJ_ALL>`
+# and  h5f.OBJ*    -> :ref:`h5f.OBJ* <ref.h5f.OBJ>`
+
+const_exclude = ['HDF5', 'API', 'H5', 'H5A', 'H5D', 'H5F', 'H5P', 'H5Z', 'INT',
+                 'UINT', 'STRING', 'LONG', 'PHIL', 'GIL', 'TUPLE', 'LIST',
+                 'FORTRAN', 'BOOL', 'NULL', 'NOT', 'SZIP']
+const_exclude = ["%s(?:\W|$)" % x for x in const_exclude]
+const_exclude = "|".join(const_exclude)
+
+const_expr = re.compile(r"""
+(?P<pre>
+  (?:^|\s+)                   # Must be preceeded by whitespace or string start
+  \W?                         # May have punctuation ( (CONST) or "CONST" )
+  (?!%s)                      # Exclude known list of non-constant objects
+)
+(?P<module>h5[a-z]{0,2}\.)?   # Optional h5xx. prefix
+(?P<name>[A-Z_][A-Z0-9_]+)    # The constant name itself
+(?P<wild>\*)?                 # Wildcard indicates this is a category
+(?P<post>
+  \W?                         # May have trailing punctuation
+  (?:$|\s+)                   # Must be followed by whitespace or end of string
+)                      
+""" % const_exclude, re.VERBOSE)
+
+def replace_constant(istr, current_module):
+
+    def rpl(match):
+        mod, name, wild = match.group('module', 'name', 'wild')
+        pre, post = match.group('pre', 'post')
+
+        if mod is None:
+            mod = current_module+'.'
+            displayname = name
+        else:
+            displayname = mod+name
+
+        if wild:
+            target = 'ref.'+mod+name
+            role = ':ref:'
+            displayname += '*'
+        else:
+            target = 'h5py.'+mod+name
+            role = ':data:'
+
+        return '%s%s`%s <%s>`%s' % (pre, role, displayname, target, post)
+
+    return safe_replace(istr, const_expr, rpl)
 
 
-# --- "Smart" regexp replacements for UPPER_CASE constant names ---
+# === Replace literal references to modules ===================================
 
-# Just the constant name, with or without the h5x. prefix.
-# Legal constant names are of the form CONST" or "h5p.CONST"
-const_only = r"(?:h5[a-z]{0,2}\.)?[A-Z_][A-Z0-9_]+"
+mod_expr = re.compile(r"""
+(?P<pre>
+  (?:^|\s+)                 # Must be preceeded by whitespace
+  \W?                       # Optional opening paren/quote/whatever
+)
+(?!h5py)                    # Don't match the package name
+(?P<name>h5[a-z]{0,2})      # Names of the form h5, h5a, h5fd
+(?P<post>
+  \W?                       # Optional closing paren/quote/whatever
+  (?:$|\s+)                 # Must be followed by whitespace
+)
+""", re.VERBOSE)
 
-# Constant name embeddded in context (whitespace, parens, etc.)
-const_pattern = r"(?:^|\s+)\W?%s\*?\W?\.?(?:$|\s+)" % const_only
+def replace_module(istr):
 
-const_category = r"%s\*" % const_only
+    def rpl(match):
+        pre, name, post = match.group('pre', 'name', 'post')
+        return '%s:mod:`%s <h5py.%s>`%s' % (pre, name, name, post)
 
-# These match the regexp but are not valid constants
-const_exclude = r"HDF5|API|H5|H5A|H5D|H5F|H5P|H5Z|" + \
-                r"INT\s|UINT|STRING|LONG|PHIL|GIL|TUPLE|LIST|FORTRAN|" +\
-                r"BOOL|NULL|\sNOT\s|\sSZIP\s"
-
-def replace_constant(instring, mod, match):
-    """ Callback for re.sub, to generate the ReST for a constant in-place """
-
-    matchstring = instring[match.start():match.end()]
-
-    if re.search(const_exclude, matchstring):
-        return matchstring
-
-    if re.search(const_category, matchstring):
-        display = re.findall(const_category, matchstring)[0]
-        target = display[0:-2]
-        target = 'ref.'+target if 'h5' in target else 'ref.%s.%s' % (mod.split('.')[-1], target)
-        rpl = ':ref:`%s <%s>`' % (display, target)
-        #print rpl
-        return re.sub(const_category, rpl, matchstring)
-    else:  
-        display = re.findall(const_only, matchstring)[0]
-        target = display
-        target = 'h5py.'+target if 'h5' in target else '%s.%s' % (mod, target)
-        rpl = ':data:`%s <%s>`' % (display, target)
-        return re.sub(const_only, rpl, matchstring)
+    return safe_replace(istr, mod_expr, rpl)
 
 
-# --- Resolve inline references to modules ---
+# === Replace parameter lists =================================================
 
-mod_pattern = re.compile(r"\s+(?!h5py)(?P<name>h5[a-z]{1,2})\W?(?:$|\s+)"
-    
-module_pattern = r"\s+h5[a-z]{1,2}\W?(?:$|\s+)"
-module_only = r"h5[a-z]{1,2}"
-module_exclude = r"h5py"
+# e.g. "    + STRING path ('/default')" -> ":param STRING path: ('/default')"
 
-def replace_module(instring, match):
+param_expr = re.compile(r"""
+^
+\s*
+\+
+\s+
+(?P<desc>
+  [^\s\(]
+  .*
+  [^\s\)]
+)
+(?:
+  \s+
+  \(
+  (?P<default>
+    [^\s\(]
+    .*
+    [^\s\)]
+  )
+  \)
+)?
+$
+""", re.VERBOSE)
 
-    matchstring = instring[match.start():match.end()]
+def replace_param(istr):
+    """ Replace parameter lists.  Not role-safe. """
 
-    if re.search(module_exclude, matchstring):
-        return matchstring
+    def rpl(match):
+        desc, default = match.group('desc', 'default')
+        default = ' (%s) ' % default if default is not None else ''
+        return ':param %s:%s' % (desc, default)
 
-    display = re.findall(module_only, matchstring)[0]
-    target = display
+    return param_expr.sub(rpl, istr)
 
-    rpl = ':mod:`%s <%s>`' % (display, 'h5py.'+target)
-    #print rpl
-    return re.sub(module_only, rpl, matchstring)
 
-# --- Resolve parameter lists
 
-param_pattern = re.compile(r"^\s*\+\s+(?P<desc>[^\s\(].*[^\s\)])(?:\s+\((?P<default>[^\s\(].*[^\s\)])\))?$")
-
-def replace_param(instring, match):
-
-    desc, default = match.group('desc'), match.group('default')
-    default = ' (%s) ' % default if default is not None else ''
-
-    return ":param %s:%s" % (desc, default)
-
-# --- Sphinx extension code ---
+# === Begin Sphinx extension code =============================================
 
 
 def setup(spx):
@@ -132,11 +206,20 @@ def setup(spx):
             mod = obj.__module__
         else:
             mod = ".".join(name.split('.')[0:2])  # i.e. "h5py.h5z"
-        lines[:] = [re.sub(const_pattern, partial(replace_constant, x, mod), x) for x in final_lines]
-        lines[:] = [re.sub(module_pattern, partial(replace_module, x), x) for x in lines]
-        lines[:] = [re.sub(param_pattern, partial(replace_param, x), x) for x in lines]
-        lines[:] = [replaceall(x, replacements) for x in lines]
+        mod = mod.split('.')[1]  # i.e. 'h5z'
+
+        del lines[:]
+        for line in final_lines:
+            line = replace_param(line)
+            line = replace_constant(line, mod)
+            line = replace_module(line)
+            line = replace_class(line)
+            line = line.replace('**kwds', '\*\*kwds').replace('*args','\*args')
+            lines.append(line)
+
         #print "\n".join(lines)
+
+
 
     def proc_sig(app, what, name, obj, options, signature, return_annotation):
         """ Auto-generate function signatures from docstrings """

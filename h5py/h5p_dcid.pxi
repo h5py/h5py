@@ -198,7 +198,7 @@ cdef class PropDCID(PropCreateID):
             - h5z.FILTER_SZIP
 
         flags
-            Bit flags (h5z.FLAG_*) setting filter properties
+            Bit flags (h5z.FLAG*) setting filter properties
 
         values
             TUPLE of UINTs giving auxiliary data for the filter
@@ -241,8 +241,8 @@ cdef class PropDCID(PropCreateID):
         Get information about a filter, identified by its index.  Tuple
         elements are:
 
-        0. INT filter code (h5z.FILTER_*)
-        1. UINT flags (h5z.FLAG_*)
+        0. INT filter code (h5z.FILTER*)
+        1. UINT flags (h5z.FLAG*)
         2. TUPLE of UINT values; filter aux data (16 values max)
         3. STRING name of filter (256 chars max)
         """
@@ -288,10 +288,10 @@ cdef class PropDCID(PropCreateID):
         """(INT filter_code) => TUPLE filter_info or None
 
         Get information about a filter, identified by its code (one
-        of h5z.FILTER_*).  If the filter doesn't exist, returns None.
+        of h5z.FILTER*).  If the filter doesn't exist, returns None.
         Tuple elements are:
 
-        0. UINT flags (h5z.FLAG_*)
+        0. UINT flags (h5z.FLAG*)
         1. TUPLE of UINT values; filter aux data (16 values max)
         2. STRING name of filter (256 chars max)
         """
@@ -325,7 +325,7 @@ cdef class PropDCID(PropCreateID):
         """(INT filter_class)
 
         Remove a filter from the pipeline.  The class code is one of 
-        h5z.FILTER_*.
+        h5z.FILTER*.
         """
         H5Premove_filter(self.id, <H5Z_filter_t>filter_class)
 
