@@ -291,7 +291,7 @@ def visit(ObjectID loc not None, object func, *,
     anything else aborts iteration and returns that value.  Keywords:
 
     BOOL info (False)
-        Callbask is func(STRING, Objinfo)
+        Callback is func(STRING, Objinfo)
 
     STRING obj_name (".")
         Visit a subgroup of "loc" instead

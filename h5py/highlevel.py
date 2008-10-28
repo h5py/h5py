@@ -54,7 +54,7 @@ import sys
 
 from h5py import h5, h5f, h5g, h5s, h5t, h5d, h5a, h5p, h5z, h5i
 from h5py.h5 import H5Error
-from utils_hl import slice_select, hbasename, strhdr, strlist, guess_chunk
+from utils_hl import slice_select, hbasename, guess_chunk
 from utils_hl import CoordsList
 from browse import _H5Browser
 
@@ -65,14 +65,7 @@ if config.API_18:
 __all__ = ["File", "Group", "Dataset",
            "Datatype", "AttributeManager", "CoordsList"]
 
-try:
-    # For interactive File.browse() capability
-    import readline
-    if not hasattr(readline, 'get_current_history_length'):
-        readline = None
-except ImportError:
-    readline = None
-
+# === Base classes ============================================================
 
 class LockableObject(object):
 
@@ -95,16 +88,60 @@ class HLObject(LockableObject):
         attrs:  HDF5 attributes of this object.  See the AttributeManager docs.
     """
 
-    name = property(lambda self: h5i.get_name(self.id),
-        doc = "Name of this object in the HDF5 file.  Not necessarily unique.")
-    attrs = property(lambda self: self._attrs,
-        doc = "Provides access to HDF5 attributes. See AttributeManager.")
+    @property
+    def name(self):
+        """Name of this object in the HDF5 file.  Not necessarily unique."""
+        return h5i.get_name(self.id)
+
+    @property
+    def attrs(self):
+        """Provides access to HDF5 attributes. See AttributeManager."""
+        return self._attrs
 
     def __nonzero__(self):
         return self.id.__nonzero__()
+"Numpy dtype equivalent for this datatype"
+class DictCompat(object):
+
+    """
+        Contains dictionary-style compatibility methods for groups and
+        attributes.
+    """
+
+    def listnames(self):
+        """ Get a list containing member names """
+        with self._lock:
+            return list(self)
+
+    def iternames(self):
+        """ Get an iterator over member names """
+        with self._lock:
+            return iter(self)
+
+    def listobjects(self):
+        """ Get a list containing members """
+        with self._lock:
+            return [self[x] for x in self]
+
+    def iterobjects(self):
+        """ Get an iterator over members """
+        with self._lock:
+            for x in self:
+                yield self[x]
+
+    def listitems(self):
+        """ Get a list of tuples containing (name, object) pairs """
+        with self._lock:
+            return [(x, self[x]) for x in self]
+
+    def iteritems(self):
+        """ Get an iterator over (name, object) pairs """
+        with self._lock:
+            for x in self:
+                yield (x, self[x])
 
 
-class Group(HLObject):
+class Group(HLObject, DictCompat):
 
     """ Represents an HDF5 group.
 
@@ -224,6 +261,18 @@ class Group(HLObject):
         """
         return Group(self, name, create=True)
 
+    def require_group(self, name):
+        """ Check if a group exists, and create it if not. Raise H5Error if
+            an incompatible object exists.
+        """
+        if not name in self:
+            return self.create_group(name)
+        else:
+            grp = self[name]
+            if not isinstance(grp, Group):
+                raise H5Error("Incompatible object (%s) already exists" % grp.__class__.__name__)
+            return grp
+
     def create_dataset(self, name, *args, **kwds):
         """ Create and return a new dataset, attached to this group.
 
@@ -250,57 +299,40 @@ class Group(HLObject):
         """
         return Dataset(self, name, *args, **kwds)
 
+    def require_dataset(self, name, shape, dtype, exact=False, **kwds):
+        """ Check if a dataset with compatible shape and dtype exists, and
+            create one if it doesn't.  Raises H5Error if an incompatible
+            dataset (or group) already exists.  
 
-    def desc(self):
-        """ Extended (multi-line) description of this group, as a string.
+            By default, datatypes are compared for loss-of-precision only.
+            To require an exact match, set keyword "exact" to True.  Shapes
+            are always compared exactly.
+
+            Keyword arguments are only used when creating a new dataset; they
+            are ignored if an dataset with matching shape and dtype already
+            exists.  See create_dataset for a list of legal keywords.
         """
+        dtype = numpy.dtype(dtype)
+
         with self._lock:
-            outstr = 'Group "%s" in file "%s":' % \
-                    (hbasename(h5i.get_name(self.id)), os.path.basename(h5f.get_name(self.id)))
-            outstr = strhdr(outstr)
-            infodct = {"Members": len(self)}
-            grpinfo = h5g.get_objinfo(self.id, '.')
-            infodct["mtime"] = grpinfo.mtime
-            outstr += strlist([(name, infodct[name]) for name in ("Members", "mtime")])
+            if not name in self:
+                return self.create_dataset(name, *(shape, dtype), **kwds)
+
+            dset = self[name]
+            if not isinstance(dset, Dataset):
+                raise H5Error("Incompatible object (%s) already exists" % dset.__class__.__name__)
+
+            if not shape == dset.shape:
+                raise H5Error("Shapes do not match (existing %s vs new %s)" % (dset.shape, shape))
+
+            if exact:
+                if not dtype == dset.dtype:
+                    raise H5Error("Datatypes do not exactly match (existing %s vs new %s)" % (dset.dtype, dtype))
+            elif not numpy.can_cast(dtype, dset.dtype):
+                raise H5Error("Datatypes cannot be safely cast (existing %s vs new %s)" % (dset.dtype, dtype))
             
-            cmnt = self.id.get_comment('.')
-            if cmnt != '':
-                outstr += '\nComment:\n'+cmnt
-            return outstr
+            return dset
 
-    # Dictionary compatibility methods
-
-    def listnames(self):
-        """ Get a list containing member names """
-        with self._lock:
-            return list(self)
-
-    def iternames(self):
-        """ Get an iterator over member names """
-        with self._lock:
-            return iter(self)
-
-    def listobjects(self):
-        """ Get a list containing member objects """
-        with self._lock:
-            return [self[x] for x in self]
-
-    def iterobjects(self):
-        """ Get an iterator over member objects """
-        with self._lock:
-            for x in self:
-                yield self[x]
-
-    def listitems(self):
-        """ Get a list of tuples containing (name, object) pairs """
-        with self._lock:
-            return [(x, self[x]) for x in self]
-
-    def iteritems(self):
-        """ Get an iterator over (name, object) pairs """
-        with self._lock:
-            for x in self:
-                yield (x, self[x])
 
     # New 1.8.X methods
 
@@ -329,10 +361,7 @@ class Group(HLObject):
             raise NotImplementedError("This feature is only available with HDF5 1.8.0 and later")
     
         with self._lock:
-            def call_proxy(name, info):
-                return func(name)
-
-            return h5o.visit(self.id, call_proxy)
+            return h5o.visit(self.id, func)
 
     def visititems(self, func):
         """ Recursively visit names and objects in this group and subgroups.
@@ -363,17 +392,17 @@ class Group(HLObject):
             raise NotImplementedError("This feature is only available with HDF5 1.8.0 and later")
 
         with self._lock:
-            def call_proxy(name, info):
+            def call_proxy(name):
                 return func(name, self[name])
-
             return h5o.visit(self.id, call_proxy)
 
     def __repr__(self):
         with self._lock:
             try:
-                return 'Group "%s" (%d members)' % (hbasename(self.name), len(self))
-            except:
-                return "Invalid group"
+                return '<HDF5 group "%s" (%d members)>' % \
+                    (hbasename(self.name), len(self))
+            except Exception:
+                return "<Closed HDF5 group>"
 
 
 class File(Group):
@@ -394,7 +423,7 @@ class File(Group):
         like command history and tab completion.
 
         This object supports the Python context manager protocol, when used
-        in a "with" block:
+        in a "with" block::
 
             with File(...) as f:
                 ... do stuff with f...
@@ -404,10 +433,15 @@ class File(Group):
         exceptions raised. 
     """
 
-    name = property(lambda self: self._name,
-        doc = "File name on disk")
-    mode = property(lambda self: self._mode,
-        doc = "Python mode used to open file")
+    @property
+    def name(self):
+        """File name on disk"""
+        return self._name
+
+    @property
+    def mode(self):
+        """Python mode used to open file"""
+        return self._mode
 
     # --- Public interface (File) ---------------------------------------------
 
@@ -444,8 +478,6 @@ class File(Group):
 
         self._name = name
         self._mode = mode
-        self._path = None
-        self._rlhist = []  # for readline nonsense
 
     def close(self):
         """ Close this HDF5 file.  All open objects will be invalidated.
@@ -470,44 +502,10 @@ class File(Group):
     def __repr__(self):
         with self._lock:
             try:
-                return 'File "%s", %d root members' % (self.name, len(self))
-            except:
-                return "Invalid file"
-
-    def browse(self, dict=None):
-        """ Open a command line shell to browse this file. If dict is not
-            specified, any imported objects will be placed in the caller's
-            global() dictionary.
-        """
-        if not self.id._valid:
-            print "Can't browse: this file is closed."
-            return
-
-        if dict is None:
-            dict = inspect.currentframe().f_back.f_globals
-
-        def gethist():
-            rlhist = [readline.get_history_item(x) for x in xrange(readline.get_current_history_length()+1)]
-            rlhist = [x for x in rlhist if x is not None]
-            return rlhist
-
-        # The following is an ugly hack to prevent readline from mixing the cmd
-        # session with IPython's session.  Is there a better way to do this?
-        if readline:
-            hist = gethist()
-            readline.clear_history()
-            for x in self._rlhist:
-                readline.add_history(x)
-        try:
-            browser = _H5Browser(self, self._path, importdict=dict)
-        finally:
-            if readline:
-                self._rlhist.extend(gethist())
-                readline.clear_history()
-                for x in hist:
-                    readline.add_history(x)
-        self._path = browser.path
-
+                return '<HDF5 file "%s" (mode %s, %d root members)>' % \
+                    (os.path.basename(self.name), self.mode, len(self))
+            except Exception:
+                return "<Closed HDF5 file>"
 
 class Dataset(HLObject):
 
@@ -520,29 +518,58 @@ class Dataset(HLObject):
         more than one), is supported.  The object returned is always a
         Numpy ndarray.
 
-        Additionally, the following properties are provided:
+        Among others, the following properties are provided:
           shape:    Numpy-style shape tuple of dimsensions
           dtype:    Numpy dtype representing the datatype
           value:    Copy of the full dataset, as either a Numpy array or a
                      Numpy/Python scalar, depending on the shape.
     """
 
-    shape = property(lambda self: self.id.shape,
-        doc = "Numpy-style shape tuple giving dataset dimensions")
+    @property
+    def shape(self):
+        """Numpy-style shape tuple giving dataset dimensions"""
+        return self.id.shape
 
-    dtype = property(lambda self: self.id.dtype,
-        doc = "Numpy dtype representing the datatype")
+    @property
+    def dtype(self):
+        """Numpy dtype representing the datatype"""
+        return self.id.dtype
 
-    def _getval(self):
+    @property
+    def value(self):
+        """The entire dataset, as an array or scalar depending on the shape"""
         with self._lock:
             arr = self[...]
             if arr.shape == ():
                 return numpy.asscalar(arr)
             return arr
 
-    value = property(_getval,
-        doc = "The entire dataset, as an array or scalar depending on the shape.")
+    @property
+    def chunks(self):
+        """Dataset chunks (or None)"""
+        try:
+            return self._plist.get_chunk()
+        except H5Error:
+            return None
 
+    @property
+    def compression(self):
+        """Compression level (or None)"""
+        filt = self._plist.get_filter_by_id(h5z.FILTER_DEFLATE)
+        if filt is not None:
+            return filt[1]
+        return None
+
+    @property
+    def shuffle(self):
+        """Shuffle filter present (T/F)"""
+        return self._plist.get_filter_by_id(h5z.FILTER_SHUFFLE) is not None
+
+    @property
+    def fletcher32(self):
+        """Fletcher32 filter is present (T/F)"""
+        return self._plist.get_filter_by_id(h5z.FILTER_FLETCHER32) is not None
+        
     def __init__(self, group, name,
                     shape=None, dtype=None, data=None,
                     chunks=None, compression=None, shuffle=False,
@@ -639,6 +666,7 @@ class Dataset(HLObject):
                     self.id.write(h5s.ALL, h5s.ALL, data)
 
             self._attrs = AttributeManager(self)
+            self._plist = self.id.get_create_plist()
 
     def extend(self, shape):
         """ Resize the dataset so it's at least as big as "shape".
@@ -659,7 +687,11 @@ class Dataset(HLObject):
         return size
 
     def len(self):
-        """ The size of the first axis.  TypeError if scalar. """
+        """ The size of the first axis.  TypeError if scalar. 
+
+            Use of this method is preferred to len(dset), as Python's built-in
+            len() cannot handle values greater then 2**32 on 32-bit systems.
+        """
         shape = self.shape
         if len(shape) == 0:
             raise TypeError("Attempt to take len() of scalar dataset")
@@ -763,12 +795,12 @@ class Dataset(HLObject):
     def __repr__(self):
         with self._lock:
             try:
-                return 'Dataset "%s": %s %s' % \
+                return '<HDF5 dataset "%s": shape %s, type "%s">' % \
                     (hbasename(self.name), self.shape, self.dtype.str)
-            except:
-                return "Invalid dataset"
+            except Exception:
+                return "<Closed HDF5 dataset>"
 
-class AttributeManager(LockableObject):
+class AttributeManager(LockableObject, DictCompat):
 
     """ Allows dictionary-style access to an HDF5 object's attributes.
 
@@ -792,9 +824,6 @@ class AttributeManager(LockableObject):
         can lose data if you try to assign an object which h5py doesn't
         understand.
     """
-
-    names = property(lambda self: tuple(self),
-        doc = "Tuple of attribute names")
 
     def __init__(self, parent):
         """ Private constructor; you should not create these.
@@ -857,12 +886,6 @@ class AttributeManager(LockableObject):
             for name in attrlist:
                 yield name
 
-    def iteritems(self):
-        """ Iterate over (name, value) tuples. """
-        with self._lock:
-            for name in self:
-                yield (name, self[name])
-
     def __contains__(self, name):
         """ Determine if an attribute exists, by name. """
         return h5a.exists(self.id, name)
@@ -870,10 +893,10 @@ class AttributeManager(LockableObject):
     def __repr__(self):
         with self._lock:
             try:
-                return 'Attributes of "%s" (%d)' % \
+                return '<Attributes of HDF5 object "%s" (%d)>' % \
                     (hbasename(h5i.get_name(self.id)), len(self))
-            except:
-                return "Invalid attributes object"
+            except Exception:
+                return "<Attributes of closed HDF5 object>"
 
 
 class Datatype(HLObject):
@@ -893,8 +916,10 @@ class Datatype(HLObject):
             * will create hard link to an existing type
     """
 
-    dtype = property(lambda self: self.id.dtype,
-        doc = "Numpy dtype equivalent for this datatype")
+    @property
+    def dtype(self):
+        """Numpy dtype equivalent for this datatype"""
+        return self.id.dtype
 
     def __init__(self, grp, name):
         """ Private constructor; you should not create these.
@@ -906,9 +931,10 @@ class Datatype(HLObject):
     def __repr__(self):
         with self._lock:
             try:
-                return "Named datatype object (%s)" % self.dtype.str
-            except:
-                return "Invalid datatype object"
+                return '<HDF5 named type "%s" (dtype %s)>' % \
+                    (hbasename(self.name), self.dtype.str)
+            except Exception:
+                return "<Closed HDF5 named type>"
 
 
 

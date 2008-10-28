@@ -33,10 +33,7 @@ def api_18(func):
 class HDF5TestCase(unittest.TestCase):
 
     """
-        Base test for unit test classes which deal with a particular
-        HDF5 file.  These should declare a class-level attribute HDFNAME
-        representing the appropriate file.  This should be a basename; the
-        TestBase class will figure out the correct directory.
+        Base test for unit test classes.
     """
 
     h5py_verbosity = 0
