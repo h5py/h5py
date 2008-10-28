@@ -100,7 +100,7 @@ class HLObject(LockableObject):
 
     def __nonzero__(self):
         return self.id.__nonzero__()
-"Numpy dtype equivalent for this datatype"
+
 class DictCompat(object):
 
     """
