@@ -26,6 +26,19 @@ from utils cimport emalloc, efree
 # Initialization
 init_hdf5()
 
+# === Public constants ========================================================
+    
+TYPE_GROUP = H5O_TYPE_GROUP    
+TYPE_DATASET = H5O_TYPE_DATASET   
+TYPE_NAMED_DATATYPE = H5O_TYPE_NAMED_DATATYPE
+
+COPY_SHALLOW_HIERARCHY_FLAG = H5O_COPY_SHALLOW_HIERARCHY_FLAG
+COPY_EXPAND_SOFT_LINK_FLAG  = H5O_COPY_EXPAND_SOFT_LINK_FLAG
+COPY_EXPAND_EXT_LINK_FLAG   = H5O_COPY_EXPAND_EXT_LINK_FLAG
+COPY_EXPAND_REFERENCE_FLAG  = H5O_COPY_EXPAND_REFERENCE_FLAG
+COPY_WITHOUT_ATTR_FLAG      = H5O_COPY_WITHOUT_ATTR_FLAG
+COPY_PRESERVE_NULL_FLAG     = H5O_COPY_PRESERVE_NULL_FLAG
+
 # === Giant H5O_info_t structure ==============================================
 
 cdef class _ObjInfoBase(SmartStruct):

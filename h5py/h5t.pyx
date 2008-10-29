@@ -62,6 +62,7 @@ include "sync.pxi"
 
 # Pyrex compile-time imports
 from h5 cimport init_hdf5, H5PYConfig, get_config, PHIL, get_phil
+from h5p cimport PropID, pdefault
 from numpy cimport dtype, ndarray
 from python_string cimport PyString_FromStringAndSize
 
@@ -368,13 +369,24 @@ cdef class TypeID(ObjectID):
     cdef object py_dtype(self):
         raise TypeError("No NumPy equivalent for %s exists" % self.__class__.__name__)
 
-    @sync
-    def commit(self, ObjectID group not None, char* name):
-        """(ObjectID group, STRING name)
+    IF H5PY_18API:
+        @sync
+        def commit(self, ObjectID group not None, char* name, PropID lcpl=None):
+            """(ObjectID group, STRING name, PropID lcpl=None)
 
-        Commit this (transient) datatype to a named datatype in a file.
-        """
-        H5Tcommit(group.id, name, self.id)
+            Commit this (transient) datatype to a named datatype in a file.
+            If present, lcpl may be a link creation property list.
+            """
+            H5Tcommit2(group.id, name, self.id, pdefault(lcpl),
+                H5P_DEFAULT, H5P_DEFAULT)
+    ELSE:
+        @sync
+        def commit(self, ObjectID group not None, char* name):
+            """(ObjectID group, STRING name)
+
+            Commit this (transient) datatype to a named datatype in a file.
+            """
+            H5Tcommit(group.id, name, self.id)
 
     @sync
     def committed(self):

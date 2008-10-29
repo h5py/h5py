@@ -110,6 +110,20 @@ cdef class PropDCID(PropCreateID):
         H5Pget_fill_value(self.id, tid.id, value.data)
 
     @sync
+    def fill_value_defined(self):
+        """() => INT fill_status
+
+        Determine the status of the dataset fill value.  Return values are:
+
+        - h5d.FILL_VALUE_UNDEFINED
+        - h5d.FILL_VALUE_DEFAULT
+        - h5d.FILL_VALUE_USER_DEFINED
+        """
+        cdef H5D_fill_value_t val
+        H5Pfill_value_defined(self.id, &val)
+        return <int>val
+
+    @sync
     def set_fill_time(self, int fill_time):
         """(INT fill_time)
 
@@ -137,52 +151,27 @@ cdef class PropDCID(PropCreateID):
         H5Pget_fill_time(self.id, &fill_time)
         return <int>fill_time
 
+    @sync
+    def set_alloc_time(self, int alloc_time):
+        """(INT alloc_time)
+
+        Set the storage space allocation time.  One of h5d.ALLOC_TIME*.
+        """
+        H5Pset_alloc_time(self.id, <H5D_alloc_time_t>alloc_time)
+
+    @sync
+    def get_alloc_time(self):
+        """() => INT alloc_time
+
+        Get the storage space allocation time.  One of h5d.ALLOC_TIME*.
+        """
+        cdef H5D_alloc_time_t alloc_time
+        H5Pget_alloc_time(self.id, &alloc_time)
+        return <int>alloc_time
+
 
     # === Filter functions ====================================================
     
-    @sync
-    def set_deflate(self, unsigned int level=5):
-        """(UINT level=5)
-
-        Enable deflate (gzip) compression, at the given level.
-        Valid levels are 0-9, default is 5.
-        """
-        H5Pset_deflate(self.id, level)
-
-    @sync
-    def set_fletcher32(self):
-        """()
-
-        Enable Fletcher32 error correction on this list.
-        """
-        H5Pset_fletcher32(self.id)
-
-    @sync
-    def set_shuffle(self):
-        """()
-
-        Enable to use of the shuffle filter.  Use this immediately before 
-        the deflate filter to increase the compression ratio.
-        """
-        H5Pset_shuffle(self.id)
-
-    @sync
-    def set_szip(self, unsigned int options, unsigned int pixels_per_block):
-        """(UINT options, UINT pixels_per_block)
-
-        Enable SZIP compression.  See the HDF5 docs for argument meanings, 
-        and general restrictions on use of the SZIP format.
-        """
-        H5Pset_szip(self.id, options, pixels_per_block)
-
-    @sync
-    def get_nfilters(self):
-        """() => INT
-
-        Determine the number of filters in the pipeline.
-        """
-        return H5Pget_nfilters(self.id)
-
     @sync
     def set_filter(self, int filter_code, unsigned int flags=0, object values=None):
         """(INT filter_code, UINT flags=0, TUPLE values=None)
@@ -233,6 +222,14 @@ cdef class PropDCID(PropCreateID):
         the library.
         """
         return <bint>(H5Pall_filters_avail(self.id))
+
+    @sync
+    def get_nfilters(self):
+        """() => INT
+
+        Determine the number of filters in the pipeline.
+        """
+        return H5Pget_nfilters(self.id)
 
     @sync
     def get_filter(self, int filter_idx):
@@ -330,16 +327,40 @@ cdef class PropDCID(PropCreateID):
         H5Premove_filter(self.id, <H5Z_filter_t>filter_class)
 
     @sync
-    def fill_value_defined(self):
-        """() => INT fill_status
+    def set_deflate(self, unsigned int level=5):
+        """(UINT level=5)
 
-        Determine the status of the dataset fill value.  Return values are:
-
-        - h5d.FILL_VALUE_UNDEFINED
-        - h5d.FILL_VALUE_DEFAULT
-        - h5d.FILL_VALUE_USER_DEFINED
+        Enable deflate (gzip) compression, at the given level.
+        Valid levels are 0-9, default is 5.
         """
-        cdef H5D_fill_value_t val
-        H5Pfill_value_defined(self.id, &val)
-        return <int>val
+        H5Pset_deflate(self.id, level)
+
+    @sync
+    def set_fletcher32(self):
+        """()
+
+        Enable Fletcher32 error correction on this list.
+        """
+        H5Pset_fletcher32(self.id)
+
+    @sync
+    def set_shuffle(self):
+        """()
+
+        Enable to use of the shuffle filter.  Use this immediately before 
+        the deflate filter to increase the compression ratio.
+        """
+        H5Pset_shuffle(self.id)
+
+    @sync
+    def set_szip(self, unsigned int options, unsigned int pixels_per_block):
+        """(UINT options, UINT pixels_per_block)
+
+        Enable SZIP compression.  See the HDF5 docs for argument meanings, 
+        and general restrictions on use of the SZIP format.
+        """
+        H5Pset_szip(self.id, options, pixels_per_block)
+
+
+
 
