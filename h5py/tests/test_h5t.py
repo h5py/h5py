@@ -17,6 +17,7 @@ from numpy import dtype
 
 from h5py import *
 from h5py.h5 import H5Error
+from common import HDF5TestCase
 
 kind_map = {'i': h5t.TypeIntegerID, 'u': h5t.TypeIntegerID, 'f': h5t.TypeFloatID,
            'c': h5t.TypeCompoundID, 'S': h5t.TypeStringID, 'V': h5t.TypeOpaqueID}
@@ -30,20 +31,29 @@ simple_types = \
     "<f4", "<f8", ">f4", ">f8", "<c8", "<c16", ">c8", ">c16",
     "|S1", "|S2", "|S33", "|V1", "|V2", "|V33"]
 
-class TestH5T(unittest.TestCase):
+class TestH5T(HDF5TestCase):
+
 
     def test_create(self):
+        """ Check that it produces instances from typecodes """
+
         types = {h5t.COMPOUND: h5t.TypeCompoundID, h5t.OPAQUE: h5t.TypeOpaqueID}
         sizes = (1,4,256)
-        for typecode, typeobj in types.iteritems():
+
+        def _t_create(typecode, size):
+            """ Core test """
+            htype=h5t.create(typecode, size)
+            self.assertEqual(type(htype), types[typecode])
+            self.assertEqual(htype.get_size(), size)
+
+        for typecode in types:
             for size in sizes:
-                htype = h5t.create(typecode, size)
-                self.assertEqual(type(htype), typeobj)
-                self.assertEqual(htype.get_size(), size)
+                _t_create(typecode, size)
         
         self.assertRaises(ValueError, h5t.create, h5t.ARRAY, 4)
     
     def test_open_commit_committed(self):
+        """ Check that we can commit a named type and open it again """
         plist = h5p.create(h5p.FILE_ACCESS)
         plist.set_fclose_degree(h5f.CLOSE_STRONG)
         fname = tempfile.mktemp('.hdf5')
@@ -62,6 +72,7 @@ class TestH5T(unittest.TestCase):
             os.unlink(fname)
 
     def test_close(self):
+        """ Make sure that closing an object decrefs its identifier """
         htype = h5t.STD_I32LE.copy()
         self.assert_(htype)
         htype._close()
@@ -69,12 +80,16 @@ class TestH5T(unittest.TestCase):
 
     def test_copy(self):
 
-        for x in simple_types:
-            htype = h5t.py_create(dtype(x))
+        def test(dt):
+            """ Test copying for the given NumPy dtype"""
+            htype = h5t.py_create(dtype(dt))
             htype2 = htype.copy()
             self.assertEqual(htype.dtype, htype2.dtype)
             self.assert_(htype is not htype2)
-            self.assert_(htype == htype2)
+            self.assert_(htype == htype2)    
+
+        for x in simple_types:
+            test(x)
 
     def test_equal(self):
 
@@ -94,27 +109,40 @@ class TestH5T(unittest.TestCase):
 
     def test_get_class(self):
 
-        for x in simple_types:
-            dt = dtype(x)
+        def test(dt):
+            """ Check that getclass produces the correct code for the dtype """
+            dt = dtype(dt)
             htype = h5t.py_create(dt)
             self.assertEqual(htype.get_class(), typecode_map[dt.kind])
 
-    def test_get_size(self):
+        for x in simple_types:
+            test(x)
+
+    def test_get_set_size(self):
 
         sizes = (1,2,3,4,127,128,129,133,16385)
-        for x in sizes:
-            htype = h5t.create(h5t.OPAQUE, x)
-            self.assertEqual(htype.get_size(), x)
+
+        def test(htype, size):
+            htype.set_size(size)
+            self.assertEqual(htype.get_size(), size)  
+
+        htype = h5t.create(h5t.OPAQUE, 4)
+        for size in sizes:
+            test(htype, size)
 
     def test_get_super(self):
 
-        for x in simple_types:
-            htype = h5t.py_create(x)
+        def test(dt):
+            """ Check get_super for a given dtype """
+            htype = h5t.py_create(dt)
             atype = h5t.array_create(htype, (4,5))
             self.assert_(htype.equal(atype.get_super()))
 
-    def test_detect_class(self):
+        for x in simple_types:
+            test(x)
 
+    def test_detect_class(self):
+        
         dt = dtype([(x, x) for x in simple_types])
 
         htype = h5t.py_create(dt)
@@ -122,12 +150,6 @@ class TestH5T(unittest.TestCase):
         self.assert_(htype.detect_class(h5t.OPAQUE))
         self.assert_(not htype.detect_class(h5t.ARRAY))
 
-    def test_set_size(self):
-
-        htype = h5t.create(h5t.OPAQUE, 128)
-        self.assertEqual(htype.get_size(), 128)
-        htype.set_size(300)
-        self.assertEqual(htype.get_size(), 300)
 
     def test_set_get_order_sign(self):
         
@@ -148,12 +170,14 @@ class TestH5T(unittest.TestCase):
         self.assertEqual(htype.get_tag(), "FOOBAR")
         
     def test_array(self):
+        """ Test all array-specific features """
         htype = h5t.array_create(h5t.STD_I32LE,(4,5))
         self.assertEqual(htype.get_array_ndims(), 2)
         self.assertEqual(htype.get_array_dims(), (4,5))
         self.assertEqual(htype.dtype, dtype(('<i4',(4,5))))
 
     def test_enum(self):
+        """ Test all enum-specific routines """
         names = ("A", "B", "Name3", "Name with space", " 12A-d878dd&%2 0-1!** ")
         values = (1,2,3.0, -999, 30004.0)
         valuedict = {}
@@ -171,6 +195,7 @@ class TestH5T(unittest.TestCase):
         self.assertEqual(htype.get_nmembers(), len(names))
 
     def test_compound(self):
+        """ Test all compound datatype operations """
         names = ("A", "B", "Name3", "Name with space", " 12A-d878dd&%2 0-1!** ")
         types = (h5t.STD_I8LE, h5t.IEEE_F32BE, h5t.STD_U16BE, h5t.C_S1.copy(), h5t.FORTRAN_S1.copy())
         types[3].set_size(8)

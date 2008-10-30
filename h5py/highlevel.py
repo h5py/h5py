@@ -86,6 +86,9 @@ class HLObject(LockableObject):
         id:     Low-level identifer, compatible with the h5py.h5* modules.
         name:   (Some) name of this object in the HDF5 file.
         attrs:  HDF5 attributes of this object.  See the AttributeManager docs.
+
+        Equality comparison and hashing are based on native HDF5 object
+        identity.
     """
 
     @property
@@ -100,6 +103,13 @@ class HLObject(LockableObject):
 
     def __nonzero__(self):
         return self.id.__nonzero__()
+
+    def __hash__(self):
+        return hash(self.id)
+    def __eq__(self, other):
+        if hasattr(other, 'id'):
+            return self.id == other.id
+        return False
 
 class DictCompat(object):
 
@@ -167,9 +177,9 @@ class Group(HLObject, DictCompat):
     def __init__(self, parent_object, name, create=False):
         """ Create a new Group object, from a parent object and a name.
 
-            If "create" is False (default), try to open the given group,
-            raising an exception if it doesn't exist.  If "create" is True,
-            create a new HDF5 group and link it into the parent group.
+        If "create" is False (default), try to open the given group,
+        raising an exception if it doesn't exist.  If "create" is True,
+        create a new HDF5 group and link it into the parent group.
         """
         with parent_object._lock:
             if create:
@@ -183,30 +193,28 @@ class Group(HLObject, DictCompat):
         """ Add the given object to the group.  The action taken depends on
             the type of object assigned:
 
-            1. Named HDF5 object (Dataset, Group, Datatype):
-                A hard link is created in this group which points to the
-                given object.
+        1. Named HDF5 object (Dataset, Group, Datatype):
+            A hard link is created in this group which points to the
+            given object.
 
-            2. Numpy ndarray:
-                The array is converted to a dataset object, with default
-                settings (contiguous storage, etc.).
+        2. Numpy ndarray:
+            The array is converted to a dataset object, with default
+            settings (contiguous storage, etc.).
 
-            3. Numpy dtype:
-                Commit a copy of the datatype as a named datatype in the file.
+        3. Numpy dtype:
+            Commit a copy of the datatype as a named datatype in the file.
 
-            4. Anything else:
-                Attempt to convert it to an ndarray and store it.  Scalar
-                values are stored as scalar datasets. Raise ValueError if we
-                can't understand the resulting array dtype.
-            
-            If a group member of the same name already exists, the assignment
-            will fail.  You can check by using the Python __contains__ syntax:
+        4. Anything else:
+            Attempt to convert it to an ndarray and store it.  Scalar
+            values are stored as scalar datasets. Raise ValueError if we
+            can't understand the resulting array dtype.
+        
+        If a group member of the same name already exists, the assignment
+        will fail.  You can check by using the Python __contains__ syntax:
 
-                if "name" in grp:
-                    del grp["name"]
-                grp["name"] = <whatever>
-
-            This limitation is intentional, and may be lifted in the future.
+            if "name" in grp:
+                del grp["name"]
+            grp["name"] = <whatever>
         """
         with self._lock:
             if isinstance(obj, Group) or isinstance(obj, Dataset) or isinstance(obj, Datatype):
@@ -221,8 +229,6 @@ class Group(HLObject, DictCompat):
 
     def __getitem__(self, name):
         """ Open an object attached to this group. 
-
-            Currently can open groups, datasets, and named types.
         """
         with self._lock:
             info = h5g.get_objinfo(self.id, name)
@@ -257,13 +263,14 @@ class Group(HLObject, DictCompat):
     def create_group(self, name):
         """ Create and return a subgroup.
 
-            Fails if the group already exists.
+        Fails if the group already exists.
         """
         return Group(self, name, create=True)
 
     def require_group(self, name):
-        """ Check if a group exists, and create it if not. Raise H5Error if
-            an incompatible object exists.
+        """ Check if a group exists, and create it if not.
+
+        Raises H5Error if an incompatible object exists.
         """
         if not name in self:
             return self.create_group(name)
@@ -276,41 +283,43 @@ class Group(HLObject, DictCompat):
     def create_dataset(self, name, *args, **kwds):
         """ Create and return a new dataset, attached to this group.
 
-            create_dataset(name, shape, [dtype=<Numpy dtype>], **kwds)
-            create_dataset(name, data=<Numpy array>, **kwds)
+        create_dataset(name, shape, [dtype=<Numpy dtype>], **kwds)
+        create_dataset(name, data=<Numpy array>, **kwds)
 
-            If "dtype" is not specified, the default is single-precision
-            floating point, with native byte order ("=f4").
+        If "dtype" is not specified, the default is single-precision
+        floating point, with native byte order ("=f4").
 
-            Creating a dataset will fail if another of the same name already 
-            exists. Additional keywords are:
+        Creating a dataset will fail if another of the same name already 
+        exists. Additional keywords are:
 
-            chunks:        Tuple of chunk dimensions or None*
-            compression:   DEFLATE (gzip) compression level, int or None*
-            shuffle:       Use the shuffle filter? (requires compression) T/F*
-            fletcher32:    Enable Fletcher32 error detection? T/F*
-            maxshape:      Tuple giving dataset maximum dimensions or None*.
-                           You can grow each axis up to this limit using
-                           extend().  For each unlimited axis, provide None.
+        chunks:        Tuple of chunk dimensions or None*
+        compression:   DEFLATE (gzip) compression level, int or None*
+        shuffle:       Use the shuffle filter? (requires compression) T/F*
+        fletcher32:    Enable Fletcher32 error detection? T/F*
+        maxshape:      Tuple giving dataset maximum dimensions or None*.
+                       You can grow each axis up to this limit using
+                       extend().  For each unlimited axis, provide None.
 
-            All these options require chunking.  If a chunk tuple is not
-            provided, the constructor will guess an appropriate chunk shape.
-            Please note none of these are allowed for scalar datasets.
+        All these options require chunking.  If a chunk tuple is not
+        provided, the constructor will guess an appropriate chunk shape.
+        Please note none of these are allowed for scalar datasets.
         """
         return Dataset(self, name, *args, **kwds)
 
     def require_dataset(self, name, shape, dtype, exact=False, **kwds):
-        """ Check if a dataset with compatible shape and dtype exists, and
-            create one if it doesn't.  Raises H5Error if an incompatible
-            dataset (or group) already exists.  
+        """Open a dataset, or create it if it doesn't exist.
 
-            By default, datatypes are compared for loss-of-precision only.
-            To require an exact match, set keyword "exact" to True.  Shapes
-            are always compared exactly.
+        Checks if a dataset with compatible shape and dtype exists, and
+        creates one if it doesn't.  Raises H5Error if an incompatible
+        dataset (or group) already exists.  
 
-            Keyword arguments are only used when creating a new dataset; they
-            are ignored if an dataset with matching shape and dtype already
-            exists.  See create_dataset for a list of legal keywords.
+        By default, datatypes are compared for loss-of-precision only.
+        To require an exact match, set keyword "exact" to True.  Shapes
+        are always compared exactly.
+
+        Keyword arguments are only used when creating a new dataset; they
+        are ignored if an dataset with matching shape and dtype already
+        exists.  See create_dataset for a list of legal keywords.
         """
         dtype = numpy.dtype(dtype)
 
@@ -336,26 +345,66 @@ class Group(HLObject, DictCompat):
 
     # New 1.8.X methods
 
+    def copy(self, source, dest):
+        """ Copy an object or group.
+
+        The source can be a path, Group, Dataset, or Datatype object.  The
+        destination can be either a path or a Group object.  The source and
+        destinations need not be in the same file.
+
+        Example:
+
+        >>> f = File('myfile.hdf5')
+        >>> f.listnames()
+        ['MyGroup']
+        >>> f.copy('MyGroup', 'MyCopy')
+        >>> f.listnames()
+        ['MyGroup', 'MyCopy']
+
+        """
+        if not config.API_18:
+            raise NotImplementedError("This feature is only available with HDF5 1.8.0 and later")
+
+        with self._lock:
+
+            if isinstance(source, HLObject):
+                source_path = '.'
+            else:
+                # Interpret source as a path relative to this group
+                source_path = source
+                source = self
+
+            if isinstance(dest, Group):
+                dest_path = '.'
+            elif isinstance(dest, HLObject):
+                raise TypeError("Destination must be path or Group object")
+            else:
+                # Interpret destination as a path relative to this group
+                dest_path = dest
+                dest = self
+
+            h5o.copy(source.id, source_path, dest.id, dest_path)
+
     def visit(self, func):
         """ Recursively visit all names in this group and subgroups.
 
-            You supply a callable (function, method or callable object); it
-            will be called exactly once for each link in this group and every
-            group below it. Your callable must conform to the signature:
+        You supply a callable (function, method or callable object); it
+        will be called exactly once for each link in this group and every
+        group below it. Your callable must conform to the signature:
 
-                func(<member name>) => <None or return value>
+            func(<member name>) => <None or return value>
 
-            Returning None continues iteration, returning anything else stops
-            and immediately returns that value from the visit method.
+        Returning None continues iteration, returning anything else stops
+        and immediately returns that value from the visit method.
 
-            Example:
+        Example:
 
-            # List the entire contents of the file
-            >>> f = File("foo.hdf5")
-            >>> list_of_names = []
-            >>> f.visit(list_of_names.append)
+        >>> # List the entire contents of the file
+        >>> f = File("foo.hdf5")
+        >>> list_of_names = []
+        >>> f.visit(list_of_names.append)
 
-            Only available with HDF5 1.8.X.
+        Only available with HDF5 1.8.X.
         """
         if not config.API_18:
             raise NotImplementedError("This feature is only available with HDF5 1.8.0 and later")
@@ -366,27 +415,27 @@ class Group(HLObject, DictCompat):
     def visititems(self, func):
         """ Recursively visit names and objects in this group and subgroups.
 
-            You supply a callable (function, method or callable object); it
-            will be called exactly once for each link in this group and every
-            group below it. Your callable must conform to the signature:
+        You supply a callable (function, method or callable object); it
+        will be called exactly once for each link in this group and every
+        group below it. Your callable must conform to the signature:
 
-                func(<member name>, <object>) => <None or return value>
+            func(<member name>, <object>) => <None or return value>
 
-            Returning None continues iteration, returning anything else stops
-            and immediately returns that value from the visit method.
+        Returning None continues iteration, returning anything else stops
+        and immediately returns that value from the visit method.
 
-            Example:
+        Example:
 
-            # Get a list of all datasets in the file
-            >>> mylist = []
-            >>> def func(name, obj):
-            ...     if isinstance(obj, Dataset):
-            ...         mylist.append(name)
-            ...
-            >>> f = File('foo.hdf5')
-            >>> f.visititems(func)
-   
-            Only available with HDF5 1.8.X.
+        # Get a list of all datasets in the file
+        >>> mylist = []
+        >>> def func(name, obj):
+        ...     if isinstance(obj, Dataset):
+        ...         mylist.append(name)
+        ...
+        >>> f = File('foo.hdf5')
+        >>> f.visititems(func)
+
+        Only available with HDF5 1.8.X.
         """
         if not config.API_18:
             raise NotImplementedError("This feature is only available with HDF5 1.8.0 and later")
@@ -403,7 +452,6 @@ class Group(HLObject, DictCompat):
                     (hbasename(self.name), len(self))
             except Exception:
                 return "<Closed HDF5 group>"
-
 
 class File(Group):
 
@@ -507,6 +555,15 @@ class File(Group):
             except Exception:
                 return "<Closed HDF5 file>"
 
+    # Fix up identity to use the file identifier, not the root group.
+    def __hash__(self):
+        return hash(self.fid)
+    def __eq__(self, other):
+        if hasattr(other, 'fid'):
+            return self.fid == other.fid
+        return False
+
+
 class Dataset(HLObject):
 
     """ High-level interface to an HDF5 dataset.
@@ -574,39 +631,41 @@ class Dataset(HLObject):
                     shape=None, dtype=None, data=None,
                     chunks=None, compression=None, shuffle=False,
                     fletcher32=False, maxshape=None):
-        """ Construct a Dataset object.  You might find it easier to use the
-            Group methods: Group["name"] or Group.create_dataset().
+        """ Open or create a new dataset in the file.
 
-            There are two modes of operation for this constructor:
+        It's recommended you use the Group methods (open via Group["name"],
+        create via Group.create_dataset), rather than calling the constructor.
 
-            1.  Open an existing dataset:
-                  Dataset(group, name)
+        There are two modes of operation for this constructor:
 
-            2.  Create a dataset:
-                  Dataset(group, name, shape, [dtype=<Numpy dtype>], **kwds)
-                or
-                  Dataset(group, name, data=<Numpy array>, **kwds)
+        1.  Open an existing dataset:
+              Dataset(group, name)
 
-                  If "dtype" is not specified, the default is single-precision
-                  floating point, with native byte order ("=f4").
+        2.  Create a dataset:
+              Dataset(group, name, shape, [dtype=<Numpy dtype>], **kwds)
+            or
+              Dataset(group, name, data=<Numpy array>, **kwds)
 
-            Creating a dataset will fail if another of the same name already 
-            exists.  Also, chunks/compression/shuffle/fletcher32 may only be
-            specified when creating a dataset.
+              If "dtype" is not specified, the default is single-precision
+              floating point, with native byte order ("=f4").
 
-            Creation keywords (* is default):
+        Creating a dataset will fail if another of the same name already 
+        exists.  Also, chunks/compression/shuffle/fletcher32 may only be
+        specified when creating a dataset.
 
-            chunks:        Tuple of chunk dimensions, True, or None*
-            compression:   DEFLATE (gzip) compression level, int or None*
-            shuffle:       Use the shuffle filter? (requires compression) T/F*
-            fletcher32:    Enable Fletcher32 error detection? T/F*
-            maxshape:      Tuple giving dataset maximum dimensions or None*.
-                           You can grow each axis up to this limit using
-                           extend().  For each unlimited axis, provide None.
+        Creation keywords (* is default):
 
-            All these options require chunking.  If a chunk tuple is not
-            provided, the constructor will guess an appropriate chunk shape.
-            Please note none of these are allowed for scalar datasets.
+        chunks:        Tuple of chunk dimensions, True, or None*
+        compression:   DEFLATE (gzip) compression level, int or None*
+        shuffle:       Use the shuffle filter? (requires compression) T/F*
+        fletcher32:    Enable Fletcher32 error detection? T/F*
+        maxshape:      Tuple giving dataset maximum dimensions or None*.
+                       You can grow each axis up to this limit using
+                       extend().  For each unlimited axis, provide None.
+
+        All these options require chunking.  If a chunk tuple is not
+        provided, the constructor will guess an appropriate chunk shape.
+        Please note none of these are allowed for scalar datasets.
         """
         with group._lock:
             if data is None and shape is None:
@@ -671,9 +730,9 @@ class Dataset(HLObject):
     def extend(self, shape):
         """ Resize the dataset so it's at least as big as "shape".
 
-            Note that the new shape must be compatible with the "maxshape"
-            argument provided when the dataset was created.  Also, the rank of
-            the dataset cannot be changed.
+        Note that the new shape must be compatible with the "maxshape"
+        argument provided when the dataset was created.  Also, the rank of
+        the dataset cannot be changed.
         """
         with self._lock:
             self.id.extend(shape)
@@ -708,19 +767,20 @@ class Dataset(HLObject):
             yield self[i]
 
     def __getitem__(self, args):
-        """ Read a slice from the HDF5 dataset.  Takes slices and
-            recarray-style field names (more than one is allowed!) in any
-            order.  Obeys basic NumPy broadcasting rules.
+        """ Read a slice from the HDF5 dataset.
 
-            Also supports:
+        Takes slices and recarray-style field names (more than one is
+        allowed!) in any order.  Obeys basic NumPy broadcasting rules.
 
-            * Boolean "mask" array indexing
-            * Discrete point selection via CoordsList instance
+        Also supports:
 
-            Beware; these last two techniques work by explicitly enumerating
-            the points to be selected.  In the worst case, the selection list
-            for a boolean array can be every point in the dataset, with a 
-            2x to 3x memory overhead.
+        * Boolean "mask" array indexing
+        * Discrete point selection via CoordsList instance
+
+        Beware; these last two techniques work by explicitly enumerating
+        the points to be selected.  In the worst case, the selection list
+        for a boolean array can be every point in the dataset, with a 
+        2x to 3x memory overhead.
         """
         with self._lock:
 
@@ -764,9 +824,10 @@ class Dataset(HLObject):
             return arr
 
     def __setitem__(self, args, val):
-        """ Write to the HDF5 dataset from a Numpy array.  The shape of the
-            Numpy array must match the shape of the selection, and the Numpy
-            array's datatype must be convertible to the HDF5 datatype.
+        """ Write to the HDF5 dataset from a Numpy array.
+
+        The shape of the Numpy array must match the shape of the selection, and
+        the Numpy array's datatype must be convertible to the HDF5 datatype.
         """
         with self._lock:
 
@@ -831,9 +892,10 @@ class AttributeManager(LockableObject, DictCompat):
         self.id = parent.id
 
     def __getitem__(self, name):
-        """ Read the value of an attribute.  If the attribute is scalar, it
-            will be returned as a Numpy scalar.  Otherwise, it will be returned
-            as a Numpy ndarray.
+        """ Read the value of an attribute.
+    
+        If the attribute is scalar, it will be returned as a Numpy
+        scalar.  Otherwise, it will be returned as a Numpy ndarray.
         """
         with self._lock:
             attr = h5a.open(self.id, name)
@@ -847,11 +909,11 @@ class AttributeManager(LockableObject, DictCompat):
 
     def __setitem__(self, name, value):
         """ Set the value of an attribute, overwriting any previous value.
-            The value you provide must be convertible to a Numpy array or
-            scalar.
 
-            Any existing value is destroyed just before the call to h5a.create.
-            If the creation fails, the data is not recoverable.
+        The value you provide must be convertible to a Numpy array or scalar.
+
+        Any existing value is destroyed just before the call to h5a.create.
+        If the creation fails, the data is not recoverable.
         """
         with self._lock:
             value = numpy.asarray(value, order='C')

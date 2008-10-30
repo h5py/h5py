@@ -25,7 +25,7 @@ ATTRIBUTES = {  'String Attribute': ("This is a string.", dtype('S18'), ()),
                 'Integer': (42, dtype('<i4'), ()),
                 'Integer Array': ( [0,1,2,3], dtype('<i4'), (4,) ),
                 'Byte': (-34, dtype('|i1'), ()) }
-ATTRIBUTES_ORDER = ['String Attribute', 'Integer', 'Integer Array', 'Byte']
+ATTRIBUTES_ORDER = sorted(ATTRIBUTES) # ['String Attribute', 'Integer', 'Integer Array', 'Byte']
 NEW_ATTRIBUTES = {'New float': ( 3.14, dtype('<f4'), ()) }
 
 
