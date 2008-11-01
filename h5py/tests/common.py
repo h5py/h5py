@@ -29,6 +29,22 @@ def api_18(func):
         return func
     return None
 
+def api_16(func):
+    """Decorator to run test under HDF5 1.6 only"""
+    if not h5.get_config().API_18:
+        return func
+    return None
+
+test_coverage = set()
+
+def covers(*args):
+    global test_coverage
+    
+    def wrap(meth):
+        test_coverage.update(args)
+        return meth
+
+    return wrap
 
 class HDF5TestCase(unittest.TestCase):
 

@@ -111,7 +111,7 @@ class HLObject(LockableObject):
             return self.id == other.id
         return False
 
-class DictCompat(object):
+class _DictCompat(object):
 
     """
         Contains dictionary-style compatibility methods for groups and
@@ -151,7 +151,7 @@ class DictCompat(object):
                 yield (x, self[x])
 
 
-class Group(HLObject, DictCompat):
+class Group(HLObject, _DictCompat):
 
     """ Represents an HDF5 group.
 
@@ -395,7 +395,8 @@ class Group(HLObject, DictCompat):
             func(<member name>) => <None or return value>
 
         Returning None continues iteration, returning anything else stops
-        and immediately returns that value from the visit method.
+        and immediately returns that value from the visit method.  No
+        particular order of iteration within groups is guranteed.
 
         Example:
 
@@ -422,7 +423,8 @@ class Group(HLObject, DictCompat):
             func(<member name>, <object>) => <None or return value>
 
         Returning None continues iteration, returning anything else stops
-        and immediately returns that value from the visit method.
+        and immediately returns that value from the visit method.  No
+        particular order of iteration within groups is guranteed.
 
         Example:
 
@@ -614,7 +616,7 @@ class Dataset(HLObject):
         """Compression level (or None)"""
         filt = self._plist.get_filter_by_id(h5z.FILTER_DEFLATE)
         if filt is not None:
-            return filt[1]
+            return filt[1][0]
         return None
 
     @property
@@ -627,6 +629,12 @@ class Dataset(HLObject):
         """Fletcher32 filter is present (T/F)"""
         return self._plist.get_filter_by_id(h5z.FILTER_FLETCHER32) is not None
         
+    @property
+    def maxshape(self):
+        space = self.id.get_space()
+        dims = space.get_simple_extent_dims(True)
+        return tuple(x if x != h5s.UNLIMITED else None for x in dims)
+
     def __init__(self, group, name,
                     shape=None, dtype=None, data=None,
                     chunks=None, compression=None, shuffle=False,
@@ -861,7 +869,7 @@ class Dataset(HLObject):
             except Exception:
                 return "<Closed HDF5 dataset>"
 
-class AttributeManager(LockableObject, DictCompat):
+class AttributeManager(LockableObject, _DictCompat):
 
     """ Allows dictionary-style access to an HDF5 object's attributes.
 

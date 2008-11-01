@@ -128,7 +128,7 @@ def open(ObjectID loc not None, char* name):
 IF H5PY_18API:
     @sync
     def create(ObjectID loc not None, char* name, PropID lcpl=None,
-               PropID gcpl=None, PropID gapl=None):
+               PropID gcpl=None):
         """(ObjectID loc, STRING name, PropLCID lcpl=None, PropGCID gcpl=None)
         => GroupID
 

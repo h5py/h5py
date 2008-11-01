@@ -53,16 +53,6 @@ class TestFCID(unittest.TestCase):
             self.p.set_sizes(a,s)
             self.assertEqual(self.p.get_sizes(), (a,s))
 
-    def test_sym(self):
-        self.p.set_sym_k(2,3)
-        self.assertEqual(self.p.get_sym_k(), (2,3))
-
-    def test_istore(self):
-        for size in (2,4,8,16):
-            self.p.set_istore_k(size)
-            self.assertEqual(self.p.get_istore_k(), size)
-
-
 class TestFAID(unittest.TestCase):
 
     CLOSE_DEGREES = (h5f.CLOSE_WEAK,

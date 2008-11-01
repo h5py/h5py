@@ -19,34 +19,34 @@
 import numpy as np
 import h5py
 
-class Group(object):
+class Group(dict):
 
-    def __init__(self, members=None, attrs=None):
-        self.attrs = {} if attrs is None else attrs
-        self.members = {} if members is None else members
+    def __init__(self, *args, **kwds):
+        dict.__init__(self, *args, **kwds)
+        self.attrs = {}
 
 class File(Group):
 
     def __init__(self, name, *args, **kwds):
-        self.name = name
         Group.__init__(self, *args, **kwds)
+        self.name = name
 
 class Dataset(object):
 
-    def __init__(self, shape=None, dtype=None, data=None, attrs=None, dset_kwds=None):
-        self.data = data
-        self.shape = shape
-        self.dtype = dtype
+    argnames = ('shape', 'dtype', 'data','chunks', 'compression', 'shuffle',
+                'fletcher32', 'maxshape')
 
-        self.attrs = {} if attrs is None else attrs
-        self.dset_kwds = {} if dset_kwds is None else dset_kwds
+    def __init__(self, *args, **kwds):
+
+        kwds.update(zip(self.argnames, args))
+        self.kwds = kwds
+        self.attrs = {}
 
 class Datatype(object):
      
-    def __init__(self, dtype, attrs=None):
-        self.attrs = {} if attrs is None else attrs
+    def __init__(self, dtype):
         self.dtype = dtype
-
+        self.attrs = {}
 
 def compile_hdf5(fileobj):
     """ Take a "model" HDF5 tree and write it to an actual file. """
@@ -58,9 +58,7 @@ def compile_hdf5(fileobj):
 
     def store_dataset(group, name, obj):
         """ Create and store a dataset in the given group """
-        kwds = obj.dset_kwds.copy()
-        kwds.update({'shape': obj.shape, 'dtype': obj.dtype, 'data': obj.data})
-        dset = group.create_dataset(name, **kwds)
+        dset = group.create_dataset(name, **obj.kwds)
         update_attrs(dset, obj.attrs)
 
     def store_type(group, name, obj):
@@ -79,8 +77,8 @@ def compile_hdf5(fileobj):
             hgroup = group
 
         # Now populate it
-        for new_name in sorted(obj.members):
-            new_obj = obj.members[new_name]
+        for new_name in sorted(obj):
+            new_obj = obj[new_name]
 
             if isinstance(new_obj, Dataset):
                 store_dataset(hgroup, new_name, new_obj)
@@ -92,7 +90,7 @@ def compile_hdf5(fileobj):
         update_attrs(hgroup, obj.attrs)
 
     f = h5py.File(fileobj.name, 'w')
-    store_group(f, None, fileobj)
+    store_group(f['/'], None, fileobj)
     f.close()
 
 
@@ -101,11 +99,12 @@ def file_attrs():
     sg1 = Group()
     sg2 = Group()
     sg3 = Group()
-    gattrs = {'String Attribute': np.asarray("This is a string.", '|S18'),
-              'Integer': np.asarray(42, '<i4'),
-              'Integer Array': np.asarray([0,1,2,3], '<i4'),
-              'Byte': np.asarray(-34, '|i1')}
-    grp = Group( {'Subgroup1': sg1, 'Subgroup2': sg2, 'Subgroup3': sg3}, gattrs)
+    grp = Group({'Subgroup1': sg1, 'Subgroup2': sg2, 'Subgroup3': sg3})
+    grp.attrs =  {'String Attribute': np.asarray("This is a string.", '|S18'),
+                  'Integer': np.asarray(42, '<i4'),
+                  'Integer Array': np.asarray([0,1,2,3], '<i4'),
+                  'Byte': np.asarray(-34, '|i1') }
+
     return File('attributes.hdf5', {'Group': grp})
 
 def file_dset():
@@ -129,9 +128,7 @@ def file_dset():
         arr[i]["f_name"][:] = np.array((1024.9637*i,)*10)
         arr[i]["g_name"] = 109
 
-    options = {'chunks': (3,)}
-
-    dset = Dataset(data=arr, attrs={}, dset_kwds=options)
+    dset = Dataset(data=arr, chunks=(3,))
 
     return File('smpl_compound_chunked.hdf5', {'CompoundChunked': dset})
 

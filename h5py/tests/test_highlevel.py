@@ -20,7 +20,8 @@ import numpy
 from h5py.highlevel import *
 from h5py import *
 from h5py.h5 import H5Error
-from common import getfullpath, HDF5TestCase
+from common import getfullpath, HDF5TestCase, api_18, api_16
+import testfiles
 
 class SliceFreezer(object):
     def __getitem__(self, args):
@@ -100,11 +101,13 @@ class TestFile(HDF5TestCase):
         with File(self.fname) as f:
             f.flush()
 
-    def test_File_str(self):
+    def test_File_special(self):
         f = File(self.fname, 'r')
         str(f)
+        repr(f)
         f.close()
         str(f)
+        repr(f)
 
     def test_AttributeManager(self):
 
@@ -162,45 +165,160 @@ class TestDataset(HDF5TestCase):
     def tearDown(self):
         self.f.close()
         os.unlink(self.fname)
+  
+    def test_special(self):
+        """ Check object identity, hashing and string representation """
+        dset1 = self.f.create_dataset('TEST', (10,10), '<i4')
+        dset2 = self.f.create_dataset('TEST2', (10,10), '<i4')
 
-    def test_Dataset_create(self):
-        
-        self.output('')
+        dset1_p = self.f['TEST']
+        dset2_p = self.f['TEST2']
 
-        shapes = [(), (1,), (10,5), (1,10), (10,1), (100,1,100), (51,2,1025)]
-        chunks = [None, (1,), (10,1), (1,1),  (1,1),  (50,1,100), (51,2,25)]
+        self.assert_(dset1 != dset2)
+        self.assert_(dset1 == dset1_p)
 
-        # Test auto-chunk creation for each
-        shapes += shapes
-        chunks += [None]*len(chunks)
+        self.assert_(hash(dset1) == hash(dset1_p))
+        self.assert_(hash(dset1) != hash(dset2))
 
-        for shape, chunk in zip(shapes, chunks):
-            for dt in TYPES:
-                self.output("    Creating %.20s %.40s" % (shape, dt))
-                dt = numpy.dtype(dt)
-                d = Dataset(self.f, "NewDataset", dtype=dt, shape=shape)
-                self.assertEqual(d.shape, shape)
-                self.assertEqual(d.dtype, dt)
-                del self.f["NewDataset"]
+        repr(dset1)
+        str(dset1)
+        dset1.id._close()
+        repr(dset1)
+        str(dset1)
 
-                if shape != ():
-                    self.output("        With chunk %s" % (chunk,))
-                    d = Dataset(self.f, "NewDataset", dtype=dt, shape=shape,
-                                chunks=chunk, shuffle=True, compression=6,
-                                fletcher32=True)
-                    self.assertEqual(d.shape, shape)
-                    self.assertEqual(d.dtype, dt)
-                    del self.f["NewDataset"]
-             
-                if 'V' not in dt.kind:
-                    srcarr = numpy.ones(shape, dtype=dt)
-                    d = Dataset(self.f, "NewDataset", data=srcarr)
-                    self.assertEqual(d.shape, shape)
-                    self.assertEqual(d.dtype, dt)
-                    self.assert_(numpy.all(d.value == srcarr))
-                    del self.f["NewDataset"]               
+    def test_create(self):
+        """ Test the constructor and public properties """
+
+        def new_dset(*args, **kwds):
+            """ Create a dataset from constructor arguments.
+
+                Return is a 2-tuple (template, dataset).
+            """
+            # "None" means the keyword is "not provided"
+            kwds = dict((x,y) for x,y in kwds.iteritems() if y is not None)
+
+            template = testfiles.Dataset(*args, **kwds)
+
+            self.output(str(template.kwds))
+
+            if 'TEST_DSET' in self.f:
+                del self.f['TEST_DSET']
+            dset = Dataset(self.f, 'TEST_DSET', *args, **kwds)
+
+            return (template, dset)
+
+        def verify_ds(hdf, template):
+            """ Compare a real dataset to a template """
+
+            # Make sure the shape and dtype of the real dataset match the
+            # template's description.
+            if 'shape' in template.kwds:
+                shape = template.kwds['shape']
+            else:
+                shape = template.kwds['data'].shape
+            if 'dtype' in template.kwds:
+                dtype = template.kwds['dtype']
+            else:
+                dtype = template.kwds['data'].dtype
+
+            self.assertEqual(hdf.dtype, dtype, "dtype mismatch %s %s" % (hdf.dtype, dtype))
+            self.assertEqual(hdf.shape, shape, "shape mismatch %s %s" % (hdf.shape, shape))
+
+            # If data was given, make sure it's identical
+            if 'data' in template.kwds:
+                self.assert_(numpy.all(hdf.value == template.kwds['data']))
+
+            # If other keywords were given (chunks, etc), make sure they are
+            # correctly recorded.
+            for name, value in template.kwds.iteritems():
+                if name == 'data':
+                    continue
+                elif value is True:
+                    self.assert_(getattr(hdf, name) is not None,
+                      "True kwd ignored: %s" % name)
+                else:
+                    self.assertEqual(getattr(hdf, name), value,
+                      "kwd mismatch: %s: %s %s" % (name, getattr(hdf, name), value))
+
+            # Make sure all the public properties work
+            for name in ('shape', 'dtype', 'chunks', 'compression', 'shuffle',
+              'fletcher32', 'maxshape'):
+                getattr(hdf, name)
+
+            # If a chunks-requiring keyword is used, make sure it's honored
+            for name in ('chunks', 'compression', 'shuffle', 'fletcher32'):
+                if template.kwds.get(name, False):
+                    self.assert_(hdf.chunks is not None, "chunks missing for arg %s" % name)
+
+        # === Begin constructor test ===
+
+        # Method 1: specify shape and dtype
+        shapes = [(), (1,), (10,5), (1,10), (100,1,100), (51,2,1025),
+                  (2**60, 2**60, 2**34)]
+
+        for shape in shapes:
+            for dtype in TYPES1+TYPES1:
+                template, dset = new_dset(shape, dtype)
+                verify_ds(dset, template)
+
+        # Method 2: specify actual data
+        for shape in shapes[0:6]:
+            for dtype in TYPES1:
+                arr = numpy.arange(numpy.product(shape), dtype=dtype).reshape(shape)
+                template, dset = new_dset(data=arr)
+                verify_ds(dset, template)
+
+        # Test shape-related keywords
+        maxshapes = { (): [None, ()],
+                      (1,): [None, (1,)],
+                      (10,5): [None, (10,5), (20,20)],
+                      (1,10): [None, (2,10), (None,20)],
+                      (100,1,100): [None, (100,2,100), (None, None, None)],
+                      (51, 2, 1025): [None, (2**60, 2**40, None)],
+                      (2**60, 2**60, 2**34): [(2**62, 2**62, 2**35)] }
+
+        chunks = { (): [None],
+                  (1,): [None, (1,)],
+                  (10,5): [None, (5,5), (10,1)],
+                  (1,10): [None, True, (1,10), (1,3)],
+                  (100,1,100): [None, (50,1,10)],
+                  (51, 2, 1025): [None],
+                  (2**60, 2**60, 2**34): [(128,64, 256)]}
+
+        for shape in shapes:
+            for ms in maxshapes[shape]:
+                for chunk in chunks[shape]:
+                    template, dset = new_dset(shape, '<i4', chunks=chunk, maxshape=ms)
+                    verify_ds(dset, template)
+
+        # Other keywords
+        compression = [None, True, 5, 9]
+        fletcher32 = [True, False]
+        shuffle = [True, False]
+
+        for comp in compression:
+            for f in fletcher32:
+                for sh in [x if comp else None for x in shuffle]:
+                    template, dset = new_dset((100,100), '<i4', compression=comp, fletcher32=f, shuffle=sh)
+                    verify_ds(dset, template)
+    
+    def test_Dataset_order(self):
+        """ Test order coercion """
+
+        fortran = numpy.array([[1,2,3],[4,5,6]], order='F'),
+        strided = numpy.arange(2*3*4, dtype=numpy.uint8)
+        strided.shape=(2,3,4)
+        strided.strides=(0,1,1)
+        b = numpy.arange(2*3*4, dtype=numpy.uint8)
+        view = numpy.ndarray(buffer=b, offset=2, shape=(2,4), dtype=numpy.uint8)
+
+        for x in (fortran, strided, view):
+            dset = self.f.create_dataset('TEST_DATA', data=x)
+            self.assert_(numpy.all(dset[:] == x))
+            del self.f['TEST_DATA']
 
     def test_Dataset_extend(self):
+        """ Test extending datasets """
 
         self.output("")
 
@@ -233,17 +351,19 @@ class TestDataset(HDF5TestCase):
 
             for illegal_shape in illegal_shapes[shape]:
                 self.assertRaises(H5Error, ds.extend, illegal_shape)
-        
-    def test_Dataset_len_iter(self):
 
+    def test_Dataset_len_iter(self):
+        """ Test new and old len(), iteration over rows """
         arr1 = numpy.arange(100).reshape((10,10))
         arr2 = numpy.ones(())
 
         d1 = self.f.create_dataset("D1", data=arr1)
         d2 = self.f.create_dataset("D2", data=arr2)
+        d3 = self.f.create_dataset("D3", shape=(2**60, 2**50))
 
         self.assertEqual(len(arr1), len(d1))
         self.assertRaises(TypeError, d2, len)
+        self.assertEqual(d3.len(), 2**60)
 
         for idx, (hval, nval) in enumerate(zip(d1, arr1)):
             self.assert_(numpy.all(hval == nval))
@@ -251,7 +371,8 @@ class TestDataset(HDF5TestCase):
         self.assertEqual(idx+1, len(arr1))
         self.assertRaises(TypeError, list, d2)
 
-    def test_Dataset_bigslice(self):
+    def test_slice_big(self):
+        """ Test slices > 2**32 """
         self.output("")
 
         s = SliceFreezer()
@@ -281,10 +402,42 @@ class TestDataset(HDF5TestCase):
                 dset[slc] = data
                 arr = dset[slc]
                 self.assert_(numpy.all(arr == data), "%r \n\n %r" % (arr, data))
-        
-    def test_Dataset_slicing(self):
 
-        self.output('')
+    def test_slice_simple(self):
+        """ Test Numpy-style slices """
+
+        srcarr = numpy.arange(10*10*50, dtype='<f4').reshape(10,10,50)
+        srcarr = srcarr + numpy.sin(srcarr)
+
+        def verify_read(dset, data, argtpl):
+            """ Make sure dset and data have identical contents under selection
+            """
+            hresult = dset[argtpl]
+            nresult = data[argtpl]
+
+            if isinstance(nresult, numpy.ndarray):
+                # If the canonical result is an array, compare shapes, dtypes
+                self.assertEqual(hresult.shape, nresult.shape)
+                self.assertEqual(hresult.dtype, nresult.dtype)
+            else:
+                # If it's a scalar, make sure the HDF5 result is also
+                self.assert_(not isinstance(hresult, numpy.ndarray))
+
+            # Must be an exact match
+            self.assert_(numpy.all(hresult == nresult))
+
+        def verify(argtpl):
+            """ Test read/write for the given selection """
+
+            dset = self.f.create_dataset('TEST', data=srcarr)
+            verify_read(dset, srcarr, argtpl)
+
+            srcarr[argtpl] = numpy.cos(srcarr[argtpl])
+            dset[argtpl] = srcarr[argtpl]
+            
+            verify_read(dset, srcarr, argtpl)
+        
+            del self.f['TEST']
 
         s = SliceFreezer()
         slices = [s[0,0,0], s[0,0,:], s[0,:,0], s[0,:,:]]
@@ -295,45 +448,32 @@ class TestDataset(HDF5TestCase):
         slices += [ s[0], s[1], s[9], s[0,0], s[4,5], s[:] ]
         slices += [ s[3,...], s[3,2,...] ]
         slices += [ numpy.random.random((10,10,50)) > 0.5 ]  # Truth array
-        slices += [ s[0,0,0:0], s[1:1,:,:], numpy.zeros((10,10,50),dtype='bool')] # Empty selections
-        for dt in TYPES1:
 
-            srcarr = numpy.arange(10*10*50, dtype=dt).reshape(10,10,50)
-            srcarr = srcarr + numpy.sin(srcarr)
+        for slc in slices:
+            self.output("    Checking %s" % ((slc,) if not isinstance(slc, numpy.ndarray) else 'ARRAY'))
+            verify(slc)
+
+    def test_slice_names(self):
+        """ Test slicing with named fields """
+
+        srcarr = numpy.ndarray((10,10), dtype=[('a', '<i4'), ('b', '<f8')])
+        srcarr['a'] = numpy.arange(100).reshape((10,10))
+        srcarr['b'] = 100*numpy.arange(100).reshape((10,10))
+
+        dset = self.f.create_dataset('TEST', data=srcarr)
+
+        pairs = \
+            [ (dset[:], srcarr[:]), (dset['a'], srcarr['a']),
+              (dset[5,5,'a'], srcarr['a'][5,5]),
+              (dset[2,:,'b'], srcarr['b'][2,:]),
+              (dset['b', ..., 5], srcarr[...,5]['b']) ]
+
+        for i, (d, n) in enumerate(pairs):
+            self.assert_(numpy.all(d == n), "Index %d mismatch" % i)
 
 
-            fname = tempfile.mktemp('.hdf5')
-            f = File(fname, 'w')
-            try:
-                d = Dataset(f, "NewDataset", data=srcarr)
-                self.assertEqual(d.shape, srcarr.shape)
-                self.assertEqual(d.dtype, srcarr.dtype)
-                for argtpl in slices:
-                    # Test read
-                    self.output("    Checking read %.20s %s" % (dt, argtpl if not isinstance(argtpl, numpy.ndarray) else 'ARRAY'))
-                    hresult = d[argtpl]
-                    nresult = srcarr[argtpl]
-                    if isinstance(nresult, numpy.ndarray):
-                        self.assertEqual(hresult.shape, nresult.shape)
-                        self.assertEqual(hresult.dtype, nresult.dtype)
-                    else:
-                        self.assert_(not isinstance(hresult, numpy.ndarray))
-                    self.assert_(numpy.all(hresult == nresult))
-
-                del f["NewDataset"]
-                d = Dataset(f, "NewDataset", data=srcarr)
-                for argtpl in slices:
-                    # Test assignment
-                    self.output("    Checking write %.20s %s" % (dt, argtpl if not isinstance(argtpl, numpy.ndarray) else 'ARRAY'))
-                    srcarr[argtpl] = numpy.cos(srcarr[argtpl])
-                    d[argtpl] = srcarr[argtpl]
-                    self.assert_(numpy.all(d.value == srcarr))
-                    
-            finally:
-                f.close()
-                os.unlink(fname)   
-
-    def test_Dataset_coords(self):
+    def test_slice_coords(self):
+        """ Test slicing with CoordsList instances """
 
         space = (100,100)
 
@@ -368,12 +508,14 @@ class TestDataset(HDF5TestCase):
             self.assertEqual(hresult.shape, nresult.shape)
 
     def test_Dataset_exceptions(self):
+        """ Test exceptions """
         # These trigger exceptions in H5Dread
         ref = numpy.ones((10,10), dtype='<i4')
         dsid = self.f.create_dataset('ds', data=ref)
         arr = numpy.ndarray((10,10), dtype='|S6') # incompatible datatype
         self.assertRaises(H5Error, dsid.id.read, h5s.ALL, h5s.ALL, arr)
         # or it'll segfault...
+
 
 class TestGroup(HDF5TestCase):
 
@@ -385,6 +527,9 @@ class TestGroup(HDF5TestCase):
     def tearDown(self):
         self.f.close()
         os.unlink(self.fname)
+
+    def assert_equal_contents(self, a, b):
+        self.assertEqual(set(a), set(b))
 
     def test_Group_init(self):
         
@@ -422,12 +567,17 @@ class TestGroup(HDF5TestCase):
             self.assert_(name in self.f)
 
         # __iter__
-        self.assertEqual(set(self.f), set(subgroups))
+        self.assert_equal_contents(list(self.f), subgroups)
 
-        # iteritems()
-        for name, obj in self.f.iteritems():
-            self.assert_(name in subgroups)
-            self.assert_(isinstance(obj, Group))
+        # Dictionary compatibility methods
+        self.assert_equal_contents(self.f.listnames(), subgroups)
+        self.assert_equal_contents(list(self.f.iternames()), subgroups)
+
+        self.assert_equal_contents(self.f.listobjects(), [self.f[x] for x in subgroups])
+        self.assert_equal_contents(list(self.f.iterobjects()), [self.f[x] for x in subgroups])
+
+        self.assert_equal_contents(self.f.listitems(), [(x, self.f[x]) for x in subgroups])
+        self.assert_equal_contents(list(self.f.iteritems()), [(x, self.f[x]) for x in subgroups])
 
         # __delitem__
         for name in subgroups:
@@ -440,8 +590,10 @@ class TestGroup(HDF5TestCase):
         # __str__
         grp = self.f.create_group("Foobar")
         str(grp)
+        repr(grp)
         grp.id._close()
         str(grp)
+        repr(grp)
 
     def test_Group_setgetitem(self):
         # Also tests named types
@@ -492,17 +644,105 @@ class TestGroup(HDF5TestCase):
         self.assertEqual(info1.fileno, info2.fileno)
         self.assertEqual(info1.objno, info2.objno)
 
-        
+        # test assignment of out-of-order arrays
+        arr = numpy.array(numpy.arange(100).reshape((10,10)), order='F')
+        self.f['FORTRAN'] = arr
+        dset = self.f['FORTRAN']
+        self.assert_(numpy.all(dset[:] == arr))
+        self.assert_(dset[:].flags['C_CONTIGUOUS'])
 
-        
-        
-        
+    def test_require(self):
 
+        grp = self.f.require_group('foo')
+        self.assert_(isinstance(grp, Group))
+        self.assert_('foo' in self.f)
+
+        grp2 = self.f.require_group('foo')
+        self.assert_(grp == grp2)
+        self.assert_(hash(grp) == hash(grp2))
+
+        dset = self.f.require_dataset('bar', (10,10), '<i4')
+        self.assert_(isinstance(dset, Dataset))
+        self.assert_('bar' in self.f)
+
+        dset2 = self.f.require_dataset('bar', (10,10), '<i4')
+        self.assert_(dset == dset2)
+        self.assert_(hash(dset) == hash(dset2))
+
+        self.assertRaises(H5Error, self.f.require_group, 'bar')
+        self.assertRaises(H5Error, self.f.require_dataset, 'foo', (10,10), '<i4')
+
+        self.assertRaises(H5Error, self.f.require_dataset, 'bar', (10,11), '<i4')
+        self.assertRaises(H5Error, self.f.require_dataset, 'bar', (10,10), '<c8')
+        self.assertRaises(H5Error, self.f.require_dataset, 'bar', (10,10), '<i1', exact=True)
+
+        self.f.require_dataset('bar', (10,10), '<i1')
+
+    @api_16
+    def test_copy_16(self):
+
+        self.f.create_group('foo')
+        self.assertRaises(NotImplementedError, self.f.copy, 'foo', 'bar')
+
+    @api_18
+    def test_copy_18(self):
+
+        self.f.create_group('foo')
+        self.f.create_group('foo/bar')
+
+        self.f.copy('foo', 'new')
+        self.assert_('new' in self.f)
+        self.assert_('new/bar' in self.f)
+
+    @api_16
+    def test_visit_16(self):
+
+        for x in ['grp1','grp2']:
+            self.f.create_group(x)
+
+        grplist = []
+        self.assertRaises(NotImplementedError, self.f.visit, grplist.append)
+
+        self.assertRaises(NotImplementedError, self.f.visititems, lambda x,y: grplist.append((x,y)))
+
+    @api_18
+    def test_visit_18(self):
+
+        groups = ['grp1', 'grp1/sg1', 'grp1/sg2', 'grp2', 'grp2/sg1', 'grp2/sg1/ssg1']
+
+        for x in groups:
+            self.f.create_group(x)
+
+        group_visit = []
+        self.f.visit(group_visit.append)
+
+        self.assert_equal_contents(groups, group_visit)
+
+        grp_items = [(x, self.f[x]) for x in groups]
+
+        group_visit = []
+        self.f.visititems(lambda x, y: group_visit.append((x,y)))
         
+        self.assert_equal_contents(grp_items, group_visit)
 
-        
+        # Test short-circuit return
 
+        group_visit = []
+        def visitor(name, obj=None):
+            group_visit.append(name)
+            if name.find('grp2/sg1') >= 0:
+                return name
+            return None
 
+        result = self.f.visit(visitor)
+        self.assert_(result.find('grp2/sg1') >= 0)
+        self.assert_(not any(x.find('grp2/sg1/ssg1') >= 0 for x in group_visit))
+
+        del group_visit[:]
+
+        result = self.f.visititems(visitor)
+        self.assert_(result.find('grp2/sg1') >= 0)
+        self.assert_(not any(x.find('grp2/sg1/ssg1') >= 0 for x in group_visit))
 
 
 

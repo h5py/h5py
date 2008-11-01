@@ -187,7 +187,7 @@ def link(ObjectID obj not None, GroupID loc not None, char* name,
     PropID lapl=None)
 
     Create a new hard link to an object.  Useful for objects created with
-    h5g.create_anon or h5d.create_anon.
+    h5g.create_anon() or h5d.create_anon().
     """
     H5Olink(obj.id, loc.id, name, pdefault(lcpl), pdefault(lapl))
 
@@ -264,26 +264,33 @@ cdef class _ObjectVisitor:
 cdef herr_t cb_obj_iterate(hid_t obj, char* name, H5O_info_t *info, void* data) except 2:
 
     cdef _ObjectVisitor visit
+
+    # HDF5 doesn't respect callback return for ".", so skip it
+    if strcmp(name, ".") == 0:
+        return 0
+
     visit = <_ObjectVisitor>data
-
     visit.objinfo.infostruct = info[0]
-
     visit.retval = visit.func(name, visit.objinfo)
 
-    if (visit.retval is None) or (not visit.retval):
-        return 0
-    return 1
+    if visit.retval is not None:
+        return 1
+    return 0
 
 cdef herr_t cb_obj_simple(hid_t obj, char* name, H5O_info_t *info, void* data) except 2:
 
     cdef _ObjectVisitor visit
-    visit = <_ObjectVisitor>data
 
+    # HDF5 doesn't respect callback return for ".", so skip it
+    if strcmp(name, ".") == 0:
+        return 0
+
+    visit = <_ObjectVisitor>data
     visit.retval = visit.func(name)
 
-    if (visit.retval is None) or (not visit.retval):
-        return 0
-    return 1
+    if visit.retval is not None:
+        return 1
+    return 0
 
 @sync
 def visit(ObjectID loc not None, object func, *,
@@ -300,8 +307,8 @@ def visit(ObjectID loc not None, object func, *,
     
         func(STRING name, ObjInfo info) => Result
 
-    Returning None or a logical False continues iteration; returning
-    anything else aborts iteration and returns that value.  Keywords:
+    Returning None continues iteration; returning anything else aborts
+    iteration and returns that value.  Keywords:
 
     BOOL info (False)
         Callback is func(STRING, Objinfo)

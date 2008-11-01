@@ -39,6 +39,7 @@ Contents:
     build
     quick
     datasets
+    hl
     threads
     licenses
 

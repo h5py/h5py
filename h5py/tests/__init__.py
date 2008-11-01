@@ -13,6 +13,7 @@
 import unittest
 import sys
 
+import common
 from common import HDF5TestCase
 import  test_h5a, test_h5d, test_h5f,\
         test_h5g, test_h5i, test_h5p,\
@@ -69,6 +70,7 @@ def runtests(requests=None, verbosity=1):
 
     if verbosity >= 1:
         print "=== Tested HDF5 %s (%s API) ===" % (version.hdf5_version, version.api_version)
+
     return retval.wasSuccessful()
 
 def autotest():
