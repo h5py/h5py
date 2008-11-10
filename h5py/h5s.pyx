@@ -132,6 +132,8 @@ cdef class SpaceID(ObjectID):
 
         * Hashable: No
         * Equality: Unimplemented
+
+        Can be pickled if HDF5 1.8 is available.
     """
 
     property shape:

@@ -380,23 +380,17 @@ class doc(Command):
         buildobj.run()
         pth = op.abspath(buildobj.build_lib)
 
-        for x in ('docs/manual-html', 'docs/api-html',
-                  'docs/build', 'docs_api/build'):
+        for x in ('docs/html', 'docs/build'):
             if op.exists(x):
                 shutil.rmtree(x)
 
-        cmd1 = "cd docs; make html"
-        cmd2 = "export H5PY_PATH=%s; cd docs_api; make html" % pth
+        cmd = "export H5PY_PATH=%s; cd docs; make html" % pth
 
-        retval = os.system(cmd1)
+        retval = os.system(cmd)
         if retval != 0:
-            fatal("Can't build manual")
-        retval = os.system(cmd2)
-        if retval != 0:
-            fatal("Can't build API documentation")
+            fatal("Can't build documentation")
 
-        shutil.copytree('docs/build/html', 'docs/manual-html')
-        shutil.copytree('docs_api/build/html', 'docs/api-html')
+        shutil.copytree('docs/build/html', 'docs/html')
 
 
 class cyclean(Command):
