@@ -210,7 +210,7 @@ def setup(spx):
 
         del lines[:]
         for line in final_lines:
-            line = replace_param(line)
+            #line = replace_param(line)
             line = replace_constant(line, mod)
             line = replace_module(line)
             line = replace_class(line)

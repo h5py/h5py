@@ -44,10 +44,10 @@ IF H5PY_18API:
             
         Create a new attribute, attached to an existing object.
 
-        + STRING obj_name (".")
+        STRING obj_name (".")
             Attach attribute to this group member instead
 
-        + PropID lapl
+        PropID lapl
             Link access property list for obj_name
         """
 
@@ -181,15 +181,15 @@ IF H5PY_18API:
         Remove an attribute from an object.  Specify exactly one of "name"
         or "index". Keyword-only arguments:
 
-        + STRING obj_name (".")
+        STRING obj_name (".")
             Attribute is attached to this group member
 
-        + PropID lapl (None)
+        PropID lapl (None)
             Link access property list for obj_name
 
-        + INT index_type (h5.INDEX_NAME)
+        INT index_type (h5.INDEX_NAME)
 
-        + INT order (h5.ITER_NATIVE)
+        INT order (h5.ITER_NATIVE)
         """
         if name != NULL and index < 0:
             H5Adelete_by_name(loc.id, obj_name, name, pdefault(lapl))
@@ -254,16 +254,16 @@ IF H5PY_18API:
         2. If you have the parent object, supply it and exactly one of
            either name or index.
 
-        + STRING obj_name (".")
+        STRING obj_name (".")
             Use this group member instead
 
-        + PropID lapl (None)
+        PropID lapl (None)
             Link access property list for obj_name
 
-        + INT index_type (h5.INDEX_NAME)
+        INT index_type (h5.INDEX_NAME)
             Which index to use
 
-        + INT order (h5.ITER_NATIVE)
+        INT order (h5.ITER_NATIVE)
             What order the index is in
         """
         cdef AttrInfo info = AttrInfo()

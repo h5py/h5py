@@ -368,9 +368,12 @@ class doc(Command):
 
     description = "Rebuild documentation"
 
-    user_options = []
+    user_options = [('rebuild', 'r', "Rebuild from scratch")]
+    boolean_options = ['rebuild']
+
     def initialize_options(self):
-        pass
+        self.rebuild = False
+
     def finalize_options(self):
         pass
 
@@ -380,15 +383,17 @@ class doc(Command):
         buildobj.run()
         pth = op.abspath(buildobj.build_lib)
 
-        for x in ('docs/html', 'docs/build'):
-            if op.exists(x):
-                shutil.rmtree(x)
+        if self.rebuild and op.exists('docs/build'):
+            shutil.rmtree('docs/build')
 
         cmd = "export H5PY_PATH=%s; cd docs; make html" % pth
 
         retval = os.system(cmd)
         if retval != 0:
             fatal("Can't build documentation")
+
+        if op.exists('docs/html'):
+            shutil.rmtree('docs/html')
 
         shutil.copytree('docs/build/html', 'docs/html')
 

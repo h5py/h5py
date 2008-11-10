@@ -1,23 +1,26 @@
-Low-level (``h5py.h5*``) guide
-==============================
 
-While the `high-level component`__ provides a friendly, NumPy-like interface
+.. _api_ref:
+
+***********************
+Low-level API reference
+***********************
+
+While the :ref:`high-level component <user_guide>` provides a friendly,
+NumPy-like interface
 to HDF5, the major accomplishment of h5py is the low-level interface.  This
 is the most powerful and flexible way to access HDF5, and is as close as you
 can get the the library without having to actually write C code.
-
-__ http://h5py.alfven.org
 
 The goal of this layer is to provide access to (almost) the entire HDF5 C API,
 while retaining a Pythonic, object-oriented style.  Emphasis has been placed
 on clean design and exhaustive documentation.  Programmers familiar with the
 HDF5 C API should find themselves at home.
 
-You'll probably also find the `official HDF5 documentation`__ useful as a guide
+You'll probably also find the
+`official HDF5 documentation <http://www.hdfgroup.com/HDF5>`_
+useful as a guide
 to how the library itself operates.  In particular, the HDF5 User Guide is
 an excellent description of each major component.
-
-__ http://hdf.ncsa.uiuc.edu/HDF5/doc/index.html
 
 Version of this documentation
 -----------------------------
@@ -31,15 +34,14 @@ than force you to use either version, h5py can be compiled in one of two
 available.  When compiled against HDF5 1.8 (``--api=18``), many new features
 are available.
 
-The `1.6 mode`_ and `1.8 mode`_ are therefore documented separately.
+Despite the major differences between these two versions of HDF5, the library
+has been designed for compatibility; the new feature set is a strict superset of
+the old.  Code written against 1.6 will continue to work with 1.8.
 
-.. _`1.6 mode`: http://h5py.alfven.org/doc16
-.. _`1.8 mode`: http://h5py.alfven.org/doc18
-
-Despite the major differences between these two versions of HDF5, the
-signatures of all routines in the "1.6 API" mode of h5py are
-forward-compatible with the "1.8 API" mode.  Code written against the 1.6 mode
-should work fine when moving to 1.8.
+Keep in mind that since this documentation is generated against the most recent
+(1.8) API version available, some routines, arguments, keywords and even
+data structures documented here may not be available in earlier versions.
+Wherever possible, this is documented.
 
 Low-level API reference
 -----------------------

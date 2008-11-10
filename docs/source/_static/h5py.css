@@ -27,6 +27,14 @@ a:hover {
     color: #2491CF;
 }
 
+/* Italic reference links are annoying */
+
+.reference em {
+    font-style: normal;
+}
+
+/* Custom header CSS */
+
 #tophdr {
     background: #fff;
     height: 3.0em;
@@ -53,11 +61,14 @@ a:hover {
 
 #tophdr p a {
     color: #222;
+    text-decoration: underline;
 }
 
 #tophdr p a:hover {
     color: #444;
 }
+
+/* End custom header CSS */
 
 pre {
     font-family: 'Consolas', 'Deja Vu Sans Mono', 'Bitstream Vera Sans Mono', monospace;
