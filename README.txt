@@ -2,7 +2,7 @@ README for the "h5py" Python/HDF5 interface
 ===========================================
 Copyright (c) 2008 Andrew Collette
 
-Version 0.3.1
+Version 1.0.0
 
 * http://h5py.alfven.org        Main site, docs, quick-start guide
 * http://h5py.googlecode.com    Downloads, FAQ and bug tracker

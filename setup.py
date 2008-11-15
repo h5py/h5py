@@ -48,7 +48,7 @@ from distutils.cmd import Command
 
 # Basic package options
 NAME = 'h5py'
-VERSION = '0.4.0'
+VERSION = '1.0.0'
 MIN_NUMPY = '1.0.3'
 MIN_CYTHON = '0.9.8.1.1'
 SRC_PATH = 'h5py'      # Name of directory with .pyx files
@@ -59,6 +59,13 @@ MODULES = {16:  ['h5', 'h5f', 'h5g', 'h5s', 'h5t', 'h5d', 'h5a', 'h5p', 'h5z',
                  'h5i', 'h5r', 'h5fd', 'utils'],
            18:  ['h5', 'h5f', 'h5g', 'h5s', 'h5t', 'h5d', 'h5a', 'h5p', 'h5z',
                  'h5i', 'h5r', 'h5fd', 'utils', 'h5o', 'h5l']}
+
+def version_check(vers, required):
+
+    def _tpl(istr):
+        return tuple(int(x) for x in istr.split('.'))
+
+    return _tpl(vers) >= _tpl(required)
 
 def fatal(instring, code=1):
     print >> sys.stderr, "Fatal: "+instring
@@ -274,8 +281,8 @@ DEF H5PY_THREADS = %(THREADS)d  # Enable thread-safety and non-blocking reads
         except ImportError:
             fatal("Cython recompilation required, but Cython >=%s not installed." % MIN_CYTHON)
 
-        if Version.version < MIN_CYTHON:
-            fatal("Old Cython version detected; at least %s required" % MIN_CYTHON)
+        if not version_check(Version.version, MIN_CYTHON):
+            fatal("Old Cython %s version detected; at least %s required" % (Version.version, MIN_CYTHON))
 
         print "Running Cython (%s)..." % Version.version
         print "  API level: %d" % self.api

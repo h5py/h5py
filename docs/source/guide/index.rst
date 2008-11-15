@@ -10,9 +10,7 @@ User Guide
 
     build
     quick
-    datasets
     hl
-    threads
     licenses
 
 

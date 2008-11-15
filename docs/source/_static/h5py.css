@@ -97,7 +97,7 @@ table.highlighttable td {
 cite, code, tt {
     font-family: 'Consolas', 'Deja Vu Sans Mono', 'Bitstream Vera Sans Mono', monospace;
     font-size: 0.95em;
-    letter-spacing: 0.01em;
+    /*letter-spacing: 0.01em;*/
 }
 
 hr {
@@ -106,9 +106,10 @@ hr {
 }
 
 tt {
-    background-color: #f2f2f2;
-    border-bottom: 1px solid #ddd;
-    color: #333;
+    /*background-color: #f2f2f2;
+    border-bottom: 1px solid #ddd;*/
+    font-weight: bold;
+    /*color: #333;*/
 }
 
 tt.descname {
@@ -116,11 +117,13 @@ tt.descname {
     font-weight: bold;
     font-size: 1.2em;
     border: 0;
+    letter-spacing: 0.01em;
 }
 
 tt.descclassname {
     background-color: transparent;
     border: 0;
+    letter-spacing: 0.01em;
 }
 
 tt.xref {
@@ -173,7 +176,7 @@ dd {
 
 dt:target,
 .highlight {
-    background-color: #fbe54e;
+    background-color: #eee; /*#fbe54e;*/
 }
 
 dl.glossary dt {
@@ -259,7 +262,7 @@ div.bodywrapper {
 }
 
 div.body a {
-    text-decoration: underline;
+    text-decoration: none;
 }
 
 div.sphinxsidebar {
