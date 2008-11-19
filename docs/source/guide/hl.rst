@@ -480,6 +480,32 @@ points are selected is preserved.
     example, it takes 40MB to express a 1-million point selection on a rank-3
     array.  Be careful, especially with boolean masks.
 
+Special features
+----------------
+
+Unlike memory-resident NumPy arrays, HDF5 dataset support a number of optional
+features.  These are enabled by the keywords provided to
+:meth:`Group.create_dataset`.  Some of the more useful are:
+
+Resizing
+    You can specify a maximum size for the dataset when you create it, by
+    providing a "maxshape" tuple.  Elements with the value ``None`` indicate
+    unlimited dimensions.  Later calls to :meth:`Dataset.resize` will
+    modify the shape in-place::
+
+        >>> dset = grp.create_dataset((10,10), '=f8', maxshape=(None, None))
+        >>> dset.shape
+        (10, 10)
+        >>> dset.resize((20,20))
+        >>> dset.shape
+        (20, 20)
+
+Compression
+    Transparent GZIP compression can substantially reduce the storage space
+    needed for the dataset.  Supply an integer between 0 and 9.  Using the
+    *shuffle* filter along with this option can improve the compression ratio
+    further.
+
 Value attribute and scalar datasets
 -----------------------------------
 
@@ -495,19 +521,8 @@ array, and a full n-dimensional array for all other cases:
            [ 1.,  1.]])
     >>> f["ScalarDS"].value
     1.0
-
-Extending Datasets
-------------------
-
-If the dataset is created with the *maxshape* option set, you can later expand
-its size.  Simply call the *extend* method:
-
-    >>> dset = f.create_dataset("MyDataset", (5,5), maxshape=(None,None))
-    >>> dset.shape
-    (5, 5)
-    >>> dset.extend((15,20))
-    >>> dset.shape
-    (15, 20)
+    >>> f["ScalarDS"][...]
+    array(1.0)
 
 Length and iteration
 --------------------
@@ -577,10 +592,12 @@ Reference
 
         Write to the dataset.  See :ref:`slicing_access`.
 
-    .. method:: extend(shape)
+    .. method:: resize(shape, axis=None)
 
-        Expand the size of the dataset to this new shape.  Must be compatible
-        with the *maxshape* as specified when the dataset was created.
+        Change the size of the dataset to this new shape.  Must be compatible
+        with the *maxshape* as specified when the dataset was created.  If
+        the keyword *axis* is provided, the argument should be a single
+        integer instead; that axis only will be modified.
 
     .. method:: __len__
 

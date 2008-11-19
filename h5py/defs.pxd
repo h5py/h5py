@@ -242,6 +242,7 @@ cdef extern from "hdf5.h":
                     hsize_t *point, void *operator_data)
   herr_t    H5Diterate(void *buf, hid_t type_id, hid_t space_id, 
                         H5D_operator_t operator, void* operator_data) except *
+  herr_t    H5Dset_extent(hid_t dset_id, hsize_t* size)
 
 
 # === H5F - File API ==========================================================

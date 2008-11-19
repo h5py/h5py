@@ -51,6 +51,7 @@ import numpy
 import inspect
 import threading
 import sys
+import warnings
 
 from h5py import h5, h5f, h5g, h5s, h5t, h5d, h5a, h5p, h5z, h5i
 from h5py.h5 import H5Error
@@ -298,7 +299,7 @@ class Group(HLObject, _DictCompat):
         fletcher32:    Enable Fletcher32 error detection? T/F*
         maxshape:      Tuple giving dataset maximum dimensions or None*.
                        You can grow each axis up to this limit using
-                       extend().  For each unlimited axis, provide None.
+                       resize().  For each unlimited axis, provide None.
 
         All these options require chunking.  If a chunk tuple is not
         provided, the constructor will guess an appropriate chunk shape.
@@ -669,7 +670,7 @@ class Dataset(HLObject):
         fletcher32:    Enable Fletcher32 error detection? T/F*
         maxshape:      Tuple giving dataset maximum dimensions or None*.
                        You can grow each axis up to this limit using
-                       extend().  For each unlimited axis, provide None.
+                       resize().  For each unlimited axis, provide None.
 
         All these options require chunking.  If a chunk tuple is not
         provided, the constructor will guess an appropriate chunk shape.
@@ -736,14 +737,33 @@ class Dataset(HLObject):
             self._plist = self.id.get_create_plist()
 
     def extend(self, shape):
-        """ Resize the dataset so it's at least as big as "shape".
+        """ Deprecated.  Use resize() instead. """
+        warnings.warn("extend() will be removed in 1.1; use resize() instead", DeprecationWarning)
+        self.resize(shape)
 
-        Note that the new shape must be compatible with the "maxshape"
-        argument provided when the dataset was created.  Also, the rank of
-        the dataset cannot be changed.
+    def resize(self, size, axis=None):
+        """ Resize the dataset, or the specified axis.
+
+        Argument should be either a new shape tuple, or an integer.  The rank
+        of the dataset cannot be changed.  Keep in mind the dataset can only
+        be resized up to the maximum dimensions provided when it was created.
+
+        Beware; if the array has more than one dimension, the indices of
+        existing data can change.
         """
+        if axis is not None:
+            if not axis >=0 and axis < self.id.rank:
+                raise ValueError("Invalid axis (0 to %s allowed)" % self.id.rank-1)
+            try:
+                newlen = int(size)
+            except TypeError:
+                raise TypeError("Argument must be a single int if axis is specified")
+            size = list(self.shape)
+            size[axis] = newlen
+            size = tuple(size)
+
         with self._lock:
-            self.id.extend(shape)
+            self.id.set_extent(size)
 
     def __len__(self):
         """ The size of the first axis.  TypeError if scalar.

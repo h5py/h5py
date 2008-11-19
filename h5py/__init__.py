@@ -32,12 +32,13 @@ except ImportError:
 import utils, h5, h5a, h5d, h5f, h5g, h5i, h5p, h5r, h5s, h5t, h5z, highlevel, version
 
 from highlevel import File, Group, Dataset, Datatype, AttributeManager, CoordsList
+from h5 import H5Error, get_config
 
 __doc__ = __doc__ % (version.version, version.hdf5_version, version.api_version)
 
 __all__ = ['h5', 'h5f', 'h5g', 'h5s', 'h5t', 'h5d', 'h5a', 'h5p', 'h5r',
            'h5z', 'h5i', 'version', 'File', 'Group', 'Dataset',
-           'Datatype', 'AttributeManager', 'CoordsList']
+           'Datatype', 'AttributeManager', 'CoordsList', 'H5Error', 'get_config']
 
 if version.api_version_tuple >= (1,8):
     import h5o, h5l

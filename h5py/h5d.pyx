@@ -256,10 +256,8 @@ cdef class DatasetID(ObjectID):
             its dataspace, which are fixed when the dataset is created.
         """
         cdef int rank
-        cdef hid_t space_id
-        cdef hsize_t* dims
-        space_id = 0
-        dims = NULL
+        cdef hid_t space_id = 0
+        cdef hsize_t* dims = NULL
 
         try:
             space_id = H5Dget_space(self.id)
@@ -276,6 +274,35 @@ cdef class DatasetID(ObjectID):
             efree(dims)
             if space_id:
                 H5Sclose(space_id)
+
+    @sync
+    def set_extent(self, tuple shape):
+        """ (TUPLE shape)
+
+            Set the size of the dataspace to match the given shape.  If the new
+            size is larger in any dimension, it must be compatible with the
+            maximum dataspace size.
+        """
+        cdef int rank
+        cdef hid_t space_id = 0
+        cdef hsize_t* dims = NULL
+
+        try:
+            space_id = H5Dget_space(self.id)
+            rank = H5Sget_simple_extent_ndims(space_id)
+
+            if len(shape) != rank:
+                raise TypeError("New shape length (%d) must match dataset rank (%d)" % (len(shape), rank))
+
+            dims = <hsize_t*>emalloc(sizeof(hsize_t)*rank)
+            convert_tuple(shape, dims, rank)
+            H5Dset_extent(self.id, dims)
+
+        finally:
+            efree(dims)
+            if space_id:
+                H5Sclose(space_id)
+
 
     @sync
     def get_space(self):

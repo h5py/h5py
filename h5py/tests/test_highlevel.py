@@ -317,7 +317,7 @@ class TestDataset(HDF5TestCase):
             self.assert_(numpy.all(dset[:] == x))
             del self.f['TEST_DATA']
 
-    def test_Dataset_extend(self):
+    def test_Dataset_resize(self):
         """ Test extending datasets """
 
         self.output("")
@@ -344,13 +344,13 @@ class TestDataset(HDF5TestCase):
             for final_shape in final_shapes[shape]:
                 self.output("    Extending %s to %s" % (shape, final_shape))
                 newarr = numpy.arange(numpy.product(final_shape)).reshape(final_shape)
-                ds.extend(final_shape)
+                ds.resize(final_shape)
                 ds[...] = newarr
                 self.assertEqual(ds.shape, final_shape)
                 self.assert_(numpy.all(ds[...] == newarr))
 
             for illegal_shape in illegal_shapes[shape]:
-                self.assertRaises(H5Error, ds.extend, illegal_shape)
+                self.assertRaises(H5Error, ds.resize, illegal_shape)
 
     def test_Dataset_len_iter(self):
         """ Test new and old len(), iteration over rows """
