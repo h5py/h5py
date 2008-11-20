@@ -585,10 +585,14 @@ class Dataset(HLObject):
                      Numpy/Python scalar, depending on the shape.
     """
 
-    @property
-    def shape(self):
+    def _g_shape(self):
         """Numpy-style shape tuple giving dataset dimensions"""
         return self.id.shape
+
+    def _s_shape(self, shape):
+        self.resize(shape)
+
+    shape = property(_g_shape, _s_shape)
 
     @property
     def dtype(self):
@@ -682,17 +686,20 @@ class Dataset(HLObject):
                     raise ValueError('You cannot specify keywords when opening a dataset.')
                 self.id = h5d.open(group.id, name)
             else:
+                
                 # Convert data to a C-contiguous ndarray
                 if data is not None:
                     data = numpy.asarray(data, order="C")
 
                 # Validate shape
-                if shape is None and data is None:
-                    raise ValueError("Either data or shape must be specified")
-                elif shape is None and data is not None:
+                if shape is None:
+                    if data is None:
+                        raise TypeError("Either data or shape must be specified")
                     shape = data.shape
-                elif shape is not None and data is not None:
-                    if numpy.product(shape) != numpy.product(data.shape):
+
+                else:
+                    shape = tuple(shape)
+                    if data is not None and (numpy.product(shape) != numpy.product(data.shape)):
                         raise ValueError("Shape tuple is incompatible with data")
 
                 # Validate dtype
@@ -707,6 +714,8 @@ class Dataset(HLObject):
                 if chunks is True or \
                    (any((compression, shuffle, fletcher32, maxshape)) and chunks is None):
                     chunks = guess_chunk(shape, dtype.itemsize)
+                elif chunks is not None:
+                    chunks = tuple(chunks)
 
                 if chunks is not None and shape == ():
                     raise ValueError("Filter options cannot be used with scalar datasets.")
@@ -714,6 +723,7 @@ class Dataset(HLObject):
                 plist = h5p.create(h5p.DATASET_CREATE)
                 if chunks is not None:
                     plist.set_chunk(chunks)
+                    plist.set_fill_time(h5d.FILL_TIME_ALLOC)
                 if shuffle:
                     plist.set_shuffle()
                 if compression is not None:
@@ -744,6 +754,8 @@ class Dataset(HLObject):
     def resize(self, size, axis=None):
         """ Resize the dataset, or the specified axis.
 
+        The dataset must be stored in chunked format.
+
         Argument should be either a new shape tuple, or an integer.  The rank
         of the dataset cannot be changed.  Keep in mind the dataset can only
         be resized up to the maximum dimensions provided when it was created.
@@ -751,18 +763,22 @@ class Dataset(HLObject):
         Beware; if the array has more than one dimension, the indices of
         existing data can change.
         """
-        if axis is not None:
-            if not axis >=0 and axis < self.id.rank:
-                raise ValueError("Invalid axis (0 to %s allowed)" % self.id.rank-1)
-            try:
-                newlen = int(size)
-            except TypeError:
-                raise TypeError("Argument must be a single int if axis is specified")
-            size = list(self.shape)
-            size[axis] = newlen
-            size = tuple(size)
-
         with self._lock:
+
+            if self.chunks is None:
+                raise TypeError("Only chunked datasets can be resized")
+
+            if axis is not None:
+                if not axis >=0 and axis < self.id.rank:
+                    raise ValueError("Invalid axis (0 to %s allowed)" % self.id.rank-1)
+                try:
+                    newlen = int(size)
+                except TypeError:
+                    raise TypeError("Argument must be a single int if axis is specified")
+                size = list(self.shape)
+                size[axis] = newlen
+
+            size = tuple(size)
             self.id.set_extent(size)
 
     def __len__(self):
@@ -806,9 +822,7 @@ class Dataset(HLObject):
         * Discrete point selection via CoordsList instance
 
         Beware; these last two techniques work by explicitly enumerating
-        the points to be selected.  In the worst case, the selection list
-        for a boolean array can be every point in the dataset, with a 
-        2x to 3x memory overhead.
+        the points to be selected, incurring memory overhead.
         """
         with self._lock:
 
