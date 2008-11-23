@@ -711,22 +711,22 @@ class Dataset(HLObject):
                     dtype = numpy.dtype(dtype)
 
                 # Generate chunks if necessary
-                if chunks is True or \
-                   (any((compression, shuffle, fletcher32, maxshape)) and chunks is None):
-                    chunks = guess_chunk(shape, dtype.itemsize)
-                elif chunks is not None:
-                    chunks = tuple(chunks)
+                if any((compression, shuffle, fletcher32, maxshape)) or chunks is True:
+                    if chunks is False:
+                        raise ValueError("Chunked format required for given storage options")
+                    if chunks in (True, None):
+                        chunks = guess_chunk(shape, dtype.itemsize)
 
-                if chunks is not None and shape == ():
+                if chunks and shape == ():
                     raise ValueError("Filter options cannot be used with scalar datasets.")
 
                 plist = h5p.create(h5p.DATASET_CREATE)
-                if chunks is not None:
-                    plist.set_chunk(chunks)
+                if chunks:
+                    plist.set_chunk(tuple(chunks))
                     plist.set_fill_time(h5d.FILL_TIME_ALLOC)
                 if shuffle:
                     plist.set_shuffle()
-                if compression is not None:
+                if compression:
                     if compression is True:
                         compression = 6
                     plist.set_deflate(compression)

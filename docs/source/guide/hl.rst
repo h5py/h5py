@@ -401,7 +401,7 @@ directly is not recommended.
 
 A subset of the NumPy indexing techniques is supported, including the
 traditional extended-slice syntax, named-field access, and boolean arrays.
-Discrete coordinate selection are also supported via an special indexer class.
+Discrete coordinate selection is also supported via an special indexer class.
 
 Properties
 ----------
@@ -412,6 +412,7 @@ Like Numpy arrays, Dataset objects have attributes named "shape" and "dtype":
     dtype('complex64')
     >>> dset.shape
     (4L, 5L)
+
 
 .. _slicing_access:
 
@@ -447,26 +448,54 @@ numeric slices:
     >>> dset[0,:,4:5, "FieldA", "FieldB"]
     >>> dset[0, ..., "FieldC"]
 
-Advanced indexing
------------------
+Coordinate lists
+----------------
 
-Boolean "mask" arrays can also be used to specify a selection.  The result of
+For any axis, you can provide an explicit list of points you want; for a
+dataset with shape (10, 10)::
+
+    >>> dset.shape
+    (10, 10)
+    >>> result = dset[0, [1,3,8]]
+    >>> result.shape
+    (3,)
+    >>> result = dset[1:6, [5,8,9]]
+    >>> result.shape
+    (5, 3)
+
+The following restrictions exist:
+
+* List selections may not be empty
+* Selection coordinates must be given in increasing order
+* Duplicate selections are ignored
+
+Sparse selection
+----------------
+
+Two mechanisms exist for the case of scattered and/or sparse selection, for
+which slab or row-based techniques may not be appropriate.
+
+Boolean "mask" arrays can be used to specify a selection.  The result of
 this operation is a 1-D array with elements arranged in the standard NumPy
 (C-style) order:
 
-    >>> arr = numpy.random.random((10,10))
+    >>> arr = numpy.arange(100).reshape((10,10))
     >>> dset = f.create_dataset("MyDataset", data=arr)
-    >>> result = dset[arr > 0.5]
+    >>> result = dset[arr > 50]
+    >>> result.shape
+    (49,)
 
 If you have a set of discrete points you want to access, you may not want to go
 through the overhead of creating a boolean mask.  This is especially the case
 for large datasets, where even a byte-valued mask may not fit in memory.  You
-can pass a list of points to the dataset selector via a custom "CoordsList"
-instance:
+can pass a sequence object containing points to the dataset selector via a
+custom "CoordsList" instance:
 
     >>> mycoords = [ (0,0), (3,4), (7,8), (3,5), (4,5) ]
     >>> coords_list = CoordsList(mycoords)
     >>> result = dset[coords_list]
+    >>> result.shape
+    (5,)
 
 Like boolean-array indexing, the result is a 1-D array.  The order in which
 points are selected is preserved.
@@ -483,15 +512,26 @@ points are selected is preserved.
 Special features
 ----------------
 
-Unlike memory-resident NumPy arrays, HDF5 dataset support a number of optional
+Unlike memory-resident NumPy arrays, HDF5 datasets support a number of optional
 features.  These are enabled by the keywords provided to
 :meth:`Group.create_dataset`.  Some of the more useful are:
 
+Compression
+    Transparent GZIP compression 
+    (keyword *compression*)
+    can substantially reduce the storage space
+    needed for the dataset.  Supply an integer between 0 and 9.  Using the
+    *shuffle* filter along with this option can improve the compression ratio
+    further.
+
 Resizing
-    You can specify a maximum size for the dataset when you create it, by
-    providing a "maxshape" tuple.  Elements with the value ``None`` indicate
-    unlimited dimensions.  Later calls to :meth:`Dataset.resize` will
-    modify the shape in-place::
+    Datasets can be resized, up to a maximum value provided at creation time.
+    You can specify this maximum size via the *maxshape* argument to
+    :meth:`create_dataset <Group.create_dataset>` or
+    :meth:`require_dataset <Group.require_dataset>`. Shape elements with the
+    value ``None`` indicate unlimited dimensions.
+
+    Later calls to :meth:`Dataset.resize` will modify the shape in-place::
 
         >>> dset = grp.create_dataset((10,10), '=f8', maxshape=(None, None))
         >>> dset.shape
@@ -500,11 +540,18 @@ Resizing
         >>> dset.shape
         (20, 20)
 
-Compression
-    Transparent GZIP compression can substantially reduce the storage space
-    needed for the dataset.  Supply an integer between 0 and 9.  Using the
-    *shuffle* filter along with this option can improve the compression ratio
-    further.
+    You can also resize a single axis at a time::
+
+        >>> dset.resize(35, axis=1)
+        >>> dset.shape
+        (20, 35)
+
+    .. note::
+        Only datasets stored in "chunked" format can be resized.  This format
+        is automatically selected when any of the advanced storage options is
+        used, or a *maxshape* tuple is provided.  You can also force it to be
+        used by specifying ``chunks=True`` at creation time.
+
 
 Value attribute and scalar datasets
 -----------------------------------
@@ -532,8 +579,9 @@ axis.  Since Python's ``len`` is limited by the size of a C long, it's
 recommended you use the syntax ``dataset.len()`` instead of ``len(dataset)``
 on 32-bit platforms, if you expect the length of the first row to exceed 2**32.
 
-Iterating over a dataset iterates over the first axis.  As with NumPy arrays,
-mutating the yielded data has no effect.
+Iterating over a dataset iterates over the first axis.  However, modifications
+to the yielded data are not recorded in the file.  Resizing a dataset while
+iterating has undefined results.
 
 Reference
 ---------
