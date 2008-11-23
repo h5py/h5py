@@ -173,65 +173,106 @@ def slice_select(space, args):
         else:
             final_args.append(arg)
 
-    # Step through the expanded argument list and handle each axis
 
-    start = []
-    count = []
-    stride = []
-    simple = []
+    # Hyperslab selection
+
+    space.select_all()
+
+    def perform_selection(start, count, step, idx, op=h5s.SELECT_AND):
+        """ Performs a selection using start/count/step in the given axis.
+
+        All other axes have their full range selected.  The selection is
+        added to the current dataspace selection using the given operator,
+        defaulting to AND.
+
+        All arguments are ints.
+        """
+
+        shape = space.shape
+
+        start = tuple(0 if i != idx else start for i, x in enumerate(shape) )
+        count = tuple(x if i != idx else count for i, x in enumerate(shape) )
+        step  = tuple(1 if i != idx else step  for i, x in enumerate(shape) )
+
+        space.select_hyperslab(start, count, step, op=op)
+
+    def validate_number(num, length):
+        """ Make sure the given object can be converted to a positive int
+        smaller than the length.
+        """
+        try:
+            num = long(num)
+        except TypeError:
+            raise TypeError("Illegal index: %r" % num)
+        if num > length-1:
+            raise IndexError('Index out of bounds: %d' % num)
+        if num < 0:
+            raise IndexError('Negative index not allowed: %d' % num)
+
+    mshape = []
+
     for idx, (length, exp) in enumerate(zip(shape,final_args)):
 
         if isinstance(exp, slice):
 
-            # slice.indices() method is limited to long ints
+            start, stop, step = exp.start, exp.stop, exp.step
+            start = 0 if start is None else int(start)
+            stop = length if stop is None else int(stop)
+            step = 1 if step is None else int(step)
 
-            start_, stop_, step_ = exp.start, exp.stop, exp.step
-            start_ = 0 if start_ is None else int(start_)
-            stop_ = length if stop_ is None else int(stop_)
-            step_ = 1 if step_ is None else int(step_)
+            if start < 0:
+                raise ValueError("Negative start index not allowed (got %d)" % start)
+            if step < 1:
+                raise ValueError("Step must be >= 1 (got %d)" % step)
+            if stop < 0:
+                raise ValueError("Negative stop index not allowed (got %d)" % stop)
 
-            if start_ < 0:
-                raise ValueError("Negative start index not allowed (got %d)" % start_)
-            if step_ < 1:
-                raise ValueError("Step must be >= 1 (got %d)" % step_)
-            if stop_ < 0:
-                raise ValueError("Negative stop index not allowed (got %d)" % stop_)
+            count = (stop-start)//step
+            if (stop-start) % step != 0:
+                count += 1
 
-            count_ = (stop_-start_)//step_
-            if (stop_-start_) % step_ != 0:
-                count_ += 1
-
-            if start_+count_ > length:
+            if start+count > length:
                 raise ValueError("Selection out of bounds on axis %d" % idx)
 
-            simple_ = False
+            perform_selection(start, count, step, idx)
 
-        else:
-            try:
-                exp = long(exp)
-            except TypeError:
-                raise TypeError("Illegal index on axis %d: %r" % (idx, exp))
+            mshape.append(count)
 
-            if exp > length-1:
-                raise IndexError('Index %d out of bounds: "%d" (should be <= %d)' % (idx, exp, length-1))
+        else:  # either an index or list of indices
 
-            start_ = exp
-            step_ = 1
-            count_ = 1
-            simple_ = True
+            if not isinstance(exp, list):
+                exp = [exp]
+                mshape.append(0)
+            else:
+                mshape.append(len(exp))
 
-        start.append(start_)
-        count.append(count_)
-        stride.append(step_)
-        simple.append(simple_)
+            if len(exp) == 0:
+                raise TypeError("Empty selections are not allowed (axis %d)" % idx)
 
-    space.select_hyperslab(tuple(start), tuple(count), tuple(stride))
+            if sorted(exp) != exp:
+                raise TypeError("Selection list must be provided in increasing order (axis %d)" % idx)
 
-    # According to the NumPy rules, dimensions which are specified as an int
-    # do not result in a length-1 axis.
-    mem_shape = tuple(x for x, smpl in zip(count, simple) if not smpl) 
+            for x in exp:
+                validate_number(x, length)
 
-    return h5s.create_simple(mem_shape, (h5s.UNLIMITED,)*len(mem_shape)), all(simple)
+            for select_idx in xrange(len(exp)+1):
+
+                if select_idx == 0:
+                    start = 0
+                    count = exp[0]
+                elif select_idx == len(exp):
+                    start = exp[-1]+1
+                    count = length-start
+                else:
+                    start = exp[select_idx-1]+1
+                    count = exp[select_idx] - start
+                if count > 0:
+                    perform_selection(start, count, 1, idx, op=h5s.SELECT_NOTB)
+
+    mshape_final = tuple(x for x in mshape if x != 0)
+    mspace = h5s.create_simple(mshape_final, (h5s.UNLIMITED,)*len(mshape_final))
+
+    return mspace, (len(mshape_final) == 0)
 
 def strhdr(line, char='-'):
     """ Print a line followed by an ASCII-art underline """

@@ -780,7 +780,8 @@ class Dataset(HLObject):
 
             size = tuple(size)
             self.id.set_extent(size)
-
+            h5f.flush(self.id)  # THG recommends
+            
     def __len__(self):
         """ The size of the first axis.  TypeError if scalar.
         """
