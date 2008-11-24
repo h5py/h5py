@@ -242,7 +242,6 @@ cdef class ObjectID:
                 return H5Iget_type(self.id) != H5I_BADID
             finally:
                 phil.release()
-
     
     def __nonzero__(self):
         """ Truth value for object identifiers (like _valid) """
@@ -259,14 +258,15 @@ cdef class ObjectID:
 
     def __dealloc__(self):
         """ Automatically decrefs the ID, if it's valid. """
-        phil.acquire()
-        try:
-            IF H5PY_DEBUG:
-                log_ident.debug("- %d" % self.id)
-            if (not self._locked) and H5Iget_type(self.id) != H5I_BADID:
-                H5Idec_ref(self.id)
-        finally:
-            phil.release()
+
+        # Acquiring PHIL leads to segfault in presence of cyclic
+        # garbage collection.  We'll have to hope this isn't called while
+        # an HDF5 callback is in progress.
+
+        IF H5PY_DEBUG:
+            log_ident.debug("- %d" % self.id)
+        if (not self._locked) and H5Iget_type(self.id) != H5I_BADID:
+            H5Idec_ref(self.id)
 
     
     def __copy__(self):

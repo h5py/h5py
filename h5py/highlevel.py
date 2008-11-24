@@ -74,7 +74,7 @@ class LockableObject(object):
         Base class which provides rudimentary locking support.
     """
 
-    _lock = threading.RLock()
+    _lock = h5.get_phil()
 
 
 class HLObject(LockableObject):

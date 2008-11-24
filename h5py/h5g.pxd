@@ -18,7 +18,7 @@ from h5 cimport ObjectID
 cdef class GroupID(ObjectID):
 
     IF H5PY_18API:
-        cdef readonly object links
+        cdef public object links
     pass
 
 

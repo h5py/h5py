@@ -56,15 +56,15 @@ def h5sync(logger=None):
             fname = funcname(func)
 
             def wrap(*args, **kwds):
-                logger.debug( ("[ Call %s\n%s\n%s" % (fname, args, kwds)).replace("\n", "\n  ") )
-                try:
-                    with phil:
+                with phil:
+                    logger.debug( ("[ Call %s\n%s\n%s" % (fname, args, kwds)).replace("\n", "\n  ") )
+                    try:
                         retval = func(*args, **kwds)
-                except Exception, e:
-                    logger.debug('! Exception in %s: %s("%s")' % (fname, e.__class__.__name__, e))
-                    raise
-                logger.debug( ("] Exit %s\n%s" % (fname,retval)).replace("\n", "\n  ") )
-                return retval
+                    except Exception, e:
+                        logger.debug('! Exception in %s: %s("%s")' % (fname, e.__class__.__name__, e))
+                        raise
+                    logger.debug( ("] Exit %s\n%s" % (fname,retval)).replace("\n", "\n  ") )
+                    return retval
 
             uw_apply(wrap, func)
             return wrap

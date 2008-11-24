@@ -353,13 +353,6 @@ cdef class TypeID(ObjectID):
         cpy = ObjectID.__copy__(self)
         return cpy
 
-    def __repr__(self):
-        try:
-            dstr = " "+self.dtype.str
-        except Exception:
-            dstr = ""
-        return ObjectID.__repr__(self)+dstr
-
     property dtype:
         """ A Numpy-style dtype object representing this object.
         """
