@@ -2,25 +2,59 @@
 Installation guide
 ******************
 
-Installing on Linux/Mac OS-X
-============================
+Where to get h5py
+=================
 
-This package is designed to be installed from source.  You will need
-Python and a C compiler, for distutils to build the extensions.  Pyrex_ is
-required only if you want to change compile-time options, like the
-debugging level.
+See the download page at `the Google Code site`__.  If installing on Windows,
+be sure to get a version that matches your Python version (2.5 or 2.6).
+
+__ http://h5py.googlecode.com
 
 Getting HDF5
-------------
+============
 
-HDF5 versions 1.6.5 and later are supported, including 1.8.X.  Since h5py
-consists of multiple modules, HDF5 *must* be available as a dynamic library.
-**The best solution is to install HDF5 via a package manager.**
+On :ref:`Windows <windows>`, HDF5 is provided as part of the integrated
+installer for h5py.  On UNIX platforms (:ref:`Linux and OS-X <linux>`), you
+must provide HDF5 yourself.  The following HDF5 versions are supported:
+
+* 1.6.5, 1.6.7, 1.6.8, 1.8.0, 1.8.1, 1.8.2
+
+**The best solution is to install HDF5 via a package manager.** If you must
+install yourself from source, keep in mind that you *must* build as a dynamic
+library.
+
 `The HDF Group`__ provides several "dumb" (untar in "/") binary distributions
 for Linux, but traditionally only static libraries for Mac.  Mac OS-X users
 should use something like Fink, or compile HDF5 from source.
 
 __ http://www.hdfgroup.com/HDF5
+
+
+.. _windows:
+
+Installing on Windows
+=====================
+
+Download the executable installer from `Google Code`__ and run it.  This
+installs h5py and a private copy of HDF5 1.8.
+
+__ http://h5py.googlecode.com
+
+Requires
+--------
+
+- NumPy_ 1.0.3 or higher
+
+.. _linux:
+
+Installing on Linux/Mac OS-X
+============================
+
+This package is designed to be installed from source.  You will need
+Python and a C compiler, for distutils to build the extensions.  Cython_ is
+required only if you want to change compile-time options, like the
+debugging level.
+
 
 Requires
 --------
@@ -29,11 +63,11 @@ Requires
 - Numpy_ 1.0.3 or higher
 - HDF5_ 1.6.5 or higher, including 1.8.X versions
 - A working compiler for distutils
-- (Optionally) Pyrex_ 0.9.8.4 or higher
+- (Optionally) Cython_ 0.9.8.1.1 or higher
 
 .. _Numpy: http://numpy.scipy.org/
 .. _HDF5: http://www.hdfgroup.com/HDF5
-.. _Pyrex: http://www.cosc.canterbury.ac.nz/greg.ewing/python/Pyrex/
+.. _Cython: http://cython.org/
 
 Procedure
 ---------
@@ -50,92 +84,19 @@ Additional options
 
 ::
 
- --pyrex         Have Pyrex recompile changed pyx files.
- --pyrex-only    Have Pyrex recompile changed pyx files, and stop.
- --pyrex-force   Recompile all pyx files, regardless of timestamps.
- --no-pyrex      Don't run Pyrex, no matter what
+ --hdf5=<path>   Path to your HDF5 installation (if not in one of the standard
+                 places.  Must contain bin/ and lib/ directories.
 
- --hdf5=path     Use alternate HDF5 directory (containing bin, include, lib)
+ --cython        Force Cython to run
 
- --api=<n>       Specifies API version.  The 1.8.X API (--api=18) is a
-                 work in progress.
+ --cython-only   Run Cython, and stop before compiling with GCC.
+ 
+ --api=<16|18>   Force either 1.6 or 1.8 API compatibility level.  Use if h5py
+                 does not correctly identify your installed HDF5 version.
 
- --debug=<n>     If nonzero, compile in debug mode.  The number is
-                 interpreted as a logging-module level number.  Requires
-                 Pyrex for recompilation.
-
- --io-nonblock   Enable experimental non-blocking I/O feature.  The GIL will
-                 be released around lengthy HDF5 reads/writes.  See the
-                 "Threading" manual entry for caveats.
+ --diag=<int>    Compile in diagnostic (debug) mode.
 
 
-Installing on Windows
-=====================
-
-**It's strongly recommended that you use the pre-built .exe installer.**  It
-will install h5py, a private copy of HDF5 1.8.1 with ZLIB and (optionally)
-SZIP compression enabled, and the proper C runtime dependencies.  You must have
-the following already installed:
-
-- Python 2.5
-- Numpy_ 1.0.3 or higher
-
-If for some reason you want to build from source (for example, to change the
-compile-time options), read the following instructions carefully.
-
-Environment for source build
-----------------------------
-
-1. Install Python 2.5 and Numpy 1.0.3 or higher
-2. Install MinGW to ``C:\MinGW``
-3. Add ``C:\MinGW\bin`` to the Windows PATH
-4. Download the ``pexports`` utility and place it in ``C:\MinGW\bin``
-5. Go to ``C:\Python25\Lib\distutils`` (or equivalent path for your Python install)
-   and create the file "distutils.cfg" with the following text::
-
-    [build]
-    compiler=mingw32
-
-6. Add ``C:\Python25`` (or wherever python.exe lives) to your Windows PATH
-
-Get HDF5 and create import file
--------------------------------
-
-1. Download the pre-built version of HDF5 1.8.1, along with SZIP and ZLIB.
-   You should use the versions built with Visual Studio 2005.  Make sure you
-   get the version of SZIP with compression enabled.
-2. Unpack the HDF5 archive to e.g. ``C:\hdf5``; this directory should now
-   contain ``include`` and ``dll``, among other things.
-3. Open a command prompt in ``C:\hdf5\dll`` and run
-   ``pexports hdf5dll.dll > hdf5dll.def``
-4. Run ``dlltool -D hdf5dll.dll -d hdf5dll.def -l hdf5dll.dll.a``
-5. Create the directory ``C:\hdf5\dll2`` and move ``hdf5dll.dll.a`` there
-
-Compile h5py
-------------
-
-1. Download h5py and extract it to ``C:\h5py``.
-2. In ``C:\h5py``, run ``python setup.py build --hdf5=C:\hdf5``
-3. Copy the following files to ``C:\h5py\h5py``:
-
-    * hdf5dll.dll (from ``C:\hdf5\dll``)
-    * zlib1.dll (from the HDF group zlib archive)
-    * szipdll.dll (from the HDF group szip archive)
-
-4. Run unit tests via ``python setup.py test --hdf5=C:\hdf5``
-
-.. note::
-
-    If you get the message "DLL import failed: configuration incorrect" or
-    some variant, you need to install the package
-    "Microsoft Visual C++ 2005 SP1 Redistributable" from Microsoft's
-    web site.  This is because the pre-compiled HDF5 library requires
-    a specific C runtime library distributed with Visual Studio.
-
-5. Install via ``python setup.py install --hdf5=C:\hdf5``.
-
-After you're done, you can delete the ``C:\hdf5`` and ``C:\h5py`` directories.
-They aren't needed at runtime.
 
 
 

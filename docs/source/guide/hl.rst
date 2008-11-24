@@ -1,4 +1,6 @@
 
+.. _h5pyreference:
+
 *************
 Documentation
 *************
@@ -545,6 +547,10 @@ Resizing
         >>> dset.resize(35, axis=1)
         >>> dset.shape
         (20, 35)
+
+    Resizing an array with existing data works differently than in NumPy; if
+    any axis shrinks, the data in the missing region is discarded.  Data does
+    not "rearrange" itself as it does when resizing a NumPy array.
 
     .. note::
         Only datasets stored in "chunked" format can be resized.  This format

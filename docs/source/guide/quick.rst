@@ -228,14 +228,10 @@ in any dataset, this is the right way to do it.
 More information
 ================
 
-Everything in h5py is documented with docstrings.  The `online HTML
-documentation`__ provides a cross-referenced document with this information.
-The classes described in this document are stored in the ``h5py.highlevel``
-module.
+See the :ref:`reference chapter <h5pyreference>` for complete documentation of
+high-level interface objects like Groups and Datasets.
 
-__ http://h5py.alfven.org/docs/
-
-The `HDF Group`__ website is the final authority on HDF5.  Their `user
+The `HDF Group`__ is the final authority on HDF5.  Their `user
 manual`__ is a great introduction to the basic concepts of HDF5, albeit from
 the perspective of a C programmer.
 

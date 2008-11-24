@@ -24,6 +24,18 @@ def uw_apply(wrap, func):
     else:
         update_wrapper(wrap, func, assigned=('__name__','__doc__'))
 
+def funcname(func):
+
+    if hasattr(func, '__module__') and func.__module__ is not None:
+        fullname = "%s.%s" % (func.__module__, func.__name__)
+    elif hasattr(func, '__self__'):
+        fullname = "%s.%s" % (func.__self__.__class__.__name__, func.__name__)
+    else:
+        fullname = func.__name__
+
+    return fullname
+
+
 def h5sync(logger=None):
 
     if logger is None:
@@ -41,15 +53,17 @@ def h5sync(logger=None):
 
         def sync_debug(func):
 
+            fname = funcname(func)
+
             def wrap(*args, **kwds):
-                logger.debug("$ Threadsafe function entry: %s" % func.__name__)
+                logger.debug( ("[ Call %s\n%s\n%s" % (fname, args, kwds)).replace("\n", "\n  ") )
                 try:
                     with phil:
                         retval = func(*args, **kwds)
-                except:
-                    logger.debug("! Exception in %s" % func.__name__)
+                except Exception, e:
+                    logger.debug('! Exception in %s: %s("%s")' % (fname, e.__class__.__name__, e))
                     raise
-                logger.debug("# Threadsafe function exit: %s" % func.__name__)
+                logger.debug( ("] Exit %s\n%s" % (fname,retval)).replace("\n", "\n  ") )
                 return retval
 
             uw_apply(wrap, func)
@@ -62,13 +76,13 @@ def h5sync_dummy(logger):
     def log_only(func):
 
         def wrap(*args, **kwds):
-            logger.debug("$ Function entry: %s" % func.__name__)
+            logger.debug("[ Function entry: %s" % func.__name__)
             try:
                 retval = func(*args, **kwds)
             except:
                 logger.debug("! Exception in %s" % func.__name__)
                 raise
-            logger.debug("# Function exit: %s" % func.__name__)
+            logger.debug("] Function exit: %s" % func.__name__)
             return retval
         uw_apply(wrap, func)
         return wrap

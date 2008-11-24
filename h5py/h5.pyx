@@ -182,13 +182,9 @@ cdef class PHIL:
             return 0
         cpdef bint acquire(self, int blocking=1) except -1:
             cdef bint rval = self.lock.acquire(blocking)
-            IF H5PY_DEBUG:
-                log_threads.debug('> PHIL acquired')
             return rval
         cpdef bint release(self) except -1:
             self.lock.release()
-            IF H5PY_DEBUG:
-                log_threads.debug('< PHIL released')
             return 0
     ELSE:
         cpdef bint __enter__(self) except -1:
@@ -266,8 +262,8 @@ cdef class ObjectID:
         phil.acquire()
         try:
             IF H5PY_DEBUG:
-                log_ident.debug("- %s" % str(self))
-            if (not self._locked) and self._valid:
+                log_ident.debug("- %d" % self.id)
+            if (not self._locked) and H5Iget_type(self.id) != H5I_BADID:
                 H5Idec_ref(self.id)
         finally:
             phil.release()
