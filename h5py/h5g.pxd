@@ -15,10 +15,13 @@ include "defs.pxd"
 
 from h5 cimport ObjectID
 
+IF H5PY_18API:
+    from h5l cimport LinkProxy
+
 cdef class GroupID(ObjectID):
 
     IF H5PY_18API:
-        cdef public object links
+        cdef readonly object links
     pass
 
 

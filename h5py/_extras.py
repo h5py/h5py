@@ -17,6 +17,9 @@ from functools import update_wrapper
 from h5py.h5 import get_phil
 phil = get_phil()
 
+prof = {}
+from time import time
+
 def uw_apply(wrap, func):
     # Cython methods don't have a "module" attribute for some reason
     if hasattr(func, '__module__'):
@@ -58,12 +61,15 @@ def h5sync(logger=None):
             def wrap(*args, **kwds):
                 with phil:
                     logger.debug( ("[ Call %s\n%s\n%s" % (fname, args, kwds)).replace("\n", "\n  ") )
+                    stime = time()
                     try:
                         retval = func(*args, **kwds)
                     except Exception, e:
                         logger.debug('! Exception in %s: %s("%s")' % (fname, e.__class__.__name__, e))
                         raise
+                    otime = time()
                     logger.debug( ("] Exit %s\n%s" % (fname,retval)).replace("\n", "\n  ") )
+                    prof.setdefault(repr(func), set()).add(otime-stime)
                     return retval
 
             uw_apply(wrap, func)

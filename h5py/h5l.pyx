@@ -92,7 +92,7 @@ cdef herr_t cb_link_simple(hid_t grp, char* name, H5L_info_t *istruct, void* dat
     return 1
 
 
-cdef class LinkProxy(ObjectID):
+cdef class LinkProxy:
 
     """
         Proxy class which provides access to the HDF5 "H5L" API.
@@ -111,13 +111,11 @@ cdef class LinkProxy(ObjectID):
         * Equality: Undefined
     """
 
-    def __cinit__(self, hid_t id_):
-        # At this point the ObjectID constructor has already been called.
+    def __init__(self, hid_t id_):
 
         # The identifier in question is the hid_t for the parent GroupID.
-        # We need to manually incref the identifier because it's now
-        # shared by both this object and the parent.
-        H5Iinc_ref(self.id)
+        # We "borrow" this reference.
+        self.id = id_
 
     def __richcmp__(self, object other, int how):
         return NotImplemented
