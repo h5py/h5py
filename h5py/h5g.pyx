@@ -253,9 +253,6 @@ cdef class GroupID(ObjectID):
         when their Python wrappers are freed.
         """
         H5Gclose(self.id)
-        IF H5PY_18API:
-            H5Gclose(self.id)  # extra ref in the LinkProxy
-
 
     @sync
     def link(self, char* current_name, char* new_name, 

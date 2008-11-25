@@ -12,8 +12,6 @@
 
 include "defs.pxd"
 
-from h5 cimport ObjectID
-
 cdef class LinkProxy:
 
     cdef hid_t id
