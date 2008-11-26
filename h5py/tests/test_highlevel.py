@@ -317,6 +317,7 @@ class TestDataset(HDF5TestCase):
             self.assert_(numpy.all(dset[:] == x))
             del self.f['TEST_DATA']
 
+    @api_18
     def test_Dataset_resize(self):
         """ Test extending datasets """
 

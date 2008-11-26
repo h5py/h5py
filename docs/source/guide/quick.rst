@@ -74,8 +74,6 @@ in it directly, or create subgroups to keep your data better organized.
 Create a dataset
 ----------------
 
-(Main chapter: :ref:`Datasets`)
-
 Datasets are like Numpy arrays which reside on disk; they are associated with
 a name, shape, and a Numpy dtype.  The easiest way to create them is with a
 method of the File object you already have::

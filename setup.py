@@ -155,7 +155,7 @@ class cybuild(build):
                      ('cython','y','Run Cython'),
                      ('cython-only','Y', 'Run Cython and stop'),
                      ('diag', 'd','Enable library debug logging'),
-                     ('threads', 't', 'Make library thread-aware')]
+                     ('no-threads', 't', 'Build without thread support')]
 
     boolean_options = build.boolean_options + ['cython', 'cython-only', 'threads','diag']
 
@@ -189,14 +189,17 @@ class cybuild(build):
         self.cython = False
         self.cython_only = False
         self.diag = False
-        self.threads = False
+        self.no_threads = False
 
 
     def finalize_options(self):
 
         build.finalize_options(self)
 
-        if any((self.cython, self.cython_only, self.diag, self.threads,
+        if self.no_threads:
+            warn("Option --no-threads will disappear soon")
+
+        if any((self.cython, self.cython_only, self.diag, self.no_threads,
                 self.api, self.hdf5)):
             self._default = False
             self.cython = True
@@ -241,6 +244,9 @@ class cybuild(build):
 
         self.distribution.ext_modules = extensions
 
+        if not all(op.exists(op.join(SRC_PATH, x+'.c')) for x in modules):
+            self.cython = True
+
         # Rebuild the C source files if necessary
         if self.cython:
             self.compile_cython(sorted(modules))
@@ -269,7 +275,7 @@ DEF H5PY_THREADS = %(THREADS)d  # Enable thread-safety and non-blocking reads
 """
         return pxi_str % {"VERSION": VERSION, "API_MAX": self.api,
                     "API_16": True, "API_18": self.api == 18,
-                    "DEBUG": 10 if self.diag else 0, "THREADS": self.threads,
+                    "DEBUG": 10 if self.diag else 0, "THREADS": not self.no_threads,
                     "HDF5": "Default" if self.hdf5 is None else self.hdf5}
 
     def compile_cython(self, modules):
@@ -286,7 +292,7 @@ DEF H5PY_THREADS = %(THREADS)d  # Enable thread-safety and non-blocking reads
 
         print "Running Cython (%s)..." % Version.version
         print "  API level: %d" % self.api
-        print "  Thread-aware: %s" % ('yes' if self.threads else 'no')
+        print "  Thread-aware: %s" % ('yes' if not self.no_threads else 'no')
         print "  Diagnostic mode: %s" % ('yes' if self.diag else 'no')
         print "  HDF5: %s" % ('default' if self.hdf5 is None else self.hdf5)
 

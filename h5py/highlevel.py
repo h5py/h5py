@@ -16,7 +16,7 @@
     Groups provide dictionary-like access to and iteration over their members.
     File objects implicitly perform these operations on the root ('/') group.
 
-    Datasets support full Numpy-style slicing and partial I/0, including
+    Datasets support Numpy-style slicing and partial I/0, including
     recarray-style access to named fields.  A minimal Numpy interface is
     included, with shape and dtype properties.
 
@@ -40,10 +40,8 @@
 
     It is safe to import this module using "from h5py.highlevel import *"; it
     will export only the major classes.
-
-    Everything in this module is thread-safe, regardless of the HDF5
-    configuration or compile options.
 """
+
 from __future__ import with_statement
 
 import os
@@ -74,7 +72,7 @@ class LockableObject(object):
         Base class which provides rudimentary locking support.
     """
 
-    _lock = h5.get_phil()
+    _lock = threading.RLock()
 
 
 class HLObject(LockableObject):
@@ -566,6 +564,11 @@ class File(Group):
             return self.fid == other.fid
         return False
 
+    def __del__(self):
+        try:
+            self.close()
+        except Exception:
+            pass
 
 class Dataset(HLObject):
 
@@ -762,8 +765,13 @@ class Dataset(HLObject):
 
         Beware; if the array has more than one dimension, the indices of
         existing data can change.
+
+        Only available with HDF5 1.8.
         """
         with self._lock:
+
+            if not config.API_18:
+                raise NotImplementedError("Resizing is only available with HDF5 1.8.")
 
             if self.chunks is None:
                 raise TypeError("Only chunked datasets can be resized")

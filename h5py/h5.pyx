@@ -690,7 +690,7 @@ def _exithack():
         try:
             H5Fget_obj_ids(H5F_OBJ_ALL, H5F_OBJ_ALL, count, objs)
             for i from 0<=i<count:
-                while H5Iget_ref(objs[i]) > 1:
+                while H5Iget_type(objs[i]) != H5I_BADID and H5Iget_ref(objs[i]) > 0:
                     H5Idec_ref(objs[i])
         finally:
             free(objs)

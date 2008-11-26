@@ -527,7 +527,8 @@ Compression
     further.
 
 Resizing
-    Datasets can be resized, up to a maximum value provided at creation time.
+    When using HDF5 1.8,
+    datasets can be resized, up to a maximum value provided at creation time.
     You can specify this maximum size via the *maxshape* argument to
     :meth:`create_dataset <Group.create_dataset>` or
     :meth:`require_dataset <Group.require_dataset>`. Shape elements with the
@@ -652,6 +653,8 @@ Reference
         with the *maxshape* as specified when the dataset was created.  If
         the keyword *axis* is provided, the argument should be a single
         integer instead; that axis only will be modified.
+
+        **Only available with HDF5 1.8**
 
     .. method:: __len__
 
