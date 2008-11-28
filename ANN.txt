@@ -1,0 +1,96 @@
+=====================================
+Announcing HDF5 for Python (h5py) 1.0
+=====================================
+
+What is h5py?
+-------------
+
+HDF5 for Python (h5py) is a general-purpose Python interface to the
+Hierarchical Data Format library, version 5.  HDF5 is a versatile,
+mature scientific software library designed for the fast, flexible
+storage of enormous amounts of data.
+
+From a Python programmer's perspective, HDF5 provides a robust way to
+store data, organized by name in a tree-like fashion.  You can create
+datasets (arrays on disk) hundreds of gigabytes in size, and perform
+random-access I/O on desired sections.  Datasets are organized in a
+filesystem-like hierarchy using containers called "groups", and 
+accesed using the tradional POSIX /path/to/resource syntax.
+
+Why should I use it?
+--------------------
+
+H5py provides a simple, robust read/write interface to HDF5 data
+from Python.  Existing Python and NumPy concepts are used for the
+interface; for example, datasets on disk are represented by a proxy
+class that supports slicing, and has dtype and shape attributes.
+HDF5 groups are are presented using a dictionary metaphor, indexed
+by name.
+
+A major design goal of h5py is interoperability; you can read your
+existing data in HDF5 format, and create new files that any HDF5-
+aware program can understand.  No Python-specific extensions are
+used; you're free to implement whatever file structure your application
+desires.
+
+Almost all HDF5 features are available from Python, including things
+like compound datatypes (as used with NumPy recarray types), HDF5
+attributes, hyperslab and point-based I/O, and more recent features
+in HDF 1.8 like resizable datasets and recursive iteration over entire
+files.
+
+The foundation of h5py is a near-complete wrapping of the HDF5 C API.
+HDF5 identifiers are first-class objects which participate in Python
+reference counting, and expose the C API via methods.  This low-level
+interface is also made available to Python programmers, and is
+exhaustively documented.
+
+See the Quick-Start Guide for a longer introduction with code examples:
+
+    http://h5py.alfven.org/docs/guide/quick.html
+
+Where to get it
+---------------
+
+* Main website, documentation:  http://h5py.alfven.org
+* Downloads, bug tracker:       http://h5py.googlecode.com
+
+* The HDF group website also contains a good introduction:
+  http://www.hdfgroup.org/HDF5/doc/H5.intro.html
+
+Requires
+--------
+
+* UNIX-like platform (Linux or Mac OS-X); Windows version is in progress.
+* Python 2.5 or 2.6
+* NumPy 1.0.3 or later (1.1.0 or later recommended)
+* HDF5 1.6.5 or later, including 1.8.  Some features only available
+  when compiled against HDF5 1.8.
+* Optionally, Cython (see cython.org) if you want to use custom install
+  options.  You'll need version 0.9.8.1.1 or later.
+
+About this version
+------------------
+
+Version 1.0 follows version 0.3.1 as the latest public release.  The
+major design phase (which began in May of 2008) is now over; the design
+of the high-level API will be supported as-is for the rest of the 1.X
+series, with minor enhancements.
+
+This is the first version to support Python 2.6, and the first to use
+Cython for the low-level interface.  The license remains 3-clause BSD.
+
+** This project is NOT affiliated with The HDF Group. **
+
+Thanks
+------
+
+Thanks to D. Dale, E. Lawrence and other for their continued support
+and comments.  Also thanks to the PyTables project, for inspiration
+and generously providing their code to the community, and to everyone
+at the HDF Group for creating such a useful piece of software.
+
+
+
+
+

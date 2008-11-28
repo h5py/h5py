@@ -118,8 +118,8 @@ You can now store data in it using Numpy-like slicing syntax::
 Closing the file
 ----------------
 
-You don't need to do anything special to "close" datasets.  However, you must
-remember to close the file before exiting Python, to prevent data loss::
+You don't need to do anything special to "close" datasets.  However, as with
+Python files you should close the file before exiting::
 
     >>> dset
     Dataset "MyDataset": (2L, 3L) dtype('int32')

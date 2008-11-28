@@ -56,7 +56,18 @@ function ``h5py.get_config()``.  This object supports the following attributes:
 Threading
 ---------
 
-H5py is now always thread-safe.
+H5py is now always thread-safe.  As HDF5 does not support thread-level
+concurrency (and as it is not necessarily thread-safe), only one thread
+at a time can acquire the lock which manages access to the library.
+
+File compatibility
+------------------
+
+HDF5 in general (and h5py in particular) tries to be as backwards-compatible
+as possible when writing new files.  However, certain combinations of dataset
+filters may cause issues when attempting to read files created with HDF5 1.8
+from an installation using HDF5 1.6.  It's generally best to use the same
+version of HDF5 for all your applications.
 
 
 Files
@@ -77,18 +88,18 @@ Valid modes (like Python's file() modes) are:
      a   Read/write if exists, create otherwise (default)
     ===  ================================================
 
-Like Python files, you must close the file when done::
+Like Python files, you should close the file when done::
 
     >>> file_obj.close()
 
 File objects can also be used as "context managers" along with the new Python
 ``with`` statement.  When used in a ``with`` block, they will be closed at
-the end of the block regardless of what exceptions have been raised::
+the end of the block, even if an exception has been raised::
 
     >>> with File('myfile.hdf5', 'r') as file_obj:
     ...    # do stuff with file_obj
     ...
-    >>> # file_obj is closed at end of block
+    >>> # file_obj is guaranteed closed at end of block
 
 .. note::
 
@@ -117,8 +128,8 @@ Reference
 
     .. method:: close()
 
-        Close the file.  You MUST do this before quitting Python or data may
-        be lost.
+        Close the file.  Like Python files, you should call this when
+        finished to be sure your data is saved.
 
     .. method:: flush()
 
