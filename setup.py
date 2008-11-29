@@ -461,7 +461,8 @@ class new_sdist(sdist):
 
 # New commands for setup (e.g. "python setup.py test")
 if os.name == 'nt':
-    CMD_CLASS.update({'build': cybuild, 'test': test, 'sdist': new_sdist})
+    CMD_CLASS.update({'build': cybuild, 'test': test, 'sdist': new_sdist,
+                       'clean': cyclean})
 else:
     CMD_CLASS.update({'build': cybuild, 'test': test, 'sdist': new_sdist,
                       'doc': doc, 'clean': cyclean, })
