@@ -23,10 +23,10 @@ __doc__ = \
 """
 try:
     import h5
-except ImportError:
+except ImportError, e:
     import os.path as op
     if op.exists('setup.py'):
-        raise ImportError("Exit source directory before importing h5py")
+        raise ImportError('Import error:\n"%s"\n\nBe sure to exit source directory before importing h5py' % e)
     raise
 
 import utils, h5, h5a, h5d, h5f, h5g, h5i, h5p, h5r, h5s, h5t, h5z, highlevel, version

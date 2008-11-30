@@ -76,7 +76,7 @@ def runtests(requests=None, verbosity=1):
 def autotest():
     try:
         if not runtests():
-            sys.exit(1)
+            sys.exit(17)
     except:
         sys.exit(2)
 
