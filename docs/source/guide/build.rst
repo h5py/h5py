@@ -17,7 +17,7 @@ On :ref:`Windows <windows>`, HDF5 is provided as part of the integrated
 installer for h5py.  On UNIX platforms (:ref:`Linux and OS-X <linux>`), you
 must provide HDF5 yourself.  The following HDF5 versions are supported:
 
-* 1.6.5, 1.6.7, 1.6.8, 1.8.0, 1.8.1, 1.8.2
+* 1.6.5, 1.6.6, 1.6.7, 1.6.8, 1.8.0, 1.8.1, 1.8.2
 
 **The best solution is to install HDF5 via a package manager.** If you must
 install yourself from source, keep in mind that you *must* build as a dynamic
@@ -58,12 +58,13 @@ debugging level.
 
 Requires
 --------
-- Unix-like environment (created/tested on 32-bit Intel linux)
 - Python with headers for development
 - Numpy_ 1.0.3 or higher
 - HDF5_ 1.6.5 or higher, including 1.8.X versions
+- Cython_ 0.9.8.1.1 or higher
+
+- Unix-like environment (created/tested on 32-bit Intel linux)
 - A working compiler for distutils
-- (Optionally) Cython_ 0.9.8.1.1 or higher
 
 .. _Numpy: http://numpy.scipy.org/
 .. _HDF5: http://www.hdfgroup.com/HDF5

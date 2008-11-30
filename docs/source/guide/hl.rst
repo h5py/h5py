@@ -19,8 +19,8 @@ package namespace; you can do::
 
     >>> from h5py import *  # or from h5py import File, etc.
 
-General info
-============
+General information about h5py and HDF5
+=======================================
 
 Paths in HDF5
 -------------
@@ -33,14 +33,25 @@ root group ``/`` (represented by the :class:`File` class) at the base.
 Wherever a name or path is called for, it may be relative or absolute.
 Constructs like ``..`` (parent group) are allowed.
 
-Metadata
---------
 
-Every object in HDF5 supports metadata in the form of "attributes", which are
-small, named bits of data.  :class:`Group`, :class:`Dataset` and even
-:class:`File` objects each carry a dictionary-like object which exposes this
-behavior, named ``<obj>.attrs``.  This is the correct way to store metadata
-in HDF5 files.
+Exceptions
+----------
+
+Standard Python exceptions like TypeError and ValueError are raised in
+response to inappropriate arguments.  When an error is encountered by the
+HDF5 library itself, h5py.H5Error (or more commonly, a subclass) is raised.
+For example::
+
+    >>> try:
+    >>>     myfile = h5py.File(some_name)
+    >>> except TypeError:
+    >>>     print "Argument some_name isn't a string!"
+    >>> except H5Error:
+    >>>     print "Problem opening the file %s" % some_name
+
+In practice, all H5Error exceptions contain a useful stacktrace generated
+by the library itself, including a good description of where and why the error
+occurred.
 
 Library configuration
 ---------------------
@@ -69,9 +80,19 @@ filters may cause issues when attempting to read files created with HDF5 1.8
 from an installation using HDF5 1.6.  It's generally best to use the same
 version of HDF5 for all your applications.
 
+Metadata
+--------
 
-Files
-=====
+Every object in HDF5 supports metadata in the form of "attributes", which are
+small, named bits of data.  :class:`Group`, :class:`Dataset` and even
+:class:`File` objects each carry a dictionary-like object which exposes this
+behavior, named ``<obj>.attrs``.  This is the correct way to store metadata
+in HDF5 files.
+
+--------------------------------------------------------
+
+File Objects
+============
 
 To open an HDF5 file, just instantiate the File object directly::
 
