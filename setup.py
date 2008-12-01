@@ -47,12 +47,14 @@ from distutils.command.sdist import sdist
 from distutils.cmd import Command
 
 # Basic package options
-NAME = 'h5py'
+NAME = 'h5py'               # Software title
 VERSION = '1.0.0'
 MIN_NUMPY = '1.0.3'
 MIN_CYTHON = '0.9.8.1.1'
-SRC_PATH = 'h5py'      # Name of directory with .pyx files
-CMD_CLASS = {}         # Custom command classes for setup()
+SRC_PATH = 'h5py'           # Name of directory with .pyx files
+HAVE_CYTHON = False         # Flag (updated below in "Import Checks")
+CMD_CLASS = {}              # Custom command classes for setup()
+PICKLE_FILE = 'buildconf.pickle'
 
 # The list of modules depends on max API version
 MODULES = {16:  ['h5', 'h5f', 'h5g', 'h5s', 'h5t', 'h5d', 'h5a', 'h5p', 'h5z',
@@ -61,11 +63,12 @@ MODULES = {16:  ['h5', 'h5f', 'h5g', 'h5s', 'h5t', 'h5d', 'h5a', 'h5p', 'h5z',
                  'h5i', 'h5r', 'h5fd', 'utils', 'h5o', 'h5l']}
 
 def version_check(vers, required):
+    """ Compare versions between two "."-separated strings. """
 
-    def _tpl(istr):
+    def tpl(istr):
         return tuple(int(x) for x in istr.split('.'))
 
-    return _tpl(vers) >= _tpl(required)
+    return tpl(vers) >= tpl(required)
 
 def fatal(instring, code=1):
     print >> sys.stderr, "Fatal: "+instring
@@ -75,7 +78,16 @@ def warn(instring):
     print >> sys.stderr, "Warning: "+instring
 
 
-# === Required imports ========================================================
+# === Import Checks ===========================================================
+
+# Evil test options for setup.py
+for arg in sys.argv[:]:
+    if arg.find('--disable-numpy') == 0:
+        sys.argv.remove(arg)
+        sys.modules['numpy'] = None
+    if arg.find('--disable-cython') == 0:
+        sys.argv.remove(arg)
+        sys.modules['Cython'] = None
 
 # Check Python version (2.5 or greater required)
 if not (sys.version_info[0:2] >= (2,5)):
@@ -89,7 +101,17 @@ try:
 except ImportError:
     fatal("Numpy not installed (version >= %s required)" % MIN_NUMPY)
 
-    
+try:
+    from Cython.Compiler.Main import Version, compile, compile_multiple, CompilationOptions
+    if version_check(Version.version, MIN_CYTHON):
+        HAVE_CYTHON = True
+    else:
+        HAVE_CYTHON = False
+        warn("Old Cython %s version ignored; at least %s required" % (Version.version, MIN_CYTHON))
+except ImportError:
+    HAVE_CYTHON = False
+    warn("Cython (http://cython.org) is not available; only default build possible")
+
 # === Platform-dependent compiler config ======================================
 
 
@@ -99,6 +121,9 @@ class ExtensionCreator(object):
         serves as a factory for Extension instances.  This is in a
         class as opposed to module code since the HDF5 location
         isn't known until runtime.
+
+        Note this is a purely C-oriented process; it doesn't know or
+        care about Cython.
     """
 
     def __init__(self, hdf5_loc=None):
@@ -146,7 +171,7 @@ class ExtensionCreator(object):
 
 class cybuild(build):
 
-    """ Cython-aware builder
+    """ Cython-aware builder.
     """
 
     user_options = build.user_options + \
@@ -157,29 +182,10 @@ class cybuild(build):
                      ('diag', 'd','Enable library debug logging'),
                      ('no-threads', 't', 'Build without thread support')]
 
-    boolean_options = build.boolean_options + ['cython', 'cython-only', 'threads','diag']
-
-
-    def get_hdf5_version(self):
-        """ Try to determine the installed HDF5 version and return either
-            16 or 18, or None if it can't be determined.
-        """
-        if self.hdf5 is not None:
-            cmd = reduce(op.join, (self.hdf5, 'bin', 'h5cc'))+" -showconfig"
-        else:
-            cmd = "h5cc -showconfig"
-        output = commands.getoutput(cmd)
-        l = output.find("HDF5 Version")
-        if l > 0:
-            if output[l:l+30].find('1.8') > 0:
-                return 18
-            elif output[l:l+30].find('1.6') > 0:
-                return 16
-        return None
+    boolean_options = build.boolean_options + ['cython', 'cython-only', 'no-threads','diag']
 
     def initialize_options(self):
         build.initialize_options(self)
-        self._default = True
 
         # Build options
         self.hdf5 = None
@@ -199,19 +205,12 @@ class cybuild(build):
         if self.no_threads:
             warn("Option --no-threads will disappear soon")
 
-        if any((self.cython, self.cython_only, self.diag, self.no_threads,
-                self.api, self.hdf5)):
-            self._default = False
-            self.cython = True
-
         if self.hdf5 is not None:
-            self._default = False
             self.hdf5 = op.abspath(self.hdf5)
             if not op.exists(self.hdf5):
                 fatal('Specified HDF5 directory "%s" does not exist' % self.hdf5)
 
         if self.api is not None:
-            self._default = False
             try:
                 self.api = int(self.api)
                 if self.api not in (16,18):
@@ -221,42 +220,63 @@ class cybuild(build):
 
     def run(self):
 
-        if self._default and op.exists('buildconf.pickle'):
-            # Read extensions info from pickle file
-            print "=> Using existing build configuration"
-            with open('buildconf.pickle','r') as f:
-                modules, extensions = pickle.load(f)
-        else:
-            print "=> Creating new build configuration"
+        if self.api is None:
+            self.api = self.get_hdf5_version()  # either 16 or 18
 
-            # Try to guess the installed HDF5 version
-            if self.api is None:
-                self.api = self.get_hdf5_version()
-                if self.api is None:
-                    warn("Can't determine HDF5 version, assuming 1.6 (use --api= to override)")
-                    self.api = 16
-
-            modules = MODULES[self.api]
-            creator = ExtensionCreator(self.hdf5)
-            extensions = [creator.create_extension(x) for x in modules]            
-            with open('buildconf.pickle','w') as f:
-                pickle.dump((modules, extensions), f)
+        modules = MODULES[self.api]
+        creator = ExtensionCreator(self.hdf5)
+        extensions = [creator.create_extension(x) for x in modules]
 
         self.distribution.ext_modules = extensions
 
-        if not all(op.exists(op.join(SRC_PATH, x+'.c')) for x in modules):
-            self.cython = True
+        # Cython must be run if any of the following are true:
+        # 1. Some of the .c files don't exist
+        # 2. The current config options don't match the last used options
+        # 3. Either option --cython or --cython-only is provided
 
-        # Rebuild the C source files if necessary
-        if self.cython:
-            self.compile_cython(sorted(modules))
+        src_missing = not all(op.exists(op.join(SRC_PATH, x+'.c')) for x in modules)
+        pxi = self.generate_pxi()
+        stale_pxi = pxi != self.read_pxi()
+
+        if any((src_missing, stale_pxi, self.cython, self.cython_only)):
+            if not HAVE_CYTHON:
+                fatal("Cython recompilation required, but Cython is unavailable or out of date")
+            if stale_pxi:
+                self.write_pxi(pxi)  # Do this AFTER the Cython check
+            self.compile_cython(sorted(modules), stale_pxi)
             if self.cython_only:
                 exit(0)
 
         # Hand over control to distutils
         build.run(self)
 
-    def get_pxi(self):
+        # For commands test and doc, which need to know about this build
+        with open(PICKLE_FILE,'w') as f:
+            pickle.dump((modules, extensions, self.build_lib), f)
+
+    def get_hdf5_version(self):
+        """ Try to determine the installed HDF5 version.
+
+            Returns either 16 or 18.  Defaults to 16 (and prints a warning)
+            if the installed version can't be identified.
+        """
+        if self.hdf5 is not None:
+            cmd = reduce(op.join, (self.hdf5, 'bin', 'h5cc'))+" -showconfig"
+        else:
+            cmd = "h5cc -showconfig"
+        output = commands.getoutput(cmd)
+        l = output.find("HDF5 Version")
+
+        if l > 0:
+            if output[l:l+30].find('1.8') > 0:
+                return 18
+            elif output[l:l+30].find('1.6') > 0:
+                return 16
+
+        warn("Can't determine HDF5 version, assuming 1.6 (use --api= to override)")
+        return 16
+
+    def generate_pxi(self):
         """ Generate a Cython .pxi file reflecting the current options. """
 
         pxi_str = \
@@ -276,50 +296,41 @@ DEF H5PY_THREADS = %(THREADS)d  # Enable thread-safety and non-blocking reads
                     "API_16": True, "API_18": self.api == 18,
                     "DEBUG": 10 if self.diag else 0, "THREADS": not self.no_threads}
 
-    def compile_cython(self, modules):
-        """ Regenerate the C source files for the build process.
-        """
+    def read_pxi(self):
+        """ Returns the current config.pxi file, or an empty string. """
+
+        pxi_path = op.join(SRC_PATH, 'config.pxi')
+        if not op.exists(pxi_path):
+            return ""
 
         try:
-            from Cython.Compiler.Main import Version, compile, compile_multiple, CompilationOptions
-        except ImportError:
-            fatal("Cython recompilation required, but Cython >=%s not installed." % MIN_CYTHON)
+            f = open(pxi_path, 'r')
+            return f.read()
+        except (IOError, OSError):
+            fatal("Can't read file %s" % pxi_path)
+        else:
+            f.close()
+    
+    def write_pxi(self, pxi):
+        """ Unconditionally overwrite the config.pxi file """
 
-        if not version_check(Version.version, MIN_CYTHON):
-            fatal("Old Cython %s version detected; at least %s required" % (Version.version, MIN_CYTHON))
+        pxi_path = op.join(SRC_PATH, 'config.pxi')
+        try:
+            f = open(pxi_path, 'w')
+            f.write(pxi)
+            f.close()
+        except IOError:
+            fatal('Failed write to "%s"' % pxi_path)
+
+    def compile_cython(self, modules, recompile_all=False):
+        """ Regenerate the C source files for the build process.
+        """
 
         print "Running Cython (%s)..." % Version.version
         print "  API level: %d" % self.api
         print "  Thread-aware: %s" % ('yes' if not self.no_threads else 'no')
         print "  Diagnostic mode: %s" % ('yes' if self.diag else 'no')
         print "  HDF5: %s" % ('default' if self.hdf5 is None else self.hdf5)
-
-        # Necessary because Cython doesn't detect changes to the .pxi
-        recompile_all = False
-
-        # Check if the config.pxi file needs to be updated for the given
-        # command-line options.
-        pxi_path = op.join(SRC_PATH, 'config.pxi')
-        pxi = self.get_pxi()
-        if not op.exists(pxi_path):
-            try:
-                f = open(pxi_path, 'w')
-                f.write(pxi)
-                f.close()
-            except IOError:
-                fatal('Failed write to "%s"' % pxi_path)
-            recompile_all = True
-        else:
-            try:
-                f = open(pxi_path, 'r+')
-            except IOError:
-                fatal("Can't read file %s" % pxi_path)
-            if f.read() != pxi:
-                f.close()
-                f = open(pxi_path, 'w')
-                f.write(pxi)
-                recompile_all = True
-            f.close()
 
         # Build each extension
         # This should be a single call to compile_multiple, but it's
@@ -362,11 +373,15 @@ class test(Command):
 
     def run(self):
 
-        buildobj = self.distribution.get_command_obj('build')
-        buildobj.run()
+        try:
+            with open(PICKLE_FILE, 'r') as f:
+                modules, extensions, build_path = pickle.load(f)
+        except (IOError, OSError):
+            fatal("Project must be built before tests can be run")
+
         oldpath = sys.path
         try:
-            sys.path = [op.abspath(buildobj.build_lib)] + oldpath
+            sys.path = [op.abspath(build_path)] + oldpath
             import h5py.tests
             if not h5py.tests.runtests(None if self.sections is None else tuple(self.sections.split(',')), self.detail):
                 raise DistutilsError("Unit tests failed.")
@@ -390,9 +405,11 @@ class doc(Command):
 
     def run(self):
 
-        buildobj = self.distribution.get_command_obj('build')
-        buildobj.run()
-        pth = op.abspath(buildobj.build_lib)
+        try:
+            with open(PICKLE_FILE, 'r') as f:
+                modules, extensions, pth = pickle.load(f)
+        except (IOError, OSError):
+            fatal("Project must be built before docs can be compiled")
 
         if self.rebuild and op.exists('docs/build'):
             shutil.rmtree('docs/build')
@@ -437,7 +454,7 @@ class cyclean(Command):
 
         fnames = [ op.join(SRC_PATH, x+'.dep') for x in allmodules ] + \
                  [ op.join(SRC_PATH, x+'.c') for x in allmodules ] + \
-                 [ op.join(SRC_PATH, 'config.pxi'), 'buildconf.pickle']
+                 [ op.join(SRC_PATH, 'config.pxi'), PICKLE_FILE]
 
         for name in fnames:
             try:

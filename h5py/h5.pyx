@@ -676,15 +676,15 @@ def _exithack():
     # it freaks out and dumps a message to stderr.  So we have Python dec_ref
     # everything when the interpreter's about to exit.
 
-    IF H5PY_DEBUG:
-        log_lib.info("* h5py is shutting down")
-
     cdef int count
     cdef int i
     cdef hid_t *objs
 
     count = H5Fget_obj_count(H5F_OBJ_ALL, H5F_OBJ_ALL)
     
+    IF H5PY_DEBUG:
+        log_lib.info("* h5py is shutting down (closing %d leftover IDs)" % count)
+
     if count > 0:
         objs = <hid_t*>malloc(sizeof(hid_t)*count)
         try:
