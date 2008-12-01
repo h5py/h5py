@@ -29,7 +29,7 @@ except ImportError, e:
         raise ImportError('Import error:\n"%s"\n\nBe sure to exit source directory before importing h5py' % e)
     raise
 
-import utils, h5, h5a, h5d, h5f, h5g, h5i, h5p, h5r, h5s, h5t, h5z, highlevel, version
+import utils, h5, h5a, h5d, h5f, h5fd, h5g, h5i, h5p, h5r, h5s, h5t, h5z, highlevel, version
 
 from highlevel import File, Group, Dataset, Datatype, AttributeManager, CoordsList
 from h5 import H5Error, get_config

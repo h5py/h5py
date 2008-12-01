@@ -220,6 +220,11 @@ class cybuild(build):
 
     def run(self):
 
+        # Hack to prevent "install" command from running Cython
+        if not 'build' in sys.argv:
+            build.run(self)
+            return
+
         if self.api is None:
             self.api = self.get_hdf5_version()  # either 16 or 18
 
