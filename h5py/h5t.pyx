@@ -576,9 +576,7 @@ cdef class TypeOpaqueID(TypeID):
             tag = buf
             return tag
         finally:
-            IF UNAME_SYSNAME != "Windows":
-                # Windows HDF5 uses separate C runtime.
-                free(buf)
+            free(buf)
 
     cdef object py_dtype(self):
         # Numpy translation function for opaque types
@@ -953,9 +951,7 @@ cdef class TypeCompositeID(TypeID):
             assert name != NULL
             pyname = name
         finally:
-            IF UNAME_SYSNAME != "Windows":
-                # Windows HDF5 uses a different C runtime.  We're f*cked.
-                free(name)
+            free(name)
 
         return pyname
 

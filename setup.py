@@ -132,10 +132,10 @@ class ExtensionCreator(object):
                 fatal("On Windows, HDF5 directory must be specified.")
 
             self.libraries = ['hdf5dll']
-            self.include_dirs = [numpy.get_include(), op.join(hdf5_loc, 'include')]
-            self.library_dirs = [op.join(hdf5_loc, 'dll2')]  # Must contain only "hdf5dll.dll.a"
+            self.include_dirs = [numpy.get_include(), op.join(hdf5_loc, 'include'), op.abspath('win_include')]
+            self.library_dirs = [op.join(hdf5_loc, 'dll')]
             self.runtime_dirs = []
-            self.extra_compile_args = ['-DH5_USE_16_API', '-D_HDF5USEDLL_', '-DH5_SIZEOF_SSIZE_T=4']
+            self.extra_compile_args = ['/DH5_USE_16_API', '/D_HDF5USEDLL_']
             self.extra_link_args = []
 
         else:
@@ -521,11 +521,8 @@ data structures and their HDF5 equivalents vastly simplifies the process of
 reading and writing data from Python. 
 """
 
-# Windows requires a custom C runtime
 if os.name == 'nt':
-    package_data = {'h5py': ['*.pyx', '*.dll', 
-                            'Microsoft.VC90.CRT/*.manifest',
-                            'Microsoft.VC90.CRT/*.dll'],
+    package_data = {'h5py': ['*.pyx', '*.dll'],
                        'h5py.tests': ['data/*.hdf5']}
 else:
     package_data = {'h5py': ['*.pyx'],
