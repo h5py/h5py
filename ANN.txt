@@ -17,6 +17,9 @@ random-access I/O on desired sections.  Datasets are organized in a
 filesystem-like hierarchy using containers called "groups", and 
 accesed using the tradional POSIX /path/to/resource syntax.
 
+This is the fourth major release of h5py, and represents the end
+of the "unstable" (0.X.X) design phase.
+
 Why should I use it?
 --------------------
 

@@ -493,13 +493,14 @@ else:
 
 cls_txt = \
 """
-Development Status :: 4 - Beta
+Development Status :: 5 - Production/Stable
 Intended Audience :: Developers
 Intended Audience :: Information Technology
 Intended Audience :: Science/Research
 License :: OSI Approved :: BSD License
 Programming Language :: Python
 Topic :: Scientific/Engineering
+Topic :: Database
 Topic :: Software Development :: Libraries :: Python Modules
 Operating System :: Unix
 Operating System :: POSIX :: Linux
@@ -507,18 +508,21 @@ Operating System :: MacOS :: MacOS X
 Operating System :: Microsoft :: Windows
 """
 
-short_desc = "General-purpose Python bindings for the HDF5 library"
+short_desc = "Read and write HDF5 files from Python"
 
 long_desc = \
 """
 The h5py package provides both a high- and low-level interface to the HDF5
 library from Python. The low-level interface is intended to be a complete
-wrapping of the HDF5 API, while the high-level component supports Python-style
-object-oriented access to HDF5 files, datasets and groups.
+wrapping of the HDF5 API, while the high-level component supports  access to
+HDF5 files, datasets and groups using established Python and NumPy concepts.
 
 A strong emphasis on automatic conversion between Python (Numpy) datatypes and
 data structures and their HDF5 equivalents vastly simplifies the process of
-reading and writing data from Python. 
+reading and writing data from Python.
+
+Supports HDF5 versions 1.6.5 through 1.8.2.  On Windows, HDF5 is included in
+the installer.
 """
 
 if os.name == 'nt':
@@ -538,7 +542,7 @@ setup(
   author_email = '"h5py" at the domain "alfven.org"',
   maintainer = 'Andrew Collette',
   maintainer_email = '"h5py" at the domain "alfven.org"',
-  url = 'h5py.alfven.org',
+  url = 'http://h5py.alfven.org',
   packages = ['h5py','h5py.tests'],
   package_data = package_data,
   ext_modules = [],
