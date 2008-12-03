@@ -48,7 +48,7 @@ from distutils.cmd import Command
 
 # Basic package options
 NAME = 'h5py'               # Software title
-VERSION = '1.0.0'
+VERSION = '1.1.0'
 MIN_NUMPY = '1.0.3'
 MIN_CYTHON = '0.9.8.1.1'
 SRC_PATH = 'h5py'           # Name of directory with .pyx files
@@ -61,6 +61,7 @@ MODULES = {16:  ['h5', 'h5f', 'h5g', 'h5s', 'h5t', 'h5d', 'h5a', 'h5p', 'h5z',
                  'h5i', 'h5r', 'h5fd', 'utils'],
            18:  ['h5', 'h5f', 'h5g', 'h5s', 'h5t', 'h5d', 'h5a', 'h5p', 'h5z',
                  'h5i', 'h5r', 'h5fd', 'utils', 'h5o', 'h5l']}
+EXTRA_SRC = {'h5': ["lzf_filter.c", "lzf/lzf_c.c", "lzf/lzf_d.c"]}
 
 def version_check(vers, required):
     """ Compare versions between two "."-separated strings. """
@@ -151,11 +152,13 @@ class ExtensionCreator(object):
             self.extra_link_args = []
 
     
-    def create_extension(self, name, extra_src=[]):
+    def create_extension(self, name, extra_src=None):
         """ Create a distutils Extension object for the given module.  A list
             of C source files to be included in the compilation can also be
             provided.
         """
+        if extra_src is None:
+            extra_src = []
         sources = [op.join(SRC_PATH, name+'.c')]+[op.join(SRC_PATH,x) for x in extra_src]
         return Extension(NAME+'.'+name,
                             sources, 
@@ -230,7 +233,7 @@ class cybuild(build):
 
         modules = MODULES[self.api]
         creator = ExtensionCreator(self.hdf5)
-        extensions = [creator.create_extension(x) for x in modules]
+        extensions = [creator.create_extension(x, EXTRA_SRC.get(x, None)) for x in modules]
 
         self.distribution.ext_modules = extensions
 

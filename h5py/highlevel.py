@@ -625,6 +625,9 @@ class Dataset(HLObject):
         filt = self._plist.get_filter_by_id(h5z.FILTER_DEFLATE)
         if filt is not None:
             return filt[1][0]
+        filt = self._plist.get_filter_by_id(h5z.FILTER_LZF)
+        if filt is not None:
+            return 'lzf'
         return None
 
     @property
@@ -732,7 +735,12 @@ class Dataset(HLObject):
                 if compression:
                     if compression is True:
                         compression = 6
-                    plist.set_deflate(compression)
+                    if compression in range(10):
+                        plist.set_deflate(compression)
+                    elif compression == 'lzf':
+                        plist.set_filter(h5z.FILTER_LZF, h5z.FLAG_OPTIONAL)
+                    else:
+                        raise ValueError('Compression must be 0-9 or "lzf"')
                 if fletcher32:
                     plist.set_fletcher32()
 

@@ -24,8 +24,9 @@ from h5 cimport init_hdf5
 # Initialization
 init_hdf5()
 
-
 # === Public constants and data structures ====================================
+
+FILTER_LZF = H5PY_FILTER_LZF
 
 FILTER_ERROR    = H5Z_FILTER_ERROR
 FILTER_NONE     = H5Z_FILTER_NONE

@@ -709,6 +709,8 @@ cdef int init_hdf5() except -1:
             raise RuntimeError("Failed to initialize the HDF5 library.")
         if H5Eset_auto(err_callback, NULL) < 0:
             raise RuntimeError("Failed to register HDF5 exception callback.")
+        if register_lzf() < 0:
+            raise RuntimeError("Failed to register LZF filter")
         atexit.register(_exithack)
         hdf5_inited = 1
 

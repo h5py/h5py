@@ -68,6 +68,11 @@ cdef extern from "compat.h":
   size_t h5py_offset_n128_real
   size_t h5py_offset_n128_imag
 
+cdef extern from "lzf_filter.h":
+
+  int H5PY_FILTER_LZF
+  int register_lzf() except *
+
 # === H5 - Common definitions and library functions ===========================
 
 cdef extern from "hdf5.h":
