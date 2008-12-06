@@ -260,7 +260,7 @@ class cybuild(build):
 
         # For commands test and doc, which need to know about this build
         with open(PICKLE_FILE,'w') as f:
-            pickle.dump((modules, extensions, self.build_lib), f)
+            pickle.dump((modules, extensions, op.abspath(self.build_lib)), f)
 
     def get_hdf5_version(self):
         """ Try to determine the installed HDF5 version.
@@ -418,6 +418,10 @@ class doc(Command):
                 modules, extensions, pth = pickle.load(f)
         except (IOError, OSError):
             fatal("Project must be built before docs can be compiled")
+
+        pth = op.abspath(pth)
+
+        print "Loading from %s" % pth
 
         if self.rebuild and op.exists('docs/build'):
             shutil.rmtree('docs/build')

@@ -1,9 +1,9 @@
 
 .. _h5pyreference:
 
-*************
-Documentation
-*************
+***********************
+Reference Documentation
+***********************
 
 .. module:: h5py.highlevel
 
@@ -67,9 +67,10 @@ function ``h5py.get_config()``.  This object supports the following attributes:
 Threading
 ---------
 
-H5py is now always thread-safe.  As HDF5 does not support thread-level
-concurrency (and as it is not necessarily thread-safe), only one thread
-at a time can acquire the lock which manages access to the library.
+H5py is now always thread-safe.  However, as HDF5 does not support thread-level
+concurrency (and as it is not necessarily thread-safe), access to the library
+is automatically serialized.  The GIL is released around read/write operations
+so that non-HDF5 threads (GUIs, computation) can continue to execute.
 
 File compatibility
 ------------------
@@ -89,7 +90,6 @@ small, named bits of data.  :class:`Group`, :class:`Dataset` and even
 behavior, named ``<obj>.attrs``.  This is the correct way to store metadata
 in HDF5 files.
 
---------------------------------------------------------
 
 File Objects
 ============
@@ -122,18 +122,16 @@ the end of the block, even if an exception has been raised::
     ...
     >>> # file_obj is guaranteed closed at end of block
 
-.. note::
-
-    In addition to the methods and properties listed below, File objects also
-    have all the methods and properties of :class:`Group` objects.  In this
-    case the group in question is the HDF5 *root group* (``/``).
 
 Reference
 ---------
 
 .. class:: File
 
-    Represents an HDF5 file on disk.
+    Represents an HDF5 file on disk, and provides access to the root
+    group (``/``).
+
+    See also :class:`Group`, of which this is a subclass.
 
     .. attribute:: name
 
@@ -141,7 +139,7 @@ Reference
 
     .. attribute:: mode
 
-        Mode used to open file
+        Mode (``r``, ``w``, etc) used to open file
 
     .. method:: __init__(name, mode='a')
         
@@ -149,8 +147,8 @@ Reference
 
     .. method:: close()
 
-        Close the file.  Like Python files, you should call this when
-        finished to be sure your data is saved.
+        Close the file.  As with Python files, it's good practice to call
+        this when you're done.
 
     .. method:: flush()
 
@@ -184,15 +182,15 @@ different behavior; see :meth:`Group.__setitem__` for details.
 
 In addition, the following behavior approximates the Python dictionary API:
 
-    - Container syntax (``if name in group``)
-    - Iteration yields member names (``for name in group``)
-    - Length (``len(group)``)
-    - :meth:`listnames <Group.listnames>`
-    - :meth:`iternames <Group.iternames>`
-    - :meth:`listobjects <Group.listobjects>`
-    - :meth:`iterobjects <Group.iterobjects>`
-    - :meth:`listitems <Group.listitems>`
-    - :meth:`iteritems <Group.iteritems>`
+- Container syntax (``if name in group``)
+- Iteration yields member names (``for name in group``)
+- Length (``len(group)``)
+- :meth:`listnames <Group.listnames>`
+- :meth:`iternames <Group.iternames>`
+- :meth:`listobjects <Group.listobjects>`
+- :meth:`iterobjects <Group.iterobjects>`
+- :meth:`listitems <Group.listitems>`
+- :meth:`iteritems <Group.iteritems>`
 
 Reference
 ---------
@@ -280,23 +278,26 @@ Reference
         **data** (None or ndarray)
             Either a NumPy ndarray or anything that can be converted to one.
 
-        Keywords:
+        Keywords (see :ref:`dsetfeatures`):
 
-        **chunks** (None or tuple)
-            Manually specify a chunked layout for the dataset.  It's
-            recommended you let the library determine this value for you.
+        **chunks** (None, True or shape tuple)
+            Store the dataset in chunked format.  Automatically
+            selected if any of the other keyword options are given.  If you
+            don't provide a shape tuple, the library will guess one for you.
 
-        **compression** (None or int)
-            Enable DEFLATE (gzip) compression, at this integer value.
+        **compression** (None or int[0-9])
+            Enable dataset compression.  Currently only gzip (DEFLATE)
+            compression is supported, at the given level.
 
         **shuffle** (True/False)
-            Enable the shuffle filter, which can provide higher compression ratios
-            when used with the compression filter.
-        
-        **fletcher32** (True/False)
-            Enable error detection.
+            Enable the shuffle filte.  When used in conjunction with the
+            *compression* keyword, can increase the compression ratio.
 
-        **maxshape** (None or tuple)
+        **fletcher32** (True/False)
+            Enable Fletcher32 error detection; may be used in addition to
+            compression.
+
+        **maxshape** (None or shape tuple)
             Make the dataset extendable, up to this maximum shape.  Should be a
             NumPy-style shape tuple.  Dimensions with value None have no upper
             limit.
@@ -310,7 +311,12 @@ Reference
         instead.  The additional keyword arguments are only honored when actually
         creating a dataset; they are ignored for the comparison.
 
+        If an existing incompatible object (Group or Datatype) already exists
+        with the given name, fails with H5Error.
+
     .. method:: copy(source, dest)
+
+        **Only available with HDF5 1.8**
 
         Recusively copy an object from one location to another, or between files.
 
@@ -324,9 +330,9 @@ Reference
             Destination.  Must be either Group or path.  If a Group object, it may
             be in a different file.
 
-        **Only available with HDF5 1.8.X**
-
     .. method:: visit(func) -> None or return value from func
+
+        **Only available with HDF5 1.8**
 
         Recursively iterate a callable over objects in this group.
 
@@ -347,9 +353,9 @@ Reference
             >>> list_of_names = []
             >>> f.visit(list_of_names.append)
 
-        **Only available with HDF5 1.8.X.**
-
     .. method:: visititems(func) -> None or return value from func
+
+        **Only available with HDF5 1.8**
 
         Recursively visit names and objects in this group and subgroups.
 
@@ -373,8 +379,6 @@ Reference
             ...
             >>> f = File('foo.hdf5')
             >>> f.visititems(func)
-
-        **Only available with HDF5 1.8.X.**
 
     .. method:: __len__
 
@@ -412,6 +416,7 @@ Reference
 
         Get an iterator over (name, object) pairs for the members of this group.
 
+.. _datasets:
 
 Datasets
 ========
@@ -430,8 +435,7 @@ as HDF5 attributes.
 
 Datasets are created using either :meth:`Group.create_dataset` or
 :meth:`Group.require_dataset`.  Existing datasets should be retrieved using
-the group indexing syntax (``dset = group["name"]``). Calling the constructor
-directly is not recommended.
+the group indexing syntax (``dset = group["name"]``).
 
 A subset of the NumPy indexing techniques is supported, including the
 traditional extended-slice syntax, named-field access, and boolean arrays.
@@ -448,11 +452,65 @@ Like Numpy arrays, Dataset objects have attributes named "shape" and "dtype":
     (4L, 5L)
 
 
-.. _slicing_access:
+.. _dsetfeatures:
 
-Special Features
+Special features
 ----------------
 
+Unlike memory-resident NumPy arrays, HDF5 datasets support a number of optional
+features.  These are enabled by the keywords provided to
+:meth:`Group.create_dataset`.  Some of the more useful are:
+
+Compression
+    Transparent compression 
+    (keyword *compression*)
+    can substantially reduce the storage space
+    needed for the dataset.  The default compression method is GZIP (DEFLATE),
+    which is universally supported by other installations of HDF5.
+    Supply an integer between 0 and 9 to enable GZIP compression at that level.
+    Using the *shuffle* filter along with this option can improve the
+    compression ratio further.
+
+Error-Detection
+    All versions of HDF5 include the *fletcher32* checksum filter, which enables
+    read-time error detection for datasets.  If part of a dataset becomes
+    corrupted, a read operation on that section will immediately fail with
+    H5Error.
+
+Resizing
+    When using HDF5 1.8,
+    datasets can be resized, up to a maximum value provided at creation time.
+    You can specify this maximum size via the *maxshape* argument to
+    :meth:`create_dataset <Group.create_dataset>` or
+    :meth:`require_dataset <Group.require_dataset>`. Shape elements with the
+    value ``None`` indicate unlimited dimensions.
+
+    Later calls to :meth:`Dataset.resize` will modify the shape in-place::
+
+        >>> dset = grp.create_dataset((10,10), '=f8', maxshape=(None, None))
+        >>> dset.shape
+        (10, 10)
+        >>> dset.resize((20,20))
+        >>> dset.shape
+        (20, 20)
+
+    You can also resize a single axis at a time::
+
+        >>> dset.resize(35, axis=1)
+        >>> dset.shape
+        (20, 35)
+
+    Resizing an array with existing data works differently than in NumPy; if
+    any axis shrinks, the data in the missing region is discarded.  Data does
+    not "rearrange" itself as it does when resizing a NumPy array.
+
+    .. note::
+        Only datasets stored in "chunked" format can be resized.  This format
+        is automatically selected when any of the advanced storage options is
+        used, or a *maxshape* tuple is provided.  You can also force it to be
+        used by specifying ``chunks=True`` at creation time.
+
+.. _slicing_access:
 
 Slicing access
 --------------
@@ -507,6 +565,8 @@ The following restrictions exist:
 * Selection coordinates must be given in increasing order
 * Duplicate selections are ignored
 
+.. _sparse_selection:
+
 Sparse selection
 ----------------
 
@@ -536,7 +596,7 @@ custom "CoordsList" instance:
     (5,)
 
 Like boolean-array indexing, the result is a 1-D array.  The order in which
-points are selected is preserved.
+points are selected is preserved.  Duplicate points are ignored.
 
 .. note::
     Boolean-mask and CoordsList indexing rely on an HDF5 construct which
@@ -546,62 +606,6 @@ points are selected is preserved.
     least 8*<rank> bytes per point, and may need to be internally copied.  For
     example, it takes 40MB to express a 1-million point selection on a rank-3
     array.  Be careful, especially with boolean masks.
-
-Special features
-----------------
-
-Unlike memory-resident NumPy arrays, HDF5 datasets support a number of optional
-features.  These are enabled by the keywords provided to
-:meth:`Group.create_dataset`.  Some of the more useful are:
-
-Compression
-    Transparent compression 
-    (keyword *compression*)
-    can substantially reduce the storage space
-    needed for the dataset.  The default compression method is GZIP (DEFPLATE),
-    which is universally supported by other installations of HDF5.
-    Supply an integer between 0 and 9 to enable GZIP compression at that level.
-    Using the *shuffle* filter along with this option can improve the
-    compression ratio further.
-
-Error-Detection
-    All versions of HDF5 include the *fletcher32* checksum filter, which enables
-    read-time error detection for datasets.  If part of a dataset becomes
-    corrupted, a read operation on that section will immediately fail with
-    H5Error.
-
-Resizing
-    When using HDF5 1.8,
-    datasets can be resized, up to a maximum value provided at creation time.
-    You can specify this maximum size via the *maxshape* argument to
-    :meth:`create_dataset <Group.create_dataset>` or
-    :meth:`require_dataset <Group.require_dataset>`. Shape elements with the
-    value ``None`` indicate unlimited dimensions.
-
-    Later calls to :meth:`Dataset.resize` will modify the shape in-place::
-
-        >>> dset = grp.create_dataset((10,10), '=f8', maxshape=(None, None))
-        >>> dset.shape
-        (10, 10)
-        >>> dset.resize((20,20))
-        >>> dset.shape
-        (20, 20)
-
-    You can also resize a single axis at a time::
-
-        >>> dset.resize(35, axis=1)
-        >>> dset.shape
-        (20, 35)
-
-    Resizing an array with existing data works differently than in NumPy; if
-    any axis shrinks, the data in the missing region is discarded.  Data does
-    not "rearrange" itself as it does when resizing a NumPy array.
-
-    .. note::
-        Only datasets stored in "chunked" format can be resized.  This format
-        is automatically selected when any of the advanced storage options is
-        used, or a *maxshape* tuple is provided.  You can also force it to be
-        used by specifying ``chunks=True`` at creation time.
 
 
 Value attribute and scalar datasets
@@ -727,21 +731,21 @@ has a small proxy object (:class:`AttributeManager`) attached to it as
 ``<obj>.attrs``.  This dictionary-like object works like a :class:`Group`
 object, with the following differences:
 
-    - Entries may only be scalars and NumPy arrays
-    - Each attribute must be small (recommended < 64k for HDF5 1.6)
-    - No partial I/O (i.e. slicing) is allowed for arrays
+- Entries may only be scalars and NumPy arrays
+- Each attribute must be small (recommended < 64k for HDF5 1.6)
+- No partial I/O (i.e. slicing) is allowed for arrays
 
 They support the same dictionary API as groups, including the following:
 
-    - Container syntax (``if name in obj.attrs``)
-    - Iteration yields member names (``for name in obj.attrs``)
-    - Number of attributes (``len(obj.attrs)``)
-    - :meth:`listnames <AttributeManager.listnames>`
-    - :meth:`iternames <AttributeManager.iternames>`
-    - :meth:`listobjects <AttributeManager.listobjects>`
-    - :meth:`iterobjects <AttributeManager.iterobjects>`
-    - :meth:`listitems <AttributeManager.listitems>`
-    - :meth:`iteritems <AttributeManager.iteritems>`
+- Container syntax (``if name in obj.attrs``)
+- Iteration yields member names (``for name in obj.attrs``)
+- Number of attributes (``len(obj.attrs)``)
+- :meth:`listnames <AttributeManager.listnames>`
+- :meth:`iternames <AttributeManager.iternames>`
+- :meth:`listobjects <AttributeManager.listobjects>`
+- :meth:`iterobjects <AttributeManager.iterobjects>`
+- :meth:`listitems <AttributeManager.listitems>`
+- :meth:`iteritems <AttributeManager.iteritems>`
 
 Reference
 ---------

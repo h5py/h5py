@@ -4,6 +4,15 @@
 Quick Start Guide
 *****************
 
+This document is a very quick overview of both HDF5 and h5py.  More
+comprehensive documentation is available at:
+
+* :ref:`h5pyreference`
+
+The `HDF Group <http://www.hdfgroup.org>`_ is the final authority on HDF5.
+They also have an `introductory tutorial <http://www.hdfgroup.org/HDF5/Tutor/>`_
+which provides a good introduction.
+
 What is HDF5?
 =============
 
@@ -61,9 +70,7 @@ Files are opened using a Python-file-like syntax::
 
     >>> f = File("myfile.hdf5", 'w')    # Create/truncate file
     >>> f
-    File "myfile.hdf5", root members:
-    >>> type(f)
-    <class 'h5py.highlevel.File'>
+    <HDF5 file "myfile.hdf5" (mode w, 0 root members)>
 
 In the filesystem metaphor of HDF5, the file object does double duty as the
 *root group* (named "/" like its POSIX counterpart).  You can store datasets
@@ -72,31 +79,32 @@ in it directly, or create subgroups to keep your data better organized.
 Create a dataset
 ----------------
 
-Datasets are like Numpy arrays which reside on disk; they are associated with
-a name, shape, and a Numpy dtype.  The easiest way to create them is with a
-method of the File object you already have::
+Datasets are like Numpy arrays which reside on disk; you create them by
+providing at least a name and a shape.  Here's an example::
 
-    >>> dset = f.create_dataset("MyDataset", (2,3), '=i4')
+    >>> dset = f.create_dataset("MyDataset", (2,3), '=i4')  # dtype is optional
     >>> dset
-    Dataset "MyDataset": (2L, 3L) dtype('int32')
-    >>> type(dset)
-    <class 'h5py.highlevel.Dataset'>
+    <HDF5 dataset "MyDataset": shape (2, 3), type "<i4">
 
 This creates a new 2-d 6-element (2x3) dataset containing 32-bit signed integer
 data, in native byte order, located in the root group at "/MyDataset".
 
-Or you can auto-create a dataset from an array, just by giving it a name:
+Some familiar NumPy attributes are included::
 
-    >>> arr = numpy.ones((2,3), '=i4')
-    >>> f["MyDataset"] = arr
-    >>> dset = f["MyDataset"]
-
-Shape and dtype information is always available via properties:
-
+    >>> dset.shape
+    (2, 3)
     >>> dset.dtype
     dtype('int32')
-    >>> dset.shape
-    (2L, 3L)
+
+This dataset, like every object in an HDF5 file, has a name::
+
+    >>> dset.name
+    '/MyDataset'
+
+If you already have a NumPy array you want to store, just hand it off to h5py::
+
+    >>> arr = numpy.ones((2,3), '=i4')
+    >>> dset = f.create_dataset('MyDataset', data=arr)
 
 Read & write data
 -----------------
@@ -113,6 +121,19 @@ You can now store data in it using Numpy-like slicing syntax::
     [[1 0 0]
      [1 0 0]]
 
+The following slice mechanisms are supported (see :ref:`datasets` for more):
+
+    * Integers/slices (``array[2:11:3]``, etc)
+    * Ellipsis indexing (``array[2,...,4:7]``)
+    * Simple broadcasting (``array[2]`` is equivalent to ``array[2,...]``)
+    * Index lists (``array[ 2, [0,1,4,6] ]``)
+
+along with some emulated advanced indexing features
+(see :ref:`sparse_selection`):
+
+    * Boolean array indexing (``array[ array[...] > 0.5 ]``)
+    * Discrete coordinate selection (
+
 Closing the file
 ----------------
 
@@ -120,58 +141,67 @@ You don't need to do anything special to "close" datasets.  However, as with
 Python files you should close the file before exiting::
 
     >>> dset
-    Dataset "MyDataset": (2L, 3L) dtype('int32')
+    <HDF5 dataset "MyDataset": shape (2, 3), type "<i4">
     >>> f.close()
+    >>> f
+    <Closed HDF5 file>
     >>> dset
-    Invalid dataset
+    <Closed HDF5 dataset>
+
+H5py tries to close all objects on exit (or when they are no longer referenced),
+but it's good practice to close your files anyway.
 
 
 Groups & multiple objects
 =========================
 
-You've already seen that every object in a file is identified by a name:
+When creating the dataset above, we gave it a name::
 
-    >>> f["DS1"] = numpy.ones((2,3))    # full name "/DS1"
-    >>> f["DS2"] = numpy.ones((1,2))    # full name "/DS2"
-    >>> f
-    File "myfile.hdf5", root members: "DS1", "DS2"
-
-Groups, including the root group ("f", in this example), act somewhat like
-Python dictionaries.  They support iteration and membership testing:
-    
-    >>> list(f)
-    ['DS1', 'DS2']
-    >>> dict(x, y.shape for x, y in f.iteritems())
-    {'DS1': (2,3), 'DS2': (1,2)}
-    >>> "DS1" in f
-    True
-    >>> "FOOBAR" in f
-    False
-
-You can "delete" (unlink) an object from a group::
-
-    >>> f["DS"] = numpy.ones((10,10))
-    >>> f["DS"]
-    Dataset "DS": (10L, 10L) dtype('float64')
-    >>> "DS" in f
-    True
-    >>> del f["DS"]
-    >>> "DS" in f
-    False
-
-Most importantly, you can create additional subgroups by giving them names:
-
-    >>> g = f.create_group('subgrp')
-    >>> g
-    Group "subgrp" (0 members)
-    >>> g.name
-    '/subgrp'
-    >>> dset = g.create_dataset("DS3", (10,10))
     >>> dset.name
-    '/subgrp/DS3'
+    '/MyDataset'
 
-Using this feature you can build up an entire virtual filesystem inside an
-HDF5 file.  This hierarchical organization is what gives HDF5 its name.
+This bears a suspicious resemblance to a POSIX filesystem path; in this case,
+we say that MyDataset resides in the *root group* (``/``) of the file.  You
+can create other groups as well::
+
+    >>> subgroup = f.create_group("SubGroup")
+    >>> subgroup.name
+    '/SubGroup'
+
+They can in turn contain new datasets or additional groups::
+
+    >>> dset2 = subgroup.create_dataset('MyOtherDataset', (4,5), '=f8')
+    >>> dset2.name
+    '/SubGroup/MyOtherDataset'
+
+You can access the contents of groups using dictionary-style syntax, using
+POSIX-style paths::
+
+    >>> dset2 = subgroup['MyOtherDataset']
+    >>> dset2 = f['/SubGroup/MyOtherDataset']   # equivalent
+
+Groups (including File objects; "f" in this example) support other
+dictionary-like operations::
+
+    >>> list(f)                 # iteration
+    ['MyDataset', 'SubGroup']
+    >>> 'MyDataset' in f        # membership testing
+    True
+    >>> 'Subgroup/MyOtherDataset' in f      # even for arbitrary paths!
+    True
+    >>> del f['MyDataset']      # Delete (unlink) a group member
+
+As a safety feature, you can't create an object with a pre-existing name;
+you have to manually delete the existing object first::
+
+    >>> grp = f.create_group("NewGroup")
+    >>> grp2 = f.create_group("NewGroup")   # wrong
+    (H5Error raised)
+    >>> del f['NewGroup']
+    grp2 = f.create_group("NewGroup")
+
+This restriction reflects HDF5's lack of transactional support, and will not
+change.
 
 .. note::
 
@@ -179,21 +209,18 @@ HDF5 file.  This hierarchical organization is what gives HDF5 its name.
     groups; you can't yet do ``f.create_group('foo/bar/baz')`` unless both
     groups "foo" and "bar" already exist.
 
-
 Attributes
 ==========
 
 HDF5 lets you associate small bits of data with both groups and datasets.
-This can be used for metadata like descriptive titles, timestamps, or any
-other purpose you want.
+This can be used for metadata like descriptive titles or timestamps.
 
 A dictionary-like object which exposes this behavior is attached to every
 Group and Dataset object as the attribute ``attrs``.  You can store any scalar
 or array value you like::
 
-    >>> dset = f.create_dataset("MyDS", (2,3), '=i4')
     >>> dset.attrs
-    Attributes of "MyDS": (none)
+    <Attributes of HDF5 object "MyDataset" (0)>
     >>> dset.attrs["Name"] = "My Dataset"
     >>> dset.attrs["Frob Index"] = 4
     >>> dset.attrs["Order Array"] = numpy.arange(10)
@@ -204,6 +231,10 @@ or array value you like::
     Frob Index: 4
     Order Array: [0 1 2 3 4 5 6 7 8 9]
 
+Attribute proxy objects support the same dictionary-like API as groups, but
+unlike group members, you can directly overwrite existing attributes:
+
+    >>> dset.attrs["Name"] = "New Name"
 
 Named datatypes
 ===============
@@ -214,26 +245,14 @@ object in any group, simply by assigning a NumPy dtype to a name:
 
     >>> f["MyIntegerDatatype"] = numpy.dtype('<i8')
     >>> htype = f["MyIntegerDatatype"]
+    >>> htype
+    <HDF5 named type "MyIntegerDatatype" (dtype <i8)>
     >>> htype.dtype
     dtype('int64')
 
 This isn't ordinarily useful because each dataset already carries its own
 dtype attribute.  However, if you want to store datatypes which are not used
 in any dataset, this is the right way to do it.
-
-More information
-================
-
-See the :ref:`reference chapter <h5pyreference>` for complete documentation of
-high-level interface objects like Groups and Datasets.
-
-The `HDF Group`__ is the final authority on HDF5.  Their `user
-manual`__ is a great introduction to the basic concepts of HDF5, albeit from
-the perspective of a C programmer.
-
-__ http://www.hdfgroup.org/HDF5/
-__ http://www.hdfgroup.org/HDF5/doc/UG/index.html
-
 
 
 
