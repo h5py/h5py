@@ -132,7 +132,7 @@ class ExtensionCreator(object):
             if hdf5_loc is None:
                 fatal("On Windows, HDF5 directory must be specified.")
 
-            self.libraries = ['hdf5dll']
+            self.libraries = ['hdf5dll18']
             self.include_dirs = [numpy.get_include(), op.join(hdf5_loc, 'include'), op.abspath('win_include')]
             self.library_dirs = [op.join(hdf5_loc, 'dll')]
             self.runtime_dirs = []
