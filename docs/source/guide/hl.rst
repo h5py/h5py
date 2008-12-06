@@ -450,6 +450,10 @@ Like Numpy arrays, Dataset objects have attributes named "shape" and "dtype":
 
 .. _slicing_access:
 
+Special Features
+----------------
+
+
 Slicing access
 --------------
 
@@ -551,12 +555,20 @@ features.  These are enabled by the keywords provided to
 :meth:`Group.create_dataset`.  Some of the more useful are:
 
 Compression
-    Transparent GZIP compression 
+    Transparent compression 
     (keyword *compression*)
     can substantially reduce the storage space
-    needed for the dataset.  Supply an integer between 0 and 9.  Using the
-    *shuffle* filter along with this option can improve the compression ratio
-    further.
+    needed for the dataset.  The default compression method is GZIP (DEFPLATE),
+    which is universally supported by other installations of HDF5.
+    Supply an integer between 0 and 9 to enable GZIP compression at that level.
+    Using the *shuffle* filter along with this option can improve the
+    compression ratio further.
+
+Error-Detection
+    All versions of HDF5 include the *fletcher32* checksum filter, which enables
+    read-time error detection for datasets.  If part of a dataset becomes
+    corrupted, a read operation on that section will immediately fail with
+    H5Error.
 
 Resizing
     When using HDF5 1.8,

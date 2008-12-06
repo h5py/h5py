@@ -44,9 +44,7 @@ HDF5-aware application can understand.
 Getting data into HDF5
 ======================
 
-First, install h5py by following the `installation instructions`__.
-
-__ http://h5py.alfven.org/build.html
+First, install h5py by following the :ref:`installation instructions <build>`.
 
 The ``import *`` construct is safe when used with the main package::
 
