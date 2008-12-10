@@ -53,6 +53,7 @@ import warnings
 
 from h5py import h5, h5f, h5g, h5s, h5t, h5d, h5a, h5p, h5z, h5i
 from h5py.h5 import H5Error
+import utils_hl as uhl
 from utils_hl import slice_select, hbasename, guess_chunk
 from utils_hl import CoordsList
 from browse import _H5Browser
@@ -614,31 +615,30 @@ class Dataset(HLObject):
     @property
     def chunks(self):
         """Dataset chunks (or None)"""
-        try:
-            return self._plist.get_chunk()
-        except H5Error:
-            return None
+        return self._chunks
 
     @property
     def compression(self):
-        """Compression level (or None)"""
-        filt = self._plist.get_filter_by_id(h5z.FILTER_DEFLATE)
-        if filt is not None:
-            return filt[1][0]
-        filt = self._plist.get_filter_by_id(h5z.FILTER_LZF)
-        if filt is not None:
-            return 'lzf'
+        """Compression strategy (or None)"""
+        for x in ('gzip','lzf','szip'):
+            if x in self._filters:
+                return x
         return None
+
+    @property
+    def compression_opts(self):
+        """ Compression setting.  Int(0-9) for gzip, 2-tuple for szip. """
+        return self._filters.get(self.compression, None)
 
     @property
     def shuffle(self):
         """Shuffle filter present (T/F)"""
-        return self._plist.get_filter_by_id(h5z.FILTER_SHUFFLE) is not None
+        return 'shuffle' in self._filters
 
     @property
     def fletcher32(self):
         """Fletcher32 filter is present (T/F)"""
-        return self._plist.get_filter_by_id(h5z.FILTER_FLETCHER32) is not None
+        return 'fletcher32' in self._filters
         
     @property
     def maxshape(self):
@@ -649,7 +649,7 @@ class Dataset(HLObject):
     def __init__(self, group, name,
                     shape=None, dtype=None, data=None,
                     chunks=None, compression=None, shuffle=False,
-                    fletcher32=False, maxshape=None):
+                    fletcher32=False, maxshape=None, compression_opts=None):
         """ Open or create a new dataset in the file.
 
         It's recommended you use the Group methods (open via Group["name"],
@@ -675,12 +675,14 @@ class Dataset(HLObject):
         Creation keywords (* is default):
 
         chunks:        Tuple of chunk dimensions, True, or None*
-        compression:   DEFLATE (gzip) compression level, int or None*
+        compression:   "gzip", "lzf", or "szip" (if available)
         shuffle:       Use the shuffle filter? (requires compression) T/F*
         fletcher32:    Enable Fletcher32 error detection? T/F*
         maxshape:      Tuple giving dataset maximum dimensions or None*.
                        You can grow each axis up to this limit using
                        resize().  For each unlimited axis, provide None.
+        
+        compress_opts: Optional setting for the compression filter
 
         All these options require chunking.  If a chunk tuple is not
         provided, the constructor will guess an appropriate chunk shape.
@@ -688,7 +690,7 @@ class Dataset(HLObject):
         """
         with group._lock:
             if data is None and shape is None:
-                if any((data,dtype,shape,chunks,compression,shuffle,fletcher32)):
+                if any((dtype,chunks,compression,shuffle,fletcher32)):
                     raise ValueError('You cannot specify keywords when opening a dataset.')
                 self.id = h5d.open(group.id, name)
             else:
@@ -702,7 +704,6 @@ class Dataset(HLObject):
                     if data is None:
                         raise TypeError("Either data or shape must be specified")
                     shape = data.shape
-
                 else:
                     shape = tuple(shape)
                     if data is not None and (numpy.product(shape) != numpy.product(data.shape)):
@@ -716,33 +717,26 @@ class Dataset(HLObject):
                 else:
                     dtype = numpy.dtype(dtype)
 
-                # Generate chunks if necessary
-                if any((compression, shuffle, fletcher32, maxshape)) or chunks is True:
+                # Legacy
+                if any((compression, shuffle, fletcher32, maxshape)):
                     if chunks is False:
                         raise ValueError("Chunked format required for given storage options")
-                    if chunks in (True, None):
-                        chunks = guess_chunk(shape, dtype.itemsize)
 
-                if chunks and shape == ():
-                    raise ValueError("Filter options cannot be used with scalar datasets.")
-
-                plist = h5p.create(h5p.DATASET_CREATE)
-                if chunks:
-                    plist.set_chunk(tuple(chunks))
-                    plist.set_fill_time(h5d.FILL_TIME_ALLOC)
-                if shuffle:
-                    plist.set_shuffle()
-                if compression:
-                    if compression is True:
-                        compression = 6
-                    if compression in range(10):
-                        plist.set_deflate(compression)
-                    elif compression == 'lzf':
-                        plist.set_filter(h5z.FILTER_LZF, h5z.FLAG_OPTIONAL)
+                # Legacy
+                if compression in range(10) or compression is True:
+                    if compression_opts is None:
+                        if compression is True:
+                            compression_opts = 4
+                        else:
+                            compression_opts = compression
                     else:
-                        raise ValueError('Compression must be 0-9 or "lzf"')
-                if fletcher32:
-                    plist.set_fletcher32()
+                        raise TypeError("Conflict in compression options")
+                    compression = 'gzip'
+
+                # Generate the dataset creation property list
+                # This also validates the keyword arguments
+                plist = uhl.generate_dcpl(shape, dtype, chunks, compression,
+                            compression_opts, shuffle, fletcher32, maxshape)
 
                 if maxshape is not None:
                     maxshape = tuple(x if x is not None else h5s.UNLIMITED for x in maxshape)
@@ -755,7 +749,12 @@ class Dataset(HLObject):
                     self.id.write(h5s.ALL, h5s.ALL, data)
 
             self._attrs = AttributeManager(self)
-            self._plist = self.id.get_create_plist()
+            plist = self.id.get_create_plist()
+            self._filters = uhl.get_filters(plist)
+            if plist.get_layout() == h5d.CHUNKED:
+                self._chunks = plist.get_chunk()
+            else:
+                self._chunks = None
 
     def extend(self, shape):
         """ Deprecated.  Use resize() instead. """

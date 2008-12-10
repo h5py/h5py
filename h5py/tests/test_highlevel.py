@@ -236,6 +236,11 @@ class TestDataset(HDF5TestCase):
                 elif value is True:
                     self.assert_(getattr(hdf, name) is not None,
                       "True kwd ignored: %s" % name)
+                elif name == 'compression':
+                    cname = getattr(hdf,name)
+                    cval = getattr(hdf, 'compression_opts')
+                    self.assertEqual(cname, 'gzip')
+                    self.assertEqual(cval,value)
                 else:
                     self.assertEqual(getattr(hdf, name), value,
                       "kwd mismatch: %s: %s %s" % (name, getattr(hdf, name), value))
