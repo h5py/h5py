@@ -236,7 +236,7 @@ class TestDataset(HDF5TestCase):
                 elif value is True:
                     self.assert_(getattr(hdf, name) is not None,
                       "True kwd ignored: %s" % name)
-                elif name == 'compression':
+                elif name == 'compression' and value in range(10):
                     cname = getattr(hdf,name)
                     cval = getattr(hdf, 'compression_opts')
                     self.assertEqual(cname, 'gzip')
@@ -297,7 +297,7 @@ class TestDataset(HDF5TestCase):
                     verify_ds(dset, template)
 
         # Other keywords
-        compression = [None, True, 5, 9]
+        compression = [None, True, 5, 9, 'lzf']
         fletcher32 = [True, False]
         shuffle = [True, False]
 

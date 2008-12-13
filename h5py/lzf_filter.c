@@ -29,6 +29,21 @@
 #include "lzf/lzf.h"
 #include "lzf_filter.h"
 
+/* Max size of compress/decompress buffer */
+#define H5PY_LZF_MAX_BUF (100L*1024L*1024L)
+
+#if H5_VERS_MAJOR == 1 && H5_VERS_MINOR < 7
+
+#define H5PY_LZF_16API 1
+#define PUSH_ERR(func, minor, str)  H5Epush(__FILE__, func, __LINE__, H5E_PLINE, minor, str)
+
+#else
+
+#define H5PY_LZF_16API 0
+#define PUSH_ERR(func, minor, str)  H5Epush1(__FILE__, func, __LINE__, H5E_PLINE, minor, str)
+
+#endif
+
 /* In HDF5, one filter function handles both compression and decompression */
 size_t lzf_filter(unsigned flags, size_t cd_nelmts,
 		    const unsigned cd_values[], size_t nbytes,
@@ -38,35 +53,34 @@ size_t lzf_filter(unsigned flags, size_t cd_nelmts,
 /* Try to register the filter, passing on the HDF5 return value */
 int register_lzf(void){
 
-/* Thanks to PyTables for this */
-#if H5_VERS_MAJOR == 1 && H5_VERS_MINOR < 7
-   /* 1.6.x */
+    int retval;
+
+#if H5PY_LZF_16API
     H5Z_class_t filter_class = {
-        (H5Z_filter_t)(H5PY_FILTER_LZF),    /* filter_id */
-        "lzf",                         /* comment */
-        NULL,                          /* can_apply_func */
-        NULL,                          /* set_local_func */
-        (H5Z_func_t)(lzf_filter)      /* filter_func */
+        (H5Z_filter_t)(H5PY_FILTER_LZF),
+        "lzf",
+        NULL,
+        NULL,
+        (H5Z_func_t)(lzf_filter)
     };
 #else
-   /* 1.7.x */
     H5Z_class_t filter_class = {
-        H5Z_CLASS_T_VERS,             /* H5Z_class_t version */
-        (H5Z_filter_t)(H5PY_FILTER_LZF),   /* filter_id */
-        1, 1,                         /* Encoding and decoding enabled */
-        "lzf",	 		  /* comment */
-        NULL,                         /* can_apply_func */
-        NULL,                         /* set_local_func */
-        (H5Z_func_t)(lzf_filter)     /* filter_func */
+        H5Z_CLASS_T_VERS,
+        (H5Z_filter_t)(H5PY_FILTER_LZF),
+        1, 1,
+        "lzf",
+        NULL,
+        NULL,
+        (H5Z_func_t)(lzf_filter)
     };
-#endif /* if H5_VERSION < "1.7" */
+#endif
 
-    return H5Zregister(&filter_class);
+    retval = H5Zregister(&filter_class);
+    if(retval<0){
+        PUSH_ERR("register_lzf", H5E_CANTREGISTER, "Can't register LZF filter");
+    }
+    return retval;
 }
-
-#define H5PY_LZF_MAX_BUF (100L*1024L*1024L) /* 100MB chunks are outrageous */
-
-static size_t historical_buf_size = 0;
 
 /* The filter function */
 size_t lzf_filter(unsigned flags, size_t cd_nelmts,
@@ -75,64 +89,70 @@ size_t lzf_filter(unsigned flags, size_t cd_nelmts,
 
     void* outbuf = NULL;
     size_t outbuf_size = 0;
+
     unsigned int status = 0;        /* Return code from lzf routines */
 
 
-    /* If we're compressing */
+    /* We're compressing */
     if(!(flags & H5Z_FLAG_REVERSE)){
 
         /* Allocate an output buffer exactly as long as the input data; if
-           the result is larger, we simply return 0.
+           the result is larger, we simply return 0.  The filter is flagged
+           as optional, so HDF5 simply marks the chunk as uncompressed and
+           proceeds.
         */
+
         outbuf_size = nbytes;
         outbuf = malloc(outbuf_size);
 
         status = lzf_compress(*buf, nbytes, outbuf, outbuf_size);
 
-    /* If we're decompressing */
-    } else {
-
-        /* Initialize to our last guess */
-        if(historical_buf_size == 0){
-            historical_buf_size = *buf_size;
-        }
-        outbuf_size = historical_buf_size;
-        
-        while(!status){
-        
+        if(status == 0){
             free(outbuf);
-            outbuf = malloc(outbuf_size);
+        }
 
-            status = lzf_decompress(*buf, nbytes, outbuf, outbuf_size);
+        return status;
+    }
 
-            /* compression failed */
-            if(!status){
+    /* We're decompressing */
 
-                /* Output buffer too small */
-                if(errno == E2BIG){
-                    outbuf_size += (*buf_size);
-                    if(outbuf_size > H5PY_LZF_MAX_BUF){
-                        fprintf(stderr, "Can't allocate buffer for LZF decompression");
-                        goto failed;
-                    }
-                    historical_buf_size = outbuf_size;
+    outbuf_size = (*buf_size);
 
-                /* Horrible internal error */
-                } else if(errno == EINVAL) {
-                    fprintf(stderr, "LZF decompression error");
-                    goto failed;
+    while(!status){
+    
+        free(outbuf);
+        outbuf = malloc(outbuf_size);
 
-                /* Unknown error */
-                } else {
-                    fprintf(stderr, "Unspecified LZF error %d", errno);
+        status = lzf_decompress(*buf, nbytes, outbuf, outbuf_size);
+
+        /* compression failed */
+        if(!status){
+
+            /* Output buffer too small; make it bigger */
+            if(errno == E2BIG){
+#ifdef H5PY_LZF_DEBUG
+                fprintf(stderr, "LZF filter: Buffer guess too small: %d", outbuf_size);
+#endif
+                outbuf_size += (*buf_size);
+                if(outbuf_size > H5PY_LZF_MAX_BUF){
+                    PUSH_ERR("lzf_filter", H5E_CALLBACK, "Requested LZF buffer too big");
                     goto failed;
                 }
 
-            } /* if !status */
+            /* Horrible internal error (data corruption) */
+            } else if(errno == EINVAL) {
+                PUSH_ERR("lzf_filter", H5E_CALLBACK, "Invalid data for LZF decompression");
+                goto failed;
 
-        } /* while !status */
+            /* Unknown error */
+            } else {
+                PUSH_ERR("lzf_filter", H5E_CALLBACK, "Unknown LZF decompression error");
+                goto failed;
+            }
 
-    } /* if decompressing */
+        } /* if !status */
+
+    } /* while !status */
     
 
     /* If compression/decompression successful, swap buffers */
@@ -146,7 +166,6 @@ size_t lzf_filter(unsigned flags, size_t cd_nelmts,
     } 
 
     failed:
-        /* Could put a Python exception call here */
         free(outbuf);
         return 0;
 
