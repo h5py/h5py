@@ -65,6 +65,15 @@ if config.API_18:
 __all__ = ["File", "Group", "Dataset",
            "Datatype", "AttributeManager", "CoordsList"]
 
+def is_hdf5(fname):
+    fname = os.path.abspath(fname)
+    if os.path.isfile(fname):
+        try:
+            return h5f.is_hdf5(fname)
+        except H5Error:
+            pass
+    return False
+
 # === Base classes ============================================================
 
 class LockableObject(object):
