@@ -166,25 +166,6 @@ class _DictCompat(object):
                 return self[name]
             return default
 
-    def setdefault(self, name, default):
-        """ Retrieve the member, setting it to default if it doesn't exist.
-
-        Be careful; unlike the get() method, the returned object is *not*
-        generally the provided default object.  The equivalent operation is:
-
-            obj[name] = default
-            return obj[name]
-
-        For groups, the returned object is always a Group, Dataset or
-        Datatype.  For attributes, the returned object is always a NumPy
-        scalar or array.
-
-        Consider using Group.require_group or Group.require_dataset instead.
-        """
-        with self._lock:
-            if not name in self:
-                self[name] = default
-            return self[name]
 
 class Group(HLObject, _DictCompat):
 
