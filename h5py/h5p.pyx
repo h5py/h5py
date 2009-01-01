@@ -15,7 +15,6 @@ __doc__ = \
 """
 
 include "config.pxi"
-include "sync.pxi"
 
 # Compile-time imports
 from h5 cimport init_hdf5
@@ -29,6 +28,8 @@ from h5t cimport TypeID, py_create
 init_hdf5()
 import_array()
 
+# Runtime imports
+from _sync import sync, nosync
 
 # === C API ===================================================================
 

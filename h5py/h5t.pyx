@@ -58,7 +58,6 @@ __doc__ = \
 """
 
 include "config.pxi"
-include "sync.pxi"
 
 # Pyrex compile-time imports
 from h5 cimport init_hdf5, H5PYConfig, get_config, PHIL, get_phil
@@ -75,6 +74,7 @@ init_hdf5()
 # Runtime imports
 import sys
 import h5
+from _sync import sync, nosync
 
 cdef H5PYConfig cfg = get_config()
 cdef PHIL phil = get_phil()

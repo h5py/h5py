@@ -14,7 +14,6 @@
 # licenses/hdf5.txt for the full HDF5 software license.
 
 include "config.pxi"
-include "sync.pxi"
 
 from h5 cimport init_hdf5
 init_hdf5()

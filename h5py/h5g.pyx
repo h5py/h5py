@@ -15,7 +15,6 @@ __doc__ = \
 """
 
 include "config.pxi"
-include "sync.pxi"
 
 # Compile-time imports
 from h5 cimport init_hdf5, SmartStruct
@@ -29,7 +28,7 @@ init_hdf5()
 
 # Runtime imports
 from h5 import H5Error
-
+from _sync import sync, nosync
 
 # === Public constants and data structures ====================================
 

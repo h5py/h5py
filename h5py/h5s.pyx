@@ -15,7 +15,6 @@ __doc__ = \
 """
 
 include "config.pxi"
-include "sync.pxi"
 
 # Pyrex compile-time imports
 from h5 cimport init_hdf5
@@ -26,6 +25,9 @@ from python_string cimport PyString_FromStringAndSize
 
 # Initialization
 init_hdf5()
+
+# Runtime imports
+from _sync import sync, nosync
 
 cdef object lockid(hid_t id_):
     cdef SpaceID space

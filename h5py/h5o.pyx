@@ -11,7 +11,6 @@
 #-
 
 include "config.pxi"
-include "sync.pxi"
 
 # Module for the new "H5O" functions introduced in HDF5 1.8.0.  Not even
 # built with API compatibility level below 1.8.
@@ -25,6 +24,9 @@ from utils cimport emalloc, efree
 
 # Initialization
 init_hdf5()
+
+# Runtime imports
+from _sync import sync, nosync
 
 # === Public constants ========================================================
     

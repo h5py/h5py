@@ -14,7 +14,6 @@ __doc__ = \
     Provides access to the low-level HDF5 "H5D" dataset interface.
 """
 include "config.pxi"
-include "sync.pxi"
 
 # Compile-time imports
 from h5 cimport init_hdf5
@@ -28,6 +27,9 @@ from h5p cimport PropID, propwrap, pdefault
 # Initialization
 import_array()
 init_hdf5()
+
+# Runtime imports
+from _sync import sync, nosync
 
 # === Public constants and data structures ====================================
 
@@ -197,10 +199,7 @@ cdef class DatasetID(ObjectID):
 
         arr_obj.flags &= (~NPY_WRITEABLE) # Wish-it-was-a-mutex approach
         try:
-            IF H5PY_THREADS:
-                with nogil:
-                    H5PY_H5Dread(self_id, mtype_id, mspace_id, fspace_id, plist_id, data)
-            ELSE:
+            with nogil:
                 H5PY_H5Dread(self_id, mtype_id, mspace_id, fspace_id, plist_id, data)
         finally:
             arr_obj.flags |= NPY_WRITEABLE
@@ -239,10 +238,7 @@ cdef class DatasetID(ObjectID):
 
         arr_obj.flags &= (~NPY_WRITEABLE) # Wish-it-was-a-mutex approach
         try:
-            IF H5PY_THREADS:
-                with nogil:
-                    H5PY_H5Dwrite(self_id, mtype_id, mspace_id, fspace_id, plist_id, data)
-            ELSE:
+            with nogil:
                 H5PY_H5Dwrite(self_id, mtype_id, mspace_id, fspace_id, plist_id, data)
         finally:
             arr_obj.flags |= NPY_WRITEABLE

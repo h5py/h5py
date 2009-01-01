@@ -11,7 +11,6 @@
 #-
 
 include "config.pxi"
-include "sync.pxi"
 
 # Compile-time imports
 from h5 cimport init_hdf5
@@ -29,6 +28,8 @@ from numpy cimport ndarray, import_array, \
 init_hdf5()
 import_array()
 
+# Runtime imports
+from _sync import sync, nosync
 
 # === Exception-aware memory allocation =======================================
 

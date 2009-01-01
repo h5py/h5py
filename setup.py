@@ -182,10 +182,9 @@ class cybuild(build):
                      ('api=', 'a', 'Set API levels (--api=16 or --api=18)'),
                      ('cython','y','Run Cython'),
                      ('cython-only','Y', 'Run Cython and stop'),
-                     ('diag', 'd','Enable library debug logging'),
-                     ('no-threads', 't', 'Build without thread support')]
+                     ('diag', 'd','Enable library debug logging')]
 
-    boolean_options = build.boolean_options + ['cython', 'cython-only', 'no-threads','diag']
+    boolean_options = build.boolean_options + ['cython', 'cython-only', 'diag']
 
     def initialize_options(self):
         build.initialize_options(self)
@@ -198,15 +197,11 @@ class cybuild(build):
         self.cython = False
         self.cython_only = False
         self.diag = False
-        self.no_threads = False
 
 
     def finalize_options(self):
 
         build.finalize_options(self)
-
-        if self.no_threads:
-            warn("Option --no-threads will disappear soon")
 
         if self.hdf5 is not None:
             self.hdf5 = op.abspath(self.hdf5)
@@ -297,12 +292,10 @@ DEF H5PY_16API = %(API_16)d    # 1.6.X API available (always true, for now)
 DEF H5PY_18API = %(API_18)d    # 1.8.X API available
 
 DEF H5PY_DEBUG = %(DEBUG)d    # Logging-level number, or 0 to disable
-
-DEF H5PY_THREADS = %(THREADS)d  # Enable thread-safety and non-blocking reads
 """
         return pxi_str % {"VERSION": VERSION, "API_MAX": self.api,
                     "API_16": True, "API_18": self.api == 18,
-                    "DEBUG": 10 if self.diag else 0, "THREADS": not self.no_threads}
+                    "DEBUG": 10 if self.diag else 0}
 
     def read_pxi(self):
         """ Returns the current config.pxi file, or an empty string. """
@@ -336,7 +329,6 @@ DEF H5PY_THREADS = %(THREADS)d  # Enable thread-safety and non-blocking reads
 
         print "Running Cython (%s)..." % Version.version
         print "  API level: %d" % self.api
-        print "  Thread-aware: %s" % ('yes' if not self.no_threads else 'no')
         print "  Diagnostic mode: %s" % ('yes' if self.diag else 'no')
         print "  HDF5: %s" % ('default' if self.hdf5 is None else self.hdf5)
 

@@ -15,7 +15,6 @@ __doc__ = \
 """
 
 include "config.pxi"
-include "sync.pxi"
 
 from h5 cimport init_hdf5, SmartStruct
 from h5p cimport PropID, pdefault
@@ -24,6 +23,9 @@ from utils cimport emalloc, efree
 from python_exc cimport PyErr_SetString
 
 init_hdf5()
+
+# Runtime imports
+from _sync import sync, nosync
 
 # === Public constants ========================================================
 

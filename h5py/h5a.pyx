@@ -16,8 +16,6 @@ __doc__=\
 """
 
 include "config.pxi"
-include "sync.pxi"
-
 
 # Compile-time imports
 from h5 cimport init_hdf5, SmartStruct
@@ -31,6 +29,8 @@ from utils cimport check_numpy_read, check_numpy_write, emalloc, efree
 import_array()
 init_hdf5()
 
+# Runtime imports
+from _sync import sync, nosync
 
 # === General attribute operations ============================================
 

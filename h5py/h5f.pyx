@@ -15,7 +15,6 @@ __doc__ = \
 """
 
 include "config.pxi"
-include "sync.pxi"
 
 # Compile-time imports
 from h5 cimport init_hdf5
@@ -26,6 +25,9 @@ from utils cimport emalloc, efree
 
 # Initialization
 init_hdf5()
+
+# Runtime imports
+from _sync import sync, nosync
 
 # === Public constants and data structures ====================================
 

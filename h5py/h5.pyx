@@ -82,7 +82,6 @@ cdef class H5PYConfig:
         self.API_16 = H5PY_16API
         self.API_18 = H5PY_18API
         self.DEBUG = H5PY_DEBUG
-        self.THREADS = H5PY_THREADS
         self._r_name = 'r'
         self._i_name = 'i'
 
@@ -112,12 +111,11 @@ Summary of h5py config
 HDF5: %s
 1.6 API: %s
 1.8 API: %s
-Thread-aware: %s
 Diagnostic mode: %s
 Complex names: %s"""
 
         rstr %= ("%d.%d.%d" % get_libversion(), bool(self.API_16),
-                bool(self.API_18), bool(self.THREADS), bool(self.DEBUG),
+                bool(self.API_18), bool(self.DEBUG),
                 self.complex_names)
         return rstr
 
@@ -163,38 +161,26 @@ cdef class PHIL:
         which manages access to the library.  HDF5 is not guaranteed to 
         be thread-safe, and certain callbacks in h5py can execute arbitrary
         threaded Python code, defeating the normal GIL-based protection for
-        extension modules.  Therefore, in threading mode all routines
-        acquire this lock first.  When h5py is built without thread awareness,
-        all locking methods are no-ops.
+        extension modules.  Therefore, in all routines acquire this lock first.
 
         You should NOT use this object in your code.  It's internal to the
         library.
     """
 
-    IF H5PY_THREADS:
-        def __init__(self):
-            self.lock = threading.RLock()
-        cpdef bint __enter__(self) except -1:
-            self.lock.acquire()
-            return 0
-        cpdef bint __exit__(self,a,b,c) except -1:
-            self.lock.release()
-            return 0
-        cpdef bint acquire(self, int blocking=1) except -1:
-            cdef bint rval = self.lock.acquire(blocking)
-            return rval
-        cpdef bint release(self) except -1:
-            self.lock.release()
-            return 0
-    ELSE:
-        cpdef bint __enter__(self) except -1:
-            return 0
-        cpdef bint __exit__(self,a,b,c) except -1:
-            return 0
-        cpdef bint acquire(self, int blocking=1) except -1:
-            return 1
-        cpdef bint release(self) except -1:
-            return 0      
+    def __init__(self):
+        self.lock = threading.RLock()
+    cpdef bint __enter__(self) except -1:
+        self.lock.acquire()
+        return 0
+    cpdef bint __exit__(self,a,b,c) except -1:
+        self.lock.release()
+        return 0
+    cpdef bint acquire(self, int blocking=1) except -1:
+        cdef bint rval = self.lock.acquire(blocking)
+        return rval
+    cpdef bint release(self) except -1:
+        self.lock.release()
+        return 0   
 
 cdef PHIL phil = PHIL()
 
@@ -208,7 +194,7 @@ cpdef PHIL get_phil():
 
 # Everything required for the decorator is now defined
 
-include "sync.pxi"
+from _sync import sync, nosync
 
 # === Public C API for object identifiers =====================================
 
