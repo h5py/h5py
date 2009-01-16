@@ -12,8 +12,10 @@
 
 include "defs.pxd"
 
-cdef class LinkProxy:
+IF H5PY_18API:
 
-    cdef hid_t id
+    cdef class LinkProxy:
+
+        cdef hid_t id
 
 

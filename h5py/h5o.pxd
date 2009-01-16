@@ -12,3 +12,5 @@
 
 include "defs.pxd"
 
+IF H5PY_18API:
+    pass
