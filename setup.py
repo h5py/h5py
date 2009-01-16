@@ -69,7 +69,8 @@ def debug(instring):
 def localpath(*args):
     return op.abspath(reduce(op.join, (op.dirname(__file__),)+args))
 
-# --- Imports ---
+
+# --- Imports -----------------------------------------------------------------
 
 # Evil test options for setup.py
 DEBUG = False
@@ -112,13 +113,55 @@ from distutils.command.build_ext import build_ext
 from distutils.cmd import Command
 
 
-# --- Compiler and library config ---
+# --- Compiler and library config ---------------------------------------------
 
-HDF5 = None
-for arg in sys.argv[:]:
-    if arg.find('--hdf5=') == 0:
-        HDF5 = arg.partition('=')[2]
-        sys.argv.remove(arg)
+class GlobalOpts:
+
+    def __init__(self):
+        self.hdf5 = None
+        self.api = None
+
+    def parse_argv(self):
+
+        for arg in sys.argv[:]:
+            if arg.find('--hdf5=') == 0:
+                self.hdf5 = arg.partition('=')[2]
+                sys.argv.remove(arg)
+            if arg.find('--api=') == 0:
+                self.api = arg.partition('=')[2]
+                try:
+                    self.api = int(self.api)
+                    if self.api not in (16,18):
+                        raise Exception
+                except Exception:
+                    fatal('Illegal option %s to --api= (legal values are 16,18)' % self.api)
+                sys.argv.remove(arg)
+
+    def get_api_version(self):
+        """ Get the active HDF5 version, from the command line or by
+            trying to run showconfig.
+        """
+        if self.api is not None:
+            return self.api
+
+        if self.hdf5 is not None:
+            cmd = reduce(op.join, (hdf5, 'bin', 'h5cc'))+" -showconfig"
+        else:
+            cmd = "h5cc -showconfig"
+        output = commands.getoutput(cmd)
+        l = output.find("HDF5 Version")
+
+        if l > 0:
+            if output[l:l+30].find('1.8') > 0:
+                debug("Autodetected HDF5 1.8")
+                return 18
+            elif output[l:l+30].find('1.6') > 0:
+                debug("Autodetected HDF5 1.6")
+                return 16
+
+        debug("Autodetect FAILED")
+        warn("Can't determine HDF5 version, assuming 1.6 (use --api= to override)")
+        return 16
 
 class ExtensionCreator(object):
 
@@ -171,11 +214,14 @@ class ExtensionCreator(object):
                             extra_compile_args = self.extra_compile_args,
                             extra_link_args = self.extra_link_args)
 
-creator = ExtensionCreator(HDF5)
-EXTENSIONS = [creator.create_extension(x) for x in MODULES]
+GLOBALOPTS = GlobalOpts()
+GLOBALOPTS.parse_argv()
+
+creator = ExtensionCreator(GLOBALOPTS.hdf5)
+EXTENSIONS = [creator.create_extension(x, EXTRA_SRC.get(x, None)) for x in MODULES]
 
 
-# === Custom extensions for distutils =========================================
+# --- Custom extensions for distutils -----------------------------------------
 
 class cython(Command):
 
@@ -183,14 +229,16 @@ class cython(Command):
 
     user_options = [('diag', 'd', 'Enable library debug logging'),
                     ('api16', '6', 'Build version 1.6'),
-                    ('api18', '8', 'Build version 1.8')]
+                    ('api18', '8', 'Build version 1.8'),
+                    ('force', 'f', 'Bypass timestamp checking')]
 
-    boolean_options = ['diag']
+    boolean_options = ['diag', 'force']
 
     def initialize_options(self):
         self.diag = None
         self.api16 = None
         self.api18 = None
+        self.force = False
 
     def finalize_options(self):
         if not (self.api16 or self.api18):
@@ -207,7 +255,7 @@ class cython(Command):
             if not version_check(Version.version, MIN_CYTHON):
                 fatal("Old Cython %s version detected; at least %s required" % (Version.version, MIN_CYTHON))
         except ImportError:
-            fatal("Cython (http://cython.org) is not available; only default build possible")
+            fatal("Cython (http://cython.org) is required to rebuild h5py")
 
         def cythonize(api, diag):
 
@@ -233,20 +281,25 @@ DEF H5PY_DEBUG = %(DEBUG)d    # Logging-level number, or 0 to disable
             f.write(pxi_str)
             f.close()
 
-            print "Running Cython (%s)..." % Version.version
+            print "  Cython: %s" % Version.version
             print "  API level: %d" % api
             print "  Diagnostic mode: %s" % ('yes' if diag else 'no')
 
             for module in MODULES:
+
                 pyx_path = localpath(SRC_PATH, module+'.pyx')
                 c_path = localpath(outpath, module+'.c')
-                if not op.exists(c_path) or \
+
+                if self.force or \
+                not op.exists(c_path) or \
                 os.stat(pyx_path).st_mtime > os.stat(c_path).st_mtime:
+
                     print "Cythoning %s" % pyx_path
                     result = compile(pyx_path, verbose=False,
                                      include_path=[outpath], output_file=c_path)
                     if result.num_errors != 0:
                         fatal("Cython error; aborting.")
+
         # end "def cythonize(...)"
 
         if self.api16:
@@ -264,55 +317,31 @@ class hbuild(build):
 
     def initialize_options(self):
         build.initialize_options(self)
-
+        self.hdf5 = None
         self.api = None
 
     def finalize_options(self):
         build.finalize_options(self)
 
-        if self.api is not None:
-            try:
-                self.api = int(self.api)
-                if self.api not in (16,18):
-                    raise Exception
-            except Exception:
-                fatal('Illegal option %s to --api= (legal values are 16,18)' % self.api)
-
-    def run(self):
-        build.run(self)
-
-    def get_api_version(self, hdf5=None):
-        """ Get the active HDF5 version, from the command line or by
-            trying to run showconfig.
-        """
-        if self.api is not None:
-            return self.api
-
-        if hdf5 is not None:
-            cmd = reduce(op.join, (hdf5, 'bin', 'h5cc'))+" -showconfig"
-        else:
-            cmd = "h5cc -showconfig"
-        output = commands.getoutput(cmd)
-        l = output.find("HDF5 Version")
-
-        if l > 0:
-            if output[l:l+30].find('1.8') > 0:
-                debug("Autodetected HDF5 1.8")
-                return 18
-            elif output[l:l+30].find('1.6') > 0:
-                debug("Autodetected HDF5 1.6")
-                return 16
-
-        debug("Autodetect FAILED")
-        warn("Can't determine HDF5 version, assuming 1.6 (use --api= to override)")
-        return 16
-
 class hbuild_ext(build_ext):
 
-    def run(self):
-        buildobj = self.distribution.get_command_obj('build')
+    user_options = build_ext.user_options + \
+                    [('hdf5=', '5', 'Custom location for HDF5'),
+                     ('api=', 'a', 'Set API levels (--api=16 or --api=18)')]
 
-        api = buildobj.get_api_version(HDF5)
+    boolean_options = build_ext.boolean_options 
+
+    def initialize_options(self):
+        build_ext.initialize_options(self)
+        self.hdf5 = None
+        self.api = None
+
+    def finalize_options(self):
+        build_ext.finalize_options(self)
+
+    def run(self):
+
+        api = GLOBALOPTS.get_api_version()
 
         c_path = localpath('api%d' % api)
         
@@ -343,6 +372,9 @@ CMD_CLASS = {'build': hbuild, 'cython': cython, 'build_ext': hbuild_ext}
 
 if not HAVE_SETUPTOOLS:
     CMD_CLASS.update({'test': test_stub})
+
+
+# --- Setup parameters --------------------------------------------------------
 
 cls_txt = \
 """
