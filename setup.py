@@ -43,6 +43,8 @@ MIN_NUMPY = '1.0.3'
 MIN_CYTHON = '0.9.8.1.1'
 SRC_PATH = 'h5py'           # Name of directory with .pyx files
 
+USE_DISTUTILS = False
+
 MODULES = ['h5', 'h5f', 'h5g', 'h5s', 'h5t', 'h5d', 'h5a', 'h5p', 'h5z',
                  'h5i', 'h5r', 'h5fd', 'utils', 'h5o', 'h5l']
 EXTRA_SRC = {'h5': ["lzf_filter.c", "lzf/lzf_c.c", "lzf/lzf_d.c"]}
@@ -81,6 +83,9 @@ for arg in sys.argv[:]:
     if arg.find('--disable-cython') == 0:
         sys.argv.remove(arg)
         sys.modules['Cython'] = None
+    if arg.find('--use-distutils') == 0:
+        sys.argv.remove(arg)
+        USE_DISTUTILS = True
     if arg.find('--setup-debug') == 0:
         sys.argv.remove(arg)
         DEBUG = True
@@ -97,14 +102,23 @@ try:
 except ImportError:
     fatal("Numpy not installed (version >= %s required)" % MIN_NUMPY)
 
-try:
-    from setuptools import setup
-    HAVE_SETUPTOOLS = True
-    debug("Using setuptools")
-except ImportError:
+if not USE_DISTUTILS:
+    try:
+        import ez_setup
+        ez_setup.use_setuptools(download_delay=0)
+        USE_DISTUTILS = False
+    except Exception, e:
+        debug("Setuptools import FAILED: %s" % str(e))
+        USE_DISTUTILS = True
+    else:
+        debug("Using setuptools")
+        from setuptools import setup
+        HAVE_SETUPTOOLS = True
+
+if USE_DISTUTILS:
+    debug("Using distutils")
     from distutils.core import setup
     HAVE_SETUPTOOLS = False
-    warn("Setuptools unavailable")
 
 from distutils.errors import DistutilsError
 from distutils.extension import Extension
@@ -126,6 +140,8 @@ class GlobalOpts:
         for arg in sys.argv[:]:
             if arg.find('--hdf5=') == 0:
                 self.hdf5 = arg.partition('=')[2]
+                if not op.isdir(self.hdf5):
+                    fatal('Invalid HDF5 directory "%s"' % self.hdf5)
                 sys.argv.remove(arg)
             if arg.find('--api=') == 0:
                 self.api = arg.partition('=')[2]
@@ -145,7 +161,7 @@ class GlobalOpts:
             return self.api
 
         if self.hdf5 is not None:
-            cmd = reduce(op.join, (hdf5, 'bin', 'h5cc'))+" -showconfig"
+            cmd = reduce(op.join, (self.hdf5, 'bin', 'h5cc'))+" -showconfig"
         else:
             cmd = "h5cc -showconfig"
         output = commands.getoutput(cmd)
@@ -228,17 +244,19 @@ class cython(Command):
     """ Cython pre-builder """
 
     user_options = [('diag', 'd', 'Enable library debug logging'),
-                    ('api16', '6', 'Build version 1.6'),
-                    ('api18', '8', 'Build version 1.8'),
-                    ('force', 'f', 'Bypass timestamp checking')]
+                    ('api16', '6', 'Only build version 1.6'),
+                    ('api18', '8', 'Only build version 1.8'),
+                    ('force', 'f', 'Bypass timestamp checking'),
+                    ('clean', 'c', 'Clean up Cython files')]
 
-    boolean_options = ['diag', 'force']
+    boolean_options = ['diag', 'force', 'clean']
 
     def initialize_options(self):
         self.diag = None
         self.api16 = None
         self.api18 = None
         self.force = False
+        self.clean = False
 
     def finalize_options(self):
         if not (self.api16 or self.api18):
@@ -250,12 +268,19 @@ class cython(Command):
 
     def run(self):
         
+        if self.clean:
+            for path in [localpath(x) for x in ('api16','api18')]:
+                shutil.rmtree(path)
+            return
+
         try:
             from Cython.Compiler.Main import Version, compile, compile_multiple, CompilationOptions
             if not version_check(Version.version, MIN_CYTHON):
                 fatal("Old Cython %s version detected; at least %s required" % (Version.version, MIN_CYTHON))
         except ImportError:
             fatal("Cython (http://cython.org) is required to rebuild h5py")
+
+        print "Rebuilding Cython files (this may take a few minutes)..."
 
         def cythonize(api, diag):
 
@@ -281,9 +306,9 @@ DEF H5PY_DEBUG = %(DEBUG)d    # Logging-level number, or 0 to disable
             f.write(pxi_str)
             f.close()
 
-            print "  Cython: %s" % Version.version
-            print "  API level: %d" % api
-            print "  Diagnostic mode: %s" % ('yes' if diag else 'no')
+            debug("  Cython: %s" % Version.version)
+            debug("  API level: %d" % api)
+            debug("  Diagnostic mode: %s" % ('yes' if diag else 'no'))
 
             for module in MODULES:
 
@@ -294,7 +319,7 @@ DEF H5PY_DEBUG = %(DEBUG)d    # Logging-level number, or 0 to disable
                 not op.exists(c_path) or \
                 os.stat(pyx_path).st_mtime > os.stat(c_path).st_mtime:
 
-                    print "Cythoning %s" % pyx_path
+                    debug("Cythoning %s" % pyx_path)
                     result = compile(pyx_path, verbose=False,
                                      include_path=[outpath], output_file=c_path)
                     if result.num_errors != 0:
