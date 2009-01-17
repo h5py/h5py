@@ -15,19 +15,7 @@
 """
     Setup script for the h5py package.  
 
-    * Quick install:
-
-      python setup.py build [--api=<16|18>] [--hdf5=/path/to/hdf5]
-      [sudo] python setup.py install
-
-    * Full rebuild (i.e. if checked out from trunk):
-
-      python setup.py cython build [--api=<16|18>] [--hdf5=/path/to/hdf5]
-      [sudo] python setup.py install
-
-    New commands:
-
-    * cython [--api16] [--api18] [--diag]
+    Read INSTALL.txt for instructions.
 """
 
 import os
@@ -36,8 +24,7 @@ import shutil
 import commands
 import os.path as op
 
-# Basic package options
-NAME = 'h5py'               # Software title
+NAME = 'h5py'
 VERSION = '1.1.0'
 MIN_NUMPY = '1.0.3'
 MIN_CYTHON = '0.9.8.1.1'
@@ -90,11 +77,9 @@ for arg in sys.argv[:]:
         sys.argv.remove(arg)
         DEBUG = True
 
-# Check Python version (2.5 or greater required)
 if not (sys.version_info[0:2] >= (2,5)):
     fatal("At least Python 2.5 is required to install h5py")
 
-# Check for Numpy (required)
 try:
     import numpy
     if numpy.version.version < MIN_NUMPY:
@@ -113,17 +98,15 @@ if not USE_DISTUTILS:
     else:
         debug("Using setuptools")
         from setuptools import setup
-        HAVE_SETUPTOOLS = True
 
 if USE_DISTUTILS:
     debug("Using distutils")
     from distutils.core import setup
-    HAVE_SETUPTOOLS = False
 
 from distutils.errors import DistutilsError
 from distutils.extension import Extension
-from distutils.command.build import build 
 from distutils.command.build_ext import build_ext
+from distutils.command.clean import clean
 from distutils.cmd import Command
 
 
@@ -132,32 +115,59 @@ from distutils.cmd import Command
 class GlobalOpts:
 
     def __init__(self):
-        self.hdf5 = None
-        self.api = None
 
-    def parse_argv(self):
+        wstr = \
+"""
+*******************************************************************************
+    Command-line options --hdf5 and --api are deprecated and will be removed
+    from setup.py in the next minor release of h5py.
 
+    Please use the environment variables HDF5_DIR and HDF5_API instead:
+        $ export HDF5_DIR=/path/to/hdf5
+        $ export HDF5_API=<16 or 18>
+*******************************************************************************\
+"""
+        hdf5 = os.environ.get("HDF5_DIR", None)
+        if hdf5 == '': hdf5 = None
+        if hdf5 is not None:
+            debug("Found environ var HDF5_DIR=%s" % hdf5)
+
+        api = os.environ.get("HDF5_API", None)
+        if api == '': api = None
+        if api is not None:
+            debug("Found environ var HDF5_API=%s" % api)
+
+        # For backwards compatibility
         for arg in sys.argv[:]:
             if arg.find('--hdf5=') == 0:
-                self.hdf5 = arg.partition('=')[2]
-                if not op.isdir(self.hdf5):
-                    fatal('Invalid HDF5 directory "%s"' % self.hdf5)
+                hdf5 = arg.partition('=')[2]
                 sys.argv.remove(arg)
+                warn(wstr)
             if arg.find('--api=') == 0:
                 self.api = arg.partition('=')[2]
-                try:
-                    self.api = int(self.api)
-                    if self.api not in (16,18):
-                        raise Exception
-                except Exception:
-                    fatal('Illegal option %s to --api= (legal values are 16,18)' % self.api)
                 sys.argv.remove(arg)
+                warn(wstr)
+
+        if hdf5 is not None and not op.isdir(hdf5):
+            fatal('Invalid HDF5 path "%s"' % hdf5)
+
+        if api is not None:
+            try:
+                api = int(api)
+                if api not in (16,18):
+                    raise Exception
+            except Exception:
+                fatal('Invalid API version "%s" (legal values are 16,18)' % api)
+
+        self.hdf5 = hdf5
+        self.api = api
 
     def get_api_version(self):
         """ Get the active HDF5 version, from the command line or by
             trying to run showconfig.
         """
         if self.api is not None:
+            debug("User specified API version %s" % self.api)
             return self.api
 
         if self.hdf5 is not None:
@@ -175,7 +185,7 @@ class GlobalOpts:
                 debug("Autodetected HDF5 1.6")
                 return 16
 
-        debug("Autodetect FAILED")
+        debug("Autodetect FAILED; output is:\n\n%s\n" % output)
         warn("Can't determine HDF5 version, assuming 1.6 (use --api= to override)")
         return 16
 
@@ -231,7 +241,6 @@ class ExtensionCreator(object):
                             extra_link_args = self.extra_link_args)
 
 GLOBALOPTS = GlobalOpts()
-GLOBALOPTS.parse_argv()
 
 creator = ExtensionCreator(GLOBALOPTS.hdf5)
 EXTENSIONS = [creator.create_extension(x, EXTRA_SRC.get(x, None)) for x in MODULES]
@@ -270,7 +279,12 @@ class cython(Command):
         
         if self.clean:
             for path in [localpath(x) for x in ('api16','api18')]:
-                shutil.rmtree(path)
+                try:
+                    shutil.rmtree(path)
+                except Exception:
+                    debug("Failed to remove file %s" % path)
+                else:
+                    debug("Cleaned up %s" % path)
             return
 
         try:
@@ -332,72 +346,65 @@ DEF H5PY_DEBUG = %(DEBUG)d    # Logging-level number, or 0 to disable
         if self.api18:
             cythonize(18, self.diag)
 
-class hbuild(build):
-
-    user_options = build.user_options + \
-                    [('hdf5=', '5', 'Custom location for HDF5'),
-                     ('api=', 'a', 'Set API levels (--api=16 or --api=18)')]
-
-    boolean_options = build.boolean_options 
-
-    def initialize_options(self):
-        build.initialize_options(self)
-        self.hdf5 = None
-        self.api = None
-
-    def finalize_options(self):
-        build.finalize_options(self)
-
 class hbuild_ext(build_ext):
-
-    user_options = build_ext.user_options + \
-                    [('hdf5=', '5', 'Custom location for HDF5'),
-                     ('api=', 'a', 'Set API levels (--api=16 or --api=18)')]
-
-    boolean_options = build_ext.boolean_options 
-
-    def initialize_options(self):
-        build_ext.initialize_options(self)
-        self.hdf5 = None
-        self.api = None
-
-    def finalize_options(self):
-        build_ext.finalize_options(self)
 
     def run(self):
 
         api = GLOBALOPTS.get_api_version()
-
-        c_path = localpath('api%d' % api)
         
-        if not all(op.exists(op.join(c_path, x+'.c')) for x in MODULES):
+        if GLOBALOPTS.hdf5 is None:
+            autostr = "(path not specified)"
+        else:
+            autostr = "(located at %s)" % GLOBALOPTS.hdf5
+
+        print "Building for HDF5 %s.%s %s" % (divmod(api,10) + (autostr,))
+
+        def identical(src, dst):
+            if not op.isfile(src) or not op.isfile(dst):
+                return False
+            ident = False
+            src_f = open(src,'r')
+            dst_f = open(dst,'r')
+            if src_f.read() == dst_f.read():
+                ident = True
+            src_f.close()
+            dst_f.close()
+            return ident
+
+        src_files = [localpath('api%d'%api, x+'.c') for x in MODULES]
+        dst_files = [localpath(SRC_PATH, x+'.c') for x in MODULES]
+
+        if not all(op.exists(x) for x in src_files):
             fatal("Cython rebuild required ('python setup.py cython')")
         
-        for x in MODULES:
-            src = op.join(c_path, x+'.c')
-            dst = localpath(SRC_PATH)
-            debug("Copying %s -> %s" % (src, dst))
-            shutil.copy(src, dst)
+        for src, dst in zip(src_files, dst_files):
+
+            if identical(src, dst):
+                debug("Skipping %s == %s" % (src, dst))
+            else:
+                debug("Copying %s -> %s" % (src, dst))
+                shutil.copy(src, dst)
+                self.force = True   # If any files are out of date, we need to
+                                    # recompile the whole thing for consistency
 
         build_ext.run(self)
 
-class test_stub(Command):
 
-    user_options = []
-    boolean_options = []
-    def initialize_options(self):
-        pass
-    def finalize_options(self):
-        pass
+class cleaner(clean):
 
     def run(self):
-        fatal("Testing only available with setuptools")
+        c_files = [localpath(SRC_PATH, x+'.c') for x in MODULES]
+        so_files = [localpath(SRC_PATH, x+'.so') for x in MODULES]
+        for path in c_files+so_files:
+            try:
+                os.remove(path)
+            except Exception:
+                debug("Failed to clean up file %s" % path)
+            else:
+                debug("Cleaning up %s" % path)
+        clean.run(self)
 
-CMD_CLASS = {'build': hbuild, 'cython': cython, 'build_ext': hbuild_ext}
-
-if not HAVE_SETUPTOOLS:
-    CMD_CLASS.update({'test': test_stub})
-
+CMD_CLASS = {'cython': cython, 'build_ext': hbuild_ext, 'clean': cleaner}
 
 # --- Setup parameters --------------------------------------------------------
 

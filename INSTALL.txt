@@ -1,0 +1,63 @@
+========================
+Installation of h5py 1.1 
+========================
+
+This document is a very quick overview of the installation procedure for UNIX.
+Full documentation is on the web at h5py.alfven.org.  Windows users should
+download a binary installer; installation from source is only supported on
+UNIX-like platforms (Linux and Mac OS-X).
+
+
+Before you start
+----------------
+
+You will first need to install HDF5, preferably via a package manager.  Both
+versions 1.6 and 1.8 are supported.  NumPy 1.0.3 (numpy.scipy.org) or later
+is also required.
+
+
+Installation
+------------
+
+H5py can now be automatically installed by setuptools' easy_install command:
+
+    [sudo] easy_install h5py
+
+Alternatively, you can install in the traditional manner by running setup.py:
+
+    python setup.py build
+    [sudo] python setup.py install
+
+
+Custom options
+--------------
+
+Sometimes h5py may not be able to determine what version of HDF5 is installed.
+Also, sometimes HDF5 may be installed in an unusual location.  You can
+specify both your version of HDF5 and its location through environment
+variables:
+
+    $ export HDF5_DIR=/path/to/hdf5
+    $ export HDF5_API=<16 or 18>
+
+These options will work for both easy_install and manual installation.
+Both are optional.
+
+
+Running tests
+-------------
+
+H5py has a battery of built-in tests.  To run them, simply do:
+
+    python setup.py nosetests
+
+Please report test failures to the author, either to [h5py at alfven dot org]
+or the bug tracker at http://h5py.googlecode.com.
+
+Thanks for using h5py!
+
+
+
+
+
+
