@@ -57,6 +57,7 @@ import utils_hl as uhl
 from utils_hl import slice_select, hbasename, guess_chunk
 from utils_hl import CoordsList
 from browse import _H5Browser
+import h5py.selections as sel
 
 config = h5.get_config()
 if config.API_18:
@@ -624,8 +625,8 @@ class Dataset(HLObject):
         """The entire dataset, as an array or scalar depending on the shape"""
         with self._lock:
             arr = self[...]
-            if arr.shape == ():
-                return numpy.asscalar(arr)
+            #if arr.shape == ():
+            #    return numpy.asscalar(arr)
             return arr
 
     @property
@@ -860,41 +861,38 @@ class Dataset(HLObject):
 
             args = args if isinstance(args, tuple) else (args,)
 
-            # Sort field indices from the slicing
+            # 1. Sort field indices from the rest of the args.
             names = tuple(x for x in args if isinstance(x, str))
-            slices = tuple(x for x in args if not isinstance(x, str))
+            args = tuple(x for x in args if not isinstance(x, str))
 
-            fspace = self.id.get_space()
-
-            # Perform selection on the dataset.  This returns
-            # 1. The proper HDF5 memory dataspace to use for the read
-            # 2. A flag which indicates if the result should be a scalar
-            mspace, scalar_result = slice_select(fspace, slices)
-
-            # Create NumPy datatype for read, using the named type restrictions
+            # 2. Create NumPy datatype for read, using only the named fields
+            #    as specified by the user.
             basetype = self.id.dtype
-            
             if len(names) == 0:
                 new_dtype = basetype
             else:
                 for name in names:
                     if not name in basetype.names:
                         raise ValueError("Field %s does not appear in this type." % name)
-
                 new_dtype = numpy.dtype([(name, basetype.fields[name][0]) for name in names])
 
-            # Create the holder array
-            arr = numpy.ndarray(mspace.shape, new_dtype, order='C')
+            # 3. Perform the dataspace selection.
+            selection = sel.FancySelection(self.shape)
+            selection[args] = sel.SET
 
-            # Perform the actual read
+            # 4. Create the output array using information from the selection.
+            arr = numpy.ndarray(selection.mshape, new_dtype, order='C')
+
+            # 5. Perfom the actual read
+            mspace = h5s.create_simple(selection.mshape)
+            fspace = selection._id
             self.id.read(mspace, fspace, arr)
 
-            # Match NumPy conventions
+            # 6. Patch up the output for NumPy
             if len(names) == 1:
                 arr = arr[names[0]]     # Single-field recarray convention
-
-            if scalar_result:
-                arr = numpy.asscalar(arr)   # Scalar if slicing rules say it is
+            if arr.shape == ():
+                arr = numpy.asscalar(arr)
             return arr
 
     def __setitem__(self, args, val):
@@ -907,25 +905,63 @@ class Dataset(HLObject):
 
             args = args if isinstance(args, tuple) else (args,)
 
-            # Sort field indices from the slicing
+            # 1. Sort field indices from the slicing
             names = tuple(x for x in args if isinstance(x, str))
-            slices = tuple(x for x in args if not isinstance(x, str))
+            args = tuple(x for x in args if not isinstance(x, str))
 
-            if len(names) != 0:
+            # 2. Create new dtype (TODO)
+            if len(names) == 0:
+                pass
+            else:
                 raise NotImplementedError("Field name selections are not yet allowed for write.")
 
+            # 3. Perform the dataspace selection
+            selection = sel.FancySelection(self.shape)
+            selection[args] = sel.SET
+
+            # 4. Validate the input array
             val = numpy.asarray(val, order='C')
 
-            fspace = self.id.get_space()
-
-            if val.shape == ():
-                mspace = h5s.create(h5s.SCALAR)
-            else:
-                mspace = h5s.create_simple(val.shape, (h5s.UNLIMITED,)*len(val.shape))
-
-            result, scalar = slice_select(fspace, args)
-
+            # 5. Perform the write
+            fspace = selection._id
+            mspace = h5s.create_simple(val.shape, (h5s.UNLIMITED,)*len(val.shape))
             self.id.write(mspace, fspace, val)
+
+    def read_direct(self, dest, source_sel=None, dest_sel=None):
+        """ Read data directly from HDF5 into a NumPy array.
+
+        The destination array must be C-contiguous.  Selections may be any
+        operator class (HyperSelection, etc) in h5py.selections.
+        """
+
+        if source_sel is not None:
+            src_space = source_sel._id
+        else:
+            src_space = h5s.create_dataspace(self.shape)
+        if dest_sel is not None:
+            dest_space = dest_space._id
+        else:
+            dest_space = h5s.create_dataspace(dest.shape)
+
+        self.id.read(dest_space, src_space, dest)
+
+    def write_direct(self, source, source_sel=None, dest_sel=None):
+        """ Write data directly to HDF5 from a NumPy array.
+
+        The source array must be C-contiguous.  Selections may be any
+        operator class (HyperSelection, etc) in h5py.selections.
+        """
+
+        if source_sel is not None:
+            src_space = source_sel._id
+        else:
+            src_space = h5s.create_dataspace(source.shape)
+        if dest_sel is not None:
+            dest_space = dest_space._id
+        else:
+            dest_space = h5s.create_dataspace(self.shape)
+
+        self.id.write(src_space, dest_space, source)
 
     def __repr__(self):
         with self._lock:

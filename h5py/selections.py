@@ -23,7 +23,7 @@ class Selection(object):
 
     def __init__(self, shape):
         shape = tuple(shape)
-        self._id = h5s.create_simple(shape, (None,)*len(shape))
+        self._id = h5s.create_simple(shape, (h5s.UNLIMITED,)*len(shape))
         self._shape = shape
 
     @property
@@ -108,7 +108,7 @@ class HyperSelection(Selection):
         if not isinstance(args, tuple):
             args = (args,)
   
-        start, count, step = _handle_simple(args, self.shape)
+        start, count, step = self._handle_args(args)
 
         if not op in (SET, OR, AND, XOR, NOTB, NOTA, True, False):
             raise ValueError("Illegal selection operator")
@@ -131,48 +131,164 @@ class HyperSelection(Selection):
 
         self._id.select_hyperslab(start, count, step, op=op)
 
+    def _handle_args(self, args):
+        """ Process a "simple" selection tuple, containing only slices and
+            integer objects.  Return is a 3-tuple with start, count, step tuples.
+
+            If "args" is shorter than "shape", the remaining axes are fully
+            selected.
+        """
+        args = _broadcast(args, len(self.shape))
+
+        def handle_arg(arg, length):
+            if isinstance(arg, slice):
+                return _translate_slice(arg, length)
+            try:
+                return _translate_int(int(arg), length)
+            except TypeError:
+                raise TypeError("Illegal index (must be a slice or number)")
+
+        start = []
+        count = []
+        step  = []
+
+        for a, length in zip(args, self.shape):
+            x,y,z = handle_arg(a, length)
+            start.append(x)
+            count.append(y)
+            step.append(z)
+
+        return tuple(start), tuple(count), tuple(step)
+
 class FancySelection(HyperSelection):
 
     """
         Implements advanced, NumPy-style selection operations.
 
-        Indexing arguments may be ints, slices, lists of indecies, or
+        Indexing arguments may be ints, slices, lists of indicies, or
         boolean arrays (1-D).  The only permitted operation is SET.
-    """
-    
-    pass
 
-def _handle_simple(args, shape):
-    """ Process a "simple" selection tuple, containing only slices and
-        integer objects.  Return is a 3-tuple with start, count, step tuples.
-
-        If "args" is shorter than "shape", the remaining axes are fully
-        selected.
+        Intended for internal use by the Dataset __getitem__ machinery.
     """
-    if len(args) > len(shape):
+
+    def __setitem__(self, args, op):
+
+        if op != SET:
+            raise ValueError("The only permitted operation is SET")
+        if not isinstance(args, tuple):
+            args = (args,)
+
+        args = _broadcast(args, len(self.shape))
+
+        self._id.select_all()
+
+        def perform_selection(start, count, step, idx, op=h5s.SELECT_AND):
+            """ Performs a selection using start/count/step in the given axis.
+
+            All other axes have their full range selected.  The selection is
+            added to the current dataspace selection using the given operator,
+            defaulting to AND.
+
+            All arguments are ints.
+            """
+
+            start = tuple(0 if i != idx else start for i, x in enumerate(self.shape))
+            count = tuple(x if i != idx else count for i, x in enumerate(self.shape))
+            step  = tuple(1 if i != idx else step  for i, x in enumerate(self.shape))
+
+            self._id.select_hyperslab(start, count, step, op=op)
+
+        def validate_number(num, length):
+            """ Validate a list member for the given axis length
+            """
+            try:
+                num = long(num)
+            except TypeError:
+                raise TypeError("Illegal index: %r" % num)
+            if num > length-1:
+                raise IndexError('Index out of bounds: %d' % num)
+            if num < 0:
+                raise IndexError('Negative index not allowed: %d' % num)
+
+        mshape = []
+
+        for idx, (exp, length) in enumerate(zip(args, self.shape)):
+
+            if isinstance(exp, slice):
+                start, count, step = _translate_slice(exp, length)
+                perform_selection(start, count, step, idx)
+                mshape.append(count)
+
+            elif isinstance(exp, np.ndarray) and exp.kind == 'b':
+
+                raise NotImplementedError() # TODO: bool vector
+
+            else:
+
+                try:
+                    exp = list(exp)     
+                except TypeError:
+                    exp = [exp]         # Handle scalar index as a list of length 1
+                    mshape.append(0)    # Keep track of scalar index for NumPy
+                else:
+                    mshape.append(len(exp))
+
+                if len(exp) == 0:
+                    raise TypeError("Empty selections are not allowed (axis %d)" % idx)
+
+                last_idx = -1
+                for select_idx in xrange(len(exp)+1):
+
+                    # This crazy piece of code performs a list selection
+                    # using HDF5 hyperslabs.
+                    # For each index, perform a "NOTB" selection on every
+                    # portion of *this axis* which falls *outside* the list
+                    # selection.  For this to work, the input array MUST be
+                    # monotonically increasing.
+
+                    if select_idx < last_idx:
+                        raise ValueError("Selection lists must be in increasing order")
+                    validate_number(select_idx, length)
+
+                    if select_idx == 0:
+                        start = 0
+                        count = exp[0]
+                    elif select_idx == len(exp):
+                        start = exp[-1]+1
+                        count = length-start
+                    else:
+                        start = exp[select_idx-1]+1
+                        count = exp[select_idx] - start
+                    if count > 0:
+                        perform_selection(start, count, 1, idx, op=h5s.SELECT_NOTB)
+
+                    last_idx = select_idx
+
+        self.mshape = tuple(x for x in mshape if x != 0)
+
+def _broadcast(args, rank):
+    """ Expand ellipsis objects and fill in missing axes.  Returns the
+    new args tuple.
+    """
+    n_el = list(args).count(Ellipsis)
+    if n_el > 1:
+        raise ValueError("Only one ellipsis may be used.")
+    elif n_el == 0 and len(args) != rank:
+        args = args + (Ellipsis,)
+
+    final_args = []
+    n_args = len(args)
+    for idx, arg in enumerate(args):
+
+        if arg == Ellipsis:
+            final_args.extend( (slice(None,None,None),)*(rank-n_args+1) )
+        else:
+            final_args.append(arg)
+
+    if len(final_args) > rank:
         raise TypeError("Argument sequence too long")
-    elif len(args) < len(shape):
-        args = args + (slice(None,None,None),)*(len(shape)-len(args))
 
-    def handle_arg(arg, length):
-        if isinstance(arg, slice):
-            return _translate_slice(arg, length)
-        try:
-            return _translate_int(int(arg), length)
-        except TypeError:
-            raise TypeError("Illegal index (must be a slice or number)")
-
-    start = []
-    count = []
-    step  = []
-
-    for a, length in zip(args, shape):
-        x,y,z = handle_arg(a, length)
-        start.append(x)
-        count.append(y)
-        step.append(z)
-
-    return tuple(start), tuple(count), tuple(step)
+    return final_args
 
 def _translate_int(exp, length):
     """ Given an integer index, return a 3-tuple
@@ -208,10 +324,10 @@ def _translate_slice(exp, length):
     if stop < 0:
         stop = length+stop
 
-    if not 0 < start < (length-1):
-        raise ValueError("Start index out of range (0-%d)" % length-1)
-    if not 1 < stop < length:
-        raise ValueError("Stop index out of range (1-%d)" % length)
+    if not 0 <= start <= (length-1):
+        raise ValueError("Start index %s out of range (0-%d)" % (start, length-1))
+    if not 1 <= stop <= length:
+        raise ValueError("Stop index %s out of range (1-%d)" % (stop, length))
 
     count = (stop-start)//step
     if (stop-start) % step != 0:
@@ -221,14 +337,6 @@ def _translate_slice(exp, length):
         raise ValueError("Selection out of bounds (%d; axis has %d)" % (start+count,length))
 
     return start, count, step
-
-
-
-
-
-
-
-
 
 
 
