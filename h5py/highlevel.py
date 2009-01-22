@@ -915,17 +915,24 @@ class Dataset(HLObject):
             else:
                 raise NotImplementedError("Field name selections are not yet allowed for write.")
 
-            # 3. Perform the dataspace selection
-            selection = sel.FancySelection(self.shape)
-            selection[args] = sel.SET
-
-            # 4. Validate the input array
+            # 3. Validate the input array.  Also convert scalars for broadcast.
             val = numpy.asarray(val, order='C')
+            if val.shape == () and self.shape != ():
+                fastest = self.shape[-1]
+                if fastest < 1e6:
+                    val = numpy.repeat(val, fastest)
 
-            # 5. Perform the write
-            fspace = selection._id
+            # 4. Perform the dataspace selection
+            if sel.is_simple(args):
+                selection = sel.RectSelection(self.shape)
+            else:
+                selection = sel.FancySelection(self.shape)
+            selection[args]
+
+            # 5. Perform the write, with broadcasting
             mspace = h5s.create_simple(val.shape, (h5s.UNLIMITED,)*len(val.shape))
-            self.id.write(mspace, fspace, val)
+            for fspace in selection.shape_broadcast(val.shape):
+                self.id.write(mspace, fspace, val)
 
     def read_direct(self, dest, source_sel=None, dest_sel=None):
         """ Read data directly from HDF5 into a NumPy array.

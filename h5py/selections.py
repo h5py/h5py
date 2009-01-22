@@ -14,6 +14,14 @@ from h5py.h5s import SELECT_XOR  as XOR
 from h5py.h5s import SELECT_NOTB as NOTB
 from h5py.h5s import SELECT_NOTA as NOTA
 
+def is_simple(args):
+    for arg in args:
+        if not isinstance(arg, slice):
+            try:
+                long(arg)
+            except Exception:
+                return False
+    return True
 
 class Selection(object):
 
@@ -48,6 +56,11 @@ class Selection(object):
 
         raise TypeError("Selection invalid")
 
+    def shape_broadcast(self, shape):
+        """ Stub broadcasting method """
+        if not shape == self.shape:
+            raise TypeError("Broadcasting is only supported for simple selections")
+        yield self._id
 
 class PointSelection(Selection):
 
@@ -72,8 +85,90 @@ class PointSelection(Selection):
     def prepend(self, points):
         self._perform_selection(points, h5s.SELECT_PREPEND)
 
+    def set(self, points):
+        self._perform_selection(points, h5s.SELECT_SET)
 
-class HyperSelection(Selection):
+
+class RectSelection(Selection):
+
+    """ A single "rectangular" (regular) selection composed of only slices
+        and integer arguments.  Can participate in broadcasting.
+    """
+
+    def __init__(self, *args, **kwds):
+        Selection.__init__(self, *args, **kwds)
+        self._sel = ((0,)*len(self.shape), self.shape, (1,)*len(self.shape))
+
+    def __getitem__(self, args):
+        if not isinstance(args, tuple):
+            args = (args,)
+  
+        start, count, step = self._handle_args(args)
+
+        self._id.select_hyperslab(start, count, step)
+
+        self._sel = (start, count, step)
+
+        return self._id
+
+    def shape_broadcast(self, cshape):
+        """ Return an iterator over target dataspaces for broadcasting """
+
+        # count = (10,10,10)
+        # cshape = (1,1,5)
+
+        start, count, step = self._sel
+        rank = len(self.shape)
+        diff = rank - len(cshape)
+        if diff > 0:
+            cshape = (1,)*diff + cshape
+        elif diff < 0:
+            raise TypeError("Cannot broadcast %s -> %s (too big)" % (count, cshape))
+            
+        if any(x%y != 0 for x, y in zip(count, cshape)):
+            raise TypeError("Cannot broadcast %s -> %s" % (count, cshape))
+
+        chunks = tuple(x/y for x, y in zip(count, cshape))
+        nchunks = np.product(chunks)
+
+        sid = self._id.copy()
+        sid.select_hyperslab((0,)*rank, cshape, step)
+
+        for idx in xrange(nchunks):
+            offset = tuple(x*y*z + s for x, y, z, s in zip(np.unravel_index(idx, chunks), cshape, step, start))
+            sid.offset_simple(offset)
+            yield sid
+
+    def _handle_args(self, args):
+        """ Process a "simple" selection tuple, containing only slices and
+            integer objects.  Return is a 3-tuple with start, count, step tuples.
+
+            If "args" is shorter than "shape", the remaining axes are fully
+            selected.
+        """
+        args = _broadcast(args, len(self.shape))
+
+        def handle_arg(arg, length):
+            if isinstance(arg, slice):
+                return _translate_slice(arg, length)
+            try:
+                return _translate_int(int(arg), length)
+            except TypeError:
+                raise TypeError("Illegal index (must be a slice or number)")
+
+        start = []
+        count = []
+        step  = []
+
+        for a, length in zip(args, self.shape):
+            x,y,z = handle_arg(a, length)
+            start.append(x)
+            count.append(y)
+            step.append(z)
+
+        return tuple(start), tuple(count), tuple(step)
+
+class HyperSelection(RectSelection):
 
     """
         Represents multiple overlapping rectangular selections, combined
@@ -131,34 +226,7 @@ class HyperSelection(Selection):
 
         self._id.select_hyperslab(start, count, step, op=op)
 
-    def _handle_args(self, args):
-        """ Process a "simple" selection tuple, containing only slices and
-            integer objects.  Return is a 3-tuple with start, count, step tuples.
 
-            If "args" is shorter than "shape", the remaining axes are fully
-            selected.
-        """
-        args = _broadcast(args, len(self.shape))
-
-        def handle_arg(arg, length):
-            if isinstance(arg, slice):
-                return _translate_slice(arg, length)
-            try:
-                return _translate_int(int(arg), length)
-            except TypeError:
-                raise TypeError("Illegal index (must be a slice or number)")
-
-        start = []
-        count = []
-        step  = []
-
-        for a, length in zip(args, self.shape):
-            x,y,z = handle_arg(a, length)
-            start.append(x)
-            count.append(y)
-            step.append(z)
-
-        return tuple(start), tuple(count), tuple(step)
 
 class FancySelection(HyperSelection):
 
@@ -298,7 +366,7 @@ def _translate_int(exp, length):
     if exp < 0:
         exp = length+exp
 
-    if not 0<exp<(length-1):
+    if not 0<=exp<(length-1):
         raise ValueError("Index out of range")
 
     return exp, 1, 1
