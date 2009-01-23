@@ -58,6 +58,7 @@ from utils_hl import slice_select, hbasename, guess_chunk
 from utils_hl import CoordsList
 from browse import _H5Browser
 import h5py.selections as sel
+import posixpath as pp
 
 config = h5.get_config()
 if config.API_18:
@@ -362,12 +363,16 @@ class Group(HLObject, _DictCompat):
 
     # New 1.8.X methods
 
-    def copy(self, source, dest):
+    def copy(self, source, dest, name=None):
         """ Copy an object or group.
 
         The source can be a path, Group, Dataset, or Datatype object.  The
         destination can be either a path or a Group object.  The source and
         destinations need not be in the same file.
+
+        When the destination is a Group object, by default the target will
+        be created in that group with its current name (basename of obj.name).
+        You can override that by setting "name" to a string.
 
         Example:
 
@@ -392,7 +397,11 @@ class Group(HLObject, _DictCompat):
                 source = self
 
             if isinstance(dest, Group):
-                dest_path = '.'
+                if name is not None:
+                    dest_path = name
+                else:
+                    dest_path = pp.basename(h5i.get_name(source[source_path].id))
+
             elif isinstance(dest, HLObject):
                 raise TypeError("Destination must be path or Group object")
             else:
