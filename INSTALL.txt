@@ -16,8 +16,8 @@ versions 1.6 and 1.8 are supported.  NumPy 1.0.3 (numpy.scipy.org) or later
 is also required.
 
 
-Installation
-------------
+Quick installation
+------------------
 
 H5py can now be automatically installed by setuptools' easy_install command:
 
@@ -29,8 +29,8 @@ Alternatively, you can install in the traditional manner by running setup.py:
     [sudo] python setup.py install
 
 
-Custom options
---------------
+Custom installation
+-------------------
 
 Sometimes h5py may not be able to determine what version of HDF5 is installed.
 Also, sometimes HDF5 may be installed in an unusual location.  You can
@@ -44,15 +44,17 @@ command:
 Alternatively (for example, if installing with easy_install), you can use
 environment variables:
 
-    $ su
-    # export HDF5_DIR=/path/to/hdf5
-    # export HDF5_API=<16 or 18>
-    # easy_install h5py
+    $ export HDF5_DIR=/path/to/hdf5
+    $ export HDF5_API=<16 or 18>
+    $ easy_install h5py
 
 Keep in mind that on some platforms, "sudo" will filter out your environment
-variables, so it's best to set them in a root shell as above.  If environment
-variables already exist and the "configure" command is run, the settings
-from "configure" take priority.
+variables.  If you need to be a superuser to run easy_install, you might
+want to issue all three of these commands in a root shell.
+
+Settings issued with the "configure" command will always override those set
+with environment variables.  Also, for technical reasons the configure command
+must be run by itself, before any build commands.
 
 
 Running tests
