@@ -34,14 +34,25 @@ Custom options
 
 Sometimes h5py may not be able to determine what version of HDF5 is installed.
 Also, sometimes HDF5 may be installed in an unusual location.  You can
-specify both your version of HDF5 and its location through environment
-variables:
+specify both your version of HDF5 and its location through the "configure"
+command:
 
-    $ export HDF5_DIR=/path/to/hdf5
-    $ export HDF5_API=<16 or 18>
+    $ python setup.py configure [--hdf5=/path/to/hdf5] [--api=<16 or 18>]
+    $ python setup.py build
+    $ [sudo] python setup.py install
 
-These options will work for both easy_install and manual installation.
-Both are optional.
+Alternatively (for example, if installing with easy_install), you can use
+environment variables:
+
+    $ su
+    # export HDF5_DIR=/path/to/hdf5
+    # export HDF5_API=<16 or 18>
+    # easy_install h5py
+
+Keep in mind that on some platforms, "sudo" will filter out your environment
+variables, so it's best to set them in a root shell as above.  If environment
+variables already exist and the "configure" command is run, the settings
+from "configure" take priority.
 
 
 Running tests

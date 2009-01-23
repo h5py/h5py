@@ -23,6 +23,7 @@ import sys
 import shutil
 import commands
 import os.path as op
+import pickle
 
 NAME = 'h5py'
 VERSION = '1.1.0'
@@ -116,17 +117,8 @@ class GlobalOpts:
 
     def __init__(self):
 
-        wstr = \
-"""
-*******************************************************************************
-    Command-line options --hdf5 and --api are deprecated and will be removed
-    from setup.py in the next minor release of h5py.
-
-    Please use the environment variables HDF5_DIR and HDF5_API instead:
-        $ export HDF5_DIR=/path/to/hdf5
-        $ export HDF5_API=<16 or 18>
-*******************************************************************************\
-"""
+        # Environment variables are the only way to communicate this
+        # information if we're building with easy_install
         hdf5 = os.environ.get("HDF5_DIR", None)
         if hdf5 == '': hdf5 = None
         if hdf5 is not None:
@@ -137,16 +129,20 @@ class GlobalOpts:
         if api is not None:
             debug("Found environ var HDF5_API=%s" % api)
 
-        # For backwards compatibility
-        for arg in sys.argv[:]:
-            if arg.find('--hdf5=') == 0:
-                hdf5 = arg.partition('=')[2]
-                sys.argv.remove(arg)
-                warn(wstr)
-            if arg.find('--api=') == 0:
-                self.api = arg.partition('=')[2]
-                sys.argv.remove(arg)
-                warn(wstr)
+        # The output of the "configure" command is preferred
+        try:
+            f = open(localpath('buildconf.pickle'),'r')
+            hdf5_pkl, api_pkl = pickle.load(f)
+            f.close()
+        except Exception:
+            pass
+        else:
+            if hdf5_pkl is not None:
+                hdf5 = hdf5_pkl
+                debug("Loaded HDF5 dir %s from pickle file" % hdf5)
+            if api_pkl is not None:
+                api = api_pkl
+                debug("Loaded API %s from pickle file" % api)
 
         if hdf5 is not None and not op.isdir(hdf5):
             fatal('Invalid HDF5 path "%s"' % hdf5)
@@ -248,9 +244,49 @@ EXTENSIONS = [creator.create_extension(x, EXTRA_SRC.get(x, None)) for x in MODUL
 
 # --- Custom extensions for distutils -----------------------------------------
 
+class configure(Command):
+
+    description = "Set options for your HDF5 installation"
+
+    user_options = [('hdf5=', '5', 'Path to HDF5'),
+                    ('api=', 'a', 'API version ("16" or "18")'),
+                    ('show', 's', 'Print existing config (don\'t set anything)')]
+
+    boolean_options = ['show']
+
+    def initialize_options(self):
+        self.hdf5 = None
+        self.api = None
+        self.show = False
+
+    def finalize_options(self):
+        pass
+
+    def run(self):
+        if self.show:
+            try:
+                f = open('buildconf.pickle','r')
+                hdf5, api = pickle.load(f)
+            except Exception:
+                hdf5 = api = None
+            print "HDF5 path: %s\nAPI setting: %s" % (hdf5, api)
+            return
+
+        if self.hdf5 is not None and not op.isdir(self.hdf5):
+            fatal("Invalid HDF5 path: %s" % self.hdf5)
+        self.hdf5 = op.abspath(self.hdf5)
+        if self.api is not None and self.api not in ('16','18'):
+            fatal("Invalid API level %s (must be 16 or 18)" % self.api)
+
+        f = open('buildconf.pickle','w')
+        pickle.dump((self.hdf5, self.api), f)
+        f.close()
+
 class cython(Command):
 
     """ Cython pre-builder """
+
+    description = "Rebuild Cython-generated C files"
 
     user_options = [('diag', 'd', 'Enable library debug logging'),
                     ('api16', '6', 'Only build version 1.6'),
@@ -395,7 +431,9 @@ class cleaner(clean):
     def run(self):
         c_files = [localpath(SRC_PATH, x+'.c') for x in MODULES]
         so_files = [localpath(SRC_PATH, x+'.so') for x in MODULES]
-        for path in c_files+so_files:
+        ext_files = [localpath('buildconf.pickle')]
+
+        for path in c_files+so_files+ext_files:
             try:
                 os.remove(path)
             except Exception:
@@ -404,7 +442,8 @@ class cleaner(clean):
                 debug("Cleaning up %s" % path)
         clean.run(self)
 
-CMD_CLASS = {'cython': cython, 'build_ext': hbuild_ext, 'clean': cleaner}
+CMD_CLASS = {'cython': cython, 'build_ext': hbuild_ext, 'clean': cleaner,
+             'configure': configure}
 
 # --- Setup parameters --------------------------------------------------------
 
@@ -466,6 +505,7 @@ setup(
   requires = ['numpy (>=%s)' % MIN_NUMPY],
   cmdclass = CMD_CLASS
 )
+
 
 
 
