@@ -222,6 +222,12 @@ class TestH5T(HDF5TestCase):
         self.assert_(htype.get_size() < total_len)
         self.assertEqual(htype.get_nmembers(), len(names))
 
+    def test_bool(self):
+        out = h5t.py_create('bool')
+        self.assert_(isinstance(out, h5t.TypeEnumID))
+        self.assertEqual(out.get_nmembers(),2)
+        self.assertEqual(out.dtype, dtype('bool'))
+
     # === Tests for py_create =================================================
 
     def test_py_create_simple(self):

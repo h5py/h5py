@@ -1158,6 +1158,16 @@ cdef class TypeEnumID(TypeCompositeID):
 
         cdef TypeID tmp_type
         tmp_type = self.get_super()
+
+        if self.get_nmembers() == 2:
+            members = {}
+            ref = {cfg._f_name: 0, cfg._t_name: 1}
+            for idx in range(2):
+                name = self.get_member_name(idx)
+                val = self.get_member_value(idx)
+                members[name] = val
+            if members == ref:
+                return dtype('bool')
         return tmp_type.py_dtype()
 
 
@@ -1225,6 +1235,18 @@ cdef TypeEnumID _c_enum(dtype dt, dict vals):
     out = TypeEnumID(H5Tenum_create(base.id))
     for name in sorted(vals):
         out.enum_insert(name, vals[name])
+    return out
+
+cdef TypeEnumID _c_bool(dtype dt):
+    # Booleans
+    global cfg
+
+    cdef TypeEnumID out
+    out = TypeEnumID(H5Tenum_create(H5T_NATIVE_INT8))
+
+    out.enum_insert(cfg._f_name, 0)
+    out.enum_insert(cfg._t_name, 1)
+
     return out
 
 cdef TypeArrayID _c_array(dtype dt):
@@ -1360,6 +1382,10 @@ cpdef TypeID py_create(object dtype_in, dict enum_vals=None):
         # String
         elif kind == c'S':
             return _c_string(dt)
+
+        # Boolean
+        elif kind == c'b':
+            return _c_bool(dt)
 
         # Unrecognized
         else:

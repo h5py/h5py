@@ -84,9 +84,13 @@ cdef class H5PYConfig:
         self.DEBUG = H5PY_DEBUG
         self._r_name = 'r'
         self._i_name = 'i'
+        self._f_name = 'FALSE'
+        self._t_name = 'TRUE'
 
     property complex_names:
         """ Settable 2-tuple controlling how complex numbers are saved.
+
+        Format is (real_name, imag_name), defaulting to ('r','i').
         """
 
         def __get__(self):
@@ -94,14 +98,29 @@ cdef class H5PYConfig:
 
         def __set__(self, val):
             try:
-                r = val[0]
-                i = val[1]
-                if not (isinstance(r, str) and isinstance(i, str)):
-                    raise TypeError
+                r = str(val[0])
+                i = str(val[1])
             except Exception:
-                raise TypeError("complex_names must be a 2-tuple (real, img)")
+                raise TypeError("complex_names must be a 2-tuple of strings (real, img)")
             self._r_name = r
             self._i_name = i
+
+    property bool_names:
+        """ Settable 2-tuple controlling HDF5 ENUM names for boolean types.
+
+        Format is (false_name, real_name), defaulting to ('FALSE', 'TRUE').
+        """
+        def __get__(self):
+            return (self._f_name, self._t_name)
+
+        def __set__(self, val):
+            try:
+                f = str(val[0])
+                t = str(val[1])
+            except Exception:
+                raise TypeError("bool_names must be a 2-tuple of strings (false, true)")
+            self._f_name = f
+            self._t_name = t
 
     def __repr__(self):
         rstr =  \
