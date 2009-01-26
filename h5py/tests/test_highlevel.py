@@ -457,10 +457,10 @@ class TestDataset(HDF5TestCase):
         slices += [ s[3,...], s[3,2,...] ]
         #slices += [ numpy.random.random((10,10,50)) > 0.5 ]  # Truth array
         #slices += [ numpy.zeros((10,10,50), dtype='bool') ]
-        slices += [ s[0, 1, [2,3,6,7]], s[:,[1,2]], s[[1,2]], s[3:7,[1]]]
+        #slices += [ s[0, 1, [2,3,6,7]], s[:,[1,2]], s[[1,2]], s[3:7,[1]]]
 
         for slc in slices:
-            self.output("    Checking %s" % ((slc,) if not isinstance(slc, numpy.ndarray) else 'ARRAY'))
+            print "    Checking %s on %s" % ((slc,) if not isinstance(slc, numpy.ndarray) else 'ARRAY', srcarr.shape)
             verify(slc)
 
     def test_slice_names(self):

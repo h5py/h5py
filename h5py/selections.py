@@ -97,45 +97,60 @@ class RectSelection(Selection):
 
     def __init__(self, *args, **kwds):
         Selection.__init__(self, *args, **kwds)
-        self._sel = ((0,)*len(self.shape), self.shape, (1,)*len(self.shape))
+        rank = len(self.shape)
+        self._sel = ((0,)*rank, self.shape, (1,)*rank, (False,)*rank)
+        self.mshape = self.shape
 
     def __getitem__(self, args):
         if not isinstance(args, tuple):
             args = (args,)
   
-        start, count, step = self._handle_args(args)
+        start, count, step, scalar = self._handle_args(args)
 
         self._id.select_hyperslab(start, count, step)
 
-        self._sel = (start, count, step)
+        self._sel = (start, count, step, scalar)
+
+        self.mshape = tuple(x for x, y in zip(count, scalar) if not y)
 
         return self._id
 
-    def shape_broadcast(self, cshape):
+
+    def shape_broadcast(self, target_shape):
         """ Return an iterator over target dataspaces for broadcasting """
 
         # count = (10,10,10)
         # cshape = (1,1,5)
 
-        start, count, step = self._sel
-        rank = len(self.shape)
-        diff = rank - len(cshape)
-        if diff > 0:
-            cshape = (1,)*diff + cshape
-        elif diff < 0:
-            raise TypeError("Cannot broadcast %s -> %s (too big)" % (count, cshape))
-            
-        if any(x%y != 0 for x, y in zip(count, cshape)):
-            raise TypeError("Cannot broadcast %s -> %s" % (count, cshape))
+        start, count, step, scalar = self._sel
 
-        chunks = tuple(x/y for x, y in zip(count, cshape))
+        rank = len(count)
+        target = list(target_shape)
+
+        tshape = []
+        for idx in xrange(1,rank+1):
+            if len(target) == 0 or scalar[-idx]:     # Skip scalar axes
+                tshape.append(1)
+            else:
+                t = target.pop()
+                if count[-idx] == t or t == 1:
+                    tshape.append(t)
+                else:
+                    raise TypeError("Can't broadcast %s -> %s [%s,%s,%s] %s\n%s" % (target_shape, count, count[-idx], t, -idx, tshape, self._sel))
+        tshape.reverse()
+        tshape = tuple(tshape)
+
+        chunks = tuple(x/y for x, y in zip(count, tshape))
+
+        #print tshape, chunks
+
         nchunks = np.product(chunks)
 
         sid = self._id.copy()
-        sid.select_hyperslab((0,)*rank, cshape, step)
+        sid.select_hyperslab((0,)*rank, tshape, step)
 
         for idx in xrange(nchunks):
-            offset = tuple(x*y*z + s for x, y, z, s in zip(np.unravel_index(idx, chunks), cshape, step, start))
+            offset = tuple(x*y*z + s for x, y, z, s in zip(np.unravel_index(idx, chunks), tshape, step, start))
             sid.offset_simple(offset)
             yield sid
 
@@ -148,25 +163,27 @@ class RectSelection(Selection):
         """
         args = _broadcast(args, len(self.shape))
 
-        def handle_arg(arg, length):
-            if isinstance(arg, slice):
-                return _translate_slice(arg, length)
-            try:
-                return _translate_int(int(arg), length)
-            except TypeError:
-                raise TypeError("Illegal index (must be a slice or number)")
-
         start = []
         count = []
         step  = []
+        scalar = []
 
-        for a, length in zip(args, self.shape):
-            x,y,z = handle_arg(a, length)
+        for arg, length in zip(args, self.shape):
+            if isinstance(arg, slice):
+                x,y,z = _translate_slice(arg, length)
+                s = False
+            else:
+                try:
+                    x,y,z = _translate_int(int(arg), length)
+                    s = True
+                except TypeError:
+                    raise TypeError('Illegal index "%s" (must be a slice or number)' % arg)
             start.append(x)
             count.append(y)
             step.append(z)
+            scalar.append(s)
 
-        return tuple(start), tuple(count), tuple(step)
+        return tuple(start), tuple(count), tuple(step), tuple(scalar)
 
 class HyperSelection(RectSelection):
 
@@ -366,8 +383,8 @@ def _translate_int(exp, length):
     if exp < 0:
         exp = length+exp
 
-    if not 0<=exp<(length-1):
-        raise ValueError("Index out of range")
+    if not 0<=exp<length:
+        raise ValueError("Index (%s) out of range (0-%s)" % (exp, length-1))
 
     return exp, 1, 1
 

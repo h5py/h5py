@@ -924,12 +924,8 @@ class Dataset(HLObject):
             else:
                 raise NotImplementedError("Field name selections are not yet allowed for write.")
 
-            # 3. Validate the input array.  Also convert scalars for broadcast.
+            # 3. Validate the input array
             val = numpy.asarray(val, order='C')
-            if val.shape == () and self.shape != ():
-                fastest = self.shape[-1]
-                if fastest < 1e6:
-                    val = numpy.repeat(val, fastest)
 
             # 4. Perform the dataspace selection
             if sel.is_simple(args):
@@ -938,6 +934,12 @@ class Dataset(HLObject):
                 selection = sel.FancySelection(self.shape)
             selection[args]
 
+            # 5. Broadcast scalars if necessary
+            if val.shape == () and selection.mshape != ():
+                val2 = numpy.empty(selection.mshape, dtype=val.dtype)
+                val2[...] = val
+                val = val2
+            
             # 5. Perform the write, with broadcasting
             mspace = h5s.create_simple(val.shape, (h5s.UNLIMITED,)*len(val.shape))
             for fspace in selection.shape_broadcast(val.shape):
