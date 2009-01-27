@@ -856,15 +856,13 @@ class Dataset(HLObject):
         """ Read a slice from the HDF5 dataset.
 
         Takes slices and recarray-style field names (more than one is
-        allowed!) in any order.  Obeys basic NumPy broadcasting rules.
+        allowed!) in any order.  Obeys basic NumPy rules, including
+        broadcasting.
 
         Also supports:
 
         * Boolean "mask" array indexing
-        * Discrete point selection via CoordsList instance
-
-        Beware; these last two techniques work by explicitly enumerating
-        the points to be selected, incurring memory overhead.
+        * Advanced dataspace selection via the "selections" module
         """
         with self._lock:
 
@@ -909,8 +907,11 @@ class Dataset(HLObject):
     def __setitem__(self, args, val):
         """ Write to the HDF5 dataset from a Numpy array.
 
-        The shape of the Numpy array must match the shape of the selection, and
-        the Numpy array's datatype must be convertible to the HDF5 datatype.
+        NumPy's broadcasting rules are honored, for "simple" indexing
+        (slices and integers).  For advanced indexing, the shapes must
+        match.
+
+        Classes from the "selections" module may also be used to index.s
         """
         with self._lock:
 
@@ -944,40 +945,52 @@ class Dataset(HLObject):
                 self.id.write(mspace, fspace, val)
 
     def read_direct(self, dest, source_sel=None, dest_sel=None):
-        """ Read data directly from HDF5 into a NumPy array.
+        """ Read data directly from HDF5 into an existing NumPy array.
 
-        The destination array must be C-contiguous.  Selections may be any
-        operator class (HyperSelection, etc) in h5py.selections.
+        The destination array must be C-contiguous and writable.
+        Selections may be any operator class (HyperSelection, etc) in
+        h5py.selections, or the output of numpy.s_[<args>].
+
+        Broadcasting is supported for simple indexing.
         """
 
-        if source_sel is not None:
-            src_space = source_sel._id
+        if source_sel is None:
+            source_sel = sel.SimpleSelection(self.shape)
         else:
-            src_space = h5s.create_dataspace(self.shape)
-        if dest_sel is not None:
-            dest_space = dest_space._id
-        else:
-            dest_space = h5s.create_dataspace(dest.shape)
+            source_sel = sel.select(self.shape, source_sel)  # for numpy.s_
+        fspace = source_sel._id
 
-        self.id.read(dest_space, src_space, dest)
+        if dest_sel is None:
+            dest_sel = sel.SimpleSelection(dest.shape)
+        else:
+            dest_sel = sel.select(dest.shape, dest_sel)
+
+        for mspace in dest_sel.broadcast(source_sel.mshape):
+            self.id.read(mspace, fspace, dest)
 
     def write_direct(self, source, source_sel=None, dest_sel=None):
         """ Write data directly to HDF5 from a NumPy array.
 
         The source array must be C-contiguous.  Selections may be any
-        operator class (HyperSelection, etc) in h5py.selections.
+        operator class (HyperSelection, etc) in h5py.selections, or
+        the output of numpy.s_[<args>].
+
+        Broadcasting is supported for simple indexing.
         """
 
-        if source_sel is not None:
-            src_space = source_sel._id
+        if source_sel is None:
+            source_sel = sel.SimpleSelection(source.shape)
         else:
-            src_space = h5s.create_dataspace(source.shape)
-        if dest_sel is not None:
-            dest_space = dest_space._id
-        else:
-            dest_space = h5s.create_dataspace(self.shape)
+            source_sel = sel.select(source.shape, source_sel)  # for numpy.s_
+        mspace = source_sel._id
 
-        self.id.write(src_space, dest_space, source)
+        if dest_sel is None:
+            dest_sel = sel.SimpleSelection(self.shape)
+        else:
+            dest_sel = sel.select(self.shape, dest_sel)
+
+        for fspace in dest_sel.broadcast(source_sel.mshape):
+            self.id.write(mspace, fspace, source)
 
     def __repr__(self):
         with self._lock:
