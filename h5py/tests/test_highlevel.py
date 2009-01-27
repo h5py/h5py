@@ -455,9 +455,9 @@ class TestDataset(HDF5TestCase):
         slices += [ s[0:7:2,0:9:3,15:43:5], s[2:8:2,...] ]
         slices += [ s[0], s[1], s[9], s[0,0], s[4,5], s[:] ]
         slices += [ s[3,...], s[3,2,...] ]
-        #slices += [ numpy.random.random((10,10,50)) > 0.5 ]  # Truth array
-        #slices += [ numpy.zeros((10,10,50), dtype='bool') ]
-        #slices += [ s[0, 1, [2,3,6,7]], s[:,[1,2]], s[[1,2]], s[3:7,[1]]]
+        slices += [ numpy.random.random((10,10,50)) > 0.5 ]  # Truth array
+        slices += [ numpy.zeros((10,10,50), dtype='bool') ]
+        slices += [ s[0, 1, [2,3,6,7]], s[:,[1,2]], s[[1,2]], s[3:7,[1]]]
 
         for slc in slices:
             print "    Checking %s on %s" % ((slc,) if not isinstance(slc, numpy.ndarray) else 'ARRAY', srcarr.shape)

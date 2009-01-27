@@ -870,12 +870,12 @@ class Dataset(HLObject):
 
             args = args if isinstance(args, tuple) else (args,)
 
-            # 1. Sort field indices from the rest of the args.
+            # Sort field indices from the rest of the args.
             names = tuple(x for x in args if isinstance(x, str))
             args = tuple(x for x in args if not isinstance(x, str))
 
-            # 2. Create NumPy datatype for read, using only the named fields
-            #    as specified by the user.
+            # Create NumPy datatype for read, using only the named fields
+            # as specified by the user.
             basetype = self.id.dtype
             if len(names) == 0:
                 new_dtype = basetype
@@ -885,19 +885,21 @@ class Dataset(HLObject):
                         raise ValueError("Field %s does not appear in this type." % name)
                 new_dtype = numpy.dtype([(name, basetype.fields[name][0]) for name in names])
 
-            # 3. Perform the dataspace selection.
-            selection = sel.FancySelection(self.shape)
-            selection[args] = sel.SET
+            # Perform the dataspace selection.
+            selection = sel.select(self.shape, args)
 
-            # 4. Create the output array using information from the selection.
+            if selection.nselect == 0:
+                return numpy.ndarray((0,), dtype=new_dtype)
+
+            # Create the output array using information from the selection.
             arr = numpy.ndarray(selection.mshape, new_dtype, order='C')
 
-            # 5. Perfom the actual read
+            # Perfom the actual read
             mspace = h5s.create_simple(selection.mshape)
             fspace = selection._id
             self.id.read(mspace, fspace, arr)
 
-            # 6. Patch up the output for NumPy
+            # Patch up the output for NumPy
             if len(names) == 1:
                 arr = arr[names[0]]     # Single-field recarray convention
             if arr.shape == ():
@@ -914,25 +916,21 @@ class Dataset(HLObject):
 
             args = args if isinstance(args, tuple) else (args,)
 
-            # 1. Sort field indices from the slicing
+            # Sort field indices from the slicing
             names = tuple(x for x in args if isinstance(x, str))
             args = tuple(x for x in args if not isinstance(x, str))
 
-            # 2. Create new dtype (TODO)
-            if len(names) == 0:
-                pass
-            else:
-                raise NotImplementedError("Field name selections are not yet allowed for write.")
+            if len(names) != 0:
+                raise TypeError("Field name selections are not allowed for write.")
 
             # 3. Validate the input array
             val = numpy.asarray(val, order='C')
 
             # 4. Perform the dataspace selection
-            if sel.is_simple(args):
-                selection = sel.RectSelection(self.shape)
-            else:
-                selection = sel.FancySelection(self.shape)
-            selection[args]
+            selection = sel.select(self.shape, args)
+
+            if selection.nselect == 0:
+                return
 
             # 5. Broadcast scalars if necessary
             if val.shape == () and selection.mshape != ():
@@ -940,9 +938,9 @@ class Dataset(HLObject):
                 val2[...] = val
                 val = val2
             
-            # 5. Perform the write, with broadcasting
+            # 6. Perform the write, with broadcasting
             mspace = h5s.create_simple(val.shape, (h5s.UNLIMITED,)*len(val.shape))
-            for fspace in selection.shape_broadcast(val.shape):
+            for fspace in selection.broadcast(val.shape):
                 self.id.write(mspace, fspace, val)
 
     def read_direct(self, dest, source_sel=None, dest_sel=None):

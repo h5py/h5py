@@ -14,28 +14,65 @@ from h5py.h5s import SELECT_XOR  as XOR
 from h5py.h5s import SELECT_NOTB as NOTB
 from h5py.h5s import SELECT_NOTA as NOTA
 
-def is_simple(args):
-    for arg in args:
-        if not isinstance(arg, slice):
+def select(shape, args):
+    """ Automatically determine the correct selection class, perform the
+        selection, and return the selection instance.  Args may be a single
+        argument or a tuple of arguments.
+    """
+    if not isinstance(args, tuple):
+        args = (args,)
+
+    if len(args) == 1 and isinstance(args[0], np.ndarray):
+            sel = PointSelection(shape)
+            sel[args[0]]
+            return sel
+
+    for a in args:
+        if not isinstance(a, slice) or a is not Ellipsis:
             try:
-                long(arg)
+                int(a)
             except Exception:
-                return False
-    return True
+                sel = FancySelection(shape)
+                sel[args]
+                return sel
+    
+    sel = SimpleSelection(shape)
+    sel[args]
+    return sel
 
 class Selection(object):
 
     """
-        Base class for HDF5 dataspace selections
+        Base class for HDF5 dataspace selections.  Subclasses support the
+        "selection protocol", which means they have at least the following
+        members:
+        
+        __init__(shape)   => Create a new selection on "shape"-tuple
+        __getitem__(args) => Perform a selection with the range specified.
+                             What args are allowed depends on the
+                             particular subclass in use.
+
+        shape (read-only) =>   The shape of the dataspace.
+        mshape  (read-only) => The shape of the selection region. 
+                               Not guaranteed to fit within "shape", although
+                               the total number of points is less than
+                               product(shape).
+        nselect (read-only) => Number of selected points.  Always equal to
+                               product(mshape).
+
+        broadcast(target_shape) => Return an iterable which yields dataspaces
+                                   for read, based on target_shape.
     """
 
     def __init__(self, shape):
         shape = tuple(shape)
         self._id = h5s.create_simple(shape, (h5s.UNLIMITED,)*len(shape))
+        self._id.select_all()
         self._shape = shape
 
     @property
     def shape(self):
+        """ Shape of whole dataspace """
         return self._shape
 
     @property
@@ -56,140 +93,75 @@ class Selection(object):
 
         raise TypeError("Selection invalid")
 
-    def shape_broadcast(self, shape):
-        """ Stub broadcasting method """
-        if not shape == self.shape:
-            raise TypeError("Broadcasting is only supported for simple selections")
-        yield self._id
-
-class PointSelection(Selection):
+class _Selection_1D(Selection):
 
     """
-        Represents a point-wise selection.
+        Base class for selections which result in a 1-D shape, as with
+        NumPy indexing via boolean mask arrays.
+    """
+
+    @property
+    def mshape(self):
+        return (self.nselect,)
+
+    def broadcast(self, target_shape):
+        """ Get an iterable for broadcasting """
+        if np.product(target_shape) != self.nselect:
+            raise TypeError("Broadcasting is not supported for point-wise selections")
+
+        yield self._id
+
+class PointSelection(_Selection_1D):
+
+    """
+        Represents a point-wise selection.  You can supply sequences of
+        points to the three methods append(), prepend() and set(), or a
+        single boolean array to __getitem__.
     """
 
     def _perform_selection(self, points, op):
 
-        points = np.asarray(points, order='C')
+        points = np.asarray(points, order='C', dtype='u8')
         if len(points.shape) == 1:
             points.shape = (1,points.shape[0])
 
         if self._id.get_select_type() != h5s.SEL_POINTS:
             op = h5s.SELECT_SET
 
-        self._id.select_elements(points, op)
+        if len(points) == 0:
+            self._id.select_none()
+        else:
+            self._id.select_elements(points, op)
+
+    def __getitem__(self, arg):
+        """ Perform point-wise selection from a NumPy boolean array """
+        if not (isinstance(arg, np.ndarray) and arg.dtype.kind == 'b'):
+            raise TypeError("PointSelection __getitem__ only works with bool arrays")
+        if not arg.shape == self.shape:
+            raise TypeError("Boolean indexing array has incompatible shape")
+
+        points = np.transpose(arg.nonzero())
+        self.set(points)
+        return self
 
     def append(self, points):
+        """ Add the sequence of points to the end of the current selection """
         self._perform_selection(points, h5s.SELECT_APPEND)
 
     def prepend(self, points):
+        """ Add the sequence of points to the beginning of the current selection """
         self._perform_selection(points, h5s.SELECT_PREPEND)
 
     def set(self, points):
+        """ Replace the current selection with the given sequence of points"""
         self._perform_selection(points, h5s.SELECT_SET)
 
-
-class RectSelection(Selection):
-
-    """ A single "rectangular" (regular) selection composed of only slices
-        and integer arguments.  Can participate in broadcasting.
-    """
-
-    def __init__(self, *args, **kwds):
-        Selection.__init__(self, *args, **kwds)
-        rank = len(self.shape)
-        self._sel = ((0,)*rank, self.shape, (1,)*rank, (False,)*rank)
-        self.mshape = self.shape
-
-    def __getitem__(self, args):
-        if not isinstance(args, tuple):
-            args = (args,)
-  
-        start, count, step, scalar = self._handle_args(args)
-
-        self._id.select_hyperslab(start, count, step)
-
-        self._sel = (start, count, step, scalar)
-
-        self.mshape = tuple(x for x, y in zip(count, scalar) if not y)
-
-        return self._id
-
-
-    def shape_broadcast(self, target_shape):
-        """ Return an iterator over target dataspaces for broadcasting """
-
-        # count = (10,10,10)
-        # cshape = (1,1,5)
-
-        start, count, step, scalar = self._sel
-
-        rank = len(count)
-        target = list(target_shape)
-
-        tshape = []
-        for idx in xrange(1,rank+1):
-            if len(target) == 0 or scalar[-idx]:     # Skip scalar axes
-                tshape.append(1)
-            else:
-                t = target.pop()
-                if count[-idx] == t or t == 1:
-                    tshape.append(t)
-                else:
-                    raise TypeError("Can't broadcast %s -> %s [%s,%s,%s] %s\n%s" % (target_shape, count, count[-idx], t, -idx, tshape, self._sel))
-        tshape.reverse()
-        tshape = tuple(tshape)
-
-        chunks = tuple(x/y for x, y in zip(count, tshape))
-
-        #print tshape, chunks
-
-        nchunks = np.product(chunks)
-
-        sid = self._id.copy()
-        sid.select_hyperslab((0,)*rank, tshape, step)
-
-        for idx in xrange(nchunks):
-            offset = tuple(x*y*z + s for x, y, z, s in zip(np.unravel_index(idx, chunks), tshape, step, start))
-            sid.offset_simple(offset)
-            yield sid
-
-    def _handle_args(self, args):
-        """ Process a "simple" selection tuple, containing only slices and
-            integer objects.  Return is a 3-tuple with start, count, step tuples.
-
-            If "args" is shorter than "shape", the remaining axes are fully
-            selected.
-        """
-        args = _broadcast(args, len(self.shape))
-
-        start = []
-        count = []
-        step  = []
-        scalar = []
-
-        for arg, length in zip(args, self.shape):
-            if isinstance(arg, slice):
-                x,y,z = _translate_slice(arg, length)
-                s = False
-            else:
-                try:
-                    x,y,z = _translate_int(int(arg), length)
-                    s = True
-                except TypeError:
-                    raise TypeError('Illegal index "%s" (must be a slice or number)' % arg)
-            start.append(x)
-            count.append(y)
-            step.append(z)
-            scalar.append(s)
-
-        return tuple(start), tuple(count), tuple(step), tuple(scalar)
-
-class HyperSelection(RectSelection):
+class HyperSelection(_Selection_1D):
 
     """
         Represents multiple overlapping rectangular selections, combined
-        with set-like operators.
+        with set-like operators.  Result is a 1D shape, as with boolean array
+        selection.
 
         When created, the entire dataspace is selected.  To make
         adjustments to the selection, use the standard NumPy slicing
@@ -214,6 +186,10 @@ class HyperSelection(RectSelection):
             Select only regions in old selection which don't intersect the new
   
     """
+
+    def __getitem__(self, args):
+        self[args] = SET
+        return self
 
     def __setitem__(self, args, op):
 
@@ -244,26 +220,104 @@ class HyperSelection(RectSelection):
         self._id.select_hyperslab(start, count, step, op=op)
 
 
+class SimpleSelection(Selection):
 
-class FancySelection(HyperSelection):
+    """ A single "rectangular" (regular) selection composed of only slices
+        and integer arguments.  Can participate in broadcasting.
+    """
+
+    def __init__(self, shape):
+        Selection.__init__(self, shape)
+        rank = len(self.shape)
+        self._sel = ((0,)*rank, self.shape, (1,)*rank, (False,)*rank)
+        self.mshape = self.shape
+
+    def __getitem__(self, args):
+        if not isinstance(args, tuple):
+            args = (args,)
+  
+        start, count, step, scalar = _handle_simple(self.shape,args)
+
+        # HDF5 hyperslabs freak out with scalar selections
+        if self.shape == ():
+            if count == ():
+                self._id.select_all()
+                return self._id
+            else:
+                raise TypeError("Invalid scalar selection")
+
+        self._id.select_hyperslab(start, count, step)
+
+        self._sel = (start, count, step, scalar)
+
+        self.mshape = tuple(x for x, y in zip(count, scalar) if not y)
+
+        return self
+
+
+    def broadcast(self, target_shape):
+        """ Return an iterator over target dataspaces for broadcasting.
+
+        Follows the standard NumPy broadcasting rules against the current
+        selection shape (self.mshape).
+        """
+
+        start, count, step, scalar = self._sel
+
+        rank = len(count)
+        target = list(target_shape)
+
+        tshape = []
+        for idx in xrange(1,rank+1):
+            if len(target) == 0 or scalar[-idx]:     # Skip scalar axes
+                tshape.append(1)
+            else:
+                t = target.pop()
+                if t == 1 or count[-idx] == t:
+                    tshape.append(t)
+                else:
+                    raise TypeError("Can't broadcast %s -> %s" % (target_shape, count))
+        tshape.reverse()
+        tshape = tuple(tshape)
+
+        chunks = tuple(x/y for x, y in zip(count, tshape))
+
+        nchunks = np.product(chunks)
+
+        sid = self._id.copy()
+        sid.select_hyperslab((0,)*rank, tshape, step)
+
+        for idx in xrange(nchunks):
+            offset = tuple(x*y*z + s for x, y, z, s in zip(np.unravel_index(idx, chunks), tshape, step, start))
+            sid.offset_simple(offset)
+            yield sid
+
+
+class FancySelection(Selection):
 
     """
-        Implements advanced, NumPy-style selection operations.
+        Implements advanced NumPy-style selection operations in addition to
+        the standard slice-and-int behavior.
 
         Indexing arguments may be ints, slices, lists of indicies, or
-        boolean arrays (1-D).  The only permitted operation is SET.
+        per-axis (1D) boolean arrays.
 
-        Intended for internal use by the Dataset __getitem__ machinery.
+        Broadcasting is not supported for these selections.
     """
+    def __init__(self, shape):
+        Selection.__init__(self, shape)
+        self._mshape = shape
 
-    def __setitem__(self, args, op):
+    @property
+    def mshape(self):
+        return self._mshape
 
-        if op != SET:
-            raise ValueError("The only permitted operation is SET")
+    def __getitem__(self, args):
+
         if not isinstance(args, tuple):
             args = (args,)
 
-        args = _broadcast(args, len(self.shape))
+        args = _expand_ellipsis(args, len(self.shape))
 
         self._id.select_all()
 
@@ -349,11 +403,15 @@ class FancySelection(HyperSelection):
 
                     last_idx = select_idx
 
-        self.mshape = tuple(x for x in mshape if x != 0)
+        self._mshape = tuple(x for x in mshape if x != 0)
 
-def _broadcast(args, rank):
-    """ Expand ellipsis objects and fill in missing axes.  Returns the
-    new args tuple.
+    def broadcast(self, target_shape):
+        if not target_shape == self.mshape:
+            raise TypeError("Broadcasting is not supported for complex selections")
+        yield self._id
+
+def _expand_ellipsis(args, rank):
+    """ Expand ellipsis objects and fill in missing axes.
     """
     n_el = list(args).count(Ellipsis)
     if n_el > 1:
@@ -374,6 +432,39 @@ def _broadcast(args, rank):
         raise TypeError("Argument sequence too long")
 
     return final_args
+
+def _handle_simple(shape, args):
+    """ Process a "simple" selection tuple, containing only slices and
+        integer objects.  Return is a 4-tuple with tuples for start,
+        count, step, and a flag which tells if the axis is a "scalar"
+        selection (indexed by an integer).
+
+        If "args" is shorter than "shape", the remaining axes are fully
+        selected.
+    """
+    args = _expand_ellipsis(args, len(shape))
+
+    start = []
+    count = []
+    step  = []
+    scalar = []
+
+    for arg, length in zip(args, shape):
+        if isinstance(arg, slice):
+            x,y,z = _translate_slice(arg, length)
+            s = False
+        else:
+            try:
+                x,y,z = _translate_int(int(arg), length)
+                s = True
+            except TypeError:
+                raise TypeError('Illegal index "%s" (must be a slice or number)' % arg)
+        start.append(x)
+        count.append(y)
+        step.append(z)
+        scalar.append(s)
+
+    return tuple(start), tuple(count), tuple(step), tuple(scalar)
 
 def _translate_int(exp, length):
     """ Given an integer index, return a 3-tuple
