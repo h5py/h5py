@@ -411,57 +411,6 @@ class TestDataset(HDF5TestCase):
                 arr = dset[slc]
                 self.assert_(numpy.all(arr == data), "%r \n\n %r" % (arr, data))
 
-    def test_slice_simple(self):
-        """ Test Numpy-style slices """
-
-        srcarr = numpy.arange(10*10*50, dtype='<f4').reshape(10,10,50)
-        srcarr = srcarr + numpy.sin(srcarr)
-
-        def verify_read(dset, data, argtpl):
-            """ Make sure dset and data have identical contents under selection
-            """
-            hresult = dset[argtpl]
-            nresult = data[argtpl]
-
-            if isinstance(nresult, numpy.ndarray):
-                # If the canonical result is an array, compare shapes, dtypes
-                self.assertEqual(hresult.shape, nresult.shape)
-                self.assertEqual(hresult.dtype, nresult.dtype)
-            else:
-                # If it's a scalar, make sure the HDF5 result is also
-                self.assert_(not isinstance(hresult, numpy.ndarray), argtpl)
-
-            # Must be an exact match
-            self.assert_(numpy.all(hresult == nresult))
-
-        def verify(argtpl):
-            """ Test read/write for the given selection """
-
-            dset = self.f.create_dataset('TEST', data=srcarr)
-            verify_read(dset, srcarr, argtpl)
-
-            srcarr[argtpl] = numpy.cos(srcarr[argtpl])
-            dset[argtpl] = srcarr[argtpl]
-            
-            verify_read(dset, srcarr, argtpl)
-        
-            del self.f['TEST']
-
-        s = SliceFreezer()
-        slices = [s[0,0,0], s[0,0,:], s[0,:,0], s[0,:,:]]
-        slices += [s[0:1,:,4:5], s[2:3,0,4:5], s[:,0,0:1], s[0,:,0:1]]
-        slices += [ s[9,9,49], s[9,:,49], s[9,:,:] ]
-        slices += [ s[0, ..., 49], s[...], s[..., 49], s[9,...] ]
-        slices += [ s[0:7:2,0:9:3,15:43:5], s[2:8:2,...] ]
-        slices += [ s[0], s[1], s[9], s[0,0], s[4,5], s[:] ]
-        slices += [ s[3,...], s[3,2,...] ]
-        slices += [ numpy.random.random((10,10,50)) > 0.5 ]  # Truth array
-        slices += [ numpy.zeros((10,10,50), dtype='bool') ]
-        slices += [ s[0, 1, [2,3,6,7]], s[:,[1,2]], s[[1,2]], s[3:7,[1]]]
-
-        for slc in slices:
-            print "    Checking %s on %s" % ((slc,) if not isinstance(slc, numpy.ndarray) else 'ARRAY', srcarr.shape)
-            verify(slc)
 
     def test_slice_names(self):
         """ Test slicing with named fields """

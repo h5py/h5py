@@ -28,7 +28,7 @@ def select(shape, args):
             return sel
 
     for a in args:
-        if not isinstance(a, slice) or a is not Ellipsis:
+        if not isinstance(a, slice) and a != Ellipsis:
             try:
                 int(a)
             except Exception:
@@ -233,18 +233,17 @@ class SimpleSelection(Selection):
         self.mshape = self.shape
 
     def __getitem__(self, args):
+
         if not isinstance(args, tuple):
             args = (args,)
   
-        start, count, step, scalar = _handle_simple(self.shape,args)
-
-        # HDF5 hyperslabs freak out with scalar selections
         if self.shape == ():
-            if count == ():
-                self._id.select_all()
-                return self._id
-            else:
-                raise TypeError("Invalid scalar selection")
+            if len(args) > 0 and args[0] not in (Ellipsis, ()):
+                raise TypeError("Invalid index for scalar dataset (only ..., () allowed)")
+            self._id.select_all()
+            return self
+
+        start, count, step, scalar = _handle_simple(self.shape,args)
 
         self._id.select_hyperslab(start, count, step)
 
@@ -261,6 +260,12 @@ class SimpleSelection(Selection):
         Follows the standard NumPy broadcasting rules against the current
         selection shape (self.mshape).
         """
+        if self.shape == ():
+            if np.product(target_shape) != 1:
+                raise TypeError("Can't broadcast %s to scalar" % target_shape)
+            self._id.select_all()
+            yield self._id
+            return
 
         start, count, step, scalar = self._sel
 
@@ -281,7 +286,6 @@ class SimpleSelection(Selection):
         tshape = tuple(tshape)
 
         chunks = tuple(x/y for x, y in zip(count, tshape))
-
         nchunks = np.product(chunks)
 
         sid = self._id.copy()
