@@ -98,6 +98,7 @@ class TestFilters(object):
         for s in shapes:
             for t in types:
                 for c in compression:
+                    test_dset(s, t, compression=c, shuffle=True)
                     test_dset(s, t, compression=c, shuffle=False)
                 test_dset(s, t, fletcher32=True)
                 test_dset(s, t, shuffle=True)

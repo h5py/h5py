@@ -72,7 +72,7 @@
  * possibly disable this for text data.
  */
 #ifndef ULTRA_FAST
-# define ULTRA_FAST 0
+# define ULTRA_FAST 1
 #endif
 
 /*
