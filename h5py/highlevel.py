@@ -46,26 +46,30 @@ from __future__ import with_statement
 
 import os
 import numpy
-import inspect
 import threading
 import sys
 import warnings
 
+import os.path as op
+import posixpath as pp
+
 from h5py import h5, h5f, h5g, h5s, h5t, h5d, h5a, h5p, h5z, h5i
 from h5py.h5 import H5Error
-import utils_hl as uhl
-from utils_hl import slice_select, hbasename, guess_chunk
-from utils_hl import CoordsList
-from browse import _H5Browser
 import h5py.selections as sel
-import posixpath as pp
+
+import filters
 
 config = h5.get_config()
 if config.API_18:
     from h5py import h5o, h5l
 
 __all__ = ["File", "Group", "Dataset",
-           "Datatype", "AttributeManager", "CoordsList"]
+           "Datatype", "AttributeManager"]
+
+def __hbasename(name):
+    """ Basename function with more readable handling of trailing slashes"""
+    name = pp.basename(pp.normpath(name))
+    return name if name != '' else '/'
 
 def is_hdf5(fname):
     fname = os.path.abspath(fname)
@@ -477,7 +481,7 @@ class Group(HLObject, _DictCompat):
         with self._lock:
             try:
                 return '<HDF5 group "%s" (%d members)>' % \
-                    (hbasename(self.name), len(self))
+                    (_hbasename(self.name), len(self))
             except Exception:
                 return "<Closed HDF5 group>"
 
@@ -674,8 +678,8 @@ class Dataset(HLObject):
 
     def __init__(self, group, name,
                     shape=None, dtype=None, data=None,
-                    chunks=None, compression=None, shuffle=False,
-                    fletcher32=False, maxshape=None, compression_opts=None):
+                    chunks=None, compression=None, shuffle=None,
+                    fletcher32=None, maxshape=None, compression_opts=None):
         """ Open or create a new dataset in the file.
 
         It's recommended you use the Group methods (open via Group["name"],
@@ -761,7 +765,7 @@ class Dataset(HLObject):
 
                 # Generate the dataset creation property list
                 # This also validates the keyword arguments
-                plist = uhl.generate_dcpl(shape, dtype, chunks, compression,
+                plist = filters.generate_dcpl(shape, dtype, chunks, compression,
                             compression_opts, shuffle, fletcher32, maxshape)
 
                 if maxshape is not None:
@@ -776,7 +780,7 @@ class Dataset(HLObject):
 
             self._attrs = AttributeManager(self)
             plist = self.id.get_create_plist()
-            self._filters = uhl.get_filters(plist)
+            self._filters = filters.get_filters(plist)
             if plist.get_layout() == h5d.CHUNKED:
                 self._chunks = plist.get_chunk()
             else:
@@ -996,7 +1000,7 @@ class Dataset(HLObject):
         with self._lock:
             try:
                 return '<HDF5 dataset "%s": shape %s, type "%s">' % \
-                    (hbasename(self.name), self.shape, self.dtype.str)
+                    (_hbasename(self.name), self.shape, self.dtype.str)
             except Exception:
                 return "<Closed HDF5 dataset>"
 
@@ -1095,7 +1099,7 @@ class AttributeManager(LockableObject, _DictCompat):
         with self._lock:
             try:
                 return '<Attributes of HDF5 object "%s" (%d)>' % \
-                    (hbasename(h5i.get_name(self.id)), len(self))
+                    (_hbasename(h5i.get_name(self.id)), len(self))
             except Exception:
                 return "<Attributes of closed HDF5 object>"
 
@@ -1133,7 +1137,7 @@ class Datatype(HLObject):
         with self._lock:
             try:
                 return '<HDF5 named type "%s" (dtype %s)>' % \
-                    (hbasename(self.name), self.dtype.str)
+                    (_hbasename(self.name), self.dtype.str)
             except Exception:
                 return "<Closed HDF5 named type>"
 

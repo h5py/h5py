@@ -82,6 +82,18 @@ int register_lzf(void){
     return retval;
 }
 
+void printbytes(char *buffer, int nbytes){
+
+    int i;
+    char c;
+    for(i=0; i<nbytes; i++){
+        c = buffer[i];
+        fprintf(stderr, "%03u ", c);
+        if(i%20==0){
+            fprintf(stderr, "\n");
+        }
+    }
+}
 /* The filter function */
 size_t lzf_filter(unsigned flags, size_t cd_nelmts,
 		    const unsigned cd_values[], size_t nbytes,
@@ -91,7 +103,6 @@ size_t lzf_filter(unsigned flags, size_t cd_nelmts,
     size_t outbuf_size = 0;
 
     unsigned int status = 0;        /* Return code from lzf routines */
-
 
     /* We're compressing */
     if(!(flags & H5Z_FLAG_REVERSE)){
@@ -107,56 +118,51 @@ size_t lzf_filter(unsigned flags, size_t cd_nelmts,
 
         status = lzf_compress(*buf, nbytes, outbuf, outbuf_size);
 
-        if(status == 0){
-            free(outbuf);
-        }
-
-        return status;
-    }
-
     /* We're decompressing */
+    } else {
 
-    outbuf_size = (*buf_size);
+        outbuf_size = (*buf_size);
 
-    while(!status){
-    
-        free(outbuf);
-        outbuf = malloc(outbuf_size);
+        while(!status){
+        
+            free(outbuf);
+            outbuf = malloc(outbuf_size);
 
-        status = lzf_decompress(*buf, nbytes, outbuf, outbuf_size);
+            status = lzf_decompress(*buf, nbytes, outbuf, outbuf_size);
 
-        /* compression failed */
-        if(!status){
+            /* compression failed */
+            if(!status){
 
-            /* Output buffer too small; make it bigger */
-            if(errno == E2BIG){
+                /* Output buffer too small; make it bigger */
+                if(errno == E2BIG){
 #ifdef H5PY_LZF_DEBUG
-                fprintf(stderr, "LZF filter: Buffer guess too small: %d", outbuf_size);
+                    fprintf(stderr, "LZF filter: Buffer guess too small: %d", outbuf_size);
 #endif
-                outbuf_size += (*buf_size);
-                if(outbuf_size > H5PY_LZF_MAX_BUF){
-                    PUSH_ERR("lzf_filter", H5E_CALLBACK, "Requested LZF buffer too big");
+                    outbuf_size += (*buf_size);
+                    if(outbuf_size > H5PY_LZF_MAX_BUF){
+                        PUSH_ERR("lzf_filter", H5E_CALLBACK, "Requested LZF buffer too big");
+                        goto failed;
+                    }
+
+                /* Horrible internal error (data corruption) */
+                } else if(errno == EINVAL) {
+
+                    PUSH_ERR("lzf_filter", H5E_CALLBACK, "Invalid data for LZF decompression");
+                    goto failed;
+
+                /* Unknown error */
+                } else {
+                    PUSH_ERR("lzf_filter", H5E_CALLBACK, "Unknown LZF decompression error");
                     goto failed;
                 }
 
-            /* Horrible internal error (data corruption) */
-            } else if(errno == EINVAL) {
-                PUSH_ERR("lzf_filter", H5E_CALLBACK, "Invalid data for LZF decompression");
-                goto failed;
+            } /* if !status */
 
-            /* Unknown error */
-            } else {
-                PUSH_ERR("lzf_filter", H5E_CALLBACK, "Unknown LZF decompression error");
-                goto failed;
-            }
+        } /* while !status */
 
-        } /* if !status */
+    } /* compressing vs decompressing */
 
-    } /* while !status */
-    
-
-    /* If compression/decompression successful, swap buffers */
-    if(status){
+    if(status != 0){
 
         free(*buf);
         *buf = outbuf;

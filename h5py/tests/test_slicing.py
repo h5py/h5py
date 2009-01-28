@@ -1,8 +1,10 @@
 import numpy as np
-import h5py
-import tempfile
 import os
 from nose.tools import assert_equal
+
+from common import makehdf, delhdf
+
+import h5py
 
 def check_arr_equal(dset, arr):
     """ Make sure dset and arr have the same shape, dtype and contents.
@@ -28,13 +30,10 @@ s = SliceFreezer()
 class TestSlicing(object):
 
     def setUp(self):
-        fname = tempfile.mktemp('.hdf5')
-        self.f = h5py.File(fname, 'w')
-        self.fname = fname
+        self.f = makehdf()
 
     def tearDown(self):
-        self.f.close()
-        os.unlink(self.fname)
+        delhdf(self.f)
 
     def generate(self, shape, dtype):
         if 'dset' in self.f:

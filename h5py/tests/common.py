@@ -46,6 +46,16 @@ def covers(*args):
 
     return wrap
 
+def makehdf():
+    fname = tempfile.mktemp('.hdf5')
+    f = h5py.File(fname, 'w')
+    return f
+
+def delhdf(f):
+    fname = f.name
+    f.close()
+    os.unlink(fname)
+
 class HDF5TestCase(unittest.TestCase):
 
     """
