@@ -82,18 +82,6 @@ int register_lzf(void){
     return retval;
 }
 
-void printbytes(char *buffer, int nbytes){
-
-    int i;
-    char c;
-    for(i=0; i<nbytes; i++){
-        c = buffer[i];
-        fprintf(stderr, "%03u ", c);
-        if(i%20==0){
-            fprintf(stderr, "\n");
-        }
-    }
-}
 /* The filter function */
 size_t lzf_filter(unsigned flags, size_t cd_nelmts,
 		    const unsigned cd_values[], size_t nbytes,
@@ -116,6 +104,11 @@ size_t lzf_filter(unsigned flags, size_t cd_nelmts,
         outbuf_size = nbytes;
         outbuf = malloc(outbuf_size);
 
+        if(outbuf == NULL){
+            PUSH_ERR("lzf_filter", H5E_CALLBACK, "Can't allocate compression buffer");
+            goto failed;
+        }
+
         status = lzf_compress(*buf, nbytes, outbuf, outbuf_size);
 
     /* We're decompressing */
@@ -127,6 +120,11 @@ size_t lzf_filter(unsigned flags, size_t cd_nelmts,
         
             free(outbuf);
             outbuf = malloc(outbuf_size);
+
+            if(outbuf == NULL){
+                PUSH_ERR("lzf_filter", H5E_CALLBACK, "Can't allocate decompression buffer");
+                goto failed;
+            }
 
             status = lzf_decompress(*buf, nbytes, outbuf, outbuf_size);
 
