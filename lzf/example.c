@@ -19,7 +19,7 @@
 
     To compile:
 
-    h5cc lzf/*.c lzf_filter.c example.c -o example
+    h5cc -DH5_USE_16_API lzf/*.c lzf_filter.c example.c -o example
 
     To run:
 
@@ -36,8 +36,6 @@
         Filter-1:  lzf-315 OPT {}
         Type:      native float
 */
-
-#define H5_USE_16_API
 
 #include "hdf5.h"
 #include "lzf_filter.h"
