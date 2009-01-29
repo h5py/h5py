@@ -33,9 +33,6 @@ SRC_PATH = 'h5py'           # Name of directory with .pyx files
 
 USE_DISTUTILS = False
 
-MODULES = ['h5', 'h5f', 'h5g', 'h5s', 'h5t', 'h5d', 'h5a', 'h5p', 'h5z',
-                 'h5i', 'h5r', 'h5fd', 'utils', 'h5o', 'h5l']
-EXTRA_SRC = {'h5': ["lzf_filter.c", "lzf/lzf_c.c", "lzf/lzf_d.c"]}
 
 def version_check(vers, required):
     """ Compare versions between two "."-separated strings. """
@@ -59,6 +56,12 @@ def debug(instring):
 def localpath(*args):
     return op.abspath(reduce(op.join, (op.dirname(__file__),)+args))
 
+MODULES = ['h5', 'h5f', 'h5g', 'h5s', 'h5t', 'h5d', 'h5a', 'h5p', 'h5z',
+                 'h5i', 'h5r', 'h5fd', 'utils', 'h5o', 'h5l']
+
+EXTRA_SRC = {'h5': [ localpath("lzf/lzf_filter.c"), 
+                     localpath("lzf/lzf/lzf_c.c"),
+                     localpath("lzf/lzf/lzf_d.c") ]    }
 
 # --- Imports -----------------------------------------------------------------
 
@@ -200,7 +203,10 @@ class ExtensionCreator(object):
                 fatal("On Windows, HDF5 directory must be specified.")
 
             self.libraries = ['hdf5dll18']
-            self.include_dirs = [numpy.get_include(), op.join(hdf5_loc, 'include'), op.abspath('win_include')]
+            self.include_dirs = [numpy.get_include(),
+                                 op.join(hdf5_loc, 'include'),
+                                 localpath('lzf'),
+                                 localpath('win_include')]
             self.library_dirs = [op.join(hdf5_loc, 'dll')]
             self.runtime_dirs = []
             self.extra_compile_args = ['/DH5_USE_16_API', '/D_HDF5USEDLL_']
@@ -209,11 +215,13 @@ class ExtensionCreator(object):
         else:
             self.libraries = ['hdf5']
             if hdf5_loc is None:
-                self.include_dirs = [numpy.get_include(), '/usr/include', '/usr/local/include']
+                self.include_dirs = [numpy.get_include(), 
+                                     '/usr/include', '/usr/local/include']
                 self.library_dirs = ['/usr/lib/', '/usr/local/lib']
             else:
                 self.include_dirs = [numpy.get_include(), op.join(hdf5_loc, 'include')]
                 self.library_dirs = [op.join(hdf5_loc, 'lib')]
+            self.include_dirs += [localpath('lzf')]
             self.runtime_dirs = self.library_dirs
             self.extra_compile_args = ['-DH5_USE_16_API', '-Wno-unused', '-Wno-uninitialized']
             self.extra_link_args = []
@@ -226,7 +234,7 @@ class ExtensionCreator(object):
         """
         if extra_src is None:
             extra_src = []
-        sources = [op.join(SRC_PATH, name+'.c')]+[op.join(SRC_PATH,x) for x in extra_src]
+        sources = [op.join(SRC_PATH, name+'.c')]+[x for x in extra_src]
         return Extension(NAME+'.'+name,
                             sources, 
                             include_dirs = self.include_dirs, 

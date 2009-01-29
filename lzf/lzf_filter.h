@@ -15,8 +15,8 @@
     with PyTables LZO/BZIP2 implementation.
 */
 
-#ifndef H5PY_LZF_FILTER
-#define H5PY_LZF_FILTER
+#ifndef H5PY_LZF_H
+#define H5PY_LZF_H
 
 #define H5PY_FILTER_LZF 315
 

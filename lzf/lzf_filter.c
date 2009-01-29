@@ -97,7 +97,7 @@ size_t lzf_filter(unsigned flags, size_t cd_nelmts,
 
         /* Allocate an output buffer exactly as long as the input data; if
            the result is larger, we simply return 0.  The filter is flagged
-           as optional, so HDF5 simply marks the chunk as uncompressed and
+           as optional, so HDF5 marks the chunk as uncompressed and
            proceeds.
         */
 
