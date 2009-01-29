@@ -2,23 +2,10 @@ import numpy as np
 import os
 from nose.tools import assert_equal
 
-from common import makehdf, delhdf
+from common import makehdf, delhdf, assert_arr_equal
 
 import h5py
 
-def check_arr_equal(dset, arr):
-    """ Make sure dset and arr have the same shape, dtype and contents.
-
-        Note that dset may be a NumPy array or an HDF5 dataset
-    """
-    if np.isscalar(dset) or np.isscalar(arr):
-        assert np.isscalar(dset) and np.isscalar(arr)
-        assert dset == arr
-        return
-
-    assert_equal(dset.shape, arr.shape)
-    assert_equal(dset.dtype, arr.dtype)
-    assert np.all(dset[...] == arr[...]), "%s %s" % (dset[...], arr[...])
 
 class SliceFreezer(object):
     """ Necessary because numpy.s_ clips slices > 2**32 """
@@ -36,19 +23,24 @@ class TestSlicing(object):
         delhdf(self.f)
 
     def generate(self, shape, dtype):
-        if 'dset' in self.f:
-            del self.f['dset']
 
         size = np.product(shape)
-        dset = self.f.create_dataset('dset', shape, dtype)
+        dset = self.generate_dset(shape, dtype)
         arr = np.arange(size, dtype=dtype).reshape(shape)
         return dset, arr
 
+    def generate_dset(self, shape, dtype, **kwds):
+        if 'dset' in self.f:
+            del self.f['dset']
+        return self.f.create_dataset('dset', shape, dtype, **kwds)
+        
     def generate_rand(self, shape, dtype='f'):
         return np.random.random(shape).astype(dtype)
 
 
     def test_slices(self):
+        # Test interger, slice, array and list indices
+
         dset, arr = self.generate((10,10,50),'f')
 
         slices = [s[0,0,0], s[0,0,:], s[0,:,0], s[0,:,:]]
@@ -70,15 +62,40 @@ class TestSlicing(object):
             dset[slc] = arr[slc]
             
             print "check write %s" % (slc,)
-            check_arr_equal(dset, arr)
+            assert_arr_equal(dset, arr)
 
             out = dset[slc]
 
             print "check read %s" % (slc,)
-            check_arr_equal(out, arr[slc])
+            assert_arr_equal(out, arr[slc])
 
+    def test_slices_big(self):
+        # Test slicing behavior for indices larger than 2**32
+
+        shape = (2**62, 2**62)
+        dtype = 'f'
+
+        bases = [1024, 2**37, 2**60]
+        regions = [ (42,1), (100,100), (1,42), (1,1), (4,1025)]
+
+        for base in bases:
+            print "Testing base 2**%d" % np.log2(base)
+
+            slices = [ s[base:base+x, base:base+y] for x, y in regions]
+
+            dset = self.generate_dset(shape, dtype, maxshape=(None, None))
+
+            for region, slc in zip(regions, slices):
+                print "    Testing shape %s slice %s" % (region, slc,)
+        
+                data = np.arange(np.product(region), dtype=dtype).reshape(region)
+
+                dset[slc] = data
+
+                assert_arr_equal(dset[slc], data)
 
     def test_scalars(self):
+        # Confirm correct behavior for scalar datasets
 
         dset, arr = self.generate((),'i')
         dset[...] = arr[...] = 42
@@ -88,6 +105,7 @@ class TestSlicing(object):
 
 
     def test_broadcast(self):
+        # Test broadcasting to HDF5
 
         dset, arr = self.generate((20,10,30),'f')
         dset[...] = arr[...]
@@ -105,7 +123,31 @@ class TestSlicing(object):
             print "broadcast %s %s" % (slc, shape)
             dset[slc] = subarr
             arr[slc] = subarr
-            check_arr_equal(dset, arr)
+            assert_arr_equal(dset, arr)
+
+    def test_slice_names(self):
+        # Test slicing in conjunction with named fields
+
+        shape = (10,10)
+        size = np.product(shape)
+        dtype = [('a', 'i'), ('b', 'f')]
+
+        srcarr = np.ndarray(shape, dtype)
+
+        srcarr['a'] = np.arange(size).reshape(shape)
+        srcarr['b'] = np.arange(size).reshape(shape)*100
+
+        dset = self.f.create_dataset('TEST', data=srcarr)
+
+        pairs = [  (s[:], srcarr[:]),
+                   (s['a'], srcarr['a']),
+                   (s[5,5,'a'], srcarr['a'][5,5]),
+                   (s[2,:,'b'], srcarr['b'][2,:]),
+                   (s['b',...,5], srcarr[...,5]['b']) ]
+
+        for slc, result in pairs:
+            print "slicing %s" % (slc,)
+            assert np.all(dset[slc] == result)
 
 
 

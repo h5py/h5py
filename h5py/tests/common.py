@@ -56,6 +56,36 @@ def delhdf(f):
     f.close()
     os.unlink(fname)
 
+EPSILON = 1e-5
+import numpy as np
+from nose.tools import assert_equal
+
+INTS = ('i', 'i1', '<i2', '>i2', '<i4', '>i4')
+FLOATS = ('f', '<f4', '>f4', '<f8', '>f8')
+COMPLEX = ('<c8', '>c8', '<c16', '>c16')
+STRINGS = ('|S1', '|S2', 'S17', '|S100')
+VOIDS = ('|V4', '|V8')
+
+def assert_arr_equal(dset, arr, message=None, precision=None):
+    """ Make sure dset and arr have the same shape, dtype and contents, to
+        within the given precision.
+
+        Note that dset may be a NumPy array or an HDF5 dataset.
+    """
+    if precision is None:
+        precision = EPSILON
+    if message is None:
+        message = ''
+
+    if np.isscalar(dset) or np.isscalar(arr):
+        assert np.isscalar(dset) and np.isscalar(arr), "%r %r" % (dset, arr)
+        assert dset - arr < precision, message
+        return
+
+    assert_equal(dset.shape, arr.shape, message)
+    assert_equal(dset.dtype, arr.dtype, message)
+    assert np.all(np.abs(dset[...] - arr[...]) < precision), "%s %s" % (dset[...], arr[...]) if not message else message
+
 class HDF5TestCase(unittest.TestCase):
 
     """

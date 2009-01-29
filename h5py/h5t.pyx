@@ -1269,6 +1269,7 @@ cdef TypeStringID _c_string(dtype dt):
 
     tid = H5Tcopy(H5T_C_S1)
     H5Tset_size(tid, dt.itemsize)
+    H5Tset_strpad(tid, H5T_STR_NULLPAD)
     return TypeStringID(tid)
 
 cdef TypeCompoundID _c_complex(dtype dt):

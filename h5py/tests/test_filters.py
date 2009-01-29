@@ -23,10 +23,37 @@ class TestFilters(object):
             dtype = 'f'
         return self.f.create_dataset('dset', shape, dtype, **kwds)
         
-    def test_compression(self):
-        """ Dataset compression keywords """
+    def test_chunks(self):
+        # Check chunk behavior, including auto-chunking
 
-        # 1. Test compression keyword only
+        # Test auto-chunking
+        pairs = [ ( {'chunks': None, 'compression': None}, False  ),
+                  ( {'chunks': True, 'compression': None},  True  ),
+                  ( {'chunks': None, 'compression': 'gzip'}, True ),
+                  ( {'fletcher32': True}, True ),
+                  ( {'shuffle': True}, True ),
+                  ( {'maxshape': (None, None)}, True),
+                  ( {}, False ) ]
+
+        for kwds, result in pairs:
+            dset = self.make_dset((10,10), **kwds)
+            assert_equal(bool(dset.chunks), result)
+
+        # Test user-defined chunking
+        shapes = [(), (1,), (10,5), (1,10), (2**60, 2**60, 2**34)]
+        chunks = {(): [None],
+                  (1,): [None, (1,)],
+                  (10,5): [None, (5,5), (10,1)],
+                  (1,10): [None, (1,10), (1,3)],
+                  (2**60, 2**60, 2**34): [(128, 64, 256)] }
+
+        for shape in shapes:
+            for chunk in chunks[shape]:
+                dset = self.make_dset(shape, chunks=chunk)
+                assert_equal(dset.chunks, chunk)
+
+    def test_compression(self):
+        # Dataset compression keywords only
 
         settings = (0, 9, 4, 'gzip', 'lzf', None)
         results  = ('gzip', 'gzip', 'gzip', 'gzip', 'lzf', None)
@@ -44,7 +71,7 @@ class TestFilters(object):
             assert_equal(dset.compression_opts, o)
 
     def test_compression_opts(self):
-        """ Dataset compression keywords & options """
+        # Dataset compression keywords & options
 
         types = ('gzip', 'lzf')
         opts = {'gzip': (0, 9, 5), 'lzf': (None,)}
@@ -61,7 +88,8 @@ class TestFilters(object):
                 assert_equal(dset.compression_opts, o)
 
     def test_fletcher32_shuffle(self):
-        
+        # Check fletcher32 and shuffle, including auto-shuffle
+
         settings = (None, False, True)
         results = (False, False, True)
 
@@ -80,10 +108,10 @@ class TestFilters(object):
         assert_equal(dset.shuffle, False)
 
     def test_data(self):
-        """ Ensure data can be read/written with filters """
+        # Ensure data can be read/written with filters
 
         compression = (None, 'gzip', 'lzf')
-        shapes = ((), (10,), (10,10), (200,200,10))
+        shapes = ((), (10,), (10,10), (200,200))
         # Filter settings should be ignored for scalar shapes
 
         types = ('f','i', 'c')
