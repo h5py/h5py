@@ -20,6 +20,9 @@
 
 #define H5PY_FILTER_LZF 315
 
+/* Register the filter with the library. Returns a negative value on failure, 
+   and a non-negative value on success.
+*/
 int register_lzf(void);
 
 #endif

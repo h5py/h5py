@@ -43,11 +43,13 @@
 # define SET_ERRNO(n) errno = (n)
 #endif
 
+#ifndef __STRICT_ANSI__
 #if (__i386 || __amd64) && __GNUC__ >= 3
 # define lzf_movsb(dst, src, len)                \
    asm ("rep movsb"                              \
         : "=D" (dst), "=S" (src), "=c" (len)     \
         :  "0" (dst),  "1" (src),  "2" (len));
+#endif
 #endif
 
 unsigned int 
