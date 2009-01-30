@@ -7,3 +7,4 @@ recursive-include api16 *
 recursive-include api18 *
 recursive-include h5py *.py *.pyx *.pxd *.pxi *.h *.c *.hdf5
 recursive-include licenses *
+recursive-include lzf *.c *.h *.txt

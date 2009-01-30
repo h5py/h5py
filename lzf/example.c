@@ -46,8 +46,9 @@ int main(){
     const hsize_t shape[] = {100,100,100};
     const hsize_t chunkshape[] = {1,100,100};
     int r, i;
+    int return_code = 1;
 
-    hid_t fid, sid, dset, plist;
+    hid_t fid, sid, dset, plist = 0;
 
     for(i=0; i<100*100*100; i++){
         data[i] = i;
@@ -87,14 +88,15 @@ int main(){
     r = H5Dwrite(dset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, &data);
     if(r<0) goto failed;
 
-    H5Dclose(dset);
-    H5Sclose(sid);
-    H5Pclose(plist);
-    H5Fclose(fid);
-
-    return 0;
+    return_code = 0;
 
     failed:
-    return 1;
+
+    if(dset>0)  H5Dclose(dset);
+    if(sid>0)   H5Sclose(sid);
+    if(plist>0) H5Pclose(plist);
+    if(fid>0)   H5Fclose(fid);
+
+    return return_code;
 }
 
