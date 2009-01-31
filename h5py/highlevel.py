@@ -66,7 +66,7 @@ if config.API_18:
 __all__ = ["File", "Group", "Dataset",
            "Datatype", "AttributeManager"]
 
-def __hbasename(name):
+def _hbasename(name):
     """ Basename function with more readable handling of trailing slashes"""
     name = pp.basename(pp.normpath(name))
     return name if name != '' else '/'
