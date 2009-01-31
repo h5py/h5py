@@ -195,6 +195,7 @@ cdef class PHIL:
         self.lock.release()
         return 0
     cpdef bint acquire(self, int blocking=1) except -1:
+        register_thread()
         cdef bint rval = self.lock.acquire(blocking)
         return rval
     cpdef bint release(self) except -1:
@@ -702,6 +703,13 @@ def _exithack():
 
 hdf5_inited = 0
 
+cpdef int register_thread() except -1:
+    """ Register the current thread for native HDF5 exception support.
+    """
+    if H5Eset_auto(err_callback, NULL) < 0:
+        raise RuntimeError("Failed to register HDF5 exception callback")
+    return 0
+
 cdef int init_hdf5() except -1:
     # Initialize the library and register Python callbacks for exception
     # handling.  Safe to call more than once.
@@ -712,8 +720,7 @@ cdef int init_hdf5() except -1:
             log_lib.info("* Initializing h5py library")
         if H5open() < 0:
             raise RuntimeError("Failed to initialize the HDF5 library.")
-        if H5Eset_auto(err_callback, NULL) < 0:
-            raise RuntimeError("Failed to register HDF5 exception callback.")
+        register_thread()
         if register_lzf() < 0:
             raise RuntimeError("Failed to register LZF filter")
         atexit.register(_exithack)
