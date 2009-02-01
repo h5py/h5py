@@ -113,6 +113,10 @@ def generate_dcpl(shape, dtype, chunks, compression, compression_opts,
         plist.set_chunk(chunks)
         plist.set_fill_time(h5d.FILL_TIME_ALLOC)
 
+    # MUST be first, to prevent 1.6/1.8 compatibility glitch
+    if fletcher32:
+        plist.set_fletcher32()
+
     if shuffle:
         plist.set_shuffle()
 
@@ -123,9 +127,6 @@ def generate_dcpl(shape, dtype, chunks, compression, compression_opts,
     elif compression == 'szip':
         opts = {'ec': h5z.SZIP_EC_OPTION_MASK, 'nn': h5z.SZIP_NN_OPTION_MASK}
         plist.set_szip(opts[szmethod], szpix)
-
-    if fletcher32:
-        plist.set_fletcher32()
 
     return plist
 
