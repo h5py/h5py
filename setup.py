@@ -200,8 +200,9 @@ class ExtensionCreator(object):
     def __init__(self, hdf5_loc=None):
         if sys.platform == 'win32':
             if hdf5_loc is None:
-                fatal("On Windows, HDF5 directory must be specified.")
-
+                warn("On Windows, HDF5 directory must be specified.")
+                hdf5_loc = '.'
+                
             self.libraries = ['hdf5dll18']
             self.include_dirs = [numpy.get_include(),
                                  op.join(hdf5_loc, 'include'),
@@ -553,7 +554,8 @@ setup(
   package_data = package_data,
   ext_modules = EXTENSIONS,
   requires = ['numpy (>=%s)' % MIN_NUMPY],
-  cmdclass = CMD_CLASS
+  cmdclass = CMD_CLASS,
+  test_suite = 'nose.collector'
 )
 
 
