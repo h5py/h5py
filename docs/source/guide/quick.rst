@@ -55,73 +55,46 @@ Getting data into HDF5
 
 First, install h5py by following the :ref:`installation instructions <build>`.
 
-The ``import *`` construct is safe when used with the main package::
+Since an example is worth a thousand words, here's how to create a new file,
+create a dataset, and store some data::
 
-    >>> from h5py import *
+    import numpy as np
+    import h5py
 
-The rest of the examples here assume you've done this.  Among other things, it
-imports the three classes ``File``, ``Group`` and ``Dataset``, which will cover
-99% of your needs.
+    mydata = np.arange(10).reshape((5,2))
 
-Create a new file
------------------
+    f = h5py.File('myfile.hdf5', 'w')
 
-Files are opened using a Python-file-like syntax::
+    dset = f.create_dataset("MyDataset", (10, 2), 'i')
 
-    >>> f = File("myfile.hdf5", 'w')    # Create/truncate file
-    >>> f
-    <HDF5 file "myfile.hdf5" (mode w, 0 root members)>
+    dset[0:5,:] = mydata
 
-In the filesystem metaphor of HDF5, the file object does double duty as the
-*root group* (named "/" like its POSIX counterpart).  You can store datasets
-in it directly, or create subgroups to keep your data better organized.
 
-Create a dataset
-----------------
+The `File <hlfile>`_ constructor accepts modes similar to Python file modes,
+including "r", "w", and "a" (the default).
 
-Datasets are like Numpy arrays which reside on disk; you create them by
-providing at least a name and a shape.  Here's an example::
-
-    >>> dset = f.create_dataset("MyDataset", (2,3), '=i4')  # dtype is optional
-    >>> dset
-    <HDF5 dataset "MyDataset": shape (2, 3), type "<i4">
-
-This creates a new 2-d 6-element (2x3) dataset containing 32-bit signed integer
-data, in native byte order, located in the root group at "/MyDataset".
-
-Some familiar NumPy attributes are included::
+The dataset object ``dset`` here represents a new 2-d HDF5 dataset.  Some
+features will be familiar to NumPy users::
 
     >>> dset.shape
-    (2, 3)
+    (10, 2)
     >>> dset.dtype
     dtype('int32')
 
-This dataset, like every object in an HDF5 file, has a name::
-
-    >>> dset.name
-    '/MyDataset'
-
 If you already have a NumPy array you want to store, just hand it off to h5py::
 
-    >>> arr = numpy.ones((2,3), '=i4')
-    >>> dset = f.create_dataset('MyDataset', data=arr)
+    arr = numpy.ones((2,3), '=i4')
+    dset = f.create_dataset('AnotherDataset', data=arr)
 
-Read & write data
------------------
+Additional features like transparent compression are also available::
 
-You can now store data in it using Numpy-like slicing syntax::
+    dset2 = f.create_dataset("CompressedDatset", data=arr, compression='lzf')
 
-    >>> print dset[...]
-    [[0 0 0]
-     [0 0 0]]
-    >>> import numpy
-    >>> myarr = numpy.ones((2,), '=i2')  # The dtype doesn't have to exactly match
-    >>> dset[:,0] = myarr
-    >>> print dset[...]
-    [[1 0 0]
-     [1 0 0]]
+Getting your data back
+----------------------
 
-The following slice mechanisms are supported (see :ref:`datasets` for more):
+You can store and retrieve data using Numpy-like slicing syntax.  The following
+slice mechanisms are supported (see :ref:`datasets` for more info):
 
     * Integers/slices (``array[2:11:3]``, etc)
     * Ellipsis indexing (``array[2,...,4:7]``)
@@ -140,13 +113,7 @@ Closing the file
 You don't need to do anything special to "close" datasets.  However, as with
 Python files you should close the file before exiting::
 
-    >>> dset
-    <HDF5 dataset "MyDataset": shape (2, 3), type "<i4">
     >>> f.close()
-    >>> f
-    <Closed HDF5 file>
-    >>> dset
-    <Closed HDF5 dataset>
 
 H5py tries to close all objects on exit (or when they are no longer referenced),
 but it's good practice to close your files anyway.

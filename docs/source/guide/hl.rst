@@ -64,6 +64,11 @@ function ``h5py.get_config()``.  This object supports the following attributes:
         Set to a 2-tuple of strings (real, imag) to control how complex numbers
         are saved.  The default is ('r','i').
 
+    **bool_names**
+        Booleans are saved as HDF5 enums.  Set this to a 2-tuple of strings
+        (false, true) to control the names used in the enum.  The default
+        is ("FALSE", "TRUE").
+
 Threading
 ---------
 
@@ -90,6 +95,7 @@ small, named bits of data.  :class:`Group`, :class:`Dataset` and even
 behavior, named ``<obj>.attrs``.  This is the correct way to store metadata
 in HDF5 files.
 
+.. _hlfile:
 
 File Objects
 ============
@@ -285,16 +291,30 @@ Reference
             selected if any of the other keyword options are given.  If you
             don't provide a shape tuple, the library will guess one for you.
 
-        **compression** (None or int[0-9])
-            Enable dataset compression.  Currently only gzip (DEFLATE)
-            compression is supported, at the given level.
+        **compression** (None, string ["gzip" | "lzf" | "szip"] or int 0-9)
+            Enable dataset compression.  DEFLATE, LZF and (where available)
+            SZIP are supported.  An integer is interpreted as a GZIP level
+            for backwards compatibility
+
+        **compression_opts** (None, or special value)
+            Setting for compression filter; legal values for each filter
+            type are:
+
+            ======      ======================================
+            "gzip"      Integer 0-9
+            "lzf"       (none allowed)
+            "szip"      2-tuple ('ec'|'nn', even integer 0-32)
+            ======      ======================================
+
+            See the ``filters`` module for a detailed description of each
+            of these filters.
 
         **shuffle** (True/False)
-            Enable the shuffle filte.  When used in conjunction with the
-            *compression* keyword, can increase the compression ratio.
+            Enable/disable data shuffling, which can improve compression
+            performance.  Automatically enabled when compression is used.
 
         **fletcher32** (True/False)
-            Enable Fletcher32 error detection; may be used in addition to
+            Enable Fletcher32 error detection; may be used with or without
             compression.
 
         **maxshape** (None or shape tuple)
@@ -462,14 +482,10 @@ features.  These are enabled by the keywords provided to
 :meth:`Group.create_dataset`.  Some of the more useful are:
 
 Compression
-    Transparent compression 
-    (keyword *compression*)
-    can substantially reduce the storage space
-    needed for the dataset.  The default compression method is GZIP (DEFLATE),
-    which is universally supported by other installations of HDF5.
-    Supply an integer between 0 and 9 to enable GZIP compression at that level.
-    Using the *shuffle* filter along with this option can improve the
-    compression ratio further.
+    Transparent compression (keyword *compression*) can substantially reduce
+    the storage space needed for the dataset.  Beginning with h5py 1.1,
+    three techniques are available, "gzip", "lzf" and "szip".  See the
+    ``filters`` module for more information.
 
 Error-Detection
     All versions of HDF5 include the *fletcher32* checksum filter, which enables
@@ -507,8 +523,9 @@ Resizing
     .. note::
         Only datasets stored in "chunked" format can be resized.  This format
         is automatically selected when any of the advanced storage options is
-        used, or a *maxshape* tuple is provided.  You can also force it to be
-        used by specifying ``chunks=True`` at creation time.
+        used, or a *maxshape* tuple is provided.  By default an appropriate
+        chunk size is selected based on the shape and type of the dataset; you
+        can also manually specify a chunk shape via the ``chunks`` keyword.
 
 .. _slicing_access:
 
@@ -570,8 +587,8 @@ The following restrictions exist:
 Sparse selection
 ----------------
 
-Two mechanisms exist for the case of scattered and/or sparse selection, for
-which slab or row-based techniques may not be appropriate.
+Additional mechanisms exist for the case of scattered and/or sparse selection,
+for which slab or row-based techniques may not be appropriate.
 
 Boolean "mask" arrays can be used to specify a selection.  The result of
 this operation is a 1-D array with elements arranged in the standard NumPy
@@ -583,30 +600,13 @@ this operation is a 1-D array with elements arranged in the standard NumPy
     >>> result.shape
     (49,)
 
-If you have a set of discrete points you want to access, you may not want to go
-through the overhead of creating a boolean mask.  This is especially the case
-for large datasets, where even a byte-valued mask may not fit in memory.  You
-can pass a sequence object containing points to the dataset selector via a
-custom "CoordsList" instance:
+Advanced selection
+------------------
 
-    >>> mycoords = [ (0,0), (3,4), (7,8), (3,5), (4,5) ]
-    >>> coords_list = CoordsList(mycoords)
-    >>> result = dset[coords_list]
-    >>> result.shape
-    (5,)
-
-Like boolean-array indexing, the result is a 1-D array.  The order in which
-points are selected is preserved.  Duplicate points are ignored.
-
-.. note::
-    Boolean-mask and CoordsList indexing rely on an HDF5 construct which
-    explicitly enumerates the points to be selected.  It's very flexible but
-    most appropriate for 
-    reasonably-sized (or sparse) selections.  The coordinate list takes at
-    least 8*<rank> bytes per point, and may need to be internally copied.  For
-    example, it takes 40MB to express a 1-million point selection on a rank-3
-    array.  Be careful, especially with boolean masks.
-
+The ``selections`` module contains additional classes which provide access to
+the full range of HDF5 dataspace selection techniques, including point-based
+selection and selection via overlapping hyperslabs.  These are especially
+useful for read_direct and write_direct.
 
 Value attribute and scalar datasets
 -----------------------------------
@@ -673,7 +673,12 @@ Reference
 
     .. attribute:: compression
 
-        GZIP compression level, or None if compression isn't used.
+        None or a string indicating the compression strategy;
+        one of "gzip", "lzf", or "lzf".
+
+    .. attribute:: compression_opts
+
+        Setting for the compression filter
 
     .. attribute:: shuffle
 
@@ -694,6 +699,20 @@ Reference
     .. method:: __setitem__(*args, val)
 
         Write to the dataset.  See :ref:`slicing_access`.
+
+    .. method:: read_direct(dest, source_sel=None, dest_sel=None)
+
+        Read directly from HDF5 into an existing NumPy array.  The "source_sel"
+        and "dest_sel" arguments may be Selection instances (from the
+        selections module) or the output of "numpy.s_".  Standard broadcasting
+        is supported.
+
+    .. method:: write_direct(source, source_sel=None, dest_sel=None)
+
+        Write directly to HDF5 from a NumPy array.  The "source_sel"
+        and "dest_sel" arguments may be Selection instances (from the
+        selections module) or the output of "numpy.s_".  Standard broadcasting
+        is supported.
 
     .. method:: resize(shape, axis=None)
 

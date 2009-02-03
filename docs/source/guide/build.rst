@@ -7,25 +7,24 @@ Installation guide
 Where to get h5py
 =================
 
-See the download page at `the Google Code site`__.  If installing on Windows,
-be sure to get a version that matches your Python version (2.5 or 2.6).
-
-__ http://h5py.googlecode.com
+Downloads for all platforms are available at http://h5py.googlecode.com.
+Tar files are available for UNIX-like systems (Linux and Mac OS-X), and
+a binary installer for Windows which includes HDF5 1.8.  As of version 1.1,
+h5py can also be installed via easy_install.
 
 Getting HDF5
 ============
 
-On :ref:`Windows <windows>`, HDF5 is provided as part of the integrated
-installer for h5py.  On UNIX platforms (:ref:`Linux and OS-X <linux>`), you
-must provide HDF5 yourself.  The following HDF5 versions are supported:
+On Windows, HDF5 is provided as part of the integrated
+installer for h5py.  On Linux and OS-X, you
+must provide HDF5 yourself.  HDF5 versions **1.6.5** through **1.8.2** are
+supported.
 
-* 1.6.5, 1.6.6, 1.6.7, 1.6.8, 1.8.0, 1.8.1, 1.8.2
+**The best solution for both Linux and OS-X is to install HDF5 via a
+package manager.** If you decide to build HDF5 from source, be sure to
+build it as a dynamic library.
 
-**The best solution is to install HDF5 via a package manager.** If you must
-install yourself from source, keep in mind that you *must* build as a dynamic
-library.
-
-`The HDF Group`__ provides several "dumb" (untar in "/") binary distributions
+`The HDF Group`__ provides several "dumb" (untar in **/**) binary distributions
 for Linux, but traditionally only static libraries for Mac.  Mac OS-X users
 should use something like Fink, or compile HDF5 from source.
 
@@ -37,15 +36,17 @@ __ http://www.hdfgroup.com/HDF5
 Installing on Windows
 =====================
 
+Requires
+--------
+
+- Python 2.5
+- NumPy_ 1.0.3 or higher
+
 Download the executable installer from `Google Code`__ and run it.  This
 installs h5py and a private copy of HDF5 1.8.
 
 __ http://h5py.googlecode.com
 
-Requires
---------
-
-- NumPy_ 1.0.3 or higher
 
 .. _linux:
 
@@ -53,51 +54,72 @@ Installing on Linux/Mac OS-X
 ============================
 
 This package is designed to be installed from source.  You will need
-Python and a C compiler, for distutils to build the extensions.  Cython_ is
-required only if you want to change compile-time options, like the
-debugging level.
-
+Python and a C compiler, for setuptools to build the extensions.
 
 Requires
 --------
-- Python with headers for development
+- Python 2.5 or 2.6, including headers ("python-dev")
 - Numpy_ 1.0.3 or higher
 - HDF5_ 1.6.5 or higher, including 1.8.X versions
-- Cython_ 0.9.8.1.1 or higher
-
-- Unix-like environment (created/tested on 32-bit Intel linux)
-- A working compiler for distutils
 
 .. _Numpy: http://numpy.scipy.org/
 .. _HDF5: http://www.hdfgroup.com/HDF5
-.. _Cython: http://cython.org/
 
-Procedure
----------
-1.  Unpack the tarball and cd to the resulting directory
-2.  Run ``python setup.py build`` to build the package
-3.  Run ``python setup.py test`` to run unit tests in-place (optional)
-4.  Run ``sudo python setup.py install`` to install into your main Python
-    package directory.
-5.  ``cd`` out of the installation directory before importing h5py, to prevent
-    Python from trying to run from the source folder.
 
-Additional options
+Quick installation
 ------------------
 
-::
+H5py can now be automatically installed by setuptools' easy_install command::
 
- --hdf5=<path>   Path to your HDF5 installation (if not in one of the standard
-                 places.  Must contain bin/ and lib/ directories.
+    $ [sudo] easy_install h5py
 
- --cython        Force Cython to run
+Alternatively, you can install in the traditional manner by running setup.py::
 
- --cython-only   Run Cython, and stop before compiling with GCC.
- 
- --api=<16|18>   Force either 1.6 or 1.8 API compatibility level.  Use if h5py
-                 does not correctly identify your installed HDF5 version.
+    $ python setup.py build
+    $ [sudo] python setup.py install
 
- --diag=<int>    Compile in diagnostic (debug) mode.
+
+Custom installation
+-------------------
+
+Sometimes h5py may not be able to determine what version of HDF5 is installed.
+Also, sometimes HDF5 may be installed in an unusual location.  You can
+specify both your version of HDF5 and its location through the ``configure``
+command::
+
+    $ python setup.py configure [--hdf5=/path/to/hdf5] [--api=<16 or 18>]
+    $ python setup.py build
+    $ [sudo] python setup.py install
+
+Alternatively (for example, if installing with easy_install), you can use
+environment variables::
+
+    $ export HDF5_DIR=/path/to/hdf5
+    $ export HDF5_API=<16 or 18>
+    $ easy_install h5py
+
+Keep in mind that on some platforms, ``sudo`` will filter out your environment
+variables.  If you need to be a superuser to run easy_install, you might
+want to issue all three of these commands in a root shell.
+
+Settings issued with the ``configure`` command will always override those set
+with environment variables.  Also, for technical reasons the configure command
+must be run by itself, before any build commands.
+
+The standard command::
+
+    $ python setup.py clean
+
+will clean up all temporary files, including the output of ``configure``.
+
+Problems
+========
+
+If you have trouble installing or using h5py, first read the FAQ at
+http://h5py.googlecode.com for common issues.  You are also welcome to
+open a new bug there, or email me directly at "h5py at alfven dot org".
+Enjoy!
+
 
 
 

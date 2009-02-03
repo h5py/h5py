@@ -455,8 +455,45 @@ class cleaner(clean):
                 debug("Cleaning up %s" % path)
         clean.run(self)
 
+class doc(Command):
+
+    """ Regenerate documentation.  Unix only, requires epydoc/sphinx. """
+
+
+    description = "Rebuild documentation"
+
+    user_options = [('rebuild', 'r', "Rebuild from scratch")]
+    boolean_options = ['rebuild']
+
+    def initialize_options(self):
+        self.rebuild = False
+
+    def finalize_options(self):
+        pass
+
+    def run(self):
+
+
+        buildobj = self.distribution.get_command_obj('build')
+        buildobj.run()
+        pth = op.abspath(buildobj.build_lib)
+
+        if self.rebuild and op.exists('docs/build'):
+            shutil.rmtree('docs/build')
+
+        cmd = "export H5PY_PATH=%s; cd docs; make html" % pth
+
+        retval = os.system(cmd)
+        if retval != 0:
+            fatal("Can't build documentation")
+
+        if op.exists('docs/html'):
+            shutil.rmtree('docs/html')
+
+        shutil.copytree('docs/build/html', 'docs/html')
+
 CMD_CLASS = {'cython': cython, 'build_ext': hbuild_ext, 'clean': cleaner,
-             'configure': configure}
+             'configure': configure, 'doc': doc}
 
 # --- Setup parameters --------------------------------------------------------
 
