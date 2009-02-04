@@ -159,9 +159,10 @@ cdef class DatasetID(ObjectID):
 
     @sync
     def read(self, SpaceID mspace not None, SpaceID fspace not None, 
-                   ndarray arr_obj not None, PropID dxpl=None):
+                   ndarray arr_obj not None, TypeID mtype=None,
+                   PropID dxpl=None):
         """ (SpaceID mspace, SpaceID fspace, NDARRAY arr_obj, 
-             PropDXID dxpl=None)
+             TypeID mtype=None, PropDXID dxpl=None)
 
             Read data from an HDF5 dataset into a Numpy array.  For maximum 
             flexibility, you can specify dataspaces for the file and the Numpy
@@ -182,12 +183,12 @@ cdef class DatasetID(ObjectID):
             is a bad idea.  All HDF5 API calls are locked until the read
             completes.
         """
-        cdef TypeID mtype
         cdef hid_t self_id, mtype_id, mspace_id, fspace_id, plist_id
         cdef void* data
         cdef int oldflags
 
-        mtype = py_create(arr_obj.dtype)
+        if mtype is None:
+            mtype = py_create(arr_obj.dtype)
         check_numpy_write(arr_obj, -1)
 
         self_id = self.id
@@ -206,9 +207,10 @@ cdef class DatasetID(ObjectID):
 
     @sync
     def write(self, SpaceID mspace not None, SpaceID fspace not None, 
-                    ndarray arr_obj not None, PropID dxpl=None):
+                    ndarray arr_obj not None, TypeID mtype=None,
+                    PropID dxpl=None):
         """ (SpaceID mspace, SpaceID fspace, NDARRAY arr_obj, 
-             PropDXID dxpl=None)
+             TypeID mtype=None, PropDXID dxpl=None)
 
             Write data from a Numpy array to an HDF5 dataset. Keyword dxpl may 
             be a dataset transfer property list.
@@ -221,12 +223,12 @@ cdef class DatasetID(ObjectID):
             is a bad idea.  All HDF5 API calls are locked until the write
             completes.
         """
-        cdef TypeID mtype
         cdef hid_t self_id, mtype_id, mspace_id, fspace_id, plist_id
         cdef void* data
         cdef int oldflags
 
-        mtype = py_create(arr_obj.dtype)
+        if mtype is None:
+            mtype = py_create(arr_obj.dtype)
         check_numpy_read(arr_obj, -1)
 
         self_id = self.id

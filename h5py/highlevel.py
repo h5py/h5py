@@ -747,6 +747,9 @@ class Dataset(HLObject):
                 else:
                     dtype = numpy.dtype(dtype)
 
+                if dtype.subdtype is not None:
+                    raise TypeError("ARRAY types are only supported as members of a compound type")
+
                 # Legacy
                 if any((compression, shuffle, fletcher32, maxshape)):
                     if chunks is False:
