@@ -1,7 +1,35 @@
 
 """
-    Utility functions for high-level modules.
+    Implements support for HDF5 compression filters via the high-level
+    interface.  The following types of filter are available:
+
+    "gzip"
+        Standard DEFLATE-based compression, at integer levels from 0 to 9.
+        Built-in to all public versions of HDF5.  Use this if you want a
+        decent-to-good ratio, good portability, and don't mind waiting.
+
+    "lzf"
+        Custom compression filter for h5py.  This filter is much, much faster 
+        than gzip (roughly 10x in compression vs. gzip level 4, and 3x faster
+        in decompressing), but at the cost of a worse compression ratio.  Use
+        this if you want cheap compression and portability is not a concern.
+
+    "szip"
+        Access to the HDF5 SZIP encoder.  SZIP is a non-mainstream compression
+        format used in space science on integer and float datasets.  SZIP is
+        subject to license requirements, which means the encoder is not
+        guaranteed to be always available.
+
+    The following constants in this module are also useful:
+
+    decode
+        Tuple of available filter names for decoding
+
+    encode
+        Tuple of available filter names for encoding 
 """
+
+
 from __future__ import with_statement
 from h5py import h5s, h5z, h5p, h5d
 import numpy as np
@@ -36,15 +64,7 @@ def generate_dcpl(shape, dtype, chunks, compression, compression_opts,
                   shuffle, fletcher32, maxshape):
     """ Generate a dataset creation property list.
 
-        Checks range and correctness of each argument.  Does not check
-        for disallowed arguments.
-
-        chunks:         None or tuple with len == len(shape)
-        compression:    None or in 'gzip', 'lzf', 'szip'
-        compression_opts: None or <arbitrary>
-        shuffle:        T/F
-        fletcher32:     T/F
-        maxshape:       None or tuple with len == len(shape)
+    Undocumented and subject to change without warning.
     """
 
     # Validate and normalize arguments
@@ -132,7 +152,9 @@ def generate_dcpl(shape, dtype, chunks, compression, compression_opts,
 
 def get_filters(plist):
     """ Extract a dictionary of active filters from a DCPL, along with
-    their settings
+    their settings.
+
+    Undocumented and subject to change without warning.
     """
 
     filters = {h5z.FILTER_DEFLATE: 'gzip', h5z.FILTER_SZIP: 'szip',
@@ -170,9 +192,11 @@ def get_filters(plist):
 
 def guess_chunk(shape, typesize):
     """ Guess an appropriate chunk layout for a dataset, given its shape and
-        the size of each element in bytes.  Will allocate chunks only as large
-        as MAX_SIZE.  Chunks are generally close to some power-of-2 fraction of
-        each axis, slightly favoring bigger values for the last index.
+    the size of each element in bytes.  Will allocate chunks only as large
+    as MAX_SIZE.  Chunks are generally close to some power-of-2 fraction of
+    each axis, slightly favoring bigger values for the last index.
+
+    Undocumented and subject to change without warning.
     """
 
     ndims = len(shape)

@@ -22,9 +22,15 @@ def select(shape, args):
     if not isinstance(args, tuple):
         args = (args,)
 
-    if len(args) == 1 and isinstance(args[0], np.ndarray):
+    if len(args) == 1:
+        arg = args[0]
+        if isinstance(arg, Selection):
+            if arg.shape == shape:
+                return arg
+            raise TypeError("Mismatched selection shape")
+        elif isinstance(arg, np.ndarray):
             sel = PointSelection(shape)
-            sel[args[0]]
+            sel[arg]
             return sel
 
     for a in args:

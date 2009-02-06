@@ -789,11 +789,6 @@ class Dataset(HLObject):
             else:
                 self._chunks = None
 
-    def extend(self, shape):
-        """ Deprecated.  Use resize() instead. """
-        warnings.warn("extend() will be removed in 1.1; use resize() instead", DeprecationWarning)
-        self.resize(shape)
-
     def resize(self, size, axis=None):
         """ Resize the dataset, or the specified axis.
 
