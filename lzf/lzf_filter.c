@@ -29,8 +29,8 @@
 #include "lzf/lzf.h"
 #include "lzf_filter.h"
 
-/* Max size of compress/decompress buffer */
-#define H5PY_LZF_MAX_BUF (100L*1024L*1024L)
+
+#define H5PY_LZF_MAX_BUF (100L*1024L*1024L)  /* max decompress buffer */
 
 #if H5_VERS_MAJOR == 1 && H5_VERS_MINOR < 7
 
@@ -49,6 +49,35 @@ size_t lzf_filter(unsigned flags, size_t cd_nelmts,
 		    const unsigned cd_values[], size_t nbytes,
 		    size_t *buf_size, void **buf);
 
+/* TODO: Store chunk size in DCPL?  This is not thread safe.
+*/
+static size_t chunksize = 0;
+
+/* Compute the chunk size to help guess a decompression buffer */
+herr_t lzf_set_local(hid_t dcpl, hid_t type, hid_t space){
+
+    int ndims;
+    int i;
+    size_t typesize;
+    hsize_t chunkdims[32];
+
+    ndims = H5Pget_chunk(dcpl, 32, &chunkdims);
+    if(ndims<0) return -1;
+    if(ndims>32) return -1;
+
+    typesize = H5Tget_size(type);
+    if(typesize==0) return -1;
+
+    chunksize = typesize;
+    for(i=0;i<ndims;i++){
+        chunksize *= chunkdims[i];
+    }
+
+#ifdef H5PY_LZF_DEBUG
+    fprintf(stderr, "Computed chunk size of %d\n", chunksize);
+#endif
+    return 1;
+}
 
 /* Try to register the filter, passing on the HDF5 return value */
 int register_lzf(void){
@@ -60,7 +89,7 @@ int register_lzf(void){
         (H5Z_filter_t)(H5PY_FILTER_LZF),
         "lzf",
         NULL,
-        NULL,
+        (H5Z_func_t)(lzf_set_local),
         (H5Z_func_t)(lzf_filter)
     };
 #else
@@ -70,7 +99,7 @@ int register_lzf(void){
         1, 1,
         "lzf",
         NULL,
-        NULL,
+        (H5Z_func_t)(lzf_set_local),
         (H5Z_func_t)(lzf_filter)
     };
 #endif
@@ -101,7 +130,7 @@ size_t lzf_filter(unsigned flags, size_t cd_nelmts,
            proceeds.
         */
 
-        outbuf_size = nbytes;
+        outbuf_size = (*buf_size);
         outbuf = malloc(outbuf_size);
 
         if(outbuf == NULL){
@@ -114,10 +143,16 @@ size_t lzf_filter(unsigned flags, size_t cd_nelmts,
     /* We're decompressing */
     } else {
 
-        outbuf_size = (*buf_size);
+        outbuf_size = chunksize;  /* From global precomputed by set_local */
+
+        if(outbuf_size==0) outbuf_size = (*buf_size);  /* just in case */
+
+#ifdef H5PY_LZF_DEBUG
+        fprintf(stderr, "Decompress %d chunk w/buffer %d\n", nbytes, outbuf_size);
+#endif
 
         while(!status){
-        
+            
             free(outbuf);
             outbuf = malloc(outbuf_size);
 
@@ -128,13 +163,14 @@ size_t lzf_filter(unsigned flags, size_t cd_nelmts,
 
             status = lzf_decompress(*buf, nbytes, outbuf, outbuf_size);
 
+
             /* compression failed */
             if(!status){
 
                 /* Output buffer too small; make it bigger */
                 if(errno == E2BIG){
 #ifdef H5PY_LZF_DEBUG
-                    fprintf(stderr, "LZF filter: Buffer guess too small: %d", outbuf_size);
+                    fprintf(stderr, "    Too small: %d\n", outbuf_size);
 #endif
                     outbuf_size += (*buf_size);
                     if(outbuf_size > H5PY_LZF_MAX_BUF){

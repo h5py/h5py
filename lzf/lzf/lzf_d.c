@@ -43,6 +43,7 @@
 # define SET_ERRNO(n) errno = (n)
 #endif
 
+/* ASM is slower than C in HDF5 tests -- A.C. 2/5/09
 #ifndef __STRICT_ANSI__
 #ifndef H5PY_DISABLE_LZF_ASM
 #if (__i386 || __amd64) && __GNUC__ >= 3
@@ -53,6 +54,7 @@
 #endif
 #endif
 #endif
+*/
 
 unsigned int 
 lzf_decompress (const void *const in_data,  unsigned int in_len,

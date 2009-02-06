@@ -33,7 +33,7 @@
         Chunks:    {1, 100, 100} 40000 bytes
         Storage:   4000000 logical bytes, 529745 allocated bytes, 755.08% utilization
         Filter-0:  shuffle-2 OPT {4}
-        Filter-1:  lzf-315 OPT {}
+        Filter-1:  lzf-32000 OPT {}
         Type:      native float
 */
 

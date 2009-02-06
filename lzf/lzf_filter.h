@@ -10,15 +10,12 @@
 * 
 ****** End preamble block ****************************************************/
 
-/*
-    Filter code is chosen in an ad-hoc manner to avoid conflict
-    with PyTables LZO/BZIP2 implementation.
-*/
 
 #ifndef H5PY_LZF_H
 #define H5PY_LZF_H
 
-#define H5PY_FILTER_LZF 315
+#define H5PY_FILTER_LZF 32000   /* Semi-official as of 2/5/09.  This value can
+                                   never change. */
 
 /* Register the filter with the library. Returns a negative value on failure, 
    and a non-negative value on success.
