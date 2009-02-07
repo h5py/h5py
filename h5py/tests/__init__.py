@@ -15,7 +15,7 @@ def runtests():
         import nose
     except ImportError:
         raise ImportError("python-nose is required to run unit tests")
-    nose.run()
+    nose.run('h5py.tests')
 
 def autotest():
     try:

@@ -48,7 +48,6 @@ import os
 import numpy
 import threading
 import sys
-import warnings
 
 import os.path as op
 import posixpath as pp
@@ -56,6 +55,7 @@ import posixpath as pp
 from h5py import h5, h5f, h5g, h5s, h5t, h5d, h5a, h5p, h5z, h5i
 from h5py.h5 import H5Error
 import h5py.selections as sel
+from h5py.selections import CoordsList
 
 import filters
 

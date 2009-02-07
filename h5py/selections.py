@@ -524,5 +524,11 @@ def _translate_slice(exp, length):
 
     return start, count, step
 
+def CoordsList(*args, **kwds):
+
+    raise NotImplementedError("CoordsList indexing is unavailable as of 1.1.\n"
+                              "Please use the selections module instead")
+
+
 
 

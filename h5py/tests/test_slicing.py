@@ -41,7 +41,8 @@ class TestSlicing(object):
     def test_slices(self):
         # Test interger, slice, array and list indices
 
-        dset, arr = self.generate((10,10,50),'f')
+        shape = (10,10,50)
+        dset, arr = self.generate(shape,'f')
 
         slices = [s[0,0,0], s[0,0,:], s[0,:,0], s[0,:,:]]
         slices += [s[0:1,:,4:5], s[2:3,0,4:5], s[:,0,0:1], s[0,:,0:1]]
@@ -58,16 +59,26 @@ class TestSlicing(object):
 
         for slc in slices:
 
+            print "slice %s" % (slc,)
+
+            print "    write"
             arr[slc] += np.random.rand()
             dset[slc] = arr[slc]
-            
-            print "check write %s" % (slc,)
             assert_arr_equal(dset, arr)
 
+            print "    read"
             out = dset[slc]
-
-            print "check read %s" % (slc,)
             assert_arr_equal(out, arr[slc])
+
+            print "    write direct"
+            arr[slc] += np.random.rand()
+            dset.write_direct(arr, slc, slc)
+            assert_arr_equal(dset, arr)
+
+            print "    read direct"
+            out = np.ndarray(shape, 'f')
+            dset.read_direct(out, slc, slc)
+            assert_arr_equal(out[slc], arr[slc])
 
     def test_slices_big(self):
         # Test slicing behavior for indices larger than 2**32
@@ -110,7 +121,8 @@ class TestSlicing(object):
         dset, arr = self.generate((20,10,30),'f')
         dset[...] = arr[...]
 
-        slices = [(s[...], (30,)),
+        slices = [(s[...], ()),
+                  (s[...], (30,)),
                   (s[...], (10,30)),
                   (s[:,5,:], (20,30)),
                   (s[:,4,:], (30,)),
@@ -148,9 +160,6 @@ class TestSlicing(object):
         for slc, result in pairs:
             print "slicing %s" % (slc,)
             assert np.all(dset[slc] == result)
-
-
-
 
 
 

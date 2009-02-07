@@ -608,24 +608,6 @@ the full range of HDF5 dataspace selection techniques, including point-based
 selection and selection via overlapping hyperslabs.  These are especially
 useful for read_direct and write_direct.
 
-Value attribute and scalar datasets
------------------------------------
-
-HDF5 allows you to store "scalar" datasets.  These have the shape "()".  You
-can use the syntax ``dset[...]`` to recover the value as an 0-dimensional
-array.  Also, the special attribute ``value`` will return a scalar for an 0-dim
-array, and a full n-dimensional array for all other cases:
-
-    >>> f["ArrayDS"] = numpy.ones((2,2))
-    >>> f["ScalarDS"] = 1.0
-    >>> f["ArrayDS"].value
-    array([[ 1.,  1.],
-           [ 1.,  1.]])
-    >>> f["ScalarDS"].value
-    1.0
-    >>> f["ScalarDS"][...]
-    array(1.0)
-
 Length and iteration
 --------------------
 
@@ -704,14 +686,14 @@ Reference
 
         Read directly from HDF5 into an existing NumPy array.  The "source_sel"
         and "dest_sel" arguments may be Selection instances (from the
-        selections module) or the output of "numpy.s_".  Standard broadcasting
+        selections module) or the output of ``numpy.s_``.  Standard broadcasting
         is supported.
 
     .. method:: write_direct(source, source_sel=None, dest_sel=None)
 
         Write directly to HDF5 from a NumPy array.  The "source_sel"
         and "dest_sel" arguments may be Selection instances (from the
-        selections module) or the output of "numpy.s_".  Standard broadcasting
+        selections module) or the output of ``numpy.s_``.  Standard broadcasting
         is supported.
 
     .. method:: resize(shape, axis=None)
@@ -855,11 +837,5 @@ Reference
     .. attribute:: dtype
 
         NumPy dtype representation of this type
-
-    
-
-
-
-
 
 

@@ -1,5 +1,5 @@
 =====================================
-Announcing HDF5 for Python (h5py) 1.0
+Announcing HDF5 for Python (h5py) 1.1
 =====================================
 
 What is h5py?
@@ -17,81 +17,86 @@ random-access I/O on desired sections.  Datasets are organized in a
 filesystem-like hierarchy using containers called "groups", and 
 accesed using the tradional POSIX /path/to/resource syntax.
 
-This is the fourth major release of h5py, and represents the end
-of the "unstable" (0.X.X) design phase.
+In addition to providing interoperability with existing HDF5 datasets
+and platforms, h5py is a convienient way to store and retrieve
+arbitrary NumPy data from disk.
 
-Why should I use it?
---------------------
 
-H5py provides a simple, robust read/write interface to HDF5 data
-from Python.  Existing Python and NumPy concepts are used for the
-interface; for example, datasets on disk are represented by a proxy
-class that supports slicing, and has dtype and shape attributes.
-HDF5 groups are are presented using a dictionary metaphor, indexed
-by name.
+New features in 1.1
+-------------------
 
-A major design goal of h5py is interoperability; you can read your
-existing data in HDF5 format, and create new files that any HDF5-
-aware program can understand.  No Python-specific extensions are
-used; you're free to implement whatever file structure your application
-desires.
+  - A new compression filter based on the LZF library, which provides
+    transparent compression many times faster than the standard HDF5
+    GZIP filter.
 
-Almost all HDF5 features are available from Python, including things
-like compound datatypes (as used with NumPy recarray types), HDF5
-attributes, hyperslab and point-based I/O, and more recent features
-in HDF 1.8 like resizable datasets and recursive iteration over entire
-files.
+  - Efficient broadcasting using HDF5 hyperslab selections; for example,
+    you can write to a (100 x 100 x 50) selection from a (100 x 50) array.
 
-The foundation of h5py is a near-complete wrapping of the HDF5 C API.
-HDF5 identifiers are first-class objects which participate in Python
-reference counting, and expose the C API via methods.  This low-level
-interface is also made available to Python programmers, and is
-exhaustively documented.
+  - High-level access to HDF5 dataspace selections, including hyperslabs
+    and point-based I/O.
 
-See the Quick-Start Guide for a longer introduction with code examples:
+  - Now installable via easy_install
 
-    http://h5py.alfven.org/docs/guide/quick.html
+  - Now supports the NumPy boolean type
+
+
+Standard features
+-----------------
+
+  - Supports storage of NumPy data of the following types:
+
+    * Integer/Unsigned Integer
+    * Float/Double
+    * Complex/Double Complex
+    * Compound ("recarray")
+    * Strings
+    * Boolean
+    * Array (as members of a compound type only)
+    * Void
+
+  - Random access to datasets using the standard NumPy slicing syntax
+
+  - Transparent compression of datasets using GZIP, LZF or SZIP,
+    and error-detection using Fletcher32
+
+  - "Pythonic" interface supporting dictionary and NumPy-array metaphors
+    for the high-level HDF5 abstrations like groups and datasets
+
+  - A comprehensive, object-oriented wrapping of the HDF5 low-level C API
+    via Cython, in addition to the NumPy-like high-level interface.
+
+  - Supports many new features of HDF5 1.8, including recursive iteration
+    over entire files and in-library copy operations on the file tree
+
 
 Where to get it
 ---------------
 
 * Main website, documentation:  http://h5py.alfven.org
+
 * Downloads, bug tracker:       http://h5py.googlecode.com
 
-* The HDF group website also contains a good introduction:
-  http://www.hdfgroup.org/HDF5/doc/H5.intro.html
 
 Requires
 --------
 
-* UNIX-like platform (Linux or Mac OS-X); Windows version is in progress.
-* Python 2.5 or 2.6
-* NumPy 1.0.3 or later (1.1.0 or later recommended)
-* HDF5 1.6.5 or later, including 1.8.  Some features only available
-  when compiled against HDF5 1.8.
-* Optionally, Cython (see cython.org) if you want to use custom install
-  options.  You'll need version 0.9.8.1.1 or later.
+* Linux, Mac OS-X or Windows
 
-About this version
-------------------
+* Python 2.5 (Windows), Python 2.5 or 2.6 (Linux/Mac OS-X)
 
-Version 1.0 follows version 0.3.1 as the latest public release.  The
-major design phase (which began in May of 2008) is now over; the design
-of the high-level API will be supported as-is for the rest of the 1.X
-series, with minor enhancements.
+* NumPy 1.0.3 or later
 
-This is the first version to support Python 2.6, and the first to use
-Cython for the low-level interface.  The license remains 3-clause BSD.
+* HDF5 1.6.5 or later (including 1.8); HDF5 is included with
+  the Windows version.
 
-** This project is NOT affiliated with The HDF Group. **
 
 Thanks
 ------
 
 Thanks to D. Dale, E. Lawrence and other for their continued support
-and comments.  Also thanks to the PyTables project, for inspiration
-and generously providing their code to the community, and to everyone
-at the HDF Group for creating such a useful piece of software.
+and comments.  Also thanks to the Francesc Alted and the PyTables project,
+for inspiration and generously providing their code to the community. Thanks
+to everyone at the HDF Group for creating such a useful piece of software.
 
 
 

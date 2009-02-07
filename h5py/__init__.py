@@ -31,8 +31,10 @@ except ImportError, e:
 
 import utils, h5, h5a, h5d, h5f, h5fd, h5g, h5i, h5p, h5r, h5s, h5t, h5z, highlevel, version
 
-from highlevel import File, Group, Dataset, Datatype, AttributeManager, is_hdf5
+from highlevel import File, Group, Dataset, Datatype, AttributeManager, is_hdf5, CoordsList
 from h5 import H5Error, get_config
+
+import filters, selections
 
 __doc__ = __doc__ % (version.version, version.hdf5_version, version.api_version)
 
