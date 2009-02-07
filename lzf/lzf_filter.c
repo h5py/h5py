@@ -29,9 +29,6 @@
 #include "lzf/lzf.h"
 #include "lzf_filter.h"
 
-
-#define H5PY_LZF_MAX_BUF (100L*1024L*1024L)  /* max decompress buffer */
-
 #if H5_VERS_MAJOR == 1 && H5_VERS_MINOR < 7
 
 #define H5PY_LZF_16API 1
@@ -44,40 +41,12 @@
 
 #endif
 
-/* In HDF5, one filter function handles both compression and decompression */
 size_t lzf_filter(unsigned flags, size_t cd_nelmts,
 		    const unsigned cd_values[], size_t nbytes,
 		    size_t *buf_size, void **buf);
 
-/* TODO: Store chunk size in DCPL?  This is not thread safe.
-*/
-static size_t chunksize = 0;
+herr_t lzf_set_local(hid_t dcpl, hid_t type, hid_t space);
 
-/* Compute the chunk size to help guess a decompression buffer */
-herr_t lzf_set_local(hid_t dcpl, hid_t type, hid_t space){
-
-    int ndims;
-    int i;
-    size_t typesize;
-    hsize_t chunkdims[32];
-
-    ndims = H5Pget_chunk(dcpl, 32, &chunkdims);
-    if(ndims<0) return -1;
-    if(ndims>32) return -1;
-
-    typesize = H5Tget_size(type);
-    if(typesize==0) return -1;
-
-    chunksize = typesize;
-    for(i=0;i<ndims;i++){
-        chunksize *= chunkdims[i];
-    }
-
-#ifdef H5PY_LZF_DEBUG
-    fprintf(stderr, "Computed chunk size of %d\n", chunksize);
-#endif
-    return 1;
-}
 
 /* Try to register the filter, passing on the HDF5 return value */
 int register_lzf(void){
@@ -111,6 +80,64 @@ int register_lzf(void){
     return retval;
 }
 
+/*  Filter setup.  Records the following inside the DCPL:
+
+    1.  If version information is not present, set slots 0 and 1 to the filter
+        revision and LZF API version, respectively.
+
+    2. Compute the chunk size in bytes and store it in slot 2.
+*/
+herr_t lzf_set_local(hid_t dcpl, hid_t type, hid_t space){
+
+    int ndims;
+    int i;
+    herr_t r;
+
+    unsigned int bufsize;
+    hsize_t chunkdims[32];
+
+    unsigned int flags;
+    size_t nelements = 8;
+    unsigned int values[] = {0,0,0,0,0,0,0,0};
+
+    r = H5Pget_filter_by_id(dcpl, H5PY_FILTER_LZF, &flags, &nelements, &values, 0, NULL);
+    if(r<0) return -1;
+
+    if(nelements < 3) nelements = 3;  /* First 3 slots reserved.  If any higher
+                                      slots are used, preserve the contents. */
+
+    /* It seems the H5Z_FLAG_REVERSE flag doesn't work here, so we have to be
+       careful not to clobber any existing version info */
+    if(values[0]==0) values[0] = H5PY_FILTER_LZF_VERSION;
+    if(values[1]==0) values[1] = LZF_VERSION;
+
+    ndims = H5Pget_chunk(dcpl, 32, &chunkdims);
+    if(ndims<0) return -1;
+    if(ndims>32){
+        PUSH_ERR("lzf_set_local", H5E_CALLBACK, "Chunk rank exceeds limit");
+        return -1;
+    }
+
+    bufsize = H5Tget_size(type);
+    if(bufsize==0) return -1;
+
+    for(i=0;i<ndims;i++){
+        bufsize *= chunkdims[i];
+    }
+
+    values[2] = bufsize;
+
+#ifdef H5PY_LZF_DEBUG
+    fprintf(stderr, "LZF: Computed buffer size %d\n", bufsize);
+#endif
+
+    r = H5Pmodify_filter(dcpl, H5PY_FILTER_LZF, flags, nelements, values);
+    if(r<0) return -1;
+
+    return 1;
+}
+
+
 /* The filter function */
 size_t lzf_filter(unsigned flags, size_t cd_nelmts,
 		    const unsigned cd_values[], size_t nbytes,
@@ -143,9 +170,11 @@ size_t lzf_filter(unsigned flags, size_t cd_nelmts,
     /* We're decompressing */
     } else {
 
-        outbuf_size = chunksize;  /* From global precomputed by set_local */
-
-        if(outbuf_size==0) outbuf_size = (*buf_size);  /* just in case */
+        if((cd_nelmts>=3)&&(cd_values[2]!=0)){
+            outbuf_size = cd_values[2];   /* Precomputed buffer guess */
+        }else{
+            outbuf_size = (*buf_size);
+        }
 
 #ifdef H5PY_LZF_DEBUG
         fprintf(stderr, "Decompress %d chunk w/buffer %d\n", nbytes, outbuf_size);
@@ -163,28 +192,18 @@ size_t lzf_filter(unsigned flags, size_t cd_nelmts,
 
             status = lzf_decompress(*buf, nbytes, outbuf, outbuf_size);
 
+            if(!status){    /* compression failed */
 
-            /* compression failed */
-            if(!status){
-
-                /* Output buffer too small; make it bigger */
                 if(errno == E2BIG){
+                    outbuf_size += (*buf_size);
 #ifdef H5PY_LZF_DEBUG
                     fprintf(stderr, "    Too small: %d\n", outbuf_size);
 #endif
-                    outbuf_size += (*buf_size);
-                    if(outbuf_size > H5PY_LZF_MAX_BUF){
-                        PUSH_ERR("lzf_filter", H5E_CALLBACK, "Requested LZF buffer too big");
-                        goto failed;
-                    }
-
-                /* Horrible internal error (data corruption) */
                 } else if(errno == EINVAL) {
 
                     PUSH_ERR("lzf_filter", H5E_CALLBACK, "Invalid data for LZF decompression");
                     goto failed;
 
-                /* Unknown error */
                 } else {
                     PUSH_ERR("lzf_filter", H5E_CALLBACK, "Unknown LZF decompression error");
                     goto failed;
@@ -206,8 +225,9 @@ size_t lzf_filter(unsigned flags, size_t cd_nelmts,
     } 
 
     failed:
-        free(outbuf);
-        return 0;
+
+    free(outbuf);
+    return 0;
 
 } /* End filter function */
 

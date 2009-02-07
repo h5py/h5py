@@ -44,3 +44,11 @@ if version.api_version_tuple >= (1,8):
     import h5o, h5l
     __all__ += ['h5l', 'h5o']
 
+try:
+   import IPython as _IP
+   if _IP.ipapi.get() is not None:
+       import _ipy_completer
+       _ipy_completer.activate()
+except Exception:
+   pass
+

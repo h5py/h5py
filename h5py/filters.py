@@ -182,6 +182,8 @@ def get_filters(plist):
             else:
                 raise TypeError("Unknown SZIP configuration")
             vals = (mask, pixels)
+        elif code == h5z.FILTER_LZF:
+            vals = None
         else:
             if len(vals) == 0:
                 vals = None

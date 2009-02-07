@@ -14,8 +14,12 @@
 #ifndef H5PY_LZF_H
 #define H5PY_LZF_H
 
-#define H5PY_FILTER_LZF 32000   /* Semi-official as of 2/5/09.  This value can
-                                   never change. */
+#define H5PY_FILTER_LZF_VERSION 1
+
+/* Filter ID registered with the HDF Group as of 2/6/09.  For maintenance
+   requests, contact the filter author directly. */
+#define H5PY_FILTER_LZF 32000
+
 
 /* Register the filter with the library. Returns a negative value on failure, 
    and a non-negative value on success.
