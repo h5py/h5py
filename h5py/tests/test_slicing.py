@@ -2,7 +2,7 @@ import numpy as np
 import os
 from nose.tools import assert_equal
 
-from common import makehdf, delhdf, assert_arr_equal
+from common import makehdf, delhdf, assert_arr_equal, skip
 
 import h5py
 
@@ -137,6 +137,21 @@ class TestSlicing(object):
             arr[slc] = subarr
             assert_arr_equal(dset, arr)
 
+
+    @skip
+    def test_broadcast_big(self):
+
+        M = 1024*1024
+
+        dset = self.f.create_dataset('dset', (100,0.5*M), 'i')
+
+        dset[...] = 42
+
+        comprow = np.ones((0.5*M,),dtype='i')*42
+
+        for row in dset:
+            assert np.all(row == comprow)
+
     def test_slice_names(self):
         # Test slicing in conjunction with named fields
 
@@ -160,6 +175,7 @@ class TestSlicing(object):
         for slc, result in pairs:
             print "slicing %s" % (slc,)
             assert np.all(dset[slc] == result)
+
 
 
 

@@ -604,9 +604,8 @@ Advanced selection
 ------------------
 
 The ``selections`` module contains additional classes which provide access to
-the full range of HDF5 dataspace selection techniques, including point-based
-selection and selection via overlapping hyperslabs.  These are especially
-useful for read_direct and write_direct.
+HDF5 dataspace selection techniques, including point-based selection.  These 
+are especially useful for read_direct and write_direct.
 
 Length and iteration
 --------------------

@@ -35,6 +35,9 @@ def api_16(func):
         return func
     return None
 
+def skip(func):
+    return None
+
 test_coverage = set()
 
 def covers(*args):

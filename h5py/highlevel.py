@@ -937,7 +937,7 @@ class Dataset(HLObject):
 
             # 5. Broadcast scalars if necessary
             if val.shape == () and selection.mshape != ():
-                val2 = numpy.empty(selection.mshape, dtype=val.dtype)
+                val2 = numpy.empty(selection.mshape[-1], dtype=val.dtype)
                 val2[...] = val
                 val = val2
             

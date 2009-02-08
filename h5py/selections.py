@@ -162,69 +162,6 @@ class PointSelection(_Selection_1D):
         """ Replace the current selection with the given sequence of points"""
         self._perform_selection(points, h5s.SELECT_SET)
 
-class HyperSelection(_Selection_1D):
-
-    """
-        Represents multiple overlapping rectangular selections, combined
-        with set-like operators.  Result is a 1D shape, as with boolean array
-        selection.
-
-        When created, the entire dataspace is selected.  To make
-        adjustments to the selection, use the standard NumPy slicing
-        syntax::
-
-            >>> sel = HyperSelection((10,20,20))  # Initially 10 x 20 x 20
-            >>> sel[:,5:15,:] = SET               # Now 10 x 10 x 20
-            >>> sel[0:5,:,:] = AND                # Now  5 x 10 x 10
-
-        Legal operators (in the h5py.selections module) are:
-            
-        SET
-            New selection, wiping out any old one
-        
-        OR (or True), AND, XOR
-            Logical OR/AND/XOR between new and old selection
-
-        NOTA
-            Select only regions in new selection which don't intersect the old
-
-        NOTB (or False)
-            Select only regions in old selection which don't intersect the new
-  
-    """
-
-    def __getitem__(self, args):
-        self[args] = SET
-        return self
-
-    def __setitem__(self, args, op):
-
-        if not isinstance(args, tuple):
-            args = (args,)
-  
-        start, count, step = self._handle_args(args)
-
-        if not op in (SET, OR, AND, XOR, NOTB, NOTA, True, False):
-            raise ValueError("Illegal selection operator")
-
-        if op is True:
-            op = OR
-        elif op is False:
-            op = NOTB
-
-        seltype == self._id.get_select_type()
-
-        if seltype == h5s.SEL_ALL:
-            self._id.select_hyperslab((0,)*len(self.shape), self.shape, op=h5s.SELECT_SET)
-        
-        elif seltype == h5s.SEL_NONE:
-            if op in (SET, OR, XOR, NOTA):
-                op = SET
-            else:
-                return
-
-        self._id.select_hyperslab(start, count, step, op=op)
-
 
 class SimpleSelection(Selection):
 

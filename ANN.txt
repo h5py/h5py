@@ -32,9 +32,6 @@ New features in 1.1
   - Efficient broadcasting using HDF5 hyperslab selections; for example,
     you can write to a (100 x 100 x 50) selection from a (100 x 50) array.
 
-  - High-level access to HDF5 dataspace selections, including hyperslabs
-    and point-based I/O.
-
   - Now installable via easy_install
 
   - Now supports the NumPy boolean type
@@ -54,7 +51,8 @@ Standard features
     * Array (as members of a compound type only)
     * Void
 
-  - Random access to datasets using the standard NumPy slicing syntax
+  - Random access to datasets using the standard NumPy slicing syntax,
+    including fancy indexing and point-based selection
 
   - Transparent compression of datasets using GZIP, LZF or SZIP,
     and error-detection using Fletcher32
