@@ -6,10 +6,10 @@ import os, sys
 python_versions = ['python2.5', 'python2.6']
 
 # Expect these to exist in parent dir
-libnames = ['h166', 'h167', 'h180', 'h181', 'h182']
+libnames = ['h166',  'h180', 'h182']
 
 # Additional options for each library version
-extraopts = {'h181': ['--api=16']}
+extraopts = {'h182': ['--api=16']}
 
 def runcmd(cmd, logfile=None):
     """ Execute a command, capturing output in a logfile.
@@ -40,11 +40,15 @@ for p in python_versions:
 
             outfile = 'autotest-%s-%s-%s.txt' % (l, i, p)
 
-            retvals.append(runcmd('%s setup.py build --hdf5=../%s %s' % (p, l, o), outfile))
-            retvals.append(runcmd('%s setup.py test' % p))
-            retvals.append(runcmd('%s setup.py clean' % p))
+            retvals.append( runcmd('%s setup.py configure --hdf5=../%s %s' % (p, l, o)) )
+            retvals.append( runcmd('%s setup.py build' % p, outfile) )
+            retvals.append( runcmd('%s setup.py test' % p) )
+            retvals.append( runcmd('%s setup.py clean' % p) )
 
+            if not any(retvals):
+                retvals = []
+            else:
+                sys.exit(17)
 print 'Done'
 
-sys.exit(int(any(retvals))*17)
 

@@ -3,8 +3,10 @@ include LICENSE.txt
 include INSTALL.txt
 include README.txt
 include setup.py
+include ez_setup.py
 recursive-include api16 *
 recursive-include api18 *
 recursive-include h5py *.py *.pyx *.pxd *.pxi *.h *.c *.hdf5
 recursive-include licenses *
 recursive-include lzf *.c *.h *.txt
+recursive-include examples *

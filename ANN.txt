@@ -30,13 +30,14 @@ New features in 1.1
     GZIP filter.
 
   - Efficient broadcasting using HDF5 hyperslab selections; for example,
-    you can write to a (2000 x 100 x 50) selection from a (100 x 50) array.
-
-  - Installable via easy_install
+    you can write to a (2000 x 100 x 50) selection from a (100 x 50)
+    source array.
 
   - Now supports the NumPy boolean type
 
   - Auto-completion for IPython 0.9.X (contributed by Darren Dale)
+
+  - Installable via easy_install
 
 
 Standard features

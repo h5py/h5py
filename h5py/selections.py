@@ -305,11 +305,10 @@ class FancySelection(Selection):
                 perform_selection(start, count, step, idx)
                 mshape.append(count)
 
-            elif isinstance(exp, np.ndarray) and exp.kind == 'b':
-
-                raise NotImplementedError() # TODO: bool vector
-
             else:
+
+                if isinstance(exp, np.ndarray) and exp.kind == 'b':
+                    exp = list(exp.nonzero()[0])
 
                 try:
                     exp = list(exp)     

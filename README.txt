@@ -2,7 +2,7 @@ README for the "h5py" Python/HDF5 interface
 ===========================================
 Copyright (c) 2008 Andrew Collette
 
-Version 1.0.0
+Version 1.1.0
 
 * http://h5py.alfven.org        Main site, docs, quick-start guide
 * http://h5py.googlecode.com    Downloads, FAQ and bug tracker
@@ -21,11 +21,10 @@ to the existing HDF5 API and abstractions, so that Python programs can
 easily deal with HDF5 files and exchange data with other HDF5-aware
 applications.
 
-Quick installation
-------------------
-On Unix-like systems with gcc and distutils, run "python setup.py build"
-followed by "sudo python setup.py install".  See INSTALL.txt or the online
-guide at h5py.alfven.org for more details.
+Installation
+------------
+
+See the file INSTALL.txt.
 
 Documentation
 -------------
@@ -45,15 +44,8 @@ High-Level
   Create and use datasets with chunking, compression, or other filters
   transparently.
 
-- Command-line browsing of HDF5 files, including the capability to import
-  HDF5 objects into an interactive Python session.
-
 - Dictionary-style access to HDF5 groups and attributes, including 
   iteration.
-
-- Automatic creation of HDF5 datasets, named types and hard links, by
-  dictionary-style assignment. For example, Group["Name"] = <Numpy array>
-  creates a dataset.
 
 Low-Level
 ---------
@@ -83,9 +75,4 @@ Low-Level
     - The majority of the HDF5 C-API documentation is still valid for the
       h5py interface
 
-Bugs
-----
-I expect there are still a few. :) A FAQ page will soon be created at the
-project hosting wiki (http://h5py.googlecode.com); check there.  You can
-open a ticket there or email me at "h5py" at the domain "alfven dot org".
 

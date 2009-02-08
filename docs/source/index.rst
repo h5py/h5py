@@ -2,7 +2,7 @@
 .. _home:
 
 *******************
-HDF5 for Python 1.0
+HDF5 for Python 1.1
 *******************
 
 The `HDF5 library <http://www.hdfgroup.com/HDF5>`_ is a versatile,
