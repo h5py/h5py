@@ -26,7 +26,7 @@ class TestDataset(object):
     def test_create(self):
         # Test dataset creation from shape and type, or raw data
 
-        types = INTS + FLOATS + COMPLEX + STRINGS
+        types = INTS + FLOATS + COMPLEX + STRINGS + ('b',)
         shapes = ( (), (1,), (10,), (20,1,15), (7,200,1) )
 
         for s in shapes:

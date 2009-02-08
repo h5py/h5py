@@ -31,7 +31,7 @@ a POSIX filesystem, objects are specified by ``/``-separated names, with the
 root group ``/`` (represented by the :class:`File` class) at the base.
 
 Wherever a name or path is called for, it may be relative or absolute.
-Constructs like ``..`` (parent group) are allowed.
+Unfortunately, the construct ``..`` (parent group) is not allowed.
 
 
 Exceptions
@@ -334,7 +334,7 @@ Reference
         If an existing incompatible object (Group or Datatype) already exists
         with the given name, fails with H5Error.
 
-    .. method:: copy(source, dest)
+    .. method:: copy(source, dest, name=None)
 
         **Only available with HDF5 1.8**
 
@@ -349,6 +349,11 @@ Reference
         **dest** (Group or str)
             Destination.  Must be either Group or path.  If a Group object, it may
             be in a different file.
+
+        **name** (None or str)
+            If the destination is a Group object, you can override the name
+            for the newly created member.  Otherwise a new name will be chosen
+            using basename(source.name).
 
     .. method:: visit(func) -> None or return value from func
 
@@ -469,7 +474,7 @@ Like Numpy arrays, Dataset objects have attributes named "shape" and "dtype":
     >>> dset.dtype
     dtype('complex64')
     >>> dset.shape
-    (4L, 5L)
+    (4, 5)
 
 
 .. _dsetfeatures:

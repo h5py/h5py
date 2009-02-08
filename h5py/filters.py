@@ -96,6 +96,8 @@ def generate_dcpl(shape, dtype, chunks, compression, compression_opts,
         if compression not in _COMP_FILTERS:
             raise ValueError("Compression method must be one of %s" % ", ".join(_COMP_FILTERS))
         if compression == 'gzip':
+            if not "gzip" in encode:
+                raise ValueError("GZIP filter unavailable")
             if compression_opts is None:
                 gzip_level = DEFAULT_GZIP
             elif compression_opts in range(10):
@@ -103,9 +105,14 @@ def generate_dcpl(shape, dtype, chunks, compression, compression_opts,
             else:
                 raise ValueError("GZIP setting must be an integer from 0-9, not %r" % compression_opts)
         elif compression == 'lzf':
+            if not "lzf" in encode:
+                raise ValueError("LZF filter unavailable")
             if compression_opts is not None:
                 raise ValueError("LZF compression filter accepts no options")
         elif compression == 'szip':
+            if not "szip" in encode:
+                raise ValueError("SZIP filter unavailable")
+
             if compression_opts is None:
                 compression_opts = DEFAULT_SZIP
 

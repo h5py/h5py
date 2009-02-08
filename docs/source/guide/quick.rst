@@ -105,7 +105,7 @@ along with some emulated advanced indexing features
 (see :ref:`sparse_selection`):
 
     * Boolean array indexing (``array[ array[...] > 0.5 ]``)
-    * Discrete coordinate selection (
+    * Discrete coordinate selection (see the ``selections`` module)
 
 Closing the file
 ----------------

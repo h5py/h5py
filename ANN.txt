@@ -19,7 +19,7 @@ accesed using the tradional POSIX /path/to/resource syntax.
 
 In addition to providing interoperability with existing HDF5 datasets
 and platforms, h5py is a convienient way to store and retrieve
-arbitrary NumPy data from disk.
+arbitrary NumPy data and metadata.
 
 
 New features in 1.1
@@ -30,11 +30,13 @@ New features in 1.1
     GZIP filter.
 
   - Efficient broadcasting using HDF5 hyperslab selections; for example,
-    you can write to a (100 x 100 x 50) selection from a (100 x 50) array.
+    you can write to a (2000 x 100 x 50) selection from a (100 x 50) array.
 
-  - Now installable via easy_install
+  - Installable via easy_install
 
   - Now supports the NumPy boolean type
+
+  - Auto-completion for IPython 0.9.X (contributed by Darren Dale)
 
 
 Standard features
@@ -65,6 +67,8 @@ Standard features
 
   - Supports many new features of HDF5 1.8, including recursive iteration
     over entire files and in-library copy operations on the file tree
+
+  - Thread-safe
 
 
 Where to get it
