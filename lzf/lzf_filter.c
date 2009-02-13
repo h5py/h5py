@@ -33,11 +33,14 @@
 
 #define H5PY_LZF_16API 1
 #define PUSH_ERR(func, minor, str)  H5Epush(__FILE__, func, __LINE__, H5E_PLINE, minor, str)
+#define H5PY_GET_FILTER H5Pget_filter_by_id
+
 
 #else
 
 #define H5PY_LZF_16API 0
 #define PUSH_ERR(func, minor, str)  H5Epush1(__FILE__, func, __LINE__, H5E_PLINE, minor, str)
+#define H5PY_GET_FILTER(a,b,c,d,e,f,g) H5Pget_filter_by_id2(a,b,c,d,e,f,g,NULL)
 
 #endif
 
@@ -58,7 +61,7 @@ int register_lzf(void){
         (H5Z_filter_t)(H5PY_FILTER_LZF),
         "lzf",
         NULL,
-        (H5Z_func_t)(lzf_set_local),
+        (H5Z_set_local_func_t)(lzf_set_local),
         (H5Z_func_t)(lzf_filter)
     };
 #else
@@ -68,7 +71,7 @@ int register_lzf(void){
         1, 1,
         "lzf",
         NULL,
-        (H5Z_func_t)(lzf_set_local),
+        (H5Z_set_local_func_t)(lzf_set_local),
         (H5Z_func_t)(lzf_filter)
     };
 #endif
@@ -98,9 +101,9 @@ herr_t lzf_set_local(hid_t dcpl, hid_t type, hid_t space){
 
     unsigned int flags;
     size_t nelements = 8;
-    unsigned int values[] = {0,0,0,0,0,0,0,0};
+    unsigned values[] = {0,0,0,0,0,0,0,0};
 
-    r = H5Pget_filter_by_id(dcpl, H5PY_FILTER_LZF, &flags, &nelements, &values, 0, NULL);
+    r = H5PY_GET_FILTER(dcpl, H5PY_FILTER_LZF, &flags, &nelements, values, 0, NULL);
     if(r<0) return -1;
 
     if(nelements < 3) nelements = 3;  /* First 3 slots reserved.  If any higher
@@ -111,7 +114,7 @@ herr_t lzf_set_local(hid_t dcpl, hid_t type, hid_t space){
     if(values[0]==0) values[0] = H5PY_FILTER_LZF_VERSION;
     if(values[1]==0) values[1] = LZF_VERSION;
 
-    ndims = H5Pget_chunk(dcpl, 32, &chunkdims);
+    ndims = H5Pget_chunk(dcpl, 32, chunkdims);
     if(ndims<0) return -1;
     if(ndims>32){
         PUSH_ERR("lzf_set_local", H5E_CALLBACK, "Chunk rank exceeds limit");

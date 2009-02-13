@@ -17,8 +17,8 @@
 
     The filter is completely stateless, and so is safe to statically
     link into the final program if desired. Using gcc with option -O1
-    or higher is recommended.  If building with HDF5 1.8, you must
-    define H5_USE_16_API when compiling.
+    or higher is recommended.  The filter can be built with either HDF5
+    1.6 or 1.8, regardless of the HDF5 API compatibility macro settings.
 
     To compile this program:
 
@@ -67,7 +67,7 @@ int main(){
     r = register_lzf();
     if(r<0) goto failed;
 
-    sid = H5Screate_simple(3, &shape, NULL);
+    sid = H5Screate_simple(3, shape, NULL);
     if(sid<0) goto failed;
 
     fid = H5Fcreate("test_lzf.hdf5", H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
@@ -77,7 +77,7 @@ int main(){
     if(plist<0) goto failed;
 
     /* Chunked layout required for filters */
-    r = H5Pset_chunk(plist, 3, &chunkshape);
+    r = H5Pset_chunk(plist, 3, chunkshape);
     if(r<0) goto failed;
 
     /* Use of the shuffle filter VASTLY improves performance of this
