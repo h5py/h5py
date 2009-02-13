@@ -69,11 +69,13 @@ Requires
 Quick installation
 ------------------
 
-H5py can now be automatically installed by setuptools' easy_install command::
+H5py can now be automatically installed by setuptools' easy_install command.
+You don't need to download anything; just run the command::
 
     $ [sudo] easy_install h5py
 
-Alternatively, you can install in the traditional manner by running setup.py::
+Alternatively, you can install in the traditional manner by downloading the
+most recent tarball of h5py, uncompressing it, and running setup.py::
 
     $ python setup.py build
     $ [sudo] python setup.py install
@@ -83,13 +85,16 @@ Custom installation
 -------------------
 
 Sometimes h5py may not be able to determine what version of HDF5 is installed.
-Also, sometimes HDF5 may be installed in an unusual location.  You can
-specify both your version of HDF5 and its location through the ``configure``
-command::
+Also, sometimes HDF5 may be installed in an unusual location.  When using
+setup.py directly, you can specify both your version of HDF5 and its location
+through the ``configure`` command::
 
     $ python setup.py configure [--hdf5=/path/to/hdf5] [--api=<16 or 18>]
     $ python setup.py build
     $ [sudo] python setup.py install
+
+The HDF5 directory you specify should contain sub-directories like "include",
+"lib" and "bin".
 
 Alternatively (for example, if installing with easy_install), you can use
 environment variables::
