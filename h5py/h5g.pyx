@@ -433,14 +433,15 @@ cdef class GroupID(ObjectID):
 
         Determine if a group member of the given name is present
         """
-        IF H5PY_18API:
-            return <bint>H5Lexists(self.id, name, H5P_DEFAULT)
-        ELSE:
-            try:
+
+        try:
+            IF H5PY_18API:
+                return <bint>H5Lexists(self.id, name, H5P_DEFAULT)
+            ELSE:
                 H5Gget_objinfo(self.id, name, 1, NULL)
                 return True
-            except H5Error:
-                return False    
+        except H5Error:
+            return False    
 
     @nosync
     def __iter__(self):
