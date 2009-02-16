@@ -52,7 +52,7 @@
  * For best compression, use 15 or 16 (or more, up to 23).
  */
 #ifndef HLOG
-# define HLOG 17
+# define HLOG 17  /* Avoid pathological case at HLOG=16   A.C. 2/15/09 */
 #endif
 
 /*
@@ -91,6 +91,12 @@
 # define INIT_HTAB 0
 #endif
 
+/* =======================================================================
+    Changing things below this line may break the HDF5 LZF filter.
+    A.C. 2/15/09
+   =======================================================================
+*/
+
 /*
  * Avoid assigning values to errno variable? for some embedding purposes
  * (linux kernel for example), this is neccessary. NOTE: this breaks
@@ -117,6 +123,7 @@
  * This check is not normally noticable on modern hardware
  * (<1% slowdown), but might slow down older cpus considerably.
  */
+
 #ifndef CHECK_INPUT
 # define CHECK_INPUT 1
 #endif

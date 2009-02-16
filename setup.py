@@ -229,9 +229,7 @@ class ExtensionCreator(object):
             self.runtime_dirs = self.library_dirs
             self.extra_compile_args = ['-DH5_USE_16_API', '-Wno-unused', '-Wno-uninitialized']
             self.extra_link_args = []
-            
-            if sys.platform == 'darwin':
-                self.extra_compile_args += ['-DH5PY_DISABLE_LZF_ASM']
+
     
     def create_extension(self, name, extra_src=None):
         """ Create a distutils Extension object for the given module.  A list

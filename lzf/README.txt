@@ -1,5 +1,5 @@
 ===============================
-LZF filter for HDF5, revision 1
+LZF filter for HDF5, revision 2
 ===============================
 
 The LZF filter provides high-speed compression with acceptable compression
@@ -8,7 +8,8 @@ cost of a slightly worse compression ratio. It's appropriate for large
 datasets of low to moderate complexity, for which some compression is
 much better than none, but for which the speed of DEFLATE is unacceptable.
 
-Both HDF5 versions 1.6 and 1.8 are supported.
+Both HDF5 versions 1.6 and 1.8 are supported.  This code is released under
+the BSD license.
 
 
 Using the filter from HDF5
@@ -42,10 +43,11 @@ example:
 It can also be built as a shared library, although you will have to install
 the resulting library somewhere the runtime linker can find it:
 
-    $ gcc -02 -lhdf5 -fPIC -shared lzf/*.c lzf_filter.c -o liblzf_filter.so
+    $ gcc -O2 -lhdf5 -fPIC -shared lzf/*.c lzf_filter.c -o liblzf_filter.so
 
-This filter has not been tested with C++ code.  As in these examples, using
-option -O1 or higher is strongly recommended for increased performance.
+A similar procedure should be used for building C++ code.  As in these
+examples, using option -O1 or higher is strongly recommended for increased
+performance.
 
 
 Contact
@@ -53,7 +55,8 @@ Contact
 
 This filter is maintained as part of the HDF5 for Python (h5py) project.  The
 goal of h5py is to provide access to the majority of the HDF5 C API and feature
-set from Python.
+set from Python.  The most recent version of h5py (1.1) includes the LZF
+filter by default.
 
 * Downloads and bug tracker:        http://h5py.googlecode.com
 
