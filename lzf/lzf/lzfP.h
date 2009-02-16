@@ -52,7 +52,7 @@
  * For best compression, use 15 or 16 (or more, up to 23).
  */
 #ifndef HLOG
-# define HLOG 16
+# define HLOG 17
 #endif
 
 /*
