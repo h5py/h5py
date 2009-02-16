@@ -5,21 +5,6 @@
 
     Example program demonstrating use of the LZF filter from C code.
 
-    The LZF filter provides high-speed compression with acceptable compression
-    performance, resulting in much faster performance than DEFLATE, at the
-    cost of a slightly worse compression ratio. It's appropriate for large
-    datasets of low to moderate complexity, for which some compression is
-    much better than none, but for which the speed of DEFLATE is unacceptable.
-
-    It's recommended to use the SHUFFLE filter with LZF, as it's virtually
-    free, supported by all current versions of HDF5, and can significantly
-    improve the compression ratio.
-
-    The filter is completely stateless, and so is safe to statically
-    link into the final program if desired. Using gcc with option -O1
-    or higher is recommended.  The filter can be built with either HDF5
-    1.6 or 1.8, regardless of the HDF5 API compatibility macro settings.
-
     To compile this program:
 
     h5cc -DH5_USE_16_API lzf/*.c lzf_filter.c example.c -o example
@@ -27,16 +12,17 @@
     To run:
 
     $ ./example
+    Success!
     $ h5ls -v test_lzf.hdf5 
     Opened "test_lzf.hdf5" with sec2 driver.
     dset                     Dataset {100/100, 100/100, 100/100}
         Location:  0:1:0:976
         Links:     1
-        Modified:  2009-01-28 21:51:20 PST
+        Modified:  2009-02-15 16:35:11 PST
         Chunks:    {1, 100, 100} 40000 bytes
-        Storage:   4000000 logical bytes, 529745 allocated bytes, 755.08% utilization
+        Storage:   4000000 logical bytes, 174288 allocated bytes, 2295.05% utilization
         Filter-0:  shuffle-2 OPT {4}
-        Filter-1:  lzf-32000 OPT {1, 261, 0}
+        Filter-1:  lzf-32000 OPT {1, 261, 40000}
         Type:      native float
 */
 
