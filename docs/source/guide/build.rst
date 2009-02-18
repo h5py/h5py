@@ -16,19 +16,24 @@ Getting HDF5
 ============
 
 On Windows, HDF5 is provided as part of the integrated
-installer for h5py.  On Linux and OS-X, you
-must provide HDF5 yourself.  HDF5 versions **1.6.5** through **1.8.2** are
-supported.
+installer for h5py.  
 
-**The best solution for both Linux and OS-X is to install HDF5 via a
-package manager.** If you decide to build HDF5 from source, be sure to
-build it as a dynamic library.
+On Linux and OS-X, you must provide HDF5 yourself.  HDF5 versions **1.6.5**
+through **1.8.2** are supported. **The best solution is
+to install HDF5 via a package manager like apt, yum or fink.** Regardless of
+how you decide to install HDF5, keep the following in mind:
 
-`The HDF Group`__ provides several "dumb" (untar in **/**) binary distributions
-for Linux, but traditionally only static libraries for Mac.  Mac OS-X users
-should use something like Fink, or compile HDF5 from source.
+* You'll need the development headers in addition to the library; sometimes
+  package managers list this separately as ``libhdf5-dev`` or similar.
 
-__ http://www.hdfgroup.com/HDF5
+* HDF5 **must** be available as a shared library (``libhdf5.so.X``), or
+  programs like h5py can't work.  In particular, the "static" distribution
+  available from the HDF Group web site **will not work**.
+
+* If you've manually installed one of the SZIP-aware builds from the HDF Group
+  web site, be sure to also install the SZIP libraries.
+
+The HDF Group downloads are located at http://www.hdfgroup.com/HDF5 .
 
 
 .. _windows:

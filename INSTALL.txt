@@ -13,7 +13,13 @@ Before you start
 
 You will first need to install HDF5, preferably via a package manager.  Both
 versions 1.6 and 1.8 are supported.  NumPy 1.0.3 (numpy.scipy.org) or later
-is also required.
+is also required. Keep in mind:
+
+1. You will also need headers for development; sometimes this is offered
+   separately as "libhdf5-dev" or similar.
+
+2. HDF5 *must* be available as a dynamic library (libhdf5.so or similar), or
+   h5py won't work.
 
 
 Quick installation
