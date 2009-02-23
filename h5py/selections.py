@@ -34,7 +34,7 @@ def select(shape, args):
             return sel
 
     for a in args:
-        if not isinstance(a, slice) and a != Ellipsis:
+        if not isinstance(a, slice) and a is not Ellipsis:
             try:
                 int(a)
             except Exception:
@@ -307,7 +307,7 @@ class FancySelection(Selection):
 
             else:
 
-                if isinstance(exp, np.ndarray) and exp.kind == 'b':
+                if isinstance(exp, np.ndarray) and exp.dtype.kind == 'b':
                     exp = list(exp.nonzero()[0])
 
                 try:
@@ -331,9 +331,11 @@ class FancySelection(Selection):
                     # selection.  For this to work, the input array MUST be
                     # monotonically increasing.
 
-                    if select_idx < last_idx:
-                        raise ValueError("Selection lists must be in increasing order")
-                    validate_number(select_idx, length)
+                    if select_idx < len(exp):
+                        if exp[select_idx] < last_idx:
+                            raise ValueError("Selection lists must be in increasing order")
+                        last_idx = exp[select_idx]
+                        validate_number(exp[select_idx], length)
 
                     if select_idx == 0:
                         start = 0
@@ -347,8 +349,6 @@ class FancySelection(Selection):
                     if count > 0:
                         perform_selection(start, count, 1, idx, op=h5s.SELECT_NOTB)
 
-                    last_idx = select_idx
-
         self._mshape = tuple(x for x in mshape if x != 0)
 
     def broadcast(self, target_shape):
@@ -359,7 +359,7 @@ class FancySelection(Selection):
 def _expand_ellipsis(args, rank):
     """ Expand ellipsis objects and fill in missing axes.
     """
-    n_el = list(args).count(Ellipsis)
+    n_el = sum(1 for arg in args if arg is Ellipsis)
     if n_el > 1:
         raise ValueError("Only one ellipsis may be used.")
     elif n_el == 0 and len(args) != rank:
@@ -369,7 +369,7 @@ def _expand_ellipsis(args, rank):
     n_args = len(args)
     for idx, arg in enumerate(args):
 
-        if arg == Ellipsis:
+        if arg is Ellipsis:
             final_args.extend( (slice(None,None,None),)*(rank-n_args+1) )
         else:
             final_args.append(arg)
