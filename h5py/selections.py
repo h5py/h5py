@@ -266,88 +266,54 @@ class FancySelection(Selection):
 
         args = _expand_ellipsis(args, len(self.shape))
 
-        self._id.select_all()
+        # First build up a dictionary of (position:sequence) pairs
 
-        def perform_selection(start, count, step, idx, op=h5s.SELECT_AND):
-            """ Performs a selection using start/count/step in the given axis.
-
-            All other axes have their full range selected.  The selection is
-            added to the current dataspace selection using the given operator,
-            defaulting to AND.
-
-            All arguments are ints.
-            """
-
-            start = tuple(0 if i != idx else start for i, x in enumerate(self.shape))
-            count = tuple(x if i != idx else count for i, x in enumerate(self.shape))
-            step  = tuple(1 if i != idx else step  for i, x in enumerate(self.shape))
-
-            self._id.select_hyperslab(start, count, step, op=op)
-
-        def validate_number(num, length):
-            """ Validate a list member for the given axis length
-            """
-            try:
-                num = long(num)
-            except TypeError:
-                raise TypeError("Illegal index: %r" % num)
-            if num > length-1:
-                raise IndexError('Index out of bounds: %d' % num)
-            if num < 0:
-                raise IndexError('Negative index not allowed: %d' % num)
-
-        mshape = []
-
-        for idx, (exp, length) in enumerate(zip(args, self.shape)):
-
-            if isinstance(exp, slice):
-                start, count, step = _translate_slice(exp, length)
-                perform_selection(start, count, step, idx)
-                mshape.append(count)
-
-            else:
-
-                if isinstance(exp, np.ndarray) and exp.dtype.kind == 'b':
-                    exp = list(exp.nonzero()[0])
-
+        sequenceargs = {}
+        for idx, arg in enumerate(args):
+            # TODO: Put argument verification back in and handle boolean arrays
+            if not isinstance(arg, slice):
                 try:
-                    exp = list(exp)     
+                    sequenceargs[idx] = list(arg)
                 except TypeError:
-                    exp = [exp]         # Handle scalar index as a list of length 1
-                    mshape.append(0)    # Keep track of scalar index for NumPy
-                else:
-                    mshape.append(len(exp))
+                    pass
 
-                if len(exp) == 0:
-                    raise TypeError("Empty selections are not allowed (axis %d)" % idx)
+        if len(sequenceargs) > 1:
+            # TODO: fix this with broadcasting
+            raise TypeError("Only one indexing vector or array is currently allowed for advanced selection")
+        if len(sequenceargs) == 0:
+            # TODO: fallback to standard selection
+            raise TypeError("Advanced selection inappropriate")
 
-                last_idx = -1
-                for select_idx in xrange(len(exp)+1):
+        vectorlength = len(sequenceargs.values()[0])
+        if not all(len(x) == vectorlength for x in sequenceargs.values()):
+            raise TypeError("All sequence arguments must have the same length %s" % sequenceargs)
 
-                    # This crazy piece of code performs a list selection
-                    # using HDF5 hyperslabs.
-                    # For each index, perform a "NOTB" selection on every
-                    # portion of *this axis* which falls *outside* the list
-                    # selection.  For this to work, the input array MUST be
-                    # monotonically increasing.
+        # Now generate a vector of selection lists,
+        # consisting only of slices and ints
 
-                    if select_idx < len(exp):
-                        if exp[select_idx] < last_idx:
-                            raise ValueError("Selection lists must be in increasing order")
-                        last_idx = exp[select_idx]
-                        validate_number(exp[select_idx], length)
+        argvector = []
+        for idx in xrange(vectorlength):
+            entry = list(args)
+            for position, seq in sequenceargs.iteritems():
+                entry[position] = seq[idx]
+            argvector.append(entry)
 
-                    if select_idx == 0:
-                        start = 0
-                        count = exp[0]
-                    elif select_idx == len(exp):
-                        start = exp[-1]+1
-                        count = length-start
-                    else:
-                        start = exp[select_idx-1]+1
-                        count = exp[select_idx] - start
-                    if count > 0:
-                        perform_selection(start, count, 1, idx, op=h5s.SELECT_NOTB)
+        # "OR" all these selection lists together to make the final selection
+
+        self._id.select_none()
+        for idx, vector in enumerate(argvector):
+            start, count, step, scalar = _handle_simple(self.shape, vector)
+            self._id.select_hyperslab(start, count, step, op=h5s.SELECT_OR)
+
+        # Final shape excludes scalars, except where
+        # they correspond to sequence entries
+
+        mshape = list(count)
+        for idx in xrange(len(mshape)):
+            if idx in sequenceargs:
+                mshape[idx] = len(sequenceargs[idx])
+            elif scalar[idx]:
+                mshape[idx] = 0
 
         self._mshape = tuple(x for x in mshape if x != 0)
 
