@@ -83,21 +83,8 @@ class Selection(object):
 
     @property
     def nselect(self):
-        seltype = self._id.get_select_type()
-
-        if seltype == h5s.SEL_POINTS:
-            return self._id.get_select_npoints()
-
-        elif seltype == h5s.SEL_HYPERSLABS:
-            return self._id.get_select_hyper_nblocks()
-
-        elif seltype == h5s.SEL_ALL:
-            return np.product(self.shape)
-
-        elif seltype == h5s.SEL_NONE:
-            return 0
-
-        raise TypeError("Selection invalid")
+        """ Number of elements currently selected """
+        return self._id.get_select_npoints()
 
 class _Selection_1D(Selection):
 
@@ -114,8 +101,8 @@ class _Selection_1D(Selection):
         """ Get an iterable for broadcasting """
         if np.product(target_shape) != self.nselect:
             raise TypeError("Broadcasting is not supported for point-wise selections")
-
         yield self._id
+
 
 class PointSelection(_Selection_1D):
 
@@ -239,6 +226,71 @@ class SimpleSelection(Selection):
             sid.offset_simple(offset)
             yield sid
 
+
+class HyperSelection(_Selection_1D):
+
+    """
+        Represents multiple overlapping rectangular selections, combined
+        with set-like operators.  Result is a 1D shape, as with boolean array
+        selection.  Broadcasting is not supported for these selections.
+
+        When created, the entire dataspace is selected.  To make
+        adjustments to the selection, use the standard NumPy slicing
+        syntax, either via __getitem__ (as with simple selections) or via
+        __setitem__ and one of the supported operators:
+
+            >>> sel = HyperSelection((10,20))  # Initially 200 points
+            >>> sel[:,5:15] = False            # Now 100 points
+            >>> sel[:,10]   = True             # Now 110 points
+            >>> sel[...]    = XOR              # Now 90 points
+
+        Legal operators (in the h5py.selections module) are:
+           
+        SET
+            New selection, wiping out any old one
+       
+        AND, XOR, OR (or True)
+            Logical AND/XOR/OR between new and old selection
+
+        NOTA
+            Select only regions in new selection which don't intersect the old
+
+        NOTB (or False)
+            Select only regions in old selection which don't intersect the new
+ 
+    """
+
+    def __getitem__(self, args):
+        self[args] = SET
+        return self
+
+    def __setitem__(self, args, op):
+
+        if not isinstance(args, tuple):
+            args = (args,)
+ 
+        start, count, step, scalar = _handle_simple(self.shape, args)
+
+        if not op in (SET, OR, AND, XOR, NOTB, NOTA, True, False):
+            raise ValueError("Illegal selection operator")
+
+        if op is True:
+            op = OR
+        elif op is False:
+            op = NOTB
+
+        seltype = self._id.get_select_type()
+
+        if seltype == h5s.SEL_ALL:
+            self._id.select_hyperslab((0,)*len(self.shape), self.shape, op=h5s.SELECT_SET)
+       
+        elif seltype == h5s.SEL_NONE:
+            if op in (SET, OR, XOR, NOTA):
+                op = SET
+            else:
+                return
+
+        self._id.select_hyperslab(start, count, step, op=op)
 
 class FancySelection(Selection):
 
