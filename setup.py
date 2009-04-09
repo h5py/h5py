@@ -284,9 +284,11 @@ class configure(Command):
             print "HDF5 path: %s\nAPI setting: %s" % (hdf5, api)
             return
 
-        if self.hdf5 is not None and not op.isdir(self.hdf5):
-            fatal("Invalid HDF5 path: %s" % self.hdf5)
-        self.hdf5 = op.abspath(self.hdf5)
+        if self.hdf5 is not None:
+            if op.isdir(self.hdf5):
+                self.hdf5 = op.abspath(self.hdf5)
+            else:
+                fatal("Invalid HDF5 path: %s" % self.hdf5)
         if self.api is not None and self.api not in ('16','18'):
             fatal("Invalid API level %s (must be 16 or 18)" % self.api)
 

@@ -1,24 +1,19 @@
 #+
-# 
+#
 # This file is part of h5py, a low-level Python interface to the HDF5 library.
-# 
+#
 # Contributed by Darren Dale
 #
 # Copyright (C) 2009 Darren Dale
 #
 # http://h5py.alfven.org
 # License: BSD  (See LICENSE.txt for full license)
-# 
+#
 #-
 
 """
-h5py completer extension for ipython. Drop this file in your ~/.ipython direcory
-and add the following lines to ~/.ipython/ipy_user_conf.py main()::
-
-  from ipy_h5py_completer.py import activate
-  activate()
-
-It will let you do things like::
+h5py completer extension for ipython. This completer is automatically loaded
+when h5py is imported within ipython. It will let you do things like::
 
   f=File('foo.h5')
   f['<tab>
@@ -73,12 +68,12 @@ def h5py_item_completer(context, command):
     except:
         return []
 
-    path, item = posixpath.split(item)
+    path, target = posixpath.split(item)
     if path:
-        target = obj[path]
-        items = (posixpath.join(path, item) for item in target.iternames())
+        items = (posixpath.join(path, name) for name in obj[path].iternames())
     else:
         items = obj.iternames()
+    items = list(items)
 
     readline.set_completer_delims(' \t\n`!@#$^&*()=+[{]}\\|;:\'",<>?')
 
