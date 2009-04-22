@@ -22,7 +22,8 @@ __doc__ = \
 
 include "config.pxi"
 
-from python_exc cimport PyErr_SetString
+
+from h5e cimport register_thread
 
 import atexit
 import threading
@@ -376,145 +377,6 @@ def _open():
 
 # === Public exception hierarchy ==============================================
 
-
-
-
-# === Error stack inspection ==================================================
-
-cdef class ErrorStackElement:
-    """
-        Represents an entry in the HDF5 error stack.
-        Modeled on the H5E_error_t struct.  All properties are read-only.
-
-        Attributes:
-
-        * maj_num:    INT major error number
-        * min_num:    INT minor error number
-        * func_name:  STRING name of failing function
-        * file_name:  STRING name of file in which error occurreed
-        * line:       UINT line number at which error occured
-        * desc:       STRING description of error
-    """
-    cdef readonly int maj_num
-    cdef readonly int min_num
-    cdef readonly object func_name
-    cdef readonly object file_name
-    cdef readonly unsigned int line
-    cdef readonly object desc
-
-    @sync
-    def __str__(self):
-        return '%2d:%2d "%s" at %s (%s: %s)' % (self.maj_num, self.min_num,
-                self.desc, self.func_name, H5Eget_major(<H5E_major_t>self.maj_num),
-                H5Eget_minor(<H5E_minor_t>self.min_num) )
-
-cdef herr_t walk_cb(int n, H5E_error_t *err_desc, void* stack_in):
-    # Callback function to extract elements from the HDF5 error stack
-
-    stack = <object>stack_in
-    cdef ErrorStackElement element
-
-    element = ErrorStackElement()
-    element.maj_num = err_desc.maj_num
-    element.min_num = err_desc.min_num
-    element.func_name = err_desc.func_name
-    element.file_name = err_desc.file_name
-    element.desc = err_desc.desc
-
-    stack.append(element)
-
-    return 0
-
-@sync
-def error_stack():
-    """ () => LIST error_stack
-
-        Retrieve the HDF5 error stack as a list of ErrorStackElement objects,
-        with the most recent call (the deepest one) listed last.
-    """
-    stack = []
-    H5Ewalk(H5E_WALK_DOWNWARD, walk_cb, <void*>stack)
-    return stack
-
-cpdef object error_string():
-    """ () => STRING error_stack
-
-        Return a string representation of the current error condition.
-        Format is one line of the format::
-
-            '<Description> (<Function name>: <error type>)'
-
-        If the stack is more than one level deep, this is followed by a
-        header and then n lines of the format::
-
-            '    n: "<Description>" at <function name>'
-    """
-    cdef int stacklen
-    cdef ErrorStackElement el
-
-    stack = error_stack()
-    stacklen = len(stack)
-
-    if stacklen == 0:
-        msg = "No HDF5 error recorded"
-    else:
-        el = stack[0]
-        msg = "%s (%s)" % (el.desc.capitalize(), el.func_name)
-        if stacklen > 1:
-            msg = msg + "\nHDF5 Error Stack:"
-            for i from 0<=i<stacklen:
-                #msg = msg + '\n' + str(stack[i])
-                el = stack[i]
-                maj_msg = H5Eget_major(<H5E_major_t>el.maj_num)
-                min_msg = H5Eget_minor(<H5E_minor_t>el.min_num)
-                msg = msg + '\n    %d: "%s" at %s [%s :: %s]' % \
-                            (i, el.desc.capitalize(), el.func_name, maj_msg, min_msg)
-
-    return msg
-
-@sync
-def clear():
-    """ ()
-
-        Clear the error stack.
-    """
-    H5Eclear()
-
-# === Automatic exception API =================================================
-
-cdef herr_t extract_cb(int n, H5E_error_t *err_desc, void* data_in):
-    # Callback to determine error information at top/bottom of stack
-    cdef H5E_error_t *err_struct
-    err_struct = <H5E_error_t*>data_in
-    err_struct.maj_num = err_desc.maj_num
-    err_struct.min_num = err_desc.min_num
-    return 1
-    
-cdef herr_t err_callback(void* client_data) with gil:
-    # Callback which sets Python exception based on the current error stack.
-
-    # MUST be "with gil" as it can be called by nogil HDF5 routines.
-    # By definition any function for which this can be called already
-    # holds the PHIL.
-    
-    cdef H5E_error_t err_struct
-    cdef H5E_major_t mj
-
-    # Determine the error numbers for the first entry on the stack.
-    H5Ewalk(H5E_WALK_UPWARD, extract_cb, &err_struct)
-    mj = err_struct.maj_num
-
-    try:
-        exc = _exceptions[mj]
-    except KeyError:
-        exc = H5Error
-
-    msg = error_string()
-    PyErr_SetString(exc, msg)  # Can't use "raise" or the traceback points here
-
-    return 1
-
-
 # === Library init ============================================================
 
 def _exithack():
@@ -545,13 +407,6 @@ def _exithack():
 
 hdf5_inited = 0
 
-cpdef int register_thread() except -1:
-    """ Register the current thread for native HDF5 exception support.
-    """
-    if H5Eset_auto(err_callback, NULL) < 0:
-        raise RuntimeError("Failed to register HDF5 exception callback")
-    return 0
-
 cdef int init_hdf5() except -1:
     # Initialize the library and register Python callbacks for exception
     # handling.  Safe to call more than once.
@@ -580,6 +435,6 @@ _version_tuple = tuple([int(x) for x in H5PY_VERSION.split('.')])
 
 
 
-
+from h5e import H5Error
 
 

@@ -21,6 +21,7 @@ phil = get_phil()
 config = get_config()
 logger = logging.getLogger('h5py.functions')
 
+
 def uw_apply(wrap, func):
     # Cython methods don't have a "module" attribute for some reason
     if hasattr(func, '__module__'):

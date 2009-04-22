@@ -56,7 +56,7 @@ def debug(instring):
 def localpath(*args):
     return op.abspath(reduce(op.join, (op.dirname(__file__),)+args))
 
-MODULES = ['h5', 'h5f', 'h5g', 'h5s', 'h5t', 'h5d', 'h5a', 'h5p', 'h5z',
+MODULES = ['h5', 'h5e', 'h5f', 'h5g', 'h5s', 'h5t', 'h5d', 'h5a', 'h5p', 'h5z',
                  'h5i', 'h5r', 'h5fd', 'utils', 'h5o', 'h5l']
 
 EXTRA_SRC = {'h5': [ localpath("lzf/lzf_filter.c"), 

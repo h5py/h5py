@@ -8,6 +8,10 @@ include "defs.pxd"
 
 # === H5E - Error handling API ================================================
 
+cdef herr_t err_callback(void* client_data) with gil
+
+cpdef int register_thread() except -1
+
 cdef extern from "hdf5.h":
 
   # Major error numbers
@@ -15,7 +19,7 @@ cdef extern from "hdf5.h":
     H5E_NONE_MAJOR       = 0,   # special zero, no error                     
     H5E_ARGS,                   # invalid arguments to routine               
     H5E_RESOURCE,               # resource unavailable                       
-    H5E_INTERNAL,               #  Internal error (too specific to document)
+    H5E_INTERNAL,               # Internal error (too specific to document)
     H5E_FILE,                   # file Accessability                         
     H5E_IO,                     # Low-level I/O                              
     H5E_FUNC,                   # function Entry/Exit                        
