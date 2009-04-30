@@ -6,10 +6,13 @@
 
 include "config.pxi"
 
-
 from python_exc cimport PyErr_SetString
 from h5 cimport SmartStruct
+
 import _stub
+
+
+# === Exception hierarchy based on major error codes ==========================
 
 class H5Error(Exception):
     """ Base class for internal HDF5 library exceptions.
@@ -205,7 +208,7 @@ cdef dict _minor_table = {
     H5E_UNSUPPORTED:    NotImplementedError,    # Feature is unsupported 
 
     H5E_NOTFOUND:       KeyError,    # Object not found 
-    H5E_CANTINSERT:     TypeError,   # Unable to insert object 
+    H5E_CANTINSERT:     ValueError,   # Unable to insert object 
 
     H5E_BADTYPE:        TypeError,   # Inappropriate type 
     H5E_BADRANGE:       ValueError,  # Out of range 
@@ -224,8 +227,8 @@ cdef dict _exact_table = {
     (H5E_INTERNAL, H5E_SYSERRSTR):  IOError,  # e.g. wrong file permissions
   }
 
-# === Error stack inspection ==================================================
 
+# === Error stack inspection ==================================================
 
 cdef class ErrorStackElement(SmartStruct):
 
@@ -263,6 +266,12 @@ def get_minor(int code):
 
 _verbose = False
 def verbose(bint v):
+    """ (BOOL verbose)
+
+    If FALSE (default), exception messages are a single line.  If TRUE,
+    an HDF5 stack trace is attached.
+    """
+
     global _verbose
     _verbose = bool(v)
 
@@ -348,7 +357,10 @@ cdef herr_t err_callback(void* client_data) with gil:
     return 1
 
 cpdef int register_thread() except -1:
-    """ Register the current thread for native HDF5 exception support.
+    """ ()
+
+    Register the current thread for native HDF5 exception support.  This is
+    automatically called by h5py on startup.  Safe to call more than once.        
     """
     if H5Eset_auto(err_callback, NULL) < 0:
         raise RuntimeError("Failed to register HDF5 exception callback")

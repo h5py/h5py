@@ -6,10 +6,8 @@
 include "config.pxi"
 include "defs.pxd"
 
-# === H5E - Error handling API ================================================
-
-cdef herr_t err_callback(void* client_data) with gil
-
+# Register the current thread for native Python exception support.
+# Safe to call more than once.
 cpdef int register_thread() except -1
 
 cdef extern from "hdf5.h":
