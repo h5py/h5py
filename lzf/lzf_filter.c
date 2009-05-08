@@ -29,20 +29,33 @@
 #include "lzf/lzf.h"
 #include "lzf_filter.h"
 
+/* Our own versions of H5Epush_sim, as it changed in 1.8 */
 #if H5_VERS_MAJOR == 1 && H5_VERS_MINOR < 7
 
-#define H5PY_LZF_16API 1
 #define PUSH_ERR(func, minor, str)  H5Epush(__FILE__, func, __LINE__, H5E_PLINE, minor, str)
 #define H5PY_GET_FILTER H5Pget_filter_by_id
 
-
 #else
 
-#define H5PY_LZF_16API 0
 #define PUSH_ERR(func, minor, str)  H5Epush1(__FILE__, func, __LINE__, H5E_PLINE, minor, str)
 #define H5PY_GET_FILTER(a,b,c,d,e,f,g) H5Pget_filter_by_id2(a,b,c,d,e,f,g,NULL)
 
 #endif
+
+/*  Deal with the mutiple definitions for H5Z_class_t.
+    Note: Only HDF5 1.6 and 1.8 are supported.
+
+    (1) The old class should always be used for HDF5 1.6
+    (2) The new class should always be used for HDF5 1.8 < 1.8.3
+    (3) The old class should be used for HDF5 1.8 >= 1.8.3 only if the
+        macro H5_USE_16_API is set
+*/
+#define H5PY_H5Z_NEWCLS 0   
+
+#if H5_VERS_MAJOR == 1 && H5_VERS_MINOR == 8 && (H5_VERS_RELEASE < 3 || !H5_USE_16_API)
+#define H5PY_H5Z_NEWCLS 1
+#endif
+
 
 size_t lzf_filter(unsigned flags, size_t cd_nelmts,
 		    const unsigned cd_values[], size_t nbytes,
@@ -56,9 +69,11 @@ int register_lzf(void){
 
     int retval;
 
-#if H5PY_LZF_16API
+#if H5PY_H5Z_NEWCLS
     H5Z_class_t filter_class = {
+        H5Z_CLASS_T_VERS,
         (H5Z_filter_t)(H5PY_FILTER_LZF),
+        1, 1,
         "lzf",
         NULL,
         (H5Z_set_local_func_t)(lzf_set_local),
@@ -66,9 +81,7 @@ int register_lzf(void){
     };
 #else
     H5Z_class_t filter_class = {
-        H5Z_CLASS_T_VERS,
         (H5Z_filter_t)(H5PY_FILTER_LZF),
-        1, 1,
         "lzf",
         NULL,
         (H5Z_set_local_func_t)(lzf_set_local),
