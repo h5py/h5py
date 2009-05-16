@@ -61,7 +61,9 @@ MODULES = ['h5', 'h5e', 'h5f', 'h5g', 'h5s', 'h5t', 'h5d', 'h5a', 'h5p', 'h5z',
 
 EXTRA_SRC = {'h5': [ localpath("lzf/lzf_filter.c"), 
                      localpath("lzf/lzf/lzf_c.c"),
-                     localpath("lzf/lzf/lzf_d.c") ]    }
+                     localpath("lzf/lzf/lzf_d.c"),
+                     localpath("h5py/typeproxy.c"),
+                     localpath("h5py/typeconv.c") ]}
 
 # --- Imports -----------------------------------------------------------------
 

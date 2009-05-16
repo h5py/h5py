@@ -24,6 +24,7 @@ include "config.pxi"  # Needed for H5PY_*API defines
 
 # === Standard C library types and functions ==================================
 
+
 cdef extern from "stdlib.h":
   ctypedef long size_t
   void *malloc(size_t size)
@@ -963,6 +964,9 @@ cdef extern from "hdf5.h":
     H5T_DIR_ASCEND,
     H5T_DIR_DESCEND
 
+  # For vlen strings
+  cdef size_t H5T_VARIABLE
+
   # --- Predefined datatypes --------------------------------------------------
 
   cdef enum:
@@ -1126,12 +1130,53 @@ cdef extern from "hdf5.h":
   herr_t    H5Tset_tag(hid_t type_id, char* tag) except *
   char*     H5Tget_tag(hid_t type_id) except? NULL
 
+  # 1.8-specific functions
   IF H5PY_18API:
     hid_t H5Tdecode(unsigned char *buf) except *
     herr_t H5Tencode(hid_t obj_id, unsigned char *buf, size_t *nalloc) except *
 
     herr_t H5Tcommit2(hid_t loc_id, char *name, hid_t dtype_id, hid_t lcpl_id,
             hid_t tcpl_id, hid_t tapl_id) 
+
+  # Type-conversion infrastructure
+
+  ctypedef enum H5T_pers_t:
+    H5T_PERS_DONTCARE	= -1,
+    H5T_PERS_HARD	= 0,	    # /*hard conversion function		     */
+    H5T_PERS_SOFT	= 1 	    # /*soft conversion function		     */
+
+  ctypedef enum H5T_cmd_t:
+    H5T_CONV_INIT	= 0,	#/*query and/or initialize private data	     */
+    H5T_CONV_CONV	= 1, 	#/*convert data from source to dest datatype */
+    H5T_CONV_FREE	= 2	    #/*function is being removed from path	     */
+
+  ctypedef enum H5T_bkg_t:
+    H5T_BKG_NO		= 0, 	#/*background buffer is not needed, send NULL */
+    H5T_BKG_TEMP	= 1,	#/*bkg buffer used as temp storage only       */
+    H5T_BKG_YES		= 2	    #/*init bkg buf with data before conversion   */
+
+  ctypedef struct H5T_cdata_t:
+    H5T_cmd_t		command     # /*what should the conversion function do?    */
+    H5T_bkg_t		need_bkg   #/*is the background buffer needed?	     */
+    hbool_t		recalc	        # /*recalculate private data		     */
+    void		*priv	        # /*private data				     */
+
+  ctypedef struct hvl_t:
+      size_t len # /* Length of VL data (in base type units) */
+      void *p    #/* Pointer to VL data */
+
+  ctypedef herr_t (*H5T_conv_t)(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
+      size_t nelmts, size_t buf_stride, size_t bkg_stride, void *buf,
+      void *bkg, hid_t dset_xfer_plist)
+
+  H5T_conv_t H5Tfind(hid_t src_id, hid_t dst_id, H5T_cdata_t **pcdata) 
+
+  herr_t    H5Tregister(H5T_pers_t pers, char *name, hid_t src_id,
+                        hid_t dst_id, H5T_conv_t func) except *
+  herr_t    H5Tunregister(H5T_pers_t pers, char *name, hid_t src_id,
+			            hid_t dst_id, H5T_conv_t func) except *
+
+
 
 # === H5Z - Filters ===========================================================
 
@@ -1239,5 +1284,7 @@ cdef extern from "hdf5.h":
             hsize_t *n, H5A_operator2_t op, void *op_data) except *
 
     hsize_t H5Aget_storage_size(hid_t attr_id) except *
+
+
 
 

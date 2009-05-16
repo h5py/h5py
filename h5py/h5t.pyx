@@ -60,7 +60,7 @@ __doc__ = \
 include "config.pxi"
 
 # Pyrex compile-time imports
-from h5 cimport init_hdf5, H5PYConfig, get_config, PHIL, get_phil
+from h5 cimport init_hdf5, H5PYConfig, get_config, PHIL, get_phil, get_object_type
 from h5p cimport PropID, pdefault
 from numpy cimport dtype, ndarray
 from python_string cimport PyString_FromStringAndSize
@@ -229,6 +229,10 @@ STD_REF_DSETREG = lockid(H5T_STD_REF_DSETREG)
 # Null terminated (C) and Fortran string types
 C_S1 = lockid(H5T_C_S1)
 FORTRAN_S1 = lockid(H5T_FORTRAN_S1)
+VARIABLE = H5T_VARIABLE
+
+# Custom Python object pointer type
+PYTHON_OBJECT = lockid(get_object_type())
 
 # Translation tables for HDF5 -> NumPy dtype conversion
 cdef dict _order_map = { H5T_ORDER_NONE: '|', H5T_ORDER_LE: '<', H5T_ORDER_BE: '>'}
@@ -593,8 +597,6 @@ cdef class TypeStringID(TypeID):
         """() => BOOL is_variable
 
         Determine if the given string datatype is a variable-length string.
-        Please note that reading/writing data in this format is impossible;
-        only fixed-length strings are currently supported.
         """
         return <bint>(H5Tis_variable_str(self.id))
 
@@ -651,7 +653,7 @@ cdef class TypeStringID(TypeID):
     cdef object py_dtype(self):
         # Numpy translation function for string types
         if self.is_variable_str():
-            raise TypeError("Variable-length strings are not supported.")
+            return py_new_vlen(str)
 
         return dtype("|S" + str(self.get_size()))
 
@@ -1156,19 +1158,23 @@ cdef class TypeEnumID(TypeCompositeID):
     cdef object py_dtype(self):
         # Translation function for enum types
 
-        cdef TypeID tmp_type
-        tmp_type = self.get_super()
+        cdef TypeID basetype = self.get_super()
 
-        if self.get_nmembers() == 2:
-            members = {}
-            ref = {cfg._f_name: 0, cfg._t_name: 1}
-            for idx in range(2):
-                name = self.get_member_name(idx)
-                val = self.get_member_value(idx)
-                members[name] = val
-            if members == ref:
-                return dtype('bool')
-        return tmp_type.py_dtype()
+        nmembers = self.get_nmembers()
+        members = {}
+
+        for idx in xrange(nmembers):
+            name = self.get_member_name(idx)
+            val = self.get_member_value(idx) 
+            members[name] = val
+
+        ref = {cfg._f_name: 0, cfg._t_name: 1}
+
+        # Boolean types have priority over standard enums
+        if members == ref:
+            return dtype('bool')
+    
+        return py_new_enum(basetype.py_dtype(), members)
 
 
 # === Translation from NumPy dtypes to HDF5 type objects ======================
@@ -1249,14 +1255,14 @@ cdef TypeEnumID _c_bool(dtype dt):
 
     return out
 
-cdef TypeArrayID _c_array(dtype dt):
+cdef TypeArrayID _c_array(dtype dt, int logical):
     # Arrays
     cdef dtype base
     cdef TypeID type_base
     cdef tuple shape
 
     base, shape = dt.subdtype
-    type_base = py_create(base)
+    type_base = py_create(base, logical=logical)
     return array_create(type_base, shape)
 
 cdef TypeOpaqueID _c_opaque(dtype dt):
@@ -1311,7 +1317,7 @@ cdef TypeCompoundID _c_complex(dtype dt):
 
     return TypeCompoundID(tid)
 
-cdef TypeCompoundID _c_compound(dtype dt):
+cdef TypeCompoundID _c_compound(dtype dt, int logical):
     # Compound datatypes
 
     cdef hid_t tid
@@ -1326,13 +1332,24 @@ cdef TypeCompoundID _c_compound(dtype dt):
 
     for name in names:
         dt_tmp, offset = dt.fields[name]
-        type_tmp = py_create(dt_tmp)
+        type_tmp = py_create(dt_tmp, logical=logical)
         H5Tinsert(tid, name, offset, type_tmp.id)
 
     return TypeCompoundID(tid)
 
+cdef TypeOpaqueID _c_object(dtype dt):
+    # Object types are represented by a custom opaque type
+    # Currently no other logic is required
+    return PYTHON_OBJECT
 
-cpdef TypeID py_create(object dtype_in, dict enum_vals=None):
+cdef TypeStringID _c_vlen_str(object basetype):
+    # Variable-length strings
+    cdef hid_t tid
+    tid = H5Tcopy(H5T_C_S1)
+    H5Tset_size(tid, H5T_VARIABLE)
+    return TypeStringID(tid)
+
+cpdef TypeID py_create(object dtype_in, bint logical=0):
     """(OBJECT dtype_in, DICT enum_vals=None) => TypeID
 
     Given a Numpy dtype object, generate a byte-for-byte memory-compatible
@@ -1342,11 +1359,12 @@ cpdef TypeID py_create(object dtype_in, dict enum_vals=None):
     Argument dtype_in may be a dtype object, or anything which can be
     converted to a dtype, including strings like '<i4'.
 
-    enum_vals
-        A optional dictionary mapping names to integer values.  If the
-        type being converted is an integer (Numpy kind i/u), the resulting 
-        HDF5 type will be an enumeration with that base type, and the 
-        given values. Ignored for all other types.
+    logical
+        If this flag is set, instead of returning a byte-for-byte identical
+        representation of the type, the function returns the closest logically
+        appropriate HDF5 type.  For example, in the case of a "hinted" dtype
+        of kind "O" representing a string, it would return an HDF5 variable-
+        length string type.
     """
     cdef dtype dt = dtype(dtype_in)
     cdef char kind = dt.kind
@@ -1360,10 +1378,13 @@ cpdef TypeID py_create(object dtype_in, dict enum_vals=None):
         # Integer
         elif kind == c'u' or kind == c'i':
 
-            if enum_vals is not None:
-                return _c_enum(dt, enum_vals)
-            else:
-                return _c_int(dt)
+            if logical:
+                # Check for an enumeration hint
+                enum_vals = py_get_enum(dt)
+                if enum_vals is not None:
+                    return _c_enum(dt, enum_vals)
+
+            return _c_int(dt)
 
         # Complex
         elif kind == c'c':
@@ -1371,12 +1392,12 @@ cpdef TypeID py_create(object dtype_in, dict enum_vals=None):
 
         # Compound
         elif kind == c'V' and dt.names is not None:
-            return _c_compound(dt)
+            return _c_compound(dt, logical)
 
         # Array or opaque
         elif kind == c'V':
             if dt.subdtype is not None:
-                return _c_array(dt)
+                return _c_array(dt, logical)
             else:
                 return _c_opaque(dt)
 
@@ -1388,10 +1409,98 @@ cpdef TypeID py_create(object dtype_in, dict enum_vals=None):
         elif kind == c'b':
             return _c_bool(dt)
 
+        # Object types (including those with vlen hints)
+        elif kind == c'O':
+
+            if logical:
+                # Check for vlen hints
+                vlen = py_get_vlen(dt)
+                if vlen is not None:
+                    return _c_vlen_str(vlen)
+                raise TypeError("Object dtype has no native HDF5 equivalent")
+
+            return _c_object(dt)
+
         # Unrecognized
         else:
             raise TypeError("No conversion path for dtype: %s" % repr(dt))
+
     finally:
         phil.release()
+
+cpdef dtype py_new_enum(dtype dt_in, dict enum_vals):
+    """ (DTYPE dt_in, DICT enum_vals) => DTYPE
+
+    Create a new NumPy integer dtype, which contains "hint" metadata for
+    an enum. Only dtypes of kind 'i' or 'u' are allowed.  The enum_vals
+    dict must consist only of string keys and integer values.
+    """
+
+    cdef dtype dt = dtype(dt_in)
+    if dt.kind != 'i' and dt.kind != 'u':
+        raise TypeError("Only integer types can be used as enums")
+
+    return dtype((dt, [( ({'vals': enum_vals},'enum'), dt )] ))
+    
+cpdef dict py_get_enum(object dt):
+    """ (DTYPE dt_in) => DICT
+
+    Determine the enum values associated with a "hinted" NumPy integer type.
+    Returns None if the type does not contain hints, or is of the wrong kind.
+    """
+    
+    if dt.kind != 'i' and dt.kind != 'u':
+        return None
+
+    if dt.fields is not None and 'enum' in dt.fields:
+        tpl = dt.fields['enum']
+        if len(tpl) == 3:
+            info_dict = tpl[2]
+            if 'vals' in info_dict:
+                return info_dict['vals']
+
+    return None
+
+cpdef dtype py_new_vlen(object kind):
+    """ (OBJECT kind) => DTYPE
+
+    Create a new NumPy object dtype, which contains "hint" metadata
+    identifying the proper HDF5 vlen base type.  For now, only the native
+    Python string object (str) is supported.
+    """
+    if kind is not str:
+        raise NotImplementedError("Only string vlens are currently supported")
+
+    return dtype(('O', [( ({'type': kind},'vlen'), 'O' )] ))
+
+cpdef object py_get_vlen(object dt_in):
+    """ (OBJECT dt_in) => TYPE
+
+    Determine the vlen "hint" type associated with a NumPy object type,
+    or None if the dtype does not contain a hint or is not of kind "O".
+    """
+    cdef dtype dt = dtype(dt_in)
+
+    if dt.kind != 'O':
+        return None
+
+    if dt.fields is not None and 'vlen' in dt.fields:
+        tpl = dt.fields['vlen']
+        if len(tpl) == 3:
+            hint_dict = tpl[2]
+            if 'type' in hint_dict:
+                return hint_dict['type']
+
+    return None
+
+        
+def path_exists(TypeID src not None, TypeID dst not None):
+
+    cdef H5T_cdata_t *data
+    cdef H5T_conv_t result = NULL
+    
+    result = H5Tfind(src.id, dst.id, &data)
+    return result != NULL
+
 
 

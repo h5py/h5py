@@ -16,7 +16,7 @@ __doc__ = \
 include "config.pxi"
 
 # Compile-time imports
-from h5 cimport init_hdf5
+from h5 cimport init_hdf5, dset_rw, H5PY_READ, H5PY_WRITE
 from numpy cimport ndarray, import_array, PyArray_DATA, NPY_WRITEABLE
 from utils cimport  check_numpy_read, check_numpy_write, \
                     convert_tuple, emalloc, efree
@@ -78,29 +78,6 @@ def open(ObjectID loc not None, char* name):
     return DatasetID(H5Dopen(loc.id, name))
 
 # --- Proxy functions for safe(r) threading -----------------------------------
-
-# It's not legal to call PyErr_Occurred() with nogil, so we can't use
-# the standard except * syntax.  Trap negative return numbers and convert them
-# to something Cython can recognize.
-
-cdef int H5PY_H5Dread(hid_t dset_id, hid_t mem_type_id, hid_t mem_space_id,
-                  hid_t file_space_id, hid_t plist_id, void *buf) nogil except -1:
-
-    cdef herr_t retval
-    retval = H5Dread(dset_id, mem_type_id,mem_space_id, file_space_id,
-                        plist_id, buf)
-    if retval < 0:
-        return -1
-    return retval
-
-cdef int H5PY_H5Dwrite(hid_t dset_id, hid_t mem_type, hid_t mem_space, hid_t 
-                        file_space, hid_t xfer_plist, void* buf) nogil except -1:
-    cdef herr_t retval
-    retval = H5Dwrite(dset_id, mem_type, mem_space, file_space,
-                        xfer_plist, buf)
-    if retval < 0:
-        return -1
-    return retval
 
 
 cdef class DatasetID(ObjectID):
@@ -200,8 +177,7 @@ cdef class DatasetID(ObjectID):
 
         arr_obj.flags &= (~NPY_WRITEABLE) # Wish-it-was-a-mutex approach
         try:
-            with nogil:
-                H5PY_H5Dread(self_id, mtype_id, mspace_id, fspace_id, plist_id, data)
+            dset_rw(self_id, mtype_id, mspace_id, fspace_id, plist_id, data, H5PY_READ)
         finally:
             arr_obj.flags |= NPY_WRITEABLE
 
@@ -240,8 +216,7 @@ cdef class DatasetID(ObjectID):
 
         arr_obj.flags &= (~NPY_WRITEABLE) # Wish-it-was-a-mutex approach
         try:
-            with nogil:
-                H5PY_H5Dwrite(self_id, mtype_id, mspace_id, fspace_id, plist_id, data)
+            dset_rw(self_id, mtype_id, mspace_id, fspace_id, plist_id, data, H5PY_WRITE)
         finally:
             arr_obj.flags |= NPY_WRITEABLE
 

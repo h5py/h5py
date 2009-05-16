@@ -405,6 +405,19 @@ def _exithack():
 
 hdf5_inited = 0
 
+cdef hid_t get_object_type() except -1:
+    return h5py_object_type()
+
+cdef herr_t dset_rw(hid_t dataset_id, hid_t mem_type_id, hid_t mem_space_id, 
+                    hid_t file_space_id, hid_t xfer_plist_id, void *outbuf,
+                    h5py_rw_t dir) except *:
+
+    return H5PY_dset_rw(dataset_id, mem_type_id, mem_space_id, file_space_id,
+                        xfer_plist_id, outbuf, dir)
+
+cdef herr_t attr_rw(hid_t attr_id, hid_t mem_type_id, void *buf, h5py_rw_t dir) except *:
+    return H5PY_attr_rw(attr_id, mem_type_id, buf, dir)
+
 cdef int init_hdf5() except -1:
     # Initialize the library and register Python callbacks for exception
     # handling.  Safe to call more than once.
@@ -419,6 +432,7 @@ cdef int init_hdf5() except -1:
         if register_lzf() < 0:
             raise RuntimeError("Failed to register LZF filter")
         atexit.register(_exithack)
+        h5py_register_conv()
         hdf5_inited = 1
 
     return 0

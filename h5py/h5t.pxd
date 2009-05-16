@@ -69,7 +69,7 @@ cdef class TypeCompoundID(TypeCompositeID):
 # === C API for other modules =================================================
 
 cdef TypeID typewrap(hid_t id_)
-cpdef TypeID py_create(object dtype, dict enum_vals=*)
+cpdef TypeID py_create(object dtype, bint logical=*)
 
 
 

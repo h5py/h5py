@@ -37,6 +37,10 @@ from h5e import H5Error
 
 import filters, selections
 
+# re-export custom vlen routines
+new_vlen = h5t.py_new_vlen
+get_vlen = h5t.py_get_vlen
+
 __doc__ = __doc__ % (version.version, version.hdf5_version, version.api_version)
 
 __all__ = ['h5', 'h5f', 'h5g', 'h5s', 'h5t', 'h5d', 'h5a', 'h5p', 'h5r',

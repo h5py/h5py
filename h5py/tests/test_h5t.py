@@ -238,17 +238,6 @@ class TestH5T(HDF5TestCase):
             self.assertEqual(type(htype), kind_map[dt.kind])
             self.assertEqual(dt, htype.dtype)
 
-    def test_py_create_enum(self):
-        enum = {'A': 0, 'AA': 1, 'foo': 34, 'bizarre': 127}
-        enum_bases = [ x for x in simple_types if 'i' in x or 'u' in x]
-        for x in enum_bases:
-            dt = dtype(x)
-            htype = h5t.py_create(dt, enum_vals=enum)
-            self.assertEqual(type(htype), h5t.TypeEnumID)
-            self.assertEqual(dt, htype.dtype)
-            for name, val in enum.iteritems():
-                self.assertEqual(name, htype.enum_nameof(val))
-
     def test_py_create_array(self):
         shapes = [ (1,1), (1,), (4,5), (99,10,22) ]
         array_types = []

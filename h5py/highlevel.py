@@ -775,7 +775,7 @@ class Dataset(HLObject):
                     maxshape = tuple(x if x is not None else h5s.UNLIMITED for x in maxshape)
 
                 space_id = h5s.create_simple(shape, maxshape)
-                type_id = h5t.py_create(dtype)
+                type_id = h5t.py_create(dtype, logical=True)
 
                 self.id = h5d.create(group.id, name, type_id, space_id, plist)
                 if data is not None:
@@ -1049,29 +1049,74 @@ class AttributeManager(LockableObject, _DictCompat):
             return arr
 
     def __setitem__(self, name, value):
-        """ Set the value of an attribute, overwriting any previous value.
+        """ Set a new attribute, or change the value of an existing one.
 
-        The value you provide must be convertible to a Numpy array or scalar.
+        The value you provide must be compatible with the type of any existing
+        attribute.  If no attribute with the given name exists, one will be
+        automatically created based on the type and shape of the given data.
 
-        Any existing value is destroyed just before the call to h5a.create.
-        If the creation fails, the data is not recoverable.
+        To unconditionally overwrite an existing attribute, use the method
+        "create".
         """
         with self._lock:
             value = numpy.asarray(value, order='C')
 
-            space = h5s.create_simple(value.shape)
-            htype = h5t.py_create(value.dtype)
-
-            # TODO: some kind of transactions safeguard
             if name in self:
-                h5a.delete(self.id, name)
+                attr = h5a.open(self.id, name)
 
-            attr = h5a.create(self.id, name, htype, space)
-            attr.write(value)
+                # Allow the case of () <-> (1,)
+                if (value.shape != attr.shape) and not \
+                   (numpy.product(value.shape)==1 and numpy.product(attr.shape)==1):
+                    raise TypeError("Shape of data is incompatible with existing attribute")
+                attr.write(value)
+            
+            else:
+                space = h5s.create_simple(value.shape)
+                htype = h5t.py_create(value.dtype, logical=True)
+
+                attr = h5a.create(self.id, name, htype, space)
+                attr.write(value)
 
     def __delitem__(self, name):
         """ Delete an attribute (which must already exist). """
         h5a.delete(self.id, name)
+
+    def create(self, name, data=None, shape=None, dtype=None):
+        """ Create a new attribute, overwriting any existing attribute.
+
+        name:   Name of the new attribute (required)
+        data:   An array to initialize the attribute.
+                Required unless "shape" is given.
+        shape:  Shape of the attribute.  Overrides data.shape if both are
+                given.  The total number of points must be unchanged.
+        dtype:  Data type of the attribute.  Overrides data.dtype if both
+                are given.  Must be conversion-compatible with data.dtype.
+        """
+       
+        if data is not None:
+            data = numpy.asarray(data, order='C', dtype=dtype)
+            if shape is None:
+                shape = data.shape
+            elif numpy.product(shape) != numpy.product(data.shape):
+                raise ValueError("Shape of new attribute conflicts with shape of data")
+                
+            if dtype is None:
+                dtype = data.dtype
+
+        if dtype is None:
+            dtype = numpy.dtype('f')
+        if shape is None:
+            raise ValueError('At least one of "shape" or "data" must be given')
+
+        space = h5s.create_simple(shape)
+        htype = h5t.py_create(dtype, logical=True)
+
+        if name in self:
+            h5a.delete(self.id, name)
+
+        attr = h5a.create(self.id, name, htype, space)
+        if data is not None:
+            attr.write(data)
 
     def __len__(self):
         """ Number of attributes attached to the object. """

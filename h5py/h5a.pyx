@@ -18,7 +18,7 @@ __doc__=\
 include "config.pxi"
 
 # Compile-time imports
-from h5 cimport init_hdf5, SmartStruct
+from h5 cimport init_hdf5, SmartStruct, attr_rw, H5PY_READ, H5PY_WRITE
 from h5t cimport TypeID, typewrap, py_create
 from h5s cimport SpaceID
 from h5p cimport PropID, pdefault
@@ -452,7 +452,7 @@ cdef class AttrID(ObjectID):
 
             mtype = py_create(arr.dtype)
 
-            H5Aread(self.id, mtype.id, PyArray_DATA(arr))
+            attr_rw(self.id, mtype.id, PyArray_DATA(arr), H5PY_READ)
 
         finally:
             if space_id:
@@ -478,7 +478,7 @@ cdef class AttrID(ObjectID):
             check_numpy_read(arr, space_id)
             mtype = py_create(arr.dtype)
 
-            H5Awrite(self.id, mtype.id, PyArray_DATA(arr))
+            attr_rw(self.id, mtype.id, PyArray_DATA(arr), H5PY_WRITE)
 
         finally:
             if space_id:
