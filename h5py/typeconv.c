@@ -89,18 +89,14 @@ herr_t vlen_to_str(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
         if(h5py_match_str_ptr(src_id, dst_id) <= 0) goto init_failed;
 
         cdata->need_bkg = H5T_BKG_YES;
-        cdata->priv = sizes = (conv_size_t*)malloc(sizeof(conv_size_t));
-        if(sizes==NULL) goto init_failed;
+        if((cdata->priv = sizes = (conv_size_t*)malloc(sizeof(conv_size_t))) == NULL) goto init_failed;
 
-        sizes->src_size = H5Tget_size(src_id);
-        if(sizes->src_size == 0) goto init_failed;
-        sizes->dst_size = H5Tget_size(dst_id);
-        if(sizes->dst_size == 0) goto init_failed;
+        if((sizes->src_size = H5Tget_size(src_id)) == 0) goto init_failed;
+        if((sizes->dst_size = H5Tget_size(dst_id)) == 0) goto init_failed;
 
         return 0;
 
         init_failed:    /* Error target */
-
         free(sizes);
         return -1;
 
@@ -180,17 +176,14 @@ herr_t str_to_vlen(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
         if(h5py_match_str_ptr(dst_id, src_id) <= 0) goto init_failed;
 
         cdata->need_bkg = H5T_BKG_NO;
-        cdata->priv = sizes = (conv_size_t*)malloc(sizeof(conv_size_t));
+        if((cdata->priv = sizes = (conv_size_t*)malloc(sizeof(conv_size_t))) == NULL) goto init_failed;
 
-        sizes->src_size = H5Tget_size(src_id);
-        if(sizes->src_size==0) goto init_failed;
-        sizes->dst_size = H5Tget_size(dst_id);
-        if(sizes->dst_size==0) goto init_failed;
+        if((sizes->src_size = H5Tget_size(src_id)) == 0) goto init_failed;
+        if((sizes->dst_size = H5Tget_size(dst_id)) == 0) goto init_failed;
         
         return 0;
 
         init_failed:    /* Error target */
-
         free(sizes);
         return -1;
 
@@ -226,7 +219,6 @@ herr_t str_to_vlen(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
         return 0;
 
         conv_failed:    /* Error target */
-
         PyGILState_Release(gil);
         return -1;
         
@@ -284,7 +276,6 @@ herr_t vlen_fixed(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
         return 0;
 
         init_failed:
-
         free(info);
         return -1;
 
@@ -376,38 +367,31 @@ herr_t enum_int(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
         case H5T_CONV_INIT:
             
             cdata->need_bkg = H5T_BKG_NO;
-            cdata->priv = info = (h5py_enum_conv_t*)malloc(sizeof(h5py_enum_conv_t));
-            if(info==NULL) goto init_failed;
+            if((cdata->priv = info = (h5py_enum_conv_t*)malloc(sizeof(h5py_enum_conv_t))) == NULL) goto init_failed;
 
             info->int_src_id = 0;
             info->int_dst_id = 0;
 
-            info->src_cls = H5Tget_class(src_id);
-            if(info->src_cls<0) goto init_failed;
+            if((info->src_cls = H5Tget_class(src_id)) < 0) goto init_failed;
 
-            info->src_size = H5Tget_size(src_id);
-            if(info->src_size<0) goto init_failed;
-            info->dst_size = H5Tget_size(dst_id);
-            if(info->dst_size<0) goto init_failed;
+            if((info->src_size = H5Tget_size(src_id)) == 0) goto init_failed;
+            if((info->dst_size = H5Tget_size(dst_id)) == 0) goto init_failed;
 
             if(info->src_cls == H5T_ENUM){
                 /* We're trying to convert an ENUM to an INT */
                 info->int_src_id = H5Tget_super(src_id);
                 info->int_dst_id = dst_id;
-                H5Iinc_ref(dst_id);
+                if(H5Iinc_ref(dst_id) < 0) goto init_failed;
             } else {
                 /* We're trying to convert an INT to an ENUM */
                 info->int_src_id = src_id;
                 info->int_dst_id = H5Tget_super(dst_id);
-                H5Iinc_ref(src_id);
+                if(H5Iinc_ref(src_id) < 0) goto init_failed;
             }
             if(info->int_src_id<0) goto init_failed;
             if(info->int_dst_id<0) goto init_failed;
 
-            cresult = H5Tequal(info->int_src_id, info->int_dst_id);
-            if(cresult<0) goto init_failed;
-
-            info->identical = cresult;
+            if((info->identical = H5Tequal(info->int_src_id, info->int_dst_id)) < 0) goto init_failed;
 
             return 0;
 
@@ -431,10 +415,8 @@ herr_t enum_int(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
             if(buf_stride==0){
                 /*  Contiguous data: H5Tconvert can do this directly */
 
-                cresult = H5Tconvert(info->int_src_id,
-                                     info->int_dst_id,
-                                     nl, buf, NULL, dset_xfer_plist);
-                if(cresult<0) goto conv_failed;
+                if(H5Tconvert(info->int_src_id, info->int_dst_id,
+                   nl, buf, NULL, dset_xfer_plist) < 0) goto conv_failed;
 
             } else {
                 /*  Can't tell H5Tconvert about strides; use a buffer */
@@ -444,8 +426,7 @@ herr_t enum_int(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
                 } else {
                     nalloc = (info->dst_size)*nl;
                 }
-                conv_buf = malloc(nalloc);
-                if(conv_buf==NULL) goto conv_failed;
+                if((conv_buf = malloc(nalloc)) == NULL) goto conv_failed;
 
                 /* Copy into temp buffer */
                 for(i=0;i<nl;i++){
@@ -454,10 +435,8 @@ herr_t enum_int(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
                 }
     
                 /* Convert in-place */
-                cresult = H5Tconvert(info->int_src_id,
-                                     info->int_dst_id,
-                                     nl, conv_buf, NULL, dset_xfer_plist);
-                if(cresult<0) goto conv_failed;
+                if(H5Tconvert(info->int_src_id, info->int_dst_id,
+                     nl, conv_buf, NULL, dset_xfer_plist) < 0) goto conv_failed;
 
                 /*  Copy back out to source buffer.  Remember these elements
                     are now of size info->dst_size. */
@@ -472,7 +451,6 @@ herr_t enum_int(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
             return 0;
 
             conv_failed:
-
             free(conv_buf);
             return -1;
 
