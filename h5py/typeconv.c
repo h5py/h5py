@@ -159,6 +159,7 @@ herr_t str_to_vlen(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
     PyGILState_STATE gil;
 
     PyObject**   obj;
+    PyObject*    inter_string = NULL;
     char**       str;
     char*        str_tmp;
     Py_ssize_t   len;
@@ -203,11 +204,20 @@ herr_t str_to_vlen(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
             if(*obj == NULL || *obj == Py_None){
                 len = 1;
                 str_tmp = "";
-            } else if(PyString_CheckExact(*obj)) {
-                len = PyString_Size(*obj)+1;
-                str_tmp = PyString_AsString(*obj);
-            } else {
-                goto conv_failed;
+
+            } else { /* If it's not a string, take the result of str(obj) */
+
+                if(PyString_CheckExact(*obj)) {
+                    len = PyString_Size(*obj)+1;
+                    str_tmp = PyString_AsString(*obj);
+                } else {
+                    inter_string = PyObject_Str(*obj);
+                    if(inter_string == NULL) goto conv_failed;
+                    len = PyString_Size(inter_string)+1;
+                    str_tmp = PyString_AsString(inter_string);
+                    Py_DECREF(inter_string);
+                }
+
             }
 
             *str = (char*)malloc(len);  /* len already includes null term */
