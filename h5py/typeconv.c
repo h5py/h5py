@@ -242,6 +242,110 @@ herr_t str_to_vlen(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
 
 }
 
+typedef struct {
+    size_t src_size;
+    size_t dst_size;
+    int vlen_to_fixed;
+} h5py_vlfix_conv_t;
+
+/* Convert back & forth between fixed and vlen strings.  When converting from
+    vlen to fixed, if the string is shorted, the space will be padded with
+    nulls; when longer, it will simply be truncated with no null termination.
+ */
+herr_t vlen_fixed(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
+                    size_t nl, size_t buf_stride, size_t bkg_stride, void *buf,
+                    void *bkg, hid_t dset_xfer_plist){
+
+    htri_t svlen, dvlen;
+    h5py_vlfix_conv_t *info = NULL;
+    void* buf_ptr;
+    char* str_tmp;
+    size_t str_tmp_len;
+
+    int i, start, stop, incr;
+
+    switch(cdata->command){
+
+    case H5T_CONV_INIT:
+
+        if((svlen = H5Tis_variable_str(src_id)) < 0) goto init_failed;
+        if((dvlen = H5Tis_variable_str(dst_id)) < 0) goto init_failed;
+
+        /* Exactly one must be variable-length */
+        if((svlen && dvlen) || !(svlen || dvlen)) goto init_failed;
+
+        if((cdata->priv = info = malloc(sizeof(h5py_vlfix_conv_t))) == NULL) goto init_failed;
+
+        if((info->src_size = H5Tget_size(src_id)) < 0) goto init_failed;
+        if((info->dst_size = H5Tget_size(dst_id)) < 0) goto init_failed;
+
+        info->vlen_to_fixed = svlen;
+
+        return 0;
+
+        init_failed:
+
+        free(info);
+        return -1;
+
+    case H5T_CONV_CONV:
+
+        info = (h5py_vlfix_conv_t*)(cdata->priv);
+
+        if(buf_stride==0) buf_stride = info->src_size;
+
+        if(info->src_size >= info->dst_size){
+            start = 0;
+            stop = nl;
+            incr = 1;
+        } else {
+            start = nl-1;
+            stop = -1;
+            incr = -1;
+        }
+
+        if(info->vlen_to_fixed){
+
+            for(i=start; i!=stop; i+=incr){
+                buf_ptr = buf + (i*buf_stride);
+                str_tmp = *((char**)buf_ptr);
+                str_tmp_len = strlen(str_tmp);
+                if(str_tmp_len <= info->dst_size){
+                    memcpy(buf_ptr, str_tmp, str_tmp_len);
+                    memset(buf_ptr + str_tmp_len, info->dst_size - str_tmp_len, '\0');
+                } else {
+                    memcpy(buf_ptr, str_tmp, info->dst_size);
+                }
+                free(str_tmp);
+            }
+
+        } else {
+
+            for(i=start; i!=stop; i+=incr){
+                buf_ptr = buf + (i*buf_stride);
+                if((str_tmp = (char*)malloc(info->src_size + 1))==NULL) goto conv_failed;
+                memcpy(str_tmp, buf_ptr, info->src_size);
+                str_tmp[info->src_size] = '\0';
+                *((char**)buf_ptr) = str_tmp;
+            }
+            
+        }
+
+        return 0;
+
+        conv_failed:
+        return -1;
+
+    case H5T_CONV_FREE:
+
+        return 0;
+
+    default:
+
+        return -1;
+    }
+}
+
 /* Convert back & forth between enums and ints */
 
 typedef struct {
@@ -401,6 +505,9 @@ int h5py_register_conv(void){
 
     H5Tregister(H5T_PERS_SOFT, "enum to int", h5py_enum, H5T_NATIVE_INT, enum_int);
     H5Tregister(H5T_PERS_SOFT, "int to enum", H5T_NATIVE_INT, h5py_enum, enum_int);
+
+    H5Tregister(H5T_PERS_SOFT, "fix to vlen", H5T_C_S1, vlen_str, vlen_fixed);
+    H5Tregister(H5T_PERS_SOFT, "vlen to fix", vlen_str, H5T_C_S1, vlen_fixed);
 
     H5Tclose(vlen_str);
 
