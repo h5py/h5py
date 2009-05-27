@@ -747,9 +747,6 @@ class Dataset(HLObject):
                 else:
                     dtype = numpy.dtype(dtype)
 
-                if dtype.subdtype is not None:
-                    raise TypeError("ARRAY types are only supported as members of a compound type")
-
                 # Legacy
                 if any((compression, shuffle, fletcher32, maxshape)):
                     if chunks is False:
@@ -894,10 +891,14 @@ class Dataset(HLObject):
             # Create the output array using information from the selection.
             arr = numpy.ndarray(selection.mshape, new_dtype, order='C')
 
+            # This is necessary because in the case of array types, NumPy
+            # discards the array information at the top level.
+            mtype = h5t.py_create(new_dtype)
+
             # Perfom the actual read
             mspace = h5s.create_simple(selection.mshape)
             fspace = selection._id
-            self.id.read(mspace, fspace, arr)
+            self.id.read(mspace, fspace, arr, mtype)
 
             # Patch up the output for NumPy
             if len(names) == 1:
@@ -926,25 +927,37 @@ class Dataset(HLObject):
             if len(names) != 0:
                 raise TypeError("Field name selections are not allowed for write.")
 
-            # 3. Validate the input array
+            # Validate the input array
             val = numpy.asarray(val, order='C')
 
-            # 4. Perform the dataspace selection
+            # Check for array dtype compatibility and convert
+            if self.dtype.subdtype is not None:
+                shp = self.dtype.subdtype[1]
+                if val.shape[-len(shp):] != shp:
+                    raise TypeError("Can't broadcast to array dimension %s" % (shp,))
+                mtype = h5t.py_create(numpy.dtype((val.dtype, shp)))
+                mshape = val.shape[0:len(val.shape)-len(shp)]
+            else:
+                mshape = val.shape
+                mtype = None
+
+            # Perform the dataspace selection
             selection = sel.select(self.shape, args)
 
             if selection.nselect == 0:
                 return
 
-            # 5. Broadcast scalars if necessary
-            if val.shape == () and selection.mshape != ():
+            # Broadcast scalars if necessary
+            # TODO: fix scalar broadcasting for array types
+            if mshape == () and selection.mshape != () and self.dtype.subdtype is None:
                 val2 = numpy.empty(selection.mshape[-1], dtype=val.dtype)
                 val2[...] = val
                 val = val2
             
-            # 6. Perform the write, with broadcasting
-            mspace = h5s.create_simple(val.shape, (h5s.UNLIMITED,)*len(val.shape))
-            for fspace in selection.broadcast(val.shape):
-                self.id.write(mspace, fspace, val)
+            # Perform the write, with broadcasting
+            mspace = h5s.create_simple(mshape, (h5s.UNLIMITED,)*len(mshape))
+            for fspace in selection.broadcast(mshape):
+                self.id.write(mspace, fspace, val, mtype)
 
     def read_direct(self, dest, source_sel=None, dest_sel=None):
         """ Read data directly from HDF5 into an existing NumPy array.
