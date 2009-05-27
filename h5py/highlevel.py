@@ -1049,33 +1049,14 @@ class AttributeManager(LockableObject, _DictCompat):
             return arr
 
     def __setitem__(self, name, value):
-        """ Set a new attribute, or change the value of an existing one.
+        """ Set a new attribute, overwriting any existing attribute.
 
-        The value you provide must be compatible with the type of any existing
-        attribute.  If no attribute with the given name exists, one will be
-        automatically created based on the type and shape of the given data.
-
-        To unconditionally overwrite an existing attribute, use the method
-        "create".
+        The type and shape of the attribute are determined from the data.  To
+        use a specific type or shape, or to preserve the type of an attribute,
+        use the methods create() and modify().
         """
         with self._lock:
-            value = numpy.asarray(value, order='C')
-
-            if name in self:
-                attr = h5a.open(self.id, name)
-
-                # Allow the case of () <-> (1,)
-                if (value.shape != attr.shape) and not \
-                   (numpy.product(value.shape)==1 and numpy.product(attr.shape)==1):
-                    raise TypeError("Shape of data is incompatible with existing attribute")
-                attr.write(value)
-            
-            else:
-                space = h5s.create_simple(value.shape)
-                htype = h5t.py_create(value.dtype, logical=True)
-
-                attr = h5a.create(self.id, name, htype, space)
-                attr.write(value)
+            self.create(name, data=value)
 
     def __delitem__(self, name):
         """ Delete an attribute (which must already exist). """
@@ -1092,31 +1073,52 @@ class AttributeManager(LockableObject, _DictCompat):
         dtype:  Data type of the attribute.  Overrides data.dtype if both
                 are given.  Must be conversion-compatible with data.dtype.
         """
-       
-        if data is not None:
-            data = numpy.asarray(data, order='C', dtype=dtype)
-            if shape is None:
-                shape = data.shape
-            elif numpy.product(shape) != numpy.product(data.shape):
-                raise ValueError("Shape of new attribute conflicts with shape of data")
-                
+        with self._lock:
+            if data is not None:
+                data = numpy.asarray(data, order='C', dtype=dtype)
+                if shape is None:
+                    shape = data.shape
+                elif numpy.product(shape) != numpy.product(data.shape):
+                    raise ValueError("Shape of new attribute conflicts with shape of data")
+                    
+                if dtype is None:
+                    dtype = data.dtype
+
             if dtype is None:
-                dtype = data.dtype
+                dtype = numpy.dtype('f')
+            if shape is None:
+                raise ValueError('At least one of "shape" or "data" must be given')
 
-        if dtype is None:
-            dtype = numpy.dtype('f')
-        if shape is None:
-            raise ValueError('At least one of "shape" or "data" must be given')
+            space = h5s.create_simple(shape)
+            htype = h5t.py_create(dtype, logical=True)
 
-        space = h5s.create_simple(shape)
-        htype = h5t.py_create(dtype, logical=True)
+            if name in self:
+                h5a.delete(self.id, name)
 
-        if name in self:
-            h5a.delete(self.id, name)
+            attr = h5a.create(self.id, name, htype, space)
+            if data is not None:
+                attr.write(data)
 
-        attr = h5a.create(self.id, name, htype, space)
-        if data is not None:
-            attr.write(data)
+    def modify(self, name, value):
+        """ Change the value of an attribute while preserving its type.
+
+        Differs from __setitem__ in that the type of an existing attribute
+        is preserved.  Useful for interacting with externally generated files.
+        If the attribute doesn't exist, it will be automatically created.
+        """
+        with self._lock:
+            if not name in self:
+                self[name] = value
+            else:
+                value = numpy.asarray(value, order='C')
+
+                attr = h5a.open(self.id, name)
+
+                # Allow the case of () <-> (1,)
+                if (value.shape != attr.shape) and not \
+                   (numpy.product(value.shape)==1 and numpy.product(attr.shape)==1):
+                    raise TypeError("Shape of data is incompatible with existing attribute")
+                attr.write(value)
 
     def __len__(self):
         """ Number of attributes attached to the object. """
