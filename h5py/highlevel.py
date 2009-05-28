@@ -52,7 +52,7 @@ import sys
 import os.path as op
 import posixpath as pp
 
-from h5py import h5, h5f, h5g, h5s, h5t, h5d, h5a, h5p, h5z, h5i
+from h5py import h5, h5f, h5g, h5s, h5t, h5d, h5a, h5p, h5z, h5i, h5fd
 from h5py.h5 import H5Error
 import h5py.selections as sel
 from h5py.selections import CoordsList
@@ -489,28 +489,20 @@ class File(Group):
 
     """ Represents an HDF5 file on disk.
 
-        File(name, mode='a')
+        File(name, mode='a', driver=None, **driver_kwds)
 
         Legal modes: r, r+, w, w-, a (default)
 
         File objects inherit from Group objects; Group-like methods all
         operate on the HDF5 root group ('/').  Like Python file objects, you
-        must close the file ("obj.close()") when you're done with it.
+        must close the file ("obj.close()") when you're done with it. File
+        objects may also be used as context managers in Python "with" blocks.
 
-        The special method browse() will open a command shell, allowing you
-        to browse the file and import objects into the interactive Python
-        session.  If the readline module is available, this includes things
-        like command history and tab completion.
+        The low-level HDF5 file driver may also be specified.  Legal values
+        for "driver" are 'sec2' (default), 'stdio', 'core', and 'family'.
 
-        This object supports the Python context manager protocol, when used
-        in a "with" block::
-
-            with File(...) as f:
-                ... do stuff with f...
-            # end block
-       
-        The file will be closed at the end of the block, regardless of any
-        exceptions raised. 
+        Consult the h5py (and HDF5) documentation for more information on these
+        drivers, and what keywords they accept.
     """
 
     @property
@@ -523,9 +515,16 @@ class File(Group):
         """Python mode used to open file"""
         return self._mode
 
+    @property
+    def driver(self):
+        """Low-level HDF5 file driver used to open file"""
+        drivers = {h5fd.SEC2: 'sec2', h5fd.STDIO: 'stdio',
+                   h5fd.CORE: 'core', h5fd.FAMILY: 'family'}
+        return drivers.get(self.fid.get_access_plist().get_driver(), 'unknown')
+
     # --- Public interface (File) ---------------------------------------------
 
-    def __init__(self, name, mode='a'):
+    def __init__(self, name, mode='a', driver=None, **driver_kwds):
         """ Create a new file object.  
 
             Valid modes (like Python's file() modes) are: 
@@ -537,6 +536,18 @@ class File(Group):
         """
         plist = h5p.create(h5p.FILE_ACCESS)
         plist.set_fclose_degree(h5f.CLOSE_STRONG)
+        if driver is not None:
+            if(driver=='sec2'):
+                plist.set_fapl_sec2(**driver_kwds)
+            elif(driver=='stdio'):
+                plist.set_fapl_stdio(**driver_kwds)
+            elif(driver=='core'):
+                plist.set_fapl_core(**driver_kwds)
+            elif(driver=='family'):
+                plist.set_fapl_family(memb_fapl=plist.copy(), **driver_kwds)
+            else:
+                raise ValueError('Unknown driver type "%s"' % driver)
+
         if mode == 'r':
             self.fid = h5f.open(name, h5f.ACC_RDONLY, fapl=plist)
         elif mode == 'r+':

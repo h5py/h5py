@@ -47,7 +47,7 @@ cdef class PropFAID(PropInstanceID):
         return deg
 
     @sync
-    def set_fapl_core(self, size_t increment=1024*1024, hbool_t backing_store=0):
+    def set_fapl_core(self, size_t block_size=1024*1024, hbool_t backing_store=0):
         """(UINT increment=1M, BOOL backing_store=False)
 
         Use the h5fd.CORE (memory-resident) file driver.
@@ -59,7 +59,7 @@ cdef class PropFAID(PropInstanceID):
             If True, write the memory contents to disk when
             the file is closed.
         """
-        H5Pset_fapl_core(self.id, increment, backing_store)
+        H5Pset_fapl_core(self.id, block_size, backing_store)
 
     @sync
     def get_fapl_core(self):
@@ -78,8 +78,8 @@ cdef class PropFAID(PropInstanceID):
         return (increment, <bint>(backing_store))
 
     @sync
-    def set_fapl_family(self, hsize_t memb_size, PropID memb_fapl=None):
-        """(UINT memb_size, PropFAID memb_fapl=None)
+    def set_fapl_family(self, hsize_t memb_size=2147483647, PropID memb_fapl=None):
+        """(UINT memb_size=2**31-1, PropFAID memb_fapl=None)
 
         Set up the family driver.
 
