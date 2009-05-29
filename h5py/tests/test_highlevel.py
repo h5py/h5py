@@ -549,12 +549,12 @@ class TestGroup(HDF5TestCase):
         self.assert_(dset == dset2)
         self.assert_(hash(dset) == hash(dset2))
 
-        self.assertRaises(H5Error, self.f.require_group, 'bar')
-        self.assertRaises(H5Error, self.f.require_dataset, 'foo', (10,10), '<i4')
+        self.assertRaises(TypeError, self.f.require_group, 'bar')
+        self.assertRaises(TypeError, self.f.require_dataset, 'foo', (10,10), '<i4')
 
-        self.assertRaises(H5Error, self.f.require_dataset, 'bar', (10,11), '<i4')
-        self.assertRaises(H5Error, self.f.require_dataset, 'bar', (10,10), '<c8')
-        self.assertRaises(H5Error, self.f.require_dataset, 'bar', (10,10), '<i1', exact=True)
+        self.assertRaises(TypeError, self.f.require_dataset, 'bar', (10,11), '<i4')
+        self.assertRaises(TypeError, self.f.require_dataset, 'bar', (10,10), '<c8')
+        self.assertRaises(TypeError, self.f.require_dataset, 'bar', (10,10), '<i1', exact=True)
 
         self.f.require_dataset('bar', (10,10), '<i1')
 

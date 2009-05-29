@@ -13,33 +13,14 @@
 """
     Provides high-level Python objects for HDF5 files, groups, and datasets.  
 
-    Groups provide dictionary-like access to and iteration over their members.
-    File objects implicitly perform these operations on the root ('/') group.
+    Objects in this module are designed to provide a friendly, Python-style
+    interface to native HDF5 concepts like files, datasets, groups and
+    attributes.  The module is written in pure Python and uses the standard
+    h5py low-level interface exclusively.
 
-    Datasets support Numpy-style slicing and partial I/0, including
-    recarray-style access to named fields.  A minimal Numpy interface is
-    included, with shape and dtype properties.
-
-    A strong emphasis has been placed on reasonable automatic conversion from
-    Python types to their HDF5 equivalents.  Setting and retrieving HDF5 data
-    is almost always handled by a simple assignment.  For example, you can
-    create an initialize an HDF5 dataset simply by assigning a Numpy array
-    to a group:
-
-        group["name"] = numpy.ones((10,50), dtype='<i2')
-
-    To make it easier to get data in and out of Python, a simple command-line
-    shell comes attached to all File objects via the method File.browse().
-    You can explore an HDF5 file, and import datasets, groups, and named
-    types into your main interactive Python session.
-
-    Although it's not required to use this high-level interface, the full power
-    of the h5py low-level library wrapping is available for these objects.
-    Each highlevel object carries an identifier object (obj.id), which can be
-    used by h5py.h5* functions or methods.
-
-    It is safe to import this module using "from h5py.highlevel import *"; it
-    will export only the major classes.
+    Most components defined here are re-exported into the root h5py package
+    namespace, because they are the most straightforward and intuitive
+    way to interact with HDF5.
 """
 
 from __future__ import with_statement
@@ -72,6 +53,7 @@ def _hbasename(name):
     return name if name != '' else '/'
 
 def is_hdf5(fname):
+    """ Determine if a file is valid HDF5 (False if it doesn't exist). """
     fname = os.path.abspath(fname)
     if os.path.isfile(fname):
         try:
@@ -82,7 +64,7 @@ def is_hdf5(fname):
 
 # === Base classes ============================================================
 
-class LockableObject(object):
+class _LockableObject(object):
 
     """
         Base class which provides rudimentary locking support.
@@ -91,7 +73,7 @@ class LockableObject(object):
     _lock = threading.RLock()
 
 
-class HLObject(LockableObject):
+class HLObject(_LockableObject):
 
     """
         Base class for high-level interface objects.
@@ -99,8 +81,8 @@ class HLObject(LockableObject):
         All objects of this class support the following properties:
 
         id:     Low-level identifer, compatible with the h5py.h5* modules.
-        name:   (Some) name of this object in the HDF5 file.
-        attrs:  HDF5 attributes of this object.  See the AttributeManager docs.
+        name:   Name of this object in the HDF5 file.  May not be unique.
+        attrs:  HDF5 attributes of this object.  See AttributeManager class.
 
         Equality comparison and hashing are based on native HDF5 object
         identity.
@@ -193,23 +175,15 @@ class Group(HLObject, _DictCompat):
 
     """ Represents an HDF5 group.
 
-        Group(parent, name, create=False)
+        It's recommended to use the Group/File method create_group to create
+        these objects, rather than trying to create them yourself.
 
-        Group members can be accessed dictionary-style (Group["name"]).  HDF5
-        objects can be automatically created in the group by assigning Numpy
-        arrays, dtypes, or other Group, Dataset or Datatype objects with this
-        syntax.  See the __setitem__ docstring for a complete list.
+        Groups implement a basic dictionary-style interface, supporting
+        __getitem__, __setitem__, __len__, __contains__, keys(), values()
+        and others.
 
-        The len() of a group is the number of members, and iterating over a
-        group yields the names of its members, in arbitary library-defined
-        order.  They also support the __contains__ syntax ("if name in group").
-
-        Subgroups and datasets can be created via the convenience functions
-        create_group and create_dataset, as well as by calling the appropriate
-        class constructor.
-
-        Group attributes are accessed via group.attrs; see the docstring for
-        the AttributeManager class.
+        They also contain the necessary methods for creating new groups and
+        datasets.  Group attributes can be accessed via <group>.attrs.
     """
 
     def __init__(self, parent_object, name, create=False):
@@ -218,6 +192,9 @@ class Group(HLObject, _DictCompat):
         If "create" is False (default), try to open the given group,
         raising an exception if it doesn't exist.  If "create" is True,
         create a new HDF5 group and link it into the parent group.
+
+        It's recommended to use __getitem__ or create_group() rather than
+        calling the constructor directly.
         """
         with parent_object._lock:
             if create:
@@ -228,8 +205,9 @@ class Group(HLObject, _DictCompat):
             self._attrs = AttributeManager(self)
     
     def __setitem__(self, name, obj):
-        """ Add the given object to the group.  The action taken depends on
-            the type of object assigned:
+        """ Add an object to the group.  The name must not already be in use.
+
+        The action taken depends on the type of object assigned:
 
         1. Named HDF5 object (Dataset, Group, Datatype):
             A hard link is created in this group which points to the
@@ -246,13 +224,6 @@ class Group(HLObject, _DictCompat):
             Attempt to convert it to an ndarray and store it.  Scalar
             values are stored as scalar datasets. Raise ValueError if we
             can't understand the resulting array dtype.
-        
-        If a group member of the same name already exists, the assignment
-        will fail.  You can check by using the Python __contains__ syntax:
-
-            if "name" in grp:
-                del grp["name"]
-            grp["name"] = <whatever>
         """
         with self._lock:
             if isinstance(obj, Group) or isinstance(obj, Dataset) or isinstance(obj, Datatype):
@@ -286,6 +257,7 @@ class Group(HLObject, _DictCompat):
         """ Delete (unlink) an item from this group. """
         self.id.unlink(name)
 
+    # TODO: this fails with > 2**32 entries
     def __len__(self):
         """ Number of members attached to this group """
         return self.id.get_num_objs()
@@ -299,48 +271,54 @@ class Group(HLObject, _DictCompat):
         return self.id.__iter__()
 
     def create_group(self, name):
-        """ Create and return a subgroup.
-
-        Fails if the group already exists.
+        """ Create and return a subgroup. Fails if the group already exists.
         """
         return Group(self, name, create=True)
 
     def require_group(self, name):
-        """ Check if a group exists, and create it if not.
-
-        Raises H5Error if an incompatible object exists.
+        """ Check if a group exists, and create it if not.  TypeError if an
+        incompatible object exists.
         """
         if not name in self:
             return self.create_group(name)
         else:
             grp = self[name]
             if not isinstance(grp, Group):
-                raise H5Error("Incompatible object (%s) already exists" % grp.__class__.__name__)
+                raise TypeError("Incompatible object (%s) already exists" % grp.__class__.__name__)
             return grp
 
     def create_dataset(self, name, *args, **kwds):
-        """ Create and return a new dataset, attached to this group.
+        """ Create and return a new dataset.  Fails if "name" already exists.
 
         create_dataset(name, shape, [dtype=<Numpy dtype>], **kwds)
         create_dataset(name, data=<Numpy array>, **kwds)
 
-        If "dtype" is not specified, the default is single-precision
-        floating point, with native byte order ("=f4").
+        The default dtype is '=f4' (single-precision float).
 
-        Creating a dataset will fail if another of the same name already 
-        exists. Additional keywords are:
+        Additional keywords ("*" is default):
 
-        chunks:        Tuple of chunk dimensions or None*
-        compression:   DEFLATE (gzip) compression level, int or None*
-        shuffle:       Use the shuffle filter? (requires compression) T/F*
-        fletcher32:    Enable Fletcher32 error detection? T/F*
-        maxshape:      Tuple giving dataset maximum dimensions or None*.
-                       You can grow each axis up to this limit using
-                       resize().  For each unlimited axis, provide None.
+        chunks
+            Tuple of chunk dimensions or None*
 
-        All these options require chunking.  If a chunk tuple is not
-        provided, the constructor will guess an appropriate chunk shape.
-        Please note none of these are allowed for scalar datasets.
+        maxshape
+            None* or a tuple giving maximum dataset size.  An element of None
+            indicates an unlimited dimension.  Dataset can be expanded by
+            calling resize()
+
+        compression
+            Compression strategy; None*, 'gzip', 'szip' or 'lzf'.  An integer
+            is interpreted as a gzip level.
+
+        compression_opts
+            Optional compression settings; for gzip, this may be an int.  For
+            szip, it should be a 2-tuple ('ec'|'nn', int(0-32)).   
+
+        shuffle
+            Use the shuffle filter (increases compression performance for
+            gzip and LZF).  True/False*.
+
+        fletcher32
+            Enable error-detection.  True/False*.
         """
         return Dataset(self, name, *args, **kwds)
 
@@ -348,7 +326,7 @@ class Group(HLObject, _DictCompat):
         """Open a dataset, or create it if it doesn't exist.
 
         Checks if a dataset with compatible shape and dtype exists, and
-        creates one if it doesn't.  Raises H5Error if an incompatible
+        creates one if it doesn't.  Raises TypeError if an incompatible
         dataset (or group) already exists.  
 
         By default, datatypes are compared for loss-of-precision only.
@@ -367,24 +345,23 @@ class Group(HLObject, _DictCompat):
 
             dset = self[name]
             if not isinstance(dset, Dataset):
-                raise H5Error("Incompatible object (%s) already exists" % dset.__class__.__name__)
+                raise TypeError("Incompatible object (%s) already exists" % dset.__class__.__name__)
 
             if not shape == dset.shape:
-                raise H5Error("Shapes do not match (existing %s vs new %s)" % (dset.shape, shape))
+                raise TypeError("Shapes do not match (existing %s vs new %s)" % (dset.shape, shape))
 
             if exact:
                 if not dtype == dset.dtype:
-                    raise H5Error("Datatypes do not exactly match (existing %s vs new %s)" % (dset.dtype, dtype))
+                    raise TypeError("Datatypes do not exactly match (existing %s vs new %s)" % (dset.dtype, dtype))
             elif not numpy.can_cast(dtype, dset.dtype):
-                raise H5Error("Datatypes cannot be safely cast (existing %s vs new %s)" % (dset.dtype, dtype))
+                raise TypeError("Datatypes cannot be safely cast (existing %s vs new %s)" % (dset.dtype, dtype))
             
             return dset
-
 
     # New 1.8.X methods
 
     def copy(self, source, dest, name=None):
-        """ Copy an object or group.
+        """ Copy an object or group (Requires HDF5 1.8).
 
         The source can be a path, Group, Dataset, or Datatype object.  The
         destination can be either a path or a Group object.  The source and
@@ -432,7 +409,7 @@ class Group(HLObject, _DictCompat):
             h5o.copy(source.id, source_path, dest.id, dest_path)
 
     def visit(self, func):
-        """ Recursively visit all names in this group and subgroups.
+        """ Recursively visit all names in this group and subgroups (HDF5 1.8).
 
         You supply a callable (function, method or callable object); it
         will be called exactly once for each link in this group and every
@@ -450,8 +427,6 @@ class Group(HLObject, _DictCompat):
         >>> f = File("foo.hdf5")
         >>> list_of_names = []
         >>> f.visit(list_of_names.append)
-
-        Only available with HDF5 1.8.X.
         """
         if not config.API_18:
             raise NotImplementedError("This feature is only available with HDF5 1.8.0 and later")
@@ -460,7 +435,7 @@ class Group(HLObject, _DictCompat):
             return h5o.visit(self.id, func)
 
     def visititems(self, func):
-        """ Recursively visit names and objects in this group and subgroups.
+        """ Recursively visit names and objects in this group (HDF5 1.8).
 
         You supply a callable (function, method or callable object); it
         will be called exactly once for each link in this group and every
@@ -482,8 +457,6 @@ class Group(HLObject, _DictCompat):
         ...
         >>> f = File('foo.hdf5')
         >>> f.visititems(func)
-
-        Only available with HDF5 1.8.X.
         """
         if not config.API_18:
             raise NotImplementedError("This feature is only available with HDF5 1.8.0 and later")
@@ -505,7 +478,7 @@ class File(Group):
 
     """ Represents an HDF5 file on disk.
 
-        File(name, mode='a', driver=None, **driver_kwds)
+        File(name, mode=None, driver=None, **driver_kwds)
 
         Legal modes: r, r+, w, w-, a (default)
 
@@ -514,11 +487,32 @@ class File(Group):
         must close the file ("obj.close()") when you're done with it. File
         objects may also be used as context managers in Python "with" blocks.
 
-        The low-level HDF5 file driver may also be specified.  Legal values
-        for "driver" are 'sec2' (default), 'stdio', 'core', and 'family'.
+        The HDF5 file driver may also be specified:
 
-        Consult the h5py (and HDF5) documentation for more information on these
-        drivers, and what keywords they accept.
+        'sec2' (default)
+            Unbuffered, optimized I/O using standard POSIX functions.
+
+        'stdio' 
+            Buffered I/O using functions from stdio.h.
+
+        'core'
+            Memory-map the entire file; all operations are performed in
+            memory and written back out when the file is closed.  Keywords:
+
+            backing_store:  If True (default), save changes to a real file
+                            when closing.  If False, the file exists purely
+                            in memory and is discarded when closed.
+
+            block_size:     Increment (in bytes) by which memory is extended.
+                            Default is 1 megabyte (1024**2).
+
+        'family'
+            Store the file on disk as a series of fixed-length chunks.  Useful
+            if the file system doesn't allow large files.  Note: the filename
+            you provide *must* contain the string "%d", which will be replaced
+            by the file sequence number.  Keywords:
+
+            memb_size:  Maximum file size (default is 2**31-1).
     """
 
     @property
@@ -540,15 +534,15 @@ class File(Group):
 
     # --- Public interface (File) ---------------------------------------------
 
-    def __init__(self, name, mode='a', driver=None, **driver_kwds):
+    def __init__(self, name, mode=None, driver=None, **driver_kwds):
         """ Create a new file object.  
 
-            Valid modes (like Python's file() modes) are: 
-            - r   Readonly, file must exist
-            - r+  Read/write, file must exist
-            - w   Create file, truncate if exists
-            - w-  Create file, fail if exists
-            - a   Read/write if exists, create otherwise (default)
+        Valid modes (like Python's file() modes) are: 
+        - r   Readonly, file must exist
+        - r+  Read/write, file must exist
+        - w   Create file, truncate if exists
+        - w-  Create file, fail if exists
+        - a   Read/write if exists, create otherwise (default)
         """
         plist = h5p.create(h5p.FILE_ACCESS)
         plist.set_fclose_degree(h5f.CLOSE_STRONG)
@@ -572,7 +566,7 @@ class File(Group):
             self.fid = h5f.create(name, h5f.ACC_EXCL, fapl=plist)
         elif mode == 'w':
             self.fid = h5f.create(name, h5f.ACC_TRUNC, fapl=plist)
-        elif mode == 'a':
+        elif mode == 'a' or mode is None:
             if not os.path.exists(name):
                 self.fid = h5f.create(name, h5f.ACC_EXCL, fapl=plist)
             else:
@@ -632,18 +626,14 @@ class Dataset(HLObject):
 
     """ High-level interface to an HDF5 dataset.
 
-        Dataset(group, name, shape=None, dtype=None, data=None, **kwds)
+        Datasets can be opened via the syntax Group[<dataset name>], and
+        created with the method Group.create_dataset().
 
-        Datasets behave superficially like Numpy arrays.  The full Numpy
-        slicing syntax, including recarray indexing of named fields (even
-        more than one), is supported.  The object returned is always a
-        Numpy ndarray.
+        Datasets behave superficially like Numpy arrays.  NumPy "simple"
+        slicing is fully supported, along with a subset of fancy indexing
+        and indexing by field names (dataset[0:10, "fieldname"]).
 
-        Among others, the following properties are provided:
-          shape:    Numpy-style shape tuple of dimsensions
-          dtype:    Numpy dtype representing the datatype
-          value:    Copy of the full dataset, as either a Numpy array or a
-                     Numpy/Python scalar, depending on the shape.
+        The standard NumPy properties "shape" and "dtype" are also available.
     """
 
     def _g_shape(self):
@@ -662,7 +652,7 @@ class Dataset(HLObject):
 
     @property
     def value(self):
-        """The entire dataset, as an array or scalar depending on the shape"""
+        """  Deprecated alias for dataset[...] and dataset[()] """
         with self._lock:
             arr = self[...]
             #if arr.shape == ():
@@ -814,18 +804,18 @@ class Dataset(HLObject):
                 self._chunks = None
 
     def resize(self, size, axis=None):
-        """ Resize the dataset, or the specified axis.
+        """ Resize the dataset, or the specified axis (HDF5 1.8 only).
 
-        The dataset must be stored in chunked format.
+        The dataset must be stored in chunked format; it can be resized up to
+        the "maximum shape" (keyword maxshape) specified at creation time.
+        The rank of the dataset cannot be changed.
 
-        Argument should be either a new shape tuple, or an integer.  The rank
-        of the dataset cannot be changed.  Keep in mind the dataset can only
-        be resized up to the maximum dimensions provided when it was created.
+        "Size" should be a shape tuple, or if an axis is specified, an integer.
 
-        Beware; if the array has more than one dimension, the indices of
-        existing data can change.
-
-        Only available with HDF5 1.8.
+        BEWARE: This functions differently than the NumPy resize() method!
+        The data is not "reshuffled" to fit in the new shape; each axis is
+        grown or shrunk independently.  The coordinates of existing data is
+        fixed.
         """
         with self._lock:
 
@@ -851,6 +841,8 @@ class Dataset(HLObject):
             
     def __len__(self):
         """ The size of the first axis.  TypeError if scalar.
+
+        Limited to 2**32 on 32-bit systems; Dataset.len() is preferred.
         """
         size = self.len()
         if size > sys.maxint:
@@ -860,8 +852,8 @@ class Dataset(HLObject):
     def len(self):
         """ The size of the first axis.  TypeError if scalar. 
 
-            Use of this method is preferred to len(dset), as Python's built-in
-            len() cannot handle values greater then 2**32 on 32-bit systems.
+        Use of this method is preferred to len(dset), as Python's built-in
+        len() cannot handle values greater then 2**32 on 32-bit systems.
         """
         shape = self.shape
         if len(shape) == 0:
@@ -869,8 +861,9 @@ class Dataset(HLObject):
         return shape[0]
 
     def __iter__(self):
-        """ Iterate over the first axis.  TypeError if scalar.  Modifications
-            to the yielded data are *NOT* recorded.
+        """ Iterate over the first axis.  TypeError if scalar.
+
+        BEWARE: Modifications to the yielded data are *NOT* written to file.
         """
         shape = self.shape
         if len(shape) == 0:
@@ -941,7 +934,7 @@ class Dataset(HLObject):
         (slices and integers).  For advanced indexing, the shapes must
         match.
 
-        Classes from the "selections" module may also be used to index.s
+        Classes from the "selections" module may also be used to index.
         """
         with self._lock:
 
@@ -1042,41 +1035,33 @@ class Dataset(HLObject):
             except Exception:
                 return "<Closed HDF5 dataset>"
 
-class AttributeManager(LockableObject, _DictCompat):
+class AttributeManager(_LockableObject, _DictCompat):
 
     """ Allows dictionary-style access to an HDF5 object's attributes.
 
-        These come attached to HDF5 objects as <obj>.attrs.  There's no need to
-        create one yourself.
+        These are created exclusively by the library and are available as
+        a Python attribute at <object>.attrs
 
-        Like the members of groups, attributes are accessed using dict-style
-        syntax.  Anything which can be reasonably converted to a Numpy array or
-        Numpy scalar can be stored.
+        Like the members of groups, attributes provide a minimal dictionary-
+        style interface.  Anything which can be reasonably converted to a
+        Numpy array or Numpy scalar can be stored.
 
-        Since attributes are typically used for small scalar values, acessing
-        a scalar attribute returns a Numpy/Python scalar, not an 0-dimensional
-        array.  Non-scalar data is always returned as an ndarray.
+        Attributes are automatically created on assignment with the
+        syntax <obj>.attrs[name] = value, with the HDF5 type automatically
+        deduced from the value.  Existing attributes are overwritten.
 
-        The len() of this object is the number of attributes; iterating over
-        it yields the attribute names.  They also support the __contains__
-        syntax ("if name in obj.attrs...").
-
-        Unlike groups, writing to an attribute will overwrite an existing
-        attribute of the same name.  This is not a transacted operation; you
-        can lose data if you try to assign an object which h5py doesn't
-        understand.
+        To modify an existing attribute while preserving its type, use the
+        method modify().  To specify an attribute of a particular type and
+        shape (or to create an empty attribute), use create().
     """
 
     def __init__(self, parent):
-        """ Private constructor; you should not create these.
+        """ Private constructor.
         """
         self.id = parent.id
 
     def __getitem__(self, name):
         """ Read the value of an attribute.
-    
-        If the attribute is scalar, it will be returned as a Numpy
-        scalar.  Otherwise, it will be returned as a Numpy ndarray.
         """
         with self._lock:
             attr = h5a.open(self.id, name)
@@ -1094,6 +1079,8 @@ class AttributeManager(LockableObject, _DictCompat):
         The type and shape of the attribute are determined from the data.  To
         use a specific type or shape, or to preserve the type of an attribute,
         use the methods create() and modify().
+
+        Broadcasting isn't supported for attributes.
         """
         with self._lock:
             self.create(name, data=value)
@@ -1144,6 +1131,7 @@ class AttributeManager(LockableObject, _DictCompat):
 
         Differs from __setitem__ in that the type of an existing attribute
         is preserved.  Useful for interacting with externally generated files.
+
         If the attribute doesn't exist, it will be automatically created.
         """
         with self._lock:
@@ -1192,18 +1180,13 @@ class AttributeManager(LockableObject, _DictCompat):
 class Datatype(HLObject):
 
     """
-        Represents an HDF5 named datatype.
+        Represents an HDF5 named datatype stored in a file.
 
-        These intentionally only represent named types, and exist mainly so
-        that you can access their attributes.  The property Datatype.dtype
-        provides a Numpy dtype equivalent.
+        To store a datatype, simply assign it to a name in a group:
 
-        They're produced only by indexing into a Group object; you can't create
-        one manually.  To create a named datatype in a file:
-
-            group["name"] = <Numpy dtype object> | <Datatype object>*
-
-            * will create hard link to an existing type
+        >>> MyGroup["name"] = numpy.dtype("f")
+        >>> named_type = MyGroup["name"]
+        >>> assert named_type.dtype == numpy.dtype("f")
     """
 
     @property
@@ -1212,7 +1195,7 @@ class Datatype(HLObject):
         return self.id.dtype
 
     def __init__(self, grp, name):
-        """ Private constructor; you should not create these.
+        """ Private constructor.
         """
         with grp._lock:
             self.id = h5t.open(grp.id, name)

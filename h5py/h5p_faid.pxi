@@ -47,8 +47,8 @@ cdef class PropFAID(PropInstanceID):
         return deg
 
     @sync
-    def set_fapl_core(self, size_t block_size=1024*1024, hbool_t backing_store=0):
-        """(UINT increment=1M, BOOL backing_store=False)
+    def set_fapl_core(self, size_t block_size=1024*1024, hbool_t backing_store=1):
+        """(UINT increment=1M, BOOL backing_store=True)
 
         Use the h5fd.CORE (memory-resident) file driver.
 
@@ -56,8 +56,9 @@ cdef class PropFAID(PropInstanceID):
             Chunk size for new memory requests (default 1 meg)
 
         backing_store
-            If True, write the memory contents to disk when
-            the file is closed.
+            If True (default), memory contents are associated with an
+            on-disk file, which is updated when the file is closed.
+            Set to False for a purely in-memory file.
         """
         H5Pset_fapl_core(self.id, block_size, backing_store)
 
