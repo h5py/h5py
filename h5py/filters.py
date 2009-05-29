@@ -123,7 +123,7 @@ def generate_dcpl(shape, dtype, chunks, compression, compression_opts,
                 raise TypeError(err)
             if szmethod not in ('ec', 'nn'):
                 raise ValueError(err)
-            if not (0<szpix<32 and szpix%2 == 0):
+            if not (0<szpix<=32 and szpix%2 == 0):
                 raise ValueError(err)
 
     # End argument validation
