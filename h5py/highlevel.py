@@ -132,29 +132,29 @@ class _DictCompat(object):
         Contains dictionary-style compatibility methods for groups and
         attributes.
     """
-
-    def listnames(self):
+    
+    def keys(self):
         """ Get a list containing member names """
         with self._lock:
             return list(self)
 
-    def iternames(self):
+    def iterkeys(self):
         """ Get an iterator over member names """
         with self._lock:
             return iter(self)
 
-    def listobjects(self):
-        """ Get a list containing members """
+    def values(self):
+        """ Get a list containing member objects """
         with self._lock:
             return [self[x] for x in self]
 
-    def iterobjects(self):
-        """ Get an iterator over members """
+    def itervalues(self):
+        """ Get an iterator over member objects """
         with self._lock:
             for x in self:
                 yield self[x]
 
-    def listitems(self):
+    def items(self):
         """ Get a list of tuples containing (name, object) pairs """
         with self._lock:
             return [(x, self[x]) for x in self]
@@ -172,6 +172,22 @@ class _DictCompat(object):
                 return self[name]
             return default
 
+    # Compatibility methods
+    def listnames(self):
+        """ Deprecated alias for keys() """
+        return self.keys()
+    def iternames(self):
+        """ Deprecated alias for iterkeys() """
+        return self.iterkeys()
+    def listobjects(self):
+        """ Deprecated alias for values() """
+        return self.values()
+    def iterobjects(self):
+        """ Deprecated alias for itervalues() """
+        return self.itervalues()
+    def listitems(self):
+        """ Deprecated alias for items() """
+        return self.items()
 
 class Group(HLObject, _DictCompat):
 
