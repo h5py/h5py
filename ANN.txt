@@ -1,6 +1,6 @@
-=====================================
-Announcing HDF5 for Python (h5py) 1.1
-=====================================
+============================================
+Announcing HDF5 for Python (h5py) 1.2 *BETA*
+============================================
 
 What is h5py?
 -------------
@@ -21,23 +21,33 @@ In addition to providing interoperability with existing HDF5 datasets
 and platforms, h5py is a convienient way to store and retrieve
 arbitrary NumPy data and metadata.
 
+Version 1.2 is a significant update to h5py, introducing several new features.
 
-New features in 1.1
--------------------
 
-  - A new compression filter based on the LZF library, which provides
-    transparent compression many times faster than the standard HDF5
-    GZIP filter.
+What's new in 1.2
+-----------------
 
-  - Efficient broadcasting using HDF5 hyperslab selections; for example,
-    you can write to a (2000 x 100 x 50) selection from a (100 x 50)
-    source array.
+  - Variable-length strings are now supported!  They are mapped to native
+    Python strings via the NumPy "object" type.  VL strings may be read, 
+    written and created from h5py, and are allowed in all HDF5 contexts,
+    even as members of compound or array types.
 
-  - Now supports the NumPy boolean type
+  - Enumerated types are now fully supported; they can be used in NumPy
+    anywhere integer types are allowed, and are stored as native HDF5
+    enums.  Conversion between integers and enums is supported.
 
-  - Auto-completion for IPython 0.9.X (contributed by Darren Dale)
+  - The NumPy "array" dtype is now allowed as a top-level type when
+    creating a dataset, not just as a member of a compound type.
 
-  - Installable via easy_install
+  - Many different low-level HDF5 drivers can be now be used when creating
+    a file, which allows purely in-memory ("core") files, multi-volume
+    ("family") files, and files which use low-level buffered I/O.
+
+  - HDF5 exceptions now inherit from common Python built-ins like TypeError
+    and ValueError (in addition to current HDF5 error hierarchy), freeing
+    the user from knowledge of the HDF5 error system.
+
+  - More Pythonic dictionary-style naming system for groups and attributes
 
 
 Standard features
@@ -51,7 +61,8 @@ Standard features
     * Compound ("recarray")
     * Strings
     * Boolean
-    * Array (as members of a compound type only)
+    * Array
+    * Enumeration (integer)
     * Void
 
   - Random access to datasets using the standard NumPy slicing syntax,
