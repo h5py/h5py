@@ -489,7 +489,12 @@ class File(Group):
 
         The HDF5 file driver may also be specified:
 
-        'sec2' (default)
+        None
+            Use the standard HDF5 driver appropriate for the current platform.
+            On UNIX, this is the H5FD_SEC2 driver; on Windows, it is
+            H5FD_WINDOWS.
+
+        'sec2'
             Unbuffered, optimized I/O using standard POSIX functions.
 
         'stdio' 
@@ -529,7 +534,8 @@ class File(Group):
     def driver(self):
         """Low-level HDF5 file driver used to open file"""
         drivers = {h5fd.SEC2: 'sec2', h5fd.STDIO: 'stdio',
-                   h5fd.CORE: 'core', h5fd.FAMILY: 'family'}
+                   h5fd.CORE: 'core', h5fd.FAMILY: 'family',
+                   h5fd.WINDOWS: 'windows'}
         return drivers.get(self.fid.get_access_plist().get_driver(), 'unknown')
 
     # --- Public interface (File) ---------------------------------------------
@@ -546,7 +552,7 @@ class File(Group):
         """
         plist = h5p.create(h5p.FILE_ACCESS)
         plist.set_fclose_degree(h5f.CLOSE_STRONG)
-        if driver is not None:
+        if driver is not None and not (driver=='windows' and sys.platform=='win32'):
             if(driver=='sec2'):
                 plist.set_fapl_sec2(**driver_kwds)
             elif(driver=='stdio'):

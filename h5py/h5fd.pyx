@@ -37,7 +37,11 @@ LOG = H5FD_LOG
 MPIO = H5FD_MPIO
 MULTI = H5FD_MULTI
 SEC2 = H5FD_SEC2
-STDIO = H5FD_STDIO  
+STDIO = H5FD_STDIO
+IF UNAME_SYSNAME == "Windows":
+    WINDOWS = H5FD_WINDOWS
+ELSE:
+    WINDOWS = -1
 
 # === Logging driver ==========================================================
 
