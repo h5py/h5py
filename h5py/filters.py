@@ -18,7 +18,8 @@
         Access to the HDF5 SZIP encoder.  SZIP is a non-mainstream compression
         format used in space science on integer and float datasets.  SZIP is
         subject to license requirements, which means the encoder is not
-        guaranteed to be always available.
+        guaranteed to be always available.  However, it is also much faster
+        than gzip.
 
     The following constants in this module are also useful:
 
@@ -33,10 +34,6 @@
 from __future__ import with_statement
 from h5py import h5s, h5z, h5p, h5d
 import numpy as np
-
-CHUNK_BASE = 16*1024    # Multiplier by which chunks are adjusted
-CHUNK_MIN = 8*1024      # Soft lower limit (8k)
-CHUNK_MAX = 1024*1024   # Hard upper limit (1M)
 
 _COMP_FILTERS = {'gzip': h5z.FILTER_DEFLATE,
                 'szip': h5z.FILTER_SZIP,
@@ -67,52 +64,46 @@ def generate_dcpl(shape, dtype, chunks, compression, compression_opts,
     Undocumented and subject to change without warning.
     """
 
-    # Validate and normalize arguments
-
+    # Scalar datasets don't support any fancy features
     if shape == ():
+        if any((chunks, compression, compression_opts, shuffle, fletcher32)):
+            raise TypeError("Scalar datasets don't support chunk/filter options")
         if maxshape and maxshape != ():
             raise TypeError("Scalar datasets cannot be extended")
         return h5p.create(h5p.DATASET_CREATE)
 
-    fletcher32 = bool(fletcher32)
-
     def rq_tuple(tpl, name):
-        if tpl not in (None, True):
-            try:
-                tpl = tuple(tpl)
-                if len(tpl) != len(shape):
-                    raise ValueError('"%s" must have same rank as dataset shape' % name)
-            except TypeError:
-                raise TypeError('"%s" argument must be None or a sequence object' % name) 
- 
+        """ Check if chunks/maxshape match dataset rank """
+        if tpl in (None, True):
+            return
+        try:
+            tpl = tuple(tpl)
+        except TypeError:
+            raise TypeError('"%s" argument must be None or a sequence object' % name)
+        if len(tpl) != len(shape):
+            raise ValueError('"%s" must have same rank as dataset shape' % name)
+
     rq_tuple(chunks, 'chunks')
     rq_tuple(maxshape, 'maxshape')
 
     if compression is not None:
 
-        if shuffle is None:
-            shuffle = True
+        if compression not in encode:
+            raise ValueError('Compression filter "%s" is unavailable' % compression)
 
-        if compression not in _COMP_FILTERS:
-            raise ValueError("Compression method must be one of %s" % ", ".join(_COMP_FILTERS))
         if compression == 'gzip':
-            if not "gzip" in encode:
-                raise ValueError("GZIP filter unavailable")
             if compression_opts is None:
                 gzip_level = DEFAULT_GZIP
             elif compression_opts in range(10):
                 gzip_level = compression_opts
             else:
                 raise ValueError("GZIP setting must be an integer from 0-9, not %r" % compression_opts)
+
         elif compression == 'lzf':
-            if not "lzf" in encode:
-                raise ValueError("LZF filter unavailable")
             if compression_opts is not None:
                 raise ValueError("LZF compression filter accepts no options")
-        elif compression == 'szip':
-            if not "szip" in encode:
-                raise ValueError("SZIP filter unavailable")
 
+        elif compression == 'szip':
             if compression_opts is None:
                 compression_opts = DEFAULT_SZIP
 
@@ -126,6 +117,10 @@ def generate_dcpl(shape, dtype, chunks, compression, compression_opts,
             if not (0<szpix<=32 and szpix%2 == 0):
                 raise ValueError(err)
 
+    elif compression_opts is not None:
+        # Can't specify just compression_opts by itself.
+        raise TypeError("Compression method must be specified")
+
     # End argument validation
 
     if (chunks is True) or \
@@ -138,7 +133,7 @@ def generate_dcpl(shape, dtype, chunks, compression, compression_opts,
     plist = h5p.create(h5p.DATASET_CREATE)
     if chunks is not None:
         plist.set_chunk(chunks)
-        plist.set_fill_time(h5d.FILL_TIME_ALLOC)
+        plist.set_fill_time(h5d.FILL_TIME_ALLOC)  # prevent resize glitch
 
     # MUST be first, to prevent 1.6/1.8 compatibility glitch
     if fletcher32:
@@ -198,6 +193,10 @@ def get_filters(plist):
         pipeline[filters.get(code, str(code))] = vals
 
     return pipeline
+
+CHUNK_BASE = 16*1024    # Multiplier by which chunks are adjusted
+CHUNK_MIN = 8*1024      # Soft lower limit (8k)
+CHUNK_MAX = 1024*1024   # Hard upper limit (1M)
 
 def guess_chunk(shape, typesize):
     """ Guess an appropriate chunk layout for a dataset, given its shape and
