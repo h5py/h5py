@@ -2,7 +2,7 @@ import numpy as np
 import h5py
 from h5py import filters
 
-from nose.tools import assert_equal
+from nose.tools import assert_equal, assert_raises
 
 from common import makehdf, delhdf
 
@@ -88,7 +88,7 @@ class TestFilters(object):
                 assert_equal(dset.compression_opts, o)
 
     def test_fletcher32_shuffle(self):
-        # Check fletcher32 and shuffle, including auto-shuffle
+        # Check fletcher32 and shuffle
 
         settings = (None, False, True)
         results = (False, False, True)
@@ -99,13 +99,6 @@ class TestFilters(object):
             assert_equal(dset.fletcher32, r)
             dset = self.make_dset(shuffle=s)
             assert_equal(dset.shuffle, r)
-
-        # Make sure shuffle is automatically activated for compression
-
-        dset = self.make_dset(compression='gzip')
-        assert_equal(dset.shuffle, True)
-        dset = self.make_dset(compression='gzip', shuffle=False)
-        assert_equal(dset.shuffle, False)
 
     def test_data(self):
         # Ensure data can be read/written with filters
@@ -118,6 +111,7 @@ class TestFilters(object):
 
         def test_dset(shape, dtype, **kwds):
             print "test %s %s %s" % (shape, dtype, kwds)
+
             dset = self.make_dset(s, dtype, **kwds)
             arr = (np.random.random(s)*100).astype(dtype)
             dset[...] = arr

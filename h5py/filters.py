@@ -65,9 +65,10 @@ def generate_dcpl(shape, dtype, chunks, compression, compression_opts,
     """
 
     # Scalar datasets don't support any fancy features
+    # However, the currently defined behavior is simply to ignore these options
     if shape == ():
-        if any((chunks, compression, compression_opts, shuffle, fletcher32)):
-            raise TypeError("Scalar datasets don't support chunk/filter options")
+        #if any((chunks, compression, compression_opts, shuffle, fletcher32)):
+        #    raise TypeError("Scalar datasets don't support chunk/filter options")
         if maxshape and maxshape != ():
             raise TypeError("Scalar datasets cannot be extended")
         return h5p.create(h5p.DATASET_CREATE)
