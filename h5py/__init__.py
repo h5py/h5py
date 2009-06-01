@@ -31,15 +31,13 @@ except ImportError, e:
 
 import utils, h5, h5a, h5d, h5f, h5fd, h5g, h5i, h5p, h5r, h5s, h5t, h5z, highlevel, version
 
-from highlevel import File, Group, Dataset, Datatype, AttributeManager, is_hdf5, CoordsList
+from highlevel import File, Group, Dataset, Datatype, AttributeManager, \
+                      is_hdf5, CoordsList, new_vlen, new_enum, get_vlen, get_enum
+
 from h5 import get_config
 from h5e import H5Error
 
 import filters, selections
-
-# re-export custom vlen routines
-new_vlen = h5t.py_new_vlen
-get_vlen = h5t.py_get_vlen
 
 __doc__ = __doc__ % (version.version, version.hdf5_version, version.api_version)
 

@@ -1216,5 +1216,42 @@ class Datatype(HLObject):
                 return "<Closed HDF5 named type>"
 
 
+# Re-export functions for new type infrastructure
+
+def new_vlen(basetype):
+    """ Create a NumPy dtype representing a variable-length type.
+
+    Currently only the native string type (str) is allowed.
+
+    The kind of the returned dtype is always "O"; metadata attached to the
+    dtype allows h5py to perform translation between HDF5 VL types and
+    native Python objects.
+    """
+    return h5t.py_new_vlen(basetype)
+
+def get_vlen(dtype):
+    """ Return the "base" type from a NumPy dtype which represents a 
+    variable-length type, or None if the type is not of variable length.
+
+    Currently only variable-length strings, created with new_vlen(), are
+    supported.
+    """
+    return h5t.py_get_vlen(dtype)
+
+def new_enum(dtype, values):
+    """ Create a new enumerated type, from an integer base type and dictionary
+    of values.
+
+    The values dict should contain string keys and int/long values.
+    """
+    return h5t.py_new_enum(numpy.dtype(dtype), values)
+
+def get_enum(dtype):
+    """ Extract the values dictionary from an enumerated type, returning None
+    if the given dtype does not represent an enum.
+    """
+    return h5t.py_get_enum(dtype)
+
+
 
 
