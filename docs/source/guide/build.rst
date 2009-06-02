@@ -19,7 +19,7 @@ On Windows, HDF5 is provided as part of the integrated
 installer for h5py.  
 
 On Linux and OS-X, you must provide HDF5 yourself.  HDF5 versions **1.6.5**
-through **1.8.2** are supported. **The best solution is
+through **1.8.3** are supported. **The best solution is
 to install HDF5 via a package manager like apt, yum or fink.** Regardless of
 how you decide to install HDF5, keep the following in mind:
 

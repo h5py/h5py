@@ -443,8 +443,8 @@ init_hdf5()
 
 _hdf5_version_tuple = get_libversion()        
 _api_version_tuple = (int(H5PY_API/10), H5PY_API%10)
-_version_tuple = tuple([int(x) for x in H5PY_VERSION.split('.')])
-
+_version_tuple = tuple([int(x) for x in H5PY_VERSION.split('-')[0].split('.')])
+_version_string = H5PY_VERSION
 
 
 from h5e import H5Error

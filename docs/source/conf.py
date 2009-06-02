@@ -46,9 +46,9 @@ copyright = '2008, Andrew Collette'
 # other places throughout the built documents.
 #
 # The short X.Y version.
-version = '1.1'
+version = '1.2'
 # The full version, including alpha/beta/rc tags.
-release = '1.1.0'
+release = '1.2.0-beta'
 
 # There are two options for replacing |today|: either, you set today to some
 # non-false value, then it is used:
@@ -91,7 +91,7 @@ html_style = 'h5py.css'
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
-html_title = "HDF5 for Python 1.1"
+html_title = "HDF5 for Python 1.2 BETA"
 
 # A shorter title for the navigation bar.  Default is the same as html_title.
 #html_short_title = None

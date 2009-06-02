@@ -1,9 +1,9 @@
 
 .. _home:
 
-*******************
-HDF5 for Python 1.1
-*******************
+***************
+HDF5 for Python
+***************
 
 The `HDF5 library <http://www.hdfgroup.com/HDF5>`_ is a versatile,
 mature library designed for the storage

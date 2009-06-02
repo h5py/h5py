@@ -1,7 +1,9 @@
 import h5 as _h5
 
-version_tuple = _h5._version_tuple
-version = "%d.%d.%d" % version_tuple
+version = _h5._version_string
+_exp = version.partition('-')
+version_tuple = tuple(int(x) for x in _exp[0].split('.')) + (_exp[2],)
+
 
 hdf5_version_tuple = _h5._hdf5_version_tuple
 hdf5_version = "%d.%d.%d" % hdf5_version_tuple
