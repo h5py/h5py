@@ -5,8 +5,10 @@ Announcing HDF5 for Python (h5py) 1.2 *BETA*
 I'm pleased to announce the availability of HDF5 for Python 1.2 beta!  This
 release represents a significant update to the h5py feature set.  The beta
 will be available until the official release on or around June 14.  Bug
-reports, questions and complaints are welcome and needed!  You can contact
-"h5py at alfven dot org" or file a bug directly at h5py.googlecode.com.
+reports, questions and complaints are welcome and needed!
+
+Downloads, bug tracker:  http://h5py.googlecode.com
+Contact email: h5py at alfven dot org
 
 What is h5py?
 -------------
@@ -42,7 +44,7 @@ What's new in 1.2
   - The NumPy "array" dtype is now allowed as a top-level type when
     creating a dataset, not just as a member of a compound type.
 
-  - Many different low-level HDF5 drivers can be now be used when creating
+  - Many different low-level HDF5 drivers can now be used when creating
     a file, which allows purely in-memory ("core") files, multi-volume
     ("family") files, and files which use low-level buffered I/O.
 
@@ -50,7 +52,10 @@ What's new in 1.2
     and ValueError (in addition to current HDF5 error hierarchy), freeing
     the user from knowledge of the HDF5 error system.
 
-  - More Pythonic dictionary-style naming system for groups and attributes
+  - Unicode file names are now supported
+
+  - Groups and attributes now support the standard Python dictionary
+    interface methods, including keys(), values() and friends.
 
 
 Design revisions since 1.1
@@ -58,7 +63,7 @@ Design revisions since 1.1
 
   - The role of the "name" attribute on File objects has changed.  "name"
     now returns the HDF5 path of the File object ('/'); the file name on
-    disk is now available at File.filename.
+    disk is available at File.filename.
 
   - Dictionary-interface methods for Group and AttributeManager objects have
     been renamed to follow the standard Python convention (keys(), values(),
@@ -66,7 +71,7 @@ Design revisions since 1.1
     will not be removed until h5py 1.4 or equivalent.
 
   - The HDF5 shuffle filter is no longer automatically activated when
-    GZIP or LZF compression is used; may datasets "in the wild" do not
+    GZIP or LZF compression is used; many datasets "in the wild" do not
     benefit from shuffling.
 
 
@@ -82,11 +87,11 @@ Standard features
     * Strings
     * Boolean
     * Array
-    * Enumeration (integer)
+    * Enumeration (integers)
     * Void
 
   - Random access to datasets using the standard NumPy slicing syntax,
-    including fancy indexing and point-based selection
+    including a subset of fancy indexing and point-based selection
 
   - Transparent compression of datasets using GZIP, LZF or SZIP,
     and error-detection using Fletcher32
