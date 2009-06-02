@@ -55,6 +55,32 @@ class TestFile(HDF5TestCase):
     def tearDown(self):
         os.unlink(self.fname)
 
+    def test_unicode(self):
+        # Three cases:
+        # 1. Unicode
+        #       Store w/filesystem encoding; should be readable as Unicode
+        # 2. Raw byte string in ASCII range
+        #       Store w/filesystem encoding; should be read as ASCII
+        # 3. Raw byte string out of ASCII range
+        #       Store as-is; since it doesn't conform to the filesystem
+        #       encoding, just return the raw string.
+        fnames = (tempfile.mktemp(u'_\u1201.hdf5'),
+                  tempfile.mktemp('_.hdf5'),
+                  tempfile.mktemp('\xff\xff\xff.hdf5'))
+        print ""
+        for fname, typ in zip(fnames, (unicode, str, str)):
+            print 'checking "%r" (%s)' % (fname, typ)
+            try:
+                f = File(fname, 'w')
+                self.assert_(isinstance(f.filename, typ))
+                self.assertEqual(f.filename, fname)
+            finally:
+                try:
+                    f.close()
+                finally:
+                    if os.path.exists(fname):
+                        os.unlink(fname)
+        
     def test_File_init_r(self):
         with File(self.fname, 'r') as f:
             self.assert_(isinstance(f["CompoundChunked"], Dataset))

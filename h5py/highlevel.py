@@ -539,8 +539,9 @@ class File(Group):
         'family'
             Store the file on disk as a series of fixed-length chunks.  Useful
             if the file system doesn't allow large files.  Note: the filename
-            you provide *must* contain the string "%d", which will be replaced
-            by the file sequence number.  Keywords:
+            you provide *must* contain a printf-style integer format code
+            (e.g. %d"), which will be replaced by the file sequence number.
+            Keywords:
 
             memb_size:  Maximum file size (default is 2**31-1).
     """
@@ -548,7 +549,17 @@ class File(Group):
     @property
     def filename(self):
         """File name on disk"""
-        return h5f.get_name(self.fid)
+        name = h5f.get_name(self.fid)
+        # Note the exception can happen in one of two ways:
+        # 1. The name doesn't comply with the file system encoding;
+        #    return the raw byte string
+        # 2. The name can't be encoded down to ASCII; return it as
+        #    a Unicode string object
+        try:
+            name = name.decode(sys.getfilesystemencoding())
+            return name.encode('ascii')
+        except UnicodeError:
+            return name
 
     @property
     def mode(self):
@@ -595,6 +606,13 @@ class File(Group):
                 plist.set_fapl_family(memb_fapl=plist.copy(), **driver_kwds)
             else:
                 raise ValueError('Unknown driver type "%s"' % driver)
+
+        try:
+            # If the byte string doesn't match the default encoding, just
+            # pass it on as-is.  Note Unicode objects can always be encoded.
+            name = name.encode(sys.getfilesystemencoding())
+        except UnicodeError:
+            pass
 
         if mode == 'r':
             self.fid = h5f.open(name, h5f.ACC_RDONLY, fapl=plist)

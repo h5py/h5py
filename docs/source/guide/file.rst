@@ -30,7 +30,7 @@ HDF5 ships with a variety of different low-level drivers, which map the logical
 HDF5 address space to different storage mechanisms.  You can specify which
 driver you want to use when the file is opened::
 
-    >>> f = h5py.File('myfile.hdf5', driver=*driver name*, *driver_kwds*)
+    >>> f = h5py.File('myfile.hdf5', driver=<driver name>, <driver_kwds>)
 
 For example, the HDF5 "core" driver can be used to create a purely in-memory
 HDF5 file, optionally written out to disk when it is closed.  Currently
@@ -63,8 +63,8 @@ None
 'family'
     Store the file on disk as a series of fixed-length chunks.  Useful
     if the file system doesn't allow large files.  Note: the filename
-    you provide *must* contain the string "%d", which will be replaced
-    by the file sequence number.  Keywords:
+    you provide *must* contain a printf-style integer format code (e.g "%d"),
+    which will be replaced by the file sequence number.  Keywords:
 
         memb_size
             Maximum file size (default is 2**31-1).
@@ -85,7 +85,8 @@ the full API of Group objects; in this case, the group in question is the
 
     .. attribute:: filename
 
-        HDF5 filename
+        HDF5 filename on disk.  This is a plain string (str) for ASCII names,
+        Unicode otherwise.
 
     .. attribute:: mode
 
@@ -97,7 +98,8 @@ the full API of Group objects; in this case, the group in question is the
 
     .. method:: __init__(name, mode='a', driver=None, **driver_kwds)
         
-        Open or create an HDF5 file.
+        Open or create an HDF5 file.  See above for a summary of options.
+        Argument *name* may be an ASCII or Unicode string.
 
     .. method:: close()
 
