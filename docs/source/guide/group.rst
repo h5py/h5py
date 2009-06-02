@@ -46,7 +46,7 @@ Reference
         Dictionary-like object which provides access to this group's
         HDF5 attributes.  See :ref:`attributes` for details.
 
-    .. attribute:: fileobj
+    .. attribute:: file
         
         The ``File`` instance used to open this HDF5 file.
 

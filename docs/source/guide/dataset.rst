@@ -180,7 +180,7 @@ Reference
 
         Provides access to HDF5 attributes; see :ref:`attributes`.
 
-    .. attribute:: fileobj
+    .. attribute:: file
         
         The ``File`` instance used to open this HDF5 file.
 

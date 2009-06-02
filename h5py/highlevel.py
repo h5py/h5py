@@ -99,7 +99,7 @@ class HLObject(_LockableObject):
         return self._attrs
 
     @property
-    def fileobj(self):
+    def file(self):
         """Return the File instance associated with this object"""
         if isinstance(self, File):
             return self
@@ -113,7 +113,7 @@ class HLObject(_LockableObject):
         Beware; if multiple hard links to this object exist, there's no way
         to predict which parent group will be returned!
         """
-        return self.fileobj[pp.dirname(self.name)]
+        return self.file[pp.dirname(self.name)]
 
     def __init__(self, parent):
         if not isinstance(self, File):

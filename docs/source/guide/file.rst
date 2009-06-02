@@ -83,7 +83,7 @@ the full API of Group objects; in this case, the group in question is the
 
     See also :class:`Group`, of which this is a subclass.
 
-    .. attribute:: name
+    .. attribute:: filename
 
         HDF5 filename
 

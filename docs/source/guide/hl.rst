@@ -74,53 +74,5 @@ concurrency (and as it is not necessarily thread-safe), access to the library
 is automatically serialized.  The GIL is released around read/write operations
 so that non-HDF5 threads (GUIs, computation) can continue to execute.
 
-Metadata
---------
-
-Every object in HDF5 supports metadata in the form of "attributes", which are
-small, named bits of data.  :class:`Group`, :class:`Dataset` and even
-:class:`File` objects each carry a dictionary-like object which exposes this
-behavior, named ``<obj>.attrs``.  This is the correct way to store metadata
-in HDF5 files.
-
-
-
-
-
-.. _named_types:
-
-Named types
-===========
-
-There is one last kind of object stored in an HDF5 file.  You can store
-datatypes (not associated with any dataset) in a group, simply by assigning
-a NumPy dtype to a name::
-
-    >>> group["name"] = numpy.dtype("<f8")
-
-and to get it back::
-
-    >>> named_type = group["name"]
-    >>> mytype = named_type.dtype
-
-Objects of this class are immutable and have no methods, just read-only
-properties.
-
-Reference
----------
-
-.. class:: Datatype
-
-    .. attribute:: name
-
-        Full name of this object in the HDF5 file (e.g. ``/grp/MyType``)
-
-    .. attribute:: attrs
-
-        Attributes of this object (see :ref:`attributes section <attributes>`)
-
-    .. attribute:: dtype
-
-        NumPy dtype representation of this type
 
 
