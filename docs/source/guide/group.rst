@@ -52,7 +52,7 @@ Reference
 
     .. attribute:: parent
 
-        A group which contains this object, according to basename(obj.name).
+        A group which contains this object, according to dirname(obj.name).
 
     .. method:: __getitem__(name) -> Group or Dataset
 
