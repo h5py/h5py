@@ -521,9 +521,9 @@ class File(Group):
     """
 
     @property
-    def name(self):
+    def filename(self):
         """File name on disk"""
-        return self._name
+        return h5f.get_name(self.fid)
 
     @property
     def mode(self):
@@ -549,6 +549,13 @@ class File(Group):
         - w   Create file, truncate if exists
         - w-  Create file, fail if exists
         - a   Read/write if exists, create otherwise (default)
+
+        Valid drivers are:
+        - None      Use default driver ('sec2' on UNIX, 'windows' on Win32) 
+        - 'sec2'    Standard UNIX driver
+        - 'stdio'   Stdio (buffered) driver
+        - 'core'    mmap driver
+        - 'family'  Multi-part file driver
         """
         plist = h5p.create(h5p.FILE_ACCESS)
         plist.set_fclose_degree(h5f.CLOSE_STRONG)
@@ -583,7 +590,6 @@ class File(Group):
         self.id = self.fid  # So the Group constructor can find it.
         Group.__init__(self, self, '/')
 
-        self._name = name
         self._mode = mode
 
     def close(self):

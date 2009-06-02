@@ -55,7 +55,7 @@ def makehdf():
     return f
 
 def delhdf(f):
-    fname = f.name
+    fname = f.filename
     f.close()
     os.unlink(fname)
 

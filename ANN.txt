@@ -2,6 +2,12 @@
 Announcing HDF5 for Python (h5py) 1.2 *BETA*
 ============================================
 
+I'm pleased to announce the availability of HDF5 for Python 1.2 beta!  This
+release represents a significant update to the h5py feature set.  The beta
+will be available until the official release on or around June 14.  Bug
+reports, questions and complaints are welcome and needed!  You can contact
+"h5py at alfven dot org" or file a bug directly at h5py.googlecode.com.
+
 What is h5py?
 -------------
 
@@ -20,9 +26,6 @@ accesed using the tradional POSIX /path/to/resource syntax.
 In addition to providing interoperability with existing HDF5 datasets
 and platforms, h5py is a convienient way to store and retrieve
 arbitrary NumPy data and metadata.
-
-Version 1.2 is a significant update to h5py, introducing several new features.
-
 
 What's new in 1.2
 -----------------
@@ -48,6 +51,23 @@ What's new in 1.2
     the user from knowledge of the HDF5 error system.
 
   - More Pythonic dictionary-style naming system for groups and attributes
+
+
+Design revisions since 1.1
+--------------------------
+
+  - The role of the "name" attribute on File objects has changed.  "name"
+    now returns the HDF5 path of the File object ('/'); the file name on
+    disk is now available at File.filename.
+
+  - Dictionary-interface methods for Group and AttributeManager objects have
+    been renamed to follow the standard Python convention (keys(), values(),
+    etc).  The old method names are still available but deprecated.  They
+    will not be removed until h5py 1.4 or equivalent.
+
+  - The HDF5 shuffle filter is no longer automatically activated when
+    GZIP or LZF compression is used; may datasets "in the wild" do not
+    benefit from shuffling.
 
 
 Standard features

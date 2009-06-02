@@ -60,7 +60,7 @@ class TestFile(HDF5TestCase):
             self.assert_(isinstance(f["CompoundChunked"], Dataset))
             self.assertRaises(H5Error, f.create_group, "FooBar")
             self.assertEqual(f.mode, 'r')
-            self.assertEqual(f.name, self.fname)
+            self.assertEqual(f.filename, self.fname)
 
     def test_File_init_rp(self):
         with File(self.fname, 'r+') as f:
@@ -68,7 +68,7 @@ class TestFile(HDF5TestCase):
             f.create_group("FooBar")
             self.assert_(isinstance(f["FooBar"], Group))
             self.assertEqual(f.mode, 'r+')
-            self.assertEqual(f.name, self.fname)
+            self.assertEqual(f.filename, self.fname)
 
     def test_File_init_a(self):
         with File(self.fname, 'a') as f:
@@ -76,7 +76,7 @@ class TestFile(HDF5TestCase):
             f.create_group("FooBar")
             self.assert_(isinstance(f["FooBar"], Group))
             self.assertEqual(f.mode, 'a')
-            self.assertEqual(f.name, self.fname)
+            self.assertEqual(f.filename, self.fname)
 
     def test_File_init_w(self):
         with File(self.fname, 'w') as f:
@@ -84,7 +84,7 @@ class TestFile(HDF5TestCase):
             f.create_group("FooBar")
             self.assert_(isinstance(f["FooBar"], Group))
             self.assertEqual(f.mode, 'w')
-            self.assertEqual(f.name, self.fname)
+            self.assertEqual(f.filename, self.fname)
 
     def test_File_init_wm(self):
         self.assertRaises(H5Error, File, self.fname, 'w-')
