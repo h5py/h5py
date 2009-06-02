@@ -98,6 +98,30 @@ class HLObject(_LockableObject):
         """Provides access to HDF5 attributes. See AttributeManager."""
         return self._attrs
 
+    @property
+    def fileobj(self):
+        """Return the File instance associated with this object"""
+        if isinstance(self, File):
+            return self
+        else:
+            return self._file
+
+    @property
+    def parent(self):
+        """Return the parent group of this object.
+
+        Beware; if multiple hard links to this object exist, there's no way
+        to predict which parent group will be returned!
+        """
+        return self.fileobj[pp.dirname(self.name)]
+
+    def __init__(self, parent):
+        if not isinstance(self, File):
+            if isinstance(parent, File):
+                self._file = parent
+            else:
+                self._file = parent._file
+
     def __nonzero__(self):
         return self.id.__nonzero__()
 
@@ -197,6 +221,7 @@ class Group(HLObject, _DictCompat):
         calling the constructor directly.
         """
         with parent_object._lock:
+            HLObject.__init__(self, parent_object)
             if create:
                 self.id = h5g.create(parent_object.id, name)
             else:
@@ -748,6 +773,7 @@ class Dataset(HLObject):
         Please note none of these are allowed for scalar datasets.
         """
         with group._lock:
+            HLObject.__init__(self, group)
             if data is None and shape is None:
                 if any((dtype,chunks,compression,shuffle,fletcher32)):
                     raise ValueError('You cannot specify keywords when opening a dataset.')
@@ -1210,6 +1236,7 @@ class Datatype(HLObject):
         """ Private constructor.
         """
         with grp._lock:
+            HLObject.__init__(self, grp)
             self.id = h5t.open(grp.id, name)
             self._attrs = AttributeManager(self)
 
