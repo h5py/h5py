@@ -180,6 +180,14 @@ Reference
 
         Provides access to HDF5 attributes; see :ref:`attributes`.
 
+    .. attribute:: fileobj
+        
+        The ``File`` instance used to open this HDF5 file.
+
+    .. attribute:: parent
+
+        A group which contains this object, according to basename(obj.name).
+
     .. attribute:: shape
 
         Numpy-style shape tuple with dataset dimensions

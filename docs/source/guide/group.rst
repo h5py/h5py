@@ -46,6 +46,14 @@ Reference
         Dictionary-like object which provides access to this group's
         HDF5 attributes.  See :ref:`attributes` for details.
 
+    .. attribute:: fileobj
+        
+        The ``File`` instance used to open this HDF5 file.
+
+    .. attribute:: parent
+
+        A group which contains this object, according to basename(obj.name).
+
     .. method:: __getitem__(name) -> Group or Dataset
 
         Open an object in this group.
