@@ -397,7 +397,7 @@ herr_t h5py_scatter_cb(void* elem, hid_t type_id, unsigned ndim,
 
     h5py_scatter_t* info = (h5py_scatter_t*)operator_data;
    
-    memcpy(elem, (info->buf)+((info->i)*(info->el_size)), info->el_size);
+    memcpy(elem, ((char*)info->buf)+((info->i)*(info->el_size)), info->el_size);
     
     info->i++;
 
@@ -409,7 +409,7 @@ herr_t h5py_gather_cb(void* elem, hid_t type_id, unsigned ndim,
 
     h5py_scatter_t* info = (h5py_scatter_t*)operator_data;
    
-    memcpy((info->buf)+((info->i)*(info->el_size)), elem, info->el_size);
+    memcpy(((char*)info->buf)+((info->i)*(info->el_size)), elem, info->el_size);
     
     info->i++;
 

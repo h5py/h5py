@@ -64,8 +64,8 @@ typedef struct {
 /*  Convert from HDF5 variable-length strings to Python string objects.
 */
 herr_t vlen_to_str(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
-                    size_t nl, size_t buf_stride, size_t bkg_stride, void *buf,
-                    void *bkg, hid_t dxpl){
+                    size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
+                    void *bkg_i, hid_t dxpl){
 
     PyGILState_STATE gil;
 
@@ -74,11 +74,17 @@ herr_t vlen_to_str(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
     PyObject** obj_bkg;
     PyObject* obj_tmp;
 
+    char *buf;
+    char *bkg;
+    
     conv_size_t *sizes = NULL;
 
     herr_t retval = -1;
     int i;
 
+    buf = (char*)buf_i;
+    bkg = (char*)bkg_i;
+    
     switch(cdata->command){
 
     /*  Determine if we can convert between src_id and dst_id; return 0 if
@@ -153,8 +159,8 @@ herr_t vlen_to_str(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
 /*  Convert from Python strings to HDF5 vlens.
 */
 herr_t str_to_vlen(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
-                    size_t nl, size_t buf_stride, size_t bkg_stride, void *buf,
-                    void *bkg, hid_t dset_xfer_plist){
+                    size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
+                    void *bkg_i, hid_t dset_xfer_plist){
 
     PyGILState_STATE gil;
 
@@ -169,6 +175,9 @@ herr_t str_to_vlen(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
     herr_t retval = -1;
     int i;
 
+    char* buf = (char*)buf_i;
+    char* bkg = (char*)bkg_i;
+    
     switch(cdata->command){
 
     case H5T_CONV_INIT:
@@ -255,17 +264,20 @@ typedef struct {
     nulls; when longer, it will simply be truncated with no null termination.
  */
 herr_t vlen_fixed(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
-                    size_t nl, size_t buf_stride, size_t bkg_stride, void *buf,
-                    void *bkg, hid_t dset_xfer_plist){
+                    size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
+                    void *bkg_i, hid_t dset_xfer_plist){
 
     htri_t svlen, dvlen;
     h5py_vlfix_conv_t *info = NULL;
-    void* buf_ptr;
+    char* buf_ptr;
     char* str_tmp;
     size_t str_tmp_len;
 
     int i, start, stop, incr;
 
+    char* buf = (char*)buf_i;
+    char* bkg = (char*)bkg_i;
+    
     switch(cdata->command){
 
     case H5T_CONV_INIT:
@@ -360,18 +372,21 @@ typedef struct {
 
 /* This function is registered on both paths ENUM -> INT and INT -> ENUM */
 herr_t enum_int(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
-                    size_t nl, size_t buf_stride, size_t bkg_stride, void *buf,
-                    void *bkg, hid_t dset_xfer_plist){
+                    size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
+                    void *bkg_i, hid_t dset_xfer_plist){
 
     h5py_enum_conv_t* info = NULL;
     hid_t conv_src_id, conv_dst_id;
 
-    void* conv_buf = NULL;
+    char* conv_buf = NULL;
     size_t nalloc;
 
     herr_t cresult;
     int i;
 
+    char* buf = (char*)buf_i;
+    char* bkg = (char*)bkg_i;
+    
     switch(cdata->command){
 
         case H5T_CONV_INIT:
@@ -479,12 +494,10 @@ herr_t enum_int(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
 
 int h5py_register_conv(void){
 
-
+    hid_t h5py_enum = H5Tenum_create(H5T_NATIVE_INT);
     hid_t h5py_obj = h5py_object_type();
     hid_t vlen_str = H5Tcopy(H5T_C_S1);
     H5Tset_size(vlen_str, H5T_VARIABLE);
-
-    hid_t h5py_enum = H5Tenum_create(H5T_NATIVE_INT);
 
     /*  "Soft" registration means the conversion is tested for any two types
         which match the given classes (in this case H5T_STRING and H55_OPAQUE) */

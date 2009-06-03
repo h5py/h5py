@@ -70,16 +70,16 @@ class TestFile(HDF5TestCase):
         print ""
         for fname, typ in zip(fnames, (unicode, str, str)):
             print 'checking "%r" (%s)' % (fname, typ)
+            f = None
             try:
                 f = File(fname, 'w')
                 self.assert_(isinstance(f.filename, typ))
                 self.assertEqual(f.filename, fname)
             finally:
-                try:
+                if f:
                     f.close()
-                finally:
-                    if os.path.exists(fname):
-                        os.unlink(fname)
+                if os.path.exists(fname):
+                    os.unlink(fname)
         
     def test_File_init_r(self):
         with File(self.fname, 'r') as f:
