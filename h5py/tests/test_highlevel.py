@@ -61,12 +61,8 @@ class TestFile(HDF5TestCase):
         #       Store w/filesystem encoding; should be readable as Unicode
         # 2. Raw byte string in ASCII range
         #       Store w/filesystem encoding; should be read as ASCII
-        # 3. Raw byte string out of ASCII range
-        #       Store as-is; since it doesn't conform to the filesystem
-        #       encoding, just return the raw string.
-        fnames = (tempfile.mktemp(u'_\u1201.hdf5'),
-                  tempfile.mktemp('_.hdf5'),
-                  tempfile.mktemp('\xff\xff\xff.hdf5'))
+        fnames = (tempfile.mktemp(u'_\u201a.hdf5'),
+                  tempfile.mktemp('_.hdf5'))
         print ""
         for fname, typ in zip(fnames, (unicode, str, str)):
             print 'checking "%r" (%s)' % (fname, typ)
