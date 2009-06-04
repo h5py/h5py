@@ -543,7 +543,7 @@ else:
 
 setup(
   name = NAME,
-  version = VERSION,
+  version = VERSION if sys.platform != 'win32' else VERSION.replace('-beta',''),
   description = short_desc,
   long_description = long_desc,
   classifiers = [x for x in cls_txt.split("\n") if x],
