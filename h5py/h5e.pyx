@@ -333,7 +333,7 @@ cdef herr_t walk_cb(int n, H5E_error_t *err_desc, void* stack_in):
     element = ErrorStackElement()
 
     element.e = err_desc[0]
-    stack += [element]
+    stack.append(element)
 
     return 0
 

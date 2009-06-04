@@ -56,7 +56,7 @@ class TestFile(HDF5TestCase):
         os.unlink(self.fname)
 
     def test_unicode(self):
-        # Three cases:
+        # Two cases:
         # 1. Unicode
         #       Store w/filesystem encoding; should be readable as Unicode
         # 2. Raw byte string in ASCII range
