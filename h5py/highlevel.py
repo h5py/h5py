@@ -55,8 +55,13 @@ def _hbasename(name):
 def is_hdf5(fname):
     """ Determine if a file is valid HDF5 (False if it doesn't exist). """
     fname = os.path.abspath(fname)
+
     if os.path.isfile(fname):
         try:
+            try:
+                fname = fname.encode(sys.getfilesystemencoding())
+            except UnicodeError:
+                pass
             return h5f.is_hdf5(fname)
         except H5Error:
             pass
