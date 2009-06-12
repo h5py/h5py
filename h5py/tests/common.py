@@ -20,6 +20,44 @@ import h5py
 
 DATADIR = op.join(op.dirname(h5py.__file__), 'tests/data')
 
+class ResourceManager(object):
+
+    """
+        Implements common operations, including generating filenames,
+        files, and cleaning up identifiers.  This frees each module from
+        having to manually unlink its files, and restores the library to
+        a known state.
+    """
+
+    def __init__(self):
+        self.fnames = set()
+
+    def get_name(self):
+        """ Return a temporary filename, which can be unlinked with clear() """
+        fname = tempfile.mktemp()
+        self.fnames.add(fname)
+        return fname
+
+    def clear(self):
+        """ Wipe out all open identifiers, and unlink all generated files """
+        id_list = h5py.h5f.get_obj_ids()
+
+        for id_ in id_list:
+            while(id_ and h5py.h5i.get_ref(id_) > 0):
+                h5py.h5i.dec_ref(id_)
+
+        for fname in self.fnames:
+            if op.exists(fname):
+                os.unlink(fname)
+
+    def get_data_path(self, name):
+        """ Return the full path to a data file (given its basename) """
+        return op.abspath(op.join(DATADIR, name))
+
+    
+
+res = ResourceManager()
+
 def getfullpath(name):
     return op.abspath(op.join(DATADIR, name))
 

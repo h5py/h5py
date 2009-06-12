@@ -20,7 +20,7 @@ from h5py.h5 import get_phil, get_config
 phil = get_phil()
 config = get_config()
 logger = logging.getLogger('h5py.functions')
-
+logging.getLogger('h5py.identifiers').disabled = True
 
 def uw_apply(wrap, func):
     # Cython methods don't have a "module" attribute for some reason
@@ -31,29 +31,42 @@ def uw_apply(wrap, func):
 
 def funcname(func):
 
-    if hasattr(func, '__module__') and func.__module__ is not None:
+    if hasattr(func, '__objclass__'):
+        fullname = "%s.%s.%s" % (func.__objclass__.__module__, func.__objclass__.__name__, func.__name__)
+    elif hasattr(func, '__module__') and func.__module__ is not None:
         fullname = "%s.%s" % (func.__module__, func.__name__)
     elif hasattr(func, '__self__'):
         fullname = "%s.%s" % (func.__self__.__class__.__name__, func.__name__)
     else:
-        fullname = func.__name__
+       print "unknown"
+       fullname = func.__name__
 
     return fullname
 
 if config.DEBUG:
+
+    indent = 0
 
     def nosync(func):
 
         fname = funcname(func)
 
         def wrap(*args, **kwds):
-            logger.debug( ("[ Call %s\n%s\n%s" % (fname, args, kwds)).replace("\n", "\n  ") )
+            global indent
+            argstr = ", ".join("%r" % (arg,) for arg in args)
+            kwstr = ", ".join("%s=%r" % (x,y) for x, y in kwds.iteritems())
+            logger.debug(" "*indent+"%s(%s%s)" % (fname, argstr, kwstr))
+            indent += 4
             try:
                 retval = func(*args, **kwds)
             except BaseException, e:
-                logger.debug('! Exception in %s: %s("%s")' % (fname, e.__class__.__name__, e))
+                logger.debug(" "*indent+'! %s("%s")' % (e.__class__.__name__, e))
                 raise
-            logger.debug( ("] Exit %s\n%s" % (fname,retval)).replace("\n", "\n  ") )
+            else:
+                if retval is not None:
+                    logger.debug(" "*(indent)+"=> %r" % (retval,))
+            finally:
+                indent -= 4
             return retval
         uw_apply(wrap, func)
         return wrap
