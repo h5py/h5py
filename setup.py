@@ -557,7 +557,7 @@ setup(
   ext_modules = EXTENSIONS,
   requires = ['numpy (>=%s)' % MIN_NUMPY],
   cmdclass = CMD_CLASS,
-  test_suite = 'nose.collector'
+  test_suite = 'h5py.tests'
 )
 
 

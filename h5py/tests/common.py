@@ -32,9 +32,11 @@ class ResourceManager(object):
     def __init__(self):
         self.fnames = set()
 
-    def get_name(self):
+    def get_name(self, suffix=None):
         """ Return a temporary filename, which can be unlinked with clear() """
-        fname = tempfile.mktemp()
+        if suffix is None:
+            suffix = '.hdf5'
+        fname = tempfile.mktemp(suffix)
         self.fnames.add(fname)
         return fname
 
