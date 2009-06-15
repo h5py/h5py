@@ -1,14 +1,21 @@
-============================================
-Announcing HDF5 for Python (h5py) 1.2 *BETA*
-============================================
 
-I'm pleased to announce the availability of HDF5 for Python 1.2 beta!  This
-release represents a significant update to the h5py feature set.  The beta
-will be available until the official release on or around June 14.  Bug
-reports, questions and complaints are welcome and needed!
+Announcing HDF5 for Python (h5py) 1.2
+=====================================
 
-Downloads, bug tracker:  http://h5py.googlecode.com
-Contact email: h5py at alfven dot org
+I'm pleased to announce the availability of HDF5 for Python 1.2 final!
+This release represents a significant update to the h5py feature set.
+Some of the new new features are:
+
+ - Support for variable-length strings!
+ - Use of built-in Python exceptions (KeyError, etc), in addition to H5Error
+ - Top-level support for HDF5 CORE, SEC2, STDIO, WINDOWS and FAMILY drivers
+ - Support for ENUM and ARRAY types
+ - Support for Unicode file names
+ - Huge speedup (3x) when slicing into a compressed/chunked dataset
+
+Main site:      http://h5py.alfven.org
+Google code:    http://h5py.googlecode.com
+
 
 What is h5py?
 -------------
@@ -29,13 +36,32 @@ In addition to providing interoperability with existing HDF5 datasets
 and platforms, h5py is a convienient way to store and retrieve
 arbitrary NumPy data and metadata.
 
-What's new in 1.2
------------------
+
+List of new features in 1.2
+---------------------------
 
   - Variable-length strings are now supported!  They are mapped to native
     Python strings via the NumPy "object" type.  VL strings may be read, 
     written and created from h5py, and are allowed in all HDF5 contexts,
     even as members of compound or array types.
+
+  - HDF5 exceptions now inherit from common Python built-ins like TypeError
+    and ValueError (in addition to current HDF5 error hierarchy), freeing
+    the user from knowledge of the HDF5 error system.  Existing code which
+    uses H5Error will continue to work.
+
+  - Many different low-level HDF5 drivers can now be used when creating
+    a file, which allows purely in-memory ("core") files, multi-volume
+    ("family") files, and files which use low-level buffered I/O.
+
+  - Groups and attributes now support the standard Python dictionary
+    interface methods, including keys(), values() and friends.  The existing
+    methods (listnames(), listobjects(), etc.) remain and will not be
+    removed until at least h5py 1.4 or equivalent.
+
+  - Workaround for an HDF5 bug has sped up reading/writing of chunked
+    datasets. When using a slice with fewer dimensions than the dataset,
+    there can be as much as a 3x improvement in write times over h5py 1.1.
 
   - Enumerated types are now fully supported; they can be used in NumPy
     anywhere integer types are allowed, and are stored as native HDF5
@@ -44,18 +70,13 @@ What's new in 1.2
   - The NumPy "array" dtype is now allowed as a top-level type when
     creating a dataset, not just as a member of a compound type.
 
-  - Many different low-level HDF5 drivers can now be used when creating
-    a file, which allows purely in-memory ("core") files, multi-volume
-    ("family") files, and files which use low-level buffered I/O.
-
-  - HDF5 exceptions now inherit from common Python built-ins like TypeError
-    and ValueError (in addition to current HDF5 error hierarchy), freeing
-    the user from knowledge of the HDF5 error system.
-
   - Unicode file names are now supported
 
-  - Groups and attributes now support the standard Python dictionary
-    interface methods, including keys(), values() and friends.
+  - It's now possible to explicitly set the type of an attribute, and to
+    preserve the type of an attribute while modifying it.
+
+  - High-level objects now have .parent and .file attributes, to make the
+    navigation of HDF5 files more convenient.
 
 
 Design revisions since 1.1
@@ -67,8 +88,7 @@ Design revisions since 1.1
 
   - Dictionary-interface methods for Group and AttributeManager objects have
     been renamed to follow the standard Python convention (keys(), values(),
-    etc).  The old method names are still available but deprecated.  They
-    will not be removed until h5py 1.4 or equivalent.
+    etc).  The old method names are still available but deprecated.
 
   - The HDF5 shuffle filter is no longer automatically activated when
     GZIP or LZF compression is used; many datasets "in the wild" do not
