@@ -38,6 +38,8 @@ from h5py.h5 import H5Error
 import h5py.selections as sel
 from h5py.selections import CoordsList
 
+import version
+
 import filters
 
 config = h5.get_config()
@@ -624,14 +626,17 @@ class File(Group):
         elif mode == 'r+':
             self.fid = h5f.open(name, h5f.ACC_RDWR, fapl=plist)
         elif mode == 'w-':
+            if driver == 'core' and version.hdf5_version_tuple[0:2] == (1,6):
+                raise NotImplementedError("w- flag does not work on 1.6 for CORE driver")
             self.fid = h5f.create(name, h5f.ACC_EXCL, fapl=plist)
         elif mode == 'w':
             self.fid = h5f.create(name, h5f.ACC_TRUNC, fapl=plist)
         elif mode == 'a' or mode is None:
-            if not os.path.exists(name):
-                self.fid = h5f.create(name, h5f.ACC_EXCL, fapl=plist)
-            else:
+            try:
                 self.fid = h5f.open(name, h5f.ACC_RDWR, fapl=plist)
+            except IOError:
+                self.fid = h5f.create(name, h5f.ACC_EXCL, fapl=plist)
+                
         else:
             raise ValueError("Invalid mode; must be one of r, r+, w, w-, a")
 

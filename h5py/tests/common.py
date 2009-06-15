@@ -51,6 +51,12 @@ class ResourceManager(object):
         for fname in self.fnames:
             if op.exists(fname):
                 os.unlink(fname)
+            try:
+                fname %= 0
+            except TypeError:
+                continue
+            if op.exists(fname):
+                os.unlink(fname)
 
     def get_data_path(self, name):
         """ Return the full path to a data file (given its basename) """
@@ -79,7 +85,9 @@ def api_16(func):
         return func
     return None
 
+skipped = []
 def skip(func):
+    skipped.append(func)
     return None
 
 test_coverage = set()
@@ -161,6 +169,21 @@ class HDF5TestCase(unittest.TestCase):
         """Close the HDF5 file copy and delete it"""
         self.fid.close()
         os.unlink(self.fname)
+
+class TestCasePlus(unittest.TestCase):
+
+    def assertRaisesMsg(self, msg, exc, clb, *args, **kwds):
+        try:
+            clb(*args, **kwds)
+        except exc:
+            return
+        raise AssertionError("%s not raised: %s" % (exc, msg))
+
+
+
+
+
+
 
 
 

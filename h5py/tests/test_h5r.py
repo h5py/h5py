@@ -16,7 +16,6 @@ import os
 import numpy
 
 from h5py import *
-from h5py.h5 import H5Error
 
 
 class TestH5R(unittest.TestCase):

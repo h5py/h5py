@@ -15,7 +15,6 @@ from numpy import array, ndarray, dtype, all, ones
 from common import HDF5TestCase, api_18
 
 from h5py import *
-from h5py.h5 import H5Error
 
 # === attributes.hdf5 description ===
 
@@ -129,7 +128,7 @@ class TestH5A(HDF5TestCase):
         del attr
 
         h5a.delete(obj, ATTRIBUTES_ORDER[0])
-        self.assertRaises(H5Error, h5a.open, obj, ATTRIBUTES_ORDER[0])
+        self.assertRaises(KeyError, h5a.open, obj, ATTRIBUTES_ORDER[0])
 
 
     # === Attribute I/O =======================================================

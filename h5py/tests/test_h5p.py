@@ -14,7 +14,6 @@ import unittest
 import numpy
 
 from h5py import *
-from h5py.h5 import H5Error
 
 HDFNAME = 'attributes.hdf5'
 

@@ -16,7 +16,6 @@ from common import HDF5TestCase, api_18
 
 from h5py import *
 from h5py import utils
-from h5py.h5 import H5Error
 
 class TestUtils(HDF5TestCase):
 

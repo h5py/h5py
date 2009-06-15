@@ -14,7 +14,6 @@ import numpy
 from common import HDF5TestCase
 
 from h5py import *
-from h5py.h5 import H5Error
 
 HDFNAME = 'smpl_compound_chunked.hdf5'
 DTYPE = numpy.dtype([('a_name','>i4'),

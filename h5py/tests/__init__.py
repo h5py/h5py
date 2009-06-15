@@ -12,6 +12,7 @@
 
 import h5py.tests
 import unittest
+import common
 
 mnames = [
 'test_dataset',
@@ -50,6 +51,10 @@ def autotest():
             sys.exit(17)
     except:
         sys.exit(2)
+
+def testinfo():
+    print "%d tests disabled" % common.skipped
+
 
 
 

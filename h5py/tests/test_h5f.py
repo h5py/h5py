@@ -16,7 +16,6 @@ import tempfile
 from common import getfullpath, HDF5TestCase
 
 from h5py import *
-from h5py.h5 import H5Error
 
 HDFNAME = 'attributes.hdf5'
 
@@ -35,7 +34,7 @@ class TestH5F(HDF5TestCase):
         fid.close()
         self.assertEqual(h5i.get_type(fid), h5i.BADID)
 
-        self.assertRaises(H5Error, h5f.open, 'SOME OTHER NAME')
+        self.assertRaises(IOError, h5f.open, 'SOME OTHER NAME')
 
     def test_create(self):
         name = tempfile.mktemp('.hdf5')
@@ -43,7 +42,7 @@ class TestH5F(HDF5TestCase):
         try:
             self.assertEqual(h5i.get_type(fid), h5i.FILE)
             fid.close()
-            self.assertRaises(H5Error, h5f.create, name, h5f.ACC_EXCL)
+            self.assertRaises(IOError, h5f.create, name, h5f.ACC_EXCL)
         finally:
             try:
                 os.unlink(name)
@@ -85,12 +84,10 @@ class TestH5F(HDF5TestCase):
 
     def test_get_obj_count(self):
         self.assert_(h5f.get_obj_count(self.fid, h5f.OBJ_ALL) >= 0)
-        self.assertRaises(H5Error, h5f.get_obj_count, -1, h5f.OBJ_ALL)
     
     def test_get_obj_ids(self):
         idlist = h5f.get_obj_ids(self.fid, h5f.OBJ_ALL)
         self.assert_(isinstance(idlist, list))
-        self.assertRaises(H5Error, h5f.get_obj_ids, -1, h5f.OBJ_ALL)
 
     def test_py(self):
         self.assertEqual(self.fid.name, self.fname)

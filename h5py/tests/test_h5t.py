@@ -16,7 +16,6 @@ import os
 from numpy import dtype
 
 from h5py import *
-from h5py.h5 import H5Error
 from common import HDF5TestCase
 
 kind_map = {'i': h5t.TypeIntegerID, 'u': h5t.TypeIntegerID, 'f': h5t.TypeFloatID,
@@ -105,7 +104,7 @@ class TestH5T(HDF5TestCase):
         htype = h5t.STD_I8LE.copy()
         htype.set_sign(h5t.SGN_NONE)
         htype.lock()
-        self.assertRaises(H5Error, htype.set_sign, h5t.SGN_2)
+        self.assertRaises(TypeError, htype.set_sign, h5t.SGN_2)
 
     def test_get_class(self):
 
