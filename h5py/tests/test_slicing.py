@@ -1,8 +1,8 @@
 import numpy as np
 import os
-from nose.tools import assert_equal
+import unittest
 
-from common import makehdf, delhdf, assert_arr_equal, skip
+from common import makehdf, delhdf, assert_arr_equal, skip, res
 
 import h5py
 
@@ -14,13 +14,13 @@ class SliceFreezer(object):
 
 s = SliceFreezer()
 
-class TestSlicing(object):
+class TestSlicing(unittest.TestCase):
 
     def setUp(self):
-        self.f = makehdf()
+        self.f = h5py.File(res.get_name(), 'w')
 
     def tearDown(self):
-        delhdf(self.f)
+        res.clear()
 
     def generate(self, shape, dtype):
 
@@ -59,26 +59,22 @@ class TestSlicing(object):
 
         for slc in slices:
 
-            print "slice %s" % (slc,)
+            msg = " slice %s" % (slc,)
 
-            print "    write"
             arr[slc] += np.random.rand()
             dset[slc] = arr[slc]
-            assert_arr_equal(dset, arr)
+            assert_arr_equal(dset, arr, "write"+msg)
 
-            print "    read"
             out = dset[slc]
-            assert_arr_equal(out, arr[slc])
+            assert_arr_equal(out, arr[slc], "read"+msg)
 
-            print "    write direct"
             arr[slc] += np.random.rand()
             dset.write_direct(arr, slc, slc)
-            assert_arr_equal(dset, arr)
+            assert_arr_equal(dset, arr, "write direct"+msg)
 
-            print "    read direct"
             out = np.ndarray(shape, 'f')
             dset.read_direct(out, slc, slc)
-            assert_arr_equal(out[slc], arr[slc])
+            assert_arr_equal(out[slc], arr[slc], "read direct"+msg)
 
     def test_slices_big(self):
         # Test slicing behavior for indices larger than 2**32
@@ -90,20 +86,19 @@ class TestSlicing(object):
         regions = [ (42,1), (100,100), (1,42), (1,1), (4,1025)]
 
         for base in bases:
-            print "Testing base 2**%d" % np.log2(base)
 
             slices = [ s[base:base+x, base:base+y] for x, y in regions]
 
             dset = self.generate_dset(shape, dtype, maxshape=(None, None))
 
             for region, slc in zip(regions, slices):
-                print "    Testing shape %s slice %s" % (region, slc,)
+                msg = "Testing base %s shape %s slice %s" % (np.log2(base), region, slc,)
         
                 data = np.arange(np.product(region), dtype=dtype).reshape(region)
 
                 dset[slc] = data
 
-                assert_arr_equal(dset[slc], data)
+                assert_arr_equal(dset[slc], data, msg)
 
     def test_scalars(self):
         # Confirm correct behavior for scalar datasets
@@ -132,10 +127,9 @@ class TestSlicing(object):
 
             subarr = np.random.random(shape)
 
-            print "broadcast %s %s" % (slc, shape)
             dset[slc] = subarr
             arr[slc] = subarr
-            assert_arr_equal(dset, arr)
+            assert_arr_equal(dset, arr, "broadcast %s %s" % (slc, shape))
 
 
     @skip
@@ -173,8 +167,8 @@ class TestSlicing(object):
                    (s['b',...,5], srcarr[...,5]['b']) ]
 
         for slc, result in pairs:
-            print "slicing %s" % (slc,)
-            assert np.all(dset[slc] == result)
+            msg = "slicing %s" % (slc,)
+            assert np.all(dset[slc] == result), msg
 
 
 

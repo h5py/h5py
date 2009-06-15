@@ -7,16 +7,18 @@
 
 import numpy as np
 
+import h5py
+import unittest
 from common import makehdf, delhdf, assert_arr_equal,\
-                   INTS, FLOATS, COMPLEX, STRINGS
+                   INTS, FLOATS, COMPLEX, STRINGS, res
 
-class TestDataset(object):
+class TestDataset(unittest.TestCase):
 
     def setUp(self):
-        self.f = makehdf()
+        self.f = h5py.File(res.get_name(), 'w')
     
     def tearDown(self):
-        delhdf(self.f)
+        res.clear()
 
     def make_dset(self, *args, **kwds):
         if 'dset' in self.f:
@@ -33,7 +35,7 @@ class TestDataset(object):
             srcdata = np.arange(np.product(s)).reshape(s)
 
             for t in types:
-                print "test %s %s" % (s, t)
+                msg = "test %s %s" % (s, t)
                 data = srcdata.astype(t)
 
                 dset = self.make_dset(s, t)
@@ -44,7 +46,7 @@ class TestDataset(object):
 
                 dset = self.make_dset(data=data)
  
-                assert np.all(dset[...] == data)
+                assert np.all(dset[...] == data), msg
 
                 
                 

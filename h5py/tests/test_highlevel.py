@@ -20,7 +20,7 @@ import numpy
 from h5py.highlevel import *
 from h5py import *
 from h5py.h5 import H5Error
-from common import getfullpath, HDF5TestCase, api_18, api_16
+from common import getfullpath, HDF5TestCase, api_18, api_16, res
 import testfiles
 
 class SliceFreezer(object):
@@ -48,12 +48,10 @@ SHAPES = [(), (1,), (10,5), (1,10), (10,1), (100,1,100), (51,2,1025)]
 class TestFile(HDF5TestCase):
 
     def setUp(self):
-        newname = tempfile.mktemp('.hdf5')
-        shutil.copy(HDFNAME, newname)
-        self.fname = newname
+        self.fname = res.get_data_copy(HDFNAME)
 
     def tearDown(self):
-        os.unlink(self.fname)
+        res.clear()
 
     def test_unicode(self):
         # Two cases:
@@ -61,21 +59,13 @@ class TestFile(HDF5TestCase):
         #       Store w/filesystem encoding; should be readable as Unicode
         # 2. Raw byte string in ASCII range
         #       Store w/filesystem encoding; should be read as ASCII
-        fnames = (tempfile.mktemp(u'_\u201a.hdf5'),
-                  tempfile.mktemp('_.hdf5'))
-        print ""
-        for fname, typ in zip(fnames, (unicode, str, str)):
-            print 'checking "%r" (%s)' % (fname, typ)
-            f = None
-            try:
-                f = File(fname, 'w')
-                self.assert_(isinstance(f.filename, typ))
-                self.assertEqual(f.filename, fname)
-            finally:
-                if f:
-                    f.close()
-                if os.path.exists(fname):
-                    os.unlink(fname)
+        fnames = [res.get_name(u'_\u201a.hdf5'), res.get_name('_.hdf5')]
+        for fname, typ in zip(fnames, [unicode, str]):
+            msg = 'checking "%r" (%s)' % (fname, typ)
+            f = File(fname, 'w')
+            self.assert_(isinstance(f.filename, typ), msg)
+            self.assertEqual(f.filename, fname, msg)
+            f.close()
         
     def test_File_init_r(self):
         with File(self.fname, 'r') as f:
@@ -391,7 +381,6 @@ class TestExceptions(HDF5TestCase):
                      "create_dataset": ("foobar", (), 'i'),}
 
         for meth, args in valerrors.iteritems():
-            print "    Testing %s" % meth
             self.assertRaises(ValueError, getattr(self.f, meth), *args)
 
     def test_attributes(self):
@@ -422,13 +411,10 @@ class TestExceptions(HDF5TestCase):
 class TestGroup(HDF5TestCase):
 
     def setUp(self):
-
-        self.fname = tempfile.mktemp('.hdf5')
-        self.f = File(self.fname, 'w')
+        self.f = File(res.get_name(), 'w')
 
     def tearDown(self):
-        self.f.close()
-        os.unlink(self.fname)
+        res.clear()
 
     def assert_equal_contents(self, a, b):
         self.assertEqual(set(a), set(b))

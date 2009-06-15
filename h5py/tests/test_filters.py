@@ -2,17 +2,17 @@ import numpy as np
 import h5py
 from h5py import filters
 
-from nose.tools import assert_equal, assert_raises
+import unittest
 
-from common import makehdf, delhdf
+from common import res
 
-class TestFilters(object):
+class TestFilters(unittest.TestCase):
 
     def setUp(self):
-        self.f = makehdf()
+        self.f = h5py.File(res.get_name(), 'w')
 
     def tearDown(self):
-        delhdf(self.f)
+        res.clear()
 
     def make_dset(self, shape=None, dtype=None, **kwds):
         if 'dset' in self.f:
@@ -37,7 +37,7 @@ class TestFilters(object):
 
         for kwds, result in pairs:
             dset = self.make_dset((10,10), **kwds)
-            assert_equal(bool(dset.chunks), result)
+            self.assertEqual(bool(dset.chunks), result)
 
         # Test user-defined chunking
         shapes = [(), (1,), (10,5), (1,10), (2**60, 2**60, 2**34)]
@@ -50,7 +50,7 @@ class TestFilters(object):
         for shape in shapes:
             for chunk in chunks[shape]:
                 dset = self.make_dset(shape, chunks=chunk)
-                assert_equal(dset.chunks, chunk)
+                self.assertEqual(dset.chunks, chunk)
 
     def test_compression(self):
         # Dataset compression keywords only
@@ -65,10 +65,10 @@ class TestFilters(object):
             opts     += (filters.DEFAULT_SZIP,)
 
         for s, r, o in zip(settings, results, opts):
-            print 'compression "%s"' % s
+            msg =  'compression "%s"' % s
             dset = self.make_dset(compression=s)
-            assert_equal(dset.compression, r)
-            assert_equal(dset.compression_opts, o)
+            self.assertEqual(dset.compression, r, msg)
+            self.assertEqual(dset.compression_opts, o, msg)
 
     def test_compression_opts(self):
         # Dataset compression keywords & options
@@ -82,10 +82,10 @@ class TestFilters(object):
 
         for t in types:
             for o in opts[t]:
-                print "compression %s %s" % (t, o)
+                msg = "compression %s %s" % (t, o)
                 dset = self.make_dset(compression=t, compression_opts=o)
-                assert_equal(dset.compression, t)
-                assert_equal(dset.compression_opts, o)
+                self.assertEqual(dset.compression, t, msg)
+                self.assertEqual(dset.compression_opts, o, msg)
 
     def test_fletcher32_shuffle(self):
         # Check fletcher32 and shuffle
@@ -94,11 +94,11 @@ class TestFilters(object):
         results = (False, False, True)
 
         for s, r in zip(settings, results):
-            print "test %s %s" % (s,r)
+            msg = "test %s %s" % (s,r)
             dset = self.make_dset(fletcher32=s)
-            assert_equal(dset.fletcher32, r)
+            self.assertEqual(dset.fletcher32, r, msg)
             dset = self.make_dset(shuffle=s)
-            assert_equal(dset.shuffle, r)
+            self.assertEqual(dset.shuffle, r, msg)
 
     def test_data(self):
         # Ensure data can be read/written with filters
@@ -110,12 +110,12 @@ class TestFilters(object):
         types = ('f','i', 'c')
 
         def test_dset(shape, dtype, **kwds):
-            print "test %s %s %s" % (shape, dtype, kwds)
+            msg = "test %s %s %s" % (shape, dtype, kwds)
 
             dset = self.make_dset(s, dtype, **kwds)
             arr = (np.random.random(s)*100).astype(dtype)
             dset[...] = arr
-            assert np.all(dset[...] == arr)
+            assert np.all(dset[...] == arr), msg
 
         for s in shapes:
             for t in types:

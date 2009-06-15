@@ -56,7 +56,11 @@ class ResourceManager(object):
         """ Return the full path to a data file (given its basename) """
         return op.abspath(op.join(DATADIR, name))
 
-    
+    def get_data_copy(self, name):
+        iname = self.get_data_path(name)
+        fname = self.get_name()
+        shutil.copy(iname, fname)
+        return fname
 
 res = ResourceManager()
 
@@ -101,7 +105,6 @@ def delhdf(f):
 
 EPSILON = 1e-5
 import numpy as np
-from nose.tools import assert_equal
 
 INTS = ('i', 'i1', '<i2', '>i2', '<i4', '>i4')
 FLOATS = ('f', '<f4', '>f4', '<f8', '>f8')
@@ -125,8 +128,8 @@ def assert_arr_equal(dset, arr, message=None, precision=None):
         assert dset - arr < precision, message
         return
 
-    assert_equal(dset.shape, arr.shape, message)
-    assert_equal(dset.dtype, arr.dtype, message)
+    assert dset.shape == arr.shape, message
+    assert dset.dtype == arr.dtype, message
     assert np.all(np.abs(dset[...] - arr[...]) < precision), "%s %s" % (dset[...], arr[...]) if not message else message
 
 class HDF5TestCase(unittest.TestCase):
