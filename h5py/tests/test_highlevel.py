@@ -16,6 +16,7 @@ import tempfile
 import shutil
 import os
 import numpy
+import numpy as np
 
 import os.path as op
 
@@ -23,6 +24,7 @@ import h5py
 from h5py.highlevel import *
 from h5py import *
 from common import getfullpath, HDF5TestCase, api_18, api_16, res, TestCasePlus
+import common
 import testfiles
 
 class SliceFreezer(object):
@@ -387,43 +389,6 @@ class TestDataset(HDF5TestCase):
                 arr = dset[slc]
                 self.assert_(numpy.all(arr == data), "%r \n\n %r" % (arr, data))
 
-
-    @skip
-    def test_slice_coords(self):
-        """ Test slicing with CoordsList instances """
-
-        space = (100,100)
-
-        # These need to be increasing to make it easy to compare to the
-        # NumPy reference array, which uses a boolean mask.
-        selections = [0,1,15,101,102, 557, 664, 1024,9999]
-        selections_list = [ selections, []]  # empty selection
-
-        arr = numpy.arange(10000).reshape(space)
-        
-        dset = self.f.create_dataset('dset', data=arr)
-
-        # Scalar selections
-        for x in selections:
-            sel = CoordsList(numpy.unravel_index(x,space))
-            self.assertEqual(dset[sel], arr.flat[x])
-            self.assert_(not isinstance(dset[sel], numpy.ndarray))
-
-        for lst in selections_list:
-            # Coordinate list selection
-            sel = CoordsList([numpy.unravel_index(x,space) for x in lst])
-
-            npy_sel = numpy.zeros(space, dtype='bool')
-            for x in lst:
-                npy_sel.flat[x] = True
-
-            hresult = dset[sel]
-            nresult = arr[npy_sel]
-            self.assert_(numpy.all(hresult == nresult))
-            self.assert_(isinstance(hresult, numpy.ndarray))
-            self.assertEqual(hresult.dtype, nresult.dtype)
-            self.assertEqual(hresult.shape, nresult.shape)
-
     def test_Dataset_exceptions(self):
         """ Test exceptions """
         # These trigger exceptions in H5Dread
@@ -718,8 +683,36 @@ class TestGroup(HDF5TestCase):
         self.assert_(not any(x.find('grp2/sg1/ssg1') >= 0 for x in group_visit))
 
 
+class TestTypes(TestCasePlus):
 
+    def setUp(self):
+        pass
 
+    def tearDown(self):
+        res.clear()
+
+    def test_enum(self):
+        # Test high-level enumerated type
+
+        vals = {'a': 1, 'b': 2, 'c': 42}
+        
+        f = h5py.File(res.get_name(), 'w')
+        for idx, basetype in enumerate(np.dtype(x) for x in (common.INTS + common.UINTS)):
+
+            msg = "dset %s, type %s" % (idx, basetype)
+
+            dt = h5py.new_enum(basetype, vals)
+            self.assertEqual(h5py.get_enum(dt), vals, msg)
+            self.assert_(h5py.get_enum(np.dtype('i')) is None, msg)
+
+            # Test dataset creation
+            refarr = np.zeros((4,4), dtype=dt)
+            ds = f.create_dataset(str(idx), (4,4), dtype=dt)
+            self.assert_(np.all(ds[...] == refarr), msg)
+
+            # Test conversion to/from plain integer
+            ds[0,0] = np.array(64, dtype=dt)
+            self.assertEqual(ds[0,0], 64, msg)
 
 
 

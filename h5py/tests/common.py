@@ -115,6 +115,7 @@ EPSILON = 1e-5
 import numpy as np
 
 INTS = ('i', 'i1', '<i2', '>i2', '<i4', '>i4')
+UINTS = ('u1', '<u2', '>u2', '<u4', '>u4')
 FLOATS = ('f', '<f4', '>f4', '<f8', '>f8')
 COMPLEX = ('<c8', '>c8', '<c16', '>c16')
 STRINGS = ('|S1', '|S2', 'S17', '|S100')
