@@ -60,6 +60,8 @@ class ResourceManager(object):
             if op.exists(fname):
                 os.unlink(fname)
 
+        self.fnames.clear()
+
     def get_data_path(self, name):
         """ Return the full path to a data file (given its basename) """
         return op.abspath(op.join(DATADIR, name))

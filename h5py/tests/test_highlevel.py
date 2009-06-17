@@ -31,9 +31,6 @@ class SliceFreezer(object):
     def __getitem__(self, args):
         return args
 
-def skip(func):
-    return None
-
 TYPES1 = \
   [ "<i1", "<i2", "<i4", "<i8", ">i1", ">i2", ">i4", ">i8", "|i1", "|u1", 
     "<u1", "<u2", "<u4", "<u8", ">u1", ">u2", ">u4", ">u8",
