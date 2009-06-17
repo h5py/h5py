@@ -18,6 +18,8 @@ import shutil
 from h5py import h5f, h5p, h5
 import h5py
 
+import numpy as np
+
 DATADIR = op.join(op.dirname(h5py.__file__), 'tests/data')
 
 class ResourceManager(object):
@@ -28,7 +30,7 @@ class ResourceManager(object):
         having to manually unlink its files, and restores the library to
         a known state.
     """
-
+    
     def __init__(self):
         self.fnames = set()
 
@@ -70,6 +72,27 @@ class ResourceManager(object):
 
 res = ResourceManager()
 
+class TypeManager(object):
+
+    ints =  [np.dtype(x) for x in ('i', 'i1', '<i2', '>i2', '<i4', '>i4')]
+    uints = [np.dtype(x) for x in ('u1', '<u2', '>u2', '<u4', '>u4')]
+    floats =  [np.dtype(x) for x in ('f', '<f4', '>f4', '<f8', '>f8')]
+    complex = [np.dtype(x) for x in ('<c8', '>c8', '<c16', '>c16')]
+    strings = [np.dtype(x) for x in ('|S1', '|S2', 'S17', '|S100')]
+    voids =   [np.dtype(x) for x in ('|V1', '|V4', '|V8', '|V193')]
+
+    compounds = [np.dtype(x) for x in \
+                (   [('a', 'i'), ('b', 'f')],
+                    [('a', '=c8'), ('b', [('a', 'i'), ('b', 'f')])] ) ] 
+
+types = TypeManager()
+
+FLOATS = ('f', '<f4', '>f4', '<f8', '>f8')
+COMPLEX = ('<c8', '>c8', '<c16', '>c16')
+STRINGS = ('|S1', '|S2', 'S17', '|S100')
+VOIDS = ('|V4', '|V8')
+
+
 def getfullpath(name):
     return op.abspath(op.join(DATADIR, name))
 
@@ -90,26 +113,6 @@ def skip(func):
     skipped.append(func)
     return None
 
-test_coverage = set()
-
-def covers(*args):
-    global test_coverage
-    
-    def wrap(meth):
-        test_coverage.update(args)
-        return meth
-
-    return wrap
-
-def makehdf():
-    fname = tempfile.mktemp('.hdf5')
-    f = h5py.File(fname, 'w')
-    return f
-
-def delhdf(f):
-    fname = f.filename
-    f.close()
-    os.unlink(fname)
 
 EPSILON = 1e-5
 import numpy as np
@@ -121,57 +124,18 @@ COMPLEX = ('<c8', '>c8', '<c16', '>c16')
 STRINGS = ('|S1', '|S2', 'S17', '|S100')
 VOIDS = ('|V4', '|V8')
 
-def assert_arr_equal(dset, arr, message=None, precision=None):
-    """ Make sure dset and arr have the same shape, dtype and contents, to
-        within the given precision.
+class TestCasePlus(unittest.TestCase):
 
-        Note that dset may be a NumPy array or an HDF5 dataset.
-    """
-    if precision is None:
-        precision = EPSILON
-    if message is None:
-        message = ''
-
-    if np.isscalar(dset) or np.isscalar(arr):
-        assert np.isscalar(dset) and np.isscalar(arr), "%r %r" % (dset, arr)
-        assert dset - arr < precision, message
-        return
-
-    assert dset.shape == arr.shape, message
-    assert dset.dtype == arr.dtype, message
-    assert np.all(np.abs(dset[...] - arr[...]) < precision), "%s %s" % (dset[...], arr[...]) if not message else message
-
-class HDF5TestCase(unittest.TestCase):
-
-    """
-        Base test for unit test classes.
-    """
-
-    h5py_verbosity = 0
-
-    def output(self, ipt):
-        """Print to stdout, only if verbosity levels so requires"""
-        if self.h5py_verbosity >= 3:
-            print ipt
-
-    def setup_fid(self, hdfname):
-        """Open a copy of an HDF5 file and set its identifier as self.fid"""
-        hdfname = getfullpath(hdfname)
-        newname = tempfile.mktemp('.hdf5')
-        shutil.copy(hdfname, newname)
-
+    def setup_fid(self, name):
+        self.fname = res.get_data_copy(name)
+        
         plist = h5p.create(h5p.FILE_ACCESS)
         plist.set_fclose_degree(h5f.CLOSE_STRONG)
-        self.fid = h5f.open(newname, h5f.ACC_RDWR, fapl=plist)
-        self.fname = newname
-        self.src_fname = hdfname
+        self.fid = h5f.open(self.fname, h5f.ACC_RDWR, fapl=plist)
 
     def teardown_fid(self):
-        """Close the HDF5 file copy and delete it"""
         self.fid.close()
         os.unlink(self.fname)
-
-class TestCasePlus(unittest.TestCase):
 
     def assertRaisesMsg(self, msg, exc, clb, *args, **kwds):
         try:
@@ -180,6 +144,27 @@ class TestCasePlus(unittest.TestCase):
             return
         raise AssertionError("%s not raised: %s" % (exc, msg))
 
+    def assertArrayEqual(self, dset, arr, message=None, precision=None):
+        """ Make sure dset and arr have the same shape, dtype and contents, to
+            within the given precision.
+
+            Note that dset may be a NumPy array or an HDF5 dataset.
+        """
+        if precision is None:
+            precision = EPSILON
+        if message is None:
+            message = ''
+        else:
+            message = ' (%s)' % message
+
+        if np.isscalar(dset) or np.isscalar(arr):
+            assert np.isscalar(dset) and np.isscalar(arr), 'Scalar/array mismatch ("%r" vs "%r")%s' % (dset, arr, message)
+            assert dset - arr < precision, "Scalars differ by more than %.3f%s" % (precision, message)
+            return
+
+        assert dset.shape == arr.shape, "Shape mismatch (%s vs %s)%s" % (dset.shape, arr.shape, message)
+        assert dset.dtype == arr.dtype, "Dtype mismatch (%s vs %s)%s" % (dset.dtype, arr.dtype, message)
+        assert np.all(np.abs(dset[...] - arr[...]) < precision), "Arrays differ by more than %.3f%s" % (precision, message)
 
 
 

@@ -322,12 +322,18 @@ class FancySelection(Selection):
 
         sequenceargs = {}
         for idx, arg in enumerate(args):
-            # TODO: Put argument verification back in and handle boolean arrays
             if not isinstance(arg, slice):
+                if hasattr(arg, 'dtype') and arg.dtype == np.dtype('bool'):
+                    if len(arg.shape) != 1:
+                        raise TypeError("Boolean indexing arrays must be 1-D")
+                    arg = arg.nonzero()[0]
                 try:
                     sequenceargs[idx] = list(arg)
                 except TypeError:
                     pass
+                else:
+                    if sorted(arg) != list(arg):
+                        raise TypeError("Indexing elements must be in increasing order")
 
         if len(sequenceargs) > 1:
             # TODO: fix this with broadcasting

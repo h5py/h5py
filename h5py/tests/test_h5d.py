@@ -11,7 +11,7 @@
 #-
 
 import numpy
-from common import HDF5TestCase
+from common import TestCasePlus
 
 from h5py import *
 
@@ -33,7 +33,7 @@ for i in range(SHAPE[0]):
     basearray[i]["f_name"][:] = numpy.array((1024.9637*i,)*10)
     basearray[i]["g_name"] = 109
 
-class TestH5D(HDF5TestCase):
+class TestH5D(TestCasePlus):
 
 
     def setUp(self):

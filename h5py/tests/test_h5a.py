@@ -12,7 +12,7 @@
 
 from numpy import array, ndarray, dtype, all, ones
 
-from common import HDF5TestCase, api_18
+from common import TestCasePlus, api_18
 
 from h5py import *
 
@@ -28,7 +28,7 @@ ATTRIBUTES_ORDER = sorted(ATTRIBUTES) # ['String Attribute', 'Integer', 'Integer
 NEW_ATTRIBUTES = {'New float': ( 3.14, dtype('<f4'), ()) }
 
 
-class TestH5A(HDF5TestCase):
+class TestH5A(TestCasePlus):
 
     def setUp(self):
         self.setup_fid(HDFNAME)

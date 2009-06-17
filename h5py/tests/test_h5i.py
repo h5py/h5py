@@ -10,14 +10,14 @@
 # 
 #-
 
-from common import HDF5TestCase
+from common import TestCasePlus
 
 from h5py import *
 
 HDFNAME = 'attributes.hdf5'
 OBJECTNAME = 'Group'
 
-class TestH5I(HDF5TestCase):
+class TestH5I(TestCasePlus):
 
 
     def setUp(self):

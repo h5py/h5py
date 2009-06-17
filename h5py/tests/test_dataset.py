@@ -9,10 +9,9 @@ import numpy as np
 
 import h5py
 import unittest
-from common import makehdf, delhdf, assert_arr_equal,\
-                   INTS, FLOATS, COMPLEX, STRINGS, res
+from common import TestCasePlus, INTS, FLOATS, COMPLEX, STRINGS, res
 
-class TestDataset(unittest.TestCase):
+class TestDataset(TestCasePlus):
 
     def setUp(self):
         self.f = h5py.File(res.get_name(), 'w')

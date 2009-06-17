@@ -13,13 +13,13 @@
 import numpy
 import os
 import tempfile
-from common import getfullpath, HDF5TestCase
+from common import TestCasePlus, res
 
 from h5py import *
 
 HDFNAME = 'attributes.hdf5'
 
-class TestH5F(HDF5TestCase):
+class TestH5F(TestCasePlus):
 
 
     def setUp(self):
@@ -29,7 +29,7 @@ class TestH5F(HDF5TestCase):
         self.teardown_fid()
 
     def test_open_close(self):
-        fid = h5f.open(getfullpath(HDFNAME), h5f.ACC_RDONLY)
+        fid = h5f.open(res.get_data_path('attributes.hdf5'), h5f.ACC_RDONLY)
         self.assertEqual(h5i.get_type(fid), h5i.FILE)
         fid.close()
         self.assertEqual(h5i.get_type(fid), h5i.BADID)

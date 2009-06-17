@@ -16,7 +16,7 @@ import os
 from numpy import dtype
 
 from h5py import *
-from common import HDF5TestCase
+from common import TestCasePlus
 
 kind_map = {'i': h5t.TypeIntegerID, 'u': h5t.TypeIntegerID, 'f': h5t.TypeFloatID,
            'c': h5t.TypeCompoundID, 'S': h5t.TypeStringID, 'V': h5t.TypeOpaqueID}
@@ -30,7 +30,7 @@ simple_types = \
     "<f4", "<f8", ">f4", ">f8", "<c8", "<c16", ">c8", ">c16",
     "|S1", "|S2", "|S33", "|V1", "|V2", "|V33"]
 
-class TestH5T(HDF5TestCase):
+class TestH5T(TestCasePlus):
 
 
     def test_create(self):

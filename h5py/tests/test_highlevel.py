@@ -23,7 +23,7 @@ import os.path as op
 import h5py
 from h5py.highlevel import *
 from h5py import *
-from common import getfullpath, HDF5TestCase, api_18, api_16, res, TestCasePlus
+from common import TestCasePlus, api_18, api_16, res, TestCasePlus
 import common
 import testfiles
 
@@ -33,8 +33,6 @@ class SliceFreezer(object):
 
 def skip(func):
     return None
-
-HDFNAME = getfullpath("smpl_compound_chunked.hdf5")
 
 TYPES1 = \
   [ "<i1", "<i2", "<i4", "<i8", ">i1", ">i2", ">i4", ">i8", "|i1", "|u1", 
@@ -52,7 +50,7 @@ SHAPES = [(), (1,), (10,5), (1,10), (10,1), (100,1,100), (51,2,1025)]
 class TestFile(TestCasePlus):
 
     def setUp(self):
-        self.fname = res.get_data_copy(HDFNAME)
+        self.fname = res.get_data_copy("smpl_compound_chunked.hdf5")
 
     def tearDown(self):
         res.clear()
@@ -256,7 +254,7 @@ class TestFile(TestCasePlus):
         del f.attrs['a']
         self.assert_(not 'a' in f.attrs)
 
-class TestDataset(HDF5TestCase):
+class TestDataset(TestCasePlus):
 
     def setUp(self):
 
@@ -306,8 +304,6 @@ class TestDataset(HDF5TestCase):
     def test_Dataset_resize(self):
         """ Test extending datasets """
 
-        self.output("")
-
         init_shapes = [(100,), (100,100), (150,100)]
         max_shapes = [(200,), (200,200), (None, 100)]
         chunks = [(10,), (10,10), (10,10)]
@@ -328,12 +324,12 @@ class TestDataset(HDF5TestCase):
             self.assertEqual(ds.shape, shape)
 
             for final_shape in final_shapes[shape]:
-                self.output("    Extending %s to %s" % (shape, final_shape))
+                msg = "Extending %s to %s" % (shape, final_shape)
                 newarr = numpy.arange(numpy.product(final_shape)).reshape(final_shape)
                 ds.resize(final_shape)
                 ds[...] = newarr
-                self.assertEqual(ds.shape, final_shape)
-                self.assert_(numpy.all(ds[...] == newarr))
+                self.assertEqual(ds.shape, final_shape, msg)
+                self.assertArrayEqual(ds[...], newarr, msg)
 
             for illegal_shape in illegal_shapes[shape]:
                 self.assertRaises(ValueError, ds.resize, illegal_shape)
@@ -358,8 +354,6 @@ class TestDataset(HDF5TestCase):
         self.assertRaises(TypeError, list, d2)
 
     def test_slice_big(self):
-        """ Test slices > 2**32 """
-        self.output("")
 
         s = SliceFreezer()
 
@@ -375,19 +369,19 @@ class TestDataset(HDF5TestCase):
             dset = self.f.create_dataset("dset", (2**62, 2**62), '=f4', maxshape=(None,None))
 
             for shp, slc in zip(shapes, slices):
-                self.output("    Testing base 2**%d" % numpy.log2(base))
+                msg = "Testing slice base 2**%d" % numpy.log2(base)
 
-                empty = numpy.zeros(shp)
+                empty = numpy.zeros(shp, dtype='=f4')
                 data = numpy.arange(numpy.product(shp), dtype='=f4').reshape(shp)
 
                 dset[slc] = empty
                 arr = dset[slc]
                 self.assertEqual(arr.shape, shp)
-                self.assert_(numpy.all(arr == empty), "%r \n\n %r" % (arr, empty))
+                self.assertArrayEqual(arr, empty, msg)
                 
                 dset[slc] = data
                 arr = dset[slc]
-                self.assert_(numpy.all(arr == data), "%r \n\n %r" % (arr, data))
+                self.assertArrayEqual(arr, data, msg)
 
     def test_Dataset_exceptions(self):
         """ Test exceptions """
@@ -398,7 +392,7 @@ class TestDataset(HDF5TestCase):
         self.assertRaises(TypeError, dsid.id.read, h5s.ALL, h5s.ALL, arr)
         # or it'll segfault...
 
-class TestExceptions(HDF5TestCase):
+class TestExceptions(TestCasePlus):
 
     def setUp(self):
 
@@ -458,7 +452,7 @@ class TestExceptions(HDF5TestCase):
                 pass
             os.unlink(fname)
 
-class TestGroup(HDF5TestCase):
+class TestGroup(TestCasePlus):
 
     def setUp(self):
         self.f = File(res.get_name(), 'w')
@@ -536,27 +530,26 @@ class TestGroup(HDF5TestCase):
     def test_Group_setgetitem(self):
         # Also tests named types
 
-        self.output('')
         for shape in SHAPES:
             for dt in TYPES1:
 
-                self.output("    Assigning %s %s" % (dt, shape))
+                msg = "Assign %s %s" % (dt, shape)
 
                 # test arbitrary datasets
                 dt_obj = numpy.dtype(dt)       
                 arr = numpy.ones(shape, dtype=dt_obj)
                 self.f["DS"] = arr
                 harr = self.f["DS"]
-                self.assert_(isinstance(harr, Dataset))
-                self.assertEqual(harr.shape, shape)
-                self.assertEqual(harr.dtype, dt_obj)
-                self.assert_(numpy.all(harr.value == arr))
+                self.assert_(isinstance(harr, Dataset), msg)
+                self.assertEqual(harr.shape, shape, msg)
+                self.assertEqual(harr.dtype, dt_obj, msg)
+                self.assertArrayEqual(harr.value, arr[()], msg)
 
                 # test named types
                 self.f["TYPE"] = dt_obj
                 htype = self.f["TYPE"]
-                self.assert_(isinstance(htype, Datatype))
-                self.assertEqual(htype.dtype, dt_obj)
+                self.assert_(isinstance(htype, Datatype), msg)
+                self.assertEqual(htype.dtype, dt_obj, msg)
 
                 del self.f["DS"]
                 del self.f["TYPE"]

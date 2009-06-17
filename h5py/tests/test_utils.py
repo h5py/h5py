@@ -12,12 +12,12 @@
 import sys
 import numpy
 
-from common import HDF5TestCase, api_18
+from common import TestCasePlus, api_18
 
 from h5py import *
 from h5py import utils
 
-class TestUtils(HDF5TestCase):
+class TestUtils(TestCasePlus):
 
     def test_check_read(self):
         """ Check if it's possible to read from the NumPy array """

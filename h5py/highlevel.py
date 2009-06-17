@@ -1013,8 +1013,13 @@ class Dataset(HLObject):
             if len(names) != 0:
                 raise TypeError("Field name selections are not allowed for write.")
 
-            # Validate the input array
-            val = numpy.asarray(val, order='C')
+            val2 = numpy.asarray(val, order='C')
+
+            # Special fudge factor for weirdness with scalar compound literals
+            if self.dtype.kind == 'V' and val2.dtype.kind != 'V':
+                val = numpy.asarray(val, dtype=self.dtype, order='C')
+            else:
+                val = val2
 
             # Check for array dtype compatibility and convert
             if self.dtype.subdtype is not None:
@@ -1033,13 +1038,15 @@ class Dataset(HLObject):
             if selection.nselect == 0:
                 return
 
-            # Broadcast scalars if necessary
-            # TODO: fix scalar broadcasting for array types
-            if mshape == () and selection.mshape != () and self.dtype.subdtype is None:
+            # Broadcast scalars if necessary.
+            if (mshape == () and selection.mshape != ()):
+                if self.dtype.subdtype is not None:
+                    raise NotImplementedError("Scalar broadcasting is not supported for array dtypes")
                 val2 = numpy.empty(selection.mshape[-1], dtype=val.dtype)
                 val2[...] = val
                 val = val2
-            
+                mshape = val.shape
+
             # Perform the write, with broadcasting
             # Be careful to pad memory shape with ones to avoid HDF5 chunking
             # glitch, which kicks in for mismatched memory/file selections
@@ -1161,12 +1168,11 @@ class AttributeManager(_LockableObject, _DictCompat):
         """ Delete an attribute (which must already exist). """
         h5a.delete(self.id, name)
 
-    def create(self, name, data=None, shape=None, dtype=None):
+    def create(self, name, data, shape=None, dtype=None):
         """ Create a new attribute, overwriting any existing attribute.
 
         name:   Name of the new attribute (required)
-        data:   An array to initialize the attribute.
-                Required unless "shape" is given.
+        data:   An array to initialize the attribute (required)
         shape:  Shape of the attribute.  Overrides data.shape if both are
                 given.  The total number of points must be unchanged.
         dtype:  Data type of the attribute.  Overrides data.dtype if both

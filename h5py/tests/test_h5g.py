@@ -10,7 +10,7 @@
 # 
 #-
 
-from common import HDF5TestCase
+from common import TestCasePlus
 
 from h5py import *
 
@@ -19,7 +19,7 @@ OBJECTNAME = 'Group'
 TEST_GROUPS = ['Subgroup1','Subgroup2','Subgroup3']
 NEW_LINK_NAME = 'Link name'
 
-class TestH5G(HDF5TestCase):
+class TestH5G(TestCasePlus):
 
 
     def setUp(self):
@@ -41,7 +41,7 @@ class TestH5G(HDF5TestCase):
             grp._close()
             self.assert_(not self.is_grp(grp), pr+"::"+str(grp))
         
-        self.assertRaises(H5Error, h5g.open, self.obj, 'Some other group')
+        self.assertRaises(KeyError, h5g.open, self.obj, 'Some other group')
 
     def test_create(self):
 

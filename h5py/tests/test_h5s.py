@@ -26,8 +26,6 @@ class TestH5S(unittest.TestCase):
         sid._close()
         self.assertEqual(h5i.get_type(sid), h5i.BADID)
 
-        self.assertRaises(H5Error, h5s.create, -1)
-
     def test_copy(self):
         sid = h5s.create(h5s.SCALAR)
         sid2 = sid.copy()
@@ -43,7 +41,7 @@ class TestH5S(unittest.TestCase):
             self.assertEqual(sid.get_simple_extent_ndims(), len(space))
 
         self.assertRaises(ValueError, h5s.create_simple, None)
-        self.assertRaises(H5Error, h5s.create_simple, (10,10), (10,9))
+        self.assertRaises(ValueError, h5s.create_simple, (10,10), (10,9))
         self.assertRaises(ValueError, h5s.create_simple, (10,10), (10,))
 
     def test_is_simple(self):

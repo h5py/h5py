@@ -1,8 +1,32 @@
+
+"""
+    Tests slicing compatibility.  The following slicing schemes are supported:
+
+    Simple slicing
+        Uses any combination of integers, ":" and "...".  These translate
+        to hyperslab selections and are the easiest to implement
+
+    Broadcast slicing
+        Refers to simple slicing where the shape of the selection and the
+        shape of the memory data do not match.  The rules for NumPy
+        broadcasting are pathologically complex.  Therefore, broadcasting is
+        not supported for advanced indexing.
+
+    Advanced indexing
+        Equivalent to simple slicing, except that the following are allowed:
+
+        1.  A list of indices, per axis
+        2.  A boolean array, per axis
+        3.  One large boolean array
+"""
+
+
+
 import numpy as np
 import os
 import unittest
 
-from common import makehdf, delhdf, assert_arr_equal, skip, res
+from common import TestCasePlus, res
 
 import h5py
 
@@ -14,7 +38,7 @@ class SliceFreezer(object):
 
 s = SliceFreezer()
 
-class TestSlicing(unittest.TestCase):
+class TestSlicing(TestCasePlus):
 
     def setUp(self):
         self.f = h5py.File(res.get_name(), 'w')
@@ -63,18 +87,18 @@ class TestSlicing(unittest.TestCase):
 
             arr[slc] += np.random.rand()
             dset[slc] = arr[slc]
-            assert_arr_equal(dset, arr, "write"+msg)
+            self.assertArrayEqual(dset, arr, "write"+msg)
 
             out = dset[slc]
-            assert_arr_equal(out, arr[slc], "read"+msg)
+            self.assertArrayEqual(out, arr[slc], "read"+msg)
 
             arr[slc] += np.random.rand()
             dset.write_direct(arr, slc, slc)
-            assert_arr_equal(dset, arr, "write direct"+msg)
+            self.assertArrayEqual(dset, arr, "write direct"+msg)
 
             out = np.ndarray(shape, 'f')
             dset.read_direct(out, slc, slc)
-            assert_arr_equal(out[slc], arr[slc], "read direct"+msg)
+            self.assertArrayEqual(out[slc], arr[slc], "read direct"+msg)
 
     def test_slices_big(self):
         # Test slicing behavior for indices larger than 2**32
@@ -98,7 +122,7 @@ class TestSlicing(unittest.TestCase):
 
                 dset[slc] = data
 
-                assert_arr_equal(dset[slc], data, msg)
+                self.assertArrayEqual(dset[slc], data, msg)
 
     def test_scalars(self):
         # Confirm correct behavior for scalar datasets
@@ -129,22 +153,24 @@ class TestSlicing(unittest.TestCase):
 
             dset[slc] = subarr
             arr[slc] = subarr
-            assert_arr_equal(dset, arr, "broadcast %s %s" % (slc, shape))
+            self.assertArrayEqual(dset, arr, "broadcast %s %s" % (slc, shape))
 
+    def test_scalar_broadcast(self):
+        # Check scalar broadcasting for multiple types
 
-    @skip
-    def test_broadcast_big(self):
+        types = ['i', 'f', [('a', 'i'), ('b','f')]]
+        values = [np.ones((), t) for t in types]
 
-        M = 1024*1024
+        for idx, (v, t) in enumerate(zip(values, types)):
 
-        dset = self.f.create_dataset('dset', (100,0.5*M), 'i')
+            comparison = np.empty((100,100), dtype=t)
+            comparison[...] = v
 
-        dset[...] = 42
+            dset = self.f.create_dataset('ds%d' % idx, (100,100), dtype=t)
 
-        comprow = np.ones((0.5*M,),dtype='i')*42
+            dset[...] = v
 
-        for row in dset:
-            assert np.all(row == comprow)
+            self.assert_(np.all(dset[...] == comparison), "%d: %s %s" % (idx, v, t))
 
     def test_slice_names(self):
         # Test slicing in conjunction with named fields
@@ -170,6 +196,36 @@ class TestSlicing(unittest.TestCase):
             msg = "slicing %s" % (slc,)
             assert np.all(dset[slc] == result), msg
 
+    def test_fancy_index(self):
+        # Test fancy selection with list indexing. Addresses I29, I31, I32.
+
+        mydata = np.arange(4*5,dtype='i').reshape((4,5))
+        dset = self.f.create_dataset("mydata", data=mydata)
+
+        slc = s[:, [0,1,2,3,4]]
+        self.assertArrayEqual(mydata[slc], dset[slc])
+
+        self.assertRaises(TypeError, dset.__getitem__, s[0,[1,0,2]])
+        self.assertRaises(TypeError, dset.__getitem__, s[[0,1], [0,1]])
+
+        # Boolean array indexing
+        barr = np.array([True, False, True, True], 'bool')
+        self.assertArrayEqual(mydata[0,barr], dset[0,barr])
+
+        # Check that NumPy arrays can be used as lists
+        slc = s[:, np.array([0,1,3], dtype='i')]
+        self.assertArrayEqual(mydata[slc], dset[slc])
+
+    def test_compound_literal(self):
+        # I41
+        dt = np.dtype([('a', 'i'), ('b', 'f'), ('c', '|S10')])
+        val = (1, 2.0, "Hello")
+
+        dset = self.f.create_dataset("ds", (10,), dt)
+        
+        dset[0] = val
+        
+        self.assert_(np.all(dset[0]==val))
 
 
 
