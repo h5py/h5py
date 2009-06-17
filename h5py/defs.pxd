@@ -758,7 +758,8 @@ cdef extern from "hdf5.h":
   H5Z_EDC_t H5Pget_edc_check(hid_t plist) except *
 
   # Other properties
-  herr_t H5Pset_sieve_buf_size(hid_t fapl_id, hsize_t size) except *
+  herr_t H5Pset_sieve_buf_size(hid_t fapl_id, size_t size) except *
+  herr_t H5Pget_sieve_buf_size(hid_t fapl_id, size_t *size) except *
   herr_t H5Pset_fapl_log(hid_t fapl_id, char *logfile,
                          unsigned int flags, size_t buf_size) except *
 

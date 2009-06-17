@@ -72,6 +72,10 @@ class TestFAID(unittest.TestCase):
         self.p.set_fapl_core(*settings)
         self.assertEqual(self.p.get_fapl_core(), settings)
 
+    def test_sieve(self):
+        self.p.get_sieve_buf_size()
+        self.p.set_sieve_buf_size(128*1024)
+        self.assertEqual(self.p.get_sieve_buf_size(), 128*1024)
 
 class TestDCID(unittest.TestCase):
 

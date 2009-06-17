@@ -187,4 +187,27 @@ cdef class PropFAID(PropInstanceID):
         H5Pget_cache(self.id, &mdc, &rdcc, &rdcc_nbytes, &w0)
         return (mdc, rdcc, rdcc_nbytes, w0)
 
+    @sync
+    def set_sieve_buf_size(self, size_t size):
+        """ (UINT size)
+
+        Set the maximum size of the data sieve buffer (in bytes).  This
+        buffer can improve I/O performance for hyperslab I/O, by combining
+        reads and writes into blocks of the given size.  The default is 64k.
+        """
+        H5Pset_sieve_buf_size(self.id, size)
+
+    @sync
+    def get_sieve_buf_size(self):
+        """ () => UINT size
+
+        Get the current maximum size of the data sieve buffer (in bytes).
+        """
+        cdef size_t size
+        H5Pget_sieve_buf_size(self.id, &size)
+        return size
+
+
+
+
 
