@@ -224,7 +224,6 @@ herr_t str_to_vlen(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
                     if(inter_string == NULL) goto conv_failed;
                     len = PyString_Size(inter_string)+1;
                     str_tmp = PyString_AsString(inter_string);
-                    Py_DECREF(inter_string);
                 }
 
             }
@@ -234,12 +233,18 @@ herr_t str_to_vlen(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
 
         }            
 
+        retval = 0;
+
+        conv_out:
+
+        /* Note we do NOT decref obj, as it is a borrowed reference */
+        Py_XDECREF(inter_string);
         PyGILState_Release(gil);
-        return 0;
+        return retval;
 
         conv_failed:    /* Error target */
-        PyGILState_Release(gil);
-        return -1;
+        retval = -1;
+        goto conv_out;
         
     case H5T_CONV_FREE:
 
