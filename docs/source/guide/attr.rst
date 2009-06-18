@@ -34,16 +34,15 @@ Reference
 
         Delete an attribute.
 
-    .. method:: create(name, data=None, shape=None, dtype=None)
+    .. method:: create(name, data, shape=None, dtype=None)
 
-        Create an attribute, optionally initializing it.
+        Create an attribute, initializing it to the given value.
 
         name
             Name of the new attribute (required)
 
         data
-            An array to initialize the attribute. 
-            Required unless "shape" is given.
+            An array to initialize the attribute. Required.
 
         shape
             Shape of the attribute.  Overrides data.shape if both are

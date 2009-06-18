@@ -1194,6 +1194,8 @@ class AttributeManager(_LockableObject, _DictCompat):
             if shape is None:
                 raise ValueError('At least one of "shape" or "data" must be given')
 
+            data = data.reshape(shape)
+
             space = h5s.create_simple(shape)
             htype = h5t.py_create(dtype, logical=True)
 
