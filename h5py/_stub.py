@@ -9,6 +9,6 @@ def generate_class(cls1, cls2):
     """
     class HybridClass(cls1, cls2):
         pass
-    HybridClass.__name__ = cls2.__name__+"H5"
+    HybridClass.__name__ = cls2.__name__
     return HybridClass
 
