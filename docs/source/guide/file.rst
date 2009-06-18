@@ -23,6 +23,8 @@ Valid modes are:
      a   Read/write if exists, create otherwise (default)
     ===  ================================================
 
+The file name may also be a Unicode string.
+
 File drivers
 ------------
 
@@ -39,17 +41,19 @@ supported drivers are:
 None
     Use the standard HDF5 driver appropriate for the current platform.
     On UNIX, this is the H5FD_SEC2 driver; on Windows, it is
-    H5FD_WINDOWS.
+    H5FD_WINDOWS.  This driver is almost always the best choice.
 
 'sec2'
-    Unbuffered, optimized I/O using standard POSIX functions.
+    Optimized I/O using standard POSIX functions.  Default on UNIX platforms.
 
 'stdio' 
-    Buffered I/O using functions from stdio.h.
+    I/O uses functions from stdio.h.  This introduces an additional layer
+    of buffering between the HDF5 library and the filesystem.
 
 'core'
-    Memory-map the entire file; all operations are performed in
-    memory and written back out when the file is closed.  Keywords:
+    Creates a memory-resident file.  With HDF5 1.8, you may specify an
+    existing file on disk.  When the file is closed, by default it is
+    written back to disk with the given name.  Keywords:
 
         backing_store  
             If True (default), save changes to a real file
@@ -75,6 +79,13 @@ Reference
 In addition to the properties and methods defined here, File objects inherit
 the full API of Group objects; in this case, the group in question is the
 *root group* (/) of the file.
+
+.. note::
+    
+    Please note that unlike Python file objects, and h5py.File objects from
+    h5py 1.1, the attribute ``File.name`` does *not* refer to the file name
+    on disk.  ``File.name`` gives the HDF5 name of the root group, "``/``". To
+    access the on-disk name, use ``File.filename``.
 
 .. class:: File
 

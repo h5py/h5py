@@ -7,12 +7,11 @@ Attributes
 Groups and datasets can have small bits of named information attached to them.
 This is the official way to store metadata in HDF5.  Each of these objects
 has a small proxy object (:class:`AttributeManager`) attached to it as
-``<obj>.attrs``.  This dictionary-like object works like a :class:`Group`
-object, with the following differences:
+``<obj>.attrs``.  Attributes have the following properties:
 
-- Entries may only be scalars and NumPy arrays
+- They may be created from any scalar or NumPy array
 - Each attribute must be small (recommended < 64k for HDF5 1.6)
-- No partial I/O (i.e. slicing) is allowed for arrays
+- There is no partial I/O (i.e. slicing); the entire attribute must be read.
 
 They support the same dictionary API as groups.
 

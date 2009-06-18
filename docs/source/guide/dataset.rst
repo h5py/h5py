@@ -50,7 +50,7 @@ Error-Detection
     All versions of HDF5 include the *fletcher32* checksum filter, which enables
     read-time error detection for datasets.  If part of a dataset becomes
     corrupted, a read operation on that section will immediately fail with
-    H5Error.
+    an exception.
 
 Resizing
     When using HDF5 1.8,
@@ -90,15 +90,14 @@ The following slicing arguments are recognized:
 
 Here are a few examples (output omitted)
 
-    >>> dset = f.create_dataset("MyDataset", data=numpy.ones((10,10,10),'=f8'))
+    >>> dset = f.create_dataset("MyDataset", (10,10,10), 'f')
     >>> dset[0,0,0]
     >>> dset[0,2:10,1:9:3]
-    >>> dset[0,...]
     >>> dset[:,::2,5]
-
-Simple array broadcasting is also supported:
-
-    >>> dset[0]   # Equivalent to dset[0,...]
+    >>> dset[0]
+    >>> dset[1,5]
+    >>> dset[0,...]
+    >>> dset[...,6]
 
 For compound data, you can specify multiple field names alongside the
 numeric slices:
@@ -106,6 +105,27 @@ numeric slices:
     >>> dset["FieldA"]
     >>> dset[0,:,4:5, "FieldA", "FieldB"]
     >>> dset[0, ..., "FieldC"]
+
+Broadcasting
+------------
+
+For simple slicing, broadcasting is supported: 
+
+    >>> dset[0,:,:] = np.arange(10)  # Broadcasts to (10,10)
+
+Importantly, h5py does *not* use NumPy to do broadcasting before the write.
+Broadcasting is implemented using repeated hyperslab selections, and is 
+safe to use with very large target selections.  In the following example, a
+write from a (1000, 1000) array is broadcast to a (1000, 1000, 1000) target
+selection as a series of 1000 writes:
+
+    >>> dset2 = f.create_dataset("MyDataset", (1000,1000,1000), 'f')
+    >>> data = np.arange(1000*1000, dtype='f').reshape((1000,1000))
+    >>> dset2[:] = data  # Does NOT allocate 3.8 G of memory
+
+Broadcasting is supported for "simple" (integer, slice and ellipsis) slicing
+only.
+
 
 Coordinate lists
 ----------------
@@ -136,7 +156,7 @@ Sparse selection
 Additional mechanisms exist for the case of scattered and/or sparse selection,
 for which slab or row-based techniques may not be appropriate.
 
-Boolean "mask" arrays can be used to specify a selection.  The result of
+NumPy boolean "mask" arrays can be used to specify a selection.  The result of
 this operation is a 1-D array with elements arranged in the standard NumPy
 (C-style) order:
 
@@ -146,24 +166,33 @@ this operation is a 1-D array with elements arranged in the standard NumPy
     >>> result.shape
     (49,)
 
-Advanced selection
-------------------
+Additionally, the ``selections`` module contains additional classes which
+provide access to native HDF5 dataspace selection techniques.  These include
+explicit point-based selection and hyperslab selections combined with logical
+operations (AND, OR, XOR, etc).  Any instance of a ``selections.Selection``
+subclass can be used for indexing directly:
 
-The ``selections`` module contains additional classes which provide access to
-HDF5 dataspace selection techniques, including point-based selection.  These 
-are especially useful for read_direct and write_direct.
+    >>> dset = f.create_dataset("MyDS2", (100,100), 'i')
+    >>> dset[...] = np.arange(100*100).reshape((100,100))
+    >>> sel = h5py.selections.PointSelection((100,100))
+    >>> sel.append([(1,1), (57,82)])
+    >>> dset[sel]
+    array([ 101, 5782])
 
 Length and iteration
 --------------------
 
 As with NumPy arrays, the ``len()`` of a dataset is the length of the first
-axis.  Since Python's ``len`` is limited by the size of a C long, it's
-recommended you use the syntax ``dataset.len()`` instead of ``len(dataset)``
-on 32-bit platforms, if you expect the length of the first row to exceed 2**32.
+axis, and iterating over a dataset iterates over the first axis.  However,
+modifications to the yielded data are not recorded in the file.  Resizing a
+dataset while iterating has undefined results.
 
-Iterating over a dataset iterates over the first axis.  However, modifications
-to the yielded data are not recorded in the file.  Resizing a dataset while
-iterating has undefined results.
+.. note::
+
+    Since Python's ``len`` is limited by the size of a C long, it's
+    recommended you use the syntax ``dataset.len()`` instead of
+    ``len(dataset)`` on 32-bit platforms, if you expect the length of the
+    first row to exceed 2**32.
 
 Reference
 ---------
@@ -195,12 +224,6 @@ Reference
     .. attribute:: dtype
 
         Numpy dtype object representing the dataset type
-
-    .. attribute:: value
-
-        Special read-only property; for a regular dataset, it's equivalent to
-        dset[:] (an ndarray with all points), but for a scalar dataset, it's
-        a NumPy scalar instead of an 0-dimensional ndarray.
 
     .. attribute:: chunks
 

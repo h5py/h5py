@@ -2,15 +2,49 @@
 Group Objects
 =============
 
+Creating and using groups
+-------------------------
+
 Groups are the container mechanism by which HDF5 files are organized.  From
 a Python perspective, they operate somewhat like dictionaries.  In this case
 the "keys" are the names of group entries, and the "values" are the entries
-themselves (:class:`Group` and :class:`Dataset`) objects.  Objects are
-retrieved from the file using the standard indexing notation::
+themselves (:class:`Group` and :class:`Dataset`) objects.
 
-    >>> file_obj = File('myfile.hdf5')
-    >>> subgroup = file_obj['/subgroup']
-    >>> dset = subgroup['MyDataset']  # full name /subgroup/Mydataset
+Group objects also contain most of the machinery which makes HDF5 useful.
+The :ref:`File object <hlfile>` does double duty as the HDF5 `root group`, and
+serves as your entry point into the file:
+
+    >>> f = h5py.File('foo.hdf5','w')
+    >>> f.name
+    '/'
+    >>> f.keys()
+    []
+
+New groups are easy to create:
+
+    >>> grp = f.create_group("bar")
+    >>> grp.name
+    '/bar'
+    >>> subgrp = grp.create_group("baz")
+    >>> subgrp.name
+    '/bar/baz'
+
+Datasets are also created by a Group method:
+
+    >>> dset = subgrp.create_dataset("MyDS", (100,100), dtype='i')
+    >>> dset.name
+    '/bar/baz/MyDS'
+
+Accessing objects
+-----------------
+
+Groups implement a subset of the Python dictionary convention.  They have
+methods like ``keys()``, ``values()`` and support iteration.  Most importantly,
+they support the indexing syntax, and standard exceptions:
+
+    >>> myds = subgrp["MyDS"]
+    >>> missing = subgrp["missing"]
+    KeyError: "Name doesn't exist (Symbol table: Object not found)"
 
 Objects can be deleted from the file using the standard syntax::
 
@@ -74,8 +108,7 @@ Reference
             for a more flexible way to do this.
 
         **Numpy dtype**
-            Commit a copy of the datatype as a
-            :ref:`named datatype <named_types>` in the file.
+            Commit a copy of the datatype as a named type in the file.
 
         **Anything else**
             Attempt to convert it to an ndarray and store it.  Scalar
@@ -93,13 +126,13 @@ Reference
 
         Create a new HDF5 group.
 
-        Fails with H5Error if the group already exists.
+        Fails with ValueError if the group already exists.
 
     .. method:: require_group(name) -> Group
 
         Open the specified HDF5 group, creating it if it doesn't exist.
 
-        Fails with H5Error if an incompatible object (dataset or named type)
+        Fails with TypeError if an incompatible object (dataset or named type)
         already exists.
 
     .. method:: create_dataset(name, [shape, [dtype]], [data], **kwds) -> Dataset
@@ -175,7 +208,7 @@ Reference
         creating a dataset; they are ignored for the comparison.
 
         If an existing incompatible object (Group or Datatype) already exists
-        with the given name, fails with H5Error.
+        with the given name, fails with ValueError.
 
     .. method:: copy(source, dest, name=None)
 

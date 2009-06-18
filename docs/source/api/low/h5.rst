@@ -21,19 +21,6 @@ Base classes for library
 .. autoclass:: PHIL
 
 
-Error handling routines
------------------------
-
-Keep in mind that errors are already handled by Python exceptions.  These
-functions exist for low-level inspection of the HDF5 error stack.
-
-.. autofunction:: error_stack
-.. autofunction:: error_string
-.. autofunction:: clear
-
-.. autoclass:: ErrorStackElement
-    :members:
-
 Module constants
 ----------------
 

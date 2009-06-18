@@ -47,31 +47,28 @@ efficient multidimensional indexing and nested compound datatypes.
 
 One additional benefit of h5py is that the files it reads and writes are
 "plain-vanilla" HDF5 files.  No Python-specific metadata or features are used.
-You can read HDF5 files created by any application, and write files that any
-HDF5-aware application can understand.
+You can read files created by most HDF5 applications, and write files that
+any HDF5-aware application can understand.
 
 Getting data into HDF5
 ======================
 
 First, install h5py by following the :ref:`installation instructions <build>`.
 
-Since an example is worth a thousand words, here's how to create a new file,
-create a dataset, and store some data::
+Since an example is worth a thousand words, here's how to make a new file,
+and create an integer dataset inside it.  The new dataset has shape (100, 100),
+is located in the file at "/MyDataset", and initialized to the value 42.
 
-    import numpy as np
-    import h5py
+    >>> import h5py
+    >>> f = h5py.File('myfile.hdf5')
+    >>> dset = f.create_dataset("MyDataset", (100, 100), 'i')
+    >>> dset[...] = 42
 
-    mydata = np.arange(10).reshape((5,2))
+The :ref:`File <hlfile>` constructor accepts modes similar to Python file modes,
+including "r", "w", and "a" (the default):
 
-    f = h5py.File('myfile.hdf5', 'w')
-
-    dset = f.create_dataset("MyDataset", (10, 2), 'i')
-
-    dset[0:5,:] = mydata
-
-
-The `File <hlfile>`_ constructor accepts modes similar to Python file modes,
-including "r", "w", and "a" (the default).
+    >>> f = h5py.File('file1.hdf5', 'w')    # overwrite any existing file
+    >>> f = h5py.File('file2.hdf5', 'r')    # open read-only
 
 The dataset object ``dset`` here represents a new 2-d HDF5 dataset.  Some
 features will be familiar to NumPy users::
@@ -81,14 +78,14 @@ features will be familiar to NumPy users::
     >>> dset.dtype
     dtype('int32')
 
-If you already have a NumPy array you want to store, just hand it off to h5py::
+You can even automatically create a dataset from an existing array:
 
-    arr = numpy.ones((2,3), '=i4')
-    dset = f.create_dataset('AnotherDataset', data=arr)
+    >>> import numpy as np
+    >>> arr = np.ones((2,3), '=i4')
+    >>> dset = f.create_dataset('AnotherDataset', data=arr)
 
-Additional features like transparent compression are also available::
-
-    dset2 = f.create_dataset("CompressedDatset", data=arr, compression='lzf')
+HDF5 datasets support many other features, like chunking and transparent 
+compression.
 
 Getting your data back
 ----------------------
@@ -150,22 +147,22 @@ POSIX-style paths::
 Groups (including File objects; "f" in this example) support other
 dictionary-like operations::
 
-    >>> list(f)                 # iteration
+    >>> list(f)
     ['MyDataset', 'SubGroup']
-    >>> 'MyDataset' in f        # membership testing
+    >>> 'MyDataset' in f
     True
-    >>> 'Subgroup/MyOtherDataset' in f      # even for arbitrary paths!
+    >>> 'Subgroup/MyOtherDataset' in f
     True
-    >>> del f['MyDataset']      # Delete (unlink) a group member
+    >>> del f['MyDataset']
 
 As a safety feature, you can't create an object with a pre-existing name;
 you have to manually delete the existing object first::
 
     >>> grp = f.create_group("NewGroup")
-    >>> grp2 = f.create_group("NewGroup")   # wrong
-    (H5Error raised)
+    >>> grp = f.create_group("NewGroup")
+    ValueError: Name already exists (Symbol table: Object already exists)
     >>> del f['NewGroup']
-    grp2 = f.create_group("NewGroup")
+    >>> grp = f.create_group("NewGroup")
 
 This restriction reflects HDF5's lack of transactional support, and will not
 change.
@@ -203,24 +200,11 @@ unlike group members, you can directly overwrite existing attributes:
 
     >>> dset.attrs["Name"] = "New Name"
 
-Named datatypes
-===============
+More information
+================
 
-There is in fact one additional, rarely-used kind of object which can be
-permanently stored in an HDF5 file.  You can permanently store a *datatype*
-object in any group, simply by assigning a NumPy dtype to a name:
-
-    >>> f["MyIntegerDatatype"] = numpy.dtype('<i8')
-    >>> htype = f["MyIntegerDatatype"]
-    >>> htype
-    <HDF5 named type "MyIntegerDatatype" (dtype <i8)>
-    >>> htype.dtype
-    dtype('int64')
-
-This isn't ordinarily useful because each dataset already carries its own
-dtype attribute.  However, if you want to store datatypes which are not used
-in any dataset, this is the right way to do it.
-
+Full documentation on files, groups, datasets and attributes is available
+in the section ":ref:`h5pyreference`".
 
 
 

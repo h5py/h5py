@@ -12,6 +12,7 @@ Tar files are available for UNIX-like systems (Linux and Mac OS-X), and
 a binary installer for Windows which includes HDF5 1.8.  As of version 1.1,
 h5py can also be installed via easy_install.
 
+
 Getting HDF5
 ============
 
@@ -122,13 +123,22 @@ The standard command::
 
 will clean up all temporary files, including the output of ``configure``.
 
-Problems
-========
+Testing
+=======
 
-If you have trouble installing or using h5py, first read the FAQ at
-http://h5py.googlecode.com for common issues.  You are also welcome to
-open a new bug there, or email me directly at "h5py at alfven dot org".
-Enjoy!
+Running unit tests can help diagnose problems unique to your platform or
+software configuration.  For the Unix version of h5py, running the command:
+
+    $ python setup.py test
+
+before installing will run the h5py test suite.  On both Unix and Windows
+platforms, the tests may be run after installation:
+
+    >>> import h5py.tests
+    >>> h5py.tests.runtests()
+
+Please report any failing tests to "h5py at alfven dot org", or file an issue
+report at http://h5py.googlecode.com.
 
 
 
