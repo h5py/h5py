@@ -1,9 +1,9 @@
 
 .. _api_ref:
 
-***********************
+#######################
 Low-level API reference
-***********************
+#######################
 
 While the :ref:`high-level component <user_guide>` provides a friendly,
 NumPy-like interface

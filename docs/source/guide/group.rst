@@ -7,11 +7,11 @@ Creating and using groups
 
 Groups are the container mechanism by which HDF5 files are organized.  From
 a Python perspective, they operate somewhat like dictionaries.  In this case
-the "keys" are the names of group entries, and the "values" are the entries
+the "keys" are the names of group members, and the "values" are the members
 themselves (:class:`Group` and :class:`Dataset`) objects.
 
 Group objects also contain most of the machinery which makes HDF5 useful.
-The :ref:`File object <hlfile>` does double duty as the HDF5 `root group`, and
+The :ref:`File object <hlfile>` does double duty as the HDF5 *root group*, and
 serves as your entry point into the file:
 
     >>> f = h5py.File('foo.hdf5','w')
@@ -159,18 +159,17 @@ Reference
         **data** (None or ndarray)
             Either a NumPy ndarray or anything that can be converted to one.
 
-        Keywords (see :ref:`dsetfeatures`):
+        Keywords (see also Dataset :ref:`dsetfeatures`):
 
         **chunks** (None, True or shape tuple)
             Store the dataset in chunked format.  Automatically
             selected if any of the other keyword options are given.  If you
             don't provide a shape tuple, the library will guess one for you.
-            Chunk sizes of 100kB-300kB work best with HDF5. 
+            Chunk sizes of 300kB and smaller work best with HDF5. 
 
         **compression** (None, string ["gzip" | "lzf" | "szip"] or int 0-9)
             Enable dataset compression.  DEFLATE, LZF and (where available)
-            SZIP are supported.  An integer is interpreted as a GZIP level
-            for backwards compatibility
+            SZIP are supported.  An integer is interpreted as a GZIP level.
 
         **compression_opts** (None, or special value)
             Setting for compression filter; legal values for each filter
@@ -182,16 +181,16 @@ Reference
             "szip"      2-tuple ('ec'|'nn', even integer 0-32)
             ======      ======================================
 
-            See the ``filters`` module for a detailed description of each
-            of these filters.
+            See the ``filters`` module docstring for a more detailed
+            description of these filters.
 
         **shuffle** (True/False)
             Enable/disable data shuffling, which can improve compression
-            performance.
+            performance.  Default is False.
 
         **fletcher32** (True/False)
             Enable Fletcher32 error detection; may be used with or without
-            compression.
+            compression.  Default is False.
 
         **maxshape** (None or shape tuple)
             Make the dataset extendable, up to this maximum shape.  Should be a

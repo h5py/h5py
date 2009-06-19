@@ -8,6 +8,7 @@ This document is a very quick overview of both HDF5 and h5py.  More
 comprehensive documentation is available at:
 
 * :ref:`h5pyreference`
+* `The h5py FAQ (at Google Code) <http://code.google.com/p/h5py/wiki/FAQ>`_
 
 The `HDF Group <http://www.hdfgroup.org>`_ is the final authority on HDF5.
 They also have an `introductory tutorial <http://www.hdfgroup.org/HDF5/Tutor/>`_
@@ -42,8 +43,8 @@ specified using standard NumPy dtype objects.
 
 You don't need to know anything about the HDF5 library to use h5py, apart from
 the basic metaphors of files, groups and datasets.  The library handles all
-data conversion transparently, and datasets support advanced features like
-efficient multidimensional indexing and nested compound datatypes.
+data conversion transparently, and translates operations like slicing into
+the appropriate efficient HDF5 routines.
 
 One additional benefit of h5py is that the files it reads and writes are
 "plain-vanilla" HDF5 files.  No Python-specific metadata or features are used.
@@ -57,7 +58,7 @@ First, install h5py by following the :ref:`installation instructions <build>`.
 
 Since an example is worth a thousand words, here's how to make a new file,
 and create an integer dataset inside it.  The new dataset has shape (100, 100),
-is located in the file at "/MyDataset", and initialized to the value 42.
+is located in the file at ``"/MyDataset"``, and initialized to the value 42.
 
     >>> import h5py
     >>> f = h5py.File('myfile.hdf5')
@@ -74,7 +75,7 @@ The dataset object ``dset`` here represents a new 2-d HDF5 dataset.  Some
 features will be familiar to NumPy users::
 
     >>> dset.shape
-    (10, 2)
+    (100, 100)
     >>> dset.dtype
     dtype('int32')
 
@@ -85,13 +86,13 @@ You can even automatically create a dataset from an existing array:
     >>> dset = f.create_dataset('AnotherDataset', data=arr)
 
 HDF5 datasets support many other features, like chunking and transparent 
-compression.
+compression.  See the section ":ref:`datasets`" for more info.
 
 Getting your data back
 ----------------------
 
 You can store and retrieve data using Numpy-like slicing syntax.  The following
-slice mechanisms are supported (see :ref:`datasets` for more info):
+slice mechanisms are supported:
 
     * Integers/slices (``array[2:11:3]``, etc)
     * Ellipsis indexing (``array[2,...,4:7]``)
@@ -144,7 +145,7 @@ POSIX-style paths::
     >>> dset2 = subgroup['MyOtherDataset']
     >>> dset2 = f['/SubGroup/MyOtherDataset']   # equivalent
 
-Groups (including File objects; "f" in this example) support other
+Groups (including File objects; ``"f"`` in this example) support other
 dictionary-like operations::
 
     >>> list(f)

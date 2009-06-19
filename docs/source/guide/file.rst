@@ -8,12 +8,12 @@ Opening & creating files
 ------------------------
 
 HDF5 files work generally like standard Python file objects.  They support
-standand modes like r/w/a, and should be closed when they are no longer in
+standard modes like r/w/a, and should be closed when they are no longer in
 use.  However, there is obviously no concept of "text" vs "binary" mode.
 
     >>> f = h5py.File('myfile.hdf5','r')
 
-Valid modes are:
+The file name may be either ``str`` or ``unicode``. Valid modes are:
 
     ===  ================================================
      r   Readonly, file must exist
@@ -23,7 +23,6 @@ Valid modes are:
      a   Read/write if exists, create otherwise (default)
     ===  ================================================
 
-The file name may also be a Unicode string.
 
 File drivers
 ------------
@@ -96,8 +95,8 @@ the full API of Group objects; in this case, the group in question is the
 
     .. attribute:: filename
 
-        HDF5 filename on disk.  This is a plain string (str) for ASCII names,
-        Unicode otherwise.
+        HDF5 filename on disk.  This is a plain string (``str``) for ASCII
+        names, ``unicode`` otherwise.
 
     .. attribute:: mode
 

@@ -71,6 +71,7 @@ Requires
 .. _Numpy: http://numpy.scipy.org/
 .. _HDF5: http://www.hdfgroup.com/HDF5
 
+Please note that Cython (or Pyrex) is *not* required to build h5py.
 
 Quick installation
 ------------------
@@ -127,7 +128,7 @@ Testing
 =======
 
 Running unit tests can help diagnose problems unique to your platform or
-software configuration.  For the Unix version of h5py, running the command:
+software configuration.  For the Unix version of h5py, running the command::
 
     $ python setup.py test
 

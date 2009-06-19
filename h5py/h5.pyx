@@ -340,7 +340,7 @@ cdef class ObjectID:
         try:
             ref = str(H5Iget_ref(self.id)) if self._valid else "X"
             lck = "L" if self._locked else "U"
-            return "%s [%s] (%s) %d" % (self.__class__.__name__, ref, lck, self.id)
+            return "<%s [%s] (%s) %d>" % (self.__class__.__name__, ref, lck, self.id)
         finally:
             phil.release()
 

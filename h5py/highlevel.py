@@ -33,21 +33,19 @@ import sys
 import os.path as op
 import posixpath as pp
 
-from h5py import h5, h5f, h5g, h5s, h5t, h5d, h5a, h5p, h5z, h5i, h5fd
+from h5py import h5, h5f, h5g, h5s, h5t, h5d, h5a, \
+                 h5p, h5r, h5z, h5i, h5fd, h5o, h5l
 from h5py.h5 import H5Error
 import h5py.selections as sel
 from h5py.selections import CoordsList
 
 import version
-
 import filters
 
 config = h5.get_config()
-if config.API_18:
-    from h5py import h5o, h5l
 
-__all__ = ["File", "Group", "Dataset",
-           "Datatype", "AttributeManager"]
+__all__ = ["File", "Group", "Dataset", "Datatype",
+           "AttributeManager", "is_hdf5"]
 
 def _hbasename(name):
     """ Basename function with more readable handling of trailing slashes"""
@@ -117,8 +115,7 @@ class HLObject(_LockableObject):
     def parent(self):
         """Return the parent group of this object.
 
-        Beware; if multiple hard links to this object exist, there's no way
-        to predict which parent group will be returned!
+        This is always equivalent to file[posixpath.basename(obj.name)].
         """
         return self.file[pp.dirname(self.name)]
 
@@ -241,18 +238,18 @@ class Group(HLObject, _DictCompat):
 
         The action taken depends on the type of object assigned:
 
-        1. Named HDF5 object (Dataset, Group, Datatype):
+        Named HDF5 object (Dataset, Group, Datatype)
             A hard link is created in this group which points to the
             given object.
 
-        2. Numpy ndarray:
+        Numpy ndarray
             The array is converted to a dataset object, with default
             settings (contiguous storage, etc.).
 
-        3. Numpy dtype:
+        Numpy dtype
             Commit a copy of the datatype as a named datatype in the file.
 
-        4. Anything else:
+        Anything else
             Attempt to convert it to an ndarray and store it.  Scalar
             values are stored as scalar datasets. Raise ValueError if we
             can't understand the resulting array dtype.
@@ -311,13 +308,14 @@ class Group(HLObject, _DictCompat):
         """ Check if a group exists, and create it if not.  TypeError if an
         incompatible object exists.
         """
-        if not name in self:
-            return self.create_group(name)
-        else:
-            grp = self[name]
-            if not isinstance(grp, Group):
-                raise TypeError("Incompatible object (%s) already exists" % grp.__class__.__name__)
-            return grp
+        with self._lock:
+            if not name in self:
+                return self.create_group(name)
+            else:
+                grp = self[name]
+                if not isinstance(grp, Group):
+                    raise TypeError("Incompatible object (%s) already exists" % grp.__class__.__name__)
+                return grp
 
     def create_dataset(self, name, *args, **kwds):
         """ Create and return a new dataset.  Fails if "name" already exists.
@@ -669,7 +667,7 @@ class File(Group):
         with self._lock:
             try:
                 return '<HDF5 file "%s" (mode %s, %d root members)>' % \
-                    (os.path.basename(self.name), self.mode, len(self))
+                    (os.path.basename(self.filename), self.mode, len(self))
             except Exception:
                 return "<Closed HDF5 file>"
 
@@ -754,9 +752,10 @@ class Dataset(HLObject):
         
     @property
     def maxshape(self):
-        space = self.id.get_space()
-        dims = space.get_simple_extent_dims(True)
-        return tuple(x if x != h5s.UNLIMITED else None for x in dims)
+        with self._lock:
+            space = self.id.get_space()
+            dims = space.get_simple_extent_dims(True)
+            return tuple(x if x != h5s.UNLIMITED else None for x in dims)
 
     def __init__(self, group, name,
                     shape=None, dtype=None, data=None,
