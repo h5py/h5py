@@ -19,6 +19,7 @@ separately below.
     dataset
     attr
     vl
+    other
 
 General information about h5py and HDF5
 =======================================

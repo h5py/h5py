@@ -11,7 +11,7 @@ comprehensive documentation is available at:
 
 The `HDF Group <http://www.hdfgroup.org>`_ is the final authority on HDF5.
 They also have an `introductory tutorial <http://www.hdfgroup.org/HDF5/Tutor/>`_
-which provides a good introduction.
+which provides a good overview.
 
 What is HDF5?
 =============
