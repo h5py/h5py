@@ -1,78 +1,163 @@
-README for the "h5py" Python/HDF5 interface
-===========================================
-Copyright (c) 2008 Andrew Collette
 
-Version 1.2.0 *BETA*
+Announcing HDF5 for Python (h5py) 1.2
+=====================================
 
-* http://h5py.alfven.org        Main site, docs, quick-start guide
-* http://h5py.googlecode.com    Downloads, FAQ and bug tracker
+I'm pleased to announce the availability of HDF5 for Python 1.2 final!
+This release represents a significant update to the h5py feature set.
+Some of the new new features are:
 
-* mail: "h5py" at the domain "alfven dot org"
+ - Support for variable-length strings!
+ - Use of built-in Python exceptions (KeyError, etc), alongside H5Error
+ - Top-level support for HDF5 CORE, SEC2, STDIO, WINDOWS and FAMILY drivers
+ - Support for ENUM and ARRAY types
+ - Support for Unicode file names
+ - Big speedup (~3x) when using single-index slicing on a chunked dataset
 
-The h5py package provides both a high- and low-level interface to the 
-HDF5 library from Python.  The low-level interface is
-intended to be a complete wrapping of the HDF5 1.6 API, while the high-
-level component supports Python-style object-oriented access to HDF5 files, 
-datasets and groups.
+Main site:      http://h5py.alfven.org
+Google code:    http://h5py.googlecode.com
 
-The goal of this package is not to provide yet another scientific data
-model. It is an attempt to create as straightforward a binding as possible
-to the existing HDF5 API and abstractions, so that Python programs can
-easily deal with HDF5 files and exchange data with other HDF5-aware
-applications.
 
-Installation
-------------
-
-See the file INSTALL.txt.
-
-Documentation
+What is h5py?
 -------------
-Extensive documentation is available through docstrings, as well as in 
-HTML format on the web and in the "docs/" directory in the 
-distribution.  This document is an overview of some of the package's 
-features and highlights.
 
-Features
-========
+HDF5 for Python (h5py) is a general-purpose Python interface to the
+Hierarchical Data Format library, version 5.  HDF5 is a versatile,
+mature scientific software library designed for the fast, flexible
+storage of enormous amounts of data.
 
-High-Level
-----------
+From a Python programmer's perspective, HDF5 provides a robust way to
+store data, organized by name in a tree-like fashion.  You can create
+datasets (arrays on disk) hundreds of gigabytes in size, and perform
+random-access I/O on desired sections.  Datasets are organized in a
+filesystem-like hierarchy using containers called "groups", and 
+accesed using the tradional POSIX /path/to/resource syntax.
 
-- Numpy-style access to HDF5 datasets, with automatic conversion between
-  datatypes.  Slice into an HDF5 dataset and get a Numpy array back.
-  Create and use datasets with chunking, compression, or other filters
-  transparently.
+In addition to providing interoperability with existing HDF5 datasets
+and platforms, h5py is a convienient way to store and retrieve
+arbitrary NumPy data and metadata.
 
-- Dictionary-style access to HDF5 groups and attributes, including 
-  iteration.
 
-Low-Level
----------
+Full list of new features in 1.2
+--------------------------------
 
-- Low-level wrappings for most of the HDF5 1.6 C API, divided in an
-  intuitive fashion across modules like h5a, h5d, h5s, etc.
+  - Variable-length strings are now supported!  They are mapped to native
+    Python strings via the NumPy "object" type.  VL strings may be read, 
+    written and created from h5py, and are allowed in all HDF5 contexts,
+    even as members of compound or array types.
 
-- No more micro-managing of identifiers; a minimal object layer on top of
-  HDF5 integer identifiers means you don't need to remember to close
-  every single identifier you create.
+  - HDF5 exceptions now inherit from common Python built-ins like TypeError
+    and ValueError (in addition to current HDF5 error hierarchy), freeing
+    the user from knowledge of the HDF5 error system.  Existing code which
+    uses H5Error will continue to work.
 
-- Most API functions are presented as methods on object identifiers, rather
-  than functions.  In addition to being more Pythonic, this makes programs
-  less verbose and objects easier to inspect from the command line.
+  - Many different low-level HDF5 drivers can now be used when creating
+    a file, which allows purely in-memory ("core") files, multi-volume
+    ("family") files, and files which use low-level buffered I/O.
 
-- Automatic exception handling; using the HDF5 error callback mechanism,
-  Python exceptions are raised by the library itself when errors occur.
-  Many new exception classes are provided, based on the HDF5 major error
-  codes.
+  - Groups and attributes now support the standard Python dictionary
+    interface methods, including keys(), values() and friends.  The existing
+    methods (listnames(), listobjects(), etc.) remain and will not be
+    removed until at least h5py 1.4 or equivalent.
 
-- Minimal changes to the HDF5 API:
+  - Workaround for an HDF5 bug has sped up reading/writing of chunked
+    datasets. When using a slice with fewer dimensions than the dataset,
+    there can be as much as a 3x improvement in write times over h5py 1.1.
 
-    - A near-1:1 mapping between HDF5 functions and h5py functions/methods
-    - Constants have their original names; H5P_DEFAULT becomes h5p.DEFAULT
-    - Python extensions are provided only when not doing so would be
-      obviously wrong; you don't need to learn a totally new API
-    - The majority of the HDF5 C-API documentation is still valid for the
-      h5py interface
+  - Enumerated types are now fully supported; they can be used in NumPy
+    anywhere integer types are allowed, and are stored as native HDF5
+    enums.  Conversion between integers and enums is supported.
+
+  - The NumPy "array" dtype is now allowed as a top-level type when
+    creating a dataset, not just as a member of a compound type.
+
+  - Unicode file names are now supported
+
+  - It's now possible to explicitly set the type of an attribute, and to
+    preserve the type of an attribute while modifying it.
+
+  - High-level objects now have .parent and .file attributes, to make the
+    navigation of HDF5 files more convenient.
+
+
+Design revisions since 1.1
+--------------------------
+
+  - The role of the "name" attribute on File objects has changed.  "name"
+    now returns the HDF5 path of the File object ('/'); the file name on
+    disk is available at File.filename.
+
+  - Dictionary-interface methods for Group and AttributeManager objects have
+    been renamed to follow the standard Python convention (keys(), values(),
+    etc).  The old method names are still available but deprecated.
+
+  - The HDF5 shuffle filter is no longer automatically activated when
+    GZIP or LZF compression is used; many datasets "in the wild" do not
+    benefit from shuffling.
+
+
+Standard features
+-----------------
+
+  - Supports storage of NumPy data of the following types:
+
+    * Integer/Unsigned Integer
+    * Float/Double
+    * Complex/Double Complex
+    * Compound ("recarray")
+    * Strings
+    * Boolean
+    * Array
+    * Enumeration (integers)
+    * Void
+
+  - Random access to datasets using the standard NumPy slicing syntax,
+    including a subset of fancy indexing and point-based selection
+
+  - Transparent compression of datasets using GZIP, LZF or SZIP,
+    and error-detection using Fletcher32
+
+  - "Pythonic" interface supporting dictionary and NumPy-array metaphors
+    for the high-level HDF5 abstrations like groups and datasets
+
+  - A comprehensive, object-oriented wrapping of the HDF5 low-level C API
+    via Cython, in addition to the NumPy-like high-level interface.
+
+  - Supports many new features of HDF5 1.8, including recursive iteration
+    over entire files and in-library copy operations on the file tree
+
+  - Thread-safe
+
+
+Where to get it
+---------------
+
+* Main website, documentation:  http://h5py.alfven.org
+
+* Downloads, bug tracker:       http://h5py.googlecode.com
+
+
+Requires
+--------
+
+* Linux, Mac OS-X or Windows
+
+* Python 2.5 (Windows), Python 2.5 or 2.6 (Linux/Mac OS-X)
+
+* NumPy 1.0.3 or later
+
+* HDF5 1.6.5 or later (including 1.8); HDF5 is included with
+  the Windows version.
+
+
+Thanks
+------
+
+Thanks to D. Dale, E. Lawrence and other for their continued support
+and comments.  Also thanks to the Francesc Alted and the PyTables project,
+for inspiration and generously providing their code to the community. Thanks
+to everyone at the HDF Group for creating such a useful piece of software.
+
+
+
 
 
