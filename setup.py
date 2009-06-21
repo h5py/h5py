@@ -530,7 +530,7 @@ A strong emphasis on automatic conversion between Python (Numpy) datatypes and
 data structures and their HDF5 equivalents vastly simplifies the process of
 reading and writing data from Python.
 
-Supports HDF5 versions 1.6.5 through 1.8.2.  On Windows, HDF5 is included in
+Supports HDF5 versions 1.6.5 through 1.8.3.  On Windows, HDF5 is included in
 the installer.
 """
 
