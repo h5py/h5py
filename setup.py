@@ -539,7 +539,7 @@ if os.name == 'nt':
                        'h5py.tests': ['data/*.hdf5']}
 else:
     package_data = {'h5py': ['*.pyx'],
-                   'h5py.tests': ['data/*.hdf5']}
+                   'h5py.tests': ['data/*.hdf5', 'data/*.h5']}
 
 setup(
   name = NAME,
