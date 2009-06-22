@@ -536,7 +536,7 @@ the installer.
 
 if os.name == 'nt':
     package_data = {'h5py': ['*.pyx', '*.dll'],
-                       'h5py.tests': ['data/*.hdf5']}
+                       'h5py.tests': ['data/*.hdf5', 'data/*.h5']}
 else:
     package_data = {'h5py': ['*.pyx'],
                    'h5py.tests': ['data/*.hdf5', 'data/*.h5']}
