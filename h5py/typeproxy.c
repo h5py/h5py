@@ -324,62 +324,48 @@ htri_t h5py_detect_vlen(hid_t type_id){
     int     i;
 
     typeclass = H5Tget_class(type_id);
-    if(typeclass<0) goto failed;
+    if(typeclass<0) return -1;
 
     switch(typeclass){
 
         case H5T_STRING:
-            retval = H5Tis_variable_str(type_id);
-            break;
+            return H5Tis_variable_str(type_id);
 
         case H5T_VLEN:
-            retval = 1;
-            break;
+            return 1;
 
         case H5T_ARRAY:
             stype = H5Tget_super(type_id);
             if(stype<0){
-                retval = -1;
-                break;
+                return -1;
             }
             retval = h5py_detect_vlen(stype);
-            break;
+            H5Tclose(stype);
+            return retval;
 
         case H5T_COMPOUND:
             nmembers = H5Tget_nmembers(type_id);
             if(nmembers<0){
-                retval = -1;
-                break;
+                return -1;
             }
             for(i=0;i<nmembers;i++){
                 stype = H5Tget_member_type(type_id, i);
                 if(stype<0){
-                    retval = -1;
-                    break;
+                    return -1;
                 }
                 retval = h5py_detect_vlen(stype);
-                if(retval!=0){
-                    break;
+                if(retval!=0){ /* short-circuit success */
+                    H5Tclose(stype);
+                    return retval;
                 }
+                H5Tclose(stype);
             }
-            break;
+            return 0;
 
         default:
-            retval = 0;
+            return 0;
 
     } /* switch */
-
-
-    out:        /* cleanup */
-
-    if(stype>0)     H5Tclose(stype);
-    
-    return retval;
-
-    failed:     /* error target */
-
-    retval = -1;
-    goto out;
 
 }
 
