@@ -213,6 +213,8 @@ def guess_chunk(shape, typesize):
         raise ValueError("Chunks not allowed for scalar datasets.")
 
     chunks = np.array(shape, dtype='=f8')
+    if not np.all(np.isfinite(chunks)):
+        raise ValueError("Illegal value in chunk tuple")
 
     # Determine the optimal chunk size in bytes using a PyTables expression.
     # This is kept as a float.
