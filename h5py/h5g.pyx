@@ -20,6 +20,7 @@ include "config.pxi"
 from h5 cimport init_hdf5, SmartStruct
 from utils cimport emalloc, efree
 from h5p cimport PropID, pdefault
+from h5e cimport err_cookie, disable_errors, enable_errors
 IF H5PY_18API:
     from h5l cimport LinkProxy
 
@@ -433,15 +434,16 @@ cdef class GroupID(ObjectID):
 
         Determine if a group member of the given name is present
         """
-
+        cdef herr_t retval
+        cdef err_cookie cookie
+        
+        cookie = disable_errors()
         try:
-            IF H5PY_18API:
-                return <bint>H5Lexists(self.id, name, H5P_DEFAULT)
-            ELSE:
-                H5Gget_objinfo(self.id, name, 1, NULL)
-                return True
-        except H5Error:
-            return False    
+            retval = H5Gget_objinfo(self.id, name, 1, NULL)
+        finally:
+            enable_errors(cookie)
+
+        return bool(retval >= 0)
 
     @nosync
     def __iter__(self):

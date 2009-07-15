@@ -373,4 +373,19 @@ cpdef int register_thread() except -1:
         raise RuntimeError("Failed to register HDF5 exception callback")
     return 0
 
+cdef err_cookie disable_errors() except *:
+    # Temporarily disable errors for the current thread
+    cdef err_cookie cookie
+    H5Eget_auto(&cookie.func, &cookie.data)
+    H5Eset_auto(NULL, NULL)
+    return cookie
+
+cdef void enable_errors(err_cookie cookie) except *:
+    # Re-enable errors for the current thread
+    cdef herr_t retval
+    retval = H5Eset_auto(cookie.func, cookie.data)
+    if(retval < 0):
+        raise RuntimeError("Cant' re-enable exception support")
+
+
 

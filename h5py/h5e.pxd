@@ -222,3 +222,10 @@ cdef extern from "hdf5.h":
   ctypedef herr_t (*H5E_walk_t)(int n, H5E_error_t *err_desc, void* client_data)  
   herr_t    H5Ewalk(H5E_direction_t direction, H5E_walk_t func, void* client_data)
 
+ctypedef struct err_cookie:
+    H5E_auto_t func
+    void* data
+
+cdef err_cookie disable_errors() except *
+cdef void enable_errors(err_cookie) except *
+
