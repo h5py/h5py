@@ -1,15 +1,15 @@
 ===============================
-LZF filter for HDF5, revision 2
+LZF filter for HDF5, revision 3
 ===============================
 
 The LZF filter provides high-speed compression with acceptable compression
 performance, resulting in much faster performance than DEFLATE, at the
-cost of a slightly worse compression ratio. It's appropriate for large
+cost of a slightly lower compression ratio. It's appropriate for large
 datasets of low to moderate complexity, for which some compression is
 much better than none, but for which the speed of DEFLATE is unacceptable.
 
-Both HDF5 versions 1.6 and 1.8 are supported.  This code is released under
-the BSD license.
+This filter has been tested against HDF5 versions 1.6.5 through 1.8.3.  It
+is released under the BSD license (see LICENSE.txt for details).
 
 
 Using the filter from HDF5
@@ -63,6 +63,19 @@ filter by default.
 * Main web site and documentation:  http://h5py.alfven.org
 
 * Contact email:  h5py at alfven dot org
+
+
+History of changes
+------------------
+
+Revision 3 (6/25/09)
+    Fix issue with changed filter struct definition under HDF5 1.8.3.
+
+Revision 2
+    Minor speed enhancement.
+
+Revision 1
+    Initial release.
 
 
 
