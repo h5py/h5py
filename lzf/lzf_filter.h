@@ -19,7 +19,7 @@ extern "C" {
 #endif
 
 /* Filter revision number, starting at 1 */
-#define H5PY_FILTER_LZF_VERSION 3
+#define H5PY_FILTER_LZF_VERSION 4
 
 /* Filter ID registered with the HDF Group as of 2/6/09.  For maintenance
    requests, contact the filter author directly. */
