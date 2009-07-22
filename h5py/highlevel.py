@@ -60,7 +60,7 @@ def is_hdf5(fname):
         try:
             try:
                 fname = fname.encode(sys.getfilesystemencoding())
-            except UnicodeError:
+            except (UnicodeError, LookupError):
                 pass
             return h5f.is_hdf5(fname)
         except H5Error:
@@ -563,7 +563,7 @@ class File(Group):
         try:
             name = name.decode(sys.getfilesystemencoding())
             return name.encode('ascii')
-        except UnicodeError:
+        except (UnicodeError, LookupError):
             return name
 
     @property
@@ -616,7 +616,7 @@ class File(Group):
             # If the byte string doesn't match the default encoding, just
             # pass it on as-is.  Note Unicode objects can always be encoded.
             name = name.encode(sys.getfilesystemencoding())
-        except UnicodeError:
+        except (UnicodeError, LookupError):
             pass
 
         if mode == 'r':
