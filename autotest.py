@@ -28,12 +28,13 @@ def iterconfigs(cfile):
 class CommandFailed(Exception):
     pass
 
-def do_cmd(cmd):
+def do_cmd(cmd, context=""):
     debug(cmd)
     s, o = getstatusoutput(cmd)
     if s != 0:
-        msg = "Command failed: %s" % cmd
-        msg += '\n'+'-'*len(msg)
+        msg = "Command failed: %s\n" % cmd
+        msg += "Context: %s\n" % context
+        msg += o
         print msg
         raise CommandFailed(cmd)
     
@@ -58,9 +59,9 @@ def run():
     for p in pythons:
         for c in configs:
             try:
-                do_cmd('%s setup.py configure %s' % (p, c))
-                do_cmd('%s setup.py build' % p)
-                do_cmd('%s setup.py test' %p)
+                do_cmd('%s setup.py configure %s' % (p, c), c)
+                do_cmd('%s setup.py build' % p, c)
+                do_cmd('%s setup.py test' %p, c)
             except CommandFailed:
                 failed = True
             finally:
