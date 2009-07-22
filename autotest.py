@@ -1,54 +1,75 @@
-# Development script to test setup options
+from __future__ import with_statement
+
+"""
+    Script to test multiple configurations of h5py on a target machine
+"""
+
 import os.path as op
 import os, sys
+from commands import getstatusoutput
 
-# Versions of the Python interpreter to test
-python_versions = ['python2.5', 'python2.6']
+def debug(what):
+    if 'debug' in sys.argv:
+        print '>>> '+what
 
-# Expect these to exist in parent dir
-libnames = ['h166',  'h180', 'h182']
-
-# Additional options for each library version
-extraopts = {'h182': ['--api=16']}
-
-def runcmd(cmd, logfile=None):
-    """ Execute a command, capturing output in a logfile.
-
-    Logfile is deleted if command succeeds.  Aborts Python if
-    exit code is exactly 1, else returns that value.
+def iterconfigs(cfile):
+    """ Iterate over multiple configurations; i.e. the "whatever" in 
+        in "setup.py configure whatever".  The special value DEFAULT
+        corresponds to no extra config information.
     """
-
-    print "Executing %s" % cmd
-    retval = os.system('%s > %s 2>&1' % (cmd, logfile if logfile is not None else '/dev/null'))
-    if retval in (1,2):
-        print "Exiting with internal exception"
-        sys.exit(1)
-    elif retval != 0:
-        print '!!! Command "%s" failed with status %s; output saved to %s' % (cmd, retval, logfile)
-    elif logfile is not None:
-        os.unlink(logfile)
-
-    return retval
-
-retvals = []
-
-for p in python_versions:
-    for l in libnames:
-        opts = ['']+extraopts.get(l,[])
-
-        for i, o in enumerate(opts):
-
-            outfile = 'autotest-%s-%s-%s.txt' % (l, i, p)
-
-            retvals.append( runcmd('%s setup.py configure --hdf5=../%s %s' % (p, l, o)) )
-            retvals.append( runcmd('%s setup.py build' % p, outfile) )
-            retvals.append( runcmd('%s setup.py test' % p) )
-            retvals.append( runcmd('%s setup.py clean' % p) )
-
-            if not any(retvals):
-                retvals = []
+    for line in (x.strip() for x in cfile):
+        if len(line) > 0 and not line.startswith('#'):
+            debug("Line: "+line)
+            if line == 'DEFAULT':
+                yield ""
             else:
-                sys.exit(17)
-print 'Done'
+                yield line
+
+class CommandFailed(Exception):
+    pass
+
+def do_cmd(cmd):
+    debug(cmd)
+    s, o = getstatusoutput(cmd)
+    if s != 0:
+        msg = "Command failed: %s" % cmd
+        msg += '\n'+'-'*len(msg)
+        print msg
+        raise CommandFailed(cmd)
+    
+def run():
+
+    failed = False
+
+    # Check what versions of Python are installed
+    pythons = [x for x in ('python2.5', 'python2.6') if os.system('%s -V > /dev/null 2>&1' % x) == 0]
+
+    debug("Have pythons %s" % pythons)
+
+    # Try to open configs file
+    try:
+        with open(op.join(op.expanduser('~'), '.h5pytest'),'r') as cfile:
+            debug("Config file found!")
+            configs = list(iterconfigs(cfile))
+    except IOError:
+        debug("No config file")
+        configs = [""]
+
+    for p in pythons:
+        for c in configs:
+            try:
+                do_cmd('%s setup.py configure %s' % (p, c))
+                do_cmd('%s setup.py build' % p)
+                do_cmd('%s setup.py test' %p)
+            except CommandFailed:
+                failed = True
+            finally:
+                do_cmd('%s setup.py clean' %p)
+
+    return not failed
+
+if __name__ == '__main__':
+    if not run():
+        sys.exit(1)
 
 
