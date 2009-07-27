@@ -124,7 +124,8 @@ def is_hdf5(char* name):
 def mount(ObjectID loc not None, char* name, FileID fid not None):
     """(ObjectID loc, STRING name, FileID fid)
 
-    Mount an open file as "name" under group loc_id.
+    Mount an open file on the group "name" under group loc_id.  Note that
+    "name" must already exist.
     """
     H5Fmount(loc.id, name, fid.id, H5P_DEFAULT)
 
@@ -132,7 +133,7 @@ def mount(ObjectID loc not None, char* name, FileID fid not None):
 def unmount(ObjectID loc not None, char* name):
     """(ObjectID loc, STRING name)
 
-    Unmount a file, mounted as "name" under group loc_id.
+    Unmount a file, mounted at "name" under group loc_id.
     """
     H5Funmount(loc.id, name)
 
