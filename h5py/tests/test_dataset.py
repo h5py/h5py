@@ -48,4 +48,24 @@ class TestDataset(TestCasePlus):
                 assert np.all(dset[...] == data), msg
 
                 
-                
+    def test_literal(self):
+        # Literal assignment for compound types
+
+        dtypes = [ [('a','i'), ('b','f')],
+                   [('a','i'), ('b', [('c','i2'),('d','f')] ) ] ]
+
+        values = [ (42, 39.5),
+                   (42, (356, 34.0)) ]
+
+        for val, dt in zip(values, dtypes):
+            ds = self.f.create_dataset('ds', (1,), dt)
+            arr = np.ndarray((1,), dtype=dt)
+            ds[0] = val
+            arr[0] = val
+            assert ds[0] == np.asscalar(arr[0]), "%r: %r" % (ds[0], arr)
+            del self.f['ds']
+        
+
+
+
+

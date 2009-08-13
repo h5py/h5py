@@ -1012,13 +1012,13 @@ class Dataset(HLObject):
             if len(names) != 0:
                 raise TypeError("Field name selections are not allowed for write.")
 
-            val2 = numpy.asarray(val, order='C')
-
-            # Special fudge factor for weirdness with scalar compound literals
-            if self.dtype.kind == 'V' and val2.dtype.kind != 'V':
+            # Generally we try to avoid converting the arrays on the Python
+            # side.  However, for compound literals this is unavoidable.
+            if self.dtype.kind == 'V' and \
+            (not isinstance(val, numpy.ndarray) or val.dtype.kind != 'V'):
                 val = numpy.asarray(val, dtype=self.dtype, order='C')
             else:
-                val = val2
+                val = numpy.asarray(val, order='C')
 
             # Check for array dtype compatibility and convert
             if self.dtype.subdtype is not None:
