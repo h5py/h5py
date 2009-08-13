@@ -43,7 +43,16 @@ TYPES = TYPES1 + TYPES2
 
 SHAPES = [(), (1,), (10,5), (1,10), (10,1), (100,1,100), (51,2,1025)]
 
- 
+
+def require_unicode(f):
+
+    try:
+        op.exists(u'\u201a')
+    except UnicodeError:
+        return None
+    else:
+        return f
+
 class TestFile(TestCasePlus):
 
     def setUp(self):
@@ -52,6 +61,7 @@ class TestFile(TestCasePlus):
     def tearDown(self):
         res.clear()
 
+    @require_unicode
     def test_unicode(self):
         # Two cases:
         # 1. Unicode
