@@ -44,7 +44,7 @@ class ResourceManager(object):
 
     def clear(self):
         """ Wipe out all open identifiers, and unlink all generated files """
-        id_list = h5py.h5f.get_obj_ids()
+        id_list = h5py.h5f.get_obj_ids(types=h5py.h5f.OBJ_ALL^h5py.h5f.OBJ_DATATYPE)
 
         for id_ in id_list:
             while(id_ and h5py.h5i.get_ref(id_) > 0):
