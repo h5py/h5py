@@ -26,7 +26,7 @@ import os.path as op
 import pickle
 
 NAME = 'h5py'
-VERSION = '1.2.0'
+VERSION = '1.2.1'
 MIN_NUMPY = '1.0.3'
 MIN_CYTHON = '0.9.8.1.1'
 SRC_PATH = 'h5py'           # Name of directory with .pyx files
@@ -552,6 +552,7 @@ setup(
   maintainer = 'Andrew Collette',
   maintainer_email = '"h5py" at the domain "alfven.org"',
   url = 'http://h5py.alfven.org',
+  download_url = 'http://code.google.com/p/h5py/downloads/list',
   packages = ['h5py','h5py.tests'],
   package_data = package_data,
   ext_modules = EXTENSIONS,
