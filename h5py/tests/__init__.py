@@ -16,6 +16,7 @@ import common
 
 mnames = [
 'test_dataset',
+'test_group',
 'test_filters',
 'test_h5a',
 'test_h5d',
