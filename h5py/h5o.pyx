@@ -1,4 +1,3 @@
-
 include "config.pxi"
 
 IF H5PY_18API:

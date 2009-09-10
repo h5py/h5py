@@ -9,7 +9,7 @@
 # $Date$
 # 
 #-
-__doc__ = \
+
 """
     HDF5 "H5T" data-type API
 
@@ -25,7 +25,12 @@ __doc__ = \
        The module function py_create is the complement to this property, and
        is the standard way to translate Numpy dtypes to HDF5 type identifiers.
        Unlike the dtype property, HDF5 datatypes returned by this function are
-       guaranteed to be binary-compatible with their Numpy dtype counterparts
+       guaranteed to be binary-compatible with their Numpy dtype counterparts.
+
+       The function py_create can also create "logically appropriate"
+       destination types; for example, the proper binary representation of
+       a Python string is an opaque type representing a char*, while the
+       "logical" type is an HDF5 variable-length string.
 
     2. Complex numbers
 
@@ -36,25 +41,33 @@ __doc__ = \
        compatible field names, it is treated as a complex type.
 
        The names for complex types are set as a property on the global
-       configuration object, available at "h5py.config".
+       configuration object, available at h5py.get_config().
 
-    3. Enumerated types
+    3. Boolan types
 
-       NumPy has no native concept of an enumerated type.  Data of this type
-       will be read from the HDF5 file as integers, depending on the base
-       type of the enum.
+       NumPy booleans are now supported.  They are stored as a 2-value byte
+       enum.  The enum names are set as a property on the global config
+       object, available at h5py.get_config().
 
-       You can get at the fields of an enum through the standard HDF5 API
-       calls, which are presented as methods of class TypeEnumID.
-       Additionally, the py_create function allows you to create HDF5
-       enumerated types by passing in a dictionary along with a Numpy dtype.
+    4. Enumerated types
 
-    4. Variable-length types
+       NumPy has no native concept of an enumerated type.  Enumerated types
+       are represented as "hinted" integer types, which are created and
+       tested with the convenience functions h5y.py_create_enum and
+       h5t.py_get_enum.  Values are handled in NumPy as integers.
 
-       "VLEN" datatype objects can be manipulated, but reading and writing data
-       in vlen format is not supported.  This applies to vlen strings as well.
+    5. Variable-length types
 
-    5. Datatypes can be pickled if HDF5 1.8.X is available.
+       Variable-length strings are now supported, via "hinted" object dtypes
+       created and tested with the convenience functions h5t.py_create_vlen
+       and h5t.py_get_vlen.  Currently non-string vlens are not supported.
+
+       NOTE:  Only C-style strings are supported; NO embedded nulls are
+       allowed.  This is a limitation of the HDF5 library and won't change
+       until generic vlen support is added.
+
+    6. Datatypes can be pickled if HDF5 1.8.X is available.  The manual
+       HDF5 serialization routines (added in 1.8) are also available.
 """
 
 include "config.pxi"
@@ -1350,7 +1363,7 @@ cdef TypeStringID _c_vlen_str(object basetype):
     return TypeStringID(tid)
 
 cpdef TypeID py_create(object dtype_in, bint logical=0):
-    """(OBJECT dtype_in, DICT enum_vals=None) => TypeID
+    """(OBJECT dtype_in, BOOL logical=False) => TypeID
 
     Given a Numpy dtype object, generate a byte-for-byte memory-compatible
     HDF5 datatype object.  The result is guaranteed to be transient and
@@ -1494,8 +1507,8 @@ cpdef object py_get_vlen(object dt_in):
     return None
 
         
-def path_exists(TypeID src not None, TypeID dst not None):
-
+def _path_exists(TypeID src not None, TypeID dst not None):
+    """ Undocumented and unsupported """
     cdef H5T_cdata_t *data
     cdef H5T_conv_t result = NULL
     

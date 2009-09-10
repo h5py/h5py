@@ -9,7 +9,7 @@
 # $Date$
 # 
 #-
-__doc__ = \
+
 """
     H5R API for object and region references.
 """

@@ -9,7 +9,7 @@
 # $Date$
 # 
 #-
-__doc__ = \
+
 """
     Low-level operations on HDF5 file objects.
 """

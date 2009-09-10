@@ -9,7 +9,7 @@
 # $Date$
 # 
 #-
-__doc__ = \
+
 """
     Low-level HDF5 "H5G" group interface.
 """
@@ -169,18 +169,18 @@ cdef herr_t cb_group_iter(hid_t gid, char *name, void* vis_in) except 2:
 def iterate(GroupID loc not None, object func, int startidx=0, *,
             char* obj_name='.'):
     """ (GroupID loc, CALLABLE func, UINT startidx=0, **kwds)
-        => Return value from func
+    => Return value from func
 
-        Iterate a callable (function, method or callable object) over the
-        members of a group.  Your callable should have the signature::
+    Iterate a callable (function, method or callable object) over the
+    members of a group.  Your callable should have the signature::
 
-            func(STRING name) => Result
+        func(STRING name) => Result
 
-        Returning None continues iteration; returning anything else aborts
-        iteration and returns that value. Keywords:
+    Returning None continues iteration; returning anything else aborts
+    iteration and returns that value. Keywords:
 
-        STRING obj_name (".")
-            Iterate over this subgroup instead
+    STRING obj_name (".")
+        Iterate over this subgroup instead
     """
     if startidx < 0:
         raise ValueError("Starting index must be non-negative")
@@ -361,7 +361,7 @@ cdef class GroupID(ObjectID):
         H5Error is raised if the idx parameter is out-of-range.
         """
         # This function does not properly raise an exception
-        cdef herr_t retval
+        cdef int retval
         retval = H5Gget_objtype_by_idx(self.id, idx)
         if retval < 0:
             raise H5Error("Invalid index")

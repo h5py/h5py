@@ -9,10 +9,11 @@
 # $Date$
 # 
 #-
-__doc__ = \
+
 """
     Provides access to the low-level HDF5 "H5D" dataset interface.
 """
+
 include "config.pxi"
 
 # Compile-time imports
@@ -154,11 +155,6 @@ cdef class DatasetID(ObjectID):
             wide variety of dataspace configurations are possible, this is not
             checked.  You can easily crash Python by reading in data from too
             large a dataspace.
-
-            The actual read is non-blocking; the array object is temporarily
-            marked read-only, but attempting to mutate it in another thread
-            is a bad idea.  All HDF5 API calls are locked until the read
-            completes.
         """
         cdef hid_t self_id, mtype_id, mspace_id, fspace_id, plist_id
         cdef void* data
@@ -193,11 +189,6 @@ cdef class DatasetID(ObjectID):
 
             The provided Numpy array must be C-contiguous.  If this is not the
             case, ValueError will be raised and the read will fail.
-
-            The actual write is non-blocking; the array object is temporarily
-            marked read-only, but attempting to mutate it in another thread
-            is a bad idea.  All HDF5 API calls are locked until the write
-            completes.
         """
         cdef hid_t self_id, mtype_id, mspace_id, fspace_id, plist_id
         cdef void* data

@@ -1,3 +1,14 @@
+#+
+# 
+# This file is part of h5py, a low-level Python interface to the HDF5 library.
+# 
+# Copyright (C) 2008 Andrew Collette
+# http://h5py.alfven.org
+# License: BSD  (See LICENSE.txt for full license)
+# 
+# $Date$
+# 
+#-
 
 """
     Implements HDF5 error support and Python exception translation.

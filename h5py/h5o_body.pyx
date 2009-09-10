@@ -10,10 +10,12 @@
 # 
 #-
 
-include "config.pxi"
+"""
+    Module for HDF5 "H5O" functions.  When built without 1.8 API support, this
+    module exists but is empty.
+"""
 
-# Module for the new "H5O" functions introduced in HDF5 1.8.0.  Not even
-# built with API compatibility level below 1.8.
+include "config.pxi"
 
 # Pyrex compile-time imports
 from h5 cimport init_hdf5, ObjectID, SmartStruct
@@ -283,7 +285,7 @@ cdef herr_t cb_obj_simple(hid_t obj, char* name, H5O_info_t *info, void* data) e
 
     cdef _ObjectVisitor visit
 
-    # HDF5 doesn't respect callback return for ".", so skip it
+    # Not all versions of HDF5 respect callback value for ".", so skip it
     if strcmp(name, ".") == 0:
         return 0
 
@@ -326,6 +328,11 @@ def visit(ObjectID loc not None, object func, *,
 
     INT order (h5.ITER_NATIVE)
         Order in which iteration occurs
+
+    Compatibility note:  No callback is executed for the starting path ("."),
+    as some versions of HDF5 don't correctly handle a return value for this
+    case.  This differs from the behavior of the native H5Ovisit, which
+    provides a literal "." as the first value.
     """
     cdef _ObjectVisitor visit = _ObjectVisitor(func)
     cdef H5O_iterate_t cfunc

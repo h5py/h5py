@@ -9,9 +9,10 @@
 # $Date$
 # 
 #-
-__doc__ = \
+
 """
-    API for the "H5L" family of link-related operations
+    API for the "H5L" family of link-related operations.  When built without
+    1.8 API support, this module exists but is empty.
 """
 
 include "config.pxi"

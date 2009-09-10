@@ -10,7 +10,6 @@
 # 
 #-
 
-__doc__=\
 """
     Provides access to the low-level HDF5 "H5A" attribute interface.
 """

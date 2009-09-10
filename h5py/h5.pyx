@@ -9,15 +9,14 @@
 # $Date$
 # 
 #-
-__doc__ = \
+
 """
     Common support and versioning module for the h5py HDF5 interface.
 
     This is an internal module which is designed to set up the library and
-    enables HDF5 exception handling.  It also enables debug logging, if the
-    library has been compiled with a nonzero debugging level.
+    enables HDF5 exception handling.
 
-    All exception classes and error handling functions are also in this module.
+    Exception classes are now located in the module h5py.h5e.
 """
 
 include "config.pxi"
@@ -76,12 +75,30 @@ cdef class SmartStruct:
 cdef class H5PYConfig:
 
     """
-        Provides runtime access to global library settings.
+        Provides runtime access to global library settings.  You retrieve the
+        master copy of this object by calling h5py.get_config().
+
+        API_16 (T/F, readonly)
+            Is the HDF5 1.6 API available?  Currently always true.
+
+        API_18 (T/F, readonly)
+            If the HDF5 1.8 API available?
+        
+        DEBUG (integer, readonly)
+            Gives the debug logging level, or 0 if built without logging.
+
+        complex_names (tuple, r/w)
+            Settable 2-tuple controlling how complex numbers are saved.
+            Defaults to ('r','i').
+
+        bool_names (tuple, r/w)
+            Settable 2-tuple controlling the HDF5 enum names used for boolean
+            values.  Defaults to ('FALSE', 'TRUE') for values 0 and 1.
     """
 
     def __init__(self):
-        self.API_16 = H5PY_16API
-        self.API_18 = H5PY_18API
+        self.API_16 = bool(H5PY_16API)
+        self.API_18 = bool(H5PY_18API)
         self.DEBUG = H5PY_DEBUG
         self._r_name = 'r'
         self._i_name = 'i'
@@ -144,7 +161,7 @@ cdef H5PYConfig cfg = H5PYConfig()
 cpdef H5PYConfig get_config():
     """() => H5PYConfig
 
-    Get a reference to the global library configuration object
+    Get a reference to the global library configuration object.
     """
     return cfg
 
@@ -177,14 +194,13 @@ def loglevel(lev):
 cdef class PHIL:
 
     """
+        Warning:  This is an internal h5py object.  Don't use it in your code.
+
         The Primary HDF5 Interface Lock (PHIL) is a global reentrant lock
         which manages access to the library.  HDF5 is not guaranteed to 
         be thread-safe, and certain callbacks in h5py can execute arbitrary
         threaded Python code, defeating the normal GIL-based protection for
         extension modules.  Therefore, in all routines acquire this lock first.
-
-        You should NOT use this object in your code.  It's internal to the
-        library.
     """
 
     def __init__(self):
@@ -208,12 +224,12 @@ cdef PHIL phil = PHIL()
 cpdef PHIL get_phil():
     """() => PHIL
 
-    Obtain a reference to the PHIL.
+    Obtain a reference to the PHIL.  For debugging and internal use only.
     """
     global phil
     return phil
 
-# Everything required for the decorator is now defined
+# Everything required for these decorators is now defined
 
 from _sync import sync, nosync
 
@@ -365,12 +381,16 @@ def get_libversion():
 @sync
 def _close():
     """ Internal function; do not call unless you want to lose all your data.
+
+    Proxy for H5close().
     """
     H5close()
 
 @sync
 def _open():
     """ Internal function; do not call unless you want to lose all your data.
+
+    Proxy for H5open().
     """
     H5open()
 
@@ -405,9 +425,12 @@ def _exithack():
 
 hdf5_inited = 0
 
+# Proxy function which returns the predefined HDF5 type corresponding to
+# a Python object pointer (opaque type with size sizeof(void*)).
 cdef hid_t get_object_type() except -1:
     return h5py_object_type()
 
+# Proxy functions for r/w with workarounds for various HDF5 bugs.
 cdef herr_t dset_rw(hid_t dataset_id, hid_t mem_type_id, hid_t mem_space_id, 
                     hid_t file_space_id, hid_t xfer_plist_id, void *outbuf,
                     h5py_rw_t dir) except *:
@@ -446,7 +469,8 @@ _api_version_tuple = (int(H5PY_API/10), H5PY_API%10)
 _version_tuple = tuple([int(x) for x in H5PY_VERSION.split('-')[0].split('.')])
 _version_string = H5PY_VERSION
 
-
+# For backwards compatibility with user code used to the exception classes
+# being in this module.
 from h5e import H5Error
 
 

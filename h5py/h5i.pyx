@@ -9,7 +9,7 @@
 # $Date$
 # 
 #-
-__doc__ = \
+
 """
     Identifier interface for object inspection.
 """

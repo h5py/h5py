@@ -13,6 +13,10 @@
 # This file contains code or comments from the HDF5 library.  See the file
 # licenses/hdf5.txt for the full HDF5 software license.
 
+"""
+    File driver constants (H5FD*).
+"""
+
 include "config.pxi"
 
 from h5 cimport init_hdf5

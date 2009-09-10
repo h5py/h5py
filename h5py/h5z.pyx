@@ -10,9 +10,8 @@
 # 
 #-
 
-__doc__ = \
 """
-    Filter API and constants
+    Filter API and constants.
 """
 
 include "config.pxi"
