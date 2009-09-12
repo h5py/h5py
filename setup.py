@@ -218,9 +218,8 @@ class ExtensionCreator(object):
         else:
             self.libraries = ['hdf5']
             if hdf5_loc is None:
-                self.include_dirs = [numpy.get_include(), 
-                                     '/usr/include', '/usr/local/include']
-                self.library_dirs = ['/usr/lib/', '/usr/local/lib']
+                self.include_dirs = [numpy.get_include()]
+                self.library_dirs = []
                 if sys.platform == 'darwin':
                     self.include_dirs += ['/opt/local/include']
                     self.library_dirs += ['/opt/local/lib']
