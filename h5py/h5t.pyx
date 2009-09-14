@@ -10,6 +10,10 @@
 # 
 #-
 
+IF UNAME_SYSNAME == "Windows":
+    __doc__ = """ HDF5 "H5T" data-type API """
+ELSE:
+    __doc__ = \
 """
     HDF5 "H5T" data-type API
 
