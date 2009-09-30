@@ -1445,7 +1445,7 @@ cpdef TypeID py_create(object dtype_in, bint logical=0):
     finally:
         phil.release()
 
-cpdef dtype py_new_enum(dtype dt_in, dict enum_vals):
+cpdef dtype py_new_enum(object dt_in, dict enum_vals):
     """ (DTYPE dt_in, DICT enum_vals) => DTYPE
 
     Create a new NumPy integer dtype, which contains "hint" metadata for

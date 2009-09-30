@@ -462,25 +462,32 @@ class TestPyCreate(TestCasePlus):
     def test_enum(self):
         """ Enum type translation
 
+        Literal:
+        - TypeIntegerID
+
+        Logical:
         - TypeEnumID
         - Base TypeIntegerID
-        - 0 to (at least) 1000 values
+        - 0 to (at least) 128 values
         """
-        enums = [{}, {'a': 0, 'b': 1}, dict(("%s" % d, d) for d in xrange(1000)) ]
+        enums = [{}, {'a': 0, 'b': 1}, dict(("%s" % d, d) for d in xrange(128)) ]
         bases = ('|i1', '|u1', '<i4', '>i4', '<u8')
 
         for b in bases:
             for e in enums:
                 dt = h5t.py_new_enum(b, e)
-                htype = h5t.py_create(dt)
                 htype_comp = h5t.py_create(b)
-                self.assert_(isinstance(htype, h5t.TypeEnumID))
-                basetype = h5t.get_super()
+                htype = h5t.py_create(dt)
+                self.assert_(isinstance(htype, h5t.TypeIntegerID))
+                self.assertEqual(htype, htype_comp)
+                htype = h5t.py_create(dt, logical=True)
+                self.assert_(isinstance(htype, h5t.TypeEnumID), "%s" % (htype,))
+                basetype = htype.get_super()
                 self.assertEqual(htype_comp, basetype)
                 self.assertEqual(htype.get_nmembers(), len(e))
                 for idx in xrange(htype.get_nmembers()):
                     name = htype.get_member_name(idx)
-                    val = htype.get_member_value(idx)
+                    value = htype.get_member_value(idx)
                     self.assertEqual(e[name], value)
 
 
