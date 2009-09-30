@@ -285,5 +285,204 @@ class TestH5T(TestCasePlus):
         finally:
             config.complex_names = oldnames
 
+import h5py
+cfg = h5py.get_config()
+bytemap = {'<': h5t.ORDER_LE, '>': h5t.ORDER_BE, '=': h5t.ORDER_NATIVE}
+
+class TestPyCreate(TestCasePlus):
+
+    """
+        Tests the translation from Python dtypes to HDF5 datatypes
+    """
+
+    def test_integer(self):
+        """ Signed integer translation
+
+        - TypeIntegerID
+        - 1, 2, 4, 8 bytes
+        - LE and BE
+        - Signed
+        """
+        bases = ('=i', '<i', '>i')
+
+        for b in bases:
+            for l in (1, 2, 4, 8):
+                dt = '%s%s' % (b, l)
+                htype = h5t.py_create(dt)
+                self.assert_(isinstance(htype, h5t.TypeIntegerID), "wrong class")
+                self.assertEqual(htype.get_size(), l, "wrong size")
+                self.assertEqual(htype.get_sign(), h5t.SGN_2, "wrong sign")
+                if l != 1:  # NumPy does not allow ordering of 1-byte types
+                    self.assertEqual(htype.get_order(), bytemap[b[0]])
+
+    def test_uinteger(self):
+        """ Unsigned integer translation
+
+        - TypeIntegerID
+        - 1, 2, 4, 8 bytes
+        - LE and BE
+        - Unsigned
+        """
+        bases = ('=u', '<u', '>u')
+
+        for b in bases:
+            for l in (1, 2, 4, 8):
+                dt = "%s%s" % (b, l)
+                htype = h5t.py_create(dt)
+                self.assert_(isinstance(htype, h5t.TypeIntegerID), "wrong class")
+                self.assertEqual(htype.get_size(), l, "wrong size")
+                self.assertEqual(htype.get_sign(), h5t.SGN_NONE, "wrong sign")
+                if l != 1:
+                    self.assertEqual(htype.get_order(), bytemap[b[0]], "wrong order")
+
+    def test_float(self):
+        """ Floating-point translation
+
+        - TypeFloatID
+        - 1, 2, 4, 8 bytes
+        - LE and BE
+        - Unsigned
+        """
+        bases = ('=f', '<f', '>f')
+        
+        for b in bases:
+            for l in (4, 8):
+                dt = "%s%s" % (b, l)
+                htype = h5t.py_create(dt)
+                self.assert_(isinstance(htype, h5t.TypeFloatID), "wrong class")
+                self.assertEqual(htype.get_size(), l, "wrong size")
+                self.assertEqual(htype.get_order(), bytemap[b[0]])
+
+    def test_complex(self):
+        """ Complex type translation
+
+        - TypeComplexID
+        - 8, 16 bytes
+        - LE and BE
+        - 2 members
+        - Member names from cfg.complex_names
+        - Members are TypeFloatID
+        """
+        bases = ('=c', '<c', '>c')
+        
+        for b in bases:
+            for l in (8, 16):
+                dt = '%s%s' % (b, l)
+                htype = h5t.py_create(dt)
+                self.assert_(isinstance(htype, h5t.TypeCompoundID), "wrong class")
+                self.assertEqual(htype.get_size(), l, "wrong size")
+                self.assertEqual(htype.get_nmembers(), 2, "wrong # members")
+                for idx in (0, 1):
+                    self.assertEqual(htype.get_member_name(idx), cfg.complex_names[idx])
+                    st = htype.get_member_type(idx)
+                    self.assert_(isinstance(st, h5t.TypeFloatID))
+                    self.assertEqual(st.get_size(), l//2)
+                    self.assertEqual(st.get_order(), bytemap[b[0]])
+
+    def test_string(self):
+        """ Fixed-length string translation
+
+        - TypeStringID
+        - Fixed-length
+        - Size 1 byte to 2**31-1 bytes
+        - Charset ASCII
+        - Null-padded
+        """
+
+        for l in (1, 23, 2**31-1):
+            dt = '|S%s' % l
+            htype = h5t.py_create(dt)
+            self.assert_(isinstance(htype, h5t.TypeStringID), "wrong class")
+            self.assertEqual(htype.get_size(), l)
+            self.assertEqual(htype.get_cset(), h5t.CSET_ASCII, "wrong cset")
+            self.assertEqual(htype.get_strpad(), h5t.STR_NULLPAD, "wrong padding")
+            self.assert_(not htype.is_variable_str(), "should be fixed str")
+
+    def test_vlstring(self):
+        """ Variable-length string translation
+
+        In literal mode:
+        - TypeOpaqueID
+        - Equal to PYTHON_OBJECT
+
+        In logical mode:
+        - TypeStringID
+        - Variable-length
+        - Charset ASCII
+        - Null-terminated
+        """
+
+        dt = h5t.py_new_vlen(str)
+        htype = h5t.py_create(dt)
+        self.assert_(isinstance(htype, h5t.TypeOpaqueID))
+        self.assertEqual(htype, h5t.PYTHON_OBJECT)
+
+        htype = h5t.py_create(dt, logical=True)
+        self.assert_(isinstance(htype, h5t.TypeStringID))
+        self.assert_(htype.is_variable_str())
+        self.assertEqual(htype.get_cset(), h5t.CSET_ASCII)
+        self.assertEqual(htype.get_strpad(), h5t.STR_NULLTERM)
+
+    def test_boolean(self):
+        """ Boolean type translation
+
+        - TypeEnumID
+        - Base TypeIntegerID
+        - Base 1 byte
+        - Base signed
+        - Member names from cfg.bool_names
+        - 2 values
+        - Values 0, 1
+        """
+
+        htype = h5t.py_create('bool')
+        self.assert_(isinstance(htype, h5t.TypeEnumID), "wrong class")
+        self.assertEqual(htype.get_nmembers(), 2, "must be 2-element enum")
+        basetype = htype.get_super()
+        self.assertEqual(basetype.get_size(), 1, "wrong size")
+        self.assertEqual(basetype.get_sign(), h5t.SGN_2, "wrong sign")
+        for idx in (0,1):
+            self.assertEqual(htype.get_member_name(idx), cfg.bool_names[idx], "wrong name")
+            self.assertEqual(htype.get_member_value(idx), idx, "wrong value")
+
+    def test_opaque(self):
+        """ Opaque type translation
+
+        - TypeOpaqueID
+        - Sizes 1 byte to 2**31-1 bytes
+        - Empty tag
+        """
+
+        for l in (1, 21, 2**31-1):
+            htype = h5t.py_create('|V%s' % l)
+            self.assert_(isinstance(htype, h5t.TypeOpaqueID))
+            self.assertEqual(htype.get_size(), l)
+            self.assertEqual(htype.get_tag(), "")
+
+    def test_enum(self):
+        """ Enum type translation
+
+        - TypeEnumID
+        - Base TypeIntegerID
+        - 0 to (at least) 1000 values
+        """
+        enums = [{}, {'a': 0, 'b': 1}, dict(("%s" % d, d) for d in xrange(1000)) ]
+        bases = ('|i1', '|u1', '<i4', '>i4', '<u8')
+
+        for b in bases:
+            for e in enums:
+                dt = h5t.py_new_enum(b, e)
+                htype = h5t.py_create(dt)
+                htype_comp = h5t.py_create(b)
+                self.assert_(isinstance(htype, h5t.TypeEnumID))
+                basetype = h5t.get_super()
+                self.assertEqual(htype_comp, basetype)
+                self.assertEqual(htype.get_nmembers(), len(e))
+                for idx in xrange(htype.get_nmembers()):
+                    name = htype.get_member_name(idx)
+                    val = htype.get_member_value(idx)
+                    self.assertEqual(e[name], value)
+
+
 
 
