@@ -16,10 +16,9 @@ import os
 from numpy import dtype
 
 from h5py import *
-from common import TestCasePlus
-
-kind_map = {'i': h5t.TypeIntegerID, 'u': h5t.TypeIntegerID, 'f': h5t.TypeFloatID,
-           'c': h5t.TypeCompoundID, 'S': h5t.TypeStringID, 'V': h5t.TypeOpaqueID}
+from h5py import h5t, h5f
+from common import TestCasePlus, api_18, res
+import cPickle
 
 typecode_map = {'i': h5t.INTEGER, 'u': h5t.INTEGER, 'f': h5t.FLOAT,
            'c': h5t.COMPOUND, 'S': h5t.STRING, 'V': h5t.OPAQUE}
@@ -30,8 +29,147 @@ simple_types = \
     "<f4", "<f8", ">f4", ">f8", "<c8", "<c16", ">c8", ">c16",
     "|S1", "|S2", "|S33", "|V1", "|V2", "|V33"]
 
-class TestH5T(TestCasePlus):
+def mkstr(arr):
+    return "".join(chr(x) for x in arr)
 
+class BaseTypeMixin(object):
+
+    """
+        Base class for TypeID tests, which tests that the various TypeID
+        subclasses correctly implement operations like equality and
+        serialization.
+
+        MUST be a mixin or the stupid unittest loader tries to test it.
+    """
+
+    def tearDown(self):
+        res.clear()
+
+    ODDBALL_TYPE = h5t.create(h5t.OPAQUE, 72)
+
+    # --- The following attributes and methods MUST be overridden ---
+
+    CLASSCODE = -1
+
+    def get_example_type(self):
+        """ Override this method to provide a dynamically-created example
+         type, which will be used to test common TypeID operations.
+        """
+        raise NotImplementedError("!")
+
+    def get_example_encoding(self):
+        """ Override this method to provide a known-good serialized example
+        of the example type above.  Only called with 1.8 API.
+        """
+        raise NotImplementedError("!")
+
+    # --- End required attributes and methods ---
+
+    def test_equal(self):
+        """ Generic subtype equality test
+
+        Calls generate_type twice and compares the result.  Also compares to
+        an known type which which should not match.
+        """
+        a1, a2 = self.get_example_type(), self.get_example_type()
+        self.assert_(a1.equal(a2))
+        self.assert_(a2.equal(a1))
+        self.assert_(a1.equal(a1))
+        self.assert_(a1 == a2)
+        self.assert_(not a1 == self.ODDBALL_TYPE)
+
+    @api_18
+    def test_serialize(self):
+        """ Generic subtype serialization test
+        """
+        # Round-trip serialization
+        htype = self.get_example_type()
+        htype2 = h5t.decode(htype.encode())
+        self.assertEqual(htype, htype2)
+
+        # Deserialization of known buffer
+        ser = self.get_example_encoding()
+        htype3 = h5t.decode(ser)
+        self.assertEqual(htype, htype2)
+
+        # Pickling
+        pkl = cPickle.dumps(htype)
+        htype4 = cPickle.loads(pkl)
+        self.assertEqual(htype, htype4)
+
+    def test_commit(self):
+        """ Generic subtype commit test
+        """
+        fid = h5f.create(res.get_name())
+        htype = self.get_example_type()
+        self.assert_(not htype.committed())
+        htype.commit(fid, "name")
+        self.assert_(htype.committed())
+        htype2 = h5t.open(fid, "name")
+        self.assertEqual(htype, htype2)
+
+    def test_class(self):
+        """ Generic subtype class code test
+        """
+        self.assertEqual(self.get_example_type().get_class(), self.CLASSCODE)
+
+class TestInteger(TestCasePlus, BaseTypeMixin):
+
+    CLASSCODE = h5t.INTEGER
+
+    def get_example_type(self):
+        return h5t.STD_I32LE.copy()
+    def get_example_encoding(self):
+        return mkstr([3, 0, 16, 8, 0, 0, 4, 0, 0, 0, 0, 0, 32, 0])
+
+    def test_set_get_order_sign(self):
+        
+        htype = h5t.STD_I32LE.copy()
+
+        self.assertEqual(htype.get_order(), h5t.ORDER_LE)
+        self.assertEqual(htype.get_sign(), h5t.SGN_2)
+
+        htype.set_order(h5t.ORDER_BE)
+        htype.set_sign(h5t.SGN_NONE)
+        
+        self.assertEqual(htype.get_order(), h5t.ORDER_BE)
+        self.assertEqual(htype.get_sign(), h5t.SGN_NONE)
+
+class TestFloat(TestCasePlus, BaseTypeMixin):
+
+    CLASSCODE = h5t.FLOAT   
+
+    def get_example_type(self):
+        return h5t.IEEE_F32LE.copy()
+    def get_example_encoding(self):
+        return mkstr([3, 0, 17, 32, 31, 0, 4, 0, 0, 0, 0, 0, 
+                      32, 0, 23, 8, 0, 23, 127, 0, 0, 0])
+
+class TestString(TestCasePlus, BaseTypeMixin):
+
+    CLASSCODE = h5t.STRING
+
+    def get_example_type(self):
+        return h5t.C_S1.copy()
+    def get_example_encoding(self):
+        return mkstr([3, 0, 19, 0, 0, 0, 1, 0, 0, 0])
+
+class TestOpaque(TestCasePlus, BaseTypeMixin):
+
+    CLASSCODE = h5t.OPAQUE
+
+    def get_example_type(self):
+        return h5t.create(h5t.OPAQUE, 31)
+    def get_example_encoding(self):
+        return mkstr([3, 0, 21, 0, 0, 0, 31, 0, 0, 0])
+
+    def test_setget_tag(self):
+        htype = h5t.create(h5t.OPAQUE, 40)
+        htype.set_tag("FOOBAR")
+        self.assertEqual(htype.get_tag(), "FOOBAR")
+
+
+class TestH5T(TestCasePlus):
 
     def test_create(self):
         """ Check that it produces instances from typecodes """
@@ -90,32 +228,12 @@ class TestH5T(TestCasePlus):
         for x in simple_types:
             test(x)
 
-    def test_equal(self):
-
-        htype = h5t.create(h5t.OPAQUE, 128)
-        htype2 = h5t.create(h5t.OPAQUE, 128)
-        htype3 = h5t.create(h5t.OPAQUE, 127)
-
-        self.assert_(htype.equal(htype2))
-        self.assert_(not htype.equal(htype3))
-
     def test_lock(self):
 
         htype = h5t.STD_I8LE.copy()
         htype.set_sign(h5t.SGN_NONE)
         htype.lock()
         self.assertRaises(TypeError, htype.set_sign, h5t.SGN_2)
-
-    def test_get_class(self):
-
-        def test(dt):
-            """ Check that getclass produces the correct code for the dtype """
-            dt = dtype(dt)
-            htype = h5t.py_create(dt)
-            self.assertEqual(htype.get_class(), typecode_map[dt.kind])
-
-        for x in simple_types:
-            test(x)
 
     def test_get_set_size(self):
 
@@ -150,23 +268,6 @@ class TestH5T(TestCasePlus):
         self.assert_(not htype.detect_class(h5t.ARRAY))
 
 
-    def test_set_get_order_sign(self):
-        
-        htype = h5t.STD_I32LE.copy()
-
-        self.assertEqual(htype.get_order(), h5t.ORDER_LE)
-        self.assertEqual(htype.get_sign(), h5t.SGN_2)
-
-        htype.set_order(h5t.ORDER_BE)
-        htype.set_sign(h5t.SGN_NONE)
-        
-        self.assertEqual(htype.get_order(), h5t.ORDER_BE)
-        self.assertEqual(htype.get_sign(), h5t.SGN_NONE)
-
-    def test_setget_tag(self):
-        htype = h5t.create(h5t.OPAQUE, 40)
-        htype.set_tag("FOOBAR")
-        self.assertEqual(htype.get_tag(), "FOOBAR")
         
     def test_array(self):
         """ Test all array-specific features """
@@ -228,14 +329,6 @@ class TestH5T(TestCasePlus):
         self.assertEqual(out.dtype, dtype('bool'))
 
     # === Tests for py_create =================================================
-
-    def test_py_create_simple(self):
-
-        for x in simple_types:
-            dt = dtype(x)
-            htype = h5t.py_create(dt)
-            self.assertEqual(type(htype), kind_map[dt.kind])
-            self.assertEqual(dt, htype.dtype)
 
     def test_py_create_array(self):
         shapes = [ (1,1), (1,), (4,5), (99,10,22) ]
