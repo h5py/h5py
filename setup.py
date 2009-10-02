@@ -28,7 +28,7 @@ import pickle
 NAME = 'h5py'
 VERSION = '1.2.2'
 MIN_NUMPY = '1.0.3'
-MIN_CYTHON = '0.9.8.1.1'
+MIN_CYTHON = '0.11.2'
 SRC_PATH = 'h5py'           # Name of directory with .pyx files
 
 USE_DISTUTILS = False
@@ -494,8 +494,23 @@ class doc(Command):
 
         shutil.copytree('docs/build/html', 'docs/html')
 
+class nose_stub(Command):
+
+    description = "UNSUPPORTED"
+
+    user_options = []
+    boolean_options = []
+
+    def initialize_options(self):
+        pass
+    def finalize_options(self):
+        pass
+
+    def run(self):
+        fatal("h5py is not compatible with nosetests command")
+
 CMD_CLASS = {'cython': cython, 'build_ext': hbuild_ext, 'clean': cleaner,
-             'configure': configure, 'doc': doc}
+             'configure': configure, 'doc': doc, 'nosetests': nose_stub}
 
 # --- Setup parameters --------------------------------------------------------
 
