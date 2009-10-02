@@ -10,68 +10,12 @@
 # 
 #-
 
-IF UNAME_SYSNAME == "Windows":
-    __doc__ = """ HDF5 "H5T" data-type API """
-ELSE:
-    __doc__ = \
 """
     HDF5 "H5T" data-type API
 
     This module contains the datatype identifier class TypeID, and its
     subclasses which represent things like integer/float/compound identifiers.
     The majority of the H5T API is presented as methods on these identifiers.
-
-    1. Translating between Numpy dtypes and HDF5 type objects
-
-       All identifier classes have a property "dtype", returning a Numpy
-       dtype which as closely as possible matches the HDF5 type.
-
-       The module function py_create is the complement to this property, and
-       is the standard way to translate Numpy dtypes to HDF5 type identifiers.
-       Unlike the dtype property, HDF5 datatypes returned by this function are
-       guaranteed to be binary-compatible with their Numpy dtype counterparts.
-
-       The function py_create can also create "logically appropriate"
-       destination types; for example, the proper binary representation of
-       a Python string is an opaque type representing a char*, while the
-       "logical" type is an HDF5 variable-length string.
-
-    2. Complex numbers
-
-       Complex number support has been refactored in this version of h5py.
-       HDF5 has no native concept of a complex number.  Numpy complex types
-       are translated to two-element compound types with two floating-point
-       fields. When a two-element compound type is encountered in a file with
-       compatible field names, it is treated as a complex type.
-
-       The names for complex types are set as a property on the global
-       configuration object, available at h5py.get_config().
-
-    3. Boolan types
-
-       NumPy booleans are now supported.  They are stored as a 2-value byte
-       enum.  The enum names are set as a property on the global config
-       object, available at h5py.get_config().
-
-    4. Enumerated types
-
-       NumPy has no native concept of an enumerated type.  Enumerated types
-       are represented as "hinted" integer types, which are created and
-       tested with the convenience functions h5y.py_create_enum and
-       h5t.py_get_enum.  Values are handled in NumPy as integers.
-
-    5. Variable-length types
-
-       Variable-length strings are now supported, via "hinted" object dtypes
-       created and tested with the convenience functions h5t.py_create_vlen
-       and h5t.py_get_vlen.  Currently non-string vlens are not supported.
-
-       NOTE:  Only C-style strings are supported; NO embedded nulls are
-       allowed.  This is a limitation of the HDF5 library and won't change
-       until generic vlen support is added.
-
-    6. Datatypes can be pickled if HDF5 1.8.X is available.  The manual
-       HDF5 serialization routines (added in 1.8) are also available.
 """
 
 include "config.pxi"
