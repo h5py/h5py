@@ -48,10 +48,15 @@ __all__ = ['h5', 'h5f', 'h5g', 'h5s', 'h5t', 'h5d', 'h5a', 'h5p', 'h5r',
            'Datatype', 'AttributeManager', 'H5Error', 'get_config', 'is_hdf5']
 
 try:
-    import IPython as _IP
-    if _IP.ipapi.get() is not None:
-       import _ipy_completer
-       _ipy_completer.activate()
+    try:
+        import IPython.core.ipapi as _IP
+    except ImportError:
+        # support <ipython-0.11
+        import IPython.ipapi as _IP
+    if _IP.get() is not None:
+        import _ipy_completer
+        _ipy_completer.activate()
 except Exception:
-   pass
+    pass
+
 

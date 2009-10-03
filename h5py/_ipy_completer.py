@@ -38,8 +38,13 @@ as should::
 import posixpath
 import re
 
-from IPython import generics
-from IPython.ipapi import TryNext, get as ipget
+try:
+    from IPython.utils import generics
+    from IPython.core.ipapi import TryNext, get as ipget
+except ImportError:
+    # support <ipython-0.11
+    from IPython import generics
+    from IPython.ipapi import TryNext, get as ipget
 
 import readline
 
