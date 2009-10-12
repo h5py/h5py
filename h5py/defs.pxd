@@ -38,6 +38,7 @@ cdef extern from "string.h":
   int strcmp(char *s1, char *s2)
   char *strdup(char *s)
   void *memcpy(void *dest, void *src, size_t n)
+  void *memset(void *s, int c, size_t n)
 
 cdef extern from "time.h":
   ctypedef int time_t
@@ -167,9 +168,8 @@ cdef extern from "hdf5.h":
   haddr_t   H5Dget_offset(hid_t dset_id) except *
   hsize_t   H5Dget_storage_size(hid_t dset_id) except? 0
 
-  # These must have their return values checked manually.  The functions
-  # H5PY_H5Dread and H5PY_HDwrite return -1 specifically, for use when
-  # the GIL is released and PyErr_Occurred() is inadvisable.
+  # These must have their return values checked manually, in order to
+  # allow the GIL to be released during reading and writing.
   herr_t    H5Dread(hid_t dset_id, hid_t mem_type_id, hid_t mem_space_id,
                   hid_t file_space_id, hid_t plist_id, void *buf) nogil
   herr_t    H5Dwrite(hid_t dset_id, hid_t mem_type, hid_t mem_space, hid_t 
@@ -185,7 +185,7 @@ cdef extern from "hdf5.h":
                             hid_t plist, void *buf) except *
 
   ctypedef  herr_t (*H5D_operator_t)(void *elem, hid_t type_id, unsigned ndim,
-                    hsize_t *point, void *operator_data)
+                    hsize_t *point, void *operator_data) except -1
   herr_t    H5Diterate(void *buf, hid_t type_id, hid_t space_id, 
                         H5D_operator_t operator, void* operator_data) except *
   herr_t    H5Dset_extent(hid_t dset_id, hsize_t* size)
@@ -1168,9 +1168,9 @@ cdef extern from "hdf5.h":
 
   ctypedef herr_t (*H5T_conv_t)(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
       size_t nelmts, size_t buf_stride, size_t bkg_stride, void *buf,
-      void *bkg, hid_t dset_xfer_plist)
+      void *bkg, hid_t dset_xfer_plist) except -1
 
-  H5T_conv_t H5Tfind(hid_t src_id, hid_t dst_id, H5T_cdata_t **pcdata) 
+  H5T_conv_t H5Tfind(hid_t src_id, hid_t dst_id, H5T_cdata_t **pcdata) except *
 
   herr_t    H5Tregister(H5T_pers_t pers, char *name, hid_t src_id,
                         hid_t dst_id, H5T_conv_t func) except *

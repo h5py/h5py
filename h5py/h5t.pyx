@@ -21,13 +21,14 @@
 include "config.pxi"
 
 # Pyrex compile-time imports
-from h5 cimport init_hdf5, H5PYConfig, get_config, PHIL, get_phil, get_object_type
+from h5 cimport init_hdf5, H5PYConfig, get_config, PHIL, get_phil
 from h5p cimport PropID, pdefault
 from numpy cimport dtype, ndarray
 from python_string cimport PyString_FromStringAndSize
 
 from utils cimport  emalloc, efree, \
                     require_tuple, convert_dims, convert_tuple
+import _conv
 
 # Initialization
 init_hdf5()
@@ -135,6 +136,11 @@ if sys.byteorder == "little":    # Custom python addition
 else:
     ORDER_NATIVE = H5T_ORDER_BE
 
+# For conversion
+BKG_NO = H5T_BKG_NO
+BKG_TEMP = H5T_BKG_TEMP
+BKG_YES = H5T_BKG_YES
+
 # --- Built-in HDF5 datatypes -------------------------------------------------
 
 # IEEE floating-point
@@ -193,7 +199,9 @@ FORTRAN_S1 = lockid(H5T_FORTRAN_S1)
 VARIABLE = H5T_VARIABLE
 
 # Custom Python object pointer type
-PYTHON_OBJECT = lockid(get_object_type())
+PYTHON_OBJECT = lockid(_conv.get_python_obj())
+
+#PYTHON_OBJECT = lockid(get_object_type())
 
 # Translation tables for HDF5 -> NumPy dtype conversion
 cdef dict _order_map = { H5T_ORDER_NONE: '|', H5T_ORDER_LE: '<', H5T_ORDER_BE: '>'}
@@ -644,7 +652,14 @@ cdef class TypeReferenceID(TypeID):
     """
         HDF5 object or region reference
     """
-    pass
+    
+    cdef object py_dtype(self):
+        if H5Tequal(self.id, H5T_STD_REF_OBJ):
+            return py_new_ref(H5R_OBJECT)
+        elif H5Tequal(self.id, H5T_STD_REF_DSETREG):
+            return py_new_ref(H5R_DATASET_REGION)
+        else:
+            raise TypeError("Unknown reference type")
 
 
 # === Numeric classes (integers and floats) ===================================
@@ -1298,17 +1313,19 @@ cdef TypeCompoundID _c_compound(dtype dt, int logical):
 
     return TypeCompoundID(tid)
 
-cdef TypeOpaqueID _c_object(dtype dt):
-    # Object types are represented by a custom opaque type
-    # Currently no other logic is required
-    return PYTHON_OBJECT
-
 cdef TypeStringID _c_vlen_str(object basetype):
     # Variable-length strings
     cdef hid_t tid
     tid = H5Tcopy(H5T_C_S1)
     H5Tset_size(tid, H5T_VARIABLE)
     return TypeStringID(tid)
+
+cdef TypeReferenceID _c_ref(int typecode):
+    if typecode == H5R_OBJECT:
+        return STD_REF_OBJ
+    elif typecode == H5R_DATASET_REGION:
+        return STD_REF_DSETREG
+    raise TypeError("Unrecognized reference code")
 
 cpdef TypeID py_create(object dtype_in, bint logical=0):
     """(OBJECT dtype_in, BOOL logical=False) => TypeID
@@ -1374,13 +1391,17 @@ cpdef TypeID py_create(object dtype_in, bint logical=0):
         elif kind == c'O':
 
             if logical:
-                # Check for vlen hints
                 vlen = py_get_vlen(dt)
                 if vlen is not None:
                     return _c_vlen_str(vlen)
-                raise TypeError("Object dtype has no native HDF5 equivalent")
 
-            return _c_object(dt)
+                refcode = py_get_ref(dt)
+                if refcode is not None:
+                        return _c_ref(refcode)
+
+                raise TypeError("Object dtype %r has no native HDF5 equivalent" % (dt,))
+
+            return PYTHON_OBJECT
 
         # Unrecognized
         else:
@@ -1422,6 +1443,37 @@ cpdef dict py_get_enum(object dt):
 
     return None
 
+cpdef dtype py_new_ref(int typecode):
+    """ (INT typecode) => DTYPE
+
+    Create a NumPy object type representing an HDF5 reference.  The typecode
+    should be one of:
+    
+    - h5r.OBJECT
+    - h5r.DATASET_REGION
+    """
+    return dtype(('O', [( ({'type': typecode},'hdf5ref'), 'O' )] ))
+
+cpdef object py_get_ref(object dt_in):
+    """ (DTYPE dt_in) => INT typecode or None
+
+    Determine what kind of reference this dtype represents.  Returns None
+    if it's not a reference.
+    """
+    cdef dtype dt = dtype(dt_in)
+
+    if dt.kind != 'O':
+        return None
+
+    if dt.fields is not None and 'hdf5ref' in dt.fields:
+        tpl = dt.fields['hdf5ref']
+        if len(tpl) == 3:
+            hint_dict = tpl[2]
+            if 'type' in hint_dict:
+                return hint_dict['type']
+
+    return None
+
 cpdef dtype py_new_vlen(object kind):
     """ (OBJECT kind) => DTYPE
 
@@ -1454,14 +1506,45 @@ cpdef object py_get_vlen(object dt_in):
 
     return None
 
-        
-def _path_exists(TypeID src not None, TypeID dst not None):
-    """ Undocumented and unsupported """
+def convert(TypeID src not None, TypeID dst not None, size_t n,
+            ndarray buf not None, ndarray bkg=None, PropID dxpl=None):
+    """ (TypeID src, TypeID dst, UINT n, NDARRAY buf, NDARRAY bkg=None,
+    PropID dxpl=None)
+
+    Convert n contiguous elements of a buffer in-place.  The array dtype
+    is ignored.  The backing buffer is optional; for conversion of compound
+    types, a temporary copy of conversion buffer will used for backing if
+    one is not supplied.
+    """
+    cdef void* bkg_ = NULL
+    cdef void* buf_ = buf.data
+
+    if bkg is None and (src.detect_class(H5T_COMPOUND) or
+                        dst.detect_class(H5T_COMPOUND)):
+        bkg = buf.copy()
+    if bkg is not None:
+        bkg_ = bkg.data
+
+    H5Tconvert(src.id, dst.id, n, buf_, bkg_, pdefault(dxpl))
+
+def find(TypeID src not None, TypeID dst not None):
+    """ (TypeID src, TypeID dst) => TUPLE or None
+
+    Determine if a conversion path exists from src to dst.  Result is None
+    or a tuple describing the conversion path.  Currently tuple entries are:
+
+    1. INT need_bkg:    Whether this routine requires a backing buffer.
+                        Values are BKG_NO, BKG_TEMP and BKG_YES.
+    """
     cdef H5T_cdata_t *data
     cdef H5T_conv_t result = NULL
     
-    result = H5Tfind(src.id, dst.id, &data)
-    return result != NULL
-
+    try:
+        result = H5Tfind(src.id, dst.id, &data)
+        if result == NULL:
+            return None
+        return (data[0].need_bkg,)
+    except:
+        return None
 
 

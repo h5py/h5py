@@ -32,10 +32,10 @@ class TestH5R(unittest.TestCase):
 
     def test_objref(self):
         ref = h5r.create(self.f.id, "grp", h5r.OBJECT)
-        deref = ref.dereference(self.f.id)
+        deref = h5r.dereference(ref, self.f.id)
         self.assertEqual(deref, self.grp.id)
         #self.assertEqual(h5i.get_name(deref), h5i.get_name(self.grp.id))
-        self.assertEqual(ref.get_obj_type(self.f.id), h5g.GROUP)
+        self.assertEqual(h5r.get_obj_type(ref, self.f.id), h5g.GROUP)
 
     def test_regref(self):
         space = self.dset.id.get_space()
@@ -46,11 +46,11 @@ class TestH5R(unittest.TestCase):
         #self.assertEqual(deref, self.grp.id)
         #self.assertEqual(h5i.get_name(deref), h5i.get_name(self.grp.id))      
 
-        deref_space = ref.get_region(self.f.id)
+        deref_space = h5r.get_region(ref, self.f.id)
         self.assertEqual(space.shape, deref_space.shape)
         self.assert_(space.get_select_bounds(), deref_space.get_select_bounds())
 
-        self.assertEqual(ref.get_obj_type(self.f.id), h5g.DATASET)
+        self.assertEqual(h5r.get_obj_type(ref, self.f.id), h5g.DATASET)
 
 
 

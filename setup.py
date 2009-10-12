@@ -57,13 +57,11 @@ def localpath(*args):
     return op.abspath(reduce(op.join, (op.dirname(__file__),)+args))
 
 MODULES = ['h5', 'h5e', 'h5f', 'h5g', 'h5s', 'h5t', 'h5d', 'h5a', 'h5p', 'h5z',
-                 'h5i', 'h5r', 'h5fd', 'utils', 'h5o', 'h5l']
+                 'h5i', 'h5r', 'h5fd', 'utils', 'h5o', 'h5l', '_conv', '_proxy']
 
 EXTRA_SRC = {'h5': [ localpath("lzf/lzf_filter.c"), 
                      localpath("lzf/lzf/lzf_c.c"),
-                     localpath("lzf/lzf/lzf_d.c"),
-                     localpath("h5py/typeproxy.c"),
-                     localpath("h5py/typeconv.c") ]}
+                     localpath("lzf/lzf/lzf_d.c")]}
 
 # --- Imports -----------------------------------------------------------------
 
@@ -435,7 +433,7 @@ class hbuild_ext(build_ext):
             else:
                 debug("Copying %s -> %s" % (src, dst))
                 shutil.copy(src, dst)
-                self.force = True   # If any files are out of date, we need to
+                #self.force = True   # If any files are out of date, we need to
                                     # recompile the whole thing for consistency
 
         build_ext.run(self)

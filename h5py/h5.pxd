@@ -50,27 +50,5 @@ cdef class SmartStruct:
 # Library init.  Safe to call more than once.
 cdef int init_hdf5() except -1
 
-cdef extern from "typeconv.h":
-
-    hid_t h5py_object_type() except *
-    int h5py_register_conv() except -1
-
-cdef extern from "typeproxy.h":
-    ctypedef enum h5py_rw_t:
-        H5PY_WRITE = 0,
-        H5PY_READ
-
-    herr_t H5PY_dset_rw(hid_t dset, hid_t mtype, hid_t mspace_in, hid_t fspace_in,
-                   hid_t xfer_plist, void* buf, h5py_rw_t dir) except *
-
-    herr_t H5PY_attr_rw(hid_t attr, hid_t mtype, void* buf, h5py_rw_t dir) except *
-
-cdef hid_t get_object_type() except -1
-
-cdef herr_t attr_rw(hid_t attr_id, hid_t mem_type_id, void *buf, h5py_rw_t dir) except *
-
-cdef herr_t dset_rw(hid_t dataset_id, hid_t mem_type_id, hid_t mem_space_id, 
-                  hid_t file_space_id, hid_t xfer_plist_id, void *outbuf,
-                  h5py_rw_t dir) except *
 
 

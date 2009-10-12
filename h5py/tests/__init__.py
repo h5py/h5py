@@ -32,7 +32,8 @@ mnames = [
 'test_slicing',
 'test_threads',
 'test_utils',
-'test_vlen']
+'test_vlen',
+'test_conv']
 
 
 def runtests():

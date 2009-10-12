@@ -17,7 +17,7 @@
 
 include "config.pxi"
 
-from python_exc cimport PyErr_SetString
+from python_exc cimport PyErr_SetString, PyErr_Occurred
 from h5 cimport SmartStruct
 
 import _stub
@@ -362,6 +362,10 @@ cdef herr_t err_callback(void* client_data) with gil:
     # By definition any function for which this can be called already
     # holds the PHIL.
     
+    if PyErr_Occurred() != NULL:
+        # Native Python exceptions can occur inside HDF5 callbacks
+        return 1
+
     stack = ErrorStack()
 
     a = stack.get_exc_msg()

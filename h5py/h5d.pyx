@@ -17,13 +17,14 @@
 include "config.pxi"
 
 # Compile-time imports
-from h5 cimport init_hdf5, dset_rw, H5PY_READ, H5PY_WRITE
+from h5 cimport init_hdf5
 from numpy cimport ndarray, import_array, PyArray_DATA, NPY_WRITEABLE
 from utils cimport  check_numpy_read, check_numpy_write, \
                     convert_tuple, emalloc, efree
 from h5t cimport TypeID, typewrap, py_create
 from h5s cimport SpaceID
 from h5p cimport PropID, propwrap, pdefault
+from _proxy cimport dset_rw
 
 # Initialization
 import_array()
@@ -173,7 +174,7 @@ cdef class DatasetID(ObjectID):
 
         arr_obj.flags &= (~NPY_WRITEABLE) # Wish-it-was-a-mutex approach
         try:
-            dset_rw(self_id, mtype_id, mspace_id, fspace_id, plist_id, data, H5PY_READ)
+            dset_rw(self_id, mtype_id, mspace_id, fspace_id, plist_id, data, 1)
         finally:
             arr_obj.flags |= NPY_WRITEABLE
 
@@ -207,7 +208,7 @@ cdef class DatasetID(ObjectID):
 
         arr_obj.flags &= (~NPY_WRITEABLE) # Wish-it-was-a-mutex approach
         try:
-            dset_rw(self_id, mtype_id, mspace_id, fspace_id, plist_id, data, H5PY_WRITE)
+            dset_rw(self_id, mtype_id, mspace_id, fspace_id, plist_id, data, 0)
         finally:
             arr_obj.flags |= NPY_WRITEABLE
 
