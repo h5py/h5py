@@ -16,7 +16,7 @@ cdef class PropFCID(PropCreateID):
         File creation property list.
     """
 
-    @sync
+    
     def get_version(self):
         """() => TUPLE version_info
 
@@ -38,7 +38,7 @@ cdef class PropFCID(PropCreateID):
 
         return (super_, freelist, stab, shhdr)
 
-    @sync
+    
     def set_userblock(self, hsize_t size):
         """(INT/LONG size)
 
@@ -47,7 +47,7 @@ cdef class PropFCID(PropCreateID):
         """
         H5Pset_userblock(self.id, size)
 
-    @sync
+    
     def get_userblock(self):
         """() => LONG size
 
@@ -57,7 +57,7 @@ cdef class PropFCID(PropCreateID):
         H5Pget_userblock(self.id, &size)
         return size
 
-    @sync
+    
     def set_sizes(self, size_t addr, size_t size):
         """(UINT addr, UINT size)
 
@@ -66,7 +66,7 @@ cdef class PropFCID(PropCreateID):
         """
         H5Pset_sizes(self.id, addr, size)
 
-    @sync
+    
     def get_sizes(self):
         """() => TUPLE sizes
 

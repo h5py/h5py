@@ -16,7 +16,7 @@ cdef class PropDCID(PropCreateID):
         Dataset creation property list.
     """
 
-    @sync
+    
     def set_layout(self, int layout_code):
         """(INT layout_code)
 
@@ -28,7 +28,7 @@ cdef class PropDCID(PropCreateID):
         """
         H5Pset_layout(self.id, layout_code)
     
-    @sync
+    
     def get_layout(self):
         """() => INT layout_code
 
@@ -40,7 +40,7 @@ cdef class PropDCID(PropCreateID):
         """
         return <int>H5Pget_layout(self.id)
 
-    @sync
+    
     def set_chunk(self, object chunksize):
         """(TUPLE chunksize)
 
@@ -61,7 +61,7 @@ cdef class PropDCID(PropCreateID):
         finally:
             efree(dims)
 
-    @sync
+    
     def get_chunk(self):
         """() => TUPLE chunk_dimensions
 
@@ -81,7 +81,7 @@ cdef class PropDCID(PropCreateID):
         finally:
             efree(dims)
 
-    @sync
+    
     def set_fill_value(self, ndarray value not None):
         """(NDARRAY value)
 
@@ -95,7 +95,7 @@ cdef class PropDCID(PropCreateID):
         tid = py_create(value.dtype)        
         H5Pset_fill_value(self.id, tid.id, value.data)
 
-    @sync
+    
     def get_fill_value(self, ndarray value not None):
         """(NDARRAY value)
 
@@ -109,7 +109,7 @@ cdef class PropDCID(PropCreateID):
         tid = py_create(value.dtype)
         H5Pget_fill_value(self.id, tid.id, value.data)
 
-    @sync
+    
     def fill_value_defined(self):
         """() => INT fill_status
 
@@ -123,7 +123,7 @@ cdef class PropDCID(PropCreateID):
         H5Pfill_value_defined(self.id, &val)
         return <int>val
 
-    @sync
+    
     def set_fill_time(self, int fill_time):
         """(INT fill_time)
 
@@ -136,7 +136,7 @@ cdef class PropDCID(PropCreateID):
         """
         H5Pset_fill_time(self.id, <H5D_fill_time_t>fill_time)
 
-    @sync
+    
     def get_fill_time(self):
         """ () => INT
 
@@ -151,7 +151,7 @@ cdef class PropDCID(PropCreateID):
         H5Pget_fill_time(self.id, &fill_time)
         return <int>fill_time
 
-    @sync
+    
     def set_alloc_time(self, int alloc_time):
         """(INT alloc_time)
 
@@ -159,7 +159,7 @@ cdef class PropDCID(PropCreateID):
         """
         H5Pset_alloc_time(self.id, <H5D_alloc_time_t>alloc_time)
 
-    @sync
+    
     def get_alloc_time(self):
         """() => INT alloc_time
 
@@ -172,7 +172,7 @@ cdef class PropDCID(PropCreateID):
 
     # === Filter functions ====================================================
     
-    @sync
+    
     def set_filter(self, int filter_code, unsigned int flags=0, object values=None):
         """(INT filter_code, UINT flags=0, TUPLE values=None)
 
@@ -214,7 +214,7 @@ cdef class PropDCID(PropCreateID):
         finally:
             efree(cd_values)
 
-    @sync
+    
     def all_filters_avail(self):
         """() => BOOL
 
@@ -223,7 +223,7 @@ cdef class PropDCID(PropCreateID):
         """
         return <bint>(H5Pall_filters_avail(self.id))
 
-    @sync
+    
     def get_nfilters(self):
         """() => INT
 
@@ -231,7 +231,7 @@ cdef class PropDCID(PropCreateID):
         """
         return H5Pget_nfilters(self.id)
 
-    @sync
+    
     def get_filter(self, int filter_idx):
         """(UINT filter_idx) => TUPLE filter_info
 
@@ -265,7 +265,7 @@ cdef class PropDCID(PropCreateID):
 
         return (filter_code, flags, tuple(vlist), name)
 
-    @sync
+    
     def _has_filter(self, int filter_code):
         """(INT filter_code)
 
@@ -280,7 +280,7 @@ cdef class PropDCID(PropCreateID):
                 return True
         return False
 
-    @sync
+    
     def get_filter_by_id(self, int filter_code):
         """(INT filter_code) => TUPLE filter_info or None
 
@@ -317,7 +317,7 @@ cdef class PropDCID(PropCreateID):
 
         return (flags, tuple(vlist), name)
 
-    @sync
+    
     def remove_filter(self, int filter_class):
         """(INT filter_class)
 
@@ -326,7 +326,7 @@ cdef class PropDCID(PropCreateID):
         """
         H5Premove_filter(self.id, <H5Z_filter_t>filter_class)
 
-    @sync
+    
     def set_deflate(self, unsigned int level=5):
         """(UINT level=5)
 
@@ -335,7 +335,7 @@ cdef class PropDCID(PropCreateID):
         """
         H5Pset_deflate(self.id, level)
 
-    @sync
+    
     def set_fletcher32(self):
         """()
 
@@ -343,7 +343,7 @@ cdef class PropDCID(PropCreateID):
         """
         H5Pset_fletcher32(self.id)
 
-    @sync
+    
     def set_shuffle(self):
         """()
 
@@ -352,7 +352,7 @@ cdef class PropDCID(PropCreateID):
         """
         H5Pset_shuffle(self.id)
 
-    @sync
+    
     def set_szip(self, unsigned int options, unsigned int pixels_per_block):
         """(UINT options, UINT pixels_per_block)
 

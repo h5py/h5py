@@ -29,7 +29,6 @@ init_hdf5()
 
 # Runtime imports
 from h5 import H5Error
-from _sync import sync, nosync
 
 # === Public constants and data structures ====================================
 
@@ -117,7 +116,7 @@ cdef class GroupIter:
 
 # === Basic group management ==================================================
 
-@sync
+
 def open(ObjectID loc not None, char* name):
     """(ObjectID loc, STRING name) => GroupID
 
@@ -126,7 +125,7 @@ def open(ObjectID loc not None, char* name):
     return GroupID(H5Gopen(loc.id, name))
 
 IF H5PY_18API:
-    @sync
+    
     def create(ObjectID loc not None, char* name, PropID lcpl=None,
                PropID gcpl=None):
         """(ObjectID loc, STRING name, PropLCID lcpl=None, PropGCID gcpl=None)
@@ -138,7 +137,7 @@ IF H5PY_18API:
                                                 pdefault(gcpl),
                                                 H5P_DEFAULT))
 ELSE:
-    @sync
+    
     def create(ObjectID loc not None, char* name):
         """(ObjectID loc, STRING name) => GroupID
 
@@ -165,7 +164,7 @@ cdef herr_t cb_group_iter(hid_t gid, char *name, void* vis_in) except 2:
         return 1
     return 0
 
-@sync
+
 def iterate(GroupID loc not None, object func, int startidx=0, *,
             char* obj_name='.'):
     """ (GroupID loc, CALLABLE func, UINT startidx=0, **kwds)
@@ -192,7 +191,7 @@ def iterate(GroupID loc not None, object func, int startidx=0, *,
 
     return vis.retval
 
-@sync
+
 def get_objinfo(ObjectID obj not None, object name='.', int follow_link=1):
     """(ObjectID obj, STRING name='.', BOOL follow_link=True) => GroupStat object
 
@@ -244,7 +243,7 @@ cdef class GroupID(ObjectID):
         def __init__(self, hid_t id_):
             self.links = LinkProxy(id_)
 
-    @sync
+    
     def _close(self):
         """()
 
@@ -254,7 +253,7 @@ cdef class GroupID(ObjectID):
         """
         H5Gclose(self.id)
 
-    @sync
+    
     def link(self, char* current_name, char* new_name, 
              int link_type=H5G_LINK_HARD, GroupID remote=None):
         """(STRING current_name, STRING new_name, INT link_type=LINK_HARD, 
@@ -281,7 +280,7 @@ cdef class GroupID(ObjectID):
         H5Glink2(self.id, current_name, <H5G_link_t>link_type, remote_id, new_name)
 
 
-    @sync
+    
     def unlink(self, char* name):
         """(STRING name)
 
@@ -290,7 +289,7 @@ cdef class GroupID(ObjectID):
         H5Gunlink(self.id, name)
    
 
-    @sync
+    
     def move(self, char* current_name, char* new_name, GroupID remote=None):
         """(STRING current_name, STRING new_name, GroupID remote=None)
 
@@ -307,7 +306,7 @@ cdef class GroupID(ObjectID):
         H5Gmove2(self.id, current_name, remote_id, new_name)
 
 
-    @sync
+    
     def get_num_objs(self):
         """() => INT number_of_objects
 
@@ -318,7 +317,7 @@ cdef class GroupID(ObjectID):
         return size
 
 
-    @sync
+    
     def get_objname_by_idx(self, hsize_t idx):
         """(INT idx) => STRING
 
@@ -345,7 +344,7 @@ cdef class GroupID(ObjectID):
             efree(buf)
 
 
-    @sync
+    
     def get_objtype_by_idx(self, hsize_t idx):
         """(INT idx) => INT object_type_code
 
@@ -368,7 +367,7 @@ cdef class GroupID(ObjectID):
         return retval
 
 
-    @sync
+    
     def get_linkval(self, char* name):
         """(STRING name) => STRING link_value
 
@@ -397,7 +396,7 @@ cdef class GroupID(ObjectID):
         finally:
             efree(value)
 
-    @sync
+    
     def set_comment(self, char* name, char* comment):
         """(STRING name, STRING comment)
 
@@ -405,7 +404,7 @@ cdef class GroupID(ObjectID):
         """
         H5Gset_comment(self.id, name, comment)
 
-    @sync
+    
     def get_comment(self, char* name):
         """(STRING name) => STRING comment
 
@@ -428,7 +427,7 @@ cdef class GroupID(ObjectID):
 
     # === Special methods =====================================================
 
-    @sync
+    
     def __contains__(self, char* name):
         """(STRING name)
 
@@ -445,12 +444,12 @@ cdef class GroupID(ObjectID):
 
         return bool(retval >= 0)
 
-    @nosync
+    
     def __iter__(self):
         """ Return an iterator over the names of group members. """
         return GroupIter(self)
 
-    @sync
+    
     def __len__(self):
         """ Number of group members """
         cdef hsize_t size

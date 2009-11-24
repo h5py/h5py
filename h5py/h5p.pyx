@@ -28,9 +28,6 @@ from h5t cimport TypeID, py_create
 init_hdf5()
 import_array()
 
-# Runtime imports
-from _sync import sync, nosync
-
 # === C API ===================================================================
 
 cdef hid_t pdefault(PropID pid):
@@ -102,7 +99,7 @@ DEFAULT = None   # In the HDF5 header files this is actually 0, which is an
 # === Property list functional API ============================================
 
 IF H5PY_18API:
-    @sync
+    
     def create(PropClassID cls not None):
         """(PropClassID cls) => PropID
         
@@ -121,7 +118,7 @@ IF H5PY_18API:
         newid = H5Pcreate(cls.id)
         return propwrap(newid)
 ELSE:
-    @sync
+    
     def create(PropClassID cls not None):
         """(PropClassID cls) => PropID
         
@@ -144,7 +141,7 @@ cdef class PropID(ObjectID):
         Base class for all property lists and classes
     """
 
-    @sync
+    
     def equal(self, PropID plist not None):
         """(PropID plist) => BOOL
 
@@ -194,7 +191,7 @@ cdef class PropInstanceID(PropID):
         * Equality: Logical H5P comparison
     """
 
-    @sync
+    
     def copy(self):
         """() => PropList newid
 
@@ -202,7 +199,7 @@ cdef class PropInstanceID(PropID):
         """
         return type(self)(H5Pcopy(self.id))
 
-    @sync
+    
     def _close(self):
         """()
     
@@ -212,7 +209,7 @@ cdef class PropInstanceID(PropID):
         """
         H5Pclose(self.id)
 
-    @sync
+    
     def get_class(self):
         """() => PropClassID
 
@@ -241,7 +238,7 @@ cdef class PropCopyID(PropInstanceID):
 
     IF H5PY_18API:
 
-        @sync
+        
         def set_copy_object(self, unsigned int flags):
             """(UINT flags)
 
@@ -265,7 +262,7 @@ cdef class PropCopyID(PropInstanceID):
             """
             H5Pset_copy_object(self.id, flags)
 
-        @sync
+        
         def get_copy_object(self):
             """() => UINT flags
 

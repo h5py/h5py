@@ -31,7 +31,6 @@ init_hdf5()
 
 # Runtime imports
 from h5 import H5Error
-from _sync import sync, nosync
 
 # === Public constants and data structures ====================================
 
@@ -71,7 +70,7 @@ cdef ObjectID wrap_identifier(hid_t ident):
 
 # === Identifier API ==========================================================
 
-@sync
+
 def get_type(ObjectID obj not None):
     """ (ObjectID obj) => INT type_code
 
@@ -81,7 +80,7 @@ def get_type(ObjectID obj not None):
     """
     return <int>H5Iget_type(obj.id)
 
-@sync
+
 def get_name(ObjectID obj not None):
     """ (ObjectID obj) => STRING name, or None
 
@@ -113,7 +112,7 @@ def get_name(ObjectID obj not None):
     finally:
         efree(name)
 
-@sync
+
 def get_file_id(ObjectID obj not None):
     """ (ObjectID obj) => FileID
 
@@ -121,7 +120,7 @@ def get_file_id(ObjectID obj not None):
     """
     return FileID(H5Iget_file_id(obj.id))
 
-@sync
+
 def inc_ref(ObjectID obj not None):
     """ (ObjectID obj)
 
@@ -133,7 +132,7 @@ def inc_ref(ObjectID obj not None):
     """
     H5Iinc_ref(obj.id)
 
-@sync
+
 def get_ref(ObjectID obj not None):
     """ (ObjectID obj) => INT
 
@@ -141,7 +140,7 @@ def get_ref(ObjectID obj not None):
     """
     return H5Iget_ref(obj.id)
 
-@sync
+
 def dec_ref(ObjectID obj not None):
     """ (ObjectID obj)
 

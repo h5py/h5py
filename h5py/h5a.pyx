@@ -29,15 +29,12 @@ from _proxy cimport attr_rw
 import_array()
 init_hdf5()
 
-# Runtime imports
-from _sync import sync, nosync
-
 # === General attribute operations ============================================
 
 # --- create, create_by_name ---
 
 IF H5PY_18API:
-    @sync
+    
     def create(ObjectID loc not None, char* name, TypeID tid not None,
         SpaceID space not None, *, char* obj_name='.', PropID lapl=None):
         """(ObjectID loc, STRING name, TypeID tid, SpaceID space, **kwds) => AttrID
@@ -55,7 +52,7 @@ IF H5PY_18API:
                 space.id, H5P_DEFAULT, H5P_DEFAULT, pdefault(lapl)))
 
 ELSE:
-    @sync
+    
     def create(ObjectID loc not None, char* name, TypeID tid not None, 
         SpaceID space not None):
         """(ObjectID loc, STRING name, TypeID tid, SpaceID space) => AttrID
@@ -69,7 +66,7 @@ ELSE:
 # --- open, open_by_name, open_by_idx ---
 
 IF H5PY_18API:
-    @sync
+    
     def open(ObjectID loc not None, char* name=NULL, int index=-1, *,
         char* obj_name='.', int index_type=H5_INDEX_NAME, int order=H5_ITER_NATIVE,
         PropID lapl=None):
@@ -101,7 +98,7 @@ IF H5PY_18API:
                 H5P_DEFAULT, pdefault(lapl)))
 
 ELSE:
-    @sync
+    
     def open(ObjectID loc not None, char* name=NULL, int index=-1):
         """(ObjectID loc, STRING name=, INT index=) => AttrID
 
@@ -120,7 +117,7 @@ ELSE:
 # --- exists, exists_by_name ---
 
 IF H5PY_18API:
-    @sync
+    
     def exists(ObjectID loc not None, char* name, *,
                 char* obj_name=".", PropID lapl=None):
         """(ObjectID loc, STRING name, **kwds) => BOOL
@@ -142,7 +139,7 @@ ELSE:
             return 1
         return 0
 
-    @sync
+    
     def exists(ObjectID loc not None, char* name):
         """(ObjectID loc, STRING name) => BOOL
 
@@ -156,7 +153,7 @@ ELSE:
 # --- rename, rename_by_name ---
 
 IF H5PY_18API:
-    @sync
+    
     def rename(ObjectID loc not None, char* name, char* new_name, *,
         char* obj_name='.', PropID lapl=None):
         """(ObjectID loc, STRING name, STRING new_name, **kwds)
@@ -172,7 +169,7 @@ IF H5PY_18API:
         H5Arename_by_name(loc.id, obj_name, name, new_name, pdefault(lapl))
 
 IF H5PY_18API:
-    @sync
+    
     def delete(ObjectID loc not None, char* name=NULL, int index=-1, *,
         char* obj_name='.', int index_type=H5_INDEX_NAME, int order=H5_ITER_NATIVE,
         PropID lapl=None):
@@ -200,7 +197,7 @@ IF H5PY_18API:
             raise TypeError("Exactly one of index or name must be specified.")
 
 ELSE:
-    @sync
+    
     def delete(ObjectID loc not None, char* name):
         """(ObjectID loc, STRING name)
 
@@ -208,7 +205,7 @@ ELSE:
         """
         H5Adelete(loc.id, name)
 
-@sync
+
 def get_num_attrs(ObjectID loc not None):
     """(ObjectID loc) => INT
 
@@ -242,7 +239,7 @@ IF H5PY_18API:
         def _hash(self):
             return hash((self.corder_valid, self.corder, self.cset, self.data_size))
 
-    @sync
+    
     def get_info(ObjectID loc not None, char* name=NULL, int index=-1, *,
                 char* obj_name='.', PropID lapl=None,
                 int index_type=H5_INDEX_NAME, int order=H5_ITER_NATIVE):
@@ -307,7 +304,7 @@ IF H5PY_18API:
             return 1
         return 0
 
-    @sync
+    
     def iterate(ObjectID loc not None, object func, int index=0, *,
         int index_type=H5_INDEX_NAME, int order=H5_ITER_NATIVE, bint info=0):
         """(ObjectID loc, CALLABLE func, INT index=0, **kwds) => <Return value from func>
@@ -360,7 +357,7 @@ ELSE:
             return 1
         return 0
 
-    @sync
+    
     def iterate(ObjectID loc not None, object func, int index=0):
         """(ObjectID loc, CALLABLE func, INT index=0) => <Return value from func>
 
@@ -421,7 +418,7 @@ cdef class AttrID(ObjectID):
             tid = self.get_type()
             return tid.py_dtype()
 
-    @sync
+    
     def _close(self):
         """()
 
@@ -431,7 +428,7 @@ cdef class AttrID(ObjectID):
         """
         H5Aclose(self.id)
 
-    @sync
+    
     def read(self, ndarray arr not None):
         """(NDARRAY arr)
 
@@ -458,7 +455,7 @@ cdef class AttrID(ObjectID):
             if space_id:
                 H5Sclose(space_id)
 
-    @sync
+    
     def write(self, ndarray arr not None):
         """(NDARRAY arr)
 
@@ -484,7 +481,7 @@ cdef class AttrID(ObjectID):
             if space_id:
                 H5Sclose(space_id)
 
-    @sync
+    
     def get_name(self):
         """() => STRING name
 
@@ -505,7 +502,7 @@ cdef class AttrID(ObjectID):
 
         return strout
 
-    @sync
+    
     def get_space(self):
         """() => SpaceID
 
@@ -513,7 +510,7 @@ cdef class AttrID(ObjectID):
         """
         return SpaceID(H5Aget_space(self.id))
 
-    @sync
+    
     def get_type(self):
         """() => TypeID
 
@@ -522,7 +519,7 @@ cdef class AttrID(ObjectID):
         return typewrap(H5Aget_type(self.id))
 
     IF H5PY_18API:
-        @sync
+        
         def get_storage_size(self):
             """() => INT
 

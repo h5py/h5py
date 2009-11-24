@@ -16,7 +16,7 @@ cdef class PropFAID(PropInstanceID):
         File access property list
     """
 
-    @sync
+    
     def set_fclose_degree(self, int close_degree):
         """(INT close_degree)
 
@@ -30,7 +30,7 @@ cdef class PropFAID(PropInstanceID):
         """
         H5Pset_fclose_degree(self.id, <H5F_close_degree_t>close_degree)
 
-    @sync
+    
     def get_fclose_degree(self):
         """() => INT close_degree
         - h5fd.
@@ -46,7 +46,7 @@ cdef class PropFAID(PropInstanceID):
         H5Pget_fclose_degree(self.id, &deg)
         return deg
 
-    @sync
+    
     def set_fapl_core(self, size_t block_size=1024*1024, hbool_t backing_store=1):
         """(UINT increment=1M, BOOL backing_store=True)
 
@@ -62,7 +62,7 @@ cdef class PropFAID(PropInstanceID):
         """
         H5Pset_fapl_core(self.id, block_size, backing_store)
 
-    @sync
+    
     def get_fapl_core(self):
         """() => TUPLE core_settings
 
@@ -78,7 +78,7 @@ cdef class PropFAID(PropInstanceID):
         H5Pget_fapl_core(self.id, &increment, &backing_store)
         return (increment, <bint>(backing_store))
 
-    @sync
+    
     def set_fapl_family(self, hsize_t memb_size=2147483647, PropID memb_fapl=None):
         """(UINT memb_size=2**31-1, PropFAID memb_fapl=None)
 
@@ -94,7 +94,7 @@ cdef class PropFAID(PropInstanceID):
         plist_id = pdefault(memb_fapl)
         H5Pset_fapl_family(self.id, memb_size, plist_id)
 
-    @sync
+    
     def get_fapl_family(self):
         """() => TUPLE info
 
@@ -115,7 +115,7 @@ cdef class PropFAID(PropInstanceID):
 
         return (msize, plist)
 
-    @sync
+    
     def set_fapl_log(self, char* logfile, unsigned int flags, size_t buf_size):
         """(STRING logfile, UINT flags, UINT buf_size)
 
@@ -124,7 +124,7 @@ cdef class PropFAID(PropInstanceID):
         """
         H5Pset_fapl_log(self.id, logfile, flags, buf_size)
 
-    @sync
+    
     def set_fapl_sec2(self):
         """()
 
@@ -132,7 +132,7 @@ cdef class PropFAID(PropInstanceID):
         """
         H5Pset_fapl_sec2(self.id)
 
-    @sync
+    
     def set_fapl_stdio(self):
         """()
 
@@ -140,7 +140,7 @@ cdef class PropFAID(PropInstanceID):
         """
         H5Pset_fapl_stdio(self.id)
 
-    @sync
+    
     def get_driver(self):
         """() => INT driver code
 
@@ -159,7 +159,7 @@ cdef class PropFAID(PropInstanceID):
         """
         return H5Pget_driver(self.id)
 
-    @sync
+    
     def set_cache(self, int mdc, int rdcc, size_t rdcc_nbytes, double rdcc_w0):
         """(INT mdc, INT rdcc, UINT rdcc_nbytes, DOUBLE rdcc_w0)
 
@@ -168,7 +168,7 @@ cdef class PropFAID(PropInstanceID):
         """
         H5Pset_cache(self.id, mdc, rdcc, rdcc_nbytes, rdcc_w0)
 
-    @sync
+    
     def get_cache(self):
         """() => TUPLE cache info
 
@@ -187,7 +187,7 @@ cdef class PropFAID(PropInstanceID):
         H5Pget_cache(self.id, &mdc, &rdcc, &rdcc_nbytes, &w0)
         return (mdc, rdcc, rdcc_nbytes, w0)
 
-    @sync
+    
     def set_sieve_buf_size(self, size_t size):
         """ (UINT size)
 
@@ -197,7 +197,7 @@ cdef class PropFAID(PropInstanceID):
         """
         H5Pset_sieve_buf_size(self.id, size)
 
-    @sync
+    
     def get_sieve_buf_size(self):
         """ () => UINT size
 

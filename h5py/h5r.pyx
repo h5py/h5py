@@ -24,9 +24,6 @@ from h5s cimport SpaceID
 # Initialization
 init_hdf5()
 
-# Runtime imports
-from _sync import sync, nosync
-
 # === Public constants and data structures ====================================
 
 OBJECT = H5R_OBJECT
@@ -35,7 +32,7 @@ DATASET_REGION = H5R_DATASET_REGION
 
 # === Reference API ===========================================================
 
-@sync
+
 def create(ObjectID loc not None, char* name, int ref_type, SpaceID space=None):
     """(ObjectID loc, STRING name, INT ref_type, SpaceID space=None)
     => ReferenceObject ref
@@ -65,7 +62,7 @@ def create(ObjectID loc not None, char* name, int ref_type, SpaceID space=None):
 
     return ref
 
-@sync
+
 def dereference(Reference ref not None, ObjectID id not None):
     """(Reference ref, ObjectID id) => ObjectID
 
@@ -77,7 +74,7 @@ def dereference(Reference ref not None, ObjectID id not None):
     """
     return wrap_identifier(H5Rdereference(id.id, <H5R_type_t>ref.typecode, &ref.ref))
 
-@sync
+
 def get_region(Reference ref not None, ObjectID id not None):
     """(Reference ref, ObjectID id) => SpaceID
 
@@ -91,7 +88,7 @@ def get_region(Reference ref not None, ObjectID id not None):
     """
     return SpaceID(H5Rget_region(id.id, <H5R_type_t>ref.typecode, &ref.ref))
 
-@sync
+
 def get_obj_type(Reference ref not None, ObjectID id not None):
     """(Reference ref, ObjectID id) => INT obj_code
 
@@ -120,8 +117,6 @@ cdef class Reference:
         or a dataset region (DATASET_REGION).
     """
 
-
-    @nosync
     def __repr__(self):
         if self.typecode == H5R_OBJECT:
             return "<HDF5 object reference>"

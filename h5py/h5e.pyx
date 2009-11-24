@@ -357,11 +357,8 @@ cdef herr_t walk_cb(int n, H5E_error_t *err_desc, void* stack_in):
 
 cdef herr_t err_callback(void* client_data) with gil:
     # Callback which sets Python exception based on the current error stack.
-
     # MUST be "with gil" as it can be called by nogil HDF5 routines.
-    # By definition any function for which this can be called already
-    # holds the PHIL.
-    
+
     if PyErr_Occurred() != NULL:
         # Native Python exceptions can occur inside HDF5 callbacks
         return 1

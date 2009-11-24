@@ -191,48 +191,6 @@ def loglevel(lev):
     ELSE:
         pass
 
-cdef class PHIL:
-
-    """
-        Warning:  This is an internal h5py object.  Don't use it in your code.
-
-        The Primary HDF5 Interface Lock (PHIL) is a global reentrant lock
-        which manages access to the library.  HDF5 is not guaranteed to 
-        be thread-safe, and certain callbacks in h5py can execute arbitrary
-        threaded Python code, defeating the normal GIL-based protection for
-        extension modules.  Therefore, in all routines acquire this lock first.
-    """
-
-    def __init__(self):
-        self.lock = threading.RLock()
-    cpdef bint __enter__(self) except -1:
-        self.lock.acquire()
-        return 0
-    cpdef bint __exit__(self,a,b,c) except -1:
-        self.lock.release()
-        return 0
-    cpdef bint acquire(self, int blocking=1) except -1:
-        register_thread()
-        cdef bint rval = self.lock.acquire(blocking)
-        return rval
-    cpdef bint release(self) except -1:
-        self.lock.release()
-        return 0   
-
-cdef PHIL phil = PHIL()
-
-cpdef PHIL get_phil():
-    """() => PHIL
-
-    Obtain a reference to the PHIL.  For debugging and internal use only.
-    """
-    global phil
-    return phil
-
-# Everything required for these decorators is now defined
-
-from _sync import sync, nosync
-
 # === Public C API for object identifiers =====================================
 
 cdef class ObjectID:
@@ -260,11 +218,8 @@ cdef class ObjectID:
         """ Indicates whether or not this identifier points to an HDF5 object.
         """
         def __get__(self):
-            phil.acquire()
-            try:
-                return H5Iget_type(self.id) != H5I_BADID
-            finally:
-                phil.release()
+            return H5Iget_type(self.id) != H5I_BADID
+
     
     def __nonzero__(self):
         """ Truth value for object identifiers (like _valid) """
@@ -282,10 +237,6 @@ cdef class ObjectID:
     def __dealloc__(self):
         """ Automatically decrefs the ID, if it's valid. """
 
-        # Acquiring PHIL leads to segfault in presence of cyclic
-        # garbage collection.  We'll have to hope this isn't called while
-        # an HDF5 callback is in progress.
-
         IF H5PY_DEBUG:
             log_ident.debug("- %d" % self.id)
         if (not self._locked) and H5Iget_type(self.id) != H5I_BADID:
@@ -299,17 +250,13 @@ cdef class ObjectID:
             across copies.
         """
         cdef ObjectID copy
-        phil.acquire()
-        try:
-            copy = type(self)(self.id)
-            if self._valid and not self._locked:
-                H5Iinc_ref(self.id)
-            copy._locked = self._locked
-            IF H5PY_DEBUG:
-                log_ident.debug("c %s" % str(self))
-            return copy
-        finally:
-            phil.release()
+        copy = type(self)(self.id)
+        if self._valid and not self._locked:
+            H5Iinc_ref(self.id)
+        copy._locked = self._locked
+        IF H5PY_DEBUG:
+            log_ident.debug("c %s" % str(self))
+        return copy
 
     def __richcmp__(self, object other, int how):
         """ Basic comparison for HDF5 objects.  Implements only equality:
@@ -340,30 +287,25 @@ cdef class ObjectID:
         cdef H5G_stat_t stat
 
         if self._hash is None:
-            phil.acquire()
             try:
                 H5Gget_objinfo(self.id, '.', 0, &stat)
                 self._hash = hash((stat.fileno[0], stat.fileno[1], stat.objno[0], stat.objno[1]))
             except Exception:
                 raise TypeError("Objects of class %s cannot be hashed" % self.__class__.__name__)
-            finally:
-                phil.release()
 
         return self._hash
 
     def __repr__(self):
-        phil.acquire()
-        try:
-            ref = str(H5Iget_ref(self.id)) if self._valid else "X"
-            lck = "L" if self._locked else "U"
-            return "<%s [%s] (%s) %d>" % (self.__class__.__name__, ref, lck, self.id)
-        finally:
-            phil.release()
+
+        ref = str(H5Iget_ref(self.id)) if self._valid else "X"
+        lck = "L" if self._locked else "U"
+        return "<%s [%s] (%s) %d>" % (self.__class__.__name__, ref, lck, self.id)
+
 
 
 # === HDF5 "H5" API ===========================================================
 
-@sync
+
 def get_libversion():
     """ () => TUPLE (major, minor, release)
 
@@ -378,7 +320,7 @@ def get_libversion():
 
     return (major, minor, release)
 
-@sync
+
 def _close():
     """ Internal function; do not call unless you want to lose all your data.
 
@@ -386,7 +328,7 @@ def _close():
     """
     H5close()
 
-@sync
+
 def _open():
     """ Internal function; do not call unless you want to lose all your data.
 

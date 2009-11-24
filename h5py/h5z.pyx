@@ -22,9 +22,6 @@ from h5 cimport init_hdf5
 # Initialization
 init_hdf5()
 
-# Runtime imports
-from _sync import sync, nosync
-
 # === Public constants and data structures ====================================
 
 FILTER_LZF = H5PY_FILTER_LZF
@@ -63,7 +60,7 @@ NO_EDC      = H5Z_NO_EDC
 
 # === Filter API  =============================================================
 
-@sync
+
 def filter_avail(int filter_code):
     """(INT filter_code) => BOOL
 
@@ -77,7 +74,7 @@ def filter_avail(int filter_code):
     """
     return <bint>H5Zfilter_avail(<H5Z_filter_t>filter_code)
 
-@sync
+
 def get_filter_info(int filter_code):
     """(INT filter_code) => INT filter_flags
 

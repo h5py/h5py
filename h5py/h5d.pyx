@@ -30,9 +30,6 @@ from _proxy cimport dset_rw
 import_array()
 init_hdf5()
 
-# Runtime imports
-from _sync import sync, nosync
-
 # === Public constants and data structures ====================================
 
 COMPACT     = H5D_COMPACT
@@ -59,7 +56,7 @@ FILL_VALUE_USER_DEFINED = H5D_FILL_VALUE_USER_DEFINED
 
 # === Dataset operations ======================================================
 
-@sync
+
 def create(ObjectID loc not None, char* name, TypeID tid not None, 
             SpaceID space not None, PropID dcpl=None):
     """ (ObjectID loc, STRING name, TypeID tid, SpaceID space,
@@ -71,7 +68,7 @@ def create(ObjectID loc not None, char* name, TypeID tid not None,
     """
     return DatasetID(H5Dcreate(loc.id, name, tid.id, space.id, pdefault(dcpl)))
 
-@sync
+
 def open(ObjectID loc not None, char* name):
     """ (ObjectID loc, STRING name) => DatasetID
 
@@ -126,7 +123,7 @@ cdef class DatasetID(ObjectID):
             sid = self.get_space()
             return sid.get_simple_extent_ndims()
 
-    @sync
+    
     def _close(self):
         """ ()
 
@@ -136,7 +133,7 @@ cdef class DatasetID(ObjectID):
         """
         H5Dclose(self.id)
 
-    @sync
+    
     def read(self, SpaceID mspace not None, SpaceID fspace not None, 
                    ndarray arr_obj not None, TypeID mtype=None,
                    PropID dxpl=None):
@@ -178,7 +175,7 @@ cdef class DatasetID(ObjectID):
         finally:
             arr_obj.flags |= NPY_WRITEABLE
 
-    @sync
+    
     def write(self, SpaceID mspace not None, SpaceID fspace not None, 
                     ndarray arr_obj not None, TypeID mtype=None,
                     PropID dxpl=None):
@@ -212,7 +209,7 @@ cdef class DatasetID(ObjectID):
         finally:
             arr_obj.flags |= NPY_WRITEABLE
 
-    @sync
+    
     def extend(self, tuple shape):
         """ (TUPLE shape)
 
@@ -240,7 +237,7 @@ cdef class DatasetID(ObjectID):
             if space_id:
                 H5Sclose(space_id)
 
-    @sync
+    
     def set_extent(self, tuple shape):
         """ (TUPLE shape)
 
@@ -269,7 +266,7 @@ cdef class DatasetID(ObjectID):
                 H5Sclose(space_id)
 
 
-    @sync
+    
     def get_space(self):
         """ () => SpaceID
 
@@ -277,7 +274,7 @@ cdef class DatasetID(ObjectID):
         """
         return SpaceID(H5Dget_space(self.id))
 
-    @sync
+    
     def get_space_status(self):
         """ () => INT space_status_code
 
@@ -292,7 +289,7 @@ cdef class DatasetID(ObjectID):
         H5Dget_space_status(self.id, &status)
         return <int>status
 
-    @sync
+    
     def get_type(self):
         """ () => TypeID
 
@@ -300,7 +297,7 @@ cdef class DatasetID(ObjectID):
         """
         return typewrap(H5Dget_type(self.id))
 
-    @sync
+    
     def get_create_plist(self):
         """ () => PropDCID
 
@@ -309,7 +306,7 @@ cdef class DatasetID(ObjectID):
         """
         return propwrap(H5Dget_create_plist(self.id))
 
-    @sync
+    
     def get_offset(self):
         """ () => LONG offset or None
 
@@ -324,7 +321,7 @@ cdef class DatasetID(ObjectID):
             return None
         return offset
 
-    @sync
+    
     def get_storage_size(self):
         """ () => LONG storage_size
 

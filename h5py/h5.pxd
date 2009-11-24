@@ -12,17 +12,6 @@
 
 include "defs.pxd"
 
-cdef class PHIL:
-
-    cdef object lock
-
-    cpdef bint __enter__(self) except -1
-    cpdef bint __exit__(self, a, b, c) except -1
-    cpdef bint acquire(self, int blocking=*) except -1
-    cpdef bint release(self) except -1
-
-cpdef PHIL get_phil()
-
 cdef class H5PYConfig:
 
     cdef object _r_name

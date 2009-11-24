@@ -14,7 +14,7 @@ cdef class PropLCID(PropCreateID):
     
     """ Link creation property list """
 
-    @sync
+    
     def set_create_intermediate_group(self, bint create):
         """(BOOL create)
 
@@ -22,7 +22,7 @@ cdef class PropLCID(PropCreateID):
         """
         H5Pset_create_intermediate_group(self.id, create)
 
-    @sync
+    
     def get_create_intermediate_group(self):
         """() => BOOL 
 

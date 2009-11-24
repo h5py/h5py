@@ -20,7 +20,7 @@ cdef class PropLAID(PropInstanceID):
     def __dealloc__(self):
         efree(self._buf)
 
-    @sync
+    
     def set_nlinks(self, size_t nlinks):
         """(UINT nlinks)
 
@@ -28,7 +28,7 @@ cdef class PropLAID(PropInstanceID):
         """
         H5Pset_nlinks(self.id, nlinks)
 
-    @sync
+    
     def get_nlinks(self):
         """() => UINT
 
@@ -38,7 +38,7 @@ cdef class PropLAID(PropInstanceID):
         H5Pget_nlinks(self.id, &nlinks)
         return nlinks
 
-    @sync
+    
     def set_elink_prefix(self, char* prefix):
         """(STRING prefix)
 
@@ -54,7 +54,7 @@ cdef class PropLAID(PropInstanceID):
 
         H5Pset_elink_prefix(self.id, self._buf)
 
-    @sync
+    
     def get_elink_prefix(self):
         """() => STRING prefix
 

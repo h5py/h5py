@@ -25,9 +25,6 @@ from python_exc cimport PyErr_SetString
 
 init_hdf5()
 
-# Runtime imports
-from _sync import sync, nosync
-
 # === Public constants ========================================================
 
 TYPE_HARD = H5L_TYPE_HARD         
@@ -126,7 +123,7 @@ cdef class LinkProxy:
     def __hash__(self):
         raise TypeError("Link proxies are unhashable; use the parent group instead.")
 
-    @sync
+    
     def create_hard(self, char* new_name, GroupID cur_loc not None,
         char* cur_name, PropID lcpl=None, PropID lapl=None):
         """ (STRING new_name, GroupID cur_loc, STRING cur_name,
@@ -138,7 +135,7 @@ cdef class LinkProxy:
         H5Lcreate_hard(cur_loc.id, cur_name, self.id, new_name,
             pdefault(lcpl), pdefault(lapl))
 
-    @sync
+    
     def create_soft(self, char* new_name, char* target,
         PropID lcpl=None, PropID lapl=None):
         """(STRING new_name, STRING target, PropID lcpl=None, PropID lapl=None)
@@ -149,7 +146,7 @@ cdef class LinkProxy:
         H5Lcreate_soft(target, self.id, new_name,
             pdefault(lcpl), pdefault(lapl))
 
-    @sync
+    
     def create_external(self, char* link_name, char* file_name, char* obj_name,
         PropID lcpl=None, PropID lapl=None):
         """(STRING link_name, STRING file_name, STRING obj_name,
@@ -160,7 +157,7 @@ cdef class LinkProxy:
         H5Lcreate_external(file_name, obj_name, self.id, link_name,
             pdefault(lcpl), pdefault(lapl))
 
-    @sync
+    
     def get_val(self, char* name, PropID lapl=None):
         """(STRING name, PropLAID lapl=None) => STRING or TUPLE(file, obj)
 
@@ -193,7 +190,7 @@ cdef class LinkProxy:
         
         return py_retval
 
-    @sync
+    
     def exists(self, char* name):
         """ (STRING name) => BOOL
 
@@ -201,7 +198,7 @@ cdef class LinkProxy:
         """
         return <bint>(H5Lexists(self.id, name, H5P_DEFAULT))
 
-    @sync
+    
     def get_info(self, char* name, int index=-1, *, PropID lapl=None):
         """(STRING name=, INT index=, **kwds) => LinkInfo instance
 
@@ -213,7 +210,7 @@ cdef class LinkProxy:
         H5Lget_info(self.id, name, &info.infostruct, pdefault(lapl))
         return info
 
-    @sync
+    
     def visit(self, object func, *,
               int idx_type=H5_INDEX_NAME, int order=H5_ITER_NATIVE,
               char* obj_name='.', PropID lapl=None, bint info=0):
