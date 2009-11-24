@@ -374,6 +374,9 @@ cdef class SpaceID(ObjectID):
 
         rank = H5Sget_simple_extent_ndims(self.id)
 
+        if H5Sget_select_npoints(self.id) == 0:
+            return None
+
         start = <hsize_t*>emalloc(sizeof(hsize_t)*rank)
         end = <hsize_t*>emalloc(sizeof(hsize_t)*rank)
 

@@ -108,6 +108,8 @@ class TestH5S(unittest.TestCase):
         self.assertEqual(sid.get_select_bounds(), ((0,0), (99,99)))
         sid.select_hyperslab((10,10), (13,17))
         self.assertEqual(sid.get_select_bounds(), ((10,10), (22,26)))
+        sid.select_none()
+        self.assert_(sid.get_select_bounds() is None)
 
     def test_select(self):
         # all, none, valid
