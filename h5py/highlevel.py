@@ -117,8 +117,27 @@ class HLObject(_LockableObject):
 
         This is always equivalent to file[posixpath.basename(obj.name)].
         """
-        return self.file[pp.dirname(self.name)]
+        if self.name is not None:
+            return self.file[pp.dirname(self.name)]
+        else:
+            raise ValueError("Parent of an anonymous object is undefined")
 
+    def ref(self, path=None, selection=None):
+        """Create an object reference
+        """
+        return h5r.create(self.id, '.' if path is None else path, h5r.OBJECT)
+
+    def deref(self, ref):
+        """Dereference an object reference
+        """
+        kind = h5r.get_obj_type(ref, self.id)
+        if kind == h5g.GROUP:
+            return Group(self, None, _rawid=h5r.dereference(ref, self.id))
+        elif kind == h5g.DATASET:
+            return Dataset(self, None, _rawid=h5r.dereference(ref, self.id))
+        else:
+            raise TypeError("Unrecognized object type")
+        
     def __init__(self, parent):
         if not isinstance(self, File):
             if isinstance(parent, File):
@@ -214,7 +233,7 @@ class Group(HLObject, _DictCompat):
         datasets.  Group attributes can be accessed via <group>.attrs.
     """
 
-    def __init__(self, parent_object, name, create=False):
+    def __init__(self, parent_object, name, create=False, _rawid=None):
         """ Create a new Group object, from a parent object and a name.
 
         If "create" is False (default), try to open the given group,
@@ -226,7 +245,9 @@ class Group(HLObject, _DictCompat):
         """
         with parent_object._lock:
             HLObject.__init__(self, parent_object)
-            if create:
+            if _rawid is not None:
+                self.id = _rawid
+            elif create:
                 self.id = h5g.create(parent_object.id, name)
             else:
                 self.id = h5g.open(parent_object.id, name)
@@ -499,8 +520,9 @@ class Group(HLObject, _DictCompat):
     def __repr__(self):
         with self._lock:
             try:
+                namestr = '"%s"' % self.name if self.name is not None else "(anonymous)"
                 return '<HDF5 group "%s" (%d members)>' % \
-                    (_hbasename(self.name), len(self))
+                    (namestr, len(self))
             except Exception:
                 return "<Closed HDF5 group>"
 
@@ -760,7 +782,8 @@ class Dataset(HLObject):
     def __init__(self, group, name,
                     shape=None, dtype=None, data=None,
                     chunks=None, compression=None, shuffle=None,
-                    fletcher32=None, maxshape=None, compression_opts=None):
+                    fletcher32=None, maxshape=None, compression_opts=None,
+                    _rawid = None):
         """ Open or create a new dataset in the file.
 
         It's recommended you use the Group methods (open via Group["name"],
@@ -801,7 +824,9 @@ class Dataset(HLObject):
         """
         with group._lock:
             HLObject.__init__(self, group)
-            if data is None and shape is None:
+            if _rawid is not None:
+                self.id = _rawid
+            elif data is None and shape is None:
                 if any((dtype,chunks,compression,shuffle,fletcher32)):
                     raise ValueError('You cannot specify keywords when opening a dataset.')
                 self.id = h5d.open(group.id, name)
@@ -1108,8 +1133,9 @@ class Dataset(HLObject):
     def __repr__(self):
         with self._lock:
             try:
-                return '<HDF5 dataset "%s": shape %s, type "%s">' % \
-                    (_hbasename(self.name), self.shape, self.dtype.str)
+                namestr = '"%s"' % _hbasename(self.name) if self.name is not None else "(anonymous)"
+                return '<HDF5 dataset %s: shape %s, type "%s">' % \
+                    (namestr, self.shape, self.dtype.str)
             except Exception:
                 return "<Closed HDF5 dataset>"
 
@@ -1250,8 +1276,9 @@ class AttributeManager(_LockableObject, _DictCompat):
     def __repr__(self):
         with self._lock:
             try:
-                return '<Attributes of HDF5 object "%s" (%d)>' % \
-                    (_hbasename(h5i.get_name(self.id)), len(self))
+                namestr = '"%s"' % _hbasename(self.id.name) if self.id.name is not None else "(anonymous)"
+                return '<Attributes of HDF5 object %s (%d)>' % \
+                    (namestr, len(self))
             except Exception:
                 return "<Attributes of closed HDF5 object>"
 
@@ -1284,8 +1311,9 @@ class Datatype(HLObject):
     def __repr__(self):
         with self._lock:
             try:
+                namestr = '"%s"' % _hbasename(self.name) if self.name is not None else "(anonymous)"
                 return '<HDF5 named type "%s" (dtype %s)>' % \
-                    (_hbasename(self.name), self.dtype.str)
+                    (namestr, self.dtype.str)
             except Exception:
                 return "<Closed HDF5 named type>"
 
