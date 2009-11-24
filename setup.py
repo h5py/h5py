@@ -301,16 +301,14 @@ class cython(Command):
 
     description = "Rebuild Cython-generated C files"
 
-    user_options = [('diag', 'd', 'Enable library debug logging'),
-                    ('api16', '6', 'Only build version 1.6'),
+    user_options = [('api16', '6', 'Only build version 1.6'),
                     ('api18', '8', 'Only build version 1.8'),
                     ('force', 'f', 'Bypass timestamp checking'),
                     ('clean', 'c', 'Clean up Cython files')]
 
-    boolean_options = ['diag', 'force', 'clean']
+    boolean_options = ['force', 'clean']
 
     def initialize_options(self):
-        self.diag = None
         self.api16 = None
         self.api18 = None
         self.force = False
@@ -345,7 +343,7 @@ class cython(Command):
 
         print "Rebuilding Cython files (this may take a few minutes)..."
 
-        def cythonize(api, diag):
+        def cythonize(api):
 
             outpath = localpath('api%d' % api)
             self.checkdir(outpath)
@@ -358,12 +356,9 @@ DEF H5PY_VERSION = "%(VERSION)s"
 DEF H5PY_API = %(API_MAX)d     # Highest API level (i.e. 18 or 16)
 DEF H5PY_16API = %(API_16)d    # 1.6.X API available (always true, for now)
 DEF H5PY_18API = %(API_18)d    # 1.8.X API available
-
-DEF H5PY_DEBUG = %(DEBUG)d    # Logging-level number, or 0 to disable
 """
             pxi_str %= {"VERSION": VERSION, "API_MAX": api,
-                        "API_16": True, "API_18": api == 18,
-                        "DEBUG": 10 if diag else 0}
+                        "API_16": True, "API_18": api == 18}
 
             f = open(op.join(outpath, 'config.pxi'),'w')
             f.write(pxi_str)
@@ -371,7 +366,6 @@ DEF H5PY_DEBUG = %(DEBUG)d    # Logging-level number, or 0 to disable
 
             debug("  Cython: %s" % Version.version)
             debug("  API level: %d" % api)
-            debug("  Diagnostic mode: %s" % ('yes' if diag else 'no'))
 
             for module in MODULES:
 
@@ -391,9 +385,9 @@ DEF H5PY_DEBUG = %(DEBUG)d    # Logging-level number, or 0 to disable
         # end "def cythonize(...)"
 
         if self.api16:
-            cythonize(16, self.diag)
+            cythonize(16)
         if self.api18:
-            cythonize(18, self.diag)
+            cythonize(18)
 
 class hbuild_ext(build_ext):
 

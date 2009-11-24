@@ -83,9 +83,6 @@ cdef class H5PYConfig:
 
         API_18 (T/F, readonly)
             If the HDF5 1.8 API available?
-        
-        DEBUG (integer, readonly)
-            Gives the debug logging level, or 0 if built without logging.
 
         complex_names (tuple, r/w)
             Settable 2-tuple controlling how complex numbers are saved.
@@ -99,7 +96,6 @@ cdef class H5PYConfig:
     def __init__(self):
         self.API_16 = bool(H5PY_16API)
         self.API_18 = bool(H5PY_18API)
-        self.DEBUG = H5PY_DEBUG
         self._r_name = 'r'
         self._i_name = 'i'
         self._f_name = 'FALSE'
@@ -165,32 +161,6 @@ cpdef H5PYConfig get_config():
     """
     return cfg
 
-# === Bootstrap diagnostics and threading, before decorator is defined ===
-
-IF H5PY_DEBUG:
-    import logging
-    for x in ('h5py.library', 'h5py.identifiers', 'h5py.functions', 'h5py.threads'):
-        l = logging.getLogger(x)
-        l.setLevel(H5PY_DEBUG)
-        l.addHandler(logging.StreamHandler())
-    log_lib = logging.getLogger('h5py.library')
-    log_ident = logging.getLogger('h5py.identifiers')
-    log_threads = logging.getLogger('h5py.threads')
-
-
-def loglevel(lev):
-    """ (INT lev)
-        
-        Shortcut to set the logging level on all library streams.
-        Does nothing if not built in debug mode.
-    """
-    IF H5PY_DEBUG:
-        for x in ('h5py.identifiers', 'h5py.functions', 'h5py.threads'):
-            l = logging.getLogger(x)
-            l.setLevel(lev)
-    ELSE:
-        pass
-
 # === Public C API for object identifiers =====================================
 
 cdef class ObjectID:
@@ -230,15 +200,9 @@ cdef class ObjectID:
         self._locked = 0
         self.id = id_
 
-    IF H5PY_DEBUG:
-        def __init__(self, hid_t id_):
-            log_ident.debug("+ %s" % str(self))
-
     def __dealloc__(self):
         """ Automatically decrefs the ID, if it's valid. """
 
-        IF H5PY_DEBUG:
-            log_ident.debug("- %d" % self.id)
         if (not self._locked) and H5Iget_type(self.id) != H5I_BADID:
             H5Idec_ref(self.id)
 
@@ -254,8 +218,6 @@ cdef class ObjectID:
         if self._valid and not self._locked:
             H5Iinc_ref(self.id)
         copy._locked = self._locked
-        IF H5PY_DEBUG:
-            log_ident.debug("c %s" % str(self))
         return copy
 
     def __richcmp__(self, object other, int how):
@@ -351,9 +313,6 @@ def _exithack():
     cdef hid_t *objs
 
     count = H5Fget_obj_count(H5F_OBJ_ALL, H5F_OBJ_ALL)
-    
-    IF H5PY_DEBUG:
-        log_lib.info("* h5py is shutting down (closing %d leftover IDs)" % count)
 
     if count > 0:
         objs = <hid_t*>malloc(sizeof(hid_t)*count)
@@ -376,8 +335,6 @@ cdef int init_hdf5() except -1:
 
     import _conv
     if not hdf5_inited:
-        IF H5PY_DEBUG:
-            log_lib.info("* Initializing h5py library")
         if H5open() < 0:
             raise RuntimeError("Failed to initialize the HDF5 library.")
         register_thread()
