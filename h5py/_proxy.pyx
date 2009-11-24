@@ -162,7 +162,7 @@ cdef herr_t dset_rw(hid_t dset, hid_t mtype, hid_t mspace, hid_t fspace,
 
     return 0
 
-cdef void* create_buffer(size_t ipt_size, size_t opt_size, nl) except NULL:
+cdef void* create_buffer(size_t ipt_size, size_t opt_size, size_t nl) except NULL:
     
     cdef size_t final_size
     cdef void* buf
