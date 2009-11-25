@@ -28,7 +28,7 @@ import pickle
 NAME = 'h5py'
 VERSION = '1.2.2'
 MIN_NUMPY = '1.0.3'
-MIN_CYTHON = '0.11.2'
+MIN_CYTHON = '0.12'
 SRC_PATH = 'h5py'           # Name of directory with .pyx files
 
 USE_DISTUTILS = False
@@ -304,15 +304,17 @@ class cython(Command):
     user_options = [('api16', '6', 'Only build version 1.6'),
                     ('api18', '8', 'Only build version 1.8'),
                     ('force', 'f', 'Bypass timestamp checking'),
-                    ('clean', 'c', 'Clean up Cython files')]
+                    ('clean', 'c', 'Clean up Cython files'),
+                    ('profile', 'p', 'Enable Cython profiling')]
 
-    boolean_options = ['force', 'clean']
+    boolean_options = ['force', 'clean', 'profile']
 
     def initialize_options(self):
         self.api16 = None
         self.api18 = None
         self.force = False
         self.clean = False
+        self.profile = False
 
     def finalize_options(self):
         if not (self.api16 or self.api18):
@@ -378,6 +380,7 @@ DEF H5PY_18API = %(API_18)d    # 1.8.X API available
 
                     debug("Cythoning %s" % pyx_path)
                     result = compile(pyx_path, verbose=False,
+                                     compiler_directives = {'profile': self.profile},
                                      include_path=[outpath], output_file=c_path)
                     if result.num_errors != 0:
                         fatal("Cython error; aborting.")
