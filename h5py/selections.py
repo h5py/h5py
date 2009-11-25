@@ -230,13 +230,15 @@ class SimpleSelection(Selection):
         chunks = tuple(x/y for x, y in zip(count, tshape))
         nchunks = np.product(chunks)
 
-        sid = self._id.copy()
-        sid.select_hyperslab((0,)*rank, tshape, step)
-
-        for idx in xrange(nchunks):
-            offset = tuple(x*y*z + s for x, y, z, s in zip(np.unravel_index(idx, chunks), tshape, step, start))
-            sid.offset_simple(offset)
-            yield sid
+        if nchunks == 1:
+            yield self._id
+        else:
+            sid = self._id.copy()
+            sid.select_hyperslab((0,)*rank, tshape, step)
+            for idx in xrange(nchunks):
+                offset = tuple(x*y*z + s for x, y, z, s in zip(np.unravel_index(idx, chunks), tshape, step, start))
+                sid.offset_simple(offset)
+                yield sid
 
 
 class HyperSelection(_Selection_1D):
