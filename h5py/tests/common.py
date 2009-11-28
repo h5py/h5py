@@ -22,6 +22,17 @@ import numpy as np
 
 DATADIR = op.join(op.dirname(h5py.__file__), 'tests/data')
 
+
+import warnings
+from contextlib import contextmanager
+
+@contextmanager
+def dump_warnings():
+    filters = warnings.filters
+    warnings.simplefilter("ignore")
+    yield
+    warnings.filters = filters
+    
 class ResourceManager(object):
 
     """

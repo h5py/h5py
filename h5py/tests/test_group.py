@@ -6,8 +6,9 @@ from __future__ import with_statement
 import numpy as np
 
 import h5py
-import warnings
+
 from common import TestCasePlus, api_16, api_18, res
+from common import dump_warnings
 
 SHAPES = [(), (1,), (10,5), (1,10), (10,1), (100,1,100), (51,2,1025)]
 
@@ -81,8 +82,7 @@ class TestSpecial(GroupBase):
     def test_dictcompat(self):
 
         # Old style -- now deprecated
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
+        with dump_warnings():
             self.assert_equal_contents(self.f.listnames(), self.subgroups)
             self.assert_equal_contents(self.f.listobjects(), [self.f[x] for x in self.subgroups])
             self.assert_equal_contents(self.f.listitems(), [(x, self.f[x]) for x in self.subgroups])
