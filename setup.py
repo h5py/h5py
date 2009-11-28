@@ -26,7 +26,7 @@ import os.path as op
 import pickle
 
 NAME = 'h5py'
-VERSION = '1.2.2'
+VERSION = '1.3.0'
 MIN_NUMPY = '1.0.3'
 MIN_CYTHON = '0.12'
 SRC_PATH = 'h5py'           # Name of directory with .pyx files
