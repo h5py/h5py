@@ -34,7 +34,7 @@ import highlevel, filters, selections, version
 
 # Re-export high-level interface to package level
 from highlevel import File, Group, Dataset, Datatype, AttributeManager, \
-                      is_hdf5, CoordsList, \
+                      is_hdf5, \
                       new_vlen, new_enum, get_vlen, get_enum
 
 from h5 import get_config

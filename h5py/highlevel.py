@@ -37,10 +37,11 @@ from h5py import h5, h5f, h5g, h5s, h5t, h5d, h5a, \
                  h5p, h5r, h5z, h5i, h5fd, h5o, h5l
 from h5py.h5 import H5Error
 import h5py.selections as sel
-from h5py.selections import CoordsList
 
 import version
 import filters
+
+import warnings
 
 config = h5.get_config()
 
@@ -204,18 +205,23 @@ class _DictCompat(object):
     # Compatibility methods
     def listnames(self):
         """ Deprecated alias for keys() """
+        warnings.warn("listnames() is deprecated; use keys() instead", DeprecationWarning)
         return self.keys()
     def iternames(self):
         """ Deprecated alias for iterkeys() """
+        warnings.warn("iternames() is deprecated; use iterkeys() instead", DeprecationWarning)
         return self.iterkeys()
     def listobjects(self):
         """ Deprecated alias for values() """
+        warnings.warn("listobjects() is deprecated; use values() instead", DeprecationWarning)
         return self.values()
     def iterobjects(self):
         """ Deprecated alias for itervalues() """
+        warnings.warn("iterobjects() is deprecated; use itervalues() instead", DeprecationWarning)
         return self.itervalues()
     def listitems(self):
         """ Deprecated alias for items() """
+        warnings.warn("listitems() is deprecated; use items() instead", DeprecationWarning)
         return self.items()
 
 class Group(HLObject, _DictCompat):
