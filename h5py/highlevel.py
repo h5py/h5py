@@ -70,14 +70,27 @@ def is_hdf5(fname):
 
 # === Base classes ============================================================
 
+import weakref
+
 class _LockableObject(object):
 
     """
-        Base class which provides rudimentary locking support.
+        Base class which implements locking.  Locks are associated with
+        file-resident HDF5 objects.   Requires an identifier be associated
+        with the object ("obj.id" -> ObjectID instance).
     """
 
-    _lock = threading.RLock()
+    _locks_dict = weakref.WeakKeyDictionary()
 
+    @property
+    def _lock(self):
+        # We do this in a property as opposed to the constructor because
+        # it's not clear when obj.id is set.
+        try:
+            return self._locks_dict[self.id]
+        except KeyError:
+            # MUST be setdefault to avoid race condition
+            return self._locks_dict.setdefault(self.id, threading.RLock())
 
 class HLObject(_LockableObject):
 
