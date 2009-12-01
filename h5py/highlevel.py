@@ -70,29 +70,7 @@ def is_hdf5(fname):
 
 # === Base classes ============================================================
 
-import weakref
-
-class _LockableObject(object):
-
-    """
-        Base class which implements locking.  Locks are associated with
-        file-resident HDF5 objects.   Requires an identifier be associated
-        with the object ("obj.id" -> ObjectID instance).
-    """
-
-    _locks_dict = weakref.WeakKeyDictionary()
-
-    @property
-    def _lock(self):
-        # We do this in a property as opposed to the constructor because
-        # it's not clear when obj.id is set.
-        try:
-            return self._locks_dict[self.id]
-        except KeyError:
-            # MUST be setdefault to avoid race condition
-            return self._locks_dict.setdefault(self.id, threading.RLock())
-
-class HLObject(_LockableObject):
+class HLObject(object):
 
     """
         Base class for high-level interface objects.
@@ -135,6 +113,10 @@ class HLObject(_LockableObject):
             return self.file[pp.dirname(self.name)]
         else:
             raise ValueError("Parent of an anonymous object is undefined")
+
+    @property
+    def _lock(self):
+        return self.file._fidlock
 
     def ref(self, path=None, selection=None):
         """Create an object reference
@@ -679,6 +661,7 @@ class File(Group):
         else:
             raise ValueError("Invalid mode; must be one of r, r+, w, w-, a")
 
+        self._fidlock = threading.RLock()
         self.id = self.fid  # So the Group constructor can find it.
         Group.__init__(self, self, '/')
 
@@ -1158,7 +1141,7 @@ class Dataset(HLObject):
             except Exception:
                 return "<Closed HDF5 dataset>"
 
-class AttributeManager(_LockableObject, _DictCompat):
+class AttributeManager(_DictCompat):
 
     """ Allows dictionary-style access to an HDF5 object's attributes.
 
@@ -1182,6 +1165,11 @@ class AttributeManager(_LockableObject, _DictCompat):
         """ Private constructor.
         """
         self.id = parent.id
+        self._file = parent.file
+
+    @property
+    def _lock(self):
+        return self._file._fidlock
 
     def __getitem__(self, name):
         """ Read the value of an attribute.
