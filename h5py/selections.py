@@ -16,7 +16,7 @@
 
 import numpy as np
 
-from h5py import h5s
+from h5py import h5s, h5r
 
 # Selection types for hyperslabs
 from h5py.h5s import SELECT_SET  as SET
@@ -26,24 +26,60 @@ from h5py.h5s import SELECT_XOR  as XOR
 from h5py.h5s import SELECT_NOTB as NOTB
 from h5py.h5s import SELECT_NOTA as NOTA
 
-def select(shape, args):
-    """ Automatically determine the correct selection class, perform the
-        selection, and return the selection instance.  Args may be a single
-        argument or a tuple of arguments.
+def select(shape, args, dsid):
+    """ High-level routine to generate a selection from arbitrary arguments
+    to __getitem__.  The arguments should be the following:
+
+    shape
+        Shape of the "source" dataspace.
+
+    args
+        Either a single argument or a tuple of arguments.  See below for
+        supported classes of argument.
+    
+    dsid
+        A h5py.h5d.DatasetID instance representing the source dataset.
+
+    Argument classes:
+
+    Single Selection instance
+        Returns the argument.
+
+    numpy.ndarray
+        Must be a boolean mask.  Returns a PointSelection instance.
+
+    RegionReference
+        Returns a Selection instance.
+
+    Indices, slices, ellipses only
+        Returns a SimpleSelection instance
+
+    Indices, slices, ellipses, lists or boolean index arrays
+        Returns a FancySelection instance.
     """
     if not isinstance(args, tuple):
         args = (args,)
 
+    # "Special" indexing objects
     if len(args) == 1:
+
         arg = args[0]
         if isinstance(arg, Selection):
-            if arg.shape == shape:
-                return arg
-            raise TypeError("Mismatched selection shape")
+            if arg.shape != shape:
+                raise TypeError("Mismatched selection shape")
+            return arg
+
         elif isinstance(arg, np.ndarray):
             sel = PointSelection(shape)
             sel[arg]
             return sel
+
+        elif isinstance(arg, h5r.RegionReference):
+            sid = h5r.get_region(arg, dsid)
+            if shape != sid.shape:
+                raise TypeError("Reference shape does not match dataset shape")
+                
+            return Selection(shape, spaceid=sid)
 
     for a in args:
         if not isinstance(a, slice) and a is not Ellipsis:
@@ -58,6 +94,29 @@ def select(shape, args):
     sel[args]
     return sel
 
+class _RegionProxy(object):
+
+    """
+        Thin proxy object which takes __getitem__-style index arguments and
+        produces RegionReference objects.  Example:
+
+        >>> dset = myfile['dataset']
+        >>> myref = dset.regionref[0:100,20:30]
+        >>> data = dset[myref]
+
+    """
+
+    def __init__(self, dsid):
+        """ Supply a h5py.h5d.DatasetID instance """
+        self.id = dsid
+
+    def __getitem__(self, args):
+        """ Takes arbitrary selection terms and produces a RegionReference
+        object.  Selection must be compatible with the dataset.
+        """
+        selection = select(self.id.shape, args)
+        return h5r.create(self.id, '.', h5r.DATASET_REGION, selection.id)
+
 class Selection(object):
 
     """
@@ -70,6 +129,7 @@ class Selection(object):
                              What args are allowed depends on the
                              particular subclass in use.
 
+        id (read-only) =>      h5py.h5s.SpaceID instance
         shape (read-only) =>   The shape of the dataspace.
         mshape  (read-only) => The shape of the selection region. 
                                Not guaranteed to fit within "shape", although
@@ -80,13 +140,25 @@ class Selection(object):
 
         broadcast(target_shape) => Return an iterable which yields dataspaces
                                    for read, based on target_shape.
+
+        The base class represents "unshaped" selections (1-D).
     """
 
-    def __init__(self, shape):
-        shape = tuple(shape)
-        self._id = h5s.create_simple(shape, (h5s.UNLIMITED,)*len(shape))
-        self._id.select_all()
-        self._shape = shape
+    def __init__(self, shape, spaceid=None):
+        """ Create a selection.  Shape may be None if spaceid is given. """
+        if spaceid is not None:
+            self._id = spaceid
+            self._shape = spaceid.shape
+        else:
+            shape = tuple(shape)
+            self._shape = shape
+            self._id = h5s.create_simple(shape, (h5s.UNLIMITED,)*len(shape))
+            self._id.select_all()
+
+    @property
+    def id(self):
+        """ SpaceID instance """
+        return self._id
 
     @property
     def shape(self):
@@ -98,15 +170,9 @@ class Selection(object):
         """ Number of elements currently selected """
         return self._id.get_select_npoints()
 
-class _Selection_1D(Selection):
-
-    """
-        Base class for selections which result in a 1-D shape, as with
-        NumPy indexing via boolean mask arrays.
-    """
-
     @property
     def mshape(self):
+        """ Shape of selection (always 1-D for this class) """
         return (self.nselect,)
 
     def broadcast(self, target_shape):
@@ -115,8 +181,10 @@ class _Selection_1D(Selection):
             raise TypeError("Broadcasting is not supported for point-wise selections")
         yield self._id
 
+    def __getitem__(self, args):
+        raise NotImplementedError("This class does not support indexing")
 
-class PointSelection(_Selection_1D):
+class PointSelection(Selection):
 
     """
         Represents a point-wise selection.  You can supply sequences of
@@ -168,11 +236,16 @@ class SimpleSelection(Selection):
         and integer arguments.  Can participate in broadcasting.
     """
 
-    def __init__(self, shape):
-        Selection.__init__(self, shape)
+    @property
+    def mshape(self):
+        """ Shape of current selection """
+        return self._mshape
+
+    def __init__(self, shape, *args, **kwds):
+        Selection.__init__(self, shape, *args, **kwds)
         rank = len(self.shape)
         self._sel = ((0,)*rank, self.shape, (1,)*rank, (False,)*rank)
-        self.mshape = self.shape
+        self._mshape = self.shape
 
     def __getitem__(self, args):
 
@@ -191,7 +264,7 @@ class SimpleSelection(Selection):
 
         self._sel = (start, count, step, scalar)
 
-        self.mshape = tuple(x for x, y in zip(count, scalar) if not y)
+        self._mshape = tuple(x for x, y in zip(count, scalar) if not y)
 
         return self
 
@@ -241,7 +314,7 @@ class SimpleSelection(Selection):
                 yield sid
 
 
-class HyperSelection(_Selection_1D):
+class HyperSelection(Selection):
 
     """
         Represents multiple overlapping rectangular selections, combined
@@ -317,13 +390,14 @@ class FancySelection(Selection):
 
         Broadcasting is not supported for these selections.
     """
-    def __init__(self, shape):
-        Selection.__init__(self, shape)
-        self._mshape = shape
 
     @property
     def mshape(self):
         return self._mshape
+
+    def __init__(self, shape, *args, **kwds):
+        Selection.__init__(self, shape, *args, **kwds)
+        self._mshape = self.shape
 
     def __getitem__(self, args):
 

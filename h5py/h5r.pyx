@@ -21,6 +21,8 @@ from h5 cimport init_hdf5, ObjectID
 from h5i cimport wrap_identifier
 from h5s cimport SpaceID
 
+from python cimport PyString_FromStringAndSize
+
 # Initialization
 init_hdf5()
 
@@ -50,7 +52,12 @@ def create(ObjectID loc not None, char* name, int ref_type, SpaceID space=None):
     """
     cdef hid_t space_id
     cdef Reference ref
-    ref = Reference()
+    if ref_type == H5R_OBJECT:
+        ref = Reference()
+    elif ref_type == H5R_DATASET_REGION:
+        ref = RegionReference()
+    else:
+        raise ValueError("Unknown reference typecode")
     if space is None:
         space_id = -1
     else:
@@ -70,14 +77,14 @@ def dereference(Reference ref not None, ObjectID id not None):
     in the file) must also be provided.  Returns None if the reference
     is zero-filled.
 
-    The reference type may be either OBJECT or DATASET_REGION.
+    The reference may be either Reference or RegionReference.
     """
     if not ref:
         return None
     return wrap_identifier(H5Rdereference(id.id, <H5R_type_t>ref.typecode, &ref.ref))
 
 
-def get_region(Reference ref not None, ObjectID id not None):
+def get_region(RegionReference ref not None, ObjectID id not None):
     """(Reference ref, ObjectID id) => SpaceID or None
 
     Retrieve the dataspace selection pointed to by the reference.
@@ -86,8 +93,8 @@ def get_region(Reference ref not None, ObjectID id not None):
     object in the file (including the dataset itself) must also be
     provided.
 
-    The reference object must be of type DATASET_REGION.  If it's not, or
-    if the reference is zero-filled, returns None.
+    The reference object must be a RegionReference.  If it is zero-filled,
+    returns None.
     """
     if ref.typecode != H5R_DATASET_REGION or not ref:
         return None
@@ -97,8 +104,8 @@ def get_region(Reference ref not None, ObjectID id not None):
 def get_obj_type(Reference ref not None, ObjectID id not None):
     """(Reference ref, ObjectID id) => INT obj_code or None
 
-    Determine what type of object the eference points to.  The
-    reference may be either type OBJECT or DATASET_REGION.  The file
+    Determine what type of object the reference points to.  The
+    reference may be a Reference or RegionReference.  The file
     identifier or the identifier of any object in the file must also
     be provided.
 
@@ -155,14 +162,24 @@ cdef class Reference:
         return False
 
     def __repr__(self):
-        empty_str = "non-empty" if self else "empty"
         if self.typecode == H5R_OBJECT:
-            return "<HDF5 object reference (%s)>" % empty_str
+            desc_str = PyString_FromStringAndSize(<char*>&self.ref, sizeof(hobj_ref_t))
+            return "<HDF5 object reference (%r)>" % desc_str
         elif self.typecode == H5R_DATASET_REGION:
-            return "<HDF5 dataset region reference (%s)>" % empty_str
+            desc_str = PyString_FromStringAndSize(<char*>&self.ref, sizeof(hdset_reg_ref_t))
+            return "<HDF5 dataset region reference (%r)>" % desc_str
         return "<Invalid HDF5 reference>"
 
+cdef class RegionReference(Reference):
 
+    """
+        Opaque representation of an HDF5 region reference.
+
+        This is a subclass of Reference which exists mainly for programming
+        convenience.
+    """
+
+    pass
 
 
 

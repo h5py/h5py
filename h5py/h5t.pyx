@@ -25,6 +25,7 @@ from h5 cimport init_hdf5, H5PYConfig, get_config
 from h5p cimport PropID, pdefault
 from numpy cimport dtype, ndarray
 from python_string cimport PyString_FromStringAndSize
+from h5r cimport Reference, RegionReference
 
 from utils cimport  emalloc, efree, \
                     require_tuple, convert_dims, convert_tuple
@@ -619,7 +620,7 @@ cdef class TypeStringID(TypeID):
     cdef object py_dtype(self):
         # Numpy translation function for string types
         if self.is_variable_str():
-            return py_new_vlen(str)
+            return special_dtype(vlen=str)
 
         return dtype("|S" + str(self.get_size()))
 
@@ -652,9 +653,9 @@ cdef class TypeReferenceID(TypeID):
     
     cdef object py_dtype(self):
         if H5Tequal(self.id, H5T_STD_REF_OBJ):
-            return py_new_ref(H5R_OBJECT)
+            return special_dtype(ref=Reference)
         elif H5Tequal(self.id, H5T_STD_REF_DSETREG):
-            return py_new_ref(H5R_DATASET_REGION)
+            return special_dtype(ref=RegionReference)
         else:
             raise TypeError("Unknown reference type")
 
@@ -1147,7 +1148,7 @@ cdef class TypeEnumID(TypeCompositeID):
         if members == ref:
             return dtype('bool')
     
-        return py_new_enum(basetype.py_dtype(), members)
+        return special_dtype(enum=(basetype.py_dtype(), members))
 
 
 # === Translation from NumPy dtypes to HDF5 type objects ======================
@@ -1317,10 +1318,10 @@ cdef TypeStringID _c_vlen_str(object basetype):
     H5Tset_size(tid, H5T_VARIABLE)
     return TypeStringID(tid)
 
-cdef TypeReferenceID _c_ref(int typecode):
-    if typecode == H5R_OBJECT:
+cdef TypeReferenceID _c_ref(object refclass):
+    if refclass is Reference:
         return STD_REF_OBJ
-    elif typecode == H5R_DATASET_REGION:
+    elif refclass is RegionReference:
         return STD_REF_DSETREG
     raise TypeError("Unrecognized reference code")
 
@@ -1353,7 +1354,7 @@ cpdef TypeID py_create(object dtype_in, bint logical=0):
 
         if logical:
             # Check for an enumeration hint
-            enum_vals = py_get_enum(dt)
+            enum_vals = check_dtype(enum=dt)
             if enum_vals is not None:
                 return _c_enum(dt, enum_vals)
 
@@ -1386,13 +1387,13 @@ cpdef TypeID py_create(object dtype_in, bint logical=0):
     elif kind == c'O':
 
         if logical:
-            vlen = py_get_vlen(dt)
+            vlen = check_dtype(vlen=dt)
             if vlen is not None:
                 return _c_vlen_str(vlen)
 
-            refcode = py_get_ref(dt)
-            if refcode is not None:
-                    return _c_ref(refcode)
+            refclass = check_dtype(ref=dt)
+            if refclass is not None:
+                    return _c_ref(refclass)
 
             raise TypeError("Object dtype %r has no native HDF5 equivalent" % (dt,))
 
@@ -1402,99 +1403,95 @@ cpdef TypeID py_create(object dtype_in, bint logical=0):
     else:
         raise TypeError("No conversion path for dtype: %s" % repr(dt))
 
-cpdef dtype py_new_enum(object dt_in, dict enum_vals):
-    """ (DTYPE dt_in, DICT enum_vals) => DTYPE
+def special_dtype(**kwds):
+    """ Create a new h5py "special" type.  Only one keyword may be given.
 
-    Create a new NumPy integer dtype, which contains "hint" metadata for
-    an enum. Only dtypes of kind 'i' or 'u' are allowed.  The enum_vals
-    dict must consist only of string keys and integer values.
+    Legal keywords are:
+
+    vlen = basetype
+        Base type for HDF5 variable-length datatype.  Currently only the
+        builtin string class (str) is allowed.
+        Example: special_dtype( vlen=str )
+
+    enum = (basetype, values_dict)
+        Create a NumPy representation of an HDF5 enumerated type.  Provide
+        a 2-tuple containing an (integer) base dtype and a dict mapping
+        string names to integer values.
+
+    ref = Reference | RegionReference
+        Create a NumPy representation of an HDF5 object or region reference
+        type.
     """
-
-    cdef dtype dt = dtype(dt_in)
-    if dt.kind != 'i' and dt.kind != 'u':
-        raise TypeError("Only integer types can be used as enums")
-
-    return dtype((dt, [( ({'vals': enum_vals},'enum'), dt )] ))
     
-cpdef dict py_get_enum(object dt):
-    """ (DTYPE dt_in) => DICT
+    if len(kwds) != 1:
+        raise TypeError("Exactly one keyword may be provided")
 
-    Determine the enum values associated with a "hinted" NumPy integer type.
-    Returns None if the type does not contain hints, or is of the wrong kind.
+    name, val = kwds.popitem()
+
+    if name == 'vlen':
+        if val is not str:
+            raise NotImplementedError("Only string vlens are currently supported")
+
+        return dtype(('O', [( ({'type': val},'vlen'), 'O' )] ))
+
+    if name == 'enum':
+
+        try:
+            dt, enum_vals = val
+        except TypeError:
+            raise TypeError("Enums must be created from a 2-tuple (basetype, values_dict)")
+
+        dt = dtype(dt)
+        if dt.kind not in "iu":
+            raise TypeError("Only integer types can be used as enums")
+
+        return dtype((dt, [( ({'vals': enum_vals},'enum'), dt )] ))
+
+    if name == 'ref':
+
+        if val not in (Reference, RegionReference):
+            raise ValueError("Ref class must be Reference or RegionReference")
+
+        return dtype(('O', [( ({'type': val},'hdf5ref'), 'O' )] ))
+
+    raise TypeError('Unknown special type "%s"' % name)
+   
+def check_dtype(**kwds):
+    """ Check a dtype for h5py special type "hint" information.  Only one
+    keyword may be given.
+
+    vlen = dtype
+        If the dtype represents an HDF5 vlen, returns the Python base class.
+        Currently only builting string vlens (str) are supported.  Returns
+        None if the dtype does not represent an HDF5 vlen.
+
+    enum = dtype
+        If the dtype represents an HDF5 enumerated type, returns the dictionary
+        mapping string names to integer values.  Returns None if the dtype does
+        not represent an HDF5 enumerated type.
+
+    ref = dtype
+        If the dtype represents an HDF5 reference type, returns the reference
+        class (either Reference or RegionReference).  Returns None if the dtype
+        does not represent an HDF5 reference type.
     """
-    
-    if dt.kind != 'i' and dt.kind != 'u':
-        return None
 
-    if dt.fields is not None and 'enum' in dt.fields:
-        tpl = dt.fields['enum']
-        if len(tpl) == 3:
-            info_dict = tpl[2]
-            if 'vals' in info_dict:
-                return info_dict['vals']
+    if len(kwds) != 1:
+        raise TypeError("Exactly one keyword may be provided")
 
-    return None
+    name, dt = kwds.popitem()
 
-cpdef dtype py_new_ref(int typecode):
-    """ (INT typecode) => DTYPE
+    if name not in ('vlen', 'enum', 'ref'):
+        raise TypeError('Unknown special type "%s"' % name)
 
-    Create a NumPy object type representing an HDF5 reference.  The typecode
-    should be one of:
-    
-    - h5r.OBJECT
-    - h5r.DATASET_REGION
-    """
-    return dtype(('O', [( ({'type': typecode},'hdf5ref'), 'O' )] ))
+    hintkey = 'type' if name is not 'enum' else 'vals'
 
-cpdef object py_get_ref(object dt_in):
-    """ (DTYPE dt_in) => INT typecode or None
-
-    Determine what kind of reference this dtype represents.  Returns None
-    if it's not a reference.
-    """
-    cdef dtype dt = dtype(dt_in)
-
-    if dt.kind != 'O':
-        return None
-
-    if dt.fields is not None and 'hdf5ref' in dt.fields:
-        tpl = dt.fields['hdf5ref']
-        if len(tpl) == 3:
-            hint_dict = tpl[2]
-            if 'type' in hint_dict:
-                return hint_dict['type']
-
-    return None
-
-cpdef dtype py_new_vlen(object kind):
-    """ (OBJECT kind) => DTYPE
-
-    Create a new NumPy object dtype, which contains "hint" metadata
-    identifying the proper HDF5 vlen base type.  For now, only the native
-    Python string object (str) is supported.
-    """
-    if kind is not str:
-        raise NotImplementedError("Only string vlens are currently supported")
-
-    return dtype(('O', [( ({'type': kind},'vlen'), 'O' )] ))
-
-cpdef object py_get_vlen(object dt_in):
-    """ (OBJECT dt_in) => TYPE
-
-    Determine the vlen "hint" type associated with a NumPy object type,
-    or None if the dtype does not contain a hint or is not of kind "O".
-    """
-    cdef dtype dt = dtype(dt_in)
-
-    if dt.kind != 'O':
-        return None
-
-    if dt.fields is not None and 'vlen' in dt.fields:
-        tpl = dt.fields['vlen']
+    if dt.fields is not None and name in dt.fields:
+        tpl = dt.fields[name]
         if len(tpl) == 3:
             hint_dict = tpl[2]
-            if 'type' in hint_dict:
-                return hint_dict['type']
+            if hintkey in hint_dict:
+                return hint_dict[hintkey]
 
     return None
 
@@ -1538,5 +1535,42 @@ def find(TypeID src not None, TypeID dst not None):
         return (data[0].need_bkg,)
     except:
         return None
+
+# ============================================================================
+# Deprecated functions
+
+import warnings
+
+cpdef dtype py_new_enum(object dt_in, dict enum_vals):
+    """ (DTYPE dt_in, DICT enum_vals) => DTYPE
+
+    Deprecated; use special_dtype() instead.
+    """
+    warnings.warn("Deprecated; use special_dtype(enum=(dtype, values)) instead", DeprecationWarning)
+    return special_dtype(enum = (dt_in, enum_vals))
+
+cpdef dict py_get_enum(object dt):
+    """ (DTYPE dt_in) => DICT
+
+    Deprecated; use check_dtype() instead.
+    """
+    warnings.warn("Deprecated; use check_dtype(enum=dtype) instead", DeprecationWarning)
+    return check_dtype(enum=dt)
+
+cpdef dtype py_new_vlen(object kind):
+    """ (OBJECT kind) => DTYPE
+
+    Deprecated; use special_dtype() instead.
+    """
+    warnings.warn("Deprecated; use special_dtype(vlen=basetype) instead", DeprecationWarning)
+    return special_dtype(vlen=kind)
+
+cpdef object py_get_vlen(object dt_in):
+    """ (OBJECT dt_in) => TYPE
+
+    Deprecated; use check_dtype() instead.
+    """
+    warnings.warn("Deprecated; use check_dtype(vlen=dtype) instead", DeprecationWarning)
+    return check_dtype(vlen=dt_in)
 
 

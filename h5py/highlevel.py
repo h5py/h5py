@@ -118,21 +118,10 @@ class HLObject(object):
     def _lock(self):
         return self.file._fidlock
 
-    def ref(self, path=None, selection=None):
-        """Create an object reference
-        """
-        return h5r.create(self.id, '.' if path is None else path, h5r.OBJECT)
-
-    def deref(self, ref):
-        """Dereference an object reference
-        """
-        kind = h5r.get_obj_type(ref, self.id)
-        if kind == h5g.GROUP:
-            return Group(self, None, _rawid=h5r.dereference(ref, self.id))
-        elif kind == h5g.DATASET:
-            return Dataset(self, None, _rawid=h5r.dereference(ref, self.id))
-        else:
-            raise TypeError("Unrecognized object type")
+    @property
+    def ref(self):
+        """ An (opaque) HDF5 reference to this object """
+        return h5r.create(self.id, '.', h5r.OBJECT)
         
     def __init__(self, parent):
         if not isinstance(self, File):
@@ -190,7 +179,7 @@ class _DictCompat(object):
             for x in self:
                 yield (x, self[x])
 
-    def get(self, name, default):
+    def get(self, name, default=None):
         """ Retrieve the member, or return default if it doesn't exist """
         with self._lock:
             if name in self:
@@ -261,8 +250,11 @@ class Group(HLObject, _DictCompat):
         The action taken depends on the type of object assigned:
 
         Named HDF5 object (Dataset, Group, Datatype)
-            A hard link is created in this group which points to the
+            A hard link is created at "name" which points to the
             given object.
+
+        SoftLink or ExternalLink instance
+            Create the corresponding link.
 
         Numpy ndarray
             The array is converted to a dataset object, with default
@@ -280,6 +272,12 @@ class Group(HLObject, _DictCompat):
             if isinstance(obj, Group) or isinstance(obj, Dataset) or isinstance(obj, Datatype):
                 self.id.link(h5i.get_name(obj.id), name, link_type=h5g.LINK_HARD)
 
+            elif isinstance(obj, SoftLink):
+                self.id.link(obj.path, name, link_type=h5g.LINK_SOFT)
+    
+            elif isinstance(obj, ExternalLink):
+                self.id.links.create_external(name, obj.filename, obj.path)
+
             elif isinstance(obj, numpy.dtype):
                 htype = h5t.py_create(obj)
                 htype.commit(self.id, name)
@@ -291,6 +289,18 @@ class Group(HLObject, _DictCompat):
         """ Open an object attached to this group. 
         """
         with self._lock:
+
+            if isinstance(name, h5r.Reference):
+                if not name:
+                    raise ValueError("Empty reference")
+                kind = h5r.get_obj_type(name, self.id)
+                if kind == h5g.GROUP:
+                    return Group(self, None, _rawid=h5r.dereference(name, self.id))
+                elif kind == h5g.DATASET:
+                    return Dataset(self, None, _rawid=h5r.dereference(name, self.id))
+                else:
+                    raise ValueError("Unrecognized object type")
+
             info = h5g.get_objinfo(self.id, name)
 
             if info.type == h5g.DATASET:
@@ -409,6 +419,59 @@ class Group(HLObject, _DictCompat):
                 raise TypeError("Datatypes cannot be safely cast (existing %s vs new %s)" % (dset.dtype, dtype))
             
             return dset
+
+    def get(self, name, default=None, getclass=False, dereference=True):
+        """ Retrieve item "name", or "default" if it's not in this group.
+
+        getclass
+            If True, returns the class of object (Group, Dataset, etc.)
+            instead of the object itself.
+
+        dereference
+            If True (default), follow soft and external links and retrieve
+            the objects they point to.  If False, return SoftLink and
+            ExternalLink instances instead.
+        """
+        with self._lock:
+
+            if not name in self:
+                return default
+
+            if config.API_18:
+
+                linkinfo = self.id.get_info(name)
+
+                if dereference or linkinfo.type == h5l.TYPE_HARD:
+
+                    objinfo = h5o.get_info(self.id, name)
+                    cls = {h5o.TYPE_GROUP: Group, h5o.TYPE_DATASET: Dataset,
+                           h5o.TYPE_NAMED_DATATYPE: Datatype}.get(objinfo.type)
+                    if cls is None:
+                        raise TypeError("Unknown object type")
+
+                    return cls if getclass else cls(self, name)
+
+                else:
+                    if linkinfo.type == h5l.TYPE_SOFT:
+                        return SoftLink(self.id.get_val(name))
+                    elif linkinfo.type == h5l.TYPE_EXTERNAL:
+                        return ExternalLink(*self.id.get_val(name))
+
+                    raise TypeError("Unknown link class")
+
+            # API 1.6
+            info = h5g.get_objinfo(self.id, name, follow_link=dereference)
+
+            cls = {h5g.DATASET: Dataset, h5g.GROUP: Group,
+                   h5g.TYPE: Datatype}.get(info.type)
+
+            if cls is not None:
+                return cls if getclass else cls(self, name)
+
+            if not dereference and info.type == h5g.LINK:
+                return SoftLink(self.id.get_linkval(name))
+                    
+            raise TypeError("Unknown object type")
 
     # New 1.8.X methods
 
@@ -709,6 +772,16 @@ class File(Group):
         except Exception:
             pass
 
+class _RegionProxy(object):
+
+    def __init__(self, dset):
+        self.id = dset.id
+
+    def __getitem__(self, args):
+        
+        selection = sel.select(self.id.shape, args, dsid=self.id)
+        return h5r.create(self.id, '.', h5r.DATASET_REGION, selection._id)
+
 class Dataset(HLObject):
 
     """ High-level interface to an HDF5 dataset.
@@ -780,6 +853,10 @@ class Dataset(HLObject):
             space = self.id.get_space()
             dims = space.get_simple_extent_dims(True)
             return tuple(x if x != h5s.UNLIMITED else None for x in dims)
+
+    @property
+    def regionref(self):
+        return self._regionproxy
 
     def __init__(self, group, name,
                     shape=None, dtype=None, data=None,
@@ -888,6 +965,7 @@ class Dataset(HLObject):
                     self.id.write(h5s.ALL, h5s.ALL, data)
 
             self._attrs = AttributeManager(self)
+            self._regionproxy = _RegionProxy(self)
             plist = self.id.get_create_plist()
             self._filters = filters.get_filters(plist)
             if plist.get_layout() == h5d.CHUNKED:
@@ -995,7 +1073,7 @@ class Dataset(HLObject):
                 new_dtype = numpy.dtype([(name, basetype.fields[name][0]) for name in names])
 
             # Perform the dataspace selection.
-            selection = sel.select(self.shape, args)
+            selection = sel.select(self.shape, args, dsid=self.id)
 
             if selection.nselect == 0:
                 return numpy.ndarray((0,), dtype=new_dtype)
@@ -1059,7 +1137,7 @@ class Dataset(HLObject):
                 mtype = None
 
             # Perform the dataspace selection
-            selection = sel.select(self.shape, args)
+            selection = sel.select(self.shape, args, dsid=self.id)
 
             if selection.nselect == 0:
                 return
@@ -1097,13 +1175,13 @@ class Dataset(HLObject):
         if source_sel is None:
             source_sel = sel.SimpleSelection(self.shape)
         else:
-            source_sel = sel.select(self.shape, source_sel)  # for numpy.s_
+            source_sel = sel.select(self.shape, source_sel, self.id)  # for numpy.s_
         fspace = source_sel._id
 
         if dest_sel is None:
             dest_sel = sel.SimpleSelection(dest.shape)
         else:
-            dest_sel = sel.select(dest.shape, dest_sel)
+            dest_sel = sel.select(dest.shape, dest_sel, self.id)
 
         for mspace in dest_sel.broadcast(source_sel.mshape):
             self.id.read(mspace, fspace, dest)
@@ -1121,13 +1199,13 @@ class Dataset(HLObject):
         if source_sel is None:
             source_sel = sel.SimpleSelection(source.shape)
         else:
-            source_sel = sel.select(source.shape, source_sel)  # for numpy.s_
+            source_sel = sel.select(source.shape, source_sel, self.id)  # for numpy.s_
         mspace = source_sel._id
 
         if dest_sel is None:
             dest_sel = sel.SimpleSelection(self.shape)
         else:
-            dest_sel = sel.select(self.shape, dest_sel)
+            dest_sel = sel.select(self.shape, dest_sel, self.id)
 
         for fspace in dest_sel.broadcast(source_sel.mshape):
             self.id.write(mspace, fspace, source)
@@ -1324,43 +1402,45 @@ class Datatype(HLObject):
             except Exception:
                 return "<Closed HDF5 named type>"
 
+class SoftLink(object):
 
-# Re-export functions for new type infrastructure
-
-def new_vlen(basetype):
-    """ Create a NumPy dtype representing a variable-length type.
-
-    Currently only the native string type (str) is allowed.
-
-    The kind of the returned dtype is always "O"; metadata attached to the
-    dtype allows h5py to perform translation between HDF5 VL types and
-    native Python objects.
     """
-    return h5t.py_new_vlen(basetype)
-
-def get_vlen(dtype):
-    """ Return the "base" type from a NumPy dtype which represents a 
-    variable-length type, or None if the type is not of variable length.
-
-    Currently only variable-length strings, created with new_vlen(), are
-    supported.
+        Represents a symbolic ("soft") link in an HDF5 file.  The path
+        may be absolute or relative.  No checking is performed to ensure
+        that the target actually exists.
     """
-    return h5t.py_get_vlen(dtype)
 
-def new_enum(dtype, values):
-    """ Create a new enumerated type, from an integer base type and dictionary
-    of values.
+    @property
+    def path(self):
+        return self._path
 
-    The values dict should contain string keys and int/long values.
+    def __init__(self, path):
+        self._path = str(path)
+
+    def __repr__(self):
+        return '<SoftLink to "%s">' % self.path
+
+class ExternalLink(object):
+
     """
-    return h5t.py_new_enum(numpy.dtype(dtype), values)
-
-def get_enum(dtype):
-    """ Extract the values dictionary from an enumerated type, returning None
-    if the given dtype does not represent an enum.
+        Represents an HDF5 external link.  Paths may be absolute or relative.
+        No checking is performed to ensure either the target or file exists.
     """
-    return h5t.py_get_enum(dtype)
 
+    @property
+    def path(self):
+        return self._path
 
+    @property
+    def filename(self):
+        return self._filename
 
+    def __init__(self, filename, path):
+        if not config.API_18:
+            raise NotImplementedError("External links are only available as of HDF5 1.8")
+        self._filename = str(filename)
+        self._path = str(path)
+
+    def __repr__(self):
+        return '<ExternalLink to "%s" in file "%s"' % (self.path, self.filename)
 

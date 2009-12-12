@@ -21,3 +21,7 @@ cdef class Reference:
     cdef ref_u ref
     cdef readonly int typecode
 
+cdef class RegionReference(Reference):
+
+    pass
+
