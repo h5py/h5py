@@ -28,44 +28,43 @@ from __future__ import with_statement
 import os
 import numpy
 import threading
+import warnings
 import sys
+import math
 
 import os.path as op
 import posixpath as pp
 
 from h5py import h5, h5f, h5g, h5s, h5t, h5d, h5a, \
-                 h5p, h5r, h5z, h5i, h5fd, h5o, h5l
-from h5py.h5 import H5Error
+                 h5p, h5r, h5z, h5i, h5fd, h5o, h5l, \
+                 version, filters
 import h5py.selections as sel
 
-import version
-import filters
-
-import warnings
-
 config = h5.get_config()
-
-__all__ = ["File", "Group", "Dataset", "Datatype",
-           "AttributeManager", "is_hdf5"]
 
 def _hbasename(name):
     """ Basename function with more readable handling of trailing slashes"""
     name = pp.basename(pp.normpath(name))
     return name if name != '' else '/'
 
+def _hsizestring(size):
+    """ Friendly representation of byte sizes """
+    d = int(math.log(size, 1024) // 1) if size else 0
+    suffix = {1: 'k', 2: 'M', 3: 'G', 4: 'T'}.get(d)
+    if suffix is None:
+        return "%d bytes" % size
+    return "%.1f%s" % (size / (1024.**d), suffix)
+    
 def is_hdf5(fname):
     """ Determine if a file is valid HDF5 (False if it doesn't exist). """
     fname = os.path.abspath(fname)
 
     if os.path.isfile(fname):
         try:
-            try:
-                fname = fname.encode(sys.getfilesystemencoding())
-            except (UnicodeError, LookupError):
-                pass
-            return h5f.is_hdf5(fname)
-        except H5Error:
+            fname = fname.encode(sys.getfilesystemencoding())
+        except (UnicodeError, LookupError):
             pass
+        return h5f.is_hdf5(fname)
     return False
 
 # === Base classes ============================================================
@@ -80,6 +79,9 @@ class HLObject(object):
         id:     Low-level identifer, compatible with the h5py.h5* modules.
         name:   Name of this object in the HDF5 file.  May not be unique.
         attrs:  HDF5 attributes of this object.  See AttributeManager class.
+        file:   The File instance associated with this object
+        parent: (A) parent of this object, according to dirname(obj.name)
+        ref:    An HDF5 reference to this object.
 
         Equality comparison and hashing are based on native HDF5 object
         identity.
@@ -98,10 +100,9 @@ class HLObject(object):
     @property
     def file(self):
         """Return the File instance associated with this object"""
-        if isinstance(self, File):
-            return self
-        else:
+        if hasattr(self, '_file'):
             return self._file
+        return self
 
     @property
     def parent(self):
@@ -109,26 +110,22 @@ class HLObject(object):
 
         This is always equivalent to file[posixpath.basename(obj.name)].
         """
-        if self.name is not None:
-            return self.file[pp.dirname(self.name)]
-        else:
+        if self.name is None:
             raise ValueError("Parent of an anonymous object is undefined")
-
-    @property
-    def _lock(self):
-        return self.file._fidlock
+        return self.file[pp.dirname(self.name)]
 
     @property
     def ref(self):
         """ An (opaque) HDF5 reference to this object """
         return h5r.create(self.id, '.', h5r.OBJECT)
+
+    @property
+    def _lock(self):
+        return self.file._fidlock
         
     def __init__(self, parent):
-        if not isinstance(self, File):
-            if isinstance(parent, File):
-                self._file = parent
-            else:
-                self._file = parent._file
+        if parent is not self:
+            self._file = parent.file
 
     def __nonzero__(self):
         return self.id.__nonzero__()
@@ -253,7 +250,7 @@ class Group(HLObject, _DictCompat):
             A hard link is created at "name" which points to the
             given object.
 
-        SoftLink or ExternalLink instance
+        SoftLink or ExternalLink
             Create the corresponding link.
 
         Numpy ndarray
@@ -291,6 +288,7 @@ class Group(HLObject, _DictCompat):
         with self._lock:
 
             if isinstance(name, h5r.Reference):
+
                 if not name:
                     raise ValueError("Empty reference")
                 kind = h5r.get_obj_type(name, self.id)
@@ -298,8 +296,8 @@ class Group(HLObject, _DictCompat):
                     return Group(self, None, _rawid=h5r.dereference(name, self.id))
                 elif kind == h5g.DATASET:
                     return Dataset(self, None, _rawid=h5r.dereference(name, self.id))
-                else:
-                    raise ValueError("Unrecognized object type")
+
+                raise ValueError("Unrecognized reference object type")
 
             info = h5g.get_objinfo(self.id, name)
 
@@ -318,7 +316,6 @@ class Group(HLObject, _DictCompat):
         """ Delete (unlink) an item from this group. """
         self.id.unlink(name)
 
-    # TODO: this fails with > 2**32 entries
     def __len__(self):
         """ Number of members attached to this group """
         return self.id.get_num_objs()
@@ -343,11 +340,10 @@ class Group(HLObject, _DictCompat):
         with self._lock:
             if not name in self:
                 return self.create_group(name)
-            else:
-                grp = self[name]
-                if not isinstance(grp, Group):
-                    raise TypeError("Incompatible object (%s) already exists" % grp.__class__.__name__)
-                return grp
+            grp = self[name]
+            if not isinstance(grp, Group):
+                raise TypeError("Incompatible object (%s) already exists" % grp.__class__.__name__)
+            return grp
 
     def create_dataset(self, name, *args, **kwds):
         """ Create and return a new dataset.  Fails if "name" already exists.
@@ -420,17 +416,16 @@ class Group(HLObject, _DictCompat):
             
             return dset
 
-    def get(self, name, default=None, getclass=False, dereference=True):
+    def get(self, name, default=None, getclass=False, getlink=False):
         """ Retrieve item "name", or "default" if it's not in this group.
 
         getclass
             If True, returns the class of object (Group, Dataset, etc.)
             instead of the object itself.
 
-        dereference
-            If True (default), follow soft and external links and retrieve
-            the objects they point to.  If False, return SoftLink and
-            ExternalLink instances instead.
+        getlink
+            If True, return SoftLink and ExternalLink instances instead
+            of the objects they point to.
         """
         with self._lock:
 
@@ -439,9 +434,9 @@ class Group(HLObject, _DictCompat):
 
             if config.API_18:
 
-                linkinfo = self.id.get_info(name)
+                linkinfo = self.id.links.get_info(name)
 
-                if dereference or linkinfo.type == h5l.TYPE_HARD:
+                if linkinfo.type == h5l.TYPE_HARD or not getlink:
 
                     objinfo = h5o.get_info(self.id, name)
                     cls = {h5o.TYPE_GROUP: Group, h5o.TYPE_DATASET: Dataset,
@@ -453,14 +448,14 @@ class Group(HLObject, _DictCompat):
 
                 else:
                     if linkinfo.type == h5l.TYPE_SOFT:
-                        return SoftLink(self.id.get_val(name))
+                        return SoftLink if getclass else SoftLink(self.id.links.get_val(name))
                     elif linkinfo.type == h5l.TYPE_EXTERNAL:
-                        return ExternalLink(*self.id.get_val(name))
+                        return ExternalLink if getclass else ExternalLink(*self.id.links.get_val(name))
 
                     raise TypeError("Unknown link class")
 
             # API 1.6
-            info = h5g.get_objinfo(self.id, name, follow_link=dereference)
+            info = h5g.get_objinfo(self.id, name, follow_link=(not getlink))
 
             cls = {h5g.DATASET: Dataset, h5g.GROUP: Group,
                    h5g.TYPE: Datatype}.get(info.type)
@@ -468,8 +463,8 @@ class Group(HLObject, _DictCompat):
             if cls is not None:
                 return cls if getclass else cls(self, name)
 
-            if not dereference and info.type == h5g.LINK:
-                return SoftLink(self.id.get_linkval(name))
+            if getlink and info.type == h5g.LINK:
+                return SoftLink if getclass else SoftLink(self.id.get_linkval(name))
                     
             raise TypeError("Unknown object type")
 
@@ -585,7 +580,7 @@ class Group(HLObject, _DictCompat):
         with self._lock:
             try:
                 namestr = '"%s"' % self.name if self.name is not None else "(anonymous)"
-                return '<HDF5 group "%s" (%d members)>' % \
+                return '<HDF5 group %s (%d members)>' % \
                     (namestr, len(self))
             except Exception:
                 return "<Closed HDF5 group>"
@@ -753,8 +748,9 @@ class File(Group):
     def __repr__(self):
         with self._lock:
             try:
-                return '<HDF5 file "%s" (mode %s, %d root members)>' % \
-                    (os.path.basename(self.filename), self.mode, len(self))
+                return '<HDF5 file "%s" (mode %s, %d bytes)>' % \
+                    (os.path.basename(self.filename), self.mode,
+                     _hsizestring(self.id.get_filesize()))
             except Exception:
                 return "<Closed HDF5 file>"
 
