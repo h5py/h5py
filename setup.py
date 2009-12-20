@@ -12,6 +12,8 @@
 # 
 #-
 
+from __future__ import with_statement
+
 """
     Setup script for the h5py package.  
 
@@ -33,6 +35,7 @@ SRC_PATH = 'h5py'           # Name of directory with .pyx files
 
 USE_DISTUTILS = False
 
+# --- Helper functions --------------------------------------------------------
 
 def version_check(vers, required):
     """ Compare versions between two "."-separated strings. """
@@ -55,6 +58,24 @@ def debug(instring):
 
 def localpath(*args):
     return op.abspath(reduce(op.join, (op.dirname(__file__),)+args))
+
+from contextlib import contextmanager
+@contextmanager
+def tempdir(*args):
+    """ Create a temp dir and clean it up afterwards. """
+    path = localpath(*args)
+    try:
+        shutil.rmtree(path)
+    except Exception:
+        pass
+    os.mkdir(path)
+    try:
+        yield
+    finally:
+        try:
+            shutil.rmtree(path)
+        except Exception:
+            pass
 
 MODULES = ['h5', 'h5e', 'h5f', 'h5g', 'h5s', 'h5t', 'h5d', 'h5a', 'h5p', 'h5z',
                  'h5i', 'h5r', 'h5fd', 'utils', 'h5o', 'h5l', '_conv', '_proxy']
@@ -80,9 +101,6 @@ for arg in sys.argv[:]:
     if arg.find('--setup-debug') == 0:
         sys.argv.remove(arg)
         DEBUG = True
-
-if not (sys.version_info[0:2] >= (2,5)):
-    fatal("At least Python 2.5 is required to install h5py")
 
 try:
     import numpy
@@ -116,120 +134,206 @@ from distutils.cmd import Command
 
 # --- Compiler and library config ---------------------------------------------
 
-class GlobalOpts:
+class GlobalSettings(object):
 
-    def __init__(self):
+    """
+        Repository for all settings which are fixed when the script is run.
+        This includes the following:
 
-        # Environment variables are the only way to communicate this
-        # information if we're building with easy_install
-        hdf5 = os.environ.get("HDF5_DIR", None)
-        if hdf5 == '': hdf5 = None
-        if hdf5 is not None:
+        * Any custom path to HDF5
+        * Any custom API level
+        * Compiler settings for extension modules
+    """
+
+    api_string = {'16': (1,6), '18': (1,8)}
+
+    def get_environment_args(self):
+        """ Look for options in environment vars """
+        hdf5 = os.environ.get("HDF5_DIR", '')
+        if hdf5 != '':
             debug("Found environ var HDF5_DIR=%s" % hdf5)
+        else:
+            hdf5 = None
 
-        api = os.environ.get("HDF5_API", None)
-        if api == '': api = None
-        if api is not None:
+        api = os.environ.get("HDF5_API", '')
+        if api != '':
             debug("Found environ var HDF5_API=%s" % api)
+            try:
+                api = self.api_string[api]
+            except KeyError:
+                fatal("API level must be one of %s" % ", ".join(self.api_string))
+        else:
+            api = None
 
-        # The output of the "configure" command is preferred
+        return hdf5, api
+
+    def get_commandline_args(self):
+        """ Look for global options in the command line """
+        hdf5 = api = None
+        for arg in sys.argv[:]:
+            if arg.find('--hdf5=') == 0:
+                hdf5 = arg.split('=')[-1]
+                if hdf5.lower() == 'default':
+                    hdf5 = False    # This means "explicitly forget"
+                sys.argv.remove(arg)
+            if arg.find('--api=') == 0:
+                api = arg.split('=')[-1]
+                if api.lower() == 'default':
+                    api = False
+                else:
+                    try:
+                        api = self.api_string[api]
+                    except KeyError:
+                        fatal("API level must be 16 or 18")
+                sys.argv.remove(arg)
+
+        # We save command line args to a pickle file so that the user doesn't
+        # have to keep specifying them for the different distutils commands.
+        if (hdf5 or api) or (hdf5 is False or api is False):
+            self.save_pickle_args(hdf5 if hdf5 is not False else None,
+                                  api if api is not False else None)
+        hdf5 = hdf5 if hdf5 else None
+        api = api if api else None
+
+        return hdf5, api
+ 
+    def get_pickle_args(self):
+        """ Look for options stored in the pickle file """
+        import pickle
+        hdf5 = api = None
         try:
             f = open(localpath('buildconf.pickle'),'r')
-            hdf5_pkl, api_pkl = pickle.load(f)
+            hdf5, api = pickle.load(f)
             f.close()
         except Exception:
             pass
-        else:
-            if hdf5_pkl is not None:
-                hdf5 = hdf5_pkl
-                debug("Loaded HDF5 dir %s from pickle file" % hdf5)
-            if api_pkl is not None:
-                api = api_pkl
-                debug("Loaded API %s from pickle file" % api)
+        return hdf5, api
+
+    def save_pickle_args(self, hdf5, api):
+        """ Save options to the pickle file """
+        import pickle
+        f = open(localpath('buildconf.pickle'),'w')
+        pickle.dump((hdf5, api), f)
+        f.close()
+    
+    def __init__(self):
+
+        # --- Handle custom dirs and API levels for HDF5 ----------------------
+
+        eargs = self.get_environment_args()
+        cargs = self.get_commandline_args()
+        pargs = self.get_pickle_args()
+
+        # Commandline args have first priority, followed by pickle args and
+        # finally by environment args
+        hdf5 = cargs[0]
+        if hdf5 is None: hdf5 = pargs[0]
+        if hdf5 is None: hdf5 = eargs[0]
+
+        api = cargs[1]
+        if api is None: api = pargs[1]
+        if api is None: api = eargs[1]
 
         if hdf5 is not None and not op.isdir(hdf5):
             fatal('Invalid HDF5 path "%s"' % hdf5)
 
-        if api is not None:
-            try:
-                api = int(api)
-                if api not in (16,18):
-                    raise Exception
-            except Exception:
-                fatal('Invalid API version "%s" (legal values are 16,18)' % api)
-
         self.hdf5 = hdf5
         self.api = api
 
-    def get_api_version(self):
-        """ Get the active HDF5 version, from the command line or by
-            trying to run showconfig.
-        """
-        if self.api is not None:
-            debug("User specified API version %s" % self.api)
-            return self.api
+        # --- Extension settings ----------------------------------------------
 
-        if self.hdf5 is not None:
-            cmd = reduce(op.join, (self.hdf5, 'bin', 'h5cc'))+" -showconfig"
-        else:
-            cmd = "h5cc -showconfig"
-        output = commands.getoutput(cmd)
-        l = output.find("HDF5 Version")
-
-        if l > 0:
-            if output[l:l+30].find('1.8') > 0:
-                debug("Autodetected HDF5 1.8")
-                return 18
-            elif output[l:l+30].find('1.6') > 0:
-                debug("Autodetected HDF5 1.6")
-                return 16
-
-        debug("Autodetect FAILED; output is:\n\n%s\n" % output)
-        warn("Can't determine HDF5 version, assuming 1.6 (use --api= to override)")
-        return 16
-
-class ExtensionCreator(object):
-
-    """ Figures out what include/library dirs are appropriate, and
-        serves as a factory for Extension instances.
-
-        Note this is a purely C-oriented process; it doesn't know or
-        care about Cython.
-    """
-
-    def __init__(self, hdf5_loc=None):
         if sys.platform == 'win32':
-            if hdf5_loc is None:
+            if hdf5 is None:
                 warn("On Windows, HDF5 directory must be specified.")
-                hdf5_loc = '.'
+                hdf5 = '.'
                 
             self.libraries = ['hdf5dll18']
             self.include_dirs = [numpy.get_include(),
-                                 op.join(hdf5_loc, 'include'),
+                                 op.join(hdf5, 'include'),
                                  localpath('lzf'),
                                  localpath('win_include')]
             self.library_dirs = [op.join(hdf5_loc, 'dll')]
             self.runtime_dirs = []
             self.extra_compile_args = ['/DH5_USE_16_API', '/D_HDF5USEDLL_']
-            self.extra_link_args = []
 
         else:
             self.libraries = ['hdf5']
-            if hdf5_loc is None:
+            if hdf5 is None:
                 self.include_dirs = [numpy.get_include()]
                 self.library_dirs = []
                 if sys.platform == 'darwin':
                     self.include_dirs += ['/opt/local/include']
                     self.library_dirs += ['/opt/local/lib']
             else:
-                self.include_dirs = [numpy.get_include(), op.join(hdf5_loc, 'include')]
-                self.library_dirs = [op.join(hdf5_loc, 'lib')]
+                self.include_dirs = [numpy.get_include(), op.join(hdf5, 'include')]
+                self.library_dirs = [op.join(hdf5, 'lib')]
             self.include_dirs += [localpath('lzf')]
             self.runtime_dirs = self.library_dirs
             self.extra_compile_args = ['-DH5_USE_16_API', '-Wno-unused', '-Wno-uninitialized']
-            self.extra_link_args = []
 
     
+    def check_hdf5(self):
+        
+        if hasattr(self, '_vers_cache'):
+            return self._vers_cache
+
+        from distutils import ccompiler
+        from distutils.core import CompileError, LinkError
+        import commands
+
+        cc = ccompiler.new_compiler()
+        cc.libraries = self.libraries
+        cc.include_dirs = self.include_dirs
+        cc.library_dirs = self.library_dirs
+        cc.runtime_library_dirs = self.runtime_dirs
+
+        with tempdir('detect'):
+
+            f = open(localpath('detect', 'h5vers.c'),'w')
+            f.write(
+r"""\
+#include <stdio.h>
+#include "hdf5.h"
+
+int main(){
+    unsigned int main, minor, release;
+    H5get_libversion(&main, &minor, &release);
+    fprintf(stdout, "%d.%d.%d\n", main, minor, release);
+    return 0;
+}
+""")
+            f.close()
+            try:
+                objs = cc.compile([localpath('detect','h5vers.c')], extra_preargs=self.extra_compile_args)
+            except CompileError:
+                fatal("Can't find your installation of HDF5.  Use the --hdf5 option to manually specify the path.")
+            try:
+                cc.link_executable(objs, localpath('detect','h5vers'))
+            except LinkError:
+                fatal("Can't link against HDF5.")
+            status, output = commands.getstatusoutput(localpath('detect', 'h5vers'))
+            if status:
+                fatal("Error running HDF5 version detection script")
+            vmaj, vmin, vrel = (int(v) for v in output.split('.'))
+            self._vers_cache = (vmaj, vmin, vrel)
+            return (vmaj, vmin, vrel)
+
+    def print_config(self):
+        """ Print a summary of the configuration to stdout """
+
+        vers = self.check_hdf5()
+
+        print "\nSummary of the h5py configuration"
+        print   "---------------------------------"
+        print       "Installed HDF5 version:      %d.%d.%d" % vers
+        print       "Path to HDF5 installation:   %s" % \
+               (self.hdf5 if self.hdf5 is not None else "default")
+        if self.api is None:
+            print   "API compatibility level:     default (%d.%d)" % vers[0:2]
+        else:
+            print   "API compatibility level:     %d.%d (manually set)" % self.api
+
+
     def create_extension(self, name, extra_src=None):
         """ Create a distutils Extension object for the given module.  A list
             of C source files to be included in the compilation can also be
@@ -244,24 +348,20 @@ class ExtensionCreator(object):
                             libraries = self.libraries,
                             library_dirs = self.library_dirs,
                             runtime_library_dirs = self.runtime_dirs,
-                            extra_compile_args = self.extra_compile_args,
-                            extra_link_args = self.extra_link_args)
+                            extra_compile_args = self.extra_compile_args)
 
-GLOBALOPTS = GlobalOpts()
-
-creator = ExtensionCreator(GLOBALOPTS.hdf5)
-EXTENSIONS = [creator.create_extension(x, EXTRA_SRC.get(x, None)) for x in MODULES]
+SETTINGS = GlobalSettings()
+EXTENSIONS = [SETTINGS.create_extension(x, EXTRA_SRC.get(x, None)) for x in MODULES]
 
 
 # --- Custom extensions for distutils -----------------------------------------
 
 class configure(Command):
 
-    description = "Set options for your HDF5 installation"
+    description = "Display and check ssettings for h5py build"
 
     user_options = [('hdf5=', '5', 'Path to HDF5'),
-                    ('api=', 'a', 'API version ("16" or "18")'),
-                    ('show', 's', 'Print existing config (don\'t set anything)')]
+                    ('api=', 'a', 'API version ("16" or "18")')]
 
     boolean_options = ['show']
 
@@ -274,26 +374,8 @@ class configure(Command):
         pass
 
     def run(self):
-        if self.show:
-            try:
-                f = open('buildconf.pickle','r')
-                hdf5, api = pickle.load(f)
-            except Exception:
-                hdf5 = api = None
-            print "HDF5 path: %s\nAPI setting: %s" % (hdf5, api)
-            return
 
-        if self.hdf5 is not None:
-            if op.isdir(self.hdf5):
-                self.hdf5 = op.abspath(self.hdf5)
-            else:
-                fatal("Invalid HDF5 path: %s" % self.hdf5)
-        if self.api is not None and self.api not in ('16','18'):
-            fatal("Invalid API level %s (must be 16 or 18)" % self.api)
-
-        f = open('buildconf.pickle','w')
-        pickle.dump((self.hdf5, self.api), f)
-        f.close()
+        SETTINGS.print_config()
 
 class cython(Command):
 
@@ -393,16 +475,23 @@ DEF H5PY_18API = %(API_18)d    # 1.8.X API available
             cythonize(18)
 
 class hbuild_ext(build_ext):
-
+        
     def run(self):
 
-        api = GLOBALOPTS.get_api_version()
-        
-        if GLOBALOPTS.hdf5 is None:
+        # First check if we can find HDF5
+        vers =  SETTINGS.check_hdf5()
+
+        # Used as a part of the path to the correct Cython build
+        if SETTINGS.api is not None:
+            api = 10*SETTINGS.api[0] + SETTINGS.api[1]
+        else:
+            api = 10*vers[0] + vers[1]
+
+        if SETTINGS.hdf5 is None:
             autostr = "(path not specified)"
         else:
-            autostr = "(located at %s)" % GLOBALOPTS.hdf5
-
+            autostr = "(located at %s)" % SETTINGS.hdf5
+        
         print "Building for HDF5 %s.%s %s" % (divmod(api,10) + (autostr,))
 
         def identical(src, dst):
@@ -435,6 +524,7 @@ class hbuild_ext(build_ext):
 
         build_ext.run(self)
 
+        SETTINGS.print_config()
 
 class cleaner(clean):
 
