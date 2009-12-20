@@ -252,7 +252,7 @@ class GlobalSettings(object):
                                  op.join(hdf5, 'include'),
                                  localpath('lzf'),
                                  localpath('win_include')]
-            self.library_dirs = [op.join(hdf5_loc, 'dll')]
+            self.library_dirs = [op.join(hdf5, 'dll')]
             self.runtime_dirs = []
             self.extra_compile_args = ['/DH5_USE_16_API', '/D_HDF5USEDLL_']
 
