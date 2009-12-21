@@ -308,10 +308,10 @@ int main(){
             except CompileError:
                 fatal("Can't find your installation of HDF5.  Use the --hdf5 option to manually specify the path.")
             try:
-                cc.link_executable(objs, localpath('detect','h5vers'))
+                cc.link_executable(objs, localpath('detect','h5vers.exe'))
             except LinkError:
                 fatal("Can't link against HDF5.")
-            status, output = commands.getstatusoutput(localpath('detect', 'h5vers'))
+            status, output = commands.getstatusoutput(localpath('detect', 'h5vers.exe'))
             if status:
                 fatal("Error running HDF5 version detection script")
             vmaj, vmin, vrel = (int(v) for v in output.split('.'))
