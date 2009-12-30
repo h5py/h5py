@@ -41,6 +41,7 @@ from highlevel import File, Group, Dataset, Datatype, AttributeManager, is_hdf5
 
 # New way to handle special types
 from h5t import special_dtype, check_dtype
+from h5r import Reference, RegionReference
 
 # Deprecated way to handle special types
 # These are going away in 1.4
