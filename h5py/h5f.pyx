@@ -308,6 +308,16 @@ cdef class FileID(ObjectID):
         """
         return H5Fget_freespace(self.id)
 
+    IF H5PY_18API:
+        def get_intent(self):
+            """ () => INT
 
+            Determine the file's write intent, either of:
+            - H5F_ACC_RDONLY
+            - H5F_ACC_RDWR
+            """
+            cdef unsigned int mode
+            H5Fget_intent(self.id, &mode)
+            return mode
 
 

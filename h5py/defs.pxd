@@ -242,6 +242,8 @@ cdef extern from "hdf5.h":
   int       H5Fget_obj_count(hid_t file_id, unsigned int types) except *
   int       H5Fget_obj_ids(hid_t file_id, unsigned int types, int max_objs, hid_t *obj_id_list) except *
 
+  IF H5PY_18API:
+    herr_t H5Fget_intent(hid_t file_id, unsigned int *intent) except *
 
 # === H5FD - Low-level file descriptor API ====================================
 
