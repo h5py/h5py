@@ -604,13 +604,12 @@ class Group(HLObject, _DictCompat):
             return h5o.visit(self.id, call_proxy)
 
     def __repr__(self):
-        with self._lock:
-            try:
-                namestr = '"%s"' % self.name if self.name is not None else "(anonymous)"
-                return '<HDF5 group %s (%d members)>' % \
-                    (namestr, len(self))
-            except Exception:
-                return "<Closed HDF5 group>"
+        if not self:
+            return "<Closed HDF5 group>"
+        namestr = '"%s"' % self.name if self.name is not None else "(anonymous)"
+        return '<HDF5 group "%s" (%d members)>' % \
+            (namestr, len(self))
+
 
 class File(Group):
 
@@ -784,7 +783,6 @@ class File(Group):
         """ Close this HDF5 file.  All open objects will be invalidated.
         """
         with self._lock:
-            self.id._close()
             self.fid.close()
 
     def flush(self):
@@ -801,13 +799,11 @@ class File(Group):
                 self.close()
             
     def __repr__(self):
-        with self._lock:
-            try:
-                return '<HDF5 file "%s" (mode %s, %d bytes)>' % \
-                    (os.path.basename(self.filename), self.mode,
-                     _hsizestring(self.id.get_filesize()))
-            except Exception:
-                return "<Closed HDF5 file>"
+        if not self:
+            return "<Closed HDF5 file>"
+        return '<HDF5 file "%s" (mode %s, %s)>' % \
+            (os.path.basename(self.filename), self.mode,
+             _hsizestring(self.fid.get_filesize()))
 
     # Fix up identity to use the file identifier, not the root group.
     def __hash__(self):
@@ -1259,13 +1255,11 @@ class Dataset(HLObject):
             self.id.write(mspace, fspace, source)
 
     def __repr__(self):
-        with self._lock:
-            try:
-                namestr = '"%s"' % _hbasename(self.name) if self.name is not None else "(anonymous)"
-                return '<HDF5 dataset %s: shape %s, type "%s">' % \
-                    (namestr, self.shape, self.dtype.str)
-            except Exception:
-                return "<Closed HDF5 dataset>"
+        if not self:
+            return "<Closed HDF5 dataset>"
+        namestr = '"%s"' % _hbasename(self.name) if self.name is not None else "(anonymous)"
+        return '<HDF5 dataset %s: shape %s, type "%s">' % \
+            (namestr, self.shape, self.dtype.str)
 
 class AttributeManager(_DictCompat):
 
@@ -1407,14 +1401,9 @@ class AttributeManager(_DictCompat):
         return h5a.exists(self.id, name)
 
     def __repr__(self):
-        with self._lock:
-            try:
-                namestr = '"%s"' % _hbasename(self.id.name) if self.id.name is not None else "(anonymous)"
-                return '<Attributes of HDF5 object %s (%d)>' % \
-                    (namestr, len(self))
-            except Exception:
-                return "<Attributes of closed HDF5 object>"
-
+        if not self.id:
+            return "<Attributes of closed HDF5 object>"
+        return "<Attributes of HDF5 object at %s>" % id(self.id)
 
 class Datatype(HLObject):
 
@@ -1440,13 +1429,11 @@ class Datatype(HLObject):
             self.id = h5t.open(grp.id, name)
 
     def __repr__(self):
-        with self._lock:
-            try:
-                namestr = '"%s"' % _hbasename(self.name) if self.name is not None else "(anonymous)"
-                return '<HDF5 named type "%s" (dtype %s)>' % \
-                    (namestr, self.dtype.str)
-            except Exception:
-                return "<Closed HDF5 named type>"
+        if not self.id:
+            return "<Closed HDF5 named type>"
+        namestr = '"%s"' % _hbasename(self.name) if self.name is not None else "(anonymous)"
+        return '<HDF5 named type "%s" (dtype %s)>' % \
+            (namestr, self.dtype.str)
 
 class SoftLink(object):
 
