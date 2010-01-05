@@ -279,8 +279,8 @@ class GlobalSettings(object):
 
         from distutils import ccompiler
         from distutils.core import CompileError, LinkError
-        import commands
-
+        import subprocess
+        
         cc = ccompiler.new_compiler()
         cc.libraries = self.libraries
         cc.include_dirs = self.include_dirs
@@ -311,10 +311,12 @@ int main(){
                 cc.link_executable(objs, localpath('detect','h5vers.exe'))
             except LinkError:
                 fatal("Can't link against HDF5.")
-            status, output = commands.getstatusoutput(localpath('detect', 'h5vers.exe'))
-            if status:
-                fatal("Error running HDF5 version detection script:\n%s" % output)
-            vmaj, vmin, vrel = (int(v) for v in output.split('.'))
+            result = subprocess.Popen(localpath('detect', 'h5vers.exe'),
+                     stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            so, se = result.communicate()
+            if result.returncode:
+                fatal("Error running HDF5 version detection script:\n%s\n%s" % (so,se))
+            vmaj, vmin, vrel = (int(v) for v in so.split('.'))
             self._vers_cache = (vmaj, vmin, vrel)
             return (vmaj, vmin, vrel)
 
