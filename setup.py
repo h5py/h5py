@@ -312,6 +312,7 @@ int main(){
                 fatal("Can't link against HDF5.")
             if sys.platform == 'win32':
                 shutil.copy(os.path.join(self.hdf5, 'dll', 'hdf5dll18.dll'), localpath('detect', 'hdf5dll18.dll'))
+                shutil.copy(os.path.join(self.hdf5, 'dll', 'zlib1.dll'), localpath('detect', 'zlib1.dll'))
             result = subprocess.Popen(localpath('detect', 'h5vers.exe'),
                      stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             so, se = result.communicate()
