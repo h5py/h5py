@@ -732,14 +732,14 @@ class File(Group):
             except (UnicodeError, LookupError):
                 pass
 
-            plist = self._get_access_plist(driver, **kwds)
-            self.fid = self._get_fid(name, mode, plist)
+            plist = self._generate_access_plist(driver, **kwds)
+            self.fid = self._generate_fid(name, mode, plist)
             self._mode = mode
 
         self.id = self.fid  # So the Group constructor can find it.
         Group.__init__(self, self, '/')
 
-    def _get_access_plist(self, driver, **kwds):
+    def _generate_access_plist(self, driver, **kwds):
         """ Set up file access property list """
         plist = h5p.create(h5p.FILE_ACCESS)
         plist.set_fclose_degree(h5f.CLOSE_STRONG)
@@ -760,7 +760,7 @@ class File(Group):
 
         return plist
 
-    def _get_fid(self, name, mode, plist):
+    def _generate_fid(self, name, mode, plist):
         """ Get a new FileID by opening or creating a file.
         Also validates mode argument."""
         if mode == 'r':
@@ -841,6 +841,8 @@ class Dataset(HLObject):
         The standard NumPy properties "shape" and "dtype" are also available.
     """
 
+    # Internal properties
+
     def _g_shape(self):
         """Numpy-style shape tuple giving dataset dimensions"""
         return self.id.shape
@@ -864,10 +866,21 @@ class Dataset(HLObject):
             #    return numpy.asscalar(arr)
             return arr
 
-    @property
+    @_memo_property
+    def _dcpl(self):
+        return self.id.get_create_plist()
+
+    @_memo_property
+    def _filters(self):
+        return filters.get_filters(self._dcpl)
+
+    @_memo_property
     def chunks(self):
         """Dataset chunks (or None)"""
-        return self._chunks
+        dcpl = self._dcpl
+        if dcpl.get_layout() == h5d.CHUNKED:
+            return dcpl.get_chunk()
+        return None
 
     @property
     def compression(self):
@@ -1007,13 +1020,6 @@ class Dataset(HLObject):
                 self.id = h5d.create(group.id, name, type_id, space_id, plist)
                 if data is not None:
                     self.id.write(h5s.ALL, h5s.ALL, data)
-
-            plist = self.id.get_create_plist()
-            self._filters = filters.get_filters(plist)
-            if plist.get_layout() == h5d.CHUNKED:
-                self._chunks = plist.get_chunk()
-            else:
-                self._chunks = None
 
     def resize(self, size, axis=None):
         """ Resize the dataset, or the specified axis (HDF5 1.8 only).
