@@ -43,6 +43,32 @@ import h5py.selections as sel
 
 config = h5.get_config()
 
+def _memo_property(meth):
+    """ Convenience decorator for memoized properties.
+
+    Intended for read-only, unchanging properties.  Instead of caching values
+    on the instance directly (i.e. self._value = value), stores in a weak-key
+    dictionary as dct[self] = value.
+
+    In addition to not polluting the instance dict, it provides a way to cache
+    values across instances; any two instances which hash to the same value
+    and compare equal will return the same value when the property is read.
+    This allows the sharing of things like file modes and per-file locks,
+    which are tied to the underlying file and not any particular instance.
+
+    Caveats:
+    1. A strong reference is held to the value, so returning self is a bad idea
+    2. Can't initialize the value in a constructor, unlike self._value caching
+    """
+    import functools
+    dct = weakref.WeakKeyDictionary()
+    def wrap(self):
+        if self not in dct:
+            return dct.setdefault(self, meth(self))
+        return dct[self]
+    functools.update_wrapper(wrap, meth)
+    return property(wrap)
+
 def _hbasename(name):
     """ Basename function with more readable handling of trailing slashes"""
     name = pp.basename(pp.normpath(name))
@@ -96,19 +122,21 @@ class HLObject(object):
             name = h5r.get_name(self.ref)
         return name
 
-    @property
+    @_memo_property
     def attrs(self):
         """Provides access to HDF5 attributes. See AttributeManager."""
-        return self._attrs
+        return AttributeManager(self)
 
+    @_memo_property
+    def _file(self):
+        fid = h5i.get_file_id(self.id)
+        return File(None, bind=fid)
+ 
     @property
     def file(self):
         """Return a File instance associated with this object"""
         if isinstance(self, File):
             return self
-        if not hasattr(self, '_file'):
-            fid = h5i.get_file_id(self.id)
-            self._file = File(None, bind=fid)
         return self._file
 
     @property
@@ -240,8 +268,6 @@ class Group(HLObject, _DictCompat):
                 self.id = h5g.create(parent_object.id, name)
             else:
                 self.id = h5g.open(parent_object.id, name)
-
-            self._attrs = AttributeManager(self)
     
     def __setitem__(self, name, obj):
         """ Add an object to the group.  The name must not already be in use.
@@ -634,20 +660,14 @@ class File(Group):
             memb_size:  Maximum file size (default is 2**31-1).
     """
 
-    # We store locks by file hash, rather than manually associating them
-    # with particular File instances.
-    _locks = weakref.WeakKeyDictionary()
-
-    @property
+    @_memo_property
     def _lock(self):
         """ Get an RLock for this file, creating it if necessary.  Locks are
         linked to the "real" underlying HDF5 file, regardless of the number
         of File instances.
         """
-        lock = self._locks.get(self)
-        if lock is None:
-            return self._locks.setdefault(self, threading.RLock())
-        return lock
+        import threading
+        return threading.RLock()
 
     @property
     def filename(self):
@@ -664,10 +684,15 @@ class File(Group):
         except (UnicodeError, LookupError):
             return name
 
-    @property
+    @_memo_property
     def mode(self):
         """Python mode used to open file"""
-        return self._mode
+        if hasattr(self, '_mode'):
+            return self._mode
+        if not config.API_18:
+            return None
+        intent = self.fid.get_intent()
+        return {h5f.ACC_RDONLY: 'r', h5f.ACC_RDWR: 'r+'}.get(intent)
 
     @property
     def driver(self):
@@ -875,9 +900,9 @@ class Dataset(HLObject):
             dims = space.get_simple_extent_dims(True)
             return tuple(x if x != h5s.UNLIMITED else None for x in dims)
 
-    @property
+    @_memo_property
     def regionref(self):
-        return self._regionproxy
+        return _RegionProxy(self)
 
     def __init__(self, group, name,
                     shape=None, dtype=None, data=None,
@@ -984,8 +1009,6 @@ class Dataset(HLObject):
                 if data is not None:
                     self.id.write(h5s.ALL, h5s.ALL, data)
 
-            self._attrs = AttributeManager(self)
-            self._regionproxy = _RegionProxy(self)
             plist = self.id.get_create_plist()
             self._filters = filters.get_filters(plist)
             if plist.get_layout() == h5d.CHUNKED:
@@ -1410,7 +1433,6 @@ class Datatype(HLObject):
         """
         with grp._lock:
             self.id = h5t.open(grp.id, name)
-            self._attrs = AttributeManager(self)
 
     def __repr__(self):
         with self._lock:
