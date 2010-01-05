@@ -27,14 +27,12 @@ from __future__ import with_statement
 
 import os
 import numpy
-import threading
 import warnings
 import sys
 import math
 
 import os.path as op
 import posixpath as pp
-import weakref
 
 from h5py import h5, h5f, h5g, h5s, h5t, h5d, h5a, \
                  h5p, h5r, h5z, h5i, h5fd, h5o, h5l, \
@@ -61,6 +59,7 @@ def _memo_property(meth):
     2. Can't initialize the value in a constructor, unlike self._value caching
     """
     import functools
+    import weakref
     dct = weakref.WeakKeyDictionary()
     def wrap(self):
         if self not in dct:
