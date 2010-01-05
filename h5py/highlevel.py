@@ -793,12 +793,6 @@ class File(Group):
             return self.fid == other.fid
         return False
 
-    def __del__(self):
-        try:
-            self.close()
-        except Exception:
-            pass
-
 class _RegionProxy(object):
 
     def __init__(self, dset):
