@@ -34,6 +34,7 @@ import math
 
 import os.path as op
 import posixpath as pp
+import weakref
 
 from h5py import h5, h5f, h5g, h5s, h5t, h5d, h5a, \
                  h5p, h5r, h5z, h5i, h5fd, h5o, h5l, \
@@ -92,7 +93,7 @@ class HLObject(object):
         """Name of this object in the HDF5 file.  Not necessarily unique."""
         name = h5i.get_name(self.id)
         if name is None and config.API_18:
-            name = h5py.h5r.get_name(self.ref)
+            name = h5r.get_name(self.ref)
         return name
 
     @property
@@ -102,10 +103,13 @@ class HLObject(object):
 
     @property
     def file(self):
-        """Return the File instance associated with this object"""
-        if hasattr(self, '_file'):
-            return self._file
-        return self
+        """Return a File instance associated with this object"""
+        if isinstance(self, File):
+            return self
+        if not hasattr(self, '_file'):
+            fid = h5i.get_file_id(self.id)
+            self._file = File(None, bind=fid)
+        return self._file
 
     @property
     def parent(self):
@@ -124,11 +128,7 @@ class HLObject(object):
 
     @property
     def _lock(self):
-        return self.file._fidlock
-        
-    def __init__(self, parent):
-        if parent is not self:
-            self._file = parent.file
+        return self.file._lock
 
     def __nonzero__(self):
         return self.id.__nonzero__()
@@ -234,7 +234,6 @@ class Group(HLObject, _DictCompat):
         calling the constructor directly.
         """
         with parent_object._lock:
-            HLObject.__init__(self, parent_object)
             if _rawid is not None:
                 self.id = _rawid
             elif create:
@@ -635,6 +634,21 @@ class File(Group):
             memb_size:  Maximum file size (default is 2**31-1).
     """
 
+    # We store locks by file hash, rather than manually associating them
+    # with particular File instances.
+    _locks = weakref.WeakKeyDictionary()
+
+    @property
+    def _lock(self):
+        """ Get an RLock for this file, creating it if necessary.  Locks are
+        linked to the "real" underlying HDF5 file, regardless of the number
+        of File instances.
+        """
+        lock = self._locks.get(self)
+        if lock is None:
+            return self._locks.setdefault(self, threading.RLock())
+        return lock
+
     @property
     def filename(self):
         """File name on disk"""
@@ -665,7 +679,7 @@ class File(Group):
 
     # --- Public interface (File) ---------------------------------------------
 
-    def __init__(self, name, mode=None, driver=None, **driver_kwds):
+    def __init__(self, name, mode=None, driver=None, **kwds):
         """ Create a new file object.  
 
         Valid modes (like Python's file() modes) are: 
@@ -682,51 +696,65 @@ class File(Group):
         - 'core'    mmap driver
         - 'family'  Multi-part file driver
         """
-        plist = h5p.create(h5p.FILE_ACCESS)
-        plist.set_fclose_degree(h5f.CLOSE_STRONG)
-        if driver is not None and not (driver=='windows' and sys.platform=='win32'):
-            if(driver=='sec2'):
-                plist.set_fapl_sec2(**driver_kwds)
-            elif(driver=='stdio'):
-                plist.set_fapl_stdio(**driver_kwds)
-            elif(driver=='core'):
-                plist.set_fapl_core(**driver_kwds)
-            elif(driver=='family'):
-                plist.set_fapl_family(memb_fapl=plist.copy(), **driver_kwds)
-            else:
-                raise ValueError('Unknown driver type "%s"' % driver)
-
-        try:
-            # If the byte string doesn't match the default encoding, just
-            # pass it on as-is.  Note Unicode objects can always be encoded.
-            name = name.encode(sys.getfilesystemencoding())
-        except (UnicodeError, LookupError):
-            pass
-
-        if mode == 'r':
-            self.fid = h5f.open(name, h5f.ACC_RDONLY, fapl=plist)
-        elif mode == 'r+':
-            self.fid = h5f.open(name, h5f.ACC_RDWR, fapl=plist)
-        elif mode == 'w-':
-            if driver == 'core' and version.hdf5_version_tuple[0:2] == (1,6):
-                raise NotImplementedError("w- flag does not work on 1.6 for CORE driver")
-            self.fid = h5f.create(name, h5f.ACC_EXCL, fapl=plist)
-        elif mode == 'w':
-            self.fid = h5f.create(name, h5f.ACC_TRUNC, fapl=plist)
-        elif mode == 'a' or mode is None:
-            try:
-                self.fid = h5f.open(name, h5f.ACC_RDWR, fapl=plist)
-            except IOError:
-                self.fid = h5f.create(name, h5f.ACC_EXCL, fapl=plist)
-                
+        if "bind" in kwds:
+            self.fid = kwds["bind"]
         else:
-            raise ValueError("Invalid mode; must be one of r, r+, w, w-, a")
+            if driver == 'core' and mode=='w-' and version.hdf5_version_tuple[0:2] == (1,6):
+                raise NotImplementedError("w- flag does not work on 1.6 for CORE driver")
+            try:
+                # If the byte string doesn't match the default encoding, just
+                # pass it on as-is.  Note Unicode objects can always be encoded.
+                name = name.encode(sys.getfilesystemencoding())
+            except (UnicodeError, LookupError):
+                pass
 
-        self._fidlock = threading.RLock()
+            plist = self._get_access_plist(driver, **kwds)
+            self.fid = self._get_fid(name, mode, plist)
+            self._mode = mode
+
         self.id = self.fid  # So the Group constructor can find it.
         Group.__init__(self, self, '/')
 
-        self._mode = mode
+    def _get_access_plist(self, driver, **kwds):
+        """ Set up file access property list """
+        plist = h5p.create(h5p.FILE_ACCESS)
+        plist.set_fclose_degree(h5f.CLOSE_STRONG)
+
+        if driver is None or (driver=='windows' and sys.platform=='win32'):
+            return plist
+
+        if(driver=='sec2'):
+            plist.set_fapl_sec2(**kwds)
+        elif(driver=='stdio'):
+            plist.set_fapl_stdio(**kwds)
+        elif(driver=='core'):
+            plist.set_fapl_core(**kwds)
+        elif(driver=='family'):
+            plist.set_fapl_family(memb_fapl=plist.copy(), **kwds)
+        else:
+            raise ValueError('Unknown driver type "%s"' % driver)
+
+        return plist
+
+    def _get_fid(self, name, mode, plist):
+        """ Get a new FileID by opening or creating a file.
+        Also validates mode argument."""
+        if mode == 'r':
+            fid = h5f.open(name, h5f.ACC_RDONLY, fapl=plist)
+        elif mode == 'r+':
+            fid = h5f.open(name, h5f.ACC_RDWR, fapl=plist)
+        elif mode == 'w-':
+            fid = h5f.create(name, h5f.ACC_EXCL, fapl=plist)
+        elif mode == 'w':
+            fid = h5f.create(name, h5f.ACC_TRUNC, fapl=plist)
+        elif mode == 'a' or mode is None:
+            try:
+                fid = h5f.open(name, h5f.ACC_RDWR, fapl=plist)
+            except IOError:
+                fid = h5f.create(name, h5f.ACC_EXCL, fapl=plist)
+        else:
+            raise ValueError("Invalid mode; must be one of r, r+, w, w-, a")
+        return fid
 
     def close(self):
         """ Close this HDF5 file.  All open objects will be invalidated.
@@ -901,7 +929,6 @@ class Dataset(HLObject):
         Please note none of these are allowed for scalar datasets.
         """
         with group._lock:
-            HLObject.__init__(self, group)
             if _rawid is not None:
                 self.id = _rawid
             elif data is None and shape is None:
@@ -1246,7 +1273,7 @@ class AttributeManager(_DictCompat):
 
     @property
     def _lock(self):
-        return self._file._fidlock
+        return self._file._lock
 
     def __getitem__(self, name):
         """ Read the value of an attribute.
@@ -1388,7 +1415,6 @@ class Datatype(HLObject):
         """ Private constructor.
         """
         with grp._lock:
-            HLObject.__init__(self, grp)
             self.id = h5t.open(grp.id, name)
             self._attrs = AttributeManager(self)
 
