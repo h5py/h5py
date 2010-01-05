@@ -813,7 +813,9 @@ cdef extern from "hdf5.h":
   hid_t     H5Rget_region(hid_t dataset, H5R_type_t ref_type, void *ref) except *
   H5G_obj_t H5Rget_obj_type(hid_t id, H5R_type_t ref_type, void *ref) except *
 
-
+  IF H5PY_18API:
+    ssize_t H5Rget_name(hid_t loc_id, H5R_type_t ref_type, void *ref, char *name, size_t size) except *
+    
 # === H5S - Dataspaces ========================================================
 
 cdef extern from "hdf5.h":

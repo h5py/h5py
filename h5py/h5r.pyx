@@ -122,6 +122,25 @@ def get_obj_type(Reference ref not None, ObjectID id not None):
         return None
     return <int>H5Rget_obj_type(id.id, <H5R_type_t>ref.typecode, &ref.ref)
 
+IF H5PY_18API:
+    def get_name(Reference ref not None, ObjectID loc not None):
+        """(Reference ref, ObjectID loc) => STRING name
+
+        Determine the name of the object pointed to by this reference.
+        Requires the HDF5 1.8 API.
+        """
+        cdef ssize_t namesize = 0
+        cdef char* namebuf = NULL
+
+        namesize = H5Rget_name(loc.id, <H5R_type_t>ref.typecode, &ref.ref, NULL, 0)
+        if namesize > 0:
+            namebuf = <char*>malloc(namesize+1)
+            try:
+                namesize = H5Rget_name(loc.id, <H5R_type_t>ref.typecode, &ref.ref, namebuf, namesize+1)
+                return namebuf
+            finally:
+                free(namebuf)
+
 cdef class Reference:
 
     """ 
