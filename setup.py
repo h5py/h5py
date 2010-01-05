@@ -313,7 +313,7 @@ int main(){
                 fatal("Can't link against HDF5.")
             status, output = commands.getstatusoutput(localpath('detect', 'h5vers.exe'))
             if status:
-                fatal("Error running HDF5 version detection script")
+                fatal("Error running HDF5 version detection script:\n%s" % output)
             vmaj, vmin, vrel = (int(v) for v in output.split('.'))
             self._vers_cache = (vmaj, vmin, vrel)
             return (vmaj, vmin, vrel)
