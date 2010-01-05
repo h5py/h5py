@@ -311,6 +311,8 @@ int main(){
                 cc.link_executable(objs, localpath('detect','h5vers.exe'))
             except LinkError:
                 fatal("Can't link against HDF5.")
+            if sys.platform == 'win32':
+                shutil.copy(localpath('h5py', 'hdf5dll18.dll'), localpath('detect', 'hdf5dll18.dll'))
             result = subprocess.Popen(localpath('detect', 'h5vers.exe'),
                      stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             so, se = result.communicate()
