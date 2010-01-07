@@ -46,6 +46,18 @@ import threading
 
 phil = threading.RLock()
 
+def cproperty(attrname):
+    """ Cached property using instance dict. """
+    import functools
+    def outer(meth):
+        def inner(self):
+            if attrname in self.__dict__:
+                return self.__dict__[attrname]
+            return self.__dict__.setdefault(attrname, meth(self))
+        functools.update_wrapper(inner, meth)
+        return property(inner)
+    return outer
+
 def _hbasename(name):
     """ Basename function with more readable handling of trailing slashes"""
     name = pp.basename(pp.normpath(name))
@@ -123,7 +135,7 @@ class HLObject(object):
             name = h5r.get_name(self.ref)
         return name
 
-    @property
+    @cproperty('_attrs')
     def attrs(self):
         """Provides access to HDF5 attributes. See AttributeManager."""
         return AttributeManager(self)
@@ -143,7 +155,7 @@ class HLObject(object):
             raise ValueError("Parent of an anonymous object is undefined")
         return self.file[pp.dirname(self.name)]
 
-    @property
+    @cproperty('_ref')
     def ref(self):
         """ An (opaque) HDF5 reference to this object """
         return h5r.create(self.id, '.', h5r.OBJECT)
@@ -674,17 +686,15 @@ class File(Group):
     def file(self):
         return self
 
-    @property
+    @cproperty('_mode')
     def mode(self):
         """Python mode used to open file"""
-        if hasattr(self, '_mode'):
-            return self._mode
         if not config.API_18:
             return None
         intent = self.fid.get_intent()
         return {h5f.ACC_RDONLY: 'r', h5f.ACC_RDWR: 'r+'}.get(intent)
 
-    @property
+    @cproperty('_driver')
     def driver(self):
         """Low-level HDF5 file driver used to open file"""
         drivers = {h5fd.SEC2: 'sec2', h5fd.STDIO: 'stdio',
@@ -841,7 +851,7 @@ class Dataset(HLObject):
 
     shape = property(_g_shape, _s_shape)
 
-    @property
+    @cproperty('_dtype')
     def dtype(self):
         """Numpy dtype representing the datatype"""
         return self.id.dtype
@@ -855,11 +865,11 @@ class Dataset(HLObject):
             #    return numpy.asscalar(arr)
             return arr
 
-    @property
+    @cproperty('__dcpl')
     def _dcpl(self):
         return self.id.get_create_plist()
 
-    @property
+    @cproperty('__filters')
     def _filters(self):
         return filters.get_filters(self._dcpl)
 
