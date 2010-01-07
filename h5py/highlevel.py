@@ -41,32 +41,10 @@ import h5py.selections as sel
 
 config = h5.get_config()
 
-def _memo_property(meth):
-    """ Convenience decorator for memoized properties.
+import weakref
+import threading
 
-    Intended for read-only, unchanging properties.  Instead of caching values
-    on the instance directly (i.e. self._value = value), stores in a weak-key
-    dictionary as dct[self] = value.
-
-    In addition to not polluting the instance dict, it provides a way to cache
-    values across instances; any two instances which hash to the same value
-    and compare equal will return the same value when the property is read.
-    This allows the sharing of things like file modes and per-file locks,
-    which are tied to the underlying file and not any particular instance.
-
-    Caveats:
-    1. A strong reference is held to the value, so returning self is a bad idea
-    2. Can't initialize the value in a constructor, unlike self._value caching
-    """
-    import functools
-    import weakref
-    dct = weakref.WeakKeyDictionary()
-    def wrap(self):
-        if self not in dct:
-            return dct.setdefault(self, meth(self))
-        return dct[self]
-    functools.update_wrapper(wrap, meth)
-    return property(wrap)
+phil = threading.RLock()
 
 def _hbasename(name):
     """ Basename function with more readable handling of trailing slashes"""
@@ -113,6 +91,30 @@ class HLObject(object):
         identity.
     """
 
+    _files_dct = weakref.WeakValueDictionary()
+
+    @classmethod
+    def _reg_file(cls, fileobj):
+        """ Register a high-level File object """
+        fileno = h5g.get_objinfo(fileobj.fid, '.').fileno
+        cls._files_dct[fileno] = fileobj
+
+    @classmethod
+    def _get_file(cls, oid):
+        """ Retrieve the File object appropriate for this object """
+        fileno = h5g.get_objinfo(oid, '.').fileno
+        try:
+            return cls._files_dct[fileno]
+        except KeyError:
+            fid = h5i.get_file_id(oid)
+            fileobj = File(None, bind=fid)
+            return cls._files_dct.setdefault(fileno, fileobj)
+
+    @property
+    def id(self):
+        """ Low-level identifier appropriate for this object """
+        return self._id
+
     @property
     def name(self):
         """Name of this object in the HDF5 file.  Not necessarily unique."""
@@ -121,21 +123,14 @@ class HLObject(object):
             name = h5r.get_name(self.ref)
         return name
 
-    @_memo_property
+    @property
     def attrs(self):
         """Provides access to HDF5 attributes. See AttributeManager."""
         return AttributeManager(self)
 
-    @_memo_property
-    def _file(self):
-        fid = h5i.get_file_id(self.id)
-        return File(None, bind=fid)
- 
     @property
     def file(self):
         """Return a File instance associated with this object"""
-        if isinstance(self, File):
-            return self
         return self._file
 
     @property
@@ -153,9 +148,10 @@ class HLObject(object):
         """ An (opaque) HDF5 reference to this object """
         return h5r.create(self.id, '.', h5r.OBJECT)
 
-    @property
-    def _lock(self):
-        return self.file._lock
+    def __init__(self, oid):
+        """ Setup this object, given its low-level identifier """
+        self._file = self._get_file(oid)
+        self._id = oid
 
     def __nonzero__(self):
         return self.id.__nonzero__()
@@ -176,39 +172,39 @@ class _DictCompat(object):
     
     def keys(self):
         """ Get a list containing member names """
-        with self._lock:
+        with phil:
             return list(self)
 
     def iterkeys(self):
         """ Get an iterator over member names """
-        with self._lock:
+        with phil:
             return iter(self)
 
     def values(self):
         """ Get a list containing member objects """
-        with self._lock:
+        with phil:
             return [self[x] for x in self]
 
     def itervalues(self):
         """ Get an iterator over member objects """
-        with self._lock:
+        with phil:
             for x in self:
                 yield self[x]
 
     def items(self):
         """ Get a list of tuples containing (name, object) pairs """
-        with self._lock:
+        with phil:
             return [(x, self[x]) for x in self]
 
     def iteritems(self):
         """ Get an iterator over (name, object) pairs """
-        with self._lock:
+        with phil:
             for x in self:
                 yield (x, self[x])
 
     def get(self, name, default=None):
         """ Retrieve the member, or return default if it doesn't exist """
-        with self._lock:
+        with phil:
             if name in self:
                 return self[name]
             return default
@@ -260,14 +256,15 @@ class Group(HLObject, _DictCompat):
         It's recommended to use __getitem__ or create_group() rather than
         calling the constructor directly.
         """
-        with parent_object._lock:
+        with phil:
             if _rawid is not None:
-                self.id = _rawid
+                id = _rawid
             elif create:
-                self.id = h5g.create(parent_object.id, name)
+                id = h5g.create(parent_object.id, name)
             else:
-                self.id = h5g.open(parent_object.id, name)
-    
+                id = h5g.open(parent_object.id, name)
+            HLObject.__init__(self, id)
+
     def __setitem__(self, name, obj):
         """ Add an object to the group.  The name must not already be in use.
 
@@ -292,7 +289,7 @@ class Group(HLObject, _DictCompat):
             values are stored as scalar datasets. Raise ValueError if we
             can't understand the resulting array dtype.
         """
-        with self._lock:
+        with phil:
             if isinstance(obj, Group) or isinstance(obj, Dataset) or isinstance(obj, Datatype):
                 self.id.link(h5i.get_name(obj.id), name, link_type=h5g.LINK_HARD)
 
@@ -312,7 +309,7 @@ class Group(HLObject, _DictCompat):
     def __getitem__(self, name):
         """ Open an object attached to this group. 
         """
-        with self._lock:
+        with phil:
 
             if isinstance(name, h5r.Reference):
 
@@ -364,7 +361,7 @@ class Group(HLObject, _DictCompat):
         """ Check if a group exists, and create it if not.  TypeError if an
         incompatible object exists.
         """
-        with self._lock:
+        with phil:
             if not name in self:
                 return self.create_group(name)
             grp = self[name]
@@ -424,7 +421,7 @@ class Group(HLObject, _DictCompat):
         """
         dtype = numpy.dtype(dtype)
 
-        with self._lock:
+        with phil:
             if not name in self:
                 return self.create_dataset(name, *(shape, dtype), **kwds)
 
@@ -454,7 +451,7 @@ class Group(HLObject, _DictCompat):
             If True, return SoftLink and ExternalLink instances instead
             of the objects they point to.
         """
-        with self._lock:
+        with phil:
 
             if not name in self:
                 return default
@@ -521,7 +518,7 @@ class Group(HLObject, _DictCompat):
         if not config.API_18:
             raise NotImplementedError("This feature is only available with HDF5 1.8.0 and later")
 
-        with self._lock:
+        with phil:
 
             if isinstance(source, HLObject):
                 source_path = '.'
@@ -568,7 +565,7 @@ class Group(HLObject, _DictCompat):
         if not config.API_18:
             raise NotImplementedError("This feature is only available with HDF5 1.8.0 and later")
     
-        with self._lock:
+        with phil:
             return h5o.visit(self.id, func)
 
     def visititems(self, func):
@@ -598,7 +595,7 @@ class Group(HLObject, _DictCompat):
         if not config.API_18:
             raise NotImplementedError("This feature is only available with HDF5 1.8.0 and later")
 
-        with self._lock:
+        with phil:
             def call_proxy(name):
                 return func(name, self[name])
             return h5o.visit(self.id, call_proxy)
@@ -658,15 +655,6 @@ class File(Group):
             memb_size:  Maximum file size (default is 2**31-1).
     """
 
-    @_memo_property
-    def _lock(self):
-        """ Get an RLock for this file, creating it if necessary.  Locks are
-        linked to the "real" underlying HDF5 file, regardless of the number
-        of File instances.
-        """
-        import threading
-        return threading.RLock()
-
     @property
     def filename(self):
         """File name on disk"""
@@ -682,7 +670,11 @@ class File(Group):
         except (UnicodeError, LookupError):
             return name
 
-    @_memo_property
+    @property
+    def file(self):
+        return self
+
+    @property
     def mode(self):
         """Python mode used to open file"""
         if hasattr(self, '_mode'):
@@ -735,8 +727,9 @@ class File(Group):
             self.fid = self._generate_fid(name, mode, plist)
             self._mode = mode
 
-        self.id = self.fid  # So the Group constructor can find it.
-        Group.__init__(self, self, '/')
+        gid = h5g.open(self.fid, '/')
+        self._reg_file(self)
+        Group.__init__(self, None, None, _rawid=gid)
 
     def _generate_access_plist(self, driver, **kwds):
         """ Set up file access property list """
@@ -782,7 +775,7 @@ class File(Group):
     def close(self):
         """ Close this HDF5 file.  All open objects will be invalidated.
         """
-        with self._lock:
+        with phil:
             self.fid.close()
 
     def flush(self):
@@ -794,7 +787,7 @@ class File(Group):
         return self
 
     def __exit__(self,*args):
-        with self._lock:
+        with phil:
             if self.id._valid:
                 self.close()
             
@@ -856,21 +849,21 @@ class Dataset(HLObject):
     @property
     def value(self):
         """  Deprecated alias for dataset[...] and dataset[()] """
-        with self._lock:
+        with phil:
             arr = self[...]
             #if arr.shape == ():
             #    return numpy.asscalar(arr)
             return arr
 
-    @_memo_property
+    @property
     def _dcpl(self):
         return self.id.get_create_plist()
 
-    @_memo_property
+    @property
     def _filters(self):
         return filters.get_filters(self._dcpl)
 
-    @_memo_property
+    @property
     def chunks(self):
         """Dataset chunks (or None)"""
         dcpl = self._dcpl
@@ -903,12 +896,12 @@ class Dataset(HLObject):
         
     @property
     def maxshape(self):
-        with self._lock:
+        with phil:
             space = self.id.get_space()
             dims = space.get_simple_extent_dims(True)
             return tuple(x if x != h5s.UNLIMITED else None for x in dims)
 
-    @_memo_property
+    @property
     def regionref(self):
         return _RegionProxy(self)
 
@@ -955,13 +948,13 @@ class Dataset(HLObject):
         provided, the constructor will guess an appropriate chunk shape.
         Please note none of these are allowed for scalar datasets.
         """
-        with group._lock:
+        with phil:
             if _rawid is not None:
-                self.id = _rawid
+                id = _rawid
             elif data is None and shape is None:
                 if any((dtype,chunks,compression,shuffle,fletcher32)):
                     raise ValueError('You cannot specify keywords when opening a dataset.')
-                self.id = h5d.open(group.id, name)
+                id = h5d.open(group.id, name)
             else:
                 
                 # Convert data to a C-contiguous ndarray
@@ -1013,9 +1006,10 @@ class Dataset(HLObject):
                 space_id = h5s.create_simple(shape, maxshape)
                 type_id = h5t.py_create(dtype, logical=True)
 
-                self.id = h5d.create(group.id, name, type_id, space_id, plist)
+                id = h5d.create(group.id, name, type_id, space_id, plist)
                 if data is not None:
-                    self.id.write(h5s.ALL, h5s.ALL, data)
+                    id.write(h5s.ALL, h5s.ALL, data)
+            HLObject.__init__(self, id)
 
     def resize(self, size, axis=None):
         """ Resize the dataset, or the specified axis (HDF5 1.8 only).
@@ -1031,7 +1025,7 @@ class Dataset(HLObject):
         grown or shrunk independently.  The coordinates of existing data is
         fixed.
         """
-        with self._lock:
+        with phil:
 
             if not config.API_18:
                 raise NotImplementedError("Resizing is only available with HDF5 1.8.")
@@ -1097,7 +1091,7 @@ class Dataset(HLObject):
         * Boolean "mask" array indexing
         * Advanced dataspace selection via the "selections" module
         """
-        with self._lock:
+        with phil:
 
             args = args if isinstance(args, tuple) else (args,)
 
@@ -1150,7 +1144,7 @@ class Dataset(HLObject):
 
         Classes from the "selections" module may also be used to index.
         """
-        with self._lock:
+        with phil:
 
             args = args if isinstance(args, tuple) else (args,)
 
@@ -1284,18 +1278,14 @@ class AttributeManager(_DictCompat):
     def __init__(self, parent):
         """ Private constructor.
         """
-        self.id = parent.id
+        self._id = parent.id
         self._file = parent.file
-
-    @property
-    def _lock(self):
-        return self._file._lock
 
     def __getitem__(self, name):
         """ Read the value of an attribute.
         """
-        with self._lock:
-            attr = h5a.open(self.id, name)
+        with phil:
+            attr = h5a.open(self._id, name)
 
             arr = numpy.ndarray(attr.shape, dtype=attr.dtype, order='C')
             attr.read(arr)
@@ -1313,12 +1303,12 @@ class AttributeManager(_DictCompat):
 
         Broadcasting isn't supported for attributes.
         """
-        with self._lock:
+        with phil:
             self.create(name, data=value)
 
     def __delitem__(self, name):
         """ Delete an attribute (which must already exist). """
-        h5a.delete(self.id, name)
+        h5a.delete(self._id, name)
 
     def create(self, name, data, shape=None, dtype=None):
         """ Create a new attribute, overwriting any existing attribute.
@@ -1330,7 +1320,7 @@ class AttributeManager(_DictCompat):
         dtype:  Data type of the attribute.  Overrides data.dtype if both
                 are given.  Must be conversion-compatible with data.dtype.
         """
-        with self._lock:
+        with phil:
             if data is not None:
                 data = numpy.asarray(data, order='C', dtype=dtype)
                 if shape is None:
@@ -1352,9 +1342,9 @@ class AttributeManager(_DictCompat):
             htype = h5t.py_create(dtype, logical=True)
 
             if name in self:
-                h5a.delete(self.id, name)
+                h5a.delete(self._id, name)
 
-            attr = h5a.create(self.id, name, htype, space)
+            attr = h5a.create(self._id, name, htype, space)
             if data is not None:
                 attr.write(data)
 
@@ -1366,13 +1356,13 @@ class AttributeManager(_DictCompat):
 
         If the attribute doesn't exist, it will be automatically created.
         """
-        with self._lock:
+        with phil:
             if not name in self:
                 self[name] = value
             else:
                 value = numpy.asarray(value, order='C')
 
-                attr = h5a.open(self.id, name)
+                attr = h5a.open(self._id, name)
 
                 # Allow the case of () <-> (1,)
                 if (value.shape != attr.shape) and not \
@@ -1383,27 +1373,27 @@ class AttributeManager(_DictCompat):
     def __len__(self):
         """ Number of attributes attached to the object. """
         # I expect we will not have more than 2**32 attributes
-        return h5a.get_num_attrs(self.id)
+        return h5a.get_num_attrs(self._id)
 
     def __iter__(self):
         """ Iterate over the names of attributes. """
-        with self._lock:
+        with phil:
             attrlist = []
             def iter_cb(name, *args):
                 attrlist.append(name)
-            h5a.iterate(self.id, iter_cb)
+            h5a.iterate(self._id, iter_cb)
 
             for name in attrlist:
                 yield name
 
     def __contains__(self, name):
         """ Determine if an attribute exists, by name. """
-        return h5a.exists(self.id, name)
+        return h5a.exists(self._id, name)
 
     def __repr__(self):
-        if not self.id:
+        if not self._id:
             return "<Attributes of closed HDF5 object>"
-        return "<Attributes of HDF5 object at %s>" % id(self.id)
+        return "<Attributes of HDF5 object at %s>" % id(self._id)
 
 class Datatype(HLObject):
 
@@ -1425,8 +1415,9 @@ class Datatype(HLObject):
     def __init__(self, grp, name):
         """ Private constructor.
         """
-        with grp._lock:
-            self.id = h5t.open(grp.id, name)
+        with phil:
+            id = h5t.open(grp.id, name)
+            HLObject.__init__(self, id)
 
     def __repr__(self):
         if not self.id:
