@@ -12,6 +12,11 @@
 
 include "defs.pxd"
 
+cdef extern from "hdf5.h":
+
+  ctypedef haddr_t hobj_ref_t
+  ctypedef unsigned char hdset_reg_ref_t[12]
+
 cdef union ref_u:
     hobj_ref_t         obj_ref
     hdset_reg_ref_t    reg_ref

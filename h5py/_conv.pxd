@@ -12,7 +12,7 @@
 
 include "defs.pxd"
 
-from h5r cimport Reference
+from h5r cimport Reference, RegionReference, hobj_ref_t, hdset_reg_ref_t
 
 # Minimal interface for Python objects immune to Cython refcounting
 cdef extern from "Python.h":

@@ -1452,7 +1452,7 @@ def special_dtype(**kwds):
         if val not in (Reference, RegionReference):
             raise ValueError("Ref class must be Reference or RegionReference")
 
-        return dtype(('O', [( ({'type': val},'hdf5ref'), 'O' )] ))
+        return dtype(('O', [( ({'type': val},'ref'), 'O' )] ))
 
     raise TypeError('Unknown special type "%s"' % name)
    

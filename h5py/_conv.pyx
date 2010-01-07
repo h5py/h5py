@@ -288,6 +288,47 @@ cdef int conv_pyref2objref(void* ipt, void* opt, void* bkg, void* priv) except -
 
     return 0
 
+cdef int conv_regref2pyref(void* ipt, void* opt, void* bkg, void* priv) except -1:
+
+    cdef PyObject** buf_obj = <PyObject**>opt
+    cdef PyObject** bkg_obj = <PyObject**>bkg
+    cdef hdset_reg_ref_t* buf_ref = <hdset_reg_ref_t*>ipt
+
+    cdef RegionReference ref = RegionReference()
+    cdef PyObject* ref_ptr = NULL
+
+    memcpy(ref.ref.reg_ref, buf_ref, sizeof(hdset_reg_ref_t))
+
+    ref.typecode = H5R_DATASET_REGION
+
+    ref_ptr = <PyObject*>ref
+    Py_INCREF(ref_ptr)  # because Cython discards its reference when the
+                        # function exits
+
+    Py_XDECREF(bkg_obj[0])
+    buf_obj[0] = ref_ptr
+
+    return 0
+
+cdef int conv_pyref2regref(void* ipt, void* opt, void* bkg, void* priv) except -1:
+
+    cdef PyObject** buf_obj = <PyObject**>ipt
+    cdef hdset_reg_ref_t* buf_ref = <hdset_reg_ref_t*>opt
+
+    cdef object obj
+    cdef RegionReference ref
+
+    if buf_obj[0] != NULL and buf_obj[0] != Py_None:
+        obj = <object>(buf_obj[0])
+        if not isinstance(obj, RegionReference):
+            raise TypeError("Can't convert incompatible object to HDF5 region reference")
+        ref = <RegionReference>(buf_obj[0])
+        memcpy(buf_ref, ref.ref.reg_ref, sizeof(hdset_reg_ref_t))
+    else:
+        memset(buf_ref, c'\0', sizeof(hdset_reg_ref_t))
+
+    return 0
+
 # =============================================================================
 # Conversion functions
 
@@ -327,6 +368,18 @@ cdef herr_t pyref2objref(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
                     void *bkg_i, hid_t dxpl) except -1:
     return generic_converter(src_id, dst_id, cdata, nl, buf_stride, bkg_stride,
              buf_i, bkg_i, dxpl, conv_pyref2objref, init_generic, H5T_BKG_NO)
+
+cdef herr_t regref2pyref(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
+                    size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
+                    void *bkg_i, hid_t dxpl) except -1:
+    return generic_converter(src_id, dst_id, cdata, nl, buf_stride, bkg_stride,
+             buf_i, bkg_i, dxpl, conv_regref2pyref, init_generic, H5T_BKG_YES)
+
+cdef herr_t pyref2regref(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
+                    size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
+                    void *bkg_i, hid_t dxpl) except -1:
+    return generic_converter(src_id, dst_id, cdata, nl, buf_stride, bkg_stride,
+             buf_i, bkg_i, dxpl, conv_pyref2regref, init_generic, H5T_BKG_NO)
 
 # =============================================================================
 # Enum to integer converter
@@ -441,10 +494,16 @@ cpdef int register_converters() except -1:
 
     H5Tregister(H5T_PERS_HARD, "vlen2str", vlstring, pyobj, vlen2str)
     H5Tregister(H5T_PERS_HARD, "str2vlen", pyobj, vlstring, str2vlen)
+
     H5Tregister(H5T_PERS_SOFT, "vlen2fixed", vlstring, H5T_C_S1, vlen2fixed)
     H5Tregister(H5T_PERS_SOFT, "fixed2vlen", H5T_C_S1, vlstring, fixed2vlen)
+
     H5Tregister(H5T_PERS_HARD, "objref2pyref", H5T_STD_REF_OBJ, pyobj, objref2pyref)
     H5Tregister(H5T_PERS_HARD, "pyref2objref", pyobj, H5T_STD_REF_OBJ, pyref2objref)
+
+    H5Tregister(H5T_PERS_HARD, "regref2pyref", H5T_STD_REF_DSETREG, pyobj, regref2pyref)
+    H5Tregister(H5T_PERS_HARD, "pyref2regref", pyobj, H5T_STD_REF_DSETREG, pyref2regref)
+
     H5Tregister(H5T_PERS_SOFT, "enum2int", enum, H5T_STD_I32LE, enum2int)
     H5Tregister(H5T_PERS_SOFT, "int2enum", H5T_STD_I32LE, enum, int2enum)
 
@@ -457,10 +516,16 @@ cpdef int unregister_converters() except -1:
 
     H5Tunregister(H5T_PERS_HARD, "vlen2str", -1, -1, vlen2str)
     H5Tunregister(H5T_PERS_HARD, "str2vlen", -1, -1, str2vlen)
+
     H5Tunregister(H5T_PERS_SOFT, "vlen2fixed", -1, -1, vlen2fixed)
     H5Tunregister(H5T_PERS_SOFT, "fixed2vlen", -1, -1, fixed2vlen)
+
     H5Tunregister(H5T_PERS_HARD, "objref2pyref", -1, -1, objref2pyref)
     H5Tunregister(H5T_PERS_HARD, "pyref2objref", -1, -1, pyref2objref)
+
+    H5Tunregister(H5T_PERS_HARD, "regref2pyref", -1, -1, regref2pyref)
+    H5Tunregister(H5T_PERS_HARD, "pyref2regref", -1, -1, pyref2regref)
+
     H5Tunregister(H5T_PERS_SOFT, "enum2int", -1, -1, enum2int)
     H5Tunregister(H5T_PERS_SOFT, "int2enum", -1, -1, int2enum)
 

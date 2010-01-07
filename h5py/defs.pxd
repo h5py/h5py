@@ -806,9 +806,6 @@ cdef extern from "hdf5.h":
     H5R_INTERNAL,
     H5R_MAXTYPE
 
-  ctypedef haddr_t hobj_ref_t
-  ctypedef unsigned char hdset_reg_ref_t[12]
-
   herr_t    H5Rcreate(void *ref, hid_t loc_id, char *name, H5R_type_t ref_type, 
                       hid_t space_id) except *
   hid_t     H5Rdereference(hid_t obj_id, H5R_type_t ref_type, void *ref) except *
