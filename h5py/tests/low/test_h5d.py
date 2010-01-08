@@ -11,7 +11,7 @@
 #-
 
 import numpy
-from common import TestCasePlus
+from h5py.tests import TestCasePlus, FIDProxy
 
 from h5py import *
 
@@ -37,12 +37,13 @@ class TestH5D(TestCasePlus):
 
 
     def setUp(self):
-        self.setup_fid(HDFNAME)
+        self.fproxy = FIDProxy(HDFNAME)
+        self.fid = self.fproxy.fid
         self.dset = h5d.open(self.fid, "CompoundChunked")
 
     def tearDown(self):
         self.dset._close()
-        self.teardown_fid()
+        self.fproxy.erase()
 
     def test_open_close(self):
         dset = h5d.open(self.fid, "CompoundChunked")

@@ -10,7 +10,7 @@
 # 
 #-
 
-from common import TestCasePlus
+from h5py.tests import TestCasePlus, FIDProxy
 
 from h5py import *
 
@@ -23,12 +23,13 @@ class TestH5G(TestCasePlus):
 
 
     def setUp(self):
-        self.setup_fid(HDFNAME)
+        self.fproxy = FIDProxy(HDFNAME)
+        self.fid = self.fproxy.fid
         self.obj = h5g.open(self.fid, OBJECTNAME)
 
     def tearDown(self):
         self.obj._close()
-        self.teardown_fid()
+        self.fproxy.erase()
 
     def is_grp(self, item):
         return h5i.get_type(item) == h5i.GROUP
