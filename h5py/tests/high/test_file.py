@@ -1,4 +1,6 @@
 
+from __future__ import with_statement
+
 from tempfile import mktemp
 
 from h5py import tests
