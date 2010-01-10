@@ -12,7 +12,7 @@
 import sys
 import numpy
 
-from h5py.tests import TestCasePlus
+from common import TestCasePlus, api_18
 
 from h5py import *
 from h5py import utils

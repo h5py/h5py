@@ -15,6 +15,8 @@ import numpy
 
 from h5py import *
 
+HDFNAME = 'attributes.hdf5'
+
 TYPES = {h5p.FILE_CREATE: h5p.PropFCID,
          h5p.FILE_ACCESS: h5p.PropFAID,
          h5p.DATASET_CREATE: h5p.PropDCID,

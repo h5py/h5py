@@ -12,7 +12,7 @@
 
 from numpy import array, ndarray, dtype, all, ones
 
-from h5py.tests import TestCasePlus, requires, FIDProxy
+from common import TestCasePlus, api_18
 
 from h5py import *
 
@@ -31,13 +31,12 @@ NEW_ATTRIBUTES = {'New float': ( 3.14, dtype('<f4'), ()) }
 class TestH5A(TestCasePlus):
 
     def setUp(self):
-        self.fproxy = FIDProxy(HDFNAME)
-        self.fid = self.fproxy.fid
+        self.setup_fid(HDFNAME)
         self.obj = h5g.open(self.fid, OBJECTNAME)
 
     def tearDown(self):
         self.obj._close()
-        self.fproxy.erase()
+        self.teardown_fid()
 
     def is_attr(self, attr):
         return (h5i.get_type(attr) == h5i.ATTR)
@@ -66,7 +65,7 @@ class TestH5A(TestCasePlus):
             attr.read(arr_val)
             self.assert_(all(arr_val == arr_ref))
 
-    @requires(api=18)
+    @api_18
     def test_create_18(self):
 
         space = h5s.create(h5s.SCALAR)
@@ -86,13 +85,13 @@ class TestH5A(TestCasePlus):
             attr = h5a.open(self.obj, name)
             self.assert_(self.is_attr(attr), 'Open: name "%s"' % name)
 
-    @requires(api=18)
+    @api_18
     def test_open_name_18(self):
         for name in ATTRIBUTES:
             attr = h5a.open(self.fid, name, obj_name=OBJECTNAME)
             self.assert_(self.is_attr(attr))
 
-    @requires(api=18)
+    @api_18
     def test_rename_18(self):
         h5a.rename(self.obj, ATTRIBUTES_ORDER[0], "NewName1")
         self.assert_(h5a.exists(self.obj, "NewName1"))
@@ -102,7 +101,7 @@ class TestH5A(TestCasePlus):
         self.assert_(h5a.exists(self.obj, "NewName2"))
         self.assert_(not h5a.exists(self.obj, ATTRIBUTES_ORDER[1]))
            
-    @requires(api=18)
+    @api_18
     def test_get_info_18(self):
         info = h5a.get_info(self.obj, ATTRIBUTES_ORDER[0])
         info.corder_valid
@@ -219,7 +218,7 @@ class TestH5A(TestCasePlus):
         self.assert_(h5a.exists(self.obj, ATTRIBUTES_ORDER[0]))
         self.assert_(not h5a.exists(self.obj, "Something else"))
 
-    @requires(api=18)
+    @api_18
     def test_exists_18(self):
         self.assert_(h5a.exists(self.fid, ATTRIBUTES_ORDER[0], obj_name=OBJECTNAME))
 

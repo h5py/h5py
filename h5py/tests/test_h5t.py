@@ -17,7 +17,7 @@ from numpy import dtype
 
 from h5py import *
 from h5py import h5t, h5f
-from h5py.tests import TestCasePlus, requires, FIDProxy
+from common import TestCasePlus, api_18, res
 import cPickle
 
 typecode_map = {'i': h5t.INTEGER, 'u': h5t.INTEGER, 'f': h5t.FLOAT,
@@ -41,6 +41,9 @@ class BaseTypeMixin(object):
 
         MUST be a mixin or the stupid unittest loader tries to test it.
     """
+
+    def tearDown(self):
+        res.clear()
 
     ODDBALL_TYPE = h5t.create(h5t.OPAQUE, 72)
 
@@ -75,7 +78,7 @@ class BaseTypeMixin(object):
         self.assert_(a1 == a2)
         self.assert_(not a1 == self.ODDBALL_TYPE)
 
-    @requires(api=18)
+    @api_18
     def test_serialize(self):
         """ Generic subtype serialization test
         """
@@ -97,17 +100,13 @@ class BaseTypeMixin(object):
     def test_commit(self):
         """ Generic subtype commit test
         """
-        fproxy = FIDProxy()
-        try:
-            fid = fproxy.fid
-            htype = self.get_example_type()
-            self.assert_(not htype.committed())
-            htype.commit(fid, "name")
-            self.assert_(htype.committed())
-            htype2 = h5t.open(fid, "name")
-            self.assertEqual(htype, htype2)
-        finally:
-            fproxy.erase()
+        fid = h5f.create(res.get_name())
+        htype = self.get_example_type()
+        self.assert_(not htype.committed())
+        htype.commit(fid, "name")
+        self.assert_(htype.committed())
+        htype2 = h5t.open(fid, "name")
+        self.assertEqual(htype, htype2)
 
     def test_class(self):
         """ Generic subtype class code test

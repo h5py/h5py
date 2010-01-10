@@ -13,7 +13,7 @@
 import numpy
 import os
 import tempfile
-from h5py.tests import TestCasePlus, datapath, FIDProxy
+from common import TestCasePlus, res
 
 from h5py import *
 
@@ -23,15 +23,13 @@ class TestH5F(TestCasePlus):
 
 
     def setUp(self):
-        self.fproxy = FIDProxy(HDFNAME)
-        self.fname = self.fproxy.name
-        self.fid = self.fproxy.fid
+        self.setup_fid(HDFNAME)
 
     def tearDown(self):
-        self.fproxy.erase()
+        self.teardown_fid()
 
     def test_open_close(self):
-        fid = h5f.open(datapath('attributes.hdf5'), h5f.ACC_RDONLY)
+        fid = h5f.open(res.get_data_path('attributes.hdf5'), h5f.ACC_RDONLY)
         self.assertEqual(h5i.get_type(fid), h5i.FILE)
         fid.close()
         self.assertEqual(h5i.get_type(fid), h5i.BADID)

@@ -10,7 +10,7 @@
 # 
 #-
 
-from h5py.tests import TestCasePlus, FIDProxy
+from common import TestCasePlus
 
 from h5py import *
 
@@ -21,13 +21,12 @@ class TestH5I(TestCasePlus):
 
 
     def setUp(self):
-        self.fproxy = FIDProxy(HDFNAME)
-        self.fid = self.fproxy.fid
+        self.setup_fid(HDFNAME)
         self.obj = h5g.open(self.fid, OBJECTNAME)
 
     def tearDown(self):
         self.obj._close()
-        self.fproxy.erase()
+        self.teardown_fid()
 
     def test_get_type(self):
         self.assertEqual(h5i.get_type(self.fid), h5i.FILE)
