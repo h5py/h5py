@@ -10,53 +10,124 @@
 # 
 #-
 
-import h5py.tests
 import unittest
-import common
+import h5py
 
-mnames = [
-'test_dataset',
-'test_group',
-'test_filters',
-'test_h5a',
-'test_h5d',
-'test_h5f',
-'test_h5g',
-'test_h5i',
-'test_h5p',
-'test_h5',
-'test_h5r',
-'test_h5s',
-'test_h5t',
-'test_highlevel',
-'test_slicing',
-'test_threads',
-'test_utils',
-'test_vlen',
-'test_conv']
-
+config = h5py.h5.get_config()
 
 def runtests():
+    """ Run low and highlevel h5py tests.
 
-    ldr = unittest.TestLoader()
-    suite = unittest.TestSuite()
-    modules = [__import__('h5py.tests.'+x, fromlist=[h5py.tests]) for x in mnames]
-    for m in modules:
-        suite.addTests(ldr.loadTestsFromModule(m))
-
+    Result is a 2-tuple of TestResult objects
+    """
+    import low
     runner = unittest.TextTestRunner()
-    return runner.run(suite)
+    return tuple(runner.run(suite) for suite in (low.getsuite(),))
 
 def autotest():
     try:
-        if not runtests():
+        if not all(runtests()):
             sys.exit(17)
     except:
         sys.exit(2)
 
-def testinfo():
-    print "%d tests disabled" % common.skipped
+def fixme(func):
+    print "FIXME: ", func.__doc__
+    return None
 
+def require(api=None, os=None, unicode=None):
+    """ Decorator to enable/disable tests """
+    import sys
+    def haveunicode():
+        import os.path
+        try:
+            os.path.exists(u'\u201a')
+        except UnicodeError:
+            return False
+        return True
+    def wrap(func):
+        if unicode and not haveunicode(): return None
+        if api == 18 and not config.API_18: return None
+        if api == 16 and config.API_18: return None
+        if os == 'windows' and sys.platform != 'win32': return None
+        if os == 'unix' and sys.platform == 'win32': return None
+        return func
+    return wrap
+
+def skip(func):
+    """ Decorator to disable a test """
+    return None
+
+def getpath(name):
+    """ Path to a data file shipped with the test suite """
+    import os.path
+    return os.path.join(os.path.dirname(__file__), 'data', name)
+
+def gettemp():
+    """ Create a temporary file and return a 2-tuple (fid, name) """
+    import tempfile
+    name = tempfile.mktemp('.hdf5')
+    plist = h5py.h5p.create(h5py.h5p.FILE_ACCESS)
+    plist.set_fclose_degree(h5py.h5f.CLOSE_STRONG)
+    fid = h5py.h5f.create(name, h5py.h5f.ACC_TRUNC, fapl=plist)
+    return fid, name
+
+
+class HTest(unittest.TestCase):
+
+    """
+        Slightly modified subclass of TestCase, which provides the following
+        added functionality:
+
+        1. assertArrayEqual(), to save us from having to remember to use
+           numpy.all.  Also allows reasonable comparison of floating-point
+           data.
+
+        2. Catches and suppresses warnings.
+    """
+
+    EPSILON = 1e-5
+
+    def run(self, *args, **kwds):
+        import warnings
+        filters = warnings.filters
+        warnings.simplefilter("ignore")
+        try:
+            unittest.TestCase.run(self, *args, **kwds)
+        finally:
+            warnings.filters = filters
+            if 0 and h5py.h5f.get_obj_count() != 0:
+                print "WARNING: %d LEFTOVER IDS" % h5py.h5f.get_obj_count()
+                ids = h5py.h5f.get_obj_ids()
+                for id_ in ids:
+                    if id_:
+                        print "Closing %r" % id_
+                    else:
+                        print "Skipping %r" % id_
+                    while id_ and h5py.h5i.get_ref(id_) > 0:
+                        h5py.h5i.dec_ref(id_)
+
+    def assertArrayEqual(self, dset, arr, message=None, precision=None):
+        """ Make sure dset and arr have the same shape, dtype and contents, to
+            within the given precision.
+
+            Note that dset may be a NumPy array or an HDF5 dataset.
+        """
+        if precision is None:
+            precision = self.EPSILON
+        if message is None:
+            message = ''
+        else:
+            message = ' (%s)' % message
+
+        if np.isscalar(dset) or np.isscalar(arr):
+            assert np.isscalar(dset) and np.isscalar(arr), 'Scalar/array mismatch ("%r" vs "%r")%s' % (dset, arr, message)
+            assert dset - arr < precision, "Scalars differ by more than %.3f%s" % (precision, message)
+            return
+
+        assert dset.shape == arr.shape, "Shape mismatch (%s vs %s)%s" % (dset.shape, arr.shape, message)
+        assert dset.dtype == arr.dtype, "Dtype mismatch (%s vs %s)%s" % (dset.dtype, arr.dtype, message)
+        assert np.all(np.abs(dset[...] - arr[...]) < precision), "Arrays differ by more than %.3f%s" % (precision, message)
 
 
 

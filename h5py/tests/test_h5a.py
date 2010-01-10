@@ -43,7 +43,7 @@ class TestH5A(TestCasePlus):
 
     # === General attribute operations ========================================
 
-    def test_create_write(self):
+    def test_write(self):
 
         obj = h5g.open(self.fid, OBJECTNAME)
         for name, (value, dt, shape) in NEW_ATTRIBUTES.iteritems():
@@ -64,32 +64,6 @@ class TestH5A(TestCasePlus):
             arr_val = ndarray(shape, dtype=dt)
             attr.read(arr_val)
             self.assert_(all(arr_val == arr_ref))
-
-    @api_18
-    def test_create_18(self):
-
-        space = h5s.create(h5s.SCALAR)
-        htype = h5t.py_create('=f4')
-
-        attr = h5a.create(self.fid, "New Attribute", htype, space, obj_name="Group")
-        self.assert_(h5a.exists(self.fid, "New Attribute", obj_name="Group"))
-
-
-    def test_open_idx(self):
-        for idx, name in enumerate(ATTRIBUTES_ORDER):
-            attr = h5a.open(self.obj, index=idx)
-            self.assert_(self.is_attr(attr), "Open: index %d" % idx)
-
-    def test_open_name(self):
-        for name in ATTRIBUTES:
-            attr = h5a.open(self.obj, name)
-            self.assert_(self.is_attr(attr), 'Open: name "%s"' % name)
-
-    @api_18
-    def test_open_name_18(self):
-        for name in ATTRIBUTES:
-            attr = h5a.open(self.fid, name, obj_name=OBJECTNAME)
-            self.assert_(self.is_attr(attr))
 
     @api_18
     def test_rename_18(self):
@@ -212,16 +186,6 @@ class TestH5A(TestCasePlus):
         for name, (val, dt, shape) in ATTRIBUTES.iteritems():
             attr = h5a.open(self.obj, name)
             self.assertEqual(attr.dtype, dt)
-
-    def test_exists(self):
-
-        self.assert_(h5a.exists(self.obj, ATTRIBUTES_ORDER[0]))
-        self.assert_(not h5a.exists(self.obj, "Something else"))
-
-    @api_18
-    def test_exists_18(self):
-        self.assert_(h5a.exists(self.fid, ATTRIBUTES_ORDER[0], obj_name=OBJECTNAME))
-
 
 
 
