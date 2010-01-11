@@ -92,20 +92,23 @@ class HTest(unittest.TestCase):
         import warnings
         filters = warnings.filters
         warnings.simplefilter("ignore")
+        objcount = h5py.h5f.get_obj_count()
         try:
             unittest.TestCase.run(self, *args, **kwds)
         finally:
             warnings.filters = filters
-            if 0 and h5py.h5f.get_obj_count() != 0:
-                print "WARNING: %d LEFTOVER IDS" % h5py.h5f.get_obj_count()
-                ids = h5py.h5f.get_obj_ids()
-                for id_ in ids:
-                    if id_:
-                        print "Closing %r" % id_
-                    else:
-                        print "Skipping %r" % id_
-                    while id_ and h5py.h5i.get_ref(id_) > 0:
-                        h5py.h5i.dec_ref(id_)
+            newcount = h5py.h5f.get_obj_count()
+            if newcount != objcount:
+                print "WARNING: LEAKED %d IDs (total %d)" % (newcount-objcount, newcount)
+                if 0:
+                    ids = h5py.h5f.get_obj_ids()
+                    for id_ in ids:
+                        if id_:
+                            print "Closing %r" % id_
+                        else:
+                            print "Skipping %r" % id_
+                        while id_ and h5py.h5i.get_ref(id_) > 0:
+                            h5py.h5i.dec_ref(id_)
 
     def assertArrayEqual(self, dset, arr, message=None, precision=None):
         """ Make sure dset and arr have the same shape, dtype and contents, to
@@ -129,5 +132,14 @@ class HTest(unittest.TestCase):
         assert dset.dtype == arr.dtype, "Dtype mismatch (%s vs %s)%s" % (dset.dtype, arr.dtype, message)
         assert np.all(np.abs(dset[...] - arr[...]) < precision), "Arrays differ by more than %.3f%s" % (precision, message)
 
+    def assertIsInstance(self, obj, typ):
+        """ Check if obj is an instance of typ """
+        if not isinstance(obj, typ):
+            raise AssertionError("instance of %s not %s" % (type(obj).__name__, typ.__name__))
 
+    def assertEqualContents(self, a, b):
+        a = list(a)
+        b = list(b)
+        if not len(a) == len(b) and set(a) == set(b):
+            raise AssertionError("contents don't match: %s vs %s" % (list(a), list(b)))
 

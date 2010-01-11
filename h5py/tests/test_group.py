@@ -44,72 +44,11 @@ class TestInit(GroupBase):
 
         self.assertEqual(grp.name, "/NewGroup")
 
-    def test_Group_create_group(self):
-
-        grp = self.f.create_group("NewGroup")
-        self.assert_("NewGroup" in self.f)
-        self.assertRaises(ValueError, self.f.create_group, "NewGroup")
-
     def test_Group_create_dataset(self):
 
         ds = self.f.create_dataset("Dataset", shape=(10,10), dtype='<i4')
         self.assert_(isinstance(ds, h5py.Dataset))
         self.assert_("Dataset" in self.f)
-
-class TestSpecial(GroupBase):
-
-    """ Special methods """
-
-    subgroups = ["Name1", " Name 1231987&*@&^*&#W  2  \t\t ",
-                 "name3", "14", "!"]
-
-    def setUp(self):
-        GroupBase.setUp(self)
-        for name in self.subgroups:
-            self.f.create_group(name)
-
-    def test_len(self):
-        self.assertEqual(len(self.f), len(self.subgroups))
-
-    def test_contains(self):
-        for name in self.subgroups:
-            self.assert_(name in self.f)
-        self.assert_("missing" not in self.f)
-
-    def test_iter(self):
-        self.assert_equal_contents(self.f, self.subgroups)
-
-    def test_dictcompat(self):
-
-        # Old style -- now deprecated
-        with dump_warnings():
-            self.assert_equal_contents(self.f.listnames(), self.subgroups)
-            self.assert_equal_contents(self.f.listobjects(), [self.f[x] for x in self.subgroups])
-            self.assert_equal_contents(self.f.listitems(), [(x, self.f[x]) for x in self.subgroups])
-            self.assert_equal_contents(list(self.f.iternames()), self.subgroups)
-            self.assert_equal_contents(list(self.f.iterobjects()), [self.f[x] for x in self.subgroups])
-
-        # New style
-        self.assert_equal_contents(self.f.keys(), self.subgroups)
-        self.assert_equal_contents(self.f.values(), [self.f[x] for x in self.subgroups])
-        self.assert_equal_contents(self.f.items(), [(x, self.f[x]) for x in self.subgroups])
-        self.assert_equal_contents(list(self.f.iteritems()), [(x, self.f[x]) for x in self.subgroups])
-
-
-    def test_del(self):
-        names = list(self.subgroups)
-        for name in self.subgroups:
-            names.remove(name)
-            del self.f[name]
-            self.assert_equal_contents(self.f, names)
-
-    def test_str_repr(self):
-        g = self.f.create_group("Foobar")
-        s = str(g)
-        r = repr(g)
-        self.assert_(isinstance(s, str),s)
-        self.assert_(isinstance(r, str),r)
-        self.assert_(r.startswith('<') and r.endswith('>'),r)
 
 class TestSetItem(GroupBase):
 

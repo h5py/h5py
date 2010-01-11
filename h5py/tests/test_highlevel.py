@@ -298,45 +298,10 @@ class TestExceptions(TestCasePlus):
         self.f.create_group("foobar")
         self.assertRaises(ValueError, self.f.create_group, "foobar")
 
-    def test_files(self):
-
-        self.f.create_group("foobar")
-        self.f.close()
-
-        valerrors = {"__getitem__":    ("foobar",),
-                     "create_group":   ("foobar",),
-                     "create_dataset": ("foobar", (), 'i'),}
-
-        for meth, args in valerrors.iteritems():
-            self.assertRaises(ValueError, getattr(self.f, meth), *args)
-
     def test_attributes(self):
         
         g = self.f.create_group("foobar")
         self.assertRaises(KeyError, g.attrs.__getitem__, "attr")
-
-    def test_mode(self):
-
-        fname = tempfile.mktemp('hdf5')
-        try:
-            f = File(fname,'w')
-            g = f.create_group("foobar")
-            g.attrs["attr"] = 42
-            f.close()
-        
-            f = File(fname, 'r')
-            g = f["foobar"]
-            self.assertRaises(IOError, g.attrs.__setitem__, "attr", 43)
-            f.close()
-        finally:
-            try:
-                f.close()
-            except Exception:
-                pass
-            os.unlink(fname)
-
-
-
 
 class TestTypes(TestCasePlus):
 
