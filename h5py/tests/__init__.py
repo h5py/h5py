@@ -12,6 +12,7 @@
 
 import unittest
 import h5py
+import numpy as np
 
 config = h5py.h5.get_config()
 
@@ -31,9 +32,12 @@ def autotest():
     except:
         sys.exit(2)
 
-def fixme(func):
-    print "FIXME: ", func.__doc__
-    return None
+def fixme(desc=""):
+
+    def wrap(func):
+        print "FIXME: %s [%s]" % (func.__doc__, desc)
+        return None
+    return wrap
 
 def require(api=None, os=None, unicode=None):
     """ Decorator to enable/disable tests """
@@ -142,4 +146,11 @@ class HTest(unittest.TestCase):
         b = list(b)
         if not len(a) == len(b) and set(a) == set(b):
             raise AssertionError("contents don't match: %s vs %s" % (list(a), list(b)))
+
+    def assertIsNone(self, what):
+
+        if what is not None:
+            raise AssertionError("%r is not None" % what)
+
+
 

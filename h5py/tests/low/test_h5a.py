@@ -43,7 +43,7 @@ class TestCreate(tests.HTest):
                          obj_name='subgroup', lapl=lapl)
         self.assert_(isattr(aid))
 
-    @tests.fixme
+    @tests.fixme()
     def test_exc_1(self):
         """ (H5A) Existing name causes ValueError """
         h5a.create(self.fid, 'name', h5t.STD_I32LE, self.sid)
@@ -104,7 +104,7 @@ class TestOpenExists(tests.HTest):
         """ (H5A) Open with wrong name causes KeyError """
         self.assertRaises(KeyError, h5a.open, self.fid, 'missing')
 
-    @tests.fixme
+    @tests.fixme()
     def test_exc_2(self):
         """ (H5A) Open with wrong index causes ValueError """
         self.assertRaises(ValueError, h5a.open, self.fid, index=2)

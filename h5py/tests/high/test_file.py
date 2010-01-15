@@ -107,14 +107,14 @@ class TestCore(FileBase):
 
     def test_create(self):
         """ (File) Create with core driver """
-        f = h5py.File('a', 'w', driver='core')
+        f = h5py.File('a', 'w', driver='core', backing_store=False)
         self.assert_(f)
         self.assertEqual(f.driver, 'core')
         f.close()
 
     @tests.require(api=18)
     def test_open(self):
-        """ (File) Open with core driver """
+        """ (File) Open with core driver on 1.8 """
         self.name = mktemp()
         self.f = h5py.File(self.name, 'w')
         self.f.create_group('g')
@@ -143,7 +143,7 @@ class TestCore(FileBase):
 
     def test_blocksize(self):
         """ (File) Block size argument for core driver """
-        self.f = h5py.File('a', 'w', driver='core', block_size=1024)
+        self.f = h5py.File('a', 'w', driver='core', block_size=1024, backing_store=False)
         self.assert_(self.f)
 
 class TestOps(tests.HTest):
