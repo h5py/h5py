@@ -31,26 +31,6 @@ class TestH5S(unittest.TestCase):
         sid2 = sid.copy()
         self.assertEqual(h5i.get_type(sid2), h5i.DATASPACE)
 
-    def test_simple(self):
-        # Tests create_simple, get_simple_extent_dims, get_simple_extent_ndims
-
-        for space, max_space in zip(spaces, max_spaces):
-            sid = h5s.create_simple(space,max_space)
-            self.assertEqual(sid.get_simple_extent_dims(), space)
-            self.assertEqual(sid.get_simple_extent_dims(maxdims=True), max_space)
-            self.assertEqual(sid.get_simple_extent_ndims(), len(space))
-
-        self.assertRaises(ValueError, h5s.create_simple, None)
-        self.assertRaises(ValueError, h5s.create_simple, (10,10), (10,9))
-        self.assertRaises(ValueError, h5s.create_simple, (10,10), (10,))
-
-    def test_is_simple(self):
-        # According to HDF5 docs, all dataspaces are "simple," even scalar ones.
-        sid = h5s.create(h5s.SCALAR)
-        self.assert_(sid.is_simple())
-        sid = h5s.create(h5s.SIMPLE)    
-        self.assert_(sid.is_simple())
-
     def test_offset_simple(self):
         
         sid = h5s.create_simple((100,100))
