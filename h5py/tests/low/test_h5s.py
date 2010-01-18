@@ -2,7 +2,15 @@
 from h5py import tests
 from h5py import *
 
-class TestCreate(tests.HTest):
+class Base(tests.HTest):
+
+    def assertEqualSpaces(self, sid1, sid2):
+        self.assertIsInstance(sid1, h5s.SpaceID)
+        self.assertIsInstance(sid2, h5s.SpaceID)
+        self.assertEqual(sid1.shape, sid2.shape)
+        self.assertEqual(sid1.get_select_bounds(), sid2.get_select_bounds())
+
+class TestCreate(Base):
 
     def test_scalar(self):
         """ (H5S) Create scalar dataspace """
@@ -45,7 +53,7 @@ class TestCreate(tests.HTest):
         """ (H5S) Extent/limit rank mismatch raises ValueError """
         self.assertRaises(ValueError, h5s.create_simple, (10,10), (20,))
 
-class TestEncodeDecode(tests.HTest):
+class TestEncodeDecode(Base):
 
     def setUp(self):
         self.sid = h5s.create_simple((10,10))
@@ -53,12 +61,6 @@ class TestEncodeDecode(tests.HTest):
 
     def tearDown(self):
         del self.sid
-
-    def assertEqualSpaces(self, sid1, sid2):
-        self.assertIsInstance(sid1, h5s.SpaceID)
-        self.assertIsInstance(sid2, h5s.SpaceID)
-        self.assertEqual(sid1.shape, sid2.shape)
-        self.assertEqual(sid1.get_select_bounds(), sid2.get_select_bounds())
 
     @tests.require(api=18)
     def test_ed(self):
@@ -76,7 +78,16 @@ class TestEncodeDecode(tests.HTest):
         dec = pickle.loads(pkl)
         self.assertEqualSpaces(self.sid, dec)
 
-     
+class TestCopy(Base):
+
+    def test_copy(self):
+        """ (H5S) Copy """
+        sid = h5s.create_simple((10,10))
+        sid.select_hyperslab((2,2), (5,5))
+        sid2 = sid.copy()
+        self.assertEqualSpaces(sid, sid2)
+        self.assert_(sid is not sid2)
+
 
 
 

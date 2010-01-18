@@ -26,11 +26,6 @@ class TestH5S(unittest.TestCase):
         sid._close()
         self.assertEqual(h5i.get_type(sid), h5i.BADID)
 
-    def test_copy(self):
-        sid = h5s.create(h5s.SCALAR)
-        sid2 = sid.copy()
-        self.assertEqual(h5i.get_type(sid2), h5i.DATASPACE)
-
     def test_offset_simple(self):
         
         sid = h5s.create_simple((100,100))
