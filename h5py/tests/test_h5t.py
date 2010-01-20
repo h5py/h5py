@@ -65,19 +65,6 @@ class BaseTypeMixin(object):
 
     # --- End required attributes and methods ---
 
-    def test_equal(self):
-        """ Generic subtype equality test
-
-        Calls generate_type twice and compares the result.  Also compares to
-        an known type which which should not match.
-        """
-        a1, a2 = self.get_example_type(), self.get_example_type()
-        self.assert_(a1.equal(a2))
-        self.assert_(a2.equal(a1))
-        self.assert_(a1.equal(a1))
-        self.assert_(a1 == a2)
-        self.assert_(not a1 == self.ODDBALL_TYPE)
-
     @api_18
     def test_serialize(self):
         """ Generic subtype serialization test
@@ -107,11 +94,6 @@ class BaseTypeMixin(object):
         self.assert_(htype.committed())
         htype2 = h5t.open(fid, "name")
         self.assertEqual(htype, htype2)
-
-    def test_class(self):
-        """ Generic subtype class code test
-        """
-        self.assertEqual(self.get_example_type().get_class(), self.CLASSCODE)
 
 class TestInteger(TestCasePlus, BaseTypeMixin):
 
@@ -170,70 +152,6 @@ class TestOpaque(TestCasePlus, BaseTypeMixin):
 
 
 class TestH5T(TestCasePlus):
-
-    def test_create(self):
-        """ Check that it produces instances from typecodes """
-
-        types = {h5t.COMPOUND: h5t.TypeCompoundID, h5t.OPAQUE: h5t.TypeOpaqueID}
-        sizes = (1,4,256)
-
-        def _t_create(typecode, size):
-            """ Core test """
-            htype=h5t.create(typecode, size)
-            self.assertEqual(type(htype), types[typecode])
-            self.assertEqual(htype.get_size(), size)
-
-        for typecode in types:
-            for size in sizes:
-                _t_create(typecode, size)
-        
-        self.assertRaises(ValueError, h5t.create, h5t.ARRAY, 4)
-    
-    def test_open_commit_committed(self):
-        """ Check that we can commit a named type and open it again """
-        plist = h5p.create(h5p.FILE_ACCESS)
-        plist.set_fclose_degree(h5f.CLOSE_STRONG)
-        fname = tempfile.mktemp('.hdf5')
-        fid = h5f.create(fname, h5f.ACC_TRUNC, fapl=plist)
-        try:
-            root = h5g.open(fid, '/')
-            htype = h5t.STD_I32LE.copy()
-            self.assert_(not htype.committed())
-            htype.commit(root, "NamedType")
-            self.assert_(htype.committed())
-            del htype
-            htype = h5t.open(root, "NamedType")
-            self.assert_(htype.equal(h5t.STD_I32LE))
-        finally:
-            fid.close()
-            os.unlink(fname)
-
-    def test_close(self):
-        """ Make sure that closing an object decrefs its identifier """
-        htype = h5t.STD_I32LE.copy()
-        self.assert_(htype)
-        htype._close()
-        self.assert_(not htype)
-
-    def test_copy(self):
-
-        def test(dt):
-            """ Test copying for the given NumPy dtype"""
-            htype = h5t.py_create(dtype(dt))
-            htype2 = htype.copy()
-            self.assertEqual(htype.dtype, htype2.dtype)
-            self.assert_(htype is not htype2)
-            self.assert_(htype == htype2)    
-
-        for x in simple_types:
-            test(x)
-
-    def test_lock(self):
-
-        htype = h5t.STD_I8LE.copy()
-        htype.set_sign(h5t.SGN_NONE)
-        htype.lock()
-        self.assertRaises(TypeError, htype.set_sign, h5t.SGN_2)
 
     def test_get_set_size(self):
 
