@@ -37,7 +37,8 @@ import highlevel, filters, selections, version
 from h5 import get_config
 from h5e import H5Error
 
-from highlevel import File, Group, Dataset, Datatype, AttributeManager, is_hdf5
+from highlevel import File, Group, Dataset, Datatype, AttributeManager, \
+                      SoftLink, ExternalLink, is_hdf5
 
 # New way to handle special types
 from h5t import special_dtype, check_dtype
@@ -55,7 +56,7 @@ __doc__ = __doc__ % (version.version, version.hdf5_version, version.api_version)
 __all__ = ['h5', 'h5f', 'h5g', 'h5s', 'h5t', 'h5d', 'h5a', 'h5p', 'h5r',
            'h5o', 'h5l', 'h5z', 'h5i', 'version', 'File', 'Group', 'Dataset',
            'Datatype', 'AttributeManager', 'H5Error', 'get_config', 'is_hdf5',
-           'special_dtype', 'check_dtype']
+           'special_dtype', 'check_dtype', 'SoftLink', 'ExternalLink']
 
 try:
     try:
