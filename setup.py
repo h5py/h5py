@@ -31,14 +31,17 @@ import os.path as op
 
 VERSION = '1.3.0'
 
+try:
+    from setuptools import setup
+    from setuptools.extension import Extension
+except ImportError:
+    from distutils.core import setup, Extension
+    
 from distutils.errors import DistutilsError
-from setuptools.extension import Extension
 from distutils.command.build_ext import build_ext
 from distutils.command.clean import clean
 from distutils.cmd import Command
-
 from distutils.command.build_ext import build_ext
-from setuptools import setup
 import detect
 
 # --- Convenience functions ---------------------------------------------------
@@ -152,7 +155,7 @@ if sys.platform.startswith('win'):
         'libraries'     : ['hdf5dll18'],
         'include_dirs'  : [numpy.get_include(),  localpath('lzf'),
                            localpath('win_include')],
-        'library_dirs'  : [op.join(hdf5, 'dll')],
+        'library_dirs'  : [],
         'define_macros' : [('H5_USE_16_API', None), ('_HDF5USEDLL_', None)]
     }
     if HDF5 is not None:
@@ -357,7 +360,7 @@ class hbuild_ext(build_ext):
         if hdf5 is None:
             autostr = "(path not specified)"
         else:
-            autostr = "(located at %s)" % SETTINGS.hdf5
+            autostr = "(located at %s)" % hdf5
         
         print "Building for HDF5 %s.%s %s" % (api[0], api[1], autostr)
 
