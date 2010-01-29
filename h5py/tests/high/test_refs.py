@@ -28,7 +28,6 @@ class TestObjRef(Base):
         self.assertIsInstance(x, h5py.Group)
         self.assertEqual(x, g)
 
-    @tests.fixme("Unimplemented in __getitem__")
     def test_dtype(self):
         """ (Refs) Named type reference round-trip """
         dt = np.dtype('f')

@@ -332,6 +332,8 @@ class Group(HLObject, _DictCompat):
                     return Group(self, None, _rawid=h5r.dereference(name, self.id))
                 elif kind == h5g.DATASET:
                     return Dataset(self, None, _rawid=h5r.dereference(name, self.id))
+                elif kind == h5g.TYPE:
+                    return Datatype(self, None, _rawid=h5r.dereference(name, self.id))
 
                 raise ValueError("Unrecognized reference object type")
 
@@ -1422,11 +1424,11 @@ class Datatype(HLObject):
         """Numpy dtype equivalent for this datatype"""
         return self.id.dtype
 
-    def __init__(self, grp, name):
+    def __init__(self, grp, name, _rawid=None):
         """ Private constructor.
         """
         with phil:
-            id = h5t.open(grp.id, name)
+            id = _rawid if _rawid is not None else h5t.open(grp.id, name)
             HLObject.__init__(self, id)
 
     def __repr__(self):
