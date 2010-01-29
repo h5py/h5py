@@ -43,7 +43,6 @@ class TestCreate(tests.HTest):
                          obj_name='subgroup', lapl=lapl)
         self.assert_(isattr(aid))
 
-    @tests.fixme()
     def test_exc_1(self):
         """ (H5A) Existing name causes ValueError """
         h5a.create(self.fid, 'name', h5t.STD_I32LE, self.sid)
