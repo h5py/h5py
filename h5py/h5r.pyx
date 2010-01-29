@@ -55,9 +55,12 @@ def create(ObjectID loc not None, char* name, int ref_type, SpaceID space=None):
     if ref_type == H5R_OBJECT:
         ref = Reference()
     elif ref_type == H5R_DATASET_REGION:
+        if space is None:   # work around segfault in HDF5
+            raise ValueError("Dataspace required for region reference")
         ref = RegionReference()
     else:
         raise ValueError("Unknown reference typecode")
+
     if space is None:
         space_id = -1
     else:

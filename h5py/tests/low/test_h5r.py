@@ -42,7 +42,6 @@ class TestBasic(tests.HTest):
         self.assertIsInstance(sid, h5s.SpaceID)
         self.assertEqual(sid2.get_select_bounds(), sid.get_select_bounds())
 
-    @tests.fixme("segfaults")
     def test_create_exc(self):
         """ (H5R) RegionReference w/no dataspace raises ValueError """
         self.assertRaises(ValueError, h5r.create, self.did, '.', h5r.DATASET_REGION)
