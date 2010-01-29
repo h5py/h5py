@@ -25,6 +25,7 @@ cdef class Reference:
 
     cdef ref_u ref
     cdef readonly int typecode
+    cdef readonly size_t typesize
 
 cdef class RegionReference(Reference):
 

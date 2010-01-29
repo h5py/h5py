@@ -64,7 +64,6 @@ def create(ObjectID loc not None, char* name, int ref_type, SpaceID space=None):
         space_id = space.id
 
     H5Rcreate(&ref.ref, loc.id, name, <H5R_type_t>ref_type, space_id)
-    ref.typecode = ref_type
 
     return ref
 
@@ -157,37 +156,17 @@ cdef class Reference:
     """
 
     def __cinit__(self, *args, **kwds):
-        self.typecode = -1
+        self.typecode = H5R_OBJECT
+        self.typesize = sizeof(hobj_ref_t)
 
     def __nonzero__(self):
-        # Whether or not the reference is zero-filled.  Note a True result
-        # does *not* mean the reference is valid.
-        cdef size_t obsize
         cdef int i
-        cdef unsigned char *buf
-
-        if self.typecode == H5R_OBJECT:
-            obsize = sizeof(hobj_ref_t)
-        elif self.typecode == H5R_DATASET_REGION:
-            obsize = sizeof(hdset_reg_ref_t)
-        else:
-            raise TypeError("Unknown reference type")
-        
-        buf = <unsigned char*>&self.ref
-
-        for i from 0<=i<obsize:
-            if buf[i] != 0:
-                return True
+        for i from 0<=i<self.typesize:
+            if (<unsigned char*>&self.ref)[i] != 0: return True
         return False
 
     def __repr__(self):
-        if self.typecode == H5R_OBJECT:
-            desc_str = PyString_FromStringAndSize(<char*>&self.ref, sizeof(hobj_ref_t))
-            return "<HDF5 object reference (%r)>" % desc_str
-        elif self.typecode == H5R_DATASET_REGION:
-            desc_str = PyString_FromStringAndSize(<char*>&self.ref, sizeof(hdset_reg_ref_t))
-            return "<HDF5 dataset region reference (%r)>" % desc_str
-        return "<Invalid HDF5 reference>"
+        return "<HDF5 object reference%s>" % ("" if self else " (null)")
 
 cdef class RegionReference(Reference):
 
@@ -198,8 +177,12 @@ cdef class RegionReference(Reference):
         convenience.
     """
 
-    pass
+    def __cinit__(self, *args, **kwds):
+        self.typecode = H5R_DATASET_REGION
+        self.typesize = sizeof(hdset_reg_ref_t)
 
+    def __repr__(self):
+        return "<HDF5 region reference%s>" % ("" if self else " (null")
 
 
 

@@ -53,14 +53,18 @@ class TestObjRef(Base):
         x = self.f[g.ref]
         self.assertIsNone(x.name)
 
-    @tests.fixme("TypeError in h5r")
     def test_bool(self):
         """ (Refs) __nonzero__ tracks validity """
         ref = h5py.Reference()
         self.assert_(not ref)
         self.assert_(self.f.ref)
 
-    @tests.fixme("TypeError in h5r")
+    def test_repr(self):
+        """ (Refs) __repr__ works on live and dead references """
+        ref = h5py.Reference()
+        self.assertIsInstance(repr(ref), basestring)
+        self.assertIsInstance(repr(self.f.ref), basestring)
+
     def test_exc(self):
         """ (Refs) Deref of empty ref raises ValueError """
         ref = h5py.Reference()
