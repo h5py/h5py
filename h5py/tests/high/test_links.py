@@ -56,5 +56,58 @@ class TestSoft(Base):
         self.f['alias'] = h5py.SoftLink('new')
         self.assertRaises(KeyError, self.f.__getitem__, 'alias')
 
+class TestExternal(Base):
+
+    def setUp(self):
+        Base.setUp(self)
+        import tempfile
+        self.ename = tempfile.mktemp()
+        self.ef = h5py.File(self.ename, 'w')
+        g = self.ef.create_group('external')
+        self.ef.close()
+
+    def tearDown(self):
+        Base.tearDown(self)
+        import os
+        os.unlink(self.ename)
+
+    @tests.require(api=18)
+    @tests.fixme("Leaks IDs by using incorrect FAPL")
+    def test_create(self):
+        """ (Links) Create and access external link """
+        self.f['ext'] = h5py.ExternalLink(self.ename, '/external')
+        g = self.f['ext']
+        self.assert_(g)
+        self.assertIsInstance(g, h5py.Group)
+
+    @tests.require(api=18)
+    def test_exc(self):
+        """ (Links) Missing external link raises KeyError """
+        self.f['ext'] = h5py.ExternalLink(self.ename, '/missing')
+        self.assertRaises(KeyError, self.f.__getitem__, 'ext')
+
+    @tests.require(api=18)
+    def test_exc1(self):
+        """ (Links) Missing external file raises IOError """
+        self.f['ext'] = h5py.ExternalLink('misssing.hdf5', '/missing')
+        self.assertRaises(IOError, self.f.__getitem__, 'ext')
+
+    @tests.fixme("Leaks IDs by using incorrect FAPL")
+    def test_file(self):
+        """ (Links) File attribute works correctly on external links """
+        self.f['ext'] = h5py.ExternalLink(self.ename, '/external')
+        g = self.f['ext']
+        self.assertNotEqual(g.file, self.f)
+
+
+
+
+
+
+
+
+
+
+
 
 
