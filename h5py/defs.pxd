@@ -772,6 +772,8 @@ cdef extern from "hdf5.h":
     herr_t H5Pget_nlinks(hid_t plist_id, size_t *nlinks) except *
     herr_t H5Pset_elink_prefix(hid_t plist_id, char *prefix) except *
     ssize_t H5Pget_elink_prefix(hid_t plist_id, char *prefix, size_t size) except *
+    hid_t  H5Pget_elink_fapl(hid_t lapl_id) except *
+    herr_t H5Pset_elink_fapl(hid_t lapl_id, hid_t fapl_id) except *
 
     herr_t H5Pset_create_intermediate_group(hid_t plist_id, unsigned crt_intmd) except *
     herr_t H5Pget_create_intermediate_group(hid_t plist_id, unsigned *crt_intmd) except *

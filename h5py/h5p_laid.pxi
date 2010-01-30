@@ -73,3 +73,17 @@ cdef class PropLAID(PropInstanceID):
 
         return pstr
 
+    def set_elink_fapl(self, PropID fapl not None):
+        """ (PropFAID fapl)
+
+        Set the file access property list used when opening external files.
+        """
+        H5Pset_elink_fapl(self.id, fapl.id)
+
+    def get_elink_fapl(self):
+        """ () => PropFAID fapl
+
+        Get the file access property list used when opening external files.
+        """
+        return propwrap(H5Pget_elink_fapl(self.id))
+
