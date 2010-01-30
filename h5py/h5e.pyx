@@ -232,7 +232,9 @@ cdef dict _minor_table = {
 
     H5E_EXISTS:         ValueError,  # Object already exists 
     H5E_ALREADYEXISTS:  ValueError,  # Object already exists, part II
-    H5E_CANTCONVERT:    TypeError    # Can't convert datatypes 
+    H5E_CANTCONVERT:    TypeError,   # Can't convert datatypes 
+
+    H5E_CANTDELETE:     KeyError,    # Can't delete message
   }
 
 # "Fudge" table to accomodate annoying inconsistencies in HDF5's use 

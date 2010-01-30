@@ -57,7 +57,6 @@ class TestDel(GroupBase):
         del self.f['new']
         self.assert_('new' not in self.f)
 
-    @tests.fixme("KeyError on 1.6, SymbolError on 1.8")
     def test_del_exc(self):
         """ (Group) del raises KeyError for missing item """
         self.assertRaises(KeyError, self.f.__delitem__, 'new')
