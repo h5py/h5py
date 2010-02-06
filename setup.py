@@ -467,7 +467,7 @@ setup(
   maintainer_email = '"h5py" at the domain "alfven.org"',
   url = 'http://h5py.alfven.org',
   download_url = 'http://code.google.com/p/h5py/downloads/list',
-  packages = ['h5py','h5py.tests'],
+  packages = ['h5py','h5py.tests', 'h5py.tests.low', 'h5py.tests.high'],
   package_data = package_data,
   ext_modules = EXTENSIONS,
   requires = ['numpy (>=1.0.1)'],

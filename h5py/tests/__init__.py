@@ -16,15 +16,6 @@ import numpy as np
 
 config = h5py.h5.get_config()
 
-def runtests():
-    """ Run low and highlevel h5py tests.
-
-    Result is a 2-tuple of TestResult objects
-    """
-    import low
-    runner = unittest.TextTestRunner()
-    return tuple(runner.run(suite) for suite in (low.getsuite(),))
-
 def autotest():
     try:
         if not all(runtests()):
@@ -151,6 +142,40 @@ class HTest(unittest.TestCase):
 
         if what is not None:
             raise AssertionError("%r is not None" % what)
+
+def runtests():
+    """ Run low and highlevel h5py tests.
+
+    Result is a 2-tuple of TestResult objects
+    """
+    import os, fnmatch
+    import h5py.tests
+    import h5py.tests.low
+    import h5py.tests.high
+
+    packages = ['low','high']
+    ldr = unittest.TestLoader()
+    suite = unittest.TestSuite()
+
+    thisdir = os.path.dirname(__file__)
+
+    # new tests
+    for p in packages:
+        files = [x.partition('.py')[0] for x in os.listdir(os.path.join(thisdir, p)) if fnmatch.fnmatch(x, 'test_*.py')]
+        modules = ['h5py.tests.%s.%s' % (p, m) for m in files]
+        modules = [__import__(m, fromlist=[h5py.tests, h5py.tests.low, h5py.tests.high]) for m in modules]
+        for m in modules:
+            suite.addTests(ldr.loadTestsFromModule(m))
+
+    # old tests
+        files = [x.partition('.py')[0] for x in os.listdir(thisdir) if fnmatch.fnmatch(x, 'test_*.py')]
+        modules = ['h5py.tests.%s' % m for m in files]
+        modules = [__import__(m, fromlist=[h5py.tests, h5py.tests.low, h5py.tests.high]) for m in modules]
+        for m in modules:
+            suite.addTests(ldr.loadTestsFromModule(m))
+
+    runner = unittest.TextTestRunner()
+    return runner.run(suite)
 
 
 
