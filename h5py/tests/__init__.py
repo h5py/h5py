@@ -143,10 +143,10 @@ class HTest(unittest.TestCase):
         if what is not None:
             raise AssertionError("%r is not None" % what)
 
-def runtests():
+def runtests(**kwds):
     """ Run low and highlevel h5py tests.
 
-    Result is a 2-tuple of TestResult objects
+    Result is a TestResult object.  Keywords forwarded to TextTestRunner.
     """
     import os, fnmatch
     import h5py.tests
@@ -174,8 +174,51 @@ def runtests():
     for m in modules:
         suite.addTests(ldr.loadTestsFromModule(m))
 
-    runner = unittest.TextTestRunner()
+    runner = unittest.TextTestRunner(**kwds)
     return runner.run(suite)
+
+def report():
+    """ Generate a test report containing system parameters and test results.
+
+    Return is a 3-tuple sysinfo, stdout, stderr.
+    """
+    import cStringIO
+    import sys
+    import os
+    import h5py
+    import time
+    import numpy
+
+    info = """\
+Time:   %(time)s
+h5py:   %(vers)s
+HDF5:   %(hvers)s
+API:    %(hapi)s
+uname:  %(uname)s
+Python: %(pyversion)s
+NumPy:  %(numpy)s
+"""
+    info %= {'time': time.asctime(), 'vers': h5py.version.version,
+             'hvers': h5py.version.hdf5_version, 'hapi': h5py.version.api_version,
+             'uname': os.uname(), 'pyversion': sys.version.replace('\n','-'),
+             'numpy': numpy.version.version}
+
+    nso, nse = cStringIO.StringIO(), cStringIO.StringIO()
+    oso, ose = sys.stdout, sys.stderr
+    try:
+        sys.stdout, sys.stderr = nso, nse
+        result = runtests(stream=nse, verbosity=3)
+    finally:
+        sys.stdout, sys.stderr, = oso, ose
+    nso.seek(0)
+    nse.seek(0)
+
+    return info, nso.read(), nse.read()
+
+
+
+
+
 
 
 
