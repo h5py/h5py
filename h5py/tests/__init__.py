@@ -168,11 +168,11 @@ def runtests():
             suite.addTests(ldr.loadTestsFromModule(m))
 
     # old tests
-        files = [x.partition('.py')[0] for x in os.listdir(thisdir) if fnmatch.fnmatch(x, 'test_*.py')]
-        modules = ['h5py.tests.%s' % m for m in files]
-        modules = [__import__(m, fromlist=[h5py.tests, h5py.tests.low, h5py.tests.high]) for m in modules]
-        for m in modules:
-            suite.addTests(ldr.loadTestsFromModule(m))
+    files = [x.partition('.py')[0] for x in os.listdir(thisdir) if fnmatch.fnmatch(x, 'test_*.py')]
+    modules = ['h5py.tests.%s' % m for m in files]
+    modules = [__import__(m, fromlist=[h5py.tests, h5py.tests.low, h5py.tests.high]) for m in modules]
+    for m in modules:
+        suite.addTests(ldr.loadTestsFromModule(m))
 
     runner = unittest.TextTestRunner()
     return runner.run(suite)
