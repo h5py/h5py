@@ -188,20 +188,20 @@ def report():
     import h5py
     import time
     import numpy
+    import platform
 
+    plat = ['platform', 'python_version', 'python_compiler']
     info = """\
 Time:   %(time)s
 h5py:   %(vers)s
 HDF5:   %(hvers)s
 API:    %(hapi)s
-uname:  %(uname)s
-Python: %(pyversion)s
 NumPy:  %(numpy)s
 """
     info %= {'time': time.asctime(), 'vers': h5py.version.version,
              'hvers': h5py.version.hdf5_version, 'hapi': h5py.version.api_version,
-             'uname': os.uname(), 'pyversion': sys.version.replace('\n','-'),
              'numpy': numpy.version.version}
+    info += "\n".join("%s: %s" % (x, getattr(platform, x)()) for x in plat)
 
     nso, nse = cStringIO.StringIO(), cStringIO.StringIO()
     oso, ose = sys.stdout, sys.stderr
