@@ -126,16 +126,23 @@ def open(ObjectID loc not None, char* name):
 
 IF H5PY_18API:
     
-    def create(ObjectID loc not None, char* name, PropID lcpl=None,
+    def create(ObjectID loc not None, char* name=NULL, PropID lcpl=None,
                PropID gcpl=None):
-        """(ObjectID loc, STRING name, PropLCID lcpl=None, PropGCID gcpl=None)
+        """(ObjectID loc, [STRING name,] PropLCID lcpl=None, PropGCID gcpl=None)
         => GroupID
 
-        Create a new group, under a given parent group.
+        Create a new group, under a given parent group.  If name is omitted,
+        an anonymous group will be created in the file.
         """
-        return GroupID(H5Gcreate2(loc.id, name, pdefault(lcpl),
-                                                pdefault(gcpl),
-                                                H5P_DEFAULT))
+        cdef hid_t gid
+
+        if name != NULL:
+            gid = H5Gcreate2(loc.id, name, pdefault(lcpl), pdefault(gcpl), H5P_DEFAULT)
+        else:
+            gid = H5Gcreate_anon(loc.id, pdefault(gcpl), H5P_DEFAULT)
+
+        return GroupID(gid)
+
 ELSE:
     
     def create(ObjectID loc not None, char* name):
