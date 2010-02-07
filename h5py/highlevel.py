@@ -704,6 +704,23 @@ class File(Group):
                    h5fd.WINDOWS: 'windows'}
         return drivers.get(self.fid.get_access_plist().get_driver(), 'unknown')
 
+    @cproperty('_xlapl')
+    def _lapl(self):
+        """Default link access property list (1.8)"""
+
+        lapl = h5p.create(h5p.LINK_ACCESS)
+        fapl = h5p.create(h5p.FILE_ACCESS)
+        fapl.set_fclose_degree(h5f.CLOSE_STRONG)
+        lapl.set_elink_fapl(fapl)
+        return lapl
+
+    @cproperty('_xlcpl')
+    def _lcpl(self):
+        """Default link creation property list (1.8)"""
+        lcpl = h5p.create(h5p.LINK_CREATE)
+        lcpl.set_create_intermediate_group(True)
+        return lcpl
+
     # --- Public interface (File) ---------------------------------------------
 
     def __init__(self, name, mode=None, driver=None, **kwds):
