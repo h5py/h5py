@@ -220,8 +220,16 @@ class TestProps(FileBase):
         lapl = self.f._lapl
         self.assertIsInstance(lapl, h5py.h5p.PropLAID)
 
+class TestMode(FileBase):
 
-
+    def test_mode(self):
+        """ (File) Mode works properly with .file attribute """
+        self.name = mktemp()
+        self.f = h5py.File(self.name, 'a')
+        g = self.f.create_group('g')
+        self.assertEqual(g.file.mode, self.f.mode)
+        self.assertEqual(self.f.mode, 'a')
+        
 
 
 

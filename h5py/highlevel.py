@@ -103,24 +103,28 @@ class HLObject(object):
         identity.
     """
 
-    _files_dct = weakref.WeakValueDictionary()
+    @property
+    def file(self):
+        """Return a File instance associated with this object"""
+        fid = h5i.get_file_id(self.id)
+        return File(None, bind=fid)
 
-    @classmethod
-    def _reg_file(cls, fileobj):
-        """ Register a high-level File object """
-        fileno = h5g.get_objinfo(fileobj.fid, '.').fileno
-        cls._files_dct[fileno] = fileobj
+    @property
+    def _lapl(self):
+        """Default link access property list (1.8)"""
 
-    @classmethod
-    def _get_file(cls, oid):
-        """ Retrieve the File object appropriate for this object """
-        fileno = h5g.get_objinfo(oid, '.').fileno
-        try:
-            return cls._files_dct[fileno]
-        except KeyError:
-            fid = h5i.get_file_id(oid)
-            fileobj = File(None, bind=fid)
-            return cls._files_dct.setdefault(fileno, fileobj)
+        lapl = h5p.create(h5p.LINK_ACCESS)
+        fapl = h5p.create(h5p.FILE_ACCESS)
+        fapl.set_fclose_degree(h5f.CLOSE_STRONG)
+        lapl.set_elink_fapl(fapl)
+        return lapl
+
+    @property
+    def _lcpl(self):
+        """Default link creation property list (1.8)"""
+        lcpl = h5p.create(h5p.LINK_CREATE)
+        lcpl.set_create_intermediate_group(True)
+        return lcpl
 
     @property
     def id(self):
@@ -136,11 +140,6 @@ class HLObject(object):
     def attrs(self):
         """Provides access to HDF5 attributes. See AttributeManager."""
         return AttributeManager(self)
-
-    @property
-    def file(self):
-        """Return a File instance associated with this object"""
-        return self._file
 
     @property
     def parent(self):
@@ -159,7 +158,7 @@ class HLObject(object):
 
     def __init__(self, oid):
         """ Setup this object, given its low-level identifier """
-        self._file = self._get_file(oid)
+        #self._file = self._get_file(oid)
         self._id = oid
 
     def __nonzero__(self):
@@ -277,7 +276,6 @@ class Group(HLObject, _DictCompat):
     def _set18(self, name, obj):
         """ HDF5 1.8 __setitem__.  PHIL should already be held. """
         plists = {'lcpl': self._lcpl, 'lapl': self._lapl}
-
         if isinstance(obj, HLObject):
             h5o.link(obj.id, self.id, name, **plists)
 
@@ -339,6 +337,20 @@ class Group(HLObject, _DictCompat):
             else:
                 self._set16(name, obj)
 
+    def _get18(self, name):
+        """ HDF5 1.8 __getitem__ """
+        
+        objinfo = h5o.get_info(self.id, name, lapl=self._lapl)
+
+        cls = {h5o.TYPE_GROUP: Group, h5o.TYPE_DATASET: Dataset,
+               h5o.TYPE_NAMED_DATATYPE: Datatype}.get(objinfo.type)
+        if cls is None:
+            raise TypeError("Unknown object type")
+
+        oid = h5o.open(self.id, name, lapl=self._lapl)
+        return cls(self, None, _rawid=oid)
+
+
     def __getitem__(self, name):
         """ Open an object attached to this group. 
         """
@@ -357,6 +369,9 @@ class Group(HLObject, _DictCompat):
                     return Datatype(self, None, _rawid=h5r.dereference(name, self.id))
 
                 raise ValueError("Unrecognized reference object type")
+
+            if config.API_18:
+                return self._get18(name)
 
             info = h5g.get_objinfo(self.id, name)
 
@@ -690,6 +705,8 @@ class File(Group):
             memb_size:  Maximum file size (default is 2**31-1).
     """
 
+    _modes = weakref.WeakKeyDictionary()
+
     @property
     def filename(self):
         """File name on disk"""
@@ -709,38 +726,21 @@ class File(Group):
     def file(self):
         return self
 
-    @cproperty('_mode')
+    @property
     def mode(self):
         """Python mode used to open file"""
-        if not config.API_18:
-            return None
-        intent = self.fid.get_intent()
-        return {h5f.ACC_RDONLY: 'r', h5f.ACC_RDWR: 'r+'}.get(intent)
+        mode = self._modes.get(self)
+        if mode is None and config.API_18:
+            mode = {h5f.ACC_RDONLY: 'r', h5f.ACC_RDWR: 'r+'}.get(self.fid.get_intent())
+        return mode
 
-    @cproperty('_driver')
+    @property
     def driver(self):
         """Low-level HDF5 file driver used to open file"""
         drivers = {h5fd.SEC2: 'sec2', h5fd.STDIO: 'stdio',
                    h5fd.CORE: 'core', h5fd.FAMILY: 'family',
                    h5fd.WINDOWS: 'windows'}
         return drivers.get(self.fid.get_access_plist().get_driver(), 'unknown')
-
-    @cproperty('_xlapl')
-    def _lapl(self):
-        """Default link access property list (1.8)"""
-
-        lapl = h5p.create(h5p.LINK_ACCESS)
-        fapl = h5p.create(h5p.FILE_ACCESS)
-        fapl.set_fclose_degree(h5f.CLOSE_STRONG)
-        lapl.set_elink_fapl(fapl)
-        return lapl
-
-    @cproperty('_xlcpl')
-    def _lcpl(self):
-        """Default link creation property list (1.8)"""
-        lcpl = h5p.create(h5p.LINK_CREATE)
-        lcpl.set_create_intermediate_group(True)
-        return lcpl
 
     # --- Public interface (File) ---------------------------------------------
 
@@ -775,10 +775,9 @@ class File(Group):
 
             plist = self._generate_access_plist(driver, **kwds)
             self.fid = self._generate_fid(name, mode, plist)
-            self._mode = mode
+            self._modes[self] = mode
 
-        gid = h5g.open(self.fid, '/')
-        self._reg_file(self)
+        gid = h5o.open(self.fid, '/', lapl=self._lapl)
         Group.__init__(self, None, None, _rawid=gid)
 
     def _generate_access_plist(self, driver, **kwds):

@@ -95,6 +95,7 @@ class HTest(unittest.TestCase):
             newcount = h5py.h5f.get_obj_count()
             if newcount != objcount:
                 print "WARNING: LEAKED %d IDs (total %d)" % (newcount-objcount, newcount)
+                print h5py.h5f.get_obj_ids()
                 if 0:
                     ids = h5py.h5f.get_obj_ids()
                     for id_ in ids:

@@ -72,9 +72,13 @@ class TestExternal(Base):
         os.unlink(self.ename)
 
     @tests.require(api=18)
-    @tests.fixme("Leaks IDs by using incorrect FAPL")
+    def test_create_only(self):
+        """ (Links) Create external link """
+        self.f['ext'] = h5py.ExternalLink(self.ename, '/external')
+
+    @tests.require(api=18)
     def test_create(self):
-        """ (Links) Create and access external link """
+        """ (Links) Access external link """
         self.f['ext'] = h5py.ExternalLink(self.ename, '/external')
         g = self.f['ext']
         self.assert_(g)
@@ -92,7 +96,7 @@ class TestExternal(Base):
         self.f['ext'] = h5py.ExternalLink('misssing.hdf5', '/missing')
         self.assertRaises(IOError, self.f.__getitem__, 'ext')
 
-    @tests.fixme("Leaks IDs by using incorrect FAPL")
+    @tests.require(api=18)
     def test_file(self):
         """ (Links) File attribute works correctly on external links """
         self.f['ext'] = h5py.ExternalLink(self.ename, '/external')
