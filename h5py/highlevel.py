@@ -625,7 +625,7 @@ class Group(HLObject, _DictCompat):
         if not self:
             return "<Closed HDF5 group>"
         namestr = '"%s"' % self.name if self.name is not None else "(anonymous)"
-        return '<HDF5 group "%s" (%d members)>' % \
+        return '<HDF5 group %s (%d members)>' % \
             (namestr, len(self))
 
 
@@ -1448,7 +1448,7 @@ class Datatype(HLObject):
         if not self.id:
             return "<Closed HDF5 named type>"
         namestr = '"%s"' % _extras.basename(self.name) if self.name is not None else "(anonymous)"
-        return '<HDF5 named type "%s" (dtype %s)>' % \
+        return '<HDF5 named type %s (dtype %s)>' % \
             (namestr, self.dtype.str)
 
 class SoftLink(object):
