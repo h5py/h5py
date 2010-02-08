@@ -274,6 +274,41 @@ class Group(HLObject, _DictCompat):
                 id = h5g.open(parent_object.id, name)
             HLObject.__init__(self, id)
 
+    def _set18(self, name, obj):
+        """ HDF5 1.8 __setitem__.  PHIL should already be held. """
+        plists = {'lcpl': self._lcpl, 'lapl': self._lapl}
+
+        if isinstance(obj, HLObject):
+            h5o.link(obj.id, self.id, name, **plists)
+
+        elif isinstance(obj, SoftLink):
+            self.id.links.create_soft(name, obj.path, **plists)
+        elif isinstance(obj, ExternalLink):
+            self.id.links.create_external(name, obj.filename, obj.path, **plists)
+
+        elif isinstance(obj, numpy.dtype):
+            htype = h5t.py_create(obj)
+            htype.commit(self.id, name, lcpl=self._lcpl)
+
+        else:
+            ds = self.create_dataset(None, data=obj)
+            h5o.link(ds.id, self.id, name, **plists)  
+
+    def _set16(self, name, obj):
+        """ HDF5 1.6 __setitem__.  PHIL should already be held. """
+        if isinstance(obj, HLObject):
+            self.id.link(h5i.get_name(obj.id), name, link_type=h5g.LINK_HARD)
+
+        elif isinstance(obj, SoftLink):
+            self.id.link(obj.path, name, link_type=h5g.LINK_SOFT)
+
+        elif isinstance(obj, numpy.dtype):
+            htype = h5t.py_create(obj)
+            htype.commit(self.id, name)
+
+        else:
+            self.create_dataset(name, data=obj)
+
     def __setitem__(self, name, obj):
         """ Add an object to the group.  The name must not already be in use.
 
@@ -299,21 +334,10 @@ class Group(HLObject, _DictCompat):
             can't understand the resulting array dtype.
         """
         with phil:
-            if isinstance(obj, Group) or isinstance(obj, Dataset) or isinstance(obj, Datatype):
-                self.id.link(h5i.get_name(obj.id), name, link_type=h5g.LINK_HARD)
-
-            elif isinstance(obj, SoftLink):
-                self.id.link(obj.path, name, link_type=h5g.LINK_SOFT)
-    
-            elif isinstance(obj, ExternalLink):
-                self.id.links.create_external(name, obj.filename, obj.path)
-
-            elif isinstance(obj, numpy.dtype):
-                htype = h5t.py_create(obj)
-                htype.commit(self.id, name)
-
+            if config.API_18:
+                self._set18(name, obj)
             else:
-                self.create_dataset(name, data=obj)
+                self._set16(name, obj)
 
     def __getitem__(self, name):
         """ Open an object attached to this group. 
