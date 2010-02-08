@@ -26,51 +26,22 @@
 from __future__ import with_statement
 
 import os
-import numpy
-import warnings
 import sys
-import math
-
+import weakref
+import threading
+import warnings
 import os.path as op
 import posixpath as pp
+import numpy
 
 from h5py import h5, h5f, h5g, h5s, h5t, h5d, h5a, \
                  h5p, h5r, h5z, h5i, h5fd, h5o, h5l, \
-                 version, filters
+                 version, filters, _extras
 import h5py.selections as sel
 
 config = h5.get_config()
-
-import weakref
-import threading
-
 phil = threading.RLock()
 
-def cproperty(attrname):
-    """ Cached property using instance dict. """
-    import functools
-    def outer(meth):
-        def inner(self):
-            if attrname in self.__dict__:
-                return self.__dict__[attrname]
-            return self.__dict__.setdefault(attrname, meth(self))
-        functools.update_wrapper(inner, meth)
-        return property(inner)
-    return outer
-
-def _hbasename(name):
-    """ Basename function with more readable handling of trailing slashes"""
-    name = pp.basename(pp.normpath(name))
-    return name if name != '' else '/'
-
-def _hsizestring(size):
-    """ Friendly representation of byte sizes """
-    d = int(math.log(size, 1024) // 1) if size else 0
-    suffix = {1: 'k', 2: 'M', 3: 'G', 4: 'T'}.get(d)
-    if suffix is None:
-        return "%d bytes" % size
-    return "%.1f%s" % (size / (1024.**d), suffix)
-    
 def is_hdf5(fname):
     """ Determine if a file is valid HDF5 (False if it doesn't exist). """
     fname = os.path.abspath(fname)
@@ -136,7 +107,7 @@ class HLObject(object):
         """Name of this object in the HDF5 file.  Not necessarily unique."""
         return h5i.get_name(self.id)
 
-    @cproperty('_attrs')
+    @_extras.cproperty('_attrs')
     def attrs(self):
         """Provides access to HDF5 attributes. See AttributeManager."""
         return AttributeManager(self)
@@ -151,7 +122,7 @@ class HLObject(object):
             raise ValueError("Parent of an anonymous object is undefined")
         return self.file[pp.dirname(self.name)]
 
-    @cproperty('_ref')
+    @_extras.cproperty('_ref')
     def ref(self):
         """ An (opaque) HDF5 reference to this object """
         return h5r.create(self.id, '.', h5r.OBJECT)
@@ -848,7 +819,7 @@ class File(Group):
             return "<Closed HDF5 file>"
         return '<HDF5 file "%s" (mode %s, %s)>' % \
             (os.path.basename(self.filename), self.mode,
-             _hsizestring(self.fid.get_filesize()))
+             _extras.sizestring(self.fid.get_filesize()))
 
     # Fix up identity to use the file identifier, not the root group.
     def __hash__(self):
@@ -893,7 +864,7 @@ class Dataset(HLObject):
 
     shape = property(_g_shape, _s_shape)
 
-    @cproperty('_dtype')
+    @_extras.cproperty('_dtype')
     def dtype(self):
         """Numpy dtype representing the datatype"""
         return self.id.dtype
@@ -907,11 +878,11 @@ class Dataset(HLObject):
             #    return numpy.asscalar(arr)
             return arr
 
-    @cproperty('__dcpl')
+    @_extras.cproperty('__dcpl')
     def _dcpl(self):
         return self.id.get_create_plist()
 
-    @cproperty('__filters')
+    @_extras.cproperty('__filters')
     def _filters(self):
         return filters.get_filters(self._dcpl)
 
@@ -1303,7 +1274,7 @@ class Dataset(HLObject):
     def __repr__(self):
         if not self:
             return "<Closed HDF5 dataset>"
-        namestr = '"%s"' % _hbasename(self.name) if self.name is not None else "(anonymous)"
+        namestr = '"%s"' % _extras.basename(self.name) if self.name is not None else "(anonymous)"
         return '<HDF5 dataset %s: shape %s, type "%s">' % \
             (namestr, self.shape, self.dtype.str)
 
@@ -1474,7 +1445,7 @@ class Datatype(HLObject):
     def __repr__(self):
         if not self.id:
             return "<Closed HDF5 named type>"
-        namestr = '"%s"' % _hbasename(self.name) if self.name is not None else "(anonymous)"
+        namestr = '"%s"' % _extras.basename(self.name) if self.name is not None else "(anonymous)"
         return '<HDF5 named type "%s" (dtype %s)>' % \
             (namestr, self.dtype.str)
 
