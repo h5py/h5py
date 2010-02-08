@@ -56,17 +56,40 @@ FILL_VALUE_USER_DEFINED = H5D_FILL_VALUE_USER_DEFINED
 
 # === Dataset operations ======================================================
 
+IF H5PY_18API:
 
-def create(ObjectID loc not None, char* name, TypeID tid not None, 
-            SpaceID space not None, PropID dcpl=None):
-    """ (ObjectID loc, STRING name, TypeID tid, SpaceID space,
-         PropDCID dcpl=None ) 
-        => DatasetID
+    def create(ObjectID loc not None, object name, TypeID tid not None,
+               SpaceID space not None, PropID dcpl=None, PropID lcpl=None):
+        """ (objectID loc, [STRING name,], TypeID tid, SpaceID space,
+             PropDCID dcpl=None, PropID lcpl=None) => DatasetID
 
-        Create a new dataset under an HDF5 file or group.  Keyword dcpl
-        may be a dataset creation property list.
-    """
-    return DatasetID(H5Dcreate(loc.id, name, tid.id, space.id, pdefault(dcpl)))
+        Create a new dataset.  If "name" is None, the dataset will be
+        anonymous.
+        """
+        cdef hid_t dsid
+        cdef char* cname = NULL
+        if name is not None:
+            cname = name
+
+        if cname != NULL:
+            dsid = H5Dcreate2(loc.id, cname, tid.id, space.id,
+                     pdefault(lcpl), pdefault(dcpl), H5P_DEFAULT)
+        else:
+            dsid = H5Dcreate_anon(loc.id, tid.id, space.id,
+                     pdefault(dcpl), H5P_DEFAULT)
+        return DatasetID(dsid)
+
+ELSE:             
+    def create(ObjectID loc not None, char* name, TypeID tid not None, 
+                SpaceID space not None, PropID dcpl=None):
+        """ (ObjectID loc, STRING name, TypeID tid, SpaceID space,
+             PropDCID dcpl=None ) 
+            => DatasetID
+
+            Create a new dataset under an HDF5 file or group.  Keyword dcpl
+            may be a dataset creation property list.
+        """
+        return DatasetID(H5Dcreate(loc.id, name, tid.id, space.id, pdefault(dcpl)))
 
 
 def open(ObjectID loc not None, char* name):

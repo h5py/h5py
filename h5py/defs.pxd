@@ -190,6 +190,12 @@ cdef extern from "hdf5.h":
                         H5D_operator_t operator, void* operator_data) except *
   herr_t    H5Dset_extent(hid_t dset_id, hsize_t* size)
 
+  IF H5PY_18API:
+    hid_t H5Dcreate2(hid_t loc_id, char *name, hid_t type_id, hid_t space_id,
+                     hid_t lcpl_id, hid_t dcpl_id, hid_t dapl_id) except *
+    hid_t H5Dcreate_anon(hid_t file_id, hid_t type_id, hid_t space_id,
+                     hid_t plist_id, hid_t dapl_id) except *
+
 
 # === H5F - File API ==========================================================
 
