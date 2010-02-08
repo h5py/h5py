@@ -777,7 +777,10 @@ class File(Group):
             self.fid = self._generate_fid(name, mode, plist)
             self._modes[self] = mode
 
-        gid = h5o.open(self.fid, '/', lapl=self._lapl)
+        if config.API_18:
+            gid = h5o.open(self.fid, '/', lapl=self._lapl)
+        else:
+            gid = h5g.open(self.fid, '/')
         Group.__init__(self, None, None, _rawid=gid)
 
     def _generate_access_plist(self, driver, **kwds):
