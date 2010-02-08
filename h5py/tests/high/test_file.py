@@ -198,28 +198,6 @@ class TestUnicode(FileBase):
         self.assertEqual(self.f.filename, self.name)
         self.assert_(isinstance(self.f.filename, unicode))
 
-class TestProps(FileBase):
-
-    def setUp(self):
-        self.name = mktemp()
-        self.f = h5py.File(self.name, 'w')
-
-    def tearDown(self):
-        if self.f:
-            self.f.close()
-        import os
-        os.unlink(self.name)
-
-    @tests.require(api=18)
-    def test_lcpl(self):
-        lcpl = self.f._lcpl
-        self.assertIsInstance(lcpl, h5py.h5p.PropLCID)
-
-    @tests.require(api=18)
-    def test_lapl(self):
-        lapl = self.f._lapl
-        self.assertIsInstance(lapl, h5py.h5p.PropLAID)
-
 class TestMode(FileBase):
 
     def test_mode(self):
