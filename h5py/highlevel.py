@@ -245,8 +245,14 @@ class Group(HLObject, _DictCompat):
             HLObject.__init__(self, id)
 
     def _set18(self, name, obj):
-        """ HDF5 1.8 __setitem__.  PHIL should already be held. """
+        """ HDF5 1.8 __setitem__.  PHIL should already be held. 
+
+        Distinct from 1.6 version in that it uses the proper link creation
+        and access property lists, which enable creation of intermediate
+        groups and proper handling of external links.
+        """
         plists = {'lcpl': self._lcpl, 'lapl': self._lapl}
+
         if isinstance(obj, HLObject):
             h5o.link(obj.id, self.id, name, **plists)
 
