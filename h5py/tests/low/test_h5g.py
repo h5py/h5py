@@ -15,7 +15,7 @@ class TestCreate(tests.HTest):
     @tests.require(api=18)
     def test_create_anon(self):
         """ (H5G) Anonymous group creation """
-        gid = h5g.create(self.fid)
+        gid = h5g.create(self.fid, None)
         self.assert_(gid)
         self.assertIsInstance(gid, h5g.GroupID)
 

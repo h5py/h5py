@@ -60,7 +60,7 @@ IF H5PY_18API:
 
     def create(ObjectID loc not None, object name, TypeID tid not None,
                SpaceID space not None, PropID dcpl=None, PropID lcpl=None):
-        """ (objectID loc, [STRING name,], TypeID tid, SpaceID space,
+        """ (objectID loc, STRING name or None, TypeID tid, SpaceID space,
              PropDCID dcpl=None, PropID lcpl=None) => DatasetID
 
         Create a new dataset.  If "name" is None, the dataset will be
