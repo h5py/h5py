@@ -315,7 +315,10 @@ class Group(HLObject, _DictCompat):
                 self._set16(name, obj)
 
     def _get18(self, name):
-        """ HDF5 1.8 __getitem__ """
+        """ HDF5 1.8 __getitem__ 
+
+        Works with string names.  Respects link access properties.
+        """
         
         objinfo = h5o.get_info(self.id, name, lapl=self._lapl)
 
@@ -327,6 +330,25 @@ class Group(HLObject, _DictCompat):
         oid = h5o.open(self.id, name, lapl=self._lapl)
         return cls(self, None, _rawid=oid)
 
+    def _get16(self, name):
+        """ HDF5 1.6 __getitem__ """
+        objinfo = h5g.get_objinfo(self.id, name)
+        
+        cls = {h5g.DATASET: Dataset, h5g.GROUP: Group,
+               h5g.TYPE: Datatype}.get(objinfo.type)
+        if cls is None:
+            raise TypeError("Unknown object type")
+        
+        return cls(self, name)
+        
+    def _getref(self, ref):
+        """ Dereference and open (1.6 and 1.8) """
+        cls = {h5g.DATASET: Dataset, h5g.GROUP: Group,
+               h5g.TYPE: Datatype}.get(h5r.get_obj_type(ref, self.id))
+        if cls is None:
+            raise ValueError("Unrecognized object type")
+    
+        return cls(self, None, _rawid=h5r.dereference(ref, self.id))
 
     def __getitem__(self, name):
         """ Open an object attached to this group. 
@@ -334,34 +356,11 @@ class Group(HLObject, _DictCompat):
         with phil:
 
             if isinstance(name, h5r.Reference):
-
-                if not name:
-                    raise ValueError("Empty reference")
-                kind = h5r.get_obj_type(name, self.id)
-                if kind == h5g.GROUP:
-                    return Group(self, None, _rawid=h5r.dereference(name, self.id))
-                elif kind == h5g.DATASET:
-                    return Dataset(self, None, _rawid=h5r.dereference(name, self.id))
-                elif kind == h5g.TYPE:
-                    return Datatype(self, None, _rawid=h5r.dereference(name, self.id))
-
-                raise ValueError("Unrecognized reference object type")
-
-            if config.API_18:
+                return self._getref(name)
+            elif config.API_18:
                 return self._get18(name)
-
-            info = h5g.get_objinfo(self.id, name)
-
-            if info.type == h5g.DATASET:
-                return Dataset(self, name)
-
-            elif info.type == h5g.GROUP:
-                return Group(self, name)
-
-            elif info.type == h5g.TYPE:
-                return Datatype(self, name)
-
-            raise ValueError("Don't know how to open object of type %d" % info.type)
+            else:
+                return self._get16(name)
 
     def __delitem__(self, name):
         """ Delete (unlink) an item from this group. """
