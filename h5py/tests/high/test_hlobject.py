@@ -44,14 +44,13 @@ class TestProps(Base):
 
 class TestParent(Base):
 
-    @tests.fixme("File object does not compare equal to Group '/'")
     def test_parent(self):
         """ (HLObject) .parent """
-        self.assertEqual(self.f.parent, self.f)
+        self.assertEqual(self.f.parent, self.f['/'])
         g = self.f.create_group('a')
-        g2 = self.f.create_group('b')
+        g2 = self.f.create_group('a/b')
         self.assertEqual(g2.parent, g)
-        self.assertEqual(g.parent, self.f)
+        self.assertEqual(g.parent, self.f['/'])
 
 
 

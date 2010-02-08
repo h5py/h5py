@@ -821,10 +821,12 @@ class File(Group):
             (os.path.basename(self.filename), self.mode,
              _extras.sizestring(self.fid.get_filesize()))
 
-    # Fix up identity to use the file identifier, not the root group.
+
     def __hash__(self):
         return hash(self.fid)
     def __eq__(self, other):
+        # Python requires that objects which compare equal hash the same.
+        # Therefore comparison to generic Group objects is impossible
         if hasattr(other, 'fid'):
             return self.fid == other.fid
         return False
