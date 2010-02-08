@@ -130,10 +130,7 @@ class HLObject(object):
     @property
     def name(self):
         """Name of this object in the HDF5 file.  Not necessarily unique."""
-        name = h5i.get_name(self.id)
-        if name is None and config.API_18:
-            name = h5r.get_name(self.ref)
-        return name
+        return h5i.get_name(self.id)
 
     @cproperty('_attrs')
     def attrs(self):
