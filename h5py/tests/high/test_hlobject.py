@@ -18,6 +18,28 @@ class Base(tests.HTest):
             if self.name and os.path.exists(self.name):
                 os.unlink(self.name)
 
+class TestComparison(Base):
+
+    def test_eq(self):
+        """ (HLObject) __eq__ and __ne__ are opposite (files and groups) """
+        g1 = self.f.create_group('a')
+        g2 = self.f['a']
+        g3 = self.f.create_group('b')
+        f1 = self.f
+        f2 = g1.file
+        self.assert_(g1 == g2)
+        self.assert_(not g1 != g2)
+        self.assert_(g1 != g3)
+        self.assert_(not g1 == g3)
+        self.assert_(f1 == f2)
+        self.assert_(not f1 != f2)
+        
+    def test_grp(self):
+        """ (HLObject) File objects don't compare equal to root group """
+        g = self.f['/']
+        self.assert_(not g == self.f)
+        self.assert_(g != self.f)
+
 class TestPropFile(Base):
 
     def test_file2(self):
