@@ -164,6 +164,15 @@ class TestOps(tests.HTest):
         self.f.close()
         self.assert_(not self.f)
 
+    def test_close_multi(self):
+        """ (File) File close() affects all copies of identifier """
+        g = self.f.create_group('a')
+        f2 = g.file
+        self.assert_(f2 is not self.f)
+        self.f.close()
+        self.assert_(not self.f)
+        self.assert_(not f2)
+
     def test_exc(self):
         """ (File) I/O on closed file results in ValueError """
         self.f.close()

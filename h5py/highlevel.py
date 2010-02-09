@@ -806,7 +806,8 @@ class File(Group):
         """ Close this HDF5 file.  All open objects will be invalidated.
         """
         with phil:
-            self.fid.close()
+            while self.fid:
+                self.fid.close()
 
     def flush(self):
         """ Tell the HDF5 library to flush its buffers.
