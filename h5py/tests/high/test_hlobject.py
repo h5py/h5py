@@ -40,15 +40,23 @@ class TestComparison(Base):
         self.assert_(not g == self.f)
         self.assert_(g != self.f)
 
-class TestPropFile(Base):
+class TestProps(Base):
 
     def test_file2(self):
-        """ (HLObject) .file property on subclasses """
+        """ (HLObject) .file """
         g = self.f.create_group('foo')
         g2 = self.f.create_group('foo/bar')
         self.assertEqual(self.f, self.f.file)
         self.assertEqual(self.f, g.file)
         self.assertEqual(self.f, g2.file)
+
+    def test_parent(self):
+        """ (HLObject) .parent """
+        self.assertEqual(self.f.parent, self.f['/'])
+        g = self.f.create_group('a')
+        g2 = self.f.create_group('a/b')
+        self.assertEqual(g2.parent, g)
+        self.assertEqual(g.parent, self.f['/'])
 
 class TestProps(Base):
 
@@ -64,15 +72,7 @@ class TestProps(Base):
         lapl = self.f._lapl
         self.assertIsInstance(lapl, h5py.h5p.PropLAID)
 
-class TestParent(Base):
 
-    def test_parent(self):
-        """ (HLObject) .parent """
-        self.assertEqual(self.f.parent, self.f['/'])
-        g = self.f.create_group('a')
-        g2 = self.f.create_group('a/b')
-        self.assertEqual(g2.parent, g)
-        self.assertEqual(g.parent, self.f['/'])
 
 
 
