@@ -45,21 +45,6 @@ class BaseTypeMixin(object):
     def tearDown(self):
         res.clear()
 
-class TestInteger(TestCasePlus, BaseTypeMixin):
-
-    def test_set_get_order_sign(self):
-        
-        htype = h5t.STD_I32LE.copy()
-
-        self.assertEqual(htype.get_order(), h5t.ORDER_LE)
-        self.assertEqual(htype.get_sign(), h5t.SGN_2)
-
-        htype.set_order(h5t.ORDER_BE)
-        htype.set_sign(h5t.SGN_NONE)
-        
-        self.assertEqual(htype.get_order(), h5t.ORDER_BE)
-        self.assertEqual(htype.get_sign(), h5t.SGN_NONE)
-
 class TestOpaque(TestCasePlus, BaseTypeMixin):
 
     def test_setget_tag(self):

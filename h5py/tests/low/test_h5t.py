@@ -111,7 +111,6 @@ class TestEncodeDecode(Base):
         dec = pickle.loads(pkl)
         self.assertEqual(self.tid, dec)
 
-
 class TestFloat(Base):
 
     @tests.require(hasattr(np, 'float128'))
@@ -119,6 +118,20 @@ class TestFloat(Base):
         """ (H5T) Unsupported float size raises TypeError """
         self.assertRaises(TypeError, h5t.py_create, np.float128)
 
-    
+class TestInteger(Base):
+
+    def test_order(self):
+        """ (H5T) integer byte order """
+        tid = h5t.STD_I32LE.copy()
+        self.assertEqual(tid.get_order(), h5t.ORDER_LE)
+        tid.set_order(h5t.ORDER_BE)
+        self.assertEqual(tid.get_order(), h5t.ORDER_BE)
+
+    def test_sign(self):
+        """ (H5T) integer sign """
+        tid = h5t.STD_I32LE.copy()
+        self.assertEqual(tid.get_sign(), h5t.SGN_2)
+        tid.set_sign(h5t.SGN_NONE)
+        self.assertEqual(tid.get_sign(), h5t.SGN_NONE)
 
     
