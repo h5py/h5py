@@ -7,6 +7,8 @@
 from h5py import tests
 from h5py import *
 
+import numpy as np
+
 class Base(tests.HTest):
     pass
 
@@ -87,11 +89,10 @@ class TestTypeID(Base):
 
 class TestFloat(Base):
 
+    @tests.require(hasattr(np, 'float128'))
     def test_float_exc(self):
         """ (H5T) Unsupported float size raises TypeError """
-        import numpy
-        if hasattr(numpy, 'float128'):
-            self.assertRaises(TypeError, h5t.py_create, numpy.float128)
+        self.assertRaises(TypeError, h5t.py_create, np.float128)
 
     
 

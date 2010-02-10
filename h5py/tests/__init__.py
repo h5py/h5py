@@ -30,9 +30,14 @@ def fixme(desc=""):
         return None
     return wrap
 
-def require(api=None, os=None, unicode=None):
+class _placeholder(object):
+    pass
+
+def require(condition=_placeholder, api=None, os=None, unicode=None):
     """ Decorator to enable/disable tests """
     import sys
+    if condition is not _placeholder and not condition:
+        return None
     def haveunicode():
         import os.path
         try:
