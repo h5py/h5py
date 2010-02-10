@@ -1281,6 +1281,12 @@ class Dataset(HLObject):
         for fspace in dest_sel.broadcast(source_sel.mshape):
             self.id.write(mspace, fspace, source)
 
+    def __array__(self, dtype=None):
+        with phil:
+            arr = numpy.empty(self.shape, dtype=self.dtype if dtype is None else dtype)
+            self.read_direct(arr)
+            return arr
+
     def __repr__(self):
         if not self:
             return "<Closed HDF5 dataset>"
