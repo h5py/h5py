@@ -529,6 +529,9 @@ class Group(HLObject, _DictCompat):
         destination can be either a path or a Group object.  The source and
         destinations need not be in the same file.
 
+        If the source is a Group object, all objects contained in that group
+        will be copied recursively.
+
         When the destination is a Group object, by default the target will
         be created in that group with its current name (basename of obj.name).
         You can override that by setting "name" to a string.
