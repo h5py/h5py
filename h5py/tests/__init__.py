@@ -36,8 +36,6 @@ class _placeholder(object):
 def require(condition=_placeholder, api=None, os=None, unicode=None):
     """ Decorator to enable/disable tests """
     import sys
-    if condition is not _placeholder and not condition:
-        return None
     def haveunicode():
         import os.path
         try:
@@ -46,6 +44,7 @@ def require(condition=_placeholder, api=None, os=None, unicode=None):
             return False
         return True
     def wrap(func):
+        if condition is not _placeholder and not condition: return None
         if unicode and not haveunicode(): return None
         if api == 18 and not config.API_18: return None
         if api == 16 and config.API_18: return None
