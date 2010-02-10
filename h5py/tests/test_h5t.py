@@ -45,64 +45,7 @@ class BaseTypeMixin(object):
     def tearDown(self):
         res.clear()
 
-    ODDBALL_TYPE = h5t.create(h5t.OPAQUE, 72)
-
-    # --- The following attributes and methods MUST be overridden ---
-
-    CLASSCODE = -1
-
-    def get_example_type(self):
-        """ Override this method to provide a dynamically-created example
-         type, which will be used to test common TypeID operations.
-        """
-        raise NotImplementedError("!")
-
-    def get_example_encoding(self):
-        """ Override this method to provide a known-good serialized example
-        of the example type above.  Only called with 1.8 API.
-        """
-        raise NotImplementedError("!")
-
-    # --- End required attributes and methods ---
-
-    @api_18
-    def test_serialize(self):
-        """ Generic subtype serialization test
-        """
-        # Round-trip serialization
-        htype = self.get_example_type()
-        htype2 = h5t.decode(htype.encode())
-        self.assertEqual(htype, htype2)
-
-        # Deserialization of known buffer
-        ser = self.get_example_encoding()
-        htype3 = h5t.decode(ser)
-        self.assertEqual(htype, htype2)
-
-        # Pickling
-        pkl = cPickle.dumps(htype)
-        htype4 = cPickle.loads(pkl)
-        self.assertEqual(htype, htype4)
-
-    def test_commit(self):
-        """ Generic subtype commit test
-        """
-        fid = h5f.create(res.get_name())
-        htype = self.get_example_type()
-        self.assert_(not htype.committed())
-        htype.commit(fid, "name")
-        self.assert_(htype.committed())
-        htype2 = h5t.open(fid, "name")
-        self.assertEqual(htype, htype2)
-
 class TestInteger(TestCasePlus, BaseTypeMixin):
-
-    CLASSCODE = h5t.INTEGER
-
-    def get_example_type(self):
-        return h5t.STD_I32LE.copy()
-    def get_example_encoding(self):
-        return mkstr([3, 0, 16, 8, 0, 0, 4, 0, 0, 0, 0, 0, 32, 0])
 
     def test_set_get_order_sign(self):
         
@@ -117,33 +60,7 @@ class TestInteger(TestCasePlus, BaseTypeMixin):
         self.assertEqual(htype.get_order(), h5t.ORDER_BE)
         self.assertEqual(htype.get_sign(), h5t.SGN_NONE)
 
-class TestFloat(TestCasePlus, BaseTypeMixin):
-
-    CLASSCODE = h5t.FLOAT   
-
-    def get_example_type(self):
-        return h5t.IEEE_F32LE.copy()
-    def get_example_encoding(self):
-        return mkstr([3, 0, 17, 32, 31, 0, 4, 0, 0, 0, 0, 0, 
-                      32, 0, 23, 8, 0, 23, 127, 0, 0, 0])
-
-class TestString(TestCasePlus, BaseTypeMixin):
-
-    CLASSCODE = h5t.STRING
-
-    def get_example_type(self):
-        return h5t.C_S1.copy()
-    def get_example_encoding(self):
-        return mkstr([3, 0, 19, 0, 0, 0, 1, 0, 0, 0])
-
 class TestOpaque(TestCasePlus, BaseTypeMixin):
-
-    CLASSCODE = h5t.OPAQUE
-
-    def get_example_type(self):
-        return h5t.create(h5t.OPAQUE, 31)
-    def get_example_encoding(self):
-        return mkstr([3, 0, 21, 0, 0, 0, 31, 0, 0, 0])
 
     def test_setget_tag(self):
         htype = h5t.create(h5t.OPAQUE, 40)
@@ -184,7 +101,6 @@ class TestH5T(TestCasePlus):
         self.assert_(htype.detect_class(h5t.INTEGER))
         self.assert_(htype.detect_class(h5t.OPAQUE))
         self.assert_(not htype.detect_class(h5t.ARRAY))
-
 
         
     def test_array(self):

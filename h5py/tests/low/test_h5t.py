@@ -87,6 +87,31 @@ class TestTypeID(Base):
         """ (H5T) get_class() """
         self.assertEqual(h5t.STD_I32LE.get_class(), h5t.INTEGER)
 
+class TestEncodeDecode(Base):
+
+    def setUp(self):
+        self.tid = h5t.STD_I32LE.copy()
+
+    def tearDown(self):
+        del self.tid
+
+    @tests.require(api=18)
+    def test_ed(self):
+        """ (H5T) Encode/decode round trip """
+        enc = self.tid.encode()
+        self.assertIsInstance(enc, str)
+        dec = h5t.decode(enc)
+        self.assertEqual(self.tid, dec)
+
+    @tests.require(api=18)
+    def test_pickle(self):
+        """ (H5T) Encode/decode round trip via pickling """
+        import pickle
+        pkl = pickle.dumps(self.tid)
+        dec = pickle.loads(pkl)
+        self.assertEqual(self.tid, dec)
+
+
 class TestFloat(Base):
 
     @tests.require(hasattr(np, 'float128'))
