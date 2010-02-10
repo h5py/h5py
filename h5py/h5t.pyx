@@ -1173,12 +1173,15 @@ cdef TypeFloatID _c_float(dtype dt):
     # Floats (single and double)
     cdef hid_t tid
 
-    if dt.byteorder == c'<':
-        tid =  _float_le[dt.elsize]
-    elif dt.byteorder == c'>':
-        tid =  _float_be[dt.elsize]
-    else:
-        tid =  _float_nt[dt.elsize]
+    try:
+        if dt.byteorder == c'<':
+            tid =  _float_le[dt.elsize]
+        elif dt.byteorder == c'>':
+            tid =  _float_be[dt.elsize]
+        else:
+            tid =  _float_nt[dt.elsize]
+    except KeyError:
+        raise TypeError("Unsupported float size (%s)" % dt.elsize)
 
     return TypeFloatID(H5Tcopy(tid))
 
@@ -1186,22 +1189,25 @@ cdef TypeIntegerID _c_int(dtype dt):
     # Integers (ints and uints)
     cdef hid_t tid
 
-    if dt.kind == c'i':
-        if dt.byteorder == c'<':
-            tid = _int_le[dt.elsize]
-        elif dt.byteorder == c'>':
-            tid = _int_be[dt.elsize]
+    try:
+        if dt.kind == c'i':
+            if dt.byteorder == c'<':
+                tid = _int_le[dt.elsize]
+            elif dt.byteorder == c'>':
+                tid = _int_be[dt.elsize]
+            else:
+                tid = _int_nt[dt.elsize]
+        elif dt.kind == c'u':
+            if dt.byteorder == c'<':
+                tid = _uint_le[dt.elsize]
+            elif dt.byteorder == c'>':
+                tid = _uint_be[dt.elsize]
+            else:
+                tid = _uint_nt[dt.elsize]
         else:
-            tid = _int_nt[dt.elsize]
-    elif dt.kind == c'u':
-        if dt.byteorder == c'<':
-            tid = _uint_le[dt.elsize]
-        elif dt.byteorder == c'>':
-            tid = _uint_be[dt.elsize]
-        else:
-            tid = _uint_nt[dt.elsize]
-    else:
-        raise TypeError('Illegal int kind "%s"' % dt.kind)
+            raise TypeError('Illegal int kind "%s"' % dt.kind)
+    except KeyError:
+        raise TypeError("Unsupported integer size (%s)" % dt.elsize)
 
     return TypeIntegerID(H5Tcopy(tid))
 

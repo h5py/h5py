@@ -85,6 +85,13 @@ class TestTypeID(Base):
         """ (H5T) get_class() """
         self.assertEqual(h5t.STD_I32LE.get_class(), h5t.INTEGER)
 
+class TestFloat(Base):
+
+    def test_float_exc(self):
+        """ (H5T) Unsupported float size raises TypeError """
+        import numpy
+        if hasattr(numpy, 'float128'):
+            self.assertRaises(TypeError, h5t.py_create, numpy.float128)
 
     
 
