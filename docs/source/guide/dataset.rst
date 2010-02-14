@@ -62,7 +62,7 @@ Resizing
 
     Later calls to :meth:`Dataset.resize` will modify the shape in-place::
 
-        >>> dset = grp.create_dataset((10,10), '=f8', maxshape=(None, None))
+        >>> dset = grp.create_dataset("name", (10,10), '=f8', maxshape=(None, None))
         >>> dset.shape
         (10, 10)
         >>> dset.resize((20,20))
