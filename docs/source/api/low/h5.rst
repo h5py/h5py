@@ -7,8 +7,6 @@ Library API
 -----------
 
 .. autofunction:: get_config
-.. autofunction:: get_phil
-.. autofunction:: loglevel
 .. autofunction:: get_libversion
 
 
@@ -18,7 +16,6 @@ Base classes for library
 .. autoclass:: ObjectID
 .. autoclass:: H5Error
 .. autoclass:: H5PYConfig
-.. autoclass:: PHIL
 
 
 Module constants
