@@ -7,7 +7,7 @@ from h5py import h5t
 import ctypes
 
 strings = ["Hi", "Hello", "This is a string", "HDF5 is awesome!"]
-vlen_dtype = h5t.py_new_vlen(str)
+vlen_dtype = h5t.special_dtype(vlen=str)
 vlen_htype = h5t.py_create(vlen_dtype, logical=1)
 obj_htype = h5t.py_create(vlen_dtype)
 
