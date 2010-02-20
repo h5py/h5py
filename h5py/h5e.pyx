@@ -402,5 +402,30 @@ cdef void enable_errors(err_cookie cookie) except *:
     if(retval < 0):
         raise RuntimeError("Cant' re-enable exception support")
 
+cdef int capture_count
+cdef H5E_auto_t backup_func
+cdef void* backup_data
+
+cpdef int capture_errors() except -1:
+    global backup_func, backup_data, capture_count
+    if capture_count != 0:
+        capture_count += 1
+        return 0
+    if(H5Eget_auto(&backup_func, &backup_data)<0):
+        raise RuntimeError("Can't back up exception information")
+    if(H5Eset_auto(err_callback, NULL)<0):
+        raise RuntimeError("Can't install exception handler")
+    return 0
+
+cpdef int release_errors() except -1:
+    global backup_func, backup_data, capture_count
+    if capture_count == 0:
+        raise RuntimeError("Illegal call to release_errors")
+    capture_count -= 1
+    if capture_count == 0:
+        if(H5Eset_auto(backup_func, backup_data)<0):
+            raise RuntimeError("Can't re-install previous error handler")
+    return 0
+
 
 

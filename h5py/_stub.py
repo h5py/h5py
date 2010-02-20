@@ -12,3 +12,19 @@ def generate_class(cls1, cls2):
     HybridClass.__name__ = cls2.__name__
     return HybridClass
 
+def _exc(func):
+    """ Enable native HDF5 exception handling on this function """
+    import functools
+    from h5e import capture_errors, release_errors
+
+    def _exception_proxy(*args, **kwds):
+        capture_errors()
+        try:
+            return func(*args, **kwds)
+        finally:
+            release_errors()
+
+    functools.update_wrapper(_exception_proxy, func)
+    return _exception_proxy
+
+
