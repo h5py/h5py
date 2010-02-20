@@ -34,43 +34,9 @@ driver you want to use when the file is opened::
     >>> f = h5py.File('myfile.hdf5', driver=<driver name>, <driver_kwds>)
 
 For example, the HDF5 "core" driver can be used to create a purely in-memory
-HDF5 file, optionally written out to disk when it is closed.  Currently
-supported drivers are:
+HDF5 file, optionally written out to disk when it is closed.  See the File
+class documentation for an exhaustive list.
 
-None
-    Use the standard HDF5 driver appropriate for the current platform.
-    On UNIX, this is the H5FD_SEC2 driver; on Windows, it is
-    H5FD_WINDOWS.  This driver is almost always the best choice.
-
-'sec2'
-    Optimized I/O using standard POSIX functions.  Default on UNIX platforms.
-
-'stdio' 
-    I/O uses functions from stdio.h.  This introduces an additional layer
-    of buffering between the HDF5 library and the filesystem.
-
-'core'
-    Creates a memory-resident file.  With HDF5 1.8, you may specify an
-    existing file on disk.  When the file is closed, by default it is
-    written back to disk with the given name.  Keywords:
-
-        backing_store  
-            If True (default), save changes to a real file
-            when closing.  If False, the file exists purely
-            in memory and is discarded when closed.
-
-        block_size     
-            Increment (in bytes) by which memory is extended.
-            Default is 1 megabyte (1024**2).
-
-'family'
-    Store the file on disk as a series of fixed-length chunks.  Useful
-    if the file system doesn't allow large files.  Note: the filename
-    you provide *must* contain a printf-style integer format code (e.g "%d"),
-    which will be replaced by the file sequence number.  Keywords:
-
-        memb_size
-            Maximum file size (default is 2**31-1).
 
 Reference
 ---------
@@ -86,37 +52,25 @@ the full API of Group objects; in this case, the group in question is the
     on disk.  ``File.name`` gives the HDF5 name of the root group, "``/``". To
     access the on-disk name, use ``File.filename``.
 
-.. class:: File
+.. autoclass:: h5py.File
 
-    Represents an HDF5 file on disk, and provides access to the root
-    group (``/``).
+    **File properties**
 
-    See also :class:`Group`, of which this is a subclass.
+    .. autoattribute:: h5py.File.filename
+    .. autoattribute:: h5py.File.mode
+    .. autoattribute:: h5py.File.driver
 
-    .. attribute:: filename
+    **File methods**
 
-        HDF5 filename on disk.  This is a plain string (``str``) for ASCII
-        names, ``unicode`` otherwise.
+    .. automethod:: h5py.File.close
+    .. automethod:: h5py.File.flush
 
-    .. attribute:: mode
+    **Properties common to all HDF5 objects:**
 
-        Mode (``r``, ``w``, etc) used to open file
-
-    .. attribute:: driver
-
-        Driver ('sec2', 'stdio', etc.) used to open file
-
-    .. method:: __init__(name, mode='a', driver=None, **driver_kwds)
-        
-        Open or create an HDF5 file.  See above for a summary of options.
-        Argument *name* may be an ASCII or Unicode string.
-
-    .. method:: close()
-
-        Close the file.  As with Python files, it's good practice to call
-        this when you're done.
-
-    .. method:: flush()
-
-        Ask the HDF5 library to flush its buffers for this file.
+    .. autoattribute:: h5py.File.file
+    .. autoattribute:: h5py.File.parent
+    .. autoattribute:: h5py.File.name
+    .. autoattribute:: h5py.File.id
+    .. autoattribute:: h5py.File.ref
+    .. autoattribute:: h5py.File.attrs
 

@@ -18,85 +18,26 @@ They support the same dictionary API as groups.
 Reference
 ---------
 
-.. class:: AttributeManager
+.. autoclass:: h5py.AttributeManager
 
-    .. method:: __getitem__(name) -> NumPy scalar or ndarray
+    .. automethod:: h5py.AttributeManager.__getitem__
+    .. automethod:: h5py.AttributeManager.__setitem__
+    .. automethod:: h5py.AttributeManager.__delitem__
 
-        Retrieve an attribute given a string name.
+    .. automethod:: h5py.AttributeManager.create
+    .. automethod:: h5py.AttributeManager.modify
 
-    .. method:: __setitem__(name, value)
+    **Inherited dictionary interface**
 
-        Set an attribute.  Value must be convertible to a NumPy scalar
-        or array.
+    .. automethod:: h5py.highlevel._DictCompat.keys
+    .. automethod:: h5py.highlevel._DictCompat.values
+    .. automethod:: h5py.highlevel._DictCompat.items
 
-    .. method:: __delitem__(name)
+    .. automethod:: h5py.highlevel._DictCompat.iterkeys
+    .. automethod:: h5py.highlevel._DictCompat.itervalues
+    .. automethod:: h5py.highlevel._DictCompat.iteritems
 
-        Delete an attribute.
+    .. automethod:: h5py.highlevel._DictCompat.get
 
-    .. method:: create(name, data, shape=None, dtype=None)
 
-        Create an attribute, initializing it to the given value.
-
-        name
-            Name of the new attribute (required)
-
-        data
-            An array to initialize the attribute. Required.
-
-        shape
-            Shape of the attribute.  Overrides data.shape if both are
-            given.  The total number of points must be unchanged.
-
-        dtype
-            Data type of the attribute.  Overrides data.dtype if both
-            are given.  Must be conversion-compatible with data.dtype.
-
-    .. method:: modify(name, value)
-
-        Change the value of an attribute while preserving its type.
-
-        Differs from __setitem__ in that the type of an existing attribute
-        is preserved.  Useful for interacting with externally generated files.
-
-        If the attribute doesn't exist, it will be automatically created.
-
-    .. method:: __len__
-
-        Number of attributes
-
-    .. method:: __iter__
-
-        Yields the names of attributes
-
-    .. method:: __contains__(name)
-
-        See if the given attribute is present
-
-    .. method:: keys
-
-        Get a list of attribute names
-
-    .. method:: iterkeys
-
-        Get an iterator over attribute names
-
-    .. method:: values
-
-        Get a list with all attribute values
-
-    .. method:: itervalues
-
-        Get an iterator over attribute values
-
-    .. method:: items
-
-        Get an list of (name, value) pairs for all attributes.
-
-    .. method:: iteritems
-
-        Get an iterator over (name, value) pairs
-
-    .. method:: get(name, default)
-
-        Return the specified attribute, or default if it doesn't exist.
 

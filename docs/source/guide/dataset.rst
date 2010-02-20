@@ -197,101 +197,51 @@ dataset while iterating has undefined results.
 Reference
 ---------
 
-.. class:: Dataset
+.. autoclass:: h5py.Dataset
 
-    Represents an HDF5 dataset.  All properties are read-only.
+    **Dataset properties**
 
-    .. attribute:: name
+    .. autoattribute:: h5py.Dataset.shape
+    .. autoattribute:: h5py.Dataset.dtype
 
-        Full name of this dataset in the file (e.g. ``/grp/MyDataset``)
+    .. autoattribute:: h5py.Dataset.chunks
+    .. autoattribute:: h5py.Dataset.maxshape
+    .. autoattribute:: h5py.Dataset.compression
+    .. autoattribute:: h5py.Dataset.compression_opts
+    .. autoattribute:: h5py.Dataset.shuffle
+    .. autoattribute:: h5py.Dataset.fletcher32
 
-    .. attribute:: attrs
+    .. autoattribute:: h5py.Dataset.regionref
 
-        Provides access to HDF5 attributes; see :ref:`attributes`.
+    **Dataset methods**
 
-    .. attribute:: file
-        
-        The ``File`` instance used to open this HDF5 file.
+    .. automethod:: h5py.Dataset.__getitem__
+    .. automethod:: h5py.Dataset.__setitem__
 
-    .. attribute:: parent
+    .. automethod:: h5py.Dataset.read_direct
+    .. automethod:: h5py.Dataset.write_direct
 
-        A group which contains this object, according to dirname(obj.name).
+    .. automethod:: h5py.Dataset.resize
+    .. automethod:: h5py.Dataset.len
 
-    .. attribute:: shape
 
-        Numpy-style shape tuple with dataset dimensions
 
-    .. attribute:: dtype
 
-        Numpy dtype object representing the dataset type
 
-    .. attribute:: chunks
 
-        Dataset chunk size, or None if chunked layout isn't used.
 
-    .. attribute:: compression
 
-        None or a string indicating the compression strategy;
-        one of "gzip", "lzf", or "lzf".
 
-    .. attribute:: compression_opts
 
-        Setting for the compression filter
 
-    .. attribute:: shuffle
 
-        Is the shuffle filter being used? (T/F)
 
-    .. attribute:: fletcher32
 
-        Is the fletcher32 filter (error detection) being used? (T/F)
 
-    .. attribute:: maxshape
 
-        Maximum allowed size of the dataset, as specified when it was created.
 
-    .. method:: __getitem__(*args) -> NumPy ndarray
 
-        Read a slice from the dataset.  See :ref:`slicing_access`.
 
-    .. method:: __setitem__(*args, val)
 
-        Write to the dataset.  See :ref:`slicing_access`.
 
-    .. method:: read_direct(dest, source_sel=None, dest_sel=None)
 
-        Read directly from HDF5 into an existing NumPy array.  The "source_sel"
-        and "dest_sel" arguments may be Selection instances (from the
-        selections module) or the output of ``numpy.s_``.  Standard broadcasting
-        is supported.
-
-    .. method:: write_direct(source, source_sel=None, dest_sel=None)
-
-        Write directly to HDF5 from a NumPy array.  The "source_sel"
-        and "dest_sel" arguments may be Selection instances (from the
-        selections module) or the output of ``numpy.s_``.  Standard broadcasting
-        is supported.
-
-    .. method:: resize(shape, axis=None)
-
-        Change the size of the dataset to this new shape.  Must be compatible
-        with the *maxshape* as specified when the dataset was created.  If
-        the keyword *axis* is provided, the argument should be a single
-        integer instead; that axis only will be modified.
-
-        **Only available with HDF5 1.8**
-
-    .. method:: __len__
-
-        The length of the first axis in the dataset (TypeError if scalar).
-        This **does not work** on 32-bit platforms, if the axis in question
-        is larger than 2^32.  Use :meth:`len` instead.
-
-    .. method:: len()
-
-        The length of the first axis in the dataset (TypeError if scalar).
-        Works on all platforms.
-
-    .. method:: __iter__
-
-        Iterate over rows (first axis) in the dataset.  TypeError if scalar.

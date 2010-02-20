@@ -66,257 +66,111 @@ Group objects implement the following subset of the Python "mapping" interface:
 - :meth:`__delitem__() <Group.__delitem__>`
 - :meth:`get() <Group.get>`
 
+Soft links
+----------
+
+Like a UNIX filesystem, HDF5 groups can contain "soft" or symbolic links,
+which contain a text path instead of a pointer to the object itself.  You
+can easily create these in h5py:
+
+    >>> myfile = h5py.File('foo.hdf5','w')
+    >>> group = myfile.create_group("somegroup")
+    >>> myfile["alias"] = h5py.SoftLink('/somegroup')
+
+Once created, soft links act just like regular links.  You don't have to
+do anything special to access them:
+
+    >>> print myfile["alias"]
+    <HDF5 group "/alias" (0 members)>
+
+However, they "point to" the target:
+
+    >>> myfile['alias'] == myfile['somegroup']
+    True
+
+If the target is removed, they will "dangle":
+
+    >>> del myfile['somegroup']
+    >>> print myfile['alias']
+    KeyError: 'Component not found (Symbol table: Object not found)'
+
+.. note::
+
+    The class h5py.SoftLink doesn't actually do anything by itself; it only
+    serves as an indication to the Group object that you want to create a
+    soft link.
+
+
+External links
+--------------
+
+New in HDF5 1.8, external links are "soft links plus", which allow you to
+specify the name of the file as well as the path to the desired object.  You
+can refer to objects in any file you wish.  Use similar syntax as for soft
+links:
+
+    >>> myfile = h5py.File('foo.hdf5','w')
+    >>> myfile['ext link'] = h5py.ExternalLink("otherfile.hdf5", "/path/to/resource")
+
+When the link is accessed, the file "otherfile.hdf5" is opened, and object at
+"/path/to/resource" is returned.
+
+.. note::
+
+    Since the object retrieved is in a different file, its ".file" and ".parent"
+    properties will refer to objects in that file, *not* the file in which the
+    link resides.
+
+Getting info on links
+---------------------
+
+Although soft and external links are designed to be transparent, there are some
+cases where it is valuable to know when they are in use.  The Group method
+"get" takes keyword arguments which let you choose whether to follow a link or
+not, and to return the class of link in use (soft or external).
+
 Reference
 ---------
 
-.. class:: Group
+.. autoclass:: h5py.Group
+   
+    **``Group`` methods**
 
-    .. attribute:: name
+    .. automethod:: h5py.Group.__setitem__
+    .. automethod:: h5py.Group.__getitem__
 
-        Full name of this group in the file (e.g. ``/grp/thisgroup``)
+    .. automethod:: h5py.Group.create_group
+    .. automethod:: h5py.Group.create_dataset
 
-    .. attribute:: attrs
+    .. automethod:: h5py.Group.require_group
+    .. automethod:: h5py.Group.require_dataset
 
-        Dictionary-like object which provides access to this group's
-        HDF5 attributes.  See :ref:`attributes` for details.
+    .. automethod:: h5py.Group.copy
+    .. automethod:: h5py.Group.visit
+    .. automethod:: h5py.Group.visititems
 
-    .. attribute:: file
-        
-        The ``File`` instance used to open this HDF5 file.
+    **Dictionary-like methods**
 
-    .. attribute:: parent
+    .. automethod:: h5py.Group.keys
+    .. automethod:: h5py.Group.values
+    .. automethod:: h5py.Group.items
 
-        A group which contains this object, according to dirname(obj.name).
+    .. automethod:: h5py.Group.iterkeys
+    .. automethod:: h5py.Group.itervalues
+    .. automethod:: h5py.Group.iteritems
 
-    .. method:: __getitem__(name) -> Group or Dataset
+    .. automethod:: h5py.Group.get
 
-        Open an object in this group.
+    **Properties common to all HDF5 objects:**
 
-    .. method:: __setitem__(name, object)
+    .. autoattribute:: h5py.Group.file
+    .. autoattribute:: h5py.Group.parent
+    .. autoattribute:: h5py.Group.name
+    .. autoattribute:: h5py.Group.id
+    .. autoattribute:: h5py.Group.ref
+    .. autoattribute:: h5py.Group.attrs
 
-        Add the given object to the group.
 
-        The action taken depends on the type of object assigned:
 
-        **Named HDF5 object** (Dataset, Group, Datatype)
-            A hard link is created in this group which points to the
-            given object.
 
-        **Numpy ndarray**
-            The array is converted to a dataset object, with default
-            settings (contiguous storage, etc.). See :meth:`create_dataset`
-            for a more flexible way to do this.
-
-        **Numpy dtype**
-            Commit a copy of the datatype as a named type in the file.
-
-        **Anything else**
-            Attempt to convert it to an ndarray and store it.  Scalar
-            values are stored as scalar datasets. Raise ValueError if we
-            can't understand the resulting array dtype.
-            
-        If a group member of the same name already exists, the assignment
-        will fail.
-
-    .. method:: __delitem__(name)
-
-        Remove (unlink) this member.
-
-    .. method:: create_group(name) -> Group
-
-        Create a new HDF5 group.
-
-        Fails with ValueError if the group already exists.
-
-    .. method:: require_group(name) -> Group
-
-        Open the specified HDF5 group, creating it if it doesn't exist.
-
-        Fails with TypeError if an incompatible object (dataset or named type)
-        already exists.
-
-    .. method:: create_dataset(name, [shape, [dtype]], [data], **kwds) -> Dataset
-
-        Create a new dataset.  There are two logical ways to specify the dataset:
-
-            1. Give the shape, and optionally the dtype.  If the dtype is not given,
-               single-precision floating point ('=f4') will be assumed.
-            2. Give a NumPy array (or anything that can be converted to a NumPy array)
-               via the "data" argument.  The shape and dtype of this array will be
-               used, and the dataset will be initialized to its contents.
-
-        Additional keyword parameters control the details of how the dataset is
-        stored.
-
-        **shape** (None or tuple)
-            NumPy-style shape tuple.  Required if data is not given.
-
-        **dtype** (None or dtype)
-            NumPy dtype (or anything that can be converted).  Optional;
-            the default is '=f4'.  Will override the dtype of any data
-            array given via the *data* parameter.
-
-        **data** (None or ndarray)
-            Either a NumPy ndarray or anything that can be converted to one.
-
-        Keywords (see also Dataset :ref:`dsetfeatures`):
-
-        **chunks** (None, True or shape tuple)
-            Store the dataset in chunked format.  Automatically
-            selected if any of the other keyword options are given.  If you
-            don't provide a shape tuple, the library will guess one for you.
-            Chunk sizes of 300kB and smaller work best with HDF5. 
-
-        **compression** (None, string ["gzip" | "lzf" | "szip"] or int 0-9)
-            Enable dataset compression.  DEFLATE, LZF and (where available)
-            SZIP are supported.  An integer is interpreted as a GZIP level.
-
-        **compression_opts** (None, or special value)
-            Setting for compression filter; legal values for each filter
-            type are:
-
-            ======      ======================================
-            "gzip"      Integer 0-9
-            "lzf"       (none allowed)
-            "szip"      2-tuple ('ec'|'nn', even integer 0-32)
-            ======      ======================================
-
-            See the ``filters`` module docstring for a more detailed
-            description of these filters.
-
-        **shuffle** (True/False)
-            Enable/disable data shuffling, which can improve compression
-            performance.  Default is False.
-
-        **fletcher32** (True/False)
-            Enable Fletcher32 error detection; may be used with or without
-            compression.  Default is False.
-
-        **maxshape** (None or shape tuple)
-            Make the dataset extendable, up to this maximum shape.  Should be a
-            NumPy-style shape tuple.  Dimensions with value None have no upper
-            limit.
-
-    .. method:: require_dataset(name, [shape, [dtype]], [data], **kwds) -> Dataset
-
-        Open a new dataset, creating one if it doesn't exist.
-
-        This method operates exactly like :meth:`create_dataset`, except that if
-        a dataset with compatible shape and dtype already exists, it is opened
-        instead.  The additional keyword arguments are only honored when actually
-        creating a dataset; they are ignored for the comparison.
-
-        If an existing incompatible object (Group or Datatype) already exists
-        with the given name, fails with ValueError.
-
-    .. method:: copy(source, dest, name=None)
-
-        **Only available with HDF5 1.8**
-
-        Recusively copy an object from one location to another, or between files.
-
-        Copies the given object, and (if it is a group) all objects below it in
-        the hierarchy.  The destination need not be in the same file.
-
-        **source** (Group, Dataset, Datatype or str)
-            Source object or path.
-
-        **dest** (Group or str)
-            Destination.  Must be either Group or path.  If a Group object, it may
-            be in a different file.
-
-        **name** (None or str)
-            If the destination is a Group object, you can override the name
-            for the newly created member.  Otherwise a new name will be chosen
-            using basename(source.name).
-
-    .. method:: visit(func) -> None or return value from func
-
-        **Only available with HDF5 1.8**
-
-        Recursively iterate a callable over objects in this group.
-
-        You supply a callable (function, method or callable object); it
-        will be called exactly once for each link in this group and every
-        group below it. Your callable must conform to the signature::
-
-            func(<member name>) -> <None or return value>
-
-        Returning None continues iteration, returning anything else stops
-        and immediately returns that value from the visit method.  No
-        particular order of iteration within groups is guranteed.
-
-        Example::
-
-            >>> # List the entire contents of the file
-            >>> f = File("foo.hdf5")
-            >>> list_of_names = []
-            >>> f.visit(list_of_names.append)
-
-    .. method:: visititems(func) -> None or return value from func
-
-        **Only available with HDF5 1.8**
-
-        Recursively visit names and objects in this group and subgroups.
-
-        You supply a callable (function, method or callable object); it
-        will be called exactly once for each link in this group and every
-        group below it. Your callable must conform to the signature::
-
-            func(<member name>, <object>) -> <None or return value>
-
-        Returning None continues iteration, returning anything else stops
-        and immediately returns that value from the visit method.  No
-        particular order of iteration within groups is guranteed.
-
-        Example::
-
-            # Get a list of all datasets in the file
-            >>> mylist = []
-            >>> def func(name, obj):
-            ...     if isinstance(obj, Dataset):
-            ...         mylist.append(name)
-            ...
-            >>> f = File('foo.hdf5')
-            >>> f.visititems(func)
-
-    .. method:: __len__
-
-        Number of group members
-
-    .. method:: __iter__
-
-        Yields the names of group members
-
-    .. method:: __contains__(name)
-
-        See if the given name is in this group.
-
-    .. method:: keys
-
-        Get a list of member names
-
-    .. method:: iterkeys
-
-        Get an iterator over member names.  Equivalent to iter(group).
-
-    .. method:: values
-
-        Get a list with all objects in this group.
-
-    .. method:: itervalues
-
-        Get an iterator over objects in this group
-
-    .. method:: items
-
-        Get an list of (name, object) pairs for the members of this group.
-
-    .. method:: iteritems
-
-        Get an iterator over (name, object) pairs for the members of this group.
-
-    .. method:: get(name, default)
-
-        Retrieve the member, or *default* if it doesn't exist.
 
