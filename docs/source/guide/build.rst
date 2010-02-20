@@ -9,9 +9,8 @@ Where to get h5py
 
 Downloads for all platforms are available at http://h5py.googlecode.com.
 Tar files are available for UNIX-like systems (Linux and Mac OS-X), and
-a binary installer for Windows which includes HDF5 1.8.  As of version 1.1,
-h5py can also be installed via easy_install.
-
+a binary installer for Windows which includes HDF5 1.8.  You can also
+install h5py via easy_install on UNIX, and via MacPorts.
 
 Getting HDF5
 ============
@@ -133,7 +132,7 @@ software configuration.  For the Unix version of h5py, running the command::
     $ python setup.py test
 
 before installing will run the h5py test suite.  On both Unix and Windows
-platforms, the tests may be run after installation:
+platforms, the tests may also be run after installation:
 
     >>> import h5py.tests
     >>> h5py.tests.runtests()
