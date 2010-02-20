@@ -54,6 +54,17 @@ def is_hdf5(fname):
         return h5f.is_hdf5(fname)
     return False
 
+def _guess_dtype(data):
+    """ Attempt to guess an appropriate dtype for the object, returning None
+    if nothing is appropriate (or if it should be left up the the array
+    constructor to figure out)
+    """
+    if isinstance(data, h5r.RegionReference):
+        return h5t.special_dtype(ref=h5r.RegionReference)
+    if isinstance(data, h5r.Reference):
+        return h5t.special_dtype(ref=h5r.Reference)
+    return None
+
 # === Base classes ============================================================
 
 class HLObject(object):
@@ -268,7 +279,7 @@ class Group(HLObject, _DictCompat):
             htype.commit(self.id, name, lcpl=self._lcpl)
 
         else:
-            ds = self.create_dataset(None, data=obj)
+            ds = self.create_dataset(None, data=obj, dtype=_guess_dtype(obj))
             h5o.link(ds.id, self.id, name, **plists)  
 
     def _set16(self, name, obj):
@@ -1346,7 +1357,7 @@ class AttributeManager(_DictCompat):
         Broadcasting isn't supported for attributes.
         """
         with phil:
-            self.create(name, data=value)
+            self.create(name, data=value, dtype=_guess_dtype(value))
 
     def __delitem__(self, name):
         """ Delete an attribute (which must already exist). """
