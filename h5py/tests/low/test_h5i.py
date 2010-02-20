@@ -39,15 +39,6 @@ class TestName(Base):
         g._close()
         self.assertIsNone(h5i.get_name(sid))
         self.assertIsNone(h5i.get_name(g))
-    
-    @tests.fixme("Inconsistent")
-    def test_ref(self):
-        """ (H5I) get_name() returns None for dereferenced objects """
-        g = h5g.create(self.fid, '/foobar')
-        ref = h5r.create(g, '.', h5r.OBJECT)
-        g._close()
-        deref = h5r.dereference(ref, self.fid)
-        self.assertIsNone(h5i.get_name(deref))
 
 class TestFID(Base):
 

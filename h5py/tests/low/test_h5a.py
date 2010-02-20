@@ -103,10 +103,9 @@ class TestOpenExists(tests.HTest):
         """ (H5A) Open with wrong name causes KeyError """
         self.assertRaises(KeyError, h5a.open, self.fid, 'missing')
 
-    @tests.fixme()
-    def test_exc_2(self):
-        """ (H5A) Open with wrong index causes ValueError """
-        self.assertRaises(ValueError, h5a.open, self.fid, index=2)
+    #def test_exc_2(self):
+    #    """ (H5A) Open with wrong index causes ValueError """
+    #    self.assertRaises(ValueError, h5a.open, self.fid, index=2)
 
     @tests.require(api=18)
     def test_exc_3(self):
