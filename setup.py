@@ -174,7 +174,7 @@ else:
     elif sys.platform == 'darwin':
         COMPILER_SETTINGS['include_dirs'] += ['/opt/local/include']
         COMPILER_SETTINGS['library_dirs'] += ['/opt/local/lib']
-    COMPILER_SETTINGS['runtime_library_dirs'] = COMPILER_SETTINGS['library_dirs']
+    COMPILER_SETTINGS['runtime_library_dirs'] = [op.abspath(x) for x in COMPILER_SETTINGS['library_dirs']]
 
 MODULES = ['h5', 'h5e', 'h5f', 'h5g', 'h5s', 'h5t', 'h5d', 'h5a', 'h5p', 'h5z',
                  'h5i', 'h5r', 'h5fd', 'utils', 'h5o', 'h5l', '_conv', '_proxy']
