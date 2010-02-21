@@ -206,15 +206,6 @@ class configure(Command):
 
     tempdir = localpath('detect')
 
-    compile_error = \
-"""\
-Failed to compile HDF5 test program.  Please check to make sure:
-
-* You have a C compiler installed
-* A development version of HDF5 is installed (including header files)
-* If HDF5 is not in a default location, supply the argument --hdf5=<path>
-"""
-
     def create_tempdir(self):
         import shutil
         self.erase_tempdir()
@@ -236,10 +227,25 @@ Failed to compile HDF5 test program.  Please check to make sure:
     def run(self):
         self.create_tempdir()
         try:
+            print "*"*42
+            print "Configure: Autodetecting HDF5 settings..."
+            print "    Custom HDF5 dir:       %s" % (HDF5,)
+            print "    Custom API level:      %s" % (API,)
             config = detect.detect_hdf5(self.tempdir, **COMPILER_SETTINGS)
-            self.debug_print("Autodetected HDF5: %s" % config)
             savepickle('configure.pickle', config)
+        except Exception:
+            print """
+    Failed to compile HDF5 test program.  Please check to make sure:
+
+    * You have a C compiler installed
+    * A development version of Python is installed (including header files)
+    * A development version of HDF5 is installed (including header files)
+    * If HDF5 is not in a default location, supply the argument --hdf5=<path>"""
+            raise
+        else:
+            print "    HDF5 version detected: %s" % ".".join(str(x) for x in config['vers'])
         finally:
+            print "*"*42
             self.erase_tempdir()
         self.config = config
 
@@ -362,7 +368,9 @@ class hbuild_ext(build_ext):
         else:
             autostr = "(located at %s)" % hdf5
         
-        print "Building for HDF5 %s.%s %s" % (api[0], api[1], autostr)
+        print "*"*49
+        print "Build: Building for HDF5 %s.%s %s" % (api[0], api[1], autostr)
+        print "*"*49
 
         def identical(src, dst):
             if not op.isfile(src) or not op.isfile(dst):
