@@ -204,7 +204,7 @@ class configure(Command):
     def finalize_options(self):
         pass
 
-    tempdir = localpath('detect')
+    tempdir = 'detect'
 
     def create_tempdir(self):
         import shutil
