@@ -381,11 +381,33 @@ cdef herr_t err_callback(void* client_data) with gil:
 cpdef int register_thread() except -1:
     """ ()
 
-    Register the current thread for native HDF5 exception support.  This is
-    automatically called by h5py on startup.  Safe to call more than once.        
+    Register the current thread for native HDF5 exception support.
+
+    Code which uses the low-level HDF5 API (h5py.h5*) is required to call
+    this function before using HDF5.  The main thread is automatically
+    registered when h5py is imported.  The high-level interface (h5py.*)
+    is unaffected.
+
+    Safe to call more than once.
     """
     if H5Eset_auto(err_callback, NULL) < 0:
         raise RuntimeError("Failed to register HDF5 exception callback")
+    return 0
+
+cpdef int unregister_thread() except -1:
+    """ ()
+
+    Unregister the current thread, turning off HDF5 exception support.
+
+    Restore the default HDF5 error handler, disabling h5py in the current
+    thread.  Third-party libraries in this thread are then free to interact
+    with the HDF5 error subsystem as they wish.  Call register_thread()
+    again to re-enable exception support.
+
+    Does not affect any other thread.  Safe to call more than once.
+    """
+    if H5Eset_auto(H5Eprint, NULL) < 0:
+        raise RuntimeError("Failed to unregister HDF5 exception callback")
     return 0
 
 cdef err_cookie disable_errors() except *:
@@ -401,31 +423,6 @@ cdef void enable_errors(err_cookie cookie) except *:
     retval = H5Eset_auto(cookie.func, cookie.data)
     if(retval < 0):
         raise RuntimeError("Cant' re-enable exception support")
-
-cdef int capture_count
-cdef H5E_auto_t backup_func
-cdef void* backup_data
-
-cpdef int capture_errors() except -1:
-    global backup_func, backup_data, capture_count
-    if capture_count != 0:
-        capture_count += 1
-        return 0
-    if(H5Eget_auto(&backup_func, &backup_data)<0):
-        raise RuntimeError("Can't back up exception information")
-    if(H5Eset_auto(err_callback, NULL)<0):
-        raise RuntimeError("Can't install exception handler")
-    return 0
-
-cpdef int release_errors() except -1:
-    global backup_func, backup_data, capture_count
-    if capture_count == 0:
-        raise RuntimeError("Illegal call to release_errors")
-    capture_count -= 1
-    if capture_count == 0:
-        if(H5Eset_auto(backup_func, backup_data)<0):
-            raise RuntimeError("Can't re-install previous error handler")
-    return 0
 
 
 
