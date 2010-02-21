@@ -52,6 +52,7 @@ Low-level API reference
     low/h5
     low/h5a
     low/h5d
+    low/h5e
     low/h5f
     low/h5fd
     low/h5g
