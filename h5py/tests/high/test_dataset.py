@@ -40,4 +40,9 @@ class TestArray(Base):
         self.assertEqual(arr.dtype, np.dtype('i1'))
         self.assertArrayEqual(arr, data.astype(arr.dtype))
 
+    def test_fieldname_exc(self):
+        """ (Dataset) Field name on non-compound dataset raises ValueError """
+        ds = self.f.create_dataset('foo', (100,), 'f')
+        self.assertRaises(ValueError, ds.__getitem__, (0, 'a'))
+
         

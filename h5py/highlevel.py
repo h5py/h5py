@@ -1188,6 +1188,8 @@ class Dataset(HLObject):
             basetype = self.id.dtype
             if len(names) == 0:
                 new_dtype = basetype
+            elif basetype.names is None:
+                raise ValueError("Field names only allowed for compound types")
             else:
                 for name in names:
                     if not name in basetype.names:
