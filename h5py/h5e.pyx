@@ -394,8 +394,8 @@ cpdef int register_thread() except -1:
         raise RuntimeError("Failed to register HDF5 exception callback")
     return 0
 
-cpdef int unregister_thread() except -1:
-    """ ()
+cpdef int unregister_thread(bint silent=0) except -1:
+    """ (silent=False)
 
     Unregister the current thread, turning off HDF5 exception support.
 
@@ -404,10 +404,15 @@ cpdef int unregister_thread() except -1:
     with the HDF5 error subsystem as they wish.  Call register_thread()
     again to re-enable exception support.
 
-    Does not affect any other thread.  Safe to call more than once.
+    Does not affect any other thread.  Safe to call more than once.  If
+    "silent" is specified, uses a NULL error handler rather than H5Eprint.
     """
-    if H5Eset_auto(H5Eprint, NULL) < 0:
-        raise RuntimeError("Failed to unregister HDF5 exception callback")
+    if not silent:
+        if H5Eset_auto(H5Eprint, NULL) < 0:
+            raise RuntimeError("Failed to unregister HDF5 exception callback")
+    else:
+        if H5Eset_auto(NULL, NULL) < 0:
+            raise RuntimeError("Failed to unregister HDF5 exception callback")
     return 0
 
 cdef err_cookie disable_errors() except *:

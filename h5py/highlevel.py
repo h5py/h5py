@@ -39,11 +39,14 @@ from h5py import h5, h5f, h5g, h5s, h5t, h5d, h5a, \
                  version, filters, _extras
 import h5py.selections as sel
 
+from h5py.h5e import register_thread
+
 config = h5.get_config()
 phil = threading.RLock()
 
 def is_hdf5(fname):
     """ Determine if a file is valid HDF5 (False if it doesn't exist). """
+    register_thread()
     fname = os.path.abspath(fname)
 
     if os.path.isfile(fname):
@@ -88,6 +91,7 @@ class HLObject(object):
     @property
     def file(self):
         """Return a File instance associated with this object"""
+        register_thread()
         fid = h5i.get_file_id(self.id)
         return File(None, bind=fid)
 
@@ -116,6 +120,7 @@ class HLObject(object):
     @property
     def name(self):
         """Name of this object in the HDF5 file.  Not necessarily unique."""
+        register_thread()
         return h5i.get_name(self.id)
 
     @_extras.cproperty('_attrs')
@@ -136,6 +141,7 @@ class HLObject(object):
     @_extras.cproperty('_ref')
     def ref(self):
         """ An (opaque) HDF5 reference to this object """
+        register_thread()
         return h5r.create(self.id, '.', h5r.OBJECT)
 
     def __init__(self, oid):
@@ -144,11 +150,14 @@ class HLObject(object):
         self._id = oid
 
     def __nonzero__(self):
+        register_thread()
         return self.id.__nonzero__()
 
     def __hash__(self):
+        register_thread()
         return hash(self.id)
     def __eq__(self, other):
+        register_thread()
         if hasattr(other, 'id'):
             return self.id == other.id
         return False
@@ -248,6 +257,7 @@ class Group(HLObject, _DictCompat):
         It's recommended to use __getitem__ or create_group() rather than
         calling the constructor directly.
         """
+        register_thread()
         with phil:
             if _rawid is not None:
                 id = _rawid
@@ -321,6 +331,7 @@ class Group(HLObject, _DictCompat):
             values are stored as scalar datasets. Raise ValueError if we
             can't understand the resulting array dtype.
         """
+        register_thread()
         with phil:
             if config.API_18:
                 self._set18(name, obj)
@@ -366,6 +377,7 @@ class Group(HLObject, _DictCompat):
     def __getitem__(self, name):
         """ Open an object attached to this group. 
         """
+        register_thread()
         with phil:
 
             if isinstance(name, h5r.Reference):
@@ -377,18 +389,22 @@ class Group(HLObject, _DictCompat):
 
     def __delitem__(self, name):
         """ Delete (unlink) an item from this group. """
+        register_thread()
         self.id.unlink(name)
 
     def __len__(self):
         """ Number of members attached to this group """
+        register_thread()
         return self.id.get_num_objs()
 
     def __contains__(self, name):
         """ Test if a member name exists """
+        register_thread()
         return name in self.id
 
     def __iter__(self):
         """ Iterate over member names """
+        register_thread()
         return self.id.__iter__()
 
     def create_group(self, name):
@@ -490,6 +506,7 @@ class Group(HLObject, _DictCompat):
             If True, return SoftLink and ExternalLink instances instead
             of the objects they point to.
         """
+        register_thread()
         with phil:
 
             if not name in self:
@@ -557,6 +574,7 @@ class Group(HLObject, _DictCompat):
         ['MyGroup', 'MyCopy']
 
         """
+        register_thread()
         if not config.API_18:
             raise NotImplementedError("This feature is only available with HDF5 1.8.0 and later")
 
@@ -604,6 +622,7 @@ class Group(HLObject, _DictCompat):
         >>> list_of_names = []
         >>> f.visit(list_of_names.append)
         """
+        register_thread()
         if not config.API_18:
             raise NotImplementedError("This feature is only available with HDF5 1.8.0 and later")
     
@@ -634,6 +653,7 @@ class Group(HLObject, _DictCompat):
         >>> f = File('foo.hdf5')
         >>> f.visititems(func)
         """
+        register_thread()
         if not config.API_18:
             raise NotImplementedError("This feature is only available with HDF5 1.8.0 and later")
 
@@ -702,6 +722,7 @@ class File(Group):
     @property
     def filename(self):
         """File name on disk"""
+        register_thread()
         name = h5f.get_name(self.fid)
         # Note the exception can happen in one of two ways:
         # 1. The name doesn't comply with the file system encoding;
@@ -721,6 +742,7 @@ class File(Group):
     @property
     def mode(self):
         """Python mode used to open file"""
+        register_thread()
         mode = self._modes.get(self)
         if mode is None and config.API_18:
             mode = {h5f.ACC_RDONLY: 'r', h5f.ACC_RDWR: 'r+'}.get(self.fid.get_intent())
@@ -729,6 +751,7 @@ class File(Group):
     @property
     def driver(self):
         """Low-level HDF5 file driver used to open file"""
+        register_thread()
         drivers = {h5fd.SEC2: 'sec2', h5fd.STDIO: 'stdio',
                    h5fd.CORE: 'core', h5fd.FAMILY: 'family',
                    h5fd.WINDOWS: 'windows'}
@@ -753,6 +776,7 @@ class File(Group):
         - 'core'    mmap driver
         - 'family'  Multi-part file driver
         """
+        register_thread()
         if "bind" in kwds:
             self.fid = kwds["bind"]
         else:
@@ -819,6 +843,7 @@ class File(Group):
     def close(self):
         """ Close this HDF5 file.  All open objects will be invalidated.
         """
+        register_thread()
         with phil:
             while self.fid:
                 self.fid.close()
@@ -826,17 +851,20 @@ class File(Group):
     def flush(self):
         """ Tell the HDF5 library to flush its buffers.
         """
+        register_thread()
         h5f.flush(self.fid)
 
     def __enter__(self):
         return self
 
     def __exit__(self,*args):
+        register_thread()
         with phil:
             if self.id._valid:
                 self.close()
             
     def __repr__(self):
+        register_thread()
         if not self:
             return "<Closed HDF5 file>"
         return '<HDF5 file "%s" (mode %s, %s)>' % \
@@ -845,10 +873,12 @@ class File(Group):
 
 
     def __hash__(self):
+        register_thread()
         return hash(self.fid)
     def __eq__(self, other):
         # Python requires that objects which compare equal hash the same.
         # Therefore comparison to generic Group objects is impossible
+        register_thread()
         if hasattr(other, 'fid'):
             return self.fid == other.fid
         return False
@@ -859,7 +889,7 @@ class _RegionProxy(object):
         self.id = dset.id
 
     def __getitem__(self, args):
-        
+        register_thread()
         selection = sel.select(self.id.shape, args, dsid=self.id)
         return h5r.create(self.id, '.', h5r.DATASET_REGION, selection._id)
 
@@ -881,6 +911,7 @@ class Dataset(HLObject):
 
     def _g_shape(self):
         """Numpy-style shape tuple giving dataset dimensions"""
+        register_thread()
         return self.id.shape
 
     def _s_shape(self, shape):
@@ -891,6 +922,7 @@ class Dataset(HLObject):
     @_extras.cproperty('_dtype')
     def dtype(self):
         """Numpy dtype representing the datatype"""
+        register_thread()
         return self.id.dtype
 
     @property
@@ -913,6 +945,7 @@ class Dataset(HLObject):
     @property
     def chunks(self):
         """Dataset chunks (or None)"""
+        register_thread()
         dcpl = self._dcpl
         if dcpl.get_layout() == h5d.CHUNKED:
             return dcpl.get_chunk()
@@ -943,6 +976,7 @@ class Dataset(HLObject):
         
     @property
     def maxshape(self):
+        register_thread()
         with phil:
             space = self.id.get_space()
             dims = space.get_simple_extent_dims(True)
@@ -995,6 +1029,7 @@ class Dataset(HLObject):
         provided, the constructor will guess an appropriate chunk shape.
         Please note none of these are allowed for scalar datasets.
         """
+        register_thread()
         with phil:
             if _rawid is not None:
                 id = _rawid
@@ -1072,6 +1107,7 @@ class Dataset(HLObject):
         grown or shrunk independently.  The coordinates of existing data is
         fixed.
         """
+        register_thread()
         with phil:
 
             if not config.API_18:
@@ -1138,6 +1174,7 @@ class Dataset(HLObject):
         * Boolean "mask" array indexing
         * Advanced dataspace selection via the "selections" module
         """
+        register_thread()
         with phil:
 
             args = args if isinstance(args, tuple) else (args,)
@@ -1191,6 +1228,7 @@ class Dataset(HLObject):
 
         Classes from the "selections" module may also be used to index.
         """
+        register_thread()
         with phil:
 
             args = args if isinstance(args, tuple) else (args,)
@@ -1256,7 +1294,7 @@ class Dataset(HLObject):
 
         Broadcasting is supported for simple indexing.
         """
-
+        register_thread()
         if source_sel is None:
             source_sel = sel.SimpleSelection(self.shape)
         else:
@@ -1280,7 +1318,7 @@ class Dataset(HLObject):
 
         Broadcasting is supported for simple indexing.
         """
-
+        register_thread()
         if source_sel is None:
             source_sel = sel.SimpleSelection(source.shape)
         else:
@@ -1337,6 +1375,7 @@ class AttributeManager(_DictCompat):
     def __getitem__(self, name):
         """ Read the value of an attribute.
         """
+        register_thread()
         with phil:
             attr = h5a.open(self._id, name)
 
@@ -1361,6 +1400,7 @@ class AttributeManager(_DictCompat):
 
     def __delitem__(self, name):
         """ Delete an attribute (which must already exist). """
+        register_thread()
         h5a.delete(self._id, name)
 
     def create(self, name, data, shape=None, dtype=None):
@@ -1373,6 +1413,7 @@ class AttributeManager(_DictCompat):
         dtype:  Data type of the attribute.  Overrides data.dtype if both
                 are given.  Must be conversion-compatible with data.dtype.
         """
+        register_thread()
         with phil:
             if data is not None:
                 data = numpy.asarray(data, order='C', dtype=dtype)
@@ -1409,6 +1450,7 @@ class AttributeManager(_DictCompat):
 
         If the attribute doesn't exist, it will be automatically created.
         """
+        register_thread()
         with phil:
             if not name in self:
                 self[name] = value
@@ -1426,10 +1468,12 @@ class AttributeManager(_DictCompat):
     def __len__(self):
         """ Number of attributes attached to the object. """
         # I expect we will not have more than 2**32 attributes
+        register_thread()
         return h5a.get_num_attrs(self._id)
 
     def __iter__(self):
         """ Iterate over the names of attributes. """
+        register_thread()
         with phil:
             attrlist = []
             def iter_cb(name, *args):
@@ -1441,6 +1485,7 @@ class AttributeManager(_DictCompat):
 
     def __contains__(self, name):
         """ Determine if an attribute exists, by name. """
+        register_thread()
         return h5a.exists(self._id, name)
 
     def __repr__(self):
@@ -1463,11 +1508,13 @@ class Datatype(HLObject):
     @property
     def dtype(self):
         """Numpy dtype equivalent for this datatype"""
+        register_thread()
         return self.id.dtype
 
     def __init__(self, grp, name, _rawid=None):
         """ Private constructor.
         """
+        register_thread()
         with phil:
             id = _rawid if _rawid is not None else h5t.open(grp.id, name)
             HLObject.__init__(self, id)
