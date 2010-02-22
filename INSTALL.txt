@@ -1,12 +1,13 @@
-========================
-Installation of h5py 1.1 
-========================
+====================
+Installation of h5py
+====================
 
 This document is a very quick overview of the installation procedure for UNIX.
 Full documentation is on the web at h5py.alfven.org.  Windows users should
 download a binary installer; installation from source is only supported on
 UNIX-like platforms (Linux and Mac OS-X).
 
+On Mac OS-X, you can also install via MacPorts.
 
 Before you start
 ----------------
@@ -68,7 +69,7 @@ Running tests
 
 H5py has a battery of built-in tests.  To run them, simply do:
 
-    python setup.py nosetests
+    python setup.py test
 
 Please report test failures to the author, either to [h5py at alfven dot org]
 or the bug tracker at http://h5py.googlecode.com.
