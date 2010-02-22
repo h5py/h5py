@@ -29,7 +29,7 @@ import sys, os
 import numpy
 import os.path as op
 
-VERSION = '1.3.0'
+VERSION = '1.3.0-beta'
 
 try:
     from setuptools import setup
