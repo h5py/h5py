@@ -321,9 +321,9 @@ class TestTypes(TestCasePlus):
 
             msg = "dset %s, type %s" % (idx, basetype)
 
-            dt = h5py.new_enum(basetype, vals)
-            self.assertEqual(h5py.get_enum(dt), vals, msg)
-            self.assert_(h5py.get_enum(np.dtype('i')) is None, msg)
+            dt = h5py.special_dtype(enum=(basetype, vals))
+            self.assertEqual(h5py.check_dtype(enum=dt), vals, msg)
+            self.assert_(h5py.check_dtype(enum=np.dtype('i')) is None, msg)
 
             # Test dataset creation
             refarr = np.zeros((4,4), dtype=dt)
