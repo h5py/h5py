@@ -504,7 +504,7 @@ else:
 
 setup(
   name = 'h5py',
-  version = VERSION,
+  version = VERSION if not sys.platform.startswith('win') else VERSION.partition('-')[0],
   description = short_desc,
   long_description = long_desc,
   classifiers = [x for x in cls_txt.split("\n") if x],
