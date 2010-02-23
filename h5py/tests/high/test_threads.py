@@ -13,7 +13,7 @@ class TestThreads(tests.HTest):
 
         def badfunc():
 
-            h5py.h5e.unregister_thread(silent=True)
+            h5py.h5e.unregister_thread(h5py.h5e.NullErrorHandler)
             try:
                 h5py.h5f.is_hdf5('missing')
             except Exception:

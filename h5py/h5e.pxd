@@ -17,9 +17,20 @@
 include "config.pxi"
 include "defs.pxd"
 
+cdef class HDF5ErrorHandler:
+
+    """
+        Opaque python-side encapsulation of an HDF5 error callback.
+        Contains a reference to both a function and its associated void* data.
+    """
+ 
+    cdef void* auto
+    cdef void* data
+
 # Register the current thread for native Python exception support.
 # Safe to call more than once.
-cpdef int register_thread() except -1
+cpdef object register_thread()
+cpdef object unregister_thread(HDF5ErrorHandler handler=*)
 
 cdef extern from "hdf5.h":
 

@@ -378,8 +378,16 @@ cdef herr_t err_callback(void* client_data) with gil:
 
     return 1
 
-cpdef int register_thread() except -1:
-    """ ()
+cdef class HDF5ErrorHandler:
+
+    def __cinit__(self, *args, **kwds):
+        self.auto = NULL
+        self.data = NULL
+
+NullErrorHandler = HDF5ErrorHandler()
+
+cpdef object register_thread():
+    """ () => HDF5ErrorHandler
 
     Register the current thread for native HDF5 exception support.
 
@@ -388,32 +396,45 @@ cpdef int register_thread() except -1:
     registered when h5py is imported.  The high-level interface (h5py.*)
     is unaffected.
 
-    Safe to call more than once.
+    Returns an opaque object which represents the previously-installed error
+    handler.  Passing this object to unregister_thread will restore the
+    previous behavior.
     """
+    cdef HDF5ErrorHandler handler = HDF5ErrorHandler()
+    cdef H5E_auto_t auto
+    cdef void* data
+    if H5Eget_auto(&auto, &data) < 0:
+        raise RuntimeError("Failed to retrieve HDF5 error handler")
+    handler.auto = auto
+    handler.data = data
     if H5Eset_auto(err_callback, NULL) < 0:
         raise RuntimeError("Failed to register HDF5 exception callback")
-    return 0
+    return handler
 
-cpdef int unregister_thread(bint silent=0) except -1:
-    """ (silent=False)
+cpdef object unregister_thread(HDF5ErrorHandler handler=None):
+    """ (HDF5ErrorHandler handler=None)
 
     Unregister the current thread, turning off HDF5 exception support.
 
-    Restore the default HDF5 error handler, disabling h5py in the current
-    thread.  Third-party libraries in this thread are then free to interact
-    with the HDF5 error subsystem as they wish.  Call register_thread()
-    again to re-enable exception support.
+    This will disable h5py in the current thread, making third-party libraries
+    free to interact with the HDF5 error subsystem as they wish.  Call
+    register_thread() again to re-enable exception support.
 
-    Does not affect any other thread.  Safe to call more than once.  If
-    "silent" is specified, uses a NULL error handler rather than H5Eprint.
+    If a "native" error handler has been retrieved with register_thread(), it
+    can be reinstalled by passing it to this function.  If not, it installs
+    the default HDF5 handler H5Eprint.
+
+    Does not affect any other thread.  Safe to call more than once.
     """
-    if not silent:
-        if H5Eset_auto(H5Eprint, NULL) < 0:
-            raise RuntimeError("Failed to unregister HDF5 exception callback")
-    else:
-        if H5Eset_auto(NULL, NULL) < 0:
-            raise RuntimeError("Failed to unregister HDF5 exception callback")
-    return 0
+    cdef H5E_auto_t auto = H5Eprint
+    cdef void* data = NULL
+
+    if handler is not None:
+        auto = <H5E_auto_t>handler.auto
+        data = handler.data
+
+    if H5Eset_auto(auto, data) < 0:
+        raise RuntimeError("Failed to unregister HDF5 exception callback")
 
 cdef err_cookie disable_errors() except *:
     # Temporarily disable errors for the current thread
