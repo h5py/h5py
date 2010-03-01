@@ -40,7 +40,8 @@ import re
 
 try:
     from IPython.utils import generics
-    from IPython.core.ipapi import TryNext, get as ipget
+    from IPython.core.error import TryNext
+    from IPython.core.ipapi import get as ipget
 except ImportError:
     # support <ipython-0.11
     from IPython import generics
@@ -75,9 +76,9 @@ def h5py_item_completer(context, command):
 
     path, target = posixpath.split(item)
     if path:
-        items = (posixpath.join(path, name) for name in obj[path].iternames())
+        items = (posixpath.join(path, name) for name in obj[path].iterkeys())
     else:
-        items = obj.iternames()
+        items = obj.iterkeys()
     items = list(items)
 
     readline.set_completer_delims(' \t\n`!@#$^&*()=+[{]}\\|;:\'",<>?')
@@ -107,7 +108,11 @@ def h5py_attr_completer(context, command):
     except TryNext:
         pass
 
-    omit__names = ipget().options.readline_omit__names
+    try:
+        omit__names = ipget().readline_omit__names
+    except AttributeError:
+        # support <ipython-0.11
+        omit__names = ipget().options.readline_omit__names
     if omit__names == 1:
         attrs = [a for a in attrs if not a.startswith('__')]
     elif omit__names == 2:
