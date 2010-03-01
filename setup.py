@@ -363,6 +363,13 @@ class hbuild_ext(build_ext):
 
         api = API if API is not None else config['vers'][0:2]
 
+        if api == (1,8) and config['vers'] in [(1,8,0), (1,8,1)]:
+            warn('!'*42)
+            warn('HDF5 1.8 features require HDF5 1.8.2 or later')
+            warn('Forcing API to emulate HDF5 1.6')
+            warn('!'*42)
+            api = (1,6)
+
         if hdf5 is None:
             autostr = "(path not specified)"
         else:
