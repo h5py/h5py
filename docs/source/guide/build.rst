@@ -72,6 +72,11 @@ Requires
 
 Please note that Cython (or Pyrex) is *not* required to build h5py.
 
+.. note::
+    Due to API changes, HDF5 1.8.0 and 1.8.1 will run in "HDF5 1.6 emulation
+    mode".  If you want to use all the new features in HDF5 1.8, please
+    install HDF5 1.8.2 or later.
+
 Quick installation
 ------------------
 
