@@ -69,6 +69,7 @@ class TestTypeID(Base):
         self.assertEqual(tid, tid2)
         self.assert_(tid is not tid2)
      
+    @tests.fixme("Intermittent RuntimeError on Windows")
     def test_lock(self):
         """ (H5T) Modification of locked type raises TypeError """
         htype = h5t.STD_I8LE.copy()
