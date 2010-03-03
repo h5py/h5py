@@ -213,6 +213,7 @@ class configure(Command):
         if sys.platform.startswith('win'):
             shutil.copy(op.join(HDF5, 'dll', 'hdf5dll18.dll'), op.join(self.tempdir, 'hdf5dll18.dll'))
             shutil.copy(op.join(HDF5, 'dll', 'zlib1.dll'), op.join(self.tempdir, 'zlib1.dll'))
+            shutil.copy(op.join(HDF5, 'dll', 'szlibdll.dll'), op.join(self.tempdir, 'szlibdll.dll'))
 
     def erase_tempdir(self):
         import shutil
@@ -375,6 +376,13 @@ class hbuild_ext(build_ext):
         else:
             autostr = "(located at %s)" % hdf5
         
+        if sys.platform.startswith('win'):
+            if hdf5 is None:
+                fatal("HDF5 directory must be specified on Windows")
+            shutil.copy(op.join(hdf5, 'dll', 'hdf5dll18.dll'), localpath('h5py','hdf5dll18.dll'))
+            shutil.copy(op.join(hdf5, 'dll', 'zlib1.dll'), localpath('h5py', 'zlib1.dll'))
+            shutil.copy(op.join(hdf5, 'dll', 'szlibdll.dll'), localpath('h5py', 'szlibdll.dll'))
+
         print "*"*49
         print "Build: Building for HDF5 %s.%s %s" % (api[0], api[1], autostr)
         print "*"*49
