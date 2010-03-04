@@ -1239,9 +1239,16 @@ cdef TypeArrayID _c_array(dtype dt, int logical):
     # Arrays
     cdef dtype base
     cdef TypeID type_base
-    cdef tuple shape
+    cdef object shape
 
     base, shape = dt.subdtype
+    try:
+        shape = tuple(shape)
+    except TypeError:
+        try:
+            shape = (int(shape),)
+        except TypeError:
+            raise TypeError("Array shape for dtype must be a sequence or integer")
     type_base = py_create(base, logical=logical)
     return array_create(type_base, shape)
 
