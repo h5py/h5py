@@ -207,64 +207,6 @@ class TestPyCreate(TestCasePlus):
         Tests the translation from Python dtypes to HDF5 datatypes
     """
 
-    def test_integer(self):
-        """ Signed integer translation
-
-        - TypeIntegerID
-        - 1, 2, 4, 8 bytes
-        - LE and BE
-        - Signed
-        """
-        bases = ('=i', '<i', '>i')
-
-        for b in bases:
-            for l in (1, 2, 4, 8):
-                dt = '%s%s' % (b, l)
-                htype = h5t.py_create(dt)
-                self.assert_(isinstance(htype, h5t.TypeIntegerID), "wrong class")
-                self.assertEqual(htype.get_size(), l, "wrong size")
-                self.assertEqual(htype.get_sign(), h5t.SGN_2, "wrong sign")
-                if l != 1:  # NumPy does not allow ordering of 1-byte types
-                    self.assertEqual(htype.get_order(), bytemap[b[0]])
-
-    def test_uinteger(self):
-        """ Unsigned integer translation
-
-        - TypeIntegerID
-        - 1, 2, 4, 8 bytes
-        - LE and BE
-        - Unsigned
-        """
-        bases = ('=u', '<u', '>u')
-
-        for b in bases:
-            for l in (1, 2, 4, 8):
-                dt = "%s%s" % (b, l)
-                htype = h5t.py_create(dt)
-                self.assert_(isinstance(htype, h5t.TypeIntegerID), "wrong class")
-                self.assertEqual(htype.get_size(), l, "wrong size")
-                self.assertEqual(htype.get_sign(), h5t.SGN_NONE, "wrong sign")
-                if l != 1:
-                    self.assertEqual(htype.get_order(), bytemap[b[0]], "wrong order")
-
-    def test_float(self):
-        """ Floating-point translation
-
-        - TypeFloatID
-        - 1, 2, 4, 8 bytes
-        - LE and BE
-        - Unsigned
-        """
-        bases = ('=f', '<f', '>f')
-        
-        for b in bases:
-            for l in (4, 8):
-                dt = "%s%s" % (b, l)
-                htype = h5t.py_create(dt)
-                self.assert_(isinstance(htype, h5t.TypeFloatID), "wrong class")
-                self.assertEqual(htype.get_size(), l, "wrong size")
-                self.assertEqual(htype.get_order(), bytemap[b[0]])
-
     def test_complex(self):
         """ Complex type translation
 
@@ -291,49 +233,9 @@ class TestPyCreate(TestCasePlus):
                     self.assertEqual(st.get_size(), l//2)
                     self.assertEqual(st.get_order(), bytemap[b[0]])
 
-    def test_string(self):
-        """ Fixed-length string translation
 
-        - TypeStringID
-        - Fixed-length
-        - Size 1 byte to 2**31-1 bytes
-        - Charset ASCII
-        - Null-padded
-        """
 
-        for l in (1, 23, 2**31-1):
-            dt = '|S%s' % l
-            htype = h5t.py_create(dt)
-            self.assert_(isinstance(htype, h5t.TypeStringID), "wrong class")
-            self.assertEqual(htype.get_size(), l)
-            self.assertEqual(htype.get_cset(), h5t.CSET_ASCII, "wrong cset")
-            self.assertEqual(htype.get_strpad(), h5t.STR_NULLPAD, "wrong padding")
-            self.assert_(not htype.is_variable_str(), "should be fixed str")
 
-    def test_vlstring(self):
-        """ Variable-length string translation
-
-        In literal mode:
-        - TypeOpaqueID
-        - Equal to PYTHON_OBJECT
-
-        In logical mode:
-        - TypeStringID
-        - Variable-length
-        - Charset ASCII
-        - Null-terminated
-        """
-
-        dt = h5t.py_new_vlen(str)
-        htype = h5t.py_create(dt)
-        self.assert_(isinstance(htype, h5t.TypeOpaqueID))
-        self.assertEqual(htype, h5t.PYTHON_OBJECT)
-
-        htype = h5t.py_create(dt, logical=True)
-        self.assert_(isinstance(htype, h5t.TypeStringID))
-        self.assert_(htype.is_variable_str())
-        self.assertEqual(htype.get_cset(), h5t.CSET_ASCII)
-        self.assertEqual(htype.get_strpad(), h5t.STR_NULLTERM)
 
     def test_boolean(self):
         """ Boolean type translation
