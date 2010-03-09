@@ -124,14 +124,6 @@ class TestCore(FileBase):
         self.assert_('g' in f)
         f.close()
 
-    @tests.require(api=16)
-    def test_exc(self):
-        """ (File) Opening with core driver raises NotImplementedError on 1.6 """
-        self.name = mktemp()
-        self.f = h5py.File(self.name, 'w')
-        self.f.close()
-        self.assertRaises(NotImplementedError, h5py.File, self.name, 'r', driver='core')
-
     def test_backing(self):
         """ (File) Backing store for core driver """
         self.name = mktemp()

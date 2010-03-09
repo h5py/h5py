@@ -1,6 +1,6 @@
 
 
-from h5py import tests
+from h5py import tests, version
 import h5py
 import numpy as np
 
@@ -45,13 +45,6 @@ class TestObjRef(Base):
         g = self.f.create_group('foo')
         x = self.f[g.ref]
         self.assertEqual(x.name, g.name)
-
-    @tests.require(api=16)
-    def test_name_16(self):
-        """ (Refs) .name property gives None for dereferenced objects (1.6) """
-        g = self.f.create_group('foo')
-        x = self.f[g.ref]
-        self.assertIsNone(x.name)
 
     def test_bool(self):
         """ (Refs) __nonzero__ tracks validity """
