@@ -51,6 +51,7 @@ class TestOpening(FileBase):
         self.f = h5py.File(self.name, 'a')
         self.assert_('g' in self.f)
 
+    @tests.require(h5py.version.hdf5_version > (1,8,2))
     def test_r(self):
         """ (File) Readonly """
         self.name = mktemp()
