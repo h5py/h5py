@@ -64,6 +64,7 @@ class TestReadWrite(tests.HTest):
             dset[s] = data_arr[s]
             self.assert_(np.all(dset[s] == data_arr[s]), "slc %s data %s" % (s, data_arr[s]))
 
+    @tests.require(h5py.version.hdf5_version_tuple >= (1,8,3))
     def test_compound(self):
         """ (Vlen) VL strings in compound types """
 
