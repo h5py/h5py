@@ -1,6 +1,10 @@
 
 .. _home:
 
+###############
+HDF5 for Python
+###############
+
 The `HDF5 library <http://www.hdfgroup.com/HDF5>`_ is a versatile,
 mature library designed for the storage
 of numerical data.  The h5py package provides a simple, Pythonic interface to

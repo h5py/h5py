@@ -11,6 +11,7 @@ User Guide
     build
     quick
     hl
+    compat
     licenses
 
 

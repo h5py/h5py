@@ -1,18 +1,5 @@
 {% extends '!layout.html' %}
 
-
-{% block relbar1 %}
-<div id="tophdr">
-<p class="right"><a href="http://h5py.alfven.org">h5py.alfven.org</a></p>
-<p>HDF5 for Python Documentation</p>
-</div><div class="clearer"></div>
-{{ super() }}
-{% endblock %}
-
-{% block relbar2 %}{% endblock %}
-{% block sidebar1 %}{{ sidebar() }}{% endblock %}
-{% block sidebar2 %}{% endblock %}
-
 {% block footer %}
 {{ super() }}
 <script type="text/javascript">
