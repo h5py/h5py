@@ -26,7 +26,6 @@
 """
 
 import sys, os
-import numpy
 import os.path as op
 
 VERSION = '1.3.0-beta'
@@ -43,6 +42,11 @@ from distutils.command.clean import clean
 from distutils.cmd import Command
 from distutils.command.build_ext import build_ext
 import detect
+
+try:
+    import numpy
+except ImportError:
+    fatal("NumPy 1.0.3 or higher is required to use h5py (http://numpy.scipy.org).")
 
 # --- Convenience functions ---------------------------------------------------
 
