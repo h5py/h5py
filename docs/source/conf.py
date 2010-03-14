@@ -15,6 +15,9 @@ import sys, os
 pth = os.getenv('H5PY_PATH', None)
 if pth is not None:
     sys.path[:] = [pth]+sys.path
+sys.path[:] = sys.path+[os.path.abspath('.')]
+
+import h5py
 
 # If your extensions are in another directory, add it here. If the directory
 # is relative to the documentation root, use os.path.abspath to make it
@@ -26,7 +29,7 @@ if pth is not None:
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-sys.path += [os.path.abspath('.')]
+
 extensions = ['sphinx.ext.autodoc', 'automod']
 
 # Add any paths that contain templates here, relative to this directory.
@@ -46,9 +49,9 @@ copyright = '2010, Andrew Collette'
 # other places throughout the built documents.
 #
 # The short X.Y version.
-version = '1.3'
+version = ".".join(str(x) for x in h5py.version.version_tuple[0:2])
 # The full version, including alpha/beta/rc tags.
-release = '1.3.0'
+release = h5py.version.version
 
 # There are two options for replacing |today|: either, you set today to some
 # non-false value, then it is used:

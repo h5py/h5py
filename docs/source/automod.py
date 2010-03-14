@@ -180,6 +180,8 @@ def replace_param(istr):
 
 # === Begin Sphinx extension code =============================================
 
+def is_callable(docstring):
+    return str(docstring).strip().startswith('(')
 
 def setup(spx):
 
@@ -189,7 +191,7 @@ def setup(spx):
         final_lines = lines[:]
 
         # Remove the signature lines from the docstring
-        if what in ("function", "method") and lines[0].strip().startswith('('):
+        if is_callable(obj.__doc__):
             doclines = []
             arglines = []
             final_lines = arglines
@@ -199,7 +201,6 @@ def setup(spx):
                 final_lines.append(line)
 
         # Resolve class names, constants and modules
-        #print name
         if hasattr(obj, 'im_class'):
             mod = obj.im_class.__module__
         elif hasattr(obj, '__module__'):
@@ -217,7 +218,6 @@ def setup(spx):
             line = line.replace('**kwds', '\*\*kwds').replace('*args','\*args')
             lines.append(line)
 
-        #print "\n".join(lines)
 
 
 
@@ -226,7 +226,7 @@ def setup(spx):
 
         def getsig(docstring):
             """ Get (sig, return) from a docstring, or None. """
-            if docstring is None or not docstring.strip().startswith('('):
+            if not is_callable(docstring):
                 return None
 
             lines = []
@@ -234,26 +234,22 @@ def setup(spx):
                 if len(line.strip()) == 0:
                     break
                 lines.append(line)
-            sig = [x.strip() for x in " ".join(lines).split('=>')]
-            ret = ''
-            if len(sig) == 2:
-                sig, ret = sig
-                ret = " -> "+ret
+            rawsig = " ".join(x.strip() for x in lines)
+
+            if '=>' in rawsig:
+                sig, ret = tuple(x.strip() for x in rawsig.split('=>'))
+            elif '->' in rawsig:
+                sig, ret = tuple(x.strip() for x in rawsig.split('->'))
             else:
-                sig = sig[0]
-            if len(sig) == 2: sig = sig[0]+" "+sig[1]  # autodoc hates "()"
+                sig = rawsig
+                ret = None
+
+            if sig == "()":
+                sig = "( )" # Why? Ask autodoc.
+
             return (sig, ret)
 
-        if what not in ("function", "method"):
-            return None
-
         sigtuple = getsig(obj.__doc__)
-
-        # If it's a built-in fuction it MUST have a docstring or
-        # Sphinx shits a giant red box into the HTML
-        if sigtuple is None and \
-          (not (hasattr(obj, 'im_func') or hasattr(obj, 'func_code'))):
-            return ('(...)', '')
 
         return sigtuple
 
