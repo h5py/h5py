@@ -17,7 +17,6 @@ separately below.
     file
     group
     dataset
-    links
     attr
     refs
     vl

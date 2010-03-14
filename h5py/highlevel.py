@@ -1350,7 +1350,8 @@ class Dataset(HLObject):
 
 class AttributeManager(_DictCompat):
 
-    """ Allows dictionary-style access to an HDF5 object's attributes.
+    """ 
+        Allows dictionary-style access to an HDF5 object's attributes.
 
         These are created exclusively by the library and are available as
         a Python attribute at <object>.attrs
@@ -1366,6 +1367,7 @@ class AttributeManager(_DictCompat):
         To modify an existing attribute while preserving its type, use the
         method modify().  To specify an attribute of a particular type and
         shape (or to create an empty attribute), use create().
+
     """
 
     def __init__(self, parent):
