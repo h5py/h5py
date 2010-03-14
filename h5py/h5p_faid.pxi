@@ -47,8 +47,8 @@ cdef class PropFAID(PropInstanceID):
         return deg
 
     
-    def set_fapl_core(self, size_t block_size=1024*1024, hbool_t backing_store=1):
-        """(UINT increment=1M, BOOL backing_store=True)
+    def set_fapl_core(self, size_t block_size=64*1024, hbool_t backing_store=1):
+        """(UINT increment=64k, BOOL backing_store=True)
 
         Use the h5fd.CORE (memory-resident) file driver.
 

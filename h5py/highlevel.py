@@ -705,7 +705,7 @@ class File(Group):
                             in memory and is discarded when closed.
 
             block_size:     Increment (in bytes) by which memory is extended.
-                            Default is 1 megabyte (1024**2).
+                            Default is 64k.
 
         'family'
             Store the file on disk as a series of fixed-length chunks.  Useful
