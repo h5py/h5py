@@ -22,6 +22,20 @@ a.reference em {
     font-style: normal;
 }
 
+
+dl.function dt {
+    background-color: #f0f0f0;
+}
+
+dl.method dt {
+    background-color: #f0f0f0;
+}
+
+dl.attribute dt {
+    background-color: #f0f0f0;
+}
+
 dl.docutils dt {
+    background-color: #fff;
     text-decoration: underline;
 }
