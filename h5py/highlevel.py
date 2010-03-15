@@ -1410,12 +1410,16 @@ class AttributeManager(_DictCompat):
     def create(self, name, data, shape=None, dtype=None):
         """ Create a new attribute, overwriting any existing attribute.
 
-        name:   Name of the new attribute (required)
-        data:   An array to initialize the attribute (required)
-        shape:  Shape of the attribute.  Overrides data.shape if both are
-                given.  The total number of points must be unchanged.
-        dtype:  Data type of the attribute.  Overrides data.dtype if both
-                are given.  Must be conversion-compatible with data.dtype.
+        name
+            Name of the new attribute (required)
+        data
+            An array to initialize the attribute (required)
+        shape
+            Shape of the attribute.  Overrides data.shape if both are
+            given.  The total number of points must be unchanged.
+        dtype
+            Data type of the attribute.  Overrides data.dtype if both
+            are given.  Must be conversion-compatible with data.dtype.
         """
         register_thread()
         with phil:

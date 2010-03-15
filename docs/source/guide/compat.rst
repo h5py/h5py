@@ -1,5 +1,5 @@
 *******************
-Compatibility Guide
+Compatibility Notes
 *******************
 
 File compatibility

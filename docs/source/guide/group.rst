@@ -66,6 +66,8 @@ Group objects implement the following subset of the Python "mapping" interface:
 - :meth:`__delitem__() <Group.__delitem__>`
 - :meth:`get() <Group.get>`
 
+.. _softlinks:
+
 Soft links
 ----------
 

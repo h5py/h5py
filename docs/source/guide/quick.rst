@@ -19,18 +19,24 @@ What is HDF5?
 
 It's a filesystem for your data.
 
-Only two kinds of objects are stored in HDF5 files: 
-*datasets*, which are homogenous, regular arrays of data (just like
-NumPy arrays), and *groups*, which are containers that store datasets and
-other groups.  Each file is organized using a filesystem metaphor; groups
-are like folders, and datasets are like files.  The syntax for accessing
-objects in the file is the traditional POSIX filesystem syntax.  Here
-are some examples::
+More accurately, it's a widely used scientific file format for archiving and
+sharing large amounts of numerical data.  HDF5 files contain *datasets*, which
+are homogenous, regular arrays of data (like NumPy arrays), and *groups*,
+which are containers that store datasets and other groups.
+
+In this sense, the structure of an HDF5 file is analagous to a POSIX filesystem.
+In fact, this is exactly the syntax used by HDF5 itself to locate resources::
 
     /                       (Root group)
     /MyGroup                (Subgroup)
     /MyGroup/DS1            (Dataset stored in subgroup)
     /MyGroup/Subgroup/DS2   (and so on)
+
+HDF5 also has a well-developed type system, supporting integers and floats
+of all the normal sizes and byte orders, as well as more advanced constructs
+like compound and array types.  The library handles all type conversion
+internally; you can read and write data without having to worry about things
+like endian-ness or precision.
 
 What is h5py?
 =============
@@ -56,9 +62,11 @@ Getting data into HDF5
 
 First, install h5py by following the :ref:`installation instructions <build>`.
 
-Since an example is worth a thousand words, here's how to make a new file,
-and create an integer dataset inside it.  The new dataset has shape (100, 100),
-is located in the file at ``"/MyDataset"``, and initialized to the value 42.
+Since examples are better than long-winded explanations, here's how to:
+
+    * Make a new file
+    * Create an integer dataset, with shape (100,100)
+    * Initialize the dataset to the value 42
 
     >>> import h5py
     >>> f = h5py.File('myfile.hdf5')
@@ -71,8 +79,8 @@ including "r", "w", and "a" (the default):
     >>> f = h5py.File('file1.hdf5', 'w')    # overwrite any existing file
     >>> f = h5py.File('file2.hdf5', 'r')    # open read-only
 
-The dataset object ``dset`` here represents a new 2-d HDF5 dataset.  Some
-features will be familiar to NumPy users::
+The :ref:`Dataset <datasets>` object ``dset`` here represents a new 2-d HDF5
+dataset.  Some features will be familiar to NumPy users::
 
     >>> dset.shape
     (100, 100)
@@ -165,15 +173,6 @@ you have to manually delete the existing object first::
     >>> del f['NewGroup']
     >>> grp = f.create_group("NewGroup")
 
-This restriction reflects HDF5's lack of transactional support, and will not
-change.
-
-.. note::
-
-    Most HDF5 versions don't support automatic creation of intermediate
-    groups; you can't yet do ``f.create_group('foo/bar/baz')`` unless both
-    groups "foo" and "bar" already exist.
-
 Attributes
 ==========
 
@@ -201,8 +200,16 @@ unlike group members, you can directly overwrite existing attributes:
 
     >>> dset.attrs["Name"] = "New Name"
 
-More information
-================
+Other stuff
+===========
+
+In addition to this basic behavior, HDF5 has a lot of other goodies.  Some
+of these features are:
+
+* :ref:`Compressed datasets <dsetfeatures>`
+* :ref:`Soft and external links <softlinks>`
+* :ref:`Object and region references <refs>`
+
 
 Full documentation on files, groups, datasets and attributes is available
 in the section ":ref:`h5pyreference`".
