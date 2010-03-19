@@ -1,14 +1,9 @@
-HDF5 for Python (h5py) 1.3.0 BETA
-=================================
+HDF5 for Python (h5py) 1.3.0
+============================
 
-I'm pleased to announce that HDF5 for Python 1.3 is now available!  This
-is a significant release introducing a number of new features, including
-support for soft/external links as well as object and region references.
-
-I encourage all interested HDF5/NumPy/Python users to give the beta a try
-and to do your best to break it. :)  Download, documentation and contact
-links are below.
-
+HDF5 for Python 1.3.0 is now available. This is a significant
+release introducing a number of new features, including support for
+soft/external links as well as object and region references.
 
 What is h5py?
 -------------
