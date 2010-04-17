@@ -176,6 +176,9 @@ cdef class DatasetID(ObjectID):
             wide variety of dataspace configurations are possible, this is not
             checked.  You can easily crash Python by reading in data from too
             large a dataspace.
+
+            The GIL is released during the read.  Modifying the contents of
+            the array from another thread has undefined results.
         """
         cdef hid_t self_id, mtype_id, mspace_id, fspace_id, plist_id
         cdef void* data
@@ -192,12 +195,7 @@ cdef class DatasetID(ObjectID):
         plist_id = pdefault(dxpl)
         data = PyArray_DATA(arr_obj)
 
-        arr_obj.flags &= (~NPY_WRITEABLE) # Wish-it-was-a-mutex approach
-        try:
-            dset_rw(self_id, mtype_id, mspace_id, fspace_id, plist_id, data, 1)
-        finally:
-            arr_obj.flags |= NPY_WRITEABLE
-
+        dset_rw(self_id, mtype_id, mspace_id, fspace_id, plist_id, data, 1)
     
     def write(self, SpaceID mspace not None, SpaceID fspace not None, 
                     ndarray arr_obj not None, TypeID mtype=None,
@@ -210,6 +208,9 @@ cdef class DatasetID(ObjectID):
 
             The provided Numpy array must be C-contiguous.  If this is not the
             case, ValueError will be raised and the read will fail.
+
+            The GIL is released during the write.  Modifying the contents of
+            the array from another thread has undefined results.
         """
         cdef hid_t self_id, mtype_id, mspace_id, fspace_id, plist_id
         cdef void* data
@@ -226,12 +227,7 @@ cdef class DatasetID(ObjectID):
         plist_id = pdefault(dxpl)
         data = PyArray_DATA(arr_obj)
 
-        arr_obj.flags &= (~NPY_WRITEABLE) # Wish-it-was-a-mutex approach
-        try:
-            dset_rw(self_id, mtype_id, mspace_id, fspace_id, plist_id, data, 0)
-        finally:
-            arr_obj.flags |= NPY_WRITEABLE
-
+        dset_rw(self_id, mtype_id, mspace_id, fspace_id, plist_id, data, 0)
     
     def extend(self, tuple shape):
         """ (TUPLE shape)
