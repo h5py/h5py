@@ -123,7 +123,7 @@ class HLObject(object):
         register_thread()
         return h5i.get_name(self.id)
 
-    @_extras.cproperty('_attrs')
+    @property
     def attrs(self):
         """Provides access to HDF5 attributes. See AttributeManager."""
         return AttributeManager(self)
@@ -138,7 +138,7 @@ class HLObject(object):
             raise ValueError("Parent of an anonymous object is undefined")
         return self.file[pp.dirname(self.name)]
 
-    @_extras.cproperty('_ref')
+    @property
     def ref(self):
         """ An (opaque) HDF5 reference to this object """
         register_thread()
@@ -919,7 +919,7 @@ class Dataset(HLObject):
 
     shape = property(_g_shape, _s_shape)
 
-    @_extras.cproperty('_dtype')
+    @property
     def dtype(self):
         """Numpy dtype representing the datatype"""
         register_thread()
@@ -934,11 +934,11 @@ class Dataset(HLObject):
             #    return numpy.asscalar(arr)
             return arr
 
-    @_extras.cproperty('__dcpl')
+    @property
     def _dcpl(self):
         return self.id.get_create_plist()
 
-    @_extras.cproperty('__filters')
+    @property
     def _filters(self):
         return filters.get_filters(self._dcpl)
 
@@ -1374,7 +1374,6 @@ class AttributeManager(_DictCompat):
         """ Private constructor.
         """
         self._id = parent.id
-        self._file = parent.file
 
     def __getitem__(self, name):
         """ Read the value of an attribute.
