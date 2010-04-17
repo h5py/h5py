@@ -91,9 +91,7 @@ class HLObject(object):
     @property
     def file(self):
         """Return a File instance associated with this object"""
-        register_thread()
-        fid = h5i.get_file_id(self.id)
-        return File(None, bind=fid)
+        return self._file
 
     @property
     def _lapl(self):
@@ -146,8 +144,11 @@ class HLObject(object):
 
     def __init__(self, oid):
         """ Setup this object, given its low-level identifier """
-        #self._file = self._get_file(oid)
+        register_thread()
         self._id = oid
+        if not isinstance(self, File):
+            fid = h5i.get_file_id(oid)
+            self._file = File(None, bind=fid)
 
     def __nonzero__(self):
         register_thread()
