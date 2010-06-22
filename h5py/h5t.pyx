@@ -1357,7 +1357,7 @@ cpdef TypeID py_create(object dtype_in, bint logical=0):
     """
     cdef dtype dt = dtype(dtype_in)
     cdef char kind = dt.kind
-
+
     # Float
     if kind == c'f':
         return _c_float(dt)
