@@ -263,7 +263,10 @@ class Group(HLObject, _DictCompat):
             if _rawid is not None:
                 id = _rawid
             elif create:
-                id = h5g.create(parent_object.id, name)
+                if config.API_18:
+                    id = h5g.create(parent_object.id, name, lcpl=self._lcpl)
+                else:
+                    id = h5g.create(parent_object.id, name)
             else:
                 id = h5g.open(parent_object.id, name)
             HLObject.__init__(self, id)

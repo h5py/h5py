@@ -28,6 +28,13 @@ class TestCreate(GroupBase):
         self.assertIsInstance(g, h5py.Group)
         self.assertEqual(g.name, '/new')
 
+    @tests.require(api=18)
+    def test_intermediate(self):
+        """ (Group) Create with missing intermediate groups """
+        g = self.f.create_group("/a/b/c/d")
+        self.assert_("/a/b/c/d" in self.f)
+        self.assertIsInstance(g, h5py.Group)
+
     def test_conflict(self):
         """ (Group) Create with existing name raises ValueError """
         self.f.create_group('new')
