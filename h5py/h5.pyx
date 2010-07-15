@@ -165,6 +165,24 @@ cpdef H5PYConfig get_config():
 
 # === Public C API for object identifiers =====================================
 
+import weakref
+cdef object _global_ids = weakref.WeakValueDictionary()
+
+cdef class IDProxy:
+
+    property valid:
+        def __get__(self):
+            return H5Iget_type(self.id) > 0
+
+    def __cinit__(self, id):
+        self.id = id
+        self.locked = 0
+
+    def __dealloc__(self):
+        if (not self.locked) and H5Iget_type(self.id) > 0:
+            H5Idec_ref(self.id)
+
+    
 cdef class ObjectID:
 
     """
@@ -192,22 +210,35 @@ cdef class ObjectID:
         def __get__(self):
             return H5Iget_type(self.id) != H5I_BADID
 
-    
+    property id:
+        """ Read the ID number, or bind a new ID """
+        def __get__(self):
+            return self._proxy.id
+        def __set__(self, hid_t id):
+            cdef IDProxy newproxy
+            if id in _global_ids:
+                try:
+                    self._proxy = _global_ids[id]
+                except KeyError:
+                    pass
+            newproxy = IDProxy(id)
+            self._proxy = _global_ids.setdefault(id, newproxy)
+            if newproxy is not self._proxy:
+                newproxy.id = 0
+
+    property _locked:
+        def __get__(self):
+            return self._proxy.locked
+        def __set__(self, val):
+            self._proxy.locked = val
+
     def __nonzero__(self):
         """ Truth value for object identifiers (like _valid) """
-        return self._valid
+        return self._proxy.valid
 
-    def __cinit__(self, hid_t id_):
+    def __cinit__(self, hid_t id):
         """ Object init; simply records the given ID. """
-        self._locked = 0
-        self.id = id_
-
-    def __dealloc__(self):
-        """ Automatically decrefs the ID, if it's valid. """
-
-        if (not self._locked) and H5Iget_type(self.id) != H5I_BADID:
-            H5Idec_ref(self.id)
-
+        self.id = id # Retrives the correct ID proxy and binds us to it
     
     def __copy__(self):
         """ Create another object wrapper which points to the same id. 
@@ -217,9 +248,6 @@ cdef class ObjectID:
         """
         cdef ObjectID copy
         copy = type(self)(self.id)
-        if self._valid and not self._locked:
-            H5Iinc_ref(self.id)
-        copy._locked = self._locked
         return copy
 
     def __richcmp__(self, object other, int how):

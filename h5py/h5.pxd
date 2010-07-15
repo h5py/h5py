@@ -25,11 +25,16 @@ cdef class H5PYConfig:
 
 cpdef H5PYConfig get_config()
 
-cdef class ObjectID:
+cdef class IDProxy:
 
     cdef object __weakref__
     cdef readonly hid_t id
-    cdef readonly int _locked
+    cdef readonly int locked
+
+cdef class ObjectID:
+
+    cdef object __weakref__
+    cdef IDProxy _proxy
     cdef object _hash
 
 cdef class SmartStruct:
