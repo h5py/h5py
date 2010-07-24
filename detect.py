@@ -9,7 +9,6 @@ def detect_hdf5(basedir, **compiler_attrs):
     """
 
     from distutils import ccompiler
-    from distutils.core import CompileError, LinkError
     import subprocess
 
     cc = ccompiler.new_compiler()
