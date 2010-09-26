@@ -925,7 +925,7 @@ cdef class TypeCompositeID(TypeID):
         try:
             name = H5Tget_member_name(self.id, member)
             assert name != NULL
-            pyname = name
+            pyname = <bytes>name
         finally:
             free(name)
 

@@ -496,7 +496,7 @@ cdef class AttrID(ObjectID):
             assert blen >= 0
             buf = <char*>emalloc(sizeof(char)*blen+1)
             blen = H5Aget_name(self.id, blen+1, buf)
-            strout = buf
+            strout = <bytes>buf
         finally:
             efree(buf)
 
