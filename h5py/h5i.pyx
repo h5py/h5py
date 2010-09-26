@@ -118,7 +118,11 @@ def get_file_id(ObjectID obj not None):
 
         Obtain an identifier for the file in which this object resides.
     """
-    return FileID(H5Iget_file_id(obj.id))
+    cdef hid_t fid
+    fid = H5Iget_file_id(obj.id)
+    if H5Iget_ref(fid) > 1:
+        H5Idec_ref(fid)
+    return FileID(fid)
 
 
 def inc_ref(ObjectID obj not None):

@@ -43,12 +43,12 @@ class TestName(Base):
 class TestFID(Base):
 
     def test_fid(self):
-        """ (H5I) get_file_id() returns FID, with increased refcount """
+        """ (H5I) get_file_id() returns FID, with fixed refcount """
         g = h5g.create(self.fid, '/foobar')
         x = h5i.get_file_id(g)
         self.assertIsInstance(x, h5f.FileID)
         self.assertEqual(x, self.fid)
-        self.assertEqual(h5i.get_ref(x), 2)
+        self.assertEqual(h5i.get_ref(x), 1)
 
     def test_exc(self):
         """ (H5I) get_file_id() on closed object raises ValueError """
