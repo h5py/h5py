@@ -187,7 +187,7 @@ cdef extern from "hdf5.h":
   ctypedef  herr_t (*H5D_operator_t)(void *elem, hid_t type_id, unsigned ndim,
                     hsize_t *point, void *operator_data) except -1
   herr_t    H5Diterate(void *buf, hid_t type_id, hid_t space_id, 
-                        H5D_operator_t operator, void* operator_data) except *
+                        H5D_operator_t op, void* operator_data) except *
   herr_t    H5Dset_extent(hid_t dset_id, hsize_t* size)
 
   IF H5PY_18API:
@@ -349,7 +349,7 @@ cdef extern from "hdf5.h":
   int    H5Gget_objtype_by_idx(hid_t loc_id, hsize_t idx) except *
 
   ctypedef herr_t (*H5G_iterate_t)(hid_t group, char *name, void* op_data) except 2
-  herr_t H5Giterate(hid_t loc_id, char *name, int *idx, H5G_iterate_t operator, void* data) except *
+  herr_t H5Giterate(hid_t loc_id, char *name, int *idx, H5G_iterate_t op, void* data) except *
   herr_t H5Gget_objinfo(hid_t loc_id, char* name, int follow_link, H5G_stat_t *statbuf) except *
 
   herr_t H5Gget_linkval(hid_t loc_id, char *name, size_t size, char *value) except *
