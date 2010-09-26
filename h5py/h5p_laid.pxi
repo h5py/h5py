@@ -85,5 +85,9 @@ cdef class PropLAID(PropInstanceID):
 
         Get the file access property list used when opening external files.
         """
-        return propwrap(H5Pget_elink_fapl(self.id))
+        cdef hid_t fid
+        fid = H5Pget_elink_fapl(self.id)
+        if H5Iget_ref(fid) > 1:
+            H5Idec_ref(fid)
+        return propwrap(fid)
 

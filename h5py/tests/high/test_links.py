@@ -81,8 +81,11 @@ class TestExternal(Base):
         """ (Links) Access external link """
         self.f['ext'] = h5py.ExternalLink(self.ename, '/external')
         g = self.f['ext']
-        self.assert_(g)
-        self.assertIsInstance(g, h5py.Group)
+        try:
+            self.assert_(g)
+            self.assertIsInstance(g, h5py.Group)
+        finally:
+            g.file.close()
 
     @tests.require(api=18)
     def test_exc(self):
@@ -100,9 +103,11 @@ class TestExternal(Base):
     def test_file(self):
         """ (Links) File attribute works correctly on external links """
         self.f['ext'] = h5py.ExternalLink(self.ename, '/external')
-        g = self.f['ext']
-        self.assertNotEqual(g.file, self.f)
-
+        try:
+            g = self.f['ext']
+            self.assertNotEqual(g.file, self.f)
+        finally:
+            g.file.close()
 
 
 
