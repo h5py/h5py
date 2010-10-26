@@ -102,13 +102,12 @@ class TestExternal(Base):
     @tests.require(api=18)
     def test_file(self):
         """ (Links) File attribute works correctly on external links """
+        from h5py.h5 import _global_ids as gi
+        from h5py import h5i
         self.f['ext'] = h5py.ExternalLink(self.ename, '/external')
-        try:
-            g = self.f['ext']
-            self.assertNotEqual(g.file, self.f)
-        finally:
-            g.file.close()
-
+        g = self.f['ext']
+        print "g is %s" % id(g)
+        self.assertNotEqual(g.file, self.f)
 
 
 
