@@ -390,10 +390,8 @@
   H5T_sign_t    H5Tget_sign(hid_t type_id)
   herr_t        H5Tset_sign(hid_t type_id, H5T_sign_t sign)
 
-  herr_t        H5Tget_fields(hid_t type_id, size_t *spos, size_t *epos, 
-                                size_t *esize, size_t *mpos, size_t *msize )
-  herr_t        H5Tset_fields(hid_t type_id, size_t spos, size_t epos, 
-                                size_t esize, size_t mpos, size_t msize )
+  herr_t        H5Tget_fields(hid_t type_id, size_t *spos, size_t *epos, size_t *esize, size_t *mpos, size_t *msize )
+  herr_t        H5Tset_fields(hid_t type_id, size_t spos, size_t epos, size_t esize, size_t mpos, size_t msize )
 
   size_t        H5Tget_ebias(hid_t type_id)
   herr_t        H5Tset_ebias(hid_t type_id, size_t ebias)
@@ -441,8 +439,7 @@
     hid_t H5Tdecode(unsigned char *buf)
     herr_t H5Tencode(hid_t obj_id, unsigned char *buf, size_t *nalloc)
 
-    herr_t H5Tcommit2(hid_t loc_id, char *name, hid_t dtype_id, hid_t lcpl_id,
-            hid_t tcpl_id, hid_t tapl_id) 
+    herr_t H5Tcommit2(hid_t loc_id, char *name, hid_t dtype_id, hid_t lcpl_id, hid_t tcpl_id, hid_t tapl_id) 
 
   H5T_conv_t H5Tfind(hid_t src_id, hid_t dst_id, H5T_cdata_t **pcdata)
 

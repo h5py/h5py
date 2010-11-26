@@ -166,7 +166,7 @@ cpdef H5PYConfig get_config():
 # === Public C API for object identifiers =====================================
 
 import weakref
-cdef object _global_ids = weakref.WeakValueDictionary()
+_global_ids = weakref.WeakValueDictionary()
 
 cdef class IDProxy:
 
