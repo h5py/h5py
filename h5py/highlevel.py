@@ -1216,8 +1216,15 @@ class Dataset(HLObject):
             # discards the array information at the top level.
             mtype = h5t.py_create(new_dtype)
 
+            # HDF5 has a bug where if the memory shape has a different rank
+            # than the dataset, the read is very slow
+            mshape = selection.mshape
+            if len(mshape) < len(self.shape):
+                # pad with ones
+                mshape = (1,)*(len(self.shape)-len(mshape)) + mshape
+
             # Perfom the actual read
-            mspace = h5s.create_simple(selection.mshape)
+            mspace = h5s.create_simple(mshape)
             fspace = selection._id
             self.id.read(mspace, fspace, arr, mtype)
 
