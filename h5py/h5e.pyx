@@ -17,7 +17,7 @@
 
 include "config.pxi"
 
-from python_exc cimport PyErr_SetString, PyErr_Occurred
+from cpython.exc cimport PyErr_SetString, PyErr_Occurred
 from h5 cimport SmartStruct
 
 import _stub
