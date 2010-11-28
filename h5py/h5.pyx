@@ -335,29 +335,17 @@ def _exithack():
     """ Internal function; do not call unless you want to lose all your data.
     """
 
-
-    cdef int count
-    cdef int i
-    cdef hid_t *objs
-
-    # This problem appears to be fixed in HDF5 1.8
-    if H5_VERS_MAJOR == 1 and H5_VERS_MINOR < 8:
-    
-        # If any identifiers have reference counts > 1 when the library closes,
-        # it freaks out and dumps a message to stderr.  So we have Python dec_ref
-        # everything when the interpreter's about to exit.
-    
-        count = H5Fget_obj_count(H5F_OBJ_ALL, H5F_OBJ_ALL)
-
-        if count > 0:
-            objs = <hid_t*>malloc(sizeof(hid_t)*count)
+    # If any identifiers have reference counts > 1 when the library closes,
+    # it freaks out and dumps a message to stderr.  So we have Python dec_ref
+    # object identifiers when we're about to exit.
+    # This function used to use H5Fget_obj_ids but that conflicted with
+    # PyTables, so now we only decref "h5py-owned" IDs.
+    for obj_id in _global_ids:
+        while H5Iget_type(obj_id) != H5I_BADID and H5Iget_ref(obj_id) > 0:
             try:
-                H5Fget_obj_ids(H5F_OBJ_ALL, H5F_OBJ_ALL, count, objs)
-                for i from 0<=i<count:
-                    while H5Iget_type(objs[i]) != H5I_BADID and H5Iget_ref(objs[i]) > 0:
-                        H5Idec_ref(objs[i])
-            finally:
-                free(objs)
+                H5Idec_ref(obj_id)
+            except:
+                break
 
     _conv.unregister_converters()
 
