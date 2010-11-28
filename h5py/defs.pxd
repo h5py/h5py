@@ -89,6 +89,10 @@ cdef extern from "hdf5.h":
   herr_t H5get_libversion(unsigned *majnum, unsigned *minnum,
                           unsigned *relnum) except *
 
+  int H5_VERS_MAJOR
+  int H5_VERS_MINOR
+  int H5_VERS_RELEASE
+  
 # === H5D - Dataset API =======================================================
 
 cdef extern from "hdf5.h":
