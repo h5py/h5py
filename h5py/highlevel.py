@@ -1092,7 +1092,10 @@ class Dataset(HLObject):
                 space_id = h5s.create_simple(shape, maxshape)
                 type_id = h5t.py_create(dtype, logical=True)
 
-                id = h5d.create(group.id, name, type_id, space_id, plist)
+                if config.API_18:
+                    id = h5d.create(group.id, name, type_id, space_id, dcpl=plist, lcpl=self._lcpl)
+                else:
+                    id = h5d.create(group.id, name, type_id, space_id, dcpl=plist)
                 if data is not None:
                     id.write(h5s.ALL, h5s.ALL, data)
             HLObject.__init__(self, id)

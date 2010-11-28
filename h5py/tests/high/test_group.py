@@ -95,6 +95,14 @@ class TestDataset(GroupBase):
         ds = self.f.create_dataset("Dataset", shape=(10,10), dtype='<i4')
         self.assertIsInstance(ds, h5py.Dataset)
         self.assert_("Dataset" in self.f)
+        
+    @tests.require(api=18)
+    def test_dataset_intermediate(self):
+        """ (Group) Create dataset with missing intermediate groups """
+        ds = self.f.create_dataset("/a/b/Dataset", shape=(10, 10), dtype='<i4')
+        self.assertIsInstance(ds, h5py.Dataset)
+        self.assert_("/a/b/Dataset" in self.f)
+
 
 class TestDict(GroupBase):
 
