@@ -60,11 +60,13 @@ __all__ = ['h5', 'h5f', 'h5g', 'h5s', 'h5t', 'h5d', 'h5a', 'h5p', 'h5r',
 
 try:
     try:
-        import IPython.core.ipapi as _IP
+        from IPython.core.iplib import InteractiveShell
+        ip_running = InteractiveShell.initialized()
     except ImportError:
         # support <ipython-0.11
-        import IPython.ipapi as _IP
-    if _IP.get() is not None:
+        from IPython import ipapi
+        ip_running = ipapi.get() is not None
+    if ip_running:
         import _ipy_completer
         _ipy_completer.activate()
 except Exception:
