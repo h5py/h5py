@@ -28,7 +28,7 @@
 import sys, os
 import os.path as op
 
-VERSION = '1.3.1'
+VERSION = '1.3.1-beta'
 
 try:
     from setuptools import setup
