@@ -21,7 +21,6 @@ from h5 cimport init_hdf5, SmartStruct
 from h5p cimport PropID, pdefault
 from h5g cimport GroupID
 from utils cimport emalloc, efree
-from cpython cimport PyErr_SetString
 
 init_hdf5()
 

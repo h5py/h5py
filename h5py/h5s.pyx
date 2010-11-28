@@ -21,7 +21,7 @@ from h5 cimport init_hdf5
 from utils cimport  require_tuple, convert_dims, convert_tuple, \
                     emalloc, efree, create_numpy_hsize, create_hsize_array
 from numpy cimport ndarray
-from cpython cimport PyString_FromStringAndSize
+
 
 # Initialization
 init_hdf5()

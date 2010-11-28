@@ -21,8 +21,6 @@ from h5 cimport init_hdf5, ObjectID
 from h5i cimport wrap_identifier
 from h5s cimport SpaceID
 
-from cpython cimport PyString_FromStringAndSize
-
 # Initialization
 init_hdf5()
 

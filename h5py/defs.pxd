@@ -59,6 +59,15 @@ cdef extern from "stdint.h":
   ctypedef signed long long int int64_t
   ctypedef signed long long int uint64_t 
 
+# Can't use Cython defs because they keep moving them around
+cdef extern from "Python.h":
+  ctypedef void PyObject
+  ctypedef ssize_t Py_ssize_t
+
+  PyObject* PyErr_Occurred()
+  void PyErr_SetString(object type, char *message)
+  object PyString_FromStringAndSize(char *v, Py_ssize_t len)
+
 # === Compatibility definitions and macros for h5py ===========================
 
 cdef extern from "compat.h":

@@ -24,7 +24,6 @@ include "config.pxi"
 from h5 cimport init_hdf5, H5PYConfig, get_config
 from h5p cimport PropID, pdefault
 from numpy cimport dtype, ndarray
-from cpython cimport PyString_FromStringAndSize
 from h5r cimport Reference, RegionReference
 
 from utils cimport  emalloc, efree, \

@@ -16,7 +16,6 @@ include "config.pxi"
 
 # Compile-time imports
 from h5 cimport init_hdf5
-from cpython cimport PyErr_SetString
 
 from numpy cimport ndarray, import_array, \
                     NPY_UINT16, NPY_UINT32, NPY_UINT64,  npy_intp, \
