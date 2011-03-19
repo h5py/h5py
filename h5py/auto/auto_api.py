@@ -43,7 +43,7 @@ class FunctionCruncher(object):
 
     def put_cython_signature(self):
         
-        return "cdef %s %s_p(%s) except? %s" % (self.code, self.fname,
+        return "cdef %s %s_py(%s) except? %s" % (self.code, self.fname,
                                               self.sig, self.retval)
 
     def put_cython_wrapper(self):
@@ -53,9 +53,9 @@ class FunctionCruncher(object):
              'condition': self.condition, 'retval': self.retval}
 
         code = """\
-cdef %(code)s %(fname)s_p(%(sig)s) except? %(retval)s:
+cdef %(code)s %(fname)s(%(sig)s) except? %(retval)s:
     cdef %(code)s r;
-    r = %(fname)s(%(args)s)
+    r = c_%(fname)s(%(args)s)
     if r%(condition)s:
         if set_exception():
             return %(retval)s;
@@ -65,7 +65,7 @@ cdef %(code)s %(fname)s_p(%(sig)s) except? %(retval)s:
 
     def put_cython_import(self):
 
-        return "%s %s(%s)" % (self.code, self.fname, self.sig)
+        return '%s c_%s "%s" (%s)' % (self.code, self.fname, self.fname, self.sig)
 
     def put_name(self):
         
@@ -82,7 +82,9 @@ if __name__ == '__main__':
     f_pxd.write("# This file is auto-generated.  Do not edit.\n\n")
     f_pyx.write("# This file is auto-generated.  Do not edit.\n\n")
 
-    defs = 'cdef extern from "hdf5.h":\n'
+    defs = "DEF H5PY_18API=1\n"
+    defs += 'include "defs_types.pxi"\n'
+    defs += 'cdef extern from "hdf5.h":\n'
     sigs = ""
     wrappers = ""
     names = ""
