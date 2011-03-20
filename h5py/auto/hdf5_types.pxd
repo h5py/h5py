@@ -1,3 +1,5 @@
+include "context.pxi"
+from external_types cimport *
 
 cdef extern from "hdf5.h":
 
