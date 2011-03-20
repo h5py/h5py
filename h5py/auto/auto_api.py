@@ -24,21 +24,21 @@ fp = re.compile(function_pattern)
 sp = re.compile(sig_pattern)
 
 raw_preamble = """\
-include "context.pxi"
+include "config.pxi"
 from hdf5_types cimport *
 from external_types cimport *
 
 """
 
 def_preamble = """\
-include "context.pxi"
+include "config.pxi"
 from hdf5_types cimport *
 from external_types cimport *
 
 """
 
 imp_preamble = """\
-include "context.pxi"
+include "config.pxi"
 from hdf5_types cimport *
 from external_types cimport *
 
@@ -51,8 +51,8 @@ cdef int set_exception():
 
 class FunctionCruncher2(object):
 
-    def __init__(self):
-        pass
+    def __init__(self, stub=False):
+        self.stub = stub
 
     def run(self):
 
@@ -117,9 +117,10 @@ class FunctionCruncher2(object):
 
         code = "cdef %(code)s %(fname)s(%(sig)s) except *\n" % function_parts
         return self.version_wrap(function_parts, code)
-
-    def make_cython_imp(self, function_parts):
-        """ Build a Cython wrapper implementation """
+        
+    def make_cython_imp(self, function_parts, stub=False):
+        """ Build a Cython wrapper implementation. If stub is True, do
+        nothing but call the function and return its value """
 
         args = sp.findall(function_parts['sig'])
         if args is None:
@@ -155,12 +156,21 @@ cdef %(code)s %(fname)s(%(sig)s) except *:
     return r
 
 """
-        return self.version_wrap(function_parts, imp % parts)
+
+        stub_imp = """\
+cdef %(code)s %(fname)s(%(sig)s) except *:
+    return hdf5.%(fname)s(%(args)s)
+
+"""
+        return self.version_wrap(function_parts, (stub_imp if self.stub else imp) % parts)
 
 
 if __name__ == '__main__':
 
-    fc = FunctionCruncher2()
+    import sys
+    print sys.argv
+    stub = True if 'stub' in sys.argv else False
+    fc = FunctionCruncher2(stub)
     fc.run()
 
 
