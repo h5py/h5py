@@ -10,7 +10,7 @@
 # 
 #-
 
-include "defs.pxd"
+from defs cimport *
 
 from h5r cimport Reference, RegionReference, hobj_ref_t, hdset_reg_ref_t
 

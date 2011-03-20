@@ -15,7 +15,7 @@
 """
 
 include "config.pxi"
-include "defs.pxd"
+from defs cimport *
 
 cdef class HDF5ErrorHandler:
 

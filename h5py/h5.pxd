@@ -10,7 +10,7 @@
 # 
 #-
 
-include "defs.pxd"
+from defs cimport *
 
 cdef class H5PYConfig:
 

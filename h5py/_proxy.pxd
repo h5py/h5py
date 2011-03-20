@@ -10,7 +10,7 @@
 # 
 #-
 
-include "defs.pxd"
+from defs cimport *
 
 cdef herr_t attr_rw(hid_t attr, hid_t mtype, void *progbuf, int read) except -1
 

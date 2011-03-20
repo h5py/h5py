@@ -10,5 +10,5 @@
 # 
 #-
 
-include "defs.pxd"
+from defs cimport *
 

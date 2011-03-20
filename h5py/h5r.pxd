@@ -10,7 +10,7 @@
 # 
 #-
 
-include "defs.pxd"
+from defs cimport *
 
 cdef extern from "hdf5.h":
 

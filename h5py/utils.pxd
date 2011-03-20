@@ -10,7 +10,7 @@
 # 
 #-
 
-include "defs.pxd"
+from defs cimport *
 
 from numpy cimport ndarray
 

@@ -11,7 +11,7 @@
 #-
 
 include "config.pxi"
-include "defs.pxd"
+from defs cimport *
 
 from h5 cimport ObjectID
 
