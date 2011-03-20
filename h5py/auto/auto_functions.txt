@@ -30,8 +30,8 @@
   herr_t    H5Dset_extent(hid_t dset_id, hsize_t* size)
 
   
-    hid_t H5Dcreate2(hid_t loc_id, char *name, hid_t type_id, hid_t space_id, hid_t lcpl_id, hid_t dcpl_id, hid_t dapl_id)
-    hid_t H5Dcreate_anon(hid_t file_id, hid_t type_id, hid_t space_id, hid_t plist_id, hid_t dapl_id)
+1.8    hid_t H5Dcreate2(hid_t loc_id, char *name, hid_t type_id, hid_t space_id, hid_t lcpl_id, hid_t dcpl_id, hid_t dapl_id)
+1.8    hid_t H5Dcreate_anon(hid_t file_id, hid_t type_id, hid_t space_id, hid_t plist_id, hid_t dapl_id)
 
 
 # === H5F - File API ==========================================================
@@ -55,7 +55,7 @@
   int       H5Fget_obj_ids(hid_t file_id, unsigned int types, int max_objs, hid_t *obj_id_list)
 
   
-    herr_t H5Fget_intent(hid_t file_id, unsigned int *intent)
+1.8    herr_t H5Fget_intent(hid_t file_id, unsigned int *intent)
 
 # === H5FD - Low-level file descriptor API ====================================
 
@@ -84,12 +84,12 @@
   # New extensions in 1.8.X
   
 
-    hid_t   H5Gcreate_anon( hid_t loc_id, hid_t gcpl_id, hid_t gapl_id)
-    hid_t   H5Gcreate2(hid_t loc_id, char *name, hid_t lcpl_id, hid_t gcpl_id, hid_t gapl_id)
-    hid_t   H5Gopen2( hid_t loc_id, char * name, hid_t gapl_id)
-    herr_t  H5Gget_info( hid_t group_id, H5G_info_t *group_info)
-    herr_t  H5Gget_info_by_name( hid_t loc_id, char *group_name, H5G_info_t *group_info, hid_t lapl_id)
-    hid_t   H5Gget_create_plist(hid_t group_id)
+1.8    hid_t   H5Gcreate_anon( hid_t loc_id, hid_t gcpl_id, hid_t gapl_id)
+1.8    hid_t   H5Gcreate2(hid_t loc_id, char *name, hid_t lcpl_id, hid_t gcpl_id, hid_t gapl_id)
+1.8    hid_t   H5Gopen2( hid_t loc_id, char * name, hid_t gapl_id)
+1.8    herr_t  H5Gget_info( hid_t group_id, H5G_info_t *group_info)
+1.8    herr_t  H5Gget_info_by_name( hid_t loc_id, char *group_name, H5G_info_t *group_info, hid_t lapl_id)
+1.8    hid_t   H5Gget_create_plist(hid_t group_id)
 
 
 # === H5I - Identifier and reflection interface ===============================
@@ -112,41 +112,41 @@
 
     # Links API
 
-    herr_t H5Lmove(hid_t src_loc, char *src_name, hid_t dst_loc, char *dst_name, hid_t lcpl_id, hid_t lapl_id)
+1.8    herr_t H5Lmove(hid_t src_loc, char *src_name, hid_t dst_loc, char *dst_name, hid_t lcpl_id, hid_t lapl_id)
 
-    herr_t H5Lcopy(hid_t src_loc, char *src_name, hid_t dst_loc, char *dst_name, hid_t lcpl_id, hid_t lapl_id)
+1.8    herr_t H5Lcopy(hid_t src_loc, char *src_name, hid_t dst_loc, char *dst_name, hid_t lcpl_id, hid_t lapl_id)
 
-    herr_t H5Lcreate_hard(hid_t cur_loc, char *cur_name, hid_t dst_loc, char *dst_name, hid_t lcpl_id, hid_t lapl_id)
+1.8    herr_t H5Lcreate_hard(hid_t cur_loc, char *cur_name, hid_t dst_loc, char *dst_name, hid_t lcpl_id, hid_t lapl_id)
 
-    herr_t H5Lcreate_soft(char *link_target, hid_t link_loc_id, char *link_name, hid_t lcpl_id, hid_t lapl_id)
+1.8    herr_t H5Lcreate_soft(char *link_target, hid_t link_loc_id, char *link_name, hid_t lcpl_id, hid_t lapl_id)
 
-    herr_t H5Ldelete(hid_t loc_id, char *name, hid_t lapl_id)
+1.8    herr_t H5Ldelete(hid_t loc_id, char *name, hid_t lapl_id)
 
-    herr_t H5Ldelete_by_idx(hid_t loc_id, char *group_name, H5_index_t idx_type, H5_iter_order_t order, hsize_t n, hid_t lapl_id)
+1.8    herr_t H5Ldelete_by_idx(hid_t loc_id, char *group_name, H5_index_t idx_type, H5_iter_order_t order, hsize_t n, hid_t lapl_id)
 
-    herr_t H5Lget_val(hid_t loc_id, char *name, void *bufout, size_t size, hid_t lapl_id)
+1.8    herr_t H5Lget_val(hid_t loc_id, char *name, void *bufout, size_t size, hid_t lapl_id)
 
-    herr_t H5Lget_val_by_idx(hid_t loc_id, char *group_name,  H5_index_t idx_type, H5_iter_order_t order, hsize_t n, void *bufout, size_t size, hid_t lapl_id)
+1.8    herr_t H5Lget_val_by_idx(hid_t loc_id, char *group_name,  H5_index_t idx_type, H5_iter_order_t order, hsize_t n, void *bufout, size_t size, hid_t lapl_id)
 
-    htri_t H5Lexists(hid_t loc_id, char *name, hid_t lapl_id)
+1.8    htri_t H5Lexists(hid_t loc_id, char *name, hid_t lapl_id)
 
-    herr_t H5Lget_info(hid_t loc_id, char *name, H5L_info_t *linfo, hid_t lapl_id)
+1.8    herr_t H5Lget_info(hid_t loc_id, char *name, H5L_info_t *linfo, hid_t lapl_id)
 
-    herr_t H5Lget_info_by_idx(hid_t loc_id, char *group_name, H5_index_t idx_type, H5_iter_order_t order, hsize_t n, H5L_info_t *linfo, hid_t lapl_id)
+1.8    herr_t H5Lget_info_by_idx(hid_t loc_id, char *group_name, H5_index_t idx_type, H5_iter_order_t order, hsize_t n, H5L_info_t *linfo, hid_t lapl_id)
 
-    ssize_t H5Lget_name_by_idx(hid_t loc_id, char *group_name, H5_index_t idx_type, H5_iter_order_t order, hsize_t n, char *name, size_t size, hid_t lapl_id)
+1.8    ssize_t H5Lget_name_by_idx(hid_t loc_id, char *group_name, H5_index_t idx_type, H5_iter_order_t order, hsize_t n, char *name, size_t size, hid_t lapl_id)
 
-    herr_t H5Literate(hid_t grp_id, H5_index_t idx_type, H5_iter_order_t order, hsize_t *idx, H5L_iterate_t op, void *op_data)
+1.8    herr_t H5Literate(hid_t grp_id, H5_index_t idx_type, H5_iter_order_t order, hsize_t *idx, H5L_iterate_t op, void *op_data)
 
-    herr_t H5Literate_by_name(hid_t loc_id, char *group_name, H5_index_t idx_type, H5_iter_order_t order, hsize_t *idx, H5L_iterate_t op, void *op_data, hid_t lapl_id)
+1.8    herr_t H5Literate_by_name(hid_t loc_id, char *group_name, H5_index_t idx_type, H5_iter_order_t order, hsize_t *idx, H5L_iterate_t op, void *op_data, hid_t lapl_id)
 
-    herr_t H5Lvisit(hid_t grp_id, H5_index_t idx_type, H5_iter_order_t order, H5L_iterate_t op, void *op_data)
+1.8    herr_t H5Lvisit(hid_t grp_id, H5_index_t idx_type, H5_iter_order_t order, H5L_iterate_t op, void *op_data)
 
-    herr_t H5Lvisit_by_name(hid_t loc_id, char *group_name, H5_index_t idx_type, H5_iter_order_t order, H5L_iterate_t op, void *op_data, hid_t lapl_id)
+1.8    herr_t H5Lvisit_by_name(hid_t loc_id, char *group_name, H5_index_t idx_type, H5_iter_order_t order, H5L_iterate_t op, void *op_data, hid_t lapl_id)
 
-    herr_t H5Lunpack_elink_val(void *ext_linkval, size_t link_size, unsigned *flags, char **filename, char **obj_path)
+1.8    herr_t H5Lunpack_elink_val(void *ext_linkval, size_t link_size, unsigned *flags, char **filename, char **obj_path)
 
-    herr_t H5Lcreate_external(char *file_name, char *obj_name, hid_t link_loc_id, char *link_name, hid_t lcpl_id, hid_t lapl_id)
+1.8    herr_t H5Lcreate_external(char *file_name, char *obj_name, hid_t link_loc_id, char *link_name, hid_t lcpl_id, hid_t lapl_id)
 
 # === H5O - General object operations (1.8.X only) ============================
 
@@ -156,29 +156,29 @@
 
     # --- H5O API -------------------------------------------------------------
 
-    hid_t H5Oopen(hid_t loc_id, char *name, hid_t lapl_id)
-    hid_t H5Oopen_by_addr(hid_t loc_id, haddr_t addr)
-    hid_t H5Oopen_by_idx(hid_t loc_id, char *group_name, H5_index_t idx_type, H5_iter_order_t order, hsize_t n, hid_t lapl_id)
+1.8    hid_t H5Oopen(hid_t loc_id, char *name, hid_t lapl_id)
+1.8    hid_t H5Oopen_by_addr(hid_t loc_id, haddr_t addr)
+1.8    hid_t H5Oopen_by_idx(hid_t loc_id, char *group_name, H5_index_t idx_type, H5_iter_order_t order, hsize_t n, hid_t lapl_id)
 
-    herr_t H5Oget_info(hid_t loc_id, H5O_info_t *oinfo)
-    herr_t H5Oget_info_by_name(hid_t loc_id, char *name, H5O_info_t *oinfo, hid_t lapl_id)
-    herr_t H5Oget_info_by_idx(hid_t loc_id, char *group_name,  H5_index_t idx_type, H5_iter_order_t order, hsize_t n, H5O_info_t *oinfo, hid_t lapl_id)
+1.8    herr_t H5Oget_info(hid_t loc_id, H5O_info_t *oinfo)
+1.8    herr_t H5Oget_info_by_name(hid_t loc_id, char *name, H5O_info_t *oinfo, hid_t lapl_id)
+1.8    herr_t H5Oget_info_by_idx(hid_t loc_id, char *group_name,  H5_index_t idx_type, H5_iter_order_t order, hsize_t n, H5O_info_t *oinfo, hid_t lapl_id)
 
-    herr_t H5Olink(hid_t obj_id, hid_t new_loc_id, char *new_name, hid_t lcpl_id, hid_t lapl_id)
-    herr_t H5Ocopy(hid_t src_loc_id, char *src_name, hid_t dst_loc_id,  char *dst_name, hid_t ocpypl_id, hid_t lcpl_id)
+1.8    herr_t H5Olink(hid_t obj_id, hid_t new_loc_id, char *new_name, hid_t lcpl_id, hid_t lapl_id)
+1.8    herr_t H5Ocopy(hid_t src_loc_id, char *src_name, hid_t dst_loc_id,  char *dst_name, hid_t ocpypl_id, hid_t lcpl_id)
 
-    herr_t H5Oincr_refcount(hid_t object_id)
-    herr_t H5Odecr_refcount(hid_t object_id)
+1.8    herr_t H5Oincr_refcount(hid_t object_id)
+1.8    herr_t H5Odecr_refcount(hid_t object_id)
 
-    herr_t H5Oset_comment(hid_t obj_id, char *comment)
-    herr_t H5Oset_comment_by_name(hid_t loc_id, char *name,  char *comment, hid_t lapl_id)
-    ssize_t H5Oget_comment(hid_t obj_id, char *comment, size_t bufsize)
-    ssize_t H5Oget_comment_by_name(hid_t loc_id, char *name, char *comment, size_t bufsize, hid_t lapl_id)
+1.8    herr_t H5Oset_comment(hid_t obj_id, char *comment)
+1.8    herr_t H5Oset_comment_by_name(hid_t loc_id, char *name,  char *comment, hid_t lapl_id)
+1.8    ssize_t H5Oget_comment(hid_t obj_id, char *comment, size_t bufsize)
+1.8    ssize_t H5Oget_comment_by_name(hid_t loc_id, char *name, char *comment, size_t bufsize, hid_t lapl_id)
 
-    herr_t H5Ovisit(hid_t obj_id, H5_index_t idx_type, H5_iter_order_t order,  H5O_iterate_t op, void *op_data)
-    herr_t H5Ovisit_by_name(hid_t loc_id, char *obj_name, H5_index_t idx_type, H5_iter_order_t order, H5O_iterate_t op, void *op_data, hid_t lapl_id)
+1.8    herr_t H5Ovisit(hid_t obj_id, H5_index_t idx_type, H5_iter_order_t order,  H5O_iterate_t op, void *op_data)
+1.8    herr_t H5Ovisit_by_name(hid_t loc_id, char *obj_name, H5_index_t idx_type, H5_iter_order_t order, H5O_iterate_t op, void *op_data, hid_t lapl_id)
 
-    herr_t H5Oclose(hid_t object_id)
+1.8    herr_t H5Oclose(hid_t object_id)
 
 # === H5P - Property list API =================================================
 
@@ -240,7 +240,7 @@
   int           H5Pget_nfilters(hid_t plist)
   H5Z_filter_t  H5Pget_filter(hid_t plist, unsigned int filter_number,   unsigned int *flags, size_t *cd_nelmts,  unsigned int* cd_values, size_t namelen, char* name )
   herr_t        H5Pget_filter_by_id( hid_t plist_id, H5Z_filter_t filter,  unsigned int *flags, size_t *cd_nelmts,  unsigned int* cd_values, size_t namelen, char* name)
-  herr_t        H5Pmodify_filter(hid_t plist, H5Z_filter_t filter, unsigned int flags, size_t cd_nelmts, unsigned int cd_values[] )
+  herr_t        H5Pmodify_filter(hid_t plist, H5Z_filter_t filter, unsigned int flags, size_t cd_nelmts, unsigned int *cd_values)
   herr_t        H5Premove_filter(hid_t plist, H5Z_filter_t filter )
   herr_t        H5Pset_fletcher32(hid_t plist)
   herr_t        H5Pset_shuffle(hid_t plist_id)
@@ -259,30 +259,30 @@
   # New in 1.8
   
 
-    herr_t H5Pset_nlinks(hid_t plist_id, size_t nlinks)
-    herr_t H5Pget_nlinks(hid_t plist_id, size_t *nlinks)
-    herr_t H5Pset_elink_prefix(hid_t plist_id, char *prefix)
-    ssize_t H5Pget_elink_prefix(hid_t plist_id, char *prefix, size_t size)
-    hid_t  H5Pget_elink_fapl(hid_t lapl_id)
-    herr_t H5Pset_elink_fapl(hid_t lapl_id, hid_t fapl_id)
+1.8    herr_t H5Pset_nlinks(hid_t plist_id, size_t nlinks)
+1.8    herr_t H5Pget_nlinks(hid_t plist_id, size_t *nlinks)
+1.8    herr_t H5Pset_elink_prefix(hid_t plist_id, char *prefix)
+1.8    ssize_t H5Pget_elink_prefix(hid_t plist_id, char *prefix, size_t size)
+1.8    hid_t  H5Pget_elink_fapl(hid_t lapl_id)
+1.8    herr_t H5Pset_elink_fapl(hid_t lapl_id, hid_t fapl_id)
 
-    herr_t H5Pset_create_intermediate_group(hid_t plist_id, unsigned crt_intmd)
-    herr_t H5Pget_create_intermediate_group(hid_t plist_id, unsigned *crt_intmd)
+1.8    herr_t H5Pset_create_intermediate_group(hid_t plist_id, unsigned crt_intmd)
+1.8    herr_t H5Pget_create_intermediate_group(hid_t plist_id, unsigned *crt_intmd)
 
-    herr_t H5Pset_copy_object(hid_t plist_id, unsigned crt_intmd)
-    herr_t H5Pget_copy_object(hid_t plist_id, unsigned *crt_intmd)
+1.8    herr_t H5Pset_copy_object(hid_t plist_id, unsigned crt_intmd)
+1.8    herr_t H5Pget_copy_object(hid_t plist_id, unsigned *crt_intmd)
 
-    herr_t H5Pset_char_encoding(hid_t plist_id, H5T_cset_t encoding)
-    herr_t H5Pget_char_encoding(hid_t plist_id, H5T_cset_t *encoding)
+1.8    herr_t H5Pset_char_encoding(hid_t plist_id, H5T_cset_t encoding)
+1.8    herr_t H5Pget_char_encoding(hid_t plist_id, H5T_cset_t *encoding)
 
-    herr_t H5Pset_local_heap_size_hint(hid_t plist_id, size_t size_hint)
-    herr_t H5Pget_local_heap_size_hint(hid_t plist_id, size_t *size_hint)
-    herr_t H5Pset_link_phase_change(hid_t plist_id, unsigned max_compact, unsigned min_dense)
-    herr_t H5Pget_link_phase_change(hid_t plist_id, unsigned *max_compact , unsigned *min_dense)
-    herr_t H5Pset_est_link_info(hid_t plist_id, unsigned est_num_entries, unsigned est_name_len)
-    herr_t H5Pget_est_link_info(hid_t plist_id, unsigned *est_num_entries , unsigned *est_name_len)
-    herr_t H5Pset_link_creation_order(hid_t plist_id, unsigned crt_order_flags)
-    herr_t H5Pget_link_creation_order(hid_t plist_id, unsigned *crt_order_flags)
+1.8    herr_t H5Pset_local_heap_size_hint(hid_t plist_id, size_t size_hint)
+1.8    herr_t H5Pget_local_heap_size_hint(hid_t plist_id, size_t *size_hint)
+1.8    herr_t H5Pset_link_phase_change(hid_t plist_id, unsigned max_compact, unsigned min_dense)
+1.8    herr_t H5Pget_link_phase_change(hid_t plist_id, unsigned *max_compact , unsigned *min_dense)
+1.8    herr_t H5Pset_est_link_info(hid_t plist_id, unsigned est_num_entries, unsigned est_name_len)
+1.8    herr_t H5Pget_est_link_info(hid_t plist_id, unsigned *est_num_entries , unsigned *est_name_len)
+1.8    herr_t H5Pset_link_creation_order(hid_t plist_id, unsigned crt_order_flags)
+1.8    herr_t H5Pget_link_creation_order(hid_t plist_id, unsigned *crt_order_flags)
 
 
 # === H5R - Reference API =====================================================
@@ -295,7 +295,7 @@
   H5G_obj_t H5Rget_obj_type(hid_t id, H5R_type_t ref_type, void *ref)
 
   
-    ssize_t H5Rget_name(hid_t loc_id, H5R_type_t ref_type, void *ref, char *name, size_t size)
+1.8    ssize_t H5Rget_name(hid_t loc_id, H5R_type_t ref_type, void *ref, char *name, size_t size)
     
 # === H5S - Dataspaces ========================================================
 
@@ -307,12 +307,12 @@
   herr_t    H5Sclose(hid_t space_id)
 
   # Simple dataspace operations
-  hid_t     H5Screate_simple(int rank, hsize_t dims[], hsize_t maxdims[])
+  hid_t     H5Screate_simple(int rank, hsize_t *dims, hsize_t *maxdims)
   htri_t    H5Sis_simple(hid_t space_id)
   herr_t    H5Soffset_simple(hid_t space_id, hssize_t *offset )
 
   int       H5Sget_simple_extent_ndims(hid_t space_id)
-  int       H5Sget_simple_extent_dims(hid_t space_id, hsize_t dims[], hsize_t maxdims[])
+  int       H5Sget_simple_extent_dims(hid_t space_id, hsize_t *dims, hsize_t *maxdims)
   hssize_t  H5Sget_simple_extent_npoints(hid_t space_id)
   H5S_class_t H5Sget_simple_extent_type(hid_t space_id)
 
@@ -336,11 +336,11 @@
 
   hssize_t  H5Sget_select_hyper_nblocks(hid_t space_id )
   herr_t    H5Sget_select_hyper_blocklist(hid_t space_id,  hsize_t startblock, hsize_t numblocks, hsize_t *buf )
-  herr_t H5Sselect_hyperslab(hid_t space_id, H5S_seloper_t op,  hsize_t start[], hsize_t _stride[], hsize_t count[], hsize_t _block[])
+  herr_t H5Sselect_hyperslab(hid_t space_id, H5S_seloper_t op,  hsize_t *start, hsize_t *_stride, hsize_t *count, hsize_t *_block)
 
   
-    herr_t  H5Sencode(hid_t obj_id, void *buf, size_t *nalloc)
-    hid_t   H5Sdecode(void *buf)
+1.8    herr_t  H5Sencode(hid_t obj_id, void *buf, size_t *nalloc)
+1.8    hid_t   H5Sdecode(void *buf)
 
 
 # === H5T - Datatypes =========================================================
@@ -426,9 +426,9 @@
   herr_t    H5Tget_member_value(hid_t type,  unsigned int memb_no, void *value )
 
   # Array data types
-  hid_t H5Tarray_create(hid_t base_id, int ndims, hsize_t dims[], int perm[])
+  hid_t H5Tarray_create(hid_t base_id, int ndims, hsize_t *dims, int *perm)
   int   H5Tget_array_ndims(hid_t type_id)
-  int   H5Tget_array_dims(hid_t type_id, hsize_t dims[], int perm[])
+  int   H5Tget_array_dims(hid_t type_id, hsize_t *dims, int *perm)
 
   # Opaque data types
   herr_t    H5Tset_tag(hid_t type_id, char* tag)
@@ -436,10 +436,10 @@
 
   # 1.8-specific functions
   
-    hid_t H5Tdecode(unsigned char *buf)
-    herr_t H5Tencode(hid_t obj_id, unsigned char *buf, size_t *nalloc)
+1.8    hid_t H5Tdecode(unsigned char *buf)
+1.8    herr_t H5Tencode(hid_t obj_id, unsigned char *buf, size_t *nalloc)
 
-    herr_t H5Tcommit2(hid_t loc_id, char *name, hid_t dtype_id, hid_t lcpl_id, hid_t tcpl_id, hid_t tapl_id) 
+1.8    herr_t H5Tcommit2(hid_t loc_id, char *name, hid_t dtype_id, hid_t lcpl_id, hid_t tcpl_id, hid_t tapl_id) 
 
   H5T_conv_t H5Tfind(hid_t src_id, hid_t dst_id, H5T_cdata_t **pcdata)
 
@@ -478,27 +478,27 @@
 
   
 
-    herr_t  H5Adelete_by_name(hid_t loc_id, char *obj_name, char *attr_name, hid_t lapl_id)
-    herr_t  H5Adelete_by_idx(hid_t loc_id, char *obj_name, H5_index_t idx_type, H5_iter_order_t order, hsize_t n, hid_t lapl_id)
+1.8    herr_t  H5Adelete_by_name(hid_t loc_id, char *obj_name, char *attr_name, hid_t lapl_id)
+1.8    herr_t  H5Adelete_by_idx(hid_t loc_id, char *obj_name, H5_index_t idx_type, H5_iter_order_t order, hsize_t n, hid_t lapl_id)
 
-    hid_t H5Acreate_by_name(hid_t loc_id, char *obj_name, char *attr_name, hid_t type_id, hid_t space_id, hid_t acpl_id, hid_t aapl_id, hid_t lapl_id)
+1.8    hid_t H5Acreate_by_name(hid_t loc_id, char *obj_name, char *attr_name, hid_t type_id, hid_t space_id, hid_t acpl_id, hid_t aapl_id, hid_t lapl_id)
  
-    herr_t H5Aopen(hid_t obj_id, char *attr_name, hid_t aapl_id)
-    herr_t H5Aopen_by_name( hid_t loc_id, char *obj_name, char *attr_name, hid_t aapl_id, hid_t lapl_id)
-    herr_t H5Aopen_by_idx(hid_t loc_id, char *obj_name, H5_index_t idx_type, H5_iter_order_t order, hsize_t n, hid_t aapl_id, hid_t lapl_id)
-    htri_t H5Aexists_by_name( hid_t loc_id, char *obj_name, char *attr_name, hid_t lapl_id)
-    htri_t H5Aexists(hid_t obj_id, char *attr_name)
+1.8    herr_t H5Aopen(hid_t obj_id, char *attr_name, hid_t aapl_id)
+1.8    herr_t H5Aopen_by_name( hid_t loc_id, char *obj_name, char *attr_name, hid_t aapl_id, hid_t lapl_id)
+1.8    herr_t H5Aopen_by_idx(hid_t loc_id, char *obj_name, H5_index_t idx_type, H5_iter_order_t order, hsize_t n, hid_t aapl_id, hid_t lapl_id)
+1.8    htri_t H5Aexists_by_name( hid_t loc_id, char *obj_name, char *attr_name, hid_t lapl_id)
+1.8    htri_t H5Aexists(hid_t obj_id, char *attr_name)
 
-    herr_t H5Arename(hid_t loc_id, char *old_attr_name, char *new_attr_name)
-    herr_t H5Arename_by_name(hid_t loc_id, char *obj_name, char *old_attr_name, char *new_attr_name, hid_t lapl_id)
+1.8    herr_t H5Arename(hid_t loc_id, char *old_attr_name, char *new_attr_name)
+1.8    herr_t H5Arename_by_name(hid_t loc_id, char *obj_name, char *old_attr_name, char *new_attr_name, hid_t lapl_id)
 
-    herr_t H5Aget_info( hid_t attr_id, H5A_info_t *ainfo)
-    herr_t H5Aget_info_by_name(hid_t loc_id, char *obj_name, char *attr_name, H5A_info_t *ainfo, hid_t lapl_id)
-    herr_t H5Aget_info_by_idx(hid_t loc_id, char *obj_name, H5_index_t idx_type, H5_iter_order_t order, hsize_t n, H5A_info_t *ainfo, hid_t lapl_id)
+1.8    herr_t H5Aget_info( hid_t attr_id, H5A_info_t *ainfo)
+1.8    herr_t H5Aget_info_by_name(hid_t loc_id, char *obj_name, char *attr_name, H5A_info_t *ainfo, hid_t lapl_id)
+1.8    herr_t H5Aget_info_by_idx(hid_t loc_id, char *obj_name, H5_index_t idx_type, H5_iter_order_t order, hsize_t n, H5A_info_t *ainfo, hid_t lapl_id)
 
-    herr_t H5Aiterate2(hid_t obj_id, H5_index_t idx_type, H5_iter_order_t order, hsize_t *n, H5A_operator2_t op, void *op_data)
+1.8    herr_t H5Aiterate2(hid_t obj_id, H5_index_t idx_type, H5_iter_order_t order, hsize_t *n, H5A_operator2_t op, void *op_data)
 
-    hsize_t H5Aget_storage_size(hid_t attr_id)
+1.8    hsize_t H5Aget_storage_size(hid_t attr_id)
 
 
 
