@@ -365,7 +365,7 @@ cdef int init_hdf5() except -1:
             raise RuntimeError("Failed to register LZF filter")
         atexit.register(_exithack)
         #h5py_register_conv()
-        _conv.register_converters()
+        #_conv.register_converters()
         hdf5_inited = 1
 
     return 0

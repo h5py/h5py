@@ -81,8 +81,8 @@ cdef herr_t attr_rw(hid_t attr, hid_t mtype, void *progbuf, int read) except -1:
 cdef herr_t H5PY_H5Dread(hid_t dset, hid_t mtype, hid_t mspace,
                         hid_t fspace, hid_t dxpl, void* buf) except -1:
     cdef herr_t retval
-    with nogil:
-        retval = H5Dread(dset, mtype, mspace, fspace, dxpl, buf)
+    #with nogil:
+    retval = H5Dread(dset, mtype, mspace, fspace, dxpl, buf)
     if retval < 0:
         return -1
     return retval
@@ -90,8 +90,8 @@ cdef herr_t H5PY_H5Dread(hid_t dset, hid_t mtype, hid_t mspace,
 cdef herr_t H5PY_H5Dwrite(hid_t dset, hid_t mtype, hid_t mspace,
                         hid_t fspace, hid_t dxpl, void* buf) except -1:
     cdef herr_t retval
-    with nogil:
-        retval = H5Dwrite(dset, mtype, mspace, fspace, dxpl, buf)
+    #with nogil:
+    retval = H5Dwrite(dset, mtype, mspace, fspace, dxpl, buf)
     if retval < 0:
         return -1
     return retval

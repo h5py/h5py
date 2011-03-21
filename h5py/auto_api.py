@@ -44,6 +44,8 @@ from external_types cimport *
 
 cimport hdf5
 
+hdf5.H5open()
+
 cdef int set_exception():
     return 1
 

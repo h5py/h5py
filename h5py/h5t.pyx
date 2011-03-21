@@ -196,7 +196,8 @@ FORTRAN_S1 = lockid(H5T_FORTRAN_S1)
 VARIABLE = H5T_VARIABLE
 
 # Custom Python object pointer type
-PYTHON_OBJECT = lockid(_conv.get_python_obj())
+#PYTHON_OBJECT = lockid(_conv.get_python_obj())
+PYTHON_OBJECT = None
 
 #PYTHON_OBJECT = lockid(get_object_type())
 

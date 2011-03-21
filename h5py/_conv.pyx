@@ -16,8 +16,6 @@
     Low-level type-conversion routines.
 """
 
-
-
 # Create Python object equivalents
 cdef hid_t H5PY_OBJ = 0
 
