@@ -5,6 +5,7 @@ build
 *.so
 *.*~
 *.pickle
+*.pyd
 h5py/config.pxi
 h5py/defs.p*
 h5py/_hdf5.pxd
