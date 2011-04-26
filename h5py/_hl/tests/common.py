@@ -1,6 +1,6 @@
 import sys
 
-if sys.version_info == (2,7) or sys.version_info >= (3,2):
+if sys.version_info >= (2,7) or sys.version_info >= (3,2):
     import unittest as ut
 else:
     try:
