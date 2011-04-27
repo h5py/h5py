@@ -6,10 +6,13 @@ from base import HLObject
 import filters
 import selections as sel
 
-def make_new_dset(parent, name, shape=None, dtype=None, data=None,
+def make_new_dset(parent, shape=None, dtype=None, data=None,
                  chunks=None, compression=None, shuffle=None,
                     fletcher32=None, maxshape=None, compression_opts=None):
-    """ Return a new low-level dataset identifier """
+    """ Return a new low-level dataset identifier 
+
+    Only creates anonymous datasets.
+    """
 
     # Convert data to a C-contiguous ndarray
     if data is not None:
@@ -56,7 +59,7 @@ def make_new_dset(parent, name, shape=None, dtype=None, data=None,
     sid = h5s.create_simple(shape, maxshape)
     tid = h5t.py_create(dtype, logical=1)
 
-    dset_id = h5d.create(parent.id, name, tid, sid, dcpl=dcpl)
+    dset_id = h5d.create(parent.id, None, tid, sid, dcpl=dcpl)
 
     if data is not None:
         dset_id.write(h5s.ALL, h5s.ALL, data)
@@ -150,7 +153,7 @@ class Dataset(HLObject):
         Constructor is provided for backwards compatibility only.
         """
         if bind is None:
-
+            # TODO: update this for unicode & add tests
             # Old constructor behavior
             if data is None and shape is None:
                 if any((dtype,chunks,compression,shuffle,fletcher32)):

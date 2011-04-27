@@ -17,7 +17,7 @@ class Group(HLObject, DictCompat):
         This constructor is provided for backwards compatibility only.
         """
         if bind is None:
-            # Old constructor used to do things
+            # TODO: this is completely broken
             if create:
                 bind = h5g.create(self.id, name, lcpl=self._shared.lcpl)
             else:
@@ -33,14 +33,19 @@ class Group(HLObject, DictCompat):
         Name may be absolute or relative.  Fails if the target name already
         exists.
         """
-        gid = h5g.create(self.id, name, lcpl=self._shared.lcpl)
+        name, lcpl = self._encode(name)
+        gid = h5g.create(self.id, name, lcpl=lcpl)
         return Group(None, None, bind=gid)
 
     def create_dataset(self, name, shape=None, dtype=None, data=None,
                  chunks=None, compression=None, shuffle=None,
                     fletcher32=None, maxshape=None, compression_opts=None):
-        dsid = dataset.make_new_dset(self, name, shape, dtype, data, chunks,
+        if name is not None:
+            name, lcpl = self._encode(name)
+        dsid = dataset.make_new_dset(self, shape, dtype, data, chunks,
                 compression, shuffle, fletcher32, maxshape, compression_opts)
+        if name is not None:
+            h5o.link(dsid, self.id, name, lcpl=lcpl)
         return dataset.Dataset(None, None, bind=dsid)
 
     def require_dataset(self, name, shape, dtype, exact=False, **kwds):
@@ -153,22 +158,24 @@ class Group(HLObject, DictCompat):
             values are stored as scalar datasets. Raise ValueError if we
             can't understand the resulting array dtype.
         """
+        name, lcpl = self._encode(name)
+
         if isinstance(obj, HLObject):
-            h5o.link(obj.id, self.id, name, lcpl=self._shared.lcpl, lapl=self._shared.lapl)
+            h5o.link(obj.id, self.id, name, lcpl=lcpl, lapl=self._shared.lapl)
 
         elif isinstance(obj, SoftLink):
-            self.id.links.create_soft(name, obj.path, lcpl=self._shared.lcpl, lapl=self._shared.lapl)
+            self.id.links.create_soft(name, obj.path, lcpl=lcpl, lapl=self._shared.lapl)
 
         elif isinstance(obj, ExternalLink):
-            self.id.links.create_external(name, obj.filename, obj.path, lcpl=self._shared.lcpl, lapl=self._shared.lapl)
+            self.id.links.create_external(name, obj.filename, obj.path, lcpl=lcpl, lapl=self._shared.lapl)
 
         elif isinstance(obj, numpy.dtype):
             htype = h5t.py_create(obj)
-            htype.commit(self.id, name, lcpl=self._shared.lcpl)
+            htype.commit(self.id, name, lcpl=lcpl)
 
         else:
             ds = self.create_dataset(None, data=obj, dtype=base.guess_dtype(obj))
-            h5o.link(ds.id, self.id, name, lcpl=self._shared.lcpl)
+            h5o.link(ds.id, self.id, name, lcpl=lcpl)
 
     def __delitem__(self, name):
         """ Delete (unlink) an item from this group. """

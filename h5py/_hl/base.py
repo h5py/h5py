@@ -62,15 +62,20 @@ class HLObject(object):
     def _encode(self, name):
         """ Encode a name according to the current file settings.
 
-        Returns a 2-tuple (encoded name, character set code)
+        Returns a 2-tuple (encoded name, lcpl)
 
         - Binary strings are always passed as-is, h5t.CSET_ASCII
         - Unicode (non-utf8): encode to given codec, h5t.CSET_ASCII
         - Unicode (utf8 or not specified): encode utf8, h5t.CSET_UTF8
 
         """
+        def lcpl(coding):
+            lcpl = self._shared.lcpl.copy()
+            lcpl.set_char_encoding(coding)
+            return lcpl
+
         if isinstance(name, str):
-            return name, h5t.CSET_ASCII
+            return name, lcpl(h5t.CSET_ASCII)
 
         encoding = self._shared.encoding
         if encoding is None:
@@ -79,7 +84,7 @@ class HLObject(object):
         name = name.encode(encoding)
         code = h5t.CSET_UTF8 if checkutf8(encoding) else h5t.CSET_ASCII
 
-        return name, code
+        return name, lcpl(code)
 
     def _decode(self, name):
         """ Decode a name according to the current file settings.
