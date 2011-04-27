@@ -30,11 +30,17 @@ def guess_dtype(data):
         return h5t.special_dtype(ref=h5r.Reference)
     return None
 
+def checkutf8(encoding):
+    a = "".join(x for x in encoding if x.isalnum())
+    a = a.lower()
+    return a in ('u8', 'utf8')
+
 class SharedConfig():
     pass
 
 filedata = collections.defaultdict(SharedConfig)
 
+    
 class HLObject(object):
 
     """
@@ -52,6 +58,44 @@ class HLObject(object):
             del filedata[self.id.fileno]
         except KeyError:
             pass
+
+    def _encode(self, name):
+        """ Encode a name according to the current file settings.
+
+        Returns a 2-tuple (encoded name, character set code)
+
+        - Binary strings are always passed as-is, h5t.CSET_ASCII
+        - Unicode (non-utf8): encode to given codec, h5t.CSET_ASCII
+        - Unicode (utf8 or not specified): encode utf8, h5t.CSET_UTF8
+
+        """
+        if isinstance(name, str):
+            return name, h5t.CSET_ASCII
+
+        encoding = self._shared.encoding
+        if encoding is None:
+            encoding = 'utf8'
+
+        name = name.encode(encoding)
+        code = h5t.CSET_UTF8 if checkutf8(encoding) else h5t.CSET_ASCII
+
+        return name, code
+
+    def _decode(self, name):
+        """ Decode a name according to the current file settings.
+
+        - Try explicit encoding (if set)
+        - Try utf-8
+        - Return the byte string
+        """
+        encoding = self._shared.encoding
+        ee = ('utf8',) if encoding is None else (encoding, 'utf8')
+        for e in ee:
+            try:
+                return name.decode(e)
+            except UnicodeDecodeError:
+                pass
+        return name
 
     @property
     def file(self):

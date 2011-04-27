@@ -99,16 +99,15 @@ class File(Group):
             self._shared.mode = {h5f.ACC_RDONLY: 'r', h5f.ACC_RDWR: 'r+'}.get(self.fid.get_intent())
         return self._shared.mode
 
-    def _g_encoding(self):
+    @property
+    def encoding(self):
         """ Default character encoding for this file """
         return self._shared.encoding
-    def _s_encoding(self, encoding):
-        # TODO: validate encoding
-        if encoding in ('utf-8','utf_8'):
-            self._shared.lcpl.set_char_encoding(h5t.CSET_UTF8)
-        self._shared.encoding = encoding
 
-    encoding = property(_g_encoding, _s_encoding)
+    @encoding.setter
+    def encoding(self, encoding):
+        # TODO: validate encoding for illegal codecs (utf-16, utf-32)
+        self._shared.encoding = encoding
 
     @property
     def fid(self):
