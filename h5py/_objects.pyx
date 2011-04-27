@@ -59,6 +59,12 @@ cdef class ObjectID:
         def __set__(self, val):
             self.proxy.locked = val
 
+    property fileno:
+        def __get__(self):
+            cdef H5G_stat_t stat
+            H5Gget_objinfo(self.id, '.', 0, &stat)
+            return (stat.fileno[0], stat.fileno[1])
+
     def __cinit__(self, id):
         self.id = id
 

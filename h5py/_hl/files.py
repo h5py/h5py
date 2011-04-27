@@ -5,6 +5,7 @@ import os
 from base import HLObject
 from group import Group
 from h5py import h5f, h5p, h5i, h5fd
+import shared
 
 def make_fapl(driver,**kwds):
     """ Set up a file access property list """
@@ -47,8 +48,6 @@ def make_fid(name, mode, plist):
         raise ValueError("Invalid mode; must be one of r, r+, w, w-, a")
     return fid
 
-_modes = weakref.WeakKeyDictionary()
-
 class File(Group):
 
     """
@@ -70,6 +69,7 @@ class File(Group):
         except (UnicodeError, LookupError):
             return name
 
+    
     @property
     def driver(self):
         """Low-level HDF5 file driver used to open file"""
@@ -78,12 +78,13 @@ class File(Group):
                    h5fd.WINDOWS: 'windows'}
         return drivers.get(self.fid.get_access_plist().get_driver(), 'unknown')
 
-    @property
-    def mode(self):
-        """Python mode used to open file"""
-        mode = _modes.get(self.id)
+    @shared.shared
+    def mode(self, sc):
+        """ Python mode used to open file """
+        mode = sc.get('mode')
         if mode is None:
             mode = {h5f.ACC_RDONLY: 'r', h5f.ACC_RDWR: 'r+'}.get(self.fid.get_intent())
+            sc['mode'] = mode
         return mode
 
     @property
@@ -93,7 +94,6 @@ class File(Group):
 
     def __init__(self, name, mode=None, driver=None, **kwds):
         """ Create a new file object """
-        global _modes
         if isinstance(name, HLObject):
             fid = h5i.get_file_id(name.id)
         else:
@@ -105,11 +105,12 @@ class File(Group):
                 pass
             fapl = make_fapl(driver,**kwds)
             fid = make_fid(name, mode, fapl)
-            _modes[fid] = mode
         Group.__init__(self, None, None, bind=fid)
+        shared.setval(self, 'mode', mode)
 
     def close(self):
         """ Close the file.  All open objects become invalid """
+        shared.wipe(self)
         self.id.close()
 
     def flush(self):
