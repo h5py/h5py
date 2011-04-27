@@ -3,6 +3,7 @@ import warnings
 import os
 import sys
 
+import shared
 from h5py import h5i, h5r, h5p, h5f, h5t
 
 def is_hdf5(fname):
@@ -33,6 +34,20 @@ class HLObject(object):
     """
         Base class for high-level interface objects.
     """
+
+    def _g_lcpl(self, sc):
+        """ Link creation property list for all objects in this file """
+        return sc['lcpl']
+    def _s_lcpl(self, sc, val):
+        sc['lcpl'] = val
+    _lcpl = shared.shared(_g_lcpl, _s_lcpl)
+
+    def _g_lapl(self, sc):
+        """ Link access property list for all objects in this file """
+        return sc['lapl']
+    def _s_lapl(self, sc, val):
+        sc['lapl'] = val
+    _lapl = shared.shared(_g_lapl, _s_lapl)
 
     @property
     def file(self):
@@ -153,22 +168,4 @@ class DictCompat(object):
         """ Deprecated alias for items() """
         warnings.warn("listitems() is deprecated; use items() instead", DeprecationWarning)
         return self.items()
-
-def make_lapl():
-    """Default link access property list (1.8)"""
-
-    lapl = h5p.create(h5p.LINK_ACCESS)
-    fapl = h5p.create(h5p.FILE_ACCESS)
-    fapl.set_fclose_degree(h5f.CLOSE_STRONG)
-    lapl.set_elink_fapl(fapl)
-    return lapl
-
-def make_lcpl():
-    """Default link creation property list (1.8)"""
-    lcpl = h5p.create(h5p.LINK_CREATE)
-    lcpl.set_create_intermediate_group(True)
-    return lcpl
-
-lapl = make_lapl()
-lcpl = make_lcpl()
 

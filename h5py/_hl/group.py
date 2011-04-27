@@ -19,7 +19,7 @@ class Group(HLObject, DictCompat):
         if bind is None:
             # Old constructor used to do things
             if create:
-                bind = h5g.create(self.id, name, lcpl=base.lcpl)
+                bind = h5g.create(self.id, name, lcpl=self._lcpl)
             else:
                 bind = get(parent_object, name)
                 if not isinstance(bind, h5g.GroupID):
@@ -33,7 +33,7 @@ class Group(HLObject, DictCompat):
         Name may be absolute or relative.  Fails if the target name already
         exists.
         """
-        gid = h5g.create(self.id, name, lcpl=base.lcpl)
+        gid = h5g.create(self.id, name, lcpl=self._lcpl)
         return Group(None, None, bind=gid)
 
     def create_dataset(self, name, shape=None, dtype=None, data=None,
@@ -65,7 +65,7 @@ class Group(HLObject, DictCompat):
             if oid is None:
                 raise ValueError("Invalid HDF5 object reference")
         else:
-            oid = h5o.open(self.id, name, lapl=base.lapl)
+            oid = h5o.open(self.id, name, lapl=self._lapl)
 
         otype = h5i.get_type(oid)
         if otype == h5i.GROUP:
@@ -154,21 +154,21 @@ class Group(HLObject, DictCompat):
             can't understand the resulting array dtype.
         """
         if isinstance(obj, HLObject):
-            h5o.link(obj.id, self.id, name, lcpl=base.lcpl, lapl=base.lapl)
+            h5o.link(obj.id, self.id, name, lcpl=self._lcpl, lapl=self._lapl)
 
         elif isinstance(obj, SoftLink):
-            self.id.links.create_soft(name, obj.path, lcpl=base.lcpl, lapl=base.lapl)
+            self.id.links.create_soft(name, obj.path, lcpl=self._lcpl, lapl=self._lapl)
 
         elif isinstance(obj, ExternalLink):
-            self.id.links.create_external(name, obj.filename, obj.path, lcpl=base.lcpl, lapl=base.lapl)
+            self.id.links.create_external(name, obj.filename, obj.path, lcpl=self._lcpl, lapl=self._lapl)
 
         elif isinstance(obj, numpy.dtype):
             htype = h5t.py_create(obj)
-            htype.commit(self.id, name, lcpl=base.lcpl)
+            htype.commit(self.id, name, lcpl=self._lcpl)
 
         else:
             ds = self.create_dataset(None, data=obj, dtype=base.guess_dtype(obj))
-            h5o.link(ds.id, self.id, name, lcpl=base.lcpl)
+            h5o.link(ds.id, self.id, name, lcpl=self._lcpl)
 
     def __delitem__(self, name):
         """ Delete (unlink) an item from this group. """

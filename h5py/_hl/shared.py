@@ -32,8 +32,11 @@ def shared(fget, fset=None, fdel=None):
 
     return property(proxy_fget, proxy_fset, proxy_fdel)
 
-def getval(self, key):
+def get(self):
     return filedata[self.id.fileno]
+
+def getval(self, key):
+    return filedata[self.id.fileno][key]
 
 def setval(self, key, val):
     filedata[self.id.fileno][key] = val

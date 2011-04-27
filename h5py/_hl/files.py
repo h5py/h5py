@@ -48,6 +48,21 @@ def make_fid(name, mode, plist):
         raise ValueError("Invalid mode; must be one of r, r+, w, w-, a")
     return fid
 
+def make_lapl():
+    """Default link access property list (1.8)"""
+
+    lapl = h5p.create(h5p.LINK_ACCESS)
+    fapl = h5p.create(h5p.FILE_ACCESS)
+    fapl.set_fclose_degree(h5f.CLOSE_STRONG)
+    lapl.set_elink_fapl(fapl)
+    return lapl
+
+def make_lcpl():
+    """Default link creation property list (1.8)"""
+    lcpl = h5p.create(h5p.LINK_CREATE)
+    lcpl.set_create_intermediate_group(True)
+    return lcpl
+
 class File(Group):
 
     """
@@ -87,12 +102,23 @@ class File(Group):
             sc['mode'] = mode
         return mode
 
+    def _g_encoding(self, sc):
+        """ Default character encoding for this file """
+        return sc.get('encoding')
+    def _s_encoding(self, sc, encoding):
+        # TODO: validate encoding
+        if encoding in ('utf-8','utf_8'):
+            self._lcpl.set_char_encoding(h5t.CSET_UTF8)
+        sc['encoding'] = encoding
+
+    encoding = shared.shared(_g_encoding, _s_encoding)
+
     @property
     def fid(self):
         """File ID (backwards compatibility) """
         return self.id
 
-    def __init__(self, name, mode=None, driver=None, **kwds):
+    def __init__(self, name, mode=None, driver=None, encoding=None, **kwds):
         """ Create a new file object """
         if isinstance(name, HLObject):
             fid = h5i.get_file_id(name.id)
@@ -106,7 +132,10 @@ class File(Group):
             fapl = make_fapl(driver,**kwds)
             fid = make_fid(name, mode, fapl)
         Group.__init__(self, None, None, bind=fid)
+        self._lcpl = make_lcpl()
+        self._lapl = make_lapl()
         shared.setval(self, 'mode', mode)
+        self.encoding = encoding
 
     def close(self):
         """ Close the file.  All open objects become invalid """
