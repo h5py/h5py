@@ -2,6 +2,7 @@ import posixpath
 import warnings
 import os
 import sys
+import collections
 
 import shared
 from h5py import h5i, h5r, h5p, h5f, h5t
@@ -29,11 +30,28 @@ def guess_dtype(data):
         return h5t.special_dtype(ref=h5r.Reference)
     return None
 
+class SharedConfig():
+    pass
+
+filedata = collections.defaultdict(SharedConfig)
+
 class HLObject(object):
 
     """
         Base class for high-level interface objects.
     """
+
+    @property
+    def _shared(self):
+        """ Settings shared across all objects in an HDF5 file """
+        return filedata[self.id.fileno]
+
+    @_shared.deleter
+    def _shared(self):
+        try:
+            del filedata[self.id.fileno]
+        except KeyError:
+            pass
 
     @property
     def file(self):

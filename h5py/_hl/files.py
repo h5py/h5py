@@ -5,7 +5,6 @@ import os
 from base import HLObject
 from group import Group
 from h5py import h5f, h5p, h5i, h5fd
-from shared import shared, wipe
 
 def make_fapl(driver,**kwds):
     """ Set up a file access property list """
@@ -96,20 +95,18 @@ class File(Group):
     @property
     def mode(self):
         """ Python mode used to open file """
-        sc = shared(self)
-        if not hasattr(sc, 'mode'):
-            sc.mode = {h5f.ACC_RDONLY: 'r', h5f.ACC_RDWR: 'r+'}.get(self.fid.get_intent())
-        return sc.mode
+        if not hasattr(self._shared, 'mode'):
+            self._shared.mode = {h5f.ACC_RDONLY: 'r', h5f.ACC_RDWR: 'r+'}.get(self.fid.get_intent())
+        return self._shared.mode
 
     def _g_encoding(self):
         """ Default character encoding for this file """
-        return shared(self).encoding
+        return self._shared.encoding
     def _s_encoding(self, encoding):
         # TODO: validate encoding
-        sc = shared(self)
         if encoding in ('utf-8','utf_8'):
-            sc.lcpl.set_char_encoding(h5t.CSET_UTF8)
-        sc.encoding = encoding
+            self._shared.lcpl.set_char_encoding(h5t.CSET_UTF8)
+        self._shared.encoding = encoding
 
     encoding = property(_g_encoding, _s_encoding)
 
@@ -132,15 +129,14 @@ class File(Group):
             fapl = make_fapl(driver,**kwds)
             fid = make_fid(name, mode, fapl)
         Group.__init__(self, None, None, bind=fid)
-        sc = shared(self)
-        sc.lcpl = make_lcpl()
-        sc.lapl = make_lapl()
-        sc.mode = mode
+        self._shared.lcpl = make_lcpl()
+        self._shared.lapl = make_lapl()
+        self._shared.mode = mode
         self.encoding = encoding
 
     def close(self):
         """ Close the file.  All open objects become invalid """
-        wipe(self)
+        del self._shared
         self.id.close()
 
     def flush(self):
