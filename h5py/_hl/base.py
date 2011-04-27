@@ -35,20 +35,6 @@ class HLObject(object):
         Base class for high-level interface objects.
     """
 
-    def _g_lcpl(self, sc):
-        """ Link creation property list for all objects in this file """
-        return sc['lcpl']
-    def _s_lcpl(self, sc, val):
-        sc['lcpl'] = val
-    _lcpl = shared.shared(_g_lcpl, _s_lcpl)
-
-    def _g_lapl(self, sc):
-        """ Link access property list for all objects in this file """
-        return sc['lapl']
-    def _s_lapl(self, sc, val):
-        sc['lapl'] = val
-    _lapl = shared.shared(_g_lapl, _s_lapl)
-
     @property
     def file(self):
         """ Return a File instance associated with this object """

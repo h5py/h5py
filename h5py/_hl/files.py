@@ -5,7 +5,7 @@ import os
 from base import HLObject
 from group import Group
 from h5py import h5f, h5p, h5i, h5fd
-import shared
+from shared import shared, wipe
 
 def make_fapl(driver,**kwds):
     """ Set up a file access property list """
@@ -93,25 +93,25 @@ class File(Group):
                    h5fd.WINDOWS: 'windows'}
         return drivers.get(self.fid.get_access_plist().get_driver(), 'unknown')
 
-    @shared.shared
-    def mode(self, sc):
+    @property
+    def mode(self):
         """ Python mode used to open file """
-        mode = sc.get('mode')
-        if mode is None:
-            mode = {h5f.ACC_RDONLY: 'r', h5f.ACC_RDWR: 'r+'}.get(self.fid.get_intent())
-            sc['mode'] = mode
-        return mode
+        sc = shared(self)
+        if not hasattr(sc, 'mode'):
+            sc.mode = {h5f.ACC_RDONLY: 'r', h5f.ACC_RDWR: 'r+'}.get(self.fid.get_intent())
+        return sc.mode
 
-    def _g_encoding(self, sc):
+    def _g_encoding(self):
         """ Default character encoding for this file """
-        return sc.get('encoding')
-    def _s_encoding(self, sc, encoding):
+        return shared(self).encoding
+    def _s_encoding(self, encoding):
         # TODO: validate encoding
+        sc = shared(self)
         if encoding in ('utf-8','utf_8'):
-            self._lcpl.set_char_encoding(h5t.CSET_UTF8)
-        sc['encoding'] = encoding
+            sc.lcpl.set_char_encoding(h5t.CSET_UTF8)
+        sc.encoding = encoding
 
-    encoding = shared.shared(_g_encoding, _s_encoding)
+    encoding = property(_g_encoding, _s_encoding)
 
     @property
     def fid(self):
@@ -132,14 +132,15 @@ class File(Group):
             fapl = make_fapl(driver,**kwds)
             fid = make_fid(name, mode, fapl)
         Group.__init__(self, None, None, bind=fid)
-        self._lcpl = make_lcpl()
-        self._lapl = make_lapl()
-        shared.setval(self, 'mode', mode)
+        sc = shared(self)
+        sc.lcpl = make_lcpl()
+        sc.lapl = make_lapl()
+        sc.mode = mode
         self.encoding = encoding
 
     def close(self):
         """ Close the file.  All open objects become invalid """
-        shared.wipe(self)
+        wipe(self)
         self.id.close()
 
     def flush(self):

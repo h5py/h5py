@@ -4,45 +4,19 @@
     which reside in the same HDF5 file.
 """
 
+
 import collections
 
-filedata = collections.defaultdict(dict)
+class SharedConfig():
+    pass
 
-def shared(fget, fset=None, fdel=None):
+filedata = collections.defaultdict(SharedConfig)
 
-    def proxy_fget(self):
-        sc = filedata[self.id.fileno]
-        return fget(self, sc)
+def shared(obj):
+    return filedata[obj.id.fileno]
 
-    if fset is not None:
-        def proxy_fset(self, val):
-            sc = filedata[self.id.fileno]
-            return fset(self, sc, val)
-    else:
-        proxy_fset = None
-
-    if fdel is not None:
-        def proxy_fdel(self):
-            sc = filedata[self.id.fileno]
-            return fdel(self, sc)
-    else:
-        proxy_fdel = None
-
-    proxy_fget.__doc__ = fget.__doc__
-
-    return property(proxy_fget, proxy_fset, proxy_fdel)
-
-def get(self):
-    return filedata[self.id.fileno]
-
-def getval(self, key):
-    return filedata[self.id.fileno][key]
-
-def setval(self, key, val):
-    filedata[self.id.fileno][key] = val
-
-def wipe(self):
+def wipe(obj):
     try:
-        del filedata[self.id.fileno]
+        del filedata[obj.id.fileno]
     except KeyError:
         pass
