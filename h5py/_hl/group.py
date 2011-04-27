@@ -187,10 +187,12 @@ class Group(HLObject, DictCompat):
 
     def __iter__(self):
         """ Iterate over member names """
-        return self.id.__iter__()
+        for x in self.id.__iter__():
+            yield self._decode(x)
 
     def __contains__(self, name):
         """ Test if a member name exists """
+        name, lcpl = self._encode(name)
         return name in self.id
 
     def copy(self, source, dest, name=None):

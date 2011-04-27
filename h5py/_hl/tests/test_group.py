@@ -3,6 +3,7 @@ import numpy as np
 from .common import ut, TestCase
 from h5py.highlevel import File, Group, SoftLink, HardLink, ExternalLink
 from h5py.highlevel import Dataset, Datatype
+from h5py import h5t
 
 class BaseGroup(TestCase):
 
@@ -39,6 +40,15 @@ class TestCreate(TestCase):
         hfile.create_group('foo')
         with self.assertRaises(ValueError):
             hfile.create_group('foo')
+        hfile.close()
+
+    def test_unicode(self):
+        """ Unicode names are correctly stored """
+        name = u"/Name\u4500"
+        hfile = File(self.mktemp(), 'w')
+        group = hfile.create_group(name)
+        self.assertEqual(group.name, name)
+        self.assertEqual(group.id.links.get_info(name.encode('utf8')).cset, h5t.CSET_UTF8)
         hfile.close()
 
 class TestDatasetAssignment(BaseGroup):

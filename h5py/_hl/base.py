@@ -111,7 +111,8 @@ class HLObject(object):
     @property
     def name(self):
         """ Return the full name of this object.  None if anonymous. """
-        return h5i.get_name(self.id)
+        name = h5i.get_name(self.id)
+        return self._decode(name)
 
     @property
     def parent(self):
