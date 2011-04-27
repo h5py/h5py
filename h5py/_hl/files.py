@@ -4,7 +4,7 @@ import os
 
 from base import HLObject
 from group import Group
-from h5py import h5f, h5p, h5i, h5fd
+from h5py import h5f, h5p, h5i, h5fd, h5t
 
 def make_fapl(driver,**kwds):
     """ Set up a file access property list """

@@ -873,6 +873,27 @@ cdef class PropLCID(PropCreateID):
 
     """ Link creation property list """
 
+    def set_char_encoding(self, int encoding):
+        """ (INT encoding)
+
+        Set the character encoding for link names.  Legal values are:
+
+        - h5t.CSET_ASCII
+        - h5t.CSET_UTF8
+        """
+        H5Pset_char_encoding(self.id, <H5T_cset_t>encoding)
+
+    def get_char_encoding(self):
+        """ () => INT encoding
+
+        Get the character encoding for link names.  Legal values are:
+
+        - h5t.CSET_ASCII
+        - h5t.CSET_UTF8
+        """
+        cdef H5T_cset_t encoding
+        H5Pget_char_encoding(self.id, &encoding)
+        return <int>encoding
     
     def set_create_intermediate_group(self, bint create):
         """(BOOL create)
