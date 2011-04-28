@@ -4,7 +4,6 @@ import os
 import sys
 import collections
 
-import shared
 from h5py import h5i, h5r, h5p, h5f, h5t
 
 def is_hdf5(fname):
@@ -35,16 +34,19 @@ def checkutf8(encoding):
     a = a.lower()
     return a in ('u8', 'utf8')
 
-class SharedConfig():
+class SharedConfig(object):
     pass
 
 filedata = collections.defaultdict(SharedConfig)
 
-    
-class HLObject(object):
+class CommonStateObject(object):
 
     """
-        Base class for high-level interface objects.
+        Mixin class that allows sharing information between objects which
+        reside in the same HDF5 file.  Requires that the host class have
+        a ".id" attribute which returns a low-level ObjectID subclass.
+
+        Also implements Unicode operations.
     """
 
     @property
@@ -59,48 +61,46 @@ class HLObject(object):
         except KeyError:
             pass
 
-    def _encode(self, name):
+    def _e(self, name, lcpl=None):
         """ Encode a name according to the current file settings.
 
-        Returns a 2-tuple (encoded name, lcpl)
+        Returns name, or 2-tuple (name, lcpl) if lcpl is True
 
         - Binary strings are always passed as-is, h5t.CSET_ASCII
-        - Unicode (non-utf8): encode to given codec, h5t.CSET_ASCII
-        - Unicode (utf8 or not specified): encode utf8, h5t.CSET_UTF8
-
+        - Unicode strings are encoded utf8, h5t.CSET_UTF8
         """
-        def lcpl(coding):
+        def get_lcpl(coding):
             lcpl = self._shared.lcpl.copy()
             lcpl.set_char_encoding(coding)
             return lcpl
 
-        if isinstance(name, str):
-            return name, lcpl(h5t.CSET_ASCII)
+        if isinstance(name, bytes):
+            coding = h5t.CSET_ASCII
+        else:
+            name = name.encode('utf8')
+            coding = h5t.CSET_UTF8
 
-        encoding = self._shared.encoding
-        if encoding is None:
-            encoding = 'utf8'
+        if lcpl:
+            return name, get_lcpl(coding)
+        return name
 
-        name = name.encode(encoding)
-        code = h5t.CSET_UTF8 if checkutf8(encoding) else h5t.CSET_ASCII
-
-        return name, lcpl(code)
-
-    def _decode(self, name):
+    def _d(self, name):
         """ Decode a name according to the current file settings.
 
-        - Try explicit encoding (if set)
-        - Try utf-8
-        - Return the byte string
+        - Try to decode utf8
+        - Failing that, return the byte string
         """
-        encoding = self._shared.encoding
-        ee = ('utf8',) if encoding is None else (encoding, 'utf8')
-        for e in ee:
-            try:
-                return name.decode(e)
-            except UnicodeDecodeError:
-                pass
+        try:
+            return name.decode('utf8')
+        except UnicodeDecodeError:
+            pass
         return name
+
+class HLObject(CommonStateObject):
+
+    """
+        Base class for high-level interface objects.
+    """
 
     @property
     def file(self):
@@ -111,8 +111,7 @@ class HLObject(object):
     @property
     def name(self):
         """ Return the full name of this object.  None if anonymous. """
-        name = h5i.get_name(self.id)
-        return self._decode(name)
+        return self._d(h5i.get_name(self.id))
 
     @property
     def parent(self):
@@ -144,9 +143,6 @@ class HLObject(object):
     def __init__(self, oid):
         """ Setup this object, given its low-level identifier """
         self._id = oid
-
-    def __nonzero__(self):
-        return self.id.__nonzero__()
 
     def __hash__(self):
         return hash(self.id)

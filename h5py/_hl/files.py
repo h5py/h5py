@@ -83,7 +83,6 @@ class File(Group):
         except (UnicodeError, LookupError):
             return name
 
-    
     @property
     def driver(self):
         """Low-level HDF5 file driver used to open file"""
@@ -100,21 +99,11 @@ class File(Group):
         return self._shared.mode
 
     @property
-    def encoding(self):
-        """ Default character encoding for this file """
-        return self._shared.encoding
-
-    @encoding.setter
-    def encoding(self, encoding):
-        # TODO: validate encoding for illegal codecs (utf-16, utf-32)
-        self._shared.encoding = encoding
-
-    @property
     def fid(self):
         """File ID (backwards compatibility) """
         return self.id
 
-    def __init__(self, name, mode=None, driver=None, encoding=None, **kwds):
+    def __init__(self, name, mode=None, driver=None, **kwds):
         """ Create a new file object """
         if isinstance(name, HLObject):
             fid = h5i.get_file_id(name.id)
@@ -131,7 +120,6 @@ class File(Group):
         self._shared.lcpl = make_lcpl()
         self._shared.lapl = make_lapl()
         self._shared.mode = mode
-        self.encoding = encoding
 
     def close(self):
         """ Close the file.  All open objects become invalid """

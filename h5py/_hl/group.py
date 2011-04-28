@@ -33,20 +33,19 @@ class Group(HLObject, DictCompat):
         Name may be absolute or relative.  Fails if the target name already
         exists.
         """
-        name, lcpl = self._encode(name)
+        name, lcpl = self._e(name, lcpl=True)
         gid = h5g.create(self.id, name, lcpl=lcpl)
         return Group(None, None, bind=gid)
 
     def create_dataset(self, name, shape=None, dtype=None, data=None,
                  chunks=None, compression=None, shuffle=None,
                     fletcher32=None, maxshape=None, compression_opts=None):
-        if name is not None:
-            name, lcpl = self._encode(name)
         dsid = dataset.make_new_dset(self, shape, dtype, data, chunks,
                 compression, shuffle, fletcher32, maxshape, compression_opts)
+        dset = dataset.Dataset(None, None, bind=dsid)
         if name is not None:
-            h5o.link(dsid, self.id, name, lcpl=lcpl)
-        return dataset.Dataset(None, None, bind=dsid)
+            self[name] = dset
+        return dset
 
     def require_dataset(self, name, shape, dtype, exact=False, **kwds):
         #TODO
@@ -70,7 +69,7 @@ class Group(HLObject, DictCompat):
             if oid is None:
                 raise ValueError("Invalid HDF5 object reference")
         else:
-            oid = h5o.open(self.id, name, lapl=self._shared.lapl)
+            oid = h5o.open(self.id, self._e(name), lapl=self._shared.lapl)
 
         otype = h5i.get_type(oid)
         if otype == h5i.GROUP:
@@ -113,7 +112,7 @@ class Group(HLObject, DictCompat):
             return self[name]
 
         elif getclass and not getlink:
-            typecode = h5o.get_info(self.id, name).type
+            typecode = h5o.get_info(self.id, self._e(name)).type
 
             try:
                 return {h5o.TYPE_GROUP: Group,
@@ -123,12 +122,12 @@ class Group(HLObject, DictCompat):
                 raise TypeError("Unknown object type")
 
         elif getlink:
-            typecode = self.id.links.get_info(name).type
+            typecode = self.id.links.get_info(self._e(name)).type
 
             if typecode == h5l.TYPE_SOFT:
-                return SoftLink if getclass else SoftLink(self.id.links.get_val(name))
+                return SoftLink if getclass else SoftLink(self.id.links.get_val(self._e(name)))
             elif typecode == h5l.TYPE_EXTERNAL:
-                return ExternalLink if getclass else ExternalLink(*self.id.links.get_val(name))
+                return ExternalLink if getclass else ExternalLink(*self.id.links.get_val(self._e(name)))
             elif typecode == h5l.TYPE_HARD:
                 return HardLink if getclass else HardLink()
             else:
@@ -158,16 +157,18 @@ class Group(HLObject, DictCompat):
             values are stored as scalar datasets. Raise ValueError if we
             can't understand the resulting array dtype.
         """
-        name, lcpl = self._encode(name)
+        name, lcpl = self._e(name, lcpl=True)
 
         if isinstance(obj, HLObject):
             h5o.link(obj.id, self.id, name, lcpl=lcpl, lapl=self._shared.lapl)
 
         elif isinstance(obj, SoftLink):
-            self.id.links.create_soft(name, obj.path, lcpl=lcpl, lapl=self._shared.lapl)
+            self.id.links.create_soft(name, self._e(obj.path),
+                          lcpl=lcpl, lapl=self._shared.lapl)
 
         elif isinstance(obj, ExternalLink):
-            self.id.links.create_external(name, obj.filename, obj.path, lcpl=lcpl, lapl=self._shared.lapl)
+            self.id.links.create_external(name, self._e(obj.filename),
+                          self._e(obj.path), lcpl=lcpl, lapl=self._shared.lapl)
 
         elif isinstance(obj, numpy.dtype):
             htype = h5t.py_create(obj)
@@ -179,7 +180,7 @@ class Group(HLObject, DictCompat):
 
     def __delitem__(self, name):
         """ Delete (unlink) an item from this group. """
-        self.id.unlink(name)
+        self.id.unlink(self._e(name))
 
     def __len__(self):
         """ Number of members attached to this group """
@@ -188,12 +189,11 @@ class Group(HLObject, DictCompat):
     def __iter__(self):
         """ Iterate over member names """
         for x in self.id.__iter__():
-            yield self._decode(x)
+            yield self._d(x)
 
     def __contains__(self, name):
         """ Test if a member name exists """
-        name, lcpl = self._encode(name)
-        return name in self.id
+        return self._e(name) in self.id
 
     def copy(self, source, dest, name=None):
         """ Copy an object or group.
@@ -230,6 +230,7 @@ class Group(HLObject, DictCompat):
             if name is not None:
                 dest_path = name
             else:
+                # TODO: don't know what this does
                 dest_path = pp.basename(h5i.get_name(source[source_path].id))
 
         elif isinstance(dest, HLObject):
@@ -239,7 +240,7 @@ class Group(HLObject, DictCompat):
             dest_path = dest
             dest = self
 
-        h5o.copy(source.id, source_path, dest.id, dest_path)
+        h5o.copy(source.id, self._e(source_path), dest.id, self._e(dest_path))
 
     def visit(self, func):
         """ Recursively visit all names in this group and subgroups (HDF5 1.8).
@@ -261,7 +262,9 @@ class Group(HLObject, DictCompat):
         >>> list_of_names = []
         >>> f.visit(list_of_names.append)
         """
-        return h5o.visit(self.id, func)
+        def proxy(name):
+            return func(self._d(name))
+        return h5o.visit(self.id, proxy)
 
     def visititems(self, func):
         """ Recursively visit names and objects in this group (HDF5 1.8).
@@ -287,9 +290,10 @@ class Group(HLObject, DictCompat):
         >>> f = File('foo.hdf5')
         >>> f.visititems(func)
         """
-        def call_proxy(name):
+        def proxy(name):
+            name = self._d(name)
             return func(name, self[name])
-        return h5o.visit(self.id, call_proxy)
+        return h5o.visit(self.id, proxy)
 
     def __repr__(self):
         if not self:

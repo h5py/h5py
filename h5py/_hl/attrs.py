@@ -3,7 +3,7 @@ import numpy
 from h5py import h5s, h5t, h5a
 import base
 
-class AttributeManager(base.DictCompat):
+class AttributeManager(base.DictCompat, base.CommonStateObject):
 
     """ 
         Allows dictionary-style access to an HDF5 object's attributes.
@@ -33,7 +33,7 @@ class AttributeManager(base.DictCompat):
     def __getitem__(self, name):
         """ Read the value of an attribute.
         """
-        attr = h5a.open(self._id, name)
+        attr = h5a.open(self._id, self._e(name))
 
         arr = numpy.ndarray(attr.shape, dtype=attr.dtype, order='C')
         attr.read(arr)
@@ -55,7 +55,7 @@ class AttributeManager(base.DictCompat):
 
     def __delitem__(self, name):
         """ Delete an attribute (which must already exist). """
-        h5a.delete(self._id, name)
+        h5a.delete(self._id, self._e(name))
 
     def create(self, name, data, shape=None, dtype=None):
         """ Create a new attribute, overwriting any existing attribute.
@@ -92,9 +92,9 @@ class AttributeManager(base.DictCompat):
         htype = h5t.py_create(dtype, logical=True)
 
         if name in self:
-            h5a.delete(self._id, name)
+            h5a.delete(self._id, self._e(name))
 
-        attr = h5a.create(self._id, name, htype, space)
+        attr = h5a.create(self._id, self._e(name), htype, space)
         if data is not None:
             attr.write(data)
 
@@ -111,7 +111,7 @@ class AttributeManager(base.DictCompat):
         else:
             value = numpy.asarray(value, order='C')
 
-            attr = h5a.open(self._id, name)
+            attr = h5a.open(self._id, self._e(name))
 
             # Allow the case of () <-> (1,)
             if (value.shape != attr.shape) and not \
@@ -128,7 +128,7 @@ class AttributeManager(base.DictCompat):
         """ Iterate over the names of attributes. """
         attrlist = []
         def iter_cb(name, *args):
-            attrlist.append(name)
+            attrlist.append(self._d(name))
         h5a.iterate(self._id, iter_cb)
 
         for name in attrlist:
@@ -136,7 +136,7 @@ class AttributeManager(base.DictCompat):
 
     def __contains__(self, name):
         """ Determine if an attribute exists, by name. """
-        return h5a.exists(self._id, name)
+        return h5a.exists(self._id, self._e(name))
 
     def __repr__(self):
         if not self._id:

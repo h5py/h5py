@@ -158,11 +158,12 @@ class Dataset(HLObject):
             if data is None and shape is None:
                 if any((dtype,chunks,compression,shuffle,fletcher32)):
                     raise ValueError('You cannot specify keywords when opening a dataset.')
-                bind = h5d.open(group.id, name)
-
+                bind = h5d.open(group.id, self._e(name))
             else:
                 bind = make_dset_id(group, name, shape, dtype, data, chunks,
-                 compression, shuffle, fletcher32, maxshape, compression_opts)
+                compression, shuffle, fletcher32, maxshape, compression_opts)
+                name, lcpl = self._e(name, lcpl=True)
+                h5o.link(bind, group.id, name, lcpl=lcpl)
 
         HLObject.__init__(self, bind)
 
