@@ -29,11 +29,6 @@ def guess_dtype(data):
         return h5t.special_dtype(ref=h5r.Reference)
     return None
 
-def checkutf8(encoding):
-    a = "".join(x for x in encoding if x.isalnum())
-    a = a.lower()
-    return a in ('u8', 'utf8')
-
 class SharedConfig(object):
     pass
 
@@ -132,7 +127,7 @@ class HLObject(CommonStateObject):
     @property
     def ref(self):
         """ An (opaque) HDF5 reference to this object """
-        return h5r.create(self.id, '.', h5r.OBJECT)
+        return h5r.create(self.id, b'.', h5r.OBJECT)
 
     @property
     def attrs(self):

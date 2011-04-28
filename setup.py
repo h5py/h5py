@@ -4,6 +4,7 @@ from distutils.cmd import Command
 from Cython.Distutils import build_ext
 import sys, os
 import os.path as op
+from functools import reduce
 
 import numpy
 
