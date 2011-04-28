@@ -72,14 +72,8 @@ class File(Group):
     def filename(self):
         """File name on disk"""
         name = h5f.get_name(self.fid)
-        # Note the exception can happen in one of two ways:
-        # 1. The name doesn't comply with the file system encoding;
-        #    return the raw byte string
-        # 2. The name can't be encoded down to ASCII; return it as
-        #    a Unicode string object
         try:
-            name = name.decode(sys.getfilesystemencoding())
-            return name.encode('ascii')
+            return name.decode(sys.getfilesystemencoding())
         except (UnicodeError, LookupError):
             return name
 

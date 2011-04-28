@@ -126,9 +126,17 @@ class Group(HLObject, DictCompat):
             typecode = self.id.links.get_info(self._e(name)).type
 
             if typecode == h5l.TYPE_SOFT:
-                return SoftLink if getclass else SoftLink(self.id.links.get_val(self._e(name)))
+                if getclass:
+                    return SoftLink
+                linkbytes = self.id.links.get_val(self._e(name))
+                return SoftLink(self._d(linkbytes))
             elif typecode == h5l.TYPE_EXTERNAL:
-                return ExternalLink if getclass else ExternalLink(*self.id.links.get_val(self._e(name)))
+                if getclass:
+                    return ExternalLink
+                filebytes, linkbytes = self.id.links.get_val(self._e(name))
+                # TODO: I think this is wrong,
+                # we should use filesystem decoding on the filename
+                return ExternalLink(self._d(filebytes), self._d(linkbytes))
             elif typecode == h5l.TYPE_HARD:
                 return HardLink if getclass else HardLink()
             else:

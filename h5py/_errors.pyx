@@ -100,7 +100,7 @@ cdef int set_exception() except -1:
     if mj_desc == NULL or mn_desc == NULL:
         raise RuntimeError("Failed to obtain error code description")
 
-    msg = "%s (%s: %s)" % (desc, mj_desc, mn_desc)
+    msg = ("%s (%s: %s)" % (desc, mj_desc, mn_desc)).encode('utf-8')
 
     PyErr_SetString(eclass, msg)
 

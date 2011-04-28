@@ -181,7 +181,7 @@ cdef class LinkProxy:
                 py_retval = buf
             else:
                 H5Lunpack_elink_val(buf, buf_size, &wtf, &ext_file_name, &ext_obj_name)
-                py_retval = (str(ext_file_name), str(ext_obj_name))
+                py_retval = (bytes(ext_file_name), bytes(ext_obj_name))
         finally:
             efree(buf)
         
