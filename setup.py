@@ -15,6 +15,18 @@ VERSION = '1.4.0'
 def localpath(*args):
     return op.abspath(reduce(op.join, (op.dirname(__file__),)+args))
 
+if sys.version_info[0] >= 3:
+    # Shamelessly stolen from Cython 0.14
+    import lib2to3.refactor
+    from distutils.command.build_py \
+         import build_py_2to3 as build_py
+    # need to convert sources to Py3 on installation
+    fixers = [ fix for fix in lib2to3.refactor.get_fixers_from_package("lib2to3.fixes")
+               if fix.split('fix_')[-1] not in ('next',)
+               ]
+    build_py.fixer_names = fixers
+else:
+    from distutils.command.build_py import build_py
 
 # --- Determine HDF5 location -------------------------------------------------
 
@@ -111,9 +123,16 @@ class test(Command):
                     "unittest2 is required to run tests with python-%d.%d"
                     % py_version
                     )
+        buildobj = self.distribution.get_command_obj('build')
+        buildobj.run()
+        oldpath = sys.path
+        try:
+            sys.path = [op.abspath(buildobj.build_lib)] + oldpath
+            suite = unittest.TestLoader().discover(op.join(buildobj.build_lib,'h5py'))
+            unittest.TextTestRunner(verbosity=self.verbosity+1).run(suite)
+        finally:
+            sys.path = oldpath
 
-        suite = unittest.TestLoader().discover('.')
-        unittest.TextTestRunner(verbosity=self.verbosity+1).run(suite)
 
 
 # --- Distutils setup and metadata --------------------------------------------
@@ -173,7 +192,7 @@ setup(
   package_data = package_data,
   ext_modules = EXTENSIONS,
   requires = ['numpy (>=1.0.1)'],
-  cmdclass = {'build_ext': build_ext, 'test': test}
+  cmdclass = {'build_ext': build_ext, 'test': test, 'build_py':build_py}
 )
 
 

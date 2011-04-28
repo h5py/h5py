@@ -167,7 +167,7 @@ cdef class SpaceID(ObjectID):
         buf = emalloc(nalloc)
         try:
             H5Sencode(self.id, buf, &nalloc)
-            pystr = PyString_FromStringAndSize(<char*>buf, nalloc)
+            pystr = PyBytes_FromStringAndSize(<char*>buf, nalloc)
         finally:
             efree(buf)
 

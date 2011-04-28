@@ -441,7 +441,7 @@ cdef class TypeID(ObjectID):
         buf = <char*>emalloc(sizeof(char)*nalloc)
         try:
             H5Tencode(self.id, <unsigned char*>buf, &nalloc)
-            pystr = PyString_FromStringAndSize(buf, nalloc)
+            pystr = PyBytes_FromStringAndSize(buf, nalloc)
         finally:
             efree(buf)
 

@@ -27,11 +27,11 @@ cdef extern from "Python.h":
         Py_ssize_t ob_refcnt
         PyTypeObject *ob_type
 
-    PyObject* PyString_FromString(char* str) except NULL
-    int PyString_CheckExact(PyObject* str) except *
-    int PyString_Size(PyObject* obj) except *
+    PyObject* PyBytes_FromString(char* str) except NULL
+    int PyBytes_CheckExact(PyObject* str) except *
+    int PyBytes_Size(PyObject* obj) except *
     PyObject* PyObject_Str(PyObject* obj) except NULL
-    char* PyString_AsString(PyObject* obj) except NULL
+    char* PyBytes_AsString(PyObject* obj) except NULL
 
     PyObject* Py_None
     void Py_INCREF(PyObject* obj)
@@ -145,9 +145,9 @@ cdef int conv_vlen2str(void* ipt, void* opt, void* bkg, void* priv) except -1:
     cdef PyObject* temp_obj = NULL
 
     if buf_cstring[0] == NULL:
-        temp_obj = PyString_FromString("")
+        temp_obj = PyBytes_FromString("")
     else:
-        temp_obj = PyString_FromString(buf_cstring[0])
+        temp_obj = PyBytes_FromString(buf_cstring[0])
 
     # Since all data conversions are by definition in-place, it
     # is our responsibility to free the memory used by the vlens.
@@ -176,15 +176,15 @@ cdef int conv_str2vlen(void* ipt, void* opt, void* bkg, void* priv) except -1:
             temp_string = ""
             temp_string_len = 0
         else:
-            if PyString_CheckExact(buf_obj[0]):
+            if PyBytes_CheckExact(buf_obj[0]):
                 temp_object = buf_obj[0]
                 Py_INCREF(temp_object)
-                temp_string = PyString_AsString(temp_object)
-                temp_string_len = PyString_Size(temp_object)
+                temp_string = PyBytes_AsString(temp_object)
+                temp_string_len = PyBytes_Size(temp_object)
             else:
                 temp_object = PyObject_Str(buf_obj[0])
-                temp_string = PyString_AsString(temp_object)
-                temp_string_len = PyString_Size(temp_object)
+                temp_string = PyBytes_AsString(temp_object)
+                temp_string_len = PyBytes_Size(temp_object)
 
         if strlen(temp_string) != temp_string_len:
             raise ValueError("VLEN strings do not support embedded NULLs")

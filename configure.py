@@ -30,7 +30,7 @@ def savepickle(name, data):
     """ Save to pickle file, ignoring if it can't be written """
     import pickle
     try:
-        f = open(name, 'w')
+        f = open(name, 'wb')
     except IOError:
         return
     try:

@@ -42,7 +42,7 @@ cdef extern from "Python.h":
 
   PyObject* PyErr_Occurred()
   void PyErr_SetString(object type, char *message)
-  object PyString_FromStringAndSize(char *v, Py_ssize_t len)
+  object PyBytes_FromStringAndSize(char *v, Py_ssize_t len)
 
 # === Compatibility definitions and macros for h5py ===========================
 
