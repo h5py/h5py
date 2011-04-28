@@ -1,6 +1,5 @@
-
 import re
-
+import warnings
 
 
 class BadLineError(Exception):
@@ -76,7 +75,7 @@ class FunctionCruncher2(object):
             try:
                 self.handle_line(line)
             except BadLineError:
-                print "Skipped <<%s>>" % line
+                warnings.warn("Skipped <<%s>>" % line)
 
         self.functions.close()
         self.cython_imp.close()
@@ -167,7 +166,6 @@ cdef %(code)s %(fname)s(%(sig)s) except *:
 if __name__ == '__main__':
 
     import sys
-    print sys.argv
     stub = True if 'stub' in sys.argv else False
     fc = FunctionCruncher2(stub)
     fc.run()
