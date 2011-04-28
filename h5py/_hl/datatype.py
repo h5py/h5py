@@ -1,4 +1,4 @@
-from base import HLObject
+from .base import HLObject
 
 class Datatype(HLObject):
 

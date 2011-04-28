@@ -30,10 +30,10 @@
         Tuple of available filter names for encoding 
 """
 
-
-from __future__ import with_statement
-from h5py import h5s, h5z, h5p, h5d
 import numpy as np
+
+from h5py import h5s, h5z, h5p, h5d
+
 
 _COMP_FILTERS = {'gzip': h5z.FILTER_DEFLATE,
                 'szip': h5z.FILTER_SZIP,

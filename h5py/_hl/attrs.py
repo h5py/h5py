@@ -1,7 +1,7 @@
 import numpy
 
 from h5py import h5s, h5t, h5a
-import base
+from . import base
 
 class AttributeManager(base.DictCompat, base.CommonStateObject):
 

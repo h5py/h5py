@@ -1,9 +1,10 @@
 import numpy
-import base
-from base import HLObject, DictCompat
+
 from h5py import h5g, h5i, h5o, h5r, h5t, h5l
-import dataset
-import datatype
+from . import base
+from .base import HLObject, DictCompat
+from . import dataset
+from . import datatype
 
 class Group(HLObject, DictCompat):
 

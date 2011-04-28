@@ -2,9 +2,9 @@ import sys
 import numpy
 
 from h5py import h5s, h5t, h5r, h5d
-from base import HLObject
-import filters
-import selections as sel
+from .base import HLObject
+from . import filters
+from . import selections as sel
 
 def make_new_dset(parent, shape=None, dtype=None, data=None,
                  chunks=None, compression=None, shuffle=None,
@@ -207,7 +207,7 @@ class Dataset(HLObject):
         Limited to 2**32 on 32-bit systems; Dataset.len() is preferred.
         """
         size = self.len()
-        if size > sys.maxint:
+        if size > sys.maxsize:
             raise OverflowError("Value too big for Python's __len__; use Dataset.len() instead.")
         return size
 

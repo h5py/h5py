@@ -1,4 +1,4 @@
-import h5 as _h5
+from . import h5 as _h5
 
 version = "1.4.0-beta"
 _exp = version.partition('-')
