@@ -258,11 +258,11 @@ class TestFilename(TestCase):
     """
 
     def test_filename(self):
-        """ .filename behaves properly for str data """
+        """ .filename behaves properly for string data """
         fname = self.mktemp()
         fid = File(fname, 'w')
         self.assertEqual(fid.filename, fname)
-        self.assertIsInstance(fid.filename, str)
+        self.assertIsInstance(fid.filename, unicode)
 
 class TestBackwardsCompat(TestCase):
 
