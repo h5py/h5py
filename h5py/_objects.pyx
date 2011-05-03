@@ -21,7 +21,10 @@
 from defs cimport *
 
 import weakref
+import threading
 registry = weakref.WeakValueDictionary()
+
+reglock = threading.RLock()
 
 cdef class IDProxy:
 
@@ -49,7 +52,8 @@ cdef class ObjectID:
             return self.proxy.id
         def __set__(self, id):
             cdef IDProxy newproxy = IDProxy(id)
-            self.proxy = registry.setdefault(id, newproxy)
+            with reglock:
+                self.proxy = registry.setdefault(id, newproxy)
             if newproxy is not self.proxy:
                 newproxy.id = 0
 
