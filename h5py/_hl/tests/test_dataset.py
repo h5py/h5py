@@ -41,6 +41,10 @@ class TestCreateShape(BaseDataset):
         dset = self.f.create_dataset('foo', (63,))
         self.assertEqual(dset.dtype, np.dtype('=f4'))
 
+    def test_missing_shape(self):
+        """ Missing shape raises TypeError """
+        with self.assertRaises(TypeError):
+            self.f.create_dataset('foo')
 
 class TestCreateData(BaseDataset):
 
