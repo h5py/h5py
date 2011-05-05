@@ -6,10 +6,21 @@ from .base import HLObject
 from .group import Group
 from h5py import h5f, h5p, h5i, h5fd, h5t
 
-def make_fapl(driver,**kwds):
+libver_dict = {'earliest': h5f.LIBVER_EARLIEST, 'latest': h5f.LIBVER_LATEST}
+libver_dict_r = dict((y,x) for x, y in libver_dict.iteritems())
+
+def make_fapl(driver,libver,**kwds):
     """ Set up a file access property list """
     plist = h5p.create(h5p.FILE_ACCESS)
     plist.set_fclose_degree(h5f.CLOSE_STRONG)
+
+    if libver is not None:
+        if libver in libver_dict:
+            low = libver_dict[libver]
+            high = h5f.LIBVER_LATEST
+        else:
+            low, high = (libver_dict[x] for x in libver)
+        plist.set_libver_bounds(low, high)
 
     if driver is None or (driver=='windows' and sys.platform=='win32'):
         return plist
@@ -97,7 +108,13 @@ class File(Group):
         """File ID (backwards compatibility) """
         return self.id
 
-    def __init__(self, name, mode=None, driver=None, **kwds):
+    @property
+    def libver(self):
+        """File format version bounds (2-tuple: low, high)"""
+        bounds = self.id.get_access_plist().get_libver_bounds()
+        return tuple(libver_dict_r[x] for x in bounds)
+
+    def __init__(self, name, mode=None, driver=None, libver=None, **kwds):
         """ Create a new file object """
         if isinstance(name, HLObject):
             fid = h5i.get_file_id(name.id)
@@ -108,7 +125,7 @@ class File(Group):
                 name = name.encode(sys.getfilesystemencoding())
             except (UnicodeError, LookupError):
                 pass
-            fapl = make_fapl(driver,**kwds)
+            fapl = make_fapl(driver,libver,**kwds)
             fid = make_fid(name, mode, fapl)
         Group.__init__(self, None, None, bind=fid)
         self._shared.lcpl = make_lcpl()

@@ -5,7 +5,6 @@ import os
 from .common import ut, TestCase
 from h5py.highlevel import File
 
-
 class TestFileOpen(TestCase):
 
     """
@@ -145,6 +144,31 @@ class TestDrivers(TestCase):
         fid.close()
 
     #TODO: family driver tests
+
+class TestLibver(TestCase):
+
+    """
+        Feature: File format compatibility bounds can be specified when
+        opening a file.
+    """
+
+    def test_single(self):
+        """ Opening with single libver arg """
+        f = File(self.mktemp(), 'w', libver='latest')
+        self.assertEqual(f.libver, ('latest','latest'))
+        f.close()
+
+    def test_multiple(self):
+        """ Opening with two libver args """
+        f = File(self.mktemp(), 'w', libver=('earliest','latest'))
+        self.assertEqual(f.libver, ('earliest', 'latest'))
+        f.close()
+
+    def test_none(self):
+        """ Omitting libver arg results in maximum compatibility """
+        f = File(self.mktemp(), 'w')
+        self.assertEqual(f.libver, ('earliest', 'latest'))
+        f.close()
 
 class TestContextManager(TestCase):
 
