@@ -48,6 +48,9 @@ OBJ_ATTR    = H5F_OBJ_ATTR
 OBJ_ALL     = H5F_OBJ_ALL
 OBJ_LOCAL   = H5F_OBJ_LOCAL
 
+LIBVER_EARLIEST = H5F_LIBVER_EARLIEST
+LIBVER_LATEST = H5F_LIBVER_LATEST
+
 # === File operations =========================================================
 
 

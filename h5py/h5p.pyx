@@ -867,6 +867,29 @@ cdef class PropFAID(PropInstanceID):
         H5Pget_sieve_buf_size(self.id, &size)
         return size
 
+    def set_libver_bounds(self, int low, int high):
+        """ (INT low, INT high)
+
+        Set the compatibility level for file format.  Legal values are:
+
+        - h5f.LIBVER_EARLIEST
+        - h5f.LIBVER_LATEST
+        """
+        H5Pset_libver_bounds(self.id, <H5F_libver_t>low, <H5F_libver_t>high)
+
+    def get_libver_bounds(self):
+        """ () => (INT low, INT high)
+
+        Get the compatibility level for file format. Returned values are from:
+
+        - h5f.LIBVER_EARLIEST
+        - h5f.LIBVER_LATEST
+        """
+        cdef H5F_libver_t low
+        cdef H5F_libver_t high
+        H5Pget_libver_bounds(self.id, &low, &high)
+       
+        return (<int>low, <int>high)
 
 # Link creation
 cdef class PropLCID(PropCreateID):

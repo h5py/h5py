@@ -102,6 +102,10 @@ cdef extern from "hdf5.h":
   int H5F_OBJ_ALL
   int H5F_OBJ_LOCAL
 
+  ctypedef enum H5F_libver_t:
+    H5F_LIBVER_EARLIEST        #/* Use the earliest possible format for storing objects */
+    H5F_LIBVER_LATEST          #/* Use the latest possible format available for storing objects*/
+
 # === H5FD - Low-level file descriptor API ====================================
 
   ctypedef enum H5FD_mem_t:

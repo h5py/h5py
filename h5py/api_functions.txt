@@ -284,6 +284,8 @@
 1.8    herr_t H5Pset_link_creation_order(hid_t plist_id, unsigned crt_order_flags)
 1.8    herr_t H5Pget_link_creation_order(hid_t plist_id, unsigned *crt_order_flags)
 
+1.8    herr_t H5Pset_libver_bounds(hid_t fapl_id, H5F_libver_t libver_low, H5F_libver_t libver_high)
+1.8    herr_t H5Pget_libver_bounds(hid_t fapl_id, H5F_libver_t *libver_low, H5F_libver_t *libver_high) 
 
 # === H5R - Reference API =====================================================
 
