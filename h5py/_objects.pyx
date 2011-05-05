@@ -22,9 +22,40 @@ from defs cimport *
 
 import weakref
 import threading
-registry = weakref.WeakValueDictionary()
 
+registry = weakref.WeakValueDictionary()
 reglock = threading.RLock()
+cdef list pending = []
+cdef list dead = []
+
+
+cdef IDProxy getproxy(hid_t oid):
+    # Retrieve an IDProxy object appropriate for the given object identifier
+    cdef IDProxy proxy
+    pending.append(oid)
+    try:
+        with reglock:
+            if not oid in registry:
+                proxy = IDProxy(oid)
+                registry[oid] = proxy
+            else:
+                proxy = registry[oid]
+        
+            for dead_id, locked in dead:
+                if (dead_id not in pending) and (dead_id not in registry):
+                    if dead_id > 0 and (not locked) and H5Iget_type(dead_id) > 0:
+                        H5Idec_ref(dead_id)
+                dead.remove((dead_id,locked))
+    finally:
+        pending.remove(oid)
+
+    if 0:
+        print "=> %s" % oid
+        print "P: %s" % pending
+        print "D: %s" % dead
+        print "R: %s" % registry.keys()
+
+    return proxy
 
 cdef class IDProxy:
 
@@ -37,8 +68,8 @@ cdef class IDProxy:
         self.locked = 0
 
     def __dealloc__(self):
-        if self.id > 0 and (not self.locked) and H5Iget_type(self.id) > 0:
-            H5Idec_ref(self.id)
+        dead.append((self.id,self.locked))
+
 
 cdef class ObjectID:
 
@@ -50,12 +81,8 @@ cdef class ObjectID:
     property id:
         def __get__(self):
             return self.proxy.id
-        def __set__(self, id):
-            cdef IDProxy newproxy = IDProxy(id)
-            with reglock:
-                self.proxy = registry.setdefault(id, newproxy)
-            if newproxy is not self.proxy:
-                newproxy.id = 0
+        def __set__(self, id_):
+            self.proxy = getproxy(id_)
 
     property locked:
         def __get__(self):
