@@ -40,9 +40,11 @@ class Group(HLObject, DictCompat):
 
     def create_dataset(self, name, shape=None, dtype=None, data=None,
                  chunks=None, compression=None, shuffle=None,
-                    fletcher32=None, maxshape=None, compression_opts=None):
+                 fletcher32=None, maxshape=None, compression_opts=None,
+                 fillvalue=None):
         dsid = dataset.make_new_dset(self, shape, dtype, data, chunks,
-                compression, shuffle, fletcher32, maxshape, compression_opts)
+                compression, shuffle, fletcher32, maxshape, compression_opts,
+                fillvalue)
         dset = dataset.Dataset(None, None, bind=dsid)
         if name is not None:
             self[name] = dset

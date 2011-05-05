@@ -8,7 +8,8 @@ from . import selections as sel
 
 def make_new_dset(parent, shape=None, dtype=None, data=None,
                  chunks=None, compression=None, shuffle=None,
-                    fletcher32=None, maxshape=None, compression_opts=None):
+                    fletcher32=None, maxshape=None, compression_opts=None,
+                  fillvalue=None):
     """ Return a new low-level dataset identifier 
 
     Only creates anonymous datasets.
@@ -55,6 +56,10 @@ def make_new_dset(parent, shape=None, dtype=None, data=None,
 
     dcpl = filters.generate_dcpl(shape, dtype, chunks, compression, compression_opts,
                   shuffle, fletcher32, maxshape)
+
+    if fillvalue is not None:
+        fillvalue = numpy.array(fillvalue)
+        dcpl.set_fill_value(fillvalue)
 
     sid = h5s.create_simple(shape, maxshape)
     tid = h5t.py_create(dtype, logical=1)
@@ -139,6 +144,12 @@ class Dataset(HLObject):
         space = self.id.get_space()
         dims = space.get_simple_extent_dims(True)
         return tuple(x if x != h5s.UNLIMITED else None for x in dims)
+
+    @property
+    def fillvalue(self):
+        arr = numpy.ndarray((1,), dtype=self.dtype)
+        dcpl = self._dcpl.get_fill_value(arr)
+        return arr[0]
 
     @property
     def regionref(self):

@@ -103,6 +103,39 @@ class TestCreateChunked(BaseDataset):
         self.assertIsInstance(dset.chunks, tuple)
         self.assertEqual(len(dset.chunks), 2)
 
+class TestCreateFillvalue(BaseDataset):
+
+    """
+        Feature: Datasets can be created with fill value
+    """
+
+    def test_create_fillval(self):
+        """ Fill value is reflected in dataset contents """
+        dset = self.f.create_dataset('foo', (10,), fillvalue=4.0)
+        self.assertEqual(dset[0], 4.0)
+        self.assertEqual(dset[7], 4.0)
+
+    def test_property(self):
+        """ Fill value is recoverable via property """
+        dset = self.f.create_dataset('foo', (10,), fillvalue=3.0)
+        self.assertEqual(dset.fillvalue, 3.0)
+        self.assertNotIsInstance(dset.fillvalue, np.ndarray)
+
+    def test_compound(self):
+        """ Fill value works with compound types """
+        dt = np.dtype([('a','f4'),('b','i8')])
+        v = np.ones((1,), dtype=dt)[0]
+        dset = self.f.create_dataset('foo', (10,), dtype=dt, fillvalue=v)
+        self.assertEqual(dset.fillvalue, v)
+        self.assertAlmostEqual(dset[4], v.item())
+
+    #TODO
+    @ut.skip("Raises H5Error")
+    def test_exc(self):
+        """ Bogus fill value raises TypeError """
+        with self.assertRaises(TypeError):
+            dset = self.f.create_dataset('foo', (10,),
+                    dtype=[('a','i'),('b','f')], fillvalue=42)
 
 @ut.skipIf('gzip' not in h5py.filters.encode, "DEFLATE is not installed")
 class TestCreateGzip(BaseDataset):
