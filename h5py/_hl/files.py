@@ -134,7 +134,10 @@ class File(Group):
 
     def close(self):
         """ Close the file.  All open objects become invalid """
-        del self._shared
+        # TODO: find a way to square this with having issue 140
+        # Not clearing shared state introduces a tiny memory leak, but
+        # it goes like the number of files opened in a session.
+        #del self._shared
         self.id.close()
 
     def flush(self):
