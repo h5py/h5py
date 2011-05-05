@@ -127,7 +127,7 @@ class TestCreateFillvalue(BaseDataset):
         v = np.ones((1,), dtype=dt)[0]
         dset = self.f.create_dataset('foo', (10,), dtype=dt, fillvalue=v)
         self.assertEqual(dset.fillvalue, v)
-        self.assertAlmostEqual(dset[4], v.item())
+        self.assertAlmostEqual(dset[4], v)
 
     #TODO
     @ut.skip("Raises H5Error")

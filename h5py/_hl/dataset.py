@@ -282,19 +282,21 @@ class Dataset(HLObject):
         if selection.nselect == 0:
             return numpy.ndarray((0,), dtype=new_dtype)
 
-        # Create the output array using information from the selection.
-        arr = numpy.ndarray(selection.mshape, new_dtype, order='C')
+        # Up-converting to (1,) so that numpy.ndarray correctly creates 
+        # np.void rows in case of multi-field dtype. (issue 135)
+        single_element = selection.mshape == ()
+        mshape = (1,) if single_element else selection.mshape
+        arr = numpy.ndarray(mshape, new_dtype, order='C')
+
+        # HDF5 has a bug where if the memory shape has a different rank
+        # than the dataset, the read is very slow
+        if len(mshape) < len(self.shape):
+            # pad with ones
+            mshape = (1,)*(len(self.shape)-len(mshape)) + mshape
 
         # This is necessary because in the case of array types, NumPy
         # discards the array information at the top level.
         mtype = h5t.py_create(new_dtype)
-
-        # HDF5 has a bug where if the memory shape has a different rank
-        # than the dataset, the read is very slow
-        mshape = selection.mshape
-        if len(mshape) < len(self.shape):
-            # pad with ones
-            mshape = (1,)*(len(self.shape)-len(mshape)) + mshape
 
         # Perfom the actual read
         mspace = h5s.create_simple(mshape)
@@ -306,6 +308,8 @@ class Dataset(HLObject):
             arr = arr[names[0]]     # Single-field recarray convention
         if arr.shape == ():
             arr = numpy.asscalar(arr)
+        if single_element:
+            arr = arr[0]
         return arr
 
     def __setitem__(self, args, val):
