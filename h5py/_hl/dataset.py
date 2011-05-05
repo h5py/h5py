@@ -61,6 +61,8 @@ def make_new_dset(parent, shape=None, dtype=None, data=None,
         fillvalue = numpy.array(fillvalue)
         dcpl.set_fill_value(fillvalue)
 
+    if maxshape is not None:
+        maxshape = tuple(m if m is not None else h5s.UNLIMITED for m in maxshape)
     sid = h5s.create_simple(shape, maxshape)
     tid = h5t.py_create(dtype, logical=1)
 

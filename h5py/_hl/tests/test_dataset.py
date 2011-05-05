@@ -279,6 +279,11 @@ class TestResize(BaseDataset):
         with self.assertRaises(ValueError):
             dset.resize(50, axis=2)
 
+    def test_zero_dim(self):
+        """ Allow zero-length initial dims for unlimited axes (issue 111) """
+        dset = self.f.create_dataset('foo', (15,0), maxshape=(15,None))
+        self.assertEqual(dset.shape, (15,0))
+        self.assertEqual(dset.maxshape, (15,None))
 
 class TestDtype(BaseDataset):
 

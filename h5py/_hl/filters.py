@@ -128,7 +128,7 @@ def generate_dcpl(shape, dtype, chunks, compression, compression_opts,
 
     if (chunks is True) or \
     (chunks is None and any((shuffle, fletcher32, compression, maxshape))):
-        chunks = guess_chunk(shape, dtype.itemsize)
+        chunks = guess_chunk(shape, maxshape, dtype.itemsize)
         
     if maxshape is True:
         maxshape = (None,)*len(shape)
@@ -201,7 +201,7 @@ CHUNK_BASE = 16*1024    # Multiplier by which chunks are adjusted
 CHUNK_MIN = 8*1024      # Soft lower limit (8k)
 CHUNK_MAX = 1024*1024   # Hard upper limit (1M)
 
-def guess_chunk(shape, typesize):
+def guess_chunk(shape, maxshape, typesize):
     """ Guess an appropriate chunk layout for a dataset, given its shape and
     the size of each element in bytes.  Will allocate chunks only as large
     as MAX_SIZE.  Chunks are generally close to some power-of-2 fraction of
@@ -209,6 +209,9 @@ def guess_chunk(shape, typesize):
 
     Undocumented and subject to change without warning.
     """
+
+    # For unlimited dimensions we have to guess 1024
+    shape = tuple((x if x!=0 else 1024) for i, x in enumerate(shape))
 
     ndims = len(shape)
     if ndims == 0:
