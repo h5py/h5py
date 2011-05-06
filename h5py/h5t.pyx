@@ -1298,12 +1298,15 @@ cdef TypeCompoundID _c_compound(dtype dt, int logical):
     cdef dict fields = dt.fields
     cdef tuple names = dt.names
 
-    tid = H5Tcreate(H5T_COMPOUND, dt.itemsize)
+    tid = H5Tcreate(H5T_COMPOUND, 4)    # exact initial size doesn't matter
 
+    offset = 0
     for name in names:
-        dt_tmp, offset = dt.fields[name]
+        dt_tmp = dt.fields[name][0]
         type_tmp = py_create(dt_tmp, logical=logical)
+        H5Tset_size(tid, offset+H5Tget_size(type_tmp.id))
         H5Tinsert(tid, name, offset, type_tmp.id)
+        offset += H5Tget_size(type_tmp.id)
 
     return TypeCompoundID(tid)
 
