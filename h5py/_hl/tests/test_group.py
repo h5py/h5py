@@ -116,17 +116,20 @@ class TestDelete(TestCase):
     def test_delete(self):
         """ Object deletion via "del" """
         hfile = File(self.mktemp(),'w')
+        self.addCleanup(hfile.close)
+        
         hfile.create_group('foo')
         self.assertIn('foo', hfile)
         del hfile['foo']
         self.assertNotIn('foo', hfile)
-
+        
     def test_nonexisting(self):
         """ Deleting non-existent object raises KeyError """
         hfile = File(self.mktemp(),'w')
+        self.addCleanup(hfile.close)
+        
         with self.assertRaises(KeyError):
             del hfile['foo']
-        hfile.close()
 
     # TODO: tweak exception tables
     @ut.expectedFailure
@@ -134,13 +137,16 @@ class TestDelete(TestCase):
         """ Deleting object in readonly file raises ValueError """
         fname = self.mktemp()
         hfile = File(fname,'w')
-        hfile.create_group('foo')
-        hfile.close()
+        try:
+            hfile.create_group('foo')
+        finally:
+            hfile.close()
 
         hfile = File(fname, 'r')
+        self.addCleanup(hfile.close)
+        
         with self.assertRaises(ValueError):
             del hfile['foo']
-        hfile.close()
 
 class TestOpen(TestCase):
 
@@ -401,6 +407,9 @@ class TestVisit(TestCase):
         for x in self.groups:
             self.f.create_group(x)
 
+    def tearDown(self):
+        self.f.close()
+        
     def test_visit(self):
         """ All subgroups are visited """
         l = []
