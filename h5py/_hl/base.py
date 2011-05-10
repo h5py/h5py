@@ -6,6 +6,8 @@ import collections
 
 from h5py import h5i, h5r, h5p, h5f, h5t
 
+py3 = sys.version_info[0] == 3
+
 def is_hdf5(fname):
     """ Determine if a file is valid HDF5 (False if it doesn't exist). """
     fname = os.path.abspath(fname)
@@ -153,38 +155,49 @@ class HLObject(CommonStateObject):
     def __nonzero__(self):
         return bool(self.id)
 
+class View(object):
+
+    def __init__(self, obj):
+        self._obj = obj
+    
+    def __len__(self):
+        return len(self._obj)
+
+class KeyView(View):
+
+    def __contains__(self, what):
+        return what in self._obj
+
+    def __iter__(self):
+        for x in self._obj:
+            yield x
+
+class ValueView(View):
+
+    def __contains__(self, what):
+        raise TypeError("Containership testing doesn't work for values. :(")
+
+    def __iter__(self):
+        for x in self._obj:
+            yield self._obj[x]
+
+class ItemView(View):
+
+    def __contains__(self, what):
+        if what[0] in self._obj:
+            return what[1] == self._obj[what[0]]
+        return False
+
+    def __iter__(self):
+        for x in self._obj:
+            yield (x, self._obj[x])
+
 class DictCompat(object):
 
     """
         Contains dictionary-style compatibility methods for groups and
         attributes.
     """
-    
-    def keys(self):
-        """ Get a list containing member names """
-        return list(self)
-
-    def iterkeys(self):
-        """ Get an iterator over member names """
-        return iter(self)
-
-    def values(self):
-        """ Get a list containing member objects """
-        return [self[x] for x in self]
-
-    def itervalues(self):
-        """ Get an iterator over member objects """
-        for x in self:
-            yield self[x]
-
-    def items(self):
-        """ Get a list of tuples containing (name, object) pairs """
-        return [(x, self[x]) for x in self]
-
-    def iteritems(self):
-        """ Get an iterator over (name, object) pairs """
-        for x in self:
-            yield (x, self[x])
 
     def get(self, name, default=None):
         """ Retrieve the member, or return default if it doesn't exist """
@@ -192,25 +205,44 @@ class DictCompat(object):
             return self[name]
         return default
 
-    # Compatibility methods
-    def listnames(self):
-        """ Deprecated alias for keys() """
-        warnings.warn("listnames() is deprecated; use keys() instead", DeprecationWarning)
-        return self.keys()
-    def iternames(self):
-        """ Deprecated alias for iterkeys() """
-        warnings.warn("iternames() is deprecated; use iterkeys() instead", DeprecationWarning)
-        return self.iterkeys()
-    def listobjects(self):
-        """ Deprecated alias for values() """
-        warnings.warn("listobjects() is deprecated; use values() instead", DeprecationWarning)
-        return self.values()
-    def iterobjects(self):
-        """ Deprecated alias for itervalues() """
-        warnings.warn("iterobjects() is deprecated; use itervalues() instead", DeprecationWarning)
-        return self.itervalues()
-    def listitems(self):
-        """ Deprecated alias for items() """
-        warnings.warn("listitems() is deprecated; use items() instead", DeprecationWarning)
-        return self.items()
+    if py3:
+        def keys(self):
+            """ Get a view object on member names """
+            return KeyView(self)
+    
+        def values(self):
+            """ Get a view object on member objects """
+            return ValueView(self)
+
+        def items(self):
+            """ Get a view object on member items """
+            return ItemView(self)
+
+    else:
+        def keys(self):
+            """ Get a list containing member names """
+            return list(self)
+
+        def iterkeys(self):
+            """ Get an iterator over member names """
+            return iter(self)
+
+        def values(self):
+            """ Get a list containing member objects """
+            return [self[x] for x in self]
+
+        def itervalues(self):
+            """ Get an iterator over member objects """
+            for x in self:
+                yield self[x]
+
+        def items(self):
+            """ Get a list of tuples containing (name, object) pairs """
+            return [(x, self[x]) for x in self]
+
+        def iteritems(self):
+            """ Get an iterator over (name, object) pairs """
+            for x in self:
+                yield (x, self[x])
+
 

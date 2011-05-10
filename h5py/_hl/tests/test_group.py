@@ -1,4 +1,5 @@
 import numpy as np
+import sys
 
 from .common import ut, TestCase
 from h5py.highlevel import File, Group, SoftLink, HardLink, ExternalLink
@@ -265,10 +266,11 @@ class TestIter(BaseMapping):
         lst = [x for x in hfile]
         self.assertEqual(lst, [])
 
-class TestDict(BaseMapping):
+@ut.skipIf(sys.version_info[0] != 2, "Py2")
+class TestPy2Dict(BaseMapping):
 
     """
-        Feature: Standard Python .keys, .values, etc. methods are available
+        Feature: Standard Python 2 .keys, .values, etc. methods are available
     """
 
     def test_keys(self):
@@ -301,19 +303,32 @@ class TestDict(BaseMapping):
         self.assertSameElements([x for x in self.f.iteritems()],
             [(x, self.f[x]) for x in self.groups])
 
-class TestOldDict(BaseMapping):
+@ut.skipIf(sys.version_info[0] != 3, "Py3")
+class TestPy3Dict(BaseMapping):
 
-    """
-        Feature: Old-style listnames, etc. are still available
-    """
+    def test_keys(self):
+        """ .keys provides a key view """
+        kv = getattr(self.f, 'keys')()
+        self.assertSameElements(list(kv), self.groups)
+        for x in self.groups:
+            self.assertIn(x, kv)
+        self.assertEqual(len(kv), len(self.groups))
 
-    def test_old(self):
-        """ Old-style dict methods """
-        self.assertSameElements(self.f.listnames(), self.groups)
-        self.assertSameElements(self.f.listobjects(), [self.f[x] for x in self.groups])
-        self.assertSameElements(self.f.listitems(), [(x, self.f[x]) for x in self.groups])
-        self.assertSameElements(list(self.f.iternames()), self.groups)
-        self.assertSameElements(list(self.f.iterobjects()), [self.f[x] for x in self.groups])
+    def test_values(self):
+        """ .values provides a value view """
+        vv = getattr(self.f, 'values')()
+        self.assertSameElements(list(vv), [self.f[x] for x in self.groups])
+        self.assertEqual(len(vv), len(self.groups))
+        with self.assertRaises(TypeError):
+            b'x' in vv
+
+    def test_items(self):
+        """ .items provides an item view """
+        iv = getattr(self.f, 'items')()
+        self.assertSameElements(list(iv), [(x,self.f[x]) for x in self.groups])
+        self.assertEqual(len(iv), len(self.groups))
+        for x in self.groups:
+            self.assertIn((x, self.f[x]), iv)
 
 class TestGet(TestCase):
 
