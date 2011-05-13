@@ -68,6 +68,32 @@ class TestDelete(BaseAttrs):
             del self.f.attrs['a']
 
 
+class TestUnicode(BaseAttrs):
+
+    """
+        Feature: Attributes can be accessed via Unicode or byte strings
+    """
+
+    def test_ascii(self):
+        """ Access via pure-ASCII byte string """
+        self.f.attrs[b"ascii"] = 42
+        out = self.f.attrs[b"ascii"]
+        self.assertEqual(out, 42)
+
+    def test_raw(self):
+        """ Access via non-ASCII byte string """
+        name = b"non-ascii\xfe"
+        self.f.attrs[name] = 42
+        out = self.f.attrs[name]
+        self.assertEqual(out, 42)
+
+    def test_unicode(self):
+        """ Access via Unicode string with non-ascii characters """
+        name = u"Omega \u03A9"
+        self.f.attrs[name] = 42
+        out = self.f.attrs[name]
+        self.assertEqual(out, 42)
+
 
 
 
