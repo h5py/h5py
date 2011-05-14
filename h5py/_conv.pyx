@@ -131,7 +131,8 @@ ctypedef struct conv_size_t:
 cdef herr_t init_generic(hid_t src, hid_t dst, void** priv) except -1:
     
     cdef conv_size_t *sizes
-    priv[0] = sizes = <conv_size_t*>malloc(sizeof(conv_size_t))
+    sizes = <conv_size_t*>malloc(sizeof(conv_size_t))
+    priv[0] = sizes
     sizes[0].src_size = H5Tget_size(src)
     sizes[0].dst_size = H5Tget_size(dst)
 
