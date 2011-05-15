@@ -51,8 +51,23 @@ class Group(HLObject, DictCompat):
         return dset
 
     def require_dataset(self, name, shape, dtype, exact=False, **kwds):
-        #TODO
-        pass
+        if not name in self:
+            return self.create_dataset(name, *(shape, dtype), **kwds)
+
+        dset = self[name]
+        if not isinstance(dset, dataset.Dataset):
+            raise TypeError("Incompatible object (%s) already exists" % dset.__class__.__name__)
+
+        if not shape == dset.shape:
+            raise TypeError("Shapes do not match (existing %s vs new %s)" % (dset.shape, shape))
+
+        if exact:
+            if not dtype == dset.dtype:
+                raise TypeError("Datatypes do not exactly match (existing %s vs new %s)" % (dset.dtype, dtype))
+        elif not numpy.can_cast(dtype, dset.dtype):
+            raise TypeError("Datatypes cannot be safely cast (existing %s vs new %s)" % (dset.dtype, dtype))
+        
+        return dset
 
     def require_group(self, name):
         """ Return group, creating it if it doesn't exist.  TypeError raised
