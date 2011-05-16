@@ -57,6 +57,7 @@ _exact_table = {
     (H5E_RESOURCE, H5E_CANTINIT):   IOError,  # obj create w/o write intent 1.6
     (H5E_INTERNAL, H5E_SYSERRSTR):  IOError,  # e.g. wrong file permissions
     (H5E_DATATYPE, H5E_CANTINIT):   TypeError,  # No conversion path
+    (H5E_DATASET, H5E_CANTINIT):    TypeError,  # bad param for dataset setup
     (H5E_ARGS, H5E_CANTINIT):       TypeError,  # Illegal operation on object
     (H5E_SYM, H5E_CANTINIT):        ValueError, # Object already exists/1.8
     (H5E_ARGS, H5E_BADTYPE):        ValueError, # Invalid location in file

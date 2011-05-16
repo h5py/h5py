@@ -174,7 +174,7 @@ class TestCreateFillvalue(BaseDataset):
         self.assertAlmostEqual(dset[4], v)
 
     #TODO
-    @ut.skip("Raises H5Error")
+    #@ut.skip("Raises H5Error")
     def test_exc(self):
         """ Bogus fill value raises TypeError """
         with self.assertRaises(TypeError):
