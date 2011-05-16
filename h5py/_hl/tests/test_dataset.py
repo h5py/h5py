@@ -128,7 +128,7 @@ class TestCreateChunked(BaseDataset):
         self.assertEqual(dset.chunks, (10,))
 
     # TODO: this raises an H5Error; tweak exception tables
-    @ut.skip("exception broken")
+    #@ut.skip("exception broken")
     def test_chunks_mismatch(self):
         """ Illegal chunk size raises ValueError """
         with self.assertRaises(ValueError):
@@ -173,11 +173,9 @@ class TestCreateFillvalue(BaseDataset):
         self.assertEqual(dset.fillvalue, v)
         self.assertAlmostEqual(dset[4], v)
 
-    #TODO
-    #@ut.skip("Raises H5Error")
     def test_exc(self):
         """ Bogus fill value raises TypeError """
-        with self.assertRaises(TypeError):
+        with self.assertRaises(ValueError):
             dset = self.f.create_dataset('foo', (10,),
                     dtype=[('a','i'),('b','f')], fillvalue=42)
 
@@ -297,8 +295,6 @@ class TestResize(BaseDataset):
         dset.resize((20,60))
         self.assertEqual(dset.shape, (20,60))
 
-    # TODO: this raises H5Error
-    @ut.expectedFailure
     def test_resize_over(self):
         """ Resizing past maxshape triggers ValueError """
         dset = self.f.create_dataset('foo', (20,30), maxshape=(20,60))
