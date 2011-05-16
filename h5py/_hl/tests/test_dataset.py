@@ -127,18 +127,14 @@ class TestCreateChunked(BaseDataset):
         dset = self.f.create_dataset('foo', shape=(100,), chunks=(10,))
         self.assertEqual(dset.chunks, (10,))
 
-    # TODO: this raises an H5Error; tweak exception tables
-    #@ut.skip("exception broken")
     def test_chunks_mismatch(self):
         """ Illegal chunk size raises ValueError """
         with self.assertRaises(ValueError):
             self.f.create_dataset('foo', shape=(100,), chunks=(200,))
 
-    # TODO: this doesn't raise an exception... is that right?
-    @ut.expectedFailure
     def test_chunks_scalar(self):
-        """ Attempting to create chunked scalar dataset raises ValueError """
-        with self.assertRaises(ValueError):
+        """ Attempting to create chunked scalar dataset raises TypeError """
+        with self.assertRaises(TypeError):
             self.f.create_dataset('foo', shape=(), chunks=(50,))
 
     def test_auto_chunks(self):
