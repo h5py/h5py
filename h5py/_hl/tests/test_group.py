@@ -132,10 +132,10 @@ class TestDelete(TestCase):
         with self.assertRaises(KeyError):
             del hfile['foo']
 
-    # TODO: tweak exception tables
-    @ut.expectedFailure
     def test_readonly_delete_exception(self):
-        """ Deleting object in readonly file raises ValueError """
+        """ Deleting object in readonly file raises KeyError """
+        # Note: it is impossible to restore the old behavior (ValueError)
+        # without breaking the above test (non-existing objects)
         fname = self.mktemp()
         hfile = File(fname,'w')
         try:
@@ -146,7 +146,7 @@ class TestDelete(TestCase):
         hfile = File(fname, 'r')
         self.addCleanup(hfile.close)
         
-        with self.assertRaises(ValueError):
+        with self.assertRaises(KeyError):
             del hfile['foo']
 
 class TestOpen(TestCase):
