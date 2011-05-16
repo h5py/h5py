@@ -32,11 +32,9 @@ import _conv
 
 # Runtime imports
 import sys
+from h5 import get_config
 
-r_name = 'r'
-i_name = 'i'
-t_name = 'TRUE'
-f_name = 'FALSE'
+cfg = get_config()
 
 # === Custom C API ============================================================
 
@@ -1004,7 +1002,7 @@ cdef class TypeCompoundID(TypeCompositeID):
 
         # 1. Check if it should be converted to a complex number
         if len(field_names) == 2                                and \
-            tuple(field_names) == (r_name, i_name)    and \
+            tuple(field_names) == (cfg._r_name, cfg._i_name)    and \
             field_types[0] == field_types[1]                    and \
             field_types[0].kind == 'f':
 
@@ -1125,7 +1123,7 @@ cdef class TypeEnumID(TypeCompositeID):
             val = self.get_member_value(idx) 
             members[name] = val
 
-        ref = {f_name: 0, t_name: 1}
+        ref = {cfg._f_name: 0, cfg._t_name: 1}
 
         # Boolean types have priority over standard enums
         if members == ref:
@@ -1282,8 +1280,8 @@ cdef TypeCompoundID _c_complex(dtype dt):
         raise TypeError("Illegal length %d for complex dtype" % length)
 
     tid = H5Tcreate(H5T_COMPOUND, size)
-    H5Tinsert(tid, r_name, off_r, tid_sub)
-    H5Tinsert(tid, i_name, off_i, tid_sub)
+    H5Tinsert(tid, cfg._r_name, off_r, tid_sub)
+    H5Tinsert(tid, cfg._i_name, off_i, tid_sub)
 
     return TypeCompoundID(tid)
 

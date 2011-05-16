@@ -117,7 +117,6 @@ class TestTypes(BaseAttrs):
             self.assertEqual(out.dtype, dt)
             self.assertEqual(out[0], data[0])
 
-    @ut.expectedFailure  # cfg not defined in h5t.pyx
     def test_bool(self):
         """ Storage of NumPy booleans """
         
@@ -125,11 +124,10 @@ class TestTypes(BaseAttrs):
         data[...] = True, False
         self.f.attrs['x'] = data
         out = self.f.attrs['x']
-        self.assertEqual(out.dtype, data)
+        self.assertEqual(out.dtype, data.dtype)
         self.assertEqual(out[0], data[0])
         self.assertEqual(out[1], data[1])
 
-   # @ut.skip("Segfaults")
     def test_vlen_string_array(self):
         """ Storage of vlen byte string arrays"""
         dt = h5py.special_dtype(vlen=bytes)
