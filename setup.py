@@ -1,10 +1,16 @@
 from distutils.core import setup
 from distutils.extension import Extension
 from distutils.cmd import Command
-from Cython.Distutils import build_ext
 import sys, os
 import os.path as op
 from functools import reduce
+
+try:
+    from Cython.Distutils import build_ext
+    SUFFIX = '.pyx'
+except ImportError:
+    from distutils.commands.build_ext import build_ext
+    SUFFIX = '.c'
 
 import numpy
 
@@ -76,7 +82,7 @@ EXTRA_SRC = {'h5z': [ localpath("lzf/lzf_filter.c"),
                       localpath("lzf/lzf/lzf_d.c")]}
 
 def make_extension(module):
-    sources = [op.join('h5py', module+'.pyx')] + EXTRA_SRC.get(module, [])
+    sources = [op.join('h5py', module+SUFFIX)] + EXTRA_SRC.get(module, [])
     return Extension('h5py.'+module, sources, **COMPILER_SETTINGS)
 
 EXTENSIONS = [make_extension(m) for m in MODULES]
