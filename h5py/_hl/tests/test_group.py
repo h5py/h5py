@@ -524,12 +524,12 @@ class TestExternalLinks(TestCase):
         with self.assertRaises(KeyError):
             self.f['ext']
 
-    # TODO: This is raising KeyError; see if that's right
-    @ut.expectedFailure
+    # I would prefer IOError but there's no way to fix this as the exception
+    # class is determined by HDF5.
     def test_exc_missingfile(self):
-        """ IOerror raised when attempting to open missing file """
+        """ KeyError raised when attempting to open missing file """
         self.f['ext'] = ExternalLink('mongoose.hdf5','/foo')
-        with self.assertRaises(IOError):
+        with self.assertRaises(KeyError):
             self.f['ext']
 
 
