@@ -5,6 +5,7 @@ from h5py import h5s, h5t, h5r, h5d
 from .base import HLObject
 from . import filters
 from . import selections as sel
+from . import selections2 as sel2
 
 def make_new_dset(parent, shape=None, dtype=None, data=None,
                  chunks=None, compression=None, shuffle=None,
@@ -278,6 +279,24 @@ class Dataset(HLObject):
                     raise ValueError("Field %s does not appear in this type." % name)
             new_dtype = numpy.dtype([(name, basetype.fields[name][0]) for name in names])
 
+        # This is necessary because in the case of array types, NumPy
+        # discards the array information at the top level.
+        mtype = h5t.py_create(new_dtype)
+
+        # === Scalar dataspaces =================
+
+        if self.shape == ():
+            fspace = self.id.get_space()
+            selection = sel2.select_read(fspace, args)
+            arr = numpy.ndarray(selection.mshape, dtype=new_dtype)
+            for mspace, fspace in selection:
+                self.id.read(mspace, fspace, arr, mtype)
+            if selection.mshape is None:
+                return arr[()]
+            return arr
+
+        # === Everything else ===================
+
         # Perform the dataspace selection.
         selection = sel.select(self.shape, args, dsid=self.id)
 
@@ -295,10 +314,6 @@ class Dataset(HLObject):
         if len(mshape) < len(self.shape):
             # pad with ones
             mshape = (1,)*(len(self.shape)-len(mshape)) + mshape
-
-        # This is necessary because in the case of array types, NumPy
-        # discards the array information at the top level.
-        mtype = h5t.py_create(new_dtype)
 
         # Perfom the actual read
         mspace = h5s.create_simple(mshape)
