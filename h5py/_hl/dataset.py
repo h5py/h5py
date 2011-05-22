@@ -1,3 +1,4 @@
+import posixpath as pp
 import sys
 import numpy
 
@@ -446,7 +447,11 @@ class Dataset(HLObject):
     def __repr__(self):
         if not self:
             return "<Closed HDF5 dataset>"
-        namestr = '"%s"' % _extras.basename(self.name) if self.name is not None else "(anonymous)"
+        if self.name is None:
+            namestr = '("anonymous")'
+        else:
+            name = pp.basename(pp.normpath(self.name))
+            namestr = '"%s"' % (name if name != '' else '/')
         return '<HDF5 dataset %s: shape %s, type "%s">' % \
             (namestr, self.shape, self.dtype.str)
 

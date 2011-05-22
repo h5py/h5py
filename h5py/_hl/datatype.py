@@ -1,3 +1,5 @@
+import posixpath as pp
+
 from .base import HLObject
 
 class Datatype(HLObject):
@@ -26,6 +28,10 @@ class Datatype(HLObject):
     def __repr__(self):
         if not self.id:
             return "<Closed HDF5 named type>"
-        namestr = '"%s"' % _extras.basename(self.name) if self.name is not None else "(anonymous)"
+        if self.name is None:
+            namestr = '("anonymous")'
+        else:
+            name = pp.basename(pp.normpath(self.name))
+            namestr = '"%s"' % (name if name != '' else '/')
         return '<HDF5 named type %s (dtype %s)>' % \
             (namestr, self.dtype.str)
