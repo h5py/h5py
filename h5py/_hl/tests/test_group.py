@@ -15,6 +15,19 @@ class BaseGroup(TestCase):
         if self.f:
             self.f.close()
 
+class TestRepr(BaseGroup):
+
+    """
+        Feature: repr() works sensibly on Group objects
+    """
+
+    def test_repr(self):
+        """ repr() works on Group objects """
+        g = self.f.create_group('foo')
+        self.assertIsInstance(g, basestring)
+        self.f.close()
+        self.assertIsInstance(g, basestring)
+
 class TestCreate(TestCase):
 
     """

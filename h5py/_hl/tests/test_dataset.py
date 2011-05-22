@@ -15,6 +15,19 @@ class BaseDataset(TestCase):
         if self.f:
             self.f.close()
 
+class TestRepr(BaseDataset):
+
+    """
+        Feature: repr(Dataset) behaves sensibly
+    """
+    
+    def test_repr_open(self):
+        """ repr() works on live and dead datasets """
+        ds = self.f.create_dataset('foo', (4,))
+        self.assertIsInstance(repr(ds), basestring)
+        self.f.close()
+        self.assertIsInstance(repr(ds), basestring)
+
 class TestCreateShape(BaseDataset):
 
     """
