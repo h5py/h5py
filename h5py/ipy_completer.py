@@ -141,6 +141,9 @@ def h5py_completer(self, event):
 
     return []
 
-def activate():
-    ip = ipget()
+
+def load_ipython_extension(ip=None):
+    if ip is None:
+        ip = ipget()
     ip.set_hook('complete_command', h5py_completer, re_key=r"(?:.*\=)?(.+?)\[")
+

@@ -32,20 +32,3 @@ __doc__ = \
     HDF5 %s
 """ % (version.version, version.hdf5_version)
 
-
-import sys as _sys
-if 'IPython' in _sys.modules:
-    _ip_running = False
-    try:
-        from IPython.core.iplib import InteractiveShell as _ishell
-        _ip_running = _ishell.initialized()
-    except ImportError:
-        # support <ipython-0.11
-        from IPython import ipapi as _ipapi
-        _ip_running = _ipapi.get() is not None
-    except Exception:
-        pass
-    if _ip_running:
-        from . import _ipy_completer
-        _ipy_completer.activate()
-
