@@ -241,13 +241,10 @@ class TestContains(BaseMapping):
         self.assertIn('a', self.f)
         self.assertNotIn('mongoose', self.f)
 
-    #TODO: See if this is really the right behavior
-    @ut.expectedFailure
     def test_exc(self):
-        """ "in" on closed group raises ValueError """
+        """ "in" on closed group returns False (see also issue 174) """
         self.f.close()
-        with self.assertRaises(ValueError):
-            'a' in self.f
+        self.assertFalse('a' in self.f)
 
 class TestIter(BaseMapping):
 
