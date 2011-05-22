@@ -39,7 +39,7 @@ class AttributeManager(base.DictCompat, base.CommonStateObject):
         attr.read(arr)
 
         if len(arr.shape) == 0:
-            return numpy.asscalar(arr)
+            return arr[()]
         return arr
 
     def __setitem__(self, name, value):

@@ -20,17 +20,15 @@ class TestScalar(BaseAttrs):
         Feature: Scalar types map correctly to array scalars
     """
 
-    @ut.expectedFailure
     def test_int(self):
         """ Integers are read as correct NumPy type """
         self.f.attrs['x'] = np.array(1, dtype=np.int8)
         out = self.f.attrs['x']
         self.assertIsInstance(out, np.int8)
 
-    @ut.expectedFailure
     def test_compound(self):
         """ Compound scalars are read as numpy.void """
-        dt = np.dtype([('a','b'),('i','f')])
+        dt = np.dtype([('a','i'),('b','f')])
         data = np.array((1,4.2), dtype=dt)
         self.f.attrs['x'] = data
         out = self.f.attrs['x']
