@@ -32,7 +32,6 @@ class TestSingleElement(BaseSlicing):
         self.assertIsInstance(out, np.ndarray)
         self.assertEqual(out.shape, (1,))
 
-    @ut.expectedFailure
     def test_scalar_index(self):
         """ Slicing with [...] yields scalar ndarray """
         dset = self.f.create_dataset('x', shape=(), dtype='f')
