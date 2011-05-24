@@ -601,7 +601,7 @@ cdef class TypeStringID(TypeID):
     cdef object py_dtype(self):
         # Numpy translation function for string types
         if self.is_variable_str():
-            return special_dtype(vlen=str)
+            return special_dtype(vlen=bytes)
 
         return dtype("|S" + str(self.get_size()))
 
@@ -992,11 +992,14 @@ cdef class TypeCompoundID(TypeCompositeID):
         field_types = []
         nfields = self.get_nmembers()
 
+        import sys
+
         # First step: read field names and their Numpy dtypes into 
         # two separate arrays.
         for i from 0 <= i < nfields:
             tmp_type = self.get_member_type(i)
-            field_names.append(self.get_member_name(i))
+            name = self.get_member_name(i)
+            field_names.append(name)
             field_types.append(tmp_type.py_dtype())
 
 
@@ -1013,7 +1016,9 @@ cdef class TypeCompoundID(TypeCompositeID):
 
         # 2. Otherwise, read all fields of the compound type, in HDF5 order.
         else:
-            typeobj = dtype(zip(field_names, field_types))
+            if sys.version[0] == '3':
+                field_names = [x.decode('utf8') for x in field_names]
+            typeobj = dtype(list(zip(field_names, field_types)))
 
         return typeobj
 
@@ -1301,10 +1306,11 @@ cdef TypeCompoundID _c_compound(dtype dt, int logical):
 
     offset = 0
     for name in names:
+        ename = name.encode('utf8') if isinstance(name, unicode) else name
         dt_tmp = dt.fields[name][0]
         type_tmp = py_create(dt_tmp, logical=logical)
         H5Tset_size(tid, offset+type_tmp.get_size())
-        H5Tinsert(tid, name, offset, type_tmp.id)
+        H5Tinsert(tid, ename, offset, type_tmp.id)
         offset += type_tmp.get_size()
 
     return TypeCompoundID(tid)
@@ -1427,8 +1433,8 @@ def special_dtype(**kwds):
     name, val = kwds.popitem()
 
     if name == 'vlen':
-        if val is not str:
-            raise NotImplementedError("Only string vlens are currently supported")
+        if val is not bytes:
+            raise NotImplementedError("Only byte-string vlens are currently supported")
 
         return dtype(('O', [( ({'type': val},'vlen'), 'O' )] ))
 

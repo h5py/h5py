@@ -35,10 +35,10 @@ cdef class H5PYConfig:
     def __init__(self):
         self.API_16 = False
         self.API_18 = True
-        self._r_name = 'r'
-        self._i_name = 'i'
-        self._f_name = 'FALSE'
-        self._t_name = 'TRUE'
+        self._r_name = b'r'
+        self._i_name = b'i'
+        self._f_name = b'FALSE'
+        self._t_name = b'TRUE'
 
     property complex_names:
         """ Settable 2-tuple controlling how complex numbers are saved.
@@ -47,15 +47,27 @@ cdef class H5PYConfig:
         """
 
         def __get__(self):
-            return (self._r_name, self._i_name)
+            import sys
+            def handle_val(val):
+                if sys.version[0] == '3':
+                    return val.decode('utf8')
+                return val
+            return (handle_val(self._r_name), handle_val(self._i_name))
 
         def __set__(self, val):
+            def handle_val(val):
+                if isinstance(val, unicode):
+                    return val.encode('utf8')
+                elif isinstance(val, bytes):
+                    return val
+                else:
+                    return bytes(val)
             try:
                 if len(val) != 2: raise TypeError()
-                r = str(val[0])
-                i = str(val[1])
+                r = handle_val(val[0])
+                i = handle_val(val[1])
             except Exception:
-                raise TypeError("complex_names must be a length-2 sequence of names (real, img)")
+                raise TypeError("complex_names must be a length-2 sequence of strings (real, img)")
             self._r_name = r
             self._i_name = i
 
