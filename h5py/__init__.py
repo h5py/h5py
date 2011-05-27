@@ -24,7 +24,7 @@ from h5py import version
 
 __doc__ = \
 """
-    This is the h5py package, a Python interface to the HDF5 
+    This is the h5py package, a Python interface to the HDF5
     scientific data format.
 
     Version %s
@@ -32,3 +32,22 @@ __doc__ = \
     HDF5 %s
 """ % (version.version, version.hdf5_version)
 
+
+def enable_ipython_completer():
+    import sys
+    if 'IPython' in sys.modules:
+        ip_running = False
+        try:
+            from IPython.core.interactiveshell import InteractiveShell
+            ip_running = InteractiveShell.initialized()
+        except ImportError:
+            # support <ipython-0.11
+            from IPython import ipapi as _ipapi
+            ip_running = _ipapi.get() is not None
+        except Exception:
+            pass
+        if ip_running:
+            from . import ipy_completer
+            return ipy_completer.load_ipython_extension()
+
+    raise RuntimeError('completer must be enabled in active ipython session')
