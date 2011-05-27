@@ -3,9 +3,9 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-###########################################
-Welcome to HDF5 for Python's documentation!
-###########################################
+###############################################
+HDF5 for Python 1.4 (BETA) Online Documentation
+###############################################
 
 Contents:
 
