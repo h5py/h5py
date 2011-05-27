@@ -17,13 +17,13 @@ file contains 3 groups, "foo", "bar", and "baz"::
    In [4]: f['foo'
 
    In [4]: f['foo'].<TAB>
-   f['bye'].attrs            f['bye'].items            f['bye'].ref
-   f['bye'].copy             f['bye'].iteritems        f['bye'].require_dataset
-   f['bye'].create_dataset   f['bye'].iterkeys         f['bye'].require_group
-   f['bye'].create_group     f['bye'].itervalues       f['bye'].values
-   f['bye'].file             f['bye'].keys             f['bye'].visit
-   f['bye'].get              f['bye'].name             f['bye'].visititems
-   f['bye'].id               f['bye'].parent
+   f['foo'].attrs            f['foo'].items            f['foo'].ref
+   f['foo'].copy             f['foo'].iteritems        f['foo'].require_dataset
+   f['foo'].create_dataset   f['foo'].iterkeys         f['foo'].require_group
+   f['foo'].create_group     f['foo'].itervalues       f['foo'].values
+   f['foo'].file             f['foo'].keys             f['foo'].visit
+   f['foo'].get              f['foo'].name             f['foo'].visititems
+   f['foo'].id               f['foo'].parent
 
 The easiest way to enable the custom completer is to do the following in an
 IPython session::
