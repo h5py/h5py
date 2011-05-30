@@ -65,11 +65,16 @@ class CommonStateObject(object):
 
         - Binary strings are always passed as-is, h5t.CSET_ASCII
         - Unicode strings are encoded utf8, h5t.CSET_UTF8
+
+        If name is None, returns either None or (None, None) appropriately.
         """
         def get_lcpl(coding):
             lcpl = self._shared.lcpl.copy()
             lcpl.set_char_encoding(coding)
             return lcpl
+
+        if name is None:
+            return (None, None) if lcpl else None
 
         if isinstance(name, bytes):
             coding = h5t.CSET_ASCII
@@ -86,7 +91,12 @@ class CommonStateObject(object):
 
         - Try to decode utf8
         - Failing that, return the byte string
+
+        If name is None, returns None.
         """
+        if name is None:
+            return None
+
         try:
             return name.decode('utf8')
         except UnicodeDecodeError:
