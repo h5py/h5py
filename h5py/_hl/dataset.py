@@ -142,12 +142,15 @@ class Dataset(HLObject):
         
     @property
     def maxshape(self):
+        """Shape up to which this dataset can be resized.  Axes with value
+        None have no resize limit. """
         space = self.id.get_space()
         dims = space.get_simple_extent_dims(True)
         return tuple(x if x != h5s.UNLIMITED else None for x in dims)
 
     @property
     def fillvalue(self):
+        """Fill value for this dataset (0 by default)"""
         arr = numpy.ndarray((1,), dtype=self.dtype)
         dcpl = self._dcpl.get_fill_value(arr)
         return arr[0]

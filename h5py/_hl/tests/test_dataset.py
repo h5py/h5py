@@ -174,6 +174,11 @@ class TestCreateFillvalue(BaseDataset):
         self.assertEqual(dset.fillvalue, 3.0)
         self.assertNotIsInstance(dset.fillvalue, np.ndarray)
 
+    def test_property_none(self):
+        """ .fillvalue property works correctly if not set """
+        dset = self.f.create_dataset('foo', (10,))
+        self.assertEqual(dset.fillvalue, 0)
+
     def test_compound(self):
         """ Fill value works with compound types """
         dt = np.dtype([('a','f4'),('b','i8')])
