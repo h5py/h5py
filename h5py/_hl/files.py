@@ -127,7 +127,7 @@ class File(Group):
                 pass
             fapl = make_fapl(driver,libver,**kwds)
             fid = make_fid(name, mode, fapl)
-        Group.__init__(self, None, None, bind=fid)
+        Group.__init__(self, fid)
         self._shared.lcpl = make_lcpl()
         self._shared.lapl = make_lapl()
         self._shared.mode = mode

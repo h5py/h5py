@@ -19,11 +19,10 @@ class Datatype(HLObject):
         """Numpy dtype equivalent for this datatype"""
         return self.id.dtype
 
-    def __init__(self, grp, name, bind=None):
-        """ Private constructor.
+    def __init__(self, bind):
+        """ Create a new Datatype object by binding to a low-level TypeID.
         """
-        id_ = bind if bind is not None else h5t.open(grp.id, name)
-        HLObject.__init__(self, id_)
+        HLObject.__init__(self, bind)
 
     def __repr__(self):
         if not self.id:

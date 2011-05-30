@@ -159,26 +159,9 @@ class Dataset(HLObject):
     def regionref(self):
         return _RegionProxy(self)
 
-    def __init__(self, group, name, shape=None, dtype=None, data=None,
-                chunks=None, compression=None, shuffle=None,
-                fletcher32=None, maxshape=None, compression_opts=None, bind=None):
-        """ Don't manually create dataset objects.  Use Group.create_dataset
-        to make new datasets, and indexing (file['name']) to open them.
-
-        Constructor is provided for backwards compatibility only.
+    def __init__(self, bind):
+        """ Create a new Dataset object by binding to a low-level DatasetID.
         """
-        if bind is None:
-            # TODO: update this for unicode & add tests
-            # Old constructor behavior
-            if data is None and shape is None:
-                if any((dtype,chunks,compression,shuffle,fletcher32)):
-                    raise ValueError('You cannot specify keywords when opening a dataset.')
-                bind = h5d.open(group.id, self._e(name))
-            else:
-                bind = make_dset_id(group, name, shape, dtype, data, chunks,
-                compression, shuffle, fletcher32, maxshape, compression_opts)
-                name, lcpl = self._e(name, lcpl=True)
-                h5o.link(bind, group.id, name, lcpl=lcpl)
 
         HLObject.__init__(self, bind)
 

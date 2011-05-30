@@ -11,21 +11,9 @@ class Group(HLObject, DictCompat):
     """ Represents an HDF5 group.
     """
 
-    def __init__(self, parent_object, name, create=False, bind=None):
-        """ Don't manually create Group objects.  Use File.create_group to
-        make new groups, and indexing syntax (file['name']) to open them.
-
-        This constructor is provided for backwards compatibility only.
+    def __init__(self, bind):
+        """ Create a new Group object by binding to a low-level GroupID.
         """
-        if bind is None:
-            # TODO: this is completely broken
-            if create:
-                bind = h5g.create(self.id, name, lcpl=self._shared.lcpl)
-            else:
-                bind = get(parent_object, name)
-                if not isinstance(bind, h5g.GroupID):
-                    raise TypeError("%s is not an HDF5 group" % name)
-
         HLObject.__init__(self, bind)
         
     def create_group(self, name):
@@ -36,7 +24,7 @@ class Group(HLObject, DictCompat):
         """
         name, lcpl = self._e(name, lcpl=True)
         gid = h5g.create(self.id, name, lcpl=lcpl)
-        return Group(None, None, bind=gid)
+        return Group(gid)
 
     def create_dataset(self, name, shape=None, dtype=None, data=None, **kwds):
         """ Create a new HDF5 dataset
@@ -77,7 +65,7 @@ class Group(HLObject, DictCompat):
         """
 
         dsid = dataset.make_new_dset(self, shape, dtype, data, **kwds)
-        dset = dataset.Dataset(None, None, bind=dsid)
+        dset = dataset.Dataset(dsid)
         if name is not None:
             self[name] = dset
         return dset
@@ -123,11 +111,11 @@ class Group(HLObject, DictCompat):
 
         otype = h5i.get_type(oid)
         if otype == h5i.GROUP:
-            return Group(None, None, bind=oid)
+            return Group(oid)
         elif otype == h5i.DATASET:
-            return dataset.Dataset(None, None, bind=oid)
+            return dataset.Dataset(oid)
         elif otype == h5i.DATATYPE:
-            return datatype.Datatype(None, None, bind=oid)
+            return datatype.Datatype(oid)
         else:
             raise TypeError("Unknown object type")
 
