@@ -157,6 +157,10 @@ class Dataset(HLObject):
 
     @property
     def regionref(self):
+        """Create a region reference.  The syntax is regionref[<slices>].
+        For example, dset.regionref[...] creates a region reference in which
+        the whole dataset is selected.
+        """
         return _RegionProxy(self)
 
     def __init__(self, bind):
@@ -169,7 +173,7 @@ class Dataset(HLObject):
         self._filters = filters.get_filters(self._dcpl)
 
     def resize(self, size, axis=None):
-        """ Resize the dataset, or the specified axis (HDF5 1.8 only).
+        """ Resize the dataset, or the specified axis.
 
         The dataset must be stored in chunked format; it can be resized up to
         the "maximum shape" (keyword maxshape) specified at creation time.
@@ -179,7 +183,7 @@ class Dataset(HLObject):
 
         BEWARE: This functions differently than the NumPy resize() method!
         The data is not "reshuffled" to fit in the new shape; each axis is
-        grown or shrunk independently.  The coordinates of existing data is
+        grown or shrunk independently.  The coordinates of existing data are
         fixed.
         """
         if self.chunks is None:
@@ -242,7 +246,6 @@ class Dataset(HLObject):
         Also supports:
 
         * Boolean "mask" array indexing
-        * Advanced dataspace selection via the "selections" module
         """
         args = args if isinstance(args, tuple) else (args,)
 
@@ -319,8 +322,6 @@ class Dataset(HLObject):
         NumPy's broadcasting rules are honored, for "simple" indexing
         (slices and integers).  For advanced indexing, the shapes must
         match.
-
-        Classes from the "selections" module may also be used to index.
         """
         args = args if isinstance(args, tuple) else (args,)
 
@@ -380,8 +381,7 @@ class Dataset(HLObject):
         """ Read data directly from HDF5 into an existing NumPy array.
 
         The destination array must be C-contiguous and writable.
-        Selections may be any operator class (HyperSelection, etc) in
-        h5py.selections, or the output of numpy.s_[<args>].
+        Selections must be the output of numpy.s_[<args>].
 
         Broadcasting is supported for simple indexing.
         """
@@ -402,8 +402,7 @@ class Dataset(HLObject):
     def write_direct(self, source, source_sel=None, dest_sel=None):
         """ Write data directly to HDF5 from a NumPy array.
 
-        The source array must be C-contiguous.  Selections may be any
-        operator class (HyperSelection, etc) in h5py.selections, or
+        The source array must be C-contiguous.  Selections must be
         the output of numpy.s_[<args>].
 
         Broadcasting is supported for simple indexing.
@@ -423,6 +422,10 @@ class Dataset(HLObject):
             self.id.write(mspace, fspace, source)
 
     def __array__(self, dtype=None):
+        """ Create a Numpy array containing the whole dataset.  DON'T THINK
+        THIS MEANS DATASETS ARE INTERCHANGABLE WITH ARRAYS.  For one thing,
+        you have to read the whole dataset everytime this method is called.
+        """
         arr = numpy.empty(self.shape, dtype=self.dtype if dtype is None else dtype)
         self.read_direct(arr)
         return arr
