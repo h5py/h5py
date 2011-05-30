@@ -38,13 +38,45 @@ class Group(HLObject, DictCompat):
         gid = h5g.create(self.id, name, lcpl=lcpl)
         return Group(None, None, bind=gid)
 
-    def create_dataset(self, name, shape=None, dtype=None, data=None,
-                 chunks=None, compression=None, shuffle=None,
-                 fletcher32=None, maxshape=None, compression_opts=None,
-                 fillvalue=None):
-        dsid = dataset.make_new_dset(self, shape, dtype, data, chunks,
-                compression, shuffle, fletcher32, maxshape, compression_opts,
-                fillvalue)
+    def create_dataset(self, name, shape=None, dtype=None, data=None, **kwds):
+        """ Create a new HDF5 dataset
+
+        name
+            Name of the dataset (absolute or relative).  Provide None to make
+            an anonymous dataset.
+        shape
+            Dataset shape.  Use "()" for scalar datasets.  Required if "data"
+            isn't provided.
+        dtype
+            Numpy dtype or string.  If omitted, dtype('f') will be used.
+            Required if "data" isn't provided; otherwise, overrides data
+            array's dtype.
+        data
+            Provide data to initialize the dataset.  If used, you can omit
+            shape and type arguments.
+
+        Keyword-only arguments:
+        
+        chunks
+            (Tuple) Chunk shape, or True to enable auto-chunking.
+        maxshape
+            (Tuple) Make the dataset resizable up to this shape.  Use None for
+            axes you want to be unlimited.
+        compression
+            (String) Compression strategy.  Legal values are 'gzip', 'szip',
+            'lzf'.  Can also use an integer in range(10) indicating gzip
+        compression_opts
+            Compression settings.  This is an integer for gzip, 2-tuple for
+            szip, etc.
+        shuffle
+            (T/F) Enable shuffle filter.
+        fletcher32
+            (T/F) Enable fletcher32 error detection.
+        fillvalue
+            (Scalar) Use this value for uninitialized parts of the dataset.
+        """
+
+        dsid = dataset.make_new_dset(self, shape, dtype, data, **kwds)
         dset = dataset.Dataset(None, None, bind=dsid)
         if name is not None:
             self[name] = dset
