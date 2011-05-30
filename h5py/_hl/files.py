@@ -59,7 +59,7 @@ def make_fid(name, mode, plist):
     return fid
 
 def make_lapl():
-    """Default link access property list (1.8)"""
+    """Default link access property list"""
 
     lapl = h5p.create(h5p.LINK_ACCESS)
     fapl = h5p.create(h5p.FILE_ACCESS)
@@ -68,7 +68,7 @@ def make_lapl():
     return lapl
 
 def make_lcpl():
-    """Default link creation property list (1.8)"""
+    """Default link creation property list"""
     lcpl = h5p.create(h5p.LINK_CREATE)
     lcpl.set_create_intermediate_group(True)
     return lcpl
@@ -76,7 +76,7 @@ def make_lcpl():
 class File(Group):
 
     """
-        Represents an HDF5 file
+        Represents an HDF5 file.
     """
 
     @property
