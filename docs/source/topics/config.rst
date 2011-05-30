@@ -1,11 +1,27 @@
 Configuring h5py
 ================
 
+Library configuration
+---------------------
+
+A few library options are available to change the behavior of the library.
+You can get a reference to the global library configuration object via the
+function ``h5py.get_config()``.  This object supports the following attributes:
+
+    **complex_names**
+        Set to a 2-tuple of strings (real, imag) to control how complex numbers
+        are saved.  The default is ('r','i').
+
+    **bool_names**
+        Booleans are saved as HDF5 enums.  Set this to a 2-tuple of strings
+        (false, true) to control the names used in the enum.  The default
+        is ("FALSE", "TRUE").
+
 
 IPython
 -------
 
-h5py ships with a custom ipython completer, which provides object introspection
+H5py ships with a custom ipython completer, which provides object introspection
 and tab completion for h5py objects in an ipython session. For example, if a
 file contains 3 groups, "foo", "bar", and "baz"::
 

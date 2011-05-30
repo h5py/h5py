@@ -41,7 +41,7 @@ class Group(HLObject, DictCompat):
             array's dtype.
         data
             Provide data to initialize the dataset.  If used, you can omit
-            shape and type arguments.
+            shape and dtype arguments.
 
         Keyword-only arguments:
         
@@ -52,7 +52,7 @@ class Group(HLObject, DictCompat):
             axes you want to be unlimited.
         compression
             (String) Compression strategy.  Legal values are 'gzip', 'szip',
-            'lzf'.  Can also use an integer in range(10) indicating gzip
+            'lzf'.  Can also use an integer in range(10) indicating gzip.
         compression_opts
             Compression settings.  This is an integer for gzip, 2-tuple for
             szip, etc.

@@ -66,6 +66,17 @@ Group objects implement the following subset of the Python "mapping" interface:
 - :meth:`__delitem__() <Group.__delitem__>`
 - :meth:`get() <Group.get>`
 
+Python 3 dict interface
+-----------------------
+
+When using h5py from Python 3, the keys(), values() and items() methods
+will return view-like objects instead of lists.  These objects support
+containership testing and iteration, but can't be sliced like lists.
+
+The iterkeys(), itervalues(), and iteritems() methods are likewise not
+available in Python 3.  You may wish to use the standard conversion script
+2to3 which ships with Python to accomodate these changes.
+
 .. _softlinks:
 
 Soft links

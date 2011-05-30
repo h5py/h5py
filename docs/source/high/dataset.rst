@@ -4,10 +4,10 @@
 Datasets
 ========
 
-Datasets, like NumPy arrays, they are homogenous collections of data elements,
-with an immutable datatype and (hyper)rectangular shape.  Unlike NumPy arrays,
-they support a variety of transparent storage features such as compression,
-error-detection, and chunked I/O.
+Datasets are very similar to NumPy arrays.  They are homogenous collections of
+data elements, with an immutable datatype and (hyper)rectangular shape.
+Unlike NumPy arrays, they support a variety of transparent storage features
+such as compression, error-detection, and chunked I/O.
 
 They are represented in h5py by a thin proxy class which supports familiar
 NumPy operations like slicing, along with a variety of descriptive attributes.
@@ -31,8 +31,9 @@ Special features
 ----------------
 
 Unlike memory-resident NumPy arrays, HDF5 datasets support a number of optional
-features.  These are enabled by the keywords provided to
-:meth:`Group.create_dataset`.  Some of the more useful are:
+features which control how the data is stored on disk.  These are enabled by
+the keywords provided to :meth:`Group.create_dataset`.  Some of the more
+useful are:
 
 Chunked storage
     HDF5 can store data in "chunks" indexed by B-trees, as well as in the
@@ -68,7 +69,7 @@ Resizing
         >>> dset.shape
         (20, 20)
 
-    Resizing an array with existing data works differently than in NumPy; if
+.. note:: Resizing an array with existing data works differently than in NumPy; if
     any axis shrinks, the data in the missing region is discarded.  Data does
     not "rearrange" itself as it does when resizing a NumPy array.
 
@@ -83,7 +84,7 @@ selections, and are are a fast and efficient way to access data in the file.
 The following slicing arguments are recognized:
 
     * Numbers: anything that can be converted to a Python long
-    * Slice objects: please note negative values are not allowed
+    * Slices (i.e. ``[:]`` or ``[0:10]``)
     * Field names, in the case of compound data
     * At most one ``Ellipsis`` (``...``) object
 
@@ -165,19 +166,6 @@ this operation is a 1-D array with elements arranged in the standard NumPy
     >>> result.shape
     (49,)
 
-Additionally, the ``selections`` module contains additional classes which
-provide access to native HDF5 dataspace selection techniques.  These include
-explicit point-based selection and hyperslab selections combined with logical
-operations (AND, OR, XOR, etc).  Any instance of a ``selections.Selection``
-subclass can be used for indexing directly:
-
-    >>> dset = f.create_dataset("MyDS2", (100,100), 'i')
-    >>> dset[...] = np.arange(100*100).reshape((100,100))
-    >>> sel = h5py.selections.PointSelection((100,100))
-    >>> sel.append([(1,1), (57,82)])
-    >>> dset[sel]
-    array([ 101, 5782])
-
 Length and iteration
 --------------------
 
@@ -188,10 +176,8 @@ dataset while iterating has undefined results.
 
 .. note::
 
-    Since Python's ``len`` is limited by the size of a C long, it's
-    recommended you use the syntax ``dataset.len()`` instead of
-    ``len(dataset)`` on 32-bit platforms, if you expect the length of the
-    first row to exceed 2**32.
+    On 32-bit platforms, len() will fail if the first axis is bigger than 2**32.
+    You can use the method ``dataset.len()`` to get around this.
 
 Reference
 ---------
@@ -209,6 +195,7 @@ Reference
     .. autoattribute:: h5py.Dataset.compression_opts
     .. autoattribute:: h5py.Dataset.shuffle
     .. autoattribute:: h5py.Dataset.fletcher32
+    .. autoattribute:: h5py.Dataset.fillvalue
 
     .. autoattribute:: h5py.Dataset.regionref
 

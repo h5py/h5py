@@ -55,7 +55,7 @@ Installing on Linux/Mac OS-X
 ----------------------------
 
 This package is designed to be installed from source.  You will need
-Python and a C compiler, for setuptools to build the extensions.
+Python and a C compiler.  Setuptools and Cython are *not* required.
 
 Requires
 ^^^^^^^^
@@ -63,18 +63,18 @@ Requires
 - Python 2.6, 2.7 or 3.2
 - C headers for Python (usually "python-dev" or similar)
 - Numpy_ 1.0.3 or higher
-- HDF5_ 1.8.3 or higher
+- HDF5_ 1.8.3 or higher (with headers, "libhdf5-dev" or similar)
 
 .. _Numpy: http://numpy.scipy.org/
 .. _HDF5: http://www.hdfgroup.com/HDF5
 
-Please note that Cython (or Pyrex) is *not* required to build h5py.
 
 Quick installation
 ^^^^^^^^^^^^^^^^^^
 
-H5py can now be automatically installed by setuptools' easy_install command.
-You don't need to download anything; just run the command::
+H5py can now be automatically installed, for example with setuptools'
+easy_install command.  You don't need to download anything; just run the
+command::
 
     $ [sudo] easy_install h5py
 
@@ -108,25 +108,15 @@ Keep in mind that on some platforms, ``sudo`` will filter out your environment
 variables.  If you need to be a superuser to run easy_install, you might
 want to issue all three of these commands in a root shell.
 
-Settings issued with the ``configure`` command will always override those set
-with environment variables.  Also, for technical reasons the configure command
-must be run by itself, before any build commands.
-
-The standard command::
-
-    $ python setup.py clean
-
-will clean up all temporary files, including the output of ``configure``.
 
 Testing
 -------
 
-Running unit tests can help diagnose problems unique to your platform or
-software configuration.  For the Unix version of h5py, running the command::
+Running unit tests can help both you and the entire h5py community.  If you're
+installing from a tarball we strongly recommend running the test suite
+first::
 
     $ python setup.py test
-
-before installing will run the h5py test suite.
 
 Please report any failing tests to the mailing list (h5py at googlegroups.com),
 or file a bug report at http://h5py.googlecode.com.

@@ -34,9 +34,39 @@ driver you want to use when the file is opened::
     >>> f = h5py.File('myfile.hdf5', driver=<driver name>, <driver_kwds>)
 
 For example, the HDF5 "core" driver can be used to create a purely in-memory
-HDF5 file, optionally written out to disk when it is closed.  See the File
-class documentation for an exhaustive list.
+HDF5 file, optionally written out to disk when it is closed.  Here's a list
+of supported drivers and their options:
 
+    None
+        **Strongly recommended.** Use the standard HDF5 driver appropriate
+        for the current platform. On UNIX, this is the H5FD_SEC2 driver;
+        on Windows, it is H5FD_WINDOWS.
+
+    'sec2'
+        Unbuffered, optimized I/O using standard POSIX functions.
+
+    'stdio' 
+        Buffered I/O using functions from stdio.h.
+
+    'core'
+        Memory-map the entire file; all operations are performed in
+        memory and written back out when the file is closed.  Keywords:
+
+        backing_store:  If True (default), save changes to a real file
+                        when closing.  If False, the file exists purely
+                        in memory and is discarded when closed.
+
+        block_size:     Increment (in bytes) by which memory is extended.
+                        Default is 64k.
+
+    'family'
+        Store the file on disk as a series of fixed-length chunks.  Useful
+        if the file system doesn't allow large files.  Note: the filename
+        you provide *must* contain a printf-style integer format code
+        (e.g. %d"), which will be replaced by the file sequence number.
+        Keywords:
+
+        memb_size:  Maximum file size (default is 2**31-1).
 
 Version Bounding
 ----------------
@@ -51,6 +81,12 @@ specify the minimum and maximum sophistication of these structures:
     >>> f = h5py.File('name.hdf5', libver='earliest') # most compatible
     >>> f = h5py.File('name.hdf5', libver='latest')   # most modern
 
+Here "latest" means that HDF5 will always use the newest version of these
+structures without particular concern for backwards compatibility.  The
+"earliest" option means that HDF5 will make a *best effort* to be backwards
+compatible.
+
+The default is "earliest".
 
 Reference
 ---------

@@ -37,9 +37,6 @@ opening any other object:
     >>> print mygroup2
     <HDF5 group "/some/group" (0 members)>
 
-You don't have to use a File object to do this.  As when using absolute paths,
-any Group object in the same file will do.
-
 Using region references
 -----------------------
 

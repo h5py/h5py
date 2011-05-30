@@ -3,11 +3,8 @@
 Quick Start Guide
 =================
 
-This document is a very quick overview of both HDF5 and h5py.  More
-comprehensive documentation is available at:
-
-* :ref:`h5pyreference`
-* `The h5py FAQ (at Google Code) <http://code.google.com/p/h5py/wiki/FAQ>`_
+This document is a very quick overview of both HDF5 and h5py.  You may also
+want to consult `the h5py FAQ (at Google Code) <http://code.google.com/p/h5py/wiki/FAQ>`_.
 
 The `HDF Group <http://www.hdfgroup.org>`_ is the final authority on HDF5.
 They also have an `introductory tutorial <http://www.hdfgroup.org/HDF5/Tutor/>`_
@@ -20,7 +17,7 @@ It's a filesystem for your data.
 
 More accurately, it's a widely used scientific file format for archiving and
 sharing large amounts of numerical data.  HDF5 files contain *datasets*, which
-are homogenous, regular arrays of data (like NumPy arrays), and *groups*,
+are homogenous, regular arrays of data, like NumPy arrays, and *groups*,
 which are containers that store datasets and other groups.
 
 In this sense, the structure of an HDF5 file is analagous to a POSIX filesystem.
@@ -66,11 +63,13 @@ Since examples are better than long-winded explanations, here's how to:
     * Make a new file
     * Create an integer dataset, with shape (100,100)
     * Initialize the dataset to the value 42
+    * Close the file
 
     >>> import h5py
     >>> f = h5py.File('myfile.hdf5')
     >>> dset = f.create_dataset("MyDataset", (100, 100), 'i')
     >>> dset[...] = 42
+    >>> f.close()
 
 The :ref:`File <hlfile>` constructor accepts modes similar to Python file modes,
 including "r", "w", and "a" (the default):
@@ -78,7 +77,7 @@ including "r", "w", and "a" (the default):
     >>> f = h5py.File('file1.hdf5', 'w')    # overwrite any existing file
     >>> f = h5py.File('file2.hdf5', 'r')    # open read-only
 
-The :ref:`Dataset <datasets>` object ``dset`` here represents a new 2-d HDF5
+The :ref:`Dataset <datasets>` object ``dset`` above represents a new 2-d HDF5
 dataset.  Some features will be familiar to NumPy users::
 
     >>> dset.shape
@@ -93,7 +92,7 @@ You can even automatically create a dataset from an existing array:
     >>> dset = f.create_dataset('AnotherDataset', data=arr)
 
 HDF5 datasets support many other features, like chunking and transparent 
-compression.  See the section ":ref:`datasets`" for more info.
+compression.  See the section "ref:`datasets` for more info.
 
 Getting your data back
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -110,24 +109,21 @@ along with some emulated advanced indexing features
 (see :ref:`sparse_selection`):
 
     * Boolean array indexing (``array[ array[...] > 0.5 ]``)
-    * Discrete coordinate selection (see the ``selections`` module)
 
 Closing the file
 ^^^^^^^^^^^^^^^^
 
-You don't need to do anything special to "close" datasets.  However, as with
-Python files you should close the file before exiting::
+You don't need to do anything special to "close" datasets or groups when you're
+done with them  However, as with Python files you should close the file
+before exiting::
 
     >>> f.close()
-
-H5py tries to close all objects on exit (or when they are no longer referenced),
-but it's good practice to close your files anyway.
-
 
 Groups & multiple objects
 -------------------------
 
-When creating the dataset above, we gave it a name::
+When creating the dataset in the first example, we gave it the name
+"MyDataset".  The Python property ".name" lets us look this up:
 
     >>> dset.name
     '/MyDataset'
@@ -152,8 +148,12 @@ POSIX-style paths::
     >>> dset2 = subgroup['MyOtherDataset']
     >>> dset2 = f['/SubGroup/MyOtherDataset']   # equivalent
 
-Groups (including File objects; ``"f"`` in this example) support other
-dictionary-like operations::
+The canny reader will have noticed that File objects support the same
+operations as Group objects.  In fact, File is implemented as a subclass
+of Group.  This reflects the long-term principle in the HDF5 C API that files
+and groups are largely interchangable.
+
+Groups support other dictionary-like operations::
 
     >>> list(f)
     ['MyDataset', 'SubGroup']
@@ -163,7 +163,7 @@ dictionary-like operations::
     True
     >>> del f['MyDataset']
 
-As a safety feature, you can't create an object with a pre-existing name;
+Unlike dictionaries, you can't create an object with a pre-existing name;
 you have to manually delete the existing object first::
 
     >>> grp = f.create_group("NewGroup")
@@ -179,7 +179,7 @@ HDF5 lets you associate small bits of data with both groups and datasets.
 This can be used for metadata like descriptive titles or timestamps.
 
 A dictionary-like object which exposes this behavior is attached to every
-Group and Dataset object as the attribute ``attrs``.  You can store any scalar
+Group and Dataset object as property ``attrs``.  You can store any scalar
 or array value you like::
 
     >>> dset.attrs
@@ -209,9 +209,6 @@ of these features are:
 * :ref:`Soft and external links <softlinks>`
 * :ref:`Object and region references <refs>`
 
-
-Full documentation on files, groups, datasets and attributes is available
-in the section ":ref:`h5pyreference`".
 
 
 

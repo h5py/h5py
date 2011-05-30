@@ -15,12 +15,6 @@ cdef class H5PYConfig:
         Provides runtime access to global library settings.  You retrieve the
         master copy of this object by calling h5py.get_config().
 
-        API_16 (T/F, readonly)
-            Is the HDF5 1.6 API available?  Currently always true.
-
-        API_18 (T/F, readonly)
-            If the HDF5 1.8 API available?
-
         complex_names (tuple, r/w)
             Settable 2-tuple controlling how complex numbers are saved.
             Defaults to ('r','i').
@@ -31,8 +25,6 @@ cdef class H5PYConfig:
     """
 
     def __init__(self):
-        self.API_16 = False
-        self.API_18 = True
         self._r_name = b'r'
         self._i_name = b'i'
         self._f_name = b'FALSE'
@@ -86,20 +78,6 @@ cdef class H5PYConfig:
                 raise TypeError("bool_names must be a length-2 sequence of of names (false, true)")
             self._f_name = f
             self._t_name = t
-
-    def __repr__(self):
-        rstr =  \
-"""\
-Summary of h5py config
-======================
-HDF5: %s
-1.6 API: %s
-1.8 API: %s
-Complex names: %s"""
-
-        rstr %= ("%d.%d.%d" % get_libversion(), bool(self.API_16),
-                bool(self.API_18), self.complex_names)
-        return rstr
 
 cdef H5PYConfig cfg = H5PYConfig()
 

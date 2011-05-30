@@ -10,7 +10,7 @@ has a small proxy object (:class:`AttributeManager`) attached to it as
 ``<obj>.attrs``.  Attributes have the following properties:
 
 - They may be created from any scalar or NumPy array
-- Each attribute must be small (recommended < 64k for HDF5 1.6)
+- Each attribute should be small (generally < 64k)
 - There is no partial I/O (i.e. slicing); the entire attribute must be read.
 
 They support the same dictionary API as groups.

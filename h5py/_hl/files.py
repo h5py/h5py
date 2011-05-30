@@ -115,8 +115,9 @@ class File(Group):
         return tuple(libver_dict_r[x] for x in bounds)
 
     def __init__(self, name, mode=None, driver=None, libver=None, **kwds):
-        """ Create a new file object.  See the h5py user guide for a
-        detailed explanation of the options.
+        """Create a new file object.
+
+        See the h5py user guide for a detailed explanation of the options.
 
         name
             Name of the file on disk.  Note: for files created with the 'core'
@@ -127,7 +128,7 @@ class File(Group):
         libver
             Library version bounds.  Currently only the strings 'earliest'
             and 'latest' are defined.
-       Additional keywords
+        Additional keywords
             Passed on to the selected file driver.
         """
         if isinstance(name, HLObject):

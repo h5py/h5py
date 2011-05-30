@@ -4,7 +4,7 @@ What's new in h5py 1.4
 HDF5 for Python (h5py) 1.4 represents the first major refactoring of the h5py
 codebase since the project's launch in 2008.  Many of the most important
 changes are behind the scenes, and include changes to the way h5py interacts
-with the HDF5 library, and with Python.  These changes have substantially
+with the HDF5 library and Python.  These changes have substantially
 improved h5py's stability, and make it possible to use more modern versions
 of HDF5 without compatibility concerns.  It is now also possible to use
 h5py with Python 3.

@@ -19,8 +19,6 @@ Configuration class
 Module constants
 ----------------
 
-These constants are only available with HDF5 1.8.X.
-
 .. data:: INDEX_NAME
 
     Resolve indices in alphanumeric order
