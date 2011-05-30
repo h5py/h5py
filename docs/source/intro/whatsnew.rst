@@ -31,7 +31,7 @@ Character Encoding
 ------------------
 
 As part of the port to Python 3, byte and Unicode strings are now strictly
-treated with h5py.  Object names (names of groups, datasets, etc.) may be
+treated within h5py.  Object names (names of groups, datasets, etc.) may be
 given as either byte strings ("str" in 2.6/2.7, "bytes" in 3.2), or unicode
 strings ("unicode" in 2.6/2.6, "str" in 3.2).  When Unicode strings are used,
 they are encoded to UTF-8 for storage in the file, with the appropriate flags
@@ -57,7 +57,7 @@ Top enhancements and bug fixes
   dset[()] produces a NumPy array scalar of the correct type.
 
 * On Python 3, dictionary-style methods like Group.keys() and Group.values()
-  return view-like objects instead of lists
+  return view-like objects instead of lists.
 
 * Element retrival from datasets of compound type now properly returns an
   instance of numpy.void, instead of a tuple.
@@ -71,13 +71,32 @@ Top enhancements and bug fixes
 * File format bounds can now be given when opening a high-level File object
   (keyword "libver").
 
+* Group, Dataset and Datatype constructors can no longer be used to create or
+  access resources.  Rather, each constructor lets you bind the new object
+  to a corresponding low-level identifier (GroupID, DatasetID, etc).
+  Creating objects in this fashion is now an official part of the API.
+
 * Many, many other bug fixes.
+
+
+Deprecations and removals
+-------------------------
+
+* The previously deprecated dict aliases for Group methods (listnames, etc)
+  have been removed.
+
+* The selections module has been removed.
+
+* Module h5py.h5e has been removed.
+
+* The H5Error exception class has been removed.  Native Python exceptions are
+  now used exclusively.
 
 
 Known issues
 ------------
 
-* Threading support in 1.4-beta is still flaky.
+* Threading support in 1.4-beta is still undergoing testing.
 
 * There are reports of crashes related to storing object and region references.
   If this happens to you, please post on the mailing list or contact the h5py
