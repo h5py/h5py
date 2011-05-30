@@ -124,7 +124,7 @@ class HLObject(CommonStateObject):
     def parent(self):
         """Return the parent group of this object.
 
-        This is always equivalent to file[posixpath.dirname(obj.name)].
+        This is always equivalent to obj.file[posixpath.dirname(obj.name)].
         ValueError if this object is anonymous.
         """
         if self.name is None:
