@@ -11,7 +11,7 @@ class AttributeManager(base.DictCompat, base.CommonStateObject):
         These are created exclusively by the library and are available as
         a Python attribute at <object>.attrs
 
-        Like the members of groups, attributes provide a minimal dictionary-
+        Like Group objects, attributes provide a minimal dictionary-
         style interface.  Anything which can be reasonably converted to a
         Numpy array or Numpy scalar can be stored.
 
@@ -21,8 +21,7 @@ class AttributeManager(base.DictCompat, base.CommonStateObject):
 
         To modify an existing attribute while preserving its type, use the
         method modify().  To specify an attribute of a particular type and
-        shape (or to create an empty attribute), use create().
-
+        shape, use create().
     """
 
     def __init__(self, parent):
@@ -48,8 +47,6 @@ class AttributeManager(base.DictCompat, base.CommonStateObject):
         The type and shape of the attribute are determined from the data.  To
         use a specific type or shape, or to preserve the type of an attribute,
         use the methods create() and modify().
-
-        Broadcasting isn't supported for attributes.
         """
         self.create(name, data=value, dtype=base.guess_dtype(value))
 
@@ -66,10 +63,10 @@ class AttributeManager(base.DictCompat, base.CommonStateObject):
             An array to initialize the attribute (required)
         shape
             Shape of the attribute.  Overrides data.shape if both are
-            given.  The total number of points must be unchanged.
+            given, in which case the total number of points must be unchanged.
         dtype
             Data type of the attribute.  Overrides data.dtype if both
-            are given.  Must be conversion-compatible with data.dtype.
+            are given.
         """
         if data is not None:
             data = numpy.asarray(data, order='C', dtype=dtype)
@@ -101,8 +98,9 @@ class AttributeManager(base.DictCompat, base.CommonStateObject):
     def modify(self, name, value):
         """ Change the value of an attribute while preserving its type.
 
-        Differs from __setitem__ in that the type of an existing attribute
-        is preserved.  Useful for interacting with externally generated files.
+        Differs from __setitem__ in that if the attribute already exists, its
+        type is preserved.  This can be very useful for interacting with
+        externally generated files.
 
         If the attribute doesn't exist, it will be automatically created.
         """
