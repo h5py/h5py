@@ -18,6 +18,7 @@ Predefined filters
 .. data:: FILTER_SHUFFLE
 .. data:: FILTER_FLETCHER32
 .. data:: FILTER_SZIP
+.. data:: FILTER_LZF
 
 .. _ref.h5z.FLAG:
 

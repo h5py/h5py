@@ -78,4 +78,10 @@ Object types
 .. data:: OBJ_ALL
 .. data:: OBJ_LOCAL
 
+Library version bounding
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. data:: LIBVER_EARLIEST
+.. data:: LIBVER_LATEST
+
 

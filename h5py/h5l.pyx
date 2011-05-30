@@ -11,8 +11,8 @@
 #-
 
 """
-    API for the "H5L" family of link-related operations.  When built without
-    1.8 API support, this module exists but is empty.
+    API for the "H5L" family of link-related operations.  Defines the class
+    LinkProxy, which comes attached to GroupID objects as <obj>.links.
 """
 
 include "config.pxi"

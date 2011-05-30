@@ -25,7 +25,7 @@ File drivers
 .. data:: MULTI
 .. data:: SEC2
 .. data:: STDIO
-
+.. data:: WINDOWS
 
 Logging driver settings
 ~~~~~~~~~~~~~~~~~~~~~~~

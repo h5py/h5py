@@ -10,6 +10,10 @@ Functional API
 .. autofunction:: create
 .. autofunction:: iterate
 .. autofunction:: get_objinfo
+
+Info objects
+------------
+
 .. autoclass:: GroupStat
     :members:
 

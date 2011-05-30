@@ -2,10 +2,33 @@ Module H5O
 ==========
 
 .. automodule:: h5py.h5o
+
+Functional API
+--------------
+
+.. autofunction:: open
+.. autofunction:: link
+.. autofunction:: copy
+.. autofunction:: set_comment
+.. autofunction:: get_comment
+.. autofunction:: visit
+.. autofunction:: get_info
+
+Info classes
+------------
+
+.. autoclass:: ObjInfo
     :members:
 
 Module constants
 ----------------
+
+Object types
+~~~~~~~~~~~~
+
+.. data:: TYPE_GROUP
+.. data:: TYPE_DATASET
+.. data:: TYPE_NAMED_DATATYPE
 
 .. _ref.h5o.COPY:
 

@@ -17,11 +17,3 @@ Contents:
     topics/index
     low/index
 
-##################
-Indices and tables
-##################
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-

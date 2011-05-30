@@ -52,7 +52,6 @@ Selection codes
 Existing selection type
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-.. data:: SEL_ERROR
 .. data:: SEL_NONE
 .. data:: SEL_POINTS
 .. data:: SEL_HYPERSLABS

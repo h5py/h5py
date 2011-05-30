@@ -11,8 +11,7 @@
 #-
 
 """
-    Module for HDF5 "H5O" functions.  When built without 1.8 API support, this
-    module exists but is empty.
+    Module for HDF5 "H5O" functions.
 """
 
 include "config.pxi"

@@ -53,24 +53,24 @@ Dataset creation
     :members:
 
 
-Link creation (1.8 only)
-------------------------
+Link creation
+-------------
 
 .. autoclass:: PropLCID
     :show-inheritance:
     :members:
 
 
-Link access (1.8 only)
-----------------------
+Link access
+-----------
 
 .. autoclass:: PropLAID
     :show-inheritance:
     :members:
 
 
-Group creation (1.8 only)
--------------------------
+Group creation
+--------------
 
 .. autoclass:: PropGCID
     :show-inheritance:
@@ -80,34 +80,16 @@ Group creation (1.8 only)
 Module constants
 ----------------
 
-Predefined classes (all versions)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Predefined classes
+~~~~~~~~~~~~~~~~~~
 
 .. data:: DEFAULT
 .. data:: FILE_CREATE
 .. data:: FILE_ACCESS
 .. data:: DATASET_CREATE
 .. data:: DATASET_XFER
-
-
-Predefined classes (HDF5 1.8.X only)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 .. data:: OBJECT_COPY
 .. data:: LINK_CREATE
 .. data:: LINK_ACCESS
 .. data:: GROUP_CREATE
-
-
-
-
-
-
-
-
-
-
-
-
-
 

@@ -3,16 +3,23 @@ Module H5T
 
 .. automodule:: h5py.h5t
 
-Functional API
---------------
+Functions specific to h5py
+--------------------------
 
 .. autofunction:: py_create
+.. autofunction:: special_dtype
+.. autofunction:: check_dtype
+
+Functional API
+--------------
 .. autofunction:: create
 .. autofunction:: open
 .. autofunction:: array_create
 .. autofunction:: enum_create
 .. autofunction:: vlen_create
 .. autofunction:: decode
+.. autofunction:: convert
+.. autofunction:: find
 
 Type classes
 ------------
@@ -133,17 +140,14 @@ Integer types
 .. data:: NATIVE_FLOAT
 .. data:: NATIVE_DOUBLE 
 
-Other types
-~~~~~~~~~~~
-
+Reference types
+~~~~~~~~~~~~~~~
 
 .. data:: STD_REF_OBJ
-
-    Object reference
-
 .. data:: STD_REF_DSETREG
 
-    Dataset region reference
+String types
+~~~~~~~~~~~~
 
 .. data:: C_S1
 
@@ -153,6 +157,14 @@ Other types
 
     Zero-padded fixed-length string
     
+.. data:: VARIABLE
+
+    Variable-length string
+
+Python object type
+~~~~~~~~~~~~~~~~~~
+
+.. data:: PYTHON_OBJECT
 
 Module constants
 ----------------
@@ -198,10 +210,15 @@ API Constants
 .. data:: NORM_NONE
 
 .. data:: CSET_ASCII
+.. DATA:: CSET_UTF8
 
 .. data:: PAD_ZERO
 .. data:: PAD_ONE
 .. data:: PAD_BACKGROUND
+
+.. data:: BKG_NO
+.. data:: BKG_TEMP
+.. data:: BKG_YES
 
 
 

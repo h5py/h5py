@@ -147,13 +147,7 @@ cdef class DatasetID(ObjectID):
         """ (SpaceID mspace, SpaceID fspace, NDARRAY arr_obj, 
              TypeID mtype=None, PropDXID dxpl=None)
 
-            Read data from an HDF5 dataset into a Numpy array.  For maximum 
-            flexibility, you can specify dataspaces for the file and the Numpy
-            object. Keyword dxpl may be a dataset transfer property list.
-
-            The provided Numpy array must be writable and C-contiguous.  If
-            this is not the case, ValueError will be raised and the read will
-            fail.
+            Read data from an HDF5 dataset into a Numpy array.
 
             It is your responsibility to ensure that the memory dataspace
             provided is compatible with the shape of the Numpy array.  Since a
@@ -161,8 +155,12 @@ cdef class DatasetID(ObjectID):
             checked.  You can easily crash Python by reading in data from too
             large a dataspace.
 
-            The GIL is released during the read.  Modifying the contents of
-            the array from another thread has undefined results.
+            If a memory datatype is not specified, one will be auto-created
+            based on the array's dtype.
+
+            The provided Numpy array must be writable and C-contiguous.  If
+            this is not the case, ValueError will be raised and the read will
+            fail.  Keyword dxpl may be a dataset transfer property list.
         """
         cdef hid_t self_id, mtype_id, mspace_id, fspace_id, plist_id
         cdef void* data
@@ -190,11 +188,17 @@ cdef class DatasetID(ObjectID):
             Write data from a Numpy array to an HDF5 dataset. Keyword dxpl may 
             be a dataset transfer property list.
 
+            It is your responsibility to ensure that the memory dataspace
+            provided is compatible with the shape of the Numpy array.  Since a
+            wide variety of dataspace configurations are possible, this is not
+            checked.  You can easily crash Python by writing data from too
+            large a dataspace.
+
+            If a memory datatype is not specified, one will be auto-created
+            based on the array's dtype.
+
             The provided Numpy array must be C-contiguous.  If this is not the
             case, ValueError will be raised and the read will fail.
-
-            The GIL is released during the write.  Modifying the contents of
-            the array from another thread has undefined results.
         """
         cdef hid_t self_id, mtype_id, mspace_id, fspace_id, plist_id
         cdef void* data
