@@ -71,6 +71,19 @@ class Group(HLObject, DictCompat):
         return dset
 
     def require_dataset(self, name, shape, dtype, exact=False, **kwds):
+        """ Open a dataset, creating it if it doesn't exist.
+
+        If keyword "exact" is False (default), an existing dataset must have
+        the same shape and a conversion-compatible dtype to be returned.  If
+        True, the shape and dtype must match exactly.
+
+        Other dataset keywords (see create_dataset) may be provided, but are
+        only used if a new dataset is to be created.
+
+        Raises TypeError if an incompatible object already exists, or if the
+        shape or dtype don't match according to the above rules.
+        """
+
         if not name in self:
             return self.create_dataset(name, *(shape, dtype), **kwds)
 
@@ -90,8 +103,10 @@ class Group(HLObject, DictCompat):
         return dset
 
     def require_group(self, name):
-        """ Return group, creating it if it doesn't exist.  TypeError raised
-        if something with that name already exists that isn't a group.
+        """ Return a group, creating it if it doesn't exist.
+
+        TypeError is raised if something with that name already exists that
+        isn't a group.
         """
         if not name in self:
             return self.create_group(name)
