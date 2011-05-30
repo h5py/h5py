@@ -106,11 +106,8 @@ class Dataset(HLObject):
 
     @property
     def value(self):
-        """  Deprecated alias for dataset[...] and dataset[()] """
-        arr = self[...]
-        #if arr.shape == ():
-        #    return numpy.asscalar(arr)
-        return arr
+        """  Alias for dataset[()] """
+        return dataset[()]
 
     @property
     def chunks(self):
