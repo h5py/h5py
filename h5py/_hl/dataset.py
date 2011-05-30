@@ -107,7 +107,7 @@ class Dataset(HLObject):
     @property
     def value(self):
         """  Alias for dataset[()] """
-        return dataset[()]
+        return self[()]
 
     @property
     def chunks(self):
