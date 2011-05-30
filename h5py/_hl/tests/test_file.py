@@ -296,8 +296,8 @@ class TestBackwardsCompat(TestCase):
 
     def test_fid(self):
         """ File objects provide a .fid attribute aliased to the file ID """
-        hfile = File(self.mktemp(), 'w')
-        self.assertIs(hfile.fid, hfile.id)
+        with File(self.mktemp(), 'w') as hfile:
+            self.assertIs(hfile.fid, hfile.id)
 
 
 
