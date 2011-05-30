@@ -22,8 +22,6 @@ from utils cimport emalloc, efree
 from h5p cimport PropID
 cimport _hdf5 # to implement container testing for 1.6
 
-# Runtime imports
-from _errors import H5Error
 
 # === Public constants and data structures ====================================
 
@@ -276,7 +274,6 @@ cdef class GroupID(ObjectID):
         H5Glink2(self.id, current_name, <H5G_link_t>link_type, remote_id, new_name)
 
 
-    
     def unlink(self, char* name):
         """(STRING name)
 
@@ -284,7 +281,6 @@ cdef class GroupID(ObjectID):
         """
         H5Gunlink(self.id, name)
    
-
     
     def move(self, char* current_name, char* new_name, GroupID remote=None):
         """(STRING current_name, STRING new_name, GroupID remote=None)
@@ -301,7 +297,6 @@ cdef class GroupID(ObjectID):
 
         H5Gmove2(self.id, current_name, remote_id, new_name)
 
-
     
     def get_num_objs(self):
         """() => INT number_of_objects
@@ -313,23 +308,16 @@ cdef class GroupID(ObjectID):
         return size
 
 
-    
     def get_objname_by_idx(self, hsize_t idx):
         """(INT idx) => STRING
 
         Get the name of a group member given its zero-based index.
-
-        Due to a limitation of the HDF5 library, the generic exception
-        H5Error is raised if the idx parameter is out-of-range.
         """
         cdef int size
         cdef char* buf
         buf = NULL
 
-        # This function does not properly raise an exception
         size = H5Gget_objname_by_idx(self.id, idx, NULL, 0)
-        if size < 0:
-            raise H5Error("Invalid index")
 
         buf = <char*>emalloc(sizeof(char)*(size+1))
         try:
@@ -338,7 +326,6 @@ cdef class GroupID(ObjectID):
             return pystring
         finally:
             efree(buf)
-
 
     
     def get_objtype_by_idx(self, hsize_t idx):
@@ -351,17 +338,8 @@ cdef class GroupID(ObjectID):
         - GROUP
         - DATASET
         - TYPE
-
-        Due to a limitation of the HDF5 library, the generic exception
-        H5Error is raised if the idx parameter is out-of-range.
         """
-        # This function does not properly raise an exception
-        cdef int retval
-        retval = H5Gget_objtype_by_idx(self.id, idx)
-        if retval < 0:
-            raise H5Error("Invalid index")
-        return retval
-
+        return <int>H5Gget_objtype_by_idx(self.id, idx)
 
     
     def get_linkval(self, char* name):

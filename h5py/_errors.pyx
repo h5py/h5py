@@ -1,5 +1,3 @@
-class H5Error(Exception):
-    pass
 
 # Python-style minor error classes.  If the minor error code matches an entry
 # in this dict, the generated exception will be used.
@@ -89,7 +87,7 @@ cdef int set_exception() except -1:
     if err.n < 0:   # No HDF5 exception information found
         return 0
 
-    eclass = _minor_table.get(err.err.min_num, H5Error)
+    eclass = _minor_table.get(err.err.min_num, RuntimeError)
     eclass = _exact_table.get((err.err.maj_num, err.err.min_num), eclass)
 
     desc = err.err.desc

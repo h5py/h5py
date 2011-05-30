@@ -2,8 +2,6 @@ include "config.pxi"
 
 from defs cimport *
 
-from _errors import H5Error # for backwards compatibility
-
 ITER_INC    = H5_ITER_INC     # Increasing order
 ITER_DEC    = H5_ITER_DEC     # Decreasing order
 ITER_NATIVE = H5_ITER_NATIVE  # No particular order, whatever is fastest
