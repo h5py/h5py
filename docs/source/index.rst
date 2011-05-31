@@ -16,4 +16,4 @@ Contents:
     high/index
     topics/index
     low/index
-
+    licenses
