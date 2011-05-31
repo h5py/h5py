@@ -12,7 +12,7 @@ store data, organized by name in a tree-like fashion.  You can create
 datasets (arrays on disk) hundreds of gigabytes in size, and perform
 random-access I/O on desired sections.  Datasets are organized in a
 filesystem-like hierarchy using containers called "groups", and 
-accesed using the tradional POSIX /path/to/resource syntax.
+accessed using the traditional POSIX /path/to/resource syntax.
 
 The beta will be available for 1-2 weeks.  Because of the substantial number
 of changes in this release, we encourage all current and prospective h5py
