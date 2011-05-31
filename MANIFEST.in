@@ -1,0 +1,7 @@
+recursive-include h5py *.c *.h *.pyx *.pxd *.pxi *.py
+recursive-include examples *.py
+recursive-include lzf *.c *.h *.txt
+recursive-include win_include *.c *.h
+include MANIFEST.in
+include configure.py
+
