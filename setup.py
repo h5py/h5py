@@ -9,7 +9,7 @@ try:
     from Cython.Distutils import build_ext
     SUFFIX = '.pyx'
 except ImportError:
-    from distutils.commands.build_ext import build_ext
+    from distutils.command.build_ext import build_ext
     SUFFIX = '.c'
 
 import numpy
