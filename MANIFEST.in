@@ -4,4 +4,5 @@ recursive-include lzf *.c *.h *.txt
 recursive-include win_include *.c *.h
 include MANIFEST.in
 include configure.py
-
+include ANN.txt
+include README.txt
