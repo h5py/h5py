@@ -614,3 +614,24 @@ class TestCopy(TestCase):
 
         hfile.close()
         hfile2.close()
+
+    def test_copy_dataset(self):
+        hfile = File(self.mktemp(), 'w')
+        hfile['foo'] = [1,2,3]
+        foo = hfile['foo']
+
+        hfile.copy(foo, 'bar')
+        self.assertArrayEqual(hfile['bar'], np.array([1,2,3]))
+
+        hfile.copy('foo', 'baz')
+        self.assertArrayEqual(hfile['baz'], np.array([1,2,3]))
+
+        hfile2 = File(self.mktemp(), 'w')
+        hfile.copy('foo', hfile2)
+        self.assertArrayEqual(hfile2['foo'], np.array([1,2,3]))
+
+        hfile2.copy(hfile['foo'], hfile2, 'bar')
+        self.assertArrayEqual(hfile2['bar'], np.array([1,2,3]))
+
+        hfile.close()
+        hfile2.close()

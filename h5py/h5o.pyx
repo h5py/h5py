@@ -1,13 +1,13 @@
 #+
-# 
+#
 # This file is part of h5py, a low-level Python interface to the HDF5 library.
-# 
+#
 # Copyright (C) 2008 Andrew Collette
 # http://h5py.alfven.org
 # License: BSD  (See LICENSE.txt for full license)
-# 
+#
 # $Date$
-# 
+#
 #-
 
 """
@@ -24,9 +24,9 @@ from h5p cimport PropID
 from utils cimport emalloc, efree
 
 # === Public constants ========================================================
-    
-TYPE_GROUP = H5O_TYPE_GROUP    
-TYPE_DATASET = H5O_TYPE_DATASET   
+
+TYPE_GROUP = H5O_TYPE_GROUP
+TYPE_DATASET = H5O_TYPE_DATASET
 TYPE_NAMED_DATATYPE = H5O_TYPE_NAMED_DATATYPE
 
 COPY_SHALLOW_HIERARCHY_FLAG = H5O_COPY_SHALLOW_HIERARCHY_FLAG
@@ -158,11 +158,11 @@ def get_info(ObjectID loc not None, char* name=NULL, int index=-1, *,
     if name != NULL and index >= 0:
         raise TypeError("At most one of name or index may be specified")
     elif name != NULL and index < 0:
-        H5Oget_info_by_name(loc.id, name, &info.infostruct, pdefault(lapl)) 
+        H5Oget_info_by_name(loc.id, name, &info.infostruct, pdefault(lapl))
     elif name == NULL and index >= 0:
         H5Oget_info_by_idx(loc.id, obj_name, <H5_index_t>index_type,
             <H5_iter_order_t>order, index, &info.infostruct, pdefault(lapl))
-    else: 
+    else:
         H5Oget_info(loc.id, &info.infostruct)
 
     return info
@@ -189,11 +189,11 @@ def link(ObjectID obj not None, GroupID loc not None, char* name,
     H5Olink(obj.id, loc.id, name, pdefault(lcpl), pdefault(lapl))
 
 
-def copy(GroupID src_loc not None, char* src_name, GroupID dst_loc not None,
+def copy(ObjectID src_loc not None, char* src_name, GroupID dst_loc not None,
     char* dst_name, PropID copypl=None, PropID lcpl=None):
-    """(GroupID src_loc, STRING src_name, GroupID dst_loc, STRING dst_name,
+    """(ObjectID src_loc, STRING src_name, GroupID dst_loc, STRING dst_name,
     PropID copypl=None, PropID lcpl=None)
-    
+
     Copy a group, dataset or named datatype from one location to another.  The
     source and destination need not be in the same file.
 
@@ -301,7 +301,7 @@ def visit(ObjectID loc not None, object func, *,
         func(STRING name) => Result
 
     or if the keyword argument "info" is True::
-    
+
         func(STRING name, ObjInfo info) => Result
 
     Returning None continues iteration; returning anything else aborts
