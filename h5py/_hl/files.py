@@ -80,6 +80,14 @@ class File(Group):
     """
 
     @property
+    def attrs(self):
+        """ Attributes attached to this object """
+        # hdf5 complains that a file identifier is an invalid location for an
+        # attribute. Instead of self, pass the root group to AttributeManager:
+        import attrs
+        return attrs.AttributeManager(self['/'])
+
+    @property
     def filename(self):
         """File name on disk"""
         name = h5f.get_name(self.fid)

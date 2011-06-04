@@ -8,7 +8,7 @@ class BaseAttrs(TestCase):
 
     def setUp(self):
         self.f = File(self.mktemp(), 'w')
- 
+
     def tearDown(self):
         if self.f:
             self.f.close()
@@ -22,6 +22,7 @@ class TestAccess(BaseAttrs):
     def test_create(self):
         """ Attribute creation by direct assignment """
         self.f.attrs['a'] = 4.0
+        self.assertEqual(self.f.attrs.keys(), ['a'])
         self.assertEqual(self.f.attrs['a'], 4.0)
 
     def test_overwrite(self):
