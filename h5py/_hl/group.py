@@ -17,7 +17,7 @@ class Group(HLObject, DictCompat):
         """ Create a new Group object by binding to a low-level GroupID.
         """
         HLObject.__init__(self, bind)
-        
+
     def create_group(self, name):
         """ Create and return a new subgroup.
 
@@ -46,7 +46,7 @@ class Group(HLObject, DictCompat):
             shape and dtype arguments.
 
         Keyword-only arguments:
-        
+
         chunks
             (Tuple) Chunk shape, or True to enable auto-chunking.
         maxshape
@@ -101,7 +101,7 @@ class Group(HLObject, DictCompat):
                 raise TypeError("Datatypes do not exactly match (existing %s vs new %s)" % (dset.dtype, dtype))
         elif not numpy.can_cast(dtype, dset.dtype):
             raise TypeError("Datatypes cannot be safely cast (existing %s vs new %s)" % (dset.dtype, dtype))
-        
+
         return dset
 
     def require_group(self, name):
@@ -157,7 +157,7 @@ class Group(HLObject, DictCompat):
         Example:
 
         >>> cls = group.get('foo', getclass=True)
-        >>> if cls == SoftLink: 
+        >>> if cls == SoftLink:
         ...     print '"foo" is a soft link!'
         """
         if not name in self:
@@ -293,7 +293,7 @@ class Group(HLObject, DictCompat):
             if name is not None:
                 dest_path = name
             else:
-                # TODO: don't know what this does
+                # copy source into dest group: dest_name/source_name
                 dest_path = pp.basename(h5i.get_name(source[source_path].id))
 
         elif isinstance(dest, HLObject):
@@ -372,7 +372,7 @@ class HardLink(object):
         Represents a hard link in an HDF5 file.  Provided only so that
         Group.get works in a sensible way.  Has no other function.
     """
-    
+
     pass
 
 #TODO: implement equality testing for these

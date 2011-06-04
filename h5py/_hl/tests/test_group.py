@@ -131,17 +131,17 @@ class TestDelete(TestCase):
         """ Object deletion via "del" """
         hfile = File(self.mktemp(),'w')
         self.addCleanup(hfile.close)
-        
+
         hfile.create_group('foo')
         self.assertIn('foo', hfile)
         del hfile['foo']
         self.assertNotIn('foo', hfile)
-        
+
     def test_nonexisting(self):
         """ Deleting non-existent object raises KeyError """
         hfile = File(self.mktemp(),'w')
         self.addCleanup(hfile.close)
-        
+
         with self.assertRaises(KeyError):
             del hfile['foo']
 
@@ -158,7 +158,7 @@ class TestDelete(TestCase):
 
         hfile = File(fname, 'r')
         self.addCleanup(hfile.close)
-        
+
         with self.assertRaises(KeyError):
             del hfile['foo']
 
@@ -368,7 +368,7 @@ class TestGet(TestCase):
         self.f.create_group('foo')
         out = self.f.get('foo', getclass=True)
         self.assertEqual(out, Group)
-        
+
         self.f.create_dataset('bar', (4,))
         out = self.f.get('bar', getclass=True)
         self.assertEqual(out, Dataset)
@@ -386,8 +386,8 @@ class TestGet(TestCase):
 
         self.f.create_group('hard')
         self.f['soft'] = sl
-        self.f['external'] = el 
-        
+        self.f['external'] = el
+
         out_hl = self.f.get('hard', default, getlink=True, getclass=True)
         out_sl = self.f.get('soft', default, getlink=True, getclass=True)
         out_el = self.f.get('external', default, getlink=True, getclass=True)
@@ -403,8 +403,8 @@ class TestGet(TestCase):
 
         self.f.create_group('hard')
         self.f['soft'] = sl
-        self.f['external'] = el 
-        
+        self.f['external'] = el
+
         out_hl = self.f.get('hard', getlink=True)
         out_sl = self.f.get('soft', getlink=True)
         out_el = self.f.get('external', getlink=True)
@@ -434,7 +434,7 @@ class TestVisit(TestCase):
 
     def tearDown(self):
         self.f.close()
-        
+
     def test_visit(self):
         """ All subgroups are visited """
         l = []
@@ -545,34 +545,72 @@ class TestExternalLinks(TestCase):
         with self.assertRaises(KeyError):
             self.f['ext']
 
+class TestCopy(TestCase):
 
+    def test_copy_path_to_path(self):
+        hfile = File(self.mktemp(), 'w')
+        foo = hfile.create_group('foo')
+        foo['bar'] = [1,2,3]
 
+        hfile.copy('foo', 'baz')
+        baz = hfile['baz']
+        self.assertIsInstance(baz, Group)
+        self.assertArrayEqual(baz['bar'], np.array([1,2,3]))
 
+        hfile.close()
 
+    def test_copy_path_to_group(self):
+        hfile = File(self.mktemp(), 'w')
+        foo = hfile.create_group('foo')
+        foo['bar'] = [1,2,3]
+        baz = hfile.create_group('baz')
 
+        hfile.copy('foo', baz)
+        baz = hfile['baz']
+        self.assertIsInstance(baz, Group)
+        self.assertArrayEqual(baz['foo/bar'], np.array([1,2,3]))
 
+        hfile2 = File(self.mktemp(), 'w')
+        hfile.copy('foo', hfile2['/'])
+        self.assertIsInstance(hfile2['/foo'], Group)
+        self.assertArrayEqual(hfile2['foo/bar'], np.array([1,2,3]))
 
+        hfile.close()
+        hfile2.close()
 
+    def test_copy_group_to_path(self):
+        hfile = File(self.mktemp(), 'w')
+        foo = hfile.create_group('foo')
+        foo['bar'] = [1,2,3]
 
+        hfile.copy(foo, 'baz')
+        baz = hfile['baz']
+        self.assertIsInstance(baz, Group)
+        self.assertArrayEqual(baz['bar'], np.array([1,2,3]))
 
+        hfile2 = File(self.mktemp(), 'w')
+        hfile2.copy(foo, 'foo')
+        self.assertIsInstance(hfile2['/foo'], Group)
+        self.assertArrayEqual(hfile2['foo/bar'], np.array([1,2,3]))
 
+        hfile.close()
+        hfile2.close()
 
+    def test_copy_group_to_group(self):
+        hfile = File(self.mktemp(), 'w')
+        foo = hfile.create_group('foo')
+        foo['bar'] = [1,2,3]
+        baz = hfile.create_group('baz')
 
+        hfile.copy(foo, baz)
+        baz = hfile['baz']
+        self.assertIsInstance(baz, Group)
+        self.assertArrayEqual(baz['foo/bar'], np.array([1,2,3]))
 
+        hfile2 = File(self.mktemp(), 'w')
+        hfile.copy(foo, hfile2['/'])
+        self.assertIsInstance(hfile2['/foo'], Group)
+        self.assertArrayEqual(hfile2['foo/bar'], np.array([1,2,3]))
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        hfile.close()
+        hfile2.close()
