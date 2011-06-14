@@ -139,14 +139,13 @@ class TestTypes(BaseAttrs):
         self.assertEqual(out[0], data[0])
         self.assertEqual(out[1], data[1])
 
-    @ut.expectedFailure
-    def test_vlen_string_scalar(self):
-        """ Storage of vlen byte string scalars (auto-creation) """
+    def test_string_scalar(self):
+        """ Storage of fixed-length byte string scalars (auto-creation) """
 
         self.f.attrs['x'] = b'Hello'
         out = self.f.attrs['x']
         self.assertEqual(out,b'Hello')
-        self.assertEqual(type(out), bytes)
+        self.assertEqual(type(out), np.str_)
 
 
 
