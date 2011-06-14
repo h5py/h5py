@@ -2,6 +2,7 @@ import numpy
 
 from h5py import h5s, h5t, h5a
 from . import base
+from .dataset import readtime_dtype
 
 class AttributeManager(base.DictCompat, base.CommonStateObject):
 
@@ -34,7 +35,8 @@ class AttributeManager(base.DictCompat, base.CommonStateObject):
         """
         attr = h5a.open(self._id, self._e(name))
 
-        arr = numpy.ndarray(attr.shape, dtype=attr.dtype, order='C')
+        dt = readtime_dtype(attr.dtype, [])
+        arr = numpy.ndarray(attr.shape, dtype=dt, order='C')
         attr.read(arr)
 
         if len(arr.shape) == 0:

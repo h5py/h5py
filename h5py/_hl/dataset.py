@@ -8,6 +8,25 @@ from . import filters
 from . import selections as sel
 from . import selections2 as sel2
 
+def readtime_dtype(basetype, names):
+    """ Make a NumPy dtype appropriate for reading """
+
+    if basetype.kind == 'O':
+        # Special-dtype fields break indexing
+        basetype = numpy.dtype('O')
+
+    if len(names) == 0:  # Not compound, or we want all fields
+        return basetype
+
+    if basetype.names is None:  # Names provided, but not compound
+        raise ValueError("Field names only allowed for compound types")
+
+    for name in names:  # Check all names are legal
+        if not name in basetype.names:
+            raise ValueError("Field %s does not appear in this type." % name)
+
+    return numpy.dtype([(name, basetype.fields[name][0]) for name in names])
+
 def make_new_dset(parent, shape=None, dtype=None, data=None,
                  chunks=None, compression=None, shuffle=None,
                     fletcher32=None, maxshape=None, compression_opts=None,
@@ -253,21 +272,28 @@ class Dataset(HLObject):
         names = tuple(x for x in args if isinstance(x, str))
         args = tuple(x for x in args if not isinstance(x, str))
 
-        # Create NumPy datatype for read, using only the named fields
-        # as specified by the user.
-        basetype = self.id.dtype
-        if len(names) == 0:
-            new_dtype = basetype
-        elif basetype.names is None:
-            raise ValueError("Field names only allowed for compound types")
-        else:
-            for name in names:
+        def readtime_dtype(basetype, names):
+            """ Make a NumPy dtype appropriate for reading """
+
+            if basetype.kind == 'O':
+                # Special-dtype fields break indexing
+                basetype = numpy.dtype('O')
+
+            if len(names) == 0:  # Not compound, or we want all fields
+                return basetype
+
+            if basetype.names is None:  # Names provided, but not compound
+                raise ValueError("Field names only allowed for compound types")
+
+            for name in names:  # Check all names are legal
                 if not name in basetype.names:
                     raise ValueError("Field %s does not appear in this type." % name)
-            new_dtype = numpy.dtype([(name, basetype.fields[name][0]) for name in names])
+
+            return numpy.dtype([(name, basetype.fields[name][0]) for name in names])
 
         # This is necessary because in the case of array types, NumPy
         # discards the array information at the top level.
+        new_dtype = readtime_dtype(self.id.dtype, names)
         mtype = h5t.py_create(new_dtype)
 
         # === Scalar dataspaces =================

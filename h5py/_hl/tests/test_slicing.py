@@ -60,14 +60,12 @@ class TestObjectIndex(BaseSlicing):
         Feauture: numpy.object_ subtypes map to real Python objects
     """
 
-    @ut.expectedFailure
     def test_reference(self):
         """ Indexing a reference dataset returns a h5py.Reference instance """
         dset = self.f.create_dataset('x', (1,), dtype=h5py.special_dtype(ref=h5py.Reference))
         dset[0] = self.f.ref
         self.assertEqual(type(dset[0]), h5py.Reference)
 
-    @ut.expectedFailure
     def test_regref(self):
         """ Indexing a region reference dataset returns a h5py.RegionReference
         """
@@ -77,14 +75,12 @@ class TestObjectIndex(BaseSlicing):
         dset2[0] = regref
         self.assertEqual(type(dset2[0]), h5py.RegionReference)
 
-    @ut.expectedFailure
     def test_scalar(self):
         """ Indexing returns a real Python object on scalar datasets """
         dset = self.f.create_dataset('x', (), dtype=h5py.special_dtype(ref=h5py.Reference))
         dset[()] = self.f.ref
         self.assertEqual(type(dset[()]), h5py.Reference)
 
-    @ut.expectedFailure
     def test_bytestr(self):
         """ Indexing a byte string dataset returns a real python byte string
         """
