@@ -1,6 +1,6 @@
 import numpy as np
 
-from .common import TestCase, ut
+from .common import TestCase, ut, py3
 
 import h5py
 from h5py.highlevel import File
@@ -145,7 +145,7 @@ class TestTypes(BaseAttrs):
         self.f.attrs['x'] = b'Hello'
         out = self.f.attrs['x']
         self.assertEqual(out,b'Hello')
-        self.assertEqual(type(out), np.str_)
+        self.assertEqual(type(out), np.bytes_ if py3 else np.str_)
 
 
 

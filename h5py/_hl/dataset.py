@@ -101,7 +101,7 @@ class _RegionProxy(object):
 
     def __getitem__(self, args):
         selection = sel.select(self.id.shape, args, dsid=self.id)
-        return h5r.create(self.id, '.', h5r.DATASET_REGION, selection._id)
+        return h5r.create(self.id, b'.', h5r.DATASET_REGION, selection._id)
 
 class Dataset(HLObject):
 
