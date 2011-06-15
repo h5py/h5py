@@ -1,7 +1,7 @@
-Announcing HDF5 for Python (h5py) 1.4 BETA
-==========================================
+Announcing HDF5 for Python (h5py) 2.0
+=====================================
 
-We are proud to announce the availability of HDF5 for Python (h5py) 1.4 beta.
+We are proud to announce the availability of HDF5 for Python (h5py) 2.0-final.
 HDF5 for Python (h5py) is a general-purpose Python interface to the
 Hierarchical Data Format library, version 5.  HDF5 is a mature scientific
 software library originally developed at NCSA, designed for the fast,
@@ -14,12 +14,16 @@ random-access I/O on desired sections.  Datasets are organized in a
 filesystem-like hierarchy using containers called "groups", and 
 accessed using the traditional POSIX /path/to/resource syntax.
 
-The beta will be available for 1-2 weeks.  Because of the substantial number
-of changes in this release, we encourage all current and prospective h5py
-users to try out the beta and provide feedback, either to the mailing list
-(h5py at googlegroups) or on the bug tracker as appropriate.
+Following beta feedback over the past few weeks, and taking into account the
+substantial number of changes in this release, we have decided to label this
+release as h5py 2.0.  While most existing code will run unmodified on 2.0,
+we strongly encourage all users to consult the document "What's new in h5py
+2.0" for a description of changes:
 
-* What's new:  http://h5py.alfven.org/docs-1.4/intro/whatsnew.html
+  http://h5py.alfven.org/docs/intro/whatsnew.html
+
+Downloads, etc are available at Google Code:
+
 * Google code site:  http://h5py.googlecode.com
 
 Most exciting changes

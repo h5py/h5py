@@ -1,6 +1,6 @@
 from . import h5 as _h5
 
-version = "1.4.0-beta2"
+version = "2.0.0"
 _exp = version.partition('-')
 version_tuple = tuple(int(x) for x in _exp[0].split('.')) + (_exp[2],)
 
