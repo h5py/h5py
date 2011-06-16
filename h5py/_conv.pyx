@@ -208,7 +208,8 @@ cdef herr_t init_vlen2fixed(hid_t src, hid_t dst, void** priv) except -1:
     if not (H5Tis_variable_str(src) and (not H5Tis_variable_str(dst))):
         return -2
 
-    priv[0] = sizes = <conv_size_t*>malloc(sizeof(conv_size_t))
+    sizes = <conv_size_t*>malloc(sizeof(conv_size_t))
+    priv[0] = sizes
     sizes[0].src_size = H5Tget_size(src)
     sizes[0].dst_size = H5Tget_size(dst)
 
@@ -221,7 +222,8 @@ cdef herr_t init_fixed2vlen(hid_t src, hid_t dst, void** priv) except -1:
     if not (H5Tis_variable_str(dst) and (not H5Tis_variable_str(src))):
         return -2
 
-    priv[0] = sizes = <conv_size_t*>malloc(sizeof(conv_size_t))
+    sizes = <conv_size_t*>malloc(sizeof(conv_size_t))
+    priv[0] = sizes
     sizes[0].src_size = H5Tget_size(src)
     sizes[0].dst_size = H5Tget_size(dst)
 
