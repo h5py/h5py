@@ -85,7 +85,7 @@ class TestObjectIndex(BaseSlicing):
         """ Indexing a byte string dataset returns a real python byte string
         """
         dset = self.f.create_dataset('x', (1,), dtype=h5py.special_dtype(vlen=bytes))
-        dset[0] = "Hello there!"
+        dset[0] = b"Hello there!"
         self.assertEqual(type(dset[0]), bytes)
 
 
