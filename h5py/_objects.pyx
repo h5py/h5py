@@ -172,7 +172,8 @@ cdef class IDProxy:
 
     def __dealloc__(self):
         #with reglock:
-            if self.id > 0 and (not self.locked) and H5Iget_type(self.id) > 0:
+            if self.id > 0 and (not self.locked) and H5Iget_type(self.id) > 0 \
+              and H5Iget_type(self.id) != H5I_FILE:
                 H5Idec_ref(self.id)
 
 cdef class ObjectID:
