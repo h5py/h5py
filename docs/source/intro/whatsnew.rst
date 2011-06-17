@@ -51,11 +51,10 @@ Supported HDF5/Python versions
 Group, Dataset and Datatype constructors have changed
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Under normal use, you should always use the create_group and create_dataset
-functions to make new groups and datasets.  In h5py 2.0, the constructors have
-been changed to accept a single low-level identifier.  This lets you "bind"
-a new high-level Group or Dataset object to an existing low-level identifier
-Creating objects in this fashion is now an official part of the API.
+In h5py 2.0, it is no longer possible to create new groups, datasets or
+named datatypes by passing names and settings to the constructors directly.
+Instead, you should use the standard Group methods create_group and
+create_dataset.
 
 The File constructor remains unchanged and is still the correct mechanism for
 opening and creating files.
@@ -70,7 +69,7 @@ Unicode is now used for object names
 
 Older versions of h5py used byte strings to represent names in the file.
 Starting with version 2.0, you may use either byte or unicode strings to create
-objects, but object names (obj.name, etc) will always be returned as Unicode.
+objects, but object names (obj.name, etc) will generally be returned as Unicode.
 
 Code which may be affected:
 
@@ -78,10 +77,9 @@ Code which may be affected:
   "str" objects.  Such checks should be removed, or changed to compare to
   "basestring" instead.
 
-* In Python 2.X, handling non-ascii names (e.g. writing to binary files) may
-  suddenly break as the "implicit" encoding from unicode to bytes is via the
-  ascii codec.  To fix this, you will need to explicitly encode any unicode
-  strings which can't be represented as ascii.
+* In Python 2.X, other parts of your application may complain if they are
+  handed Unicode data which can't be encoded down to ascii.  This is a
+  general problem in Python 2.
 
 File objects no longer close themselves
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -118,7 +116,7 @@ Reading object-like data strips special type information
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In the past, reading multiple data points from dataset with vlen or reference
-type returned an Numpy array with a "special dtype" (such as those created
+type returned a Numpy array with a "special dtype" (such as those created
 by ``h5py.special_dtype()``).  In h5py 2.0, all such arrays now have a generic
 Numpy object dtype (``numpy.dtype('O')``).  To get a copy of the dataset's
 dtype, always use the dataset's dtype property directly (``mydataset.dtype``).
@@ -146,7 +144,8 @@ error-management API.
 Long-deprecated dict methods have been removed
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Aliases for Group/AttributeManager methods (e.g. listnames) have been removed.
+Certain ancient aliases for Group/AttributeManager methods (e.g. ``listnames``)
+have been removed.
 Please use the standard Python dict interface (Python 2 or Python 3 as
 appropriate) to interact with these objects.
 

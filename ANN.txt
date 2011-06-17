@@ -1,7 +1,7 @@
 Announcing HDF5 for Python (h5py) 2.0
 =====================================
 
-We are proud to announce the availability of HDF5 for Python (h5py) 2.0-final.
+We are proud to announce the availability of HDF5 for Python (h5py) 2.0 final.
 HDF5 for Python (h5py) is a general-purpose Python interface to the
 Hierarchical Data Format library, version 5.  HDF5 is a mature scientific
 software library originally developed at NCSA, designed for the fast,
@@ -16,13 +16,13 @@ accessed using the traditional POSIX /path/to/resource syntax.
 
 Following beta feedback over the past few weeks, and taking into account the
 substantial number of changes in this release, we have decided to label this
-release as h5py 2.0.  While most existing code will run unmodified on 2.0,
-we strongly encourage all users to consult the document "What's new in h5py
-2.0" for a description of changes:
+release as h5py 2.0.  While most existing code will run unmodified, we
+strongly encourage all users to consult the list of changes in the document
+"What's new in h5py 2.0":
 
   http://h5py.alfven.org/docs/intro/whatsnew.html
 
-Downloads, etc are available at Google Code:
+Downloads, FAQ and bug tracker are available at Google Code:
 
 * Google code site:  http://h5py.googlecode.com
 
