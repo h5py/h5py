@@ -4,7 +4,7 @@ import os
 
 from .base import HLObject
 from .group import Group
-from h5py import h5f, h5p, h5i, h5fd, h5t
+from h5py import h5f, h5p, h5i, h5fd, h5t, _objects
 
 libver_dict = {'earliest': h5f.LIBVER_EARLIEST, 'latest': h5f.LIBVER_LATEST}
 libver_dict_r = dict((y,x) for x, y in libver_dict.iteritems())
@@ -139,8 +139,8 @@ class File(Group):
         Additional keywords
             Passed on to the selected file driver.
         """
-        if isinstance(name, HLObject):
-            fid = h5i.get_file_id(name.id)
+        if isinstance(name, _objects.ObjectID):
+            fid = h5i.get_file_id(name)
         else:
             try:
                 # If the byte string doesn't match the default encoding, just

@@ -113,7 +113,7 @@ class HLObject(CommonStateObject):
     def file(self):
         """ Return a File instance associated with this object """
         import files
-        return files.File(self)
+        return files.File(self.id)
 
     @property
     def name(self):
