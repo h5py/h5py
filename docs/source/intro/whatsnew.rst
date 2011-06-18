@@ -81,20 +81,22 @@ Code which may be affected:
   handed Unicode data which can't be encoded down to ascii.  This is a
   general problem in Python 2.
 
-File objects no longer close themselves
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+File objects must be manually closed
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 With h5py 1.3, when File objects (or low-level FileID) objects went out of
 scope, the corresponding HDF5 file was closed.  This led to surprising
-behavior, especially when files were opened with the H5F_CLOSE_STRONG flag.
+behavior, especially when files were opened with the H5F_CLOSE_STRONG flag;
+"losing" the original File object meant that all open groups and datasets
+suddenly became invalid.
 
 Beginning with h5py 2.0, files must be manually closed, by calling the "close"
 method or by using the file object as a context manager.  If you forget to
 close a file, the HDF5 library will try to close it for you when the
 application exits.
 
-Opening the same file a second time (i.e. without closing it first) results in 
-undefined behavior.
+Please note that opening the same file a multiple times (i.e. without closing
+it first) continues to result in undefined behavior.
 
 Changes to scalar slicing code
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
