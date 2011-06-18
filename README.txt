@@ -1,5 +1,12 @@
-README file for h5py version 1.4 (beta)
-=======================================
+README file for h5py version 2.0.0
+==================================
+
+Websites
+--------
+
+  * Docs, general info: h5py.alfven.org
+  * Downloads, FAQ, bug tracker:  h5py.googlecode.com
+  * Mailing list: h5py at googlegroups
 
 Prerequisites
 -------------
@@ -15,6 +22,22 @@ Optionally:
   * Cython 0.13 or later, to build from Mercurial
   * If using Python 2.6, unittest2 is needed to run the tests
 
+Installing from tarball
+-----------------------
+
+Run the following commands:
+
+  * python setup.py build [--hdf5=/path/to/hdf5]
+  * python setup.py test   # optional
+  * [sudo] python setup.py install
+
+Installing via easy_install
+---------------------------
+
+Run the following commands:
+ 
+  * export HDF5_DIR=/path/to/hdf5   # optional
+  * [sudo] easy_install h5py
 
 Building from a Mercurial checkout (UNIX)
 -----------------------------------------
@@ -51,3 +74,4 @@ Reporting bugs
 
   * You're always free to email the author directly at [andrew dot collette
     at gmail dot com].
+
