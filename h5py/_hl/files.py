@@ -107,9 +107,7 @@ class File(Group):
     @property
     def mode(self):
         """ Python mode used to open file """
-        if not hasattr(self._shared, 'mode'):
-            self._shared.mode = {h5f.ACC_RDONLY: 'r', h5f.ACC_RDWR: 'r+'}.get(self.fid.get_intent())
-        return self._shared.mode
+        return {h5f.ACC_RDONLY: 'r', h5f.ACC_RDWR: 'r+'}.get(self.fid.get_intent())
 
     @property
     def fid(self):

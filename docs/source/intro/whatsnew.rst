@@ -143,6 +143,12 @@ mapping!
 The old errors module (h5py.h5e) has also been removed.  There is no public
 error-management API.
 
+File .mode property is now either 'r' or 'r+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Files can be opened using the same mode arguments as before, but now the
+property File.mode will always return 'r' (read-only) or 'r+' (read-write).
+
 Long-deprecated dict methods have been removed
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
