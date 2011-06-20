@@ -81,6 +81,14 @@ class TestFileOpen(TestCase):
         with self.assertRaises(ValueError):
             File(self.mktemp(), 'mongoose')
 
+    def test_mode_attr(self):
+        """ Mode equivalent can be retrieved via property """
+        fname = self.mktemp()
+        with File(fname, 'w') as f:
+            self.assertEqual(f.mode, 'r+')
+        with File(fname, 'r') as f:
+            self.assertEqual(f.mode, 'r')
+
 class TestDrivers(TestCase):
 
     """
