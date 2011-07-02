@@ -88,7 +88,27 @@ class TestObjectIndex(BaseSlicing):
         dset[0] = b"Hello there!"
         self.assertEqual(type(dset[0]), bytes)
 
+class TestSimpleSlicing(TestCase):
 
+    """
+        Feature: Simple NumPy-style slices (start:stop:step) are supported.
+    """
+
+    def setUp(self):
+        self.f = File(self.mktemp(), 'w')
+        self.arr = np.arange(10)
+        self.dset = self.f.create_dataset('x', data=self.arr)
+
+    def tearDown(self):
+        if self.f:
+            self.f.close()
+
+    @ut.expectedFailure
+    def test_negative_stop(self):
+        """ Negative stop indexes work as they do in NumPy """
+        self.assertArrayEqual(self.dset[2:-2], self.arr[2:-2])
+
+        
 
 
 
