@@ -75,9 +75,10 @@ MODULES =  ['defs','_errors','_objects','_proxy', 'h5fd', 'h5z',
             '_conv', 'h5t','h5s',
             'h5p',
             'h5d', 'h5a', 'h5f', 'h5g',
-            'h5l', 'h5o']
+            'h5l', 'h5o',
+            'h5ds']
 
-EXTRA_SRC = {'h5z': [ localpath("lzf/lzf_filter.c"), 
+EXTRA_SRC = {'h5z': [ localpath("lzf/lzf_filter.c"),
                       localpath("lzf/lzf/lzf_c.c"),
                       localpath("lzf/lzf/lzf_d.c")]}
 
@@ -185,7 +186,7 @@ else:
 # Why the hell does Windows demand this format?
 if sys.platform.startswith('win'):
     VERSION = VERSION.replace('-beta','b')
-    
+
 setup(
   name = 'h5py',
   version = VERSION,
