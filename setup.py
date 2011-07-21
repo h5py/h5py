@@ -57,7 +57,7 @@ if sys.platform.startswith('win'):
         COMPILER_SETTINGS['library_dirs'] += [op.join(HDF5, 'dll')]
 else:
     COMPILER_SETTINGS = {
-       'libraries'      : ['hdf5'],
+       'libraries'      : ['hdf5', 'hdf5_hl'],
        'include_dirs'   : [numpy.get_include(), localpath('lzf')],
        'library_dirs'   : [],
        'define_macros'  : [('H5_USE_16_API', None)]

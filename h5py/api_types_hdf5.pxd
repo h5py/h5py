@@ -669,8 +669,10 @@ cdef extern from "hdf5.h":
             H5A_info_t *ainfo, void *op_data) except 2
 
 
+
+cdef extern from "hdf5_hl.h":
 # === H5DS - Dimension Scales API =============================================
 
-#  ctypedef herr_t  (*H5DS_iterate_t)(hid_t dset, unsigned dim, hid_t scale, void *visitor_data) except 2
+  ctypedef herr_t  (*H5DS_iterate_t)(hid_t dset, unsigned dim, hid_t scale, void *visitor_data) except 2
 
 

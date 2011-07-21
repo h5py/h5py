@@ -54,12 +54,12 @@ from h5d cimport DatasetID
 # === Basic group management ==================================================
 
 
-def make_scale(DatasetID dset not None, char* dimname):
+def set_scale(DatasetID dset not None, char* dimname=''):
     """(DatasetID dset, STRING dimname)
 
     Convert dataset dset to a dimension scale, with optional name dimname.
     """
-    H5DSmake_scale(dset.id, dimname)
+    H5DSset_scale(dset.id, dimname)
 
 ## def create(ObjectID loc not None, object name, PropID lcpl=None,
 ##            PropID gcpl=None):

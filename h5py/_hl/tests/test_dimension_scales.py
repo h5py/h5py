@@ -25,7 +25,7 @@ class TestCreateDimensionScale(BaseDataset):
         """ Create a scalar dataset from existing array """
         data = np.ones((2), 'f')
         dset = self.f.create_dataset('foo', data=data)
-        h5py.h5ds.make_scale(dset)
+        h5py.h5ds.set_scale(dset.id)
         self.assertEqual(dset.attrs['CLASS'], "DIMENSION_SCALE")
 
 
