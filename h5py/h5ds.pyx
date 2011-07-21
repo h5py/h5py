@@ -18,6 +18,7 @@ include "config.pxi"
 
 # Compile-time imports
 from h5d cimport DatasetID
+from utils cimport emalloc, efree
 
 
 # === Public constants and data structures ====================================
@@ -60,6 +61,59 @@ def set_scale(DatasetID dset not None, char* dimname=''):
     Convert dataset dset to a dimension scale, with optional name dimname.
     """
     H5DSset_scale(dset.id, dimname)
+
+def is_scale(DatasetID dset not None):
+    """(DatasetID dset)
+
+    Determines whether dset is a dimension scale.
+    """
+    return <bint>(H5DSis_scale(dset.id))
+
+def attach_scale(DatasetID dset not None, DatasetID dscale not None, unsigned
+                 int idx):
+    H5DSattach_scale(dset.id, dscale.id, idx)
+
+def is_attached(DatasetID dset not None, DatasetID dscale not None,
+                unsigned int idx):
+    return <bint>(H5DSis_attached(dset.id, dscale.id, idx))
+
+def detach_scale(DatasetID dset not None, DatasetID dscale not None,
+                 unsigned int idx):
+    H5DSdetach_scale(dset.id, dscale.id, idx)
+
+def get_num_scales(DatasetID dset, unsigned int dim):
+    return H5DSget_num_scales(dset.id, dim)
+
+def set_label(DatasetID dset, unsigned int idx, char* label):
+    H5DSset_label(dset.id, idx, label)
+
+def get_label(DatasetID dset, unsigned int idx):
+    cdef ssize_t size
+    cdef char* label
+    label = NULL
+
+    size = H5DSget_label(dset.id, idx, NULL, 0)
+    label = <char*>emalloc(sizeof(char)*(size+1))
+    try:
+        H5DSget_label(dset.id, idx, label, size+1)
+        plabel = label
+        return plabel
+    finally:
+        efree(label)
+
+def get_scale_name(DatasetID dscale):
+    cdef ssize_t size
+    cdef char* name
+    name = NULL
+
+    size = H5DSget_scale_name(dscale.id, NULL, 0)
+    name = <char*>emalloc(sizeof(char)*(size+1))
+    try:
+        H5DSget_scale_name(dscale.id, name, size)
+        pname = name
+        return pname
+    finally:
+        efree(name)
 
 ## def create(ObjectID loc not None, object name, PropID lcpl=None,
 ##            PropID gcpl=None):
