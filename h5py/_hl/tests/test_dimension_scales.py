@@ -72,6 +72,20 @@ class TestCreateDimensionScale(BaseDataset):
         self.assertEqual(h5py.h5ds.get_label(dset.id, 0), 'foo label')
         self.assertEqual(h5py.h5ds.get_label(dset.id, 1), 'bar label')
 
+    def test_iter_dimensionscales(self):
+        data = np.ones((2, 2), 'f')
+        dset = self.f.create_dataset('foo', data=data)
+        dscale = np.ones((2), 'f')
+        dsetscale = self.f.create_dataset('bar', data=dscale)
+        h5py.h5ds.set_scale(dsetscale.id, 'bar')
+        h5py.h5ds.attach_scale(dset.id, dsetscale.id, 0)
+        dsetscale2 = self.f.create_dataset('baz', data=dscale)
+        h5py.h5ds.set_scale(dsetscale.id, 'baz')
+        h5py.h5ds.attach_scale(dset.id, dsetscale.id, 0)
 
+        def func(dsid):
+            if h5py.h5ds.get_scale_name(dsid) == 'baz':
+                return dsid
 
-
+        res = h5py.h5ds.iterate(dset.id, 0, func)
+        self.assertEqual(h5py.h5ds.get_scale_name(res), 'baz')

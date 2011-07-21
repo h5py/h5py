@@ -21,40 +21,6 @@ from h5d cimport DatasetID
 from utils cimport emalloc, efree
 
 
-# === Public constants and data structures ====================================
-
-
-## cdef class GroupIter:
-
-##     """
-##         Iterator over the names of group members.  After this iterator is
-##         exhausted, it releases its reference to the group ID.
-##     """
-
-##     cdef unsigned long idx
-##     cdef unsigned long nobjs
-##     cdef GroupID grp
-
-##     def __init__(self, GroupID grp not None):
-##         self.idx = 0
-##         self.grp = grp
-##         self.nobjs = grp.get_num_objs()
-
-##     def __iter__(self):
-##         return self
-
-##     def __next__(self):
-##         if self.idx == self.nobjs:
-##             self.grp = None
-##             raise StopIteration
-
-##         retval = self.grp.get_objname_by_idx(self.idx)
-##         self.idx = self.idx + 1
-##         return retval
-
-# === Basic group management ==================================================
-
-
 def set_scale(DatasetID dset not None, char* dimname=''):
     """(DatasetID dset, STRING dimname)
 
@@ -81,13 +47,13 @@ def detach_scale(DatasetID dset not None, DatasetID dscale not None,
                  unsigned int idx):
     H5DSdetach_scale(dset.id, dscale.id, idx)
 
-def get_num_scales(DatasetID dset, unsigned int dim):
+def get_num_scales(DatasetID dset not None, unsigned int dim):
     return H5DSget_num_scales(dset.id, dim)
 
-def set_label(DatasetID dset, unsigned int idx, char* label):
+def set_label(DatasetID dset not None, unsigned int idx, char* label):
     H5DSset_label(dset.id, idx, label)
 
-def get_label(DatasetID dset, unsigned int idx):
+def get_label(DatasetID dset not None, unsigned int idx):
     cdef ssize_t size
     cdef char* label
     label = NULL
@@ -101,7 +67,7 @@ def get_label(DatasetID dset, unsigned int idx):
     finally:
         efree(label)
 
-def get_scale_name(DatasetID dscale):
+def get_scale_name(DatasetID dscale not None):
     cdef ssize_t size
     cdef char* name
     name = NULL
@@ -115,70 +81,47 @@ def get_scale_name(DatasetID dscale):
     finally:
         efree(name)
 
-## def create(ObjectID loc not None, object name, PropID lcpl=None,
-##            PropID gcpl=None):
-##     """(ObjectID loc, STRING name or None, PropLCID lcpl=None,
-##         PropGCID gcpl=None)
-##     => GroupID
 
-##     Create a new group, under a given parent group.  If name is None,
-##     an anonymous group will be created in the file.
-##     """
-##     cdef hid_t gid
-##     cdef char* cname = NULL
-##     if name is not None:
-##         cname = name
+cdef class _DimensionScaleVisitor:
 
-##     if cname != NULL:
-##         gid = H5Gcreate2(loc.id, cname, pdefault(lcpl), pdefault(gcpl), H5P_DEFAULT)
-##     else:
-##         gid = H5Gcreate_anon(loc.id, pdefault(gcpl), H5P_DEFAULT)
+    cdef object func
+    cdef object retval
 
-##     return GroupID(gid)
+    def __init__(self, func):
+        self.func = func
+        self.retval = None
 
 
-## cdef class _GroupVisitor:
+cdef herr_t cb_ds_iter(hid_t dset, unsigned int dim, hid_t scale, void* vis_in) except 2:
 
-##     cdef object func
-##     cdef object retval
+    cdef _DimensionScaleVisitor vis = <_DimensionScaleVisitor>vis_in
 
-##     def __init__(self, func):
-##         self.func = func
-##         self.retval = None
+    vis.retval = vis.func(DatasetID(scale))
 
-## cdef herr_t cb_group_iter(hid_t gid, char *name, void* vis_in) except 2:
-
-##     cdef _GroupVisitor vis = <_GroupVisitor>vis_in
-
-##     vis.retval = vis.func(name)
-
-##     if vis.retval is not None:
-##         return 1
-##     return 0
+    if vis.retval is not None:
+        return 1
+    return 0
 
 
-## def iterate(GroupID loc not None, object func, int startidx=0, *,
-##             char* obj_name='.'):
-##     """ (GroupID loc, CALLABLE func, UINT startidx=0, **kwds)
-##     => Return value from func
+def iterate(DatasetID dset not None, unsigned int dim, object func,
+            int startidx=0):
+    """ (DatasetID loc, UINT dim, CALLABLE func, UINT startidx=0)
+    => Return value from func
 
-##     Iterate a callable (function, method or callable object) over the
-##     members of a group.  Your callable should have the signature::
+    Iterate a callable (function, method or callable object) over the
+    members of a group.  Your callable should have the signature::
 
-##         func(STRING name) => Result
+        func(STRING name) => Result
 
-##     Returning None continues iteration; returning anything else aborts
-##     iteration and returns that value. Keywords:
+    Returning None continues iteration; returning anything else aborts
+    iteration and returns that value. Keywords:
+    """
+    if startidx < 0:
+        raise ValueError("Starting index must be non-negative")
 
-##     STRING obj_name (".")
-##         Iterate over this subgroup instead
-##     """
-##     if startidx < 0:
-##         raise ValueError("Starting index must be non-negative")
+    cdef int i = startidx
+    cdef _DimensionScaleVisitor vis = _DimensionScaleVisitor(func)
 
-##     cdef int i = startidx
-##     cdef _GroupVisitor vis = _GroupVisitor(func)
+    H5DSiterate_scales(dset.id, dim, &i, <H5DS_iterate_t>cb_ds_iter, <void*>vis)
 
-##     H5Giterate(loc.id, obj_name, &i, <H5G_iterate_t>cb_group_iter, <void*>vis)
-
-##     return vis.retval
+    return vis.retval

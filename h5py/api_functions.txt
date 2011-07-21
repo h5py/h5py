@@ -523,6 +523,6 @@ hdf5_hl:
 
   htri_t H5DSis_scale(hid_t did)
 
-#  herr_t  H5DSiterate_scales(hid_t did, unsigned int dim, int *idx, H5DS_iterate_t visitor, void *visitor_data)
+  herr_t  H5DSiterate_scales(hid_t did, unsigned int dim, int *idx, H5DS_iterate_t visitor, void *visitor_data)
 
   htri_t H5DSis_attached(hid_t did, hid_t dsid, unsigned int idx)
