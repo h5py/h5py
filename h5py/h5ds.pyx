@@ -94,10 +94,9 @@ cdef class _DimensionScaleVisitor:
 cdef herr_t cb_ds_iter(hid_t dset, unsigned int dim, hid_t scale, void* vis_in) except 2:
 
     cdef _DimensionScaleVisitor vis = <_DimensionScaleVisitor>vis_in
-    cdef object dscale
 
-    dscale = DatasetID(<hid_t>scale)
-    vis.retval = vis.func(dscale)
+    H5Iinc_ref(scale)
+    vis.retval = vis.func(DatasetID(scale))
 
     if vis.retval is not None:
         return 1

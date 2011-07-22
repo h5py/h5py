@@ -90,19 +90,9 @@ class TestCreateDimensionScale(BaseDataset):
         self.assertEqual(h5py.h5ds.get_num_scales(dset.id, 0), 2)
 
         def func(dsid):
-            print "in iterable function"
-            print type(dsid), type(dsid.id)
-            print dsid, dsid.id
-            print h5py.Dataset(dsid)[...]
-            name = h5py.h5ds.get_scale_name(dsid)
-            print name
-            if name == 'baz':
+            res = h5py.h5ds.get_scale_name(dsid)
+            if res == 'baz':
                 return dsid
 
-        print 'lets iterate:'
         res = h5py.h5ds.iterate(dset.id, 0, func, 0)
-        print 'done iterating'
-        print type(res), type(res.id)
-        print res, res.id
-        print h5py.Dataset(res)[...]
         self.assertEqual(h5py.h5ds.get_scale_name(res), 'baz')
