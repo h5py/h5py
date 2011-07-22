@@ -68,14 +68,13 @@ def get_label(DatasetID dset not None, unsigned int idx):
         efree(label)
 
 def get_scale_name(DatasetID dscale not None):
-    cdef ssize_t size
-    cdef char* name
-    name = NULL
+    cdef ssize_t size, s
+    cdef char* name = NULL
 
     size = H5DSget_scale_name(dscale.id, NULL, 0)
     name = <char*>emalloc(sizeof(char)*(size+1))
     try:
-        H5DSget_scale_name(dscale.id, name, size)
+        s = H5DSget_scale_name(dscale.id, name, size)
         pname = name
         return pname
     finally:
@@ -95,8 +94,10 @@ cdef class _DimensionScaleVisitor:
 cdef herr_t cb_ds_iter(hid_t dset, unsigned int dim, hid_t scale, void* vis_in) except 2:
 
     cdef _DimensionScaleVisitor vis = <_DimensionScaleVisitor>vis_in
+    cdef object dscale
 
-    vis.retval = vis.func(DatasetID(scale))
+    dscale = DatasetID(<hid_t>scale)
+    vis.retval = vis.func(dscale)
 
     if vis.retval is not None:
         return 1
@@ -109,7 +110,7 @@ def iterate(DatasetID dset not None, unsigned int dim, object func,
     => Return value from func
 
     Iterate a callable (function, method or callable object) over the
-    members of a group.  Your callable should have the signature::
+    members of a group.  Your callable shoutld have the signature::
 
         func(STRING name) => Result
 
