@@ -99,3 +99,20 @@ class TestCreateDimensionScale(BaseDataset):
 
         res = h5py.h5ds.iterate(dset.id, 0, func, 0)
         self.assertEqual(h5py.h5ds.get_scale_name(res), 'bazzoo name')
+
+
+class TestHighLevel(BaseDataset):
+
+    def test_label_dimensionscale(self):
+        data = np.ones((2, 2), 'f')
+        dset = self.f.create_dataset('foo', data=data)
+        dscale = np.ones((2), 'f')
+        dsetscale = self.f.create_dataset('bar', data=dscale)
+        dset.dims.create_scale(dsetscale, 'bar name')
+        dim = dset.dims[0]
+        dim.label = 'dimension 1'
+        self.assertEqual(dim.label, 'dimension 1')
+        dim.attach_scale(dsetscale)
+        self.assertEqual(dim[0], dsetscale)
+        self.assertEqual(dim['bar name'], dsetscale)
+        self.assertEqual(dim.keys(), ['bar name'])
