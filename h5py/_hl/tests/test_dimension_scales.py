@@ -46,7 +46,7 @@ class TestCreateDimensionScale(BaseDataset):
         self.assertEqual(h5py.h5ds.get_num_scales(dset.id, 0), 1)
         self.assertEqual(h5py.h5ds.get_num_scales(dset.id, 1), 0)
         dsetscale2 = self.f.create_dataset('baz', data=dscale)
-        h5py.h5ds.set_scale(dsetscale.id, 'baz')
+        h5py.h5ds.set_scale(dsetscale2.id, 'baz')
         h5py.h5ds.attach_scale(dset.id, dsetscale2.id, 0)
         self.assertTrue(h5py.h5ds.is_attached(dset.id, dsetscale.id, 0))
         self.assertTrue(h5py.h5ds.is_attached(dset.id, dsetscale2.id, 0))
@@ -82,17 +82,20 @@ class TestCreateDimensionScale(BaseDataset):
         dset = self.f.create_dataset('foo', data=data)
         dscale = np.ones((2), 'f')
         dsetscale = self.f.create_dataset('bar', data=dscale)
-        h5py.h5ds.set_scale(dsetscale.id, 'bar')
+        h5py.h5ds.set_scale(dsetscale.id, 'bar name')
         h5py.h5ds.attach_scale(dset.id, dsetscale.id, 0)
         dsetscale2 = self.f.create_dataset('baz', data=dscale)
-        h5py.h5ds.set_scale(dsetscale.id, 'baz')
+        h5py.h5ds.set_scale(dsetscale2.id, 'baz name')
         h5py.h5ds.attach_scale(dset.id, dsetscale2.id, 0)
         self.assertEqual(h5py.h5ds.get_num_scales(dset.id, 0), 2)
+        dsetscale3 = self.f.create_dataset('bazzoo', data=dscale)
+        h5py.h5ds.set_scale(dsetscale3.id, 'bazzoo name')
+        h5py.h5ds.attach_scale(dset.id, dsetscale3.id, 0)
 
         def func(dsid):
             res = h5py.h5ds.get_scale_name(dsid)
-            if res == 'baz':
+            if res == 'bazzoo name':
                 return dsid
 
         res = h5py.h5ds.iterate(dset.id, 0, func, 0)
-        self.assertEqual(h5py.h5ds.get_scale_name(res), 'baz')
+        self.assertEqual(h5py.h5ds.get_scale_name(res), 'bazzoo name')

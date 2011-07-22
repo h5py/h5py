@@ -68,13 +68,13 @@ def get_label(DatasetID dset not None, unsigned int idx):
         efree(label)
 
 def get_scale_name(DatasetID dscale not None):
-    cdef ssize_t size, s
+    cdef ssize_t namelen
     cdef char* name = NULL
 
-    size = H5DSget_scale_name(dscale.id, NULL, 0)
-    name = <char*>emalloc(sizeof(char)*(size+1))
+    namelen = H5DSget_scale_name(dscale.id, NULL, 0)
+    name = <char*>emalloc(sizeof(char)*(namelen+1))
     try:
-        s = H5DSget_scale_name(dscale.id, name, size)
+        H5DSget_scale_name(dscale.id, name, namelen)
         pname = name
         return pname
     finally:
@@ -95,6 +95,8 @@ cdef herr_t cb_ds_iter(hid_t dset, unsigned int dim, hid_t scale, void* vis_in) 
 
     cdef _DimensionScaleVisitor vis = <_DimensionScaleVisitor>vis_in
 
+    # we did not retrieve the scale identifier using the normal machinery,
+    # so we need to inc_ref it before using it to create a DatasetID.
     H5Iinc_ref(scale)
     vis.retval = vis.func(DatasetID(scale))
 
