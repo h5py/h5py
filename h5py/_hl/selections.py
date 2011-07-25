@@ -542,10 +542,10 @@ def _translate_slice(exp, length):
         (start, count, step)
         for use with the hyperslab selection routines
     """
-    start, stop, step = exp.start, exp.stop, exp.step
-    start = 0 if start is None else int(start)
-    stop = length if stop is None else int(stop)
-    step = 1 if step is None else int(step)
+    start, stop, step = exp.indices(length)
+        # Now if step > 0, then start and stop are in [0, length]; 
+        # if step < 0, they are in [-1, length - 1] (Python 2.6b2 and later; 
+        # Python issue 3004).
 
     if step < 1:
         raise ValueError("Step must be >= 1 (got %d)" % step)
@@ -553,20 +553,8 @@ def _translate_slice(exp, length):
         raise ValueError("Zero-length selections are not allowed")
     if stop < start:
         raise ValueError("Reverse-order selections are not allowed")
-    if start < 0:
-        start = length+start
-    if stop < 0:
-        stop = length+stop
-
-    if not 0 <= start <= (length-1):
-        raise ValueError("Start index %s out of range (0-%d)" % (start, length-1))
-    if not 1 <= stop <= length:
-        raise ValueError("Stop index %s out of range (1-%d)" % (stop, length))
 
     count = 1 + (stop - start - 1) // step
-
-    if start+count > length:
-        raise ValueError("Selection out of bounds (%d; axis has %d)" % (start+count,length))
 
     return start, count, step
 

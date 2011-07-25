@@ -103,7 +103,6 @@ class TestSimpleSlicing(TestCase):
         if self.f:
             self.f.close()
 
-    @ut.expectedFailure
     def test_negative_stop(self):
         """ Negative stop indexes work as they do in NumPy """
         self.assertArrayEqual(self.dset[2:-2], self.arr[2:-2])
