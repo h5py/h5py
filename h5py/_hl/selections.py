@@ -563,9 +563,7 @@ def _translate_slice(exp, length):
     if not 1 <= stop <= length:
         raise ValueError("Stop index %s out of range (1-%d)" % (stop, length))
 
-    count = (stop-start)//step
-    if (stop-start) % step != 0:
-        count += 1
+    count = 1 + (stop - start - 1) // step
 
     if start+count > length:
         raise ValueError("Selection out of bounds (%d; axis has %d)" % (start+count,length))
