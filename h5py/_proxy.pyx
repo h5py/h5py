@@ -140,7 +140,7 @@ cdef herr_t dset_rw(hid_t dset, hid_t mtype, hid_t mspace, hid_t fspace,
             else:
                 need_bkg = needs_bkg_buffer(mtype, dstype)
             if need_bkg:
-                back_buf = malloc(H5Tget_size(mtype)*npoints)
+                back_buf = create_buffer(H5Tget_size(dstype), H5Tget_size(mtype), npoints)
                 h5py_copy(mtype, mspace, back_buf, progbuf, H5PY_GATHER)
 
             if read:
