@@ -5,11 +5,18 @@ from . import base
 from .dataset import Dataset, readtime_dtype
 
 
-class Dimension(object):
+class DimensionProxy(object):
 
     @property
     def label(self):
-        return h5ds.get_label(self._id, self._dimension)
+        # This approach will segfault for a non-existent label:
+        #return h5ds.get_label(self._id, self._dimension)
+        # so we will do this instead:
+        try:
+            dset = Dataset(self._id)
+            return dset.attrs['DIMENSION_LABELS'][self._dimension]
+        except (KeyError, IndexError):
+            return ''
     @label.setter
     def label(self, val):
         h5ds.set_label(self._id, self._dimension, val)
@@ -17,6 +24,19 @@ class Dimension(object):
     def __init__(self, id, dimension):
         self._id = id
         self._dimension = dimension
+
+    def __hash__(self):
+        return hash((type(self), self._id, self._dimension))
+
+    def __eq__(self, other):
+        return hash(self) == hash(other)
+
+    def __iter__(self):
+        for k in self.keys():
+            yield k
+
+    def __len__(self):
+        return h5ds.get_num_scales(self._id, self._dimension)
 
     def __getitem__(self, item):
         if isinstance(item, int):
@@ -37,33 +57,32 @@ class Dimension(object):
     def attach_scale(self, dset):
         h5ds.attach_scale(self._id, dset.id, self._dimension)
 
-    def keys(self):
+    def detach_scale(self, dset):
+        h5ds.detach_scale(self._id, dset.id, self._dimension)
+
+    def items(self):
         scales = []
         def f(dsid):
             scales.append(dsid)
         h5ds.iterate(self._id, self._dimension, f, 0)
-        return [h5ds.get_scale_name(scale) for scale in scales]
+        return [(h5ds.get_scale_name(id), Dataset(id)) for id in scales]
+
+    def keys(self):
+        return [key for (key, val) in self.items()]
+
+    def values(self):
+        return [val for (key, val) in self.items()]
+
+    def __repr__(self):
+        if not self._id:
+            return "<Dimension of closed HDF5 dataset>"
+        return ('<"%s" dimension %d of HDF5 dataset at %s>'
+               % (self.label, self._dimension, id(self._id)))
 
 
 class DimensionManager(base.DictCompat, base.CommonStateObject):
 
     """
-        Allows dictionary-style access to an HDF5 object's attributes.
-
-        These are created exclusively by the library and are available as
-        a Python attribute at <object>.attrs
-
-        Like Group objects, attributes provide a minimal dictionary-
-        style interface.  Anything which can be reasonably converted to a
-        Numpy array or Numpy scalar can be stored.
-
-        Attributes are automatically created on assignment with the
-        syntax <obj>.attrs[name] = value, with the HDF5 type automatically
-        deduced from the value.  Existing attributes are overwritten.
-
-        To modify an existing attribute while preserving its type, use the
-        method modify().  To specify an attribute of a particular type and
-        shape, use create().
     """
 
     def __init__(self, parent):
@@ -74,27 +93,23 @@ class DimensionManager(base.DictCompat, base.CommonStateObject):
     def __getitem__(self, index):
         """ Return a Dimension object
         """
-        return Dimension(self._id, index)
+        if index > len(self) - 1:
+            raise IndexError('Index out of range')
+        return DimensionProxy(self._id, index)
 
     def __len__(self):
-        """ Number of attributes attached to the object. """
-        # I expect we will not have more than 2**32 attributes
-        return h5a.get_num_attrs(self._id)
+        """ Number of dimensions associated with the dataset. """
+        return len(Dataset(self._id).shape)
 
     def __iter__(self):
-        """ Iterate over the names of attributes. """
-        attrlist = []
-        def iter_cb(name, *args):
-            attrlist.append(self._d(name))
-        h5a.iterate(self._id, iter_cb)
-
-        for name in attrlist:
-            yield name
+        """ Iterate over the dimensions. """
+        for i in range(len(self)):
+            yield self[i]
 
     def __repr__(self):
         if not self._id:
-            return "<Attributes of closed HDF5 object>"
-        return "<Attributes of HDF5 object at %s>" % id(self._id)
+            return "<Dimensions of closed HDF5 dataset>"
+        return "<Dimensions of HDF5 object at %s>" % id(self._id)
 
     def create_scale(self, dset, name=''):
         h5ds.set_scale(dset.id, name)

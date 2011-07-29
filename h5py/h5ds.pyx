@@ -59,6 +59,8 @@ def get_label(DatasetID dset not None, unsigned int idx):
     label = NULL
 
     size = H5DSget_label(dset.id, idx, NULL, 0)
+    if size <= 0:
+        return ''
     label = <char*>emalloc(sizeof(char)*(size+1))
     try:
         H5DSget_label(dset.id, idx, label, size+1)
@@ -72,6 +74,8 @@ def get_scale_name(DatasetID dscale not None):
     cdef char* name = NULL
 
     namelen = H5DSget_scale_name(dscale.id, NULL, 0)
+    if namelen <= 0:
+        return ''
     name = <char*>emalloc(sizeof(char)*(namelen+1))
     try:
         H5DSget_scale_name(dscale.id, name, namelen)
