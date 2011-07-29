@@ -6,7 +6,7 @@ Dimension Scales
 
 Datasets are multidimensional arrays. HDF5 provides support for labeling the
 dimensions and associating one or "dimension scales" with each dimension. A
-dimension scale is simple another HDF5 dataset. In principle, the length of the
+dimension scale is simply another HDF5 dataset. In principle, the length of the
 multidimensional array along the dimension of interest should be equal to the
 length of the dimension scale, but HDF5 does not enforce this property.
 
@@ -25,7 +25,7 @@ HDF5 allows the dimensions of ``data`` to be labeled, for example::
 
 Note that the first dimension, which has a length of 4, has been labeled "z",
 the third dimension (in this case the fastest varying dimension), has been
-labeled "x", and the second dimension was givin no label at all.
+labeled "x", and the second dimension was given no label at all.
 
 We can also use HDF5 datasets as dimension scales. For example, if we have::
 
@@ -75,13 +75,18 @@ If you want the names of the dimension scales associated with the "x" axis::
     ['', 'x2 name']
 
 :meth:`items` and :meth:`values` methods are also provided. The dimension
-scales can also be accessed with::
+scales themselves can also be accessed with::
 
     f['data'].dims[2][1]
 
 or::
 
     f['data'].dims[2]['x2 name']
+
+such that::
+
+    >>> f['data'].dims[2][1] == f['x2']
+    True
 
 though, beware that if you attempt to index the dimension scales with a string,
 the first dimension scale whose name matches the string is the one that will be
