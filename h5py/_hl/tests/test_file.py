@@ -5,12 +5,13 @@ import os
 from .common import ut, TestCase
 from h5py.highlevel import File
 
+
 class TestFileOpen(TestCase):
 
     """
         Feature: Opening files with Python-style modes.
     """
-
+            
     def test_create(self):
         """ Mode 'w' opens file in overwrite mode """
         fname = self.mktemp()
@@ -35,15 +36,20 @@ class TestFileOpen(TestCase):
         """ Mode 'a' opens file in append/readwrite mode, creating if necessary """
         fname = self.mktemp()
         fid = File(fname, 'a')
-        self.assert_(fid)
-        fid.create_group('foo')
-        self.assert_('foo' in fid)
-        fid.close()
+        try:
+            self.assert_(fid)
+            fid.create_group('foo')
+            self.assert_('foo' in fid)
+        finally:
+            fid.close()
         fid = File(fname, 'a')
-        self.assert_('foo' in fid)
-        fid.create_group('bar')
-        self.assert_('bar' in fid)
-
+        try:
+            self.assert_('foo' in fid)
+            fid.create_group('bar')
+            self.assert_('bar' in fid)
+        finally:
+            fid.close()
+            
     def test_readonly(self):
         """ Mode 'r' opens file in readonly mode """
         fname = self.mktemp()
@@ -201,9 +207,12 @@ class TestUnicode(TestCase):
         """
         fname = self.mktemp(prefix = u'\u201a')
         fid = File(fname, 'w')
-        self.assertEqual(fid.filename, fname)
-        self.assertIsInstance(fid.filename, unicode)
-
+        try:
+            self.assertEqual(fid.filename, fname)
+            self.assertIsInstance(fid.filename, unicode)
+        finally:
+            fid.close()
+            
 class TestFileProperty(TestCase):
 
     """
@@ -215,9 +224,12 @@ class TestFileProperty(TestCase):
         """ File object can be retrieved from subgroup """
         fname = self.mktemp()
         hfile = File(fname, 'w')
-        hfile2 = hfile['/'].file
-        self.assertEqual(hfile, hfile2)
-
+        try:
+            hfile2 = hfile['/'].file
+            self.assertEqual(hfile, hfile2)
+        finally:
+            hfile.close()
+        
     def test_close(self):
         """ All retrieved File objects are closed at the same time """
         fname = self.mktemp()
@@ -233,9 +245,11 @@ class TestFileProperty(TestCase):
     def test_mode(self):
         """ Retrieved File objects have a meaningful mode attribute """
         hfile = File(self.mktemp(),'w')
-        grp = hfile.create_group('foo')
-        self.assertEqual(grp.file.mode, hfile.mode)
-
+        try:
+            grp = hfile.create_group('foo')
+            self.assertEqual(grp.file.mode, hfile.mode)
+        finally:
+            hfile.close()
 
 class TestClose(TestCase):
 
@@ -293,9 +307,12 @@ class TestFilename(TestCase):
         """ .filename behaves properly for string data """
         fname = self.mktemp()
         fid = File(fname, 'w')
-        self.assertEqual(fid.filename, fname)
-        self.assertIsInstance(fid.filename, unicode)
-
+        try:
+            self.assertEqual(fid.filename, fname)
+            self.assertIsInstance(fid.filename, unicode)
+        finally:
+            fid.close()
+            
 class TestBackwardsCompat(TestCase):
 
     """

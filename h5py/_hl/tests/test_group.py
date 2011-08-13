@@ -28,7 +28,7 @@ class TestRepr(BaseGroup):
         self.f.close()
         self.assertIsInstance(g, basestring)
 
-class TestCreate(TestCase):
+class TestCreate(BaseGroup):
 
     """
         Feature: New groups can be created via .create_group method
@@ -36,34 +36,26 @@ class TestCreate(TestCase):
 
     def test_create(self):
         """ Simple .create_group call """
-        hfile = File(self.mktemp(), 'w')
-        grp = hfile.create_group('foo')
+        grp = self.f.create_group('foo')
         self.assertIsInstance(grp, Group)
-        hfile.close()
 
     def test_create_intermediate(self):
         """ Intermediate groups can be created automatically """
-        hfile = File(self.mktemp(), 'w')
-        grp = hfile.create_group('foo/bar/baz')
+        grp = self.f.create_group('foo/bar/baz')
         self.assertEqual(grp.name, '/foo/bar/baz')
-        hfile.close()
 
     def test_create_exception(self):
         """ Name conflict causes group creation to fail with ValueError """
-        hfile = File(self.mktemp(), 'w')
-        hfile.create_group('foo')
+        self.f.create_group('foo')
         with self.assertRaises(ValueError):
-            hfile.create_group('foo')
-        hfile.close()
+            self.f.create_group('foo')
 
     def test_unicode(self):
         """ Unicode names are correctly stored """
         name = u"/Name\u4500"
-        hfile = File(self.mktemp(), 'w')
-        group = hfile.create_group(name)
+        group = self.f.create_group(name)
         self.assertEqual(group.name, name)
         self.assertEqual(group.id.links.get_info(name.encode('utf8')).cset, h5t.CSET_UTF8)
-        hfile.close()
 
 class TestDatasetAssignment(BaseGroup):
 
@@ -91,7 +83,7 @@ class TestDtypeAssignment(BaseGroup):
         self.assertIsInstance(self.f['a'], Datatype)
         self.assertEqual(self.f['a'].dtype, dtype)
 
-class TestRequire(TestCase):
+class TestRequire(BaseGroup):
 
     """
         Feature: Groups can be auto-created, or opened via .require_group
@@ -99,29 +91,23 @@ class TestRequire(TestCase):
 
     def test_open_existing(self):
         """ Existing group is opened and returned """
-        hfile = File(self.mktemp(),'w')
-        grp = hfile.create_group('foo')
-        grp2 = hfile.require_group('foo')
+        grp = self.f.create_group('foo')
+        grp2 = self.f.require_group('foo')
         self.assertEqual(grp, grp2)
-        hfile.close()
 
     def test_create(self):
         """ Group is created if it doesn't exist """
-        hfile = File(self.mktemp(),'w')
-        grp = hfile.require_group('foo')
+        grp = self.f.require_group('foo')
         self.assertIsInstance(grp, Group)
         self.assertEqual(grp.name, '/foo')
-        hfile.close()
 
     def test_require_exception(self):
         """ Opening conflicting object results in TypeError """
-        hfile = File(self.mktemp(),'w')
-        hfile.create_dataset('foo', (1,), 'f')
+        self.f.create_dataset('foo', (1,), 'f')
         with self.assertRaises(TypeError):
-            hfile.require_group('foo')
-        hfile.close()
+            self.f.require_group('foo')
 
-class TestDelete(TestCase):
+class TestDelete(BaseGroup):
 
     """
         Feature: Objects can be unlinked via "del" operator
@@ -129,21 +115,15 @@ class TestDelete(TestCase):
 
     def test_delete(self):
         """ Object deletion via "del" """
-        hfile = File(self.mktemp(),'w')
-        self.addCleanup(hfile.close)
-
-        hfile.create_group('foo')
-        self.assertIn('foo', hfile)
-        del hfile['foo']
-        self.assertNotIn('foo', hfile)
+        self.f.create_group('foo')
+        self.assertIn('foo', self.f)
+        del self.f['foo']
+        self.assertNotIn('foo', self.f)
 
     def test_nonexisting(self):
         """ Deleting non-existent object raises KeyError """
-        hfile = File(self.mktemp(),'w')
-        self.addCleanup(hfile.close)
-
         with self.assertRaises(KeyError):
-            del hfile['foo']
+            del self.f['foo']
 
     def test_readonly_delete_exception(self):
         """ Deleting object in readonly file raises KeyError """
@@ -157,12 +137,13 @@ class TestDelete(TestCase):
             hfile.close()
 
         hfile = File(fname, 'r')
-        self.addCleanup(hfile.close)
-
-        with self.assertRaises(KeyError):
-            del hfile['foo']
-
-class TestOpen(TestCase):
+        try:
+            with self.assertRaises(KeyError):
+                del hfile['foo']
+        finally:
+            hfile.close()
+            
+class TestOpen(BaseGroup):
 
     """
         Feature: Objects can be opened via indexing syntax obj[name]
@@ -170,32 +151,26 @@ class TestOpen(TestCase):
 
     def test_open(self):
         """ Simple obj[name] opening """
-        hfile = File(self.mktemp(),'w')
-        grp = hfile.create_group('foo')
-        grp2 = hfile['foo']
-        grp3 = hfile['/foo']
+        grp = self.f.create_group('foo')
+        grp2 = self.f['foo']
+        grp3 = self.f['/foo']
         self.assertEqual(grp, grp2)
         self.assertEqual(grp, grp3)
-        hfile.close()
 
     def test_nonexistent(self):
         """ Opening missing objects raises KeyError """
-        hfile = File(self.mktemp(), 'w')
         with self.assertRaises(KeyError):
-            hfile['foo']
-        hfile.close()
+            self.f['foo']
 
     def test_reference(self):
         """ Objects can be opened by HDF5 object reference """
-        hfile = File(self.mktemp(), 'w')
-        grp = hfile.create_group('foo')
-        grp2 = hfile[grp.ref]
+        grp = self.f.create_group('foo')
+        grp2 = self.f[grp.ref]
         self.assertEqual(grp2, grp)
-        hfile.close()
 
     # TODO: check that regionrefs also work with __getitem__
 
-class TestRepr(TestCase):
+class TestRepr(BaseGroup):
 
     """
         Feature: Opened and closed groups provide a useful __repr__ string
@@ -203,14 +178,12 @@ class TestRepr(TestCase):
 
     def test_repr(self):
         """ Opened and closed groups provide a useful __repr__ string """
-        hfile = File(self.mktemp(), 'w')
-        g = hfile.create_group('foo')
+        g = self.f.create_group('foo')
         self.assertIsInstance(repr(g), basestring)
         g.id._close()
         self.assertIsInstance(repr(g), basestring)
-        hfile.close()
 
-class BaseMapping(TestCase):
+class BaseMapping(BaseGroup):
 
     """
         Base class for mapping tests
@@ -273,9 +246,12 @@ class TestIter(BaseMapping):
     def test_iter_zero(self):
         """ Iteration works properly for the case with no group members """
         hfile = File(self.mktemp(), 'w')
-        lst = [x for x in hfile]
-        self.assertEqual(lst, [])
-
+        try:
+            lst = [x for x in hfile]
+            self.assertEqual(lst, [])
+        finally:
+            hfile.close()
+            
 @ut.skipIf(sys.version_info[0] != 2, "Py2")
 class TestPy2Dict(BaseMapping):
 
@@ -340,18 +316,11 @@ class TestPy3Dict(BaseMapping):
         for x in self.groups:
             self.assertIn((x, self.f[x]), iv)
 
-class TestGet(TestCase):
+class TestGet(BaseGroup):
 
     """
         Feature: The .get method allows access to objects and metadata
     """
-
-    def setUp(self):
-        self.f = File(self.mktemp(), 'w')
-
-    def tearDown(self):
-        if self.f:
-            self.f.close()
 
     def test_get_default(self):
         """ Object is returned, or default if it doesn't exist """
@@ -455,20 +424,12 @@ class TestVisit(TestCase):
         x = self.f.visititems(lambda x, y: (x,y))
         self.assertEqual(x, (self.groups[0], self.f[self.groups[0]]))
 
-class TestSoftLinks(TestCase):
+class TestSoftLinks(BaseGroup):
 
     """
         Feature: Create and manage soft links with the high-level interface
     """
-
-    def setUp(self):
-        self.f = File(self.mktemp(), 'w')
-
-    def tearDown(self):
-        if self.f:
-            self.f.close()
-
-
+    
     def test_spath(self):
         """ SoftLink path attribute """
         sl = SoftLink('/foo')
@@ -547,91 +508,80 @@ class TestExternalLinks(TestCase):
 
 class TestCopy(TestCase):
 
+    def setUp(self):
+        self.f1 = File(self.mktemp(), 'w')
+        self.f2 = File(self.mktemp(), 'w')
+        
+    def tearDown(self):
+        if self.f1:
+            self.f1.close()
+        if self.f2:
+            self.f2.close()
+            
     def test_copy_path_to_path(self):
-        hfile = File(self.mktemp(), 'w')
-        foo = hfile.create_group('foo')
+        foo = self.f1.create_group('foo')
         foo['bar'] = [1,2,3]
 
-        hfile.copy('foo', 'baz')
-        baz = hfile['baz']
+        self.f1.copy('foo', 'baz')
+        baz = self.f1['baz']
         self.assertIsInstance(baz, Group)
         self.assertArrayEqual(baz['bar'], np.array([1,2,3]))
-
-        hfile.close()
 
     def test_copy_path_to_group(self):
-        hfile = File(self.mktemp(), 'w')
-        foo = hfile.create_group('foo')
+        foo = self.f1.create_group('foo')
         foo['bar'] = [1,2,3]
-        baz = hfile.create_group('baz')
+        baz = self.f1.create_group('baz')
 
-        hfile.copy('foo', baz)
-        baz = hfile['baz']
+        self.f1.copy('foo', baz)
+        baz = self.f1['baz']
         self.assertIsInstance(baz, Group)
         self.assertArrayEqual(baz['foo/bar'], np.array([1,2,3]))
 
-        hfile2 = File(self.mktemp(), 'w')
-        hfile.copy('foo', hfile2['/'])
-        self.assertIsInstance(hfile2['/foo'], Group)
-        self.assertArrayEqual(hfile2['foo/bar'], np.array([1,2,3]))
-
-        hfile.close()
-        hfile2.close()
+        self.f1.copy('foo', self.f2['/'])
+        self.assertIsInstance(self.f2['/foo'], Group)
+        self.assertArrayEqual(self.f2['foo/bar'], np.array([1,2,3]))
 
     def test_copy_group_to_path(self):
-        hfile = File(self.mktemp(), 'w')
-        foo = hfile.create_group('foo')
+
+        foo = self.f1.create_group('foo')
         foo['bar'] = [1,2,3]
 
-        hfile.copy(foo, 'baz')
-        baz = hfile['baz']
+        self.f1.copy(foo, 'baz')
+        baz = self.f1['baz']
         self.assertIsInstance(baz, Group)
         self.assertArrayEqual(baz['bar'], np.array([1,2,3]))
 
-        hfile2 = File(self.mktemp(), 'w')
-        hfile2.copy(foo, 'foo')
-        self.assertIsInstance(hfile2['/foo'], Group)
-        self.assertArrayEqual(hfile2['foo/bar'], np.array([1,2,3]))
-
-        hfile.close()
-        hfile2.close()
+        self.f2.copy(foo, 'foo')
+        self.assertIsInstance(self.f2['/foo'], Group)
+        self.assertArrayEqual(self.f2['foo/bar'], np.array([1,2,3]))
 
     def test_copy_group_to_group(self):
-        hfile = File(self.mktemp(), 'w')
-        foo = hfile.create_group('foo')
-        foo['bar'] = [1,2,3]
-        baz = hfile.create_group('baz')
 
-        hfile.copy(foo, baz)
-        baz = hfile['baz']
+        foo = self.f1.create_group('foo')
+        foo['bar'] = [1,2,3]
+        baz = self.f1.create_group('baz')
+
+        self.f1.copy(foo, baz)
+        baz = self.f1['baz']
         self.assertIsInstance(baz, Group)
         self.assertArrayEqual(baz['foo/bar'], np.array([1,2,3]))
 
-        hfile2 = File(self.mktemp(), 'w')
-        hfile.copy(foo, hfile2['/'])
-        self.assertIsInstance(hfile2['/foo'], Group)
-        self.assertArrayEqual(hfile2['foo/bar'], np.array([1,2,3]))
-
-        hfile.close()
-        hfile2.close()
+        self.f1.copy(foo, self.f2['/'])
+        self.assertIsInstance(self.f2['/foo'], Group)
+        self.assertArrayEqual(self.f2['foo/bar'], np.array([1,2,3]))
 
     def test_copy_dataset(self):
-        hfile = File(self.mktemp(), 'w')
-        hfile['foo'] = [1,2,3]
-        foo = hfile['foo']
+        self.f1['foo'] = [1,2,3]
+        foo = self.f1['foo']
 
-        hfile.copy(foo, 'bar')
-        self.assertArrayEqual(hfile['bar'], np.array([1,2,3]))
+        self.f1.copy(foo, 'bar')
+        self.assertArrayEqual(self.f1['bar'], np.array([1,2,3]))
 
-        hfile.copy('foo', 'baz')
-        self.assertArrayEqual(hfile['baz'], np.array([1,2,3]))
+        self.f1.copy('foo', 'baz')
+        self.assertArrayEqual(self.f1['baz'], np.array([1,2,3]))
 
-        hfile2 = File(self.mktemp(), 'w')
-        hfile.copy('foo', hfile2)
-        self.assertArrayEqual(hfile2['foo'], np.array([1,2,3]))
+        self.f1.copy('foo', self.f2)
+        self.assertArrayEqual(self.f2['foo'], np.array([1,2,3]))
 
-        hfile2.copy(hfile['foo'], hfile2, 'bar')
-        self.assertArrayEqual(hfile2['bar'], np.array([1,2,3]))
-
-        hfile.close()
-        hfile2.close()
+        self.f2.copy(self.f1['foo'], self.f2, 'bar')
+        self.assertArrayEqual(self.f2['bar'], np.array([1,2,3]))
