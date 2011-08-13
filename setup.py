@@ -135,7 +135,9 @@ class test(Command):
         try:
             sys.path = [op.abspath(buildobj.build_lib)] + oldpath
             suite = unittest.TestLoader().discover(op.join(buildobj.build_lib,'h5py'))
-            unittest.TextTestRunner(verbosity=self.verbosity+1).run(suite)
+            result = unittest.TextTestRunner(verbosity=self.verbosity+1).run(suite)
+            if not result.wasSuccessful():
+                sys.exit(1)
         finally:
             sys.path = oldpath
 
