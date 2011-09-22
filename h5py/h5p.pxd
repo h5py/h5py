@@ -71,19 +71,17 @@ cdef class PropDXID(PropInstanceID):
 
 # --- New in 1.8 ---
 
-IF H5PY_18API:
+cdef class PropLCID(PropCreateID):
+    """ Link creation property list """
+    pass
 
-    cdef class PropLCID(PropCreateID):
-        """ Link creation property list """
-        pass
+cdef class PropLAID(PropInstanceID):
+    """ Link access property list """
+    cdef char* _buf
 
-    cdef class PropLAID(PropInstanceID):
-        """ Link access property list """
-        cdef char* _buf
-
-    cdef class PropGCID(PropCreateID):
-        """ Group creation property list """
-        pass
+cdef class PropGCID(PropCreateID):
+    """ Group creation property list """
+    pass
 
 cdef hid_t pdefault(PropID pid)
 cdef object propwrap(hid_t id_in)

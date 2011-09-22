@@ -19,20 +19,18 @@ cdef extern from "hdf5.h":
   int HADDR_UNDEF
 
   # New in 1.8.X
-  IF H5PY_18API:
+  ctypedef enum H5_iter_order_t:
+    H5_ITER_UNKNOWN = -1,       # Unknown order
+    H5_ITER_INC,                # Increasing order
+    H5_ITER_DEC,                # Decreasing order
+    H5_ITER_NATIVE,             # No particular order, whatever is fastest
+    H5_ITER_N                   # Number of iteration orders
 
-    ctypedef enum H5_iter_order_t:
-      H5_ITER_UNKNOWN = -1,       # Unknown order
-      H5_ITER_INC,                # Increasing order
-      H5_ITER_DEC,                # Decreasing order
-      H5_ITER_NATIVE,             # No particular order, whatever is fastest
-      H5_ITER_N                   # Number of iteration orders
-
-    ctypedef enum H5_index_t:
-      H5_INDEX_UNKNOWN = -1,      # Unknown index type     
-      H5_INDEX_NAME,              # Index on names      
-      H5_INDEX_CRT_ORDER,         # Index on creation order    
-      H5_INDEX_N                  # Number of indices defined    
+  ctypedef enum H5_index_t:
+    H5_INDEX_UNKNOWN = -1,      # Unknown index type     
+    H5_INDEX_NAME,              # Index on names      
+    H5_INDEX_CRT_ORDER,         # Index on creation order    
+    H5_INDEX_N                  # Number of indices defined    
 
 # === H5D - Dataset API =======================================================
 
@@ -187,18 +185,16 @@ cdef extern from "hdf5.h":
 
   ctypedef herr_t (*H5G_iterate_t)(hid_t group, char *name, void* op_data) except 2
 
-  IF H5PY_18API:
-
-    ctypedef enum H5G_storage_type_t:
-        H5G_STORAGE_TYPE_UNKNOWN = -1,
-        H5G_STORAGE_TYPE_SYMBOL_TABLE,
-        H5G_STORAGE_TYPE_COMPACT,
-        H5G_STORAGE_TYPE_DENSE 
-   
-    ctypedef struct H5G_info_t:
-        H5G_storage_type_t     storage_type
-        hsize_t     nlinks
-        int64_t     max_corder
+  ctypedef enum H5G_storage_type_t:
+      H5G_STORAGE_TYPE_UNKNOWN = -1,
+      H5G_STORAGE_TYPE_SYMBOL_TABLE,
+      H5G_STORAGE_TYPE_COMPACT,
+      H5G_STORAGE_TYPE_DENSE 
+ 
+  ctypedef struct H5G_info_t:
+      H5G_storage_type_t     storage_type
+      hsize_t     nlinks
+      int64_t     max_corder
 
 # === H5I - Identifier and reflection interface ===============================
 
@@ -218,108 +214,105 @@ cdef extern from "hdf5.h":
 
 # === H5L/H5O - Links interface (1.8.X only) ======================================
 
-  IF H5PY_18API:
+  # TODO: put both versions in h5t.pxd
+  ctypedef enum H5T_cset_t:
+    H5T_CSET_ERROR       = -1,  #
+    H5T_CSET_ASCII       = 0,   # US ASCII
+    H5T_CSET_UTF8        = 1,   # UTF-8 Unicode encoding
 
+  unsigned int H5L_MAX_LINK_NAME_LEN #  ((uint32_t) (-1)) (4GB - 1)
 
-    # TODO: put both versions in h5t.pxd
-    ctypedef enum H5T_cset_t:
-      H5T_CSET_ERROR       = -1,  #
-      H5T_CSET_ASCII       = 0,   # US ASCII
-      H5T_CSET_UTF8        = 1,   # UTF-8 Unicode encoding
+  # Link class types.
+  # * Values less than 64 are reserved for the HDF5 library's internal use.
+  # * Values 64 to 255 are for "user-defined" link class types; these types are
+  # * defined by HDF5 but their behavior can be overridden by users.
+  # * Users who want to create new classes of links should contact the HDF5
+  # * development team at hdfhelp@ncsa.uiuc.edu .
+  # * These values can never change because they appear in HDF5 files. 
+  # 
+  ctypedef enum H5L_type_t:
+    H5L_TYPE_ERROR = (-1),      #  Invalid link type id         
+    H5L_TYPE_HARD = 0,          #  Hard link id                 
+    H5L_TYPE_SOFT = 1,          #  Soft link id                 
+    H5L_TYPE_EXTERNAL = 64,     #  External link id             
+    H5L_TYPE_MAX = 255          #  Maximum link type id         
 
-    unsigned int H5L_MAX_LINK_NAME_LEN #  ((uint32_t) (-1)) (4GB - 1)
+  #  Information struct for link (for H5Lget_info/H5Lget_info_by_idx)
+  cdef union _add_u:
+    haddr_t address   #  Address hard link points to    
+    size_t val_size   #  Size of a soft link or UD link value 
 
-    # Link class types.
-    # * Values less than 64 are reserved for the HDF5 library's internal use.
-    # * Values 64 to 255 are for "user-defined" link class types; these types are
-    # * defined by HDF5 but their behavior can be overridden by users.
-    # * Users who want to create new classes of links should contact the HDF5
-    # * development team at hdfhelp@ncsa.uiuc.edu .
-    # * These values can never change because they appear in HDF5 files. 
-    # 
-    ctypedef enum H5L_type_t:
-      H5L_TYPE_ERROR = (-1),      #  Invalid link type id         
-      H5L_TYPE_HARD = 0,          #  Hard link id                 
-      H5L_TYPE_SOFT = 1,          #  Soft link id                 
-      H5L_TYPE_EXTERNAL = 64,     #  External link id             
-      H5L_TYPE_MAX = 255          #  Maximum link type id         
+  ctypedef struct H5L_info_t:
+    H5L_type_t  type            #  Type of link                   
+    hbool_t     corder_valid    #  Indicate if creation order is valid 
+    int64_t     corder          #  Creation order                 
+    H5T_cset_t  cset            #  Character set of link name     
+    _add_u u
 
-    #  Information struct for link (for H5Lget_info/H5Lget_info_by_idx)
-    cdef union _add_u:
-      haddr_t address   #  Address hard link points to    
-      size_t val_size   #  Size of a soft link or UD link value 
+  #  Prototype for H5Literate/H5Literate_by_name() operator 
+  ctypedef herr_t (*H5L_iterate_t) (hid_t group, char *name, H5L_info_t *info,
+                    void *op_data) except 2
 
-    ctypedef struct H5L_info_t:
-      H5L_type_t  type            #  Type of link                   
-      hbool_t     corder_valid    #  Indicate if creation order is valid 
-      int64_t     corder          #  Creation order                 
-      H5T_cset_t  cset            #  Character set of link name     
-      _add_u u
+  ctypedef uint32_t H5O_msg_crt_idx_t
 
-    #  Prototype for H5Literate/H5Literate_by_name() operator 
-    ctypedef herr_t (*H5L_iterate_t) (hid_t group, char *name, H5L_info_t *info,
-                      void *op_data) except 2
+  ctypedef enum H5O_type_t:
+    H5O_TYPE_UNKNOWN = -1,      # Unknown object type        
+    H5O_TYPE_GROUP,             # Object is a group        
+    H5O_TYPE_DATASET,           # Object is a dataset        
+    H5O_TYPE_NAMED_DATATYPE,    # Object is a named data type    
+    H5O_TYPE_NTYPES             # Number of different object types (must be last!) 
 
-    ctypedef uint32_t H5O_msg_crt_idx_t
+  unsigned int H5O_COPY_SHALLOW_HIERARCHY_FLAG    # (0x0001u) Copy only immediate members
+  unsigned int H5O_COPY_EXPAND_SOFT_LINK_FLAG     # (0x0002u) Expand soft links into new objects
+  unsigned int H5O_COPY_EXPAND_EXT_LINK_FLAG      # (0x0004u) Expand external links into new objects
+  unsigned int H5O_COPY_EXPAND_REFERENCE_FLAG     # (0x0008u) Copy objects that are pointed by references
+  unsigned int H5O_COPY_WITHOUT_ATTR_FLAG         # (0x0010u) Copy object without copying attributes
+  unsigned int H5O_COPY_PRESERVE_NULL_FLAG        # (0x0020u) Copy NULL messages (empty space)
+  unsigned int H5O_COPY_ALL                       # (0x003Fu) All object copying flags (for internal checking)
 
-    ctypedef enum H5O_type_t:
-      H5O_TYPE_UNKNOWN = -1,      # Unknown object type        
-      H5O_TYPE_GROUP,             # Object is a group        
-      H5O_TYPE_DATASET,           # Object is a dataset        
-      H5O_TYPE_NAMED_DATATYPE,    # Object is a named data type    
-      H5O_TYPE_NTYPES             # Number of different object types (must be last!) 
+  # --- Components for the H5O_info_t struct ----------------------------------
 
-    unsigned int H5O_COPY_SHALLOW_HIERARCHY_FLAG    # (0x0001u) Copy only immediate members
-    unsigned int H5O_COPY_EXPAND_SOFT_LINK_FLAG     # (0x0002u) Expand soft links into new objects
-    unsigned int H5O_COPY_EXPAND_EXT_LINK_FLAG      # (0x0004u) Expand external links into new objects
-    unsigned int H5O_COPY_EXPAND_REFERENCE_FLAG     # (0x0008u) Copy objects that are pointed by references
-    unsigned int H5O_COPY_WITHOUT_ATTR_FLAG         # (0x0010u) Copy object without copying attributes
-    unsigned int H5O_COPY_PRESERVE_NULL_FLAG        # (0x0020u) Copy NULL messages (empty space)
-    unsigned int H5O_COPY_ALL                       # (0x003Fu) All object copying flags (for internal checking)
+  ctypedef struct space:
+    hsize_t total           #  Total space for storing object header in file 
+    hsize_t meta            #  Space within header for object header metadata information 
+    hsize_t mesg            #  Space within header for actual message information 
+    hsize_t free            #  Free space within object header 
 
-    # --- Components for the H5O_info_t struct ----------------------------------
+  ctypedef struct mesg:
+    unsigned long present   #  Flags to indicate presence of message type in header 
+    unsigned long shared    #  Flags to indicate message type is shared in header 
 
-    ctypedef struct space:
-      hsize_t total           #  Total space for storing object header in file 
-      hsize_t meta            #  Space within header for object header metadata information 
-      hsize_t mesg            #  Space within header for actual message information 
-      hsize_t free            #  Free space within object header 
+  ctypedef struct hdr:
+    unsigned version        #  Version number of header format in file 
+    unsigned nmesgs         #  Number of object header messages 
+    unsigned nchunks        #  Number of object header chunks 
+    unsigned flags          #  Object header status flags 
+    space space
+    mesg mesg
 
-    ctypedef struct mesg:
-      unsigned long present   #  Flags to indicate presence of message type in header 
-      unsigned long shared    #  Flags to indicate message type is shared in header 
+  ctypedef struct H5_ih_info_t:
+    hsize_t     index_size,  # btree and/or list
+    hsize_t     heap_size
 
-    ctypedef struct hdr:
-      unsigned version        #  Version number of header format in file 
-      unsigned nmesgs         #  Number of object header messages 
-      unsigned nchunks        #  Number of object header chunks 
-      unsigned flags          #  Object header status flags 
-      space space
-      mesg mesg
+  cdef struct meta_size:
+    H5_ih_info_t   obj,    #        v1/v2 B-tree & local/fractal heap for groups, B-tree for chunked datasets
+    H5_ih_info_t   attr    #        v2 B-tree & heap for attributes
 
-    ctypedef struct H5_ih_info_t:
-      hsize_t     index_size,  # btree and/or list
-      hsize_t     heap_size
+  ctypedef struct H5O_info_t:
+    unsigned long   fileno      #  File number that object is located in 
+    haddr_t         addr        #  Object address in file    
+    H5O_type_t      type        #  Basic object type (group, dataset, etc.) 
+    unsigned        rc          #  Reference count of object    
+    time_t          atime       #  Access time            
+    time_t          mtime       #  Modification time        
+    time_t          ctime       #  Change time            
+    time_t          btime       #  Birth time            
+    hsize_t         num_attrs   #  # of attributes attached to object 
+    hdr             hdr
+    meta_size       meta_size
 
-    cdef struct meta_size:
-      H5_ih_info_t   obj,    #        v1/v2 B-tree & local/fractal heap for groups, B-tree for chunked datasets
-      H5_ih_info_t   attr    #        v2 B-tree & heap for attributes
-
-    ctypedef struct H5O_info_t:
-      unsigned long   fileno      #  File number that object is located in 
-      haddr_t         addr        #  Object address in file    
-      H5O_type_t      type        #  Basic object type (group, dataset, etc.) 
-      unsigned        rc          #  Reference count of object    
-      time_t          atime       #  Access time            
-      time_t          mtime       #  Modification time        
-      time_t          ctime       #  Change time            
-      time_t          btime       #  Birth time            
-      hsize_t         num_attrs   #  # of attributes attached to object 
-      hdr             hdr
-      meta_size       meta_size
-
-    ctypedef herr_t (*H5O_iterate_t)(hid_t obj, char *name, H5O_info_t *info,
-                      void *op_data) except 2
+  ctypedef herr_t (*H5O_iterate_t)(hid_t obj, char *name, H5O_info_t *info,
+                    void *op_data) except 2
 
 # === H5P - Property list API =================================================
 
@@ -389,12 +382,12 @@ cdef extern from "hdf5.h":
   hid_t H5P_FILE_ACCESS 
   hid_t H5P_DATASET_CREATE 
   hid_t H5P_DATASET_XFER 
-  IF H5PY_18API:
-    hid_t H5P_OBJECT_CREATE
-    hid_t H5P_OBJECT_COPY
-    hid_t H5P_LINK_CREATE
-    hid_t H5P_LINK_ACCESS
-    hid_t H5P_GROUP_CREATE
+
+  hid_t H5P_OBJECT_CREATE
+  hid_t H5P_OBJECT_COPY
+  hid_t H5P_LINK_CREATE
+  hid_t H5P_LINK_ACCESS
+  hid_t H5P_GROUP_CREATE
 
 # === H5R - Reference API =====================================================
 
@@ -657,16 +650,14 @@ cdef extern from "hdf5.h":
 
   ctypedef herr_t (*H5A_operator_t)(hid_t loc_id, char *attr_name, void* operator_data) except 2
 
-  IF H5PY_18API:
+  ctypedef struct H5A_info_t:
+    hbool_t corder_valid          # Indicate if creation order is valid
+    H5O_msg_crt_idx_t corder      # Creation order
+    H5T_cset_t        cset        # Character set of attribute name
+    hsize_t           data_size   # Size of raw data
 
-    ctypedef struct H5A_info_t:
-      hbool_t corder_valid          # Indicate if creation order is valid
-      H5O_msg_crt_idx_t corder      # Creation order
-      H5T_cset_t        cset        # Character set of attribute name
-      hsize_t           data_size   # Size of raw data
-
-    ctypedef herr_t (*H5A_operator2_t)(hid_t location_id, char *attr_name,
-            H5A_info_t *ainfo, void *op_data) except 2
+  ctypedef herr_t (*H5A_operator2_t)(hid_t location_id, char *attr_name,
+          H5A_info_t *ainfo, void *op_data) except 2
 
 
 

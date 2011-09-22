@@ -13,10 +13,8 @@
 include "config.pxi"
 from defs cimport *
 
-IF H5PY_18API:
+cdef class LinkProxy:
 
-    cdef class LinkProxy:
-
-        cdef hid_t id
+    cdef hid_t id
 
 
