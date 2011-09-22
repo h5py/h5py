@@ -1,5 +1,3 @@
-include "config.pxi"
-
 from defs cimport *
 
 ITER_INC    = H5_ITER_INC     # Increasing order

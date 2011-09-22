@@ -14,8 +14,6 @@
     Low-level operations on HDF5 file objects.
 """
 
-include "config.pxi"
-
 # Compile-time imports
 from _objects cimport pdefault
 from h5p cimport propwrap, PropFAID, PropFCID

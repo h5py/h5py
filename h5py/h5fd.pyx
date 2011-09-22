@@ -17,8 +17,6 @@
     File driver constants (H5FD*).
 """
 
-include "config.pxi"
-
 # === Multi-file driver =======================================================
 
 MEM_DEFAULT = H5FD_MEM_DEFAULT

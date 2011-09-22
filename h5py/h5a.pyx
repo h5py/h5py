@@ -14,8 +14,6 @@
     Provides access to the low-level HDF5 "H5A" attribute interface.
 """
 
-include "config.pxi"
-
 # Compile-time imports
 from _objects cimport pdefault
 from h5t cimport TypeID, typewrap, py_create

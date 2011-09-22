@@ -14,8 +14,6 @@
     Identifier interface for object inspection.
 """
 
-include "config.pxi"
-
 # === Public constants and data structures ====================================
 
 BADID       = H5I_BADID

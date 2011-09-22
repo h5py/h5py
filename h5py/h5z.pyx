@@ -14,8 +14,6 @@
     Filter API and constants.
 """
 
-include "config.pxi"
-
 # === Public constants and data structures ====================================
 
 FILTER_LZF = H5PY_FILTER_LZF

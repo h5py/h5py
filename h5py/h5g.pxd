@@ -10,7 +10,6 @@
 # 
 #-
 
-include "config.pxi"
 from defs cimport *
 
 from _objects cimport ObjectID

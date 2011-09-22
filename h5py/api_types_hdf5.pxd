@@ -1,4 +1,3 @@
-include "config.pxi"
 from api_types_ext cimport *
 
 cdef extern from "hdf5.h":

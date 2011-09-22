@@ -14,8 +14,6 @@
     H5R API for object and region references.
 """
 
-include "config.pxi"
-
 # Pyrex compile-time imports
 from _objects cimport ObjectID
 

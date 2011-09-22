@@ -14,7 +14,6 @@
 # license is available at licenses/pytables.txt, in the distribution root
 # directory.
 
-include "config.pxi"
 from defs cimport *
 
 from _objects cimport ObjectID

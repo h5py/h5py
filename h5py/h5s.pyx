@@ -14,8 +14,6 @@
     Low-level interface to the "H5S" family of data-space functions.
 """
 
-include "config.pxi"
-
 # Pyrex compile-time imports
 from utils cimport  require_tuple, convert_dims, convert_tuple, \
                     emalloc, efree, create_numpy_hsize, create_hsize_array

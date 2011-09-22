@@ -14,8 +14,6 @@
     HDF5 property list interface.
 """
 
-include "config.pxi"
-
 # Compile-time imports
 from utils cimport  require_tuple, convert_dims, convert_tuple, \
                     emalloc, efree, \

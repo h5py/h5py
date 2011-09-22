@@ -12,9 +12,6 @@
 # 
 #-
 
-include "config.pxi"
-
-
 from numpy cimport ndarray, import_array, \
                     NPY_UINT16, NPY_UINT32, NPY_UINT64,  npy_intp, \
                     PyArray_SimpleNew, PyArray_ContiguousFromAny, \

@@ -23,21 +23,18 @@ fp = re.compile(function_pattern)
 sp = re.compile(sig_pattern)
 
 raw_preamble = """\
-include "config.pxi"
 from api_types_hdf5 cimport *
 from api_types_ext cimport *
 
 """
 
 def_preamble = """\
-include "config.pxi"
 from api_types_hdf5 cimport *
 from api_types_ext cimport *
 
 """
 
 imp_preamble = """\
-include "config.pxi"
 from api_types_ext cimport *
 from api_types_hdf5 cimport *
 

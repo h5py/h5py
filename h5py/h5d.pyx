@@ -14,8 +14,6 @@
     Provides access to the low-level HDF5 "H5D" dataset interface.
 """
 
-include "config.pxi"
-
 # Compile-time imports
 from _objects cimport pdefault
 from numpy cimport ndarray, import_array, PyArray_DATA, NPY_WRITEABLE

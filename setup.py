@@ -87,16 +87,6 @@ def make_extension(module):
 
 EXTENSIONS = [make_extension(m) for m in MODULES]
 
-
-# --- Write PXI file (this should go away soon) -------------------------------
-
-with open('h5py/config.pxi','w') as config_file:
-    config_file.write('DEF H5PY_16API=1\n')
-    config_file.write('DEF H5PY_18API=1\n')
-    config_file.write('DEF H5PY_API=18\n')
-    config_file.write('DEF H5PY_VERSION="%s"\n'%VERSION)
-
-
 # --- Custom distutils commands -----------------------------------------------
 
 class test(Command):

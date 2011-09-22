@@ -18,8 +18,6 @@
     The majority of the H5T API is presented as methods on these identifiers.
 """
 
-include "config.pxi"
-
 # Pyrex compile-time imports
 from _objects cimport pdefault
 
