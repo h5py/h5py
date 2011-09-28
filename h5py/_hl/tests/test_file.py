@@ -1,3 +1,10 @@
+
+"""
+    File object test module.
+
+    Tests all aspects of File objects, including their creation.
+"""
+
 from __future__ import with_statement
 
 import os

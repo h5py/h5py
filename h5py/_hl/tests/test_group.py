@@ -1,3 +1,13 @@
+
+"""
+    Group test module.
+
+    Tests all methods and properties of Group objects, with the following
+    exceptions:
+
+    1. Method create_dataset is tested in module test_dataset
+"""
+
 import numpy as np
 import sys
 

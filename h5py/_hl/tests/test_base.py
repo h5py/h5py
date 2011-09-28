@@ -1,4 +1,10 @@
 
+"""
+    Common high-level operations test
+
+    Tests features common to all high-level objects, like the .name property.
+"""
+
 from h5py import File
 from .common import ut, TestCase
 

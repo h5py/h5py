@@ -1,3 +1,13 @@
+
+"""
+    Dataset slicing test module.
+
+    Tests all supported slicing operations, including read/write and
+    broadcasting operations.  Does not test type conversion except for
+    corner cases overlapping with slicing; for example, when selecting
+    specific fields of a compound type.
+"""
+
 import numpy as np
 
 from .common import ut, TestCase

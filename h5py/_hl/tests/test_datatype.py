@@ -1,3 +1,10 @@
+
+"""
+    File-resident datatype tests.
+
+    Tests "committed" file-resident datatype objects.
+"""
+
 import numpy as np
 
 from .common import ut, TestCase
