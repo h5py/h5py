@@ -1,3 +1,13 @@
+
+"""
+    Dataset testing operations.
+
+    Tests all dataset operations, including creation, with the exception of:
+
+    1. Slicing operations for read and write, handled by module test_slicing
+    2. Type conversion for read and write (currently untested)
+"""
+
 import sys
 
 import numpy as np

@@ -1,3 +1,12 @@
+
+"""
+    Attributes testing module
+
+    Covers all operations which access the .attrs property, with the
+    exception of data read/write and type conversion.  Those operations
+    are tested by module test_attrs_data.
+"""
+
 import numpy as np
 
 from common import TestCase, ut

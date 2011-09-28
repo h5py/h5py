@@ -1,3 +1,10 @@
+
+"""
+    Attribute data transfer testing module
+
+    Covers all data read/write and type-conversion operations for attributes.
+"""
+
 import numpy as np
 
 from .common import TestCase, ut, py3
