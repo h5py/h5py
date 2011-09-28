@@ -58,21 +58,6 @@ def make_fid(name, mode, plist):
         raise ValueError("Invalid mode; must be one of r, r+, w, w-, a")
     return fid
 
-def make_lapl():
-    """Default link access property list"""
-
-    lapl = h5p.create(h5p.LINK_ACCESS)
-    fapl = h5p.create(h5p.FILE_ACCESS)
-    fapl.set_fclose_degree(h5f.CLOSE_STRONG)
-    lapl.set_elink_fapl(fapl)
-    return lapl
-
-def make_lcpl():
-    """Default link creation property list"""
-    lcpl = h5p.create(h5p.LINK_CREATE)
-    lcpl.set_create_intermediate_group(True)
-    return lcpl
-
 class File(Group):
 
     """
@@ -149,16 +134,12 @@ class File(Group):
             fapl = make_fapl(driver,libver,**kwds)
             fid = make_fid(name, mode, fapl)
         Group.__init__(self, fid)
-        self._shared.lcpl = make_lcpl()
-        self._shared.lapl = make_lapl()
-        self._shared.mode = mode
 
     def close(self):
         """ Close the file.  All open objects become invalid """
         # TODO: find a way to square this with having issue 140
         # Not clearing shared state introduces a tiny memory leak, but
         # it goes like the number of files opened in a session.
-        #del self._shared
         self.id.close()
 
     def flush(self):

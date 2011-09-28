@@ -31,10 +31,22 @@ def guess_dtype(data):
         return h5t.special_dtype(ref=h5r.Reference)
     return None
 
-class SharedConfig(object):
-    pass
+def default_lapl():
+    """ Default link access property list """
+    lapl = h5p.create(h5p.LINK_ACCESS)
+    fapl = h5p.create(h5p.FILE_ACCESS)
+    fapl.set_fclose_degree(h5f.CLOSE_STRONG)
+    lapl.set_elink_fapl(fapl)
+    return lapl
 
-filedata = collections.defaultdict(SharedConfig)
+def default_lcpl():
+    """ Default link creation property list """
+    lcpl = h5p.create(h5p.LINK_CREATE)
+    lcpl.set_create_intermediate_group(True)
+    return lcpl
+
+dlapl = default_lapl()
+dlcpl = default_lcpl()
 
 class CommonStateObject(object):
 
@@ -47,16 +59,16 @@ class CommonStateObject(object):
     """
 
     @property
-    def _shared(self):
-        """ Settings shared across all objects in an HDF5 file """
-        return filedata[self.id.fileno]
+    def _lapl(self):
+        """ Fetch the link access property list appropriate for this object
+        """
+        return dlapl
 
-    @_shared.deleter
-    def _shared(self):
-        try:
-            del filedata[self.id.fileno]
-        except KeyError:
-            pass
+    @property
+    def _lcpl(self):
+        """ Fetch the link creation property list appropriate for this object
+        """
+        return dlcpl
 
     def _e(self, name, lcpl=None):
         """ Encode a name according to the current file settings.
@@ -69,7 +81,7 @@ class CommonStateObject(object):
         If name is None, returns either None or (None, None) appropriately.
         """
         def get_lcpl(coding):
-            lcpl = self._shared.lcpl.copy()
+            lcpl = self._lcpl.copy()
             lcpl.set_char_encoding(coding)
             return lcpl
 

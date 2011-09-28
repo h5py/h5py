@@ -124,7 +124,7 @@ class Group(HLObject, DictCompat):
             if oid is None:
                 raise ValueError("Invalid HDF5 object reference")
         else:
-            oid = h5o.open(self.id, self._e(name), lapl=self._shared.lapl)
+            oid = h5o.open(self.id, self._e(name), lapl=self._lapl)
 
         otype = h5i.get_type(oid)
         if otype == h5i.GROUP:
@@ -223,15 +223,15 @@ class Group(HLObject, DictCompat):
         name, lcpl = self._e(name, lcpl=True)
 
         if isinstance(obj, HLObject):
-            h5o.link(obj.id, self.id, name, lcpl=lcpl, lapl=self._shared.lapl)
+            h5o.link(obj.id, self.id, name, lcpl=lcpl, lapl=self._lapl)
 
         elif isinstance(obj, SoftLink):
             self.id.links.create_soft(name, self._e(obj.path),
-                          lcpl=lcpl, lapl=self._shared.lapl)
+                          lcpl=lcpl, lapl=self._lapl)
 
         elif isinstance(obj, ExternalLink):
             self.id.links.create_external(name, self._e(obj.filename),
-                          self._e(obj.path), lcpl=lcpl, lapl=self._shared.lapl)
+                          self._e(obj.path), lcpl=lcpl, lapl=self._lapl)
 
         elif isinstance(obj, numpy.dtype):
             htype = h5t.py_create(obj)
