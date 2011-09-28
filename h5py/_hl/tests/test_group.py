@@ -516,6 +516,43 @@ class TestExternalLinks(TestCase):
         with self.assertRaises(KeyError):
             self.f['ext']
 
+class TestExtLinkBugs(TestCase):
+
+    """
+        Bugs: Specific regressions for external links
+    """
+
+    def test_issue_212(self):
+        """ Issue 212
+    
+        Fails with:
+
+        AttributeError: 'SharedConfig' object has no attribute 'lapl'
+        """
+        def closer(x):
+            def w():
+                try:
+                    x.close()
+                except IOError:
+                    pass
+            return w
+        orig_name = self.mktemp()
+        new_name = self.mktemp()
+        f = File(orig_name, 'w')
+        self.addCleanup(closer(f))
+        f.create_group('a')
+        f.close()
+
+        g = File(new_name, 'w')
+        self.addCleanup(closer(g))
+        g['link'] = ExternalLink(orig_name, '/')  # note root group
+        g.close()
+
+        h = File(new_name, 'r')
+        self.addCleanup(closer(h))
+        self.assertIsInstance(h['link']['a'], Group)
+
+
 class TestCopy(TestCase):
 
     def setUp(self):
