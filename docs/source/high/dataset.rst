@@ -109,12 +109,12 @@ numeric slices:
 Broadcasting
 ------------
 
-For simple slicing, broadcasting is supported: 
+For simple slicing, broadcasting is supported:
 
     >>> dset[0,:,:] = np.arange(10)  # Broadcasts to (10,10)
 
 Importantly, h5py does *not* use NumPy to do broadcasting before the write.
-Broadcasting is implemented using repeated hyperslab selections, and is 
+Broadcasting is implemented using repeated hyperslab selections, and is
 safe to use with very large target selections.  In the following example, a
 write from a (1000, 1000) array is broadcast to a (1000, 1000, 1000) target
 selection as a series of 1000 writes:
@@ -209,25 +209,3 @@ Reference
 
     .. automethod:: h5py.Dataset.resize
     .. automethod:: h5py.Dataset.len
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
