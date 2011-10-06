@@ -532,7 +532,8 @@ class TestExtLinkBugs(TestCase):
         def closer(x):
             def w():
                 try:
-                    x.close()
+                    if x:
+                        x.close()
                 except IOError:
                     pass
             return w
