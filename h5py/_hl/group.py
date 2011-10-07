@@ -119,6 +119,10 @@ class Group(HLObject, DictCompat):
 
     def __getitem__(self, name):
         """ Open an object in the file """
+        if isinstance(name, numpy.object_):
+            # Values pulled out of compound types can be wrapped like this
+            name = name.item()
+
         if isinstance(name, h5r.Reference):
             oid = h5r.dereference(name, self.id)
             if oid is None:
