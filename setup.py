@@ -6,6 +6,10 @@ import os.path as op
 from functools import reduce
 
 try:
+    import Cython.Compiler.Version
+    vers = [int(x) for x in Cython.Compiler.Version.version.split('.')]
+    if vers < (0,13):
+        raise ImportError
     from Cython.Distutils import build_ext
     SUFFIX = '.pyx'
 except ImportError:
