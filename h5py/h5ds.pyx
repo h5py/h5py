@@ -14,8 +14,6 @@
     Low-level HDF5 "H5G" group interface.
 """
 
-include "config.pxi"
-
 # Compile-time imports
 from h5d cimport DatasetID
 from utils cimport emalloc, efree

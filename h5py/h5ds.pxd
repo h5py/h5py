@@ -10,5 +10,4 @@
 #
 #-
 
-include "config.pxi"
 from defs cimport *
