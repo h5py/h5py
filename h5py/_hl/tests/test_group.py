@@ -12,6 +12,7 @@ import numpy as np
 import sys
 
 from .common import ut, TestCase
+import h5py
 from h5py.highlevel import File, Group, SoftLink, HardLink, ExternalLink
 from h5py.highlevel import Dataset, Datatype
 from h5py import h5t
@@ -177,6 +178,21 @@ class TestOpen(BaseGroup):
         grp = self.f.create_group('foo')
         grp2 = self.f[grp.ref]
         self.assertEqual(grp2, grp)
+
+    def test_reference_numpyobj(self):
+        """ Object can be opened by numpy.object_ containing object ref
+
+        Test for issue 181, issue 202.
+        """
+        g = self.f.create_group('test')
+
+        rtype = h5py.special_dtype(ref=h5py.Reference)
+        dt = np.dtype([('a', 'i'),('b',rtype)])
+        dset = self.f.create_dataset('test_dset', (1,), dt)
+
+        dset[0] =(42,g.ref)
+        data = dset[0]
+        self.assertEqual(self.f[data[1]], g)
 
     # TODO: check that regionrefs also work with __getitem__
 
