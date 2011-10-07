@@ -61,7 +61,7 @@ if sys.platform.startswith('win'):
         COMPILER_SETTINGS['library_dirs'] += [op.join(HDF5, 'dll')]
 else:
     COMPILER_SETTINGS = {
-       'libraries'      : ['hdf5'],
+       'libraries'      : ['hdf5', 'hdf5_hl'],
        'include_dirs'   : [numpy.get_include(), localpath('lzf')],
        'library_dirs'   : [],
        'define_macros'  : [('H5_USE_16_API', None)]
@@ -79,9 +79,10 @@ MODULES =  ['defs','_errors','_objects','_proxy', 'h5fd', 'h5z',
             '_conv', 'h5t','h5s',
             'h5p',
             'h5d', 'h5a', 'h5f', 'h5g',
-            'h5l', 'h5o']
+            'h5l', 'h5o',
+            'h5ds']
 
-EXTRA_SRC = {'h5z': [ localpath("lzf/lzf_filter.c"), 
+EXTRA_SRC = {'h5z': [ localpath("lzf/lzf_filter.c"),
                       localpath("lzf/lzf/lzf_c.c"),
                       localpath("lzf/lzf/lzf_d.c")]}
 
@@ -181,7 +182,7 @@ else:
 # Why the hell does Windows demand this format?
 if sys.platform.startswith('win'):
     VERSION = VERSION.replace('-beta','b')
-    
+
 setup(
   name = 'h5py',
   version = VERSION,
