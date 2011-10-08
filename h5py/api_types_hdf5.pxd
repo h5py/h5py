@@ -126,7 +126,7 @@ cdef extern from "hdf5.h":
   hid_t H5FD_MPIO
   hid_t H5FD_MULTI
   hid_t H5FD_SEC2
-  hid_t H5FD_STDIO  
+  hid_t H5FD_STDIO
 
   int H5FD_LOG_LOC_READ   # 0x0001
   int H5FD_LOG_LOC_WRITE  # 0x0002
@@ -188,8 +188,8 @@ cdef extern from "hdf5.h":
       H5G_STORAGE_TYPE_UNKNOWN = -1,
       H5G_STORAGE_TYPE_SYMBOL_TABLE,
       H5G_STORAGE_TYPE_COMPACT,
-      H5G_STORAGE_TYPE_DENSE 
- 
+      H5G_STORAGE_TYPE_DENSE
+
   ctypedef struct H5G_info_t:
       H5G_storage_type_t     storage_type
       hsize_t     nlinks
@@ -198,18 +198,18 @@ cdef extern from "hdf5.h":
 # === H5I - Identifier and reflection interface ===============================
 
   ctypedef enum H5I_type_t:
-    H5I_BADID        = -1,  # invalid Group                   
-    H5I_FILE        = 1,    # group ID for File objects           
-    H5I_GROUP,              # group ID for Group objects           
-    H5I_DATATYPE,           # group ID for Datatype objects           
-    H5I_DATASPACE,          # group ID for Dataspace objects       
-    H5I_DATASET,            # group ID for Dataset objects           
-    H5I_ATTR,               # group ID for Attribute objects       
-    H5I_REFERENCE,          # group ID for Reference objects       
-    H5I_VFL,                # group ID for virtual file layer       
+    H5I_BADID        = -1,  # invalid Group
+    H5I_FILE        = 1,    # group ID for File objects
+    H5I_GROUP,              # group ID for Group objects
+    H5I_DATATYPE,           # group ID for Datatype objects
+    H5I_DATASPACE,          # group ID for Dataspace objects
+    H5I_DATASET,            # group ID for Dataset objects
+    H5I_ATTR,               # group ID for Attribute objects
+    H5I_REFERENCE,          # group ID for Reference objects
+    H5I_VFL,                # group ID for virtual file layer
     H5I_GENPROP_CLS,        # group ID for generic property list classes
-    H5I_GENPROP_LST,        # group ID for generic property lists      
-    H5I_NGROUPS             # number of valid groups, MUST BE LAST!       
+    H5I_GENPROP_LST,        # group ID for generic property lists
+    H5I_NGROUPS             # number of valid groups, MUST BE LAST!
 
 # === H5L/H5O - Links interface (1.8.X only) ======================================
 
@@ -227,39 +227,39 @@ cdef extern from "hdf5.h":
   # * defined by HDF5 but their behavior can be overridden by users.
   # * Users who want to create new classes of links should contact the HDF5
   # * development team at hdfhelp@ncsa.uiuc.edu .
-  # * These values can never change because they appear in HDF5 files. 
-  # 
+  # * These values can never change because they appear in HDF5 files.
+  #
   ctypedef enum H5L_type_t:
-    H5L_TYPE_ERROR = (-1),      #  Invalid link type id         
-    H5L_TYPE_HARD = 0,          #  Hard link id                 
-    H5L_TYPE_SOFT = 1,          #  Soft link id                 
-    H5L_TYPE_EXTERNAL = 64,     #  External link id             
-    H5L_TYPE_MAX = 255          #  Maximum link type id         
+    H5L_TYPE_ERROR = (-1),      #  Invalid link type id
+    H5L_TYPE_HARD = 0,          #  Hard link id
+    H5L_TYPE_SOFT = 1,          #  Soft link id       
+    H5L_TYPE_EXTERNAL = 64,     #  External link id
+    H5L_TYPE_MAX = 255          #  Maximum link type id
 
   #  Information struct for link (for H5Lget_info/H5Lget_info_by_idx)
   cdef union _add_u:
-    haddr_t address   #  Address hard link points to    
-    size_t val_size   #  Size of a soft link or UD link value 
+    haddr_t address   #  Address hard link points to
+    size_t val_size   #  Size of a soft link or UD link value
 
   ctypedef struct H5L_info_t:
-    H5L_type_t  type            #  Type of link                   
-    hbool_t     corder_valid    #  Indicate if creation order is valid 
-    int64_t     corder          #  Creation order                 
-    H5T_cset_t  cset            #  Character set of link name     
+    H5L_type_t  type            #  Type of link
+    hbool_t     corder_valid    #  Indicate if creation order is valid
+    int64_t     corder          #  Creation order
+    H5T_cset_t  cset            #  Character set of link name
     _add_u u
 
-  #  Prototype for H5Literate/H5Literate_by_name() operator 
+  #  Prototype for H5Literate/H5Literate_by_name() operator
   ctypedef herr_t (*H5L_iterate_t) (hid_t group, char *name, H5L_info_t *info,
                     void *op_data) except 2
 
   ctypedef uint32_t H5O_msg_crt_idx_t
 
   ctypedef enum H5O_type_t:
-    H5O_TYPE_UNKNOWN = -1,      # Unknown object type        
-    H5O_TYPE_GROUP,             # Object is a group        
-    H5O_TYPE_DATASET,           # Object is a dataset        
-    H5O_TYPE_NAMED_DATATYPE,    # Object is a named data type    
-    H5O_TYPE_NTYPES             # Number of different object types (must be last!) 
+    H5O_TYPE_UNKNOWN = -1,      # Unknown object type
+    H5O_TYPE_GROUP,             # Object is a group
+    H5O_TYPE_DATASET,           # Object is a dataset
+    H5O_TYPE_NAMED_DATATYPE,    # Object is a named data type
+    H5O_TYPE_NTYPES             # Number of different object types (must be last!)
 
   unsigned int H5O_COPY_SHALLOW_HIERARCHY_FLAG    # (0x0001u) Copy only immediate members
   unsigned int H5O_COPY_EXPAND_SOFT_LINK_FLAG     # (0x0002u) Expand soft links into new objects
@@ -272,20 +272,20 @@ cdef extern from "hdf5.h":
   # --- Components for the H5O_info_t struct ----------------------------------
 
   ctypedef struct space:
-    hsize_t total           #  Total space for storing object header in file 
-    hsize_t meta            #  Space within header for object header metadata information 
-    hsize_t mesg            #  Space within header for actual message information 
-    hsize_t free            #  Free space within object header 
+    hsize_t total           #  Total space for storing object header in file
+    hsize_t meta            #  Space within header for object header metadata information
+    hsize_t mesg            #  Space within header for actual message information
+    hsize_t free            #  Free space within object header
 
   ctypedef struct mesg:
-    unsigned long present   #  Flags to indicate presence of message type in header 
-    unsigned long shared    #  Flags to indicate message type is shared in header 
+    unsigned long present   #  Flags to indicate presence of message type in header
+    unsigned long shared    #  Flags to indicate message type is shared in header
 
   ctypedef struct hdr:
-    unsigned version        #  Version number of header format in file 
-    unsigned nmesgs         #  Number of object header messages 
-    unsigned nchunks        #  Number of object header chunks 
-    unsigned flags          #  Object header status flags 
+    unsigned version        #  Version number of header format in file
+    unsigned nmesgs         #  Number of object header messages
+    unsigned nchunks        #  Number of object header chunks
+    unsigned flags          #  Object header status flags
     space space
     mesg mesg
 
@@ -298,15 +298,15 @@ cdef extern from "hdf5.h":
     H5_ih_info_t   attr    #        v2 B-tree & heap for attributes
 
   ctypedef struct H5O_info_t:
-    unsigned long   fileno      #  File number that object is located in 
-    haddr_t         addr        #  Object address in file    
-    H5O_type_t      type        #  Basic object type (group, dataset, etc.) 
-    unsigned        rc          #  Reference count of object    
-    time_t          atime       #  Access time            
-    time_t          mtime       #  Modification time        
-    time_t          ctime       #  Change time            
-    time_t          btime       #  Birth time            
-    hsize_t         num_attrs   #  # of attributes attached to object 
+    unsigned long   fileno      #  File number that object is located in
+    haddr_t         addr        #  Object address in file
+    H5O_type_t      type        #  Basic object type (group, dataset, etc.)
+    unsigned        rc          #  Reference count of object
+    time_t          atime       #  Access time
+    time_t          mtime       #  Modification time
+    time_t          ctime       #  Change time
+    time_t          btime       #  Birth time
+    hsize_t         num_attrs   #  # of attributes attached to object
     hdr             hdr
     meta_size       meta_size
 
@@ -356,7 +356,7 @@ cdef extern from "hdf5.h":
     H5Z_ERROR_EDC       = -1,
     H5Z_DISABLE_EDC     = 0,
     H5Z_ENABLE_EDC      = 1,
-    H5Z_NO_EDC          = 2 
+    H5Z_NO_EDC          = 2
 
   cdef enum H5F_close_degree_t:
     H5F_CLOSE_WEAK  = 0,
@@ -377,10 +377,10 @@ cdef extern from "hdf5.h":
 
   # Property list classes
   hid_t H5P_NO_CLASS
-  hid_t H5P_FILE_CREATE 
-  hid_t H5P_FILE_ACCESS 
-  hid_t H5P_DATASET_CREATE 
-  hid_t H5P_DATASET_XFER 
+  hid_t H5P_FILE_CREATE
+  hid_t H5P_FILE_ACCESS
+  hid_t H5P_DATASET_CREATE
+  hid_t H5P_DATASET_XFER
 
   hid_t H5P_OBJECT_CREATE
   hid_t H5P_OBJECT_COPY
@@ -419,19 +419,19 @@ cdef extern from "hdf5.h":
     H5S_SELECT_INVALID    # Must be the last one
 
   ctypedef enum H5S_class_t:
-    H5S_NO_CLASS         = -1,  #/*error                                     
-    H5S_SCALAR           = 0,   #/*scalar variable                           
-    H5S_SIMPLE           = 1,   #/*simple data space                         
+    H5S_NO_CLASS         = -1,  #/*error
+    H5S_SCALAR           = 0,   #/*scalar variable
+    H5S_SIMPLE           = 1,   #/*simple data space
     # no longer defined in 1.8
-    #H5S_COMPLEX          = 2    #/*complex data space                        
+    #H5S_COMPLEX          = 2    #/*complex data space
 
   ctypedef enum H5S_sel_type:
-    H5S_SEL_ERROR    = -1,         #Error           
-    H5S_SEL_NONE    = 0,        #Nothing selected        
-    H5S_SEL_POINTS    = 1,        #Sequence of points selected   
-    H5S_SEL_HYPERSLABS  = 2,    #"New-style" hyperslab selection defined   
-    H5S_SEL_ALL        = 3,        #Entire extent selected   
-    H5S_SEL_N        = 4            #/*THIS MUST BE LAST       
+    H5S_SEL_ERROR    = -1,         #Error
+    H5S_SEL_NONE    = 0,        #Nothing selected
+    H5S_SEL_POINTS    = 1,        #Sequence of points selected
+    H5S_SEL_HYPERSLABS  = 2,    #"New-style" hyperslab selection defined
+    H5S_SEL_ALL        = 3,        #Entire extent selected
+    H5S_SEL_N        = 4            #/*THIS MUST BE LAST
 
 # === H5T - Datatypes =========================================================
 
@@ -615,7 +615,7 @@ cdef extern from "hdf5.h":
   int H5Z_FILTER_NONE
   int H5Z_FILTER_ALL
   int H5Z_FILTER_DEFLATE
-  int H5Z_FILTER_SHUFFLE 
+  int H5Z_FILTER_SHUFFLE
   int H5Z_FILTER_FLETCHER32
   int H5Z_FILTER_SZIP
   int H5Z_FILTER_RESERVED
@@ -643,7 +643,7 @@ cdef extern from "hdf5.h":
       H5Z_ERROR_EDC       = -1,
       H5Z_DISABLE_EDC     = 0,
       H5Z_ENABLE_EDC      = 1,
-      H5Z_NO_EDC          = 2 
+      H5Z_NO_EDC          = 2
 
 # === H5A - Attributes API ====================================================
 
@@ -660,5 +660,9 @@ cdef extern from "hdf5.h":
 
 
 
+cdef extern from "hdf5_hl.h":
+# === H5DS - Dimension Scales API =============================================
+
+  ctypedef herr_t  (*H5DS_iterate_t)(hid_t dset, unsigned dim, hid_t scale, void *visitor_data) except 2
 
 

@@ -8,8 +8,9 @@ a small number of classes which represent the main HDF5 abstractions like
 file, groups, and datasets.
 
 .. toctree::
-    
+
     file
     group
     dataset
     attr
+    dims

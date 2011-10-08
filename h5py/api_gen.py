@@ -63,11 +63,8 @@ class FunctionCruncher2(object):
         self.cython_def.write(def_preamble)
         self.cython_imp.write(imp_preamble)
 
-        self.raw_defs.write('cdef extern from "hdf5.h":\n')
-
         for line in self.functions:
-            line = line.strip()
-            if not line or line[0] == '#':
+            if not line or line[0] == '#' or line[0] == '\n':
                 continue
             try:
                 self.handle_line(line)
@@ -83,14 +80,23 @@ class FunctionCruncher2(object):
         """ Parse a function definition line and output the correct code
         to each of the output files. """
 
-        m = fp.match(line)
-        if m is None:
-            raise BadLineError("Signature for line <<%s>> did not match regexp" % line)
-        function_parts = m.groupdict()
+        if line.startswith(' '):
+            line = line.strip()
+            if line.startswith('#'):
+                return
+            m = fp.match(line)
+            if m is None:
+                raise BadLineError(
+                    "Signature for line <<%s>> did not match regexp" % line
+                    )
+            function_parts = m.groupdict()
 
-        self.raw_defs.write('  '+self.make_raw_sig(function_parts))
-        self.cython_def.write(self.make_cython_sig(function_parts))
-        self.cython_imp.write(self.make_cython_imp(function_parts))
+            self.raw_defs.write('  '+self.make_raw_sig(function_parts))
+            self.cython_def.write(self.make_cython_sig(function_parts))
+            self.cython_imp.write(self.make_cython_imp(function_parts))
+        else:
+            inc = line.split(':')[0]
+            self.raw_defs.write('cdef extern from "%s.h":\n' % inc)
 
     def make_raw_sig(self, function_parts):
         """ Build a "cdef extern"-style definition for an HDF5 function """
@@ -101,7 +107,7 @@ class FunctionCruncher2(object):
         """ Build Cython signature for wrapper function """
 
         return "cdef %(code)s %(fname)s(%(sig)s) except *\n" % function_parts
-        
+
     def make_cython_imp(self, function_parts, stub=False):
         """ Build a Cython wrapper implementation. If stub is True, do
         nothing but call the function and return its value """
