@@ -11,7 +11,7 @@ import os
 
 from .common import ut, TestCase
 from h5py.highlevel import File
-
+import h5py
 
 class TestFileOpen(TestCase):
 
@@ -94,6 +94,12 @@ class TestFileOpen(TestCase):
         with self.assertRaises(ValueError):
             File(self.mktemp(), 'mongoose')
 
+class TestModes(TestCase):
+
+    """
+        Feature: File mode can be retrieved via file.mode
+    """
+
     def test_mode_attr(self):
         """ Mode equivalent can be retrieved via property """
         fname = self.mktemp()
@@ -101,6 +107,32 @@ class TestFileOpen(TestCase):
             self.assertEqual(f.mode, 'r+')
         with File(fname, 'r') as f:
             self.assertEqual(f.mode, 'r')
+
+    def test_mode_external(self):
+        """ Mode property works for files opened via external links 
+
+        Issue 190.
+        """
+        fname1 = self.mktemp()
+        fname2 = self.mktemp()
+
+        f1 = File(fname1,'w')
+        f1.close()
+
+        f2 = File(fname2,'w')
+        try:
+            f2['External'] = h5py.ExternalLink(fname1, '/')
+            f3 = f2['External'].file
+            self.assertEqual(f3.mode, 'r+')
+        finally:
+            f2.close()
+
+        f2 = File(fname2,'r')
+        try:
+            f3 = f2['External'].file
+            self.assertEqual(f3.mode, 'r')
+        finally:
+            f2.close()
 
 class TestDrivers(TestCase):
 
