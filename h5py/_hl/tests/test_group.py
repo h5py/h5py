@@ -532,6 +532,17 @@ class TestExternalLinks(TestCase):
         with self.assertRaises(KeyError):
             self.f['ext']
 
+    def test_close_file(self):
+        """ Files opened by accessing external links can be closed 
+
+        Issue 189.
+        """
+        self.f['ext'] = ExternalLink(self.ename, '/')
+        grp = self.f['ext']
+        f2 = grp.file
+        f2.close()
+        self.assertFalse(f2)
+
 class TestExtLinkBugs(TestCase):
 
     """
