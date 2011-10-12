@@ -272,12 +272,22 @@ class Dataset(HLObject):
         names = tuple(x for x in args if isinstance(x, str))
         args = tuple(x for x in args if not isinstance(x, str))
 
+        def strip_fields(basetype):
+            """ Strip extra dtype information from special types """
+            if basetype.kind == 'O':
+                return numpy.dtype('O')
+            if basetype.fields is not None:
+                fields = []
+                for name, (subtype, meta) in basetype.fields.items():
+                    subtype = strip_fields(subtype)
+                    fields.append((name, subtype))
+                return numpy.dtype(fields)
+            return basetype
+
         def readtime_dtype(basetype, names):
             """ Make a NumPy dtype appropriate for reading """
 
-            if basetype.kind == 'O':
-                # Special-dtype fields break indexing
-                basetype = numpy.dtype('O')
+            basetype = strip_fields(basetype)
 
             if len(names) == 0:  # Not compound, or we want all fields
                 return basetype

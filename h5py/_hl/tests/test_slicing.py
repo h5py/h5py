@@ -85,6 +85,17 @@ class TestObjectIndex(BaseSlicing):
         dset2[0] = regref
         self.assertEqual(type(dset2[0]), h5py.RegionReference)
 
+    def test_reference_field(self):
+        """ Compound types of which a reference is an element work right """
+        reftype = h5py.special_dtype(ref=h5py.Reference)
+        dt = np.dtype([('a', 'i'),('b',reftype)])
+
+        dset = self.f.create_dataset('x', (1,), dtype=dt)
+        dset[0] = (42, self.f['/'].ref)
+
+        out = dset[0]
+        self.assertEqual(type(out[1]), h5py.Reference)  # isinstance does NOT work
+
     def test_scalar(self):
         """ Indexing returns a real Python object on scalar datasets """
         dset = self.f.create_dataset('x', (), dtype=h5py.special_dtype(ref=h5py.Reference))
