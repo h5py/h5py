@@ -128,9 +128,74 @@ class TestSimpleSlicing(TestCase):
         """ Negative stop indexes work as they do in NumPy """
         self.assertArrayEqual(self.dset[2:-2], self.arr[2:-2])
 
+class TestArraySlicing(BaseSlicing):
+
+    """
+        Feature: Array types are handled appropriately
+    """
+
+    def test_read(self):
+        """ Read arrays tack array dimensions onto end of shape tuple """
+        dt = np.dtype('(3,)f8')
+        dset = self.f.create_dataset('x',(10,),dtype=dt)
+        self.assertEqual(dset.shape, (10,))
+        self.assertEqual(dset.dtype, dt)
+
+        # Full read
+        out = dset[...]
+        self.assertEqual(out.dtype, np.dtype('f8'))
+        self.assertEqual(out.shape, (10,3))
+
+        # Single element
+        out = dset[0]
+        self.assertEqual(out.dtype, np.dtype('f8'))
+        self.assertEqual(out.shape, (3,))
+
+        # Range
+        out = dset[2:8:2]
+        self.assertEqual(out.dtype, np.dtype('f8'))
+        self.assertEqual(out.shape, (3,3))
+
+    @ut.expectedFailure
+    def test_write_broadcast(self):
+        """ Fill an array type with a constant 
+
+        Issue 211.
+        """
+        dt = np.dtype('(3,)f8')
+        dset = self.f.create_dataset('x', (10,), dtype=dt)
+        dset[...] = 42.0
+        out = dset[...]
+        self.assertTrue(np.all(out == 42))
+
+    @ut.expectedFailure
+    def test_write_element(self):
+        """ Write a single element to the array 
+
+        Issue 211.
+        """
+        dt = np.dtype('(3,)f8')
+        dset = self.f.create_dataset('x', (10,), dtype=dt)
         
+        data = np.array([1,2,3.0])
+        dset[4] = data
+        
+        out = dset[4]
+        self.assertTrue(np.all(out == data))
 
+    @ut.expectedFailure
+    def test_roundtrip(self):
+        """ Read the contents of an array and write them back
 
+        Issue 211.
+        """
+        dt = np.dtype('(3,)f8')
+        dset = self.f.create_dataset('x', (10,), dtype=dt)
+
+        out = dset[...]
+        dset[...] = out
+
+        self.assertTrue(np.all(dset[...] == out))
 
 
 
