@@ -31,7 +31,7 @@ def make_new_dset(parent, shape=None, dtype=None, data=None,
                  chunks=None, compression=None, shuffle=None,
                     fletcher32=None, maxshape=None, compression_opts=None,
                   fillvalue=None):
-    """ Return a new low-level dataset identifier 
+    """ Return a new low-level dataset identifier
 
     Only creates anonymous datasets.
     """
@@ -109,6 +109,11 @@ class Dataset(HLObject):
         Represents an HDF5 dataset
     """
 
+    @property
+    def dims(self):
+        from . dims import DimensionManager
+        return DimensionManager(self)
+
     def _g_shape(self):
         """Numpy-style shape tuple giving dataset dimensions"""
         return self.id.shape
@@ -158,7 +163,7 @@ class Dataset(HLObject):
     def fletcher32(self):
         """Fletcher32 filter is present (T/F)"""
         return 'fletcher32' in self._filters
-        
+
     @property
     def maxshape(self):
         """Shape up to which this dataset can be resized.  Axes with value
@@ -233,7 +238,7 @@ class Dataset(HLObject):
         return size
 
     def len(self):
-        """ The size of the first axis.  TypeError if scalar. 
+        """ The size of the first axis.  TypeError if scalar.
 
         Use of this method is preferred to len(dset), as Python's built-in
         len() cannot handle values greater then 2**32 on 32-bit systems.
@@ -326,7 +331,7 @@ class Dataset(HLObject):
         if selection.nselect == 0:
             return numpy.ndarray((0,), dtype=new_dtype)
 
-        # Up-converting to (1,) so that numpy.ndarray correctly creates 
+        # Up-converting to (1,) so that numpy.ndarray correctly creates
         # np.void rows in case of multi-field dtype. (issue 135)
         single_element = selection.mshape == ()
         mshape = (1,) if single_element else selection.mshape
