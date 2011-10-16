@@ -5,7 +5,7 @@ from . import base
 from .dataset import Dataset, readtime_dtype
 
 
-class DimensionProxy(object):
+class DimensionProxy(base.CommonStateObject):
 
     @property
     def label(self):
@@ -14,12 +14,12 @@ class DimensionProxy(object):
         # so we will do this instead:
         try:
             dset = Dataset(self._id)
-            return dset.attrs['DIMENSION_LABELS'][self._dimension]
+            return self._d(dset.attrs['DIMENSION_LABELS'][self._dimension])
         except (KeyError, IndexError):
             return ''
     @label.setter
     def label(self, val):
-        h5ds.set_label(self._id, self._dimension, val)
+        h5ds.set_label(self._id, self._dimension, self._e(val))
 
     def __init__(self, id, dimension):
         self._id = id
@@ -47,7 +47,7 @@ class DimensionProxy(object):
             return scales[item]
         else:
             def f(dsid):
-                if h5ds.get_scale_name(dsid) == item:
+                if h5ds.get_scale_name(dsid) == self._e(item):
                     return Dataset(dsid)
             res = h5ds.iterate(self._id, self._dimension, f, 0)
             if res is None:
@@ -65,7 +65,10 @@ class DimensionProxy(object):
         def f(dsid):
             scales.append(dsid)
         h5ds.iterate(self._id, self._dimension, f, 0)
-        return [(h5ds.get_scale_name(id), Dataset(id)) for id in scales]
+        return [
+            (self._d(h5ds.get_scale_name(id)), Dataset(id))
+            for id in scales
+            ]
 
     def keys(self):
         return [key for (key, val) in self.items()]
@@ -112,4 +115,4 @@ class DimensionManager(base.DictCompat, base.CommonStateObject):
         return "<Dimensions of HDF5 object at %s>" % id(self._id)
 
     def create_scale(self, dset, name=''):
-        h5ds.set_scale(dset.id, name)
+        h5ds.set_scale(dset.id, self._e(name))

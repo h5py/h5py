@@ -50,9 +50,9 @@ IPython session::
 
 It is also possible to configure IPython to enable the completer every time you
 start a new session. For >=ipython-0.11, "h5py.ipy_completer" just needs to be
-added to the list of extensions in
-:file:`~/.config/ipython/ipython_config.py`. Here is the simplest possible
-config file, in its entirety::
+added to the list of extensions in your ipython config file, for example
+:file:`~/.config/ipython/profile_default/ipython_config.py` (if this file does
+not exist, you can create it by invoking `ipython profile create`)::
 
    c = get_config()
    c.Global.extensions = ['h5py.ipy_completer']

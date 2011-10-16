@@ -26,15 +26,15 @@ class BaseDataset(TestCase):
         h5py.h5ds.set_scale(self.f['x1'].id)
         h5py.h5ds.attach_scale(self.f['data'].id, self.f['x1'].id, 2)
         self.f['x2'] = np.ones((2), 'f')
-        h5py.h5ds.set_scale(self.f['x2'].id, 'x2 name')
+        h5py.h5ds.set_scale(self.f['x2'].id, b'x2 name')
         h5py.h5ds.attach_scale(self.f['data'].id, self.f['x2'].id, 2)
         self.f['y1'] = np.ones((3), 'f')
-        h5py.h5ds.set_scale(self.f['y1'].id, 'y1 name')
+        h5py.h5ds.set_scale(self.f['y1'].id, b'y1 name')
         h5py.h5ds.attach_scale(self.f['data'].id, self.f['y1'].id, 1)
         self.f['z1'] = np.ones((4), 'f')
 
-        h5py.h5ds.set_label(self.f['data'].id, 0, 'z')
-        h5py.h5ds.set_label(self.f['data'].id, 2, 'x')
+        h5py.h5ds.set_label(self.f['data'].id, 0, b'z')
+        h5py.h5ds.set_label(self.f['data'].id, 2, b'x')
 
     def tearDown(self):
         if self.f:
@@ -49,9 +49,9 @@ class TestH5DSBindings(BaseDataset):
     def test_create_dimensionscale(self):
         """ Create a dimension scale from existing dataset """
         self.assertTrue(h5py.h5ds.is_scale(self.f['x1'].id))
-        self.assertEqual(h5py.h5ds.get_scale_name(self.f['x1'].id), '')
-        self.assertEqual(self.f['x1'].attrs['CLASS'], "DIMENSION_SCALE")
-        self.assertEqual(h5py.h5ds.get_scale_name(self.f['x2'].id), 'x2 name')
+        self.assertEqual(h5py.h5ds.get_scale_name(self.f['x1'].id), b'')
+        self.assertEqual(self.f['x1'].attrs['CLASS'], b"DIMENSION_SCALE")
+        self.assertEqual(h5py.h5ds.get_scale_name(self.f['x2'].id), b'x2 name')
 
     def test_attach_dimensionscale(self):
         self.assertTrue(
@@ -79,28 +79,28 @@ class TestH5DSBindings(BaseDataset):
         "Reading non-existent label segfaults"
         )
     def test_label_dimensionscale(self):
-        self.assertEqual(h5py.h5ds.get_label(self.f['data'].id, 0), 'z')
-        self.assertEqual(h5py.h5ds.get_label(self.f['data'].id, 1), '')
-        self.assertEqual(h5py.h5ds.get_label(self.f['data'].id, 2), 'x')
+        self.assertEqual(h5py.h5ds.get_label(self.f['data'].id, 0), b'z')
+        self.assertEqual(h5py.h5ds.get_label(self.f['data'].id, 1), b'')
+        self.assertEqual(h5py.h5ds.get_label(self.f['data'].id, 2), b'x')
 
     def test_iter_dimensionscales(self):
         def func(dsid):
             res = h5py.h5ds.get_scale_name(dsid)
-            if res == 'x2 name':
+            if res == b'x2 name':
                 return dsid
 
         res = h5py.h5ds.iterate(self.f['data'].id, 2, func, 0)
-        self.assertEqual(h5py.h5ds.get_scale_name(res), 'x2 name')
+        self.assertEqual(h5py.h5ds.get_scale_name(res), b'x2 name')
 
 
 class TestDimensionManager(BaseDataset):
 
     def test_create_scale(self):
         # test recreating or renaming an existing scale:
-        self.f['data'].dims.create_scale(self.f['x1'], 'foobar')
+        self.f['data'].dims.create_scale(self.f['x1'], b'foobar')
         self.assertEqual(self.f['data'].dims[2]['foobar'], self.f['x1'])
         # test creating entirely new scale:
-        self.f['data'].dims.create_scale(self.f['data2'], 'foobaz')
+        self.f['data'].dims.create_scale(self.f['data2'], b'foobaz')
         self.f['data'].dims[2].attach_scale(self.f['data2'])
         self.assertEqual(self.f['data'].dims[2]['foobaz'], self.f['data2'])
 
