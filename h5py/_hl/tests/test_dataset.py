@@ -91,6 +91,12 @@ class TestCreateData(BaseDataset):
         dset = self.f.create_dataset('foo', data=data)
         self.assertEqual(dset.shape, data.shape)
 
+    def test_dataset_intermediate_group(self):
+        """ Create dataset with missing intermediate groups """
+        ds = self.f.create_dataset("/foo/bar/baz", shape=(10, 10), dtype='<i4')
+        self.assertIsInstance(ds, h5py.Dataset)
+        self.assertTrue("/foo/bar/baz" in self.f)
+
     def test_reshape(self):
         """ Create from existing data, and make it fit a new shape """
         data = np.arange(30, dtype='f')
