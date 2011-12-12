@@ -131,6 +131,8 @@ class Dataset(HLObject):
     @property
     def value(self):
         """  Alias for dataset[()] """
+        DeprecationWarning("dataset.value has been deprecated. "
+            "Use dataset[()] instead.")
         return self[()]
 
     @property
