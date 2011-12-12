@@ -51,3 +51,19 @@ def enable_ipython_completer():
             return ipy_completer.load_ipython_extension()
 
     raise RuntimeError('completer must be enabled in active ipython session')
+
+def run_tests(verbosity=1):
+    import sys
+    py_version = sys.version_info[:2]
+    if py_version == (2,7) or py_version >= (3,2):
+        import unittest
+    else:
+        try:
+            import unittest2 as unittest
+        except ImportError:
+            raise ImportError(
+                "unittest2 is required to run tests with python-%d.%d"
+                % py_version
+                )
+    suite = unittest.TestLoader().discover('h5py')
+    result = unittest.TextTestRunner(verbosity=verbosity).run(suite)
