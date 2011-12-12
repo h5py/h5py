@@ -80,8 +80,8 @@ Slicing access
 
 The best way to get at data is to use the traditional NumPy extended-slicing
 syntax.   Slice specifications are translated directly to HDF5 *hyperslab*
-selections, and are are a fast and efficient way to access data in the file.
-The following slicing arguments are recognized:
+selections, and are a fast and efficient way to access data in the file. The
+following slicing arguments are recognized:
 
     * Numbers: anything that can be converted to a Python long
     * Slices (i.e. ``[:]`` or ``[0:10]``)
