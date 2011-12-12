@@ -9,9 +9,9 @@ class DimensionProxy(base.CommonStateObject):
 
     @property
     def label(self):
-        # This approach will segfault for a non-existent label:
         #return h5ds.get_label(self._id, self._dimension)
-        # so we will do this instead:
+        # Produces a segfault for a non-existent label (Fixed in hdf5-1.8.8).
+        # Here is a workaround:
         try:
             dset = Dataset(self._id)
             return self._d(dset.attrs['DIMENSION_LABELS'][self._dimension])
