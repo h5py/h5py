@@ -58,6 +58,10 @@ class TestCreateShape(BaseDataset):
         """ Create an extended dataset """
         dset = self.f.create_dataset('foo', (63,))
         self.assertEqual(dset.shape, (63,))
+        self.assertEqual(dset.size, 63)
+        dset = self.f.create_dataset('bar', (6, 10))
+        self.assertEqual(dset.shape, (6, 10))
+        self.assertEqual(dset.size, (60))
 
     def test_default_dtype(self):
         """ Confirm that the default dtype is float """
@@ -402,32 +406,3 @@ class TestIter(BaseDataset):
         dset = self.f.create_dataset('foo', shape=())
         with self.assertRaises(TypeError):
             [x for x in dset]
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

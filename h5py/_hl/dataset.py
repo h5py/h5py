@@ -114,14 +114,18 @@ class Dataset(HLObject):
         from . dims import DimensionManager
         return DimensionManager(self)
 
-    def _g_shape(self):
+    @property
+    def shape(self):
         """Numpy-style shape tuple giving dataset dimensions"""
         return self.id.shape
-
-    def _s_shape(self, shape):
+    @shape.setter
+    def shape(self, shape):
         self.resize(shape)
 
-    shape = property(_g_shape, _s_shape)
+    @property
+    def size(self):
+        """Numpy-style attribute giving the total dataset size"""
+        return numpy.prod(self.shape)
 
     @property
     def dtype(self):
