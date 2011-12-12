@@ -196,7 +196,8 @@ class Dataset(HLObject):
     def __init__(self, bind):
         """ Create a new Dataset object by binding to a low-level DatasetID.
         """
-
+        if not isinstance(bind, h5d.DatasetID):
+            raise ValueError("%s is not a DatasetID" % bind)
         HLObject.__init__(self, bind)
 
         self._dcpl = self.id.get_create_plist()

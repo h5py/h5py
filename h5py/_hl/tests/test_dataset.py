@@ -98,6 +98,11 @@ class TestCreateData(BaseDataset):
         self.assertEqual(dset.shape, (10,3))
         self.assertArrayEqual(dset[...],data.reshape((10,3)))
 
+    def test_appropriate_low_level_id(self):
+        " Binding Dataset to a non-DatasetID identifier fails with ValueError "
+        with self.assertRaises(ValueError):
+            Dataset(self.f['/'].id)
+
 class TestCreateRequire(BaseDataset):
 
     """
