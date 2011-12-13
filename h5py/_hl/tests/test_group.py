@@ -593,7 +593,8 @@ class TestCopy(TestCase):
         if self.f2:
             self.f2.close()
             
-    @ut.skipIf(h5py.version.hdf5_version < (1,8,9), "Bug in HDF5<1.8.8 prevents copying open dataset")
+    @ut.skipIf(h5py.version.hdf5_version_tuple < (1,8,9),
+               "Bug in HDF5<1.8.8 prevents copying open dataset")
     def test_copy_path_to_path(self):
         foo = self.f1.create_group('foo')
         foo['bar'] = [1,2,3]
@@ -603,7 +604,8 @@ class TestCopy(TestCase):
         self.assertIsInstance(baz, Group)
         self.assertArrayEqual(baz['bar'], np.array([1,2,3]))
 
-    @ut.skipIf(h5py.version.hdf5_version < (1,8,9), "Bug in HDF5<1.8.8 prevents copying open dataset")
+    @ut.skipIf(h5py.version.hdf5_version_tuple < (1,8,9),
+               "Bug in HDF5<1.8.8 prevents copying open dataset")
     def test_copy_path_to_group(self):
         foo = self.f1.create_group('foo')
         foo['bar'] = [1,2,3]
@@ -618,7 +620,8 @@ class TestCopy(TestCase):
         self.assertIsInstance(self.f2['/foo'], Group)
         self.assertArrayEqual(self.f2['foo/bar'], np.array([1,2,3]))
 
-    @ut.skipIf(h5py.version.hdf5_version < (1,8,9), "Bug in HDF5<1.8.8 prevents copying open dataset")
+    @ut.skipIf(h5py.version.hdf5_version_tuple < (1,8,9),
+               "Bug in HDF5<1.8.8 prevents copying open dataset")
     def test_copy_group_to_path(self):
 
         foo = self.f1.create_group('foo')
@@ -633,7 +636,8 @@ class TestCopy(TestCase):
         self.assertIsInstance(self.f2['/foo'], Group)
         self.assertArrayEqual(self.f2['foo/bar'], np.array([1,2,3]))
 
-    @ut.skipIf(h5py.version.hdf5_version < (1,8,9), "Bug in HDF5<1.8.8 prevents copying open dataset")
+    @ut.skipIf(h5py.version.hdf5_version_tuple < (1,8,9),
+               "Bug in HDF5<1.8.8 prevents copying open dataset")
     def test_copy_group_to_group(self):
 
         foo = self.f1.create_group('foo')
@@ -649,7 +653,8 @@ class TestCopy(TestCase):
         self.assertIsInstance(self.f2['/foo'], Group)
         self.assertArrayEqual(self.f2['foo/bar'], np.array([1,2,3]))
 
-    @ut.skipIf(h5py.version.hdf5_version < (1,8,9), "Bug in HDF5<1.8.8 prevents copying open dataset")
+    @ut.skipIf(h5py.version.hdf5_version_tuple < (1,8,9),
+               "Bug in HDF5<1.8.8 prevents copying open dataset")
     def test_copy_dataset(self):
         self.f1['foo'] = [1,2,3]
         foo = self.f1['foo']
