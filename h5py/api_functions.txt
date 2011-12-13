@@ -1,3 +1,4 @@
+hdf5:
   herr_t H5open()
   herr_t H5close()
 
@@ -13,7 +14,7 @@
   herr_t    H5Dget_space_status(hid_t dset_id, H5D_space_status_t *status)
   hid_t     H5Dget_type(hid_t dset_id)
   hid_t     H5Dget_create_plist(hid_t dataset_id)
-  
+
   haddr_t   H5Dget_offset(hid_t dset_id)
   hsize_t   H5Dget_storage_size(hid_t dset_id)
 
@@ -31,7 +32,7 @@
   herr_t    H5Diterate(void *buf, hid_t type_id, hid_t space_id,  H5D_operator_t op, void* operator_data)
   herr_t    H5Dset_extent(hid_t dset_id, hsize_t* size)
 
-  
+
 
 
 
@@ -49,13 +50,13 @@
   herr_t    H5Funmount(hid_t loc_id, char *name)
   herr_t    H5Fget_filesize(hid_t file_id, hsize_t *size)
   hid_t     H5Fget_create_plist(hid_t file_id )
-  hid_t     H5Fget_access_plist(hid_t file_id) 
+  hid_t     H5Fget_access_plist(hid_t file_id)
   hssize_t  H5Fget_freespace(hid_t file_id)
   ssize_t   H5Fget_name(hid_t obj_id, char *name, size_t size)
   int       H5Fget_obj_count(hid_t file_id, unsigned int types)
   int       H5Fget_obj_ids(hid_t file_id, unsigned int types, int max_objs, hid_t *obj_id_list)
 
-  
+
   herr_t H5Fget_intent(hid_t file_id, unsigned int *intent)
 
 # === H5FD - Low-level file descriptor API ====================================
@@ -83,7 +84,7 @@
   int H5Gget_comment(hid_t loc_id, char *name, size_t bufsize, char *comment)
 
   # New extensions in 1.8.X
-  
+
 
   hid_t   H5Gcreate_anon( hid_t loc_id, hid_t gcpl_id, hid_t gapl_id)
   hid_t   H5Gcreate2(hid_t loc_id, char *name, hid_t lcpl_id, hid_t gcpl_id, hid_t gapl_id)
@@ -109,7 +110,7 @@
 
 
 
-  
+
 
     # Links API
 
@@ -153,7 +154,7 @@
 
 
 
-  
+
 
     # --- H5O API -------------------------------------------------------------
 
@@ -216,7 +217,7 @@
   herr_t    H5Pset_family_offset ( hid_t fapl_id, hsize_t offset)
   herr_t    H5Pget_family_offset ( hid_t fapl_id, hsize_t *offset)
   herr_t    H5Pset_fapl_log(hid_t fapl_id, char *logfile, unsigned int flags, size_t buf_size)
-  herr_t    H5Pset_fapl_multi(hid_t fapl_id, H5FD_mem_t *memb_map, hid_t *memb_fapl, char **memb_name, haddr_t *memb_addr, hbool_t relax) 
+  herr_t    H5Pset_fapl_multi(hid_t fapl_id, H5FD_mem_t *memb_map, hid_t *memb_fapl, char **memb_name, haddr_t *memb_addr, hbool_t relax)
   herr_t H5Pset_cache(hid_t plist_id, int mdc_nelmts, int rdcc_nelmts,  size_t rdcc_nbytes, double rdcc_w0)
   herr_t H5Pget_cache(hid_t plist_id, int *mdc_nelmts, int *rdcc_nelmts, size_t *rdcc_nbytes, double *rdcc_w0)
   herr_t H5Pset_fapl_sec2(hid_t fapl_id)
@@ -257,7 +258,7 @@
   herr_t H5Pget_sieve_buf_size(hid_t fapl_id, size_t *size)
 
   # New in 1.8
-  
+
 
   herr_t H5Pset_nlinks(hid_t plist_id, size_t nlinks)
   herr_t H5Pget_nlinks(hid_t plist_id, size_t *nlinks)
@@ -296,9 +297,9 @@
   hid_t     H5Rget_region(hid_t dataset, H5R_type_t ref_type, void *ref)
   H5G_obj_t H5Rget_obj_type(hid_t id, H5R_type_t ref_type, void *ref)
 
-  
+
   ssize_t H5Rget_name(hid_t loc_id, H5R_type_t ref_type, void *ref, char *name, size_t size)
-    
+
 # === H5S - Dataspaces ========================================================
 
 
@@ -340,7 +341,7 @@
   herr_t    H5Sget_select_hyper_blocklist(hid_t space_id,  hsize_t startblock, hsize_t numblocks, hsize_t *buf )
   herr_t H5Sselect_hyperslab(hid_t space_id, H5S_seloper_t op,  hsize_t *start, hsize_t *_stride, hsize_t *count, hsize_t *_block)
 
-  
+
   herr_t  H5Sencode(hid_t obj_id, void *buf, size_t *nalloc)
   hid_t   H5Sdecode(void *buf)
 
@@ -437,7 +438,7 @@
   char*     H5Tget_tag(hid_t type_id)
 
   # 1.8-specific functions
-  
+
   hid_t H5Tdecode(unsigned char *buf)
   herr_t H5Tencode(hid_t obj_id, unsigned char *buf, size_t *nalloc)
 
@@ -478,13 +479,13 @@
   hid_t     H5Aget_type(hid_t attr_id)
   herr_t    H5Aiterate(hid_t loc_id, unsigned * idx, H5A_operator_t op, void* op_data)
 
-  
+
 
   herr_t  H5Adelete_by_name(hid_t loc_id, char *obj_name, char *attr_name, hid_t lapl_id)
   herr_t  H5Adelete_by_idx(hid_t loc_id, char *obj_name, H5_index_t idx_type, H5_iter_order_t order, hsize_t n, hid_t lapl_id)
 
   hid_t H5Acreate_by_name(hid_t loc_id, char *obj_name, char *attr_name, hid_t type_id, hid_t space_id, hid_t acpl_id, hid_t aapl_id, hid_t lapl_id)
- 
+
   herr_t H5Aopen(hid_t obj_id, char *attr_name, hid_t aapl_id)
   herr_t H5Aopen_by_name( hid_t loc_id, char *obj_name, char *attr_name, hid_t aapl_id, hid_t lapl_id)
   herr_t H5Aopen_by_idx(hid_t loc_id, char *obj_name, H5_index_t idx_type, H5_iter_order_t order, hsize_t n, hid_t aapl_id, hid_t lapl_id)
@@ -503,5 +504,25 @@
   hsize_t H5Aget_storage_size(hid_t attr_id)
 
 
+hdf5_hl:
+# === H5DS - Dimension Scales API =============================================
 
+  herr_t  H5DSattach_scale(hid_t did, hid_t dsid, unsigned int idx)
 
+  herr_t  H5DSdetach_scale(hid_t did, hid_t dsid, unsigned int idx)
+
+  herr_t  H5DSset_scale(hid_t dsid, char *dimname)
+
+  int H5DSget_num_scales(hid_t did, unsigned int dim)
+
+  herr_t  H5DSset_label(hid_t did, unsigned int idx, char *label)
+
+  ssize_t H5DSget_label(hid_t did, unsigned int idx, char *label, size_t size)
+
+  ssize_t H5DSget_scale_name(hid_t did, char *name, size_t size)
+
+  htri_t H5DSis_scale(hid_t did)
+
+  herr_t  H5DSiterate_scales(hid_t did, unsigned int dim, int *idx, H5DS_iterate_t visitor, void *visitor_data)
+
+  htri_t H5DSis_attached(hid_t did, hid_t dsid, unsigned int idx)

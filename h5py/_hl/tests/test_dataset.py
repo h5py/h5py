@@ -58,6 +58,10 @@ class TestCreateShape(BaseDataset):
         """ Create an extended dataset """
         dset = self.f.create_dataset('foo', (63,))
         self.assertEqual(dset.shape, (63,))
+        self.assertEqual(dset.size, 63)
+        dset = self.f.create_dataset('bar', (6, 10))
+        self.assertEqual(dset.shape, (6, 10))
+        self.assertEqual(dset.size, (60))
 
     def test_default_dtype(self):
         """ Confirm that the default dtype is float """
@@ -87,12 +91,23 @@ class TestCreateData(BaseDataset):
         dset = self.f.create_dataset('foo', data=data)
         self.assertEqual(dset.shape, data.shape)
 
+    def test_dataset_intermediate_group(self):
+        """ Create dataset with missing intermediate groups """
+        ds = self.f.create_dataset("/foo/bar/baz", shape=(10, 10), dtype='<i4')
+        self.assertIsInstance(ds, h5py.Dataset)
+        self.assertTrue("/foo/bar/baz" in self.f)
+
     def test_reshape(self):
         """ Create from existing data, and make it fit a new shape """
         data = np.arange(30, dtype='f')
         dset = self.f.create_dataset('foo', shape=(10,3), data=data)
         self.assertEqual(dset.shape, (10,3))
         self.assertArrayEqual(dset[...],data.reshape((10,3)))
+
+    def test_appropriate_low_level_id(self):
+        " Binding Dataset to a non-DatasetID identifier fails with ValueError "
+        with self.assertRaises(ValueError):
+            Dataset(self.f['/'].id)
 
 class TestCreateRequire(BaseDataset):
 
@@ -402,32 +417,3 @@ class TestIter(BaseDataset):
         dset = self.f.create_dataset('foo', shape=())
         with self.assertRaises(TypeError):
             [x for x in dset]
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

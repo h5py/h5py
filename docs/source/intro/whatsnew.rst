@@ -95,7 +95,7 @@ method or by using the file object as a context manager.  If you forget to
 close a file, the HDF5 library will try to close it for you when the
 application exits.
 
-Please note that opening the same file a multiple times (i.e. without closing
+Please note that opening the same file multiple times (i.e. without closing
 it first) continues to result in undefined behavior.
 
 Changes to scalar slicing code

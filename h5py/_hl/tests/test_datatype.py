@@ -10,6 +10,7 @@ import numpy as np
 from .common import ut, TestCase
 
 from h5py import File
+from h5py._hl.datatype import Datatype
 
 class BaseType(TestCase):
 
@@ -20,7 +21,7 @@ class BaseType(TestCase):
         if self.f:
             self.f.close()
 
-class TestRepr(BaseType):
+class TestCreation(BaseType):
 
     """
         Feature: repr() works sensibly on datatype objects
@@ -33,3 +34,9 @@ class TestRepr(BaseType):
         self.assertIsInstance(repr(dt), basestring)
         self.f.close()
         self.assertIsInstance(repr(dt), basestring)
+
+
+    def test_appropriate_low_level_id(self):
+        " Binding a group to a non-TypeID identifier fails with ValueError "
+        with self.assertRaises(ValueError):
+            Datatype(self.f['/'].id)

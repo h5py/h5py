@@ -68,6 +68,12 @@ class TestCreate(BaseGroup):
         self.assertEqual(group.name, name)
         self.assertEqual(group.id.links.get_info(name.encode('utf8')).cset, h5t.CSET_UTF8)
 
+    def test_appropriate_low_level_id(self):
+        " Binding a group to a non-group identifier fails with ValueError "
+        dset = self.f.create_dataset('foo', [1])
+        with self.assertRaises(ValueError):
+            Group(dset.id)
+
 class TestDatasetAssignment(BaseGroup):
 
     """

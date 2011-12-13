@@ -1,5 +1,6 @@
 import posixpath as pp
 
+from ..h5t import TypeID
 from .base import HLObject
 
 class Datatype(HLObject):
@@ -22,6 +23,8 @@ class Datatype(HLObject):
     def __init__(self, bind):
         """ Create a new Datatype object by binding to a low-level TypeID.
         """
+        if not isinstance(bind, TypeID):
+            raise ValueError("%s is not a TypeID" % bind)
         HLObject.__init__(self, bind)
 
     def __repr__(self):

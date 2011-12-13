@@ -16,6 +16,8 @@ class Group(HLObject, DictCompat):
     def __init__(self, bind):
         """ Create a new Group object by binding to a low-level GroupID.
         """
+        if not isinstance(bind, h5g.GroupID):
+            raise ValueError("%s is not a GroupID" % bind)
         HLObject.__init__(self, bind)
 
     def create_group(self, name):

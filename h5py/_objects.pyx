@@ -15,12 +15,14 @@
     reference count of the IDProxy decreases.  The use of a weak-value
     dictionary means that as soon as no ObjectIDs remain which reference the
     IDProxy, it is deallocated, closing the HDF5 integer identifier in
-    its __dealloc__ method.
+    its __dealloc__ method. The weak-value dictionary must be synchronized
+    such that garbage collection can reclaim the proxy object and delete
+    the corresponding entries from the dictionary in a thread-safe manner.
 """
 
 from defs cimport *
 
-import weakref
+from weakref import KeyedRef, ref
 
 
 ## {{{ http://code.activestate.com/recipes/577336/ (r3)
@@ -144,21 +146,52 @@ cdef inline void unlock_lock(FastRLock lock) nogil:
 ## end of http://code.activestate.com/recipes/577336/ }}}
 
 
-registry = weakref.WeakValueDictionary()
-reglock = FastRLock()
+cdef class _Registry:
+
+    cdef object _data, _remove, __weakref__
+    cdef FastRLock _lock
+
+    def __cinit__(self):
+        def remove(wr, selfref=ref(self)):
+            self = selfref()
+            if self is not None:
+                self._delitem(wr.key)
+        self._remove = remove
+        self._data = {}
+        self._lock = FastRLock()
+
+    __hash__ = None # Avoid Py3 warning
+
+    def __setitem__(self, key, val):
+        with self._lock:
+            self._data[key] = KeyedRef(val, self._remove, key)
+
+    def _delitem(self, key):
+        with self._lock:
+            del self._data[key]
+
+    def get(self, key, default=None):
+        try:
+            with self._lock:
+                o = self._data[key]()
+            return o if o is not None else default
+        except KeyError:
+            return default
+
+
+registry = _Registry()
 
 
 cdef IDProxy getproxy(hid_t oid):
     # Retrieve an IDProxy object appropriate for the given object identifier
     cdef IDProxy proxy
-    with reglock:
-        if not oid in registry:
-            proxy = IDProxy(oid)
-            registry[oid] = proxy
-        else:
-            proxy = registry[oid]
+    proxy = registry.get(oid, None)
+    if proxy is None:
+        proxy = IDProxy(oid)
+        registry[oid] = proxy
 
     return proxy
+
 
 cdef class IDProxy:
 
@@ -175,6 +208,7 @@ cdef class IDProxy:
             if self.id > 0 and (not self.locked) and H5Iget_type(self.id) > 0 \
               and H5Iget_type(self.id) != H5I_FILE:
                 H5Idec_ref(self.id)
+
 
 cdef class ObjectID:
 
