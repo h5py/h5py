@@ -11,9 +11,9 @@ multidimensional array along the dimension of interest should be equal to the
 length of the dimension scale, but HDF5 does not enforce this property.
 
 The HDF5 library provides the H5DS API for working with dimension scales. H5py
-provides low-level bindings to this API in :module:`h5py.h5ds`. These low-level
+provides low-level bindings to this API in :mod:`h5py.h5ds`. These low-level
 bindings are in turn used to provide a high-level interface through the
-:property:`Dataset.dims` property. Suppose we have the following data file::
+``Dataset.dims`` property. Suppose we have the following data file::
 
     f = File('foo.h5', 'w')
     f['data'] = np.ones((4, 3, 2), 'f')
