@@ -106,6 +106,12 @@ numeric slices:
     >>> dset[0,:,4:5, "FieldA", "FieldB"]
     >>> dset[0, ..., "FieldC"]
 
+.. note::
+
+    To retrieve the contents of a `scalar` dataset, you can use the same
+    syntax as in NumPy:  ``result = dset[()]``.  In other words, index into
+    the dataset using an empty tuple.
+
 Broadcasting
 ------------
 
