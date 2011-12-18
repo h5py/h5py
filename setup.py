@@ -51,7 +51,7 @@ HDF5 = settings.get('hdf5')
 
 if sys.platform.startswith('win'):
     COMPILER_SETTINGS = {
-        'libraries'     : ['hdf5dll18'],
+        'libraries'     : ['hdf5dll18','hdf5_hldll'],
         'include_dirs'  : [numpy.get_include(),  localpath('lzf'),
                            localpath('win_include')],
         'library_dirs'  : [],
