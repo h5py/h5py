@@ -126,13 +126,15 @@ class TestModes(TestCase):
             self.assertEqual(f3.mode, 'r+')
         finally:
             f2.close()
-
+            f3.close()
+            
         f2 = File(fname2,'r')
         try:
             f3 = f2['External'].file
             self.assertEqual(f3.mode, 'r')
         finally:
             f2.close()
+            f3.close()
 
 class TestDrivers(TestCase):
 
