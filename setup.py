@@ -182,7 +182,7 @@ else:
 
 # Why the hell does Windows demand this format?
 if sys.platform.startswith('win'):
-    VERSION = VERSION.replace('-beta','b')
+    VERSION = VERSION.replace('-beta','b1')
 
 setup(
   name = 'h5py',
