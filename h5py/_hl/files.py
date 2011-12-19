@@ -127,7 +127,7 @@ class File(Group):
 
     @property
     def userblock_size(self):
-        """ User block size (integer) """
+        """ User block size (in bytes) """
         fcpl = self.fid.get_create_plist()
         return fcpl.get_userblock()
 

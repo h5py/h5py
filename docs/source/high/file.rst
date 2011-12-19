@@ -88,6 +88,22 @@ compatible.
 
 The default is "earliest".
 
+User block
+----------
+
+HDF5 allows the user to insert arbitrary data at the beginning of the file,
+in a reserved space called the `user block`.  The length of the user block
+must be specified when the file is created.  It can be either zero
+(the default) or a power of two greater than or equal to 512.  You
+can specify the size of the user block when creating a new file, via the
+``userblock_size`` keyword to File; the userblock size of an open file can
+likewise be queried through the ``File.userblock_size`` property.
+
+Modifying the user block on an open file is not supported; this is a limitation
+of the HDF5 library.  However, once the file is closed you are free to read and
+write data at the start of the file, provided your modifications don't leave
+the user block region.
+
 Reference
 ---------
 
@@ -112,6 +128,7 @@ the full API of Group objects; in this case, the group in question is the
     .. autoattribute:: h5py.File.mode
     .. autoattribute:: h5py.File.driver
     .. autoattribute:: h5py.File.libver
+    .. autoattribute:: h5py.File.userblock_size
 
     **File methods**
 
