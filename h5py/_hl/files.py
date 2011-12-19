@@ -38,24 +38,44 @@ def make_fapl(driver,libver,**kwds):
 
     return plist
 
-def make_fid(name, mode, plist):
+def make_fid(name, mode, userblock_size, fapl):
     """ Get a new FileID by opening or creating a file.
     Also validates mode argument."""
+
+    fcpl=None
+    if userblock_size is not None:
+        if mode in ('r', 'r+'):
+            raise ValueError("User block may only be specified when creating a file")
+        try:
+            userblock_size = int(userblock_size)
+        except (TypeError, ValueError):
+            raise ValueError("User block size must be an integer")
+        fcpl = h5p.create(h5p.FILE_CREATE)
+        fcpl.set_userblock(userblock_size)
+
     if mode == 'r':
-        fid = h5f.open(name, h5f.ACC_RDONLY, fapl=plist)
+        fid = h5f.open(name, h5f.ACC_RDONLY, fapl=fapl)
     elif mode == 'r+':
-        fid = h5f.open(name, h5f.ACC_RDWR, fapl=plist)
+        fid = h5f.open(name, h5f.ACC_RDWR, fapl=fapl)
     elif mode == 'w-':
-        fid = h5f.create(name, h5f.ACC_EXCL, fapl=plist)
+        fid = h5f.create(name, h5f.ACC_EXCL, fapl=fapl, fcpl=fcpl)
     elif mode == 'w':
-        fid = h5f.create(name, h5f.ACC_TRUNC, fapl=plist)
+        fid = h5f.create(name, h5f.ACC_TRUNC, fapl=fapl, fcpl=fcpl)
     elif mode == 'a' or mode is None:
         try:
-            fid = h5f.open(name, h5f.ACC_RDWR, fapl=plist)
+            fid = h5f.open(name, h5f.ACC_RDWR, fapl=fapl)
+            try:
+                existing_fcpl = fid.get_create_plist()
+                if userblock_size is not None and existing_fcpl.get_userblock() != userblock_size:
+                    raise ValueError("Requested userblock size (%d) does not match that of existing file (%d)" % (userblock_size, existing_fcpl.get_userblock()))
+            except:
+                fid.close()
+                raise
         except IOError:
-            fid = h5f.create(name, h5f.ACC_EXCL, fapl=plist)
+            fid = h5f.create(name, h5f.ACC_EXCL, fapl=fapl, fcpl=fcpl)
     else:
         raise ValueError("Invalid mode; must be one of r, r+, w, w-, a")
+
     return fid
 
 class File(Group):
@@ -105,7 +125,14 @@ class File(Group):
         bounds = self.id.get_access_plist().get_libver_bounds()
         return tuple(libver_dict_r[x] for x in bounds)
 
-    def __init__(self, name, mode=None, driver=None, libver=None, **kwds):
+    @property
+    def userblock_size(self):
+        """ User block size (integer) """
+        fcpl = self.fid.get_create_plist()
+        return fcpl.get_userblock()
+
+    def __init__(self, name, mode=None, driver=None, libver=None, userblock_size=None,
+        **kwds):
         """Create a new file object.
 
         See the h5py user guide for a detailed explanation of the options.
@@ -119,6 +146,9 @@ class File(Group):
         libver
             Library version bounds.  Currently only the strings 'earliest'
             and 'latest' are defined.
+        userblock
+            Desired size of user block.  Only allowed when creating a new
+            file (mode w or w-).
         Additional keywords
             Passed on to the selected file driver.
         """
@@ -132,7 +162,7 @@ class File(Group):
             except (UnicodeError, LookupError):
                 pass
             fapl = make_fapl(driver,libver,**kwds)
-            fid = make_fid(name, mode, fapl)
+            fid = make_fid(name, mode, userblock_size, fapl)
         Group.__init__(self, fid)
 
     def close(self):
