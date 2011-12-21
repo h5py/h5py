@@ -154,6 +154,13 @@ class TestTypes(BaseAttrs):
         self.assertEqual(out,b'Hello')
         self.assertEqual(type(out), np.bytes_ if py3 else np.str_)
 
+    def test_unicode_scalar(self):
+        """ Storage of variable-length unicode strings (auto-creation) """
+
+        self.f.attrs['x'] = u"Hello\u2340!!"
+        out = self.f.attrs['x']
+        self.assertEqual(out, u"Hello\u2340!!")
+        self.assertEqual(type(out), unicode)
 
 
 

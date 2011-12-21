@@ -35,9 +35,23 @@ class AttributeManager(base.DictCompat, base.CommonStateObject):
         """
         attr = h5a.open(self._id, self._e(name))
 
+        tid = attr.get_type()
+
+        # TODO: REMOVE WHEN UNICODE VLENS IMPLEMENTED
+        if isinstance(tid, h5t.TypeStringID) and tid.get_cset() == h5t.CSET_UTF8 and attr.shape == ():
+            unicode_hack = True
+        else:
+            unicode_hack = False
+
         dt = readtime_dtype(attr.dtype, [])
+
         arr = numpy.ndarray(attr.shape, dtype=dt, order='C')
         attr.read(arr)
+
+        # TODO: REMOVE WHEN UNICODE VLENS IMPLEMENTED
+        if unicode_hack:
+            bytestring = arr[()]
+            return bytestring.decode('utf8')
 
         if len(arr.shape) == 0:
             return arr[()]
@@ -70,6 +84,14 @@ class AttributeManager(base.DictCompat, base.CommonStateObject):
             Data type of the attribute.  Overrides data.dtype if both
             are given.
         """
+        # TODO: REMOVE WHEN UNICODE VLENS IMPLEMENTED
+        # Hack to support Unicode values (scalars only)
+        if isinstance(data, unicode):
+            unicode_hack = True
+            data = data.encode('utf8')
+        else:
+            unicode_hack = False
+
         if data is not None:
             data = numpy.asarray(data, order='C', dtype=dtype)
             if shape is None:
@@ -89,6 +111,10 @@ class AttributeManager(base.DictCompat, base.CommonStateObject):
 
         space = h5s.create_simple(shape)
         htype = h5t.py_create(dtype, logical=True)
+
+        # TODO: REMOVE WHEN UNICODE VLENS IMPLEMENTED
+        if unicode_hack:
+            htype.set_cset(h5t.CSET_UTF8)
 
         if name in self:
             h5a.delete(self._id, self._e(name))

@@ -34,9 +34,6 @@ class TestAccess(BaseAttrs):
         self.assertEqual(self.f.attrs.keys(), ['a'])
         self.assertEqual(self.f.attrs['a'], 4.0)
 
-        self.f.attrs['b'] = 'b'
-        self.assertEqual(self.f.attrs['b'], 'b')
-
     def test_overwrite(self):
         """ Attributes are silently overwritten """
         self.f.attrs['a'] = 4.0
