@@ -30,13 +30,24 @@ cdef extern from "Python.h":
     PyObject* PyBytes_FromString(char* str) except NULL
     int PyBytes_CheckExact(PyObject* str) except *
     int PyBytes_Size(PyObject* obj) except *
+    PyObject* PyString_AsDecodedObject(PyObject* s, char *encoding, char *errors) except NULL
+
+    PyObject* PyUnicode_DecodeUTF8(char *s, Py_ssize_t size, char *errors) except NULL
+    int PyUnicode_CheckExact(PyObject* str) except *
+    PyObject* PyUnicode_AsUTF8String(PyObject* s) except NULL
+
     PyObject* PyObject_Str(PyObject* obj) except NULL
+    PyObject* PyObject_Unicode(PyObject* obj) except NULL
     char* PyBytes_AsString(PyObject* obj) except NULL
 
     PyObject* Py_None
     void Py_INCREF(PyObject* obj)
     void Py_DECREF(PyObject* obj)
     void Py_XDECREF(PyObject* obj)
+
+cdef object objectify(PyObject* o):
+    Py_INCREF(o)
+    return <object>o
 
 # Create Python object equivalents
 cdef hid_t H5PY_OBJ = 0
@@ -87,6 +98,11 @@ cdef herr_t generic_converter(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
 
         sizes = <conv_size_t*>cdata[0].priv
 
+        if H5Tis_variable_str(src_id):
+            sizes.cset = H5Tget_cset(src_id)
+        elif H5Tis_variable_str(dst_id):
+            sizes.cset = H5Tget_cset(dst_id)
+
         if bkg_stride==0: bkg_stride = sizes[0].dst_size;
 
         if buf_stride == 0:
@@ -122,11 +138,12 @@ cdef herr_t generic_converter(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
     return 0
 
 # =============================================================================
-# String to VLEN routines
+# Generic conversion 
 
 ctypedef struct conv_size_t:
     size_t src_size
     size_t dst_size
+    int cset
 
 cdef herr_t init_generic(hid_t src, hid_t dst, void** priv) except -1:
     
@@ -138,17 +155,29 @@ cdef herr_t init_generic(hid_t src, hid_t dst, void** priv) except -1:
 
     return 0
 
+# =============================================================================
+# Vlen string conversion
+
 cdef int conv_vlen2str(void* ipt, void* opt, void* bkg, void* priv) except -1:
 
     cdef PyObject** buf_obj = <PyObject**>opt
     cdef PyObject** bkg_obj = <PyObject**>bkg
     cdef char** buf_cstring = <char**>ipt
     cdef PyObject* temp_obj = NULL
+    cdef conv_size_t *sizes = <conv_size_t*>priv
 
-    if buf_cstring[0] == NULL:
-        temp_obj = PyBytes_FromString("")
-    else:
-        temp_obj = PyBytes_FromString(buf_cstring[0])
+    # When reading we identify H5T_CSET_ASCII as a byte string and
+    # H5T_CSET_UTF8 as a utf8-encoded unicode string
+    if sizes.cset == H5T_CSET_ASCII:
+        if buf_cstring[0] == NULL:
+            temp_obj = PyBytes_FromString("")
+        else:
+            temp_obj = PyBytes_FromString(buf_cstring[0])
+    elif sizes.cset == H5T_CSET_UTF8:
+        if buf_cstring[0] == NULL:
+            temp_obj = PyUnicode_DecodeUTF8("", 0, NULL)
+        else:
+            temp_obj = PyUnicode_DecodeUTF8(buf_cstring[0], strlen(buf_cstring[0]), NULL)
 
     # Since all data conversions are by definition in-place, it
     # is our responsibility to free the memory used by the vlens.
@@ -167,10 +196,15 @@ cdef int conv_str2vlen(void* ipt, void* opt, void* bkg, void* priv) except -1:
 
     cdef PyObject** buf_obj = <PyObject**>ipt
     cdef char** buf_cstring = <char**>opt
+    cdef conv_size_t* sizes = <conv_size_t*>priv
 
     cdef PyObject* temp_object = NULL
+    cdef PyObject* temp_encoded = NULL
+
     cdef char* temp_string = NULL
     cdef size_t temp_string_len = 0  # Not including null term
+
+    print "str2vlen called"
 
     try:
         if buf_obj[0] == NULL or buf_obj[0] == Py_None:
@@ -178,15 +212,44 @@ cdef int conv_str2vlen(void* ipt, void* opt, void* bkg, void* priv) except -1:
             temp_string_len = 0
         else:
             if PyBytes_CheckExact(buf_obj[0]):
+                print "Writing from byte string"
+                # Input is a byte string.  If we're using CSET_UTF8, make sure
+                # it's valid UTF-8.  Otherwise just store it.
                 temp_object = buf_obj[0]
                 Py_INCREF(temp_object)
-                temp_string = PyBytes_AsString(temp_object)
-                temp_string_len = PyBytes_Size(temp_object)
-            else:
-                temp_object = PyObject_Str(buf_obj[0])
+                if sizes.cset == H5T_CSET_UTF8:
+                    try:
+                        temp_encoded = PyString_AsDecodedObject(temp_object, "utf8", NULL)
+                    except:
+                        raise ValueError("Byte string is not valid utf-8 and can't be stored in a utf-8 dataset")
                 temp_string = PyBytes_AsString(temp_object)
                 temp_string_len = PyBytes_Size(temp_object)
 
+            # We are given a Unicode object.  Encode it to utf-8 regardless of
+            # the HDF5 character set.
+            elif PyUnicode_CheckExact(buf_obj[0]):
+                temp_object = buf_obj[0]
+                Py_INCREF(temp_object)
+                temp_encoded = PyUnicode_AsUTF8String(temp_object)
+                Py_INCREF(temp_encoded)
+                temp_string = PyBytes_AsString(temp_encoded)
+                temp_string_len = PyBytes_Size(temp_encoded)
+
+            else:
+                if sizes.cset == H5T_CSET_ASCII:
+                    temp_object = PyObject_Str(buf_obj[0])
+                    temp_string = PyBytes_AsString(temp_object)
+                    temp_string_len = PyBytes_Size(temp_object)
+                elif sizes.cset == H5T_CSET_UTF8:
+                    temp_object = PyObject_Unicode(buf_obj[0])
+                    Py_INCREF(temp_object)
+                    temp_encoded = PyUnicode_AsUTF8String(temp_object)
+                    Py_INCREF(temp_encoded)
+                    temp_string = PyBytes_AsString(temp_encoded)
+                    temp_string_len = PyBytes_Size(temp_encoded)
+                else:
+                    raise TypeError("Unrecognized dataset encoding")
+                    
         if strlen(temp_string) != temp_string_len:
             raise ValueError("VLEN strings do not support embedded NULLs")
 
@@ -196,7 +259,7 @@ cdef int conv_str2vlen(void* ipt, void* opt, void* bkg, void* priv) except -1:
         return 0
     finally:
         Py_XDECREF(temp_object)
-
+        Py_XDECREF(temp_encoded)
 
 # =============================================================================
 # VLEN to fixed-width strings

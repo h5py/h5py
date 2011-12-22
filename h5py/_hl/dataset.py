@@ -38,7 +38,8 @@ def make_new_dset(parent, shape=None, dtype=None, data=None,
 
     # Convert data to a C-contiguous ndarray
     if data is not None:
-        data = numpy.asarray(data, order="C")
+        import base
+        data = numpy.asarray(data, order="C", dtype=base.guess_dtype(data))
 
     # Validate shape
     if shape is None:
@@ -382,8 +383,9 @@ class Dataset(HLObject):
 
         # Generally we try to avoid converting the arrays on the Python
         # side.  However, for compound literals this is unavoidable.
-        if self.dtype.kind == 'V' and \
-        (not isinstance(val, numpy.ndarray) or val.dtype.kind != 'V'):
+        if self.dtype.kind == "O" or (
+          self.dtype.kind == 'V' and \
+          (not isinstance(val, numpy.ndarray) or val.dtype.kind != 'V') ):
             val = numpy.asarray(val, dtype=self.dtype, order='C')
         else:
             val = numpy.asarray(val, order='C')

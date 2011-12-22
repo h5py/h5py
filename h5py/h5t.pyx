@@ -599,7 +599,12 @@ cdef class TypeStringID(TypeID):
     cdef object py_dtype(self):
         # Numpy translation function for string types
         if self.is_variable_str():
-            return special_dtype(vlen=bytes)
+            if self.get_cset() == H5T_CSET_ASCII:
+                return special_dtype(vlen=bytes)
+            elif self.get_cset() == H5T_CSET_UTF8:
+                return special_dtype(vlen=unicode)
+            else:
+                raise TypeError("Unknown string encoding (value %d)" % self.get_cset())
 
         return dtype("|S" + str(self.get_size()))
 
@@ -1313,13 +1318,20 @@ cdef TypeCompoundID _c_compound(dtype dt, int logical):
 
     return TypeCompoundID(tid)
 
-cdef TypeStringID _c_vlen_str(object basetype):
+cdef TypeStringID _c_vlen_str():
     # Variable-length strings
     cdef hid_t tid
     tid = H5Tcopy(H5T_C_S1)
     H5Tset_size(tid, H5T_VARIABLE)
     return TypeStringID(tid)
 
+cdef TypeStringID _c_vlen_unicode():
+    cdef hid_t tid
+    tid = H5Tcopy(H5T_C_S1)
+    H5Tset_size(tid, H5T_VARIABLE)
+    H5Tset_cset(tid, H5T_CSET_UTF8)
+    return TypeStringID(tid)
+ 
 cdef TypeReferenceID _c_ref(object refclass):
     if refclass is Reference:
         return STD_REF_OBJ
@@ -1390,8 +1402,10 @@ cpdef TypeID py_create(object dtype_in, bint logical=0):
 
         if logical:
             vlen = check_dtype(vlen=dt)
-            if vlen is not None:
-                return _c_vlen_str(vlen)
+            if vlen is bytes:
+                return _c_vlen_str()
+            elif vlen is unicode:
+                return _c_vlen_unicode()
 
             refclass = check_dtype(ref=dt)
             if refclass is not None:
@@ -1431,8 +1445,8 @@ def special_dtype(**kwds):
     name, val = kwds.popitem()
 
     if name == 'vlen':
-        if val is not bytes:
-            raise NotImplementedError("Only byte-string vlens are currently supported")
+        if val not in (bytes, unicode):
+            raise NotImplementedError("Only byte or unicode string vlens are currently supported")
 
         return dtype(('O', [( ({'type': val},'vlen'), 'O' )] ))
 

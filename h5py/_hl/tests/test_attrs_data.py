@@ -147,12 +147,12 @@ class TestTypes(BaseAttrs):
         self.assertEqual(out[1], data[1])
 
     def test_string_scalar(self):
-        """ Storage of fixed-length byte string scalars (auto-creation) """
+        """ Storage of variable-length byte string scalars (auto-creation) """
 
         self.f.attrs['x'] = b'Hello'
         out = self.f.attrs['x']
         self.assertEqual(out,b'Hello')
-        self.assertEqual(type(out), np.bytes_ if py3 else np.str_)
+        self.assertEqual(type(out), bytes)
 
     def test_unicode_scalar(self):
         """ Storage of variable-length unicode strings (auto-creation) """

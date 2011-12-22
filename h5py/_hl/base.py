@@ -29,6 +29,11 @@ def guess_dtype(data):
         return h5t.special_dtype(ref=h5r.RegionReference)
     if isinstance(data, h5r.Reference):
         return h5t.special_dtype(ref=h5r.Reference)
+    if type(data) == bytes:
+        return h5t.special_dtype(vlen=bytes)
+    if type(data) == unicode:
+        return h5t.special_dtype(vlen=unicode)
+
     return None
 
 def default_lapl():
