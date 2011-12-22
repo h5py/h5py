@@ -344,7 +344,6 @@ class TestAutoCreate(BaseDataset):
         ascii dataset """
         self.f['x'] = np.string_("Hello there")
         ds = self.f['x']
-        print ds[()]
         tid = ds.id.get_type()
         self.assertEqual(type(tid), h5py.h5t.TypeStringID)
         self.assertEqual(tid.get_size(), 11)

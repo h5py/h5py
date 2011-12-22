@@ -204,15 +204,13 @@ cdef int conv_str2vlen(void* ipt, void* opt, void* bkg, void* priv) except -1:
     cdef char* temp_string = NULL
     cdef size_t temp_string_len = 0  # Not including null term
 
-    print "str2vlen called"
-
     try:
         if buf_obj[0] == NULL or buf_obj[0] == Py_None:
             temp_string = ""
             temp_string_len = 0
         else:
             if PyBytes_CheckExact(buf_obj[0]):
-                print "Writing from byte string"
+
                 # Input is a byte string.  If we're using CSET_UTF8, make sure
                 # it's valid UTF-8.  Otherwise just store it.
                 temp_object = buf_obj[0]
