@@ -162,35 +162,23 @@ cdef class _Registry:
 
     __hash__ = None # Avoid Py3 warning
 
-    def __setitem__(self, key, val):
+    def __call__(self, key):
         with self._lock:
-            self._data[key] = KeyedRef(val, self._remove, key)
+            try:
+                o = self._data[key]()
+            except KeyError:
+                o = None
+            if o is None:
+                o = IDProxy(key)
+                self._data[key] = KeyedRef(o, self._remove, key)
+        return o
 
     def _delitem(self, key):
         with self._lock:
             del self._data[key]
 
-    def get(self, key, default=None):
-        try:
-            with self._lock:
-                o = self._data[key]()
-            return o if o is not None else default
-        except KeyError:
-            return default
-
 
 registry = _Registry()
-
-
-cdef IDProxy getproxy(hid_t oid):
-    # Retrieve an IDProxy object appropriate for the given object identifier
-    cdef IDProxy proxy
-    proxy = registry.get(oid, None)
-    if proxy is None:
-        proxy = IDProxy(oid)
-        registry[oid] = proxy
-
-    return proxy
 
 
 cdef class IDProxy:
@@ -204,10 +192,10 @@ cdef class IDProxy:
         self.locked = 0
 
     def __dealloc__(self):
-        #with reglock:
-            if self.id > 0 and (not self.locked) and H5Iget_type(self.id) > 0 \
-              and H5Iget_type(self.id) != H5I_FILE:
-                H5Idec_ref(self.id)
+        if self.id > 0 and (not self.locked) and H5Iget_type(self.id) > 0 \
+          and H5Iget_type(self.id) != H5I_FILE:
+            H5Idec_ref(self.id)
+
 
 
 cdef class ObjectID:
@@ -221,7 +209,7 @@ cdef class ObjectID:
         def __get__(self):
             return self.proxy.id
         def __set__(self, id_):
-            self.proxy = getproxy(id_)
+            self.proxy = registry(id_)
 
     property locked:
         def __get__(self):
@@ -296,5 +284,3 @@ cdef hid_t pdefault(ObjectID pid):
     if pid is None:
         return <hid_t>H5P_DEFAULT
     return pid.id
-
-
