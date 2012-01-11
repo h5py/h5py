@@ -8,22 +8,22 @@
     breaks this system.
 
     We now use a global registry of "proxy objects".  This is implemented
-    via a weak-value dictionary which maps an integer representation of the
-    identifier to an IDProxy object.  There is only one IDProxy object in
-    the universe for each integer identifier.  Objects hold strong references
-    to this "master" IDProxy object.  As they are deallocated, the
-    reference count of the IDProxy decreases.  The use of a weak-value
-    dictionary means that as soon as no ObjectIDs remain which reference the
-    IDProxy, it is deallocated, closing the HDF5 integer identifier in
-    its __dealloc__ method. The weak-value dictionary must be synchronized
-    such that garbage collection can reclaim the proxy object and delete
-    the corresponding entries from the dictionary in a thread-safe manner.
+    via a dictionary which maps an integer representation of the identifier
+    to a weak reference of an IDProxy object.  There is only one IDProxy
+    object in the universe for each integer identifier.  Objects hold strong
+    references to this "master" IDProxy object.  As they are deallocated,
+    the reference count of the IDProxy decreases.  As soon as no ObjectIDs
+    remain which reference the IDProxy, the IDProxy __dealloc__ method is
+    called, which deletes the identifier and weak reference from the
+    registry. The registry, in turn, decreases the HDF5 reference count for
+    that identifier, which should now be zero, closing the identifier and
+    allowing HDF5 to repurpose the identifier. The registry must be
+    synchronized for thread safety.
 """
 
 from defs cimport *
 
 from weakref import KeyedRef, ref
-
 
 ## {{{ http://code.activestate.com/recipes/577336/ (r3)
 from cpython cimport pythread
@@ -148,34 +148,36 @@ cdef inline void unlock_lock(FastRLock lock) nogil:
 
 cdef class _Registry:
 
-    cdef object _data, _remove, __weakref__
+    cdef object _data
     cdef FastRLock _lock
 
     def __cinit__(self):
-        def remove(wr, selfref=ref(self)):
-            self = selfref()
-            if self is not None:
-                self._delitem(wr.key)
-        self._remove = remove
         self._data = {}
         self._lock = FastRLock()
 
     __hash__ = None # Avoid Py3 warning
 
-    def __call__(self, key):
+    def __getitem__(self, key):
         with self._lock:
             try:
                 o = self._data[key]()
+                if o is None:
+                    # its not clear why this identifier has not been deleted
+                    # from the registry:
+                    del self._data[key]
             except KeyError:
                 o = None
             if o is None:
                 o = IDProxy(key)
-                self._data[key] = KeyedRef(o, self._remove, key)
+                self._data[key] = ref(o)
         return o
 
-    def _delitem(self, key):
+    def __delitem__(self, key):
         with self._lock:
+            # we apparently need to synchronize removal of the id from the
+            # registry and decreasing the HDF5 reference count:
             del self._data[key]
+            H5Idec_ref(key)
 
 
 registry = _Registry()
@@ -194,8 +196,7 @@ cdef class IDProxy:
     def __dealloc__(self):
         if self.id > 0 and (not self.locked) and H5Iget_type(self.id) > 0 \
           and H5Iget_type(self.id) != H5I_FILE:
-            H5Idec_ref(self.id)
-
+            del registry[self.id]
 
 
 cdef class ObjectID:
@@ -209,7 +210,7 @@ cdef class ObjectID:
         def __get__(self):
             return self.proxy.id
         def __set__(self, id_):
-            self.proxy = registry(id_)
+            self.proxy = registry[id_]
 
     property locked:
         def __get__(self):
