@@ -1,13 +1,13 @@
 #+
-# 
+#
 # This file is part of h5py, a low-level Python interface to the HDF5 library.
-# 
+#
 # Copyright (C) 2008 Andrew Collette
 # http://h5py.alfven.org
 # License: BSD  (See LICENSE.txt for full license)
-# 
+#
 # $Date$
-# 
+#
 #-
 
 """
@@ -20,6 +20,8 @@ from h5p cimport propwrap, PropFAID, PropFCID
 from h5t cimport typewrap
 from h5i cimport wrap_identifier
 from utils cimport emalloc, efree
+
+import _objects
 
 # Initialization
 
@@ -106,7 +108,7 @@ def flush(ObjectID obj not None, int scope=H5F_SCOPE_LOCAL):
 def is_hdf5(char* name):
     """(STRING name) => BOOL
 
-    Determine if a given file is an HDF5 file.  Note this raises an 
+    Determine if a given file is an HDF5 file.  Note this raises an
     exception if the file doesn't exist.
     """
     return <bint>(H5Fis_hdf5(name))
@@ -131,7 +133,7 @@ def unmount(ObjectID loc not None, char* name):
 
 def get_name(ObjectID obj not None):
     """(ObjectID obj) => STRING
-    
+
     Determine the name of the file in which the specified object resides.
     """
     cdef ssize_t size
@@ -141,7 +143,7 @@ def get_name(ObjectID obj not None):
     size = H5Fget_name(obj.id, NULL, 0)
     assert size >= 0
     name = <char*>emalloc(sizeof(char)*(size+1))
-    try:    
+    try:
         H5Fget_name(obj.id, name, size+1)
         pname = name
         return pname
@@ -159,11 +161,11 @@ def get_obj_count(object where=OBJ_ALL, int types=H5F_OBJ_ALL):
         special constant OBJ_ALL, to count objects in all files.
 
     type
-        Specify what kinds of object to include.  May be one of OBJ*, 
-        or any bitwise combination (e.g. OBJ_FILE | OBJ_ATTR).  
+        Specify what kinds of object to include.  May be one of OBJ*,
+        or any bitwise combination (e.g. OBJ_FILE | OBJ_ATTR).
 
-        The special value OBJ_ALL matches all object types, and 
-        OBJ_LOCAL will only match objects opened through a specific 
+        The special value OBJ_ALL matches all object types, and
+        OBJ_LOCAL will only match objects opened through a specific
         identifier.
     """
     cdef hid_t where_id
@@ -187,11 +189,11 @@ def get_obj_ids(object where=OBJ_ALL, int types=H5F_OBJ_ALL):
         special constant OBJ_ALL, to list objects in all files.
 
     type
-        Specify what kinds of object to include.  May be one of OBJ*, 
-        or any bitwise combination (e.g. OBJ_FILE | OBJ_ATTR).  
+        Specify what kinds of object to include.  May be one of OBJ*,
+        or any bitwise combination (e.g. OBJ_FILE | OBJ_ATTR).
 
-        The special value OBJ_ALL matches all object types, and 
-        OBJ_LOCAL will only match objects opened through a specific 
+        The special value OBJ_ALL matches all object types, and
+        OBJ_LOCAL will only match objects opened through a specific
         identifier.
     """
     cdef int count
@@ -227,7 +229,7 @@ def get_obj_ids(object where=OBJ_ALL, int types=H5F_OBJ_ALL):
 
 cdef class FileID(GroupID):
 
-    """ 
+    """
         Represents an HDF5 file identifier.
 
         These objects wrap a small portion of the H5F interface; all the
@@ -249,18 +251,21 @@ cdef class FileID(GroupID):
         def __get__(self):
             return get_name(self)
 
-    
+
     def close(self):
         """()
 
         Terminate access through this identifier.  Note that depending on
         what property list settings were used to open the file, the
         physical file might not be closed until all remaining open
-        identifiers are freed.  
+        identifiers are freed.
         """
-        H5Fclose(self.id)
+        # When a file is closed, its identifier needs to be removed from the
+        # registry. Doing so causes the HDF5 reference count to decrease,
+        # closing the identifier. Therefore, a call to H5Fclose is not needed.
+        del _objects.registry[self.id]
 
-    
+
     def reopen(self):
         """() => FileID
 
@@ -270,18 +275,18 @@ cdef class FileID(GroupID):
         """
         return FileID(H5Freopen(self.id))
 
-    
+
     def get_filesize(self):
         """() => LONG size
 
-        Determine the total size (in bytes) of the HDF5 file, 
+        Determine the total size (in bytes) of the HDF5 file,
         including any user block.
         """
         cdef hsize_t size
         H5Fget_filesize(self.id, &size)
         return size
 
-    
+
     def get_create_plist(self):
         """() => PropFCID
 
@@ -290,16 +295,16 @@ cdef class FileID(GroupID):
         """
         return propwrap(H5Fget_create_plist(self.id))
 
-    
+
     def get_access_plist(self):
         """() => PropFAID
 
-        Retrieve a copy of the file access property list which manages access 
+        Retrieve a copy of the file access property list which manages access
         to this file.
         """
         return propwrap(H5Fget_access_plist(self.id))
 
-    
+
     def get_freespace(self):
         """() => LONG freespace
 
@@ -319,5 +324,3 @@ cdef class FileID(GroupID):
         cdef unsigned int mode
         H5Fget_intent(self.id, &mode)
         return mode
-
-
