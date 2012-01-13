@@ -1,13 +1,13 @@
 #+
-# 
+#
 # This file is part of h5py, a low-level Python interface to the HDF5 library.
-# 
+#
 # Copyright (C) 2008 Andrew Collette
 # http://h5py.alfven.org
 # License: BSD  (See LICENSE.txt for full license)
-# 
+#
 # $Date$
-# 
+#
 #-
 
 """
@@ -23,17 +23,19 @@ from numpy cimport import_array, ndarray, PyArray_DATA
 from utils cimport check_numpy_read, check_numpy_write, emalloc, efree
 from _proxy cimport attr_rw
 
+import _objects
+
 # Initialization
 import_array()
 
 # === General attribute operations ============================================
 
 # --- create, create_by_name ---
-    
+
 def create(ObjectID loc not None, char* name, TypeID tid not None,
     SpaceID space not None, *, char* obj_name='.', PropID lapl=None):
     """(ObjectID loc, STRING name, TypeID tid, SpaceID space, **kwds) => AttrID
-        
+
     Create a new attribute, attached to an existing object.
 
     STRING obj_name (".")
@@ -48,12 +50,12 @@ def create(ObjectID loc not None, char* name, TypeID tid not None,
 
 
 # --- open, open_by_name, open_by_idx ---
-    
+
 def open(ObjectID loc not None, char* name=NULL, int index=-1, *,
     char* obj_name='.', int index_type=H5_INDEX_NAME, int order=H5_ITER_NATIVE,
     PropID lapl=None):
     """(ObjectID loc, STRING name=, INT index=, **kwds) => AttrID
-   
+
     Open an attribute attached to an existing object.  You must specify
     exactly one of either name or idx.  Keywords are:
 
@@ -90,7 +92,7 @@ def exists(ObjectID loc not None, char* name, *,
 
     STRING obj_name (".")
         Look for attributes attached to this group member
-    
+
     PropID lapl (None):
         Link access property list for obj_name
     """
@@ -172,7 +174,7 @@ cdef class AttrInfo:
     def _hash(self):
         return hash((self.corder_valid, self.corder, self.cset, self.data_size))
 
-    
+
 def get_info(ObjectID loc not None, char* name=NULL, int index=-1, *,
             char* obj_name='.', PropID lapl=None,
             int index_type=H5_INDEX_NAME, int order=H5_ITER_NATIVE):
@@ -235,7 +237,7 @@ cdef herr_t cb_attr_simple(hid_t loc_id, char* attr_name, H5A_info_t *ainfo, voi
         return 1
     return 0
 
-    
+
 def iterate(ObjectID loc not None, object func, int index=0, *,
     int index_type=H5_INDEX_NAME, int order=H5_ITER_NATIVE, bint info=0):
     """(ObjectID loc, CALLABLE func, INT index=0, **kwds) => <Return value from func>
@@ -252,7 +254,7 @@ def iterate(ObjectID loc not None, object func, int index=0, *,
 
     Returning None continues iteration; returning anything else aborts
     iteration and returns that value.  Keywords:
-    
+
     BOOL info (False)
         Callback is func(STRING name, AttrInfo info), not func(STRING name)
 
@@ -291,7 +293,7 @@ cdef class AttrID(ObjectID):
         Objects of this class can be used in any HDF5 function call
         which expects an attribute identifier.  Additionally, all ``H5A*``
         functions which always take an attribute instance as the first
-        argument are presented as methods of this class.  
+        argument are presented as methods of this class.
 
         * Hashable: No
         * Equality: Identifier comparison
@@ -318,7 +320,7 @@ cdef class AttrID(ObjectID):
             tid = self.get_type()
             return tid.py_dtype()
 
-    
+
     def _close(self):
         """()
 
@@ -326,14 +328,17 @@ cdef class AttrID(ObjectID):
         call this manually; attributes are automatically destroyed when
         their Python wrappers are freed.
         """
-        H5Aclose(self.id)
+        with _objects.registry.lock:
+            H5Aclose(self.id)
+            if not self.proxy.valid:
+                del _objects.registry[self.id]
 
-    
+
     def read(self, ndarray arr not None):
         """(NDARRAY arr)
 
-        Read the attribute data into the given Numpy array.  Note that the 
-        Numpy array must have the same shape as the HDF5 attribute, and a 
+        Read the attribute data into the given Numpy array.  Note that the
+        Numpy array must have the same shape as the HDF5 attribute, and a
         conversion-compatible datatype.
 
         The Numpy array must be writable and C-contiguous.  If this is not
@@ -355,15 +360,15 @@ cdef class AttrID(ObjectID):
             if space_id:
                 H5Sclose(space_id)
 
-    
+
     def write(self, ndarray arr not None):
         """(NDARRAY arr)
 
         Write the contents of a Numpy array too the attribute.  Note that
         the Numpy array must have the same shape as the HDF5 attribute, and
-        a conversion-compatible datatype.  
+        a conversion-compatible datatype.
 
-        The Numpy array must be C-contiguous.  If this is not the case, 
+        The Numpy array must be C-contiguous.  If this is not the case,
         the write will fail with an exception.
         """
         cdef TypeID mtype
@@ -381,7 +386,7 @@ cdef class AttrID(ObjectID):
             if space_id:
                 H5Sclose(space_id)
 
-    
+
     def get_name(self):
         """() => STRING name
 
@@ -402,7 +407,7 @@ cdef class AttrID(ObjectID):
 
         return strout
 
-    
+
     def get_space(self):
         """() => SpaceID
 
@@ -410,7 +415,7 @@ cdef class AttrID(ObjectID):
         """
         return SpaceID(H5Aget_space(self.id))
 
-    
+
     def get_type(self):
         """() => TypeID
 

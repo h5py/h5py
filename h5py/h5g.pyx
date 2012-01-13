@@ -1,13 +1,13 @@
 #+
-# 
+#
 # This file is part of h5py, a low-level Python interface to the HDF5 library.
-# 
+#
 # Copyright (C) 2008 Andrew Collette
 # http://h5py.alfven.org
 # License: BSD  (See LICENSE.txt for full license)
-# 
+#
 # $Date$
-# 
+#
 #-
 
 """
@@ -20,6 +20,7 @@ from utils cimport emalloc, efree
 from h5p cimport PropID
 cimport _hdf5 # to implement container testing for 1.6
 
+import _objects
 
 # === Public constants and data structures ====================================
 
@@ -46,7 +47,7 @@ cdef class GroupStat:
     * mtime:    Modification time of this object
     * linklen:  Length of the symbolic link name, or 0 if not a link.
 
-    "Uniquely identifying" means unique among currently open files, 
+    "Uniquely identifying" means unique among currently open files,
     not universally unique.
 
     * Hashable: Yes
@@ -100,7 +101,7 @@ cdef class GroupIter:
         if self.idx == self.nobjs:
             self.grp = None
             raise StopIteration
-        
+
         retval = self.grp.get_objname_by_idx(self.idx)
         self.idx = self.idx + 1
         return retval
@@ -114,7 +115,7 @@ def open(ObjectID loc not None, char* name):
     Open an existing HDF5 group, attached to some other group.
     """
     return GroupID(H5Gopen(loc.id, name))
-    
+
 def create(ObjectID loc not None, object name, PropID lcpl=None,
            PropID gcpl=None):
     """(ObjectID loc, STRING name or None, PropLCID lcpl=None,
@@ -190,10 +191,10 @@ def get_objinfo(ObjectID obj not None, object name='.', int follow_link=1):
     Obtain information about a named object.  If "name" is provided,
     "obj" is taken to be a GroupID object containing the target.
     The return value is a GroupStat object; see that class's docstring
-    for a description of its attributes.  
+    for a description of its attributes.
 
-    If follow_link is True (default) and the object is a symbolic link, 
-    the information returned describes its target.  Otherwise the 
+    If follow_link is True (default) and the object is a symbolic link,
+    the information returned describes its target.  Otherwise the
     information describes the link itself.
     """
     cdef GroupStat statobj
@@ -235,7 +236,7 @@ cdef class GroupID(ObjectID):
         import h5l
         self.links = h5l.LinkProxy(id_)
 
-    
+
     def _close(self):
         """()
 
@@ -243,12 +244,15 @@ cdef class GroupID(ObjectID):
         call this manually; group identifiers are automatically released
         when their Python wrappers are freed.
         """
-        H5Gclose(self.id)
+        with _objects.registry.lock:
+            H5Gclose(self.id)
+            if not self.proxy.valid:
+                del _objects.registry[self.id]
 
-    
-    def link(self, char* current_name, char* new_name, 
+
+    def link(self, char* current_name, char* new_name,
              int link_type=H5G_LINK_HARD, GroupID remote=None):
-        """(STRING current_name, STRING new_name, INT link_type=LINK_HARD, 
+        """(STRING current_name, STRING new_name, INT link_type=LINK_HARD,
         GroupID remote=None)
 
         Create a new hard or soft link.  current_name identifies
@@ -278,8 +282,8 @@ cdef class GroupID(ObjectID):
         Remove a link to an object from this group.
         """
         H5Gunlink(self.id, name)
-   
-    
+
+
     def move(self, char* current_name, char* new_name, GroupID remote=None):
         """(STRING current_name, STRING new_name, GroupID remote=None)
 
@@ -295,7 +299,7 @@ cdef class GroupID(ObjectID):
 
         H5Gmove2(self.id, current_name, remote_id, new_name)
 
-    
+
     def get_num_objs(self):
         """() => INT number_of_objects
 
@@ -325,7 +329,7 @@ cdef class GroupID(ObjectID):
         finally:
             efree(buf)
 
-    
+
     def get_objtype_by_idx(self, hsize_t idx):
         """(INT idx) => INT object_type_code
 
@@ -339,7 +343,7 @@ cdef class GroupID(ObjectID):
         """
         return <int>H5Gget_objtype_by_idx(self.id, idx)
 
-    
+
     def get_linkval(self, char* name):
         """(STRING name) => STRING link_value
 
@@ -368,7 +372,7 @@ cdef class GroupID(ObjectID):
         finally:
             efree(value)
 
-    
+
     def set_comment(self, char* name, char* comment):
         """(STRING name, STRING comment)
 
@@ -376,7 +380,7 @@ cdef class GroupID(ObjectID):
         """
         H5Gset_comment(self.id, name, comment)
 
-    
+
     def get_comment(self, char* name):
         """(STRING name) => STRING comment
 
@@ -399,7 +403,7 @@ cdef class GroupID(ObjectID):
 
     # === Special methods =====================================================
 
-    
+
     def __contains__(self, char* name):
         """(STRING name)
 
@@ -410,12 +414,12 @@ cdef class GroupID(ObjectID):
 
         return bool(retval >= 0)
 
-    
+
     def __iter__(self):
         """ Return an iterator over the names of group members. """
         return GroupIter(self)
 
-    
+
     def __len__(self):
         """ Number of group members """
         cdef hsize_t size

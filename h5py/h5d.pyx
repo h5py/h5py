@@ -1,13 +1,13 @@
 #+
-# 
+#
 # This file is part of h5py, a low-level Python interface to the HDF5 library.
-# 
+#
 # Copyright (C) 2008 Andrew Collette
 # http://h5py.alfven.org
 # License: BSD  (See LICENSE.txt for full license)
-# 
+#
 # $Date$
-# 
+#
 #-
 
 """
@@ -23,6 +23,8 @@ from h5t cimport TypeID, typewrap, py_create
 from h5s cimport SpaceID
 from h5p cimport PropID, propwrap
 from _proxy cimport dset_rw
+
+import _objects
 
 # Initialization
 import_array()
@@ -106,7 +108,7 @@ cdef class DatasetID(ObjectID):
     property dtype:
         """ Numpy dtype object representing the dataset type """
         def __get__(self):
-            # Dataset type can't change            
+            # Dataset type can't change
             cdef TypeID tid
             if self._dtype is None:
                 tid = self.get_type()
@@ -128,7 +130,7 @@ cdef class DatasetID(ObjectID):
             sid = self.get_space()
             return sid.get_simple_extent_ndims()
 
-    
+
     def _close(self):
         """ ()
 
@@ -136,13 +138,16 @@ cdef class DatasetID(ObjectID):
             call this manually; Dataset objects are automatically destroyed
             when their Python wrappers are freed.
         """
-        H5Dclose(self.id)
+        with _objects.registry.lock:
+            H5Dclose(self.id)
+            if not self.proxy.valid:
+                del _objects.registry[self.id]
 
-    
-    def read(self, SpaceID mspace not None, SpaceID fspace not None, 
+
+    def read(self, SpaceID mspace not None, SpaceID fspace not None,
                    ndarray arr_obj not None, TypeID mtype=None,
                    PropID dxpl=None):
-        """ (SpaceID mspace, SpaceID fspace, NDARRAY arr_obj, 
+        """ (SpaceID mspace, SpaceID fspace, NDARRAY arr_obj,
              TypeID mtype=None, PropDXID dxpl=None)
 
             Read data from an HDF5 dataset into a Numpy array.
@@ -176,14 +181,14 @@ cdef class DatasetID(ObjectID):
         data = PyArray_DATA(arr_obj)
 
         dset_rw(self_id, mtype_id, mspace_id, fspace_id, plist_id, data, 1)
-    
-    def write(self, SpaceID mspace not None, SpaceID fspace not None, 
+
+    def write(self, SpaceID mspace not None, SpaceID fspace not None,
                     ndarray arr_obj not None, TypeID mtype=None,
                     PropID dxpl=None):
-        """ (SpaceID mspace, SpaceID fspace, NDARRAY arr_obj, 
+        """ (SpaceID mspace, SpaceID fspace, NDARRAY arr_obj,
              TypeID mtype=None, PropDXID dxpl=None)
 
-            Write data from a Numpy array to an HDF5 dataset. Keyword dxpl may 
+            Write data from a Numpy array to an HDF5 dataset. Keyword dxpl may
             be a dataset transfer property list.
 
             It is your responsibility to ensure that the memory dataspace
@@ -214,12 +219,12 @@ cdef class DatasetID(ObjectID):
         data = PyArray_DATA(arr_obj)
 
         dset_rw(self_id, mtype_id, mspace_id, fspace_id, plist_id, data, 0)
-    
+
     def extend(self, tuple shape):
         """ (TUPLE shape)
 
-            Extend the given dataset so it's at least as big as "shape".  Note 
-            that a dataset may only be extended up to the maximum dimensions of 
+            Extend the given dataset so it's at least as big as "shape".  Note
+            that a dataset may only be extended up to the maximum dimensions of
             its dataspace, which are fixed when the dataset is created.
         """
         cdef int rank
@@ -242,7 +247,7 @@ cdef class DatasetID(ObjectID):
             if space_id:
                 H5Sclose(space_id)
 
-    
+
     def set_extent(self, tuple shape):
         """ (TUPLE shape)
 
@@ -271,7 +276,7 @@ cdef class DatasetID(ObjectID):
                 H5Sclose(space_id)
 
 
-    
+
     def get_space(self):
         """ () => SpaceID
 
@@ -279,22 +284,22 @@ cdef class DatasetID(ObjectID):
         """
         return SpaceID(H5Dget_space(self.id))
 
-    
+
     def get_space_status(self):
         """ () => INT space_status_code
 
-            Determine if space has been allocated for a dataset.  
+            Determine if space has been allocated for a dataset.
             Return value is one of:
 
             * SPACE_STATUS_NOT_ALLOCATED
             * SPACE_STATUS_PART_ALLOCATED
-            * SPACE_STATUS_ALLOCATED 
+            * SPACE_STATUS_ALLOCATED
         """
         cdef H5D_space_status_t status
         H5Dget_space_status(self.id, &status)
         return <int>status
 
-    
+
     def get_type(self):
         """ () => TypeID
 
@@ -302,7 +307,7 @@ cdef class DatasetID(ObjectID):
         """
         return typewrap(H5Dget_type(self.id))
 
-    
+
     def get_create_plist(self):
         """ () => PropDCID
 
@@ -311,7 +316,7 @@ cdef class DatasetID(ObjectID):
         """
         return propwrap(H5Dget_create_plist(self.id))
 
-    
+
     def get_offset(self):
         """ () => LONG offset or None
 
@@ -326,12 +331,12 @@ cdef class DatasetID(ObjectID):
             return None
         return offset
 
-    
+
     def get_storage_size(self):
         """ () => LONG storage_size
 
-            Determine the amount of file space required for a dataset.  Note 
-            this only counts the space which has actually been allocated; it 
+            Determine the amount of file space required for a dataset.  Note
+            this only counts the space which has actually been allocated; it
             may even be zero.
         """
         return H5Dget_storage_size(self.id)

@@ -176,8 +176,11 @@ cdef class _Registry:
             try:
                 o = self._data[key]()
                 if o is None:
-                    # its not clear why this identifier has not been deleted
-                    # from the registry:
+                    # This would occur if we had open objects and closed their
+                    # file, causing the objects identifiers to be reclaimed.
+                    # Now we clean up the registry when we close a file (or any
+                    # other identifier, for that matter), so in practice this
+                    # condition never obtains.
                     del self._data[key]
             except KeyError:
                 o = None
@@ -188,8 +191,8 @@ cdef class _Registry:
 
     def __delitem__(self, key):
         with self.lock:
-            # we apparently need to synchronize removal of the id from the
-            # registry and decreasing the HDF5 reference count:
+            # we need to synchronize removal of the id from the
+            # registry with decreasing the HDF5 reference count:
             try:
                 del self._data[key]
                 H5Idec_ref(key)

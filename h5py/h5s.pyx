@@ -1,13 +1,13 @@
 #+
-# 
+#
 # This file is part of h5py, a low-level Python interface to the HDF5 library.
-# 
+#
 # Copyright (C) 2008 Andrew Collette
 # http://h5py.alfven.org
 # License: BSD  (See LICENSE.txt for full license)
-# 
+#
 # $Date$
-# 
+#
 #-
 
 """
@@ -18,6 +18,8 @@
 from utils cimport  require_tuple, convert_dims, convert_tuple, \
                     emalloc, efree, create_numpy_hsize, create_hsize_array
 from numpy cimport ndarray
+
+import _objects
 
 
 cdef object lockid(hid_t id_):
@@ -30,7 +32,7 @@ cdef object lockid(hid_t id_):
 
 #enum H5S_seloper_t:
 SELECT_NOOP     = H5S_SELECT_NOOP
-SELECT_SET      = H5S_SELECT_SET      
+SELECT_SET      = H5S_SELECT_SET
 SELECT_OR       = H5S_SELECT_OR
 SELECT_AND      = H5S_SELECT_AND
 SELECT_XOR      = H5S_SELECT_XOR
@@ -38,7 +40,7 @@ SELECT_NOTB     = H5S_SELECT_NOTB
 SELECT_NOTA     = H5S_SELECT_NOTA
 SELECT_APPEND   = H5S_SELECT_APPEND
 SELECT_PREPEND  = H5S_SELECT_PREPEND
-SELECT_INVALID  = H5S_SELECT_INVALID 
+SELECT_INVALID  = H5S_SELECT_INVALID
 
 ALL = lockid(H5S_ALL)   # This is accepted in lieu of an actual identifier
                         # in functions like H5Dread, so wrap it.
@@ -71,11 +73,11 @@ def create(int class_code):
 def create_simple(object dims_tpl, object max_dims_tpl=None):
     """(TUPLE dims_tpl, TUPLE max_dims_tpl) => SpaceID
 
-    Create a simple (slab) dataspace from a tuple of dimensions.  
-    Every element of dims_tpl must be a positive integer.  
+    Create a simple (slab) dataspace from a tuple of dimensions.
+    Every element of dims_tpl must be a positive integer.
 
-    You can optionally specify the maximum dataspace size. The 
-    special value UNLIMITED, as an element of max_dims, indicates 
+    You can optionally specify the maximum dataspace size. The
+    special value UNLIMITED, as an element of max_dims, indicates
     an unlimited dimension.
     """
     cdef int rank
@@ -133,7 +135,7 @@ cdef class SpaceID(ObjectID):
         def __get__(self):
             return self.get_simple_extent_dims()
 
-    
+
     def _close(self):
         """()
 
@@ -141,9 +143,12 @@ cdef class SpaceID(ObjectID):
         call this manually; dataspace objects are automatically destroyed
         when their Python wrappers are freed.
         """
-        H5Sclose(self.id)
+        with _objects.registry.lock:
+            H5Sclose(self.id)
+            if not self.proxy.valid:
+                del _objects.registry[self.id]
 
-    
+
     def copy(self):
         """() => SpaceID
 
@@ -175,14 +180,14 @@ cdef class SpaceID(ObjectID):
     def __reduce__(self):
         return (type(self), (-1,), self.encode())
 
-    
+
     def __setstate__(self, state):
         cdef char* buf = state
         self.id = H5Sdecode(buf)
 
     # === Simple dataspaces ===================================================
 
-    
+
     def is_simple(self):
         """() => BOOL is_simple
 
@@ -191,12 +196,12 @@ cdef class SpaceID(ObjectID):
         """
         return <bint>(H5Sis_simple(self.id))
 
-    
+
     def offset_simple(self, object offset=None):
         """(TUPLE offset=None)
 
         Set the offset of a dataspace.  The length of the given tuple must
-        match the rank of the dataspace. If None is provided (default), 
+        match the rank of the dataspace. If None is provided (default),
         the offsets on all axes will be set to 0.
         """
         cdef int rank
@@ -208,14 +213,14 @@ cdef class SpaceID(ObjectID):
                 raise ValueError("%d is not a simple dataspace" % self.id)
 
             rank = H5Sget_simple_extent_ndims(self.id)
-            
+
             require_tuple(offset, 1, rank, "offset")
             dims = <hssize_t*>emalloc(sizeof(hssize_t)*rank)
             if(offset is not None):
                 convert_tuple(offset, <hsize_t*>dims, rank)
             else:
-                # The HDF5 docs say passing in NULL resets the offset to 0.  
-                # Instead it raises an exception.  Imagine my surprise. We'll 
+                # The HDF5 docs say passing in NULL resets the offset to 0.
+                # Instead it raises an exception.  Imagine my surprise. We'll
                 # do this manually.
                 for i from 0<=i<rank:
                     dims[i] = 0
@@ -225,19 +230,19 @@ cdef class SpaceID(ObjectID):
         finally:
             efree(dims)
 
-    
+
     def get_simple_extent_ndims(self):
         """() => INT rank
-        
+
         Determine the rank of a "simple" (slab) dataspace.
         """
         return H5Sget_simple_extent_ndims(self.id)
 
-    
+
     def get_simple_extent_dims(self, int maxdims=0):
         """(BOOL maxdims=False) => TUPLE shape
 
-        Determine the shape of a "simple" (slab) dataspace.  If "maxdims" 
+        Determine the shape of a "simple" (slab) dataspace.  If "maxdims"
         is True, retrieve the maximum dataspace size instead.
         """
         cdef int rank
@@ -256,8 +261,8 @@ cdef class SpaceID(ObjectID):
 
         finally:
             efree(dims)
-    
-    
+
+
     def get_simple_extent_npoints(self):
         """() => LONG npoints
 
@@ -265,7 +270,7 @@ cdef class SpaceID(ObjectID):
         """
         return H5Sget_simple_extent_npoints(self.id)
 
-    
+
     def get_simple_extent_type(self):
         """() => INT class_code
 
@@ -275,7 +280,7 @@ cdef class SpaceID(ObjectID):
 
     # === Extents =============================================================
 
-    
+
     def extent_copy(self, SpaceID source not None):
         """(SpaceID source)
 
@@ -284,15 +289,15 @@ cdef class SpaceID(ObjectID):
         """
         H5Sextent_copy(self.id, source.id)
 
-    
+
     def set_extent_simple(self, object dims_tpl, object max_dims_tpl=None):
         """(TUPLE dims_tpl, TUPLE max_dims_tpl=None)
 
-        Reset the dataspace extent via a tuple of dimensions.  
-        Every element of dims_tpl must be a positive integer.  
+        Reset the dataspace extent via a tuple of dimensions.
+        Every element of dims_tpl must be a positive integer.
 
-        You can optionally specify the maximum dataspace size. The 
-        special value UNLIMITED, as an element of max_dims, indicates 
+        You can optionally specify the maximum dataspace size. The
+        special value UNLIMITED, as an element of max_dims, indicates
         an unlimited dimension.
         """
         cdef int rank
@@ -317,7 +322,7 @@ cdef class SpaceID(ObjectID):
             efree(dims)
             efree(max_dims)
 
-    
+
     def set_extent_none(self):
         """()
 
@@ -327,7 +332,7 @@ cdef class SpaceID(ObjectID):
 
     # === General selection operations ========================================
 
-    
+
     def get_select_type(self):
         """ () => INT select_code
 
@@ -340,20 +345,20 @@ cdef class SpaceID(ObjectID):
         """
         return <int>H5Sget_select_type(self.id)
 
-    
+
     def get_select_npoints(self):
         """() => LONG npoints
 
-        Determine the total number of points currently selected.  
+        Determine the total number of points currently selected.
         Works for all selection techniques.
         """
         return H5Sget_select_npoints(self.id)
 
-    
+
     def get_select_bounds(self):
         """() => (TUPLE start, TUPLE end)
 
-        Determine the bounding box which exactly contains 
+        Determine the bounding box which exactly contains
         the current selection.
         """
         cdef int rank
@@ -379,7 +384,7 @@ cdef class SpaceID(ObjectID):
             efree(start)
             efree(end)
 
-    
+
     def select_all(self):
         """()
 
@@ -387,7 +392,7 @@ cdef class SpaceID(ObjectID):
         """
         H5Sselect_all(self.id)
 
-    
+
     def select_none(self):
         """()
 
@@ -395,10 +400,10 @@ cdef class SpaceID(ObjectID):
         """
         H5Sselect_none(self.id)
 
-    
+
     def select_valid(self):
         """() => BOOL
-        
+
         Determine if the current selection falls within
         the dataspace extent.
         """
@@ -406,7 +411,7 @@ cdef class SpaceID(ObjectID):
 
     # === Point selection functions ===========================================
 
-    
+
     def get_select_elem_npoints(self):
         """() => LONG npoints
 
@@ -414,7 +419,7 @@ cdef class SpaceID(ObjectID):
         """
         return H5Sget_select_elem_npoints(self.id)
 
-    
+
     def get_select_elem_pointlist(self):
         """() => NDARRAY
 
@@ -433,7 +438,7 @@ cdef class SpaceID(ObjectID):
 
         return buf
 
-    
+
     def select_elements(self, object coords, int op=H5S_SELECT_SET):
         """(SEQUENCE coords, INT op=SELECT_SET)
 
@@ -442,7 +447,7 @@ cdef class SpaceID(ObjectID):
         converted to an array of uints with the shape::
 
             (<npoints>, <space rank>)
-        
+
         Examples::
 
             >>> obj.shape
@@ -450,7 +455,7 @@ cdef class SpaceID(ObjectID):
             >>> obj.select_elements([(1,2), (3,4), (5,9)])
 
         A zero-length selection (i.e. shape ``(0, <rank>)``) is not allowed
-        by the HDF5 library.  
+        by the HDF5 library.
         """
         cdef ndarray hcoords
         cdef size_t nelements
@@ -471,7 +476,7 @@ cdef class SpaceID(ObjectID):
 
     # === Hyperslab selection functions =======================================
 
-    
+
     def get_select_hyper_nblocks(self):
         """() => LONG nblocks
 
@@ -479,7 +484,7 @@ cdef class SpaceID(ObjectID):
         """
         return H5Sget_select_hyper_nblocks(self.id)
 
-    
+
     def get_select_hyper_blocklist(self):
         """() => NDARRAY
 
@@ -506,12 +511,12 @@ cdef class SpaceID(ObjectID):
 
         return buf
 
-    
-    def select_hyperslab(self, object start, object count, object stride=None, 
+
+    def select_hyperslab(self, object start, object count, object stride=None,
                          object block=None, int op=H5S_SELECT_SET):
-        """(TUPLE start, TUPLE count, TUPLE stride=None, TUPLE block=None, 
+        """(TUPLE start, TUPLE count, TUPLE stride=None, TUPLE block=None,
              INT op=SELECT_SET)
-     
+
         Select a block region from an existing dataspace.  See the HDF5
         documentation for the meaning of the "block" and "op" keywords.
         """
@@ -542,7 +547,7 @@ cdef class SpaceID(ObjectID):
                 block_array = <hsize_t*>emalloc(sizeof(hsize_t)*rank)
                 convert_tuple(block, block_array, rank)
 
-            H5Sselect_hyperslab(self.id, <H5S_seloper_t>op, start_array, 
+            H5Sselect_hyperslab(self.id, <H5S_seloper_t>op, start_array,
                                          stride_array, count_array, block_array)
 
         finally:
