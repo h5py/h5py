@@ -207,6 +207,8 @@ cdef class IDProxy:
 
     property valid:
         def __get__(self):
+            if not self.id:
+                return False
             res = H5Iget_type(self.id) > 0
             if not res:
                 self.id = 0
