@@ -252,6 +252,11 @@ cdef class FileID(GroupID):
             return get_name(self)
 
 
+    def __cinit__(self, id):
+        # lock the id proxy for as long as the the identifier is open
+        self.proxy.locked = True
+
+
     def close(self):
         """()
 
@@ -260,10 +265,10 @@ cdef class FileID(GroupID):
         physical file might not be closed until all remaining open
         identifiers are freed.
         """
-        # When a file is closed, its identifier needs to be removed from the
-        # registry. Doing so causes the HDF5 reference count to decrease,
-        # closing the identifier. Therefore, a call to H5Fclose is not needed.
-        del _objects.registry[self.id]
+        with _objects.registry.lock:
+            self.proxy.locked = False
+            H5Fclose(self.id)
+            _objects.registry.cleanup()
 
 
     def reopen(self):

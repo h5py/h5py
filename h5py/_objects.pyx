@@ -149,16 +149,30 @@ cdef inline void unlock_lock(FastRLock lock) nogil:
 cdef class _Registry:
 
     cdef object _data
-    cdef FastRLock _lock
+    cdef readonly FastRLock lock
 
     def __cinit__(self):
         self._data = {}
-        self._lock = FastRLock()
+        self.lock = FastRLock()
 
     __hash__ = None # Avoid Py3 warning
 
+    def cleanup(self):
+        "Manage invalid identifiers"
+        with self.lock:
+            deadlist = []
+            for key, val in self._data.iteritems():
+                val = val()
+                if val is None:
+                    deadlist.append(key)
+                    continue
+                if not val.valid:
+                    deadlist.append(key)
+            for key in deadlist:
+                del self._data[key]
+
     def __getitem__(self, key):
-        with self._lock:
+        with self.lock:
             try:
                 o = self._data[key]()
                 if o is None:
@@ -173,11 +187,17 @@ cdef class _Registry:
         return o
 
     def __delitem__(self, key):
-        with self._lock:
+        with self.lock:
             # we apparently need to synchronize removal of the id from the
             # registry and decreasing the HDF5 reference count:
-            del self._data[key]
-            H5Idec_ref(key)
+            try:
+                del self._data[key]
+                H5Idec_ref(key)
+            except KeyError:
+                pass
+            except RuntimeError:
+                # dec_ref failed because object was explicitly closed
+                pass
 
 
 registry = _Registry()
@@ -187,15 +207,17 @@ cdef class IDProxy:
 
     property valid:
         def __get__(self):
-            return H5Iget_type(self.id) > 0
+            res = H5Iget_type(self.id) > 0
+            if not res:
+                self.id = 0
+            return res
 
     def __cinit__(self, id):
         self.id = id
         self.locked = 0
 
     def __dealloc__(self):
-        if self.id > 0 and (not self.locked) and H5Iget_type(self.id) > 0 \
-          and H5Iget_type(self.id) != H5I_FILE:
+        if not self.locked:
             del registry[self.id]
 
 

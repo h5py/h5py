@@ -18,7 +18,7 @@ class TestFileOpen(TestCase):
     """
         Feature: Opening files with Python-style modes.
     """
-            
+
     def test_create(self):
         """ Mode 'w' opens file in overwrite mode """
         fname = self.mktemp()
@@ -56,7 +56,7 @@ class TestFileOpen(TestCase):
             self.assert_('bar' in fid)
         finally:
             fid.close()
-            
+
     def test_readonly(self):
         """ Mode 'r' opens file in readonly mode """
         fname = self.mktemp()
@@ -80,7 +80,7 @@ class TestFileOpen(TestCase):
         fid.create_group('bar')
         self.assert_('bar' in fid)
         fid.close()
-        
+
     def test_nonexistent_file(self):
         """ Modes 'r' and 'r+' do not create files """
         fname = self.mktemp()
@@ -109,7 +109,7 @@ class TestModes(TestCase):
             self.assertEqual(f.mode, 'r')
 
     def test_mode_external(self):
-        """ Mode property works for files opened via external links 
+        """ Mode property works for files opened via external links
 
         Issue 190.
         """
@@ -127,7 +127,7 @@ class TestModes(TestCase):
         finally:
             f2.close()
             f3.close()
-            
+
         f2 = File(fname2,'r')
         try:
             f3 = f2['External'].file
@@ -189,7 +189,7 @@ class TestDrivers(TestCase):
         with self.assertRaises(ValueError):
             fid.create_group('bar')
         fid.close()
-    
+
     def test_blocksize(self):
         """ Core driver supports variable block size """
         fname = self.mktemp()
@@ -304,7 +304,7 @@ class TestUserblock(TestCase):
             self.assert_("Foobar" in f)
         finally:
             f.close()
-        
+
         pyfile = open(name, 'rb')
         try:
             self.assertEqual(pyfile.read(512), b'X'*512)
@@ -339,7 +339,7 @@ class TestUnicode(TestCase):
             self.assertIsInstance(fid.filename, unicode)
         finally:
             fid.close()
-            
+
 class TestFileProperty(TestCase):
 
     """
@@ -356,7 +356,7 @@ class TestFileProperty(TestCase):
             self.assertEqual(hfile, hfile2)
         finally:
             hfile.close()
-        
+
     def test_close(self):
         """ All retrieved File objects are closed at the same time """
         fname = self.mktemp()
@@ -390,7 +390,7 @@ class TestClose(TestCase):
         self.assert_(fid)
         fid.close()
         self.assert_(not fid)
-      
+
     def test_closed_file(self):
         """ Trying to modify closed file raises ValueError """
         fid = File(self.mktemp(), 'w')
@@ -439,7 +439,7 @@ class TestFilename(TestCase):
             self.assertIsInstance(fid.filename, unicode)
         finally:
             fid.close()
-            
+
 class TestBackwardsCompat(TestCase):
 
     """
@@ -452,20 +452,25 @@ class TestBackwardsCompat(TestCase):
             self.assertIs(hfile.fid, hfile.id)
 
 
+class TestCloseInvalidatesOpenObjectIDs(TestCase):
 
+    """
+        Ensure that closing a file invalidates object IDs, as appropriate
+    """
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    def test_close(self):
+        """ Closing a file invalidates any of the file's open objects """
+        with File(self.mktemp(), 'w') as f1:
+            g1 = f1.create_group('foo')
+            self.assertTrue(bool(f1.id))
+            self.assertTrue(bool(g1.id))
+            f1.close()
+            self.assertFalse(bool(f1.id))
+            self.assertFalse(bool(g1.id))
+        with File(self.mktemp(), 'w') as f2:
+            g2 = f2.create_group('foo')
+            self.assertTrue(bool(f2.id))
+            self.assertTrue(bool(g2.id))
+            self.assertFalse(bool(f1.id))
+            self.assertFalse(bool(g1.id))
 
