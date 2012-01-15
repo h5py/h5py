@@ -1,15 +1,10 @@
 from defs cimport *
 
-cdef class IDProxy:
-
-    cdef object __weakref__
-    cdef readonly hid_t id
-    cdef readonly int locked
-
 cdef class ObjectID:
 
     cdef object __weakref__
-    cdef IDProxy proxy
+    cdef readonly hid_t id
+    cdef public int locked
     cdef object _hash
 
 # Convenience functions

@@ -74,14 +74,14 @@ def create(ObjectID loc not None, object name, TypeID tid not None,
         else:
             dsid = H5Dcreate_anon(loc.id, tid.id, space.id,
                      pdefault(dcpl), H5P_DEFAULT)
-        return DatasetID(dsid)
+        return DatasetID.open(dsid)
 
 def open(ObjectID loc not None, char* name):
     """ (ObjectID loc, STRING name) => DatasetID
 
         Open an existing dataset attached to a group or file object, by name.
     """
-    return DatasetID(H5Dopen(loc.id, name))
+    return DatasetID.open(H5Dopen(loc.id, name))
 
 # --- Proxy functions for safe(r) threading -----------------------------------
 
@@ -140,7 +140,7 @@ cdef class DatasetID(ObjectID):
         """
         with _objects.registry.lock:
             H5Dclose(self.id)
-            if not self.proxy.valid:
+            if not self.valid:
                 del _objects.registry[self.id]
 
 

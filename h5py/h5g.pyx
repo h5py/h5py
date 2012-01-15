@@ -114,7 +114,7 @@ def open(ObjectID loc not None, char* name):
 
     Open an existing HDF5 group, attached to some other group.
     """
-    return GroupID(H5Gopen(loc.id, name))
+    return GroupID.open(H5Gopen(loc.id, name))
 
 def create(ObjectID loc not None, object name, PropID lcpl=None,
            PropID gcpl=None):
@@ -135,7 +135,7 @@ def create(ObjectID loc not None, object name, PropID lcpl=None,
     else:
         gid = H5Gcreate_anon(loc.id, pdefault(gcpl), H5P_DEFAULT)
 
-    return GroupID(gid)
+    return GroupID.open(gid)
 
 
 cdef class _GroupVisitor:
@@ -246,7 +246,7 @@ cdef class GroupID(ObjectID):
         """
         with _objects.registry.lock:
             H5Gclose(self.id)
-            if not self.proxy.valid:
+            if not self.valid:
                 del _objects.registry[self.id]
 
 
@@ -425,5 +425,3 @@ cdef class GroupID(ObjectID):
         cdef hsize_t size
         H5Gget_num_objs(self.id, &size)
         return size
-
-

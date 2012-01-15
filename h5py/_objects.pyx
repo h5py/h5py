@@ -7,18 +7,21 @@
     HDF5 1.8.5 they have started recycling object identifiers, which
     breaks this system.
 
-    We now use a global registry of "proxy objects".  This is implemented
+    We now use a global registry of object identifiers.  This is implemented
     via a dictionary which maps an integer representation of the identifier
-    to a weak reference of an IDProxy object.  There is only one IDProxy
-    object in the universe for each integer identifier.  Objects hold strong
-    references to this "master" IDProxy object.  As they are deallocated,
-    the reference count of the IDProxy decreases.  As soon as no ObjectIDs
-    remain which reference the IDProxy, the IDProxy __dealloc__ method is
-    called, which deletes the identifier and weak reference from the
-    registry. The registry, in turn, decreases the HDF5 reference count for
-    that identifier, which should now be zero, closing the identifier and
-    allowing HDF5 to repurpose the identifier. The registry must be
-    synchronized for thread safety.
+    to a weak reference of an ObjectID.  There is only one ObjectID instance
+    in the universe for each integer identifier.  When the HDF5 reference
+    count for a identifier reaches zero, HDF5 closes the object and reclaims
+    the identifier. When this occurs, the identifier and weak reference must
+    be deleted from the registry. If an ObjectID is deallocated, it is deleted
+    from the registry and the HDF5 reference count is decreased, HDF5 closes
+    and reclaims the identifier for future use.
+
+    All interactions with the registry must be synchronized for thread safety.
+
+    All ObjectIDs and subclasses thereof should be opened with the "open"
+    classmethod factory function, such that an existing ObjectID instance can
+    be returned from the registry when appropriate.
 """
 
 from defs cimport *
@@ -173,21 +176,23 @@ cdef class _Registry:
 
     def __getitem__(self, key):
         with self.lock:
-            try:
-                o = self._data[key]()
-                if o is None:
-                    # This would occur if we had open objects and closed their
-                    # file, causing the objects identifiers to be reclaimed.
-                    # Now we clean up the registry when we close a file (or any
-                    # other identifier, for that matter), so in practice this
-                    # condition never obtains.
-                    del self._data[key]
-            except KeyError:
-                o = None
+            o = self._data[key]()
             if o is None:
-                o = IDProxy(key)
-                self._data[key] = ref(o)
-        return o
+                # This would occur if we had open objects and closed their
+                # file, causing the objects identifiers to be reclaimed.
+                # Now we clean up the registry when we close a file (or any
+                # other identifier, for that matter), so in practice this
+                # condition never obtains.
+                del self._data[key]
+                # We need to raise a KeyError:
+                o = self._data[key]()
+            return o
+
+    def __setitem__(self, key, val):
+        # this method should only be called by ObjectID.open
+        with self.lock:
+            self._data[key] = ref(val)
+
 
     def __delitem__(self, key):
         with self.lock:
@@ -206,7 +211,18 @@ cdef class _Registry:
 registry = _Registry()
 
 
-cdef class IDProxy:
+cdef class ObjectID:
+
+    """
+        Represents an HDF5 identifier.
+
+    """
+
+    property fileno:
+        def __get__(self):
+            cdef H5G_stat_t stat
+            H5Gget_objinfo(self.id, '.', 0, &stat)
+            return (stat.fileno[0], stat.fileno[1])
 
     property valid:
         def __get__(self):
@@ -225,37 +241,8 @@ cdef class IDProxy:
         if not self.locked:
             del registry[self.id]
 
-
-cdef class ObjectID:
-
-    """
-        Represents an HDF5 identifier.
-
-    """
-
-    property id:
-        def __get__(self):
-            return self.proxy.id
-        def __set__(self, id_):
-            self.proxy = registry[id_]
-
-    property locked:
-        def __get__(self):
-            return self.proxy.locked
-        def __set__(self, val):
-            self.proxy.locked = val
-
-    property fileno:
-        def __get__(self):
-            cdef H5G_stat_t stat
-            H5Gget_objinfo(self.id, '.', 0, &stat)
-            return (stat.fileno[0], stat.fileno[1])
-
-    def __cinit__(self, id):
-        self.id = id
-
     def __nonzero__(self):
-        return self.proxy.valid
+        return self.valid
 
     def __copy__(self):
         cdef ObjectID cpy
@@ -306,6 +293,18 @@ cdef class ObjectID:
                 raise TypeError("Objects of class %s cannot be hashed" % self.__class__.__name__)
 
         return self._hash
+
+    @classmethod
+    def open(cls, id):
+        """ Return a representation of an HDF5 identifier """
+        with registry.lock:
+            try:
+                res = registry[id]
+            except KeyError:
+                res = cls(id)
+                registry[id] = res
+            return res
+
 
 cdef hid_t pdefault(ObjectID pid):
 

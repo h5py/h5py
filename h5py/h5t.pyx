@@ -67,7 +67,7 @@ cpdef TypeID typewrap(hid_t id_):
     else:
         pcls = TypeID
 
-    return pcls(id_)
+    return pcls.open(id_)
 
 cdef object lockid(hid_t id_in):
     cdef TypeID tid
@@ -424,7 +424,7 @@ cdef class TypeID(ObjectID):
             return
         with _objects.registry.lock:
             H5Tclose(self.id)
-            if not self.proxy.valid:
+            if not self.valid:
                 del _objects.registry[self.id]
 
 

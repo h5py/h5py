@@ -1,13 +1,13 @@
 #+
-# 
+#
 # This file is part of h5py, a low-level Python interface to the HDF5 library.
-# 
+#
 # Copyright (C) 2008 Andrew Collette
 # http://h5py.alfven.org
 # License: BSD  (See LICENSE.txt for full license)
-# 
+#
 # $Date$
-# 
+#
 #-
 
 """
@@ -35,16 +35,16 @@ cpdef ObjectID wrap_identifier(hid_t ident):
     typecode = H5Iget_type(ident)
     if typecode == H5I_FILE:
         import h5f
-        obj = h5f.FileID(ident)
+        obj = h5f.FileID.open(ident)
     elif typecode == H5I_DATASET:
         import h5d
-        obj = h5d.DatasetID(ident)
+        obj = h5d.DatasetID.open(ident)
     elif typecode == H5I_GROUP:
         import h5g
-        obj = h5g.GroupID(ident)
+        obj = h5g.GroupID.open(ident)
     elif typecode == H5I_ATTR:
         import h5a
-        obj = h5a.AttrID(ident)
+        obj = h5a.AttrID.open(ident)
     elif typecode == H5I_DATATYPE:
         import h5t
         obj = h5t.typewrap(ident)
@@ -62,8 +62,8 @@ cpdef ObjectID wrap_identifier(hid_t ident):
 def get_type(ObjectID obj not None):
     """ (ObjectID obj) => INT type_code
 
-        Determine the HDF5 typecode of an arbitrary HDF5 object.  The return 
-        value is always one of the type constants defined in this module; if 
+        Determine the HDF5 typecode of an arbitrary HDF5 object.  The return
+        value is always one of the type constants defined in this module; if
         the ID is invalid, BADID is returned.
     """
     return <int>H5Iget_type(obj.id)
@@ -144,19 +144,3 @@ def dec_ref(ObjectID obj not None):
         ObjectID instances by abusing this function.
     """
     H5Idec_ref(obj.id)
-
-
-
-
-    
-
-
-
-
-
-
-
-
-
-
-

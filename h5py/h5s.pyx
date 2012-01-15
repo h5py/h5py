@@ -24,7 +24,7 @@ import _objects
 
 cdef object lockid(hid_t id_):
     cdef SpaceID space
-    space = SpaceID(id_)
+    space = SpaceID.open(id_)
     space.locked = 1
     return space
 
@@ -67,7 +67,7 @@ def create(int class_code):
     Create a new HDF5 dataspace object, of the given class.
     Legal values are SCALAR and SIMPLE.
     """
-    return SpaceID(H5Screate(<H5S_class_t>class_code))
+    return SpaceID.open(H5Screate(<H5S_class_t>class_code))
 
 
 def create_simple(object dims_tpl, object max_dims_tpl=None):
@@ -96,7 +96,7 @@ def create_simple(object dims_tpl, object max_dims_tpl=None):
             max_dims = <hsize_t*>emalloc(sizeof(hsize_t)*rank)
             convert_tuple(max_dims_tpl, max_dims, rank)
 
-        return SpaceID(H5Screate_simple(rank, dims, max_dims))
+        return SpaceID.open(H5Screate_simple(rank, dims, max_dims))
 
     finally:
         efree(dims)
@@ -109,7 +109,7 @@ def decode(buf):
     Python pickling machinery to do this.
     """
     cdef char* buf_ = buf
-    return SpaceID(H5Sdecode(buf_))
+    return SpaceID.open(H5Sdecode(buf_))
 
 # === H5S class API ===========================================================
 
@@ -145,7 +145,7 @@ cdef class SpaceID(ObjectID):
         """
         with _objects.registry.lock:
             H5Sclose(self.id)
-            if not self.proxy.valid:
+            if not self.valid:
                 del _objects.registry[self.id]
 
 
@@ -154,7 +154,7 @@ cdef class SpaceID(ObjectID):
 
         Create a new copy of this dataspace.
         """
-        return SpaceID(H5Scopy(self.id))
+        return SpaceID.open(H5Scopy(self.id))
 
 
     def encode(self):
@@ -555,7 +555,6 @@ cdef class SpaceID(ObjectID):
             efree(count_array)
             efree(stride_array)
             efree(block_array)
-
 
 
 
