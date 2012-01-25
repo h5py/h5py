@@ -244,7 +244,7 @@ def array_create(TypeID base not None, object dims_tpl):
 
     try:
         convert_tuple(dims_tpl, dims, rank)
-        return TypeArrayID(H5Tarray_create(base.id, rank, dims, NULL))
+        return TypeArrayID.open(H5Tarray_create(base.id, rank, dims, NULL))
     finally:
         efree(dims)
 
@@ -1177,7 +1177,7 @@ cdef TypeFloatID _c_float(dtype dt):
     except KeyError:
         raise TypeError("Unsupported float size (%s)" % dt.elsize)
 
-    return TypeFloatID(H5Tcopy(tid))
+    return TypeFloatID.open(H5Tcopy(tid))
 
 cdef TypeIntegerID _c_int(dtype dt):
     # Integers (ints and uints)
@@ -1203,7 +1203,7 @@ cdef TypeIntegerID _c_int(dtype dt):
     except KeyError:
         raise TypeError("Unsupported integer size (%s)" % dt.elsize)
 
-    return TypeIntegerID(H5Tcopy(tid))
+    return TypeIntegerID.open(H5Tcopy(tid))
 
 cdef TypeEnumID _c_enum(dtype dt, dict vals):
     # Enums
@@ -1212,7 +1212,7 @@ cdef TypeEnumID _c_enum(dtype dt, dict vals):
 
     base = _c_int(dt)
 
-    out = TypeEnumID(H5Tenum_create(base.id))
+    out = TypeEnumID.open(H5Tenum_create(base.id))
     for name in sorted(vals):
         out.enum_insert(name, vals[name])
     return out
@@ -1222,7 +1222,7 @@ cdef TypeEnumID _c_bool(dtype dt):
     global cfg
 
     cdef TypeEnumID out
-    out = TypeEnumID(H5Tenum_create(H5T_NATIVE_INT8))
+    out = TypeEnumID.open(H5Tenum_create(H5T_NATIVE_INT8))
 
     out.enum_insert(cfg._f_name, 0)
     out.enum_insert(cfg._t_name, 1)
@@ -1248,7 +1248,7 @@ cdef TypeArrayID _c_array(dtype dt, int logical):
 
 cdef TypeOpaqueID _c_opaque(dtype dt):
     # Opaque
-    return TypeOpaqueID(H5Tcreate(H5T_OPAQUE, dt.itemsize))
+    return TypeOpaqueID.open(H5Tcreate(H5T_OPAQUE, dt.itemsize))
 
 cdef TypeStringID _c_string(dtype dt):
     # Strings (fixed-length)
@@ -1257,7 +1257,7 @@ cdef TypeStringID _c_string(dtype dt):
     tid = H5Tcopy(H5T_C_S1)
     H5Tset_size(tid, dt.itemsize)
     H5Tset_strpad(tid, H5T_STR_NULLPAD)
-    return TypeStringID(tid)
+    return TypeStringID.open(tid)
 
 cdef TypeCompoundID _c_complex(dtype dt):
     # Complex numbers (names depend on cfg)
@@ -1296,7 +1296,7 @@ cdef TypeCompoundID _c_complex(dtype dt):
     H5Tinsert(tid, cfg._r_name, off_r, tid_sub)
     H5Tinsert(tid, cfg._i_name, off_i, tid_sub)
 
-    return TypeCompoundID(tid)
+    return TypeCompoundID.open(tid)
 
 cdef TypeCompoundID _c_compound(dtype dt, int logical):
     # Compound datatypes
@@ -1321,21 +1321,21 @@ cdef TypeCompoundID _c_compound(dtype dt, int logical):
         H5Tinsert(tid, ename, offset, type_tmp.id)
         offset += type_tmp.get_size()
 
-    return TypeCompoundID(tid)
+    return TypeCompoundID.open(tid)
 
 cdef TypeStringID _c_vlen_str():
     # Variable-length strings
     cdef hid_t tid
     tid = H5Tcopy(H5T_C_S1)
     H5Tset_size(tid, H5T_VARIABLE)
-    return TypeStringID(tid)
+    return TypeStringID.open(tid)
 
 cdef TypeStringID _c_vlen_unicode():
     cdef hid_t tid
     tid = H5Tcopy(H5T_C_S1)
     H5Tset_size(tid, H5T_VARIABLE)
     H5Tset_cset(tid, H5T_CSET_UTF8)
-    return TypeStringID(tid)
+    return TypeStringID.open(tid)
 
 cdef TypeReferenceID _c_ref(object refclass):
     if refclass is Reference:

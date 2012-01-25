@@ -282,7 +282,7 @@ cdef class DatasetID(ObjectID):
 
             Create and return a new copy of the dataspace for this dataset.
         """
-        return SpaceID(H5Dget_space(self.id))
+        return SpaceID.open(H5Dget_space(self.id))
 
 
     def get_space_status(self):

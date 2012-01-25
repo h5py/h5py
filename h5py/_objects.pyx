@@ -193,16 +193,16 @@ cdef class _Registry:
         with self.lock:
             self._data[key] = ref(val)
 
-
     def __delitem__(self, key):
         with self.lock:
             # we need to synchronize removal of the id from the
             # registry with decreasing the HDF5 reference count:
             try:
                 del self._data[key]
-                H5Idec_ref(key)
             except KeyError:
                 pass
+            try:
+                H5Idec_ref(key)
             except RuntimeError:
                 # dec_ref failed because object was explicitly closed
                 pass
@@ -236,6 +236,7 @@ cdef class ObjectID:
     def __cinit__(self, id):
         self.id = id
         self.locked = 0
+        registry[id] = self
 
     def __dealloc__(self):
         if not self.locked:
@@ -302,7 +303,6 @@ cdef class ObjectID:
                 res = registry[id]
             except KeyError:
                 res = cls(id)
-                registry[id] = res
             return res
 
 

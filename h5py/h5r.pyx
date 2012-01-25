@@ -1,13 +1,13 @@
 #+
-# 
+#
 # This file is part of h5py, a low-level Python interface to the HDF5 library.
-# 
+#
 # Copyright (C) 2008 Andrew Collette
 # http://h5py.alfven.org
 # License: BSD  (See LICENSE.txt for full license)
-# 
+#
 # $Date$
-# 
+#
 #-
 
 """
@@ -36,7 +36,7 @@ def create(ObjectID loc not None, char* name, int ref_type, ObjectID space=None)
         Reference to an object in an HDF5 file.  Parameters "loc"
         and "name" identify the object; "space" is unused.
 
-    DATASET_REGION    
+    DATASET_REGION
         Reference to a dataset region.  Parameters "loc" and
         "name" identify the dataset; the selection on "space"
         identifies the region.
@@ -93,7 +93,7 @@ def get_region(RegionReference ref not None, ObjectID id not None):
     import h5s
     if ref.typecode != H5R_DATASET_REGION or not ref:
         return None
-    return h5s.SpaceID(H5Rget_region(id.id, <H5R_type_t>ref.typecode, &ref.ref))
+    return h5s.SpaceID.open(H5Rget_region(id.id, <H5R_type_t>ref.typecode, &ref.ref))
 
 
 def get_obj_type(Reference ref not None, ObjectID id not None):
@@ -138,12 +138,12 @@ def get_name(Reference ref not None, ObjectID loc not None):
 
 cdef class Reference:
 
-    """ 
+    """
         Opaque representation of an HDF5 reference.
 
-        Objects of this class are created exclusively by the library and 
-        cannot be modified.  The read-only attribute "typecode" determines 
-        whether the reference is to an object in an HDF5 file (OBJECT) 
+        Objects of this class are created exclusively by the library and
+        cannot be modified.  The read-only attribute "typecode" determines
+        whether the reference is to an object in an HDF5 file (OBJECT)
         or a dataset region (DATASET_REGION).
 
         The object's truth value indicates whether it contains a nonzero

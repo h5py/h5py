@@ -100,7 +100,7 @@ cdef herr_t cb_ds_iter(hid_t dset, unsigned int dim, hid_t scale, void* vis_in) 
     # we did not retrieve the scale identifier using the normal machinery,
     # so we need to inc_ref it before using it to create a DatasetID.
     H5Iinc_ref(scale)
-    vis.retval = vis.func(DatasetID(scale))
+    vis.retval = vis.func(DatasetID.open(scale))
 
     if vis.retval is not None:
         return 1

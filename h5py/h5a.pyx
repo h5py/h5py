@@ -413,7 +413,7 @@ cdef class AttrID(ObjectID):
 
         Create and return a copy of the attribute's dataspace.
         """
-        return SpaceID(H5Aget_space(self.id))
+        return SpaceID.open(H5Aget_space(self.id))
 
 
     def get_type(self):
