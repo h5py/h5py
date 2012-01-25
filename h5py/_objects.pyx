@@ -18,6 +18,10 @@
     and reclaims the identifier for future use.
 
     All interactions with the registry must be synchronized for thread safety.
+    You must acquire "registry.lock" before interacting with the registry. The
+    registry is not internally synchronized, in the interest of performance: we
+    don't want the same thread attempting to acquire the lock multiple times
+    during a single operation, if we can avoid it.
 
     All ObjectIDs and subclasses thereof should be opened with the "open"
     classmethod factory function, such that an existing ObjectID instance can
@@ -162,50 +166,46 @@ cdef class _Registry:
 
     def cleanup(self):
         "Manage invalid identifiers"
-        with self.lock:
-            deadlist = []
-            for key, val in self._data.iteritems():
-                val = val()
-                if val is None:
-                    deadlist.append(key)
-                    continue
-                if not val.valid:
-                    deadlist.append(key)
-            for key in deadlist:
-                del self._data[key]
+        deadlist = []
+        for key, val in self._data.iteritems():
+            val = val()
+            if val is None:
+                deadlist.append(key)
+                continue
+            if not val.valid:
+                deadlist.append(key)
+        for key in deadlist:
+            del self._data[key]
 
     def __getitem__(self, key):
-        with self.lock:
+        o = self._data[key]()
+        if o is None:
+            # This would occur if we had open objects and closed their
+            # file, causing the objects identifiers to be reclaimed.
+            # Now we clean up the registry when we close a file (or any
+            # other identifier, for that matter), so in practice this
+            # condition never obtains.
+            del self._data[key]
+            # We need to raise a KeyError:
             o = self._data[key]()
-            if o is None:
-                # This would occur if we had open objects and closed their
-                # file, causing the objects identifiers to be reclaimed.
-                # Now we clean up the registry when we close a file (or any
-                # other identifier, for that matter), so in practice this
-                # condition never obtains.
-                del self._data[key]
-                # We need to raise a KeyError:
-                o = self._data[key]()
-            return o
+        return o
 
     def __setitem__(self, key, val):
         # this method should only be called by ObjectID.open
-        with self.lock:
-            self._data[key] = ref(val)
+        self._data[key] = ref(val)
 
     def __delitem__(self, key):
-        with self.lock:
-            # we need to synchronize removal of the id from the
-            # registry with decreasing the HDF5 reference count:
-            try:
-                del self._data[key]
-            except KeyError:
-                pass
-            try:
-                H5Idec_ref(key)
-            except RuntimeError:
-                # dec_ref failed because object was explicitly closed
-                pass
+        # we need to synchronize removal of the id from the
+        # registry with decreasing the HDF5 reference count:
+        try:
+            del self._data[key]
+        except KeyError:
+            pass
+        try:
+            H5Idec_ref(key)
+        except RuntimeError:
+            # dec_ref failed because object was explicitly closed
+            pass
 
 
 registry = _Registry()
@@ -236,11 +236,13 @@ cdef class ObjectID:
     def __cinit__(self, id):
         self.id = id
         self.locked = 0
-        registry[id] = self
+        with registry.lock:
+            registry[id] = self
 
     def __dealloc__(self):
         if not self.locked:
-            del registry[self.id]
+            with registry.lock:
+                del registry[self.id]
 
     def __nonzero__(self):
         return self.valid
