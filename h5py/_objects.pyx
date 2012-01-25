@@ -241,8 +241,12 @@ cdef class ObjectID:
 
     def __dealloc__(self):
         if not self.locked:
-            with registry.lock:
-                del registry[self.id]
+            try:
+                with registry.lock:
+                    del registry[self.id]
+            except AttributeError:
+                # library being torn down, registry is None
+                pass
 
     def __nonzero__(self):
         return self.valid
