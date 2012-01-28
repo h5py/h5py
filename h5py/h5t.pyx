@@ -197,6 +197,7 @@ CSET_UTF8 = H5T_CSET_UTF8
 
 # Custom Python object pointer type
 PYTHON_OBJECT = lockid(_conv.get_python_obj())
+NUMPY_UNICODE = lockid(_conv.get_numpy_unicode())
 
 # Translation tables for HDF5 -> NumPy dtype conversion
 cdef dict _order_map = { H5T_ORDER_NONE: '|', H5T_ORDER_LE: '<', H5T_ORDER_BE: '>'}

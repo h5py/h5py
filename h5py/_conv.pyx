@@ -49,9 +49,8 @@ cdef object objectify(PyObject* o):
     Py_INCREF(o)
     return <object>o
 
-# Create Python object equivalents
+# This is an exact binary representation of a Python object pointer
 cdef hid_t H5PY_OBJ = 0
-
 cpdef hid_t get_python_obj():
     global H5PY_OBJ
     if H5PY_OBJ <= 0:
@@ -59,6 +58,16 @@ cpdef hid_t get_python_obj():
         H5Tset_tag(H5PY_OBJ, "PYTHON:OBJECT")
         H5Tlock(H5PY_OBJ)
     return H5PY_OBJ
+
+# This is an exact binary representation of a NumPy 4-byte Unicode code point
+cdef hid_t H5PY_UNICODE = 0
+cpdef hid_t get_numpy_unicode():
+    global H5PY_UNICODE
+    if H5PY_UNICODE <= 0:
+        H5PY_UNICODE = H5Tcreate(H5T_OPAQUE, 4)
+        H5Tset_tag(H5PY_UNICODE, "PYTHON:UNICODE")
+        H5Tlock(H5PY_UNICODE)
+    return H5PY_UNICODE
 
 ctypedef int (*conv_operator_t)(void* ipt, void* opt, void* bkg, void* priv) except -1
 ctypedef herr_t (*init_operator_t)(hid_t src, hid_t dst, void** priv) except -1
