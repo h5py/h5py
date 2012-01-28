@@ -489,10 +489,10 @@ class TestStrings(BaseDataset):
         self.assertEqual(tid.get_cset(), h5py.h5t.CSET_ASCII)
 
     def test_fixed_unicode(self):
-        """ Fixed-length unicode datasets are unsupported (raise TypeError) """
+        """ Fixed-length unicode datasets turn into vlen unicode """
         dt = np.dtype("|U10")
-        with self.assertRaises(TypeError):
-            ds = self.f.create_dataset('x', (100,), dtype=dt)
+        ds = self.f.create_dataset('x', (100,), dtype=dt)
+        self.assertEqual(h5py.check_dtype(vlen=ds.dtype), unicode)
 
     def test_roundtrip_vlen_bytes(self):
         """ writing and reading to vlen bytes dataset preserves type and content

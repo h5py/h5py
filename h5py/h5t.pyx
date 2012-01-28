@@ -35,6 +35,8 @@ from h5 import get_config
 
 cfg = get_config()
 
+PY3 = (sys.version_info[0] == 3)
+
 # === Custom C API ============================================================
 
 cpdef TypeID typewrap(hid_t id_):
@@ -604,15 +606,33 @@ cdef class TypeStringID(TypeID):
 
     cdef object py_dtype(self):
         # Numpy translation function for string types
+
+        if cfg.read_byte_strings:
+            if self.is_variable_str():
+                return special_dtype(vlen=bytes)
+            return dtype("|S" + str(self.get_size()))
+
+        if PY3:
+            if self.is_variable_str():
+                return special_dtype(vlen=unicode)
+            return dtype("=U" + str(self.get_size()))
+
+        #PY2 variable
         if self.is_variable_str():
             if self.get_cset() == H5T_CSET_ASCII:
                 return special_dtype(vlen=bytes)
             elif self.get_cset() == H5T_CSET_UTF8:
                 return special_dtype(vlen=unicode)
             else:
-                raise TypeError("Unknown string encoding (value %d)" % self.get_cset())
+                raise TypeError("Unknown vlen string encoding (value %d)" % self.get_cset())
 
-        return dtype("|S" + str(self.get_size()))
+        #PY2 fixed
+        if self.get_cset() == H5T_CSET_ASCII:
+            return dtype("|S" + str(self.get_size()))
+        elif self.get_cset() == H5T_CSET_UTF8:
+            return dtype("=U" + str(self.get_size()))
+        else:
+            raise TypeError("Unknown fixed string encoding (value %d)" % self.get_cset())
 
 cdef class TypeVlenID(TypeID):
 
@@ -1421,6 +1441,13 @@ cpdef TypeID py_create(object dtype_in, bint logical=0):
 
         return PYTHON_OBJECT
 
+    elif kind == c'U':
+
+        if logical:
+            return _c_vlen_unicode()
+
+        return NUMPY_UNICODE
+                
     # Unrecognized
     else:
         raise TypeError("No conversion path for dtype: %s" % repr(dt))

@@ -7,6 +7,23 @@ ITER_NATIVE = H5_ITER_NATIVE  # No particular order, whatever is fastest
 INDEX_NAME      = H5_INDEX_NAME       # Index on names      
 INDEX_CRT_ORDER = H5_INDEX_CRT_ORDER  # Index on creation order    
 
+class ByteStringContext(object):
+
+    def __init__(self):
+        self._readbytes = False
+
+    def __bool__(self):
+        return self._readbytes
+
+    def __nonzero__(self):
+        return self.__bool__()
+
+    def __enter__(self):
+        self._readbytes = True
+
+    def __exit__(self, *args):
+        self._readbytes = False
+
 cdef class H5PYConfig:
 
     """
@@ -27,6 +44,7 @@ cdef class H5PYConfig:
         self._i_name = b'i'
         self._f_name = b'FALSE'
         self._t_name = b'TRUE'
+        self._bytestrings = ByteStringContext()
 
     property complex_names:
         """ Settable 2-tuple controlling how complex numbers are saved.
@@ -76,6 +94,13 @@ cdef class H5PYConfig:
                 raise TypeError("bool_names must be a length-2 sequence of of names (false, true)")
             self._f_name = f
             self._t_name = t
+
+    property read_byte_strings:
+        """ Returns a context manager which forces all strings to be returned
+        as byte strings. """
+        
+        def __get__(self):
+            return self._bytestrings
 
 cdef H5PYConfig cfg = H5PYConfig()
 

@@ -8,6 +8,7 @@ cdef class H5PYConfig:
     cdef readonly object _t_name
     cdef readonly object API_16
     cdef readonly object API_18
+    cdef readonly object _bytestrings
 
 cpdef H5PYConfig get_config()
 

@@ -32,7 +32,6 @@ class TestStrings_Dtype2HDF5(ut.TestCase):
         Tests dtype conversion rules governing Unicode and byte strings (Py2 and Py3)
     """
 
-    @ut.expectedFailure
     def test_fixedbytes(self):
         """ Fixed-width byte string dtype to hdf5 type """
         dt = np.dtype("|S10")
@@ -44,7 +43,6 @@ class TestStrings_Dtype2HDF5(ut.TestCase):
             self.assertFalse(htype.is_variable_str())
             self.assertEqual(htype.get_size(), 10)
 
-    @ut.expectedFailure
     def test_vlenbytes(self):
         """ Vlen byte string dtype to hdf5 type """
         dt = h5py.special_dtype(vlen=bytes)
@@ -56,10 +54,9 @@ class TestStrings_Dtype2HDF5(ut.TestCase):
         # The logical representation is a variable-length string with CSET 0
         htype = h5t.py_create(dt, logical=1)
         self.assertIsInstance(htype, h5t.TypeStringID)
-        self.assertTrue(htype.is_variable_string())
+        self.assertTrue(htype.is_variable_str())
         self.assertEqual(htype.get_cset(), h5t.CSET_ASCII)
 
-    @ut.expectedFailure
     def test_fixedunicode(self):
         """ NumPy unicode string dtype to hdf5 type """
         dt = np.dtype("=U10")
@@ -74,7 +71,6 @@ class TestStrings_Dtype2HDF5(ut.TestCase):
         self.assertTrue(htype.is_variable_str())
         self.assertEqual(htype.get_cset(), h5t.CSET_UTF8)
 
-    @ut.expectedFailure
     def test_vlenunicode(self):
         """ Vlen unicode string to hdf5 type """
         dt = h5py.special_dtype(vlen=unicode)
@@ -86,7 +82,7 @@ class TestStrings_Dtype2HDF5(ut.TestCase):
         # The logical representation is a variable-length string with CSET 1
         htype = h5t.py_create(dt, logical=1)
         self.assertIsInstance(htype, h5t.TypeStringID)
-        self.assertTrue(htype.is_variable_string())
+        self.assertTrue(htype.is_variable_str())
         self.assertEqual(htype.get_cset(), h5t.CSET_UTF8)
 
 @ut.skipIf(sys.version_info[0] != 2, "Py2 only")
@@ -96,44 +92,40 @@ class TestStrings_HDF52Dtype_Py2(ut.TestCase):
         Test HDF5 type to NumPy type (Py2)
     """
 
-    @ut.expectedFailure
     def test_fixed_ascii(self):
         """ Fixed-ascii to NumPy dtype """
         htype = h5t.C_S1.copy()
         htype.set_size(10)
         htype.set_cset(h5t.CSET_ASCII)
 
-        dt = htype.py_dtype()
+        dt = htype.dtype
         self.assertEqual(dt, np.dtype("|S10"))
 
-    @ut.expectedFailure
     def test_fixed_utf8(self):
         """ Fixed-utf8 to NumPy dtype """
         htype = h5t.C_S1.copy()
         htype.set_size(10)
         htype.set_cset(h5t.CSET_UTF8)
 
-        dt = htype.py_dtype()
+        dt = htype.dtype
         self.assertEqual(dt, np.dtype("=U10"))
 
-    @ut.expectedFailure
     def test_vlen_ascii(self):
         """ Vlen ascii to NumPy dtype """
         htype = h5t.C_S1.copy()
         htype.set_size(h5t.VARIABLE)
         htype.set_cset(h5t.CSET_ASCII)
 
-        dt = htype.py_dtype()
+        dt = htype.dtype
         self.assertEqual(h5py.check_dtype(vlen=dt), bytes)
 
-    @ut.expectedFailure
     def test_vlen_utf8(self):
         """ Vlen utf8 to NumPy dtype """
         htype = h5t.C_S1.copy()
         htype.set_size(h5t.VARIABLE)
         htype.set_cset(h5t.CSET_UTF8)
 
-        dt = htype.py_dtype()
+        dt = htype.dtype
         self.assertEqual(h5py.check_dtype(vlen=dt), unicode)
 
 @ut.skipIf(sys.version_info[0] != 3, "Py3 only")
@@ -150,7 +142,7 @@ class TestStrings_HDF52Dtype_Py3(ut.TestCase):
         htype.set_size(10)
         htype.set_cset(h5t.CSET_ASCII)
 
-        dt = htype.py_dtype()
+        dt = htype.dtype
         self.assertEqual(dt, np.dtype("=U10"))
 
     @ut.expectedFailure
@@ -160,7 +152,7 @@ class TestStrings_HDF52Dtype_Py3(ut.TestCase):
         htype.set_size(10)
         htype.set_cset(h5t.CSET_UTF8)
 
-        dt = htype.py_dtype()
+        dt = htype.dtype
         self.assertEqual(dt, np.dtype("=U10"))
 
     @ut.expectedFailure
@@ -170,7 +162,7 @@ class TestStrings_HDF52Dtype_Py3(ut.TestCase):
         htype.set_size(h5t.VARIABLE)
         htype.set_cset(h5t.CSET_ASCII)
 
-        dt = htype.py_dtype()
+        dt = htype.dtype
         self.assertEqual(h5py.check_dtype(vlen=dt), unicode)
 
     @ut.expectedFailure
@@ -180,7 +172,7 @@ class TestStrings_HDF52Dtype_Py3(ut.TestCase):
         htype.set_size(h5t.VARIABLE)
         htype.set_cset(h5t.CSET_UTF8)
 
-        dt = htype.py_dtype()
+        dt = htype.dtype
         self.assertEqual(h5py.check_dtype(vlen=dt), unicode)
 
 class TestStrings_ForceBytes(ut.TestCase):
@@ -189,7 +181,6 @@ class TestStrings_ForceBytes(ut.TestCase):
         Test HDF5 type to NumPy dtype with byte string forcing
     """
 
-    @ut.expectedFailure
     def test_fixed_ascii(self):
         """ Fixed-ascii to NumPy dtype """
         htype = h5t.C_S1.copy()
@@ -197,10 +188,9 @@ class TestStrings_ForceBytes(ut.TestCase):
         htype.set_cset(h5t.CSET_ASCII)
 
         with h5py.get_config().read_byte_strings:
-            dt = htype.py_dtype()
+            dt = htype.dtype
             self.assertEqual(dt, np.dtype("=S10"))
 
-    @ut.expectedFailure
     def test_fixed_utf8(self):
         """ Fixed-utf8 to NumPy dtype """
         htype = h5t.C_S1.copy()
@@ -208,10 +198,9 @@ class TestStrings_ForceBytes(ut.TestCase):
         htype.set_cset(h5t.CSET_UTF8)
 
         with h5py.get_config().read_byte_strings:
-            dt = htype.py_dtype()
+            dt = htype.dtype
             self.assertEqual(dt, np.dtype("=S10"))
 
-    @ut.expectedFailure
     def test_vlen_ascii(self):
         """ Vlen ascii to NumPy dtype """
         htype = h5t.C_S1.copy()
@@ -219,10 +208,9 @@ class TestStrings_ForceBytes(ut.TestCase):
         htype.set_cset(h5t.CSET_ASCII)
 
         with h5py.get_config().read_byte_strings:
-            dt = htype.py_dtype()
+            dt = htype.dtype
             self.assertEqual(h5py.check_dtype(vlen=dt), bytes)
 
-    @ut.expectedFailure
     def test_vlen_utf8(self):
         """ Vlen utf8 to NumPy dtype """
         htype = h5t.C_S1.copy()
@@ -230,7 +218,7 @@ class TestStrings_ForceBytes(ut.TestCase):
         htype.set_cset(h5t.CSET_UTF8)
 
         with h5py.get_config().read_byte_strings:
-            dt = htype.py_dtype()
+            dt = htype.dtype
             self.assertEqual(h5py.check_dtype(vlen=dt), bytes)
 
 
