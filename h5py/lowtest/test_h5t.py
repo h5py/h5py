@@ -39,7 +39,7 @@ class TestStrings_Dtype2HDF5(ut.TestCase):
  
         # For fixed-width strings the exact and logical representations are
         # identical.
-        for htype in (h5t.py_create(dt), h5t.py_create(dt, logical)):
+        for htype in (h5t.py_create(dt), h5t.py_create(dt, logical=1)):
             self.assertIsInstance(htype, h5t.TypeStringID)
             self.assertFalse(htype.is_variable_str())
             self.assertEqual(htype.get_size(), 10)
@@ -54,7 +54,7 @@ class TestStrings_Dtype2HDF5(ut.TestCase):
         self.assertEqual(htype, h5t.PYTHON_OBJECT)
 
         # The logical representation is a variable-length string with CSET 0
-        htype = h5t.py_create(dt, logical)
+        htype = h5t.py_create(dt, logical=1)
         self.assertIsInstance(htype, h5t.TypeStringID)
         self.assertTrue(htype.is_variable_string())
         self.assertEqual(htype.get_cset(), h5t.CSET_ASCII)
@@ -69,7 +69,7 @@ class TestStrings_Dtype2HDF5(ut.TestCase):
         self.assertEqual(htype, h5t.NUMPY_UNICODE)
 
         # The logical representation is a variable-length string with CSET 1
-        htype = h5t.py_create(dt, logical)
+        htype = h5t.py_create(dt, logical=1)
         self.assertIsInstance(htype, h5t.TypeStringID)
         self.assertTrue(htype.is_variable_str())
         self.assertEqual(htype.get_cset(), h5t.CSET_UTF8)
@@ -84,7 +84,7 @@ class TestStrings_Dtype2HDF5(ut.TestCase):
         self.assertEqual(htype, h5t.PYTHON_OBJECT)
 
         # The logical representation is a variable-length string with CSET 1
-        htype = h5t.py_create(dt, logical)
+        htype = h5t.py_create(dt, logical=1)
         self.assertIsInstance(htype, h5t.TypeStringID)
         self.assertTrue(htype.is_variable_string())
         self.assertEqual(htype.get_cset(), h5t.CSET_UTF8)
