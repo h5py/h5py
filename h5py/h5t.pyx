@@ -198,8 +198,11 @@ CSET_ASCII = H5T_CSET_ASCII
 CSET_UTF8 = H5T_CSET_UTF8
 
 # Custom Python object pointer type
-PYTHON_OBJECT = lockid(_conv.get_python_obj())
-NUMPY_UNICODE = lockid(_conv.get_numpy_unicode())
+_PYTHON_OBJECT = lockid(_conv.get_python_obj())
+_PYTHON_BYTES = lockid(_conv.get_bytes())
+_PYTHON_UNICODE = lockid(_conv.get_unicode())
+_PYTHON_UTF32_LE = lockid(_conv.get_utf32_le())
+_PYTHON_UTF32_BE = lockid(_conv.get_utf32_be())
 
 # Translation tables for HDF5 -> NumPy dtype conversion
 cdef dict _order_map = { H5T_ORDER_NONE: '|', H5T_ORDER_LE: '<', H5T_ORDER_BE: '>'}
@@ -1426,27 +1429,36 @@ cpdef TypeID py_create(object dtype_in, bint logical=0):
     # Object types (including those with vlen hints)
     elif kind == c'O':
 
-        if logical:
-            vlen = check_dtype(vlen=dt)
-            if vlen is bytes:
+        vlen = check_dtype(vlen=dt)
+        if vlen is bytes:
+            if logical:
                 return _c_vlen_str()
-            elif vlen is unicode:
+            return _PYTHON_BYTES
+
+        if vlen is unicode:
+            if logical:
                 return _c_vlen_unicode()
+            return _PYTHON_UNICODE
 
-            refclass = check_dtype(ref=dt)
-            if refclass is not None:
-                    return _c_ref(refclass)
+        refclass = check_dtype(ref=dt)
 
+        if refclass is not None:
+            if logical:
+                return _c_ref(refclass)
+            return _PYTHON_OBJECT
+
+        if logical:
             raise TypeError("Object dtype %r has no native HDF5 equivalent" % (dt,))
-
-        return PYTHON_OBJECT
+        return _PYTHON_OBJECT
 
     elif kind == c'U':
 
         if logical:
             return _c_vlen_unicode()
 
-        return NUMPY_UNICODE
+        if dt.str[0] == '>':
+            return _PYTHON_UTF32_BE
+        return _PYTHON_UTF32_LE
                 
     # Unrecognized
     else:
