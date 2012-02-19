@@ -245,7 +245,12 @@ cdef htri_t needs_bkg_buffer(hid_t src, hid_t dst) except -1:
     if H5Tdetect_class(src, H5T_COMPOUND) or H5Tdetect_class(dst, H5T_COMPOUND):
         return 1
 
-    H5Tfind(src, dst, &info)
+    try:
+        H5Tfind(src, dst, &info)
+    except:
+        print "Failed to find converter for %s -> %s" % (H5Tget_size(src), H5Tget_tag(dst))
+        raise
+
     if info[0].need_bkg == H5T_BKG_YES:
         return 1
 

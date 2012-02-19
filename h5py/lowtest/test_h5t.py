@@ -49,7 +49,7 @@ class TestStrings_Dtype2HDF5(ut.TestCase):
 
         # The exact representation is a size_t OPAQUE type
         htype = h5t.py_create(dt)
-        self.assertEqual(htype, h5t.PYTHON_OBJECT)
+        self.assertEqual(htype, h5t._PYTHON_BYTES)
 
         # The logical representation is a variable-length string with CSET 0
         htype = h5t.py_create(dt, logical=1)
@@ -59,11 +59,11 @@ class TestStrings_Dtype2HDF5(ut.TestCase):
 
     def test_fixedunicode(self):
         """ NumPy unicode string dtype to hdf5 type """
-        dt = np.dtype("=U10")
+        dt = np.dtype("<U10")
 
         # The exact representation is a 4-byte OPAQUE type    
         htype = h5t.py_create(dt)
-        self.assertEqual(htype, h5t.NUMPY_UNICODE)
+        self.assertEqual(htype, h5t._PYTHON_UTF32_LE)
 
         # The logical representation is a variable-length string with CSET 1
         htype = h5t.py_create(dt, logical=1)
@@ -77,7 +77,7 @@ class TestStrings_Dtype2HDF5(ut.TestCase):
 
         # The exact representation is a size_t OPAQUE type
         htype = h5t.py_create(dt)
-        self.assertEqual(htype, h5t.PYTHON_OBJECT)
+        self.assertEqual(htype, h5t._PYTHON_UNICODE)
 
         # The logical representation is a variable-length string with CSET 1
         htype = h5t.py_create(dt, logical=1)

@@ -12,6 +12,9 @@
 # 
 #-
 
+# TODO:
+# Where a Py object type is the destination, move the logic which selects
+# the kind (bytes or unicode) out of the 
 """
     Low-level type-conversion routines.
 """
@@ -19,6 +22,7 @@
 from h5r cimport Reference, RegionReference, hobj_ref_t, hdset_reg_ref_t
 
 import sys
+import h5py
 
 PY3 = sys.version_info[0] == 3
 
@@ -92,7 +96,7 @@ cpdef init_python_types():
 
     H5PY_BYTES = H5Tcreate(H5T_OPAQUE, sizeof(PyObject*))
     H5Tset_tag(H5PY_BYTES, "PYTHON:BYTES")
-    H5Tlock(H5PY_UNICODE)
+    H5Tlock(H5PY_BYTES)
 
     H5PY_TYPES_INITED = 1
 
@@ -236,17 +240,9 @@ cdef herr_t init_generic(hid_t src, hid_t dst, void** priv) except -1:
 
 # These two init functions are necessary as HDF5 does not distinguish between
 # fixed and variable length strings when the functions are registered.
-cdef herr_t init_vlen2fixed(hid_t src, hid_t dst, void** priv) except -1:
 
-    if H5Tis_variable_str(src) and not H5Tis_variable_str(dst):
-        return init_generic(src, dst, priv)
-    return -1
 
-cdef herr_t init_fixed2vlen(hid_t src, hid_t dst, void** priv) except -1:
 
-    if H5Tis_variable_str(dst) and not H5Tis_variable_str(dst):
-        return init_generic(src, dst, priv)
-    return -1
 
 # =============================================================================
 # Section 1: Conversion from HDF5 vlen to all string types
@@ -291,6 +287,12 @@ cdef int conv_vlen2fixed(char** ipt, char* opt, void* bkg, conv_size_t* sizes) e
 
     return 0
 
+cdef herr_t init_vlen2fixed(hid_t src, hid_t dst, void** priv) except -1:
+
+    if H5Tis_variable_str(src) and not H5Tis_variable_str(dst):
+        return init_generic(src, dst, priv)
+    return -2
+
 cdef herr_t vlen2fixed(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
                     size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
                     void *bkg_i, hid_t dxpl) except -1:
@@ -312,11 +314,34 @@ cdef int conv_vlen2bytes(char** ipt, PyObject** opt, PyObject** bkg, conv_size_t
     Py_XDECREF(bkg[0])
     opt[0] = temp
 
+cdef herr_t init_vlen2bytes(hid_t src, hid_t dst, void**  priv) except -1:
+
+    cdef int match = 0
+
+    if H5Tis_variable_str(src) and H5Tequal(dst, H5PY_BYTES):
+        match = 1
+
+    # Generic object destination means we must consult the rules
+    elif H5Tis_variable_str(src) and H5Tequal(dst, H5PY_OBJ):
+
+        # Py2: ASCII vlens always map to byte strings
+        if (not PY3) and H5Tget_cset(src) == H5T_CSET_ASCII:
+            match = 1
+
+        # Py3: Vlens of any kind map to byte strings only if in bytes mode
+        if PY3 and h5py.get_config().read_byte_strings:
+            match = 1
+
+    if match:
+        print "vlen2bytes matched"
+        return init_generic(src, dst, priv)
+    return -2
+
 cdef herr_t vlen2bytes(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
                     size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
                     void *bkg_i, hid_t dxpl) except -1:
     return generic_converter(src_id, dst_id, cdata, nl, buf_stride, bkg_stride,
-             buf_i, bkg_i, dxpl,  <conv_operator_t>conv_vlen2bytes, init_generic, H5T_BKG_YES)
+             buf_i, bkg_i, dxpl,  <conv_operator_t>conv_vlen2bytes, init_vlen2bytes, H5T_BKG_YES)
 
 # HDF5 vlen -> Py unicode
 cdef int conv_vlen2unicode(char** ipt, PyObject** opt, PyObject** bkg, conv_size_t* sizes) except -1:
@@ -335,11 +360,30 @@ cdef int conv_vlen2unicode(char** ipt, PyObject** opt, PyObject** bkg, conv_size
     Py_XDECREF(bkg[0])
     opt[0] = temp
 
+cdef herr_t init_vlen2unicode(hid_t src, hid_t dst, void** priv) except -1:
+
+    cdef int match = 0
+
+    if H5Tis_variable_str(src) and H5Tequal(dst, H5PY_UNICODE):
+        match = 1
+
+    # Generic object destination means we must consult the rules
+    elif H5Tis_variable_str(src) and H5Tequal(dst, H5PY_OBJ):
+
+        # Py2 & Py3: UTF-8 vlens map to byte strings unless in byte string mode
+        if (H5Tget_cset(src) == <int>H5T_CSET_UTF8) and (not h5py.get_config().read_byte_strings):
+            match = 1
+
+    if match:
+        print "vlen2unicode matched"
+        return init_generic(src, dst, priv)
+    return -2
+
 cdef herr_t vlen2unicode(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
                     size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
                     void *bkg_i, hid_t dxpl) except -1:
     return generic_converter(src_id, dst_id, cdata, nl, buf_stride, bkg_stride,
-             buf_i, bkg_i, dxpl,  <conv_operator_t>conv_vlen2unicode, init_generic, H5T_BKG_YES)
+             buf_i, bkg_i, dxpl,  <conv_operator_t>conv_vlen2unicode, init_vlen2unicode, H5T_BKG_YES)
 
 # Not implemented for now as this can never happen with the current type translation
 # HDF5 vlen -> NumPy UTF32
@@ -365,6 +409,12 @@ cdef int conv_fixed2vlen(char* ipt, char** opt, void* bkg, conv_size_t *sizes) e
 
     return 0
 
+cdef herr_t init_fixed2vlen(hid_t src, hid_t dst, void** priv) except -1:
+
+    if H5Tis_variable_str(dst) and not H5Tis_variable_str(dst):
+        return init_generic(src, dst, priv)
+    return -2
+
 cdef herr_t fixed2vlen(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
                     size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
                     void *bkg_i, hid_t dxpl) except -1:
@@ -376,15 +426,21 @@ cdef herr_t fixed2vlen(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
 # HDF5 fixed -> Py unicode
 
 # HDF5 fixed -> utf32
-cdef int conv_fixed2utf32le(char* ipt, npy_ucs4* opt, void* bkg, conv_size_t *sizes) except -1:
+cdef int conv_fixed2utf32(char* ipt, npy_ucs4* opt, void* bkg, conv_size_t *sizes) except -1:
 
     raise NotImplementedError("fixed -> utf32le")
+
+cdef herr_t init_fixed2utf32(hid_t src, hid_t dst, void** priv) except -1:
+
+    if (not H5Tis_variable_str(dst)) and (H5Tequal(dst, H5PY_UTF32_LE) or H5Tequal(dst, H5PY_UTF32_BE)):
+        return init_generic(src, dst, priv)
+    return -2
 
 cdef herr_t fixed2utf32(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
                     size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
                     void *bkg_i, hid_t dxpl) except -1:
     return generic_converter(src_id, dst_id, cdata, nl, buf_stride, bkg_stride,
-             buf_i, bkg_i, dxpl,  <conv_operator_t>conv_fixed2utf32le, init_generic, H5T_BKG_NO)
+             buf_i, bkg_i, dxpl,  <conv_operator_t>conv_fixed2utf32, init_fixed2utf32, H5T_BKG_NO)
 
 # =============================================================================
 # Section 3: Conversion from Py bytes to all destination types
@@ -427,11 +483,17 @@ cdef int conv_bytes2fixed(PyObject** ipt, char* opt, void* bkg, conv_size_t* siz
 
     return 0
 
+cdef herr_t init_bytes2fixed(hid_t src, hid_t dst, void** priv) except -1:
+
+    if H5Tequal(src, H5PY_BYTES) and (not H5Tis_variable_str(dst)):
+        return init_generic(src, dst, priv)
+    return -2
+
 cdef herr_t bytes2fixed(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
                     size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
                     void *bkg_i, hid_t dxpl) except -1:
     return generic_converter(src_id, dst_id, cdata, nl, buf_stride, bkg_stride,
-             buf_i, bkg_i, dxpl,  <conv_operator_t>conv_bytes2fixed, init_generic, H5T_BKG_NO)
+             buf_i, bkg_i, dxpl,  <conv_operator_t>conv_bytes2fixed, init_bytes2fixed, H5T_BKG_NO)
 
 
 # Py bytes -> HDF5 vlen
@@ -465,11 +527,17 @@ cdef int conv_bytes2vlen(PyObject** ipt, char** opt, void* bkg, conv_size_t size
 
     return 0
 
+cdef herr_t init_bytes2vlen(hid_t src, hid_t dst, void** priv) except -1:
+
+    if H5Tequal(src, H5PY_BYTES) and H5Tis_variable_str(dst):
+        return init_generic(src, dst, priv)
+    return -2
+
 cdef herr_t bytes2vlen(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
                     size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
                     void *bkg_i, hid_t dxpl) except -1:
     return generic_converter(src_id, dst_id, cdata, nl, buf_stride, bkg_stride,
-             buf_i, bkg_i, dxpl,  <conv_operator_t>conv_bytes2vlen, init_generic, H5T_BKG_NO)
+             buf_i, bkg_i, dxpl,  <conv_operator_t>conv_bytes2vlen, init_bytes2vlen, H5T_BKG_NO)
 
 
 # Omitted
@@ -521,11 +589,17 @@ cdef int conv_unicode2fixed(PyObject** ipt, char* opt, void* bkg, conv_size_t* s
 
     return 0
 
+cdef herr_t init_unicode2fixed(hid_t src, hid_t dst, void** priv) except -1:
+
+    if H5Tequal(src, H5PY_UNICODE) and not H5Tis_variable_str(dst):
+        return init_generic(src, dst, priv)
+    return -2
+
 cdef herr_t unicode2fixed(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
                     size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
                     void *bkg_i, hid_t dxpl) except -1:
     return generic_converter(src_id, dst_id, cdata, nl, buf_stride, bkg_stride,
-             buf_i, bkg_i, dxpl,  <conv_operator_t>conv_unicode2fixed, init_generic, H5T_BKG_NO)
+             buf_i, bkg_i, dxpl,  <conv_operator_t>conv_unicode2fixed, init_unicode2fixed, H5T_BKG_NO)
 
 
 # Py unicode -> HDF5 vlen
@@ -555,11 +629,17 @@ cdef int conv_unicode2vlen(PyObject** ipt, char** opt, void* bkg, conv_size_t* s
 
     return 0
 
+cdef herr_t init_unicode2vlen(hid_t src, hid_t dst, void** priv) except -1:
+
+    if H5Tequal(src, H5PY_UNICODE) and H5Tis_variable_str(dst):
+        return init_generic(src, dst, priv)
+    return -2
+
 cdef herr_t unicode2vlen(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
                     size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
                     void *bkg_i, hid_t dxpl) except -1:
     return generic_converter(src_id, dst_id, cdata, nl, buf_stride, bkg_stride,
-             buf_i, bkg_i, dxpl,  <conv_operator_t>conv_unicode2vlen, init_generic, H5T_BKG_NO)
+             buf_i, bkg_i, dxpl,  <conv_operator_t>conv_unicode2vlen, init_unicode2vlen, H5T_BKG_NO)
 
 
 # Omitted
@@ -574,11 +654,17 @@ cdef int conv_utf322fixed(npy_ucs4* ipt, char* opt, void* bkg, conv_size_t* size
 
     raise NotImplementedError("utf32 -> fixed-length")
 
+cdef herr_t init_utf322fixed(hid_t src, hid_t dst, void** priv) except -1:
+
+    if (H5Tequal(src, H5PY_UTF32_LE) or H5Tequal(src, H5PY_UTF32_BE)) and not H5Tis_variable_str(dst):
+        return init_generic(src, dst, priv)
+    return -2
+
 cdef herr_t utf322fixed(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
                     size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
                     void *bkg_i, hid_t dxpl) except -1:
     return generic_converter(src_id, dst_id, cdata, nl, buf_stride, bkg_stride,
-             buf_i, bkg_i, dxpl,  <conv_operator_t>conv_utf322fixed, init_generic, H5T_BKG_NO)
+             buf_i, bkg_i, dxpl,  <conv_operator_t>conv_utf322fixed, init_utf322fixed, H5T_BKG_NO)
 
 
 # UTF32 -> HDF5 vlen
@@ -586,11 +672,17 @@ cdef int conv_utf322vlen(npy_ucs4* ipt, char** opt, void* bkg, conv_size_t* size
 
     raise NotImplementedError("utf32 -> vlen")
 
+cdef herr_t init_utf322vlen(hid_t src, hid_t dst, void** priv) except -1:
+
+    if (H5Tequal(src, H5PY_UTF32_LE) or H5Tequal(src, H5PY_UTF32_BE)) and H5Tis_variable_str(dst):
+        return init_generic(src, dst, priv)
+    return -2
+
 cdef herr_t utf322vlen(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
                     size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
                     void *bkg_i, hid_t dxpl) except -1:
     return generic_converter(src_id, dst_id, cdata, nl, buf_stride, bkg_stride,
-             buf_i, bkg_i, dxpl,  <conv_operator_t>conv_utf322vlen, init_generic, H5T_BKG_NO)
+             buf_i, bkg_i, dxpl,  <conv_operator_t>conv_utf322vlen, init_utf322vlen, H5T_BKG_NO)
 
 
 # Omitted
@@ -820,29 +912,25 @@ cpdef int register_converters() except -1:
     H5Tset_size(vlstring, H5T_VARIABLE)
     enum = H5Tenum_create(H5T_STD_I32LE)
 
-    # Section 1
-    H5Tregister(H5T_PERS_HARD, "vlen2fixed", vlstring, H5T_C_S1, vlen2fixed)
-    H5Tregister(H5T_PERS_HARD, "vlen2bytes", vlstring, H5PY_BYTES, vlen2bytes)
-    H5Tregister(H5T_PERS_HARD, "vlen2unicode", vlstring, H5PY_UNICODE, vlen2unicode)
+    # HDF5 string to HDF5 string
+    H5Tregister(H5T_PERS_SOFT, "vlen2fixed", vlstring, H5T_C_S1, vlen2fixed)
+    H5Tregister(H5T_PERS_SOFT, "fixed2vlen", H5T_C_S1, vlstring, fixed2vlen)
 
-    # Section 2
-    #H5Tregister(H5T_PERS_HARD, "fixed2vlen", H5T_C_S1, vlstring, fixed2vlen)
-    H5Tregister(H5T_PERS_HARD, "fixed2utf32le", H5T_C_S1, H5PY_UTF32_LE, fixed2utf32)
-    H5Tregister(H5T_PERS_HARD, "fixed2utf32be", H5T_C_S1, H5PY_UTF32_BE, fixed2utf32)
-
-    # Section 3
-    H5Tregister(H5T_PERS_HARD, "bytes2fixed", H5PY_BYTES, H5T_C_S1, bytes2fixed)
-    H5Tregister(H5T_PERS_HARD, "bytes2vlen", H5PY_BYTES, vlstring, bytes2vlen)
-
-    # Section 4
-    H5Tregister(H5T_PERS_HARD, "unicode2fixed", H5PY_UNICODE, H5T_C_S1, unicode2fixed)
-    H5Tregister(H5T_PERS_HARD, "unicode2vlen", H5PY_UNICODE, vlstring, unicode2vlen)
-
-    # Section 5
-    H5Tregister(H5T_PERS_HARD, "utf32le2fixed", H5PY_UTF32_LE, H5T_C_S1, utf322fixed)
-    H5Tregister(H5T_PERS_HARD, "utf32be2fixed", H5PY_UTF32_BE, H5T_C_S1, utf322fixed)
-    H5Tregister(H5T_PERS_HARD, "utf32le2vlen", H5PY_UTF32_LE, vlstring, utf322vlen)
-    H5Tregister(H5T_PERS_HARD, "utf32be2vlen", H5PY_UTF32_BE, vlstring, utf322vlen)
+    # HDF5 string to Python pointer-like
+    H5Tregister(H5T_PERS_SOFT, "vlen2bytes", vlstring, H5PY_BYTES, vlen2bytes)
+    H5Tregister(H5T_PERS_SOFT, "vlen2unicode", vlstring, H5PY_UNICODE, vlen2unicode)
+    H5Tregister(H5T_PERS_SOFT, "fixed2utf32le", H5T_C_S1, H5PY_UTF32_LE, fixed2utf32)
+    H5Tregister(H5T_PERS_SOFT, "fixed2utf32be", H5T_C_S1, H5PY_UTF32_BE, fixed2utf32)
+    
+    # Python pointer-like to HDF5 string
+    H5Tregister(H5T_PERS_SOFT, "bytes2fixed", H5PY_BYTES, H5T_C_S1, bytes2fixed)
+    H5Tregister(H5T_PERS_SOFT, "bytes2vlen", H5PY_BYTES, vlstring, bytes2vlen)
+    H5Tregister(H5T_PERS_SOFT, "unicode2fixed", H5PY_UNICODE, H5T_C_S1, unicode2fixed)
+    H5Tregister(H5T_PERS_SOFT, "unicode2vlen", H5PY_UNICODE, vlstring, unicode2vlen)
+    H5Tregister(H5T_PERS_SOFT, "utf32le2fixed", H5PY_UTF32_LE, H5T_C_S1, utf322fixed)
+    H5Tregister(H5T_PERS_SOFT, "utf32be2fixed", H5PY_UTF32_BE, H5T_C_S1, utf322fixed)
+    H5Tregister(H5T_PERS_SOFT, "utf32le2vlen", H5PY_UTF32_LE, vlstring, utf322vlen)
+    H5Tregister(H5T_PERS_SOFT, "utf32be2vlen", H5PY_UTF32_BE, vlstring, utf322vlen)
 
     # Section 6
     H5Tregister(H5T_PERS_HARD, "objref2pyref", H5T_STD_REF_OBJ, H5PY_OBJ, objref2pyref)
@@ -862,46 +950,6 @@ cpdef int register_converters() except -1:
     return 0
 
 cpdef int unregister_converters() except -1:
-
-    # Note: The fixed/vlen converters are registered as "soft" because
-    #       this part of HDF5 does not distinguish vlen and fixed-length
-    #       strings as distinct types.
-
-    # Section 1
-    H5Tunregister(H5T_PERS_SOFT, "vlen2fixed", -1, -1, vlen2fixed)
-    H5Tunregister(H5T_PERS_HARD, "vlen2bytes", -1, -1, vlen2bytes)
-    H5Tunregister(H5T_PERS_HARD, "vlen2unicode", -1, -1, vlen2unicode)
-
-    # Section 2
-    H5Tunregister(H5T_PERS_SOFT, "fixed2vlen", -1, -1, fixed2vlen)
-    H5Tunregister(H5T_PERS_HARD, "fixed2utf32le", -1, -1, fixed2utf32)
-    H5Tunregister(H5T_PERS_HARD, "fixed2utf32be", -1, -1, fixed2utf32)
-
-    # Section 3
-    H5Tunregister(H5T_PERS_HARD, "bytes2fixed", -1, -1, bytes2fixed)
-    H5Tunregister(H5T_PERS_HARD, "bytes2vlen", -1, -1, bytes2vlen)
-
-    # Section 4
-    H5Tunregister(H5T_PERS_HARD, "unicode2fixed", -1, -1, unicode2fixed)
-    H5Tunregister(H5T_PERS_HARD, "unicode2vlen", -1, -1, unicode2vlen)
-
-    # Section 5
-    H5Tunregister(H5T_PERS_HARD, "utf32le2fixed", -1, -1, utf322fixed)
-    H5Tunregister(H5T_PERS_HARD, "utf32be2fixed", -1, -1, utf322fixed)
-    H5Tunregister(H5T_PERS_HARD, "utf32le2vlen", -1, -1, utf322vlen)
-    H5Tunregister(H5T_PERS_HARD, "utf32be2vlen", -1, -1, utf322vlen)
-
-    # Section 6
-    H5Tunregister(H5T_PERS_HARD, "objref2pyref", -1, -1, objref2pyref)
-    H5Tunregister(H5T_PERS_HARD, "pyref2objref", -1, -1, pyref2objref)
-
-    # Section 7
-    H5Tunregister(H5T_PERS_HARD, "regref2pyref", -1, -1, regref2pyref)
-    H5Tunregister(H5T_PERS_HARD, "pyref2regref", -1, -1, pyref2regref)
-
-    # Enums
-    H5Tunregister(H5T_PERS_SOFT, "enum2int", -1, -1, enum2int)
-    H5Tunregister(H5T_PERS_SOFT, "int2enum", -1, -1, int2enum)
 
     return 0
 

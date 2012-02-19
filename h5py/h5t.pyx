@@ -1450,6 +1450,7 @@ cpdef TypeID py_create(object dtype_in, bint logical=0):
         if logical:
             raise TypeError("Object dtype %r has no native HDF5 equivalent" % (dt,))
         return _PYTHON_OBJECT
+        #raise TypeError("No equivalent for raw object dtype")
 
     elif kind == c'U':
 

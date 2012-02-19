@@ -37,21 +37,10 @@ class AttributeManager(base.DictCompat, base.CommonStateObject):
 
         tid = attr.get_type()
 
-        # TODO: REMOVE WHEN UNICODE VLENS IMPLEMENTED
-        ##if isinstance(tid, h5t.TypeStringID) and tid.get_cset() == h5t.CSET_UTF8 and attr.shape == ():
-        #    unicode_hack = True
-        #else:
-        #    unicode_hack = False
+        rtdt = readtime_dtype(attr.dtype, [])
 
-        dt = readtime_dtype(attr.dtype, [])
-
-        arr = numpy.ndarray(attr.shape, dtype=dt, order='C')
+        arr = numpy.ndarray(attr.shape, dtype=rtdt, order='C')
         attr.read(arr)
-
-        # TODO: REMOVE WHEN UNICODE VLENS IMPLEMENTED
-        #if unicode_hack:
-        #    bytestring = arr[()]
-        #    return bytestring.decode('utf8')
 
         if len(arr.shape) == 0:
             return arr[()]
