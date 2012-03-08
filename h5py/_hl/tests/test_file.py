@@ -357,6 +357,17 @@ class TestFileProperty(TestCase):
         finally:
             hfile.close()
 
+        hfile = File(fname, 'w')
+        try:
+            self.assertEqual(fname, hfile.file.filename)
+        finally:
+            hfile.close()
+        hfile = File(fname, 'w')
+        try:
+            self.assertEqual(fname, hfile.file.filename)
+        finally:
+            hfile.close()
+
     def test_close(self):
         """ All retrieved File objects are closed at the same time """
         fname = self.mktemp()

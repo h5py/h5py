@@ -266,9 +266,10 @@ cdef class FileID(GroupID):
         identifiers are freed.
         """
         with _objects.registry.lock:
-            self.locked = False
             H5Fclose(self.id)
-            _objects.registry.cleanup()
+            if not self.valid:
+                self.locked = False
+                _objects.registry.cleanup()
 
 
     def reopen(self):
