@@ -362,7 +362,7 @@ class TestFileProperty(TestCase):
         fname = self.mktemp()
         hfile = File(fname, 'w')
         try:
-            self.assertEqual(hfile.id, hfile.file.id)
+            self.assertIs(hfile.id, hfile.file.id)
         finally:
             hfile.close()
         # otherwise, following up with this next block would yield:
