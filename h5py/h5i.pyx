@@ -111,7 +111,7 @@ def get_file_id(ObjectID obj not None):
     fid = H5Iget_file_id(obj.id)
     if H5Iget_ref(fid) > 1:
         H5Idec_ref(fid)
-    return h5f.FileID(fid)
+    return h5f.FileID.open(fid)
 
 
 def inc_ref(ObjectID obj not None):
