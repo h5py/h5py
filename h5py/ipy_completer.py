@@ -108,11 +108,24 @@ def h5py_attr_completer(context, command):
     except TryNext:
         pass
 
+    omit__names = None
     try:
-        omit__names = ipget().readline_omit__names
+        # support >=ipython-0.12
+        omit__names = ipget().Completer.omit__names
     except AttributeError:
-        # support <ipython-0.11
-        omit__names = ipget().options.readline_omit__names
+        pass
+    if omit__names is None:
+        try:
+            # support ipython-0.11
+            omit__names = ipget().readline_omit__names
+        except AttributeError:
+            pass
+    if omit__names is None:
+        try:
+            # support <ipython-0.11
+            omit__names = ipget().options.readline_omit__names
+        except AttributeError:
+            omit__names = 0
     if omit__names == 1:
         attrs = [a for a in attrs if not a.startswith('__')]
     elif omit__names == 2:
@@ -146,4 +159,3 @@ def load_ipython_extension(ip=None):
     if ip is None:
         ip = ipget()
     ip.set_hook('complete_command', h5py_completer, re_key=r"(?:.*\=)?(.+?)\[")
-
