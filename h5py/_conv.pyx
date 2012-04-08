@@ -12,24 +12,12 @@
 # 
 #-
 
-# TODO:
-# Where a Py object type is the destination, move the logic which selects
-# the kind (bytes or unicode) out of the 
 """
     Low-level type-conversion routines.
 """
 
 from h5r cimport Reference, RegionReference, hobj_ref_t, hdset_reg_ref_t
 
-import sys
-import h5py
-
-PY3 = sys.version_info[0] == 3
-
-cdef extern from *:
-
-    ctypedef int npy_ucs4
-    
 # Minimal interface for Python objects immune to Cython refcounting
 cdef extern from "Python.h":
     
@@ -38,10 +26,6 @@ cdef extern from "Python.h":
     ctypedef struct PyObject:
         Py_ssize_t ob_refcnt
         PyTypeObject *ob_type
-
-    ctypedef int Py_UNICODE
-    ctypedef struct PyUnicodeObject:
-        Py_UNICODE *str
 
     PyObject* PyBytes_FromString(char* str) except NULL
     int PyBytes_CheckExact(PyObject* str) except *
@@ -65,60 +49,16 @@ cdef object objectify(PyObject* o):
     Py_INCREF(o)
     return <object>o
 
+# Create Python object equivalents
 cdef hid_t H5PY_OBJ = 0
-cdef hid_t H5PY_UTF32_LE = 0
-cdef hid_t H5PY_UTF32_BE = 0
-cdef hid_t H5PY_UNICODE = 0
-cdef hid_t H5PY_BYTES = 0
-cdef int H5PY_TYPES_INITED = 0
-
-cpdef init_python_types():
-    global H5PY_TYPES_INITED, H5PY_OBJ, H5PY_UTF32_LE, H5PY_UTF32_BE, H5PY_UNICODE, H5PY_BYTES
-    
-    if H5PY_TYPES_INITED:
-        return 
-
-    H5PY_OBJ = H5Tcreate(H5T_OPAQUE, sizeof(PyObject*))
-    H5Tset_tag(H5PY_OBJ, "PYTHON:OBJECT")
-    H5Tlock(H5PY_OBJ)
-
-    H5PY_UTF32_LE = H5Tcreate(H5T_OPAQUE, 4)
-    H5Tset_tag(H5PY_UTF32_LE, "PYTHON:UTF32LE")
-    H5Tlock(H5PY_UTF32_LE)
-
-    H5PY_UTF32_BE = H5Tcreate(H5T_OPAQUE, 4)
-    H5Tset_tag(H5PY_UTF32_BE, "PYTHON:UTF32BE")
-    H5Tlock(H5PY_UTF32_BE)
-
-    H5PY_UNICODE = H5Tcreate(H5T_OPAQUE, sizeof(PyObject*))
-    H5Tset_tag(H5PY_UNICODE, "PYTHON:UNICODE")
-    H5Tlock(H5PY_UNICODE)
-
-    H5PY_BYTES = H5Tcreate(H5T_OPAQUE, sizeof(PyObject*))
-    H5Tset_tag(H5PY_BYTES, "PYTHON:BYTES")
-    H5Tlock(H5PY_BYTES)
-
-    H5PY_TYPES_INITED = 1
 
 cpdef hid_t get_python_obj():
     global H5PY_OBJ
+    if H5PY_OBJ <= 0:
+        H5PY_OBJ = H5Tcreate(H5T_OPAQUE, sizeof(PyObject*))
+        H5Tset_tag(H5PY_OBJ, "PYTHON:OBJECT")
+        H5Tlock(H5PY_OBJ)
     return H5PY_OBJ
-
-cpdef hid_t get_utf32_le():
-    global H5PY_UTF32_LE
-    return H5PY_UTF32_LE
-
-cpdef hid_t get_utf32_be():
-    global H5PY_UTF32_BE
-    return H5PY_UTF32_BE
-
-cpdef hid_t get_unicode():
-    global H5PY_UNICODE
-    return H5PY_UNICODE
-
-cpdef hid_t get_bytes():
-    global H5PY_BYTES
-    return H5PY_BYTES
 
 ctypedef int (*conv_operator_t)(void* ipt, void* opt, void* bkg, void* priv) except -1
 ctypedef herr_t (*init_operator_t)(hid_t src, hid_t dst, void** priv) except -1
@@ -157,6 +97,11 @@ cdef herr_t generic_converter(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
     elif command == H5T_CONV_CONV:
 
         sizes = <conv_size_t*>cdata[0].priv
+
+        if H5Tis_variable_str(src_id):
+            sizes.cset = H5Tget_cset(src_id)
+        elif H5Tis_variable_str(dst_id):
+            sizes.cset = H5Tget_cset(dst_id)
 
         if bkg_stride==0: bkg_stride = sizes[0].dst_size;
 
@@ -198,12 +143,7 @@ cdef herr_t generic_converter(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
 ctypedef struct conv_size_t:
     size_t src_size
     size_t dst_size
-    int src_cset
-    int dst_cset
-    int src_pad
-    int dst_pad
-    int src_byte_order
-    int dst_byte_order
+    int cset
 
 cdef herr_t init_generic(hid_t src, hid_t dst, void** priv) except -1:
     
@@ -212,488 +152,186 @@ cdef herr_t init_generic(hid_t src, hid_t dst, void** priv) except -1:
     priv[0] = sizes
     sizes[0].src_size = H5Tget_size(src)
     sizes[0].dst_size = H5Tget_size(dst)
-    sizes[0].src_cset = -1
-    sizes[0].dst_cset = -1
-    sizes[0].src_pad = -1
-    sizes[0].dst_pad = -1
-    sizes[0].src_byte_order = 0
-    sizes[0].dst_byte_order = 0
-
-    if H5Tget_class(src) == H5T_STRING:
-        sizes[0].src_cset = H5Tget_cset(src)
-        sizes[0].src_pad = H5Tget_strpad(src)
-    if H5Tget_class(dst) == H5T_STRING:
-        sizes[0].dst_cset = H5Tget_cset(dst)
-        sizes[0].dst_pad = H5Tget_strpad(dst)
-
-    if H5Tequal(src, H5PY_UTF32_LE):
-        sizes[0].src_byte_order = -1
-    elif H5Tequal(src, H5PY_UTF32_BE):
-        sizes[0].src_byte_order = 1
-
-    if H5Tequal(dst, H5PY_UTF32_LE):
-        sizes[0].dst_byte_order = -1
-    elif H5Tequal(dst, H5PY_UTF32_BE):
-        sizes[0].dst_byte_order = 1
 
     return 0
-
-# These two init functions are necessary as HDF5 does not distinguish between
-# fixed and variable length strings when the functions are registered.
-
-
-
 
 # =============================================================================
-# Section 1: Conversion from HDF5 vlen to all string types
+# Vlen string conversion
 
-# HDF5 vlen -> HDF5 vlen
-# TODO: Omitted as HDF5 now handles this internally.  We'll eventually want
-# this because they claim conversion will eventually be charset sensitive
+cdef int conv_vlen2str(void* ipt, void* opt, void* bkg, void* priv) except -1:
 
-# HDF5 vlen -> Fixed-width
-cdef int conv_vlen2fixed(char** ipt, char* opt, void* bkg, conv_size_t* sizes) except -1:
+    cdef PyObject** buf_obj = <PyObject**>opt
+    cdef PyObject** bkg_obj = <PyObject**>bkg
+    cdef char** buf_cstring = <char**>ipt
+    cdef PyObject* temp_obj = NULL
+    cdef conv_size_t *sizes = <conv_size_t*>priv
 
-    cdef char* vlen_str = ipt[0]
-    cdef char pad = c'\0'
-    cdef size_t ilen
-
-    if sizes.dst_pad == H5T_STR_SPACEPAD:
-        pad = c' '
-
-    # Input is empty string
-    if vlen_str == NULL:
-        memset(opt, pad, sizes.dst_size)
-
-    else:
-
-        ilen = strlen(vlen_str)
-            
-        if ilen <= sizes[0].dst_size:
-            # Input string is smaller, so copy it and pad the remainder
-            memcpy(opt, vlen_str, ilen)
-            memcpy(opt+ilen, &pad, sizes[0].dst_size - ilen)
+    # When reading we identify H5T_CSET_ASCII as a byte string and
+    # H5T_CSET_UTF8 as a utf8-encoded unicode string
+    if sizes.cset == H5T_CSET_ASCII:
+        if buf_cstring[0] == NULL:
+            temp_obj = PyBytes_FromString("")
         else:
-            # Input string is too big, so simply truncate it
-            # TODO: make sure utf-8 strings don't get chopped off in the middle of a
-            # multibyte sequence
-            memcpy(opt, vlen_str, sizes[0].dst_size)
+            temp_obj = PyBytes_FromString(buf_cstring[0])
+    elif sizes.cset == H5T_CSET_UTF8:
+        if buf_cstring[0] == NULL:
+            temp_obj = PyUnicode_DecodeUTF8("", 0, NULL)
+        else:
+            temp_obj = PyUnicode_DecodeUTF8(buf_cstring[0], strlen(buf_cstring[0]), NULL)
 
-        # TODO: Do we have to overwrite the last element with c'\0' if 
-        # the padding is H5T_STR_NULLTERM?
+    # Since all data conversions are by definition in-place, it
+    # is our responsibility to free the memory used by the vlens.
+    free(buf_cstring[0])
 
-    # TODO: Do we really own this reference?
-    free(vlen_str)
+    # HDF5 will eventuallly overwrite this target location, so we
+    # make sure to decref the object there.
+    Py_XDECREF(bkg_obj[0])
+
+    # Write the new string object to the buffer in-place
+    buf_obj[0] = temp_obj
 
     return 0
+
+cdef int conv_str2vlen(void* ipt, void* opt, void* bkg, void* priv) except -1:
+
+    cdef PyObject** buf_obj = <PyObject**>ipt
+    cdef char** buf_cstring = <char**>opt
+    cdef conv_size_t* sizes = <conv_size_t*>priv
+
+    cdef PyObject* temp_object = NULL
+    cdef PyObject* temp_encoded = NULL
+
+    cdef char* temp_string = NULL
+    cdef size_t temp_string_len = 0  # Not including null term
+
+    try:
+        if buf_obj[0] == NULL or buf_obj[0] == Py_None:
+            temp_string = ""
+            temp_string_len = 0
+        else:
+            if PyBytes_CheckExact(buf_obj[0]):
+
+                # Input is a byte string.  If we're using CSET_UTF8, make sure
+                # it's valid UTF-8.  Otherwise just store it.
+                temp_object = buf_obj[0]
+                Py_INCREF(temp_object)
+                if sizes.cset == H5T_CSET_UTF8:
+                    try:
+                        temp_encoded = PyString_AsDecodedObject(temp_object, "utf8", NULL)
+                    except:
+                        raise ValueError("Byte string is not valid utf-8 and can't be stored in a utf-8 dataset")
+                temp_string = PyBytes_AsString(temp_object)
+                temp_string_len = PyBytes_Size(temp_object)
+
+            # We are given a Unicode object.  Encode it to utf-8 regardless of
+            # the HDF5 character set.
+            elif PyUnicode_CheckExact(buf_obj[0]):
+                temp_object = buf_obj[0]
+                Py_INCREF(temp_object)
+                temp_encoded = PyUnicode_AsUTF8String(temp_object)
+                Py_INCREF(temp_encoded)
+                temp_string = PyBytes_AsString(temp_encoded)
+                temp_string_len = PyBytes_Size(temp_encoded)
+
+            else:
+                if sizes.cset == H5T_CSET_ASCII:
+                    temp_object = PyObject_Str(buf_obj[0])
+                    temp_string = PyBytes_AsString(temp_object)
+                    temp_string_len = PyBytes_Size(temp_object)
+                elif sizes.cset == H5T_CSET_UTF8:
+                    temp_object = PyObject_Unicode(buf_obj[0])
+                    Py_INCREF(temp_object)
+                    temp_encoded = PyUnicode_AsUTF8String(temp_object)
+                    Py_INCREF(temp_encoded)
+                    temp_string = PyBytes_AsString(temp_encoded)
+                    temp_string_len = PyBytes_Size(temp_encoded)
+                else:
+                    raise TypeError("Unrecognized dataset encoding")
+                    
+        if strlen(temp_string) != temp_string_len:
+            raise ValueError("VLEN strings do not support embedded NULLs")
+
+        buf_cstring[0] = <char*>malloc(temp_string_len+1)
+        memcpy(buf_cstring[0], temp_string, temp_string_len+1)
+
+        return 0
+    finally:
+        Py_XDECREF(temp_object)
+        Py_XDECREF(temp_encoded)
+
+# =============================================================================
+# VLEN to fixed-width strings
 
 cdef herr_t init_vlen2fixed(hid_t src, hid_t dst, void** priv) except -1:
 
-    if H5Tis_variable_str(src) and not H5Tis_variable_str(dst):
-        return init_generic(src, dst, priv)
-    return -2
+    cdef conv_size_t *sizes
 
-cdef herr_t vlen2fixed(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
-                    size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
-                    void *bkg_i, hid_t dxpl) except -1:
-    return generic_converter(src_id, dst_id, cdata, nl, buf_stride, bkg_stride,
-             buf_i, bkg_i, dxpl,  <conv_operator_t>conv_vlen2fixed, init_vlen2fixed, H5T_BKG_NO)
+    if not (H5Tis_variable_str(src) and (not H5Tis_variable_str(dst))):
+        return -2
 
-# HDF5 vlen -> Py bytes
-cdef int conv_vlen2bytes(char** ipt, PyObject** opt, PyObject** bkg, conv_size_t* sizes) except -1:
-
-    # We need this because ipt and opt may be the same pointer!
-    cdef PyObject* temp
-    
-    if ipt[0] == NULL:
-        temp = PyBytes_FromString("")
-    else:
-        temp = PyBytes_FromString(ipt[0])
-
-    free(ipt[0])
-    Py_XDECREF(bkg[0])
-    opt[0] = temp
-
-cdef herr_t init_vlen2bytes(hid_t src, hid_t dst, void**  priv) except -1:
-
-    cdef int match = 0
-
-    if H5Tis_variable_str(src) and H5Tequal(dst, H5PY_BYTES):
-        match = 1
-
-    # Generic object destination means we must consult the rules
-    elif H5Tis_variable_str(src) and H5Tequal(dst, H5PY_OBJ):
-
-        # Py2: ASCII vlens always map to byte strings
-        if (not PY3) and H5Tget_cset(src) == H5T_CSET_ASCII:
-            match = 1
-
-        # Py3: Vlens of any kind map to byte strings only if in bytes mode
-        if PY3 and h5py.get_config().read_byte_strings:
-            match = 1
-
-    if match:
-        print "vlen2bytes matched"
-        return init_generic(src, dst, priv)
-    return -2
-
-cdef herr_t vlen2bytes(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
-                    size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
-                    void *bkg_i, hid_t dxpl) except -1:
-    return generic_converter(src_id, dst_id, cdata, nl, buf_stride, bkg_stride,
-             buf_i, bkg_i, dxpl,  <conv_operator_t>conv_vlen2bytes, init_vlen2bytes, H5T_BKG_YES)
-
-# HDF5 vlen -> Py unicode
-cdef int conv_vlen2unicode(char** ipt, PyObject** opt, PyObject** bkg, conv_size_t* sizes) except -1:
-
-    cdef PyObject* temp
-    
-    if ipt[0] == NULL:
-        temp = PyUnicode_DecodeUTF8("", 0, NULL)
-    else:
-        try:
-            temp = PyUnicode_DecodeUTF8(ipt[0], strlen(ipt[0]), NULL)
-        except UnicodeDecodeError:
-            temp = PyBytes_FromString(ipt[0])
-
-    free(ipt[0])
-    Py_XDECREF(bkg[0])
-    opt[0] = temp
-
-cdef herr_t init_vlen2unicode(hid_t src, hid_t dst, void** priv) except -1:
-
-    cdef int match = 0
-
-    if H5Tis_variable_str(src) and H5Tequal(dst, H5PY_UNICODE):
-        match = 1
-
-    # Generic object destination means we must consult the rules
-    elif H5Tis_variable_str(src) and H5Tequal(dst, H5PY_OBJ):
-
-        # Py2 & Py3: UTF-8 vlens map to byte strings unless in byte string mode
-        if (H5Tget_cset(src) == <int>H5T_CSET_UTF8) and (not h5py.get_config().read_byte_strings):
-            match = 1
-
-    if match:
-        print "vlen2unicode matched"
-        return init_generic(src, dst, priv)
-    return -2
-
-cdef herr_t vlen2unicode(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
-                    size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
-                    void *bkg_i, hid_t dxpl) except -1:
-    return generic_converter(src_id, dst_id, cdata, nl, buf_stride, bkg_stride,
-             buf_i, bkg_i, dxpl,  <conv_operator_t>conv_vlen2unicode, init_vlen2unicode, H5T_BKG_YES)
-
-# Not implemented for now as this can never happen with the current type translation
-# HDF5 vlen -> NumPy UTF32
-
-# =============================================================================
-# Section 2: Conversion from HDF5 fixed-length to all destination strings
-
-# HDF5 fixed -> HDF5 fixed
-# TODO: Omitted for same reason as above
-
-# HDF5 fixed -> vlen
-cdef int conv_fixed2vlen(char* ipt, char** opt, void* bkg, conv_size_t *sizes) except -1:
-
-    cdef char* vlen = NULL
-
-    # TODO: charset validation?
-
-    vlen = <char*>malloc(sizes[0].src_size+1)
-    memcpy(vlen, ipt, sizes[0].src_size)
-    vlen[sizes[0].src_size] = c'\0'
-
-    opt[0] = vlen
+    sizes = <conv_size_t*>malloc(sizeof(conv_size_t))
+    priv[0] = sizes
+    sizes[0].src_size = H5Tget_size(src)
+    sizes[0].dst_size = H5Tget_size(dst)
 
     return 0
 
 cdef herr_t init_fixed2vlen(hid_t src, hid_t dst, void** priv) except -1:
 
-    if H5Tis_variable_str(dst) and not H5Tis_variable_str(dst):
-        return init_generic(src, dst, priv)
-    return -2
+    cdef conv_size_t *sizes
 
-cdef herr_t fixed2vlen(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
-                    size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
-                    void *bkg_i, hid_t dxpl) except -1:
-    return generic_converter(src_id, dst_id, cdata, nl, buf_stride, bkg_stride,
-             buf_i, bkg_i, dxpl,  <conv_operator_t>conv_fixed2vlen, init_fixed2vlen, H5T_BKG_NO)
+    if not (H5Tis_variable_str(dst) and (not H5Tis_variable_str(src))):
+        return -2
 
-# Omitted for now as they can't happen with the current type translation
-# HDF5 fixed -> Py bytes
-# HDF5 fixed -> Py unicode
-
-# HDF5 fixed -> utf32
-cdef int conv_fixed2utf32(char* ipt, npy_ucs4* opt, void* bkg, conv_size_t *sizes) except -1:
-
-    raise NotImplementedError("fixed -> utf32le")
-
-cdef herr_t init_fixed2utf32(hid_t src, hid_t dst, void** priv) except -1:
-
-    if (not H5Tis_variable_str(dst)) and (H5Tequal(dst, H5PY_UTF32_LE) or H5Tequal(dst, H5PY_UTF32_BE)):
-        return init_generic(src, dst, priv)
-    return -2
-
-cdef herr_t fixed2utf32(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
-                    size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
-                    void *bkg_i, hid_t dxpl) except -1:
-    return generic_converter(src_id, dst_id, cdata, nl, buf_stride, bkg_stride,
-             buf_i, bkg_i, dxpl,  <conv_operator_t>conv_fixed2utf32, init_fixed2utf32, H5T_BKG_NO)
-
-# =============================================================================
-# Section 3: Conversion from Py bytes to all destination types
-
-# Py bytes -> HDF5 fixed
-cdef int conv_bytes2fixed(PyObject** ipt, char* opt, void* bkg, conv_size_t* sizes) except -1:
-
-    cdef PyObject* pystring = NULL
-    cdef char* cstring = NULL
-    cdef size_t cstring_len = 0
-    cdef char pad = c'\0'
-
-    # TODO: Charset validation when dest has H5T_CSET_UTF8?
-
-    if sizes[0].dst_pad == H5T_STR_SPACEPAD:
-        pad = c' '
-
-    if ipt[0] == NULL or ipt[0] == Py_None:
-        memset(opt, pad, sizes[0].dst_pad)
-        return 0
-
-    try:
-        if PyBytes_CheckExact(ipt[0]):
-            cstring = PyBytes_AsString(ipt[0])
-        else:
-            pystring = PyObject_Str(ipt[0])
-            cstring = PyBytes_AsString(pystring)
-        
-        cstring_len = strlen(cstring)
-
-        if cstring_len <= sizes[0].dst_size:
-            # Input is smaller; copy and pad
-            memcpy(opt, cstring, cstring_len)
-            memset(opt+cstring_len, pad, sizes[0].dst_size-cstring_len)
-        else:
-            # Input is bigger; truncate
-            memcpy(opt, cstring, sizes[0].dst_size)
-    finally:
-        Py_XDECREF(pystring)
+    sizes = <conv_size_t*>malloc(sizeof(conv_size_t))
+    priv[0] = sizes
+    sizes[0].src_size = H5Tget_size(src)
+    sizes[0].dst_size = H5Tget_size(dst)
 
     return 0
 
-cdef herr_t init_bytes2fixed(hid_t src, hid_t dst, void** priv) except -1:
+cdef int conv_vlen2fixed(void* ipt, void* opt, void* bkg, void* priv) except -1:
 
-    if H5Tequal(src, H5PY_BYTES) and (not H5Tis_variable_str(dst)):
-        return init_generic(src, dst, priv)
-    return -2
+    cdef char** buf_vlen = <char**>ipt
+    cdef char* buf_fixed = <char*>opt
+    cdef char* temp_string = NULL
+    cdef size_t temp_string_len = 0  # Without null term
+    cdef conv_size_t *sizes = <conv_size_t*>priv
 
-cdef herr_t bytes2fixed(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
-                    size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
-                    void *bkg_i, hid_t dxpl) except -1:
-    return generic_converter(src_id, dst_id, cdata, nl, buf_stride, bkg_stride,
-             buf_i, bkg_i, dxpl,  <conv_operator_t>conv_bytes2fixed, init_bytes2fixed, H5T_BKG_NO)
+    if buf_vlen[0] != NULL:
+        temp_string = buf_vlen[0]
+        temp_string_len = strlen(temp_string)
 
-
-# Py bytes -> HDF5 vlen
-cdef int conv_bytes2vlen(PyObject** ipt, char** opt, void* bkg, conv_size_t sizes) except -1:
-
-    cdef PyObject* pystring = NULL
-    cdef char* cstring = NULL
-    cdef size_t cstring_len = 0
-
-    # TODO: charset validation?
-
-    if ipt[0] == NULL or ipt[0] == Py_None:
-        opt[0] = <char*>malloc(1)
-        opt[0][0] = c'\0'
-        return 0
-
-    try:
-        if PyBytes_CheckExact(ipt[0]):
-            cstring = PyBytes_AsString(ipt[0])
+        if temp_string_len <= sizes[0].dst_size:
+            # Pad with zeros
+            memcpy(buf_fixed, temp_string, temp_string_len)
+            memset(buf_fixed + temp_string_len, c'\0', sizes[0].dst_size - temp_string_len)
         else:
-            pystring = PyObject_Str(ipt[0])
-            cstring = PyBytes_AsString(pystring)
-
-        cstring_len = strlen(cstring)
-
-        opt[0] = <char*>malloc(cstring_len+1)
-        memcpy(opt[0], cstring, cstring_len+1)
-
-    finally:
-        Py_XDECREF(pystring)
+            # Simply truncate the string
+            memcpy(buf_fixed, temp_string, sizes[0].dst_size)
+    else:
+        memset(buf_fixed, c'\0', sizes[0].dst_size)
 
     return 0
 
-cdef herr_t init_bytes2vlen(hid_t src, hid_t dst, void** priv) except -1:
+cdef int conv_fixed2vlen(void* ipt, void* opt, void* bkg, void* priv) except -1:
 
-    if H5Tequal(src, H5PY_BYTES) and H5Tis_variable_str(dst):
-        return init_generic(src, dst, priv)
-    return -2
+    cdef char** buf_vlen = <char**>opt
+    cdef char* buf_fixed = <char*>ipt
+    cdef char* temp_string = NULL
+    cdef conv_size_t *sizes = <conv_size_t*>priv
 
-cdef herr_t bytes2vlen(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
-                    size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
-                    void *bkg_i, hid_t dxpl) except -1:
-    return generic_converter(src_id, dst_id, cdata, nl, buf_stride, bkg_stride,
-             buf_i, bkg_i, dxpl,  <conv_operator_t>conv_bytes2vlen, init_bytes2vlen, H5T_BKG_NO)
+    temp_string = <char*>malloc(sizes[0].src_size+1)
+    memcpy(temp_string, buf_fixed, sizes[0].src_size)
+    temp_string[sizes[0].src_size] = c'\0'
 
-
-# Omitted
-# Py bytes -> Py bytes
-# Py bytes -> Py unicode
-# Py bytes -> utf32
-
-# =============================================================================
-# Section 4: Py unicode to all destination types
-
-# Py unicode -> HDF5 fixed
-cdef int conv_unicode2fixed(PyObject** ipt, char* opt, void* bkg, conv_size_t* sizes) except -1:
-
-    cdef PyObject* pyunicode = NULL
-    cdef PyObject* pybytes = NULL
-    cdef char* cstring = NULL
-    cdef size_t cstring_len = 0
-    cdef char pad = c'\0'
-
-    if sizes[0].dst_pad == H5T_STR_SPACEPAD:
-        pad = c' '
-
-    if ipt[0] == NULL or ipt[0] == Py_None:
-        memset(opt, pad, sizes[0].dst_size)
-        return 0
-
-    try:
-        if PyUnicode_CheckExact(ipt[0]):
-            pybytes = PyUnicode_AsUTF8String(ipt[0])
-            cstring = PyBytes_AsString(pybytes)
-        else:
-            pyunicode = PyObject_Unicode(ipt[0])
-            pybytes = PyUnicode_AsUTF8String(pyunicode)
-            cstring = PyBytes_AsString(pybytes)
-
-        cstring_len = strlen(cstring)
-
-        if cstring_len <= sizes[0].dst_size:
-            # Input is shorter; copy & pad
-            memcpy(opt, cstring, cstring_len)
-            memset(opt+cstring_len, pad, sizes[0].dst_size-cstring_len)
-        else:
-            # Input is longer; truncate
-            # TODO: watch out for multibyte utf-8 sequences
-            memcpy(opt, cstring, sizes[0].dst_size)
-    finally:
-        Py_XDECREF(pyunicode)
-        Py_XDECREF(pybytes)
+    buf_vlen[0] = temp_string
 
     return 0
 
-cdef herr_t init_unicode2fixed(hid_t src, hid_t dst, void** priv) except -1:
-
-    if H5Tequal(src, H5PY_UNICODE) and not H5Tis_variable_str(dst):
-        return init_generic(src, dst, priv)
-    return -2
-
-cdef herr_t unicode2fixed(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
-                    size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
-                    void *bkg_i, hid_t dxpl) except -1:
-    return generic_converter(src_id, dst_id, cdata, nl, buf_stride, bkg_stride,
-             buf_i, bkg_i, dxpl,  <conv_operator_t>conv_unicode2fixed, init_unicode2fixed, H5T_BKG_NO)
-
-
-# Py unicode -> HDF5 vlen
-cdef int conv_unicode2vlen(PyObject** ipt, char** opt, void* bkg, conv_size_t* sizes) except -1:
-
-    cdef PyObject* pyunicode = NULL
-    cdef PyObject* pybytes = NULL
-    cdef char* cstring = NULL
-    cdef size_t cstring_len = 0
-
-    try:
-        if PyUnicode_CheckExact(ipt[0]):
-            pybytes = PyUnicode_AsUTF8String(ipt[0])
-            cstring = PyBytes_AsString(pybytes)
-        else:
-            pyunicode = PyObject_Unicode(ipt[0])
-            pybytes = PyUnicode_AsUTF8String(pyunicode)
-            cstring = PyBytes_AsString(pybytes)
-
-        cstring_len = strlen(cstring)
-
-        opt[0] = <char*>malloc(cstring_len+1)
-        memcpy(opt[0], cstring, cstring_len+1)
-    finally:
-        Py_XDECREF(pyunicode)
-        Py_XDECREF(pybytes)
-
-    return 0
-
-cdef herr_t init_unicode2vlen(hid_t src, hid_t dst, void** priv) except -1:
-
-    if H5Tequal(src, H5PY_UNICODE) and H5Tis_variable_str(dst):
-        return init_generic(src, dst, priv)
-    return -2
-
-cdef herr_t unicode2vlen(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
-                    size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
-                    void *bkg_i, hid_t dxpl) except -1:
-    return generic_converter(src_id, dst_id, cdata, nl, buf_stride, bkg_stride,
-             buf_i, bkg_i, dxpl,  <conv_operator_t>conv_unicode2vlen, init_unicode2vlen, H5T_BKG_NO)
-
-
-# Omitted
-# Py unicode -> Py bytes
-# Py unicode -> utf32
-
 # =============================================================================
-# Section 5: UTF32 to all destination types
+# HDF5 references to Python instances of h5r.Reference
 
-# UTF32 -> HDF5 fixed
-cdef int conv_utf322fixed(npy_ucs4* ipt, char* opt, void* bkg, conv_size_t* sizes) except -1:
-
-    raise NotImplementedError("utf32 -> fixed-length")
-
-cdef herr_t init_utf322fixed(hid_t src, hid_t dst, void** priv) except -1:
-
-    if (H5Tequal(src, H5PY_UTF32_LE) or H5Tequal(src, H5PY_UTF32_BE)) and not H5Tis_variable_str(dst):
-        return init_generic(src, dst, priv)
-    return -2
-
-cdef herr_t utf322fixed(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
-                    size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
-                    void *bkg_i, hid_t dxpl) except -1:
-    return generic_converter(src_id, dst_id, cdata, nl, buf_stride, bkg_stride,
-             buf_i, bkg_i, dxpl,  <conv_operator_t>conv_utf322fixed, init_utf322fixed, H5T_BKG_NO)
-
-
-# UTF32 -> HDF5 vlen
-cdef int conv_utf322vlen(npy_ucs4* ipt, char** opt, void* bkg, conv_size_t* sizes) except -1:
-
-    raise NotImplementedError("utf32 -> vlen")
-
-cdef herr_t init_utf322vlen(hid_t src, hid_t dst, void** priv) except -1:
-
-    if (H5Tequal(src, H5PY_UTF32_LE) or H5Tequal(src, H5PY_UTF32_BE)) and H5Tis_variable_str(dst):
-        return init_generic(src, dst, priv)
-    return -2
-
-cdef herr_t utf322vlen(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
-                    size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
-                    void *bkg_i, hid_t dxpl) except -1:
-    return generic_converter(src_id, dst_id, cdata, nl, buf_stride, bkg_stride,
-             buf_i, bkg_i, dxpl,  <conv_operator_t>conv_utf322vlen, init_utf322vlen, H5T_BKG_NO)
-
-
-# Omitted
-# utf32 -> bytes
-# utf32 -> unicode
-# utf32 -> utf32
-
-# =============================================================================
-# Section 6: Conversion HDF5 object references and Python Reference objects
-
-# HDF5 object reference -> Py Reference() object
 cdef int conv_objref2pyref(void* ipt, void* opt, void* bkg, void* priv) except -1:
 
     cdef PyObject** buf_obj = <PyObject**>opt
@@ -715,13 +353,6 @@ cdef int conv_objref2pyref(void* ipt, void* opt, void* bkg, void* priv) except -
 
     return 0
 
-cdef herr_t objref2pyref(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
-                    size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
-                    void *bkg_i, hid_t dxpl) except -1:
-    return generic_converter(src_id, dst_id, cdata, nl, buf_stride, bkg_stride,
-             buf_i, bkg_i, dxpl,  <conv_operator_t>conv_objref2pyref, init_generic, H5T_BKG_YES)
-
-# Py Reference() -> HDF5 object reference
 cdef int conv_pyref2objref(void* ipt, void* opt, void* bkg, void* priv) except -1:
 
     cdef PyObject** buf_obj = <PyObject**>ipt
@@ -741,16 +372,6 @@ cdef int conv_pyref2objref(void* ipt, void* opt, void* bkg, void* priv) except -
 
     return 0
 
-cdef herr_t pyref2objref(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
-                    size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
-                    void *bkg_i, hid_t dxpl) except -1:
-    return generic_converter(src_id, dst_id, cdata, nl, buf_stride, bkg_stride,
-             buf_i, bkg_i, dxpl,  <conv_operator_t>conv_pyref2objref, init_generic, H5T_BKG_NO)
-
-# =============================================================================
-# Section 7: Conversion between HDF5 region references and RegionReference()
-
-# HDF5 region reference -> Py RegionReference()
 cdef int conv_regref2pyref(void* ipt, void* opt, void* bkg, void* priv) except -1:
 
     cdef PyObject** buf_obj = <PyObject**>opt
@@ -773,13 +394,6 @@ cdef int conv_regref2pyref(void* ipt, void* opt, void* bkg, void* priv) except -
 
     return 0
 
-cdef herr_t regref2pyref(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
-                    size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
-                    void *bkg_i, hid_t dxpl) except -1:
-    return generic_converter(src_id, dst_id, cdata, nl, buf_stride, bkg_stride,
-             buf_i, bkg_i, dxpl,  <conv_operator_t>conv_regref2pyref, init_generic, H5T_BKG_YES)
-
-# Py RegionReference() -> HDF5 region reference
 cdef int conv_pyref2regref(void* ipt, void* opt, void* bkg, void* priv) except -1:
 
     cdef PyObject** buf_obj = <PyObject**>ipt
@@ -799,11 +413,57 @@ cdef int conv_pyref2regref(void* ipt, void* opt, void* bkg, void* priv) except -
 
     return 0
 
+# =============================================================================
+# Conversion functions
+
+
+cdef herr_t vlen2str(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
+                    size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
+                    void *bkg_i, hid_t dxpl) except -1:
+    return generic_converter(src_id, dst_id, cdata, nl, buf_stride, bkg_stride,
+             buf_i, bkg_i, dxpl,  conv_vlen2str, init_generic, H5T_BKG_YES)
+
+cdef herr_t str2vlen(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
+                    size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
+                    void *bkg_i, hid_t dxpl) except -1:
+    return generic_converter(src_id, dst_id, cdata, nl, buf_stride, bkg_stride,
+             buf_i, bkg_i, dxpl, conv_str2vlen, init_generic, H5T_BKG_NO)
+
+cdef herr_t vlen2fixed(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
+                    size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
+                    void *bkg_i, hid_t dxpl) except -1:
+    return generic_converter(src_id, dst_id, cdata, nl, buf_stride, bkg_stride,
+             buf_i, bkg_i, dxpl, conv_vlen2fixed, init_vlen2fixed, H5T_BKG_NO)
+
+cdef herr_t fixed2vlen(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
+                    size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
+                    void *bkg_i, hid_t dxpl) except -1:
+    return generic_converter(src_id, dst_id, cdata, nl, buf_stride, bkg_stride,
+             buf_i, bkg_i, dxpl, conv_fixed2vlen, init_fixed2vlen, H5T_BKG_NO)
+
+cdef herr_t objref2pyref(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
+                    size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
+                    void *bkg_i, hid_t dxpl) except -1:
+    return generic_converter(src_id, dst_id, cdata, nl, buf_stride, bkg_stride,
+             buf_i, bkg_i, dxpl, conv_objref2pyref, init_generic, H5T_BKG_YES)
+
+cdef herr_t pyref2objref(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
+                    size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
+                    void *bkg_i, hid_t dxpl) except -1:
+    return generic_converter(src_id, dst_id, cdata, nl, buf_stride, bkg_stride,
+             buf_i, bkg_i, dxpl, conv_pyref2objref, init_generic, H5T_BKG_NO)
+
+cdef herr_t regref2pyref(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
+                    size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
+                    void *bkg_i, hid_t dxpl) except -1:
+    return generic_converter(src_id, dst_id, cdata, nl, buf_stride, bkg_stride,
+             buf_i, bkg_i, dxpl, conv_regref2pyref, init_generic, H5T_BKG_YES)
+
 cdef herr_t pyref2regref(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
                     size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
                     void *bkg_i, hid_t dxpl) except -1:
     return generic_converter(src_id, dst_id, cdata, nl, buf_stride, bkg_stride,
-             buf_i, bkg_i, dxpl,  <conv_operator_t>conv_pyref2regref, init_generic, H5T_BKG_NO)
+             buf_i, bkg_i, dxpl, conv_pyref2regref, init_generic, H5T_BKG_NO)
 
 # =============================================================================
 # Enum to integer converter
@@ -906,41 +566,28 @@ cdef herr_t int2enum(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
 cpdef int register_converters() except -1:
 
     cdef hid_t vlstring
+    cdef hid_t pyobj
     cdef hid_t enum
 
     vlstring = H5Tcopy(H5T_C_S1)
     H5Tset_size(vlstring, H5T_VARIABLE)
+    
     enum = H5Tenum_create(H5T_STD_I32LE)
 
-    # HDF5 string to HDF5 string
+    pyobj = get_python_obj()
+
+    H5Tregister(H5T_PERS_HARD, "vlen2str", vlstring, pyobj, vlen2str)
+    H5Tregister(H5T_PERS_HARD, "str2vlen", pyobj, vlstring, str2vlen)
+
     H5Tregister(H5T_PERS_SOFT, "vlen2fixed", vlstring, H5T_C_S1, vlen2fixed)
     H5Tregister(H5T_PERS_SOFT, "fixed2vlen", H5T_C_S1, vlstring, fixed2vlen)
 
-    # HDF5 string to Python pointer-like
-    H5Tregister(H5T_PERS_SOFT, "vlen2bytes", vlstring, H5PY_BYTES, vlen2bytes)
-    H5Tregister(H5T_PERS_SOFT, "vlen2unicode", vlstring, H5PY_UNICODE, vlen2unicode)
-    H5Tregister(H5T_PERS_SOFT, "fixed2utf32le", H5T_C_S1, H5PY_UTF32_LE, fixed2utf32)
-    H5Tregister(H5T_PERS_SOFT, "fixed2utf32be", H5T_C_S1, H5PY_UTF32_BE, fixed2utf32)
-    
-    # Python pointer-like to HDF5 string
-    H5Tregister(H5T_PERS_SOFT, "bytes2fixed", H5PY_BYTES, H5T_C_S1, bytes2fixed)
-    H5Tregister(H5T_PERS_SOFT, "bytes2vlen", H5PY_BYTES, vlstring, bytes2vlen)
-    H5Tregister(H5T_PERS_SOFT, "unicode2fixed", H5PY_UNICODE, H5T_C_S1, unicode2fixed)
-    H5Tregister(H5T_PERS_SOFT, "unicode2vlen", H5PY_UNICODE, vlstring, unicode2vlen)
-    H5Tregister(H5T_PERS_SOFT, "utf32le2fixed", H5PY_UTF32_LE, H5T_C_S1, utf322fixed)
-    H5Tregister(H5T_PERS_SOFT, "utf32be2fixed", H5PY_UTF32_BE, H5T_C_S1, utf322fixed)
-    H5Tregister(H5T_PERS_SOFT, "utf32le2vlen", H5PY_UTF32_LE, vlstring, utf322vlen)
-    H5Tregister(H5T_PERS_SOFT, "utf32be2vlen", H5PY_UTF32_BE, vlstring, utf322vlen)
+    H5Tregister(H5T_PERS_HARD, "objref2pyref", H5T_STD_REF_OBJ, pyobj, objref2pyref)
+    H5Tregister(H5T_PERS_HARD, "pyref2objref", pyobj, H5T_STD_REF_OBJ, pyref2objref)
 
-    # Section 6
-    H5Tregister(H5T_PERS_HARD, "objref2pyref", H5T_STD_REF_OBJ, H5PY_OBJ, objref2pyref)
-    H5Tregister(H5T_PERS_HARD, "pyref2objref", H5PY_OBJ, H5T_STD_REF_OBJ, pyref2objref)
+    H5Tregister(H5T_PERS_HARD, "regref2pyref", H5T_STD_REF_DSETREG, pyobj, regref2pyref)
+    H5Tregister(H5T_PERS_HARD, "pyref2regref", pyobj, H5T_STD_REF_DSETREG, pyref2regref)
 
-    # Section 7
-    H5Tregister(H5T_PERS_HARD, "regref2pyref", H5T_STD_REF_DSETREG, H5PY_OBJ, regref2pyref)
-    H5Tregister(H5T_PERS_HARD, "pyref2regref", H5PY_OBJ, H5T_STD_REF_DSETREG, pyref2regref)
-
-    # Enums
     H5Tregister(H5T_PERS_SOFT, "enum2int", enum, H5T_STD_I32LE, enum2int)
     H5Tregister(H5T_PERS_SOFT, "int2enum", H5T_STD_I32LE, enum, int2enum)
 
@@ -951,9 +598,24 @@ cpdef int register_converters() except -1:
 
 cpdef int unregister_converters() except -1:
 
+    H5Tunregister(H5T_PERS_HARD, "vlen2str", -1, -1, vlen2str)
+    H5Tunregister(H5T_PERS_HARD, "str2vlen", -1, -1, str2vlen)
+
+    H5Tunregister(H5T_PERS_SOFT, "vlen2fixed", -1, -1, vlen2fixed)
+    H5Tunregister(H5T_PERS_SOFT, "fixed2vlen", -1, -1, fixed2vlen)
+
+    H5Tunregister(H5T_PERS_HARD, "objref2pyref", -1, -1, objref2pyref)
+    H5Tunregister(H5T_PERS_HARD, "pyref2objref", -1, -1, pyref2objref)
+
+    H5Tunregister(H5T_PERS_HARD, "regref2pyref", -1, -1, regref2pyref)
+    H5Tunregister(H5T_PERS_HARD, "pyref2regref", -1, -1, pyref2regref)
+
+    H5Tunregister(H5T_PERS_SOFT, "enum2int", -1, -1, enum2int)
+    H5Tunregister(H5T_PERS_SOFT, "int2enum", -1, -1, int2enum)
+
     return 0
 
-init_python_types()
+
 
 
 
