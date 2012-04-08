@@ -454,7 +454,7 @@ class TestIter(BaseDataset):
         with self.assertRaises(TypeError):
             [x for x in dset]
 
-class TestStringRW(BaseDataset):
+class TestStrings(BaseDataset):
 
     """
         Feature: Datasets created with vlen and fixed datatypes correctly
@@ -489,37 +489,10 @@ class TestStringRW(BaseDataset):
         self.assertEqual(tid.get_cset(), h5py.h5t.CSET_ASCII)
 
     def test_fixed_unicode(self):
-        """ Fixed-length unicode datasets turn into vlen unicode """
+        """ Fixed-length unicode datasets are unsupported (raise TypeError) """
         dt = np.dtype("|U10")
-        ds = self.f.create_dataset('x', (100,), dtype=dt)
-        self.assertEqual(h5py.check_dtype(vlen=ds.dtype), unicode)
-
-    def test_unicode_write_error(self):
-        """ Writing a non-utf8 byte string to a unicode vlen dataset raises
-        ValueError """
-        dt = h5py.special_dtype(vlen=unicode)
-        ds = self.f.create_dataset('x', (100,), dtype=dt)
-        data = "Hello\xef"
-        with self.assertRaises(ValueError):
-            ds[0] = data
-
-    def test_unicode_write_bytes(self):
-        """ Writing valid utf-8 byte strings to a unicode vlen dataset is OK
-        """
-        dt = h5py.special_dtype(vlen=unicode)
-        ds = self.f.create_dataset('x', (100,), dtype=dt)
-        data = u"Hello there\u2034"
-        ds[0] = data.encode('utf8')
-        out = ds[0]
-        self.assertEqual(type(out), unicode)
-        self.assertEqual(out, data)
-
-@ut.skipIf(sys.version_info[0] != 2, "Py2 only")
-class TestStringRWPy2(BaseDataset):
-
-    """
-        String I/O (Py2)
-    """
+        with self.assertRaises(TypeError):
+            ds = self.f.create_dataset('x', (100,), dtype=dt)
 
     def test_roundtrip_vlen_bytes(self):
         """ writing and reading to vlen bytes dataset preserves type and content
@@ -552,5 +525,25 @@ class TestStringRWPy2(BaseDataset):
         ds[0] = data
         out = ds[0]
         self.assertEqual(type(out), np.string_)
+        self.assertEqual(out, data)
+
+    def test_unicode_write_error(self):
+        """ Writing a non-utf8 byte string to a unicode vlen dataset raises
+        ValueError """
+        dt = h5py.special_dtype(vlen=unicode)
+        ds = self.f.create_dataset('x', (100,), dtype=dt)
+        data = "Hello\xef"
+        with self.assertRaises(ValueError):
+            ds[0] = data
+
+    def test_unicode_write_bytes(self):
+        """ Writing valid utf-8 byte strings to a unicode vlen dataset is OK
+        """
+        dt = h5py.special_dtype(vlen=unicode)
+        ds = self.f.create_dataset('x', (100,), dtype=dt)
+        data = u"Hello there\u2034"
+        ds[0] = data.encode('utf8')
+        out = ds[0]
+        self.assertEqual(type(out), unicode)
         self.assertEqual(out, data)
 
