@@ -93,11 +93,16 @@ class CommonStateObject(object):
         if name is None:
             return (None, None) if lcpl else None
 
+
         if isinstance(name, bytes):
             coding = h5t.CSET_ASCII
         else:
-            name = name.encode('utf8')
-            coding = h5t.CSET_UTF8
+            try:
+                name = name.encode('ascii')
+                coding = h5t.CSET_ASCII
+            except UnicodeEncodeError:
+                name = name.encode('utf8')
+                coding = h5t.CSET_UTF8
 
         if lcpl:
             return name, get_lcpl(coding)
