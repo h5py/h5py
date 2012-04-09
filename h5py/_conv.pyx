@@ -474,82 +474,101 @@ cdef struct conv_enum_t:
     hid_t supertype
     int identical
 
-# Direction ("forward"): 1 = enum to int, 0 = int to enum
-cdef herr_t enum_int_converter(hid_t src, hid_t dst, H5T_cdata_t *cdata,
-                    size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
-                    void *bkg_i, hid_t dxpl, int forward) except -1 with gil:
 
-    cdef int command = cdata[0].command
+cdef int enum_int_converter_init(hid_t src, hid_t dst,
+                                 H5T_cdata_t *cdata, int forward) except -1 with gil:
+    cdef conv_enum_t *info
+
+    cdata[0].need_bkg = H5T_BKG_NO
+    cdata[0].priv = info = <conv_enum_t*>malloc(sizeof(conv_enum_t))
+    info[0].src_size = H5Tget_size(src)
+    info[0].dst_size = H5Tget_size(dst)
+    if forward:
+        info[0].supertype = H5Tget_super(src)
+        info[0].identical = H5Tequal(info[0].supertype, dst)
+    else:
+        info[0].supertype = H5Tget_super(dst)
+        info[0].identical = H5Tequal(info[0].supertype, src)
+
+
+cdef void enum_int_converter_free(H5T_cdata_t *cdata):
+    cdef conv_enum_t *info
+
+    info = <conv_enum_t*>cdata[0].priv
+    free(info)
+    cdata[0].priv = NULL
+
+
+cdef int enum_int_converter_conv(hid_t src, hid_t dst, H5T_cdata_t *cdata,
+                                  size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
+                                 void *bkg_i, hid_t dxpl, int forward) except -1 with gil:
     cdef conv_enum_t *info
     cdef size_t nalloc
     cdef int i
     cdef char* cbuf = NULL
     cdef char* buf = <char*>buf_i
 
-    if command == H5T_CONV_INIT:
-        cdata[0].need_bkg = H5T_BKG_NO
-        cdata[0].priv = info = <conv_enum_t*>malloc(sizeof(conv_enum_t))
-        info[0].src_size = H5Tget_size(src)
-        info[0].dst_size = H5Tget_size(dst)
+    info = <conv_enum_t*>cdata[0].priv
+
+    # Short-circuit success
+    if info[0].identical:
+        return 0
+
+    if buf_stride == 0:
+        # Contiguous case: call H5Tconvert directly
         if forward:
-            info[0].supertype = H5Tget_super(src)
-            info[0].identical = H5Tequal(info[0].supertype, dst)
+            H5Tconvert(info[0].supertype, dst, nl, buf, NULL, dxpl)
         else:
-            info[0].supertype = H5Tget_super(dst)
-            info[0].identical = H5Tequal(info[0].supertype, src)
+            H5Tconvert(src, info[0].supertype, nl, buf, NULL, dxpl)
+    else:
+        # Non-contiguous: gather, convert and then scatter
+        if info[0].src_size > info[0].dst_size:
+            nalloc = info[0].src_size*nl
+        else:
+            nalloc = info[0].dst_size*nl
 
-    elif command == H5T_CONV_FREE:
+        cbuf = <char*>malloc(nalloc)
+        if cbuf == NULL:
+            raise MemoryError()
+        try:
+            for i from 0<=i<nl:
+                memcpy(cbuf + (i*info[0].src_size), buf + (i*buf_stride),
+                        info[0].src_size)
 
-        info = <conv_enum_t*>cdata[0].priv
-        #H5Tclose(info[0].supertype)
-        free(info)
-        cdata[0].priv = NULL
-
-    elif command == H5T_CONV_CONV:
-
-        info = <conv_enum_t*>cdata[0].priv
-
-        # Short-circuit success
-        if info[0].identical:
-            return 0
-
-        if buf_stride == 0:
-            # Contiguous case: call H5Tconvert directly
             if forward:
-                H5Tconvert(info[0].supertype, dst, nl, buf, NULL, dxpl)
+                H5Tconvert(info[0].supertype, dst, nl, cbuf, NULL, dxpl)
             else:
-                H5Tconvert(src, info[0].supertype, nl, buf, NULL, dxpl)
-        else:
-            # Non-contiguous: gather, convert and then scatter
-            if info[0].src_size > info[0].dst_size:
-                nalloc = info[0].src_size*nl
-            else:
-                nalloc = info[0].dst_size*nl
-            
-            cbuf = <char*>malloc(nalloc)
-            if cbuf == NULL:
-                raise MemoryError("Can't allocate conversion buffer")
-            try:
-                for i from 0<=i<nl:
-                    memcpy(cbuf + (i*info[0].src_size), buf + (i*buf_stride),
-                           info[0].src_size)
+                H5Tconvert(src, info[0].supertype, nl, cbuf, NULL, dxpl)
 
-                if forward:
-                    H5Tconvert(info[0].supertype, dst, nl, cbuf, NULL, dxpl)
-                else:
-                    H5Tconvert(src, info[0].supertype, nl, cbuf, NULL, dxpl)
+            for i from 0<=i<nl:
+                memcpy(buf + (i*buf_stride), cbuf + (i*info[0].dst_size),
+                        info[0].dst_size)
+        finally:
+            free(cbuf)
+            cbuf = NULL
+    return 0
 
-                for i from 0<=i<nl:
-                    memcpy(buf + (i*buf_stride), cbuf + (i*info[0].dst_size),
-                           info[0].dst_size)
-            finally:
-                free(cbuf)
-                cbuf = NULL
+
+# Direction ("forward"): 1 = enum to int, 0 = int to enum
+cdef herr_t enum_int_converter(hid_t src, hid_t dst, H5T_cdata_t *cdata,
+                    size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
+                               void *bkg_i, hid_t dxpl, int forward) except -1:
+
+    cdef int command = cdata[0].command
+
+    if command == H5T_CONV_INIT:
+        enum_int_converter_init(src, dst, cdata, forward)
+    elif command == H5T_CONV_FREE:
+        enum_int_converter_free(cdata)
+    elif command == H5T_CONV_CONV:
+        return enum_int_converter_conv(src, dst, cdata, nl, buf_stride,
+                                       bkg_stride, buf_i, bkg_i, dxpl, forward)
     else:
         return -2
 
     return 0
-            
+
+
 cdef herr_t enum2int(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
                     size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
                     void *bkg_i, hid_t dxpl) except -1:
