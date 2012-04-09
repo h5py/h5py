@@ -291,7 +291,8 @@ class Dataset(HLObject):
                 return numpy.dtype('O')
             if basetype.fields is not None:
                 fields = []
-                for name, (subtype, meta) in basetype.fields.items():
+                for name in basetype.names:
+                    (subtype, meta) = basetype.fields[name]
                     subtype = strip_fields(subtype)
                     fields.append((name, subtype))
                 return numpy.dtype(fields)

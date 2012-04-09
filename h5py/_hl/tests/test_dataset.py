@@ -547,3 +547,30 @@ class TestStrings(BaseDataset):
         self.assertEqual(type(out), unicode)
         self.assertEqual(out, data)
 
+class TestCompound(BaseDataset):
+
+    """
+        Feature: Compound types correctly round-trip
+    """
+
+    def test_rt(self):
+        """ Compound types are read back in correct order (issue 236)"""
+
+        dt = np.dtype( [ ('weight', np.float64),
+                             ('cputime', np.float64),
+                             ('walltime', np.float64),
+                             ('parents_offset', np.uint32),
+                             ('n_parents', np.uint32),
+                             ('status', np.uint8),
+                             ('endpoint_type', np.uint8), ] )
+
+        testdata = np.ndarray((16,),dtype=dt)
+        for key in dt.fields:
+            testdata[key] = np.random.random((16,))*100
+
+        self.f['test'] = testdata
+        outdata = self.f['test'][...]
+        self.assertTrue(np.all(outdata == testdata))
+        self.assertEqual(outdata.dtype, testdata.dtype)
+
+
