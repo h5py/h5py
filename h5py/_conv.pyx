@@ -37,7 +37,7 @@ cdef extern from "Python.h":
     PyObject* PyUnicode_AsUTF8String(PyObject* s) except NULL
 
     PyObject* PyObject_Str(PyObject* obj) except NULL
-    PyObject* PyObject_Unicode(PyObject* obj) except NULL
+    #PyObject* (PyObject* obj) except NULL
     char* PyBytes_AsString(PyObject* obj) except NULL
 
     PyObject* Py_None
@@ -217,7 +217,8 @@ cdef int conv_str2vlen(void* ipt, void* opt, void* bkg, void* priv) except -1:
                 Py_INCREF(temp_object)
                 if sizes.cset == H5T_CSET_UTF8:
                     try:
-                        temp_encoded = PyString_AsDecodedObject(temp_object, "utf8", NULL)
+                        pass # disabled for Python 3 compatibility
+                        #temp_encoded = PyString_AsDecodedObject(temp_object, "utf8", NULL)
                     except:
                         raise ValueError("Byte string is not valid utf-8 and can't be stored in a utf-8 dataset")
                 temp_string = PyBytes_AsString(temp_object)
@@ -239,7 +240,7 @@ cdef int conv_str2vlen(void* ipt, void* opt, void* bkg, void* priv) except -1:
                     temp_string = PyBytes_AsString(temp_object)
                     temp_string_len = PyBytes_Size(temp_object)
                 elif sizes.cset == H5T_CSET_UTF8:
-                    temp_object = PyObject_Unicode(buf_obj[0])
+                    temp_object = PyObject_Str(buf_obj[0])
                     Py_INCREF(temp_object)
                     temp_encoded = PyUnicode_AsUTF8String(temp_object)
                     Py_INCREF(temp_encoded)

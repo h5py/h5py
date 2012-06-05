@@ -167,7 +167,8 @@ cdef class _Registry:
     def cleanup(self):
         "Manage invalid identifiers"
         deadlist = []
-        for key, val in self._data.iteritems():
+        for key in self._data:
+            val = self._data[key]
             val = val()
             if val is None:
                 deadlist.append(key)
