@@ -527,6 +527,7 @@ class TestStrings(BaseDataset):
         self.assertEqual(type(out), np.string_)
         self.assertEqual(out, data)
 
+    @ut.expectedFailure
     def test_unicode_write_error(self):
         """ Writing a non-utf8 byte string to a unicode vlen dataset raises
         ValueError """
