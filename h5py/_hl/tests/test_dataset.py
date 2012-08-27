@@ -574,4 +574,37 @@ class TestCompound(BaseDataset):
         self.assertTrue(np.all(outdata == testdata))
         self.assertEqual(outdata.dtype, testdata.dtype)
 
+class TestEnum(BaseDataset):
+
+    """
+        Feature: Enum datatype info is preserved, read/write as integer
+    """
+
+    EDICT = {'RED': 0, 'GREEN': 1, 'BLUE': 42}
+
+    def test_create(self):
+        """ Enum datasets can be created and type correctly round-trips """
+        dt = h5py.special_dtype(enum=('i', self.EDICT))
+        ds = self.f.create_dataset('x', (100,100), dtype=dt)
+        dt2 = ds.dtype
+        dict2 = h5py.check_dtype(enum=dt2)
+        self.assertEqual(dict2,self.EDICT)
+
+    def test_readwrite(self):
+        """ Enum datasets can be read/written as integers """
+        dt = h5py.special_dtype(enum=('i', self.EDICT))
+        ds = self.f.create_dataset('x', (100,100), dtype=dt)
+        ds[35,37] = 42
+        ds[1,:] = 1
+        self.assertEqual(ds[35,37], 42)
+        self.assertArrayEqual(ds[1,:], np.array((1,)*100))
+
+
+
+
+
+
+
+
+
 

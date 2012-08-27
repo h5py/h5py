@@ -290,9 +290,16 @@ class Dataset(HLObject):
             if basetype.kind == 'O':
                 return numpy.dtype('O')
             if basetype.fields is not None:
+                if basetype.kind in ('i','u'):
+                    return basetype.fields['enum'][0]
                 fields = []
                 for name in basetype.names:
-                    (subtype, meta) = basetype.fields[name]
+                    fff = basetype.fields[name]
+                    if len(fff) == 3:
+                        (subtype, offset, meta) = fff
+                    else:
+                        subtype, meta = fff
+                        offset = 0
                     subtype = strip_fields(subtype)
                     fields.append((name, subtype))
                 return numpy.dtype(fields)
