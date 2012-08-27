@@ -34,6 +34,8 @@ from h5 import get_config
 
 cfg = get_config()
 
+PY3 = sys.version_info[0] == 3
+
 # === Custom C API ============================================================
 
 cpdef TypeID typewrap(hid_t id_):
@@ -1137,7 +1139,20 @@ cdef class TypeEnumID(TypeCompositeID):
         if members == ref:
             return dtype('bool')
     
-        return special_dtype(enum=(basetype.py_dtype(), members))
+        # Convert strings to appropriate representation
+        members_conv = {}
+        for name, val in members.iteritems():
+            try:    # ASCII; Py2 -> preserve bytes, Py3 -> make unicode
+                uname = name.decode('ascii')
+                if PY3:
+                    name = uname
+            except UnicodeDecodeError:
+                try:    # Non-ascii; all platforms try unicode
+                    name = name.decode('utf8')
+                except UnicodeDecodeError:
+                    pass    # Last resort: return byte string
+            members_conv[name] = val
+        return special_dtype(enum=(basetype.py_dtype(), members_conv))
 
 
 # === Translation from NumPy dtypes to HDF5 type objects ======================
@@ -1209,7 +1224,11 @@ cdef TypeEnumID _c_enum(dtype dt, dict vals):
 
     out = TypeEnumID(H5Tenum_create(base.id))
     for name in sorted(vals):
-        out.enum_insert(name, vals[name])
+        if isinstance(name, bytes):
+            bname = name
+        else:
+            bname = unicode(name).encode('utf8')
+        out.enum_insert(bname, vals[name])
     return out
 
 cdef TypeEnumID _c_bool(dtype dt):
