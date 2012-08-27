@@ -521,7 +521,7 @@ class TestStrings(BaseDataset):
         type and content """
         dt = np.dtype("|S10")
         ds = self.f.create_dataset('x', (100,), dtype=dt)
-        data = "Hello\xef"
+        data = b"Hello\xef"
         ds[0] = data
         out = ds[0]
         self.assertEqual(type(out), np.string_)
