@@ -592,12 +592,12 @@ class TestEnum(BaseDataset):
 
     def test_readwrite(self):
         """ Enum datasets can be read/written as integers """
-        dt = h5py.special_dtype(enum=('i', self.EDICT))
+        dt = h5py.special_dtype(enum=('i4', self.EDICT))
         ds = self.f.create_dataset('x', (100,100), dtype=dt)
         ds[35,37] = 42
         ds[1,:] = 1
         self.assertEqual(ds[35,37], 42)
-        self.assertArrayEqual(ds[1,:], np.array((1,)*100))
+        self.assertArrayEqual(ds[1,:], np.array((1,)*100,dtype='i4'))
 
 
 
