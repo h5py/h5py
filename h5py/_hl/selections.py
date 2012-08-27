@@ -301,7 +301,7 @@ class SimpleSelection(Selection):
         tshape = tuple(tshape)
 
         chunks = tuple(x/y for x, y in zip(count, tshape))
-        nchunks = np.product(chunks)
+        nchunks = long(np.product(chunks))
 
         if nchunks == 1:
             yield self._id
