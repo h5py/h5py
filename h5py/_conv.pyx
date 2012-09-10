@@ -484,13 +484,6 @@ cdef int enum_int_converter_init(hid_t src, hid_t dst,
     cdata[0].priv = info = <conv_enum_t*>malloc(sizeof(conv_enum_t))
     info[0].src_size = H5Tget_size(src)
     info[0].dst_size = H5Tget_size(dst)
-    if forward:
-        info[0].supertype = H5Tget_super(src)
-        info[0].identical = H5Tequal(info[0].supertype, dst)
-    else:
-        info[0].supertype = H5Tget_super(dst)
-        info[0].identical = H5Tequal(info[0].supertype, src)
-
 
 cdef void enum_int_converter_free(H5T_cdata_t *cdata):
     cdef conv_enum_t *info
@@ -510,12 +503,20 @@ cdef int enum_int_converter_conv(hid_t src, hid_t dst, H5T_cdata_t *cdata,
     cdef char* buf = <char*>buf_i
 
     info = <conv_enum_t*>cdata[0].priv
-
+    
+    if forward:
+        info[0].supertype = H5Tget_super(src)
+        info[0].identical = H5Tequal(info[0].supertype, dst)
+    else:
+        info[0].supertype = H5Tget_super(dst)
+        info[0].identical = H5Tequal(info[0].supertype, src)
+   
     # Short-circuit success
     if info[0].identical:
         return 0
 
     if buf_stride == 0:
+        print '    contig'
         # Contiguous case: call H5Tconvert directly
         if forward:
             H5Tconvert(info[0].supertype, dst, nl, buf, NULL, dxpl)
@@ -523,6 +524,7 @@ cdef int enum_int_converter_conv(hid_t src, hid_t dst, H5T_cdata_t *cdata,
             H5Tconvert(src, info[0].supertype, nl, buf, NULL, dxpl)
     else:
         # Non-contiguous: gather, convert and then scatter
+        print '    ncontig'
         if info[0].src_size > info[0].dst_size:
             nalloc = info[0].src_size*nl
         else:
