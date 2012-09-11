@@ -37,4 +37,4 @@ What's new in h5py 2.1
 * Dataset objects now expose a .size property giving the total number of
   elements.
 
-* Many, many bug fixes.
+* Many bug fixes.
