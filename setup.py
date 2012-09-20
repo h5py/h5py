@@ -21,7 +21,7 @@ import numpy
 
 import configure
 
-VERSION = '2.1.0-beta'
+VERSION = '2.1.0b2'
 
 def localpath(*args):
     return op.abspath(reduce(op.join, (op.dirname(__file__),)+args))
@@ -174,10 +174,6 @@ if os.name == 'nt':
     package_data = {'h5py': ['*.pyx', '*.dll']}
 else:
     package_data = {'h5py': ['*.pyx']}
-
-# Why the hell does Windows demand this format?
-if sys.platform.startswith('win'):
-    VERSION = VERSION.replace('-beta','b1')
 
 setup(
   name = 'h5py',
