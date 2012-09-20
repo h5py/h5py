@@ -516,7 +516,6 @@ cdef int enum_int_converter_conv(hid_t src, hid_t dst, H5T_cdata_t *cdata,
         return 0
 
     if buf_stride == 0:
-        print '    contig'
         # Contiguous case: call H5Tconvert directly
         if forward:
             H5Tconvert(info[0].supertype, dst, nl, buf, NULL, dxpl)
@@ -524,7 +523,6 @@ cdef int enum_int_converter_conv(hid_t src, hid_t dst, H5T_cdata_t *cdata,
             H5Tconvert(src, info[0].supertype, nl, buf, NULL, dxpl)
     else:
         # Non-contiguous: gather, convert and then scatter
-        print '    ncontig'
         if info[0].src_size > info[0].dst_size:
             nalloc = info[0].src_size*nl
         else:
