@@ -21,7 +21,7 @@ import numpy
 
 import configure
 
-VERSION = '2.2.0a'
+VERSION = '2.2.0a1'
 
 def localpath(*args):
     return op.abspath(reduce(op.join, (op.dirname(__file__),)+args))
