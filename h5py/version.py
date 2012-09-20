@@ -1,7 +1,7 @@
 from . import h5 as _h5
 from distutils.version import StrictVersion as _sv
 
-version = "2.1.0b2"
+version = "2.2.0a"
 _exp = _sv(version)
 
 version_tuple = _exp.version + (''.join(str(x) for x in _exp.prerelease),)
