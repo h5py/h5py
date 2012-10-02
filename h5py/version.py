@@ -4,7 +4,7 @@ from distutils.version import StrictVersion as _sv
 version = "2.1.0"
 _exp = _sv(version)
 
-version_tuple = _exp.version + (''.join(str(x) for x in _exp.prerelease),)
+version_tuple = _exp.version + ((''.join(str(x) for x in _exp.prerelease),) if _exp.prerelease is not None else ())
 
 hdf5_version_tuple = _h5.get_libversion()
 hdf5_version = "%d.%d.%d" % hdf5_version_tuple
