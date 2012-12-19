@@ -4,7 +4,7 @@
    contain the root `toctree` directive.
 
 ########################################
-HDF5 for Python 2.0 Online Documentation
+HDF5 for Python 2.1 Online Documentation
 ########################################
 
 Contents:
