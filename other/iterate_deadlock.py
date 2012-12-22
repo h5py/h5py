@@ -4,6 +4,7 @@
 """
 
 from threading import Thread
+import sys
 
 import h5py
 
@@ -11,7 +12,7 @@ FNAME = "deadlock.hdf5"
 
 def make_file():
     with h5py.File(FNAME,'w') as f:
-        for idx in xrange(1000):
+        for idx in range(1000):
             f.attrs['%d'%idx] = 1
 
 def list_attributes():
