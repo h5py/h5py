@@ -1,7 +1,7 @@
-Announcing HDF5 for Python (h5py) 2.1 BETA
-==========================================
+Announcing HDF5 for Python (h5py) 2.1.0
+=======================================
 
-We are proud to announce the availability of HDF5 for Python (h5py) 2.1-beta.
+We are proud to announce the availability of HDF5 for Python (h5py) 2.1.0.
 HDF5 for Python (h5py) is a general-purpose Python interface to the
 Hierarchical Data Format library, version 5.  HDF5 is a mature scientific
 software library originally developed at NCSA, designed for the fast,
@@ -13,10 +13,6 @@ datasets (arrays on disk) hundreds of gigabytes in size, and perform
 random-access I/O on desired sections.  Datasets are organized in a
 filesystem-like hierarchy using containers called "groups", and 
 accessed using the traditional POSIX /path/to/resource syntax.
-
-H5py 2.1-beta is available for Unix and Windows.  The beta period will last
-approximately 2 weeks.  Comments and suggestions are welcome, either at the
-project issue tracker or on the mailing list (h5py at Google Groups).
 
 Downloads, FAQ and bug tracker are available at Google Code:
 

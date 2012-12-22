@@ -8,3 +8,4 @@ Introduction
     whatsnew_v2
     build
     quick
+    howdoi
