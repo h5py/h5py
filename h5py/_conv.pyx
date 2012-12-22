@@ -230,7 +230,6 @@ cdef int conv_str2vlen(void* ipt, void* opt, void* bkg, void* priv) except -1:
                 temp_object = buf_obj[0]
                 Py_INCREF(temp_object)
                 temp_encoded = PyUnicode_AsUTF8String(temp_object)
-                Py_INCREF(temp_encoded)
                 temp_string = PyBytes_AsString(temp_encoded)
                 temp_string_len = PyBytes_Size(temp_encoded)
 
