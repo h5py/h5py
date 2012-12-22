@@ -18,6 +18,7 @@ else:
 
 if sys.version_info[0] == 3:
     xrange = range
+    unicode = str
 
 memory = 0
 def print_memory():
@@ -27,8 +28,19 @@ def print_memory():
     print ("%.2f MB (%.2f since last call)" % (rubytes/(1024.**2), (rubytes-memory)/(1024.**2)))
     memory = rubytes
 
-dt = h5py.special_dtype(vlen=bytes)
-data = np.array(["%d"*100 for idx in xrange(1000)])
+
+def make_data(kind):
+    global data
+    global dt
+
+    if kind is bytes:
+        s = b"xx"
+    else:
+        s = b"xx".decode('utf8')
+
+    dt = h5py.special_dtype(vlen=kind)
+    data = np.array([s*100 for idx in xrange(1000)])
+
 
 def ds_leak():
     print("Testing vlens for dataset r/w")
@@ -42,6 +54,7 @@ def ds_leak():
             ds[...] = data
             ds[...]
 
+
 def attr_leak():
     print("Testing vlens for attribute r/w")
     print("-------------------------------")
@@ -52,9 +65,18 @@ def attr_leak():
             f.attrs.create('foo', dtype=dt, data=data)
             f.attrs['foo']
 
+
 if __name__ == '__main__':
     print("h5py ", h5py.version.version)
     print("HDF5 ", h5py.version.hdf5_version)
+    print("Bytes test")
+    print("==========")
+    make_data(bytes)
+    attr_leak()
+    ds_leak()
+    print("Unicode test")
+    print("============")
+    make_data(unicode)
     attr_leak()
     ds_leak()
 
