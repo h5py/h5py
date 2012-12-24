@@ -216,5 +216,14 @@ cdef extern from "hdf5.h":
   ctypedef herr_t (*H5E_walk_t)(int n, H5E_error_t *err_desc, void* client_data)  
   herr_t    H5Ewalk(H5E_direction_t direction, H5E_walk_t func, void* client_data)
 
+# --- Functions for managing the HDF5 error callback mechanism ---
 
+ctypedef struct err_cookie:
+    # Defines the error handler state (callback and callback data)
+    H5E_auto_t func
+    void *data
+
+# Set (via H5Eset_auto) the HDF5 error handler for this thread.  Returns
+# the old (presently installed) handler.
+cdef err_cookie set_error_handler(err_cookie handler)
     

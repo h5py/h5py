@@ -19,6 +19,7 @@ from _objects cimport pdefault
 from utils cimport emalloc, efree
 from h5p cimport PropID
 cimport _hdf5 # to implement container testing for 1.6
+from _errors cimport set_error_handler, err_cookie
 
 import _objects
 
@@ -409,8 +410,16 @@ cdef class GroupID(ObjectID):
 
         Determine if a group member of the given name is present
         """
+        cdef err_cookie old_handler
+        cdef err_cookie new_handler
         cdef herr_t retval
+        
+        new_handler.func = NULL
+        new_handler.data = NULL
+
+        old_handler = set_error_handler(new_handler)
         retval = _hdf5.H5Gget_objinfo(self.id, name, 0, NULL)
+        set_error_handler(old_handler)
 
         return bool(retval >= 0)
 
