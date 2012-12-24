@@ -65,6 +65,8 @@ cdef herr_t attr_rw(hid_t attr, hid_t mtype, void *progbuf, int read) except -1:
                 memcpy(conv_buf, progbuf, msize*npoints)
                 H5Tconvert(mtype, atype, npoints, conv_buf, back_buf, H5P_DEFAULT)
                 H5Awrite(attr, atype, conv_buf)
+                H5Dvlen_reclaim(atype, aspace, H5P_DEFAULT, conv_buf)
+
     finally:
         free(conv_buf)
         free(back_buf)
@@ -151,7 +153,8 @@ cdef herr_t dset_rw(hid_t dset, hid_t mtype, hid_t mspace, hid_t fspace,
                 h5py_copy(mtype, mspace, conv_buf, progbuf, H5PY_GATHER)
                 H5Tconvert(mtype, dstype, npoints, conv_buf, back_buf, dxpl)
                 H5PY_H5Dwrite(dset, dstype, cspace, fspace, dxpl, conv_buf)
-
+                H5Dvlen_reclaim(dstype, cspace, H5P_DEFAULT, conv_buf)
+ 
     finally:
         free(back_buf)
         free(conv_buf)

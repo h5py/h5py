@@ -120,8 +120,18 @@ def unsilence_errors():
     if H5Eset_auto(H5Eprint, stderr) < 0:
         raise RuntimeError("Failed to enable automatic error printing")
 
+cdef err_cookie set_error_handler(err_cookie handler):
+    # Note: exceptions here will be printed instead of raised.
 
+    cdef err_cookie old_handler
 
+    if H5Eget_auto(&old_handler.func, &old_handler.data) < 0:
+        raise RuntimeError("Failed to retrieve old handler")
+
+    if H5Eset_auto(handler.func, handler.data) < 0:
+        raise RuntimeError("Failed to install new handler")
+
+    return old_handler
 
 
 

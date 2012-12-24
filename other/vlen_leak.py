@@ -1,0 +1,82 @@
+
+"""
+    Demonstrates memory leak involving variable-length strings.
+"""
+
+import sys
+import resource
+import numpy as np
+
+import h5py
+
+FNAME = 'test.hdf5'
+
+if 'linux' in sys.platform:
+    MAXRSS_BYTES = 1024. # in KiB on linux
+else:
+    MAXRSS_BYTES = 1.
+
+if sys.version_info[0] == 3:
+    xrange = range
+    unicode = str
+
+memory = 0
+def print_memory():
+    global memory
+
+    rubytes = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss*MAXRSS_BYTES
+    print ("%.2f MB (%.2f since last call)" % (rubytes/(1024.**2), (rubytes-memory)/(1024.**2)))
+    memory = rubytes
+
+
+def make_data(kind):
+    global data
+    global dt
+
+    if kind is bytes:
+        s = b"xx"
+    else:
+        s = b"xx".decode('utf8')
+
+    dt = h5py.special_dtype(vlen=kind)
+    data = np.array([s*100 for idx in xrange(1000)])
+
+
+def ds_leak():
+    print("Testing vlens for dataset r/w")
+    print("-----------------------------")
+    with h5py.File(FNAME,'w') as f:
+        ds = f.create_dataset('dset', (1000,), dtype=dt)
+        for idx in xrange(500):
+            #print idx
+            if idx%100 == 0:
+                print_memory()
+            ds[...] = data
+            ds[...]
+
+
+def attr_leak():
+    print("Testing vlens for attribute r/w")
+    print("-------------------------------")
+    with h5py.File(FNAME,'w') as f:
+        for idx in xrange(500):
+            if idx%100 == 0:
+                print_memory()
+            f.attrs.create('foo', dtype=dt, data=data)
+            f.attrs['foo']
+
+
+if __name__ == '__main__':
+    print("h5py ", h5py.version.version)
+    print("HDF5 ", h5py.version.hdf5_version)
+    print("Bytes test")
+    print("==========")
+    make_data(bytes)
+    attr_leak()
+    ds_leak()
+    print("Unicode test")
+    print("============")
+    make_data(unicode)
+    attr_leak()
+    ds_leak()
+
