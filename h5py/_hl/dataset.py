@@ -3,7 +3,7 @@ import sys
 import numpy
 
 from h5py import h5s, h5t, h5r, h5d
-from .base import HLObject
+from .base import HLObject, py3
 from . import filters
 from . import selections as sel
 from . import selections2 as sel2
@@ -490,14 +490,19 @@ class Dataset(HLObject):
 
     def __repr__(self):
         if not self:
-            return "<Closed HDF5 dataset>"
-        if self.name is None:
-            namestr = '("anonymous")'
+            r = u'<Closed HDF5 dataset>'
         else:
-            name = pp.basename(pp.normpath(self.name))
-            namestr = '"%s"' % (name if name != '' else '/')
-        return '<HDF5 dataset %s: shape %s, type "%s">' % \
-            (namestr, self.shape, self.dtype.str)
+            if self.name is None:
+                namestr = u'("anonymous")'
+            else:
+                name = pp.basename(pp.normpath(self.name))
+                namestr = u'"%s"' % (name if name != u'' else u'/')
+            r = u'<HDF5 dataset %s: shape %s, type "%s">' % \
+                (namestr, self.shape, self.dtype.str)
+        if py3:
+            return r
+        return r.encode('utf8')
+
 
 
 

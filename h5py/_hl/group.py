@@ -4,7 +4,7 @@ import numpy
 
 from h5py import h5g, h5i, h5o, h5r, h5t, h5l
 from . import base
-from .base import HLObject, DictCompat
+from .base import HLObject, DictCompat, py3
 from . import dataset
 from . import datatype
 
@@ -363,11 +363,14 @@ class Group(HLObject, DictCompat):
 
     def __repr__(self):
         if not self:
-            return "<Closed HDF5 group>"
-        namestr = '"%s"' % self.name if self.name is not None else "(anonymous)"
-        return '<HDF5 group %s (%d members)>' % \
-            (namestr, len(self))
-
+            r = u"<Closed HDF5 group>"
+        else:
+            namestr = (u'"%s"' % self.name) if self.name is not None else u"(anonymous)"
+            r = u'<HDF5 group %s (%d members)>' % (namestr, len(self))
+        
+        if py3:
+            return r
+        return r.encode('utf8')
 
 class HardLink(object):
 
