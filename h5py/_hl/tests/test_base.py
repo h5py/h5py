@@ -6,7 +6,11 @@
 """
 
 from h5py import File
-from .common import ut, TestCase
+from .common import ut, TestCase, py3
+
+import numpy as np
+import os
+import tempfile
 
 class BaseTest(TestCase):
 
@@ -27,3 +31,48 @@ class TestName(BaseTest):
         """ Anomymous objects have name None """
         grp = self.f.create_group(None)
         self.assertIs(grp.name, None)
+
+class TestRepr(BaseTest):
+
+    """
+        repr() works correctly with Unicode names
+    """
+
+    USTRING = u"\xfc\xdf"
+
+    def _check_type(self, obj):
+        if py3:
+            self.assertIsInstance(repr(obj), unicode)
+        else:
+            self.assertIsInstance(repr(obj), bytes)
+
+    def test_group(self):
+        """ Group repr() with unicode """
+        grp = self.f.create_group(self.USTRING)
+        self._check_type(grp)
+
+    def test_dataset(self):
+        """ Dataset repr() with unicode """
+        dset = self.f.create_dataset(self.USTRING, (1,))
+        self._check_type(dset)
+
+    def test_namedtype(self):
+        """ Named type repr() with unicode """
+        self.f['type'] = np.dtype('f')
+        typ = self.f['type']
+        self._check_type(typ)
+
+    def test_file(self):
+        """ File object repr() with unicode """
+        fname = tempfile.mktemp(self.USTRING+u'.hdf5')
+        try:
+            with File(fname,'w') as f:
+                self._check_type(f)
+        finally:
+            try:
+                os.unlink(fname)
+            except Exception:
+                pass
+
+        
+
