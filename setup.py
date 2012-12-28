@@ -8,6 +8,7 @@ import warnings
 import sys, os
 import os.path as op
 from functools import reduce
+import mpi4py
 
 
 try:
@@ -53,7 +54,7 @@ if sys.platform.startswith('win'):
     COMPILER_SETTINGS = {
         'libraries'     : ['hdf5dll18','hdf5_hldll'],
         'include_dirs'  : [numpy.get_include(),  localpath('lzf'),
-                           localpath('win_include')],
+                           localpath('win_include'), mpi4py.get_include()],
         'library_dirs'  : [],
         'define_macros' : [('H5_USE_16_API', None), ('_HDF5USEDLL_', None)]
     }
@@ -63,7 +64,7 @@ if sys.platform.startswith('win'):
 else:
     COMPILER_SETTINGS = {
        'libraries'      : ['hdf5', 'hdf5_hl'],
-       'include_dirs'   : [numpy.get_include(), localpath('lzf')],
+       'include_dirs'   : [numpy.get_include(), localpath('lzf'), mpi4py.get_include()],
        'library_dirs'   : [],
        'define_macros'  : [('H5_USE_16_API', None)]
     }
