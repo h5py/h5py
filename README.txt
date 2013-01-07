@@ -1,11 +1,11 @@
-README file for h5py version 2.1.0
+README file for h5py version 2.1.1
 ==================================
 
 Websites
 --------
 
-  * Docs, general info: h5py.alfven.org
-  * Downloads, FAQ, bug tracker:  h5py.googlecode.com
+  * Main website: http://www.h5py.org
+  * Source code: http://github.com/h5py/h5py
   * Mailing list: h5py at googlegroups
 
 Prerequisites
@@ -13,13 +13,13 @@ Prerequisites
 
 You need, at a minimum:
 
-  * HDF5 1.8.3 or later
+  * HDF5 1.8.3 or later on Linux (On Windows, h5py ships with HDF5)
   * Python 2.6, 2.7 or 3.2
   * Any modern version of NumPy
 
 Optionally:
 
-  * Cython 0.13 or later, to build from Mercurial
+  * Cython 0.13 or later, to build from a git checkout
   * If using Python 2.6, unittest2 is needed to run the tests
 
 Installing from tarball
@@ -39,14 +39,14 @@ Run the following commands:
   * export HDF5_DIR=/path/to/hdf5   # optional
   * [sudo] easy_install h5py
 
-Building from a Mercurial checkout (UNIX)
+Building from a Git checkout (UNIX)
 -----------------------------------------
 
-We now use Mercurial to manage changes at Google Code.  Here's how to build
+We have switched development to GitHub.  Here's how to build
 h5py from source:
 
   * Clone the project:
-    $ hg clone http://h5py.googlecode.com/hg h5py
+    $ git clone https://github.com/h5py/h5py.git
 
   * Generate the Cython files which talk to HDF5:
     $ cd h5py/h5py
@@ -54,7 +54,7 @@ h5py from source:
 
   * Build the project (this step also auto-compiles the .c files)
     $ cd ..
-    $ python setup.py build
+    $ python setup.py build [--hdf5=/path/to/hdf5]
 
   * Run the unit tests (optional)
     $ python setup.py test
@@ -62,7 +62,7 @@ h5py from source:
 Reporting bugs
 --------------
 
-  * Bug reports are always welcome at h5py.googlecode.com.  Please don't be
+  * Bug reports are always welcome at the GitHub tracker.  Please don't be
     offended if it takes a while to respond to your report... we value user
     input and take all bugs seriously.
 
