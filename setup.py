@@ -166,7 +166,7 @@ A strong emphasis on automatic conversion between Python (Numpy) datatypes and
 data structures and their HDF5 equivalents vastly simplifies the process of
 reading and writing data from Python.
 
-Supports HDF5 versions 1.8.2 and higher.  On Windows, HDF5 is included with
+Supports HDF5 versions 1.8.3 and higher.  On Windows, HDF5 is included with
 the installer.
 """
 
@@ -182,10 +182,10 @@ setup(
   long_description = long_desc,
   classifiers = [x for x in cls_txt.split("\n") if x],
   author = 'Andrew Collette',
-  author_email = '"h5py" at the domain "alfven.org"',
+  author_email = 'andrew dot collette at gmail dot com',
   maintainer = 'Andrew Collette',
-  maintainer_email = '"h5py" at the domain "alfven.org"',
-  url = 'http://h5py.alfven.org',
+  maintainer_email = 'andrew dot collette at gmail dot com',
+  url = 'http://www.h5py.org',
   download_url = 'http://code.google.com/p/h5py/downloads/list',
   packages = ['h5py', 'h5py._hl', 'h5py._hl.tests', 'h5py.lowtest'],
   package_data = package_data,
