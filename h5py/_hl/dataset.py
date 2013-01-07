@@ -30,7 +30,8 @@ def readtime_dtype(basetype, names):
 def make_new_dset(parent, shape=None, dtype=None, data=None,
                  chunks=None, compression=None, shuffle=None,
                     fletcher32=None, maxshape=None, compression_opts=None,
-                  fillvalue=None):
+                  fillvalue=None,
+                  scaleoffset=None, scaleoffset_opts=None):
     """ Return a new low-level dataset identifier
 
     Only creates anonymous datasets.
@@ -60,7 +61,7 @@ def make_new_dset(parent, shape=None, dtype=None, data=None,
         dtype = numpy.dtype(dtype)
 
     # Legacy
-    if any((compression, shuffle, fletcher32, maxshape)) and chunks is False:
+    if any((compression, shuffle, fletcher32, maxshape,scaleoffset)) and chunks is False:
         raise ValueError("Chunked format required for given storage options")
 
     # Legacy
@@ -77,7 +78,7 @@ def make_new_dset(parent, shape=None, dtype=None, data=None,
         compression = 'gzip'
 
     dcpl = filters.generate_dcpl(shape, dtype, chunks, compression, compression_opts,
-                  shuffle, fletcher32, maxshape)
+                  shuffle, fletcher32, maxshape, scaleoffset, scaleoffset_opts)
 
     if fillvalue is not None:
         fillvalue = numpy.array(fillvalue)
@@ -170,6 +171,21 @@ class Dataset(HLObject):
     def fletcher32(self):
         """Fletcher32 filter is present (T/F)"""
         return 'fletcher32' in self._filters
+    
+    @property
+    def scaleoffset(self):
+        """scale/offset is present (T/F)"""
+        return 'scaleoffset' in self._filters
+    
+    @property
+    def scaleoffset_opts(self):
+        """ Scale/offset filter settings. For integer data types, this is
+        the number of bits stored, or 0 for auto-detected. For floating
+        point data types, this is the number of decimal places retained. """
+        try:
+            return self._filters['scaleoffset'][1]
+        except KeyError:
+            return None
 
     @property
     def maxshape(self):

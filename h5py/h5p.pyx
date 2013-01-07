@@ -671,6 +671,17 @@ cdef class PropDCID(PropCreateID):
         and general restrictions on use of the SZIP format.
         """
         H5Pset_szip(self.id, options, pixels_per_block)
+        
+    def set_scaleoffset(self, H5Z_SO_scale_type_t scale_type, int scale_factor):
+        '''(H5Z_SO_scale_type_t scale_type, INT scale_factor)
+        
+        Enable scale/offset (usually lossy) compression; lossless (e.g. gzip)
+        compression and other filters may be applied on top of this.
+        
+        Note that error detection (i.e. fletcher32) cannot precede this in
+        the filter chain, or else all reads on lossily-compressed data will
+        fail.'''
+        H5Pset_scaleoffset(self.id, scale_type, scale_factor)
 
 # File access
 cdef class PropFAID(PropInstanceID):

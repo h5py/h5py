@@ -199,6 +199,8 @@ Reference
     .. autoattribute:: h5py.Dataset.maxshape
     .. autoattribute:: h5py.Dataset.compression
     .. autoattribute:: h5py.Dataset.compression_opts
+    .. autoattribute:: h5py.Dataset.scaleoffset
+    .. autoattribute:: h5py.Dataset.scaleoffset_opts
     .. autoattribute:: h5py.Dataset.shuffle
     .. autoattribute:: h5py.Dataset.fletcher32
     .. autoattribute:: h5py.Dataset.fillvalue

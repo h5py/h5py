@@ -39,7 +39,8 @@ _COMP_FILTERS = {'gzip': h5z.FILTER_DEFLATE,
                 'szip': h5z.FILTER_SZIP,
                 'lzf': h5z.FILTER_LZF,
                 'shuffle': h5z.FILTER_SHUFFLE,
-                'fletcher32': h5z.FILTER_FLETCHER32 }
+                'fletcher32': h5z.FILTER_FLETCHER32,
+                'scaleoffset': h5z.FILTER_SCALEOFFSET }
 
 DEFAULT_GZIP = 4
 DEFAULT_SZIP = ('nn', 8)
@@ -60,7 +61,7 @@ def _gen_filter_tuples():
 decode, encode = _gen_filter_tuples()
 
 def generate_dcpl(shape, dtype, chunks, compression, compression_opts,
-                  shuffle, fletcher32, maxshape):
+                  shuffle, fletcher32, maxshape, scaleoffset, scaleoffset_opts):
     """ Generate a dataset creation property list.
 
     Undocumented and subject to change without warning.
@@ -121,11 +122,29 @@ def generate_dcpl(shape, dtype, chunks, compression, compression_opts,
     elif compression_opts is not None:
         # Can't specify just compression_opts by itself.
         raise TypeError("Compression method must be specified")
+    
+    if scaleoffset or scaleoffset_opts is not None:
+        scaleoffset = True
+        if dtype.kind not in ('u', 'i', 'f'):
+            raise TypeError('scale/offset filter only supported for integer and floating-point types')
+        if scaleoffset_opts is None:
+            if dtype.kind == 'f':
+                raise ValueError('a scaling factor must be supplied via scaleoffset_opts for floating point types')
+        else:
+            if dtype.kind in ('u', 'i') and scaleoffset_opts < 0:
+                raise ValueError('minimum bits must be >= 0')
+        
+        # scale/offset following fletcher32 in the filter chain will (almost?) always trigger
+        # a read error, as most scale/offset settings are lossy
+        # since fletcher32 must come first (see comment below) we simply prohibit
+        # the combination of fletcher32 and scale/offset
+        if fletcher32:
+            raise ValueError('fletcher32 cannot be used with potentially lossy scale/offset filter')                    
 
     # End argument validation
 
     if (chunks is True) or \
-    (chunks is None and any((shuffle, fletcher32, compression, maxshape))):
+    (chunks is None and any((shuffle, fletcher32, compression, maxshape, scaleoffset))):
         chunks = guess_chunk(shape, maxshape, dtype.itemsize)
         
     if maxshape is True:
@@ -140,8 +159,16 @@ def generate_dcpl(shape, dtype, chunks, compression, compression_opts,
     if fletcher32:
         plist.set_fletcher32()
 
+    # scale-offset must come before shuffle and compression
+    if scaleoffset:
+        if dtype.kind in ('u', 'i'):
+            so_args = (h5z.SO_INT, scaleoffset_opts or h5z.SO_INT_MINBITS_DEFAULT)
+        else:
+            so_args = (h5z.SO_FLOAT_DSCALE, scaleoffset_opts)
+        plist.set_scaleoffset(*so_args)
+
     if shuffle:
-        plist.set_shuffle()
+        plist.set_shuffle()        
 
     if compression == 'gzip':
         plist.set_deflate(gzip_level)
@@ -162,7 +189,7 @@ def get_filters(plist):
 
     filters = {h5z.FILTER_DEFLATE: 'gzip', h5z.FILTER_SZIP: 'szip',
                h5z.FILTER_SHUFFLE: 'shuffle', h5z.FILTER_FLETCHER32: 'fletcher32',
-               h5z.FILTER_LZF: 'lzf'}
+               h5z.FILTER_LZF: 'lzf', h5z.FILTER_SCALEOFFSET: 'scaleoffset'}
     szopts = {h5z.SZIP_EC_OPTION_MASK: 'ec', h5z.SZIP_NN_OPTION_MASK: 'nn'}
 
     pipeline = {}

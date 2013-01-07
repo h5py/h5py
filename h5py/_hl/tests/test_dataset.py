@@ -315,6 +315,66 @@ class TestCreateFletcher32(BaseDataset):
         dset = self.f.create_dataset('foo', (20,30), fletcher32=True)
         self.assertTrue(dset.fletcher32)
 
+@ut.skipIf('scaleoffset' not in h5py.filters.encode, "SCALEOFFSET is not installed")
+class TestCreateScaleOffset(BaseDataset):    
+    """
+        Feature: Datasets can use the scale/offset filter
+    """
+
+    def test_float(self):
+        """ Enable scaleoffset for floating point data """
+        dset = self.f.create_dataset('foo', (20,30), dtype=float, scaleoffset=True, scaleoffset_opts=10000)
+        self.assertTrue(dset.scaleoffset)
+        
+    def test_float_fails_without_options(self):
+        """ Ensure that failing to provide a scale factor with floating point data
+        raises an exception """
+        with self.assertRaises(ValueError):
+            dset = self.f.create_dataset('foo', (20,30), dtype=float, scaleoffset=True)
+        
+    def test_int(self):
+        """ Enable scaleoffset for integer data """
+        dset = self.f.create_dataset('foo', (20,30), dtype=int, scaleoffset=True)
+        self.assertTrue(dset.scaleoffset)
+        
+    def test_int_with_minbits(self):
+        """ Enable scaleoffset for integer data with explicit minbits """
+        dset = self.f.create_dataset('foo', (20,30), dtype=int, scaleoffset=True, scaleoffset_opts = 12)
+        self.assertTrue(dset.scaleoffset)
+        self.assertTrue(dset.scaleoffset_opts == 12)
+
+@ut.skipIf('scaleoffset' not in h5py.filters.encode, "SCALEOFFSET is not installed")
+class TestScaleOffsetRoundtrip(BaseDataset):    
+    """
+        Feature: Datasets written with the scale/offset filter can be read.
+    """
+
+    def test_int_roundtrip(self):
+        nbits = 12
+        shape =  (100, 300)
+        chunks = (10,15)
+        testdata = np.random.randint(0, 2**nbits-1,size=shape)
+        niobits = nbits
+        
+        self.f.create_dataset('testdata_int', data=testdata, scaleoffset=True, scaleoffset_opts=0)
+        readdata = self.f['testdata_int'][...]
+        
+        self.assertTrue((readdata == testdata).all())
+        
+    def test_float_roundtrip(self):
+        range=200
+        scalefac = 4
+        scale=10**scalefac
+        shape=(100,300)
+        chunks=(10,15)
+        testdata = (np.random.rand(*shape)-0.5)*range
+        
+        self.f.create_dataset('testdata_float', data=testdata, scaleoffset=True, scaleoffset_opts=scalefac)
+        readdata = self.f['testdata_float'][...]
+        
+        self.assertTrue(np.allclose(readdata, testdata, atol=10**(-scalefac)))
+        
+
 class TestAutoCreate(BaseDataset):
 
     """

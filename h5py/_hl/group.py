@@ -60,10 +60,20 @@ class Group(HLObject, DictCompat):
         compression_opts
             Compression settings.  This is an integer for gzip, 2-tuple for
             szip, etc.
+        scaleoffset
+            (T/F) Enable scale/offset filter for (potentially) lossy
+            compression of integer or floating-point data.
+        scaleoffset_opts
+            (Integer) Scale/offset settings. Optional for integer data, for
+            which it is the number of bits per data element; if None or 0,
+            this will be determined from the data and lead to lossless
+            compression. Required for floating-point data, for which it is
+            the number of decimal places retained. 
         shuffle
             (T/F) Enable shuffle filter.
         fletcher32
-            (T/F) Enable fletcher32 error detection.
+            (T/F) Enable fletcher32 error detection. Not permitted in
+            conjunction with the scale/offset filter.
         fillvalue
             (Scalar) Use this value for uninitialized parts of the dataset.
         """
