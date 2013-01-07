@@ -1,36 +1,53 @@
-Announcing HDF5 for Python (h5py) 2.1.0
+Announcing HDF5 for Python (h5py) 2.1.1
 =======================================
 
-We are proud to announce the availability of HDF5 for Python (h5py) 2.1.0.
-HDF5 for Python (h5py) is a general-purpose Python interface to the
-Hierarchical Data Format library, version 5.  HDF5 is a mature scientific
-software library originally developed at NCSA, designed for the fast,
-flexible storage of enormous amounts of data.
+HDF5 for Python 2.1.1 is now available!  This bugfix release also marks 
+a number of changes for the h5py project intended to make the development 
+process more responsive, including a move to GitHub and a switch to a 
+rapid release model.
 
-From a Python programmer's perspective, HDF5 provides a robust way to
-store data, organized by name in a tree-like fashion.  You can create
-datasets (arrays on disk) hundreds of gigabytes in size, and perform
-random-access I/O on desired sections.  Datasets are organized in a
-filesystem-like hierarchy using containers called "groups", and 
-accessed using the traditional POSIX /path/to/resource syntax.
+Development has moved over to GitHub at http://github.com/h5py/h5py.  We
+welcome bug reports and pull requests from anyone interested in contributing.
 
-Downloads, FAQ and bug tracker are available at Google Code:
+Releases will now be made every 4-6 weeks, in order to get bugfixes and new
+features out to users quickly while still leaving time for testing.
 
-* Google code site:  http://h5py.googlecode.com
+* New main website: http://www.h5py.org
+* Mailing list:     http://groups.google.com/group/h5py
 
-Documentation is available at Alfven.org:
 
-* http://h5py.alfven.org
+What is h5py?
+=============
 
-What's new in h5py 2.1
------------------------
+The h5py package is a Pythonic interface to the HDF5 binary data format.
 
-* The HDF5 Dimension Scales API is now available, along with high-level
-  integration with Dataset objects.  Thanks to D. Dale for implementing this.
+It lets you store huge amounts of numerical data, and easily manipulate that 
+data from NumPy. For example, you can slice into multi-terabyte datasets 
+stored on disk, as if they were real NumPy arrays. Thousands of datasets can 
+be stored in a single file, categorized and tagged however you want.
 
-* Unicode scalar strings can now be stored in attributes.
+H5py uses straightforward NumPy and Python metaphors, like dictionary and 
+NumPy array syntax. For example, you can iterate over datasets in a file, or 
+check out the .shape or .dtype attributes of datasets. You don't need to know 
+anything special about HDF5 to get started.
 
-* Dataset objects now expose a .size property giving the total number of
-  elements.
+In addition to the easy-to-use high level interface, h5py rests on a 
+object-oriented Cython wrapping of the HDF5 C API. Almost anything you can do 
+from C in HDF5, you can do from h5py.
 
-* Many bug fixes.
+Best of all, the files you create are in a widely-used standard binary format, 
+which you can exchange with other people, including those who use programs 
+like IDL and MATLAB.
+
+
+What's new in 2.1.1?
+====================
+
+This is a bugfix release.  The most substantial changes were:
+
+* Fixed a memory leak related to variable-length strings (Thanks to Luke 
+    Campbell for extensive testing and bug reports)
+* Fixed a threading deadlock related to the use of H5Aiterate
+* Fixed a double INCREF memory leak affecting Unicode variable-length strings
+* Fixed an exception when taking the repr() of objects with non-ASCII names
+  on Python 
