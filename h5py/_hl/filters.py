@@ -168,7 +168,7 @@ def generate_dcpl(shape, dtype, chunks, compression, compression_opts,
         plist.set_scaleoffset(*so_args)
 
     if shuffle:
-        plist.set_shuffle()        
+        plist.set_shuffle()
 
     if compression == 'gzip':
         plist.set_deflate(gzip_level)
