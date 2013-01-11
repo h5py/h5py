@@ -61,14 +61,15 @@ def _gen_filter_tuples():
 decode, encode = _gen_filter_tuples()
 
 def generate_dcpl(shape, dtype, chunks, compression, compression_opts,
-                  shuffle, fletcher32, maxshape, scaleoffset, scaleoffset_opts):
+                  shuffle, fletcher32, maxshape, scaleoffset):
     """ Generate a dataset creation property list.
 
     Undocumented and subject to change without warning.
     """
 
     if shape == ():
-        if any((chunks, compression, compression_opts, shuffle, fletcher32)):
+        if any((chunks, compression, compression_opts, shuffle, fletcher32,
+                scaleoffset is not None)):
             raise TypeError("Scalar datasets don't support chunk/filter options")
         if maxshape and maxshape != ():
             raise TypeError("Scalar datasets cannot be extended")
@@ -123,28 +124,37 @@ def generate_dcpl(shape, dtype, chunks, compression, compression_opts,
         # Can't specify just compression_opts by itself.
         raise TypeError("Compression method must be specified")
     
-    if scaleoffset or scaleoffset_opts is not None:
-        scaleoffset = True
-        if dtype.kind not in ('u', 'i', 'f'):
-            raise TypeError('scale/offset filter only supported for integer and floating-point types')
-        if scaleoffset_opts is None:
-            if dtype.kind == 'f':
-                raise ValueError('a scaling factor must be supplied via scaleoffset_opts for floating point types')
-        else:
-            if dtype.kind in ('u', 'i') and scaleoffset_opts < 0:
-                raise ValueError('minimum bits must be >= 0')
+    if scaleoffset is not None:
+        # scaleoffset must be an integer when it is not None or False,
+        # except for integral data, for which scaleoffset == True is
+        # permissible (will use SO_INT_MINBITS_DEFAULT)
         
-        # scale/offset following fletcher32 in the filter chain will (almost?) always trigger
-        # a read error, as most scale/offset settings are lossy
-        # since fletcher32 must come first (see comment below) we simply prohibit
-        # the combination of fletcher32 and scale/offset
+        if scaleoffset < 0:
+            raise ValueError('scale factor must be >= 0')
+                
+        if dtype.kind == 'f':
+            if scaleoffset is True:
+                raise ValueError('integer scaleoffset must be provided for '
+                                 'floating point types')
+        elif dtype.kind in ('u', 'i'):
+            if scaleoffset is True:
+                scaleoffset = h5z.SO_INT_MINBITS_DEFAULT
+        else:
+            raise TypeError('scale/offset filter only supported for integer '
+                            'and floating-point types')
+        
+        # Scale/offset following fletcher32 in the filter chain will (almost?)
+        # always triggera a read error, as most scale/offset settings are
+        # lossy. Since fletcher32 must come first (see comment below) we
+        # simply prohibit the combination of fletcher32 and scale/offset.
         if fletcher32:
-            raise ValueError('fletcher32 cannot be used with potentially lossy scale/offset filter')                    
-
+            raise ValueError('fletcher32 cannot be used with potentially lossy'
+                             ' scale/offset filter')
     # End argument validation
 
     if (chunks is True) or \
-    (chunks is None and any((shuffle, fletcher32, compression, maxshape, scaleoffset))):
+    (chunks is None and any((shuffle, fletcher32, compression, maxshape, 
+                             scaleoffset is not None))):
         chunks = guess_chunk(shape, maxshape, dtype.itemsize)
         
     if maxshape is True:
@@ -160,12 +170,11 @@ def generate_dcpl(shape, dtype, chunks, compression, compression_opts,
         plist.set_fletcher32()
 
     # scale-offset must come before shuffle and compression
-    if scaleoffset:
+    if scaleoffset is not None:
         if dtype.kind in ('u', 'i'):
-            so_args = (h5z.SO_INT, scaleoffset_opts or h5z.SO_INT_MINBITS_DEFAULT)
-        else:
-            so_args = (h5z.SO_FLOAT_DSCALE, scaleoffset_opts)
-        plist.set_scaleoffset(*so_args)
+            plist.set_scaleoffset(h5z.SO_INT, scaleoffset)
+        else: # dtype.kind == 'f'
+            plist.set_scaleoffset(h5z.SO_FLOAT_DSCALE, scaleoffset)
 
     if shuffle:
         plist.set_shuffle()

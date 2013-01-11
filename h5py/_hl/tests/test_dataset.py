@@ -320,7 +320,7 @@ class TestCreateScaleOffset(BaseDataset):
     """
         Feature: Datasets can use the scale/offset filter
     """
-
+        
     def test_float_fails_without_options(self):
         """ Ensure that a scale factor is required for scaleoffset compression of floating point data """
         
@@ -329,20 +329,29 @@ class TestCreateScaleOffset(BaseDataset):
 
     def test_float(self):
         """ Scaleoffset filter works for floating point data """
+        
         scalefac = 4
         shape=(100,300)
-        range=200
+        range=20*10**scalefac
         testdata = (np.random.rand(*shape)-0.5)*range
 
-        dset = self.f.create_dataset('foo', shape, dtype=float, scaleoffset=True, scaleoffset_opts=scalefac)
+        dset = self.f.create_dataset('foo', shape, dtype=float, scaleoffset=scalefac)
 
         # Dataset reports that scaleoffset is in use
-        self.assertTrue(dset.scaleoffset)
+        assert dset.scaleoffset is not None
 
         # Dataset round-trips
         dset[...] = testdata
-        readdata = dset[...]
+        filename = self.f.filename
+        self.f.close()
+        self.f = h5py.File(filename, 'r')
+        readdata = self.f['foo'][...]
+        
+        # Test that data round-trips to requested precision
         self.assertArrayEqual(readdata, testdata, precision=10**(-scalefac))
+        
+        # Test that the filter is actually active (i.e. compression is lossy)
+        assert not (readdata == testdata).all()
  
     def test_int(self):
         """ Scaleoffset filter works for integer data with default precision """
@@ -355,31 +364,57 @@ class TestCreateScaleOffset(BaseDataset):
         dset = self.f.create_dataset('foo', shape, dtype=int, scaleoffset=True)
 
         # Dataset reports scaleoffset enabled
-        self.assertTrue(dset.scaleoffset)
+        assert dset.scaleoffset is not None
 
-        # Data round-trips correctly
+        # Data round-trips correctly and identically
         dset[...] = testdata
-        readdata = testdata[...]
+        filename = self.f.filename
+        self.f.close()
+        self.f = h5py.File(filename, 'r')
+        readdata = self.f['foo'][...]
         self.assertArrayEqual(readdata, testdata)
-        
         
     def test_int_with_minbits(self):
         """ Scaleoffset filter works for integer data with specified precision """
 
         nbits = 12
         shape =  (100, 300)
-        testdata = np.random.randint(0, 2**nbits-1,size=shape)
+        testdata = np.random.randint(0, 2**nbits,size=shape)
 
-        dset = self.f.create_dataset('foo', shape, dtype=int, scaleoffset=True, scaleoffset_opts=nbits)
+        dset = self.f.create_dataset('foo', shape, dtype=int, scaleoffset=nbits)
 
         # Dataset reports scaleoffset enabled with correct precision
-        self.assertTrue(dset.scaleoffset)
-        self.assertTrue(dset.scaleoffset_opts == 12)
+        self.assertTrue(dset.scaleoffset == 12)
 
         # Data round-trips correctly
         dset[...] = testdata
-        readdata = testdata[...]
+        filename = self.f.filename
+        self.f.close()
+        self.f = h5py.File(filename, 'r')
+        readdata = self.f['foo'][...]
         self.assertArrayEqual(readdata, testdata)
+
+    def test_int_with_minbits_lossy(self):
+        """ Scaleoffset filter works for integer data with specified precision """
+
+        nbits = 12
+        shape =  (100, 300)
+        testdata = np.random.randint(0, 2**(nbits+1)-1,size=shape)
+
+        dset = self.f.create_dataset('foo', shape, dtype=int, scaleoffset=nbits)
+
+        # Dataset reports scaleoffset enabled with correct precision
+        self.assertTrue(dset.scaleoffset == 12)
+
+        # Data can be written and read
+        dset[...] = testdata
+        filename = self.f.filename
+        self.f.close()
+        self.f = h5py.File(filename, 'r')
+        readdata = self.f['foo'][...]
+
+        # Compression is lossy
+        assert not (readdata == testdata).all()
         
 class TestAutoCreate(BaseDataset):
 

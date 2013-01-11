@@ -30,8 +30,7 @@ def readtime_dtype(basetype, names):
 def make_new_dset(parent, shape=None, dtype=None, data=None,
                  chunks=None, compression=None, shuffle=None,
                     fletcher32=None, maxshape=None, compression_opts=None,
-                  fillvalue=None,
-                  scaleoffset=None, scaleoffset_opts=None):
+                  fillvalue=None, scaleoffset=None):
     """ Return a new low-level dataset identifier
 
     Only creates anonymous datasets.
@@ -78,8 +77,8 @@ def make_new_dset(parent, shape=None, dtype=None, data=None,
         compression = 'gzip'
 
     dcpl = filters.generate_dcpl(shape, dtype, chunks, compression, compression_opts,
-                  shuffle, fletcher32, maxshape, scaleoffset, scaleoffset_opts)
-
+                  shuffle, fletcher32, maxshape, scaleoffset)
+    
     if fillvalue is not None:
         fillvalue = numpy.array(fillvalue)
         dcpl.set_fill_value(fillvalue)
@@ -174,14 +173,10 @@ class Dataset(HLObject):
     
     @property
     def scaleoffset(self):
-        """scale/offset is present (T/F)"""
-        return 'scaleoffset' in self._filters
-    
-    @property
-    def scaleoffset_opts(self):
-        """ Scale/offset filter settings. For integer data types, this is
+        """Scale/offset filter settings. For integer data types, this is
         the number of bits stored, or 0 for auto-detected. For floating
-        point data types, this is the number of decimal places retained. """
+        point data types, this is the number of decimal places retained. 
+        If the scale/offset filter is not in use, this is None."""
         try:
             return self._filters['scaleoffset'][1]
         except KeyError:

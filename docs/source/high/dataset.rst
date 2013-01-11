@@ -42,10 +42,25 @@ Chunked storage
     n-th element along the fastest-varying dimension.
 
 Compression
-    Transparent compression can substantially reduce
+    Transparent lossless compression can substantially reduce
     the storage space needed for the dataset.  Beginning with h5py 1.1,
-    three techniques are available, "gzip", "lzf" and "szip".  See the
+    three techniques are available, "gzip", "lzf" and "szip". See the
     ``filters`` module for more information.
+    
+Scale/offset storage & lossy compression
+    HDF5 1.8 introduces compression based on truncation to
+    a fixed number of bits after scaling and shifting data. This can be
+    used, for instance, to do the following:
+    
+      - Losslessly store 12-bit integer data using only 12 bits of storage
+        per value.
+      - Lossily store 16-bit integer data using 12 bits of storage per
+        value.
+      - Lossily store floating-point data with a fixed number of
+        digits after the decimal place.
+        
+    See the ``scaleoffset`` argument to :meth:`Group.create_dataset` for more
+    information.
 
 Error-Detection
     All versions of HDF5 include the *fletcher32* checksum filter, which enables
@@ -200,7 +215,6 @@ Reference
     .. autoattribute:: h5py.Dataset.compression
     .. autoattribute:: h5py.Dataset.compression_opts
     .. autoattribute:: h5py.Dataset.scaleoffset
-    .. autoattribute:: h5py.Dataset.scaleoffset_opts
     .. autoattribute:: h5py.Dataset.shuffle
     .. autoattribute:: h5py.Dataset.fletcher32
     .. autoattribute:: h5py.Dataset.fillvalue
