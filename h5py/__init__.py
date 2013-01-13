@@ -22,6 +22,8 @@ from h5py.h5t import py_get_enum as get_enum
 
 from h5py import version
 
+__version__ = version.version
+
 __doc__ = \
 """
     This is the h5py package, a Python interface to the HDF5
