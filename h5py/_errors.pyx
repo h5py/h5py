@@ -77,7 +77,9 @@ cdef herr_t walk_cb(int n, H5E_error_t *desc, void *e):
 cdef int set_exception() except -1:
 
     cdef err_data_t err
-    cdef char *mj_desc, *mn_desc, *desc
+    cdef char *mj_desc = NULL
+    cdef char *mn_desc = NULL
+    cdef char *desc = NULL
 
     err.n = -1
 
@@ -94,14 +96,19 @@ cdef int set_exception() except -1:
     if desc is NULL:
         raise RuntimeError("Failed to extract detailed error description")
 
-    mj_desc = H5Eget_major(err.err.maj_num)
-    mn_desc = H5Eget_minor(err.err.min_num)
-    if mj_desc == NULL or mn_desc == NULL:
-        raise RuntimeError("Failed to obtain error code description")
+    try:
+        mj_desc = H5Eget_major(err.err.maj_num)
+        mn_desc = H5Eget_minor(err.err.min_num)
+        if mj_desc == NULL or mn_desc == NULL:
+            raise RuntimeError("Failed to obtain error code description")
 
-    msg = ("%s (%s: %s)" % (desc.decode('utf-8'), 
-                            mj_desc.decode('utf-8'), 
-                            mn_desc.decode('utf-8'))  ).encode('utf-8')
+        msg = ("%s (%s: %s)" % (desc.decode('utf-8'), 
+                                mj_desc.decode('utf-8'), 
+                                mn_desc.decode('utf-8'))  ).encode('utf-8')
+    finally:
+        free(mj_desc)
+        free(mn_desc)
+        # HDF5 forbids freeing "desc"
 
     PyErr_SetString(eclass, msg)
 
