@@ -198,15 +198,10 @@ cdef class _Registry:
     def __delitem__(self, key):
         # we need to synchronize removal of the id from the
         # registry with decreasing the HDF5 reference count:
-        try:
-            del self._data[key]
-        except KeyError:
-            pass
-        try:
-            H5Idec_ref(key)
-        except RuntimeError:
-            # dec_ref failed because object was explicitly closed
-            pass
+        self._data.pop(key,None)
+
+        if H5Iget_type(key) >= 0: # if not, object was explicitly closed
+            H5Idec_ref(key) 
 
 
 registry = _Registry()
