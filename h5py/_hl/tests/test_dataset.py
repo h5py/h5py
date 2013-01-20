@@ -184,6 +184,11 @@ class TestCreateChunked(BaseDataset):
         self.assertIsInstance(dset.chunks, tuple)
         self.assertEqual(len(dset.chunks), 2)
 
+    def test_auto_chunks_abuse(self):
+        """ Auto-chunking with pathologically large element sizes """
+        dset = self.f.create_dataset('foo', shape=(3,), dtype='S100000000', chunks=True)
+        self.assertEqual(dset.chunks, (1,))
+
 class TestCreateFillvalue(BaseDataset):
 
     """
