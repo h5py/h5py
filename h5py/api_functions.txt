@@ -247,6 +247,7 @@ hdf5:
   herr_t        H5Pset_fletcher32(hid_t plist)
   herr_t        H5Pset_shuffle(hid_t plist_id)
   herr_t        H5Pset_szip(hid_t plist, unsigned int options_mask, unsigned int pixels_per_block)
+  herr_t        H5Pset_scaleoffset(hid_t plist, H5Z_SO_scale_type_t scale_type, int scale_factor)
 
 
   # Transfer properties

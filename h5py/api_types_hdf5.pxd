@@ -618,6 +618,8 @@ cdef extern from "hdf5.h":
   int H5Z_FILTER_SHUFFLE
   int H5Z_FILTER_FLETCHER32
   int H5Z_FILTER_SZIP
+  int H5Z_FILTER_NBIT
+  int H5Z_FILTER_SCALEOFFSET
   int H5Z_FILTER_RESERVED
   int H5Z_FILTER_MAX
   int H5Z_MAX_NFILTERS
@@ -635,6 +637,8 @@ cdef extern from "hdf5.h":
   int H5_SZIP_EC_OPTION_MASK          #4
   int H5_SZIP_NN_OPTION_MASK          #32
   int H5_SZIP_MAX_PIXELS_PER_BLOCK    #32
+  
+  int H5Z_SO_INT_MINBITS_DEFAULT
 
   int H5Z_FILTER_CONFIG_ENCODE_ENABLED #(0x0001)
   int H5Z_FILTER_CONFIG_DECODE_ENABLED #(0x0002)
@@ -644,6 +648,11 @@ cdef extern from "hdf5.h":
       H5Z_DISABLE_EDC     = 0,
       H5Z_ENABLE_EDC      = 1,
       H5Z_NO_EDC          = 2
+
+  cdef enum H5Z_SO_scale_type_t:
+      H5Z_SO_FLOAT_DSCALE = 0,
+      H5Z_SO_FLOAT_ESCALE = 1,
+      H5Z_SO_INT          = 2
 
 # === H5A - Attributes API ====================================================
 
