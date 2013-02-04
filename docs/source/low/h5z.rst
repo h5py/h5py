@@ -18,6 +18,7 @@ Predefined filters
 .. data:: FILTER_SHUFFLE
 .. data:: FILTER_FLETCHER32
 .. data:: FILTER_SZIP
+.. data:: FILTER_SCALEOFFSET
 .. data:: FILTER_LZF
 
 .. _ref.h5z.FLAG:
@@ -42,6 +43,14 @@ SZIP-specific options
 .. data:: SZIP_EC_OPTION_MASK
 .. data:: SZIP_NN_OPTION_MASK
 .. data:: SZIP_MAX_PIXELS_PER_BLOCK
+
+Scale/offset-specific options
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. data:: SO_FLOAT_DSCALE
+.. data:: SO_FLOAT_ESCALE
+.. data:: SO_INT
+.. data:: SO_INT_MINBITS_DEFAULT
 
 Other flags
 ~~~~~~~~~~~
