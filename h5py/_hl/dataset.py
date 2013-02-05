@@ -391,9 +391,10 @@ class Dataset(HLObject):
 
         # Generally we try to avoid converting the arrays on the Python
         # side.  However, for compound literals this is unavoidable.
-        if self.dtype.kind == "O" or (
-          self.dtype.kind == 'V' and \
-          (not isinstance(val, numpy.ndarray) or val.dtype.kind != 'V') ):
+        if self.dtype.kind == "O" or \
+          (self.dtype.kind == 'V' and \
+          (not isinstance(val, numpy.ndarray) or val.dtype.kind != 'V') and \
+          (self.dtype.subdtype == None)):
             val = numpy.asarray(val, dtype=self.dtype, order='C')
         else:
             val = numpy.asarray(val, order='C')
@@ -401,8 +402,9 @@ class Dataset(HLObject):
         # Check for array dtype compatibility and convert
         if self.dtype.subdtype is not None:
             shp = self.dtype.subdtype[1]
-            if val.shape[-len(shp):] != shp:
-                raise TypeError("Can't broadcast to array dimension %s" % (shp,))
+            valshp = val.shape[-len(shp):]
+            if valshp != shp:  # Last dimension has to match
+                raise TypeError("When writing to array types, last N dimensions have to match (got %s, but should be %s)" % (valshp, shp,))
             mtype = h5t.py_create(numpy.dtype((val.dtype, shp)))
             mshape = val.shape[0:len(val.shape)-len(shp)]
         else:
@@ -418,7 +420,7 @@ class Dataset(HLObject):
         # Broadcast scalars if necessary.
         if (mshape == () and selection.mshape != ()):
             if self.dtype.subdtype is not None:
-                raise NotImplementedError("Scalar broadcasting is not supported for array dtypes")
+                raise TypeError("Scalar broadcasting is not supported for array dtypes")
             val2 = numpy.empty(selection.mshape[-1], dtype=val.dtype)
             val2[...] = val
             val = val2
