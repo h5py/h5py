@@ -1,13 +1,17 @@
-Announcing HDF5 for Python (h5py) 2.1.1
+Announcing HDF5 for Python (h5py) 2.1.2
 =======================================
 
-HDF5 for Python 2.1.1 is now available!  This bugfix release also marks 
-a number of changes for the h5py project intended to make the development 
-process more responsive, including a move to GitHub and a switch to a 
-rapid release model.
+HDF5 for Python 2.1.2 is now available!  This is a bugfix release, and the
+second in our rapid release program.
 
-Development has moved over to GitHub at http://github.com/h5py/h5py.  We
-welcome bug reports and pull requests from anyone interested in contributing.
+Our new home
+============
+
+With h5py 2.1.1, development moved over to GitHub:
+
+    http://github.com/h5py/h5py.
+
+We welcome bug reports and pull requests from anyone interested in contributing.
 
 Releases will now be made every 4-6 weeks, in order to get bugfixes and new
 features out to users quickly while still leaving time for testing.
@@ -40,14 +44,19 @@ which you can exchange with other people, including those who use programs
 like IDL and MATLAB.
 
 
-What's new in 2.1.1?
+What's new in 2.1.2?
 ====================
 
 This is a bugfix release.  The most substantial changes were:
 
-* Fixed a memory leak related to variable-length strings (Thanks to Luke 
-    Campbell for extensive testing and bug reports)
-* Fixed a threading deadlock related to the use of H5Aiterate
-* Fixed a double INCREF memory leak affecting Unicode variable-length strings
-* Fixed an exception when taking the repr() of objects with non-ASCII names
-  on Python 
+* Fixed a memory leak related to string handling in exceptions
+  (Thanks again to Luke Campbell)
+
+* Fixed a longstanding bug preventing the use of the array type as the
+  top-level type in a dataset
+
+* The auto-chunker no longer freezes for datatypes larger than the
+  optimum chunk size
+
+* h5py.__version__ now provides the current version string
+
