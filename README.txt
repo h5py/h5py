@@ -1,4 +1,4 @@
-README file for h5py version 2.1.1
+README file for h5py version 2.1.2
 ==================================
 
 Websites
