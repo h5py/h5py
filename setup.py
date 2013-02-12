@@ -7,8 +7,10 @@ from functools import reduce
 
 try:
     import Cython.Compiler.Version
-    vers = tuple(int(x.rstrip('+')) for
-                 x in Cython.Compiler.Version.version.split('.'))
+    s = Cython.Compiler.Version.version
+    if '-' in s:
+        s = s[:s.find('-')]
+    vers = tuple(int(x.rstrip('+')) for x in s.split('.'))
     if vers < (0,13):
         raise ImportError
     from Cython.Distutils import build_ext
