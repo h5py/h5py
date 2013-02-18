@@ -67,8 +67,8 @@ class Group(HLObject, DictCompat):
             retain (pass 0 to let HDF5 determine the minimum number of
             bits necessary for lossless compression). For floating point
             data, scaleoffset is the number of digits after the decimal
-            place to retain; stored values thus have absolute error 
-            less than 0.5*10**(-scaleoffset). 
+            place to retain; stored values thus have absolute error
+            less than 0.5*10**(-scaleoffset).
         shuffle
             (T/F) Enable shuffle filter.
         fletcher32
@@ -76,6 +76,8 @@ class Group(HLObject, DictCompat):
             conjunction with the scale/offset filter.
         fillvalue
             (Scalar) Use this value for uninitialized parts of the dataset.
+        track_times
+            (T/F) Enable dataset creation timestamps.
         """
 
         dsid = dataset.make_new_dset(self, shape, dtype, data, **kwds)
@@ -377,7 +379,7 @@ class Group(HLObject, DictCompat):
         else:
             namestr = (u'"%s"' % self.name) if self.name is not None else u"(anonymous)"
             r = u'<HDF5 group %s (%d members)>' % (namestr, len(self))
-        
+
         if py3:
             return r
         return r.encode('utf8')
