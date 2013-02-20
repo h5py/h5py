@@ -380,6 +380,7 @@ cdef extern from "hdf5.h":
   hid_t H5P_FILE_CREATE
   hid_t H5P_FILE_ACCESS
   hid_t H5P_DATASET_CREATE
+  hid_t H5P_DATASET_ACCESS
   hid_t H5P_DATASET_XFER
 
   hid_t H5P_OBJECT_CREATE

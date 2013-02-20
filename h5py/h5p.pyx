@@ -54,6 +54,9 @@ cdef object propwrap(hid_t id_in):
             pcls = PropLAID
         elif H5Pequal(clsid, H5P_GROUP_CREATE):
             pcls = PropGCID
+        elif H5Pequal(clsid, H5P_DATASET_ACCESS):
+            pcls = PropDAID
+
         else:
             raise ValueError("No class found for ID %d" % id_in)
 
@@ -77,6 +80,7 @@ FILE_CREATE    = lockcls(H5P_FILE_CREATE)
 FILE_ACCESS    = lockcls(H5P_FILE_ACCESS)
 DATASET_CREATE = lockcls(H5P_DATASET_CREATE)
 DATASET_XFER   = lockcls(H5P_DATASET_XFER)
+DATASET_ACCESS = lockcls(H5P_DATASET_ACCESS)
 
 OBJECT_COPY = lockcls(H5P_OBJECT_COPY)
 LINK_CREATE = lockcls(H5P_LINK_CREATE)
@@ -100,6 +104,7 @@ def create(PropClassID cls not None):
     - FILE_ACCESS
     - DATASET_CREATE
     - DATASET_XFER
+    - DATASET_ACCESS
     - LINK_CREATE
     - LINK_ACCESS
     - GROUP_CREATE
@@ -671,13 +676,13 @@ cdef class PropDCID(PropCreateID):
         and general restrictions on use of the SZIP format.
         """
         H5Pset_szip(self.id, options, pixels_per_block)
-        
+
     def set_scaleoffset(self, H5Z_SO_scale_type_t scale_type, int scale_factor):
         '''(H5Z_SO_scale_type_t scale_type, INT scale_factor)
-        
+
         Enable scale/offset (usually lossy) compression; lossless (e.g. gzip)
         compression and other filters may be applied on top of this.
-        
+
         Note that error detection (i.e. fletcher32) cannot precede this in
         the filter chain, or else all reads on lossily-compressed data will
         fail.'''
@@ -1038,13 +1043,30 @@ cdef class PropGCID(PropCreateID):
     pass
 
 
+# Dataset access
+cdef class PropDAID(PropInstanceID):
 
+    """ Dataset access property list """
 
+    def set_chunk_cache(self, size_t rdcc_nslots,size_t rdcc_nbytes, double rdcc_w0):
+        """(size_t rdcc_nslots,size_t rdcc_nbytes, double rdcc_w0)
 
+        Sets the raw data chunk cache parameters.
+        """
+        H5Pset_chunk_cache(self.id,rdcc_nslots,rdcc_nbytes,rdcc_w0)
+    def get_chunk_cache(self):
+        """() => TUPLE chunk cache info
 
+        Get the metadata and raw data chunk cache settings.  See the HDF5
+        docs for element definitions.  Return is a 3-tuple with entries:
 
+        1. size_t rdcc_nslots: Number of chunk slots in the raw data chunk cache hash table.
+        2. size_t rdcc_nbytes: Total size of the raw data chunk cache, in bytes.
+        3. DOUBLE rdcc_w0:     Preemption policy.
+        """
+        cdef size_t rdcc_nslots
+        cdef size_t rdcc_nbytes
+        cdef double rdcc_w0
 
-
-
-
-
+        H5Pget_chunk_cache(self.id, &rdcc_nslots, &rdcc_nbytes, &rdcc_w0 )
+        return (rdcc_nslots,rdcc_nbytes,rdcc_w0)
