@@ -56,6 +56,8 @@ cdef object propwrap(hid_t id_in):
             pcls = PropGCID
         elif H5Pequal(clsid, H5P_DATASET_ACCESS):
             pcls = PropDAID
+        elif H5Pequal(clsid, H5P_OBJECT_CREATE):
+            pcls = PropOCID
 
         else:
             raise ValueError("No class found for ID %d" % id_in)
@@ -75,6 +77,8 @@ cdef object lockcls(hid_t id_in):
 
 # Property list classes
 # These need to be locked, as the library won't let you close them.
+
+
 NO_CLASS       = lockcls(H5P_NO_CLASS)
 FILE_CREATE    = lockcls(H5P_FILE_CREATE)
 FILE_ACCESS    = lockcls(H5P_FILE_ACCESS)
@@ -83,9 +87,11 @@ DATASET_XFER   = lockcls(H5P_DATASET_XFER)
 DATASET_ACCESS = lockcls(H5P_DATASET_ACCESS)
 
 OBJECT_COPY = lockcls(H5P_OBJECT_COPY)
+
 LINK_CREATE = lockcls(H5P_LINK_CREATE)
 LINK_ACCESS = lockcls(H5P_LINK_ACCESS)
 GROUP_CREATE = lockcls(H5P_GROUP_CREATE)
+OBJECT_CREATE = lockcls(H5P_OBJECT_CREATE)
 
 DEFAULT = None   # In the HDF5 header files this is actually 0, which is an
                  # invalid identifier.  The new strategy for default options
@@ -109,6 +115,7 @@ def create(PropClassID cls not None):
     - LINK_ACCESS
     - GROUP_CREATE
     - OBJECT_COPY
+    - OBJECT_CREATE
     """
     cdef hid_t newid
     newid = H5Pcreate(cls.id)
@@ -688,6 +695,24 @@ cdef class PropDCID(PropCreateID):
         fail.'''
         H5Pset_scaleoffset(self.id, scale_type, scale_factor)
 
+    def set_obj_track_times(self,track_times):
+         """Sets the recording of times associated with an object."""
+         H5Pset_obj_track_times(self.id,track_times)
+
+    def get_obj_track_times(self):
+        """
+        Determines whether times associated with an object are being recorded.
+        """
+
+        cdef hbool_t track_times
+
+        H5Pget_obj_track_times(self.id,&track_times)
+
+        return track_times
+
+
+
+
 # File access
 cdef class PropFAID(PropInstanceID):
 
@@ -1041,6 +1066,44 @@ cdef class PropGCID(PropCreateID):
 
     """ Group creation property list """
     pass
+
+    def set_obj_track_times(self,track_times):
+        """Sets the recording of times associated with an object."""
+        H5Pset_obj_track_times(self.id,track_times)
+    def get_obj_track_times(self):
+        """
+        Determines whether times associated with an object are being recorded.
+        """
+        cdef hbool_t track_times
+
+        H5Pget_obj_track_times(self.id,&track_times)
+
+        return track_times
+
+
+
+# Object creation property list
+cdef class PropOCID(PropCreateID):
+    """ Object creation property list
+
+    This seems to be a super class for dataset creation property list
+    and group creation property list.
+
+    The documentation is somewhat hazy
+    """
+    def set_obj_track_times(self,track_times):
+        """Sets the recording of times associated with an object."""
+        H5Pset_obj_track_times(self.id,track_times)
+    def get_obj_track_times(self):
+        """
+        Determines whether times associated with an object are being recorded.
+        """
+
+        cdef hbool_t track_times
+
+        H5Pget_obj_track_times(self.id,&track_times)
+
+        return track_times
 
 
 # Dataset access
