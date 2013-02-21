@@ -333,7 +333,7 @@ cdef class PropFCID(PropCreateID):
 
 
 # Dataset creation
-cdef class PropDCID(PropCreateID):
+cdef class PropDCID(PropOCID):
 
     """
         Dataset creation property list.
@@ -695,23 +695,6 @@ cdef class PropDCID(PropCreateID):
         fail.'''
         H5Pset_scaleoffset(self.id, scale_type, scale_factor)
 
-    def set_obj_track_times(self,track_times):
-         """Sets the recording of times associated with an object."""
-         H5Pset_obj_track_times(self.id,track_times)
-
-    def get_obj_track_times(self):
-        """
-        Determines whether times associated with an object are being recorded.
-        """
-
-        cdef hbool_t track_times
-
-        H5Pget_obj_track_times(self.id,&track_times)
-
-        return track_times
-
-
-
 
 # File access
 cdef class PropFAID(PropInstanceID):
@@ -1062,24 +1045,10 @@ cdef class PropLAID(PropInstanceID):
         return propwrap(fid)
 
 # Group creation
-cdef class PropGCID(PropCreateID):
+cdef class PropGCID(PropOCID):
 
     """ Group creation property list """
     pass
-
-    def set_obj_track_times(self,track_times):
-        """Sets the recording of times associated with an object."""
-        H5Pset_obj_track_times(self.id,track_times)
-    def get_obj_track_times(self):
-        """
-        Determines whether times associated with an object are being recorded.
-        """
-        cdef hbool_t track_times
-
-        H5Pget_obj_track_times(self.id,&track_times)
-
-        return track_times
-
 
 
 # Object creation property list
@@ -1094,6 +1063,7 @@ cdef class PropOCID(PropCreateID):
     def set_obj_track_times(self,track_times):
         """Sets the recording of times associated with an object."""
         H5Pset_obj_track_times(self.id,track_times)
+
     def get_obj_track_times(self):
         """
         Determines whether times associated with an object are being recorded.
