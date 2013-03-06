@@ -1,0 +1,23 @@
+language: python
+
+virtualenv:
+  system_site_packages: true
+
+python:
+  - "2.6"
+  - "2.7"
+  - "3.2"
+
+before_install:
+    - sudo apt-get update -qq
+    - sudo apt-get install -qq libhdf5-serial-dev
+    - if [[ $TRAVIS_PYTHON_VERSION == "2.6" ]]; then pip install unittest2; fi
+    - pip install cython numpy
+
+install: 
+    - cd h5py
+    - python api_gen.py
+    - cd ..
+    - python setup.py build -f
+
+script: "python setup.py test"
