@@ -21,7 +21,7 @@ from h5p cimport PropID
 cimport _hdf5 # to implement container testing for 1.6
 from _errors cimport set_error_handler, err_cookie
 
-import _objects
+from h5py import _objects
 
 # === Public constants and data structures ====================================
 

@@ -23,7 +23,7 @@ from numpy cimport import_array, ndarray, PyArray_DATA
 from utils cimport check_numpy_read, check_numpy_write, emalloc, efree
 from _proxy cimport attr_rw
 
-import _objects
+from h5py import _objects
 
 # Initialization
 import_array()
