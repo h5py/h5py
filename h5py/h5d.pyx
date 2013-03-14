@@ -24,7 +24,7 @@ from h5s cimport SpaceID
 from h5p cimport PropID, propwrap
 from _proxy cimport dset_rw
 
-import _objects
+from h5py import _objects
 
 # Initialization
 import_array()

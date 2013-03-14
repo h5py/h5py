@@ -21,7 +21,7 @@ from utils cimport  require_tuple, convert_dims, convert_tuple, \
 from numpy cimport ndarray, import_array
 from h5t cimport TypeID, py_create
 
-import _objects
+from h5py import _objects
 
 # Initialization
 import_array()
