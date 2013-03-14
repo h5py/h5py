@@ -19,7 +19,7 @@ from utils cimport  require_tuple, convert_dims, convert_tuple, \
                     emalloc, efree, create_numpy_hsize, create_hsize_array
 from numpy cimport ndarray
 
-import _objects
+from h5py import _objects
 
 
 cdef object lockid(hid_t id_):

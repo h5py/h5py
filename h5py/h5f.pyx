@@ -21,7 +21,7 @@ from h5t cimport typewrap
 from h5i cimport wrap_identifier
 from utils cimport emalloc, efree
 
-import _objects
+from h5py import _objects
 
 # Initialization
 

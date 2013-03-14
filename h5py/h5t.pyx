@@ -26,7 +26,7 @@ from h5r cimport Reference, RegionReference
 
 from utils cimport  emalloc, efree, \
                     require_tuple, convert_dims, convert_tuple
-import _conv
+from h5py import _conv
 
 # Runtime imports
 import sys
