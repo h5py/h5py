@@ -19,6 +19,7 @@ else:
 import shutil
 import tempfile
 import numpy as np
+import os
 
 class TestCase(ut.TestCase):
 
@@ -90,4 +91,19 @@ class TestCase(ut.TestCase):
             np.all(np.abs(dset[...] - arr[...]) < precision),
             "Arrays differ by more than %.3f%s" % (precision, message)
             )
+
+# Check if non-ascii filenames are supported
+# Evidently this is the most reliable way to check
+# See also h5py issue #263 and ipython #466
+# To test for this, run the testsuite with LC_ALL=C
+try:
+    testfile, fname = tempfile.mkstemp(u'\u03b7')
+except UnicodeError:
+    unicode_filenames = False
+else:
+    unicode_filenames = True
+    os.close(testfile)
+    os.unlink(fname)
+    del fname
+    del testfile
 
