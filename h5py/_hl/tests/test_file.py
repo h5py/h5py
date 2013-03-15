@@ -9,7 +9,7 @@ from __future__ import with_statement
 
 import os
 
-from .common import ut, TestCase
+from .common import ut, TestCase, unicode_filenames
 from h5py.highlevel import File
 import h5py
 
@@ -329,6 +329,7 @@ class TestUnicode(TestCase):
         Feature: Unicode filenames are supported
     """
 
+    @ut.skipIf(not unicode_filenames, "Filesystem unicode support required")
     def test_unicode(self):
         """ Unicode filenames can be used, and retrieved properly via .filename
         """
