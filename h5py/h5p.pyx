@@ -15,7 +15,7 @@
 """
 
 # Compile-time imports
-from utils cimport  require_tuple, convert_dims, convert_tuple, \
+from utils cimport require_tuple, convert_dims, convert_tuple, \
                     emalloc, efree, \
                     check_numpy_write, check_numpy_read
 from numpy cimport ndarray, import_array
@@ -54,6 +54,8 @@ cdef object propwrap(hid_t id_in):
             pcls = PropLAID
         elif H5Pequal(clsid, H5P_GROUP_CREATE):
             pcls = PropGCID
+        elif H5Pequal(clsid, H5P_OBJECT_CREATE):
+            pcls = PropOCID
         else:
             raise ValueError("No class found for ID %d" % id_in)
 
@@ -82,6 +84,7 @@ OBJECT_COPY = lockcls(H5P_OBJECT_COPY)
 LINK_CREATE = lockcls(H5P_LINK_CREATE)
 LINK_ACCESS = lockcls(H5P_LINK_ACCESS)
 GROUP_CREATE = lockcls(H5P_GROUP_CREATE)
+OBJECT_CREATE = lockcls(H5P_OBJECT_CREATE)
 
 DEFAULT = None   # In the HDF5 header files this is actually 0, which is an
                  # invalid identifier.  The new strategy for default options
@@ -104,6 +107,7 @@ def create(PropClassID cls not None):
     - LINK_ACCESS
     - GROUP_CREATE
     - OBJECT_COPY
+    - OBJECT_CREATE
     """
     cdef hid_t newid
     newid = H5Pcreate(cls.id)
@@ -671,13 +675,27 @@ cdef class PropDCID(PropCreateID):
         and general restrictions on use of the SZIP format.
         """
         H5Pset_szip(self.id, options, pixels_per_block)
-        
+
+    def set_obj_track_times(self,track_times):
+        """Sets the recording of times associated with an object."""
+        H5Pset_obj_track_times(self.id,track_times)
+    def get_obj_track_times(self):
+        """
+        Determines whether times associated with an object are being recorded.
+        """
+
+        cdef hbool_t track_times
+
+        H5Pget_obj_track_times(self.id,&track_times)
+
+        return track_times
+
     def set_scaleoffset(self, H5Z_SO_scale_type_t scale_type, int scale_factor):
         '''(H5Z_SO_scale_type_t scale_type, INT scale_factor)
-        
+
         Enable scale/offset (usually lossy) compression; lossless (e.g. gzip)
         compression and other filters may be applied on top of this.
-        
+
         Note that error detection (i.e. fletcher32) cannot precede this in
         the filter chain, or else all reads on lossily-compressed data will
         fail.'''
@@ -1037,14 +1055,40 @@ cdef class PropGCID(PropCreateID):
     """ Group creation property list """
     pass
 
+    def set_obj_track_times(self,track_times):
+        """Sets the recording of times associated with an object."""
+        H5Pset_obj_track_times(self.id,track_times)
+    def get_obj_track_times(self):
+        """
+        Determines whether times associated with an object are being recorded.
+        """
+
+        cdef hbool_t track_times
+
+        H5Pget_obj_track_times(self.id,&track_times)
+
+        return track_times
 
 
+# Object creation property list
+cdef class PropOCID(PropCreateID):
+    """ Object creation property list
 
+    This seems to be a super class for dataset creation property list
+    and group creation property list.
 
+    The documentation is somewhat hazy
+    """
+    def set_obj_track_times(self,track_times):
+        """Sets the recording of times associated with an object."""
+        H5Pset_obj_track_times(self.id,track_times)
+    def get_obj_track_times(self):
+        """
+        Determines whether times associated with an object are being recorded.
+        """
 
+        cdef hbool_t track_times
 
+        H5Pget_obj_track_times(self.id,&track_times)
 
-
-
-
-
+        return track_times
