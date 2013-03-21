@@ -422,6 +422,7 @@ cdef extern from "hdf5.h":
     H5S_NO_CLASS         = -1,  #/*error
     H5S_SCALAR           = 0,   #/*scalar variable
     H5S_SIMPLE           = 1,   #/*simple data space
+    H5S_NULL             = 2,   # NULL data space
     # no longer defined in 1.8
     #H5S_COMPLEX          = 2    #/*complex data space
 

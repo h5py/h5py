@@ -10,6 +10,7 @@ import numpy as np
 from .common import TestCase, ut, py3
 
 import h5py
+from h5py import h5a, h5s, h5t
 from h5py.highlevel import File
 
 class BaseAttrs(TestCase):
@@ -176,10 +177,39 @@ class TestTypes(BaseAttrs):
         self.assertTrue(tid.is_variable_str())
 
 
+class TestEmpty(BaseAttrs):
 
+    def setUp(self):
+        BaseAttrs.setUp(self)
+        sid = h5s.create(h5s.NULL)
+        tid = h5t.C_S1.copy()
+        tid.set_size(10)
+        aid = h5a.create(self.f.id, b'x', tid, sid)
 
+    def test_read(self):
+        with self.assertRaises(IOError):
+            self.f.attrs['x']
 
+    def test_modify(self):
+        with self.assertRaises(IOError):
+            self.f.attrs.modify('x', 1)
 
+    def test_values(self):
+        with self.assertRaises(IOError):
+            # list() is for Py3 where these are iterators
+            list(self.f.attrs.values())
+
+    def test_items(self):
+        with self.assertRaises(IOError):
+            list(self.f.attrs.items())
+
+    def test_itervalues(self):
+        with self.assertRaises(IOError):
+            list(self.f.attrs.itervalues())
+
+    def test_iteritems(self):
+        with self.assertRaises(IOError):
+            list(self.f.attrs.iteritems())
 
 
 
