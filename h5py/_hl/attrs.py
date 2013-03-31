@@ -35,6 +35,9 @@ class AttributeManager(base.DictCompat, base.CommonStateObject):
         """
         attr = h5a.open(self._id, self._e(name))
 
+        if attr.get_space().get_simple_extent_type() == h5s.NULL:
+            raise IOError("Empty attributes cannot be read")
+
         tid = attr.get_type()
 
         rtdt = readtime_dtype(attr.dtype, [])
@@ -127,6 +130,9 @@ class AttributeManager(base.DictCompat, base.CommonStateObject):
             value = numpy.asarray(value, order='C')
 
             attr = h5a.open(self._id, self._e(name))
+
+            if attr.get_space().get_simple_extent_type() == h5s.NULL:
+                raise IOError("Empty attributes can't be modified")
 
             # Allow the case of () <-> (1,)
             if (value.shape != attr.shape) and not \
