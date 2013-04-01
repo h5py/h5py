@@ -34,8 +34,6 @@ hdf5:
 
 
 
-
-
 # === H5F - File API ==========================================================
 
 
@@ -249,10 +247,11 @@ hdf5:
   herr_t        H5Pset_szip(hid_t plist, unsigned int options_mask, unsigned int pixels_per_block)
   herr_t        H5Pset_scaleoffset(hid_t plist, H5Z_SO_scale_type_t scale_type, int scale_factor)
 
-
-  # Transfer properties
+  # Dataset Acces, Memory, and Tranfer Properties
   herr_t    H5Pset_edc_check(hid_t plist, H5Z_EDC_t check)
   H5Z_EDC_t H5Pget_edc_check(hid_t plist)
+  herr_t    H5Pset_chunk_cache( hid_t dapl_id, size_t rdcc_nslots, size_t rdcc_nbytes, double rdcc_w0 )
+  herr_t    H5Pget_chunk_cache( hid_t dapl_id, size_t *rdcc_nslots, size_t *rdcc_nbytes, double *rdcc_w0 )
 
   # Other properties
   herr_t H5Pset_sieve_buf_size(hid_t fapl_id, size_t size)
@@ -287,7 +286,10 @@ hdf5:
   herr_t H5Pget_link_creation_order(hid_t plist_id, unsigned *crt_order_flags)
 
   herr_t H5Pset_libver_bounds(hid_t fapl_id, H5F_libver_t libver_low, H5F_libver_t libver_high)
-  herr_t H5Pget_libver_bounds(hid_t fapl_id, H5F_libver_t *libver_low, H5F_libver_t *libver_high) 
+  herr_t H5Pget_libver_bounds(hid_t fapl_id, H5F_libver_t *libver_low, H5F_libver_t *libver_high)
+
+
+
 
 # === H5R - Reference API =====================================================
 
@@ -443,7 +445,7 @@ hdf5:
   hid_t H5Tdecode(unsigned char *buf)
   herr_t H5Tencode(hid_t obj_id, unsigned char *buf, size_t *nalloc)
 
-  herr_t H5Tcommit2(hid_t loc_id, char *name, hid_t dtype_id, hid_t lcpl_id, hid_t tcpl_id, hid_t tapl_id) 
+  herr_t H5Tcommit2(hid_t loc_id, char *name, hid_t dtype_id, hid_t lcpl_id, hid_t tcpl_id, hid_t tapl_id)
 
   H5T_conv_t H5Tfind(hid_t src_id, hid_t dst_id, H5T_cdata_t **pcdata)
 
