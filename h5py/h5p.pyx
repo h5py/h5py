@@ -1054,15 +1054,16 @@ cdef class PropDAID(PropInstanceID):
         Sets the raw data chunk cache parameters.
         """
         H5Pset_chunk_cache(self.id,rdcc_nslots,rdcc_nbytes,rdcc_w0)
+
     def get_chunk_cache(self):
         """() => TUPLE chunk cache info
 
         Get the metadata and raw data chunk cache settings.  See the HDF5
         docs for element definitions.  Return is a 3-tuple with entries:
 
-        1. size_t rdcc_nslots: Number of chunk slots in the raw data chunk cache hash table.
-        2. size_t rdcc_nbytes: Total size of the raw data chunk cache, in bytes.
-        3. DOUBLE rdcc_w0:     Preemption policy.
+        0. size_t rdcc_nslots: Number of chunk slots in the raw data chunk cache hash table.
+        1. size_t rdcc_nbytes: Total size of the raw data chunk cache, in bytes.
+        2. DOUBLE rdcc_w0:     Preemption policy.
         """
         cdef size_t rdcc_nslots
         cdef size_t rdcc_nbytes
