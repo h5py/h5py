@@ -56,7 +56,7 @@ FILL_VALUE_USER_DEFINED = H5D_FILL_VALUE_USER_DEFINED
 # === Dataset operations ======================================================
 
 def create(ObjectID loc not None, object name, TypeID tid not None,
-               SpaceID space not None, PropID dcpl=None, PropID lcpl=None):
+               SpaceID space not None, PropID dcpl=None, PropID lcpl=None, PropID dapl = None):
         """ (objectID loc, STRING name or None, TypeID tid, SpaceID space,
              PropDCID dcpl=None, PropID lcpl=None) => DatasetID
 
@@ -70,10 +70,10 @@ def create(ObjectID loc not None, object name, TypeID tid not None,
 
         if cname != NULL:
             dsid = H5Dcreate2(loc.id, cname, tid.id, space.id,
-                     pdefault(lcpl), pdefault(dcpl), H5P_DEFAULT)
+                     pdefault(lcpl), pdefault(dcpl), pdefault(dapl))
         else:
             dsid = H5Dcreate_anon(loc.id, tid.id, space.id,
-                     pdefault(dcpl), H5P_DEFAULT)
+                     pdefault(dcpl), pdefault(dapl))
         return DatasetID.open(dsid)
 
 def open(ObjectID loc not None, char* name):
@@ -340,6 +340,3 @@ cdef class DatasetID(ObjectID):
             may even be zero.
         """
         return H5Dget_storage_size(self.id)
-
-
-
