@@ -712,7 +712,7 @@ class TestTrackTimes(BaseDataset):
     """
 
     def test_disable_track_times(self):
-        """ repr() works on live and dead datasets """
+        """ check that when track_times=False, the time stamp=0 (Jan 1, 1970) """
         ds = self.f.create_dataset('foo', (4,), track_times=False)
         ds_mtime = h5py.h5g.get_objinfo(ds._id).mtime
         self.assertEqual(0, ds_mtime)
