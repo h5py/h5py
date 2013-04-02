@@ -212,7 +212,7 @@ class HLObject(CommonStateObject):
 
     @property
     def regionref(self):
-        """Create a region reference (Datasets only).  
+        """Create a region reference (Datasets only).
 
         The syntax is regionref[<slices>]. For example, dset.regionref[...]
         creates a region reference in which the whole dataset is selected.
@@ -343,5 +343,4 @@ class DictCompat(object):
             for x in self:
                 yield (x, self.get(x))
 
-
-
+collections.MutableMapping.register(DictCompat)
