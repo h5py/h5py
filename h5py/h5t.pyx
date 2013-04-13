@@ -997,8 +997,6 @@ cdef class TypeCompoundID(TypeCompositeID):
         field_types = []
         nfields = self.get_nmembers()
 
-        import sys
-
         # First step: read field names and their Numpy dtypes into 
         # two separate arrays.
         for i from 0 <= i < nfields:
