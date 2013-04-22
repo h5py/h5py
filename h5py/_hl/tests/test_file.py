@@ -142,7 +142,7 @@ class TestDrivers(TestCase):
         Feature: Files can be opened with low-level HDF5 drivers
     """
 
-    @ut.skipUnless(os.name, 'posix')
+    @ut.skipUnless(os.name == 'posix', "Stdio driver is supported on posix")
     def test_stdio(self):
         """ Stdio driver is supported on posix """
         fid = File(self.mktemp(), 'w', driver='stdio')
@@ -150,7 +150,7 @@ class TestDrivers(TestCase):
         self.assertEqual(fid.driver, 'stdio')
         fid.close()
 
-    @ut.skipUnless(os.name, 'posix')
+    @ut.skipUnless(os.name == 'posix', "Sec2 driver is supported on posix")
     def test_sec2(self):
         """ Sec2 driver is supported on posix """
         fid = File(self.mktemp(), 'w', driver='sec2')
