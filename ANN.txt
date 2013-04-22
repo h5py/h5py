@@ -1,13 +1,14 @@
-Announcing HDF5 for Python (h5py) 2.1.2
+Announcing HDF5 for Python (h5py) 2.1.3
 =======================================
 
-HDF5 for Python 2.1.2 is now available!  This is a bugfix release, and the
-second in our rapid release program.
+HDF5 for Python 2.1.3 is now available!  This is a bugfix release, and is
+planned to be the last release in the 2.1 series.  Version 2.2.0 is expected in
+approximately six weeks.
 
 Our new home
 ============
 
-With h5py 2.1.1, development moved over to GitHub:
+Starting with h5py 2.1.1, development moved over to GitHub:
 
     http://github.com/h5py/h5py.
 
@@ -44,19 +45,24 @@ which you can exchange with other people, including those who use programs
 like IDL and MATLAB.
 
 
-What's new in 2.1.2?
+What's new in 2.1.3?
 ====================
 
 This is a bugfix release.  The most substantial changes were:
 
-* Fixed a memory leak related to string handling in exceptions
-  (Thanks again to Luke Campbell)
+* Reading an empty (HS_NULL) attribute or dataset incorrectly returned an
+  uninitialized scalar.  Attempting to read an empty attribute or dataset
+  now raises IOError.  We plan to add proper support in a later version.
 
-* Fixed a longstanding bug preventing the use of the array type as the
-  top-level type in a dataset
+* Certain tests would fail on platforms set to the C locale (LC_ALL=C).
+  Tests for non-ASCII filenames are now skipped on those platforms.
 
-* The auto-chunker no longer freezes for datatypes larger than the
-  optimum chunk size
+* Fixed broken file driver tests on Windows
 
-* h5py.__version__ now provides the current version string
+* The file api_functions.txt, required for regenerating the Cython glue files,
+  is now included in the tarball distribution.
+
+* Documentation updates regarding how to build h5py against an MPI-aware
+  build of HDF5.
+
 
