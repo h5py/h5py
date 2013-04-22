@@ -108,6 +108,15 @@ Keep in mind that on some platforms, ``sudo`` will filter out your environment
 variables.  If you need to be a superuser to run easy_install, you might
 want to issue all three of these commands in a root shell.
 
+Building against MPI-aware instances of HDF5
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Although h5py does not yet support Parallel HDF5, it is safe to build against
+an MPI-enabled build of HDF5.  To do so, you may need to set the
+environment ``C_INCLUDE_PATH`` to the directory containing ``mpi.h``, for
+example::
+
+    $ export C_INCLUDE_PATH=/usr/lib/openmpi/include
 
 Testing
 -------
