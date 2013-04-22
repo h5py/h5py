@@ -10,4 +10,5 @@ h5py/_hdf5.*
 h5py/defs.*
 build/
 *.pyc
-
+dist/
+MANIFEST
