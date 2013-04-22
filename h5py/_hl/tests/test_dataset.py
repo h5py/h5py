@@ -432,7 +432,7 @@ class TestLen(BaseDataset):
         """ Python len() vs Dataset.len() """
         dset = self.f.create_dataset('foo', (2**33,15))
         self.assertEqual(dset.shape, (2**33, 15))
-        if sys.maxint == 2**31-1:
+        if sys.maxsize == 2**31-1:
             with self.assertRaises(OverflowError):
                 len(dset)
         else:
