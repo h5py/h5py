@@ -6,7 +6,7 @@
 """
 
 from h5py import File
-from .common import ut, TestCase, py3
+from .common import ut, TestCase, py3, unicode_filenames
 
 import numpy as np
 import os
@@ -62,6 +62,7 @@ class TestRepr(BaseTest):
         typ = self.f['type']
         self._check_type(typ)
 
+    @ut.skipIf(not unicode_filenames, "Filesystem unicode support required")
     def test_file(self):
         """ File object repr() with unicode """
         fname = tempfile.mktemp(self.USTRING+u'.hdf5')
