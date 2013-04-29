@@ -627,7 +627,14 @@ cdef class TypeVlenID(TypeID):
     """
         Non-string vlen datatypes.
     """
-    pass
+    
+    cdef object py_dtype(self):
+    
+        # get base type id
+        cdef TypeID base_type
+        base_type = self.get_super()
+        
+        return special_dtype(vlen=base_type.dtype)
 
 cdef class TypeTimeID(TypeID):
 
@@ -1446,10 +1453,12 @@ cpdef TypeID py_create(object dtype_in, bint logical=0):
                 return _c_vlen_str()
             elif vlen is unicode:
                 return _c_vlen_unicode()
+            elif vlen is not None:
+                return vlen_create(py_create(vlen))
 
             refclass = check_dtype(ref=dt)
             if refclass is not None:
-                    return _c_ref(refclass)
+                return _c_ref(refclass)
 
             raise TypeError("Object dtype %r has no native HDF5 equivalent" % (dt,))
 
@@ -1465,8 +1474,8 @@ def special_dtype(**kwds):
     Legal keywords are:
 
     vlen = basetype
-        Base type for HDF5 variable-length datatype.  Currently only the
-        builtin string class (str) is allowed.
+        Base type for HDF5 variable-length datatype. This can be Python
+        str type or instance of np.dtype.
         Example: special_dtype( vlen=str )
 
     enum = (basetype, values_dict)
@@ -1485,8 +1494,6 @@ def special_dtype(**kwds):
     name, val = kwds.popitem()
 
     if name == 'vlen':
-        if val not in (bytes, unicode):
-            raise NotImplementedError("Only byte or unicode string vlens are currently supported")
 
         return dtype('O', metadata={'vlen': val})
 
