@@ -23,7 +23,6 @@ from h5r cimport Reference, RegionReference
 
 from utils cimport  emalloc, efree, \
                     require_tuple, convert_dims, convert_tuple
-from h5py import _conv
 
 # Runtime imports
 import sys
@@ -194,9 +193,6 @@ VARIABLE = H5T_VARIABLE
 CSET_ASCII = H5T_CSET_ASCII
 CSET_UTF8 = H5T_CSET_UTF8
 
-# Custom Python object pointer type
-PYTHON_OBJECT = lockid(_conv.get_python_obj())
-
 # Mini floats
 IEEE_F16BE = IEEE_F32BE.copy()
 IEEE_F16BE.set_fields(15, 10, 5, 0, 10)
@@ -207,6 +203,13 @@ IEEE_F16BE.lock()
 IEEE_F16LE = IEEE_F16BE.copy()
 IEEE_F16LE.set_order(H5T_ORDER_LE)
 IEEE_F16LE.lock()
+
+# Custom Python object pointer type
+cdef hid_t H5PY_OBJ = H5Tcreate(H5T_OPAQUE, sizeof(PyObject*))
+H5Tset_tag(H5PY_OBJ, "PYTHON:OBJECT")
+H5Tlock(H5PY_OBJ)
+
+PYTHON_OBJECT = lockid(H5PY_OBJ)
 
 # Translation tables for HDF5 -> NumPy dtype conversion
 cdef dict _order_map = { H5T_ORDER_NONE: '|', H5T_ORDER_LE: '<', H5T_ORDER_BE: '>'}

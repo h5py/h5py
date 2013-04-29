@@ -14,6 +14,11 @@
 """
 
 from h5r cimport Reference, RegionReference, hobj_ref_t, hdset_reg_ref_t
+from h5t cimport H5PY_OBJ, typewrap
+cimport numpy as np
+
+# Initialization
+np.import_array()
 
 # Minimal interface for Python objects immune to Cython refcounting
 cdef extern from "Python.h":
@@ -45,17 +50,6 @@ cdef extern from "Python.h":
 cdef object objectify(PyObject* o):
     Py_INCREF(o)
     return <object>o
-
-# Create Python object equivalents
-cdef hid_t H5PY_OBJ = 0
-
-cpdef hid_t get_python_obj():
-    global H5PY_OBJ
-    if H5PY_OBJ <= 0:
-        H5PY_OBJ = H5Tcreate(H5T_OPAQUE, sizeof(PyObject*))
-        H5Tset_tag(H5PY_OBJ, "PYTHON:OBJECT")
-        H5Tlock(H5PY_OBJ)
-    return H5PY_OBJ
 
 ctypedef int (*conv_operator_t)(void* ipt, void* opt, void* bkg, void* priv) except -1
 ctypedef herr_t (*init_operator_t)(hid_t src, hid_t dst, void** priv) except -1
@@ -590,7 +584,9 @@ cpdef int register_converters() except -1:
     
     enum = H5Tenum_create(H5T_STD_I32LE)
 
-    pyobj = get_python_obj()
+    vlentype = H5Tvlen_create(H5T_STD_I32LE)
+
+    pyobj = H5PY_OBJ
 
     H5Tregister(H5T_PERS_HARD, "vlen2str", vlstring, pyobj, vlen2str)
     H5Tregister(H5T_PERS_HARD, "str2vlen", pyobj, vlstring, str2vlen)
