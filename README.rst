@@ -1,3 +1,6 @@
+.. image:: https://travis-ci.org/h5py/h5py.png
+   :target: https://travis-ci.org/h5py/h5py
+
 h5py version 2.1.2
 ==================
 
