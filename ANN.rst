@@ -7,9 +7,7 @@ second in our rapid release program.
 Our new home
 ============
 
-With h5py 2.1.1, development moved over to GitHub:
-
-    http://github.com/h5py/h5py.
+With h5py 2.1.1, development moved over to GitHub: http://github.com/h5py/h5py.
 
 We welcome bug reports and pull requests from anyone interested in contributing.
 
@@ -58,5 +56,5 @@ This is a bugfix release.  The most substantial changes were:
 * The auto-chunker no longer freezes for datatypes larger than the
   optimum chunk size
 
-* h5py.__version__ now provides the current version string
+* ``h5py.__version__`` now provides the current version string
 
