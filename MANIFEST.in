@@ -5,5 +5,5 @@ recursive-include win_include *.c *.h
 include h5py/api_functions.txt
 include MANIFEST.in
 include configure.py
-include ANN.txt
-include README.txt
+include ANN.rst
+include README.rst
