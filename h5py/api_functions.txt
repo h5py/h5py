@@ -53,6 +53,7 @@ hdf5:
   ssize_t   H5Fget_name(hid_t obj_id, char *name, size_t size)
   int       H5Fget_obj_count(hid_t file_id, unsigned int types)
   int       H5Fget_obj_ids(hid_t file_id, unsigned int types, int max_objs, hid_t *obj_id_list)
+  herr_t    H5Fget_vfd_handle(hid_t file_id, hid_t fapl_id, void **file_handle)
 
 
   herr_t H5Fget_intent(hid_t file_id, unsigned int *intent)

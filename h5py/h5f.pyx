@@ -329,3 +329,13 @@ cdef class FileID(GroupID):
         cdef unsigned int mode
         H5Fget_intent(self.id, &mode)
         return mode
+
+
+    def get_vfd_handle(self):
+        """ () => LONG
+
+        Retrieve the file handle or file descriptor used by the virtual file driver
+        """
+        cdef unsigned long *handle
+        H5Fget_vfd_handle(self.id, H5Fget_access_plist(self.id), <void**>&handle)
+        return handle[0]
