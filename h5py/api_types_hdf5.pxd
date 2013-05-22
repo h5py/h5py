@@ -72,24 +72,23 @@ cdef extern from "hdf5.h":
 
   # File constants
   cdef enum:
-    H5F_ACC_TRUNC
     H5F_ACC_RDONLY
     H5F_ACC_RDWR
+    H5F_ACC_TRUNC
     H5F_ACC_EXCL
     H5F_ACC_DEBUG
     H5F_ACC_CREAT
 
   # The difference between a single file and a set of mounted files
-  cdef enum H5F_scope_t:
+  ctypedef enum H5F_scope_t:
     H5F_SCOPE_LOCAL   = 0
     H5F_SCOPE_GLOBAL  = 1
-    H5F_SCOPE_DOWN      = 2     
 
-  cdef enum H5F_close_degree_t:
-    H5F_CLOSE_WEAK  = 0 
-    H5F_CLOSE_SEMI  = 1 
-    H5F_CLOSE_STRONG = 2 
-    H5F_CLOSE_DEFAULT = 3
+  ctypedef enum H5F_close_degree_t:
+    H5F_CLOSE_DEFAULT  = 0
+    H5F_CLOSE_WEAK     = 1
+    H5F_CLOSE_SEMI     = 2
+    H5F_CLOSE_STRONG   = 3
 
   int H5F_OBJ_FILE
   int H5F_OBJ_DATASET
@@ -166,17 +165,19 @@ cdef extern from "hdf5.h":
     H5G_LINK_HARD       = 0
     H5G_LINK_SOFT       = 1
 
-  cdef enum H5G_obj_t:
+
+  ctypedef enum H5G_obj_t:
     H5G_UNKNOWN     =-1
-    H5G_LINK                    
     H5G_GROUP
     H5G_DATASET
     H5G_TYPE
+    H5G_LINK
+    H5G_UDLINK
 
   ctypedef struct H5G_stat_t:
     unsigned long   fileno[2]
     unsigned long   objno[2]
-    unsigned int    nlink
+    unsigned        nlink
     H5G_obj_t       type
     time_t          mtime
     size_t          linklen
@@ -194,10 +195,12 @@ cdef extern from "hdf5.h":
     H5G_storage_type_t   storage_type
     hsize_t              nlinks
     int64_t              max_corder
+    #hbool_t              mounted
 
 # === H5I - Identifier and reflection interface ===============================
 
   ctypedef enum H5I_type_t:
+    H5I_UNINIT       =-2
     H5I_BADID        =-1
     H5I_FILE         = 1
     H5I_GROUP
@@ -209,7 +212,10 @@ cdef extern from "hdf5.h":
     H5I_VFL
     H5I_GENPROP_CLS
     H5I_GENPROP_LST
-    H5I_NGROUPS             
+    H5I_ERROR_CLASS
+    H5I_ERROR_MSG
+    H5I_ERROR_STACK
+    H5I_NTYPES
 
 # === H5L/H5O - Links interface (1.8.X only) ======================================
 
@@ -281,7 +287,7 @@ cdef extern from "hdf5.h":
     unsigned long present   #  Flags to indicate presence of message type in header
     unsigned long shared    #  Flags to indicate message type is shared in header
 
-  ctypedef struct hdr:
+  ctypedef struct H5O_hdr_info_t:
     unsigned   version
     unsigned   nmesgs
     unsigned   nchunks
@@ -307,7 +313,7 @@ cdef extern from "hdf5.h":
     time_t           ctime
     time_t           btime
     hsize_t          num_attrs
-    hdr             hdr
+    H5O_hdr_info_t   hdr
     meta_size       meta_size
 
   ctypedef herr_t (*H5O_iterate_t)(hid_t obj, char *name, H5O_info_t *info,
@@ -352,17 +358,11 @@ cdef extern from "hdf5.h":
     H5D_FILL_VALUE_DEFAULT       = 1
     H5D_FILL_VALUE_USER_DEFINED  = 2
 
-  cdef enum H5Z_EDC_t:
+  ctypedef enum H5Z_EDC_t:
     H5Z_ERROR_EDC    =-1
     H5Z_DISABLE_EDC  = 0
     H5Z_ENABLE_EDC   = 1
     H5Z_NO_EDC       = 2
-
-  cdef enum H5F_close_degree_t:
-    H5F_CLOSE_WEAK  = 0 
-    H5F_CLOSE_SEMI  = 1 
-    H5F_CLOSE_STRONG = 2 
-    H5F_CLOSE_DEFAULT = 3
 
   ctypedef enum H5FD_mem_t:
     H5FD_MEM_NOLIST   =-1
@@ -398,7 +398,6 @@ cdef extern from "hdf5.h":
     H5R_BADTYPE         =-1
     H5R_OBJECT
     H5R_DATASET_REGION
-    H5R_INTERNAL 
     H5R_MAXTYPE
 
 # === H5S - Dataspaces ========================================================
@@ -433,7 +432,7 @@ cdef extern from "hdf5.h":
     H5S_SEL_POINTS      = 1
     H5S_SEL_HYPERSLABS  = 2
     H5S_SEL_ALL         = 3
-    H5S_SEL_N           = 4            
+    H5S_SEL_N
 
 # === H5T - Datatypes =========================================================
 
@@ -445,7 +444,8 @@ cdef extern from "hdf5.h":
     H5T_ORDER_LE     = 0
     H5T_ORDER_BE     = 1
     H5T_ORDER_VAX    = 2
-    H5T_ORDER_NONE       = 3    
+    H5T_ORDER_MIXED  = 3
+    H5T_ORDER_NONE   = 4
 
   # HDF5 signed enums
   ctypedef enum H5T_sign_t:
@@ -472,12 +472,14 @@ cdef extern from "hdf5.h":
 
   # Atomic datatype padding
   ctypedef enum H5T_pad_t:
+    H5T_PAD_ERROR       =-1
     H5T_PAD_ZERO        = 0
     H5T_PAD_ONE         = 1
     H5T_PAD_BACKGROUND  = 2
+    H5T_NPAD            = 3
 
   # HDF5 type classes
-  cdef enum H5T_class_t:
+  ctypedef enum H5T_class_t:
     H5T_NO_CLASS   =-1
     H5T_INTEGER    = 0
     H5T_FLOAT      = 1
@@ -493,10 +495,10 @@ cdef extern from "hdf5.h":
     H5T_NCLASSES
 
   # Native search direction
-  cdef enum H5T_direction_t:
-    H5T_DIR_DEFAULT 
-    H5T_DIR_ASCEND 
-    H5T_DIR_DESCEND
+  ctypedef enum H5T_direction_t:
+    H5T_DIR_DEFAULT  = 0
+    H5T_DIR_ASCEND   = 1
+    H5T_DIR_DESCEND  = 2
 
   # For vlen strings
   cdef size_t H5T_VARIABLE
@@ -645,13 +647,13 @@ cdef extern from "hdf5.h":
   int H5Z_FILTER_CONFIG_ENCODE_ENABLED #(0x0001)
   int H5Z_FILTER_CONFIG_DECODE_ENABLED #(0x0002)
 
-  cdef enum H5Z_EDC_t:
+  ctypedef enum H5Z_EDC_t:
     H5Z_ERROR_EDC    =-1
     H5Z_DISABLE_EDC  = 0
     H5Z_ENABLE_EDC   = 1
     H5Z_NO_EDC       = 2
 
-  cdef enum H5Z_SO_scale_type_t:
+  ctypedef enum H5Z_SO_scale_type_t:
     H5Z_SO_FLOAT_DSCALE  = 0
     H5Z_SO_FLOAT_ESCALE  = 1
     H5Z_SO_INT           = 2
