@@ -64,7 +64,8 @@ else:
        'libraries'      : ['hdf5', 'hdf5_hl'],
        'include_dirs'   : [numpy.get_include(), localpath('lzf')],
        'library_dirs'   : [],
-       'define_macros'  : [('H5_USE_16_API', None)]
+       'define_macros'  : [('H5_USE_16_API', None)],
+       'extra_compile_args' : ['-Wno-unused-but-set-variable','-Wno-maybe-uninitialized','-Wno-unused-function']
     }
     if HDF5 is not None:
         COMPILER_SETTINGS['include_dirs'] += [op.join(HDF5, 'include')]
