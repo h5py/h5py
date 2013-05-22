@@ -93,6 +93,13 @@ class FunctionCruncher2(object):
                     "Signature for line <<%s>> did not match regexp" % line
                     )
             function_parts = m.groupdict()
+            
+            function_parts['sig']=function_parts['sig'].replace('const ', 'const_')
+            function_parts['sig']=function_parts['sig'].replace('const_unsigned char', 'const_unsigned_char')
+            function_parts['sig']=function_parts['sig'].replace('const_unsigned int', 'const_unsigned_int')
+            function_parts['sig']=function_parts['sig'].replace('const_unsigned short', 'const_unsigned_short')
+            function_parts['sig']=function_parts['sig'].replace('const_unsigned long', 'const_unsigned_long')
+            function_parts['sig']=function_parts['sig'].replace('const_long long', 'const_long_long')
 
             self.raw_defs.write('  '+self.make_raw_sig(function_parts))
             self.cython_def.write(self.make_cython_sig(function_parts))
