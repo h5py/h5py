@@ -13,7 +13,7 @@ cdef extern from "hdf5.h":
 
   ctypedef struct hvl_t:
     size_t len                 # Length of VL data (in base type units)
-    void *p                    # Pointer to VL data
+    void   *p                  # Pointer to VL data
 
   int HADDR_UNDEF
 
@@ -103,17 +103,6 @@ cdef extern from "hdf5.h":
     H5F_LIBVER_LATEST
 
 # === H5FD - Low-level file descriptor API ====================================
-
-  ctypedef enum H5FD_mem_t:
-    H5FD_MEM_NOLIST   =-1
-    H5FD_MEM_DEFAULT  = 0
-    H5FD_MEM_SUPER    = 1
-    H5FD_MEM_BTREE    = 2
-    H5FD_MEM_DRAW     = 3
-    H5FD_MEM_GHEAP    = 4
-    H5FD_MEM_LHEAP    = 5
-    H5FD_MEM_OHDR     = 6
-    H5FD_MEM_NTYPES
 
   # HDF5 uses a clever scheme wherein these are actually init() calls
   # Hopefully Cython won't have a problem with this.
@@ -325,38 +314,6 @@ cdef extern from "hdf5.h":
 
   ctypedef int H5Z_filter_t
 
-  # HDF5 layouts
-  ctypedef enum H5D_layout_t:
-    H5D_LAYOUT_ERROR  =-1
-    H5D_COMPACT       = 0
-    H5D_CONTIGUOUS    = 1
-    H5D_CHUNKED       = 2
-    H5D_NLAYOUTS      = 3
-
-  ctypedef enum H5D_alloc_time_t:
-    H5D_ALLOC_TIME_ERROR    =-1
-    H5D_ALLOC_TIME_DEFAULT  = 0
-    H5D_ALLOC_TIME_EARLY    = 1
-    H5D_ALLOC_TIME_LATE     = 2
-    H5D_ALLOC_TIME_INCR     = 3
-
-  ctypedef enum H5D_space_status_t:
-    H5D_SPACE_STATUS_ERROR           =-1
-    H5D_SPACE_STATUS_NOT_ALLOCATED   = 0
-    H5D_SPACE_STATUS_PART_ALLOCATED  = 1
-    H5D_SPACE_STATUS_ALLOCATED       = 2
-
-  ctypedef enum H5D_fill_time_t:
-    H5D_FILL_TIME_ERROR  =-1
-    H5D_FILL_TIME_ALLOC  = 0
-    H5D_FILL_TIME_NEVER  = 1
-    H5D_FILL_TIME_IFSET  = 2
-
-  ctypedef enum H5D_fill_value_t:
-    H5D_FILL_VALUE_ERROR         =-1
-    H5D_FILL_VALUE_UNDEFINED     = 0
-    H5D_FILL_VALUE_DEFAULT       = 1
-    H5D_FILL_VALUE_USER_DEFINED  = 2
 
   ctypedef enum H5Z_EDC_t:
     H5Z_ERROR_EDC    =-1
@@ -459,10 +416,6 @@ cdef extern from "hdf5.h":
     H5T_NORM_IMPLIED  = 0
     H5T_NORM_MSBSET   = 1
     H5T_NORM_NONE     = 2
-
-  ctypedef enum H5T_cset_t:
-    H5T_CSET_ERROR        =-1
-    H5T_CSET_ASCII        = 0
 
   ctypedef enum H5T_str_t:
     H5T_STR_ERROR        =-1
@@ -603,10 +556,6 @@ cdef extern from "hdf5.h":
     hbool_t     recalc
     void        *priv
 
-  ctypedef struct hvl_t:
-    size_t   len
-    void     *p
-
   ctypedef herr_t (*H5T_conv_t)(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
       size_t nelmts, size_t buf_stride, size_t bkg_stride, void *buf,
       void *bkg, hid_t dset_xfer_plist) except -1
@@ -646,12 +595,6 @@ cdef extern from "hdf5.h":
 
   int H5Z_FILTER_CONFIG_ENCODE_ENABLED #(0x0001)
   int H5Z_FILTER_CONFIG_DECODE_ENABLED #(0x0002)
-
-  ctypedef enum H5Z_EDC_t:
-    H5Z_ERROR_EDC    =-1
-    H5Z_DISABLE_EDC  = 0
-    H5Z_ENABLE_EDC   = 1
-    H5Z_NO_EDC       = 2
 
   ctypedef enum H5Z_SO_scale_type_t:
     H5Z_SO_FLOAT_DSCALE  = 0

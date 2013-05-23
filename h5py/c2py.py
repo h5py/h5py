@@ -35,7 +35,7 @@ that are not yet part of the h5py library.
 '''
 from __future__ import print_function, division
 from pycparser import c_parser, c_ast, parse_file
-import sys,os
+import sys,os,re
 import subprocess
 import StringIO
 import logging
@@ -351,6 +351,75 @@ class Chdr2py(c_ast.NodeVisitor):
     else:
       pass
 
+def CheckDuplicate(args):
+  '''
+  seeks structs and enums that are declared twice
+  '''
+  _log.info('')
+  #for fn in os.listdir('.'):
+  #  if
+  cmd="grep -nE 'c\w+\s+(enum|struct)\s+\w+\s*:' *.p* --exclude=new.* --exclude=unused.*"
+  p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+  retval = p.wait()
+  dictType=dict()
+  for l in p.stdout.readlines():
+    m=re.match('(.*):(.*):\s*(\w+)\s*(\w+)\s*(\w+)\s*:', l[:-1])
+    if m:
+      g=m.groups()
+      #print(g)
+      ll=dictType.get(g[-1])
+      if ll:
+        ll.append(g[:-1])
+        pass
+      else:
+        dictType[g[-1]]=[g[:-1]]
+    else:
+      _log.warn('Regexp Failed:'+l[:-1])
+
+  for (k,v) in dictType.iteritems():
+    if len(v)>1:
+      print(k)
+      for vv in v:
+        print('  ',vv)
+  pass
+
+def CheckUsage(args):
+  '''
+  seeks structs and enums that are declared twice
+  '''
+  _log.info('')
+  funcList=Chdr2py.GetFuncList()
+
+  lstFuncUse=list()
+  for func in funcList:   
+    cmd="grep -nE '\W"+func+"\W' *.p* --exclude=defs.pxd --exclude=defs.pyx --exclude=_hdf5.pxd --exclude=c2py.py"
+    p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    retval = p.wait()
+    lstUse=list()
+    for l in p.stdout.readlines():
+      m=re.match('(.*):(.*):\s*(.*)', l[:-1])
+      if m:
+        g=m.groups()
+        #print(g)
+        lstUse.append(g)
+      else:
+        _log.warn('Regexp Failed:'+l[:-1])
+    lstFuncUse.append([func,lstUse])
+    if not lstUse:
+      _log.warn('Unused function:'+func)
+    if not lstUse:
+      print('-'+func+' unused function' )
+    else:
+      print(func)
+      for v in lstUse:
+        print('  ',v)
+     
+    pass
+  pass
+
+
+  return lstFuncUse
+
 if __name__ == '__main__':
   """this module parse the libHeLIC header file and generates the python wrapper
      the used pycparser Version is: '2.0.6'. check with
@@ -367,11 +436,13 @@ if __name__ == '__main__':
   logging.root.setLevel(logging.INFO)
   
   cpp_args= [r'-D_PYPARSE_']
-  exampleCmd=r'-v --hdfDir=../../hdf5/include --header=hdf5py.h c2pyOut.txt'
+  cmdLst=['gen', 'dup', 'use']
+  exampleCmd=r'-v --hdfDir=../../hdf5/include --header=hdf5py.h --outFile=c2pyOut.txt gen'
   parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
                                    description=__doc__,
                                    epilog='Example:\n  '+os.path.basename(sys.argv[0])+' '+exampleCmd+'\n ')
-  parser.add_argument('outFile', help='the file to generate')
+  parser.add_argument('command', choices=cmdLst, default=cmdLst[0], help='the command to execute')
+  parser.add_argument('--outFile', help='the file to generate')
   parser.add_argument('--hdfDir', help='the hdf directory')
   parser.add_argument('--header', help='the header file to parse')
   parser.add_argument('-v', action='store_true', help='verbose')
@@ -384,29 +455,36 @@ if __name__ == '__main__':
   else:
     args = parser.parse_args()
 
-  fnHdr=args.header
-  fnOut=args.outFile
-  cpp_args.append(r'-I'+args.hdfDir)
+  if args.command==cmdLst[0]:#gen
+    fnHdr=args.header
+    fnOut=args.outFile
+    cpp_args.append(r'-I'+args.hdfDir)
+    
+    if args.v:
+      logging.root.setLevel(logging.DEBUG)
   
-  if args.v:
-    logging.root.setLevel(logging.DEBUG)
+    print(fnOut,fnHdr,cpp_args) 
+  
+    ast = parse_file(fnHdr, use_cpp=True, cpp_args=cpp_args)
+    v = Chdr2py()
+    #ast.show()
+    v.visit(ast)
+  
+    if fnOut:
+      fs=open(fnOut,'w')
+      fs.write('#-------------------------------- GENERATED c2py.py ----------------------------\n')
+      fs.write(v.out)
+      fs.write('#-------------------------------- GENERATED END --------------------------------\n')
+      fs.close()
+      print('generated file:'+fnOut)
+  
+    v.GenFuncListFile('new.api_functions.txt','unused.api_functions.txt')
+    v.GenEnumStructFile('new.api_types_hdf5.pxd','unused.api_types_hdf5.pxd')
+  elif args.command==cmdLst[1]:#dup
+    CheckDuplicate(args)
+  elif args.command==cmdLst[2]:#use
+    CheckUsage(args)
 
-  print(fnOut,fnHdr,cpp_args) 
-
-  ast = parse_file(fnHdr, use_cpp=True, cpp_args=cpp_args)
-  v = Chdr2py()
-  #ast.show()
-  v.visit(ast)
-
-  fs=open(fnOut,'w')
-  fs.write('#-------------------------------- GENERATED c2py.py ----------------------------\n')
-  fs.write(v.out)
-  fs.write('#-------------------------------- GENERATED END --------------------------------\n')
-  fs.close()
-  print('generated file:'+fnOut)
-
-  v.GenFuncListFile('new.api_functions.txt','unused.api_functions.txt')
-  v.GenEnumStructFile('new.api_types_hdf5.pxd','unused.api_types_hdf5.pxd')
   
   pass
 
