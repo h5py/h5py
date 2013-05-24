@@ -50,20 +50,19 @@ rlock = FastRLock()
 
   tplImp = """\
 cdef %(ret)s %(func)s(%(sig)s) except *:
-    cdef %(ret)s r
-    with rlock:
-        r = _hdf5.%(func)s(%(args)s)
-        if r%(condition)s:
-            if set_exception():
-                return <%(ret)s>%(retval)s;
-        return r
+  cdef %(ret)s r
+  with rlock:
+    r = _hdf5.%(func)s(%(args)s)
+    if r%(condition)s:
+      set_exception()
+    return r
 
 """
 
   tplImpStub = """\
 cdef %(ret)s %(fname)s(%(sig)s) except *:
-    with rlock:
-        return hdf5.%(fname)s(%(args)s)
+  with rlock:
+    return hdf5.%(fname)s(%(args)s)
 
 """
 
@@ -72,6 +71,7 @@ class FunctionCruncher(object):
 
   def __init__(self, stub=False):
     self.stub = stub
+    self.retTypes=set()
 
   def run(self):
 
@@ -101,6 +101,11 @@ class FunctionCruncher(object):
     self.fsDef.close()
     self.fsImp.close()
     print('files:'+', '.join(filenames)+' generated.')
+    print('Existing ReturnTypes are:')
+    rtLst=list(self.retTypes)
+    rtLst.sort()
+    for rt in rtLst:
+      print('  '+rt)
 
   def handle_line(self, line):
     """ Parse a function definition line and output the correct code
@@ -132,29 +137,30 @@ class FunctionCruncher(object):
 
       # Figure out what conditional to use for the error testing
       ret = dictFuncElem['ret']
+      self.retTypes.add(ret)
       if '*' in ret or ret in ('H5T_conv_t',):
         condition = "==NULL"
-        retval = "NULL"
       elif ret in ('int', 'herr_t', 'htri_t', 'hid_t','hssize_t','ssize_t') \
         or re.match(r'H5[A-Z]+_[a-zA-Z_]+_t',ret):
           condition = "<0"
-          retval = "-1"
       elif ret in ('unsigned int','haddr_t','hsize_t','size_t'):
         condition = "==0"
-        retval = 0
       else:
         raise UnknownCodeError("return type <<%s>> unknown" % self.ret)
 
-      dictFuncElem.update({'condition': condition, 'retval': retval, 'args': args})
+      dictFuncElem.update({'args': args, 'condition': condition})
 
       if stub:
         (tplRaw,tplDef,tplImp)=(strTbl.tplRaw,strTbl.tplDef,strTbl.tplImpStub)
       else:
         (tplRaw,tplDef,tplImp)=(strTbl.tplRaw,strTbl.tplDef,strTbl.tplImp)            
 
-      self.fsRaw.write(tplRaw%dictFuncElem)
-      self.fsDef.write(tplDef%dictFuncElem)
-      self.fsImp.write(tplImp%dictFuncElem)
+      if tplRaw!=None:
+        self.fsRaw.write(tplRaw%dictFuncElem)
+      if tplDef!=None:
+        self.fsDef.write(tplDef%dictFuncElem)
+      if tplImp!=None:
+        self.fsImp.write(tplImp%dictFuncElem)
     else:
       inc = line.split(':')[0]
       self.fsRaw.write('cdef extern from "%s.h":\n' % inc)
