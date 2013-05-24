@@ -239,7 +239,7 @@ hdf5:
 
   hssize_t  H5Sget_select_elem_npoints(hid_t spaceid)
   herr_t    H5Sget_select_elem_pointlist(hid_t spaceid, hsize_t startpoint, hsize_t numpoints, hsize_t *buf)
-  herr_t    H5Sselect_elements(hid_t space_id, H5S_seloper_t op, size_t num_elem, hsize_t **coord)
+  herr_t    H5Sselect_elements(hid_t space_id, H5S_seloper_t op, size_t num_elem, const hsize_t *coord)
 
   hssize_t  H5Sget_select_hyper_nblocks(hid_t spaceid)
   herr_t    H5Sget_select_hyper_blocklist(hid_t spaceid, hsize_t startblock, hsize_t numblocks, hsize_t *buf)
