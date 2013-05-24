@@ -92,7 +92,7 @@ class Chdr2py(c_ast.NodeVisitor):
       fs.write('\n\n# ========= Missing functions =========\n')
       flSet2=list(flSet2);flSet2.sort()
       for funcName in flSet2:
-        (retStr,paramLst)=v.funcDict[fn]
+        (retStr,paramLst)=v.funcDict[funcName]
         s='  '+retStr+' '+funcName+'('+', '.join(paramLst)+')\n'
         fs.write(s)
       fs.close()      
@@ -248,10 +248,13 @@ class Chdr2py(c_ast.NodeVisitor):
 
   def visit_FuncDecl(self, node):
     nd=node.type
+
     (t,nd)=Chdr2py.type2str(node.type)
     
     if t[0] and t[2]:
       funcName=t[2]
+      if funcName=='H5Eget_major':
+        pass
       retStr=t[0]+t[1]
     else:
       s = StringIO.StringIO();node.show(s)
