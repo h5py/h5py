@@ -276,6 +276,9 @@ hdf5:
   herr_t H5Pset_char_encoding(hid_t plist_id, H5T_cset_t encoding)
   herr_t H5Pget_char_encoding(hid_t plist_id, H5T_cset_t *encoding)
 
+  herr_t H5Pset_obj_track_times( hid_t ocpl_id, hbool_t track_times )
+  herr_t H5Pget_obj_track_times( hid_t ocpl_id, hbool_t *track_times )
+
   herr_t H5Pset_local_heap_size_hint(hid_t plist_id, size_t size_hint)
   herr_t H5Pget_local_heap_size_hint(hid_t plist_id, size_t *size_hint)
   herr_t H5Pset_link_phase_change(hid_t plist_id, unsigned max_compact, unsigned min_dense)
