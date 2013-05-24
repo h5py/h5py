@@ -18,6 +18,7 @@ class TestLibver(ut.TestCase):
         self.assertEqual((h5f.LIBVER_EARLIEST, h5f.LIBVER_LATEST),
                          plist.get_libver_bounds())
 
+
 class TestDA(ut.TestCase):
     '''
     Feature: setting/getting chunk cache size on a dataset access property list
@@ -32,3 +33,31 @@ class TestDA(ut.TestCase):
         dalist.set_chunk_cache(nslots, nbytes, w0)
         self.assertEqual((nslots, nbytes, w0),
                          dalist.get_chunk_cache())
+
+class TestPL(ut.TestCase):
+    def test_obj_track_times(self):
+        """
+        tests if the object track times  set/get
+        """
+        # test for groups
+        gcid = h5p.create(h5p.GROUP_CREATE)
+        gcid.set_obj_track_times(False)
+        self.assertEqual(False,gcid.get_obj_track_times())
+
+        gcid.set_obj_track_times(True)
+        self.assertEqual(True,gcid.get_obj_track_times())
+        # test for datasets
+        dcid = h5p.create(h5p.DATASET_CREATE)
+        dcid.set_obj_track_times(False)
+        self.assertEqual(False,dcid.get_obj_track_times())
+
+        dcid.set_obj_track_times(True)
+        self.assertEqual(True,dcid.get_obj_track_times())
+
+        # test for generic objects
+        ocid = h5p.create(h5p.OBJECT_CREATE)
+        ocid.set_obj_track_times(False)
+        self.assertEqual(False,ocid.get_obj_track_times())
+
+        ocid.set_obj_track_times(True)
+        self.assertEqual(True,ocid.get_obj_track_times())

@@ -76,6 +76,8 @@ class Group(HLObject, DictCompat):
             conjunction with the scale/offset filter.
         fillvalue
             (Scalar) Use this value for uninitialized parts of the dataset.
+        track_times
+            (T/F) Enable dataset creation timestamps.
         """
 
         dsid = dataset.make_new_dset(self, shape, dtype, data, **kwds)
