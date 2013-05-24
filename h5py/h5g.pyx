@@ -186,7 +186,7 @@ def iterate(GroupID loc not None, object func, int startidx=0, *,
     return vis.retval
 
 
-def get_objinfo(ObjectID obj not None, object name='.', int follow_link=1):
+def get_objinfo(ObjectID obj not None, object name=b'.', int follow_link=1):
     """(ObjectID obj, STRING name='.', BOOL follow_link=True) => GroupStat object
 
     Obtain information about a named object.  If "name" is provided,
