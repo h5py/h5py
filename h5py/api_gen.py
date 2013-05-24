@@ -60,9 +60,9 @@ cdef %(ret)s %(func)s(%(sig)s) except *:
 """
 
   tplImpStub = """\
-cdef %(ret)s %(fname)s(%(sig)s) except *:
+cdef %(ret)s %(func)s(%(sig)s) except *:
   with rlock:
-    return hdf5.%(fname)s(%(args)s)
+    return hdf5.%(func)s(%(args)s)
 
 """
 
@@ -74,21 +74,15 @@ class FunctionCruncher(object):
     self.retTypes=set()
 
   def run(self):
+    self.strRaw=''
+    self.strDef=''
+    self.epiDef='' #epilog in defs.pxd
+    self.strImp=''
+
 
     # Function definitions file
-    self.fsAPIFunc = open('api_functions.txt','r')
-
-    # Create output files
-    filenames=('_hdf5.pxd','defs.pxd','defs.pyx')
-    self.fsRaw = open(filenames[0],'w')
-    self.fsDef = open(filenames[1],'w')
-    self.fsImp = open(filenames[2],'w')
-
-    self.fsRaw.write(strTbl.preambleRaw)
-    self.fsDef.write(strTbl.preambleDef)
-    self.fsImp.write(strTbl.preambleImp)
-
-    for line in self.fsAPIFunc:
+    fsAPIFunc = open('api_functions.txt','r')
+    for line in fsAPIFunc:
       if not line or line[0] == '#' or line[0] == '\n':
         continue
       try:
@@ -96,10 +90,28 @@ class FunctionCruncher(object):
       except BadLineError:
         warnings.warn("Skipped <<%s>>" % line)
 
-    self.fsAPIFunc.close()
-    self.fsRaw.close()
-    self.fsDef.close()
-    self.fsImp.close()
+    fsAPIFunc.close()
+
+    # Create output files
+    filenames=('_hdf5.pxd','defs.pxd','defs.pyx')
+
+    fsRaw = open(filenames[0],'w')
+    fsRaw.write(strTbl.preambleRaw)
+    fsRaw.write(self.strRaw)
+    fsRaw.close()
+
+    fsDef = open(filenames[1],'w')
+    fsDef.write(strTbl.preambleDef)
+    fsDef.write(self.strDef)
+    self.epiDef+='  pass\n'#needed because there are no "hdf5_hl.h" in this block
+    fsDef.write(self.epiDef)
+    fsDef.close()
+
+    fsImp = open(filenames[2],'w')
+    fsImp.write(strTbl.preambleImp)
+    fsImp.write(self.strImp)
+    fsImp.close()
+
     print('files:'+', '.join(filenames)+' generated.')
     print('Existing ReturnTypes are:')
     rtLst=list(self.retTypes)
@@ -134,36 +146,37 @@ class FunctionCruncher(object):
       if args is None:
         raise BadLineError("Can't understand function signature <<%s>>" % dictFuncElem['sig'])
       args = ", ".join(args)
+      dictFuncElem['args']=args
 
       # Figure out what conditional to use for the error testing
       ret = dictFuncElem['ret']
       self.retTypes.add(ret)
-      if '*' in ret or ret in ('H5T_conv_t',):
-        condition = "==NULL"
-      elif ret in ('int', 'herr_t', 'htri_t', 'hid_t','hssize_t','ssize_t') \
-        or re.match(r'H5[A-Z]+_[a-zA-Z_]+_t',ret):
-          condition = "<0"
-      elif ret in ('unsigned int','haddr_t','hsize_t','size_t'):
-        condition = "==0"
+      if ret in ('H5T_conv_t',):
+        dictFuncElem['condition']="==NULL"
+        self.strRaw+=strTbl.tplRaw%dictFuncElem
+        self.strDef+=strTbl.tplDef%dictFuncElem
+        self.strImp+=(strTbl.tplImpStub if self.stub else strTbl.tplImp)%dictFuncElem
+      elif ret in ('hsize_t','size_t'):
+        dictFuncElem['condition']="==0"
+        self.strRaw+=strTbl.tplRaw%dictFuncElem
+        self.strDef+=strTbl.tplDef%dictFuncElem
+        self.strImp+=(strTbl.tplImpStub if self.stub else strTbl.tplImp)%dictFuncElem
+      elif ret in ('char*',): #no exception handling. only direct import
+        self.epiDef+=strTbl.tplRaw%dictFuncElem
+      elif ret in ('int', 'herr_t', 'htri_t', 'hid_t','hssize_t','ssize_t','haddr_t','H5S_sel_type') \
+               or re.match(r'H5[A-Z]+_[a-zA-Z_]+_t$',ret):
+        dictFuncElem['condition']="<0"
+        self.strRaw+=strTbl.tplRaw%dictFuncElem
+        self.strDef+=strTbl.tplDef%dictFuncElem
+        self.strImp+=(strTbl.tplImpStub if self.stub else strTbl.tplImp)%dictFuncElem
+      #elif '*' in ret or ret in ('H5T_conv_t',):
+      #  condition = "==NULL"
       else:
-        raise UnknownCodeError("return type <<%s>> unknown" % self.ret)
-
-      dictFuncElem.update({'args': args, 'condition': condition})
-
-      if stub:
-        (tplRaw,tplDef,tplImp)=(strTbl.tplRaw,strTbl.tplDef,strTbl.tplImpStub)
-      else:
-        (tplRaw,tplDef,tplImp)=(strTbl.tplRaw,strTbl.tplDef,strTbl.tplImp)            
-
-      if tplRaw!=None:
-        self.fsRaw.write(tplRaw%dictFuncElem)
-      if tplDef!=None:
-        self.fsDef.write(tplDef%dictFuncElem)
-      if tplImp!=None:
-        self.fsImp.write(tplImp%dictFuncElem)
+        raise UnknownCodeError("return type <<%s>> unknown" % ret)
     else:
       inc = line.split(':')[0]
-      self.fsRaw.write('cdef extern from "%s.h":\n' % inc)
+      self.strRaw+='cdef extern from "%s.h":\n' % inc
+      self.epiDef+='\ncdef extern from "%s.h":\n' % inc
 
 if __name__ == '__main__':
 
