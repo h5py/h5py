@@ -11,6 +11,28 @@ cdef extern from "hdf5.h":
   ctypedef signed long long hssize_t
   ctypedef signed long long haddr_t
 
+# === fixing const =============================================
+#http://wiki.cython.org/FAQ#HowdoIuse.27const.27.3F
+  ctypedef void const_void "const void"
+  ctypedef char const_char "const char"
+  ctypedef int const_int "const int"
+
+  ctypedef long long const_long_long "const long long"
+
+  ctypedef unsigned char const_unsigned_char "const unsigned char"
+  ctypedef unsigned short const_unsigned_short "const unsigned short"
+  ctypedef unsigned int const_unsigned_int "const unsigned int"
+  ctypedef unsigned long const_unsigned_long "const unsigned long"
+
+  ctypedef hsize_t const_hsize_t "const hsize_t"
+  ctypedef hssize_t const_hssize_t "const hssize_t"
+  ctypedef hid_t const_hid_t "const hid_t"
+  ctypedef haddr_t const_haddr_t "const haddr_t"
+  #for other defines: search for 'const_'
+
+# === structs and enums =============================================
+
+
   ctypedef struct hvl_t:
     size_t len                 # Length of VL data (in base type units)
     void   *p                  # Pointer to VL data
@@ -66,7 +88,8 @@ cdef extern from "hdf5.h":
     H5D_FILL_VALUE_USER_DEFINED  = 2
 
   ctypedef  herr_t (*H5D_operator_t)(void *elem, hid_t type_id, unsigned ndim,
-                    hsize_t *point, void *operator_data) except -1
+				            const_hsize_t *point, void *operator_data) except -1
+
 
 # === H5F - File API ==========================================================
 
@@ -244,7 +267,8 @@ cdef extern from "hdf5.h":
     _add_u u
 
   #  Prototype for H5Literate/H5Literate_by_name() operator
-  ctypedef herr_t (*H5L_iterate_t) (hid_t group, char *name, H5L_info_t *info,
+  ctypedef H5L_info_t const_H5L_info_t "const H5L_info_t"
+  ctypedef herr_t (*H5L_iterate_t) (hid_t group, const_char *name, const_H5L_info_t *info,
                     void *op_data) except 2
 
   ctypedef uint32_t H5O_msg_crt_idx_t
@@ -305,7 +329,8 @@ cdef extern from "hdf5.h":
     H5O_hdr_info_t   hdr
     meta_size       meta_size
 
-  ctypedef herr_t (*H5O_iterate_t)(hid_t obj, char *name, H5O_info_t *info,
+  ctypedef H5O_info_t const_H5O_info_t "const H5O_info_t"
+  ctypedef herr_t (*H5O_iterate_t)(hid_t obj, const_char *name, const_H5O_info_t *info,
                     void *op_data) except 2
 
 # === H5P - Property list API =================================================
@@ -611,30 +636,12 @@ cdef extern from "hdf5.h":
     H5T_cset_t          cset
     hsize_t             data_size
 
-  ctypedef herr_t (*H5A_operator2_t)(hid_t location_id, char *attr_name,
-          H5A_info_t *ainfo, void *op_data) except 2
+  ctypedef H5A_info_t const_H5A_info_t "const H5A_info_t"
+  ctypedef herr_t (*H5A_operator2_t)(hid_t location_id, const_char *attr_name,
+          const_H5A_info_t *ainfo, void *op_data) except 2
 
 cdef extern from "hdf5_hl.h":
 # === H5DS - Dimension Scales API =============================================
 
   ctypedef herr_t  (*H5DS_iterate_t)(hid_t dset, unsigned dim, hid_t scale, void *visitor_data) except 2
 
-# === fixing const =============================================
-#http://wiki.cython.org/FAQ#HowdoIuse.27const.27.3F
-cdef extern from *:
-  ctypedef void const_void "const void"
-  ctypedef char const_char "const char"
-  ctypedef int const_int "const int"
-
-  ctypedef long long const_long_long "const long long"
-
-  ctypedef unsigned char const_unsigned_char "const unsigned char"
-  ctypedef unsigned short const_unsigned_short "const unsigned short"
-  ctypedef unsigned int const_unsigned_int "const unsigned int"
-  ctypedef unsigned long const_unsigned_long "const unsigned long"
-
-  ctypedef hsize_t const_hsize_t "const hsize_t"
-  ctypedef hssize_t const_hssize_t "const hssize_t"
-  ctypedef hid_t const_hid_t "const hid_t"
-  ctypedef haddr_t const_haddr_t "const haddr_t"
-  ctypedef H5FD_mem_t const_H5FD_mem_t "const H5FD_mem_t"

@@ -71,13 +71,13 @@ class Chdr2py(c_ast.NodeVisitor):
       #the h5py used the old API so H5Dopen is equal to H5Dopen1
       if funcName in ('H5Dopen','H5Gcreate','H5Gopen','H5Pget_filter','H5Pget_filter_by_id',
                       'H5Rget_obj_type','H5Topen','H5Tcommit','H5Tarray_create','H5Tget_array_dims',
-                      'H5Acreate','H5Aiterate'):
+                      'H5Acreate','H5Aiterate','H5Eclear','H5Eset_auto','H5Eget_auto','H5Eprint','H5Ewalk'):
         fn+='1'
       try:
         (retStr,paramLst)=v.funcDict[fn]
         flSet.add(fn)
       except KeyError as e:
-        _log.warn(e)
+        _log.warn('Function '+str(e)+' not found')
         continue
       s='  '+retStr+' '+' '*(9-len(retStr))+funcName+'('+', '.join(paramLst)+')\n'
       fs.write(s)

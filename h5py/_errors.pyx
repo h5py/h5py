@@ -124,7 +124,7 @@ def silence_errors():
 
 def unsilence_errors():
     """ Re-enable HDF5's automatic error printing in this thread """
-    if H5Eset_auto(H5Eprint, stderr) < 0:
+    if H5Eset_auto(<H5E_auto_t>H5Eprint, stderr) < 0:
         raise RuntimeError("Failed to enable automatic error printing")
 
 cdef err_cookie set_error_handler(err_cookie handler):

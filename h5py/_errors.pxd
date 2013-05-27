@@ -211,7 +211,8 @@ cdef extern from "hdf5.h":
   herr_t    H5Eset_auto(H5E_auto_t func, void *client_data)
   herr_t    H5Eget_auto(H5E_auto_t *func, void** client_data)
 
-  herr_t    H5Eprint(void *stream)
+  ctypedef void FILE
+  herr_t    H5Eprint(FILE *stream)
 
   ctypedef herr_t (*H5E_walk_t)(int n, H5E_error_t *err_desc, void* client_data)  
   herr_t    H5Ewalk(H5E_direction_t direction, H5E_walk_t func, void* client_data)
