@@ -332,10 +332,12 @@ cdef class FileID(GroupID):
         return mode
 
 
-    def get_descriptor(self):
+    def get_vfd_handle(self):
         """ () => INT
 
-        Retrieve the file descriptor used by the virtual file driver.
+        Retrieve the file handle used by the virtual file driver.
+
+        This method is only functional when the the SEC2 driver is used.
         """
         if H5Pget_driver(H5Fget_access_plist(self.id)) != h5fd.SEC2:
             raise NotImplementedError
