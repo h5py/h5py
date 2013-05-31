@@ -33,6 +33,8 @@ def make_fapl(driver,libver,**kwds):
         plist.set_fapl_core(**kwds)
     elif(driver=='family'):
         plist.set_fapl_family(memb_fapl=plist.copy(), **kwds)
+    elif(driver=='mpi'):
+        plist.set_fapl_mpio(kwds['comm'], kwds['info'])
     else:
         raise ValueError('Unknown driver type "%s"' % driver)
 
@@ -142,7 +144,7 @@ class File(Group):
             driver, HDF5 still requires this be non-empty.
         driver
             Name of the driver to use.  Legal values are None (default,
-            recommended), 'core', 'sec2' (UNIX), 'stdio'.
+            recommended), 'core', 'sec2', 'stdio', 'mpi'.
         libver
             Library version bounds.  Currently only the strings 'earliest'
             and 'latest' are defined.
