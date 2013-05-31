@@ -23,6 +23,7 @@ from h5t cimport TypeID, typewrap, py_create
 from h5s cimport SpaceID
 from h5p cimport PropID, propwrap
 from _proxy cimport dset_rw
+#from cython cimport view
 
 from h5py import _objects
 
@@ -219,6 +220,44 @@ cdef class DatasetID(ObjectID):
         data = PyArray_DATA(arr_obj)
 
         dset_rw(self_id, mtype_id, mspace_id, fspace_id, plist_id, data, 0)
+
+    def write_chunk(self, pyOfs, ndarray pyData, filters=0, PropID dxpl=None):
+      """ (TUPLE offset, np.array data)
+
+          Writes a data chunk into a dataset.
+        """
+      #herr_t    H5DOwrite_chunk(hid_t dset_id, hid_t dxpl_id, uint32_t filters, const hsize_t *offset, size_t data_size, const void *buf)
+      cdef hid_t dset_id, dxpl_id
+      cdef hid_t space_id = 0
+      #cdef uint32_t filters
+      cdef hsize_t *offset
+      cdef size_t data_size
+      cdef void *buf
+      cdef int rank
+
+      try:
+        dset_id=self.id
+        dxpl_id=pdefault(dxpl)
+        space_id = H5Dget_space(self.id)
+        rank = H5Sget_simple_extent_ndims(space_id)
+
+        if len(pyOfs) != rank:
+          raise TypeError("offset length (%d) must match dataset rank (%d)" % (len(pyOfs), rank))
+
+        offset = <hsize_t*>emalloc(sizeof(hsize_t)*rank)
+        convert_tuple(pyOfs, offset, rank)
+        buf = PyArray_DATA(pyData)
+        data_size=pyData.nbytes
+        #print 'H5DOwrite_chunk(',dset_id, dxpl_id, filters, <long>offset, data_size, <long>buf,')'
+        #print '(',type(pyData),data_size,')'
+        H5DOwrite_chunk(dset_id, dxpl_id, filters, offset, data_size, buf)
+      except BaseException as e:
+        print e
+      finally:
+        efree(offset)
+        if space_id:
+          H5Sclose(space_id)
+      pass
 
     def extend(self, tuple shape):
         """ (TUPLE shape)
