@@ -385,6 +385,13 @@ class Group(HLObject, DictCompat):
             return r
         return r.encode('utf8')
 
+    if not py3:
+        def keys(self):
+            list_of_names = []
+            tmp_fun = lambda x: list_of_names.append(x) if '/' not in x else None
+            self.visit(tmp_fun)
+            return list_of_names
+
 
 class HardLink(object):
 
