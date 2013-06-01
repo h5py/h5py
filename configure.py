@@ -71,6 +71,7 @@ def scrape_cargs():
                 settings['mpi'] = False
             else:
                 raise ValueError("Invalid option for --mpi (--mpi or --mpi=[yes|no])")
+            sys.argv.remove(arg)
         if arg.find('--api=') == 0:
             warnings.warn("--api option ignored (Support for HDF5 1.6 dropped)")
             sys.argv.remove(arg)
