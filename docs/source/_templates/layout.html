@@ -1,6 +1,10 @@
-{% extends '!layout.html' %}
-
+{% extends "!layout.html" %}
+{% block rootrellink %}
+        <li><a href="http://www.h5py.org/">HDF5 for Python</a>{{ reldelim1 }}</li>
+        <li><a href="{{ pathto('index') }}">Documentation</a>{{ reldelim1 }}</li>
+{% endblock %}
 {% block extrahead %}
+<script type="text/javascript" src="{{ pathto('_static/copybutton.js', 1) }}"></script>
 <script type="text/javascript">
 
   var _gaq = _gaq || [];
@@ -15,5 +19,3 @@
 
 </script>
 {% endblock %}
-
-
