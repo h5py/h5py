@@ -8,6 +8,7 @@ from h5py import h5i, h5r, h5p, h5f, h5t
 
 py3 = sys.version_info[0] == 3
 
+
 def is_hdf5(fname):
     """ Determine if a file is valid HDF5 (False if it doesn't exist). """
     fname = os.path.abspath(fname)
@@ -19,6 +20,7 @@ def is_hdf5(fname):
             pass
         return h5f.is_hdf5(fname)
     return False
+
 
 def guess_dtype(data):
     """ Attempt to guess an appropriate dtype for the object, returning None
@@ -36,6 +38,7 @@ def guess_dtype(data):
 
     return None
 
+
 def default_lapl():
     """ Default link access property list """
     lapl = h5p.create(h5p.LINK_ACCESS)
@@ -43,6 +46,7 @@ def default_lapl():
     fapl.set_fclose_degree(h5f.CLOSE_STRONG)
     lapl.set_elink_fapl(fapl)
     return lapl
+
 
 def default_lcpl():
     """ Default link creation property list """
@@ -52,6 +56,7 @@ def default_lcpl():
 
 dlapl = default_lapl()
 dlcpl = default_lcpl()
+
 
 class CommonStateObject(object):
 
@@ -93,7 +98,6 @@ class CommonStateObject(object):
         if name is None:
             return (None, None) if lcpl else None
 
-
         if isinstance(name, bytes):
             coding = h5t.CSET_ASCII
         else:
@@ -124,6 +128,7 @@ class CommonStateObject(object):
         except UnicodeDecodeError:
             pass
         return name
+
 
 class HLObject(CommonStateObject):
 
@@ -187,13 +192,15 @@ class HLObject(CommonStateObject):
     def __nonzero__(self):
         return bool(self.id)
 
+
 class View(object):
 
     def __init__(self, obj):
         self._obj = obj
-    
+
     def __len__(self):
         return len(self._obj)
+
 
 class KeyView(View):
 
@@ -204,6 +211,7 @@ class KeyView(View):
         for x in self._obj:
             yield x
 
+
 class ValueView(View):
 
     def __contains__(self, what):
@@ -212,6 +220,7 @@ class ValueView(View):
     def __iter__(self):
         for x in self._obj:
             yield self._obj[x]
+
 
 class ItemView(View):
 
@@ -223,6 +232,7 @@ class ItemView(View):
     def __iter__(self):
         for x in self._obj:
             yield (x, self._obj[x])
+
 
 class DictCompat(object):
 
@@ -241,7 +251,7 @@ class DictCompat(object):
         def keys(self):
             """ Get a view object on member names """
             return KeyView(self)
-    
+
         def values(self):
             """ Get a view object on member objects """
             return ValueView(self)
@@ -276,5 +286,3 @@ class DictCompat(object):
             """ Get an iterator over (name, object) pairs """
             for x in self:
                 yield (x, self[x])
-
-
