@@ -38,7 +38,6 @@ else:
 
 # --- Support functions and "super-option" configuring ------------------------
 
-
 import configure
 
 def localpath(*args):
@@ -78,7 +77,7 @@ settings = configure.scrape_eargs()          # lowest priority
 settings.update(configure.scrape_cargs())    # highest priority
 
 HDF5 = settings.get('hdf5')
-MPI = settings.get('mpi')
+MPI = settings.setdefault('mpi', False)
 if MPI:
     try:
         import mpi4py

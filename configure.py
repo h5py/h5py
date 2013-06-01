@@ -55,7 +55,7 @@ def scrape_eargs():
 def scrape_cargs():
     """ Locate settings in command line or pickle file """
     settings = loadpickle('h5py_config.pickle')
-    if settings is None:  settings = {}
+    if settings is None: settings = {}
     for arg in sys.argv[:]:
         if arg.find('--hdf5=') == 0:
             hdf5 = arg.split('=')[-1]
@@ -64,6 +64,13 @@ def scrape_cargs():
             else:
                 settings['hdf5'] = hdf5
             sys.argv.remove(arg)
+        if arg.find('--mpi') == 0:
+            if arg in ('--mpi','--mpi=yes'):
+                settings['mpi'] = True
+            elif arg == '--mpi=no':
+                settings['mpi'] = False
+            else:
+                raise ValueError("Invalid option for --mpi (--mpi or --mpi=[yes|no])")
         if arg.find('--api=') == 0:
             warnings.warn("--api option ignored (Support for HDF5 1.6 dropped)")
             sys.argv.remove(arg)
