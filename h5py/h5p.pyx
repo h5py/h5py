@@ -14,6 +14,8 @@
     HDF5 property list interface.
 """
 
+include "config.pxi"
+
 # Compile-time imports
 from utils cimport  require_tuple, convert_dims, convert_tuple, \
                     emalloc, efree, \
@@ -918,9 +920,10 @@ cdef class PropFAID(PropInstanceID):
 
         return (<int>low, <int>high)
 
-    def set_fapl_mpio(self, Comm comm not None, Info info not None):
-        """ Set Parallel HDF5 driver """
-        H5Pset_fapl_mpio(self.id, comm.ob_mpi, info.ob_mpi) 
+    IF MPI:
+        def set_fapl_mpio(self, Comm comm not None, Info info not None):
+            """ Set Parallel HDF5 driver """
+            H5Pset_fapl_mpio(self.id, comm.ob_mpi, info.ob_mpi) 
 
 # Link creation
 cdef class PropLCID(PropCreateID):

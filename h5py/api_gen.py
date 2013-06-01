@@ -23,18 +23,21 @@ fp = re.compile(function_pattern)
 sp = re.compile(sig_pattern)
 
 raw_preamble = """\
+include "config.pxi"
 from api_types_hdf5 cimport *
 from api_types_ext cimport *
 
 """
 
 def_preamble = """\
+include "config.pxi"
 from api_types_hdf5 cimport *
 from api_types_ext cimport *
 
 """
 
 imp_preamble = """\
+include "config.pxi"
 from api_types_ext cimport *
 from api_types_hdf5 cimport *
 
@@ -72,6 +75,7 @@ class FunctionCruncher2(object):
             try:
                 self.handle_line(line)
             except BadLineError:
+                raise
                 warnings.warn("Skipped <<%s>>" % line)
 
         self.functions.close()
@@ -83,16 +87,23 @@ class FunctionCruncher2(object):
         """ Parse a function definition line and output the correct code
         to each of the output files. """
 
+        mpi = False
+
         if line.startswith(' '):
             line = line.strip()
             if line.startswith('#'):
                 return
+            if line.startswith('MPI'):
+                mpi = True
+                line = line.replace('MPI','',1)
+
             m = fp.match(line)
             if m is None:
                 raise BadLineError(
                     "Signature for line <<%s>> did not match regexp" % line
                     )
             function_parts = m.groupdict()
+            function_parts['mpi'] = mpi
 
             self.raw_defs.write('  '+self.make_raw_sig(function_parts))
             self.cython_def.write(self.make_cython_sig(function_parts))
@@ -104,12 +115,18 @@ class FunctionCruncher2(object):
     def make_raw_sig(self, function_parts):
         """ Build a "cdef extern"-style definition for an HDF5 function """
 
-        return "%(code)s %(fname)s(%(sig)s)\n" % function_parts
+        raw_sig = "%(code)s %(fname)s(%(sig)s)\n" % function_parts
+        if function_parts['mpi']:
+            raw_sig = "IF MPI:\n    %s" % raw_sig
+        return raw_sig
 
     def make_cython_sig(self, function_parts):
         """ Build Cython signature for wrapper function """
 
-        return "cdef %(code)s %(fname)s(%(sig)s) except *\n" % function_parts
+        cython_sig = "cdef %(code)s %(fname)s(%(sig)s) except *\n" % function_parts
+        if function_parts['mpi']:
+            cython_sig = "IF MPI:\n    %s" % cython_sig
+        return cython_sig
 
     def make_cython_imp(self, function_parts, stub=False):
         """ Build a Cython wrapper implementation. If stub is True, do
@@ -157,8 +174,11 @@ cdef %(code)s %(fname)s(%(sig)s) except *:
         return hdf5.%(fname)s(%(args)s)
 
 """
-        return (stub_imp if self.stub else imp) % parts
-
+        imp = (stub_imp if self.stub else imp) % parts
+        if function_parts['mpi']:
+            imp = imp.replace('\n', '\n    ', imp.count('\n')-1) # Yes, -1.
+            imp = "IF MPI:\n    %s" % imp
+        return imp
 
 if __name__ == '__main__':
 

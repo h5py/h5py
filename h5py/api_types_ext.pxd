@@ -1,6 +1,9 @@
 # === Standard C library types and functions ==================================
 
-from mpi4py.MPI cimport MPI_Comm, MPI_Info, Comm, Info
+include 'config.pxi'
+
+IF MPI:
+    from mpi4py.MPI cimport MPI_Comm, MPI_Info, Comm, Info
 
 cdef extern from "stdlib.h":
   ctypedef long size_t
