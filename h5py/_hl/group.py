@@ -8,6 +8,7 @@ from .base import HLObject, DictCompat, py3
 from . import dataset
 from . import datatype
 
+
 class Group(HLObject, DictCompat):
 
     """ Represents an HDF5 group.
@@ -67,8 +68,8 @@ class Group(HLObject, DictCompat):
             retain (pass 0 to let HDF5 determine the minimum number of
             bits necessary for lossless compression). For floating point
             data, scaleoffset is the number of digits after the decimal
-            place to retain; stored values thus have absolute error 
-            less than 0.5*10**(-scaleoffset). 
+            place to retain; stored values thus have absolute error
+            less than 0.5*10**(-scaleoffset).
         shuffle
             (T/F) Enable shuffle filter.
         fletcher32
@@ -379,10 +380,11 @@ class Group(HLObject, DictCompat):
         else:
             namestr = (u'"%s"' % self.name) if self.name is not None else u"(anonymous)"
             r = u'<HDF5 group %s (%d members)>' % (namestr, len(self))
-        
+
         if py3:
             return r
         return r.encode('utf8')
+
 
 class HardLink(object):
 
@@ -392,6 +394,7 @@ class HardLink(object):
     """
 
     pass
+
 
 #TODO: implement equality testing for these
 class SoftLink(object):
@@ -411,6 +414,7 @@ class SoftLink(object):
 
     def __repr__(self):
         return '<SoftLink to "%s">' % self.path
+
 
 class ExternalLink(object):
 
@@ -433,5 +437,3 @@ class ExternalLink(object):
 
     def __repr__(self):
         return '<ExternalLink to "%s" in file "%s"' % (self.path, self.filename)
-
-
