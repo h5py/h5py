@@ -385,6 +385,21 @@ class Group(HLObject, DictCompat):
             return r
         return r.encode('utf8')
 
+    def key_list(self):
+        """
+        Get a list containing member names
+        """
+        names = []
+
+        def appendname(byte_name):
+            names.append(self._d(byte_name))
+        self.id.links.iterate(appendname)
+        return names
+
+    if not py3:
+        # if we are not in python3, replace keys with key_list
+        keys = key_list
+
 
 class HardLink(object):
 
