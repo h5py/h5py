@@ -344,3 +344,45 @@ cdef class FileID(GroupID):
         cdef int *handle
         H5Fget_vfd_handle(self.id, H5Fget_access_plist(self.id), <void**>&handle)
         return handle[0]
+
+    def get_mdc_hit_rate(self):
+        """() => DOUBLE
+
+        Retrieve the cache hit rate
+
+        """
+        cdef double hit_rate
+        cdef herr_t err
+        err = H5Fget_mdc_hit_rate(self.id, &hit_rate)
+        if err < 0:
+            raise RuntimeError("Failed to get hit rate")
+        return hit_rate
+
+    def get_mdc_size(self):
+        """() => (max_size, min_clean_size, cur_size, cur_num_entries) [SIZE_T, SIZE_T, SIZE_T, INT]
+
+        Obtain current metadata cache size data for specified file.
+
+        """
+        cdef size_t max_size
+        cdef size_t min_clean_size
+        cdef size_t cur_size
+        cdef int cur_num_entries
+
+        cdef herr_t err
+
+        err = H5Fget_mdc_size(self.id, &max_size, &min_clean_size, &cur_size, &cur_num_entries)
+        if err < 0:
+            raise RuntimeError("Failed to get hit rate")
+        return (max_size, min_clean_size, cur_size, cur_num_entries)
+
+    def reset_mdc_hit_rate_stats(self):
+        """no return
+
+        rests the hit-rate statistics
+
+        """
+        cdef herr_t err
+        err = H5Freset_mdc_hit_rate_stats(self.id)
+        if err < 0:
+            raise RuntimeError("Failed to get hit rate")
