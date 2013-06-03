@@ -19,6 +19,7 @@ from _objects cimport pdefault
 from h5p cimport propwrap, PropFAID, PropFCID
 from h5t cimport typewrap
 from h5i cimport wrap_identifier
+from h5ac cimport CacheConfig
 from utils cimport emalloc, efree
 
 from h5py import _objects
@@ -384,5 +385,31 @@ cdef class FileID(GroupID):
         """
         cdef herr_t err
         err = H5Freset_mdc_hit_rate_stats(self.id)
+        if err < 0:
+            raise RuntimeError("Failed to get hit rate")
+
+    def get_mdc_config(self):
+        """() => CacheConfig
+        Returns an object that stores all the information about the meta-data cache
+        configuration
+        """
+
+        cdef CacheConfig config = CacheConfig()
+
+        cdef herr_t  err
+        err = H5Fget_mdc_config(self.id, &config.cache_config)
+        if err < 0:
+            raise RuntimeError("Failed to get hit rate")
+
+        return config
+
+    def set_mdc_config(self, CacheConfig config not None):
+        """(CacheConfig) => None
+        Returns an object that stores all the information about the meta-data cache
+        configuration
+        """
+        # I feel this should have some sanity checking to make sure that
+        cdef herr_t  err
+        err = H5Fset_mdc_config(self.id, &config.cache_config)
         if err < 0:
             raise RuntimeError("Failed to get hit rate")

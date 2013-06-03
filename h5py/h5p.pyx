@@ -20,7 +20,7 @@ from utils cimport  require_tuple, convert_dims, convert_tuple, \
                     check_numpy_write, check_numpy_read
 from numpy cimport ndarray, import_array
 from h5t cimport TypeID, py_create
-
+from h5ac cimport CacheConfig
 from h5py import _objects
 
 # Initialization
@@ -917,6 +917,33 @@ cdef class PropFAID(PropInstanceID):
         H5Pget_libver_bounds(self.id, &low, &high)
 
         return (<int>low, <int>high)
+
+    def get_mdc_config(self):
+        """() => CacheConfig
+        Returns an object that stores all the information about the meta-data cache
+        configuration
+        """
+
+        cdef CacheConfig config = CacheConfig()
+
+        cdef herr_t  err
+        err = H5Fget_mdc_config(self.id, &config.cache_config)
+        if err < 0:
+            raise RuntimeError("Failed to get hit rate")
+
+        return config
+
+    def set_mdc_config(self, CacheConfig config not None):
+        """(CacheConfig) => None
+        Returns an object that stores all the information about the meta-data cache
+        configuration
+        """
+        # I feel this should have some sanity checking to make sure that
+        cdef herr_t  err
+        err = H5Fset_mdc_config(self.id, &config.cache_config)
+        if err < 0:
+            raise RuntimeError("Failed to get hit rate")
+
 
 # Link creation
 cdef class PropLCID(PropCreateID):
