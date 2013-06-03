@@ -356,6 +356,38 @@ class TestPy3Dict(BaseMapping):
         for x in self.groups:
             self.assertIn((x, self.f[x]), iv)
 
+class TestKeyEdges(BaseGroup):
+
+    """
+        Checks edge conditions for new underlying batch-iteration scheme
+    """
+
+    def test_multi(self):
+        """ Checks to make sure edge conditions are met for 100-element
+            batches
+        """
+
+        names = []
+        self.assertSameElements(self.f.keys(), names)
+        
+        for idx in xrange(99):
+            name = u'%d' % idx
+            names.append(name)
+            self.f.create_group(name)
+
+        self.assertSameElements(self.f.keys(), names)
+
+        names.append(u'100')
+        self.f.create_group(u'100')
+
+        self.assertSameElements(self.f.keys(), names)
+
+        names.append(u'101')
+        self.f.create_group(u'101')
+
+        self.assertSameElements(self.f.keys(), names)
+
+
 class TestGet(BaseGroup):
 
     """
