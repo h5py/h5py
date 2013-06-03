@@ -76,7 +76,7 @@ def get_scale_name(DatasetID dscale not None):
         return ''
     name = <char*>emalloc(sizeof(char)*(namelen+1))
     try:
-        H5DSget_scale_name(dscale.id, name, namelen)
+        H5DSget_scale_name(dscale.id, name, namelen+1)
         pname = name
         return pname
     finally:
