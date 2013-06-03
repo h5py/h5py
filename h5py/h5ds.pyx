@@ -35,23 +35,50 @@ def is_scale(DatasetID dset not None):
 
 def attach_scale(DatasetID dset not None, DatasetID dscale not None, unsigned
                  int idx):
+    """(DatasetID dset, DatasetID dscale, UINT idx)
+
+    Attach a scale dataset dscale to main dataset dset, on axis idx.
+    """
     H5DSattach_scale(dset.id, dscale.id, idx)
 
 def is_attached(DatasetID dset not None, DatasetID dscale not None,
                 unsigned int idx):
+    """(DatasetID dset, DatasetID dscale, UINT idx) => BOOL
+
+    Determine whether dimension scale dataset dscale is attached to axis
+    idx of main dataset dset.
+    """
     return <bint>(H5DSis_attached(dset.id, dscale.id, idx))
 
 def detach_scale(DatasetID dset not None, DatasetID dscale not None,
                  unsigned int idx):
+    """(DatasetID dset, DatasetID dscale, UINT idx)
+
+    Remove dimension scale dataset dscale from axis idx of main dataset dset.
+    """
     H5DSdetach_scale(dset.id, dscale.id, idx)
 
 def get_num_scales(DatasetID dset not None, unsigned int dim):
+    """(DatasetID dset, UINT dim) => INT
+
+    Determine number of scales attached to axis dim of dataset dset.
+    """ 
     return H5DSget_num_scales(dset.id, dim)
 
 def set_label(DatasetID dset not None, unsigned int idx, char* label):
+    """(DatasetID dset, UINT idx, STRING label)
+
+    Label axis idx of dataset dset.
+    """
     H5DSset_label(dset.id, idx, label)
 
 def get_label(DatasetID dset not None, unsigned int idx):
+    """(DatasetID dset, UINT idx) => STRING name
+
+    Get the label attached to axis idx of dataset dset.
+
+    Returns "" if no label has been set.
+    """
     cdef ssize_t size
     cdef char* label
     label = NULL
@@ -68,6 +95,12 @@ def get_label(DatasetID dset not None, unsigned int idx):
         efree(label)
 
 def get_scale_name(DatasetID dscale not None):
+    """(DatasetID dscale) => STRING name
+
+    Get the name associated with dimension scale dataset dset.
+  
+    Returns "" if no name has been set.
+    """
     cdef ssize_t namelen
     cdef char* name = NULL
 
@@ -76,7 +109,7 @@ def get_scale_name(DatasetID dscale not None):
         return ''
     name = <char*>emalloc(sizeof(char)*(namelen+1))
     try:
-        H5DSget_scale_name(dscale.id, name, namelen)
+        H5DSget_scale_name(dscale.id, name, namelen+1)
         pname = name
         return pname
     finally:
@@ -113,12 +146,13 @@ def iterate(DatasetID dset not None, unsigned int dim, object func,
     => Return value from func
 
     Iterate a callable (function, method or callable object) over the
-    members of a group.  Your callable shoutld have the signature::
+    dimension scales attached to axis dim of dataset dset.  
+    Your callable shoutld have the signature::
 
-        func(STRING name) => Result
+        func(DatasetID dscale) => Result
 
     Returning None continues iteration; returning anything else aborts
-    iteration and returns that value. Keywords:
+    iteration and returns that value.
     """
     if startidx < 0:
         raise ValueError("Starting index must be non-negative")
