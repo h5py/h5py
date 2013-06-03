@@ -79,6 +79,8 @@ cdef class GroupStat:
         return hash((self.fileno, self.objno, self.nlink, self.type, self.mtime, self.linklen))
 
 
+DEF NAMES_ITER_CHUNK = 100   # We collect names in "batches"
+
 cdef class GroupIter:
 
     """
@@ -88,23 +90,37 @@ cdef class GroupIter:
 
     cdef unsigned long idx
     cdef unsigned long nobjs
+    cdef list names
     cdef GroupID grp
 
     def __init__(self, GroupID grp not None):
         self.idx = 0
         self.grp = grp
         self.nobjs = grp.get_num_objs()
+        self.names = []
 
     def __iter__(self):
         return self
 
     def __next__(self):
+
         if self.idx == self.nobjs:
             self.grp = None
             raise StopIteration
 
-        retval = self.grp.get_objname_by_idx(self.idx)
+        def iter_names(name):
+            self.names.append(name)
+            if len(self.names) == NAMES_ITER_CHUNK:
+                return True
+
+        if self.idx % NAMES_ITER_CHUNK == 0:
+            del self.names[:]
+            self.grp.links.iterate(iter_names, idx=self.idx)
+
+        retval = self.names[self.idx % NAMES_ITER_CHUNK]
+
         self.idx = self.idx + 1
+
         return retval
 
 # === Basic group management ==================================================
