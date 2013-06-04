@@ -33,8 +33,10 @@ def make_fapl(driver,libver,**kwds):
         plist.set_fapl_core(**kwds)
     elif(driver=='family'):
         plist.set_fapl_family(memb_fapl=plist.copy(), **kwds)
-    elif(driver=='mpi'):
-        plist.set_fapl_mpio(kwds['comm'], kwds['info'])
+    elif(driver=='mpio'):
+        plist.set_fapl_mpio(kwds['comm'], kwds.get('info',MPI.Info()))
+    elif(driver=='mpiposix'):
+        plist.set_fapl_mpiposix(kwds['comm'])
     else:
         raise ValueError('Unknown driver type "%s"' % driver)
 
@@ -108,7 +110,8 @@ class File(Group):
         """Low-level HDF5 file driver used to open file"""
         drivers = {h5fd.SEC2: 'sec2', h5fd.STDIO: 'stdio',
                    h5fd.CORE: 'core', h5fd.FAMILY: 'family',
-                   h5fd.WINDOWS: 'windows'}
+                   h5fd.WINDOWS: 'windows', h5fd.MPIO: 'mpio',
+                   h5fd.MPIPOSIX: 'mpiposix'}
         return drivers.get(self.fid.get_access_plist().get_driver(), 'unknown')
 
     @property
