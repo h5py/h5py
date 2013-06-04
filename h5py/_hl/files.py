@@ -151,7 +151,7 @@ class File(Group):
             driver, HDF5 still requires this be non-empty.
         driver
             Name of the driver to use.  Legal values are None (default,
-            recommended), 'core', 'sec2', 'stdio', 'mpi'.
+            recommended), 'core', 'sec2', 'stdio', 'mpio', 'mpiposix'
         libver
             Library version bounds.  Currently only the strings 'earliest'
             and 'latest' are defined.
