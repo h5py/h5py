@@ -89,22 +89,35 @@ cdef class GroupIter:
     cdef unsigned long idx
     cdef unsigned long nobjs
     cdef GroupID grp
+    cdef list names
+
 
     def __init__(self, GroupID grp not None):
+
         self.idx = 0
         self.grp = grp
         self.nobjs = grp.get_num_objs()
+        self.names = []
+
 
     def __iter__(self):
+
         return self
 
+
     def __next__(self):
+
         if self.idx == self.nobjs:
             self.grp = None
+            self.names = None
             raise StopIteration
 
-        retval = self.grp.get_objname_by_idx(self.idx)
-        self.idx = self.idx + 1
+        if self.idx == 0:
+            self.grp.links.iterate(self.names.append)
+
+        retval = self.names[self.idx]
+        self.idx += 1
+
         return retval
 
 # === Basic group management ==================================================
