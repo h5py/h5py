@@ -207,9 +207,3 @@ cdef class CacheConfig:
             return self.cache_config.dirty_bytes_threshold
         def __set__(self, int val):
             self.cache_config.dirty_bytes_threshold = val
-
-    property metadata_write_strategy:
-        def __get__(self):
-            return self.cache_config.metadata_write_strategy
-        def __set__(self, int val):
-            self.cache_config.metadata_write_strategy = val

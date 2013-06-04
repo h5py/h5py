@@ -1,7 +1,6 @@
 from api_types_ext cimport *
 
 cdef extern from "hdf5.h":
-
   # Basic types
   ctypedef int hid_t
   ctypedef int hbool_t
@@ -683,6 +682,7 @@ cdef extern from "hdf5.h":
   unsigned int H5AC_METADATA_WRITE_STRATEGY__PROCESS_0_ONLY   # 0
   unsigned int H5AC_METADATA_WRITE_STRATEGY__DISTRIBUTED      # 1
 
+
   cdef extern from "H5Cpublic.h":
   # === H5C - Cache configuration API ================================
     cdef enum H5C_cache_incr_mode:
@@ -701,41 +701,42 @@ cdef extern from "hdf5.h":
       H5C_decr__age_out,
       H5C_decr__age_out_with_threshold
 
-  ctypedef struct H5AC_cache_config_t:
-    #     /* general configuration fields: */
-    int version
-    hbool_t rpt_fcn_enabled
-    hbool_t open_trace_file
-    hbool_t close_trace_file
-    char trace_file_name[H5AC__MAX_TRACE_FILE_NAME_LEN + 1]
-    hbool_t evictions_enabled
-    hbool_t set_initial_size
-    size_t initial_size
-    double min_clean_fraction
-    size_t max_size
-    size_t min_size
-    long int epoch_length
-    #    /* size increase control fields: */
-    H5C_cache_incr_mode incr_mode
-    double lower_hr_threshold
-    double increment
-    hbool_t apply_max_increment
-    size_t max_increment
-    H5C_cache_flash_incr_mode flash_incr_mode
-    double flash_multiple
-    double flash_threshold
-    # /* size decrease control fields: */
-    H5C_cache_decr_mode decr_mode
-    double upper_hr_threshold
-    double decrement
-    hbool_t apply_max_decrement
-    size_t max_decrement
-    int epochs_before_eviction
-    hbool_t apply_empty_reserve
-    double empty_reserve
-    # /* parallel configuration fields: */
-    int dirty_bytes_threshold
-    int metadata_write_strategy
+    ctypedef struct H5AC_cache_config_t:
+      #     /* general configuration fields: */
+      int version
+      hbool_t rpt_fcn_enabled
+      hbool_t open_trace_file
+      hbool_t close_trace_file
+      char trace_file_name[H5AC__MAX_TRACE_FILE_NAME_LEN + 1]
+      hbool_t evictions_enabled
+      hbool_t set_initial_size
+      size_t initial_size
+      double min_clean_fraction
+      size_t max_size
+      size_t min_size
+      long int epoch_length
+      #    /* size increase control fields: */
+      H5C_cache_incr_mode incr_mode
+      double lower_hr_threshold
+      double increment
+      hbool_t apply_max_increment
+      size_t max_increment
+      H5C_cache_flash_incr_mode flash_incr_mode
+      double flash_multiple
+      double flash_threshold
+      # /* size decrease control fields: */
+      H5C_cache_decr_mode decr_mode
+      double upper_hr_threshold
+      double decrement
+      hbool_t apply_max_decrement
+      size_t max_decrement
+      int epochs_before_eviction
+      hbool_t apply_empty_reserve
+      double empty_reserve
+      # /* parallel configuration fields: */
+      int dirty_bytes_threshold
+      #  int metadata_write_strategy # present in 1.8.6 and higher
+
 
 
 
