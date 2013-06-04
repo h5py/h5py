@@ -208,6 +208,21 @@ class TestOpen(BaseGroup):
         data = dset[0]
         self.assertEqual(self.f[data[1]], g)
 
+    def test_invalid_ref(self):
+        """ Invalid region references should raise ValueError """
+
+        ref = h5py.h5r.Reference()
+
+        with self.assertRaises(ValueError):
+            self.f[ref]
+
+        self.f.create_group('x')
+        ref = self.f['x'].ref
+        del self.f['x']
+
+        with self.assertRaises(ValueError):
+            self.f[ref]
+
     # TODO: check that regionrefs also work with __getitem__
 
 class TestRepr(BaseGroup):
