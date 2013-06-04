@@ -71,7 +71,6 @@ DEF HDF5_VERSION = %(hdf5_version)s
     newcontents = newcontents.encode('utf-8')
 
     # Only reconfigure and rebuild if settings have actually changed.
-    # Bump utime to force Cython to rebuild
     if newcontents != oldcontents:
         with open(localpath('h5py/config.pxi'),'wb') as f:
             f.write(newcontents)

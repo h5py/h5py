@@ -88,9 +88,6 @@ class FunctionCruncher2(object):
         """ Parse a function definition line and output the correct code
         to each of the output files. """
 
-        mpi = False     # Bool: add IF check for mpi mode
-        vers = None     # None or 3-tuple with min version for this function
-
         if line.startswith(' '):
             line = line.strip()
             if line.startswith('#'):
@@ -114,44 +111,32 @@ class FunctionCruncher2(object):
             inc = line.split(':')[0]
             self.raw_defs.write('cdef extern from "%s.h":\n' % inc)
 
-    def add_cython_if(self, condition, code):
-        """ Wrap a block of code in a Cython "IF" block.
+    def add_cython_if(self, function_parts, block):
+        """ Wrap a block of code in the required "IF" checks """
+        def wrapif(condition, code):
+            code = code.replace('\n', '\n    ', code.count('\n')-1) # Yes, -1.
+            code = "IF %s:\n    %s" % (condition, code)
+            return code
 
-        Must start with zero indentation.
+        if function_parts['mpi']:
+            block = wrapif('MPI', block)
+        if function_parts['version']:
+            block = wrapif('HDF5_VERSION >= %s' % (function_parts['version'],), block)
 
-        condition: string holding Cython condition to evaluate
-        code: block to wrap and indent
-        """
-        code = code.replace('\n', '\n    ', code.count('\n')-1) # Yes, -1.
-        code = "IF %s:\n    %s" % (condition, code)
-        return code
-
-    def add_cython_version_check(self, minversion, code):
-        """ Wrap a block of code in an "IF" block for version check.
-
-        minversion: 3-tuple with min version
-        code: block to indent and wrap
-        """
-        return self.add_cython_if("HDF5_VERSION >= %s" % (minversion,), code)
+        return block
 
     def make_raw_sig(self, function_parts):
         """ Build a "cdef extern"-style definition for an HDF5 function """
 
         raw_sig = "%(code)s %(fname)s(%(sig)s)\n" % function_parts
-        if function_parts['mpi']:
-            raw_sig = self.add_cython_if('MPI', raw_sig)
-        if function_parts['version']:
-            raw_sig = self.add_cython_version_check(function_parts['version'], raw_sig)
+        raw_sig = self.add_cython_if(function_parts, raw_sig)
         return raw_sig
 
     def make_cython_sig(self, function_parts):
         """ Build Cython signature for wrapper function """
 
         cython_sig = "cdef %(code)s %(fname)s(%(sig)s) except *\n" % function_parts
-        if function_parts['mpi']:
-            cython_sig = self.add_cython_if('MPI', cython_sig)
-        if function_parts['version']:
-            cython_sig = self.add_cython_version_check(function_parts['version'], cython_sig)
+        cython_sig = self.add_cython_if(function_parts, cython_sig)
         return cython_sig
 
     def make_cython_imp(self, function_parts, stub=False):
@@ -201,10 +186,7 @@ cdef %(code)s %(fname)s(%(sig)s) except *:
 
 """
         imp = (stub_imp if self.stub else imp) % parts
-        if function_parts['mpi']:
-            imp = self.add_cython_if('MPI', imp)
-        if function_parts['version']:
-            imp = self.add_cython_version_check(function_parts['version'], imp)
+        imp = self.add_cython_if(function_parts, imp)
         return imp
 
 if __name__ == '__main__':

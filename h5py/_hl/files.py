@@ -4,7 +4,10 @@ import os
 
 from .base import HLObject, py3
 from .group import Group
-from h5py import h5f, h5p, h5i, h5fd, h5t, _objects
+from h5py import h5, h5f, h5p, h5i, h5fd, h5t, _objects
+
+if h5.get_config().mpi:
+    import mpi4py
 
 libver_dict = {'earliest': h5f.LIBVER_EARLIEST, 'latest': h5f.LIBVER_LATEST}
 libver_dict_r = dict((y,x) for x, y in libver_dict.iteritems())
@@ -34,9 +37,10 @@ def make_fapl(driver,libver,**kwds):
     elif(driver=='family'):
         plist.set_fapl_family(memb_fapl=plist.copy(), **kwds)
     elif(driver=='mpio'):
-        plist.set_fapl_mpio(kwds['comm'], kwds.get('info',MPI.Info()))
+        kwds.setdefault('info', mpi4py.MPI.Info())
+        plist.set_fapl_mpio(**kwds)
     elif(driver=='mpiposix'):
-        plist.set_fapl_mpiposix(kwds['comm'])
+        plist.set_fapl_mpiposix(**kwds)
     else:
         raise ValueError('Unknown driver type "%s"' % driver)
 

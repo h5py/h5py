@@ -13,6 +13,8 @@ from .common import ut, TestCase, unicode_filenames
 from h5py.highlevel import File
 import h5py
 
+mpi = h5py.get_config().mpi
+
 class TestFileOpen(TestCase):
 
     """
@@ -197,6 +199,24 @@ class TestDrivers(TestCase):
                    backing_store=False)
         self.assert_(fid)
         fid.close()
+
+    @ut.skipUnless(mpi, "Parallel HDF5 is required for MPIO driver test")
+    def test_mpio(self):
+        """ MPIO driver and options """
+        from mpi4py import MPI
+
+        fname = self.mktemp()
+        with File(fname, 'w', driver='mpio', comm=MPI.COMM_WORLD) as f:
+            self.assertTrue(f)
+
+    @ut.skipUnless(mpi, "Parallel HDF5 is required for MPIPOSIX driver test")
+    def test_mpiposix(self):
+        """ MPIPOSIX driver and options """
+        from mpi4py import MPI
+
+        fname = self.mktemp()
+        with File(fname, 'w', driver='mpiposix', comm=MPI.COMM_WORLD) as f:
+            self.assertTrue(f)
 
     #TODO: family driver tests
 
