@@ -3,17 +3,18 @@
 from distutils.core import setup
 from distutils.extension import Extension
 from distutils.cmd import Command
+from distutils.version import LooseVersion
+import warnings
 import sys, os
 import os.path as op
 from functools import reduce
 
+
 try:
     import Cython.Compiler.Version
-    s = Cython.Compiler.Version.version
-    if '-' in s:
-        s = s[:s.find('-')]
-    vers = tuple(int(x.rstrip('+')) for x in s.split('.'))
-    if vers < (0,13):
+    s = LooseVersion(Cython.Compiler.Version.version)
+    if s.version[0:2] < [0, 13]:
+        warnings.warn("Cython version %s too old; not used" % s.vstring)
         raise ImportError
     from Cython.Distutils import build_ext
     SUFFIX = '.pyx'
