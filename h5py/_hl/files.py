@@ -7,9 +7,10 @@ from .group import Group
 from h5py import h5f, h5p, h5i, h5fd, h5t, _objects
 
 libver_dict = {'earliest': h5f.LIBVER_EARLIEST, 'latest': h5f.LIBVER_LATEST}
-libver_dict_r = dict((y,x) for x, y in libver_dict.iteritems())
+libver_dict_r = dict((y, x) for x, y in libver_dict.iteritems())
 
-def make_fapl(driver,libver,**kwds):
+
+def make_fapl(driver, libver, **kwds):
     """ Set up a file access property list """
     plist = h5p.create(h5p.FILE_ACCESS)
     plist.set_fclose_degree(h5f.CLOSE_STRONG)
@@ -22,30 +23,32 @@ def make_fapl(driver,libver,**kwds):
             low, high = (libver_dict[x] for x in libver)
         plist.set_libver_bounds(low, high)
 
-    if driver is None or (driver=='windows' and sys.platform=='win32'):
+    if driver is None or (driver == 'windows' and sys.platform == 'win32'):
         return plist
 
-    if(driver=='sec2'):
+    if(driver == 'sec2'):
         plist.set_fapl_sec2(**kwds)
-    elif(driver=='stdio'):
+    elif(driver == 'stdio'):
         plist.set_fapl_stdio(**kwds)
-    elif(driver=='core'):
+    elif(driver == 'core'):
         plist.set_fapl_core(**kwds)
-    elif(driver=='family'):
+    elif(driver == 'family'):
         plist.set_fapl_family(memb_fapl=plist.copy(), **kwds)
     else:
         raise ValueError('Unknown driver type "%s"' % driver)
 
     return plist
 
+
 def make_fid(name, mode, userblock_size, fapl):
     """ Get a new FileID by opening or creating a file.
     Also validates mode argument."""
 
-    fcpl=None
+    fcpl = None
     if userblock_size is not None:
         if mode in ('r', 'r+'):
-            raise ValueError("User block may only be specified when creating a file")
+            raise ValueError("User block may only be specified "
+                             "when creating a file")
         try:
             userblock_size = int(userblock_size)
         except (TypeError, ValueError):
@@ -66,8 +69,12 @@ def make_fid(name, mode, userblock_size, fapl):
             fid = h5f.open(name, h5f.ACC_RDWR, fapl=fapl)
             try:
                 existing_fcpl = fid.get_create_plist()
-                if userblock_size is not None and existing_fcpl.get_userblock() != userblock_size:
-                    raise ValueError("Requested userblock size (%d) does not match that of existing file (%d)" % (userblock_size, existing_fcpl.get_userblock()))
+                if (userblock_size is not None and
+                        existing_fcpl.get_userblock() != userblock_size):
+                    raise ValueError("Requested userblock size (%d) does "
+                                     "not match that of existing file (%d)"
+                                     "" % (userblock_size,
+                                           existing_fcpl.get_userblock()))
             except:
                 fid.close()
                 raise
@@ -77,6 +84,7 @@ def make_fid(name, mode, userblock_size, fapl):
         raise ValueError("Invalid mode; must be one of r, r+, w, w-, a")
 
     return fid
+
 
 class File(Group):
 
@@ -112,7 +120,8 @@ class File(Group):
     @property
     def mode(self):
         """ Python mode used to open file """
-        return {h5f.ACC_RDONLY: 'r', h5f.ACC_RDWR: 'r+'}.get(self.fid.get_intent())
+        return {h5f.ACC_RDONLY: 'r',
+                h5f.ACC_RDWR: 'r+'}.get(self.fid.get_intent())
 
     @property
     def fid(self):
@@ -131,7 +140,8 @@ class File(Group):
         fcpl = self.fid.get_create_plist()
         return fcpl.get_userblock()
 
-    def __init__(self, name, mode=None, driver=None, libver=None, userblock_size=None,
+    def __init__(self, name, mode=None, driver=None,
+                 libver=None, userblock_size=None,
         **kwds):
         """Create a new file object.
 
@@ -156,12 +166,13 @@ class File(Group):
             fid = h5i.get_file_id(name)
         else:
             try:
-                # If the byte string doesn't match the default encoding, just
-                # pass it on as-is.  Note Unicode objects can always be encoded.
+                # If the byte string doesn't match the default
+                # encoding, just pass it on as-is.  Note Unicode
+                # objects can always be encoded.
                 name = name.encode(sys.getfilesystemencoding())
             except (UnicodeError, LookupError):
                 pass
-            fapl = make_fapl(driver,libver,**kwds)
+            fapl = make_fapl(driver, libver, **kwds)
             fid = make_fid(name, mode, userblock_size, fapl)
         Group.__init__(self, fid)
 
@@ -180,7 +191,7 @@ class File(Group):
     def __enter__(self):
         return self
 
-    def __exit__(self,*args):
+    def __exit__(self, *args):
         if self.id:
             self.close()
 
@@ -192,11 +203,10 @@ class File(Group):
             # Mode is always a "native" string
             filename = self.filename
             if isinstance(filename, bytes):  # Can't decode fname
-                filename = filename.decode('utf8','replace')
-            r = u'<HDF5 file "%s" (mode %s)>' % (os.path.basename(filename), self.mode)
+                filename = filename.decode('utf8', 'replace')
+            r = u'<HDF5 file "%s" (mode %s)>' % (os.path.basename(filename),
+                                                 self.mode)
 
         if py3:
             return r
         return r.encode('utf8')
-
-
