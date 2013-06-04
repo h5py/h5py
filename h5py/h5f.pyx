@@ -14,6 +14,8 @@
     Low-level operations on HDF5 file objects.
 """
 
+include "config.pxi"
+
 # Compile-time imports
 from _objects cimport pdefault
 from h5p cimport propwrap, PropFAID, PropFCID
@@ -344,3 +346,4 @@ cdef class FileID(GroupID):
         cdef int *handle
         H5Fget_vfd_handle(self.id, H5Fget_access_plist(self.id), <void**>&handle)
         return handle[0]
+

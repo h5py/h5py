@@ -1,26 +1,60 @@
-from distutils import ccompiler
-import os, subprocess
+import re
+import ctypes
+from ctypes import byref
+import os
+import os.path as op
+import sys
 
-def detect(**s):
+COMPAT_VERSION = (1, 8, 4)
 
-    outfiles = []
-    
-    cc = ccompiler.new_compiler()
+def detect(libdirs):
+    """
+    Detect the current version of HDF5, and return it as a tuple
+    (major, minor, release).
+
+    If the version can't be determined, defaults to COMPAT_VERSION.
+
+    libdirs: list of library paths to search for libhdf5.so
+    """
+
+    if sys.platform.startswith('win'):
+        regexp = re.compile('^hdf5.dll$')
+    else:
+        regexp = re.compile(r'^libhdf5.so')
+
     try:
-        outfiles = cc.compile(['detect.c'], include_dirs = s.get('include_dirs'),
-            macros = s.get('define_macros'))
-        cc.link_executable(outfiles, 'detect', libraries = s.get('libraries'),
-            library_dirs = s.get('library_dirs'),
-            runtime_library_dirs = s.get('runtime_library_dirs'))
-        outfiles += ['detect']
-        output = subprocess.check_output(['./detect']).decode('ascii')
-        version = tuple(int(x) for x in output.split('.'))
+        path = None
+
+        for d in libdirs:
+            try:
+                candidates = [x for x in os.listdir(d) if regexp.match(x)]
+                if len(candidates) != 0:
+                    candidates.sort(key=lambda x: len(x))   # Prefer libfoo.so to libfoo.so.X.Y.Z
+                    path = op.abspath(op.join(d, candidates[0]))
+            except Exception:
+                pass   # We skip invalid entries, because that's what the C compiler does
+
+        if path is None:
+            path = "libhdf5.so"
+
+        lib = ctypes.cdll.LoadLibrary(path)
+
     except Exception as e:
-        print("Failed to detect HDF5 version; defaulting to 1.8.4")
+
+        print("Failed to detect HDF5 version; defaulting to %s" % ".".join(str(x) for x in COMPAT_VERSION))
         print(e)
-        return (1, 8, 4)
-    finally:
-        for fname in outfiles:
-            os.unlink(fname)
-    return version
+        return COMPAT_VERSION
+
+    major = ctypes.c_uint()
+    minor = ctypes.c_uint()
+    release = ctypes.c_uint()
+
+    lib.H5get_libversion(byref(major), byref(minor), byref(release))
+
+    vers = (int(major.value), int(minor.value), int(release.value))
+
+    print("Autodetected HDF5 %s" % (vers,))
+
+    return vers
+
 
