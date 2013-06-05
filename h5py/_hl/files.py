@@ -170,8 +170,16 @@ class File(Group):
                 name = name.encode(sys.getfilesystemencoding())
             except (UnicodeError, LookupError):
                 pass
+
+            atomic = kwds.pop('atomic', None) if driver == 'mpio' else None
+
             fapl = make_fapl(driver,libver,**kwds)
             fid = make_fid(name, mode, userblock_size, fapl)
+
+            if atomic:
+                # For some reason this isn't done on the property list.
+                fid.set_mpi_atomicity(atomic)
+
         Group.__init__(self, fid)
 
     def close(self):
