@@ -209,15 +209,6 @@ class TestDrivers(TestCase):
         with File(fname, 'w', driver='mpio', comm=MPI.COMM_WORLD) as f:
             self.assertTrue(f)
 
-    @ut.skipUnless(mpi, "Parallel HDF5 is required for MPIPOSIX driver test")
-    def test_mpiposix(self):
-        """ MPIPOSIX driver and options """
-        from mpi4py import MPI
-
-        fname = self.mktemp()
-        with File(fname, 'w', driver='mpiposix', comm=MPI.COMM_WORLD) as f:
-            self.assertTrue(f)
-
     @ut.skipUnless(mpi, "Parallel HDF5 required")
     def test_mpi_atomic(self):
         """ Enable atomic mode for MPIO driver """
