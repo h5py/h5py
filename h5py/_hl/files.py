@@ -5,8 +5,12 @@ import os
 from .base import HLObject, py3
 from .group import Group
 from h5py import h5, h5f, h5p, h5i, h5fd, h5t, _objects
+from h5py import version
 
-if h5.get_config().mpi:
+mpi = h5.get_config().mpi
+hdf5_version = version.hdf5_version_tuple[0:3]
+
+if mpi:
     import mpi4py
 
 libver_dict = {'earliest': h5f.LIBVER_EARLIEST, 'latest': h5f.LIBVER_LATEST}
@@ -138,6 +142,18 @@ class File(Group):
         fcpl = self.fid.get_create_plist()
         return fcpl.get_userblock()
 
+    if mpi and hdf5_version >= (1, 8, 9):
+
+        @property
+        def atomic(self):
+            """ Set/get MPI-IO atomic mode 
+            """
+            return self.id.get_mpi_atomicity()
+
+        @atomic.setter
+        def atomic(self, value):
+            self.id.set_mpi_atomicity(value)
+
     def __init__(self, name, mode=None, driver=None, libver=None, userblock_size=None,
         **kwds):
         """Create a new file object.
@@ -169,14 +185,8 @@ class File(Group):
             except (UnicodeError, LookupError):
                 pass
 
-            atomic = kwds.pop('atomic', None) if driver == 'mpio' else None
-
             fapl = make_fapl(driver,libver,**kwds)
             fid = make_fid(name, mode, userblock_size, fapl)
-
-            if atomic:
-                # For some reason this isn't done on the property list.
-                fid.set_mpi_atomicity(atomic)
 
         Group.__init__(self, fid)
 
