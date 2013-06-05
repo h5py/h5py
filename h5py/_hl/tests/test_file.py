@@ -208,6 +208,7 @@ class TestDrivers(TestCase):
         fname = self.mktemp()
         with File(fname, 'w', driver='mpio', comm=MPI.COMM_WORLD) as f:
             self.assertTrue(f)
+            self.assertEqual(f.driver, 'mpio')
 
     @ut.skipUnless(mpi, "Parallel HDF5 required")
     def test_mpi_atomic(self):
