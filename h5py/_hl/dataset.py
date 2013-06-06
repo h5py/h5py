@@ -343,6 +343,13 @@ class Dataset(HLObject):
         new_dtype = readtime_dtype(self.id.dtype, names)
         mtype = h5t.py_create(new_dtype)
 
+        # === Check for zero-sized datasets =====
+
+        if numpy.product(self.shape) == 0:
+            # These are the only access methods NumPy allows for such objects
+            if args == (Ellipsis,) or args == tuple():
+                return numpy.empty(self.shape, dtype=new_dtype)
+            
         # === Scalar dataspaces =================
 
         if self.shape == ():
@@ -461,6 +468,7 @@ class Dataset(HLObject):
 
         Broadcasting is supported for simple indexing.
         """
+
         if source_sel is None:
             source_sel = sel.SimpleSelection(self.shape)
         else:
@@ -503,6 +511,11 @@ class Dataset(HLObject):
         you have to read the whole dataset everytime this method is called.
         """
         arr = numpy.empty(self.shape, dtype=self.dtype if dtype is None else dtype)
+
+        # Special case for (0,)*-shape datasets
+        if numpy.product(self.shape) == 0:
+            return arr
+
         self.read_direct(arr)
         return arr
 
