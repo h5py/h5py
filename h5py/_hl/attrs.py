@@ -76,13 +76,6 @@ class AttributeManager(base.DictCompat, base.CommonStateObject):
             Data type of the attribute.  Overrides data.dtype if both
             are given.
         """
-        # TODO: REMOVE WHEN UNICODE VLENS IMPLEMENTED
-        # Hack to support Unicode values (scalars only)
-        #if isinstance(data, unicode):
-        #    unicode_hack = True
-        #    data = data.encode('utf8')
-        #else:
-        #    unicode_hack = False
 
         if data is not None:
             data = numpy.asarray(data, order='C', dtype=dtype)
@@ -104,16 +97,18 @@ class AttributeManager(base.DictCompat, base.CommonStateObject):
         space = h5s.create_simple(shape)
         htype = h5t.py_create(dtype, logical=True)
 
-        # TODO: REMOVE WHEN UNICODE VLENS IMPLEMENTED
-        #if unicode_hack:
-        #    htype.set_cset(h5t.CSET_UTF8)
-
         if name in self:
             h5a.delete(self._id, self._e(name))
 
         attr = h5a.create(self._id, self._e(name), htype, space)
+
         if data is not None:
-            attr.write(data)
+            try:
+                attr.write(data)
+            except:
+                attr._close()
+                h5a.delete(self._id, self._e(name))
+                raise
 
     def modify(self, name, value):
         """ Change the value of an attribute while preserving its type.
