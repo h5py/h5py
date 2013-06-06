@@ -104,7 +104,7 @@ class FunctionCruncher2(object):
     def make_raw_sig(self, function_parts):
         """ Build a "cdef extern"-style definition for an HDF5 function """
 
-        return "%(code)s %(fname)s(%(sig)s)\n" % function_parts
+        return "%(code)s %(fname)s(%(sig)s) except *\n" % function_parts
 
     def make_cython_sig(self, function_parts):
         """ Build Cython signature for wrapper function """
