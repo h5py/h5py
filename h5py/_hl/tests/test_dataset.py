@@ -716,3 +716,28 @@ class TestTrackTimes(BaseDataset):
         ds = self.f.create_dataset('foo', (4,), track_times=False)
         ds_mtime = h5py.h5g.get_objinfo(ds._id).mtime
         self.assertEqual(0, ds_mtime)
+
+class TestZeroShape(BaseDataset):
+
+    """
+        Features of datasets with (0,)-shape axes
+    """
+
+    def test_array_conversion(self):
+        """ Empty datasets can be converted to NumPy arrays """
+        ds = self.f.create_dataset('x', (0,), maxshape=(None,))
+        self.assertEqual(ds.shape, np.array(ds).shape)
+
+        ds = self.f.create_dataset('y', (0,0), maxshape=(None,None))
+        self.assertEqual(ds.shape, np.array(ds).shape)
+
+    def test_reading(self):
+        """ Slicing into empty datasets works correctly """
+        dt = [('a','f'),('b','i')]
+        ds = self.f.create_dataset('x', (0,), dtype=dt, maxshape=(None,))
+        arr = np.empty((0,), dtype=dt)
+
+        self.assertEqual(ds[...].shape, arr.shape)
+        self.assertEqual(ds[...].dtype, arr.dtype)
+        self.assertEqual(ds[()].shape, arr.shape)
+        self.assertEqual(ds[()].dtype, arr.dtype)
