@@ -21,6 +21,7 @@ Getting Started
 .. toctree::
     :maxdepth: 2
 
+    whatsnew/index
     intro/index
     high/index
 
