@@ -1,7 +1,7 @@
 .. _build:
 
-Downloading and Building h5py
-=============================
+Building h5py
+=============
 
 Downloads for all platforms are available at http://h5py.org.
 
@@ -112,7 +112,7 @@ be done with command-line options from the h5py tarball.  You will need:
 To build in MPI mode (sticky option)::
 
     $ export CC=mpicc
-    $ python setup.py build --mpi=yes
+    $ python setup.py build --mpi
 
 Option ``--mpi=no`` will reset to the default (serial) build setting.
 
