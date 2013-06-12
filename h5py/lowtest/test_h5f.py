@@ -3,8 +3,11 @@ try:
 except ImportError:
     import unittest as ut
 
-import tempfile, shutil, os
+import tempfile
+import shutil
+import os
 from h5py import File
+
 
 class TestFileID(ut.TestCase):
     def test_descriptor_core(self):
