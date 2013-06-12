@@ -386,7 +386,7 @@ cdef class FileID(GroupID):
         cdef herr_t err
         err = H5Freset_mdc_hit_rate_stats(self.id)
         if err < 0:
-            raise RuntimeError("Failed to get hit rate")
+            raise RuntimeError("Failed to get reset rate")
 
     def get_mdc_config(self):
         """() => CacheConfig
@@ -399,7 +399,7 @@ cdef class FileID(GroupID):
         cdef herr_t  err
         err = H5Fget_mdc_config(self.id, &config.cache_config)
         if err < 0:
-            raise RuntimeError("Failed to get hit rate")
+            raise RuntimeError("Failed to get mdc_cache_config")
 
         return config
 
@@ -412,4 +412,4 @@ cdef class FileID(GroupID):
         cdef herr_t  err
         err = H5Fset_mdc_config(self.id, &config.cache_config)
         if err < 0:
-            raise RuntimeError("Failed to get hit rate")
+            raise RuntimeError("Failed to set the mdc_cache_config")
