@@ -20,9 +20,12 @@ cdef class CacheConfig:
     """Represents H5AC_cache_config_t objects
 
     """
-    #    cdef H5AC_cache_config_t cache_config
 
+    #cdef H5AC_cache_config_t cache_config
     #     /* general configuration fields: */
+    def __cinit__(self):
+        self.cache_config.version = H5AC__CURR_CACHE_CONFIG_VERSION
+
     property version:
         def __get__(self):
             return self.cache_config.version
