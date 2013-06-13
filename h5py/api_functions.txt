@@ -45,6 +45,7 @@ hdf5:
   ssize_t   H5Fget_name(hid_t obj_id, char *name, size_t size)
   ssize_t   H5Fget_obj_count(hid_t file_id, unsigned types)
   ssize_t   H5Fget_obj_ids(hid_t file_id, unsigned types, size_t max_objs, hid_t *obj_id_list)
+  herr_t    H5Fget_vfd_handle(hid_t file_id, hid_t fapl_id, void **file_handle)
 
   herr_t    H5Fget_intent(hid_t file_id, unsigned *intent)
 
@@ -193,6 +194,9 @@ hdf5:
 
   herr_t    H5Pset_char_encoding(hid_t plist_id, H5T_cset_t encoding)
   herr_t    H5Pget_char_encoding(hid_t plist_id, H5T_cset_t *encoding)
+
+  herr_t    H5Pset_obj_track_times( hid_t ocpl_id, hbool_t track_times )
+  herr_t    H5Pget_obj_track_times( hid_t ocpl_id, hbool_t *track_times )
 
   herr_t    H5Pset_libver_bounds(hid_t plist_id, H5F_libver_t low, H5F_libver_t high)
   herr_t    H5Pget_libver_bounds(hid_t plist_id, H5F_libver_t *low, H5F_libver_t *high)

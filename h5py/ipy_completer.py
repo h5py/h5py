@@ -56,21 +56,31 @@ re_item_match = re.compile(r"""(?:.*\=)?(.*)\[(?P<s>['|"])(?!.*(?P=s))(.*)$""")
 re_object_match = re.compile(r"(?:.*\=)?(.+?)(?:\[)")
 
 
+def _retrieve_obj(name, context):
+    # we don't want to call any functions, but I couldn't find a robust regex
+    # that filtered them without unintended side effects. So keys containing
+    # "(" will not complete.
+    try:
+        assert '(' not in name
+    except AssertionError:
+        raise ValueError()
+
+    try:
+        # older versions of IPython:
+        obj = eval(name, context.shell.user_ns)
+    except AttributeError:
+        # as of IPython-1.0:
+        obj = eval(name, context.user_ns)
+    return obj
+
+
 def h5py_item_completer(context, command):
     """Compute possible item matches for dict-like objects"""
 
     base, item = re_item_match.split(command)[1:4:2]
 
-    # we don't want to call any functions, but I couldn't find a robust regex
-    # that filtered them without unintended side effects. So keys containing
-    # "(" will not complete.
     try:
-        assert '(' not in base
-    except AssertionError:
-        raise ValueError()
-
-    try:
-        obj = eval(base, context.shell.user_ns)
+        obj = _retrieve_obj(base, context)
     except:
         return []
 
@@ -93,12 +103,7 @@ def h5py_attr_completer(context, command):
     base = base.strip()
 
     try:
-        assert '(' not in base
-    except AssertionError:
-        raise ValueError()
-
-    try:
-        obj = eval(base, context.shell.user_ns)
+        obj = _retrieve_obj(base, context)
     except:
         return []
 

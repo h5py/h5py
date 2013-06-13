@@ -58,7 +58,7 @@ include "_locks.pxi"
 rlock = FastRLock()
 """
 
-  tplRaw="  %(ret)s %(func)s(%(sig)s)\n"
+  tplRaw="  %(ret)s %(func)s(%(sig)s) except *\n"
   tplDef="cdef %(ret)s %(func)s(%(sig)s) except *\n"
 
   tplImp = """\

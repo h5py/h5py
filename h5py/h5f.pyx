@@ -22,6 +22,7 @@ from h5i cimport wrap_identifier
 from utils cimport emalloc, efree
 
 from h5py import _objects
+import h5fd
 
 # Initialization
 
@@ -329,3 +330,17 @@ cdef class FileID(GroupID):
         cdef unsigned int mode
         H5Fget_intent(self.id, &mode)
         return mode
+
+
+    def get_vfd_handle(self):
+        """ () => INT
+
+        Retrieve the file handle used by the virtual file driver.
+
+        This method is only functional when the the SEC2 driver is used.
+        """
+        if H5Pget_driver(H5Fget_access_plist(self.id)) != h5fd.SEC2:
+            raise NotImplementedError
+        cdef int *handle
+        H5Fget_vfd_handle(self.id, H5Fget_access_plist(self.id), <void**>&handle)
+        return handle[0]

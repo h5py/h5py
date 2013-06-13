@@ -59,6 +59,7 @@ _exact_table = {
     (H5E_ARGS, H5E_CANTINIT):       TypeError,  # Illegal operation on object
     (H5E_SYM, H5E_CANTINIT):        ValueError, # Object already exists/1.8
     (H5E_ARGS, H5E_BADTYPE):        ValueError, # Invalid location in file
+    (H5E_REFERENCE, H5E_CANTINIT):  ValueError, # Dereferencing invalid ref
   }
 
 cdef struct err_data_t:

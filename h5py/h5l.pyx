@@ -1,13 +1,13 @@
 #+
-# 
+#
 # This file is part of h5py, a low-level Python interface to the HDF5 library.
-# 
+#
 # Copyright (C) 2008 Andrew Collette
 # http://h5py.alfven.org
 # License: BSD  (See LICENSE.txt for full license)
-# 
+#
 # $Date$
-# 
+#
 #-
 
 """
@@ -22,9 +22,9 @@ from utils cimport emalloc, efree
 
 # === Public constants ========================================================
 
-TYPE_HARD = H5L_TYPE_HARD         
-TYPE_SOFT = H5L_TYPE_SOFT      
-TYPE_EXTERNAL = H5L_TYPE_EXTERNAL     
+TYPE_HARD = H5L_TYPE_HARD
+TYPE_SOFT = H5L_TYPE_SOFT
+TYPE_EXTERNAL = H5L_TYPE_EXTERNAL
 
 cdef class LinkInfo:
 
@@ -118,7 +118,7 @@ cdef class LinkProxy:
     def __hash__(self):
         raise TypeError("Link proxies are unhashable; use the parent group instead.")
 
-    
+
     def create_hard(self, char* new_name, GroupID cur_loc not None,
         char* cur_name, PropID lcpl=None, PropID lapl=None):
         """ (STRING new_name, GroupID cur_loc, STRING cur_name,
@@ -130,7 +130,7 @@ cdef class LinkProxy:
         H5Lcreate_hard(cur_loc.id, cur_name, self.id, new_name,
             pdefault(lcpl), pdefault(lapl))
 
-    
+
     def create_soft(self, char* new_name, char* target,
         PropID lcpl=None, PropID lapl=None):
         """(STRING new_name, STRING target, PropID lcpl=None, PropID lapl=None)
@@ -141,7 +141,7 @@ cdef class LinkProxy:
         H5Lcreate_soft(target, self.id, new_name,
             pdefault(lcpl), pdefault(lapl))
 
-    
+
     def create_external(self, char* link_name, char* file_name, char* obj_name,
         PropID lcpl=None, PropID lapl=None):
         """(STRING link_name, STRING file_name, STRING obj_name,
@@ -152,7 +152,7 @@ cdef class LinkProxy:
         H5Lcreate_external(file_name, obj_name, self.id, link_name,
             pdefault(lcpl), pdefault(lapl))
 
-    
+
     def get_val(self, char* name, PropID lapl=None):
         """(STRING name, PropLAID lapl=None) => STRING or TUPLE(file, obj)
 
@@ -182,10 +182,10 @@ cdef class LinkProxy:
                 py_retval = (bytes(<char*>ext_file_name), bytes(<char*>ext_obj_name))
         finally:
             efree(buf)
-        
+
         return py_retval
 
-    
+
     def exists(self, char* name):
         """ (STRING name) => BOOL
 
@@ -193,7 +193,7 @@ cdef class LinkProxy:
         """
         return <bint>(H5Lexists(self.id, name, H5P_DEFAULT))
 
-    
+
     def get_info(self, char* name, int index=-1, *, PropID lapl=None):
         """(STRING name=, INT index=, **kwds) => LinkInfo instance
 
@@ -205,7 +205,7 @@ cdef class LinkProxy:
         H5Lget_info(self.id, name, &info.infostruct, pdefault(lapl))
         return info
 
-    
+
     def visit(self, object func, *,
               int idx_type=H5_INDEX_NAME, int order=H5_ITER_NATIVE,
               char* obj_name='.', PropID lapl=None, bint info=0):
@@ -249,7 +249,50 @@ cdef class LinkProxy:
 
         return it.retval
 
+    def iterate(self, object func, *,
+              int idx_type=H5_INDEX_NAME, int order=H5_ITER_NATIVE,
+              char* obj_name='.', PropID lapl=None, bint info=0,
+              hsize_t idx=0):
+        """(CALLABLE func, **kwds) => <Return value from func>, <index to restart at>
 
+        Iterate a function or callable object over all groups in this
+        one.  Your callable should conform to the signature::
 
+            func(STRING name) => Result
 
+        or if the keyword argument "info" is True::
 
+            func(STRING name, LinkInfo info) => Result
+
+        Returning None or a logical False continues iteration; returning
+        anything else aborts iteration and returns that value.
+
+        BOOL info (False)
+            Provide a LinkInfo instance to callback
+
+        STRING obj_name (".")
+            Visit this subgroup instead
+
+        PropLAID lapl (None)
+            Link access property list for "obj_name"
+
+        INT idx_type (h5.INDEX_NAME)
+
+        INT order (h5.ITER_NATIVE)
+
+        hsize_t idx (0)
+            The index to start iterating at
+        """
+        cdef _LinkVisitor it = _LinkVisitor(func)
+        cdef H5L_iterate_t cfunc
+
+        if info:
+            cfunc = cb_link_iterate
+        else:
+            cfunc = cb_link_simple
+
+        H5Literate_by_name(self.id, obj_name, <H5_index_t>idx_type,
+            <H5_iter_order_t>order, &idx,
+            cfunc, <void*>it, pdefault(lapl))
+
+        return it.retval, idx

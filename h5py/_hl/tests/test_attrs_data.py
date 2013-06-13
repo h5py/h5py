@@ -212,7 +212,24 @@ class TestEmpty(BaseAttrs):
             list(self.f.attrs.iteritems())
 
 
+class TestWriteException(BaseAttrs):
 
+    """
+        Ensure failed attribute writes don't leave garbage behind.
+    """
+
+    def test_write(self):
+        """ ValueError on string write wipes out attribute """
+
+        s = b"Hello\x00\Hello"
+
+        try:
+            self.f.attrs['x'] = s
+        except ValueError:
+            pass
+
+        with self.assertRaises(KeyError):
+            self.f.attrs['x']
 
 
 
