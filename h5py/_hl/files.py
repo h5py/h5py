@@ -71,10 +71,7 @@ def make_fid(name, mode, userblock_size, fapl):
                 existing_fcpl = fid.get_create_plist()
                 if (userblock_size is not None and
                         existing_fcpl.get_userblock() != userblock_size):
-                    raise ValueError("Requested userblock size (%d) does "
-                                     "not match that of existing file (%d)"
-                                     "" % (userblock_size,
-                                           existing_fcpl.get_userblock()))
+                    raise ValueError("Requested userblock size (%d) does not match that of existing file (%d)" % (userblock_size, existing_fcpl.get_userblock()))
             except:
                 fid.close()
                 raise
