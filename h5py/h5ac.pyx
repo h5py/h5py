@@ -38,29 +38,6 @@ cdef class CacheConfig:
         def __set__(self, hbool_t val):
             self.cache_config.rpt_fcn_enabled = val
 
-    property open_trace_file:
-        def __get__(self):
-            return self.cache_config.open_trace_file
-        def __set__(self, hbool_t val):
-            self.cache_config.open_trace_file = val
-
-    property close_trace_file:
-        def __get__(self):
-            return self.cache_config.close_trace_file
-        def __set__(self, hbool_t val):
-            self.cache_config.close_trace_file = val
-
-    property trace_file_name:
-        def __get__(self):
-            return str(self.close_trace_file.trace_file_name)
-        def __set__(self, val):
-            # check if val is string like and short enough
-            val = str(val)
-            if len(val) > H5AC__MAX_TRACE_FILE_NAME_LEN:
-                raise RuntimeError("trace file name is too long")
-            # figure out how to convert to char[]
-            #            self.cache_config.trace_file_name = val
-
     property evictions_enabled:
         def __get__(self):
             return self.cache_config.evictions_enabled

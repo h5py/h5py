@@ -705,9 +705,6 @@ cdef extern from "hdf5.h":
       #     /* general configuration fields: */
       int version
       hbool_t rpt_fcn_enabled
-      hbool_t open_trace_file
-      hbool_t close_trace_file
-      char trace_file_name[H5AC__MAX_TRACE_FILE_NAME_LEN + 1]
       hbool_t evictions_enabled
       hbool_t set_initial_size
       size_t initial_size
