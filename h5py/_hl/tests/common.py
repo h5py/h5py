@@ -5,7 +5,8 @@ if sys.version_info[0] == 3:
 else:
     py3 = False
 
-if sys.version_info >= (2,7) or sys.version_info >= (3,2):
+
+if sys.version_info >= (2, 7) or sys.version_info >= (3, 2):
     import unittest as ut
 else:
     try:
@@ -20,6 +21,7 @@ import shutil
 import tempfile
 import numpy as np
 import os
+
 
 class TestCase(ut.TestCase):
 
@@ -38,7 +40,7 @@ class TestCase(ut.TestCase):
 
     if not hasattr(ut.TestCase, 'assertSameElements'):
         # shim until this is ported into unittest2
-        def assertSameElements(self, a,b):
+        def assertSameElements(self, a, b):
             for x in a:
                 match = False
                 for y in b:
@@ -106,4 +108,3 @@ else:
     os.unlink(fname)
     del fname
     del testfile
-
