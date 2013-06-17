@@ -699,3 +699,59 @@ class TestCopy(TestCase):
 
         self.f2.copy(self.f1['foo'], self.f2, 'bar')
         self.assertArrayEqual(self.f2['bar'], np.array([1,2,3]))
+
+
+class TestMove(BaseGroup):
+
+    """
+        Feature: Group.move moves links in a file
+    """
+
+    def test_move_hardlink(self):
+        """ Moving an object """
+        grp = self.f.create_group("X")
+        self.f.move("X", "Y")
+        self.assertEqual(self.f["Y"], grp)
+        self.f.move("Y", "new/nested/path")
+        self.assertEqual(self.f['new/nested/path'], grp)
+
+    def test_move_softlink(self):
+        """ Moving a soft link """
+        self.f['soft'] = h5py.SoftLink("relative/path")
+        self.f.move('soft', 'new_soft')
+        lnk = self.f.get('new_soft', getlink=True)
+        self.assertEqual(lnk.path, "relative/path")
+
+    def test_move_conflict(self):
+        """ Move conflict raises ValueError """
+        self.f.create_group("X")
+        self.f.create_group("Y")
+        with self.assertRaises(ValueError):
+            self.f.move("X","Y")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

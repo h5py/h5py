@@ -186,6 +186,16 @@ cdef class LinkProxy:
         return py_retval
 
 
+    def move(self, char* src_name, GroupID dst_loc not None, char* dst_name,
+        PropID lcpl=None, PropID lapl=None):
+        """ (STRING src_name, GroupID dst_loc, STRING dst_name)
+
+        Move a link to a new location in the file.
+        """
+        H5Lmove(self.id, src_name, dst_loc.id, dst_name, pdefault(lcpl),
+                pdefault(lapl))
+
+
     def exists(self, char* name):
         """ (STRING name) => BOOL
 
