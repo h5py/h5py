@@ -6,6 +6,7 @@ from .common import ut, TestCase
 from h5py.highlevel import File, Group, Dataset
 import h5py
 
+
 class BaseDataset(TestCase):
 
     """
@@ -39,6 +40,7 @@ class BaseDataset(TestCase):
     def tearDown(self):
         if self.f:
             self.f.close()
+
 
 class TestH5DSBindings(BaseDataset):
 
@@ -75,7 +77,7 @@ class TestH5DSBindings(BaseDataset):
 
     # TODO: update condition once the bug is fixed upstream
     @ut.skipUnless(
-        h5py.version.hdf5_version_tuple > (2,0,0),
+        h5py.version.hdf5_version_tuple > (2, 0, 0),
         "Reading non-existent label segfaults"
         )
     def test_label_dimensionscale(self):
