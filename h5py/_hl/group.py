@@ -321,6 +321,16 @@ class Group(HLObject, DictCompat):
 
         h5o.copy(source.id, self._e(source_path), dest.id, self._e(dest_path))
 
+    def move(self, source, dest):
+        """ Move a link to a new location in the file.
+
+        If "source" is a hard link, this effectively renames the object.  If
+        "source" is a soft or external link, the link itself is moved, with its
+        value unmodified.
+        """
+        self.id.links.move(self._e(source), self.id, self._e(dest),
+                           lapl=self._lapl, lcpl=self._lcpl)
+
     def visit(self, func):
         """ Recursively visit all names in this group and subgroups (HDF5 1.8).
 
