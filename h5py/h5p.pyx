@@ -14,6 +14,8 @@
     HDF5 property list interface.
 """
 
+include "config.pxi"
+
 # Compile-time imports
 from utils cimport  require_tuple, convert_dims, convert_tuple, \
                     emalloc, efree, \
@@ -917,6 +919,28 @@ cdef class PropFAID(PropInstanceID):
         H5Pget_libver_bounds(self.id, &low, &high)
 
         return (<int>low, <int>high)
+
+    IF MPI:
+        def set_fapl_mpio(self, Comm comm not None, Info info not None):
+            """ (Comm comm, Info info)
+
+            Set MPI-I/O Parallel HDF5 driver.
+
+            Comm: An mpi4py.MPI.Comm instance
+            Info: An mpi4py.MPI.Info instance
+            """
+            H5Pset_fapl_mpio(self.id, comm.ob_mpi, info.ob_mpi) 
+
+
+        def set_fapl_mpiposix(self, Comm comm not None, bint use_gpfs_hints=0):
+            """ (Comm comm, BOOL use_gpfs_hints=0)
+
+            Set MPI-POSIX driver.
+
+            Comm: An mpi4py.MPI.Comm instance
+            use_gpfs_hints: Enable internal hints for GPFS file system
+            """
+            H5Pset_fapl_mpiposix(self.id, comm.ob_mpi, use_gpfs_hints)
 
 # Link creation
 cdef class PropLCID(PropCreateID):

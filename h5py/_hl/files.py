@@ -4,7 +4,14 @@ import os
 
 from .base import HLObject, py3
 from .group import Group
-from h5py import h5f, h5p, h5i, h5fd, h5t, _objects
+from h5py import h5, h5f, h5p, h5i, h5fd, h5t, _objects
+from h5py import version
+
+mpi = h5.get_config().mpi
+hdf5_version = version.hdf5_version_tuple[0:3]
+
+if mpi:
+    import mpi4py
 
 libver_dict = {'earliest': h5f.LIBVER_EARLIEST, 'latest': h5f.LIBVER_LATEST}
 libver_dict_r = dict((y, x) for x, y in libver_dict.iteritems())
@@ -34,6 +41,9 @@ def make_fapl(driver, libver, **kwds):
         plist.set_fapl_core(**kwds)
     elif(driver == 'family'):
         plist.set_fapl_family(memb_fapl=plist.copy(), **kwds)
+    elif(driver == 'mpio'):
+        kwds.setdefault('info', mpi4py.MPI.Info())
+        plist.set_fapl_mpio(**kwds)
     else:
         raise ValueError('Unknown driver type "%s"' % driver)
 
@@ -111,7 +121,8 @@ class File(Group):
         """Low-level HDF5 file driver used to open file"""
         drivers = {h5fd.SEC2: 'sec2', h5fd.STDIO: 'stdio',
                    h5fd.CORE: 'core', h5fd.FAMILY: 'family',
-                   h5fd.WINDOWS: 'windows'}
+                   h5fd.WINDOWS: 'windows', h5fd.MPIO: 'mpio',
+                   h5fd.MPIPOSIX: 'mpiposix'}
         return drivers.get(self.fid.get_access_plist().get_driver(), 'unknown')
 
     @property
@@ -137,9 +148,22 @@ class File(Group):
         fcpl = self.fid.get_create_plist()
         return fcpl.get_userblock()
 
-    def __init__(self, name, mode=None, driver=None,
-                 libver=None, userblock_size=None,
-        **kwds):
+
+    if mpi and hdf5_version >= (1, 8, 9):
+
+        @property
+        def atomic(self):
+            """ Set/get MPI-IO atomic mode 
+            """
+            return self.id.get_mpi_atomicity()
+
+        @atomic.setter
+        def atomic(self, value):
+            self.id.set_mpi_atomicity(value)
+
+
+    def __init__(self, name, mode=None, driver=None, 
+                 libver=None, userblock_size=None, **kwds):
         """Create a new file object.
 
         See the h5py user guide for a detailed explanation of the options.
@@ -149,7 +173,7 @@ class File(Group):
             driver, HDF5 still requires this be non-empty.
         driver
             Name of the driver to use.  Legal values are None (default,
-            recommended), 'core', 'sec2' (UNIX), 'stdio'.
+            recommended), 'core', 'sec2', 'stdio', 'mpio'.
         libver
             Library version bounds.  Currently only the strings 'earliest'
             and 'latest' are defined.
@@ -169,8 +193,10 @@ class File(Group):
                 name = name.encode(sys.getfilesystemencoding())
             except (UnicodeError, LookupError):
                 pass
+
             fapl = make_fapl(driver, libver, **kwds)
             fid = make_fid(name, mode, userblock_size, fapl)
+
         Group.__init__(self, fid)
 
     def close(self):

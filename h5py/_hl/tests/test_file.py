@@ -13,6 +13,8 @@ from .common import ut, TestCase, unicode_filenames
 from h5py.highlevel import File
 import h5py
 
+mpi = h5py.get_config().mpi
+
 class TestFileOpen(TestCase):
 
     """
@@ -197,6 +199,27 @@ class TestDrivers(TestCase):
                    backing_store=False)
         self.assert_(fid)
         fid.close()
+
+    @ut.skipUnless(mpi, "Parallel HDF5 is required for MPIO driver test")
+    def test_mpio(self):
+        """ MPIO driver and options """
+        from mpi4py import MPI
+
+        fname = self.mktemp()
+        with File(fname, 'w', driver='mpio', comm=MPI.COMM_WORLD) as f:
+            self.assertTrue(f)
+            self.assertEqual(f.driver, 'mpio')
+
+    @ut.skipUnless(mpi, "Parallel HDF5 required")
+    def test_mpi_atomic(self):
+        """ Enable atomic mode for MPIO driver """
+        from mpi4py import MPI
+
+        fname = self.mktemp()
+        with File(fname, 'w', driver='mpio', comm=MPI.COMM_WORLD) as f:
+            self.assertFalse(f.atomic)
+            f.atomic = True
+            self.assertTrue(f.atomic)
 
     #TODO: family driver tests
 

@@ -1,3 +1,5 @@
+include "config.pxi"
+
 from defs cimport *
 
 ITER_INC    = H5_ITER_INC     # Increasing order
@@ -101,6 +103,14 @@ cdef class H5PYConfig:
         
         def __get__(self):
             return self._bytestrings
+
+    property mpi:
+        """ Boolean indicating if Parallel HDF5 is available """
+        def __get__(self):
+            IF MPI:
+                return True
+            ELSE:
+                return False
 
 cdef H5PYConfig cfg = H5PYConfig()
 

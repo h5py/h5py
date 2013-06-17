@@ -36,6 +36,7 @@ cdef extern from "hdf5.h":
 # hid_t H5FD_GASS  not in 1.8.X
   hid_t H5FD_LOG
   hid_t H5FD_MPIO
+  hid_t H5FD_MPIPOSIX
   hid_t H5FD_MULTI
   hid_t H5FD_SEC2
   hid_t H5FD_STDIO
