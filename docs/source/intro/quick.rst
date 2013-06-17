@@ -7,7 +7,7 @@ Official website and documentation: http://h5py.org
 
 Mailing list (both dev and discussion): `Google Groups <http://groups.google.com/group/h5py>`_
 
-See :ref:`build` for installation instructions.
+**See** :ref:`build` **for installation instructions.**
 
 
 Design philosphy

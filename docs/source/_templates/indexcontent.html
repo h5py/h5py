@@ -1,5 +1,7 @@
 {% extends "defindex.html" %}
 {% block tables %}
+  <!-- Based on the Python.org documentation.  See h5py licenses folder for full
+       Python Software Foundation license. -->
   <p><strong>Parts of the documentation:</strong></p>
   <table class="contentstable" align="center"><tr>
     <td width="50%">
@@ -11,26 +13,26 @@
       <p class="biglink"><a class="biglink" href="{{ pathto("low/index") }}">Low-Level Reference</a><br/>
          <span class="linkdescr">the native interface to HDF5</span></p>
     </td><td width="50%">
-      <p class="biglink"><a class="biglink" href="{{ pathto("intro/index") }}">Getting Started</a><br/>
+      <p class="biglink"><a class="biglink" href="{{ pathto("intro/quick") }}">Getting Started</a><br/>
          <span class="linkdescr">building and basics</span></p>
-      <p class="biglink"><a class="biglink" href="{{ pathto("extending/index") }}">Examples List</a><br/>
+      <p class="biglink"><a class="biglink" href="{{ pathto("intro/examples") }}">Examples List</a><br/>
          <span class="linkdescr">code examples from trivial to impossible</span></p>
-      <p class="biglink"><a class="biglink" href="{{ pathto("c-api/index") }}">FAQ</a><br/>
+      <p class="biglink"><a class="biglink" href="{{ pathto("intro/faq") }}">FAQ</a><br/>
          <span class="linkdescr">common questions and problems</span></p>
     </td></tr>
   </table>
 
-  <p><strong>Special topics:</strong></p>
+  <p><strong>Special topics (<a href="{{ pathto("topics/index") }}">full index here</a>):</strong></p>
   <table class="contentstable" align="center"><tr>
     <td width="50%">
-      <p class="biglink"><a class="biglink" href="{{ pathto("c-api/index") }}">Parallel HDF5 with MPI</a><br/>
+      <p class="biglink"><a class="biglink" href="{{ pathto("topics/mpi") }}">Parallel HDF5 with MPI</a><br/>
          <span class="linkdescr">using h5py to solve parallel problems</span></p>
-      <p class="biglink"><a class="biglink" href="{{ pathto("c-api/index") }}">Filters and Compression</a><br/>
-         <span class="linkdescr">applying HDF5 and third-party filters</span></p>
+      <p class="biglink"><a class="biglink" href="{{ pathto("topics/refs") }}">Object and Region References</a><br/>
+         <span class="linkdescr">using the HDF5 reference type</span></p>
     </td><td width="50%">
-      <p class="biglink"><a class="biglink" href="{{ pathto("c-api/index") }}">Object and Region References</a><br/>
-         <span class="linkdescr">linking objects together in the file</span></p>
-      <p class="biglink"><a class="biglink" href="{{ pathto("c-api/index") }}">Strings in HDF5</a><br/>
+      <p class="biglink"><a class="biglink" href="{{ pathto("topics/special") }}">Special Types</a><br/>
+         <span class="linkdescr">object references, enums and vlen strings</span></p>
+      <p class="biglink"><a class="biglink" href="{{ pathto("topics/strings") }}">Strings in HDF5</a><br/>
          <span class="linkdescr">hint: they're not like python strings</span></p>
     </td></tr>
   </table>
@@ -38,14 +40,11 @@
   <p><strong>Meta information:</strong></p>
   <table class="contentstable" align="center"><tr>
     <td width="50%">
-      <p class="biglink"><a class="biglink" href="{{ pathto("bugs") }}">Reporting Bugs</a><br/>
+      <p class="biglink"><a class="biglink" href="{{ pathto("meta/bugs") }}">Reporting Bugs</a><br/>
          <span class="linkdescr">how to report problems effectively</span></p>
-      <p class="biglink"><a class="biglink" href="{{ pathto("contributing") }}">Contributing to h5py</a><br/>
-         <span class="linkdescr">guidelines for hacking the codebase</span></p>
     </td><td width="50%">
-      <p class="biglink"><a class="biglink" href="{{ pathto("license") }}">License statements</a><br/>
+      <p class="biglink"><a class="biglink" href="{{ pathto("meta/licenses") }}">License statements</a><br/>
          <span class="linkdescr">licensing information for h5py and components</span></p>
-      <p><br/><br/></p>
     </td></tr>
   </table>
 {% endblock %}

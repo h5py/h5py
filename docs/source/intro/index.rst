@@ -6,4 +6,5 @@ Introduction
 
     build
     quick
-    howdoi
+    examples
+    faq

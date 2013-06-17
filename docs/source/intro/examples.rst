@@ -1,7 +1,9 @@
 
-How do I... ?
+Examples list
 =============
 
+.. contents::
+   :depth: 3
 
 Files
 -----
