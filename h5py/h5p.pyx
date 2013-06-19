@@ -242,6 +242,9 @@ cdef class PropCopyID(PropInstanceID):
 
         h5o.COPY_WITHOUT_ATTR_FLAG
             Copy object without copying attributes.
+
+        h5o.COPY_MERGE_COMMITTED_DTYPE_FLAG
+            Use a matching committed datatype in the destination file.
         """
         H5Pset_copy_object(self.id, flags)
 

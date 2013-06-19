@@ -261,13 +261,14 @@ cdef extern from "hdf5.h":
     H5O_TYPE_NAMED_DATATYPE,    # Object is a named data type
     H5O_TYPE_NTYPES             # Number of different object types (must be last!)
 
-  unsigned int H5O_COPY_SHALLOW_HIERARCHY_FLAG    # (0x0001u) Copy only immediate members
-  unsigned int H5O_COPY_EXPAND_SOFT_LINK_FLAG     # (0x0002u) Expand soft links into new objects
-  unsigned int H5O_COPY_EXPAND_EXT_LINK_FLAG      # (0x0004u) Expand external links into new objects
-  unsigned int H5O_COPY_EXPAND_REFERENCE_FLAG     # (0x0008u) Copy objects that are pointed by references
-  unsigned int H5O_COPY_WITHOUT_ATTR_FLAG         # (0x0010u) Copy object without copying attributes
-  unsigned int H5O_COPY_PRESERVE_NULL_FLAG        # (0x0020u) Copy NULL messages (empty space)
-  unsigned int H5O_COPY_ALL                       # (0x003Fu) All object copying flags (for internal checking)
+  unsigned int H5O_COPY_SHALLOW_HIERARCHY_FLAG     # (0x0001u) Copy only immediate members
+  unsigned int H5O_COPY_EXPAND_SOFT_LINK_FLAG      # (0x0002u) Expand soft links into new objects
+  unsigned int H5O_COPY_EXPAND_EXT_LINK_FLAG       # (0x0004u) Expand external links into new objects
+  unsigned int H5O_COPY_EXPAND_REFERENCE_FLAG      # (0x0008u) Copy objects that are pointed by references
+  unsigned int H5O_COPY_WITHOUT_ATTR_FLAG          # (0x0010u) Copy object without copying attributes
+  unsigned int H5O_COPY_MERGE_COMMITTED_DTYPE_FLAG # (0x0040u)   /* Merge committed datatypes in dest file */
+  unsigned int H5O_COPY_PRESERVE_NULL_FLAG         # (0x0020u) Copy NULL messages (empty space)
+  unsigned int H5O_COPY_ALL                        # (0x003Fu) All object copying flags (for internal checking)
 
   # --- Components for the H5O_info_t struct ----------------------------------
 
