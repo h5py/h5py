@@ -351,7 +351,7 @@ class Dataset(HLObject):
 
         if numpy.product(self.shape) == 0:
             # These are the only access methods NumPy allows for such objects
-            if args == (Ellipsis,) or args == tuple():
+            if args == (Ellipsis,) or args == tuple() or args == (slice(None),):
                 return numpy.empty(self.shape, dtype=new_dtype)
 
         # === Scalar dataspaces =================
