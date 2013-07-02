@@ -120,8 +120,12 @@ else:
         COMPILER_SETTINGS['include_dirs'] += [op.join(HDF5, 'include')]
         COMPILER_SETTINGS['library_dirs'] += [op.join(HDF5, 'lib')]
     elif sys.platform == 'darwin':
-        COMPILER_SETTINGS['include_dirs'] += ['/opt/local/include']
-        COMPILER_SETTINGS['library_dirs'] += ['/opt/local/lib']
+        # putting here both macports and homebrew paths will generate
+        # "ld: warning: dir not found" at the linking phase 
+        COMPILER_SETTINGS['include_dirs'] += ['/opt/local/include'] # macports
+        COMPILER_SETTINGS['library_dirs'] += ['/opt/local/lib']     # macports
+        COMPILER_SETTINGS['include_dirs'] += ['/usr/local/include'] # homebrew
+        COMPILER_SETTINGS['library_dirs'] += ['/usr/local/lib']     # homebrew
     if MPI:
         COMPILER_SETTINGS['include_dirs'] += [mpi4py.get_include()]
     COMPILER_SETTINGS['runtime_library_dirs'] = [op.abspath(x) for x in COMPILER_SETTINGS['library_dirs']]

@@ -156,6 +156,8 @@ def autodetect(libdirs):
 
     if sys.platform.startswith('win'):
         regexp = re.compile('^hdf5.dll$')
+    elif sys.platform.startswith('darwin'):
+        regexp = re.compile(r'^libhdf5.dylib')
     else:
         regexp = re.compile(r'^libhdf5.so')
 
