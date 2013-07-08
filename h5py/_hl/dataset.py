@@ -409,16 +409,25 @@ class Dataset(HLObject):
         names = tuple(x for x in args if isinstance(x, str))
         args = tuple(x for x in args if not isinstance(x, str))
 
-        if len(names) != 0:
-            raise TypeError("Field name selections are not allowed for write.")
-
         # Generally we try to avoid converting the arrays on the Python
         # side.  However, for compound literals this is unavoidable.
         if self.dtype.kind == "O" or \
           (self.dtype.kind == 'V' and \
           (not isinstance(val, numpy.ndarray) or val.dtype.kind != 'V') and \
           (self.dtype.subdtype == None)):
-            val = numpy.asarray(val, dtype=self.dtype, order='C')
+            if len(names) == 1 and self.dtype.fields is not None:
+                # Single field selected for write, from a non-array source
+                if not names[0] in self.dtype.fields:
+                    raise ValueError("No such field for indexing: %s" % names[0])
+                dtype = self.dtype.fields[names[0]][0]
+                cast_compound = True
+            else:
+                dtype = self.dtype
+                cast_compound = False
+
+            val = numpy.asarray(val, dtype=dtype, order='C')
+            if cast_compound:
+                val = val.astype(numpy.dtype([(names[0], dtype)]))
         else:
             val = numpy.asarray(val, order='C')
 
@@ -430,6 +439,36 @@ class Dataset(HLObject):
                 raise TypeError("When writing to array types, last N dimensions have to match (got %s, but should be %s)" % (valshp, shp,))
             mtype = h5t.py_create(numpy.dtype((val.dtype, shp)))
             mshape = val.shape[0:len(val.shape)-len(shp)]
+
+        # Make a compound memory type if field-name slicing is required
+        elif len(names) != 0:
+
+            mshape = val.shape
+
+            # Catch common errors
+            if self.dtype.fields is None:
+                raise TypeError("Illegal slicing argument (not a compound dataset)")
+            mismatch = [x for x in names if x not in self.dtype.fields]
+            if len(mismatch) != 0:
+                mismatch = ", ".join('"%s"'%x for x in mismatch)
+                raise ValueError("Illegal slicing argument (fields %s not in dataset type)" % mismatch)
+        
+            # Write non-compound source into a single dataset field
+            if len(names) == 1 and val.dtype.fields is None:
+                subtype = h5y.py_create(val.dtype)
+                mtype = h5t.create(h5t.COMPOUND, subtype.get_size())
+                mtype.insert(self._e(names[0]), 0, subtype)
+
+            # Make a new source type keeping only the requested fields
+            else:
+                fieldnames = [x for x in val.dtype.names if x in names] # Keep source order
+                mtype = h5t.create(h5t.COMPOUND, val.dtype.itemsize)
+                for fieldname in fieldnames:
+                    subtype = h5t.py_create(val.dtype.fields[fieldname][0])
+                    offset = val.dtype.fields[fieldname][1]
+                    mtype.insert(self._e(fieldname), offset, subtype)
+
+        # Use mtype derived from array (let DatasetID.write figure it out)
         else:
             mshape = val.shape
             mtype = None
