@@ -353,10 +353,7 @@ cdef class FileID(GroupID):
 
         """
         cdef double hit_rate
-        cdef herr_t err
-        err = H5Fget_mdc_hit_rate(self.id, &hit_rate)
-        if err < 0:
-            raise RuntimeError("Failed to get hit rate")
+        H5Fget_mdc_hit_rate(self.id, &hit_rate)
         return hit_rate
 
     def get_mdc_size(self):
@@ -370,11 +367,9 @@ cdef class FileID(GroupID):
         cdef size_t cur_size
         cdef int cur_num_entries
 
-        cdef herr_t err
 
-        err = H5Fget_mdc_size(self.id, &max_size, &min_clean_size, &cur_size, &cur_num_entries)
-        if err < 0:
-            raise RuntimeError("Failed to get hit rate")
+        H5Fget_mdc_size(self.id, &max_size, &min_clean_size, &cur_size, &cur_num_entries)
+
         return (max_size, min_clean_size, cur_size, cur_num_entries)
 
     def reset_mdc_hit_rate_stats(self):
@@ -383,10 +378,7 @@ cdef class FileID(GroupID):
         rests the hit-rate statistics
 
         """
-        cdef herr_t err
-        err = H5Freset_mdc_hit_rate_stats(self.id)
-        if err < 0:
-            raise RuntimeError("Failed to get reset rate")
+        H5Freset_mdc_hit_rate_stats(self.id)
 
     def get_mdc_config(self):
         """() => CacheConfig
@@ -396,10 +388,7 @@ cdef class FileID(GroupID):
 
         cdef CacheConfig config = CacheConfig()
 
-        cdef herr_t  err
-        err = H5Fget_mdc_config(self.id, &config.cache_config)
-        if err < 0:
-            raise RuntimeError("Failed to get mdc_cache_config")
+        H5Fget_mdc_config(self.id, &config.cache_config)
 
         return config
 
@@ -409,7 +398,4 @@ cdef class FileID(GroupID):
         configuration
         """
         # I feel this should have some sanity checking to make sure that
-        cdef herr_t  err
-        err = H5Fset_mdc_config(self.id, &config.cache_config)
-        if err < 0:
-            raise RuntimeError("Failed to set the mdc_cache_config")
+        H5Fset_mdc_config(self.id, &config.cache_config)
