@@ -8,6 +8,7 @@ from . import filters
 from . import selections as sel
 from . import selections2 as sel2
 
+
 def readtime_dtype(basetype, names):
     """ Make a NumPy dtype appropriate for reading """
 
@@ -26,6 +27,7 @@ def readtime_dtype(basetype, names):
             raise ValueError("Field %s does not appear in this type." % name)
 
     return numpy.dtype([(name, basetype.fields[name][0]) for name in names])
+
 
 def make_new_dset(parent, shape=None, dtype=None, data=None,
                  chunks=None, compression=None, shuffle=None,
@@ -60,7 +62,7 @@ def make_new_dset(parent, shape=None, dtype=None, data=None,
         dtype = numpy.dtype(dtype)
 
     # Legacy
-    if any((compression, shuffle, fletcher32, maxshape,scaleoffset)) and chunks is False:
+    if any((compression, shuffle, fletcher32, maxshape, scaleoffset)) and chunks is False:
         raise ValueError("Chunked format required for given storage options")
 
     # Legacy
@@ -100,6 +102,7 @@ def make_new_dset(parent, shape=None, dtype=None, data=None,
 
     return dset_id
 
+
 class _RegionProxy(object):
 
     def __init__(self, dset):
@@ -108,6 +111,7 @@ class _RegionProxy(object):
     def __getitem__(self, args):
         selection = sel.select(self.id.shape, args, dsid=self.id)
         return h5r.create(self.id, b'.', h5r.DATASET_REGION, selection._id)
+
 
 class Dataset(HLObject):
 
@@ -124,6 +128,7 @@ class Dataset(HLObject):
     def shape(self):
         """Numpy-style shape tuple giving dataset dimensions"""
         return self.id.shape
+
     @shape.setter
     def shape(self, shape):
         self.resize(shape)
@@ -156,7 +161,7 @@ class Dataset(HLObject):
     @property
     def compression(self):
         """Compression strategy (or None)"""
-        for x in ('gzip','lzf','szip'):
+        for x in ('gzip', 'lzf', 'szip'):
             if x in self._filters:
                 return x
         return None
@@ -238,7 +243,7 @@ class Dataset(HLObject):
             raise TypeError("Only chunked datasets can be resized")
 
         if axis is not None:
-            if not (axis >=0 and axis < self.id.rank):
+            if not (axis >= 0 and axis < self.id.rank):
                 raise ValueError("Invalid axis (0 to %s allowed)" % (self.id.rank-1))
             try:
                 newlen = int(size)
@@ -283,7 +288,6 @@ class Dataset(HLObject):
         for i in xrange(shape[0]):
             yield self[i]
 
-
     def __getitem__(self, args):
         """ Read a slice from the HDF5 dataset.
 
@@ -306,7 +310,7 @@ class Dataset(HLObject):
             if basetype.kind == 'O':
                 return numpy.dtype('O')
             if basetype.fields is not None:
-                if basetype.kind in ('i','u'):
+                if basetype.kind in ('i', 'u'):
                     return basetype.fields['enum'][0]
                 fields = []
                 for name in basetype.names:
@@ -347,9 +351,9 @@ class Dataset(HLObject):
 
         if numpy.product(self.shape) == 0:
             # These are the only access methods NumPy allows for such objects
-            if args == (Ellipsis,) or args == tuple():
+            if args == (Ellipsis,) or args == tuple() or args == (slice(None),):
                 return numpy.empty(self.shape, dtype=new_dtype)
-            
+
         # === Scalar dataspaces =================
 
         if self.shape == ():
@@ -415,9 +419,9 @@ class Dataset(HLObject):
         # Generally we try to avoid converting the arrays on the Python
         # side.  However, for compound literals this is unavoidable.
         if self.dtype.kind == "O" or \
-          (self.dtype.kind == 'V' and \
-          (not isinstance(val, numpy.ndarray) or val.dtype.kind != 'V') and \
-          (self.dtype.subdtype == None)):
+          (self.dtype.kind == 'V' and
+          (not isinstance(val, numpy.ndarray) or val.dtype.kind != 'V') and
+          (self.dtype.subdtype is None)):
             val = numpy.asarray(val, dtype=self.dtype, order='C')
         else:
             val = numpy.asarray(val, order='C')
