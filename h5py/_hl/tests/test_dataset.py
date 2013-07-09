@@ -226,6 +226,20 @@ class TestCreateFillvalue(BaseDataset):
             dset = self.f.create_dataset('foo', (10,),
                     dtype=[('a','i'),('b','f')], fillvalue=42)
 
+class TestCreateNamedType(BaseDataset):
+
+    """
+        Feature: Datasets created from an existing named type
+    """
+
+    def test_named(self):
+        """ Named type object works and links the dataset to type """
+        self.f['type'] = np.dtype('f8')
+        dset = self.f.create_dataset('x', (100,), dtype=self.f['type'])
+        self.assertEqual(dset.dtype, np.dtype('f8'))
+        self.assertEqual(dset.id.get_type(), self.f['type'].id)
+        self.assertTrue(dset.id.get_type().committed())
+
 @ut.skipIf('gzip' not in h5py.filters.encode, "DEFLATE is not installed")
 class TestCreateGzip(BaseDataset):
 

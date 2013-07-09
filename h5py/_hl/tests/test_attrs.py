@@ -12,6 +12,7 @@ import numpy as np
 from common import TestCase, ut
 
 from h5py.highlevel import File
+from h5py import h5a
 
 class BaseAttrs(TestCase):
 
@@ -103,3 +104,22 @@ class TestUnicode(BaseAttrs):
         self.f.attrs[name] = 42
         out = self.f.attrs[name]
         self.assertEqual(out, 42)
+
+class TestCreate(BaseAttrs):
+
+    """
+        Options for explicit attribute creation
+    """
+
+    def test_named(self):
+        """ Attributes created from named types link to the source type object
+        """
+        self.f['type'] = np.dtype('u8')
+        self.f.attrs.create('x', 42, dtype=self.f['type'])
+        self.assertEqual(self.f.attrs['x'], 42)
+        aid = h5a.open(self.f.id, b'x')
+        htype = aid.get_type()
+        htype2 = self.f['type'].id
+        self.assertEqual(htype, htype2)
+        self.assertTrue(htype.committed())
+
