@@ -21,6 +21,7 @@ from _objects cimport pdefault
 from h5p cimport propwrap, PropFAID, PropFCID
 from h5t cimport typewrap
 from h5i cimport wrap_identifier
+from h5ac cimport CacheConfig
 from utils cimport emalloc, efree
 
 from h5py import _objects
@@ -375,20 +376,57 @@ cdef class FileID(GroupID):
             H5Fget_mpi_atomicity(self.id, &atom)
             return <bint>atom
 
+    def get_mdc_hit_rate(self):
+        """() => DOUBLE
+
+        Retrieve the cache hit rate
+
+        """
+        cdef double hit_rate
+        H5Fget_mdc_hit_rate(self.id, &hit_rate)
+        return hit_rate
+
+    def get_mdc_size(self):
+        """() => (max_size, min_clean_size, cur_size, cur_num_entries) [SIZE_T, SIZE_T, SIZE_T, INT]
+
+        Obtain current metadata cache size data for specified file.
+
+        """
+        cdef size_t max_size
+        cdef size_t min_clean_size
+        cdef size_t cur_size
+        cdef int cur_num_entries
 
 
+        H5Fget_mdc_size(self.id, &max_size, &min_clean_size, &cur_size, &cur_num_entries)
 
+        return (max_size, min_clean_size, cur_size, cur_num_entries)
 
+    def reset_mdc_hit_rate_stats(self):
+        """no return
 
+        rests the hit-rate statistics
 
+        """
+        H5Freset_mdc_hit_rate_stats(self.id)
 
+    def get_mdc_config(self):
+        """() => CacheConfig
+        Returns an object that stores all the information about the meta-data cache
+        configuration
+        """
 
+        cdef CacheConfig config = CacheConfig()
 
+        H5Fget_mdc_config(self.id, &config.cache_config)
 
+        return config
 
-
-
-
-
-
+    def set_mdc_config(self, CacheConfig config not None):
+        """(CacheConfig) => None
+        Returns an object that stores all the information about the meta-data cache
+        configuration
+        """
+        # I feel this should have some sanity checking to make sure that
+        H5Fset_mdc_config(self.id, &config.cache_config)
 

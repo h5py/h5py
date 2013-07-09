@@ -58,6 +58,11 @@ hdf5:
 
   herr_t H5Fget_intent(hid_t file_id, unsigned int *intent)
 
+  herr_t H5Fget_mdc_config(hid_t file_id, H5AC_cache_config_t *config_ptr)
+  herr_t H5Fget_mdc_hit_rate(hid_t file_id, double *hit_rate_ptr)
+  herr_t H5Fget_mdc_size(hid_t file_id, size_t *max_size_ptr, size_t *min_clean_size_ptr, size_t *cur_size_ptr, int *cur_num_entries_ptr)
+  herr_t H5Freset_mdc_hit_rate_stats(hid_t file_id)
+  herr_t H5Fset_mdc_config(hid_t file_id, H5AC_cache_config_t *config_ptr)
 # === H5FD - Low-level file descriptor API ====================================
 
 # === H5G - Groups API ========================================================
@@ -222,6 +227,11 @@ hdf5:
   herr_t H5Pset_fapl_sec2(hid_t fapl_id)
   herr_t H5Pset_fapl_stdio(hid_t fapl_id)
   hid_t  H5Pget_driver(hid_t fapl_id)
+
+
+  herr_t H5Pget_mdc_config(hid_t plist_id, H5AC_cache_config_t *config_ptr)
+  herr_t H5Pset_mdc_config(hid_t plist_id, H5AC_cache_config_t *config_ptr)
+
 
   # Dataset creation properties
   herr_t        H5Pset_layout(hid_t plist, int layout)

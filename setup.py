@@ -136,7 +136,7 @@ MODULES =  ['defs','_errors','_objects','_proxy', 'h5fd', 'h5z',
             'h5p',
             'h5d', 'h5a', 'h5f', 'h5g',
             'h5l', 'h5o',
-            'h5ds']
+            'h5ds', 'h5ac']
 
 # No Cython, no point in configuring
 if HAVE_CYTHON:     
@@ -271,5 +271,3 @@ setup(
   requires = ['numpy (>=1.0.1)'],
   cmdclass = {'build_ext': build_ext, 'test': test, 'build_py':build_py}
 )
-
-
