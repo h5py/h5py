@@ -176,11 +176,14 @@ class Group(HLObject, DictCompat):
         >>> if cls == SoftLink:
         ...     print '"foo" is a soft link!'
         """
+        if not (getclass or getlink):
+            try:
+                return self[name]
+            except KeyError:
+                return default
+
         if not name in self:
             return default
-
-        if not (getclass or getlink):
-            return self[name]
 
         elif getclass and not getlink:
             typecode = h5o.get_info(self.id, self._e(name)).type

@@ -219,19 +219,19 @@ class ValueView(View):
 
     def __iter__(self):
         for x in self._obj:
-            yield self._obj[x]
+            yield self._obj.get(x)
 
 
 class ItemView(View):
 
     def __contains__(self, what):
         if what[0] in self._obj:
-            return what[1] == self._obj[what[0]]
+            return what[1] == self._obj.get(what[0])
         return False
 
     def __iter__(self):
         for x in self._obj:
-            yield (x, self._obj[x])
+            yield (x, self._obj.get(x))
 
 
 class DictCompat(object):
@@ -243,9 +243,10 @@ class DictCompat(object):
 
     def get(self, name, default=None):
         """ Retrieve the member, or return default if it doesn't exist """
-        if name in self:
+        try:
             return self[name]
-        return default
+        except KeyError:
+            return default
 
     if py3:
         def keys(self):
@@ -271,18 +272,18 @@ class DictCompat(object):
 
         def values(self):
             """ Get a list containing member objects """
-            return [self[x] for x in self]
+            return [self.get(x) for x in self]
 
         def itervalues(self):
             """ Get an iterator over member objects """
             for x in self:
-                yield self[x]
+                yield self.get(x)
 
         def items(self):
             """ Get a list of tuples containing (name, object) pairs """
-            return [(x, self[x]) for x in self]
+            return [(x, self.get(x)) for x in self]
 
         def iteritems(self):
             """ Get an iterator over (name, object) pairs """
             for x in self:
-                yield (x, self[x])
+                yield (x, self.get(x))
