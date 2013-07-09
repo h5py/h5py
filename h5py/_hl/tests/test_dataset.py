@@ -753,7 +753,7 @@ class TestZeroShape(BaseDataset):
         """ Slicing into empty datasets works correctly """
         dt = [('a', 'f'), ('b', 'i')]
         for dims in ((0,), (0, 3), (0, 1, 3)):
-            ds = self.f.create_dataset('x', dims, dtype=dt)
+            ds = self.f.create_dataset('x', dims, dtype=dt, maxshape=(None,)*len(dims))
             arr = np.empty(dims, dtype=dt)
 
             self.assertEqual(ds[...].shape, arr.shape)
