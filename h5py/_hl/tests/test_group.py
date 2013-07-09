@@ -249,6 +249,8 @@ class BaseMapping(BaseGroup):
         self.groups = ('a','b','c','d')
         for x in self.groups:
             self.f.create_group(x)
+        self.f['x'] = h5py.SoftLink('/mongoose')
+        self.groups = self.groups + ('x',)
 
     def tearDown(self):
         if self.f:
@@ -323,13 +325,13 @@ class TestPy2Dict(BaseMapping):
     def test_values(self):
         """ .values method """
         self.assertIsInstance(self.f.values(), list)
-        self.assertSameElements(self.f.values(), [self.f[x] for x in self.groups])
+        self.assertSameElements(self.f.values(), [self.f.get(x) for x in self.groups])
 
     def test_items(self):
         """ .items method """
         self.assertIsInstance(self.f.items(), list)
         self.assertSameElements(self.f.items(),
-            [(x, self.f[x]) for x in self.groups])
+            [(x, self.f.get(x)) for x in self.groups])
 
     def test_iterkeys(self):
         """ .iterkeys method """
@@ -338,12 +340,12 @@ class TestPy2Dict(BaseMapping):
     def test_itervalues(self):
         """ .itervalues method """
         self.assertSameElements([x for x in self.f.itervalues()],
-            [self.f[x] for x in self.groups])
+            [self.f.get(x) for x in self.groups])
 
     def test_iteritems(self):
         """ .iteritems method """
         self.assertSameElements([x for x in self.f.iteritems()],
-            [(x, self.f[x]) for x in self.groups])
+            [(x, self.f.get(x)) for x in self.groups])
 
 @ut.skipIf(sys.version_info[0] != 3, "Py3")
 class TestPy3Dict(BaseMapping):
@@ -359,7 +361,7 @@ class TestPy3Dict(BaseMapping):
     def test_values(self):
         """ .values provides a value view """
         vv = getattr(self.f, 'values')()
-        self.assertSameElements(list(vv), [self.f[x] for x in self.groups])
+        self.assertSameElements(list(vv), [self.f.get(x) for x in self.groups])
         self.assertEqual(len(vv), len(self.groups))
         with self.assertRaises(TypeError):
             b'x' in vv
@@ -367,10 +369,10 @@ class TestPy3Dict(BaseMapping):
     def test_items(self):
         """ .items provides an item view """
         iv = getattr(self.f, 'items')()
-        self.assertSameElements(list(iv), [(x,self.f[x]) for x in self.groups])
+        self.assertSameElements(list(iv), [(x,self.f.get(x)) for x in self.groups])
         self.assertEqual(len(iv), len(self.groups))
         for x in self.groups:
-            self.assertIn((x, self.f[x]), iv)
+            self.assertIn((x, self.f.get(x)), iv)
 
 class TestGet(BaseGroup):
 
