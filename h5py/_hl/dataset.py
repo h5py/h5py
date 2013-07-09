@@ -2,6 +2,7 @@ import posixpath as pp
 import sys
 import numpy
 
+import h5py
 from h5py import h5s, h5t, h5r, h5d
 from .base import HLObject, py3
 from . import filters
@@ -51,13 +52,19 @@ def make_new_dset(parent, shape=None, dtype=None, data=None,
         if data is not None and (numpy.product(shape) != numpy.product(data.shape)):
             raise ValueError("Shape tuple is incompatible with data")
 
-    # Validate dtype
-    if dtype is None and data is None:
-        dtype = numpy.dtype("=f4")
-    elif dtype is None and data is not None:
-        dtype = data.dtype
+    if isinstance(dtype, h5py.Datatype):
+        # Named types are used as-is
+        tid = dtype.id
+        dtype = tid.dtype  # Following code needs this
     else:
-        dtype = numpy.dtype(dtype)
+        # Validate dtype
+        if dtype is None and data is None:
+            dtype = numpy.dtype("=f4")
+        elif dtype is None and data is not None:
+            dtype = data.dtype
+        else:
+            dtype = numpy.dtype(dtype)
+        tid = h5t.py_create(dtype, logical=1)
 
     # Legacy
     if any((compression, shuffle, fletcher32, maxshape,scaleoffset)) and chunks is False:
@@ -91,7 +98,7 @@ def make_new_dset(parent, shape=None, dtype=None, data=None,
     if maxshape is not None:
         maxshape = tuple(m if m is not None else h5s.UNLIMITED for m in maxshape)
     sid = h5s.create_simple(shape, maxshape)
-    tid = h5t.py_create(dtype, logical=1)
+
 
     dset_id = h5d.create(parent.id, None, tid, sid, dcpl=dcpl)
 
