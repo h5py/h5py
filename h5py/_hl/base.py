@@ -2,7 +2,6 @@ import posixpath
 import warnings
 import os
 import sys
-import collections
 
 from h5py import h5d, h5i, h5r, h5p, h5f, h5t
 
@@ -342,5 +341,3 @@ class DictCompat(object):
             """ Get an iterator over (name, object) pairs """
             for x in self:
                 yield (x, self.get(x))
-
-collections.MutableMapping.register(DictCompat)

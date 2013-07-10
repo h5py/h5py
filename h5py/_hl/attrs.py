@@ -1,13 +1,15 @@
 import numpy
+import collections
 
 import h5py
 from h5py import h5s, h5t, h5a
 from . import base
 from .dataset import readtime_dtype
 
+
 class AttributeManager(base.DictCompat, base.CommonStateObject):
 
-    """ 
+    """
         Allows dictionary-style access to an HDF5 object's attributes.
 
         These are created exclusively by the library and are available as
@@ -84,7 +86,7 @@ class AttributeManager(base.DictCompat, base.CommonStateObject):
                 shape = data.shape
             elif numpy.product(shape) != numpy.product(data.shape):
                 raise ValueError("Shape of new attribute conflicts with shape of data")
-                
+
             if dtype is None:
                 dtype = data.dtype
 
@@ -137,7 +139,7 @@ class AttributeManager(base.DictCompat, base.CommonStateObject):
 
             # Allow the case of () <-> (1,)
             if (value.shape != attr.shape) and not \
-               (numpy.product(value.shape)==1 and numpy.product(attr.shape)==1):
+               (numpy.product(value.shape) == 1 and numpy.product(attr.shape) == 1):
                 raise TypeError("Shape of data is incompatible with existing attribute")
             attr.write(value)
 
@@ -149,6 +151,7 @@ class AttributeManager(base.DictCompat, base.CommonStateObject):
     def __iter__(self):
         """ Iterate over the names of attributes. """
         attrlist = []
+
         def iter_cb(name, *args):
             attrlist.append(self._d(name))
         h5a.iterate(self._id, iter_cb)
@@ -164,3 +167,5 @@ class AttributeManager(base.DictCompat, base.CommonStateObject):
         if not self._id:
             return "<Attributes of closed HDF5 object>"
         return "<Attributes of HDF5 object at %s>" % id(self._id)
+
+collections.MutableMapping.register(AttributeManager)
