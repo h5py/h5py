@@ -31,6 +31,7 @@ from h5py import _conv
 # Runtime imports
 import sys
 from h5 import get_config
+import numpy as np
 
 cfg = get_config()
 
@@ -198,6 +199,26 @@ CSET_UTF8 = H5T_CSET_UTF8
 
 # Custom Python object pointer type
 PYTHON_OBJECT = lockid(_conv.get_python_obj())
+
+# Mini floats
+IEEE_F16BE = IEEE_F32BE.copy()
+IEEE_F16BE.set_fields(15, 10, 5, 0, 10)
+IEEE_F16BE.set_size(2)
+IEEE_F16BE.set_ebias(15)
+IEEE_F16BE.lock()
+
+IEEE_F16LE = IEEE_F16BE.copy()
+IEEE_F16LE.set_order(H5T_ORDER_LE)
+IEEE_F16LE.lock()
+
+# Extended-precision floats
+NATIVE_LDOUBLE = lockid(H5T_NATIVE_LDOUBLE)
+_LDOUBLE_LE = NATIVE_LDOUBLE.copy()
+_LDOUBLE_LE.set_order(H5T_ORDER_LE)
+_LDOUBLE_LE.lock()
+_LDOUBLE_BE = NATIVE_LDOUBLE.copy()
+_LDOUBLE_BE.set_order(H5T_ORDER_BE)
+_LDOUBLE_BE.lock()
 
 # Translation tables for HDF5 -> NumPy dtype conversion
 cdef dict _order_map = { H5T_ORDER_NONE: '|', H5T_ORDER_LE: '<', H5T_ORDER_BE: '>'}
@@ -875,6 +896,17 @@ cdef class TypeFloatID(TypeAtomicID):
 
     cdef object py_dtype(self):
         # Translation function for floating-point types
+        size = self.get_size()                  # int giving number of bytes
+        order = _order_map[self.get_order()]    # string with '<' or '>'
+
+        if size == 2 and not hasattr(np, 'float16'):
+            # This build doesn't have float16; promote to float32
+            return dtype(order+"f4")
+
+        if size > 8:
+            # The native NumPy longdouble is used for 96 and 128-bit floats
+            return dtype(order + "f" + str(np.longdouble(1).dtype.itemsize))
+            
         return dtype( _order_map[self.get_order()] + "f" + \
                       str(self.get_size()) )
 
@@ -1159,9 +1191,9 @@ cdef class TypeEnumID(TypeCompositeID):
 # of NumPy dtype into an HDF5 type object.  The result is guaranteed to be
 # transient and unlocked.
 
-cdef dict _float_le = {4: H5T_IEEE_F32LE, 8: H5T_IEEE_F64LE}
-cdef dict _float_be = {4: H5T_IEEE_F32BE, 8: H5T_IEEE_F64BE}
-cdef dict _float_nt = {4: H5T_NATIVE_FLOAT, 8: H5T_NATIVE_DOUBLE}
+cdef dict _float_le = {2: IEEE_F16LE.id, 4: H5T_IEEE_F32LE, 8: H5T_IEEE_F64LE, 12: _LDOUBLE_LE.id, 16: _LDOUBLE_LE.id}
+cdef dict _float_be = {2: IEEE_F16BE.id, 4: H5T_IEEE_F32BE, 8: H5T_IEEE_F64BE, 12: _LDOUBLE_BE.id, 16: _LDOUBLE_BE.id}
+cdef dict _float_nt = _float_le if ORDER_NATIVE == H5T_ORDER_LE else _float_be
 
 cdef dict _int_le = {1: H5T_STD_I8LE, 2: H5T_STD_I16LE, 4: H5T_STD_I32LE, 8: H5T_STD_I64LE}
 cdef dict _int_be = {1: H5T_STD_I8BE, 2: H5T_STD_I16BE, 4: H5T_STD_I32BE, 8: H5T_STD_I64BE}
