@@ -14,6 +14,7 @@ import numpy as np
 
 from .common import ut, TestCase
 from h5py.highlevel import File, Group, Dataset
+from h5py import h5t
 import h5py
 
 class BaseDataset(TestCase):
@@ -718,6 +719,50 @@ class TestEnum(BaseDataset):
         ds[1,:] = 1
         self.assertEqual(ds[35,37], 42)
         self.assertArrayEqual(ds[1,:], np.array((1,)*100,dtype='i4'))
+
+class TestFloats(BaseDataset):
+
+    """
+        Test support for mini and extended-precision floats
+    """
+
+    def _exectest(self, dt):
+        dset = self.f.create_dataset('x', (100,), dtype=dt)
+        self.assertEqual(dset.dtype, dt)
+        data = np.ones((100,), dtype=dt)
+        dset[...] = data
+        self.assertArrayEqual(dset[...], data)
+
+    @ut.skipUnless(hasattr(np, 'float16'), "NumPy float16 support required") 
+    def test_mini(self):
+        """ Mini-floats round trip """
+        self._exectest(np.dtype('float16'))
+
+    @ut.skipUnless(hasattr(np, 'float96'), "NumPy float96 support required")
+    def test_96(self):
+        """ Extended (96-bit) float """
+        self._exectest(np.dtype('float96'))
+
+    @ut.skipUnless(hasattr(np, 'float128'), "NumPy float128 support required")
+    def test_quad(self):
+        """ Quad floats round trip """
+        self._exectest(np.dtype('float128'))
+
+    #TODO: move these tests to test_h5t
+    def test_mini_mapping(self):
+        """ Test mapping for float16 """
+        if hasattr(np, 'float16'):
+            self.assertEqual(h5t.IEEE_F16LE.dtype, np.dtype('<f2'))
+        else:
+            self.assertEqual(h5t.IEEE_F16LE.dtype, np.dtype('<f4'))
+
+    def test_ldouble_mapping(self):
+        """ Test mapping for extended-precision """
+        self.assertEqual(h5t.NATIVE_LDOUBLE.dtype, np.longdouble(1).dtype)
+        if hasattr(np, 'float96'):
+            self.assertEqual(h5t.py_create(np.dtype('float96')).dtype, np.longdouble(1).dtype)
+        if hasattr(np, 'float128'):
+            self.assertEqual(h5t.py_create(np.dtype('float128')).dtype, np.longdouble(1).dtype)
 
 class TestTrackTimes(BaseDataset):
 
