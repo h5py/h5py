@@ -107,15 +107,6 @@ def make_new_dset(parent, shape=None, dtype=None, data=None,
 
     return dset_id
 
-class _RegionProxy(object):
-
-    def __init__(self, dset):
-        self.id = dset.id
-
-    def __getitem__(self, args):
-        selection = sel.select(self.id.shape, args, dsid=self.id)
-        return h5r.create(self.id, b'.', h5r.DATASET_REGION, selection._id)
-
 class Dataset(HLObject):
 
     """
@@ -208,14 +199,6 @@ class Dataset(HLObject):
         arr = numpy.ndarray((1,), dtype=self.dtype)
         dcpl = self._dcpl.get_fill_value(arr)
         return arr[0]
-
-    @property
-    def regionref(self):
-        """Create a region reference.  The syntax is regionref[<slices>].
-        For example, dset.regionref[...] creates a region reference in which
-        the whole dataset is selected.
-        """
-        return _RegionProxy(self)
 
     def __init__(self, bind):
         """ Create a new Dataset object by binding to a low-level DatasetID.
@@ -349,6 +332,26 @@ class Dataset(HLObject):
         # discards the array information at the top level.
         new_dtype = readtime_dtype(self.id.dtype, names)
         mtype = h5t.py_create(new_dtype)
+
+        # === Special-case region references ====
+
+        if len(args) == 1 and isinstance(args[0], h5r.RegionReference):
+
+            obj = h5r.dereference(args[0], self.id)
+            if obj != self.id:
+                raise ValueError("Region reference must point to this dataset")
+
+            sid = h5r.get_region(args[0], self.id)
+            mshape = sel.guess_shape(sid)
+            if mshape is None:
+                return np.array((0,), dtype=new_dtype)
+            if numpy.product(mshape) == 0:
+                return np.array(mshape, dtype=new_dtype)
+            out = numpy.empty(mshape, dtype=new_dtype)
+            sid_out = h5s.create_simple(mshape)
+            sid_out.select_all()
+            self.id.read(sid_out, sid, out, mtype)
+            return out
 
         # === Check for zero-sized datasets =====
 

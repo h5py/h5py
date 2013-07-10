@@ -800,3 +800,43 @@ class TestZeroShape(BaseDataset):
         self.assertEqual(ds[...].dtype, arr.dtype)
         self.assertEqual(ds[()].shape, arr.shape)
         self.assertEqual(ds[()].dtype, arr.dtype)
+
+class TestRegionRefs(BaseDataset):
+
+    """
+        Various features of region references
+    """
+
+    def setUp(self):
+        BaseDataset.setUp(self)
+        self.dset = self.f.create_dataset('x', (100, 100), dtype='i')
+        self.data = np.arange(100*100).reshape((100,100))
+        self.dset[...] = self.data
+
+    def test_create_ref(self):
+        """ Region references can be used as slicing arguments """
+        slic = np.s_[25:35,10:100:5]
+        ref = self.dset.regionref[slic]
+        self.assertArrayEqual(self.dset[ref], self.data[slic])
+
+    def test_ref_shape(self):
+        """ Region reference shape and selection shape """
+        slic = np.s_[25:35,10:100:5]
+        ref = self.dset.regionref[slic]
+        self.assertEqual(self.dset.regionref.shape(ref), self.dset.shape)
+        self.assertEqual(self.dset.regionref.selection(ref), (10, 18))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
