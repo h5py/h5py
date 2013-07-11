@@ -558,7 +558,95 @@ def _translate_slice(exp, length):
 
     return start, count, step
 
+def guess_shape(sid):
+    """ Given a dataspace, try to deduce the shape of the selection.
 
+    Returns one of:
+        * A tuple with the selection shape, same length as the dataspace 
+        * A 1D selection shape for point-based and multiple-hyperslab selections
+        * None, for unselected scalars and for NULL dataspaces
+    """
+
+    sel_class = sid.get_simple_extent_type()    # Dataspace class
+    sel_type = sid.get_select_type()            # Flavor of selection in use
+
+    if sel_class == h5s.NULL:
+        # NULL dataspaces don't support selections
+        return None
+
+    elif sel_class == h5s.SCALAR:
+        # NumPy has no way of expressing empty 0-rank selections, so we use None
+        if sel_type == h5s.SEL_NONE: return None
+        if sel_type == h5s.SEL_ALL: return tuple()
+
+    elif sel_class != h5s.SIMPLE:
+        raise TypeError("Unrecognized dataspace class %s" % sel_class)
+
+    # We have a "simple" (rank >= 1) dataspace
+
+    N = sid.get_select_npoints()
+    rank = len(sid.shape)
+
+    if sel_type == h5s.SEL_NONE:
+        return (0,)*rank
+
+    elif sel_type == h5s.SEL_ALL:
+        return sid.shape
+
+    elif sel_type == h5s.SEL_POINTS:
+        # Like NumPy, point-based selections yield 1D arrays regardless of
+        # the dataspace rank
+        return (N,)
+
+    elif sel_type != h5s.SEL_HYPERSLABS:
+        raise TypeError("Unrecognized selection method %s" % sel_type)
+
+    # We have a hyperslab-based selection
+
+    if N == 0:
+        return (0,)*rank
+
+    bottomcorner, topcorner = (np.array(x) for x in sid.get_select_bounds())
+
+    # Shape of full selection box
+    boxshape = topcorner - bottomcorner + np.ones((rank,))
+
+    def get_n_axis(sid, axis):
+        """ Determine the number of elements selected along a particular axis.
+
+        To do this, we "mask off" the axis by making a hyperslab selection
+        which leaves only the first point along the axis.  For a 2D dataset
+        with selection box shape (X, Y), for axis 1, this would leave a
+        selection of shape (X, 1).  We count the number of points N_leftover
+        remaining in the selection and compute the axis selection length by
+        N_axis = N/N_leftover.
+        """
+
+        if(boxshape[axis]) == 1:
+            return 1
+
+        start = bottomcorner.copy()
+        start[axis] += 1
+        count = boxshape.copy()
+        count[axis] -= 1
+
+        # Throw away all points along this axis
+        masked_sid = sid.copy()
+        masked_sid.select_hyperslab(tuple(start), tuple(count), op=h5s.SELECT_NOTB)
+
+        N_leftover = masked_sid.get_select_npoints()
+
+        return N//N_leftover
+
+
+    shape = tuple(get_n_axis(sid, x) for x in xrange(rank))
+
+    if np.product(shape) != N:
+        # This means multiple hyperslab selections are in effect,
+        # so we fall back to a 1D shape
+        return (N,)
+
+    return shape
 
 
 
