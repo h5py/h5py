@@ -809,8 +809,8 @@ class TestRegionRefs(BaseDataset):
 
     def setUp(self):
         BaseDataset.setUp(self)
-        self.dset = self.f.create_dataset('x', (100, 100), dtype='i')
         self.data = np.arange(100*100).reshape((100,100))
+        self.dset = self.f.create_dataset('x', data=self.data)
         self.dset[...] = self.data
 
     def test_create_ref(self):
