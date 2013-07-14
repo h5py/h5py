@@ -78,6 +78,17 @@ DEF HDF5_VERSION = %(hdf5_version)s
             os.utime(localpath('h5py',m+'.pyx'),None)
 
 
+# --- Detect build issues -----------------------------------------------------
+
+if not op.isfile(localpath('h5py','defs.pyx')):
+    raise ValueError("""\
+defs.pyx not present
+When building from a git checkout (or Github tarball), API files must first
+be generated:
+$ cd h5py
+$ python api_gen.py
+""")
+
 # --- Determine configuration settings ----------------------------------------
 
 settings = configure.scrape_eargs()          # lowest priority
