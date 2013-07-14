@@ -1,6 +1,6 @@
 import re
 import warnings
-
+import os.path as op
 
 class BadLineError(Exception):
     pass
@@ -59,12 +59,12 @@ class FunctionCruncher2(object):
     def run(self):
 
         # Function definitions file
-        self.functions = open('api_functions.txt','r')
+        self.functions = open(op.join('h5py', 'api_functions.txt'), 'r')
 
         # Create output files
-        self.raw_defs =     open('_hdf5.pxd','w')
-        self.cython_def =   open('defs.pxd','w')
-        self.cython_imp =   open('defs.pyx','w')
+        self.raw_defs =     open(op.join('h5py', '_hdf5.pxd'), 'w')
+        self.cython_def =   open(op.join('h5py', 'defs.pxd'), 'w')
+        self.cython_imp =   open(op.join('h5py', 'defs.pyx'), 'w')
 
         self.raw_defs.write(raw_preamble)
         self.cython_def.write(def_preamble)
@@ -189,12 +189,7 @@ cdef %(code)s %(fname)s(%(sig)s) except *:
         imp = self.add_cython_if(function_parts, imp)
         return imp
 
-if __name__ == '__main__':
 
-    import sys
-    stub = True if 'stub' in sys.argv else False
+def run(stub=False):
     fc = FunctionCruncher2(stub)
     fc.run()
-
-
-
