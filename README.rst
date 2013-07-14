@@ -25,14 +25,16 @@ Optionally:
 * Cython 0.13 or later, to build from a git checkout
 * If using Python 2.6, unittest2 is needed to run the tests
 
-Installing from tarball
------------------------
+Installing from release tarball
+-------------------------------
 
 Run the following commands::
 
    python setup.py build [--hdf5=/path/to/hdf5]
    python setup.py test   # optional
    [sudo] python setup.py install
+
+For a GitHub or source tarball, follow the Git Checkout instructions below.
 
 Installing via easy_install
 ---------------------------
