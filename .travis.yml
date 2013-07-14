@@ -19,8 +19,6 @@ before_install:
 
 install: 
     - cd h5py
-    - python api_gen.py
-    - cd ..
     - python setup.py build -f
 
 script: "python setup.py test"
