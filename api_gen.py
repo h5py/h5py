@@ -193,3 +193,6 @@ cdef %(code)s %(fname)s(%(sig)s) except *:
 def run(stub=False):
     fc = FunctionCruncher2(stub)
     fc.run()
+
+if __name__ == '__main__':
+    run()
