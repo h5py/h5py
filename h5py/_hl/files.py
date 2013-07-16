@@ -50,11 +50,10 @@ def make_fapl(driver, libver, **kwds):
     return plist
 
 
-def make_fid(name, mode, userblock_size, fapl):
+def make_fid(name, mode, userblock_size, fapl, fcpl=None):
     """ Get a new FileID by opening or creating a file.
     Also validates mode argument."""
 
-    fcpl = None
     if userblock_size is not None:
         if mode in ('r', 'r+'):
             raise ValueError("User block may only be specified "
@@ -63,7 +62,8 @@ def make_fid(name, mode, userblock_size, fapl):
             userblock_size = int(userblock_size)
         except (TypeError, ValueError):
             raise ValueError("User block size must be an integer")
-        fcpl = h5p.create(h5p.FILE_CREATE)
+        if fcpl is None:
+            fcpl = h5p.create(h5p.FILE_CREATE)
         fcpl.set_userblock(userblock_size)
 
     if mode == 'r':
