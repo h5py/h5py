@@ -95,6 +95,9 @@ LINK_ACCESS = lockcls(H5P_LINK_ACCESS)
 GROUP_CREATE = lockcls(H5P_GROUP_CREATE)
 OBJECT_CREATE = lockcls(H5P_OBJECT_CREATE)
 
+CRT_ORDER_TRACKED = H5P_CRT_ORDER_TRACKED
+CRT_ORDER_INDEXED = H5P_CRT_ORDER_INDEXED
+
 DEFAULT = None   # In the HDF5 header files this is actually 0, which is an
                  # invalid identifier.  The new strategy for default options
                  # is to make them all None, to better match the Python style
@@ -332,6 +335,24 @@ cdef class PropFCID(PropCreateID):
         cdef size_t size
         H5Pget_sizes(self.id, &addr, &size)
         return (addr, size)
+
+    def set_link_creation_order(self, unsigned int flags):
+        """ (UINT flags)
+
+        Set tracking and indexing of creation order for links added to this group
+
+        flags -- h5p.CRT_ORDER_TRACKED, h5p.CRT_ORDER_INDEXED
+        """
+        H5Pset_link_creation_order(self.id, flags)
+
+    def get_link_creation_order(self):
+        """ () -> UINT flags
+
+        Get tracking and indexing of creation order for links added to this group
+        """
+        cdef unsigned int flags
+        H5Pget_link_creation_order(self.id, &flags)
+        return flags
 
 
 # Dataset creation
@@ -1097,9 +1118,25 @@ cdef class PropLAID(PropInstanceID):
 
 # Group creation
 cdef class PropGCID(PropOCID):
-
     """ Group creation property list """
-    pass
+
+    def set_link_creation_order(self, unsigned int flags):
+        """ (UINT flags)
+
+        Set tracking and indexing of creation order for links added to this group
+
+        flags -- h5p.CRT_ORDER_TRACKED, h5p.CRT_ORDER_INDEXED
+        """
+        H5Pset_link_creation_order(self.id, flags)
+
+    def get_link_creation_order(self):
+        """ () -> UINT flags
+
+        Get tracking and indexing of creation order for links added to this group
+        """
+        cdef unsigned int flags
+        H5Pget_link_creation_order(self.id, &flags)
+        return flags
 
 
 # Object creation property list
