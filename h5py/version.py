@@ -1,5 +1,7 @@
 from . import h5 as _h5
 from distutils.version import StrictVersion as _sv
+import sys
+import numpy
 
 version = "2.2.0b1"
 _exp = _sv(version)
@@ -16,5 +18,23 @@ __doc__ = """\
 This is h5py **%s**
 
 * HDF5 version: **%s**
-* API compatibility: **%s**
-""" % (version, hdf5_version, api_version)
+""" % (version, hdf5_version)
+
+info = """\
+Summary of the h5py configuration
+---------------------------------
+
+h5py    %(h5py)s
+HDF5    %(hdf5)s
+Python  %(python)s
+sys.platform    %(platform)s
+sys.maxsize     %(maxsize)s
+numpy   %(numpy)s
+""" % { 'h5py': version,
+        'hdf5': hdf5_version,
+        'python': sys.version,
+        'platform': sys.platform,
+        'maxsize': sys.maxsize,
+        'numpy': numpy.__version__ }
+
+
