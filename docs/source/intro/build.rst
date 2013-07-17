@@ -30,11 +30,11 @@ You will need:
 
   * HDF5 1.8.4 or newer, shared library version with development headers (``libhdf5-dev`` or similar)
   * Python 2.6 - 3.3 with development headers (``python-dev`` or similar)
-  * NumPy 1.5 or newer
+  * NumPy 1.5 or newer (1.6 recommended)
 
 With ``pip`` or ``easy_install``::
 
-    $ pip install HDF5
+    $ pip install h5py
 
 Manually, from the h5py tarball::
 
@@ -45,7 +45,7 @@ Manually, from the h5py tarball::
 .. note::
 
     If you want access to features in HDF5 newer than 1.8.4, you will
-    additionally need to install Cython (cython.org).
+    additionally need to install `Cython <http://cython.org>`_.
 
 
 Running the test suite
@@ -65,19 +65,6 @@ After installing h5py::
 Custom installation
 -------------------
 
-The variable ``HDF5_DIR`` may contain the path to your
-installation of HDF5.  The directory you provide should contain a subdirectory
-called ``lib``::
-
-    $ export HDF5_DIR=/path/to/hdf5
-    $ pip install h5py
-
-The variable ``HDF5_VERSION`` manually tells h5py to build against a specific
-version of HDF5, and disables the version auto-detection in ``setup.py``::
-
-    $ export HDF5_VERSION=1.8.11
-    $ pip install h5py
-
 Build options can also be passed to ``setup.py`` directly.  Keep in mind these
 options are "sticky".  They hang around between e.g. ``build`` and ``test``
 invocations of h5py.
@@ -91,6 +78,21 @@ Manually specifying the HDF5 version (disables auto-detection)::
 
     $ python setup.py install --hdf5-version=1.8.11
     $ python setup.py install --hdf5-version=default   # re-enable autodetection
+
+You can also configure h5py using environment variables.
+The variable ``HDF5_DIR`` may contain the path to your
+installation of HDF5.  The directory you provide should contain a subdirectory
+called ``lib``::
+
+    $ export HDF5_DIR=/path/to/hdf5
+    $ pip install h5py
+
+The variable ``HDF5_VERSION`` manually tells h5py to build against a specific
+version of HDF5, and disables the version auto-detection in ``setup.py``::
+
+    $ export HDF5_VERSION=1.8.11
+    $ pip install h5py
+
 
 
 Building against Parallel HDF5
