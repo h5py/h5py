@@ -10,6 +10,7 @@ python:
   - "2.6"
   - "2.7"
   - "3.2"
+  - "3.3"
 
 before_install:
     - sudo apt-get update -qq
@@ -18,9 +19,6 @@ before_install:
     - pip install cython numpy
 
 install: 
-    - cd h5py
-    - python api_gen.py
-    - cd ..
     - python setup.py build -f
 
 script: "python setup.py test"
