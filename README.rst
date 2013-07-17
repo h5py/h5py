@@ -1,8 +1,8 @@
 .. image:: https://travis-ci.org/h5py/h5py.png
    :target: https://travis-ci.org/h5py/h5py
 
-h5py version 2.1.2
-==================
+HDF5 for Python
+===============
 
 Websites
 --------
@@ -25,8 +25,8 @@ Optionally:
 * Cython 0.13 or later, to build from a git checkout
 * If using Python 2.6, unittest2 is needed to run the tests
 
-Installing from tarball
------------------------
+Installing from release tarball
+-------------------------------
 
 Run the following commands::
 
@@ -52,19 +52,17 @@ h5py from source:
    
       git clone https://github.com/h5py/h5py.git
 
-2. Generate the Cython files which talk to HDF5::
- 
-      cd h5py/h5py 
-      python api_gen.py
-
-3. Build the project (this step also auto-compiles the .c files)::
+2. Build the project (this step also auto-compiles the .c files)::
   
-      cd ..
       python setup.py build [--hdf5=/path/to/hdf5]
 
-4. Run the unit tests (optional)::
+3. Run the unit tests (optional)::
   
       python setup.py test
+
+If you add new functions to api_functions.txt, remember to run the script
+api_gen.py to update the Cython interface.  See the developer guide at
+http://www.h5py.org for more information.
 
 Reporting bugs
 --------------
