@@ -23,7 +23,7 @@
 
 import re
 import warnings
-
+import os.path as op
 
 class BadLineError(Exception):
   pass
@@ -82,8 +82,9 @@ cdef %(ret)s %(func)s(%(sig)s) except *:
 
 class FunctionCruncher(object):
 
-  def __init__(self, args=None):
-    self.args = args
+  def __init__(self, stub, verbose):
+    self.stub = stub
+    self.verbose = verbose
     self.retTypes=set()
 
   def run(self):
@@ -94,7 +95,7 @@ class FunctionCruncher(object):
 
 
     # Function definitions file
-    fsAPIFunc = open('api_functions.txt','r')
+    fsAPIFunc = open(op.join('h5py', 'api_functions.txt'),'r')
     for line in fsAPIFunc:
       if not line or line[0] == '#' or line[0] == '\n':
         continue
@@ -108,24 +109,24 @@ class FunctionCruncher(object):
     # Create output files
     filenames=('_hdf5.pxd','defs.pxd','defs.pyx')
 
-    fsRaw = open(filenames[0],'w')
+    fsRaw = open(op.join('h5py', filenames[0]),'w')
     fsRaw.write(strTbl.preambleRaw)
     fsRaw.write(self.strRaw)
     fsRaw.close()
 
-    fsDef = open(filenames[1],'w')
+    fsDef = open(op.join('h5py', filenames[1]),'w')
     fsDef.write(strTbl.preambleDef)
     fsDef.write(self.strDef)
     self.epiDef+='  pass\n'#needed because there are no "hdf5_hl.h" in this block
     fsDef.write(self.epiDef)
     fsDef.close()
 
-    fsImp = open(filenames[2],'w')
+    fsImp = open(op.join('h5py', filenames[2]),'w')
     fsImp.write(strTbl.preambleImp)
     fsImp.write(self.strImp)
     fsImp.close()
 
-    if self.args.verbose:
+    if self.verbose:
       print('Existing ReturnTypes are:')
       rtLst=list(self.retTypes)
       rtLst.sort()
@@ -156,7 +157,7 @@ class FunctionCruncher(object):
       dictFuncElem['sig']=dictFuncElem['sig'].replace('const_unsigned long', 'const_unsigned_long')
       dictFuncElem['sig']=dictFuncElem['sig'].replace('const_long long', 'const_long_long')
 
-      if self.args.verbose:
+      if self.verbose:
         print dictFuncElem
       args = regexParam.findall(dictFuncElem['sig'])
       if args is None:
@@ -171,12 +172,12 @@ class FunctionCruncher(object):
         dictFuncElem['condition']="==NULL"
         self.strRaw+=strTbl.tplRaw%dictFuncElem
         self.strDef+=strTbl.tplDef%dictFuncElem
-        self.strImp+=(strTbl.tplImpStub if self.args.stub else strTbl.tplImp)%dictFuncElem
+        self.strImp+=(strTbl.tplImpStub if self.stub else strTbl.tplImp)%dictFuncElem
       elif ret in ('hsize_t','size_t'):
         dictFuncElem['condition']="==0"
         self.strRaw+=strTbl.tplRaw%dictFuncElem
         self.strDef+=strTbl.tplDef%dictFuncElem
-        self.strImp+=(strTbl.tplImpStub if self.args.stub else strTbl.tplImp)%dictFuncElem
+        self.strImp+=(strTbl.tplImpStub if self.stub else strTbl.tplImp)%dictFuncElem
       elif ret in ('char*',): #no exception handling. only direct import
         self.epiDef+=strTbl.tplRaw%dictFuncElem
       elif ret in ('int', 'herr_t', 'htri_t', 'hid_t','hssize_t','ssize_t','haddr_t','H5S_sel_type') \
@@ -184,7 +185,7 @@ class FunctionCruncher(object):
         dictFuncElem['condition']="<0"
         self.strRaw+=strTbl.tplRaw%dictFuncElem
         self.strDef+=strTbl.tplDef%dictFuncElem
-        self.strImp+=(strTbl.tplImpStub if self.args.stub else strTbl.tplImp)%dictFuncElem
+        self.strImp+=(strTbl.tplImpStub if self.stub else strTbl.tplImp)%dictFuncElem
       #elif '*' in ret or ret in ('H5T_conv_t',):
       #  condition = "==NULL"
       else:
@@ -193,6 +194,10 @@ class FunctionCruncher(object):
       inc = line.split(':')[0]
       self.strRaw+='cdef extern from "%s.h":\n' % inc
       self.epiDef+='\ncdef extern from "%s.h":\n' % inc
+
+def run(stub=False):
+    fc = FunctionCruncher(stub,False)
+    fc.run()
 
 if __name__ == '__main__':
 
@@ -206,7 +211,7 @@ if __name__ == '__main__':
   else:
     args.stub = False
   args.verbose = True if '-v' in sys.argv else False
-  fc = FunctionCruncher(args)
+  fc = FunctionCruncher(args.stub,args.verbose)
   fc.run()
 
 

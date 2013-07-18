@@ -49,6 +49,12 @@ hdf5:
 
   herr_t    H5Fget_intent(hid_t file_id, unsigned *intent)
 
+  herr_t    H5Fget_mdc_config(hid_t file_id, H5AC_cache_config_t *config_ptr)
+  herr_t    H5Fget_mdc_hit_rate(hid_t file_id, double *hit_rate_ptr)
+  herr_t    H5Fget_mdc_size(hid_t file_id, size_t *max_size_ptr, size_t *min_clean_size_ptr, size_t *cur_size_ptr, int *cur_num_entries_ptr)
+  herr_t    H5Freset_mdc_hit_rate_stats(hid_t file_id)
+  herr_t    H5Fset_mdc_config(hid_t file_id, H5AC_cache_config_t *config_ptr)
+
 # === H5FD - Low-level file descriptor API ====================================
 
 # === H5G - Groups API ========================================================
@@ -85,6 +91,7 @@ hdf5:
 
 # === H5L - Links interface (1.8.X only) ======================================
 
+  herr_t    H5Lmove(hid_t src_loc, const char *src_name, hid_t dst_loc, const char *dst_name, hid_t lcpl_id, hid_t lapl_id)
   herr_t    H5Lcreate_hard(hid_t cur_loc, const char *cur_name, hid_t dst_loc, const char *dst_name, hid_t lcpl_id, hid_t lapl_id)
   herr_t    H5Lcreate_soft(const char *link_target, hid_t link_loc_id, const char *link_name, hid_t lcpl_id, hid_t lapl_id)
   herr_t    H5Lget_val(hid_t loc_id, const char *name, void *buf, size_t size, hid_t lapl_id)
@@ -198,6 +205,14 @@ hdf5:
   herr_t    H5Pset_obj_track_times( hid_t ocpl_id, hbool_t track_times )
   herr_t    H5Pget_obj_track_times( hid_t ocpl_id, hbool_t *track_times )
 
+  herr_t    H5Pset_local_heap_size_hint(hid_t plist_id, size_t size_hint)
+  herr_t    H5Pget_local_heap_size_hint(hid_t plist_id, size_t *size_hint)
+  herr_t    H5Pset_link_phase_change(hid_t plist_id, unsigned max_compact, unsigned min_dense)
+  herr_t    H5Pget_link_phase_change(hid_t plist_id, unsigned *max_compact , unsigned *min_dense)
+  herr_t    H5Pset_est_link_info(hid_t plist_id, unsigned est_num_entries, unsigned est_name_len)
+  herr_t    H5Pget_est_link_info(hid_t plist_id, unsigned *est_num_entries , unsigned *est_name_len)
+  herr_t    H5Pset_link_creation_order(hid_t plist_id, unsigned crt_order_flags)
+  herr_t    H5Pget_link_creation_order(hid_t plist_id, unsigned *crt_order_flags)
   herr_t    H5Pset_libver_bounds(hid_t plist_id, H5F_libver_t low, H5F_libver_t high)
   herr_t    H5Pget_libver_bounds(hid_t plist_id, H5F_libver_t *low, H5F_libver_t *high)
 
