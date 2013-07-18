@@ -1,14 +1,4 @@
-try:
-    from h5py import _errors
-except ImportError as e:
-    raise ImportError("""\
-Failed to import module "_errors".
-This usually means that something went wrong with the h5py build process.
-Check the installation guide at http://www.h5py.org.
-Original exception:
-%s
-""" % str(e))
-
+from h5py import _errors
 _errors.silence_errors()
 
 from h5py import _conv

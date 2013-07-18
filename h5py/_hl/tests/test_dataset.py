@@ -738,16 +738,6 @@ class TestFloats(BaseDataset):
         """ Mini-floats round trip """
         self._exectest(np.dtype('float16'))
 
-    @ut.skipUnless(hasattr(np, 'float96'), "NumPy float96 support required")
-    def test_96(self):
-        """ Extended (96-bit) float """
-        self._exectest(np.dtype('float96'))
-
-    @ut.skipUnless(hasattr(np, 'float128'), "NumPy float128 support required")
-    def test_quad(self):
-        """ Quad floats round trip """
-        self._exectest(np.dtype('float128'))
-
     #TODO: move these tests to test_h5t
     def test_mini_mapping(self):
         """ Test mapping for float16 """
@@ -755,14 +745,6 @@ class TestFloats(BaseDataset):
             self.assertEqual(h5t.IEEE_F16LE.dtype, np.dtype('<f2'))
         else:
             self.assertEqual(h5t.IEEE_F16LE.dtype, np.dtype('<f4'))
-
-    def test_ldouble_mapping(self):
-        """ Test mapping for extended-precision """
-        self.assertEqual(h5t.NATIVE_LDOUBLE.dtype, np.longdouble(1).dtype)
-        if hasattr(np, 'float96'):
-            self.assertEqual(h5t.py_create(np.dtype('float96')).dtype, np.longdouble(1).dtype)
-        if hasattr(np, 'float128'):
-            self.assertEqual(h5t.py_create(np.dtype('float128')).dtype, np.longdouble(1).dtype)
 
 class TestTrackTimes(BaseDataset):
 

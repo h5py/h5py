@@ -37,7 +37,7 @@ Other new features
 ==================
 
 * Support for Python 3.3
-* Support for short (16-bit) and extended-precision floats
+* Support for 16-bit "mini" floats
 * Access to the HDF5 scale-offset filter
 * Field names are now allowed when writing to a dataset
 * Region references now preserve the shape of their selections

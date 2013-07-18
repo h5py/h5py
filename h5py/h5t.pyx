@@ -211,15 +211,6 @@ IEEE_F16LE = IEEE_F16BE.copy()
 IEEE_F16LE.set_order(H5T_ORDER_LE)
 IEEE_F16LE.lock()
 
-# Extended-precision floats
-NATIVE_LDOUBLE = lockid(H5T_NATIVE_LDOUBLE)
-_LDOUBLE_LE = NATIVE_LDOUBLE.copy()
-_LDOUBLE_LE.set_order(H5T_ORDER_LE)
-_LDOUBLE_LE.lock()
-_LDOUBLE_BE = NATIVE_LDOUBLE.copy()
-_LDOUBLE_BE.set_order(H5T_ORDER_BE)
-_LDOUBLE_BE.lock()
-
 # Translation tables for HDF5 -> NumPy dtype conversion
 cdef dict _order_map = { H5T_ORDER_NONE: '|', H5T_ORDER_LE: '<', H5T_ORDER_BE: '>'}
 cdef dict _sign_map  = { H5T_SGN_NONE: 'u', H5T_SGN_2: 'i' }
@@ -1191,8 +1182,8 @@ cdef class TypeEnumID(TypeCompositeID):
 # of NumPy dtype into an HDF5 type object.  The result is guaranteed to be
 # transient and unlocked.
 
-cdef dict _float_le = {2: IEEE_F16LE.id, 4: H5T_IEEE_F32LE, 8: H5T_IEEE_F64LE, 12: _LDOUBLE_LE.id, 16: _LDOUBLE_LE.id}
-cdef dict _float_be = {2: IEEE_F16BE.id, 4: H5T_IEEE_F32BE, 8: H5T_IEEE_F64BE, 12: _LDOUBLE_BE.id, 16: _LDOUBLE_BE.id}
+cdef dict _float_le = {2: IEEE_F16LE.id, 4: H5T_IEEE_F32LE, 8: H5T_IEEE_F64LE}
+cdef dict _float_be = {2: IEEE_F16BE.id, 4: H5T_IEEE_F32BE, 8: H5T_IEEE_F64BE}
 cdef dict _float_nt = _float_le if ORDER_NATIVE == H5T_ORDER_LE else _float_be
 
 cdef dict _int_le = {1: H5T_STD_I8LE, 2: H5T_STD_I16LE, 4: H5T_STD_I32LE, 8: H5T_STD_I64LE}

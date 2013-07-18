@@ -16,13 +16,10 @@ Support for Python 3.3
 Python 3.3 is now officially supported.
 
 
-Short and extended-precision float support (issue #141)
--------------------------------------------------------
+Mini float support (issue #141)
+-------------------------------
 
-Two-byte floats (NumPy ``float16``) and long-double (``float96`` or
-``float128``) are supported.  The native NumPy longdouble representation is
-used when 96-bit or 128-bit floats are encountered in a file.
-
+Two-byte floats (NumPy ``float16``) are supported.
 
 HDF5 scale/offset filter
 ------------------------
