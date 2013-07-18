@@ -61,3 +61,22 @@ class TestPL(ut.TestCase):
 
         ocid.set_obj_track_times(True)
         self.assertEqual(True,ocid.get_obj_track_times())
+
+    def test_link_creation_tracking(self):
+        """
+        tests the link creation order set/get
+        """
+
+        gcid = h5p.create(h5p.GROUP_CREATE)
+        gcid.set_link_creation_order(0)
+        self.assertEqual(0, gcid.get_link_creation_order())
+
+        flags = h5p.CRT_ORDER_TRACKED|h5p.CRT_ORDER_INDEXED
+        gcid.set_link_creation_order(flags)
+        self.assertEqual(flags, gcid.get_link_creation_order())
+
+        # test for file creation
+        fcpl = h5p.create(h5p.FILE_CREATE)
+        fcpl.set_link_creation_order(flags)
+        self.assertEqual(flags, fcpl.get_link_creation_order())
+

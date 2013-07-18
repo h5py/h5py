@@ -14,6 +14,7 @@ import numpy as np
 
 from .common import ut, TestCase
 from h5py.highlevel import File, Group, Dataset
+from h5py import h5t
 import h5py
 
 class BaseDataset(TestCase):
@@ -225,6 +226,20 @@ class TestCreateFillvalue(BaseDataset):
         with self.assertRaises(ValueError):
             dset = self.f.create_dataset('foo', (10,),
                     dtype=[('a','i'),('b','f')], fillvalue=42)
+
+class TestCreateNamedType(BaseDataset):
+
+    """
+        Feature: Datasets created from an existing named type
+    """
+
+    def test_named(self):
+        """ Named type object works and links the dataset to type """
+        self.f['type'] = np.dtype('f8')
+        dset = self.f.create_dataset('x', (100,), dtype=self.f['type'])
+        self.assertEqual(dset.dtype, np.dtype('f8'))
+        self.assertEqual(dset.id.get_type(), self.f['type'].id)
+        self.assertTrue(dset.id.get_type().committed())
 
 @ut.skipIf('gzip' not in h5py.filters.encode, "DEFLATE is not installed")
 class TestCreateGzip(BaseDataset):
@@ -705,6 +720,32 @@ class TestEnum(BaseDataset):
         self.assertEqual(ds[35,37], 42)
         self.assertArrayEqual(ds[1,:], np.array((1,)*100,dtype='i4'))
 
+class TestFloats(BaseDataset):
+
+    """
+        Test support for mini and extended-precision floats
+    """
+
+    def _exectest(self, dt):
+        dset = self.f.create_dataset('x', (100,), dtype=dt)
+        self.assertEqual(dset.dtype, dt)
+        data = np.ones((100,), dtype=dt)
+        dset[...] = data
+        self.assertArrayEqual(dset[...], data)
+
+    @ut.skipUnless(hasattr(np, 'float16'), "NumPy float16 support required") 
+    def test_mini(self):
+        """ Mini-floats round trip """
+        self._exectest(np.dtype('float16'))
+
+    #TODO: move these tests to test_h5t
+    def test_mini_mapping(self):
+        """ Test mapping for float16 """
+        if hasattr(np, 'float16'):
+            self.assertEqual(h5t.IEEE_F16LE.dtype, np.dtype('<f2'))
+        else:
+            self.assertEqual(h5t.IEEE_F16LE.dtype, np.dtype('<f4'))
+
 class TestTrackTimes(BaseDataset):
 
     """
@@ -741,3 +782,43 @@ class TestZeroShape(BaseDataset):
         self.assertEqual(ds[...].dtype, arr.dtype)
         self.assertEqual(ds[()].shape, arr.shape)
         self.assertEqual(ds[()].dtype, arr.dtype)
+
+class TestRegionRefs(BaseDataset):
+
+    """
+        Various features of region references
+    """
+
+    def setUp(self):
+        BaseDataset.setUp(self)
+        self.data = np.arange(100*100).reshape((100,100))
+        self.dset = self.f.create_dataset('x', data=self.data)
+        self.dset[...] = self.data
+
+    def test_create_ref(self):
+        """ Region references can be used as slicing arguments """
+        slic = np.s_[25:35,10:100:5]
+        ref = self.dset.regionref[slic]
+        self.assertArrayEqual(self.dset[ref], self.data[slic])
+
+    def test_ref_shape(self):
+        """ Region reference shape and selection shape """
+        slic = np.s_[25:35,10:100:5]
+        ref = self.dset.regionref[slic]
+        self.assertEqual(self.dset.regionref.shape(ref), self.dset.shape)
+        self.assertEqual(self.dset.regionref.selection(ref), (10, 18))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

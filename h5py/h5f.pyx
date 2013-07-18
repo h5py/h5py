@@ -14,11 +14,14 @@
     Low-level operations on HDF5 file objects.
 """
 
+include "config.pxi"
+
 # Compile-time imports
 from _objects cimport pdefault
 from h5p cimport propwrap, PropFAID, PropFCID
 from h5t cimport typewrap
 from h5i cimport wrap_identifier
+from h5ac cimport CacheConfig
 from utils cimport emalloc, efree
 
 from h5py import _objects
@@ -344,3 +347,86 @@ cdef class FileID(GroupID):
         cdef int *handle
         H5Fget_vfd_handle(self.id, H5Fget_access_plist(self.id), <void**>&handle)
         return handle[0]
+
+
+    IF MPI and HDF5_VERSION >= (1, 8, 9):
+
+        def set_mpi_atomicity(self, bint atomicity):
+            """ (BOOL atomicity)
+
+            For MPI-IO driver, set to atomic (True), which guarantees sequential 
+            I/O semantics, or non-atomic (False), which improves  performance.
+
+            Default is False.
+
+            Feature requires: 1.8.9 and Parallel HDF5
+            """
+            H5Fset_mpi_atomicity(self.id, <hbool_t>atomicity)
+
+
+        def get_mpi_atomicity(self):
+            """ () => BOOL
+
+            Return atomicity setting for MPI-IO driver.
+
+            Feature requires: 1.8.9 and Parallel HDF5
+            """
+            cdef hbool_t atom
+
+            H5Fget_mpi_atomicity(self.id, &atom)
+            return <bint>atom
+
+    def get_mdc_hit_rate(self):
+        """() => DOUBLE
+
+        Retrieve the cache hit rate
+
+        """
+        cdef double hit_rate
+        H5Fget_mdc_hit_rate(self.id, &hit_rate)
+        return hit_rate
+
+    def get_mdc_size(self):
+        """() => (max_size, min_clean_size, cur_size, cur_num_entries) [SIZE_T, SIZE_T, SIZE_T, INT]
+
+        Obtain current metadata cache size data for specified file.
+
+        """
+        cdef size_t max_size
+        cdef size_t min_clean_size
+        cdef size_t cur_size
+        cdef int cur_num_entries
+
+
+        H5Fget_mdc_size(self.id, &max_size, &min_clean_size, &cur_size, &cur_num_entries)
+
+        return (max_size, min_clean_size, cur_size, cur_num_entries)
+
+    def reset_mdc_hit_rate_stats(self):
+        """no return
+
+        rests the hit-rate statistics
+
+        """
+        H5Freset_mdc_hit_rate_stats(self.id)
+
+    def get_mdc_config(self):
+        """() => CacheConfig
+        Returns an object that stores all the information about the meta-data cache
+        configuration
+        """
+
+        cdef CacheConfig config = CacheConfig()
+
+        H5Fget_mdc_config(self.id, &config.cache_config)
+
+        return config
+
+    def set_mdc_config(self, CacheConfig config not None):
+        """(CacheConfig) => None
+        Returns an object that stores all the information about the meta-data cache
+        configuration
+        """
+        # I feel this should have some sanity checking to make sure that
+        H5Fset_mdc_config(self.id, &config.cache_config)
+

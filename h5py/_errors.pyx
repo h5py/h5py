@@ -45,6 +45,8 @@ _minor_table = {
     H5E_CANTDELETE:     KeyError,    # Can't delete message
 
     H5E_CANTOPENOBJ:    KeyError,
+
+    H5E_CANTMOVE:       ValueError,  # Can't move a link
   }
 
 # "Fudge" table to accomodate annoying inconsistencies in HDF5's use 

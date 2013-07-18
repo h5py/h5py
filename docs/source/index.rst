@@ -15,22 +15,15 @@ If you've never used h5py before, you may want to begin with the :ref:`quick`
 Our `main website is at www.h5py.org <http://www.h5py.org/>`_.
 
 ===============
-Getting Started
+HDF5 for Python
 ===============
 
 .. toctree::
     :maxdepth: 2
 
+    whatsnew/index
     intro/index
     high/index
-
-============
-More Details
-============
-
-.. toctree::
-    :maxdepth: 2
-
     topics/index
     low/index
-    licenses
+    meta/index

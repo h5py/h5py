@@ -2,11 +2,12 @@ import posixpath as pp
 
 import numpy
 
-from h5py import h5g, h5i, h5o, h5r, h5t, h5l
+from h5py import h5g, h5i, h5o, h5r, h5t, h5l, h5p
 from . import base
 from .base import HLObject, DictCompat, py3
 from . import dataset
 from . import datatype
+
 
 class Group(HLObject, DictCompat):
 
@@ -67,8 +68,8 @@ class Group(HLObject, DictCompat):
             retain (pass 0 to let HDF5 determine the minimum number of
             bits necessary for lossless compression). For floating point
             data, scaleoffset is the number of digits after the decimal
-            place to retain; stored values thus have absolute error 
-            less than 0.5*10**(-scaleoffset). 
+            place to retain; stored values thus have absolute error
+            less than 0.5*10**(-scaleoffset).
         shuffle
             (T/F) Enable shuffle filter.
         fletcher32
@@ -175,11 +176,14 @@ class Group(HLObject, DictCompat):
         >>> if cls == SoftLink:
         ...     print '"foo" is a soft link!'
         """
+        if not (getclass or getlink):
+            try:
+                return self[name]
+            except KeyError:
+                return default
+
         if not name in self:
             return default
-
-        if not (getclass or getlink):
-            return self[name]
 
         elif getclass and not getlink:
             typecode = h5o.get_info(self.id, self._e(name)).type
@@ -273,8 +277,10 @@ class Group(HLObject, DictCompat):
         """ Test if a member name exists """
         return self._e(name) in self.id
 
-    def copy(self, source, dest, name=None):
-        """ Copy an object or group.
+    def copy(self, source, dest, name=None,
+             shallow=False, expand_soft=False, expand_external=False,
+             expand_refs=False, without_attrs=False):
+        """Copy an object or group.
 
         The source can be a path, Group, Dataset, or Datatype object.  The
         destination can be either a path or a Group object.  The source and
@@ -287,7 +293,19 @@ class Group(HLObject, DictCompat):
         be created in that group with its current name (basename of obj.name).
         You can override that by setting "name" to a string.
 
-        Example:
+        There are various options which all default to "False":
+
+         - shallow: copy only immediate members of a group. 
+
+         - expand_soft: expand soft links into new objects.
+
+         - expand_external: expand external links into new objects.
+
+         - expand_refs: copy objects that are pointed to by references.
+
+         - without_attrs: copy object without copying attributes.
+
+       Example:
 
         >>> f = File('myfile.hdf5')
         >>> f.listnames()
@@ -317,8 +335,36 @@ class Group(HLObject, DictCompat):
             # Interpret destination as a path relative to this group
             dest_path = dest
             dest = self
+            
+        flags = 0
+        if shallow:
+            flags |= h5o.COPY_SHALLOW_HIERARCHY_FLAG
+        if expand_soft:
+            flags |= h5o.COPY_EXPAND_SOFT_LINK_FLAG
+        if expand_external:
+            flags |= h5o.COPY_EXPAND_EXT_LINK_FLAG
+        if expand_refs:
+            flags |= h5o.COPY_EXPAND_REFERENCE_FLAG
+        if without_attrs:
+            flags |= h5o.COPY_WITHOUT_ATTR_FLAG
+        if flags:
+            copypl = h5p.create(h5p.OBJECT_COPY)
+            copypl.set_copy_object(flags)
+        else:
+            copypl = None
+        
+        h5o.copy(source.id, self._e(source_path), dest.id, self._e(dest_path),
+                 copypl, base.dlcpl)
 
-        h5o.copy(source.id, self._e(source_path), dest.id, self._e(dest_path))
+    def move(self, source, dest):
+        """ Move a link to a new location in the file.
+
+        If "source" is a hard link, this effectively renames the object.  If
+        "source" is a soft or external link, the link itself is moved, with its
+        value unmodified.
+        """
+        self.id.links.move(self._e(source), self.id, self._e(dest),
+                           lapl=self._lapl, lcpl=self._lcpl)
 
     def visit(self, func):
         """ Recursively visit all names in this group and subgroups (HDF5 1.8).
@@ -379,10 +425,11 @@ class Group(HLObject, DictCompat):
         else:
             namestr = (u'"%s"' % self.name) if self.name is not None else u"(anonymous)"
             r = u'<HDF5 group %s (%d members)>' % (namestr, len(self))
-        
+
         if py3:
             return r
         return r.encode('utf8')
+
 
 class HardLink(object):
 
@@ -392,6 +439,7 @@ class HardLink(object):
     """
 
     pass
+
 
 #TODO: implement equality testing for these
 class SoftLink(object):
@@ -411,6 +459,7 @@ class SoftLink(object):
 
     def __repr__(self):
         return '<SoftLink to "%s">' % self.path
+
 
 class ExternalLink(object):
 
@@ -433,5 +482,3 @@ class ExternalLink(object):
 
     def __repr__(self):
         return '<ExternalLink to "%s" in file "%s"' % (self.path, self.filename)
-
-

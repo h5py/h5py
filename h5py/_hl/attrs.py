@@ -1,5 +1,6 @@
 import numpy
 
+import h5py
 from h5py import h5s, h5t, h5a
 from . import base
 from .dataset import readtime_dtype
@@ -87,15 +88,20 @@ class AttributeManager(base.DictCompat, base.CommonStateObject):
             if dtype is None:
                 dtype = data.dtype
 
-        if dtype is None:
-            dtype = numpy.dtype('f')
+        if isinstance(dtype, h5py.Datatype):
+            htype = dtype.id
+            dtype = htype.dtype
+        else:
+            if dtype is None:
+                dtype = numpy.dtype('f')
+            htype = h5t.py_create(dtype, logical=True)
+
         if shape is None:
             raise ValueError('At least one of "shape" or "data" must be given')
 
         data = data.reshape(shape)
 
         space = h5s.create_simple(shape)
-        htype = h5t.py_create(dtype, logical=True)
 
         if name in self:
             h5a.delete(self._id, self._e(name))

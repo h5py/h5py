@@ -2,6 +2,7 @@ import posixpath as pp
 import sys
 import numpy
 
+import h5py
 from h5py import h5s, h5t, h5r, h5d
 from .base import HLObject, py3
 from . import filters
@@ -51,13 +52,19 @@ def make_new_dset(parent, shape=None, dtype=None, data=None,
         if data is not None and (numpy.product(shape) != numpy.product(data.shape)):
             raise ValueError("Shape tuple is incompatible with data")
 
-    # Validate dtype
-    if dtype is None and data is None:
-        dtype = numpy.dtype("=f4")
-    elif dtype is None and data is not None:
-        dtype = data.dtype
+    if isinstance(dtype, h5py.Datatype):
+        # Named types are used as-is
+        tid = dtype.id
+        dtype = tid.dtype  # Following code needs this
     else:
-        dtype = numpy.dtype(dtype)
+        # Validate dtype
+        if dtype is None and data is None:
+            dtype = numpy.dtype("=f4")
+        elif dtype is None and data is not None:
+            dtype = data.dtype
+        else:
+            dtype = numpy.dtype(dtype)
+        tid = h5t.py_create(dtype, logical=1)
 
     # Legacy
     if any((compression, shuffle, fletcher32, maxshape,scaleoffset)) and chunks is False:
@@ -91,7 +98,7 @@ def make_new_dset(parent, shape=None, dtype=None, data=None,
     if maxshape is not None:
         maxshape = tuple(m if m is not None else h5s.UNLIMITED for m in maxshape)
     sid = h5s.create_simple(shape, maxshape)
-    tid = h5t.py_create(dtype, logical=1)
+
 
     dset_id = h5d.create(parent.id, None, tid, sid, dcpl=dcpl)
 
@@ -99,15 +106,6 @@ def make_new_dset(parent, shape=None, dtype=None, data=None,
         dset_id.write(h5s.ALL, h5s.ALL, data)
 
     return dset_id
-
-class _RegionProxy(object):
-
-    def __init__(self, dset):
-        self.id = dset.id
-
-    def __getitem__(self, args):
-        selection = sel.select(self.id.shape, args, dsid=self.id)
-        return h5r.create(self.id, b'.', h5r.DATASET_REGION, selection._id)
 
 class Dataset(HLObject):
 
@@ -201,14 +199,6 @@ class Dataset(HLObject):
         arr = numpy.ndarray((1,), dtype=self.dtype)
         dcpl = self._dcpl.get_fill_value(arr)
         return arr[0]
-
-    @property
-    def regionref(self):
-        """Create a region reference.  The syntax is regionref[<slices>].
-        For example, dset.regionref[...] creates a region reference in which
-        the whole dataset is selected.
-        """
-        return _RegionProxy(self)
 
     def __init__(self, bind):
         """ Create a new Dataset object by binding to a low-level DatasetID.
@@ -343,6 +333,26 @@ class Dataset(HLObject):
         new_dtype = readtime_dtype(self.id.dtype, names)
         mtype = h5t.py_create(new_dtype)
 
+        # === Special-case region references ====
+
+        if len(args) == 1 and isinstance(args[0], h5r.RegionReference):
+
+            obj = h5r.dereference(args[0], self.id)
+            if obj != self.id:
+                raise ValueError("Region reference must point to this dataset")
+
+            sid = h5r.get_region(args[0], self.id)
+            mshape = sel.guess_shape(sid)
+            if mshape is None:
+                return np.array((0,), dtype=new_dtype)
+            if numpy.product(mshape) == 0:
+                return np.array(mshape, dtype=new_dtype)
+            out = numpy.empty(mshape, dtype=new_dtype)
+            sid_out = h5s.create_simple(mshape)
+            sid_out.select_all()
+            self.id.read(sid_out, sid, out, mtype)
+            return out
+
         # === Check for zero-sized datasets =====
 
         if numpy.product(self.shape) == 0:
@@ -409,16 +419,25 @@ class Dataset(HLObject):
         names = tuple(x for x in args if isinstance(x, str))
         args = tuple(x for x in args if not isinstance(x, str))
 
-        if len(names) != 0:
-            raise TypeError("Field name selections are not allowed for write.")
-
         # Generally we try to avoid converting the arrays on the Python
         # side.  However, for compound literals this is unavoidable.
         if self.dtype.kind == "O" or \
           (self.dtype.kind == 'V' and \
           (not isinstance(val, numpy.ndarray) or val.dtype.kind != 'V') and \
           (self.dtype.subdtype == None)):
-            val = numpy.asarray(val, dtype=self.dtype, order='C')
+            if len(names) == 1 and self.dtype.fields is not None:
+                # Single field selected for write, from a non-array source
+                if not names[0] in self.dtype.fields:
+                    raise ValueError("No such field for indexing: %s" % names[0])
+                dtype = self.dtype.fields[names[0]][0]
+                cast_compound = True
+            else:
+                dtype = self.dtype
+                cast_compound = False
+
+            val = numpy.asarray(val, dtype=dtype, order='C')
+            if cast_compound:
+                val = val.astype(numpy.dtype([(names[0], dtype)]))
         else:
             val = numpy.asarray(val, order='C')
 
@@ -430,6 +449,36 @@ class Dataset(HLObject):
                 raise TypeError("When writing to array types, last N dimensions have to match (got %s, but should be %s)" % (valshp, shp,))
             mtype = h5t.py_create(numpy.dtype((val.dtype, shp)))
             mshape = val.shape[0:len(val.shape)-len(shp)]
+
+        # Make a compound memory type if field-name slicing is required
+        elif len(names) != 0:
+
+            mshape = val.shape
+
+            # Catch common errors
+            if self.dtype.fields is None:
+                raise TypeError("Illegal slicing argument (not a compound dataset)")
+            mismatch = [x for x in names if x not in self.dtype.fields]
+            if len(mismatch) != 0:
+                mismatch = ", ".join('"%s"'%x for x in mismatch)
+                raise ValueError("Illegal slicing argument (fields %s not in dataset type)" % mismatch)
+        
+            # Write non-compound source into a single dataset field
+            if len(names) == 1 and val.dtype.fields is None:
+                subtype = h5y.py_create(val.dtype)
+                mtype = h5t.create(h5t.COMPOUND, subtype.get_size())
+                mtype.insert(self._e(names[0]), 0, subtype)
+
+            # Make a new source type keeping only the requested fields
+            else:
+                fieldnames = [x for x in val.dtype.names if x in names] # Keep source order
+                mtype = h5t.create(h5t.COMPOUND, val.dtype.itemsize)
+                for fieldname in fieldnames:
+                    subtype = h5t.py_create(val.dtype.fields[fieldname][0])
+                    offset = val.dtype.fields[fieldname][1]
+                    mtype.insert(self._e(fieldname), offset, subtype)
+
+        # Use mtype derived from array (let DatasetID.write figure it out)
         else:
             mshape = val.shape
             mtype = None

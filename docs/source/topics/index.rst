@@ -1,11 +1,13 @@
-************
-Other topics
-************
+**************
+Special topics
+**************
 
 .. toctree::
 
+    mpi
     config
     refs
-    unicode    
+    strings
     special
+    
 
