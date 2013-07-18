@@ -13,3 +13,6 @@ build/
 *.pyc
 dist/
 MANIFEST
+*~
+h5py/new.api_*
+h5py/unused.api_*

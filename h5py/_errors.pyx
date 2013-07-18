@@ -82,7 +82,7 @@ cdef int set_exception() except -1:
     cdef err_data_t err
     cdef char *mj_desc = NULL
     cdef char *mn_desc = NULL
-    cdef char *desc = NULL
+    cdef const_char *desc = NULL
 
     err.n = -1
 
@@ -105,7 +105,7 @@ cdef int set_exception() except -1:
         if mj_desc == NULL or mn_desc == NULL:
             raise RuntimeError("Failed to obtain error code description")
 
-        msg = ("%s (%s: %s)" % (desc.decode('utf-8'), 
+        msg = ("%s (%s: %s)" % ((<char*>desc).decode('utf-8'), 
                                 mj_desc.decode('utf-8'), 
                                 mn_desc.decode('utf-8'))  ).encode('utf-8')
     finally:
@@ -127,7 +127,7 @@ def silence_errors():
 
 def unsilence_errors():
     """ Re-enable HDF5's automatic error printing in this thread """
-    if H5Eset_auto(H5Eprint, stderr) < 0:
+    if H5Eset_auto(<H5E_auto_t>H5Eprint, stderr) < 0:
         raise RuntimeError("Failed to enable automatic error printing")
 
 cdef err_cookie set_error_handler(err_cookie handler):

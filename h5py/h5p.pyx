@@ -890,8 +890,8 @@ cdef class PropFAID(PropInstanceID):
         3. UINT rdcc_nbytes:     Size of raw data cache
         4. DOUBLE rdcc_w0:       Preemption policy for data cache.
         """
-        cdef int mdc, rdcc
-        cdef size_t rdcc_nbytes
+        cdef int mdc
+        cdef size_t rdcc_nbytes, rdcc
         cdef double w0
 
         H5Pget_cache(self.id, &mdc, &rdcc, &rdcc_nbytes, &w0)

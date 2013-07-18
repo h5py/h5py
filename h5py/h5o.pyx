@@ -256,32 +256,32 @@ cdef class _ObjectVisitor:
         self.retval = None
         self.objinfo = ObjInfo()
 
-cdef herr_t cb_obj_iterate(hid_t obj, char* name, H5O_info_t *info, void* data) except 2:
+cdef herr_t cb_obj_iterate(hid_t obj, const_char* name, const_H5O_info_t *info, void* data) except 2:
 
     cdef _ObjectVisitor visit
 
     # HDF5 doesn't respect callback return for ".", so skip it
-    if strcmp(name, ".") == 0:
+    if strcmp(<char*>name, ".") == 0:
         return 0
 
     visit = <_ObjectVisitor>data
     visit.objinfo.infostruct = info[0]
-    visit.retval = visit.func(name, visit.objinfo)
+    visit.retval = visit.func(<char*>name, visit.objinfo)
 
     if visit.retval is not None:
         return 1
     return 0
 
-cdef herr_t cb_obj_simple(hid_t obj, char* name, H5O_info_t *info, void* data) except 2:
+cdef herr_t cb_obj_simple(hid_t obj, const_char* name, const_H5O_info_t *info, void* data) except 2:
 
     cdef _ObjectVisitor visit
 
     # Not all versions of HDF5 respect callback value for ".", so skip it
-    if strcmp(name, ".") == 0:
+    if strcmp(<char*>name, ".") == 0:
         return 0
 
     visit = <_ObjectVisitor>data
-    visit.retval = visit.func(name)
+    visit.retval = visit.func(<char*>name)
 
     if visit.retval is not None:
         return 1

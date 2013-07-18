@@ -8,11 +8,22 @@ import warnings
 import sys, os
 import os.path as op
 from functools import reduce
-import numpy
+import numpy, subprocess
 
 import configure   # Sticky-options configuration and version auto-detect
 
-VERSION = '2.2.0b1'
+def getVersion(forceUpdate=False):
+  argv=sys.argv
+  p = subprocess.Popen('git rev-list HEAD', shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+  #p = subprocess.Popen('git log --pretty=%h', shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+  retval = p.wait()
+  res=p.stdout.readlines()
+  ver=len(res)
+  ver='2.2.0b1.'+str(ver)
+  gitcmt=res[0][:7]
+  return (ver,gitcmt)
+  
+VERSION,COMMITHASH = getVersion()
 
 
 # --- Autodetect Cython -------------------------------------------------------
@@ -123,7 +134,9 @@ else:
        'libraries'      : ['hdf5', 'hdf5_hl'],
        'include_dirs'   : [numpy.get_include(), localpath('lzf')],
        'library_dirs'   : [],
-       'define_macros'  : [('H5_USE_16_API', None)]
+       'define_macros'  : [('H5_USE_16_API', None)],
+       #these warning suppression works not for old compilers...
+       #'extra_compile_args' : ['-Wno-unused-but-set-variable','-Wno-maybe-uninitialized','-Wno-unused-function']
     }
     if HDF5 is not None:
         COMPILER_SETTINGS['include_dirs'] += [op.join(HDF5, 'include')]
@@ -265,10 +278,10 @@ else:
 setup(
   name = 'h5py',
   version = VERSION,
-  description = short_desc,
+  description = short_desc+' (git:'+COMMITHASH+')',
   long_description = long_desc,
   classifiers = [x for x in cls_txt.split("\n") if x],
-  author = 'Andrew Collette',
+  author = 'Andrew Collette (PSI fixed by Thierry Zamofing)',
   author_email = 'andrew dot collette at gmail dot com',
   maintainer = 'Andrew Collette',
   maintainer_email = 'andrew dot collette at gmail dot com',
