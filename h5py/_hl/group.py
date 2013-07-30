@@ -295,7 +295,7 @@ class Group(HLObject, DictCompat):
 
         There are various options which all default to "False":
 
-         - shallow: copy only immediate members of a group. 
+         - shallow: copy only immediate members of a group.
 
          - expand_soft: expand soft links into new objects.
 
@@ -335,7 +335,7 @@ class Group(HLObject, DictCompat):
             # Interpret destination as a path relative to this group
             dest_path = dest
             dest = self
-            
+
         flags = 0
         if shallow:
             flags |= h5o.COPY_SHALLOW_HIERARCHY_FLAG
@@ -352,7 +352,7 @@ class Group(HLObject, DictCompat):
             copypl.set_copy_object(flags)
         else:
             copypl = None
-        
+
         h5o.copy(source.id, self._e(source_path), dest.id, self._e(dest_path),
                  copypl, base.dlcpl)
 
@@ -363,6 +363,8 @@ class Group(HLObject, DictCompat):
         "source" is a soft or external link, the link itself is moved, with its
         value unmodified.
         """
+        if source == dest:
+            return
         self.id.links.move(self._e(source), self.id, self._e(dest),
                            lapl=self._lapl, lcpl=self._lcpl)
 
