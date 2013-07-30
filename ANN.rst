@@ -42,6 +42,6 @@ Other new features
 * Field names are now allowed when writing to a dataset
 * Region references now preserve the shape of their selections
 * File-resident "committed" types can be linked to datasets and attributes
-* A new "move" on Group objects
+* A new "move" method on Group objects
 * Many new options for Group.copy
 
