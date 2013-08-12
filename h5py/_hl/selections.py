@@ -549,8 +549,6 @@ def _translate_slice(exp, length):
 
     if step < 1:
         raise ValueError("Step must be >= 1 (got %d)" % step)
-    if stop == start:
-        raise ValueError("Zero-length selections are not allowed")
     if stop < start:
         raise ValueError("Reverse-order selections are not allowed")
 

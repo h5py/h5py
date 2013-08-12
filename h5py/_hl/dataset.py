@@ -378,7 +378,7 @@ class Dataset(HLObject):
         selection = sel.select(self.shape, args, dsid=self.id)
 
         if selection.nselect == 0:
-            return numpy.ndarray((0,), dtype=new_dtype)
+            return numpy.ndarray(selection.mshape, dtype=new_dtype)
 
         # Up-converting to (1,) so that numpy.ndarray correctly creates
         # np.void rows in case of multi-field dtype. (issue 135)
