@@ -1,7 +1,6 @@
 from api_types_ext cimport *
 
 cdef extern from "hdf5.h":
-
   # Basic types
   ctypedef int hid_t
   ctypedef int hbool_t
@@ -26,10 +25,10 @@ cdef extern from "hdf5.h":
     H5_ITER_N                   # Number of iteration orders
 
   ctypedef enum H5_index_t:
-    H5_INDEX_UNKNOWN = -1,      # Unknown index type     
-    H5_INDEX_NAME,              # Index on names      
-    H5_INDEX_CRT_ORDER,         # Index on creation order    
-    H5_INDEX_N                  # Number of indices defined    
+    H5_INDEX_UNKNOWN = -1,      # Unknown index type
+    H5_INDEX_NAME,              # Index on names
+    H5_INDEX_CRT_ORDER,         # Index on creation order
+    H5_INDEX_N                  # Number of indices defined
 
 # === H5D - Dataset API =======================================================
 
@@ -232,7 +231,7 @@ cdef extern from "hdf5.h":
   ctypedef enum H5L_type_t:
     H5L_TYPE_ERROR = (-1),      #  Invalid link type id
     H5L_TYPE_HARD = 0,          #  Hard link id
-    H5L_TYPE_SOFT = 1,          #  Soft link id       
+    H5L_TYPE_SOFT = 1,          #  Soft link id
     H5L_TYPE_EXTERNAL = 64,     #  External link id
     H5L_TYPE_MAX = 255          #  Maximum link type id
 
@@ -388,6 +387,8 @@ cdef extern from "hdf5.h":
   hid_t H5P_LINK_CREATE
   hid_t H5P_LINK_ACCESS
   hid_t H5P_GROUP_CREATE
+  hid_t H5P_CRT_ORDER_TRACKED
+  hid_t H5P_CRT_ORDER_INDEXED
 
 # === H5R - Reference API =====================================================
 
@@ -639,7 +640,7 @@ cdef extern from "hdf5.h":
   int H5_SZIP_EC_OPTION_MASK          #4
   int H5_SZIP_NN_OPTION_MASK          #32
   int H5_SZIP_MAX_PIXELS_PER_BLOCK    #32
-  
+
   int H5Z_SO_INT_MINBITS_DEFAULT
 
   int H5Z_FILTER_CONFIG_ENCODE_ENABLED #(0x0001)
@@ -671,9 +672,74 @@ cdef extern from "hdf5.h":
 
 
 
+#  === H5AC - Attribute Cache configuration API ================================
+
+
+  unsigned int H5AC__CURR_CACHE_CONFIG_VERSION  # 	1
+  # I don't really understand why this works, but
+  # https://groups.google.com/forum/?fromgroups#!topic/cython-users/-fLG08E5lYM
+  # suggests it and it _does_ work
+  enum: H5AC__MAX_TRACE_FILE_NAME_LEN	#	1024
+
+  unsigned int H5AC_METADATA_WRITE_STRATEGY__PROCESS_0_ONLY   # 0
+  unsigned int H5AC_METADATA_WRITE_STRATEGY__DISTRIBUTED      # 1
+
+
+  cdef extern from "H5Cpublic.h":
+  # === H5C - Cache configuration API ================================
+    cdef enum H5C_cache_incr_mode:
+      H5C_incr__off,
+      H5C_incr__threshold,
+
+
+    cdef enum H5C_cache_flash_incr_mode:
+      H5C_flash_incr__off,
+      H5C_flash_incr__add_space
+
+
+    cdef enum H5C_cache_decr_mode:
+      H5C_decr__off,
+      H5C_decr__threshold,
+      H5C_decr__age_out,
+      H5C_decr__age_out_with_threshold
+
+    ctypedef struct H5AC_cache_config_t:
+      #     /* general configuration fields: */
+      int version
+      hbool_t rpt_fcn_enabled
+      hbool_t evictions_enabled
+      hbool_t set_initial_size
+      size_t initial_size
+      double min_clean_fraction
+      size_t max_size
+      size_t min_size
+      long int epoch_length
+      #    /* size increase control fields: */
+      H5C_cache_incr_mode incr_mode
+      double lower_hr_threshold
+      double increment
+      hbool_t apply_max_increment
+      size_t max_increment
+      H5C_cache_flash_incr_mode flash_incr_mode
+      double flash_multiple
+      double flash_threshold
+      # /* size decrease control fields: */
+      H5C_cache_decr_mode decr_mode
+      double upper_hr_threshold
+      double decrement
+      hbool_t apply_max_decrement
+      size_t max_decrement
+      int epochs_before_eviction
+      hbool_t apply_empty_reserve
+      double empty_reserve
+      # /* parallel configuration fields: */
+      int dirty_bytes_threshold
+      #  int metadata_write_strategy # present in 1.8.6 and higher
+
+
+
+
 cdef extern from "hdf5_hl.h":
 # === H5DS - Dimension Scales API =============================================
 
   ctypedef herr_t  (*H5DS_iterate_t)(hid_t dset, unsigned dim, hid_t scale, void *visitor_data) except 2
-
-

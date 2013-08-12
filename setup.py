@@ -12,7 +12,7 @@ import numpy
 
 import configure   # Sticky-options configuration and version auto-detect
 
-VERSION = '2.1.2'
+VERSION = '2.2.0b1'
 
 
 # --- Autodetect Cython -------------------------------------------------------
@@ -78,6 +78,15 @@ DEF HDF5_VERSION = %(hdf5_version)s
             os.utime(localpath('h5py',m+'.pyx'),None)
 
 
+# --- Pre-compiling API generation --------------------------------------------
+
+if not op.isfile(localpath('h5py','defs.pyx')):
+    if not HAVE_CYTHON:
+        raise ValueError("A modern version of Cython is required to build from source")
+    import api_gen
+    api_gen.run()
+
+
 # --- Determine configuration settings ----------------------------------------
 
 settings = configure.scrape_eargs()          # lowest priority
@@ -136,7 +145,7 @@ MODULES =  ['defs','_errors','_objects','_proxy', 'h5fd', 'h5z',
             'h5p',
             'h5d', 'h5a', 'h5f', 'h5g',
             'h5l', 'h5o',
-            'h5ds']
+            'h5ds', 'h5ac']
 
 # No Cython, no point in configuring
 if HAVE_CYTHON:     
@@ -271,5 +280,3 @@ setup(
   requires = ['numpy (>=1.0.1)'],
   cmdclass = {'build_ext': build_ext, 'test': test, 'build_py':build_py}
 )
-
-

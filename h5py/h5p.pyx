@@ -22,7 +22,7 @@ from utils cimport  require_tuple, convert_dims, convert_tuple, \
                     check_numpy_write, check_numpy_read
 from numpy cimport ndarray, import_array
 from h5t cimport TypeID, py_create
-
+from h5ac cimport CacheConfig
 from h5py import _objects
 
 # Initialization
@@ -94,6 +94,9 @@ LINK_CREATE = lockcls(H5P_LINK_CREATE)
 LINK_ACCESS = lockcls(H5P_LINK_ACCESS)
 GROUP_CREATE = lockcls(H5P_GROUP_CREATE)
 OBJECT_CREATE = lockcls(H5P_OBJECT_CREATE)
+
+CRT_ORDER_TRACKED = H5P_CRT_ORDER_TRACKED
+CRT_ORDER_INDEXED = H5P_CRT_ORDER_INDEXED
 
 DEFAULT = None   # In the HDF5 header files this is actually 0, which is an
                  # invalid identifier.  The new strategy for default options
@@ -332,6 +335,24 @@ cdef class PropFCID(PropCreateID):
         cdef size_t size
         H5Pget_sizes(self.id, &addr, &size)
         return (addr, size)
+
+    def set_link_creation_order(self, unsigned int flags):
+        """ (UINT flags)
+
+        Set tracking and indexing of creation order for links added to this group
+
+        flags -- h5p.CRT_ORDER_TRACKED, h5p.CRT_ORDER_INDEXED
+        """
+        H5Pset_link_creation_order(self.id, flags)
+
+    def get_link_creation_order(self):
+        """ () -> UINT flags
+
+        Get tracking and indexing of creation order for links added to this group
+        """
+        cdef unsigned int flags
+        H5Pget_link_creation_order(self.id, &flags)
+        return flags
 
 
 # Dataset creation
@@ -942,6 +963,33 @@ cdef class PropFAID(PropInstanceID):
             """
             H5Pset_fapl_mpiposix(self.id, comm.ob_mpi, use_gpfs_hints)
 
+    def get_mdc_config(self):
+        """() => CacheConfig
+        Returns an object that stores all the information about the meta-data cache
+        configuration
+        """
+
+        cdef CacheConfig config = CacheConfig()
+
+        cdef herr_t  err
+        err = H5Fget_mdc_config(self.id, &config.cache_config)
+        if err < 0:
+            raise RuntimeError("Failed to get hit rate")
+
+        return config
+
+    def set_mdc_config(self, CacheConfig config not None):
+        """(CacheConfig) => None
+        Returns an object that stores all the information about the meta-data cache
+        configuration
+        """
+        # I feel this should have some sanity checking to make sure that
+        cdef herr_t  err
+        err = H5Fset_mdc_config(self.id, &config.cache_config)
+        if err < 0:
+            raise RuntimeError("Failed to get hit rate")
+
+
 # Link creation
 cdef class PropLCID(PropCreateID):
 
@@ -1070,9 +1118,25 @@ cdef class PropLAID(PropInstanceID):
 
 # Group creation
 cdef class PropGCID(PropOCID):
-
     """ Group creation property list """
-    pass
+
+    def set_link_creation_order(self, unsigned int flags):
+        """ (UINT flags)
+
+        Set tracking and indexing of creation order for links added to this group
+
+        flags -- h5p.CRT_ORDER_TRACKED, h5p.CRT_ORDER_INDEXED
+        """
+        H5Pset_link_creation_order(self.id, flags)
+
+    def get_link_creation_order(self):
+        """ () -> UINT flags
+
+        Get tracking and indexing of creation order for links added to this group
+        """
+        cdef unsigned int flags
+        H5Pget_link_creation_order(self.id, &flags)
+        return flags
 
 
 # Object creation property list
