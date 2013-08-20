@@ -168,7 +168,7 @@ class TestDelete(BaseGroup):
                 del hfile['foo']
         finally:
             hfile.close()
-            
+
 class TestOpen(BaseGroup):
 
     """
@@ -309,7 +309,7 @@ class TestIter(BaseMapping):
             self.assertEqual(lst, [])
         finally:
             hfile.close()
-            
+
 @ut.skipIf(sys.version_info[0] != 2, "Py2")
 class TestPy2Dict(BaseMapping):
 
@@ -487,7 +487,7 @@ class TestSoftLinks(BaseGroup):
     """
         Feature: Create and manage soft links with the high-level interface
     """
-    
+
     def test_spath(self):
         """ SoftLink path attribute """
         sl = SoftLink('/foo')
@@ -565,7 +565,7 @@ class TestExternalLinks(TestCase):
             self.f['ext']
 
     def test_close_file(self):
-        """ Files opened by accessing external links can be closed 
+        """ Files opened by accessing external links can be closed
 
         Issue 189.
         """
@@ -583,7 +583,7 @@ class TestExtLinkBugs(TestCase):
 
     def test_issue_212(self):
         """ Issue 212
-    
+
         Fails with:
 
         AttributeError: 'SharedConfig' object has no attribute 'lapl'
@@ -618,13 +618,13 @@ class TestCopy(TestCase):
     def setUp(self):
         self.f1 = File(self.mktemp(), 'w')
         self.f2 = File(self.mktemp(), 'w')
-        
+
     def tearDown(self):
         if self.f1:
             self.f1.close()
         if self.f2:
             self.f2.close()
-            
+
     @ut.skipIf(h5py.version.hdf5_version_tuple < (1,8,9),
                "Bug in HDF5<1.8.8 prevents copying open dataset")
     def test_copy_path_to_path(self):
@@ -832,5 +832,9 @@ class TestMove(BaseGroup):
         self.f.create_group("X")
         self.f.create_group("Y")
         with self.assertRaises(ValueError):
-            self.f.move("X","Y")
+            self.f.move("X", "Y")
 
+    def test_short_circuit(self):
+        ''' Test that a null-move works '''
+        self.f.create_group("X")
+        self.f.move("X", "X")
