@@ -168,16 +168,16 @@ class TestArraySlicing(BaseSlicing):
             dset[...] = 42
 
     def test_write_element(self):
-        """ Write a single element to the array 
+        """ Write a single element to the array
 
         Issue 211.
         """
         dt = np.dtype('(3,)f8')
         dset = self.f.create_dataset('x', (10,), dtype=dt)
-        
+
         data = np.array([1,2,3.0])
         dset[4] = data
-        
+
         out = dset[4]
         self.assertTrue(np.all(out == data))
 
@@ -196,7 +196,7 @@ class TestArraySlicing(BaseSlicing):
         dset[3, 1:5, 6:11] = data2
         self.assertArrayEqual(dset[3, 1:5, 6:11], data2)
 
-        
+
     def test_roundtrip(self):
         """ Read the contents of an array and write them back
 
@@ -231,6 +231,48 @@ class TestEmptySlicing(BaseSlicing):
     def test_empty_tuple(self):
         with self.assertRaises(IOError):
             self.dataset[()]
+
+class TestZeroLengthSlicing(BaseSlicing):
+
+    """
+        Slices resulting in empty arrays
+    """
+
+    def test_slice_zero_length_dimension(self):
+        """ Slice a dataset with a zero in its shape vector
+            along the zero-length dimension """
+        for i, shape in enumerate([(0,), (0, 3), (0, 2, 1)]):
+            dset = self.f.create_dataset('x%d'%i, shape, dtype=np.int, maxshape=(None,)*len(shape))
+            self.assertEqual(dset.shape, shape)
+            out = dset[...]
+            self.assertIsInstance(out, np.ndarray)
+            self.assertEqual(out.shape, shape)
+            out = dset[:]
+            self.assertIsInstance(out, np.ndarray)
+            self.assertEqual(out.shape, shape)
+            if len(shape) > 1:
+                out = dset[:, :1]
+                self.assertIsInstance(out, np.ndarray)
+                self.assertEqual(out.shape[:2], (0, 1))
+
+    def test_slice_other_dimension(self):
+        """ Slice a dataset with a zero in its shape vector
+            along a non-zero-length dimension """
+        for i, shape in enumerate([(3, 0), (1, 2, 0), (2, 0, 1)]):
+            dset = self.f.create_dataset('x%d'%i, shape, dtype=np.int, maxshape=(None,)*len(shape))
+            self.assertEqual(dset.shape, shape)
+            out = dset[:1]
+            self.assertIsInstance(out, np.ndarray)
+            self.assertEqual(out.shape, (1,)+shape[1:])
+
+    def test_slice_of_length_zero(self):
+        """ Get a slice of length zero from a non-empty dataset """
+        for i, shape in enumerate([(3,), (2, 2,), (2,  1, 5)]):
+            dset = self.f.create_dataset('x%d'%i, data=np.zeros(shape, np.int), maxshape=(None,)*len(shape))
+            self.assertEqual(dset.shape, shape)
+            out = dset[1:1]
+            self.assertIsInstance(out, np.ndarray)
+            self.assertEqual(out.shape, (0,)+shape[1:])
 
 class TestFieldNames(BaseSlicing):
 
