@@ -107,11 +107,28 @@ def make_new_dset(parent, shape=None, dtype=None, data=None,
 
     return dset_id
 
+
+class AstypeContext(object):
+
+    def __init__(self, dset, dtype):
+        self._dset = dset
+        self._dtype = numpy.dtype(dtype)
+
+    def __enter__(self):
+        self._dset._local.astype = self._dtype
+
+    def __exit__(self, *args):
+        self._dset._local.astype = None
+
+
 class Dataset(HLObject):
 
     """
         Represents an HDF5 dataset
     """
+        
+    def astype(self, dtype):
+        return AstypeContext(self, dtype)
 
     @property
     def dims(self):
@@ -203,12 +220,16 @@ class Dataset(HLObject):
     def __init__(self, bind):
         """ Create a new Dataset object by binding to a low-level DatasetID.
         """
+        from threading import local
+
         if not isinstance(bind, h5d.DatasetID):
             raise ValueError("%s is not a DatasetID" % bind)
         HLObject.__init__(self, bind)
 
         self._dcpl = self.id.get_create_plist()
         self._filters = filters.get_filters(self._dcpl)
+        self._local = local()
+        self._local.astype = None
 
     def resize(self, size, axis=None):
         """ Resize the dataset, or the specified axis.
@@ -328,9 +349,12 @@ class Dataset(HLObject):
 
             return numpy.dtype([(name, basetype.fields[name][0]) for name in names])
 
-        # This is necessary because in the case of array types, NumPy
-        # discards the array information at the top level.
-        new_dtype = readtime_dtype(self.id.dtype, names)
+        if self._local.astype is not None:
+            new_dtype = readtime_dtype(self._local.astype, names)
+        else:
+            # This is necessary because in the case of array types, NumPy
+            # discards the array information at the top level.
+            new_dtype = readtime_dtype(self.id.dtype, names)
         mtype = h5t.py_create(new_dtype)
 
         # === Special-case region references ====
