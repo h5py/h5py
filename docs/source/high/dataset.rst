@@ -221,10 +221,13 @@ Reference
 
     .. autoattribute:: h5py.Dataset.regionref
 
+
     **Dataset methods**
 
     .. automethod:: h5py.Dataset.__getitem__
     .. automethod:: h5py.Dataset.__setitem__
+
+    .. automethod:: h5py.Dataset.astype
 
     .. automethod:: h5py.Dataset.read_direct
     .. automethod:: h5py.Dataset.write_direct
