@@ -136,7 +136,6 @@ cdef extern from "hdf5.h":
 
 # === H5FD - Low-level file descriptor API ====================================
 
-
   # HDF5 uses a clever scheme wherein these are actually init() calls
   # Hopefully Cython won't have a problem with this.
   # Thankfully they are defined but -1 if unavailable
@@ -351,16 +350,11 @@ cdef extern from "hdf5.h":
   ctypedef int H5Z_filter_t
 
 
-
-
-
-
   ctypedef enum H5Z_EDC_t:
     H5Z_ERROR_EDC    =-1
     H5Z_DISABLE_EDC  = 0
     H5Z_ENABLE_EDC   = 1
     H5Z_NO_EDC       = 2
-
 
   ctypedef enum H5FD_mem_t:
     H5FD_MEM_NOLIST   =-1
@@ -459,7 +453,6 @@ cdef extern from "hdf5.h":
     H5T_NORM_IMPLIED  = 0
     H5T_NORM_MSBSET   = 1
     H5T_NORM_NONE     = 2
-
 
   ctypedef enum H5T_str_t:
     H5T_STR_ERROR        =-1
@@ -600,7 +593,6 @@ cdef extern from "hdf5.h":
     hbool_t     recalc
     void        *priv
 
-
   ctypedef herr_t (*H5T_conv_t)(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
       size_t nelmts, size_t buf_stride, size_t bkg_stride, void *buf,
       void *bkg, hid_t dset_xfer_plist) except -1
@@ -640,7 +632,6 @@ cdef extern from "hdf5.h":
 
   int H5Z_FILTER_CONFIG_ENCODE_ENABLED #(0x0001)
   int H5Z_FILTER_CONFIG_DECODE_ENABLED #(0x0002)
-
 
   ctypedef enum H5Z_SO_scale_type_t:
     H5Z_SO_FLOAT_DSCALE  = 0

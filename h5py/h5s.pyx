@@ -458,9 +458,8 @@ cdef class SpaceID(ObjectID):
         cdef ndarray hcoords
         cdef size_t nelements
 
-        # The docs say the selection list should be an hsize_t**, but it seems
-        # that HDF5 expects the coordinates to be a static, contiguous
-        # array.  We simulate that by creating a contiguous NumPy array of
+        # The docs say the selection list should be an const_hsize_t *
+        # We simulate that by creating a contiguous NumPy array of
         # a compatible type and initializing it to the input.
 
         hcoords = create_hsize_array(coords)
@@ -470,7 +469,7 @@ cdef class SpaceID(ObjectID):
 
         nelements = hcoords.dimensions[0]
 
-        H5Sselect_elements(self.id, <H5S_seloper_t>op, nelements, <hsize_t**>hcoords.data)
+        H5Sselect_elements(self.id, <H5S_seloper_t>op, nelements, <const_hsize_t *>hcoords.data)
 
     # === Hyperslab selection functions =======================================
 
