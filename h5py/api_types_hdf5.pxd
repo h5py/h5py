@@ -753,3 +753,23 @@ cdef extern from "hdf5_hl.h":
 # === H5DS - Dimension Scales API =============================================
 
   ctypedef herr_t  (*H5DS_iterate_t)(hid_t dset, unsigned dim, hid_t scale, void *visitor_data) except 2
+
+# === fixing const =============================================
+#http://wiki.cython.org/FAQ#HowdoIuse.27const.27.3F
+cdef extern from *:
+  ctypedef void const_void "const void"
+  ctypedef char const_char "const char"
+  ctypedef int const_int "const int"
+
+  ctypedef long long const_long_long "const long long"
+
+  ctypedef unsigned char const_unsigned_char "const unsigned char"
+  ctypedef unsigned short const_unsigned_short "const unsigned short"
+  ctypedef unsigned int const_unsigned_int "const unsigned int"
+  ctypedef unsigned long const_unsigned_long "const unsigned long"
+
+  ctypedef hsize_t const_hsize_t "const hsize_t"
+  ctypedef hssize_t const_hssize_t "const hssize_t"
+  ctypedef hid_t const_hid_t "const hid_t"
+  ctypedef haddr_t const_haddr_t "const haddr_t"
+  ctypedef H5FD_mem_t const_H5FD_mem_t "const H5FD_mem_t"
