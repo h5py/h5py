@@ -10,6 +10,7 @@
 from api_types_ext cimport *
 
 cdef extern from "hdf5.h":
+
   # Basic types
   ctypedef int hid_t
   ctypedef int hbool_t
@@ -27,51 +28,51 @@ cdef extern from "hdf5.h":
 
   # New in 1.8.X
   ctypedef enum H5_iter_order_t:
-    H5_ITER_UNKNOWN = -1,       # Unknown order
-    H5_ITER_INC,                # Increasing order
-    H5_ITER_DEC,                # Decreasing order
-    H5_ITER_NATIVE,             # No particular order, whatever is fastest
-    H5_ITER_N                   # Number of iteration orders
+    H5_ITER_UNKNOWN  =-1
+    H5_ITER_INC
+    H5_ITER_DEC
+    H5_ITER_NATIVE
+    H5_ITER_N
 
   ctypedef enum H5_index_t:
-    H5_INDEX_UNKNOWN = -1,      # Unknown index type
-    H5_INDEX_NAME,              # Index on names
-    H5_INDEX_CRT_ORDER,         # Index on creation order
-    H5_INDEX_N                  # Number of indices defined
+    H5_INDEX_UNKNOWN    =-1
+    H5_INDEX_NAME
+    H5_INDEX_CRT_ORDER
+    H5_INDEX_N
 
 # === H5D - Dataset API =======================================================
 
   ctypedef enum H5D_layout_t:
-    H5D_LAYOUT_ERROR    = -1,
-    H5D_COMPACT         = 0,
-    H5D_CONTIGUOUS      = 1,
-    H5D_CHUNKED         = 2,
-    H5D_NLAYOUTS        = 3
+    H5D_LAYOUT_ERROR  =-1
+    H5D_COMPACT       = 0
+    H5D_CONTIGUOUS    = 1
+    H5D_CHUNKED       = 2
+    H5D_NLAYOUTS      = 3
 
   ctypedef enum H5D_alloc_time_t:
-    H5D_ALLOC_TIME_ERROR    =-1,
-    H5D_ALLOC_TIME_DEFAULT  =0,
-    H5D_ALLOC_TIME_EARLY    =1,
-    H5D_ALLOC_TIME_LATE        =2,
-    H5D_ALLOC_TIME_INCR        =3
+    H5D_ALLOC_TIME_ERROR    =-1
+    H5D_ALLOC_TIME_DEFAULT  = 0
+    H5D_ALLOC_TIME_EARLY    = 1
+    H5D_ALLOC_TIME_LATE     = 2
+    H5D_ALLOC_TIME_INCR     = 3
 
   ctypedef enum H5D_space_status_t:
-    H5D_SPACE_STATUS_ERROR            =-1,
-    H5D_SPACE_STATUS_NOT_ALLOCATED    =0,
-    H5D_SPACE_STATUS_PART_ALLOCATED    =1,
-    H5D_SPACE_STATUS_ALLOCATED        =2
+    H5D_SPACE_STATUS_ERROR           =-1
+    H5D_SPACE_STATUS_NOT_ALLOCATED   = 0
+    H5D_SPACE_STATUS_PART_ALLOCATED  = 1
+    H5D_SPACE_STATUS_ALLOCATED       = 2
 
   ctypedef enum H5D_fill_time_t:
-    H5D_FILL_TIME_ERROR    =-1,
-    H5D_FILL_TIME_ALLOC =0,
-    H5D_FILL_TIME_NEVER    =1,
-    H5D_FILL_TIME_IFSET    =2
+    H5D_FILL_TIME_ERROR  =-1
+    H5D_FILL_TIME_ALLOC  = 0
+    H5D_FILL_TIME_NEVER  = 1
+    H5D_FILL_TIME_IFSET  = 2
 
   ctypedef enum H5D_fill_value_t:
-    H5D_FILL_VALUE_ERROR        =-1,
-    H5D_FILL_VALUE_UNDEFINED    =0,
-    H5D_FILL_VALUE_DEFAULT      =1,
-    H5D_FILL_VALUE_USER_DEFINED =2
+    H5D_FILL_VALUE_ERROR         =-1
+    H5D_FILL_VALUE_UNDEFINED     = 0
+    H5D_FILL_VALUE_DEFAULT       = 1
+    H5D_FILL_VALUE_USER_DEFINED  = 2
 
   ctypedef  herr_t (*H5D_operator_t)(void *elem, hid_t type_id, unsigned ndim,
                     hsize_t *point, void *operator_data) except -1
@@ -89,14 +90,14 @@ cdef extern from "hdf5.h":
 
   # The difference between a single file and a set of mounted files
   cdef enum H5F_scope_t:
-    H5F_SCOPE_LOCAL     = 0,    # specified file handle only
-    H5F_SCOPE_GLOBAL    = 1,    # entire virtual file
-    H5F_SCOPE_DOWN      = 2     # for internal use only
+    H5F_SCOPE_LOCAL   = 0
+    H5F_SCOPE_GLOBAL  = 1
+    H5F_SCOPE_DOWN      = 2     
 
   cdef enum H5F_close_degree_t:
-    H5F_CLOSE_WEAK  = 0,
-    H5F_CLOSE_SEMI  = 1,
-    H5F_CLOSE_STRONG = 2,
+    H5F_CLOSE_WEAK  = 0 
+    H5F_CLOSE_SEMI  = 1 
+    H5F_CLOSE_STRONG = 2 
     H5F_CLOSE_DEFAULT = 3
 
   int H5F_OBJ_FILE
@@ -108,20 +109,20 @@ cdef extern from "hdf5.h":
   int H5F_OBJ_LOCAL
 
   ctypedef enum H5F_libver_t:
-    H5F_LIBVER_EARLIEST        #/* Use the earliest possible format for storing objects */
-    H5F_LIBVER_LATEST          #/* Use the latest possible format available for storing objects*/
+    H5F_LIBVER_EARLIEST
+    H5F_LIBVER_LATEST
 
 # === H5FD - Low-level file descriptor API ====================================
 
   ctypedef enum H5FD_mem_t:
-    H5FD_MEM_NOLIST    = -1,
-    H5FD_MEM_DEFAULT    = 0,
-    H5FD_MEM_SUPER      = 1,
-    H5FD_MEM_BTREE      = 2,
-    H5FD_MEM_DRAW       = 3,
-    H5FD_MEM_GHEAP      = 4,
-    H5FD_MEM_LHEAP      = 5,
-    H5FD_MEM_OHDR       = 6,
+    H5FD_MEM_NOLIST   =-1
+    H5FD_MEM_DEFAULT  = 0
+    H5FD_MEM_SUPER    = 1
+    H5FD_MEM_BTREE    = 2
+    H5FD_MEM_DRAW     = 3
+    H5FD_MEM_GHEAP    = 4
+    H5FD_MEM_LHEAP    = 5
+    H5FD_MEM_OHDR     = 6
     H5FD_MEM_NTYPES
 
   # HDF5 uses a clever scheme wherein these are actually init() calls
@@ -170,62 +171,62 @@ cdef extern from "hdf5.h":
 # === H5G - Groups API ========================================================
 
   ctypedef enum H5G_link_t:
-    H5G_LINK_ERROR      = -1,
-    H5G_LINK_HARD       = 0,
+    H5G_LINK_ERROR      = -1
+    H5G_LINK_HARD       = 0
     H5G_LINK_SOFT       = 1
 
   cdef enum H5G_obj_t:
-    H5G_UNKNOWN = -1,           # Unknown object type
-    H5G_LINK,                   # Object is a symbolic link
-    H5G_GROUP,                  # Object is a group
-    H5G_DATASET,                # Object is a dataset
-    H5G_TYPE,                   # Object is a named data type
+    H5G_UNKNOWN     =-1
+    H5G_LINK                    
+    H5G_GROUP
+    H5G_DATASET
+    H5G_TYPE
 
   ctypedef struct H5G_stat_t:
-    unsigned long fileno[2]
-    unsigned long objno[2]
-    unsigned int nlink
-    H5G_obj_t type              # new in HDF5 1.6
-    time_t mtime
-    size_t linklen
-    #H5O_stat_t ohdr            # Object header information. New in HDF5 1.6
+    unsigned long   fileno[2]
+    unsigned long   objno[2]
+    unsigned int    nlink
+    H5G_obj_t       type
+    time_t          mtime
+    size_t          linklen
+    #H5O_stat_t      ohdr            # Object header information. New in HDF5 1.6
 
   ctypedef herr_t (*H5G_iterate_t)(hid_t group, char *name, void* op_data) except 2
 
   ctypedef enum H5G_storage_type_t:
-      H5G_STORAGE_TYPE_UNKNOWN = -1,
-      H5G_STORAGE_TYPE_SYMBOL_TABLE,
-      H5G_STORAGE_TYPE_COMPACT,
-      H5G_STORAGE_TYPE_DENSE
+    H5G_STORAGE_TYPE_UNKNOWN       =-1
+    H5G_STORAGE_TYPE_SYMBOL_TABLE
+    H5G_STORAGE_TYPE_COMPACT
+    H5G_STORAGE_TYPE_DENSE
 
   ctypedef struct H5G_info_t:
-      H5G_storage_type_t     storage_type
-      hsize_t     nlinks
-      int64_t     max_corder
+    H5G_storage_type_t   storage_type
+    hsize_t              nlinks
+    int64_t              max_corder
 
 # === H5I - Identifier and reflection interface ===============================
 
   ctypedef enum H5I_type_t:
-    H5I_BADID        = -1,  # invalid Group
-    H5I_FILE        = 1,    # group ID for File objects
-    H5I_GROUP,              # group ID for Group objects
-    H5I_DATATYPE,           # group ID for Datatype objects
-    H5I_DATASPACE,          # group ID for Dataspace objects
-    H5I_DATASET,            # group ID for Dataset objects
-    H5I_ATTR,               # group ID for Attribute objects
-    H5I_REFERENCE,          # group ID for Reference objects
-    H5I_VFL,                # group ID for virtual file layer
-    H5I_GENPROP_CLS,        # group ID for generic property list classes
-    H5I_GENPROP_LST,        # group ID for generic property lists
-    H5I_NGROUPS             # number of valid groups, MUST BE LAST!
+    H5I_BADID        =-1
+    H5I_FILE         = 1
+    H5I_GROUP
+    H5I_DATATYPE
+    H5I_DATASPACE
+    H5I_DATASET
+    H5I_ATTR
+    H5I_REFERENCE
+    H5I_VFL
+    H5I_GENPROP_CLS
+    H5I_GENPROP_LST
+    H5I_NGROUPS             
 
 # === H5L/H5O - Links interface (1.8.X only) ======================================
 
   # TODO: put both versions in h5t.pxd
   ctypedef enum H5T_cset_t:
-    H5T_CSET_ERROR       = -1,  #
-    H5T_CSET_ASCII       = 0,   # US ASCII
-    H5T_CSET_UTF8        = 1,   # UTF-8 Unicode encoding
+    H5T_CSET_ERROR        =-1
+    H5T_CSET_ASCII        = 0
+    H5T_CSET_UTF8         = 1
 
   unsigned int H5L_MAX_LINK_NAME_LEN #  ((uint32_t) (-1)) (4GB - 1)
 
@@ -238,11 +239,11 @@ cdef extern from "hdf5.h":
   # * These values can never change because they appear in HDF5 files.
   #
   ctypedef enum H5L_type_t:
-    H5L_TYPE_ERROR = (-1),      #  Invalid link type id
-    H5L_TYPE_HARD = 0,          #  Hard link id
-    H5L_TYPE_SOFT = 1,          #  Soft link id
-    H5L_TYPE_EXTERNAL = 64,     #  External link id
-    H5L_TYPE_MAX = 255          #  Maximum link type id
+    H5L_TYPE_ERROR     =-1
+    H5L_TYPE_HARD      = 0
+    H5L_TYPE_SOFT      = 1
+    H5L_TYPE_EXTERNAL  = 64
+    H5L_TYPE_MAX       = 255
 
   #  Information struct for link (for H5Lget_info/H5Lget_info_by_idx)
   cdef union _add_u:
@@ -250,10 +251,10 @@ cdef extern from "hdf5.h":
     size_t val_size   #  Size of a soft link or UD link value
 
   ctypedef struct H5L_info_t:
-    H5L_type_t  type            #  Type of link
-    hbool_t     corder_valid    #  Indicate if creation order is valid
-    int64_t     corder          #  Creation order
-    H5T_cset_t  cset            #  Character set of link name
+    H5L_type_t   type
+    hbool_t      corder_valid
+    int64_t      corder
+    H5T_cset_t   cset
     _add_u u
 
   #  Prototype for H5Literate/H5Literate_by_name() operator
@@ -263,11 +264,11 @@ cdef extern from "hdf5.h":
   ctypedef uint32_t H5O_msg_crt_idx_t
 
   ctypedef enum H5O_type_t:
-    H5O_TYPE_UNKNOWN = -1,      # Unknown object type
-    H5O_TYPE_GROUP,             # Object is a group
-    H5O_TYPE_DATASET,           # Object is a dataset
-    H5O_TYPE_NAMED_DATATYPE,    # Object is a named data type
-    H5O_TYPE_NTYPES             # Number of different object types (must be last!)
+    H5O_TYPE_UNKNOWN         =-1
+    H5O_TYPE_GROUP
+    H5O_TYPE_DATASET
+    H5O_TYPE_NAMED_DATATYPE
+    H5O_TYPE_NTYPES
 
   unsigned int H5O_COPY_SHALLOW_HIERARCHY_FLAG    # (0x0001u) Copy only immediate members
   unsigned int H5O_COPY_EXPAND_SOFT_LINK_FLAG     # (0x0002u) Expand soft links into new objects
@@ -290,31 +291,31 @@ cdef extern from "hdf5.h":
     unsigned long shared    #  Flags to indicate message type is shared in header
 
   ctypedef struct hdr:
-    unsigned version        #  Version number of header format in file
-    unsigned nmesgs         #  Number of object header messages
-    unsigned nchunks        #  Number of object header chunks
-    unsigned flags          #  Object header status flags
-    space space
-    mesg mesg
+    unsigned   version
+    unsigned   nmesgs
+    unsigned   nchunks
+    unsigned   flags
+    space      space
+    mesg       mesg
 
   ctypedef struct H5_ih_info_t:
-    hsize_t     index_size,  # btree and/or list
-    hsize_t     heap_size
+    hsize_t   index_size
+    hsize_t   heap_size
 
   cdef struct meta_size:
-    H5_ih_info_t   obj,    #        v1/v2 B-tree & local/fractal heap for groups, B-tree for chunked datasets
-    H5_ih_info_t   attr    #        v2 B-tree & heap for attributes
+    H5_ih_info_t   obj    #        v1/v2 B-tree & local/fractal heap for groups, B-tree for chunked datasets
+    H5_ih_info_t   attr   #        v2 B-tree & heap for attributes
 
   ctypedef struct H5O_info_t:
-    unsigned long   fileno      #  File number that object is located in
-    haddr_t         addr        #  Object address in file
-    H5O_type_t      type        #  Basic object type (group, dataset, etc.)
-    unsigned        rc          #  Reference count of object
-    time_t          atime       #  Access time
-    time_t          mtime       #  Modification time
-    time_t          ctime       #  Change time
-    time_t          btime       #  Birth time
-    hsize_t         num_attrs   #  # of attributes attached to object
+    unsigned long    fileno
+    haddr_t          addr
+    H5O_type_t       type
+    unsigned         rc
+    time_t           atime
+    time_t           mtime
+    time_t           ctime
+    time_t           btime
+    hsize_t          num_attrs
     hdr             hdr
     meta_size       meta_size
 
@@ -329,58 +330,58 @@ cdef extern from "hdf5.h":
 
   # HDF5 layouts
   ctypedef enum H5D_layout_t:
-    H5D_LAYOUT_ERROR    = -1,
-    H5D_COMPACT         = 0,    # raw data is very small
-    H5D_CONTIGUOUS      = 1,    # the default
-    H5D_CHUNKED         = 2,    # slow and fancy
-    H5D_NLAYOUTS        = 3     # this one must be last!
+    H5D_LAYOUT_ERROR  =-1
+    H5D_COMPACT       = 0
+    H5D_CONTIGUOUS    = 1
+    H5D_CHUNKED       = 2
+    H5D_NLAYOUTS      = 3
 
   ctypedef enum H5D_alloc_time_t:
-    H5D_ALLOC_TIME_ERROR    =-1,
-    H5D_ALLOC_TIME_DEFAULT  =0,
-    H5D_ALLOC_TIME_EARLY    =1,
-    H5D_ALLOC_TIME_LATE        =2,
-    H5D_ALLOC_TIME_INCR        =3
+    H5D_ALLOC_TIME_ERROR    =-1
+    H5D_ALLOC_TIME_DEFAULT  = 0
+    H5D_ALLOC_TIME_EARLY    = 1
+    H5D_ALLOC_TIME_LATE     = 2
+    H5D_ALLOC_TIME_INCR     = 3
 
   ctypedef enum H5D_space_status_t:
-    H5D_SPACE_STATUS_ERROR            =-1,
-    H5D_SPACE_STATUS_NOT_ALLOCATED    =0,
-    H5D_SPACE_STATUS_PART_ALLOCATED    =1,
-    H5D_SPACE_STATUS_ALLOCATED        =2
+    H5D_SPACE_STATUS_ERROR           =-1
+    H5D_SPACE_STATUS_NOT_ALLOCATED   = 0
+    H5D_SPACE_STATUS_PART_ALLOCATED  = 1
+    H5D_SPACE_STATUS_ALLOCATED       = 2
 
   ctypedef enum H5D_fill_time_t:
-    H5D_FILL_TIME_ERROR    =-1,
-    H5D_FILL_TIME_ALLOC =0,
-    H5D_FILL_TIME_NEVER    =1,
-    H5D_FILL_TIME_IFSET    =2
+    H5D_FILL_TIME_ERROR  =-1
+    H5D_FILL_TIME_ALLOC  = 0
+    H5D_FILL_TIME_NEVER  = 1
+    H5D_FILL_TIME_IFSET  = 2
 
   ctypedef enum H5D_fill_value_t:
-    H5D_FILL_VALUE_ERROR        =-1,
-    H5D_FILL_VALUE_UNDEFINED    =0,
-    H5D_FILL_VALUE_DEFAULT      =1,
-    H5D_FILL_VALUE_USER_DEFINED =2
+    H5D_FILL_VALUE_ERROR         =-1
+    H5D_FILL_VALUE_UNDEFINED     = 0
+    H5D_FILL_VALUE_DEFAULT       = 1
+    H5D_FILL_VALUE_USER_DEFINED  = 2
 
   cdef enum H5Z_EDC_t:
-    H5Z_ERROR_EDC       = -1,
-    H5Z_DISABLE_EDC     = 0,
-    H5Z_ENABLE_EDC      = 1,
-    H5Z_NO_EDC          = 2
+    H5Z_ERROR_EDC    =-1
+    H5Z_DISABLE_EDC  = 0
+    H5Z_ENABLE_EDC   = 1
+    H5Z_NO_EDC       = 2
 
   cdef enum H5F_close_degree_t:
-    H5F_CLOSE_WEAK  = 0,
-    H5F_CLOSE_SEMI  = 1,
-    H5F_CLOSE_STRONG = 2,
+    H5F_CLOSE_WEAK  = 0 
+    H5F_CLOSE_SEMI  = 1 
+    H5F_CLOSE_STRONG = 2 
     H5F_CLOSE_DEFAULT = 3
 
   ctypedef enum H5FD_mem_t:
-    H5FD_MEM_NOLIST    = -1,
-    H5FD_MEM_DEFAULT    = 0,
-    H5FD_MEM_SUPER      = 1,
-    H5FD_MEM_BTREE      = 2,
-    H5FD_MEM_DRAW       = 3,
-    H5FD_MEM_GHEAP      = 4,
-    H5FD_MEM_LHEAP      = 5,
-    H5FD_MEM_OHDR       = 6,
+    H5FD_MEM_NOLIST   =-1
+    H5FD_MEM_DEFAULT  = 0
+    H5FD_MEM_SUPER    = 1
+    H5FD_MEM_BTREE    = 2
+    H5FD_MEM_DRAW     = 3
+    H5FD_MEM_GHEAP    = 4
+    H5FD_MEM_LHEAP    = 5
+    H5FD_MEM_OHDR     = 6
     H5FD_MEM_NTYPES
 
   # Property list classes
@@ -405,10 +406,10 @@ cdef extern from "hdf5.h":
   size_t H5R_OBJ_REF_BUF_SIZE
 
   ctypedef enum H5R_type_t:
-    H5R_BADTYPE = (-1),
-    H5R_OBJECT,
-    H5R_DATASET_REGION,
-    H5R_INTERNAL,
+    H5R_BADTYPE         =-1
+    H5R_OBJECT
+    H5R_DATASET_REGION
+    H5R_INTERNAL 
     H5R_MAXTYPE
 
 # === H5S - Dataspaces ========================================================
@@ -418,32 +419,32 @@ cdef extern from "hdf5.h":
 
   # Codes for defining selections
   ctypedef enum H5S_seloper_t:
-    H5S_SELECT_NOOP      = -1,
-    H5S_SELECT_SET       = 0,
-    H5S_SELECT_OR,
-    H5S_SELECT_AND,
-    H5S_SELECT_XOR,
-    H5S_SELECT_NOTB,
-    H5S_SELECT_NOTA,
-    H5S_SELECT_APPEND,
-    H5S_SELECT_PREPEND,
-    H5S_SELECT_INVALID    # Must be the last one
+    H5S_SELECT_NOOP     =-1
+    H5S_SELECT_SET      = 0
+    H5S_SELECT_OR
+    H5S_SELECT_AND
+    H5S_SELECT_XOR
+    H5S_SELECT_NOTB
+    H5S_SELECT_NOTA
+    H5S_SELECT_APPEND
+    H5S_SELECT_PREPEND
+    H5S_SELECT_INVALID
 
   ctypedef enum H5S_class_t:
-    H5S_NO_CLASS         = -1,  #/*error
-    H5S_SCALAR           = 0,   #/*scalar variable
-    H5S_SIMPLE           = 1,   #/*simple data space
-    H5S_NULL             = 2,   # NULL data space
+    H5S_NO_CLASS  =-1
+    H5S_SCALAR    = 0
+    H5S_SIMPLE    = 1
+    H5S_NULL      = 2
     # no longer defined in 1.8
     #H5S_COMPLEX          = 2    #/*complex data space
 
   ctypedef enum H5S_sel_type:
-    H5S_SEL_ERROR    = -1,         #Error
-    H5S_SEL_NONE    = 0,        #Nothing selected
-    H5S_SEL_POINTS    = 1,        #Sequence of points selected
-    H5S_SEL_HYPERSLABS  = 2,    #"New-style" hyperslab selection defined
-    H5S_SEL_ALL        = 3,        #Entire extent selected
-    H5S_SEL_N        = 4            #/*THIS MUST BE LAST
+    H5S_SEL_ERROR       =-1
+    H5S_SEL_NONE        = 0
+    H5S_SEL_POINTS      = 1
+    H5S_SEL_HYPERSLABS  = 2
+    H5S_SEL_ALL         = 3
+    H5S_SEL_N           = 4            
 
 # === H5T - Datatypes =========================================================
 
@@ -451,61 +452,61 @@ cdef extern from "hdf5.h":
 
   # Byte orders
   ctypedef enum H5T_order_t:
-    H5T_ORDER_ERROR      = -1,  # error
-    H5T_ORDER_LE         = 0,   # little endian
-    H5T_ORDER_BE         = 1,   # bit endian
-    H5T_ORDER_VAX        = 2,   # VAX mixed endian
-    H5T_ORDER_NONE       = 3    # no particular order (strings, bits,..)
+    H5T_ORDER_ERROR  =-1
+    H5T_ORDER_LE     = 0
+    H5T_ORDER_BE     = 1
+    H5T_ORDER_VAX    = 2
+    H5T_ORDER_NONE       = 3    
 
   # HDF5 signed enums
   ctypedef enum H5T_sign_t:
-    H5T_SGN_ERROR        = -1,  # error
-    H5T_SGN_NONE         = 0,   # this is an unsigned type
-    H5T_SGN_2            = 1,   # two's complement
-    H5T_NSGN             = 2    # this must be last!
+    H5T_SGN_ERROR  =-1
+    H5T_SGN_NONE   = 0
+    H5T_SGN_2      = 1
+    H5T_NSGN       = 2
 
   ctypedef enum H5T_norm_t:
-    H5T_NORM_ERROR       = -1,
-    H5T_NORM_IMPLIED     = 0,
-    H5T_NORM_MSBSET      = 1,
-    H5T_NORM_NONE        = 2
+    H5T_NORM_ERROR    =-1
+    H5T_NORM_IMPLIED  = 0
+    H5T_NORM_MSBSET   = 1
+    H5T_NORM_NONE     = 2
 
   ctypedef enum H5T_cset_t:
-    H5T_CSET_ERROR       = -1,
-    H5T_CSET_ASCII       = 0
+    H5T_CSET_ERROR        =-1
+    H5T_CSET_ASCII        = 0
 
   ctypedef enum H5T_str_t:
-    H5T_STR_ERROR        = -1,
-    H5T_STR_NULLTERM     = 0,
-    H5T_STR_NULLPAD      = 1,
+    H5T_STR_ERROR        =-1
+    H5T_STR_NULLTERM     = 0
+    H5T_STR_NULLPAD      = 1
     H5T_STR_SPACEPAD     = 2
 
   # Atomic datatype padding
   ctypedef enum H5T_pad_t:
-    H5T_PAD_ZERO        = 0,
-    H5T_PAD_ONE         = 1,
+    H5T_PAD_ZERO        = 0
+    H5T_PAD_ONE         = 1
     H5T_PAD_BACKGROUND  = 2
 
   # HDF5 type classes
   cdef enum H5T_class_t:
-    H5T_NO_CLASS         = -1,  # error
-    H5T_INTEGER          = 0,   # integer types
-    H5T_FLOAT            = 1,   # floating-point types
-    H5T_TIME             = 2,   # date and time types
-    H5T_STRING           = 3,   # character string types
-    H5T_BITFIELD         = 4,   # bit field types
-    H5T_OPAQUE           = 5,   # opaque types
-    H5T_COMPOUND         = 6,   # compound types
-    H5T_REFERENCE        = 7,   # reference types
-    H5T_ENUM             = 8,   # enumeration types
-    H5T_VLEN             = 9,   # variable-length types
-    H5T_ARRAY            = 10,  # array types
-    H5T_NCLASSES                # this must be last
+    H5T_NO_CLASS   =-1
+    H5T_INTEGER    = 0
+    H5T_FLOAT      = 1
+    H5T_TIME       = 2
+    H5T_STRING     = 3
+    H5T_BITFIELD   = 4
+    H5T_OPAQUE     = 5
+    H5T_COMPOUND   = 6
+    H5T_REFERENCE  = 7
+    H5T_ENUM       = 8
+    H5T_VLEN       = 9
+    H5T_ARRAY      = 10
+    H5T_NCLASSES
 
   # Native search direction
   cdef enum H5T_direction_t:
-    H5T_DIR_DEFAULT,
-    H5T_DIR_ASCEND,
+    H5T_DIR_DEFAULT 
+    H5T_DIR_ASCEND 
     H5T_DIR_DESCEND
 
   # For vlen strings
@@ -591,29 +592,29 @@ cdef extern from "hdf5.h":
   # Type-conversion infrastructure
 
   ctypedef enum H5T_pers_t:
-    H5T_PERS_DONTCARE	= -1,
-    H5T_PERS_HARD	= 0,	    # /*hard conversion function		     */
-    H5T_PERS_SOFT	= 1 	    # /*soft conversion function		     */
+    H5T_PERS_DONTCARE  =-1
+    H5T_PERS_HARD      = 0
+    H5T_PERS_SOFT      = 1
 
   ctypedef enum H5T_cmd_t:
-    H5T_CONV_INIT	= 0,	#/*query and/or initialize private data	     */
-    H5T_CONV_CONV	= 1, 	#/*convert data from source to dest datatype */
-    H5T_CONV_FREE	= 2	    #/*function is being removed from path	     */
+    H5T_CONV_INIT  = 0
+    H5T_CONV_CONV  = 1
+    H5T_CONV_FREE  = 2
 
   ctypedef enum H5T_bkg_t:
-    H5T_BKG_NO		= 0, 	#/*background buffer is not needed, send NULL */
-    H5T_BKG_TEMP	= 1,	#/*bkg buffer used as temp storage only       */
-    H5T_BKG_YES		= 2	    #/*init bkg buf with data before conversion   */
+    H5T_BKG_NO    = 0
+    H5T_BKG_TEMP  = 1
+    H5T_BKG_YES   = 2
 
   ctypedef struct H5T_cdata_t:
-    H5T_cmd_t		command     # /*what should the conversion function do?    */
-    H5T_bkg_t		need_bkg   #/*is the background buffer needed?	     */
-    hbool_t		recalc	        # /*recalculate private data		     */
-    void		*priv	        # /*private data				     */
+    H5T_cmd_t   command
+    H5T_bkg_t   need_bkg
+    hbool_t     recalc
+    void        *priv
 
   ctypedef struct hvl_t:
-      size_t len # /* Length of VL data (in base type units) */
-      void *p    #/* Pointer to VL data */
+    size_t   len
+    void     *p
 
   ctypedef herr_t (*H5T_conv_t)(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
       size_t nelmts, size_t buf_stride, size_t bkg_stride, void *buf,
@@ -649,32 +650,32 @@ cdef extern from "hdf5.h":
   int H5_SZIP_EC_OPTION_MASK          #4
   int H5_SZIP_NN_OPTION_MASK          #32
   int H5_SZIP_MAX_PIXELS_PER_BLOCK    #32
-
+  
   int H5Z_SO_INT_MINBITS_DEFAULT
 
   int H5Z_FILTER_CONFIG_ENCODE_ENABLED #(0x0001)
   int H5Z_FILTER_CONFIG_DECODE_ENABLED #(0x0002)
 
   cdef enum H5Z_EDC_t:
-      H5Z_ERROR_EDC       = -1,
-      H5Z_DISABLE_EDC     = 0,
-      H5Z_ENABLE_EDC      = 1,
-      H5Z_NO_EDC          = 2
+    H5Z_ERROR_EDC    =-1
+    H5Z_DISABLE_EDC  = 0
+    H5Z_ENABLE_EDC   = 1
+    H5Z_NO_EDC       = 2
 
   cdef enum H5Z_SO_scale_type_t:
-      H5Z_SO_FLOAT_DSCALE = 0,
-      H5Z_SO_FLOAT_ESCALE = 1,
-      H5Z_SO_INT          = 2
+    H5Z_SO_FLOAT_DSCALE  = 0
+    H5Z_SO_FLOAT_ESCALE  = 1
+    H5Z_SO_INT           = 2
 
 # === H5A - Attributes API ====================================================
 
   ctypedef herr_t (*H5A_operator_t)(hid_t loc_id, char *attr_name, void* operator_data) except 2
 
   ctypedef struct H5A_info_t:
-    hbool_t corder_valid          # Indicate if creation order is valid
-    H5O_msg_crt_idx_t corder      # Creation order
-    H5T_cset_t        cset        # Character set of attribute name
-    hsize_t           data_size   # Size of raw data
+    hbool_t             corder_valid
+    H5O_msg_crt_idx_t   corder
+    H5T_cset_t          cset
+    hsize_t             data_size
 
   ctypedef herr_t (*H5A_operator2_t)(hid_t location_id, char *attr_name,
           H5A_info_t *ainfo, void *op_data) except 2
