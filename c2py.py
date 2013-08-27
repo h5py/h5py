@@ -22,7 +22,13 @@
 '''
 Parse the hdf5 header to use for h5py.
 
-generates file: "outFile"
+the arguments
+- gen: generates the files
+- dup: seeks structs and enums that are declared twice in the *.p* files
+- use: seeks structs and enums that are declared in api_function.txt but not used in any *.p* file
+
+------ gen ------
+generates file: c2pyOut.txt: list of which functions have been found in which header files
 generates file: new.api_functions.txt,  unused.api_functions.txt
 generates file: new.api_types_hdf5.pxd, unused.api_types_hdf5.pxd
 
@@ -32,6 +38,7 @@ The generated "outFile" contains all declared functions, enums and structure
 in a readable, condensed format.
 the generated files unused.api_functions.txt and unused.api_types_hdf5.pxd contains functions, struct and enums,
 that are not yet part of the h5py library.
+
 '''
 from __future__ import print_function, division
 from pycparser import c_parser, c_ast, parse_file
@@ -356,12 +363,12 @@ class Chdr2py(c_ast.NodeVisitor):
 
 def CheckDuplicate(args):
   '''
-  seeks structs and enums that are declared twice
+  seeks structs and enums that are declared twice in the *.p* files
   '''
   _log.info('')
   #for fn in os.listdir('.'):
   #  if
-  cmd="grep -nE 'c\w+\s+(enum|struct)\s+\w+\s*:' *.p* --exclude=new.* --exclude=unused.*"
+  cmd="grep -nE 'c\w+\s+(enum|struct)\s+\w+\s*:' h5py/*.p* --exclude=new.* --exclude=unused.*"
   p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
   retval = p.wait()
   dictType=dict()
@@ -388,14 +395,14 @@ def CheckDuplicate(args):
 
 def CheckUsage(args):
   '''
-  seeks structs and enums that are declared twice
+  seeks structs and enums that are declared in api_function.txt but not used in any *.p* file
   '''
   _log.info('')
   funcList=Chdr2py.GetFuncList()
 
   lstFuncUse=list()
   for func in funcList:   
-    cmd="grep -nE '\W"+func+"\W' *.p* --exclude=defs.pxd --exclude=defs.pyx --exclude=_hdf5.pxd --exclude=c2py.py"
+    cmd="grep -nE '\W"+func+"\W' h5py/*.p* --exclude=defs.pxd --exclude=defs.pyx --exclude=_hdf5.pxd --exclude=c2py.py"
     p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     retval = p.wait()
     lstUse=list()
@@ -440,10 +447,17 @@ if __name__ == '__main__':
   
   cpp_args= [r'-D_PYPARSE_']
   cmdLst=['gen', 'dup', 'use']
-  exampleCmd=r'-v --hdfDir=../hdf5/include --header=hdf5py.h --outFile=c2pyOut.txt gen'
+  exampleCmd=('-v --hdfDir=../hdf5/include --header=hdf5py.h --outFile=c2pyOut.txt gen',
+              '-v dup',
+              '-v use',)
+              
+  epilog= 'Example:\n'
+  for e in exampleCmd:
+    epilog+=' '+os.path.basename(sys.argv[0])+' '+e+'\n'
+
   parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
                                    description=__doc__,
-                                   epilog='Example:\n  '+os.path.basename(sys.argv[0])+' '+exampleCmd+'\n ')
+                                   epilog=epilog)
   parser.add_argument('command', choices=cmdLst, default=cmdLst[0], help='the command to execute')
   parser.add_argument('--outFile', help='the file to generate')
   parser.add_argument('--hdfDir', help='the hdf directory')
