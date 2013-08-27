@@ -32,7 +32,7 @@ class UnknownCodeError(Exception):
   pass
 
 #\s*?(?P<mpi>MPI)\s*?(?P<version>[0-9]\.[0-9]\.[0-9])\s*
-regexFunc  = re.compile('\s*(?P<mpi>MPI)?\s*(?P<version>[0-9]\.[0-9]\.[0-9])?\s*(?P<ret>.*?)\s*(?P<func>\w*)\s*\((?P<sig>[\w\s,*\[\]]*)\)')
+regexFunc  = re.compile('\s*(?P<mpi>MPI)?\s*(?P<version>[0-9]+\.[0-9]+\.[0-9]+)?\s*(?P<ret>.*?)\s*(?P<func>\w*)\s*\((?P<sig>[\w\s,*\[\]]*)\)')
 regexParam = re.compile('(?P<param>\w+)\s*(?:\[|,|$)')
 
 class strTbl:
@@ -192,7 +192,7 @@ class FunctionCruncher(object):
         self.indent=(idtSpc,curIdtElem)
       
       if self.verbose:
-        print dictFuncElem
+        print(dictFuncElem)
       args = regexParam.findall(dictFuncElem['sig'])
       if args is None:
         raise BadLineError("Can't understand function signature <<%s>>" % dictFuncElem['sig'])
@@ -232,7 +232,7 @@ class FunctionCruncher(object):
       self.epiDef+='\ncdef extern from "%s.h":\n' % inc
 
 def run(stub=False):
-    fc = FunctionCruncher(stub,False)
+    fc = FunctionCruncher(stub,True)
     fc.run()
 
 if __name__ == '__main__':
@@ -243,7 +243,7 @@ if __name__ == '__main__':
   args=Args()
   if '--stub' in sys.argv:
     args.stub = True
-    print 'Stub functions (without exception handling) are generated'
+    print('Stub functions (without exception handling) are generated')
   else:
     args.stub = False
   args.verbose = True if '-v' in sys.argv else False

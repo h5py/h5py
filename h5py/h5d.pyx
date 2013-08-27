@@ -10,6 +10,8 @@
     Provides access to the low-level HDF5 "H5D" dataset interface.
 """
 
+include "config.pxi"
+
 # Compile-time imports
 from _objects cimport pdefault
 from numpy cimport ndarray, import_array, PyArray_DATA, NPY_WRITEABLE
@@ -216,43 +218,44 @@ cdef class DatasetID(ObjectID):
 
         dset_rw(self_id, mtype_id, mspace_id, fspace_id, plist_id, data, 0)
 
-    def write_chunk(self, pyOfs, ndarray pyData, filters=0, PropID dxpl=None):
-      """ (TUPLE offset, np.array data)
+    IF HDF5_VERSION >= (1, 8, 11):
+      def write_chunk(self, pyOfs, ndarray pyData, filters=0, PropID dxpl=None):
+        """ (TUPLE offset, np.array data)
 
-          Writes a data chunk into a dataset.
-        """
-      #herr_t    H5DOwrite_chunk(hid_t dset_id, hid_t dxpl_id, uint32_t filters, const hsize_t *offset, size_t data_size, const void *buf)
-      cdef hid_t dset_id, dxpl_id
-      cdef hid_t space_id = 0
-      #cdef uint32_t filters
-      cdef hsize_t *offset
-      cdef size_t data_size
-      cdef void *buf
-      cdef int rank
+            Writes a data chunk into a dataset.
+          """
+        #herr_t    H5DOwrite_chunk(hid_t dset_id, hid_t dxpl_id, uint32_t filters, const hsize_t *offset, size_t data_size, const void *buf)
+        cdef hid_t dset_id, dxpl_id
+        cdef hid_t space_id = 0
+        #cdef uint32_t filters
+        cdef hsize_t *offset
+        cdef size_t data_size
+        cdef void *buf
+        cdef int rank
 
-      try:
-        dset_id=self.id
-        dxpl_id=pdefault(dxpl)
-        space_id = H5Dget_space(self.id)
-        rank = H5Sget_simple_extent_ndims(space_id)
+        try:
+          dset_id=self.id
+          dxpl_id=pdefault(dxpl)
+          space_id = H5Dget_space(self.id)
+          rank = H5Sget_simple_extent_ndims(space_id)
 
-        if len(pyOfs) != rank:
-          raise TypeError("offset length (%d) must match dataset rank (%d)" % (len(pyOfs), rank))
+          if len(pyOfs) != rank:
+            raise TypeError("offset length (%d) must match dataset rank (%d)" % (len(pyOfs), rank))
 
-        offset = <hsize_t*>emalloc(sizeof(hsize_t)*rank)
-        convert_tuple(pyOfs, offset, rank)
-        buf = PyArray_DATA(pyData)
-        data_size=pyData.nbytes
-        #print 'H5DOwrite_chunk(',dset_id, dxpl_id, filters, <long>offset, data_size, <long>buf,')'
-        #print '(',type(pyData),data_size,')'
-        H5DOwrite_chunk(dset_id, dxpl_id, filters, offset, data_size, buf)
-      except BaseException as e:
-        print e
-      finally:
-        efree(offset)
-        if space_id:
-          H5Sclose(space_id)
-      pass
+          offset = <hsize_t*>emalloc(sizeof(hsize_t)*rank)
+          convert_tuple(pyOfs, offset, rank)
+          buf = PyArray_DATA(pyData)
+          data_size=pyData.nbytes
+          #print 'H5DOwrite_chunk(',dset_id, dxpl_id, filters, <long>offset, data_size, <long>buf,')'
+          #print '(',type(pyData),data_size,')'
+          H5DOwrite_chunk(dset_id, dxpl_id, filters, offset, data_size, buf)
+        except BaseException as e:
+          print e
+        finally:
+          efree(offset)
+          if space_id:
+            H5Sclose(space_id)
+        pass
 
     def extend(self, tuple shape):
         """ (TUPLE shape)

@@ -403,9 +403,9 @@ hdf5:
   MPI 1.8.9 herr_t H5Fset_mpi_atomicity(hid_t file_id, hbool_t flag)
   MPI 1.8.9 herr_t H5Fget_mpi_atomicity(hid_t file_id, hbool_t *flag)
 
-  1.8.9 herr_t    H5DOwrite_chunk(hid_t dset_id, hid_t dxpl_id, uint32_t filters, const hsize_t *offset, size_t data_size, const void *buf)
-#  1.8.9 herr_t    H5Zregister(const void *cls)
-#  1.8.9 herr_t    H5Zunregister(H5Z_filter_t id)
+  1.8.11 herr_t    H5DOwrite_chunk(hid_t dset_id, hid_t dxpl_id, uint32_t filters, const hsize_t *offset, size_t data_size, const void *buf)
+#  1.8.11 herr_t    H5Zregister(const void *cls)
+#  1.8.11 herr_t    H5Zunregister(H5Z_filter_t id)
 
 
 hdf5_hl:
