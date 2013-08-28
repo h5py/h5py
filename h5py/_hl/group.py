@@ -1,6 +1,7 @@
 import posixpath as pp
 
 import numpy
+import collections
 
 from h5py import h5g, h5i, h5o, h5r, h5t, h5l, h5p
 from . import base
@@ -431,6 +432,8 @@ class Group(HLObject, DictCompat):
         if py3:
             return r
         return r.encode('utf8')
+
+collections.MutableMapping.register(Group)
 
 
 class HardLink(object):

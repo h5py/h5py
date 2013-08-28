@@ -7,7 +7,7 @@
 
     1. Method create_dataset is tested in module test_dataset
 """
-
+import collections
 import numpy as np
 import os
 import sys
@@ -838,3 +838,24 @@ class TestMove(BaseGroup):
         ''' Test that a null-move works '''
         self.f.create_group("X")
         self.f.move("X", "X")
+
+
+class TestMutableMapping(BaseGroup):
+    '''Tests if the registration of Group as a MutableMapping
+    behaves as expected
+    '''
+    def test_resolution(self):
+        assert issubclass(Group, collections.MutableMapping)
+        grp = self.f.create_group("K")
+        assert isinstance(grp, collections.MutableMapping)
+
+    def test_validity(self):
+        '''
+        Test that the required functions are implemented.
+        '''
+        Group.__getitem__
+        Group.__setitem__
+        Group.__delitem__
+        Group.__iter__
+        Group.__len__
+

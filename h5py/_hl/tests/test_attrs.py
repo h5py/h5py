@@ -8,11 +8,14 @@
 """
 
 import numpy as np
+import collections
 
 from common import TestCase, ut
 
 from h5py.highlevel import File
 from h5py import h5a
+from h5py.highlevel import AttributeManager
+
 
 class BaseAttrs(TestCase):
 
@@ -22,6 +25,7 @@ class BaseAttrs(TestCase):
     def tearDown(self):
         if self.f:
             self.f.close()
+
 
 class TestAccess(BaseAttrs):
 
@@ -105,6 +109,7 @@ class TestUnicode(BaseAttrs):
         out = self.f.attrs[name]
         self.assertEqual(out, 42)
 
+
 class TestCreate(BaseAttrs):
 
     """
@@ -123,3 +128,21 @@ class TestCreate(BaseAttrs):
         self.assertEqual(htype, htype2)
         self.assertTrue(htype.committed())
 
+
+class TestMutableMapping(BaseAttrs):
+    '''Tests if the registration of AttributeManager as a MutableMapping
+    behaves as expected
+    '''
+    def test_resolution(self):
+        assert issubclass(AttributeManager, collections.MutableMapping)
+        assert isinstance(self.f.attrs, collections.MutableMapping)
+
+    def test_validity(self):
+        '''
+        Test that the required functions are implemented.
+        '''
+        AttributeManager.__getitem__
+        AttributeManager.__setitem__
+        AttributeManager.__delitem__
+        AttributeManager.__iter__
+        AttributeManager.__len__
