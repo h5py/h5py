@@ -4,5 +4,5 @@ Meta information
 
 .. toctree::
 
-    bugs
+    contributing
     licenses
