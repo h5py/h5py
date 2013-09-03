@@ -326,7 +326,6 @@ cdef int conv_fixed2vlen(void* ipt, void* opt, void* bkg, void* priv) except -1:
 cdef int conv_objref2pyref(void* ipt, void* opt, void* bkg, void* priv) except -1:
 
     cdef PyObject** buf_obj = <PyObject**>opt
-    cdef PyObject** bkg_obj = <PyObject**>bkg
     cdef hobj_ref_t* buf_ref = <hobj_ref_t*>ipt
 
     cdef Reference ref = Reference()
@@ -339,7 +338,6 @@ cdef int conv_objref2pyref(void* ipt, void* opt, void* bkg, void* priv) except -
     Py_INCREF(ref_ptr)  # because Cython discards its reference when the
                         # function exits
 
-    Py_XDECREF(bkg_obj[0])
     buf_obj[0] = ref_ptr
 
     return 0
@@ -436,7 +434,7 @@ cdef herr_t objref2pyref(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
                     size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
                     void *bkg_i, hid_t dxpl) except -1:
     return generic_converter(src_id, dst_id, cdata, nl, buf_stride, bkg_stride,
-             buf_i, bkg_i, dxpl, conv_objref2pyref, init_generic, H5T_BKG_YES)
+             buf_i, bkg_i, dxpl, conv_objref2pyref, init_generic, H5T_BKG_NO)
 
 cdef herr_t pyref2objref(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
                     size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
