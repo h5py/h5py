@@ -136,6 +136,12 @@ When the link is accessed, the file "otherfile.hdf5" is opened, and object at
     properties will refer to objects in that file, *not* the file in which the
     link resides.
 
+.. note::
+
+    Currently, you can't access an external link if the file it points to is
+    already open.  This is related to how HDF5 manages file permissions
+    internally.
+
 Getting info on links
 ---------------------
 
