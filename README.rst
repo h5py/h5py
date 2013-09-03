@@ -17,7 +17,7 @@ Prerequisites
 You need, at a minimum:
 
 * HDF5 1.8.3 or later on Linux (On Windows, h5py ships with HDF5)
-* Python 2.6, 2.7 or 3.2
+* Python 2.6, 2.7, 3.2 or 3.3
 * Any modern version of NumPy
 
 Optionally:
