@@ -1,9 +1,8 @@
-Announcing HDF5 for Python (h5py) 2.2.0 BETA
-============================================
+Announcing HDF5 for Python (h5py) 2.2.0
+=======================================
 
-We are proud to announce that HDF5 for Python 2.2.0 (beta) is now available.
-Because of the large number of new features in this release, we are actively
-seeking community feedback over the (2-week) beta period.
+We are proud to announce that HDF5 for Python 2.2.0 is now available.
+Thanks to everyone who helped put together this release!
 
 The h5py package is a Pythonic interface to the HDF5 binary data format.
 
@@ -31,7 +30,7 @@ package or "multiprocessing".
 
 There is a guide to using Parallel HDF5 at the h5py web site:
 
-http://h5py.org/docs/build/html/topics/mpi.html
+    http://www.h5py.org/docs/topics/mpi.html
 
 Other new features
 ==================
@@ -42,6 +41,32 @@ Other new features
 * Field names are now allowed when writing to a dataset
 * Region references now preserve the shape of their selections
 * File-resident "committed" types can be linked to datasets and attributes
+* Make object mtime tracking optional
 * A new "move" method on Group objects
 * Many new options for Group.copy
+* Access to HDF5's get_vfd_handle
+* Many bug fixes
+
+Acknowledgments
+===============
+
+Special thanks to:
+
+    *  Thomas A Caswell
+    *  Konrad Hinsen
+    *  Darren Dale
+    *  Matt Zwier
+    *  Toon Verstraelen
+    *  Noel Dawe
+    *  Barry Wardel
+    *  Bradley M. Froehle
+    *  Dan Meliza
+    *  Johannes Meixner
+    *  John Benediktsson
+    *  Matthew Turk
+    *  syhw
+
+And everyone else who posted a bug report, contributed on the mailing list,
+or otherwise helped with this release.
+
 
