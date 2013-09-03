@@ -14,6 +14,12 @@
 # license is available at licenses/pytables.txt, in the distribution root
 # directory.
 
+# Minimal interface for Python objects immune to Cython refcounting
+cdef extern from "Python.h":
+    
+    ctypedef struct PyTypeObject:
+        pass
+
 # API for NumPy objects
 cdef extern from "numpy/arrayobject.h":
 
@@ -88,6 +94,8 @@ cdef extern from "numpy/arrayobject.h":
     double real
     double imag
 
+  PyTypeObject PyArray_Type
+
   # Functions
   int PyArray_DIM(ndarray arr, int i)
   object PyArray_FROM_OF(object arr, int requirements)
@@ -97,9 +105,11 @@ cdef extern from "numpy/arrayobject.h":
   dtype PyArray_DescrFromType(int type)
   object PyArray_Scalar(void *data, dtype descr, object base)
   long PyArray_NBYTES(object arr)
+  int PyArray_FLAGS(object arr)
 
   int PyArray_CheckScalar(object sclr)
   void PyArray_ScalarAsCtype(object sclr, void* ptr)
+  object PyArray_NewFromDescr(PyTypeObject* subtype, dtype descr, int nd, npy_intp* dims, npy_intp* strides, void* data, int flags, object obj)
   object PyArray_SimpleNew(int nd, npy_intp* dims, int typenum)
   object PyArray_ContiguousFromAny(object arr, int typenum, int min_depth, int max_depth)
   object PyArray_FROM_OTF(object arr, int typenum, int requirements)
