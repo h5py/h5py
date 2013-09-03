@@ -127,7 +127,7 @@ else:
     }
     if HDF5 is not None:
         COMPILER_SETTINGS['include_dirs'] += [op.join(HDF5, 'include')]
-        COMPILER_SETTINGS['library_dirs'] += [op.join(HDF5, 'lib')]
+        COMPILER_SETTINGS['library_dirs'] += [op.join(HDF5, 'lib'), op.join(HDF5, 'lib64')]
     elif sys.platform == 'darwin':
         # putting here both macports and homebrew paths will generate
         # "ld: warning: dir not found" at the linking phase 
