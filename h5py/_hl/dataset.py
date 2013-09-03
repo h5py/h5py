@@ -398,6 +398,8 @@ class Dataset(HLObject):
             arr = numpy.ndarray(selection.mshape, dtype=new_dtype)
             for mspace, fspace in selection:
                 self.id.read(mspace, fspace, arr, mtype)
+            if len(names) == 1:
+                arr = arr[names[0]]
             if selection.mshape is None:
                 return arr[()]
             return arr
