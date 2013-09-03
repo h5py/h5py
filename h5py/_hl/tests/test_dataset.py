@@ -823,6 +823,19 @@ class TestAstype(BaseDataset):
             self.assertTrue(np.all(dset[...] == np.arange(100)))
 
 
+class TestScalarCompound(BaseDataset):
+
+    """
+        Retrieval of a single field from a scalar compound dataset should
+        strip the field info
+    """
+
+    def test_scalar_compound(self):
+
+        dt = np.dtype([('a','i')])
+        dset = self.f.create_dataset('x', (), dtype=dt)
+        self.assertEqual(dset['a'].dtype, np.dtype('i'))
+
 
 
 
