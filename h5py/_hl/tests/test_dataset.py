@@ -808,8 +808,19 @@ class TestRegionRefs(BaseDataset):
         self.assertEqual(self.dset.regionref.shape(ref), self.dset.shape)
         self.assertEqual(self.dset.regionref.selection(ref), (10, 18))
 
+class TestAstype(BaseDataset):
 
+    """
+        .astype context manager
+    """
 
+    def test_astype(self):
+
+        dset = self.f.create_dataset('x', (100,), dtype='i2')
+        dset[...] = np.arange(100)
+        with dset.astype('f8'):
+            self.assertEqual(dset[...].dtype, np.dtype('f8'))
+            self.assertTrue(np.all(dset[...] == np.arange(100)))
 
 
 
