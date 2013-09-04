@@ -458,7 +458,16 @@ class Dataset(HLObject):
 
         # Generally we try to avoid converting the arrays on the Python
         # side.  However, for compound literals this is unavoidable.
-        if self.dtype.kind == "O" or \
+        vlen = h5t.check_dtype(vlen=self.dtype)
+        if vlen not in (str, unicode, None) and vlen == val.dtype:
+            if val.ndim > 1:
+                r = numpy.empty(shape=val.shape[:-1], dtype=object)
+                r.ravel()[:] = [i for i in val.reshape(
+                    (numpy.product(val.shape[:-1]), val.shape[-1]))]
+                val = r
+            else:
+                val, val[0] = numpy.array([None], dtype=object), val
+        elif self.dtype.kind == "O" or \
           (self.dtype.kind == 'V' and \
           (not isinstance(val, numpy.ndarray) or val.dtype.kind != 'V') and \
           (self.dtype.subdtype == None)):
