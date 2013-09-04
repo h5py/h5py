@@ -845,12 +845,19 @@ class TestScalarCompound(BaseDataset):
         self.assertEqual(dset['a'].dtype, np.dtype('i'))
 
 
-
-
-
-
-
-
-
-
-
+class TestVlen(BaseDataset):
+    def test_int(self):
+        dt = h5py.special_dtype(vlen=int)
+        ds = self.f.create_dataset('vlen', (3,), dtype=dt)
+        ds[0] = np.arange(3)
+        ds[1] = np.arange(1)
+        ds[2] = np.arange(0)
+        self.assertArrayEqual(ds[0], np.arange(3))
+        self.assertArrayEqual(ds[1], np.arange(1))
+        self.assertArrayEqual(ds[2], np.arange(0))
+        ds[0:2] = np.array([np.arange(5), np.arange(4)])
+        self.assertArrayEqual(ds[0], np.arange(5))
+        self.assertArrayEqual(ds[1], np.arange(4))
+        ds[0:2] = np.array([np.arange(3), np.arange(3)])
+        self.assertArrayEqual(ds[0], np.arange(3))
+        self.assertArrayEqual(ds[1], np.arange(3))
