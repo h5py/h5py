@@ -21,10 +21,6 @@ from . import selections2 as sel2
 def readtime_dtype(basetype, names):
     """ Make a NumPy dtype appropriate for reading """
 
-    if basetype.kind == 'O':
-        # Special-dtype fields break indexing
-        basetype = numpy.dtype('O')
-
     if len(names) == 0:  # Not compound, or we want all fields
         return basetype
 

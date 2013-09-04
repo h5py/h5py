@@ -1485,7 +1485,7 @@ def special_dtype(**kwds):
         if val not in (bytes, unicode):
             raise NotImplementedError("Only byte or unicode string vlens are currently supported")
 
-        return dtype(('O', [( ({'type': val},'vlen'), 'O' )] ))
+        return dtype('O', metadata={'vlen': val})
 
     if name == 'enum':
 
@@ -1498,14 +1498,14 @@ def special_dtype(**kwds):
         if dt.kind not in "iu":
             raise TypeError("Only integer types can be used as enums")
 
-        return dtype((dt, [( ({'vals': enum_vals},'enum'), dt )] ))
+        return dtype(dt, metadata={'enum': enum_vals})
 
     if name == 'ref':
 
         if val not in (Reference, RegionReference):
             raise ValueError("Ref class must be Reference or RegionReference")
 
-        return dtype(('O', [( ({'type': val},'ref'), 'O' )] ))
+        return dtype('O', metadata={'ref': val})
 
     raise TypeError('Unknown special type "%s"' % name)
    
@@ -1537,16 +1537,12 @@ def check_dtype(**kwds):
     if name not in ('vlen', 'enum', 'ref'):
         raise TypeError('Unknown special type "%s"' % name)
 
-    hintkey = 'type' if name is not 'enum' else 'vals'
-
-    if dt.fields is not None and name in dt.fields:
-        tpl = dt.fields[name]
-        if len(tpl) == 3:
-            hint_dict = tpl[2]
-            if hintkey in hint_dict:
-                return hint_dict[hintkey]
-
-    return None
+    try:
+        return dt.metadata[name]
+    except TypeError:
+        return None
+    except KeyError:
+        return None
 
 def convert(TypeID src not None, TypeID dst not None, size_t n,
             ndarray buf not None, ndarray bkg=None, ObjectID dxpl=None):
