@@ -55,27 +55,6 @@ class TestTypeGeneration(TestCase):
         self.assertEqual(out, np.dtype('i'))
         self.assertEqual(format, np.dtype( [('a','i')] ))
 
-    def test_objects(self):
-        """ Metadata is stripped from object types """
-        dt = h5py.special_dtype(ref=h5py.Reference)
-        
-        out, format = sel.read_dtypes(dt, ())
-        self.assertEqual(out, format)
-        self.assertEqual(format, dt)
-        self.assertTrue(out.fields is None)
-        self.assertTrue(format.fields is not None)
-
-    def test_compound_objects(self):
-        """ Metadata is stripped from output in compound types"""
-        reftype = h5py.special_dtype(ref=h5py.Reference)
-
-        dt = np.dtype( [('a','i'), ('b',reftype), ('c','|S10')] )
-
-        out, format = sel.read_dtypes(dt, ())
-        self.assertEqual(out, format)
-        self.assertEqual(format, dt)
-        self.assertTrue(all(x[0].fields is None for x in out.fields.values() if x[0].kind == 'O'))
-
 
 class TestScalarSliceRules(TestCase):
 
