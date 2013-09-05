@@ -693,7 +693,7 @@ cdef herr_t ndarray2vlen(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
             return -2
         supertype = typewrap(H5Tget_super(dst_id))
         for i from 0 <= i < nl:
-            if supertype != py_create((<np.ndarray> pdata[i]).dtype, logical=1):
+            if supertype != py_create((<np.ndarray> pdata[i]).dtype, 1):
                 return -2
             if (<np.ndarray> pdata[i]).ndim != 1:
                 return -2

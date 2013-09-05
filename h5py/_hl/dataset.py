@@ -459,7 +459,7 @@ class Dataset(HLObject):
         # Generally we try to avoid converting the arrays on the Python
         # side.  However, for compound literals this is unavoidable.
         vlen = h5t.check_dtype(vlen=self.dtype)
-        if vlen not in (str, unicode, None) and vlen == val.dtype:
+        if vlen not in (bytes, unicode, None) and vlen == val.dtype:
             if val.ndim > 1:
                 r = numpy.empty(shape=val.shape[:-1], dtype=object)
                 r.ravel()[:] = [i for i in val.reshape(
