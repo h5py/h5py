@@ -26,14 +26,16 @@ class NumpyExtension(Extension):
 
     def __init__(self, *args, **kwargs):
         Extension.__init__(self, *args, **kwargs)
-        self._include_dirs = self.include_dirs
-        del self.include_dirs  # restore overwritten property
 
     # warning: Extension is a classic class so it's not really read-only
     @property
     def include_dirs(self):
         from numpy import get_include
         return self._include_dirs + [get_include()]
+
+    @include_dirs.setter
+    def include_dirs(self, include_dirs):
+        self._include_dirs = include_dirs
 
 
 # --- Autodetect Cython -------------------------------------------------------
