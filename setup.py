@@ -21,13 +21,12 @@ VERSION = '2.2.0'
 # --- Encapsulate NumPy imports in a specialized Extension type ---------------
 
 # https://mail.python.org/pipermail/distutils-sig/2007-September/008253.html
-class NumpyExtension(Extension):
+class NumpyExtension(Extension, object):
     """Extension type that adds the NumPy include directory to include_dirs."""
 
     def __init__(self, *args, **kwargs):
-        Extension.__init__(self, *args, **kwargs)
+        super(NumpyExtension, self).__init__(*args, **kwargs)
 
-    # warning: Extension is a classic class so it's not really read-only
     @property
     def include_dirs(self):
         from numpy import get_include
