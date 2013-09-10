@@ -1,18 +1,39 @@
 #!/usr/bin/env python
 
-from distutils.core import setup
-from distutils.extension import Extension
+try:
+    # If possible, use setuptools.Extension so we get setup_requires
+    from setuptools import Extension, setup
+except ImportError:
+    from distutils.core import setup
+    from distutils.extension import Extension
 from distutils.cmd import Command
 from distutils.version import LooseVersion
 import warnings
 import sys, os
 import os.path as op
 from functools import reduce
-import numpy
 
 import configure   # Sticky-options configuration and version auto-detect
 
 VERSION = '2.2.0'
+
+
+# --- Encapsulate NumPy imports in a specialized Extension type ---------------
+
+# https://mail.python.org/pipermail/distutils-sig/2007-September/008253.html
+class NumpyExtension(Extension):
+    """Extension type that adds the NumPy include directory to include_dirs."""
+
+    def __init__(self, *args, **kwargs):
+        Extension.__init__(self, *args, **kwargs)
+        self._include_dirs = self.include_dirs
+        del self.include_dirs  # restore overwritten property
+
+    # warning: Extension is a classic class so it's not really read-only
+    @property
+    def include_dirs(self):
+        from numpy import get_include
+        return self._include_dirs + [get_include()]
 
 
 # --- Autodetect Cython -------------------------------------------------------
@@ -110,7 +131,7 @@ if MPI:
 if sys.platform.startswith('win'):
     COMPILER_SETTINGS = {
         'libraries'     : ['hdf5dll18','hdf5_hldll'],
-        'include_dirs'  : [numpy.get_include(),  localpath('lzf'),
+        'include_dirs'  : [localpath('lzf'),
                            localpath('win_include')],
         'library_dirs'  : [],
         'define_macros' : [('H5_USE_16_API', None), ('_HDF5USEDLL_', None)]
@@ -121,7 +142,7 @@ if sys.platform.startswith('win'):
 else:
     COMPILER_SETTINGS = {
        'libraries'      : ['hdf5', 'hdf5_hl'],
-       'include_dirs'   : [numpy.get_include(), localpath('lzf')],
+       'include_dirs'   : [localpath('lzf')],
        'library_dirs'   : [],
        'define_macros'  : [('H5_USE_16_API', None)]
     }
@@ -173,7 +194,7 @@ EXTRA_SRC = {'h5z': [ localpath("lzf/lzf_filter.c"),
 
 def make_extension(module):
     sources = [op.join('h5py', module+SUFFIX)] + EXTRA_SRC.get(module, [])
-    return Extension('h5py.'+module, sources, **COMPILER_SETTINGS)
+    return NumpyExtension('h5py.'+module, sources, **COMPILER_SETTINGS)
 
 EXTENSIONS = [make_extension(m) for m in MODULES]
 
@@ -281,5 +302,6 @@ setup(
   package_data = package_data,
   ext_modules = EXTENSIONS,
   requires = ['numpy (>=1.0.1)'],
+  setup_requires = ['numpy >=1.0.1'],
   cmdclass = {'build_ext': build_ext, 'test': test, 'build_py':build_py}
 )
