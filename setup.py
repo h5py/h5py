@@ -7,6 +7,7 @@ except ImportError:
     from distutils.core import setup
     from distutils.extension import Extension
 from distutils.cmd import Command
+from distutils.dist import Distribution
 from distutils.version import LooseVersion
 import warnings
 import sys, os
@@ -287,6 +288,12 @@ if os.name == 'nt':
 else:
     package_data = {'h5py': ['*.pyx']}
 
+# Avoid going off and installing NumPy if the user only queries for information
+if any('--' + opt in sys.argv for opt in Distribution.display_option_names + ['help']):
+    setup_requires = []
+else:
+    setup_requires = ['numpy >=1.0.1']
+
 setup(
   name = 'h5py',
   version = VERSION,
@@ -303,6 +310,6 @@ setup(
   package_data = package_data,
   ext_modules = EXTENSIONS,
   requires = ['numpy (>=1.0.1)'],
-  setup_requires = ['numpy >=1.0.1'],
+  setup_requires = setup_requires,
   cmdclass = {'build_ext': build_ext, 'test': test, 'build_py':build_py}
 )
