@@ -21,7 +21,7 @@ import collections
 from common import TestCase, ut
 
 from h5py.highlevel import File
-from h5py import h5a
+from h5py import h5a,  h5t
 from h5py.highlevel import AttributeManager
 
 
@@ -154,3 +154,10 @@ class TestMutableMapping(BaseAttrs):
         AttributeManager.__delitem__
         AttributeManager.__iter__
         AttributeManager.__len__
+
+class TestVlen(BaseAttrs):
+    def test_vlen(self):
+        a = np.array([np.arange(3), np.arange(4)],
+            dtype=h5t.special_dtype(vlen=int))
+        self.f.attrs['a'] = a
+        self.assertArrayEqual(self.f.attrs['a'][0], a[0])

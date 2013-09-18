@@ -23,7 +23,6 @@ from h5r cimport Reference, RegionReference
 
 from utils cimport  emalloc, efree, \
                     require_tuple, convert_dims, convert_tuple
-from h5py import _conv
 
 # Runtime imports
 import sys
@@ -194,9 +193,6 @@ VARIABLE = H5T_VARIABLE
 CSET_ASCII = H5T_CSET_ASCII
 CSET_UTF8 = H5T_CSET_UTF8
 
-# Custom Python object pointer type
-PYTHON_OBJECT = lockid(_conv.get_python_obj())
-
 # Mini floats
 IEEE_F16BE = IEEE_F32BE.copy()
 IEEE_F16BE.set_fields(15, 10, 5, 0, 10)
@@ -207,6 +203,13 @@ IEEE_F16BE.lock()
 IEEE_F16LE = IEEE_F16BE.copy()
 IEEE_F16LE.set_order(H5T_ORDER_LE)
 IEEE_F16LE.lock()
+
+# Custom Python object pointer type
+cdef hid_t H5PY_OBJ = H5Tcreate(H5T_OPAQUE, sizeof(PyObject*))
+H5Tset_tag(H5PY_OBJ, "PYTHON:OBJECT")
+H5Tlock(H5PY_OBJ)
+
+PYTHON_OBJECT = lockid(H5PY_OBJ)
 
 # Translation tables for HDF5 -> NumPy dtype conversion
 cdef dict _order_map = { H5T_ORDER_NONE: '|', H5T_ORDER_LE: '<', H5T_ORDER_BE: '>'}
@@ -624,7 +627,14 @@ cdef class TypeVlenID(TypeID):
     """
         Non-string vlen datatypes.
     """
-    pass
+    
+    cdef object py_dtype(self):
+    
+        # get base type id
+        cdef TypeID base_type
+        base_type = self.get_super()
+        
+        return special_dtype(vlen=base_type.dtype)
 
 cdef class TypeTimeID(TypeID):
 
@@ -1443,10 +1453,12 @@ cpdef TypeID py_create(object dtype_in, bint logical=0):
                 return _c_vlen_str()
             elif vlen is unicode:
                 return _c_vlen_unicode()
+            elif vlen is not None:
+                return vlen_create(py_create(vlen))
 
             refclass = check_dtype(ref=dt)
             if refclass is not None:
-                    return _c_ref(refclass)
+                return _c_ref(refclass)
 
             raise TypeError("Object dtype %r has no native HDF5 equivalent" % (dt,))
 
@@ -1462,8 +1474,8 @@ def special_dtype(**kwds):
     Legal keywords are:
 
     vlen = basetype
-        Base type for HDF5 variable-length datatype.  Currently only the
-        builtin string class (str) is allowed.
+        Base type for HDF5 variable-length datatype. This can be Python
+        str type or instance of np.dtype.
         Example: special_dtype( vlen=str )
 
     enum = (basetype, values_dict)
@@ -1482,10 +1494,8 @@ def special_dtype(**kwds):
     name, val = kwds.popitem()
 
     if name == 'vlen':
-        if val not in (bytes, unicode):
-            raise NotImplementedError("Only byte or unicode string vlens are currently supported")
 
-        return dtype(('O', [( ({'type': val},'vlen'), 'O' )] ))
+        return dtype('O', metadata={'vlen': val})
 
     if name == 'enum':
 
@@ -1498,14 +1508,14 @@ def special_dtype(**kwds):
         if dt.kind not in "iu":
             raise TypeError("Only integer types can be used as enums")
 
-        return dtype((dt, [( ({'vals': enum_vals},'enum'), dt )] ))
+        return dtype(dt, metadata={'enum': enum_vals})
 
     if name == 'ref':
 
         if val not in (Reference, RegionReference):
             raise ValueError("Ref class must be Reference or RegionReference")
 
-        return dtype(('O', [( ({'type': val},'ref'), 'O' )] ))
+        return dtype('O', metadata={'ref': val})
 
     raise TypeError('Unknown special type "%s"' % name)
    
@@ -1537,16 +1547,12 @@ def check_dtype(**kwds):
     if name not in ('vlen', 'enum', 'ref'):
         raise TypeError('Unknown special type "%s"' % name)
 
-    hintkey = 'type' if name is not 'enum' else 'vals'
-
-    if dt.fields is not None and name in dt.fields:
-        tpl = dt.fields[name]
-        if len(tpl) == 3:
-            hint_dict = tpl[2]
-            if hintkey in hint_dict:
-                return hint_dict[hintkey]
-
-    return None
+    try:
+        return dt.metadata[name]
+    except TypeError:
+        return None
+    except KeyError:
+        return None
 
 def convert(TypeID src not None, TypeID dst not None, size_t n,
             ndarray buf not None, ndarray bkg=None, ObjectID dxpl=None):

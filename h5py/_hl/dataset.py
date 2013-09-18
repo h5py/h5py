@@ -21,10 +21,6 @@ from . import selections2 as sel2
 def readtime_dtype(basetype, names):
     """ Make a NumPy dtype appropriate for reading """
 
-    if basetype.kind == 'O':
-        # Special-dtype fields break indexing
-        basetype = numpy.dtype('O')
-
     if len(names) == 0:  # Not compound, or we want all fields
         return basetype
 
@@ -462,7 +458,26 @@ class Dataset(HLObject):
 
         # Generally we try to avoid converting the arrays on the Python
         # side.  However, for compound literals this is unavoidable.
-        if self.dtype.kind == "O" or \
+        vlen = h5t.check_dtype(vlen=self.dtype)
+        if vlen not in (bytes, unicode, None):
+            try:
+                val = numpy.asarray(val, dtype=vlen)
+            except ValueError:
+                try:
+                    val = numpy.array([numpy.array(x, dtype=vlen)
+                                       for x in val], dtype=self.dtype)
+                except ValueError:
+                    pass
+            if vlen == val.dtype:
+                if val.ndim > 1:
+                    tmp = numpy.empty(shape=val.shape[:-1], dtype=object)
+                    tmp.ravel()[:] = [i for i in val.reshape(
+                        (numpy.product(val.shape[:-1]), val.shape[-1]))]
+                else:
+                    tmp = numpy.array([None], dtype=object)
+                    tmp[0] = val
+                val = tmp
+        elif self.dtype.kind == "O" or \
           (self.dtype.kind == 'V' and \
           (not isinstance(val, numpy.ndarray) or val.dtype.kind != 'V') and \
           (self.dtype.subdtype == None)):

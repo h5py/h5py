@@ -14,12 +14,18 @@
 """
 
 from h5r cimport Reference, RegionReference, hobj_ref_t, hdset_reg_ref_t
+from h5t cimport H5PY_OBJ, typewrap, py_create, TypeID
+cimport numpy as np
+from libc.stdlib cimport realloc
+
+# Initialization
+np.import_array()
 
 # Minimal interface for Python objects immune to Cython refcounting
 cdef extern from "Python.h":
     
     # From Cython declarations
-    ctypedef void PyTypeObject
+    ctypedef int PyTypeObject
     ctypedef struct PyObject:
         Py_ssize_t ob_refcnt
         PyTypeObject *ob_type
@@ -46,16 +52,10 @@ cdef object objectify(PyObject* o):
     Py_INCREF(o)
     return <object>o
 
-# Create Python object equivalents
-cdef hid_t H5PY_OBJ = 0
+cdef extern from "numpy/arrayobject.h":
+    PyTypeObject PyArray_Type
+    object PyArray_NewFromDescr(PyTypeObject* subtype, np.dtype descr, int nd, np.npy_intp* dims, np.npy_intp* strides, void* data, int flags, object obj)
 
-cpdef hid_t get_python_obj():
-    global H5PY_OBJ
-    if H5PY_OBJ <= 0:
-        H5PY_OBJ = H5Tcreate(H5T_OPAQUE, sizeof(PyObject*))
-        H5Tset_tag(H5PY_OBJ, "PYTHON:OBJECT")
-        H5Tlock(H5PY_OBJ)
-    return H5PY_OBJ
 
 ctypedef int (*conv_operator_t)(void* ipt, void* opt, void* bkg, void* priv) except -1
 ctypedef herr_t (*init_operator_t)(hid_t src, hid_t dst, void** priv) except -1
@@ -332,7 +332,6 @@ cdef int conv_fixed2vlen(void* ipt, void* opt, void* bkg, void* priv) except -1:
 cdef int conv_objref2pyref(void* ipt, void* opt, void* bkg, void* priv) except -1:
 
     cdef PyObject** buf_obj = <PyObject**>opt
-    cdef PyObject** bkg_obj = <PyObject**>bkg
     cdef hobj_ref_t* buf_ref = <hobj_ref_t*>ipt
 
     cdef Reference ref = Reference()
@@ -345,7 +344,6 @@ cdef int conv_objref2pyref(void* ipt, void* opt, void* bkg, void* priv) except -
     Py_INCREF(ref_ptr)  # because Cython discards its reference when the
                         # function exits
 
-    Py_XDECREF(bkg_obj[0])
     buf_obj[0] = ref_ptr
 
     return 0
@@ -442,7 +440,7 @@ cdef herr_t objref2pyref(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
                     size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
                     void *bkg_i, hid_t dxpl) except -1:
     return generic_converter(src_id, dst_id, cdata, nl, buf_stride, bkg_stride,
-             buf_i, bkg_i, dxpl, conv_objref2pyref, init_generic, H5T_BKG_YES)
+             buf_i, bkg_i, dxpl, conv_objref2pyref, init_generic, H5T_BKG_NO)
 
 cdef herr_t pyref2objref(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
                     size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
@@ -578,10 +576,198 @@ cdef herr_t int2enum(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
     return enum_int_converter(src_id, dst_id, cdata, nl, buf_stride, bkg_stride,
              buf_i, bkg_i, dxpl, 0)
 
+# =============================================================================
+# ndarray to VLEN routines
+
+cdef herr_t vlen2ndarray(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
+                    size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
+                    void *bkg_i, hid_t dxpl) except -1:
+
+    cdef int command = cdata[0].command
+    cdef size_t src_size, dst_size
+    cdef TypeID supertype
+    cdef TypeID outtype
+    cdef np.dtype dt
+    cdef int i
+
+    cdef char* buf = <char*>buf_i
+
+    if command == H5T_CONV_INIT:
+
+        cdata[0].need_bkg = H5T_BKG_NO
+        if H5Tget_class(src_id) != H5T_VLEN or H5Tget_class(dst_id) != H5T_OPAQUE:
+            return -2
+
+    elif command == H5T_CONV_FREE:
+        
+        pass
+
+    elif command == H5T_CONV_CONV:
+
+        # need to pass element dtype to converter
+        supertype = typewrap(H5Tget_super(src_id))
+        dt = supertype.dtype
+        outtype = py_create(dt)
+
+        if buf_stride == 0:
+            # No explicit stride seems to mean that the elements are packed
+            # contiguously in the buffer.  In this case we must be careful
+            # not to "stomp on" input elements if the output elements are
+            # of a larger size.
+
+            src_size = H5Tget_size(src_id)
+            dst_size = H5Tget_size(dst_id)
+
+            if src_size >= dst_size:
+                for i from 0<=i<nl:
+                    conv_vlen2ndarray(buf + (i*src_size), buf + (i*dst_size),
+                                      dt, supertype, outtype)
+            else:
+                for i from nl>i>=0:
+                    conv_vlen2ndarray(buf + (i*src_size), buf + (i*dst_size),
+                                      dt, supertype, outtype)
+        else:
+            # With explicit strides, we assume that the library knows the
+            # alignment better than us.  Therefore we use the given stride
+            # offsets exclusively.
+            for i from 0<=i<nl:
+                conv_vlen2ndarray(buf + (i*buf_stride), buf + (i*buf_stride),
+                                  dt, supertype, outtype)
+
+    else:
+        return -2   # Unrecognized command.  Note this is NOT an exception.
+
+    return 0
+
+
+cdef struct vlen_t:
+    size_t len
+    void* ptr
+
+cdef int conv_vlen2ndarray(void* ipt, void* opt, np.dtype elem_dtype,
+        TypeID intype, TypeID outtype) except -1:
+
+    cdef PyObject** buf_obj = <PyObject**>opt
+    cdef vlen_t* in_vlen = <vlen_t*>ipt
+    cdef int flags = np.NPY_WRITEABLE | np.NPY_C_CONTIGUOUS
+    cdef np.npy_intp dims[1]
+    cdef void* data
+    cdef np.ndarray ndarray
+
+    dims[0] = in_vlen[0].len
+    data = in_vlen[0].ptr
+    if outtype.get_size() > intype.get_size():
+        data = realloc(data, outtype.get_size() * in_vlen[0].len)
+    H5Tconvert(intype.id, outtype.id, in_vlen[0].len, data, NULL, H5P_DEFAULT)
+    
+    Py_INCREF(<PyObject*>elem_dtype)
+    ndarray = PyArray_NewFromDescr(&PyArray_Type, elem_dtype, 1,
+                dims, NULL, data, flags, <object>NULL)
+    ndarray.flags |= np.NPY_OWNDATA
+    Py_INCREF(<PyObject*>ndarray)
+
+    # Write the new object to the buffer in-place
+    in_vlen[0].ptr = NULL
+    buf_obj[0] = <PyObject*>ndarray
+    
+    return 0
+
+cdef herr_t ndarray2vlen(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
+                    size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
+                    void *bkg_i, hid_t dxpl) except -1:
+
+    cdef int command = cdata[0].command
+    cdef size_t src_size, dst_size
+    cdef TypeID supertype
+    cdef TypeID outtype
+    cdef np.dtype dt
+    cdef int i
+    cdef PyObject **pdata = <PyObject **> buf_i
+
+    cdef char* buf = <char*>buf_i
+
+    if command == H5T_CONV_INIT:
+
+        cdata[0].need_bkg = H5T_BKG_NO
+        if not H5Tequal(src_id, H5PY_OBJ) or H5Tget_class(dst_id) != H5T_VLEN:
+            return -2
+        supertype = typewrap(H5Tget_super(dst_id))
+        for i from 0 <= i < nl:
+            if supertype != py_create((<np.ndarray> pdata[i]).dtype, 1):
+                return -2
+            if (<np.ndarray> pdata[i]).ndim != 1:
+                return -2
+
+    elif command == H5T_CONV_FREE:
+        
+        pass
+
+    elif command == H5T_CONV_CONV:
+
+        # need to pass element dtype to converter
+        supertype = py_create((<np.ndarray> pdata[0]).dtype)
+        outtype = typewrap(H5Tget_super(dst_id))
+
+        if buf_stride == 0:
+            # No explicit stride seems to mean that the elements are packed
+            # contiguously in the buffer.  In this case we must be careful
+            # not to "stomp on" input elements if the output elements are
+            # of a larger size.
+
+            src_size = H5Tget_size(src_id)
+            dst_size = H5Tget_size(dst_id)
+
+            if src_size >= dst_size:
+                for i from 0<=i<nl:
+                    conv_ndarray2vlen(buf + (i*src_size), buf + (i*dst_size),
+                                      supertype, outtype)
+            else:
+                for i from nl>i>=0:
+                    conv_ndarray2vlen(buf + (i*src_size), buf + (i*dst_size),
+                                      supertype, outtype)
+        else:
+            # With explicit strides, we assume that the library knows the
+            # alignment better than us.  Therefore we use the given stride
+            # offsets exclusively.
+            for i from 0<=i<nl:
+                conv_ndarray2vlen(buf + (i*buf_stride), buf + (i*buf_stride),
+                                  supertype, outtype)
+
+    else:
+        return -2   # Unrecognized command.  Note this is NOT an exception.
+
+    return 0
+
+
+cdef int conv_ndarray2vlen(void* ipt, void* opt,
+        TypeID intype, TypeID outtype) except -1:
+
+    cdef PyObject** buf_obj = <PyObject**>ipt
+    cdef vlen_t* in_vlen = <vlen_t*>opt
+    cdef int flags = np.NPY_WRITEABLE | np.NPY_C_CONTIGUOUS
+    cdef np.npy_intp dims[1]
+    cdef void* data
+    cdef np.ndarray ndarray = <np.ndarray> buf_obj[0]
+    cdef size_t len = ndarray.shape[0]
+
+    if outtype.get_size() > intype.get_size():
+        data = malloc(outtype.get_size() * len)
+    else:
+        data = malloc(intype.get_size() * len)
+    memcpy(data, ndarray.data, intype.get_size() * len)
+    H5Tconvert(intype.id, outtype.id, len, data, NULL, H5P_DEFAULT)
+
+    in_vlen[0].len = len
+    in_vlen[0].ptr = data
+    
+    return 0
+            
+# =============================================================================
 
 cpdef int register_converters() except -1:
 
     cdef hid_t vlstring
+    cdef hid_t vlentype
     cdef hid_t pyobj
     cdef hid_t enum
 
@@ -590,7 +776,9 @@ cpdef int register_converters() except -1:
     
     enum = H5Tenum_create(H5T_STD_I32LE)
 
-    pyobj = get_python_obj()
+    vlentype = H5Tvlen_create(H5T_STD_I32LE)
+
+    pyobj = H5PY_OBJ
 
     H5Tregister(H5T_PERS_HARD, "vlen2str", vlstring, pyobj, vlen2str)
     H5Tregister(H5T_PERS_HARD, "str2vlen", pyobj, vlstring, str2vlen)
@@ -607,7 +795,11 @@ cpdef int register_converters() except -1:
     H5Tregister(H5T_PERS_SOFT, "enum2int", enum, H5T_STD_I32LE, enum2int)
     H5Tregister(H5T_PERS_SOFT, "int2enum", H5T_STD_I32LE, enum, int2enum)
 
+    H5Tregister(H5T_PERS_SOFT, "vlen2ndarray", vlentype, pyobj, vlen2ndarray)
+    H5Tregister(H5T_PERS_SOFT, "ndarray2vlen", pyobj, vlentype, ndarray2vlen)
+
     H5Tclose(vlstring)
+    H5Tclose(vlentype)
     H5Tclose(enum)
 
     return 0
@@ -629,9 +821,7 @@ cpdef int unregister_converters() except -1:
     H5Tunregister(H5T_PERS_SOFT, "enum2int", -1, -1, enum2int)
     H5Tunregister(H5T_PERS_SOFT, "int2enum", -1, -1, int2enum)
 
+    H5Tunregister(H5T_PERS_SOFT, "vlen2ndarray", -1, -1, vlen2ndarray)
+    H5Tunregister(H5T_PERS_SOFT, "ndarray2vlen", -1, -1, ndarray2vlen)
+
     return 0
-
-
-
-
-

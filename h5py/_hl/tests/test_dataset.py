@@ -845,12 +845,47 @@ class TestScalarCompound(BaseDataset):
         self.assertEqual(dset['a'].dtype, np.dtype('i'))
 
 
+class TestVlen(BaseDataset):
+    def test_int(self):
+        dt = h5py.special_dtype(vlen=int)
+        ds = self.f.create_dataset('vlen', (4,), dtype=dt)
+        ds[0] = np.arange(3)
+        ds[1] = np.arange(0)
+        ds[2] = [1, 2, 3]
+        ds[3] = np.arange(1)
+        self.assertArrayEqual(ds[0], np.arange(3))
+        self.assertArrayEqual(ds[1], np.arange(0))
+        self.assertArrayEqual(ds[2], np.array([1, 2, 3]))
+        self.assertArrayEqual(ds[1], np.arange(0))
+        ds[0:2] = np.array([np.arange(5), np.arange(4)])
+        self.assertArrayEqual(ds[0], np.arange(5))
+        self.assertArrayEqual(ds[1], np.arange(4))
+        ds[0:2] = np.array([np.arange(3), np.arange(3)])
+        self.assertArrayEqual(ds[0], np.arange(3))
+        self.assertArrayEqual(ds[1], np.arange(3))
 
+    def test_convert(self):
+        dt = h5py.special_dtype(vlen=int)
+        ds = self.f.create_dataset('vlen', (3,), dtype=dt)
+        ds[0] = np.array([1.4, 1.2])
+        ds[1] = np.array([1.2])
+        ds[2] = [1.2, 2, 3]
+        self.assertArrayEqual(ds[0], np.array([1, 1]))
+        self.assertArrayEqual(ds[1], np.array([1]))
+        self.assertArrayEqual(ds[2], np.array([1, 2, 3]))
+        ds[0:2] = np.array([[0.1, 1.1, 2.1, 3.1, 4], np.arange(4)])
+        self.assertArrayEqual(ds[0], np.arange(5))
+        self.assertArrayEqual(ds[1], np.arange(4))
+        ds[0:2] = np.array([np.array([0.1, 1.2, 2.2]),
+                            np.array([0.2, 1.2, 2.2])])
+        self.assertArrayEqual(ds[0], np.arange(3))
+        self.assertArrayEqual(ds[1], np.arange(3))
 
-
-
-
-
-
-
-
+    def test_multidim(self):
+        dt = h5py.special_dtype(vlen=int)
+        ds = self.f.create_dataset('vlen', (2, 2), dtype=dt)
+        ds[0, 0] = np.arange(1)
+        ds[:, :] = np.array([[np.arange(3), np.arange(2)], 
+                            [np.arange(1), np.arange(2)]])
+        ds[:, :] = np.array([[np.arange(2), np.arange(2)],
+                             [np.arange(2), np.arange(2)]])

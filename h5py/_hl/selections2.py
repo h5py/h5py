@@ -10,23 +10,6 @@
 import numpy as np
 from h5py import h5s
 
-def strip_fields(basetype):
-    """ Convenience function to recursively strip extra dtype information 
-    from special types """
-
-    if basetype.kind == 'O':
-        return np.dtype('O')
-
-    if basetype.fields is not None:
-        fields = []
-        for name in basetype.names:
-            subtype, meta = basetype.fields[name]
-            subtype = strip_fields(subtype)
-            fields.append((name, subtype))
-        return np.dtype(fields)
-
-    return basetype
-
 def read_dtypes(dataset_dtype, names):
     """ Returns a 2-tuple containing:
 
@@ -52,10 +35,6 @@ def read_dtypes(dataset_dtype, names):
     
     else:
         output_dtype = format_dtype
-
-    # The field metadata for special types screws up NumPy indexing
-    # (issues 181 and 202)
-    output_dtype = strip_fields(output_dtype)
 
     return output_dtype, format_dtype
 

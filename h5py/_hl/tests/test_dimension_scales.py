@@ -195,3 +195,10 @@ class TestDimensionsHighLevel(BaseDataset):
 
     def test_repr(self):
         self.assertEqual(repr(self.f['data'].dims[2])[1:16], '"x" dimension 2')
+
+    def test_attributes(self):
+        self.f["data2"].attrs["DIMENSION_LIST"] = self.f["data"].attrs[
+            "DIMENSION_LIST"]
+        self.assertEqual(len(self.f['data2'].dims[0]), 0)
+        self.assertEqual(len(self.f['data2'].dims[1]), 1)
+        self.assertEqual(len(self.f['data2'].dims[2]), 2)
