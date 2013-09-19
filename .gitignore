@@ -16,3 +16,6 @@ MANIFEST
 *~
 h5py/new.api_*
 h5py/unused.api_*
+.project
+.pydevproject
+h5py.egg-info/
