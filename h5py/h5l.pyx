@@ -64,21 +64,21 @@ cdef class _LinkVisitor:
         self.retval = None
         self.info = LinkInfo()
 
-cdef herr_t cb_link_iterate(hid_t grp, char* name, H5L_info_t *istruct, void* data) except 2:
+cdef herr_t cb_link_iterate(hid_t grp, const_char* name, const_H5L_info_t *istruct, void* data) except 2:
     # Standard iteration callback for iterate/visit routines
 
     cdef _LinkVisitor it = <_LinkVisitor?>data
     it.info.infostruct = istruct[0]
-    it.retval = it.func(name, it.info)
+    it.retval = it.func(<char*>name, it.info)
     if (it.retval is None) or (not it.retval):
         return 0
     return 1
 
-cdef herr_t cb_link_simple(hid_t grp, char* name, H5L_info_t *istruct, void* data) except 2:
+cdef herr_t cb_link_simple(hid_t grp, const_char* name, const_H5L_info_t *istruct, void* data) except 2:
     # Simplified iteration callback which only provides the name
 
     cdef _LinkVisitor it = <_LinkVisitor?>data
-    it.retval = it.func(name)
+    it.retval = it.func(<char*>name)
     if (it.retval is None) or (not it.retval):
         return 0
     return 1
@@ -160,8 +160,8 @@ cdef class LinkProxy:
         cdef H5L_info_t info
         cdef size_t buf_size
         cdef char* buf = NULL
-        cdef char* ext_file_name = NULL
-        cdef char* ext_obj_name = NULL
+        cdef const_char* ext_file_name = NULL
+        cdef const_char* ext_obj_name = NULL
         cdef unsigned int wtf = 0
 
         H5Lget_info(self.id, name, &info, plist)
@@ -176,7 +176,7 @@ cdef class LinkProxy:
                 py_retval = buf
             else:
                 H5Lunpack_elink_val(buf, buf_size, &wtf, &ext_file_name, &ext_obj_name)
-                py_retval = (bytes(ext_file_name), bytes(ext_obj_name))
+                py_retval = (bytes(<char*>ext_file_name), bytes(<char*>ext_obj_name))
         finally:
             efree(buf)
 

@@ -207,10 +207,10 @@ cdef extern from "hdf5.h":
   ctypedef struct H5E_error_t:
     H5E_major_t     maj_num     #  major error number             
     H5E_minor_t     min_num     #  minor error number             
-    char    *func_name          #  function in which error occurred   
-    char    *file_name          #  file in which error occurred       
+    const_char      *func_name  #  function in which error occurred   
+    const_char      *file_name  #  file in which error occurred       
     unsigned    line            #  line in file where error occurs    
-    char    *desc               #  optional supplied description      
+    const_char      *desc       #  optional supplied description      
 
   char      *H5Eget_major(H5E_major_t n)
   char      *H5Eget_minor(H5E_minor_t n)
@@ -220,7 +220,8 @@ cdef extern from "hdf5.h":
   herr_t    H5Eset_auto(H5E_auto_t func, void *client_data)
   herr_t    H5Eget_auto(H5E_auto_t *func, void** client_data)
 
-  herr_t    H5Eprint(void *stream)
+  ctypedef void FILE
+  herr_t    H5Eprint(FILE *stream)
 
   ctypedef herr_t (*H5E_walk_t)(int n, H5E_error_t *err_desc, void* client_data)  
   herr_t    H5Ewalk(H5E_direction_t direction, H5E_walk_t func, void* client_data)
