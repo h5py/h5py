@@ -23,6 +23,7 @@ hdf5:
   herr_t    H5Dget_space_status(hid_t dset_id, H5D_space_status_t *status)
   hid_t     H5Dget_type(hid_t dset_id)
   hid_t     H5Dget_create_plist(hid_t dataset_id)
+  hid_t     H5Dget_access_plist(hid_t dataset_id)
 
   haddr_t   H5Dget_offset(hid_t dset_id)
   hsize_t   H5Dget_storage_size(hid_t dset_id)

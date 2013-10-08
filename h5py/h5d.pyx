@@ -313,6 +313,15 @@ cdef class DatasetID(ObjectID):
         return propwrap(H5Dget_create_plist(self.id))
 
 
+
+    def get_access_plist(self):
+        """ () => PropDAID
+
+            Create an return a new copy of the dataset access property list.
+        """
+        return propwrap(H5Dget_access_plist(self.id))
+
+
     def get_offset(self):
         """ () => LONG offset or None
 
