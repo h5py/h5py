@@ -912,3 +912,9 @@ class TestVlen(BaseDataset):
                             [np.arange(1), np.arange(2)]])
         ds[:, :] = np.array([[np.arange(2), np.arange(2)],
                              [np.arange(2), np.arange(2)]])
+
+
+class low_level(BaseDataset):
+    def test_get_acces_list(self):
+        ds = self.f.create_dataset('foo', (4,))
+        p_list = ds.id.get_access_plist()
