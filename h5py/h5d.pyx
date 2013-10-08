@@ -72,12 +72,14 @@ def create(ObjectID loc not None, object name, TypeID tid not None,
                      pdefault(dcpl), pdefault(dapl))
         return DatasetID.open(dsid)
 
-def open(ObjectID loc not None, char* name):
-    """ (ObjectID loc, STRING name) => DatasetID
+def open(ObjectID loc not None, char* name, PropID dapl=None):
+    """ (ObjectID loc, STRING name, PropID dapl=None) => DatasetID
 
-        Open an existing dataset attached to a group or file object, by name.
+    Open an existing dataset attached to a group or file object, by name.
+
+    If specified, dapl may be a dataset access property list.
     """
-    return DatasetID.open(H5Dopen(loc.id, name))
+    return DatasetID.open(H5Dopen2(loc.id, name, pdefault(dapl)))
 
 # --- Proxy functions for safe(r) threading -----------------------------------
 

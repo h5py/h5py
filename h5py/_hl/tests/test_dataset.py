@@ -889,3 +889,16 @@ class TestVlen(BaseDataset):
                             [np.arange(1), np.arange(2)]])
         ds[:, :] = np.array([[np.arange(2), np.arange(2)],
                              [np.arange(2), np.arange(2)]])
+
+
+class TestLowOpen(BaseDataset):
+
+    def test_dapl(self):
+        """ Test the dapl keyword to h5d.open """
+        dapl = h5py.h5p.create(h5py.h5p.DATASET_ACCESS)
+        dset = self.f.create_dataset('x', (100,))
+        del dset
+        dsid = h5py.h5d.open(self.f.id, b'x', dapl)
+        self.assertIsInstance(dsid, h5py.h5d.DatasetID)
+
+
