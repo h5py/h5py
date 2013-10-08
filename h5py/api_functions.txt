@@ -17,6 +17,7 @@ hdf5:
   hid_t H5Dcreate_anon(hid_t file_id, hid_t type_id, hid_t space_id, hid_t plist_id, hid_t dapl_id)
 
   hid_t     H5Dopen(hid_t file_id, char *name)
+  hid_t     H5Dopen2(hid_t loc_id, char *name, hid_t dapl_id )
   herr_t    H5Dclose(hid_t dset_id)
 
   hid_t     H5Dget_space(hid_t dset_id)
