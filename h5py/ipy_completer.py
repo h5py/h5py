@@ -41,7 +41,10 @@ import re
 try:
     from IPython.utils import generics
     from IPython.core.error import TryNext
-    from IPython.core.ipapi import get as ipget
+    try:
+        from IPython.core.getipython import get_ipython as ipget
+    except ImportError:
+        from IPython.core.ipapi import get as ipget
 except ImportError:
     # support <ipython-0.11
     from IPython import generics
