@@ -14,6 +14,8 @@
     File driver constants (H5FD*).
 """
 
+include "config.pxi"
+
 # === Multi-file driver =======================================================
 
 MEM_DEFAULT = H5FD_MEM_DEFAULT
@@ -24,6 +26,12 @@ MEM_GHEAP = H5FD_MEM_GHEAP
 MEM_LHEAP = H5FD_MEM_LHEAP
 MEM_OHDR = H5FD_MEM_OHDR
 MEM_NTYPES = H5FD_MEM_NTYPES
+
+# === MPI driver ==============================================================
+
+IF MPI:
+    MPIO_INDEPENDENT = H5FD_MPIO_INDEPENDENT
+    MPIO_COLLECTIVE = H5FD_MPIO_COLLECTIVE
 
 # === Driver types ============================================================
 

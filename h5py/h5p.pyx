@@ -1189,3 +1189,32 @@ cdef class PropDAID(PropInstanceID):
 
         H5Pget_chunk_cache(self.id, &rdcc_nslots, &rdcc_nbytes, &rdcc_w0 )
         return (rdcc_nslots,rdcc_nbytes,rdcc_w0)
+
+cdef class PropDXID(PropInstanceID):
+
+    """ Data transfer property list """
+
+    IF MPI:
+        def set_dxpl_mpio(self, int xfer_mode):
+            """ Set the transfer mode for MPI I/O.
+
+            Must be one of:
+
+            - h5fd.MPIO_INDEPDENDENT (default)
+            - h5fd.MPIO_COLLECTIVE
+            """
+            H5Pset_dxpl_mpio(self.id, <H5FD_mpio_xfer_t>xfer_mode)
+
+        def get_dxpl_mpio(self):
+            """ Get the current transfer mode for MPI I/O.
+
+            Will be one of:
+
+            - h5fd.MPIO_INDEPDENDENT (default)
+            - h5fd.MPIO_COLLECTIVE
+            """
+            cdef H5FD_mpio_xfer_t mode
+            H5Pget_dxpl_mpio(self.id, &mode)
+            return <int>mode
+
+
