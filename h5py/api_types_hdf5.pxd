@@ -9,6 +9,8 @@
 
 from api_types_ext cimport *
 
+include "config.pxi"
+
 cdef extern from "hdf5.h":
   # Basic types
   ctypedef int hid_t
@@ -123,6 +125,11 @@ cdef extern from "hdf5.h":
     H5FD_MEM_LHEAP      = 5,
     H5FD_MEM_OHDR       = 6,
     H5FD_MEM_NTYPES
+
+  IF MPI:
+      ctypedef enum H5FD_mpio_xfer_t:
+        H5FD_MPIO_INDEPENDENT = 0,
+        H5FD_MPIO_COLLECTIVE
 
   # HDF5 uses a clever scheme wherein these are actually init() calls
   # Hopefully Cython won't have a problem with this.
