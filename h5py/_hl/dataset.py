@@ -12,11 +12,13 @@ import sys
 import numpy
 
 import h5py
-from h5py import h5s, h5t, h5r, h5d
+from h5py import h5s, h5t, h5r, h5d, h5p
 from .base import HLObject, py3
 from . import filters
 from . import selections as sel
 from . import selections2 as sel2
+
+MPI = h5py.h5.get_config().mpi
 
 def readtime_dtype(basetype, names):
     """ Make a NumPy dtype appropriate for reading """
@@ -125,6 +127,21 @@ class AstypeContext(object):
     def __exit__(self, *args):
         self._dset._local.astype = None
 
+if MPI:
+    class CollectiveContext(object):
+
+        """ Manages collective I/O in MPI mode """
+
+        # We don't bother with _local as threads are forbidden in MPI mode
+
+        def __init__(self, dset):
+            self._dset = dset
+
+        def __enter__(self):
+            self._dset._dxpl.set_dxpl_mpio(h5py.h5fd.MPIO_COLLECTIVE)
+
+        def __exit__(self, *args):
+            self._dset._dxpl.set_dxpl_mpio(h5py.h5fd.MPIO_INDEPENDENT)
 
 class Dataset(HLObject):
 
@@ -140,6 +157,12 @@ class Dataset(HLObject):
         ...     double_precision = dataset[0:100:2]
         """
         return AstypeContext(self, dtype)
+
+    if MPI:
+        @property
+        def collective(self):
+            """ Context manager for MPI collective reads & writes """
+            return CollectiveContext(self)
 
     @property
     def dims(self):
@@ -238,6 +261,7 @@ class Dataset(HLObject):
         HLObject.__init__(self, bind)
 
         self._dcpl = self.id.get_create_plist()
+        self._dxpl = h5p.create(h5p.DATASET_XFER)
         self._filters = filters.get_filters(self._dcpl)
         self._local = local()
         self._local.astype = None
