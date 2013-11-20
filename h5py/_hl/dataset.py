@@ -456,7 +456,7 @@ class Dataset(HLObject):
         # Perfom the actual read
         mspace = h5s.create_simple(mshape)
         fspace = selection._id
-        self.id.read(mspace, fspace, arr, mtype)
+        self.id.read(mspace, fspace, arr, mtype, dxpl=self._dxpl)
 
         # Patch up the output for NumPy
         if len(names) == 1:
@@ -587,7 +587,7 @@ class Dataset(HLObject):
             mshape_pad = mshape
         mspace = h5s.create_simple(mshape_pad, (h5s.UNLIMITED,)*len(mshape_pad))
         for fspace in selection.broadcast(mshape):
-            self.id.write(mspace, fspace, val, mtype)
+            self.id.write(mspace, fspace, val, mtype, dxpl=self._dxpl)
 
     def read_direct(self, dest, source_sel=None, dest_sel=None):
         """ Read data directly from HDF5 into an existing NumPy array.
@@ -610,7 +610,7 @@ class Dataset(HLObject):
             dest_sel = sel.select(dest.shape, dest_sel, self.id)
 
         for mspace in dest_sel.broadcast(source_sel.mshape):
-            self.id.read(mspace, fspace, dest)
+            self.id.read(mspace, fspace, dest, dxpl=self._dxpl)
 
     def write_direct(self, source, source_sel=None, dest_sel=None):
         """ Write data directly to HDF5 from a NumPy array.
@@ -632,7 +632,7 @@ class Dataset(HLObject):
             dest_sel = sel.select(self.shape, dest_sel, self.id)
 
         for fspace in dest_sel.broadcast(source_sel.mshape):
-            self.id.write(mspace, fspace, source)
+            self.id.write(mspace, fspace, source, dxpl=self._dxpl)
 
     def __array__(self, dtype=None):
         """ Create a Numpy array containing the whole dataset.  DON'T THINK
