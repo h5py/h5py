@@ -986,6 +986,23 @@ cdef class PropFAID(PropInstanceID):
         if err < 0:
             raise RuntimeError("Failed to get hit rate")
 
+    def set_alignment(self, hsize_t threshold, hsize_t alignment):
+        """ (LONG threshold, LONG alignment)
+
+        Set alignment for file access; objects bigger than "threshold" will
+        be aligned to "alignment"-aligned boundaries, relative to the
+        beginning of the file (including any user block).
+        """
+        H5Pset_alignment(self.id, threshold, alignment)
+
+    def get_alignment(self):
+        """ () => (LONG threshold, LONG alignment)
+
+        Get alignment settings (see set_alignment)
+        """
+        cdef hsize_t threshold, alignment
+        H5Pget_alignment(self.id, &threshold, &alignment)
+        return (threshold, alignment)
 
 # Link creation
 cdef class PropLCID(PropCreateID):
@@ -1194,11 +1211,27 @@ cdef class PropDXID(PropInstanceID):
 
     """ Data transfer property list """
 
+    def set_buffer(self, hsize_t size):
+        """ (LONG size)
+
+        Set the size of the type conversion and background buffers.
+        """
+        H5Pset_buffer(self.id, size, NULL, NULL)
+
+    def get_buffer(self):
+        """ () => LONG size
+
+        Get the size of the type conversion and background buffers.
+        """
+        cdef char *a
+        cdef char *b
+        return H5Pget_buffer(self.id, <void**>&a, <void**>&b)
+
     IF MPI:
         def set_dxpl_mpio(self, int xfer_mode):
-            """ Set the transfer mode for MPI I/O.
+            """ (INT xfer_mode)
 
-            Must be one of:
+            Set the transfer mode for MPI I/O. Must be one of:
 
             - h5fd.MPIO_INDEPDENDENT (default)
             - h5fd.MPIO_COLLECTIVE
@@ -1206,9 +1239,9 @@ cdef class PropDXID(PropInstanceID):
             H5Pset_dxpl_mpio(self.id, <H5FD_mpio_xfer_t>xfer_mode)
 
         def get_dxpl_mpio(self):
-            """ Get the current transfer mode for MPI I/O.
+            """ () => INT xfer_mode
 
-            Will be one of:
+            Get the current transfer mode for MPI I/O. Will be one of:
 
             - h5fd.MPIO_INDEPDENDENT (default)
             - h5fd.MPIO_COLLECTIVE
