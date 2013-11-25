@@ -90,7 +90,7 @@ def get_region(RegionReference ref not None, ObjectID id not None):
     import h5s
     if ref.typecode != H5R_DATASET_REGION or not ref:
         return None
-    return h5s.SpaceID.open(H5Rget_region(id.id, <H5R_type_t>ref.typecode, &ref.ref))
+    return h5s.SpaceID(H5Rget_region(id.id, <H5R_type_t>ref.typecode, &ref.ref))
 
 
 def get_obj_type(Reference ref not None, ObjectID id not None):

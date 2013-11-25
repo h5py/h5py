@@ -70,7 +70,7 @@ def create(ObjectID loc not None, object name, TypeID tid not None,
         else:
             dsid = H5Dcreate_anon(loc.id, tid.id, space.id,
                      pdefault(dcpl), pdefault(dapl))
-        return DatasetID.open(dsid)
+        return DatasetID(dsid)
 
 def open(ObjectID loc not None, char* name, PropID dapl=None):
     """ (ObjectID loc, STRING name, PropID dapl=None) => DatasetID
@@ -79,7 +79,7 @@ def open(ObjectID loc not None, char* name, PropID dapl=None):
 
     If specified, dapl may be a dataset access property list.
     """
-    return DatasetID.open(H5Dopen2(loc.id, name, pdefault(dapl)))
+    return DatasetID(H5Dopen2(loc.id, name, pdefault(dapl)))
 
 # --- Proxy functions for safe(r) threading -----------------------------------
 
@@ -127,19 +127,6 @@ cdef class DatasetID(ObjectID):
             cdef SpaceID sid
             sid = self.get_space()
             return sid.get_simple_extent_ndims()
-
-
-    def _close(self):
-        """ ()
-
-            Terminate access through this identifier.  You shouldn't have to
-            call this manually; Dataset objects are automatically destroyed
-            when their Python wrappers are freed.
-        """
-        with _objects.registry.lock:
-            H5Dclose(self.id)
-            if not self.valid:
-                del _objects.registry[self.id]
 
 
     def read(self, SpaceID mspace not None, SpaceID fspace not None,
@@ -280,7 +267,7 @@ cdef class DatasetID(ObjectID):
 
             Create and return a new copy of the dataspace for this dataset.
         """
-        return SpaceID.open(H5Dget_space(self.id))
+        return SpaceID(H5Dget_space(self.id))
 
 
     def get_space_status(self):

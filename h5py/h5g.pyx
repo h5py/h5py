@@ -125,7 +125,7 @@ def open(ObjectID loc not None, char* name):
 
     Open an existing HDF5 group, attached to some other group.
     """
-    return GroupID.open(H5Gopen(loc.id, name))
+    return GroupID(H5Gopen(loc.id, name))
 
 def create(ObjectID loc not None, object name, PropID lcpl=None,
            PropID gcpl=None):
@@ -146,7 +146,7 @@ def create(ObjectID loc not None, object name, PropID lcpl=None,
     else:
         gid = H5Gcreate_anon(loc.id, pdefault(gcpl), H5P_DEFAULT)
 
-    return GroupID.open(gid)
+    return GroupID(gid)
 
 
 cdef class _GroupVisitor:
@@ -246,19 +246,6 @@ cdef class GroupID(ObjectID):
     def __init__(self, hid_t id_):
         import h5l
         self.links = h5l.LinkProxy(id_)
-
-
-    def _close(self):
-        """()
-
-        Terminate access through this identifier.  You shouldn't have to
-        call this manually; group identifiers are automatically released
-        when their Python wrappers are freed.
-        """
-        with _objects.registry.lock:
-            H5Gclose(self.id)
-            if not self.valid:
-                del _objects.registry[self.id]
 
 
     def link(self, char* current_name, char* new_name,
