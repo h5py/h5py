@@ -389,23 +389,6 @@ class TestFileProperty(TestCase):
         finally:
             hfile.close()
 
-    def test_property_object_id(self):
-        """ File property should have the same ObjectID as the original """
-        fname = self.mktemp()
-        hfile = File(fname, 'w')
-        try:
-            self.assertIs(hfile.id, hfile.file.id)
-        finally:
-            hfile.close()
-        # otherwise, following up with this next block would yield:
-        # ValueError: invalid file identifier
-        # (Invalid arguments to routine: Inappropriate type)
-        hfile = File(fname, 'w')
-        try:
-            self.assertEqual(hfile.id, hfile.file.id)
-        finally:
-            hfile.close()
-
     def test_close(self):
         """ All retrieved File objects are closed at the same time """
         fname = self.mktemp()

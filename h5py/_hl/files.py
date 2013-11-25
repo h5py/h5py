@@ -29,7 +29,6 @@ libver_dict_r = dict((y, x) for x, y in libver_dict.iteritems())
 def make_fapl(driver, libver, **kwds):
     """ Set up a file access property list """
     plist = h5p.create(h5p.FILE_ACCESS)
-    plist.set_fclose_degree(h5f.CLOSE_STRONG)
 
     if libver is not None:
         if libver in libver_dict:
@@ -210,10 +209,12 @@ class File(Group):
 
     def close(self):
         """ Close the file.  All open objects become invalid """
-        # TODO: find a way to square this with having issue 140
-        # Not clearing shared state introduces a tiny memory leak, but
-        # it goes like the number of files opened in a session.
+        # We have to explicitly murder all open objects related to the file
+        idlist = h5f.get_obj_ids(self.id)
         self.id.close()
+        for id_ in idlist:
+            if id_.valid:
+                id_._close()
 
     def flush(self):
         """ Tell the HDF5 library to flush its buffers.
