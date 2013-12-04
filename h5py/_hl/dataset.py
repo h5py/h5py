@@ -379,9 +379,9 @@ class Dataset(HLObject):
             sid = h5r.get_region(args[0], self.id)
             mshape = sel.guess_shape(sid)
             if mshape is None:
-                return np.array((0,), dtype=new_dtype)
+                return numpy.array((0,), dtype=new_dtype)
             if numpy.product(mshape) == 0:
-                return np.array(mshape, dtype=new_dtype)
+                return numpy.array(mshape, dtype=new_dtype)
             out = numpy.empty(mshape, dtype=new_dtype)
             sid_out = h5s.create_simple(mshape)
             sid_out.select_all()
