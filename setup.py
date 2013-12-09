@@ -12,7 +12,7 @@ import numpy
 
 import configure   # Sticky-options configuration and version auto-detect
 
-VERSION = '2.2.0'
+VERSION = '2.2.1'
 
 
 # --- Autodetect Cython -------------------------------------------------------
