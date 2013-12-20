@@ -13,6 +13,7 @@ import warnings
 import sys, os
 import os.path as op
 from functools import reduce
+import shutil
 
 import configure   # Sticky-options configuration and version auto-detect
 
@@ -132,7 +133,7 @@ if MPI:
 
 if sys.platform.startswith('win'):
     COMPILER_SETTINGS = {
-        'libraries'     : ['hdf5dll18','hdf5_hldll'],
+        'libraries'     : ['h5py_hdf5','h5py_hdf5_hl'],
         'include_dirs'  : [localpath('lzf'),
                            localpath('win_include')],
         'library_dirs'  : [],
@@ -140,7 +141,9 @@ if sys.platform.startswith('win'):
     }
     if HDF5 is not None:
         COMPILER_SETTINGS['include_dirs'] += [op.join(HDF5, 'include')]
-        COMPILER_SETTINGS['library_dirs'] += [op.join(HDF5, 'dll')]
+        COMPILER_SETTINGS['library_dirs'] += [op.join(HDF5, 'lib')]
+        for f in ('h5py_hdf5.dll', 'h5py_hdf5_hl.dll', 'szip.dll', 'zlib.dll'):
+            shutil.copy(op.join(HDF5, 'bin', f), localpath('h5py', f))
 else:
     COMPILER_SETTINGS = {
        'libraries'      : ['hdf5', 'hdf5_hl'],
@@ -284,9 +287,9 @@ the installer.
 """
 
 if os.name == 'nt':
-    package_data = {'h5py': ['*.pyx', '*.dll']}
+    package_data = {'h5py': ['*.dll']}
 else:
-    package_data = {'h5py': ['*.pyx']}
+    package_data = {'h5py': []}
 
 # Avoid going off and installing NumPy if the user only queries for information
 if any('--' + opt in sys.argv for opt in Distribution.display_option_names + ['help']):
