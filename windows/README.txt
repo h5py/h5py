@@ -13,6 +13,10 @@ Build instructions for h5py on Windows
   hdfgroup.org and follow the Windows build instructions.
   Provide the h5py cacheinit file when required.
   
+  The ZLIB and SZIP dependencies are now handled automatically
+  by checking out source from the HDF Group Subversion system.
+  You will need a command-line Subversion client in your PATH.
+  
   Finally, create a ZIP distribution by using CPACK:
   
   cpack -G ZIP
