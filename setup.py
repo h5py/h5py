@@ -135,7 +135,7 @@ if sys.platform.startswith('win'):
     COMPILER_SETTINGS = {
         'libraries'     : ['h5py_hdf5','h5py_hdf5_hl'],
         'include_dirs'  : [localpath('lzf'),
-                           localpath('win_include')],
+                           localpath('windows')],
         'library_dirs'  : [],
         'define_macros' : [('H5_USE_16_API', None), ('_HDF5USEDLL_', None)]
     }
