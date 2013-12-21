@@ -23,6 +23,7 @@ Datasets implement the following parts of the NumPy-array user interface:
 
   - Slicing:  simple indexing and a subset of advanced indexing
   - **shape** attribute
+  - **size** attribute
   - **dtype** attribute
 
 .. _dsetfeatures:
@@ -208,6 +209,7 @@ Reference
     **Dataset properties**
 
     .. autoattribute:: h5py.Dataset.shape
+    .. autoattribute:: h5py.Dataset.size
     .. autoattribute:: h5py.Dataset.dtype
 
     .. autoattribute:: h5py.Dataset.chunks
