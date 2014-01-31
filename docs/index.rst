@@ -62,8 +62,8 @@ Introductory info
     build
 
 
-High-level reference guide
---------------------------
+High-level API reference
+------------------------
 
 .. toctree::
     :maxdepth: 2
@@ -86,6 +86,15 @@ Advanced topics
     strings
     refs
     mpi
+
+
+Low-level API reference
+-----------------------
+
+.. toctree::
+    :maxdepth: 2
+
+    low/index
 
 
 Meta-info about the h5py project
