@@ -1,7 +1,7 @@
 .. _install:
 
-Installing h5py
-===============
+Installation
+============
 
 
 For Python beginners

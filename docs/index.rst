@@ -60,3 +60,6 @@ Table of Contents
 
     quick
     build
+    contributing
+    faq
+    licenses
