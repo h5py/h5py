@@ -18,12 +18,4 @@ Our `main website is at www.h5py.org <http://www.h5py.org/>`_.
 HDF5 for Python
 ===============
 
-.. toctree::
-    :maxdepth: 2
-
-    whatsnew/index
-    intro/index
-    high/index
-    topics/index
-    low/index
-    meta/index
+Content goes here.
