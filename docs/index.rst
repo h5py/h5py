@@ -4,18 +4,19 @@
    contain the root `toctree` directive.
 
 ########################################
-HDF5 for Python 2.1 Online Documentation
+HDF5 for Python 2.X Online Documentation
 ########################################
 
 The h5py package is a Pythonic interface to the HDF5 binary data format.
 
-If you've never used h5py before, you may want to begin with the :ref:`quick`
-(after you've :ref:`installed h5py <build>`).
+**This page on readthedocs.org is a migration test.**
+The main documentation for h5py is at http://www.h5py.org/docs.
 
-Our `main website is at www.h5py.org <http://www.h5py.org/>`_.
+**This version of the documentation is incomplete and subject to frequent
+change or removal.**
 
 ===============
 HDF5 for Python
 ===============
 
-Content goes here.
+See http://www.h5py.org.
