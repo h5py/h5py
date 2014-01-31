@@ -52,8 +52,8 @@ By the way, nobody will get mad if you file a bug and it turns out to be
 something else.  That's just how software development goes.
 
 
-Making the bug report
-~~~~~~~~~~~~~~~~~~~~~
+What to include
+~~~~~~~~~~~~~~~
 
 When filing a bug, there are two things you should include.  The first is
 the output of ``h5py.version.info``::
