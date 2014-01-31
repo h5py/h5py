@@ -14,3 +14,4 @@ build/
 dist/
 MANIFEST
 .DS_Store
+/docs/_build
