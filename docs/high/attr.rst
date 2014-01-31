@@ -18,26 +18,7 @@ They support the same dictionary API as groups.
 Reference
 ---------
 
-.. autoclass:: h5py.AttributeManager
-
-    .. automethod:: h5py.AttributeManager.__getitem__
-    .. automethod:: h5py.AttributeManager.__setitem__
-    .. automethod:: h5py.AttributeManager.__delitem__
-
-    .. automethod:: h5py.AttributeManager.create
-    .. automethod:: h5py.AttributeManager.modify
-
-    **Inherited dictionary interface**
-
-    .. automethod:: h5py._hl.base.DictCompat.keys
-    .. automethod:: h5py._hl.base.DictCompat.values
-    .. automethod:: h5py._hl.base.DictCompat.items
-
-    .. automethod:: h5py._hl.base.DictCompat.iterkeys
-    .. automethod:: h5py._hl.base.DictCompat.itervalues
-    .. automethod:: h5py._hl.base.DictCompat.iteritems
-
-    .. automethod:: h5py._hl.base.DictCompat.get
+auto
 
 
 

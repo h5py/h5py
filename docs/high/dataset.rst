@@ -204,35 +204,4 @@ dataset while iterating has undefined results.
 Reference
 ---------
 
-.. autoclass:: h5py.Dataset
-
-    **Dataset properties**
-
-    .. autoattribute:: h5py.Dataset.shape
-    .. autoattribute:: h5py.Dataset.size
-    .. autoattribute:: h5py.Dataset.dtype
-
-    .. autoattribute:: h5py.Dataset.chunks
-    .. autoattribute:: h5py.Dataset.maxshape
-    .. autoattribute:: h5py.Dataset.compression
-    .. autoattribute:: h5py.Dataset.compression_opts
-    .. autoattribute:: h5py.Dataset.scaleoffset
-    .. autoattribute:: h5py.Dataset.shuffle
-    .. autoattribute:: h5py.Dataset.fletcher32
-    .. autoattribute:: h5py.Dataset.fillvalue
-
-    .. autoattribute:: h5py.Dataset.regionref
-
-
-    **Dataset methods**
-
-    .. automethod:: h5py.Dataset.__getitem__
-    .. automethod:: h5py.Dataset.__setitem__
-
-    .. automethod:: h5py.Dataset.astype
-
-    .. automethod:: h5py.Dataset.read_direct
-    .. automethod:: h5py.Dataset.write_direct
-
-    .. automethod:: h5py.Dataset.resize
-    .. automethod:: h5py.Dataset.len
+auto

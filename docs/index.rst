@@ -68,10 +68,10 @@ High-level reference guide
 .. toctree::
     :maxdepth: 2
 
-    File Reference <high/file>
-    Group Reference <high/group>
-    Dataset Reference <high/dataset>
-    Attribute Reference <high/dataset>
+    high/file
+    high/group
+    high/dataset
+    high/dataset
     high/dims
 
 
