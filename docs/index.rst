@@ -71,7 +71,7 @@ High-level reference guide
     high/file
     high/group
     high/dataset
-    high/dataset
+    high/attr
     high/dims
 
 
