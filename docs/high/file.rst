@@ -1,8 +1,8 @@
 .. _hlfile:
 
-============
-File Objects
-============
+
+HDF5 File Objects
+=================
 
 Opening & creating files
 ------------------------

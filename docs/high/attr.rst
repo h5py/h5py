@@ -1,8 +1,8 @@
 .. _attributes:
 
-==========
-Attributes
-==========
+
+HDF5 Attributes
+===============
 
 Groups and datasets can have small bits of named information attached to them.
 This is the official way to store metadata in HDF5.  Each of these objects

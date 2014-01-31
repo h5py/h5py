@@ -1,8 +1,8 @@
 .. _groups:
 
-=============
-Group Objects
-=============
+
+HDF5 Groups
+===========
 
 Creating and using groups
 -------------------------
