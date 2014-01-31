@@ -3,43 +3,15 @@
 Quick Start Guide
 =================
 
-Official website and documentation: http://h5py.org
+If you're having trouble installing h5py, refer to :ref:`install`.
 
-Mailing list (both dev and discussion): `Google Groups <http://groups.google.com/group/h5py>`_
-
-**See** :ref:`build` **for installation instructions.**
-
-
-Design philosphy
-----------------
-
-`HDF5 <http://hdfgroup.org>`_ is an open-source library and file format for 
-storing large amounts of numerical data, originally developed at NCSA.  It is 
-widely used in the scientific community for everything from NASA's Earth
-Observing System to the storage of data from laboratory experiments and 
-simulations.
-
-Over the past few years, HDF5 has rapidly emerged as the de-facto standard 
-technology in Python to store large numerical datasets.  The h5py package
-is a Pythonic, easy-to-use but full featured interface to HDF5.
-
-The package is designed with two major goals in mind:
-
-* Use the native HDF5 feature set only
-* Use native Python and NumPy abstractions
-
-The files you create can be read by anyone else using HDF5-enabled
-software, whether they're using Python, IDL, MATLAB or another software
-package.
-
-
-Jump right in
+Core concepts
 -------------
 
-HDF5 files hold `datasets`, which are array-like collections of data, and
-`groups`, which are folder-like containers that hold datasets and other groups.
-
-The most fundamental thing to remember when using h5py is:
+An HDF5 file is a container for two kinds of objects: `datasets`, which are
+array-like collections of data, and `groups`, which are folder-like containers
+that hold datasets and other groups. The most fundamental thing to remember
+when using h5py is:
 
     **Groups work like dictionaries, and datasets work like NumPy arrays**
 
