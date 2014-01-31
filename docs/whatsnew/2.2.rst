@@ -1,0 +1,101 @@
+What's new in h5py 2.2
+======================
+
+
+Support for Parallel HDF5
+-------------------------
+
+On UNIX platforms, you can now take advantage of MPI and Parallel HDF5.
+Cython, ``mpi4py`` and an MPI-enabled build of HDF5 are required..  
+See :ref:`parallel` in the documentation for details.
+
+
+Support for Python 3.3
+----------------------
+
+Python 3.3 is now officially supported.
+
+
+Mini float support (issue #141)
+-------------------------------
+
+Two-byte floats (NumPy ``float16``) are supported.
+
+HDF5 scale/offset filter
+------------------------
+
+The Scale/Offset filter added in HDF5 1.8 is now available.
+
+
+Field indexing is now allowed when writing to a dataset (issue #42)
+-------------------------------------------------------------------
+
+H5py has long supported reading only certain fields from a dataset::
+
+    >>> dset = f.create_dataset('x', (100,), dtype=np.dtype([('a', 'f'), ('b', 'i')]))
+    >>> out = dset['a', 0:100:10]
+    >>> out.dtype
+    dtype('float32')
+
+Now, field names are also allowed when writing to a dataset:
+
+    >>> dset['a', 20:50] = 1.0
+
+
+Region references preserve shape (issue #295)
+---------------------------------------------
+
+Previously, region references always resulted in a 1D selection, even when
+2D slicing was used::
+
+    >>> dset = f.create_dataset('x', (10, 10))
+    >>> ref = dset.regionref[0:5,0:5]
+    >>> out = dset[ref]
+    >>> out.shape
+    (25,)
+
+Shape is now preserved::
+
+    >>> out = dset[ref]
+    >>> out.shape
+    (5, 5)
+
+Additionally, the shape of both the target dataspace and the selection shape
+can be determined via new methods on the ``regionref`` proxy (now available
+on both datasets and groups)::
+
+    >>> f.regionref.shape(ref)
+    (10, 10)
+    >>> f.regionref.selection(ref)
+    (5, 5)
+
+
+Committed types can be linked to datasets and attributes
+--------------------------------------------------------
+
+HDF5 supports "shared" named types stored in the file::
+
+    >>> f['name'] = np.dtype("int64")
+
+You can now use these types when creating a new dataset or attribute, and
+HDF5 will "link" the dataset type to the named type::
+
+    >>> dset = f.create_dataset('int dataset', (10,), dtype=f['name'])
+    >>> f.attrs.create('int scalar attribute', shape=(), dtype=f['name'])
+
+
+``move`` method on Group objects
+--------------------------------
+
+It's no longer necessary to move objects in a file by manually re-linking them::
+
+    >>> f.create_group('a')
+    >>> f['b'] = f['a']
+    >>> del f['a']
+
+The method ``Group.move`` allows this to be performed in one step::
+
+    >>> f.move('a', 'b')
+
+Both the source and destination must be in the same file.
+

@@ -1,0 +1,61 @@
+What's new in h5py 2.1
+======================
+
+Dimension scales
+----------------
+
+H5py now supports the Dimension Scales feature of HDF5!  Thanks to Darren
+Dale for implementing this.  You can find more information on using scales
+in the :ref:`dimensionscales` section of the docs.
+
+Unicode strings allowed in attributes
+-------------------------------------
+
+Group, dataset and attribute names in h5py 2.X can all be given as unicode.
+Now, you can also store (scalar) unicode data in attribute values as well::
+
+    >>> myfile.attrs['x'] = u"I'm a Unicode string!"
+
+Storing Unicode strings in datasets or as members of compound types is not
+yet implemented.
+
+Dataset size property
+---------------------
+
+Dataset objects now expose a ``.size`` property which provides the total
+number of elements in the dataspace.
+
+``Dataset.value`` property is now deprecated.
+---------------------------------------------
+
+The property ``Dataset.value``, which dates back to h5py 1.0, is deprecated
+and will be removed in a later release.  This property dumps the entire
+dataset into a NumPy array.  Code using ``.value`` should be updated to use
+NumPy indexing, using ``mydataset[...]`` or ``mydataset[()]`` as appropriate.
+
+Bug fixes
+---------
+
+    * Object and region references were sometimes incorrectly wrapped wrapped
+      in a ``numpy.object_`` instance (issue 202)
+    * H5py now ignores old versions of Cython (<0.13) when building
+      (issue 221)
+    * Link access property lists weren't being properly tracked in the high
+      level interface (issue 212)
+    * Race condition fixed in identifier tracking which led to Python crashes
+      (issue 151)
+    * Highlevel objects will now complain if you try to bind them to the wrong
+      HDF5 object types (issue 191)
+    * Unit tests can now be run after installation (issue 201)
+
+
+
+
+
+
+
+
+
+
+
+
