@@ -13,3 +13,4 @@ build/
 *.pyc
 dist/
 MANIFEST
+.DS_Store
