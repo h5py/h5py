@@ -52,7 +52,7 @@ The lead author of h5py, Andrew Collette, also wrote
 which provides a comprehensive, example-based tour of HDF5 and h5py.
 
 
-Table of Contents
+Introductory info
 -----------------
 
 .. toctree::
@@ -60,6 +60,27 @@ Table of Contents
 
     quick
     build
+
+
+Advanced topics
+---------------
+
+.. toctree::
+    :maxdepth: 2
+    
+    config
+    special
+    strings
+    refs
+    mpi
+
+
+Meta-info about the h5py project
+--------------------------------
+
+.. toctree::
+    :maxdepth: 2
+
     contributing
     faq
     licenses
