@@ -1,15 +1,20 @@
-.. _build:
+.. _install:
 
-Building h5py
-=============
+Installing h5py
+===============
 
-Downloads for all platforms are available at http://h5py.org.
 
-Tar files are available for UNIX-like systems (Linux and Mac OS-X), and
-a binary installer for Windows which includes HDF5 1.8.  
+For Python beginners
+--------------------
 
-You can also
-install h5py via ``pip`` or ``easy_install``.
+It can be a pain to install NumPy, HDF5, h5py, Cython and other dependencies.
+If you're just starting out, by far the easiest approach is to install h5py via
+your package manager (``apt-get`` or similar), or by using one of the major
+science-oriented Python distributions:
+
+* `Anaconda <http://continuum.io/downloads>`_ (Linux, Mac, Windows)
+* `PythonXY <https://code.google.com/p/pythonxy/>`_ (Windows)
+* `Enthought Canopy <https://www.enthought.com/products/canopy/>`_ (Linux, Mac, Windows)
 
 
 Installing on Windows
@@ -18,19 +23,26 @@ Installing on Windows
 You will need:
 
   * Python 2.6 - 3.3
+  * NumPy 1.6 or newer
 
-Download the MSI installer from http://www.h5py.org and run it.  HDF5 is
+Download the installer from http://www.h5py.org and run it.  HDF5 is
 included.
 
 
 Installing on Linux and Mac OS X
 --------------------------------
 
+On Mac OS X, `homebrew <http://brew.sh>`_ is a reliable way of getting
+Python, NumPy, HDF5 and other dependencies set up.  It is also safe to use h5py
+with the OS X system Python.
+
 You will need:
 
   * HDF5 1.8.4 or newer, shared library version with development headers (``libhdf5-dev`` or similar)
   * Python 2.6 - 3.3 with development headers (``python-dev`` or similar)
-  * NumPy 1.5 or newer (1.6 recommended)
+  * NumPy 1.6 or newer
+  * Optionally `Cython <http://cython.org>`_, if you want to access features
+    introduced after HDF5 1.8.4, or Parallel HDF5.
 
 With ``pip`` or ``easy_install``::
 
@@ -41,11 +53,6 @@ Manually, from the h5py tarball::
     $ tar xzf h5py-X.Y.Z.tar.gz
     $ cd h5py
     $ python setup.py install
-
-.. note::
-
-    If you want access to features in HDF5 newer than 1.8.4, you will
-    additionally need to install `Cython <http://cython.org>`_.
 
 
 Running the test suite
