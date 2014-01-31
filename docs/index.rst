@@ -62,6 +62,16 @@ Introductory info
     build
 
 
+High-level reference guide
+--------------------------
+
+.. toctree::
+    :maxdepth: 2
+
+    high/group
+    high/dataset
+
+
 Advanced topics
 ---------------
 
