@@ -68,8 +68,11 @@ High-level reference guide
 .. toctree::
     :maxdepth: 2
 
-    high/group
-    high/dataset
+    File Reference <high/file>
+    Group Reference <high/group>
+    Dataset Reference <high/dataset>
+    Attribute Reference <high/dataset>
+    high/dims
 
 
 Advanced topics
@@ -91,6 +94,7 @@ Meta-info about the h5py project
 .. toctree::
     :maxdepth: 2
 
+    whatsnew/index
     contributing
     faq
     licenses
