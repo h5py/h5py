@@ -94,7 +94,7 @@ Low-level API reference
 .. toctree::
     :maxdepth: 2
 
-    low/index
+    low
 
 
 Meta-info about the h5py project
