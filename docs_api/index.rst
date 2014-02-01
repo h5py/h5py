@@ -2,9 +2,10 @@
 Low-Level API Reference
 =======================
 
-**For the main h5py documentation, please go to** http://docs.h5py.org.
+**This is a testing version of the h5py low-level API documentation.  It is
+not guaranteed to be complete or correct.**
 
-**Downloads are at** http://www.h5py.org.
+**For the current h5py documentation, please go to** http://www.h5py.org/docs.
 
 This documentation contains the auto-generated API information for the
 HDF5 for Python "low-level" interface, a collection of Cython modules
