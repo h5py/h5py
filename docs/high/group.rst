@@ -11,7 +11,7 @@ the "keys" are the names of group members, and the "values" are the members
 themselves (:class:`Group` and :class:`Dataset`) objects.
 
 Group objects also contain most of the machinery which makes HDF5 useful.
-The :ref:`File object <hlfile>` does double duty as the HDF5 *root group*, and
+The :ref:`File object <file>` does double duty as the HDF5 *root group*, and
 serves as your entry point into the file:
 
     >>> f = h5py.File('foo.hdf5','w')
