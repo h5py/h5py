@@ -1,5 +1,4 @@
-.. _dimensionscales:
-
+.. _dimension_scales:
 
 HDF5 Dimension Scales
 =====================

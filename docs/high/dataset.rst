@@ -17,7 +17,6 @@ NumPy operations like slicing, along with a variety of descriptive attributes:
   - **dtype** attribute
 
 
-
 .. _dataset_create:
 
 Creating datasets
@@ -57,7 +56,7 @@ divided up into regularly-sized pieces which are stored haphazardly on disk,
 and indexed using a B-tree.
 
 Chunked storage makes it possible to resize datasets, and because the data
-is stored in fixed-size chunks, the use of compression filters.
+is stored in fixed-size chunks, to use compression filters.
 
 To enable chunked storage, set the keyword ``chunks`` to a tuple indicating
 the chunk shape::
@@ -93,9 +92,9 @@ the dataset, via the keyword ``maxshape``::
 
     >>> dset = f.create_dataset("resizable", (10,10), maxshape=(500, 20))
 
-Any (or all) axes may also be marked as "unlimited", in which case there is
-no limit on how large they can get (up to 2**64 elements).  Simply mark
-unlimited axes using ``None``::
+Any (or all) axes may also be marked as "unlimited", in which case they may 
+be increased up to the HDF5 per-axis limit of 2**64 elements.  Indicate these
+axes using ``None``::
 
     >>> dset = f.create_dataset("unlimited", (10, 10), maxshape=(None, 10))
 
@@ -187,33 +186,18 @@ Obviously shouldn't be used with lossy compression filters.
 
 Enable by setting :meth:`Group.create_dataset` keyword ``fletcher32`` to True.
 
-ation time.
-    You can specify this maximum size via the *maxshape* argument to
-    :meth:`create_dataset <Group.create_dataset>` or
-    :meth:`require_dataset <Group.require_dataset>`. Shape elements with the
-    value ``None`` indicate unlimited dimensions.
-
-    Later calls to :meth:`Dataset.resize` will modify the shape in-place::
-
-        >>> dset = grp.create_dataset("name", (10,10), '=f8', maxshape=(None, None))
-        >>> dset.shape
-        (10, 10)
-        >>> dset.resize((20,20))
-        >>> dset.shape
-        (20, 20)
-
 
 .. _dataset_slicing:
 
-Slicing access
---------------
+Reading & writing data
+----------------------
 
-The best way to get at data is to use the traditional NumPy extended-slicing
-syntax.   Slice specifications are translated directly to HDF5 *hyperslab*
+HDF5 datasets re-use the NumPy slicing syntax to read and write to the file.
+Slice specifications are translated directly to HDF5 "hyperslab"
 selections, and are a fast and efficient way to access data in the file. The
 following slicing arguments are recognized:
 
-    * Numbers: anything that can be converted to a Python long
+    * Indices: anything that can be converted to a Python long
     * Slices (i.e. ``[:]`` or ``[0:10]``)
     * Field names, in the case of compound data
     * At most one ``Ellipsis`` (``...``) object
@@ -236,35 +220,27 @@ numeric slices:
     >>> dset[0,:,4:5, "FieldA", "FieldB"]
     >>> dset[0, ..., "FieldC"]
 
-.. note::
-
-    To retrieve the contents of a `scalar` dataset, you can use the same
-    syntax as in NumPy:  ``result = dset[()]``.  In other words, index into
-    the dataset using an empty tuple.
-
-Broadcasting
-------------
+To retrieve the contents of a `scalar` dataset, you can use the same
+syntax as in NumPy:  ``result = dset[()]``.  In other words, index into
+the dataset using an empty tuple.
 
 For simple slicing, broadcasting is supported:
 
     >>> dset[0,:,:] = np.arange(10)  # Broadcasts to (10,10)
 
-Importantly, h5py does *not* use NumPy to do broadcasting before the write.
 Broadcasting is implemented using repeated hyperslab selections, and is
-safe to use with very large target selections.  In the following example, a
-write from a (1000, 1000) array is broadcast to a (1000, 1000, 1000) target
-selection as a series of 1000 writes:
-
-    >>> dset2 = f.create_dataset("MyDataset", (1000,1000,1000), 'f')
-    >>> data = np.arange(1000*1000, dtype='f').reshape((1000,1000))
-    >>> dset2[:] = data  # Does NOT allocate 3.8 G of memory
-
-Broadcasting is supported for "simple" (integer, slice and ellipsis) slicing
-only.
+safe to use with very large target selections.  It is supported for the above
+"simple" (integer, slice and ellipsis) slicing only.
 
 
-Coordinate lists
-----------------
+.. _dataset_fancy:
+
+Fancy indexing
+--------------
+
+A subset of the NumPy fancy-indexing syntax is supported.  Use this with
+caution, as the underlying HDF5 mechanisms may have different performance
+than you expect.
 
 For any axis, you can provide an explicit list of points you want; for a
 dataset with shape (10, 10)::
@@ -283,24 +259,21 @@ The following restrictions exist:
 * List selections may not be empty
 * Selection coordinates must be given in increasing order
 * Duplicate selections are ignored
+* Very long lists (> 1000 elements) may produce poor performance
 
-.. _sparse_selection:
-
-Sparse selection
-----------------
-
-Additional mechanisms exist for the case of scattered and/or sparse selection,
-for which slab or row-based techniques may not be appropriate.
-
-NumPy boolean "mask" arrays can be used to specify a selection.  The result of
-this operation is a 1-D array with elements arranged in the standard NumPy
-(C-style) order:
+NumPy boolean "mask" arrays can also be used to specify a selection.  The
+result of this operation is a 1-D array with elements arranged in the
+standard NumPy (C-style) order.  Behind the scenes, this generates a laundry
+list of points to select, so be careful when using it with large masks::
 
     >>> arr = numpy.arange(100).reshape((10,10))
     >>> dset = f.create_dataset("MyDataset", data=arr)
     >>> result = dset[arr > 50]
     >>> result.shape
     (49,)
+
+
+.. _dataset_iter:
 
 Length and iteration
 --------------------
@@ -310,12 +283,140 @@ axis, and iterating over a dataset iterates over the first axis.  However,
 modifications to the yielded data are not recorded in the file.  Resizing a
 dataset while iterating has undefined results.
 
-.. note::
+On 32-bit platforms, ``len(dataset)`` will fail if the first axis is bigger
+than 2**32. It's recommended to use :meth:`Dataset.len` for large datasets.
 
-    On 32-bit platforms, len() will fail if the first axis is bigger than 2**32.
-    You can use the method ``dataset.len()`` to get around this.
 
 Reference
 ---------
 
-auto
+.. class:: Dataset(identifier)
+
+    Dataset objects are typically created via :meth:`Group.create_dataset`,
+    or by retrieving existing datasets from a file.  Call this constructor to
+    create a new Dataset bound to an existing 
+    :class:`DatasetID <low:h5py.h5d.DatasetID>` identifier.
+
+    .. method:: __getitem__(args)
+
+        NumPy-style slicing to retrieve data.  See :ref:`dataset_slicing`.
+
+    .. method:: __setitem__(args)
+
+        NumPy-style slicing to write data.  See :ref:`dataset_slicing`.
+
+    .. method:: read_direct(array, source_sel=None, dest_sel=None)
+
+        Read from an HDF5 dataset directly into a NumPy array, which can
+        avoid making an intermediate copy as happens with slicing. The
+        destination array must be C-contiguous and writable, and must have
+        a datatype to which the source data may be cast.  Data type conversion
+        will be carried out on the fly by HDF5.
+
+        `source_sel` and `dest_sel` indicate the range of points in the
+        dataset and destination array respectively.  Use the output of
+        ``numpy.s_[args]``::
+
+            >>> dset = f.create_dataset("dset", (100,), dtype='int64')
+            >>> arr = np.zeros((100,), dtype='int32')
+            >>> dset.read_direct(arr, np.s_[0:10], np.s_[50:60])
+
+    .. method:: astype(dtype)
+
+        Return a context manager allowing you to read data as a particular
+        type.  Conversion is handled by HDF5 directly, on the fly::
+
+            >>> dset = f.create_dataset("bigint", (1000,), dtype='int64')
+            >>> with dset.astype('int16'):
+            ...     out = dset[:]
+            >>> out.dtype
+            dtype('int16')
+
+    .. method:: resize(size, axis=None)
+
+        Change the shape of a dataset.  `size` may be a tuple giving the new
+        dataset shape, or an integer giving the new length of the specified
+        `axis`.
+
+        Datasets may be resized only up to :attr:`Dataset.maxshape`.
+
+    .. method:: len()
+        
+        Return the size of the first axis.
+
+    .. attribute:: shape
+
+        NumPy-style shape tuple giving dataset dimensions.
+
+    .. attribute:: dtype
+
+        NumPy dtype object giving the dataset's type.
+
+    .. attribute:: size
+
+        Integer giving the total number of elements in the dataset.
+
+    .. attribute:: maxshape
+
+        NumPy-style shape tuple indicating the maxiumum dimensions up to which
+        the dataset may be resized.  Axes with ``None`` are unlimited.
+
+    .. attribute:: chunks
+
+        Tuple giving the chunk shape, or None if chunked storage is not used.
+        See :ref:`dataset_chunks`.
+
+    .. attribute:: compression
+
+        String with the currently applied compression filter, or None if
+        compression is not enabled for this dataset.  See :ref:`dataset_compression`.
+
+    .. attribute:: compression_opts
+
+        Options for the compression filter.  See :ref:`dataset_compression`.
+
+    .. attribute:: scaleoffset
+
+        Setting for the HDF5 scale-offset filter (integer), or None if
+        scale-offset compression is not used for this dataset.
+        See :ref:`dataset_scaleoffset`.
+
+    .. attribute:: shuffle
+
+        Whether the shuffle filter is applied (T/F).  See :ref:`dataset_shuffle`.
+
+    .. attribute:: fletcher32
+
+        Whether Fletcher32 checksumming is enabled (T/F).  See :ref:`dataset_fletcher32`.
+
+    .. attribute:: fillvalue
+
+        Value used when reading uninitialized portions of the dataset, or None
+        if no fill value has been defined, in which case HDF5 will use a
+        type-appropriate default value.  Can't be changed after the dataset is
+        created.
+
+    .. attribute:: dims
+
+        Access to :ref:`dimension_scales`.
+
+    .. attribute:: attrs
+
+        :ref:`attributes` for this dataset.
+
+    .. attribute:: id
+
+        The dataset's low-level identifer; an instance of
+        :class:`DatasetID <low:h5py.h5d.DatasetID>`.
+
+    .. attribute:: name
+
+        String giving the full path to this dataset.
+
+    .. attribute:: file
+
+        :class:`File` instance in which this dataset resides
+
+    .. attribute:: parent
+
+        :class:`Group` instance containing this dataset.
