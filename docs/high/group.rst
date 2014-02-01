@@ -1,11 +1,9 @@
-.. _groups:
+.. _group:
 
 
 HDF5 Groups
 ===========
 
-Creating and using groups
--------------------------
 
 Groups are the container mechanism by which HDF5 files are organized.  From
 a Python perspective, they operate somewhat like dictionaries.  In this case
@@ -22,7 +20,11 @@ serves as your entry point into the file:
     >>> f.keys()
     []
 
-New groups are easy to create:
+
+Creating groups
+---------------
+
+New groups are easy to create::
 
     >>> grp = f.create_group("bar")
     >>> grp.name
@@ -31,11 +33,15 @@ New groups are easy to create:
     >>> subgrp.name
     '/bar/baz'
 
-Datasets are also created by a Group method:
+Multiple intermediate groups can also be created implicitly::
 
-    >>> dset = subgrp.create_dataset("MyDS", (100,100), dtype='i')
-    >>> dset.name
-    '/bar/baz/MyDS'
+    >>> grp2 = f.create_group("/some/long/path")
+    >>> grp2.name
+    '/some/long/path'
+    >>> grp3 = f['/some/long']
+    >>> grp3.name
+    '/some/long'
+
 
 Accessing objects
 -----------------

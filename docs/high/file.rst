@@ -1,8 +1,12 @@
-.. _hlfile:
+.. _file:
 
 
 HDF5 File Objects
 =================
+
+File objects serve as your entry point into the world of HDF5.  In addition
+to the File-specific capabilities listed here, every File instance is
+also an :ref:`HDF5 group <group>` representing the `root group` of the file.
 
 .. _file_open:
 

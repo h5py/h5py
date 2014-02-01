@@ -1,4 +1,4 @@
-.. _datasets:
+.. _dataset:
 
 
 HDF5 Datasets
@@ -10,67 +10,184 @@ Unlike NumPy arrays, they support a variety of transparent storage features
 such as compression, error-detection, and chunked I/O.
 
 They are represented in h5py by a thin proxy class which supports familiar
-NumPy operations like slicing, along with a variety of descriptive attributes.
+NumPy operations like slicing, along with a variety of descriptive attributes:
 
-Datasets are created using either :meth:`Group.create_dataset` or
-:meth:`Group.require_dataset`.  Existing datasets should be retrieved using
-the group indexing syntax (``dset = group["name"]``).
-
-NumPy compatibility
--------------------
-
-Datasets implement the following parts of the NumPy-array user interface:
-
-  - Slicing:  simple indexing and a subset of advanced indexing
   - **shape** attribute
   - **size** attribute
   - **dtype** attribute
 
-.. _dsetfeatures:
 
-Special features
-----------------
 
-Unlike memory-resident NumPy arrays, HDF5 datasets support a number of optional
-features which control how the data is stored on disk.  These are enabled by
-the keywords provided to :meth:`Group.create_dataset`.  Some of the more
-useful are:
+.. _dataset_create:
+
+Creating datasets
+-----------------
+
+New datasets are created using either :meth:`Group.create_dataset` or
+:meth:`Group.require_dataset`.  Existing datasets should be retrieved using
+the group indexing syntax (``dset = group["name"]``).
+
+To make an empty dataset, all you have to do is specify a name, shape, and
+optionally the data type (defaults to ``'f'``)::
+
+    >>> dset = f.create_dataset("default", (100,))
+    >>> dset = f.create_dataset("ints", (100,), dtype='i8')
+
+You may initialize the dataset to an existing NumPy array::
+
+    >>> arr = np.arange(100)
+    >>> dset = f.create_dataset("init", data=arr)
+
+Keywords ``shape`` and ``dtype`` may be specified along with ``data``; if so,
+they will override ``data.shape`` and ``data.dtype``.  It's required that
+(1) the total number of points in ``shape`` match the total number of points
+in ``data.shape``, and that (2) it's possible to cast ``data.dtype`` to
+the requested ``dtype``.
+
+
+.. _dataset_chunks:
 
 Chunked storage
-    HDF5 can store data in "chunks" indexed by B-trees, as well as in the
-    traditional contiguous manner.  This can dramatically increase I/O
-    performance for certain patterns of access; for example, reading every
-    n-th element along the fastest-varying dimension.
+---------------
 
-Compression
-    Transparent lossless compression can substantially reduce
-    the storage space needed for the dataset.  Beginning with h5py 1.1,
-    three techniques are available, "gzip", "lzf" and "szip". See the
-    ``filters`` module for more information.
-    
-Scale/offset storage & lossy compression
-    HDF5 1.8 introduces compression based on truncation to
-    a fixed number of bits after scaling and shifting data. This can be
-    used, for instance, to do the following:
-    
-      - Losslessly store 12-bit integer data using only 12 bits of storage
-        per value.
-      - Lossily store 16-bit integer data using 12 bits of storage per
-        value.
-      - Lossily store floating-point data with a fixed number of
-        digits after the decimal place.
-        
-    See the ``scaleoffset`` argument to :meth:`Group.create_dataset` for more
-    information.
+An HDF5 dataset created with the default settings will be `contiguous`; in
+other words, laid out on disk in traditional C order.  Datasets may also be
+created using HDF5's `chunked` storage layout.  This means the dataset is
+divided up into regularly-sized pieces which are stored haphazardly on disk,
+and indexed using a B-tree.
 
-Error-Detection
-    All versions of HDF5 include the *fletcher32* checksum filter, which enables
-    read-time error detection for datasets.  If part of a dataset becomes
-    corrupted, a read operation on that section will immediately fail with
-    an exception.
+Chunked storage makes it possible to resize datasets, and because the data
+is stored in fixed-size chunks, the use of compression filters.
 
-Resizing
-    Datasets can be resized, up to a maximum value provided at creation time.
+To enable chunked storage, set the keyword ``chunks`` to a tuple indicating
+the chunk shape::
+
+    >>> dset = f.create_dataset("chunked", (1000, 1000), chunks=(100, 100))
+
+Data will be read and written in blocks with shape (100,100); for example,
+the data in ``dset[0:100,0:100]`` will be stored together in the file, as will
+the data points in range ``dset[400:500, 100:200]``.
+
+Chunking has performance implications.  It's recommended to keep the total
+size of your chunks between 10 KiB and 1 MiB, larger for larger datasets.
+Also keep in mind that when any element in a chunk is accessed, the entire
+chunk is read from disk.
+
+Since picking a chunk shape can be confusing, you can have h5py guess a chunk
+shape for you::
+
+    >>> dset = f.create_dataset("autochunk", (1000, 1000), chunks=True)
+
+Auto-chunking is also enabled when using compression or ``maxshape``, etc.,
+if a chunk shape is not manually specified.
+
+
+.. _dataset_resize:
+
+Resizable datasets
+------------------
+
+In HDF5, datasets can be resized once created up to a maximum size,
+by calling :meth:`Dataset.resize`.  You specify this maximum size when creating
+the dataset, via the keyword ``maxshape``::
+
+    >>> dset = f.create_dataset("resizable", (10,10), maxshape=(500, 20))
+
+Any (or all) axes may also be marked as "unlimited", in which case there is
+no limit on how large they can get (up to 2**64 elements).  Simply mark
+unlimited axes using ``None``::
+
+    >>> dset = f.create_dataset("unlimited", (10, 10), maxshape=(None, 10))
+
+.. note:: Resizing an array with existing data works differently than in NumPy; if
+    any axis shrinks, the data in the missing region is discarded.  Data does
+    not "rearrange" itself as it does when resizing a NumPy array.
+
+
+.. _dataset_compression:
+
+Filter pipeline
+---------------
+
+Chunked data may be transformed by the HDF5 `filter pipeline`.  The most
+common use is applying transparent compression.  Data is compressed on the
+way to disk, and automatically decompressed when read.  Once the dataset
+is created with a particular compression filter applied, data may be read
+and written as normal with no special steps required.
+
+Enable compression with the ``compression`` keyword to
+:meth:`Group.create_dataset`::
+
+    >>> dset = f.create_dataset("zipped", (100, 100), compression="gzip")
+
+Options for each filter may be specified with ``compression_opts``::
+
+    >>> dset = f.create_dataset("zipped_max", (100, 100), compression="gzip", compression_opts=9)
+
+Lossless compression filters
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+GZIP filter (``"gzip"``)
+    Available with every installation of HDF5, so it's best where portability is
+    required.  Good compression, moderate speed.  ``compression_opts`` sets the
+    compression level and may be an integer from 0 to 9, default is 4.
+
+
+LZF filter (``"lzf"``)
+    Available with every installation of h5py (C source code also available).
+    Low to moderate compression, very fast.  No options.
+
+
+SZIP filter (``"szip"``)
+    Patent-encumbered filter used in the NASA community.  Not available with all
+    installations of HDF5 due to legal reasons.  Consult the HDF5 docs for filter
+    options.
+
+
+.. _dataset_scaleoffset:
+
+Scale-Offset filter
+~~~~~~~~~~~~~~~~~~~
+
+Filters enabled with the ``compression`` keywords are _lossless_; what comes
+out of the dataset is exactly what you put in.  HDF5 also includes a lossy
+filter which trades precision for storage space.  
+
+Works with integer and floating-point data only.  Enable the scale-offset
+filter by setting :meth:`Group.create_dataset` keyword ``scaleoffset`` to an
+integer.  
+
+For integer data, this specifies the number of bits to retain.  Set to 0 to have
+HDF5 automatically compute the number of bits required for lossless compression
+of the chunk.  For floating-point data, indicates the number of digits after
+the decimal point to retain.
+
+
+.. _dataset_shuffle:
+
+Shuffle filter
+~~~~~~~~~~~~~~
+
+Block-oriented compressors like GZIP or LZF work better when presented with
+runs of similar values.  Enabling the shuffle filter rearranges the bytes in
+the chunk and may improve compression ratio.  No significant speed penalty,
+lossless.
+
+Enable by setting :meth:`Group.create_dataset` keyword ``shuffle`` to True.
+
+
+.. _dataset_fletcher32:
+
+Fletcher32 filter
+~~~~~~~~~~~~~~~~~
+
+Adds a checksum to each chunk to detect data corruption.  Attempts to read
+corrupted chunks will fail with an error.  No significant speed penalty.
+Obviously shouldn't be used with lossy compression filters.
+
+Enable by setting :meth:`Group.create_dataset` keyword ``fletcher32`` to True.
+
+ation time.
     You can specify this maximum size via the *maxshape* argument to
     :meth:`create_dataset <Group.create_dataset>` or
     :meth:`require_dataset <Group.require_dataset>`. Shape elements with the
@@ -85,11 +202,8 @@ Resizing
         >>> dset.shape
         (20, 20)
 
-.. note:: Resizing an array with existing data works differently than in NumPy; if
-    any axis shrinks, the data in the missing region is discarded.  Data does
-    not "rearrange" itself as it does when resizing a NumPy array.
 
-.. _slicing_access:
+.. _dataset_slicing:
 
 Slicing access
 --------------
