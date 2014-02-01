@@ -4,6 +4,8 @@
 HDF5 File Objects
 =================
 
+.. _file_open:
+
 Opening & creating files
 ------------------------
 
@@ -23,6 +25,8 @@ The file name may be a byte string or unicode string. Valid modes are:
      a   Read/write if exists, create otherwise (default)
     ===  ================================================
 
+
+.. _file_driver:
 
 File drivers
 ------------
@@ -68,6 +72,9 @@ of supported drivers and their options:
 
         memb_size:  Maximum file size (default is 2**31-1).
 
+
+.. _file_version:
+
 Version Bounding
 ----------------
 
@@ -87,6 +94,9 @@ structures without particular concern for backwards compatibility.  The
 compatible.
 
 The default is "earliest".
+
+
+.. _file_userblock:
 
 User block
 ----------
@@ -109,7 +119,8 @@ Reference
 
 In addition to the properties and methods defined here, File objects inherit
 the full API of Group objects; in this case, the group in question is the
-*root group* (/) of the file.
+*root group* (/) of the file.  Refer to :class:`h5py.Group` for more
+information.
 
 .. note::
     
@@ -118,29 +129,58 @@ the full API of Group objects; in this case, the group in question is the
     name of the root group, "``/``". To access the on-disk name, use
     ``File.filename``.
 
-.. autoclass:: h5py.File
+.. class:: h5py.File
 
-    .. automethod:: h5py.File.__init__
+    Represents a HDF5 file on disk.
 
-    **File properties**
+    .. method:: __init__(name, mode=None, driver=None, libver=None, userblock_size, **kwds)
+        
+        Open or create a new file.
 
-    .. autoattribute:: h5py.File.filename
-    .. autoattribute:: h5py.File.mode
-    .. autoattribute:: h5py.File.driver
-    .. autoattribute:: h5py.File.libver
-    .. autoattribute:: h5py.File.userblock_size
+        :param name:    Name of file (`str` or `unicode`), or an instance of
+                        :class:`h5py.h5f.FileID` to bind to an existing
+                        file identifier.
+        :param mode:    Mode in which to open file; one of
+                        ("w", "r", "r+", "a", "w-").  See :ref:`file_open`.
+        :param driver:  File driver to use; see :ref:`file_driver`.
+        :param libver:  Compatibility bounds; see :ref:`file_version`.
+        :param userblock_size:  Size (in bytes) of the user block.  If nonzero,
+                        must be a power of 2 and at least 512.  See
+                        :ref:`file_userblock`.
+        :param kwds:    Driver-specific keywords; see :ref:`file_driver`.
 
-    **File methods**
+    .. method:: close()
 
-    .. automethod:: h5py.File.close
-    .. automethod:: h5py.File.flush
+        Close this file.  All open objects will become invalid.
 
-    **Properties common to all HDF5 objects:**
+    .. method:: flush()
 
-    .. autoattribute:: h5py.File.file
-    .. autoattribute:: h5py.File.parent
-    .. autoattribute:: h5py.File.name
-    .. autoattribute:: h5py.File.id
-    .. autoattribute:: h5py.File.ref
-    .. autoattribute:: h5py.File.attrs
+        Request that the HDF5 library flush its buffers to disk.
 
+    .. attribute:: id
+
+        Low-level identifier (an instance of :class:`h5py.h5f.FileID`).
+
+    .. attribute:: filename
+
+        Name of this file on disk.  Generally a Unicode string; a byte string
+        will be used if HDF5 returns a non-UTF-8 encoded string.
+
+    .. attribute:: mode
+
+        String indicating if the file is open readonly ("r") or read-write
+        ("r+").  Will always be one of these two values, regardless of the
+        mode used to open the file.
+
+    .. attribute:: driver
+
+        String giving the driver used to open the file.  Refer to
+        :ref:`file_driver` for a list of drivers.
+
+    .. attribute:: libver
+
+        2-tuple with library version settings.  See :ref:`file_version`.
+
+    .. attribute:: userblock_size
+
+        Size of user block (in bytes).  Generally 0.  See :ref:`file_userblock`.
