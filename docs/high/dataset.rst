@@ -409,6 +409,16 @@ Reference
         The dataset's low-level identifer; an instance of
         :class:`DatasetID <low:h5py.h5d.DatasetID>`.
 
+    .. attribute:: ref
+
+        An HDF5 object reference pointing to this dataset.  See
+        :ref:`refs_object`.
+
+    .. attribute:: regionref
+
+        Proxy object for creating HDF5 region references.  See
+        :ref:`refs_region`.
+
     .. attribute:: name
 
         String giving the full path to this dataset.
