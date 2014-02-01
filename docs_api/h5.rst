@@ -1,0 +1,44 @@
+Module H5
+=========
+
+.. automodule:: h5py.h5
+
+Library API
+-----------
+
+.. autofunction:: get_config
+.. autofunction:: get_libversion
+
+
+Configuration class
+-------------------
+
+.. autoclass:: H5PYConfig
+
+
+Module constants
+----------------
+
+.. data:: INDEX_NAME
+
+    Resolve indices in alphanumeric order
+
+.. data:: INDEX_CRT_ORDER
+
+    Resolve indices in order of object creation.  Not always available.
+
+.. data:: ITER_NATIVE
+
+    Traverse index in the fastest possible order.  No particular pattern is
+    guaranteed.
+
+.. data:: ITER_INC
+
+    Traverse index in increasing order
+
+.. data:: ITER_DEC
+
+    Traverse index in decreasing order
+
+
+
