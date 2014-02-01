@@ -153,45 +153,82 @@ not, and to return the class of link in use (soft or external).
 Reference
 ---------
 
-.. autoclass:: h5py.Group
-   
-    **``Group`` methods**
+.. class:: Group(identifier)
 
-    .. automethod:: h5py.Group.__setitem__
-    .. automethod:: h5py.Group.__getitem__
-
-    .. automethod:: h5py.Group.create_group
-    .. automethod:: h5py.Group.create_dataset
-
-    .. automethod:: h5py.Group.require_group
-    .. automethod:: h5py.Group.require_dataset
-
-    .. automethod:: h5py.Group.copy
-    .. automethod:: h5py.Group.visit
-    .. automethod:: h5py.Group.visititems
-
-    **Dictionary-like methods**
-
-    .. automethod:: h5py.Group.keys
-    .. automethod:: h5py.Group.values
-    .. automethod:: h5py.Group.items
-
-    .. automethod:: h5py.Group.iterkeys
-    .. automethod:: h5py.Group.itervalues
-    .. automethod:: h5py.Group.iteritems
-
-    .. automethod:: h5py.Group.get
-
-    **Properties common to all HDF5 objects:**
-
-    .. autoattribute:: h5py.Group.file
-    .. autoattribute:: h5py.Group.parent
-    .. autoattribute:: h5py.Group.name
-    .. autoattribute:: h5py.Group.id
-    .. autoattribute:: h5py.Group.ref
-    .. autoattribute:: h5py.Group.attrs
+    Generally Group objects are created by opening objects in the file, or
+    by the method :meth:`Group.create_group`.  Call the constructor with
+    an instance of :class:`h5g.GroupID` to create a new Group bound to an
+    existing low-level identifier.
 
 
+    .. method:: create_group(name)
+
+        Create and return a new group in the file.
+
+        :param name:    Name of group to create.  May be an absolute
+                        or relative path.  Provide None to create an anonymous
+                        group, to be linked into the file later.
+        :type name:     String or None
+
+        :return:        The new :class:`Group` object.
 
 
+    .. method:: require_group(name)
+
+        Open a group in the file, creating it if it doesn't exist.
+        TypeError is raised if a conflicting object already exists.
+        Parameters as in :meth:`Group.create_group`.
+
+
+    .. method:: create_dataset(name, shape=None, dtype=None, data=None, **kwds)
+
+        Create a new dataset.  Options are explained in :ref:`dataset_create`.
+
+        :param name:    Name of dataset to create.  May be an absolute
+                        or relative path.  Provide None to create an anonymous
+                        dataset, to be linked into the file later.
+
+        :param shape:   Shape of new dataset (Tuple).
+
+        :param dtype:   Data type for new dataset
+
+        :param data:    Initialize dataset to this (NumPy array).
+
+        :keyword chunks:    Chunk shape, or True to enable auto-chunking.
+
+        :keyword maxshape:  Dataset will be resizable up to this shape (Tuple).
+                            Automatically enables chunking.  Use None for the
+                            axes you want to be unlimited.
+
+        :keyword compression:   Compression strategy.  See :ref:`dataset_compress`.
+
+        :keyword compression_opts:  Parameters for compression filter.
+
+        :keyword scaleoffset:   See :ref:`dataset_scaleoffset`.
+
+        :keyword shuffle:   Enable shuffle filter (T/**F**).  See :ref:`dataset_filters`.
+
+        :keyword fletcher32: Enable Fletcher32 checksum (T/**F**).  See :ref:`dataset_filters`.
+
+        :keyword fillvalue: This value will be used when reading
+                            uninitialized parts of the dataset.
+
+        :keyword track_times:   Enable dataset creation timestamps (**T**/F).
+
+
+    .. method:: require_dataset(name, shape=None, dtype=None, exact=None, **kwds)
+
+        Open a dataset, creating it if it doesn't exist.
+
+        If keyword "exact" is False (default), an existing dataset must have
+        the same shape and a conversion-compatible dtype to be returned.  If
+        True, the shape and dtype must match exactly.
+
+        Other dataset keywords (see create_dataset) may be provided, but are
+        only used if a new dataset is to be created.
+
+        Raises TypeError if an incompatible object already exists, or if the
+        shape or dtype don't match according to the above rules.
+
+        :keyword exact:     Require shape and type to match exactly (T/**F**)
 
