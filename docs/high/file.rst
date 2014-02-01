@@ -123,15 +123,15 @@ Reference
     HDF5 name of the root group, "``/``". To access the on-disk name, use
     :attr:`File.filename`.
 
-.. class:: h5py.File(name, mode=None, driver=None, libver=None, userblock_size, **kwds)
+.. class:: File(name, mode=None, driver=None, libver=None, userblock_size, **kwds)
 
     Open or create a new file.
 
     Note that in addition to the File-specific methods and properties listed
-    below, File objects inherit the full interface of :class:`h5py.Group`.
+    below, File objects inherit the full interface of :class:`Group`.
 
     :param name:    Name of file (`str` or `unicode`), or an instance of
-                    :class:`h5py.h5f.FileID` to bind to an existing
+                    :class:`h5f.FileID` to bind to an existing
                     file identifier.
     :param mode:    Mode in which to open file; one of
                     ("w", "r", "r+", "a", "w-").  See :ref:`file_open`.
@@ -152,7 +152,7 @@ Reference
 
     .. attribute:: id
 
-        Low-level identifier (an instance of :class:`h5py.h5f.FileID`).
+        Low-level identifier (an instance of :class:`h5f.FileID`).
 
     .. attribute:: filename
 
