@@ -152,7 +152,7 @@ Reference
 
     .. attribute:: id
 
-        Low-level identifier (an instance of :class:`h5f.FileID`).
+        Low-level identifier (an instance of :class:`FileID <low:h5py.h5f.FileID>`).
 
     .. attribute:: filename
 
