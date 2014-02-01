@@ -129,25 +129,21 @@ information.
     name of the root group, "``/``". To access the on-disk name, use
     ``File.filename``.
 
-.. class:: h5py.File
+.. class:: h5py.File(name, mode=None, driver=None, libver=None, userblock_size, **kwds)
 
-    Represents a HDF5 file on disk.
+    Open or create a new file.
 
-    .. method:: __init__(name, mode=None, driver=None, libver=None, userblock_size, **kwds)
-        
-        Open or create a new file.
-
-        :param name:    Name of file (`str` or `unicode`), or an instance of
-                        :class:`h5py.h5f.FileID` to bind to an existing
-                        file identifier.
-        :param mode:    Mode in which to open file; one of
-                        ("w", "r", "r+", "a", "w-").  See :ref:`file_open`.
-        :param driver:  File driver to use; see :ref:`file_driver`.
-        :param libver:  Compatibility bounds; see :ref:`file_version`.
-        :param userblock_size:  Size (in bytes) of the user block.  If nonzero,
-                        must be a power of 2 and at least 512.  See
-                        :ref:`file_userblock`.
-        :param kwds:    Driver-specific keywords; see :ref:`file_driver`.
+    :param name:    Name of file (`str` or `unicode`), or an instance of
+                    :class:`h5py.h5f.FileID` to bind to an existing
+                    file identifier.
+    :param mode:    Mode in which to open file; one of
+                    ("w", "r", "r+", "a", "w-").  See :ref:`file_open`.
+    :param driver:  File driver to use; see :ref:`file_driver`.
+    :param libver:  Compatibility bounds; see :ref:`file_version`.
+    :param userblock_size:  Size (in bytes) of the user block.  If nonzero,
+                    must be a power of 2 and at least 512.  See
+                    :ref:`file_userblock`.
+    :param kwds:    Driver-specific keywords; see :ref:`file_driver`.
 
     .. method:: close()
 
