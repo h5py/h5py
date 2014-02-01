@@ -117,21 +117,18 @@ the user block region.
 Reference
 ---------
 
-In addition to the properties and methods defined here, File objects inherit
-the full API of Group objects; in this case, the group in question is the
-*root group* (/) of the file.  Refer to :class:`h5py.Group` for more
-information.
-
 .. note::
     
-    Please note that unlike Python file objects, the attribute ``File.name``
-    does *not* refer to the file name on disk.  ``File.name`` gives the HDF5
-    name of the root group, "``/``". To access the on-disk name, use
-    ``File.filename``.
+    Unlike Python file objects, the attribute ``File.name`` gives the
+    HDF5 name of the root group, "``/``". To access the on-disk name, use
+    :attr:`File.filename`.
 
 .. class:: h5py.File(name, mode=None, driver=None, libver=None, userblock_size, **kwds)
 
     Open or create a new file.
+
+    Note that in addition to the File-specific methods and properties listed
+    below, File objects inherit the full interface of :class:`h5py.Group`.
 
     :param name:    Name of file (`str` or `unicode`), or an instance of
                     :class:`h5py.h5f.FileID` to bind to an existing
