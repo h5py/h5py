@@ -134,6 +134,6 @@ Help! It didn't work!
 You may wish to check the :ref:`faq` first for common installation problems.
 
 Then, feel free to ask the discussion group
-`at Google Groups <http://groups.google.com/group/h5py‎>`_.  There's
+`at Google Groups <http://groups.google.com/group/h5py>`_. There's
 only one discussion group for h5py, so you're likely to get help directly
 from the maintainers.
