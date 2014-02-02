@@ -98,11 +98,13 @@ cdef herr_t H5PY_H5Dwrite(hid_t dset, hid_t mtype, hid_t mspace,
 # =============================================================================
 # Proxy for vlen buf workaround
 
+
 cdef herr_t dset_rw(hid_t dset, hid_t mtype, hid_t mspace, hid_t fspace,
                     hid_t dxpl, void* progbuf, int read) except -1:
 
     cdef htri_t need_bkg
     cdef hid_t dstype = -1      # Dataset datatype
+    cdef hid_t rawdstype = -1
     cdef hid_t dspace = -1      # Dataset dataspace
     cdef hid_t cspace = -1      # Temporary contiguous dataspaces
 
@@ -111,7 +113,17 @@ cdef herr_t dset_rw(hid_t dset, hid_t mtype, hid_t mspace, hid_t fspace,
     cdef hsize_t npoints
 
     try:
-        dstype = H5Dget_type(dset)
+        # Issue 372: when a compound type is involved, using the dataset type
+        # may result in uninitialized data being sent to H5Tconvert for fields
+        # not present in the memory type.  Limit the type used for the dataset
+        # to only those fields present in the memory type.  We can't use the
+        # memory type directly because of course that triggers HDFFV-1063.
+        if (H5Tget_class(mtype) == H5T_COMPOUND) and (not read):
+            rawdstype = H5Dget_type(dset)
+            dstype = make_reduced_type(mtype, rawdstype)
+            H5Tclose(rawdstype)
+        else:
+            dstype = H5Dget_type(dset)
 
         if not (needs_proxy(dstype) or needs_proxy(mtype)):
             if read:
@@ -163,6 +175,47 @@ cdef herr_t dset_rw(hid_t dset, hid_t mtype, hid_t mspace, hid_t fspace,
             H5Sclose(cspace)
 
     return 0
+
+
+cdef hid_t make_reduced_type(hid_t mtype, hid_t dstype):
+    # Go through dstype, pick out the fields which also appear in mtype, and
+    # return a new compound type with the fields packed together
+    # See also: issue 372
+
+    cdef hid_t newtype, temptype
+    cdef hsize_t newtype_size, offset
+
+    # Make a list of all names in the memory type.
+    mtype_fields = []
+    for idx in xrange(H5Tget_nmembers(mtype)):
+        mtype_fields.append(H5Tget_member_name(mtype, idx))
+
+    # First pass: add up the sizes of matching fields so we know how large a
+    # type to make
+    newtype_size = 0
+    for idx in xrange(H5Tget_nmembers(dstype)):
+        name = H5Tget_member_name(dstype, idx)
+        if name not in mtype_fields:
+            continue
+        temptype = H5Tget_member_type(dstype, idx)
+        newtype_size += H5Tget_size(temptype)
+        H5Tclose(temptype)
+
+    newtype = H5Tcreate(H5T_COMPOUND, newtype_size)
+
+    # Second pass: pick out the matching fields and pack them in the new type
+    offset = 0
+    for idx in xrange(H5Tget_nmembers(dstype)):
+        name = H5Tget_member_name(dstype, idx)
+        if name not in mtype_fields:
+            continue
+        temptype = H5Tget_member_type(dstype, idx)
+        H5Tinsert(newtype, name, offset, temptype)
+        offset += H5Tget_size(temptype)
+        H5Tclose(temptype)
+
+    return newtype
+
 
 cdef void* create_buffer(size_t ipt_size, size_t opt_size, size_t nl) except NULL:
     
