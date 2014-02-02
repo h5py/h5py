@@ -8,30 +8,22 @@ HDF5 for Python
 subject to unannounced change or removal.  Go to** http://www.h5py.org/docs
 **for the current stable documentation.**
 
-What's h5py?
-------------
-
 The h5py package is a Pythonic interface to the HDF5 binary data format.
 
 `HDF5 <http://hdfgroup.org>`_ is an open-source library and file format for 
 storing large amounts of numerical data, originally developed at NCSA.  It is 
 widely used in the scientific community for everything from NASA's Earth
 Observing System to the storage of data from laboratory experiments and 
-simulations.
+simulations.  Over the past few years, HDF5 has rapidly emerged as the de-facto
+standard  technology in Python to store large numerical datasets.
 
-Over the past few years, HDF5 has rapidly emerged as the de-facto standard 
-technology in Python to store large numerical datasets.  The h5py package
-is a Pythonic, easy-to-use but full featured interface to HDF5.
+This is the reference documentation for the h5py package.  Check out
+the :ref:`quick` if you're new to h5py and HDF5.
 
-The package is designed with two major goals in mind:
-
-* Use the native HDF5 feature set only
-* Use native Python and NumPy abstractions
-
-The files you create can be read by anyone else using HDF5-enabled
-software, whether they're using Python, IDL, MATLAB or another software
-package.
-
+The lead author of h5py, Andrew Collette, also wrote
+`an O'Reilly book <http://shop.oreilly.com/product/0636920030249.do>`_
+which provides a comprehensive, example-based introduction to using Python
+and HDF5 together.
 
 Getting h5py
 ------------
@@ -44,12 +36,10 @@ first.
 Getting help
 -------------
 
-Tutorial and reference documentation is available at http://docs.h5py.org.
+Tutorial and reference documentation is available here at http://docs.h5py.org.
 We also have a mailing list `at Google Groups <http://groups.google.com/d/forum/h5py>`_.
-
-The lead author of h5py, Andrew Collette, also wrote
-`an O'Reilly book <http://shop.oreilly.com/product/0636920030249.do>`_
-which provides a comprehensive, example-based tour of HDF5 and h5py.
+Anyone is welcome to post; the list is read by both users and the core developers
+of h5py.
 
 
 Introductory info
