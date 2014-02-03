@@ -184,35 +184,49 @@ cdef hid_t make_reduced_type(hid_t mtype, hid_t dstype):
 
     cdef hid_t newtype, temptype
     cdef hsize_t newtype_size, offset
+    cdef char* member_name = NULL
 
     # Make a list of all names in the memory type.
     mtype_fields = []
     for idx in xrange(H5Tget_nmembers(mtype)):
-        mtype_fields.append(H5Tget_member_name(mtype, idx))
+        member_name = H5Tget_member_name(mtype, idx)
+        try:
+            mtype_fields.append(member_name)
+        finally:
+            free(member_name)
+            member_name = NULL
 
     # First pass: add up the sizes of matching fields so we know how large a
     # type to make
     newtype_size = 0
     for idx in xrange(H5Tget_nmembers(dstype)):
-        name = H5Tget_member_name(dstype, idx)
-        if name not in mtype_fields:
-            continue
-        temptype = H5Tget_member_type(dstype, idx)
-        newtype_size += H5Tget_size(temptype)
-        H5Tclose(temptype)
+        member_name = H5Tget_member_name(dstype, idx)
+        try:
+            if member_name not in mtype_fields:
+                continue
+            temptype = H5Tget_member_type(dstype, idx)
+            newtype_size += H5Tget_size(temptype)
+            H5Tclose(temptype)
+        finally:
+            free(member_name)
+            member_name =  NULL
 
     newtype = H5Tcreate(H5T_COMPOUND, newtype_size)
 
     # Second pass: pick out the matching fields and pack them in the new type
     offset = 0
     for idx in xrange(H5Tget_nmembers(dstype)):
-        name = H5Tget_member_name(dstype, idx)
-        if name not in mtype_fields:
-            continue
-        temptype = H5Tget_member_type(dstype, idx)
-        H5Tinsert(newtype, name, offset, temptype)
-        offset += H5Tget_size(temptype)
-        H5Tclose(temptype)
+        member_name = H5Tget_member_name(dstype, idx)
+        try:
+            if member_name not in mtype_fields:
+                continue
+            temptype = H5Tget_member_type(dstype, idx)
+            H5Tinsert(newtype, member_name, offset, temptype)
+            offset += H5Tget_size(temptype)
+            H5Tclose(temptype)
+        finally:
+            free(member_name)
+            member_name = NULL
 
     return newtype
 
