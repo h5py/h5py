@@ -17,6 +17,9 @@ a dataset, and additionally contain information about a certain selection
 representing an image, you could specify a region of interest, and store it
 as an attribute on the dataset.
 
+
+.. _refs_object:
+
 Using object references
 -----------------------
 
@@ -36,6 +39,8 @@ opening any other object:
     >>> mygroup2 = myfile[ref]
     >>> print mygroup2
     <HDF5 group "/some/group" (0 members)>
+
+.. _refs_region:
 
 Using region references
 -----------------------
