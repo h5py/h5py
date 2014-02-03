@@ -2,10 +2,6 @@
 Low-Level API Reference
 =======================
 
-**This is a testing version of the h5py low-level API documentation.  It is
-not guaranteed to be complete or correct.**
-
-**For the current h5py documentation, please go to** http://www.h5py.org/docs.
 
 This documentation contains the auto-generated API information for the
 HDF5 for Python "low-level" interface, a collection of Cython modules
@@ -14,6 +10,15 @@ our main documentation as it requires autodoc.
 
 These docs are updated less frequently than the spiffy ReadTheDocs-hosted
 main documentation; this means roughly once per minor (X.Y) release.
+
+This may not be what you're looking for!
+----------------------------------------
+
+**The main docs for h5py are at** http://docs.h5py.org.  **These are
+the docs specifically for the h5py low-level interface.**
+
+Contents
+--------
 
 .. toctree::
     :maxdepth: 2
