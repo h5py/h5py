@@ -22,12 +22,12 @@ The very first thing you'll need to do is create a new file::
     >>>
     >>> f = h5py.File("mytestfile.hdf5", "w").
 
-The `File object <hlfile>`_ is your starting point.  It has a couple of
+The :ref:`File object <file>` is your starting point.  It has a couple of
 methods which look interesting.  One of them is ``create_dataset``::
 
     >>> dset = f.create_dataset("mydataset", (100,), dtype='i')
 
-The object we created isn't an array, but `an HDF5 dataset <datasets>`_.
+The object we created isn't an array, but :ref:`an HDF5 dataset <dataset>`.
 Like NumPy arrays, datasets have both a shape and a data type:
 
     >>> dset.shape
@@ -46,6 +46,8 @@ from a dataset in the file:
     >>> dset[0:100:10]
     array([ 0, 10, 20, 30, 40, 50, 60, 70, 80, 90])
 
+For more, see :ref:`file` and :ref:`dataset`.
+
 
 Groups and hierarchical organization
 ------------------------------------
@@ -57,7 +59,7 @@ has a name, and they're arranged in a POSIX-style hierarchy with
     >>> dset.name
     u'/mydataset'
 
-The "folders" in this system are called `groups`.  The ``File`` object we
+The "folders" in this system are called :ref:`groups <group>`.  The ``File`` object we
 created is itself a group, in this case the `root group`, named ``/``:
 
     >>> f.name
@@ -80,11 +82,7 @@ Specifying a full path works just fine::
     >>> dset3.name
     u'/subgroup2/dataset_three'
 
-
-Groups are dictionaries (mostly)
---------------------------------
-
-`Groups <groups>`_ support most of the Python dictionary-style interface.  
+Groups support most of the Python dictionary-style interface.  
 You retrieve object in the file using the item-retrieval syntax::
 
     >>> dataset_three = f['subgroup/dataset_three']
@@ -125,6 +123,7 @@ iterating over an entire file is accomplished with the ``Group`` methods
     subgroup2
     subgroup2/dataset_three
 
+For more, see :ref:`group`.
 
 Attributes
 ----------
@@ -142,42 +141,6 @@ implements the dictionary interface::
     >>> 'temperature' in dset.attrs
     True
 
-
-Supported types
----------------
-
-The h5py package supports every Numpy type which maps to a native HDF5 type,
-and a few others.
-
-NumPy types:
-
-* Integers: signed/unsigned; 1, 2, 4, 8 bytes; LE/BE
-* Floats: 2, 4, 8, 12 bytes; LE/BE
-* Structured/compound: may contain arbitrary types, included nested compounds
-* Complex numbers: 8, 16, 24 bytes; LE/BE
-* Strings: NumPy "S" strings
-* Array type: may contain arbitrary types, including nested arrays
-
-Some additional types h5py supports, brought from HDF5:
-
-* Variable-length strings (See also :ref:`strings`)
-* Enums
-* :ref:`Object and region references <refs>`
-
-For example, variable-length strings let you store Python-style (as opposed to
-fixed-width "S") strings using native HDF5 constructs.  No Python-specific
-code or pickling is used.
-
-Create a dtype object to represent these by using ``special_dtype``::
-
-    >>> dt = h5py.special_dtype(vlen=str)   # bytes/str/unicode all supported
-
-Then create your dataset using that type:
-
-    >>> dset = f.create_dataset("stringy", (2,), dtype=dt)
-    >>> dset[0] = "Hello"
-    >>> dset[1] = "Hello this is a longer string"
-    >>> dset[...]
-    array([Hello, Hello this is a longer string], dtype=object)
+For more, see :ref:`attributes`.
 
 
