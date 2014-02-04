@@ -85,17 +85,17 @@ qthelp:
 	@echo
 	@echo "Build finished; now you can run "qcollectiongenerator" with the" \
 	      ".qhcp project file in $(BUILDDIR)/qthelp, like this:"
-	@echo "# qcollectiongenerator $(BUILDDIR)/qthelp/h5py.qhcp"
+	@echo "# qcollectiongenerator $(BUILDDIR)/qthelp/Low-levelAPIforh5py.qhcp"
 	@echo "To view the help file:"
-	@echo "# assistant -collectionFile $(BUILDDIR)/qthelp/h5py.qhc"
+	@echo "# assistant -collectionFile $(BUILDDIR)/qthelp/Low-levelAPIforh5py.qhc"
 
 devhelp:
 	$(SPHINXBUILD) -b devhelp $(ALLSPHINXOPTS) $(BUILDDIR)/devhelp
 	@echo
 	@echo "Build finished."
 	@echo "To view the help file:"
-	@echo "# mkdir -p $$HOME/.local/share/devhelp/h5py"
-	@echo "# ln -s $(BUILDDIR)/devhelp $$HOME/.local/share/devhelp/h5py"
+	@echo "# mkdir -p $$HOME/.local/share/devhelp/Low-levelAPIforh5py"
+	@echo "# ln -s $(BUILDDIR)/devhelp $$HOME/.local/share/devhelp/Low-levelAPIforh5py"
 	@echo "# devhelp"
 
 epub:

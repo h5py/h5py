@@ -17,9 +17,36 @@ h5py can use it to determine how to store the data.
 
 There are two functions for creating these "hinted" dtypes:
 
-.. autofunction:: h5py.special_dtype
+.. function:: special_dtype(**kwds)
 
-.. autofunction:: h5py.check_dtype
+    Create a NumPy dtype object containing type hints.  Only one keyword
+    may be specified.
+
+    :param vlen: Base type for HDF5 variable-length datatype.  Currently
+                 only ``str`` and ``unicode`` are allowed.
+
+    :param enum: 2-tuple ``(basetype, values_dict)``.  ``basetype`` must be
+                 an integer dtype; ``values_dict`` is a dictionary mapping
+                 string names to integer values.
+
+    :param ref:  Provide class ``h5py.Reference`` or ``h5py.RegionReference``
+                 to create a type representing object or region references
+                 respectively.
+
+.. function:: check_dtype(**kwds)
+
+    Determine if the given dtype object is a special type.  Example::
+
+        >>> out = h5py.check_dtype(vlen=mydtype)
+        >>> if out is not None:
+        ...     print "Vlen of type %s" % out
+        str
+
+    :param vlen:    Check for an HDF5 variable-length type; returns base class
+    :param enum:    Check for an enumerated type; returns 2-tuple ``(basetype, values_dict)``.
+    :param ref:     Check for an HDF5 object or region reference; returns
+                    either ``h5py.Reference`` or ``h5py.RegionReference``.
+
 
 Variable-length strings
 -----------------------
@@ -71,7 +98,7 @@ Here's an example of creating an enumerated type::
     >>> ds[1,0]
     0
 
-References
-----------
+Object and region references
+----------------------------
 
 References have their :ref:`own section <refs>`.

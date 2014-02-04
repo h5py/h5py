@@ -1,5 +1,5 @@
-Contributing code or bug reports to h5py
-========================================
+Bug Reports & Contributions
+===========================
 
 Contributions and bug reports are welcome from anyone!  Some of the best
 features in h5py, including thread support, dimension scales, and the
@@ -32,8 +32,8 @@ Finally, we describe the various subsystems inside h5py, and give
 technical guidance as to how to implement your changes.  
 
 
-Part 1: How to File a Bug Report
---------------------------------
+How to File a Bug Report
+------------------------
 
 Bug reports are always welcome!  The issue tracker is at:
 
@@ -52,8 +52,8 @@ By the way, nobody will get mad if you file a bug and it turns out to be
 something else.  That's just how software development goes.
 
 
-Making the bug report
-~~~~~~~~~~~~~~~~~~~~~
+What to include
+~~~~~~~~~~~~~~~
 
 When filing a bug, there are two things you should include.  The first is
 the output of ``h5py.version.info``::
@@ -65,15 +65,15 @@ The second is a detailed explanation of what went wrong.  Unless the bug
 is really trivial, **include code if you can**, either via GitHub's
 inline markup::
 
-    {{{
+    ```
         import h5py
         h5py.explode()    # Destroyed my computer!
-    }}}
+    ```
 
 or by uploading a code sample to `Github Gist <http://gist.github.com>`_.
 
-Part 2: How to Get Your Code into h5py
---------------------------------------
+How to Get Your Code into h5py
+------------------------------
 
 This section describes how to contribute changes to the h5py code base.
 Before you start, be sure to read the h5py license and contributor
@@ -165,8 +165,8 @@ commits in the history, and it's helpful to keep all the history together
 in one place.
 
 
-Part 3: How to Modify h5py
---------------------------
+How to Modify h5py
+------------------
 
 This section is a little more involved, and provides tips on how to modify
 h5py.  The h5py package is built in layers.  Starting from the bottom, they
