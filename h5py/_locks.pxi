@@ -1,3 +1,11 @@
+cdef class BogoLock:
+
+    def __enter__(self):
+        pass
+
+    def __exit__(self, *args):
+        pass
+
 ## {{{ http://code.activestate.com/recipes/577336/ (r3)
 from cpython cimport pythread
 from cpython.exc cimport PyErr_NoMemory

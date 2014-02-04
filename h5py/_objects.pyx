@@ -11,7 +11,53 @@
     Implements ObjectID base class.
 """
 
+include "_locks.pxi"
 from defs cimport *
+
+DEF USE_LOCKING = True
+
+
+# --- Locking code ------------------------------------------------------------
+#
+# Most of the functions and methods in h5py spend all their time in the C API
+# for Python, and hold the GIL until they exit.  However, in some cases,
+# particularly when calling native-Python functions from the stdlib or
+# elsewhere, the GIL can be released mid-function and another thread can
+# call into the API at the same time.
+#
+# This is bad news, especially for the object identifier registry.
+#
+# We serialize all access to the low-level API with a single recursive lock.
+# Only one thread at a time can call any low-level routine.
+#
+# Note that this doesn't affect other applications like PyTables which are
+# interacting with HDF5.  In the case of the identifier registry, this means
+# that it's possible for an identifier to go stale and for PyTables to reuse
+# it before we've had a chance to set obj.id = 0.  For this reason, h5py is
+# advertised for EITHER multithreaded use OR use alongside PyTables/NetCDF4,
+# but not both at the same time.
+
+IF USE_LOCKING:
+    cdef FastRLock phil = FastRLock()
+
+    def with_phil(func):
+        """ Locking decorator """
+
+        import functools
+
+        @functools.wraps(func)
+        def wrapper(*args, **kwds):
+            with phil:
+                return func(*args, **kwds)
+
+        return wrapper
+ELSE:
+    cdef BogoLock phil = BogoLock()
+
+    def with_phil(func):
+        return func
+
+# --- End locking code --------------------------------------------------------
 
 
 # --- Registry code ----------------------------------------------------------
@@ -49,6 +95,7 @@ def debug(what):
 # Will map id(obj) -> weakref(obj), where obj is an ObjectID instance
 cdef dict registry = {}
 
+@with_phil
 def nonlocal_close():
     """ Find dead ObjectIDs and set their integer identifiers to 0.
     """
@@ -76,6 +123,8 @@ def nonlocal_close():
 # --- End registry code -------------------------------------------------------
 
 
+
+
 cdef class ObjectID:
 
     """
@@ -86,14 +135,16 @@ cdef class ObjectID:
     property fileno:
         def __get__(self):
             cdef H5G_stat_t stat
-            H5Gget_objinfo(self.id, '.', 0, &stat)
-            return (stat.fileno[0], stat.fileno[1])
+            with phil:
+                H5Gget_objinfo(self.id, '.', 0, &stat)
+                return (stat.fileno[0], stat.fileno[1])
 
     property valid:
         def __get__(self):
             if not self.id:
                 return False
-            return H5Iget_type(self.id) > 0
+            with phil:
+                return H5Iget_type(self.id) > 0
 
     def __cinit__(self, id_):
         self.id = id_
