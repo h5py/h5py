@@ -8,35 +8,73 @@
 #           and contributor agreement.
 
 """
-    Implements ObjectID base class and global object registry.
-
-    It used to be that we could store the HDF5 identifier in an ObjectID
-    and simply close it when the object was deallocated.  However, since
-    HDF5 1.8.5 they have started recycling object identifiers, which
-    breaks this system.
-
-    We now use a global registry of object identifiers.  This is implemented
-    via a dictionary which maps an integer representation of the identifier
-    to a weak reference of an ObjectID.  There is only one ObjectID instance
-    in the universe for each integer identifier.  When the HDF5 reference
-    count for a identifier reaches zero, HDF5 closes the object and reclaims
-    the identifier. When this occurs, the identifier and weak reference must
-    be deleted from the registry. If an ObjectID is deallocated, it is deleted
-    from the registry and the HDF5 reference count is decreased, HDF5 closes
-    and reclaims the identifier for future use.
-
-    All interactions with the registry must be synchronized for thread safety.
-    You must acquire "registry.lock" before interacting with the registry. The
-    registry is not internally synchronized, in the interest of performance: we
-    don't want the same thread attempting to acquire the lock multiple times
-    during a single operation, if we can avoid it.
-
-    All ObjectIDs and subclasses thereof should be opened with the "open"
-    classmethod factory function, such that an existing ObjectID instance can
-    be returned from the registry when appropriate.
+    Implements ObjectID base class.
 """
 
 from defs cimport *
+
+
+# --- Registry code ----------------------------------------------------------
+#
+# With HDF5 1.8, when an identifier is closed its value may be immediately
+# re-used for a new object.  This leads to odd behavior when an ObjectID
+# with an old identifier is left hanging around... for example, a GroupID
+# belonging to a closed file could suddenly "mutate" into one from a
+# different file.
+#
+# This is generally handled by setting obj.id = 0 when deallocating, or when
+# explicitly closing an ObjectID instance via obj._close().  However, certain
+# actions in HDF5 can *remotely* invalidate identifiers.  For example, closing
+# a file opened with H5F_CLOSE_STRONG will also close open groups, etc.
+#
+# When such a "nonlocal" event occurs, we have to examine all live ObjectID
+# instances, and manually set obj.id = 0.  That's what the function
+# nonlocal_close() does.  We maintain an inventory of all live ObjectID
+# instances in the registry dict.  Then, when a nonlocal event occurs,
+# nonlocal_close() walks through the inventory and sets the stale identifiers
+# to 0.
+#
+# See also __cinit__ and __dealloc__ for Object ID.
+
+import weakref
+import warnings
+
+# Print messages to stdout with identifier diagnostic info
+DEBUG_ID = False
+
+def debug(what):
+    if DEBUG_ID:
+        print what
+
+# Will map id(obj) -> weakref(obj), where obj is an ObjectID instance
+cdef dict registry = {}
+
+def nonlocal_close():
+    """ Find dead ObjectIDs and set their integer identifiers to 0.
+    """
+    cdef ObjectID obj
+
+    for python_id, ref in registry.items():
+
+        obj = ref()
+        if obj is not None:
+
+            if (not obj.locked) and (not H5Iget_type(obj.id) > 0):
+                debug("NONLOCAL - invalidating %d of kind %s HDF5 id %d" %
+                        (python_id, type(obj), obj.id) )
+                obj.id = 0
+            else:
+                debug("NONLOCAL - OK identifier %d of kind %s HDF5 id %d" %
+                        (python_id, type(obj), obj.id) )
+
+        # The ObjectID somehow died without being removed from the registry
+        else:
+            warnings.warn("Found murdered identifier %d of kind %s HDF5 id %d" % 
+                             (python_id, type(obj), obj.id), RuntimeWarning)
+            del registry[python_id]
+
+# --- End registry code -------------------------------------------------------
+
 
 cdef class ObjectID:
 
@@ -55,20 +93,20 @@ cdef class ObjectID:
         def __get__(self):
             if not self.id:
                 return False
-            res = H5Iget_type(self.id) > 0
-            if not res:
-                self.id = 0
-            return res
+            return H5Iget_type(self.id) > 0
 
-    def __cinit__(self, id):
-        self.id = id
+    def __cinit__(self, id_):
+        self.id = id_
         self.locked = 0
+        debug("CINIT - registering %d of kind %s HDF5 id %d" % (id(self), type(self), id_))
+        registry[id(self)] = weakref.ref(self)
 
     def __dealloc__(self):
-        try:
+        if self.valid:
             H5Idec_ref(self.id)
-        except Exception:
-            pass
+        debug("DEALLOC - unregistering %d of kind %s HDF5 id %d" % (id(self), type(self), self.id))
+        self.id = 0
+        del registry[id(self)] 
 
     def __nonzero__(self):
         return self.valid
@@ -76,6 +114,7 @@ cdef class ObjectID:
     def __copy__(self):
         cdef ObjectID cpy
         cpy = type(self)(self.id)
+        H5Iinc_ref(cpy.id)
         return cpy
 
     def __richcmp__(self, object other, int how):
@@ -105,9 +144,11 @@ cdef class ObjectID:
         return not equal
 
     def _close(self):
-        """ Close this object """
+        """ Manually close this object. """
+        debug("CLOSE - %d of kind %s HDF5 id %d" % (id(self), type(self), self.id))
         if self.valid:
             H5Idec_ref(self.id)
+        self.id = 0
 
     def __hash__(self):
         """ Default hashing mechanism for HDF5 objects

@@ -213,8 +213,9 @@ class File(Group):
         idlist = h5f.get_obj_ids(self.id)
         self.id.close()
         for id_ in idlist:
-            if id_.valid:
-                id_._close()
+            while id_.valid:
+                h5i.dec_ref(id_)
+        _objects.nonlocal_close()
 
     def flush(self):
         """ Tell the HDF5 library to flush its buffers.

@@ -219,7 +219,7 @@ def get_obj_ids(object where=OBJ_ALL, int types=H5F_OBJ_ALL):
         for i from 0<=i<count:
             py_obj_list.append(wrap_identifier(obj_list[i]))
             # The HDF5 function returns a borrowed reference for each hid_t.
-            #H5Iinc_ref(obj_list[i])
+            H5Iinc_ref(obj_list[i])
         return py_obj_list
 
     finally:
@@ -267,6 +267,7 @@ cdef class FileID(GroupID):
         identifiers are freed.
         """
         self._close()
+        _objects.nonlocal_close()
 
     def reopen(self):
         """() => FileID
