@@ -38,18 +38,19 @@ DEF USE_LOCKING = True
 # but not both at the same time.
 
 IF USE_LOCKING:
-    cdef FastRLock phil = FastRLock()
+    cdef FastRLock _phil = FastRLock()
+    phil = _phil
 
     def with_phil(func):
         """ Locking decorator """
 
         import functools
 
-        @functools.wraps(func)
         def wrapper(*args, **kwds):
-            with phil:
+            with _phil:
                 return func(*args, **kwds)
 
+        functools.update_wrapper(wrapper, func, ('__name__', '__doc__'))
         return wrapper
 ELSE:
     cdef BogoLock phil = BogoLock()
@@ -135,7 +136,7 @@ cdef class ObjectID:
     property fileno:
         def __get__(self):
             cdef H5G_stat_t stat
-            with phil:
+            with _phil:
                 H5Gget_objinfo(self.id, '.', 0, &stat)
                 return (stat.fileno[0], stat.fileno[1])
 
@@ -143,7 +144,7 @@ cdef class ObjectID:
         def __get__(self):
             if not self.id:
                 return False
-            with phil:
+            with _phil:
                 return H5Iget_type(self.id) > 0
 
     def __cinit__(self, id_):
@@ -155,7 +156,7 @@ cdef class ObjectID:
     def __dealloc__(self):
         if self.valid:
             H5Idec_ref(self.id)
-        debug("DEALLOC - unregistering %d of kind %s HDF5 id %d" % (id(self), type(self), self.id))
+        #debug("DEALLOC - unregistering %d of kind %s HDF5 id %d" % (id(self), type(self), self.id))
         self.id = 0
         del registry[id(self)] 
 

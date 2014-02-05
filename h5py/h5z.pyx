@@ -11,6 +11,9 @@
     Filter API and constants.
 """
 
+from ._objects import phil, with_phil
+
+
 # === Public constants and data structures ====================================
 
 FILTER_LZF = H5PY_FILTER_LZF
@@ -56,7 +59,7 @@ NO_EDC      = H5Z_NO_EDC
 
 # === Filter API  =============================================================
 
-
+@with_phil
 def filter_avail(int filter_code):
     """(INT filter_code) => BOOL
 
@@ -71,6 +74,7 @@ def filter_avail(int filter_code):
     return <bint>H5Zfilter_avail(<H5Z_filter_t>filter_code)
 
 
+@with_phil
 def get_filter_info(int filter_code):
     """(INT filter_code) => INT filter_flags
 

@@ -14,14 +14,18 @@
 # Pyrex compile-time imports
 from _objects cimport ObjectID
 
+from ._objects import phil, with_phil
+
+
 # === Public constants and data structures ====================================
 
 OBJECT = H5R_OBJECT
 DATASET_REGION = H5R_DATASET_REGION
 
+
 # === Reference API ===========================================================
 
-
+@with_phil
 def create(ObjectID loc not None, char* name, int ref_type, ObjectID space=None):
     """(ObjectID loc, STRING name, INT ref_type, SpaceID space=None)
     => ReferenceObject ref
@@ -59,6 +63,7 @@ def create(ObjectID loc not None, char* name, int ref_type, ObjectID space=None)
     return ref
 
 
+@with_phil
 def dereference(Reference ref not None, ObjectID id not None):
     """(Reference ref, ObjectID id) => ObjectID or None
 
@@ -75,6 +80,7 @@ def dereference(Reference ref not None, ObjectID id not None):
     return h5i.wrap_identifier(H5Rdereference(id.id, <H5R_type_t>ref.typecode, &ref.ref))
 
 
+@with_phil
 def get_region(RegionReference ref not None, ObjectID id not None):
     """(Reference ref, ObjectID id) => SpaceID or None
 
@@ -93,6 +99,7 @@ def get_region(RegionReference ref not None, ObjectID id not None):
     return h5s.SpaceID(H5Rget_region(id.id, <H5R_type_t>ref.typecode, &ref.ref))
 
 
+@with_phil
 def get_obj_type(Reference ref not None, ObjectID id not None):
     """(Reference ref, ObjectID id) => INT obj_code or None
 
@@ -115,6 +122,7 @@ def get_obj_type(Reference ref not None, ObjectID id not None):
     return <int>H5Rget_obj_type(id.id, <H5R_type_t>ref.typecode, &ref.ref)
 
 
+@with_phil
 def get_name(Reference ref not None, ObjectID loc not None):
     """(Reference ref, ObjectID loc) => STRING name
 
@@ -132,6 +140,7 @@ def get_name(Reference ref not None, ObjectID loc not None):
             return namebuf
         finally:
             free(namebuf)
+
 
 cdef class Reference:
 

@@ -22,6 +22,7 @@ from h5ac cimport CacheConfig
 from utils cimport emalloc, efree
 
 from h5py import _objects
+from ._objects import phil, with_phil
 import h5fd
 
 # Initialization
@@ -54,7 +55,7 @@ LIBVER_LATEST = H5F_LIBVER_LATEST
 
 # === File operations =========================================================
 
-
+@with_phil
 def open(char* name, unsigned int flags=H5F_ACC_RDWR, PropFAID fapl=None):
     """(STRING name, UINT flags=ACC_RDWR, PropFAID fapl=None) => FileID
 
@@ -71,6 +72,7 @@ def open(char* name, unsigned int flags=H5F_ACC_RDWR, PropFAID fapl=None):
     return FileID(H5Fopen(name, flags, pdefault(fapl)))
 
 
+@with_phil
 def create(char* name, int flags=H5F_ACC_TRUNC, PropFCID fcpl=None,
                                                 PropFAID fapl=None):
     """(STRING name, INT flags=ACC_TRUNC, PropFCID fcpl=None,
@@ -90,6 +92,7 @@ def create(char* name, int flags=H5F_ACC_TRUNC, PropFCID fcpl=None,
     return FileID(H5Fcreate(name, flags, pdefault(fcpl), pdefault(fapl)))
 
 
+@with_phil
 def flush(ObjectID obj not None, int scope=H5F_SCOPE_LOCAL):
     """(ObjectID obj, INT scope=SCOPE_LOCAL)
 
@@ -106,6 +109,7 @@ def flush(ObjectID obj not None, int scope=H5F_SCOPE_LOCAL):
     H5Fflush(obj.id, <H5F_scope_t>scope)
 
 
+@with_phil
 def is_hdf5(char* name):
     """(STRING name) => BOOL
 
@@ -115,6 +119,7 @@ def is_hdf5(char* name):
     return <bint>(H5Fis_hdf5(name))
 
 
+@with_phil
 def mount(ObjectID loc not None, char* name, FileID fid not None):
     """(ObjectID loc, STRING name, FileID fid)
 
@@ -124,6 +129,7 @@ def mount(ObjectID loc not None, char* name, FileID fid not None):
     H5Fmount(loc.id, name, fid.id, H5P_DEFAULT)
 
 
+@with_phil
 def unmount(ObjectID loc not None, char* name):
     """(ObjectID loc, STRING name)
 
@@ -132,6 +138,7 @@ def unmount(ObjectID loc not None, char* name):
     H5Funmount(loc.id, name)
 
 
+@with_phil
 def get_name(ObjectID obj not None):
     """(ObjectID obj) => STRING
 
@@ -152,6 +159,7 @@ def get_name(ObjectID obj not None):
         efree(name)
 
 
+@with_phil
 def get_obj_count(object where=OBJ_ALL, int types=H5F_OBJ_ALL):
     """(OBJECT where=OBJ_ALL, types=OBJ_ALL) => INT
 
@@ -180,6 +188,7 @@ def get_obj_count(object where=OBJ_ALL, int types=H5F_OBJ_ALL):
     return H5Fget_obj_count(where_id, types)
 
 
+@with_phil
 def get_obj_ids(object where=OBJ_ALL, int types=H5F_OBJ_ALL):
     """(OBJECT where=OBJ_ALL, types=OBJ_ALL) => LIST
 
@@ -250,14 +259,17 @@ cdef class FileID(GroupID):
     property name:
         """ File name on disk (according to h5f.get_name()) """
         def __get__(self):
-            return get_name(self)
+            with phil:
+                return get_name(self)
 
 
     def __cinit__(self, id):
-        # lock the id proxy for as long as the the identifier is open
+        # File objects are special; they should not be closed if they happen
+        # to go out of scope.
         self.locked = True
 
 
+    @with_phil
     def close(self):
         """()
 
@@ -269,6 +281,8 @@ cdef class FileID(GroupID):
         self._close()
         _objects.nonlocal_close()
 
+
+    @with_phil
     def reopen(self):
         """() => FileID
 
@@ -279,6 +293,7 @@ cdef class FileID(GroupID):
         return FileID(H5Freopen(self.id))
 
 
+    @with_phil
     def get_filesize(self):
         """() => LONG size
 
@@ -290,6 +305,7 @@ cdef class FileID(GroupID):
         return size
 
 
+    @with_phil
     def get_create_plist(self):
         """() => PropFCID
 
@@ -299,6 +315,7 @@ cdef class FileID(GroupID):
         return propwrap(H5Fget_create_plist(self.id))
 
 
+    @with_phil
     def get_access_plist(self):
         """() => PropFAID
 
@@ -308,6 +325,7 @@ cdef class FileID(GroupID):
         return propwrap(H5Fget_access_plist(self.id))
 
 
+    @with_phil
     def get_freespace(self):
         """() => LONG freespace
 
@@ -317,6 +335,7 @@ cdef class FileID(GroupID):
         return H5Fget_freespace(self.id)
 
 
+    @with_phil
     def get_intent(self):
         """ () => INT
 
@@ -329,6 +348,7 @@ cdef class FileID(GroupID):
         return mode
 
 
+    @with_phil
     def get_vfd_handle(self):
         """ () => INT
 
@@ -345,6 +365,7 @@ cdef class FileID(GroupID):
 
     IF MPI and HDF5_VERSION >= (1, 8, 9):
 
+        @with_phil
         def set_mpi_atomicity(self, bint atomicity):
             """ (BOOL atomicity)
 
@@ -358,6 +379,7 @@ cdef class FileID(GroupID):
             H5Fset_mpi_atomicity(self.id, <hbool_t>atomicity)
 
 
+        @with_phil
         def get_mpi_atomicity(self):
             """ () => BOOL
 
@@ -370,6 +392,8 @@ cdef class FileID(GroupID):
             H5Fget_mpi_atomicity(self.id, &atom)
             return <bint>atom
 
+
+    @with_phil
     def get_mdc_hit_rate(self):
         """() => DOUBLE
 
@@ -380,6 +404,8 @@ cdef class FileID(GroupID):
         H5Fget_mdc_hit_rate(self.id, &hit_rate)
         return hit_rate
 
+
+    @with_phil
     def get_mdc_size(self):
         """() => (max_size, min_clean_size, cur_size, cur_num_entries) [SIZE_T, SIZE_T, SIZE_T, INT]
 
@@ -396,6 +422,8 @@ cdef class FileID(GroupID):
 
         return (max_size, min_clean_size, cur_size, cur_num_entries)
 
+
+    @with_phil
     def reset_mdc_hit_rate_stats(self):
         """no return
 
@@ -404,6 +432,8 @@ cdef class FileID(GroupID):
         """
         H5Freset_mdc_hit_rate_stats(self.id)
 
+
+    @with_phil
     def get_mdc_config(self):
         """() => CacheConfig
         Returns an object that stores all the information about the meta-data cache
@@ -416,6 +446,7 @@ cdef class FileID(GroupID):
 
         return config
 
+    @with_phil
     def set_mdc_config(self, CacheConfig config not None):
         """(CacheConfig) => None
         Returns an object that stores all the information about the meta-data cache

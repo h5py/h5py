@@ -28,6 +28,7 @@ from utils cimport  emalloc, efree, \
 import sys
 from h5 import get_config
 import numpy as np
+from ._objects import phil, with_phil
 
 cfg = get_config()
 
@@ -218,7 +219,7 @@ cdef dict _sign_map  = { H5T_SGN_NONE: 'u', H5T_SGN_2: 'i' }
 
 # === General datatype operations =============================================
 
-
+@with_phil
 def create(int classtype, size_t size):
     """(INT classtype, UINT size) => TypeID
         
@@ -233,6 +234,7 @@ def create(int classtype, size_t size):
     return typewrap(H5Tcreate(<H5T_class_t>classtype, size))
 
 
+@with_phil
 def open(ObjectID group not None, char* name):
     """(ObjectID group, STRING name) => TypeID
 
@@ -241,6 +243,7 @@ def open(ObjectID group not None, char* name):
     return typewrap(H5Topen(group.id, name))
 
 
+@with_phil
 def array_create(TypeID base not None, object dims_tpl):
     """(TypeID base, TUPLE dimensions) => TypeArrayID
 
@@ -262,6 +265,7 @@ def array_create(TypeID base not None, object dims_tpl):
         efree(dims)
 
 
+@with_phil
 def enum_create(TypeID base not None):
     """(TypeID base) => TypeID
 
@@ -270,6 +274,7 @@ def enum_create(TypeID base not None):
     return typewrap(H5Tenum_create(base.id))
 
 
+@with_phil
 def vlen_create(TypeID base not None):
     """(TypeID base) => TypeID
 
@@ -281,6 +286,7 @@ def vlen_create(TypeID base not None):
     return typewrap(H5Tvlen_create(base.id))
 
     
+@with_phil
 def decode(char* buf):
     """(STRING buf) => TypeID
 
@@ -288,6 +294,7 @@ def decode(char* buf):
     Python pickling machinery.
     """
     return typewrap(H5Tdecode(<unsigned char*>buf))
+
 
 # === Base type class =========================================================
 
@@ -301,45 +308,54 @@ cdef class TypeID(ObjectID):
     """
 
     def __hash__(self):
-        if self._hash is None:
-            try:
-                # Try to use object header first
-                return ObjectID.__hash__(self)
-            except TypeError:
-                # It's a transient type object
-                if self.locked:
-                    self._hash = hash(self.encode())
-                else:
-                    raise TypeError("Only locked or committed types can be hashed")
+        with phil:
+            if self._hash is None:
+                try:
+                    # Try to use object header first
+                    return ObjectID.__hash__(self)
+                except TypeError:
+                    # It's a transient type object
+                    if self.locked:
+                        self._hash = hash(self.encode())
+                    else:
+                        raise TypeError("Only locked or committed types can be hashed")
 
-        return self._hash
+            return self._hash
+
 
     def __richcmp__(self, object other, int how):
         cdef bint truthval = 0
-        if how != 2 and how != 3:
-            return NotImplemented
-        if isinstance(other, TypeID):
-            truthval = self.equal(other)
+        with phil:
+            if how != 2 and how != 3:
+                return NotImplemented
+            if isinstance(other, TypeID):
+                truthval = self.equal(other)
         
-        if how == 2:
-            return truthval
-        return not truthval
+            if how == 2:
+                return truthval
+            return not truthval
+
 
     def __copy__(self):
         cdef TypeID cpy
-        cpy = ObjectID.__copy__(self)
-        return cpy
+        with phil:
+            cpy = ObjectID.__copy__(self)
+            return cpy
+
 
     property dtype:
         """ A Numpy-style dtype object representing this object.
         """
         def __get__(self):
-            return self.py_dtype()
+            with phil:
+                return self.py_dtype()
+
 
     cdef object py_dtype(self):
         raise TypeError("No NumPy equivalent for %s exists" % self.__class__.__name__)
 
 
+    @with_phil
     def commit(self, ObjectID group not None, char* name, ObjectID lcpl=None):
         """(ObjectID group, STRING name, PropID lcpl=None)
 
@@ -349,6 +365,8 @@ cdef class TypeID(ObjectID):
         H5Tcommit2(group.id, name, self.id, pdefault(lcpl),
             H5P_DEFAULT, H5P_DEFAULT)
     
+
+    @with_phil
     def committed(self):
         """() => BOOL is_comitted
 
@@ -356,7 +374,8 @@ cdef class TypeID(ObjectID):
         """
         return <bint>(H5Tcommitted(self.id))
 
-    
+
+    @with_phil
     def copy(self):
         """() => TypeID
 
@@ -365,6 +384,7 @@ cdef class TypeID(ObjectID):
         return typewrap(H5Tcopy(self.id))
 
     
+    @with_phil
     def equal(self, TypeID typeid):
         """(TypeID typeid) => BOOL
 
@@ -374,6 +394,7 @@ cdef class TypeID(ObjectID):
         return <bint>(H5Tequal(self.id, typeid.id))
 
     
+    @with_phil
     def lock(self):
         """()
 
@@ -384,6 +405,7 @@ cdef class TypeID(ObjectID):
         self.locked = 1
 
     
+    @with_phil
     def get_class(self):
         """() => INT classcode
 
@@ -391,7 +413,8 @@ cdef class TypeID(ObjectID):
         """
         return <int>H5Tget_class(self.id)
 
-    
+
+    @with_phil    
     def set_size(self, size_t size):
         """(UINT size)
 
@@ -400,6 +423,7 @@ cdef class TypeID(ObjectID):
         H5Tset_size(self.id, size)
 
     
+    @with_phil
     def get_size(self):
         """ () => INT size
 
@@ -408,6 +432,7 @@ cdef class TypeID(ObjectID):
         return H5Tget_size(self.id)
 
     
+    @with_phil
     def get_super(self):
         """() => TypeID
 
@@ -415,7 +440,8 @@ cdef class TypeID(ObjectID):
         """
         return typewrap(H5Tget_super(self.id))
 
-    
+
+    @with_phil    
     def detect_class(self, int classtype):
         """(INT classtype) => BOOL class_is_present
 
@@ -424,19 +450,8 @@ cdef class TypeID(ObjectID):
         """
         return <bint>(H5Tdetect_class(self.id, <H5T_class_t>classtype))
 
-    
-    def _close(self):
-        """()
 
-        Close this datatype.  If it's locked, nothing happens.
-
-        You shouldn't ordinarily need to call this function; datatype
-        objects are automatically closed when they're deallocated.
-        """
-        if not self.locked:
-            H5Tclose(self.id)
-
-
+    @with_phil
     def encode(self):
         """() => STRING
 
@@ -459,11 +474,13 @@ cdef class TypeID(ObjectID):
 
 
     def __reduce__(self):
-        return (type(self), (-1,), self.encode())
+        with phil:
+            return (type(self), (-1,), self.encode())
 
     
     def __setstate__(self, char* state):
-        self.id = H5Tdecode(<unsigned char*>state)
+        with phil:
+            self.id = H5Tdecode(<unsigned char*>state)
 
 
 # === Top-level classes (inherit directly from TypeID) ========================
@@ -475,6 +492,7 @@ cdef class TypeArrayID(TypeID):
     """
 
     
+    @with_phil
     def get_array_ndims(self):
         """() => INT rank
 
@@ -483,6 +501,7 @@ cdef class TypeArrayID(TypeID):
         return H5Tget_array_ndims(self.id)
 
     
+    @with_phil
     def get_array_dims(self):
         """() => TUPLE dimensions
 
@@ -518,6 +537,7 @@ cdef class TypeOpaqueID(TypeID):
     """
 
     
+    @with_phil
     def set_tag(self, char* tag):
         """(STRING tag)
 
@@ -527,6 +547,7 @@ cdef class TypeOpaqueID(TypeID):
         H5Tset_tag(self.id, tag)
 
     
+    @with_phil
     def get_tag(self):
         """() => STRING tag
 
@@ -546,6 +567,7 @@ cdef class TypeOpaqueID(TypeID):
         # Numpy translation function for opaque types
         return dtype("|V" + str(self.get_size()))
 
+
 cdef class TypeStringID(TypeID):
 
     """
@@ -553,6 +575,7 @@ cdef class TypeStringID(TypeID):
     """
 
     
+    @with_phil
     def is_variable_str(self):
         """() => BOOL is_variable
 
@@ -561,6 +584,7 @@ cdef class TypeStringID(TypeID):
         return <bint>(H5Tis_variable_str(self.id))
 
     
+    @with_phil
     def get_cset(self):
         """() => INT character_set
 
@@ -569,6 +593,7 @@ cdef class TypeStringID(TypeID):
         return <int>H5Tget_cset(self.id)
 
     
+    @with_phil
     def set_cset(self, int cset):
         """(INT character_set)
 
@@ -577,6 +602,7 @@ cdef class TypeStringID(TypeID):
         H5Tset_cset(self.id, <H5T_cset_t>cset)
 
     
+    @with_phil
     def get_strpad(self):
         """() => INT padding_type
 
@@ -594,6 +620,7 @@ cdef class TypeStringID(TypeID):
         return <int>H5Tget_strpad(self.id)
 
     
+    @with_phil
     def set_strpad(self, int pad):
         """(INT pad)
 
@@ -609,6 +636,7 @@ cdef class TypeStringID(TypeID):
             Pad buffer with spaces (FORTRAN style)
         """
         H5Tset_strpad(self.id, <H5T_str_t>pad)
+
 
     cdef object py_dtype(self):
         # Numpy translation function for string types
@@ -674,6 +702,7 @@ cdef class TypeAtomicID(TypeID):
     """
 
     
+    @with_phil
     def get_order(self):
         """() => INT order
 
@@ -685,6 +714,7 @@ cdef class TypeAtomicID(TypeID):
         return <int>H5Tget_order(self.id)
 
     
+    @with_phil
     def set_order(self, int order):
         """(INT order)
 
@@ -696,6 +726,7 @@ cdef class TypeAtomicID(TypeID):
         H5Tset_order(self.id, <H5T_order_t>order)
 
     
+    @with_phil
     def get_precision(self):
         """() => UINT precision
 
@@ -704,6 +735,7 @@ cdef class TypeAtomicID(TypeID):
         return H5Tget_precision(self.id)
 
     
+    @with_phil
     def set_precision(self, size_t precision):
         """(UINT precision)
             
@@ -712,6 +744,7 @@ cdef class TypeAtomicID(TypeID):
         H5Tset_precision(self.id, precision)
 
     
+    @with_phil
     def get_offset(self):
         """() => INT offset
 
@@ -720,6 +753,7 @@ cdef class TypeAtomicID(TypeID):
         return H5Tget_offset(self.id)
 
     
+    @with_phil
     def set_offset(self, size_t offset):
         """(UINT offset)
 
@@ -728,6 +762,7 @@ cdef class TypeAtomicID(TypeID):
         H5Tset_offset(self.id, offset)
 
     
+    @with_phil
     def get_pad(self):
         """() => (INT lsb_pad_code, INT msb_pad_code)
 
@@ -743,6 +778,7 @@ cdef class TypeAtomicID(TypeID):
         return (<int>lsb, <int>msb)
 
     
+    @with_phil
     def set_pad(self, int lsb, int msb):
         """(INT lsb_pad_code, INT msb_pad_code)
 
@@ -762,6 +798,7 @@ cdef class TypeIntegerID(TypeAtomicID):
     """
 
     
+    @with_phil
     def get_sign(self):
         """() => INT sign
 
@@ -776,6 +813,7 @@ cdef class TypeIntegerID(TypeAtomicID):
         return <int>H5Tget_sign(self.id)
 
     
+    @with_phil
     def set_sign(self, int sign):
         """(INT sign)
 
@@ -802,6 +840,7 @@ cdef class TypeFloatID(TypeAtomicID):
     """
 
     
+    @with_phil
     def get_fields(self):
         """() => TUPLE field_info
 
@@ -819,6 +858,7 @@ cdef class TypeFloatID(TypeAtomicID):
         return (spos, epos, esize, mpos, msize)
 
     
+    @with_phil
     def set_fields(self, size_t spos, size_t epos, size_t esize, 
                           size_t mpos, size_t msize):
         """(UINT spos, UINT epos, UINT esize, UINT mpos, UINT msize)
@@ -829,6 +869,7 @@ cdef class TypeFloatID(TypeAtomicID):
         H5Tset_fields(self.id, spos, epos, esize, mpos, msize)
 
     
+    @with_phil
     def get_ebias(self):
         """() => UINT ebias
 
@@ -837,6 +878,7 @@ cdef class TypeFloatID(TypeAtomicID):
         return H5Tget_ebias(self.id)
 
     
+    @with_phil
     def set_ebias(self, size_t ebias):
         """(UINT ebias)
 
@@ -845,6 +887,7 @@ cdef class TypeFloatID(TypeAtomicID):
         H5Tset_ebias(self.id, ebias)
 
     
+    @with_phil
     def get_norm(self):
         """() => INT normalization_code
 
@@ -857,6 +900,7 @@ cdef class TypeFloatID(TypeAtomicID):
         return <int>H5Tget_norm(self.id)
 
     
+    @with_phil
     def set_norm(self, int norm):
         """(INT normalization_code)
 
@@ -869,6 +913,7 @@ cdef class TypeFloatID(TypeAtomicID):
         H5Tset_norm(self.id, <H5T_norm_t>norm)
 
     
+    @with_phil
     def get_inpad(self):
         """() => INT pad_code
 
@@ -881,6 +926,7 @@ cdef class TypeFloatID(TypeAtomicID):
         return <int>H5Tget_inpad(self.id)
 
     
+    @with_phil
     def set_inpad(self, int pad_code):
         """(INT pad_code)
 
@@ -891,6 +937,7 @@ cdef class TypeFloatID(TypeAtomicID):
         - PAD_BACKGROUND
         """
         H5Tset_inpad(self.id, <H5T_pad_t>pad_code)
+
 
     cdef object py_dtype(self):
         # Translation function for floating-point types
@@ -918,6 +965,7 @@ cdef class TypeCompositeID(TypeID):
     """
 
     
+    @with_phil
     def get_nmembers(self):
         """() => INT number_of_members
 
@@ -926,6 +974,7 @@ cdef class TypeCompositeID(TypeID):
         return H5Tget_nmembers(self.id)
 
     
+    @with_phil
     def get_member_name(self, int member):
         """(INT member) => STRING name
         
@@ -948,6 +997,7 @@ cdef class TypeCompositeID(TypeID):
         return pyname
 
     
+    @with_phil
     def get_member_index(self, char* name):
         """(STRING name) => INT index
 
@@ -964,7 +1014,7 @@ cdef class TypeCompoundID(TypeCompositeID):
     """
 
 
-    
+    @with_phil
     def get_member_class(self, int member):
         """(INT member) => INT class
 
@@ -976,7 +1026,7 @@ cdef class TypeCompoundID(TypeCompositeID):
         return H5Tget_member_class(self.id, member)
 
 
-    
+    @with_phil
     def get_member_offset(self, int member):
         """(INT member) => INT offset
 
@@ -987,7 +1037,8 @@ cdef class TypeCompoundID(TypeCompositeID):
             raise ValueError("Member index must be non-negative.")
         return H5Tget_member_offset(self.id, member)
 
-    
+
+    @with_phil
     def get_member_type(self, int member):
         """(INT member) => TypeID
 
@@ -999,6 +1050,7 @@ cdef class TypeCompoundID(TypeCompositeID):
         return typewrap(H5Tget_member_type(self.id, member))
 
     
+    @with_phil
     def insert(self, char* name, size_t offset, TypeID field not None):
         """(STRING name, UINT offset, TypeID field)
 
@@ -1009,6 +1061,7 @@ cdef class TypeCompoundID(TypeCompositeID):
         H5Tinsert(self.id, name, offset, field.id)
 
     
+    @with_phil
     def pack(self):
         """()
 
@@ -1055,6 +1108,7 @@ cdef class TypeCompoundID(TypeCompositeID):
 
         return typeobj
 
+
 cdef class TypeEnumID(TypeCompositeID):
 
     """
@@ -1084,7 +1138,8 @@ cdef class TypeEnumID(TypeCompositeID):
         finally:
             H5Tclose(basetype)
 
-    
+
+    @with_phil
     def enum_insert(self, char* name, long long value):
         """(STRING name, INT/LONG value)
 
@@ -1100,6 +1155,7 @@ cdef class TypeEnumID(TypeCompositeID):
         H5Tenum_insert(self.id, name, &buf)
 
     
+    @with_phil
     def enum_nameof(self, long long value):
         """(LONG value) => STRING name
 
@@ -1119,6 +1175,7 @@ cdef class TypeEnumID(TypeCompositeID):
         return retstring
 
     
+    @with_phil
     def enum_valueof(self, char* name):
         """(STRING name) => LONG value
 
@@ -1131,6 +1188,7 @@ cdef class TypeEnumID(TypeCompositeID):
         return buf
 
     
+    @with_phil
     def get_member_value(self, int idx):
         """(UINT index) => LONG value
 
@@ -1386,6 +1444,7 @@ cdef TypeReferenceID _c_ref(object refclass):
         return STD_REF_DSETREG
     raise TypeError("Unrecognized reference code")
 
+
 cpdef TypeID py_create(object dtype_in, bint logical=0):
     """(OBJECT dtype_in, BOOL logical=False) => TypeID
 
@@ -1406,68 +1465,71 @@ cpdef TypeID py_create(object dtype_in, bint logical=0):
     cdef dtype dt = dtype(dtype_in)
     cdef char kind = dt.kind
 
-    # Float
-    if kind == c'f':
-        return _c_float(dt)
+    with phil:
+        # Float
+        if kind == c'f':
+            return _c_float(dt)
     
-    # Integer
-    elif kind == c'u' or kind == c'i':
+        # Integer
+        elif kind == c'u' or kind == c'i':
 
-        if logical:
-            # Check for an enumeration hint
-            enum_vals = check_dtype(enum=dt)
-            if enum_vals is not None:
-                return _c_enum(dt, enum_vals)
+            if logical:
+                # Check for an enumeration hint
+                enum_vals = check_dtype(enum=dt)
+                if enum_vals is not None:
+                    return _c_enum(dt, enum_vals)
 
-        return _c_int(dt)
+            return _c_int(dt)
 
-    # Complex
-    elif kind == c'c':
-        return _c_complex(dt)
+        # Complex
+        elif kind == c'c':
+            return _c_complex(dt)
 
-    # Compound
-    elif kind == c'V' and dt.names is not None:
-        return _c_compound(dt, logical)
+        # Compound
+        elif kind == c'V' and dt.names is not None:
+            return _c_compound(dt, logical)
 
-    # Array or opaque
-    elif kind == c'V':
-        if dt.subdtype is not None:
-            return _c_array(dt, logical)
+        # Array or opaque
+        elif kind == c'V':
+            if dt.subdtype is not None:
+                return _c_array(dt, logical)
+            else:
+                return _c_opaque(dt)
+
+        # String
+        elif kind == c'S':
+            return _c_string(dt)
+
+        # Boolean
+        elif kind == c'b':
+            return _c_bool(dt)
+
+        # Object types (including those with vlen hints)
+        elif kind == c'O':
+
+            if logical:
+                vlen = check_dtype(vlen=dt)
+                if vlen is bytes:
+                    return _c_vlen_str()
+                elif vlen is unicode:
+                    return _c_vlen_unicode()
+                elif vlen is not None:
+                    return vlen_create(py_create(vlen))
+
+                refclass = check_dtype(ref=dt)
+                if refclass is not None:
+                    return _c_ref(refclass)
+
+                raise TypeError("Object dtype %r has no native HDF5 equivalent" % (dt,))
+
+            return PYTHON_OBJECT
+
+        # Unrecognized
         else:
-            return _c_opaque(dt)
+            raise TypeError("No conversion path for dtype: %s" % repr(dt))
 
-    # String
-    elif kind == c'S':
-        return _c_string(dt)
 
-    # Boolean
-    elif kind == c'b':
-        return _c_bool(dt)
-
-    # Object types (including those with vlen hints)
-    elif kind == c'O':
-
-        if logical:
-            vlen = check_dtype(vlen=dt)
-            if vlen is bytes:
-                return _c_vlen_str()
-            elif vlen is unicode:
-                return _c_vlen_unicode()
-            elif vlen is not None:
-                return vlen_create(py_create(vlen))
-
-            refclass = check_dtype(ref=dt)
-            if refclass is not None:
-                return _c_ref(refclass)
-
-            raise TypeError("Object dtype %r has no native HDF5 equivalent" % (dt,))
-
-        return PYTHON_OBJECT
-
-    # Unrecognized
-    else:
-        raise TypeError("No conversion path for dtype: %s" % repr(dt))
-
+@with_phil
 def special_dtype(**kwds):
     """ Create a new h5py "special" type.  Only one keyword may be given.
 
@@ -1519,6 +1581,8 @@ def special_dtype(**kwds):
 
     raise TypeError('Unknown special type "%s"' % name)
    
+
+@with_phil
 def check_dtype(**kwds):
     """ Check a dtype for h5py special type "hint" information.  Only one
     keyword may be given.
@@ -1554,6 +1618,8 @@ def check_dtype(**kwds):
     except KeyError:
         return None
 
+
+@with_phil
 def convert(TypeID src not None, TypeID dst not None, size_t n,
             ndarray buf not None, ndarray bkg=None, ObjectID dxpl=None):
     """ (TypeID src, TypeID dst, UINT n, NDARRAY buf, NDARRAY bkg=None,
@@ -1575,6 +1641,8 @@ def convert(TypeID src not None, TypeID dst not None, size_t n,
 
     H5Tconvert(src.id, dst.id, n, buf_, bkg_, pdefault(dxpl))
 
+
+@with_phil
 def find(TypeID src not None, TypeID dst not None):
     """ (TypeID src, TypeID dst) => TUPLE or None
 
@@ -1594,6 +1662,7 @@ def find(TypeID src not None, TypeID dst not None):
         return (data[0].need_bkg,)
     except:
         return None
+
 
 # ============================================================================
 # Deprecated functions
