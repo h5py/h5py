@@ -15,7 +15,7 @@ include "_locks.pxi"
 from defs cimport *
 
 DEF USE_LOCKING = True
-
+DEF DEBUG_ID = False
 
 # --- Locking code ------------------------------------------------------------
 #
@@ -39,24 +39,22 @@ DEF USE_LOCKING = True
 
 IF USE_LOCKING:
     cdef FastRLock _phil = FastRLock()
-    phil = _phil
-
-    def with_phil(func):
-        """ Locking decorator """
-
-        import functools
-
-        def wrapper(*args, **kwds):
-            with _phil:
-                return func(*args, **kwds)
-
-        functools.update_wrapper(wrapper, func, ('__name__', '__doc__'))
-        return wrapper
 ELSE:
-    cdef BogoLock phil = BogoLock()
+    cdef BogoLock _phil = BogoLock()
 
-    def with_phil(func):
-        return func
+phil = _phil
+
+def with_phil(func):
+    """ Locking decorator """
+
+    import functools
+
+    def wrapper(*args, **kwds):
+        with _phil:
+            return func(*args, **kwds)
+
+    functools.update_wrapper(wrapper, func, ('__name__', '__doc__'))
+    return wrapper
 
 # --- End locking code --------------------------------------------------------
 
@@ -69,31 +67,32 @@ ELSE:
 # belonging to a closed file could suddenly "mutate" into one from a
 # different file.
 #
-# This is generally handled by setting obj.id = 0 when deallocating, or when
-# explicitly closing an ObjectID instance via obj._close().  However, certain
-# actions in HDF5 can *remotely* invalidate identifiers.  For example, closing
-# a file opened with H5F_CLOSE_STRONG will also close open groups, etc.
+# There are two ways such "zombie" identifiers can arise.  The first is if
+# an identifier is explicitly closed via obj._close().  For this case we
+# set obj.id = 0.  The second is that certain actions in HDF5 can *remotely*
+# invalidate identifiers.  For example, closing a file opened with
+# H5F_CLOSE_STRONG will also close open groups, etc.
 #
 # When such a "nonlocal" event occurs, we have to examine all live ObjectID
 # instances, and manually set obj.id = 0.  That's what the function
 # nonlocal_close() does.  We maintain an inventory of all live ObjectID
 # instances in the registry dict.  Then, when a nonlocal event occurs,
 # nonlocal_close() walks through the inventory and sets the stale identifiers
-# to 0.
+# to 0.  It must be explictly called; currently, this happens in FileID.close()
+# as well as the high-level File.close().
 #
-# See also __cinit__ and __dealloc__ for Object ID.
+# The entire low-level API is now explicitly locked, so only one thread at at
+# time is taking actions that may create or invalidate identifiers. See the
+# "locking code" section above.
+#
+# See also __cinit__ and __dealloc__ for class ObjectID.
 
 import weakref
 import warnings
 
-# Print messages to stdout with identifier diagnostic info
-DEBUG_ID = False
-
-def debug(what):
-    if DEBUG_ID:
-        print what
-
-# Will map id(obj) -> weakref(obj), where obj is an ObjectID instance
+# Will map id(obj) -> weakref(obj), where obj is an ObjectID instance.
+# Objects are added only via ObjectID.__cinit__, and removed only by
+# ObjectID.__dealloc__.
 cdef dict registry = {}
 
 @with_phil
@@ -105,25 +104,29 @@ def nonlocal_close():
     for python_id, ref in registry.items():
 
         obj = ref()
-        if obj is not None:
 
-            if (not obj.locked) and (not H5Iget_type(obj.id) > 0):
-                debug("NONLOCAL - invalidating %d of kind %s HDF5 id %d" %
-                        (python_id, type(obj), obj.id) )
-                obj.id = 0
-            else:
-                debug("NONLOCAL - OK identifier %d of kind %s HDF5 id %d" %
-                        (python_id, type(obj), obj.id) )
-
-        # The ObjectID somehow died without being removed from the registry
-        else:
+        # Object somehow died without being removed from the registry.
+        # I think this is impossible, but let's make sure.
+        if obj is None:
             warnings.warn("Found murdered identifier %d of kind %s HDF5 id %d" % 
                              (python_id, type(obj), obj.id), RuntimeWarning)
             del registry[python_id]
+            continue
+
+        # Locked objects are immortal, as they generally are provided by
+        # the HDF5 library itself (property list classes, etc.).
+        if obj.locked:
+            continue
+
+        # Invalid object; set obj.id = 0 so it doesn't become a zombie
+        if not H5Iis_valid(obj.id):
+            IF DEBUG_ID:
+                print("NONLOCAL - invalidating %d of kind %s HDF5 id %d" %
+                        (python_id, type(obj), obj.id) )
+            obj.id = 0
+            continue
 
 # --- End registry code -------------------------------------------------------
-
-
 
 
 cdef class ObjectID:
@@ -140,34 +143,72 @@ cdef class ObjectID:
                 H5Gget_objinfo(self.id, '.', 0, &stat)
                 return (stat.fileno[0], stat.fileno[1])
 
+
     property valid:
         def __get__(self):
-            if not self.id:
+
+            # Locked objects are always valid, regardless of obj.id
+            if self.locked:
+                return True
+
+            # Former zombie object
+            if self.id == 0:
                 return False
+
+            # Ask HDF5.  Note that H5Iis_valid only works for "user"
+            # identifiers, hence the above checks.
             with _phil:
-                return H5Iget_type(self.id) > 0
+                return H5Iis_valid(self.id)
+
 
     def __cinit__(self, id_):
-        self.id = id_
-        self.locked = 0
-        debug("CINIT - registering %d of kind %s HDF5 id %d" % (id(self), type(self), id_))
-        registry[id(self)] = weakref.ref(self)
+        with _phil:
+            self.id = id_
+            self.locked = 0
+            IF DEBUG_ID:
+                print("CINIT - registering %d of kind %s HDF5 id %d" % (id(self), type(self), id_))
+            registry[id(self)] = weakref.ref(self)
+
 
     def __dealloc__(self):
-        if self.valid and (not self.locked):
-            H5Idec_ref(self.id)
-        debug("DEALLOC - unregistering %d of kind %s HDF5 id %d" % (id(self), type(self), self.id))
-        self.id = 0
-        del registry[id(self)] 
+        with _phil:
+            IF DEBUG_ID:
+                print("DEALLOC - unregistering %d of kind %s HDF5 id %d" % (id(self), type(self), self.id))
+            try:
+                # There's no reason to expect it, but in principle H5Idec_ref
+                # could raise an exception.
+                if self.valid and (not self.locked):
+                    H5Idec_ref(self.id)
+            finally:
+                del registry[id(self)] 
+
+
+    def _close(self):
+        """ Manually close this object. """
+
+        with _phil:
+            IF DEBUG_ID:
+                print("CLOSE - %d of kind %s HDF5 id %d" % (id(self), type(self), self.id))
+            try:
+                # There's no reason to expect it, but in principle H5Idec_ref
+                # could raise an exception.
+                if self.valid and (not self.locked):
+                    H5Idec_ref(self.id)
+            finally:
+                self.id = 0
+
 
     def __nonzero__(self):
         return self.valid
 
+
     def __copy__(self):
         cdef ObjectID cpy
-        cpy = type(self)(self.id)
-        H5Iinc_ref(cpy.id)
-        return cpy
+        with _phil:
+            cpy = type(self)(self.id)
+            H5Iinc_ref(cpy.id)
+            return cpy
+
 
     def __richcmp__(self, object other, int how):
         """ Default comparison mechanism for HDF5 objects (equal/not-equal)
@@ -179,28 +220,23 @@ cdef class ObjectID:
         """
         cdef bint equal = 0
 
-        if how != 2 and how != 3:
-            return NotImplemented
+        with _phil:
+            if how != 2 and how != 3:
+                return NotImplemented
 
-        if isinstance(other, ObjectID):
-            if self.id == other.id:
-                equal = 1
-            else:
-                try:
-                    equal = hash(self) == hash(other)
-                except TypeError:
-                    pass
+            if isinstance(other, ObjectID):
+                if self.id == other.id:
+                    equal = 1
+                else:
+                    try:
+                        equal = hash(self) == hash(other)
+                    except TypeError:
+                        pass
 
-        if how == 2:
-            return equal
-        return not equal
+            if how == 2:
+                return equal
+            return not equal
 
-    def _close(self):
-        """ Manually close this object. """
-        debug("CLOSE - %d of kind %s HDF5 id %d" % (id(self), type(self), self.id))
-        if self.valid and not self.locked:
-            H5Idec_ref(self.id)
-        self.id = 0
 
     def __hash__(self):
         """ Default hashing mechanism for HDF5 objects
@@ -211,15 +247,16 @@ cdef class ObjectID:
         3. If (1) fails, raise TypeError
         """
         cdef H5G_stat_t stat
+        
+        with _phil:
+            if self._hash is None:
+                try:
+                    H5Gget_objinfo(self.id, '.', 0, &stat)
+                    self._hash = hash((stat.fileno[0], stat.fileno[1], stat.objno[0], stat.objno[1]))
+                except Exception:
+                    raise TypeError("Objects of class %s cannot be hashed" % self.__class__.__name__)
 
-        if self._hash is None:
-            try:
-                H5Gget_objinfo(self.id, '.', 0, &stat)
-                self._hash = hash((stat.fileno[0], stat.fileno[1], stat.objno[0], stat.objno[1]))
-            except Exception:
-                raise TypeError("Objects of class %s cannot be hashed" % self.__class__.__name__)
-
-        return self._hash
+            return self._hash
 
 
 cdef hid_t pdefault(ObjectID pid):
