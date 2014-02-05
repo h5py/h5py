@@ -156,7 +156,7 @@ cdef class ObjectID:
     def __dealloc__(self):
         if self.valid and (not self.locked):
             H5Idec_ref(self.id)
-        #debug("DEALLOC - unregistering %d of kind %s HDF5 id %d" % (id(self), type(self), self.id))
+        debug("DEALLOC - unregistering %d of kind %s HDF5 id %d" % (id(self), type(self), self.id))
         self.id = 0
         del registry[id(self)] 
 
