@@ -13,7 +13,7 @@ import numpy
 
 import h5py
 from h5py import h5s, h5t, h5r, h5d
-from .base import HLObject, py3
+from .base import HLObject, py3, phil, with_phil
 from . import filters
 from . import selections as sel
 from . import selections2 as sel2
@@ -142,29 +142,35 @@ class Dataset(HLObject):
         return AstypeContext(self, dtype)
 
     @property
+    @with_phil
     def dims(self):
         from . dims import DimensionManager
         return DimensionManager(self)
 
     @property
+    @with_phil
     def shape(self):
         """Numpy-style shape tuple giving dataset dimensions"""
         return self.id.shape
     @shape.setter
+    @with_phil
     def shape(self, shape):
         self.resize(shape)
 
     @property
+    @with_phil
     def size(self):
         """Numpy-style attribute giving the total dataset size"""
         return numpy.prod(self.shape)
 
     @property
+    @with_phil
     def dtype(self):
         """Numpy dtype representing the datatype"""
         return self.id.dtype
 
     @property
+    @with_phil
     def value(self):
         """  Alias for dataset[()] """
         DeprecationWarning("dataset.value has been deprecated. "
@@ -172,6 +178,7 @@ class Dataset(HLObject):
         return self[()]
 
     @property
+    @with_phil
     def chunks(self):
         """Dataset chunks (or None)"""
         dcpl = self._dcpl
@@ -180,6 +187,7 @@ class Dataset(HLObject):
         return None
 
     @property
+    @with_phil
     def compression(self):
         """Compression strategy (or None)"""
         for x in ('gzip','lzf','szip'):
@@ -188,21 +196,25 @@ class Dataset(HLObject):
         return None
 
     @property
+    @with_phil
     def compression_opts(self):
         """ Compression setting.  Int(0-9) for gzip, 2-tuple for szip. """
         return self._filters.get(self.compression, None)
 
     @property
+    @with_phil
     def shuffle(self):
         """Shuffle filter present (T/F)"""
         return 'shuffle' in self._filters
 
     @property
+    @with_phil
     def fletcher32(self):
         """Fletcher32 filter is present (T/F)"""
         return 'fletcher32' in self._filters
 
     @property
+    @with_phil
     def scaleoffset(self):
         """Scale/offset filter settings. For integer data types, this is
         the number of bits stored, or 0 for auto-detected. For floating
@@ -214,6 +226,7 @@ class Dataset(HLObject):
             return None
 
     @property
+    @with_phil
     def maxshape(self):
         """Shape up to which this dataset can be resized.  Axes with value
         None have no resize limit. """
@@ -222,12 +235,14 @@ class Dataset(HLObject):
         return tuple(x if x != h5s.UNLIMITED else None for x in dims)
 
     @property
+    @with_phil
     def fillvalue(self):
         """Fill value for this dataset (0 by default)"""
         arr = numpy.ndarray((1,), dtype=self.dtype)
         dcpl = self._dcpl.get_fill_value(arr)
         return arr[0]
 
+    @with_phil
     def __init__(self, bind):
         """ Create a new Dataset object by binding to a low-level DatasetID.
         """
@@ -256,23 +271,25 @@ class Dataset(HLObject):
         grown or shrunk independently.  The coordinates of existing data are
         fixed.
         """
-        if self.chunks is None:
-            raise TypeError("Only chunked datasets can be resized")
+        with phil:
+            if self.chunks is None:
+                raise TypeError("Only chunked datasets can be resized")
 
-        if axis is not None:
-            if not (axis >=0 and axis < self.id.rank):
-                raise ValueError("Invalid axis (0 to %s allowed)" % (self.id.rank-1))
-            try:
-                newlen = int(size)
-            except TypeError:
-                raise TypeError("Argument must be a single int if axis is specified")
-            size = list(self.shape)
-            size[axis] = newlen
+            if axis is not None:
+                if not (axis >=0 and axis < self.id.rank):
+                    raise ValueError("Invalid axis (0 to %s allowed)" % (self.id.rank-1))
+                try:
+                    newlen = int(size)
+                except TypeError:
+                    raise TypeError("Argument must be a single int if axis is specified")
+                size = list(self.shape)
+                size[axis] = newlen
 
-        size = tuple(size)
-        self.id.set_extent(size)
-        #h5f.flush(self.id)  # THG recommends
+            size = tuple(size)
+            self.id.set_extent(size)
+            #h5f.flush(self.id)  # THG recommends
 
+    @with_phil
     def __len__(self):
         """ The size of the first axis.  TypeError if scalar.
 
@@ -289,11 +306,13 @@ class Dataset(HLObject):
         Use of this method is preferred to len(dset), as Python's built-in
         len() cannot handle values greater then 2**32 on 32-bit systems.
         """
-        shape = self.shape
-        if len(shape) == 0:
-            raise TypeError("Attempt to take len() of scalar dataset")
-        return shape[0]
+        with phil:
+            shape = self.shape
+            if len(shape) == 0:
+                raise TypeError("Attempt to take len() of scalar dataset")
+            return shape[0]
 
+    @with_phil
     def __iter__(self):
         """ Iterate over the first axis.  TypeError if scalar.
 
@@ -306,6 +325,7 @@ class Dataset(HLObject):
             yield self[i]
 
 
+    @with_phil
     def __getitem__(self, args):
         """ Read a slice from the HDF5 dataset.
 
@@ -443,6 +463,8 @@ class Dataset(HLObject):
             arr = arr[0]
         return arr
 
+
+    @with_phil
     def __setitem__(self, args, val):
         """ Write to the HDF5 dataset from a Numpy array.
 
@@ -573,20 +595,20 @@ class Dataset(HLObject):
 
         Broadcasting is supported for simple indexing.
         """
+        with phil:
+            if source_sel is None:
+                source_sel = sel.SimpleSelection(self.shape)
+            else:
+                source_sel = sel.select(self.shape, source_sel, self.id)  # for numpy.s_
+            fspace = source_sel._id
 
-        if source_sel is None:
-            source_sel = sel.SimpleSelection(self.shape)
-        else:
-            source_sel = sel.select(self.shape, source_sel, self.id)  # for numpy.s_
-        fspace = source_sel._id
+            if dest_sel is None:
+                dest_sel = sel.SimpleSelection(dest.shape)
+            else:
+                dest_sel = sel.select(dest.shape, dest_sel, self.id)
 
-        if dest_sel is None:
-            dest_sel = sel.SimpleSelection(dest.shape)
-        else:
-            dest_sel = sel.select(dest.shape, dest_sel, self.id)
-
-        for mspace in dest_sel.broadcast(source_sel.mshape):
-            self.id.read(mspace, fspace, dest)
+            for mspace in dest_sel.broadcast(source_sel.mshape):
+                self.id.read(mspace, fspace, dest)
 
     def write_direct(self, source, source_sel=None, dest_sel=None):
         """ Write data directly to HDF5 from a NumPy array.
@@ -596,20 +618,22 @@ class Dataset(HLObject):
 
         Broadcasting is supported for simple indexing.
         """
-        if source_sel is None:
-            source_sel = sel.SimpleSelection(source.shape)
-        else:
-            source_sel = sel.select(source.shape, source_sel, self.id)  # for numpy.s_
-        mspace = source_sel._id
+        with phil:
+            if source_sel is None:
+                source_sel = sel.SimpleSelection(source.shape)
+            else:
+                source_sel = sel.select(source.shape, source_sel, self.id)  # for numpy.s_
+            mspace = source_sel._id
 
-        if dest_sel is None:
-            dest_sel = sel.SimpleSelection(self.shape)
-        else:
-            dest_sel = sel.select(self.shape, dest_sel, self.id)
+            if dest_sel is None:
+                dest_sel = sel.SimpleSelection(self.shape)
+            else:
+                dest_sel = sel.select(self.shape, dest_sel, self.id)
 
-        for fspace in dest_sel.broadcast(source_sel.mshape):
-            self.id.write(mspace, fspace, source)
+            for fspace in dest_sel.broadcast(source_sel.mshape):
+                self.id.write(mspace, fspace, source)
 
+    @with_phil
     def __array__(self, dtype=None):
         """ Create a Numpy array containing the whole dataset.  DON'T THINK
         THIS MEANS DATASETS ARE INTERCHANGABLE WITH ARRAYS.  For one thing,
@@ -624,6 +648,7 @@ class Dataset(HLObject):
         self.read_direct(arr)
         return arr
 
+    @with_phil
     def __repr__(self):
         if not self:
             r = u'<Closed HDF5 dataset>'
