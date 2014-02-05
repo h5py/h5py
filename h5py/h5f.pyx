@@ -263,12 +263,6 @@ cdef class FileID(GroupID):
                 return get_name(self)
 
 
-    def __cinit__(self, id):
-        # File objects are special; they should not be closed if they happen
-        # to go out of scope.
-        self.locked = True
-
-
     @with_phil
     def close(self):
         """()

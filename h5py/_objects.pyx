@@ -154,7 +154,7 @@ cdef class ObjectID:
         registry[id(self)] = weakref.ref(self)
 
     def __dealloc__(self):
-        if self.valid:
+        if self.valid and (not self.locked):
             H5Idec_ref(self.id)
         #debug("DEALLOC - unregistering %d of kind %s HDF5 id %d" % (id(self), type(self), self.id))
         self.id = 0
@@ -198,7 +198,7 @@ cdef class ObjectID:
     def _close(self):
         """ Manually close this object. """
         debug("CLOSE - %d of kind %s HDF5 id %d" % (id(self), type(self), self.id))
-        if self.valid:
+        if self.valid and not self.locked:
             H5Idec_ref(self.id)
         self.id = 0
 
