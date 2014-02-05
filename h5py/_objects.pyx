@@ -96,6 +96,19 @@ import warnings
 cdef dict registry = {}
 
 @with_phil
+def print_reg():
+    import h5py
+    refs = registry.values()
+    objs = [r() for r in refs]
+
+    none = len([x for x in objs if x is None])
+    files = len([x for x in objs if isinstance(x, h5py.h5f.FileID)])
+    groups = len([x for x in objs if isinstance(x, h5py.h5g.GroupID)])
+
+    print "REGISTRY: %d | %d None | %d FileID | %d GroupID" % (len(objs), none, files, groups)
+
+
+@with_phil
 def nonlocal_close():
     """ Find dead ObjectIDs and set their integer identifiers to 0.
     """
