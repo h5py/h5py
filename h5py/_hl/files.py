@@ -222,6 +222,7 @@ class File(Group):
         with phil:
             # We have to explicitly murder all open objects related to the file
             idlist = h5f.get_obj_ids(self.id)
+            idlist = [x for x in idlist if h5i.get_file_id(x).id == self.id.id]
             self.id.close()
             for id_ in idlist:
                 while id_.valid:
