@@ -362,8 +362,7 @@ class DictCompat(object):
 
         def iterkeys(self):
             """ Get an iterator over member names """
-            with phil:
-                return iter(self)
+            return iter(self)
 
         def values(self):
             """ Get a list containing member objects """
@@ -372,9 +371,8 @@ class DictCompat(object):
 
         def itervalues(self):
             """ Get an iterator over member objects """
-            with phil:
-                for x in self:
-                    yield self.get(x)
+            for x in self:
+                yield self.get(x)
 
         def items(self):
             """ Get a list of tuples containing (name, object) pairs """
@@ -383,6 +381,5 @@ class DictCompat(object):
 
         def iteritems(self):
             """ Get an iterator over (name, object) pairs """
-            with phil:
-                for x in self:
-                    yield (x, self.get(x))
+            for x in self:
+                yield (x, self.get(x))

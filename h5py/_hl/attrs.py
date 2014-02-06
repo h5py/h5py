@@ -164,14 +164,14 @@ class AttributeManager(base.DictCompat, base.CommonStateObject):
         # I expect we will not have more than 2**32 attributes
         return h5a.get_num_attrs(self._id)
 
-    @with_phil
     def __iter__(self):
         """ Iterate over the names of attributes. """
-        attrlist = []
+        with phil:
+            attrlist = []
 
-        def iter_cb(name, *args):
-            attrlist.append(self._d(name))
-        h5a.iterate(self._id, iter_cb)
+            def iter_cb(name, *args):
+                attrlist.append(self._d(name))
+            h5a.iterate(self._id, iter_cb)
 
         for name in attrlist:
             yield name
