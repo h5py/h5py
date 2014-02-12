@@ -415,23 +415,15 @@ cdef class GroupID(ObjectID):
     # === Special methods =====================================================
 
 
-    def __contains__(self, char* name):
+    def __contains__(self, name):
         """(STRING name)
 
         Determine if a group member of the given name is present
         """
-        cdef err_cookie old_handler
-        cdef err_cookie new_handler
-        cdef herr_t retval
-        
-        new_handler.func = NULL
-        new_handler.data = NULL
+        if not self:
+            return False
 
-        old_handler = set_error_handler(new_handler)
-        retval = _hdf5.H5Gget_objinfo(self.id, name, 0, NULL)
-        set_error_handler(old_handler)
-
-        return bool(retval >= 0)
+        return _path_valid(self, name)
 
 
     def __iter__(self):
@@ -444,3 +436,59 @@ cdef class GroupID(ObjectID):
         cdef hsize_t size
         H5Gget_num_objs(self.id, &size)
         return size
+
+
+def _path_valid(GroupID grp not None, object path not None, PropID lapl=None):
+    """ Determine if *path* points to an object in the file.
+
+    If *path* represents an external or soft link, the link's validity is not
+    checked.
+    """
+    import h5o
+
+    if isinstance(path, bytes):
+        path = path.decode('utf-8')
+    else:
+        path = unicode(path)
+
+    if path[0] == '/':
+        current_loc = open(grp, b'/')
+        path = path[1:]
+    else:
+        current_loc = grp
+
+    # If the path ends with "/", ensure it is a group
+    if path[-1] == '/':
+        path = path + u'.'
+
+    path_parts = [x.encode('utf-8') for x in path.split('/')]
+    nparts = len(path_parts)
+
+    for idx, p in enumerate(path_parts):
+
+        # Is there any kind of link by that name in this group?
+        if not current_loc.links.exists(p, lapl=lapl):
+            return False
+    
+        # If we're at the last link in the chain, we're done.
+        # We don't check to see if the last part points to a valid object;
+        # it's enough that it exists.
+        if idx == nparts - 1:
+            return True
+
+        # Otherwise, does the link point to a real object?
+        if not h5o.exists_by_name(current_loc, p, lapl=lapl):
+            return False
+
+        # Is that object a group?
+        next_loc = h5o.open(current_loc, p, lapl=lapl)
+        info = h5o.get_info(next_loc)
+        if info.type != H5O_TYPE_GROUP:
+            return False
+
+        # Go into that group
+        current_loc = next_loc
+
+    return True
+
+
