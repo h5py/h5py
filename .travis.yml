@@ -19,6 +19,7 @@ before_install:
     - pip install cython numpy
 
 install: 
+    - python api_gen.py
     - python setup.py build -f
 
 script: "python setup.py test"
