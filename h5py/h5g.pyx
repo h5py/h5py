@@ -418,20 +418,14 @@ cdef class GroupID(ObjectID):
     def __contains__(self, char* name):
         """(STRING name)
 
-        Determine if a group member of the given name is present
+        Determine if a group member of the given name is present.
+
+        Note this returns True for broken soft & external links; the object
+        pointed to by *name* is not inspected in any way.
         """
-        cdef err_cookie old_handler
-        cdef err_cookie new_handler
-        cdef herr_t retval
-        
-        new_handler.func = NULL
-        new_handler.data = NULL
-
-        old_handler = set_error_handler(new_handler)
-        retval = _hdf5.H5Gget_objinfo(self.id, name, 0, NULL)
-        set_error_handler(old_handler)
-
-        return bool(retval >= 0)
+        if not self.id:
+            return False
+        return <bint>H5LTpath_valid(self.id, name, <hbool_t>0)
 
 
     def __iter__(self):
