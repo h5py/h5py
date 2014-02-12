@@ -558,3 +558,5 @@ hdf5_hl:
   ERROR herr_t  H5DSiterate_scales(hid_t did, unsigned int dim, int *idx, H5DS_iterate_t visitor, void *visitor_data)
 
   ERROR htri_t H5DSis_attached(hid_t did, hid_t dsid, unsigned int idx)
+
+  htri_t H5LTpath_valid(hid_t loc_id, char *path, hbool_t check_object_valid)
