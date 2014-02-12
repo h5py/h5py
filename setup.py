@@ -306,7 +306,7 @@ setup(
   maintainer_email = 'andrew dot collette at gmail dot com',
   url = 'http://www.h5py.org',
   download_url = 'http://code.google.com/p/h5py/downloads/list',
-  packages = ['h5py', 'h5py._hl', 'h5py._hl.tests', 'h5py.lowtest'],
+  packages = ['h5py', 'h5py._hl', 'h5py.tests'],
   package_data = package_data,
   ext_modules = EXTENSIONS,
   requires = ['numpy (>=1.0.1)'],
