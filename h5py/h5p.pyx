@@ -22,6 +22,10 @@ from h5t cimport TypeID, py_create
 from h5ac cimport CacheConfig
 from h5py import _objects
 
+if MPI:
+    from mpi4py.libmpi cimport MPI_Comm, MPI_Info, MPI_Comm_dup, MPI_Info_dup, \
+                               MPI_Comm_free, MPI_Info_free
+
 # Initialization
 import_array()
 
@@ -949,6 +953,27 @@ cdef class PropFAID(PropInstanceID):
             """
             H5Pset_fapl_mpio(self.id, comm.ob_mpi, info.ob_mpi) 
 
+
+        def get_fapl_mpio(self):
+            """ () => (mpi4py.MPI.Comm, mpi4py.MPI.Info)
+
+            Determine mpio driver MPI information.
+
+            0. The mpi4py.MPI.Comm Communicator
+            1. The mpi4py.MPI.Comm Info
+            """
+            cdef MPI_Comm comm
+            cdef MPI_Info info
+
+            H5Pget_fapl_mpio(self.id, &comm, &info)
+            pycomm = Comm()
+            pyinfo = Info()
+            MPI_Comm_dup(comm, &pycomm.ob_mpi)
+            MPI_Info_dup(info, &pyinfo.ob_mpi)
+            MPI_Comm_free(&comm)
+            MPI_Info_free(&info)
+
+            return (pycomm, pyinfo)
 
         def set_fapl_mpiposix(self, Comm comm not None, bint use_gpfs_hints=0):
             """ (Comm comm, BOOL use_gpfs_hints=0)
