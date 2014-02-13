@@ -11,6 +11,8 @@
     Low-level HDF5 "H5G" group interface.
 """
 
+include "config.pxi"
+
 # Compile-time imports
 from _objects cimport pdefault
 from utils cimport emalloc, efree
@@ -419,7 +421,7 @@ cdef class GroupID(ObjectID):
 
     # === Special methods =====================================================
 
-    def __contains__(self, char* name):
+    def __contains__(self, name):
         """(STRING name)
 
         Determine if a group member of the given name is present
@@ -431,13 +433,19 @@ cdef class GroupID(ObjectID):
         new_handler.func = NULL
         new_handler.data = NULL
 
-        with phil:
-            old_handler = set_error_handler(new_handler)
-            retval = _hdf5.H5Gget_objinfo(self.id, name, 0, NULL)
-            set_error_handler(old_handler)
+        if not self:
+            return False
 
-            return bool(retval >= 0)
-
+        IF HDF5_VERSION >= (1, 8, 5):
+            # New system is more robust but requires H5Oexists_by_name
+            with phil:
+                return _path_valid(self, name)
+        ELSE:
+            with phil:
+                old_handler = set_error_handler(new_handler)
+                retval = _hdf5.H5Gget_objinfo(self.id, name, 0, NULL)
+                set_error_handler(old_handler)
+                return bool(retval >= 0)
 
     def __iter__(self):
         """ Return an iterator over the names of group members. """
@@ -451,3 +459,76 @@ cdef class GroupID(ObjectID):
         with phil:
             H5Gget_num_objs(self.id, &size)
             return size
+
+
+IF HDF5_VERSION >= (1, 8, 5):
+    @with_phil
+    def _path_valid(GroupID grp not None, object path not None, PropID lapl=None):
+        """ Determine if *path* points to an object in the file.
+
+        If *path* represents an external or soft link, the link's validity is not
+        checked.
+        """
+        import h5o
+
+        if isinstance(path, bytes):
+            path = path.decode('utf-8')
+        else:
+            path = unicode(path)
+
+        # Empty names are not allowed by HDF5
+        if len(path) == 0:
+            return False
+
+        # Note: we cannot use pp.normpath as it resolves ".." components,
+        # which don't exist in HDF5
+
+        path_parts = path.split('/')
+
+        # Absolute path (started with slash)
+        if path_parts[0] == '':
+            current_loc = h5o.open(grp, b'/', lapl=lapl)
+        else:
+            current_loc = grp
+
+        # HDF5 ignores duplicate or trailing slashes
+        path_parts = [x for x in path_parts if x != '']
+
+        # Special case: path was entirely composed of slashes!
+        if len(path_parts) == 0:
+            path_parts = ['.']  # i.e. the root group
+
+        path_parts = [x.encode('utf-8') for x in path_parts]
+        nparts = len(path_parts)
+
+        for idx, p in enumerate(path_parts):
+
+            # Special case; '.' always refers to the present group
+            if p == b'.':
+                continue
+
+            # Is there any kind of link by that name in this group?
+            if not current_loc.links.exists(p, lapl=lapl):
+                return False
+    
+            # If we're at the last link in the chain, we're done.
+            # We don't check to see if the last part points to a valid object;
+            # it's enough that it exists.
+            if idx == nparts - 1:
+                return True
+
+            # Otherwise, does the link point to a real object?
+            if not h5o.exists_by_name(current_loc, p, lapl=lapl):
+                return False
+
+            # Is that object a group?
+            next_loc = h5o.open(current_loc, p, lapl=lapl)
+            info = h5o.get_info(next_loc)
+            if info.type != H5O_TYPE_GROUP:
+                return False
+
+            # Go into that group
+            current_loc = next_loc
+
+        return True
+

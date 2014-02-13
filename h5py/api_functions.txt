@@ -181,6 +181,8 @@ hdf5:
   herr_t H5Oget_info_by_name(hid_t loc_id, char *name, H5O_info_t *oinfo, hid_t lapl_id)
   herr_t H5Oget_info_by_idx(hid_t loc_id, char *group_name,  H5_index_t idx_type, H5_iter_order_t order, hsize_t n, H5O_info_t *oinfo, hid_t lapl_id)
 
+  1.8.5 htri_t H5Oexists_by_name(hid_t loc_id, char * name, hid_t lapl_id )
+
   herr_t H5Olink(hid_t obj_id, hid_t new_loc_id, char *new_name, hid_t lcpl_id, hid_t lapl_id)
   herr_t H5Ocopy(hid_t src_loc_id, char *src_name, hid_t dst_loc_id,  char *dst_name, hid_t ocpypl_id, hid_t lcpl_id)
 
@@ -532,6 +534,7 @@ hdf5:
   hsize_t H5Aget_storage_size(hid_t attr_id)
 
   MPI herr_t H5Pset_fapl_mpio(hid_t fapl_id, MPI_Comm comm, MPI_Info info)
+  MPI herr_t H5Pget_fapl_mpio(hid_t fapl_id, MPI_Comm *comm, MPI_Info *info)
   MPI herr_t H5Pset_fapl_mpiposix(hid_t fapl_id, MPI_Comm comm, hbool_t hints)
   MPI 1.8.9 herr_t H5Fset_mpi_atomicity(hid_t file_id, hbool_t flag)
   MPI 1.8.9 herr_t H5Fget_mpi_atomicity(hid_t file_id, hbool_t *flag)
@@ -539,22 +542,22 @@ hdf5:
 hdf5_hl:
 # === H5DS - Dimension Scales API =============================================
 
-  herr_t  H5DSattach_scale(hid_t did, hid_t dsid, unsigned int idx)
+  ERROR herr_t  H5DSattach_scale(hid_t did, hid_t dsid, unsigned int idx)
 
-  herr_t  H5DSdetach_scale(hid_t did, hid_t dsid, unsigned int idx)
+  ERROR herr_t  H5DSdetach_scale(hid_t did, hid_t dsid, unsigned int idx)
 
-  herr_t  H5DSset_scale(hid_t dsid, char *dimname)
+  ERROR herr_t  H5DSset_scale(hid_t dsid, char *dimname)
 
-  int H5DSget_num_scales(hid_t did, unsigned int dim)
+  ERROR int H5DSget_num_scales(hid_t did, unsigned int dim)
 
-  herr_t  H5DSset_label(hid_t did, unsigned int idx, char *label)
+  ERROR herr_t  H5DSset_label(hid_t did, unsigned int idx, char *label)
 
-  ssize_t H5DSget_label(hid_t did, unsigned int idx, char *label, size_t size)
+  ERROR ssize_t H5DSget_label(hid_t did, unsigned int idx, char *label, size_t size)
 
-  ssize_t H5DSget_scale_name(hid_t did, char *name, size_t size)
+  ERROR ssize_t H5DSget_scale_name(hid_t did, char *name, size_t size)
 
-  htri_t H5DSis_scale(hid_t did)
+  ERROR htri_t H5DSis_scale(hid_t did)
 
-  herr_t  H5DSiterate_scales(hid_t did, unsigned int dim, int *idx, H5DS_iterate_t visitor, void *visitor_data)
+  ERROR herr_t  H5DSiterate_scales(hid_t did, unsigned int dim, int *idx, H5DS_iterate_t visitor, void *visitor_data)
 
-  htri_t H5DSis_attached(hid_t did, hid_t dsid, unsigned int idx)
+  ERROR htri_t H5DSis_attached(hid_t did, hid_t dsid, unsigned int idx)

@@ -204,12 +204,12 @@ cdef class LinkProxy:
 
 
     @with_phil
-    def exists(self, char* name):
-        """ (STRING name) => BOOL
+    def exists(self, char* name, PropID lapl=None):
+        """ (STRING name, PropID lapl=None) => BOOL
 
             Check if a link of the specified name exists in this group.
         """
-        return <bint>(H5Lexists(self.id, name, H5P_DEFAULT))
+        return <bint>(H5Lexists(self.id, name, pdefault(lapl)))
 
 
     @with_phil

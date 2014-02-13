@@ -340,8 +340,10 @@ class Dataset(HLObject):
         args = args if isinstance(args, tuple) else (args,)
 
         # Sort field indices from the rest of the args.
-        names = tuple(x for x in args if isinstance(x, str))
-        args = tuple(x for x in args if not isinstance(x, str))
+        names = tuple(x for x in args if isinstance(x, basestring))
+        args = tuple(x for x in args if not isinstance(x, basestring))
+        if not py3:
+            names = tuple(x.encode('utf-8') if isinstance(x, unicode) else x for x in names)
 
         def strip_fields(basetype):
             """ Strip extra dtype information from special types """
@@ -475,8 +477,10 @@ class Dataset(HLObject):
         args = args if isinstance(args, tuple) else (args,)
 
         # Sort field indices from the slicing
-        names = tuple(x for x in args if isinstance(x, str))
-        args = tuple(x for x in args if not isinstance(x, str))
+        names = tuple(x for x in args if isinstance(x, basestring))
+        args = tuple(x for x in args if not isinstance(x, basestring))
+        if not py3:
+            names = tuple(x.encode('utf-8') if isinstance(x, unicode) else x for x in names)
 
         # Generally we try to avoid converting the arrays on the Python
         # side.  However, for compound literals this is unavoidable.
