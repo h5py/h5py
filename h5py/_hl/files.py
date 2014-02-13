@@ -83,21 +83,36 @@ def make_fid(name, mode, userblock_size, fapl, fcpl=None):
         fid = h5f.create(name, h5f.ACC_EXCL, fapl=fapl, fcpl=fcpl)
     elif mode == 'w':
         fid = h5f.create(name, h5f.ACC_TRUNC, fapl=fapl, fcpl=fcpl)
-    elif mode == 'a' or mode is None:
+    elif mode == 'a':
+        # Open in append mode (read/write).
+        # If that fails, create a new file only if it won't clobber an
+        # existing one (ACC_EXCL)
         try:
             fid = h5f.open(name, h5f.ACC_RDWR, fapl=fapl)
-            try:
-                existing_fcpl = fid.get_create_plist()
-                if (userblock_size is not None and
-                        existing_fcpl.get_userblock() != userblock_size):
-                    raise ValueError("Requested userblock size (%d) does not match that of existing file (%d)" % (userblock_size, existing_fcpl.get_userblock()))
-            except:
-                fid.close()
-                raise
         except IOError:
             fid = h5f.create(name, h5f.ACC_EXCL, fapl=fapl, fcpl=fcpl)
+    elif mode is None:
+        # Try to open in append mode (read/write).
+        # If that fails, try readonly, and finally create a new file only
+        # if it won't clobber an existing file (ACC_EXCL).
+        try:
+            fid = h5f.open(name, h5f.ACC_RDWR, fapl=fapl)
+        except IOError:
+            try:
+                fid = h5f.open(name, h5f.ACC_RDONLY, fapl=fapl)
+            except IOError:
+                fid = h5f.create(name, h5f.ACC_EXCL, fapl=fapl, fcpl=fcpl)
     else:
         raise ValueError("Invalid mode; must be one of r, r+, w, w-, a")
+
+    try:
+        if userblock_size is not None:
+            existing_fcpl = fid.get_create_plist()
+            if existing_fcpl.get_userblock() != userblock_size:
+                raise ValueError("Requested userblock size (%d) does not match that of existing file (%d)" % (userblock_size, existing_fcpl.get_userblock()))
+    except:
+        fid.close()
+        raise
 
     return fid
 

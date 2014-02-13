@@ -15,7 +15,7 @@
 
 from __future__ import with_statement
 
-import os
+import os, stat
 
 from .common import ut, TestCase, unicode_filenames
 from h5py.highlevel import File
@@ -29,6 +29,30 @@ class TestFileOpen(TestCase):
         Feature: Opening files with Python-style modes.
     """
 
+    def test_default(self):
+        """ Default semantics in the presence or absence of a file """
+        fname = self.mktemp()
+
+        # No existing file; create a new file and open RW
+        with File(fname) as f:
+            self.assertTrue(f)
+            self.assertEqual(f.mode, 'r+')
+
+        # Existing readonly file; open read-only
+        os.chmod(fname, stat.S_IREAD)
+        try:
+            with File(fname) as f:
+                self.assertTrue(f)
+                self.assertEqual(f.mode, 'r')
+        finally:
+            os.chmod(fname, stat.S_IWRITE)
+
+        # File exists but is not HDF5; raise IOError
+        with open(fname, 'wb') as f:
+            f.write(b'\x00')
+        with self.assertRaises(IOError):
+            File(fname)
+        
     def test_create(self):
         """ Mode 'w' opens file in overwrite mode """
         fname = self.mktemp()
