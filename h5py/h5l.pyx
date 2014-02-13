@@ -193,12 +193,12 @@ cdef class LinkProxy:
                 pdefault(lapl))
 
 
-    def exists(self, char* name):
-        """ (STRING name) => BOOL
+    def exists(self, char* name, PropID lapl=None):
+        """ (STRING name, PropID lapl=None) => BOOL
 
             Check if a link of the specified name exists in this group.
         """
-        return <bint>(H5Lexists(self.id, name, H5P_DEFAULT))
+        return <bint>(H5Lexists(self.id, name, pdefault(lapl)))
 
 
     def get_info(self, char* name, int index=-1, *, PropID lapl=None):
