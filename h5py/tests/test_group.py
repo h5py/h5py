@@ -321,13 +321,13 @@ class TestContains(BaseGroup):
         self.assertIn(u'/', self.f)
 
     def test_trailing_slash(self):
-        """ Trailing slashes work only for groups """
+        """ Trailing slashes are unconditionally ignored """
         self.f.create_group('group')
         self.f['dataset'] = 42
         self.assertIn('/group/', self.f)
         self.assertIn('group/', self.f)
-        self.assertNotIn('/dataset/', self.f)
-        self.assertNotIn('dataset/', self.f)
+        self.assertIn('/dataset/', self.f)
+        self.assertIn('dataset/', self.f)
 
     def test_softlinks(self):
         """ Broken softlinks are contained, but their members are not """
@@ -339,6 +339,22 @@ class TestContains(BaseGroup):
         self.assertIn('/grp/external', self.f)
         self.assertNotIn('/grp/external/something', self.f)
 
+    def test_oddball_paths(self):
+        """ Technically legitimate (but odd-looking) paths """
+        self.f.create_group('x/y/z')
+        self.f['dset'] = 42
+        self.assertIn('/', self.f)
+        self.assertIn('//', self.f)
+        self.assertIn('///', self.f)
+        self.assertIn('.///', self.f)
+        self.assertIn('././/', self.f)
+        grp = self.f['x']
+        self.assertIn('.//x/y/z', self.f)
+        self.assertNotIn('.//x/y/z', grp)
+        self.assertIn('x///', self.f)
+        self.assertIn('./x///', self.f)
+        self.assertIn('dset///', self.f)
+        self.assertIn('/dset//', self.f)
 
 class TestIter(BaseMapping):
 

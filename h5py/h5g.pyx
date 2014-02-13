@@ -470,19 +470,25 @@ IF HDF5_VERSION >= (1, 8, 5):
         if len(path) == 0:
             return False
 
-        # If the path has a trailing slash, ensure it is a group.
-        # Note it's important to do this first (in case path == "/").
-        if path.endswith('/'):
-            path = path + u'.'
+        # Note: we cannot use pp.normpath as it resolves ".." components,
+        # which don't exist in HDF5
 
-        # Absolute paths should be tested relative to root
-        if path.startswith('/'):
+        path_parts = path.split('/')
+
+        # Absolute path (started with slash)
+        if path_parts[0] == '':
             current_loc = h5o.open(grp, b'/', lapl=lapl)
-            path = path[1:]
         else:
             current_loc = grp
 
-        path_parts = [x.encode('utf-8') for x in path.split('/')]
+        # HDF5 ignores duplicate or trailing slashes
+        path_parts = [x for x in path_parts if x != '']
+
+        # Special case: path was entirely composed of slashes!
+        if len(path_parts) == 0:
+            path_parts = ['.']  # i.e. the root group
+
+        path_parts = [x.encode('utf-8') for x in path_parts]
         nparts = len(path_parts)
 
         for idx, p in enumerate(path_parts):
