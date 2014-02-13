@@ -19,8 +19,8 @@ DEF DEBUG_ID = False
 
 # --- Locking code ------------------------------------------------------------
 #
-# Most of the functions and methods in h5py spend all their time in the C API
-# for Python, and hold the GIL until they exit.  However, in some cases,
+# Most of the functions and methods in h5py spend all their time in the Cython
+# code for h5py, and hold the GIL until they exit.  However, in some cases,
 # particularly when calling native-Python functions from the stdlib or
 # elsewhere, the GIL can be released mid-function and another thread can
 # call into the API at the same time.
@@ -42,6 +42,7 @@ IF USE_LOCKING:
 ELSE:
     cdef BogoLock _phil = BogoLock()
 
+# Python alias for access from other modules
 phil = _phil
 
 def with_phil(func):
