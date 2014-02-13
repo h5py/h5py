@@ -451,20 +451,30 @@ def _path_valid(GroupID grp not None, object path not None, PropID lapl=None):
     else:
         path = unicode(path)
 
-    if path[0] == '/':
-        current_loc = open(grp, b'/')
+    # Empty names are not allowed by HDF5
+    if len(path) == 0:
+        return False
+
+    # If the path has a trailing slash, ensure it is a group.
+    # Note it's important to do this first (in case path == "/").
+    if path.endswith('/'):
+        path = path + u'.'
+
+    # Absolute paths should be tested relative to root
+    if path.startswith('/'):
+        current_loc = h5o.open(grp, b'/', lapl=lapl)
         path = path[1:]
     else:
         current_loc = grp
-
-    # If the path ends with "/", ensure it is a group
-    if path[-1] == '/':
-        path = path + u'.'
 
     path_parts = [x.encode('utf-8') for x in path.split('/')]
     nparts = len(path_parts)
 
     for idx, p in enumerate(path_parts):
+
+        # Special case; '.' always refers to the present group
+        if p == b'.':
+            continue
 
         # Is there any kind of link by that name in this group?
         if not current_loc.links.exists(p, lapl=lapl):
