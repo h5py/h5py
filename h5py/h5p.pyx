@@ -23,7 +23,8 @@ from h5ac cimport CacheConfig
 from h5py import _objects
 
 if MPI:
-    from mpi4py.libmpi cimport MPI_Comm, MPI_Info, MPI_Comm_dup, MPI_Info_dup
+    from mpi4py.libmpi cimport MPI_Comm, MPI_Info, MPI_Comm_dup, MPI_Info_dup, \
+                               MPI_Comm_free, MPI_Info_free
 
 # Initialization
 import_array()
@@ -969,6 +970,8 @@ cdef class PropFAID(PropInstanceID):
             pyinfo = Info()
             MPI_Comm_dup(comm, &pycomm.ob_mpi)
             MPI_Info_dup(info, &pyinfo.ob_mpi)
+            MPI_Comm_free(&comm)
+            MPI_Info_free(&info)
 
             return (pycomm, pyinfo)
 
