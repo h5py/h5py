@@ -11,6 +11,8 @@
     Module for HDF5 "H5O" functions.
 """
 
+include 'config.pxi'
+
 # Pyrex compile-time imports
 from _objects cimport ObjectID, pdefault
 from h5g cimport GroupID
@@ -162,13 +164,13 @@ def get_info(ObjectID loc not None, char* name=NULL, int index=-1, *,
 
     return info
 
+IF HDF5_VERSION >= (1, 8, 5):
+    def exists_by_name(ObjectID loc not None, char *name, PropID lapl=None):
+        """ (ObjectID loc, STRING name, PropID lapl=None) => BOOL exists
 
-def exists_by_name(ObjectID loc not None, char *name, PropID lapl=None):
-    """ (ObjectID loc, STRING name, PropID lapl=None) => BOOL exists
-
-    Determines whether a link resolves to an actual object.
-    """
-    return <bint>H5Oexists_by_name(loc.id, name, pdefault(lapl))
+        Determines whether a link resolves to an actual object.
+        """
+        return <bint>H5Oexists_by_name(loc.id, name, pdefault(lapl))
 
 
 # === General object operations ===============================================
