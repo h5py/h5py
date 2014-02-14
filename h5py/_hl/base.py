@@ -274,9 +274,9 @@ class HLObject(CommonStateObject):
     def __ne__(self, other):
         return not self.__eq__(other)
 
-    @with_phil
     def __nonzero__(self):
-        return bool(self.id)
+        with phil:
+            return bool(self.id)
 
 
 class View(object):
