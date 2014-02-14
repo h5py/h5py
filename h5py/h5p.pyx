@@ -23,7 +23,7 @@ from h5ac cimport CacheConfig
 from h5py import _objects
 
 if MPI:
-    from mpi4py.libmpi cimport MPI_Comm, MPI_Info, MPI_Comm_dup, MPI_Info_dup, \
+    from mpi4py.mpi_c cimport MPI_Comm, MPI_Info, MPI_Comm_dup, MPI_Info_dup, \
                                MPI_Comm_free, MPI_Info_free
 
 # Initialization
