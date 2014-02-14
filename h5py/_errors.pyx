@@ -88,9 +88,11 @@ cdef herr_t walk_cb(int n, H5E_error_t *desc, void *e):
 cdef int set_exception() except -1:
 
     cdef err_data_t err
-    cdef char *mj_desc = NULL
-    cdef char *mn_desc = NULL
-    cdef char *desc = NULL
+    cdef char *desc = NULL          # Note: HDF5 forbids freeing these
+    cdef char *desc_bottom = NULL
+
+    # First, extract the major & minor error codes from the top of the
+    # stack, along with the top-level error description
 
     err.n = -1
 
@@ -105,21 +107,23 @@ cdef int set_exception() except -1:
 
     desc = err.err.desc
     if desc is NULL:
-        raise RuntimeError("Failed to extract detailed error description")
+        raise RuntimeError("Failed to extract top-level error description")
 
-    try:
-        mj_desc = H5Eget_major(err.err.maj_num)
-        mn_desc = H5Eget_minor(err.err.min_num)
-        if mj_desc == NULL or mn_desc == NULL:
-            raise RuntimeError("Failed to obtain error code description")
+    # Second, retrieve the bottom-most error description for additional info
 
-        msg = ("%s (%s: %s)" % (desc.decode('utf-8'), 
-                                mj_desc.decode('utf-8'), 
-                                mn_desc.decode('utf-8'))  ).encode('utf-8')
-    finally:
-        free(mj_desc)
-        free(mn_desc)
-        # HDF5 forbids freeing "desc"
+    err.n = -1
+
+    if H5Ewalk(H5E_WALK_DOWNWARD, walk_cb, &err) < 0:
+        raise RuntimeError("Failed to walk error stack")
+
+    desc_bottom = err.err.desc
+    if desc_bottom is NULL:
+        raise RuntimeError("Failed to extract bottom-level error description")
+
+    msg = ("%s (%s)" % (desc.decode('utf-8').capitalize(), desc_bottom.decode('utf-8').capitalize())).encode('utf-8')
+
+    # Finally, set the exception.  We do this with the Python C function
+    # so that the traceback doesn't point here.
 
     PyErr_SetString(eclass, msg)
 
