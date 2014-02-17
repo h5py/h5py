@@ -20,7 +20,7 @@ The very first thing you'll need to do is create a new file::
     >>> import h5py
     >>> import numpy as np
     >>>
-    >>> f = h5py.File("mytestfile.hdf5", "w").
+    >>> f = h5py.File("mytestfile.hdf5", "w")
 
 The :ref:`File object <file>` is your starting point.  It has a couple of
 methods which look interesting.  One of them is ``create_dataset``::
@@ -83,7 +83,7 @@ Specifying a full path works just fine::
     u'/subgroup2/dataset_three'
 
 Groups support most of the Python dictionary-style interface.  
-You retrieve object in the file using the item-retrieval syntax::
+You retrieve objects in the file using the item-retrieval syntax::
 
     >>> dataset_three = f['subgroup/dataset_three']
 
