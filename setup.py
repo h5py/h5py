@@ -17,7 +17,7 @@ import shutil
 
 import configure   # Sticky-options configuration and version auto-detect
 
-VERSION = '2.2.1'
+VERSION = '2.3.0a0'
 
 
 # --- Encapsulate NumPy imports in a specialized Extension type ---------------
