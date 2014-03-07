@@ -6,6 +6,7 @@ h5py/_objects.c
 h5py/_errors.c
 h5py/config.pxi
 h5py/_hdf5.*
+h5py/*.dll
 *.hdf5
 *.pickle
 h5py/defs.*
