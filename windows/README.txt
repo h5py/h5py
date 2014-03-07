@@ -1,39 +1,20 @@
-Build instructions for h5py on Windows
+Build instructions for h5py on Windows:
 
-1. Building HDF5
+Build h5py in the normal fashion, except you are required to provide
+both the --hdf5 and --hdf5-version arguments to setup.py.
 
-  Because of the way the SZIP license is written, we cannot
-  distribute the build of HDF5 provided by the HDF Group.
-  The official builds of h5py include the SZIP decompressor only.
-  Additionally, to avoid a runtime conflict with PyTables or
-  other programs using HDF5, we have to rename the DLL.
-  
-  All of this is handled by the CMake cacheinit script in this
-  directory.  To build HDF5, download the source code from
-  hdfgroup.org and follow the Windows build instructions.
-  Provide the h5py cacheinit file when required.
-  
-  The ZLIB and SZIP dependencies are now handled automatically
-  by checking out source from the HDF Group Subversion system.
-  You will need a command-line Subversion client in your PATH.
-  
-  Finally, create a ZIP distribution by using CPACK:
-  
-  cpack -G ZIP
-  
-  Unzip this file to c:\some\path; it should have directories
-  like c:\some\path\bin and c:\some\path\lib.
-  
-2. Building h5py
+Build HDF5 for distribution with a single command, using the pavement
+file in this directory.  You will need to install paver first.
 
-  You will need Python, NumPy and Cython installed.  On Windows,
-  the path to the HDF5 install directory must be provided.  You
-  must also manually specify the version of HDF5:
-  
-  python setup.py --build --hdf5=c:\some\path --hdf5-version=1.8.12
-  
-3. Run tests
+To build HDF5 with Visual Studio 2008 (required for Python 2.6 and 2.7):
 
-  Run the unit tests to make sure h5py has been properly built:
+  paver build_2008
   
-  python setup.py test
+To build with Visual Studio 2010 (required for Python 3.2 and 3.3):
+
+  paver build_2010
+  
+These commands will each produce a zip file containing the appropriate
+build of HDF5.  Unpack them and supply the appropriate directory to --hdf5.
+
+Check pavement.py for the current HDF5 version to pass to --hdf5-version.
