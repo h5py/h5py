@@ -76,6 +76,32 @@ Here's an example showing how to create a VL array of strings::
     >>> h5py.check_dtype(vlen=ds.dtype)
     <type 'str'>
 
+
+.. _vlen:
+
+Arbitrary vlen data
+-------------------
+
+Starting with h5py 2.3, variable-length types are not restricted to strings.
+For example, you can create a "ragged" array of integers::
+
+    >>> dt = h5py.special_dtype(vlen=np.dtype('int32'))
+    >>> dset = f.create_dataset('vlen_int', (100,), dtype=dt)
+    >>> dset[0] = [1,2,3]
+    >>> dset[1] = [1,2,3,4,5]
+
+Single elements are read as NumPy arrays::
+
+    >>> dset[0]
+    array([1, 2, 3], dtype=int32)
+
+Multidimensional selections produce an object array whose members are integer
+arrays::
+
+    >>> dset[0:2]
+    array([array([1, 2, 3], dtype=int32), array([1, 2, 3, 4, 5], dtype=int32)], dtype=object)
+    
+
 Enumerated types
 ----------------
 
