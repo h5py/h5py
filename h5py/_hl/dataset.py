@@ -362,8 +362,9 @@ class Dataset(HLObject):
 
             return numpy.dtype([(name, basetype.fields[name][0]) for name in names])
 
-        if self._local.astype is not None:
-            new_dtype = readtime_dtype(self._local.astype, names)
+        new_dtype = getattr(self._local, 'astype', None)
+        if new_dtype is not None:
+            new_dtype = readtime_dtype(new_dtype, names)
         else:
             # This is necessary because in the case of array types, NumPy
             # discards the array information at the top level.
