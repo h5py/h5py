@@ -1,35 +1,55 @@
-Announcing HDF5 for Python (h5py) 2.2.1
-=======================================
+Announcing HDF5 for Python (h5py) 2.3.0 BETA
+============================================
 
-The h5py team is happy to announce the availability of h5py 2.2.1.  This
-release fixes a critical bug reported by Jim Parker on December 7th, which
-affects code using HDF5 compound types.
+The h5py team is happy to announce the availability of h5py 2.3.0 beta. This
+beta release will be available for approximately two weeks.
 
-We recommend that all users of h5py upgrade to avoid crashes or possible
-data corruption.
-
-
-Scope of bug
+What's h5py?
 ------------
 
-The issue may affect code which modifies HDF5 compound types in-place, by
-specifying a field name or names when writing to a dataset:
+The h5py package is a Pythonic interface to the HDF5 binary data format.
 
->>> dataset['field_name'] = value
+It lets you store huge amounts of numerical data, and easily manipulate
+that data from NumPy. For example, you can slice into multi-terabyte
+datasets stored on disk, as if they were real NumPy arrays. Thousands of
+datasets can be stored in a single file, categorized and tagged however
+you want.
 
-Under certain conditions, h5py can supply uninitialized memory to the HDF5
-conversion machinery, leading (in the case reported) to a segmentation fault.
-It is also possible for other fields of the type to be corrupted.
+Changes
+-------
 
-This issue affects only code which updates a subset of the fields in the
-compound type.  Programs reading from a compound type, writing all fields, or
-using other datatypes, are not affected.  If you are using code that takes
-advantage of this feature, please double-check your files to ensure your data
-has not been affected.
+This release introduces some important new features, including:
 
+* Support for arbitrary vlen data
+* Improved exception messages
+* Improved setuptools support
+* Multiple additions to the low-level API
+* Improved support for MPI features
+* Single-step build for HDF5 on Windows
 
-More information
+A complete description of changes is available online:
+
+http://docs.h5py.org/en/latest/whatsnew/2.3.html
+
+Where to get it
+---------------
+
+Downloads, documentation, and more are available at the h5py website:
+
+http://www.h5py.org
+
+Acknowledgements
 ----------------
 
-Github issue:  https://github.com/h5py/h5py/issues/372
-Original thread: https://groups.google.com/forum/#!topic/h5py/AbUOZ1MXf3U
+The h5py package relies on third-party testing and contributions.  For the
+2.3 release, thanks especially to:
+
+* Martin Teichmann
+* Florian Rathgerber
+* Pierre de Buyl
+* Thomas Caswell
+* Andy Salnikov
+* Darren Dale
+* Robert David Grant
+* Toon Verstraelen
+* Many others who contributed bug reports and testing
