@@ -12,7 +12,7 @@ from distutils.version import StrictVersion as _sv
 import sys
 import numpy
 
-version = "2.3.0a0"
+version = "2.3.0b1"
 _exp = _sv(version)
 
 version_tuple = _exp.version + ((''.join(str(x) for x in _exp.prerelease),) if _exp.prerelease is not None else ('',))
