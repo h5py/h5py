@@ -55,7 +55,7 @@ added to the list of extensions in your ipython config file, for example
 not exist, you can create it by invoking `ipython profile create`)::
 
    c = get_config()
-   c.Global.extensions = ['h5py.ipy_completer']
+   c.InteractiveShellApp.extensions = ['h5py.ipy_completer']
 
 For <ipython-0.11, the completer can be enabled by adding the following lines
 to the :func:`main` in :file:`.ipython/ipy_user_conf.py`::

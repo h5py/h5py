@@ -39,16 +39,23 @@ import posixpath
 import re
 
 try:
-    from IPython.utils import generics
-    from IPython.core.error import TryNext
+    # >=ipython-1.0
+    from IPython import get_ipython
+except ImportError:
     try:
-        from IPython.core.getipython import get_ipython as ipget
+        # support >=ipython-0.11, <ipython-1.0
+        from IPython.core.ipapi import get as get_ipython
     except ImportError:
-        from IPython.core.ipapi import get as ipget
+        # support <ipython-0.11
+        from IPython.ipapi import get as get_ipython
+try:
+    # support >=ipython-0.11
+    from IPython.utils import generics
+    from IPython import TryNext
 except ImportError:
     # support <ipython-0.11
     from IPython import generics
-    from IPython.ipapi import TryNext, get as ipget
+    from IPython.ipapi import TryNext
 
 import readline
 
@@ -119,19 +126,19 @@ def h5py_attr_completer(context, command):
     omit__names = None
     try:
         # support >=ipython-0.12
-        omit__names = ipget().Completer.omit__names
+        omit__names = get_ipython().Completer.omit__names
     except AttributeError:
         pass
     if omit__names is None:
         try:
             # support ipython-0.11
-            omit__names = ipget().readline_omit__names
+            omit__names = get_ipython().readline_omit__names
         except AttributeError:
             pass
     if omit__names is None:
         try:
             # support <ipython-0.11
-            omit__names = ipget().options.readline_omit__names
+            omit__names = get_ipython().options.readline_omit__names
         except AttributeError:
             omit__names = 0
     if omit__names == 1:
@@ -165,5 +172,5 @@ def h5py_completer(self, event):
 
 def load_ipython_extension(ip=None):
     if ip is None:
-        ip = ipget()
+        ip = get_ipython()
     ip.set_hook('complete_command', h5py_completer, re_key=r"(?:.*\=)?(.+?)\[")
