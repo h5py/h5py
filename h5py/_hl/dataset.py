@@ -57,6 +57,12 @@ def make_new_dset(parent, shape=None, dtype=None, data=None,
         if data is not None and (numpy.product(shape) != numpy.product(data.shape)):
             raise ValueError("Shape tuple is incompatible with data")
 
+    # Validate chunk shape
+    if isinstance(chunks, tuple) and numpy.greater(chunks, shape).any():
+        errmsg = "Chunk shape must not be greater than data shape in any dimension. "\
+                 "{} is not compatible with {}".format(chunks, shape)
+        raise ValueError(errmsg)
+
     if isinstance(dtype, h5py.Datatype):
         # Named types are used as-is
         tid = dtype.id
