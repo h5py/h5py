@@ -69,11 +69,11 @@ class Group(HLObject, DictCompat):
             (String or int) Compression strategy.  Legal values are 'gzip',
             'szip', 'lzf'.  If an integer in range(10), this indicates gzip
             compression level. Otherwise, an integer indicates the number of a
-            custom compression filter.
+            dynamically loaded compression filter.
         compression_opts
             Compression settings.  This is an integer for gzip, 2-tuple for
-            szip, etc. If specifying a custom compression filter number, this
-            must be a tuple of values or None.
+            szip, etc. If specifying a dynamically loaded compression filter
+            number, this must be a tuple of values.
         scaleoffset
             (Integer) Enable scale/offset filter for (usually) lossy
             compression of integer or floating-point data. For integer
