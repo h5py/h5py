@@ -66,11 +66,14 @@ class Group(HLObject, DictCompat):
             (Tuple) Make the dataset resizable up to this shape.  Use None for
             axes you want to be unlimited.
         compression
-            (String) Compression strategy.  Legal values are 'gzip', 'szip',
-            'lzf'.  Can also use an integer in range(10) indicating gzip.
+            (String or int) Compression strategy.  Legal values are 'gzip',
+            'szip', 'lzf'.  If an integer in range(10), this indicates gzip
+            compression level. Otherwise, an integer indicates the number of a
+            custom compression filter.
         compression_opts
             Compression settings.  This is an integer for gzip, 2-tuple for
-            szip, etc.
+            szip, etc. If specifying a custom compression filter number, this
+            must be a tuple of values or None.
         scaleoffset
             (Integer) Enable scale/offset filter for (usually) lossy
             compression of integer or floating-point data. For integer
