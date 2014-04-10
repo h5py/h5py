@@ -18,6 +18,8 @@ from . import filters
 from . import selections as sel
 from . import selections2 as sel2
 
+_LEGACY_GZIP_COMPRESSION_VALS = frozenset(range(10))
+
 def readtime_dtype(basetype, names):
     """ Make a NumPy dtype appropriate for reading """
 
@@ -89,7 +91,7 @@ def make_new_dset(parent, shape=None, dtype=None, data=None,
         compression = 'gzip'
 
     # Legacy
-    if compression in range(10):
+    if compression in _LEGACY_GZIP_COMPRESSION_VALS:
         if compression_opts is not None:
             raise TypeError("Conflict in compression options")
         compression_opts = compression
