@@ -195,6 +195,9 @@ def generate_dcpl(shape, dtype, chunks, compression, compression_opts,
         opts = {'ec': h5z.SZIP_EC_OPTION_MASK, 'nn': h5z.SZIP_NN_OPTION_MASK}
         plist.set_szip(opts[szmethod], szpix)
     elif isinstance(compression, int):
+        if not h5z.filter_avail(compression):
+            raise ValueError("Unknown compression filter number: {}".format(compression))
+
         plist.set_filter(compression, h5z.FLAG_OPTIONAL, compression_opts)
 
     return plist

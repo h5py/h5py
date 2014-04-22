@@ -288,7 +288,7 @@ class TestCreateGzip(BaseDataset):
         original_compression_vals = h5py._hl.dataset._LEGACY_GZIP_COMPRESSION_VALS
         try:
             h5py._hl.dataset._LEGACY_GZIP_COMPRESSION_VALS = tuple()
-            with self.assertRaises(RuntimeError):
+            with self.assertRaises(ValueError):
                 dset = self.f.create_dataset('foo', (20, 30), compression=7)
         finally:
             h5py._hl.dataset._LEGACY_GZIP_COMPRESSION_VALS = original_compression_vals
@@ -329,9 +329,9 @@ class TestCreateCompressionNumber(BaseDataset):
             self.f.create_dataset('foo', (20, 30), compression=-999)
         self.assertIn("Invalid filter", str(e.exception))
 
-        with self.assertRaises(RuntimeError) as e:
+        with self.assertRaises(ValueError) as e:
             self.f.create_dataset('foo', (20, 30), compression=100)
-        self.assertIn("Failed to call", str(e.exception))
+        self.assertIn("Unknown compression", str(e.exception))
 
         original_compression_vals = h5py._hl.dataset._LEGACY_GZIP_COMPRESSION_VALS
         try:
