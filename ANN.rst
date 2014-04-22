@@ -1,8 +1,8 @@
-Announcing HDF5 for Python (h5py) 2.3.0 BETA
-============================================
+Announcing HDF5 for Python (h5py) 2.3.0
+=======================================
 
-The h5py team is happy to announce the availability of h5py 2.3.0 beta. This
-beta release will be available for approximately two weeks.
+The h5py team is happy to announce the availability of h5py 2.3.0 (final).
+Thanks to everyone who provided beta feedback!
 
 What's h5py?
 ------------
@@ -26,6 +26,12 @@ This release introduces some important new features, including:
 * Multiple additions to the low-level API
 * Improved support for MPI features
 * Single-step build for HDF5 on Windows
+
+Major fixes since beta:
+
+* LZF compression crash on Win64
+* Unhelpful error message relating to chunked storage
+* Import error for IPython completer on certain platforms
 
 A complete description of changes is available online:
 
