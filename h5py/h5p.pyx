@@ -1009,7 +1009,7 @@ cdef class PropFAID(PropInstanceID):
         cdef herr_t  err
         err = H5Fset_mdc_config(self.id, &config.cache_config)
         if err < 0:
-            raise RuntimeError("Failed to get hit rate")
+            raise RuntimeError("Failed to set hit rate")
 
 
 # Link creation
