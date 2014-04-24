@@ -43,6 +43,20 @@ class TestDA(ut.TestCase):
         self.assertEqual((nslots, nbytes, w0),
                          dalist.get_chunk_cache())
 
+class TestFA(ut.TestCase):
+    '''
+    Feature: setting/getting alignment on a file access property list
+    '''
+    def test_set_alignment(self):
+        '''test get/set chunk cache '''
+        falist = h5p.create(h5p.FILE_ACCESS)
+        threshold = 10 * 1024 # threshold of 10kiB
+        alignment = 1024 * 1024 # threshold of 1kiB
+
+        falist.set_alignment(threshold, alignment)
+        self.assertEqual((threshold, alignment),
+                         falist.get_alignment())
+
 class TestPL(ut.TestCase):
     def test_obj_track_times(self):
         """
