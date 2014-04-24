@@ -142,6 +142,19 @@ SZIP filter (``"szip"``)
     installations of HDF5 due to legal reasons.  Consult the HDF5 docs for filter
     options.
 
+Custom compression filters
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In addition to the compression filters listed above, compression filters can be
+dynamically loaded by the underlying hdf5 library. This is done by passing a
+filter number to :meth:`Group.create_dataset`: as the ``compression`` parameter.
+``compression_opts`` will then be passed to this filter.
+
+.. note:: The underlying implementation of the compression filter will use
+    ``H5Z_FLAG_OPTIONAL``. This indicates that if a compression filter doesn't
+    compress a block while writing, no error will be thrown. The filter will
+    then be skipped when subsequently reading the block.
+
 
 .. _dataset_scaleoffset:
 

@@ -99,7 +99,7 @@ def generate_dcpl(shape, dtype, chunks, compression, compression_opts,
 
     if compression is not None:
 
-        if compression not in encode:
+        if compression not in encode and not isinstance(compression, int):
             raise ValueError('Compression filter "%s" is unavailable' % compression)
 
         if compression == 'gzip':
@@ -194,6 +194,11 @@ def generate_dcpl(shape, dtype, chunks, compression, compression_opts,
     elif compression == 'szip':
         opts = {'ec': h5z.SZIP_EC_OPTION_MASK, 'nn': h5z.SZIP_NN_OPTION_MASK}
         plist.set_szip(opts[szmethod], szpix)
+    elif isinstance(compression, int):
+        if not h5z.filter_avail(compression):
+            raise ValueError("Unknown compression filter number: %s" % compression)
+
+        plist.set_filter(compression, h5z.FLAG_OPTIONAL, compression_opts)
 
     return plist
 
