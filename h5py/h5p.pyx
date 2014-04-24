@@ -1011,6 +1011,27 @@ cdef class PropFAID(PropInstanceID):
         if err < 0:
             raise RuntimeError("Failed to set hit rate")
 
+    def get_alignment(self):
+        """
+        Retrieves the current settings for alignment properties from a file access property list.
+        """
+        cdef herr_t  err
+        cdef hsize_t threshold, alignment
+        err = H5Pget_alignment(self.id, &threshold, &alignment)
+        if err < 0:
+            raise RuntimeError("Failed to get alignment")
+
+        return threshold, alignment
+
+    def set_alignment(self, threshold, alignment):
+        """
+        Sets alignment properties of a file access property list.
+        """
+        cdef herr_t  err
+        err = H5Pset_alignment(self.id, threshold, alignment)
+        if err < 0:
+            raise RuntimeError("Failed to set alignment")
+
 
 # Link creation
 cdef class PropLCID(PropCreateID):

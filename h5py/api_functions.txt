@@ -315,6 +315,8 @@ hdf5:
   herr_t H5Pset_libver_bounds(hid_t fapl_id, H5F_libver_t libver_low, H5F_libver_t libver_high)
   herr_t H5Pget_libver_bounds(hid_t fapl_id, H5F_libver_t *libver_low, H5F_libver_t *libver_high)
 
+  herr_t H5Pset_alignment(hid_t plist_id, hsize_t threshold, hsize_t alignment)
+  herr_t H5Pget_alignment(hid_t plist_id, hsize_t *threshold, hsize_t *alignment)
 
 
 
