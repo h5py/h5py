@@ -146,8 +146,8 @@ Custom compression filters
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In addition to the compression filters listed above, compression filters can be
-dynamically loaded by the underlying hdf5 library. This is done by passing a
-filter number to :meth:`Group.create_dataset`: as the ``compression`` parameter.
+dynamically loaded by the underlying HDF5 library. This is done by passing a
+filter number to :meth:`Group.create_dataset` as the ``compression`` parameter.
 ``compression_opts`` will then be passed to this filter.
 
 .. note:: The underlying implementation of the compression filter will use
