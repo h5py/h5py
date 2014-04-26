@@ -994,7 +994,7 @@ cdef class PropFAID(PropInstanceID):
         cdef CacheConfig config = CacheConfig()
 
         cdef herr_t  err
-        err = H5Fget_mdc_config(self.id, &config.cache_config)
+        err = H5Pget_mdc_config(self.id, &config.cache_config)
         if err < 0:
             raise RuntimeError("Failed to get hit rate")
 
@@ -1007,7 +1007,7 @@ cdef class PropFAID(PropInstanceID):
         """
         # I feel this should have some sanity checking to make sure that
         cdef herr_t  err
-        err = H5Fset_mdc_config(self.id, &config.cache_config)
+        err = H5Pset_mdc_config(self.id, &config.cache_config)
         if err < 0:
             raise RuntimeError("Failed to get hit rate")
 
