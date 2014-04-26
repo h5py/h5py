@@ -44,15 +44,15 @@ class TestDA(ut.TestCase):
                          dalist.get_chunk_cache())
 
 class TestFA(ut.TestCase):
-  '''
+    '''
     Feature: setting/getting mdc config on a file access property list
     '''
-  def test_mdc_config(self):
-    '''test get/set mdc config '''
-    falist = h5p.create(h5p.FILE_ACCESS)
+    def test_mdc_config(self):
+        '''test get/set mdc config '''
+        falist = h5p.create(h5p.FILE_ACCESS)
     
-    config = falist.get_mdc_config()
-    falist.set_mdc_config(config)
+        config = falist.get_mdc_config()
+        falist.set_mdc_config(config)
 
 
 class TestPL(ut.TestCase):
