@@ -993,10 +993,7 @@ cdef class PropFAID(PropInstanceID):
 
         cdef CacheConfig config = CacheConfig()
 
-        cdef herr_t  err
-        err = H5Fget_mdc_config(self.id, &config.cache_config)
-        if err < 0:
-            raise RuntimeError("Failed to get hit rate")
+        H5Pget_mdc_config(self.id, &config.cache_config)
 
         return config
 
@@ -1005,11 +1002,7 @@ cdef class PropFAID(PropInstanceID):
         Returns an object that stores all the information about the meta-data cache
         configuration
         """
-        # I feel this should have some sanity checking to make sure that
-        cdef herr_t  err
-        err = H5Fset_mdc_config(self.id, &config.cache_config)
-        if err < 0:
-            raise RuntimeError("Failed to get hit rate")
+        H5Pset_mdc_config(self.id, &config.cache_config)
 
 
 # Link creation
