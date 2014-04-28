@@ -1004,6 +1004,21 @@ cdef class PropFAID(PropInstanceID):
         """
         H5Pset_mdc_config(self.id, &config.cache_config)
 
+    def get_alignment(self):
+        """
+        Retrieves the current settings for alignment properties from a file access property list.
+        """
+        cdef hsize_t threshold, alignment
+        H5Pget_alignment(self.id, &threshold, &alignment)
+
+        return threshold, alignment
+
+    def set_alignment(self, threshold, alignment):
+        """
+        Sets alignment properties of a file access property list.
+        """
+        H5Pset_alignment(self.id, threshold, alignment)
+
 
 # Link creation
 cdef class PropLCID(PropCreateID):

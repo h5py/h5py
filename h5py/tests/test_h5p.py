@@ -54,6 +54,16 @@ class TestFA(ut.TestCase):
         config = falist.get_mdc_config()
         falist.set_mdc_config(config)
 
+    def test_set_alignment(self):
+        '''test get/set chunk cache '''
+        falist = h5p.create(h5p.FILE_ACCESS)
+        threshold = 10 * 1024 # threshold of 10kiB
+        alignment = 1024 * 1024 # threshold of 1kiB
+
+        falist.set_alignment(threshold, alignment)
+        self.assertEqual((threshold, alignment),
+                         falist.get_alignment())
+
 
 class TestPL(ut.TestCase):
     def test_obj_track_times(self):
