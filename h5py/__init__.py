@@ -64,7 +64,13 @@ def enable_ipython_completer():
 
     raise RuntimeError('completer must be enabled in active ipython session')
 
+
 def run_tests(verbosity=1):
+    """ (int verbosity) => unittest.TextTestRunner result
+
+        Run tests with given verbosity level
+        Returns result instance from unittest.TextTestRunner
+    """
     import sys
     py_version = sys.version_info[:2]
     if py_version == (2,7) or py_version >= (3,2):
@@ -78,4 +84,4 @@ def run_tests(verbosity=1):
                 % py_version
                 )
     suite = unittest.TestLoader().discover('h5py')
-    result = unittest.TextTestRunner(verbosity=verbosity).run(suite)
+    return unittest.TextTestRunner(verbosity=verbosity).run(suite)
