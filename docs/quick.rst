@@ -85,7 +85,7 @@ Specifying a full path works just fine::
 Groups support most of the Python dictionary-style interface.  
 You retrieve objects in the file using the item-retrieval syntax::
 
-    >>> dataset_three = f['subgroup/dataset_three']
+    >>> dataset_three = f['subgroup2/dataset_three']
 
 Iterating over a group provides the names of its members::
 
@@ -108,7 +108,7 @@ You can even use full path names:
     True
 
 There are also the familiar ``keys()``, ``values()``, ``items()`` and
-``iter*()`` methods, as well as ``get()``.
+``iter()`` methods, as well as ``get()``.
 
 Since iterating over a group only yields its directly-attached members,
 iterating over an entire file is accomplished with the ``Group`` methods
