@@ -108,7 +108,7 @@ You can even use full path names:
     True
 
 There are also the familiar ``keys()``, ``values()``, ``items()`` and
-``iter*()`` methods, as well as ``get()``.
+``iter()`` methods, as well as ``get()``.
 
 Since iterating over a group only yields its directly-attached members,
 iterating over an entire file is accomplished with the ``Group`` methods
