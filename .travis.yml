@@ -3,9 +3,6 @@ language: python
 notifications:
   email: false
 
-virtualenv:
-  system_site_packages: true
-
 python:
   - "2.6"
   - "2.7"
