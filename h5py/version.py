@@ -13,6 +13,7 @@ import sys
 import numpy
 
 version = "2.4.0a0"
+
 _exp = _sv(version)
 
 version_tuple = _exp.version + ((''.join(str(x) for x in _exp.prerelease),) if _exp.prerelease is not None else ('',))

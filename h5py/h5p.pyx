@@ -976,14 +976,9 @@ cdef class PropFAID(PropInstanceID):
             return (pycomm, pyinfo)
 
         def set_fapl_mpiposix(self, Comm comm not None, bint use_gpfs_hints=0):
-            """ (Comm comm, BOOL use_gpfs_hints=0)
-
-            Set MPI-POSIX driver.
-
-            Comm: An mpi4py.MPI.Comm instance
-            use_gpfs_hints: Enable internal hints for GPFS file system
+            """ Obsolete.
             """
-            H5Pset_fapl_mpiposix(self.id, comm.ob_mpi, use_gpfs_hints)
+            raise RuntimeError("MPI-POSIX driver is broken; removed in h5py 2.3.1")
 
     def get_mdc_config(self):
         """() => CacheConfig
