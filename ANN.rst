@@ -1,8 +1,9 @@
-Announcing HDF5 for Python (h5py) 2.3.0
+Announcing HDF5 for Python (h5py) 2.3.1
 =======================================
 
-The h5py team is happy to announce the availability of h5py 2.3.0 (final).
-Thanks to everyone who provided beta feedback!
+The h5py team is happy to announce the availability of h5py 2.3.1.  This is
+a bugfix release which fixes a build issue when using the most recent
+version of HDF5 (1.8.13), and some issues with Travis-CI.
 
 What's h5py?
 ------------
@@ -18,24 +19,10 @@ you want.
 Changes
 -------
 
-This release introduces some important new features, including:
-
-* Support for arbitrary vlen data
-* Improved exception messages
-* Improved setuptools support
-* Multiple additions to the low-level API
-* Improved support for MPI features
-* Single-step build for HDF5 on Windows
-
-Major fixes since beta:
-
-* LZF compression crash on Win64
-* Unhelpful error message relating to chunked storage
-* Import error for IPython completer on certain platforms
-
-A complete description of changes is available online:
-
-http://docs.h5py.org/en/latest/whatsnew/2.3.html
+* Removed lingering references to the MPIPOSIX driver, which was removed
+  in HDF5 1.8.13
+* Resolved a build issue with Travis-CI, which caused good pull requests
+  to be wrongly marked as failed.
 
 Where to get it
 ---------------
@@ -43,19 +30,3 @@ Where to get it
 Downloads, documentation, and more are available at the h5py website:
 
 http://www.h5py.org
-
-Acknowledgements
-----------------
-
-The h5py package relies on third-party testing and contributions.  For the
-2.3 release, thanks especially to:
-
-* Martin Teichmann
-* Florian Rathgerber
-* Pierre de Buyl
-* Thomas Caswell
-* Andy Salnikov
-* Darren Dale
-* Robert David Grant
-* Toon Verstraelen
-* Many others who contributed bug reports and testing
