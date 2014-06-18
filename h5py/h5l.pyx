@@ -17,6 +17,9 @@ from h5p cimport PropID
 from h5g cimport GroupID
 from utils cimport emalloc, efree
 
+from ._objects import phil, with_phil
+
+
 # === Public constants ========================================================
 
 TYPE_HARD = H5L_TYPE_HARD
@@ -101,6 +104,8 @@ cdef class LinkProxy:
 
         * Hashable: No
         * Equality: Undefined
+
+        You will note that this class does *not* inherit from ObjectID.
     """
 
     def __init__(self, hid_t id_):
@@ -116,6 +121,7 @@ cdef class LinkProxy:
         raise TypeError("Link proxies are unhashable; use the parent group instead.")
 
 
+    @with_phil
     def create_hard(self, char* new_name, GroupID cur_loc not None,
         char* cur_name, PropID lcpl=None, PropID lapl=None):
         """ (STRING new_name, GroupID cur_loc, STRING cur_name,
@@ -128,6 +134,7 @@ cdef class LinkProxy:
             pdefault(lcpl), pdefault(lapl))
 
 
+    @with_phil
     def create_soft(self, char* new_name, char* target,
         PropID lcpl=None, PropID lapl=None):
         """(STRING new_name, STRING target, PropID lcpl=None, PropID lapl=None)
@@ -139,6 +146,7 @@ cdef class LinkProxy:
             pdefault(lcpl), pdefault(lapl))
 
 
+    @with_phil
     def create_external(self, char* link_name, char* file_name, char* obj_name,
         PropID lcpl=None, PropID lapl=None):
         """(STRING link_name, STRING file_name, STRING obj_name,
@@ -150,6 +158,7 @@ cdef class LinkProxy:
             pdefault(lcpl), pdefault(lapl))
 
 
+    @with_phil
     def get_val(self, char* name, PropID lapl=None):
         """(STRING name, PropLAID lapl=None) => STRING or TUPLE(file, obj)
 
@@ -183,6 +192,7 @@ cdef class LinkProxy:
         return py_retval
 
 
+    @with_phil
     def move(self, char* src_name, GroupID dst_loc not None, char* dst_name,
         PropID lcpl=None, PropID lapl=None):
         """ (STRING src_name, GroupID dst_loc, STRING dst_name)
@@ -193,6 +203,7 @@ cdef class LinkProxy:
                 pdefault(lapl))
 
 
+    @with_phil
     def exists(self, char* name, PropID lapl=None):
         """ (STRING name, PropID lapl=None) => BOOL
 
@@ -201,6 +212,7 @@ cdef class LinkProxy:
         return <bint>(H5Lexists(self.id, name, pdefault(lapl)))
 
 
+    @with_phil
     def get_info(self, char* name, int index=-1, *, PropID lapl=None):
         """(STRING name=, INT index=, **kwds) => LinkInfo instance
 
@@ -213,6 +225,7 @@ cdef class LinkProxy:
         return info
 
 
+    @with_phil
     def visit(self, object func, *,
               int idx_type=H5_INDEX_NAME, int order=H5_ITER_NATIVE,
               char* obj_name='.', PropID lapl=None, bint info=0):
@@ -256,6 +269,8 @@ cdef class LinkProxy:
 
         return it.retval
 
+
+    @with_phil
     def iterate(self, object func, *,
               int idx_type=H5_INDEX_NAME, int order=H5_ITER_NATIVE,
               char* obj_name='.', PropID lapl=None, bint info=0,

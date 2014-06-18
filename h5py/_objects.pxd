@@ -13,7 +13,7 @@ cdef class ObjectID:
 
     cdef object __weakref__
     cdef readonly hid_t id
-    cdef public int locked
+    cdef public int locked              # Cannot be closed, explicitly or auto
     cdef object _hash
 
 # Convenience functions

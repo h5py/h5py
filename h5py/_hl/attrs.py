@@ -13,6 +13,7 @@ import collections
 import h5py
 from h5py import h5s, h5t, h5a
 from . import base
+from .base import phil, with_phil
 from .dataset import readtime_dtype
 
 
@@ -42,6 +43,7 @@ class AttributeManager(base.DictCompat, base.CommonStateObject):
         """
         self._id = parent.id
 
+    @with_phil
     def __getitem__(self, name):
         """ Read the value of an attribute.
         """
@@ -61,6 +63,7 @@ class AttributeManager(base.DictCompat, base.CommonStateObject):
             return arr[()]
         return arr
 
+    @with_phil
     def __setitem__(self, name, value):
         """ Set a new attribute, overwriting any existing attribute.
 
@@ -70,6 +73,7 @@ class AttributeManager(base.DictCompat, base.CommonStateObject):
         """
         self.create(name, data=value, dtype=base.guess_dtype(value))
 
+    @with_phil
     def __delitem__(self, name):
         """ Delete an attribute (which must already exist). """
         h5a.delete(self._id, self._e(name))
@@ -89,43 +93,44 @@ class AttributeManager(base.DictCompat, base.CommonStateObject):
             are given.
         """
 
-        if data is not None:
-            data = numpy.asarray(data, order='C', dtype=dtype)
+        with phil:
+            if data is not None:
+                data = numpy.asarray(data, order='C', dtype=dtype)
+                if shape is None:
+                    shape = data.shape
+                elif numpy.product(shape) != numpy.product(data.shape):
+                    raise ValueError("Shape of new attribute conflicts with shape of data")
+
+                if dtype is None:
+                    dtype = data.dtype
+
+            if isinstance(dtype, h5py.Datatype):
+                htype = dtype.id
+                dtype = htype.dtype
+            else:
+                if dtype is None:
+                    dtype = numpy.dtype('f')
+                htype = h5t.py_create(dtype, logical=True)
+
             if shape is None:
-                shape = data.shape
-            elif numpy.product(shape) != numpy.product(data.shape):
-                raise ValueError("Shape of new attribute conflicts with shape of data")
+                raise ValueError('At least one of "shape" or "data" must be given')
 
-            if dtype is None:
-                dtype = data.dtype
+            data = data.reshape(shape)
 
-        if isinstance(dtype, h5py.Datatype):
-            htype = dtype.id
-            dtype = htype.dtype
-        else:
-            if dtype is None:
-                dtype = numpy.dtype('f')
-            htype = h5t.py_create(dtype, logical=True)
+            space = h5s.create_simple(shape)
 
-        if shape is None:
-            raise ValueError('At least one of "shape" or "data" must be given')
-
-        data = data.reshape(shape)
-
-        space = h5s.create_simple(shape)
-
-        if name in self:
-            h5a.delete(self._id, self._e(name))
-
-        attr = h5a.create(self._id, self._e(name), htype, space)
-
-        if data is not None:
-            try:
-                attr.write(data)
-            except:
-                attr._close()
+            if name in self:
                 h5a.delete(self._id, self._e(name))
-                raise
+
+            attr = h5a.create(self._id, self._e(name), htype, space)
+
+            if data is not None:
+                try:
+                    attr.write(data)
+                except:
+                    attr._close()
+                    h5a.delete(self._id, self._e(name))
+                    raise
 
     def modify(self, name, value):
         """ Change the value of an attribute while preserving its type.
@@ -136,22 +141,24 @@ class AttributeManager(base.DictCompat, base.CommonStateObject):
 
         If the attribute doesn't exist, it will be automatically created.
         """
-        if not name in self:
-            self[name] = value
-        else:
-            value = numpy.asarray(value, order='C')
+        with phil:
+            if not name in self:
+                self[name] = value
+            else:
+                value = numpy.asarray(value, order='C')
 
-            attr = h5a.open(self._id, self._e(name))
+                attr = h5a.open(self._id, self._e(name))
 
-            if attr.get_space().get_simple_extent_type() == h5s.NULL:
-                raise IOError("Empty attributes can't be modified")
+                if attr.get_space().get_simple_extent_type() == h5s.NULL:
+                    raise IOError("Empty attributes can't be modified")
 
-            # Allow the case of () <-> (1,)
-            if (value.shape != attr.shape) and not \
-               (numpy.product(value.shape) == 1 and numpy.product(attr.shape) == 1):
-                raise TypeError("Shape of data is incompatible with existing attribute")
-            attr.write(value)
+                # Allow the case of () <-> (1,)
+                if (value.shape != attr.shape) and not \
+                   (numpy.product(value.shape) == 1 and numpy.product(attr.shape) == 1):
+                    raise TypeError("Shape of data is incompatible with existing attribute")
+                attr.write(value)
 
+    @with_phil
     def __len__(self):
         """ Number of attributes attached to the object. """
         # I expect we will not have more than 2**32 attributes
@@ -159,19 +166,22 @@ class AttributeManager(base.DictCompat, base.CommonStateObject):
 
     def __iter__(self):
         """ Iterate over the names of attributes. """
-        attrlist = []
+        with phil:
+            attrlist = []
 
-        def iter_cb(name, *args):
-            attrlist.append(self._d(name))
-        h5a.iterate(self._id, iter_cb)
+            def iter_cb(name, *args):
+                attrlist.append(self._d(name))
+            h5a.iterate(self._id, iter_cb)
 
         for name in attrlist:
             yield name
 
+    @with_phil
     def __contains__(self, name):
         """ Determine if an attribute exists, by name. """
         return h5a.exists(self._id, self._e(name))
 
+    @with_phil
     def __repr__(self):
         if not self._id:
             return "<Attributes of closed HDF5 object>"

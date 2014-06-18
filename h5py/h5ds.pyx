@@ -15,7 +15,9 @@
 from h5d cimport DatasetID
 from utils cimport emalloc, efree
 
+from ._objects import phil, with_phil
 
+@with_phil
 def set_scale(DatasetID dset not None, char* dimname=''):
     """(DatasetID dset, STRING dimname)
 
@@ -23,6 +25,7 @@ def set_scale(DatasetID dset not None, char* dimname=''):
     """
     H5DSset_scale(dset.id, dimname)
 
+@with_phil
 def is_scale(DatasetID dset not None):
     """(DatasetID dset)
 
@@ -30,24 +33,30 @@ def is_scale(DatasetID dset not None):
     """
     return <bint>(H5DSis_scale(dset.id))
 
+@with_phil
 def attach_scale(DatasetID dset not None, DatasetID dscale not None, unsigned
                  int idx):
     H5DSattach_scale(dset.id, dscale.id, idx)
 
+@with_phil
 def is_attached(DatasetID dset not None, DatasetID dscale not None,
                 unsigned int idx):
     return <bint>(H5DSis_attached(dset.id, dscale.id, idx))
 
+@with_phil
 def detach_scale(DatasetID dset not None, DatasetID dscale not None,
                  unsigned int idx):
     H5DSdetach_scale(dset.id, dscale.id, idx)
 
+@with_phil
 def get_num_scales(DatasetID dset not None, unsigned int dim):
     return H5DSget_num_scales(dset.id, dim)
 
+@with_phil
 def set_label(DatasetID dset not None, unsigned int idx, char* label):
     H5DSset_label(dset.id, idx, label)
 
+@with_phil
 def get_label(DatasetID dset not None, unsigned int idx):
     cdef ssize_t size
     cdef char* label
@@ -64,6 +73,7 @@ def get_label(DatasetID dset not None, unsigned int idx):
     finally:
         efree(label)
 
+@with_phil
 def get_scale_name(DatasetID dscale not None):
     cdef ssize_t namelen
     cdef char* name = NULL
@@ -97,13 +107,13 @@ cdef herr_t cb_ds_iter(hid_t dset, unsigned int dim, hid_t scale, void* vis_in) 
     # we did not retrieve the scale identifier using the normal machinery,
     # so we need to inc_ref it before using it to create a DatasetID.
     H5Iinc_ref(scale)
-    vis.retval = vis.func(DatasetID.open(scale))
+    vis.retval = vis.func(DatasetID(scale))
 
     if vis.retval is not None:
         return 1
     return 0
 
-
+@with_phil
 def iterate(DatasetID dset not None, unsigned int dim, object func,
             int startidx=0):
     """ (DatasetID loc, UINT dim, CALLABLE func, UINT startidx=0)

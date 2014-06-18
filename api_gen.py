@@ -45,10 +45,6 @@ from api_types_hdf5 cimport *
 cimport _hdf5
 
 from _errors cimport set_exception
-
-include "_locks.pxi"
-
-rlock = FastRLock()
 """
 
 class FunctionCruncher2(object):
@@ -171,21 +167,19 @@ class FunctionCruncher2(object):
         imp = """\
 cdef %(code)s %(fname)s(%(sig)s) except *:
     cdef %(code)s r
-    with rlock:
-        r = _hdf5.%(fname)s(%(args)s)
-        if r%(condition)s:
-            if set_exception():
-                return <%(code)s>%(retval)s;
-            elif %(error)s:
-                raise RuntimeError("Unspecified error in %(fname)s (return value %(condition)s)")
-        return r
+    r = _hdf5.%(fname)s(%(args)s)
+    if r%(condition)s:
+        if set_exception():
+            return <%(code)s>%(retval)s
+        elif %(error)s:
+            raise RuntimeError("Unspecified error in %(fname)s (return value %(condition)s)")
+    return r
 
 """
 
         stub_imp = """\
 cdef %(code)s %(fname)s(%(sig)s) except *:
-    with rlock:
-        return hdf5.%(fname)s(%(args)s)
+    return hdf5.%(fname)s(%(args)s)
 
 """
         imp = (stub_imp if self.stub else imp) % parts

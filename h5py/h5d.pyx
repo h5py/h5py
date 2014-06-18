@@ -21,6 +21,7 @@ from h5p cimport PropID, propwrap
 from _proxy cimport dset_rw
 
 from h5py import _objects
+from ._objects import phil, with_phil
 
 # Initialization
 import_array()
@@ -51,6 +52,7 @@ FILL_VALUE_USER_DEFINED = H5D_FILL_VALUE_USER_DEFINED
 
 # === Dataset operations ======================================================
 
+@with_phil
 def create(ObjectID loc not None, object name, TypeID tid not None,
                SpaceID space not None, PropID dcpl=None, PropID lcpl=None, PropID dapl = None):
         """ (objectID loc, STRING name or None, TypeID tid, SpaceID space,
@@ -70,8 +72,9 @@ def create(ObjectID loc not None, object name, TypeID tid not None,
         else:
             dsid = H5Dcreate_anon(loc.id, tid.id, space.id,
                      pdefault(dcpl), pdefault(dapl))
-        return DatasetID.open(dsid)
+        return DatasetID(dsid)
 
+@with_phil
 def open(ObjectID loc not None, char* name, PropID dapl=None):
     """ (ObjectID loc, STRING name, PropID dapl=None) => DatasetID
 
@@ -79,7 +82,7 @@ def open(ObjectID loc not None, char* name, PropID dapl=None):
 
     If specified, dapl may be a dataset access property list.
     """
-    return DatasetID.open(H5Dopen2(loc.id, name, pdefault(dapl)))
+    return DatasetID(H5Dopen2(loc.id, name, pdefault(dapl)))
 
 # --- Proxy functions for safe(r) threading -----------------------------------
 
@@ -108,40 +111,31 @@ cdef class DatasetID(ObjectID):
         def __get__(self):
             # Dataset type can't change
             cdef TypeID tid
-            if self._dtype is None:
-                tid = self.get_type()
-                self._dtype = tid.dtype
-            return self._dtype
+            with phil:
+                if self._dtype is None:
+                    tid = self.get_type()
+                    self._dtype = tid.dtype
+                return self._dtype
 
     property shape:
         """ Numpy-style shape tuple representing the dataspace """
         def __get__(self):
             # Shape can change (DatasetID.extend), so don't cache it
             cdef SpaceID sid
-            sid = self.get_space()
-            return sid.get_simple_extent_dims()
+            with phil:
+                sid = self.get_space()
+                return sid.get_simple_extent_dims()
 
     property rank:
         """ Integer giving the dataset rank (0 = scalar) """
         def __get__(self):
             cdef SpaceID sid
-            sid = self.get_space()
-            return sid.get_simple_extent_ndims()
+            with phil:
+                sid = self.get_space()
+                return sid.get_simple_extent_ndims()
 
 
-    def _close(self):
-        """ ()
-
-            Terminate access through this identifier.  You shouldn't have to
-            call this manually; Dataset objects are automatically destroyed
-            when their Python wrappers are freed.
-        """
-        with _objects.registry.lock:
-            H5Dclose(self.id)
-            if not self.valid:
-                del _objects.registry[self.id]
-
-
+    @with_phil
     def read(self, SpaceID mspace not None, SpaceID fspace not None,
                    ndarray arr_obj not None, TypeID mtype=None,
                    PropID dxpl=None):
@@ -180,6 +174,8 @@ cdef class DatasetID(ObjectID):
 
         dset_rw(self_id, mtype_id, mspace_id, fspace_id, plist_id, data, 1)
 
+
+    @with_phil
     def write(self, SpaceID mspace not None, SpaceID fspace not None,
                     ndarray arr_obj not None, TypeID mtype=None,
                     PropID dxpl=None):
@@ -218,6 +214,8 @@ cdef class DatasetID(ObjectID):
 
         dset_rw(self_id, mtype_id, mspace_id, fspace_id, plist_id, data, 0)
 
+
+    @with_phil
     def extend(self, tuple shape):
         """ (TUPLE shape)
 
@@ -246,6 +244,7 @@ cdef class DatasetID(ObjectID):
                 H5Sclose(space_id)
 
 
+    @with_phil
     def set_extent(self, tuple shape):
         """ (TUPLE shape)
 
@@ -274,15 +273,16 @@ cdef class DatasetID(ObjectID):
                 H5Sclose(space_id)
 
 
-
+    @with_phil
     def get_space(self):
         """ () => SpaceID
 
             Create and return a new copy of the dataspace for this dataset.
         """
-        return SpaceID.open(H5Dget_space(self.id))
+        return SpaceID(H5Dget_space(self.id))
 
 
+    @with_phil
     def get_space_status(self):
         """ () => INT space_status_code
 
@@ -298,6 +298,7 @@ cdef class DatasetID(ObjectID):
         return <int>status
 
 
+    @with_phil
     def get_type(self):
         """ () => TypeID
 
@@ -306,6 +307,7 @@ cdef class DatasetID(ObjectID):
         return typewrap(H5Dget_type(self.id))
 
 
+    @with_phil
     def get_create_plist(self):
         """ () => PropDCID
 
@@ -315,7 +317,7 @@ cdef class DatasetID(ObjectID):
         return propwrap(H5Dget_create_plist(self.id))
 
 
-
+    @with_phil
     def get_access_plist(self):
         """ () => PropDAID
 
@@ -324,6 +326,7 @@ cdef class DatasetID(ObjectID):
         return propwrap(H5Dget_access_plist(self.id))
 
 
+    @with_phil
     def get_offset(self):
         """ () => LONG offset or None
 
@@ -339,6 +342,7 @@ cdef class DatasetID(ObjectID):
         return offset
 
 
+    @with_phil
     def get_storage_size(self):
         """ () => LONG storage_size
 

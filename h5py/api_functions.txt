@@ -119,7 +119,7 @@ hdf5:
   int        H5Idec_ref(hid_t obj_id)
   int        H5Iget_ref(hid_t obj_id)
   int        H5Iinc_ref(hid_t obj_id)
-
+  htri_t     H5Iis_valid( hid_t obj_id )
 
 # === H5L - Links interface (1.8.X only) ======================================
 

@@ -11,7 +11,7 @@ import weakref
 import sys
 import os
 
-from .base import HLObject, py3
+from .base import HLObject, py3, phil, with_phil
 from .group import Group
 from h5py import h5, h5f, h5p, h5i, h5fd, h5t, _objects
 from h5py import version
@@ -29,7 +29,6 @@ libver_dict_r = dict((y, x) for x, y in libver_dict.iteritems())
 def make_fapl(driver, libver, **kwds):
     """ Set up a file access property list """
     plist = h5p.create(h5p.FILE_ACCESS)
-    plist.set_fclose_degree(h5f.CLOSE_STRONG)
 
     if libver is not None:
         if libver in libver_dict:
@@ -124,6 +123,7 @@ class File(Group):
     """
 
     @property
+    @with_phil
     def attrs(self):
         """ Attributes attached to this object """
         # hdf5 complains that a file identifier is an invalid location for an
@@ -132,6 +132,7 @@ class File(Group):
         return attrs.AttributeManager(self['/'])
 
     @property
+    @with_phil
     def filename(self):
         """File name on disk"""
         name = h5f.get_name(self.fid)
@@ -141,6 +142,7 @@ class File(Group):
             return name
 
     @property
+    @with_phil
     def driver(self):
         """Low-level HDF5 file driver used to open file"""
         drivers = {h5fd.SEC2: 'sec2', h5fd.STDIO: 'stdio',
@@ -150,23 +152,27 @@ class File(Group):
         return drivers.get(self.fid.get_access_plist().get_driver(), 'unknown')
 
     @property
+    @with_phil
     def mode(self):
         """ Python mode used to open file """
         return {h5f.ACC_RDONLY: 'r',
                 h5f.ACC_RDWR: 'r+'}.get(self.fid.get_intent())
 
     @property
+    @with_phil
     def fid(self):
         """File ID (backwards compatibility) """
         return self.id
 
     @property
+    @with_phil
     def libver(self):
         """File format version bounds (2-tuple: low, high)"""
         bounds = self.id.get_access_plist().get_libver_bounds()
         return tuple(libver_dict_r[x] for x in bounds)
 
     @property
+    @with_phil
     def userblock_size(self):
         """ User block size (in bytes) """
         fcpl = self.fid.get_create_plist()
@@ -176,12 +182,14 @@ class File(Group):
     if mpi and hdf5_version >= (1, 8, 9):
 
         @property
+        @with_phil
         def atomic(self):
             """ Set/get MPI-IO atomic mode 
             """
             return self.id.get_mpi_atomicity()
 
         @atomic.setter
+        @with_phil
         def atomic(self, value):
             self.id.set_mpi_atomicity(value)
 
@@ -207,41 +215,51 @@ class File(Group):
         Additional keywords
             Passed on to the selected file driver.
         """
-        if isinstance(name, _objects.ObjectID):
-            fid = h5i.get_file_id(name)
-        else:
-            try:
-                # If the byte string doesn't match the default
-                # encoding, just pass it on as-is.  Note Unicode
-                # objects can always be encoded.
-                name = name.encode(sys.getfilesystemencoding())
-            except (UnicodeError, LookupError):
-                pass
+        with phil:
+            if isinstance(name, _objects.ObjectID):
+                fid = h5i.get_file_id(name)
+            else:
+                try:
+                    # If the byte string doesn't match the default
+                    # encoding, just pass it on as-is.  Note Unicode
+                    # objects can always be encoded.
+                    name = name.encode(sys.getfilesystemencoding())
+                except (UnicodeError, LookupError):
+                    pass
 
-            fapl = make_fapl(driver, libver, **kwds)
-            fid = make_fid(name, mode, userblock_size, fapl)
+                fapl = make_fapl(driver, libver, **kwds)
+                fid = make_fid(name, mode, userblock_size, fapl)
 
-        Group.__init__(self, fid)
+            Group.__init__(self, fid)
 
     def close(self):
         """ Close the file.  All open objects become invalid """
-        # TODO: find a way to square this with having issue 140
-        # Not clearing shared state introduces a tiny memory leak, but
-        # it goes like the number of files opened in a session.
-        self.id.close()
+        with phil:
+            # We have to explicitly murder all open objects related to the file
+            idlist = h5f.get_obj_ids(self.id)
+            idlist = [x for x in idlist if h5i.get_file_id(x).id == self.id.id]
+            self.id.close()
+            for id_ in idlist:
+                while id_.valid:
+                    h5i.dec_ref(id_)
+            _objects.nonlocal_close()
 
     def flush(self):
         """ Tell the HDF5 library to flush its buffers.
         """
-        h5f.flush(self.fid)
+        with phil:
+            h5f.flush(self.fid)
 
+    @with_phil
     def __enter__(self):
         return self
 
+    @with_phil
     def __exit__(self, *args):
         if self.id:
             self.close()
 
+    @with_phil
     def __repr__(self):
         if not self.id:
             r = u'<Closed HDF5 file>'

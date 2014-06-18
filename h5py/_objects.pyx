@@ -8,211 +8,139 @@
 #           and contributor agreement.
 
 """
-    Implements ObjectID base class and global object registry.
-
-    It used to be that we could store the HDF5 identifier in an ObjectID
-    and simply close it when the object was deallocated.  However, since
-    HDF5 1.8.5 they have started recycling object identifiers, which
-    breaks this system.
-
-    We now use a global registry of object identifiers.  This is implemented
-    via a dictionary which maps an integer representation of the identifier
-    to a weak reference of an ObjectID.  There is only one ObjectID instance
-    in the universe for each integer identifier.  When the HDF5 reference
-    count for a identifier reaches zero, HDF5 closes the object and reclaims
-    the identifier. When this occurs, the identifier and weak reference must
-    be deleted from the registry. If an ObjectID is deallocated, it is deleted
-    from the registry and the HDF5 reference count is decreased, HDF5 closes
-    and reclaims the identifier for future use.
-
-    All interactions with the registry must be synchronized for thread safety.
-    You must acquire "registry.lock" before interacting with the registry. The
-    registry is not internally synchronized, in the interest of performance: we
-    don't want the same thread attempting to acquire the lock multiple times
-    during a single operation, if we can avoid it.
-
-    All ObjectIDs and subclasses thereof should be opened with the "open"
-    classmethod factory function, such that an existing ObjectID instance can
-    be returned from the registry when appropriate.
+    Implements ObjectID base class.
 """
 
+include "_locks.pxi"
 from defs cimport *
 
-from weakref import KeyedRef, ref
+DEF USE_LOCKING = True
+DEF DEBUG_ID = False
 
-## {{{ http://code.activestate.com/recipes/577336/ (r3)
-from cpython cimport pythread
-from cpython.exc cimport PyErr_NoMemory
+# --- Locking code ------------------------------------------------------------
+#
+# Most of the functions and methods in h5py spend all their time in the Cython
+# code for h5py, and hold the GIL until they exit.  However, in some cases,
+# particularly when calling native-Python functions from the stdlib or
+# elsewhere, the GIL can be released mid-function and another thread can
+# call into the API at the same time.
+#
+# This is bad news, especially for the object identifier registry.
+#
+# We serialize all access to the low-level API with a single recursive lock.
+# Only one thread at a time can call any low-level routine.
+#
+# Note that this doesn't affect other applications like PyTables which are
+# interacting with HDF5.  In the case of the identifier registry, this means
+# that it's possible for an identifier to go stale and for PyTables to reuse
+# it before we've had a chance to set obj.id = 0.  For this reason, h5py is
+# advertised for EITHER multithreaded use OR use alongside PyTables/NetCDF4,
+# but not both at the same time.
 
-cdef class FastRLock:
-    """Fast, re-entrant locking.
+IF USE_LOCKING:
+    cdef FastRLock _phil = FastRLock()
+ELSE:
+    cdef BogoLock _phil = BogoLock()
 
-    Under uncongested conditions, the lock is never acquired but only
-    counted.  Only when a second thread comes in and notices that the
-    lock is needed, it acquires the lock and notifies the first thread
-    to release it when it's done.  This is all made possible by the
-    wonderful GIL.
+# Python alias for access from other modules
+phil = _phil
+
+def with_phil(func):
+    """ Locking decorator """
+
+    import functools
+
+    def wrapper(*args, **kwds):
+        with _phil:
+            return func(*args, **kwds)
+
+    functools.update_wrapper(wrapper, func, ('__name__', '__doc__'))
+    return wrapper
+
+# --- End locking code --------------------------------------------------------
+
+
+# --- Registry code ----------------------------------------------------------
+#
+# With HDF5 1.8, when an identifier is closed its value may be immediately
+# re-used for a new object.  This leads to odd behavior when an ObjectID
+# with an old identifier is left hanging around... for example, a GroupID
+# belonging to a closed file could suddenly "mutate" into one from a
+# different file.
+#
+# There are two ways such "zombie" identifiers can arise.  The first is if
+# an identifier is explicitly closed via obj._close().  For this case we
+# set obj.id = 0.  The second is that certain actions in HDF5 can *remotely*
+# invalidate identifiers.  For example, closing a file opened with
+# H5F_CLOSE_STRONG will also close open groups, etc.
+#
+# When such a "nonlocal" event occurs, we have to examine all live ObjectID
+# instances, and manually set obj.id = 0.  That's what the function
+# nonlocal_close() does.  We maintain an inventory of all live ObjectID
+# instances in the registry dict.  Then, when a nonlocal event occurs,
+# nonlocal_close() walks through the inventory and sets the stale identifiers
+# to 0.  It must be explictly called; currently, this happens in FileID.close()
+# as well as the high-level File.close().
+#
+# The entire low-level API is now explicitly locked, so only one thread at at
+# time is taking actions that may create or invalidate identifiers. See the
+# "locking code" section above.
+#
+# See also __cinit__ and __dealloc__ for class ObjectID.
+
+import weakref
+import warnings
+
+# Will map id(obj) -> weakref(obj), where obj is an ObjectID instance.
+# Objects are added only via ObjectID.__cinit__, and removed only by
+# ObjectID.__dealloc__.
+cdef dict registry = {}
+
+@with_phil
+def print_reg():
+    import h5py
+    refs = registry.values()
+    objs = [r() for r in refs]
+
+    none = len([x for x in objs if x is None])
+    files = len([x for x in objs if isinstance(x, h5py.h5f.FileID)])
+    groups = len([x for x in objs if isinstance(x, h5py.h5g.GroupID)])
+
+    print "REGISTRY: %d | %d None | %d FileID | %d GroupID" % (len(objs), none, files, groups)
+
+
+@with_phil
+def nonlocal_close():
+    """ Find dead ObjectIDs and set their integer identifiers to 0.
     """
-    cdef pythread.PyThread_type_lock _real_lock
-    cdef long _owner            # ID of thread owning the lock
-    cdef int _count             # re-entry count
-    cdef int _pending_requests  # number of pending requests for real lock
-    cdef bint _is_locked        # whether the real lock is acquired
+    cdef ObjectID obj
 
-    def __cinit__(self):
-        self._owner = -1
-        self._count = 0
-        self._is_locked = False
-        self._pending_requests = 0
-        self._real_lock = pythread.PyThread_allocate_lock()
-        if self._real_lock is NULL:
-            PyErr_NoMemory()
+    for python_id, ref in registry.items():
 
-    def __dealloc__(self):
-        if self._real_lock is not NULL:
-            pythread.PyThread_free_lock(self._real_lock)
-            self._real_lock = NULL
+        obj = ref()
 
-    def acquire(self, bint blocking=True):
-        return lock_lock(self, pythread.PyThread_get_thread_ident(), blocking)
+        # Object somehow died without being removed from the registry.
+        # I think this is impossible, but let's make sure.
+        if obj is None:
+            warnings.warn("Found murdered identifier %d of kind %s HDF5 id %d" % 
+                             (python_id, type(obj), obj.id), RuntimeWarning)
+            del registry[python_id]
+            continue
 
-    def release(self):
-        if self._owner != pythread.PyThread_get_thread_ident():
-            raise RuntimeError("cannot release un-acquired lock")
-        unlock_lock(self)
+        # Locked objects are immortal, as they generally are provided by
+        # the HDF5 library itself (property list classes, etc.).
+        if obj.locked:
+            continue
 
-    # compatibility with threading.RLock
+        # Invalid object; set obj.id = 0 so it doesn't become a zombie
+        if not H5Iis_valid(obj.id):
+            IF DEBUG_ID:
+                print("NONLOCAL - invalidating %d of kind %s HDF5 id %d" %
+                        (python_id, type(obj), obj.id) )
+            obj.id = 0
+            continue
 
-    def __enter__(self):
-        # self.acquire()
-        return lock_lock(self, pythread.PyThread_get_thread_ident(), True)
-
-    def __exit__(self, t, v, tb):
-        # self.release()
-        if self._owner != pythread.PyThread_get_thread_ident():
-            raise RuntimeError("cannot release un-acquired lock")
-        unlock_lock(self)
-
-    def _is_owned(self):
-        return self._owner == pythread.PyThread_get_thread_ident()
-
-
-cdef inline bint lock_lock(FastRLock lock, long current_thread, bint blocking) nogil:
-    # Note that this function *must* hold the GIL when being called.
-    # We just use 'nogil' in the signature to make sure that no Python
-    # code execution slips in that might free the GIL
-
-    if lock._count:
-        # locked! - by myself?
-        if current_thread == lock._owner:
-            lock._count += 1
-            return 1
-    elif not lock._pending_requests:
-        # not locked, not requested - go!
-        lock._owner = current_thread
-        lock._count = 1
-        return 1
-    # need to get the real lock
-    return _acquire_lock(
-        lock, current_thread,
-        pythread.WAIT_LOCK if blocking else pythread.NOWAIT_LOCK)
-
-cdef bint _acquire_lock(FastRLock lock, long current_thread, int wait) nogil:
-    # Note that this function *must* hold the GIL when being called.
-    # We just use 'nogil' in the signature to make sure that no Python
-    # code execution slips in that might free the GIL
-
-    if not lock._is_locked and not lock._pending_requests:
-        # someone owns it but didn't acquire the real lock - do that
-        # now and tell the owner to release it when done. Note that we
-        # do not release the GIL here as we must absolutely be the one
-        # who acquires the lock now.
-        if not pythread.PyThread_acquire_lock(lock._real_lock, wait):
-            return 0
-        #assert not lock._is_locked
-        lock._is_locked = True
-    lock._pending_requests += 1
-    with nogil:
-        # wait for the lock owning thread to release it
-        locked = pythread.PyThread_acquire_lock(lock._real_lock, wait)
-    lock._pending_requests -= 1
-    #assert not lock._is_locked
-    #assert lock._count == 0
-    if not locked:
-        return 0
-    lock._is_locked = True
-    lock._owner = current_thread
-    lock._count = 1
-    return 1
-
-cdef inline void unlock_lock(FastRLock lock) nogil:
-    # Note that this function *must* hold the GIL when being called.
-    # We just use 'nogil' in the signature to make sure that no Python
-    # code execution slips in that might free the GIL
-
-    #assert lock._owner == pythread.PyThread_get_thread_ident()
-    #assert lock._count > 0
-    lock._count -= 1
-    if lock._count == 0:
-        lock._owner = -1
-        if lock._is_locked:
-            pythread.PyThread_release_lock(lock._real_lock)
-            lock._is_locked = False
-## end of http://code.activestate.com/recipes/577336/ }}}
-
-
-cdef class _Registry:
-
-    cdef object _data
-    cdef readonly FastRLock lock
-
-    def __cinit__(self):
-        self._data = {}
-        self.lock = FastRLock()
-
-    __hash__ = None # Avoid Py3 warning
-
-    def cleanup(self):
-        "Manage invalid identifiers"
-        deadlist = []
-        for key in self._data:
-            val = self._data[key]
-            val = val()
-            if val is None:
-                deadlist.append(key)
-                continue
-            if not val.valid:
-                deadlist.append(key)
-        for key in deadlist:
-            del self._data[key]
-
-    def __getitem__(self, key):
-        o = self._data[key]()
-        if o is None:
-            # This would occur if we had open objects and closed their
-            # file, causing the objects identifiers to be reclaimed.
-            # Now we clean up the registry when we close a file (or any
-            # other identifier, for that matter), so in practice this
-            # condition never obtains.
-            del self._data[key]
-            # We need to raise a KeyError:
-            o = self._data[key]()
-        return o
-
-    def __setitem__(self, key, val):
-        # this method should only be called by ObjectID.open
-        self._data[key] = ref(val)
-
-    def __delitem__(self, key):
-        # we need to synchronize removal of the id from the
-        # registry with decreasing the HDF5 reference count:
-        self._data.pop(key,None)
-
-        if H5Iget_type(key) >= 0: # if not, object was explicitly closed
-            H5Idec_ref(key) 
-
-
-registry = _Registry()
+# --- End registry code -------------------------------------------------------
 
 
 cdef class ObjectID:
@@ -225,40 +153,76 @@ cdef class ObjectID:
     property fileno:
         def __get__(self):
             cdef H5G_stat_t stat
-            H5Gget_objinfo(self.id, '.', 0, &stat)
-            return (stat.fileno[0], stat.fileno[1])
+            with _phil:
+                H5Gget_objinfo(self.id, '.', 0, &stat)
+                return (stat.fileno[0], stat.fileno[1])
+
 
     property valid:
         def __get__(self):
-            if not self.id:
-                return False
-            res = H5Iget_type(self.id) > 0
-            if not res:
-                self.id = 0
-            return res
 
-    def __cinit__(self, id):
-        self.id = id
-        self.locked = 0
-        with registry.lock:
-            registry[id] = self
+            # Locked objects are always valid, regardless of obj.id
+            if self.locked:
+                return True
+
+            # Former zombie object
+            if self.id == 0:
+                return False
+
+            # Ask HDF5.  Note that H5Iis_valid only works for "user"
+            # identifiers, hence the above checks.
+            with _phil:
+                return H5Iis_valid(self.id)
+
+
+    def __cinit__(self, id_):
+        with _phil:
+            self.id = id_
+            self.locked = 0
+            IF DEBUG_ID:
+                print("CINIT - registering %d of kind %s HDF5 id %d" % (id(self), type(self), id_))
+            registry[id(self)] = weakref.ref(self)
+
 
     def __dealloc__(self):
-        if not self.locked:
+        with _phil:
+            IF DEBUG_ID:
+                print("DEALLOC - unregistering %d of kind %s HDF5 id %d" % (id(self), type(self), self.id))
             try:
-                with registry.lock:
-                    del registry[self.id]
-            except AttributeError:
-                # library being torn down, registry is None
-                pass
+                # There's no reason to expect it, but in principle H5Idec_ref
+                # could raise an exception.
+                if self.valid and (not self.locked):
+                    H5Idec_ref(self.id)
+            finally:
+                del registry[id(self)] 
+
+
+    def _close(self):
+        """ Manually close this object. """
+
+        with _phil:
+            IF DEBUG_ID:
+                print("CLOSE - %d of kind %s HDF5 id %d" % (id(self), type(self), self.id))
+            try:
+                # There's no reason to expect it, but in principle H5Idec_ref
+                # could raise an exception.
+                if self.valid and (not self.locked):
+                    H5Idec_ref(self.id)
+            finally:
+                self.id = 0
+
 
     def __nonzero__(self):
         return self.valid
 
+
     def __copy__(self):
         cdef ObjectID cpy
-        cpy = type(self)(self.id)
-        return cpy
+        with _phil:
+            cpy = type(self)(self.id)
+            H5Iinc_ref(cpy.id)
+            return cpy
+
 
     def __richcmp__(self, object other, int how):
         """ Default comparison mechanism for HDF5 objects (equal/not-equal)
@@ -270,21 +234,23 @@ cdef class ObjectID:
         """
         cdef bint equal = 0
 
-        if how != 2 and how != 3:
-            return NotImplemented
+        with _phil:
+            if how != 2 and how != 3:
+                return NotImplemented
 
-        if isinstance(other, ObjectID):
-            if self.id == other.id:
-                equal = 1
-            else:
-                try:
-                    equal = hash(self) == hash(other)
-                except TypeError:
-                    pass
+            if isinstance(other, ObjectID):
+                if self.id == other.id:
+                    equal = 1
+                else:
+                    try:
+                        equal = hash(self) == hash(other)
+                    except TypeError:
+                        pass
 
-        if how == 2:
-            return equal
-        return not equal
+            if how == 2:
+                return equal
+            return not equal
+
 
     def __hash__(self):
         """ Default hashing mechanism for HDF5 objects
@@ -295,25 +261,16 @@ cdef class ObjectID:
         3. If (1) fails, raise TypeError
         """
         cdef H5G_stat_t stat
+        
+        with _phil:
+            if self._hash is None:
+                try:
+                    H5Gget_objinfo(self.id, '.', 0, &stat)
+                    self._hash = hash((stat.fileno[0], stat.fileno[1], stat.objno[0], stat.objno[1]))
+                except Exception:
+                    raise TypeError("Objects of class %s cannot be hashed" % self.__class__.__name__)
 
-        if self._hash is None:
-            try:
-                H5Gget_objinfo(self.id, '.', 0, &stat)
-                self._hash = hash((stat.fileno[0], stat.fileno[1], stat.objno[0], stat.objno[1]))
-            except Exception:
-                raise TypeError("Objects of class %s cannot be hashed" % self.__class__.__name__)
-
-        return self._hash
-
-    @classmethod
-    def open(cls, id):
-        """ Return a representation of an HDF5 identifier """
-        with registry.lock:
-            try:
-                res = registry[id]
-            except KeyError:
-                res = cls(id)
-            return res
+            return self._hash
 
 
 cdef hid_t pdefault(ObjectID pid):
