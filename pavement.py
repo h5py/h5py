@@ -20,3 +20,9 @@ def release_windows():
         sh('%s setup.py test --hdf5-version=1.8.4 --hdf5=%s' % (exe, hdf5))
         sh('%s setup.py bdist_wininst --hdf5-version=1.8.4 --hdf5=%s' % (exe, hdf5))
     print ("Windows exe release done.  Distribution files are in dist/")
+    
+@task
+@consume_args
+def git_summary(options):
+    sh('git log --no-merges --pretty=oneline --abbrev-commit %s..HEAD'%options.args[0])
+    sh('git shortlog -s -n %s..HEAD'%options.args[0])
