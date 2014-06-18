@@ -392,7 +392,7 @@ class Dataset(HLObject):
                 return numpy.array((0,), dtype=new_dtype)
             if numpy.product(mshape) == 0:
                 return numpy.array(mshape, dtype=new_dtype)
-            out = numpy.empty(mshape, dtype=new_dtype)
+            out = numpy.zeros(mshape, dtype=new_dtype)
             sid_out = h5s.create_simple(mshape)
             sid_out.select_all()
             self.id.read(sid_out, sid, out, mtype)
@@ -410,7 +410,7 @@ class Dataset(HLObject):
         if self.shape == ():
             fspace = self.id.get_space()
             selection = sel2.select_read(fspace, args)
-            arr = numpy.ndarray(selection.mshape, dtype=new_dtype)
+            arr = numpy.zeros(selection.mshape, dtype=new_dtype)
             for mspace, fspace in selection:
                 self.id.read(mspace, fspace, arr, mtype)
             if len(names) == 1:
@@ -431,7 +431,7 @@ class Dataset(HLObject):
         # np.void rows in case of multi-field dtype. (issue 135)
         single_element = selection.mshape == ()
         mshape = (1,) if single_element else selection.mshape
-        arr = numpy.ndarray(mshape, new_dtype, order='C')
+        arr = numpy.zeros(mshape, new_dtype, order='C')
 
         # HDF5 has a bug where if the memory shape has a different rank
         # than the dataset, the read is very slow
