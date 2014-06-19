@@ -14,7 +14,6 @@ science-oriented Python distributions:
 
 * `Anaconda <http://continuum.io/downloads>`_ (Linux, Mac, Windows)
 * `PythonXY <https://code.google.com/p/pythonxy/>`_ (Windows)
-* `Enthought Canopy <https://www.enthought.com/products/canopy/>`_ (Linux, Mac, Windows)
 
 
 Installing on Windows
@@ -32,23 +31,37 @@ included.
 Installing on Linux and Mac OS X
 --------------------------------
 
-On Mac OS X, `homebrew <http://brew.sh>`_ is a reliable way of getting
-Python, NumPy, HDF5 and other dependencies set up.  It is also safe to use h5py
-with the OS X system Python.
+System dependencies
+~~~~~~~~~~~~~~~~~~~
 
 You will need:
 
-  * HDF5 1.8.4 or newer, shared library version with development headers (``libhdf5-dev`` or similar)
-  * Python 2.6 - 3.3 with development headers (``python-dev`` or similar)
-  * NumPy 1.6 or newer
-  * Optionally `Cython <http://cython.org>`_, if you want to access features
-    introduced after HDF5 1.8.4, or Parallel HDF5.
+* Python 2.6 - 3.3 with development headers (``python-dev`` or similar)
+* HDF5 1.8.4 or newer, shared library version with development headers (``libhdf5-dev`` or similar)
 
-With ``pip`` or ``easy_install``::
+On Mac OS X, `homebrew <http://brew.sh>`_ is a reliable way of getting
+Python, HDF5 and other dependencies set up.  It is also safe to use h5py
+with the OS X system Python.
+
+Install with pip
+~~~~~~~~~~~~~~~~
+
+Simply run::
 
     $ pip install h5py
+    
+All dependencies are installed automatically.
 
-Manually, from the h5py tarball::
+Via setup.py
+~~~~~~~~~~~~
+
+You will need:
+
+* The h5py tarball from http://www.h5py.org.
+* NumPy 1.5 or newer
+* `Cython <http://cython.org>`_ 0.16 or newer
+
+::
 
     $ tar xzf h5py-X.Y.Z.tar.gz
     $ cd h5py
@@ -72,34 +85,36 @@ After installing h5py::
 Custom installation
 -------------------
 
-Build options can also be passed to ``setup.py`` directly.  Keep in mind these
-options are "sticky".  They hang around between e.g. ``build`` and ``test``
-invocations of h5py.
+You can specify build options for h5py with the ``configure`` option to
+setup.py.  Options may be given together or separately::
 
-Specifying the path to HDF5::
+    $ python setup.py configure --hdf5=/path/to/hdf5
+    $ python setup.py configure --hdf5-version=X.Y.Z
+    $ python setup.py configure --mpi
+    
+Note the ``--hdf5-version`` option is generally not needed, as h5py 
+auto-detects the installed version of HDF5 (even for custom locations).
 
-    $ python setup.py install --hdf5=/path/to/hdf5
-    $ python setup.py install --hdf5=default        # reset to compiler path
+Once set, build options apply to all future builds in the source directory.
+You can reset to the defaults with the ``--reset`` option::
 
-Manually specifying the HDF5 version (disables auto-detection)::
+    $ python setup.py configure --reset
 
-    $ python setup.py install --hdf5-version=1.8.11
-    $ python setup.py install --hdf5-version=default   # re-enable autodetection
+You can also configure h5py using environment variables.  This is handy
+when installing via ``pip``, as you don't have direct access to setup.py::
 
-You can also configure h5py using environment variables.
-The variable ``HDF5_DIR`` may contain the path to your
-installation of HDF5.  The directory you provide should contain a subdirectory
-called ``lib``::
+    $ HDF5_DIR=/path/to/hdf5 pip install h5py
+    $ HDF5_VERSION=X.Y.Z pip install h5py
+    
+Here's a list of all the configure options currently supported:
 
-    $ export HDF5_DIR=/path/to/hdf5
-    $ pip install h5py
-
-The variable ``HDF5_VERSION`` manually tells h5py to build against a specific
-version of HDF5, and disables the version auto-detection in ``setup.py``::
-
-    $ export HDF5_VERSION=1.8.11
-    $ pip install h5py
-
+======================= =========================== ===========================
+Option                  Via setup.py                Via environment variable
+======================= =========================== ===========================
+Custom path to HDF5     ``--hdf5=/path/to/hdf5``    ``HDF5_DIR=/path/to/hdf5``
+Force HDF5 version      ``--hdf5-version=X.Y.Z``    ``HDF5_VERSION=X.Y.Z``
+Enable MPI mode         ``--mpi``                   (none)
+======================= =========================== ===========================
 
 
 Building against Parallel HDF5
@@ -113,17 +128,16 @@ HDF5 features in h5py itself::
 
 If you want access to the full Parallel HDF5 feature set in h5py
 (:ref:`parallel`), you will have to build in MPI mode.  Right now this must
-be done with command-line options from the h5py tarball.  You will need:
+be done with command-line options from the h5py tarball.
 
-  * Cython
-  * A shared-library build of Parallel HDF5 (i.e. built with ``./configure --enable-shared --enable-parallel``).
+**You will need a shared-library build of Parallel HDF5 (i.e. built with
+./configure --enable-shared --enable-parallel).**
 
-To build in MPI mode (sticky option)::
+To build in MPI mode, use the ``--mpi`` option to ``setup.py configure``::
 
     $ export CC=mpicc
-    $ python setup.py build --mpi
-
-Option ``--mpi=no`` will reset to the default (serial) build setting.
+    $ python setup.py configure --mpi
+    $ python setup.py build
 
 See also :ref:`parallel`.
 
