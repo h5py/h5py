@@ -7,6 +7,26 @@
 # License:  Standard 3-clause BSD; see "license.txt" for full license terms
 #           and contributor agreement.
 
+# Defines the HDF5 C API functions wrapped by h5py. See also api_gen.py.
+#
+# Format of this file:
+#
+# header_declaration:
+#   function_line
+#   function_line
+#   ...
+#
+# Header declarations are the basenames of the C header files (without the .h);
+# for example, functions from "hdf5.h" are under the "hdf5" declaration.
+#
+# Function lines are C function signatures, optionally preceeded by:
+#   MPI     If present, function requires an MPI-aware build of h5py
+#   ERROR   Explicit error checks are needed (HDF5 does not use error stack)
+#   X.Y.Z   Minimum version of HDF5 required for this function
+#
+# Blank/whitespace-only lines are ignored, as are lines starting with "#".
+# Indentation must be via spaces only.
+
 hdf5:
   herr_t H5open()
   herr_t H5close()
