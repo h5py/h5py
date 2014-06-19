@@ -146,6 +146,6 @@ setup(
   package_data = package_data,
   ext_modules = [Extension('h5py.x',['x.c'])],  # To trick build into running build_ext
   requires = ['numpy (>=1.5.0)', 'Cython (>=0.16)'],
-  install_requires = ['numpy (>=1.5.0)', 'Cython (>=0.16)'],
+  install_requires = ['numpy>=1.5.0', 'Cython>=0.16'],
   cmdclass = CMDCLASS,
 )
