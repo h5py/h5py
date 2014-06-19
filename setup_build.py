@@ -10,7 +10,6 @@ try:
 except ImportError:
     from distutils.extension import Extension
 from distutils.command.build_ext import build_ext
-from Cython.Build import cythonize
 import sys
 import os
 import os.path as op
@@ -96,6 +95,8 @@ class h5py_build_ext(build_ext):
     def run(self):
         """ Distutils calls this method to run the command """
         
+        from Cython.Build import cythonize
+
         # Provides all of our build options
         config = self.distribution.get_command_obj('configure')
         config.run()
@@ -106,6 +107,7 @@ class h5py_build_ext(build_ext):
              
         # Rebuild low-level defs if missing or stale
         if not op.isfile(defs_file) or os.stat(func_file).st_mtime > os.stat(defs_file).st_mtime:
+            print("Executing api_gen rebuild of defs")
             api_gen.run()
             
         # Rewrite config.pxi file if needed
@@ -117,7 +119,7 @@ class h5py_build_ext(build_ext):
 DEF MPI = %(mpi)s
 DEF HDF5_VERSION = %(version)s
 """
-                s %= {'mpi': config.mpi,
+                s %= {'mpi': bool(config.mpi),
                       'version': tuple(int(x) for x in config.hdf5_version.split('.'))}
                 s = s.encode('utf-8')
                 f.write(s)

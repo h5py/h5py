@@ -130,12 +130,6 @@ if os.name == 'nt':
 else:
     package_data = {'h5py': []}
 
-# Avoid going off and installing NumPy if the user only queries for information
-if any('--' + opt in sys.argv for opt in Distribution.display_option_names + ['help']):
-    setup_requires = []
-else:
-    setup_requires = ['numpy >=1.0.1']
-
 setup(
   name = 'h5py',
   version = VERSION,
@@ -147,11 +141,11 @@ setup(
   maintainer = 'Andrew Collette',
   maintainer_email = 'andrew dot collette at gmail dot com',
   url = 'http://www.h5py.org',
-  download_url = 'http://code.google.com/p/h5py/downloads/list',
+  download_url = 'https://pypi.python.org/pypi/h5py',
   packages = ['h5py', 'h5py._hl', 'h5py.tests'],
   package_data = package_data,
   ext_modules = [Extension('h5py.x',['x.c'])],  # To trick build into running build_ext
-  requires = ['numpy (>=1.0.1)'],
-  setup_requires = setup_requires,
+  requires = ['numpy (>=1.5.0)', 'Cython (>=0.16)'],
+  install_requires = ['numpy (>=1.5.0)', 'Cython (>=0.16)'],
   cmdclass = CMDCLASS,
 )
