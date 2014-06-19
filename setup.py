@@ -8,15 +8,10 @@ except ImportError:
     from distutils.extension import Extension
 from distutils.cmd import Command
 from distutils.dist import Distribution
-from distutils.version import LooseVersion
-import warnings
 import sys, os
 import os.path as op
-from functools import reduce
-import shutil
 
-import configure   # Sticky-options configuration and version auto-detect
-import setup_build
+import setup_build, setup_configure
 
 VERSION = '2.4.0a0'
 
@@ -28,35 +23,6 @@ if sys.version_info[0] >= 3:
          import build_py_2to3 as build_py
 else:
     from distutils.command.build_py import build_py
-
-
-# --- Support functions and "super-option" configuring ------------------------
-
-def localpath(*args):
-    return op.abspath(reduce(op.join, (op.dirname(__file__),)+args))
-
-
-# --- Determine configuration settings ----------------------------------------
-
-settings = configure.scrape_eargs()          # lowest priority
-settings.update(configure.scrape_cargs())    # highest priority
-
-HDF5 = settings.get('hdf5')
-HDF5_VERSION = settings.get('hdf5_version')
-
-MPI = settings.setdefault('mpi', False)
-if MPI:
-    if not HAVE_CYTHON:
-        raise ValueError("Cython is required to compile h5py in MPI mode")
-    try:
-        import mpi4py
-    except ImportError:
-        raise ImportError("mpi4py is required to compile h5py in MPI mode")
-
-
-# --- Configure Cython and create extensions ----------------------------------
-
-
 
 
 # --- Custom distutils commands -----------------------------------------------
@@ -169,5 +135,6 @@ setup(
   ext_modules = [Extension('h5py.x',['x.c'])],  # To trick build into running build_ext
   requires = ['numpy (>=1.0.1)'],
   setup_requires = setup_requires,
-  cmdclass = {'build_ext': setup_build.h5py_build_ext, 'test': test, 'build_py':build_py}
+  cmdclass = {'build_ext': setup_build.h5py_build_ext, 'test': test, 'build_py':build_py, 
+    'configure': setup_configure.configure}
 )
