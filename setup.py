@@ -1,35 +1,48 @@
 #!/usr/bin/env python
 
+"""
+    This is the main setup script for h5py (http://www.h5py.org).
+    
+    Most of the functionality is provided in two separate modules:
+    setup_configure, which manages compile-time/Cython-time build options
+    for h5py, and setup_build, which handles the actual compilation process.
+"""
+
 try:
-    # If possible, use setuptools.Extension so we get setup_requires
     from setuptools import Extension, setup
 except ImportError:
     from distutils.core import setup
     from distutils.extension import Extension
 from distutils.cmd import Command
 from distutils.dist import Distribution
-import sys, os
+import sys
+import os
 import os.path as op
 
-import setup_build, setup_configure
-
-VERSION = '2.4.0a0'
-
-
 if sys.version_info[0] >= 3:
-    # Shamelessly stolen from Cython 0.14
     import lib2to3.refactor
     from distutils.command.build_py \
          import build_py_2to3 as build_py
 else:
     from distutils.command.build_py import build_py
+    
+import setup_build, setup_configure
 
 
-# --- Custom distutils commands -----------------------------------------------
+VERSION = '2.4.0a0'
+
+
+# --- Custom Distutils commands -----------------------------------------------
 
 class test(Command):
 
-    """Run the test suite."""
+    """
+        Custom Distutils command to run the h5py test suite.
+    
+        This command will invoke build/build_ext if the project has not
+        already been built.  It then patches in the build directory to
+        sys.path and runs the test suite directly.
+    """
 
     description = "Run the test suite"
 
@@ -45,20 +58,20 @@ class test(Command):
             raise ValueError('verbosity must be an integer.')
 
     def run(self):
+        """ Called by Distutils when this command is run """
         import sys
         py_version = sys.version_info[:2]
-        if py_version == (2,7) or py_version >= (3,2):
+        if py_version != (2, 6):
             import unittest
         else:
             try:
                 import unittest2 as unittest
             except ImportError:
-                raise ImportError(
-                    "unittest2 is required to run tests with python-%d.%d"
-                    % py_version
-                    )
+                raise ImportError( "unittest2 is required to run tests with Python 2.6")
+
         buildobj = self.distribution.get_command_obj('build')
         buildobj.run()
+        
         oldpath = sys.path
         try:
             sys.path = [op.abspath(buildobj.build_lib)] + oldpath
@@ -68,7 +81,12 @@ class test(Command):
                 sys.exit(1)
         finally:
             sys.path = oldpath
-
+        
+        
+CMDCLASS = {'build_py': build_py,
+            'build_ext': setup_build.h5py_build_ext,
+            'configure': setup_configure.configure,
+            'test': test, }
 
 
 # --- Distutils setup and metadata --------------------------------------------
@@ -135,6 +153,5 @@ setup(
   ext_modules = [Extension('h5py.x',['x.c'])],  # To trick build into running build_ext
   requires = ['numpy (>=1.0.1)'],
   setup_requires = setup_requires,
-  cmdclass = {'build_ext': setup_build.h5py_build_ext, 'test': test, 'build_py':build_py, 
-    'configure': setup_configure.configure}
+  cmdclass = CMDCLASS,
 )

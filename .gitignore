@@ -8,7 +8,7 @@ h5py/config.pxi
 h5py/_hdf5.*
 h5py/*.dll
 *.hdf5
-*.pickle
+*.pkl
 h5py/defs.*
 build/
 *.pyc
