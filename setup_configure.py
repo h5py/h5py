@@ -18,13 +18,14 @@
 
 from distutils.cmd import Command
 import os
+import os.path as op
 import sys
 import pickle
 
 def loadpickle():
     """ Load settings dict from the pickle file """
     try:
-        with open('h5config.pkl','r') as f:
+        with open('h5config.pkl','rb') as f:
             cfg = pickle.load(f)
         if not isinstance(cfg, dict): raise TypeError
     except Exception:
@@ -34,11 +35,8 @@ def loadpickle():
 
 def savepickle(dct):
     """ Save settings dict to the pickle file """
-    try:
-        with open('h5config.pkl','w') as f:
-            pickle.dump(dct, f)
-    except Exception:
-        pass
+    with open('h5config.pkl','wb') as f:
+        pickle.dump(dct, f)
 
 
 def validate_version(s):
@@ -112,7 +110,7 @@ class configure(Command):
         env = EnvironmentOptions()
         oldsettings = {} if self.reset else loadpickle()
         dct = oldsettings.copy()
-        
+                
         # Step 1: determine if settings have changed and update cache
         
         if self.hdf5 is not None:
@@ -153,7 +151,7 @@ class configure(Command):
         if self.hdf5_version is None:
             self.hdf5_version = oldsettings.get('env_hdf5_version')
         if self.hdf5_version is None:
-            self.hdf5_version = autodetect_version(self.hdf5)
+            self.hdf5_version = autodetect_version(op.join(self.hdf5, 'lib') if self.hdf5 is not None else None)
             
         if self.mpi is None:
             self.mpi = oldsettings.get('cmd_mpi')

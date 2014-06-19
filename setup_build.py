@@ -79,11 +79,12 @@ class h5py_build_ext(build_ext):
         # Ensure a custom location appears first, so we don't get a copy of
         # HDF5 from some default location in COMPILER_SETTINGS
         if config.hdf5 is not None:
-            settings['include_dirs'].insert(0, config.hdf5)
-            settings['library_dirs'].insert(0, config.hdf5)
+            settings['include_dirs'].insert(0, op.join(config.hdf5, 'include'))
+            settings['library_dirs'].insert(0, op.join(config.hdf5, 'lib'))
 
         # TODO: should this only be done on UNIX?
-        settings['runtime_library_dirs'] = settings['library_dirs']
+        if os.name != 'nt':
+            settings['runtime_library_dirs'] = settings['library_dirs']
         
         def make_extension(module):
             sources = [localpath('h5py', module+'.pyx')] + EXTRA_SRC.get(module, [])
