@@ -108,11 +108,14 @@ class configure(Command):
         """ Distutils calls this when the command is run """
         
         env = EnvironmentOptions()
-        oldsettings = {} if self.reset else loadpickle()
-        dct = oldsettings.copy()
                 
         # Step 1: determine if settings have changed and update cache
         
+        oldsettings = {} if self.reset else loadpickle()
+        dct = oldsettings.copy()
+        
+        # Only update settings which have actually been specified this
+        # round; ignore the others (which have value None).
         if self.hdf5 is not None:
             dct['cmd_hdf5'] = self.hdf5
         if env.hdf5 is not None:
@@ -126,9 +129,9 @@ class configure(Command):
 
         self.rebuild_required = dct.get('rebuild') or dct != oldsettings
         
-        # Corner case: rebuild if options reset, but not if they previously
-        # had default values (multiple resets in a row or no change)
-        if self.reset and not all((not x) for x in loadpickle().values()):
+        # Corner case: rebuild if options reset, but only if they previously
+        # had non-default values (to handle multiple resets in a row)
+        if self.reset and any(loadpickle().values()):
             self.rebuild_required = True
             
         dct['rebuild'] = self.rebuild_required
