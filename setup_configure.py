@@ -154,8 +154,13 @@ class configure(Command):
         if self.hdf5_version is None:
             self.hdf5_version = oldsettings.get('env_hdf5_version')
         if self.hdf5_version is None:
-            self.hdf5_version = autodetect_version(op.join(self.hdf5, 'lib') if self.hdf5 is not None else None)
-            
+            try:
+                self.hdf5_version = autodetect_version(self.hdf5)
+                print("Autodetected HDF5 %s" % self.hdf5_version)
+            except Exception as e:
+                sys.stderr.write("Autodetection skipped [%s]\n" % e)
+                self.hdf5_version = '1.8.4'
+                
         if self.mpi is None:
             self.mpi = oldsettings.get('cmd_mpi')
                 
@@ -172,14 +177,14 @@ class configure(Command):
         print('*' * 80)
 
 
-def autodetect_version(libdir=None):
+def autodetect_version(hdf5_dir=None):
     """
     Detect the current version of HDF5, and return X.Y.Z version string.
 
-    If the version can't be determined, prints error information to stderr
-    and returns the lowest supported version.
+    Intended for Unix-ish platforms (Linux, OS X, BSD).
+    Does not support Windows. Raises an exception if anything goes wrong.
 
-    libdir: optional place to search for libhdf5.so.
+    hdf5_dir: optional HDF5 install directory to look in (containing "lib")
     """
 
     import os
@@ -188,48 +193,37 @@ def autodetect_version(libdir=None):
     import re
     import ctypes
     from ctypes import byref
-
-    if sys.platform.startswith('win'):
-        regexp = re.compile('^hdf5.dll$')
-    elif sys.platform.startswith('darwin'):
+    
+    if sys.platform.startswith('darwin'):
         regexp = re.compile(r'^libhdf5.dylib')
     else:
         regexp = re.compile(r'^libhdf5.so')
+        
+    libdirs = ['/usr/local/lib', '/opt/local/lib']
+    if hdf5_dir is not None:
+        libdirs.insert(0, op.join(hdf5_dir, 'lib'))
 
-    try:
-        path = None
+    path = None
+    for d in libdirs:
+        try:
+            candidates = [x for x in os.listdir(d) if regexp.match(x)]
+        except Exception:
+            continue   # Skip invalid entries
 
-        libdirs = [] if libdir is None else [libdir]
-        libdirs += ['/usr/local/lib', '/opt/local/lib']
-        for d in libdirs:
-            try:
-                candidates = [x for x in os.listdir(d) if regexp.match(x)]
-                if len(candidates) != 0:
-                    candidates.sort(key=lambda x: len(x))   # Prefer libfoo.so to libfoo.so.X.Y.Z
-                    path = op.abspath(op.join(d, candidates[0]))
-            except Exception:
-                pass   # We skip invalid entries, because that's what the C compiler does
+        if len(candidates) != 0:
+            candidates.sort(key=lambda x: len(x))   # Prefer libfoo.so to libfoo.so.X.Y.Z
+            path = op.abspath(op.join(d, candidates[0]))
+            break
 
-        if path is None:
-            path = "libhdf5.so"
+    if path is None:
+        path = "libhdf5.so"
 
-        lib = ctypes.cdll.LoadLibrary(path)
+    lib = ctypes.cdll.LoadLibrary(path)
 
-        major = ctypes.c_uint()
-        minor = ctypes.c_uint()
-        release = ctypes.c_uint()
+    major = ctypes.c_uint()
+    minor = ctypes.c_uint()
+    release = ctypes.c_uint()
 
-        lib.H5get_libversion(byref(major), byref(minor), byref(release))
+    lib.H5get_libversion(byref(major), byref(minor), byref(release))
 
-        vers = (int(major.value), int(minor.value), int(release.value))
-        vers = "%s.%s.%s" % vers
-        print("Autodetected HDF5 version " + vers)
-
-        return vers
-
-    except Exception as e:
-
-        sys.stderr.write("Autodetection skipped [")
-        sys.stderr.write(str(e))
-        sys.stderr.write("]\n")
-        return '1.8.4'
+    return "{}.{}.{}".format(int(major.value), int(minor.value), int(release.value))
