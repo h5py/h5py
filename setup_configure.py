@@ -36,7 +36,7 @@ def loadpickle():
 def savepickle(dct):
     """ Save settings dict to the pickle file """
     with open('h5config.pkl','wb') as f:
-        pickle.dump(dct, f)
+        pickle.dump(dct, f, protocol=0)
 
 
 def validate_version(s):
