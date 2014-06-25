@@ -3,8 +3,8 @@ from paver.easy import *
 @task
 def release_unix():
     sh('python setup.py clean')
-    sh('rm -f h5py_config.pickle')
-    sh('python setup.py build --hdf5-version=1.8.4 --mpi=no')
+    sh('python setup.py configure --reset --hdf5-version=1.8.4')
+    sh('python setup.py build -f')
     sh('python setup.py test')
     sh('python setup.py sdist')
     print("Unix release done.  Distribution tar file is in dist/")
@@ -15,10 +15,10 @@ def release_windows():
         exe = r'C:\Python%d\Python.exe' % pyver
         hdf5 = r'c:\hdf5\Python%d' % pyver
         sh('%s setup.py clean' % exe)
-        sh('%s api_gen.py' % exe)
-        sh('%s setup.py build -f --hdf5-version=1.8.4 --hdf5=%s' % (exe, hdf5))
-        sh('%s setup.py test --hdf5-version=1.8.4 --hdf5=%s' % (exe, hdf5))
-        sh('%s setup.py bdist_wininst --hdf5-version=1.8.4 --hdf5=%s' % (exe, hdf5))
+        sh('%s setup.py configure --reset --hdf5-version=1.8.4 --hdf5=%s' % (exe, hdf5))
+        sh('%s setup.py build -f' % exe)
+        sh('%s setup.py test' % exe)
+        sh('%s setup.py bdist_wininst' % exe)
     print ("Windows exe release done.  Distribution files are in dist/")
     
 @task
