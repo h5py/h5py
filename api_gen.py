@@ -78,7 +78,7 @@ class Line(object):
         
         m = self.PATTERN.match(text)
         if m is None:
-            raise ValueError("Invalid line encountered: {}".format(text))
+            raise ValueError("Invalid line encountered: {0}".format(text))
             
         parts = m.groupdict()
         
@@ -93,7 +93,7 @@ class Line(object):
 
         self.args = self.SIG_PATTERN.findall(self.sig)
         if self.args is None:
-            raise ValueError("Invalid function signature: {}".format(self.sig))
+            raise ValueError("Invalid function signature: {0}".format(self.sig))
         self.args = ", ".join(x[1] for x in self.args)
 
 
@@ -170,7 +170,7 @@ class LineProcessor(object):
         
         def wrapif(condition, code):
             code = code.replace('\n', '\n    ', code.count('\n')-1) # Yes, -1.
-            code = "IF {}:\n    {}".format(condition, code)
+            code = "IF {0}:\n    {1}".format(condition, code)
             return code
 
         if self.line.mpi:
