@@ -9,7 +9,7 @@ Websites
 
 * Main website: http://www.h5py.org
 * Source code: http://github.com/h5py/h5py
-* Mailing list: h5py at googlegroups
+* Mailing list: https://groups.google.com/d/forum/h5py
 
 For advanced installation options, see http://docs.h5py.org.
 
@@ -32,15 +32,6 @@ Installing on Windows
 
 Download an installer from http://www.h5py.org and run it.
 
-Installing from release tarball
--------------------------------
-
-Run the following commands::
-
-   python setup.py build
-   python setup.py test   # optional
-   [sudo] python setup.py install
-
 Installing on UNIX
 ------------------
 
@@ -58,4 +49,4 @@ Reporting bugs
 --------------
 
 Open a bug at http://github.com/h5py/h5py/issues.  For general questions, ask
-on the list (h5py at google groups).
+on the list (https://groups.google.com/d/forum/h5py).
