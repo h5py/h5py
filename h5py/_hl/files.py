@@ -59,6 +59,16 @@ def make_fapl(driver, libver, **kwds):
     return plist
 
 
+def make_fid_from_memory(memory, flags):
+    """ Get a new FileID by opening or creating a file.
+    """
+
+    if flags & ~(h5f.IMAGE_OPEN_R0 | h5f.IMAGE_OPEN_RW | h5f.IMAGE_DONT_COPY | h5f.IMAGE_DONT_RELEASE):
+        raise ValueError("Invalid flags; must be one of h5f.IMAGE_OPEN_R0, h5f.IMAGE_OPEN_RW, h5f.IMAGE_DONT_COPY, h5f.IMAGE_DONT_RELEASE")
+
+    fid = h5f.open_from_memory(memory, flags)
+    return fid
+
 def make_fid(name, mode, userblock_size, fapl, fcpl=None):
     """ Get a new FileID by opening or creating a file.
     Also validates mode argument."""
@@ -186,8 +196,8 @@ class File(Group):
             self.id.set_mpi_atomicity(value)
 
 
-    def __init__(self, name, mode=None, driver=None, 
-                 libver=None, userblock_size=None, **kwds):
+    def __init__(self, name = None, mode=None, driver=None,
+                 libver=None, userblock_size=None, image=None, image_flags = h5f.IMAGE_OPEN_R0, **kwds):
         """Create a new file object.
 
         See the h5py user guide for a detailed explanation of the options.
@@ -204,22 +214,29 @@ class File(Group):
         userblock
             Desired size of user block.  Only allowed when creating a new
             file (mode w or w-).
+        image
+            existing file image
+        image_flags
+            flags for the treatment of the specified file image
         Additional keywords
             Passed on to the selected file driver.
         """
-        if isinstance(name, _objects.ObjectID):
-            fid = h5i.get_file_id(name)
+        if image is not None:
+            fid = make_fid_from_memory(image, image_flags)
         else:
-            try:
-                # If the byte string doesn't match the default
-                # encoding, just pass it on as-is.  Note Unicode
-                # objects can always be encoded.
-                name = name.encode(sys.getfilesystemencoding())
-            except (UnicodeError, LookupError):
-                pass
+            if isinstance(name, _objects.ObjectID):
+                fid = h5i.get_file_id(name)
+            else:
+                try:
+                    # If the byte string doesn't match the default
+                    # encoding, just pass it on as-is.  Note Unicode
+                    # objects can always be encoded.
+                    name = name.encode(sys.getfilesystemencoding())
+                except (UnicodeError, LookupError):
+                    pass
 
-            fapl = make_fapl(driver, libver, **kwds)
-            fid = make_fid(name, mode, userblock_size, fapl)
+                fapl = make_fapl(driver, libver, **kwds)
+                fid = make_fid(name, mode, userblock_size, fapl)
 
         Group.__init__(self, fid)
 
