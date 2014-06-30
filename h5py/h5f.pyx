@@ -96,13 +96,14 @@ def open_from_memory(object memory, unsigned int flags=0):
             raise TypeError("memory must be a buffer")
     cdef int buf_flags = PyBUF_SIMPLE | PyBUF_C_CONTIGUOUS
     cdef int writable = False
-    if flags & H5LT_FILE_IMAGE_OPEN_RW:
+    if flags & IMAGE_OPEN_RW:
         buf_flags |= PyBUF_WRITABLE
         writable = True
     if PyObject_GetBuffer(memory, &buffer, buf_flags):
         raise TypeError("memory must be a %scontiguous buffer"%(("writable " if writable else "")))
 
     r = H5LTopen_file_image(buffer.buf, buffer.len, flags)
+    PyBuffer_Release(&buffer)
     if r<0:
         if set_exception():
             return <hid_t>-1
