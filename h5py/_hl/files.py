@@ -206,7 +206,7 @@ class File(Group):
 
 
     def __init__(self, name = None, mode=None, driver=None,
-                 libver=None, userblock_size=None, image=None, image_flags = h5f.IMAGE_OPEN_R0, **kwds):
+                 libver=None, userblock_size=None, image=None, image_flags = h5f.IMAGE_OPEN_RO, **kwds):
         """Create a new file object.
 
         See the h5py user guide for a detailed explanation of the options.

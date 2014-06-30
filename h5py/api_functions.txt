@@ -509,4 +509,5 @@ hdf5_hl:
   ERROR htri_t  H5DSis_scale(hid_t did)
   ERROR herr_t  H5DSiterate_scales(hid_t did, unsigned int dim, int *idx, H5DS_iterate_t visitor, void *visitor_data)
 
-  ERROR hid_t H5LTopen_file_image(void *buf_ptr, size_t buf_size, unsigned flags)
+  1.8.9 hid_t H5LTopen_file_image(void *buf_ptr, size_t buf_size, unsigned flags)
+
