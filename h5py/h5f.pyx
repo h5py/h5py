@@ -37,7 +37,7 @@ ACC_EXCL    = H5F_ACC_EXCL
 ACC_RDWR    = H5F_ACC_RDWR
 ACC_RDONLY  = H5F_ACC_RDONLY
 
-IMAGE_OPEN_R0      = 0
+IMAGE_OPEN_RO      = 0
 IMAGE_OPEN_RW      = H5LT_FILE_IMAGE_OPEN_RW
 IMAGE_DONT_COPY    = H5LT_FILE_IMAGE_DONT_COPY
 IMAGE_DONT_RELEASE = H5LT_FILE_IMAGE_DONT_RELEASE
@@ -85,7 +85,7 @@ def open_from_memory(object memory, unsigned int flags=0):
     """(STRING name, memory, UINT flags=0) => FileID
 
     Open an HDF5 file from memory.  Keyword "flags" may be OR'd together:
-    IMAGE_OPEN_R0
+    IMAGE_OPEN_RO
     IMAGE_OPEN_RW
     IMAGE_DONT_COPY
     IMAGE_DONT_RELEASE
