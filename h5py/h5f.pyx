@@ -20,6 +20,10 @@ from h5t cimport typewrap
 from h5i cimport wrap_identifier
 from h5ac cimport CacheConfig
 from utils cimport emalloc, efree
+from _errors cimport set_exception
+from cpython.buffer cimport Py_buffer, PyBUF_SIMPLE, PyBUF_C_CONTIGUOUS, PyBUF_WRITABLE, PyObject_CheckBuffer, PyObject_GetBuffer, PyBuffer_Release
+
+
 
 from h5py import _objects
 from ._objects import phil, with_phil
@@ -33,6 +37,12 @@ ACC_TRUNC   = H5F_ACC_TRUNC
 ACC_EXCL    = H5F_ACC_EXCL
 ACC_RDWR    = H5F_ACC_RDWR
 ACC_RDONLY  = H5F_ACC_RDONLY
+
+IF HDF5_VERSION >= (1, 8, 9):
+    IMAGE_OPEN_RO      = 0
+    IMAGE_OPEN_RW      = H5LT_FILE_IMAGE_OPEN_RW
+    IMAGE_DONT_COPY    = H5LT_FILE_IMAGE_DONT_COPY
+    IMAGE_DONT_RELEASE = H5LT_FILE_IMAGE_DONT_RELEASE
 
 SCOPE_LOCAL     = H5F_SCOPE_LOCAL
 SCOPE_GLOBAL    = H5F_SCOPE_GLOBAL
@@ -70,6 +80,42 @@ def open(char* name, unsigned int flags=H5F_ACC_RDWR, PropFAID fapl=None):
     Keyword fapl may be a file access property list.
     """
     return FileID(H5Fopen(name, flags, pdefault(fapl)))
+
+
+IF HDF5_VERSION >= (1, 8, 9):
+    @with_phil
+    def open_from_memory(object memory, unsigned int flags=0):
+        """(STRING name, memory, UINT flags=0) => FileID
+
+        Open an HDF5 file from memory.  Keyword "flags" may be OR'd together:
+        IMAGE_OPEN_RO
+        IMAGE_OPEN_RW
+        IMAGE_DONT_COPY
+        IMAGE_DONT_RELEASE
+        """
+        cdef hid_t r
+        cdef Py_buffer buffer
+        if not PyObject_CheckBuffer(memory):
+                raise TypeError("memory must be a buffer")
+        cdef int buf_flags = PyBUF_SIMPLE | PyBUF_C_CONTIGUOUS
+        cdef int writable = False
+        if flags & IMAGE_OPEN_RW:
+            buf_flags |= PyBUF_WRITABLE
+            writable = True
+        if PyObject_GetBuffer(memory, &buffer, buf_flags):
+            raise TypeError("memory must be a %scontiguous buffer"%(("writable " if writable else "")))
+
+        r = H5LTopen_file_image(buffer.buf, buffer.len, flags)
+        if PyObject_GetBuffer(memory, &buffer, buf_flags):
+            raise TypeError("memory must be a %scontiguous buffer"%(("writable " if writable else "")))
+
+        try:
+            r = H5LTopen_file_image(buffer.buf, buffer.len, flags)
+        except Exception as e:
+            PyBuffer_Release(&buffer)
+            raise e
+        PyBuffer_Release(&buffer)
+        return FileID(r)
 
 
 @with_phil
