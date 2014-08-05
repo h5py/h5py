@@ -16,7 +16,7 @@
 #ifndef H5PY_COMPAT
 #define H5PY_COMPAT
 
-#if (MPI_VERSION < 3) && !defined(PyMPI_HAVE_MPI_Message)
+#if defined(MPI_VERSION) && (MPI_VERSION < 3) && !defined(PyMPI_HAVE_MPI_Message)
 typedef void *PyMPI_MPI_Message;
 #define MPI_Message PyMPI_MPI_Message
 #endif
