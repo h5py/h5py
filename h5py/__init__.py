@@ -32,6 +32,8 @@ from h5py.h5t import py_get_enum as get_enum
 
 from h5py import version
 
+from .tests import run_tests
+
 __version__ = version.version
 
 __doc__ = \
@@ -64,24 +66,3 @@ def enable_ipython_completer():
 
     raise RuntimeError('completer must be enabled in active ipython session')
 
-
-def run_tests(verbosity=1):
-    """ (int verbosity) => unittest.TextTestRunner result
-
-        Run tests with given verbosity level
-        Returns result instance from unittest.TextTestRunner
-    """
-    import sys
-    py_version = sys.version_info[:2]
-    if py_version == (2,7) or py_version >= (3,2):
-        import unittest
-    else:
-        try:
-            import unittest2 as unittest
-        except ImportError:
-            raise ImportError(
-                "unittest2 is required to run tests with python-%d.%d"
-                % py_version
-                )
-    suite = unittest.TestLoader().discover('h5py')
-    return unittest.TextTestRunner(verbosity=verbosity).run(suite)

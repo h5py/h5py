@@ -46,16 +46,13 @@ class test(Command):
 
     description = "Run the test suite"
 
-    user_options = [('verbosity=', 'V', 'set test report verbosity')]
+    user_options = [('detail', 'd', 'Display additional test information')]
 
     def initialize_options(self):
-        self.verbosity = 0
+        self.detail = False
 
     def finalize_options(self):
-        try:
-            self.verbosity = int(self.verbosity)
-        except ValueError:
-            raise ValueError('verbosity must be an integer.')
+        self.detail = bool(self.detail)
 
     def run(self):
         """ Called by Distutils when this command is run """
@@ -75,8 +72,8 @@ class test(Command):
         oldpath = sys.path
         try:
             sys.path = [op.abspath(buildobj.build_lib)] + oldpath
-            suite = unittest.TestLoader().discover(op.join(buildobj.build_lib,'h5py'))
-            result = unittest.TextTestRunner(verbosity=self.verbosity+1).run(suite)
+            import h5py
+            result = h5py.run_tests(verbose=self.detail)
             if not result.wasSuccessful():
                 sys.exit(1)
         finally:
@@ -142,7 +139,7 @@ setup(
   maintainer_email = 'andrew dot collette at gmail dot com',
   url = 'http://www.h5py.org',
   download_url = 'https://pypi.python.org/pypi/h5py',
-  packages = ['h5py', 'h5py._hl', 'h5py.tests'],
+  packages = ['h5py', 'h5py._hl', 'h5py.tests', 'h5py.tests.old', 'h5py.tests.hl'],
   package_data = package_data,
   ext_modules = [Extension('h5py.x',['x.c'])],  # To trick build into running build_ext
   requires = ['numpy (>=1.5.0)', 'Cython (>=0.16)'],
