@@ -27,10 +27,42 @@ else:
     from distutils.command.build_py import build_py
     
 import setup_build, setup_configure
+import subprocess
 
-
-VERSION = '2.4.0a0'
-
+def getVersion():
+  #for dirname, dirnames, filenames in os.walk('.'):
+  #  for subdirname in dirnames:
+  #    print os.path.join(dirname, subdirname)
+  #  for filename in filenames:
+  #    print os.path.join(dirname, filename)
+  
+  fn='./PKG-INFO'
+  print 'getVersion() -> seek for %s in %s...'%(fn,os.getcwd())
+  if os.access(fn, os.R_OK):
+    sys.stdout.write('getVersion() -> Parsing '+fn+' -> ')
+    fo=open(fn,'r')
+    for ln in fo.readlines():
+      if ln.startswith('Version:'):
+        ver=re.match('Version:\s*(\S*)', ln).group(1)
+      elif ln.startswith('Summary:'):
+        #print ln
+        gitcmt=re.search('\(git:(.*)\)', ln).group(1)
+    fo.close()
+  else:
+    argv=sys.argv
+    sys.stdout.write('getVersion() -> using git command -> ')
+    p = subprocess.Popen("git describe  --tags --match '*.*.*' --long", shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    retval = p.wait()
+    if retval==0:
+      res=p.stdout.readline()
+      res=res[:-1].rsplit('-',1)
+      ver=res[0]
+      gitcmt=res[1][1:]
+    else:
+      print p.stdout.readlines()
+      (ver,gitcmt)=('0.0.0','???')
+  print ':'+ver+':'+gitcmt+':'
+  return (ver,gitcmt)
 
 # --- Custom Distutils commands -----------------------------------------------
 
@@ -130,13 +162,14 @@ if os.name == 'nt':
 else:
     package_data = {'h5py': []}
 
+VERSION, COMMITHASH = getVersion()
 setup(
   name = 'h5py',
   version = VERSION,
-  description = short_desc,
+  description = short_desc+' (git:'+COMMITHASH+')',
   long_description = long_desc,
   classifiers = [x for x in cls_txt.split("\n") if x],
-  author = 'Andrew Collette',
+  author = 'Andrew Collette (PSI fixed by Thierry Zamofing)',
   author_email = 'andrew dot collette at gmail dot com',
   maintainer = 'Andrew Collette',
   maintainer_email = 'andrew dot collette at gmail dot com',
