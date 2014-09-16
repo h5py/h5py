@@ -205,12 +205,12 @@ cdef extern from "hdf5.h":
     H5E_WALK_DOWNWARD = 1       # begin at API function, end deep    
 
   ctypedef struct H5E_error_t:
-    H5E_major_t     maj_num     #  major error number             
-    H5E_minor_t     min_num     #  minor error number             
-    char    *func_name          #  function in which error occurred   
-    char    *file_name          #  file in which error occurred       
-    unsigned    line            #  line in file where error occurs    
-    char    *desc               #  optional supplied description      
+    H5E_major_t    maj_num     #  major error number             
+    H5E_minor_t    min_num     #  minor error number             
+    const char    *func_name   #  function in which error occurred   
+    char          *file_name   #  file in which error occurred       
+    unsigned       line        #  line in file where error occurs    
+    const char    *desc        #  optional supplied description      
 
   char      *H5Eget_major(H5E_major_t n)
   char      *H5Eget_minor(H5E_minor_t n)

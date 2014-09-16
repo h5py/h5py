@@ -48,6 +48,7 @@ else:
        'include_dirs'   : [localpath('lzf'), '/opt/local/include', '/usr/local/include'],
        'library_dirs'   : ['/opt/local/lib', '/usr/local/lib'],
        'define_macros'  : [('H5_USE_16_API', None)] }
+    COMPILER_SETTINGS['extra_compile_args']=['-Wno-unused-but-set-variable','-Wno-uninitialized','-Wno-unused-function']
 
 
 class h5py_build_ext(build_ext):

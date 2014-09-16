@@ -37,7 +37,7 @@ def getVersion():
   #    print os.path.join(dirname, filename)
   
   fn='./PKG-INFO'
-  print 'getVersion() -> seek for %s in %s...'%(fn,os.getcwd())
+  sys.stdout.write('getVersion() -> seek for %s in %s...\n'%(fn,os.getcwd()))
   if os.access(fn, os.R_OK):
     sys.stdout.write('getVersion() -> Parsing '+fn+' -> ')
     fo=open(fn,'r')
@@ -59,9 +59,9 @@ def getVersion():
       ver=res[0]
       gitcmt=res[1][1:]
     else:
-      print p.stdout.readlines()
+      sys.stdout.write('\ngit failed:\n'+str(p.stdout.readlines()))
       (ver,gitcmt)=('0.0.0','???')
-  print ':'+ver+':'+gitcmt+':'
+  sys.stdout.write(':'+ver+':'+gitcmt+':\n')
   return (ver,gitcmt)
 
 # --- Custom Distutils commands -----------------------------------------------
