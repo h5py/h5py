@@ -88,8 +88,8 @@ cdef herr_t walk_cb(int n, H5E_error_t *desc, void *e):
 cdef int set_exception() except -1:
 
     cdef err_data_t err
-    cdef char *desc = NULL          # Note: HDF5 forbids freeing these
-    cdef char *desc_bottom = NULL
+    cdef const char *desc = NULL          # Note: HDF5 forbids freeing these
+    cdef const char *desc_bottom = NULL
 
     # First, extract the major & minor error codes from the top of the
     # stack, along with the top-level error description
@@ -139,7 +139,7 @@ def silence_errors():
 
 def unsilence_errors():
     """ Re-enable HDF5's automatic error printing in this thread """
-    if H5Eset_auto(H5Eprint, stderr) < 0:
+    if H5Eset_auto(<H5E_auto_t>H5Eprint, stderr) < 0:
         raise RuntimeError("Failed to enable automatic error printing")
 
 cdef err_cookie set_error_handler(err_cookie handler):

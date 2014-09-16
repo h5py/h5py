@@ -1,4 +1,4 @@
-
+#!/usr/bin/python
 """
     Generate the lowest-level Cython bindings to HDF5.
     
@@ -56,7 +56,7 @@ class Line(object):
         
     PATTERN = re.compile("""(?P<mpi>(MPI)[ ]+)?
                             (?P<error>(ERROR)[ ]+)?
-                            (?P<version>([0-9]\.[0-9]\.[0-9]))?
+                            (?P<version>([0-9]\.[0-9]\.[0-9]+))?
                             ([ ]+)?
                             (?P<code>(unsigned[ ]+)?[a-zA-Z_]+[a-zA-Z0-9_]*\**)[ ]+
                             (?P<fname>[a-zA-Z_]+[a-zA-Z0-9_]*)[ ]*
@@ -64,6 +64,7 @@ class Line(object):
                             """, re.VERBOSE)
 
     SIG_PATTERN = re.compile("""
+                            (const[ ]+)?
                             (unsigned[ ]+)?
                             (?:[a-zA-Z_]+[a-zA-Z0-9_]*\**)
                             [ ]+[ *]*
@@ -94,7 +95,7 @@ class Line(object):
         self.args = self.SIG_PATTERN.findall(self.sig)
         if self.args is None:
             raise ValueError("Invalid function signature: {0}".format(self.sig))
-        self.args = ", ".join(x[1] for x in self.args)
+        self.args = ", ".join(x[2] for x in self.args)
 
 
 raw_preamble = """\
