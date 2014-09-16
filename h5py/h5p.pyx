@@ -382,7 +382,7 @@ cdef class PropDCID(PropOCID):
         - h5d.CONTIGUOUS
         - h5d.CHUNKED
         """
-        H5Pset_layout(self.id, layout_code)
+        H5Pset_layout(self.id, <H5D_layout_t>layout_code)
 
 
     @with_phil
@@ -938,7 +938,7 @@ cdef class PropFAID(PropInstanceID):
         cdef size_t rdcc_nbytes
         cdef double w0
 
-        H5Pget_cache(self.id, &mdc, &rdcc, &rdcc_nbytes, &w0)
+        H5Pget_cache(self.id, &mdc, <size_t*>&rdcc, &rdcc_nbytes, &w0)
         return (mdc, rdcc, rdcc_nbytes, w0)
 
 

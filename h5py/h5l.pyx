@@ -67,7 +67,7 @@ cdef class _LinkVisitor:
         self.retval = None
         self.info = LinkInfo()
 
-cdef herr_t cb_link_iterate(hid_t grp, char* name, H5L_info_t *istruct, void* data) except 2:
+cdef herr_t cb_link_iterate(hid_t grp, const char* name, const H5L_info_t *istruct, void* data) except 2:
     # Standard iteration callback for iterate/visit routines
 
     cdef _LinkVisitor it = <_LinkVisitor?>data
@@ -77,7 +77,7 @@ cdef herr_t cb_link_iterate(hid_t grp, char* name, H5L_info_t *istruct, void* da
         return 0
     return 1
 
-cdef herr_t cb_link_simple(hid_t grp, char* name, H5L_info_t *istruct, void* data) except 2:
+cdef herr_t cb_link_simple(hid_t grp, const char* name, const H5L_info_t *istruct, void* data) except 2:
     # Simplified iteration callback which only provides the name
 
     cdef _LinkVisitor it = <_LinkVisitor?>data
@@ -169,8 +169,8 @@ cdef class LinkProxy:
         cdef H5L_info_t info
         cdef size_t buf_size
         cdef char* buf = NULL
-        cdef char* ext_file_name = NULL
-        cdef char* ext_obj_name = NULL
+        cdef const char* ext_file_name = NULL
+        cdef const char* ext_obj_name = NULL
         cdef unsigned int wtf = 0
 
         H5Lget_info(self.id, name, &info, plist)

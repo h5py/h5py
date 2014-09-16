@@ -257,7 +257,7 @@ cdef extern from "hdf5.h":
     _add_u u
 
   #  Prototype for H5Literate/H5Literate_by_name() operator
-  ctypedef herr_t (*H5L_iterate_t) (hid_t group, char *name, H5L_info_t *info,
+  ctypedef herr_t (*H5L_iterate_t) (hid_t group, const char *name, const H5L_info_t *info,
                     void *op_data) except 2
 
   ctypedef uint32_t H5O_msg_crt_idx_t
@@ -318,7 +318,7 @@ cdef extern from "hdf5.h":
     hdr             hdr
     meta_size       meta_size
 
-  ctypedef herr_t (*H5O_iterate_t)(hid_t obj, char *name, H5O_info_t *info,
+  ctypedef herr_t (*H5O_iterate_t)(hid_t obj, const char *name, const H5O_info_t *info,
                     void *op_data) except 2
 
 # === H5P - Property list API =================================================
@@ -367,10 +367,10 @@ cdef extern from "hdf5.h":
     H5Z_NO_EDC          = 2
 
   cdef enum H5F_close_degree_t:
-    H5F_CLOSE_WEAK  = 0,
-    H5F_CLOSE_SEMI  = 1,
-    H5F_CLOSE_STRONG = 2,
-    H5F_CLOSE_DEFAULT = 3
+    H5F_CLOSE_DEFAULT  = 0
+    H5F_CLOSE_WEAK     = 1
+    H5F_CLOSE_SEMI     = 2
+    H5F_CLOSE_STRONG   = 3
 
   ctypedef enum H5FD_mem_t:
     H5FD_MEM_NOLIST    = -1,
@@ -455,7 +455,8 @@ cdef extern from "hdf5.h":
     H5T_ORDER_LE         = 0,   # little endian
     H5T_ORDER_BE         = 1,   # bit endian
     H5T_ORDER_VAX        = 2,   # VAX mixed endian
-    H5T_ORDER_NONE       = 3    # no particular order (strings, bits,..)
+    H5T_ORDER_MIXED  = 3
+    H5T_ORDER_NONE   = 4
 
   # HDF5 signed enums
   ctypedef enum H5T_sign_t:
