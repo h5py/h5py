@@ -20,9 +20,9 @@ def archive(fname):
 
 CACHENAME = op.join(ROOTPATH, "cacheinit.cmake")
 
-ZIPDIR = "HDF5-1.8.12"
-ZIPFILE_NAME = "hdf5-1.8.12.zip"
-ZIPFILE_URL = "http://www.hdfgroup.org/ftp/HDF5/current/src/hdf5-1.8.12.zip"
+ZIPDIR = "HDF5-1.8.13"
+ZIPFILE_NAME = "hdf5-1.8.13.zip"
+ZIPFILE_URL = "http://www.hdfgroup.org/ftp/HDF5/releases/hdf5-1.8.13/src/hdf5-1.8.13.zip"
 
 def build(vs_version):
     """ Build HDF5.
