@@ -6,6 +6,9 @@ both the --hdf5 and --hdf5-version arguments to setup.py.
 Build HDF5 for distribution with a single command, using the pavement
 file in this directory.  You will need to install paver first.
 
+CMake 2.8 (NOT 3.0 or higher), and a SVN client, must be installed and
+on the path.
+
 To build HDF5 with Visual Studio 2008 (required for Python 2.6, 2.7 and 3.2):
 
   paver build_2008

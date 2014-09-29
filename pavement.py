@@ -1,4 +1,7 @@
 from paver.easy import *
+import os
+
+DLLS = ['h5py_hdf5.dll', 'h5py_hdf5_hl.dll', 'szip.dll', 'zlib.dll']
 
 @task
 def release_unix():
@@ -11,15 +14,19 @@ def release_unix():
 
 @task
 def release_windows():
-    for pyver in (26, 27, 32, 33):
+    for pyver in (27, 33, 34):
         exe = r'C:\Python%d\Python.exe' % pyver
         hdf5 = r'c:\hdf5\Python%d' % pyver
         sh('%s setup.py clean' % exe)
         sh('%s setup.py configure --reset --hdf5-version=1.8.4 --hdf5=%s' % (exe, hdf5))
+        for dll in DLLS:
+            sh('copy c:\\hdf5\\Python%d\\bin\\%s h5py /Y' % (pyver, dll))
         sh('%s setup.py build -f' % exe)
         sh('%s setup.py test' % exe)
         sh('%s setup.py bdist_wininst' % exe)
     print ("Windows exe release done.  Distribution files are in dist/")
+    for dll in DLLS:
+        os.unlink('h5py\\%s' % dll)
     
 @task
 @consume_args
