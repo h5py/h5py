@@ -18,7 +18,7 @@ def release_windows():
         exe = r'C:\Python%d\Python.exe' % pyver
         hdf5 = r'c:\hdf5\Python%d' % pyver
         sh('%s setup.py clean' % exe)
-        sh('%s setup.py configure --reset --hdf5-version=1.8.4 --hdf5=%s' % (exe, hdf5))
+        sh('%s setup.py configure --reset --hdf5-version=1.8.13 --hdf5=%s' % (exe, hdf5))
         for dll in DLLS:
             sh('copy c:\\hdf5\\Python%d\\bin\\%s h5py /Y' % (pyver, dll))
         sh('%s setup.py build -f' % exe)
