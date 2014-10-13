@@ -85,7 +85,12 @@ class DimensionProxy(base.CommonStateObject):
             scales = []
             def f(dsid):
                 scales.append(dsid)
-            h5ds.iterate(self._id, self._dimension, f, 0)
+            
+            # H5DSiterate raises an error if there are no dimension scales,
+            # rather than iterating 0 times.  See #483.
+            if len(self) > 0:
+                h5ds.iterate(self._id, self._dimension, f, 0)
+                
             return [
                 (self._d(h5ds.get_scale_name(id)), Dataset(id))
                 for id in scales
