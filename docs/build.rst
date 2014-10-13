@@ -21,8 +21,8 @@ Installing on Windows
 
 You will need:
 
-  * Python 2.6 - 3.3
-  * NumPy 1.6 or newer
+  * Python 2.6, 2.7, 3.2, 3.3 or 3.4
+  * NumPy 1.6.1 or newer
 
 Download the installer from http://www.h5py.org and run it.  HDF5 is
 included.
@@ -36,7 +36,7 @@ System dependencies
 
 You will need:
 
-* Python 2.6 - 3.3 with development headers (``python-dev`` or similar)
+* Python 2.6, 2.7, 3.2, 3.3, or 3.4 with development headers (``python-dev`` or similar)
 * HDF5 1.8.4 or newer, shared library version with development headers (``libhdf5-dev`` or similar)
 
 On Mac OS X, `homebrew <http://brew.sh>`_ is a reliable way of getting
@@ -58,8 +58,8 @@ Via setup.py
 You will need:
 
 * The h5py tarball from http://www.h5py.org.
-* NumPy 1.5 or newer
-* `Cython <http://cython.org>`_ 0.16 or newer
+* NumPy 1.6.1 or newer
+* `Cython <http://cython.org>`_ 0.17 or newer
 
 ::
 
