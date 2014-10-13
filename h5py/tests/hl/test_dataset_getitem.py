@@ -235,8 +235,9 @@ class TestScalarArray(TestCase):
         """ field name -> ValueError (no fields) """
         with self.assertRaises(ValueError):
             self.dset['field']
-            
 
+            
+@ut.skipUnless(h5py.version.hdf5_version_tuple >= (1, 8, 7), 'HDF5 1.8.7+ required')
 class Test1DZeroFloat(TestCase):
 
     def setUp(self):
