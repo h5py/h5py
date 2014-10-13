@@ -118,7 +118,7 @@ A strong emphasis on automatic conversion between Python (Numpy) datatypes and
 data structures and their HDF5 equivalents vastly simplifies the process of
 reading and writing data from Python.
 
-Supports HDF5 versions 1.8.3 and higher.  On Windows, HDF5 is included with
+Supports HDF5 versions 1.8.4 and higher.  On Windows, HDF5 is included with
 the installer.
 """
 
@@ -142,7 +142,7 @@ setup(
   packages = ['h5py', 'h5py._hl', 'h5py.tests', 'h5py.tests.old', 'h5py.tests.hl'],
   package_data = package_data,
   ext_modules = [Extension('h5py.x',['x.c'])],  # To trick build into running build_ext
-  requires = ['numpy (>=1.5.0)', 'Cython (>=0.16)'],
-  install_requires = ['numpy>=1.5.0', 'Cython>=0.16'],
+  requires = ['numpy (>=1.6.1)', 'Cython (>=0.17)'],
+  install_requires = ['numpy>=1.6.1', 'Cython>=0.17'],
   cmdclass = CMDCLASS,
 )
