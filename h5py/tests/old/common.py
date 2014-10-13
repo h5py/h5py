@@ -8,11 +8,12 @@
 #           and contributor agreement.
 
 import sys
-import os
-import shutil
-import tempfile
-import numpy as np
-import h5py
+
+if sys.version_info[0] == 3:
+    py3 = True
+else:
+    py3 = False
+
 
 if sys.version_info >= (2, 7) or sys.version_info >= (3, 2):
     import unittest as ut
@@ -25,35 +26,14 @@ else:
             % (sys.version_info[:2])
             )
 
-
-if sys.version_info[0] == 3:
-    PY3 = True
-else:
-    PY3 = False
-
-
-# Check if non-ascii filenames are supported
-# Evidently this is the most reliable way to check
-# See also h5py issue #263 and ipython #466
-# To test for this, run the testsuite with LC_ALL=C
-try:
-    testfile, fname = tempfile.mkstemp(u'\u03b7')
-except UnicodeError:
-    UNICODE_FILENAMES = False
-else:
-    UNICODE_FILENAMES = True
-    os.close(testfile)
-    os.unlink(fname)
-    del fname
-    del testfile
+import shutil
+import tempfile
+import numpy as np
+import os
 
 
 class TestCase(ut.TestCase):
 
-    """
-        Base class for unit tests.
-    """
-    
     @classmethod
     def setUpClass(cls):
         cls.tempdir = tempfile.mkdtemp(prefix='h5py-test_')
@@ -66,16 +46,6 @@ class TestCase(ut.TestCase):
         if dir is None:
             dir = self.tempdir
         return tempfile.mktemp(suffix, prefix, dir=self.tempdir)
-        
-    def setUp(self):
-        self.f = h5py.File(self.mktemp(), 'w')
-        
-    def tearDown(self):
-        try:
-            if self.f:
-                self.f.close()
-        except:
-            pass
 
     if not hasattr(ut.TestCase, 'assertSameElements'):
         # shim until this is ported into unittest2
@@ -128,38 +98,22 @@ class TestCase(ut.TestCase):
             dset.dtype == arr.dtype,
             "Dtype mismatch (%s vs %s)%s" % (dset.dtype, arr.dtype, message)
             )
-            
-        if arr.dtype.names is not None:
-            for n in arr.dtype.names:
-                message = '[FIELD %s] %s' % (n, message)
-                self.assertArrayEqual(dset[n], arr[n], message=message, precision=precision)
-        elif arr.dtype.kind in ('i', 'f'):
-            self.assert_(
-                np.all(np.abs(dset[...] - arr[...]) < precision),
-                "Arrays differ by more than %.3f%s" % (precision, message)
-                )
-        else:
-            self.assert_(
-                np.all(dset[...] == arr[...]),
-                "Arrays are not equal (dtype %s) %s" % (arr.dtype.str, message)
-                )
+        self.assert_(
+            np.all(np.abs(dset[...] - arr[...]) < precision),
+            "Arrays differ by more than %.3f%s" % (precision, message)
+            )
 
-    def assertNumpyBehavior(self, dset, arr, s):
-        """ Apply slicing arguments "s" to both dset and arr.
-        
-        Succeeds if the results of the slicing are identical, or the
-        exception raised is of the same type for both.
-        
-        "arr" must be a Numpy array; "dset" may be a NumPy array or dataset.
-        """
-        exc = None
-        try:
-            arr_result = arr[s]
-        except Exception as e:
-            exc = type(e)
-            
-        if exc is None:
-            self.assertArrayEqual(dset[s], arr_result)
-        else:
-            with self.assertRaises(exc):
-                dset[s]
+# Check if non-ascii filenames are supported
+# Evidently this is the most reliable way to check
+# See also h5py issue #263 and ipython #466
+# To test for this, run the testsuite with LC_ALL=C
+try:
+    testfile, fname = tempfile.mkstemp(u'\u03b7')
+except UnicodeError:
+    unicode_filenames = False
+else:
+    unicode_filenames = True
+    os.close(testfile)
+    os.unlink(fname)
+    del fname
+    del testfile
