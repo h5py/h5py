@@ -387,3 +387,19 @@ class Test1DFloat(TestCase):
         with self.assertRaises(ValueError):
             self.dset['field']
             
+
+@ut.skipUnless(h5py.version.hdf5_version_tuple >= (1, 8, 7), 'HDF5 1.8.7+ required')
+class Test2DZeroFloat(TestCase):
+
+    def setUp(self):
+        TestCase.setUp(self)
+        self.data = np.ones((0,3), dtype='f')
+        self.dset = self.f.create_dataset('x', data=self.data)
+        
+    @ut.expectedFailure
+    def test_indexlist(self):
+        """ see issue #473 """
+        self.assertNumpyBehavior(self.dset, self.data, np.s_[:,[0,1,2]])
+
+        
+        
