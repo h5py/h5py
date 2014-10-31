@@ -20,7 +20,7 @@ system in h5py.  As part of this refactoring, the entire API is also now
 protected by threading locks.  User-visible changes include:
 
 * Files are now automatically closed when all objects within them
-  are unreachable. Previously, if File.close() was not explicitly closed,
+  are unreachable. Previously, if File.close() was not explicitly called,
   files would remain open and "leaks" were possible if the File object
   was lost.
 
