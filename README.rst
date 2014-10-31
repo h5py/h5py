@@ -18,13 +18,13 @@ Prerequisites
 
 You need, at a minimum:
 
-* Python 2.6, 2.7, 3.2 or 3.3
-* Any modern version of NumPy
+* Python 2.6, 2.7, 3.2, 3.3, or 3.4
+* NumPy 1.6.1 or later
 
 To build on UNIX:
 
 * HDF5 1.8.4 or later (on Windows, HDF5 comes with h5py)
-* Cython 0.16 or later
+* Cython 0.17 or later
 * If using Python 2.6, unittest2 is needed to run the tests
 
 Installing on Windows

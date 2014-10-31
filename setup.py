@@ -29,7 +29,7 @@ else:
 import setup_build, setup_configure
 
 
-VERSION = '2.4.0a0'
+VERSION = '2.4.0b1'
 
 
 # --- Custom Distutils commands -----------------------------------------------
