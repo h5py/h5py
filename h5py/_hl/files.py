@@ -236,12 +236,24 @@ class File(Group):
         """ Close the file.  All open objects become invalid """
         with phil:
             # We have to explicitly murder all open objects related to the file
-            idlist = h5f.get_obj_ids(self.id)
-            idlist = [x for x in idlist if h5i.get_file_id(x).id == self.id.id]
-            self.id.close()
-            for id_ in idlist:
+            
+            # Close file-resident objects first, then the files.
+            # Otherwise we get errors in MPI mode.
+            id_list = h5f.get_obj_ids(self.id, ~h5f.OBJ_FILE)
+            file_list = h5f.get_obj_ids(self.id, h5f.OBJ_FILE)
+            
+            id_list = [x for x in id_list if h5i.get_file_id(x).id == self.id.id]
+            file_list = [x for x in file_list if h5i.get_file_id(x).id == self.id.id]
+            
+            for id_ in id_list:
                 while id_.valid:
                     h5i.dec_ref(id_)
+                    
+            for id_ in file_list:
+                while id_.valid:
+                    h5i.dec_ref(id_)
+                    
+            self.id.close()
             _objects.nonlocal_close()
 
     def flush(self):

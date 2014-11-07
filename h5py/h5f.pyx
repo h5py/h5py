@@ -224,11 +224,13 @@ def get_obj_ids(object where=OBJ_ALL, int types=H5F_OBJ_ALL):
         count = H5Fget_obj_count(where_id, types)
         obj_list = <hid_t*>emalloc(sizeof(hid_t)*count)
 
-        H5Fget_obj_ids(where_id, types, count, obj_list)
-        for i from 0<=i<count:
-            py_obj_list.append(wrap_identifier(obj_list[i]))
-            # The HDF5 function returns a borrowed reference for each hid_t.
-            H5Iinc_ref(obj_list[i])
+        if count > 0: # HDF5 complains that obj_list is NULL, even if count==0
+            H5Fget_obj_ids(where_id, types, count, obj_list)
+            for i from 0<=i<count:
+                py_obj_list.append(wrap_identifier(obj_list[i]))
+                # The HDF5 function returns a borrowed reference for each hid_t.
+                H5Iinc_ref(obj_list[i])
+                
         return py_obj_list
 
     finally:
