@@ -352,9 +352,6 @@ cdef class AttrID(ObjectID):
             if mtype is None:
                 mtype = py_create(arr.dtype)
 
-            if mtype.get_size() != arr.itemsize:
-                raise ValueError("HDF5 data type size does not match the NumPy dtype size")
-                
             attr_rw(self.id, mtype.id, PyArray_DATA(arr), 1)
 
         finally:
@@ -382,9 +379,6 @@ cdef class AttrID(ObjectID):
             
             if mtype is None:
                 mtype = py_create(arr.dtype)
-
-            if mtype.get_size() != arr.itemsize:
-                raise ValueError("HDF5 data type size does not match the NumPy dtype size")
                 
             attr_rw(self.id, mtype.id, PyArray_DATA(arr), 0)
 
