@@ -1,7 +1,9 @@
 from . import  (test_dataset_getitem, 
                 test_dims_dimensionproxy,
-                test_file, )
+                test_file, 
+                test_attribute_create, )
                 
 MODULES = ( test_dataset_getitem, 
             test_dims_dimensionproxy,
-            test_file, )
+            test_file,
+            test_attribute_create, )
