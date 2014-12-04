@@ -466,9 +466,6 @@ cdef herr_t pyref2regref(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
 cdef struct conv_enum_t:
     size_t src_size
     size_t dst_size
-    hid_t supertype
-    int identical
-
 
 cdef int enum_int_converter_init(hid_t src, hid_t dst,
                                  H5T_cdata_t *cdata, int forward) except -1 with gil:
@@ -495,52 +492,59 @@ cdef int enum_int_converter_conv(hid_t src, hid_t dst, H5T_cdata_t *cdata,
     cdef int i
     cdef char* cbuf = NULL
     cdef char* buf = <char*>buf_i
-
+    cdef int identical
+    cdef hid_t supertype = -1
+    
     info = <conv_enum_t*>cdata[0].priv
     
-    if forward:
-        info[0].supertype = H5Tget_super(src)
-        info[0].identical = H5Tequal(info[0].supertype, dst)
-    else:
-        info[0].supertype = H5Tget_super(dst)
-        info[0].identical = H5Tequal(info[0].supertype, src)
-   
-    # Short-circuit success
-    if info[0].identical:
-        return 0
-
-    if buf_stride == 0:
-        # Contiguous case: call H5Tconvert directly
+    try:
         if forward:
-            H5Tconvert(info[0].supertype, dst, nl, buf, NULL, dxpl)
+            supertype = H5Tget_super(src)
+            identical = H5Tequal(supertype, dst)
         else:
-            H5Tconvert(src, info[0].supertype, nl, buf, NULL, dxpl)
-    else:
-        # Non-contiguous: gather, convert and then scatter
-        if info[0].src_size > info[0].dst_size:
-            nalloc = info[0].src_size*nl
-        else:
-            nalloc = info[0].dst_size*nl
+            supertype = H5Tget_super(dst)
+            identical = H5Tequal(supertype, src)
+   
+        # Short-circuit success
+        if identical:
+            return 0
 
-        cbuf = <char*>malloc(nalloc)
-        if cbuf == NULL:
-            raise MemoryError()
-        try:
+        if buf_stride == 0:
+            # Contiguous case: call H5Tconvert directly
+            if forward:
+                H5Tconvert(supertype, dst, nl, buf, NULL, dxpl)
+            else:
+                H5Tconvert(src, supertype, nl, buf, NULL, dxpl)
+        else:
+            # Non-contiguous: gather, convert and then scatter
+            if info[0].src_size > info[0].dst_size:
+                nalloc = info[0].src_size*nl
+            else:
+                nalloc = info[0].dst_size*nl
+
+            cbuf = <char*>malloc(nalloc)
+            if cbuf == NULL:
+                raise MemoryError()
+
             for i from 0<=i<nl:
                 memcpy(cbuf + (i*info[0].src_size), buf + (i*buf_stride),
                         info[0].src_size)
 
             if forward:
-                H5Tconvert(info[0].supertype, dst, nl, cbuf, NULL, dxpl)
+                H5Tconvert(supertype, dst, nl, cbuf, NULL, dxpl)
             else:
-                H5Tconvert(src, info[0].supertype, nl, cbuf, NULL, dxpl)
+                H5Tconvert(src, supertype, nl, cbuf, NULL, dxpl)
 
             for i from 0<=i<nl:
                 memcpy(buf + (i*buf_stride), cbuf + (i*info[0].dst_size),
                         info[0].dst_size)
-        finally:
-            free(cbuf)
-            cbuf = NULL
+
+    finally:
+        free(cbuf)
+        cbuf = NULL
+        if supertype > 0:
+            H5Tclose(supertype)
+
     return 0
 
 
