@@ -123,7 +123,9 @@ class AttributeManager(base.DictCompat, base.CommonStateObject):
                 dtype = dtype.dtype
             elif dtype is None:
                 dtype = data.dtype
-                
+            else:
+                dtype = numpy.dtype(dtype) # In case a string, e.g. 'i8' is passed
+ 
             original_dtype = dtype  # We'll need this for top-level array types
 
             # Where a top-level array type is requested, we have to do some

@@ -38,3 +38,8 @@ class TestArray(TestCase):
         out = self.f.attrs['x']
         
         self.assertArrayEqual(out, data)
+        
+    def test_string_dtype(self):
+        # See issue 498 discussion
+        
+        self.f.attrs.create('x', data=42, dtype='i8')
