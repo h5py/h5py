@@ -14,6 +14,9 @@ import sys
 import os
 import os.path as op
 from functools import reduce
+
+import pkgconfig
+
 import api_gen
 
 
@@ -45,9 +48,22 @@ if sys.platform.startswith('win'):
 else:
     COMPILER_SETTINGS = {
        'libraries'      : ['hdf5', 'hdf5_hl'],
-       'include_dirs'   : [localpath('lzf'), '/opt/local/include', '/usr/local/include'],
+       'include_dirs'   : ['/opt/local/include', '/usr/local/include'],
        'library_dirs'   : ['/opt/local/lib', '/usr/local/lib'],
        'define_macros'  : [('H5_USE_16_API', None)] }
+    if pkgconfig.exists('hdf5'):
+        pkgconfig_settings = pkgconfig.parse("hdf5")
+        COMPILER_SETTINGS['include_dirs'] = list(
+            pkgconfig_settings['include_dirs']
+        )
+        COMPILER_SETTINGS['library_dirs'] = list(
+            pkgconfig_settings['library_dirs']
+        )
+        if pkgconfig_settings['define_macros']:
+            COMPILER_SETTINGS['define_macros'].append(
+                pkgconfig_settings['define_macros']
+            )
+    COMPILER_SETTINGS['include_dirs'].insert(0, localpath('lzf'))
 
 
 class h5py_build_ext(build_ext):

@@ -22,6 +22,8 @@ import os.path as op
 import sys
 import pickle
 
+import pkgconfig
+
 def loadpickle():
     """ Load settings dict from the pickle file """
     try:
@@ -200,6 +202,8 @@ def autodetect_version(hdf5_dir=None):
         regexp = re.compile(r'^libhdf5.so')
         
     libdirs = ['/usr/local/lib', '/opt/local/lib']
+    if pkgconfig.exists("hdf5"):
+        libdirs = list(pkgconfig.parse("hdf5")['library_dirs'])
     if hdf5_dir is not None:
         libdirs.insert(0, op.join(hdf5_dir, 'lib'))
 
