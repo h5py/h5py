@@ -10,5 +10,6 @@ include MANIFEST.in
 include api_gen.py
 include setup_build.py
 include setup_configure.py
+include real-setup.py
 include ANN.rst
 include README.rst
