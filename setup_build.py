@@ -69,8 +69,16 @@ class h5py_build_ext(build_ext):
         enter the build process.
         """
         import numpy
+        import pkgconfig
 
         settings = COMPILER_SETTINGS.copy()
+
+        if pkgconfig.exists('hdf5'):
+            pkgcfg = pkgconfig.parse("hdf5")
+            settings['include_dirs'].extend(pkgcfg['include_dirs'])
+            settings['library_dirs'].extend(pkgcfg['library_dirs'])
+            settings['define_macros'].extend(pkgcfg['define_macros'])
+
         settings['include_dirs'] += [numpy.get_include()]
         if config.mpi:
             import mpi4py
