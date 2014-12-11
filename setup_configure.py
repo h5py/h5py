@@ -202,8 +202,11 @@ def autodetect_version(hdf5_dir=None):
         regexp = re.compile(r'^libhdf5.so')
         
     libdirs = ['/usr/local/lib', '/opt/local/lib']
-    if pkgconfig.exists("hdf5"):
-        libdirs.append(pkgconfig.parse("hdf5")['library_dirs'])
+    try:
+        if pkgconfig.exists("hdf5"):
+            libdirs.append(pkgconfig.parse("hdf5")['library_dirs'])
+    except EnvironmentError:
+        pass
     if hdf5_dir is not None:
         libdirs.insert(0, op.join(hdf5_dir, 'lib'))
 
