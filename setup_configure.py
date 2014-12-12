@@ -193,6 +193,8 @@ def autodetect_version(hdf5_dir=None):
     import re
     import ctypes
     from ctypes import byref
+
+    import pkgconfig
     
     if sys.platform.startswith('darwin'):
         regexp = re.compile(r'^libhdf5.dylib')
@@ -200,6 +202,11 @@ def autodetect_version(hdf5_dir=None):
         regexp = re.compile(r'^libhdf5.so')
         
     libdirs = ['/usr/local/lib', '/opt/local/lib']
+    try:
+        if pkgconfig.exists("hdf5"):
+            libdirs.append(pkgconfig.parse("hdf5")['library_dirs'])
+    except EnvironmentError:
+        pass
     if hdf5_dir is not None:
         libdirs.insert(0, op.join(hdf5_dir, 'lib'))
 
