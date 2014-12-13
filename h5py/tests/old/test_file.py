@@ -13,9 +13,11 @@
     Tests all aspects of File objects, including their creation.
 """
 
-from __future__ import with_statement
+from __future__ import absolute_import, with_statement
 
 import os, stat
+
+import six
 
 from .common import ut, TestCase, unicode_filenames
 from h5py.highlevel import File
@@ -392,7 +394,7 @@ class TestUnicode(TestCase):
         fid = File(fname, 'w')
         try:
             self.assertEqual(fid.filename, fname)
-            self.assertIsInstance(fid.filename, unicode)
+            self.assertIsInstance(fid.filename, six.text_type)
         finally:
             fid.close()
 
@@ -476,9 +478,9 @@ class TestRepr(TestCase):
     def test_repr(self):
         """ __repr__ behaves itself when files are open and closed """
         fid = File(self.mktemp())
-        self.assertIsInstance(repr(fid), basestring)
+        self.assertIsInstance(repr(fid), six.string_types)
         fid.close()
-        self.assertIsInstance(repr(fid), basestring)
+        self.assertIsInstance(repr(fid), six.string_types)
 
 class TestFilename(TestCase):
 
@@ -492,7 +494,7 @@ class TestFilename(TestCase):
         fid = File(fname, 'w')
         try:
             self.assertEqual(fid.filename, fname)
-            self.assertIsInstance(fid.filename, unicode)
+            self.assertIsInstance(fid.filename, six.text_type)
         finally:
             fid.close()
 

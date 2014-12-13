@@ -16,6 +16,8 @@
     specific fields of a compound type.
 """
 
+from __future__ import absolute_import
+
 import numpy as np
 
 from .common import ut, TestCase, py3

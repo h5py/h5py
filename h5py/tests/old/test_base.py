@@ -13,6 +13,10 @@
     Tests features common to all high-level objects, like the .name property.
 """
 
+from __future__ import absolute_import
+
+import six
+
 from h5py import File
 from .common import ut, TestCase, py3, unicode_filenames
 
@@ -50,7 +54,7 @@ class TestRepr(BaseTest):
 
     def _check_type(self, obj):
         if py3:
-            self.assertIsInstance(repr(obj), unicode)
+            self.assertIsInstance(repr(obj), six.text_type)
         else:
             self.assertIsInstance(repr(obj), bytes)
 

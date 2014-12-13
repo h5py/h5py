@@ -15,10 +15,15 @@
 
     1. Method create_dataset is tested in module test_dataset
 """
+
+from __future__ import absolute_import
+
 import collections
 import numpy as np
 import os
 import sys
+
+import six
 
 from .common import ut, TestCase
 import h5py
@@ -44,9 +49,9 @@ class TestRepr(BaseGroup):
     def test_repr(self):
         """ repr() works on Group objects """
         g = self.f.create_group('foo')
-        self.assertIsInstance(g, basestring)
+        self.assertIsInstance(g, six.string_types)
         self.f.close()
-        self.assertIsInstance(g, basestring)
+        self.assertIsInstance(g, six.string_types)
 
 class TestCreate(BaseGroup):
 
@@ -243,9 +248,9 @@ class TestRepr(BaseGroup):
     def test_repr(self):
         """ Opened and closed groups provide a useful __repr__ string """
         g = self.f.create_group('foo')
-        self.assertIsInstance(repr(g), basestring)
+        self.assertIsInstance(repr(g), six.string_types)
         g.id._close()
-        self.assertIsInstance(repr(g), basestring)
+        self.assertIsInstance(repr(g), six.string_types)
 
 class BaseMapping(BaseGroup):
 
@@ -562,7 +567,7 @@ class TestSoftLinks(BaseGroup):
     def test_srepr(self):
         """ SoftLink path repr """
         sl = SoftLink('/foo')
-        self.assertIsInstance(repr(sl), basestring)
+        self.assertIsInstance(repr(sl), six.string_types)
 
     def test_create(self):
         """ Create new soft link by assignment """
@@ -606,7 +611,7 @@ class TestExternalLinks(TestCase):
     def test_erepr(self):
         """ External link repr """
         el = ExternalLink('foo.hdf5','/foo')
-        self.assertIsInstance(repr(el), basestring)
+        self.assertIsInstance(repr(el), six.string_types)
 
     def test_create(self):
         """ Creating external links """

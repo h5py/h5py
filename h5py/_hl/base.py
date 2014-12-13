@@ -7,20 +7,22 @@
 # License:  Standard 3-clause BSD; see "license.txt" for full license terms
 #           and contributor agreement.
 
+from __future__ import absolute_import
+
 import posixpath
 import warnings
 import os
 import sys
 
-from h5py import h5d, h5i, h5r, h5p, h5f, h5t
+import six
+
+from .. import h5d, h5i, h5r, h5p, h5f, h5t
 
 # The high-level interface is serialized; every public API function & method
 # is wrapped in a lock.  We re-use the low-level lock because (1) it's fast, 
 # and (2) it eliminates the possibility of deadlocks due to out-of-order
 # lock acquisition.
-from h5py._objects import phil, with_phil
-
-py3 = sys.version_info[0] == 3
+from .._objects import phil, with_phil
 
 
 def is_hdf5(fname):
@@ -49,8 +51,8 @@ def guess_dtype(data):
             return h5t.special_dtype(ref=h5r.Reference)
         if type(data) == bytes:
             return h5t.special_dtype(vlen=bytes)
-        if type(data) == unicode:
-            return h5t.special_dtype(vlen=unicode)
+        if type(data) == six.text_type:
+            return h5t.special_dtype(vlen=six.text_type)
 
         return None
 
@@ -201,7 +203,7 @@ class HLObject(CommonStateObject):
     @with_phil
     def file(self):
         """ Return a File instance associated with this object """
-        import files
+        from . import files
         return files.File(self.id)
 
     @property
@@ -252,7 +254,7 @@ class HLObject(CommonStateObject):
     @with_phil
     def attrs(self):
         """ Attributes attached to this object """
-        import attrs
+        from . import attrs
         return attrs.AttributeManager(self)
 
     @with_phil
@@ -274,10 +276,10 @@ class HLObject(CommonStateObject):
     def __ne__(self, other):
         return not self.__eq__(other)
 
-    def __nonzero__(self):
+    def __bool__(self):
         with phil:
             return bool(self.id)
-
+    __nonzero__ = __bool__
 
 class View(object):
 
@@ -341,7 +343,7 @@ class DictCompat(object):
             except KeyError:
                 return default
 
-    if py3:
+    if six.PY3:
         def keys(self):
             """ Get a view object on member names """
             return KeyView(self)

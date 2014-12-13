@@ -15,10 +15,12 @@
     are tested by module test_attrs_data.
 """
 
+from __future__ import absolute_import
+
 import numpy as np
 import collections
 
-from common import TestCase, ut
+from .common import TestCase, ut
 
 from h5py.highlevel import File
 from h5py import h5a,  h5t
@@ -44,7 +46,7 @@ class TestAccess(BaseAttrs):
     def test_create(self):
         """ Attribute creation by direct assignment """
         self.f.attrs['a'] = 4.0
-        self.assertEqual(self.f.attrs.keys(), ['a'])
+        self.assertEqual(list(self.f.attrs.keys()), ['a'])
         self.assertEqual(self.f.attrs['a'], 4.0)
 
     def test_overwrite(self):

@@ -7,14 +7,18 @@
 # License:  Standard 3-clause BSD; see "license.txt" for full license terms
 #           and contributor agreement.
 
+from __future__ import absolute_import
+
 import weakref
 import sys
 import os
 
-from .base import HLObject, py3, phil, with_phil
+import six
+
+from .base import HLObject, phil, with_phil
 from .group import Group
-from h5py import h5, h5f, h5p, h5i, h5fd, h5t, _objects
-from h5py import version
+from .. import h5, h5f, h5p, h5i, h5fd, h5t, _objects
+from .. import version
 
 mpi = h5.get_config().mpi
 hdf5_version = version.hdf5_version_tuple[0:3]
@@ -23,7 +27,7 @@ if mpi:
     import mpi4py
 
 libver_dict = {'earliest': h5f.LIBVER_EARLIEST, 'latest': h5f.LIBVER_LATEST}
-libver_dict_r = dict((y, x) for x, y in libver_dict.iteritems())
+libver_dict_r = dict((y, x) for x, y in six.iteritems(libver_dict))
 
 
 def make_fapl(driver, libver, **kwds):
@@ -128,7 +132,7 @@ class File(Group):
         """ Attributes attached to this object """
         # hdf5 complains that a file identifier is an invalid location for an
         # attribute. Instead of self, pass the root group to AttributeManager:
-        import attrs
+        from . import attrs
         return attrs.AttributeManager(self['/'])
 
     @property
@@ -284,6 +288,6 @@ class File(Group):
             r = u'<HDF5 file "%s" (mode %s)>' % (os.path.basename(filename),
                                                  self.mode)
 
-        if py3:
+        if six.PY3:
             return r
         return r.encode('utf8')

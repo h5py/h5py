@@ -7,6 +7,8 @@
 # License:  Standard 3-clause BSD; see "license.txt" for full license terms
 #           and contributor agreement.
 
+from __future__ import absolute_import
+
 from . import h5 as _h5
 from distutils.version import StrictVersion as _sv
 import sys

@@ -7,14 +7,18 @@
 # License:  Standard 3-clause BSD; see "license.txt" for full license terms
 #           and contributor agreement.
 
+from __future__ import absolute_import
+
 import posixpath as pp
+
+import six
 
 import numpy
 import collections
 
-from h5py import h5g, h5i, h5o, h5r, h5t, h5l, h5p
+from .. import h5g, h5i, h5o, h5r, h5t, h5l, h5p
 from . import base
-from .base import HLObject, DictCompat, py3, phil, with_phil
+from .base import HLObject, DictCompat, phil, with_phil
 from . import dataset
 from . import datatype
 
@@ -456,7 +460,7 @@ class Group(HLObject, DictCompat):
             namestr = (u'"%s"' % self.name) if self.name is not None else u"(anonymous)"
             r = u'<HDF5 group %s (%d members)>' % (namestr, len(self))
 
-        if py3:
+        if six.PY3:
             return r
         return r.encode('utf8')
 
