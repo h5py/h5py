@@ -434,8 +434,8 @@ class TestPy3Dict(BaseMapping):
         vv = getattr(self.f, 'values')()
         self.assertSameElements(list(vv), [self.f.get(x) for x in self.groups])
         self.assertEqual(len(vv), len(self.groups))
-        with self.assertRaises(TypeError):
-            b'x' in vv
+        for x in self.groups:
+            self.assertIn(self.f.get(x), vv)
 
     def test_items(self):
         """ .items provides an item view """

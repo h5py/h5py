@@ -114,7 +114,7 @@ class DimensionProxy(base.CommonStateObject):
                % (self.label, self._dimension, id(self._id)))
 
 
-class DimensionManager(base.DictCompat, base.CommonStateObject):
+class DimensionManager(base.MappingWithLock, base.CommonStateObject):
 
     """
     """

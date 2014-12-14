@@ -18,12 +18,12 @@ import collections
 
 from .. import h5g, h5i, h5o, h5r, h5t, h5l, h5p
 from . import base
-from .base import HLObject, DictCompat, phil, with_phil
+from .base import HLObject, MutableMappingWithLock, phil, with_phil
 from . import dataset
 from . import datatype
 
 
-class Group(HLObject, DictCompat):
+class Group(HLObject, MutableMappingWithLock):
 
     """ Represents an HDF5 group.
     """
@@ -465,8 +465,6 @@ class Group(HLObject, DictCompat):
         if six.PY3:
             return r
         return r.encode('utf8')
-
-collections.MutableMapping.register(Group)
 
 
 class HardLink(object):

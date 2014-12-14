@@ -19,7 +19,7 @@ from .dataset import readtime_dtype
 from .datatype import Datatype
 
 
-class AttributeManager(base.DictCompat, base.CommonStateObject):
+class AttributeManager(base.MutableMappingWithLock, base.CommonStateObject):
 
     """
         Allows dictionary-style access to an HDF5 object's attributes.
@@ -249,5 +249,3 @@ class AttributeManager(base.DictCompat, base.CommonStateObject):
         if not self._id:
             return "<Attributes of closed HDF5 object>"
         return "<Attributes of HDF5 object at %s>" % id(self._id)
-
-collections.MutableMapping.register(AttributeManager)
