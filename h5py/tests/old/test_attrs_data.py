@@ -19,7 +19,7 @@ import six
 
 import numpy as np
 
-from .common import TestCase, ut, py3
+from .common import TestCase, ut
 
 import h5py
 from h5py import h5a, h5s, h5t
@@ -177,9 +177,9 @@ class TestTypes(BaseAttrs):
     def test_unicode_scalar(self):
         """ Storage of variable-length unicode strings (auto-creation) """
 
-        self.f.attrs['x'] = u"Hello\u2340!!"
+        self.f.attrs['x'] = six.u("Hello") + six.unichr(0x2340) + six.u("!!")
         out = self.f.attrs['x']
-        self.assertEqual(out, u"Hello\u2340!!")
+        self.assertEqual(out, six.u("Hello") + six.unichr(0x2340) + six.u("!!"))
         self.assertEqual(type(out), six.text_type)
 
         aid = h5py.h5a.open(self.f.id, b"x")

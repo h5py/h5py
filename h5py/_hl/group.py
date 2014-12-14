@@ -455,10 +455,12 @@ class Group(HLObject, DictCompat):
     @with_phil
     def __repr__(self):
         if not self:
-            r = u"<Closed HDF5 group>"
+            r = six.u("<Closed HDF5 group>")
         else:
-            namestr = (u'"%s"' % self.name) if self.name is not None else u"(anonymous)"
-            r = u'<HDF5 group %s (%d members)>' % (namestr, len(self))
+            namestr = (
+                six.u('"%s"') % self.name
+            ) if self.name is not None else six.u("(anonymous)")
+            r = six.u('<HDF5 group %s (%d members)>') % (namestr, len(self))
 
         if six.PY3:
             return r

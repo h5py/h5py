@@ -390,7 +390,7 @@ class TestUnicode(TestCase):
     def test_unicode(self):
         """ Unicode filenames can be used, and retrieved properly via .filename
         """
-        fname = self.mktemp(prefix = u'\u201a')
+        fname = self.mktemp(prefix = six.unichr(0x201a))
         fid = File(fname, 'w')
         try:
             self.assertEqual(fid.filename, fname)

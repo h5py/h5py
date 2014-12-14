@@ -525,7 +525,7 @@ class TestAutoCreate(BaseDataset):
 
     def test_vlen_unicode(self):
         """ Assignment of a unicode string produces a vlen unicode dataset """
-        self.f['x'] = u"Hello there\u2034"
+        self.f['x'] = six.u("Hello there") + six.unichr(0x2034)
         ds = self.f['x']
         tid = ds.id.get_type()
         self.assertEqual(type(tid), h5py.h5t.TypeStringID)
@@ -707,7 +707,7 @@ class TestStrings(BaseDataset):
         """
         dt = h5py.special_dtype(vlen=six.text_type)
         ds = self.f.create_dataset('x', (100,), dtype=dt)
-        data = u"Hello\u2034"
+        data = six.u("Hello") + six.unichr(0x2034)
         ds[0] = data
         out = ds[0]
         self.assertEqual(type(out), six.text_type)
@@ -739,7 +739,7 @@ class TestStrings(BaseDataset):
         """
         dt = h5py.special_dtype(vlen=six.text_type)
         ds = self.f.create_dataset('x', (100,), dtype=dt)
-        data = u"Hello there\u2034"
+        data = six.u("Hello there") + six.unichr(0x2034)
         ds[0] = data.encode('utf8')
         out = ds[0]
         self.assertEqual(type(out), six.text_type)

@@ -17,6 +17,8 @@
 
 from __future__ import absolute_import
 
+import six
+
 import numpy as np
 import collections
 
@@ -114,7 +116,7 @@ class TestUnicode(BaseAttrs):
 
     def test_unicode(self):
         """ Access via Unicode string with non-ascii characters """
-        name = u"Omega \u03A9"
+        name = six.u("Omega") + six.unichr(0x03A9)
         self.f.attrs[name] = 42
         out = self.f.attrs[name]
         self.assertEqual(out, 42)
