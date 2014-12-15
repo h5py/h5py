@@ -78,7 +78,7 @@ def make_fid(name, mode, userblock_size, fapl, fcpl=None):
         fid = h5f.open(name, h5f.ACC_RDONLY, fapl=fapl)
     elif mode == 'r+':
         fid = h5f.open(name, h5f.ACC_RDWR, fapl=fapl)
-    elif mode == 'w-':
+    elif mode in ['w-', 'x']:
         fid = h5f.create(name, h5f.ACC_EXCL, fapl=fapl, fcpl=fcpl)
     elif mode == 'w':
         fid = h5f.create(name, h5f.ACC_TRUNC, fapl=fapl, fcpl=fcpl)
@@ -102,7 +102,7 @@ def make_fid(name, mode, userblock_size, fapl, fcpl=None):
             except IOError:
                 fid = h5f.create(name, h5f.ACC_EXCL, fapl=fapl, fcpl=fcpl)
     else:
-        raise ValueError("Invalid mode; must be one of r, r+, w, w-, a")
+        raise ValueError("Invalid mode; must be one of r, r+, w, w-, x, a")
 
     try:
         if userblock_size is not None:
@@ -211,7 +211,7 @@ class File(Group):
             and 'latest' are defined.
         userblock
             Desired size of user block.  Only allowed when creating a new
-            file (mode w or w-).
+            file (mode w, w- or x).
         Additional keywords
             Passed on to the selected file driver.
         """

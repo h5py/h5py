@@ -21,13 +21,13 @@ use.  However, there is obviously no concept of "text" vs "binary" mode.
 
 The file name may be a byte string or unicode string. Valid modes are:
 
-    ===  ================================================
-     r   Readonly, file must exist
-     r+  Read/write, file must exist
-     w   Create file, truncate if exists
-     w-  Create file, fail if exists
-     a   Read/write if exists, create otherwise (default)
-    ===  ================================================
+    ========  ================================================
+     r        Readonly, file must exist
+     r+       Read/write, file must exist
+     w        Create file, truncate if exists
+     w- or x  Create file, fail if exists
+     a        Read/write if exists, create otherwise (default)
+    ========  ================================================
 
 
 .. _file_driver:

@@ -287,8 +287,14 @@ class TestUserblock(TestCase):
     """
 
     def test_create_blocksize(self):
-        """ User blocks created with w, w- and properties work correctly """
+        """ User blocks created with w, w-, x and properties work correctly """
         f = File(self.mktemp(),'w-', userblock_size=512)
+        try:
+            self.assertEqual(f.userblock_size, 512)
+        finally:
+            f.close()
+
+        f = File(self.mktemp(),'x', userblock_size=512)
         try:
             self.assertEqual(f.userblock_size, 512)
         finally:
