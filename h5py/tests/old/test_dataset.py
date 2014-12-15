@@ -935,6 +935,19 @@ class TestVlen(BaseDataset):
         self.assertArrayEqual(ds[0], np.arange(3))
         self.assertArrayEqual(ds[1], np.arange(3))
 
+    def test_reuse_from_other(self):
+        dt = h5py.special_dtype(vlen=int)
+        ds = self.f.create_dataset('vlen', (1,), dtype=dt)
+        self.f.create_dataset('vlen2', (1,), ds[()].dtype)
+
+    def test_reuse_struct_from_other(self):
+        dt = [('a', int), ('b', h5py.special_dtype(vlen=int))]
+        ds = self.f.create_dataset('vlen', (1,), dtype=dt)
+        fname = self.f.filename
+        self.f.close()
+        self.f = h5py.File(fname)
+        self.f.create_dataset('vlen2', (1,), self.f['vlen']['b'][()].dtype)
+
     def test_convert(self):
         dt = h5py.special_dtype(vlen=int)
         ds = self.f.create_dataset('vlen', (3,), dtype=dt)

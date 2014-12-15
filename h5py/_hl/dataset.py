@@ -354,30 +354,8 @@ class Dataset(HLObject):
         if not py3:
             names = tuple(x.encode('utf-8') if isinstance(x, unicode) else x for x in names)
 
-        def strip_fields(basetype):
-            """ Strip extra dtype information from special types """
-            if basetype.kind == 'O':
-                return numpy.dtype('O')
-            if basetype.fields is not None:
-                if basetype.kind in ('i','u'):
-                    return basetype.fields['enum'][0]
-                fields = []
-                for name in basetype.names:
-                    fff = basetype.fields[name]
-                    if len(fff) == 3:
-                        (subtype, offset, meta) = fff
-                    else:
-                        subtype, meta = fff
-                        offset = 0
-                    subtype = strip_fields(subtype)
-                    fields.append((name, subtype))
-                return numpy.dtype(fields)
-            return basetype
-
         def readtime_dtype(basetype, names):
             """ Make a NumPy dtype appropriate for reading """
-
-            basetype = strip_fields(basetype)
 
             if len(names) == 0:  # Not compound, or we want all fields
                 return basetype

@@ -3,8 +3,7 @@ Special types
 
 HDF5 supports a few types which have no direct NumPy equivalent.  Among the
 most useful and widely used are *variable-length* (VL) types, and enumerated
-types.  As of version 1.2, h5py fully supports HDF5 enums, and has partial
-support for VL types.
+types.  As of version 2.3, h5py fully supports HDF5 enums and VL types.
 
 How special types are represented
 ---------------------------------
@@ -22,8 +21,7 @@ There are two functions for creating these "hinted" dtypes:
     Create a NumPy dtype object containing type hints.  Only one keyword
     may be specified.
 
-    :param vlen: Base type for HDF5 variable-length datatype.  Currently
-                 only ``str`` and ``unicode`` are allowed.
+    :param vlen: Base type for HDF5 variable-length datatype.
 
     :param enum: 2-tuple ``(basetype, values_dict)``.  ``basetype`` must be
                  an integer dtype; ``values_dict`` is a dictionary mapping
