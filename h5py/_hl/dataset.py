@@ -7,16 +7,22 @@
 # License:  Standard 3-clause BSD; see "license.txt" for full license terms
 #           and contributor agreement.
 
+from __future__ import absolute_import
+
 import posixpath as pp
 import sys
+
+import six
+from six.moves import xrange
+
 import numpy
 
-import h5py
-from h5py import h5s, h5t, h5r, h5d
-from .base import HLObject, py3, phil, with_phil
+from .. import h5s, h5t, h5r, h5d
+from .base import HLObject, phil, with_phil
 from . import filters
 from . import selections as sel
 from . import selections2 as sel2
+from .datatype import Datatype
 
 _LEGACY_GZIP_COMPRESSION_VALS = frozenset(range(10))
 
@@ -46,7 +52,7 @@ def make_new_dset(parent, shape=None, dtype=None, data=None,
 
     # Convert data to a C-contiguous ndarray
     if data is not None:
-        import base
+        from . import base
         data = numpy.asarray(data, order="C", dtype=base.guess_dtype(data))
 
     # Validate shape
@@ -66,7 +72,7 @@ def make_new_dset(parent, shape=None, dtype=None, data=None,
                  "{} is not compatible with {}".format(chunks, shape)
         raise ValueError(errmsg)
 
-    if isinstance(dtype, h5py.Datatype):
+    if isinstance(dtype, Datatype):
         # Named types are used as-is
         tid = dtype.id
         dtype = tid.dtype  # Following code needs this
@@ -349,10 +355,10 @@ class Dataset(HLObject):
         args = args if isinstance(args, tuple) else (args,)
 
         # Sort field indices from the rest of the args.
-        names = tuple(x for x in args if isinstance(x, basestring))
-        args = tuple(x for x in args if not isinstance(x, basestring))
-        if not py3:
-            names = tuple(x.encode('utf-8') if isinstance(x, unicode) else x for x in names)
+        names = tuple(x for x in args if isinstance(x, six.string_types))
+        args = tuple(x for x in args if not isinstance(x, six.string_types))
+        if not six.PY3:
+            names = tuple(x.encode('utf-8') if isinstance(x, six.text_type) else x for x in names)
 
         def readtime_dtype(basetype, names):
             """ Make a NumPy dtype appropriate for reading """
@@ -465,15 +471,15 @@ class Dataset(HLObject):
         args = args if isinstance(args, tuple) else (args,)
 
         # Sort field indices from the slicing
-        names = tuple(x for x in args if isinstance(x, basestring))
-        args = tuple(x for x in args if not isinstance(x, basestring))
-        if not py3:
-            names = tuple(x.encode('utf-8') if isinstance(x, unicode) else x for x in names)
+        names = tuple(x for x in args if isinstance(x, six.string_types))
+        args = tuple(x for x in args if not isinstance(x, six.string_types))
+        if not six.PY3:
+            names = tuple(x.encode('utf-8') if isinstance(x, six.text_type) else x for x in names)
 
         # Generally we try to avoid converting the arrays on the Python
         # side.  However, for compound literals this is unavoidable.
         vlen = h5t.check_dtype(vlen=self.dtype)
-        if vlen not in (bytes, unicode, None):
+        if vlen not in (bytes, six.text_type, None):
             try:
                 val = numpy.asarray(val, dtype=vlen)
             except ValueError:
@@ -643,15 +649,16 @@ class Dataset(HLObject):
     @with_phil
     def __repr__(self):
         if not self:
-            r = u'<Closed HDF5 dataset>'
+            r = six.u('<Closed HDF5 dataset>')
         else:
             if self.name is None:
-                namestr = u'("anonymous")'
+                namestr = six.u('("anonymous")')
             else:
                 name = pp.basename(pp.normpath(self.name))
-                namestr = u'"%s"' % (name if name != u'' else u'/')
-            r = u'<HDF5 dataset %s: shape %s, type "%s">' % \
+                namestr = six.u('"%s"') % (
+                    name if name != six.u('') else six.u('/'))
+            r = six.u('<HDF5 dataset %s: shape %s, type "%s">') % \
                 (namestr, self.shape, self.dtype.str)
-        if py3:
+        if six.PY3:
             return r
         return r.encode('utf8')

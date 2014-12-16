@@ -19,13 +19,6 @@ import sys
 import os
 import os.path as op
 
-if sys.version_info[0] >= 3:
-    import lib2to3.refactor
-    from distutils.command.build_py \
-         import build_py_2to3 as build_py
-else:
-    from distutils.command.build_py import build_py
-    
 import setup_build, setup_configure
 
 
@@ -80,8 +73,7 @@ class test(Command):
             sys.path = oldpath
         
         
-CMDCLASS = {'build_py': build_py,
-            'build_ext': setup_build.h5py_build_ext,
+CMDCLASS = {'build_ext': setup_build.h5py_build_ext,
             'configure': setup_configure.configure,
             'test': test, }
 
@@ -143,7 +135,7 @@ setup(
   package_data = package_data,
   ext_modules = [Extension('h5py.x',['x.c'])],  # To trick build into running build_ext
   requires = ['numpy (>=1.6.1)', 'Cython (>=0.17)'],
-  install_requires = ['numpy>=1.6.1', 'Cython>=0.17'],
-  setup_requires = ['pkgconfig'],
+  install_requires = ['numpy>=1.6.1', 'Cython>=0.17', 'six'],
+  setup_requires = ['pkgconfig', 'six'],
   cmdclass = CMDCLASS,
 )

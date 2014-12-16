@@ -40,6 +40,8 @@
         Field names
 """
 
+from __future__ import absolute_import
+
 import numpy as np
 import h5py
 
@@ -401,5 +403,4 @@ class Test2DZeroFloat(TestCase):
         """ see issue #473 """
         self.assertNumpyBehavior(self.dset, self.data, np.s_[:,[0,1,2]])
 
-        
         

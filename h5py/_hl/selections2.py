@@ -7,8 +7,10 @@
 # License:  Standard 3-clause BSD; see "license.txt" for full license terms
 #           and contributor agreement.
 
+from __future__ import absolute_import
+
 import numpy as np
-from h5py import h5s
+from .. import h5s
 
 def read_dtypes(dataset_dtype, names):
     """ Returns a 2-tuple containing:

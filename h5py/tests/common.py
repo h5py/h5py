@@ -7,10 +7,15 @@
 # License:  Standard 3-clause BSD; see "license.txt" for full license terms
 #           and contributor agreement.
 
+from __future__ import absolute_import
+
 import sys
 import os
 import shutil
 import tempfile
+
+from six import unichr
+
 import numpy as np
 import h5py
 
@@ -26,18 +31,12 @@ else:
             )
 
 
-if sys.version_info[0] == 3:
-    PY3 = True
-else:
-    PY3 = False
-
-
 # Check if non-ascii filenames are supported
 # Evidently this is the most reliable way to check
 # See also h5py issue #263 and ipython #466
 # To test for this, run the testsuite with LC_ALL=C
 try:
-    testfile, fname = tempfile.mkstemp(u'\u03b7')
+    testfile, fname = tempfile.mkstemp(unichr(0x03b7))
 except UnicodeError:
     UNICODE_FILENAMES = False
 else:

@@ -7,13 +7,11 @@
 # License:  Standard 3-clause BSD; see "license.txt" for full license terms
 #           and contributor agreement.
 
+from __future__ import absolute_import
+
 import sys
 
-if sys.version_info[0] == 3:
-    py3 = True
-else:
-    py3 = False
-
+from six import unichr, PY3
 
 if sys.version_info >= (2, 7) or sys.version_info >= (3, 2):
     import unittest as ut
@@ -108,7 +106,7 @@ class TestCase(ut.TestCase):
 # See also h5py issue #263 and ipython #466
 # To test for this, run the testsuite with LC_ALL=C
 try:
-    testfile, fname = tempfile.mkstemp(u'\u03b7')
+    testfile, fname = tempfile.mkstemp(unichr(0x03b7))
 except UnicodeError:
     unicode_filenames = False
 else:

@@ -11,6 +11,8 @@
     Tests the h5py.File object.
 """
 
+from __future__ import absolute_import
+
 import h5py
 
 from ..common import ut, TestCase

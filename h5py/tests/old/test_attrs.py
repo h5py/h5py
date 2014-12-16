@@ -15,10 +15,14 @@
     are tested by module test_attrs_data.
 """
 
+from __future__ import absolute_import
+
+import six
+
 import numpy as np
 import collections
 
-from common import TestCase, ut
+from .common import TestCase, ut
 
 from h5py.highlevel import File
 from h5py import h5a,  h5t
@@ -44,7 +48,7 @@ class TestAccess(BaseAttrs):
     def test_create(self):
         """ Attribute creation by direct assignment """
         self.f.attrs['a'] = 4.0
-        self.assertEqual(self.f.attrs.keys(), ['a'])
+        self.assertEqual(list(self.f.attrs.keys()), ['a'])
         self.assertEqual(self.f.attrs['a'], 4.0)
 
     def test_overwrite(self):
@@ -112,7 +116,7 @@ class TestUnicode(BaseAttrs):
 
     def test_unicode(self):
         """ Access via Unicode string with non-ascii characters """
-        name = u"Omega \u03A9"
+        name = six.u("Omega") + six.unichr(0x03A9)
         self.f.attrs[name] = 42
         out = self.f.attrs[name]
         self.assertEqual(out, 42)

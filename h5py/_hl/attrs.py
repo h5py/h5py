@@ -7,14 +7,16 @@
 # License:  Standard 3-clause BSD; see "license.txt" for full license terms
 #           and contributor agreement.
 
+from __future__ import absolute_import
+
 import numpy
 import collections
 
-import h5py
-from h5py import h5s, h5t, h5a
+from .. import h5s, h5t, h5a
 from . import base
 from .base import phil, with_phil
 from .dataset import readtime_dtype
+from .datatype import Datatype
 
 
 class AttributeManager(base.DictCompat, base.CommonStateObject):
@@ -118,7 +120,7 @@ class AttributeManager(base.DictCompat, base.CommonStateObject):
             use_htype = None    # If a committed type is given, we must use it
                                 # in the call to h5a.create.
                                             
-            if isinstance(dtype, h5py.Datatype):
+            if isinstance(dtype, Datatype):
                 use_htype = dtype.id
                 dtype = dtype.dtype
             elif dtype is None:

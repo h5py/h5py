@@ -7,6 +7,8 @@
 # License:  Standard 3-clause BSD; see "license.txt" for full license terms
 #           and contributor agreement.
 
+from __future__ import absolute_import
+
 try:
     import unittest2 as ut
 except ImportError:

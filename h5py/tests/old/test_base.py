@@ -13,8 +13,12 @@
     Tests features common to all high-level objects, like the .name property.
 """
 
+from __future__ import absolute_import
+
+import six
+
 from h5py import File
-from .common import ut, TestCase, py3, unicode_filenames
+from .common import ut, TestCase, unicode_filenames
 
 import numpy as np
 import os
@@ -46,11 +50,11 @@ class TestRepr(BaseTest):
         repr() works correctly with Unicode names
     """
 
-    USTRING = u"\xfc\xdf"
+    USTRING = six.unichr(0xfc) + six.unichr(0xdf)
 
     def _check_type(self, obj):
-        if py3:
-            self.assertIsInstance(repr(obj), unicode)
+        if six.PY3:
+            self.assertIsInstance(repr(obj), six.text_type)
         else:
             self.assertIsInstance(repr(obj), bytes)
 
@@ -73,7 +77,7 @@ class TestRepr(BaseTest):
     @ut.skipIf(not unicode_filenames, "Filesystem unicode support required")
     def test_file(self):
         """ File object repr() with unicode """
-        fname = tempfile.mktemp(self.USTRING+u'.hdf5')
+        fname = tempfile.mktemp(self.USTRING+six.u('.hdf5'))
         try:
             with File(fname,'w') as f:
                 self._check_type(f)

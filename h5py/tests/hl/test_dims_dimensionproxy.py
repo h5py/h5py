@@ -11,6 +11,8 @@
     Tests the h5py.Dataset.dims.DimensionProxy class.
 """
 
+from __future__ import absolute_import
+
 import numpy as np
 import h5py
 

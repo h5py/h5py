@@ -7,30 +7,32 @@
 # License:  Standard 3-clause BSD; see "license.txt" for full license terms
 #           and contributor agreement.
 
-from h5py import _errors
+from __future__ import absolute_import
+
+from . import _errors
 _errors.silence_errors()
 
-from h5py import _conv
+from . import _conv
 _conv.register_converters()
 
-from h5py import h5a, h5d, h5ds, h5f, h5fd, h5g, h5r, h5s, h5t, h5p, h5z
+from . import h5a, h5d, h5ds, h5f, h5fd, h5g, h5r, h5s, h5t, h5p, h5z
 
 h5s.NULL = h5s._NULL  # NULL is a reserved name at the Cython layer
 h5z._register_lzf()
 
-from h5py.highlevel import *
+from .highlevel import *
 
-from h5py.h5 import get_config
-from h5py.h5r import Reference, RegionReference
-from h5py.h5t import special_dtype, check_dtype
+from .h5 import get_config
+from .h5r import Reference, RegionReference
+from .h5t import special_dtype, check_dtype
 
 # Deprecated functions
-from h5py.h5t import py_new_vlen as new_vlen
-from h5py.h5t import py_get_vlen as get_vlen
-from h5py.h5t import py_new_enum as new_enum
-from h5py.h5t import py_get_enum as get_enum
+from .h5t import py_new_vlen as new_vlen
+from .h5t import py_get_vlen as get_vlen
+from .h5t import py_new_enum as new_enum
+from .h5t import py_get_enum as get_enum
 
-from h5py import version
+from . import version
 
 from .tests import run_tests
 

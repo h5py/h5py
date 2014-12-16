@@ -7,9 +7,11 @@
 # License:  Standard 3-clause BSD; see "license.txt" for full license terms
 #           and contributor agreement.
 
+from __future__ import absolute_import
+
 import numpy
 
-from h5py import h5ds
+from .. import h5ds
 from . import base
 from .base import phil, with_phil
 from .dataset import Dataset, readtime_dtype

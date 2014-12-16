@@ -15,10 +15,15 @@
 
     1. Method create_dataset is tested in module test_dataset
 """
+
+from __future__ import absolute_import
+
 import collections
 import numpy as np
 import os
 import sys
+
+import six
 
 from .common import ut, TestCase
 import h5py
@@ -44,9 +49,9 @@ class TestRepr(BaseGroup):
     def test_repr(self):
         """ repr() works on Group objects """
         g = self.f.create_group('foo')
-        self.assertIsInstance(g, basestring)
+        self.assertIsInstance(g, six.string_types)
         self.f.close()
-        self.assertIsInstance(g, basestring)
+        self.assertIsInstance(g, six.string_types)
 
 class TestCreate(BaseGroup):
 
@@ -72,7 +77,7 @@ class TestCreate(BaseGroup):
 
     def test_unicode(self):
         """ Unicode names are correctly stored """
-        name = u"/Name\u4500"
+        name = six.u("/Name") + six.unichr(0x4500)
         group = self.f.create_group(name)
         self.assertEqual(group.name, name)
         self.assertEqual(group.id.links.get_info(name.encode('utf8')).cset, h5t.CSET_UTF8)
@@ -80,7 +85,7 @@ class TestCreate(BaseGroup):
     def test_unicode_default(self):
         """ Unicode names convertible to ASCII are stored as ASCII (issue 239)
         """
-        name = u"/Hello, this is a name"
+        name = six.u("/Hello, this is a name")
         group = self.f.create_group(name)
         self.assertEqual(group.name, name)
         self.assertEqual(group.id.links.get_info(name.encode('utf8')).cset, h5t.CSET_ASCII)
@@ -243,9 +248,9 @@ class TestRepr(BaseGroup):
     def test_repr(self):
         """ Opened and closed groups provide a useful __repr__ string """
         g = self.f.create_group('foo')
-        self.assertIsInstance(repr(g), basestring)
+        self.assertIsInstance(repr(g), six.string_types)
         g.id._close()
-        self.assertIsInstance(repr(g), basestring)
+        self.assertIsInstance(repr(g), six.string_types)
 
 class BaseMapping(BaseGroup):
 
@@ -292,33 +297,33 @@ class TestContains(BaseGroup):
         """ "in" builtin works for containership (byte and Unicode) """
         self.f.create_group('a')
         self.assertIn(b'a', self.f)
-        self.assertIn(u'a', self.f)
+        self.assertIn(six.u('a'), self.f)
         self.assertIn(b'/a', self.f)
-        self.assertIn(u'/a', self.f)
+        self.assertIn(six.u('/a'), self.f)
         self.assertNotIn(b'mongoose', self.f)
-        self.assertNotIn(u'mongoose', self.f)
+        self.assertNotIn(six.u('mongoose'), self.f)
 
     def test_exc(self):
         """ "in" on closed group returns False (see also issue 174) """
         self.f.create_group('a')
         self.f.close()
         self.assertFalse(b'a' in self.f)
-        self.assertFalse(u'a' in self.f)
+        self.assertFalse(six.u('a') in self.f)
 
     def test_empty(self):
         """ Empty strings work properly and aren't contained """
-        self.assertNotIn(u'', self.f)
+        self.assertNotIn(six.u(''), self.f)
         self.assertNotIn(b'', self.f)
 
     def test_dot(self):
         """ Current group "." is always contained """
         self.assertIn(b'.', self.f)
-        self.assertIn(u'.', self.f)
+        self.assertIn(six.u('.'), self.f)
 
     def test_root(self):
         """ Root group (by itself) is contained """
         self.assertIn(b'/', self.f)
-        self.assertIn(u'/', self.f)
+        self.assertIn(six.u('/'), self.f)
 
     def test_trailing_slash(self):
         """ Trailing slashes are unconditionally ignored """
@@ -413,7 +418,7 @@ class TestPy2Dict(BaseMapping):
         self.assertSameElements([x for x in self.f.iteritems()],
             [(x, self.f.get(x)) for x in self.groups])
 
-@ut.skipIf(sys.version_info[0] != 3, "Py3")
+@ut.skipIf(not six.PY3, "Py3")
 class TestPy3Dict(BaseMapping):
 
     def test_keys(self):
@@ -562,7 +567,7 @@ class TestSoftLinks(BaseGroup):
     def test_srepr(self):
         """ SoftLink path repr """
         sl = SoftLink('/foo')
-        self.assertIsInstance(repr(sl), basestring)
+        self.assertIsInstance(repr(sl), six.string_types)
 
     def test_create(self):
         """ Create new soft link by assignment """
@@ -606,7 +611,7 @@ class TestExternalLinks(TestCase):
     def test_erepr(self):
         """ External link repr """
         el = ExternalLink('foo.hdf5','/foo')
-        self.assertIsInstance(repr(el), basestring)
+        self.assertIsInstance(repr(el), six.string_types)
 
     def test_create(self):
         """ Creating external links """
