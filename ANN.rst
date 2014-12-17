@@ -1,16 +1,22 @@
-Announcing HDF5 for Python (h5py) 2.4.0 BETA
-============================================
+Announcing HDF5 for Python (h5py) 2.4.0
+========================================
 
-The h5py team is happy to announce the availability of h5py 2.4.0 (beta).
+The h5py team is happy to announce the availability of h5py 2.4.0 (final).
 
-This beta version will be available for approximately two weeks.  Because
-of the substantial number of changes to the code base, we welcome feedback,
-particularly from MPI users.
+What's h5py?
+------------
 
-Documentation for the beta is at:
+The h5py package is a Pythonic interface to the HDF5 binary data format.
 
-http://docs.h5py.org/en/latest/
+It lets you store huge amounts of numerical data, and easily manipulate
+that data from NumPy. For example, you can slice into multi-terabyte
+datasets stored on disk, as if they were real NumPy arrays. Thousands of
+datasets can be stored in a single file, categorized and tagged however
+you want.
 
+Documentation is at:
+
+http://docs.h5py.org
 
 Changes
 -------
@@ -39,6 +45,16 @@ protected by threading locks.  User-visible changes include:
 
 * Various other enhancements and bug fixes
   
+Acknowlegements
+---------------
+
+This release incorporates changes from, among others:
+
+* Matthieu Brucher
+* Laurence Hole
+* John Tyree
+* Pierre de Buyl
+* Matthew Brett
 
 Where to get it
 ---------------
