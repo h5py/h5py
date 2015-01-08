@@ -274,7 +274,7 @@ cdef class _ObjectVisitor:
         self.retval = None
         self.objinfo = ObjInfo()
 
-cdef herr_t cb_obj_iterate(hid_t obj, char* name, H5O_info_t *info, void* data) except 2:
+cdef herr_t cb_obj_iterate(hid_t obj, const char* name, const H5O_info_t *info, void* data) except 2:
 
     cdef _ObjectVisitor visit
 
@@ -290,7 +290,7 @@ cdef herr_t cb_obj_iterate(hid_t obj, char* name, H5O_info_t *info, void* data) 
         return 1
     return 0
 
-cdef herr_t cb_obj_simple(hid_t obj, char* name, H5O_info_t *info, void* data) except 2:
+cdef herr_t cb_obj_simple(hid_t obj, const char* name, const H5O_info_t *info, void* data) except 2:
 
     cdef _ObjectVisitor visit
 
