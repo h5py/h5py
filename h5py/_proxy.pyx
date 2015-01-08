@@ -256,7 +256,7 @@ ctypedef struct h5py_scatter_t:
     void* buf
 
 cdef herr_t h5py_scatter_cb(void* elem, hid_t type_id, unsigned ndim,
-                hsize_t *point, void *operator_data) except -1:
+                const hsize_t *point, void *operator_data) except -1:
 
     cdef h5py_scatter_t* info = <h5py_scatter_t*>operator_data
    
@@ -268,7 +268,7 @@ cdef herr_t h5py_scatter_cb(void* elem, hid_t type_id, unsigned ndim,
     return 0
 
 cdef herr_t h5py_gather_cb(void* elem, hid_t type_id, unsigned ndim,
-                hsize_t *point, void *operator_data) except -1:
+                const hsize_t *point, void *operator_data) except -1:
 
     cdef h5py_scatter_t* info = <h5py_scatter_t*>operator_data
    
