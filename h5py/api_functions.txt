@@ -197,7 +197,7 @@ hdf5:
   herr_t    H5Literate_by_name(hid_t loc_id, char *group_name, H5_index_t idx_type, H5_iter_order_t order, hsize_t *idx, H5L_iterate_t op, void *op_data, hid_t lapl_id)
   herr_t    H5Lvisit(hid_t grp_id, H5_index_t idx_type, H5_iter_order_t order, H5L_iterate_t op, void *op_data)
   herr_t    H5Lvisit_by_name(hid_t loc_id, char *group_name, H5_index_t idx_type, H5_iter_order_t order, H5L_iterate_t op, void *op_data, hid_t lapl_id)
-  herr_t    H5Lunpack_elink_val(void *ext_linkval, size_t link_size, unsigned *flags, char **filename, char **obj_path)
+  herr_t    H5Lunpack_elink_val(void *ext_linkval, size_t link_size, unsigned *flags, const char **filename, const char **obj_path)
   herr_t    H5Lcreate_external(char *file_name, char *obj_name, hid_t link_loc_id, char *link_name, hid_t lcpl_id, hid_t lapl_id)
 
 
@@ -262,9 +262,9 @@ hdf5:
   herr_t    H5Pset_family_offset ( hid_t fapl_id, hsize_t offset)
   herr_t    H5Pget_family_offset ( hid_t fapl_id, hsize_t *offset)
   herr_t    H5Pset_fapl_log(hid_t fapl_id, char *logfile, unsigned int flags, size_t buf_size)
-  herr_t    H5Pset_fapl_multi(hid_t fapl_id, H5FD_mem_t *memb_map, hid_t *memb_fapl, char **memb_name, haddr_t *memb_addr, hbool_t relax)
+  herr_t    H5Pset_fapl_multi(hid_t fapl_id, H5FD_mem_t *memb_map, hid_t *memb_fapl, const char * const *memb_name, haddr_t *memb_addr, hbool_t relax)
   herr_t    H5Pset_cache(hid_t plist_id, int mdc_nelmts, int rdcc_nelmts,  size_t rdcc_nbytes, double rdcc_w0)
-  herr_t    H5Pget_cache(hid_t plist_id, int *mdc_nelmts, int *rdcc_nelmts, size_t *rdcc_nbytes, double *rdcc_w0)
+  herr_t    H5Pget_cache(hid_t plist_id, int *mdc_nelmts, size_t *rdcc_nelmts, size_t *rdcc_nbytes, double *rdcc_w0)
   herr_t    H5Pset_fapl_sec2(hid_t fapl_id)
   herr_t    H5Pset_fapl_stdio(hid_t fapl_id)
   hid_t     H5Pget_driver(hid_t fapl_id)
@@ -386,7 +386,7 @@ hdf5:
 
   hssize_t  H5Sget_select_elem_npoints(hid_t space_id)
   herr_t    H5Sget_select_elem_pointlist(hid_t space_id, hsize_t startpoint,  hsize_t numpoints, hsize_t *buf)
-  herr_t    H5Sselect_elements(hid_t space_id, H5S_seloper_t op,  size_t num_elements, hsize_t **coord)
+  herr_t    H5Sselect_elements(hid_t space_id, H5S_seloper_t op,  size_t num_elements, const hsize_t *coord)
 
   hssize_t  H5Sget_select_hyper_nblocks(hid_t space_id )
   herr_t    H5Sget_select_hyper_blocklist(hid_t space_id,  hsize_t startblock, hsize_t numblocks, hsize_t *buf )
