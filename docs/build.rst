@@ -49,7 +49,7 @@ Install with pip
 Simply run::
 
     $ pip install h5py
-    
+
 All dependencies are installed automatically.
 
 Via setup.py
@@ -88,12 +88,21 @@ Custom installation
 You can specify build options for h5py with the ``configure`` option to
 setup.py.  Options may be given together or separately::
 
-    $ python setup.py configure --hdf5=/path/to/hdf5
+    $ python setup.py configure --hdf5=/path/to/hdf5/{lib/include}
+    $ python setup.py configure --hdf5-libdir=/path/to/libhdf5/lib
+    $ python setup.py configure --hdf5-includedir=/path/to/hdf5/include
+    $ python setup.py configure --hdf5-libname=customname-libhdf5
     $ python setup.py configure --hdf5-version=X.Y.Z
     $ python setup.py configure --mpi
-    
-Note the ``--hdf5-version`` option is generally not needed, as h5py 
+
+Note the ``--hdf5-version`` option is generally not needed, as h5py
 auto-detects the installed version of HDF5 (even for custom locations).
+
+The custom library name may be needed when multiple versions of hdf5 are
+installed under different names.
+
+Furthermore note, that ``--hdf5-libdir`` and ``--hdf5-includedir`` take
+precedence over ``--hdf5``
 
 Once set, build options apply to all future builds in the source directory.
 You can reset to the defaults with the ``--reset`` option::
@@ -104,17 +113,24 @@ You can also configure h5py using environment variables.  This is handy
 when installing via ``pip``, as you don't have direct access to setup.py::
 
     $ HDF5_DIR=/path/to/hdf5 pip install h5py
+    $ HDF5_LIB=/path/to/hdf5/lib pip install h5py
+    $ HDF5_INCLUDE=/path/to/hdf5/include pip install h5py
+    $ HDF5_LIBNAME=customname-libhdf5 pip install h5py
     $ HDF5_VERSION=X.Y.Z pip install h5py
-    
+    $ HDF5_MPI=1 pip install h5py
+
 Here's a list of all the configure options currently supported:
 
-======================= =========================== ===========================
-Option                  Via setup.py                Via environment variable
-======================= =========================== ===========================
-Custom path to HDF5     ``--hdf5=/path/to/hdf5``    ``HDF5_DIR=/path/to/hdf5``
-Force HDF5 version      ``--hdf5-version=X.Y.Z``    ``HDF5_VERSION=X.Y.Z``
-Enable MPI mode         ``--mpi``                   (none)
-======================= =========================== ===========================
+===============================  ===========================================  ===================================
+Option                           Via setup.py                                 Via environment variable
+===============================  ===========================================  ===================================
+Custom path to HDF5              ``--hdf5=/path/to/hdf5``                     ``HDF5_DIR=/path/to/hdf5``
+Custom path to HDF5 lib dir      ``--hdf5-libdir=/path/to/hdf5/lib``          ``HDF5_DIR=/path/to/hdf5``
+Custom path to HDF5 include dir  ``--hdf5-includedir=/path/to/hdf5/include``  ``HDF5_DIR=/path/to/hdf5``
+Custom name for HDF5             ``--hdf5-libname=customname-libhdf5``        ``HDF5_LIBNAME=customname-libhdf5``
+Force HDF5 version               ``--hdf5-version=X.Y.Z``                     ``HDF5_VERSION=X.Y.Z``
+Enable MPI mode                  ``--mpi``                                    ``HDF5_MPI=1``
+===============================  ===========================================  ===================================
 
 
 Building against Parallel HDF5
