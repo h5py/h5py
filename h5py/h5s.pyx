@@ -485,7 +485,7 @@ cdef class SpaceID(ObjectID):
 
         nelements = hcoords.dimensions[0]
 
-        H5Sselect_elements(self.id, <H5S_seloper_t>op, nelements, <hsize_t**>hcoords.data)
+        H5Sselect_elements(self.id, <H5S_seloper_t>op, nelements, <hsize_t*>hcoords.data)
 
 
     # === Hyperslab selection functions =======================================
