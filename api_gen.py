@@ -64,11 +64,11 @@ class Line(object):
                             """, re.VERBOSE)
 
     SIG_PATTERN = re.compile("""
-                            (const[ ]+)?
-                            (unsigned[ ]+)?
-                            (?:[a-zA-Z_]+[a-zA-Z0-9_]*\**)
-                            [ ]+[ *]*
-                            (?P<param>[a-zA-Z_]+[a-zA-Z0-9_]*)
+                             (?:const[ ]+)?
+                             (?:unsigned[ ]+)?
+                             (?:[a-zA-Z_]+[a-zA-Z0-9_]*\**)
+                             [ ]+[ *]*
+                             (?P<param>[a-zA-Z_]+[a-zA-Z0-9_]*)
                             """, re.VERBOSE)
                             
     def __init__(self, text):
@@ -95,7 +95,7 @@ class Line(object):
         self.args = self.SIG_PATTERN.findall(self.sig)
         if self.args is None:
             raise ValueError("Invalid function signature: {0}".format(self.sig))
-        self.args = ", ".join(x[1] for x in self.args)
+        self.args = ", ".join(self.args)
 
 
 raw_preamble = """\
