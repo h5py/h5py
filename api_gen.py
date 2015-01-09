@@ -64,6 +64,7 @@ class Line(object):
                             """, re.VERBOSE)
 
     SIG_PATTERN = re.compile("""
+                            (const[ ]+)?
                             (unsigned[ ]+)?
                             (?:[a-zA-Z_]+[a-zA-Z0-9_]*\**)
                             [ ]+[ *]*
