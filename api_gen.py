@@ -63,7 +63,6 @@ class Line(object):
                             \((?P<sig>[a-zA-Z0-9_,* ]*)\)
                             """, re.VERBOSE)
 
-    CONST_PATTERN = re.compile('[ ]+const[ ]+')
     SIG_PATTERN = re.compile("""
                              (?:unsigned[ ]+)?
                              (?:[a-zA-Z_]+[a-zA-Z0-9_]*\**)
@@ -92,7 +91,7 @@ class Line(object):
         self.fname = parts['fname']
         self.sig = parts['sig']
 
-        sig_const_stripped = self.CONST_PATTERN.sub('', self.sig)
+        sig_const_stripped = self.sig.replace('const', '')
         self.args = self.SIG_PATTERN.findall(sig_const_stripped)
         if self.args is None:
             raise ValueError("Invalid function signature: {0}".format(self.sig))
