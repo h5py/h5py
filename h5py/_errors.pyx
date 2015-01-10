@@ -88,8 +88,8 @@ cdef herr_t walk_cb(int n, H5E_error_t *desc, void *e):
 cdef int set_exception() except -1:
 
     cdef err_data_t err
-    cdef char *desc = NULL          # Note: HDF5 forbids freeing these
-    cdef char *desc_bottom = NULL
+    cdef const char *desc = NULL          # Note: HDF5 forbids freeing these
+    cdef const char *desc_bottom = NULL
 
     # First, extract the major & minor error codes from the top of the
     # stack, along with the top-level error description

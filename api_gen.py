@@ -64,11 +64,11 @@ class Line(object):
                             """, re.VERBOSE)
 
     SIG_PATTERN = re.compile("""
-                            (unsigned[ ]+)?
-                            (?:[a-zA-Z_]+[a-zA-Z0-9_]*\**)
-                            [ ]+[ *]*
-                            (?P<param>[a-zA-Z_]+[a-zA-Z0-9_]*)
-                            """, re.VERBOSE)
+                             (?:unsigned[ ]+)?
+                             (?:[a-zA-Z_]+[a-zA-Z0-9_]*\**)
+                             [ ]+[ *]*
+                             (?P<param>[a-zA-Z_]+[a-zA-Z0-9_]*)
+                             """, re.VERBOSE)
                             
     def __init__(self, text):
         """ Break the line into pieces and populate object attributes.
@@ -91,10 +91,11 @@ class Line(object):
         self.fname = parts['fname']
         self.sig = parts['sig']
 
-        self.args = self.SIG_PATTERN.findall(self.sig)
+        sig_const_stripped = self.sig.replace('const', '')
+        self.args = self.SIG_PATTERN.findall(sig_const_stripped)
         if self.args is None:
             raise ValueError("Invalid function signature: {0}".format(self.sig))
-        self.args = ", ".join(x[1] for x in self.args)
+        self.args = ", ".join(self.args)
 
 
 raw_preamble = """\
