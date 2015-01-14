@@ -1,0 +1,47 @@
+What's new in h5py 2.4
+======================
+
+Build system changes
+--------------------
+
+The setup.py-based build system has been reworked to be more maintainable, and
+to fix certain long-standing bugs.  As a consequence, the options to setup.py
+have changed; a new top-level "configure" command handles options like 
+``--hdf5=/path/to/hdf5`` and ``--mpi``.  Setup.py now works correctly under
+Python 3 when these options are used.
+
+Cython (0.17+) is now required when building from source on all platforms;
+the .c files are no longer shipped in the UNIX release.  The minimum NumPy 
+version is now 1.6.1.
+
+Files will now auto-close
+-------------------------
+  
+Files are now automatically closed when all objects within them
+are unreachable. Previously, if File.close() was not explicitly called,
+files would remain open and "leaks" were possible if the File object
+was lost.
+
+Thread safety improvements
+--------------------------
+
+Access to all APIs, high- and low-level, are now protected by a global lock.
+The entire API is now believed to be thread-safe.  Feedback and real-world
+testing is welcome.
+
+External link improvements
+--------------------------
+
+External links now work if the target file is already open.  Previously
+this was not possible because of a mismatch in the file close strengths.
+
+Thanks to
+---------
+
+Many people, but especially:
+
+* Matthieu Brucher
+* Laurence Hole
+* John Tyree
+* Pierre de Buyl
+* Matthew Brett
