@@ -13,6 +13,9 @@ import posixpath
 import warnings
 import os
 import sys
+from collections import (
+    Mapping, MutableMapping, MappingView, KeysView, ValuesView, ItemsView
+)
 
 import six
 
@@ -281,60 +284,55 @@ class HLObject(CommonStateObject):
             return bool(self.id)
     __nonzero__ = __bool__
 
-class View(object):
+class MappingViewWithLock(MappingView):
 
-    def __init__(self, obj):
-        self._obj = obj
-
-    @with_phil
     def __len__(self):
-        return len(self._obj)
+        with phil:
+            return super(MappingViewWithLock, self).__len__()
 
 
-class KeyView(View):
+class KeysViewWithLock(MappingViewWithLock, KeysView):
+    def __contains__(self, item):
+        with phil:
+            return super(KeysViewWithLock, self).__contains__(item)
 
-    @with_phil
-    def __contains__(self, what):
-        return what in self._obj
-
-    @with_phil
     def __iter__(self):
-        for x in self._obj:
-            yield x
+        with phil:
+            return super(KeysViewWithLock, self).__iter__()
 
 
-class ValueView(View):
+class ValuesViewWithLock(MappingViewWithLock, ValuesView):
+    def __contains__(self, value):
+        with phil:
+            for key in self._mapping:
+                if value == self._mapping.get(key):
+                    return True
+            return False
 
-    def __contains__(self, what):
-        raise TypeError("Containership testing doesn't work for values. :(")
-
-    @with_phil
     def __iter__(self):
-        for x in self._obj:
-            yield self._obj.get(x)
+        with phil:
+            for key in self._mapping:
+                yield self._mapping.get(key)
 
 
-class ItemView(View):
+class ItemsViewWithLock(MappingViewWithLock, ItemsView):
+    def __contains__(self, item):
+        with phil:
+            key, val = item
+            if key in self._mapping:
+                return val == self._mapping.get(key)
+            return False
 
-    @with_phil
-    def __contains__(self, what):
-        if what[0] in self._obj:
-            return what[1] == self._obj.get(what[0])
-        return False
-
-    @with_phil
     def __iter__(self):
-        for x in self._obj:
-            yield (x, self._obj.get(x))
+        with phil:
+            for key in self._mapping:
+                yield (key, self._mapping.get(key))
 
 
-class DictCompat(object):
-
+class MappingWithLock(Mapping):
     """
-        Contains dictionary-style compatibility methods for groups and
-        attributes.
+    Subclass of collections.Mapping with locks.
     """
-
     def get(self, name, default=None):
         """ Retrieve the member, or return default if it doesn't exist """
         with phil:
@@ -346,25 +344,21 @@ class DictCompat(object):
     if six.PY3:
         def keys(self):
             """ Get a view object on member names """
-            return KeyView(self)
+            return KeysViewWithLock(self)
 
         def values(self):
             """ Get a view object on member objects """
-            return ValueView(self)
+            return ValuesViewWithLock(self)
 
         def items(self):
             """ Get a view object on member items """
-            return ItemView(self)
+            return ItemsViewWithLock(self)
 
     else:
         def keys(self):
             """ Get a list containing member names """
             with phil:
                 return list(self)
-
-        def iterkeys(self):
-            """ Get an iterator over member names """
-            return iter(self)
 
         def values(self):
             """ Get a list containing member objects """
@@ -385,3 +379,6 @@ class DictCompat(object):
             """ Get an iterator over (name, object) pairs """
             for x in self:
                 yield (x, self.get(x))
+
+class MutableMappingWithLock(MappingWithLock,MutableMapping):
+    pass
