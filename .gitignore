@@ -17,3 +17,6 @@ MANIFEST
 .DS_Store
 /docs/_build
 /docs_api/_build
+/.tox
+/h5py.egg-info
+/*.egg
