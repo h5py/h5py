@@ -14,7 +14,7 @@ from distutils.version import StrictVersion as _sv
 import sys
 import numpy
 
-version = "2.4.0"
+version = "2.5.0a0"
 
 _exp = _sv(version)
 
