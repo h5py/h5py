@@ -22,7 +22,7 @@ import os.path as op
 import setup_build, setup_configure
 
 
-VERSION = '2.4.0b1'
+VERSION = '2.4.0'
 
 
 # --- Custom Distutils commands -----------------------------------------------
