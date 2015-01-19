@@ -265,7 +265,7 @@ def autodetect_version(libdirs, libnameregexp, mpi=False, hdf5_version=None):
 
     version = "{0}.{1}.{2}".format(int(major.value), int(minor.value), int(release.value))
 
-    if hdf5_version is not None:
+    if hdf5_version is not None and not sys.platform.startswith('win'):
         assert hdf5_version == version
 
     return version
