@@ -125,8 +125,8 @@ Here's a list of all the configure options currently supported:
 Option                           Via setup.py                                 Via environment variable
 ===============================  ===========================================  ===================================
 Custom path to HDF5              ``--hdf5=/path/to/hdf5``                     ``HDF5_DIR=/path/to/hdf5``
-Custom path to HDF5 lib dir      ``--hdf5-libdir=/path/to/hdf5/lib``          ``HDF5_DIR=/path/to/hdf5``
-Custom path to HDF5 include dir  ``--hdf5-includedir=/path/to/hdf5/include``  ``HDF5_DIR=/path/to/hdf5``
+Custom path to HDF5 lib dir      ``--hdf5-libdir=/path/to/hdf5/lib``          ``HDF5_LIB=/path/to/hdf5``
+Custom path to HDF5 include dir  ``--hdf5-includedir=/path/to/hdf5/include``  ``HDF5_INCLUDE=/path/to/hdf5``
 Custom name for HDF5             ``--hdf5-libname=customname-libhdf5``        ``HDF5_LIBNAME=customname-libhdf5``
 Force HDF5 version               ``--hdf5-version=X.Y.Z``                     ``HDF5_VERSION=X.Y.Z``
 Enable MPI mode                  ``--mpi``                                    ``HDF5_MPI=1``
