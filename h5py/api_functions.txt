@@ -106,8 +106,12 @@ hdf5:
 
   herr_t    H5Diterate(void *buf, hid_t type_id, hid_t space_id,  H5D_operator_t op, void* operator_data)
   herr_t    H5Dset_extent(hid_t dset_id, hsize_t* size)
-
-
+  
+  # SWMR functions
+  1.9.178   herr_t H5Dflush(hid_t dataset_id)
+  1.9.178   herr_t H5Drefresh(hid_t dataset_id)
+  
+  
   # === H5F - File API ========================================================
 
   hid_t     H5Fcreate(char *filename, unsigned int flags, hid_t create_plist, hid_t access_plist)
@@ -138,6 +142,9 @@ hdf5:
   # MPI functions
   MPI 1.8.9 herr_t H5Fset_mpi_atomicity(hid_t file_id, hbool_t flag)
   MPI 1.8.9 herr_t H5Fget_mpi_atomicity(hid_t file_id, hbool_t *flag)
+  
+  # SWMR functions
+  1.9.178   herr_t H5Fstart_swmr_write(hid_t file_id)
 
 
   # === H5G - Groups API ======================================================
