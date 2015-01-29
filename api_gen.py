@@ -56,7 +56,7 @@ class Line(object):
         
     PATTERN = re.compile("""(?P<mpi>(MPI)[ ]+)?
                             (?P<error>(ERROR)[ ]+)?
-                            (?P<version>([0-9]\.[0-9]\.[0-9]))?
+                            (?P<version>([0-9]+\.[0-9]+\.[0-9]+))?
                             ([ ]+)?
                             (?P<code>(unsigned[ ]+)?[a-zA-Z_]+[a-zA-Z0-9_]*\**)[ ]+
                             (?P<fname>[a-zA-Z_]+[a-zA-Z0-9_]*)[ ]*
