@@ -62,7 +62,7 @@ def make_fapl(driver, libver, **kwds):
     return plist
 
 
-def make_fid(name, mode, userblock_size, fapl, fcpl=None):
+def make_fid(name, mode, userblock_size, fapl, fcpl=None, swmr=False):
     """ Get a new FileID by opening or creating a file.
     Also validates mode argument."""
 
@@ -79,7 +79,10 @@ def make_fid(name, mode, userblock_size, fapl, fcpl=None):
         fcpl.set_userblock(userblock_size)
 
     if mode == 'r':
-        fid = h5f.open(name, h5f.ACC_RDONLY, fapl=fapl)
+        flags = h5f.ACC_RDONLY
+        if swmr:
+            flags |= h5f.ACC_SWMR_READ
+        fid = h5f.open(name, flags, fapl=fapl)
     elif mode == 'r+':
         fid = h5f.open(name, h5f.ACC_RDWR, fapl=fapl)
     elif mode in ['w-', 'x']:
@@ -199,7 +202,7 @@ class File(Group):
 
 
     def __init__(self, name, mode=None, driver=None, 
-                 libver=None, userblock_size=None, **kwds):
+                 libver=None, userblock_size=None, swmr=False, **kwds):
         """Create a new file object.
 
         See the h5py user guide for a detailed explanation of the options.
@@ -216,6 +219,8 @@ class File(Group):
         userblock
             Desired size of user block.  Only allowed when creating a new
             file (mode w, w- or x).
+        swmr
+            Open the file in SWMR read mode. Only used when mode = 'r'.
         Additional keywords
             Passed on to the selected file driver.
         """
@@ -232,7 +237,7 @@ class File(Group):
                     pass
 
                 fapl = make_fapl(driver, libver, **kwds)
-                fid = make_fid(name, mode, userblock_size, fapl)
+                fid = make_fid(name, mode, userblock_size, fapl, swmr=swmr)
 
             Group.__init__(self, fid)
 
