@@ -109,14 +109,13 @@ class h5py_build_ext(build_ext):
     def run_system_cython(pyx_files):
         try:
             retcode = subprocess.call(['cython', '--fast-fail', '--verbose'] + pyx_files)
-            print "Retcode: ", str(retcode)
             if not retcode == 0:
                 raise Exception('ERROR: Cython failed')
         except OSError as e:
-            print "ERROR: cython exec failed. Is cython not in the path? ", str(e)
+            print("ERROR: cython exec failed. Is cython not in the path? ", str(e))
             raise
         except Exception as e:
-            print "ERROR: cython exec failed", str(e)
+            print("ERROR: cython exec failed", str(e))
             raise
 
     def check_rerun_cythonize(self):
@@ -129,9 +128,9 @@ class h5py_build_ext(build_ext):
             if not op.isfile(c_src_file):
                 missing_c_src_files.append( c_src_file )
         if missing_c_src_files:
-            print "WARNING: cythonize() failed to create all .c files (setuptools too old?)"
+            print("WARNING: cythonize() failed to create all .c files (setuptools too old?)")
             pyx_files = [os.path.splitext(fname)[0] + ".pyx" for fname in missing_c_src_files]
-            print "         Executing system cython on pyx files: ", str(pyx_files)
+            print("         Executing system cython on pyx files: ", str(pyx_files))
             self.run_system_cython(pyx_files)
 
 
@@ -168,7 +167,7 @@ DEF HDF5_VERSION = %(version)s
                 f.write(s)
         
         # Run Cython
-        print "Executing cythonize()"
+        print("Executing cythonize()")
         self.extensions = cythonize(self._make_extensions(config),
                             force=config.rebuild_required or self.force)
         self.check_rerun_cythonize()
