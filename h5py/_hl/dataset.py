@@ -479,7 +479,7 @@ class Dataset(HLObject):
         # Generally we try to avoid converting the arrays on the Python
         # side.  However, for compound literals this is unavoidable.
         vlen = h5t.check_dtype(vlen=self.dtype)
-        if vlen not in (bytes, six.text_type, None):
+        if vlen is not None and vlen not in (bytes, six.text_type):
             try:
                 val = numpy.asarray(val, dtype=vlen)
             except ValueError:
