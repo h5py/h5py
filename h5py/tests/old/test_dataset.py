@@ -978,6 +978,70 @@ class TestVlen(BaseDataset):
         ds[:, :] = np.array([[np.arange(2), np.arange(2)],
                              [np.arange(2), np.arange(2)]])
 
+    def _help_float_testing(self, np_dt, dataset_name='vlen'):
+        """
+        Helper for testing various vlen numpy data types.
+        :param np_dt: Numpy datatype to test
+        :param dataset_name: String name of the dataset to create for testing.
+        """
+        dt = h5py.special_dtype(vlen=np_dt)
+        ds = self.f.create_dataset(dataset_name, (5,), dtype=dt)
+
+        # Create some arrays, and assign them to the dataset
+        array_0 = np.array([1., 2., 30.], dtype=np_dt)
+        array_1 = np.array([100.3, 200.4, 98.1, -10.5, -300.0], dtype=np_dt)
+
+        # Test that a numpy array of different type gets cast correctly
+        array_2 = np.array([1, 2, 8], dtype=np.dtype('int32'))
+        casted_array_2 = array_2.astype(np_dt)
+
+        # Test that we can set a list of floats.
+        list_3 = [1., 2., 900., 0., -0.5]
+        list_array_3 = np.array(list_3, dtype=np_dt)
+
+        # Test that a list of integers gets casted correctly
+        list_4 = [-1, -100, 0, 1, 9999, 70]
+        list_array_4 = np.array(list_4, dtype=np_dt)
+
+        ds[0] = array_0
+        ds[1] = array_1
+        ds[2] = array_2
+        ds[3] = list_3
+        ds[4] = list_4
+
+        self.assertArrayEqual(array_0, ds[0])
+        self.assertArrayEqual(array_1, ds[1])
+        self.assertArrayEqual(casted_array_2, ds[2])
+        self.assertArrayEqual(list_array_3, ds[3])
+        self.assertArrayEqual(list_array_4, ds[4])
+
+        # Test that we can reassign arrays in the dataset
+        list_array_3 = np.array([0.3, 2.2], dtype=np_dt)
+
+        ds[0] = list_array_3[:]
+
+        self.assertArrayEqual(list_array_3, ds[0])
+
+        # Make sure we can close the file.
+        self.f.flush()
+        self.f.close()
+
+    def test_numpy_float16(self):
+        np_dt = np.dtype('float16')
+        self._help_float_testing(np_dt)
+
+    def test_numpy_float32(self):
+        np_dt = np.dtype('float32')
+        self._help_float_testing(np_dt)
+
+    def test_numpy_float64_from_dtype(self):
+        np_dt = np.dtype('float64')
+        self._help_float_testing(np_dt)
+
+    def test_numpy_float64_2(self):
+        np_dt = np.float64
+        self._help_float_testing(np_dt)
+
 
 class TestLowOpen(BaseDataset):
 
