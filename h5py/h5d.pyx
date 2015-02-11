@@ -354,7 +354,7 @@ cdef class DatasetID(ObjectID):
         """
         return H5Dget_storage_size(self.id)
         
-    IF HDF5_VERSION >= (1, 9, 178):
+    IF HDF5_VERSION >= SWMR_MIN_HDF5_VERSION:
 
         @with_phil
         def flush(self):

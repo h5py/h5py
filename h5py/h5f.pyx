@@ -454,7 +454,7 @@ cdef class FileID(GroupID):
         # I feel this should have some sanity checking to make sure that
         H5Fset_mdc_config(self.id, &config.cache_config)
 
-    IF HDF5_VERSION >= (1, 9, 178):
+    IF HDF5_VERSION >= SWMR_MIN_HDF5_VERSION:
 
         @with_phil
         def start_swmr_write(self):
