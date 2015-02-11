@@ -23,6 +23,10 @@ from .. import version
 mpi = h5.get_config().mpi
 hdf5_version = version.hdf5_version_tuple[0:3]
 
+swmr_support = False
+if hdf5_version >= h5.get_config().swmr_min_hdf5_version:
+    swmr_support = True
+
 if mpi:
     import mpi4py
 
@@ -80,7 +84,7 @@ def make_fid(name, mode, userblock_size, fapl, fcpl=None, swmr=False):
 
     if mode == 'r':
         flags = h5f.ACC_RDONLY
-        if swmr:
+        if swmr and swmr_support:
             flags |= h5f.ACC_SWMR_READ
         fid = h5f.open(name, flags, fapl=fapl)
     elif mode == 'r+':
