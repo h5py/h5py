@@ -673,7 +673,7 @@ class Dataset(HLObject):
         """
         try:
             self._id.refresh()
-        except AttributeError, e:
+        except AttributeError as e:
             raise AttributeError("Dataset.refresh() is a SWMR feature of HDF5 >= 1.9.178\n " + e.message)
             
     @with_phil
@@ -687,7 +687,7 @@ class Dataset(HLObject):
         """
         try:
             self._id.flush()
-        except AttributeError, e:
+        except AttributeError as e:
             raise AttributeError("Dataset.flush() is a SWMR feature of HDF5 >= 1.9.178\n " + e.message)
             
 

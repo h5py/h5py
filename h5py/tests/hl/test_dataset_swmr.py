@@ -4,8 +4,6 @@ import numpy as np
 import h5py
 
 from ..common import ut, TestCase
-print "Are we getting here?"
-
 
 
 @ut.skipUnless(h5py.version.hdf5_version_tuple < (1, 9, 178), 'SWMR is available. Skipping backwards compatible tests')
@@ -16,7 +14,6 @@ class TestDatasetNoSwmrRead(TestCase):
     """
     
     def setUp(self):
-        print "NO SWMR SETUP"
         TestCase.setUp(self)
         self.data = np.arange(13).astype('f')
         self.dset = self.f.create_dataset('data', chunks=(13,), maxshape=(None,), data=self.data)
@@ -40,7 +37,6 @@ class TestDatasetSwmrRead(TestCase):
     """
     
     def setUp(self):
-        print "SWMR SETUP"
         TestCase.setUp(self)
         self.data = np.arange(13).astype('f')
         self.dset = self.f.create_dataset('data', chunks=(13,), maxshape=(None,), data=self.data)
