@@ -36,11 +36,8 @@ class EventHandler(pyinotify.ProcessEvent):
         self.get_dset_shape()
         
     def get_dset_shape(self):
-        if h5py.version.hdf5_version_tuple >= (1,9,178):
-            logging.debug("Refreshing dataset")
-            self.dset.id.refresh()
-        else:
-            logging.warning("dataset refresh() is a SWMR feature and requires HDF5 >= 1.9.178")
+        logging.debug("Refreshing dataset")
+        self.dset.refresh()
         
         logging.debug("Getting shape")
         shape = self.dset.shape
