@@ -203,7 +203,20 @@ class File(Group):
         @with_phil
         def atomic(self, value):
             self.id.set_mpi_atomicity(value)
-
+            
+    if swmr_support:
+        @property
+        def swmr_mode(self):
+            return self._swmr_mode
+            
+        @swmr_mode.setter
+        @with_phil
+        def swmr_mode(self, value):
+            if value:
+                self.id.start_swmr_write()
+                self._swmr_mode = True
+            else:
+                raise ValueError("It is not possible to forcibly swith SWMR mode off.")
 
     def __init__(self, name, mode=None, driver=None, 
                  libver=None, userblock_size=None, swmr=False, **kwds):
@@ -242,7 +255,12 @@ class File(Group):
 
                 fapl = make_fapl(driver, libver, **kwds)
                 fid = make_fid(name, mode, userblock_size, fapl, swmr=swmr)
-
+            
+                if swmr_support:
+                    self._swmr_mode = False
+                    if swmr and mode == 'r':
+                        self._swmr_mode = True                    
+                    
             Group.__init__(self, fid)
 
     def close(self):
