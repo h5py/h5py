@@ -27,6 +27,8 @@ You will need:
 Download the installer from http://www.h5py.org and run it.  HDF5 is
 included.
 
+If Anaconda Python is installed, plese use:
+  conda install h5py
 
 Installing on Linux and Mac OS X
 --------------------------------
