@@ -21,11 +21,17 @@ Installing on Windows
 
 You will need:
 
-  * Python 2.6, 2.7, 3.2, 3.3 or 3.4
+  * Python 2.6, 2.7, 3.2, 3.3 or 3.4 (from Python.org)
   * NumPy 1.6.1 or newer
 
 Download the installer from http://www.h5py.org and run it.  HDF5 is
 included.
+
+.. note::
+
+    If you are using Anaconda, PythonXY or another non-Python.org
+    distribution, you should instead install h5py via your distribution's
+    own pacakge manager.
 
 
 Installing on Linux and Mac OS X
