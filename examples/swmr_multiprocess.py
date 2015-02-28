@@ -75,7 +75,7 @@ class SwmrWriter(Process):
             self._event.set()        
 
             # Write loop
-            for i in range(20):
+            for i in range(5):
                 new_shape = ((i+1) * len(arr), )
                 self.log.info("Resizing dset shape: %s"%str(new_shape))
                 dset.resize( new_shape )

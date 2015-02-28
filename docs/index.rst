@@ -69,6 +69,7 @@ Advanced topics
     strings
     refs
     mpi
+    swmr
 
 
 Low-level API reference
