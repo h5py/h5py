@@ -7,10 +7,12 @@
 # License:  Standard 3-clause BSD; see "license.txt" for full license terms
 #           and contributor agreement.
 
+from __future__ import absolute_import
+
 import posixpath as pp
 
 from ..h5t import TypeID
-from .base import HLObject
+from .base import HLObject, phil, with_phil
 
 class Datatype(HLObject):
 
@@ -25,10 +27,12 @@ class Datatype(HLObject):
     """
 
     @property
+    @with_phil
     def dtype(self):
         """Numpy dtype equivalent for this datatype"""
         return self.id.dtype
 
+    @with_phil
     def __init__(self, bind):
         """ Create a new Datatype object by binding to a low-level TypeID.
         """
@@ -36,6 +40,7 @@ class Datatype(HLObject):
             raise ValueError("%s is not a TypeID" % bind)
         HLObject.__init__(self, bind)
 
+    @with_phil
     def __repr__(self):
         if not self.id:
             return "<Closed HDF5 named type>"

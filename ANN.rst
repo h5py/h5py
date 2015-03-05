@@ -1,72 +1,64 @@
-Announcing HDF5 for Python (h5py) 2.2.0
-=======================================
+Announcing HDF5 for Python (h5py) 2.4.0
+========================================
 
-We are proud to announce that HDF5 for Python 2.2.0 is now available.
-Thanks to everyone who helped put together this release!
+The h5py team is happy to announce the availability of h5py 2.4.0 (final).
+
+What's h5py?
+------------
 
 The h5py package is a Pythonic interface to the HDF5 binary data format.
 
-It lets you store huge amounts of numerical data, and easily manipulate that
-data from NumPy. For example, you can slice into multi-terabyte datasets
-stored on disk, as if they were real NumPy arrays. Thousands of datasets can 
-be stored in a single file, categorized and tagged however you want.
+It lets you store huge amounts of numerical data, and easily manipulate
+that data from NumPy. For example, you can slice into multi-terabyte
+datasets stored on disk, as if they were real NumPy arrays. Thousands of
+datasets can be stored in a single file, categorized and tagged however
+you want.
 
-H5py uses straightforward NumPy and Python metaphors, like dictionary and
-NumPy array syntax. For example, you can iterate over datasets in a file, or
-check out the .shape or .dtype attributes of datasets. You don't need to know
-anything special about HDF5 to get started.
+Documentation is at:
 
-Documentation and download links are available at:
+http://docs.h5py.org
 
-    http://www.h5py.org
+Changes
+-------
 
-Parallel HDF5
-=============
+This release incorporates a total re-write of the identifier management
+system in h5py.  As part of this refactoring, the entire API is also now
+protected by threading locks.  User-visible changes include:
 
-This version of h5py introduces support for MPI/Parallel HDF5, using the
-mpi4py package.  Parallel HDF5 is the "native" method in HDF5 for sharing
-files and objects across multiple processes, in contrast to the "threading"
-package or "multiprocessing".
+* Files are now automatically closed when all objects within them
+  are unreachable. Previously, if File.close() was not explicitly called,
+  files would remain open and "leaks" were possible if the File object
+  was lost.
 
-There is a guide to using Parallel HDF5 at the h5py web site:
+* The entire API is now believed to be thread-safe (feedback welcome!).
 
-    http://www.h5py.org/docs/topics/mpi.html
+* External links now work if the target file is already open.  Previously
+  this was not possible because of a mismatch in the file close strengths.
+  
+* The options to setup.py have changed; a new top-level "configure"
+  command handles options like --hdf5=/path/to/hdf5 and --mpi.  Setup.py 
+  now works correctly under Python 3 when these options are used.
+  
+* Cython (0.17+) is now required when building from source.
+  
+* The minimum NumPy version is now 1.6.1.
 
-Other new features
-==================
+* Various other enhancements and bug fixes
+  
+Acknowlegements
+---------------
 
-* Support for Python 3.3
-* Support for 16-bit "mini" floats
-* Access to the HDF5 scale-offset filter
-* Field names are now allowed when writing to a dataset
-* Region references now preserve the shape of their selections
-* File-resident "committed" types can be linked to datasets and attributes
-* Make object mtime tracking optional
-* A new "move" method on Group objects
-* Many new options for Group.copy
-* Access to HDF5's get_vfd_handle
-* Many bug fixes
+This release incorporates changes from, among others:
 
-Acknowledgments
-===============
+* Matthieu Brucher
+* Laurence Hole
+* John Tyree
+* Pierre de Buyl
+* Matthew Brett
 
-Special thanks to:
+Where to get it
+---------------
 
-    *  Thomas A Caswell
-    *  Konrad Hinsen
-    *  Darren Dale
-    *  Matt Zwier
-    *  Toon Verstraelen
-    *  Noel Dawe
-    *  Barry Wardel
-    *  Bradley M. Froehle
-    *  Dan Meliza
-    *  Johannes Meixner
-    *  John Benediktsson
-    *  Matthew Turk
-    *  syhw
+Downloads, documentation, and more are available at the h5py website:
 
-And everyone else who posted a bug report, contributed on the mailing list,
-or otherwise helped with this release.
-
-
+http://www.h5py.org

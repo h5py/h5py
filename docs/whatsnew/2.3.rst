@@ -1,0 +1,85 @@
+What's new in h5py 2.3
+======================
+
+
+Support for arbitrary vlen data
+-------------------------------
+
+Variable-length data is :ref:`no longer restricted to strings <vlen>`.  You
+can use this feature to produce "ragged" arrays, whose members are 1D
+arrays of variable length.
+
+The implementation of special types was changed to use the NumPy dtype
+"metadata" field. This change should be transparent, as access to special types
+is handled through ``h5py.special_dtype`` and ``h5py.check_dtype``.
+
+
+Improved exception messages
+---------------------------
+
+H5py has historically suffered from low-detail exception messages generated
+automatically by HDF5.  While the exception types in 2.3 remain identical to
+those in 2.2, the messages have been substantially improved to provide more
+information as to the source of the error.
+
+Examples::
+
+    ValueError: Unable to set extend dataset (Dimension cannot exceed the existing maximal size (new: 100 max: 1))
+
+    IOError: Unable to open file (Unable to open file: name = 'x3', errno = 2, error message = 'no such file or directory', flags = 0, o_flags = 0)
+
+    KeyError: "Unable to open object (Object 'foo' doesn't exist)"
+
+
+Improved setuptools support
+---------------------------
+
+``setup.py`` now uses ``setup_requires`` to make installation via pip friendlier.
+
+
+Multiple low-level additions
+----------------------------
+
+Improved support for opening datasets via the low-level interface, by
+adding ``H5Dopen2`` and many new property-list functions.
+
+
+Improved support for MPI features
+---------------------------------
+
+Added support for retrieving the MPI communicator and info objects from an
+open file.  Added boilerplate code to allow compiling cleanly against newer
+versions of mpi4py.
+
+
+Readonly files can now be opened in default mode
+------------------------------------------------
+
+When opening a read-only file with no mode flags, now defaults to opening the
+file on RO mode rather than raising an exception.
+
+
+Single-step build for HDF5 on Windows
+-------------------------------------
+
+Building h5py on windows has typically been hamstrung by the need to build
+a compatible version of HDF5 first.  A new Paver-based system located in
+the "windows" distribution directory allows single-step compilation of HDF5
+with settings that are known to work with h5py.
+
+For more, see:
+
+https://github.com/h5py/h5py/tree/master/windows
+
+Thanks to
+---------
+
+* Martin Teichmann
+* Florian Rathgerber
+* Pierre de Buyl
+* Thomas Caswell
+* Andy Salnikov
+* Darren Dale
+* Robert David Grant
+* Toon Verstraelen
+* Many others who contributed bug reports

@@ -7,16 +7,19 @@
 # License:  Standard 3-clause BSD; see "license.txt" for full license terms
 #           and contributor agreement.
 
+from __future__ import absolute_import
+
 import numpy
 import collections
 
-import h5py
-from h5py import h5s, h5t, h5a
+from .. import h5s, h5t, h5a
 from . import base
+from .base import phil, with_phil
 from .dataset import readtime_dtype
+from .datatype import Datatype
 
 
-class AttributeManager(base.DictCompat, base.CommonStateObject):
+class AttributeManager(base.MutableMappingWithLock, base.CommonStateObject):
 
     """
         Allows dictionary-style access to an HDF5 object's attributes.
@@ -42,6 +45,7 @@ class AttributeManager(base.DictCompat, base.CommonStateObject):
         """
         self._id = parent.id
 
+    @with_phil
     def __getitem__(self, name):
         """ Read the value of an attribute.
         """
@@ -50,17 +54,29 @@ class AttributeManager(base.DictCompat, base.CommonStateObject):
         if attr.get_space().get_simple_extent_type() == h5s.NULL:
             raise IOError("Empty attributes cannot be read")
 
-        tid = attr.get_type()
+        dtype = readtime_dtype(attr.dtype, [])
+        shape = attr.shape
+        
+        # Do this first, as we'll be fiddling with the dtype for top-level
+        # array types
+        htype = h5t.py_create(dtype)
 
-        rtdt = readtime_dtype(attr.dtype, [])
-
-        arr = numpy.ndarray(attr.shape, dtype=rtdt, order='C')
-        attr.read(arr)
+        # NumPy doesn't support top-level array types, so we have to "fake"
+        # the correct type and shape for the array.  For example, consider
+        # attr.shape == (5,) and attr.dtype == '(3,)f'. Then:
+        if dtype.subdtype is not None:
+            subdtype, subshape = dtype.subdtype
+            shape = attr.shape + subshape   # (5, 3)
+            dtype = subdtype                # 'f'
+            
+        arr = numpy.ndarray(shape, dtype=dtype, order='C')
+        attr.read(arr, mtype=htype)
 
         if len(arr.shape) == 0:
             return arr[()]
         return arr
 
+    @with_phil
     def __setitem__(self, name, value):
         """ Set a new attribute, overwriting any existing attribute.
 
@@ -70,6 +86,7 @@ class AttributeManager(base.DictCompat, base.CommonStateObject):
         """
         self.create(name, data=value, dtype=base.guess_dtype(value))
 
+    @with_phil
     def __delitem__(self, name):
         """ Delete an attribute (which must already exist). """
         h5a.delete(self._id, self._e(name))
@@ -89,44 +106,95 @@ class AttributeManager(base.DictCompat, base.CommonStateObject):
             are given.
         """
 
-        if data is not None:
-            data = numpy.asarray(data, order='C', dtype=dtype)
+        import uuid
+        
+        with phil:
+                
+            # First, make sure we have a NumPy array.  We leave the data
+            # type conversion for HDF5 to perform.
+            data = numpy.asarray(data, order='C')
+    
             if shape is None:
                 shape = data.shape
-            elif numpy.product(shape) != numpy.product(data.shape):
-                raise ValueError("Shape of new attribute conflicts with shape of data")
-
-            if dtype is None:
+                
+            use_htype = None    # If a committed type is given, we must use it
+                                # in the call to h5a.create.
+                                            
+            if isinstance(dtype, Datatype):
+                use_htype = dtype.id
+                dtype = dtype.dtype
+            elif dtype is None:
                 dtype = data.dtype
+            else:
+                dtype = numpy.dtype(dtype) # In case a string, e.g. 'i8' is passed
+ 
+            original_dtype = dtype  # We'll need this for top-level array types
 
-        if isinstance(dtype, h5py.Datatype):
-            htype = dtype.id
-            dtype = htype.dtype
-        else:
-            if dtype is None:
-                dtype = numpy.dtype('f')
-            htype = h5t.py_create(dtype, logical=True)
+            # Where a top-level array type is requested, we have to do some
+            # fiddling around to present the data as a smaller array of
+            # subarrays. 
+            if dtype.subdtype is not None:
+            
+                subdtype, subshape = dtype.subdtype
+                
+                # Make sure the subshape matches the last N axes' sizes.
+                if shape[-len(subshape):] != subshape:
+                    raise ValueError("Array dtype shape %s is incompatible with data shape %s" % (subshape, shape))
 
-        if shape is None:
-            raise ValueError('At least one of "shape" or "data" must be given')
+                # New "advertised" shape and dtype
+                shape = shape[0:len(shape)-len(subshape)]
+                dtype = subdtype
+                
+            # Not an array type; make sure to check the number of elements
+            # is compatible, and reshape if needed.
+            else:
+               
+                if numpy.product(shape) != numpy.product(data.shape):
+                    raise ValueError("Shape of new attribute conflicts with shape of data")
 
-        data = data.reshape(shape)
+                if shape != data.shape:
+                    data = data.reshape(shape)
 
-        space = h5s.create_simple(shape)
+            # We need this to handle special string types.
+            data = numpy.asarray(data, dtype=dtype)
+    
+            # Make HDF5 datatype and dataspace for the H5A calls
+            if use_htype is None:
+                htype = h5t.py_create(original_dtype, logical=True)
+                htype2 = h5t.py_create(original_dtype)  # Must be bit-for-bit representation rather than logical
+            else:
+                htype = use_htype
+                htype2 = None
+                
+            space = h5s.create_simple(shape)
 
-        if name in self:
-            h5a.delete(self._id, self._e(name))
+            # This mess exists because you can't overwrite attributes in HDF5.
+            # So we write to a temporary attribute first, and then rename.
+            
+            tempname = uuid.uuid4().hex
 
-        attr = h5a.create(self._id, self._e(name), htype, space)
-
-        if data is not None:
             try:
-                attr.write(data)
+                attr = h5a.create(self._id, self._e(tempname), htype, space)
             except:
-                attr._close()
-                h5a.delete(self._id, self._e(name))
                 raise
-
+            else:
+                try:
+                    attr.write(data, mtype=htype2)
+                except:
+                    attr._close()
+                    h5a.delete(self._id, self._e(tempname))
+                    raise
+                else:
+                    try:
+                        # No atomic rename in HDF5 :(
+                        if h5a.exists(self._id, self._e(name)):
+                            h5a.delete(self._id, self._e(name))
+                        h5a.rename(self._id, self._e(tempname), self._e(name))
+                    except:
+                        attr._close()
+                        h5a.delete(self._id, self._e(tempname))
+                        raise
+                        
     def modify(self, name, value):
         """ Change the value of an attribute while preserving its type.
 
@@ -136,22 +204,24 @@ class AttributeManager(base.DictCompat, base.CommonStateObject):
 
         If the attribute doesn't exist, it will be automatically created.
         """
-        if not name in self:
-            self[name] = value
-        else:
-            value = numpy.asarray(value, order='C')
+        with phil:
+            if not name in self:
+                self[name] = value
+            else:
+                value = numpy.asarray(value, order='C')
 
-            attr = h5a.open(self._id, self._e(name))
+                attr = h5a.open(self._id, self._e(name))
 
-            if attr.get_space().get_simple_extent_type() == h5s.NULL:
-                raise IOError("Empty attributes can't be modified")
+                if attr.get_space().get_simple_extent_type() == h5s.NULL:
+                    raise IOError("Empty attributes can't be modified")
 
-            # Allow the case of () <-> (1,)
-            if (value.shape != attr.shape) and not \
-               (numpy.product(value.shape) == 1 and numpy.product(attr.shape) == 1):
-                raise TypeError("Shape of data is incompatible with existing attribute")
-            attr.write(value)
+                # Allow the case of () <-> (1,)
+                if (value.shape != attr.shape) and not \
+                   (numpy.product(value.shape) == 1 and numpy.product(attr.shape) == 1):
+                    raise TypeError("Shape of data is incompatible with existing attribute")
+                attr.write(value)
 
+    @with_phil
     def __len__(self):
         """ Number of attributes attached to the object. """
         # I expect we will not have more than 2**32 attributes
@@ -159,22 +229,23 @@ class AttributeManager(base.DictCompat, base.CommonStateObject):
 
     def __iter__(self):
         """ Iterate over the names of attributes. """
-        attrlist = []
+        with phil:
+            attrlist = []
 
-        def iter_cb(name, *args):
-            attrlist.append(self._d(name))
-        h5a.iterate(self._id, iter_cb)
+            def iter_cb(name, *args):
+                attrlist.append(self._d(name))
+            h5a.iterate(self._id, iter_cb)
 
         for name in attrlist:
             yield name
 
+    @with_phil
     def __contains__(self, name):
         """ Determine if an attribute exists, by name. """
         return h5a.exists(self._id, self._e(name))
 
+    @with_phil
     def __repr__(self):
         if not self._id:
             return "<Attributes of closed HDF5 object>"
         return "<Attributes of HDF5 object at %s>" % id(self._id)
-
-collections.MutableMapping.register(AttributeManager)

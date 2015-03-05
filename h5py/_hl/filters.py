@@ -38,10 +38,16 @@
         Tuple of available filter names for encoding 
 """
 
+from __future__ import absolute_import, division
+
+import six
+
 import numpy as np
 
-from h5py import h5s, h5z, h5p, h5d
+from .. import h5s, h5z, h5p, h5d
 
+if six.PY3:
+    long = int
 
 _COMP_FILTERS = {'gzip': h5z.FILTER_DEFLATE,
                 'szip': h5z.FILTER_SZIP,
@@ -56,7 +62,7 @@ DEFAULT_SZIP = ('nn', 8)
 def _gen_filter_tuples():
     decode = []
     encode = []
-    for name, code in _COMP_FILTERS.iteritems():
+    for name, code in six.iteritems(_COMP_FILTERS):
         if h5z.filter_avail(code):
             info = h5z.get_filter_info(code)
             if info & h5z.FILTER_CONFIG_ENCODE_ENABLED:
@@ -99,7 +105,7 @@ def generate_dcpl(shape, dtype, chunks, compression, compression_opts,
 
     if compression is not None:
 
-        if compression not in encode:
+        if compression not in encode and not isinstance(compression, int):
             raise ValueError('Compression filter "%s" is unavailable' % compression)
 
         if compression == 'gzip':
@@ -194,6 +200,11 @@ def generate_dcpl(shape, dtype, chunks, compression, compression_opts,
     elif compression == 'szip':
         opts = {'ec': h5z.SZIP_EC_OPTION_MASK, 'nn': h5z.SZIP_NN_OPTION_MASK}
         plist.set_szip(opts[szmethod], szpix)
+    elif isinstance(compression, int):
+        if not h5z.filter_avail(compression):
+            raise ValueError("Unknown compression filter number: %s" % compression)
+
+        plist.set_filter(compression, h5z.FLAG_OPTIONAL, compression_opts)
 
     return plist
 

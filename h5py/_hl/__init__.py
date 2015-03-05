@@ -6,3 +6,6 @@
 #
 # License:  Standard 3-clause BSD; see "license.txt" for full license terms
 #           and contributor agreement.
+
+from __future__ import absolute_import
+

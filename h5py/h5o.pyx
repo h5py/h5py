@@ -11,12 +11,17 @@
     Module for HDF5 "H5O" functions.
 """
 
+include 'config.pxi'
+
 # Pyrex compile-time imports
 from _objects cimport ObjectID, pdefault
 from h5g cimport GroupID
 from h5i cimport wrap_identifier
 from h5p cimport PropID
 from utils cimport emalloc, efree
+
+from ._objects import phil, with_phil
+
 
 # === Public constants ========================================================
 
@@ -128,6 +133,7 @@ cdef class ObjInfo(_ObjInfo):
         return newcopy
 
 
+@with_phil
 def get_info(ObjectID loc not None, char* name=NULL, int index=-1, *,
         char* obj_name='.', int index_type=H5_INDEX_NAME, int order=H5_ITER_NATIVE,
         PropID lapl=None):
@@ -162,9 +168,20 @@ def get_info(ObjectID loc not None, char* name=NULL, int index=-1, *,
 
     return info
 
+
+IF HDF5_VERSION >= (1, 8, 5):
+    @with_phil
+    def exists_by_name(ObjectID loc not None, char *name, PropID lapl=None):
+        """ (ObjectID loc, STRING name, PropID lapl=None) => BOOL exists
+
+        Determines whether a link resolves to an actual object.
+        """
+        return <bint>H5Oexists_by_name(loc.id, name, pdefault(lapl))
+
+
 # === General object operations ===============================================
 
-
+@with_phil
 def open(ObjectID loc not None, char* name, PropID lapl=None):
     """(ObjectID loc, STRING name, PropID lapl=None) => ObjectID
 
@@ -173,6 +190,7 @@ def open(ObjectID loc not None, char* name, PropID lapl=None):
     return wrap_identifier(H5Oopen(loc.id, name, pdefault(lapl)))
 
 
+@with_phil
 def link(ObjectID obj not None, GroupID loc not None, char* name,
     PropID lcpl=None, PropID lapl=None):
     """(ObjectID obj, GroupID loc, STRING name, PropID lcpl=None,
@@ -184,6 +202,7 @@ def link(ObjectID obj not None, GroupID loc not None, char* name,
     H5Olink(obj.id, loc.id, name, pdefault(lcpl), pdefault(lapl))
 
 
+@with_phil
 def copy(ObjectID src_loc not None, char* src_name, GroupID dst_loc not None,
     char* dst_name, PropID copypl=None, PropID lcpl=None):
     """(ObjectID src_loc, STRING src_name, GroupID dst_loc, STRING dst_name,
@@ -199,6 +218,7 @@ def copy(ObjectID src_loc not None, char* src_name, GroupID dst_loc not None,
         pdefault(lcpl))
 
 
+@with_phil
 def set_comment(ObjectID loc not None, char* comment, *, char* obj_name=".",
     PropID lapl=None):
     """(ObjectID loc, STRING comment, **kwds)
@@ -214,7 +234,7 @@ def set_comment(ObjectID loc not None, char* comment, *, char* obj_name=".",
     H5Oset_comment_by_name(loc.id, obj_name, comment, pdefault(lapl))
 
 
-
+@with_phil
 def get_comment(ObjectID loc not None, char* comment, *, char* obj_name=".",
     PropID lapl=None):
     """(ObjectID loc, STRING comment, **kwds)
@@ -240,6 +260,7 @@ def get_comment(ObjectID loc not None, char* comment, *, char* obj_name=".",
 
     return pstring
 
+
 # === Visit routines ==========================================================
 
 cdef class _ObjectVisitor:
@@ -253,7 +274,7 @@ cdef class _ObjectVisitor:
         self.retval = None
         self.objinfo = ObjInfo()
 
-cdef herr_t cb_obj_iterate(hid_t obj, char* name, H5O_info_t *info, void* data) except 2:
+cdef herr_t cb_obj_iterate(hid_t obj, const char* name, const H5O_info_t *info, void* data) except 2:
 
     cdef _ObjectVisitor visit
 
@@ -269,7 +290,7 @@ cdef herr_t cb_obj_iterate(hid_t obj, char* name, H5O_info_t *info, void* data) 
         return 1
     return 0
 
-cdef herr_t cb_obj_simple(hid_t obj, char* name, H5O_info_t *info, void* data) except 2:
+cdef herr_t cb_obj_simple(hid_t obj, const char* name, const H5O_info_t *info, void* data) except 2:
 
     cdef _ObjectVisitor visit
 
@@ -285,6 +306,7 @@ cdef herr_t cb_obj_simple(hid_t obj, char* name, H5O_info_t *info, void* data) e
     return 0
 
 
+@with_phil
 def visit(ObjectID loc not None, object func, *,
           int idx_type=H5_INDEX_NAME, int order=H5_ITER_NATIVE,
           char* obj_name=".", PropID lapl=None, bint info=0):

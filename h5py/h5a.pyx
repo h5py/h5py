@@ -21,6 +21,7 @@ from utils cimport check_numpy_read, check_numpy_write, emalloc, efree
 from _proxy cimport attr_rw
 
 from h5py import _objects
+from ._objects import phil, with_phil
 
 # Initialization
 import_array()
@@ -29,6 +30,7 @@ import_array()
 
 # --- create, create_by_name ---
 
+@with_phil
 def create(ObjectID loc not None, char* name, TypeID tid not None,
     SpaceID space not None, *, char* obj_name='.', PropID lapl=None):
     """(ObjectID loc, STRING name, TypeID tid, SpaceID space, **kwds) => AttrID
@@ -42,12 +44,13 @@ def create(ObjectID loc not None, char* name, TypeID tid not None,
         Link access property list for obj_name
     """
 
-    return AttrID.open(H5Acreate_by_name(loc.id, obj_name, name, tid.id,
+    return AttrID(H5Acreate_by_name(loc.id, obj_name, name, tid.id,
             space.id, H5P_DEFAULT, H5P_DEFAULT, pdefault(lapl)))
 
 
 # --- open, open_by_name, open_by_idx ---
 
+@with_phil
 def open(ObjectID loc not None, char* name=NULL, int index=-1, *,
     char* obj_name='.', int index_type=H5_INDEX_NAME, int order=H5_ITER_NATIVE,
     PropID lapl=None):
@@ -71,16 +74,17 @@ def open(ObjectID loc not None, char* name=NULL, int index=-1, *,
         raise TypeError("Exactly one of name or idx must be specified")
 
     if name != NULL:
-        return AttrID.open(H5Aopen_by_name(loc.id, obj_name, name,
+        return AttrID(H5Aopen_by_name(loc.id, obj_name, name,
                         H5P_DEFAULT, pdefault(lapl)))
     else:
-        return AttrID.open(H5Aopen_by_idx(loc.id, obj_name,
+        return AttrID(H5Aopen_by_idx(loc.id, obj_name,
             <H5_index_t>index_type, <H5_iter_order_t>order, index,
             H5P_DEFAULT, pdefault(lapl)))
 
 
 # --- exists, exists_by_name ---
 
+@with_phil
 def exists(ObjectID loc not None, char* name, *,
             char* obj_name=".", PropID lapl=None):
     """(ObjectID loc, STRING name, **kwds) => BOOL
@@ -98,6 +102,7 @@ def exists(ObjectID loc not None, char* name, *,
 
 # --- rename, rename_by_name ---
 
+@with_phil
 def rename(ObjectID loc not None, char* name, char* new_name, *,
     char* obj_name='.', PropID lapl=None):
     """(ObjectID loc, STRING name, STRING new_name, **kwds)
@@ -113,6 +118,7 @@ def rename(ObjectID loc not None, char* name, char* new_name, *,
     H5Arename_by_name(loc.id, obj_name, name, new_name, pdefault(lapl))
 
 
+@with_phil
 def delete(ObjectID loc not None, char* name=NULL, int index=-1, *,
     char* obj_name='.', int index_type=H5_INDEX_NAME, int order=H5_ITER_NATIVE,
     PropID lapl=None):
@@ -139,6 +145,8 @@ def delete(ObjectID loc not None, char* name=NULL, int index=-1, *,
     else:
         raise TypeError("Exactly one of index or name must be specified.")
 
+
+@with_phil
 def get_num_attrs(ObjectID loc not None):
     """(ObjectID loc) => INT
 
@@ -172,6 +180,7 @@ cdef class AttrInfo:
         return hash((self.corder_valid, self.corder, self.cset, self.data_size))
 
 
+@with_phil
 def get_info(ObjectID loc not None, char* name=NULL, int index=-1, *,
             char* obj_name='.', PropID lapl=None,
             int index_type=H5_INDEX_NAME, int order=H5_ITER_NATIVE):
@@ -218,7 +227,7 @@ cdef class _AttrVisitor:
         self.func = func
         self.retval = None
 
-cdef herr_t cb_attr_iter(hid_t loc_id, char* attr_name, H5A_info_t *ainfo, void* vis_in) except 2:
+cdef herr_t cb_attr_iter(hid_t loc_id, const char* attr_name, const H5A_info_t *ainfo, void* vis_in) except 2:
     cdef _AttrVisitor vis = <_AttrVisitor>vis_in
     cdef AttrInfo info = AttrInfo()
     info.info = ainfo[0]
@@ -227,7 +236,7 @@ cdef herr_t cb_attr_iter(hid_t loc_id, char* attr_name, H5A_info_t *ainfo, void*
         return 1
     return 0
 
-cdef herr_t cb_attr_simple(hid_t loc_id, char* attr_name, H5A_info_t *ainfo, void* vis_in) except 2:
+cdef herr_t cb_attr_simple(hid_t loc_id, const char* attr_name, const H5A_info_t *ainfo, void* vis_in) except 2:
     cdef _AttrVisitor vis = <_AttrVisitor>vis_in
     vis.retval = vis.func(attr_name)
     if vis.retval is not None:
@@ -235,6 +244,7 @@ cdef herr_t cb_attr_simple(hid_t loc_id, char* attr_name, H5A_info_t *ainfo, voi
     return 0
 
 
+@with_phil
 def iterate(ObjectID loc not None, object func, int index=0, *,
     int index_type=H5_INDEX_NAME, int order=H5_ITER_NATIVE, bint info=0):
     """(ObjectID loc, CALLABLE func, INT index=0, **kwds) => <Return value from func>
@@ -299,40 +309,29 @@ cdef class AttrID(ObjectID):
     property name:
         """The attribute's name"""
         def __get__(self):
-            return self.get_name()
+            with phil:
+                return self.get_name()
 
     property shape:
         """A Numpy-style shape tuple representing the attribute's dataspace"""
         def __get__(self):
-
             cdef SpaceID space
-            space = self.get_space()
-            return space.get_simple_extent_dims()
+            with phil:
+                space = self.get_space()
+                return space.get_simple_extent_dims()
 
     property dtype:
         """A Numpy-stype dtype object representing the attribute's datatype"""
         def __get__(self):
-
             cdef TypeID tid
-            tid = self.get_type()
-            return tid.py_dtype()
+            with phil:
+                tid = self.get_type()
+                return tid.py_dtype()
 
-
-    def _close(self):
-        """()
-
-        Close this attribute and release resources.  You don't need to
-        call this manually; attributes are automatically destroyed when
-        their Python wrappers are freed.
-        """
-        with _objects.registry.lock:
-            H5Aclose(self.id)
-            if not self.valid:
-                del _objects.registry[self.id]
-
-
-    def read(self, ndarray arr not None):
-        """(NDARRAY arr)
+    
+    @with_phil
+    def read(self, ndarray arr not None, TypeID mtype=None):
+        """(NDARRAY arr, TypeID mtype=None)
 
         Read the attribute data into the given Numpy array.  Note that the
         Numpy array must have the same shape as the HDF5 attribute, and a
@@ -340,8 +339,9 @@ cdef class AttrID(ObjectID):
 
         The Numpy array must be writable and C-contiguous.  If this is not
         the case, the read will fail with an exception.
+        
+        If provided, the HDF5 TypeID mtype will override the array's dtype.
         """
-        cdef TypeID mtype
         cdef hid_t space_id
         space_id = 0
 
@@ -349,7 +349,8 @@ cdef class AttrID(ObjectID):
             space_id = H5Aget_space(self.id)
             check_numpy_write(arr, space_id)
 
-            mtype = py_create(arr.dtype)
+            if mtype is None:
+                mtype = py_create(arr.dtype)
 
             attr_rw(self.id, mtype.id, PyArray_DATA(arr), 1)
 
@@ -358,7 +359,8 @@ cdef class AttrID(ObjectID):
                 H5Sclose(space_id)
 
 
-    def write(self, ndarray arr not None):
+    @with_phil
+    def write(self, ndarray arr not None, TypeID mtype=None):
         """(NDARRAY arr)
 
         Write the contents of a Numpy array too the attribute.  Note that
@@ -368,15 +370,16 @@ cdef class AttrID(ObjectID):
         The Numpy array must be C-contiguous.  If this is not the case,
         the write will fail with an exception.
         """
-        cdef TypeID mtype
         cdef hid_t space_id
         space_id = 0
 
         try:
             space_id = H5Aget_space(self.id)
             check_numpy_read(arr, space_id)
-            mtype = py_create(arr.dtype)
-
+            
+            if mtype is None:
+                mtype = py_create(arr.dtype)
+                
             attr_rw(self.id, mtype.id, PyArray_DATA(arr), 0)
 
         finally:
@@ -384,6 +387,7 @@ cdef class AttrID(ObjectID):
                 H5Sclose(space_id)
 
 
+    @with_phil
     def get_name(self):
         """() => STRING name
 
@@ -405,14 +409,16 @@ cdef class AttrID(ObjectID):
         return strout
 
 
+    @with_phil
     def get_space(self):
         """() => SpaceID
 
         Create and return a copy of the attribute's dataspace.
         """
-        return SpaceID.open(H5Aget_space(self.id))
+        return SpaceID(H5Aget_space(self.id))
 
 
+    @with_phil
     def get_type(self):
         """() => TypeID
 
@@ -421,6 +427,7 @@ cdef class AttrID(ObjectID):
         return typewrap(H5Aget_type(self.id))
 
 
+    @with_phil
     def get_storage_size(self):
         """() => INT
 

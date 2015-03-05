@@ -10,6 +10,7 @@
 include "config.pxi"
 
 from defs cimport *
+from ._objects import phil, with_phil
 
 ITER_INC    = H5_ITER_INC     # Increasing order
 ITER_DEC    = H5_ITER_DEC     # Decreasing order
@@ -64,29 +65,31 @@ cdef class H5PYConfig:
         """
 
         def __get__(self):
-            import sys
-            def handle_val(val):
-                if sys.version[0] == '3':
-                    return val.decode('utf8')
-                return val
-            return (handle_val(self._r_name), handle_val(self._i_name))
+            with phil:
+                import sys
+                def handle_val(val):
+                    if sys.version[0] == '3':
+                        return val.decode('utf8')
+                    return val
+                return (handle_val(self._r_name), handle_val(self._i_name))
 
         def __set__(self, val):
-            def handle_val(val):
-                if isinstance(val, unicode):
-                    return val.encode('utf8')
-                elif isinstance(val, bytes):
-                    return val
-                else:
-                    return bytes(val)
-            try:
-                if len(val) != 2: raise TypeError()
-                r = handle_val(val[0])
-                i = handle_val(val[1])
-            except Exception:
-                raise TypeError("complex_names must be a length-2 sequence of strings (real, img)")
-            self._r_name = r
-            self._i_name = i
+            with phil:
+                def handle_val(val):
+                    if isinstance(val, unicode):
+                        return val.encode('utf8')
+                    elif isinstance(val, bytes):
+                        return val
+                    else:
+                        return bytes(val)
+                try:
+                    if len(val) != 2: raise TypeError()
+                    r = handle_val(val[0])
+                    i = handle_val(val[1])
+                except Exception:
+                    raise TypeError("complex_names must be a length-2 sequence of strings (real, img)")
+                self._r_name = r
+                self._i_name = i
 
     property bool_names:
         """ Settable 2-tuple controlling HDF5 ENUM names for boolean types.
@@ -94,24 +97,27 @@ cdef class H5PYConfig:
         Format is (false_name, real_name), defaulting to ('FALSE', 'TRUE').
         """
         def __get__(self):
-            return (self._f_name, self._t_name)
+            with phil:
+                return (self._f_name, self._t_name)
 
         def __set__(self, val):
-            try:
-                if len(val) != 2: raise TypeError()
-                f = str(val[0])
-                t = str(val[1])
-            except Exception:
-                raise TypeError("bool_names must be a length-2 sequence of of names (false, true)")
-            self._f_name = f
-            self._t_name = t
+            with phil:
+                try:
+                    if len(val) != 2: raise TypeError()
+                    f = str(val[0])
+                    t = str(val[1])
+                except Exception:
+                    raise TypeError("bool_names must be a length-2 sequence of of names (false, true)")
+                self._f_name = f
+                self._t_name = t
 
     property read_byte_strings:
         """ Returns a context manager which forces all strings to be returned
         as byte strings. """
         
         def __get__(self):
-            return self._bytestrings
+            with phil:
+                return self._bytestrings
 
     property mpi:
         """ Boolean indicating if Parallel HDF5 is available """
@@ -130,6 +136,7 @@ cpdef H5PYConfig get_config():
     """
     return cfg
 
+@with_phil
 def get_libversion():
     """ () => TUPLE (major, minor, release)
 

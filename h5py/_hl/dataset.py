@@ -7,17 +7,25 @@
 # License:  Standard 3-clause BSD; see "license.txt" for full license terms
 #           and contributor agreement.
 
+from __future__ import absolute_import
+
 import posixpath as pp
 import sys
+
+import six
+from six.moves import xrange
+
 import numpy
 
 import h5py
-from h5py import h5s, h5t, h5r, h5d, h5p
-from .base import HLObject, py3
+from .. import h5s, h5t, h5r, h5d, h5p
+from .base import HLObject, phil, with_phil
 from . import filters
 from . import selections as sel
 from . import selections2 as sel2
+from .datatype import Datatype
 
+_LEGACY_GZIP_COMPRESSION_VALS = frozenset(range(10))
 MPI = h5py.h5.get_config().mpi
 
 def readtime_dtype(basetype, names):
@@ -46,7 +54,7 @@ def make_new_dset(parent, shape=None, dtype=None, data=None,
 
     # Convert data to a C-contiguous ndarray
     if data is not None:
-        import base
+        from . import base
         data = numpy.asarray(data, order="C", dtype=base.guess_dtype(data))
 
     # Validate shape
@@ -59,7 +67,14 @@ def make_new_dset(parent, shape=None, dtype=None, data=None,
         if data is not None and (numpy.product(shape) != numpy.product(data.shape)):
             raise ValueError("Shape tuple is incompatible with data")
 
-    if isinstance(dtype, h5py.Datatype):
+    tmp_shape = maxshape if maxshape is not None else shape
+    # Validate chunk shape
+    if isinstance(chunks, tuple) and (-numpy.array([ i>=j for i,j in zip(tmp_shape,chunks) if i is not None])).any():
+        errmsg = "Chunk shape must not be greater than data shape in any dimension. "\
+                 "{} is not compatible with {}".format(chunks, shape)
+        raise ValueError(errmsg)
+
+    if isinstance(dtype, Datatype):
         # Named types are used as-is
         tid = dtype.id
         dtype = tid.dtype  # Following code needs this
@@ -84,7 +99,7 @@ def make_new_dset(parent, shape=None, dtype=None, data=None,
         compression = 'gzip'
 
     # Legacy
-    if compression in range(10):
+    if compression in _LEGACY_GZIP_COMPRESSION_VALS:
         if compression_opts is not None:
             raise TypeError("Conflict in compression options")
         compression_opts = compression
@@ -165,29 +180,35 @@ class Dataset(HLObject):
             return CollectiveContext(self)
 
     @property
+    @with_phil
     def dims(self):
         from . dims import DimensionManager
         return DimensionManager(self)
 
     @property
+    @with_phil
     def shape(self):
         """Numpy-style shape tuple giving dataset dimensions"""
         return self.id.shape
     @shape.setter
+    @with_phil
     def shape(self, shape):
         self.resize(shape)
 
     @property
+    @with_phil
     def size(self):
         """Numpy-style attribute giving the total dataset size"""
         return numpy.prod(self.shape)
 
     @property
+    @with_phil
     def dtype(self):
         """Numpy dtype representing the datatype"""
         return self.id.dtype
 
     @property
+    @with_phil
     def value(self):
         """  Alias for dataset[()] """
         DeprecationWarning("dataset.value has been deprecated. "
@@ -195,6 +216,7 @@ class Dataset(HLObject):
         return self[()]
 
     @property
+    @with_phil
     def chunks(self):
         """Dataset chunks (or None)"""
         dcpl = self._dcpl
@@ -203,6 +225,7 @@ class Dataset(HLObject):
         return None
 
     @property
+    @with_phil
     def compression(self):
         """Compression strategy (or None)"""
         for x in ('gzip','lzf','szip'):
@@ -211,21 +234,25 @@ class Dataset(HLObject):
         return None
 
     @property
+    @with_phil
     def compression_opts(self):
         """ Compression setting.  Int(0-9) for gzip, 2-tuple for szip. """
         return self._filters.get(self.compression, None)
 
     @property
+    @with_phil
     def shuffle(self):
         """Shuffle filter present (T/F)"""
         return 'shuffle' in self._filters
 
     @property
+    @with_phil
     def fletcher32(self):
         """Fletcher32 filter is present (T/F)"""
         return 'fletcher32' in self._filters
 
     @property
+    @with_phil
     def scaleoffset(self):
         """Scale/offset filter settings. For integer data types, this is
         the number of bits stored, or 0 for auto-detected. For floating
@@ -237,6 +264,7 @@ class Dataset(HLObject):
             return None
 
     @property
+    @with_phil
     def maxshape(self):
         """Shape up to which this dataset can be resized.  Axes with value
         None have no resize limit. """
@@ -245,12 +273,14 @@ class Dataset(HLObject):
         return tuple(x if x != h5s.UNLIMITED else None for x in dims)
 
     @property
+    @with_phil
     def fillvalue(self):
         """Fill value for this dataset (0 by default)"""
         arr = numpy.ndarray((1,), dtype=self.dtype)
         dcpl = self._dcpl.get_fill_value(arr)
         return arr[0]
 
+    @with_phil
     def __init__(self, bind):
         """ Create a new Dataset object by binding to a low-level DatasetID.
         """
@@ -280,23 +310,25 @@ class Dataset(HLObject):
         grown or shrunk independently.  The coordinates of existing data are
         fixed.
         """
-        if self.chunks is None:
-            raise TypeError("Only chunked datasets can be resized")
+        with phil:
+            if self.chunks is None:
+                raise TypeError("Only chunked datasets can be resized")
 
-        if axis is not None:
-            if not (axis >=0 and axis < self.id.rank):
-                raise ValueError("Invalid axis (0 to %s allowed)" % (self.id.rank-1))
-            try:
-                newlen = int(size)
-            except TypeError:
-                raise TypeError("Argument must be a single int if axis is specified")
-            size = list(self.shape)
-            size[axis] = newlen
+            if axis is not None:
+                if not (axis >=0 and axis < self.id.rank):
+                    raise ValueError("Invalid axis (0 to %s allowed)" % (self.id.rank-1))
+                try:
+                    newlen = int(size)
+                except TypeError:
+                    raise TypeError("Argument must be a single int if axis is specified")
+                size = list(self.shape)
+                size[axis] = newlen
 
-        size = tuple(size)
-        self.id.set_extent(size)
-        #h5f.flush(self.id)  # THG recommends
+            size = tuple(size)
+            self.id.set_extent(size)
+            #h5f.flush(self.id)  # THG recommends
 
+    @with_phil
     def __len__(self):
         """ The size of the first axis.  TypeError if scalar.
 
@@ -313,11 +345,13 @@ class Dataset(HLObject):
         Use of this method is preferred to len(dset), as Python's built-in
         len() cannot handle values greater then 2**32 on 32-bit systems.
         """
-        shape = self.shape
-        if len(shape) == 0:
-            raise TypeError("Attempt to take len() of scalar dataset")
-        return shape[0]
+        with phil:
+            shape = self.shape
+            if len(shape) == 0:
+                raise TypeError("Attempt to take len() of scalar dataset")
+            return shape[0]
 
+    @with_phil
     def __iter__(self):
         """ Iterate over the first axis.  TypeError if scalar.
 
@@ -330,6 +364,7 @@ class Dataset(HLObject):
             yield self[i]
 
 
+    @with_phil
     def __getitem__(self, args):
         """ Read a slice from the HDF5 dataset.
 
@@ -344,33 +379,13 @@ class Dataset(HLObject):
         args = args if isinstance(args, tuple) else (args,)
 
         # Sort field indices from the rest of the args.
-        names = tuple(x for x in args if isinstance(x, str))
-        args = tuple(x for x in args if not isinstance(x, str))
-
-        def strip_fields(basetype):
-            """ Strip extra dtype information from special types """
-            if basetype.kind == 'O':
-                return numpy.dtype('O')
-            if basetype.fields is not None:
-                if basetype.kind in ('i','u'):
-                    return basetype.fields['enum'][0]
-                fields = []
-                for name in basetype.names:
-                    fff = basetype.fields[name]
-                    if len(fff) == 3:
-                        (subtype, offset, meta) = fff
-                    else:
-                        subtype, meta = fff
-                        offset = 0
-                    subtype = strip_fields(subtype)
-                    fields.append((name, subtype))
-                return numpy.dtype(fields)
-            return basetype
+        names = tuple(x for x in args if isinstance(x, six.string_types))
+        args = tuple(x for x in args if not isinstance(x, six.string_types))
+        if not six.PY3:
+            names = tuple(x.encode('utf-8') if isinstance(x, six.text_type) else x for x in names)
 
         def readtime_dtype(basetype, names):
             """ Make a NumPy dtype appropriate for reading """
-
-            basetype = strip_fields(basetype)
 
             if len(names) == 0:  # Not compound, or we want all fields
                 return basetype
@@ -384,8 +399,9 @@ class Dataset(HLObject):
 
             return numpy.dtype([(name, basetype.fields[name][0]) for name in names])
 
-        if self._local.astype is not None:
-            new_dtype = readtime_dtype(self._local.astype, names)
+        new_dtype = getattr(self._local, 'astype', None)
+        if new_dtype is not None:
+            new_dtype = readtime_dtype(new_dtype, names)
         else:
             # This is necessary because in the case of array types, NumPy
             # discards the array information at the top level.
@@ -403,9 +419,9 @@ class Dataset(HLObject):
             sid = h5r.get_region(args[0], self.id)
             mshape = sel.guess_shape(sid)
             if mshape is None:
-                return np.array((0,), dtype=new_dtype)
+                return numpy.array((0,), dtype=new_dtype)
             if numpy.product(mshape) == 0:
-                return np.array(mshape, dtype=new_dtype)
+                return numpy.array(mshape, dtype=new_dtype)
             out = numpy.empty(mshape, dtype=new_dtype)
             sid_out = h5s.create_simple(mshape)
             sid_out.select_all()
@@ -467,6 +483,8 @@ class Dataset(HLObject):
             arr = arr[0]
         return arr
 
+
+    @with_phil
     def __setitem__(self, args, val):
         """ Write to the HDF5 dataset from a Numpy array.
 
@@ -477,13 +495,15 @@ class Dataset(HLObject):
         args = args if isinstance(args, tuple) else (args,)
 
         # Sort field indices from the slicing
-        names = tuple(x for x in args if isinstance(x, str))
-        args = tuple(x for x in args if not isinstance(x, str))
+        names = tuple(x for x in args if isinstance(x, six.string_types))
+        args = tuple(x for x in args if not isinstance(x, six.string_types))
+        if not six.PY3:
+            names = tuple(x.encode('utf-8') if isinstance(x, six.text_type) else x for x in names)
 
         # Generally we try to avoid converting the arrays on the Python
         # side.  However, for compound literals this is unavoidable.
         vlen = h5t.check_dtype(vlen=self.dtype)
-        if vlen not in (bytes, unicode, None):
+        if vlen is not None and vlen not in (bytes, six.text_type):
             try:
                 val = numpy.asarray(val, dtype=vlen)
             except ValueError:
@@ -597,20 +617,20 @@ class Dataset(HLObject):
 
         Broadcasting is supported for simple indexing.
         """
+        with phil:
+            if source_sel is None:
+                source_sel = sel.SimpleSelection(self.shape)
+            else:
+                source_sel = sel.select(self.shape, source_sel, self.id)  # for numpy.s_
+            fspace = source_sel._id
 
-        if source_sel is None:
-            source_sel = sel.SimpleSelection(self.shape)
-        else:
-            source_sel = sel.select(self.shape, source_sel, self.id)  # for numpy.s_
-        fspace = source_sel._id
+            if dest_sel is None:
+                dest_sel = sel.SimpleSelection(dest.shape)
+            else:
+                dest_sel = sel.select(dest.shape, dest_sel, self.id)
 
-        if dest_sel is None:
-            dest_sel = sel.SimpleSelection(dest.shape)
-        else:
-            dest_sel = sel.select(dest.shape, dest_sel, self.id)
-
-        for mspace in dest_sel.broadcast(source_sel.mshape):
-            self.id.read(mspace, fspace, dest, dxpl=self._dxpl)
+            for mspace in dest_sel.broadcast(source_sel.mshape):
+                self.id.read(mspace, fspace, dest, dxpl=self._dxpl)
 
     def write_direct(self, source, source_sel=None, dest_sel=None):
         """ Write data directly to HDF5 from a NumPy array.
@@ -620,20 +640,22 @@ class Dataset(HLObject):
 
         Broadcasting is supported for simple indexing.
         """
-        if source_sel is None:
-            source_sel = sel.SimpleSelection(source.shape)
-        else:
-            source_sel = sel.select(source.shape, source_sel, self.id)  # for numpy.s_
-        mspace = source_sel._id
+        with phil:
+            if source_sel is None:
+                source_sel = sel.SimpleSelection(source.shape)
+            else:
+                source_sel = sel.select(source.shape, source_sel, self.id)  # for numpy.s_
+            mspace = source_sel._id
 
-        if dest_sel is None:
-            dest_sel = sel.SimpleSelection(self.shape)
-        else:
-            dest_sel = sel.select(self.shape, dest_sel, self.id)
+            if dest_sel is None:
+                dest_sel = sel.SimpleSelection(self.shape)
+            else:
+                dest_sel = sel.select(self.shape, dest_sel, self.id)
 
         for fspace in dest_sel.broadcast(source_sel.mshape):
             self.id.write(mspace, fspace, source, dxpl=self._dxpl)
 
+    @with_phil
     def __array__(self, dtype=None):
         """ Create a Numpy array containing the whole dataset.  DON'T THINK
         THIS MEANS DATASETS ARE INTERCHANGABLE WITH ARRAYS.  For one thing,
@@ -648,17 +670,19 @@ class Dataset(HLObject):
         self.read_direct(arr)
         return arr
 
+    @with_phil
     def __repr__(self):
         if not self:
-            r = u'<Closed HDF5 dataset>'
+            r = six.u('<Closed HDF5 dataset>')
         else:
             if self.name is None:
-                namestr = u'("anonymous")'
+                namestr = six.u('("anonymous")')
             else:
                 name = pp.basename(pp.normpath(self.name))
-                namestr = u'"%s"' % (name if name != u'' else u'/')
-            r = u'<HDF5 dataset %s: shape %s, type "%s">' % \
+                namestr = six.u('"%s"') % (
+                    name if name != six.u('') else six.u('/'))
+            r = six.u('<HDF5 dataset %s: shape %s, type "%s">') % \
                 (namestr, self.shape, self.dtype.str)
-        if py3:
+        if six.PY3:
             return r
         return r.encode('utf8')

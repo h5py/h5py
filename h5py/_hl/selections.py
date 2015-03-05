@@ -11,17 +11,25 @@
     High-level access to HDF5 dataspace selections
 """
 
+from __future__ import absolute_import
+
+import six
+from six.moves import xrange
+
 import numpy as np
 
-from h5py import h5s, h5r
+from .. import h5s, h5r
 
 # Selection types for hyperslabs
-from h5py.h5s import SELECT_SET  as SET
-from h5py.h5s import SELECT_OR   as OR
-from h5py.h5s import SELECT_AND  as AND
-from h5py.h5s import SELECT_XOR  as XOR
-from h5py.h5s import SELECT_NOTB as NOTB
-from h5py.h5s import SELECT_NOTA as NOTA
+from ..h5s import SELECT_SET  as SET
+from ..h5s import SELECT_OR   as OR
+from ..h5s import SELECT_AND  as AND
+from ..h5s import SELECT_XOR  as XOR
+from ..h5s import SELECT_NOTB as NOTB
+from ..h5s import SELECT_NOTA as NOTA
+
+if six.PY3:
+    long = int
 
 def select(shape, args, dsid):
     """ High-level routine to generate a selection from arbitrary arguments
@@ -297,7 +305,7 @@ class SimpleSelection(Selection):
         tshape.reverse()
         tshape = tuple(tshape)
 
-        chunks = tuple(x/y for x, y in zip(count, tshape))
+        chunks = tuple(x//y for x, y in zip(count, tshape))
         nchunks = long(np.product(chunks))
 
         if nchunks == 1:
@@ -427,7 +435,7 @@ class FancySelection(Selection):
             # TODO: fallback to standard selection
             raise TypeError("Advanced selection inappropriate")
 
-        vectorlength = len(sequenceargs.values()[0])
+        vectorlength = len(list(sequenceargs.values())[0])
         if not all(len(x) == vectorlength for x in sequenceargs.values()):
             raise TypeError("All sequence arguments must have the same length %s" % sequenceargs)
 
@@ -437,7 +445,7 @@ class FancySelection(Selection):
         argvector = []
         for idx in xrange(vectorlength):
             entry = list(args)
-            for position, seq in sequenceargs.iteritems():
+            for position, seq in six.iteritems(sequenceargs):
                 entry[position] = seq[idx]
             argvector.append(entry)
 

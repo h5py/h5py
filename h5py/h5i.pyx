@@ -11,6 +11,9 @@
     Identifier interface for object inspection.
 """
 
+from ._objects import phil, with_phil
+
+
 # === Public constants and data structures ====================================
 
 BADID       = H5I_BADID
@@ -32,16 +35,16 @@ cpdef ObjectID wrap_identifier(hid_t ident):
     typecode = H5Iget_type(ident)
     if typecode == H5I_FILE:
         import h5f
-        obj = h5f.FileID.open(ident)
+        obj = h5f.FileID(ident)
     elif typecode == H5I_DATASET:
         import h5d
-        obj = h5d.DatasetID.open(ident)
+        obj = h5d.DatasetID(ident)
     elif typecode == H5I_GROUP:
         import h5g
-        obj = h5g.GroupID.open(ident)
+        obj = h5g.GroupID(ident)
     elif typecode == H5I_ATTR:
         import h5a
-        obj = h5a.AttrID.open(ident)
+        obj = h5a.AttrID(ident)
     elif typecode == H5I_DATATYPE:
         import h5t
         obj = h5t.typewrap(ident)
@@ -53,9 +56,10 @@ cpdef ObjectID wrap_identifier(hid_t ident):
 
     return obj
 
+
 # === Identifier API ==========================================================
 
-
+@with_phil
 def get_type(ObjectID obj not None):
     """ (ObjectID obj) => INT type_code
 
@@ -66,6 +70,7 @@ def get_type(ObjectID obj not None):
     return <int>H5Iget_type(obj.id)
 
 
+@with_phil
 def get_name(ObjectID obj not None):
     """ (ObjectID obj) => STRING name, or None
 
@@ -98,6 +103,7 @@ def get_name(ObjectID obj not None):
         free(name)
 
 
+@with_phil
 def get_file_id(ObjectID obj not None):
     """ (ObjectID obj) => FileID
 
@@ -106,11 +112,10 @@ def get_file_id(ObjectID obj not None):
     import h5f
     cdef hid_t fid
     fid = H5Iget_file_id(obj.id)
-    if H5Iget_ref(fid) > 1:
-        H5Idec_ref(fid)
-    return h5f.FileID.open(fid)
+    return h5f.FileID(fid)
 
 
+@with_phil
 def inc_ref(ObjectID obj not None):
     """ (ObjectID obj)
 
@@ -123,6 +128,7 @@ def inc_ref(ObjectID obj not None):
     H5Iinc_ref(obj.id)
 
 
+@with_phil
 def get_ref(ObjectID obj not None):
     """ (ObjectID obj) => INT
 
@@ -131,6 +137,7 @@ def get_ref(ObjectID obj not None):
     return H5Iget_ref(obj.id)
 
 
+@with_phil
 def dec_ref(ObjectID obj not None):
     """ (ObjectID obj)
 
