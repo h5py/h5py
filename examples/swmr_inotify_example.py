@@ -43,10 +43,15 @@ class EventHandler(pyinotify.ProcessEvent):
         shape = self.dset.shape
         logging.info("Read data shape: %s"%str(shape))
         return shape        
+        
+    def read_dataset(self, latest):
+        logging.info("Reading out dataset [%d]"%latest)
+        self.dset[latest:]
                 
     def process_IN_MODIFY(self, event):
         logging.debug("File modified!")
-        self.get_dset_shape()
+        shape = self.get_dset_shape()
+        self.read_dataset(shape[0])
                     
     def process_IN_CLOSE_WRITE(self, event):
         logging.info("File writer closed file")
