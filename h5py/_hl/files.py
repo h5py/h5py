@@ -241,6 +241,9 @@ class File(Group):
         Additional keywords
             Passed on to the selected file driver.
         """
+        if swmr and not swmr_support:
+            raise ValueError("The SWMR feature is not available in this version of the HDF5 library")
+        
         with phil:
             if isinstance(name, _objects.ObjectID):
                 fid = h5i.get_file_id(name)
