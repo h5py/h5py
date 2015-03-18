@@ -17,14 +17,13 @@ class TestSwmrNotAvailable(TestCase):
         TestCase.setUp(self)
         self.data = np.arange(13).astype('f')
         self.dset = self.f.create_dataset('data', chunks=(13,), maxshape=(None,), data=self.data)
+
+    def test_open_swmr_raises(self):
         fname = self.f.filename
         self.f.close()
-       
-        self.f = h5py.File(fname, 'r', swmr=True) # The swmr=True flag is ignored in this case
-        self.dset = self.f['data']
-        
-    def test_read_data(self):
-        self.assertArrayEqual(self.dset, self.data)
+ 
+        with self.assertRaises(ValueError):
+            self.f = h5py.File(fname, 'r', swmr=True)
         
     def test_refresh_raises(self):
         """ If the SWMR feature is not available then Dataset.refresh() should throw an AttributeError
