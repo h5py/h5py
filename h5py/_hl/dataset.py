@@ -663,31 +663,25 @@ class Dataset(HLObject):
             return r
         return r.encode('utf8')
         
-    @with_phil
-    def refresh(self):
-        """ Refresh the dataset metadata by reloading from the file.
-        
-        This is part of the SWMR features and only work with HDF5 librarary.
-        version >=1.9.178
-        Raises AttributeError if the SWMR features are not available.
-        """
-        try:
-            self._id.refresh()
-        except AttributeError as e:
-            raise AttributeError("Dataset.refresh() is a SWMR feature of HDF5 >= 1.9.178\n " + e.message)
+    if hasattr(h5d.DatasetID, "refresh"):
+        @with_phil
+        def refresh(self):
+            """ Refresh the dataset metadata by reloading from the file.
             
-    @with_phil
-    def flush(self):
-        """ Flush the dataset data and metadata to the file.
-        If the dataset is chunked, raw data chunks are written to the file.
-        
-        This is part of the SWMR features and only work with HDF5 librarary.
-        version >=1.9.178
-        Raises AttributeError if the SWMR features are not available.
-        """
-        try:
+            This is part of the SWMR features and only exist when the HDF5
+            librarary version >=1.9.178
+            """
+            self._id.refresh()
+                
+    if hasattr(h5d.DatasetID, "flush"):
+        @with_phil
+        def flush(self):
+            """ Flush the dataset data and metadata to the file.
+            If the dataset is chunked, raw data chunks are written to the file.
+            
+            This is part of the SWMR features and only exist when the HDF5 
+            librarary version >=1.9.178
+            """
             self._id.flush()
-        except AttributeError as e:
-            raise AttributeError("Dataset.flush() is a SWMR feature of HDF5 >= 1.9.178\n " + e.message)
             
 
