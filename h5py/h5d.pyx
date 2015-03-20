@@ -10,6 +10,8 @@
     Provides access to the low-level HDF5 "H5D" dataset interface.
 """
 
+include "config.pxi"
+
 # Compile-time imports
 from _objects cimport pdefault
 from numpy cimport ndarray, import_array, PyArray_DATA, NPY_WRITEABLE
@@ -351,3 +353,41 @@ cdef class DatasetID(ObjectID):
             may even be zero.
         """
         return H5Dget_storage_size(self.id)
+        
+    IF HDF5_VERSION >= SWMR_MIN_HDF5_VERSION:
+
+        @with_phil
+        def flush(self):
+            """ no return
+            
+            Flushes all buffers associated with a dataset to disk.
+            
+            This function causes all buffers associated with a dataset to be 
+            immediately flushed to disk without removing the data from the cache.
+            
+            Use this in SWMR write mode to allow readers to be updated with the
+            dataset changes.
+            
+            Feature requires: 1.9.178 HDF5
+            """ 
+            H5Dflush(self.id)
+
+        @with_phil
+        def refresh(self):
+            """ no return
+            
+            Refreshes all buffers associated with a dataset. 
+            
+            This function causes all buffers associated with a dataset to be
+            cleared and immediately re-loaded with updated contents from disk.
+            
+            This function essentially closes the dataset, evicts all metadata
+            associated with it from the cache, and then re-opens the dataset.
+            The reopened dataset is automatically re-registered with the same ID. 
+            
+            Use this in SWMR read mode to poll for dataset changes.
+            
+            Feature requires: 1.9.178 HDF5
+            """ 
+            H5Drefresh(self.id)
+

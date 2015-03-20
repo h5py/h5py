@@ -662,3 +662,26 @@ class Dataset(HLObject):
         if six.PY3:
             return r
         return r.encode('utf8')
+        
+    if hasattr(h5d.DatasetID, "refresh"):
+        @with_phil
+        def refresh(self):
+            """ Refresh the dataset metadata by reloading from the file.
+            
+            This is part of the SWMR features and only exist when the HDF5
+            librarary version >=1.9.178
+            """
+            self._id.refresh()
+                
+    if hasattr(h5d.DatasetID, "flush"):
+        @with_phil
+        def flush(self):
+            """ Flush the dataset data and metadata to the file.
+            If the dataset is chunked, raw data chunks are written to the file.
+            
+            This is part of the SWMR features and only exist when the HDF5 
+            librarary version >=1.9.178
+            """
+            self._id.flush()
+            
+

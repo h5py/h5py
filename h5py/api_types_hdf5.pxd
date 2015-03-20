@@ -86,6 +86,8 @@ cdef extern from "hdf5.h":
     H5F_ACC_EXCL
     H5F_ACC_DEBUG
     H5F_ACC_CREAT
+    H5F_ACC_SWMR_WRITE
+    H5F_ACC_SWMR_READ
 
   # The difference between a single file and a set of mounted files
   cdef enum H5F_scope_t:

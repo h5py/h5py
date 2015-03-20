@@ -160,6 +160,7 @@ class h5py_build_ext(build_ext):
 
 DEF MPI = %(mpi)s
 DEF HDF5_VERSION = %(version)s
+DEF SWMR_MIN_HDF5_VERSION = (1,9,178)
 """
                 s %= {'mpi': bool(config.mpi),
                       'version': tuple(int(x) for x in config.hdf5_version.split('.'))}
