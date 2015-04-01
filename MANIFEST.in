@@ -12,3 +12,5 @@ include setup_build.py
 include setup_configure.py
 include ANN.rst
 include README.rst
+recursive-include docs *
+recursive-include docs_api *
