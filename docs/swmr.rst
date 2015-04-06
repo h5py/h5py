@@ -3,7 +3,7 @@
 Single Writer Multiple Reader (SWMR)
 ====================================
 
-Starting with version N.N.N, h5py includes support for the HDF5 SWMR features.
+Starting with version 2.5.0, h5py includes support for the HDF5 SWMR features.
 
 The SWMR feature is not available in the current release (1.8 series) of HDF5 
 library. It is planned to be released for production use in version 1.10. Until
