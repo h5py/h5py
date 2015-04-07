@@ -20,6 +20,7 @@ You need, at a minimum:
 
 * Python 2.6, 2.7, 3.2, 3.3, or 3.4
 * NumPy 1.6.1 or later
+* The "six" package for Python 2/3 compatibility
 
 To build on UNIX:
 

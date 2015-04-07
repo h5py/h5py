@@ -23,6 +23,7 @@ You will need:
 
   * Python 2.6, 2.7, 3.2, 3.3 or 3.4 (from Python.org)
   * NumPy 1.6.1 or newer
+  * The "six" Python 2/3 compatibility package
 
 Download the installer from http://www.h5py.org and run it.  HDF5 is
 included.
