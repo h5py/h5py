@@ -16,6 +16,9 @@ version 1.9.178 on the
              experimenting and testing. Please do not consider this a production
              quality feature until the HDF5 library is released as 1.10.
 
+.. Warning:: FILES PRODUCED BY THE HDF5 1.9.X DEVELOPMENT SNAPSHOTS MAY NOT BE
+             READABLE BY OTHER VERSIONS OF HDF5, INCLUDING THE EXISTING 1.8
+             SERIES AND ALSO 1.10 WHEN IT IS RELEASED.
 
 What is SWMR?
 -------------
