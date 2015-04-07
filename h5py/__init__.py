@@ -9,7 +9,15 @@
 
 from __future__ import absolute_import
 
-from . import _errors
+try:
+    from . import _errors
+except ImportError:
+    import os.path as _op
+    if _op.exists(_op.join(_op.dirname(__file__), '..', 'setup.py')):
+        raise ImportError("You cannot import h5py from inside the install directory.\nChange to another directory first.")
+    else:
+        raise
+    
 _errors.silence_errors()
 
 from . import _conv
