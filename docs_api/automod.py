@@ -48,9 +48,15 @@ class_exprs = { "ObjectID": "h5py.h5.ObjectID",
                 "[Gg]roup creation property list": "h5py.h5p.PropGCID"}
 
 
-class_exprs = dict( 
-    (re.compile(class_base % x.replace(" ",r"\s"), re.VERBOSE), y) \
-    for x, y in class_exprs.iteritems() )
+try:
+    class_exprs = dict( 
+        (re.compile(class_base % x.replace(" ",r"\s"), re.VERBOSE), y) \
+        for x, y in class_exprs.iteritems() )
+except AttributeError:
+    class_exprs = dict( 
+        (re.compile(class_base % x.replace(" ",r"\s"), re.VERBOSE), y) \
+        for x, y in class_exprs.items() )
+
 
 def replace_class(istr):
 
