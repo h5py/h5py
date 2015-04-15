@@ -218,7 +218,7 @@ class File(Group):
             else:
                 raise ValueError("It is not possible to forcibly swith SWMR mode off.")
 
-    def __init__(self, name, mode=None, driver=None, 
+    def __init__(self, name, mode=None, driver=None,
                  libver=None, userblock_size=None, swmr=False, **kwds):
         """Create a new file object.
 
@@ -227,6 +227,12 @@ class File(Group):
         name
             Name of the file on disk.  Note: for files created with the 'core'
             driver, HDF5 still requires this be non-empty.
+        mode
+            r        Readonly, file must exist
+            r+       Read/write, file must exist
+            w        Create file, truncate if exists
+            w- or x  Create file, fail if exists
+            a        Read/write if exists, create otherwise (default)
         driver
             Name of the driver to use.  Legal values are None (default,
             recommended), 'core', 'sec2', 'stdio', 'mpio'.
