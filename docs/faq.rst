@@ -99,7 +99,7 @@ This greatly simplifies the design of the complicated high-level interface, by
 relying on the "Pythonicity" of the C API wrapping.
 
 There's also a PyTables perspective on this question at the 
-`PyTables FAQ <http://www.pytables.org/moin/FAQ#HowdoesPyTablescomparewiththeh5pyproject.3F>`_.
+`PyTables FAQ <http://www.pytables.org/FAQ.html#how-does-pytables-compare-with-the-h5py-project>`_.
 
 
 Does h5py support Parallel HDF5?
