@@ -304,9 +304,6 @@ hdf5:
   herr_t    H5Pset_buffer(hid_t plist, hsize_t size, void *tconv, void *bkg )
   hsize_t   H5Pget_buffer(hid_t plist, void **tconv, void **bkg )
 
-  herr_t    H5Pset_alignment(hid_t plist, hsize_t threshold, hsize_t alignment )
-  herr_t    H5Pget_alignment(hid_t plist, hsize_t *threshold, hsize_t *alignment )
-
   MPI  herr_t    H5Pset_dxpl_mpio( hid_t dxpl_id, H5FD_mpio_xfer_t xfer_mode )
   MPI  herr_t    H5Pget_dxpl_mpio( hid_t dxpl_id, H5FD_mpio_xfer_t* xfer_mode )
 
