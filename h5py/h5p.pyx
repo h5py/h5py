@@ -1071,24 +1071,6 @@ cdef class PropFAID(PropInstanceID):
         """
         H5Pset_alignment(self.id, threshold, alignment)
 
-    def set_alignment(self, hsize_t threshold, hsize_t alignment):
-        """ (LONG threshold, LONG alignment)
-
-        Set alignment for file access; objects bigger than "threshold" will
-        be aligned to "alignment"-aligned boundaries, relative to the
-        beginning of the file (including any user block).
-        """
-        H5Pset_alignment(self.id, threshold, alignment)
-
-    def get_alignment(self):
-        """ () => (LONG threshold, LONG alignment)
-
-        Get alignment settings (see set_alignment)
-        """
-        cdef hsize_t threshold, alignment
-        H5Pget_alignment(self.id, &threshold, &alignment)
-        return (threshold, alignment)
-
 # Link creation
 cdef class PropLCID(PropCreateID):
 
