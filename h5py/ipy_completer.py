@@ -11,34 +11,42 @@
 #
 #-
 
+# pylint: disable=eval-used,protected-access
+
 """
-h5py completer extension for ipython. This completer is automatically loaded
-when h5py is imported within ipython. It will let you do things like::
+    This is the h5py completer extension for ipython.  It is loaded by
+    calling the function h5py.enable_ipython_completer() from within an
+    interactive IPython session.
+    
+    It will let you do things like::
 
-  f=File('foo.h5')
-  f['<tab>
-  # or:
-  f['ite<tab>
+      f=File('foo.h5')
+      f['<tab>
+      # or:
+      f['ite<tab>
 
-which will do tab completion based on the subgroups of `f`. Also::
+    which will do tab completion based on the subgroups of `f`. Also::
 
-  f['item1'].at<tab>
+      f['item1'].at<tab>
 
-will perform tab completion for the attributes in the usual way. This should
-also work::
+    will perform tab completion for the attributes in the usual way. This should
+    also work::
 
-  a = b = f['item1'].attrs.<tab>
+      a = b = f['item1'].attrs.<tab>
 
-as should::
+    as should::
 
-  f['item1/item2/it<tab>
-
+      f['item1/item2/it<tab>
 """
 
 from __future__ import absolute_import
 
 import posixpath
 import re
+import readline
+from ._hl.attrs import AttributeManager
+from ._hl.base import HLObject
+
 
 try:
     # >=ipython-1.0
@@ -59,9 +67,6 @@ except ImportError:
     from IPython import generics
     from IPython.ipapi import TryNext
 
-import readline
-
-from h5py.highlevel import AttributeManager, HLObject
 
 re_attr_match = re.compile(r"(?:.*\=)?(.+\[.*\].*)\.(\w*)$")
 re_item_match = re.compile(r"""(?:.*\=)?(.*)\[(?P<s>['|"])(?!.*(?P=s))(.*)$""")
@@ -69,12 +74,13 @@ re_object_match = re.compile(r"(?:.*\=)?(.+?)(?:\[)")
 
 
 def _retrieve_obj(name, context):
+    """ Filter function for completion. """
+
     # we don't want to call any functions, but I couldn't find a robust regex
     # that filtered them without unintended side effects. So keys containing
     # "(" will not complete.
-    try:
-        assert '(' not in name
-    except AssertionError:
+    
+    if '(' in name:
         raise ValueError()
 
     try:
@@ -93,10 +99,10 @@ def h5py_item_completer(context, command):
 
     try:
         obj = _retrieve_obj(base, context)
-    except:
+    except Exception:
         return []
 
-    path, target = posixpath.split(item)
+    path, _ = posixpath.split(item)
     if path:
         items = (posixpath.join(path, name) for name in obj[path].iterkeys())
     else:
@@ -116,7 +122,7 @@ def h5py_attr_completer(context, command):
 
     try:
         obj = _retrieve_obj(base, context)
-    except:
+    except Exception:
         return []
 
     attrs = dir(obj)
@@ -154,6 +160,7 @@ def h5py_attr_completer(context, command):
 
 
 def h5py_completer(self, event):
+    """ Completer function to be loaded into IPython """
     base = re_object_match.split(event.line)[1]
 
     if not isinstance(self._ofind(base)['obj'], (AttributeManager, HLObject)):
@@ -173,6 +180,7 @@ def h5py_completer(self, event):
 
 
 def load_ipython_extension(ip=None):
+    """ Load completer function into IPython """
     if ip is None:
         ip = get_ipython()
     ip.set_hook('complete_command', h5py_completer, re_key=r"(?:.*\=)?(.+?)\[")
