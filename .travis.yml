@@ -10,17 +10,15 @@ python:
   - "3.3"
   - "3.4"
 
-before_install:
+install:
     - sudo apt-get update -qq
     - sudo apt-get install -qq libhdf5-serial-dev
     - if [[ $TRAVIS_PYTHON_VERSION == "2.6" ]]; then pip install unittest2; fi
     - pip install numpy
     - pip install --install-option="--no-cython-compile" cython
     - pip install pylint
-    
-install: 
-    - python setup.py build -f
 
 script:
-    - pylint h5py || true
+    - if [[ $TRAVIS_PYTHON_VERSION != "2.6" && $TRAVIS_PYTHON_VERSION != "3.2" ]]; then pylint h5py || true; fi
+    - python setup.py build -f
     - python setup.py test
