@@ -7,17 +7,20 @@
 # License:  Standard 3-clause BSD; see "license.txt" for full license terms
 #           and contributor agreement.
 
+"""
+    Implements high-level support for HDF5 file objects.
+"""
+
 from __future__ import absolute_import
 
-import weakref
 import sys
 import os
 
 import six
 
-from .base import HLObject, phil, with_phil
+from .base import phil, with_phil
 from .group import Group
-from .. import h5, h5f, h5p, h5i, h5fd, h5t, _objects
+from .. import h5, h5f, h5p, h5i, h5fd, _objects
 from .. import version
 
 mpi = h5.get_config().mpi
@@ -49,15 +52,15 @@ def make_fapl(driver, libver, **kwds):
     if driver is None or (driver == 'windows' and sys.platform == 'win32'):
         return plist
 
-    if(driver == 'sec2'):
+    if driver == 'sec2':
         plist.set_fapl_sec2(**kwds)
-    elif(driver == 'stdio'):
+    elif driver == 'stdio':
         plist.set_fapl_stdio(**kwds)
-    elif(driver == 'core'):
+    elif driver == 'core':
         plist.set_fapl_core(**kwds)
-    elif(driver == 'family'):
+    elif driver == 'family':
         plist.set_fapl_family(memb_fapl=plist.copy(), **kwds)
-    elif(driver == 'mpio'):
+    elif driver == 'mpio':
         kwds.setdefault('info', mpi4py.MPI.Info())
         plist.set_fapl_mpio(**kwds)
     else:
@@ -202,21 +205,24 @@ class File(Group):
         @atomic.setter
         @with_phil
         def atomic(self, value):
+            # pylint: disable=missing-docstring
             self.id.set_mpi_atomicity(value)
             
     if swmr_support:
         @property
         def swmr_mode(self):
+            """ Controls single-writer multiple-reader mode """
             return self._swmr_mode
             
         @swmr_mode.setter
         @with_phil
         def swmr_mode(self, value):
+            # pylint: disable=missing-docstring
             if value:
                 self.id.start_swmr_write()
                 self._swmr_mode = True
             else:
-                raise ValueError("It is not possible to forcibly swith SWMR mode off.")
+                raise ValueError("It is not possible to forcibly switch SWMR mode off.")
 
     def __init__(self, name, mode=None, driver=None,
                  libver=None, userblock_size=None, swmr=False, **kwds):

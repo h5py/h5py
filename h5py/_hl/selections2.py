@@ -7,6 +7,10 @@
 # License:  Standard 3-clause BSD; see "license.txt" for full license terms
 #           and contributor agreement.
 
+"""
+    Implements a portion of the selection operations.
+"""
+
 from __future__ import absolute_import
 
 import numpy as np
@@ -26,7 +30,7 @@ def read_dtypes(dataset_dtype, names):
         raise ValueError("Field names only allowed for compound types")
 
     elif any(x not in dataset_dtype.names for x in names):
-        raise ValueError("Field %s does not appear in this type." % name)
+        raise ValueError("Field does not appear in this type.")
 
     else:
         format_dtype = np.dtype([(name, dataset_dtype.fields[name][0]) for name in names])
@@ -71,6 +75,10 @@ def read_selections_scalar(dsid, args):
 
 class ScalarReadSelection(object):
 
+    """
+        Implements slicing for scalar datasets.
+    """
+    
     def __init__(self, fspace, args):
         if args == ():
             self.mshape = None
@@ -87,7 +95,10 @@ class ScalarReadSelection(object):
         yield self.fspace, self.mspace        
 
 def select_read(fspace, args):
+    """ Top-level dispatch function for reading.
     
+    At the moment, only supports reading from scalar datasets.
+    """
     if fspace.shape == ():
         return ScalarReadSelection(fspace, args)
 

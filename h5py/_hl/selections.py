@@ -7,6 +7,9 @@
 # License:  Standard 3-clause BSD; see "license.txt" for full license terms
 #           and contributor agreement.
 
+# We use __getitem__ side effects, which pylint doesn't like.
+# pylint: disable=pointless-statement
+
 """
     High-level access to HDF5 dataspace selections
 """
@@ -14,22 +17,12 @@
 from __future__ import absolute_import
 
 import six
-from six.moves import xrange
+from six.moves import xrange    # pylint: disable=redefined-builtin
 
 import numpy as np
 
 from .. import h5s, h5r
 
-# Selection types for hyperslabs
-from ..h5s import SELECT_SET  as SET
-from ..h5s import SELECT_OR   as OR
-from ..h5s import SELECT_AND  as AND
-from ..h5s import SELECT_XOR  as XOR
-from ..h5s import SELECT_NOTB as NOTB
-from ..h5s import SELECT_NOTA as NOTA
-
-if six.PY3:
-    long = int
 
 def select(shape, args, dsid):
     """ High-level routine to generate a selection from arbitrary arguments
@@ -119,7 +112,7 @@ class _RegionProxy(object):
         """ Takes arbitrary selection terms and produces a RegionReference
         object.  Selection must be compatible with the dataset.
         """
-        selection = select(self.id.shape, args)
+        selection = select(self.id.shape, args, self.id)
         return h5r.create(self.id, '.', h5r.DATASET_REGION, selection.id)
 
 class Selection(object):
@@ -198,7 +191,7 @@ class PointSelection(Selection):
     """
 
     def _perform_selection(self, points, op):
-
+        """ Internal method which actually performs the selection """
         points = np.asarray(points, order='C', dtype='u8')
         if len(points.shape) == 1:
             points.shape = (1,points.shape[0])
@@ -306,7 +299,7 @@ class SimpleSelection(Selection):
         tshape = tuple(tshape)
 
         chunks = tuple(x//y for x, y in zip(count, tshape))
-        nchunks = long(np.product(chunks))
+        nchunks = int(np.product(chunks))
 
         if nchunks == 1:
             yield self._id
@@ -318,71 +311,6 @@ class SimpleSelection(Selection):
                 sid.offset_simple(offset)
                 yield sid
 
-
-class HyperSelection(Selection):
-
-    """
-        Represents multiple overlapping rectangular selections, combined
-        with set-like operators.  Result is a 1D shape, as with boolean array
-        selection.  Broadcasting is not supported for these selections.
-
-        When created, the entire dataspace is selected.  To make
-        adjustments to the selection, use the standard NumPy slicing
-        syntax, either via __getitem__ (as with simple selections) or via
-        __setitem__ and one of the supported operators:
-
-            >>> sel = HyperSelection((10,20))  # Initially 200 points
-            >>> sel[:,5:15] = False            # Now 100 points
-            >>> sel[:,10]   = True             # Now 110 points
-            >>> sel[...]    = XOR              # Now 90 points
-
-        Legal operators (in the h5py.selections module) are:
-           
-        SET
-            New selection, wiping out any old one
-       
-        AND, XOR, OR (or True)
-            Logical AND/XOR/OR between new and old selection
-
-        NOTA
-            Select only regions in new selection which don't intersect the old
-
-        NOTB (or False)
-            Select only regions in old selection which don't intersect the new
- 
-    """
-
-    def __getitem__(self, args):
-        self[args] = SET
-        return self
-
-    def __setitem__(self, args, op):
-
-        if not isinstance(args, tuple):
-            args = (args,)
- 
-        start, count, step, scalar = _handle_simple(self.shape, args)
-
-        if not op in (SET, OR, AND, XOR, NOTB, NOTA, True, False):
-            raise ValueError("Illegal selection operator")
-
-        if op is True:
-            op = OR
-        elif op is False:
-            op = NOTB
-
-        seltype = self._id.get_select_type()
-
-        if seltype == h5s.SEL_ALL:
-            self._id.select_hyperslab((0,)*len(self.shape), self.shape, op=h5s.SELECT_SET)
-       
-        elif seltype == h5s.SEL_NONE:
-            if op in (SET, OR, XOR, NOTA):
-                op = SET
-            else:
-                return
-
-        self._id.select_hyperslab(start, count, step, op=op)
 
 class FancySelection(Selection):
 
@@ -429,10 +357,8 @@ class FancySelection(Selection):
                         raise TypeError("Indexing elements must be in increasing order")
 
         if len(sequenceargs) > 1:
-            # TODO: fix this with broadcasting
             raise TypeError("Only one indexing vector or array is currently allowed for advanced selection")
         if len(sequenceargs) == 0:
-            # TODO: fallback to standard selection
             raise TypeError("Advanced selection inappropriate")
 
         vectorlength = len(list(sequenceargs.values())[0])
@@ -484,7 +410,7 @@ def _expand_ellipsis(args, rank):
 
     final_args = []
     n_args = len(args)
-    for idx, arg in enumerate(args):
+    for arg in args:
 
         if arg is Ellipsis:
             final_args.extend( (slice(None,None,None),)*(rank-n_args+1) )

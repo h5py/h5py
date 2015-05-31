@@ -212,6 +212,13 @@ cdef class ObjectID:
                 self.id = 0
 
 
+    def close(self):
+        """ Close this identifier. """
+        # Note this is the default close method.  Subclasses, e.g. FileID,
+        # which have nonlocal effects should override this.
+        self._close()
+
+
     def __nonzero__(self):
         return self.valid
 

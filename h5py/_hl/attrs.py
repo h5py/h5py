@@ -7,10 +7,16 @@
 # License:  Standard 3-clause BSD; see "license.txt" for full license terms
 #           and contributor agreement.
 
+"""
+    Implements high-level operations for attributes.
+    
+    Provides the AttributeManager class, available on high-level objects
+    as <obj>.attrs.
+"""
+
 from __future__ import absolute_import
 
 import numpy
-import collections
 
 from .. import h5s, h5t, h5a
 from . import base
@@ -19,7 +25,7 @@ from .dataset import readtime_dtype
 from .datatype import Datatype
 
 
-class AttributeManager(base.MutableMappingWithLock, base.CommonStateObject):
+class AttributeManager(base.MutableMappingHDF5, base.CommonStateObject):
 
     """
         Allows dictionary-style access to an HDF5 object's attributes.
@@ -181,7 +187,7 @@ class AttributeManager(base.MutableMappingWithLock, base.CommonStateObject):
                 try:
                     attr.write(data, mtype=htype2)
                 except:
-                    attr._close()
+                    attr.close()
                     h5a.delete(self._id, self._e(tempname))
                     raise
                 else:
@@ -191,7 +197,7 @@ class AttributeManager(base.MutableMappingWithLock, base.CommonStateObject):
                             h5a.delete(self._id, self._e(name))
                         h5a.rename(self._id, self._e(tempname), self._e(name))
                     except:
-                        attr._close()
+                        attr.close()
                         h5a.delete(self._id, self._e(tempname))
                         raise
                         
@@ -230,10 +236,12 @@ class AttributeManager(base.MutableMappingWithLock, base.CommonStateObject):
     def __iter__(self):
         """ Iterate over the names of attributes. """
         with phil:
+        
             attrlist = []
-
             def iter_cb(name, *args):
+                """ Callback to gather attribute names """
                 attrlist.append(self._d(name))
+
             h5a.iterate(self._id, iter_cb)
 
         for name in attrlist:

@@ -47,7 +47,7 @@ UNLIMITED = H5S_UNLIMITED
 NO_CLASS = H5S_NO_CLASS
 SCALAR   = H5S_SCALAR
 SIMPLE   = H5S_SIMPLE
-_NULL = H5S_NULL
+globals()["NULL"] = H5S_NULL  # "NULL" is reserved in Cython
 
 #enum H5S_sel_type
 SEL_ERROR       = H5S_SEL_ERROR

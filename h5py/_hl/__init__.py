@@ -7,5 +7,12 @@
 # License:  Standard 3-clause BSD; see "license.txt" for full license terms
 #           and contributor agreement.
 
+"""
+    This subpackage implements the high-level interface for h5py.
+    
+    Don't manually import things from here; the public API lives directly
+    in the top-level package namespace.
+"""
+
 from __future__ import absolute_import
 

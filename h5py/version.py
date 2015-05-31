@@ -7,6 +7,10 @@
 # License:  Standard 3-clause BSD; see "license.txt" for full license terms
 #           and contributor agreement.
 
+"""
+    Versioning module for h5py.
+"""
+
 from __future__ import absolute_import
 
 from . import h5 as _h5
@@ -25,12 +29,6 @@ hdf5_version = "%d.%d.%d" % hdf5_version_tuple
 
 api_version_tuple = (1,8)
 api_version = "1.8"
-
-__doc__ = """\
-This is h5py **%s**
-
-* HDF5 version: **%s**
-""" % (version, hdf5_version)
 
 info = """\
 Summary of the h5py configuration

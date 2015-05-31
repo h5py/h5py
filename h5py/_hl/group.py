@@ -7,23 +7,25 @@
 # License:  Standard 3-clause BSD; see "license.txt" for full license terms
 #           and contributor agreement.
 
+"""
+    Implements support for high-level access to HDF5 groups.
+"""
+
 from __future__ import absolute_import
 
 import posixpath as pp
-
 import six
-
 import numpy
-import collections
+import sys
 
 from .. import h5g, h5i, h5o, h5r, h5t, h5l, h5p
 from . import base
-from .base import HLObject, MutableMappingWithLock, phil, with_phil
+from .base import HLObject, MutableMappingHDF5, phil, with_phil
 from . import dataset
 from . import datatype
 
 
-class Group(HLObject, MutableMappingWithLock):
+class Group(HLObject, MutableMappingHDF5):
 
     """ Represents an HDF5 group.
     """
@@ -197,6 +199,8 @@ class Group(HLObject, MutableMappingWithLock):
         >>> if cls == SoftLink:
         ...     print '"foo" is a soft link!'
         """
+        # pylint: disable=arguments-differ
+
         with phil:
             if not (getclass or getlink):
                 try:
@@ -225,15 +229,20 @@ class Group(HLObject, MutableMappingWithLock):
                         return SoftLink
                     linkbytes = self.id.links.get_val(self._e(name))
                     return SoftLink(self._d(linkbytes))
+                    
                 elif typecode == h5l.TYPE_EXTERNAL:
                     if getclass:
                         return ExternalLink
                     filebytes, linkbytes = self.id.links.get_val(self._e(name))
-                    # TODO: I think this is wrong,
-                    # we should use filesystem decoding on the filename
-                    return ExternalLink(self._d(filebytes), self._d(linkbytes))
+                    try:
+                        filetext = filebytes.decode(sys.getfilesystemencoding())
+                    except (UnicodeError, LookupError):
+                        filetext = filebytes
+                    return ExternalLink(filetext, self._d(linkbytes))
+                    
                 elif typecode == h5l.TYPE_HARD:
                     return HardLink if getclass else HardLink()
+                    
                 else:
                     raise TypeError("Unknown link type")
 
@@ -419,6 +428,7 @@ class Group(HLObject, MutableMappingWithLock):
         """
         with phil:
             def proxy(name):
+                """ Call the function with the text name, not bytes """
                 return func(self._d(name))
             return h5o.visit(self.id, proxy)
 
@@ -448,6 +458,7 @@ class Group(HLObject, MutableMappingWithLock):
         """
         with phil:
             def proxy(name):
+                """ Use the text name of the object, not bytes """
                 name = self._d(name)
                 return func(name, self[name])
             return h5o.visit(self.id, proxy)
@@ -477,7 +488,6 @@ class HardLink(object):
     pass
 
 
-#TODO: implement equality testing for these
 class SoftLink(object):
 
     """
@@ -488,6 +498,7 @@ class SoftLink(object):
 
     @property
     def path(self):
+        """ Soft link value.  Not guaranteed to be a valid path. """
         return self._path
 
     def __init__(self, path):
@@ -506,10 +517,12 @@ class ExternalLink(object):
 
     @property
     def path(self):
+        """ Soft link path, i.e. the part inside the HDF5 file. """
         return self._path
 
     @property
     def filename(self):
+        """ Path to the external HDF5 file in the filesystem. """
         return self._filename
 
     def __init__(self, filename, path):
