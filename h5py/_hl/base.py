@@ -7,17 +7,18 @@
 # License:  Standard 3-clause BSD; see "license.txt" for full license terms
 #           and contributor agreement.
 
+"""
+    Implements operations common to all high-level objects (File, etc.).
+"""
+
 from __future__ import absolute_import
 
 import posixpath
-import warnings
 import os
 import sys
-from collections import (
-    Mapping, MutableMapping, MappingView, KeysView, ValuesView, ItemsView
-)
-
 import six
+from collections import (Mapping, MutableMapping, KeysView, 
+                         ValuesView, ItemsView)
 
 from .. import h5d, h5i, h5r, h5p, h5f, h5t
 
@@ -112,6 +113,7 @@ class CommonStateObject(object):
         If name is None, returns either None or (None, None) appropriately.
         """
         def get_lcpl(coding):
+            """ Create an appropriate link creation property list """
             lcpl = self._lcpl.copy()
             lcpl.set_char_encoding(coding)
             return lcpl
@@ -179,7 +181,7 @@ class _RegionProxy(object):
             raise TypeError("Region references can only be made to datasets")
         from . import selections
         selection = selections.select(self.id.shape, args, dsid=self.id)
-        return h5r.create(self.id, b'.', h5r.DATASET_REGION, selection._id)
+        return h5r.create(self.id, b'.', h5r.DATASET_REGION, selection.id)
 
     def shape(self, ref):
         """ Get the shape of the target dataspace referred to by *ref*. """
@@ -284,24 +286,26 @@ class HLObject(CommonStateObject):
             return bool(self.id)
     __nonzero__ = __bool__
 
-class MappingViewWithLock(MappingView):
 
-    def __len__(self):
-        with phil:
-            return super(MappingViewWithLock, self).__len__()
+# --- Dictionary-style interface ----------------------------------------------
 
-
-class KeysViewWithLock(MappingViewWithLock, KeysView):
-    def __contains__(self, item):
-        with phil:
-            return super(KeysViewWithLock, self).__contains__(item)
-
-    def __iter__(self):
-        with phil:
-            return super(KeysViewWithLock, self).__iter__()
+# To implement the dictionary-style interface from groups and attributes,
+# we inherit from the appropriate abstract base classes in collections.
+#
+# All locking is taken care of by the subclasses.
+# We have to override ValuesView and ItemsView here because Group and
+# AttributeManager can only test for key names.
 
 
-class ValuesViewWithLock(MappingViewWithLock, ValuesView):
+class ValuesViewHDF5(ValuesView):
+
+    """
+        Wraps e.g. a Group or AttributeManager to provide a value view.
+        
+        Note that __contains__ will have poor performance as it has
+        to scan all the links or attributes.
+    """
+    
     def __contains__(self, value):
         with phil:
             for key in self._mapping:
@@ -315,7 +319,12 @@ class ValuesViewWithLock(MappingViewWithLock, ValuesView):
                 yield self._mapping.get(key)
 
 
-class ItemsViewWithLock(MappingViewWithLock, ItemsView):
+class ItemsViewHDF5(ItemsView):
+
+    """
+        Wraps e.g. a Group or AttributeManager to provide an items view.
+    """
+        
     def __contains__(self, item):
         with phil:
             key, val = item
@@ -329,30 +338,28 @@ class ItemsViewWithLock(MappingViewWithLock, ItemsView):
                 yield (key, self._mapping.get(key))
 
 
-class MappingWithLock(Mapping):
-    """
-    Subclass of collections.Mapping with locks.
-    """
-    def get(self, name, default=None):
-        """ Retrieve the member, or return default if it doesn't exist """
-        with phil:
-            try:
-                return self[name]
-            except KeyError:
-                return default
+class MappingHDF5(Mapping):
 
+    """
+        Wraps a Group, AttributeManager or DimensionManager object to provide
+        an immutable mapping interface.
+        
+        We don't inherit directly from MutableMapping because certain
+        subclasses, for example DimensionManager, are read-only.
+    """
+    
     if six.PY3:
         def keys(self):
             """ Get a view object on member names """
-            return KeysViewWithLock(self)
+            return KeysView(self)
 
         def values(self):
             """ Get a view object on member objects """
-            return ValuesViewWithLock(self)
+            return ValuesViewHDF5(self)
 
         def items(self):
             """ Get a view object on member items """
-            return ItemsViewWithLock(self)
+            return ItemsViewHDF5(self)
 
     else:
         def keys(self):
@@ -379,6 +386,15 @@ class MappingWithLock(Mapping):
             """ Get an iterator over (name, object) pairs """
             for x in self:
                 yield (x, self.get(x))
+                
 
-class MutableMappingWithLock(MappingWithLock,MutableMapping):
+class MutableMappingHDF5(MappingHDF5, MutableMapping):
+
+    """
+        Wraps a Group or AttributeManager object to provide a mutable
+        mapping interface, in contrast to the read-only mapping of
+        MappingHDF5.
+    """
+
     pass
+    
