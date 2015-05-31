@@ -7,6 +7,10 @@
 # License:  Standard 3-clause BSD; see "license.txt" for full license terms
 #           and contributor agreement.
 
+"""
+    Implements support for high-level dataset access.
+"""
+
 from __future__ import absolute_import
 
 import posixpath as pp
@@ -40,6 +44,7 @@ def readtime_dtype(basetype, names):
             raise ValueError("Field %s does not appear in this type." % name)
 
     return numpy.dtype([(name, basetype.fields[name][0]) for name in names])
+
 
 def make_new_dset(parent, shape=None, dtype=None, data=None,
                  chunks=None, compression=None, shuffle=None,
@@ -130,14 +135,20 @@ def make_new_dset(parent, shape=None, dtype=None, data=None,
 
 class AstypeContext(object):
 
+    """
+        Context manager which allows changing the type read from a dataset.
+    """
+    
     def __init__(self, dset, dtype):
         self._dset = dset
         self._dtype = numpy.dtype(dtype)
 
     def __enter__(self):
+        # pylint: disable=protected-access
         self._dset._local.astype = self._dtype
 
     def __exit__(self, *args):
+        # pylint: disable=protected-access
         self._dset._local.astype = None
 
 
@@ -159,7 +170,8 @@ class Dataset(HLObject):
     @property
     @with_phil
     def dims(self):
-        from . dims import DimensionManager
+        """ Access dimension scales attached to this dataset. """
+        from .dims import DimensionManager
         return DimensionManager(self)
 
     @property
@@ -170,6 +182,7 @@ class Dataset(HLObject):
     @shape.setter
     @with_phil
     def shape(self, shape):
+        # pylint: disable=missing-docstring
         self.resize(shape)
 
     @property
@@ -254,7 +267,7 @@ class Dataset(HLObject):
     def fillvalue(self):
         """Fill value for this dataset (0 by default)"""
         arr = numpy.ndarray((1,), dtype=self.dtype)
-        dcpl = self._dcpl.get_fill_value(arr)
+        self._dcpl.get_fill_value(arr)
         return arr[0]
 
     @with_phil
@@ -360,21 +373,6 @@ class Dataset(HLObject):
         if not six.PY3:
             names = tuple(x.encode('utf-8') if isinstance(x, six.text_type) else x for x in names)
 
-        def readtime_dtype(basetype, names):
-            """ Make a NumPy dtype appropriate for reading """
-
-            if len(names) == 0:  # Not compound, or we want all fields
-                return basetype
-
-            if basetype.names is None:  # Names provided, but not compound
-                raise ValueError("Field names only allowed for compound types")
-
-            for name in names:  # Check all names are legal
-                if not name in basetype.names:
-                    raise ValueError("Field %s does not appear in this type." % name)
-
-            return numpy.dtype([(name, basetype.fields[name][0]) for name in names])
-
         new_dtype = getattr(self._local, 'astype', None)
         if new_dtype is not None:
             new_dtype = readtime_dtype(new_dtype, names)
@@ -447,7 +445,7 @@ class Dataset(HLObject):
 
         # Perfom the actual read
         mspace = h5s.create_simple(mshape)
-        fspace = selection._id
+        fspace = selection.id
         self.id.read(mspace, fspace, arr, mtype)
 
         # Patch up the output for NumPy
@@ -541,7 +539,7 @@ class Dataset(HLObject):
         
             # Write non-compound source into a single dataset field
             if len(names) == 1 and val.dtype.fields is None:
-                subtype = h5y.py_create(val.dtype)
+                subtype = h5t.py_create(val.dtype)
                 mtype = h5t.create(h5t.COMPOUND, subtype.get_size())
                 mtype.insert(self._e(names[0]), 0, subtype)
 
@@ -566,7 +564,7 @@ class Dataset(HLObject):
             return
 
         # Broadcast scalars if necessary.
-        if (mshape == () and selection.mshape != ()):
+        if mshape == () and selection.mshape != ():
             if self.dtype.subdtype is not None:
                 raise TypeError("Scalar broadcasting is not supported for array dtypes")
             val2 = numpy.empty(selection.mshape[-1], dtype=val.dtype)
@@ -577,7 +575,7 @@ class Dataset(HLObject):
         # Perform the write, with broadcasting
         # Be careful to pad memory shape with ones to avoid HDF5 chunking
         # glitch, which kicks in for mismatched memory/file selections
-        if(len(mshape) < len(self.shape)):
+        if len(mshape) < len(self.shape):
             mshape_pad = (1,)*(len(self.shape)-len(mshape)) + mshape
         else:
             mshape_pad = mshape
@@ -598,7 +596,7 @@ class Dataset(HLObject):
                 source_sel = sel.SimpleSelection(self.shape)
             else:
                 source_sel = sel.select(self.shape, source_sel, self.id)  # for numpy.s_
-            fspace = source_sel._id
+            fspace = source_sel.id
 
             if dest_sel is None:
                 dest_sel = sel.SimpleSelection(dest.shape)
@@ -621,7 +619,7 @@ class Dataset(HLObject):
                 source_sel = sel.SimpleSelection(source.shape)
             else:
                 source_sel = sel.select(source.shape, source_sel, self.id)  # for numpy.s_
-            mspace = source_sel._id
+            mspace = source_sel.id
 
             if dest_sel is None:
                 dest_sel = sel.SimpleSelection(self.shape)
