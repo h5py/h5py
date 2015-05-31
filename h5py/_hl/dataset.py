@@ -17,7 +17,7 @@ import posixpath as pp
 import sys
 
 import six
-from six.moves import xrange
+from six.moves import xrange    # pylint: disable=redefined-builtin
 
 import numpy
 

@@ -17,7 +17,7 @@
 from __future__ import absolute_import
 
 import six
-from six.moves import xrange
+from six.moves import xrange    # pylint: disable=redefined-builtin
 
 import numpy as np
 

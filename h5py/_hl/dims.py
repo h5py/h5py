@@ -113,19 +113,19 @@ class DimensionProxy(base.CommonStateObject):
                 h5ds.iterate(self._id, self._dimension, scales.append, 0)
                 
             return [
-                (self._d(h5ds.get_scale_name(id)), Dataset(id))
-                for id in scales
+                (self._d(h5ds.get_scale_name(x)), Dataset(x))
+                for x in scales
                 ]
 
     def keys(self):
         """ Get a list of names for the scales on this dimension. """
         with phil:
-            return [key for (key, val) in self.items()]
+            return [key for (key, _) in self.items()]
 
     def values(self):
         """ Get a list of Dataset for scales on this dimension. """
         with phil:
-            return [val for (key, val) in self.items()]
+            return [val for (_, val) in self.items()]
 
     @with_phil
     def __repr__(self):
