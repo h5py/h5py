@@ -40,14 +40,9 @@
 
 from __future__ import absolute_import, division
 
-import six
-
 import numpy as np
+from .. import h5z, h5p, h5d
 
-from .. import h5s, h5z, h5p, h5d
-
-if six.PY3:
-    long = int
 
 _COMP_FILTERS = {'gzip': h5z.FILTER_DEFLATE,
                 'szip': h5z.FILTER_SZIP,
@@ -60,17 +55,18 @@ DEFAULT_GZIP = 4
 DEFAULT_SZIP = ('nn', 8)
 
 def _gen_filter_tuples():
-    decode = []
-    encode = []
-    for name, code in six.iteritems(_COMP_FILTERS):
+    """ Bootstrap function to figure out what filters are available. """
+    dec = []
+    enc = []
+    for name, code in _COMP_FILTERS.items():
         if h5z.filter_avail(code):
             info = h5z.get_filter_info(code)
             if info & h5z.FILTER_CONFIG_ENCODE_ENABLED:
-                encode.append(name)
+                enc.append(name)
             if info & h5z.FILTER_CONFIG_DECODE_ENABLED:
-                decode.append(name)
+                dec.append(name)
 
-    return tuple(decode), tuple(encode)
+    return tuple(dec), tuple(enc)
 
 decode, encode = _gen_filter_tuples()
 
@@ -218,7 +214,6 @@ def get_filters(plist):
     filters = {h5z.FILTER_DEFLATE: 'gzip', h5z.FILTER_SZIP: 'szip',
                h5z.FILTER_SHUFFLE: 'shuffle', h5z.FILTER_FLETCHER32: 'fletcher32',
                h5z.FILTER_LZF: 'lzf', h5z.FILTER_SCALEOFFSET: 'scaleoffset'}
-    szopts = {h5z.SZIP_EC_OPTION_MASK: 'ec', h5z.SZIP_NN_OPTION_MASK: 'nn'}
 
     pipeline = {}
 
@@ -226,7 +221,7 @@ def get_filters(plist):
 
     for i in range(nfilters):
 
-        code, flags, vals, desc = plist.get_filter(i)
+        code, _, vals, _ = plist.get_filter(i)
 
         if code == h5z.FILTER_DEFLATE:
             vals = vals[0] # gzip level
@@ -262,7 +257,8 @@ def guess_chunk(shape, maxshape, typesize):
 
     Undocumented and subject to change without warning.
     """
-
+    # pylint: disable=unused-argument
+    
     # For unlimited dimensions we have to guess 1024
     shape = tuple((x if x!=0 else 1024) for i, x in enumerate(shape))
 
@@ -304,7 +300,7 @@ def guess_chunk(shape, maxshape, typesize):
         chunks[idx%ndims] = np.ceil(chunks[idx%ndims] / 2.0)
         idx += 1
 
-    return tuple(long(x) for x in chunks)
+    return tuple(int(x) for x in chunks)
 
 
 
