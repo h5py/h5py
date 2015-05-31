@@ -19,6 +19,6 @@ install:
     - if [[ $TRAVIS_PYTHON_VERSION != "2.6" && $TRAVIS_PYTHON_VERSION != "3.2" ]]; then pip install pylint; fi
 
 script:
-    - if [[ $TRAVIS_PYTHON_VERSION != "2.6" && $TRAVIS_PYTHON_VERSION != "3.2" ]]; then pylint h5py || true; fi
+    - if [[ $TRAVIS_PYTHON_VERSION != "2.6" && $TRAVIS_PYTHON_VERSION != "3.2" ]]; then pylint h5py; fi
     - python setup.py build -f
     - python setup.py test
