@@ -76,7 +76,7 @@ def read_selections_scalar(dsid, args):
 class ScalarReadSelection(object):
 
     """
-        Undocumented.
+        Implements slicing for scalar datasets.
     """
     
     def __init__(self, fspace, args):
@@ -95,7 +95,10 @@ class ScalarReadSelection(object):
         yield self.fspace, self.mspace        
 
 def select_read(fspace, args):
-    """ Undocumented. """
+    """ Top-level dispatch function for reading.
+    
+    At the moment, only supports reading from scalar datasets.
+    """
     if fspace.shape == ():
         return ScalarReadSelection(fspace, args)
 
