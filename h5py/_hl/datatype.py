@@ -7,12 +7,16 @@
 # License:  Standard 3-clause BSD; see "license.txt" for full license terms
 #           and contributor agreement.
 
+"""
+    Implements high-level access to committed datatypes in the file.
+"""
+
 from __future__ import absolute_import
 
 import posixpath as pp
 
 from ..h5t import TypeID
-from .base import HLObject, phil, with_phil
+from .base import HLObject, with_phil
 
 class Datatype(HLObject):
 
