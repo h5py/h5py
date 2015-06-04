@@ -112,6 +112,12 @@ hdf5:
   1.9.178   herr_t H5Drefresh(hid_t dataset_id)
   
   
+  # === H5E - Minimal error-handling interface ================================
+  
+  # This is used only for defs.py, to disable printing in new threads
+  herr_t H5Eset_auto(void* a, void* b)
+    
+
   # === H5F - File API ========================================================
 
   hid_t     H5Fcreate(char *filename, unsigned int flags, hid_t create_plist, hid_t access_plist)
