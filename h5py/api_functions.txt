@@ -243,7 +243,7 @@ hdf5:
   # General operations
   hid_t     H5Pcreate(hid_t plist_id)
   hid_t     H5Pcopy(hid_t plist_id)
-  int       H5Pget_class(hid_t plist_id)
+  hid_t     H5Pget_class(hid_t plist_id)
   herr_t    H5Pclose(hid_t plist_id)
   htri_t    H5Pequal( hid_t id1, hid_t id2 )
   herr_t    H5Pclose_class(hid_t id)
