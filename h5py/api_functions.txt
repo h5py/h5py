@@ -60,9 +60,9 @@ hdf5:
 
   hid_t     H5Acreate_by_name(hid_t loc_id, char *obj_name, char *attr_name, hid_t type_id, hid_t space_id, hid_t acpl_id, hid_t aapl_id, hid_t lapl_id)
 
-  herr_t    H5Aopen(hid_t obj_id, char *attr_name, hid_t aapl_id)
-  herr_t    H5Aopen_by_name( hid_t loc_id, char *obj_name, char *attr_name, hid_t aapl_id, hid_t lapl_id)
-  herr_t    H5Aopen_by_idx(hid_t loc_id, char *obj_name, H5_index_t idx_type, H5_iter_order_t order, hsize_t n, hid_t aapl_id, hid_t lapl_id)
+  hid_t     H5Aopen(hid_t obj_id, char *attr_name, hid_t aapl_id)
+  hid_t     H5Aopen_by_name( hid_t loc_id, char *obj_name, char *attr_name, hid_t aapl_id, hid_t lapl_id)
+  hid_t     H5Aopen_by_idx(hid_t loc_id, char *obj_name, H5_index_t idx_type, H5_iter_order_t order, hsize_t n, hid_t aapl_id, hid_t lapl_id)
   htri_t    H5Aexists_by_name( hid_t loc_id, char *obj_name, char *attr_name, hid_t lapl_id)
   htri_t    H5Aexists(hid_t obj_id, char *attr_name)
 
