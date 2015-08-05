@@ -60,7 +60,8 @@ Once you've got a Parallel-enabled build of HDF5, h5py has to be compiled in
 and build h5py with the ``--mpi`` option::
 
     $ export CC=mpicc
-    $ python setup.py build --mpi [--hdf5=/path/to/parallel/hdf5]
+    $ python setup.py configure --mpi [--hdf5=/path/to/parallel/hdf5]
+    $ python setup.py build
 
 
 Using Parallel HDF5 from h5py
