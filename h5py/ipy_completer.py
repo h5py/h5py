@@ -61,12 +61,17 @@ except ImportError:
 try:
     # support >=ipython-0.11
     from IPython.utils import generics
-    from IPython import TryNext
 except ImportError:
     # support <ipython-0.11
     from IPython import generics
-    from IPython.ipapi import TryNext
 
+try:
+    from IPython.core.error import TryNext
+except ImportError:
+    try:
+        from IPython import TryNext
+    except ImportError:
+        from IPython.ipapi import TryNext
 
 re_attr_match = re.compile(r"(?:.*\=)?(.+\[.*\].*)\.(\w*)$")
 re_item_match = re.compile(r"""(?:.*\=)?(.*)\[(?P<s>['|"])(?!.*(?P=s))(.*)$""")
