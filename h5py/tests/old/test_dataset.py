@@ -772,6 +772,22 @@ class TestCompound(BaseDataset):
         self.assertTrue(np.all(outdata == testdata))
         self.assertEqual(outdata.dtype, testdata.dtype)
 
+    def test_assign(self):
+        dt = np.dtype( [ ('weight', (np.float64, 3)),
+                         ('endpoint_type', np.uint8), ] )
+
+        testdata = np.ndarray((16,), dtype=dt)
+        for key in dt.fields:
+            testdata[key] = np.random.random(size=testdata[key].shape)*100
+
+        ds = self.f.create_dataset('test', (16,), dtype=dt)
+        for key in dt.fields:
+            ds[key] = testdata[key]
+
+        outdata = self.f['test'][...]
+
+        self.assertTrue(np.all(outdata == testdata))
+        self.assertEqual(outdata.dtype, testdata.dtype)
 
 class TestEnum(BaseDataset):
 

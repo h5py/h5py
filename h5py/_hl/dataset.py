@@ -509,9 +509,10 @@ class Dataset(HLObject):
                 dtype = self.dtype
                 cast_compound = False
 
-            val = numpy.asarray(val, dtype=dtype, order='C')
+            val = numpy.asarray(val, dtype=dtype.base, order='C')
             if cast_compound:
-                val = val.astype(numpy.dtype([(names[0], dtype)]))
+                val = val.view(numpy.dtype([(names[0], dtype)]))
+                val = val.reshape(val.shape[:len(val.shape) - len(dtype.shape)])
         else:
             val = numpy.asarray(val, order='C')
 
