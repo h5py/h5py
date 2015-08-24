@@ -113,8 +113,9 @@ Check out :ref:`parallel` for details.
 Variable-length (VLEN) data
 ---------------------------
 
-Variable-length byte and unicode strings are supported by h5py. However, generic
-(non-string) VLEN data cannot yet be processed. Please note that since strings
+Starting with version 2.3, all supported types can be stored in variable-length
+arrays (previously only variable-length byte and unicode strings were supported)
+See :ref:`Special Types <vlen>` for use details.  Please note that since strings
 in HDF5 are encoded as ASCII or UTF-8, NUL bytes are not allowed in strings.
 
 
