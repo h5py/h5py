@@ -15,19 +15,22 @@ when using h5py is:
 
     **Groups work like dictionaries, and datasets work like NumPy arrays**
 
-The very first thing you'll need to do is create a new file::
+Suppose someone has send you a HDF5 file, `mytestfile.hdf5`. (If not, read createfile_ on creating a HDF5 file with h5py). The very first thing you'll need to do is to open the file::
 
     >>> import h5py
-    >>> import numpy as np
+    >>> f = h5py.File("mytestfile.hdf5", "r")
     >>>
-    >>> f = h5py.File("mytestfile.hdf5", "w")
 
-The :ref:`File object <file>` is your starting point.  It has a couple of
-methods which look interesting.  One of them is ``create_dataset``::
+The :ref:`File object <file>` is your starting point. Remember :py:class:`h5py.File` acts like a Python dictionary, thus we can check the keys,
 
-    >>> dset = f.create_dataset("mydataset", (100,), dtype='i')
+    >>> f.keys()
+    [('mydataset'),]
 
-The object we created isn't an array, but :ref:`an HDF5 dataset <dataset>`.
+Thus there is one data set, 'mydataset' in the file. Let's read the data set in
+
+    >>> dset = f['mydataset']
+
+The object we obtained isn't an array, but :ref:`an HDF5 dataset <dataset>`.
 Like NumPy arrays, datasets have both a shape and a data type:
 
     >>> dset.shape
@@ -47,6 +50,19 @@ from a dataset in the file:
     array([ 0, 10, 20, 30, 40, 50, 60, 70, 80, 90])
 
 For more, see :ref:`file` and :ref:`dataset`.
+
+.. _createfile:
+
+You may wonder how `mytestdata.hdf5` is created. This is how::
+
+    >>> import h5py
+    >>> import numpy as np
+    >>>
+    >>> f = h5py.File("mytestfile.hdf5", "w")
+
+File object has a couple of methods which look interesting. One of them is ``create_dataset``::
+
+    >>> dset = f.create_dataset("mydataset", (100,), dtype='i')
 
 
 Groups and hierarchical organization
