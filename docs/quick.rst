@@ -20,12 +20,13 @@ Suppose someone has sent you a HDF5 file, :code:`mytestfile.hdf5`. (To create th
     >>> import h5py
     >>> f = h5py.File("mytestfile.hdf5", "r")
 
-The :ref:`File object <file>` is your starting point. Remember :py:class:`h5py.File` acts like a Python dictionary, thus we can check the keys,
+The :ref:`File object <file>` is your starting point. What is stored in this file? Remember :py:class:`h5py.File` acts like a Python dictionary, thus we can check the keys,
 
     >>> f.keys()
-    [('mydataset'),]
+    [u'mydataset']
 
-Thus there is one data set, 'mydataset' in the file. Let's read the data set in
+Based on our observation, there is one data set, :code:`mydataset` in the file. 
+Let us examine the data set as a :ref:`Dataset <dataset>` object
 
     >>> dset = f['mydataset']
 
@@ -53,7 +54,12 @@ For more, see :ref:`file` and :ref:`dataset`.
 Appendix: Creating a file
 +++++++++++++++++++++++++
 
-At this point, you may wonder how :code:`mytestdata.hdf5` is created. We can create a file by setting the :code:`mode` to :code:`w` when the File object is created. Some other modes are :code:`a` (for read/write/create access), and :code:`r+` (for read/write access). A full list of file access modes and their meanings  is at :ref:`file`. ::  
+At this point, you may wonder how :code:`mytestdata.hdf5` is created. 
+We can create a file by setting the :code:`mode` to :code:`w` when 
+the File object is initialized. Some other modes are :code:`a` 
+(for read/write/create access), and 
+:code:`r+` (for read/write access). 
+A full list of file access modes and their meanings is at :ref:`file`. ::  
 
     >>> import h5py
     >>> import numpy as np
@@ -64,7 +70,18 @@ The :ref:`File object <file>` has a couple of methods which look interesting. On
 
     >>> dset = f.create_dataset("mydataset", (100,), dtype='i')
 
+Now we can flush the file to the disk
 
+    >>> f.flush()
+    >>> del f
+
+The File object is a context manager, and we can avoid the explict flushing.
+The following lines perform the same operation ::
+
+    >>> with h5py.File("mytestfile.hdf5", "w") as f:
+    >>>     dset = f.create_dataset("mydataset", (100,), dtype='i')
+   
+                
 Groups and hierarchical organization
 ------------------------------------
 
