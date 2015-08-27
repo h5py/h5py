@@ -15,11 +15,10 @@ when using h5py is:
 
     **Groups work like dictionaries, and datasets work like NumPy arrays**
 
-Suppose someone has send you a HDF5 file, `mytestfile.hdf5`. (If not, read createfile_ on creating a HDF5 file with h5py). The very first thing you'll need to do is to open the file::
+Suppose someone has sent you a HDF5 file, :code:`mytestfile.hdf5`. (To create this file, read `Appendix: Creating a file`_.) The very first thing you'll need to do is to open the file::
 
     >>> import h5py
     >>> f = h5py.File("mytestfile.hdf5", "r")
-    >>>
 
 The :ref:`File object <file>` is your starting point. Remember :py:class:`h5py.File` acts like a Python dictionary, thus we can check the keys,
 
@@ -51,16 +50,17 @@ from a dataset in the file:
 
 For more, see :ref:`file` and :ref:`dataset`.
 
-.. _createfile:
+Appendix: Creating a file
++++++++++++++++++++++++++
 
-You may wonder how `mytestdata.hdf5` is created. This is how::
+At this point, you may wonder how :code:`mytestdata.hdf5` is created. We can create a file by setting the :code:`mode` to :code:`w` when the File object is created. Some other modes are :code:`a` (for read/write/create access), and :code:`r+` (for read/write access). A full list of file access modes and their meanings  is at :ref:`file`. ::  
 
     >>> import h5py
     >>> import numpy as np
     >>>
     >>> f = h5py.File("mytestfile.hdf5", "w")
 
-File object has a couple of methods which look interesting. One of them is ``create_dataset``::
+The :ref:`File object <file>` has a couple of methods which look interesting. One of them is ``create_dataset``::
 
     >>> dset = f.create_dataset("mydataset", (100,), dtype='i')
 
