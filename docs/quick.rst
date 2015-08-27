@@ -15,10 +15,10 @@ when using h5py is:
 
     **Groups work like dictionaries, and datasets work like NumPy arrays**
 
-Suppose someone has sent you a HDF5 file, :code:`mytestfile.hdf5`. (To create this file, read `Appendix: Creating a file`_.) The very first thing you'll need to do is to open the file::
+Suppose someone has sent you a HDF5 file, :code:`mytestfile.hdf5`. (To create this file, read `Appendix: Creating a file`_.) The very first thing you'll need to do is to open the file for reading::
 
     >>> import h5py
-    >>> f = h5py.File("mytestfile.hdf5", "r")
+    >>> f = h5py.File('mytestfile.hdf5', 'r')
 
 The :ref:`File object <file>` is your starting point. What is stored in this file? Remember :py:class:`h5py.File` acts like a Python dictionary, thus we can check the keys,
 
@@ -98,8 +98,9 @@ created is itself a group, in this case the `root group`, named ``/``:
     >>> f.name
     u'/'
 
-Creating a subgroup is accomplished via the aptly-named ``create_group``::
-
+Creating a subgroup is accomplished via the aptly-named ``create_group``. But we need to open the file in read/write mode first ::
+   
+    >>> f = h5py.File('mydataset.hdf5', 'r+')
     >>> grp = f.create_group("subgroup")
 
 All ``Group`` objects also have the ``create_*`` methods like File::
