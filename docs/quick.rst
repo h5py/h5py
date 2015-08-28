@@ -63,10 +63,10 @@ A full list of file access modes and their meanings is at :ref:`file`. ::
 
     >>> import h5py
     >>> import numpy as np
-    >>>
     >>> f = h5py.File("mytestfile.hdf5", "w")
 
-The :ref:`File object <file>` has a couple of methods which look interesting. One of them is ``create_dataset``::
+The :ref:`File object <file>` has a couple of methods which look interesting. One of them is ``create_dataset``, which 
+as the name suggests, creates a data set of given shape and dtype ::
 
     >>> dset = f.create_dataset("mydataset", (100,), dtype='i')
 
@@ -75,9 +75,11 @@ Now we can flush the file to the disk
     >>> f.flush()
     >>> del f
 
-The File object is a context manager, and we can avoid the explict flushing.
-The following lines perform the same operation ::
+The File object is a context manager; thus we can create the file and
+manage the :code:`flush` operation with the following lines ::
 
+    >>> import h5py
+    >>> import numpy as np
     >>> with h5py.File("mytestfile.hdf5", "w") as f:
     >>>     dset = f.create_dataset("mydataset", (100,), dtype='i')
    
