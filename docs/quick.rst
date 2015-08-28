@@ -69,14 +69,8 @@ The :ref:`File object <file>` has a couple of methods which look interesting. On
 as the name suggests, creates a data set of given shape and dtype ::
 
     >>> dset = f.create_dataset("mydataset", (100,), dtype='i')
-
-Now we can flush the file to the disk
-
-    >>> f.flush()
-    >>> del f
-
-The File object is a context manager; thus we can create the file and
-manage the :code:`flush` operation with the following lines ::
+    
+The File object is a context manager; so the following code works too ::
 
     >>> import h5py
     >>> import numpy as np
