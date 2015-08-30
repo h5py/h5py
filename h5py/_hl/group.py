@@ -285,7 +285,7 @@ class Group(HLObject, MutableMappingHDF5):
                           self._e(obj.path), lcpl=lcpl, lapl=self._lapl)
 
         elif isinstance(obj, numpy.dtype):
-            htype = h5t.py_create(obj)
+            htype = h5t.py_create(obj, logical=True)
             htype.commit(self.id, name, lcpl=lcpl)
 
         else:
