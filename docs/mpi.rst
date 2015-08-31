@@ -21,7 +21,7 @@ excellent, complete Python bindings for MPI.  Here's an example
 "Hello World" using ``mpi4py``::
 
     >>> from mpi4py import MPI
-    >>> print "Hello World (from process %d)" % MPI.COMM_WORLD.rank
+    >>> print "Hello World (from process %d)" % MPI.COMM_WORLD.Get_rank()
 
 To run an MPI-based parallel program, use the ``mpiexec`` program to launch
 several parallel instances of Python::
@@ -60,7 +60,8 @@ Once you've got a Parallel-enabled build of HDF5, h5py has to be compiled in
 and build h5py with the ``--mpi`` option::
 
     $ export CC=mpicc
-    $ python setup.py build --mpi [--hdf5=/path/to/parallel/hdf5]
+    $ python setup.py configure --mpi [--hdf5=/path/to/parallel/hdf5]
+    $ python setup.py build
 
 
 Using Parallel HDF5 from h5py
