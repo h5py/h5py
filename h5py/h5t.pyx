@@ -1514,7 +1514,7 @@ cpdef TypeID py_create(object dtype_in, bint logical=0):
                 elif vlen is unicode:
                     return _c_vlen_unicode()
                 elif vlen is not None:
-                    return vlen_create(py_create(vlen))
+                    return vlen_create(py_create(vlen, logical))
 
                 refclass = check_dtype(ref=dt)
                 if refclass is not None:
