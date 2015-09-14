@@ -25,3 +25,21 @@ class TestVlen(TestCase):
         dt_out = self.f['mytype'].dtype.fields['field_1'][0]
         self.assertEqual(h5py.check_dtype(vlen=dt_out), str)
         
+    def test_vlen_enum(self):
+        fname = self.mktemp()
+        arr1 = [[1],[1,2]]
+        dt1 = h5py.special_dtype(vlen=h5py.special_dtype(
+            enum=('i', dict(foo=1, bar=2))))
+
+        with h5py.File(fname,'w') as f:
+            df1 = f.create_dataset('test', (len(arr1),), dtype=dt1)
+            df1[:] = np.array(arr1)
+
+        with h5py.File(fname,'r') as f:
+            df2  = f['test']
+            dt2  = df2.dtype
+            arr2 = [e.tolist() for e in df2[:]]
+
+        self.assertEqual(arr1, arr2)
+        self.assertEqual(h5py.check_dtype(enum=h5py.check_dtype(vlen=dt1)),
+                         h5py.check_dtype(enum=h5py.check_dtype(vlen=dt2)))
