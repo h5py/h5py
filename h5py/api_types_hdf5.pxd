@@ -13,10 +13,7 @@ include "config.pxi"
 
 cdef extern from "hdf5.h":
   # Basic types
-  IF HDF5_VERSION >= (1, 9, 222):
-    ctypedef long int hid_t
-  ELSE:
-    ctypedef int hid_t
+  ctypedef long int hid_t
   ctypedef int hbool_t
   ctypedef int herr_t
   ctypedef int htri_t
