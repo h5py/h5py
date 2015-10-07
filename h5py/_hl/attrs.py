@@ -76,7 +76,18 @@ class AttributeManager(base.MutableMappingHDF5, base.CommonStateObject):
             dtype = subdtype                # 'f'
             
         arr = numpy.ndarray(shape, dtype=dtype, order='C')
-        attr.read(arr, mtype=htype)
+
+        #TODO: detect fixed-length unicodeness here instead of further down
+        #saves evil out params and some convuluted logic
+        is_unicode = [False]
+        attr.read(arr, mtype=htype, is_unicode=is_unicode)
+
+        if is_unicode[0]:
+            def _gen(it):
+                for i in it:
+                    yield i.tobytes().decode('utf-8')
+            udtype = numpy.dtype(dtype.str.replace('S','U'))
+            arr = numpy.fromiter(_gen(arr.flat), dtype=udtype)
 
         if len(arr.shape) == 0:
             return arr[()]

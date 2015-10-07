@@ -13,7 +13,7 @@
 
 # Compile-time imports
 from _objects cimport pdefault
-from h5t cimport TypeID, typewrap, py_create
+from h5t cimport TypeID, typewrap, py_create, TypeStringID
 from h5s cimport SpaceID
 from h5p cimport PropID
 from numpy cimport import_array, ndarray, PyArray_DATA
@@ -330,7 +330,7 @@ cdef class AttrID(ObjectID):
 
     
     @with_phil
-    def read(self, ndarray arr not None, TypeID mtype=None):
+    def read(self, ndarray arr not None, TypeID mtype=None, is_unicode=[False]):
         """(NDARRAY arr, TypeID mtype=None)
 
         Read the attribute data into the given Numpy array.  Note that the
@@ -348,9 +348,14 @@ cdef class AttrID(ObjectID):
         try:
             space_id = H5Aget_space(self.id)
             check_numpy_write(arr, space_id)
+            is_unicode[0] = isinstance(self.get_type(), TypeStringID) and self.get_type().get_cset() == 1 \
+                    and not self.get_type().is_variable_str()
 
             if mtype is None:
                 mtype = py_create(arr.dtype)
+
+            if is_unicode[0]:
+                mtype = self.get_type()
 
             attr_rw(self.id, mtype.id, PyArray_DATA(arr), 1)
 
