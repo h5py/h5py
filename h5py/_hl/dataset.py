@@ -446,7 +446,16 @@ class Dataset(HLObject):
         # Perfom the actual read
         mspace = h5s.create_simple(mshape)
         fspace = selection.id
-        self.id.read(mspace, fspace, arr, mtype)
+
+        is_unicode = [False]
+        self.id.read(mspace, fspace, arr, mtype, is_unicode=is_unicode)
+
+        if is_unicode[0]:
+            def _gen(it):
+                for i in it:
+                    yield i.tobytes().decode('utf-8')
+            udtype = numpy.dtype(arr.dtype.str.replace('S', 'U'))
+            arr = numpy.fromiter(_gen(arr.flat), dtype=udtype)
 
         # Patch up the output for NumPy
         if len(names) == 1:
