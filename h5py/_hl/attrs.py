@@ -88,12 +88,15 @@ class AttributeManager(base.MutableMappingHDF5, base.CommonStateObject):
 
         attr.read(arr, mtype=htype)
 
-        if is_fl_unicode:
-            arr = convert_utf8_array(arr)
 
         if len(arr.shape) == 0:
+            if is_fl_unicode:
+                arr = numpy.array(arr.tobytes().decode('utf-8'))
             return arr[()]
+        elif is_fl_unicode:
+            arr = convert_utf8_array(arr)
         return arr
+
 
     @with_phil
     def __setitem__(self, name, value):

@@ -442,7 +442,8 @@ class Dataset(HLObject):
             if len(names) == 1:
                 arr = arr[names[0]]
             if is_fl_unicode:
-                arr = convert_utf8_array(arr)
+                #Match return of vlen unicode strings
+                arr = numpy.array(arr.tobytes().decode('utf-8'))
             if selection.mshape is None:
                 return arr[()]
             return arr
