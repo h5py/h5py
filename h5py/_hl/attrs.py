@@ -21,7 +21,7 @@ import numpy
 from .. import h5s, h5t, h5a
 from . import base
 from .base import phil, with_phil
-from .dataset import readtime_dtype
+from .dataset import readtime_dtype, convert_utf8_array
 from .datatype import Datatype
 
 
@@ -77,17 +77,19 @@ class AttributeManager(base.MutableMappingHDF5, base.CommonStateObject):
             
         arr = numpy.ndarray(shape, dtype=dtype, order='C')
 
-        #TODO: detect fixed-length unicodeness here instead of further down
-        #saves evil out params and some convuluted logic
-        is_unicode = [False]
-        attr.read(arr, mtype=htype, is_unicode=is_unicode)
+        is_fl_unicode = False
+        try:
+            is_fl_unicode = attr.get_type().get_cset() == 1 and not attr.get_type().is_variable_str()
+        except AttributeError, e:
+            pass
 
-        if is_unicode[0]:
-            def _gen(it):
-                for i in it:
-                    yield i.tobytes().decode('utf-8')
-            udtype = numpy.dtype(dtype.str.replace('S','U'))
-            arr = numpy.fromiter(_gen(arr.flat), dtype=udtype)
+        if is_fl_unicode:
+            htype.set_cset(1)
+
+        attr.read(arr, mtype=htype)
+
+        if is_fl_unicode:
+            arr = convert_utf8_array(arr)
 
         if len(arr.shape) == 0:
             return arr[()]

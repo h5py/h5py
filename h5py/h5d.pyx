@@ -17,7 +17,7 @@ from _objects cimport pdefault
 from numpy cimport ndarray, import_array, PyArray_DATA, NPY_WRITEABLE
 from utils cimport  check_numpy_read, check_numpy_write, \
                     convert_tuple, emalloc, efree
-from h5t cimport TypeID, typewrap, py_create, TypeStringID
+from h5t cimport TypeID, typewrap, py_create
 from h5s cimport SpaceID
 from h5p cimport PropID, propwrap
 from _proxy cimport dset_rw
@@ -140,7 +140,7 @@ cdef class DatasetID(ObjectID):
     @with_phil
     def read(self, SpaceID mspace not None, SpaceID fspace not None,
                    ndarray arr_obj not None, TypeID mtype=None,
-                   PropID dxpl=None, is_unicode=[False]):
+                   PropID dxpl=None):
         """ (SpaceID mspace, SpaceID fspace, NDARRAY arr_obj,
              TypeID mtype=None, PropDXID dxpl=None)
 
@@ -173,12 +173,6 @@ cdef class DatasetID(ObjectID):
         fspace_id = fspace.id
         plist_id = pdefault(dxpl)
         data = PyArray_DATA(arr_obj)
-
-        # Fixed length unicode hack
-        is_unicode[0] = isinstance(self.get_type(), TypeStringID) and self.get_type().get_cset() == 1 \
-                and not self.get_type().is_variable_str()
-        if is_unicode[0]:
-            H5Tset_cset(mtype.id, H5T_CSET_UTF8)
 
         dset_rw(self_id, mtype_id, mspace_id, fspace_id, plist_id, data, 1)
 
