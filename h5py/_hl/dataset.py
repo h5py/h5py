@@ -132,6 +132,19 @@ def make_new_dset(parent, shape=None, dtype=None, data=None,
 
     return dset_id
 
+def convert_utf8_array(arr):
+    """ Create a numpy unicode array from a numpy string array containing utf-8 bytes """
+
+    if not arr.dtype.kind == 'S':
+        raise TypeError("Array is not a string array")
+
+    def _gen(it):
+        for i in it:
+            yield i.tobytes().decode('utf-8')
+
+    udtype = numpy.dtype(arr.dtype.str.replace('S', 'U'))
+    return numpy.fromiter(_gen(arr.flat), dtype=udtype)
+
 
 class AstypeContext(object):
 
@@ -382,6 +395,17 @@ class Dataset(HLObject):
             new_dtype = readtime_dtype(self.id.dtype, names)
         mtype = h5t.py_create(new_dtype)
 
+        # Fixed length unicode strings need special care
+        # We read utf8 bytes into an ascii numpy array and convert later
+        is_fl_unicode = False
+        try:
+            is_fl_unicode = self.id.get_type().get_cset() == 1 and not self.id.get_type().is_variable_str()
+        except AttributeError:
+            pass
+
+        if is_fl_unicode:
+            mtype.set_cset(1)
+
         # === Special-case region references ====
 
         if len(args) == 1 and isinstance(args[0], h5r.RegionReference):
@@ -419,6 +443,9 @@ class Dataset(HLObject):
                 self.id.read(mspace, fspace, arr, mtype)
             if len(names) == 1:
                 arr = arr[names[0]]
+            if is_fl_unicode:
+                #Match return of vlen unicode strings
+                arr = numpy.array(arr.tobytes().decode('utf-8'))
             if selection.mshape is None:
                 return arr[()]
             return arr
@@ -446,7 +473,12 @@ class Dataset(HLObject):
         # Perfom the actual read
         mspace = h5s.create_simple(mshape)
         fspace = selection.id
+
+
         self.id.read(mspace, fspace, arr, mtype)
+
+        if is_fl_unicode:
+            arr = convert_utf8_array(arr)
 
         # Patch up the output for NumPy
         if len(names) == 1:

@@ -21,7 +21,7 @@ import numpy
 from .. import h5s, h5t, h5a
 from . import base
 from .base import phil, with_phil
-from .dataset import readtime_dtype
+from .dataset import readtime_dtype, convert_utf8_array
 from .datatype import Datatype
 
 
@@ -76,11 +76,27 @@ class AttributeManager(base.MutableMappingHDF5, base.CommonStateObject):
             dtype = subdtype                # 'f'
             
         arr = numpy.ndarray(shape, dtype=dtype, order='C')
+
+        is_fl_unicode = False
+        try:
+            is_fl_unicode = attr.get_type().get_cset() == 1 and not attr.get_type().is_variable_str()
+        except AttributeError:
+            pass
+
+        if is_fl_unicode:
+            htype.set_cset(1)
+
         attr.read(arr, mtype=htype)
 
+
         if len(arr.shape) == 0:
+            if is_fl_unicode:
+                arr = numpy.array(arr.tobytes().decode('utf-8'))
             return arr[()]
+        elif is_fl_unicode:
+            arr = convert_utf8_array(arr)
         return arr
+
 
     @with_phil
     def __setitem__(self, name, value):
