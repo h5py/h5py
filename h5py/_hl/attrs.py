@@ -80,7 +80,7 @@ class AttributeManager(base.MutableMappingHDF5, base.CommonStateObject):
         is_fl_unicode = False
         try:
             is_fl_unicode = attr.get_type().get_cset() == 1 and not attr.get_type().is_variable_str()
-        except AttributeError, e:
+        except AttributeError:
             pass
 
         if is_fl_unicode:

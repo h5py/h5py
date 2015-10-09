@@ -133,6 +133,8 @@ def make_new_dset(parent, shape=None, dtype=None, data=None,
     return dset_id
 
 def convert_utf8_array(arr):
+    """ Create a numpy unicode array from a numpy string array containing utf-8 bytes """
+
     if not arr.dtype.kind == 'S':
         raise TypeError("Array is not a string array")
 
