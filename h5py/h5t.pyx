@@ -1078,6 +1078,7 @@ cdef class TypeCompoundID(TypeCompositeID):
         cdef int nfields
         field_names = []
         field_types = []
+        field_offsets = []
         nfields = self.get_nmembers()
 
         # First step: read field names and their Numpy dtypes into 
@@ -1087,6 +1088,7 @@ cdef class TypeCompoundID(TypeCompositeID):
             name = self.get_member_name(i)
             field_names.append(name)
             field_types.append(tmp_type.py_dtype())
+            field_offsets.append(self.get_member_offset(i))
 
 
         # 1. Check if it should be converted to a complex number
@@ -1104,7 +1106,7 @@ cdef class TypeCompoundID(TypeCompositeID):
         else:
             if sys.version[0] == '3':
                 field_names = [x.decode('utf8') for x in field_names]
-            typeobj = dtype(list(zip(field_names, field_types)))
+            typeobj = dtype({'names': field_names, 'formats': field_types, 'offsets': field_offsets})
 
         return typeobj
 
