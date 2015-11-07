@@ -81,7 +81,7 @@ class DimensionProxy(base.CommonStateObject):
                     
             res = h5ds.iterate(self._id, self._dimension, f, 0)
             if res is None:
-                raise KeyError('%s not found' % item)
+                raise KeyError(item)
             return Dataset(res)
 
     def attach_scale(self, dset):
