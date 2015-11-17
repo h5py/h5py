@@ -27,9 +27,8 @@ MEM_NTYPES = H5FD_MEM_NTYPES
 
 # === MPI driver ==============================================================
 
-IF MPI:
-    MPIO_INDEPENDENT = H5FD_MPIO_INDEPENDENT
-    MPIO_COLLECTIVE = H5FD_MPIO_COLLECTIVE
+MPIO_INDEPENDENT = H5FD_MPIO_INDEPENDENT
+MPIO_COLLECTIVE = H5FD_MPIO_COLLECTIVE
 
 # === Driver types ============================================================
 

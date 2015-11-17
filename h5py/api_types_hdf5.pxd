@@ -171,9 +171,9 @@ cdef extern from "hdf5.h":
   int H5FD_LOG_ALLOC      # 0x4000
   int H5FD_LOG_ALL        # (H5FD_LOG_ALLOC|H5FD_LOG_TIME_IO|H5FD_LOG_NUM_IO|H5FD_LOG_FLAVOR|H5FD_LOG_FILE_IO|H5FD_LOG_LOC_IO)
   IF MPI:
-      ctypedef enum H5FD_mpio_xfer_t:
-	H5FD_MPIO_INDEPENDENT = 0,
-	H5FD_MPIO_COLLECTIVE
+    ctypedef enum H5FD_mpio_xfer_t:
+     H5FD_MPIO_INDEPENDENT = 0,
+     H5FD_MPIO_COLLECTIVE
 
 # === H5G - Groups API ========================================================
 
