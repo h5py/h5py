@@ -1,0 +1,24 @@
+rm -rf build/
+rm -rf h5py/*.c
+rm -rf h5py/dist
+rm *.egg
+rm -rf *.egg/
+rm h5config.pkl
+rm *.pyc
+rm -rf /global/cscratch1/sd/jialin/h5py-test-install
+mkdir -p /global/cscratch1/sd/jialin/h5py-test-install
+mkdir -p /global/cscratch1/sd/jialin/h5py-test-install/lib/python2.7/site-packages
+module swap PrgEnv-intel PrgEnv-gnu
+module load python
+module load mpi4py
+module unload cray-hdf5-parallel
+python setup.py configure -r
+python setup.py configure --hdf5-version=1.8.15 
+export CRAYPE_LINK_TYPE=dynamic
+python setup.py configure --mpi --hdf5=/global/homes/j/jialin/packages/pkg-install/hdf5-1.8.15
+export CC=cc
+export PYTHONPATH=$PYTHONPATH:/global/cscratch1/sd/jialin/h5py-test-install/lib/python2.7/site-packages
+python -W ignore setup.py build
+python setup.py install --prefix=/global/cscratch1/sd/jialin/h5py-test-install
+ls
+
