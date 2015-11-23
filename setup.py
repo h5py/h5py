@@ -24,6 +24,16 @@ import setup_build, setup_configure
 
 VERSION = '2.5.0'
 
+NUMPY_DEP = 'numpy>=1.6.1'
+
+# these are required to use h5py
+RUN_REQUIRES = [NUMPY_DEP, 'six']
+
+# these are required to build h5py
+# RUN_REQUIRES is included as setup.py test needs RUN_REQUIRES for testing
+# RUN_REQUIRES can be removed when setup.py test is removed
+SETUP_REQUIRES = RUN_REQUIRES + [NUMPY_DEP, 'Cython>=0.19', 'pkgconfig']
+
 
 # --- Custom Distutils commands -----------------------------------------------
 
@@ -134,8 +144,7 @@ setup(
   packages = ['h5py', 'h5py._hl', 'h5py.tests', 'h5py.tests.old', 'h5py.tests.hl'],
   package_data = package_data,
   ext_modules = [Extension('h5py.x',['x.c'])],  # To trick build into running build_ext
-  requires = ['numpy (>=1.6.1)', 'Cython (>=0.17)'],
-  install_requires = ['numpy>=1.6.1', 'Cython>=0.17', 'six'],
-  setup_requires = ['numpy>=1.6.1', 'Cython>=0.17', 'pkgconfig', 'six'],
+  install_requires = RUN_REQUIRES,
+  setup_requires = SETUP_REQUIRES,
   cmdclass = CMDCLASS,
 )
