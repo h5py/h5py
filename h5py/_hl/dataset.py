@@ -175,6 +175,11 @@ class Dataset(HLObject):
         return DimensionManager(self)
 
     @property
+    def ndim(self):
+        """Numpy-style attribute giving the number of dimensions"""
+        return self.id.rank
+
+    @property
     @with_phil
     def shape(self):
         """Numpy-style shape tuple giving dataset dimensions"""
