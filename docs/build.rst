@@ -66,7 +66,7 @@ You will need:
 
 * The h5py tarball from http://www.h5py.org.
 * NumPy 1.6.1 or newer
-* `Cython <http://cython.org>`_ 0.17 or newer
+* `Cython <http://cython.org>`_ 0.19 or newer
 
 ::
 
