@@ -305,7 +305,7 @@ class Dataset(HLObject):
         HLObject.__init__(self, bind)
 
         self._dcpl = self.id.get_create_plist()
-	self._dxpl = h5p.create(h5p.DATASET_XFER)
+        self._dxpl = h5p.create(h5p.DATASET_XFER)
         self._filters = filters.get_filters(self._dcpl)
         self._local = local()
         self._local.astype = None
