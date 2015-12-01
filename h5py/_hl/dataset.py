@@ -185,7 +185,7 @@ class Dataset(HLObject):
 
     if MPI:
         @property
-	@with_phil
+        @with_phil
         def collective(self):
             """ Context manager for MPI collective reads & writes """
             return CollectiveContext(self)
