@@ -25,7 +25,7 @@ You need, at a minimum:
 To build on UNIX:
 
 * HDF5 1.8.4 or later (on Windows, HDF5 comes with h5py)
-* Cython 0.17 or later
+* Cython 0.19 or later
 * If using Python 2.6, unittest2 is needed to run the tests
 
 Installing on Windows

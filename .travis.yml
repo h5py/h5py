@@ -3,22 +3,27 @@ language: python
 notifications:
   email: false
 
-python:
-  - "2.6"
-  - "2.7"
-  - "3.2"
-  - "3.3"
-  - "3.4"
+env:
+# Commented out since setup_requires is controlled by easy_install
+# This should be uncommented when pip can use setup_requires
+#  - TOXENV=py26-test-nodeps
+#  - TOXENV=py27-test-nodeps
+#  - TOXENV=py32-test-nodeps
+#  - TOXENV=py33-test-nodeps
+#  - TOXENV=py34-test-nodeps
+  - TOXENV=py26-test-deps
+  - TOXENV=py27-test-deps
+  - TOXENV=py32-test-deps
+  - TOXENV=py33-test-deps
+  - TOXENV=py34-test-deps
+  - TOXENV=py27-pylint-deps
+  - TOXENV=py33-pylint-deps
+  - TOXENV=py34-pylint-deps
 
 install:
-    - sudo apt-get update -qq
-    - sudo apt-get install -qq libhdf5-serial-dev
-    - if [[ $TRAVIS_PYTHON_VERSION == "2.6" ]]; then pip install unittest2; fi
-    - pip install numpy
-    - pip install --install-option="--no-cython-compile" cython
-    - if [[ $TRAVIS_PYTHON_VERSION != "2.6" && $TRAVIS_PYTHON_VERSION != "3.2" ]]; then pip install pylint; fi
+  - sudo apt-get update -qq
+  - sudo apt-get install -qq libhdf5-serial-dev
+  - pip install tox
 
 script:
-    - if [[ $TRAVIS_PYTHON_VERSION != "2.6" && $TRAVIS_PYTHON_VERSION != "3.2" ]]; then pylint h5py; fi
-    - python setup.py build -f
-    - python setup.py test
+  - tox
