@@ -3,6 +3,17 @@ language: python
 notifications:
   email: false
 
+addons:
+  apt:
+    packages:
+      - libhdf5-serial-dev
+
+sudo: false
+
+cache:
+  directories:
+    - $HOME/.cache/pip
+
 env:
 # Commented out since setup_requires is controlled by easy_install
 # This should be uncommented when pip can use setup_requires
@@ -21,8 +32,6 @@ env:
   - TOXENV=py34-pylint-deps
 
 install:
-  - sudo apt-get update -qq
-  - sudo apt-get install -qq libhdf5-serial-dev
   - pip install tox
 
 script:
