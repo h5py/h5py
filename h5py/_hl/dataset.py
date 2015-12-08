@@ -163,9 +163,11 @@ if MPI:
             self._dset = dset
 
         def __enter__(self):
+            # pylint: disable=protected-access
             self._dset._dxpl.set_dxpl_mpio(h5fd.MPIO_COLLECTIVE)
 
         def __exit__(self, *args):
+            # pylint: disable=protected-access
             self._dset._dxpl.set_dxpl_mpio(h5fd.MPIO_INDEPENDENT)
 
 class Dataset(HLObject):
