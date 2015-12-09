@@ -58,6 +58,14 @@ class TestEmpty(TestCase):
         dsid = h5py.h5d.create(self.f.id, b'x', tid, sid)
         self.dset = h5py.Dataset(dsid)
         
+    def test_ndim(self):
+        """ Verify number of dimensions """
+        self.assertEquals(self.dset.ndim, 0)
+        
+    def test_shape(self):
+        """ Verify shape """
+        self.assertEquals(self.dset.shape, tuple())
+        
     def test_ellipsis(self):
         """ Ellipsis -> IOError """
         with self.assertRaises(IOError):
@@ -101,6 +109,14 @@ class TestScalarFloat(TestCase):
         TestCase.setUp(self)
         self.data = np.array(42.5, dtype='f')
         self.dset = self.f.create_dataset('x', data=self.data)
+        
+    def test_ndim(self):
+        """ Verify number of dimensions """
+        self.assertEquals(self.dset.ndim, 0)
+        
+    def test_shape(self):
+        """ Verify shape """
+        self.assertEquals(self.dset.shape, tuple())
 
     def test_ellipsis(self):
         """ Ellipsis -> scalar ndarray """
@@ -147,6 +163,14 @@ class TestScalarCompound(TestCase):
         TestCase.setUp(self)
         self.data = np.array((42.5, -118, "Hello"), dtype=[('a', 'f'), ('b', 'i'), ('c', '|S10')])
         self.dset = self.f.create_dataset('x', data=self.data)
+        
+    def test_ndim(self):
+        """ Verify number of dimensions """
+        self.assertEquals(self.dset.ndim, 0)
+        
+    def test_shape(self):
+        """ Verify shape """
+        self.assertEquals(self.dset.shape, tuple())
 
     def test_ellipsis(self):
         """ Ellipsis -> scalar ndarray """
@@ -201,6 +225,16 @@ class TestScalarArray(TestCase):
         self.data = np.array([(3.2, -119), (42, 99.8), (3.14, 0)], dtype='f')
         self.dset = self.f.create_dataset('x', (), dtype=self.dt)
         self.dset[...] = self.data
+        
+    def test_ndim(self):
+        """ Verify number of dimensions """
+        self.assertEquals(self.data.ndim, 2)
+        self.assertEquals(self.dset.ndim, 0)
+        
+    def test_shape(self):
+        """ Verify shape """
+        self.assertEquals(self.data.shape, (3, 2))
+        self.assertEquals(self.dset.shape, tuple())
 
     def test_ellipsis(self):
         """ Ellipsis -> ndarray promoted to underlying shape """
@@ -246,6 +280,14 @@ class Test1DZeroFloat(TestCase):
         TestCase.setUp(self)
         self.data = np.ones((0,), dtype='f')
         self.dset = self.f.create_dataset('x', data=self.data)
+        
+    def test_ndim(self):
+        """ Verify number of dimensions """
+        self.assertEquals(self.dset.ndim, 0)
+        
+    def test_shape(self):
+        """ Verify shape """
+        self.assertEquals(self.dset.shape, (0,))
 
     def test_ellipsis(self):
         """ Ellipsis -> ndarray of matching shape """
@@ -290,6 +332,14 @@ class Test1DFloat(TestCase):
         TestCase.setUp(self)
         self.data = np.arange(13).astype('f')
         self.dset = self.f.create_dataset('x', data=self.data)
+        
+    def test_ndim(self):
+        """ Verify number of dimensions """
+        self.assertEquals(self.dset.ndim, 1)
+        
+    def test_shape(self):
+        """ Verify shape """
+        self.assertEquals(self.dset.shape, (13,))
 
     def test_ellipsis(self):
         self.assertNumpyBehavior(self.dset, self.data, np.s_[...])
@@ -397,6 +447,14 @@ class Test2DZeroFloat(TestCase):
         TestCase.setUp(self)
         self.data = np.ones((0,3), dtype='f')
         self.dset = self.f.create_dataset('x', data=self.data)
+        
+    def test_ndim(self):
+        """ Verify number of dimensions """
+        self.assertEquals(self.dset.ndim, 2)
+        
+    def test_shape(self):
+        """ Verify shape """
+        self.assertEquals(self.dset.shape, (0, 3))
         
     @ut.expectedFailure
     def test_indexlist(self):
