@@ -201,6 +201,7 @@ class Dataset(HLObject):
         return DimensionManager(self)
 
     @property
+    @with_phil
     def ndim(self):
         """Numpy-style attribute giving the number of dimensions"""
         return self.id.rank
