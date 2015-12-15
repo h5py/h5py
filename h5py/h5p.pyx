@@ -1374,6 +1374,33 @@ cdef class PropDAID(PropInstanceID):
             H5Pget_virtual_view(self.id, &view)
             return <unsigned int>view
 
+        @with_phil
+        def set_virtual_printf_gap(self, hsize_t gap_size=0):
+            """(LONG gap_size=0)
+
+            Set the maximum number of missing source files and/or datasets
+            with the printf-style names when getting the extent of an unlimited
+            virtual dataset.
+
+            Instruct the library to stop looking for the mapped data stored in
+            the files and/or datasets with the printf-style names after not
+            finding gap_size files and/or datasets. The found source files and
+            datasets will determine the extent of the unlimited virtual dataset
+            with the printf-style mappings. Default value: 0.
+            """
+            H5Pset_virtual_printf_gap(self.id, gap_size)
+
+        @with_phil
+        def get_virtual_printf_gap(self):
+            """() => LONG gap_size
+
+            Return the maximum number of missing source files and/or datasets
+            with the printf-style names when getting the extent for an
+            unlimited virtual dataset.
+            """
+            cdef hsize_t gap_size
+            H5Pget_virtual_printf_gap(self.id, &gap_size)
+            return gap_size
 
 cdef class PropDXID(PropInstanceID):
 
