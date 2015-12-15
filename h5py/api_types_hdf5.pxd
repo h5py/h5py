@@ -51,6 +51,12 @@ cdef extern from "hdf5.h":
         H5D_CHUNKED         = 2,
         H5D_VIRTUAL         = 3,
         H5D_NLAYOUTS        = 4
+
+    ctypedef enum H5D_vds_view_t:
+        H5D_VDS_ERROR           = -1,
+        H5D_VDS_FIRST_MISSING   = 0,
+        H5D_VDS_LAST_AVAILABLE  = 1
+
   ELSE:
     ctypedef enum H5D_layout_t:
         H5D_LAYOUT_ERROR    = -1,

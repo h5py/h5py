@@ -32,7 +32,7 @@
 hdf5:
 
   # === H5 - General library functions ========================================
-  
+
   herr_t    H5open()
   herr_t    H5close()
   herr_t    H5get_libversion(unsigned *majnum, unsigned *minnum, unsigned *relnum)
@@ -78,7 +78,7 @@ hdf5:
 
 
   # === H5D - Dataset API =====================================================
-  
+
   hid_t     H5Dcreate2(hid_t loc_id, char *name, hid_t type_id, hid_t space_id, hid_t lcpl_id, hid_t dcpl_id, hid_t dapl_id)
   hid_t     H5Dcreate_anon(hid_t file_id, hid_t type_id, hid_t space_id, hid_t plist_id, hid_t dapl_id)
 
@@ -106,17 +106,17 @@ hdf5:
 
   herr_t    H5Diterate(void *buf, hid_t type_id, hid_t space_id,  H5D_operator_t op, void* operator_data)
   herr_t    H5Dset_extent(hid_t dset_id, hsize_t* size)
-  
+
   # SWMR functions
   1.9.178   herr_t H5Dflush(hid_t dataset_id)
   1.9.178   herr_t H5Drefresh(hid_t dataset_id)
-  
-  
+
+
   # === H5E - Minimal error-handling interface ================================
-  
+
   # This is used only for defs.py, to disable printing in new threads
   herr_t H5Eset_auto(void* a, void* b)
-    
+
 
   # === H5F - File API ========================================================
 
@@ -148,7 +148,7 @@ hdf5:
   # MPI functions
   MPI 1.8.9 herr_t H5Fset_mpi_atomicity(hid_t file_id, hbool_t flag)
   MPI 1.8.9 herr_t H5Fget_mpi_atomicity(hid_t file_id, hbool_t *flag)
-  
+
   # SWMR functions
   1.9.178   herr_t H5Fstart_swmr_write(hid_t file_id)
 
@@ -314,6 +314,8 @@ hdf5:
   H5Z_EDC_t H5Pget_edc_check(hid_t plist)
   herr_t    H5Pset_chunk_cache( hid_t dapl_id, size_t rdcc_nslots, size_t rdcc_nbytes, double rdcc_w0 )
   herr_t    H5Pget_chunk_cache( hid_t dapl_id, size_t *rdcc_nslots, size_t *rdcc_nbytes, double *rdcc_w0 )
+  1.9.233 herr_t H5Pset_virtual_view(hid_t plist_id, H5D_vds_view_t view)
+  1.9.233 herr_t H5Pget_virtual_view(hid_t plist_id, H5D_vds_view_t *view)
 
   MPI herr_t H5Pset_dxpl_mpio( hid_t dxpl_id, H5FD_mpio_xfer_t xfer_mode )
   MPI herr_t H5Pget_dxpl_mpio( hid_t dxpl_id, H5FD_mpio_xfer_t* xfer_mode )
@@ -356,7 +358,7 @@ hdf5:
   herr_t    H5Pset_alignment(hid_t plist_id, hsize_t threshold, hsize_t alignment)
   herr_t    H5Pget_alignment(hid_t plist_id, hsize_t *threshold, hsize_t *alignment)
 
-  # MPI functions  
+  # MPI functions
   MPI herr_t H5Pset_fapl_mpio(hid_t fapl_id, MPI_Comm comm, MPI_Info info)
   MPI herr_t H5Pget_fapl_mpio(hid_t fapl_id, MPI_Comm *comm, MPI_Info *info)
 
@@ -520,7 +522,7 @@ hdf5_hl:
 
   ERROR herr_t  H5DSset_label(hid_t did, unsigned int idx, char *label)
   ERROR ssize_t H5DSget_label(hid_t did, unsigned int idx, char *label, size_t size)
-  
+
   ERROR ssize_t H5DSget_scale_name(hid_t did, char *name, size_t size)
   ERROR htri_t  H5DSis_scale(hid_t did)
   ERROR herr_t  H5DSiterate_scales(hid_t did, unsigned int dim, int *idx, H5DS_iterate_t visitor, void *visitor_data)

@@ -388,7 +388,7 @@ cdef class PropDCID(PropOCID):
             - h5d.CHUNKED
             - h5d.VIRTUAL
             """
-            H5Pset_layout(self.id, layout_code)
+            H5Pset_layout(self.id, <H5D_layout_t>layout_code)
 
 
         @with_phil
@@ -1335,6 +1335,45 @@ cdef class PropDAID(PropInstanceID):
 
         H5Pget_chunk_cache(self.id, &rdcc_nslots, &rdcc_nbytes, &rdcc_w0 )
         return (rdcc_nslots,rdcc_nbytes,rdcc_w0)
+
+    # === Virtual dataset functions ===========================================
+    IF HDF5_VERSION >= VDS_MIN_HDF5_VERSION:
+
+        @with_phil
+        def set_virtual_view(self, unsigned int view):
+            """(UINT view)
+
+            Set the view of the virtual dataset (VDS) to include or exclude
+            missing mapped elements.
+
+            If view is set to h5d.VDS_FIRST_MISSING, the view includes all data
+            before the first missing mapped data. This setting provides a view
+            containing only the continuous data starting with the dataset’s
+            first data element. Any break in continuity terminates the view.
+
+            If view is set to h5d.VDS_LAST_AVAILABLE, the view includes all
+            available mapped data.
+
+            Missing mapped data is filled with the fill value set in the
+            virtual dataset's creation property list.
+            """
+            H5Pset_virtual_view(self.id, <H5D_vds_view_t>view)
+
+        @with_phil
+        def get_virtual_view(self):
+            """() => UINT view
+
+            Retrieve the view of the virtual dataset.
+
+            Valid values are:
+
+            - h5d.VDS_FIRST_MISSING
+            - h5d.VDS_LAST_AVAILABLE
+            """
+            cdef H5D_vds_view_t view
+            H5Pget_virtual_view(self.id, &view)
+            return <unsigned int>view
+
 
 cdef class PropDXID(PropInstanceID):
 
