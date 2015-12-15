@@ -786,6 +786,28 @@ cdef class PropDCID(PropOCID):
         fail.'''
         H5Pset_scaleoffset(self.id, scale_type, scale_factor)
 
+    # === Virtual dataset functions ===========================================
+    IF HDF5_VERSION >= VDS_MIN_HDF5_VERSION:
+
+        @with_phil
+        def get_virtual_dsetname(self, size_t index=0):
+            """(UINT index=0) => STR
+
+            Get the name of a source dataset used in the mapping of the virtual
+            dataset at the position index.
+            """
+            cdef char* name = NULL
+            cdef ssize_t size
+
+            size = H5Pget_virtual_dsetname(self.id, index, NULL, 0)
+            name = <char*>emalloc(size+1)
+            try:
+                H5Pget_virtual_dsetname(self.id, index, name, <size_t>size+1)
+                src_dset_name = name
+            finally:
+                efree(name)
+
+            return src_dset_name
 
 # File access
 cdef class PropFAID(PropInstanceID):
