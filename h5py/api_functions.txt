@@ -309,6 +309,7 @@ hdf5:
   herr_t        H5Pset_szip(hid_t plist, unsigned int options_mask, unsigned int pixels_per_block)
   herr_t        H5Pset_scaleoffset(hid_t plist, H5Z_SO_scale_type_t scale_type, int scale_factor)
   1.9.233 ssize_t H5Pget_virtual_dsetname(hid_t dcpl_id, size_t index, char *name, size_t size)
+  1.9.233 ssize_t H5Pget_virtual_filename(hid_t dcpl_id, size_t index, char *name, size_t size)
 
   # Dataset access
   herr_t    H5Pset_edc_check(hid_t plist, H5Z_EDC_t check)
