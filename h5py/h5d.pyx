@@ -33,6 +33,8 @@ import_array()
 COMPACT     = H5D_COMPACT
 CONTIGUOUS  = H5D_CONTIGUOUS
 CHUNKED     = H5D_CHUNKED
+IF HDF5_VERSION >= VDS_MIN_HDF5_VERSION:
+    VIRTUAL = H5D_VIRTUAL
 
 ALLOC_TIME_DEFAULT  = H5D_ALLOC_TIME_DEFAULT
 ALLOC_TIME_LATE     = H5D_ALLOC_TIME_LATE
@@ -353,41 +355,41 @@ cdef class DatasetID(ObjectID):
             may even be zero.
         """
         return H5Dget_storage_size(self.id)
-        
+
     IF HDF5_VERSION >= SWMR_MIN_HDF5_VERSION:
 
         @with_phil
         def flush(self):
             """ no return
-            
+
             Flushes all buffers associated with a dataset to disk.
-            
-            This function causes all buffers associated with a dataset to be 
+
+            This function causes all buffers associated with a dataset to be
             immediately flushed to disk without removing the data from the cache.
-            
+
             Use this in SWMR write mode to allow readers to be updated with the
             dataset changes.
-            
+
             Feature requires: 1.9.178 HDF5
-            """ 
+            """
             H5Dflush(self.id)
 
         @with_phil
         def refresh(self):
             """ no return
-            
-            Refreshes all buffers associated with a dataset. 
-            
+
+            Refreshes all buffers associated with a dataset.
+
             This function causes all buffers associated with a dataset to be
             cleared and immediately re-loaded with updated contents from disk.
-            
+
             This function essentially closes the dataset, evicts all metadata
             associated with it from the cache, and then re-opens the dataset.
-            The reopened dataset is automatically re-registered with the same ID. 
-            
+            The reopened dataset is automatically re-registered with the same ID.
+
             Use this in SWMR read mode to poll for dataset changes.
-            
+
             Feature requires: 1.9.178 HDF5
-            """ 
+            """
             H5Drefresh(self.id)
 
