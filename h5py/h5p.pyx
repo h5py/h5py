@@ -853,6 +853,24 @@ cdef class PropDCID(PropOCID):
 
             return src_fname
 
+        @with_phil
+        def get_virtual_vspace(self, size_t index=0):
+            """(UINT index=0) => SpaceID
+
+            Get a dataspace for the selection within the virtual dataset used
+            in the mapping.
+            """
+            return SpaceID(H5Pget_virtual_vspace(self.id, index))
+
+        @with_phil
+        def get_virtual_srcspace(self, size_t index=0):
+            """(UINT index=0) => SpaceID
+
+            Get a dataspace for the selection within the source dataset used
+            in the mapping.
+            """
+            return SpaceID(H5Pget_virtual_srcspace(self.id, index))
+
 # File access
 cdef class PropFAID(PropInstanceID):
 
