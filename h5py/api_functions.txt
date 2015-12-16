@@ -419,6 +419,9 @@ hdf5:
   herr_t    H5Sencode(hid_t obj_id, void *buf, size_t *nalloc)
   hid_t     H5Sdecode(void *buf)
 
+  1.9.233 htri_t H5Sis_regular_hyperslab(hid_t spaceid)
+  1.9.233 htri_t H5Sget_regular_hyperslab(hid_t spaceid, hsize_t* start, hsize_t* stride, hsize_t* count, hsize_t* block)
+
 
   # === H5T - Datatypes =========================================================
 
