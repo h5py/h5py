@@ -19,6 +19,7 @@ from utils cimport  require_tuple, convert_dims, convert_tuple, \
                     check_numpy_write, check_numpy_read
 from numpy cimport ndarray, import_array
 from h5t cimport TypeID, py_create
+from h5s cimport SpaceID
 from h5ac cimport CacheConfig
 from h5py import _objects
 
@@ -415,7 +416,6 @@ cdef class PropDCID(PropOCID):
             - h5d.COMPACT
             - h5d.CONTIGUOUS
             - h5d.CHUNKED
-            - h5d.VIRTUAL
             """
             H5Pset_layout(self.id, layout_code)
 
@@ -429,7 +429,6 @@ cdef class PropDCID(PropOCID):
             - h5d.COMPACT
             - h5d.CONTIGUOUS
             - h5d.CHUNKED
-            - h5d.VIRTUAL
             """
             return <int>H5Pget_layout(self.id)
 
@@ -787,7 +786,22 @@ cdef class PropDCID(PropOCID):
         H5Pset_scaleoffset(self.id, scale_type, scale_factor)
 
     # === Virtual dataset functions ===========================================
+
     IF HDF5_VERSION >= VDS_MIN_HDF5_VERSION:
+
+        @with_phil
+        def set_virtual(self, SpaceID vspace not None, char* src_file_name,
+                        char* src_dset_name, SpaceID src_space not None):
+            """(SpaceID vspace, STR src_file_name, STR src_dset_name, SpaceID src_space)
+
+            Set the mapping between virtual and source datasets.
+
+            The virtual dataset is described by its virtual dataspace (vspace)
+            to the elements. The source dataset is described by the name of the
+            file where it is located (src_file_name), the name of the dataset
+            (src_dset_name) and its dataspace (src_space).
+            """
+            H5Pset_virtual(self.id, vspace.id, src_file_name, src_dset_name, src_space.id)
 
         @with_phil
         def get_virtual_count(self):

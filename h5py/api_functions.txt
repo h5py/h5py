@@ -311,6 +311,7 @@ hdf5:
   1.9.233 ssize_t H5Pget_virtual_dsetname(hid_t dcpl_id, size_t index, char *name, size_t size)
   1.9.233 ssize_t H5Pget_virtual_filename(hid_t dcpl_id, size_t index, char *name, size_t size)
   1.9.233 herr_t H5Pget_virtual_count(hid_t dcpl_id, size_t *count)
+  1.9.233 herr_t H5Pset_virtual(hid_t dcpl_id, hid_t vspace_id, const char *src_file_name, const char *src_dset_name, hid_t src_space_id)
 
   # Dataset access
   herr_t    H5Pset_edc_check(hid_t plist, H5Z_EDC_t check)
