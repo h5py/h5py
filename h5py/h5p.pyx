@@ -790,6 +790,16 @@ cdef class PropDCID(PropOCID):
     IF HDF5_VERSION >= VDS_MIN_HDF5_VERSION:
 
         @with_phil
+        def get_virtual_count(self):
+            """() => UINT
+
+            Get the number of mappings for the virtual dataset.
+            """
+            cdef size_t count
+            H5Pget_virtual_count(self.id, &count)
+            return count
+
+        @with_phil
         def get_virtual_dsetname(self, size_t index=0):
             """(UINT index=0) => STR
 
