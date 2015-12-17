@@ -283,7 +283,7 @@ class Test1DZeroFloat(TestCase):
         
     def test_ndim(self):
         """ Verify number of dimensions """
-        self.assertEquals(self.dset.ndim, 0)
+        self.assertEquals(self.dset.ndim, 1)
         
     def test_shape(self):
         """ Verify shape """
