@@ -4,7 +4,7 @@
 Author:  Jialin Liu, jalnliu@lbl.gov
 Date:    Nov 17, 2015
 Prerequisites: python 2.5.0, mpi4py and numpy
-Source Codes: Already submit this 'collective io' branch to h5py master, meanwhile, can download this branch at https://github.com/valiantljk/h5py.git
+Source Codes: This 'collective io' branch is pushed into the h5py master
 Note: Must build the h5py with parallel hdf5
 """
 
