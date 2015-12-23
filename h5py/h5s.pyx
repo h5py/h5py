@@ -597,10 +597,10 @@ cdef class SpaceID(ObjectID):
             cdef hsize_t* count_array = NULL
             cdef hsize_t* stride_array = NULL
             cdef hsize_t* block_array = NULL
-            cdef tuple start = ()
-            cdef tuple stride = ()
-            cdef tuple count = ()
-            cdef tuple block = ()
+            cdef list start = []
+            cdef list stride = []
+            cdef list count = []
+            cdef list block = []
             cdef int i
 
             rank = H5Sget_simple_extent_ndims(self.id)
@@ -613,12 +613,12 @@ cdef class SpaceID(ObjectID):
                                          count_array, block_array)
 
                 for i in range(rank):
-                    start[i] = start_array[i]
-                    stride[i] = stride_array[i]
-                    count[i] = count_array[i]
-                    block[i] = block_array[i]
+                    start.append(start_array[i])
+                    stride.append(stride_array[i])
+                    count.append(count_array[i])
+                    block.append(block_array[i])
 
-                return (start, stride, count, block)
+                return (tuple(start), tuple(stride), tuple(count), tuple(block))
 
             finally:
                 efree(start_array)
