@@ -175,7 +175,7 @@ DEF MPI = %(mpi)s
 DEF MPI4PY_V2 = %(mpi4py_v2)s
 DEF HDF5_VERSION = %(version)s
 DEF SWMR_MIN_HDF5_VERSION = (1,9,178)
-DEF VDS_MIN_HDF5_VERSION = (1,10,0)
+DEF VDS_MIN_HDF5_VERSION = (1,9,233)
 """
                 s %= {'mpi': bool(config.mpi),
                       'mpi4py_v2': bool(v2),
