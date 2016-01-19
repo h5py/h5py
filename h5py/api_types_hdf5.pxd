@@ -43,22 +43,13 @@ cdef extern from "hdf5.h":
 
 # === H5D - Dataset API =======================================================
 
-  IF HDF5_VERSION >= VDS_MIN_HDF5_VERSION:
-    ctypedef enum H5D_layout_t:
-        H5D_LAYOUT_ERROR    = -1,
-        H5D_COMPACT         = 0,
-        H5D_CONTIGUOUS      = 1,
-        H5D_CHUNKED         = 2,
-        H5D_VIRTUAL         = 3,
-        H5D_NLAYOUTS        = 4
-
-  ELSE:
-    ctypedef enum H5D_layout_t:
-        H5D_LAYOUT_ERROR    = -1,
-        H5D_COMPACT         = 0,
-        H5D_CONTIGUOUS      = 1,
-        H5D_CHUNKED         = 2,
-        H5D_NLAYOUTS        = 3
+  ctypedef enum H5D_layout_t:
+      H5D_LAYOUT_ERROR    = -1,
+      H5D_COMPACT         = 0,
+      H5D_CONTIGUOUS      = 1,
+      H5D_CHUNKED         = 2,
+      H5D_VIRTUAL         = 3,  # New in 1.10
+      H5D_NLAYOUTS        = 4
 
   IF HDF5_VERSION >= VDS_MIN_HDF5_VERSION:
     ctypedef enum H5D_vds_view_t:

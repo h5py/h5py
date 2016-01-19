@@ -376,62 +376,32 @@ cdef class PropDCID(PropOCID):
         Dataset creation property list.
     """
 
-    IF HDF5_VERSION >= VDS_MIN_HDF5_VERSION:
+    @with_phil
+    def set_layout(self, int layout_code):
+        """(INT layout_code)
 
-        @with_phil
-        def set_layout(self, int layout_code):
-            """(INT layout_code)
+        Set dataset storage strategy; legal values are:
 
-            Set dataset storage strategy; legal values are:
-
-            - h5d.COMPACT
-            - h5d.CONTIGUOUS
-            - h5d.CHUNKED
-            - h5d.VIRTUAL
-            """
-            H5Pset_layout(self.id, <H5D_layout_t>layout_code)
+        - h5d.COMPACT
+        - h5d.CONTIGUOUS
+        - h5d.CHUNKED
+        - h5d.VIRTUAL (If using HDF5 library version 1.10 or later)
+        """
+        H5Pset_layout(self.id, <H5D_layout_t>layout_code)
 
 
-        @with_phil
-        def get_layout(self):
-            """() => INT layout_code
+    @with_phil
+    def get_layout(self):
+        """() => INT layout_code
 
-            Determine the storage strategy of a dataset; legal values are:
+        Determine the storage strategy of a dataset; legal values are:
 
-            - h5d.COMPACT
-            - h5d.CONTIGUOUS
-            - h5d.CHUNKED
-            - h5d.VIRTUAL
-            """
-            return <int>H5Pget_layout(self.id)
-
-    ELSE:
-
-        @with_phil
-        def set_layout(self, int layout_code):
-            """(INT layout_code)
-
-            Set dataset storage strategy; legal values are:
-
-            - h5d.COMPACT
-            - h5d.CONTIGUOUS
-            - h5d.CHUNKED
-            """
-            H5Pset_layout(self.id, layout_code)
-
-
-        @with_phil
-        def get_layout(self):
-            """() => INT layout_code
-
-            Determine the storage strategy of a dataset; legal values are:
-
-            - h5d.COMPACT
-            - h5d.CONTIGUOUS
-            - h5d.CHUNKED
-            """
-            return <int>H5Pget_layout(self.id)
-
+        - h5d.COMPACT
+        - h5d.CONTIGUOUS
+        - h5d.CHUNKED
+        - h5d.VIRTUAL (If using HDF5 library version 1.10 or later)
+        """
+        return <int>H5Pget_layout(self.id)
 
     @with_phil
     def set_chunk(self, object chunksize):
