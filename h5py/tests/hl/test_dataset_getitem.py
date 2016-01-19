@@ -57,6 +57,7 @@ class TestEmpty(TestCase):
         tid.set_size(10)
         dsid = h5py.h5d.create(self.f.id, b'x', tid, sid)
         self.dset = h5py.Dataset(dsid)
+        self.empty_obj = h5py.Empty(np.dtype("S10"))
         
     def test_ndim(self):
         """ Verify number of dimensions """
@@ -64,17 +65,16 @@ class TestEmpty(TestCase):
         
     def test_shape(self):
         """ Verify shape """
-        self.assertEquals(self.dset.shape, tuple())
+        self.assertEquals(self.dset.shape, None)
         
     def test_ellipsis(self):
-        """ Ellipsis -> IOError """
-        with self.assertRaises(IOError):
+        """ Ellipsis -> ValueError """
+        with self.assertRaises(ValueError):
             out = self.dset[...]
         
     def test_tuple(self):
         """ () -> IOError """
-        with self.assertRaises(IOError):
-            out = self.dset[()]
+        self.assertEquals(self.dset[()], self.empty_obj)
         
     def test_slice(self):
         """ slice -> ValueError """

@@ -26,6 +26,7 @@ import numpy as np
 
 from .common import ut, TestCase
 from h5py.highlevel import File, Group, Dataset
+from h5py._hl.base import is_empty_dataspace
 from h5py import h5t
 import h5py
 
@@ -130,6 +131,13 @@ class TestCreateData(BaseDataset):
         # there was no test here!
         self.assertEqual(True, False)
 
+    def test_empty_create_via_None_shape(self):
+        self.f.create_dataset('foo', dtype='f')
+        self.assertTrue(is_empty_dataspace(self.f['foo'].id))
+
+    def test_empty_create_via_Empty_class(self):
+        self.f.create_dataset('foo', data=h5py.Empty(dtype='f'))
+        self.assertTrue(is_empty_dataspace(self.f['foo'].id))
 
 class TestCreateRequire(BaseDataset):
 

@@ -20,7 +20,7 @@ import six
 from collections import (Mapping, MutableMapping, KeysView, 
                          ValuesView, ItemsView)
 
-from .. import h5d, h5i, h5r, h5p, h5f, h5t
+from .. import h5d, h5i, h5r, h5p, h5f, h5t, h5s
 
 # The high-level interface is serialized; every public API function & method
 # is wrapped in a lock.  We re-use the low-level lock because (1) it's fast, 
@@ -78,6 +78,13 @@ def default_lcpl():
 
 dlapl = default_lapl()
 dlcpl = default_lcpl()
+
+
+def is_empty_dataspace(obj):
+    """ Check if an object's dataspace is empty """
+    if obj.get_space().get_simple_extent_type() == h5s.NULL:
+        return True
+    return False
 
 
 class CommonStateObject(object):
@@ -397,4 +404,25 @@ class MutableMappingHDF5(MappingHDF5, MutableMapping):
     """
 
     pass
-    
+
+
+class Empty(object):
+
+    """
+        Proxy object to represent empty/null dataspaces (a.k.a H5S_NULL).
+
+        This can have an associated dtype, but has no shape or data. This is not
+        the same as an array with shape (0,).
+    """
+    shape = None
+
+    def __init__(self, dtype):
+        self.dtype = dtype
+
+    def __eq__(self, other):
+        if isinstance(other, Empty) and self.dtype == other.dtype:
+            return True
+        return False
+
+    def __repr__(self):
+        return "Empty(dtype={0!r})".format(self.dtype)

@@ -247,6 +247,9 @@ cdef class SpaceID(ObjectID):
         cdef int rank
         cdef hsize_t* dims = NULL
 
+        if self.get_simple_extent_type() == H5S_NULL:
+            return None
+
         rank = H5Sget_simple_extent_dims(self.id, NULL, NULL)
 
         dims = <hsize_t*>emalloc(sizeof(hsize_t)*rank)
