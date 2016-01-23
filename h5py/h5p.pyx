@@ -19,6 +19,7 @@ from utils cimport  require_tuple, convert_dims, convert_tuple, \
                     check_numpy_write, check_numpy_read
 from numpy cimport ndarray, import_array
 from h5t cimport TypeID, py_create
+from h5s cimport SpaceID
 from h5ac cimport CacheConfig
 from h5py import _objects
 
@@ -375,7 +376,6 @@ cdef class PropDCID(PropOCID):
         Dataset creation property list.
     """
 
-
     @with_phil
     def set_layout(self, int layout_code):
         """(INT layout_code)
@@ -385,8 +385,9 @@ cdef class PropDCID(PropOCID):
         - h5d.COMPACT
         - h5d.CONTIGUOUS
         - h5d.CHUNKED
+        - h5d.VIRTUAL (If using HDF5 library version 1.10 or later)
         """
-        H5Pset_layout(self.id, layout_code)
+        H5Pset_layout(self.id, <H5D_layout_t>layout_code)
 
 
     @with_phil
@@ -398,9 +399,9 @@ cdef class PropDCID(PropOCID):
         - h5d.COMPACT
         - h5d.CONTIGUOUS
         - h5d.CHUNKED
+        - h5d.VIRTUAL (If using HDF5 library version 1.10 or later)
         """
         return <int>H5Pget_layout(self.id)
-
 
     @with_phil
     def set_chunk(self, object chunksize):
@@ -754,6 +755,91 @@ cdef class PropDCID(PropOCID):
         fail.'''
         H5Pset_scaleoffset(self.id, scale_type, scale_factor)
 
+    # === Virtual dataset functions ===========================================
+
+    IF HDF5_VERSION >= VDS_MIN_HDF5_VERSION:
+
+        @with_phil
+        def set_virtual(self, SpaceID vspace not None, char* src_file_name,
+                        char* src_dset_name, SpaceID src_space not None):
+            """(SpaceID vspace, STR src_file_name, STR src_dset_name, SpaceID src_space)
+
+            Set the mapping between virtual and source datasets.
+
+            The virtual dataset is described by its virtual dataspace (vspace)
+            to the elements. The source dataset is described by the name of the
+            file where it is located (src_file_name), the name of the dataset
+            (src_dset_name) and its dataspace (src_space).
+            """
+            H5Pset_virtual(self.id, vspace.id, src_file_name, src_dset_name, src_space.id)
+
+        @with_phil
+        def get_virtual_count(self):
+            """() => UINT
+
+            Get the number of mappings for the virtual dataset.
+            """
+            cdef size_t count
+            H5Pget_virtual_count(self.id, &count)
+            return count
+
+        @with_phil
+        def get_virtual_dsetname(self, size_t index=0):
+            """(UINT index=0) => STR
+
+            Get the name of a source dataset used in the mapping of the virtual
+            dataset at the position index.
+            """
+            cdef char* name = NULL
+            cdef ssize_t size
+
+            size = H5Pget_virtual_dsetname(self.id, index, NULL, 0)
+            name = <char*>emalloc(size+1)
+            try:
+                H5Pget_virtual_dsetname(self.id, index, name, <size_t>size+1)
+                src_dset_name = name
+            finally:
+                efree(name)
+
+            return src_dset_name
+
+        @with_phil
+        def get_virtual_filename(self, size_t index=0):
+            """(UINT index=0) => STR
+
+            Get the file name of a source dataset used in the mapping of the
+            virtual dataset at the position index.
+            """
+            cdef char* name = NULL
+            cdef ssize_t size
+
+            size = H5Pget_virtual_dsetname(self.id, index, NULL, 0)
+            name = <char*>emalloc(size+1)
+            try:
+                H5Pget_virtual_filename(self.id, index, name, <size_t>size+1)
+                src_fname = name
+            finally:
+                efree(name)
+
+            return src_fname
+
+        @with_phil
+        def get_virtual_vspace(self, size_t index=0):
+            """(UINT index=0) => SpaceID
+
+            Get a dataspace for the selection within the virtual dataset used
+            in the mapping.
+            """
+            return SpaceID(H5Pget_virtual_vspace(self.id, index))
+
+        @with_phil
+        def get_virtual_srcspace(self, size_t index=0):
+            """(UINT index=0) => SpaceID
+
+            Get a dataspace for the selection within the source dataset used
+            in the mapping.
+            """
+            return SpaceID(H5Pget_virtual_srcspace(self.id, index))
 
 # File access
 cdef class PropFAID(PropInstanceID):
@@ -1005,7 +1091,7 @@ cdef class PropFAID(PropInstanceID):
             Comm: An mpi4py.MPI.Comm instance
             Info: An mpi4py.MPI.Info instance
             """
-            H5Pset_fapl_mpio(self.id, comm.ob_mpi, info.ob_mpi) 
+            H5Pset_fapl_mpio(self.id, comm.ob_mpi, info.ob_mpi)
 
 
         @with_phil
@@ -1303,6 +1389,72 @@ cdef class PropDAID(PropInstanceID):
 
         H5Pget_chunk_cache(self.id, &rdcc_nslots, &rdcc_nbytes, &rdcc_w0 )
         return (rdcc_nslots,rdcc_nbytes,rdcc_w0)
+
+    # === Virtual dataset functions ===========================================
+    IF HDF5_VERSION >= VDS_MIN_HDF5_VERSION:
+
+        @with_phil
+        def set_virtual_view(self, unsigned int view):
+            """(UINT view)
+
+            Set the view of the virtual dataset (VDS) to include or exclude
+            missing mapped elements.
+
+            If view is set to h5d.VDS_FIRST_MISSING, the view includes all data
+            before the first missing mapped data. This setting provides a view
+            containing only the continuous data starting with the dataset’s
+            first data element. Any break in continuity terminates the view.
+
+            If view is set to h5d.VDS_LAST_AVAILABLE, the view includes all
+            available mapped data.
+
+            Missing mapped data is filled with the fill value set in the
+            virtual dataset's creation property list.
+            """
+            H5Pset_virtual_view(self.id, <H5D_vds_view_t>view)
+
+        @with_phil
+        def get_virtual_view(self):
+            """() => UINT view
+
+            Retrieve the view of the virtual dataset.
+
+            Valid values are:
+
+            - h5d.VDS_FIRST_MISSING
+            - h5d.VDS_LAST_AVAILABLE
+            """
+            cdef H5D_vds_view_t view
+            H5Pget_virtual_view(self.id, &view)
+            return <unsigned int>view
+
+        @with_phil
+        def set_virtual_printf_gap(self, hsize_t gap_size=0):
+            """(LONG gap_size=0)
+
+            Set the maximum number of missing source files and/or datasets
+            with the printf-style names when getting the extent of an unlimited
+            virtual dataset.
+
+            Instruct the library to stop looking for the mapped data stored in
+            the files and/or datasets with the printf-style names after not
+            finding gap_size files and/or datasets. The found source files and
+            datasets will determine the extent of the unlimited virtual dataset
+            with the printf-style mappings. Default value: 0.
+            """
+            H5Pset_virtual_printf_gap(self.id, gap_size)
+
+        @with_phil
+        def get_virtual_printf_gap(self):
+            """() => LONG gap_size
+
+            Return the maximum number of missing source files and/or datasets
+            with the printf-style names when getting the extent for an
+            unlimited virtual dataset.
+            """
+            cdef hsize_t gap_size
+            H5Pget_virtual_printf_gap(self.id, &gap_size)
+            return gap_size
 
 cdef class PropDXID(PropInstanceID):
 

@@ -11,6 +11,8 @@
     Low-level interface to the "H5S" family of data-space functions.
 """
 
+include "config.pxi"
+
 # Pyrex compile-time imports
 from utils cimport  require_tuple, convert_dims, convert_tuple, \
                     emalloc, efree, create_numpy_hsize, create_hsize_array
@@ -572,8 +574,54 @@ cdef class SpaceID(ObjectID):
             efree(stride_array)
             efree(block_array)
 
+    # === Virtual dataset functions ===========================================
 
+    IF HDF5_VERSION >= VDS_MIN_HDF5_VERSION:
 
+        @with_phil
+        def is_regular_hyperslab(self):
+            """() => BOOL
 
+            Determine whether a hyperslab selection is regular.
+            """
+            return <bint>H5Sis_regular_hyperslab(self.id)
 
+        @with_phil
+        def get_regular_hyperslab(self):
+            """() => (TUPLE start, TUPLE stride, TUPLE count, TUPLE block)
 
+            Retrieve a regular hyperslab selection.
+            """
+            cdef int rank
+            cdef hsize_t* start_array = NULL
+            cdef hsize_t* count_array = NULL
+            cdef hsize_t* stride_array = NULL
+            cdef hsize_t* block_array = NULL
+            cdef list start = []
+            cdef list stride = []
+            cdef list count = []
+            cdef list block = []
+            cdef int i
+
+            rank = H5Sget_simple_extent_ndims(self.id)
+            try:
+                start_array = <hsize_t*>emalloc(sizeof(hsize_t)*rank)
+                stride_array = <hsize_t*>emalloc(sizeof(hsize_t)*rank)
+                count_array = <hsize_t*>emalloc(sizeof(hsize_t)*rank)
+                block_array = <hsize_t*>emalloc(sizeof(hsize_t)*rank)
+                H5Sget_regular_hyperslab(self.id, start_array, stride_array,
+                                         count_array, block_array)
+
+                for i in range(rank):
+                    start.append(start_array[i])
+                    stride.append(stride_array[i])
+                    count.append(count_array[i])
+                    block.append(block_array[i])
+
+                return (tuple(start), tuple(stride), tuple(count), tuple(block))
+
+            finally:
+                efree(start_array)
+                efree(stride_array)
+                efree(count_array)
+                efree(block_array)
