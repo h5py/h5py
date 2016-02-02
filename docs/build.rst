@@ -3,90 +3,50 @@
 Installation
 ============
 
+Pre-configured installation (recommended)
+-----------------------------------------
 
-For Python beginners
---------------------
+It's strongly recommended that you use a Python distribution or package
+manager to install h5py along with its compiled dependencies.  Here are some
+which are popular in the Python community:
 
-It can be a pain to install NumPy, HDF5, h5py, Cython and other dependencies.
-If you're just starting out, by far the easiest approach is to install h5py via
-your package manager (``apt-get`` or similar), or by using one of the major
-science-oriented Python distributions:
-
-* `Anaconda <http://continuum.io/downloads>`_ (Linux, Mac, Windows)
+* `Anaconda <http://continuum.io/downloads>`_ or `Miniconda <http://conda.pydata.org/miniconda.html>`_ (Mac, Windows, Linux)
+* `Enthought Canopy <https://www.enthought.com/products/canopy/>`_ (Mac, Windows, Linux)
 * `PythonXY <https://code.google.com/p/pythonxy/>`_ (Windows)
 
+Or, use your package manager:
 
-Installing on Windows
----------------------
-
-You will need:
-
-  * Python 2.6, 2.7, 3.2, 3.3 or 3.4 (from Python.org)
-  * NumPy 1.6.1 or newer
-  * The "six" Python 2/3 compatibility package
-
-Download the installer from http://www.h5py.org and run it.  HDF5 is
-included.
-
-.. note::
-
-    If you are using Anaconda, PythonXY or another non-Python.org
-    distribution, you should instead install h5py via your distribution's
-    own pacakge manager.
+* apt-get (Linux/Debian, including Ubuntu)
+* yum (Linux/Red Hat, including Fedora and CentOS)
+* Homebrew (OS X)
 
 
-Installing on Linux and Mac OS X
---------------------------------
+Source installation on Linux and OS X
+-------------------------------------
 
-System dependencies
-~~~~~~~~~~~~~~~~~~~
+You need, via apt-get, yum or Homebrew:
 
-You will need:
-
-* Python 2.6, 2.7, 3.2, 3.3, or 3.4 with development headers (``python-dev`` or similar)
+* Python 2.6, 2.7, 3.3, or 3.4 with development headers (``python-dev`` or similar)
 * HDF5 1.8.4 or newer, shared library version with development headers (``libhdf5-dev`` or similar)
-
-On Mac OS X, `homebrew <http://brew.sh>`_ is a reliable way of getting
-Python, HDF5 and other dependencies set up.  It is also safe to use h5py
-with the OS X system Python.
-
-Install with pip
-~~~~~~~~~~~~~~~~
-
-Simply run::
-
-    $ pip install h5py
-    
-All dependencies are installed automatically.
-
-Via setup.py
-~~~~~~~~~~~~
-
-You will need:
-
-* The h5py tarball from http://www.h5py.org.
-* NumPy 1.6.1 or newer
-* `Cython <http://cython.org>`_ 0.19 or newer
+* NumPy 1.6.1 or later
 
 ::
 
-    $ tar xzf h5py-X.Y.Z.tar.gz
-    $ cd h5py
+    $ pip install h5py
+
+or, from a tarball::
+
     $ python setup.py install
 
 
-Running the test suite
-----------------------
+Source installation on Windows
+------------------------------
 
-With the tarball version of h5py::
+Installing from source on Windows is effectively impossible because of the C
+library dependencies involved.
 
-    $ python setup.py build
-    $ python setup.py test
-
-After installing h5py::
-
-    >>> import h5py
-    >>> h5py.run_tests()
+If you don't want to use Anaconda, Canopy, or PythonXY, download
+a `third-party wheel from Chris Gohlke's excellent collection <http://www.lfd.uci.edu/~gohlke/pythonlibs/>`_.
 
 
 Custom installation
@@ -149,12 +109,3 @@ To build in MPI mode, use the ``--mpi`` option to ``setup.py configure``::
 See also :ref:`parallel`.
 
 
-Help! It didn't work!
----------------------
-
-You may wish to check the :ref:`faq` first for common installation problems.
-
-Then, feel free to ask the discussion group
-`at Google Groups <http://groups.google.com/group/h5py>`_. There's
-only one discussion group for h5py, so you're likely to get help directly
-from the maintainers.

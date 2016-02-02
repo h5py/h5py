@@ -1,8 +1,8 @@
 .. _file:
 
 
-HDF5 File Objects
-=================
+File Objects
+============
 
 File objects serve as your entry point into the world of HDF5.  In addition
 to the File-specific capabilities listed here, every File instance is
