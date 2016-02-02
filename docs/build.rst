@@ -14,6 +14,11 @@ which are popular in the Python community:
 * `Enthought Canopy <https://www.enthought.com/products/canopy/>`_ (Mac, Windows, Linux)
 * `PythonXY <https://code.google.com/p/pythonxy/>`_ (Windows)
 
+::
+
+    conda install h5py  # Anaconda/Miniconda
+    enpkg h5py          # Canopy
+
 Or, use your package manager:
 
 * apt-get (Linux/Debian, including Ubuntu)
