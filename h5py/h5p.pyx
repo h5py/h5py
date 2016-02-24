@@ -14,6 +14,10 @@
 include "config.pxi"
 
 # Compile-time imports
+from cpython.buffer cimport PyObject_CheckBuffer, \
+                            PyObject_GetBuffer, PyBuffer_Release, \
+                            PyBUF_SIMPLE
+
 from utils cimport  require_tuple, convert_dims, convert_tuple, \
                     emalloc, efree, \
                     check_numpy_write, check_numpy_read
@@ -1161,6 +1165,27 @@ cdef class PropFAID(PropInstanceID):
         """
         H5Pset_alignment(self.id, threshold, alignment)
 
+    @with_phil
+    def set_file_image(self, image):
+        """ (BUFFER image)
+        Sets an initial file image in a memory buffer.
+        """
+
+        cdef Py_buffer buf
+
+        if image is None:
+            # Release file image buffer if set
+            H5Pset_file_image(self.id, NULL, 0)
+
+        if not PyObject_CheckBuffer(image):
+            raise TypeError("image must support the buffer protocol")
+
+        PyObject_GetBuffer(image, &buf, PyBUF_SIMPLE)
+
+        try:
+            H5Pset_file_image(self.id, buf.buf, buf.len)
+        finally:
+            PyBuffer_Release(&buf)
 
 # Link creation
 cdef class PropLCID(PropCreateID):

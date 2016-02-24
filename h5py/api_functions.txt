@@ -145,6 +145,9 @@ hdf5:
   herr_t    H5Freset_mdc_hit_rate_stats(hid_t file_id)
   herr_t    H5Fset_mdc_config(hid_t file_id, H5AC_cache_config_t *config_ptr)
 
+  # File Image Operations
+  1.8.9     ssize_t H5Fget_file_image(hid_t file_id, void *buf_ptr, size_t buf_len)
+
   # MPI functions
   MPI 1.8.9 herr_t H5Fset_mpi_atomicity(hid_t file_id, hbool_t flag)
   MPI 1.8.9 herr_t H5Fget_mpi_atomicity(hid_t file_id, hbool_t *flag)
@@ -283,6 +286,7 @@ hdf5:
   hid_t     H5Pget_driver(hid_t fapl_id)
   herr_t    H5Pget_mdc_config(hid_t plist_id, H5AC_cache_config_t *config_ptr)
   herr_t    H5Pset_mdc_config(hid_t plist_id, H5AC_cache_config_t *config_ptr)
+  1.8.9 herr_t H5Pset_file_image(hid_t plist_id, void *buf_ptr, size_t buf_len)
 
   # Dataset creation
   herr_t        H5Pset_layout(hid_t plist, int layout)
