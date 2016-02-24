@@ -1165,27 +1165,30 @@ cdef class PropFAID(PropInstanceID):
         """
         H5Pset_alignment(self.id, threshold, alignment)
 
-    @with_phil
-    def set_file_image(self, image):
-        """ (BUFFER image)
-        Sets an initial file image in a memory buffer.
-        """
+    IF HDF5_VERSION >= (1, 8, 9):
 
-        cdef Py_buffer buf
+        @with_phil
+        def set_file_image(self, image):
+            """ (BUFFER image)
+            Sets an initial file image in a memory buffer.
+            """
 
-        if image is None:
-            # Release file image buffer if set
-            H5Pset_file_image(self.id, NULL, 0)
+            cdef Py_buffer buf
 
-        if not PyObject_CheckBuffer(image):
-            raise TypeError("image must support the buffer protocol")
+            if image is None:
+                # Release file image buffer if set
+                H5Pset_file_image(self.id, NULL, 0)
 
-        PyObject_GetBuffer(image, &buf, PyBUF_SIMPLE)
+            if not PyObject_CheckBuffer(image):
+                raise TypeError("image must support the buffer protocol")
 
-        try:
-            H5Pset_file_image(self.id, buf.buf, buf.len)
-        finally:
-            PyBuffer_Release(&buf)
+            PyObject_GetBuffer(image, &buf, PyBUF_SIMPLE)
+
+            try:
+                H5Pset_file_image(self.id, buf.buf, buf.len)
+            finally:
+                PyBuffer_Release(&buf)
+
 
 # Link creation
 cdef class PropLCID(PropCreateID):
