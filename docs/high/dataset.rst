@@ -1,8 +1,8 @@
 .. _dataset:
 
 
-HDF5 Datasets
-=============
+Datasets
+========
 
 Datasets are very similar to NumPy arrays.  They are homogenous collections of
 data elements, with an immutable datatype and (hyper)rectangular shape.

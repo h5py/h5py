@@ -1,8 +1,8 @@
 .. _group:
 
 
-HDF5 Groups
-===========
+Groups
+======
 
 
 Groups are the container mechanism by which HDF5 files are organized.  From

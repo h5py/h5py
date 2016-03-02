@@ -15,21 +15,10 @@ cache:
     - $HOME/.cache/pip
 
 env:
-# Commented out since setup_requires is controlled by easy_install
-# This should be uncommented when pip can use setup_requires
-#  - TOXENV=py26-test-nodeps
-#  - TOXENV=py27-test-nodeps
-#  - TOXENV=py32-test-nodeps
-#  - TOXENV=py33-test-nodeps
-#  - TOXENV=py34-test-nodeps
   - TOXENV=py26-test-deps
   - TOXENV=py27-test-deps
-  - TOXENV=py32-test-deps
   - TOXENV=py33-test-deps
   - TOXENV=py34-test-deps
-  - TOXENV=py27-pylint-deps
-  - TOXENV=py33-pylint-deps
-  - TOXENV=py34-pylint-deps
 
 install:
   - pip install tox

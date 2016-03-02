@@ -25,6 +25,11 @@ MEM_LHEAP = H5FD_MEM_LHEAP
 MEM_OHDR = H5FD_MEM_OHDR
 MEM_NTYPES = H5FD_MEM_NTYPES
 
+# === MPI driver ==============================================================
+
+MPIO_INDEPENDENT = H5FD_MPIO_INDEPENDENT
+MPIO_COLLECTIVE = H5FD_MPIO_COLLECTIVE
+
 # === Driver types ============================================================
 
 CORE = H5FD_CORE

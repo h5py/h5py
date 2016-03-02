@@ -44,11 +44,18 @@ cdef extern from "hdf5.h":
 # === H5D - Dataset API =======================================================
 
   ctypedef enum H5D_layout_t:
-    H5D_LAYOUT_ERROR    = -1,
-    H5D_COMPACT         = 0,
-    H5D_CONTIGUOUS      = 1,
-    H5D_CHUNKED         = 2,
-    H5D_NLAYOUTS        = 3
+      H5D_LAYOUT_ERROR    = -1,
+      H5D_COMPACT         = 0,
+      H5D_CONTIGUOUS      = 1,
+      H5D_CHUNKED         = 2,
+      H5D_VIRTUAL         = 3,  # New in 1.10
+      H5D_NLAYOUTS        = 4
+
+  IF HDF5_VERSION >= VDS_MIN_HDF5_VERSION:
+    ctypedef enum H5D_vds_view_t:
+        H5D_VDS_ERROR           = -1,
+        H5D_VDS_FIRST_MISSING   = 0,
+        H5D_VDS_LAST_AVAILABLE  = 1
 
   ctypedef enum H5D_alloc_time_t:
     H5D_ALLOC_TIME_ERROR    =-1,
@@ -170,6 +177,10 @@ cdef extern from "hdf5.h":
   # Flag for tracking allocation of space in file
   int H5FD_LOG_ALLOC      # 0x4000
   int H5FD_LOG_ALL        # (H5FD_LOG_ALLOC|H5FD_LOG_TIME_IO|H5FD_LOG_NUM_IO|H5FD_LOG_FLAVOR|H5FD_LOG_FILE_IO|H5FD_LOG_LOC_IO)
+  IF MPI:
+    ctypedef enum H5FD_mpio_xfer_t:
+     H5FD_MPIO_INDEPENDENT = 0,
+     H5FD_MPIO_COLLECTIVE
 
 # === H5G - Groups API ========================================================
 

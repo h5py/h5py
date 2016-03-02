@@ -1,7 +1,7 @@
 .. _dimension_scales:
 
-HDF5 Dimension Scales
-=====================
+Dimension Scales
+================
 
 Datasets are multidimensional arrays. HDF5 provides support for labeling the
 dimensions and associating one or "dimension scales" with each dimension. A
