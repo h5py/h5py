@@ -867,6 +867,21 @@ cdef class PropFAID(PropInstanceID):
 
         return (msize, plist)
 
+    @with_phil
+    def set_fapl_split(self, char* metafile, char* rawfile):
+        """(STRING metafile, STRING rawfile)
+
+        Set up the split driver.
+
+        metafile and rawfile are either extensions or paths with extensions
+
+        See https://www.hdfgroup.org/HDF5/doc/RM/H5P/H5Pset_fapl_split.htm for formatting
+        
+        TODO: allow multiple sub-fapls for each
+        """
+        H5Pset_fapl_split(self.id, metafile, H5P_DEFAULT, rawfile, H5P_DEFAULT)
+
+
 
     @with_phil
     def set_fapl_log(self, char* logfile, unsigned int flags, size_t buf_size):

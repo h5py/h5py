@@ -72,6 +72,7 @@ stdio                               Buffered I/O using stdio.h
 core                                In-memory file (optionally backed to disk)
 family                              Multi-file driver
 mpio                                Parallel HDF5 file access
+split                               Splits metadata and data into two files
 =================================== =========================================== ============================
 
 

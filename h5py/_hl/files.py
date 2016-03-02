@@ -60,6 +60,19 @@ def make_fapl(driver, libver, **kwds):
         plist.set_fapl_core(**kwds)
     elif driver == 'family':
         plist.set_fapl_family(memb_fapl=plist.copy(), **kwds)
+    elif driver == 'split':
+        if 'metafile' in kwds:
+            kwds['metafile'] = os.path.join(kwds['metafile'],r'%s')
+        kwds['metafile'] = kwds.get('metafile','')+'-m.h5'
+        if 'rawfile' in kwds:
+            kwds['rawfile'] = os.path.join(kwds['rawfile'],r'%s')
+        kwds['rawfile'] = kwds.get('rawfile','')+'-r.h5'
+        try:
+           kwds['rawfile'] = kwds['rawfile'].encode(sys.getfilesystemencoding())
+           kwds['metafile'] = kwds['metafile'].encode(sys.getfilesystemencoding())
+        except (UnicodeError, LookupError):
+           pass
+        plist.set_fapl_split(**kwds)
     elif driver == 'mpio':
         kwds.setdefault('info', mpi4py.MPI.Info())
         plist.set_fapl_mpio(**kwds)
@@ -162,7 +175,7 @@ class File(Group):
         drivers = {h5fd.SEC2: 'sec2', h5fd.STDIO: 'stdio',
                    h5fd.CORE: 'core', h5fd.FAMILY: 'family',
                    h5fd.WINDOWS: 'windows', h5fd.MPIO: 'mpio',
-                   h5fd.MPIPOSIX: 'mpiposix'}
+                   h5fd.MPIPOSIX: 'mpiposix', h5fd.MULTI: 'split'}
         return drivers.get(self.fid.get_access_plist().get_driver(), 'unknown')
 
     @property
@@ -241,7 +254,7 @@ class File(Group):
             a        Read/write if exists, create otherwise (default)
         driver
             Name of the driver to use.  Legal values are None (default,
-            recommended), 'core', 'sec2', 'stdio', 'mpio'.
+            recommended), 'core', 'sec2', 'stdio', 'mpio', 'split'.
         libver
             Library version bounds.  Currently only the strings 'earliest'
             and 'latest' are defined.
@@ -269,6 +282,7 @@ class File(Group):
                     pass
 
                 fapl = make_fapl(driver, libver, **kwds)
+
                 fid = make_fid(name, mode, userblock_size, fapl, swmr=swmr)
             
                 if swmr_support:

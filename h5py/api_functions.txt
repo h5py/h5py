@@ -280,6 +280,7 @@ hdf5:
   herr_t    H5Pget_cache(hid_t plist_id, int *mdc_nelmts, size_t *rdcc_nelmts, size_t *rdcc_nbytes, double *rdcc_w0)
   herr_t    H5Pset_fapl_sec2(hid_t fapl_id)
   herr_t    H5Pset_fapl_stdio(hid_t fapl_id)
+  herr_t    H5Pset_fapl_split(hid_t fapl_id, char *meta_ext, hid_t meta_plist_id, char *raw_ext, hid_t raw_plist_id)
   hid_t     H5Pget_driver(hid_t fapl_id)
   herr_t    H5Pget_mdc_config(hid_t plist_id, H5AC_cache_config_t *config_ptr)
   herr_t    H5Pset_mdc_config(hid_t plist_id, H5AC_cache_config_t *config_ptr)
