@@ -1178,8 +1178,8 @@ cdef class PropFAID(PropInstanceID):
             cdef Py_buffer buf
 
             if image is None:
-                # Release file image buffer if set
                 H5Pset_file_image(self.id, NULL, 0)
+                return
 
             if not PyObject_CheckBuffer(image):
                 raise TypeError("image must support the buffer protocol")
