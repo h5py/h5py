@@ -1169,8 +1169,10 @@ cdef class PropFAID(PropInstanceID):
 
         @with_phil
         def set_file_image(self, image):
-            """ (BUFFER image)
-            Sets an initial file image in a memory buffer.
+            """
+            Copy a file image into the property list. Passing None releases
+            any image currently loaded. The parameter image must either be
+            None or support the buffer protocol.
             """
 
             cdef Py_buffer buf
