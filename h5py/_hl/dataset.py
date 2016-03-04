@@ -73,7 +73,9 @@ def make_new_dset(parent, shape=None, dtype=None, data=None,
 
     tmp_shape = maxshape if maxshape is not None else shape
     # Validate chunk shape
-    if isinstance(chunks, tuple) and (-numpy.array([ i>=j for i,j in zip(tmp_shape,chunks) if i is not None])).any():
+    if isinstance(chunks, tuple) and any(
+        chunk > dim for dim, chunk in zip(tmp_shape,chunks) if dim is not None
+    ):
         errmsg = "Chunk shape must not be greater than data shape in any dimension. "\
                  "{} is not compatible with {}".format(chunks, shape)
         raise ValueError(errmsg)
