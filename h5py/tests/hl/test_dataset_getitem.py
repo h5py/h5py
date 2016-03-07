@@ -69,8 +69,7 @@ class TestEmpty(TestCase):
         
     def test_ellipsis(self):
         """ Ellipsis -> ValueError """
-        with self.assertRaises(ValueError):
-            out = self.dset[...]
+        self.assertEquals(self.dset[...], self.empty_obj)
         
     def test_tuple(self):
         """ () -> IOError """

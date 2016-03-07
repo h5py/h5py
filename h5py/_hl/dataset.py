@@ -406,7 +406,7 @@ class Dataset(HLObject):
         """
         args = args if isinstance(args, tuple) else (args,)
         if is_empty_dataspace(self.id):
-            if args != tuple():
+            if not (args == tuple() or args == (Ellipsis,)):
                 raise ValueError("Empty datasets cannot be sliced")
             return Empty(self.dtype)
 
