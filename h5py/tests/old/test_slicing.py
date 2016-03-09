@@ -222,27 +222,6 @@ class TestArraySlicing(BaseSlicing):
 
         self.assertTrue(np.all(dset[...] == out))
 
-class TestEmptySlicing(BaseSlicing):
-
-    """
-        Empty (H5S_NULL) datasets can't be sliced
-    """
-
-    def setUp(self):
-        BaseSlicing.setUp(self)
-        sid = h5s.create(h5s.NULL)
-        tid = h5t.C_S1.copy()
-        tid.set_size(10)
-        dsid = h5d.create(self.f.id, b'x', tid, sid)
-        self.dataset = self.f['x']
-
-    def test_ellipsis(self):
-        with self.assertRaises(IOError):
-            self.dataset[...]
-
-    def test_empty_tuple(self):
-        with self.assertRaises(IOError):
-            self.dataset[()]
 
 class TestZeroLengthSlicing(BaseSlicing):
 

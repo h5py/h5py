@@ -20,7 +20,7 @@ import numpy
 
 from .. import h5s, h5t, h5a
 from . import base
-from .base import phil, with_phil
+from .base import phil, with_phil, Empty, is_empty_dataspace
 from .dataset import readtime_dtype
 from .datatype import Datatype
 
@@ -57,8 +57,8 @@ class AttributeManager(base.MutableMappingHDF5, base.CommonStateObject):
         """
         attr = h5a.open(self._id, self._e(name))
 
-        if attr.get_space().get_simple_extent_type() == h5s.NULL:
-            raise IOError("Empty attributes cannot be read")
+        if is_empty_dataspace(attr):
+            return Empty(attr.dtype)
 
         dtype = readtime_dtype(attr.dtype, [])
         shape = attr.shape
@@ -118,7 +118,8 @@ class AttributeManager(base.MutableMappingHDF5, base.CommonStateObject):
                 
             # First, make sure we have a NumPy array.  We leave the data
             # type conversion for HDF5 to perform.
-            data = numpy.asarray(data, order='C')
+            if not isinstance(data, Empty):
+                data = numpy.asarray(data, order='C')
     
             if shape is None:
                 shape = data.shape
@@ -155,14 +156,15 @@ class AttributeManager(base.MutableMappingHDF5, base.CommonStateObject):
             # is compatible, and reshape if needed.
             else:
                
-                if numpy.product(shape) != numpy.product(data.shape):
+                if shape is not None and numpy.product(shape) != numpy.product(data.shape):
                     raise ValueError("Shape of new attribute conflicts with shape of data")
 
                 if shape != data.shape:
                     data = data.reshape(shape)
 
             # We need this to handle special string types.
-            data = numpy.asarray(data, dtype=dtype)
+            if not isinstance(data, Empty):
+                data = numpy.asarray(data, dtype=dtype)
     
             # Make HDF5 datatype and dataspace for the H5A calls
             if use_htype is None:
@@ -172,7 +174,10 @@ class AttributeManager(base.MutableMappingHDF5, base.CommonStateObject):
                 htype = use_htype
                 htype2 = None
                 
-            space = h5s.create_simple(shape)
+            if isinstance(data, Empty):
+                space = h5s.create(h5s.NULL)
+            else:
+                space = h5s.create_simple(shape)
 
             # This mess exists because you can't overwrite attributes in HDF5.
             # So we write to a temporary attribute first, and then rename.
@@ -185,7 +190,8 @@ class AttributeManager(base.MutableMappingHDF5, base.CommonStateObject):
                 raise
             else:
                 try:
-                    attr.write(data, mtype=htype2)
+                    if not isinstance(data, Empty):
+                        attr.write(data, mtype=htype2)
                 except:
                     attr.close()
                     h5a.delete(self._id, self._e(tempname))
@@ -218,7 +224,7 @@ class AttributeManager(base.MutableMappingHDF5, base.CommonStateObject):
 
                 attr = h5a.open(self._id, self._e(name))
 
-                if attr.get_space().get_simple_extent_type() == h5s.NULL:
+                if is_empty_dataspace(attr):
                     raise IOError("Empty attributes can't be modified")
 
                 # Allow the case of () <-> (1,)

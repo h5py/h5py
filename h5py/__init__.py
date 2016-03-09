@@ -43,7 +43,7 @@ _register_lzf()
 from . import h5a, h5d, h5ds, h5f, h5fd, h5g, h5r, h5s, h5t, h5p, h5z
 
 from ._hl import filters
-from ._hl.base import is_hdf5, HLObject
+from ._hl.base import is_hdf5, HLObject, Empty
 from ._hl.files import File
 from ._hl.group import Group, SoftLink, ExternalLink, HardLink
 from ._hl.dataset import Dataset

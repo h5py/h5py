@@ -22,7 +22,7 @@ from six.moves import xrange    # pylint: disable=redefined-builtin
 import numpy
 
 from .. import h5, h5s, h5t, h5r, h5d, h5p, h5fd
-from .base import HLObject, phil, with_phil
+from .base import HLObject, phil, with_phil, Empty, is_empty_dataspace
 from . import filters
 from . import selections as sel
 from . import selections2 as sel2
@@ -57,14 +57,16 @@ def make_new_dset(parent, shape=None, dtype=None, data=None,
     """
 
     # Convert data to a C-contiguous ndarray
-    if data is not None:
+    if data is not None and not isinstance(data, Empty):
         from . import base
         data = numpy.asarray(data, order="C", dtype=base.guess_dtype(data))
 
     # Validate shape
     if shape is None:
         if data is None:
-            raise TypeError("Either data or shape must be specified")
+            if dtype is None:
+                raise TypeError("One of data, shape or dtype must be specified")
+            data = Empty(dtype)
         shape = data.shape
     else:
         shape = tuple(shape)
@@ -125,12 +127,16 @@ def make_new_dset(parent, shape=None, dtype=None, data=None,
 
     if maxshape is not None:
         maxshape = tuple(m if m is not None else h5s.UNLIMITED for m in maxshape)
-    sid = h5s.create_simple(shape, maxshape)
+
+    if isinstance(data, Empty):
+        sid = h5s.create(h5s.NULL)
+    else:
+        sid = h5s.create_simple(shape, maxshape)
 
 
     dset_id = h5d.create(parent.id, None, tid, sid, dcpl=dcpl)
 
-    if data is not None:
+    if (data is not None) and (not isinstance(data, Empty)):
         dset_id.write(h5s.ALL, h5s.ALL, data)
 
     return dset_id
@@ -401,6 +407,10 @@ class Dataset(HLObject):
         * Boolean "mask" array indexing
         """
         args = args if isinstance(args, tuple) else (args,)
+        if is_empty_dataspace(self.id):
+            if not (args == tuple() or args == (Ellipsis,)):
+                raise ValueError("Empty datasets cannot be sliced")
+            return Empty(self.dtype)
 
         # Sort field indices from the rest of the args.
         names = tuple(x for x in args if isinstance(x, six.string_types))
@@ -628,6 +638,8 @@ class Dataset(HLObject):
         Broadcasting is supported for simple indexing.
         """
         with phil:
+            if is_empty_dataspace(self.id):
+                raise TypeError("Empty datasets have no numpy representation")
             if source_sel is None:
                 source_sel = sel.SimpleSelection(self.shape)
             else:
@@ -651,6 +663,8 @@ class Dataset(HLObject):
         Broadcasting is supported for simple indexing.
         """
         with phil:
+            if is_empty_dataspace(self.id):
+                raise TypeError("Empty datasets cannot be written to")
             if source_sel is None:
                 source_sel = sel.SimpleSelection(source.shape)
             else:
