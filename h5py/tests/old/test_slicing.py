@@ -281,7 +281,7 @@ class TestFieldNames(BaseSlicing):
 
     def test_read(self):
         """ Test read with field selections (bytes and unicode) """
-        if not six.PY3:
+        if six.PY2:
             # Byte strings are only allowed for field names on Py2
             self.assertArrayEqual(self.dset[b'a'], self.data['a'])
         self.assertArrayEqual(self.dset[six.u('a')], self.data['a'])

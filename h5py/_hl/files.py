@@ -330,6 +330,6 @@ class File(Group):
             r = six.u('<HDF5 file "%s" (mode %s)>') % (os.path.basename(filename),
                                                  self.mode)
 
-        if six.PY3:
-            return r
-        return r.encode('utf8')
+        if six.PY2:
+            return r.encode('utf8')
+        return r
