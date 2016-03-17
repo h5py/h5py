@@ -398,40 +398,35 @@ cdef class DatasetID(ObjectID):
 
     IF HDF5_VERSION >= (1, 8, 11):
 
-        def write_direct_chunk(self, offsets, data, filter_mask=0, PropID dxpl=None):
-            """
-            Direct chunk write to dataset
+        def write_direct_chunk(self, offsets, bytes data, H5Z_filter_t filter_mask=H5Z_FILTER_NONE, PropID dxpl=None):
+            """ no return
+
+            Writes data from a bytes array (as provided e.g. by struct.pack) directly
+            to a chunk at position specified by the offsets argument.
+
+            Feature requires: 1.8.11 HDF5
             """
 
             cdef hid_t dset_id
             cdef hid_t dxpl_id
             cdef hid_t space_id = 0
-            cdef uint32_t filters
-            cdef hsize_t *offset
+            cdef hsize_t *offset = NULL
             cdef size_t data_size
-            cdef char *buf
             cdef int rank
 
+            dset_id = self.id
+            dxpl_id = pdefault(dxpl)
+            space_id = H5Dget_space(self.id)
+            rank = H5Sget_simple_extent_ndims(space_id)
+
+            if len(offsets) != rank:
+                raise TypeError("offset length (%d) must match dataset rank (%d)" % (len(offsets), rank))
+
             try:
-                dset_id = self.id
-                dxpl_id = pdefault(dxpl)
-                filters = filter_mask
-                space_id = H5Dget_space(self.id)
-                rank = H5Sget_simple_extent_ndims(space_id)
-
-                if len(offsets) != rank:
-                    raise TypeError("offset length (%d) must match dataset rank (%d)" % (len(offsets), rank))
-
                 offset = <hsize_t*>emalloc(sizeof(hsize_t)*rank)
                 convert_tuple(offsets, offset, rank)
-                buf = data
-                data_size = len(data)
-
-                H5DOwrite_chunk(dset_id, dxpl_id, filters, offset, data_size, buf)
-            except BaseException as e:
-                print e
+                H5DOwrite_chunk(dset_id, dxpl_id, filter_mask, offset, len(data), <char *> data)
             finally:
                 efree(offset)
                 if space_id:
                     H5Sclose(space_id)
-            pass
