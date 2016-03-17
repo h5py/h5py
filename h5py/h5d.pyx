@@ -399,7 +399,7 @@ cdef class DatasetID(ObjectID):
     IF HDF5_VERSION >= (1, 8, 11):
 
         def write_direct_chunk(self, offsets, bytes data, H5Z_filter_t filter_mask=H5Z_FILTER_NONE, PropID dxpl=None):
-            """ no return
+            """ (offsets, bytes data, H5Z_filter_t filter_mask=H5Z_FILTER_NONE, PropID dxpl=None)
 
             Writes data from a bytes array (as provided e.g. by struct.pack) directly
             to a chunk at position specified by the offsets argument.
