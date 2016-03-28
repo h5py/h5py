@@ -532,80 +532,74 @@ cdef extern from "hdf5.h":
 
   # --- Predefined datatypes --------------------------------------------------
 
-  cdef enum:
-    H5T_NATIVE_B8
-    H5T_NATIVE_CHAR
-    H5T_NATIVE_SCHAR
-    H5T_NATIVE_UCHAR
-    H5T_NATIVE_SHORT
-    H5T_NATIVE_USHORT
-    H5T_NATIVE_INT
-    H5T_NATIVE_UINT
-    H5T_NATIVE_LONG
-    H5T_NATIVE_ULONG
-    H5T_NATIVE_LLONG
-    H5T_NATIVE_ULLONG
-    H5T_NATIVE_FLOAT
-    H5T_NATIVE_DOUBLE
-    H5T_NATIVE_LDOUBLE
+  cdef hid_t H5T_NATIVE_B8
+  cdef hid_t H5T_NATIVE_CHAR
+  cdef hid_t H5T_NATIVE_SCHAR
+  cdef hid_t H5T_NATIVE_UCHAR
+  cdef hid_t H5T_NATIVE_SHORT
+  cdef hid_t H5T_NATIVE_USHORT
+  cdef hid_t H5T_NATIVE_INT
+  cdef hid_t H5T_NATIVE_UINT
+  cdef hid_t H5T_NATIVE_LONG
+  cdef hid_t H5T_NATIVE_ULONG
+  cdef hid_t H5T_NATIVE_LLONG
+  cdef hid_t H5T_NATIVE_ULLONG
+  cdef hid_t H5T_NATIVE_FLOAT
+  cdef hid_t H5T_NATIVE_DOUBLE
+  cdef hid_t H5T_NATIVE_LDOUBLE
 
   # "Standard" types
-  cdef enum:
-    H5T_STD_I8LE
-    H5T_STD_I16LE
-    H5T_STD_I32LE
-    H5T_STD_I64LE
-    H5T_STD_U8LE
-    H5T_STD_U16LE
-    H5T_STD_U32LE
-    H5T_STD_U64LE
-    H5T_STD_B8LE
-    H5T_STD_B16LE
-    H5T_STD_B32LE
-    H5T_STD_B64LE
-    H5T_IEEE_F32LE
-    H5T_IEEE_F64LE
-    H5T_STD_I8BE
-    H5T_STD_I16BE
-    H5T_STD_I32BE
-    H5T_STD_I64BE
-    H5T_STD_U8BE
-    H5T_STD_U16BE
-    H5T_STD_U32BE
-    H5T_STD_U64BE
-    H5T_STD_B8BE
-    H5T_STD_B16BE
-    H5T_STD_B32BE
-    H5T_STD_B64BE
-    H5T_IEEE_F32BE
-    H5T_IEEE_F64BE
+  cdef hid_t H5T_STD_I8LE
+  cdef hid_t H5T_STD_I16LE
+  cdef hid_t H5T_STD_I32LE
+  cdef hid_t H5T_STD_I64LE
+  cdef hid_t H5T_STD_U8LE
+  cdef hid_t H5T_STD_U16LE
+  cdef hid_t H5T_STD_U32LE
+  cdef hid_t H5T_STD_U64LE
+  cdef hid_t H5T_STD_B8LE
+  cdef hid_t H5T_STD_B16LE
+  cdef hid_t H5T_STD_B32LE
+  cdef hid_t H5T_STD_B64LE
+  cdef hid_t H5T_IEEE_F32LE
+  cdef hid_t H5T_IEEE_F64LE
+  cdef hid_t H5T_STD_I8BE
+  cdef hid_t H5T_STD_I16BE
+  cdef hid_t H5T_STD_I32BE
+  cdef hid_t H5T_STD_I64BE
+  cdef hid_t H5T_STD_U8BE
+  cdef hid_t H5T_STD_U16BE
+  cdef hid_t H5T_STD_U32BE
+  cdef hid_t H5T_STD_U64BE
+  cdef hid_t H5T_STD_B8BE
+  cdef hid_t H5T_STD_B16BE
+  cdef hid_t H5T_STD_B32BE
+  cdef hid_t H5T_STD_B64BE
+  cdef hid_t H5T_IEEE_F32BE
+  cdef hid_t H5T_IEEE_F64BE
 
-  cdef enum:
-    H5T_NATIVE_INT8
-    H5T_NATIVE_UINT8
-    H5T_NATIVE_INT16
-    H5T_NATIVE_UINT16
-    H5T_NATIVE_INT32
-    H5T_NATIVE_UINT32
-    H5T_NATIVE_INT64
-    H5T_NATIVE_UINT64
+  cdef hid_t H5T_NATIVE_INT8
+  cdef hid_t H5T_NATIVE_UINT8
+  cdef hid_t H5T_NATIVE_INT16
+  cdef hid_t H5T_NATIVE_UINT16
+  cdef hid_t H5T_NATIVE_INT32
+  cdef hid_t H5T_NATIVE_UINT32
+  cdef hid_t H5T_NATIVE_INT64
+  cdef hid_t H5T_NATIVE_UINT64
 
   # Unix time types
-  cdef enum:
-    H5T_UNIX_D32LE
-    H5T_UNIX_D64LE
-    H5T_UNIX_D32BE
-    H5T_UNIX_D64BE
+  cdef hid_t H5T_UNIX_D32LE
+  cdef hid_t H5T_UNIX_D64LE
+  cdef hid_t H5T_UNIX_D32BE
+  cdef hid_t H5T_UNIX_D64BE
 
   # String types
-  cdef enum:
-    H5T_FORTRAN_S1
-    H5T_C_S1
+  cdef hid_t H5T_FORTRAN_S1
+  cdef hid_t H5T_C_S1
 
   # References
-  cdef enum:
-    H5T_STD_REF_OBJ
-    H5T_STD_REF_DSETREG
+  cdef hid_t H5T_STD_REF_OBJ
+  cdef hid_t H5T_STD_REF_DSETREG
 
   # Type-conversion infrastructure
 
