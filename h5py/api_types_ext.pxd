@@ -46,7 +46,7 @@ cdef extern from "stdint.h":
   ctypedef signed long int int32_t
   ctypedef unsigned long int uint32_t
   ctypedef signed long long int int64_t
-  ctypedef signed long long int uint64_t 
+  ctypedef unsigned long long int uint64_t 
 
 # Can't use Cython defs because they keep moving them around
 cdef extern from "Python.h":
