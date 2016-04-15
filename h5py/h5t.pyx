@@ -1414,14 +1414,13 @@ cdef TypeCompoundID _c_compound(dtype dt, int logical):
     # Initial size MUST be 1 to avoid segfaults (issue 166)
     tid = H5Tcreate(H5T_COMPOUND, 1)  
 
-    offset = 0
     for name in names:
         ename = name.encode('utf8') if isinstance(name, unicode) else name
         dt_tmp = dt.fields[name][0]
+        offset = dt.fields[name][1]
         type_tmp = py_create(dt_tmp, logical=logical)
         H5Tset_size(tid, offset+type_tmp.get_size())
         H5Tinsert(tid, ename, offset, type_tmp.id)
-        offset += type_tmp.get_size()
 
     return TypeCompoundID(tid)
 
