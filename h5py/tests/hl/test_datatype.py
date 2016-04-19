@@ -7,7 +7,7 @@ from __future__ import absolute_import
 import numpy as np
 import h5py
 
-from ..common import ut, TestCase
+from ..common import ut, TestCase, NUMPY_RELEASE_VERSION
 
 class TestVlen(TestCase):
 
@@ -44,6 +44,7 @@ class TestVlen(TestCase):
         self.assertEqual(h5py.check_dtype(enum=h5py.check_dtype(vlen=dt1)),
                          h5py.check_dtype(enum=h5py.check_dtype(vlen=dt2)))
 
+@ut.skipIf(NUMPY_RELEASE_VERSION < (1, 11), "Requires numpy>=1.11")
 class TestAligned(TestCase):
 
     """
