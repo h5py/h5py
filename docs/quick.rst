@@ -55,7 +55,7 @@ from a dataset in the file:
     >>> dset[0]
     0
     >>> dset[10]
-    9
+    10
     >>> dset[0:100:10]
     array([ 0, 10, 20, 30, 40, 50, 60, 70, 80, 90])
 
