@@ -19,12 +19,11 @@ env:
   - TOXENV=py27-test-deps
   - TOXENV=py33-test-deps
   - TOXENV=py34-test-deps
-#  - TOXENV=py35-test-deps
-# commented out because of https://github.com/travis-ci/travis-ci/issues/4794
   - TOXENV=py26-test-mindeps
   - TOXENV=py27-test-mindeps
   - TOXENV=py33-test-mindeps
   - TOXENV=py34-test-mindeps
+#  - TOXENV=py35-test-deps
 #  - TOXENV=py35-test-mindeps
 # commented out because of https://github.com/travis-ci/travis-ci/issues/4794
 
@@ -34,9 +33,6 @@ matrix:
     - python: 3.5
       env:
       - TOXENV=py35-test-deps
-    - python: 3.5
-      env:
-      - TOXENV=py35-test-mindeps
 
 install:
   - pip install tox
