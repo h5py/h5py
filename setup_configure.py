@@ -1,4 +1,3 @@
-
 """
     Implements a new custom Distutils command for handling library
     configuration.
@@ -205,7 +204,7 @@ def autodetect_version(hdf5_dir=None):
     try:
         if pkgconfig.exists("hdf5"):
             hdf5_library_dirs = pkgconfig.parse("hdf5")['library_dirs']
-            if isinstance(hdf5_library_dirs, basestring):
+            if isinstance(hdf5_library_dirs, (type(u""), type(b""))):
                 libdirs.append(hdf5_library_dirs)
             else:
                 libdirs.extend(hdf5_library_dirs)
