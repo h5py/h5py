@@ -473,9 +473,9 @@ class Group(HLObject, MutableMappingHDF5):
             ) if self.name is not None else six.u("(anonymous)")
             r = six.u('<HDF5 group %s (%d members)>') % (namestr, len(self))
 
-        if six.PY3:
-            return r
-        return r.encode('utf8')
+        if six.PY2:
+            return r.encode('utf8')
+        return r
 
 
 class HardLink(object):

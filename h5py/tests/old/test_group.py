@@ -418,7 +418,7 @@ class TestPy2Dict(BaseMapping):
         self.assertSameElements([x for x in self.f.iteritems()],
             [(x, self.f.get(x)) for x in self.groups])
 
-@ut.skipIf(not six.PY3, "Py3")
+@ut.skipIf(six.PY2, "Py3")
 class TestPy3Dict(BaseMapping):
 
     def test_keys(self):

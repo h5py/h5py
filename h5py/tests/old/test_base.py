@@ -53,10 +53,10 @@ class TestRepr(BaseTest):
     USTRING = six.unichr(0xfc) + six.unichr(0xdf)
 
     def _check_type(self, obj):
-        if six.PY3:
-            self.assertIsInstance(repr(obj), six.text_type)
-        else:
+        if six.PY2:
             self.assertIsInstance(repr(obj), bytes)
+        else:
+            self.assertIsInstance(repr(obj), six.text_type)
 
     def test_group(self):
         """ Group repr() with unicode """

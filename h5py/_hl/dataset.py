@@ -415,7 +415,7 @@ class Dataset(HLObject):
         # Sort field indices from the rest of the args.
         names = tuple(x for x in args if isinstance(x, six.string_types))
         args = tuple(x for x in args if not isinstance(x, six.string_types))
-        if not six.PY3:
+        if six.PY2:
             names = tuple(x.encode('utf-8') if isinstance(x, six.text_type) else x for x in names)
 
         new_dtype = getattr(self._local, 'astype', None)
@@ -516,7 +516,7 @@ class Dataset(HLObject):
         # Sort field indices from the slicing
         names = tuple(x for x in args if isinstance(x, six.string_types))
         args = tuple(x for x in args if not isinstance(x, six.string_types))
-        if not six.PY3:
+        if six.PY2:
             names = tuple(x.encode('utf-8') if isinstance(x, six.text_type) else x for x in names)
 
         # Generally we try to avoid converting the arrays on the Python
@@ -707,9 +707,9 @@ class Dataset(HLObject):
                     name if name != six.u('') else six.u('/'))
             r = six.u('<HDF5 dataset %s: shape %s, type "%s">') % \
                 (namestr, self.shape, self.dtype.str)
-        if six.PY3:
-            return r
-        return r.encode('utf8')
+        if six.PY2:
+            return r.encode('utf8')
+        return r
         
     if hasattr(h5d.DatasetID, "refresh"):
         @with_phil

@@ -354,21 +354,7 @@ class MappingHDF5(Mapping):
         We don't inherit directly from MutableMapping because certain
         subclasses, for example DimensionManager, are read-only.
     """
-    
-    if six.PY3:
-        def keys(self):
-            """ Get a view object on member names """
-            return KeysView(self)
-
-        def values(self):
-            """ Get a view object on member objects """
-            return ValuesViewHDF5(self)
-
-        def items(self):
-            """ Get a view object on member items """
-            return ItemsViewHDF5(self)
-
-    else:
+    if six.PY2:
         def keys(self):
             """ Get a list containing member names """
             with phil:
@@ -393,7 +379,20 @@ class MappingHDF5(Mapping):
             """ Get an iterator over (name, object) pairs """
             for x in self:
                 yield (x, self.get(x))
-                
+
+    else:
+        def keys(self):
+            """ Get a view object on member names """
+            return KeysView(self)
+
+        def values(self):
+            """ Get a view object on member objects """
+            return ValuesViewHDF5(self)
+
+        def items(self):
+            """ Get a view object on member items """
+            return ItemsViewHDF5(self)
+
 
 class MutableMappingHDF5(MappingHDF5, MutableMapping):
 
