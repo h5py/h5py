@@ -7,7 +7,7 @@ from __future__ import absolute_import
 import numpy as np
 import h5py
 
-from ..common import ut, TestCase, NUMPY_RELEASE_VERSION
+from ..common import ut, TestCase
 
 class TestVlen(TestCase):
 
@@ -44,7 +44,6 @@ class TestVlen(TestCase):
         self.assertEqual(h5py.check_dtype(enum=h5py.check_dtype(vlen=dt1)),
                          h5py.check_dtype(enum=h5py.check_dtype(vlen=dt2)))
 
-@ut.skipIf(NUMPY_RELEASE_VERSION < (1, 11), "Requires numpy>=1.11")
 class TestAligned(TestCase):
 
     """
@@ -64,7 +63,7 @@ class TestAligned(TestCase):
         dt = np.dtype('i2,f8', align=True)
         data = np.empty(10, dtype=dt)
 
-        data['f0'] = np.random.randint(-100, 100, size=data.size, dtype='i2')
+        data['f0'] = np.array(np.random.randint(-100, 100, size=data.size), dtype='i2')
         data['f1'] = np.random.rand(data.size)
 
         fname = self.mktemp()
