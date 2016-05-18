@@ -162,3 +162,5 @@ class TestCase(ut.TestCase):
         else:
             with self.assertRaises(exc):
                 dset[s]
+
+NUMPY_RELEASE_VERSION = tuple([int(i) for i in np.__version__.split(".")[0:2]])
