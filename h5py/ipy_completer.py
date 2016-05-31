@@ -109,9 +109,9 @@ def h5py_item_completer(context, command):
 
     path, _ = posixpath.split(item)
     if path:
-        items = (posixpath.join(path, name) for name in obj[path].iterkeys())
+        items = (posixpath.join(path, name) for name in obj[path].keys())
     else:
-        items = obj.iterkeys()
+        items = obj.keys()
     items = list(items)
 
     readline.set_completer_delims(' \t\n`!@#$^&*()=+[{]}\\|;:\'",<>?')
