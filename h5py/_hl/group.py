@@ -16,7 +16,10 @@ from __future__ import absolute_import
 import posixpath as pp
 import six
 import numpy
-import sys
+try:
+    from os import fsdecode
+except ImportError:
+    from .compat import fsdecode
 
 from .. import h5g, h5i, h5o, h5r, h5t, h5l, h5p
 from . import base
@@ -234,11 +237,7 @@ class Group(HLObject, MutableMappingHDF5):
                     if getclass:
                         return ExternalLink
                     filebytes, linkbytes = self.id.links.get_val(self._e(name))
-                    try:
-                        filetext = filebytes.decode(sys.getfilesystemencoding())
-                    except (UnicodeError, LookupError):
-                        filetext = filebytes
-                    return ExternalLink(filetext, self._d(linkbytes))
+                    return ExternalLink(fsdecode(filebytes), self._d(linkbytes))
                     
                 elif typecode == h5l.TYPE_HARD:
                     return HardLink if getclass else HardLink()
