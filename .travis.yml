@@ -46,9 +46,9 @@ matrix:
       addons:
         apt:
           packages:
-            - openmpi-bin         # 1.6.5
+            - openmpi-bin         # 1.4.3
             - libopenmpi-dev
-            - libhdf5-openmpi-dev # 1.8.11
+            - libhdf5-openmpi-dev # 1.8.4
 
 install:
   - pip install tox
