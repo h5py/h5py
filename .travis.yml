@@ -27,17 +27,28 @@ env:
 #  - TOXENV=py35-test-mindeps
 # commented out because of https://github.com/travis-ci/travis-ci/issues/4794
 
-# needed to work around https://github.com/travis-ci/travis-ci/issues/4794
 matrix:
   include:
+    # needed to work around https://github.com/travis-ci/travis-ci/issues/4794
     - python: 3.5
       env:
       - TOXENV=py35-test-deps
-matrix:
-  include:
     - python: 3.5
       env:
       - TOXENV=py35-test-mindeps
+    # parallel HDF5 test with HDF5>=1.8.9 for mpio "atomic" support
+    - dist: trusty
+      sudo: required
+      env:
+      - TOXENV=py34-test-mpi4py
+      - CC="mpicc"
+      - HDF5_PARALLEL="ON"
+      addons:
+        apt:
+          packages:
+            - openmpi-bin         # 1.6.5
+            - libopenmpi-dev
+            - libhdf5-openmpi-dev # 1.8.11
 
 install:
   - pip install tox
