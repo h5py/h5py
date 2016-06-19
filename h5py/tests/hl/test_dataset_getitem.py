@@ -395,6 +395,15 @@ class Test1DFloat(TestCase):
         
     def test_indexlist_simple(self):
         self.assertNumpyBehavior(self.dset, self.data, np.s_[[1,2,5]])
+
+    def test_indexlist_single_index_ellipsis(self):
+        self.assertNumpyBehavior(self.dset, self.data, np.s_[[0], ...])
+
+    def test_indexlist_numpyarray_single_index_ellipsis(self):
+        self.assertNumpyBehavior(self.dset, self.data, np.s_[np.array([0]), ...])
+
+    def test_indexlist_numpyarray_ellipsis(self):
+        self.assertNumpyBehavior(self.dset, self.data, np.s_[np.array([1, 2, 5]), ...])
         
     # Another UnboundLocalError
     @ut.expectedFailure

@@ -83,6 +83,8 @@ def select(shape, args, dsid):
         if not isinstance(a, slice) and a is not Ellipsis:
             try:
                 int(a)
+                if isinstance(a, np.ndarray) and a.shape == (1,):
+                    raise Exception()
             except Exception:
                 sel = FancySelection(shape)
                 sel[args]
