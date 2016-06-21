@@ -42,7 +42,7 @@ matrix:
       env:
       - TOXENV=py34-test-mpi4py
       - CC="mpicc"
-      - HDF5_PARALLEL="ON"
+      - HDF5_MPI="ON"
       addons:
         apt:
           packages:
