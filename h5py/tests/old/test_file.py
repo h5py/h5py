@@ -42,10 +42,14 @@ class TestFileOpen(TestCase):
 
         # Existing readonly file; open read-only
         os.chmod(fname, stat.S_IREAD)
+        # Running as root (e.g. in a docker container) gives 'r+' as the file
+        # mode, even for a read-only file.  See
+        # https://github.com/h5py/h5py/issues/696
+        exp_mode = 'r+' if os.stat(fname).st_uid == 0 else 'r'
         try:
             with File(fname) as f:
                 self.assertTrue(f)
-                self.assertEqual(f.mode, 'r')
+                self.assertEqual(f.mode, exp_mode)
         finally:
             os.chmod(fname, stat.S_IWRITE)
 
@@ -54,7 +58,7 @@ class TestFileOpen(TestCase):
             f.write(b'\x00')
         with self.assertRaises(IOError):
             File(fname)
-        
+
     def test_create(self):
         """ Mode 'w' opens file in overwrite mode """
         fname = self.mktemp()
