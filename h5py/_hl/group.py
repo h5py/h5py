@@ -16,18 +16,10 @@ from __future__ import absolute_import
 import posixpath as pp
 import six
 import numpy
-try:
-    from os import fsdecode
-except ImportError:
-    from .compat import fsdecode
-try:
-    from os import fsencode
-except ImportError:
-    from .compat import fsencode
-try:
-    from os import fspath
-except ImportError:
-    from .compat import fspath
+
+from .compat import fsdecode
+from .compat import fsencode
+from .compat import fspath
 
 from .. import h5g, h5i, h5o, h5r, h5t, h5l, h5p
 from . import base

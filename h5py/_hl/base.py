@@ -19,14 +19,8 @@ import six
 from collections import (Mapping, MutableMapping, KeysView, 
                          ValuesView, ItemsView)
 
-try:
-    from os import fspath
-except ImportError:
-    from .compat import fspath
-try:
-    from os import fsencode
-except ImportError:
-    from .compat import fsencode
+from .compat import fspath
+from .compat import fsencode
 
 from .. import h5d, h5i, h5r, h5p, h5f, h5t, h5s
 
