@@ -33,6 +33,11 @@ matrix:
     - python: 3.5
       env:
       - TOXENV=py35-test-deps
+matrix:
+  include:
+    - python: 3.5
+      env:
+      - TOXENV=py35-test-mindeps
 
 install:
   - pip install tox
