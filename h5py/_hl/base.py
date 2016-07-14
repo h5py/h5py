@@ -15,10 +15,12 @@ from __future__ import absolute_import
 
 import posixpath
 import os
-import sys
 import six
 from collections import (Mapping, MutableMapping, KeysView, 
                          ValuesView, ItemsView)
+
+from .compat import fspath
+from .compat import fsencode
 
 from .. import h5d, h5i, h5r, h5p, h5f, h5t, h5s
 
@@ -32,14 +34,10 @@ from .._objects import phil, with_phil
 def is_hdf5(fname):
     """ Determine if a file is valid HDF5 (False if it doesn't exist). """
     with phil:
-        fname = os.path.abspath(fname)
+        fname = os.path.abspath(fspath(fname))
 
         if os.path.isfile(fname):
-            try:
-                fname = fname.encode(sys.getfilesystemencoding())
-            except (UnicodeError, LookupError):
-                pass
-            return h5f.is_hdf5(fname)
+            return h5f.is_hdf5(fsencode(fname))
         return False
 
 

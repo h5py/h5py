@@ -16,6 +16,10 @@ from __future__ import absolute_import
 import sys
 import os
 
+from .compat import fspath
+from .compat import fsencode
+from .compat import fsdecode
+
 import six
 
 from .base import phil, with_phil
@@ -149,11 +153,7 @@ class File(Group):
     @with_phil
     def filename(self):
         """File name on disk"""
-        name = h5f.get_name(self.fid)
-        try:
-            return name.decode(sys.getfilesystemencoding())
-        except (UnicodeError, LookupError):
-            return name
+        return fsdecode(h5f.get_name(self.fid))
 
     @property
     @with_phil
@@ -260,13 +260,7 @@ class File(Group):
             if isinstance(name, _objects.ObjectID):
                 fid = h5i.get_file_id(name)
             else:
-                try:
-                    # If the byte string doesn't match the default
-                    # encoding, just pass it on as-is.  Note Unicode
-                    # objects can always be encoded.
-                    name = name.encode(sys.getfilesystemencoding())
-                except (UnicodeError, LookupError):
-                    pass
+                name = fsencode(fspath(name))
 
                 fapl = make_fapl(driver, libver, **kwds)
                 fid = make_fid(name, mode, userblock_size, fapl, swmr=swmr)

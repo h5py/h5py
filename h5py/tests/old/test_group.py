@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # This file is part of h5py, a Python interface to the HDF5 library.
 #
 # http://www.h5py.org
@@ -21,7 +22,9 @@ from __future__ import absolute_import
 import collections
 import numpy as np
 import os
+import os.path
 import sys
+from tempfile import mkdtemp
 
 import six
 
@@ -730,6 +733,28 @@ class TestExternalLinks(TestCase):
         f2 = grp.file
         f2.close()
         self.assertFalse(f2)
+
+    def test_unicode_encode(self):
+        """
+        Check that external links encode unicode filenames properly
+        Testing issue #732
+        """
+        ext_filename = os.path.join(mkdtemp(), "α.hdf5")
+        with File(ext_filename, "w") as ext_file:
+            ext_file.create_group('external')
+        self.f['ext'] = ExternalLink(ext_filename, '/external')
+
+    def test_unicode_decode(self):
+        """
+        Check that external links decode unicode filenames properly
+        Testing issue #732
+        """
+        ext_filename = os.path.join(mkdtemp(), "α.hdf5")
+        with File(ext_filename, "w") as ext_file:
+            ext_file.create_group('external')
+            ext_file["external"].attrs["ext_attr"] = "test"
+        self.f['ext'] = ExternalLink(ext_filename, '/external')
+        self.assertEqual(self.f["ext"].attrs["ext_attr"], "test")
 
 class TestExtLinkBugs(TestCase):
 
