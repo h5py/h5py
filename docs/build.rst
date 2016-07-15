@@ -77,6 +77,7 @@ when installing via ``pip``, as you don't have direct access to setup.py::
 
     $ HDF5_DIR=/path/to/hdf5 pip install h5py
     $ HDF5_VERSION=X.Y.Z pip install h5py
+    $ CC="mpicc" HDF5_MPI="ON" HDF5_DIR=/path/to/parallel-hdf5 pip install h5py
     
 Here's a list of all the configure options currently supported:
 
@@ -85,7 +86,7 @@ Option                  Via setup.py                Via environment variable
 ======================= =========================== ===========================
 Custom path to HDF5     ``--hdf5=/path/to/hdf5``    ``HDF5_DIR=/path/to/hdf5``
 Force HDF5 version      ``--hdf5-version=X.Y.Z``    ``HDF5_VERSION=X.Y.Z``
-Enable MPI mode         ``--mpi``                   (none)
+Enable MPI mode         ``--mpi``                   ``HDF5_MPI=ON``
 ======================= =========================== ===========================
 
 
@@ -99,16 +100,20 @@ HDF5 features in h5py itself::
     $ python setup.py install
 
 If you want access to the full Parallel HDF5 feature set in h5py
-(:ref:`parallel`), you will have to build in MPI mode.  Right now this must
-be done with command-line options from the h5py tarball.
+(:ref:`parallel`), you will further have to build in MPI mode.  This can either
+be done with command-line options from the h5py tarball or by::
+
+    $ export HDF5_MPI="ON"
 
 **You will need a shared-library build of Parallel HDF5 (i.e. built with
 ./configure --enable-shared --enable-parallel).**
 
-To build in MPI mode, use the ``--mpi`` option to ``setup.py configure``::
+To build in MPI mode, use the ``--mpi`` option to ``setup.py configure`` or
+export ``HDF5_MPI="ON"`` beforehand::
 
     $ export CC=mpicc
-    $ python setup.py configure --mpi
+    $ export HDF5_MPI="ON"
+    $ python setup.py configure
     $ python setup.py build
 
 See also :ref:`parallel`.

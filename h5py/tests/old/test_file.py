@@ -256,6 +256,8 @@ class TestDrivers(TestCase):
             self.assertEqual(f.driver, 'mpio')
 
     @ut.skipUnless(mpi, "Parallel HDF5 required")
+    @ut.skipIf(h5py.version.hdf5_version_tuple < (1,8,9),
+               "mpio atomic file operations were added in HDF5 1.8.9+")
     def test_mpi_atomic(self):
         """ Enable atomic mode for MPIO driver """
         from mpi4py import MPI
