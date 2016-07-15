@@ -1433,14 +1433,21 @@ cdef TypeCompoundID _c_compound(dtype dt, int logical):
     cdef tuple names = dt.names
 
     # Initial size MUST be 1 to avoid segfaults (issue 166)
-    tid = H5Tcreate(H5T_COMPOUND, 1)  
+    tid = H5Tcreate(H5T_COMPOUND, 1)
 
+    max_size = 0
     for name in names:
         ename = name.encode('utf8') if isinstance(name, unicode) else name
         dt_tmp = dt.fields[name][0]
         offset = dt.fields[name][1]
         type_tmp = py_create(dt_tmp, logical=logical)
-        H5Tset_size(tid, offset+type_tmp.get_size())
+
+        # account for out of order fields (as determined by offsets)
+        new_size = offset+type_tmp.get_size()
+        if new_size > max_size:
+            H5Tset_size(tid, new_size)
+            max_size = new_size
+
         H5Tinsert(tid, ename, offset, type_tmp.id)
 
     return TypeCompoundID(tid)
