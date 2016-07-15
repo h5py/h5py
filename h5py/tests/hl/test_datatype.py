@@ -47,7 +47,7 @@ class TestVlen(TestCase):
 
 class TestOffsets(TestCase):
     """
-        Check that compound members with manual offsets are handled
+        Check that compound members with aligned or manual offsets are handled
         correctly.
     """
 
