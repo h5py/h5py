@@ -36,7 +36,7 @@ hdf5:
   herr_t    H5open()
   herr_t    H5close()
   herr_t    H5get_libversion(unsigned *majnum, unsigned *minnum, unsigned *relnum)
-
+  herr_t    H5check_version(unsigned majnum, unsigned minnum, unsigned relnum )
 
   # === H5A - Attributes API ==================================================
 
