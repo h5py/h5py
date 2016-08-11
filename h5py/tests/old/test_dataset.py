@@ -88,6 +88,17 @@ class TestCreateShape(BaseDataset):
         with self.assertRaises(TypeError):
             self.f.create_dataset('foo')
 
+    def test_long_double(self):
+        """ Confirm that the default dtype is float """
+        dset = self.f.create_dataset('foo', (63,), dtype=np.longdouble)
+        self.assertEqual(dset.dtype, np.longdouble)
+
+    def test_complex256(self):
+        """ Confirm that the default dtype is float """
+        dset = self.f.create_dataset('foo', (63,),
+                                     dtype=np.dtype('complex256'))
+        self.assertEqual(dset.dtype, np.dtype('complex256'))
+
 
 class TestCreateData(BaseDataset):
 
@@ -138,6 +149,7 @@ class TestCreateData(BaseDataset):
     def test_empty_create_via_Empty_class(self):
         self.f.create_dataset('foo', data=h5py.Empty(dtype='f'))
         self.assertTrue(is_empty_dataspace(self.f['foo'].id))
+
 
 class TestCreateRequire(BaseDataset):
 

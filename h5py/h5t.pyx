@@ -1251,7 +1251,8 @@ cdef class TypeEnumID(TypeCompositeID):
 
 cdef dict _float_le = {2: H5Tcopy(IEEE_F16LE.id), 4: H5Tcopy(H5T_IEEE_F32LE), 8: H5Tcopy(H5T_IEEE_F64LE)}
 cdef dict _float_be = {2: H5Tcopy(IEEE_F16BE.id), 4: H5Tcopy(H5T_IEEE_F32BE), 8: H5Tcopy(H5T_IEEE_F64BE)}
-cdef dict _float_nt = _float_le if ORDER_NATIVE == H5T_ORDER_LE else _float_be
+cdef dict _float_nt = dict(_float_le) if ORDER_NATIVE == H5T_ORDER_LE else dict(_float_be)
+_float_nt[sizeof(long double)] = H5Tcopy(H5T_NATIVE_LDOUBLE)
 
 cdef dict _int_le = {1: H5Tcopy(H5T_STD_I8LE), 2: H5Tcopy(H5T_STD_I16LE), 4: H5Tcopy(H5T_STD_I32LE), 8: H5Tcopy(H5T_STD_I64LE)}
 cdef dict _int_be = {1: H5Tcopy(H5T_STD_I8BE), 2: H5Tcopy(H5T_STD_I16BE), 4: H5Tcopy(H5T_STD_I32BE), 8: H5Tcopy(H5T_STD_I64BE)}
@@ -1259,7 +1260,7 @@ cdef dict _int_nt = {1: H5Tcopy(H5T_NATIVE_INT8), 2: H5Tcopy(H5T_NATIVE_INT16), 
 
 cdef dict _uint_le = {1: H5Tcopy(H5T_STD_U8LE), 2: H5Tcopy(H5T_STD_U16LE), 4: H5Tcopy(H5T_STD_U32LE), 8: H5Tcopy(H5T_STD_U64LE)}
 cdef dict _uint_be = {1: H5Tcopy(H5T_STD_U8BE), 2: H5Tcopy(H5T_STD_U16BE), 4: H5Tcopy(H5T_STD_U32BE), 8: H5Tcopy(H5T_STD_U64BE)}
-cdef dict _uint_nt = {1: H5Tcopy(H5T_NATIVE_UINT8), 2: H5Tcopy(H5T_NATIVE_UINT16), 4: H5Tcopy(H5T_NATIVE_UINT32), 8: H5Tcopy(H5T_NATIVE_UINT64)} 
+cdef dict _uint_nt = {1: H5Tcopy(H5T_NATIVE_UINT8), 2: H5Tcopy(H5T_NATIVE_UINT16), 4: H5Tcopy(H5T_NATIVE_UINT32), 8: H5Tcopy(H5T_NATIVE_UINT64)}
 
 cdef TypeFloatID _c_float(dtype dt):
     # Floats (single and double)
@@ -1391,6 +1392,12 @@ cdef TypeCompoundID _c_complex(dtype dt):
             tid_sub = H5T_IEEE_F64BE
         else:
             tid_sub = H5T_NATIVE_DOUBLE
+
+    elif length == 32:
+        size = h5py_size_n256
+        off_r = h5py_offset_n256_real
+        off_i = h5py_offset_n256_imag
+        tid_sub = H5T_NATIVE_LDOUBLE
     else:
         raise TypeError("Illegal length %d for complex dtype" % length)
 
