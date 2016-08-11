@@ -1392,6 +1392,12 @@ cdef TypeCompoundID _c_complex(dtype dt):
             tid_sub = H5T_IEEE_F64BE
         else:
             tid_sub = H5T_NATIVE_DOUBLE
+
+    elif length == 32:
+        size = h5py_size_n256
+        off_r = h5py_offset_n256_real
+        off_i = h5py_offset_n256_imag
+        tid_sub = H5T_NATIVE_LDOUBLE
     else:
         raise TypeError("Illegal length %d for complex dtype" % length)
 

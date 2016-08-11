@@ -1,5 +1,5 @@
 /***** Preamble block *********************************************************
-* 
+*
 * This file is part of h5py, a Python interface to the HDF5 library.
 *
 * http://www.h5py.org
@@ -8,7 +8,7 @@
 *
 * License:  Standard 3-clause BSD; see "license.txt" for full license terms
 *           and contributor agreement.
-* 
+*
 ****** End preamble block ****************************************************/
 
 /* Contains compatibility macros and definitions for use by Cython code */
@@ -30,11 +30,13 @@ typedef void *PyMPI_MPI_Message;
 
 #define h5py_size_n64 (sizeof(npy_complex64))
 #define h5py_size_n128 (sizeof(npy_complex128))
+#define h5py_size_n256 (sizeof(npy_complex256))
 
 #define h5py_offset_n64_real (HOFFSET(npy_complex64, real))
 #define h5py_offset_n64_imag (HOFFSET(npy_complex64, imag))
 #define h5py_offset_n128_real (HOFFSET(npy_complex128, real))
 #define h5py_offset_n128_imag (HOFFSET(npy_complex128, imag))
+#define h5py_offset_n256_real (HOFFSET(npy_complex256, real))
+#define h5py_offset_n256_imag (HOFFSET(npy_complex256, imag))
 
 #endif
-
