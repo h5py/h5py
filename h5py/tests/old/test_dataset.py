@@ -88,6 +88,11 @@ class TestCreateShape(BaseDataset):
         with self.assertRaises(TypeError):
             self.f.create_dataset('foo')
 
+    def test_long_double(self):
+        """ Confirm that the default dtype is float """
+        dset = self.f.create_dataset('foo', (63,), dtype=np.longdouble)
+        self.assertEqual(dset.dtype, np.longdouble)
+
 
 class TestCreateData(BaseDataset):
 
