@@ -54,6 +54,11 @@ def make_fapl(driver, libver, **kwds):
         plist.set_libver_bounds(low, high)
 
     if driver is None or (driver == 'windows' and sys.platform == 'win32'):
+        # Prevent swallowing unused key arguments
+        if kwds:
+            msg = "'{key}' is an invalid keyword argument for this function" \
+                  .format(key=next(iter(kwds)))
+            raise TypeError(msg)
         return plist
 
     if driver == 'sec2':
@@ -198,7 +203,7 @@ class File(Group):
         @property
         @with_phil
         def atomic(self):
-            """ Set/get MPI-IO atomic mode 
+            """ Set/get MPI-IO atomic mode
             """
             return self.id.get_mpi_atomicity()
 
@@ -207,13 +212,13 @@ class File(Group):
         def atomic(self, value):
             # pylint: disable=missing-docstring
             self.id.set_mpi_atomicity(value)
-            
+
     if swmr_support:
         @property
         def swmr_mode(self):
             """ Controls single-writer multiple-reader mode """
             return self._swmr_mode
-            
+
         @swmr_mode.setter
         @with_phil
         def swmr_mode(self, value):
@@ -255,7 +260,7 @@ class File(Group):
         """
         if swmr and not swmr_support:
             raise ValueError("The SWMR feature is not available in this version of the HDF5 library")
-        
+
         with phil:
             if isinstance(name, _objects.ObjectID):
                 fid = h5i.get_file_id(name)
@@ -264,35 +269,35 @@ class File(Group):
 
                 fapl = make_fapl(driver, libver, **kwds)
                 fid = make_fid(name, mode, userblock_size, fapl, swmr=swmr)
-            
+
                 if swmr_support:
                     self._swmr_mode = False
                     if swmr and mode == 'r':
-                        self._swmr_mode = True                    
-                    
+                        self._swmr_mode = True
+
             Group.__init__(self, fid)
 
     def close(self):
         """ Close the file.  All open objects become invalid """
         with phil:
             # We have to explicitly murder all open objects related to the file
-            
+
             # Close file-resident objects first, then the files.
             # Otherwise we get errors in MPI mode.
             id_list = h5f.get_obj_ids(self.id, ~h5f.OBJ_FILE)
             file_list = h5f.get_obj_ids(self.id, h5f.OBJ_FILE)
-            
+
             id_list = [x for x in id_list if h5i.get_file_id(x).id == self.id.id]
             file_list = [x for x in file_list if h5i.get_file_id(x).id == self.id.id]
-            
+
             for id_ in id_list:
                 while id_.valid:
                     h5i.dec_ref(id_)
-                    
+
             for id_ in file_list:
                 while id_.valid:
                     h5i.dec_ref(id_)
-                    
+
             self.id.close()
             _objects.nonlocal_close()
 
