@@ -750,5 +750,10 @@ cdef extern from "hdf5.h":
 
 cdef extern from "hdf5_hl.h":
 # === H5DS - Dimension Scales API =============================================
+  cdef enum:
+    H5LT_FILE_IMAGE_OPEN_RW
+    H5LT_FILE_IMAGE_DONT_COPY
+    H5LT_FILE_IMAGE_DONT_RELEASE
+
 
   ctypedef herr_t  (*H5DS_iterate_t)(hid_t dset, unsigned dim, hid_t scale, void *visitor_data) except 2
