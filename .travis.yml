@@ -49,6 +49,11 @@ matrix:
             - openmpi-bin         # 1.4.3
             - libopenmpi-dev
             - libhdf5-openmpi-dev # 1.8.4
+    - python: pypy
+      env:
+      - TOXENV=pypy-test-deps
+  allow_failures:
+    - python: pypy
 
 install:
   - pip install tox

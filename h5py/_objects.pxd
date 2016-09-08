@@ -15,9 +15,11 @@ cdef class ObjectID:
     cdef readonly hid_t id
     cdef public int locked              # Cannot be closed, explicitly or auto
     cdef object _hash
+    cdef unsigned long _pyid
 
 # Convenience functions
 cdef hid_t pdefault(ObjectID pid)
+cdef int is_h5py_obj_valid(ObjectID obj)
 
 # Inheritance scheme (for top-level cimport and import statements):
 #
