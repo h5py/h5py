@@ -31,4 +31,4 @@ class TestWriteDirectChunk(TestCase):
         filehandle = h5py.File(filename, "r")
         for i in range(10):
             read_data = filehandle["data"][i]
-            self.assertTrue(array[i] == read_data).all()
+            self.assertTrue((array[i] == read_data).all())
