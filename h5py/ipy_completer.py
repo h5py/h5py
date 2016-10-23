@@ -108,12 +108,16 @@ def h5py_item_completer(context, command):
         return []
 
     path, _ = posixpath.split(item)
-    if path:
-        items = (posixpath.join(path, name) for name in obj[path].iterkeys())
-    else:
-        items = obj.iterkeys()
-    items = list(items)
 
+    try:
+        if path:
+            items = (posixpath.join(path, name) for name in obj[path].keys())
+        else:
+            items = obj.keys()
+    except AttributeError:
+        return []
+
+    items = list(items)
     readline.set_completer_delims(' \t\n`!@#$^&*()=+[{]}\\|;:\'",<>?')
 
     return [i for i in items if i[:len(item)] == item]
