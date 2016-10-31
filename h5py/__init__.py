@@ -52,7 +52,7 @@ from ._hl.files import (
     unregister_driver,
     registered_drivers,
 )
-from ._hl.group import Group, SoftLink, ExternalLink, HardLink
+from ._hl.group import Group, SoftLink, ExternalLink, HardLink, VirtualSource, VirtualTarget, VirtualMap
 from ._hl.dataset import Dataset
 from ._hl.datatype import Datatype
 from ._hl.attrs import AttributeManager
