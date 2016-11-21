@@ -482,6 +482,10 @@ class Test3DFloat(TestCase):
     def test_index_slice_and_list(self):
         self.assertNumpyBehavior(self.dset, self.data, np.s_[0, :, [1, 2]])
  
+    def test_slice_and_lists(self):
+        self.assertNumpyBehavior(self.dset, self.data,
+                                 np.s_[:, [0, 1], [1, 2]])
+
     def test_index_and_lists1(self):
         self.assertNumpyBehavior(self.dset, self.data,
                                  np.s_[0, [0, 1], [1, 2]])

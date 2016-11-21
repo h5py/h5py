@@ -406,14 +406,19 @@ class FancySelection(Selection):
                len(sequenceargs) == 1):
                 mshape[idx] = len(sequenceargs[idx])
             elif (idx in sequenceargs and
-                  len(sequenceargs) > 1 or
-                  scalar[idx]):
+                  len(sequenceargs) > 1):
                 mshape[idx] = 0
 
-        self._mshape = tuple(x for x in mshape if x != 0)
         if len(sequenceargs) > 1:
-            self._reorder = True
-            self._mshape = (vectorlength,) + self._mshape
+            if np.max(np.diff(np.sort(list(sequenceargs.keys())))) > 1:
+                self._reorder = True
+                mshape = [vectorlength] + mshape
+            else:
+                mshape = np.asarray(mshape)
+                # Replace first occurence of list:
+                mshape[np.where(mshape == 0)[0][0]] = vectorlength
+
+        self._mshape = tuple(x for x in mshape if x != 0)
 
     def broadcast(self, target_shape):
         if not target_shape == self.mshape:
