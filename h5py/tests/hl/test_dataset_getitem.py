@@ -461,3 +461,33 @@ class Test2DZeroFloat(TestCase):
         self.assertNumpyBehavior(self.dset, self.data, np.s_[:,[0,1,2]])
 
         
+class Test3DFloat(TestCase):
+
+    def setUp(self):
+        TestCase.setUp(self)
+        self.data = np.arange(27).astype('f').reshape((3, 3, 3))
+        self.dset = self.f.create_dataset('x', data=self.data)
+        
+    def test_ndim(self):
+        """ Verify number of dimensions """
+        self.assertEquals(self.dset.ndim, 3)
+        
+    def test_shape(self):
+        """ Verify shape """
+        self.assertEquals(self.dset.shape, (3, 3, 3))
+
+    def test_two_slices_and_list(self):
+        self.assertNumpyBehavior(self.dset, self.data, np.s_[:, :, [1, 2]])
+
+    def test_index_slice_and_list(self):
+        self.assertNumpyBehavior(self.dset, self.data, np.s_[0, :, [1, 2]])
+        
+    def test_index_and_lists1(self):
+        self.assertNumpyBehavior(self.dset, self.data, np.s_[0, [0, 1], [1, 2]])
+
+    def test_index_and_lists2(self):
+        self.assertNumpyBehavior(self.dset, self.data, np.s_[[0, 1], 0, [1, 2]])
+
+    def test_lists(self):
+        self.assertNumpyBehavior(self.dset, self.data, np.s_[[1, 2], [0, 1], [1, 2]])
+        

@@ -500,6 +500,12 @@ class Dataset(HLObject):
             arr = numpy.asscalar(arr)
         if single_element:
             arr = arr[0]
+
+        if selection.reorder:
+            #This allows vector numpy-style indexing:
+            arr = (arr.reshape(numpy.prod(arr.shape))
+                      .reshape(arr.shape, order='F')
+                      )
         return arr
 
 
