@@ -377,7 +377,7 @@ class FancySelection(Selection):
 
         for idx, arg in enumerate(args):
             if (not isinstance(arg, slice) and
-               idx not in sequenceargs ):
+               idx not in sequenceargs):
                 sequenceargs[idx] = vectorlength * [arg]
 
         # Now generate a vector of selection lists,

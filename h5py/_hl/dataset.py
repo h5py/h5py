@@ -502,12 +502,11 @@ class Dataset(HLObject):
             arr = arr[0]
 
         if selection.reorder:
-            #This allows vector numpy-style indexing:
+            # This allows vector numpy-style indexing:
             arr = (arr.reshape(numpy.prod(arr.shape))
-                      .reshape(arr.shape, order='F')
-                      )
+                   .reshape(arr.shape, order='F')
+                   )
         return arr
-
 
     @with_phil
     def __setitem__(self, args, val):
