@@ -115,15 +115,13 @@ def nonlocal_close():
     """
     cdef ObjectID obj
 
-    for python_id, ref in registry.items():
+    # list() needed because the registry can be mutated concurrently
+    for python_id, ref in list(registry.items()):
         obj = ref()
 
-        # Object somehow died without being removed from the registry.
-        # I think this is impossible, but let's make sure.
+        # Object died while walking the registry list, presumably because
+        # the cyclic GC kicked in.
         if obj is None:
-            warnings.warn("Found murdered identifier %d of kind %s HDF5 id %d" % 
-                             (python_id, type(obj), obj.id), RuntimeWarning)
-            del registry[python_id]
             continue
 
         # Locked objects are immortal, as they generally are provided by
