@@ -112,7 +112,12 @@ def make_fid(name, mode, userblock_size, fapl, fcpl=None, swmr=False):
         try:
             fid = h5f.open(name, h5f.ACC_RDWR, fapl=fapl)
         except IOError:
-            fid = h5f.create(name, h5f.ACC_EXCL, fapl=fapl, fcpl=fcpl)
+            exc_info = sys.exc_info()  # save the root cause
+            try:
+                fid = h5f.create(name, h5f.ACC_EXCL, fapl=fapl, fcpl=fcpl)
+            except:
+                # reraise the original root cause
+                raise exc_info[0], exc_info[1], exc_info[2]
     elif mode is None:
         # Try to open in append mode (read/write).
         # If that fails, try readonly, and finally create a new file only
