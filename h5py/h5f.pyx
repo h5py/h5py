@@ -1,27 +1,31 @@
-#+
+# This file is part of h5py, a Python interface to the HDF5 library.
 #
-# This file is part of h5py, a low-level Python interface to the HDF5 library.
+# http://www.h5py.org
 #
-# Copyright (C) 2008 Andrew Collette
-# http://h5py.alfven.org
-# License: BSD  (See LICENSE.txt for full license)
+# Copyright 2008-2013 Andrew Collette and contributors
 #
-# $Date$
-#
-#-
+# License:  Standard 3-clause BSD; see "license.txt" for full license terms
+#           and contributor agreement.
 
 """
     Low-level operations on HDF5 file objects.
 """
+
+include "config.pxi"
 
 # Compile-time imports
 from _objects cimport pdefault
 from h5p cimport propwrap, PropFAID, PropFCID
 from h5t cimport typewrap
 from h5i cimport wrap_identifier
+from h5ac cimport CacheConfig
 from utils cimport emalloc, efree
 
-import _objects
+from h5py import _objects
+from ._objects import phil, with_phil
+import h5fd
+
+from cpython.bytes cimport PyBytes_FromStringAndSize, PyBytes_AsString
 
 # Initialization
 
@@ -31,6 +35,10 @@ ACC_TRUNC   = H5F_ACC_TRUNC
 ACC_EXCL    = H5F_ACC_EXCL
 ACC_RDWR    = H5F_ACC_RDWR
 ACC_RDONLY  = H5F_ACC_RDONLY
+IF HDF5_VERSION >= SWMR_MIN_HDF5_VERSION:
+    ACC_SWMR_WRITE = H5F_ACC_SWMR_WRITE
+    ACC_SWMR_READ  = H5F_ACC_SWMR_READ
+
 
 SCOPE_LOCAL     = H5F_SCOPE_LOCAL
 SCOPE_GLOBAL    = H5F_SCOPE_GLOBAL
@@ -53,7 +61,7 @@ LIBVER_LATEST = H5F_LIBVER_LATEST
 
 # === File operations =========================================================
 
-
+@with_phil
 def open(char* name, unsigned int flags=H5F_ACC_RDWR, PropFAID fapl=None):
     """(STRING name, UINT flags=ACC_RDWR, PropFAID fapl=None) => FileID
 
@@ -67,9 +75,10 @@ def open(char* name, unsigned int flags=H5F_ACC_RDWR, PropFAID fapl=None):
 
     Keyword fapl may be a file access property list.
     """
-    return FileID.open(H5Fopen(name, flags, pdefault(fapl)))
+    return FileID(H5Fopen(name, flags, pdefault(fapl)))
 
 
+@with_phil
 def create(char* name, int flags=H5F_ACC_TRUNC, PropFCID fcpl=None,
                                                 PropFAID fapl=None):
     """(STRING name, INT flags=ACC_TRUNC, PropFCID fcpl=None,
@@ -86,9 +95,10 @@ def create(char* name, int flags=H5F_ACC_TRUNC, PropFCID fcpl=None,
     To keep the behavior in line with that of Python's built-in functions,
     the default is ACC_TRUNC.  Be careful!
     """
-    return FileID.open(H5Fcreate(name, flags, pdefault(fcpl), pdefault(fapl)))
+    return FileID(H5Fcreate(name, flags, pdefault(fcpl), pdefault(fapl)))
 
 
+@with_phil
 def flush(ObjectID obj not None, int scope=H5F_SCOPE_LOCAL):
     """(ObjectID obj, INT scope=SCOPE_LOCAL)
 
@@ -105,6 +115,7 @@ def flush(ObjectID obj not None, int scope=H5F_SCOPE_LOCAL):
     H5Fflush(obj.id, <H5F_scope_t>scope)
 
 
+@with_phil
 def is_hdf5(char* name):
     """(STRING name) => BOOL
 
@@ -114,6 +125,7 @@ def is_hdf5(char* name):
     return <bint>(H5Fis_hdf5(name))
 
 
+@with_phil
 def mount(ObjectID loc not None, char* name, FileID fid not None):
     """(ObjectID loc, STRING name, FileID fid)
 
@@ -123,6 +135,7 @@ def mount(ObjectID loc not None, char* name, FileID fid not None):
     H5Fmount(loc.id, name, fid.id, H5P_DEFAULT)
 
 
+@with_phil
 def unmount(ObjectID loc not None, char* name):
     """(ObjectID loc, STRING name)
 
@@ -131,6 +144,7 @@ def unmount(ObjectID loc not None, char* name):
     H5Funmount(loc.id, name)
 
 
+@with_phil
 def get_name(ObjectID obj not None):
     """(ObjectID obj) => STRING
 
@@ -151,6 +165,7 @@ def get_name(ObjectID obj not None):
         efree(name)
 
 
+@with_phil
 def get_obj_count(object where=OBJ_ALL, int types=H5F_OBJ_ALL):
     """(OBJECT where=OBJ_ALL, types=OBJ_ALL) => INT
 
@@ -179,6 +194,7 @@ def get_obj_count(object where=OBJ_ALL, int types=H5F_OBJ_ALL):
     return H5Fget_obj_count(where_id, types)
 
 
+@with_phil
 def get_obj_ids(object where=OBJ_ALL, int types=H5F_OBJ_ALL):
     """(OBJECT where=OBJ_ALL, types=OBJ_ALL) => LIST
 
@@ -214,11 +230,13 @@ def get_obj_ids(object where=OBJ_ALL, int types=H5F_OBJ_ALL):
         count = H5Fget_obj_count(where_id, types)
         obj_list = <hid_t*>emalloc(sizeof(hid_t)*count)
 
-        H5Fget_obj_ids(where_id, types, count, obj_list)
-        for i from 0<=i<count:
-            py_obj_list.append(wrap_identifier(obj_list[i]))
-            # The HDF5 function returns a borrowed reference for each hid_t.
-            #H5Iinc_ref(obj_list[i])
+        if count > 0: # HDF5 complains that obj_list is NULL, even if count==0
+            H5Fget_obj_ids(where_id, types, count, obj_list)
+            for i from 0<=i<count:
+                py_obj_list.append(wrap_identifier(obj_list[i]))
+                # The HDF5 function returns a borrowed reference for each hid_t.
+                H5Iinc_ref(obj_list[i])
+                
         return py_obj_list
 
     finally:
@@ -249,14 +267,11 @@ cdef class FileID(GroupID):
     property name:
         """ File name on disk (according to h5f.get_name()) """
         def __get__(self):
-            return get_name(self)
+            with phil:
+                return get_name(self)
 
 
-    def __cinit__(self, id):
-        # lock the id proxy for as long as the the identifier is open
-        self.locked = True
-
-
+    @with_phil
     def close(self):
         """()
 
@@ -265,12 +280,11 @@ cdef class FileID(GroupID):
         physical file might not be closed until all remaining open
         identifiers are freed.
         """
-        with _objects.registry.lock:
-            self.locked = False
-            H5Fclose(self.id)
-            _objects.registry.cleanup()
+        self._close()
+        _objects.nonlocal_close()
 
 
+    @with_phil
     def reopen(self):
         """() => FileID
 
@@ -278,9 +292,10 @@ cdef class FileID(GroupID):
         The new identifier is guaranteed to neither be mounted nor contain
         a mounted file.
         """
-        return FileID.open(H5Freopen(self.id))
+        return FileID(H5Freopen(self.id))
 
 
+    @with_phil
     def get_filesize(self):
         """() => LONG size
 
@@ -292,6 +307,7 @@ cdef class FileID(GroupID):
         return size
 
 
+    @with_phil
     def get_create_plist(self):
         """() => PropFCID
 
@@ -301,6 +317,7 @@ cdef class FileID(GroupID):
         return propwrap(H5Fget_create_plist(self.id))
 
 
+    @with_phil
     def get_access_plist(self):
         """() => PropFAID
 
@@ -310,6 +327,7 @@ cdef class FileID(GroupID):
         return propwrap(H5Fget_access_plist(self.id))
 
 
+    @with_phil
     def get_freespace(self):
         """() => LONG freespace
 
@@ -319,6 +337,7 @@ cdef class FileID(GroupID):
         return H5Fget_freespace(self.id)
 
 
+    @with_phil
     def get_intent(self):
         """ () => INT
 
@@ -329,3 +348,164 @@ cdef class FileID(GroupID):
         cdef unsigned int mode
         H5Fget_intent(self.id, &mode)
         return mode
+
+
+    @with_phil
+    def get_vfd_handle(self):
+        """ () => INT
+
+        Retrieve the file handle used by the virtual file driver.
+
+        This method is only functional when the the SEC2 driver is used.
+        """
+        if H5Pget_driver(H5Fget_access_plist(self.id)) != h5fd.SEC2:
+            raise NotImplementedError
+        cdef int *handle
+        H5Fget_vfd_handle(self.id, H5Fget_access_plist(self.id), <void**>&handle)
+        return handle[0]
+
+    IF HDF5_VERSION >= (1, 8, 9):
+
+        @with_phil
+        def get_file_image(self):
+            """ () => BYTES
+
+            Retrieves a copy of the image of an existing, open file.
+
+            Feature requries: 1.8.9
+            """
+
+            cdef ssize_t size
+
+            size = H5Fget_file_image(self.id, NULL, 0)
+            image = PyBytes_FromStringAndSize(NULL, size)
+
+            H5Fget_file_image(self.id, PyBytes_AsString(image), size)
+
+            return image
+
+    IF MPI and HDF5_VERSION >= (1, 8, 9):
+
+        @with_phil
+        def set_mpi_atomicity(self, bint atomicity):
+            """ (BOOL atomicity)
+
+            For MPI-IO driver, set to atomic (True), which guarantees sequential 
+            I/O semantics, or non-atomic (False), which improves  performance.
+
+            Default is False.
+
+            Feature requires: 1.8.9 and Parallel HDF5
+            """
+            H5Fset_mpi_atomicity(self.id, <hbool_t>atomicity)
+
+
+        @with_phil
+        def get_mpi_atomicity(self):
+            """ () => BOOL
+
+            Return atomicity setting for MPI-IO driver.
+
+            Feature requires: 1.8.9 and Parallel HDF5
+            """
+            cdef hbool_t atom
+
+            H5Fget_mpi_atomicity(self.id, &atom)
+            return <bint>atom
+
+
+    @with_phil
+    def get_mdc_hit_rate(self):
+        """() => DOUBLE
+
+        Retrieve the cache hit rate
+
+        """
+        cdef double hit_rate
+        H5Fget_mdc_hit_rate(self.id, &hit_rate)
+        return hit_rate
+
+
+    @with_phil
+    def get_mdc_size(self):
+        """() => (max_size, min_clean_size, cur_size, cur_num_entries) [SIZE_T, SIZE_T, SIZE_T, INT]
+
+        Obtain current metadata cache size data for specified file.
+
+        """
+        cdef size_t max_size
+        cdef size_t min_clean_size
+        cdef size_t cur_size
+        cdef int cur_num_entries
+
+
+        H5Fget_mdc_size(self.id, &max_size, &min_clean_size, &cur_size, &cur_num_entries)
+
+        return (max_size, min_clean_size, cur_size, cur_num_entries)
+
+
+    @with_phil
+    def reset_mdc_hit_rate_stats(self):
+        """no return
+
+        rests the hit-rate statistics
+
+        """
+        H5Freset_mdc_hit_rate_stats(self.id)
+
+
+    @with_phil
+    def get_mdc_config(self):
+        """() => CacheConfig
+        Returns an object that stores all the information about the meta-data cache
+        configuration
+        """
+
+        cdef CacheConfig config = CacheConfig()
+
+        H5Fget_mdc_config(self.id, &config.cache_config)
+
+        return config
+
+    @with_phil
+    def set_mdc_config(self, CacheConfig config not None):
+        """(CacheConfig) => None
+        Returns an object that stores all the information about the meta-data cache
+        configuration
+        """
+        # I feel this should have some sanity checking to make sure that
+        H5Fset_mdc_config(self.id, &config.cache_config)
+
+    IF HDF5_VERSION >= SWMR_MIN_HDF5_VERSION:
+
+        @with_phil
+        def start_swmr_write(self):
+            """ no return
+
+            Enables SWMR writing mode for a file.
+            
+            This function will activate SWMR writing mode for a file associated 
+            with file_id. This routine will prepare and ensure the file is safe
+            for SWMR writing as follows:
+            
+                * Check that the file is opened with write access (H5F_ACC_RDWR).
+                * Check that the file is opened with the latest library format
+                  to ensure data structures with check-summed metadata are used.
+                * Check that the file is not already marked in SWMR writing mode.
+                * Enable reading retries for check-summed metadata to remedy
+                  possible checksum failures from reading inconsistent metadata 
+                  on a system that is not atomic.
+                * Turn off usage of the library’s accumulator to avoid possible 
+                  ordering problem on a system that is not atomic.
+                * Perform a flush of the file’s data buffers and metadata to set
+                  a consistent state for starting SWMR write operations.
+
+            Library objects are groups, datasets, and committed datatypes. For 
+            the current implementation, groups and datasets can remain open when
+            activating SWMR writing mode, but not committed datatypes. Attributes
+            attached to objects cannot remain open. 
+
+            Feature requires: 1.9.178 HDF5
+            """
+            H5Fstart_swmr_write(self.id)
+            

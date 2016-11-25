@@ -1,14 +1,11 @@
-#+
-# 
-# This file is part of h5py, a low-level Python interface to the HDF5 library.
-# 
-# Copyright (C) 2008 Andrew Collette
-# http://h5py.alfven.org
-# License: BSD  (See LICENSE.txt for full license)
-# 
-# $Date$
-# 
-#-
+# This file is part of h5py, a Python interface to the HDF5 library.
+#
+# http://www.h5py.org
+#
+# Copyright 2008-2013 Andrew Collette and contributors
+#
+# License:  Standard 3-clause BSD; see "license.txt" for full license terms
+#           and contributor agreement.
 
 # This file contains code or comments from the HDF5 library.  See the file
 # licenses/hdf5.txt for the full HDF5 software license.
@@ -36,12 +33,14 @@ cdef extern from "hdf5.h":
 # hid_t H5FD_GASS  not in 1.8.X
   hid_t H5FD_LOG
   hid_t H5FD_MPIO
+#  hid_t H5FD_MPIPOSIX  removed in 1.8.13
   hid_t H5FD_MULTI
   hid_t H5FD_SEC2
   hid_t H5FD_STDIO
   IF UNAME_SYSNAME == "Windows":
     hid_t H5FD_WINDOWS
-
+  hid_t H5FD_MPIO_COLLECTIVE
+  hid_t H5FD_MPIO_INDEPENDENT
   int H5FD_LOG_LOC_READ   # 0x0001
   int H5FD_LOG_LOC_WRITE  # 0x0002
   int H5FD_LOG_LOC_SEEK   # 0x0004

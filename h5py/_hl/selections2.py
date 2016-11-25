@@ -1,22 +1,20 @@
+# This file is part of h5py, a Python interface to the HDF5 library.
+#
+# http://www.h5py.org
+#
+# Copyright 2008-2013 Andrew Collette and contributors
+#
+# License:  Standard 3-clause BSD; see "license.txt" for full license terms
+#           and contributor agreement.
+
+"""
+    Implements a portion of the selection operations.
+"""
+
+from __future__ import absolute_import
+
 import numpy as np
-from h5py import h5s
-
-def strip_fields(basetype):
-    """ Convenience function to recursively strip extra dtype information 
-    from special types """
-
-    if basetype.kind == 'O':
-        return np.dtype('O')
-
-    if basetype.fields is not None:
-        fields = []
-        for name in basetype.names:
-            subtype, meta = basetype.fields[name]
-            subtype = strip_fields(subtype)
-            fields.append((name, subtype))
-        return np.dtype(fields)
-
-    return basetype
+from .. import h5s
 
 def read_dtypes(dataset_dtype, names):
     """ Returns a 2-tuple containing:
@@ -32,7 +30,7 @@ def read_dtypes(dataset_dtype, names):
         raise ValueError("Field names only allowed for compound types")
 
     elif any(x not in dataset_dtype.names for x in names):
-        raise ValueError("Field %s does not appear in this type." % name)
+        raise ValueError("Field does not appear in this type.")
 
     else:
         format_dtype = np.dtype([(name, dataset_dtype.fields[name][0]) for name in names])
@@ -43,10 +41,6 @@ def read_dtypes(dataset_dtype, names):
     
     else:
         output_dtype = format_dtype
-
-    # The field metadata for special types screws up NumPy indexing
-    # (issues 181 and 202)
-    output_dtype = strip_fields(output_dtype)
 
     return output_dtype, format_dtype
 
@@ -81,6 +75,10 @@ def read_selections_scalar(dsid, args):
 
 class ScalarReadSelection(object):
 
+    """
+        Implements slicing for scalar datasets.
+    """
+    
     def __init__(self, fspace, args):
         if args == ():
             self.mshape = None
@@ -97,7 +95,10 @@ class ScalarReadSelection(object):
         yield self.fspace, self.mspace        
 
 def select_read(fspace, args):
+    """ Top-level dispatch function for reading.
     
+    At the moment, only supports reading from scalar datasets.
+    """
     if fspace.shape == ():
         return ScalarReadSelection(fspace, args)
 

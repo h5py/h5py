@@ -63,31 +63,43 @@ size_t lzf_filter(unsigned flags, size_t cd_nelmts,
 
 herr_t lzf_set_local(hid_t dcpl, hid_t type, hid_t space);
 
+#if H5PY_H5Z_NEWCLS
+static const H5Z_class_t filter_class = {
+    H5Z_CLASS_T_VERS,
+    (H5Z_filter_t)(H5PY_FILTER_LZF),
+    1, 1,
+    "lzf",
+    NULL,
+    (H5Z_set_local_func_t)(lzf_set_local),
+    (H5Z_func_t)(lzf_filter)
+};
+#else
+static const H5Z_class_t filter_class = {
+    (H5Z_filter_t)(H5PY_FILTER_LZF),
+    "lzf",
+    NULL,
+    (H5Z_set_local_func_t)(lzf_set_local),
+    (H5Z_func_t)(lzf_filter)
+};
+#endif
+
+/* Support dynamical loading of LZF filter plugin */
+#if defined(H5_VERSION_GE)
+#if H5_VERSION_GE(1, 8, 11)
+
+#include "H5PLextern.h"
+
+H5PL_type_t H5PLget_plugin_type(void){ return H5PL_TYPE_FILTER; }
+
+const void *H5PLget_plugin_info(void){ return &filter_class; }
+
+#endif
+#endif
 
 /* Try to register the filter, passing on the HDF5 return value */
 int register_lzf(void){
 
     int retval;
-
-#if H5PY_H5Z_NEWCLS
-    H5Z_class_t filter_class = {
-        H5Z_CLASS_T_VERS,
-        (H5Z_filter_t)(H5PY_FILTER_LZF),
-        1, 1,
-        "lzf",
-        NULL,
-        (H5Z_set_local_func_t)(lzf_set_local),
-        (H5Z_func_t)(lzf_filter)
-    };
-#else
-    H5Z_class_t filter_class = {
-        (H5Z_filter_t)(H5PY_FILTER_LZF),
-        "lzf",
-        NULL,
-        (H5Z_set_local_func_t)(lzf_set_local),
-        (H5Z_func_t)(lzf_filter)
-    };
-#endif
 
     retval = H5Zregister(&filter_class);
     if(retval<0){

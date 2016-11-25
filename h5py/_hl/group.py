@@ -1,14 +1,34 @@
-import posixpath as pp
+# This file is part of h5py, a Python interface to the HDF5 library.
+#
+# http://www.h5py.org
+#
+# Copyright 2008-2013 Andrew Collette and contributors
+#
+# License:  Standard 3-clause BSD; see "license.txt" for full license terms
+#           and contributor agreement.
 
+"""
+    Implements support for high-level access to HDF5 groups.
+"""
+
+from __future__ import absolute_import
+
+import posixpath as pp
+import six
 import numpy
 
-from h5py import h5g, h5i, h5o, h5r, h5t, h5l
+from .compat import fsdecode
+from .compat import fsencode
+from .compat import fspath
+
+from .. import h5g, h5i, h5o, h5r, h5t, h5l, h5p
 from . import base
-from .base import HLObject, DictCompat, py3
+from .base import HLObject, MutableMappingHDF5, phil, with_phil
 from . import dataset
 from . import datatype
 
-class Group(HLObject, DictCompat):
+
+class Group(HLObject, MutableMappingHDF5):
 
     """ Represents an HDF5 group.
     """
@@ -16,9 +36,10 @@ class Group(HLObject, DictCompat):
     def __init__(self, bind):
         """ Create a new Group object by binding to a low-level GroupID.
         """
-        if not isinstance(bind, h5g.GroupID):
-            raise ValueError("%s is not a GroupID" % bind)
-        HLObject.__init__(self, bind)
+        with phil:
+            if not isinstance(bind, h5g.GroupID):
+                raise ValueError("%s is not a GroupID" % bind)
+            HLObject.__init__(self, bind)
 
     def create_group(self, name):
         """ Create and return a new subgroup.
@@ -26,9 +47,10 @@ class Group(HLObject, DictCompat):
         Name may be absolute or relative.  Fails if the target name already
         exists.
         """
-        name, lcpl = self._e(name, lcpl=True)
-        gid = h5g.create(self.id, name, lcpl=lcpl)
-        return Group(gid)
+        with phil:
+            name, lcpl = self._e(name, lcpl=True)
+            gid = h5g.create(self.id, name, lcpl=lcpl)
+            return Group(gid)
 
     def create_dataset(self, name, shape=None, dtype=None, data=None, **kwds):
         """ Create a new HDF5 dataset
@@ -55,24 +77,39 @@ class Group(HLObject, DictCompat):
             (Tuple) Make the dataset resizable up to this shape.  Use None for
             axes you want to be unlimited.
         compression
-            (String) Compression strategy.  Legal values are 'gzip', 'szip',
-            'lzf'.  Can also use an integer in range(10) indicating gzip.
+            (String or int) Compression strategy.  Legal values are 'gzip',
+            'szip', 'lzf'.  If an integer in range(10), this indicates gzip
+            compression level. Otherwise, an integer indicates the number of a
+            dynamically loaded compression filter.
         compression_opts
             Compression settings.  This is an integer for gzip, 2-tuple for
-            szip, etc.
+            szip, etc. If specifying a dynamically loaded compression filter
+            number, this must be a tuple of values.
+        scaleoffset
+            (Integer) Enable scale/offset filter for (usually) lossy
+            compression of integer or floating-point data. For integer
+            data, the value of scaleoffset is the number of bits to
+            retain (pass 0 to let HDF5 determine the minimum number of
+            bits necessary for lossless compression). For floating point
+            data, scaleoffset is the number of digits after the decimal
+            place to retain; stored values thus have absolute error
+            less than 0.5*10**(-scaleoffset).
         shuffle
             (T/F) Enable shuffle filter.
         fletcher32
-            (T/F) Enable fletcher32 error detection.
+            (T/F) Enable fletcher32 error detection. Not permitted in
+            conjunction with the scale/offset filter.
         fillvalue
             (Scalar) Use this value for uninitialized parts of the dataset.
+        track_times
+            (T/F) Enable dataset creation timestamps.
         """
-
-        dsid = dataset.make_new_dset(self, shape, dtype, data, **kwds)
-        dset = dataset.Dataset(dsid)
-        if name is not None:
-            self[name] = dset
-        return dset
+        with phil:
+            dsid = dataset.make_new_dset(self, shape, dtype, data, **kwds)
+            dset = dataset.Dataset(dsid)
+            if name is not None:
+                self[name] = dset
+            return dset
 
     def require_dataset(self, name, shape, dtype, exact=False, **kwds):
         """ Open a dataset, creating it if it doesn't exist.
@@ -87,24 +124,24 @@ class Group(HLObject, DictCompat):
         Raises TypeError if an incompatible object already exists, or if the
         shape or dtype don't match according to the above rules.
         """
+        with phil:
+            if not name in self:
+                return self.create_dataset(name, *(shape, dtype), **kwds)
 
-        if not name in self:
-            return self.create_dataset(name, *(shape, dtype), **kwds)
+            dset = self[name]
+            if not isinstance(dset, dataset.Dataset):
+                raise TypeError("Incompatible object (%s) already exists" % dset.__class__.__name__)
 
-        dset = self[name]
-        if not isinstance(dset, dataset.Dataset):
-            raise TypeError("Incompatible object (%s) already exists" % dset.__class__.__name__)
+            if not shape == dset.shape:
+                raise TypeError("Shapes do not match (existing %s vs new %s)" % (dset.shape, shape))
 
-        if not shape == dset.shape:
-            raise TypeError("Shapes do not match (existing %s vs new %s)" % (dset.shape, shape))
+            if exact:
+                if not dtype == dset.dtype:
+                    raise TypeError("Datatypes do not exactly match (existing %s vs new %s)" % (dset.dtype, dtype))
+            elif not numpy.can_cast(dtype, dset.dtype):
+                raise TypeError("Datatypes cannot be safely cast (existing %s vs new %s)" % (dset.dtype, dtype))
 
-        if exact:
-            if not dtype == dset.dtype:
-                raise TypeError("Datatypes do not exactly match (existing %s vs new %s)" % (dset.dtype, dtype))
-        elif not numpy.can_cast(dtype, dset.dtype):
-            raise TypeError("Datatypes cannot be safely cast (existing %s vs new %s)" % (dset.dtype, dtype))
-
-        return dset
+            return dset
 
     def require_group(self, name):
         """ Return a group, creating it if it doesn't exist.
@@ -112,13 +149,15 @@ class Group(HLObject, DictCompat):
         TypeError is raised if something with that name already exists that
         isn't a group.
         """
-        if not name in self:
-            return self.create_group(name)
-        grp = self[name]
-        if not isinstance(grp, Group):
-            raise TypeError("Incompatible object (%s) already exists" % grp.__class__.__name__)
-        return grp
+        with phil:
+            if not name in self:
+                return self.create_group(name)
+            grp = self[name]
+            if not isinstance(grp, Group):
+                raise TypeError("Incompatible object (%s) already exists" % grp.__class__.__name__)
+            return grp
 
+    @with_phil
     def __getitem__(self, name):
         """ Open an object in the file """
 
@@ -163,42 +202,50 @@ class Group(HLObject, DictCompat):
         >>> if cls == SoftLink:
         ...     print '"foo" is a soft link!'
         """
-        if not name in self:
-            return default
+        # pylint: disable=arguments-differ
 
-        if not (getclass or getlink):
-            return self[name]
+        with phil:
+            if not (getclass or getlink):
+                try:
+                    return self[name]
+                except KeyError:
+                    return default
 
-        elif getclass and not getlink:
-            typecode = h5o.get_info(self.id, self._e(name)).type
+            if not name in self:
+                return default
 
-            try:
-                return {h5o.TYPE_GROUP: Group,
-                        h5o.TYPE_DATASET: dataset.Dataset,
-                        h5o.TYPE_NAMED_DATATYPE: datatype.Datatype}[typecode]
-            except KeyError:
-                raise TypeError("Unknown object type")
+            elif getclass and not getlink:
+                typecode = h5o.get_info(self.id, self._e(name)).type
 
-        elif getlink:
-            typecode = self.id.links.get_info(self._e(name)).type
+                try:
+                    return {h5o.TYPE_GROUP: Group,
+                            h5o.TYPE_DATASET: dataset.Dataset,
+                            h5o.TYPE_NAMED_DATATYPE: datatype.Datatype}[typecode]
+                except KeyError:
+                    raise TypeError("Unknown object type")
 
-            if typecode == h5l.TYPE_SOFT:
-                if getclass:
-                    return SoftLink
-                linkbytes = self.id.links.get_val(self._e(name))
-                return SoftLink(self._d(linkbytes))
-            elif typecode == h5l.TYPE_EXTERNAL:
-                if getclass:
-                    return ExternalLink
-                filebytes, linkbytes = self.id.links.get_val(self._e(name))
-                # TODO: I think this is wrong,
-                # we should use filesystem decoding on the filename
-                return ExternalLink(self._d(filebytes), self._d(linkbytes))
-            elif typecode == h5l.TYPE_HARD:
-                return HardLink if getclass else HardLink()
-            else:
-                raise TypeError("Unknown link type")
+            elif getlink:
+                typecode = self.id.links.get_info(self._e(name)).type
 
+                if typecode == h5l.TYPE_SOFT:
+                    if getclass:
+                        return SoftLink
+                    linkbytes = self.id.links.get_val(self._e(name))
+                    return SoftLink(self._d(linkbytes))
+                    
+                elif typecode == h5l.TYPE_EXTERNAL:
+                    if getclass:
+                        return ExternalLink
+                    filebytes, linkbytes = self.id.links.get_val(self._e(name))
+                    return ExternalLink(fsdecode(filebytes), self._d(linkbytes))
+                    
+                elif typecode == h5l.TYPE_HARD:
+                    return HardLink if getclass else HardLink()
+                    
+                else:
+                    raise TypeError("Unknown link type")
+
+    @with_phil
     def __setitem__(self, name, obj):
         """ Add an object to the group.  The name must not already be in use.
 
@@ -233,36 +280,42 @@ class Group(HLObject, DictCompat):
                           lcpl=lcpl, lapl=self._lapl)
 
         elif isinstance(obj, ExternalLink):
-            self.id.links.create_external(name, self._e(obj.filename),
+            self.id.links.create_external(name, fsencode(obj.filename),
                           self._e(obj.path), lcpl=lcpl, lapl=self._lapl)
 
         elif isinstance(obj, numpy.dtype):
-            htype = h5t.py_create(obj)
+            htype = h5t.py_create(obj, logical=True)
             htype.commit(self.id, name, lcpl=lcpl)
 
         else:
             ds = self.create_dataset(None, data=obj, dtype=base.guess_dtype(obj))
             h5o.link(ds.id, self.id, name, lcpl=lcpl)
 
+    @with_phil
     def __delitem__(self, name):
         """ Delete (unlink) an item from this group. """
         self.id.unlink(self._e(name))
 
+    @with_phil
     def __len__(self):
         """ Number of members attached to this group """
         return self.id.get_num_objs()
 
+    @with_phil
     def __iter__(self):
         """ Iterate over member names """
         for x in self.id.__iter__():
             yield self._d(x)
 
+    @with_phil
     def __contains__(self, name):
         """ Test if a member name exists """
         return self._e(name) in self.id
 
-    def copy(self, source, dest, name=None):
-        """ Copy an object or group.
+    def copy(self, source, dest, name=None,
+             shallow=False, expand_soft=False, expand_external=False,
+             expand_refs=False, without_attrs=False):
+        """Copy an object or group.
 
         The source can be a path, Group, Dataset, or Datatype object.  The
         destination can be either a path or a Group object.  The source and
@@ -275,7 +328,19 @@ class Group(HLObject, DictCompat):
         be created in that group with its current name (basename of obj.name).
         You can override that by setting "name" to a string.
 
-        Example:
+        There are various options which all default to "False":
+
+         - shallow: copy only immediate members of a group.
+
+         - expand_soft: expand soft links into new objects.
+
+         - expand_external: expand external links into new objects.
+
+         - expand_refs: copy objects that are pointed to by references.
+
+         - without_attrs: copy object without copying attributes.
+
+       Example:
 
         >>> f = File('myfile.hdf5')
         >>> f.listnames()
@@ -285,28 +350,60 @@ class Group(HLObject, DictCompat):
         ['MyGroup', 'MyCopy']
 
         """
-        if isinstance(source, HLObject):
-            source_path = '.'
-        else:
-            # Interpret source as a path relative to this group
-            source_path = source
-            source = self
-
-        if isinstance(dest, Group):
-            if name is not None:
-                dest_path = name
+        with phil:
+            if isinstance(source, HLObject):
+                source_path = '.'
             else:
-                # copy source into dest group: dest_name/source_name
-                dest_path = pp.basename(h5i.get_name(source[source_path].id))
+                # Interpret source as a path relative to this group
+                source_path = source
+                source = self
 
-        elif isinstance(dest, HLObject):
-            raise TypeError("Destination must be path or Group object")
-        else:
-            # Interpret destination as a path relative to this group
-            dest_path = dest
-            dest = self
+            if isinstance(dest, Group):
+                if name is not None:
+                    dest_path = name
+                else:
+                    # copy source into dest group: dest_name/source_name
+                    dest_path = pp.basename(h5i.get_name(source[source_path].id))
 
-        h5o.copy(source.id, self._e(source_path), dest.id, self._e(dest_path))
+            elif isinstance(dest, HLObject):
+                raise TypeError("Destination must be path or Group object")
+            else:
+                # Interpret destination as a path relative to this group
+                dest_path = dest
+                dest = self
+
+            flags = 0
+            if shallow:
+                flags |= h5o.COPY_SHALLOW_HIERARCHY_FLAG
+            if expand_soft:
+                flags |= h5o.COPY_EXPAND_SOFT_LINK_FLAG
+            if expand_external:
+                flags |= h5o.COPY_EXPAND_EXT_LINK_FLAG
+            if expand_refs:
+                flags |= h5o.COPY_EXPAND_REFERENCE_FLAG
+            if without_attrs:
+                flags |= h5o.COPY_WITHOUT_ATTR_FLAG
+            if flags:
+                copypl = h5p.create(h5p.OBJECT_COPY)
+                copypl.set_copy_object(flags)
+            else:
+                copypl = None
+
+            h5o.copy(source.id, self._e(source_path), dest.id, self._e(dest_path),
+                     copypl, base.dlcpl)
+
+    def move(self, source, dest):
+        """ Move a link to a new location in the file.
+
+        If "source" is a hard link, this effectively renames the object.  If
+        "source" is a soft or external link, the link itself is moved, with its
+        value unmodified.
+        """
+        with phil:
+            if source == dest:
+                return
+            self.id.links.move(self._e(source), self.id, self._e(dest),
+                               lapl=self._lapl, lcpl=self._lcpl)
 
     def visit(self, func):
         """ Recursively visit all names in this group and subgroups (HDF5 1.8).
@@ -328,9 +425,11 @@ class Group(HLObject, DictCompat):
         >>> list_of_names = []
         >>> f.visit(list_of_names.append)
         """
-        def proxy(name):
-            return func(self._d(name))
-        return h5o.visit(self.id, proxy)
+        with phil:
+            def proxy(name):
+                """ Call the function with the text name, not bytes """
+                return func(self._d(name))
+            return h5o.visit(self.id, proxy)
 
     def visititems(self, func):
         """ Recursively visit names and objects in this group (HDF5 1.8).
@@ -356,21 +455,27 @@ class Group(HLObject, DictCompat):
         >>> f = File('foo.hdf5')
         >>> f.visititems(func)
         """
-        def proxy(name):
-            name = self._d(name)
-            return func(name, self[name])
-        return h5o.visit(self.id, proxy)
+        with phil:
+            def proxy(name):
+                """ Use the text name of the object, not bytes """
+                name = self._d(name)
+                return func(name, self[name])
+            return h5o.visit(self.id, proxy)
 
+    @with_phil
     def __repr__(self):
         if not self:
-            r = u"<Closed HDF5 group>"
+            r = six.u("<Closed HDF5 group>")
         else:
-            namestr = (u'"%s"' % self.name) if self.name is not None else u"(anonymous)"
-            r = u'<HDF5 group %s (%d members)>' % (namestr, len(self))
-        
-        if py3:
-            return r
-        return r.encode('utf8')
+            namestr = (
+                six.u('"%s"') % self.name
+            ) if self.name is not None else six.u("(anonymous)")
+            r = six.u('<HDF5 group %s (%d members)>') % (namestr, len(self))
+
+        if six.PY2:
+            return r.encode('utf8')
+        return r
+
 
 class HardLink(object):
 
@@ -381,7 +486,7 @@ class HardLink(object):
 
     pass
 
-#TODO: implement equality testing for these
+
 class SoftLink(object):
 
     """
@@ -392,6 +497,7 @@ class SoftLink(object):
 
     @property
     def path(self):
+        """ Soft link value.  Not guaranteed to be a valid path. """
         return self._path
 
     def __init__(self, path):
@@ -399,6 +505,7 @@ class SoftLink(object):
 
     def __repr__(self):
         return '<SoftLink to "%s">' % self.path
+
 
 class ExternalLink(object):
 
@@ -409,17 +516,17 @@ class ExternalLink(object):
 
     @property
     def path(self):
+        """ Soft link path, i.e. the part inside the HDF5 file. """
         return self._path
 
     @property
     def filename(self):
+        """ Path to the external HDF5 file in the filesystem. """
         return self._filename
 
     def __init__(self, filename, path):
-        self._filename = str(filename)
+        self._filename = fspath(filename)
         self._path = str(path)
 
     def __repr__(self):
         return '<ExternalLink to "%s" in file "%s"' % (self.path, self.filename)
-
-

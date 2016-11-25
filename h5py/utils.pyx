@@ -1,16 +1,13 @@
 # cython: profile=False
 
-#+
-# 
-# This file is part of h5py, a low-level Python interface to the HDF5 library.
-# 
-# Copyright (C) 2008 Andrew Collette
-# http://h5py.alfven.org
-# License: BSD  (See LICENSE.txt for full license)
-# 
-# $Date$
-# 
-#-
+# This file is part of h5py, a Python interface to the HDF5 library.
+#
+# http://www.h5py.org
+#
+# Copyright 2008-2013 Andrew Collette and contributors
+#
+# License:  Standard 3-clause BSD; see "license.txt" for full license terms
+#           and contributor agreement.
 
 from numpy cimport ndarray, import_array, \
                     NPY_UINT16, NPY_UINT32, NPY_UINT64,  npy_intp, \
@@ -63,7 +60,6 @@ cdef int check_numpy(ndarray arr, hid_t space_id, int write):
     cdef int required_flags
     cdef hsize_t arr_rank
     cdef hsize_t space_rank
-    cdef hsize_t *space_dims = NULL
     cdef int i
 
     if arr is None:
@@ -81,34 +77,6 @@ cdef int check_numpy(ndarray arr, hid_t space_id, int write):
             PyErr_SetString(TypeError, "Array must be C-contiguous")
             return -1
 
-    # Validate dataspace compatibility, if it's provided
-
-    if space_id > 0:
-
-        arr_rank = arr.nd
-        space_rank = H5Sget_simple_extent_ndims(space_id)
-
-        if arr_rank != space_rank:
-            err_msg = "Numpy array rank %d must match dataspace rank %d." % (arr_rank, space_rank)
-            PyErr_SetString(TypeError, err_msg)
-            return -1
-
-        space_dims = <hsize_t*>malloc(sizeof(hsize_t)*space_rank)
-        try:
-            space_rank = H5Sget_simple_extent_dims(space_id, space_dims, NULL)
-
-            for i from 0 < i < space_rank:
-
-                if write:
-                    if PyArray_DIM(arr,i) < space_dims[i]:
-                        PyErr_SetString(TypeError, "Array dimensions are too small for the dataspace.")
-                        return -1
-                else:
-                    if PyArray_DIM(arr,i) > space_dims[i]:
-                        PyErr_SetString(TypeError, "Array dimensions are too large for the dataspace.")
-                        return -1
-        finally:
-            free(space_dims)
     return 1
 
 cpdef int check_numpy_write(ndarray arr, hid_t space_id=-1) except -1:

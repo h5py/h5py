@@ -1,14 +1,11 @@
-#+
-# 
-# This file is part of h5py, a low-level Python interface to the HDF5 library.
-# 
-# Copyright (C) 2008 Andrew Collette
-# http://h5py.alfven.org
-# License: BSD  (See LICENSE.txt for full license)
-# 
-# $Date$
-# 
-#-
+# This file is part of h5py, a Python interface to the HDF5 library.
+#
+# http://www.h5py.org
+#
+# Copyright 2008-2013 Andrew Collette and contributors
+#
+# License:  Standard 3-clause BSD; see "license.txt" for full license terms
+#           and contributor agreement.
 
 # This file contains code or comments from the HDF5 library.  See the file
 # licenses/hdf5.txt for the full HDF5 software license.
@@ -28,12 +25,18 @@ MEM_LHEAP = H5FD_MEM_LHEAP
 MEM_OHDR = H5FD_MEM_OHDR
 MEM_NTYPES = H5FD_MEM_NTYPES
 
+# === MPI driver ==============================================================
+
+MPIO_INDEPENDENT = H5FD_MPIO_INDEPENDENT
+MPIO_COLLECTIVE = H5FD_MPIO_COLLECTIVE
+
 # === Driver types ============================================================
 
 CORE = H5FD_CORE
 FAMILY = H5FD_FAMILY
 LOG = H5FD_LOG
 MPIO = H5FD_MPIO
+MPIPOSIX = -1
 MULTI = H5FD_MULTI
 SEC2 = H5FD_SEC2
 STDIO = H5FD_STDIO

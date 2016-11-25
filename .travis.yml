@@ -1,0 +1,62 @@
+language: python
+
+notifications:
+  email: false
+
+addons:
+  apt:
+    packages:
+      - libhdf5-serial-dev
+
+sudo: false
+
+cache:
+  directories:
+    - $HOME/.cache/pip
+
+env:
+  - TOXENV=py26-test-deps
+  - TOXENV=py27-test-deps
+  - TOXENV=py33-test-deps
+  - TOXENV=py34-test-deps
+  - TOXENV=py26-test-mindeps
+  - TOXENV=py27-test-mindeps
+  - TOXENV=py33-test-mindeps
+  - TOXENV=py34-test-mindeps
+#  - TOXENV=py35-test-deps
+#  - TOXENV=py35-test-mindeps
+# commented out because of https://github.com/travis-ci/travis-ci/issues/4794
+
+matrix:
+  include:
+    # needed to work around https://github.com/travis-ci/travis-ci/issues/4794
+    - python: 3.5
+      env:
+      - TOXENV=py35-test-deps
+    - python: 3.5
+      env:
+      - TOXENV=py35-test-mindeps
+    # parallel HDF5 test with HDF5>=1.8.9 for mpio "atomic" support
+    - dist: trusty
+      sudo: required
+      env:
+      - TOXENV=py34-test-mpi4py
+      - CC="mpicc"
+      - HDF5_MPI="ON"
+      addons:
+        apt:
+          packages:
+            - openmpi-bin         # 1.4.3
+            - libopenmpi-dev
+            - libhdf5-openmpi-dev # 1.8.4
+    - python: pypy
+      env:
+      - TOXENV=pypy-test-deps
+  allow_failures:
+    - python: pypy
+
+install:
+  - pip install tox
+
+script:
+  - tox

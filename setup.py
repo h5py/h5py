@@ -1,137 +1,91 @@
-from distutils.core import setup
-from distutils.extension import Extension
-from distutils.cmd import Command
-import sys, os
-import os.path as op
-from functools import reduce
+#!/usr/bin/env python
+
+"""
+    This is the main setup script for h5py (http://www.h5py.org).
+    
+    Most of the functionality is provided in two separate modules:
+    setup_configure, which manages compile-time/Cython-time build options
+    for h5py, and setup_build, which handles the actual compilation process.
+"""
 
 try:
-    import Cython.Compiler.Version
-    vers = tuple(int(x.rstrip('+')) for
-                 x in Cython.Compiler.Version.version.split('.'))
-    if vers < (0,13):
-        raise ImportError
-    from Cython.Distutils import build_ext
-    SUFFIX = '.pyx'
+    from setuptools import Extension, setup
 except ImportError:
-    from distutils.command.build_ext import build_ext
-    SUFFIX = '.c'
+    from distutils.core import setup
+    from distutils.extension import Extension
+from distutils.cmd import Command
+from distutils.dist import Distribution
+import sys
+import os
+import os.path as op
 
-import numpy
-
-import configure
-
-VERSION = '2.1.1'
-
-def localpath(*args):
-    return op.abspath(reduce(op.join, (op.dirname(__file__),)+args))
-
-if sys.version_info[0] >= 3:
-    # Shamelessly stolen from Cython 0.14
-    import lib2to3.refactor
-    from distutils.command.build_py \
-         import build_py_2to3 as build_py
-else:
-    from distutils.command.build_py import build_py
-
-# --- Determine HDF5 location -------------------------------------------------
-
-settings = configure.scrape_eargs()          # lowest priority
-settings.update(configure.scrape_cargs())    # highest priority
-
-HDF5 = settings.get('hdf5')
+import setup_build, setup_configure
 
 
-# --- Create extensions -------------------------------------------------------
+VERSION = '2.6.0'
 
-if sys.platform.startswith('win'):
-    COMPILER_SETTINGS = {
-        'libraries'     : ['hdf5dll18','hdf5_hldll'],
-        'include_dirs'  : [numpy.get_include(),  localpath('lzf'),
-                           localpath('win_include')],
-        'library_dirs'  : [],
-        'define_macros' : [('H5_USE_16_API', None), ('_HDF5USEDLL_', None)]
-    }
-    if HDF5 is not None:
-        COMPILER_SETTINGS['include_dirs'] += [op.join(HDF5, 'include')]
-        COMPILER_SETTINGS['library_dirs'] += [op.join(HDF5, 'dll')]
-else:
-    COMPILER_SETTINGS = {
-       'libraries'      : ['hdf5', 'hdf5_hl'],
-       'include_dirs'   : [numpy.get_include(), localpath('lzf')],
-       'library_dirs'   : [],
-       'define_macros'  : [('H5_USE_16_API', None)]
-    }
-    if HDF5 is not None:
-        COMPILER_SETTINGS['include_dirs'] += [op.join(HDF5, 'include')]
-        COMPILER_SETTINGS['library_dirs'] += [op.join(HDF5, 'lib')]
-    elif sys.platform == 'darwin':
-        COMPILER_SETTINGS['include_dirs'] += ['/opt/local/include']
-        COMPILER_SETTINGS['library_dirs'] += ['/opt/local/lib']
-    COMPILER_SETTINGS['runtime_library_dirs'] = [op.abspath(x) for x in COMPILER_SETTINGS['library_dirs']]
+NUMPY_DEP = 'numpy>=1.6.1'
 
-MODULES =  ['defs','_errors','_objects','_proxy', 'h5fd', 'h5z',
-            'h5','h5i','h5r','utils',
-            '_conv', 'h5t','h5s',
-            'h5p',
-            'h5d', 'h5a', 'h5f', 'h5g',
-            'h5l', 'h5o',
-            'h5ds']
+# these are required to use h5py
+RUN_REQUIRES = [NUMPY_DEP, 'six']
 
-EXTRA_SRC = {'h5z': [ localpath("lzf/lzf_filter.c"),
-                      localpath("lzf/lzf/lzf_c.c"),
-                      localpath("lzf/lzf/lzf_d.c")]}
+# these are required to build h5py
+# RUN_REQUIRES is included as setup.py test needs RUN_REQUIRES for testing
+# RUN_REQUIRES can be removed when setup.py test is removed
+SETUP_REQUIRES = RUN_REQUIRES + [NUMPY_DEP, 'Cython>=0.19', 'pkgconfig']
 
-def make_extension(module):
-    sources = [op.join('h5py', module+SUFFIX)] + EXTRA_SRC.get(module, [])
-    return Extension('h5py.'+module, sources, **COMPILER_SETTINGS)
 
-EXTENSIONS = [make_extension(m) for m in MODULES]
-
-# --- Custom distutils commands -----------------------------------------------
+# --- Custom Distutils commands -----------------------------------------------
 
 class test(Command):
 
-    """Run the test suite."""
+    """
+        Custom Distutils command to run the h5py test suite.
+    
+        This command will invoke build/build_ext if the project has not
+        already been built.  It then patches in the build directory to
+        sys.path and runs the test suite directly.
+    """
 
     description = "Run the test suite"
 
-    user_options = [('verbosity=', 'V', 'set test report verbosity')]
+    user_options = [('detail', 'd', 'Display additional test information')]
 
     def initialize_options(self):
-        self.verbosity = 0
+        self.detail = False
 
     def finalize_options(self):
-        try:
-            self.verbosity = int(self.verbosity)
-        except ValueError:
-            raise ValueError('verbosity must be an integer.')
+        self.detail = bool(self.detail)
 
     def run(self):
+        """ Called by Distutils when this command is run """
         import sys
         py_version = sys.version_info[:2]
-        if py_version == (2,7) or py_version >= (3,2):
+        if py_version != (2, 6):
             import unittest
         else:
             try:
                 import unittest2 as unittest
             except ImportError:
-                raise ImportError(
-                    "unittest2 is required to run tests with python-%d.%d"
-                    % py_version
-                    )
+                raise ImportError( "unittest2 is required to run tests with Python 2.6")
+
         buildobj = self.distribution.get_command_obj('build')
         buildobj.run()
+        
         oldpath = sys.path
         try:
             sys.path = [op.abspath(buildobj.build_lib)] + oldpath
-            suite = unittest.TestLoader().discover(op.join(buildobj.build_lib,'h5py'))
-            result = unittest.TextTestRunner(verbosity=self.verbosity+1).run(suite)
+            import h5py
+            result = h5py.run_tests(verbose=self.detail)
             if not result.wasSuccessful():
                 sys.exit(1)
         finally:
             sys.path = oldpath
-
+        
+        
+CMDCLASS = {'build_ext': setup_build.h5py_build_ext,
+            'configure': setup_configure.configure,
+            'test': test, }
 
 
 # --- Distutils setup and metadata --------------------------------------------
@@ -166,14 +120,14 @@ A strong emphasis on automatic conversion between Python (Numpy) datatypes and
 data structures and their HDF5 equivalents vastly simplifies the process of
 reading and writing data from Python.
 
-Supports HDF5 versions 1.8.3 and higher.  On Windows, HDF5 is included with
+Supports HDF5 versions 1.8.4 and higher.  On Windows, HDF5 is included with
 the installer.
 """
 
 if os.name == 'nt':
-    package_data = {'h5py': ['*.pyx', '*.dll']}
+    package_data = {'h5py': ['*.dll']}
 else:
-    package_data = {'h5py': ['*.pyx']}
+    package_data = {'h5py': []}
 
 setup(
   name = 'h5py',
@@ -182,16 +136,15 @@ setup(
   long_description = long_desc,
   classifiers = [x for x in cls_txt.split("\n") if x],
   author = 'Andrew Collette',
-  author_email = 'andrew dot collette at gmail dot com',
+  author_email = 'andrew.collette@gmail.com',
   maintainer = 'Andrew Collette',
-  maintainer_email = 'andrew dot collette at gmail dot com',
+  maintainer_email = 'andrew.collette@gmail.com',
   url = 'http://www.h5py.org',
-  download_url = 'http://code.google.com/p/h5py/downloads/list',
-  packages = ['h5py', 'h5py._hl', 'h5py._hl.tests', 'h5py.lowtest'],
+  download_url = 'https://pypi.python.org/pypi/h5py',
+  packages = ['h5py', 'h5py._hl', 'h5py.tests', 'h5py.tests.old', 'h5py.tests.hl'],
   package_data = package_data,
-  ext_modules = EXTENSIONS,
-  requires = ['numpy (>=1.0.1)'],
-  cmdclass = {'build_ext': build_ext, 'test': test, 'build_py':build_py}
+  ext_modules = [Extension('h5py.x',['x.c'])],  # To trick build into running build_ext
+  install_requires = RUN_REQUIRES,
+  setup_requires = SETUP_REQUIRES,
+  cmdclass = CMDCLASS,
 )
-
-

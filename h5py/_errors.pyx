@@ -1,3 +1,11 @@
+# This file is part of h5py, a Python interface to the HDF5 library.
+#
+# http://www.h5py.org
+#
+# Copyright 2008-2013 Andrew Collette and contributors
+#
+# License:  Standard 3-clause BSD; see "license.txt" for full license terms
+#           and contributor agreement.
 
 # Python-style minor error classes.  If the minor error code matches an entry
 # in this dict, the generated exception will be used.
@@ -45,6 +53,8 @@ _minor_table = {
     H5E_CANTDELETE:     KeyError,    # Can't delete message
 
     H5E_CANTOPENOBJ:    KeyError,
+
+    H5E_CANTMOVE:       ValueError,  # Can't move a link
   }
 
 # "Fudge" table to accomodate annoying inconsistencies in HDF5's use 
@@ -59,6 +69,7 @@ _exact_table = {
     (H5E_ARGS, H5E_CANTINIT):       TypeError,  # Illegal operation on object
     (H5E_SYM, H5E_CANTINIT):        ValueError, # Object already exists/1.8
     (H5E_ARGS, H5E_BADTYPE):        ValueError, # Invalid location in file
+    (H5E_REFERENCE, H5E_CANTINIT):  ValueError, # Dereferencing invalid ref
   }
 
 cdef struct err_data_t:
@@ -77,7 +88,11 @@ cdef herr_t walk_cb(int n, H5E_error_t *desc, void *e):
 cdef int set_exception() except -1:
 
     cdef err_data_t err
-    cdef char *mj_desc, *mn_desc, *desc
+    cdef const char *desc = NULL          # Note: HDF5 forbids freeing these
+    cdef const char *desc_bottom = NULL
+
+    # First, extract the major & minor error codes from the top of the
+    # stack, along with the top-level error description
 
     err.n = -1
 
@@ -92,16 +107,23 @@ cdef int set_exception() except -1:
 
     desc = err.err.desc
     if desc is NULL:
-        raise RuntimeError("Failed to extract detailed error description")
+        raise RuntimeError("Failed to extract top-level error description")
 
-    mj_desc = H5Eget_major(err.err.maj_num)
-    mn_desc = H5Eget_minor(err.err.min_num)
-    if mj_desc == NULL or mn_desc == NULL:
-        raise RuntimeError("Failed to obtain error code description")
+    # Second, retrieve the bottom-most error description for additional info
 
-    msg = ("%s (%s: %s)" % (desc.decode('utf-8'), 
-                            mj_desc.decode('utf-8'), 
-                            mn_desc.decode('utf-8'))  ).encode('utf-8')
+    err.n = -1
+
+    if H5Ewalk(H5E_WALK_DOWNWARD, walk_cb, &err) < 0:
+        raise RuntimeError("Failed to walk error stack")
+
+    desc_bottom = err.err.desc
+    if desc_bottom is NULL:
+        raise RuntimeError("Failed to extract bottom-level error description")
+
+    msg = ("%s (%s)" % (desc.decode('utf-8').capitalize(), desc_bottom.decode('utf-8').capitalize())).encode('utf-8')
+
+    # Finally, set the exception.  We do this with the Python C function
+    # so that the traceback doesn't point here.
 
     PyErr_SetString(eclass, msg)
 
@@ -117,7 +139,7 @@ def silence_errors():
 
 def unsilence_errors():
     """ Re-enable HDF5's automatic error printing in this thread """
-    if H5Eset_auto(H5Eprint, stderr) < 0:
+    if H5Eset_auto(<H5E_auto_t> H5Eprint, stderr) < 0:
         raise RuntimeError("Failed to enable automatic error printing")
 
 cdef err_cookie set_error_handler(err_cookie handler):

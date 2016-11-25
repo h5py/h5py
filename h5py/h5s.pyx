@@ -1,30 +1,29 @@
-#+
+# This file is part of h5py, a Python interface to the HDF5 library.
 #
-# This file is part of h5py, a low-level Python interface to the HDF5 library.
+# http://www.h5py.org
 #
-# Copyright (C) 2008 Andrew Collette
-# http://h5py.alfven.org
-# License: BSD  (See LICENSE.txt for full license)
+# Copyright 2008-2013 Andrew Collette and contributors
 #
-# $Date$
-#
-#-
+# License:  Standard 3-clause BSD; see "license.txt" for full license terms
+#           and contributor agreement.
 
 """
     Low-level interface to the "H5S" family of data-space functions.
 """
+
+include "config.pxi"
 
 # Pyrex compile-time imports
 from utils cimport  require_tuple, convert_dims, convert_tuple, \
                     emalloc, efree, create_numpy_hsize, create_hsize_array
 from numpy cimport ndarray
 
-import _objects
-
+from h5py import _objects
+from ._objects import phil, with_phil
 
 cdef object lockid(hid_t id_):
     cdef SpaceID space
-    space = SpaceID.open(id_)
+    space = SpaceID(id_)
     space.locked = 1
     return space
 
@@ -50,6 +49,7 @@ UNLIMITED = H5S_UNLIMITED
 NO_CLASS = H5S_NO_CLASS
 SCALAR   = H5S_SCALAR
 SIMPLE   = H5S_SIMPLE
+globals()["NULL"] = H5S_NULL  # "NULL" is reserved in Cython
 
 #enum H5S_sel_type
 SEL_ERROR       = H5S_SEL_ERROR
@@ -58,18 +58,20 @@ SEL_POINTS      = H5S_SEL_POINTS
 SEL_HYPERSLABS  = H5S_SEL_HYPERSLABS
 SEL_ALL         = H5S_SEL_ALL
 
+
 # === Basic dataspace operations ==============================================
 
-
+@with_phil
 def create(int class_code):
     """(INT class_code) => SpaceID
 
     Create a new HDF5 dataspace object, of the given class.
     Legal values are SCALAR and SIMPLE.
     """
-    return SpaceID.open(H5Screate(<H5S_class_t>class_code))
+    return SpaceID(H5Screate(<H5S_class_t>class_code))
 
 
+@with_phil
 def create_simple(object dims_tpl, object max_dims_tpl=None):
     """(TUPLE dims_tpl, TUPLE max_dims_tpl) => SpaceID
 
@@ -96,12 +98,14 @@ def create_simple(object dims_tpl, object max_dims_tpl=None):
             max_dims = <hsize_t*>emalloc(sizeof(hsize_t)*rank)
             convert_tuple(max_dims_tpl, max_dims, rank)
 
-        return SpaceID.open(H5Screate_simple(rank, dims, max_dims))
+        return SpaceID(H5Screate_simple(rank, dims, max_dims))
 
     finally:
         efree(dims)
         efree(max_dims)
 
+
+@with_phil
 def decode(buf):
     """(STRING buf) => SpaceID
 
@@ -109,7 +113,8 @@ def decode(buf):
     Python pickling machinery to do this.
     """
     cdef char* buf_ = buf
-    return SpaceID.open(H5Sdecode(buf_))
+    return SpaceID(H5Sdecode(buf_))
+
 
 # === H5S class API ===========================================================
 
@@ -133,30 +138,20 @@ cdef class SpaceID(ObjectID):
         """ Numpy-style shape tuple representing dimensions.  () == scalar.
         """
         def __get__(self):
-            return self.get_simple_extent_dims()
+            with phil:
+                return self.get_simple_extent_dims()
 
 
-    def _close(self):
-        """()
-
-        Terminate access through this identifier.  You shouldn't have to
-        call this manually; dataspace objects are automatically destroyed
-        when their Python wrappers are freed.
-        """
-        with _objects.registry.lock:
-            H5Sclose(self.id)
-            if not self.valid:
-                del _objects.registry[self.id]
-
-
+    @with_phil
     def copy(self):
         """() => SpaceID
 
         Create a new copy of this dataspace.
         """
-        return SpaceID.open(H5Scopy(self.id))
+        return SpaceID(H5Scopy(self.id))
 
 
+    @with_phil
     def encode(self):
         """() => STRING
 
@@ -178,16 +173,19 @@ cdef class SpaceID(ObjectID):
 
 
     def __reduce__(self):
-        return (type(self), (-1,), self.encode())
+        with phil:
+            return (type(self), (-1,), self.encode())
 
 
     def __setstate__(self, state):
         cdef char* buf = state
-        self.id = H5Sdecode(buf)
+        with phil:
+            self.id = H5Sdecode(buf)
+
 
     # === Simple dataspaces ===================================================
 
-
+    @with_phil
     def is_simple(self):
         """() => BOOL is_simple
 
@@ -197,6 +195,7 @@ cdef class SpaceID(ObjectID):
         return <bint>(H5Sis_simple(self.id))
 
 
+    @with_phil
     def offset_simple(self, object offset=None):
         """(TUPLE offset=None)
 
@@ -231,6 +230,7 @@ cdef class SpaceID(ObjectID):
             efree(dims)
 
 
+    @with_phil
     def get_simple_extent_ndims(self):
         """() => INT rank
 
@@ -239,6 +239,7 @@ cdef class SpaceID(ObjectID):
         return H5Sget_simple_extent_ndims(self.id)
 
 
+    @with_phil
     def get_simple_extent_dims(self, int maxdims=0):
         """(BOOL maxdims=False) => TUPLE shape
 
@@ -247,6 +248,9 @@ cdef class SpaceID(ObjectID):
         """
         cdef int rank
         cdef hsize_t* dims = NULL
+
+        if self.get_simple_extent_type() == H5S_NULL:
+            return None
 
         rank = H5Sget_simple_extent_dims(self.id, NULL, NULL)
 
@@ -263,6 +267,7 @@ cdef class SpaceID(ObjectID):
             efree(dims)
 
 
+    @with_phil
     def get_simple_extent_npoints(self):
         """() => LONG npoints
 
@@ -271,6 +276,7 @@ cdef class SpaceID(ObjectID):
         return H5Sget_simple_extent_npoints(self.id)
 
 
+    @with_phil
     def get_simple_extent_type(self):
         """() => INT class_code
 
@@ -278,9 +284,10 @@ cdef class SpaceID(ObjectID):
         """
         return <int>H5Sget_simple_extent_type(self.id)
 
+
     # === Extents =============================================================
 
-
+    @with_phil
     def extent_copy(self, SpaceID source not None):
         """(SpaceID source)
 
@@ -290,6 +297,7 @@ cdef class SpaceID(ObjectID):
         H5Sextent_copy(self.id, source.id)
 
 
+    @with_phil
     def set_extent_simple(self, object dims_tpl, object max_dims_tpl=None):
         """(TUPLE dims_tpl, TUPLE max_dims_tpl=None)
 
@@ -323,6 +331,7 @@ cdef class SpaceID(ObjectID):
             efree(max_dims)
 
 
+    @with_phil
     def set_extent_none(self):
         """()
 
@@ -330,9 +339,10 @@ cdef class SpaceID(ObjectID):
         """
         H5Sset_extent_none(self.id)
 
+
     # === General selection operations ========================================
 
-
+    @with_phil
     def get_select_type(self):
         """ () => INT select_code
 
@@ -346,6 +356,7 @@ cdef class SpaceID(ObjectID):
         return <int>H5Sget_select_type(self.id)
 
 
+    @with_phil
     def get_select_npoints(self):
         """() => LONG npoints
 
@@ -355,6 +366,7 @@ cdef class SpaceID(ObjectID):
         return H5Sget_select_npoints(self.id)
 
 
+    @with_phil
     def get_select_bounds(self):
         """() => (TUPLE start, TUPLE end)
 
@@ -385,6 +397,7 @@ cdef class SpaceID(ObjectID):
             efree(end)
 
 
+    @with_phil
     def select_all(self):
         """()
 
@@ -393,6 +406,7 @@ cdef class SpaceID(ObjectID):
         H5Sselect_all(self.id)
 
 
+    @with_phil
     def select_none(self):
         """()
 
@@ -401,6 +415,7 @@ cdef class SpaceID(ObjectID):
         H5Sselect_none(self.id)
 
 
+    @with_phil
     def select_valid(self):
         """() => BOOL
 
@@ -409,9 +424,10 @@ cdef class SpaceID(ObjectID):
         """
         return <bint>(H5Sselect_valid(self.id))
 
+
     # === Point selection functions ===========================================
 
-
+    @with_phil
     def get_select_elem_npoints(self):
         """() => LONG npoints
 
@@ -420,6 +436,7 @@ cdef class SpaceID(ObjectID):
         return H5Sget_select_elem_npoints(self.id)
 
 
+    @with_phil
     def get_select_elem_pointlist(self):
         """() => NDARRAY
 
@@ -439,6 +456,7 @@ cdef class SpaceID(ObjectID):
         return buf
 
 
+    @with_phil
     def select_elements(self, object coords, int op=H5S_SELECT_SET):
         """(SEQUENCE coords, INT op=SELECT_SET)
 
@@ -472,11 +490,12 @@ cdef class SpaceID(ObjectID):
 
         nelements = hcoords.dimensions[0]
 
-        H5Sselect_elements(self.id, <H5S_seloper_t>op, nelements, <hsize_t**>hcoords.data)
+        H5Sselect_elements(self.id, <H5S_seloper_t>op, nelements, <hsize_t*>hcoords.data)
+
 
     # === Hyperslab selection functions =======================================
 
-
+    @with_phil
     def get_select_hyper_nblocks(self):
         """() => LONG nblocks
 
@@ -485,6 +504,7 @@ cdef class SpaceID(ObjectID):
         return H5Sget_select_hyper_nblocks(self.id)
 
 
+    @with_phil
     def get_select_hyper_blocklist(self):
         """() => NDARRAY
 
@@ -512,6 +532,7 @@ cdef class SpaceID(ObjectID):
         return buf
 
 
+    @with_phil
     def select_hyperslab(self, object start, object count, object stride=None,
                          object block=None, int op=H5S_SELECT_SET):
         """(TUPLE start, TUPLE count, TUPLE stride=None, TUPLE block=None,
@@ -556,8 +577,54 @@ cdef class SpaceID(ObjectID):
             efree(stride_array)
             efree(block_array)
 
+    # === Virtual dataset functions ===========================================
 
+    IF HDF5_VERSION >= VDS_MIN_HDF5_VERSION:
 
+        @with_phil
+        def is_regular_hyperslab(self):
+            """() => BOOL
 
+            Determine whether a hyperslab selection is regular.
+            """
+            return <bint>H5Sis_regular_hyperslab(self.id)
 
+        @with_phil
+        def get_regular_hyperslab(self):
+            """() => (TUPLE start, TUPLE stride, TUPLE count, TUPLE block)
 
+            Retrieve a regular hyperslab selection.
+            """
+            cdef int rank
+            cdef hsize_t* start_array = NULL
+            cdef hsize_t* count_array = NULL
+            cdef hsize_t* stride_array = NULL
+            cdef hsize_t* block_array = NULL
+            cdef list start = []
+            cdef list stride = []
+            cdef list count = []
+            cdef list block = []
+            cdef int i
+
+            rank = H5Sget_simple_extent_ndims(self.id)
+            try:
+                start_array = <hsize_t*>emalloc(sizeof(hsize_t)*rank)
+                stride_array = <hsize_t*>emalloc(sizeof(hsize_t)*rank)
+                count_array = <hsize_t*>emalloc(sizeof(hsize_t)*rank)
+                block_array = <hsize_t*>emalloc(sizeof(hsize_t)*rank)
+                H5Sget_regular_hyperslab(self.id, start_array, stride_array,
+                                         count_array, block_array)
+
+                for i in range(rank):
+                    start.append(start_array[i])
+                    stride.append(stride_array[i])
+                    count.append(count_array[i])
+                    block.append(block_array[i])
+
+                return (tuple(start), tuple(stride), tuple(count), tuple(block))
+
+            finally:
+                efree(start_array)
+                efree(stride_array)
+                efree(count_array)
+                efree(block_array)

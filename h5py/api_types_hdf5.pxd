@@ -1,9 +1,19 @@
+# This file is part of h5py, a Python interface to the HDF5 library.
+#
+# http://www.h5py.org
+#
+# Copyright 2008-2013 Andrew Collette and contributors
+#
+# License:  Standard 3-clause BSD; see "license.txt" for full license terms
+#           and contributor agreement.
+
 from api_types_ext cimport *
 
-cdef extern from "hdf5.h":
+include "config.pxi"
 
+cdef extern from "hdf5.h":
   # Basic types
-  ctypedef int hid_t
+  ctypedef long int hid_t
   ctypedef int hbool_t
   ctypedef int herr_t
   ctypedef int htri_t
@@ -26,19 +36,26 @@ cdef extern from "hdf5.h":
     H5_ITER_N                   # Number of iteration orders
 
   ctypedef enum H5_index_t:
-    H5_INDEX_UNKNOWN = -1,      # Unknown index type     
-    H5_INDEX_NAME,              # Index on names      
-    H5_INDEX_CRT_ORDER,         # Index on creation order    
-    H5_INDEX_N                  # Number of indices defined    
+    H5_INDEX_UNKNOWN = -1,      # Unknown index type
+    H5_INDEX_NAME,              # Index on names
+    H5_INDEX_CRT_ORDER,         # Index on creation order
+    H5_INDEX_N                  # Number of indices defined
 
 # === H5D - Dataset API =======================================================
 
   ctypedef enum H5D_layout_t:
-    H5D_LAYOUT_ERROR    = -1,
-    H5D_COMPACT         = 0,
-    H5D_CONTIGUOUS      = 1,
-    H5D_CHUNKED         = 2,
-    H5D_NLAYOUTS        = 3
+      H5D_LAYOUT_ERROR    = -1,
+      H5D_COMPACT         = 0,
+      H5D_CONTIGUOUS      = 1,
+      H5D_CHUNKED         = 2,
+      H5D_VIRTUAL         = 3,  # New in 1.10
+      H5D_NLAYOUTS        = 4
+
+  IF HDF5_VERSION >= VDS_MIN_HDF5_VERSION:
+    ctypedef enum H5D_vds_view_t:
+        H5D_VDS_ERROR           = -1,
+        H5D_VDS_FIRST_MISSING   = 0,
+        H5D_VDS_LAST_AVAILABLE  = 1
 
   ctypedef enum H5D_alloc_time_t:
     H5D_ALLOC_TIME_ERROR    =-1,
@@ -78,6 +95,8 @@ cdef extern from "hdf5.h":
     H5F_ACC_EXCL
     H5F_ACC_DEBUG
     H5F_ACC_CREAT
+    H5F_ACC_SWMR_WRITE
+    H5F_ACC_SWMR_READ
 
   # The difference between a single file and a set of mounted files
   cdef enum H5F_scope_t:
@@ -158,6 +177,10 @@ cdef extern from "hdf5.h":
   # Flag for tracking allocation of space in file
   int H5FD_LOG_ALLOC      # 0x4000
   int H5FD_LOG_ALL        # (H5FD_LOG_ALLOC|H5FD_LOG_TIME_IO|H5FD_LOG_NUM_IO|H5FD_LOG_FLAVOR|H5FD_LOG_FILE_IO|H5FD_LOG_LOC_IO)
+  IF MPI:
+    ctypedef enum H5FD_mpio_xfer_t:
+     H5FD_MPIO_INDEPENDENT = 0,
+     H5FD_MPIO_COLLECTIVE
 
 # === H5G - Groups API ========================================================
 
@@ -198,6 +221,7 @@ cdef extern from "hdf5.h":
 # === H5I - Identifier and reflection interface ===============================
 
   ctypedef enum H5I_type_t:
+    H5I_UNINIT       = -2,  # uninitialized Group
     H5I_BADID        = -1,  # invalid Group
     H5I_FILE        = 1,    # group ID for File objects
     H5I_GROUP,              # group ID for Group objects
@@ -209,7 +233,10 @@ cdef extern from "hdf5.h":
     H5I_VFL,                # group ID for virtual file layer
     H5I_GENPROP_CLS,        # group ID for generic property list classes
     H5I_GENPROP_LST,        # group ID for generic property lists
-    H5I_NGROUPS             # number of valid groups, MUST BE LAST!
+    H5I_ERROR_CLASS,        # group ID for error classes
+    H5I_ERROR_MSG,          # group ID for error messages
+    H5I_ERROR_STACK,        # group ID for error stacks
+    H5I_NTYPES              # number of valid groups, MUST BE LAST!
 
 # === H5L/H5O - Links interface (1.8.X only) ======================================
 
@@ -232,7 +259,7 @@ cdef extern from "hdf5.h":
   ctypedef enum H5L_type_t:
     H5L_TYPE_ERROR = (-1),      #  Invalid link type id
     H5L_TYPE_HARD = 0,          #  Hard link id
-    H5L_TYPE_SOFT = 1,          #  Soft link id       
+    H5L_TYPE_SOFT = 1,          #  Soft link id
     H5L_TYPE_EXTERNAL = 64,     #  External link id
     H5L_TYPE_MAX = 255          #  Maximum link type id
 
@@ -380,6 +407,7 @@ cdef extern from "hdf5.h":
   hid_t H5P_FILE_CREATE
   hid_t H5P_FILE_ACCESS
   hid_t H5P_DATASET_CREATE
+  hid_t H5P_DATASET_ACCESS
   hid_t H5P_DATASET_XFER
 
   hid_t H5P_OBJECT_CREATE
@@ -387,6 +415,8 @@ cdef extern from "hdf5.h":
   hid_t H5P_LINK_CREATE
   hid_t H5P_LINK_ACCESS
   hid_t H5P_GROUP_CREATE
+  hid_t H5P_CRT_ORDER_TRACKED
+  hid_t H5P_CRT_ORDER_INDEXED
 
 # === H5R - Reference API =====================================================
 
@@ -422,6 +452,7 @@ cdef extern from "hdf5.h":
     H5S_NO_CLASS         = -1,  #/*error
     H5S_SCALAR           = 0,   #/*scalar variable
     H5S_SIMPLE           = 1,   #/*simple data space
+    H5S_NULL             = 2,   # NULL data space
     # no longer defined in 1.8
     #H5S_COMPLEX          = 2    #/*complex data space
 
@@ -501,80 +532,74 @@ cdef extern from "hdf5.h":
 
   # --- Predefined datatypes --------------------------------------------------
 
-  cdef enum:
-    H5T_NATIVE_B8
-    H5T_NATIVE_CHAR
-    H5T_NATIVE_SCHAR
-    H5T_NATIVE_UCHAR
-    H5T_NATIVE_SHORT
-    H5T_NATIVE_USHORT
-    H5T_NATIVE_INT
-    H5T_NATIVE_UINT
-    H5T_NATIVE_LONG
-    H5T_NATIVE_ULONG
-    H5T_NATIVE_LLONG
-    H5T_NATIVE_ULLONG
-    H5T_NATIVE_FLOAT
-    H5T_NATIVE_DOUBLE
-    H5T_NATIVE_LDOUBLE
+  cdef hid_t H5T_NATIVE_B8
+  cdef hid_t H5T_NATIVE_CHAR
+  cdef hid_t H5T_NATIVE_SCHAR
+  cdef hid_t H5T_NATIVE_UCHAR
+  cdef hid_t H5T_NATIVE_SHORT
+  cdef hid_t H5T_NATIVE_USHORT
+  cdef hid_t H5T_NATIVE_INT
+  cdef hid_t H5T_NATIVE_UINT
+  cdef hid_t H5T_NATIVE_LONG
+  cdef hid_t H5T_NATIVE_ULONG
+  cdef hid_t H5T_NATIVE_LLONG
+  cdef hid_t H5T_NATIVE_ULLONG
+  cdef hid_t H5T_NATIVE_FLOAT
+  cdef hid_t H5T_NATIVE_DOUBLE
+  cdef hid_t H5T_NATIVE_LDOUBLE
 
   # "Standard" types
-  cdef enum:
-    H5T_STD_I8LE
-    H5T_STD_I16LE
-    H5T_STD_I32LE
-    H5T_STD_I64LE
-    H5T_STD_U8LE
-    H5T_STD_U16LE
-    H5T_STD_U32LE
-    H5T_STD_U64LE
-    H5T_STD_B8LE
-    H5T_STD_B16LE
-    H5T_STD_B32LE
-    H5T_STD_B64LE
-    H5T_IEEE_F32LE
-    H5T_IEEE_F64LE
-    H5T_STD_I8BE
-    H5T_STD_I16BE
-    H5T_STD_I32BE
-    H5T_STD_I64BE
-    H5T_STD_U8BE
-    H5T_STD_U16BE
-    H5T_STD_U32BE
-    H5T_STD_U64BE
-    H5T_STD_B8BE
-    H5T_STD_B16BE
-    H5T_STD_B32BE
-    H5T_STD_B64BE
-    H5T_IEEE_F32BE
-    H5T_IEEE_F64BE
+  cdef hid_t H5T_STD_I8LE
+  cdef hid_t H5T_STD_I16LE
+  cdef hid_t H5T_STD_I32LE
+  cdef hid_t H5T_STD_I64LE
+  cdef hid_t H5T_STD_U8LE
+  cdef hid_t H5T_STD_U16LE
+  cdef hid_t H5T_STD_U32LE
+  cdef hid_t H5T_STD_U64LE
+  cdef hid_t H5T_STD_B8LE
+  cdef hid_t H5T_STD_B16LE
+  cdef hid_t H5T_STD_B32LE
+  cdef hid_t H5T_STD_B64LE
+  cdef hid_t H5T_IEEE_F32LE
+  cdef hid_t H5T_IEEE_F64LE
+  cdef hid_t H5T_STD_I8BE
+  cdef hid_t H5T_STD_I16BE
+  cdef hid_t H5T_STD_I32BE
+  cdef hid_t H5T_STD_I64BE
+  cdef hid_t H5T_STD_U8BE
+  cdef hid_t H5T_STD_U16BE
+  cdef hid_t H5T_STD_U32BE
+  cdef hid_t H5T_STD_U64BE
+  cdef hid_t H5T_STD_B8BE
+  cdef hid_t H5T_STD_B16BE
+  cdef hid_t H5T_STD_B32BE
+  cdef hid_t H5T_STD_B64BE
+  cdef hid_t H5T_IEEE_F32BE
+  cdef hid_t H5T_IEEE_F64BE
 
-  cdef enum:
-    H5T_NATIVE_INT8
-    H5T_NATIVE_UINT8
-    H5T_NATIVE_INT16
-    H5T_NATIVE_UINT16
-    H5T_NATIVE_INT32
-    H5T_NATIVE_UINT32
-    H5T_NATIVE_INT64
-    H5T_NATIVE_UINT64
+  cdef hid_t H5T_NATIVE_INT8
+  cdef hid_t H5T_NATIVE_UINT8
+  cdef hid_t H5T_NATIVE_INT16
+  cdef hid_t H5T_NATIVE_UINT16
+  cdef hid_t H5T_NATIVE_INT32
+  cdef hid_t H5T_NATIVE_UINT32
+  cdef hid_t H5T_NATIVE_INT64
+  cdef hid_t H5T_NATIVE_UINT64
 
   # Unix time types
-  cdef enum:
-    H5T_UNIX_D32LE
-    H5T_UNIX_D64LE
-    H5T_UNIX_D32BE
-    H5T_UNIX_D64BE
+  cdef hid_t H5T_UNIX_D32LE
+  cdef hid_t H5T_UNIX_D64LE
+  cdef hid_t H5T_UNIX_D32BE
+  cdef hid_t H5T_UNIX_D64BE
 
   # String types
-  cdef enum:
-    H5T_FORTRAN_S1
-    H5T_C_S1
+  cdef hid_t H5T_FORTRAN_S1
+  cdef hid_t H5T_C_S1
 
   # References
-  cdef enum:
-    H5T_STD_REF_OBJ
-    H5T_STD_REF_DSETREG
+  cdef hid_t H5T_STD_REF_OBJ
+  cdef hid_t H5T_STD_REF_DSETREG
 
   # Type-conversion infrastructure
 
@@ -618,6 +643,8 @@ cdef extern from "hdf5.h":
   int H5Z_FILTER_SHUFFLE
   int H5Z_FILTER_FLETCHER32
   int H5Z_FILTER_SZIP
+  int H5Z_FILTER_NBIT
+  int H5Z_FILTER_SCALEOFFSET
   int H5Z_FILTER_RESERVED
   int H5Z_FILTER_MAX
   int H5Z_MAX_NFILTERS
@@ -636,6 +663,8 @@ cdef extern from "hdf5.h":
   int H5_SZIP_NN_OPTION_MASK          #32
   int H5_SZIP_MAX_PIXELS_PER_BLOCK    #32
 
+  int H5Z_SO_INT_MINBITS_DEFAULT
+
   int H5Z_FILTER_CONFIG_ENCODE_ENABLED #(0x0001)
   int H5Z_FILTER_CONFIG_DECODE_ENABLED #(0x0002)
 
@@ -644,6 +673,11 @@ cdef extern from "hdf5.h":
       H5Z_DISABLE_EDC     = 0,
       H5Z_ENABLE_EDC      = 1,
       H5Z_NO_EDC          = 2
+
+  cdef enum H5Z_SO_scale_type_t:
+      H5Z_SO_FLOAT_DSCALE = 0,
+      H5Z_SO_FLOAT_ESCALE = 1,
+      H5Z_SO_INT          = 2
 
 # === H5A - Attributes API ====================================================
 
@@ -660,9 +694,74 @@ cdef extern from "hdf5.h":
 
 
 
+#  === H5AC - Attribute Cache configuration API ================================
+
+
+  unsigned int H5AC__CURR_CACHE_CONFIG_VERSION  # 	1
+  # I don't really understand why this works, but
+  # https://groups.google.com/forum/?fromgroups#!topic/cython-users/-fLG08E5lYM
+  # suggests it and it _does_ work
+  enum: H5AC__MAX_TRACE_FILE_NAME_LEN	#	1024
+
+  unsigned int H5AC_METADATA_WRITE_STRATEGY__PROCESS_0_ONLY   # 0
+  unsigned int H5AC_METADATA_WRITE_STRATEGY__DISTRIBUTED      # 1
+
+
+  cdef extern from "H5Cpublic.h":
+  # === H5C - Cache configuration API ================================
+    cdef enum H5C_cache_incr_mode:
+      H5C_incr__off,
+      H5C_incr__threshold,
+
+
+    cdef enum H5C_cache_flash_incr_mode:
+      H5C_flash_incr__off,
+      H5C_flash_incr__add_space
+
+
+    cdef enum H5C_cache_decr_mode:
+      H5C_decr__off,
+      H5C_decr__threshold,
+      H5C_decr__age_out,
+      H5C_decr__age_out_with_threshold
+
+    ctypedef struct H5AC_cache_config_t:
+      #     /* general configuration fields: */
+      int version
+      hbool_t rpt_fcn_enabled
+      hbool_t evictions_enabled
+      hbool_t set_initial_size
+      size_t initial_size
+      double min_clean_fraction
+      size_t max_size
+      size_t min_size
+      long int epoch_length
+      #    /* size increase control fields: */
+      H5C_cache_incr_mode incr_mode
+      double lower_hr_threshold
+      double increment
+      hbool_t apply_max_increment
+      size_t max_increment
+      H5C_cache_flash_incr_mode flash_incr_mode
+      double flash_multiple
+      double flash_threshold
+      # /* size decrease control fields: */
+      H5C_cache_decr_mode decr_mode
+      double upper_hr_threshold
+      double decrement
+      hbool_t apply_max_decrement
+      size_t max_decrement
+      int epochs_before_eviction
+      hbool_t apply_empty_reserve
+      double empty_reserve
+      # /* parallel configuration fields: */
+      int dirty_bytes_threshold
+      #  int metadata_write_strategy # present in 1.8.6 and higher
+
+
+
+
 cdef extern from "hdf5_hl.h":
 # === H5DS - Dimension Scales API =============================================
 
   ctypedef herr_t  (*H5DS_iterate_t)(hid_t dset, unsigned dim, hid_t scale, void *visitor_data) except 2
-
-
