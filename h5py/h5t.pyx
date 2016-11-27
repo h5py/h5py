@@ -946,16 +946,28 @@ cdef class TypeFloatID(TypeAtomicID):
         size = self.get_size()                  # int giving number of bytes
         order = _order_map[self.get_order()]    # string with '<' or '>'
 
-        if size == 2 and not hasattr(np, 'float16'):
+        s_offset, e_offset, e_size, m_offset, m_size = self.get_fields()
+
+        # Handle non-standard exponent and mantissa sizes.
+        if e_size > 15 or m_size > 112:
+            raise ValueError('Invalid exponent or mantissa size in ' + str(self))
+        elif e_size > 11 or m_size > 52:
+            size = 16
+        elif e_size > 8 or m_size > 23:
+            size = 8
+        elif e_size != 5 or m_size != 10:
+            size = 4
+        elif not hasattr(np, 'float16'):
             # This build doesn't have float16; promote to float32
-            return dtype(order+"f4")
+            size = 4
+        else:
+            size = 2
 
         if size > 8:
             # The native NumPy longdouble is used for 96 and 128-bit floats
             return dtype(order + "f" + str(np.longdouble(1).dtype.itemsize))
             
-        return dtype( _order_map[self.get_order()] + "f" + \
-                      str(self.get_size()) )
+        return dtype(order + "f" + str(size) )
 
 
 # === Composite types (enums and compound) ====================================
