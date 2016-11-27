@@ -947,15 +947,16 @@ cdef class TypeFloatID(TypeAtomicID):
         order = _order_map[self.get_order()]    # string with '<' or '>'
 
         s_offset, e_offset, e_size, m_offset, m_size = self.get_fields()
+        e_bias = self.get_ebias()
 
         # Handle non-standard exponent and mantissa sizes.
-        if e_size > 15 or m_size > 112:
+        if m_size > 112 or (2**e_size - 2 - e_bias) > 16383 or (1 - e_bias) < -16382:
             raise ValueError('Invalid exponent or mantissa size in ' + str(self))
-        elif e_size > 11 or m_size > 52:
+        elif m_size > 52 or (2**e_size - 2 - e_bias) > 1023 or (1 - e_bias) < -1022:
             size = 16
-        elif e_size > 8 or m_size > 23:
+        elif m_size > 23 or (2**e_size - 2 - e_bias) > 127 or (1 - e_bias) < -126:
             size = 8
-        elif e_size != 5 or m_size != 10:
+        elif m_size > 10 or (2**e_size - 2 - e_bias) > 15 or (1 - e_bias) < -14:
             size = 4
         elif not hasattr(np, 'float16'):
             # This build doesn't have float16; promote to float32
