@@ -26,6 +26,7 @@ from utils cimport  emalloc, efree, \
 
 # Runtime imports
 import sys
+import operator
 from h5 import get_config
 import numpy as np
 from ._objects import phil, with_phil
@@ -1006,7 +1007,6 @@ cdef class TypeCompositeID(TypeID):
         """
         return H5Tget_member_index(self.id, name)
 
-
 cdef class TypeCompoundID(TypeCompositeID):
 
     """
@@ -1106,7 +1106,17 @@ cdef class TypeCompoundID(TypeCompositeID):
         else:
             if sys.version[0] == '3':
                 field_names = [x.decode('utf8') for x in field_names]
-            typeobj = dtype({'names': field_names, 'formats': field_types, 'offsets': field_offsets})
+            if len(field_names) > 0:
+                collated_fields = zip(field_names, field_types, field_offsets)
+                ordered_fields = sorted(
+                    collated_fields, key=operator.itemgetter(2))
+                field_names, field_types, field_offsets = \
+                    map(list, zip(*ordered_fields))
+            typeobj = dtype({
+                'names': field_names,
+                'formats': field_types,
+                'offsets': field_offsets
+            })
 
         return typeobj
 
