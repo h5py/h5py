@@ -10,6 +10,7 @@ try:
 except ImportError:
     from distutils.extension import Extension
 from distutils.command.build_ext import build_ext
+import distutils.sysconfig
 import sys
 import os
 import os.path as op
@@ -47,7 +48,7 @@ else:
     COMPILER_SETTINGS = {
        'libraries'      : ['hdf5', 'hdf5_hl'],
        'include_dirs'   : [localpath('lzf'), '/opt/local/include', '/usr/local/include'],
-       'library_dirs'   : ['/opt/local/lib', '/usr/local/lib'],
+       'library_dirs'   : [ distutils.sysconfig.get_config_var("LIBDIR"), '/opt/local/lib', '/usr/local/lib'],
        'define_macros'  : [('H5_USE_16_API', None)] }
 
 
