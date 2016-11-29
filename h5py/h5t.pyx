@@ -1111,7 +1111,7 @@ cdef class TypeCompoundID(TypeCompositeID):
                 ordered_fields = sorted(
                     collated_fields, key=operator.itemgetter(2))
                 field_names, field_types, field_offsets = \
-                    [list(t) for t in zip(*ordered_fields)]
+                    map(list, zip(*ordered_fields))
             typeobj = dtype({
                 'names': field_names,
                 'formats': field_types,
