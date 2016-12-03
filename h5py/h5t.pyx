@@ -16,6 +16,7 @@
 """
 
 # Pyrex compile-time imports
+include "config.pxi"
 from _objects cimport pdefault
 
 from numpy cimport dtype, ndarray
@@ -1394,10 +1395,13 @@ cdef TypeCompoundID _c_complex(dtype dt):
             tid_sub = H5T_NATIVE_DOUBLE
 
     elif length == 32:
-        size = h5py_size_n256
-        off_r = h5py_offset_n256_real
-        off_i = h5py_offset_n256_imag
-        tid_sub = H5T_NATIVE_LDOUBLE
+        IF COMPLEX256_SUPPORT:
+            size = h5py_size_n256
+            off_r = h5py_offset_n256_real
+            off_i = h5py_offset_n256_imag
+            tid_sub = H5T_NATIVE_LDOUBLE
+        ELSE:
+            raise TypeError("Illegal length %d for complex dtype" % length)
     else:
         raise TypeError("Illegal length %d for complex dtype" % length)
 
