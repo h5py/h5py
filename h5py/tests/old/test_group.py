@@ -739,7 +739,7 @@ class TestExternalLinks(TestCase):
         Check that external links encode unicode filenames properly
         Testing issue #732
         """
-        ext_filename = os.path.join(mkdtemp(), "α.hdf5")
+        ext_filename = os.path.join(mkdtemp(), u"α.hdf5")
         with File(ext_filename, "w") as ext_file:
             ext_file.create_group('external')
         self.f['ext'] = ExternalLink(ext_filename, '/external')
@@ -749,7 +749,7 @@ class TestExternalLinks(TestCase):
         Check that external links decode unicode filenames properly
         Testing issue #732
         """
-        ext_filename = os.path.join(mkdtemp(), "α.hdf5")
+        ext_filename = os.path.join(mkdtemp(), u"α.hdf5")
         with File(ext_filename, "w") as ext_file:
             ext_file.create_group('external')
             ext_file["external"].attrs["ext_attr"] = "test"
