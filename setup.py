@@ -34,6 +34,13 @@ RUN_REQUIRES = [NUMPY_DEP, 'six']
 # RUN_REQUIRES can be removed when setup.py test is removed
 SETUP_REQUIRES = RUN_REQUIRES + [NUMPY_DEP, 'Cython>=0.19', 'pkgconfig']
 
+# Needed to avoid trying to install numpy/cython on pythons which the latest
+# versions don't support
+if "sdist" in sys.argv and "bdist_wheel" not in sys.argv and "install" not in sys.argv:
+    use_setup_requires = False
+else:
+    use_setup_requires = True
+
 
 # --- Custom Distutils commands -----------------------------------------------
 
@@ -145,6 +152,6 @@ setup(
   package_data = package_data,
   ext_modules = [Extension('h5py.x',['x.c'])],  # To trick build into running build_ext
   install_requires = RUN_REQUIRES,
-  setup_requires = SETUP_REQUIRES,
+  setup_requires = SETUP_REQUIRES if use_setup_requires else [],
   cmdclass = CMDCLASS,
 )
