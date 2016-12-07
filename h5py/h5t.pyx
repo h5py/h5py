@@ -1441,7 +1441,8 @@ cdef TypeCompoundID _c_compound(dtype dt, int logical):
         offset = dt.fields[name][1]
         type_tmp = py_create(dt_tmp, logical=logical)
 
-        # Increase size if initial too small
+        # Increase size if initial too small, which can happen if there are out
+        # of order fields (as determined by offsets)
         if H5Tget_size(tid) < (offset + type_tmp.get_size()):
             H5Tset_size(tid, offset+type_tmp.get_size())
 
