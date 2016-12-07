@@ -67,7 +67,7 @@ cdef class TypeCompoundID(TypeCompositeID):
 
 cpdef TypeID typewrap(hid_t id_)
 cdef hid_t H5PY_OBJ
-cpdef TypeID py_create(object dtype, bint logical=*)
+cpdef TypeID py_create(object dtype, bint logical=*, bint aligned=*)
 
 
 

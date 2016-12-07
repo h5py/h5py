@@ -1421,32 +1421,51 @@ cdef TypeCompoundID _c_complex(dtype dt):
 
     return TypeCompoundID(tid)
 
-cdef TypeCompoundID _c_compound(dtype dt, int logical):
+cdef TypeCompoundID _c_compound(dtype dt, int logical, int aligned):
     # Compound datatypes
 
     cdef hid_t tid
     cdef TypeID type_tmp
     cdef dtype dt_tmp
     cdef size_t offset
+    cdef size_t offset_step = 0
 
-    cdef dict fields = dt.fields
     cdef tuple names = dt.names
+    cdef dict fields = {}
+    cdef list offsets
 
-    # Set initial size to itemsize
-    tid = H5Tcreate(H5T_COMPOUND, dt.itemsize)
+    for name, field in dt.fields.items():
+        dt_tmp = field[0]
+        offset = field[1]
+        fields[offset] = {
+            "name": name.encode('utf8') if isinstance(name, unicode) else name,
+            "dtype": dtype(dt_tmp),
+            "size": py_create(dt_tmp, logical=logical).get_size(),
+        }
 
-    for name in names:
-        ename = name.encode('utf8') if isinstance(name, unicode) else name
-        dt_tmp = dt.fields[name][0]
-        offset = dt.fields[name][1]
-        type_tmp = py_create(dt_tmp, logical=logical)
+    offsets = list(sorted(fields))
+    # Set initial size to itemsize or last offset plus itemsize, whichever is
+    # bigger
+    tid = H5Tcreate(H5T_COMPOUND,
+        max(dt.itemsize, offsets[-1] + fields[offsets[-1]]["size"])
+    )
 
+    for i, offset in enumerate(offsets):
+        dt_tmp = fields[offset]["dtype"]
+        type_tmp = py_create(dt_tmp, logical=logical, aligned=aligned)
+        if aligned and type_tmp.get_size() > dt_tmp.itemsize:
+            raise TypeError("Enforced alignment not compatible with HDF5 type")
         # Increase size if initial too small, which can happen if there are out
         # of order fields (as determined by offsets)
-        if H5Tget_size(tid) < (offset + type_tmp.get_size()):
-            H5Tset_size(tid, offset+type_tmp.get_size())
+        if H5Tget_size(tid) < (offset + offset_step + type_tmp.get_size()):
+            H5Tset_size(tid, offset + offset_step + type_tmp.get_size())
+        H5Tinsert(tid, fields[offset]["name"], offset + offset_step, type_tmp.id)
 
-        H5Tinsert(tid, ename, offset, type_tmp.id)
+        if (i + 1 < len(offsets)) and fields[offset]["size"] > offsets[i + 1]:
+            if aligned:
+                raise TypeError("dtype results in overlapping fields")
+            else:
+                offset_step += fields[offset]["size"] - offsets[i + 1]
 
     return TypeCompoundID(tid)
 
@@ -1472,7 +1491,7 @@ cdef TypeReferenceID _c_ref(object refclass):
     raise TypeError("Unrecognized reference code")
 
 
-cpdef TypeID py_create(object dtype_in, bint logical=0):
+cpdef TypeID py_create(object dtype_in, bint logical=0, bint aligned=0):
     """(OBJECT dtype_in, BOOL logical=False) => TypeID
 
     Given a Numpy dtype object, generate a byte-for-byte memory-compatible
@@ -1491,6 +1510,8 @@ cpdef TypeID py_create(object dtype_in, bint logical=0):
     """
     cdef dtype dt = dtype(dtype_in)
     cdef char kind = dt.kind
+
+    aligned = getattr(dtype_in, "isalignedstruct", aligned)
 
     with phil:
         # Float
@@ -1514,7 +1535,7 @@ cpdef TypeID py_create(object dtype_in, bint logical=0):
 
         # Compound
         elif kind == c'V' and dt.names is not None:
-            return _c_compound(dt, logical)
+            return _c_compound(dt, logical, aligned)
 
         # Array or opaque
         elif kind == c'V':
