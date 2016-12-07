@@ -30,13 +30,19 @@ typedef void *PyMPI_MPI_Message;
 
 #define h5py_size_n64 (sizeof(npy_complex64))
 #define h5py_size_n128 (sizeof(npy_complex128))
+
+#ifdef NPY_COMPLEX256
 #define h5py_size_n256 (sizeof(npy_complex256))
+#endif
 
 #define h5py_offset_n64_real (HOFFSET(npy_complex64, real))
 #define h5py_offset_n64_imag (HOFFSET(npy_complex64, imag))
 #define h5py_offset_n128_real (HOFFSET(npy_complex128, real))
 #define h5py_offset_n128_imag (HOFFSET(npy_complex128, imag))
+
+#ifdef NPY_COMPLEX256
 #define h5py_offset_n256_real (HOFFSET(npy_complex256, real))
 #define h5py_offset_n256_imag (HOFFSET(npy_complex256, imag))
+#endif
 
 #endif
