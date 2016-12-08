@@ -112,6 +112,11 @@ def main():
             makedirs(install_path)
     if vs_version is not None:
         cmake_generator = VSVERSION_TO_GENERATOR[vs_version]
+        if vs_version == '9-64':
+            # Needed for
+            # http://help.appveyor.com/discussions/kb/38-visual-studio-2008-64-bit-builds
+            run("ci\\appveyor\\vs2008_patch\\setup_x64.bat")
+
     if not hdf5_cached(install_path):
         with TemporaryFile() as f:
             download_hdf5(version, f)
