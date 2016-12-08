@@ -21,6 +21,7 @@ import tempfile
 import six
 
 from .common import ut, TestCase, unicode_filenames
+from ..common import closed_tempfile
 from h5py.highlevel import File
 import h5py
 
@@ -559,17 +560,17 @@ class TestPathlibSupport(TestCase):
     """
     def test_pathlib_accepted_file(self):
         """ Check that pathlib is accepted by h5py.File """
-        with tempfile.NamedTemporaryFile() as f:
-            path = pathlib.Path(f.name)
+        with closed_tempfile() as f:
+            path = pathlib.Path(f)
             with File(path) as f2:
                 self.assertTrue(True)
 
     def test_pathlib_name_match(self):
         """ Check that using pathlib does not affect naming """
-        with tempfile.NamedTemporaryFile() as f:
-            path = pathlib.Path(f.name)
+        with closed_tempfile() as f:
+            path = pathlib.Path(f)
             with File(path) as h5f1:
                 pathlib_name = h5f1.filename
-            with File(f.name) as h5f2:
+            with File(f) as h5f2:
                 normal_name = h5f2.filename
             self.assertEqual(pathlib_name, normal_name)
