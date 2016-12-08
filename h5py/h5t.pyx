@@ -1434,6 +1434,16 @@ cdef TypeCompoundID _c_compound(dtype dt, int logical, int aligned):
     cdef dict fields = {}
     cdef list offsets
 
+    # The challenge with correctly converting a numpy/h5py dtype to a HDF5 type
+    # which is composed of subtypes has three aspects we must consider
+    # 1. numpy/h5py dtypes do not always have the same size and HDF5, even when
+    #   equivalent (can result in overlapping elements if not careful)
+    # 2. For correct round-tripping of aligned dtypes, we need to consider how
+    #   much padding we need
+    # 3. There is no requirement that the offsets be monotonically increasing
+    #
+    # The code below tries to cover these aspects
+
     for name, field in dt.fields.items():
         dt_tmp = field[0]
         offset = field[1]
