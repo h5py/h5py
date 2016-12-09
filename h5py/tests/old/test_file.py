@@ -16,6 +16,7 @@
 from __future__ import absolute_import, with_statement
 
 import os, stat
+from sys import platform
 import tempfile
 
 import six
@@ -53,7 +54,7 @@ class TestFileOpen(TestCase):
         # Running as root (e.g. in a docker container) gives 'r+' as the file
         # mode, even for a read-only file.  See
         # https://github.com/h5py/h5py/issues/696
-        exp_mode = 'r+' if os.stat(fname).st_uid == 0 else 'r'
+        exp_mode = 'r+' if os.stat(fname).st_uid == 0 and platform != "win32" else 'r'
         try:
             with File(fname) as f:
                 self.assertTrue(f)
