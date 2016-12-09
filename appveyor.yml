@@ -62,6 +62,7 @@ environment:
 
 install:
   # We need wheel installed to build wheels
+  - "%PYTHON%\\python.exe -m pip install --upgrade wheel pip setuptools"
   - "py -3.5 -m pip install --upgrade wheel pip setuptools"
   - "py -3.5 -m pip install requests"
   - "py -3.5 ci\\get_hdf5.py"
@@ -84,7 +85,7 @@ after_test:
   # Again, you only need build.cmd if you're building C extensions for
   # 64-bit Python 3.3/3.4. And you need to use %PYTHON% to get the correct
   # interpreter
-  - "ci\\appveyor\\build.cmd %TOXPYTHON% setup.py bdist_wheel"
+  - "ci\\appveyor\\build.cmd %PYTHON%\\python.exe setup.py bdist_wheel"
 
 artifacts:
   # bdist_wheel puts your built wheel in the dist directory
