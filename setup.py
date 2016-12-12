@@ -24,7 +24,7 @@ import setup_build, setup_configure
 
 VERSION = '2.6.0'
 
-NUMPY_DEP = 'numpy>=1.6.1'
+NUMPY_DEP = 'numpy>=1.7'
 
 # these are required to use h5py
 RUN_REQUIRES = [NUMPY_DEP, 'six']
