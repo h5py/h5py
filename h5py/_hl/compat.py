@@ -48,7 +48,13 @@ def _fscodec():
     if encoding == 'mbcs':
         errors = 'strict'
     else:
-        errors = 'surrogateescape'
+        try:
+            from codecs import lookup_error
+            lookup_error('surrogateescape')
+        except LookupError:
+            errors = 'strict'
+        else:
+            errors = 'surrogateescape'
 
     def fsencode(filename):
         """
