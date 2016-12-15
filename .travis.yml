@@ -26,6 +26,22 @@ env:
 #  - TOXENV=py35-test-deps
 #  - TOXENV=py35-test-mindeps
 # commented out because of https://github.com/travis-ci/travis-ci/issues/4794
+  - TOXENV=py26-test-deps
+    TOX_TESTENV_PASSENV=LANG LC_ALL
+    LANG=C
+    LC_ALL=C
+  - TOXENV=py27-test-deps
+    TOX_TESTENV_PASSENV=LANG LC_ALL
+    LANG=C
+    LC_ALL=C
+  - TOXENV=py33-test-deps
+    TOX_TESTENV_PASSENV=LANG LC_ALL
+    LANG=C
+    LC_ALL=C
+  - TOXENV=py34-test-deps
+    TOX_TESTENV_PASSENV=LANG LC_ALL
+    LANG=C
+    LC_ALL=C
 
 matrix:
   include:
@@ -36,6 +52,12 @@ matrix:
     - python: 3.5
       env:
       - TOXENV=py35-test-mindeps
+    - python: 3.5
+      env:
+      - TOXENV=py35-test-deps
+        TOX_TESTENV_PASSENV=LANG LC_ALL
+        LANG=C
+        LC_ALL=C
     # parallel HDF5 test with HDF5>=1.8.9 for mpio "atomic" support
     - dist: trusty
       sudo: required
