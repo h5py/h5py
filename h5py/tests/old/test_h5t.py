@@ -14,6 +14,8 @@ try:
 except ImportError:
     import unittest as ut
 
+from six import text_type
+
 import numpy as np
 import h5py
 from h5py import h5t
@@ -36,3 +38,25 @@ class TestCompound(ut.TestCase):
         self.assertEqual(tid.get_member_offset(0), 0)
         self.assertEqual(tid.get_member_offset(1), h5t.STD_REF_OBJ.get_size())
 
+    def test_out_of_order_offsets(self):
+        size = 20
+        type_dict = {
+            'names' : ['f1', 'f2', 'f3'],
+            'formats' : ['<f4', '<i4', '<f8'],
+            'offsets' : [0, 16, 8]
+        }
+
+        expected_dtype = np.dtype(type_dict)
+
+        tid = h5t.create(h5t.COMPOUND, size)
+        for name, offset, dt in zip(
+                type_dict["names"], type_dict["offsets"], type_dict["formats"]
+        ):
+            tid.insert(
+                name.encode("utf8") if isinstance(name, text_type) else name,
+                offset,
+                h5t.py_create(dt)
+            )
+
+        self.assertEqual(tid.dtype, expected_dtype)
+        self.assertEqual(tid.dtype.itemsize, size)
