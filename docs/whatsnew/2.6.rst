@@ -11,7 +11,11 @@ This work was added in `#663`_ by Aleksandar Jelenak.
 
 Add MPI Collective I/O Support
 ------------------------------
-(`#648`_ by Jialin Liu)
+Support for using MPI Collective I/O in both low-level and high-level code has
+been added. See the collective_io.py example for a simple demonstration of how
+to use MPI Collective I/O with the high level API.
+
+This work was added in `#648`_ by Jialin Liu.
 
 Numerous build/testing/CI improvements
 --------------------------------------
@@ -28,24 +32,21 @@ There was a large cleanup of pylint-identified problems by Andrew Collette
 
 Fixes to low-level API
 ----------------------
-* Correct return types on attribute open low-level API functions (`#597`_ by Ulrik Kofoed Pedersen)
-* Correct return type of `H5Pget_class` (`#589`_ by Peter Chang)
-* Construct Python dtype with correct offsets for compound types (`#639`_ by @nevion)
-* Fix hid_t typing in Cython (`#625`_ by Spaghetti Sort)
-* Fix enumeration within variable-length arrays (`#621`_ by Sam Mason)
-* Use correct destination type when committing (`#614`_ by Andrew Collette)
-* Add support for assigning a vector to a component of a compound dataset (`#606`_ by Yu Feng)
+Fixes to the typing of functions were added in `#597`_ by Ulrik Kofoed
+Pedersen, `#589`_ by Peter Chang, and `#625`_ by Spaghetti Sort. A fix for
+variable-length arrays was added in `#621`_ by Sam Mason. Fixes to compound
+types were added in `#639`_ by @nevion and `#606`_ by Yu Feng. Finally, a fix
+to type conversion was added in `#614`_ by Andrew Collette.
 
 Documentation improvements
 --------------------------
-* Update FAQ section on variable length arrays (`#608`_ by Dan Guest)
-* Update list of supported types in FAQ (`#607`_ by Peter Hill)
-* Update MPI setup instructions (`#604`_ by Jens Timmerman)
-* Update MPI example (`#572`_ by Matthias König)
+* Updates to FAQ by Dan Guest (`#608`_) and Peter Hill (`#607`_).
+* Updates MPI-releated documentation by Jens Timmerman (`#604`_) and
+  Matthias König (`#572`_).
+* Fixes to documentation building by Ghislain Antony Vaillant (`#562`_,
+  `#561`_).
 * Update PyTables link (`#574`_ by Dominik Kriegner)
 * Add File opening modes to docstring (`#563`_ by Antony Lee)
-* Fix apidoc build on Python 3 (`#562`_ by Ghislain Antony Vaillant)
-* Fix shipping doc build in release tarball (`#561`_ by Ghislain Antony Vaillant)
 
 Other changes
 -------------
