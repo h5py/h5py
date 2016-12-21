@@ -34,6 +34,7 @@ recover it::
     >>> binary_blob = out.tostring()
 
 
+
 How to store text strings
 -------------------------
 
@@ -44,6 +45,7 @@ to a specific type within Python (but see :ref:`str_py3` below):
 * Variable-length ASCII (Python 2 ``str``, Python 3 ``bytes``)
 * Variable-length UTF-8 (Python 2 ``unicode``, Python 3 ``str``)
 
+.. _str_py3:
 
 Compatibility
 ^^^^^^^^^^^^^
@@ -76,7 +78,7 @@ for compatibility with other progams using HDF5 (IDL, MATLAB, etc.), you
 should use ASCII only.
 
 .. note::
-    
+
     This is the most-compatible way to store a string.  Everything else
     can read it.
 
@@ -127,12 +129,12 @@ byte strings.  But in Python 3, there's a strict separation between `data` and
 `text`, which intentionally makes it painful to handle encoded strings
 directly.
 
-So, when reading or writing scalar string attributes, on Python 3 they will 
+So, when reading or writing scalar string attributes, on Python 3 they will
 `always` be returned as type ``str``, regardless of the underlying storage
 mechanism.  The regular rules for writing apply; to get a fixed-width ASCII
 string, use ``numpy.string_``, and to get a variable-length ASCII string, use
 ``bytes``.
- 
+
 
 What about NumPy's ``U`` type?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -152,7 +154,7 @@ Unicode strings are used exclusively for object names in the file::
     u'/'
 
 You can supply either byte or unicode strings (on both Python 2 and Python 3)
-when creating or retrieving objects. If a byte string is supplied, 
+when creating or retrieving objects. If a byte string is supplied,
 it will be used as-is; Unicode strings will be encoded down to UTF-8.
 
 In the file, h5py uses the most-compatible representation; H5T_CSET_ASCII for
