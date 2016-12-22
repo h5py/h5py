@@ -135,6 +135,9 @@ class Selection(object):
                                product(shape).
         nselect (read-only) => Number of selected points.  Always equal to
                                product(mshape).
+        reorder (read-only) => Returns an int that indicates which axis should
+                               be brought to the front of the array.
+                               Default: 0.
 
         broadcast(target_shape) => Return an iterable which yields dataspaces
                                    for read, based on target_shape.
@@ -167,6 +170,11 @@ class Selection(object):
     def nselect(self):
         """ Number of elements currently selected """
         return self._id.get_select_npoints()
+
+    @property
+    def reorder(self):
+        """ Should the result be reordered """
+        return 0
 
     @property
     def mshape(self):
@@ -328,9 +336,14 @@ class FancySelection(Selection):
     def mshape(self):
         return self._mshape
 
+    @property
+    def reorder(self):
+        return self._reorder
+
     def __init__(self, shape, *args, **kwds):
         Selection.__init__(self, shape, *args, **kwds)
         self._mshape = self.shape
+        self._reorder = 0
 
     def __getitem__(self, args):
 
@@ -354,16 +367,21 @@ class FancySelection(Selection):
                     pass
                 else:
                     if sorted(arg) != list(arg):
-                        raise TypeError("Indexing elements must be in increasing order")
+                        raise TypeError("Indexing elements must be in "
+                                        "increasing order")
 
-        if len(sequenceargs) > 1:
-            raise TypeError("Only one indexing vector or array is currently allowed for advanced selection")
         if len(sequenceargs) == 0:
             raise TypeError("Advanced selection inappropriate")
 
         vectorlength = len(list(sequenceargs.values())[0])
         if not all(len(x) == vectorlength for x in sequenceargs.values()):
-            raise TypeError("All sequence arguments must have the same length %s" % sequenceargs)
+            raise TypeError("All sequence arguments must have the same "
+                            "length %s" % sequenceargs)
+
+        for idx, arg in enumerate(args):
+            if (not isinstance(arg, slice) and
+               idx not in sequenceargs):
+                sequenceargs[idx] = vectorlength * [arg]
 
         # Now generate a vector of selection lists,
         # consisting only of slices and ints
@@ -387,12 +405,30 @@ class FancySelection(Selection):
 
         mshape = list(count)
         for idx in xrange(len(mshape)):
-            if idx in sequenceargs:
-                mshape[idx] = len(sequenceargs[idx])
-            elif scalar[idx]:
+            if (idx in sequenceargs and
+               len(sequenceargs) == 1):
+                mshape[idx] = vectorlength
+            elif (idx in sequenceargs and
+                  len(sequenceargs) > 1):
                 mshape[idx] = 0
 
         self._mshape = tuple(x for x in mshape if x != 0)
+
+        if len(sequenceargs) > 1:
+            sortedaxes = np.sort(list(sequenceargs.keys()))
+            if np.max(np.diff(sortedaxes)) > 1:
+                for num, idx in enumerate(sortedaxes):
+                    # Find the first non-identical sequence:
+                    if len(set(sequenceargs[idx])) > 1:
+                        sequenceaxis = idx
+                        self._reorder = idx - num
+                        break
+            else:
+                sequenceaxis = np.min(sortedaxes)
+            mshape = np.asarray(mshape)
+            mshape[sequenceaxis] = vectorlength
+
+            self._mshape = tuple(x for x in mshape if x != 0)
 
     def broadcast(self, target_shape):
         if not target_shape == self.mshape:

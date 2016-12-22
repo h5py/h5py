@@ -24,7 +24,7 @@
         Scalar
         1D
         3D
-        
+
     2. Type:
         Float
         Compound
@@ -458,6 +458,64 @@ class Test2DZeroFloat(TestCase):
     @ut.expectedFailure
     def test_indexlist(self):
         """ see issue #473 """
-        self.assertNumpyBehavior(self.dset, self.data, np.s_[:,[0,1,2]])
+        self.assertNumpyBehavior(self.dset, self.data, np.s_[:, [0, 1, 2]])
 
-        
+
+class Test3DFloat(TestCase):
+
+    base = 3
+    ndim = 3
+
+    def setUp(self):
+        TestCase.setUp(self)
+        self.data = (np.arange(self.base**self.ndim).astype('f')
+                     .reshape(tuple(self.ndim * [self.base])))
+        self.dset = self.f.create_dataset('x', data=self.data)
+
+    def test_ndim(self):
+        """ Verify number of dimensions """
+        self.assertEquals(self.dset.ndim, self.ndim)
+
+    def test_shape(self):
+        """ Verify shape """
+        self.assertEquals(self.dset.shape, tuple(self.ndim * [self.base]))
+
+    def test_all_slice_list_and_index_cases(self):
+        """ Verify all possible vector slicing combinations but
+            limited to index lists of length 2 """
+
+        def _is_sorted(l):
+            return all(l[i] <= l[i+1] for i in range(len(l)-1))
+
+        import itertools
+        slices_comb = set([y for y
+                           in (itertools
+                               .product([x for x
+                                         in (itertools
+                                             .product(range(self.base),
+                                                      repeat=2))
+                                         if _is_sorted(x)],
+                                        repeat=4))])
+
+        def _simple_list(x):
+            if len(set(x)) == 1:
+                return x[0]
+            else:
+                return list(x)
+
+        def _simple_slice(x):
+            if len(set(x)) == 1:
+                return x[0]
+            else:
+                return slice(*x)
+        funcs_comb = set([funcs for funcs
+                          in (itertools
+                              .product([_simple_list, _simple_slice],
+                                       repeat=self.ndim))])
+
+        for slc in slices_comb:
+            for funcs in funcs_comb:
+                self.assertNumpyBehavior(self.dset, self.data,
+                                         np.s_[tuple([fcn(s)
+                                                      for fcn, s
+                                                      in zip(funcs, slc)])])
