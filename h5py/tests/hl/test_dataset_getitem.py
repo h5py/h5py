@@ -24,7 +24,6 @@
         Scalar
         1D
         3D
-        4D
 
     2. Type:
         Float
@@ -464,57 +463,8 @@ class Test2DZeroFloat(TestCase):
 
 class Test3DFloat(TestCase):
 
-    def setUp(self):
-        TestCase.setUp(self)
-        self.data = np.arange(27).astype('f').reshape((3, 3, 3))
-        self.dset = self.f.create_dataset('x', data=self.data)
-
-    def test_ndim(self):
-        """ Verify number of dimensions """
-        self.assertEquals(self.dset.ndim, 3)
-
-    def test_shape(self):
-        """ Verify shape """
-        self.assertEquals(self.dset.shape, (3, 3, 3))
-
-    def test_two_slices_and_list(self):
-        self.assertNumpyBehavior(self.dset, self.data, np.s_[:, :, [1, 2]])
-        self.assertNumpyBehavior(self.dset, self.data, np.s_[:, [1, 2], :])
-        self.assertNumpyBehavior(self.dset, self.data, np.s_[[1, 2], :, :])
-
-    def test_index_slice_and_list(self):
-        self.assertNumpyBehavior(self.dset, self.data, np.s_[0, [1, 2], :])
-        self.assertNumpyBehavior(self.dset, self.data, np.s_[[1, 2], 0, :])
-        self.assertNumpyBehavior(self.dset, self.data, np.s_[:, [1, 2], 0])
-        self.assertNumpyBehavior(self.dset, self.data, np.s_[:, 0, [1, 2]])
-        self.assertNumpyBehavior(self.dset, self.data, np.s_[[1, 2], :, 0])
-        self.assertNumpyBehavior(self.dset, self.data, np.s_[0, :, [1, 2]])
-
-    def test_slice_and_lists(self):
-        self.assertNumpyBehavior(self.dset, self.data,
-                                 np.s_[:, [0, 1], [1, 2]])
-        self.assertNumpyBehavior(self.dset, self.data,
-                                 np.s_[[0, 1], [1, 2], :])
-        self.assertNumpyBehavior(self.dset, self.data,
-                                 np.s_[[0, 1], :, [1, 2]])
-
-    def test_index_and_lists(self):
-        self.assertNumpyBehavior(self.dset, self.data,
-                                 np.s_[0, [0, 1], [1, 2]])
-        self.assertNumpyBehavior(self.dset, self.data,
-                                 np.s_[[0, 1], 0, [1, 2]])
-        self.assertNumpyBehavior(self.dset, self.data,
-                                 np.s_[[0, 1], [1, 2], 0])
-
-    def test_lists(self):
-        self.assertNumpyBehavior(self.dset, self.data,
-                                 np.s_[[1, 2], [0, 1], [1, 2]])
-
-
-class Test4DFloat(TestCase):
-
     base = 3
-    ndim = 4
+    ndim = 3
 
     def setUp(self):
         TestCase.setUp(self)
@@ -534,14 +484,18 @@ class Test4DFloat(TestCase):
         """ Verify all possible vector slicing combinations but
             limited to index lists of length 2 """
         import itertools
-        s_cbs = [y for y
-                 in (itertools
-                     .combinations_with_replacement(
-                       [x for x
-                        in (itertools
-                            .combinations_with_replacement(range(self.base),
-                                                           2))],
-                       self.ndim))]
+
+        def _is_sorted(l):
+            return all(l[i] <= l[i+1] for i in xrange(len(l)-1))
+
+        slices_comb = set([y for y
+                           in (itertools
+                               .product([x for x
+                                         in (itertools
+                                             .product(range(self.base),
+                                                      repeat=2))
+                                         if _is_sorted(x)],
+                                        repeat=4))])
 
         def _simple_list(x):
             if len(set(x)) == 1:
@@ -554,13 +508,14 @@ class Test4DFloat(TestCase):
                 return x[0]
             else:
                 return slice(*x)
+        funcs_comb = set([funcs for funcs
+                          in (itertools
+                              .product([_simple_list, _simple_slice],
+                                       repeat=self.ndim))])
 
-        for _slc in s_cbs:
-            for funcs in (itertools
-                          .combinations_with_replacement([_simple_list,
-                                                          _simple_slice],
-                                                         self.ndim)):
+        for slc in slices_comb:
+            for funcs in funcs_comb:
                 self.assertNumpyBehavior(self.dset, self.data,
                                          np.s_[tuple([fcn(s)
                                                       for fcn, s
-                                                      in zip(funcs, _slc)])])
+                                                      in zip(funcs, slc)])])

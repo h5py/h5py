@@ -503,7 +503,7 @@ class Dataset(HLObject):
 
         if selection.reorder != 0:
             # This allows vector numpy-style indexing:
-            arr = numpy.moveaxis(arr, selection.reorder, 0)
+            arr = numpy.rollaxis(arr, selection.reorder)
         return arr
 
     @with_phil
