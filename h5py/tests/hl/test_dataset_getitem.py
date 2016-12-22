@@ -25,7 +25,6 @@
         1D
         3D
         4D
-        5D
 
     2. Type:
         Float
@@ -510,6 +509,7 @@ class Test3DFloat(TestCase):
     def test_lists(self):
         self.assertNumpyBehavior(self.dset, self.data,
                                  np.s_[[1, 2], [0, 1], [1, 2]])
+
 
 class Test4DFloat(TestCase):
 
