@@ -25,7 +25,8 @@
         1D
         3D
         4D
-        
+        5D
+
     2. Type:
         Float
         Compound
@@ -461,18 +462,18 @@ class Test2DZeroFloat(TestCase):
         """ see issue #473 """
         self.assertNumpyBehavior(self.dset, self.data, np.s_[:, [0, 1, 2]])
 
- 
+
 class Test3DFloat(TestCase):
 
     def setUp(self):
         TestCase.setUp(self)
         self.data = np.arange(27).astype('f').reshape((3, 3, 3))
         self.dset = self.f.create_dataset('x', data=self.data)
- 
+
     def test_ndim(self):
         """ Verify number of dimensions """
         self.assertEquals(self.dset.ndim, 3)
- 
+
     def test_shape(self):
         """ Verify shape """
         self.assertEquals(self.dset.shape, (3, 3, 3))
@@ -483,20 +484,20 @@ class Test3DFloat(TestCase):
         self.assertNumpyBehavior(self.dset, self.data, np.s_[[1, 2], :, :])
 
     def test_index_slice_and_list(self):
-        self.assertNumpyBehavior(self.dset, self.data, np.s_[0, :, [1, 2]])
         self.assertNumpyBehavior(self.dset, self.data, np.s_[0, [1, 2], :])
         self.assertNumpyBehavior(self.dset, self.data, np.s_[[1, 2], 0, :])
-        self.assertNumpyBehavior(self.dset, self.data, np.s_[[1, 2], :, 0])
         self.assertNumpyBehavior(self.dset, self.data, np.s_[:, [1, 2], 0])
         self.assertNumpyBehavior(self.dset, self.data, np.s_[:, 0, [1, 2]])
- 
+        self.assertNumpyBehavior(self.dset, self.data, np.s_[[1, 2], :, 0])
+        self.assertNumpyBehavior(self.dset, self.data, np.s_[0, :, [1, 2]])
+
     def test_slice_and_lists(self):
         self.assertNumpyBehavior(self.dset, self.data,
                                  np.s_[:, [0, 1], [1, 2]])
         self.assertNumpyBehavior(self.dset, self.data,
-                                 np.s_[[0, 1], :, [1, 2]])
-        self.assertNumpyBehavior(self.dset, self.data,
                                  np.s_[[0, 1], [1, 2], :])
+        self.assertNumpyBehavior(self.dset, self.data,
+                                 np.s_[[0, 1], :, [1, 2]])
 
     def test_index_and_lists(self):
         self.assertNumpyBehavior(self.dset, self.data,
@@ -509,61 +510,57 @@ class Test3DFloat(TestCase):
     def test_lists(self):
         self.assertNumpyBehavior(self.dset, self.data,
                                  np.s_[[1, 2], [0, 1], [1, 2]])
-                                 
 
 class Test4DFloat(TestCase):
 
+    base = 3
+    ndim = 4
+
     def setUp(self):
         TestCase.setUp(self)
-        self.data = np.arange(81).astype('f').reshape((3, 3, 3, 3))
+        self.data = (np.arange(self.base**self.ndim).astype('f')
+                     .reshape(tuple(self.ndim * [self.base])))
         self.dset = self.f.create_dataset('x', data=self.data)
- 
+
     def test_ndim(self):
         """ Verify number of dimensions """
-        self.assertEquals(self.dset.ndim, 4)
- 
+        self.assertEquals(self.dset.ndim, self.ndim)
+
     def test_shape(self):
         """ Verify shape """
-        self.assertEquals(self.dset.shape, (3, 3, 3, 3))
+        self.assertEquals(self.dset.shape, tuple(self.ndim * [self.base]))
 
-    def test_three_slices_and_list(self):
-        self.assertNumpyBehavior(self.dset, self.data, np.s_[:, :, :, [1, 2]])
-        self.assertNumpyBehavior(self.dset, self.data, np.s_[:, :, [1, 2], :])
-        self.assertNumpyBehavior(self.dset, self.data, np.s_[:, [1, 2], :, :])
-        self.assertNumpyBehavior(self.dset, self.data, np.s_[[1, 2], :, :, :])
+    def test_all_slice_list_and_index_cases(self):
+        """ Verify all possible vector slicing combinations but
+            limited to index lists of length 2 """
+        import itertools
+        s_cbs = [y for y
+                 in (itertools
+                     .combinations_with_replacement(
+                       [x for x
+                        in (itertools
+                            .combinations_with_replacement(range(self.base),
+                                                           2))],
+                       self.ndim))]
 
-    def test_index_slice_and_list(self):
-        self.assertNumpyBehavior(self.dset, self.data, np.s_[0, :, :, [1, 2]])
-        self.assertNumpyBehavior(self.dset, self.data, np.s_[0, :, [1, 2], :])
-        self.assertNumpyBehavior(self.dset, self.data, np.s_[0, [1, 2], :, :])
-        self.assertNumpyBehavior(self.dset, self.data, np.s_[[1, 2], 0, :, :])
-        self.assertNumpyBehavior(self.dset, self.data, np.s_[[1, 2], :, 0, :])
-        self.assertNumpyBehavior(self.dset, self.data, np.s_[[1, 2], :, :, 0])
-        self.assertNumpyBehavior(self.dset, self.data, np.s_[:, [1, 2], :, 0])
-        self.assertNumpyBehavior(self.dset, self.data, np.s_[:, 0, :, [1, 2]])
-        self.assertNumpyBehavior(self.dset, self.data, np.s_[:, :, 0, [1, 2]])
-        self.assertNumpyBehavior(self.dset, self.data, np.s_[:, :, [1, 2], 0])
- 
-    def test_two_slices_and_two_lists(self):
-        self.assertNumpyBehavior(self.dset, self.data,
-                                 np.s_[:, :, [0, 1], [1, 2]])
-        self.assertNumpyBehavior(self.dset, self.data,
-                                 np.s_[:, [0, 1], :, [1, 2]])
-        self.assertNumpyBehavior(self.dset, self.data,
-                                 np.s_[:, [0, 1], [1, 2], :])
-        self.assertNumpyBehavior(self.dset, self.data,
-                                 np.s_[[0, 1], :, [1, 2], :])
-        self.assertNumpyBehavior(self.dset, self.data,
-                                 np.s_[[0, 1], [1, 2], :, :])
-        self.assertNumpyBehavior(self.dset, self.data,
-                                 np.s_[[0, 1], :, :, [1, 2]])
+        def _simple_list(x):
+            if len(set(x)) == 1:
+                return x[0]
+            else:
+                return list(x)
 
-    def test_one_slice_and_three_lists(self):
-        self.assertNumpyBehavior(self.dset, self.data,
-                                 np.s_[:, [0, 2], [0, 1], [1, 2]])
-        self.assertNumpyBehavior(self.dset, self.data,
-                                 np.s_[[0, 2], [0, 1], :, [1, 2]])
-        self.assertNumpyBehavior(self.dset, self.data,
-                                 np.s_[[0, 2], [0, 1], [1, 2], :])
-        self.assertNumpyBehavior(self.dset, self.data,
-                                 np.s_[[0, 1], :, [1, 2], [0, 2]])
+        def _simple_slice(x):
+            if len(set(x)) == 1:
+                return x[0]
+            else:
+                return slice(*x)
+
+        for _slc in s_cbs:
+            for funcs in (itertools
+                          .combinations_with_replacement([_simple_list,
+                                                          _simple_slice],
+                                                         self.ndim)):
+                self.assertNumpyBehavior(self.dset, self.data,
+                                         np.s_[tuple([fcn(s)
+                                                      for fcn, s
+                                                      in zip(funcs, _slc)])])

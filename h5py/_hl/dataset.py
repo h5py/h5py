@@ -501,11 +501,9 @@ class Dataset(HLObject):
         if single_element:
             arr = arr[0]
 
-        if selection.reorder:
+        if selection.reorder != 0:
             # This allows vector numpy-style indexing:
-            arr = (arr.reshape(numpy.prod(arr.shape))
-                   .reshape(arr.shape, order='F')
-                   )
+            arr = numpy.moveaxis(arr, selection.reorder, 0)
         return arr
 
     @with_phil
