@@ -943,7 +943,6 @@ cdef class TypeFloatID(TypeAtomicID):
 
     cdef object py_dtype(self):
         # Translation function for floating-point types
-        size = self.get_size()                  # int giving number of bytes
         order = _order_map[self.get_order()]    # string with '<' or '>'
 
         s_offset, e_offset, e_size, m_offset, m_size = self.get_fields()
