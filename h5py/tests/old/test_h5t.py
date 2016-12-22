@@ -67,17 +67,19 @@ class TestTypeFloatID(TestCase):
 
     def test_custom_float_promotion(self):
         """Custom floats are correctly promoted to standard floats on read."""
-        DATASET = 'DS1'
-        DATASET2 = 'DS2'
-        DATASET3 = 'DS3'
-        DATASET4 = 'DS4'
+        test_filename = self.mktemp()
+        dataset = 'DS1'
+        dataset2 = 'DS2'
+        dataset3 = 'DS3'
+        dataset4 = 'DS4'
 
         # Strings are handled very differently between python2 and python3.
         if sys.hexversion >= 0x03000000:
-            DATASET = DATASET.encode()
-            DATASET2 = DATASET2.encode()
-            DATASET3 = DATASET3.encode()
-            DATASET4 = DATASET4.encode()
+            test_filename = test_filename.encode()
+            dataset = dataset.encode()
+            dataset2 = dataset2.encode()
+            dataset3 = dataset3.encode()
+            dataset4 = dataset4.encode()
 
         DIM0 = 4
         DIM1 = 7
@@ -109,7 +111,6 @@ class TestTypeFloatID(TestCase):
                             4.06089384e-10]], dtype=np.float32)
 
         # Create a new file using the default properties.
-        test_filename = self.mktemp(prefix='h5t_custom_float_read_test')
         fid = h5py.h5f.create(test_filename)
         # Create the dataspace.  No maximum size parameter needed.
         dims = (DIM0, DIM1)
@@ -123,7 +124,7 @@ class TestTypeFloatID(TestCase):
         mytype.set_ebias(53)
         mytype.lock()
 
-        dset = h5py.h5d.create(fid, DATASET, mytype, space)
+        dset = h5py.h5d.create(fid, dataset, mytype, space)
         dset.write(h5py.h5s.ALL, h5py.h5s.ALL, wdata)
 
         del dset
@@ -136,7 +137,7 @@ class TestTypeFloatID(TestCase):
         mytype2.set_ebias(53)
         mytype2.lock()
 
-        dset = h5py.h5d.create(fid, DATASET2, mytype2, space)
+        dset = h5py.h5d.create(fid, dataset2, mytype2, space)
         dset.write(h5py.h5s.ALL, h5py.h5s.ALL, wdata2)
 
         del dset
@@ -149,7 +150,7 @@ class TestTypeFloatID(TestCase):
         mytype3.set_ebias(15)
         mytype3.lock()
 
-        dset = h5py.h5d.create(fid, DATASET3, mytype3, space)
+        dset = h5py.h5d.create(fid, dataset3, mytype3, space)
         dset.write(h5py.h5s.ALL, h5py.h5s.ALL, wdata2)
 
         del dset
@@ -162,7 +163,7 @@ class TestTypeFloatID(TestCase):
         mytype4.set_ebias(258)
         mytype4.lock()
 
-        dset = h5py.h5d.create(fid, DATASET4, mytype4, space)
+        dset = h5py.h5d.create(fid, dataset4, mytype4, space)
         dset.write(h5py.h5s.ALL, h5py.h5s.ALL, wdata2)
 
         # Explicitly close and release resources.
@@ -173,22 +174,22 @@ class TestTypeFloatID(TestCase):
         f = h5py.File(test_filename, 'r')
 
         # ebias promotion to float32
-        values = f[DATASET][:]
+        values = f[dataset][:]
         self.assert_(np.all(values == wdata))
         self.assert_(values.dtype == np.float32)
 
         # esize promotion to float32
-        values = f[DATASET2][:]
+        values = f[dataset2][:]
         self.assert_(np.all(values == wdata2))
         self.assert_(values.dtype == np.float32)
 
         # regular half floats
-        dset = f[DATASET3]
+        dset = f[dataset3]
         try:
             self.assert_(dset.dtype == np.float16)
         except AttributeError:
             self.assert_(dset.dtype == np.float32)
 
         # ebias promotion to float64
-        dset = f[DATASET4]
+        dset = f[dataset4]
         self.assert_(dset.dtype == np.float64)
