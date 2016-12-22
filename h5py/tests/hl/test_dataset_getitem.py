@@ -392,10 +392,16 @@ class Test1DFloat(TestCase):
     def test_index_outofrange(self):
         with self.assertRaises(ValueError):
             self.dset[100]
-        
+
     def test_indexlist_simple(self):
         self.assertNumpyBehavior(self.dset, self.data, np.s_[[1,2,5]])
-        
+
+    def test_indexarray_singleton(self):
+        self.assertNumpyBehavior(self.dset, self.data, np.array([1]))
+
+    def test_indexarray_multiple(self):
+        self.assertNumpyBehavior(self.dset, self.data, np.array([1, 2]))
+
     # Another UnboundLocalError
     @ut.expectedFailure
     def test_indexlist_empty(self):
