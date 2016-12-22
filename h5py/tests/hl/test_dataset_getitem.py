@@ -483,11 +483,11 @@ class Test3DFloat(TestCase):
     def test_all_slice_list_and_index_cases(self):
         """ Verify all possible vector slicing combinations but
             limited to index lists of length 2 """
-        import itertools
 
         def _is_sorted(l):
-            return all(l[i] <= l[i+1] for i in xrange(len(l)-1))
+            return all(l[i] <= l[i+1] for i in range(len(l)-1))
 
+        import itertools
         slices_comb = set([y for y
                            in (itertools
                                .product([x for x
