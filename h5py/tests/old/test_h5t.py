@@ -11,16 +11,14 @@ from __future__ import absolute_import
 
 import sys
 
-try:
-    import unittest2 as ut
-except ImportError:
-    import unittest as ut
-
 from six import text_type
 
 import numpy as np
 import h5py
 from h5py import h5t
+
+from ..common import TestCase, ut
+
 
 class TestCompound(ut.TestCase):
 
@@ -64,12 +62,11 @@ class TestCompound(ut.TestCase):
         self.assertEqual(tid.dtype.itemsize, size)
 
 
-class TestTypeFloatID(ut.TestCase):
+class TestTypeFloatID(TestCase):
     """Test TypeFloatID."""
 
     def test_custom_float_promotion(self):
         """Custom floats are correctly promoted to standard floats on read."""
-        FILE = '/tmp/h5t_custom_float_read_test.h5'
         DATASET = 'DS1'
         DATASET2 = 'DS2'
         DATASET3 = 'DS3'
@@ -77,7 +74,6 @@ class TestTypeFloatID(ut.TestCase):
 
         # Strings are handled very differently between python2 and python3.
         if sys.hexversion >= 0x03000000:
-            FILE = FILE.encode()
             DATASET = DATASET.encode()
             DATASET2 = DATASET2.encode()
             DATASET3 = DATASET3.encode()
@@ -113,8 +109,8 @@ class TestTypeFloatID(ut.TestCase):
                             4.06089384e-10]], dtype=np.float32)
 
         # Create a new file using the default properties.
-        fid = h5py.h5f.create(FILE)
-
+        test_filename = self.mktemp(prefix='h5t_custom_float_read_test')
+        fid = h5py.h5f.create(test_filename)
         # Create the dataspace.  No maximum size parameter needed.
         dims = (DIM0, DIM1)
         space = h5py.h5s.create_simple(dims)
@@ -174,7 +170,7 @@ class TestTypeFloatID(ut.TestCase):
         del dset
         del fid
 
-        f = h5py.File(FILE, 'r')
+        f = h5py.File(test_filename, 'r')
 
         # ebias promotion to float32
         values = f[DATASET][:]
