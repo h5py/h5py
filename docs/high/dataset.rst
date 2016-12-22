@@ -255,7 +255,7 @@ A subset of the NumPy fancy-indexing syntax is supported.  Use this with
 caution, as the underlying HDF5 mechanisms may have different performance
 than you expect.
 
-For any axis, you can provide an explicit list of points you want; for a
+For any axis, you can provide one or more explicit lists of points you want; for a
 dataset with shape (10, 10)::
 
     >>> dset.shape
@@ -266,13 +266,34 @@ dataset with shape (10, 10)::
     >>> result = dset[1:6, [5,8,9]]
     >>> result.shape
     (5, 3)
+    >>> result = dset[[1,2,3], [5,8,9]]
+    >>> result.shape
+    (3,)
 
 The following restrictions exist:
 
 * List selections may not be empty
 * Selection coordinates must be given in increasing order
 * Duplicate selections are ignored
-* Very long lists (> 1000 elements) may produce poor performance
+* Very loong lists (> 1000 elements) may produce poor performance
+
+In the case where multiple lists are used, NumPy "vector" indexing
+rules are applied. This may yield surprising behaviors. For example,
+with a dataset of shape (10, 10, 10)::
+
+    >>> dset.shape
+    (10, 100, 10)
+    >>> result = dset[:, 0, [1,3,8]]
+    >>> result.shape
+    (10, 3)
+    >>> result = dset[0, :, [1,3,8]]
+    >>> result.shape
+    (3, 10)
+
+In NumPy, the latter case is equivalent to ``dset[[0,0,0], :, [1,3,8]]``.
+In such a case, which axis the vectors should be collapsed to is ambiguous
+and is therefore collapsed to the first axis by convention.
+
 
 NumPy boolean "mask" arrays can also be used to specify a selection.  The
 result of this operation is a 1-D array with elements arranged in the
