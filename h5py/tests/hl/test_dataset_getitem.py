@@ -411,9 +411,6 @@ class Test1DFloat(TestCase):
         with self.assertRaises(TypeError):
             self.dset[[1,3,2]]
         
-    # This results in IOError as the argument is not properly validated.
-    # Suggest IndexError be raised.
-    @ut.expectedFailure
     def test_indexlist_repeated(self):
         """ we forbid repeated index values """
         with self.assertRaises(TypeError):
