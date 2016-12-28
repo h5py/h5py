@@ -218,6 +218,11 @@ PYTHON_OBJECT = lockid(H5PY_OBJ)
 cdef dict _order_map = { H5T_ORDER_NONE: '|', H5T_ORDER_LE: '<', H5T_ORDER_BE: '>'}
 cdef dict _sign_map  = { H5T_SGN_NONE: 'u', H5T_SGN_2: 'i' }
 
+# Available floating point types
+available_ftypes = dict()
+for ftype in np.typeDict.values():
+    if np.issubdtype(ftype, float):
+        available_ftypes[np.dtype(ftype).itemsize] = np.finfo(ftype)
 
 # === General datatype operations =============================================
 
@@ -949,24 +954,18 @@ cdef class TypeFloatID(TypeAtomicID):
         e_bias = self.get_ebias()
 
         # Handle non-standard exponent and mantissa sizes.
-        if m_size > 112 or (2**e_size - 2 - e_bias) > 16383 or (1 - e_bias) < -16382:
-            raise ValueError('Invalid exponent or mantissa size in ' + str(self))
-        elif m_size > 52 or (2**e_size - 2 - e_bias) > 1023 or (1 - e_bias) < -1022:
-            size = 16
-        elif m_size > 23 or (2**e_size - 2 - e_bias) > 127 or (1 - e_bias) < -126:
-            size = 8
-        elif m_size > 10 or (2**e_size - 2 - e_bias) > 15 or (1 - e_bias) < -14:
-            size = 4
-        elif not hasattr(np, 'float16'):
-            # This build doesn't have float16; promote to float32
-            size = 4
+        for size, finfo in sorted(available_ftypes.items()):
+            nmant = finfo.nmant
+            if nmant == 63 and finfo.nexp == 15:
+                # This is an 80-bit float, correct mantissa size
+                nmant += 1
+            if m_size <= nmant and (2**e_size - e_bias - 1) <= finfo.maxexp and (1 - e_bias) >= finfo.minexp:
+                break
         else:
-            size = 2
+            raise ValueError('Insufficient precision in available types to represent ' + str(self.get_fields()))
 
-        if size > 8:
-            # The native NumPy longdouble is used for 96 and 128-bit floats
-            return dtype(order + "f" + str(np.longdouble(1).dtype.itemsize))
-            
+
+
         return dtype(order + "f" + str(size) )
 
 
