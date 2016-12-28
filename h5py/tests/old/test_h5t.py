@@ -11,9 +11,9 @@ from __future__ import absolute_import
 
 import sys
 
-from six import text_type
-
 import numpy as np
+from six import PY2, text_type
+
 import h5py
 from h5py import h5t
 
@@ -74,7 +74,7 @@ class TestTypeFloatID(TestCase):
         dataset4 = 'DS4'
 
         # Strings are handled very differently between python2 and python3.
-        if sys.hexversion >= 0x03000000:
+        if not PY2:
             test_filename = test_filename.encode()
             dataset = dataset.encode()
             dataset2 = dataset2.encode()
