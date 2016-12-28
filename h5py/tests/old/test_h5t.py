@@ -170,7 +170,7 @@ class TestTypeFloatID(TestCase):
 
         del dset
 
-        # create a custom type with larger bias
+        # create a dataset with long doubles
         dset = h5py.h5d.create(fid, dataset5, h5t.NATIVE_LDOUBLE, space)
         dset.write(h5py.h5s.ALL, h5py.h5s.ALL, wdata2)
 
