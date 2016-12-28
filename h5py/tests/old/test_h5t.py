@@ -72,6 +72,7 @@ class TestTypeFloatID(TestCase):
         dataset2 = 'DS2'
         dataset3 = 'DS3'
         dataset4 = 'DS4'
+        dataset5 = 'DS5'
 
         # Strings are handled very differently between python2 and python3.
         if not PY2:
@@ -80,6 +81,7 @@ class TestTypeFloatID(TestCase):
             dataset2 = dataset2.encode()
             dataset3 = dataset3.encode()
             dataset4 = dataset4.encode()
+            dataset5 = dataset5.encode()
 
         DIM0 = 4
         DIM1 = 7
@@ -166,6 +168,12 @@ class TestTypeFloatID(TestCase):
         dset = h5py.h5d.create(fid, dataset4, mytype4, space)
         dset.write(h5py.h5s.ALL, h5py.h5s.ALL, wdata2)
 
+        del dset
+
+        # create a custom type with larger bias
+        dset = h5py.h5d.create(fid, dataset5, h5t.NATIVE_LDOUBLE, space)
+        dset.write(h5py.h5s.ALL, h5py.h5s.ALL, wdata2)
+
         # Explicitly close and release resources.
         del space
         del dset
@@ -193,3 +201,8 @@ class TestTypeFloatID(TestCase):
         # ebias promotion to float64
         dset = f[dataset4]
         self.assert_(dset.dtype == np.float64)
+
+        # long double floats
+
+        dset = f[dataset5]
+        self.assert_(dset.dtype == np.float128)
