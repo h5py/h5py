@@ -205,4 +205,4 @@ class TestTypeFloatID(TestCase):
         # long double floats
 
         dset = f[dataset5]
-        self.assert_(dset.dtype == np.float128)
+        self.assert_(dset.dtype == np.longdouble)
