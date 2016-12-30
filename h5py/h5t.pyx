@@ -176,6 +176,7 @@ NATIVE_INT64 = lockid(H5T_NATIVE_INT64)
 NATIVE_UINT64 = lockid(H5T_NATIVE_UINT64)
 NATIVE_FLOAT = lockid(H5T_NATIVE_FLOAT)
 NATIVE_DOUBLE = lockid(H5T_NATIVE_DOUBLE)
+NATIVE_LDOUBLE = lockid(H5T_NATIVE_LDOUBLE)
 
 # Unix time types
 UNIX_D32LE = lockid(H5T_UNIX_D32LE)
@@ -218,6 +219,11 @@ PYTHON_OBJECT = lockid(H5PY_OBJ)
 cdef dict _order_map = { H5T_ORDER_NONE: '|', H5T_ORDER_LE: '<', H5T_ORDER_BE: '>'}
 cdef dict _sign_map  = { H5T_SGN_NONE: 'u', H5T_SGN_2: 'i' }
 
+# Available floating point types
+available_ftypes = dict()
+for ftype in np.typeDict.values():
+    if np.issubdtype(ftype, float):
+        available_ftypes[np.dtype(ftype).itemsize] = np.finfo(ftype)
 
 # === General datatype operations =============================================
 
@@ -943,19 +949,25 @@ cdef class TypeFloatID(TypeAtomicID):
 
     cdef object py_dtype(self):
         # Translation function for floating-point types
-        size = self.get_size()                  # int giving number of bytes
         order = _order_map[self.get_order()]    # string with '<' or '>'
 
-        if size == 2 and not hasattr(np, 'float16'):
-            # This build doesn't have float16; promote to float32
-            return dtype(order+"f4")
+        s_offset, e_offset, e_size, m_offset, m_size = self.get_fields()
+        e_bias = self.get_ebias()
 
-        if size > 8:
-            # The native NumPy longdouble is used for 96 and 128-bit floats
-            return dtype(order + "f" + str(np.longdouble(1).dtype.itemsize))
-            
-        return dtype( _order_map[self.get_order()] + "f" + \
-                      str(self.get_size()) )
+        # Handle non-standard exponent and mantissa sizes.
+        for size, finfo in sorted(available_ftypes.items()):
+            nmant = finfo.nmant
+            if nmant == 63 and finfo.nexp == 15:
+                # This is an 80-bit float, correct mantissa size
+                nmant += 1
+            if m_size <= nmant and (2**e_size - e_bias - 1) <= finfo.maxexp and (1 - e_bias) >= finfo.minexp:
+                break
+        else:
+            raise ValueError('Insufficient precision in available types to represent ' + str(self.get_fields()))
+
+
+
+        return dtype(order + "f" + str(size) )
 
 
 # === Composite types (enums and compound) ====================================
