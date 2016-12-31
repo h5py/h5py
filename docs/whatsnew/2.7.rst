@@ -1,0 +1,95 @@
+What's new in h5py 2.7
+======================
+
+Python 3.2 is no longer supported
+---------------------------------
+``h5py`` 2.7 drops Python 3.2 support, and testing is not longer preformed on Python 3.2. The latest versions of ``pip``, ``virtualenv``, ``setuptools`` and ``numpy`` do not support Python 3.2, and dropping 3.2 allows both ``u`` and ``b`` prefixes to be used for strings. A clean up of some of the legacy code was done in `#675`_ by Andrew Collette.
+
+Additionally, support for Python 2.6 is soon to be dropped for ``pip`` (See https://github.com/pypa/pip/issues/3955) and ``setuptools`` (See https://github.com/pypa/setuptools/issues/878), and ``numpy`` has dropped Python 2.6 also in the latest release. While ``h5py`` has not dropped Python 2.6 this release, users are strongly encouraged to move to Python 2.7 where possible.
+
+Improved testing support
+------------------------
+There has been a major increase in the number of configurations ``h5py`` is automatically tested in, with Windows CI support added via Appveyor (`#795`_, `#798`_, `#799`_ and `#801`_ by James Tocknell) and testing of minimum requirements to ensure we still satisfy them (`#703`_ by James Tocknell). Additionally, ``tox`` was used to ensure that we don't run tests on Python versions which our dependencies have dropped or do not support (`#662`_, `#700`_ and `#733`_). Thanks to to the Appveyor support, unicode tests were made more robust (`#788`_, `#800`_ and `#804`_ by James Tocknell). Finally, other tests were improved or added where needed (`#724`_ by Matthew Brett, `#789`_, `#794`_ and `#802`_ by James Tocknell).
+
+Improved python compatibility
+-----------------------------
+The ``ipython``/``jupyter`` completion support now has Python 3 support (`#715`_ by Joseph Kleinhenz). ``h5py`` now supports ``pathlib`` filenames (`#716`_ by James Tocknell).
+
+Documentation improvements
+--------------------------
+An update to the installation instructions and some whitespace cleanup was done in `#808`_ by Thomas A Caswell, and mistake in the quickstart was fixed by Joydeep Bhattacharjee in `#708`_.
+
+setup.py improvements
+---------------------
+Support for detecting the version of HDF5 via ``pkgconfig`` was added by Axel Huebl in `#734`_, and support for specifying the path to MPI-supported HDF5 was added by Axel Huebl in `#721`_. ``h5py's`` classifiers were updated to include supported python version and interpreters in `#811`_ by James Tocknell.
+
+Support for additional HDF5 features added
+------------------------------------------
+Low-level support for `HDF5 Direct Chunk Write`_ was added in `#691`_ by Simon Gregor Ebner.  Minimal support for `HDF5 File Image Operations`_ was added by Andrea Bedini in `#680`_. Ideas and opinions for further support for both `HDF5 Direct Chunk Write`_ and `HDF5 File Image Operations`_ are welcome. High-level support for reading and writing null dataspaces was added in `#664`_ by James Tocknell.
+
+Improvements to type system
+---------------------------
+Reading and writing of compound datatypes has improved, with support for different orderings and alignments (`#701`_ by Jonah Bernhard, `#702`_ by Caleb Morse `#738`_ by @smutch, `#765`_ by Nathan Goldbaum and `#793`_ by James Tocknell). Support for reading extended precision and non-standard floating point numbers has also been added (`#749`_, `#812`_ by Thomas A Caswell, `#787`_ by James Tocknell and `#781`_ by Martin Raspaud). Finally, compatibility improvements to ``Cython`` annotations of HDF5 types were added in `#692`_ and `#693`_ by Aleksandar Jelenak.
+
+Other changes
+-------------
+* Fix deprecation of ``-`` for ``numpy`` boolean arrays (`#683`_ by James Tocknell)
+* Check for duplicates in fancy index validation (`#739`_ by Sam Toyer)
+* Avoid potential race condition (`#754`_ by James Tocknell)
+* Fix inconsistency when slicing with ``numpy.array`` of shape ``(1,)`` (`#772`_ by Artsiom)
+* Use ``size_t`` to store Python object id (`#773`_ by Christoph Gohlke)
+* Avoid errors when the Python GC runs during ``nonlocal_close()`` (`#776`_ by Antoine Pitrou)
+* Move from ``six.PY3`` to ``six.PY2`` (`#686`_ by James Tocknell)
+
+
+.. _`#662` : https://github.com/h5py/h5py/pull/662
+.. _`#664` : https://github.com/h5py/h5py/pull/664
+.. _`#675` : https://github.com/h5py/h5py/pull/675
+.. _`#680` : https://github.com/h5py/h5py/pull/680
+.. _`#683` : https://github.com/h5py/h5py/pull/683
+.. _`#686` : https://github.com/h5py/h5py/pull/686
+.. _`#691` : https://github.com/h5py/h5py/pull/691
+.. _`#692` : https://github.com/h5py/h5py/pull/692
+.. _`#693` : https://github.com/h5py/h5py/pull/693
+.. _`#700` : https://github.com/h5py/h5py/pull/700
+.. _`#701` : https://github.com/h5py/h5py/pull/701
+.. _`#702` : https://github.com/h5py/h5py/pull/702
+.. _`#703` : https://github.com/h5py/h5py/pull/703
+.. _`#708` : https://github.com/h5py/h5py/pull/708
+.. _`#715` : https://github.com/h5py/h5py/pull/715
+.. _`#716` : https://github.com/h5py/h5py/pull/716
+.. _`#721` : https://github.com/h5py/h5py/pull/721
+.. _`#724` : https://github.com/h5py/h5py/pull/724
+.. _`#733` : https://github.com/h5py/h5py/pull/733
+.. _`#734` : https://github.com/h5py/h5py/pull/734
+.. _`#738` : https://github.com/h5py/h5py/pull/738
+.. _`#739` : https://github.com/h5py/h5py/pull/739
+.. _`#749` : https://github.com/h5py/h5py/pull/749
+.. _`#754` : https://github.com/h5py/h5py/pull/754
+.. _`#765` : https://github.com/h5py/h5py/pull/765
+.. _`#772` : https://github.com/h5py/h5py/pull/772
+.. _`#773` : https://github.com/h5py/h5py/pull/773
+.. _`#776` : https://github.com/h5py/h5py/pull/776
+.. _`#781` : https://github.com/h5py/h5py/pull/781
+.. _`#787` : https://github.com/h5py/h5py/pull/787
+.. _`#788` : https://github.com/h5py/h5py/pull/788
+.. _`#789` : https://github.com/h5py/h5py/pull/789
+.. _`#793` : https://github.com/h5py/h5py/pull/793
+.. _`#794` : https://github.com/h5py/h5py/pull/794
+.. _`#795` : https://github.com/h5py/h5py/pull/795
+.. _`#798` : https://github.com/h5py/h5py/pull/798
+.. _`#799` : https://github.com/h5py/h5py/pull/799
+.. _`#800` : https://github.com/h5py/h5py/pull/800
+.. _`#801` : https://github.com/h5py/h5py/pull/801
+.. _`#802` : https://github.com/h5py/h5py/pull/802
+.. _`#804` : https://github.com/h5py/h5py/pull/804
+.. _`#807` : https://github.com/h5py/h5py/pull/807
+.. _`#808` : https://github.com/h5py/h5py/pull/808
+.. _`#811` : https://github.com/h5py/h5py/pull/811
+.. _`#812` : https://github.com/h5py/h5py/pull/812
+.. _`HDF5 Direct Chunk Write` : https://support.hdfgroup.org/HDF5/doc/Advanced/DirectChunkWrite/
+.. _`HDF5 File Image Operations` : http://www.hdfgroup.org/HDF5/doc/Advanced/FileImageOperations/HDF5FileImageOperations.pdf
+
+Acknowlegements
+---------------
+
