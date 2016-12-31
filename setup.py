@@ -2,7 +2,7 @@
 
 """
     This is the main setup script for h5py (http://www.h5py.org).
-    
+
     Most of the functionality is provided in two separate modules:
     setup_configure, which manages compile-time/Cython-time build options
     for h5py, and setup_build, which handles the actual compilation process.
@@ -22,7 +22,7 @@ import os.path as op
 import setup_build, setup_configure
 
 
-VERSION = '2.6.0'
+VERSION = '2.7.0rc2'
 
 NUMPY_DEP = 'numpy>=1.7'
 
@@ -48,7 +48,7 @@ class test(Command):
 
     """
         Custom Distutils command to run the h5py test suite.
-    
+
         This command will invoke build/build_ext if the project has not
         already been built.  It then patches in the build directory to
         sys.path and runs the test suite directly.
@@ -78,7 +78,7 @@ class test(Command):
 
         buildobj = self.distribution.get_command_obj('build')
         buildobj.run()
-        
+
         oldpath = sys.path
         try:
             sys.path = [op.abspath(buildobj.build_lib)] + oldpath
@@ -88,8 +88,8 @@ class test(Command):
                 sys.exit(1)
         finally:
             sys.path = oldpath
-        
-        
+
+
 CMDCLASS = {'build_ext': setup_build.h5py_build_ext,
             'configure': setup_configure.configure,
             'test': test, }
