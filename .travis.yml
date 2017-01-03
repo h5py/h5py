@@ -150,7 +150,7 @@ matrix:
     # parallel HDF5 test with HDF5>=1.8.9 for mpio "atomic" support
     - python: 3.4
       env:
-      - TOXENV=py34-test-mpi4py
+      - TOXENV=py34-test-mindeps-mpi4py
       - CC="mpicc"
       - HDF5_MPI="ON"
       addons:
