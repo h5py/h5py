@@ -465,12 +465,12 @@ class Group(HLObject, MutableMappingHDF5):
     @with_phil
     def __repr__(self):
         if not self:
-            r = six.u("<Closed HDF5 group>")
+            r = u"<Closed HDF5 group>"
         else:
             namestr = (
-                six.u('"%s"') % self.name
-            ) if self.name is not None else six.u("(anonymous)")
-            r = six.u('<HDF5 group %s (%d members)>') % (namestr, len(self))
+                u'"%s"' % self.name
+            ) if self.name is not None else u"(anonymous)"
+            r = u'<HDF5 group %s (%d members)>' % (namestr, len(self))
 
         if six.PY2:
             return r.encode('utf8')
