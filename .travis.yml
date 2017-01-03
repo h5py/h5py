@@ -79,7 +79,7 @@ matrix:
     - dist: trusty
       sudo: required
       env:
-      - TOXENV=py34-test-mpi4py
+      - TOXENV=py34-test-mindeps-mpi4py
       - CC="mpicc"
       - HDF5_MPI="ON"
       addons:
