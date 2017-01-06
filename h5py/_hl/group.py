@@ -113,29 +113,33 @@ class Group(HLObject, MutableMappingHDF5):
                 self[name] = dset
             return dset
 
-    def create_virtual_dataset(self,VMlist=[], fill_value=0x1):
-        '''
-        Creates the virtual dataset from a list of virtual maps
-        '''
+    def create_virtual_dataset(self,VMlist=None, fillvalue=None):
+        """
+        Creates the virtual dataset from a list of virtual maps, any gaps are filled with a specified fill value.
+        
+        VMlist
+            (List) A list of the the VirtualMaps between the source and target datasets. At least one is required.
+        fillvalue
+            (Scalar) Use this value for uninitialized parts of the dataset.
+        """
+
+        if VMlist is None:
+            raise ValueError("create_virtual_dataset requires at least one virtual map to construct output.")
+
         if type(VMlist) is not type([]):
             VMlist = [VMlist]
-        
-        if len(VMlist)<1:
-            print "you have not given me any VirtualMaps!"
-            return 0
-            
         with phil:
             dcpl = h5p.create(h5p.DATASET_CREATE)
-            dcpl.set_fill_value(numpy.array([fill_value]))
+            dcpl.set_fill_value(numpy.array([fillvalue]))
             sh = VMlist[0].target.shape
             virt_dspace = h5s.create_simple(sh) # create the virtual dataspace
             for VM in VMlist:
-                virt_start_idx = tuple([0 if ix.start is None else ix.start for ix in VM.target.get_slice_list()])
-                virt_stride_index = tuple([1 if ix.step is None else ix.step for ix in VM.target.get_slice_list()])
+                virt_start_idx = tuple([0 if ix.start is None else ix.start for ix in VM.target.slice_list])
+                virt_stride_index = tuple([1 if ix.step is None else ix.step for ix in VM.target.slice_list])
                 virt_dspace.select_hyperslab(start=virt_start_idx, count=virt_stride_index,
-                                        block=VM.get_block_shape())
-                dcpl.set_virtual(virt_dspace, VM.src.get_path(), VM.src.get_key(), VM.get_src_dpsace())
-            dset = h5d.create(self.id, name=VM.target.get_key(), tid=h5t.py_create(VM.dtype,logical=1), space=virt_dspace, dcpl=dcpl)
+                                        block=VM.block_shape)
+                dcpl.set_virtual(virt_dspace, VM.src.path, VM.src.key, VM.src_dspace)
+            dset = h5d.create(self.id, name=VM.target.key, tid=h5t.py_create(VM.dtype,logical=1), space=virt_dspace, dcpl=dcpl)
             return dset
 
 
@@ -564,41 +568,32 @@ class DatasetContainer(object):
     def __init__(self, path, key,shape,dtype=None):
         '''
         This is an object that looks like a dataset, but it not. It allows the user to specify the maps based on lazy indexing, 
-        which is natural, but without needing to load the data. If we can specify the shape, it's faster, if not, it gets pull from the actual source data.
+        which is natural, but without needing to load the data. 
+                
+        path
+            This is the full path to the file on disk.
+        
+        key
+            This is the key to the entry inside the hdf5 file.
+        
+        shape
+            The shape of the data. We specify this by hand because it is a lot faster than getting it from the source file.
+        
+        dtype
+            The data type. For the source we specify this because it is faster than getting from the file. For the target,
+            we can specify it to be different to the source.
         '''
         self.path = path
         self.key = key
         self.shape = shape
         self.slice_list = [slice(None, None, None)] * len(self.shape)
-        
-        
-    def get_path(self):
-        return self.path
-    
-    def get_key(self):
-        return self.key
-    
+
     def __getitem__(self, val):
         if type(val) is not type(()):# make sure it's always a tuple
             val = (val,)
         self.slice_list = list(val) + [slice(None, None, None)]*(len(self.shape)-len(val)) # generate the right slice
         return copy(self)
 
-    @property
-    def block_shape(self): # block shape is the size of the "SLICED dataset
-        outshape = ()
-        for i in range(len(self.shape)):
-            sanitized = self.get_slice_list()[i].indices(self.shape[i])
-            outshape += tuple([(sanitized[1]-sanitized[0])/sanitized[2]])
-        return outshape
-
-    def get_slice_list(self):
-        return self.slice_list
-    
-    def set_block_shape(self,shape):
-        self.the_block_shape = shape
-    
-    
 class VirtualSource(DatasetContainer):
     '''
     Virtual source and VirtualTarget are just easy identifiers for the user. They do the same thing.
@@ -622,30 +617,22 @@ class VirtualMap(object):
         self.src = virtual_source
         self.dtype = dtype
         self.target = virtual_target
-        self.create_src_dpsace()
+        self.create_src_dspace()
 
-    def get_block_shape(self):
+    @property
+    def block_shape(self):
         '''
-        the two could be different ranks causing a rank deficiency in the map
+        the sources and target could be different ranks causing a rank deficiency in the map
+        THIS NEEDS MORE THINKING ABOUT. IT'S not always good to put the extra indices in front.
         '''
         rank_def = len(self.target.shape) - len(self.src.shape)
         return (1,)*rank_def + self.src.shape
 
-    def create_src_dpsace(self):
+    def create_src_dspace(self):
         '''
         define the src dataspace
         '''
         self.src_dspace = h5s.create_simple(self.src.shape)
-#         print self.src.get_slice_list()
-        # if the slice is None then we must want to take the first position
-        start_idx = tuple([0 if ix.start is None else ix.start for ix in self.src.get_slice_list()])
-        # if the count idx is None then we must want all the elements
-        count_idx = tuple([1 if ix.step is None else ix.step for ix in self.src.get_slice_list()])
-#         print count_idx
+        start_idx = tuple([0 if ix.start is None else ix.start for ix in self.src.slice_list])
+        count_idx = tuple([1 if ix.step is None else ix.step for ix in self.src.slice_list])
         self.src_dspace.select_hyperslab(start=start_idx, count=count_idx, block=self.src.shape)
-    
-    def get_src_dpsace(self):
-        '''
-        get the source data space
-        '''
-        return self.src_dspace
