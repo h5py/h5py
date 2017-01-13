@@ -30,8 +30,8 @@ class TestCompound(ut.TestCase):
         """ Reference types are correctly stored in compound types (issue 144)
         """
         ref = h5py.special_dtype(ref=h5py.Reference)
-        dt = np.dtype([('a',ref),('b','<f4')])
-        tid = h5t.py_create(dt,logical=True)
+        dt = np.dtype([('a', ref), ('b', '<f4')])
+        tid = h5t.py_create(dt, logical=True)
         t1, t2 = tid.get_member_type(0), tid.get_member_type(1)
         self.assertEqual(t1, h5t.STD_REF_OBJ)
         self.assertEqual(t2, h5t.IEEE_F32LE)
@@ -41,9 +41,9 @@ class TestCompound(ut.TestCase):
     def test_out_of_order_offsets(self):
         size = 20
         type_dict = {
-            'names' : ['f1', 'f2', 'f3'],
-            'formats' : ['<f4', '<i4', '<f8'],
-            'offsets' : [0, 16, 8]
+            'names': ['f1', 'f2', 'f3'],
+            'formats': ['<f4', '<i4', '<f8'],
+            'offsets': [0, 16, 8]
         }
 
         expected_dtype = np.dtype(type_dict)
@@ -183,26 +183,26 @@ class TestTypeFloatID(TestCase):
 
         # ebias promotion to float32
         values = f[dataset][:]
-        self.assert_(np.all(values == wdata))
-        self.assert_(values.dtype == np.float32)
+        self.assertTrue(np.all(values == wdata))
+        self.assertEqual(values.dtype, np.dtype('<f4'))
 
         # esize promotion to float32
         values = f[dataset2][:]
-        self.assert_(np.all(values == wdata2))
-        self.assert_(values.dtype == np.float32)
+        self.assertTrue(np.all(values == wdata2))
+        self.assertEqual(values.dtype, np.dtype('<f4'))
 
         # regular half floats
         dset = f[dataset3]
         try:
-            self.assert_(dset.dtype == np.float16)
+            self.assertEqual(dset.dtype, np.dtype('<f2'))
         except AttributeError:
-            self.assert_(dset.dtype == np.float32)
+            self.assertEqual(dset.dtype, np.dtype('<f4'))
 
         # ebias promotion to float64
         dset = f[dataset4]
-        self.assert_(dset.dtype == np.float64)
+        self.assertEqual(dset.dtype, np.dtype('<f8'))
 
         # long double floats
 
         dset = f[dataset5]
-        self.assert_(dset.dtype == np.longdouble)
+        self.assertEqual(dset.dtype, np.longdouble)
