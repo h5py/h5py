@@ -31,10 +31,13 @@ import operator
 from h5 import get_config
 import numpy as np
 from ._objects import phil, with_phil
+import platform
 
 cfg = get_config()
 
 PY3 = sys.version_info[0] == 3
+
+MACHINE = platform.machine()
 
 # === Custom C API ============================================================
 
@@ -958,13 +961,22 @@ cdef class TypeFloatID(TypeAtomicID):
         # Handle non-standard exponent and mantissa sizes.
         for size, finfo in sorted(available_ftypes.items()):
             nmant = finfo.nmant
-            if nmant == 63 and finfo.nexp == 15:
+            maxexp = finfo.maxexp
+            minexp = finfo.minexp
+            # workaround for numpy's buggy finfo on float128 on ppc64 archs
+            if size == 16 and MACHINE.startswith('ppc64'):
+                nmant = 116
+                maxexp = 1024
+                minexp = -1022
+            elif nmant == 63 and finfo.nexp == 15:
                 # This is an 80-bit float, correct mantissa size
                 nmant += 1
-            if h5t_size <= size and m_size <= nmant and (2**e_size - e_bias - 1) <= finfo.maxexp and (1 - e_bias) >= finfo.minexp:
+            if (h5t_size <= size and m_size <= nmant and
+                (2**e_size - e_bias - 1) <= maxexp and (1 - e_bias) >= minexp):
                 break
         else:
-            raise ValueError('Insufficient precision in available types to represent ' + str(self.get_fields()))
+            raise ValueError('Insufficient precision in available types to ' +
+                             'represent ' + str(self.get_fields()))
 
 
 
