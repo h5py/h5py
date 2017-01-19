@@ -956,7 +956,6 @@ cdef class TypeFloatID(TypeAtomicID):
 
         s_offset, e_offset, e_size, m_offset, m_size = self.get_fields()
         e_bias = self.get_ebias()
-        h5t_size = self.get_size()
 
         # Handle non-standard exponent and mantissa sizes.
         for size, finfo in sorted(available_ftypes.items()):
@@ -971,7 +970,7 @@ cdef class TypeFloatID(TypeAtomicID):
             elif nmant == 63 and finfo.nexp == 15:
                 # This is an 80-bit float, correct mantissa size
                 nmant += 1
-            if (h5t_size <= size and m_size <= nmant and
+            if (m_size <= nmant and
                 (2**e_size - e_bias - 1) <= maxexp and (1 - e_bias) >= minexp):
                 break
         else:
