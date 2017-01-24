@@ -949,9 +949,24 @@ cdef class TypeFloatID(TypeAtomicID):
         """
         H5Tset_inpad(self.id, <H5T_pad_t>pad_code)
 
-
     cdef object py_dtype(self):
         # Translation function for floating-point types
+
+        if MACHINE == 'ppc64el':
+            size = self.get_size()                  # int giving number of bytes
+            order = _order_map[self.get_order()]    # string with '<' or '>'
+
+            if size == 2 and not hasattr(np, 'float16'):
+                # This build doesn't have float16; promote to float32
+                return dtype(order+"f4")
+
+            if size > 8:
+                # The native NumPy longdouble is used for 96 and 128-bit floats
+                return dtype(order + "f" + str(np.longdouble(1).dtype.itemsize))
+
+            return dtype( _order_map[self.get_order()] + "f" + \
+                          str(self.get_size()) )
+
         order = _order_map[self.get_order()]    # string with '<' or '>'
 
         s_offset, e_offset, e_size, m_offset, m_size = self.get_fields()
