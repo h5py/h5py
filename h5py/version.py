@@ -18,7 +18,7 @@ from distutils.version import StrictVersion as _sv
 import sys
 import numpy
 
-version = "2.6.0"
+version = "2.7.0rc3"
 
 _exp = _sv(version)
 
@@ -46,5 +46,3 @@ numpy   %(numpy)s
         'platform': sys.platform,
         'maxsize': sys.maxsize,
         'numpy': numpy.__version__ }
-
-
