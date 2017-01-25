@@ -952,7 +952,7 @@ cdef class TypeFloatID(TypeAtomicID):
     cdef object py_dtype(self):
         # Translation function for floating-point types
 
-        if MACHINE == 'ppc64el':
+        if MACHINE == 'ppc64le':
             size = self.get_size()                  # int giving number of bytes
             order = _order_map[self.get_order()]    # string with '<' or '>'
 
