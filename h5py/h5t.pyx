@@ -952,21 +952,6 @@ cdef class TypeFloatID(TypeAtomicID):
     cdef object py_dtype(self):
         # Translation function for floating-point types
 
-        if MACHINE == 'ppc64le':
-            size = self.get_size()                  # int giving number of bytes
-            order = _order_map[self.get_order()]    # string with '<' or '>'
-
-            if size == 2 and not hasattr(np, 'float16'):
-                # This build doesn't have float16; promote to float32
-                return dtype(order+"f4")
-
-            if size > 8:
-                # The native NumPy longdouble is used for 96 and 128-bit floats
-                return dtype(order + "f" + str(np.longdouble(1).dtype.itemsize))
-
-            return dtype( _order_map[self.get_order()] + "f" + \
-                          str(self.get_size()) )
-
         order = _order_map[self.get_order()]    # string with '<' or '>'
 
         s_offset, e_offset, e_size, m_offset, m_size = self.get_fields()
@@ -978,14 +963,20 @@ cdef class TypeFloatID(TypeAtomicID):
             maxexp = finfo.maxexp
             minexp = finfo.minexp
             # workaround for numpy's buggy finfo on float128 on ppc64 archs
-            if size == 16 and MACHINE.startswith('ppc64'):
+            if size == 16 and MACHINE == 'ppc64':
+	        # values reported by hdf5
                 nmant = 116
+                maxexp = 1024
+                minexp = -1022
+            elif size == 16 and MACHINE == 'ppc64le':
+	        # values reported by hdf5
+                nmant = 52
                 maxexp = 1024
                 minexp = -1022
             elif nmant == 63 and finfo.nexp == 15:
                 # This is an 80-bit float, correct mantissa size
                 nmant += 1
-            if (m_size <= nmant and
+            if (size >= self.get_size() and m_size <= nmant and
                 (2**e_size - e_bias - 1) <= maxexp and (1 - e_bias) >= minexp):
                 break
         else:
