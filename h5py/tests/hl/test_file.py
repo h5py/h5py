@@ -83,7 +83,7 @@ class TestDealloc(TestCase):
         # bad filename in dir if encoding error
         f = h5py.File(os.path.join(tmpdir, in_filename), 'w')
         f.close()
-        out_filename = os.listdir(tmpdir)
+        out_filename = os.listdir(tmpdir)[0]
         self.assertEqual(in_filename, out_filename)  
         
         # Use the same file with correct filename for read test
