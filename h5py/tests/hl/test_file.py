@@ -78,20 +78,20 @@ class TestDealloc(TestCase):
 
         tmpdir = mkdtemp()
         in_filename = 'test_é.h5'
+        in_filepath = os.path.join(tmpdir, in_filename)
         
         # Write Test
         # bad filename in dir if encoding error
-        f = h5py.File(os.path.join(tmpdir, in_filename), 'w')
+        f = h5py.File(in_filepath, 'w')
         f.close()
         out_filename = os.listdir(tmpdir)[0]
         self.assertEqual(in_filename, out_filename)  
         
         # Use the same file with correct filename for read test
         if in_filename != out_filename:
-            os.rename(os.path.join(tmpdir, out_filename),
-                      os.path.join(tmpdir, in_filename))
+            os.rename(os.path.join(tmpdir, out_filename), in_filepath)
 
         # Read Test : 
         # Raise Exception if encoding error
-        f = h5py.File(in_filename, 'r')
+        f = h5py.File(in_filepath, 'r')
         f.close()
