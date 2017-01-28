@@ -60,6 +60,12 @@ environment:
       HDF5_VSVERSION: "14-64"
       HDF5_DIR: "C:\\hdf5\\%HDF5_VERSION%\\%HDF5_VSVERSION%"
 
+    - PYTHON: "C:\\Python36-x64"
+      TOXENV: "py36-test-deps"
+      TOXPYTHON: "%PYTHON%\\python.exe"
+      HDF5_VSVERSION: "14-64"
+      HDF5_DIR: "C:\\hdf5\\%HDF5_VERSION%\\%HDF5_VSVERSION%"
+
 install:
   # We need wheel installed to build wheels
   - "%PYTHON%\\python.exe -m pip install --upgrade wheel pip setuptools"
