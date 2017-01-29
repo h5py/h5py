@@ -77,7 +77,7 @@ class TestDealloc(TestCase):
         import os
 
         tmpdir = mkdtemp()
-        in_filename = 'test_é.h5'
+        in_filename = u'test_é.h5'
         in_filepath = os.path.join(tmpdir, in_filename)
         
         # Write Test
