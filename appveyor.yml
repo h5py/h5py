@@ -34,6 +34,12 @@ environment:
       HDF5_VSVERSION: "14"
       HDF5_DIR: "C:\\hdf5\\%HDF5_VERSION%\\%HDF5_VSVERSION%"
 
+    - PYTHON: "C:\\Python36"
+      TOXENV: "py35-test-deps"
+      TOXPYTHON: "%PYTHON%\\python.exe"
+      HDF5_VSVERSION: "14"
+      HDF5_DIR: "C:\\hdf5\\%HDF5_VERSION%\\%HDF5_VSVERSION%"
+
     - PYTHON: "C:\\Python27-x64"
       TOXENV: "py27-test-deps"
       TOXPYTHON: "%PYTHON%\\python.exe"
@@ -61,7 +67,7 @@ environment:
       HDF5_DIR: "C:\\hdf5\\%HDF5_VERSION%\\%HDF5_VSVERSION%"
 
     - PYTHON: "C:\\Python36-x64"
-      TOXENV: "py36-test-deps"
+      TOXENV: "py35-test-deps"
       TOXPYTHON: "%PYTHON%\\python.exe"
       HDF5_VSVERSION: "14-64"
       HDF5_DIR: "C:\\hdf5\\%HDF5_VERSION%\\%HDF5_VSVERSION%"
