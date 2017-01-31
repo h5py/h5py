@@ -33,12 +33,12 @@ import h5py
 from h5py.highlevel import File, Group, SoftLink, HardLink, ExternalLink
 from h5py.highlevel import Dataset, Datatype
 from h5py import h5t
-from h5py._hl.compat import fsencode
+from h5py._hl.compat import filename_encode
 
 # If we can't encode unicode filenames, there's not much point failing tests
 # which must fail
 try:
-    fsencode(u"α")
+    filename_encode(u"α")
 except UnicodeEncodeError:
     NO_FS_UNICODE = True
 else:

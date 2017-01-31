@@ -147,6 +147,13 @@ link resides.
     already open.  This is related to how HDF5 manages file permissions
     internally.
 
+.. note::
+
+    How the filename is processed is operating system dependent, it is
+    recommended to read :ref:`file_filenames` to understand potential limitations on
+    filenames on your operating system. Note especially that Windows is
+    particularly susceptible to problems with external links, due to possible
+    encoding errors and how filenames are structured.
 
 Reference
 ---------

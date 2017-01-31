@@ -118,6 +118,52 @@ of the HDF5 library.  However, once the file is closed you are free to read and
 write data at the start of the file, provided your modifications don't leave
 the user block region.
 
+
+.. _file_filenames:
+
+Filenames on different systems
+------------------------------
+
+Different operating systems (and different file systems) store filenames with
+different encodings. Additionally, in Python there are at least two different
+representations of filenames, as encoded bytes (via str on Python 2, bytes on
+Python 3) or as a unicode string (via unicode on Python 2 and str on Python 3).
+The safest bet when creating a new file is to use unicode strings on all
+systems.
+
+macOS (OSX)
+...........
+macOS is the simplest system to deal with, it only accepts UTF-8, so using
+unicode paths will just work (and should be preferred).
+
+Linux (and non-macOS Unix)
+..........................
+Unix-like systems use locale settings to determine the correct encoding to use.
+These are set via a number of different environment variables, of which ``LANG``
+and ``LC_ALL`` are the ones of most interest. Of special interest is the ``C``
+locale, which Python will interpret as only allowing ASCII, meaning unicode
+paths should be preencoded. This will likely change in Python 3.7 with
+https://www.python.org/dev/peps/pep-0538/, but this will likely be backported by
+distributions to earlier versions.
+
+To summarise, use unicode strings where possible, but be aware that sometimes
+using encoded bytes may be necessary to read incorrectly encoded filenames.
+
+Windows
+.......
+Windows systems have two different APIs to perform file-related operations, a
+ANSI (char, legacy) interface and a unicode (wchar) interface. HDF5 currently
+only supports the ANSI interface, which is limited in what it can encode. This
+means that it may not be possible to open certain files, and because
+:ref:`group_extlinks` do not specify their encoding, it is possible that opening an
+external link may not work. There is work being done to fix this (see
+https://github.com/h5py/h5py/issues/839), but it is likely there will need to be
+breaking changes make to allow Windows to have the same level of support for
+unicode filenames as other operating systems.
+
+The best suggestion is to use unicode strings, but to keep to ASCII for
+filenames to avoid possible breakage.
+
 Reference
 ---------
 

@@ -17,9 +17,7 @@ import posixpath as pp
 import six
 import numpy
 
-from .compat import fsdecode
-from .compat import fsencode
-from .compat import fspath
+from .compat import filename_decode, filename_encode
 
 from .. import h5g, h5i, h5o, h5r, h5t, h5l, h5p
 from . import base
@@ -237,7 +235,9 @@ class Group(HLObject, MutableMappingHDF5):
                     if getclass:
                         return ExternalLink
                     filebytes, linkbytes = self.id.links.get_val(self._e(name))
-                    return ExternalLink(fsdecode(filebytes), self._d(linkbytes))
+                    return ExternalLink(
+                        filename_decode(filebytes), self._d(linkbytes)
+                    )
                     
                 elif typecode == h5l.TYPE_HARD:
                     return HardLink if getclass else HardLink()
@@ -280,7 +280,7 @@ class Group(HLObject, MutableMappingHDF5):
                           lcpl=lcpl, lapl=self._lapl)
 
         elif isinstance(obj, ExternalLink):
-            self.id.links.create_external(name, fsencode(obj.filename),
+            self.id.links.create_external(name, filename_encode(obj.filename),
                           self._e(obj.path), lcpl=lcpl, lapl=self._lapl)
 
         elif isinstance(obj, numpy.dtype):
@@ -525,7 +525,7 @@ class ExternalLink(object):
         return self._filename
 
     def __init__(self, filename, path):
-        self._filename = fspath(filename)
+        self._filename = filename_decode(filename_encode(filename))
         self._path = str(path)
 
     def __repr__(self):
