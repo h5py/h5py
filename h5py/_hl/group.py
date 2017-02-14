@@ -119,6 +119,7 @@ class Group(HLObject, MutableMappingHDF5):
         
         VMlist
             (List) A list of the the VirtualMaps between the source and target datasets. At least one is required.
+
         fillvalue
             (Scalar) Use this value for uninitialized parts of the dataset.
         """
@@ -577,7 +578,7 @@ class ExternalLink(object):
 
 class DatasetContainer(object):
     def __init__(self, path, key,shape, dtype=None, maxshape=None):
-        '''
+        """
         This is an object that looks like a dataset, but it not. It allows the user to specify the maps based on lazy indexing, 
         which is natural, but without needing to load the data. 
                 
@@ -593,7 +594,7 @@ class DatasetContainer(object):
         dtype
             The data type. For the source we specify this because it is faster than getting from the file. For the target,
             we can specify it to be different to the source.
-        '''
+        """
         self.path = path
         self.key = key
         self.shape = shape
@@ -612,25 +613,33 @@ class DatasetContainer(object):
         return copy(self)
 
 class VirtualSource(DatasetContainer):
-    '''
+    """
     Virtual source and VirtualTarget are just easy identifiers for the user. They do the same thing.
-    '''
+    """
     pass
 
 class VirtualTarget(DatasetContainer):
-    '''
+    """
     Virtual source and VirtualTarget are just easy identifiers for the user. They do the same thing.
-    '''
+    """
     pass
 
 
 class VirtualMap(object):
-    '''
-    The idea of this class is to specify the mapping between the source and target.
-    This is slow unless you specify the dtype. Otherwise it tries to go checkout the type in the file.
-    '''
-        
     def __init__(self, virtual_source, virtual_target, dtype):
+        """
+        The idea of this class is to specify the mapping between the source and target files.
+        Since data type casting is supported by VDS, we include this here.
+            virtual_source
+                A DatasetContainer object containing all the useful information about the source file for this map.
+            
+            virtual_target
+                A DatasetContainer object containing all the useful information about the source file for this map.
+
+            dtype
+                The type of the final output dataset.
+        
+        """
         self.src = virtual_source
         self.dtype = dtype
         self.target = virtual_target
@@ -638,11 +647,11 @@ class VirtualMap(object):
         self.create_src_dspace()
 
     def create_src_dspace(self):
-        '''
-        define the src dataspace
-        '''
+        """
+        Creates the source data-spaces and sorts out the relevant block shapes including the unlimited data dimensions.
+        """
         rank_def = len(self.target.shape) - len(self.src.shape)
-        self.block_shape = (1,)*rank_def + self.src.shape
+        self.block_shape = (1,)*rank_def + self.src.shape # if the rank of the two datasets is not the same, pad with singletons. This isn't necessarily the best way to do this! 
         self.src_dspace = h5s.create_simple(self.src.shape, self.src.maxshape)
         start_idx = tuple([0 if ix.start is None else ix.start for ix in self.src.slice_list])
         stride_idx = tuple([1 if ix.step is None else ix.step for ix in self.src.slice_list])
