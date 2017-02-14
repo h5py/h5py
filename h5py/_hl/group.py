@@ -132,12 +132,21 @@ class Group(HLObject, MutableMappingHDF5):
             dcpl = h5p.create(h5p.DATASET_CREATE)
             dcpl.set_fill_value(numpy.array([fillvalue]))
             sh = VMlist[0].target.shape
-            virt_dspace = h5s.create_simple(sh) # create the virtual dataspace
+            virt_dspace = h5s.create_simple(sh, VMlist[0].target.maxshape) # create the virtual dataspace
             for VM in VMlist:
                 virt_start_idx = tuple([0 if ix.start is None else ix.start for ix in VM.target.slice_list])
                 virt_stride_index = tuple([1 if ix.step is None else ix.step for ix in VM.target.slice_list])
-                virt_dspace.select_hyperslab(start=virt_start_idx, count=virt_stride_index,
-                                        block=VM.block_shape)
+                if any(ix==h5s.UNLIMITED for ix in VM.target.maxshape):
+                    count_idx = [1, ] * len(virt_stride_index)
+                    unlimited_index = VM.target.maxshape.index(h5s.UNLIMITED)
+                    count_idx[unlimited_index] = h5s.UNLIMITED
+                    count_idx = tuple(count_idx)
+                else:
+                    count_idx = (1, ) * len(virt_stride_index)
+                virt_dspace.select_hyperslab(start=virt_start_idx, 
+                                             count=count_idx, 
+                                             stride=virt_stride_index,
+                                             block=VM.block_shape)
                 dcpl.set_virtual(virt_dspace, VM.src.path, VM.src.key, VM.src_dspace)
             dset = h5d.create(self.id, name=VM.target.key, tid=h5t.py_create(VM.dtype,logical=1), space=virt_dspace, dcpl=dcpl)
             return dset
@@ -565,7 +574,7 @@ class ExternalLink(object):
 
 
 class DatasetContainer(object):
-    def __init__(self, path, key,shape,dtype=None):
+    def __init__(self, path, key,shape, dtype=None, maxshape=None):
         '''
         This is an object that looks like a dataset, but it not. It allows the user to specify the maps based on lazy indexing, 
         which is natural, but without needing to load the data. 
@@ -587,6 +596,12 @@ class DatasetContainer(object):
         self.key = key
         self.shape = shape
         self.slice_list = [slice(None, None, None)] * len(self.shape)
+        if maxshape is None:
+            self.maxshape=shape
+        else:
+            self.maxshape = tuple([h5s.UNLIMITED if ix is None else ix for ix in maxshape])
+            
+        print "the maximum shape is:" + str(self.maxshape)
 
     def __getitem__(self, val):
         if type(val) is not type(()):# make sure it's always a tuple
@@ -617,22 +632,27 @@ class VirtualMap(object):
         self.src = virtual_source
         self.dtype = dtype
         self.target = virtual_target
+        self.block_shape = None
         self.create_src_dspace()
-
-    @property
-    def block_shape(self):
-        '''
-        the sources and target could be different ranks causing a rank deficiency in the map
-        THIS NEEDS MORE THINKING ABOUT. IT'S not always good to put the extra indices in front.
-        '''
-        rank_def = len(self.target.shape) - len(self.src.shape)
-        return (1,)*rank_def + self.src.shape
 
     def create_src_dspace(self):
         '''
         define the src dataspace
         '''
-        self.src_dspace = h5s.create_simple(self.src.shape)
+        rank_def = len(self.target.shape) - len(self.src.shape)
+        self.block_shape = (1,)*rank_def + self.src.shape
+        self.src_dspace = h5s.create_simple(self.src.shape, self.src.maxshape)
         start_idx = tuple([0 if ix.start is None else ix.start for ix in self.src.slice_list])
-        count_idx = tuple([1 if ix.step is None else ix.step for ix in self.src.slice_list])
-        self.src_dspace.select_hyperslab(start=start_idx, count=count_idx, block=self.src.shape)
+        stride_idx = tuple([1 if ix.step is None else ix.step for ix in self.src.slice_list])
+        
+        if any(ix==h5s.UNLIMITED for ix in self.src.maxshape):
+            count_idx = [1, ] * len(stride_idx)
+            unlimited_index = self.src.maxshape.index(h5s.UNLIMITED)
+            count_idx[unlimited_index] = h5s.UNLIMITED
+            count_idx = tuple(count_idx)
+            bs = list(self.block_shape)
+            bs[unlimited_index] = 1
+            self.block_shape = tuple(bs)
+        else:
+            count_idx = (1, ) * len(stride_idx)
+        self.src_dspace.select_hyperslab(start=start_idx, count=count_idx, stride=stride_idx, block=self.block_shape)
