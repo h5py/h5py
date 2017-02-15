@@ -7,7 +7,7 @@ https://support.hdfgroup.org/HDF5/docNewFeatures/VDS/HDF5-VDS-requirements-use-c
 import unittest
 import numpy as np
 import h5py as h5
-
+import tempfile
 
 class ExcaliburData(object):
     FEM_PIXELS_PER_CHIP_X = 256
@@ -52,7 +52,7 @@ class ExcaliburHighLevelTest(unittest.TestCase):
                 dset[data_value_index] = excalibur_data.generate_fem_stripe_image(data_value_index*scale)
 
     def setUp(self):
-        self.working_dir = '/scratch/vds_test/'
+        self.working_dir = tempfile.mkdtemp()
         self.fname = ["stripe_%d.h5" % stripe for stripe in range(1,7)]
         self.fname = [self.working_dir+ix for ix in self.fname]
         nframes = 5

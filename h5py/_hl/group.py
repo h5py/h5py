@@ -133,7 +133,6 @@ class Group(HLObject, MutableMappingHDF5):
             dcpl = h5p.create(h5p.DATASET_CREATE)
             dcpl.set_fill_value(numpy.array([fillvalue]))
             sh = VMlist[0].target.shape
-            print "target shape is:"+str(sh)
             virt_dspace = h5s.create_simple(sh, VMlist[0].target.maxshape) # create the virtual dataspace
             for VM in VMlist:
                 virt_start_idx = tuple([0 if ix.start is None else ix.start for ix in VM.target.slice_list])
