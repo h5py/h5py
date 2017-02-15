@@ -112,7 +112,7 @@ class Group(HLObject, MutableMappingHDF5):
                 self[name] = dset
             return dset
 
-    def create_virtual_dataset(self,VMlist=None, fillvalue=None):
+    def create_virtual_dataset(self,VMlist, fillvalue=None):
         """
         Creates the virtual dataset from a list of virtual maps, any gaps are filled with a specified fill value.
 
@@ -123,20 +123,17 @@ class Group(HLObject, MutableMappingHDF5):
             (Scalar) Use this value for uninitialized parts of the dataset.
         """
 
-        if VMlist is None:
+        if not VMlist:
             raise ValueError("create_virtual_dataset requires at least one virtual map to construct output.")
 
-        if type(VMlist) is not type([]):
+        if not isinstance(VMlist,(tuple,list)):
             VMlist = [VMlist]
-
-        if len(VMlist)<1:
-            print "you have not given me any VirtualMaps!"
-            return 0
 
         with phil:
             dcpl = h5p.create(h5p.DATASET_CREATE)
             dcpl.set_fill_value(numpy.array([fillvalue]))
             sh = VMlist[0].target.shape
+            print "target shape is:"+str(sh)
             virt_dspace = h5s.create_simple(sh, VMlist[0].target.maxshape) # create the virtual dataspace
             for VM in VMlist:
                 virt_start_idx = tuple([0 if ix.start is None else ix.start for ix in VM.target.slice_list])
@@ -608,53 +605,48 @@ class DatasetContainer(object):
         self.path = path
         self.key = key
         self.shape = shape
-        self.slice_list = [slice(None, None, None)] * len(self.shape)
+        self.slice_list = [slice(None, None, None)] * len(self.shape) # if we don't slice, we want the whole array
         if maxshape is None:
             self.maxshape=shape
         else:
             self.maxshape = tuple([h5s.UNLIMITED if ix is None else ix for ix in maxshape])
 
-        print "the maximum shape is:" + str(self.maxshape)
-
-
-    def get_path(self):
-        return self.path
-
-    def get_key(self):
-        return self.key
-
-    def __getitem__(self, val):
-        if type(val) is not type(()):# make sure it's always a tuple
-            val = (val,)
-        self.slice_list = list(val) + [slice(None, None, None)]*(len(self.shape)-len(val)) # generate the right slice
-        return copy(self)
-
-    @property
-    def block_shape(self): # block shape is the size of the "SLICED dataset
-        outshape = ()
-        for i in range(len(self.shape)):
-            sanitized = self.get_slice_list()[i].indices(self.shape[i])
-            outshape += tuple([(sanitized[1]-sanitized[0])/sanitized[2]])
-        return outshape
-
-    def get_slice_list(self):
-        return self.slice_list
-
-    def set_block_shape(self,shape):
-        self.the_block_shape = shape
-
 
 class VirtualSource(DatasetContainer):
     """
-    Virtual source and VirtualTarget are just easy identifiers for the user. They do the same thing.
+    A container for the source information. This is similar to a virtual target, but the shape information changes with slicing.
+    This does not happen with VirtualTarget since it is the source that ultimately set's the block shape.
     """
-    pass
+    def __getitem__(self, *key):
+        if (len(self.shape)-len(key))<0:
+            raise IndexError('Index rank is greater than dataset rank')
+        # need to deal with integer inputs
+        tmp = copy(self)
+        tmp.slice_list = list(key[0] + (slice(None, None, None),)*(len(self.shape)-len(key[0]))) # generate the right slice
+        # sanitize this slice list to get rid of the nones and integers/floats(?)
+        tmp.slice_list = [slice(ix) if isinstance(ix, (int,float)) else ix for ix in tmp.slice_list]
+        new_shape = ()
+        for ix,sl in enumerate(tmp.slice_list):
+            start = 0 if sl.start is None else sl.start
+            step = 0 if sl.step is None else sl.step
+            stop = self.shape[ix]
+            new_shape+=((stop-start)/step,)
+            tmp.slice_list[ix] = slice(start,stop,step)
+        tmp.shape = new_shape
+        return tmp
 
 class VirtualTarget(DatasetContainer):
     """
-    Virtual source and VirtualTarget are just easy identifiers for the user. They do the same thing.
+    A container for the target information. This is similar to a virtual source, but the shape information does not change with slicing.
+    This does not happen with VirtualSource since it is the source that ultimately set's the block shape so it must change on slicing.
     """
-    pass
+    def __getitem__(self, *key):
+        if (len(self.shape)-len(key))<0:
+            raise IndexError('Index rank is greater than dataset rank')
+        tmp = copy(self)
+        tmp.slice_list = list(key[0] + (slice(None, None, None),)*(len(self.shape)-len(key[0]))) # generate the right slice
+        tmp.slice_list = [slice(ix) if isinstance(ix, (int,float)) else ix for ix in tmp.slice_list]
+        return tmp
 
 
 class VirtualMap(object):
@@ -676,14 +668,15 @@ class VirtualMap(object):
         self.dtype = dtype
         self.target = virtual_target
         self.block_shape = None
-        self.create_src_dspace()
-
-    def create_src_dspace(self):
-        """
-        Creates the source data-spaces and sorts out the relevant block shapes including the unlimited data dimensions.
-        """
+        # if the rank of the two datasets is not the same, pad with singletons. This isn't necessarily the best way to do this!
         rank_def = len(self.target.shape) - len(self.src.shape)
-        self.block_shape = (1,)*rank_def + self.src.shape # if the rank of the two datasets is not the same, pad with singletons. This isn't necessarily the best way to do this!
+        if rank_def > 0:
+            self.block_shape = (1,)*rank_def + self.src.shape
+        elif rank_def < 0:
+            # This might be pathological.
+            self.block_shape = (1,)*rank_def + self.target.shape
+        else:
+            self.block_shape = self.src.shape
         self.src_dspace = h5s.create_simple(self.src.shape, self.src.maxshape)
         start_idx = tuple([0 if ix.start is None else ix.start for ix in self.src.slice_list])
         stride_idx = tuple([1 if ix.step is None else ix.step for ix in self.src.slice_list])
