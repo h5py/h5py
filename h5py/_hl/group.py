@@ -615,15 +615,11 @@ class VirtualSource(DatasetContainer):
             raise IndexError('Index rank is greater than dataset rank')
         # need to deal with integer inputs
         tmp = copy(self)
-        print key, type(key)
+
         if not isinstance(key, tuple):
             key = tuple(key)
         elif not isinstance(key[0],slice):
             key  = key[0]
-
-            
-        
-        print key, type(key)
         tmp.slice_list = list(key + (slice(None, None, None),)*(len(self.shape)-len(key))) # generate the right slice
 
         # sanitize this slice list to get rid of the nones and integers/floats(?)
