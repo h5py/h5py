@@ -644,9 +644,9 @@ class VirtualSource(DatasetContainer):
         new_shape = ()
         for ix,sl in enumerate(tmp.slice_list):
             start = 0 if sl.start is None else sl.start
-            step = 0 if sl.step is None else sl.step
+            step = 1 if sl.step is None else sl.step
             stop = self.shape[ix]
-            new_shape+=((stop-start)/step,)
+            new_shape+=((stop-start)/abs(step),)
             tmp.slice_list[ix] = slice(start,stop,step)
         tmp.shape = new_shape
         return tmp
@@ -660,8 +660,8 @@ class VirtualTarget(DatasetContainer):
         if (len(self.shape)-len(key))<0:
             raise IndexError('Index rank is greater than dataset rank')
         tmp = copy(self)
-        tmp.slice_list = list(key[0] + (slice(None, None, None),)*(len(self.shape)-len(key[0]))) # generate the right slice
-        tmp.slice_list = [slice(ix) if isinstance(ix, (int,float)) else ix for ix in tmp.slice_list]
+        tmp.slice_list = list(key[0] + (slice(None, None, None),)*(len(self.shape)-len(key[0]))) # generate the right slice_list length
+        tmp.slice_list = [slice(ix) if isinstance(ix, (int,float)) else ix for ix in tmp.slice_list]# cope with integers
         return tmp
 
 
