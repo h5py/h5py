@@ -40,7 +40,7 @@ class ExcaliburData(object):
 
 
 
-class ExcaliburHighLevelTest(unittest.TestCase):
+class TestExcaliburHighLevel(unittest.TestCase):
     def create_excalibur_fem_stripe_datafile(self, fname, nframes, excalibur_data,scale):
         shape = (nframes,) + excalibur_data.fem_stripe_dimensions
         max_shape = shape#(None,) + excalibur_data.fem_stripe_dimensions

@@ -622,17 +622,33 @@ class VirtualSource(DatasetContainer):
             raise IndexError('Index rank is greater than dataset rank')
         # need to deal with integer inputs
         tmp = copy(self)
-        tmp.slice_list = list(key[0] + (slice(None, None, None),)*(len(self.shape)-len(key[0]))) # generate the right slice
+
+        if not isinstance(key, tuple):
+            key = tuple(key)
+        elif not isinstance(key[0],slice):
+            key  = key[0]
+        tmp.slice_list = list(key + (slice(None, None, None),)*(len(self.shape)-len(key))) # generate the right slice
+
         # sanitize this slice list to get rid of the nones and integers/floats(?)
-        tmp.slice_list = [slice(ix) if isinstance(ix, (int,float)) else ix for ix in tmp.slice_list]
-        new_shape = ()
+        tmp.slice_list = [slice(ix,ix+1,1) if isinstance(ix, (int,float)) else ix for ix in tmp.slice_list]
+        new_shape = []
         for ix,sl in enumerate(tmp.slice_list):
-            start = 0 if sl.start is None else sl.start
             step = 1 if sl.step is None else sl.step
-            stop = self.shape[ix]
-            new_shape+=((stop-start)/abs(step),)
+            if step>0:
+                start = 0 if sl.start is None else sl.start
+                stop = self.shape[ix] if sl.stop is None else sl.stop
+                new_shape.append((stop-start)/step)
+            elif step<0:
+                stop = 0 if sl.stop is None else sl.stop
+                start = self.shape[ix] if sl.start is None else sl.start
+                if start>stop: # this gets the same behaviour as numpy array
+                    new_shape.append((start-stop)/abs(step))
+                else:
+                    new_shape.append(0)
+            elif step==0:
+                raise IndexError("A step of 0 is not valid")
             tmp.slice_list[ix] = slice(start,stop,step)
-        tmp.shape = new_shape
+        tmp.shape = tuple(new_shape)
         return tmp
 
 class VirtualTarget(DatasetContainer):
