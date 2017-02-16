@@ -9,7 +9,7 @@ import numpy as np
 import h5py as h5
 import tempfile
 
-class EigerHighLevelTest(unittest.TestCase):
+class TestEigerHighLevel(unittest.TestCase):
     def setUp(self):
         self.working_dir = tempfile.mkdtemp()
         self.fname = ['raw_file_1.h5','raw_file_2.h5','raw_file_3.h5']

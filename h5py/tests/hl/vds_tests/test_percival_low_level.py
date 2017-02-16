@@ -9,7 +9,7 @@ import numpy as np
 import h5py as h5
 import tempfile
 
-class PercivalLowLevelTest(unittest.TestCase):
+class TestPercivalLowLevel(unittest.TestCase):
 
     def setUp(self):
         self.working_dir = tempfile.mkdtemp()
