@@ -158,12 +158,12 @@ class Group(HLObject, MutableMappingHDF5):
         shape and dtype, in which case the provided values take precedence over
         those from `other`.
         """
-        kw = {k: kwupdate.get(k, getattr(other, k)) for k in [
-            'shape', 'dtype', 'chunks', 'maxshape', 'compression',
-            'compression_opts', 'scaleoffset', 'shuffle', 'fletcher32', 'fillvalue'
-        ]}
+        for k in ('shape', 'dtype', 'chunks', 'maxshape', 'compression',
+                  'compression_opts', 'scaleoffset', 'shuffle', 'fletcher32',
+                  'fillvalue'):
+            kwupdate.setdefault(k, getattr(other, k))
 
-        return self.create_dataset(name, **kw)
+        return self.create_dataset(name, **kwupdate)
 
     def require_group(self, name):
         """ Return a group, creating it if it doesn't exist.
