@@ -136,8 +136,8 @@ class Group(HLObject, MutableMappingHDF5):
             sh = VMlist[0].target.shape
             virt_dspace = h5s.create_simple(sh, VMlist[0].target.maxshape) # create the virtual dataspace
             for VM in VMlist:
-                virt_start_idx = tuple([0 if ix.start is None else ix.start for ix in VM.target.slice_list])
-                virt_stride_index = tuple([1 if ix.step is None else ix.step for ix in VM.target.slice_list])
+                virt_start_idx = tuple([ix.start for ix in VM.target.slice_list])
+                virt_stride_index = tuple([ix.step for ix in VM.target.slice_list])
                 if any(ix==h5s.UNLIMITED for ix in VM.target.maxshape):
                     count_idx = [1, ] * len(virt_stride_index)
                     unlimited_index = VM.target.maxshape.index(h5s.UNLIMITED)
@@ -612,43 +612,23 @@ class DatasetContainer(object):
         rank = len(self.shape)
         if (rank-len(key))<0:
             raise IndexError('Index rank is greater than dataset rank')
-        if not isinstance(key, tuple):
-            key = tuple(key)
-        if isinstance(key[0], tuple):
+        if isinstance(key[0], tuple): # sometimes this is needed. odd
             key = key[0]
         key = list(key)
         key = [slice(ix, ix + 1, 1) if isinstance(ix, (int, float)) else ix for ix in key]
-        key = tuple(key)
         
         # now let's parse ellipsis
         ellipsis_test = [ix==Ellipsis for ix in key]
         if sum(ellipsis_test)>1:
             raise ValueError("Only use of one Ellipsis(...) supported.")
         if not any(ellipsis_test):
-            for ix, val in enumerate(key):
-                tmp.slice_list[ix] = val
-        elif any(ellipsis_test):
-            if (len(key)==1) and ellipsis_test[0]:
-                pass # the current slice list is fine
-            
-            elif (ellipsis_test.index(True) == (len(key)-1)):
-                for ix, val in enumerate(key):
-                    if val is not Ellipsis:
-                        tmp.slice_list[ix] = val
-            elif (ellipsis_test.index(True) == 0):
-                for ix, val in enumerate(key[::-1]):
-                    if val is not Ellipsis:
-                        tmp.slice_list[rank-ix-1] = val
-            else:
-                # it must be in the middle
-                ellipsis_idx = ellipsis_test.index(True)
-                for ix, val in enumerate(key[:ellipsis_idx]):
-                    if val is not Ellipsis:
-                        tmp.slice_list[ix] = val
-
-                for ix, val in enumerate(key[:ellipsis_idx:-1]):
-                    if val is not Ellipsis:
-                        tmp.slice_list[rank-ix-1] = val
+            tmp.slice_list[:len(key)] = key
+        elif any(ellipsis_test) and (len(key) is not 1):
+            ellipsis_idx = ellipsis_test.index(True)
+            ellipsis_idx_back = ellipsis_test[::-1].index(True)
+            tmp.slice_list[0:ellipsis_idx] = key[0:ellipsis_idx]
+            if ellipsis_idx_back>=ellipsis_idx: # edge case
+                tmp.slice_list[(-ellipsis_idx_back):] = key[(-ellipsis_idx_back):]
 
         new_shape = []
         for ix, sl in enumerate(tmp.slice_list):
@@ -673,7 +653,7 @@ class DatasetContainer(object):
                     new_shape.append(0)
             elif step == 0:
                 raise IndexError("A step of 0 is not valid")
-                tmp.slice_list[ix] = slice(start, stop, step)
+            tmp.slice_list[ix] = slice(start, stop, step)
         tmp.shape = tuple(new_shape)
         return tmp
 
@@ -712,9 +692,9 @@ class VirtualMap(object):
                 The type of the final output dataset.
         
         """
-        self.src = virtual_source
+        self.src = virtual_source[...]
         self.dtype = dtype
-        self.target = virtual_target
+        self.target = virtual_target[...]
         self.block_shape = None
         # if the rank of the two datasets is not the same, pad with singletons. This isn't necessarily the best way to do this!
         rank_def = len(self.target.shape) - len(self.src.shape)
