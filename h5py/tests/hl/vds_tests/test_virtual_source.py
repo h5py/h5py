@@ -72,6 +72,26 @@ class TestVirtualSource(unittest.TestCase):
         dataset = h5.VirtualSource('test','test',(20,30,30))
         sliced = dataset[-4:-10:-2]
         self.assertEqual((3,30,30),sliced.shape)
+        
+#     def test_ellipsis(self):
+#         dataset = h5.VirtualSource('test','test',(20,30,30))
+#         sliced = dataset[...]
+#         self.assertEqual(dataset.shape,sliced.shape)
+# 
+#     def test_ellipsis_end(self):
+#         dataset = h5.VirtualSource('test','test',(20,30,30))
+#         sliced = dataset[0,...]
+#         self.assertEqual((1,)+dataset.shape[1:],sliced.shape)
+# 
+#     def test_ellipsis_start(self):
+#         dataset = h5.VirtualSource('test','test',(20,30,30))
+#         sliced = dataset[...,0]
+#         self.assertEqual(dataset.shape[:-1]+(1,),sliced.shape)
+# 
+#     def test_ellipsis_sandwich(self):
+#         dataset = h5.VirtualSource('test','test',(20,30,30,40)
+#         sliced = dataset[0,...5]
+#         self.assertEqual((1,)+dataset.shape[1:-1]+(1,),sliced.shape)
 
 if __name__ == "__main__":
     unittest.main()
