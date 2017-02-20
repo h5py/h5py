@@ -363,6 +363,23 @@ Reference
 
         :keyword exact:     Require shape and type to match exactly (T/**F**)
 
+
+    .. method:: create_dataset_like(name, other, **kwds)
+
+        Create a dataset similar to `other`, much like numpy's `_like` functions.
+
+        :param name:
+            Name of the dataset (absolute or relative).  Provide None to make
+            an anonymous dataset.
+        :param other:
+            The dataset whom the new dataset should mimic. All properties, such
+            as shape, dtype, chunking, ... will be taken from it, but no data
+            or attributes are being copied.
+
+        Any dataset keywords (see create_dataset) may be provided, including
+        shape and dtype, in which case the provided values take precedence over
+        those from `other`.
+
     .. attribute:: attrs
 
         :ref:`attributes` for this group.
