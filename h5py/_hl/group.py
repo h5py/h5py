@@ -25,6 +25,7 @@ from . import base
 from .base import HLObject, MutableMappingHDF5, phil, with_phil
 from . import dataset
 from . import datatype
+
 # from . import files
 # # from .files import File
 
@@ -621,7 +622,7 @@ class DatasetContainer(object):
         self.path = path
         self.key = key
         self.shape = shape
-        self.slice_list = [slice(None, None, None)] * len(self.shape) # if we don't slice, we want the whole array
+        self.slice_list = [slice(0, ix, 1) for ix in self.shape] # if we don't slice, we want the whole array
         if maxshape is None:
             self.maxshape=shape
         else:
@@ -650,14 +651,14 @@ class DatasetContainer(object):
             if step > 0:
                 start = 0 if sl.start is None else sl.start# parse for Nones
                 stop = self.shape[ix] if sl.stop is None else sl.stop
-                
+
                 start = self.shape[ix]+start if start<0 else start
                 stop = self.shape[ix]+stop if stop<0 else stop
                 new_shape.append((stop - start) / step)
             elif step < 0:
                 stop = 0 if sl.stop is None else sl.stop# parse for Nones
                 start = self.shape[ix] if sl.start is None else sl.start
-                
+
                 start = self.shape[ix]+start if start<0 else start
                 stop = self.shape[ix]+stop if stop<0 else stop
 
@@ -731,8 +732,9 @@ class VirtualMap(object):
             self.block_shape = self.src.shape
 
         self.src_dspace = h5s.create_simple(self.src.shape, self.src.maxshape)
-        start_idx = tuple([0 if ix.start is None else ix.start for ix in self.src.slice_list])
-        stride_idx = tuple([1 if ix.step is None else ix.step for ix in self.src.slice_list])
+
+        start_idx = tuple([ix.start for ix in self.src.slice_list])
+        stride_idx = tuple([ix.step for ix in self.src.slice_list])
 
         if any(ix==h5s.UNLIMITED for ix in self.src.maxshape):
             count_idx = [1, ] * len(stride_idx)
