@@ -615,15 +615,16 @@ class VirtualSource(DatasetContainer):
             raise IndexError('Index rank is greater than dataset rank')
         # need to deal with integer inputs
         tmp = copy(self)
-
         if not isinstance(key, tuple):
             key = tuple(key)
-        elif not isinstance(key[0],slice):
-            key  = key[0]
+        if isinstance(key[0], tuple):
+            key = key[0]
+        key = list(key)
+        key = [slice(ix,ix+1,1) if isinstance(ix, (int,float)) else ix for ix in key]
+        key = tuple(key)
         tmp.slice_list = list(key + (slice(None, None, None),)*(len(self.shape)-len(key))) # generate the right slice
-
         # sanitize this slice list to get rid of the nones and integers/floats(?)
-        tmp.slice_list = [slice(ix,ix+1,1) if isinstance(ix, (int,float)) else ix for ix in tmp.slice_list]
+
         new_shape = []
         for ix,sl in enumerate(tmp.slice_list):
             step = 1 if sl.step is None else sl.step
@@ -652,9 +653,36 @@ class VirtualTarget(DatasetContainer):
     def __getitem__(self, *key):
         if (len(self.shape)-len(key))<0:
             raise IndexError('Index rank is greater than dataset rank')
+        # need to deal with integer inputs
         tmp = copy(self)
-        tmp.slice_list = list(key[0] + (slice(None, None, None),)*(len(self.shape)-len(key[0]))) # generate the right slice_list length
-        tmp.slice_list = [slice(ix) if isinstance(ix, (int,float)) else ix for ix in tmp.slice_list]# cope with integers
+
+        if not isinstance(key, tuple):
+            key = tuple(key)
+        if isinstance(key[0], tuple):
+            key = key[0]
+        key = list(key)
+        key = [slice(ix,ix+1,1) if isinstance(ix, (int,float)) else ix for ix in key]
+        key = tuple(key)
+        tmp.slice_list = list(key + (slice(None, None, None),)*(len(self.shape)-len(key))) # generate the right slice
+        # sanitize this slice list to get rid of the nones and integers/floats(?)
+        new_shape = []
+        for ix,sl in enumerate(tmp.slice_list):
+            step = 1 if sl.step is None else sl.step
+            if step>0:
+                start = 0 if sl.start is None else sl.start
+                stop = self.shape[ix] if sl.stop is None else sl.stop
+                new_shape.append((stop-start)/step)
+            elif step<0:
+                stop = 0 if sl.stop is None else sl.stop
+                start = self.shape[ix] if sl.start is None else sl.start
+                if start>stop: # this gets the same behaviour as numpy array
+                    new_shape.append((start-stop)/abs(step))
+                else:
+                    new_shape.append(0)
+            elif step==0:
+                raise IndexError("A step of 0 is not valid")
+            tmp.slice_list[ix] = slice(start,stop,step)
+#         tmp.shape = tuple(new_shape)
         return tmp
 
 
@@ -679,13 +707,21 @@ class VirtualMap(object):
         self.block_shape = None
         # if the rank of the two datasets is not the same, pad with singletons. This isn't necessarily the best way to do this!
         rank_def = len(self.target.shape) - len(self.src.shape)
+        print "rank deficiency:", rank_def
         if rank_def > 0:
-            self.block_shape = (1,)*rank_def + self.src.shape
+            if len(self.src.shape)==1:
+                pass
+            else:
+                self.block_shape = (1,)*rank_def + self.src.shape
         elif rank_def < 0:
             # This might be pathological.
-            self.block_shape = (1,)*rank_def + self.target.shape
+            if len(self.target.shape)==1:
+                pass
+            else:
+                self.block_shape = (1,)*rank_def + self.target.shape
         else:
             self.block_shape = self.src.shape
+
         self.src_dspace = h5s.create_simple(self.src.shape, self.src.maxshape)
         start_idx = tuple([0 if ix.start is None else ix.start for ix in self.src.slice_list])
         stride_idx = tuple([1 if ix.step is None else ix.step for ix in self.src.slice_list])
@@ -700,4 +736,6 @@ class VirtualMap(object):
             self.block_shape = tuple(bs)
         else:
             count_idx = (1, ) * len(stride_idx)
+        print "source shape", self.src.shape
+        print "blockshape:",self.block_shape
         self.src_dspace.select_hyperslab(start=start_idx, count=count_idx, stride=stride_idx, block=self.block_shape)
