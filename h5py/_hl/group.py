@@ -606,7 +606,7 @@ class DatasetContainer(object):
         self.path = path
         self.key = key
         self.shape = shape
-        self.slice_list = [slice(0, ix, 1) for ix in self.shape] # if we don't slice, we want the whole array
+        self.slice_list = [slice(0,ix,1) for ix in self.shape] # if we don't slice, we want the whole array
         if maxshape is None:
             self.maxshape=shape
         else:
@@ -627,7 +627,9 @@ class DatasetContainer(object):
         key = list(key)
         key = [slice(ix, ix + 1, 1) if isinstance(ix, (int, float)) else ix for ix in key]
         key = tuple(key)
-        tmp.slice_list = list(key + (slice(None, None, None), ) * (len(self.shape) - len(key))) # generate the right slice
+        for ix, val in enumerate(key):
+            tmp.slice_list[ix] = val
+#         tmp.slice_list = list(key + (slice(None, None, None), ) * (len(self.shape) - len(key))) # generate the right slice
     # sanitize this slice list to get rid of the nones and integers/floats(?)
         new_shape = []
         for ix, sl in enumerate(tmp.slice_list):
