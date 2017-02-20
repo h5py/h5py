@@ -26,7 +26,7 @@ from . import base
 from .base import HLObject, MutableMappingHDF5, phil, with_phil
 from . import dataset
 from . import datatype
-
+from types import EllipsisType
 # from . import files
 # # from .files import File
 
@@ -609,7 +609,8 @@ class DatasetContainer(object):
         parses the __get_item__ key to get useful slicing information
         """
         tmp = copy(self)
-        if (len(self.shape)-len(key))<0:
+        rank = len(self.shape)
+        if (rank-len(key))<0:
             raise IndexError('Index rank is greater than dataset rank')
         if not isinstance(key, tuple):
             key = tuple(key)
@@ -618,10 +619,37 @@ class DatasetContainer(object):
         key = list(key)
         key = [slice(ix, ix + 1, 1) if isinstance(ix, (int, float)) else ix for ix in key]
         key = tuple(key)
-        for ix, val in enumerate(key):
-            tmp.slice_list[ix] = val
-#         tmp.slice_list = list(key + (slice(None, None, None), ) * (len(self.shape) - len(key))) # generate the right slice
-    # sanitize this slice list to get rid of the nones and integers/floats(?)
+        
+        # now let's parse ellipsis
+        ellipsis_test = [ix==Ellipsis for ix in key]
+        if sum(ellipsis_test)>1:
+            raise ValueError("Only use of one Ellipsis(...) supported.")
+        if not any(ellipsis_test):
+            for ix, val in enumerate(key):
+                tmp.slice_list[ix] = val
+        elif any(ellipsis_test):
+            if (len(key)==1) and ellipsis_test[0]:
+                pass # the current slice list is fine
+            
+            elif (ellipsis_test.index(True) == (len(key)-1)):
+                for ix, val in enumerate(key):
+                    if val is not Ellipsis:
+                        tmp.slice_list[ix] = val
+            elif (ellipsis_test.index(True) == 0):
+                for ix, val in enumerate(key[::-1]):
+                    if val is not Ellipsis:
+                        tmp.slice_list[rank-ix-1] = val
+            else:
+                # it must be in the middle
+                ellipsis_idx = ellipsis_test.index(True)
+                for ix, val in enumerate(key[:ellipsis_idx]):
+                    if val is not Ellipsis:
+                        tmp.slice_list[ix] = val
+
+                for ix, val in enumerate(key[:ellipsis_idx:-1]):
+                    if val is not Ellipsis:
+                        tmp.slice_list[rank-ix-1] = val
+
         new_shape = []
         for ix, sl in enumerate(tmp.slice_list):
             step = 1 if sl.step is None else sl.step
