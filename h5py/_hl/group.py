@@ -685,11 +685,8 @@ class VirtualSource(DatasetContainer):
     This does not happen with VirtualTarget since it is the source that ultimately set's the block shape.
     """
     def __getitem__(self, *key):
-        op = copy(self)
         tmp =self._parse_slicing(key)
-        op.shape = tmp.shape
-        op.slice_list = tmp.slice_list
-        return op
+        return tmp
 
 class VirtualTarget(DatasetContainer):
     """
@@ -697,10 +694,9 @@ class VirtualTarget(DatasetContainer):
     This does not happen with VirtualSource since it is the source that ultimately set's the block shape so it must change on slicing.
     """
     def __getitem__(self, *key):
-        op = copy(self)
         tmp =self._parse_slicing(key)
-        op.slice_list = tmp.slice_list
-        return op
+        tmp.shape = self.shape
+        return tmp
 
 
 class VirtualMap(object):
