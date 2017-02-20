@@ -12,6 +12,11 @@ class TestVirtualSource(unittest.TestCase):
         dataset = h5.VirtualSource('test','test',(20,30,30))
         sliced = dataset[:,:,::-1]
         self.assertEqual(dataset.shape,sliced.shape)
+        
+    def test_subsampled_slice_inverted(self):
+        dataset = h5.VirtualSource('test','test',(20,30,30))
+        sliced = dataset[:,:,::-2]
+        self.assertEqual((20,30,15),sliced.shape)
     
     def test_integer_indexed(self):
         dataset = h5.VirtualSource('test','test',(20,30,30))
@@ -47,6 +52,26 @@ class TestVirtualSource(unittest.TestCase):
         dataset = h5.VirtualSource('test','test',(20,30,30))
         sliced = dataset[12:6:-2,:,26:20:-3]
         self.assertEqual((3,30,2),sliced.shape)
+
+    def test_negative_start_index(self):
+        dataset = h5.VirtualSource('test','test',(20,30,30))
+        sliced = dataset[-10:16]
+        self.assertEqual((6,30,30),sliced.shape)
+        
+    def test_negative_stop_index(self):
+        dataset = h5.VirtualSource('test','test',(20,30,30))
+        sliced = dataset[10:-4]
+        self.assertEqual((6,30,30),sliced.shape)
+
+    def test_negative_start_and_stop_index(self):
+        dataset = h5.VirtualSource('test','test',(20,30,30))
+        sliced = dataset[-10:-4]
+        self.assertEqual((6,30,30),sliced.shape)
+        
+    def test_negative_start_and_stop_and_stride_index(self):
+        dataset = h5.VirtualSource('test','test',(20,30,30))
+        sliced = dataset[-4:-10:-2]
+        self.assertEqual((3,30,30),sliced.shape)
 
 if __name__ == "__main__":
     unittest.main()
