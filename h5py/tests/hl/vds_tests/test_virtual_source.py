@@ -1,6 +1,6 @@
 import unittest
 import h5py as h5
-
+import numpy as np
 
 class TestVirtualSource(unittest.TestCase):
     def test_full_slice(self):
@@ -37,7 +37,46 @@ class TestVirtualSource(unittest.TestCase):
         dataset = h5.VirtualSource('test','test',(20,30,30))
         sliced = dataset[5:10,:,:]
         self.assertEqual((5,)+dataset.shape[1:],sliced.shape)
+    
+    def test_shape_calculation_positive_step(self):
+        dataset = h5.VirtualSource('test','test',(20,))
+        cmp = []
+        for i in range(5):
+            d = dataset[2:12+i:3].shape[0]
+            ref = np.arange(20)[2:12+i:3].size
+            cmp.append(ref==d)
+        self.assertEqual(5, sum(cmp))
+
+    def test_shape_calculation_positive_step_switched_start_stop(self):
+        dataset = h5.VirtualSource('test','test',(20,))
+        cmp = []
+        for i in range(5):
+            d = dataset[12+i:2:3].shape[0]
+            ref = np.arange(20)[12+i:2:3].size
+            print d,ref
+            cmp.append(ref==d)
+        self.assertEqual(5, sum(cmp))
+
+
+    def test_shape_calculation_negative_step(self):
+        dataset = h5.VirtualSource('test','test',(20,))
+        cmp = []
+        for i in range(5):
+            d = dataset[12+i:2:-3].shape[0]
+            ref = np.arange(20)[12+i:2:-3].size
+            cmp.append(ref==d) 
+        self.assertEqual(5, sum(cmp))
         
+    def test_shape_calculation_negative_step_switched_start_stop(self):
+        dataset = h5.VirtualSource('test','test',(20,))
+        cmp = []
+        for i in range(5):
+            d = dataset[2:12+i:-3].shape[0]
+            ref = np.arange(20)[2:12+i:-3].size
+            cmp.append(ref==d)
+        self.assertEqual(5, sum(cmp))
+
+
     def test_double_range(self):
         dataset = h5.VirtualSource('test','test',(20,30,30))
         sliced = dataset[5:10,:,20:25]
@@ -47,7 +86,7 @@ class TestVirtualSource(unittest.TestCase):
         dataset = h5.VirtualSource('test','test',(20,30,30))
         sliced = dataset[6:12:2,:,20:26:3]
         self.assertEqual((3,30,2,),sliced.shape)
-    
+
     def test_double_strided_range_inverted(self):
         dataset = h5.VirtualSource('test','test',(20,30,30))
         sliced = dataset[12:6:-2,:,26:20:-3]
@@ -92,6 +131,8 @@ class TestVirtualSource(unittest.TestCase):
         dataset = h5.VirtualSource('test','test',(20,30,30,40))
         sliced = dataset[0,...,5]
         self.assertEqual((1,)+dataset.shape[1:-1]+(1,),sliced.shape)
+
+        
 
 if __name__ == "__main__":
     unittest.main()

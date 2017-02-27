@@ -636,10 +636,13 @@ class DatasetContainer(object):
             if step > 0:
                 start = 0 if sl.start is None else sl.start# parse for Nones
                 stop = self.shape[ix] if sl.stop is None else sl.stop
-                
                 start = self.shape[ix]+start if start<0 else start
                 stop = self.shape[ix]+stop if stop<0 else stop
-                new_shape.append((stop - start) / step)
+                if start < stop:
+                    new_shape.append((stop - start + step - 1)/step)
+                else:
+                    new_shape.append(0)
+
             elif step < 0:
                 stop = 0 if sl.stop is None else sl.stop# parse for Nones
                 start = self.shape[ix] if sl.start is None else sl.start
@@ -648,7 +651,7 @@ class DatasetContainer(object):
                 stop = self.shape[ix]+stop if stop<0 else stop
 
                 if start > stop: # this gets the same behaviour as numpy array
-                    new_shape.append((start - stop) / abs(step))
+                    new_shape.append((start - stop - step - 1)/-step)
                 else:
                     new_shape.append(0)
             elif step == 0:
