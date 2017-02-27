@@ -1,6 +1,6 @@
 import unittest
 import h5py as h5
-
+import numpy as np
 
 class TestVirtualSource(unittest.TestCase):
     def test_full_slice(self):
