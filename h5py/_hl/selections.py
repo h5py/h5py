@@ -83,6 +83,8 @@ def select(shape, args, dsid):
         if not isinstance(a, slice) and a is not Ellipsis:
             try:
                 int(a)
+                if isinstance(a, np.ndarray) and a.shape == (1,):
+                    raise Exception()
             except Exception:
                 sel = FancySelection(shape)
                 sel[args]
@@ -353,7 +355,9 @@ class FancySelection(Selection):
                 except TypeError:
                     pass
                 else:
-                    if sorted(arg) != list(arg):
+                    list_arg = list(arg)
+                    adjacent = zip(list_arg[:-1], list_arg[1:])
+                    if any(fst >= snd for fst, snd in adjacent):
                         raise TypeError("Indexing elements must be in increasing order")
 
         if len(sequenceargs) > 1:

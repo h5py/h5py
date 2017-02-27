@@ -23,13 +23,13 @@ This guide is divided into three sections.  The first describes how to file
 a bug report.
 
 The second describes the mechanics of
-how to submit a contribution to the h5py project; for example, how to 
+how to submit a contribution to the h5py project; for example, how to
 create a pull request, which branch to base your work on, etc.
 We assume you're are familiar with Git, the version control system used by h5py.
 If not, `here's a great place to start <http://git-scm.com/book>`_.
 
 Finally, we describe the various subsystems inside h5py, and give
-technical guidance as to how to implement your changes.  
+technical guidance as to how to implement your changes.
 
 
 How to File a Bug Report
@@ -43,7 +43,7 @@ Bug reports are always welcome!  The issue tracker is at:
 If you're unsure whether you've found a bug
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Always feel free to ask on the mailing list (h5py at Google Groups). 
+Always feel free to ask on the mailing list (h5py at Google Groups).
 Discussions there are seen by lots of people and are archived by Google.
 Even if the issue you're having turns out not to be a bug in the end, other
 people can benefit from a record of the conversation.
@@ -98,12 +98,14 @@ Here are some tips to getting your pull requests accepted:
    advertised.  The maintainers will let you know if more are needed.
 
 
+.. _git_checkout:
+
 Clone the h5py repository
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The best way to do this is by signing in to GitHub and cloning the
 h5py project directly.  You'll end up with a new repository under your
-account; for example, if your username is ``yourname``, the repository 
+account; for example, if your username is ``yourname``, the repository
 would be at http://github.com/yourname/h5py.
 
 Then, clone your new copy of h5py to your local machine::
@@ -144,7 +146,7 @@ Push your topic branch back up to your GitHub clone::
 
     $ git push origin newfeature
 
-Then, `create a pull request <https://help.github.com/articles/creating-a-pull-request>`_ based on your topic branch. 
+Then, `create a pull request <https://help.github.com/articles/creating-a-pull-request>`_ based on your topic branch.
 
 
 Work with the maintainers
@@ -229,7 +231,7 @@ This is necessary because Cython will use a "generic" signature like
 ``method(*args, **kwds)`` when the file is compiled.  The h5py documentation
 system will extract the first line and use it as the signature.
 
-Next, we decide whether we want to add access to this function to the 
+Next, we decide whether we want to add access to this function to the
 high-level interface.  That means users of the top-level ``h5py.Dataset``
 object will be able to see how much space on disk their files use.  The
 high-level interface is implemented in the subpackage ``h5py._hl``, and
@@ -249,7 +251,7 @@ Finally (and don't skip this step), we write **unit tests** for this feature.
 Since the feature is ultimately exposed at the high-level interface, it's OK
 to write tests for the ``Dataset.storagesize`` property only.  Unit tests for
 the high-level interface are located in the "tests" subfolder, right near
-``dataset.py``.  
+``dataset.py``.
 
 It looks like the right file is ``test_dataset.py``. Unit tests are
 implemented as methods on custom ``unittest.UnitTest`` subclasses;
@@ -281,7 +283,7 @@ test every combination under the sun (different ranks, datasets with more
 than 2**32 elements, datasets with the string "kumquat" in the name...), but
 the basic, commonly encountered set of conditions.
 
-To build and test our changes, we have to do a few things.  First of all, 
+To build and test our changes, we have to do a few things.  First of all,
 run the file ``api_gen.py`` to re-generate the Cython wrappers from
 ``api_functions.txt``::
 
@@ -323,7 +325,7 @@ In the Cython code, these show up as "preprocessor" defines ``MPI`` and
         def set_mpi_atomicity(self, bint atomicity):
             """ (BOOL atomicity)
 
-            For MPI-IO driver, set to atomic (True), which guarantees sequential 
+            For MPI-IO driver, set to atomic (True), which guarantees sequential
             I/O semantics, or non-atomic (False), which improves  performance.
 
             Default is False.
@@ -334,5 +336,3 @@ In the Cython code, these show up as "preprocessor" defines ``MPI`` and
 
 High-level code can check the version of the HDF5 library, or check to see if
 the method is present on ``FileID`` objects.
-
-

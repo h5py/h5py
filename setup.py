@@ -2,7 +2,7 @@
 
 """
     This is the main setup script for h5py (http://www.h5py.org).
-    
+
     Most of the functionality is provided in two separate modules:
     setup_configure, which manages compile-time/Cython-time build options
     for h5py, and setup_build, which handles the actual compilation process.
@@ -22,9 +22,9 @@ import os.path as op
 import setup_build, setup_configure
 
 
-VERSION = '2.6.0'
+VERSION = '2.7.0rc3'
 
-NUMPY_DEP = 'numpy>=1.6.1'
+NUMPY_DEP = 'numpy>=1.7'
 
 # these are required to use h5py
 RUN_REQUIRES = [NUMPY_DEP, 'six']
@@ -34,6 +34,13 @@ RUN_REQUIRES = [NUMPY_DEP, 'six']
 # RUN_REQUIRES can be removed when setup.py test is removed
 SETUP_REQUIRES = RUN_REQUIRES + [NUMPY_DEP, 'Cython>=0.19', 'pkgconfig']
 
+# Needed to avoid trying to install numpy/cython on pythons which the latest
+# versions don't support
+if "sdist" in sys.argv and "bdist_wheel" not in sys.argv and "install" not in sys.argv:
+    use_setup_requires = False
+else:
+    use_setup_requires = True
+
 
 # --- Custom Distutils commands -----------------------------------------------
 
@@ -41,7 +48,7 @@ class test(Command):
 
     """
         Custom Distutils command to run the h5py test suite.
-    
+
         This command will invoke build/build_ext if the project has not
         already been built.  It then patches in the build directory to
         sys.path and runs the test suite directly.
@@ -71,7 +78,7 @@ class test(Command):
 
         buildobj = self.distribution.get_command_obj('build')
         buildobj.run()
-        
+
         oldpath = sys.path
         try:
             sys.path = [op.abspath(buildobj.build_lib)] + oldpath
@@ -81,8 +88,8 @@ class test(Command):
                 sys.exit(1)
         finally:
             sys.path = oldpath
-        
-        
+
+
 CMDCLASS = {'build_ext': setup_build.h5py_build_ext,
             'configure': setup_configure.configure,
             'test': test, }
@@ -97,7 +104,16 @@ Intended Audience :: Developers
 Intended Audience :: Information Technology
 Intended Audience :: Science/Research
 License :: OSI Approved :: BSD License
+Programming Language :: Cython
 Programming Language :: Python
+Programming Language :: Python :: 2
+Programming Language :: Python :: 2.6
+Programming Language :: Python :: 2.7
+Programming Language :: Python :: 3
+Programming Language :: Python :: 3.3
+Programming Language :: Python :: 3.4
+Programming Language :: Python :: 3.5
+Programming Language :: Python :: Implementation :: CPython
 Topic :: Scientific/Engineering
 Topic :: Database
 Topic :: Software Development :: Libraries :: Python Modules
@@ -145,6 +161,6 @@ setup(
   package_data = package_data,
   ext_modules = [Extension('h5py.x',['x.c'])],  # To trick build into running build_ext
   install_requires = RUN_REQUIRES,
-  setup_requires = SETUP_REQUIRES,
+  setup_requires = SETUP_REQUIRES if use_setup_requires else [],
   cmdclass = CMDCLASS,
 )

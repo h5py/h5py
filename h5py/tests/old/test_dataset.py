@@ -93,6 +93,7 @@ class TestCreateShape(BaseDataset):
         dset = self.f.create_dataset('foo', (63,), dtype=np.longdouble)
         self.assertEqual(dset.dtype, np.longdouble)
 
+    @ut.skipIf(not hasattr(np, "complex256"), "No support for complex256")
     def test_complex256(self):
         """ Confirm that the default dtype is float """
         dset = self.f.create_dataset('foo', (63,),

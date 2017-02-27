@@ -33,6 +33,17 @@ import h5py
 from h5py.highlevel import File, Group, SoftLink, HardLink, ExternalLink
 from h5py.highlevel import Dataset, Datatype
 from h5py import h5t
+from h5py._hl.compat import fsencode
+
+# If we can't encode unicode filenames, there's not much point failing tests
+# which must fail
+try:
+    fsencode(u"α")
+except UnicodeEncodeError:
+    NO_FS_UNICODE = True
+else:
+    NO_FS_UNICODE = False
+
 
 class BaseGroup(TestCase):
 
@@ -734,22 +745,24 @@ class TestExternalLinks(TestCase):
         f2.close()
         self.assertFalse(f2)
 
+    @ut.skipIf(NO_FS_UNICODE, "No unicode filename support")
     def test_unicode_encode(self):
         """
         Check that external links encode unicode filenames properly
         Testing issue #732
         """
-        ext_filename = os.path.join(mkdtemp(), "α.hdf5")
+        ext_filename = os.path.join(mkdtemp(), u"α.hdf5")
         with File(ext_filename, "w") as ext_file:
             ext_file.create_group('external')
         self.f['ext'] = ExternalLink(ext_filename, '/external')
 
+    @ut.skipIf(NO_FS_UNICODE, "No unicode filename support")
     def test_unicode_decode(self):
         """
         Check that external links decode unicode filenames properly
         Testing issue #732
         """
-        ext_filename = os.path.join(mkdtemp(), "α.hdf5")
+        ext_filename = os.path.join(mkdtemp(), u"α.hdf5")
         with File(ext_filename, "w") as ext_file:
             ext_file.create_group('external')
             ext_file["external"].attrs["ext_attr"] = "test"

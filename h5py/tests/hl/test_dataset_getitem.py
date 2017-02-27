@@ -395,6 +395,15 @@ class Test1DFloat(TestCase):
         
     def test_indexlist_simple(self):
         self.assertNumpyBehavior(self.dset, self.data, np.s_[[1,2,5]])
+
+    def test_indexlist_single_index_ellipsis(self):
+        self.assertNumpyBehavior(self.dset, self.data, np.s_[[0], ...])
+
+    def test_indexlist_numpyarray_single_index_ellipsis(self):
+        self.assertNumpyBehavior(self.dset, self.data, np.s_[np.array([0]), ...])
+
+    def test_indexlist_numpyarray_ellipsis(self):
+        self.assertNumpyBehavior(self.dset, self.data, np.s_[np.array([1, 2, 5]), ...])
         
     # Another UnboundLocalError
     @ut.expectedFailure
@@ -411,9 +420,6 @@ class Test1DFloat(TestCase):
         with self.assertRaises(TypeError):
             self.dset[[1,3,2]]
         
-    # This results in IOError as the argument is not properly validated.
-    # Suggest IndexError be raised.
-    @ut.expectedFailure
     def test_indexlist_repeated(self):
         """ we forbid repeated index values """
         with self.assertRaises(TypeError):

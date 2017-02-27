@@ -24,14 +24,17 @@ Or, use your package manager:
 * apt-get (Linux/Debian, including Ubuntu)
 * yum (Linux/Red Hat, including Fedora and CentOS)
 * Homebrew (OS X)
+* pacman (Arch linux)
 
+
+.. _source_install:
 
 Source installation on Linux and OS X
 -------------------------------------
 
 You need, via apt-get, yum or Homebrew:
 
-* Python 2.6, 2.7, 3.3, or 3.4 with development headers (``python-dev`` or similar)
+* Python 2.6, 2.7, 3.3, 3.4, or 3.5 with development headers (``python-dev`` or similar)
 * HDF5 1.8.4 or newer, shared library version with development headers (``libhdf5-dev`` or similar)
 * NumPy 1.6.1 or later
 
@@ -39,9 +42,21 @@ You need, via apt-get, yum or Homebrew:
 
     $ pip install h5py
 
-or, from a tarball::
+or, from a tarball or git :ref:`checkout <git_checkout>` ::
+
+    $ pip install -v .
+
+or ::
 
     $ python setup.py install
+
+If you are working on a development version and the underlying cython files change
+it may be necessary to force a full rebuild.  The easiest way to achieve this is ::
+
+  $ git clean -xfd
+
+from the top of your clone and then rebuilding.
+
 
 
 Source installation on Windows
@@ -63,8 +78,8 @@ setup.py.  Options may be given together or separately::
     $ python setup.py configure --hdf5=/path/to/hdf5
     $ python setup.py configure --hdf5-version=X.Y.Z
     $ python setup.py configure --mpi
-    
-Note the ``--hdf5-version`` option is generally not needed, as h5py 
+
+Note the ``--hdf5-version`` option is generally not needed, as h5py
 auto-detects the installed version of HDF5 (even for custom locations).
 
 Once set, build options apply to all future builds in the source directory.
@@ -78,7 +93,7 @@ when installing via ``pip``, as you don't have direct access to setup.py::
     $ HDF5_DIR=/path/to/hdf5 pip install h5py
     $ HDF5_VERSION=X.Y.Z pip install h5py
     $ CC="mpicc" HDF5_MPI="ON" HDF5_DIR=/path/to/parallel-hdf5 pip install h5py
-    
+
 Here's a list of all the configure options currently supported:
 
 ======================= =========================== ===========================
@@ -117,5 +132,3 @@ export ``HDF5_MPI="ON"`` beforehand::
     $ python setup.py build
 
 See also :ref:`parallel`.
-
-

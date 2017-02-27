@@ -1,0 +1,103 @@
+# from https://packaging.python.org/en/latest/appveyor/
+environment:
+  HDF5_VERSION: "1.8.17"
+  TOX_TESTENV_PASSENV: "HDF5_DIR"
+
+  matrix:
+
+    # For Python versions available on Appveyor, see
+    # http://www.appveyor.com/docs/installed-software#python
+    # The list here is complete (excluding Python 2.6, which
+    # isn't covered by this document) at the time of writing.
+
+    - PYTHON: "C:\\Python27"
+      TOXENV: "py27-test-deps"
+      TOXPYTHON: "%PYTHON%\\python.exe"
+      HDF5_VSVERSION: "9"
+      HDF5_DIR: "C:\\hdf5\\%HDF5_VERSION%\\%HDF5_VSVERSION%"
+
+    - PYTHON: "C:\\Python33"
+      TOXENV: "py33-test-deps"
+      TOXPYTHON: "%PYTHON%\\python.exe"
+      HDF5_VSVERSION: "10"
+      HDF5_DIR: "C:\\hdf5\\%HDF5_VERSION%\\%HDF5_VSVERSION%"
+
+    - PYTHON: "C:\\Python34"
+      TOXENV: "py34-test-deps"
+      TOXPYTHON: "%PYTHON%\\python.exe"
+      HDF5_VSVERSION: "10"
+      HDF5_DIR: "C:\\hdf5\\%HDF5_VERSION%\\%HDF5_VSVERSION%"
+
+    - PYTHON: "C:\\Python35"
+      TOXENV: "py35-test-deps"
+      TOXPYTHON: "%PYTHON%\\python.exe"
+      HDF5_VSVERSION: "14"
+      HDF5_DIR: "C:\\hdf5\\%HDF5_VERSION%\\%HDF5_VSVERSION%"
+
+    - PYTHON: "C:\\Python27-x64"
+      TOXENV: "py27-test-deps"
+      TOXPYTHON: "%PYTHON%\\python.exe"
+      HDF5_VSVERSION: "9-64"
+      HDF5_DIR: "C:\\hdf5\\%HDF5_VERSION%\\%HDF5_VSVERSION%"
+
+    - PYTHON: "C:\\Python33-x64"
+      TOXENV: "py33-test-deps"
+      TOXPYTHON: "%PYTHON%\\python.exe"
+      HDF5_VSVERSION: "10-64"
+      DISTUTILS_USE_SDK: "1"
+      HDF5_DIR: "C:\\hdf5\\%HDF5_VERSION%\\%HDF5_VSVERSION%"
+
+    - PYTHON: "C:\\Python34-x64"
+      TOXENV: "py34-test-deps"
+      TOXPYTHON: "%PYTHON%\\python.exe"
+      HDF5_VSVERSION: "10-64"
+      DISTUTILS_USE_SDK: "1"
+      HDF5_DIR: "C:\\hdf5\\%HDF5_VERSION%\\%HDF5_VSVERSION%"
+
+    - PYTHON: "C:\\Python35-x64"
+      TOXENV: "py35-test-deps"
+      TOXPYTHON: "%PYTHON%\\python.exe"
+      HDF5_VSVERSION: "14-64"
+      HDF5_DIR: "C:\\hdf5\\%HDF5_VERSION%\\%HDF5_VSVERSION%"
+
+install:
+  # We need wheel installed to build wheels
+  - "%PYTHON%\\python.exe -m pip install --upgrade wheel pip setuptools"
+  - "py -3.5 -m pip install --upgrade wheel pip setuptools"
+  - "py -3.5 -m pip install requests"
+  - "py -3.5 ci\\get_hdf5.py"
+  - "py -3.5 -m pip install tox"
+
+build: off
+
+test_script:
+  # Put your test command here.
+  # If you don't need to build C extensions on 64-bit Python 3.3 or 3.4,
+  # you can remove "build.cmd" from the front of the command, as it's
+  # only needed to support those cases.
+  # Note that you must use the environment variable %PYTHON% to refer to
+  # the interpreter you're using - Appveyor does not do anything special
+  # to put the Python evrsion you want to use on PATH.
+  - "ci\\appveyor\\build.cmd py -3.5 -m tox"
+
+# This is commented out as there's no easy way to deal with numpy dropping
+# older python versions without a recent pip/setuptools.
+#after_test:
+#  # This step builds your wheels.
+#  # Again, you only need build.cmd if you're building C extensions for
+#  # 64-bit Python 3.3/3.4. And you need to use %PYTHON% to get the correct
+#  # interpreter
+#  - "ci\\appveyor\\build.cmd %PYTHON%\\python.exe setup.py bdist_wheel"
+#
+#artifacts:
+#  # bdist_wheel puts your built wheel in the dist directory
+#  - path: dist\*
+
+cache:
+  - "%LOCALAPPDATA%\\pip\\Cache"
+  - "C:\\hdf5"
+
+#on_success:
+#  You can use this step to upload your artifacts to a public website.
+#  See Appveyor's documentation for more details. Or you can simply
+#  access your wheels from the Appveyor "artifacts" tab for your build.

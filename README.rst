@@ -1,5 +1,7 @@
 .. image:: https://travis-ci.org/h5py/h5py.png
    :target: https://travis-ci.org/h5py/h5py
+.. image:: https://ci.appveyor.com/api/projects/status/h3iajp4d1myotprc/branch/master?svg=true
+   :target: https://ci.appveyor.com/project/h5py/h5py/branch/master
 
 HDF5 for Python
 ===============

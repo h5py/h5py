@@ -16,6 +16,7 @@
 """
 
 # Pyrex compile-time imports
+include "config.pxi"
 from _objects cimport pdefault
 
 from numpy cimport dtype, ndarray
@@ -26,13 +27,17 @@ from utils cimport  emalloc, efree, \
 
 # Runtime imports
 import sys
+import operator
 from h5 import get_config
 import numpy as np
 from ._objects import phil, with_phil
+import platform
 
 cfg = get_config()
 
 PY3 = sys.version_info[0] == 3
+
+MACHINE = platform.machine()
 
 # === Custom C API ============================================================
 
@@ -174,6 +179,7 @@ NATIVE_INT64 = lockid(H5T_NATIVE_INT64)
 NATIVE_UINT64 = lockid(H5T_NATIVE_UINT64)
 NATIVE_FLOAT = lockid(H5T_NATIVE_FLOAT)
 NATIVE_DOUBLE = lockid(H5T_NATIVE_DOUBLE)
+NATIVE_LDOUBLE = lockid(H5T_NATIVE_LDOUBLE)
 
 # Unix time types
 UNIX_D32LE = lockid(H5T_UNIX_D32LE)
@@ -216,6 +222,11 @@ PYTHON_OBJECT = lockid(H5PY_OBJ)
 cdef dict _order_map = { H5T_ORDER_NONE: '|', H5T_ORDER_LE: '<', H5T_ORDER_BE: '>'}
 cdef dict _sign_map  = { H5T_SGN_NONE: 'u', H5T_SGN_2: 'i' }
 
+# Available floating point types
+available_ftypes = dict()
+for ftype in np.typeDict.values():
+    if np.issubdtype(ftype, float):
+        available_ftypes[np.dtype(ftype).itemsize] = np.finfo(ftype)
 
 # === General datatype operations =============================================
 
@@ -938,22 +949,52 @@ cdef class TypeFloatID(TypeAtomicID):
         """
         H5Tset_inpad(self.id, <H5T_pad_t>pad_code)
 
-
     cdef object py_dtype(self):
         # Translation function for floating-point types
-        size = self.get_size()                  # int giving number of bytes
+
+        if MACHINE == 'ppc64le':
+            size = self.get_size()                  # int giving number of bytes
+            order = _order_map[self.get_order()]    # string with '<' or '>'
+
+            if size == 2 and not hasattr(np, 'float16'):
+                # This build doesn't have float16; promote to float32
+                return dtype(order+"f4")
+
+            if size > 8:
+                # The native NumPy longdouble is used for 96 and 128-bit floats
+                return dtype(order + "f" + str(np.longdouble(1).dtype.itemsize))
+
+            return dtype( _order_map[self.get_order()] + "f" + \
+                          str(self.get_size()) )
+
         order = _order_map[self.get_order()]    # string with '<' or '>'
 
-        if size == 2 and not hasattr(np, 'float16'):
-            # This build doesn't have float16; promote to float32
-            return dtype(order+"f4")
+        s_offset, e_offset, e_size, m_offset, m_size = self.get_fields()
+        e_bias = self.get_ebias()
 
-        if size > 8:
-            # The native NumPy longdouble is used for 96 and 128-bit floats
-            return dtype(order + "f" + str(np.longdouble(1).dtype.itemsize))
-            
-        return dtype( _order_map[self.get_order()] + "f" + \
-                      str(self.get_size()) )
+        # Handle non-standard exponent and mantissa sizes.
+        for size, finfo in sorted(available_ftypes.items()):
+            nmant = finfo.nmant
+            maxexp = finfo.maxexp
+            minexp = finfo.minexp
+            # workaround for numpy's buggy finfo on float128 on ppc64 archs
+            if size == 16 and MACHINE.startswith('ppc64'):
+                nmant = 116
+                maxexp = 1024
+                minexp = -1022
+            elif nmant == 63 and finfo.nexp == 15:
+                # This is an 80-bit float, correct mantissa size
+                nmant += 1
+            if (m_size <= nmant and
+                (2**e_size - e_bias - 1) <= maxexp and (1 - e_bias) >= minexp):
+                break
+        else:
+            raise ValueError('Insufficient precision in available types to ' +
+                             'represent ' + str(self.get_fields()))
+
+
+
+        return dtype(order + "f" + str(size) )
 
 
 # === Composite types (enums and compound) ====================================
@@ -1005,7 +1046,6 @@ cdef class TypeCompositeID(TypeID):
         identified by a string name.
         """
         return H5Tget_member_index(self.id, name)
-
 
 cdef class TypeCompoundID(TypeCompositeID):
 
@@ -1106,7 +1146,17 @@ cdef class TypeCompoundID(TypeCompositeID):
         else:
             if sys.version[0] == '3':
                 field_names = [x.decode('utf8') for x in field_names]
-            typeobj = dtype({'names': field_names, 'formats': field_types, 'offsets': field_offsets})
+            if len(field_names) > 0:
+                collated_fields = zip(field_names, field_types, field_offsets)
+                ordered_fields = sorted(
+                    collated_fields, key=operator.itemgetter(2))
+                field_names, field_types, field_offsets = \
+                    map(list, zip(*ordered_fields))
+            typeobj = dtype({
+                'names': field_names,
+                'formats': field_types,
+                'offsets': field_offsets
+            })
 
         return typeobj
 
@@ -1394,10 +1444,13 @@ cdef TypeCompoundID _c_complex(dtype dt):
             tid_sub = H5T_NATIVE_DOUBLE
 
     elif length == 32:
-        size = h5py_size_n256
-        off_r = h5py_offset_n256_real
-        off_i = h5py_offset_n256_imag
-        tid_sub = H5T_NATIVE_LDOUBLE
+        IF COMPLEX256_SUPPORT:
+            size = h5py_size_n256
+            off_r = h5py_offset_n256_real
+            off_i = h5py_offset_n256_imag
+            tid_sub = H5T_NATIVE_LDOUBLE
+        ELSE:
+            raise TypeError("Illegal length %d for complex dtype" % length)
     else:
         raise TypeError("Illegal length %d for complex dtype" % length)
 
@@ -1407,27 +1460,61 @@ cdef TypeCompoundID _c_complex(dtype dt):
 
     return TypeCompoundID(tid)
 
-cdef TypeCompoundID _c_compound(dtype dt, int logical):
+cdef TypeCompoundID _c_compound(dtype dt, int logical, int aligned):
     # Compound datatypes
 
     cdef hid_t tid
     cdef TypeID type_tmp
     cdef dtype dt_tmp
     cdef size_t offset
+    cdef size_t offset_step = 0
 
-    cdef dict fields = dt.fields
     cdef tuple names = dt.names
+    cdef dict fields = {}
+    cdef list offsets
 
-    # Initial size MUST be 1 to avoid segfaults (issue 166)
-    tid = H5Tcreate(H5T_COMPOUND, 1)  
+    # The challenge with correctly converting a numpy/h5py dtype to a HDF5 type
+    # which is composed of subtypes has three aspects we must consider
+    # 1. numpy/h5py dtypes do not always have the same size and HDF5, even when
+    #   equivalent (can result in overlapping elements if not careful)
+    # 2. For correct round-tripping of aligned dtypes, we need to consider how
+    #   much padding we need
+    # 3. There is no requirement that the offsets be monotonically increasing
+    #
+    # The code below tries to cover these aspects
 
-    for name in names:
-        ename = name.encode('utf8') if isinstance(name, unicode) else name
-        dt_tmp = dt.fields[name][0]
-        offset = dt.fields[name][1]
-        type_tmp = py_create(dt_tmp, logical=logical)
-        H5Tset_size(tid, offset+type_tmp.get_size())
-        H5Tinsert(tid, ename, offset, type_tmp.id)
+    for name, field in dt.fields.items():
+        dt_tmp = field[0]
+        offset = field[1]
+        fields[offset] = {
+            "name": name.encode('utf8') if isinstance(name, unicode) else name,
+            "dtype": dtype(dt_tmp),
+            "size": py_create(dt_tmp, logical=logical).get_size(),
+        }
+
+    offsets = list(sorted(fields))
+    # Set initial size to itemsize or last offset plus itemsize, whichever is
+    # bigger
+    tid = H5Tcreate(H5T_COMPOUND,
+        max(dt.itemsize, offsets[-1] + fields[offsets[-1]]["size"])
+    )
+
+    for i, offset in enumerate(offsets):
+        dt_tmp = fields[offset]["dtype"]
+        type_tmp = py_create(dt_tmp, logical=logical, aligned=aligned)
+        if aligned and type_tmp.get_size() > dt_tmp.itemsize:
+            raise TypeError("Enforced alignment not compatible with HDF5 type")
+        # Increase size if initial too small, which can happen if there are out
+        # of order fields (as determined by offsets)
+        if H5Tget_size(tid) < (offset + offset_step + type_tmp.get_size()):
+            H5Tset_size(tid, offset + offset_step + type_tmp.get_size())
+        H5Tinsert(tid, fields[offset]["name"], offset + offset_step, type_tmp.id)
+
+        if (i + 1 < len(offsets)) and fields[offset]["size"] > offsets[i + 1]:
+            if aligned:
+                raise TypeError("dtype results in overlapping fields")
+            else:
+                offset_step += fields[offset]["size"] - offsets[i + 1]
 
     return TypeCompoundID(tid)
 
@@ -1453,7 +1540,7 @@ cdef TypeReferenceID _c_ref(object refclass):
     raise TypeError("Unrecognized reference code")
 
 
-cpdef TypeID py_create(object dtype_in, bint logical=0):
+cpdef TypeID py_create(object dtype_in, bint logical=0, bint aligned=0):
     """(OBJECT dtype_in, BOOL logical=False) => TypeID
 
     Given a Numpy dtype object, generate a byte-for-byte memory-compatible
@@ -1472,6 +1559,8 @@ cpdef TypeID py_create(object dtype_in, bint logical=0):
     """
     cdef dtype dt = dtype(dtype_in)
     cdef char kind = dt.kind
+
+    aligned = getattr(dtype_in, "isalignedstruct", aligned)
 
     with phil:
         # Float
@@ -1495,7 +1584,7 @@ cpdef TypeID py_create(object dtype_in, bint logical=0):
 
         # Compound
         elif kind == c'V' and dt.names is not None:
-            return _c_compound(dt, logical)
+            return _c_compound(dt, logical, aligned)
 
         # Array or opaque
         elif kind == c'V':
