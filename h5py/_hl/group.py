@@ -27,7 +27,7 @@ from . import base
 from .base import HLObject, MutableMappingHDF5, phil, with_phil
 from . import dataset
 from . import datatype
-if sys.version_info.major < 3:
+if sys.version_info[0] < 3:
     from types import EllipsisType
 else:
     EllipisisType=type(Ellipsis)
