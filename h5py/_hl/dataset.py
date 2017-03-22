@@ -697,16 +697,16 @@ class Dataset(HLObject):
     @with_phil
     def __repr__(self):
         if not self:
-            r = six.u('<Closed HDF5 dataset>')
+            r = u'<Closed HDF5 dataset>'
         else:
             if self.name is None:
-                namestr = six.u('("anonymous")')
+                namestr = u'("anonymous")'
             else:
                 name = pp.basename(pp.normpath(self.name))
-                namestr = six.u('"%s"') % (
-                    name if name != six.u('') else six.u('/'))
-            r = six.u('<HDF5 dataset %s: shape %s, type "%s">') % \
-                (namestr, self.shape, self.dtype.str)
+                namestr = u'"%s"' % (name if name != u'' else u'/')
+            r = u'<HDF5 dataset %s: shape %s, type "%s">' % (
+                namestr, self.shape, self.dtype.str
+            )
         if six.PY2:
             return r.encode('utf8')
         return r

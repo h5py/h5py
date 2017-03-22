@@ -16,9 +16,7 @@ from __future__ import absolute_import
 import sys
 import os
 
-from .compat import fspath
-from .compat import fsencode
-from .compat import fsdecode
+from .compat import filename_decode, filename_encode
 
 import six
 
@@ -158,7 +156,7 @@ class File(Group):
     @with_phil
     def filename(self):
         """File name on disk"""
-        return fsdecode(h5f.get_name(self.fid))
+        return filename_decode(h5f.get_name(self.fid))
 
     @property
     @with_phil
@@ -265,7 +263,7 @@ class File(Group):
             if isinstance(name, _objects.ObjectID):
                 fid = h5i.get_file_id(name)
             else:
-                name = fsencode(fspath(name))
+                name = filename_encode(name)
 
                 fapl = make_fapl(driver, libver, **kwds)
                 fid = make_fid(name, mode, userblock_size, fapl, swmr=swmr)
@@ -319,14 +317,14 @@ class File(Group):
     @with_phil
     def __repr__(self):
         if not self.id:
-            r = six.u('<Closed HDF5 file>')
+            r = u'<Closed HDF5 file>'
         else:
             # Filename has to be forced to Unicode if it comes back bytes
             # Mode is always a "native" string
             filename = self.filename
             if isinstance(filename, bytes):  # Can't decode fname
                 filename = filename.decode('utf8', 'replace')
-            r = six.u('<HDF5 file "%s" (mode %s)>') % (os.path.basename(filename),
+            r = u'<HDF5 file "%s" (mode %s)>' % (os.path.basename(filename),
                                                  self.mode)
 
         if six.PY2:

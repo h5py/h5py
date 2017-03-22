@@ -33,12 +33,12 @@ import h5py
 from h5py.highlevel import File, Group, SoftLink, HardLink, ExternalLink
 from h5py.highlevel import Dataset, Datatype
 from h5py import h5t
-from h5py._hl.compat import fsencode
+from h5py._hl.compat import filename_encode
 
 # If we can't encode unicode filenames, there's not much point failing tests
 # which must fail
 try:
-    fsencode(u"α")
+    filename_encode(u"α")
 except UnicodeEncodeError:
     NO_FS_UNICODE = True
 else:
@@ -91,7 +91,7 @@ class TestCreate(BaseGroup):
 
     def test_unicode(self):
         """ Unicode names are correctly stored """
-        name = six.u("/Name") + six.unichr(0x4500)
+        name = u"/Name" + six.unichr(0x4500)
         group = self.f.create_group(name)
         self.assertEqual(group.name, name)
         self.assertEqual(group.id.links.get_info(name.encode('utf8')).cset, h5t.CSET_UTF8)
@@ -99,7 +99,7 @@ class TestCreate(BaseGroup):
     def test_unicode_default(self):
         """ Unicode names convertible to ASCII are stored as ASCII (issue 239)
         """
-        name = six.u("/Hello, this is a name")
+        name = u"/Hello, this is a name"
         group = self.f.create_group(name)
         self.assertEqual(group.name, name)
         self.assertEqual(group.id.links.get_info(name.encode('utf8')).cset, h5t.CSET_ASCII)
@@ -311,33 +311,33 @@ class TestContains(BaseGroup):
         """ "in" builtin works for containership (byte and Unicode) """
         self.f.create_group('a')
         self.assertIn(b'a', self.f)
-        self.assertIn(six.u('a'), self.f)
+        self.assertIn(u'a', self.f)
         self.assertIn(b'/a', self.f)
-        self.assertIn(six.u('/a'), self.f)
+        self.assertIn(u'/a', self.f)
         self.assertNotIn(b'mongoose', self.f)
-        self.assertNotIn(six.u('mongoose'), self.f)
+        self.assertNotIn(u'mongoose', self.f)
 
     def test_exc(self):
         """ "in" on closed group returns False (see also issue 174) """
         self.f.create_group('a')
         self.f.close()
         self.assertFalse(b'a' in self.f)
-        self.assertFalse(six.u('a') in self.f)
+        self.assertFalse(u'a' in self.f)
 
     def test_empty(self):
         """ Empty strings work properly and aren't contained """
-        self.assertNotIn(six.u(''), self.f)
+        self.assertNotIn(u'', self.f)
         self.assertNotIn(b'', self.f)
 
     def test_dot(self):
         """ Current group "." is always contained """
         self.assertIn(b'.', self.f)
-        self.assertIn(six.u('.'), self.f)
+        self.assertIn(u'.', self.f)
 
     def test_root(self):
         """ Root group (by itself) is contained """
         self.assertIn(b'/', self.f)
-        self.assertIn(six.u('/'), self.f)
+        self.assertIn(u'/', self.f)
 
     def test_trailing_slash(self):
         """ Trailing slashes are unconditionally ignored """
