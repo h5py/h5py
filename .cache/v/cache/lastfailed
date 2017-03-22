@@ -1,0 +1,16 @@
+{
+  "h5py/tests/hl/test_attribute_create.py": true, 
+  "h5py/tests/hl/test_dataset_getitem.py": true, 
+  "h5py/tests/hl/test_dataset_swmr.py": true, 
+  "h5py/tests/hl/test_datatype.py": true, 
+  "h5py/tests/hl/test_dims_dimensionproxy.py": true, 
+  "h5py/tests/hl/test_file.py": true, 
+  "h5py/tests/hl/test_threads.py": true, 
+  "h5py/tests/hl/vds_tests/test_eiger_high_level.py": true, 
+  "h5py/tests/hl/vds_tests/test_eiger_low_level.py": true, 
+  "h5py/tests/hl/vds_tests/test_excalibur_high_level.py": true, 
+  "h5py/tests/hl/vds_tests/test_excalibur_low_level.py": true, 
+  "h5py/tests/hl/vds_tests/test_percival_high_level.py": true, 
+  "h5py/tests/hl/vds_tests/test_percival_low_level.py": true, 
+  "h5py/tests/hl/vds_tests/test_virtual_source.py": true
+}

@@ -18,12 +18,16 @@ import six
 import numpy
 
 from .compat import filename_decode, filename_encode
+from copy import deepcopy as copy
 
-from .. import h5g, h5i, h5o, h5r, h5t, h5l, h5p
+
+from .. import h5g, h5i, h5o, h5r, h5t, h5l, h5p, h5s, h5d
 from . import base
 from .base import HLObject, MutableMappingHDF5, phil, with_phil
 from . import dataset
 from . import datatype
+# from . import files
+# # from .files import File
 
 
 class Group(HLObject, MutableMappingHDF5):
@@ -108,6 +112,32 @@ class Group(HLObject, MutableMappingHDF5):
             if name is not None:
                 self[name] = dset
             return dset
+
+    def create_virtual_dataset(self,VMlist=[], fill_value=0x1):
+        '''
+        Creates the virtual dataset from a list of virtual maps
+        '''
+        if type(VMlist) is not type([]):
+            VMlist = [VMlist]
+        
+        if len(VMlist)<1:
+            print "you have not given me any VirtualMaps!"
+            return 0
+            
+        with phil:
+            dcpl = h5p.create(h5p.DATASET_CREATE)
+            dcpl.set_fill_value(numpy.array([fill_value]))
+            sh = VMlist[0].target.shape
+            virt_dspace = h5s.create_simple(sh) # create the virtual dataspace
+            for VM in VMlist:
+                virt_start_idx = tuple([0 if ix.start is None else ix.start for ix in VM.target.get_slice_list()])
+                virt_stride_index = tuple([1 if ix.step is None else ix.step for ix in VM.target.get_slice_list()])
+                virt_dspace.select_hyperslab(start=virt_start_idx, count=virt_stride_index,
+                                        block=VM.get_block_shape())
+                dcpl.set_virtual(virt_dspace, VM.src.get_path(), VM.src.get_key(), VM.get_src_dpsace())
+            dset = h5d.create(self.id, name=VM.target.get_key(), tid=h5t.py_create(VM.dtype,logical=1), space=virt_dspace, dcpl=dcpl)
+            return dset
+
 
     def require_dataset(self, name, shape, dtype, exact=False, **kwds):
         """ Open a dataset, creating it if it doesn't exist.
@@ -530,3 +560,94 @@ class ExternalLink(object):
 
     def __repr__(self):
         return '<ExternalLink to "%s" in file "%s"' % (self.path, self.filename)
+
+
+class DatasetContainer(object):
+    def __init__(self, path, key,shape,dtype=None):
+        '''
+        This is an object that looks like a dataset, but it not. It allows the user to specify the maps based on lazy indexing, 
+        which is natural, but without needing to load the data. If we can specify the shape, it's faster, if not, it gets pull from the actual source data.
+        '''
+        self.path = path
+        self.key = key
+        self.shape = shape
+        self.slice_list = [slice(None, None, None)] * len(self.shape)
+        
+        
+    def get_path(self):
+        return self.path
+    
+    def get_key(self):
+        return self.key
+    
+    def __getitem__(self, val):
+        if type(val) is not type(()):# make sure it's always a tuple
+            val = (val,)
+        self.slice_list = list(val) + [slice(None, None, None)]*(len(self.shape)-len(val)) # generate the right slice
+        return copy(self)
+
+    @property
+    def block_shape(self): # block shape is the size of the "SLICED dataset
+        outshape = ()
+        for i in range(len(self.shape)):
+            sanitized = self.get_slice_list()[i].indices(self.shape[i])
+            outshape += tuple([(sanitized[1]-sanitized[0])/sanitized[2]])
+        return outshape
+
+    def get_slice_list(self):
+        return self.slice_list
+    
+    def set_block_shape(self,shape):
+        self.the_block_shape = shape
+    
+    
+class VirtualSource(DatasetContainer):
+    '''
+    Virtual source and VirtualTarget are just easy identifiers for the user. They do the same thing.
+    '''
+    pass
+
+class VirtualTarget(DatasetContainer):
+    '''
+    Virtual source and VirtualTarget are just easy identifiers for the user. They do the same thing.
+    '''
+    pass
+
+
+class VirtualMap(object):
+    '''
+    The idea of this class is to specify the mapping between the source and target.
+    This is slow unless you specify the dtype. Otherwise it tries to go checkout the type in the file.
+    '''
+        
+    def __init__(self, virtual_source, virtual_target, dtype):
+        self.src = virtual_source
+        self.dtype = dtype
+        self.target = virtual_target
+        self.create_src_dpsace()
+
+    def get_block_shape(self):
+        '''
+        the two could be different ranks causing a rank deficiency in the map
+        '''
+        rank_def = len(self.target.shape) - len(self.src.shape)
+        return (1,)*rank_def + self.src.shape
+
+    def create_src_dpsace(self):
+        '''
+        define the src dataspace
+        '''
+        self.src_dspace = h5s.create_simple(self.src.shape)
+#         print self.src.get_slice_list()
+        # if the slice is None then we must want to take the first position
+        start_idx = tuple([0 if ix.start is None else ix.start for ix in self.src.get_slice_list()])
+        # if the count idx is None then we must want all the elements
+        count_idx = tuple([1 if ix.step is None else ix.step for ix in self.src.get_slice_list()])
+#         print count_idx
+        self.src_dspace.select_hyperslab(start=start_idx, count=count_idx, block=self.src.shape)
+    
+    def get_src_dpsace(self):
+        '''
+        get the source data space
+        '''
+        return self.src_dspace
