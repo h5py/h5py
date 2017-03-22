@@ -16,6 +16,7 @@ from __future__ import absolute_import
 import posixpath as pp
 import six
 import numpy
+import sys
 from copy import deepcopy as copy
 from .compat import fsdecode
 from .compat import fsencode
@@ -26,7 +27,11 @@ from . import base
 from .base import HLObject, MutableMappingHDF5, phil, with_phil
 from . import dataset
 from . import datatype
-from types import EllipsisType
+if sys.version_info.major < 3:
+    from types import EllipsisType
+else:
+    EllipisisType=type(Ellipsis)
+
 # from . import files
 # # from .files import File
 
