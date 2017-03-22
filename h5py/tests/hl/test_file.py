@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 # This file is part of h5py, a Python interface to the HDF5 library.
 #
 # http://www.h5py.org
@@ -67,3 +69,29 @@ class TestDealloc(TestCase):
         
         self.assertEqual(nfiles(), start_nfiles)
         self.assertEqual(ngroups(), start_ngroups)
+        
+    def test_fileencoding(self):
+        """Test file encoding with non ASCII characters
+        (See issue #818 with Python 3.6 and PEP529 on Windows)"""
+        from tempfile import mkdtemp
+        import os
+
+        tmpdir = mkdtemp()
+        in_filename = u'test_é.h5'
+        in_filepath = os.path.join(tmpdir, in_filename)
+        
+        # Write Test
+        # bad filename in dir if encoding error
+        f = h5py.File(in_filepath, 'w')
+        f.close()
+        out_filename = os.listdir(tmpdir)[0]
+        self.assertEqual(in_filename, out_filename)  
+        
+        # Use the same file with correct filename for read test
+        if in_filename != out_filename:
+            os.rename(os.path.join(tmpdir, out_filename), in_filepath)
+
+        # Read Test : 
+        # Raise Exception if encoding error
+        f = h5py.File(in_filepath, 'r')
+        f.close()
