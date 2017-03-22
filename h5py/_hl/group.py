@@ -21,7 +21,6 @@ from .compat import fsdecode
 from .compat import fsencode
 from .compat import fspath
 
-from .compat import filename_decode, filename_encode
 import sys
 from copy import deepcopy as copy
 
