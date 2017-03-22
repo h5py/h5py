@@ -15,10 +15,16 @@ from __future__ import absolute_import
 import posixpath as pp
 import six
 import numpy
+import sys
+from copy import deepcopy as copy
+from .compat import fsdecode
+from .compat import fsencode
+from .compat import fspath
 
 from .compat import filename_decode, filename_encode
 import sys
 from copy import deepcopy as copy
+
 from .. import h5g, h5i, h5o, h5r, h5t, h5l, h5p, h5s, h5d
 from . import base
 from .base import HLObject, MutableMappingHDF5, phil, with_phil
