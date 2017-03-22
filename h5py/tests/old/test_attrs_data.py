@@ -178,9 +178,9 @@ class TestTypes(BaseAttrs):
     def test_unicode_scalar(self):
         """ Storage of variable-length unicode strings (auto-creation) """
 
-        self.f.attrs['x'] = six.u("Hello") + six.unichr(0x2340) + six.u("!!")
+        self.f.attrs['x'] = u"Hello" + six.unichr(0x2340) + u"!!"
         out = self.f.attrs['x']
-        self.assertEqual(out, six.u("Hello") + six.unichr(0x2340) + six.u("!!"))
+        self.assertEqual(out, u"Hello" + six.unichr(0x2340) + u"!!")
         self.assertEqual(type(out), six.text_type)
 
         aid = h5py.h5a.open(self.f.id, b"x")
@@ -223,7 +223,7 @@ class TestEmpty(BaseAttrs):
     def test_items(self):
         items = list(self.f.attrs.items())
         self.assertEqual(
-            [(six.u("x"), self.empty_obj)], items
+            [(u"x", self.empty_obj)], items
         )
 
     def test_itervalues(self):
@@ -235,7 +235,7 @@ class TestEmpty(BaseAttrs):
     def test_iteritems(self):
         items = list(six.iteritems(self.f.attrs))
         self.assertEqual(
-            [(six.u("x"), self.empty_obj)], items
+            [(u"x", self.empty_obj)], items
         )
 
 
