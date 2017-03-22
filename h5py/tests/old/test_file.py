@@ -401,13 +401,13 @@ class TestContextManager(TestCase):
             self.assertTrue(fid)
         self.assertTrue(not fid)
 
-@ut.skipIf(not unicode_filenames, "Filesystem unicode support required")
 class TestUnicode(TestCase):
 
     """
         Feature: Unicode filenames are supported
     """
 
+    @ut.skipIf(not unicode_filenames, "Filesystem unicode support required")
     def test_unicode(self):
         """ Unicode filenames can be used, and retrieved properly via .filename
         """
@@ -418,14 +418,6 @@ class TestUnicode(TestCase):
             self.assertIsInstance(fid.filename, six.text_type)
         finally:
             fid.close()
-
-    def test_unicode_hdf5_python_consistent(self):
-        """ Unicode filenames can be used, and seen correctly from python
-        """
-        fname = self.mktemp(prefix = six.unichr(0x201a))
-        with File(fname, 'w') as f:
-            self.assertTrue(os.path.exists(fname))
-
 
 class TestFileProperty(TestCase):
 
