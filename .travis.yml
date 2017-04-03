@@ -44,6 +44,7 @@ env:
     TOX_TESTENV_PASSENV=LANG LC_ALL
     LANG=C
     LC_ALL=C
+  - TOXENV=docs
 
 matrix:
   include:
