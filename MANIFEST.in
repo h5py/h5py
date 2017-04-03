@@ -1,19 +1,32 @@
-recursive-include h5py *.h *.pyx *.pxd *.pxi *.py *.txt
-exclude h5py/defs.pyx
-exclude h5py/defs.pxd
-exclude h5py/config.pxi
-recursive-include examples *.py
-recursive-include lzf *
-recursive-include windows *
-recursive-include licenses *
-include MANIFEST.in
+include ANN.rst
 include api_gen.py
+include MANIFEST.in
+include pylintrc
+include README.rst
 include setup_build.py
 include setup_configure.py
-include ANN.rst
-include README.rst
+include tox.ini
+
 recursive-include docs *
 prune docs/_build
 recursive-include docs_api *
 prune docs_api/_build
+recursive-include examples *.py
+
+recursive-include h5py *.h *.pyx *.pxd *.pxi *.py *.txt
+exclude h5py/config.pxi
+exclude h5py/defs.pxd
+exclude h5py/defs.pyx
+
+recursive-include licenses *
+recursive-include lzf *
+recursive-include windows *
+
 recursive-exclude * .DS_Store
+
+exclude ci other .github
+recursive-exclude ci *
+recursive-exclude other *
+recursive-exclude .github *
+exclude pavement.py
+exclude *.yml
