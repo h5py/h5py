@@ -3,44 +3,89 @@
 Installation
 ============
 
-Pre-configured installation (recommended)
+It is highly recommended that you use a pre-built version of h5py, either from a
+Python Distribution, an OS-specific package manager, or a pre-built wheel from
+PyPI.
+
+Be aware however that most pre-built versions lack MPI support, and that they
+are built against a specific version of HDF5. If you require MPI support, or
+newer HDF5 features, you will need to build from source.
+
+After installing h5py, you should run the tests to be sure that everything was
+installed correctly. This can be done in the python interpreter via::
+
+    import h5py
+    h5py.run_tests()
+
+On Python 2.6, unittest2 must be installed to run the tests.
+
+Pre-built installation (recommended)
 -----------------------------------------
 
-It's strongly recommended that you use a Python distribution or package
-manager to install h5py along with its compiled dependencies.  Here are some
-which are popular in the Python community:
+Pre-build h5py can be installed via many Python Distributions, OS-specific
+package managers, or via h5py wheels.
 
-* `Anaconda <http://continuum.io/downloads>`_ or `Miniconda <http://conda.pydata.org/miniconda.html>`_ (Mac, Windows, Linux)
-* `Enthought Canopy <https://www.enthought.com/products/canopy/>`_ (Mac, Windows, Linux)
-* `PythonXY <https://code.google.com/p/pythonxy/>`_ (Windows)
+Python Distributions
+....................
+If you do not already use a Python Distribution, we recommend either
+`Anaconda <http://continuum.io/downloads>`_/`Miniconda <http://conda.pydata.org/miniconda.html>`_
+or
+`Enthought Canopy <https://www.enthought.com/products/canopy/>`_, both of which
+support most versions of Microsoft Windows, OSX/MacOS, and a variety of Linux
+Distributions. Installation of h5py can be done on the command line via::
 
-::
+    $ conda install h5py
 
-    conda install h5py  # Anaconda/Miniconda
-    enpkg h5py          # Canopy
+for Anaconda/MiniConda, and via::
 
-Or, use your package manager:
+    $ enpkg h5py
 
-* apt-get (Linux/Debian, including Ubuntu)
-* yum (Linux/Red Hat, including Fedora and CentOS)
-* Homebrew (OS X)
-* pacman (Arch linux)
+for Canopy.
+
+Wheels
+......
+If you have an existing Python installation (e.g. a python.org download,
+or one that comes with your OS), then on Windows, MacOS/OSX, and
+Linux on Intel computers, pre-built h5py wheels can be installed via pip from
+PyPI::
+
+    $ pip install h5py
+
+Additionally, for Windows users, `Chris Gohlke provides third-party wheels
+which use Intel's MKL <http://www.lfd.uci.edu/~gohlke/pythonlibs/>`_.
+
+OS-Specific Package Managers
+............................
+On OSX/MacOS, h5py can be installed via `Homebrew <https://brew.sh/>`_,
+`Macports <https://www.macports.org/>`_, or `Fink <http://finkproject.org/>`_.
+
+The current state of h5py in various Linux Distributions can be seen at
+https://pkgs.org/download/python-h5py, and can be installed via the package
+manager.
+
+As far as the h5py developers know, none of the Windows package managers (e.g.
+`Chocolatey <https://chocolatey.org/>`_, `nuget <https://www.nuget.org/>`_)
+have h5py included, however they may assist in installing h5py's requirements
+when building from source.
 
 
 .. _source_install:
 
-Source installation on Linux and OS X
--------------------------------------
+Source installation
+-------------------
+To install h5py from source, you need three things installed:
+* A supported Python version with development headers
+* HDF5 1.8.4 or newer with development headers
+* A C compiler
+OS-specific instructions for installing HDF5, Python and a C compiler are in the next few
+sections.
 
-You need, via apt-get, yum or Homebrew:
+Additional Python-level requirements should be installed automatically (which
+will require an internet connection).
 
-* Python 2.6, 2.7, 3.3, 3.4, or 3.5 with development headers (``python-dev`` or similar)
-* HDF5 1.8.4 or newer, shared library version with development headers (``libhdf5-dev`` or similar)
-* NumPy 1.6.1 or later
+The actual installation of h5py should be done via::
 
-::
-
-    $ pip install h5py
+    $ pip install --no-binary=h5py h5py
 
 or, from a tarball or git :ref:`checkout <git_checkout>` ::
 
@@ -53,24 +98,50 @@ or ::
 If you are working on a development version and the underlying cython files change
 it may be necessary to force a full rebuild.  The easiest way to achieve this is ::
 
-  $ git clean -xfd
+    $ git clean -xfd
 
 from the top of your clone and then rebuilding.
 
+Source installation on OSX/MacOS
+................................
+HDF5 and Python are most likely in your package manager (e.g. `Homebrew <https://brew.sh/>`_,
+`Macports <https://www.macports.org/>`_, or `Fink <http://finkproject.org/>`_).
+Be sure to install the development headers, as sometimes they are not included
+in the main package.
 
+XCode comes with a C compiler (clang), and your package manager will likely have
+other C compilers for you to install.
+
+Source installation on Linux/Other Unix
+.......................................
+HDF5 and Python are most likely in your package manager. A C compiler almost
+definitely is, usually there is some kind of metapackage to install the
+default build tools, e.g. `build-essential`, which should be sufficient for our
+needs. Make sure that that you have the development headers, as they are
+usually not installed by default. They can usually be found in ``python-dev`` or
+similar and ``libhdf5-dev`` or similar.
 
 Source installation on Windows
-------------------------------
+..............................
+Installing from source on Windows is a much more difficult prospect than
+installing from source on other OSs, as not only are you likely to need to
+compile HDF5 from source, everything must be built with the correct version of
+Visual Studio. Additional patches are also needed to HDF5 to get HDF5 and Python
+to work together.
 
-Installing from source on Windows is effectively impossible because of the C
-library dependencies involved.
-
-If you don't want to use Anaconda, Canopy, or PythonXY, download
-a `third-party wheel from Chris Gohlke's excellent collection <http://www.lfd.uci.edu/~gohlke/pythonlibs/>`_.
+We recommend examining the appveyor build scripts, and using those to build and
+install HDF5 and h5py.
 
 
 Custom installation
 -------------------
+.. important:: Remember that pip installs wheels by default.
+    To perform a custom installation with pip, you should use::
+
+        $ pip install --no-binary=h5py h5py
+
+    or build from a git checkout or downloaded tarball to avoid getting
+    a pre-built version of h5py.
 
 You can specify build options for h5py with the ``configure`` option to
 setup.py.  Options may be given together or separately::
@@ -90,9 +161,9 @@ You can reset to the defaults with the ``--reset`` option::
 You can also configure h5py using environment variables.  This is handy
 when installing via ``pip``, as you don't have direct access to setup.py::
 
-    $ HDF5_DIR=/path/to/hdf5 pip install h5py
-    $ HDF5_VERSION=X.Y.Z pip install h5py
-    $ CC="mpicc" HDF5_MPI="ON" HDF5_DIR=/path/to/parallel-hdf5 pip install h5py
+    $ HDF5_DIR=/path/to/hdf5 pip install --no-binary=h5py h5py
+    $ HDF5_VERSION=X.Y.Z pip install --no-binary=h5py h5py
+    $ CC="mpicc" HDF5_MPI="ON" HDF5_DIR=/path/to/parallel-hdf5 pip install --no-binary=h5py h5py
 
 Here's a list of all the configure options currently supported:
 
@@ -112,7 +183,7 @@ If you just want to build with ``mpicc``, and don't care about using Parallel
 HDF5 features in h5py itself::
 
     $ export CC=mpicc
-    $ python setup.py install
+    $ pip install --no-binary=h5py h5py
 
 If you want access to the full Parallel HDF5 feature set in h5py
 (:ref:`parallel`), you will further have to build in MPI mode.  This can either
@@ -128,7 +199,6 @@ export ``HDF5_MPI="ON"`` beforehand::
 
     $ export CC=mpicc
     $ export HDF5_MPI="ON"
-    $ python setup.py configure
-    $ python setup.py build
+    $ pip install --no-binary=h5py h5py
 
 See also :ref:`parallel`.
