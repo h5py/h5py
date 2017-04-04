@@ -144,13 +144,13 @@ class File(Group):
     """
 
     @property
-    @with_phil
     def attrs(self):
         """ Attributes attached to this object """
         # hdf5 complains that a file identifier is an invalid location for an
         # attribute. Instead of self, pass the root group to AttributeManager:
         from . import attrs
-        return attrs.AttributeManager(self['/'])
+        with phil:
+            return attrs.AttributeManager(self['/'])
 
     @property
     @with_phil
