@@ -22,7 +22,7 @@ import numpy
 # needed for our use case
 _H5PY_VERSION_CLS = namedtuple("_H5PY_VERSION_CLS", "major minor bugfix pre post dev")
 
-version_tuple = _H5PY_VERSION_CLS(2, 7, 0, None, 0, None)
+version_tuple = _H5PY_VERSION_CLS(2, 7, 0, "rc3", None, None)
 
 version = "{0.major:d}.{0.minor:d}.{0.bugfix:d}".format(version_tuple)
 if version_tuple.pre is not None:
