@@ -230,7 +230,7 @@ class Group(HLObject, MutableMappingHDF5):
                         return SoftLink
                     linkbytes = self.id.links.get_val(self._e(name))
                     return SoftLink(self._d(linkbytes))
-                    
+
                 elif typecode == h5l.TYPE_EXTERNAL:
                     if getclass:
                         return ExternalLink
@@ -238,14 +238,13 @@ class Group(HLObject, MutableMappingHDF5):
                     return ExternalLink(
                         filename_decode(filebytes), self._d(linkbytes)
                     )
-                    
+
                 elif typecode == h5l.TYPE_HARD:
                     return HardLink if getclass else HardLink()
-                    
+
                 else:
                     raise TypeError("Unknown link type")
 
-    @with_phil
     def __setitem__(self, name, obj):
         """ Add an object to the group.  The name must not already be in use.
 
@@ -270,26 +269,33 @@ class Group(HLObject, MutableMappingHDF5):
             values are stored as scalar datasets. Raise ValueError if we
             can't understand the resulting array dtype.
         """
-        name, lcpl = self._e(name, lcpl=True)
+        do_link = False
+        with phil:
+            name, lcpl = self._e(name, lcpl=True)
 
-        if isinstance(obj, HLObject):
-            h5o.link(obj.id, self.id, name, lcpl=lcpl, lapl=self._lapl)
+            if isinstance(obj, HLObject):
+                h5o.link(obj.id, self.id, name, lcpl=lcpl, lapl=self._lapl)
 
-        elif isinstance(obj, SoftLink):
-            self.id.links.create_soft(name, self._e(obj.path),
-                          lcpl=lcpl, lapl=self._lapl)
+            elif isinstance(obj, SoftLink):
+                self.id.links.create_soft(name, self._e(obj.path),
+                              lcpl=lcpl, lapl=self._lapl)
 
-        elif isinstance(obj, ExternalLink):
-            self.id.links.create_external(name, filename_encode(obj.filename),
-                          self._e(obj.path), lcpl=lcpl, lapl=self._lapl)
+            elif isinstance(obj, ExternalLink):
+                do_link = True
 
-        elif isinstance(obj, numpy.dtype):
-            htype = h5t.py_create(obj, logical=True)
-            htype.commit(self.id, name, lcpl=lcpl)
+            elif isinstance(obj, numpy.dtype):
+                htype = h5t.py_create(obj, logical=True)
+                htype.commit(self.id, name, lcpl=lcpl)
 
-        else:
-            ds = self.create_dataset(None, data=obj, dtype=base.guess_dtype(obj))
-            h5o.link(ds.id, self.id, name, lcpl=lcpl)
+            else:
+                ds = self.create_dataset(None, data=obj, dtype=base.guess_dtype(obj))
+                h5o.link(ds.id, self.id, name, lcpl=lcpl)
+
+        if do_link:
+            fn = filename_encode(obj.filename)
+            with phil:
+                self.id.links.create_external(name, fn, self._e(obj.path),
+                                              lcpl=lcpl, lapl=self._lapl)
 
     @with_phil
     def __delitem__(self, name):
