@@ -19,6 +19,8 @@ ITER_NATIVE = H5_ITER_NATIVE  # No particular order, whatever is fastest
 INDEX_NAME      = H5_INDEX_NAME       # Index on names
 INDEX_CRT_ORDER = H5_INDEX_CRT_ORDER  # Index on creation order
 
+HDF5_VERSION_COMPILED_AGAINST = HDF5_VERSION
+
 class ByteStringContext(object):
 
     def __init__(self):

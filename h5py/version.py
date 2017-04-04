@@ -22,6 +22,8 @@ import numpy
 # needed for our use case
 _H5PY_VERSION_CLS = namedtuple("_H5PY_VERSION_CLS", "major minor bugfix pre post dev")
 
+hdf5_built_version_tuple = _h5.HDF5_VERSION_COMPILED_AGAINST
+
 version_tuple = _H5PY_VERSION_CLS(2, 7, 0, None, 0, None)
 
 version = "{0.major:d}.{0.minor:d}.{0.bugfix:d}".format(version_tuple)
