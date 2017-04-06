@@ -16,6 +16,8 @@ from __future__ import absolute_import
 import posixpath as pp
 import sys
 
+from threading import local
+
 import six
 from six.moves import xrange    # pylint: disable=redefined-builtin
 
@@ -30,6 +32,7 @@ from .datatype import Datatype
 
 _LEGACY_GZIP_COMPRESSION_VALS = frozenset(range(10))
 MPI = h5.get_config().mpi
+
 
 def readtime_dtype(basetype, names):
     """ Make a NumPy dtype appropriate for reading """
@@ -311,20 +314,19 @@ class Dataset(HLObject):
         self._dcpl.get_fill_value(arr)
         return arr[0]
 
+    @with_phil
     def __init__(self, bind):
         """ Create a new Dataset object by binding to a low-level DatasetID.
         """
-        from threading import local
-        with phil:
-            if not isinstance(bind, h5d.DatasetID):
-                raise ValueError("%s is not a DatasetID" % bind)
-            HLObject.__init__(self, bind)
+        if not isinstance(bind, h5d.DatasetID):
+            raise ValueError("%s is not a DatasetID" % bind)
+        HLObject.__init__(self, bind)
 
-            self._dcpl = self.id.get_create_plist()
-            self._dxpl = h5p.create(h5p.DATASET_XFER)
-            self._filters = filters.get_filters(self._dcpl)
-            self._local = local()
-            self._local.astype = None
+        self._dcpl = self.id.get_create_plist()
+        self._dxpl = h5p.create(h5p.DATASET_XFER)
+        self._filters = filters.get_filters(self._dcpl)
+        self._local = local()
+        self._local.astype = None
 
     def resize(self, size, axis=None):
         """ Resize the dataset, or the specified axis.
