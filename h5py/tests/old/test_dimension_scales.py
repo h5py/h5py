@@ -63,7 +63,7 @@ class TestH5DSBindings(BaseDataset):
         """ Create a dimension scale from existing dataset """
         self.assertTrue(h5py.h5ds.is_scale(self.f['x1'].id))
         self.assertEqual(h5py.h5ds.get_scale_name(self.f['x1'].id), b'')
-        self.assertEqual(self.f['x1'].attrs['CLASS'], b"DIMENSION_SCALE")
+        self.assertEqual(self.f['x1'].attrs['CLASS'], "DIMENSION_SCALE")
         self.assertEqual(h5py.h5ds.get_scale_name(self.f['x2'].id), b'x2 name')
 
     def test_attach_dimensionscale(self):
