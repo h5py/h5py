@@ -3,6 +3,8 @@
 Installation
 ============
 
+.. _install_recommends:
+
 It is highly recommended that you use a pre-built version of h5py, either from a
 Python Distribution, an OS-specific package manager, or a pre-built wheel from
 PyPI.
@@ -18,6 +20,8 @@ installed correctly. This can be done in the python interpreter via::
     h5py.run_tests()
 
 On Python 2.6, unittest2 must be installed to run the tests.
+
+.. _prebuilt_install:
 
 Pre-built installation (recommended)
 -----------------------------------------
@@ -132,6 +136,7 @@ to work together.
 We recommend examining the appveyor build scripts, and using those to build and
 install HDF5 and h5py.
 
+.. _custom_install:
 
 Custom installation
 -------------------
@@ -175,6 +180,7 @@ Force HDF5 version      ``--hdf5-version=X.Y.Z``    ``HDF5_VERSION=X.Y.Z``
 Enable MPI mode         ``--mpi``                   ``HDF5_MPI=ON``
 ======================= =========================== ===========================
 
+.. _build_mpi:
 
 Building against Parallel HDF5
 ------------------------------
