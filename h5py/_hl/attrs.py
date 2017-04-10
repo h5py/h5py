@@ -16,6 +16,8 @@
 
 from __future__ import absolute_import
 
+import warnings
+
 import six
 import numpy
 
@@ -81,13 +83,21 @@ class AttributeManager(base.MutableMappingHDF5, base.CommonStateObject):
 
         if len(arr.shape) == 0:
             value = arr[()]
-            if not six.PY2 and isinstance(value, bytes):
+            if isinstance(value, bytes):
                 # The low-level interface gives HDF5 strings with ASCII
                 # character sets NumPy's 'S' dtype, for which the corresponding
                 # builtin scalar type is bytes. Decode them as ASCII to convert
                 # these values to strings on Python 3 (on Python 2, bytes is
                 # already a string type).
-                value = value.decode('ascii')
+                try:
+                    value = value.decode('utf-8')
+                except UnicodeDecodeError:
+                    warnings.warn(
+                        'Decoding ASCII attribute failed, falling back to '
+                        'return bytes. This behavior is deprecated: in the '
+                        'future this will be an error and you will need to '
+                        'explicitly read these values with the low-level '
+                        'h5py.h5a interface.', DeprecationWarning)
             return value
         return arr
 

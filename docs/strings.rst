@@ -72,10 +72,19 @@ In the file, these map to fixed-width ASCII strings.  One byte per character
 is used.  The representation is "null-padded", which is the internal
 representation used by NumPy (and the only one which round-trips through HDF5).
 
-Technically, these strings are supposed to store `only` ASCII-encoded text,
-although in practice anything you can store in NumPy will round-trip.  But
-for compatibility with other progams using HDF5 (IDL, MATLAB, etc.), you
-should use ASCII only.
+How these strings are read depends upon whether they are scalar attributes or
+not:
+
+- Scalar attributes are read as native Python strings. On Python 3, that means
+  decoding from ASCII to unicode. If decoding fails, the
+  current version of h5py will issue a ``DeprecationWarning`` and return a
+  ``np.string_``. In the future, this will be an error and such strings will
+  not be readable with h5py's high level API.
+- All other values (non-scalar attributes and datasets) remain arrays with the
+  ``S`` dtype. This means that even though technically these strings are
+  supposed to store `only` ASCII-encoded text, in practice anything you can
+  store in a NumPy array will round-trip. But for compatibility with other
+  programs using HDF5 (IDL, MATLAB, etc.), you should use ASCII only.
 
 .. note::
 
@@ -103,6 +112,10 @@ only store ASCII-encoded text, without NULL bytes::
 In the file, these are created as variable-length strings with character set
 H5T_CSET_ASCII.
 
+Similarly to how fixed-length ASCII is handled, scalar attributes are read
+as native Python strings (and if that fails, a warning or error will be issued).
+Non-scalar attributes and datasets are left as arrays of bytes.
+
 
 Variable-length UTF-8
 ^^^^^^^^^^^^^^^^^^^^^
@@ -119,21 +132,6 @@ or if you create a dataset with an explicit ``unicode`` vlen type:
 They can store any character a Python unicode string can store, with the
 exception of NULLs.  In the file these are created as variable-length strings
 with character set H5T_CSET_UTF8.
-
-
-Exceptions for Python 3
-^^^^^^^^^^^^^^^^^^^^^^^
-
-Most strings in the HDF5 world are stored in ASCII, which means they map to
-byte strings.  But in Python 3, there's a strict separation between `data` and
-`text`, which intentionally makes it painful to handle encoded strings
-directly.
-
-So, when reading or writing scalar string attributes, on Python 3 they will
-`always` be returned as type ``str``, regardless of the underlying storage
-mechanism.  The regular rules for writing apply; to get a fixed-width ASCII
-string, use ``numpy.string_``, and to get a variable-length ASCII string, use
-``bytes``.
 
 
 What about NumPy's ``U`` type?
