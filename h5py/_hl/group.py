@@ -265,6 +265,12 @@ class Group(HLObject, MutableMappingHDF5):
         Numpy dtype
             Commit a copy of the datatype as a named datatype in the file.
 
+        Class that implements __toh5ds__
+            Call obj.__toh5ds__(self, name), to allow client code to support
+            automatic coercion to a dataset. The name is provided to the
+            client for metadata generation, but the client is not permitted
+            to change the name used for the assignment.
+
         Anything else
             Attempt to convert it to an ndarray and store it.  Scalar
             values are stored as scalar datasets. Raise ValueError if we
@@ -286,6 +292,10 @@ class Group(HLObject, MutableMappingHDF5):
         elif isinstance(obj, numpy.dtype):
             htype = h5t.py_create(obj, logical=True)
             htype.commit(self.id, name, lcpl=lcpl)
+
+        elif getattr(obj, '__toh5ds__', None) is not None:
+            ds = obj.__toh5ds__(self, name)
+            h5o.link(ds.id, self.id, name, lcpl=lcpl)
 
         else:
             ds = self.create_dataset(None, data=obj, dtype=base.guess_dtype(obj))
