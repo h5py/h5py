@@ -144,13 +144,13 @@ class File(Group):
     """
 
     @property
-    @with_phil
     def attrs(self):
         """ Attributes attached to this object """
         # hdf5 complains that a file identifier is an invalid location for an
         # attribute. Instead of self, pass the root group to AttributeManager:
         from . import attrs
-        return attrs.AttributeManager(self['/'])
+        with phil:
+            return attrs.AttributeManager(self['/'])
 
     @property
     @with_phil
@@ -259,12 +259,12 @@ class File(Group):
         if swmr and not swmr_support:
             raise ValueError("The SWMR feature is not available in this version of the HDF5 library")
 
-        with phil:
-            if isinstance(name, _objects.ObjectID):
+        if isinstance(name, _objects.ObjectID):
+            with phil:
                 fid = h5i.get_file_id(name)
-            else:
-                name = filename_encode(name)
-
+        else:
+            name = filename_encode(name)
+            with phil:
                 fapl = make_fapl(driver, libver, **kwds)
                 fid = make_fid(name, mode, userblock_size, fapl, swmr=swmr)
 
@@ -273,7 +273,7 @@ class File(Group):
                     if swmr and mode == 'r':
                         self._swmr_mode = True
 
-            Group.__init__(self, fid)
+        Group.__init__(self, fid)
 
     def close(self):
         """ Close the file.  All open objects become invalid """

@@ -16,6 +16,8 @@ from __future__ import absolute_import
 import posixpath as pp
 import sys
 
+from threading import local
+
 import six
 from six.moves import xrange    # pylint: disable=redefined-builtin
 
@@ -30,6 +32,7 @@ from .datatype import Datatype
 
 _LEGACY_GZIP_COMPRESSION_VALS = frozenset(range(10))
 MPI = h5.get_config().mpi
+
 
 def readtime_dtype(basetype, names):
     """ Make a NumPy dtype appropriate for reading """
@@ -147,7 +150,7 @@ class AstypeContext(object):
     """
         Context manager which allows changing the type read from a dataset.
     """
-    
+
     def __init__(self, dset, dtype):
         self._dset = dset
         self._dtype = numpy.dtype(dtype)
@@ -159,6 +162,7 @@ class AstypeContext(object):
     def __exit__(self, *args):
         # pylint: disable=protected-access
         self._dset._local.astype = None
+
 
 if MPI:
     class CollectiveContext(object):
@@ -178,12 +182,13 @@ if MPI:
             # pylint: disable=protected-access
             self._dset._dxpl.set_dxpl_mpio(h5fd.MPIO_INDEPENDENT)
 
+
 class Dataset(HLObject):
 
     """
         Represents an HDF5 dataset
     """
-        
+
     def astype(self, dtype):
         """ Get a context manager allowing you to perform reads to a
         different destination type, e.g.:
@@ -200,13 +205,12 @@ class Dataset(HLObject):
             """ Context manager for MPI collective reads & writes """
             return CollectiveContext(self)
 
-
     @property
-    @with_phil
     def dims(self):
         """ Access dimension scales attached to this dataset. """
         from .dims import DimensionManager
-        return DimensionManager(self)
+        with phil:
+            return DimensionManager(self)
 
     @property
     @with_phil
@@ -314,8 +318,6 @@ class Dataset(HLObject):
     def __init__(self, bind):
         """ Create a new Dataset object by binding to a low-level DatasetID.
         """
-        from threading import local
-
         if not isinstance(bind, h5d.DatasetID):
             raise ValueError("%s is not a DatasetID" % bind)
         HLObject.__init__(self, bind)
@@ -453,7 +455,7 @@ class Dataset(HLObject):
             # These are the only access methods NumPy allows for such objects
             if args == (Ellipsis,) or args == tuple():
                 return numpy.empty(self.shape, dtype=new_dtype)
-            
+
         # === Scalar dataspaces =================
 
         if self.shape == ():
@@ -582,7 +584,7 @@ class Dataset(HLObject):
             if len(mismatch) != 0:
                 mismatch = ", ".join('"%s"'%x for x in mismatch)
                 raise ValueError("Illegal slicing argument (fields %s not in dataset type)" % mismatch)
-        
+
             # Write non-compound source into a single dataset field
             if len(names) == 1 and val.dtype.fields is None:
                 subtype = h5t.py_create(val.dtype)
@@ -710,26 +712,24 @@ class Dataset(HLObject):
         if six.PY2:
             return r.encode('utf8')
         return r
-        
+
     if hasattr(h5d.DatasetID, "refresh"):
         @with_phil
         def refresh(self):
             """ Refresh the dataset metadata by reloading from the file.
-            
+
             This is part of the SWMR features and only exist when the HDF5
             librarary version >=1.9.178
             """
             self._id.refresh()
-                
+
     if hasattr(h5d.DatasetID, "flush"):
         @with_phil
         def flush(self):
             """ Flush the dataset data and metadata to the file.
             If the dataset is chunked, raw data chunks are written to the file.
-            
-            This is part of the SWMR features and only exist when the HDF5 
+
+            This is part of the SWMR features and only exist when the HDF5
             librarary version >=1.9.178
             """
             self._id.flush()
-            
-

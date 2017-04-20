@@ -9,7 +9,7 @@
 
 """
     Implements high-level operations for attributes.
-    
+
     Provides the AttributeManager class, available on high-level objects
     as <obj>.attrs.
 """
@@ -17,6 +17,8 @@
 from __future__ import absolute_import
 
 import numpy
+import uuid
+
 
 from .. import h5s, h5t, h5a
 from . import base
@@ -62,7 +64,7 @@ class AttributeManager(base.MutableMappingHDF5, base.CommonStateObject):
 
         dtype = readtime_dtype(attr.dtype, [])
         shape = attr.shape
-        
+
         # Do this first, as we'll be fiddling with the dtype for top-level
         # array types
         htype = h5t.py_create(dtype)
@@ -74,7 +76,7 @@ class AttributeManager(base.MutableMappingHDF5, base.CommonStateObject):
             subdtype, subshape = dtype.subdtype
             shape = attr.shape + subshape   # (5, 3)
             dtype = subdtype                # 'f'
-            
+
         arr = numpy.ndarray(shape, dtype=dtype, order='C')
         attr.read(arr, mtype=htype)
 
@@ -112,21 +114,19 @@ class AttributeManager(base.MutableMappingHDF5, base.CommonStateObject):
             are given.
         """
 
-        import uuid
-        
         with phil:
-                
+
             # First, make sure we have a NumPy array.  We leave the data
             # type conversion for HDF5 to perform.
             if not isinstance(data, Empty):
                 data = numpy.asarray(data, order='C')
-    
+
             if shape is None:
                 shape = data.shape
-                
+
             use_htype = None    # If a committed type is given, we must use it
                                 # in the call to h5a.create.
-                                            
+
             if isinstance(dtype, Datatype):
                 use_htype = dtype.id
                 dtype = dtype.dtype
@@ -134,16 +134,16 @@ class AttributeManager(base.MutableMappingHDF5, base.CommonStateObject):
                 dtype = data.dtype
             else:
                 dtype = numpy.dtype(dtype) # In case a string, e.g. 'i8' is passed
- 
+
             original_dtype = dtype  # We'll need this for top-level array types
 
             # Where a top-level array type is requested, we have to do some
             # fiddling around to present the data as a smaller array of
-            # subarrays. 
+            # subarrays.
             if dtype.subdtype is not None:
-            
+
                 subdtype, subshape = dtype.subdtype
-                
+
                 # Make sure the subshape matches the last N axes' sizes.
                 if shape[-len(subshape):] != subshape:
                     raise ValueError("Array dtype shape %s is incompatible with data shape %s" % (subshape, shape))
@@ -151,11 +151,11 @@ class AttributeManager(base.MutableMappingHDF5, base.CommonStateObject):
                 # New "advertised" shape and dtype
                 shape = shape[0:len(shape)-len(subshape)]
                 dtype = subdtype
-                
+
             # Not an array type; make sure to check the number of elements
             # is compatible, and reshape if needed.
             else:
-               
+
                 if shape is not None and numpy.product(shape) != numpy.product(data.shape):
                     raise ValueError("Shape of new attribute conflicts with shape of data")
 
@@ -165,7 +165,7 @@ class AttributeManager(base.MutableMappingHDF5, base.CommonStateObject):
             # We need this to handle special string types.
             if not isinstance(data, Empty):
                 data = numpy.asarray(data, dtype=dtype)
-    
+
             # Make HDF5 datatype and dataspace for the H5A calls
             if use_htype is None:
                 htype = h5t.py_create(original_dtype, logical=True)
@@ -173,7 +173,7 @@ class AttributeManager(base.MutableMappingHDF5, base.CommonStateObject):
             else:
                 htype = use_htype
                 htype2 = None
-                
+
             if isinstance(data, Empty):
                 space = h5s.create(h5s.NULL)
             else:
@@ -181,7 +181,7 @@ class AttributeManager(base.MutableMappingHDF5, base.CommonStateObject):
 
             # This mess exists because you can't overwrite attributes in HDF5.
             # So we write to a temporary attribute first, and then rename.
-            
+
             tempname = uuid.uuid4().hex
 
             try:
@@ -206,7 +206,7 @@ class AttributeManager(base.MutableMappingHDF5, base.CommonStateObject):
                         attr.close()
                         h5a.delete(self._id, self._e(tempname))
                         raise
-                        
+
     def modify(self, name, value):
         """ Change the value of an attribute while preserving its type.
 
@@ -242,7 +242,7 @@ class AttributeManager(base.MutableMappingHDF5, base.CommonStateObject):
     def __iter__(self):
         """ Iterate over the names of attributes. """
         with phil:
-        
+
             attrlist = []
             def iter_cb(name, *args):
                 """ Callback to gather attribute names """
