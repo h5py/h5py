@@ -278,26 +278,28 @@ class File(Group):
     def close(self):
         """ Close the file.  All open objects become invalid """
         with phil:
-            # We have to explicitly murder all open objects related to the file
+            # Check that the file is still open, otherwise skip
+            if self.id.valid:
+                # We have to explicitly murder all open objects related to the file
 
-            # Close file-resident objects first, then the files.
-            # Otherwise we get errors in MPI mode.
-            id_list = h5f.get_obj_ids(self.id, ~h5f.OBJ_FILE)
-            file_list = h5f.get_obj_ids(self.id, h5f.OBJ_FILE)
+                # Close file-resident objects first, then the files.
+                # Otherwise we get errors in MPI mode.
+                id_list = h5f.get_obj_ids(self.id, ~h5f.OBJ_FILE)
+                file_list = h5f.get_obj_ids(self.id, h5f.OBJ_FILE)
 
-            id_list = [x for x in id_list if h5i.get_file_id(x).id == self.id.id]
-            file_list = [x for x in file_list if h5i.get_file_id(x).id == self.id.id]
+                id_list = [x for x in id_list if h5i.get_file_id(x).id == self.id.id]
+                file_list = [x for x in file_list if h5i.get_file_id(x).id == self.id.id]
 
-            for id_ in id_list:
-                while id_.valid:
-                    h5i.dec_ref(id_)
+                for id_ in id_list:
+                    while id_.valid:
+                        h5i.dec_ref(id_)
 
-            for id_ in file_list:
-                while id_.valid:
-                    h5i.dec_ref(id_)
+                for id_ in file_list:
+                    while id_.valid:
+                        h5i.dec_ref(id_)
 
-            self.id.close()
-            _objects.nonlocal_close()
+                self.id.close()
+                _objects.nonlocal_close()
 
     def flush(self):
         """ Tell the HDF5 library to flush its buffers.

@@ -485,6 +485,24 @@ class TestClose(TestCase):
         with self.assertRaises(ValueError):
             fid.create_group('foo')
 
+    def test_close_multiple_default_driver(self):
+        fname = self.mktemp()
+        f = h5py.File(fname, 'w')
+        f.create_group("test")
+        f.close()
+        f.close()
+
+    @ut.skipUnless(mpi, "Parallel HDF5 is required for MPIO driver test")
+    def test_close_multiple_mpio_driver(self):
+        """ MPIO driver and options """
+        from mpi4py import MPI
+
+        fname = self.mktemp()
+        f = File(fname, 'w', driver='mpio', comm=MPI.COMM_WORLD)
+        f.create_group("test")
+        f.close()
+        f.close()
+
 class TestFlush(TestCase):
 
     """
