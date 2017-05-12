@@ -37,6 +37,14 @@ optionally the data type (defaults to ``'f'``)::
     >>> dset = f.create_dataset("default", (100,))
     >>> dset = f.create_dataset("ints", (100,), dtype='i8')
 
+If you need a complex datatype, or if you perfer low-level HDF5 API, you can
+pass an instance of `h5py.h5t.TypeID` directly to :meth:`Group.create_dataset`
+as the `dtype`:
+
+    >>> my_h5t_id = h5t.create(h5t.COMPOUND, 100)
+    >>> my_h5t_id = h5t.insert(b'my_field', 40, h5t.NATIVE_DOUBLE)
+    >>> dset = f.create_dataset("default", (100,), my_h5t_id)
+
 You may initialize the dataset to an existing NumPy array::
 
     >>> arr = np.arange(100)

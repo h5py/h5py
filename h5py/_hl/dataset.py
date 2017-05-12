@@ -103,7 +103,10 @@ def make_new_dset(parent, shape=None, dtype=None, data=None,
                  "{} is not compatible with {}".format(chunks, shape)
         raise ValueError(errmsg)
 
-    if isinstance(dtype, Datatype):
+    if isinstance(dtype, h5t.TypeID):
+        tid = dtype
+        dtype = tid.dtype  # Following code needs this
+    elif isinstance(dtype, Datatype):
         # Named types are used as-is
         tid = dtype.id
         dtype = tid.dtype  # Following code needs this
