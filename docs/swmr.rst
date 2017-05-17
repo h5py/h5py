@@ -25,7 +25,8 @@ user to implement either a file polling mechanism, inotify or any other IPC
 mechanism to notify when data has been written.
 
 The SWMR functionality requires use of the latest HDF5 file format: v110. In
-practice this implies setting the libver bounding to "latest" when opening or 
+practice this implies using at least HDF5 1.10 (this can be checked via 
+`h5py.info`) and setting the libver bounding to "latest" when opening or 
 creating the file.
 
 
