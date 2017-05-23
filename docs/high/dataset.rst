@@ -317,7 +317,7 @@ Similarly, reading an empty attribute returns ``h5py.Empty``::
     >>> obj.attrs["EmptyAttr"]
     h5py.Empty(dtype="f")
 
-Empty datasets can be created by either by defining a ``dtype`` but no
+Empty datasets can be created either by defining a ``dtype`` but no
 ``shape`` in ``create_dataset``::
 
     >>> grp.create_dataset("EmptyDataset", dtype="f")
