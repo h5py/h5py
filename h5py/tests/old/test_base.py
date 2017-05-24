@@ -18,7 +18,7 @@ from __future__ import absolute_import
 import six
 
 from h5py import File
-from .common import ut, TestCase, unicode_filenames
+from ..common import ut, TestCase, UNICODE_FILENAMES
 
 import numpy as np
 import os
@@ -74,7 +74,7 @@ class TestRepr(BaseTest):
         typ = self.f['type']
         self._check_type(typ)
 
-    @ut.skipIf(not unicode_filenames, "Filesystem unicode support required")
+    @ut.skipIf(not UNICODE_FILENAMES, "Filesystem unicode support required")
     def test_file(self):
         """ File object repr() with unicode """
         fname = tempfile.mktemp(self.USTRING+u'.hdf5')

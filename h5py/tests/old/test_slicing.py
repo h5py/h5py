@@ -22,7 +22,7 @@ import six
 
 import numpy as np
 
-from .common import ut, TestCase
+from ..common import ut, TestCase
 
 import h5py
 from h5py import h5s, h5t, h5d

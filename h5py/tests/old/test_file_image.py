@@ -3,7 +3,7 @@ from __future__ import absolute_import
 import h5py
 from h5py import h5f, h5p
 
-from .common import ut, TestCase
+from ..common import ut, TestCase
 
 @ut.skipUnless(h5py.version.hdf5_version_tuple >= (1, 8, 9), 'file image operations require HDF5 >= 1.8.9')
 class TestFileImage(TestCase):

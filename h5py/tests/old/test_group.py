@@ -28,7 +28,7 @@ from tempfile import mkdtemp
 
 import six
 
-from .common import ut, TestCase
+from ..common import ut, TestCase
 import h5py
 from h5py.highlevel import File, Group, SoftLink, HardLink, ExternalLink
 from h5py.highlevel import Dataset, Datatype

@@ -21,8 +21,7 @@ import tempfile
 
 import six
 
-from .common import ut, TestCase, unicode_filenames
-from ..common import closed_tempfile
+from ..common import ut, TestCase, UNICODE_FILENAMES, closed_tempfile
 from h5py.highlevel import File
 import h5py
 
@@ -401,7 +400,7 @@ class TestContextManager(TestCase):
             self.assertTrue(fid)
         self.assertTrue(not fid)
 
-@ut.skipIf(not unicode_filenames, "Filesystem unicode support required")
+@ut.skipIf(not UNICODE_FILENAMES, "Filesystem unicode support required")
 class TestUnicode(TestCase):
 
     """
