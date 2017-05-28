@@ -20,16 +20,13 @@ from six import unichr
 import numpy as np
 import h5py
 
-if sys.version_info >= (2, 7) or sys.version_info >= (3, 2):
-    import unittest as ut
-else:
+if sys.version_info[:2] == (2, 6):
     try:
         import unittest2 as ut
     except ImportError:
-        raise ImportError(
-            'unittest2 is required to run the test suite with python-%d.%d'
-            % (sys.version_info[:2])
-            )
+        raise ImportError( "unittest2 is required to run tests with Python 2.6")
+else:
+    import unittest as ut
 
 
 # Check if non-ascii filenames are supported
@@ -53,7 +50,7 @@ class TestCase(ut.TestCase):
     """
         Base class for unit tests.
     """
-    
+
     @classmethod
     def setUpClass(cls):
         cls.tempdir = tempfile.mkdtemp(prefix='h5py-test_')
@@ -66,10 +63,10 @@ class TestCase(ut.TestCase):
         if dir is None:
             dir = self.tempdir
         return tempfile.mktemp(suffix, prefix, dir=self.tempdir)
-        
+
     def setUp(self):
         self.f = h5py.File(self.mktemp(), 'w')
-        
+
     def tearDown(self):
         try:
             if self.f:
@@ -77,24 +74,22 @@ class TestCase(ut.TestCase):
         except:
             pass
 
-    if not hasattr(ut.TestCase, 'assertSameElements'):
-        # shim until this is ported into unittest2
-        def assertSameElements(self, a, b):
-            for x in a:
-                match = False
-                for y in b:
-                    if x == y:
-                        match = True
-                if not match:
-                    raise AssertionError("Item '%s' appears in a but not b" % x)
+    def assertSameElements(self, a, b):
+        for x in a:
+            match = False
+            for y in b:
+                if x == y:
+                    match = True
+            if not match:
+                raise AssertionError("Item '%s' appears in a but not b" % x)
 
-            for x in b:
-                match = False
-                for y in a:
-                    if x == y:
-                        match = True
-                if not match:
-                    raise AssertionError("Item '%s' appears in b but not a" % x)
+        for x in b:
+            match = False
+            for y in a:
+                if x == y:
+                    match = True
+            if not match:
+                raise AssertionError("Item '%s' appears in b but not a" % x)
 
     def assertArrayEqual(self, dset, arr, message=None, precision=None):
         """ Make sure dset and arr have the same shape, dtype and contents, to
@@ -128,7 +123,7 @@ class TestCase(ut.TestCase):
             dset.dtype == arr.dtype,
             "Dtype mismatch (%s vs %s)%s" % (dset.dtype, arr.dtype, message)
             )
-            
+
         if arr.dtype.names is not None:
             for n in arr.dtype.names:
                 message = '[FIELD %s] %s' % (n, message)
@@ -146,10 +141,10 @@ class TestCase(ut.TestCase):
 
     def assertNumpyBehavior(self, dset, arr, s):
         """ Apply slicing arguments "s" to both dset and arr.
-        
+
         Succeeds if the results of the slicing are identical, or the
         exception raised is of the same type for both.
-        
+
         "arr" must be a Numpy array; "dset" may be a NumPy array or dataset.
         """
         exc = None
@@ -157,7 +152,7 @@ class TestCase(ut.TestCase):
             arr_result = arr[s]
         except Exception as e:
             exc = type(e)
-            
+
         if exc is None:
             self.assertArrayEqual(dset[s], arr_result)
         else:

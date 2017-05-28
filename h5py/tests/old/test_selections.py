@@ -17,7 +17,7 @@ import numpy as np
 import h5py
 import h5py._hl.selections2 as sel
 
-from .common import TestCase, ut
+from ..common import TestCase, ut
 
 class TestTypeGeneration(TestCase):
 

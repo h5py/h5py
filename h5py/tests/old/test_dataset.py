@@ -24,7 +24,7 @@ import six
 
 import numpy as np
 
-from .common import ut, TestCase
+from ..common import ut, TestCase
 from h5py.highlevel import File, Group, Dataset
 from h5py._hl.base import is_empty_dataspace
 from h5py import h5t
