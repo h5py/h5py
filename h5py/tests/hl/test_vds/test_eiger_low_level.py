@@ -55,11 +55,12 @@ class TestEigerLowLevel(unittest.TestCase):
                                              count=(1, 1, 1),
                                              block=src_shape)
 
-                dcpl.set_virtual(virt_dspace, foo, 'data', src_dspace)
+                dcpl.set_virtual(virt_dspace, foo.encode('utf-8'),
+                                 b'data', src_dspace)
                 k += src_shape[0]
 
             # Create the virtual dataset
-            h5.h5d.create(f.id, name="data", tid=h5.h5t.NATIVE_INT16,
+            h5.h5d.create(f.id, name=b"data", tid=h5.h5t.NATIVE_INT16,
                           space=virt_dspace, dcpl=dcpl)
 
         f = h5.File(self.outfile, 'r')['data']
