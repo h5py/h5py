@@ -138,7 +138,6 @@ class Group(HLObject, MutableMappingHDF5):
             dcpl = h5p.create(h5p.DATASET_CREATE)
             dcpl.set_fill_value(numpy.array([fillvalue]))
             sh = VMlist[0].target.shape
-            print "target shape is:"+str(sh)
             virt_dspace = h5s.create_simple(sh, VMlist[0].target.maxshape) # create the virtual dataspace
             for VM in VMlist:
                 virt_start_idx = tuple([ix.start for ix in VM.target.slice_list])
@@ -248,7 +247,6 @@ class Group(HLObject, MutableMappingHDF5):
 
         >>> cls = group.get('foo', getclass=True)
         >>> if cls == SoftLink:
-        ...     print '"foo" is a soft link!'
         """
         # pylint: disable=arguments-differ
 
@@ -616,6 +614,21 @@ class DatasetContainer(object):
         else:
             self.maxshape = tuple([h5s.UNLIMITED if ix is None else ix for ix in maxshape])
 
+    @property
+    def key(self):
+        return self._key_bytes
+
+    @key.setter
+    def key(self, val):
+        self._key_bytes = val.encode('utf-8')
+
+    @property
+    def path(self):
+        return self._path_bytes
+
+    @key.setter
+    def path(self, val):
+        self._path_bytes = val.encode('utf-8')
 
     def _parse_slicing(self, key):
         """
