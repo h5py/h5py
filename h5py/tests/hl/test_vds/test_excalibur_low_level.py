@@ -96,11 +96,13 @@ class TestExcaliburLowLevel(unittest.TestCase):
                                              count=(1, 1, 1),
                                              block=vdset_stripe_max_shape)
                 # Set the virtual dataset hyperslab to point to the real first dataset
-                dcpl.set_virtual(virt_dspace, raw_file, "/data", src_dspace)
+                dcpl.set_virtual(virt_dspace, raw_file.encode('utf-8'),
+                                 b"/data", src_dspace)
                 vdset_y_offset += vdset_stripe_shape[1] + 10
 
             # Create the virtual dataset
-            dset = h5.h5d.create(f.id, name="data", tid=h5.h5t.NATIVE_INT16, space=virt_dspace, dcpl=dcpl)
+            dset = h5.h5d.create(f.id, name=b"data",
+                                 tid=h5.h5t.NATIVE_INT16, space=virt_dspace, dcpl=dcpl)
             assert(f['data'].fillvalue == 0x01)
 
         f = h5.File(self.outfile,'r')['data']

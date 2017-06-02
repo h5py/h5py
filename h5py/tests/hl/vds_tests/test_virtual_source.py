@@ -53,7 +53,6 @@ class TestVirtualSource(unittest.TestCase):
         for i in range(5):
             d = dataset[12+i:2:3].shape[0]
             ref = np.arange(20)[12+i:2:3].size
-            print d,ref
             cmp.append(ref==d)
         self.assertEqual(5, sum(cmp))
 

@@ -56,16 +56,16 @@ class TestPercivalLowLevel(unittest.TestCase):
                                              count=(num, 1, 1),
                                              block=(1,)+src_shape[1:])
 
-                dcpl.set_virtual(virt_dspace, foo, 'data', src_dspace)
+                dcpl.set_virtual(virt_dspace, foo.encode('utf-8'), b'data', src_dspace)
                 k+=1
 
             # Create the virtual dataset
-            dset = h5.h5d.create(f.id, name="data", tid=h5.h5t.NATIVE_INT16, space=virt_dspace, dcpl=dcpl)
+            dset = h5.h5d.create(f.id, name=b"data", tid=h5.h5t.NATIVE_INT16, space=virt_dspace, dcpl=dcpl)
 
             f = h5.File(self.outfile,'r')
             sh = f['data'].shape
             line = f['data'][:8,100,100]
-            foo = np.array(2*range(4))
+            foo = np.array(2*list(range(4)))
             f.close()
             self.assertEqual(sh,(79,200,200),)
             np.testing.assert_array_equal(line,foo)
