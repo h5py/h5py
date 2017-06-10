@@ -25,7 +25,7 @@ CMAKE_BUILD_CMD = ["cmake", "--build"]
 CMAKE_INSTALL_ARG = ["--target", "install", '--config', 'Release']
 CMAKE_INSTALL_PATH_ARG = "-DCMAKE_INSTALL_PREFIX={install_path}"
 CMAKE_HDF5_LIBRARY_PREFIX = ["-DHDF5_EXTERNAL_LIB_PREFIX=h5py_"]
-REL_PATH_TO_CMAKE_CFG = "hdf5-{version}"
+REL_PATH_TO_UNPACKED_DIR = "hdf5-{version}"
 DEFAULT_VERSION = '1.8.17'
 VSVERSION_TO_GENERATOR = {
     "9": "Visual Studio 9 2008",
@@ -55,47 +55,92 @@ def download_hdf5(version, outfile):
         exit(1)
 
 
-def build_hdf5(version, hdf5_file, install_path, cmake_generator, use_prefix):
-    with TemporaryDirectory() as hdf5_extract_path:
-        generator_args = (
-            ["-G", cmake_generator]
-            if cmake_generator is not None
-            else []
-        )
-        prefix_args = CMAKE_HDF5_LIBRARY_PREFIX if use_prefix else []
+def build_hdf5(
+    version, hdf5_file, install_path, cmake_generator, use_prefix, with_mpi
+):
+    if platform.startswith('win'):
+        build_system = "cmake"
+    else:
+        build_system = "autotools"
 
+    with TemporaryDirectory() as hdf5_extract_path:
         with ZipFile(hdf5_file) as z:
             z.extractall(hdf5_extract_path)
-        old_dir = getcwd()
 
-        with TemporaryDirectory() as new_dir:
-            chdir(new_dir)
-            cfg_cmd = CMAKE_CONFIGURE_CMD + [
-                get_cmake_install_path(install_path),
-                get_cmake_config_path(version, hdf5_extract_path),
-            ] + generator_args + prefix_args
-            build_cmd = CMAKE_BUILD_CMD + [
-                '.',
-            ] + CMAKE_INSTALL_ARG
+        if build_system == "cmake":
+            cfg_cmd, build_cmd = get_cmake_cmds(
+                version, install_path, cmake_generator, use_prefix
+            )
+        elif build_system == "autotools":
+            cfg_cmd, build_cmd = get_autotools_cmds(install_path, with_mpi)
+        else:
+            raise RuntimeError("Unknown build system")
+
+        old_dir = getcwd()
+        with TemporaryDirectory() as cmake_work_dir:
+            if build_system == "cmake":
+                chdir(cmake_work_dir)
+            elif build_system == "autotools":
+                chdir(get_unpacked_path(version, hdf5_extract_path))
+                p = run(["chmod", "+x", "autogen.sh"])
+                p.check_returncode()
+                p = run(["./autogen.sh"])
+                p.check_returncode()
+            else:
+                raise RuntimeError("Unknown build system")
+
+
             print("Configuring HDF5 version {version}...".format(version=version), file=stderr)
             print(' '.join(cfg_cmd), file=stderr)
             p = run(cfg_cmd, stdout=PIPE, stderr=STDOUT, universal_newlines=True)
             print(p.stdout)
+            p.check_returncode()
             print("Building HDF5 version {version}...".format(version=version), file=stderr)
             print(' '.join(build_cmd), file=stderr)
             p = run(build_cmd, stdout=PIPE, stderr=STDOUT, universal_newlines=True)
+            p.check_returncode()
             print(p.stdout)
             print("Installed HDF5 version {version} to {install_path}".format(
                 version=version, install_path=install_path,
             ), file=stderr)
+
             chdir(old_dir)
+
     if platform.startswith('win'):
+        print("Copying HDF5 dlls", file=stderr)
         for f in glob(pjoin(install_path, 'bin/*.dll')):
             copy(f, pjoin(install_path, 'lib'))
 
+def get_autotools_cmds(install_path, with_mpi):
+    parallel_args = ["--enable-parallel"] if with_mpi else []
 
-def get_cmake_config_path(version, extract_point):
-    return pjoin(extract_point, REL_PATH_TO_CMAKE_CFG.format(version=version))
+    cfg_cmd = ["./configure", "--prefix", install_path] + parallel_args
+
+    build_cmd = ["make", "install"]
+
+    return cfg_cmd, build_cmd
+
+
+def get_cmake_cmds(
+    version, install_path, cmake_generator, use_prefix, hdf5_extract_path
+):
+    generator_args = (
+        ["-G", cmake_generator] if cmake_generator is not None else []
+    )
+    prefix_args = CMAKE_HDF5_LIBRARY_PREFIX if use_prefix else []
+
+    cfg_cmd = CMAKE_CONFIGURE_CMD + [
+        get_cmake_install_path(install_path),
+        get_unpacked_path(version, hdf5_extract_path),
+    ] + generator_args + prefix_args
+
+    build_cmd = CMAKE_BUILD_CMD + ['.'] + CMAKE_INSTALL_ARG
+
+    return cfg_cmd, build_cmd
+
+
+def get_unpacked_path(version, extract_point):
+    return pjoin(extract_point, REL_PATH_TO_UNPACKED_DIR.format(version=version))
 
 
 def get_cmake_install_path(install_path):
@@ -115,6 +160,7 @@ def main():
     version = environ.get("HDF5_VERSION", DEFAULT_VERSION)
     vs_version = environ.get("HDF5_VSVERSION")
     use_prefix = True if environ.get("H5PY_USE_PREFIX") is not None else False
+    with_mpi = environ.get('HDF5_MPI') == "ON"
 
     if install_path is not None:
         if not exists(install_path):
@@ -125,11 +171,13 @@ def main():
             # Needed for
             # http://help.appveyor.com/discussions/kb/38-visual-studio-2008-64-bit-builds
             run("ci\\appveyor\\vs2008_patch\\setup_x64.bat")
+    else:
+        cmake_generator = None
 
     if not hdf5_cached(install_path):
         with TemporaryFile() as f:
             download_hdf5(version, f)
-            build_hdf5(version, f, install_path, cmake_generator, use_prefix)
+            build_hdf5(version, f, install_path, cmake_generator, use_prefix, with_mpi)
     else:
         print("using cached hdf5", file=stderr)
     if install_path is not None:
