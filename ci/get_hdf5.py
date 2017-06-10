@@ -12,7 +12,10 @@ from zipfile import ZipFile
 import requests
 
 HDF5_URL = "https://www.hdfgroup.org/ftp/HDF5/releases/hdf5-{version}/src/"
+HDF5_110_URL = "https://www.hdfgroup.org/ftp/HDF5/releases/hdf5-1.10/hdf5-{version}/src/"
 HDF5_FILE = HDF5_URL + "hdf5-{version}.zip"
+HDF5_110_FILE = HDF5_110_URL + "hdf5-{version}.zip"
+
 CMAKE_CONFIGURE_CMD = [
     "cmake", "-DBUILD_SHARED_LIBS:BOOL=ON", "-DCMAKE_BUILD_TYPE:STRING=RELEASE",
     "-DHDF5_BUILD_CPP_LIB=OFF", "-DHDF5_BUILD_HL_LIB=ON",
@@ -35,7 +38,13 @@ VSVERSION_TO_GENERATOR = {
 
 
 def download_hdf5(version, outfile):
-    r = requests.get(HDF5_FILE.format(version=version), stream=True)
+    if version.split(".")[:2] == ["1", "10"]:
+        file = HDF5_110_FILE.format(version=version)
+    else:
+        file = HDF5_FILE.format(version=version)
+
+    print("Downloading " + file, file=stderr)
+    r = requests.get(file, stream=True)
     try:
         r.raise_for_status()
         copyfileobj(r.raw, outfile)
