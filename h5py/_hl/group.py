@@ -642,7 +642,7 @@ class DatasetContainer(object):
     def path(self):
         return self._path_bytes
 
-    @key.setter
+    @path.setter
     def path(self, val):
         self._path_bytes = val.encode('utf-8')
 
