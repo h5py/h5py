@@ -47,7 +47,7 @@ class TestPercivalHighLevel(unittest.TestCase):
         line = f[:8,100,100]
         foo = np.array(2*list(range(4)))
         f.file.close()
-        self.assertEqual(sh,(79,200,200),)
+        self.assertEqual(sh, (79,200,200),)
         np.testing.assert_array_equal(line,foo)
 
     def tearDown(self):
