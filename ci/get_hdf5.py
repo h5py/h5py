@@ -81,7 +81,8 @@ def build_hdf5(
 
         if build_system == "cmake":
             cfg_cmd, build_cmds = get_cmake_cmds(
-                version, install_path, cmake_generator, use_prefix
+                version, install_path, cmake_generator, use_prefix,
+                hdf5_extract_path
             )
         elif build_system == "autotools":
             cfg_cmd, build_cmds = get_autotools_cmds(install_path, with_mpi)
