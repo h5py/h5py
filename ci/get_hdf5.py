@@ -113,7 +113,7 @@ def build_hdf5(
                 p = run(cmd,
                         universal_newlines=True, shell=True)
                 p.check_returncode()
-                print(p.stdout)
+                print(p)
             print("Installed HDF5 version {version} to {install_path}".format(
                 version=version, install_path=install_path,
             ), file=stderr)

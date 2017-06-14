@@ -114,12 +114,12 @@ matrix:
     - python: pypy
 
 before_install:
-  - export PATH=/usr/lib/ccache:$PATH
+  # - export PATH=/usr/lib/ccache:$PATH
   - ccache -s
 
 install:
   - pip install tox
   - ci/travis/get_hdf5_if_needed.sh
-  - ls -R $HDF5_CACHE_DIR
+  - ls -lRa $HDF5_CACHE_DIR
 script:
   - tox
