@@ -165,7 +165,8 @@ def get_cmake_install_path(install_path):
 
 
 def hdf5_cached(install_path):
-    if exists(pjoin(install_path, "lib", "hdf5.dll")):
+    if any(exists(pjoin(install_path, "lib", lib_bin))
+           for lib_bin in ['hdf5.dll', 'libhdf5.so']):
         return True
     return False
 
