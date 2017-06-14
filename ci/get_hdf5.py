@@ -93,7 +93,7 @@ def build_hdf5(
             if build_system == "cmake":
                 chdir(cmake_work_dir)
             elif build_system == "autotools":
-                cwd = Path(get_unpacked_path(version, hdf5_extract_path))
+                cwd = get_unpacked_path(version, hdf5_extract_path)
                 chdir(cwd)
                 p = run(["chmod", "+x", "autogen.sh"])
                 p.check_returncode()
