@@ -51,8 +51,8 @@ def readtime_dtype(basetype, names):
 
 
 def make_new_dset(parent, shape=None, dtype=None, data=None,
-                 chunks=None, compression=None, shuffle=None,
-                    fletcher32=None, maxshape=None, compression_opts=None,
+                  chunks=None, compression=None, shuffle=None,
+                  fletcher32=None, maxshape=None, compression_opts=None,
                   fillvalue=None, scaleoffset=None, track_times=None):
     """ Return a new low-level dataset identifier
 
@@ -79,7 +79,7 @@ def make_new_dset(parent, shape=None, dtype=None, data=None,
     tmp_shape = maxshape if maxshape is not None else shape
     # Validate chunk shape
     if isinstance(chunks, tuple) and any(
-        chunk > dim for dim, chunk in zip(tmp_shape,chunks) if dim is not None
+        chunk > dim for dim, chunk in zip(tmp_shape, chunks) if dim is not None
     ):
         errmsg = "Chunk shape must not be greater than data shape in any dimension. "\
                  "{} is not compatible with {}".format(chunks, shape)
@@ -395,7 +395,6 @@ class Dataset(HLObject):
         for i in xrange(shape[0]):
             yield self[i]
 
-
     @with_phil
     def __getitem__(self, args):
         """ Read a slice from the HDF5 dataset.
@@ -503,7 +502,6 @@ class Dataset(HLObject):
         if single_element:
             arr = arr[0]
         return arr
-
 
     @with_phil
     def __setitem__(self, args, val):
