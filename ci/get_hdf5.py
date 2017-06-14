@@ -198,6 +198,7 @@ def main():
     else:
         print("using cached hdf5", file=stderr)
     if install_path is not None:
+        print("install path", install_path)
         print("hdf5 files: ", file=stderr)
         for dirpath, dirnames, filenames in walk(install_path):
             for file in filenames:
