@@ -15,11 +15,11 @@ cache:
   directories:
     - $HOME/.cache/pip
     - $HOME/.cache/hdf5
-
+    - $HOME/.ccache  # https://github.com/travis-ci/travis-ci/issues/5853
+    - $HOME/.cache/matplotlib
 env:
   global:
     - HDF5_CACHE_DIR=$HOME/.cache/hdf5
-    - HDF5_VERSION=1.8.4
   matrix:
       #    - TOXENV=py26-test-deps
       #    - TOXENV=py27-test-deps
@@ -112,6 +112,10 @@ matrix:
       - TOXENV=pypy-test-deps
   allow_failures:
     - python: pypy
+
+before_install:
+  - export PATH=/usr/lib/ccache:$PATH
+  - ccache -s
 
 install:
   - pip install tox

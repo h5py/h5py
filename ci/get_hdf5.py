@@ -8,13 +8,20 @@ from shutil import copyfileobj, copy
 from glob import glob
 from subprocess import run, PIPE, STDOUT
 from zipfile import ZipFile
-
+from tarfile import TarFile
+from gzip import GzipFile
+from pathlib import Path
 import requests
 
 HDF5_18_URL = "https://www.hdfgroup.org/ftp/HDF5/releases/hdf5-1.8/hdf5-{version}/src/"
 HDF5_110_URL = "https://www.hdfgroup.org/ftp/HDF5/releases/hdf5-1.10/hdf5-{version}/src/"
-HDF5_18_FILE = HDF5_18_URL + "hdf5-{version}.zip"
-HDF5_110_FILE = HDF5_110_URL + "hdf5-{version}.zip"
+if platform.startswith('win'):
+    HDF5_18_FILE = HDF5_18_URL + "hdf5-{version}.zip"
+    HDF5_110_FILE = HDF5_110_URL + "hdf5-{version}.zip"
+else:
+    HDF5_18_FILE = HDF5_18_URL + "hdf5-{version}.gzip"
+    HDF5_110_FILE = HDF5_110_URL + "hdf5-{version}.tar.gz"
+
 
 CMAKE_CONFIGURE_CMD = [
     "cmake", "-DBUILD_SHARED_LIBS:BOOL=ON", "-DCMAKE_BUILD_TYPE:STRING=RELEASE",
@@ -64,15 +71,20 @@ def build_hdf5(
         build_system = "autotools"
 
     with TemporaryDirectory() as hdf5_extract_path:
-        with ZipFile(hdf5_file) as z:
-            z.extractall(hdf5_extract_path)
+        if platform.startswith('win'):
+            with ZipFile(hdf5_file) as z:
+                z.extractall(hdf5_extract_path)
+        else:
+            with GzipFile(fileobj=hdf5_file) as z:
+                with TarFile(fileobj=z) as t:
+                    t.extractall(hdf5_extract_path)
 
         if build_system == "cmake":
-            cfg_cmd, build_cmd = get_cmake_cmds(
+            cfg_cmd, build_cmds = get_cmake_cmds(
                 version, install_path, cmake_generator, use_prefix
             )
         elif build_system == "autotools":
-            cfg_cmd, build_cmd = get_autotools_cmds(install_path, with_mpi)
+            cfg_cmd, build_cmds = get_autotools_cmds(install_path, with_mpi)
         else:
             raise RuntimeError("Unknown build system")
 
@@ -81,14 +93,14 @@ def build_hdf5(
             if build_system == "cmake":
                 chdir(cmake_work_dir)
             elif build_system == "autotools":
-                chdir(get_unpacked_path(version, hdf5_extract_path))
+                cwd = Path(get_unpacked_path(version, hdf5_extract_path))
+                chdir(cwd)
                 p = run(["chmod", "+x", "autogen.sh"])
                 p.check_returncode()
-                p = run(["./autogen.sh"])
+                p = run(["./autogen.sh"], cwd=cwd)
                 p.check_returncode()
             else:
                 raise RuntimeError("Unknown build system")
-
 
             print("Configuring HDF5 version {version}...".format(version=version), file=stderr)
             print(' '.join(cfg_cmd), file=stderr)
@@ -96,10 +108,12 @@ def build_hdf5(
             print(p.stdout)
             p.check_returncode()
             print("Building HDF5 version {version}...".format(version=version), file=stderr)
-            print(' '.join(build_cmd), file=stderr)
-            p = run(build_cmd, stdout=PIPE, stderr=STDOUT, universal_newlines=True)
-            p.check_returncode()
-            print(p.stdout)
+            for cmd in build_cmds:
+                print(' '.join(cmd), file=stderr)
+                p = run(cmd,
+                        universal_newlines=True, shell=True)
+                p.check_returncode()
+                print(p.stdout)
             print("Installed HDF5 version {version} to {install_path}".format(
                 version=version, install_path=install_path,
             ), file=stderr)
@@ -111,14 +125,15 @@ def build_hdf5(
         for f in glob(pjoin(install_path, 'bin/*.dll')):
             copy(f, pjoin(install_path, 'lib'))
 
+
 def get_autotools_cmds(install_path, with_mpi):
     parallel_args = ["--enable-parallel"] if with_mpi else []
 
     cfg_cmd = ["./configure", "--prefix", install_path] + parallel_args
 
-    build_cmd = ["make", "install"]
+    build_cmds = (["make"], ["make", "install"])
 
-    return cfg_cmd, build_cmd
+    return cfg_cmd, build_cmds
 
 
 def get_cmake_cmds(
@@ -136,7 +151,7 @@ def get_cmake_cmds(
 
     build_cmd = CMAKE_BUILD_CMD + ['.'] + CMAKE_INSTALL_ARG
 
-    return cfg_cmd, build_cmd
+    return cfg_cmd, (build_cmd, )
 
 
 def get_unpacked_path(version, extract_point):
@@ -177,6 +192,7 @@ def main():
     if not hdf5_cached(install_path):
         with TemporaryFile() as f:
             download_hdf5(version, f)
+            f.seek(0)
             build_hdf5(version, f, install_path, cmake_generator, use_prefix, with_mpi)
     else:
         print("using cached hdf5", file=stderr)
