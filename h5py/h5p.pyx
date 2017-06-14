@@ -800,8 +800,9 @@ cdef class PropDCID(PropOCID):
             size = H5Pget_virtual_dsetname(self.id, index, NULL, 0)
             name = <char*>emalloc(size+1)
             try:
+                # TODO check return size
                 H5Pget_virtual_dsetname(self.id, index, name, <size_t>size+1)
-                src_dset_name = name
+                src_dset_name = bytes(name).decode('utf-8')
             finally:
                 efree(name)
 
@@ -817,11 +818,12 @@ cdef class PropDCID(PropOCID):
             cdef char* name = NULL
             cdef ssize_t size
 
-            size = H5Pget_virtual_dsetname(self.id, index, NULL, 0)
+            size = H5Pget_virtual_filename(self.id, index, NULL, 0)
             name = <char*>emalloc(size+1)
             try:
+                # TODO check return size
                 H5Pget_virtual_filename(self.id, index, name, <size_t>size+1)
-                src_fname = name
+                src_fname = bytes(name).decode('utf-8')
             finally:
                 efree(name)
 
