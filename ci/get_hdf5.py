@@ -112,7 +112,8 @@ def build_hdf5(
             for cmd in build_cmds:
                 print(' '.join(cmd), file=stderr)
                 p = run(cmd,
-                        universal_newlines=True, shell=True)
+                        universal_newlines=True, shell=True,
+                        cwd=cwd)
                 p.check_returncode()
                 print(p)
             print("Installed HDF5 version {version} to {install_path}".format(
@@ -132,7 +133,7 @@ def get_autotools_cmds(install_path, with_mpi):
 
     cfg_cmd = ["./configure", "--prefix", install_path] + parallel_args
 
-    build_cmds = (["make"], ["make", "install"])
+    build_cmds = (["make"], ["make", "install", '-v'])
 
     return cfg_cmd, build_cmds
 
