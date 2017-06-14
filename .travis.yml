@@ -16,7 +16,7 @@ cache:
     - $HOME/.cache/pip
     - $HOME/.cache/hdf5
     - $HOME/.ccache  # https://github.com/travis-ci/travis-ci/issues/5853
-    - $HOME/.cache/matplotlib
+
 env:
   global:
     - HDF5_CACHE_DIR=$HOME/.cache/hdf5
@@ -120,6 +120,6 @@ before_install:
 install:
   - pip install tox
   - ci/travis/get_hdf5_if_needed.sh
-
+  - ls -R $HDF5_CACHE_DIR
 script:
   - tox
