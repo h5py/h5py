@@ -61,7 +61,7 @@ matrix:
         LC_ALL=C
     - python: 2.6
       env:
-      - TOXENV=py33-test-deps
+      - TOXENV=py26-test-deps
         HDF5_VERSION=1.10.1
         HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION
 
