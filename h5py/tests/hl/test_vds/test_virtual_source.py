@@ -1,8 +1,11 @@
-import unittest
+from ...common import ut
 import h5py as h5
 import numpy as np
 
-class TestVirtualSource(unittest.TestCase):
+
+@ut.skipUnless(h5.version.hdf5_version_tuple >= (1, 9, 233),
+               'VDS requires HDF5 >= 1.9.233')
+class TestVirtualSource(ut.TestCase):
     def test_full_slice(self):
         dataset = h5.VirtualSource('test','test',(20,30,30))
         sliced = dataset[:,:,:]
@@ -134,4 +137,4 @@ class TestVirtualSource(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    unittest.main()
+    ut.main()
