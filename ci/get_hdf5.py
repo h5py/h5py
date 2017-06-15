@@ -112,8 +112,7 @@ def build_hdf5(
             for cmd in build_cmds:
                 print(' '.join(cmd), file=stderr)
                 p = run(cmd,
-                        universal_newlines=True, shell=True,
-                        cwd=cwd)
+                        universal_newlines=True, shell=True)
                 p.check_returncode()
                 print(p)
             print("Installed HDF5 version {version} to {install_path}".format(
