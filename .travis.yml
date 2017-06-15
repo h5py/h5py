@@ -47,21 +47,21 @@ env:
 matrix:
   include:
     # needed to work around https://github.com/travis-ci/travis-ci/issues/4794
-    - python: 3.5
+    - python: 2.6
       env:
-      - TOXENV=py35-test-deps
-    - python: 3.5
+      - TOXENV=py26-test-deps
+    - python: 2.6
       env:
-      - TOXENV=py35-test-mindeps
-    - python: 3.5
+      - TOXENV=py26-test-mindeps
+    - python: 2.6
       env:
-      - TOXENV=py35-test-deps
+      - TOXENV=py26-test-deps
         TOX_TESTENV_PASSENV=LANG LC_ALL
         LANG=C
         LC_ALL=C
-    - python: 3.5
+    - python: 2.6
       env:
-      - TOXENV=py35-test-deps
+      - TOXENV=py33-test-deps
         HDF5_VERSION=1.10.1
         HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION
 
@@ -83,9 +83,30 @@ matrix:
         HDF5_VERSION=1.10.1
         HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION
 
+    - python: 3.5
+      env:
+      - TOXENV=py35-test-deps
+    - python: 3.5
+      env:
+      - TOXENV=py35-test-mindeps
+    - python: 3.5
+      env:
+      - TOXENV=py35-test-deps
+        TOX_TESTENV_PASSENV=LANG LC_ALL
+        LANG=C
+        LC_ALL=C
+    - python: 3.5
+      env:
+      - TOXENV=py35-test-deps
+        HDF5_VERSION=1.10.1
+        HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION
+
     - python: 3.6
       env:
       - TOXENV=py36-test-deps
+    - python: 3.6
+      env:
+      - TOXENV=py36-test-deps-pre
     - python: 3.6
       env:
       - TOXENV=py36-test-mindeps
@@ -113,11 +134,17 @@ matrix:
             - openmpi-bin         # 1.4.3
             - libopenmpi-dev
             - libhdf5-openmpi-dev # 1.8.4
+
+    - python: "nightly"
+      env:
+      - TOXENV=nightly
+
     - python: pypy
       env:
       - TOXENV=pypy-test-deps
   allow_failures:
     - python: pypy
+    - python: 'nightly'
 
 before_install:
   # - export PATH=/usr/lib/ccache:$PATH
