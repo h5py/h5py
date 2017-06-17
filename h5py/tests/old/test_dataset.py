@@ -170,6 +170,12 @@ class TestCreateRequire(BaseDataset):
         dset2 = self.f.require_dataset('foo', (10, 3), 'f')
         self.assertEqual(dset, dset2)
 
+    def test_kwds_fail(self):
+        """ require_dataset yields existing dataset """
+        self.f.require_dataset('foo', (10, 3), 'f', data=np.ones((10, 3)))
+        with self.assertRaises(RuntimeError):
+            self.f.require_dataset('foo', (10, 3), 'f', data=np.ones((10, 3)))
+
     def test_shape_conflict(self):
         """ require_dataset with shape conflict yields TypeError """
         self.f.create_dataset('foo', (10, 3), 'f')

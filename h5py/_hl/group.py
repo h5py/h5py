@@ -123,8 +123,11 @@ class Group(HLObject, MutableMappingHDF5):
         shape or dtype don't match according to the above rules.
         """
         with phil:
-            if not name in self:
+            if name not in self:
                 return self.create_dataset(name, *(shape, dtype), **kwds)
+
+            if kwds:
+                raise RuntimeError('Keyword arguments are ignored')
 
             dset = self[name]
             if not isinstance(dset, dataset.Dataset):
