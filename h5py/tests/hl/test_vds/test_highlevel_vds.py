@@ -6,9 +6,10 @@ import numpy as np
 import h5py as h5
 import tempfile
 from ...common import ut
+from ...._hl.vds import vmlist_to_kwawrgs, vds_support
 
 
-@ut.skipUnless(h5.version.hdf5_version_tuple >= (1, 9, 233),
+@ut.skipUnless(vds_support,
                'VDS requires HDF5 >= 1.9.233')
 class TestEigerHighLevel(ut.TestCase):
     def setUp(self):
@@ -44,7 +45,7 @@ class TestEigerHighLevel(ut.TestCase):
                 VM = h5.VirtualMap(VSRC, TGT[M_minus_1:M, :, :], dtype=float)
                 VMlist.append(VM)
                 M_minus_1 = M
-            f.create_virtual_dataset(VMlist=VMlist, fillvalue=45)
+            f.create_virtual_dataset(**vmlist_to_kwawrgs(VMlist=VMlist, fillvalue=45))
             f.close()
 
         f = h5.File(self.outfile, 'r')['data']
@@ -95,7 +96,7 @@ class ExcaliburData(object):
         return dset
 
 
-@ut.skipUnless(h5.version.hdf5_version_tuple >= (1, 9, 233),
+@ut.skipUnless(vds_support,
                'VDS requires HDF5 >= 1.9.233')
 class TestExcaliburHighLevel(ut.TestCase):
     def create_excalibur_fem_stripe_datafile(self, fname, nframes, excalibur_data,scale):
@@ -140,7 +141,9 @@ class TestExcaliburHighLevel(ut.TestCase):
             offset += in_sh[1]+vertical_gap # increment the offset
             VMlist.append(VM) # append it to the list
 
-        f.create_virtual_dataset(VMlist=VMlist, fillvalue=0x1) # pass the fill value and list of maps
+        # pass the fill value and list of maps
+        f.create_virtual_dataset(
+            **vmlist_to_kwawrgs(VMlist=VMlist, fillvalue=0x1))
         f.close()
 
         f = h5.File(self.outfile,'r')['data']
@@ -166,7 +169,7 @@ https://support.hdfgroup.org/HDF5/docNewFeatures/VDS/HDF5-VDS-requirements-use-c
 '''
 
 
-@ut.skipUnless(h5.version.hdf5_version_tuple >= (1, 9, 233),
+@ut.skipUnless(vds_support,
                'VDS requires HDF5 >= 1.9.233')
 class TestPercivalHighLevel(ut.TestCase):
 
@@ -198,7 +201,9 @@ class TestPercivalHighLevel(ut.TestCase):
                 VSRC = h5.VirtualSource(foo, 'data',shape=(20,200,200),maxshape=(None, 200,200))
                 VM.append(h5.VirtualMap(VSRC,TGT[k:79:4,:,:] , dtype=np.float))
                 k+=1
-            f.create_virtual_dataset(VMlist=VM, fillvalue=-5) # pass the fill value and list of maps
+            # pass the fill value and list of maps
+            f.create_virtual_dataset(
+                **vmlist_to_kwawrgs(VMlist=VM, fillvalue=-5))
             f.close()
 
         f = h5.File(self.outfile,'r')['data']
