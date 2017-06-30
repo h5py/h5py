@@ -11,19 +11,21 @@
     Implements support for high-level access to HDF5 groups.
 """
 
-from __future__ import absolute_import
+from __future__ import absolute_import, division
 
 import posixpath as pp
 import six
 import numpy
 
+
 from .compat import filename_decode, filename_encode
 
-from .. import h5g, h5i, h5o, h5r, h5t, h5l, h5p
+from .. import h5g, h5i, h5o, h5r, h5t, h5l, h5p, h5s, h5d
 from . import base
 from .base import HLObject, MutableMappingHDF5, phil, with_phil
 from . import dataset
 from . import datatype
+from .vds import vds_support
 
 
 class Group(HLObject, MutableMappingHDF5):
@@ -107,6 +109,55 @@ class Group(HLObject, MutableMappingHDF5):
             dset = dataset.Dataset(dsid)
             if name is not None:
                 self[name] = dset
+            return dset
+
+    if vds_support:
+        def create_virtual_dataset(self, name, vds_iter, target_dtype,
+                                   target_shape, target_maxshape,
+                                   fillvalue=None):
+            """Create a new virtual dataset in this group.
+
+            Creates the virtual dataset from a list of virtual maps, any
+            gaps are filled with a specified fill value.
+
+            name
+                (str) Name of the new dataset
+
+            vds_iter
+                (iterable) Mappings between the virtual data set and
+                the source data set.  The values in this
+
+            target_dtype
+                (?) Data type of the virtual dataset
+
+            target_shape, optional
+                (tuple)  The shape of the virtual dataset.  If not specified
+                attempt to infer from the the union of targe slices in vds_iter
+
+            target_maxshape, optional
+                (tuple) The maximum shape for the virtual dataset
+
+            fillvalue
+                (Scalar) Use this value for uninitialized parts of the dataset.
+
+            """
+            # create the creation property list
+            dcpl = h5p.create(h5p.DATASET_CREATE)
+            if fillvalue is not None:
+                dcpl.set_fill_value(numpy.array([fillvalue]))
+
+            virt_dspace = h5s.create_simple(target_shape, target_maxshape)
+
+            for vspace, fpath, dset, src_dspace in vds_iter:
+
+                dcpl.set_virtual(vspace, fpath, dset, src_dspace)
+
+            with phil:
+                dset = h5d.create(self.id,
+                                  name=name,
+                                  tid=target_dtype,
+                                  space=virt_dspace,
+                                  dcpl=dcpl)
             return dset
 
     def require_dataset(self, name, shape, dtype, exact=False, **kwds):
@@ -198,7 +249,6 @@ class Group(HLObject, MutableMappingHDF5):
 
         >>> cls = group.get('foo', getclass=True)
         >>> if cls == SoftLink:
-        ...     print '"foo" is a soft link!'
         """
         # pylint: disable=arguments-differ
 
@@ -535,4 +585,5 @@ class ExternalLink(object):
         self._path = str(path)
 
     def __repr__(self):
-        return '<ExternalLink to "%s" in file "%s"' % (self.path, self.filename)
+        return '<ExternalLink to "%s" in file "%s"' % (self.path,
+                                                       self.filename)

@@ -9,46 +9,80 @@ addons:
       - libhdf5-serial-dev
 
 sudo: false
+dist: trusty
 
 cache:
   directories:
     - $HOME/.cache/pip
+    - $HOME/.cache/hdf5
+    - $HOME/.ccache  # https://github.com/travis-ci/travis-ci/issues/5853
 
 env:
-  - TOXENV=py26-test-deps
-  - TOXENV=py27-test-deps
-  - TOXENV=py33-test-deps
-  - TOXENV=py34-test-deps
-  - TOXENV=py26-test-mindeps
-  - TOXENV=py27-test-mindeps
-  - TOXENV=py33-test-mindeps
-  - TOXENV=py34-test-mindeps
-#  - TOXENV=py35-test-deps
-#  - TOXENV=py35-test-mindeps
-#  - TOXENV=py36-test-deps
-#  - TOXENV=py36-test-mindeps
-# commented out because of https://github.com/travis-ci/travis-ci/issues/4794
-  - TOXENV=py26-test-deps
-    TOX_TESTENV_PASSENV=LANG LC_ALL
-    LANG=C
-    LC_ALL=C
-  - TOXENV=py27-test-deps
-    TOX_TESTENV_PASSENV=LANG LC_ALL
-    LANG=C
-    LC_ALL=C
-  - TOXENV=py33-test-deps
-    TOX_TESTENV_PASSENV=LANG LC_ALL
-    LANG=C
-    LC_ALL=C
-  - TOXENV=py34-test-deps
-    TOX_TESTENV_PASSENV=LANG LC_ALL
-    LANG=C
-    LC_ALL=C
-  - TOXENV=docs
+  global:
+    - HDF5_CACHE_DIR=$HOME/.cache/hdf5
+  matrix:
+
+    - TOXENV=py27-test-deps
+    - TOXENV=py27-test-mindeps
+    - TOXENV=py27-test-deps
+      TOX_TESTENV_PASSENV=LANG LC_ALL
+      LANG=C
+      LC_ALL=C
+    - TOXENV=py27-test-deps
+      HDF5_VERSION=1.10.1
+      HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION
+
+    - TOXENV=py34-test-deps
+    - TOXENV=py34-test-mindeps
+    - TOXENV=py34-test-deps
+      TOX_TESTENV_PASSENV=LANG LC_ALL
+      LANG=C
+      LC_ALL=C
+    - TOXENV=py34-test-deps
+      HDF5_VERSION=1.10.1
+      HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION
+
+    - TOXENV=docs
 
 matrix:
   include:
     # needed to work around https://github.com/travis-ci/travis-ci/issues/4794
+    - python: 2.6
+      env:
+      - TOXENV=py26-test-deps
+    - python: 2.6
+      env:
+      - TOXENV=py26-test-mindeps
+    - python: 2.6
+      env:
+      - TOXENV=py26-test-deps
+        TOX_TESTENV_PASSENV=LANG LC_ALL
+        LANG=C
+        LC_ALL=C
+    - python: 2.6
+      env:
+      - TOXENV=py26-test-deps
+        HDF5_VERSION=1.10.1
+        HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION
+
+    - python: 3.3
+      env:
+      - TOXENV=py33-test-deps
+    - python: 3.3
+      env:
+      - TOXENV=py33-test-mindeps
+    - python: 3.3
+      env:
+      - TOXENV=py33-test-deps
+        TOX_TESTENV_PASSENV=LANG LC_ALL
+        LANG=C
+        LC_ALL=C
+    - python: 3.3
+      env:
+      - TOXENV=py33-test-deps
+        HDF5_VERSION=1.10.1
+        HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION
+
     - python: 3.5
       env:
       - TOXENV=py35-test-deps
@@ -61,9 +95,18 @@ matrix:
         TOX_TESTENV_PASSENV=LANG LC_ALL
         LANG=C
         LC_ALL=C
+    - python: 3.5
+      env:
+      - TOXENV=py35-test-deps
+        HDF5_VERSION=1.10.1
+        HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION
+
     - python: 3.6
       env:
       - TOXENV=py36-test-deps
+    - python: 3.6
+      env:
+      - TOXENV=py36-test-deps-pre
     - python: 3.6
       env:
       - TOXENV=py36-test-mindeps
@@ -73,9 +116,14 @@ matrix:
         TOX_TESTENV_PASSENV=LANG LC_ALL
         LANG=C
         LC_ALL=C
+    - python: 3.6
+      env:
+      - TOXENV=py36-test-deps
+        HDF5_VERSION=1.10.1
+        HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION
+
     # parallel HDF5 test with HDF5>=1.8.9 for mpio "atomic" support
-    - dist: trusty
-      sudo: required
+    - python: 3.6
       env:
       - TOXENV=py34-test-mpi4py
       - CC="mpicc"
@@ -86,14 +134,25 @@ matrix:
             - openmpi-bin         # 1.4.3
             - libopenmpi-dev
             - libhdf5-openmpi-dev # 1.8.4
+
+    - python: "nightly"
+      env:
+      - TOXENV=nightly
+
     - python: pypy
       env:
       - TOXENV=pypy-test-deps
   allow_failures:
     - python: pypy
+    - python: 'nightly'
+
+before_install:
+  # - export PATH=/usr/lib/ccache:$PATH
+  - ccache -s
 
 install:
   - pip install tox
-
+  - ci/travis/get_hdf5_if_needed.sh
+  - ls -lRa $HDF5_CACHE_DIR
 script:
   - tox

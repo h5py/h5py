@@ -52,13 +52,14 @@ Advanced topics
 
 .. toctree::
     :maxdepth: 1
-    
+
     config
     special
     strings
     refs
     mpi
     swmr
+    vds
 
 
 Meta-info about the h5py project

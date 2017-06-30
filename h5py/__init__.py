@@ -30,7 +30,7 @@ except ImportError:
         raise ImportError("You cannot import h5py from inside the install directory.\nChange to another directory first.")
     else:
         raise
-    
+
 _errors.silence_errors()
 
 from ._conv import register_converters as _register_converters
@@ -61,9 +61,12 @@ from .version import version as __version__
 
 from .tests import run_tests
 
+if version.hdf5_version_tuple[:3] >= get_config().vds_min_hdf5_version:
+    from ._hl.vds import VirtualSource, VirtualTarget, VirtualMap
+
 if version.hdf5_version_tuple != version.hdf5_built_version_tuple:
     _warn(("h5py is running against HDF5 {0} when it was built against {1}, "
-        "this may cause problems").format(
+           "this may cause problems").format(
             '{0}.{1}.{2}'.format(*version.hdf5_version_tuple),
             '{0}.{1}.{2}'.format(*version.hdf5_built_version_tuple)
     ))
@@ -98,7 +101,3 @@ from .h5t import py_new_vlen as new_vlen
 from .h5t import py_get_vlen as get_vlen
 from .h5t import py_new_enum as new_enum
 from .h5t import py_get_enum as get_enum
-
-
-
-
