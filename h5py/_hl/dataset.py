@@ -233,7 +233,7 @@ class Dataset(HLObject):
     @with_phil
     def size(self):
         """Numpy-style attribute giving the total dataset size"""
-        return numpy.prod(self.shape)
+        return numpy.prod(self.shape, dtype=numpy.intp)
 
     @property
     @with_phil
