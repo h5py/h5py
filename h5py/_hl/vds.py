@@ -1,5 +1,22 @@
 from copy import deepcopy as copy
-from .. import h5s
+from collections import namedtuple
+from .. import h5s, h5t, h5
+from .. import version
+
+
+class VDSmap(namedtuple('VDSmap', ('vspace', 'file_name',
+                                   'dset_name', 'src_space'))):
+    '''Mapping to the the virtual data set from a source dataset
+
+    P
+    '''
+
+
+vds_support = False
+hdf5_version = version.hdf5_version_tuple[0:3]
+
+if hdf5_version >= h5.get_config().vds_min_hdf5_version:
+    vds_support = True
 
 
 class DatasetContainer(object):
@@ -213,3 +230,59 @@ class VirtualMap(object):
         get the source data space
         '''
         return self.src_dspace
+
+
+def vmlist_to_kwawrgs(VMlist, fillvalue):
+    '''Create kwargs to pass to Group.create_virtual_dataset
+
+    Parameters
+    ----------
+    VMlist : List[VirtualMap]
+
+    fillvalue : object
+
+    Returns
+    -------
+    kwargs : dict
+       Suitable to be **kwarg into `Group.create_virtual_dataset`
+    '''
+    if not VMlist:
+        raise ValueError("create_virtual_dataset requires at least "
+                         "one virtual map to construct output.")
+
+    if not isinstance(VMlist, (tuple, list)):
+        VMlist = [VMlist]
+
+    vds_iter = []
+
+    sh = VMlist[0].target.shape
+    max_sh = VMlist[0].target.maxshape
+    for VM in VMlist:
+        virt_start_idx = tuple([ix.start
+                                for ix in VM.target.slice_list])
+        virt_stride_index = tuple([ix.step
+                                   for ix in VM.target.slice_list])
+        if any(ix == h5s.UNLIMITED for ix in VM.target.maxshape):
+            count_idx = [1, ] * len(virt_stride_index)
+            unlimited_index = VM.target.maxshape.index(h5s.UNLIMITED)
+            count_idx[unlimited_index] = h5s.UNLIMITED
+            count_idx = tuple(count_idx)
+        else:
+            count_idx = (1, ) * len(virt_stride_index)
+        virt_dspace = h5s.create_simple(sh, max_sh)
+        virt_dspace.select_hyperslab(start=virt_start_idx,
+                                     count=count_idx,
+                                     stride=virt_stride_index,
+                                     block=VM.block_shape)
+        vds_iter.append(VDSmap(virt_dspace,
+                               VM.src.path,
+                               VM.src.key,
+                               VM.src_dspace))
+
+    return {
+        'name': VMlist[-1].target.key,
+        'vds_iter': vds_iter,
+        'target_dtype': h5t.py_create(VMlist[-1].dtype, logical=1),
+        'target_shape': VMlist[0].target.shape,
+        'target_maxshape': VMlist[0].target.maxshape,
+        'fillvalue': fillvalue}

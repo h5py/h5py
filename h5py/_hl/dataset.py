@@ -30,19 +30,11 @@ from . import selections as sel
 from . import selections2 as sel2
 from .datatype import Datatype
 from .compat import filename_decode
-from .. import version
-from collections import namedtuple
+from .vds import VDSmap, vds_support
 
 _LEGACY_GZIP_COMPRESSION_VALS = frozenset(range(10))
 MPI = h5.get_config().mpi
 
-hdf5_version = version.hdf5_version_tuple[0:3]
-
-vds_support = False
-if hdf5_version >= h5.get_config().vds_min_hdf5_version:
-    vds_support = True
-    vds_source = namedtuple('vds_source', ('vspace', 'file_name',
-                                           'dset_name', 'src_space'))
 
 def readtime_dtype(basetype, names):
     """ Make a NumPy dtype appropriate for reading """
@@ -769,8 +761,8 @@ class Dataset(HLObject):
                 raise RuntimeError("Not a virtual dataset")
             dcpl = self._dcpl
             return [
-                vds_source(dcpl.get_virtual_vspace(j),
-                           dcpl.get_virtual_filename(j),
-                           dcpl.get_virtual_dsetname(j),
-                           dcpl.get_virtual_srcspace(j))
+                VDSmap(dcpl.get_virtual_vspace(j),
+                       dcpl.get_virtual_filename(j),
+                       dcpl.get_virtual_dsetname(j),
+                       dcpl.get_virtual_srcspace(j))
                 for j in range(dcpl.get_virtual_count())]
