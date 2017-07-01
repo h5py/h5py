@@ -472,8 +472,7 @@ class TestVeryLargeArray(TestCase):
 
     def setUp(self):
         TestCase.setUp(self)
-        self.data = np.empty((2**15, 2**16), dtype=np.bool)
-        self.dset = self.f.create_dataset('x', data=self.data)
+        self.dset = self.f.create_dataset('x', shape=(2**15, 2**16))
 
     @ut.skipIf(sys.maxsize < 2**31, 'Maximum integer size >= 2**31 required')
     def test_size(self):
