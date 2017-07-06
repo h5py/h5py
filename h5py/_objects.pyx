@@ -115,12 +115,15 @@ def nonlocal_close():
     """ Find dead ObjectIDs and set their integer identifiers to 0.
     """
     cdef ObjectID obj
+    cdef list reg_ids
 
     # create a cached list of ids whilst the gc is disabled to avoid hitting
     # the cyclic gc while iterating through the registry dict
     gc.disable()
-    reg_ids = list(registry)
-    gc.enable()
+    try:
+        reg_ids = list(registry)
+    finally:
+        gc.enable()
 
     for python_id in reg_ids:
         ref = registry.get(python_id)
