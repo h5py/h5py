@@ -11,8 +11,8 @@ from zipfile import ZipFile
 
 import requests
 
-HDF5_URL = "https://www.hdfgroup.org/ftp/HDF5/releases/hdf5-{version}/src/"
-HDF5_FILE = HDF5_URL + "hdf5-{version}.zip"
+HDF5_18_URL = "https://www.hdfgroup.org/ftp/HDF5/releases/hdf5-1.8/hdf5-{version}/src/"
+HDF5_FILE = HDF5_18_URL + "hdf5-{version}.zip"
 CMAKE_CONFIGURE_CMD = [
     "cmake", "-DBUILD_SHARED_LIBS:BOOL=ON", "-DCMAKE_BUILD_TYPE:STRING=RELEASE",
     "-DHDF5_BUILD_CPP_LIB=OFF", "-DHDF5_BUILD_HL_LIB=ON",
