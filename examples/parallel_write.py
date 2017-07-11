@@ -3,7 +3,7 @@
 """
 Author:  Jialin Liu, jalnliu@lbl.gov
 Date:    Nov 17, 2015
-Prerequisites: python 2.5.0, mpi4py and numpy
+Prerequisites: python 2.7.0, mpi4py and numpy
 Source Codes: This 'collective io' branch is pushed into the h5py master
 Note: Must build the h5py with parallel hdf5
 """
@@ -28,7 +28,7 @@ f = h5py.File(filename, 'w', driver='mpio', comm=MPI.COMM_WORLD)
 rank = comm.Get_rank()
 length_x = 6400*1024
 length_y = 1024
-dset = f.create_dataset('test', (length_x,length_y), dtype='f8')
+dset = f.create_dataset('dset', (length_x,length_y), dtype='f8')
 #data type should be consistent in numpy and h5py, e.g., 64 bits
 #otherwise, hdf5 layer will fall back to independent io.
 f.atomic = False
@@ -38,6 +38,7 @@ comm.Barrier()
 timestart=MPI.Wtime()
 start=rank*length_rank
 end=start+length_rank
+ele_size=dset.dtype.itemsize
 if rank==nproc-1: #last rank
     end=start+length_last_rank
 temp=np.random.random((end-start,length_y))
@@ -50,10 +51,10 @@ comm.Barrier()
 timeend=MPI.Wtime()
 if rank==0:
     if colw==1:
-    	print "collective write time %f" %(timeend-timestart)
+    	print "Collective write time: %f seconds" %(timeend-timestart)
     else :
-	print "independent write time %f" %(timeend-timestart)
-    print "data size x: %d y: %d" %(length_x, length_y)
-    print "file size ~%d GB" % (length_x*length_y/1024.0/1024.0/1024.0*8.0)
-    print "number of processes %d" %nproc
+	print "Independent write time: %f seconds" %(timeend-timestart)
+    print "Data Dimension: x: %d y: %d" %(length_x, length_y)
+    print "Data size: %d bytes" % (length_x*length_y*ele_size)
+    print "Number of processes: %d" %nproc
 f.close()

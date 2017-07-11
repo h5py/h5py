@@ -65,9 +65,9 @@ comm.Barrier()
 timeend=MPI.Wtime()
 if rank==0:
     if colr==0:
-     print "Independent read time: %f" %(timeend-timestart)
+     print "Independent read time: %f seconds" %(timeend-timestart)
     else:
-     print "Collective read time: %f" %(timeend-timestart)
+     print "Collective read time: %f seconds" %(timeend-timestart)
     print "Data dimension x: %d y: %d" %(length_x, length_y)
     print "Data size: %d bytes" % (length_x*length_y*ele_size)
     print "Number of processes: %d" %nproc
