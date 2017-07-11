@@ -13,22 +13,32 @@
 
 from __future__ import absolute_import
 
+from collections import namedtuple
 from . import h5 as _h5
-from distutils.version import StrictVersion as _sv
 import sys
 import numpy
 
-version = "2.5.0"
+# All should be integers, except pre, as validating versions is more than is
+# needed for our use case
+_H5PY_VERSION_CLS = namedtuple("_H5PY_VERSION_CLS", "major minor bugfix pre post dev")
 
-_exp = _sv(version)
+hdf5_built_version_tuple = _h5.HDF5_VERSION_COMPILED_AGAINST
 
-version_tuple = _exp.version + ((''.join(str(x) for x in _exp.prerelease),) if _exp.prerelease is not None else ('',))
+version_tuple = _H5PY_VERSION_CLS(2, 7, 0, None, 0, None)
+
+version = "{0.major:d}.{0.minor:d}.{0.bugfix:d}".format(version_tuple)
+if version_tuple.pre is not None:
+    version += version_tuple.pre
+if version_tuple.post is not None:
+    version += ".post{0.post:d}".format(version_tuple)
+if version_tuple.dev is not None:
+    version += ".dev{0.dev:d}".format(version_tuple)
 
 hdf5_version_tuple = _h5.get_libversion()
 hdf5_version = "%d.%d.%d" % hdf5_version_tuple
 
 api_version_tuple = (1,8)
-api_version = "1.8"
+api_version = "%d.%d" % api_version_tuple
 
 info = """\
 Summary of the h5py configuration
@@ -46,5 +56,3 @@ numpy   %(numpy)s
         'platform': sys.platform,
         'maxsize': sys.maxsize,
         'numpy': numpy.__version__ }
-
-

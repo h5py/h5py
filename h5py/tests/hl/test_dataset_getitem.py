@@ -57,6 +57,7 @@ class TestEmpty(TestCase):
         tid.set_size(10)
         dsid = h5py.h5d.create(self.f.id, b'x', tid, sid)
         self.dset = h5py.Dataset(dsid)
+        self.empty_obj = h5py.Empty(np.dtype("S10"))
         
     def test_ndim(self):
         """ Verify number of dimensions """
@@ -64,17 +65,15 @@ class TestEmpty(TestCase):
         
     def test_shape(self):
         """ Verify shape """
-        self.assertEquals(self.dset.shape, tuple())
+        self.assertEquals(self.dset.shape, None)
         
     def test_ellipsis(self):
-        """ Ellipsis -> IOError """
-        with self.assertRaises(IOError):
-            out = self.dset[...]
+        """ Ellipsis -> ValueError """
+        self.assertEquals(self.dset[...], self.empty_obj)
         
     def test_tuple(self):
         """ () -> IOError """
-        with self.assertRaises(IOError):
-            out = self.dset[()]
+        self.assertEquals(self.dset[()], self.empty_obj)
         
     def test_slice(self):
         """ slice -> ValueError """
@@ -283,7 +282,7 @@ class Test1DZeroFloat(TestCase):
         
     def test_ndim(self):
         """ Verify number of dimensions """
-        self.assertEquals(self.dset.ndim, 0)
+        self.assertEquals(self.dset.ndim, 1)
         
     def test_shape(self):
         """ Verify shape """
@@ -396,6 +395,15 @@ class Test1DFloat(TestCase):
         
     def test_indexlist_simple(self):
         self.assertNumpyBehavior(self.dset, self.data, np.s_[[1,2,5]])
+
+    def test_indexlist_single_index_ellipsis(self):
+        self.assertNumpyBehavior(self.dset, self.data, np.s_[[0], ...])
+
+    def test_indexlist_numpyarray_single_index_ellipsis(self):
+        self.assertNumpyBehavior(self.dset, self.data, np.s_[np.array([0]), ...])
+
+    def test_indexlist_numpyarray_ellipsis(self):
+        self.assertNumpyBehavior(self.dset, self.data, np.s_[np.array([1, 2, 5]), ...])
         
     # Another UnboundLocalError
     @ut.expectedFailure
@@ -412,9 +420,6 @@ class Test1DFloat(TestCase):
         with self.assertRaises(TypeError):
             self.dset[[1,3,2]]
         
-    # This results in IOError as the argument is not properly validated.
-    # Suggest IndexError be raised.
-    @ut.expectedFailure
     def test_indexlist_repeated(self):
         """ we forbid repeated index values """
         with self.assertRaises(TypeError):

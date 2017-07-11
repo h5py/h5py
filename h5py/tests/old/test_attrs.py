@@ -22,7 +22,7 @@ import six
 import numpy as np
 import collections
 
-from .common import TestCase, ut
+from ..common import TestCase, ut
 
 from h5py.highlevel import File
 from h5py import h5a,  h5t
@@ -116,7 +116,7 @@ class TestUnicode(BaseAttrs):
 
     def test_unicode(self):
         """ Access via Unicode string with non-ascii characters """
-        name = six.u("Omega") + six.unichr(0x03A9)
+        name = u"Omega" + six.unichr(0x03A9)
         self.f.attrs[name] = 42
         out = self.f.attrs[name]
         self.assertEqual(out, 42)

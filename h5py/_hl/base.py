@@ -15,15 +15,16 @@ from __future__ import absolute_import
 
 import posixpath
 import os
-import sys
 import six
-from collections import (Mapping, MutableMapping, KeysView, 
+from collections import (Mapping, MutableMapping, KeysView,
                          ValuesView, ItemsView)
 
-from .. import h5d, h5i, h5r, h5p, h5f, h5t
+from .compat import fspath, filename_encode
+
+from .. import h5d, h5i, h5r, h5p, h5f, h5t, h5s
 
 # The high-level interface is serialized; every public API function & method
-# is wrapped in a lock.  We re-use the low-level lock because (1) it's fast, 
+# is wrapped in a lock.  We re-use the low-level lock because (1) it's fast,
 # and (2) it eliminates the possibility of deadlocks due to out-of-order
 # lock acquisition.
 from .._objects import phil, with_phil
@@ -32,14 +33,10 @@ from .._objects import phil, with_phil
 def is_hdf5(fname):
     """ Determine if a file is valid HDF5 (False if it doesn't exist). """
     with phil:
-        fname = os.path.abspath(fname)
+        fname = os.path.abspath(fspath(fname))
 
         if os.path.isfile(fname):
-            try:
-                fname = fname.encode(sys.getfilesystemencoding())
-            except (UnicodeError, LookupError):
-                pass
-            return h5f.is_hdf5(fname)
+            return h5f.is_hdf5(filename_encode(fname))
         return False
 
 
@@ -78,6 +75,13 @@ def default_lcpl():
 
 dlapl = default_lapl()
 dlcpl = default_lcpl()
+
+
+def is_empty_dataspace(obj):
+    """ Check if an object's dataspace is empty """
+    if obj.get_space().get_simple_extent_type() == h5s.NULL:
+        return True
+    return False
 
 
 class CommonStateObject(object):
@@ -175,13 +179,13 @@ class _RegionProxy(object):
     def __init__(self, obj):
         self.id = obj.id
 
-    @with_phil
     def __getitem__(self, args):
         if not isinstance(self.id, h5d.DatasetID):
             raise TypeError("Region references can only be made to datasets")
         from . import selections
-        selection = selections.select(self.id.shape, args, dsid=self.id)
-        return h5r.create(self.id, b'.', h5r.DATASET_REGION, selection.id)
+        with phil:
+            selection = selections.select(self.id.shape, args, dsid=self.id)
+            return h5r.create(self.id, b'.', h5r.DATASET_REGION, selection.id)
 
     def shape(self, ref):
         """ Get the shape of the target dataspace referred to by *ref*. """
@@ -192,8 +196,8 @@ class _RegionProxy(object):
     def selection(self, ref):
         """ Get the shape of the target dataspace selection referred to by *ref*
         """
+        from . import selections
         with phil:
-            from . import selections
             sid = h5r.get_region(ref, self.id)
             return selections.guess_shape(sid)
 
@@ -205,11 +209,11 @@ class HLObject(CommonStateObject):
     """
 
     @property
-    @with_phil
     def file(self):
         """ Return a File instance associated with this object """
         from . import files
-        return files.File(self.id)
+        with phil:
+            return files.File(self.id)
 
     @property
     @with_phil
@@ -256,11 +260,11 @@ class HLObject(CommonStateObject):
         return _RegionProxy(self)
 
     @property
-    @with_phil
     def attrs(self):
         """ Attributes attached to this object """
         from . import attrs
-        return attrs.AttributeManager(self)
+        with phil:
+            return attrs.AttributeManager(self)
 
     @with_phil
     def __init__(self, oid):
@@ -301,11 +305,11 @@ class ValuesViewHDF5(ValuesView):
 
     """
         Wraps e.g. a Group or AttributeManager to provide a value view.
-        
+
         Note that __contains__ will have poor performance as it has
         to scan all the links or attributes.
     """
-    
+
     def __contains__(self, value):
         with phil:
             for key in self._mapping:
@@ -324,7 +328,7 @@ class ItemsViewHDF5(ItemsView):
     """
         Wraps e.g. a Group or AttributeManager to provide an items view.
     """
-        
+
     def __contains__(self, item):
         with phil:
             key, val = item
@@ -343,25 +347,11 @@ class MappingHDF5(Mapping):
     """
         Wraps a Group, AttributeManager or DimensionManager object to provide
         an immutable mapping interface.
-        
+
         We don't inherit directly from MutableMapping because certain
         subclasses, for example DimensionManager, are read-only.
     """
-    
-    if six.PY3:
-        def keys(self):
-            """ Get a view object on member names """
-            return KeysView(self)
-
-        def values(self):
-            """ Get a view object on member objects """
-            return ValuesViewHDF5(self)
-
-        def items(self):
-            """ Get a view object on member items """
-            return ItemsViewHDF5(self)
-
-    else:
+    if six.PY2:
         def keys(self):
             """ Get a list containing member names """
             with phil:
@@ -386,7 +376,20 @@ class MappingHDF5(Mapping):
             """ Get an iterator over (name, object) pairs """
             for x in self:
                 yield (x, self.get(x))
-                
+
+    else:
+        def keys(self):
+            """ Get a view object on member names """
+            return KeysView(self)
+
+        def values(self):
+            """ Get a view object on member objects """
+            return ValuesViewHDF5(self)
+
+        def items(self):
+            """ Get a view object on member items """
+            return ItemsViewHDF5(self)
+
 
 class MutableMappingHDF5(MappingHDF5, MutableMapping):
 
@@ -397,4 +400,25 @@ class MutableMappingHDF5(MappingHDF5, MutableMapping):
     """
 
     pass
-    
+
+
+class Empty(object):
+
+    """
+        Proxy object to represent empty/null dataspaces (a.k.a H5S_NULL).
+
+        This can have an associated dtype, but has no shape or data. This is not
+        the same as an array with shape (0,).
+    """
+    shape = None
+
+    def __init__(self, dtype):
+        self.dtype = dtype
+
+    def __eq__(self, other):
+        if isinstance(other, Empty) and self.dtype == other.dtype:
+            return True
+        return False
+
+    def __repr__(self):
+        return "Empty(dtype={0!r})".format(self.dtype)

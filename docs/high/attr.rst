@@ -1,8 +1,8 @@
 .. _attributes:
 
 
-HDF5 Attributes
-===============
+Attributes
+==========
 
 Attributes are a critical part of what makes HDF5 a "self-describing"
 format.  They are small named pieces of data attached directly to

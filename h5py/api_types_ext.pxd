@@ -46,7 +46,7 @@ cdef extern from "stdint.h":
   ctypedef signed long int int32_t
   ctypedef unsigned long int uint32_t
   ctypedef signed long long int int64_t
-  ctypedef signed long long int uint64_t 
+  ctypedef unsigned long long int uint64_t
 
 # Can't use Cython defs because they keep moving them around
 cdef extern from "Python.h":
@@ -67,6 +67,11 @@ cdef extern from "api_compat.h":
   size_t h5py_offset_n64_imag
   size_t h5py_offset_n128_real
   size_t h5py_offset_n128_imag
+
+  IF COMPLEX256_SUPPORT:
+    size_t h5py_size_n256
+    size_t h5py_offset_n256_real
+    size_t h5py_offset_n256_imag
 
 cdef extern from "lzf_filter.h":
 

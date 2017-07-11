@@ -5,21 +5,6 @@ Single Writer Multiple Reader (SWMR)
 
 Starting with version 2.5.0, h5py includes support for the HDF5 SWMR features.
 
-The SWMR feature is not available in the current release (1.8 series) of HDF5 
-library. It is planned to be released for production use in version 1.10. Until
-then it is available as an experimental prototype form from development snapshot
-version 1.9.178 on the
-`HDF Group ftp server <ftp://ftp.hdfgroup.uiuc.edu/pub/outgoing/SWMR/>`_ or the
-`HDF Group svn repository <http://svn.hdfgroup.uiuc.edu/hdf5/branches/revise_chunks>`_.
-
-.. Warning:: The SWMR feature is currently in prototype form and available for 
-             experimenting and testing. Please do not consider this a production
-             quality feature until the HDF5 library is released as 1.10.
-
-.. Warning:: FILES PRODUCED BY THE HDF5 1.9.X DEVELOPMENT SNAPSHOTS MAY NOT BE
-             READABLE BY OTHER VERSIONS OF HDF5, INCLUDING THE EXISTING 1.8
-             SERIES AND ALSO 1.10 WHEN IT IS RELEASED.
-
 What is SWMR?
 -------------
 
@@ -40,7 +25,8 @@ user to implement either a file polling mechanism, inotify or any other IPC
 mechanism to notify when data has been written.
 
 The SWMR functionality requires use of the latest HDF5 file format: v110. In
-practice this implies setting the libver bounding to "latest" when opening or 
+practice this implies using at least HDF5 1.10 (this can be checked via 
+`h5py.info`) and setting the libver bounding to "latest" when opening or 
 creating the file.
 
 

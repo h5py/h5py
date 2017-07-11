@@ -16,6 +16,8 @@ from __future__ import absolute_import
 import sys
 import os
 
+from .compat import filename_decode, filename_encode
+
 import six
 
 from .base import phil, with_phil
@@ -50,6 +52,11 @@ def make_fapl(driver, libver, **kwds):
         plist.set_libver_bounds(low, high)
 
     if driver is None or (driver == 'windows' and sys.platform == 'win32'):
+        # Prevent swallowing unused key arguments
+        if kwds:
+            msg = "'{key}' is an invalid keyword argument for this function" \
+                  .format(key=next(iter(kwds)))
+            raise TypeError(msg)
         return plist
 
     if driver == 'sec2':
@@ -137,23 +144,19 @@ class File(Group):
     """
 
     @property
-    @with_phil
     def attrs(self):
         """ Attributes attached to this object """
         # hdf5 complains that a file identifier is an invalid location for an
         # attribute. Instead of self, pass the root group to AttributeManager:
         from . import attrs
-        return attrs.AttributeManager(self['/'])
+        with phil:
+            return attrs.AttributeManager(self['/'])
 
     @property
     @with_phil
     def filename(self):
         """File name on disk"""
-        name = h5f.get_name(self.fid)
-        try:
-            return name.decode(sys.getfilesystemencoding())
-        except (UnicodeError, LookupError):
-            return name
+        return filename_decode(h5f.get_name(self.fid))
 
     @property
     @with_phil
@@ -198,7 +201,7 @@ class File(Group):
         @property
         @with_phil
         def atomic(self):
-            """ Set/get MPI-IO atomic mode 
+            """ Set/get MPI-IO atomic mode
             """
             return self.id.get_mpi_atomicity()
 
@@ -207,13 +210,13 @@ class File(Group):
         def atomic(self, value):
             # pylint: disable=missing-docstring
             self.id.set_mpi_atomicity(value)
-            
+
     if swmr_support:
         @property
         def swmr_mode(self):
             """ Controls single-writer multiple-reader mode """
             return self._swmr_mode
-            
+
         @swmr_mode.setter
         @with_phil
         def swmr_mode(self, value):
@@ -255,52 +258,48 @@ class File(Group):
         """
         if swmr and not swmr_support:
             raise ValueError("The SWMR feature is not available in this version of the HDF5 library")
-        
-        with phil:
-            if isinstance(name, _objects.ObjectID):
-                fid = h5i.get_file_id(name)
-            else:
-                try:
-                    # If the byte string doesn't match the default
-                    # encoding, just pass it on as-is.  Note Unicode
-                    # objects can always be encoded.
-                    name = name.encode(sys.getfilesystemencoding())
-                except (UnicodeError, LookupError):
-                    pass
 
+        if isinstance(name, _objects.ObjectID):
+            with phil:
+                fid = h5i.get_file_id(name)
+        else:
+            name = filename_encode(name)
+            with phil:
                 fapl = make_fapl(driver, libver, **kwds)
                 fid = make_fid(name, mode, userblock_size, fapl, swmr=swmr)
-            
+
                 if swmr_support:
                     self._swmr_mode = False
                     if swmr and mode == 'r':
-                        self._swmr_mode = True                    
-                    
-            Group.__init__(self, fid)
+                        self._swmr_mode = True
+
+        Group.__init__(self, fid)
 
     def close(self):
         """ Close the file.  All open objects become invalid """
         with phil:
-            # We have to explicitly murder all open objects related to the file
-            
-            # Close file-resident objects first, then the files.
-            # Otherwise we get errors in MPI mode.
-            id_list = h5f.get_obj_ids(self.id, ~h5f.OBJ_FILE)
-            file_list = h5f.get_obj_ids(self.id, h5f.OBJ_FILE)
-            
-            id_list = [x for x in id_list if h5i.get_file_id(x).id == self.id.id]
-            file_list = [x for x in file_list if h5i.get_file_id(x).id == self.id.id]
-            
-            for id_ in id_list:
-                while id_.valid:
-                    h5i.dec_ref(id_)
-                    
-            for id_ in file_list:
-                while id_.valid:
-                    h5i.dec_ref(id_)
-                    
-            self.id.close()
-            _objects.nonlocal_close()
+            # Check that the file is still open, otherwise skip
+            if self.id.valid:
+                # We have to explicitly murder all open objects related to the file
+
+                # Close file-resident objects first, then the files.
+                # Otherwise we get errors in MPI mode.
+                id_list = h5f.get_obj_ids(self.id, ~h5f.OBJ_FILE)
+                file_list = h5f.get_obj_ids(self.id, h5f.OBJ_FILE)
+
+                id_list = [x for x in id_list if h5i.get_file_id(x).id == self.id.id]
+                file_list = [x for x in file_list if h5i.get_file_id(x).id == self.id.id]
+
+                for id_ in id_list:
+                    while id_.valid:
+                        h5i.dec_ref(id_)
+
+                for id_ in file_list:
+                    while id_.valid:
+                        h5i.dec_ref(id_)
+
+                self.id.close()
+                _objects.nonlocal_close()
 
     def flush(self):
         """ Tell the HDF5 library to flush its buffers.
@@ -320,16 +319,16 @@ class File(Group):
     @with_phil
     def __repr__(self):
         if not self.id:
-            r = six.u('<Closed HDF5 file>')
+            r = u'<Closed HDF5 file>'
         else:
             # Filename has to be forced to Unicode if it comes back bytes
             # Mode is always a "native" string
             filename = self.filename
             if isinstance(filename, bytes):  # Can't decode fname
                 filename = filename.decode('utf8', 'replace')
-            r = six.u('<HDF5 file "%s" (mode %s)>') % (os.path.basename(filename),
+            r = u'<HDF5 file "%s" (mode %s)>' % (os.path.basename(filename),
                                                  self.mode)
 
-        if six.PY3:
-            return r
-        return r.encode('utf8')
+        if six.PY2:
+            return r.encode('utf8')
+        return r

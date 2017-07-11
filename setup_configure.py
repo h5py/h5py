@@ -58,6 +58,7 @@ class EnvironmentOptions(object):
     def __init__(self):
         self.hdf5 = os.environ.get('HDF5_DIR')
         self.hdf5_version = os.environ.get('HDF5_VERSION')
+        self.mpi = os.environ.get('HDF5_MPI') == "ON"
         if self.hdf5_version is not None:
             validate_version(self.hdf5_version)
 
@@ -126,6 +127,8 @@ class configure(Command):
             dct['env_hdf5_version'] = env.hdf5_version
         if self.mpi is not None:
             dct['cmd_mpi'] = self.mpi
+        if env.mpi is not None:
+            dct['env_mpi'] = env.mpi
 
         self.rebuild_required = dct.get('rebuild') or dct != oldsettings
         
@@ -163,9 +166,13 @@ class configure(Command):
                 
         if self.mpi is None:
             self.mpi = oldsettings.get('cmd_mpi')
+        if self.mpi is None:
+            self.mpi = env.mpi
+        if self.mpi is None:
+            self.mpi = oldsettings.get('env_mpi')
                 
         # Step 3: print the resulting configuration to stdout
-        
+
         print('*' * 80)
         print(' ' * 23 + "Summary of the h5py configuration")
         print('')
@@ -204,7 +211,7 @@ def autodetect_version(hdf5_dir=None):
     libdirs = ['/usr/local/lib', '/opt/local/lib']
     try:
         if pkgconfig.exists("hdf5"):
-            libdirs.append(pkgconfig.parse("hdf5")['library_dirs'])
+            libdirs.extend(pkgconfig.parse("hdf5")['library_dirs'])
     except EnvironmentError:
         pass
     if hdf5_dir is not None:

@@ -3,7 +3,20 @@
 Quick Start Guide
 =================
 
-If you're having trouble installing h5py, refer to :ref:`install`.
+Install
+-------
+
+With `Anaconda <http://continuum.io/downloads>`_ or 
+`Miniconda <http://conda.pydata.org/miniconda.html>`_::
+
+    conda install h5py
+    
+With `Enthought Canopy <https://www.enthought.com/products/canopy/>`_, use
+the GUI package manager or::
+
+    enpkg h5py
+
+With pip or setup.py, see :ref:`install`.
 
 Core concepts
 -------------
@@ -42,7 +55,7 @@ from a dataset in the file:
     >>> dset[0]
     0
     >>> dset[10]
-    9
+    10
     >>> dset[0:100:10]
     array([ 0, 10, 20, 30, 40, 50, 60, 70, 80, 90])
 

@@ -16,8 +16,10 @@ ITER_INC    = H5_ITER_INC     # Increasing order
 ITER_DEC    = H5_ITER_DEC     # Decreasing order
 ITER_NATIVE = H5_ITER_NATIVE  # No particular order, whatever is fastest
 
-INDEX_NAME      = H5_INDEX_NAME       # Index on names      
-INDEX_CRT_ORDER = H5_INDEX_CRT_ORDER  # Index on creation order    
+INDEX_NAME      = H5_INDEX_NAME       # Index on names
+INDEX_CRT_ORDER = H5_INDEX_CRT_ORDER  # Index on creation order
+
+HDF5_VERSION_COMPILED_AGAINST = HDF5_VERSION
 
 class ByteStringContext(object):
 
@@ -114,7 +116,7 @@ cdef class H5PYConfig:
     property read_byte_strings:
         """ Returns a context manager which forces all strings to be returned
         as byte strings. """
-        
+
         def __get__(self):
             with phil:
                 return self._bytestrings
@@ -126,11 +128,16 @@ cdef class H5PYConfig:
                 return True
             ELSE:
                 return False
-                
+
     property swmr_min_hdf5_version:
         """ Tuple indicating the minimum HDF5 version required for SWMR features"""
         def __get__(self):
             return SWMR_MIN_HDF5_VERSION
+
+    property vds_min_hdf5_version:
+        """Tuple indicating the minimum HDF5 version required for virtual dataset (VDS) features"""
+        def __get__(self):
+            return VDS_MIN_HDF5_VERSION
 
 cdef H5PYConfig cfg = H5PYConfig()
 
@@ -151,7 +158,7 @@ def get_libversion():
     cdef unsigned int minor
     cdef unsigned int release
     cdef herr_t retval
-    
+
     H5get_libversion(&major, &minor, &release)
 
     return (major, minor, release)

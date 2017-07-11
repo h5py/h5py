@@ -14,6 +14,8 @@
 
 from __future__ import absolute_import
 
+from warnings import warn as _warn
+
 
 # --- Library setup -----------------------------------------------------------
 
@@ -43,7 +45,7 @@ _register_lzf()
 from . import h5a, h5d, h5ds, h5f, h5fd, h5g, h5r, h5s, h5t, h5p, h5z
 
 from ._hl import filters
-from ._hl.base import is_hdf5, HLObject
+from ._hl.base import is_hdf5, HLObject, Empty
 from ._hl.files import File
 from ._hl.group import Group, SoftLink, ExternalLink, HardLink
 from ._hl.dataset import Dataset
@@ -58,6 +60,14 @@ from . import version
 from .version import version as __version__
 
 from .tests import run_tests
+
+if version.hdf5_version_tuple != version.hdf5_built_version_tuple:
+    _warn(("h5py is running against HDF5 {0} when it was built against {1}, "
+        "this may cause problems").format(
+            '{0}.{1}.{2}'.format(*version.hdf5_version_tuple),
+            '{0}.{1}.{2}'.format(*version.hdf5_built_version_tuple)
+    ))
+
 
 def enable_ipython_completer():
     """ Call this from an interactive IPython session to enable tab-completion

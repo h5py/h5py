@@ -1,0 +1,67 @@
+What's new in h5py 2.5
+======================
+
+Experimental support for Single Writer Multiple Reader (SWMR)
+-------------------------------------------------------------
+
+This release introduces experimental support for the highly-anticipated
+"Single Writer Multiple Reader" (SWMR) feature in the upcoming HDF5 1.10
+release.  SWMR allows sharing of a single HDF5 file between multiple processes
+without the complexity of MPI or multiprocessing-based solutions.
+
+This is an experimental feature that should NOT be used in production code.
+We are interested in getting feedback from the broader community with respect
+to performance and the API design.
+
+For more details, check out the h5py user guide:
+http://docs.h5py.org/en/latest/swmr.html
+
+SWMR support was contributed by Ulrik Pedersen (`#551`_).
+
+Other changes
+-------------
+* Use system Cython as a fallback if `cythonize()` fails (`#541`_ by Ulrik Pedersen).
+* Use pkg-config for builing/linking against hdf5 (`#505`_ by James Tocknell).
+* Disable building Cython on Travis (`#513`_ by Andrew Collette).
+* Improvements to release tarball (`#555`_, `#560`_ by Ghislain Antony
+  Vaillant).
+* h5py now has one codebase for both Python 2 and 3; 2to3 removed from setup.py
+  (`#508`_ by James Tocknell).
+* Add python 3.4 to tox (`#507`_ by James Tocknell).
+* Warn when importing from inside install dir (`#558`_ by Andrew Collette).
+* Tweak installation docs with reference to Anaconda and other Python package
+  managers (`#546`_ by Andrew Collette).
+* Fix incompatible function pointer types (`#526`_, `#524`_ by Peter H. Li).
+* Add explicit `vlen is not None` check to work around
+  https://github.com/numpy/numpy/issues/2190 (`#538` by Will Parkin).
+* Group and AttributeManager classes now inherit from the appropriate ABCs
+  (`#527`_ by James Tocknell).
+* Don't strip metadata from special dtypes on read (`#512`_ by Antony Lee).
+* Add 'x' mode as an alias for 'w-' (`#510`_ by Antony Lee).
+* Support dynamical loading of LZF filter plugin (`#506`_ by Peter Colberg).
+* Fix accessing attributes with array type (`#501`_ by Andrew Collette).
+* Don't leak types in enum converter (`#503`_ by Andrew Collette).
+
+.. _`#551` : https://github.com/h5py/h5py/pull/551
+.. _`#541` : https://github.com/h5py/h5py/pull/541
+.. _`#505` : https://github.com/h5py/h5py/pull/505
+.. _`#513` : https://github.com/h5py/h5py/pull/513
+.. _`#555` : https://github.com/h5py/h5py/pull/555
+.. _`#560` : https://github.com/h5py/h5py/pull/560
+.. _`#508` : https://github.com/h5py/h5py/pull/508
+.. _`#507` : https://github.com/h5py/h5py/pull/507
+.. _`#558` : https://github.com/h5py/h5py/pull/558
+.. _`#546` : https://github.com/h5py/h5py/pull/546
+.. _`#526` : https://github.com/h5py/h5py/pull/526
+.. _`#524` : https://github.com/h5py/h5py/pull/524
+.. _`#538` : https://github.com/h5py/h5py/pull/538
+.. _`#527` : https://github.com/h5py/h5py/pull/527
+.. _`#512` : https://github.com/h5py/h5py/pull/512
+.. _`#510` : https://github.com/h5py/h5py/pull/510
+.. _`#506` : https://github.com/h5py/h5py/pull/506
+.. _`#501` : https://github.com/h5py/h5py/pull/501
+.. _`#503` : https://github.com/h5py/h5py/pull/503
+
+Acknowlegements
+---------------
+

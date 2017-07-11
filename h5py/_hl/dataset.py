@@ -16,13 +16,15 @@ from __future__ import absolute_import
 import posixpath as pp
 import sys
 
+from threading import local
+
 import six
 from six.moves import xrange    # pylint: disable=redefined-builtin
 
 import numpy
 
 from .. import h5, h5s, h5t, h5r, h5d, h5p, h5fd
-from .base import HLObject, phil, with_phil
+from .base import HLObject, phil, with_phil, Empty, is_empty_dataspace
 from . import filters
 from . import selections as sel
 from . import selections2 as sel2
@@ -30,6 +32,7 @@ from .datatype import Datatype
 
 _LEGACY_GZIP_COMPRESSION_VALS = frozenset(range(10))
 MPI = h5.get_config().mpi
+
 
 def readtime_dtype(basetype, names):
     """ Make a NumPy dtype appropriate for reading """
@@ -57,14 +60,16 @@ def make_new_dset(parent, shape=None, dtype=None, data=None,
     """
 
     # Convert data to a C-contiguous ndarray
-    if data is not None:
+    if data is not None and not isinstance(data, Empty):
         from . import base
         data = numpy.asarray(data, order="C", dtype=base.guess_dtype(data))
 
     # Validate shape
     if shape is None:
         if data is None:
-            raise TypeError("Either data or shape must be specified")
+            if dtype is None:
+                raise TypeError("One of data, shape or dtype must be specified")
+            data = Empty(dtype)
         shape = data.shape
     else:
         shape = tuple(shape)
@@ -73,7 +78,9 @@ def make_new_dset(parent, shape=None, dtype=None, data=None,
 
     tmp_shape = maxshape if maxshape is not None else shape
     # Validate chunk shape
-    if isinstance(chunks, tuple) and (-numpy.array([ i>=j for i,j in zip(tmp_shape,chunks) if i is not None])).any():
+    if isinstance(chunks, tuple) and any(
+        chunk > dim for dim, chunk in zip(tmp_shape,chunks) if dim is not None
+    ):
         errmsg = "Chunk shape must not be greater than data shape in any dimension. "\
                  "{} is not compatible with {}".format(chunks, shape)
         raise ValueError(errmsg)
@@ -123,12 +130,16 @@ def make_new_dset(parent, shape=None, dtype=None, data=None,
 
     if maxshape is not None:
         maxshape = tuple(m if m is not None else h5s.UNLIMITED for m in maxshape)
-    sid = h5s.create_simple(shape, maxshape)
+
+    if isinstance(data, Empty):
+        sid = h5s.create(h5s.NULL)
+    else:
+        sid = h5s.create_simple(shape, maxshape)
 
 
     dset_id = h5d.create(parent.id, None, tid, sid, dcpl=dcpl)
 
-    if data is not None:
+    if (data is not None) and (not isinstance(data, Empty)):
         dset_id.write(h5s.ALL, h5s.ALL, data)
 
     return dset_id
@@ -139,7 +150,7 @@ class AstypeContext(object):
     """
         Context manager which allows changing the type read from a dataset.
     """
-    
+
     def __init__(self, dset, dtype):
         self._dset = dset
         self._dtype = numpy.dtype(dtype)
@@ -151,6 +162,7 @@ class AstypeContext(object):
     def __exit__(self, *args):
         # pylint: disable=protected-access
         self._dset._local.astype = None
+
 
 if MPI:
     class CollectiveContext(object):
@@ -170,12 +182,13 @@ if MPI:
             # pylint: disable=protected-access
             self._dset._dxpl.set_dxpl_mpio(h5fd.MPIO_INDEPENDENT)
 
+
 class Dataset(HLObject):
 
     """
         Represents an HDF5 dataset
     """
-        
+
     def astype(self, dtype):
         """ Get a context manager allowing you to perform reads to a
         different destination type, e.g.:
@@ -192,15 +205,15 @@ class Dataset(HLObject):
             """ Context manager for MPI collective reads & writes """
             return CollectiveContext(self)
 
-
     @property
-    @with_phil
     def dims(self):
         """ Access dimension scales attached to this dataset. """
         from .dims import DimensionManager
-        return DimensionManager(self)
+        with phil:
+            return DimensionManager(self)
 
     @property
+    @with_phil
     def ndim(self):
         """Numpy-style attribute giving the number of dimensions"""
         return self.id.rank
@@ -305,8 +318,6 @@ class Dataset(HLObject):
     def __init__(self, bind):
         """ Create a new Dataset object by binding to a low-level DatasetID.
         """
-        from threading import local
-
         if not isinstance(bind, h5d.DatasetID):
             raise ValueError("%s is not a DatasetID" % bind)
         HLObject.__init__(self, bind)
@@ -398,11 +409,15 @@ class Dataset(HLObject):
         * Boolean "mask" array indexing
         """
         args = args if isinstance(args, tuple) else (args,)
+        if is_empty_dataspace(self.id):
+            if not (args == tuple() or args == (Ellipsis,)):
+                raise ValueError("Empty datasets cannot be sliced")
+            return Empty(self.dtype)
 
         # Sort field indices from the rest of the args.
         names = tuple(x for x in args if isinstance(x, six.string_types))
         args = tuple(x for x in args if not isinstance(x, six.string_types))
-        if not six.PY3:
+        if six.PY2:
             names = tuple(x.encode('utf-8') if isinstance(x, six.text_type) else x for x in names)
 
         new_dtype = getattr(self._local, 'astype', None)
@@ -440,7 +455,7 @@ class Dataset(HLObject):
             # These are the only access methods NumPy allows for such objects
             if args == (Ellipsis,) or args == tuple():
                 return numpy.empty(self.shape, dtype=new_dtype)
-            
+
         # === Scalar dataspaces =================
 
         if self.shape == ():
@@ -503,7 +518,7 @@ class Dataset(HLObject):
         # Sort field indices from the slicing
         names = tuple(x for x in args if isinstance(x, six.string_types))
         args = tuple(x for x in args if not isinstance(x, six.string_types))
-        if not six.PY3:
+        if six.PY2:
             names = tuple(x.encode('utf-8') if isinstance(x, six.text_type) else x for x in names)
 
         # Generally we try to avoid converting the arrays on the Python
@@ -569,7 +584,7 @@ class Dataset(HLObject):
             if len(mismatch) != 0:
                 mismatch = ", ".join('"%s"'%x for x in mismatch)
                 raise ValueError("Illegal slicing argument (fields %s not in dataset type)" % mismatch)
-        
+
             # Write non-compound source into a single dataset field
             if len(names) == 1 and val.dtype.fields is None:
                 subtype = h5t.py_create(val.dtype)
@@ -625,6 +640,8 @@ class Dataset(HLObject):
         Broadcasting is supported for simple indexing.
         """
         with phil:
+            if is_empty_dataspace(self.id):
+                raise TypeError("Empty datasets have no numpy representation")
             if source_sel is None:
                 source_sel = sel.SimpleSelection(self.shape)
             else:
@@ -648,6 +665,8 @@ class Dataset(HLObject):
         Broadcasting is supported for simple indexing.
         """
         with phil:
+            if is_empty_dataspace(self.id):
+                raise TypeError("Empty datasets cannot be written to")
             if source_sel is None:
                 source_sel = sel.SimpleSelection(source.shape)
             else:
@@ -680,39 +699,37 @@ class Dataset(HLObject):
     @with_phil
     def __repr__(self):
         if not self:
-            r = six.u('<Closed HDF5 dataset>')
+            r = u'<Closed HDF5 dataset>'
         else:
             if self.name is None:
-                namestr = six.u('("anonymous")')
+                namestr = u'("anonymous")'
             else:
                 name = pp.basename(pp.normpath(self.name))
-                namestr = six.u('"%s"') % (
-                    name if name != six.u('') else six.u('/'))
-            r = six.u('<HDF5 dataset %s: shape %s, type "%s">') % \
-                (namestr, self.shape, self.dtype.str)
-        if six.PY3:
-            return r
-        return r.encode('utf8')
-        
+                namestr = u'"%s"' % (name if name != u'' else u'/')
+            r = u'<HDF5 dataset %s: shape %s, type "%s">' % (
+                namestr, self.shape, self.dtype.str
+            )
+        if six.PY2:
+            return r.encode('utf8')
+        return r
+
     if hasattr(h5d.DatasetID, "refresh"):
         @with_phil
         def refresh(self):
             """ Refresh the dataset metadata by reloading from the file.
-            
+
             This is part of the SWMR features and only exist when the HDF5
             librarary version >=1.9.178
             """
             self._id.refresh()
-                
+
     if hasattr(h5d.DatasetID, "flush"):
         @with_phil
         def flush(self):
             """ Flush the dataset data and metadata to the file.
             If the dataset is chunked, raw data chunks are written to the file.
-            
-            This is part of the SWMR features and only exist when the HDF5 
+
+            This is part of the SWMR features and only exist when the HDF5
             librarary version >=1.9.178
             """
             self._id.flush()
-            
-

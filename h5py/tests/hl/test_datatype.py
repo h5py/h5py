@@ -43,3 +43,55 @@ class TestVlen(TestCase):
         self.assertEqual(arr1, arr2)
         self.assertEqual(h5py.check_dtype(enum=h5py.check_dtype(vlen=dt1)),
                          h5py.check_dtype(enum=h5py.check_dtype(vlen=dt2)))
+
+
+class TestOffsets(TestCase):
+    """
+        Check that compound members with aligned or manual offsets are handled
+        correctly.
+    """
+
+    def test_aligned_offsets(self):
+        dt = np.dtype('i2,i8', align=True)
+        ht = h5py.h5t.py_create(dt)
+        self.assertEqual(dt.itemsize, ht.get_size())
+        self.assertEqual(
+            [dt.fields[i][1] for i in dt.names],
+            [ht.get_member_offset(i) for i in range(ht.get_nmembers())]
+        )
+
+
+    def test_aligned_data(self):
+        dt = np.dtype('i2,f8', align=True)
+        data = np.empty(10, dtype=dt)
+
+        data['f0'] = np.array(np.random.randint(-100, 100, size=data.size), dtype='i2')
+        data['f1'] = np.random.rand(data.size)
+
+        fname = self.mktemp()
+
+        with h5py.File(fname, 'w') as f:
+            f['data'] = data
+
+        with h5py.File(fname, 'r') as f:
+            self.assertArrayEqual(f['data'], data)
+
+
+    def test_out_of_order_offsets(self):
+        dt = np.dtype({
+            'names' : ['f1', 'f2', 'f3'],
+            'formats' : ['<f4', '<i4', '<f8'],
+            'offsets' : [0, 16, 8]
+        })
+        data = np.empty(10, dtype=dt)
+        data['f1'] = np.random.rand(data.size)
+        data['f2'] = np.random.random_integers(-10, 10, data.size)
+        data['f3'] = np.random.rand(data.size)*-1
+
+        fname = self.mktemp()
+
+        with h5py.File(fname, 'w') as fd:
+            fd.create_dataset('data', data=data)
+
+        with h5py.File(fname, 'r') as fd:
+            self.assertArrayEqual(fd['data'], data)

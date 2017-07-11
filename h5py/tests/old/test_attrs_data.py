@@ -19,11 +19,12 @@ import six
 
 import numpy as np
 
-from .common import TestCase, ut
+from ..common import TestCase, ut
 
 import h5py
 from h5py import h5a, h5s, h5t
 from h5py.highlevel import File
+from h5py._hl.base import is_empty_dataspace
 
 class BaseAttrs(TestCase):
 
@@ -177,9 +178,9 @@ class TestTypes(BaseAttrs):
     def test_unicode_scalar(self):
         """ Storage of variable-length unicode strings (auto-creation) """
 
-        self.f.attrs['x'] = six.u("Hello") + six.unichr(0x2340) + six.u("!!")
+        self.f.attrs['x'] = u"Hello" + six.unichr(0x2340) + u"!!"
         out = self.f.attrs['x']
-        self.assertEqual(out, six.u("Hello") + six.unichr(0x2340) + six.u("!!"))
+        self.assertEqual(out, u"Hello" + six.unichr(0x2340) + u"!!")
         self.assertEqual(type(out), six.text_type)
 
         aid = h5py.h5a.open(self.f.id, b"x")
@@ -197,31 +198,45 @@ class TestEmpty(BaseAttrs):
         tid = h5t.C_S1.copy()
         tid.set_size(10)
         aid = h5a.create(self.f.id, b'x', tid, sid)
+        self.empty_obj = h5py.Empty(np.dtype("S10"))
 
     def test_read(self):
-        with self.assertRaises(IOError):
-            self.f.attrs['x']
+        self.assertEqual(
+            self.empty_obj, self.f.attrs['x']
+        )
+
+    def test_write(self):
+        self.f.attrs["y"] = self.empty_obj
+        self.assertTrue(is_empty_dataspace(h5a.open(self.f.id, b'y')))
 
     def test_modify(self):
         with self.assertRaises(IOError):
             self.f.attrs.modify('x', 1)
 
     def test_values(self):
-        with self.assertRaises(IOError):
-            # list() is for Py3 where these are iterators
-            list(self.f.attrs.values())
+        # list() is for Py3 where these are iterators
+        values = list(self.f.attrs.values())
+        self.assertEqual(
+            [self.empty_obj], values
+        )
 
     def test_items(self):
-        with self.assertRaises(IOError):
-            list(self.f.attrs.items())
+        items = list(self.f.attrs.items())
+        self.assertEqual(
+            [(u"x", self.empty_obj)], items
+        )
 
     def test_itervalues(self):
-        with self.assertRaises(IOError):
-            list(six.itervalues(self.f.attrs))
+        values = list(six.itervalues(self.f.attrs))
+        self.assertEqual(
+            [self.empty_obj], values
+        )
 
     def test_iteritems(self):
-        with self.assertRaises(IOError):
-            list(six.iteritems(self.f.attrs))
+        items = list(six.iteritems(self.f.attrs))
+        self.assertEqual(
+            [(u"x", self.empty_obj)], items
+        )
 
 
 class TestWriteException(BaseAttrs):
