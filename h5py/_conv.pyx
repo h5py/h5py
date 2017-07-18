@@ -162,30 +162,35 @@ cdef int conv_vlen2str(void* ipt, void* opt, void* bkg, void* priv) except -1:
     cdef char** buf_cstring = <char**>ipt
     cdef PyObject* temp_obj = NULL
     cdef conv_size_t *sizes = <conv_size_t*>priv
+    cdef PyObject* bkg_obj0
+    cdef char* buf_cstring0
+
+    memcpy(&bkg_obj0, bkg_obj, sizeof(bkg_obj0))
+    memcpy(&buf_cstring0, buf_cstring, sizeof(buf_cstring0))
 
     # When reading we identify H5T_CSET_ASCII as a byte string and
     # H5T_CSET_UTF8 as a utf8-encoded unicode string
     if sizes.cset == H5T_CSET_ASCII:
-        if buf_cstring[0] == NULL:
+        if buf_cstring0 == NULL:
             temp_obj = PyBytes_FromString("")
         else:
-            temp_obj = PyBytes_FromString(buf_cstring[0])
+            temp_obj = PyBytes_FromString(buf_cstring0)
     elif sizes.cset == H5T_CSET_UTF8:
-        if buf_cstring[0] == NULL:
+        if buf_cstring0 == NULL:
             temp_obj = PyUnicode_DecodeUTF8("", 0, NULL)
         else:
-            temp_obj = PyUnicode_DecodeUTF8(buf_cstring[0], strlen(buf_cstring[0]), NULL)
+            temp_obj = PyUnicode_DecodeUTF8(buf_cstring0, strlen(buf_cstring0), NULL)
 
     # Since all data conversions are by definition in-place, it
     # is our responsibility to free the memory used by the vlens.
-    free(buf_cstring[0])
+    free(buf_cstring0)
 
     # HDF5 will eventuallly overwrite this target location, so we
     # make sure to decref the object there.
-    Py_XDECREF(bkg_obj[0])
+    Py_XDECREF(bkg_obj0)
 
     # Write the new string object to the buffer in-place
-    buf_obj[0] = temp_obj
+    memcpy(buf_obj, &temp_obj, sizeof(temp_obj));
 
     return 0
 
@@ -201,16 +206,21 @@ cdef int conv_str2vlen(void* ipt, void* opt, void* bkg, void* priv) except -1:
     cdef char* temp_string = NULL
     cdef size_t temp_string_len = 0  # Not including null term
 
+    cdef PyObject* buf_obj0
+    cdef char* buf_cstring0
+
+    memcpy(&buf_obj0, buf_obj, sizeof(buf_obj0))
+
     try:
-        if buf_obj[0] == NULL or buf_obj[0] == Py_None:
+        if buf_obj0 == NULL or buf_obj0 == Py_None:
             temp_string = ""
             temp_string_len = 0
         else:
-            if PyBytes_CheckExact(buf_obj[0]):
+            if PyBytes_CheckExact(buf_obj0):
 
                 # Input is a byte string.  If we're using CSET_UTF8, make sure
                 # it's valid UTF-8.  Otherwise just store it.
-                temp_object = buf_obj[0]
+                temp_object = buf_obj0
                 Py_INCREF(temp_object)
                 if sizes.cset == H5T_CSET_UTF8:
                     try:
@@ -223,8 +233,8 @@ cdef int conv_str2vlen(void* ipt, void* opt, void* bkg, void* priv) except -1:
 
             # We are given a Unicode object.  Encode it to utf-8 regardless of
             # the HDF5 character set.
-            elif PyUnicode_CheckExact(buf_obj[0]):
-                temp_object = buf_obj[0]
+            elif PyUnicode_CheckExact(buf_obj0):
+                temp_object = buf_obj0
                 Py_INCREF(temp_object)
                 temp_encoded = PyUnicode_AsUTF8String(temp_object)
                 temp_string = PyBytes_AsString(temp_encoded)
@@ -232,11 +242,11 @@ cdef int conv_str2vlen(void* ipt, void* opt, void* bkg, void* priv) except -1:
 
             else:
                 if sizes.cset == H5T_CSET_ASCII:
-                    temp_object = PyObject_Str(buf_obj[0])
+                    temp_object = PyObject_Str(buf_obj0)
                     temp_string = PyBytes_AsString(temp_object)
                     temp_string_len = PyBytes_Size(temp_object)
                 elif sizes.cset == H5T_CSET_UTF8:
-                    temp_object = PyObject_Str(buf_obj[0])
+                    temp_object = PyObject_Str(buf_obj0)
                     Py_INCREF(temp_object)
                     temp_encoded = PyUnicode_AsUTF8String(temp_object)
                     Py_INCREF(temp_encoded)
@@ -248,8 +258,9 @@ cdef int conv_str2vlen(void* ipt, void* opt, void* bkg, void* priv) except -1:
         if strlen(temp_string) != temp_string_len:
             raise ValueError("VLEN strings do not support embedded NULLs")
 
-        buf_cstring[0] = <char*>malloc(temp_string_len+1)
-        memcpy(buf_cstring[0], temp_string, temp_string_len+1)
+        buf_cstring0 = <char*>malloc(temp_string_len+1)
+        memcpy(buf_cstring0, temp_string, temp_string_len+1)
+        memcpy(buf_cstring, &buf_cstring0, sizeof(buf_cstring0));
 
         return 0
     finally:
@@ -294,9 +305,12 @@ cdef int conv_vlen2fixed(void* ipt, void* opt, void* bkg, void* priv) except -1:
     cdef char* temp_string = NULL
     cdef size_t temp_string_len = 0  # Without null term
     cdef conv_size_t *sizes = <conv_size_t*>priv
+    cdef char* buf_vlen0
 
-    if buf_vlen[0] != NULL:
-        temp_string = buf_vlen[0]
+    memcpy(&buf_vlen0, buf_vlen, sizeof(buf_vlen0));
+
+    if buf_vlen0 != NULL:
+        temp_string = buf_vlen0
         temp_string_len = strlen(temp_string)
 
         if temp_string_len <= sizes[0].dst_size:
@@ -322,7 +336,7 @@ cdef int conv_fixed2vlen(void* ipt, void* opt, void* bkg, void* priv) except -1:
     memcpy(temp_string, buf_fixed, sizes[0].src_size)
     temp_string[sizes[0].src_size] = c'\0'
 
-    buf_vlen[0] = temp_string
+    memcpy(buf_vlen, &temp_string, sizeof(temp_string));
 
     return 0
 
@@ -337,14 +351,14 @@ cdef int conv_objref2pyref(void* ipt, void* opt, void* bkg, void* priv) except -
     cdef Reference ref = Reference()
     cdef PyObject* ref_ptr = NULL
 
-    ref.ref.obj_ref = buf_ref[0]
+    memcpy(&ref.ref.obj_ref, buf_ref, sizeof(ref.ref.obj_ref))
     ref.typecode = H5R_OBJECT
 
     ref_ptr = <PyObject*>ref
     Py_INCREF(ref_ptr)  # because Cython discards its reference when the
                         # function exits
 
-    buf_obj[0] = ref_ptr
+    memcpy(buf_obj, &ref_ptr, sizeof(ref_ptr))
 
     return 0
 
@@ -356,12 +370,16 @@ cdef int conv_pyref2objref(void* ipt, void* opt, void* bkg, void* priv) except -
     cdef object obj
     cdef Reference ref
 
-    if buf_obj[0] != NULL and buf_obj[0] != Py_None:
-        obj = <object>(buf_obj[0])
+    cdef PyObject* buf_obj0
+
+    memcpy(&buf_obj0, buf_obj, sizeof(buf_obj0));
+
+    if buf_obj0 != NULL and buf_obj0 != Py_None:
+        obj = <object>(buf_obj0)
         if not isinstance(obj, Reference):
             raise TypeError("Can't convert incompatible object to HDF5 object reference")
-        ref = <Reference>(buf_obj[0])
-        buf_ref[0] = ref.ref.obj_ref
+        ref = <Reference>(buf_obj0)
+        memcpy(buf_ref, &ref.ref.obj_ref, sizeof(ref.ref.obj_ref))
     else:
         memset(buf_ref, c'\0', sizeof(hobj_ref_t))
 
@@ -376,6 +394,9 @@ cdef int conv_regref2pyref(void* ipt, void* opt, void* bkg, void* priv) except -
     cdef RegionReference ref = RegionReference()
     cdef PyObject* ref_ptr = NULL
 
+    cdef PyObject* bkg_obj0
+
+    memcpy(&bkg_obj0, bkg_obj, sizeof(bkg_obj0));
     memcpy(ref.ref.reg_ref, buf_ref, sizeof(hdset_reg_ref_t))
 
     ref.typecode = H5R_DATASET_REGION
@@ -384,8 +405,8 @@ cdef int conv_regref2pyref(void* ipt, void* opt, void* bkg, void* priv) except -
     Py_INCREF(ref_ptr)  # because Cython discards its reference when the
                         # function exits
 
-    Py_XDECREF(bkg_obj[0])
-    buf_obj[0] = ref_ptr
+    Py_XDECREF(bkg_obj0)
+    memcpy(buf_obj, &ref_ptr, sizeof(ref_ptr))
 
     return 0
 
@@ -397,11 +418,15 @@ cdef int conv_pyref2regref(void* ipt, void* opt, void* bkg, void* priv) except -
     cdef object obj
     cdef RegionReference ref
 
-    if buf_obj[0] != NULL and buf_obj[0] != Py_None:
-        obj = <object>(buf_obj[0])
+    cdef PyObject* buf_obj0
+
+    memcpy(&buf_obj0, buf_obj, sizeof(buf_obj0));
+
+    if buf_obj0 != NULL and buf_obj0 != Py_None:
+        obj = <object>(buf_obj0)
         if not isinstance(obj, RegionReference):
             raise TypeError("Can't convert incompatible object to HDF5 region reference")
-        ref = <RegionReference>(buf_obj[0])
+        ref = <RegionReference>(buf_obj0)
         memcpy(buf_ref, ref.ref.reg_ref, sizeof(hdset_reg_ref_t))
     else:
         memset(buf_ref, c'\0', sizeof(hdset_reg_ref_t))
@@ -657,22 +682,27 @@ cdef int conv_vlen2ndarray(void* ipt, void* opt, np.dtype elem_dtype,
     cdef np.npy_intp dims[1]
     cdef void* data
     cdef np.ndarray ndarray
+    cdef PyObject* ndarray_obj
+    cdef vlen_t in_vlen0
 
-    dims[0] = in_vlen[0].len
-    data = in_vlen[0].ptr
+    memcpy(&in_vlen0, in_vlen, sizeof(in_vlen0))
+
+    dims[0] = in_vlen0.len
+    data = in_vlen0.ptr
     if outtype.get_size() > intype.get_size():
-        data = realloc(data, outtype.get_size() * in_vlen[0].len)
-    H5Tconvert(intype.id, outtype.id, in_vlen[0].len, data, NULL, H5P_DEFAULT)
+        data = realloc(data, outtype.get_size() * in_vlen0.len)
+    H5Tconvert(intype.id, outtype.id, in_vlen0.len, data, NULL, H5P_DEFAULT)
     
     Py_INCREF(<PyObject*>elem_dtype)
     ndarray = PyArray_NewFromDescr(&PyArray_Type, elem_dtype, 1,
                 dims, NULL, data, flags, <object>NULL)
     ndarray.flags |= np.NPY_OWNDATA
-    Py_INCREF(<PyObject*>ndarray)
+    ndarray_obj = <PyObject*>ndarray
+    Py_INCREF(ndarray_obj)
 
     # Write the new object to the buffer in-place
-    in_vlen[0].ptr = NULL
-    buf_obj[0] = <PyObject*>ndarray
+    in_vlen0.ptr = NULL
+    memcpy(buf_obj, &ndarray_obj, sizeof(ndarray_obj))
     
     return 0
 
@@ -687,6 +717,7 @@ cdef herr_t ndarray2vlen(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
     cdef np.dtype dt
     cdef int i
     cdef PyObject **pdata = <PyObject **> buf_i
+    cdef PyObject *pdata_elem
 
     cdef char* buf = <char*>buf_i
 
@@ -697,9 +728,10 @@ cdef herr_t ndarray2vlen(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
             return -2
         supertype = typewrap(H5Tget_super(dst_id))
         for i from 0 <= i < nl:
-            if supertype != py_create((<np.ndarray> pdata[i]).dtype, 1):
+            memcpy(&pdata_elem, pdata+i, sizeof(pdata_elem))
+            if supertype != py_create((<np.ndarray> pdata_elem).dtype, 1):
                 return -2
-            if (<np.ndarray> pdata[i]).ndim != 1:
+            if (<np.ndarray> pdata_elem).ndim != 1:
                 return -2
 
     elif command == H5T_CONV_FREE:
@@ -709,7 +741,8 @@ cdef herr_t ndarray2vlen(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
     elif command == H5T_CONV_CONV:
 
         # need to pass element dtype to converter
-        supertype = py_create((<np.ndarray> pdata[0]).dtype)
+        memcpy(&pdata_elem, pdata, sizeof(pdata_elem))
+        supertype = py_create((<np.ndarray> pdata_elem).dtype)
         outtype = typewrap(H5Tget_super(dst_id))
 
         if buf_stride == 0:
@@ -751,8 +784,13 @@ cdef int conv_ndarray2vlen(void* ipt, void* opt,
     cdef int flags = np.NPY_WRITEABLE | np.NPY_C_CONTIGUOUS
     cdef np.npy_intp dims[1]
     cdef void* data
-    cdef np.ndarray ndarray = <np.ndarray> buf_obj[0]
-    cdef size_t len = ndarray.shape[0]
+    cdef np.ndarray ndarray
+    cdef size_t len
+    cdef PyObject* buf_obj0
+
+    memcpy(&buf_obj0, buf_obj, sizeof(buf_obj0))
+    ndarray = <np.ndarray> buf_obj0
+    len = ndarray.shape[0]
 
     if outtype.get_size() > intype.get_size():
         data = malloc(outtype.get_size() * len)
@@ -761,8 +799,8 @@ cdef int conv_ndarray2vlen(void* ipt, void* opt,
     memcpy(data, ndarray.data, intype.get_size() * len)
     H5Tconvert(intype.id, outtype.id, len, data, NULL, H5P_DEFAULT)
 
-    in_vlen[0].len = len
-    in_vlen[0].ptr = data
+    memcpy(&in_vlen[0].len, &len, sizeof(len))
+    memcpy(&in_vlen[0].ptr, &data, sizeof(data))
     
     return 0
             
