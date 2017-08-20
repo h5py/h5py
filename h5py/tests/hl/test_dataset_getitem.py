@@ -41,6 +41,7 @@
 """
 
 from __future__ import absolute_import
+import sys
 
 import numpy as np
 import h5py
@@ -452,18 +453,27 @@ class Test2DZeroFloat(TestCase):
         TestCase.setUp(self)
         self.data = np.ones((0,3), dtype='f')
         self.dset = self.f.create_dataset('x', data=self.data)
-        
+
     def test_ndim(self):
         """ Verify number of dimensions """
         self.assertEquals(self.dset.ndim, 2)
-        
+
     def test_shape(self):
         """ Verify shape """
         self.assertEquals(self.dset.shape, (0, 3))
-        
+
     @ut.expectedFailure
     def test_indexlist(self):
         """ see issue #473 """
         self.assertNumpyBehavior(self.dset, self.data, np.s_[:,[0,1,2]])
 
-        
+
+class TestVeryLargeArray(TestCase):
+
+    def setUp(self):
+        TestCase.setUp(self)
+        self.dset = self.f.create_dataset('x', shape=(2**15, 2**16))
+
+    @ut.skipIf(sys.maxsize < 2**31, 'Maximum integer size >= 2**31 required')
+    def test_size(self):
+        self.assertEqual(self.dset.size, 2**31)
