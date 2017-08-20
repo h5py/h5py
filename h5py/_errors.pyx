@@ -120,7 +120,7 @@ cdef int set_exception() except -1:
     if desc_bottom is NULL:
         raise RuntimeError("Failed to extract bottom-level error description")
 
-    msg = ("%s (%s)" % (desc.decode('utf-8').capitalize(), desc_bottom.decode('utf-8').capitalize())).encode('utf-8')
+    msg = ("%s (%s)" % (desc.decode('utf-8').capitalize(), desc_bottom.decode('utf-8'))).encode('utf-8')
 
     # Finally, set the exception.  We do this with the Python C function
     # so that the traceback doesn't point here.
