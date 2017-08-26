@@ -14,7 +14,7 @@ class TestVlen(TestCase):
     """
         Check that storage of vlen strings is carried out correctly.
     """
-    
+
     def test_compound(self):
 
         fields = []
@@ -24,7 +24,54 @@ class TestVlen(TestCase):
         self.f['mytype'] = np.dtype(dt)
         dt_out = self.f['mytype'].dtype.fields['field_1'][0]
         self.assertEqual(h5py.check_dtype(vlen=dt_out), str)
-        
+
+    def test_compound_bool(self):
+        vidt = h5py.special_dtype(vlen=np.uint8)
+        f = self.f
+
+        dt_vb = np.dtype([
+            ('foo', vidt),
+            ('logical', np.bool)])
+        vb = f.create_dataset('dt_vb', shape=(4,), dtype=dt_vb)
+        data = np.array([([1,2,3], True),
+                         ([1    ], False),
+                         ([1,5  ], True),
+                         ([],      False),], dtype=dt_vb)
+        vb[:] = data
+        actual = f['dt_vb'][:]
+        self.assertEqual(data, actual)
+
+        dt_vv = np.dtype([
+            ('foo', vidt),
+            ('bar', vidt)])
+        f.create_dataset('dt_vv', shape=(4,), dtype=dt_vv)
+
+        dt_vvb = np.dtype([
+            ('foo', vidt),
+            ('bar', vidt),
+            ('logical', np.bool)])
+        vvb = f.create_dataset('dt_vvb', shape=(2,), dtype=dt_vvb)
+
+        #data = np.array([([1,2,3], [1,2],   True),
+        #                 ([1    ], [1,2],   False),
+        #                 ([1,5  ], [1],     True),
+        #                 ([],      [2,4,6], False),], dtype=dt_vvb)
+        #vvb[:] = data
+        #vvb['foo',0] = np.array([1,2,3], dtype=np.uint8)
+        #vvb['foo',1] = [1,2]
+        #vvb['bar',0] = []
+        #vvb['bar',1] = [8]
+        #vvb['logical'] = [True, False]
+
+        #foo = vvb['foo'][:]
+        #bar = vvb['bar'][:]
+        #logical = vvb['logical'][:]
+        #print(repr(foo), repr(bar), repr(logical))
+        #actual = f['dt_vvb'][:]
+        #print(repr(actual))
+        #print(actual.tolist())
+        #self.assertEqual(data, actual)
+
     def test_vlen_enum(self):
         fname = self.mktemp()
         arr1 = [[1],[1,2]]
