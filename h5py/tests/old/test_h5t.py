@@ -67,8 +67,6 @@ class TestTypeFloatID(TestCase):
 
     def test_custom_float_promotion(self):
         """Custom floats are correctly promoted to standard floats on read."""
-        if h5t.MACHINE == 'ppc64le':
-            return
 
         test_filename = self.mktemp()
         dataset = 'DS1'
