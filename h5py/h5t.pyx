@@ -1467,11 +1467,10 @@ cdef TypeCompoundID _c_compound(dtype dt, int logical, int aligned):
     cdef TypeID type_tmp
     cdef dtype dt_tmp
     cdef size_t offset
-    cdef size_t offset_step = 0
+    cdef size_t accum_offset = 0
 
-    cdef tuple names = dt.names
-    cdef dict fields = {}
-    cdef list offsets
+    cdef dict offsets = {}
+    cdef list fields = []
 
     # The challenge with correctly converting a numpy/h5py dtype to a HDF5 type
     # which is composed of subtypes has three aspects we must consider
@@ -1483,38 +1482,33 @@ cdef TypeCompoundID _c_compound(dtype dt, int logical, int aligned):
     #
     # The code below tries to cover these aspects
 
+    # Get offsets for each compound member
     for name, field in dt.fields.items():
+        offsets[name] = field[1]
+
+    # Build list of fields, names, and offsets
+    for name in sorted(dt.names, key=offsets.__getitem__):
+        field = dt.fields[name]
+        name = name.encode('utf8') if isinstance(name, unicode) else name
+
+        # Get data types and calculate offsets/sizes
         dt_tmp = field[0]
-        offset = field[1]
-        fields[offset] = {
-            "name": name.encode('utf8') if isinstance(name, unicode) else name,
-            "dtype": dtype(dt_tmp),
-            "size": py_create(dt_tmp, logical=logical).get_size(),
-        }
-
-    offsets = list(sorted(fields))
-    # Set initial size to itemsize or last offset plus itemsize, whichever is
-    # bigger
-    tid = H5Tcreate(H5T_COMPOUND,
-        max(dt.itemsize, offsets[-1] + fields[offsets[-1]]["size"])
-    )
-
-    for i, offset in enumerate(offsets):
-        dt_tmp = fields[offset]["dtype"]
         type_tmp = py_create(dt_tmp, logical=logical, aligned=aligned)
-        if aligned and type_tmp.get_size() > dt_tmp.itemsize:
+        offset = max(field[1], accum_offset)
+        size   = max(type_tmp.get_size(), dt_tmp.itemsize)
+        if aligned and (size != dt_tmp.itemsize or offset != field[1]):
             raise TypeError("Enforced alignment not compatible with HDF5 type")
-        # Increase size if initial too small, which can happen if there are out
-        # of order fields (as determined by offsets)
-        if H5Tget_size(tid) < (offset + offset_step + type_tmp.get_size()):
-            H5Tset_size(tid, offset + offset_step + type_tmp.get_size())
-        H5Tinsert(tid, fields[offset]["name"], offset + offset_step, type_tmp.id)
+        fields.append((name, dtype(dt_tmp), type_tmp, offset, size))
+        accum_offset = offset + size
 
-        if (i + 1 < len(offsets)) and fields[offset]["size"] > offsets[i + 1]:
-            if aligned:
-                raise TypeError("dtype results in overlapping fields")
-            else:
-                offset_step += fields[offset]["size"] - offsets[i + 1]
+    if aligned and dt.itemsize != accum_offset:
+        raise TypeError("Enforced alignment not compatible with HDF5 type")
+
+    # Create compound with the necessary size
+    tid = H5Tcreate(H5T_COMPOUND, accum_offset)
+
+    for (name, dt_tmp, type_tmp, offset, size) in fields:
+        H5Tinsert(tid, name, offset, type_tmp.id)
 
     return TypeCompoundID(tid)
 
