@@ -182,7 +182,7 @@ Enable MPI mode         ``--mpi``                   ``HDF5_MPI=ON``
 
 .. _build_mpi:
 
-Building against Parallel HDF5
+Building against Custom Built Parallel HDF5
 ------------------------------
 
 If you just want to build with ``mpicc``, and don't care about using Parallel
@@ -192,19 +192,42 @@ HDF5 features in h5py itself::
     $ pip install --no-binary=h5py h5py
 
 If you want access to the full Parallel HDF5 feature set in h5py
-(:ref:`parallel`), you will further have to build in MPI mode.  This can either
-be done with command-line options from the h5py tarball or by::
+(:ref:`parallel`), you will further have to build in MPI mode.
 
-    $ export HDF5_MPI="ON"
+Before installing h5py with parallel capabilities, there are a few prerequisites.
+
+1. Install an MPI library and check that "which mpicc" returns the path to the correct library
+2. Install a parallel enabled HDF5 library, linked to the above MPI library.
 
 **You will need a shared-library build of Parallel HDF5 (i.e. built with
 ./configure --enable-shared --enable-parallel).**
 
-To build in MPI mode, use the ``--mpi`` option to ``setup.py configure`` or
-export ``HDF5_MPI="ON"`` beforehand::
+If you are unsure, you can check that HDF5 is linked to the correct MPI library by navigating to the lib folder inside your HDF5 installation. Use "ldd" on any .so file there, and check that the MPI path is correct.
 
-    $ export CC=mpicc
-    $ export HDF5_MPI="ON"
-    $ pip install --no-binary=h5py h5py
+h5py also requires an installation of mpi4py.  Install mpi4py using::
 
-See also :ref:`parallel`.
+    $ pip install mpi4py --no-cache-dir
+
+The last argument "--no-cache-dir" is important.  Without it, pip may install its own MPI library, one that is not linked to your installed version.  This would cause two implementations of MPI to be called at runtime, and your application will not work.
+
+You can double check that mpi4py is linking to the correct MPI library using::
+
+    $ ldd anaconda3/lib/python3.6/site-packages/mpi4py/MPI.cpython-36m-x86_64-linux-gnu.so"
+
+the path and .so name may be different for you, you can find out where mpi4py is installed using::
+
+    $ pip show mpi4py
+
+You are now ready to install h5py with parallel capabilities. Pull the h5py repository and navigate to the root folder.  
+
+Create and run the following script, change the HDF5_PATH so that it points to your HDF5 installation.  Next, change gcc=gcc to whichever compiler you have used to compile the libraries above.  Finally, change the --hdf5-version number to match your installed library::
+
+
+    #!/bin/bash
+    export HDF5_PATH=path-to-parallel-hdf5
+    python setup.py clean --all
+    python setup.py configure -r --hdf5-version=X.Y.Z --mpi --hdf5=$HDF5_PATH
+    export gcc=gcc
+    CC=mpicc HDF5_DIR=$HDF5_PATH python setup.py build
+    python setup.py install
+
