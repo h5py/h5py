@@ -35,6 +35,9 @@ class TestVlen(TestCase):
 
     def test_compound_bool(self):
         vidt = h5py.special_dtype(vlen=np.uint8)
+        def a(items):
+            return np.array(items, dtype=np.uint8)
+
         eidt = h5py.special_dtype(enum=(np.uint8, {'OFF': 0, 'ON': 1}))
         f = self.f
 
@@ -42,10 +45,10 @@ class TestVlen(TestCase):
             ('foo', vidt),
             ('logical', np.bool)])
         vb = f.create_dataset('dt_vb', shape=(4,), dtype=dt_vb)
-        data = np.array([(np.array([1,2,3], dtype=np.uint8), True),
-                         (np.array([1    ], dtype=np.uint8), False),
-                         (np.array([1,5  ], dtype=np.uint8), True),
-                         (np.array([],      dtype=np.uint8), False),],
+        data = np.array([(a([1,2,3]), True),
+                         (a([1    ]), False),
+                         (a([1,5  ]), True),
+                         (a([],    ), False),],
                      dtype=dt_vb)
         vb[:] = data
         actual = f['dt_vb'][:]
@@ -62,10 +65,14 @@ class TestVlen(TestCase):
             ('bar', vidt),
             ('switch', eidt)])
         vve = f.create_dataset('dt_vve', shape=(2,), dtype=dt_vve)
-        data = np.array([(np.array([1,2,3]), np.array([1,2]),   1),
-                         (np.array([]),      np.array([2,4,6]), 0),],
+        data = np.array([(a([1,2,3]), a([1,2]),   1),
+                         (a([]),      a([2,4,6]), 0),],
                          dtype=dt_vve)
         vve[:] = data
+        actual = vve[:]
+        self.assertVlenArrayEqual(data['foo'], actual['foo'])
+        self.assertVlenArrayEqual(data['bar'], actual['bar'])
+        self.assertArrayEqual(data['switch'], actual['switch'])
 
         dt_vvb = np.dtype([
             ('foo', vidt),
