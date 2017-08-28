@@ -4,6 +4,7 @@
 
 from __future__ import absolute_import
 
+from itertools import count
 import numpy as np
 import h5py
 
@@ -14,6 +15,13 @@ class TestVlen(TestCase):
     """
         Check that storage of vlen strings is carried out correctly.
     """
+    def assertVlenArrayEqual(self, dset, arr, message=None, precision=None):
+        self.assert_(
+            dset.shape == arr.shape,
+            "Shape mismatch (%s vs %s)%s" % (dset.shape, arr.shape, message)
+            )
+        for (i, d, a) in zip(count(), dset, arr):
+            self.assertArrayEqual(d, a, message, precision)
 
     def test_compound(self):
 
@@ -27,50 +35,43 @@ class TestVlen(TestCase):
 
     def test_compound_bool(self):
         vidt = h5py.special_dtype(vlen=np.uint8)
+        eidt = h5py.special_dtype(enum=(np.uint8, {'OFF': 0, 'ON': 1}))
         f = self.f
 
         dt_vb = np.dtype([
             ('foo', vidt),
             ('logical', np.bool)])
         vb = f.create_dataset('dt_vb', shape=(4,), dtype=dt_vb)
-        data = np.array([([1,2,3], True),
-                         ([1    ], False),
-                         ([1,5  ], True),
-                         ([],      False),], dtype=dt_vb)
+        data = np.array([(np.array([1,2,3], dtype=np.uint8), True),
+                         (np.array([1    ], dtype=np.uint8), False),
+                         (np.array([1,5  ], dtype=np.uint8), True),
+                         (np.array([],      dtype=np.uint8), False),],
+                     dtype=dt_vb)
         vb[:] = data
         actual = f['dt_vb'][:]
-        self.assertEqual(data, actual)
+        self.assertVlenArrayEqual(data['foo'], actual['foo'])
+        self.assertArrayEqual(data['logical'], actual['logical'])
 
         dt_vv = np.dtype([
             ('foo', vidt),
             ('bar', vidt)])
         f.create_dataset('dt_vv', shape=(4,), dtype=dt_vv)
 
+        dt_vve = np.dtype([
+            ('foo', vidt),
+            ('bar', vidt),
+            ('switch', eidt)])
+        vve = f.create_dataset('dt_vve', shape=(2,), dtype=dt_vve)
+        data = np.array([(np.array([1,2,3]), np.array([1,2]),   1),
+                         (np.array([]),      np.array([2,4,6]), 0),],
+                         dtype=dt_vve)
+        vve[:] = data
+
         dt_vvb = np.dtype([
             ('foo', vidt),
             ('bar', vidt),
             ('logical', np.bool)])
         vvb = f.create_dataset('dt_vvb', shape=(2,), dtype=dt_vvb)
-
-        #data = np.array([([1,2,3], [1,2],   True),
-        #                 ([1    ], [1,2],   False),
-        #                 ([1,5  ], [1],     True),
-        #                 ([],      [2,4,6], False),], dtype=dt_vvb)
-        #vvb[:] = data
-        #vvb['foo',0] = np.array([1,2,3], dtype=np.uint8)
-        #vvb['foo',1] = [1,2]
-        #vvb['bar',0] = []
-        #vvb['bar',1] = [8]
-        #vvb['logical'] = [True, False]
-
-        #foo = vvb['foo'][:]
-        #bar = vvb['bar'][:]
-        #logical = vvb['logical'][:]
-        #print(repr(foo), repr(bar), repr(logical))
-        #actual = f['dt_vvb'][:]
-        #print(repr(actual))
-        #print(actual.tolist())
-        #self.assertEqual(data, actual)
 
     def test_vlen_enum(self):
         fname = self.mktemp()
@@ -98,6 +99,24 @@ class TestOffsets(TestCase):
         correctly.
     """
 
+    def test_compound_vlen(self):
+        vidt = h5py.special_dtype(vlen=np.uint8)
+        eidt = h5py.special_dtype(enum=(np.uint8, {'OFF': 0, 'ON': 1}))
+
+        for np_align in (False, True):
+            dt = np.dtype([
+                ('foo', vidt),
+                ('bar', vidt),
+                ('switch', eidt)], align=np_align)
+
+            for logical in (False, True):
+                if np_align:
+                    # Vlen types have different size in the numpy struct
+                    self.assertRaises(TypeError, h5py.h5t.py_create, dt,
+                            logical=logical)
+                else:
+                    ht = h5py.h5t.py_create(dt, logical=logical)
+
     def test_aligned_offsets(self):
         dt = np.dtype('i2,i8', align=True)
         ht = h5py.h5t.py_create(dt)
@@ -112,7 +131,8 @@ class TestOffsets(TestCase):
         dt = np.dtype('i2,f8', align=True)
         data = np.empty(10, dtype=dt)
 
-        data['f0'] = np.array(np.random.randint(-100, 100, size=data.size), dtype='i2')
+        data['f0'] = np.array(np.random.randint(-100, 100, size=data.size),
+                dtype='i2')
         data['f1'] = np.random.rand(data.size)
 
         fname = self.mktemp()
