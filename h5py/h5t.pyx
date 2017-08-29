@@ -14,6 +14,7 @@
     subclasses which represent things like integer/float/compound identifiers.
     The majority of the H5T API is presented as methods on these identifiers.
 """
+from __future__ import print_function
 # Pyrex compile-time imports
 include "config.pxi"
 from _objects cimport pdefault
@@ -1495,24 +1496,20 @@ cdef TypeCompoundID _c_compound(dtype dt, int logical, int aligned):
         member_dt = field[0]
         member_offset = max(member_offset, field[1])
         member_type = py_create(member_dt, logical=logical, aligned=aligned)
-        if aligned:
-            if member_offset > field[1] or member_dt.itemsize != member_type.get_size():
-                # Aligned position overlaps with the previous element
-                raise TypeError("Enforced alignment not compatible with HDF5 type")
+        if aligned and (member_offset > field[1]
+                        or member_dt.itemsize != member_type.get_size()):
+            raise TypeError("Enforced alignment not compatible with HDF5 type")
         fields.append((name, member_offset, member_type))
 
         # Update member offset based on the HDF5 type size
         member_offset += member_type.get_size()
 
-    if aligned:
-        if member_offset > dt.itemsize:
-            # Final HDF5 struct size exceeds Numpy item size
-            raise TypeError("Enforced alignment not compatible with HDF5 type")
-        member_offset = dt.itemsize
+    member_offset = max(member_offset, dt.itemsize)
+    if aligned and member_offset > dt.itemsize:
+        raise TypeError("Enforced alignment not compatible with HDF5 type")
 
-    # Create compound with the necessary size
+    # Create compound with the necessary size, and insert its members
     tid = H5Tcreate(H5T_COMPOUND, member_offset)
-
     for (name, member_offset, member_type) in fields:
         H5Tinsert(tid, name, member_offset, member_type.id)
 
