@@ -33,12 +33,11 @@ class TestVlen(TestCase):
         dt_out = self.f['mytype'].dtype.fields['field_1'][0]
         self.assertEqual(h5py.check_dtype(vlen=dt_out), str)
 
-    def test_compound_bool(self):
+    def test_compound_vlen_bool(self):
         vidt = h5py.special_dtype(vlen=np.uint8)
         def a(items):
             return np.array(items, dtype=np.uint8)
 
-        eidt = h5py.special_dtype(enum=(np.uint8, {'OFF': 0, 'ON': 1}))
         f = self.f
 
         dt_vb = np.dtype([
@@ -60,6 +59,34 @@ class TestVlen(TestCase):
             ('bar', vidt)])
         f.create_dataset('dt_vv', shape=(4,), dtype=dt_vv)
 
+        dt_vvb = np.dtype([
+            ('foo', vidt),
+            ('bar', vidt),
+            ('logical', np.bool)])
+        vvb = f.create_dataset('dt_vvb', shape=(2,), dtype=dt_vvb)
+
+        dt_bvv = np.dtype([
+            ('logical', np.bool),
+            ('foo', vidt),
+            ('bar', vidt)])
+        bvv = f.create_dataset('dt_bvv', shape=(2,), dtype=dt_bvv)
+        data = np.array([(True,  a([1,2,3]), a([1,2]) ),
+                         (False, a([]),      a([2,4,6])),],
+                         dtype=bvv)
+        bvv[:] = data
+        actual = bvv[:]
+        self.assertVlenArrayEqual(data['foo'], actual['foo'])
+        self.assertVlenArrayEqual(data['bar'], actual['bar'])
+        self.assertArrayEqual(data['logical'], actual['logical'])
+
+    def test_compound_vlen_enum(self):
+        eidt = h5py.special_dtype(enum=(np.uint8, {'OFF': 0, 'ON': 1}))
+        vidt = h5py.special_dtype(vlen=np.uint8)
+        def a(items):
+            return np.array(items, dtype=np.uint8)
+
+        f = self.f
+
         dt_vve = np.dtype([
             ('foo', vidt),
             ('bar', vidt),
@@ -73,12 +100,6 @@ class TestVlen(TestCase):
         self.assertVlenArrayEqual(data['foo'], actual['foo'])
         self.assertVlenArrayEqual(data['bar'], actual['bar'])
         self.assertArrayEqual(data['switch'], actual['switch'])
-
-        dt_vvb = np.dtype([
-            ('foo', vidt),
-            ('bar', vidt),
-            ('logical', np.bool)])
-        vvb = f.create_dataset('dt_vvb', shape=(2,), dtype=dt_vvb)
 
     def test_vlen_enum(self):
         fname = self.mktemp()
