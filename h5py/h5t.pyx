@@ -14,7 +14,6 @@
     subclasses which represent things like integer/float/compound identifiers.
     The majority of the H5T API is presented as methods on these identifiers.
 """
-
 # Pyrex compile-time imports
 include "config.pxi"
 from _objects cimport pdefault
@@ -1455,57 +1454,54 @@ cdef TypeCompoundID _c_compound(dtype dt, int logical, int aligned):
     # Compound datatypes
 
     cdef hid_t tid
-    cdef TypeID type_tmp
-    cdef dtype dt_tmp
-    cdef size_t offset
-    cdef size_t offset_step = 0
+    cdef TypeID member_type
+    cdef dtype member_dt
+    cdef size_t member_offset = 0
 
-    cdef tuple names = dt.names
-    cdef dict fields = {}
-    cdef list offsets
+    cdef dict offsets = {}
+    cdef list fields = []
 
     # The challenge with correctly converting a numpy/h5py dtype to a HDF5 type
     # which is composed of subtypes has three aspects we must consider
-    # 1. numpy/h5py dtypes do not always have the same size and HDF5, even when
+    # 1. numpy/h5py dtypes do not always have the same size as HDF5, even when
     #   equivalent (can result in overlapping elements if not careful)
     # 2. For correct round-tripping of aligned dtypes, we need to consider how
-    #   much padding we need
+    #   much padding we need by looking at the field offsets
     # 3. There is no requirement that the offsets be monotonically increasing
+    #  (so we start by sorting the names as a function of increasing offset)
     #
     # The code below tries to cover these aspects
 
+    # Get offsets for each compound member
     for name, field in dt.fields.items():
-        dt_tmp = field[0]
-        offset = field[1]
-        fields[offset] = {
-            "name": name.encode('utf8') if isinstance(name, unicode) else name,
-            "dtype": dtype(dt_tmp),
-            "size": py_create(dt_tmp, logical=logical).get_size(),
-        }
+        offsets[name] = field[1]
 
-    offsets = list(sorted(fields))
-    # Set initial size to itemsize or last offset plus itemsize, whichever is
-    # bigger
-    tid = H5Tcreate(H5T_COMPOUND,
-        max(dt.itemsize, offsets[-1] + fields[offsets[-1]]["size"])
-    )
+    # Build list of names, offsets, and types, sorted by increasing offset
+    # (i.e. the position of the member in the struct)
+    for name in sorted(dt.names, key=offsets.__getitem__):
+        field = dt.fields[name]
+        name = name.encode('utf8') if isinstance(name, unicode) else name
 
-    for i, offset in enumerate(offsets):
-        dt_tmp = fields[offset]["dtype"]
-        type_tmp = py_create(dt_tmp, logical=logical, aligned=aligned)
-        if aligned and type_tmp.get_size() > dt_tmp.itemsize:
+        # Get HDF5 data types and set the offset for each member
+        member_dt = field[0]
+        member_offset = max(member_offset, field[1])
+        member_type = py_create(member_dt, logical=logical, aligned=aligned)
+        if aligned and (member_offset > field[1]
+                        or member_dt.itemsize != member_type.get_size()):
             raise TypeError("Enforced alignment not compatible with HDF5 type")
-        # Increase size if initial too small, which can happen if there are out
-        # of order fields (as determined by offsets)
-        if H5Tget_size(tid) < (offset + offset_step + type_tmp.get_size()):
-            H5Tset_size(tid, offset + offset_step + type_tmp.get_size())
-        H5Tinsert(tid, fields[offset]["name"], offset + offset_step, type_tmp.id)
+        fields.append((name, member_offset, member_type))
 
-        if (i + 1 < len(offsets)) and fields[offset]["size"] > offsets[i + 1]:
-            if aligned:
-                raise TypeError("dtype results in overlapping fields")
-            else:
-                offset_step += fields[offset]["size"] - offsets[i + 1]
+        # Update member offset based on the HDF5 type size
+        member_offset += member_type.get_size()
+
+    member_offset = max(member_offset, dt.itemsize)
+    if aligned and member_offset > dt.itemsize:
+        raise TypeError("Enforced alignment not compatible with HDF5 type")
+
+    # Create compound with the necessary size, and insert its members
+    tid = H5Tcreate(H5T_COMPOUND, member_offset)
+    for (name, member_offset, member_type) in fields:
+        H5Tinsert(tid, name, member_offset, member_type.id)
 
     return TypeCompoundID(tid)
 
