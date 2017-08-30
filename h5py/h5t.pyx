@@ -14,7 +14,6 @@
     subclasses which represent things like integer/float/compound identifiers.
     The majority of the H5T API is presented as methods on these identifiers.
 """
-from __future__ import print_function
 # Pyrex compile-time imports
 include "config.pxi"
 from _objects cimport pdefault
