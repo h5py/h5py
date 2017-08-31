@@ -28,10 +28,12 @@ import os
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx.ext.intersphinx']
+extensions = ['sphinx.ext.intersphinx', 'sphinx.ext.extlinks']
 
 intersphinx_mapping = {'low': ('http://api.h5py.org', None)}
 
+extlinks = {'issue': ('https://github.com/h5py/h5py/issues/%s',
+                      'GH')}
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 
