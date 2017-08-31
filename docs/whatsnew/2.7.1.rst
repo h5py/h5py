@@ -16,6 +16,7 @@ Bug fixes
   - :issue:`902` Fix overflow computing size of dataset on windows
   - :issue:`912` Do not mangle capitalization of filenames in error messages
   - :issue:`842` Fix longdouble on ppc64le
+  - :issue:`862`, :issue:`916` Fix compounds structs with variable-size members
 
 Fix h5py segfaulting on some Python 3 versions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
