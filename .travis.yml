@@ -21,27 +21,6 @@ env:
   global:
     - HDF5_CACHE_DIR=$HOME/.cache/hdf5
   matrix:
-
-    - TOXENV=py27-test-deps
-    - TOXENV=py27-test-mindeps
-    - TOXENV=py27-test-deps
-      TOX_TESTENV_PASSENV=LANG LC_ALL
-      LANG=C
-      LC_ALL=C
-    - TOXENV=py27-test-deps
-      HDF5_VERSION=1.10.1
-      HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION
-
-    - TOXENV=py34-test-deps
-    - TOXENV=py34-test-mindeps
-    - TOXENV=py34-test-deps
-      TOX_TESTENV_PASSENV=LANG LC_ALL
-      LANG=C
-      LC_ALL=C
-    - TOXENV=py34-test-deps
-      HDF5_VERSION=1.10.1
-      HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION
-
     - TOXENV=docs
     - TOXENV=check-manifest
     - TOXENV=checkreadme
@@ -49,6 +28,9 @@ env:
 matrix:
   include:
     # needed to work around https://github.com/travis-ci/travis-ci/issues/4794
+    # We should see if we can replace this with installing python via pyenv
+    # based on toxenv
+    # Python 2.6
     - python: 2.6
       env:
       - TOXENV=py26-test-deps
@@ -67,6 +49,26 @@ matrix:
         HDF5_VERSION=1.10.1
         HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION
 
+    # Python 2.7
+    - python: 2.7
+      env:
+      - TOXENV=py27-test-deps
+    - python: 2.7
+      env:
+      - TOXENV=py27-test-mindeps
+    - python: 2.7
+      env:
+      - TOXENV=py27-test-deps
+        TOX_TESTENV_PASSENV=LANG LC_ALL
+        LANG=C
+        LC_ALL=C
+    - python: 2.7
+      env:
+      - TOXENV=py27-test-deps
+        HDF5_VERSION=1.10.1
+        HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION
+
+    # Python 3.3
     - python: 3.3
       env:
       - TOXENV=py33-test-deps
@@ -85,6 +87,26 @@ matrix:
         HDF5_VERSION=1.10.1
         HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION
 
+    # Python 3.4
+    - python: 3.4
+      env:
+      - TOXENV=py34-test-deps
+    - python: 3.4
+      env:
+      - TOXENV=py34-test-mindeps
+    - python: 3.4
+      env:
+      - TOXENV=py34-test-deps
+        TOX_TESTENV_PASSENV=LANG LC_ALL
+        LANG=C
+        LC_ALL=C
+    - python: 3.4
+      env:
+      - TOXENV=py34-test-deps
+        HDF5_VERSION=1.10.1
+        HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION
+
+    # Python 3.5
     - python: 3.5
       env:
       - TOXENV=py35-test-deps
@@ -103,6 +125,7 @@ matrix:
         HDF5_VERSION=1.10.1
         HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION
 
+    # Python 3.6
     - python: 3.6
       env:
       - TOXENV=py36-test-deps
@@ -125,7 +148,7 @@ matrix:
         HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION
 
     # parallel HDF5 test with HDF5>=1.8.9 for mpio "atomic" support
-    - python: 3.6
+    - python: 3.4
       env:
       - TOXENV=py34-test-mpi4py
       - CC="mpicc"
