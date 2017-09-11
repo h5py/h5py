@@ -28,8 +28,8 @@ env:
 matrix:
   include:
     # needed to work around https://github.com/travis-ci/travis-ci/issues/4794
-    # We should see if we can replace this with installing python via pyenv
-    # based on toxenv
+    # TODO: We should see if we can replace this with installing python via pyenv # based on toxenv
+
     # Python 2.6
     - python: 2.6
       env:
@@ -147,19 +147,32 @@ matrix:
         HDF5_VERSION=1.10.1
         HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION
 
-    # parallel HDF5 test with HDF5>=1.8.9 for mpio "atomic" support
-    - python: 3.4
+    # MPI tests
+    # TODO: We should test with newer versions of HDF5
+    - python: 2.7
       env:
-      - TOXENV=py34-test-mindeps-mpi4py
+      - TOXENV=py27-test-mindeps-mpi4py
       - CC="mpicc"
       - HDF5_MPI="ON"
       addons:
         apt:
           packages:
-            - openmpi-bin         # 1.4.3
+            - openmpi-bin         # 1.6.5 based on trusty
             - libopenmpi-dev
-            - libhdf5-openmpi-dev # 1.8.4
+            - libhdf5-openmpi-dev # 1.8.11 based on trusty
+    - python: 3.6
+      env:
+      - TOXENV=py36-test-mindeps-mpi4py
+      - CC="mpicc"
+      - HDF5_MPI="ON"
+      addons:
+        apt:
+          packages:
+            - openmpi-bin         # 1.6.5 based on trusty
+            - libopenmpi-dev
+            - libhdf5-openmpi-dev # 1.8.11 based on trusty
 
+    # Additional python versions which are not officially supported
     - python: "nightly"
       env:
       - TOXENV=nightly
