@@ -301,6 +301,9 @@ class Test1DZeroFloat(TestCase):
         """ slice -> ndarray of shape (0,) """
         self.assertNumpyBehavior(self.dset, self.data, np.s_[0:4])
 
+    def test_slice_stop_less_than_start(self):
+        self.assertNumpyBehavior(self.dset, self.data, np.s_[7:5])
+
     # FIXME: NumPy raises IndexError
     def test_index(self):
         """ index -> out of range """
@@ -358,6 +361,9 @@ class Test1DFloat(TestCase):
 
     def test_slice_negindexes(self):
         self.assertNumpyBehavior(self.dset, self.data, np.s_[-8:-2:3])
+
+    def test_slice_stop_less_than_start(self):
+        self.assertNumpyBehavior(self.dset, self.data, np.s_[7:5])
 
     def test_slice_outofrange(self):
         self.assertNumpyBehavior(self.dset, self.data, np.s_[100:400:3])

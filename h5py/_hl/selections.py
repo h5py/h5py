@@ -485,7 +485,8 @@ def _translate_slice(exp, length):
     if step < 1:
         raise ValueError("Step must be >= 1 (got %d)" % step)
     if stop < start:
-        raise ValueError("Reverse-order selections are not allowed")
+        # list/tuple and numpy consider stop < start to be an empty selection
+        return 0, 0, 1
 
     count = 1 + (stop - start - 1) // step
 
