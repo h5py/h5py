@@ -116,7 +116,7 @@ install:
   - "%PYTHON%\\python.exe -m pip install --upgrade wheel pip setuptools"
   - "py -3.5 -m pip install --upgrade wheel pip setuptools"
   - "py -3.5 -m pip install requests"
-  - "py -3.5 ci\\get_hdf5.py"
+  - "py -3.5 ci\\appveyor\\get_hdf5.py"
   - "py -3.5 -m pip install tox"
 
 build: off
