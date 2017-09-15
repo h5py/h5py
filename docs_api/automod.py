@@ -64,9 +64,14 @@ def replace_class(istr):
         pre, name, post = match.group('pre', 'name', 'post')
         return '%s:class:`%s <%s>`%s' % (pre, name, target, post)
 
-    for expr, target in class_exprs.iteritems():
-        rpl2 = partial(rpl, target)
-        istr = safe_replace(istr, expr, rpl2)
+    try:
+        for expr, target in class_exprs.iteritems():
+            rpl2 = partial(rpl, target)
+            istr = safe_replace(istr, expr, rpl2)
+    except AttributeError:
+         for expr, target in class_exprs.items():
+            rpl2 = partial(rpl, target)
+            istr = safe_replace(istr, expr, rpl2)
 
     return istr
 
