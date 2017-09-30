@@ -121,7 +121,7 @@ in HDF5 are encoded as ASCII or UTF-8, NUL bytes are not allowed in strings.
 
 Enumerated types
 ----------------
-HDF5 enumerated types are supported as. As NumPy has no native enum type, they
+HDF5 enumerated types are supported. As NumPy has no native enum type, they
 are treated on the Python side as integers with a small amount of metadata
 attached to the dtype.
 
