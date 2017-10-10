@@ -278,6 +278,12 @@ class TestLibver(TestCase):
         opening a file.
     """
 
+    def test_default(self):
+        """ Opening with no libver arg """
+        f = File(self.mktemp(), 'w')
+        self.assertEqual(f.libver, ('earliest','latest'))
+        f.close()
+
     def test_single(self):
         """ Opening with single libver arg """
         f = File(self.mktemp(), 'w', libver='latest')
