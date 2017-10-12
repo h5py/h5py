@@ -1,0 +1,5 @@
+[build-system]
+# this should match SETUP_REQUIRES in setup.py, with the addition of setuptools
+# and wheel (in case some point in the future pip does not assume setuptools and
+# wheel)
+requires = ["setuptools", "wheel", "numpy>=1.7", "Cython>=0.23", "pkgconfig"]

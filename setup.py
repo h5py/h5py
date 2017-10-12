@@ -32,7 +32,12 @@ RUN_REQUIRES = [NUMPY_DEP,]
 # these are required to build h5py
 # RUN_REQUIRES is included as setup.py test needs RUN_REQUIRES for testing
 # RUN_REQUIRES can be removed when setup.py test is removed
+# apart from RUN_REQUIRES, this should match the deps in pyproject.toml
 SETUP_REQUIRES = RUN_REQUIRES + [NUMPY_DEP, 'Cython>=0.23', 'pkgconfig']
+
+# this specifies which versions of python we support, pip >= 9 knows to skip
+# versions of packages which are not compatible with the running python
+PYTHON_REQUIRES = '>=2.6, !=3.0.*, !=3.1.*, !=3.2.*'
 
 # Needed to avoid trying to install numpy/cython on pythons which the latest
 # versions don't support
