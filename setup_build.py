@@ -43,12 +43,37 @@ COMPILER_SETTINGS = {
                       ]
 }
 
+CYTHON_SETTINGS = {
+    'compiler_directives': {}
+}
+
 if sys.platform.startswith('win'):
     COMPILER_SETTINGS['include_dirs'].append(localpath('windows'))
     COMPILER_SETTINGS['define_macros'].extend([
         ('_HDF5USEDLL_', None),
         ('H5_BUILT_AS_DYNAMIC_LIB', None)
     ])
+
+if os.environ.get('CYTHON_COVERAGE'):
+    CYTHON_SETTINGS['compiler_directives'].update(**{'linetrace': True})
+    COMPILER_SETTINGS['define_macros'].extend([
+        ('CYTHON_TRACE', '1'), ('CYTHON_TRACE_NOGIL', '1')
+    ])
+
+def cython_settings_to_args(cython_settings):
+    """
+    Converts cython compiler directives to cython cli arguments.
+
+    NOTE: ONLY SUPPORTS COMPILER DIRECTIVES, SUPPORT FOR ADDITIONAL KEYWORDS
+    DOES NOT EXIST AT THIS TIME
+    """
+    arguments = []
+    for setting_name, setting in cython_settings.items():
+        if setting_name != "compiler_directives":
+            raise Exception("Unable to produce matching cli argument to {}".format(setting_name))
+        for directive, dir_value in setting:
+            arguments.extend(['-X', directive + '=' + str(dir_value)])
+    return arguments
 
 
 class h5py_build_ext(build_ext):
@@ -102,7 +127,10 @@ class h5py_build_ext(build_ext):
     @staticmethod
     def run_system_cython(pyx_files):
         try:
-            retcode = subprocess.call(['cython', '--fast-fail', '--verbose'] + pyx_files)
+            retcode = subprocess.call(
+                ['cython', '--fast-fail', '--verbose'] +
+                cython_settings_to_args(CYTHON_SETTINGS) + pyx_files
+            )
             if not retcode == 0:
                 raise Exception('ERROR: Cython failed')
         except OSError as e:
@@ -176,9 +204,12 @@ DEF COMPLEX256_SUPPORT = %(complex256_support)s
 
         # Run Cython
         print("Executing cythonize()")
-        self.extensions = cythonize(self._make_extensions(config),
-                                    force=config.rebuild_required or self.force,
-                                    language_level=3)
+        self.extensions = cythonize(
+            self._make_extensions(config),
+            force = config.rebuild_required or self.force,
+            language_level=3,
+            **CYTHON_SETTINGS
+        )
         self.check_rerun_cythonize()
 
         # Perform the build
