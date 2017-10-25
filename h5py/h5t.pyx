@@ -224,7 +224,7 @@ cdef dict _sign_map  = { H5T_SGN_NONE: 'u', H5T_SGN_2: 'i' }
 # Available floating point types
 available_ftypes = dict()
 for ftype in np.typeDict.values():
-    if np.issubdtype(ftype, float):
+    if np.issubdtype(ftype, np.floating):
         available_ftypes[np.dtype(ftype).itemsize] = np.finfo(ftype)
 
 # === General datatype operations =============================================
