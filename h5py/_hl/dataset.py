@@ -112,7 +112,7 @@ def make_new_dset(parent, shape=None, dtype=None, data=None, name=None,
         maxshape, scaleoffset, external, allow_unknown_filter)
 
     if fillvalue is not None:
-        fillvalue = numpy.array(fillvalue)
+        fillvalue = numpy.array(fillvalue, dtype=dtype)
         dcpl.set_fill_value(fillvalue)
 
     if track_times is None:
