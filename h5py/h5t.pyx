@@ -251,7 +251,7 @@ def _get_available_ftypes():
                 sorted_ftypes.append((ftype, np.finfo(ftype), size))
     return tuple(sorted_ftypes)
 
-available_ftypes = _get_available_ftypes()
+_available_ftypes = _get_available_ftypes()
 
 # === General datatype operations =============================================
 
@@ -983,7 +983,7 @@ cdef class TypeFloatID(TypeAtomicID):
         e_bias = self.get_ebias()
 
         # Handle non-standard exponent and mantissa sizes.
-        for ftype_, finfo, size in available_ftypes:
+        for ftype_, finfo, size in _available_ftypes:
             nmant = finfo.nmant
             maxexp = finfo.maxexp
             minexp = finfo.minexp
@@ -1319,7 +1319,7 @@ def _get_float_dtype_to_hdf5():
     float_be = {}
     h5_be_list = [IEEE_F16BE, IEEE_F32BE, IEEE_F64BE, IEEE_F128BE]
     h5_le_list = [IEEE_F16LE, IEEE_F32LE, IEEE_F64LE, IEEE_F128LE]
-    for ftype_, finfo, size in available_ftypes:
+    for ftype_, finfo, size in _available_ftypes:
         for h5type in h5_be_list:
             spos, epos, esize, mpos, msize = h5type.get_fields()
             ebias = h5type.get_ebias()
