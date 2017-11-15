@@ -28,10 +28,16 @@ from utils cimport  emalloc, efree, \
 from collections import defaultdict
 import sys
 import operator
+from warnings import warn
 from h5 import get_config
 import numpy as np
 from ._objects import phil, with_phil
 import platform
+
+try:
+    from collections.abc import Mapping
+except ImportError:
+    from collections import Mapping
 
 cfg = get_config()
 
@@ -252,6 +258,37 @@ def _get_available_ftypes():
     return tuple(sorted_ftypes)
 
 _available_ftypes = _get_available_ftypes()
+
+# Old code to inform about floating point changes
+class _DeprecatedMapping(Mapping):
+    """
+    Mapping class which warns when members are accessed
+    """
+    def __init__(self, mapping, message):
+        self._mapping = mapping
+        self._message = message
+
+    def __len__(self):
+        warn(self._message, DeprecationWarning)
+        return len(self._mapping)
+
+    def __iter__(self):
+        warn(self._message, DeprecationWarning)
+        return iter(self._mapping)
+
+    def __getitem__(self, key):
+        warn(self._message, DeprecationWarning)
+        return self._mapping[key]
+
+available_ftypes = dict()
+for ftype in np.typeDict.values():
+    if np.issubdtype(ftype, np.floating):
+        available_ftypes[np.dtype(ftype).itemsize] = np.finfo(ftype)
+
+available_ftypes = _DeprecatedMapping(available_ftypes,
+    ("Do not use available_ftypes, this is not part of the public API of "
+    "h5py. See https://github.com/h5py/h5py/pull/926 for details.")
+)
 
 # === General datatype operations =============================================
 
