@@ -16,6 +16,7 @@ from six import PY2, text_type
 
 import h5py
 from h5py import h5t
+from h5py.h5py_warnings import H5pyDeprecationWarning
 
 from ..common import TestCase, ut
 
@@ -214,6 +215,6 @@ class TestDeprecation(TestCase):
         warning_message = ("Do not use available_ftypes, this is not part of "
             "the public API of h5py. See "
             "https://github.com/h5py/h5py/pull/926 for details.")
-        with self.assertWarnsRegex(DeprecationWarning, warning_message) as warning:
+        with self.assertWarnsRegex(H5pyDeprecationWarning, warning_message) as warning:
             from h5py.h5t import available_ftypes
             available_ftypes[np.dtype(np.float).itemsize]

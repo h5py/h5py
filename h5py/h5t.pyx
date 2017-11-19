@@ -32,12 +32,14 @@ from warnings import warn
 from h5 import get_config
 import numpy as np
 from ._objects import phil, with_phil
+from .h5py_warnings import H5pyDeprecationWarning
 import platform
 
 try:
     from collections.abc import Mapping
 except ImportError:
     from collections import Mapping
+
 
 cfg = get_config()
 
@@ -269,15 +271,15 @@ class _DeprecatedMapping(Mapping):
         self._message = message
 
     def __len__(self):
-        warn(self._message, DeprecationWarning)
+        warn(self._message, H5pyDeprecationWarning)
         return len(self._mapping)
 
     def __iter__(self):
-        warn(self._message, DeprecationWarning)
+        warn(self._message, H5pyDeprecationWarning)
         return iter(self._mapping)
 
     def __getitem__(self, key):
-        warn(self._message, DeprecationWarning)
+        warn(self._message, H5pyDeprecationWarning)
         return self._mapping[key]
 
 available_ftypes = dict()
@@ -1841,14 +1843,13 @@ def find(TypeID src not None, TypeID dst not None):
 # ============================================================================
 # Deprecated functions
 
-import warnings
-
 cpdef dtype py_new_enum(object dt_in, dict enum_vals):
     """ (DTYPE dt_in, DICT enum_vals) => DTYPE
 
     Deprecated; use special_dtype() instead.
     """
-    #warnings.warn("Deprecated; use special_dtype(enum=(dtype, values)) instead", DeprecationWarning)
+    warn("Deprecated; use special_dtype(enum=(dtype, values)) instead",
+        H5pyDeprecationWarning)
     return special_dtype(enum = (dt_in, enum_vals))
 
 cpdef dict py_get_enum(object dt):
@@ -1856,7 +1857,8 @@ cpdef dict py_get_enum(object dt):
 
     Deprecated; use check_dtype() instead.
     """
-    #warnings.warn("Deprecated; use check_dtype(enum=dtype) instead", DeprecationWarning)
+    warn("Deprecated; use check_dtype(enum=dtype) instead",
+        H5pyDeprecationWarning)
     return check_dtype(enum=dt)
 
 cpdef dtype py_new_vlen(object kind):
@@ -1864,7 +1866,8 @@ cpdef dtype py_new_vlen(object kind):
 
     Deprecated; use special_dtype() instead.
     """
-    #warnings.warn("Deprecated; use special_dtype(vlen=basetype) instead", DeprecationWarning)
+    warn("Deprecated; use special_dtype(vlen=basetype) instead",
+        H5pyDeprecationWarning)
     return special_dtype(vlen=kind)
 
 cpdef object py_get_vlen(object dt_in):
@@ -1872,7 +1875,8 @@ cpdef object py_get_vlen(object dt_in):
 
     Deprecated; use check_dtype() instead.
     """
-    #warnings.warn("Deprecated; use check_dtype(vlen=dtype) instead", DeprecationWarning)
+    warn("Deprecated; use check_dtype(vlen=dtype) instead",
+        H5pyDeprecationWarning)
     return check_dtype(vlen=dt_in)
 
 
