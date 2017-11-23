@@ -35,6 +35,11 @@ EXTRA_SRC = {'h5z': [ localpath("lzf/lzf_filter.c"),
               localpath("lzf/lzf/lzf_c.c"),
               localpath("lzf/lzf/lzf_d.c")]}
 
+FALLBACK_PATHS = {
+    'include_dirs': [],
+    'library_dirs': []
+}
+
 COMPILER_SETTINGS = {
    'libraries'      : ['hdf5', 'hdf5_hl'],
    'include_dirs'   : [localpath('lzf')],
@@ -49,8 +54,8 @@ if sys.platform.startswith('win'):
         ('H5_BUILT_AS_DYNAMIC_LIB', None)
     ])
 else:
-    COMPILER_SETTINGS['include_dirs'].extend(['/opt/local/include', '/usr/local/include'])
-    COMPILER_SETTINGS['library_dirs'].extend(['/opt/local/include', '/usr/local/include'])
+    FALLBACK_PATHS['include_dirs'].extend(['/opt/local/include', '/usr/local/include'])
+    FALLBACK_PATHS['library_dirs'].extend(['/opt/local/lib', '/usr/local/lib'])
 
 
 class h5py_build_ext(build_ext):
@@ -76,14 +81,22 @@ class h5py_build_ext(build_ext):
 
         settings = COMPILER_SETTINGS.copy()
 
-        try:
-            if pkgconfig.exists('hdf5'):
-                pkgcfg = pkgconfig.parse("hdf5")
-                settings['include_dirs'].extend(pkgcfg['include_dirs'])
-                settings['library_dirs'].extend(pkgcfg['library_dirs'])
-                settings['define_macros'].extend(pkgcfg['define_macros'])
-        except EnvironmentError:
-            pass
+        # Ensure that if a custom HDF5 location is specified, prevent
+        # pkg-config and fallback locations from appearing in the settings
+        if config.hdf5 is not None:
+            settings['include_dirs'].insert(0, op.join(config.hdf5, 'include'))
+            settings['library_dirs'].insert(0, op.join(config.hdf5, 'lib'))
+        else:
+            try:
+                if pkgconfig.exists('hdf5'):
+                    pkgcfg = pkgconfig.parse("hdf5")
+                    settings['include_dirs'].extend(pkgcfg['include_dirs'])
+                    settings['library_dirs'].extend(pkgcfg['library_dirs'])
+                    settings['define_macros'].extend(pkgcfg['define_macros'])
+            except EnvironmentError:
+                pass
+            settings['include_dirs'].extend(FALLBACK_PATHS['include_dirs'])
+            settings['library_dirs'].extend(FALLBACK_PATHS['library_dirs'])
 
         try:
             numpy_includes = numpy.get_include()
@@ -96,12 +109,6 @@ class h5py_build_ext(build_ext):
         if config.mpi:
             import mpi4py
             settings['include_dirs'] += [mpi4py.get_include()]
-
-        # Ensure a custom location appears first, so we don't get a copy of
-        # HDF5 from some default location in COMPILER_SETTINGS
-        if config.hdf5 is not None:
-            settings['include_dirs'].insert(0, op.join(config.hdf5, 'include'))
-            settings['library_dirs'].insert(0, op.join(config.hdf5, 'lib'))
 
         # TODO: should this only be done on UNIX?
         if os.name != 'nt':
