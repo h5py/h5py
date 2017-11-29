@@ -90,6 +90,6 @@ Other changes
 .. _`HDF5 Direct Chunk Write` : https://support.hdfgroup.org/HDF5/doc/Advanced/DirectChunkWrite/
 .. _`HDF5 File Image Operations` : http://www.hdfgroup.org/HDF5/doc/Advanced/FileImageOperations/HDF5FileImageOperations.pdf
 
-Acknowlegements
----------------
+Acknowledgements
+----------------
 

@@ -21,7 +21,7 @@ SWMR support was contributed by Ulrik Pedersen (`#551`_).
 Other changes
 -------------
 * Use system Cython as a fallback if `cythonize()` fails (`#541`_ by Ulrik Pedersen).
-* Use pkg-config for builing/linking against hdf5 (`#505`_ by James Tocknell).
+* Use pkg-config for building/linking against hdf5 (`#505`_ by James Tocknell).
 * Disable building Cython on Travis (`#513`_ by Andrew Collette).
 * Improvements to release tarball (`#555`_, `#560`_ by Ghislain Antony
   Vaillant).
@@ -62,6 +62,6 @@ Other changes
 .. _`#501` : https://github.com/h5py/h5py/pull/501
 .. _`#503` : https://github.com/h5py/h5py/pull/503
 
-Acknowlegements
----------------
+Acknowledgements
+----------------
 

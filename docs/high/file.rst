@@ -142,7 +142,7 @@ Unix-like systems use locale settings to determine the correct encoding to use.
 These are set via a number of different environment variables, of which ``LANG``
 and ``LC_ALL`` are the ones of most interest. Of special interest is the ``C``
 locale, which Python will interpret as only allowing ASCII, meaning unicode
-paths should be preencoded. This will likely change in Python 3.7 with
+paths should be pre-encoded. This will likely change in Python 3.7 with
 https://www.python.org/dev/peps/pep-0538/, but this will likely be backported by
 distributions to earlier versions.
 

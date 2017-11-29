@@ -10,7 +10,7 @@ What is SWMR?
 
 The SWMR features allow simple concurrent reading of a HDF5 file while it is 
 being written from another process. Prior to this feature addition it was not
-possible to do this as the file data and meta-data would not be syncrhonised
+possible to do this as the file data and meta-data would not be synchronised
 and attempts to read a file which was open for writing would fail or result in
 garbage data.
 

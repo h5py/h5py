@@ -26,7 +26,7 @@ Enhancements unlikely to affect compatibility
 
 * Object and region references now work correctly in compound types.
 
-* Zero-length dimensions for extendible axes are now allowed.
+* Zero-length dimensions for extendable axes are now allowed.
 
 * H5py no longer attempts to auto-import ipython on startup.
 

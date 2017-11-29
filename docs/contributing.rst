@@ -306,7 +306,7 @@ Adding a function only available in certain versions of HDF5
 At the moment, h5py must be backwards-compatible all the way back to
 HDF5 1.8.4.  Starting with h5py 2.2.0, it's possible to conditionally
 include functions which only appear in newer versions of HDF5.  It's also
-possible to mark functions which requre Parallel HDF5.  For example, the
+possible to mark functions which require Parallel HDF5.  For example, the
 function ``H5Fset_mpi_atomicity`` was introduced in HDF5 1.8.9 and requires
 Parallel HDF5.  Specifiers before the signature in ``api_functions.txt``
 communicate this::

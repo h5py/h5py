@@ -20,7 +20,7 @@
 # Header declarations are the basenames of the C header files (without the .h);
 # for example, functions from "hdf5.h" are under the "hdf5" declaration.
 #
-# Function lines are C function signatures, optionally preceeded by:
+# Function lines are C function signatures, optionally preceded by:
 #   MPI     If present, function requires an MPI-aware build of h5py
 #   ERROR   Explicit error checks are needed (HDF5 does not use error stack)
 #   X.Y.Z   Minimum version of HDF5 required for this function

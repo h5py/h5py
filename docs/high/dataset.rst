@@ -4,7 +4,7 @@
 Datasets
 ========
 
-Datasets are very similar to NumPy arrays.  They are homogenous collections of
+Datasets are very similar to NumPy arrays.  They are homogeneous collections of
 data elements, with an immutable datatype and (hyper)rectangular shape.
 Unlike NumPy arrays, they support a variety of transparent storage features
 such as compression, error-detection, and chunked I/O.
