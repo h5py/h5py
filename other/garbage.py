@@ -8,7 +8,7 @@
 #           and contributor agreement.
 
 """
-    Demonstrates garbage messages printed to stderr for containership
+    Demonstrates garbage messages printed to stderr for membership
     testing, when performed in new threads.
 """
 

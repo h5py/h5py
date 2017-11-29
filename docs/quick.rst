@@ -108,7 +108,7 @@ Iterating over a group provides the names of its members::
     subgroup
     subgroup2
 
-Containership testing also uses names::
+Membership testing also uses names::
 
     >>> "mydataset" in f
     True

@@ -304,11 +304,11 @@ class TestLen(BaseMapping):
 class TestContains(BaseGroup):
 
     """
-        Feature: The Python "in" builtin tests for containership
+        Feature: The Python "in" builtin tests for membership
     """
 
     def test_contains(self):
-        """ "in" builtin works for containership (byte and Unicode) """
+        """ "in" builtin works for membership (byte and Unicode) """
         self.f.create_group('a')
         self.assertIn(b'a', self.f)
         self.assertIn(u'a', self.f)

@@ -70,7 +70,7 @@ Objects can be deleted from the file using the standard syntax::
 .. note::
     When using h5py from Python 3, the keys(), values() and items() methods
     will return view-like objects instead of lists.  These objects support
-    containership testing and iteration, but can't be sliced like lists.
+    membership testing and iteration, but can't be sliced like lists.
 
 
 .. _group_hardlinks:
@@ -173,7 +173,7 @@ Reference
 
     .. method:: __contains__(name)
 
-        Dict-like containership testing.  `name` may be a relative or absolute
+        Dict-like membership testing.  `name` may be a relative or absolute
         path.
 
     .. method:: __getitem__(name)
