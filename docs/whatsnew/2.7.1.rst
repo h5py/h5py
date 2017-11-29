@@ -31,7 +31,7 @@ to Python 3.3 onwards).
 Avoid unaligned memory access in conversion functions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Some architectures (e.g. SPRAC64) do not allow unaligned memory access, which
+Some architectures (e.g. SPARC64) do not allow unaligned memory access, which
 can come up when copying packed structs. :issue:`904` (by James Clarke) uses
 ``memcpy`` to avoid said unaligned memory access.
 

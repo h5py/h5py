@@ -36,7 +36,7 @@ _minor_table = {
     H5E_BADATOM:        ValueError,  # Unable to find atom information (already closed?) 
     H5E_BADGROUP:       ValueError,  # Unable to find ID group information 
     H5E_BADSELECT:      ValueError,  # Invalid selection (hyperslabs)
-    H5E_UNINITIALIZED:  ValueError,  # Information is uinitialized 
+    H5E_UNINITIALIZED:  ValueError,  # Information is uninitialized
     H5E_UNSUPPORTED:    NotImplementedError,    # Feature is unsupported 
 
     H5E_NOTFOUND:       KeyError,    # Object not found 
@@ -57,7 +57,7 @@ _minor_table = {
     H5E_CANTMOVE:       ValueError,  # Can't move a link
   }
 
-# "Fudge" table to accomodate annoying inconsistencies in HDF5's use 
+# "Fudge" table to accommodate annoying inconsistencies in HDF5's use
 # of the minor error codes.  If a (major, minor) entry appears here,
 # it will override any entry in the minor error table.
 _exact_table = {

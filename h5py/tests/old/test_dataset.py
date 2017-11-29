@@ -176,7 +176,7 @@ class TestCreateRequire(BaseDataset):
         with self.assertRaises(TypeError):
             self.f.require_dataset('foo', (10, 4), 'f')
 
-    def test_type_confict(self):
+    def test_type_conflict(self):
         """ require_dataset with object type conflict yields TypeError """
         self.f.create_group('foo')
         with self.assertRaises(TypeError):
@@ -418,7 +418,7 @@ class TestCreateShuffle(BaseDataset):
 @ut.skipIf('fletcher32' not in h5py.filters.encode, "FLETCHER32 is not installed")
 class TestCreateFletcher32(BaseDataset):
     """
-        Feature: Datases can use the fletcher32 filter
+        Feature: Datasets can use the fletcher32 filter
     """
 
     def test_fletcher32(self):
@@ -532,7 +532,7 @@ class TestCreateScaleOffset(BaseDataset):
 class TestAutoCreate(BaseDataset):
 
     """
-        Feauture: Datasets auto-created from data produce the correct types
+        Feature: Datasets auto-created from data produce the correct types
     """
 
     def test_vlen_bytes(self):
@@ -554,7 +554,7 @@ class TestAutoCreate(BaseDataset):
         self.assertEqual(tid.get_cset(), h5py.h5t.CSET_UTF8)
 
     def test_string_fixed(self):
-        """ Assignement of fixed-length byte string produces a fixed-length
+        """ Assignment of fixed-length byte string produces a fixed-length
         ascii dataset """
         self.f['x'] = np.string_("Hello there")
         ds = self.f['x']

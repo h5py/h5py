@@ -80,7 +80,7 @@ class TestSingleElement(BaseSlicing):
 class TestObjectIndex(BaseSlicing):
 
     """
-        Feauture: numpy.object_ subtypes map to real Python objects
+        Feature: numpy.object_ subtypes map to real Python objects
     """
 
     def test_reference(self):

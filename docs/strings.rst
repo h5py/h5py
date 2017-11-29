@@ -74,7 +74,7 @@ representation used by NumPy (and the only one which round-trips through HDF5).
 
 Technically, these strings are supposed to store `only` ASCII-encoded text,
 although in practice anything you can store in NumPy will round-trip.  But
-for compatibility with other progams using HDF5 (IDL, MATLAB, etc.), you
+for compatibility with other programs using HDF5 (IDL, MATLAB, etc.), you
 should use ASCII only.
 
 .. note::

@@ -15,7 +15,7 @@ import time
 import sys
 
 #"run as "mpirun -np 64 python-mpi collective_io.py 1 file.h5" 
-#(1 is for collective write, ohter number for non-collective write)"
+#(1 is for collective write, other numbers for non-collective write)"
 
 colw=1 #default is collective write
 filename="parallel_test.hdf5"

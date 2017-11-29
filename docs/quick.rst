@@ -41,7 +41,7 @@ methods which look interesting.  One of them is ``create_dataset``::
     >>> dset = f.create_dataset("mydataset", (100,), dtype='i')
 
 The object we created isn't an array, but :ref:`an HDF5 dataset <dataset>`.
-Like NumPy arrays, datasets have both a shape and a data type:
+Like NumPy arrays, datasets have both a shape and a data type::
 
     >>> dset.shape
     (100,)
@@ -49,7 +49,7 @@ Like NumPy arrays, datasets have both a shape and a data type:
     dtype('int32')
 
 They also support array-style slicing.  This is how you read and write data
-from a dataset in the file:
+from a dataset in the file::
 
     >>> dset[...] = np.arange(100)
     >>> dset[0]
@@ -108,14 +108,14 @@ Iterating over a group provides the names of its members::
     subgroup
     subgroup2
 
-Containership testing also uses names:
+Membership testing also uses names::
 
     >>> "mydataset" in f
     True
     >>> "somethingelse" in f
     False
 
-You can even use full path names:
+You can even use full path names::
 
     >>> "subgroup/another_dataset" in f
     True

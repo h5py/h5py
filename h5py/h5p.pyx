@@ -1494,7 +1494,7 @@ cdef class PropDXID(PropInstanceID):
         def set_dxpl_mpio(self, int xfer_mode):
             """ Set the transfer mode for MPI I/O.
             Must be one of:
-            - h5fd.MPIO_INDEPDENDENT (default)
+            - h5fd.MPIO_INDEPENDENT (default)
             - h5fd.MPIO_COLLECTIVE
             """
             H5Pset_dxpl_mpio(self.id, <H5FD_mpio_xfer_t>xfer_mode)
@@ -1502,7 +1502,7 @@ cdef class PropDXID(PropInstanceID):
         def get_dxpl_mpio(self):
             """ Get the current transfer mode for MPI I/O.
             Will be one of:
-            - h5fd.MPIO_INDEPDENDENT (default)
+            - h5fd.MPIO_INDEPENDENT (default)
             - h5fd.MPIO_COLLECTIVE
             """
             cdef H5FD_mpio_xfer_t mode

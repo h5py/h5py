@@ -185,7 +185,7 @@ cdef int conv_vlen2str(void* ipt, void* opt, void* bkg, void* priv) except -1:
     # is our responsibility to free the memory used by the vlens.
     free(buf_cstring0)
 
-    # HDF5 will eventuallly overwrite this target location, so we
+    # HDF5 will eventually overwrite this target location, so we
     # make sure to decref the object there.
     Py_XDECREF(bkg_obj0)
 

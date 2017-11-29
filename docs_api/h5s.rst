@@ -22,7 +22,7 @@ Module constants
 
 .. data:: ALL
 
-    Accepted in place of an actual datapace; means "every point"
+    Accepted in place of an actual dataspace; means "every point"
 
 .. data:: UNLIMITED
     

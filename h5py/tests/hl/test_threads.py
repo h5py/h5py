@@ -26,7 +26,7 @@ class TestErrorPrinting(TestCase):
     """
     
     def test_printing(self):
-        """ No console messages should be shown from containership tests """
+        """ No console messages should be shown from membership tests """
         # Unfortunately we can't have this test assert anything, as
         # HDF5 writes directly to stderr.  But it will show up in the
         # console output.

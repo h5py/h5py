@@ -41,7 +41,7 @@ to type conversion was added in `#614`_ by Andrew Collette.
 Documentation improvements
 --------------------------
 * Updates to FAQ by Dan Guest (`#608`_) and Peter Hill (`#607`_).
-* Updates MPI-releated documentation by Jens Timmerman (`#604`_) and
+* Updates MPI-related documentation by Jens Timmerman (`#604`_) and
   Matthias König (`#572`_).
 * Fixes to documentation building by Ghislain Antony Vaillant (`#562`_,
   `#561`_).
@@ -87,5 +87,5 @@ Other changes
 .. _`#661` : https://github.com/h5py/h5py/pull/661
 .. _`#663` : https://github.com/h5py/h5py/pull/663
 
-Acknowlegements
----------------
+Acknowledgements
+----------------
