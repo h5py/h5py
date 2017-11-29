@@ -28,7 +28,7 @@ def ngroups():
 class TestDealloc(TestCase):
 
     """ 
-        Behavior on object dellocation.  Note most of this behavior is
+        Behavior on object deallocation.  Note most of this behavior is
         delegated to FileID.
     """
     

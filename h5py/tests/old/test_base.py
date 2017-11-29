@@ -40,7 +40,7 @@ class TestName(BaseTest):
     """
 
     def test_anonymous(self):
-        """ Anomymous objects have name None """
+        """ Anonymous objects have name None """
         grp = self.f.create_group(None)
         self.assertIs(grp.name, None)
 

@@ -490,7 +490,7 @@ class Dataset(HLObject):
             # pad with ones
             mshape = (1,)*(len(self.shape)-len(mshape)) + mshape
 
-        # Perfom the actual read
+        # Perform the actual read
         mspace = h5s.create_simple(mshape)
         fspace = selection.id
         self.id.read(mspace, fspace, arr, mtype, dxpl=self._dxpl)
@@ -684,8 +684,8 @@ class Dataset(HLObject):
     @with_phil
     def __array__(self, dtype=None):
         """ Create a Numpy array containing the whole dataset.  DON'T THINK
-        THIS MEANS DATASETS ARE INTERCHANGABLE WITH ARRAYS.  For one thing,
-        you have to read the whole dataset everytime this method is called.
+        THIS MEANS DATASETS ARE INTERCHANGEABLE WITH ARRAYS.  For one thing,
+        you have to read the whole dataset every time this method is called.
         """
         arr = numpy.empty(self.shape, dtype=self.dtype if dtype is None else dtype)
 
@@ -719,7 +719,7 @@ class Dataset(HLObject):
             """ Refresh the dataset metadata by reloading from the file.
 
             This is part of the SWMR features and only exist when the HDF5
-            librarary version >=1.9.178
+            library version >=1.9.178
             """
             self._id.refresh()
 
@@ -730,6 +730,6 @@ class Dataset(HLObject):
             If the dataset is chunked, raw data chunks are written to the file.
 
             This is part of the SWMR features and only exist when the HDF5
-            librarary version >=1.9.178
+            library version >=1.9.178
             """
             self._id.flush()

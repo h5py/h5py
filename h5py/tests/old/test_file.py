@@ -547,7 +547,7 @@ class TestFilename(TestCase):
 class TestBackwardsCompat(TestCase):
 
     """
-        Feauture: Deprecated attributes are included to support 1.3 code
+        Feature: Deprecated attributes are included to support 1.3 code
     """
 
     def test_fid(self):

@@ -422,7 +422,7 @@ class Group(HLObject, MutableMappingHDF5):
 
         Returning None continues iteration, returning anything else stops
         and immediately returns that value from the visit method.  No
-        particular order of iteration within groups is guranteed.
+        particular order of iteration within groups is guaranteed.
 
         Example:
 
@@ -448,7 +448,7 @@ class Group(HLObject, MutableMappingHDF5):
 
         Returning None continues iteration, returning anything else stops
         and immediately returns that value from the visit method.  No
-        particular order of iteration within groups is guranteed.
+        particular order of iteration within groups is guaranteed.
 
         Example:
 

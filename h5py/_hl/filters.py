@@ -154,7 +154,7 @@ def generate_dcpl(shape, dtype, chunks, compression, compression_opts,
                             'and floating-point types')
         
         # Scale/offset following fletcher32 in the filter chain will (almost?)
-        # always triggera a read error, as most scale/offset settings are
+        # always triggers a read error, as most scale/offset settings are
         # lossy. Since fletcher32 must come first (see comment below) we
         # simply prohibit the combination of fletcher32 and scale/offset.
         if fletcher32:

@@ -42,7 +42,7 @@
 
 #endif
 
-/*  Deal with the mutiple definitions for H5Z_class_t.
+/*  Deal with the multiple definitions for H5Z_class_t.
     Note: Only HDF5 1.6 and 1.8 are supported.
 
     (1) The old class should always be used for HDF5 1.6

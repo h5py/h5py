@@ -372,7 +372,7 @@ cdef class FileID(GroupID):
 
             Retrieves a copy of the image of an existing, open file.
 
-            Feature requries: 1.8.9
+            Feature requires: 1.8.9
             """
 
             cdef ssize_t size
