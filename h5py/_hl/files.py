@@ -39,6 +39,53 @@ libver_dict = {'earliest': h5f.LIBVER_EARLIEST, 'latest': h5f.LIBVER_LATEST}
 libver_dict_r = dict((y, x) for x, y in six.iteritems(libver_dict))
 
 
+def _set_fapl_mpio(plist, **kwargs):
+    kwargs.setdefault('info', mpi4py.MPI.Info())
+    plist.set_fapl_mpio(**kwargs)
+
+
+_drivers = {
+    'sec2': lambda plist, **kwargs: plist.set_fapl_sec2(**kwargs),
+    'stdio': lambda plist, **kwargs: plist.set_fapl_stdio(**kwargs),
+    'core': lambda plist, **kwargs: plist.set_fapl_core(**kwargs),
+    'family': lambda plist, **kwargs: plist.set_fapl_family(
+        memb_fapl=plist.copy(),
+        **kwargs
+    ),
+    'mpio': _set_fapl_mpio,
+}
+
+
+def register_driver(name, set_fapl):
+    """Register a custom driver.
+
+    Parameters
+    ----------
+    name : str
+        The name of the driver.
+    set_fapl : callable[PropFAID, **kwargs] -> NoneType
+        The function to set the fapl to use your custom driver.
+    """
+    _drivers[name] = set_fapl
+
+
+def unregister_driver(name):
+    """Unregister a custom driver.
+
+    Parameters
+    ----------
+    name : str
+        The name of the driver.
+    """
+    del _drivers[name]
+
+
+def registered_drivers():
+    """Return a frozenset of the names of all of the registered drivers.
+    """
+    return frozenset(_drivers)
+
+
 def make_fapl(driver, libver, **kwds):
     """ Set up a file access property list """
     plist = h5p.create(h5p.FILE_ACCESS)
@@ -59,19 +106,12 @@ def make_fapl(driver, libver, **kwds):
             raise TypeError(msg)
         return plist
 
-    if driver == 'sec2':
-        plist.set_fapl_sec2(**kwds)
-    elif driver == 'stdio':
-        plist.set_fapl_stdio(**kwds)
-    elif driver == 'core':
-        plist.set_fapl_core(**kwds)
-    elif driver == 'family':
-        plist.set_fapl_family(memb_fapl=plist.copy(), **kwds)
-    elif driver == 'mpio':
-        kwds.setdefault('info', mpi4py.MPI.Info())
-        plist.set_fapl_mpio(**kwds)
-    else:
+    try:
+        set_fapl = _drivers[driver]
+    except KeyError:
         raise ValueError('Unknown driver type "%s"' % driver)
+    else:
+        set_fapl(plist, **kwds)
 
     return plist
 
