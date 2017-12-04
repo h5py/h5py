@@ -769,6 +769,18 @@ class TestExternalLinks(TestCase):
         self.f['ext'] = ExternalLink(ext_filename, '/external')
         self.assertEqual(self.f["ext"].attrs["ext_attr"], "test")
 
+    def test_unicode_hdf5_path(self):
+        """
+        Check that external links handle unicode hdf5 paths properly
+        Testing issue #333
+        """
+        ext_filename = os.path.join(mkdtemp(), "external.hdf5")
+        with File(ext_filename, "w") as ext_file:
+            ext_file.create_group(u'α')
+            ext_file[u"α"].attrs["ext_attr"] = "test"
+        self.f['ext'] = ExternalLink(ext_filename, u'/α')
+        self.assertEqual(self.f["ext"].attrs["ext_attr"], "test")
+
 class TestExtLinkBugs(TestCase):
 
     """
