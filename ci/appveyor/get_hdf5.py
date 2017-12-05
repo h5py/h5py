@@ -11,7 +11,7 @@ from os import environ, makedirs, walk, getcwd, chdir
 from os.path import join as pjoin, exists
 from tempfile import TemporaryFile, TemporaryDirectory
 from sys import exit, stderr
-from shutil import copyfileobj, copy
+from shutil import copy
 from glob import glob
 from subprocess import run, PIPE, STDOUT
 from zipfile import ZipFile
@@ -54,12 +54,14 @@ def download_hdf5(version, outfile):
     r = requests.get(file, stream=True)
     try:
         r.raise_for_status()
-        copyfileobj(r.raw, outfile)
     except requests.HTTPError:
         print("Failed to download hdf5 version {version}, exiting".format(
             version=version
         ), file=stderr)
         exit(1)
+    else:
+        for chunk in r.iter_content(chunk_size=None):
+            outfile.write(chunk)
 
 
 def build_hdf5(version, hdf5_file, install_path, cmake_generator, use_prefix):
