@@ -135,6 +135,10 @@ mechanism.  The regular rules for writing apply; to get a fixed-width ASCII
 string, use ``numpy.string_``, and to get a variable-length ASCII string, use
 ``bytes``.
 
+Since Python 3 strings are encoded as UTF-8 by default. This causes some issues
+when storing a list of strings. For more information, and work arounds, see
+[issue #289](https://github.com/h5py/h5py/issues/289).
+
 
 What about NumPy's ``U`` type?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
