@@ -96,7 +96,10 @@ def make_fapl(driver, libver, **kwds):
             high = h5f.LIBVER_LATEST
         else:
             low, high = (libver_dict[x] for x in libver)
-        plist.set_libver_bounds(low, high)
+    else:
+        # we default to earliest
+        low, high = h5f.LIBVER_EARLIEST, h5f.LIBVER_LATEST
+    plist.set_libver_bounds(low, high)
 
     if driver is None or (driver == 'windows' and sys.platform == 'win32'):
         # Prevent swallowing unused key arguments
