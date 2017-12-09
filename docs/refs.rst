@@ -58,15 +58,9 @@ dataset:
 
     >>> subset = myds[regref]
 
-There is one complication; since HDF5 region references don't express shapes
-the same way as NumPy does, the data returned will be "flattened" into a
-1-D array:
-
-    >>> subset.shape
-    (50,)
-
-This is similar to the behavior of NumPy's fancy indexing, which returns
-a 1D array for selections which don't conform to a regular grid.
+For selections which don't conform to a regular grid, h5py copies the behavior
+of NumPy's fancy indexing, which returns a 1D array. Note that for h5py release
+before 2.2, h5py always returns a 1D array.
 
 In addition to storing a selection, region references inherit from object
 references, and can be used anywhere an object reference is accepted.  In this
