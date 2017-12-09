@@ -173,7 +173,7 @@ Reference
     HDF5 name of the root group, "``/``". To access the on-disk name, use
     :attr:`File.filename`.
 
-.. class:: File(name, mode=None, driver=None, libver=None, userblock_size, **kwds)
+.. class:: File(name, mode=None, driver=None, libver=None, userblock_size=None, **kwds)
 
     Open or create a new file.
 
