@@ -1,3 +1,5 @@
+.. _special_types:
+
 Special types
 =============
 
