@@ -67,7 +67,7 @@ def select(shape, args, dsid):
                 raise TypeError("Mismatched selection shape")
             return arg
 
-        elif isinstance(arg, np.ndarray):
+        elif isinstance(arg, np.ndarray) and arg.dtype.kind == 'b':
             sel = PointSelection(shape)
             sel[arg]
             return sel
