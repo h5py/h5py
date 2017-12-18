@@ -39,7 +39,8 @@ cdef extern from "hdf5.h":
   hid_t H5FD_STDIO
   IF UNAME_SYSNAME == "Windows":
     hid_t H5FD_WINDOWS
-
+  hid_t H5FD_MPIO_COLLECTIVE
+  hid_t H5FD_MPIO_INDEPENDENT
   int H5FD_LOG_LOC_READ   # 0x0001
   int H5FD_LOG_LOC_WRITE  # 0x0002
   int H5FD_LOG_LOC_SEEK   # 0x0004

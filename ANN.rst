@@ -44,8 +44,8 @@ Changes
 * Entire code base ported to "six"; 2to3 removed from setup.py
   
 
-Acknowlegements
----------------
+Acknowledgements
+----------------
 
 This release incorporates changes from, among others:
 

@@ -14,6 +14,7 @@
 from __future__ import absolute_import
 
 import h5py
+from h5py._hl.files import _drivers
 
 from ..common import ut, TestCase
 
@@ -28,7 +29,7 @@ def ngroups():
 class TestDealloc(TestCase):
 
     """ 
-        Behavior on object dellocation.  Note most of this behavior is
+        Behavior on object deallocation.  Note most of this behavior is
         delegated to FileID.
     """
     
@@ -67,3 +68,36 @@ class TestDealloc(TestCase):
         
         self.assertEqual(nfiles(), start_nfiles)
         self.assertEqual(ngroups(), start_ngroups)
+
+
+class TestDriverRegsitration(TestCase):
+    def test_register_driver(self):
+        called_with = [None]
+
+        def set_fapl(plist, *args, **kwargs):
+            called_with[0] = args, kwargs
+            return _drivers['sec2'](plist)
+
+        h5py.register_driver('new-driver', set_fapl)
+        self.assertIn('new-driver', h5py.registered_drivers())
+
+        fname = self.mktemp()
+        h5py.File(fname, driver='new-driver', driver_arg_0=0, driver_arg_1=1)
+
+        self.assertEqual(
+            called_with,
+            [((), {'driver_arg_0': 0, 'driver_arg_1': 1})],
+        )
+
+    def test_unregister_driver(self):
+        h5py.register_driver('new-driver', lambda plist: None)
+        self.assertIn('new-driver', h5py.registered_drivers())
+
+        h5py.unregister_driver('new-driver')
+        self.assertNotIn('new-driver', h5py.registered_drivers())
+
+        with self.assertRaises(ValueError) as e:
+            fname = self.mktemp()
+            h5py.File(fname, driver='new-driver')
+
+        self.assertEqual(str(e.exception), 'Unknown driver type "new-driver"')

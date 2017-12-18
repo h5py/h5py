@@ -22,7 +22,7 @@ import six
 
 import numpy as np
 
-from .common import ut, TestCase
+from ..common import ut, TestCase
 
 import h5py
 from h5py import h5s, h5t, h5d
@@ -80,7 +80,7 @@ class TestSingleElement(BaseSlicing):
 class TestObjectIndex(BaseSlicing):
 
     """
-        Feauture: numpy.object_ subtypes map to real Python objects
+        Feature: numpy.object_ subtypes map to real Python objects
     """
 
     def test_reference(self):
@@ -222,27 +222,6 @@ class TestArraySlicing(BaseSlicing):
 
         self.assertTrue(np.all(dset[...] == out))
 
-class TestEmptySlicing(BaseSlicing):
-
-    """
-        Empty (H5S_NULL) datasets can't be sliced
-    """
-
-    def setUp(self):
-        BaseSlicing.setUp(self)
-        sid = h5s.create(h5s.NULL)
-        tid = h5t.C_S1.copy()
-        tid.set_size(10)
-        dsid = h5d.create(self.f.id, b'x', tid, sid)
-        self.dataset = self.f['x']
-
-    def test_ellipsis(self):
-        with self.assertRaises(IOError):
-            self.dataset[...]
-
-    def test_empty_tuple(self):
-        with self.assertRaises(IOError):
-            self.dataset[()]
 
 class TestZeroLengthSlicing(BaseSlicing):
 
@@ -302,18 +281,18 @@ class TestFieldNames(BaseSlicing):
 
     def test_read(self):
         """ Test read with field selections (bytes and unicode) """
-        if not six.PY3:
+        if six.PY2:
             # Byte strings are only allowed for field names on Py2
             self.assertArrayEqual(self.dset[b'a'], self.data['a'])
-        self.assertArrayEqual(self.dset[six.u('a')], self.data['a'])
+        self.assertArrayEqual(self.dset[u'a'], self.data['a'])
 
     def test_unicode_names(self):
         """ Unicode field names for for read and write """
-        self.assertArrayEqual(self.dset[six.u('a')], self.data['a'])
-        self.dset[six.u('a')] = 42
+        self.assertArrayEqual(self.dset[u'a'], self.data['a'])
+        self.dset[u'a'] = 42
         data = self.data.copy()
         data['a'] = 42
-        self.assertArrayEqual(self.dset[six.u('a')], data['a'])
+        self.assertArrayEqual(self.dset[u'a'], data['a'])
 
     def test_write(self):
         """ Test write with field selections """

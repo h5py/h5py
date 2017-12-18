@@ -3,21 +3,194 @@ language: python
 notifications:
   email: false
 
-python:
-  - "2.6"
-  - "2.7"
-  - "3.2"
-  - "3.3"
-  - "3.4"
+addons:
+  apt:
+    packages:
+      - libhdf5-serial-dev
+
+sudo: false
+dist: trusty
+
+cache:
+  directories:
+    - $HOME/.cache/pip
+    - $HOME/.cache/hdf5
+    - $HOME/.ccache  # https://github.com/travis-ci/travis-ci/issues/5853
+
+env:
+  global:
+    - HDF5_CACHE_DIR=$HOME/.cache/hdf5
+  matrix:
+    - TOXENV=docs
+    - TOXENV=check-manifest
+    - TOXENV=checkreadme
+
+matrix:
+  include:
+    # needed to work around https://github.com/travis-ci/travis-ci/issues/4794
+    # TODO: We should see if we can replace this with installing python via pyenv # based on toxenv
+
+    # Python 2.6
+    - python: 2.6
+      env:
+      - TOXENV=py26-test-deps
+    - python: 2.6
+      env:
+      - TOXENV=py26-test-mindeps
+    - python: 2.6
+      env:
+      - TOXENV=py26-test-deps
+        TOX_TESTENV_PASSENV=LANG LC_ALL
+        LANG=C
+        LC_ALL=C
+    - python: 2.6
+      env:
+      - TOXENV=py26-test-deps
+        HDF5_VERSION=1.10.1
+        HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION
+
+    # Python 2.7
+    - python: 2.7
+      env:
+      - TOXENV=py27-test-deps
+    - python: 2.7
+      env:
+      - TOXENV=py27-test-mindeps
+    - python: 2.7
+      env:
+      - TOXENV=py27-test-deps
+        TOX_TESTENV_PASSENV=LANG LC_ALL
+        LANG=C
+        LC_ALL=C
+    - python: 2.7
+      env:
+      - TOXENV=py27-test-deps
+        HDF5_VERSION=1.10.1
+        HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION
+
+    # Python 3.3
+    - python: 3.3
+      env:
+      - TOXENV=py33-test-deps
+    - python: 3.3
+      env:
+      - TOXENV=py33-test-mindeps
+    - python: 3.3
+      env:
+      - TOXENV=py33-test-deps
+        TOX_TESTENV_PASSENV=LANG LC_ALL
+        LANG=C
+        LC_ALL=C
+    - python: 3.3
+      env:
+      - TOXENV=py33-test-deps
+        HDF5_VERSION=1.10.1
+        HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION
+
+    # Python 3.4
+    - python: 3.4
+      env:
+      - TOXENV=py34-test-deps
+    - python: 3.4
+      env:
+      - TOXENV=py34-test-mindeps
+    - python: 3.4
+      env:
+      - TOXENV=py34-test-deps
+        TOX_TESTENV_PASSENV=LANG LC_ALL
+        LANG=C
+        LC_ALL=C
+    - python: 3.4
+      env:
+      - TOXENV=py34-test-deps
+        HDF5_VERSION=1.10.1
+        HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION
+
+    # Python 3.5
+    - python: 3.5
+      env:
+      - TOXENV=py35-test-deps
+    - python: 3.5
+      env:
+      - TOXENV=py35-test-mindeps
+    - python: 3.5
+      env:
+      - TOXENV=py35-test-deps
+        TOX_TESTENV_PASSENV=LANG LC_ALL
+        LANG=C
+        LC_ALL=C
+    - python: 3.5
+      env:
+      - TOXENV=py35-test-deps
+        HDF5_VERSION=1.10.1
+        HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION
+
+    # Python 3.6
+    - python: 3.6
+      env:
+      - TOXENV=py36-test-deps
+    - python: 3.6
+      env:
+      - TOXENV=py36-test-deps-pre
+    - python: 3.6
+      env:
+      - TOXENV=py36-test-mindeps
+    - python: 3.6
+      env:
+      - TOXENV=py36-test-deps
+        TOX_TESTENV_PASSENV=LANG LC_ALL
+        LANG=C
+        LC_ALL=C
+    - python: 3.6
+      env:
+      - TOXENV=py36-test-deps
+        HDF5_VERSION=1.10.1
+        HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION
+
+    # MPI tests
+    # TODO: We should test with newer versions of HDF5
+    - python: 2.7
+      env:
+      - TOXENV=py27-test-mindeps-mpi4py
+      - CC="mpicc"
+      - HDF5_MPI="ON"
+      addons:
+        apt:
+          packages:
+            - openmpi-bin         # 1.6.5 based on trusty
+            - libopenmpi-dev
+            - libhdf5-openmpi-dev # 1.8.11 based on trusty
+    - python: 3.6
+      env:
+      - TOXENV=py36-test-mindeps-mpi4py
+      - CC="mpicc"
+      - HDF5_MPI="ON"
+      addons:
+        apt:
+          packages:
+            - openmpi-bin         # 1.6.5 based on trusty
+            - libopenmpi-dev
+            - libhdf5-openmpi-dev # 1.8.11 based on trusty
+
+    # Additional python versions which are not officially supported
+    - python: "nightly"
+      env:
+      - TOXENV=nightly
+
+    - python: pypy
+      env:
+      - TOXENV=pypy-test-deps
+  allow_failures:
+    - python: pypy
+    - python: 'nightly'
 
 before_install:
-    - sudo apt-get update -qq
-    - sudo apt-get install -qq libhdf5-serial-dev
-    - if [[ $TRAVIS_PYTHON_VERSION == "2.6" ]]; then pip install unittest2; fi
-    - pip install numpy
-    - pip install --install-option="--no-cython-compile" cython
+  # - export PATH=/usr/lib/ccache:$PATH
+  - ccache -s
 
-install: 
-    - python setup.py build -f
-
-script: "python setup.py test"
+install:
+  - pip install tox
+  - ci/travis/get_hdf5_if_needed.sh
+  - ls -lRa $HDF5_CACHE_DIR
+script:
+  - tox

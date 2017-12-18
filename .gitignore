@@ -20,3 +20,6 @@ MANIFEST
 /.tox
 /h5py.egg-info
 /*.egg
+.eggs/
+*.so
+*~

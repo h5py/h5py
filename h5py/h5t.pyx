@@ -14,8 +14,8 @@
     subclasses which represent things like integer/float/compound identifiers.
     The majority of the H5T API is presented as methods on these identifiers.
 """
-
 # Pyrex compile-time imports
+include "config.pxi"
 from _objects cimport pdefault
 
 from numpy cimport dtype, ndarray
@@ -26,13 +26,17 @@ from utils cimport  emalloc, efree, \
 
 # Runtime imports
 import sys
+import operator
 from h5 import get_config
 import numpy as np
 from ._objects import phil, with_phil
+import platform
 
 cfg = get_config()
 
 PY3 = sys.version_info[0] == 3
+
+MACHINE = platform.machine()
 
 # === Custom C API ============================================================
 
@@ -174,6 +178,7 @@ NATIVE_INT64 = lockid(H5T_NATIVE_INT64)
 NATIVE_UINT64 = lockid(H5T_NATIVE_UINT64)
 NATIVE_FLOAT = lockid(H5T_NATIVE_FLOAT)
 NATIVE_DOUBLE = lockid(H5T_NATIVE_DOUBLE)
+NATIVE_LDOUBLE = lockid(H5T_NATIVE_LDOUBLE)
 
 # Unix time types
 UNIX_D32LE = lockid(H5T_UNIX_D32LE)
@@ -216,6 +221,11 @@ PYTHON_OBJECT = lockid(H5PY_OBJ)
 cdef dict _order_map = { H5T_ORDER_NONE: '|', H5T_ORDER_LE: '<', H5T_ORDER_BE: '>'}
 cdef dict _sign_map  = { H5T_SGN_NONE: 'u', H5T_SGN_2: 'i' }
 
+# Available floating point types
+available_ftypes = dict()
+for ftype in np.typeDict.values():
+    if np.issubdtype(ftype, float):
+        available_ftypes[np.dtype(ftype).itemsize] = np.finfo(ftype)
 
 # === General datatype operations =============================================
 
@@ -938,22 +948,43 @@ cdef class TypeFloatID(TypeAtomicID):
         """
         H5Tset_inpad(self.id, <H5T_pad_t>pad_code)
 
-
     cdef object py_dtype(self):
         # Translation function for floating-point types
-        size = self.get_size()                  # int giving number of bytes
+
         order = _order_map[self.get_order()]    # string with '<' or '>'
 
-        if size == 2 and not hasattr(np, 'float16'):
-            # This build doesn't have float16; promote to float32
-            return dtype(order+"f4")
+        s_offset, e_offset, e_size, m_offset, m_size = self.get_fields()
+        e_bias = self.get_ebias()
 
-        if size > 8:
-            # The native NumPy longdouble is used for 96 and 128-bit floats
-            return dtype(order + "f" + str(np.longdouble(1).dtype.itemsize))
-            
-        return dtype( _order_map[self.get_order()] + "f" + \
-                      str(self.get_size()) )
+        # Handle non-standard exponent and mantissa sizes.
+        for size, finfo in sorted(available_ftypes.items()):
+            nmant = finfo.nmant
+            maxexp = finfo.maxexp
+            minexp = finfo.minexp
+            # workaround for numpy's buggy finfo on float128 on ppc64 archs
+            if size == 16 and MACHINE == 'ppc64':
+	        # values reported by hdf5
+                nmant = 116
+                maxexp = 1024
+                minexp = -1022
+            elif size == 16 and MACHINE == 'ppc64le':
+	        # values reported by hdf5
+                nmant = 52
+                maxexp = 1024
+                minexp = -1022
+            elif nmant == 63 and finfo.nexp == 15:
+                # This is an 80-bit float, correct mantissa size
+                nmant += 1
+            if (size >= self.get_size() and m_size <= nmant and
+                (2**e_size - e_bias - 1) <= maxexp and (1 - e_bias) >= minexp):
+                break
+        else:
+            raise ValueError('Insufficient precision in available types to ' +
+                             'represent ' + str(self.get_fields()))
+
+
+
+        return dtype(order + "f" + str(size) )
 
 
 # === Composite types (enums and compound) ====================================
@@ -1005,7 +1036,6 @@ cdef class TypeCompositeID(TypeID):
         identified by a string name.
         """
         return H5Tget_member_index(self.id, name)
-
 
 cdef class TypeCompoundID(TypeCompositeID):
 
@@ -1078,6 +1108,7 @@ cdef class TypeCompoundID(TypeCompositeID):
         cdef int nfields
         field_names = []
         field_types = []
+        field_offsets = []
         nfields = self.get_nmembers()
 
         # First step: read field names and their Numpy dtypes into 
@@ -1087,6 +1118,7 @@ cdef class TypeCompoundID(TypeCompositeID):
             name = self.get_member_name(i)
             field_names.append(name)
             field_types.append(tmp_type.py_dtype())
+            field_offsets.append(self.get_member_offset(i))
 
 
         # 1. Check if it should be converted to a complex number
@@ -1104,7 +1136,17 @@ cdef class TypeCompoundID(TypeCompositeID):
         else:
             if sys.version[0] == '3':
                 field_names = [x.decode('utf8') for x in field_names]
-            typeobj = dtype(list(zip(field_names, field_types)))
+            if len(field_names) > 0:
+                collated_fields = zip(field_names, field_types, field_offsets)
+                ordered_fields = sorted(
+                    collated_fields, key=operator.itemgetter(2))
+                field_names, field_types, field_offsets = \
+                    map(list, zip(*ordered_fields))
+            typeobj = dtype({
+                'names': field_names,
+                'formats': field_types,
+                'offsets': field_offsets
+            })
 
         return typeobj
 
@@ -1247,17 +1289,18 @@ cdef class TypeEnumID(TypeCompositeID):
 # of NumPy dtype into an HDF5 type object.  The result is guaranteed to be
 # transient and unlocked.
 
-cdef dict _float_le = {2: IEEE_F16LE.id, 4: H5T_IEEE_F32LE, 8: H5T_IEEE_F64LE}
-cdef dict _float_be = {2: IEEE_F16BE.id, 4: H5T_IEEE_F32BE, 8: H5T_IEEE_F64BE}
-cdef dict _float_nt = _float_le if ORDER_NATIVE == H5T_ORDER_LE else _float_be
+cdef dict _float_le = {2: H5Tcopy(IEEE_F16LE.id), 4: H5Tcopy(H5T_IEEE_F32LE), 8: H5Tcopy(H5T_IEEE_F64LE)}
+cdef dict _float_be = {2: H5Tcopy(IEEE_F16BE.id), 4: H5Tcopy(H5T_IEEE_F32BE), 8: H5Tcopy(H5T_IEEE_F64BE)}
+cdef dict _float_nt = dict(_float_le) if ORDER_NATIVE == H5T_ORDER_LE else dict(_float_be)
+_float_nt[sizeof(long double)] = H5Tcopy(H5T_NATIVE_LDOUBLE)
 
-cdef dict _int_le = {1: H5T_STD_I8LE, 2: H5T_STD_I16LE, 4: H5T_STD_I32LE, 8: H5T_STD_I64LE}
-cdef dict _int_be = {1: H5T_STD_I8BE, 2: H5T_STD_I16BE, 4: H5T_STD_I32BE, 8: H5T_STD_I64BE}
-cdef dict _int_nt = {1: H5T_NATIVE_INT8, 2: H5T_NATIVE_INT16, 4: H5T_NATIVE_INT32, 8: H5T_NATIVE_INT64}
+cdef dict _int_le = {1: H5Tcopy(H5T_STD_I8LE), 2: H5Tcopy(H5T_STD_I16LE), 4: H5Tcopy(H5T_STD_I32LE), 8: H5Tcopy(H5T_STD_I64LE)}
+cdef dict _int_be = {1: H5Tcopy(H5T_STD_I8BE), 2: H5Tcopy(H5T_STD_I16BE), 4: H5Tcopy(H5T_STD_I32BE), 8: H5Tcopy(H5T_STD_I64BE)}
+cdef dict _int_nt = {1: H5Tcopy(H5T_NATIVE_INT8), 2: H5Tcopy(H5T_NATIVE_INT16), 4: H5Tcopy(H5T_NATIVE_INT32), 8: H5Tcopy(H5T_NATIVE_INT64)}
 
-cdef dict _uint_le = {1: H5T_STD_U8LE, 2: H5T_STD_U16LE, 4: H5T_STD_U32LE, 8: H5T_STD_U64LE}
-cdef dict _uint_be = {1: H5T_STD_U8BE, 2: H5T_STD_U16BE, 4: H5T_STD_U32BE, 8: H5T_STD_U64BE}
-cdef dict _uint_nt = {1: H5T_NATIVE_UINT8, 2: H5T_NATIVE_UINT16, 4: H5T_NATIVE_UINT32, 8: H5T_NATIVE_UINT64} 
+cdef dict _uint_le = {1: H5Tcopy(H5T_STD_U8LE), 2: H5Tcopy(H5T_STD_U16LE), 4: H5Tcopy(H5T_STD_U32LE), 8: H5Tcopy(H5T_STD_U64LE)}
+cdef dict _uint_be = {1: H5Tcopy(H5T_STD_U8BE), 2: H5Tcopy(H5T_STD_U16BE), 4: H5Tcopy(H5T_STD_U32BE), 8: H5Tcopy(H5T_STD_U64BE)}
+cdef dict _uint_nt = {1: H5Tcopy(H5T_NATIVE_UINT8), 2: H5Tcopy(H5T_NATIVE_UINT16), 4: H5Tcopy(H5T_NATIVE_UINT32), 8: H5Tcopy(H5T_NATIVE_UINT64)}
 
 cdef TypeFloatID _c_float(dtype dt):
     # Floats (single and double)
@@ -1389,6 +1432,15 @@ cdef TypeCompoundID _c_complex(dtype dt):
             tid_sub = H5T_IEEE_F64BE
         else:
             tid_sub = H5T_NATIVE_DOUBLE
+
+    elif length == 32:
+        IF COMPLEX256_SUPPORT:
+            size = h5py_size_n256
+            off_r = h5py_offset_n256_real
+            off_i = h5py_offset_n256_imag
+            tid_sub = H5T_NATIVE_LDOUBLE
+        ELSE:
+            raise TypeError("Illegal length %d for complex dtype" % length)
     else:
         raise TypeError("Illegal length %d for complex dtype" % length)
 
@@ -1398,28 +1450,58 @@ cdef TypeCompoundID _c_complex(dtype dt):
 
     return TypeCompoundID(tid)
 
-cdef TypeCompoundID _c_compound(dtype dt, int logical):
+cdef TypeCompoundID _c_compound(dtype dt, int logical, int aligned):
     # Compound datatypes
 
     cdef hid_t tid
-    cdef TypeID type_tmp
-    cdef dtype dt_tmp
-    cdef size_t offset
+    cdef TypeID member_type
+    cdef dtype member_dt
+    cdef size_t member_offset = 0
 
-    cdef dict fields = dt.fields
-    cdef tuple names = dt.names
+    cdef dict offsets = {}
+    cdef list fields = []
 
-    # Initial size MUST be 1 to avoid segfaults (issue 166)
-    tid = H5Tcreate(H5T_COMPOUND, 1)  
+    # The challenge with correctly converting a numpy/h5py dtype to a HDF5 type
+    # which is composed of subtypes has three aspects we must consider
+    # 1. numpy/h5py dtypes do not always have the same size as HDF5, even when
+    #   equivalent (can result in overlapping elements if not careful)
+    # 2. For correct round-tripping of aligned dtypes, we need to consider how
+    #   much padding we need by looking at the field offsets
+    # 3. There is no requirement that the offsets be monotonically increasing
+    #  (so we start by sorting the names as a function of increasing offset)
+    #
+    # The code below tries to cover these aspects
 
-    offset = 0
-    for name in names:
-        ename = name.encode('utf8') if isinstance(name, unicode) else name
-        dt_tmp = dt.fields[name][0]
-        type_tmp = py_create(dt_tmp, logical=logical)
-        H5Tset_size(tid, offset+type_tmp.get_size())
-        H5Tinsert(tid, ename, offset, type_tmp.id)
-        offset += type_tmp.get_size()
+    # Get offsets for each compound member
+    for name, field in dt.fields.items():
+        offsets[name] = field[1]
+
+    # Build list of names, offsets, and types, sorted by increasing offset
+    # (i.e. the position of the member in the struct)
+    for name in sorted(dt.names, key=offsets.__getitem__):
+        field = dt.fields[name]
+        name = name.encode('utf8') if isinstance(name, unicode) else name
+
+        # Get HDF5 data types and set the offset for each member
+        member_dt = field[0]
+        member_offset = max(member_offset, field[1])
+        member_type = py_create(member_dt, logical=logical, aligned=aligned)
+        if aligned and (member_offset > field[1]
+                        or member_dt.itemsize != member_type.get_size()):
+            raise TypeError("Enforced alignment not compatible with HDF5 type")
+        fields.append((name, member_offset, member_type))
+
+        # Update member offset based on the HDF5 type size
+        member_offset += member_type.get_size()
+
+    member_offset = max(member_offset, dt.itemsize)
+    if aligned and member_offset > dt.itemsize:
+        raise TypeError("Enforced alignment not compatible with HDF5 type")
+
+    # Create compound with the necessary size, and insert its members
+    tid = H5Tcreate(H5T_COMPOUND, member_offset)
+    for (name, member_offset, member_type) in fields:
+        H5Tinsert(tid, name, member_offset, member_type.id)
 
     return TypeCompoundID(tid)
 
@@ -1445,7 +1527,7 @@ cdef TypeReferenceID _c_ref(object refclass):
     raise TypeError("Unrecognized reference code")
 
 
-cpdef TypeID py_create(object dtype_in, bint logical=0):
+cpdef TypeID py_create(object dtype_in, bint logical=0, bint aligned=0):
     """(OBJECT dtype_in, BOOL logical=False) => TypeID
 
     Given a Numpy dtype object, generate a byte-for-byte memory-compatible
@@ -1464,6 +1546,8 @@ cpdef TypeID py_create(object dtype_in, bint logical=0):
     """
     cdef dtype dt = dtype(dtype_in)
     cdef char kind = dt.kind
+
+    aligned = getattr(dtype_in, "isalignedstruct", aligned)
 
     with phil:
         # Float
@@ -1487,7 +1571,7 @@ cpdef TypeID py_create(object dtype_in, bint logical=0):
 
         # Compound
         elif kind == c'V' and dt.names is not None:
-            return _c_compound(dt, logical)
+            return _c_compound(dt, logical, aligned)
 
         # Array or opaque
         elif kind == c'V':
@@ -1514,7 +1598,7 @@ cpdef TypeID py_create(object dtype_in, bint logical=0):
                 elif vlen is unicode:
                     return _c_vlen_unicode()
                 elif vlen is not None:
-                    return vlen_create(py_create(vlen))
+                    return vlen_create(py_create(vlen, logical))
 
                 refclass = check_dtype(ref=dt)
                 if refclass is not None:

@@ -19,7 +19,7 @@ import six
 
 import numpy as np
 
-from .common import ut, TestCase
+from ..common import ut, TestCase
 
 from h5py import File
 from h5py._hl.datatype import Datatype

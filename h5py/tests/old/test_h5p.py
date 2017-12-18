@@ -16,7 +16,9 @@ except ImportError:
 
 from h5py import h5p, h5f
 
-class TestLibver(ut.TestCase):
+from ..common import TestCase
+
+class TestLibver(TestCase):
 
     """
         Feature: Setting/getting lib ver bounds
@@ -30,7 +32,7 @@ class TestLibver(ut.TestCase):
                          plist.get_libver_bounds())
 
 
-class TestDA(ut.TestCase):
+class TestDA(TestCase):
     '''
     Feature: setting/getting chunk cache size on a dataset access property list
     '''
@@ -45,7 +47,7 @@ class TestDA(ut.TestCase):
         self.assertEqual((nslots, nbytes, w0),
                          dalist.get_chunk_cache())
 
-class TestFA(ut.TestCase):
+class TestFA(TestCase):
     '''
     Feature: setting/getting mdc config on a file access property list
     '''
@@ -67,7 +69,7 @@ class TestFA(ut.TestCase):
                          falist.get_alignment())
 
 
-class TestPL(ut.TestCase):
+class TestPL(TestCase):
     def test_obj_track_times(self):
         """
         tests if the object track times  set/get

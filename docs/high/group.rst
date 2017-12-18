@@ -1,8 +1,8 @@
 .. _group:
 
 
-HDF5 Groups
-===========
+Groups
+======
 
 
 Groups are the container mechanism by which HDF5 files are organized.  From
@@ -70,7 +70,7 @@ Objects can be deleted from the file using the standard syntax::
 .. note::
     When using h5py from Python 3, the keys(), values() and items() methods
     will return view-like objects instead of lists.  These objects support
-    containership testing and iteration, but can't be sliced like lists.
+    membership testing and iteration, but can't be sliced like lists.
 
 
 .. _group_hardlinks:
@@ -147,6 +147,13 @@ link resides.
     already open.  This is related to how HDF5 manages file permissions
     internally.
 
+.. note::
+
+    How the filename is processed is operating system dependent, it is
+    recommended to read :ref:`file_filenames` to understand potential limitations on
+    filenames on your operating system. Note especially that Windows is
+    particularly susceptible to problems with external links, due to possible
+    encoding errors and how filenames are structured.
 
 Reference
 ---------
@@ -166,7 +173,7 @@ Reference
 
     .. method:: __contains__(name)
 
-        Dict-like containership testing.  `name` may be a relative or absolute
+        Dict-like membership testing.  `name` may be a relative or absolute
         path.
 
     .. method:: __getitem__(name)

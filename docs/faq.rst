@@ -99,7 +99,7 @@ This greatly simplifies the design of the complicated high-level interface, by
 relying on the "Pythonicity" of the C API wrapping.
 
 There's also a PyTables perspective on this question at the 
-`PyTables FAQ <http://www.pytables.org/moin/FAQ#HowdoesPyTablescomparewiththeh5pyproject.3F>`_.
+`PyTables FAQ <http://www.pytables.org/FAQ.html#how-does-pytables-compare-with-the-h5py-project>`_.
 
 
 Does h5py support Parallel HDF5?
@@ -121,7 +121,7 @@ in HDF5 are encoded as ASCII or UTF-8, NUL bytes are not allowed in strings.
 
 Enumerated types
 ----------------
-HDF5 enumerated types are supported as. As NumPy has no native enum type, they
+HDF5 enumerated types are supported. As NumPy has no native enum type, they
 are treated on the Python side as integers with a small amount of metadata
 attached to the dtype.
 

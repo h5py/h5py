@@ -1,0 +1,38 @@
+What's new in h5py 2.7.1
+========================
+
+2.7.1 is the first bug-fix release in the 2.7.x series.
+
+Bug fixes
+---------
+
+  - :issue:`903` Fixed critical issue with cyclic gc which resulted in segfaults
+  - :issue:`904` Avoid unaligned access fixing h5py on sparc64
+  - :issue:`883` Fixed compilation issues for some library locations
+  - :issue:`868` Fix deadlock between phil and the import lock in py2
+  - :issue:`841` Improve windows handling if filenames
+  - :issue:`874` Allow close to be called on file multiple times
+  - :issue:`867`, :issue:`872` Warn on loaded vs complied hdf5 version issues
+  - :issue:`902` Fix overflow computing size of dataset on windows
+  - :issue:`912` Do not mangle capitalization of filenames in error messages
+  - :issue:`842` Fix longdouble on ppc64le
+  - :issue:`862`, :issue:`916` Fix compounds structs with variable-size members
+
+Fix h5py segfaulting on some Python 3 versions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Through an intersection of `Python Issue 30484`_ and :issue:`888`, it was
+possible for the Python Garbage Collector to activate when closing ``h5py``
+objects, which due to how dictionaries were iterated over in Python could
+cause a segfault. :issue:`903` fixes the Garbage Collector activating whilst
+closing, whilst `Python Issue 30484`_ had been fixed upstream (and backported
+to Python 3.3 onwards).
+
+Avoid unaligned memory access in conversion functions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Some architectures (e.g. SPARC64) do not allow unaligned memory access, which
+can come up when copying packed structs. :issue:`904` (by James Clarke) uses
+``memcpy`` to avoid said unaligned memory access.
+
+.. _`Python Issue 30484`: https://bugs.python.org/issue30484

@@ -25,6 +25,8 @@ from h5py import _objects
 from ._objects import phil, with_phil
 import h5fd
 
+from cpython.bytes cimport PyBytes_FromStringAndSize, PyBytes_AsString
+
 # Initialization
 
 # === Public constants and data structures ====================================
@@ -362,6 +364,25 @@ cdef class FileID(GroupID):
         H5Fget_vfd_handle(self.id, H5Fget_access_plist(self.id), <void**>&handle)
         return handle[0]
 
+    IF HDF5_VERSION >= (1, 8, 9):
+
+        @with_phil
+        def get_file_image(self):
+            """ () => BYTES
+
+            Retrieves a copy of the image of an existing, open file.
+
+            Feature requires: 1.8.9
+            """
+
+            cdef ssize_t size
+
+            size = H5Fget_file_image(self.id, NULL, 0)
+            image = PyBytes_FromStringAndSize(NULL, size)
+
+            H5Fget_file_image(self.id, PyBytes_AsString(image), size)
+
+            return image
 
     IF MPI and HDF5_VERSION >= (1, 8, 9):
 

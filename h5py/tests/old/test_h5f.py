@@ -9,18 +9,15 @@
 
 from __future__ import absolute_import
 
-try:
-    import unittest2 as ut
-except ImportError:
-    import unittest as ut
-
 import tempfile
 import shutil
 import os
 from h5py import File
 
+from ..common import TestCase
 
-class TestFileID(ut.TestCase):
+
+class TestFileID(TestCase):
     def test_descriptor_core(self):
         with File('TestFileID.test_descriptor_core', driver='core', backing_store=False) as f:
             with self.assertRaises(NotImplementedError):
@@ -38,7 +35,7 @@ class TestFileID(ut.TestCase):
             shutil.rmtree(dn_tmp)
 
 
-class TestCacheConfig(ut.TestCase):
+class TestCacheConfig(TestCase):
     def test_simple_gets(self):
         dn_tmp = tempfile.mkdtemp('h5py.lowtest.test_h5f.TestFileID.TestCacheConfig.test_simple_gets')
         fn_h5 = os.path.join(dn_tmp, 'test.h5')

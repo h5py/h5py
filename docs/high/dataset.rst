@@ -1,10 +1,10 @@
 .. _dataset:
 
 
-HDF5 Datasets
-=============
+Datasets
+========
 
-Datasets are very similar to NumPy arrays.  They are homogenous collections of
+Datasets are very similar to NumPy arrays.  They are homogeneous collections of
 data elements, with an immutable datatype and (hyper)rectangular shape.
 Unlike NumPy arrays, they support a variety of transparent storage features
 such as compression, error-detection, and chunked I/O.
@@ -299,6 +299,44 @@ dataset while iterating has undefined results.
 On 32-bit platforms, ``len(dataset)`` will fail if the first axis is bigger
 than 2**32. It's recommended to use :meth:`Dataset.len` for large datasets.
 
+Creating and Reading Empty (or Null) datasets and attributes
+------------------------------------------------------------
+
+HDF5 has the concept of Empty or Null datasets and attributes. These are not
+the same as an array with a shape of (), or a scalar dataspace in HDF5 terms.
+Instead, it is a dataset with an associated type, no data, and no shape. In
+h5py, we represent this as either a dataset with shape ``None``, or an
+instance of ``h5py.Empty``. Empty datasets and attributes cannot be sliced.
+
+To create an empty attribute, use ``h5py.Empty`` as per :ref:`attributes`::
+
+    >>> obj.attrs["EmptyAttr"] = h5py.Empty("f")
+
+Similarly, reading an empty attribute returns ``h5py.Empty``::
+
+    >>> obj.attrs["EmptyAttr"]
+    h5py.Empty(dtype="f")
+
+Empty datasets can be created either by defining a ``dtype`` but no
+``shape`` in ``create_dataset``::
+
+    >>> grp.create_dataset("EmptyDataset", dtype="f")
+
+or by ``data`` to an instance of ``h5py.Empty``::
+
+    >>> grp.create_dataset("EmptyDataset", data=h5py.Empty("f"))
+
+An empty dataset has shape defined as ``None``, which is the best way of
+determining whether a dataset is empty or not. An empty dataset can be "read" in
+a similar way to scalar datasets, i.e. if ``empty_dataset`` is an empty
+dataset,::
+
+    >>> empty_dataset[()]
+    h5py.Empty(dtype="f")
+
+The dtype of the dataset can be accessed via ``<dset>.dtype`` as per normal.
+As empty datasets cannot be sliced, some methods of datasets such as
+``read_direct`` will raise an exception if used on a empty dataset.
 
 Reference
 ---------

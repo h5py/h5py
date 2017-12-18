@@ -88,6 +88,7 @@ def with_phil(func):
 #
 # See also __cinit__ and __dealloc__ for class ObjectID.
 
+import gc
 import weakref
 import warnings
 
@@ -114,17 +115,28 @@ def nonlocal_close():
     """ Find dead ObjectIDs and set their integer identifiers to 0.
     """
     cdef ObjectID obj
+    cdef list reg_ids
 
-    for python_id, ref in registry.items():
+    # create a cached list of ids whilst the gc is disabled to avoid hitting
+    # the cyclic gc while iterating through the registry dict
+    gc.disable()
+    try:
+        reg_ids = list(registry)
+    finally:
+        gc.enable()
+
+    for python_id in reg_ids:
+        ref = registry.get(python_id)
+
+        # registry dict has changed underneath us, skip to next item
+        if ref is None:
+            continue
 
         obj = ref()
 
-        # Object somehow died without being removed from the registry.
-        # I think this is impossible, but let's make sure.
+        # Object died while walking the registry list, presumably because
+        # the cyclic GC kicked in.
         if obj is None:
-            warnings.warn("Found murdered identifier %d of kind %s HDF5 id %d" % 
-                             (python_id, type(obj), obj.id), RuntimeWarning)
-            del registry[python_id]
             continue
 
         # Locked objects are immortal, as they generally are provided by
@@ -160,41 +172,32 @@ cdef class ObjectID:
 
     property valid:
         def __get__(self):
-
-            # Locked objects are always valid, regardless of obj.id
-            if self.locked:
-                return True
-
-            # Former zombie object
-            if self.id == 0:
-                return False
-
-            # Ask HDF5.  Note that H5Iis_valid only works for "user"
-            # identifiers, hence the above checks.
-            with _phil:
-                return H5Iis_valid(self.id)
+            return is_h5py_obj_valid(self)
 
 
     def __cinit__(self, id_):
         with _phil:
             self.id = id_
             self.locked = 0
+            self._pyid = id(self)
             IF DEBUG_ID:
-                print("CINIT - registering %d of kind %s HDF5 id %d" % (id(self), type(self), id_))
-            registry[id(self)] = weakref.ref(self)
+                print("CINIT - registering %d of kind %s HDF5 id %d" % (self._pyid, type(self), self.id))
+            registry[self._pyid] = weakref.ref(self)
 
 
     def __dealloc__(self):
         with _phil:
             IF DEBUG_ID:
-                print("DEALLOC - unregistering %d of kind %s HDF5 id %d" % (id(self), type(self), self.id))
-            try:
-                # There's no reason to expect it, but in principle H5Idec_ref
-                # could raise an exception.
-                if self.valid and (not self.locked):
-                    H5Idec_ref(self.id)
-            finally:
-                del registry[id(self)] 
+                print("DEALLOC - unregistering %d HDF5 id %d" % (self._pyid, self.id))
+            if is_h5py_obj_valid(self) and (not self.locked):
+                if H5Idec_ref(self.id) < 0:
+                    warnings.warn(
+                        "Reference counting issue with HDF5 id {}".format(
+                            self.id
+                        )
+                    )
+            if self._pyid is not None:
+                del registry[self._pyid]
 
 
     def _close(self):
@@ -202,14 +205,22 @@ cdef class ObjectID:
 
         with _phil:
             IF DEBUG_ID:
-                print("CLOSE - %d of kind %s HDF5 id %d" % (id(self), type(self), self.id))
-            try:
-                # There's no reason to expect it, but in principle H5Idec_ref
-                # could raise an exception.
-                if self.valid and (not self.locked):
-                    H5Idec_ref(self.id)
-            finally:
-                self.id = 0
+                print("CLOSE - %d HDF5 id %d" % (self._pyid, self.id))
+            if is_h5py_obj_valid(self) and (not self.locked):
+                if H5Idec_ref(self.id) < 0:
+                    warnings.warn(
+                        "Reference counting issue with HDF5 id {}".format(
+                            self.id
+                        )
+                    )
+            self.id = 0
+
+
+    def close(self):
+        """ Close this identifier. """
+        # Note this is the default close method.  Subclasses, e.g. FileID,
+        # which have nonlocal effects should override this.
+        self._close()
 
 
     def __nonzero__(self):
@@ -278,3 +289,25 @@ cdef hid_t pdefault(ObjectID pid):
     if pid is None:
         return <hid_t>H5P_DEFAULT
     return pid.id
+
+
+cdef int is_h5py_obj_valid(ObjectID obj):
+    """
+    Check that h5py object is valid, i.e. HDF5 object wrapper is valid and HDF5
+    object is valid
+    """
+    # MUST BE CALLABLE AT ANY TIME, CANNOT USE PROPERTIES ETC. AS PER
+    # http://cython.readthedocs.io/en/latest/src/userguide/special_methods.html
+
+    # Locked objects are always valid, regardless of obj.id
+    if obj.locked:
+        return True
+
+    # Former zombie object
+    if obj.id == 0:
+        return False
+
+    # Ask HDF5.  Note that H5Iis_valid only works for "user"
+    # identifiers, hence the above checks.
+    with _phil:
+        return H5Iis_valid(obj.id)
