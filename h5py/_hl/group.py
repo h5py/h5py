@@ -39,15 +39,25 @@ class Group(HLObject, MutableMappingHDF5):
                 raise ValueError("%s is not a GroupID" % bind)
             HLObject.__init__(self, bind)
 
-    def create_group(self, name):
+
+    _gcpl_crt_order = h5p.create(h5p.GROUP_CREATE)
+    _gcpl_crt_order.set_link_creation_order(
+        h5p.CRT_ORDER_TRACKED | h5p.CRT_ORDER_INDEXED)
+
+
+    def create_group(self, name, track_order=False):
         """ Create and return a new subgroup.
 
         Name may be absolute or relative.  Fails if the target name already
         exists.
+
+        track_order
+            Track dataset/group creation order under this group if True.
         """
         with phil:
             name, lcpl = self._e(name, lcpl=True)
-            gid = h5g.create(self.id, name, lcpl=lcpl)
+            gcpl = Group._gcpl_crt_order if track_order else None
+            gid = h5g.create(self.id, name, lcpl=lcpl, gcpl=gcpl)
             return Group(gid)
 
     def create_dataset(self, name, shape=None, dtype=None, data=None, **kwds):
