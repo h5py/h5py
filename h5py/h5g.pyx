@@ -16,7 +16,8 @@ include "config.pxi"
 # Compile-time imports
 from _objects cimport pdefault
 from utils cimport emalloc, efree
-from h5p cimport PropID
+from h5p import CRT_ORDER_TRACKED
+from h5p cimport PropID, PropGCID
 cimport _hdf5 # to implement container testing for 1.6
 from _errors cimport set_error_handler, err_cookie
 
@@ -113,7 +114,16 @@ cdef class GroupIter:
             raise StopIteration
 
         if self.idx == 0:
-            self.grp.links.iterate(self.names.append)
+            cpl = self.grp.get_create_plist()
+            crt_order = cpl.get_link_creation_order()
+            cpl.close()
+            if crt_order & CRT_ORDER_TRACKED:
+                idx_type = H5_INDEX_CRT_ORDER
+            else:
+                idx_type = H5_INDEX_NAME
+
+            self.grp.links.iterate(self.names.append,
+                                   idx_type=idx_type)
 
         retval = self.names[self.idx]
         self.idx += 1
@@ -386,6 +396,16 @@ cdef class GroupID(ObjectID):
             return pyvalue
         finally:
             efree(value)
+
+
+    @with_phil
+    def get_create_plist(self):
+        """() => PropGCID
+
+        Retrieve a copy of the group creation property list used to
+        create this group.
+        """
+        return PropGCID(H5Gget_create_plist(self.id))
 
 
     @with_phil
