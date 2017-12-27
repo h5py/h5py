@@ -398,14 +398,14 @@ class TestIter(BaseMapping):
 class TestTrackOrder(BaseGroup):
     def test_track_order(self):
         g = self.f.create_group('order', track_order=True)
-        for i in xrange(100):
+        for i in range(100):
             # Mix group and dataset creation.
             if i % 10 == 0:
                 g.create_group(str(i))
             else:
                 g[str(i)] = [i]
 
-        objs = [str(i) for i in xrange(100)]
+        objs = [str(i) for i in range(100)]
         objs2 = [o for o in g]
         self.assertEqual(objs, objs2)
 
