@@ -32,7 +32,7 @@ RUN_REQUIRES = [NUMPY_DEP, 'six']
 # these are required to build h5py
 # RUN_REQUIRES is included as setup.py test needs RUN_REQUIRES for testing
 # RUN_REQUIRES can be removed when setup.py test is removed
-SETUP_REQUIRES = RUN_REQUIRES + [NUMPY_DEP, 'Cython>=0.19', 'pkgconfig']
+SETUP_REQUIRES = RUN_REQUIRES + [NUMPY_DEP, 'Cython>=0.23', 'pkgconfig']
 
 # Needed to avoid trying to install numpy/cython on pythons which the latest
 # versions don't support
