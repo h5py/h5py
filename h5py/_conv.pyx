@@ -23,7 +23,7 @@ np.import_array()
 
 # Minimal interface for Python objects immune to Cython refcounting
 cdef extern from "Python.h":
-    
+
     # From Cython declarations
     ctypedef int PyTypeObject
     ctypedef struct PyObject:
@@ -87,7 +87,7 @@ cdef herr_t generic_converter(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
         return initop(src_id, dst_id, &(cdata[0].priv))
 
     elif command == H5T_CONV_FREE:
-        
+
         free(cdata[0].priv)
         cdata[0].priv = NULL
 
@@ -135,7 +135,7 @@ cdef herr_t generic_converter(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
     return 0
 
 # =============================================================================
-# Generic conversion 
+# Generic conversion
 
 ctypedef struct conv_size_t:
     size_t src_size
@@ -143,7 +143,7 @@ ctypedef struct conv_size_t:
     int cset
 
 cdef herr_t init_generic(hid_t src, hid_t dst, void** priv) except -1:
-    
+
     cdef conv_size_t *sizes
     sizes = <conv_size_t*>malloc(sizeof(conv_size_t))
     priv[0] = sizes
@@ -254,7 +254,7 @@ cdef int conv_str2vlen(void* ipt, void* opt, void* bkg, void* priv) except -1:
                     temp_string_len = PyBytes_Size(temp_encoded)
                 else:
                     raise TypeError("Unrecognized dataset encoding")
-                    
+
         if strlen(temp_string) != temp_string_len:
             raise ValueError("VLEN strings do not support embedded NULLs")
 
@@ -485,6 +485,12 @@ cdef herr_t pyref2regref(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
     return generic_converter(src_id, dst_id, cdata, nl, buf_stride, bkg_stride,
              buf_i, bkg_i, dxpl, conv_pyref2regref, init_generic, H5T_BKG_NO)
 
+cdef herr_t fixedutf8_to_ascii(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
+                    size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
+                    void *bkg_i, hid_t dxpl) except -1:
+    return generic_converter(src_id, dst_id, cdata, nl, buf_stride, bkg_stride,
+             buf_i, bkg_i, dxpl, conv_fixedutf8_to_ascii, init_fixedutf8_to_ascii, H5T_BKG_NO)
+
 # =============================================================================
 # Enum to integer converter
 
@@ -519,9 +525,9 @@ cdef int enum_int_converter_conv(hid_t src, hid_t dst, H5T_cdata_t *cdata,
     cdef char* buf = <char*>buf_i
     cdef int identical
     cdef hid_t supertype = -1
-    
+
     info = <conv_enum_t*>cdata[0].priv
-    
+
     try:
         if forward:
             supertype = H5Tget_super(src)
@@ -529,7 +535,7 @@ cdef int enum_int_converter_conv(hid_t src, hid_t dst, H5T_cdata_t *cdata,
         else:
             supertype = H5Tget_super(dst)
             identical = H5Tequal(supertype, src)
-   
+
         # Short-circuit success
         if identical:
             return 0
@@ -628,7 +634,7 @@ cdef herr_t vlen2ndarray(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
             return -2
 
     elif command == H5T_CONV_FREE:
-        
+
         pass
 
     elif command == H5T_CONV_CONV:
@@ -692,7 +698,7 @@ cdef int conv_vlen2ndarray(void* ipt, void* opt, np.dtype elem_dtype,
     if outtype.get_size() > intype.get_size():
         data = realloc(data, outtype.get_size() * in_vlen0.len)
     H5Tconvert(intype.id, outtype.id, in_vlen0.len, data, NULL, H5P_DEFAULT)
-    
+
     Py_INCREF(<PyObject*>elem_dtype)
     ndarray = PyArray_NewFromDescr(&PyArray_Type, elem_dtype, 1,
                 dims, NULL, data, flags, <object>NULL)
@@ -703,7 +709,7 @@ cdef int conv_vlen2ndarray(void* ipt, void* opt, np.dtype elem_dtype,
     # Write the new object to the buffer in-place
     in_vlen0.ptr = NULL
     memcpy(buf_obj, &ndarray_obj, sizeof(ndarray_obj))
-    
+
     return 0
 
 cdef herr_t ndarray2vlen(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
@@ -735,7 +741,7 @@ cdef herr_t ndarray2vlen(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
                 return -2
 
     elif command == H5T_CONV_FREE:
-        
+
         pass
 
     elif command == H5T_CONV_CONV:
@@ -801,9 +807,80 @@ cdef int conv_ndarray2vlen(void* ipt, void* opt,
 
     memcpy(&in_vlen[0].len, &len, sizeof(len))
     memcpy(&in_vlen[0].ptr, &data, sizeof(data))
-    
+
     return 0
-            
+
+# =============================================================================
+# Convert between fixed-length UTF-8 to fixed-length null-padded ASCII strings
+
+cdef struct conv_fixedstr_t:
+    size_t src_size
+    size_t dst_size
+    H5T_str_t src_pad
+
+cdef herr_t init_fixedutf8_to_ascii(hid_t src, hid_t dst, void** priv) except -1:
+
+    cdef conv_fixedstr_t *info
+    cdef size_t src_size, dst_size
+
+    if not (<int>H5Tget_cset(src) == <int>H5T_CSET_UTF8 and
+            <int>H5Tget_cset(dst) == <int>H5T_CSET_ASCII):
+        return -2
+    elif H5Tis_variable_str(src) or H5Tis_variable_str(dst):
+        return -2
+    elif H5Tget_strpad(dst) != H5T_STR_NULLPAD:
+        return -2
+    src_size = H5Tget_size(src)
+    dst_size = H5Tget_size(dst)
+    if src_size != dst_size:
+        return -2
+
+    info = <conv_fixedstr_t*>malloc(sizeof(conv_fixedstr_t))
+    priv[0] = info
+    info[0].src_size = src_size
+    info[0].dst_size = dst_size
+    info[0].src_pad = <H5T_str_t>H5Tget_strpad(src)
+
+    return 0
+
+
+cdef int conv_fixedutf8_to_ascii(void* ipt, void* opt, void* bkg, void* priv) except -1:
+
+    cdef size_t i
+    cdef size_t len_
+    cdef H5T_str_t strpad
+    cdef char* buf_in = <char*>ipt
+    cdef char* buf_out = <char*>opt
+    cdef conv_fixedstr_t* info = <conv_fixedstr_t*>priv
+
+    len_ = info[0].src_size
+    strpad = info[0].src_pad
+    if strpad == H5T_STR_NULLTERM:
+        for i in range(len_):
+            if buf_in[i] == <uint8_t>0x00:
+                break
+            buf_out[i] = buf_in[i]
+        memset(&buf_out[i], 0x00, len_ - 1 - i)
+
+    elif strpad == H5T_STR_NULLPAD:
+        if &buf_in[0] != &buf_out[0]:
+            for i in range(len_):
+                buf_out[i] = buf_in[i]
+
+    elif strpad == H5T_STR_SPACEPAD:
+        for i in range(len_ - 1, 0, -1):
+            if buf_in[i] != <uint8_t>0x20:
+                break
+            buf_out[i] = buf_in[i]
+        len_ = i
+        for i in range(len_, 0, -1):
+            buf_out[i] = buf_in[i]
+
+    else:
+        raise ValueError('Unknown string termination method')
+
+    return 0
+
 # =============================================================================
 
 cpdef int register_converters() except -1:
@@ -812,15 +889,23 @@ cpdef int register_converters() except -1:
     cdef hid_t vlentype
     cdef hid_t pyobj
     cdef hid_t enum
+    cdef hid_t utf8_str
+    cdef hid_t ascii_str
 
     vlstring = H5Tcopy(H5T_C_S1)
     H5Tset_size(vlstring, H5T_VARIABLE)
-    
+
     enum = H5Tenum_create(H5T_STD_I32LE)
 
     vlentype = H5Tvlen_create(H5T_STD_I32LE)
 
     pyobj = H5PY_OBJ
+
+    utf8_str = H5Tcopy(H5T_C_S1)
+    H5Tset_cset(utf8_str, H5T_CSET_UTF8)
+
+    ascii_str = H5Tcopy(H5T_C_S1)
+    H5Tset_cset(ascii_str, H5T_CSET_ASCII)
 
     H5Tregister(H5T_PERS_HARD, "vlen2str", vlstring, pyobj, vlen2str)
     H5Tregister(H5T_PERS_HARD, "str2vlen", pyobj, vlstring, str2vlen)
@@ -840,9 +925,13 @@ cpdef int register_converters() except -1:
     H5Tregister(H5T_PERS_SOFT, "vlen2ndarray", vlentype, pyobj, vlen2ndarray)
     H5Tregister(H5T_PERS_SOFT, "ndarray2vlen", pyobj, vlentype, ndarray2vlen)
 
+    H5Tregister(H5T_PERS_SOFT, "fixedutf8_to_ascii", utf8_str, ascii_str, fixedutf8_to_ascii)
+
     H5Tclose(vlstring)
     H5Tclose(vlentype)
     H5Tclose(enum)
+    H5Tclose(utf8_str)
+    H5Tclose(ascii_str)
 
     return 0
 
@@ -865,5 +954,7 @@ cpdef int unregister_converters() except -1:
 
     H5Tunregister(H5T_PERS_SOFT, "vlen2ndarray", -1, -1, vlen2ndarray)
     H5Tunregister(H5T_PERS_SOFT, "ndarray2vlen", -1, -1, ndarray2vlen)
+
+    H5Tregister(H5T_PERS_SOFT, "fixedutf8_to_ascii", -1, -1, fixedutf8_to_ascii)
 
     return 0
