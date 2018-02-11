@@ -16,6 +16,11 @@ NumPy operations like slicing, along with a variety of descriptive attributes:
   - **size** attribute
   - **dtype** attribute
 
+h5py supports most NumPy dtypes, and uses the same character codes (e.g.
+``'f'``, ``'i8'``) and dtype machinery as
+`Numpy <https://docs.scipy.org/doc/numpy/reference/arrays.dtypes.html>`_.
+See :ref:`faq` for the list of dtypes h5py supports.
+
 
 .. _dataset_create:
 
@@ -173,6 +178,12 @@ For integer data, this specifies the number of bits to retain.  Set to 0 to have
 HDF5 automatically compute the number of bits required for lossless compression
 of the chunk.  For floating-point data, indicates the number of digits after
 the decimal point to retain.
+
+.. warning::
+    Currently the scale-offset filter does not preserve special float values
+    (i.e. NaN, inf), see
+    https://lists.hdfgroup.org/pipermail/hdf-forum_lists.hdfgroup.org/2015-January/008296.html
+    for more information and follow-up.
 
 
 .. _dataset_shuffle:

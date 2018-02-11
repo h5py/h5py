@@ -45,6 +45,8 @@ to a specific type within Python (but see :ref:`str_py3` below):
 * Variable-length ASCII (Python 2 ``str``, Python 3 ``bytes``)
 * Variable-length UTF-8 (Python 2 ``unicode``, Python 3 ``str``)
 
+Note that h5py currently lacks support for fixed-length UTF-8.
+
 .. _str_py3:
 
 Compatibility
@@ -107,13 +109,14 @@ H5T_CSET_ASCII.
 Variable-length UTF-8
 ^^^^^^^^^^^^^^^^^^^^^
 
-These are created when you assign a ``unicode`` string to an attribute::
+These are created when you assign a unicode string to an attribute::
 
     >>> dset.attrs["name"] = u"Hello"
 
-or if you create a dataset with an explicit ``unicode`` vlen type:
+or if you create a dataset with an explicit unicode vlen type:
 
-    >>> dt = h5py.special_dtype(vlen=unicode)
+    >>> dt = h5py.special_dtype(vlen=unicode) # PY2
+    >>> dt = h5py.special_dtype(vlen=str)     # PY3
     >>> dset = f.create_dataset("name", (100,), dtype=dt)
 
 They can store any character a Python unicode string can store, with the
