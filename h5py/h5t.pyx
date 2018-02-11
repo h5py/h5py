@@ -25,12 +25,21 @@ from utils cimport  emalloc, efree, \
                     require_tuple, convert_dims, convert_tuple
 
 # Runtime imports
+from collections import defaultdict
 import sys
 import operator
+from warnings import warn
 from h5 import get_config
 import numpy as np
 from ._objects import phil, with_phil
+from .h5py_warnings import H5pyDeprecationWarning
 import platform
+
+try:
+    from collections.abc import Mapping
+except ImportError:
+    from collections import Mapping
+
 
 cfg = get_config()
 
@@ -199,7 +208,7 @@ VARIABLE = H5T_VARIABLE
 CSET_ASCII = H5T_CSET_ASCII
 CSET_UTF8 = H5T_CSET_UTF8
 
-# Mini floats
+# Mini (or short) floats
 IEEE_F16BE = IEEE_F32BE.copy()
 IEEE_F16BE.set_fields(15, 10, 5, 0, 10)
 IEEE_F16BE.set_size(2)
@@ -209,6 +218,18 @@ IEEE_F16BE.lock()
 IEEE_F16LE = IEEE_F16BE.copy()
 IEEE_F16LE.set_order(H5T_ORDER_LE)
 IEEE_F16LE.lock()
+
+# Quad floats
+IEEE_F128BE = IEEE_F64BE.copy()
+IEEE_F128BE.set_size(16)
+IEEE_F128BE.set_precision(128)
+IEEE_F128BE.set_fields(127, 112, 15, 0, 112)
+IEEE_F128BE.set_ebias(16383)
+IEEE_F128BE.lock()
+
+IEEE_F128LE = IEEE_F128BE.copy()
+IEEE_F128LE.set_order(H5T_ORDER_LE)
+IEEE_F128LE.lock()
 
 # Custom Python object pointer type
 cdef hid_t H5PY_OBJ = H5Tcreate(H5T_OPAQUE, sizeof(PyObject*))
@@ -222,10 +243,54 @@ cdef dict _order_map = { H5T_ORDER_NONE: '|', H5T_ORDER_LE: '<', H5T_ORDER_BE: '
 cdef dict _sign_map  = { H5T_SGN_NONE: 'u', H5T_SGN_2: 'i' }
 
 # Available floating point types
+def _get_available_ftypes():
+    def cmp_ftype(t):
+        return np.finfo(t).maxexp
+
+    available_ftypes = defaultdict(list)
+    for ftype in np.typeDict.values():
+        if np.issubdtype(ftype, np.floating):
+            available_ftypes[np.dtype(ftype).itemsize].append(ftype)
+
+    sorted_ftypes = []
+    for size, ftypes in sorted(available_ftypes.items()):
+        for ftype in sorted(ftypes, key=cmp_ftype):
+            if ftype not in sorted_ftypes:
+                sorted_ftypes.append((ftype, np.finfo(ftype), size))
+    return tuple(sorted_ftypes)
+
+_available_ftypes = _get_available_ftypes()
+
+# Old code to inform about floating point changes
+class _DeprecatedMapping(Mapping):
+    """
+    Mapping class which warns when members are accessed
+    """
+    def __init__(self, mapping, message):
+        self._mapping = mapping
+        self._message = message
+
+    def __len__(self):
+        warn(self._message, H5pyDeprecationWarning)
+        return len(self._mapping)
+
+    def __iter__(self):
+        warn(self._message, H5pyDeprecationWarning)
+        return iter(self._mapping)
+
+    def __getitem__(self, key):
+        warn(self._message, H5pyDeprecationWarning)
+        return self._mapping[key]
+
 available_ftypes = dict()
 for ftype in np.typeDict.values():
-    if np.issubdtype(ftype, float):
+    if np.issubdtype(ftype, np.floating):
         available_ftypes[np.dtype(ftype).itemsize] = np.finfo(ftype)
+
+available_ftypes = _DeprecatedMapping(available_ftypes,
+    ("Do not use available_ftypes, this is not part of the public API of "
+    "h5py. See https://github.com/h5py/h5py/pull/926 for details.")
+)
 
 # === General datatype operations =============================================
 
@@ -957,18 +1022,18 @@ cdef class TypeFloatID(TypeAtomicID):
         e_bias = self.get_ebias()
 
         # Handle non-standard exponent and mantissa sizes.
-        for size, finfo in sorted(available_ftypes.items()):
+        for ftype_, finfo, size in _available_ftypes:
             nmant = finfo.nmant
             maxexp = finfo.maxexp
             minexp = finfo.minexp
             # workaround for numpy's buggy finfo on float128 on ppc64 archs
-            if size == 16 and MACHINE == 'ppc64':
-	        # values reported by hdf5
+            if ftype_ == np.longdouble and MACHINE == 'ppc64':
+                # values reported by hdf5
                 nmant = 116
                 maxexp = 1024
                 minexp = -1022
-            elif size == 16 and MACHINE == 'ppc64le':
-	        # values reported by hdf5
+            elif ftype_ == np.longdouble and MACHINE == 'ppc64le':
+                # values reported by hdf5
                 nmant = 52
                 maxexp = 1024
                 minexp = -1022
@@ -977,14 +1042,13 @@ cdef class TypeFloatID(TypeAtomicID):
                 nmant += 1
             if (size >= self.get_size() and m_size <= nmant and
                 (2**e_size - e_bias - 1) <= maxexp and (1 - e_bias) >= minexp):
+                new_dtype = np.dtype(ftype_).newbyteorder(order)
                 break
         else:
             raise ValueError('Insufficient precision in available types to ' +
                              'represent ' + str(self.get_fields()))
 
-
-
-        return dtype(order + "f" + str(size) )
+        return new_dtype
 
 
 # === Composite types (enums and compound) ====================================
@@ -1283,10 +1347,38 @@ cdef class TypeEnumID(TypeCompositeID):
 # of NumPy dtype into an HDF5 type object.  The result is guaranteed to be
 # transient and unlocked.
 
-cdef dict _float_le = {2: H5Tcopy(IEEE_F16LE.id), 4: H5Tcopy(H5T_IEEE_F32LE), 8: H5Tcopy(H5T_IEEE_F64LE)}
-cdef dict _float_be = {2: H5Tcopy(IEEE_F16BE.id), 4: H5Tcopy(H5T_IEEE_F32BE), 8: H5Tcopy(H5T_IEEE_F64BE)}
-cdef dict _float_nt = dict(_float_le) if ORDER_NATIVE == H5T_ORDER_LE else dict(_float_be)
-_float_nt[sizeof(long double)] = H5Tcopy(H5T_NATIVE_LDOUBLE)
+def _get_float_dtype_to_hdf5():
+    float_le = {}
+    float_be = {}
+    h5_be_list = [IEEE_F16BE, IEEE_F32BE, IEEE_F64BE, IEEE_F128BE]
+    h5_le_list = [IEEE_F16LE, IEEE_F32LE, IEEE_F64LE, IEEE_F128LE]
+    for ftype_, finfo, size in _available_ftypes:
+        for h5type in h5_be_list:
+            spos, epos, esize, mpos, msize = h5type.get_fields()
+            ebias = h5type.get_ebias()
+            if (finfo.iexp == esize and finfo.nmant == msize and
+                (finfo.maxexp - 1) == ebias
+            ):
+                float_be[ftype_] = h5type
+        for h5type in h5_le_list:
+            spos, epos, esize, mpos, msize = h5type.get_fields()
+            ebias = h5type.get_ebias()
+            if (finfo.iexp == esize and finfo.nmant == msize and
+                (finfo.maxexp - 1) == ebias
+            ):
+                float_le[ftype_] = h5type
+    if ORDER_NATIVE == H5T_ORDER_LE:
+        float_nt = dict(float_le)
+    else:
+        float_nt = dict(float_be)
+    if np.longdouble not in float_nt:
+        float_nt[np.longdouble] = NATIVE_LDOUBLE
+    return float_le, float_be, float_nt
+
+cdef dict _float_le
+cdef dict _float_be
+cdef dict _float_nt
+_float_le, _float_be, _float_nt = _get_float_dtype_to_hdf5()
 
 cdef dict _int_le = {1: H5Tcopy(H5T_STD_I8LE), 2: H5Tcopy(H5T_STD_I16LE), 4: H5Tcopy(H5T_STD_I32LE), 8: H5Tcopy(H5T_STD_I64LE)}
 cdef dict _int_be = {1: H5Tcopy(H5T_STD_I8BE), 2: H5Tcopy(H5T_STD_I16BE), 4: H5Tcopy(H5T_STD_I32BE), 8: H5Tcopy(H5T_STD_I64BE)}
@@ -1298,19 +1390,19 @@ cdef dict _uint_nt = {1: H5Tcopy(H5T_NATIVE_UINT8), 2: H5Tcopy(H5T_NATIVE_UINT16
 
 cdef TypeFloatID _c_float(dtype dt):
     # Floats (single and double)
-    cdef hid_t tid
+    cdef TypeFloatID tid
 
     try:
         if dt.byteorder == c'<':
-            tid =  _float_le[dt.elsize]
+            tid =  _float_le[np.dtype(dt).type]
         elif dt.byteorder == c'>':
-            tid =  _float_be[dt.elsize]
+            tid =  _float_be[np.dtype(dt).type]
         else:
-            tid =  _float_nt[dt.elsize]
+            tid =  _float_nt[np.dtype(dt).type]
     except KeyError:
-        raise TypeError("Unsupported float size (%s)" % dt.elsize)
+        raise TypeError("Unsupported float type (%s)" % dt)
 
-    return TypeFloatID(H5Tcopy(tid))
+    return tid.copy()
 
 cdef TypeIntegerID _c_int(dtype dt):
     # Integers (ints and uints)
@@ -1740,14 +1832,13 @@ def find(TypeID src not None, TypeID dst not None):
 # ============================================================================
 # Deprecated functions
 
-import warnings
-
 cpdef dtype py_new_enum(object dt_in, dict enum_vals):
     """ (DTYPE dt_in, DICT enum_vals) => DTYPE
 
     Deprecated; use special_dtype() instead.
     """
-    #warnings.warn("Deprecated; use special_dtype(enum=(dtype, values)) instead", DeprecationWarning)
+    warn("Deprecated; use special_dtype(enum=(dtype, values)) instead",
+        H5pyDeprecationWarning)
     return special_dtype(enum = (dt_in, enum_vals))
 
 cpdef dict py_get_enum(object dt):
@@ -1755,7 +1846,8 @@ cpdef dict py_get_enum(object dt):
 
     Deprecated; use check_dtype() instead.
     """
-    #warnings.warn("Deprecated; use check_dtype(enum=dtype) instead", DeprecationWarning)
+    warn("Deprecated; use check_dtype(enum=dtype) instead",
+        H5pyDeprecationWarning)
     return check_dtype(enum=dt)
 
 cpdef dtype py_new_vlen(object kind):
@@ -1763,7 +1855,8 @@ cpdef dtype py_new_vlen(object kind):
 
     Deprecated; use special_dtype() instead.
     """
-    #warnings.warn("Deprecated; use special_dtype(vlen=basetype) instead", DeprecationWarning)
+    warn("Deprecated; use special_dtype(vlen=basetype) instead",
+        H5pyDeprecationWarning)
     return special_dtype(vlen=kind)
 
 cpdef object py_get_vlen(object dt_in):
@@ -1771,7 +1864,8 @@ cpdef object py_get_vlen(object dt_in):
 
     Deprecated; use check_dtype() instead.
     """
-    #warnings.warn("Deprecated; use check_dtype(vlen=dtype) instead", DeprecationWarning)
+    warn("Deprecated; use check_dtype(vlen=dtype) instead",
+        H5pyDeprecationWarning)
     return check_dtype(vlen=dt_in)
 
 
