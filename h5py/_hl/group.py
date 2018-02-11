@@ -542,7 +542,7 @@ class ExternalLink(object):
 
     def __init__(self, filename, path):
         self._filename = filename_decode(filename_encode(filename))
-        self._path = str(path)
+        self._path = path
 
     def __repr__(self):
         return '<ExternalLink to "%s" in file "%s"' % (self.path, self.filename)
