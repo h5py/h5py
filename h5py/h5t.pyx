@@ -1200,12 +1200,6 @@ cdef class TypeCompoundID(TypeCompositeID):
         else:
             if sys.version[0] == '3':
                 field_names = [x.decode('utf8') for x in field_names]
-            if len(field_names) > 0:
-                collated_fields = zip(field_names, field_types, field_offsets)
-                ordered_fields = sorted(
-                    collated_fields, key=operator.itemgetter(2))
-                field_names, field_types, field_offsets = \
-                    map(list, zip(*ordered_fields))
             typeobj = dtype({
                 'names': field_names,
                 'formats': field_types,
@@ -1550,8 +1544,7 @@ cdef TypeCompoundID _c_compound(dtype dt, int logical, int aligned):
     cdef dtype member_dt
     cdef size_t member_offset = 0
 
-    cdef dict offsets = {}
-    cdef list fields = []
+    cdef dict fields = {}
 
     # The challenge with correctly converting a numpy/h5py dtype to a HDF5 type
     # which is composed of subtypes has three aspects we must consider
@@ -1560,19 +1553,14 @@ cdef TypeCompoundID _c_compound(dtype dt, int logical, int aligned):
     # 2. For correct round-tripping of aligned dtypes, we need to consider how
     #   much padding we need by looking at the field offsets
     # 3. There is no requirement that the offsets be monotonically increasing
-    #  (so we start by sorting the names as a function of increasing offset)
     #
     # The code below tries to cover these aspects
 
-    # Get offsets for each compound member
-    for name, field in dt.fields.items():
-        offsets[name] = field[1]
-
     # Build list of names, offsets, and types, sorted by increasing offset
     # (i.e. the position of the member in the struct)
-    for name in sorted(dt.names, key=offsets.__getitem__):
+    for name in sorted(dt.names, key=(lambda n: dt.fields[n][1])):
         field = dt.fields[name]
-        name = name.encode('utf8') if isinstance(name, unicode) else name
+        h5_name = name.encode('utf8') if isinstance(name, unicode) else name
 
         # Get HDF5 data types and set the offset for each member
         member_dt = field[0]
@@ -1581,7 +1569,7 @@ cdef TypeCompoundID _c_compound(dtype dt, int logical, int aligned):
         if aligned and (member_offset > field[1]
                         or member_dt.itemsize != member_type.get_size()):
             raise TypeError("Enforced alignment not compatible with HDF5 type")
-        fields.append((name, member_offset, member_type))
+        fields[name] = (h5_name, member_offset, member_type)
 
         # Update member offset based on the HDF5 type size
         member_offset += member_type.get_size()
@@ -1592,8 +1580,9 @@ cdef TypeCompoundID _c_compound(dtype dt, int logical, int aligned):
 
     # Create compound with the necessary size, and insert its members
     tid = H5Tcreate(H5T_COMPOUND, member_offset)
-    for (name, member_offset, member_type) in fields:
-        H5Tinsert(tid, name, member_offset, member_type.id)
+    for name in dt.names:
+        h5_name, member_offset, member_type = fields[name]
+        H5Tinsert(tid, h5_name, member_offset, member_type.id)
 
     return TypeCompoundID(tid)
 
