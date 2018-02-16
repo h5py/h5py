@@ -157,6 +157,7 @@ setup(
   author_email = 'andrew.collette@gmail.com',
   maintainer = 'Andrew Collette',
   maintainer_email = 'andrew.collette@gmail.com',
+  license = 'BSD',
   url = 'http://www.h5py.org',
   download_url = 'https://pypi.python.org/pypi/h5py',
   packages = ['h5py', 'h5py._hl', 'h5py.tests', 'h5py.tests.old', 'h5py.tests.hl'],
