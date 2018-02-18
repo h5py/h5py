@@ -27,7 +27,7 @@ import numpy as np
 from ..common import ut, TestCase
 from h5py.highlevel import File, Group, Dataset
 from h5py._hl.base import is_empty_dataspace
-from h5py import h5t
+from h5py import h5f, h5t
 import h5py
 
 
@@ -528,6 +528,62 @@ class TestCreateScaleOffset(BaseDataset):
         # Compression is lossy
         assert not (readdata == testdata).all()
 
+
+class TestExternal(BaseDataset):
+    """
+        Feature: Datasets with the external storage property
+    """
+    def test_external(self):
+        """ Create and access an external dataset """
+
+        shape = (6, 100)
+        testdata = np.random.random(shape)
+
+        # create a dataset in an external file and set it
+        ext_file = self.mktemp()
+        external = [(ext_file, 0, h5f.UNLIMITED)]
+        dset = self.f.create_dataset('foo', shape, dtype=testdata.dtype, external=external)
+        dset[...] = testdata
+
+        assert dset.external is not None
+
+        # verify file was created, and size is correct
+        import os
+        statinfo = os.stat(ext_file)
+        assert statinfo.st_size == testdata.nbytes
+
+        # verify contents
+        with open(ext_file, 'rb') as fid:
+            contents = fid.read()
+        assert contents == testdata.tostring()
+
+    def test_external_other(self):
+        """ Test other forms of external lists """
+
+        shape = (6, 100)
+        ext_file = self.mktemp()
+
+        self.f.create_dataset('foo', shape, external=ext_file)
+        self.f.create_dataset('bar', shape, external=[ext_file])
+        self.f.create_dataset('moo', shape, external=[ext_file, 0])
+        self.f.create_dataset('car', shape, external=[ext_file, 0, h5f.UNLIMITED])
+
+        N = 100
+        external = [(ext_file, x*1000, (x+1)*1000) for x in range(0,N)]
+        dset = self.f.create_dataset('poo', shape, external=external)
+        assert len(dset.external) == N
+
+    def test_external_invalid(self):
+        """ Test with invalid external lists """
+
+        shape = (6, 100)
+        ext_file = self.mktemp()
+
+        with self.assertRaises(TypeError):
+            self.f.create_dataset('foo', shape, external=[(ext_file, 0, "h5f.UNLIMITED")])
+
+        with self.assertRaises(TypeError):
+            self.f.create_dataset('foo', shape, external=[(ext_file, 0, h5f.UNLIMITED, 0)])
 
 class TestAutoCreate(BaseDataset):
 

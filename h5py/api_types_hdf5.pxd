@@ -20,6 +20,7 @@ cdef extern from "hdf5.h":
   ctypedef long long hsize_t
   ctypedef signed long long hssize_t
   ctypedef signed long long haddr_t
+  ctypedef long int off_t
 
   ctypedef struct hvl_t:
     size_t len                 # Length of VL data (in base type units)
@@ -117,6 +118,7 @@ cdef extern from "hdf5.h":
   int H5F_OBJ_ATTR
   int H5F_OBJ_ALL
   int H5F_OBJ_LOCAL
+  hsize_t H5F_UNLIMITED
 
   ctypedef enum H5F_libver_t:
     H5F_LIBVER_EARLIEST        #/* Use the earliest possible format for storing objects */

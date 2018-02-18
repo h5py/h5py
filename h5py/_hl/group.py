@@ -111,6 +111,12 @@ class Group(HLObject, MutableMappingHDF5):
             (Scalar) Use this value for uninitialized parts of the dataset.
         track_times
             (T/F) Enable dataset creation timestamps.
+        external
+            (List of tuples) Sets the external storage property, thus
+            designating that the dataset will be stored in one or more
+            non-HDF5 file(s) external to the HDF5 file. Adds each listed
+            tuple of (file[, offset[, size]]) to the dataset's list of
+            external files.
         """
         with phil:
             dsid = dataset.make_new_dset(self, shape, dtype, data, **kwds)

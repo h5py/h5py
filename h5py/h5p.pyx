@@ -759,6 +759,52 @@ cdef class PropDCID(PropOCID):
         fail.'''
         H5Pset_scaleoffset(self.id, scale_type, scale_factor)
 
+
+    # === External dataset functions ===========================================
+
+    @with_phil
+    def set_external(self, name, offset, size):
+        '''(STR name, UINT offset, UINT size)
+        
+        Adds an external file to the list of external files for the dataset.
+        
+        The first call sets the external storage property in the property list,
+        thus designating that the dataset will be stored in one or more non-HDF5
+        file(s) external to the HDF5 file.'''
+        H5Pset_external(self.id, name, offset, size)
+
+    @with_phil
+    def get_external_count(self):
+        """() => INT
+
+        Returns the number of external files for the dataset.
+        """
+        return <int>(H5Pget_external_count(self.id))
+
+    @with_phil
+    def get_external(self, idx=0):
+        """(UINT idx=0) => TUPLE external_file_info
+
+        Returns information about the indexed external file.
+        Tuple elements are:
+
+        0. STRING name of file (256 chars max)
+        1. UINT offset
+        2. UINT size
+        """
+        cdef char name[257]
+        cdef off_t offset
+        cdef hsize_t size
+        cdef herr_t retval
+
+        retval = H5Pget_external(self.id, idx, 256, name, &offset, &size)
+        name[256] = c'\0'  # In case HDF5 doesn't terminate name properly
+
+        result = None
+        if retval==0:
+            result = (name, offset, size)
+        return result
+
     # === Virtual dataset functions ===========================================
 
     IF HDF5_VERSION >= VDS_MIN_HDF5_VERSION:
