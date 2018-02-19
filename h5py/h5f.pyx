@@ -236,7 +236,7 @@ def get_obj_ids(object where=OBJ_ALL, int types=H5F_OBJ_ALL):
                 py_obj_list.append(wrap_identifier(obj_list[i]))
                 # The HDF5 function returns a borrowed reference for each hid_t.
                 H5Iinc_ref(obj_list[i])
-                
+
         return py_obj_list
 
     finally:
@@ -390,7 +390,7 @@ cdef class FileID(GroupID):
         def set_mpi_atomicity(self, bint atomicity):
             """ (BOOL atomicity)
 
-            For MPI-IO driver, set to atomic (True), which guarantees sequential 
+            For MPI-IO driver, set to atomic (True), which guarantees sequential
             I/O semantics, or non-atomic (False), which improves  performance.
 
             Default is False.
@@ -483,29 +483,28 @@ cdef class FileID(GroupID):
             """ no return
 
             Enables SWMR writing mode for a file.
-            
-            This function will activate SWMR writing mode for a file associated 
+
+            This function will activate SWMR writing mode for a file associated
             with file_id. This routine will prepare and ensure the file is safe
             for SWMR writing as follows:
-            
+
                 * Check that the file is opened with write access (H5F_ACC_RDWR).
                 * Check that the file is opened with the latest library format
                   to ensure data structures with check-summed metadata are used.
                 * Check that the file is not already marked in SWMR writing mode.
                 * Enable reading retries for check-summed metadata to remedy
-                  possible checksum failures from reading inconsistent metadata 
+                  possible checksum failures from reading inconsistent metadata
                   on a system that is not atomic.
-                * Turn off usage of the library’s accumulator to avoid possible 
+                * Turn off usage of the library’s accumulator to avoid possible
                   ordering problem on a system that is not atomic.
                 * Perform a flush of the file’s data buffers and metadata to set
                   a consistent state for starting SWMR write operations.
 
-            Library objects are groups, datasets, and committed datatypes. For 
+            Library objects are groups, datasets, and committed datatypes. For
             the current implementation, groups and datasets can remain open when
             activating SWMR writing mode, but not committed datatypes. Attributes
-            attached to objects cannot remain open. 
+            attached to objects cannot remain open.
 
             Feature requires: 1.9.178 HDF5
             """
             H5Fstart_swmr_write(self.id)
-            

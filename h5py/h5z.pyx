@@ -97,12 +97,3 @@ def get_filter_info(int filter_code):
 
 def _register_lzf():
     register_lzf()
-
-
-
-
-
-
-
-
-

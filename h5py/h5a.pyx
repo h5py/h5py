@@ -328,7 +328,7 @@ cdef class AttrID(ObjectID):
                 tid = self.get_type()
                 return tid.py_dtype()
 
-    
+
     @with_phil
     def read(self, ndarray arr not None, TypeID mtype=None):
         """(NDARRAY arr, TypeID mtype=None)
@@ -339,7 +339,7 @@ cdef class AttrID(ObjectID):
 
         The Numpy array must be writable and C-contiguous.  If this is not
         the case, the read will fail with an exception.
-        
+
         If provided, the HDF5 TypeID mtype will override the array's dtype.
         """
         cdef hid_t space_id
@@ -376,10 +376,10 @@ cdef class AttrID(ObjectID):
         try:
             space_id = H5Aget_space(self.id)
             check_numpy_read(arr, space_id)
-            
+
             if mtype is None:
                 mtype = py_create(arr.dtype)
-                
+
             attr_rw(self.id, mtype.id, PyArray_DATA(arr), 0)
 
         finally:
@@ -434,11 +434,3 @@ cdef class AttrID(ObjectID):
         Get the amount of storage required for this attribute.
         """
         return H5Aget_storage_size(self.id)
-
-
-
-
-
-
-
-

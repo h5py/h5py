@@ -46,7 +46,7 @@ class TestTypeGeneration(TestCase):
         out, format = sel.read_dtypes(dt, ())
         self.assertEqual(out, format)
         self.assertEqual(out, dt)
-       
+
         # Explicit selection of fields -> requested fields
         out, format = sel.read_dtypes(dt, ('a','b'))
         self.assertEqual(out, format)
@@ -81,17 +81,6 @@ class TestScalarSliceRules(TestCase):
         shape, selection = sel.read_selections_scalar(self.dsid, (Ellipsis,))
         self.assertEqual(shape, ())
         self.assertEqual(selection.get_select_npoints(), 1)
-        
+
         with self.assertRaises(ValueError):
             shape, selection = sel.read_selections_scalar(self.dsid, (1,))
-
-
-
-
-
-
-
-
-
-
-

@@ -1,18 +1,18 @@
 """
-    Demonstrate the use of h5py in SWMR mode to write to a dataset (appending) 
+    Demonstrate the use of h5py in SWMR mode to write to a dataset (appending)
     from one process while monitoring the growing dataset from another process.
-    
+
     Usage:
             swmr_multiprocess.py [FILENAME [DATASETNAME]]
-            
+
               FILENAME:    name of file to monitor. Default: swmrmp.h5
               DATASETNAME: name of dataset to monitor in DATAFILE. Default: data
-            
+
     This script will start up two processes: a writer and a reader. The writer
     will open/create the file (FILENAME) in SWMR mode, create a dataset and start
     appending data to it. After each append the dataset is flushed and an event
-    sent to the reader process. Meanwhile the reader process will wait for events 
-    from the writer and when triggered it will refresh the dataset and read the 
+    sent to the reader process. Meanwhile the reader process will wait for events
+    from the writer and when triggered it will refresh the dataset and read the
     current shape of it.
 """
 
@@ -29,13 +29,13 @@ class SwmrReader(Process):
         self._fname = fname
         self._dsetname = dsetname
         self._timeout = timeout
-        
+
     def run(self):
         self.log = logging.getLogger('reader')
         self.log.info("Waiting for initial event")
         assert self._event.wait( self._timeout )
         self._event.clear()
-        
+
         self.log.info("Opening file %s", self._fname)
         f = h5py.File(self._fname, 'r', libver='latest', swmr=True)
         assert f.swmr_mode
@@ -58,7 +58,7 @@ class SwmrWriter(Process):
         self._event = event
         self._fname = fname
         self._dsetname = dsetname
-        
+
     def run(self):
         self.log = logging.getLogger('writer')
         self.log.info("Creating file %s", self._fname)
@@ -72,7 +72,7 @@ class SwmrWriter(Process):
             f.swmr_mode = True
             assert f.swmr_mode
             self.log.debug("Sending initial event")
-            self._event.set()        
+            self._event.set()
 
             # Write loop
             for i in range(5):
@@ -85,7 +85,7 @@ class SwmrWriter(Process):
                 self.log.debug("Flushing data")
                 dset.flush()
                 self.log.info("Sending event")
-                self._event.set()        
+                self._event.set()
         finally:
             f.close()
 
@@ -98,19 +98,17 @@ if __name__ == "__main__":
         fname = sys.argv[1]
     if len(sys.argv) > 2:
         dsetname = sys.argv[2]
-        
+
     event = Event()
     reader = SwmrReader(event, fname, dsetname)
     writer = SwmrWriter(event, fname, dsetname)
-    
+
     logging.info("Starting reader")
     reader.start()
     logging.info("Starting reader")
     writer.start()
-    
+
     logging.info("Waiting for writer to finish")
     writer.join()
     logging.info("Waiting for reader to finish")
     reader.join()
-
-
