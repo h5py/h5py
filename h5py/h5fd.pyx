@@ -52,29 +52,28 @@ LOG_LOC_WRITE = H5FD_LOG_LOC_WRITE  # 0x0002
 LOG_LOC_SEEK  = H5FD_LOG_LOC_SEEK   # 0x0004
 LOG_LOC_IO    = H5FD_LOG_LOC_IO     # (H5FD_LOG_LOC_READ|H5FD_LOG_LOC_WRITE|H5FD_LOG_LOC_SEEK)
 
-# Flags for tracking number of times each byte is read/written 
+# Flags for tracking number of times each byte is read/written
 LOG_FILE_READ = H5FD_LOG_FILE_READ  # 0x0008
 LOG_FILE_WRITE= H5FD_LOG_FILE_WRITE # 0x0010
 LOG_FILE_IO   = H5FD_LOG_FILE_IO    # (H5FD_LOG_FILE_READ|H5FD_LOG_FILE_WRITE)
 
-# Flag for tracking "flavor" (type) of information stored at each byte 
+# Flag for tracking "flavor" (type) of information stored at each byte
 LOG_FLAVOR    = H5FD_LOG_FLAVOR     # 0x0020
 
-# Flags for tracking total number of reads/writes/seeks 
+# Flags for tracking total number of reads/writes/seeks
 LOG_NUM_READ  = H5FD_LOG_NUM_READ   # 0x0040
 LOG_NUM_WRITE = H5FD_LOG_NUM_WRITE  # 0x0080
 LOG_NUM_SEEK  = H5FD_LOG_NUM_SEEK   # 0x0100
 LOG_NUM_IO    = H5FD_LOG_NUM_IO     # (H5FD_LOG_NUM_READ|H5FD_LOG_NUM_WRITE|H5FD_LOG_NUM_SEEK)
 
-# Flags for tracking time spent in open/read/write/seek/close 
-LOG_TIME_OPEN = H5FD_LOG_TIME_OPEN  # 0x0200        # Not implemented yet 
-LOG_TIME_READ = H5FD_LOG_TIME_READ  # 0x0400        # Not implemented yet 
-LOG_TIME_WRITE= H5FD_LOG_TIME_WRITE # 0x0800        # Partially implemented (need to track total time) 
-LOG_TIME_SEEK = H5FD_LOG_TIME_SEEK  # 0x1000        # Partially implemented (need to track total time & track time for seeks during reading) 
-LOG_TIME_CLOSE= H5FD_LOG_TIME_CLOSE # 0x2000        # Fully implemented 
+# Flags for tracking time spent in open/read/write/seek/close
+LOG_TIME_OPEN = H5FD_LOG_TIME_OPEN  # 0x0200        # Not implemented yet
+LOG_TIME_READ = H5FD_LOG_TIME_READ  # 0x0400        # Not implemented yet
+LOG_TIME_WRITE= H5FD_LOG_TIME_WRITE # 0x0800        # Partially implemented (need to track total time)
+LOG_TIME_SEEK = H5FD_LOG_TIME_SEEK  # 0x1000        # Partially implemented (need to track total time & track time for seeks during reading)
+LOG_TIME_CLOSE= H5FD_LOG_TIME_CLOSE # 0x2000        # Fully implemented
 LOG_TIME_IO   = H5FD_LOG_TIME_IO    # (H5FD_LOG_TIME_OPEN|H5FD_LOG_TIME_READ|H5FD_LOG_TIME_WRITE|H5FD_LOG_TIME_SEEK|H5FD_LOG_TIME_CLOSE)
 
-# Flag for tracking allocation of space in file 
+# Flag for tracking allocation of space in file
 LOG_ALLOC     = H5FD_LOG_ALLOC      # 0x4000
 LOG_ALL       = H5FD_LOG_ALL        # (H5FD_LOG_ALLOC|H5FD_LOG_TIME_IO|H5FD_LOG_NUM_IO|H5FD_LOG_FLAVOR|H5FD_LOG_FILE_IO|H5FD_LOG_LOC_IO)
-

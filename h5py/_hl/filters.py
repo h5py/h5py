@@ -17,7 +17,7 @@
         decent-to-good ratio, good portability, and don't mind waiting.
 
     "lzf"
-        Custom compression filter for h5py.  This filter is much, much faster 
+        Custom compression filter for h5py.  This filter is much, much faster
         than gzip (roughly 10x in compression vs. gzip level 4, and 3x faster
         in decompressing), but at the cost of a worse compression ratio.  Use
         this if you want cheap compression and portability is not a concern.
@@ -35,7 +35,7 @@
         Tuple of available filter names for decoding
 
     encode
-        Tuple of available filter names for encoding 
+        Tuple of available filter names for encoding
 """
 
 from __future__ import absolute_import, division
@@ -169,15 +169,15 @@ def generate_dcpl(shape, dtype, chunks, compression, compression_opts,
     elif compression_opts is not None:
         # Can't specify just compression_opts by itself.
         raise TypeError("Compression method must be specified")
-    
+
     if scaleoffset is not None:
         # scaleoffset must be an integer when it is not None or False,
         # except for integral data, for which scaleoffset == True is
         # permissible (will use SO_INT_MINBITS_DEFAULT)
-        
+
         if scaleoffset < 0:
             raise ValueError('scale factor must be >= 0')
-                
+
         if dtype.kind == 'f':
             if scaleoffset is True:
                 raise ValueError('integer scaleoffset must be provided for '
@@ -188,7 +188,7 @@ def generate_dcpl(shape, dtype, chunks, compression, compression_opts,
         else:
             raise TypeError('scale/offset filter only supported for integer '
                             'and floating-point types')
-        
+
         # Scale/offset following fletcher32 in the filter chain will (almost?)
         # always triggers a read error, as most scale/offset settings are
         # lossy. Since fletcher32 must come first (see comment below) we
@@ -201,10 +201,10 @@ def generate_dcpl(shape, dtype, chunks, compression, compression_opts,
     # End argument validation
 
     if (chunks is True) or \
-    (chunks is None and any((shuffle, fletcher32, compression, maxshape, 
+    (chunks is None and any((shuffle, fletcher32, compression, maxshape,
                              scaleoffset is not None))):
         chunks = guess_chunk(shape, maxshape, dtype.itemsize)
-        
+
     if maxshape is True:
         maxshape = (None,)*len(shape)
 
@@ -301,7 +301,7 @@ def guess_chunk(shape, maxshape, typesize):
     Undocumented and subject to change without warning.
     """
     # pylint: disable=unused-argument
-    
+
     # For unlimited dimensions we have to guess 1024
     shape = tuple((x if x!=0 else 1024) for i, x in enumerate(shape))
 
@@ -344,11 +344,3 @@ def guess_chunk(shape, maxshape, typesize):
         idx += 1
 
     return tuple(int(x) for x in chunks)
-
-
-
-
-
-
-
-

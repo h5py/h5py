@@ -95,7 +95,7 @@ cdef int convert_tuple(object tpl, hsize_t *dims, hsize_t rank) except -1:
 
     if len(tpl) != rank:
         raise ValueError("Tuple length incompatible with array")
-    
+
     try:
         for i from 0<=i<rank:
             dims[i] = tpl[i]
@@ -103,7 +103,7 @@ cdef int convert_tuple(object tpl, hsize_t *dims, hsize_t rank) except -1:
         raise TypeError("Can't convert element %d (%s) to hsize_t" % (i, tpl[i]))
 
     return 0
-    
+
 cdef object convert_dims(hsize_t* dims, hsize_t rank):
     # Convert an hsize_t array to a Python tuple of ints.
 
@@ -115,7 +115,7 @@ cdef object convert_dims(hsize_t* dims, hsize_t rank):
         dims_list.append(int(dims[i]))
 
     return tuple(dims_list)
-    
+
 
 cdef object create_numpy_hsize(int rank, hsize_t* dims):
     # Create an empty Numpy array which can hold HDF5 hsize_t entries
@@ -180,5 +180,3 @@ cdef int require_tuple(object tpl, int none_allowed, int size, char* name) excep
     msg = "%s must be a tuple%s%s." % (name, smsg, nmsg)
     PyErr_SetString(ValueError, msg)
     return -1
-
-

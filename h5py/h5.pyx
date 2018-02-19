@@ -162,8 +162,3 @@ def get_libversion():
     H5get_libversion(&major, &minor, &release)
 
     return (major, minor, release)
-
-
-
-
-

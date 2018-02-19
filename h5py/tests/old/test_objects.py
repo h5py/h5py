@@ -36,4 +36,3 @@ class TestObjects(TestCase):
         oid = o.ObjectID(42)
         with self.assertRaises(TypeError):
             hash(oid)
-

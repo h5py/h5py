@@ -85,7 +85,7 @@ def run_calculation():
     dset.attrs['YSTART'] = YSTART
     dset.attrs['XEXTENT'] = XEXTENT
     dset.attrs['YEXTENT'] = YEXTENT
-    
+
     result = pool.imap(compute_row, (x*xincr for x in xrange(NX)))
 
     for idx, arr in enumerate(result):
@@ -126,6 +126,3 @@ if __name__ == '__main__':
     else:
         print('Fractal found in "mandelbrot.hdf5". Delete file to re-run calculation.')
     visualize_file()
-
-
-

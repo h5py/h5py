@@ -449,7 +449,7 @@ cdef class GroupID(ObjectID):
         cdef err_cookie old_handler
         cdef err_cookie new_handler
         cdef herr_t retval
-        
+
         new_handler.func = NULL
         new_handler.data = NULL
 
@@ -530,7 +530,7 @@ IF HDF5_VERSION >= (1, 8, 5):
             # Is there any kind of link by that name in this group?
             if not current_loc.links.exists(p, lapl=lapl):
                 return False
-    
+
             # If we're at the last link in the chain, we're done.
             # We don't check to see if the last part points to a valid object;
             # it's enough that it exists.
@@ -551,4 +551,3 @@ IF HDF5_VERSION >= (1, 8, 5):
             current_loc = next_loc
 
         return True
-
