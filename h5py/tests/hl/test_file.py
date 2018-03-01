@@ -70,7 +70,7 @@ class TestDealloc(TestCase):
         self.assertEqual(ngroups(), start_ngroups)
 
 
-class TestDriverRegsitration(TestCase):
+class TestDriverRegistration(TestCase):
     def test_register_driver(self):
         called_with = [None]
 
@@ -101,3 +101,29 @@ class TestDriverRegsitration(TestCase):
             h5py.File(fname, driver='new-driver')
 
         self.assertEqual(str(e.exception), 'Unknown driver type "new-driver"')
+
+
+class TestCache(TestCase):
+    def test_defaults(self):
+        fname = self.mktemp()
+        f = h5py.File(fname, 'w')
+        self.assertEqual(list(f.id.get_access_plist().get_cache()),
+                         [0, 521, 1048576, 0.75])
+
+    def test_nbytes(self):
+        fname = self.mktemp()
+        f = h5py.File(fname, 'w', rdcc_nbytes=1024)
+        self.assertEqual(list(f.id.get_access_plist().get_cache()),
+                         [0, 521, 1024, 0.75])
+
+    def test_nslots(self):
+        fname = self.mktemp()
+        f = h5py.File(fname, 'w', rdcc_nslots=125)
+        self.assertEqual(list(f.id.get_access_plist().get_cache()),
+                         [0, 125, 1048576, 0.75])
+
+    def test_w0(self):
+        fname = self.mktemp()
+        f = h5py.File(fname, 'w', rdcc_w0=0.25)
+        self.assertEqual(list(f.id.get_access_plist().get_cache()),
+                         [0, 521, 1048576, 0.25])

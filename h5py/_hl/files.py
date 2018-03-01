@@ -86,7 +86,7 @@ def registered_drivers():
     return frozenset(_drivers)
 
 
-def make_fapl(driver, libver, **kwds):
+def make_fapl(driver, libver, rdcc_nslots, rdcc_nbytes, rdcc_w0, **kwds):
     """ Set up a file access property list """
     plist = h5p.create(h5p.FILE_ACCESS)
 
@@ -100,6 +100,15 @@ def make_fapl(driver, libver, **kwds):
         # we default to earliest
         low, high = h5f.LIBVER_EARLIEST, h5f.LIBVER_LATEST
     plist.set_libver_bounds(low, high)
+
+    cache_settings = list(plist.get_cache())
+    if rdcc_nslots is not None:
+        cache_settings[1] = rdcc_nslots
+    if rdcc_nbytes is not None:
+        cache_settings[2] = rdcc_nbytes
+    if rdcc_w0 is not None:
+        cache_settings[3] = rdcc_w0
+    plist.set_cache(*cache_settings)
 
     if driver is None or (driver == 'windows' and sys.platform == 'win32'):
         # Prevent swallowing unused key arguments
@@ -271,7 +280,9 @@ class File(Group):
                 raise ValueError("It is not possible to forcibly switch SWMR mode off.")
 
     def __init__(self, name, mode=None, driver=None,
-                 libver=None, userblock_size=None, swmr=False, **kwds):
+                 libver=None, userblock_size=None, swmr=False,
+                 rdcc_nslots=None, rdcc_nbytes=None, rdcc_w0=None,
+                 **kwds):
         """Create a new file object.
 
         See the h5py user guide for a detailed explanation of the options.
@@ -296,8 +307,33 @@ class File(Group):
             file (mode w, w- or x).
         swmr
             Open the file in SWMR read mode. Only used when mode = 'r'.
+        rdcc_nbytes
+            Total size of the raw data chunk cache in bytes. The default size
+            is 1024**2 (1 MB) per dataset.
+        rdcc_w0
+            The chunk preemption policy for all datasets.  This must be
+            between 0 and 1 inclusive and indicates the weighting according to
+            which chunks which have been fully read or written are penalized
+            when determining which chunks to flush from cache.  A value of 0
+            means fully read or written chunks are treated no differently than
+            other chunks (the preemption is strictly LRU) while a value of 1
+            means fully read or written chunks are always preempted before
+            other chunks.  If your application only reads or writes data once,
+            this can be safely set to 1.  Otherwise, this should be set lower
+            depending on how often you re-read or re-write the same data.  The
+            default value is 0.75.
+        rdcc_nslots
+            The number of chunk slots in the raw data chunk cache for this
+            dataset. Increasing this value reduces the number of cache
+            collisions, but slightly increases the memory used. Due to the
+            hashing strategy, this value should ideally be a prime number. As
+            a rule of thumb, this value should be at least 10 times the number
+            of chunks that can fit in rdcc_nbytes bytes. For maximum
+            performance, this value should be set approximately 100 times that
+            number of chunks. The default value is 521.
         Additional keywords
             Passed on to the selected file driver.
+
         """
         if swmr and not swmr_support:
             raise ValueError("The SWMR feature is not available in this version of the HDF5 library")
@@ -308,7 +344,7 @@ class File(Group):
         else:
             name = filename_encode(name)
             with phil:
-                fapl = make_fapl(driver, libver, **kwds)
+                fapl = make_fapl(driver, libver, rdcc_nslots, rdcc_nbytes, rdcc_w0, **kwds)
                 fid = make_fid(name, mode, userblock_size, fapl, swmr=swmr)
 
                 if swmr_support:
