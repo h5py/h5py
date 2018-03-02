@@ -324,13 +324,13 @@ class File(Group):
             default value is 0.75.
         rdcc_nslots
             The number of chunk slots in the raw data chunk cache for this
-            dataset. Increasing this value reduces the number of cache
-            collisions, but slightly increases the memory used. Due to the
-            hashing strategy, this value should ideally be a prime number. As
-            a rule of thumb, this value should be at least 10 times the number
-            of chunks that can fit in rdcc_nbytes bytes. For maximum
-            performance, this value should be set approximately 100 times that
-            number of chunks. The default value is 521.
+            file. Increasing this value reduces the number of cache collisions,
+            but slightly increases the memory used. Due to the hashing
+            strategy, this value should ideally be a prime number. As a rule of
+            thumb, this value should be at least 10 times the number of chunks
+            that can fit in rdcc_nbytes bytes. For maximum performance, this
+            value should be set approximately 100 times that number of
+            chunks. The default value is 521.
         Additional keywords
             Passed on to the selected file driver.
 
