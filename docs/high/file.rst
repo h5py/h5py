@@ -179,7 +179,7 @@ directly from memory rather than reading the file again.  The details of a
 given dataset's chunks are controlled when creating the dataset, but it is
 possible to adjust the behavior of the chunk *cache* when opening the file.
 
-The parameters controlling this behavior are prefixed by ``rdcc`, for raw data
+The parameters controlling this behavior are prefixed by ``rdcc``, for raw data
 chunk cache.  The first parameter is ``rdcc_nbytes``, which sets the total size
 (measured in bytes) of the raw data chunk cache for each dataset.  The default
 size is 1 MB.  This should be set to the size of each chunk times the number of
