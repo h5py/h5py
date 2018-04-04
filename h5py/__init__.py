@@ -64,7 +64,6 @@ from .h5t import special_dtype, check_dtype
 from . import version
 from .version import version as __version__
 
-from .tests import run_tests
 
 if version.hdf5_version_tuple != version.hdf5_built_version_tuple:
     _warn(("h5py is running against HDF5 {0} when it was built against {1}, "
@@ -72,6 +71,14 @@ if version.hdf5_version_tuple != version.hdf5_built_version_tuple:
             '{0}.{1}.{2}'.format(*version.hdf5_version_tuple),
             '{0}.{1}.{2}'.format(*version.hdf5_built_version_tuple)
     ))
+
+
+def run_tests(verbose=False):
+    """Run tests with TextTestRunner and returns a TestResult instance.
+    """
+    # Lazy-loading of tests package to avoid strong dependency on unittest2
+    from .tests import run_tests
+    return run_tests(verbose=verbose)
 
 
 def enable_ipython_completer():
