@@ -23,4 +23,3 @@ class TestFileImage(TestCase):
         f = h5py.File(fid)
 
         self.assertTrue('test' in f)
-

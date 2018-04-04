@@ -272,7 +272,7 @@ cdef class ObjectID:
         3. If (1) fails, raise TypeError
         """
         cdef H5G_stat_t stat
-        
+
         with _phil:
             if self._hash is None:
                 try:

@@ -27,7 +27,7 @@ def release_windows():
     print ("Windows exe release done.  Distribution files are in dist/")
     for dll in DLLS:
         os.unlink('h5py\\%s' % dll)
-    
+
 @task
 @consume_args
 def git_summary(options):
