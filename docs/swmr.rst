@@ -104,7 +104,7 @@ receive a signal each time the target file has been updated.
 Multiprocess concurrent write and read
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The SWMR multiprocess example starts starts two concurrent child processes: 
+The SWMR multiprocess example starts two concurrent child processes: 
 a writer and a reader.
 The writer process first creates the target file and dataset. Then it switches
 the file into SWMR mode and the reader process is notified (with a
