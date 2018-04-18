@@ -9,6 +9,9 @@
 
 # Python-style minor error classes.  If the minor error code matches an entry
 # in this dict, the generated exception will be used.
+
+from ._hl.compat import filename_encode, filename_decode
+
 _minor_table = {
     H5E_SEEKERROR:      IOError,    # Seek failed 
     H5E_READERROR:      IOError,    # Read failed  
@@ -120,7 +123,10 @@ cdef int set_exception() except -1:
     if desc_bottom is NULL:
         raise RuntimeError("Failed to extract bottom-level error description")
 
-    msg = ("%s (%s)" % (desc.decode('utf-8').capitalize(), desc_bottom.decode('utf-8'))).encode('utf-8')
+    msg = filename_encode(u"{0} ({1})".format(
+        filename_decode(desc).capitalize(),
+        filename_decode(desc_bottom)
+    ))
 
     # Finally, set the exception.  We do this with the Python C function
     # so that the traceback doesn't point here.

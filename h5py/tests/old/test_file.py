@@ -431,6 +431,16 @@ class TestUnicode(TestCase):
         with File(fname, 'w') as f:
             self.assertTrue(os.path.exists(fname))
 
+    def test_nonexistent_file_unicode(self):
+        """
+        Modes 'r' and 'r+' do not create files even when given unicode names
+        """
+        fname = self.mktemp(prefix = six.unichr(0x201a))
+        with self.assertRaises(IOError):
+            File(fname, 'r')
+        with self.assertRaises(IOError):
+            File(fname, 'r+')
+
 
 class TestFileProperty(TestCase):
 
