@@ -383,7 +383,7 @@ Reference
             >>> arr = np.zeros((100,), dtype='int32')
             >>> dset.read_direct(arr, np.s_[0:10], np.s_[50:60])
 
-  .. method:: write_direct(self, source, source_sel=None, dest_sel=None):
+    .. method:: write_direct(self, source, source_sel=None, dest_sel=None):
 
         Write data directly to HDF5 from a NumPy array.
         The source array must be C-contiguous.  Selections must be
