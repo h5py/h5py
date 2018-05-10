@@ -435,7 +435,10 @@ cdef class AttrID(ObjectID):
         """
         return H5Aget_storage_size(self.id)
 
-
+    @with_phil
+    def get_cset(self):
+        tid = H5Aget_type(self.id)
+        return <int>H5Tget_cset(tid)
 
 
 

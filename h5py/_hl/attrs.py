@@ -77,8 +77,17 @@ class AttributeManager(base.MutableMappingHDF5, base.CommonStateObject):
             shape = attr.shape + subshape   # (5, 3)
             dtype = subdtype                # 'f'
 
+        # Ensure htype has the correct character set in the case
+        # of the data being tagged as UTF8 encoded text:
+        if dtype.type == numpy.bytes_ and attr.get_cset() == h5t.CSET_UTF8:
+            htype.set_cset(h5t.CSET_UTF8)
+
         arr = numpy.ndarray(shape, dtype=dtype, order='C')
         attr.read(arr, mtype=htype)
+
+        # If the data is tagged as utf8 encoded text, decode it:
+        if arr.dtype.type == numpy.bytes_ and attr.get_cset() == h5t.CSET_UTF8:
+            arr = numpy.core.defchararray.decode(arr, 'utf8')
 
         if len(arr.shape) == 0:
             return arr[()]
@@ -162,14 +171,25 @@ class AttributeManager(base.MutableMappingHDF5, base.CommonStateObject):
                 if shape != data.shape:
                     data = data.reshape(shape)
 
+            s_cset_utf8 = 0
             # We need this to handle special string types.
             if not isinstance(data, Empty):
                 data = numpy.asarray(data, dtype=dtype)
+                # We encode numpy U arrays to numpy S arrays containing UTF8
+                # encoded text
+                if dtype.type == numpy.unicode_:
+                    data = numpy.core.defchararray.encode(data, 'utf8')
+                    dtype = data.dtype
+                    original_dtype = dtype
+                    # Flag to set the character set to UTF8 even though the numpy
+                    # array is S type
+                    s_cset_utf8 = 1
 
             # Make HDF5 datatype and dataspace for the H5A calls
             if use_htype is None:
-                htype = h5t.py_create(original_dtype, logical=True)
-                htype2 = h5t.py_create(original_dtype)  # Must be bit-for-bit representation rather than logical
+                htype = h5t.py_create(original_dtype, logical=True, s_cset_utf8=s_cset_utf8)
+                # Must be bit-for-bit representation rather than logical:
+                htype2 = h5t.py_create(original_dtype, s_cset_utf8=s_cset_utf8)  
             else:
                 htype = use_htype
                 htype2 = None
