@@ -1479,13 +1479,15 @@ cdef TypeOpaqueID _c_opaque(dtype dt):
     # Opaque
     return TypeOpaqueID(H5Tcreate(H5T_OPAQUE, dt.itemsize))
 
-cdef TypeStringID _c_string(dtype dt):
+cdef TypeStringID _c_string(dtype dt, bint s_cset_utf8=0):
     # Strings (fixed-length)
     cdef hid_t tid
 
     tid = H5Tcopy(H5T_C_S1)
     H5Tset_size(tid, dt.itemsize)
     H5Tset_strpad(tid, H5T_STR_NULLPAD)
+    if s_cset_utf8:
+        H5Tset_cset(tid, H5T_CSET_UTF8)
     return TypeStringID(tid)
 
 cdef TypeCompoundID _c_complex(dtype dt):
@@ -1608,7 +1610,7 @@ cdef TypeReferenceID _c_ref(object refclass):
     raise TypeError("Unrecognized reference code")
 
 
-cpdef TypeID py_create(object dtype_in, bint logical=0, bint aligned=0):
+cpdef TypeID py_create(object dtype_in, bint logical=0, bint aligned=0, bint s_cset_utf8=0):
     """(OBJECT dtype_in, BOOL logical=False) => TypeID
 
     Given a Numpy dtype object, generate a byte-for-byte memory-compatible
@@ -1624,11 +1626,18 @@ cpdef TypeID py_create(object dtype_in, bint logical=0, bint aligned=0):
         appropriate HDF5 type.  For example, in the case of a "hinted" dtype
         of kind "O" representing a string, it would return an HDF5 variable-
         length string type.
+
+    s_cset_utf8
+        If this flag is set, 'S' dtypes will have the character set set to UTF8, 
+        to indicate that the data contains UTF8 encoded text.
     """
     cdef dtype dt = dtype(dtype_in)
     cdef char kind = dt.kind
 
     aligned = getattr(dtype_in, "isalignedstruct", aligned)
+
+    if kind != c'S' and s_cset_utf8:
+        raise ValueError('can only declare \'S\' type as utf8 encoded text')
 
     with phil:
         # Float
@@ -1663,7 +1672,7 @@ cpdef TypeID py_create(object dtype_in, bint logical=0, bint aligned=0):
 
         # String
         elif kind == c'S':
-            return _c_string(dt)
+            return _c_string(dt, s_cset_utf8)
 
         # Boolean
         elif kind == c'b':
