@@ -249,7 +249,7 @@ def _get_available_ftypes():
 
     available_ftypes = defaultdict(list)
     for ftype in np.typeDict.values():
-        if np.issubdtype(ftype, np.floating):
+        if np.issubdtype(ftype, np.dtype(float).type):
             available_ftypes[np.dtype(ftype).itemsize].append(ftype)
 
     sorted_ftypes = []
@@ -284,7 +284,7 @@ class _DeprecatedMapping(Mapping):
 
 available_ftypes = dict()
 for ftype in np.typeDict.values():
-    if np.issubdtype(ftype, np.floating):
+    if np.issubdtype(ftype, np.dtype(float).type):
         available_ftypes[np.dtype(ftype).itemsize] = np.finfo(ftype)
 
 available_ftypes = _DeprecatedMapping(available_ftypes,
