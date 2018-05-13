@@ -97,7 +97,7 @@ the dataset, via the keyword ``maxshape``::
 
     >>> dset = f.create_dataset("resizable", (10,10), maxshape=(500, 20))
 
-Any (or all) axes may also be marked as "unlimited", in which case they may 
+Any (or all) axes may also be marked as "unlimited", in which case they may
 be increased up to the HDF5 per-axis limit of 2**64 elements.  Indicate these
 axes using ``None``::
 
@@ -168,11 +168,11 @@ Scale-Offset filter
 
 Filters enabled with the ``compression`` keywords are _lossless_; what comes
 out of the dataset is exactly what you put in.  HDF5 also includes a lossy
-filter which trades precision for storage space.  
+filter which trades precision for storage space.
 
 Works with integer and floating-point data only.  Enable the scale-offset
 filter by setting :meth:`Group.create_dataset` keyword ``scaleoffset`` to an
-integer.  
+integer.
 
 For integer data, this specifies the number of bits to retain.  Set to 0 to have
 HDF5 automatically compute the number of bits required for lossless compression
@@ -356,7 +356,7 @@ Reference
 
     Dataset objects are typically created via :meth:`Group.create_dataset`,
     or by retrieving existing datasets from a file.  Call this constructor to
-    create a new Dataset bound to an existing 
+    create a new Dataset bound to an existing
     :class:`DatasetID <low:h5py.h5d.DatasetID>` identifier.
 
     .. method:: __getitem__(args)
@@ -383,13 +383,13 @@ Reference
             >>> arr = np.zeros((100,), dtype='int32')
             >>> dset.read_direct(arr, np.s_[0:10], np.s_[50:60])
 
-    .. method:: write_direct(self, source, source_sel=None, dest_sel=None):
+    .. method:: write_direct(source, source_sel=None, dest_sel=None)
 
         Write data directly to HDF5 from a NumPy array.
         The source array must be C-contiguous.  Selections must be
         the output of numpy.s_[<args>].
         Broadcasting is supported for simple indexing.
- 
+
 
     .. method:: astype(dtype)
 
@@ -411,7 +411,7 @@ Reference
         Datasets may be resized only up to :attr:`Dataset.maxshape`.
 
     .. method:: len()
-        
+
         Return the size of the first axis.
 
     .. attribute:: shape
