@@ -41,7 +41,9 @@
 from __future__ import absolute_import, division
 
 import numpy as np
-from .. import h5z, h5p, h5d
+import six
+from .compat import filename_encode
+from .. import h5z, h5p, h5d, h5f
 
 
 _COMP_FILTERS = {'gzip': h5z.FILTER_DEFLATE,
@@ -70,8 +72,42 @@ def _gen_filter_tuples():
 
 decode, encode = _gen_filter_tuples()
 
+def _external_entry(name, offset=0, size=h5f.UNLIMITED):
+    """ Check for and return a well-formed entry tuple for
+    a call to h5p.set_external. """
+    if not isinstance(name, six.string_types):
+        raise TypeError('external entry for offset must be a string')
+    if not isinstance(offset, six.integer_types):
+        raise TypeError('external entry for offset must be an integer')
+    if not isinstance(size, six.integer_types):
+        raise TypeError('external entry for size must be an integer')
+    return (filename_encode(name), offset, size)
+
+def _normalize_external(external):
+    """ Normalize external into a well-formed list of tuples and return. """
+    if external is None:
+        return []
+    elif isinstance(external, six.string_types):
+        # accept a solitary file string
+        return [_external_entry(external)]
+    if not isinstance(external, (list)):
+        raise ValueError('external should be a list of tuples of (file[, offset[, size]])')
+    try:
+        # accept a single entry, not in a list
+        return [_external_entry(*external)]
+    except TypeError:
+        pass
+    # check and rebuild each list entry to be well-formed
+    for idx, item in enumerate(external):
+        if isinstance(item, six.string_types):
+            item = _external_entry(item)
+        else:
+            item = _external_entry(*item)
+        external[idx] = item
+    return external
+
 def generate_dcpl(shape, dtype, chunks, compression, compression_opts,
-                  shuffle, fletcher32, maxshape, scaleoffset):
+                  shuffle, fletcher32, maxshape, scaleoffset, external):
     """ Generate a dataset creation property list.
 
     Undocumented and subject to change without warning.
@@ -160,6 +196,8 @@ def generate_dcpl(shape, dtype, chunks, compression, compression_opts,
         if fletcher32:
             raise ValueError('fletcher32 cannot be used with potentially lossy'
                              ' scale/offset filter')
+
+    external = _normalize_external(external)
     # End argument validation
 
     if (chunks is True) or \
@@ -181,6 +219,9 @@ def generate_dcpl(shape, dtype, chunks, compression, compression_opts,
             plist.set_scaleoffset(h5z.SO_INT, scaleoffset)
         else: # dtype.kind == 'f'
             plist.set_scaleoffset(h5z.SO_FLOAT_DSCALE, scaleoffset)
+
+    for item in external:
+        plist.set_external(*item)
 
     if shuffle:
         plist.set_shuffle()

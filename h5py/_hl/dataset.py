@@ -29,6 +29,7 @@ from . import filters
 from . import selections as sel
 from . import selections2 as sel2
 from .datatype import Datatype
+from .compat import filename_decode
 
 _LEGACY_GZIP_COMPRESSION_VALS = frozenset(range(10))
 MPI = h5.get_config().mpi
@@ -53,7 +54,8 @@ def readtime_dtype(basetype, names):
 def make_new_dset(parent, shape=None, dtype=None, data=None,
                  chunks=None, compression=None, shuffle=None,
                     fletcher32=None, maxshape=None, compression_opts=None,
-                  fillvalue=None, scaleoffset=None, track_times=None):
+                  fillvalue=None, scaleoffset=None, track_times=None,
+                  external=None):
     """ Return a new low-level dataset identifier
 
     Only creates anonymous datasets.
@@ -117,7 +119,7 @@ def make_new_dset(parent, shape=None, dtype=None, data=None,
         compression = 'gzip'
 
     dcpl = filters.generate_dcpl(shape, dtype, chunks, compression, compression_opts,
-                  shuffle, fletcher32, maxshape, scaleoffset)
+                  shuffle, fletcher32, maxshape, scaleoffset, external)
 
     if fillvalue is not None:
         fillvalue = numpy.array(fillvalue)
@@ -296,6 +298,20 @@ class Dataset(HLObject):
             return self._filters['scaleoffset'][1]
         except KeyError:
             return None
+
+    @property
+    def external(self):
+        """External file settings. Returns a list of tuples of
+        (name, offset, size) for each external file entry, or returns None
+        if no external files are used."""
+        count = self._dcpl.get_external_count()
+        if count<=0:
+            return None
+        ext_list = list()
+        for x in xrange(count):
+            (name, offset, size) = self._dcpl.get_external(x)
+            ext_list.append( (filename_decode(name), offset, size) )
+        return ext_list
 
     @property
     @with_phil
