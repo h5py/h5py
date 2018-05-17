@@ -225,13 +225,14 @@ Reference
 ---------
 
 .. note::
-    
-    Unlike Python file objects, the attribute ``File.name`` gives the
+
+    Unlike Python file objects, the attribute :attr:`File.name` gives the
     HDF5 name of the root group, "``/``". To access the on-disk name, use
     :attr:`File.filename`.
 
-.. class:: File(name, mode=None, driver=None, libver=None, userblock_size=None, swmr=False,
-                rdcc_nslots=None, rdcc_nbytes=None, rdcc_w0=None, **kwds)
+.. class:: File(name, mode=None, driver=None, libver=None, \
+    userblock_size=None, swmr=False, rdcc_nslots=None, rdcc_nbytes=None, \
+    rdcc_w0=None, **kwds)
 
     Open or create a new file.
 
@@ -251,7 +252,7 @@ Reference
     :param swmr:    If ``True`` open the file in single-writer-multiple-reader
                     mode. Only used when mode="r".
     :param rdcc_nbytes:  Total size of the raw data chunk cache in bytes. The
-                    default size is 1024**2 (1 MB) per dataset.
+                    default size is :math:`1024^2` (1 MB) per dataset.
     :param rdcc_w0: Chunk preemption policy for all datasets.  Default value is
                     0.75.
     :param rdcc_nslots:  Number of chunk slots in the raw data chunk cache for
