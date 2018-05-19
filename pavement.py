@@ -14,7 +14,7 @@ def release_unix():
 
 @task
 def release_windows():
-    for pyver in (26, 27, 34):
+    for pyver in (27, 34):
         exe = r'C:\Python%d\Python.exe' % pyver
         hdf5 = r'c:\hdf5\Python%d' % pyver
         sh('%s setup.py clean' % exe)

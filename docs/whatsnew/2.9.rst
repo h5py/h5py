@@ -5,3 +5,5 @@ Support for old Python
 ----------------------
 
 Support for Python 3.3 has been dropped.
+
+Support for Python 2.6 has been dropped.
