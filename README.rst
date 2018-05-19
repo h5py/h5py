@@ -5,7 +5,7 @@
 
 HDF5 for Python
 ===============
-`h5py` is a thin, pythonic wrapper around the `HDF5 <https://support.hdfgroup.org/HDF5/>`_, which runs on Python 2 (2.6-2.7), and Python 3 (3.3-3.6).
+`h5py` is a thin, pythonic wrapper around the `HDF5 <https://support.hdfgroup.org/HDF5/>`_, which runs on Python 2 (2.6-2.7), and Python 3 (3.4-3.6).
 
 Websites
 --------

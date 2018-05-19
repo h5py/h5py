@@ -68,25 +68,6 @@ matrix:
         HDF5_VERSION=1.10.1
         HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION
 
-    # Python 3.3
-    - python: 3.3
-      env:
-      - TOXENV=py33-test-deps
-    - python: 3.3
-      env:
-      - TOXENV=py33-test-mindeps
-    - python: 3.3
-      env:
-      - TOXENV=py33-test-deps
-        TOX_TESTENV_PASSENV=LANG LC_ALL
-        LANG=C
-        LC_ALL=C
-    - python: 3.3
-      env:
-      - TOXENV=py33-test-deps
-        HDF5_VERSION=1.10.1
-        HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION
-
     # Python 3.4
     - python: 3.4
       env:
