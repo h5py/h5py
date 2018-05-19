@@ -28,7 +28,11 @@ import os
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx.ext.intersphinx', 'sphinx.ext.extlinks']
+extensions = [
+        'sphinx.ext.intersphinx',
+        'sphinx.ext.extlinks',
+        'sphinx.ext.mathjax',
+]
 
 intersphinx_mapping = {'low': ('http://api.h5py.org', None)}
 
