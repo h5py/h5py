@@ -12,12 +12,6 @@ environment:
       HDF5_VSVERSION: "9"
       HDF5_DIR: "C:\\hdf5\\%HDF5_VERSION%\\%HDF5_VSVERSION%"
 
-    - PYTHON: "C:\\Python33"
-      TOXENV: "py33-test-deps"
-      TOXPYTHON: "%PYTHON%\\python.exe"
-      HDF5_VSVERSION: "10"
-      HDF5_DIR: "C:\\hdf5\\%HDF5_VERSION%\\%HDF5_VSVERSION%"
-
     - PYTHON: "C:\\Python34"
       TOXENV: "py34-test-deps"
       TOXPYTHON: "%PYTHON%\\python.exe"
@@ -40,13 +34,6 @@ environment:
       TOXENV: "py27-test-deps"
       TOXPYTHON: "%PYTHON%\\python.exe"
       HDF5_VSVERSION: "9-64"
-      HDF5_DIR: "C:\\hdf5\\%HDF5_VERSION%\\%HDF5_VSVERSION%"
-
-    - PYTHON: "C:\\Python33-x64"
-      TOXENV: "py33-test-deps"
-      TOXPYTHON: "%PYTHON%\\python.exe"
-      HDF5_VSVERSION: "10-64"
-      DISTUTILS_USE_SDK: "1"
       HDF5_DIR: "C:\\hdf5\\%HDF5_VERSION%\\%HDF5_VSVERSION%"
 
     - PYTHON: "C:\\Python34-x64"
@@ -123,7 +110,7 @@ build: off
 
 test_script:
   # Put your test command here.
-  # If you don't need to build C extensions on 64-bit Python 3.3 or 3.4,
+  # If you don't need to build C extensions on 64-bit Python 3.4,
   # you can remove "build.cmd" from the front of the command, as it's
   # only needed to support those cases.
   # Note that you must use the environment variable %PYTHON% to refer to
@@ -136,7 +123,7 @@ test_script:
 #after_test:
 #  # This step builds your wheels.
 #  # Again, you only need build.cmd if you're building C extensions for
-#  # 64-bit Python 3.3/3.4. And you need to use %PYTHON% to get the correct
+#  # 64-bit Python 3.4. And you need to use %PYTHON% to get the correct
 #  # interpreter
 #  - "ci\\appveyor\\build.cmd %PYTHON%\\python.exe setup.py bdist_wheel"
 #

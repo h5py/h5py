@@ -14,7 +14,7 @@ def release_unix():
 
 @task
 def release_windows():
-    for pyver in (26, 27, 32, 33, 34):
+    for pyver in (27, 34):
         exe = r'C:\Python%d\Python.exe' % pyver
         hdf5 = r'c:\hdf5\Python%d' % pyver
         sh('%s setup.py clean' % exe)
@@ -27,7 +27,7 @@ def release_windows():
     print ("Windows exe release done.  Distribution files are in dist/")
     for dll in DLLS:
         os.unlink('h5py\\%s' % dll)
-    
+
 @task
 @consume_args
 def git_summary(options):

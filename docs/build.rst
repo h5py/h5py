@@ -19,7 +19,7 @@ installed correctly. This can be done in the python interpreter via::
     import h5py
     h5py.run_tests()
 
-On Python 2.6, unittest2 must be installed to run the tests.
+On Python 2.6 and 2.7, unittest2 must be installed to run the tests.
 
 .. _prebuilt_install:
 
