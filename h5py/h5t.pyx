@@ -1203,7 +1203,8 @@ cdef class TypeCompoundID(TypeCompositeID):
             typeobj = dtype({
                 'names': field_names,
                 'formats': field_types,
-                'offsets': field_offsets
+                'offsets': field_offsets,
+                'itemsize': self.get_size()
             })
 
         return typeobj

@@ -152,7 +152,7 @@ class TestOffsets(TestCase):
                         self.assertEqual(np_offsets, offsets)
 
     def test_aligned_offsets(self):
-        dt = np.dtype('i2,i8', align=True)
+        dt = np.dtype('i4,i8,i2', align=True)
         ht = h5py.h5t.py_create(dt)
         self.assertEqual(dt.itemsize, ht.get_size())
         self.assertEqual(
@@ -162,12 +162,14 @@ class TestOffsets(TestCase):
 
 
     def test_aligned_data(self):
-        dt = np.dtype('i2,f8', align=True)
+        dt = np.dtype('i4,f8,i2', align=True)
         data = np.empty(10, dtype=dt)
 
         data['f0'] = np.array(np.random.randint(-100, 100, size=data.size),
-                dtype='i2')
+                dtype='i4')
         data['f1'] = np.random.rand(data.size)
+        data['f2'] = np.array(np.random.randint(-100, 100, size=data.size),
+                dtype='i2')
 
         fname = self.mktemp()
 
