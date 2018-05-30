@@ -26,7 +26,7 @@ from ..common import ut, TestCase
 
 import h5py
 from h5py import h5s, h5t, h5d
-from h5py.highlevel import File
+from h5py import File
 
 class BaseSlicing(TestCase):
 

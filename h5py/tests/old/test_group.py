@@ -30,8 +30,8 @@ import six
 
 from ..common import ut, TestCase
 import h5py
-from h5py.highlevel import File, Group, SoftLink, HardLink, ExternalLink
-from h5py.highlevel import Dataset, Datatype
+from h5py import File, Group, SoftLink, HardLink, ExternalLink
+from h5py import Dataset, Datatype
 from h5py import h5t
 from h5py._hl.compat import filename_encode
 

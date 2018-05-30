@@ -14,7 +14,7 @@ import sys
 import numpy as np
 
 from ..common import ut, TestCase
-from h5py.highlevel import File, Group, Dataset
+from h5py import File, Group, Dataset
 import h5py
 
 
