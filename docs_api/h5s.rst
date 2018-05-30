@@ -25,7 +25,7 @@ Module constants
     Accepted in place of an actual dataspace; means "every point"
 
 .. data:: UNLIMITED
-    
+
     Indicates an unlimited maximum dimension
 
 Dataspace class codes
@@ -56,7 +56,3 @@ Existing selection type
 .. data:: SEL_POINTS
 .. data:: SEL_HYPERSLABS
 .. data:: SEL_ALL
-
-
-
-

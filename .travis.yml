@@ -24,6 +24,7 @@ env:
     - TOXENV=docs
     - TOXENV=check-manifest
     - TOXENV=checkreadme
+    - TOXENV=pre-commit
 
 matrix:
   include:

@@ -765,9 +765,9 @@ cdef class PropDCID(PropOCID):
     @with_phil
     def set_external(self, name, offset, size):
         '''(STR name, UINT offset, UINT size)
-        
+
         Adds an external file to the list of external files for the dataset.
-        
+
         The first call sets the external storage property in the property list,
         thus designating that the dataset will be stored in one or more non-HDF5
         file(s) external to the HDF5 file.'''

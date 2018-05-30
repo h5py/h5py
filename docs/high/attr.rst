@@ -117,6 +117,3 @@ Reference
         :type name:     String
 
         :param value:   New value.  Will be put through ``numpy.array(value)``.
-
-
-

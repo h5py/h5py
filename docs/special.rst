@@ -62,7 +62,7 @@ dtype.  In h5py, variable-length strings are mapped to object arrays.  A
 small amount of metadata attached to an "O" dtype tells h5py that its contents
 should be converted to VL strings when stored in the file.
 
-Existing VL strings can be read and written to with no additional effort; 
+Existing VL strings can be read and written to with no additional effort;
 Python strings and fixed-length NumPy strings can be auto-converted to VL
 data and stored.
 
@@ -100,7 +100,7 @@ arrays::
 
     >>> dset[0:2]
     array([array([1, 2, 3], dtype=int32), array([1, 2, 3, 4, 5], dtype=int32)], dtype=object)
-    
+
 
 Enumerated types
 ----------------

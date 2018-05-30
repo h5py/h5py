@@ -52,7 +52,7 @@ Advanced topics
 
 .. toctree::
     :maxdepth: 1
-    
+
     config
     special
     strings

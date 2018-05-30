@@ -1,13 +1,13 @@
 /***** Preamble block *********************************************************
-* 
+*
 * This file is part of h5py, a low-level Python interface to the HDF5 library.
-* 
+*
 * Copyright (C) 2008 Andrew Collette
 * http://h5py.alfven.org
 * License: BSD  (See LICENSE.txt for full license)
-* 
+*
 * $Date$
-* 
+*
 ****** End preamble block ****************************************************/
 
 
@@ -25,7 +25,7 @@ extern "C" {
    requests, contact the filter author directly. */
 #define H5PY_FILTER_LZF 32000
 
-/* Register the filter with the library. Returns a negative value on failure, 
+/* Register the filter with the library. Returns a negative value on failure,
    and a non-negative value on success.
 */
 int register_lzf(void);
@@ -35,4 +35,3 @@ int register_lzf(void);
 #endif
 
 #endif
-

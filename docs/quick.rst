@@ -185,5 +185,3 @@ implements the dictionary interface::
     True
 
 For more, see :ref:`attributes`.
-
-

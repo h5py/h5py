@@ -86,7 +86,7 @@ is to create an :ref:`HDF5 datasets <dataset>`::
     >>> out = grp["name"]
     >>> out
     <HDF5 dataset "name": shape (), type "<i8">
-    
+
 When the object being stored is an existing Group or Dataset, a new link is
 made to the object::
 
@@ -430,7 +430,7 @@ Link classes
 
     :param filename:    Name of the file to which the link points
     :type filename:     String
-    
+
     :param path:        Path to the object in the external file.
     :type path:         String
 

@@ -23,4 +23,3 @@ Identifier classes
 .. data:: GENPROP_CLS
 .. data:: GENPROP_LST
 .. data:: DATATYPE
-

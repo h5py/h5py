@@ -20,5 +20,3 @@ cdef class H5PYConfig:
     cdef readonly object _bytestrings
 
 cpdef H5PYConfig get_config()
-
-

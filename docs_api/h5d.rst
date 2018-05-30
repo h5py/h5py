@@ -20,9 +20,9 @@ Allocation times
 ~~~~~~~~~~~~~~~~
 
 .. data:: ALLOC_TIME_DEFAULT
-.. data:: ALLOC_TIME_LATE 
+.. data:: ALLOC_TIME_LATE
 .. data:: ALLOC_TIME_EARLY
-.. data:: ALLOC_TIME_INCR  
+.. data:: ALLOC_TIME_INCR
 
 Allocation status
 ~~~~~~~~~~~~~~~~~
@@ -44,4 +44,3 @@ Fill values
 .. data:: FILL_VALUE_UNDEFINED
 .. data:: FILL_VALUE_DEFAULT
 .. data:: FILL_VALUE_USER_DEFINED
-

@@ -32,7 +32,7 @@ Variable length array               Any supported type                          
 Unsupported types:
 
 =========================           ============================================
-Type                                Status                                 
+Type                                Status
 =========================           ============================================
 HDF5 "time" type
 NumPy "U" strings                   No HDF5 equivalent
@@ -61,7 +61,7 @@ What file drivers are available?
 --------------------------------
 
 A number of different HDF5 "drivers", which provide different modes of access
-to the filesystem, are accessible in h5py via the high-level interface. The 
+to the filesystem, are accessible in h5py via the high-level interface. The
 currently supported drivers are:
 
 =================================== =========================================== ============================
@@ -95,10 +95,10 @@ This layer is object-oriented with respect to HDF5 identifiers, supports
 reference counting, automatic translation between NumPy and HDF5 type objects,
 translation between the HDF5 error stack and Python exceptions, and more.
 
-This greatly simplifies the design of the complicated high-level interface, by 
+This greatly simplifies the design of the complicated high-level interface, by
 relying on the "Pythonicity" of the C API wrapping.
 
-There's also a PyTables perspective on this question at the 
+There's also a PyTables perspective on this question at the
 `PyTables FAQ <http://www.pytables.org/FAQ.html#how-does-pytables-compare-with-the-h5py-project>`_.
 
 
@@ -138,14 +138,14 @@ Appending data to a dataset
 The short response is that h5py is NumPy-like, not database-like. Unlike the
 HDF5 packet-table interface (and PyTables), there is no concept of appending
 rows. Rather, you can expand the shape of the dataset to fit your needs. For
-example, if I have a series of time traces 1024 points long, I can create an 
+example, if I have a series of time traces 1024 points long, I can create an
 extendable dataset to store them:
 
     >>> dset = myfile.create_dataset("MyDataset", (10, 1024), maxshape=(None, 1024))
     >>> dset.shape
     (10,1024)
 
-The keyword argument "maxshape" tells HDF5 that the first dimension of the 
+The keyword argument "maxshape" tells HDF5 that the first dimension of the
 dataset can be expanded to any size, while the second dimension is limited to a
 maximum size of 1024. We create the dataset with room for an initial ensemble
 of 10 time traces. If we later want to store 10 more time traces, the dataset
@@ -163,7 +163,7 @@ Each axis can be resized up to the maximum values in "maxshape". Things to note:
 
 Unicode
 -------
-As of h5py 2.0.0, Unicode is supported for file names as well as for objects 
+As of h5py 2.0.0, Unicode is supported for file names as well as for objects
 in the file. When object names are read, they are returned as Unicode by default.
 
 However, HDF5 has no predefined datatype to represent fixed-width UTF-16 or
@@ -205,6 +205,3 @@ containing a compiled, shared-library build of HDF5 (containing things like "inc
     $ python setup.py test
 
 Report any failing tests to the mailing list (h5py at googlegroups), or by filing a bug report at GitHub.
-
-
-

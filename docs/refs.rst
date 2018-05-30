@@ -45,7 +45,7 @@ opening any other object:
 Using region references
 -----------------------
 
-Region references always contain a selection.  You create them using the 
+Region references always contain a selection.  You create them using the
 dataset property "regionref" and standard NumPy slicing syntax:
 
     >>> myds = myfile.create_dataset('dset', (200,200))
@@ -119,5 +119,3 @@ indicate whether or not it is null:
     >>> nullref = ref_dataset[50]
     >>> print bool(nullref)
     False
-
-

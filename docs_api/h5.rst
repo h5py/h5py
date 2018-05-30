@@ -39,6 +39,3 @@ Module constants
 .. data:: ITER_DEC
 
     Traverse index in decreasing order
-
-
-

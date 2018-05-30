@@ -50,14 +50,3 @@ Link type codes
 
 .. data:: LINK_HARD
 .. data:: LINK_SOFT
-
-
-
-
-
-
-
-
-
-
-

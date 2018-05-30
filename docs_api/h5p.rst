@@ -92,4 +92,3 @@ Predefined classes
 .. data:: LINK_CREATE
 .. data:: LINK_ACCESS
 .. data:: GROUP_CREATE
-
