@@ -68,6 +68,10 @@ class TestEmpty(TestCase):
         """ Verify shape """
         self.assertEquals(self.dset.shape, None)
         
+    def test_size(self):
+        """ Verify shape """
+        self.assertEquals(self.dset.size, None)
+
     def test_ellipsis(self):
         """ Ellipsis -> ValueError """
         self.assertEquals(self.dset[...], self.empty_obj)

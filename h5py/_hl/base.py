@@ -417,6 +417,7 @@ class Empty(object):
         the same as an array with shape (0,).
     """
     shape = None
+    size = None
 
     def __init__(self, dtype):
         self.dtype = dtype
