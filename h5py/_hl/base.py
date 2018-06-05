@@ -301,6 +301,12 @@ class HLObject(CommonStateObject):
 # AttributeManager can only test for key names.
 
 
+class KeysViewHDF5(KeysView):
+    def __str__(self):
+        k = ", ".join(repr(x) for x in self)
+        return "hdf_keys([{}])".format(k)
+    __repr__ = __str__
+
 class ValuesViewHDF5(ValuesView):
 
     """
@@ -380,7 +386,7 @@ class MappingHDF5(Mapping):
     else:
         def keys(self):
             """ Get a view object on member names """
-            return KeysView(self)
+            return KeysViewHDF5(self)
 
         def values(self):
             """ Get a view object on member objects """
