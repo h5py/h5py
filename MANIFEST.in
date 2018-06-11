@@ -30,3 +30,4 @@ recursive-exclude other *
 recursive-exclude .github *
 exclude pavement.py
 exclude *.yml
+exclude *.yaml

@@ -86,6 +86,3 @@ class TestRepr(BaseTest):
                 os.unlink(fname)
             except Exception:
                 pass
-
-        
-

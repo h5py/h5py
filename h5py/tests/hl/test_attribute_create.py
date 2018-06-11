@@ -23,25 +23,25 @@ class TestArray(TestCase):
     """
         Check that top-level array types can be created and read.
     """
-    
+
     def test_int(self):
         # See issue 498
-        
+
         dt = np.dtype('(3,)i')
         data = np.arange(3, dtype='i')
-        
+
         self.f.attrs.create('x', data=data, dtype=dt)
-        
+
         aid = h5py.h5a.open(self.f.id, b'x')
-        
+
         htype = aid.get_type()
         self.assertEqual(htype.get_class(), h5py.h5t.ARRAY)
-        
+
         out = self.f.attrs['x']
-        
+
         self.assertArrayEqual(out, data)
-        
+
     def test_string_dtype(self):
         # See issue 498 discussion
-        
+
         self.f.attrs.create('x', data=42, dtype='i8')

@@ -6,7 +6,7 @@ The h5py team is happy to announce the availability of h5py 2.5.0.
 This release introduces experimental support for the highly-anticipated
 "Single Writer Multiple Reader" (SWMR) feature in the upcoming HDF5 1.10
 release.  SWMR allows sharing of a single HDF5 file between multiple processes
-without the complexity of MPI or multiprocessing-based solutions.  
+without the complexity of MPI or multiprocessing-based solutions.
 
 This is an experimental feature that should NOT be used in production code.
 We are interested in getting feedback from the broader community with respect
@@ -42,7 +42,7 @@ Changes
 * Fixed an issue with 64-bit float VLENS
 * Cython warning cleanups related to "const"
 * Entire code base ported to "six"; 2to3 removed from setup.py
-  
+
 
 Acknowledgements
 ----------------

@@ -54,7 +54,7 @@ class TestFA(TestCase):
     def test_mdc_config(self):
         '''test get/set mdc config '''
         falist = h5p.create(h5p.FILE_ACCESS)
-    
+
         config = falist.get_mdc_config()
         falist.set_mdc_config(config)
 
@@ -114,4 +114,3 @@ class TestPL(TestCase):
         fcpl = h5p.create(h5p.FILE_CREATE)
         fcpl.set_link_creation_order(flags)
         self.assertEqual(flags, fcpl.get_link_creation_order())
-

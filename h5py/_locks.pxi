@@ -125,4 +125,3 @@ cdef inline void unlock_lock(FastRLock lock) nogil:
             pythread.PyThread_release_lock(lock._real_lock)
             lock._is_locked = False
 ## end of http://code.activestate.com/recipes/577336/ }}}
-

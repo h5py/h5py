@@ -38,14 +38,14 @@ cdef herr_t attr_rw(hid_t attr, hid_t mtype, void *progbuf, int read) except -1:
                 H5Awrite(attr, mtype, progbuf)
 
         else:
-            
+
             asize = H5Tget_size(atype)
             msize = H5Tget_size(mtype)
             aspace = H5Aget_space(attr)
             npoints = H5Sget_select_npoints(aspace)
 
             conv_buf = create_buffer(asize, msize, npoints)
-            
+
             if read:
                 need_bkg = needs_bkg_buffer(atype, mtype)
             else:
@@ -163,7 +163,7 @@ cdef herr_t dset_rw(hid_t dset, hid_t mtype, hid_t mspace, hid_t fspace,
                 H5Tconvert(mtype, dstype, npoints, conv_buf, back_buf, dxpl)
                 H5PY_H5Dwrite(dset, dstype, cspace, fspace, dxpl, conv_buf)
                 H5Dvlen_reclaim(dstype, cspace, H5P_DEFAULT, conv_buf)
- 
+
     finally:
         free(back_buf)
         free(conv_buf)
@@ -232,7 +232,7 @@ cdef hid_t make_reduced_type(hid_t mtype, hid_t dstype):
 
 
 cdef void* create_buffer(size_t ipt_size, size_t opt_size, size_t nl) except NULL:
-    
+
     cdef size_t final_size
     cdef void* buf
 
@@ -240,7 +240,7 @@ cdef void* create_buffer(size_t ipt_size, size_t opt_size, size_t nl) except NUL
         final_size = ipt_size*nl
     else:
         final_size = opt_size*nl
-        
+
     buf = malloc(final_size)
     if buf == NULL:
         raise MemoryError("Failed to allocate conversion buffer")
@@ -259,10 +259,10 @@ cdef herr_t h5py_scatter_cb(void* elem, hid_t type_id, unsigned ndim,
                 const hsize_t *point, void *operator_data) except -1:
 
     cdef h5py_scatter_t* info = <h5py_scatter_t*>operator_data
-   
-    memcpy(elem, (<char*>info[0].buf)+((info[0].i)*(info[0].elsize)), 
+
+    memcpy(elem, (<char*>info[0].buf)+((info[0].i)*(info[0].elsize)),
            info[0].elsize)
-    
+
     info[0].i += 1
 
     return 0
@@ -271,10 +271,10 @@ cdef herr_t h5py_gather_cb(void* elem, hid_t type_id, unsigned ndim,
                 const hsize_t *point, void *operator_data) except -1:
 
     cdef h5py_scatter_t* info = <h5py_scatter_t*>operator_data
-   
-    memcpy((<char*>info[0].buf)+((info[0].i)*(info[0].elsize)), elem, 
+
+    memcpy((<char*>info[0].buf)+((info[0].i)*(info[0].elsize)), elem,
             info[0].elsize)
-    
+
     info[0].i += 1
 
     return 0
@@ -306,7 +306,7 @@ cdef herr_t h5py_copy(hid_t tid, hid_t space, void* contig, void* noncontig,
 # VLEN support routines
 
 cdef htri_t needs_bkg_buffer(hid_t src, hid_t dst) except -1:
-    
+
     cdef H5T_cdata_t *info = NULL
 
     if H5Tdetect_class(src, H5T_COMPOUND) or H5Tdetect_class(dst, H5T_COMPOUND):
@@ -325,7 +325,7 @@ cdef htri_t needs_bkg_buffer(hid_t src, hid_t dst) except -1:
 
 # Determine if the given type requires proxy buffering
 cdef htri_t needs_proxy(hid_t tid) except -1:
-    
+
     cdef H5T_class_t cls
     cdef hid_t supertype
     cdef int i, n
@@ -340,7 +340,7 @@ cdef htri_t needs_proxy(hid_t tid) except -1:
         return H5Tis_variable_str(tid)
 
     elif cls == H5T_ARRAY:
-        
+
         supertype = H5Tget_super(tid)
         try:
             return needs_proxy(supertype)

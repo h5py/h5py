@@ -13,4 +13,3 @@ from _objects cimport ObjectID
 
 cdef class DatasetID(ObjectID):
     cdef object _dtype
-

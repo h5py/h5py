@@ -14,5 +14,3 @@ from h5g cimport GroupID
 
 cdef class FileID(GroupID):
     pass
-
-

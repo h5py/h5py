@@ -71,11 +71,11 @@ class ComputeThread(threading.Thread):
 
     def run(self):
         """ Perform computations and record the result to file """
-        
+
         nx, ny = self.shape
 
         arr = np.ndarray((nx,ny), dtype='i')
-        
+
         xincr = self.extent.real/nx
         yincr = self.extent.imag/ny
 
@@ -138,7 +138,7 @@ class ComputeWidget(object):
         self.startyfield = tk.Entry(entryframe)
         self.extentxfield = tk.Entry(entryframe)
         self.extentyfield = tk.Entry(entryframe)
-        
+
         nxlabel.grid(row=0, column=0, sticky=tk.E)
         nylabel.grid(row=1, column=0, sticky=tk.E)
         escapelabel.grid(row=2, column=0, sticky=tk.E)
@@ -186,13 +186,13 @@ class ComputeWidget(object):
         except (ValueError, TypeError), e:
             print e
             return
-        
+
         if t is not None:
             t.join()
 
         t = ComputeThread(self.f, (nx,ny), escape, start, extent, self.eventcall)
         t.start()
-        
+
     def suggest(self, *args):
         """ Populate the input fields with interesting locations """
 
@@ -309,4 +309,3 @@ if __name__ == '__main__':
         if t is not None:
             t.join()
         f.close()
-

@@ -22,8 +22,8 @@ Copyright Notice and Statement for the h5py Project
        documentation and/or other materials provided with the
        distribution.
 
-    c. Neither the name of the author nor the names of contributors may 
-       be used to endorse or promote products derived from this software 
+    c. Neither the name of the author nor the names of contributors may
+       be used to endorse or promote products derived from this software
        without specific prior written permission.
 
     THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
@@ -179,7 +179,7 @@ stdint.h (Windows version) License
     EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
     SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
     PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
-    OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, 
+    OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
     WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
     OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
     ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
@@ -229,4 +229,3 @@ Python license
 
 #. By copying, installing or otherwise using Python Python 2.7.5, Licensee agrees
    to be bound by the terms and conditions of this License Agreement.
-

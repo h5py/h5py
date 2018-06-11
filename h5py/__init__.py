@@ -30,7 +30,7 @@ except ImportError:
         raise ImportError("You cannot import h5py from inside the install directory.\nChange to another directory first.")
     else:
         raise
-    
+
 _errors.silence_errors()
 
 from ._conv import register_converters as _register_converters
@@ -110,7 +110,3 @@ from .h5t import py_new_vlen as new_vlen
 from .h5t import py_get_vlen as get_vlen
 from .h5t import py_new_enum as new_enum
 from .h5t import py_get_enum as get_enum
-
-
-
-

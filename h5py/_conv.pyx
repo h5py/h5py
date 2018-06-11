@@ -23,7 +23,7 @@ np.import_array()
 
 # Minimal interface for Python objects immune to Cython refcounting
 cdef extern from "Python.h":
-    
+
     # From Cython declarations
     ctypedef int PyTypeObject
     ctypedef struct PyObject:
@@ -87,7 +87,7 @@ cdef herr_t generic_converter(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
         return initop(src_id, dst_id, &(cdata[0].priv))
 
     elif command == H5T_CONV_FREE:
-        
+
         free(cdata[0].priv)
         cdata[0].priv = NULL
 
@@ -135,7 +135,7 @@ cdef herr_t generic_converter(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
     return 0
 
 # =============================================================================
-# Generic conversion 
+# Generic conversion
 
 ctypedef struct conv_size_t:
     size_t src_size
@@ -143,7 +143,7 @@ ctypedef struct conv_size_t:
     int cset
 
 cdef herr_t init_generic(hid_t src, hid_t dst, void** priv) except -1:
-    
+
     cdef conv_size_t *sizes
     sizes = <conv_size_t*>malloc(sizeof(conv_size_t))
     priv[0] = sizes
@@ -254,7 +254,7 @@ cdef int conv_str2vlen(void* ipt, void* opt, void* bkg, void* priv) except -1:
                     temp_string_len = PyBytes_Size(temp_encoded)
                 else:
                     raise TypeError("Unrecognized dataset encoding")
-                    
+
         if strlen(temp_string) != temp_string_len:
             raise ValueError("VLEN strings do not support embedded NULLs")
 
@@ -519,9 +519,9 @@ cdef int enum_int_converter_conv(hid_t src, hid_t dst, H5T_cdata_t *cdata,
     cdef char* buf = <char*>buf_i
     cdef int identical
     cdef hid_t supertype = -1
-    
+
     info = <conv_enum_t*>cdata[0].priv
-    
+
     try:
         if forward:
             supertype = H5Tget_super(src)
@@ -529,7 +529,7 @@ cdef int enum_int_converter_conv(hid_t src, hid_t dst, H5T_cdata_t *cdata,
         else:
             supertype = H5Tget_super(dst)
             identical = H5Tequal(supertype, src)
-   
+
         # Short-circuit success
         if identical:
             return 0
@@ -628,7 +628,7 @@ cdef herr_t vlen2ndarray(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
             return -2
 
     elif command == H5T_CONV_FREE:
-        
+
         pass
 
     elif command == H5T_CONV_CONV:
@@ -692,7 +692,7 @@ cdef int conv_vlen2ndarray(void* ipt, void* opt, np.dtype elem_dtype,
     if outtype.get_size() > intype.get_size():
         data = realloc(data, outtype.get_size() * in_vlen0.len)
     H5Tconvert(intype.id, outtype.id, in_vlen0.len, data, NULL, H5P_DEFAULT)
-    
+
     Py_INCREF(<PyObject*>elem_dtype)
     ndarray = PyArray_NewFromDescr(&PyArray_Type, elem_dtype, 1,
                 dims, NULL, data, flags, <object>NULL)
@@ -703,7 +703,7 @@ cdef int conv_vlen2ndarray(void* ipt, void* opt, np.dtype elem_dtype,
     # Write the new object to the buffer in-place
     in_vlen0.ptr = NULL
     memcpy(buf_obj, &ndarray_obj, sizeof(ndarray_obj))
-    
+
     return 0
 
 cdef herr_t ndarray2vlen(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
@@ -735,7 +735,7 @@ cdef herr_t ndarray2vlen(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
                 return -2
 
     elif command == H5T_CONV_FREE:
-        
+
         pass
 
     elif command == H5T_CONV_CONV:
@@ -801,9 +801,9 @@ cdef int conv_ndarray2vlen(void* ipt, void* opt,
 
     memcpy(&in_vlen[0].len, &len, sizeof(len))
     memcpy(&in_vlen[0].ptr, &data, sizeof(data))
-    
+
     return 0
-            
+
 # =============================================================================
 
 cpdef int register_converters() except -1:
@@ -815,7 +815,7 @@ cpdef int register_converters() except -1:
 
     vlstring = H5Tcopy(H5T_C_S1)
     H5Tset_size(vlstring, H5T_VARIABLE)
-    
+
     enum = H5Tenum_create(H5T_STD_I32LE)
 
     vlentype = H5Tvlen_create(H5T_STD_I32LE)

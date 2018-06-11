@@ -21,11 +21,11 @@ def mname(obj):
     """ Get the full dotted name of the test method """
     mod_name = obj.__class__.__module__.replace('h5py.tests.','')
     return "%s.%s.%s" % (mod_name, obj.__class__.__name__, obj._testMethodName)
-    
+
 
 def run_tests(verbose=False):
     """ Run tests with TextTestRunner.  Returns a TestResult instance.
-    
+
     """
     suite = ut.TestSuite()
     for m in MODULES:
@@ -37,5 +37,5 @@ def run_tests(verbose=False):
             print("S  %s (%s)" % (mname(case), reason), file=sys.stderr)
         for (case, reason) in result.expectedFailures:
             print("X  %s" % mname(case), file=sys.stderr)
-        
+
     return result

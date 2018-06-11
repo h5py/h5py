@@ -166,12 +166,3 @@ Known issues
 * There are reports of crashes related to storing object and region references.
   If this happens to you, please post on the mailing list or contact the h5py
   author directly.
-
-
-
-
-
-
-
-
-

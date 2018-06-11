@@ -49,11 +49,11 @@ class_exprs = { "ObjectID": "h5py.h5.ObjectID",
 
 
 try:
-    class_exprs = dict( 
+    class_exprs = dict(
         (re.compile(class_base % x.replace(" ",r"\s"), re.VERBOSE), y) \
         for x, y in class_exprs.iteritems() )
 except AttributeError:
-    class_exprs = dict( 
+    class_exprs = dict(
         (re.compile(class_base % x.replace(" ",r"\s"), re.VERBOSE), y) \
         for x, y in class_exprs.items() )
 
@@ -98,7 +98,7 @@ const_expr = re.compile(r"""
 (?P<post>
   \W?                         # May have trailing punctuation
   (?:$|\s+)                   # Must be followed by whitespace or end of string
-)                      
+)
 """ % const_exclude, re.VERBOSE)
 
 def replace_constant(istr, current_module):
@@ -266,4 +266,3 @@ def setup(spx):
 
     spx.connect('autodoc-process-signature', proc_sig)
     spx.connect('autodoc-process-docstring', proc_doc)
-

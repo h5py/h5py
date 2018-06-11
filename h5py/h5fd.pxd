@@ -71,4 +71,3 @@ cdef extern from "hdf5.h":
   # /* Flag for tracking allocation of space in file */
   int H5FD_LOG_ALLOC      # 0x4000
   int H5FD_LOG_ALL        # (H5FD_LOG_ALLOC|H5FD_LOG_TIME_IO|H5FD_LOG_NUM_IO|H5FD_LOG_FLAVOR|H5FD_LOG_FILE_IO|H5FD_LOG_LOC_IO)
-

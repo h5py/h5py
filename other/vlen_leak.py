@@ -87,4 +87,3 @@ if __name__ == '__main__':
     make_data(unicode)
     attr_leak()
     ds_leak()
-

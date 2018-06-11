@@ -53,7 +53,7 @@ of supported drivers and their options:
     'sec2'
         Unbuffered, optimized I/O using standard POSIX functions.
 
-    'stdio' 
+    'stdio'
         Buffered I/O using functions from stdio.h.
 
     'core'

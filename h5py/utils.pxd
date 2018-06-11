@@ -24,16 +24,3 @@ cdef int require_tuple(object tpl, int none_allowed, int size, char* name) excep
 
 cdef object create_numpy_hsize(int rank, hsize_t* dims)
 cdef object create_hsize_array(object arr)
-
-
-
-
-
-
-
-
-
-
-
-
-

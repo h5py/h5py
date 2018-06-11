@@ -30,7 +30,7 @@ class BaseAttrs(TestCase):
 
     def setUp(self):
         self.f = File(self.mktemp(), 'w')
- 
+
     def tearDown(self):
         if self.f:
             self.f.close()
@@ -103,42 +103,42 @@ class TestTypes(BaseAttrs):
     def test_float(self):
         """ Storage of floating point types """
         dtypes = tuple(np.dtype(x) for x in ('<f4','>f4','<f8','>f8'))
-        
+
         for dt in dtypes:
             data = np.ndarray((1,), dtype=dt)
             data[...] = 42.3
             self.f.attrs['x'] = data
-            out = self.f.attrs['x'] 
+            out = self.f.attrs['x']
             self.assertEqual(out.dtype, dt)
             self.assertArrayEqual(out, data)
 
     def test_complex(self):
         """ Storage of complex types """
         dtypes = tuple(np.dtype(x) for x in ('<c8','>c8','<c16','>c16'))
-        
+
         for dt in dtypes:
             data = np.ndarray((1,), dtype=dt)
             data[...] = -4.2j+35.9
             self.f.attrs['x'] = data
-            out = self.f.attrs['x'] 
+            out = self.f.attrs['x']
             self.assertEqual(out.dtype, dt)
             self.assertArrayEqual(out, data)
 
     def test_string(self):
         """ Storage of fixed-length strings """
         dtypes = tuple(np.dtype(x) for x in ('|S1', '|S10'))
-        
+
         for dt in dtypes:
             data = np.ndarray((1,), dtype=dt)
             data[...] = 'h'
             self.f.attrs['x'] = data
-            out = self.f.attrs['x'] 
+            out = self.f.attrs['x']
             self.assertEqual(out.dtype, dt)
             self.assertEqual(out[0], data[0])
 
     def test_bool(self):
         """ Storage of NumPy booleans """
-        
+
         data = np.ndarray((2,), dtype=np.bool_)
         data[...] = True, False
         self.f.attrs['x'] = data
@@ -150,7 +150,7 @@ class TestTypes(BaseAttrs):
     def test_vlen_string_array(self):
         """ Storage of vlen byte string arrays"""
         dt = h5py.special_dtype(vlen=bytes)
-        
+
         data = np.ndarray((2,), dtype=dt)
         data[...] = b"Hello", b"Hi there!  This is HDF5!"
 
@@ -257,15 +257,3 @@ class TestWriteException(BaseAttrs):
 
         with self.assertRaises(KeyError):
             self.f.attrs['x']
-
-
-
-
-
-
-
-
-
-
-
-

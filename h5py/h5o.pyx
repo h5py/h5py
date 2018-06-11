@@ -356,11 +356,3 @@ def visit(ObjectID loc not None, object func, *,
         <H5_iter_order_t>order, cfunc, <void*>visit, pdefault(lapl))
 
     return visit.retval
-
-
-
-
-
-
-
-

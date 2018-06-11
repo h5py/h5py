@@ -22,7 +22,7 @@ def read_dtypes(dataset_dtype, names):
     1. Output dataset dtype
     2. Dtype containing HDF5-appropriate description of destination
     """
-    
+
     if len(names) == 0:     # Not compound, or all fields needed
         format_dtype = dataset_dtype
 
@@ -38,7 +38,7 @@ def read_dtypes(dataset_dtype, names):
     if len(names) == 1:
         # We don't preserve the field information if only one explicitly selected.
         output_dtype = format_dtype.fields[names[0]][0]
-    
+
     else:
         output_dtype = format_dtype
 
@@ -78,7 +78,7 @@ class ScalarReadSelection(object):
     """
         Implements slicing for scalar datasets.
     """
-    
+
     def __init__(self, fspace, args):
         if args == ():
             self.mshape = None
@@ -92,15 +92,14 @@ class ScalarReadSelection(object):
 
     def __iter__(self):
         self.mspace.select_all()
-        yield self.fspace, self.mspace        
+        yield self.fspace, self.mspace
 
 def select_read(fspace, args):
     """ Top-level dispatch function for reading.
-    
+
     At the moment, only supports reading from scalar datasets.
     """
     if fspace.shape == ():
         return ScalarReadSelection(fspace, args)
 
     raise NotImplementedError()
-

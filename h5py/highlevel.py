@@ -11,7 +11,7 @@
 
 """
     This is the deprecated legacy high-level interface.
-    
+
     Everything here is canonically located at the root of the package.
     New code should import directly from there, e.g. "from h5py import File".
 """
@@ -25,5 +25,3 @@ from ._hl.group import Group, SoftLink, ExternalLink, HardLink
 from ._hl.dataset import Dataset
 from ._hl.datatype import Datatype
 from ._hl.attrs import AttributeManager
-
-

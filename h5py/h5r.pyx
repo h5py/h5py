@@ -185,13 +185,3 @@ cdef class RegionReference(Reference):
 
     def __repr__(self):
         return "<HDF5 region reference%s>" % ("" if self else " (null")
-
-
-
-
-
-
-
-
-
-
