@@ -253,9 +253,11 @@ def _get_available_ftypes():
             available_ftypes[np.dtype(ftype).itemsize].append(ftype)
 
     sorted_ftypes = []
+    seen_ftypes = set()
     for size, ftypes in sorted(available_ftypes.items()):
         for ftype in sorted(ftypes, key=cmp_ftype):
-            if ftype not in sorted_ftypes:
+            if ftype not in seen_ftypes:
+                seen_ftypes.add(ftype)
                 sorted_ftypes.append((ftype, np.finfo(ftype), size))
     return tuple(sorted_ftypes)
 
