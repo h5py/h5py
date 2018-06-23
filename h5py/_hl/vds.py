@@ -209,17 +209,16 @@ class VirtualMap(object):
 
         start_idx = tuple([ix.start for ix in self.src.slice_list])
         stride_idx = tuple([ix.step for ix in self.src.slice_list])
+        count_idx = tuple([ix.stop - ix.start for ix in self.src.slice_list])
 
         if any(ix == h5s.UNLIMITED for ix in self.src.maxshape):
-            count_idx = [1, ] * len(stride_idx)
             unlimited_index = self.src.maxshape.index(h5s.UNLIMITED)
+            count_idx = list(count_idx)
             count_idx[unlimited_index] = h5s.UNLIMITED
             count_idx = tuple(count_idx)
             bs = list(self.block_shape)
             bs[unlimited_index] = 1
             self.block_shape = tuple(bs)
-        else:
-            count_idx = (1, ) * len(stride_idx)
 
         self.src_dspace.select_hyperslab(
             start=start_idx, count=count_idx, stride=stride_idx,
@@ -260,18 +259,20 @@ def vmlist_to_kwawrgs(VMlist, fillvalue):
     for VM in VMlist:
         virt_start_idx = tuple([ix.start
                                 for ix in VM.target.slice_list])
+        virt_count_idx = tuple([ix.stop - ix.start
+                                for ix in VM.target.slice_list])
         virt_stride_index = tuple([ix.step
                                    for ix in VM.target.slice_list])
+
         if any(ix == h5s.UNLIMITED for ix in VM.target.maxshape):
-            count_idx = [1, ] * len(virt_stride_index)
             unlimited_index = VM.target.maxshape.index(h5s.UNLIMITED)
-            count_idx[unlimited_index] = h5s.UNLIMITED
-            count_idx = tuple(count_idx)
-        else:
-            count_idx = (1, ) * len(virt_stride_index)
+            virt_count_idx = list(virt_count_idx)
+            virt_count_idx[unlimited_index] = h5s.UNLIMITED
+            virt_count_idx = tuple(virt_count_idx)
+
         virt_dspace = h5s.create_simple(sh, max_sh)
         virt_dspace.select_hyperslab(start=virt_start_idx,
-                                     count=count_idx,
+                                     count=virt_count_idx,
                                      stride=virt_stride_index,
                                      block=VM.block_shape)
         vds_iter.append(VDSmap(virt_dspace,
