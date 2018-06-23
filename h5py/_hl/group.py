@@ -128,9 +128,7 @@ class Group(HLObject, MutableMappingHDF5):
             return dset
 
     if vds_support:
-        def create_virtual_dataset(self, name, vds_iter, target_dtype,
-                                   target_shape, target_maxshape,
-                                   fillvalue=None):
+        def create_virtual_dataset(self, name, virtual_target):
             """Create a new virtual dataset in this group.
 
             Creates the virtual dataset from a list of virtual maps, any
@@ -139,39 +137,25 @@ class Group(HLObject, MutableMappingHDF5):
             name
                 (str) Name of the new dataset
 
-            vds_iter
-                (iterable) Mappings between the virtual data set and
-                the source data set.  The values in this
-
-            target_dtype
-                (?) Data type of the virtual dataset
-
-            target_shape, optional
-                (tuple)  The shape of the virtual dataset.  If not specified
-                attempt to infer from the the union of targe slices in vds_iter
-
-            target_maxshape, optional
-                (tuple) The maximum shape for the virtual dataset
-
-            fillvalue
-                (Scalar) Use this value for uninitialized parts of the dataset.
+            virtual_target
+                Defines the sources for the virtual dataset
 
             """
             # create the creation property list
             dcpl = h5p.create(h5p.DATASET_CREATE)
-            if fillvalue is not None:
-                dcpl.set_fill_value(numpy.array([fillvalue]))
+            tgt = virtual_target
+            if tgt.fillvalue is not None:
+                dcpl.set_fill_value(numpy.array([tgt.fillvalue]))
 
-            virt_dspace = h5s.create_simple(target_shape, target_maxshape)
+            virt_dspace = h5s.create_simple(tgt.shape, tgt.maxshape)
 
-            for vspace, fpath, dset, src_dspace in vds_iter:
-
-                dcpl.set_virtual(vspace, fpath, dset, src_dspace)
+            for vspace, fpath, dset, src_dspace in tgt.sources:
+                dcpl.set_virtual(vspace, self._e(fpath), self._e(dset), src_dspace)
 
             with phil:
                 dset = h5d.create(self.id,
-                                  name=name,
-                                  tid=target_dtype,
+                                  name=self._e(name),
+                                  tid=h5t.py_create(tgt.dtype, logical=1),
                                   space=virt_dspace,
                                   dcpl=dcpl)
             return dset
