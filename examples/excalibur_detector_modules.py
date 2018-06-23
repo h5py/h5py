@@ -32,4 +32,4 @@ for i in range(nfiles):
 
 # Create an output file.
 with h5py.File(outfile, 'w', libver='latest') as f:
-    f.create_virtual_dataset(, target)
+    f.create_virtual_dataset(out_key, target)
