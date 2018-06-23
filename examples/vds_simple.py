@@ -15,7 +15,7 @@ for n in range(1, 5):
         d[:] = np.arange(100) + n
 
 # Assemble virtual dataset
-target = h5py.VirtualTarget((4, 100), 'i4', fillvalue=-5)
+target = h5py.VirtualTarget(shape=(4, 100), dtype='i4', fillvalue=-5)
 
 for n in range(1, 5):
     filename = "{}.h5".format(n)
