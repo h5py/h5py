@@ -204,6 +204,27 @@ class TestPercivalHighLevel(ut.TestCase):
             self.assertEqual(ds.shape, (79,200,200),)
             assert_array_equal(line, foo)
 
+    def test_percival_source_from_dataset(self):
+        outfile = osp.join(self.working_dir,  'percival.h5')
+
+        # Virtual target is a representation of the output dataset
+        target = h5.VirtualTarget(shape=(79, 200, 200), dtype=np.float, fillvalue=-5)
+        for k, filename in enumerate(self.fname):
+            with h5.File(filename, 'r') as f:
+                vsource = h5.VirtualSource(f['data'])
+                target[k:79:4, :, :] = vsource
+
+        # Create the virtual dataset file
+        with h5.File(outfile, 'w', libver='latest') as f:
+            f.create_virtual_dataset('data', target)
+
+        foo = np.array(2 * list(range(4)))
+        with h5.File(outfile,'r') as f:
+            ds = f['data']
+            line = ds[:8,100,100]
+            self.assertEqual(ds.shape, (79,200,200),)
+            assert_array_equal(line, foo)
+
     def tearDown(self):
         shutil.rmtree(self.working_dir)
 
