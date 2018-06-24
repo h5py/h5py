@@ -1,7 +1,7 @@
 from copy import deepcopy as copy
 from collections import namedtuple
 from .selections import SimpleSelection
-from .. import h5s, h5t, h5
+from .. import h5s, h5
 from .. import version
 
 
