@@ -245,7 +245,7 @@ class SlicingTestCase(ut.TestCase):
         target = h5.VirtualTarget((4, 100), 'i4', fillvalue=-5)
 
         for n in range(1, 5):
-            filename = "{}.h5".format(n)
+            filename = osp.join(self.tmpdir, "{}.h5".format(n))
             vsource = h5.VirtualSource(filename, 'data', shape=(100,))
             # Fill the first half with positions 0, 2, 4... from the source
             target[n - 1, :50] = vsource[0:100:2]
