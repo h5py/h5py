@@ -23,4 +23,3 @@ target[(in_sh[0] + gap):(2 * in_sh[0] + gap + 1):1, :, :] = vsource2
 # Create an output file
 with h5py.File('outfile.h5', 'w', libver='latest') as f:
     f.create_virtual_dataset('data', target)
-
