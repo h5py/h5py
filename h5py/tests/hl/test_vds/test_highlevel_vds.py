@@ -228,6 +228,8 @@ class TestPercivalHighLevel(ut.TestCase):
     def tearDown(self):
         shutil.rmtree(self.working_dir)
 
+@ut.skipUnless(vds_support,
+               'VDS requires HDF5 >= 1.9.233')
 class SlicingTestCase(ut.TestCase):
 
     def setUp(self):
