@@ -252,15 +252,20 @@ class SlicingTestCase(ut.TestCase):
             # Fill the second half with places 1, 3, 5... from the source
             target[n - 1, 50:] = vsource[1:100:2]
 
+        outfile = osp.join(self.tmpdir, 'VDS.h5')
+
         # Add virtual dataset to output file
-        with h5.File("VDS.h5", 'w', libver='latest') as f:
+        with h5.File(outfile, 'w', libver='latest') as f:
             f.create_virtual_dataset('data', target)
 
-        with h5.File("VDS.h5", 'r') as f:
+        with h5.File(outfile, 'r') as f:
             assert_array_equal(f['data'][0][:3], [1, 3, 5])
             assert_array_equal(f['data'][0][50:53], [2, 4, 6])
             assert_array_equal(f['data'][3][:3], [4, 6, 8])
             assert_array_equal(f['data'][3][50:53], [5, 7, 9])
+
+    def tearDown(self):
+        shutil.rmtree(self.tmpdir)
 
 if __name__ == "__main__":
     ut.main()
