@@ -150,7 +150,8 @@ class Group(HLObject, MutableMappingHDF5):
             virt_dspace = h5s.create_simple(tgt.shape, tgt.maxshape)
 
             for vspace, fpath, dset, src_dspace in tgt.sources:
-                dcpl.set_virtual(vspace, self._e(fpath), self._e(dset), src_dspace)
+                fn = filename_encode(fpath)
+                dcpl.set_virtual(vspace, fn, self._e(dset), src_dspace)
 
             with phil:
                 dset = h5d.create(self.id,
