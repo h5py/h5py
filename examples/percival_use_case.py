@@ -9,7 +9,7 @@ dtype = h5py.File('raw_file_1.h5')['data'].dtype
 outshape = (799,2000,2000)
 
 # Virtual target is a representation of the output dataset
-target = h5py.VirtualTarget(shape=outshape, dtype=dtype, fillvalue=0x1)
+layout = h5py.VirtualLayout(shape=outshape, dtype=dtype)
 
 # Sources represent the input datasets
 vsource1 = h5py.VirtualSource('raw_file_1.h5', 'data', shape=(200, 2000, 2000))
@@ -18,11 +18,11 @@ vsource3 = h5py.VirtualSource('raw_file_3.h5', 'data', shape=(200, 2000, 2000))
 vsource4 = h5py.VirtualSource('raw_file_4.h5', 'data', shape=(199, 2000, 2000))
 
 # Map the inputs into the virtual dataset
-target[0:799:4, :, :] = vsource1
-target[1:799:4, :, :] = vsource2
-target[2:799:4, :, :] = vsource3
-target[3:799:4, :, :] = vsource4
+layout[0:799:4, :, :] = vsource1
+layout[1:799:4, :, :] = vsource2
+layout[2:799:4, :, :] = vsource3
+layout[3:799:4, :, :] = vsource4
 
 # Create an output file
 with h5py.File('full_time_series.h5', 'w', libver='latest') as f:
-    f.create_virtual_dataset(in_key, target)
+    f.create_virtual_dataset(in_key, layout, fillvalue=0x1)

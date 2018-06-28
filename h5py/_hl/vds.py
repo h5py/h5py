@@ -82,7 +82,7 @@ class VirtualSource(object):
         tmp.sel = SimpleSelection(self.shape)[key]
         return tmp
 
-class VirtualTarget(object):
+class VirtualLayout(object):
     """Object for building a virtual dataset.
 
     Instantiate this class to define a virtual dataset, assign to slices of it
@@ -100,11 +100,10 @@ class VirtualTarget(object):
         The source dataset is resizable up to this shape. Use None for
         axes you want to be unlimited.
     """
-    def __init__(self, shape, dtype=None, maxshape=None, fillvalue=None):
+    def __init__(self, shape, dtype=None, maxshape=None):
         self.shape = shape
         self.dtype = dtype
         self.maxshape = maxshape
-        self.fillvalue = fillvalue
         self.sources = []
 
     def __setitem__(self, key, source):

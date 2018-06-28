@@ -36,28 +36,28 @@ Creating virtual datasets in h5py
 
 To make a virtual dataset using h5py, you need to:
 
-1. Create a ``VirtualTarget`` object representing the dimensions and data type
+1. Create a ``VirtualLayout`` object representing the dimensions and data type
    of the virtual dataset.
 2. Create a number of ``VirtualSource`` objects, representing the datasets the
    array will be built from. ``VirtualSource`` objects can be created either
    from an h5py :class:`Dataset`, or from a filename, dataset name and shape.
    This can be done even before the file exists.
-3. Map slices from the sources into the target.
-4. Convert the ``VirtualTarget`` object into a virtual dataset in an HDF5 file.
+3. Map slices from the sources into the layout.
+4. Convert the ``VirtualLayout`` object into a virtual dataset in an HDF5 file.
 
 The following snippet creates a virtual dataset to stack
 together four 1D datasets from separate files into a 2D dataset::
 
-    target = h5py.VirtualTarget(shape=(4, 100), dtype='i4', fillvalue=-5)
+    layout = h5py.VirtualLayout(shape=(4, 100), dtype='i4')
 
     for n in range(1, 5):
         filename = "{}.h5".format(n)
         vsource = h5py.VirtualSource(filename, 'data', shape=(100,))
-        target[n - 1] = vsource
+        layout[n - 1] = vsource
 
     # Add virtual dataset to output file
     with h5py.File("VDS.h5", 'w', libver='latest') as f:
-        f.create_virtual_dataset('data', target)
+        f.create_virtual_dataset('data', layout, fillvalue=-5)
 
 This is an extract from the ``vds_simple.py`` example in the examples folder.
 

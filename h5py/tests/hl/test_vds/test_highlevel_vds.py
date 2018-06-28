@@ -33,7 +33,7 @@ class TestEigerHighLevel(ut.TestCase):
 
     def test_eiger_high_level(self):
         outfile = osp.join(self.working_dir, 'eiger.h5')
-        target = h5.VirtualTarget(shape=(78, 200, 200), dtype=float, fillvalue=45)
+        layout = h5.VirtualLayout(shape=(78, 200, 200), dtype=float)
 
         M_minus_1 = 0
         # Create the virtual dataset file
@@ -44,9 +44,9 @@ class TestEigerHighLevel(ut.TestCase):
                 in_data.file.close()
                 M = M_minus_1 + src_shape[0]
                 vsource = h5.VirtualSource(foo, 'data', shape=src_shape)
-                target[M_minus_1:M, :, :] = vsource
+                layout[M_minus_1:M, :, :] = vsource
                 M_minus_1 = M
-            f.create_virtual_dataset('data', target)
+            f.create_virtual_dataset('data', layout, fillvalue=45)
 
         f = h5.File(outfile, 'r')['data']
         self.assertEqual(f[10, 100, 10], 0.0)
@@ -129,17 +129,17 @@ class TestExcaliburHighLevel(ut.TestCase):
         height = (in_sh[1]*nfiles) + (vertical_gap*(nfiles-1))
         out_sh = (nframes, height, width)
 
-        # Virtual target is a representation of the output dataset
-        target = h5.VirtualTarget(shape=out_sh, dtype=dtype, fillvalue=0x1)
+        # Virtual layout is a representation of the output dataset
+        layout = h5.VirtualLayout(shape=out_sh, dtype=dtype)
         offset = 0 # initial offset
         for i, filename in enumerate(self.fname):
             # A representation of the input dataset
             vsource = h5.VirtualSource(filename, in_key, shape=in_sh)
-            target[:, offset:(offset + in_sh[1]), :] = vsource # map them with indexing
+            layout[:, offset:(offset + in_sh[1]), :] = vsource # map them with indexing
             offset += in_sh[1] + vertical_gap # increment the offset
 
         # pass the fill value and list of maps
-        f.create_virtual_dataset('data', target)
+        f.create_virtual_dataset('data', layout, fillvalue=0x1)
         f.close()
 
         f = h5.File(outfile,'r')['data']
@@ -186,16 +186,16 @@ class TestPercivalHighLevel(ut.TestCase):
     def test_percival_high_level(self):
         outfile = osp.join(self.working_dir,  'percival.h5')
 
-        # Virtual target is a representation of the output dataset
-        target = h5.VirtualTarget(shape=(79, 200, 200), dtype=np.float, fillvalue=-5)
+        # Virtual layout is a representation of the output dataset
+        layout = h5.VirtualLayout(shape=(79, 200, 200), dtype=np.float)
         for k, filename in enumerate(self.fname):
             dim1 = 19 if k == 3 else 20
             vsource = h5.VirtualSource(filename, 'data',shape=(dim1, 200, 200))
-            target[k:79:4, :, :] = vsource[:, :, :]
+            layout[k:79:4, :, :] = vsource[:, :, :]
 
         # Create the virtual dataset file
         with h5.File(outfile, 'w', libver='latest') as f:
-            f.create_virtual_dataset('data', target)
+            f.create_virtual_dataset('data', layout, fillvalue=-5)
 
         foo = np.array(2 * list(range(4)))
         with h5.File(outfile,'r') as f:
@@ -207,16 +207,16 @@ class TestPercivalHighLevel(ut.TestCase):
     def test_percival_source_from_dataset(self):
         outfile = osp.join(self.working_dir,  'percival.h5')
 
-        # Virtual target is a representation of the output dataset
-        target = h5.VirtualTarget(shape=(79, 200, 200), dtype=np.float, fillvalue=-5)
+        # Virtual layout is a representation of the output dataset
+        layout = h5.VirtualLayout(shape=(79, 200, 200), dtype=np.float)
         for k, filename in enumerate(self.fname):
             with h5.File(filename, 'r') as f:
                 vsource = h5.VirtualSource(f['data'])
-                target[k:79:4, :, :] = vsource
+                layout[k:79:4, :, :] = vsource
 
         # Create the virtual dataset file
         with h5.File(outfile, 'w', libver='latest') as f:
-            f.create_virtual_dataset('data', target)
+            f.create_virtual_dataset('data', layout, fillvalue=-5)
 
         foo = np.array(2 * list(range(4)))
         with h5.File(outfile,'r') as f:
@@ -242,21 +242,21 @@ class SlicingTestCase(ut.TestCase):
 
     def test_slice_source(self):
         # Assemble virtual dataset
-        target = h5.VirtualTarget((4, 100), 'i4', fillvalue=-5)
+        layout = h5.VirtualLayout((4, 100), 'i4')
 
         for n in range(1, 5):
             filename = osp.join(self.tmpdir, "{}.h5".format(n))
             vsource = h5.VirtualSource(filename, 'data', shape=(100,))
             # Fill the first half with positions 0, 2, 4... from the source
-            target[n - 1, :50] = vsource[0:100:2]
+            layout[n - 1, :50] = vsource[0:100:2]
             # Fill the second half with places 1, 3, 5... from the source
-            target[n - 1, 50:] = vsource[1:100:2]
+            layout[n - 1, 50:] = vsource[1:100:2]
 
         outfile = osp.join(self.tmpdir, 'VDS.h5')
 
         # Add virtual dataset to output file
         with h5.File(outfile, 'w', libver='latest') as f:
-            f.create_virtual_dataset('data', target)
+            f.create_virtual_dataset('data', layout, fillvalue=-5)
 
         with h5.File(outfile, 'r') as f:
             assert_array_equal(f['data'][0][:3], [1, 3, 5])

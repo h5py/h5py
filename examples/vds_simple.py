@@ -15,15 +15,15 @@ for n in range(1, 5):
         d[:] = np.arange(100) + n
 
 # Assemble virtual dataset
-target = h5py.VirtualTarget(shape=(4, 100), dtype='i4', fillvalue=-5)
+layout = h5py.VirtualLayout(shape=(4, 100), dtype='i4')
 
 for n in range(1, 5):
     filename = "{}.h5".format(n)
     vsource = h5py.VirtualSource(filename, 'data', shape=(100,))
-    target[n - 1] = vsource
+    layout[n - 1] = vsource
 
 # Add virtual dataset to output file
 with h5py.File("VDS.h5", 'w', libver='latest') as f:
-    f.create_virtual_dataset('data', target)
+    f.create_virtual_dataset('data', layout, fillvalue=-5)
     print("Virtual dataset:")
     print(f['data'][:, :10])

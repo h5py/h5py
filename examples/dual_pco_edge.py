@@ -15,11 +15,11 @@ gap = 10
 vsource1 = h5py.VirtualSource('raw_file_1.h5', 'data', shape=in_sh)
 vsource2 = h5py.VirtualSource('raw_file_2.h5', 'data', shape=in_sh)
 # target is where we layout the virtual dataset
-target = h5py.VirtualTarget((in_sh[0], 2 * in_sh[1] + gap, in_sh[3]),
-                            dtype=dtype, fillvalue=0x1)
-target[0:in_sh[0]:1, :, :] = vsource1
-target[(in_sh[0] + gap):(2 * in_sh[0] + gap + 1):1, :, :] = vsource2
+layout = h5py.VirtualLayout((in_sh[0], 2 * in_sh[1] + gap, in_sh[3]),
+                            dtype=dtype)
+layout[0:in_sh[0]:1, :, :] = vsource1
+layout[(in_sh[0] + gap):(2 * in_sh[0] + gap + 1):1, :, :] = vsource2
 
 # Create an output file
 with h5py.File('outfile.h5', 'w', libver='latest') as f:
-    f.create_virtual_dataset('data', target)
+    f.create_virtual_dataset('data', layout, fillvalue=0x1)

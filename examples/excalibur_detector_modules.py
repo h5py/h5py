@@ -22,14 +22,14 @@ height = (in_sh[1]*nfiles) + (vertical_gap*(nfiles-1))
 out_sh = (nframes, height, width)
 
 # Virtual target is a representation of the output dataset
-target = h5py.VirtualTarget(shape=out_sh, dtype=dtype, fillvalue=0x1)
+layout = h5py.VirtualLayout(shape=out_sh, dtype=dtype)
 offset = 0 # initial offset
 for i in range(nfiles):
     print("frame_number is: %s" % str(i)) # for feedback
     vsource = h5py.VirtualSource(raw_files[i], in_key, shape=in_sh) #a representation of the input dataset
-    target[:, offset:(offset + in_sh[1]), :] = vsource
+    layout[:, offset:(offset + in_sh[1]), :] = vsource
     offset += in_sh[1]+vertical_gap # increment the offset
 
 # Create an output file.
 with h5py.File(outfile, 'w', libver='latest') as f:
-    f.create_virtual_dataset(out_key, target)
+    f.create_virtual_dataset(out_key, layout, fillvalue=0x1)

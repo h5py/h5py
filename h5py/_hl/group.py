@@ -128,7 +128,7 @@ class Group(HLObject, MutableMappingHDF5):
             return dset
 
     if vds_support:
-        def create_virtual_dataset(self, name, virtual_target):
+        def create_virtual_dataset(self, name, layout, fillvalue=None):
             """Create a new virtual dataset in this group.
 
             Creates the virtual dataset from a list of virtual maps, any
@@ -143,20 +143,19 @@ class Group(HLObject, MutableMappingHDF5):
             """
             # create the creation property list
             dcpl = h5p.create(h5p.DATASET_CREATE)
-            tgt = virtual_target
-            if tgt.fillvalue is not None:
-                dcpl.set_fill_value(numpy.array([tgt.fillvalue]))
+            if fillvalue is not None:
+                dcpl.set_fill_value(numpy.array([fillvalue]))
 
-            virt_dspace = h5s.create_simple(tgt.shape, tgt.maxshape)
+            virt_dspace = h5s.create_simple(layout.shape, layout.maxshape)
 
-            for vspace, fpath, dset, src_dspace in tgt.sources:
+            for vspace, fpath, dset, src_dspace in layout.sources:
                 fn = filename_encode(fpath)
                 dcpl.set_virtual(vspace, fn, self._e(dset), src_dspace)
 
             with phil:
                 dset = h5d.create(self.id,
                                   name=self._e(name),
-                                  tid=h5t.py_create(tgt.dtype, logical=1),
+                                  tid=h5t.py_create(layout.dtype, logical=1),
                                   space=virt_dspace,
                                   dcpl=dcpl)
             return dset
