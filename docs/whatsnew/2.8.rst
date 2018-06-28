@@ -1,0 +1,81 @@
+What's new in h5py 2.8
+======================
+
+This is the first release of the h5py 2.8 series. Note that the 2.8 series is
+the last series of h5py to support Python 2.6 and 3.3. Users should look to
+moving to Python 2.7 or (preferably) Python 3.4 or higher, as earlier releases
+are now outside of security support.
+
+API changes
+-----------
+* Deprecation of ``h5t.available_ftypes``.  This is no longer used internally
+  and will be removed in the future.  There is no replacement public API. See
+  :issue:`926` for how to add addition floating point types to h5py.
+* Do not sort fields in compound types (:issue:`970` by James Tocknell).  This
+  is to account for changes in numpy 1.14.
+* Minimum required version of Cython is now 0.23.
+
+Features
+--------
+* Allow registration of new file drivers (:issue:`956` by Joe Jevnik).
+* Add option to track object creation order to ``Group.create_group``
+  (:issue:`968` by Chen Yufei)
+
+Bug fixes
+---------
+* Support slices with stop < start as empty slices (:issue:`924` by Joe Jevnik)
+* Avoid crashing the IPython auto-completer when missing key (:issue:`885`,
+  :issue:`958` by James Tocknell). The auto-completer currently only works on
+  older versions of IPython, see :issue:`1022` for what's needed to support
+  newer versions of IPython/jupyter (PRs welcome!)
+* Set libver default to 'earliest' (a.k.a LIBVER_EARLIEST) as previously
+  documented (:issue:`933`, :issue:`936` by James Tocknell)
+* Fix conflict between fletcher32 and szip compression when using the float64
+  dtype (:issue:`953`, :issue:`989`, by Paul Müller).
+* Update floating point type handling as flagged by numpy deprecation warning
+  (:issue:`985`, by Eric Larson)
+* Allow ExternalLinks to use non-ASCII hdf5 paths (:issue:`333`, :issue:`952` by
+  James Tocknell)
+* Prefer custom HDF5 over pkg-config/fallback paths when building/installing
+  (:issue:`946`, :issue:`947` by Lars Viklund)
+* Fix compatibility with Python 3 in document generation (:issue:`921`
+  by Ghislain Antony Vaillant)
+* Fix spelling and grammar in documentation (:issue:`931` by Michael V.
+  DePalatis, :issue:`950` by Christian Sachs, :issue:`1015` by Mikhail)
+* Add minor changes to documentation in order to improve clarity and warn about
+  potential problems (:issue:`528`, :issue:`783`, :issue:`829`, :issue:`849`,
+  :issue:`911`, :issue:`959`, by James Tocknell)
+* Add license field to ``setup.py`` metadata (:issue:`999` by Nils Werner).
+* Use system encoding for errors, not utf-8 (:issue:`1016`, :issue:`1025` by
+  James Tocknell)
+* Add ``write_direct`` to the documentation (:issue:`1028` by Sajid Ali and
+  Thomas A Caswell)
+
+Wheels HDF5 Version
+-------------------
+* Wheels uploaded to PyPI will now be built against the HDF5 1.10 series as
+  opposed to the 1.8 series (h5py 2.8 is built against HDF5 1.10.2).
+
+CI/Testing improvements and fixes
+---------------------------------
+There were a number of improvements to testing and CI systems of h5py, including
+running the CI against multiple versions of HDF5, improving reliability and
+speed of the CIs, and simplifying the tox file. See :issue:`857`, :issue:`894`,
+:issue:`922`, :issue:`954` and :issue:`962` by Thomas A Caswell and James
+Tocknell for more details.
+
+Other changes
+-------------
+* Emphasise reading from HDF5 files rather than writing to files in Quickguide
+  (:issue:`609`, :issue:`610` by Yu Feng). Note these changes were in the 2.5
+  branch, but never got merged into master. The h5py 2.8 release now actually
+  includes these changes.
+* Use lazy-loading of run_tests to avoid strong dependency on unittest2
+  (:issue:`1013`, :issue:`1014` by Thomas VINCENT)
+* Correctly handle with multiple float types of the same size (:issue:`926`
+  by James Tocknell)
+
+Acknowledgements and Thanks
+---------------------------
+The h5py developers thank Nathan Goldbaum, Matthew Brett, and Christoph Gohlke
+for building the wheels that appear on PyPI.
