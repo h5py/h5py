@@ -134,9 +134,9 @@ class TestFileObj(TestCase):
     def test_BytesIO(self):
         with io.BytesIO() as fileobj:
             f = h5py.File(fileobj)
-            self.assertEquals(fileobj.getbuffer().nbytes, 0)
+            self.assertEquals(len(fileobj.getvalue()), 0)
             f.create_dataset('test', data=list(range(12)))
-            self.assertGreater(fileobj.getbuffer().nbytes, 0)
+            self.assertGreater(len(fileobj.getvalue()), 0)
             self.assertEqual(list(f), ['test'])
             self.assertEqual(list(f['test'][:]), list(range(12)))
             f.close()
