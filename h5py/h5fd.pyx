@@ -124,7 +124,7 @@ cdef herr_t H5FD_fileobj_read(H5FD_fileobj_t *f, H5FD_mem_t type, hid_t dxpl, ha
 
 cdef herr_t H5FD_fileobj_write(H5FD_fileobj_t *f, H5FD_mem_t type, hid_t dxpl, haddr_t addr, size_t size, const void *buf):
     (<object>f.fileobj).seek(addr)
-    (<object>f.fileobj).write(bytes(<const unsigned char[:size]>buf))
+    (<object>f.fileobj).write(bytearray(<const char[:size]>buf))
     return 0
 
 cdef herr_t H5FD_fileobj_truncate(H5FD_fileobj_t *f, hid_t dxpl, hbool_t closing):
