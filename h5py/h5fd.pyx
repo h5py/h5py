@@ -77,3 +77,79 @@ LOG_TIME_IO   = H5FD_LOG_TIME_IO    # (H5FD_LOG_TIME_OPEN|H5FD_LOG_TIME_READ|H5F
 # Flag for tracking allocation of space in file
 LOG_ALLOC     = H5FD_LOG_ALLOC      # 0x4000
 LOG_ALL       = H5FD_LOG_ALL        # (H5FD_LOG_ALLOC|H5FD_LOG_TIME_IO|H5FD_LOG_NUM_IO|H5FD_LOG_FLAVOR|H5FD_LOG_FILE_IO|H5FD_LOG_LOC_IO)
+
+
+# H5FD_t of file-like object
+ctypedef struct H5FD_fileobj_t:
+  H5FD_t base
+  PyObject* fileobj
+  haddr_t eoa
+
+
+from cpython cimport Py_INCREF, Py_DECREF
+from libc.stdint cimport *
+from libc.stdio cimport *
+
+
+cdef H5FD_fileobj_t *H5FD_fileobj_open(const char *name, unsigned flags, hid_t fapl, haddr_t maxaddr):
+    cdef H5FD_fileobj_t *f = <H5FD_fileobj_t *>malloc(sizeof(H5FD_fileobj_t))
+    cdef uintptr_t p
+    sscanf(name, "%lx", &p)
+    f.fileobj = <PyObject*>p
+    Py_INCREF(<object>f.fileobj)
+    f.eoa = 0
+    return f
+
+cdef herr_t H5FD_fileobj_close(H5FD_fileobj_t *f):
+    Py_DECREF(<object>f.fileobj)
+    return 0
+
+cdef haddr_t H5FD_fileobj_get_eoa(const H5FD_fileobj_t *f, H5FD_mem_t type):
+    return f.eoa
+
+cdef herr_t H5FD_fileobj_set_eoa(H5FD_fileobj_t *f, H5FD_mem_t type, haddr_t addr):
+    f.eoa = addr
+    return 0
+
+cdef haddr_t H5FD_fileobj_get_eof(const H5FD_fileobj_t *f, H5FD_mem_t type):
+    (<object>f.fileobj).seek(0, SEEK_END)
+    return (<object>f.fileobj).tell()
+
+cdef herr_t H5FD_fileobj_read(H5FD_fileobj_t *f, H5FD_mem_t type, hid_t dxpl, haddr_t addr, size_t size, void *buf):
+    (<object>f.fileobj).seek(addr)
+    cdef b = (<object>f.fileobj).read(size)
+    cdef const unsigned char[:] mview = b
+    memcpy(buf, &mview[0], size)
+    return 0
+
+cdef herr_t H5FD_fileobj_write(H5FD_fileobj_t *f, H5FD_mem_t type, hid_t dxpl, haddr_t addr, size_t size, const void *buf):
+    (<object>f.fileobj).seek(addr)
+    (<object>f.fileobj).write(bytes(<const unsigned char[:size]>buf))
+    return 0
+
+cdef herr_t H5FD_fileobj_truncate(H5FD_fileobj_t *f, hid_t dxpl, hbool_t closing):
+    (<object>f.fileobj).truncate(f.eoa)
+    return 0
+
+cdef herr_t H5FD_fileobj_flush(H5FD_fileobj_t *f, hid_t dxpl, hbool_t closing):
+    (<object>f.fileobj).flush()
+    return 0
+
+
+cdef H5FD_class_t info
+memset(&info, 0, sizeof(info))
+
+info.name = 'fileobj'
+info.maxaddr = SIZE_MAX - 1
+info.fc_degree = H5F_CLOSE_WEAK
+info.open = <H5FD_t *(*)(const char *name, unsigned flags, hid_t fapl, haddr_t maxaddr)>H5FD_fileobj_open
+info.close = <herr_t (*)(H5FD_t *)>H5FD_fileobj_close
+info.get_eoa = <haddr_t (*)(const H5FD_t *, H5FD_mem_t)>H5FD_fileobj_get_eoa
+info.set_eoa = <herr_t (*)(H5FD_t *, H5FD_mem_t, haddr_t)>H5FD_fileobj_set_eoa
+info.get_eof = <haddr_t (*)(const H5FD_t *, H5FD_mem_t)>H5FD_fileobj_get_eof
+info.read = <herr_t (*)(H5FD_t *, H5FD_mem_t, hid_t, haddr_t, size_t, void *)>H5FD_fileobj_read
+info.write = <herr_t (*)(H5FD_t *, H5FD_mem_t, hid_t, haddr_t, size_t, const void *)>H5FD_fileobj_write
+info.truncate = <herr_t (*)(H5FD_t *, hid_t, hbool_t)>H5FD_fileobj_truncate
+info.flush = <herr_t (*)(H5FD_t *, hid_t, hbool_t)>H5FD_fileobj_flush
+
+fileobj_driver = H5FDregister(&info)

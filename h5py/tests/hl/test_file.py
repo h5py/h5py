@@ -18,6 +18,7 @@ from h5py._hl.files import _drivers
 
 from ..common import ut, TestCase
 
+import io
 
 def nfiles():
     return h5py.h5f.get_obj_count(h5py.h5f.OBJ_ALL, h5py.h5f.OBJ_FILE)
@@ -127,3 +128,42 @@ class TestCache(TestCase):
         f = h5py.File(fname, 'w', rdcc_w0=0.25)
         self.assertEqual(list(f.id.get_access_plist().get_cache()),
                          [0, 521, 1048576, 0.25])
+
+
+class TestFileObj(TestCase):
+    def test_BytesIO(self):
+        with io.BytesIO() as fileobj:
+            f = h5py.File(fileobj)
+            self.assertEquals(fileobj.getbuffer().nbytes, 0)
+            f.create_dataset('test', data=list(range(12)))
+            self.assertGreater(fileobj.getbuffer().nbytes, 0)
+            self.assertEqual(list(f), ['test'])
+            self.assertEqual(list(f['test'][:]), list(range(12)))
+            f.close()
+
+            f = h5py.File(fileobj, 'r')
+            self.assertEqual(list(f), ['test'])
+            self.assertEqual(list(f['test'][:]), list(range(12)))
+            self.assertRaises(Exception, f.create_dataset, 'another.test', data=list(range(3)))
+            f.close()
+
+    def test_file(self):
+        fname = self.mktemp()
+        with open(fname, 'wb+') as fileobj:
+            f = h5py.File(fileobj)
+            f.create_dataset('test', data=list(range(12)))
+            self.assertEqual(list(f), ['test'])
+            self.assertEqual(list(f['test'][:]), list(range(12)))
+            f.close()
+
+            f = h5py.File(fileobj, 'r')
+            self.assertEqual(list(f), ['test'])
+            self.assertEqual(list(f['test'][:]), list(range(12)))
+            self.assertRaises(Exception, f.create_dataset, 'another.test', data=list(range(3)))
+            f.close()
+
+        with open(fname, 'rb') as fileobj:
+            f = h5py.File(fileobj, 'r')
+            self.assertEqual(list(f), ['test'])
+            self.assertEqual(list(f['test'][:]), list(range(12)))
+            f.close()
