@@ -217,7 +217,7 @@ cdef extern from "hdf5.h":
     herr_t  (*truncate)(H5FD_t *file, hid_t dxpl_id, hbool_t closing)
     herr_t  (*lock)(H5FD_t *file, hbool_t rw)
     herr_t  (*unlock)(H5FD_t *file)
-    H5FD_mem_t fl_map[7]  # FIXME: H5FD_mem_t.H5FD_MEM_NTYPES
+    H5FD_mem_t fl_map[<int>H5FD_MEM_NTYPES]
 
   # The main datatype for each driver
   ctypedef struct H5FD_t:
