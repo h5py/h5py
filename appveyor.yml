@@ -98,49 +98,6 @@ environment:
       HDF5_DIR: "C:\\hdf5\\%HDF5_VERSION%\\%HDF5_VSVERSION%"
       HDF5_VERSION: "1.10.1"
 
-    ### USING HDF5 1.10 ###
-    - PYTHON: "C:\\Python27"
-      TOXENV: "py27-test-deps"
-      TOXPYTHON: "%PYTHON%\\python.exe"
-      HDF5_VSVERSION: "9"
-      HDF5_DIR: "C:\\hdf5\\%HDF5_VERSION%\\%HDF5_VSVERSION%"
-      HDF5_VERSION: "1.10.1"
-
-    - PYTHON: "C:\\Python35"
-      TOXENV: "py35-test-deps"
-      TOXPYTHON: "%PYTHON%\\python.exe"
-      HDF5_VSVERSION: "14"
-      HDF5_DIR: "C:\\hdf5\\%HDF5_VERSION%\\%HDF5_VSVERSION%"
-      HDF5_VERSION: "1.10.1"
-
-    - PYTHON: "C:\\Python36"
-      TOXENV: "py36-test-deps"
-      TOXPYTHON: "%PYTHON%\\python.exe"
-      HDF5_VSVERSION: "14"
-      HDF5_DIR: "C:\\hdf5\\%HDF5_VERSION%\\%HDF5_VSVERSION%"
-      HDF5_VERSION: "1.10.1"
-
-    - PYTHON: "C:\\Python27-x64"
-      TOXENV: "py27-test-deps"
-      TOXPYTHON: "%PYTHON%\\python.exe"
-      HDF5_VSVERSION: "9-64"
-      HDF5_DIR: "C:\\hdf5\\%HDF5_VERSION%\\%HDF5_VSVERSION%"
-      HDF5_VERSION: "1.10.1"
-
-    - PYTHON: "C:\\Python35-x64"
-      TOXENV: "py35-test-deps"
-      TOXPYTHON: "%PYTHON%\\python.exe"
-      HDF5_VSVERSION: "14-64"
-      HDF5_DIR: "C:\\hdf5\\%HDF5_VERSION%\\%HDF5_VSVERSION%"
-      HDF5_VERSION: "1.10.1"
-
-    - PYTHON: "C:\\Python36-x64"
-      TOXENV: "py36-test-deps"
-      TOXPYTHON: "%PYTHON%\\python.exe"
-      HDF5_VSVERSION: "14-64"
-      HDF5_DIR: "C:\\hdf5\\%HDF5_VERSION%\\%HDF5_VSVERSION%"
-      HDF5_VERSION: "1.10.1"
-
 install:
   # We need wheel installed to build wheels
   - "%PYTHON%\\python.exe -m pip install --upgrade wheel pip setuptools"
