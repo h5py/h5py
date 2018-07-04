@@ -79,12 +79,32 @@ LOG_ALLOC     = H5FD_LOG_ALLOC      # 0x4000
 LOG_ALL       = H5FD_LOG_ALL        # (H5FD_LOG_ALLOC|H5FD_LOG_TIME_IO|H5FD_LOG_NUM_IO|H5FD_LOG_FLAVOR|H5FD_LOG_FILE_IO|H5FD_LOG_LOC_IO)
 
 
+# Implementation of 'fileobj' Virtual File Driver: HDF5 Virtual File
+# Layer wrapper over Python file-like object.
+# https://support.hdfgroup.org/HDF5/doc1.8/TechNotes/VFL.html
+
+# HDF5 events (read, write, flush, ...) are dispatched via
+# H5FD_class_t (struct of callback pointers, H5FD_fileobj_*). This is
+# registered as the handler for 'fileobj' driver via H5FDregister.
+
+# H5FD_fileobj_open callback acts first, expecting "filename" from
+# Python side in form
+#   hex(id(file)).encode('ASCII')
+# and retruning struct H5FD_fileobj_t (descendant of base H5FD_t)
+# which will hold file state. Other callbacks receive H5FD_fileobj_t
+# and operate on f.fileobj. If successful, callbacks must return zero;
+# otherwize non-zero value.
+
+
 # H5FD_t of file-like object
 ctypedef struct H5FD_fileobj_t:
-  H5FD_t base
+  H5FD_t base  # must be first
   PyObject* fileobj
   haddr_t eoa
 
+
+# A minimal subset of callbacks is implemented. Non-essential
+# parameters (dxpl, type) are ignored.
 
 from cpython cimport Py_INCREF, Py_DECREF
 from libc.stdint cimport *
@@ -141,6 +161,8 @@ cdef herr_t H5FD_fileobj_flush(H5FD_fileobj_t *f, hid_t dxpl, hbool_t closing) e
     (<object>f.fileobj).flush()
     return 0
 
+
+# Construct H5FD_class_t struct and register 'fileobj' driver.
 
 cdef H5FD_class_t info
 memset(&info, 0, sizeof(info))
