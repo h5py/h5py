@@ -123,13 +123,13 @@ cdef herr_t H5FD_fileobj_read(H5FD_fileobj_t *f, H5FD_mem_t type, hid_t dxpl, ha
     cdef b = (<object>f.fileobj).read(size)
     if len(b) != size:
         return 1
-    cdef const unsigned char[:] mview = b
+    cdef unsigned char[:] mview = bytearray(b)
     memcpy(buf, &mview[0], size)
     return 0
 
-cdef herr_t H5FD_fileobj_write(H5FD_fileobj_t *f, H5FD_mem_t type, hid_t dxpl, haddr_t addr, size_t size, const void *buf) except -1:
+cdef herr_t H5FD_fileobj_write(H5FD_fileobj_t *f, H5FD_mem_t type, hid_t dxpl, haddr_t addr, size_t size, void *buf) except -1:
     (<object>f.fileobj).seek(addr)
-    cdef b = bytearray(<const unsigned char[:size]>buf)
+    cdef b = bytearray(<unsigned char[:size]>buf)
     (<object>f.fileobj).write(b)
     return 0
 
