@@ -92,46 +92,52 @@ from libc.stdio cimport *
 
 
 cdef H5FD_fileobj_t *H5FD_fileobj_open(const char *name, unsigned flags, hid_t fapl, haddr_t maxaddr):
-    cdef H5FD_fileobj_t *f = <H5FD_fileobj_t *>malloc(sizeof(H5FD_fileobj_t))
     cdef uintptr_t p
-    sscanf(name, "%lx", &p)
-    f.fileobj = <PyObject*>p
-    Py_INCREF(<object>f.fileobj)
-    f.eoa = 0
-    return f
+    cdef H5FD_fileobj_t *f
+    if sscanf(name, "%lx", &p):
+        f = <H5FD_fileobj_t *>malloc(sizeof(H5FD_fileobj_t))
+        f.fileobj = <PyObject*>p
+        Py_INCREF(<object>f.fileobj)
+        f.eoa = 0
+        return f
+    else:
+        return NULL
 
-cdef herr_t H5FD_fileobj_close(H5FD_fileobj_t *f):
+cdef herr_t H5FD_fileobj_close(H5FD_fileobj_t *f) except -1:
     Py_DECREF(<object>f.fileobj)
     return 0
 
 cdef haddr_t H5FD_fileobj_get_eoa(const H5FD_fileobj_t *f, H5FD_mem_t type):
     return f.eoa
 
-cdef herr_t H5FD_fileobj_set_eoa(H5FD_fileobj_t *f, H5FD_mem_t type, haddr_t addr):
+cdef herr_t H5FD_fileobj_set_eoa(H5FD_fileobj_t *f, H5FD_mem_t type, haddr_t addr) except -1:
     f.eoa = addr
     return 0
 
-cdef haddr_t H5FD_fileobj_get_eof(const H5FD_fileobj_t *f, H5FD_mem_t type):
+cdef haddr_t H5FD_fileobj_get_eof(const H5FD_fileobj_t *f, H5FD_mem_t type) except -1:
     (<object>f.fileobj).seek(0, SEEK_END)
     return (<object>f.fileobj).tell()
 
-cdef herr_t H5FD_fileobj_read(H5FD_fileobj_t *f, H5FD_mem_t type, hid_t dxpl, haddr_t addr, size_t size, void *buf):
+cdef herr_t H5FD_fileobj_read(H5FD_fileobj_t *f, H5FD_mem_t type, hid_t dxpl, haddr_t addr, size_t size, void *buf) except -1:
     (<object>f.fileobj).seek(addr)
     cdef b = (<object>f.fileobj).read(size)
+    if len(b) != size:
+        return 1
     cdef const unsigned char[:] mview = b
     memcpy(buf, &mview[0], size)
     return 0
 
-cdef herr_t H5FD_fileobj_write(H5FD_fileobj_t *f, H5FD_mem_t type, hid_t dxpl, haddr_t addr, size_t size, const void *buf):
+cdef herr_t H5FD_fileobj_write(H5FD_fileobj_t *f, H5FD_mem_t type, hid_t dxpl, haddr_t addr, size_t size, const void *buf) except -1:
     (<object>f.fileobj).seek(addr)
-    (<object>f.fileobj).write(bytearray(<const char[:size]>buf))
+    cdef b = bytearray(<const unsigned char[:size]>buf)
+    (<object>f.fileobj).write(b)
     return 0
 
-cdef herr_t H5FD_fileobj_truncate(H5FD_fileobj_t *f, hid_t dxpl, hbool_t closing):
+cdef herr_t H5FD_fileobj_truncate(H5FD_fileobj_t *f, hid_t dxpl, hbool_t closing) except -1:
     (<object>f.fileobj).truncate(f.eoa)
     return 0
 
-cdef herr_t H5FD_fileobj_flush(H5FD_fileobj_t *f, hid_t dxpl, hbool_t closing):
+cdef herr_t H5FD_fileobj_flush(H5FD_fileobj_t *f, hid_t dxpl, hbool_t closing) except -1:
     (<object>f.fileobj).flush()
     return 0
 
