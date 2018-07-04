@@ -279,7 +279,7 @@ class File(Group):
             else:
                 raise ValueError("It is not possible to forcibly switch SWMR mode off.")
 
-    def __init__(self, file, mode=None, driver=None,
+    def __init__(self, name, mode=None, driver=None,
                  libver=None, userblock_size=None, swmr=False,
                  rdcc_nslots=None, rdcc_nbytes=None, rdcc_w0=None,
                  **kwds):
@@ -287,7 +287,7 @@ class File(Group):
 
         See the h5py user guide for a detailed explanation of the options.
 
-        file
+        name
             Name of the file on disk, or file-like object.  Note: for files
             created with the 'core' driver, HDF5 still requires this be
             non-empty.
@@ -339,23 +339,24 @@ class File(Group):
         if swmr and not swmr_support:
             raise ValueError("The SWMR feature is not available in this version of the HDF5 library")
 
-        if isinstance(file, _objects.ObjectID):
+        if isinstance(name, _objects.ObjectID):
             with phil:
-                fid = h5i.get_file_id(file)
-        elif hasattr(file, 'read') and hasattr(file, 'seek'):
-            with phil:
-                fapl = make_fapl('fileobj', libver, rdcc_nslots, rdcc_nbytes, rdcc_w0, **kwds)
-                fid = make_fid(hex(id(file)).encode('ASCII'), mode, userblock_size, fapl, swmr=swmr)
+                fid = h5i.get_file_id(name)
         else:
-            file = filename_encode(file)
+            if hasattr(name, 'read') and hasattr(name, 'seek'):
+                name = hex(id(name)).encode('ASCII')
+                driver = 'fileobj'
+            else:
+                name = filename_encode(name)
+
             with phil:
                 fapl = make_fapl(driver, libver, rdcc_nslots, rdcc_nbytes, rdcc_w0, **kwds)
-                fid = make_fid(file, mode, userblock_size, fapl, swmr=swmr)
+                fid = make_fid(name, mode, userblock_size, fapl, swmr=swmr)
 
-                if swmr_support:
-                    self._swmr_mode = False
-                    if swmr and mode == 'r':
-                        self._swmr_mode = True
+            if swmr_support:
+                self._swmr_mode = False
+                if swmr and mode == 'r':
+                    self._swmr_mode = True
 
         Group.__init__(self, fid)
 
