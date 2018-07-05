@@ -19,6 +19,9 @@ from h5py._hl.files import _drivers
 from ..common import ut, TestCase
 
 import io
+import tempfile
+import os
+
 
 def nfiles():
     return h5py.h5f.get_obj_count(h5py.h5f.OBJ_ALL, h5py.h5f.OBJ_FILE)
@@ -167,3 +170,19 @@ class TestFileObj(TestCase):
             self.assertEqual(list(f), ['test'])
             self.assertEqual(list(f['test'][:]), list(range(12)))
             f.close()
+
+    def test_TemporaryFile(self):
+        fileobj = tempfile.NamedTemporaryFile()
+        fname = fileobj.name
+        f = h5py.File(fileobj)
+        del fileobj
+
+        # can use simply
+        # f = h5py.File(tempfile.TemporaryFile())
+
+        f.create_dataset('test', data=list(range(12)))
+        self.assertEqual(list(f), ['test'])
+        self.assertEqual(list(f['test'][:]), list(range(12)))
+        self.assertTrue(os.path.isfile(fname))
+        f.close()
+        self.assertFalse(os.path.isfile(fname))
