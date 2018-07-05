@@ -62,6 +62,10 @@ class VirtualSource(object):
             maxshape = ds.maxshape
         else:
             path = path_or_dataset
+            if name is None:
+                raise TypeError("The name parameter is required when specifying a source by path")
+            if shape is None:
+                raise TypeError("The shape parameter is required when specifying a source by path")
         self.path = path
         self.name = name
         self.dtype = dtype
