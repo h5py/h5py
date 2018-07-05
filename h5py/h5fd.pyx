@@ -120,11 +120,10 @@ cdef H5FD_fileobj_t *H5FD_fileobj_open(const char *name, unsigned flags, hid_t f
         Py_INCREF(<object>f.fileobj)
         f.eoa = 0
         return f
-    else:
-        return NULL
 
 cdef herr_t H5FD_fileobj_close(H5FD_fileobj_t *f) except -1:
     Py_DECREF(<object>f.fileobj)
+    free(f)
     return 0
 
 cdef haddr_t H5FD_fileobj_get_eoa(const H5FD_fileobj_t *f, H5FD_mem_t type):
