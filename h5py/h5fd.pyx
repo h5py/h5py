@@ -112,7 +112,7 @@ from libc.stdio cimport *
 
 
 cdef H5FD_fileobj_t *H5FD_fileobj_open(const char *name, unsigned flags, hid_t fapl, haddr_t maxaddr):
-    cdef long long unsigned int *p
+    cdef unsigned long long int p
     cdef H5FD_fileobj_t *f
     if sscanf(name, "%llx", &p):
         f = <H5FD_fileobj_t *>malloc(sizeof(H5FD_fileobj_t))
