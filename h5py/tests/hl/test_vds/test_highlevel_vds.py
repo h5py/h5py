@@ -256,13 +256,13 @@ class SlicingTestCase(ut.TestCase):
 
         # Add virtual dataset to output file
         with h5.File(outfile, 'w', libver='latest') as f:
-            f.create_virtual_dataset('data', layout, fillvalue=-5)
+            f.create_virtual_dataset('/group/data', layout, fillvalue=-5)
 
         with h5.File(outfile, 'r') as f:
-            assert_array_equal(f['data'][0][:3], [1, 3, 5])
-            assert_array_equal(f['data'][0][50:53], [2, 4, 6])
-            assert_array_equal(f['data'][3][:3], [4, 6, 8])
-            assert_array_equal(f['data'][3][50:53], [5, 7, 9])
+            assert_array_equal(f['/group/data'][0][:3], [1, 3, 5])
+            assert_array_equal(f['/group/data'][0][50:53], [2, 4, 6])
+            assert_array_equal(f['/group/data'][3][:3], [4, 6, 8])
+            assert_array_equal(f['/group/data'][3][50:53], [5, 7, 9])
 
     def tearDown(self):
         shutil.rmtree(self.tmpdir)

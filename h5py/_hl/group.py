@@ -153,11 +153,15 @@ class Group(HLObject, MutableMappingHDF5):
                 dcpl.set_virtual(vspace, fn, self._e(dset), src_dspace)
 
             with phil:
-                dset = h5d.create(self.id,
-                                  name=self._e(name),
+                dsid = h5d.create(self.id,
+                                  name=None,
                                   tid=h5t.py_create(layout.dtype, logical=1),
                                   space=virt_dspace,
                                   dcpl=dcpl)
+                dset = dataset.Dataset(dsid)
+                if name is not None:
+                    self[name] = dset
+
             return dset
 
     def require_dataset(self, name, shape, dtype, exact=False, **kwds):
