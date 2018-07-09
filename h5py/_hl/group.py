@@ -141,23 +141,18 @@ class Group(HLObject, MutableMappingHDF5):
                 Defines the sources for the virtual dataset
 
             """
-            # create the creation property list
-            dcpl = h5p.create(h5p.DATASET_CREATE)
-            if fillvalue is not None:
-                dcpl.set_fill_value(numpy.array([fillvalue]))
-
-            virt_dspace = h5s.create_simple(layout.shape, layout.maxshape)
-
-            for vspace, fpath, dset, src_dspace in layout.sources:
-                fn = filename_encode(fpath)
-                dcpl.set_virtual(vspace, fn, self._e(dset), src_dspace)
+            from .vds import VDSmap
+            # Encode filenames and dataset names appropriately.
+            sources = [VDSmap(vspace, filename_encode(file_name),
+                              self._e(dset_name), src_space)
+                       for (vspace, file_name, dset_name, src_space)
+                       in layout.sources]
 
             with phil:
-                dsid = h5d.create(self.id,
-                                  name=None,
-                                  tid=h5t.py_create(layout.dtype, logical=1),
-                                  space=virt_dspace,
-                                  dcpl=dcpl)
+                dsid = dataset.make_new_virtual_dset(self, layout.shape,
+                         sources=sources, dtype=layout.dtype,
+                         maxshape=layout.maxshape, fillvalue=fillvalue)
+
                 dset = dataset.Dataset(dsid)
                 if name is not None:
                     self[name] = dset

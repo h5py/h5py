@@ -242,7 +242,7 @@ class SlicingTestCase(ut.TestCase):
 
     def test_slice_source(self):
         # Assemble virtual dataset
-        layout = h5.VirtualLayout((4, 100), 'i4')
+        layout = h5.VirtualLayout((4, 100), 'i4', maxshape=(4, None))
 
         for n in range(1, 5):
             filename = osp.join(self.tmpdir, "{}.h5".format(n))
