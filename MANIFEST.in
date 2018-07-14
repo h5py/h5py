@@ -31,3 +31,5 @@ recursive-exclude .github *
 exclude pavement.py
 exclude *.yml
 exclude *.yaml
+recursive-exclude * __pycache__
+recursive-exclude * *.py[co]
