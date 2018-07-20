@@ -16,8 +16,13 @@ from __future__ import absolute_import
 import posixpath
 import os
 import six
-from collections import (Mapping, MutableMapping, KeysView,
-                         ValuesView, ItemsView)
+
+try:
+    from collections.abc import (Mapping, MutableMapping, KeysView,
+                                 ValuesView, ItemsView)
+except ImportError:
+    from collections import (Mapping, MutableMapping, KeysView,
+                             ValuesView, ItemsView)
 
 from .compat import fspath, filename_encode
 
