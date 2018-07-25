@@ -35,6 +35,8 @@ ACC_TRUNC   = H5F_ACC_TRUNC
 ACC_EXCL    = H5F_ACC_EXCL
 ACC_RDWR    = H5F_ACC_RDWR
 ACC_RDONLY  = H5F_ACC_RDONLY
+ACC_FILE_IMAGE_DONT_COPY = H5LT_FILE_IMAGE_DONT_COPY
+ACC_FILE_IMAGE_OPEN_RW = H5LT_FILE_IMAGE_OPEN_RW
 IF HDF5_VERSION >= SWMR_MIN_HDF5_VERSION:
     ACC_SWMR_WRITE = H5F_ACC_SWMR_WRITE
     ACC_SWMR_READ  = H5F_ACC_SWMR_READ
@@ -97,6 +99,21 @@ def create(char* name, int flags=H5F_ACC_TRUNC, PropFCID fcpl=None,
     the default is ACC_TRUNC.  Be careful!
     """
     return FileID(H5Fcreate(name, flags, pdefault(fcpl), pdefault(fapl)))
+
+
+@with_phil
+def open_file_image(char* image, int flags=H5FLT_FILE_IMAGE_DONT_COPY):
+    """(STRING image, INT flags=ACC_FILE_IMAGE_DONT_COPY) => FileID
+
+    Load a new HDF5 file into memory.  Keyword "flags" may be:
+
+    ACC_FILE_IMAGE_DONT_COPY
+        Open an existing image, read only.
+
+    ACC_FILE_IMAGE_OPEN_RW
+        Copy the given buffer, open read/write.
+    """
+    return FileID(H5LTopen_file_image(image, len(image), flags))
 
 
 @with_phil
