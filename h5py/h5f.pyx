@@ -35,9 +35,6 @@ ACC_TRUNC   = H5F_ACC_TRUNC
 ACC_EXCL    = H5F_ACC_EXCL
 ACC_RDWR    = H5F_ACC_RDWR
 ACC_RDONLY  = H5F_ACC_RDONLY
-if HDF5_VERSION >= (1, 8, 9):
-    ACC_FILE_IMAGE_DONT_COPY = H5LT_FILE_IMAGE_DONT_COPY
-    ACC_FILE_IMAGE_OPEN_RW = H5LT_FILE_IMAGE_OPEN_RW
 IF HDF5_VERSION >= SWMR_MIN_HDF5_VERSION:
     ACC_SWMR_WRITE = H5F_ACC_SWMR_WRITE
     ACC_SWMR_READ  = H5F_ACC_SWMR_READ
@@ -62,6 +59,11 @@ UNLIMITED   = H5F_UNLIMITED
 
 LIBVER_EARLIEST = H5F_LIBVER_EARLIEST
 LIBVER_LATEST = H5F_LIBVER_LATEST
+
+if HDF5_VERSION >= (1, 8, 9):
+    FILE_IMAGE_OPEN_RW = H5LT_FILE_IMAGE_OPEN_RW
+    FILE_IMAGE_DONT_COPY = H5LT_FILE_IMAGE_DONT_COPY
+    FILE_IMAGE_DONT_RELEASE = H5LT_FILE_IMAGE_DONT_RELEASE
 
 # === File operations =========================================================
 
@@ -103,16 +105,23 @@ def create(char* name, int flags=H5F_ACC_TRUNC, PropFCID fcpl=None,
 
 IF HDF5_VERSION >= (1, 8, 9):
     @with_phil
-    def open_file_image(char* image, int flags=H5FLT_FILE_IMAGE_DONT_COPY):
-        """(STRING image, INT flags=ACC_FILE_IMAGE_DONT_COPY) => FileID
+    def open_file_image(char* image, int flags=0):
+        """(STRING image, INT flags=0) => FileID
 
         Load a new HDF5 file into memory.  Keyword "flags" may be:
 
-        ACC_FILE_IMAGE_DONT_COPY
-            Open an existing image, read only.
+        FILE_IMAGE_OPEN_RW
+            Specifies opening the file image in read/write mode.
 
-        ACC_FILE_IMAGE_OPEN_RW
-            Copy the given buffer, open read/write.
+        FILE_IMAGE_DONT_COPY
+            Specifies to not copy the provided file image buffer;
+            the buffer will be used directly. HDF5 will release the
+            file image when finished.
+
+        FILE_IMAGE_DONT_RELEASE
+        Specifies that HDF5 is not to release the buffer when the file is closed;
+        releasing the buffer will be left to the application. This flag is valid
+        only when used with FILE_IMAGE_DONT_COPY.
         """
         return FileID(H5LTopen_file_image(image, len(image), flags))
 
