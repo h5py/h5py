@@ -116,22 +116,3 @@ class VirtualLayout(object):
                                source.path,
                                source.name,
                                source.sel.id))
-
-    def _make_block_shape(self, source):
-        # if the rank of the two datasets is not the same,
-        # left-pad with size 1 dimensions
-        # This isn't necessarily the best way to do this!
-        rank_def = len(self.shape) - len(source.shape)
-        if rank_def > 0:
-            if len(source.shape) == 1:
-                return None
-            else:
-                return (1,) * rank_def + source.shape
-        elif rank_def < 0:
-            # This might be pathological.
-            if len(self.shape) == 1:
-                return None
-            else:
-                return (1,) * rank_def + self.shape
-        else:
-            return source.shape
