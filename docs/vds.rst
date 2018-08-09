@@ -3,10 +3,10 @@
 Virtual Datasets (VDS)
 ======================
 
-Starting with version 2.9, h5py includes support for HDF5 'virtual datasets'.
-The VDS feature is available in version 1.10 of the HDF5 library;
-h5py must be built with a new enough version of HDF5 to create or read
-virtual datasets.
+Starting with version 2.9, h5py includes high-level support for HDF5
+'virtual datasets'.  The VDS feature is available in version 1.10 of
+the HDF5 library; h5py must be built with a new enough version of HDF5
+to create or read virtual datasets.
 
 
 What are virtual datasets?
