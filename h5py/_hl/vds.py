@@ -51,9 +51,21 @@ class VirtualSource(object):
         The source dataset is resizable up to this shape. Use None for
         axes you want to be unlimited.
     """
-    def __init__(self, path_or_dataset, name=None, shape=None, dtype=None, maxshape=None):
+    def __init__(self, path_or_dataset, name=None,
+                 shape=None, dtype=None, maxshape=None):
         from .dataset import Dataset
         if isinstance(path_or_dataset, Dataset):
+            if any(inp is not None
+                   for inp in [name, shape, dtype, maxshape]):
+                failed = {k: v
+                          for k, v in
+                          {'name': name, 'shape': shape,
+                           'dtype': dtype, 'maxshape': maxshape}.items()
+                          if v is not None}
+
+                raise TypeError("If a Dataset is passed as the first argument "
+                                "then no other arguments maybe passed.  You "
+                                "passed {failed}".format(failed=failed))
             ds = path_or_dataset
             path = ds.file.filename
             name = ds.name
