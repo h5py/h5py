@@ -113,6 +113,6 @@ class VirtualLayout(object):
     def __setitem__(self, key, source):
         sel = SimpleSelection(self.shape)[key]
         self.sources.append(VDSmap(sel.id,
-                               source.path,
-                               source.name,
-                               source.sel.id))
+                                   source.path,
+                                   source.name,
+                                   source.sel.id))
