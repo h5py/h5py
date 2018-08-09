@@ -55,16 +55,14 @@ class VirtualSource(object):
                  shape=None, dtype=None, maxshape=None):
         from .dataset import Dataset
         if isinstance(path_or_dataset, Dataset):
-            if any(inp is not None
-                   for inp in [name, shape, dtype, maxshape]):
-                failed = {k: v
-                          for k, v in
-                          {'name': name, 'shape': shape,
-                           'dtype': dtype, 'maxshape': maxshape}.items()
-                          if v is not None}
-
+            failed = {k: v
+                      for k, v in
+                      {'name': name, 'shape': shape,
+                       'dtype': dtype, 'maxshape': maxshape}.items()
+                      if v is not None}
+            if failed:
                 raise TypeError("If a Dataset is passed as the first argument "
-                                "then no other arguments maybe passed.  You "
+                                "then no other arguments may be passed.  You "
                                 "passed {failed}".format(failed=failed))
             ds = path_or_dataset
             path = ds.file.filename
