@@ -30,6 +30,7 @@ from . import selections as sel
 from . import selections2 as sel2
 from .datatype import Datatype
 from .compat import filename_decode
+from .vds import VDSmap, vds_support
 
 _LEGACY_GZIP_COMPRESSION_VALS = frozenset(range(10))
 MPI = h5.get_config().mpi
@@ -81,7 +82,7 @@ def make_new_dset(parent, shape=None, dtype=None, data=None,
     tmp_shape = maxshape if maxshape is not None else shape
     # Validate chunk shape
     if isinstance(chunks, tuple) and any(
-        chunk > dim for dim, chunk in zip(tmp_shape,chunks) if dim is not None
+        chunk > dim for dim, chunk in zip(tmp_shape, chunks) if dim is not None
     ):
         errmsg = "Chunk shape must not be greater than data shape in any dimension. "\
                  "{} is not compatible with {}".format(chunks, shape)
@@ -145,6 +146,41 @@ def make_new_dset(parent, shape=None, dtype=None, data=None,
         dset_id.write(h5s.ALL, h5s.ALL, data)
 
     return dset_id
+
+
+def make_new_virtual_dset(parent, shape, sources, dtype=None,
+                          maxshape=None, fillvalue=None):
+    """Return a new low-level dataset identifier for a virtual dataset
+
+    Like make_new_dset(), this creates an anonymous dataset, which can be given
+    a name later.
+    """
+    # create the creation property list
+    dcpl = h5p.create(h5p.DATASET_CREATE)
+    if fillvalue is not None:
+        dcpl.set_fill_value(numpy.array([fillvalue]))
+
+    if maxshape is not None:
+        maxshape = tuple(m if m is not None else h5s.UNLIMITED for m in maxshape)
+
+    virt_dspace = h5s.create_simple(shape, maxshape)
+
+    for vspace, fpath, dset, src_dspace in sources:
+        dcpl.set_virtual(vspace, fpath, dset, src_dspace)
+
+    dtype = dtype
+    if isinstance(dtype, Datatype):
+        # Named types are used as-is
+        tid = dtype.id
+    else:
+        if dtype is None:
+            dtype = numpy.dtype("=f4")
+        else:
+            dtype = numpy.dtype(dtype)
+        tid = h5t.py_create(dtype, logical=1)
+
+    return h5d.create(parent.id, name=None, tid=tid, space=virt_dspace,
+                      dcpl=dcpl)
 
 
 class AstypeContext(object):
@@ -413,7 +449,6 @@ class Dataset(HLObject):
         for i in xrange(shape[0]):
             yield self[i]
 
-
     @with_phil
     def __getitem__(self, args):
         """ Read a slice from the HDF5 dataset.
@@ -521,7 +556,6 @@ class Dataset(HLObject):
         if single_element:
             arr = arr[0]
         return arr
-
 
     @with_phil
     def __setitem__(self, args, val):
@@ -751,3 +785,19 @@ class Dataset(HLObject):
             library version >=1.9.178
             """
             self._id.flush()
+
+    if vds_support:
+        @property
+        def is_virtual(self):
+            return self._dcpl.get_layout() == h5d.VIRTUAL
+
+        def virtual_sources(self):
+            if not self.is_virtual:
+                raise RuntimeError("Not a virtual dataset")
+            dcpl = self._dcpl
+            return [
+                VDSmap(dcpl.get_virtual_vspace(j),
+                       dcpl.get_virtual_filename(j),
+                       dcpl.get_virtual_dsetname(j),
+                       dcpl.get_virtual_srcspace(j))
+                for j in range(dcpl.get_virtual_count())]

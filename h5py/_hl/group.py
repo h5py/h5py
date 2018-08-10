@@ -11,19 +11,21 @@
     Implements support for high-level access to HDF5 groups.
 """
 
-from __future__ import absolute_import
+from __future__ import absolute_import, division
 
 import posixpath as pp
 import six
 import numpy
 
+
 from .compat import filename_decode, filename_encode
 
-from .. import h5g, h5i, h5o, h5r, h5t, h5l, h5p
+from .. import h5g, h5i, h5o, h5r, h5t, h5l, h5p, h5s, h5d
 from . import base
 from .base import HLObject, MutableMappingHDF5, phil, with_phil
 from . import dataset
 from . import datatype
+from .vds import vds_support
 
 
 class Group(HLObject, MutableMappingHDF5):
@@ -125,6 +127,38 @@ class Group(HLObject, MutableMappingHDF5):
                 self[name] = dset
             return dset
 
+    if vds_support:
+        def create_virtual_dataset(self, name, layout, fillvalue=None):
+            """Create a new virtual dataset in this group.
+
+            Creates the virtual dataset from a list of virtual maps, any
+            gaps are filled with a specified fill value.
+
+            name
+                (str) Name of the new dataset
+
+            virtual_target
+                Defines the sources for the virtual dataset
+
+            """
+            from .vds import VDSmap
+            # Encode filenames and dataset names appropriately.
+            sources = [VDSmap(vspace, filename_encode(file_name),
+                              self._e(dset_name), src_space)
+                       for (vspace, file_name, dset_name, src_space)
+                       in layout.sources]
+
+            with phil:
+                dsid = dataset.make_new_virtual_dset(self, layout.shape,
+                         sources=sources, dtype=layout.dtype,
+                         maxshape=layout.maxshape, fillvalue=fillvalue)
+
+                dset = dataset.Dataset(dsid)
+                if name is not None:
+                    self[name] = dset
+
+            return dset
+
     def require_dataset(self, name, shape, dtype, exact=False, **kwds):
         """ Open a dataset, creating it if it doesn't exist.
 
@@ -214,7 +248,6 @@ class Group(HLObject, MutableMappingHDF5):
 
         >>> cls = group.get('foo', getclass=True)
         >>> if cls == SoftLink:
-        ...     print '"foo" is a soft link!'
         """
         # pylint: disable=arguments-differ
 
@@ -551,4 +584,5 @@ class ExternalLink(object):
         self._path = path
 
     def __repr__(self):
-        return '<ExternalLink to "%s" in file "%s"' % (self.path, self.filename)
+        return '<ExternalLink to "%s" in file "%s"' % (self.path,
+                                                       self.filename)

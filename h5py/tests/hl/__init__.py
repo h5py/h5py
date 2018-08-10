@@ -8,7 +8,8 @@ from . import  (test_dataset_getitem,
                 test_filters,
                 test_attribute_create,
                 test_threads,
-                test_datatype, )
+                test_datatype,
+                test_vds)
 
 MODULES = ( test_dataset_getitem,
             test_dataset_swmr,
@@ -17,4 +18,5 @@ MODULES = ( test_dataset_getitem,
             test_filters,
             test_attribute_create,
             test_threads,
-            test_datatype, )
+            test_datatype,
+            test_vds)
