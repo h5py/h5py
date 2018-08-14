@@ -14,6 +14,9 @@
 include "config.pxi"
 
 # Compile-time imports
+from cpython.buffer cimport PyObject_CheckBuffer, \
+                            PyObject_GetBuffer, PyBuffer_Release, \
+                            PyBUF_SIMPLE
 from _objects cimport pdefault
 from h5p cimport propwrap, PropFAID, PropFCID
 from h5t cimport typewrap
@@ -62,8 +65,6 @@ LIBVER_LATEST = H5F_LIBVER_LATEST
 
 if HDF5_VERSION >= (1, 8, 9):
     FILE_IMAGE_OPEN_RW = H5LT_FILE_IMAGE_OPEN_RW
-    FILE_IMAGE_DONT_COPY = H5LT_FILE_IMAGE_DONT_COPY
-    FILE_IMAGE_DONT_RELEASE = H5LT_FILE_IMAGE_DONT_RELEASE
 
 # === File operations =========================================================
 
@@ -105,25 +106,24 @@ def create(char* name, int flags=H5F_ACC_TRUNC, PropFCID fcpl=None,
 
 IF HDF5_VERSION >= (1, 8, 9):
     @with_phil
-    def open_file_image(char* image, int flags=0):
+    def open_file_image(image, flags=0):
         """(STRING image, INT flags=0) => FileID
 
         Load a new HDF5 file into memory.  Keyword "flags" may be:
 
         FILE_IMAGE_OPEN_RW
             Specifies opening the file image in read/write mode.
-
-        FILE_IMAGE_DONT_COPY
-            Specifies to not copy the provided file image buffer;
-            the buffer will be used directly. HDF5 will release the
-            file image when finished.
-
-        FILE_IMAGE_DONT_RELEASE
-        Specifies that HDF5 is not to release the buffer when the file is closed;
-        releasing the buffer will be left to the application. This flag is valid
-        only when used with FILE_IMAGE_DONT_COPY.
         """
-        return FileID(H5LTopen_file_image(image, len(image), flags))
+        cdef Py_buffer buf
+
+        if not PyObject_CheckBuffer(image):
+            raise TypeError("image must support the buffer protocol")
+
+        PyObject_GetBuffer(image, &buf, PyBUF_SIMPLE)
+        try:
+            return FileID(H5LTopen_file_image(buf.buf, buf.len, flags))
+        finally:
+            PyBuffer_Release(&buf)
 
 
 @with_phil
