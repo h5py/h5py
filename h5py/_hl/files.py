@@ -44,6 +44,10 @@ def _set_fapl_mpio(plist, **kwargs):
     plist.set_fapl_mpio(**kwargs)
 
 
+def _set_fapl_fileobj(plist, **kwargs):
+    plist.set_fileobj_driver(h5fd.fileobj_driver, kwargs['fileobj'])
+
+
 _drivers = {
     'sec2': lambda plist, **kwargs: plist.set_fapl_sec2(**kwargs),
     'stdio': lambda plist, **kwargs: plist.set_fapl_stdio(**kwargs),
@@ -53,6 +57,7 @@ _drivers = {
         **kwargs
     ),
     'mpio': _set_fapl_mpio,
+    'fileobj': _set_fapl_fileobj,
 }
 
 
@@ -344,8 +349,10 @@ class File(Group):
                 fid = h5i.get_file_id(name)
         else:
             if hasattr(name, 'read') and hasattr(name, 'seek'):
-                name = hex(id(name)).encode('ASCII')
+                assert driver is None or driver == 'fileobj'
                 driver = 'fileobj'
+                kwds.update(fileobj=name)
+                name = str(name).encode('ASCII')
             else:
                 name = filename_encode(name)
 
@@ -417,7 +424,3 @@ class File(Group):
         if six.PY2:
             return r.encode('utf8')
         return r
-
-
-register_driver('fileobj',
-                lambda plist: plist.set_driver(h5fd.fileobj_driver))

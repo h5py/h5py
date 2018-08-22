@@ -87,13 +87,13 @@ LOG_ALL       = H5FD_LOG_ALL        # (H5FD_LOG_ALLOC|H5FD_LOG_TIME_IO|H5FD_LOG_
 # H5FD_class_t (struct of callback pointers, H5FD_fileobj_*). This is
 # registered as the handler for 'fileobj' driver via H5FDregister.
 
-# H5FD_fileobj_open callback acts first, expecting "filename" from
-# Python side in form
-#   hex(id(file)).encode('ASCII')
-# and retruning struct H5FD_fileobj_t (descendant of base H5FD_t)
-# which will hold file state. Other callbacks receive H5FD_fileobj_t
-# and operate on f.fileobj. If successful, callbacks must return zero;
-# otherwize non-zero value.
+# File-like object is passed from Python side via FAPL with
+# PropFAID.set_fileobj_driver. Then H5FD_fileobj_open callback acts,
+# taking file-like object from FAPL and returning struct
+# H5FD_fileobj_t (descendant of base H5FD_t) which will hold file
+# state. Other callbacks receive H5FD_fileobj_t and operate on
+# f.fileobj. If successful, callbacks must return zero; otherwize
+# non-zero value.
 
 
 # H5FD_t of file-like object
@@ -111,15 +111,25 @@ from libc.stdint cimport *
 from libc.stdio cimport *
 
 
+cdef void *H5FD_fileobj_fapl_get(H5FD_fileobj_t *f):
+    Py_INCREF(<object>f.fileobj)
+    return f.fileobj
+
+cdef void *H5FD_fileobj_fapl_copy(const PyObject *old_fa):
+    cdef PyObject *new_fa = old_fa
+    Py_INCREF(<object>new_fa)
+    return new_fa
+
+cdef herr_t H5FD_fileobj_fapl_free(PyObject *fa) except -1:
+    Py_DECREF(<object>fa)
+    return 0
+
 cdef H5FD_fileobj_t *H5FD_fileobj_open(const char *name, unsigned flags, hid_t fapl, haddr_t maxaddr):
-    cdef unsigned long long int p
-    cdef H5FD_fileobj_t *f
-    if sscanf(name, "%llx", &p):
-        f = <H5FD_fileobj_t *>malloc(sizeof(H5FD_fileobj_t))
-        f.fileobj = <PyObject *>p
-        Py_INCREF(<object>f.fileobj)
-        f.eoa = 0
-        return f
+    f = <H5FD_fileobj_t *>malloc(sizeof(H5FD_fileobj_t))
+    f.fileobj = <PyObject *>H5Pget_driver_info(fapl)
+    Py_INCREF(<object>f.fileobj)
+    f.eoa = 0
+    return f
 
 cdef herr_t H5FD_fileobj_close(H5FD_fileobj_t *f) except -1:
     Py_DECREF(<object>f.fileobj)
@@ -169,6 +179,10 @@ memset(&info, 0, sizeof(info))
 info.name = 'fileobj'
 info.maxaddr = SIZE_MAX - 1
 info.fc_degree = H5F_CLOSE_WEAK
+info.fapl_size = sizeof(PyObject *)
+info.fapl_get = <void *(*)(H5FD_t *)>H5FD_fileobj_fapl_get
+info.fapl_copy = <void *(*)(const void *)>H5FD_fileobj_fapl_copy
+info.fapl_free = <herr_t (*)(void *)>H5FD_fileobj_fapl_free
 info.open = <H5FD_t *(*)(const char *name, unsigned flags, hid_t fapl, haddr_t maxaddr)>H5FD_fileobj_open
 info.close = <herr_t (*)(H5FD_t *)>H5FD_fileobj_close
 info.get_eoa = <haddr_t (*)(const H5FD_t *, H5FD_mem_t)>H5FD_fileobj_get_eoa
@@ -178,5 +192,6 @@ info.read = <herr_t (*)(H5FD_t *, H5FD_mem_t, hid_t, haddr_t, size_t, void *)>H5
 info.write = <herr_t (*)(H5FD_t *, H5FD_mem_t, hid_t, haddr_t, size_t, const void *)>H5FD_fileobj_write
 info.truncate = <herr_t (*)(H5FD_t *, hid_t, hbool_t)>H5FD_fileobj_truncate
 info.flush = <herr_t (*)(H5FD_t *, hid_t, hbool_t)>H5FD_fileobj_flush
+#info.fl_map = H5FD_FLMAP_DICHOTOMY
 
 fileobj_driver = H5FDregister(&info)
