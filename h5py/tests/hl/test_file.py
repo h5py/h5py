@@ -134,50 +134,52 @@ class TestCache(TestCase):
 
 
 class TestFileObj(TestCase):
+
+    def check_write(self, fileobj, getsize=None):
+        f = h5py.File(fileobj)
+        if getsize:
+            self.assertEquals(getsize(fileobj), 0)
+        f.create_dataset('test', data=list(range(12)))
+        if getsize:
+            self.assertGreater(getsize(fileobj), 0)
+        self.assertEqual(list(f), ['test'])
+        self.assertEqual(list(f['test'][:]), list(range(12)))
+        f.close()
+
+    def check_read(self, fileobj):
+        f = h5py.File(fileobj, 'r')
+        self.assertEqual(list(f), ['test'])
+        self.assertEqual(list(f['test'][:]), list(range(12)))
+        self.assertRaises(Exception, f.create_dataset, 'another.test', data=list(range(3)))
+        f.close()
+
+
     def test_BytesIO(self):
         with io.BytesIO() as fileobj:
-            f = h5py.File(fileobj)
-            self.assertEquals(len(fileobj.getvalue()), 0)
-            f.create_dataset('test', data=list(range(12)))
-            self.assertGreater(len(fileobj.getvalue()), 0)
-            self.assertEqual(list(f), ['test'])
-            self.assertEqual(list(f['test'][:]), list(range(12)))
-            f.close()
+            self.check_write(fileobj, lambda fileobj: len(fileobj.getvalue()))
+            self.check_read(fileobj)
 
-            f = h5py.File(fileobj, 'r')
-            self.assertEqual(list(f), ['test'])
-            self.assertEqual(list(f['test'][:]), list(range(12)))
-            self.assertRaises(Exception, f.create_dataset, 'another.test', data=list(range(3)))
-            f.close()
 
     def test_file(self):
         fname = self.mktemp()
-        with open(fname, 'wb+') as fileobj:
-            f = h5py.File(fileobj)
-            f.create_dataset('test', data=list(range(12)))
-            self.assertEqual(list(f), ['test'])
-            self.assertEqual(list(f['test'][:]), list(range(12)))
-            f.close()
+        try:
+            with open(fname, 'wb+') as fileobj:
+                self.check_write(fileobj)
+                self.check_read(fileobj)
+            with open(fname, 'rb') as fileobj:
+                self.check_read(fileobj)
+        finally:
+            os.remove(fname)
 
-            f = h5py.File(fileobj, 'r')
-            self.assertEqual(list(f), ['test'])
-            self.assertEqual(list(f['test'][:]), list(range(12)))
-            self.assertRaises(Exception, f.create_dataset, 'another.test', data=list(range(3)))
-            f.close()
-
-        with open(fname, 'rb') as fileobj:
-            f = h5py.File(fileobj, 'r')
-            self.assertEqual(list(f), ['test'])
-            self.assertEqual(list(f['test'][:]), list(range(12)))
-            f.close()
 
     def test_TemporaryFile(self):
+        # in this test, we check explicitly that temp file gets
+        # automatically deleted upon h5py.File.close()...
         fileobj = tempfile.NamedTemporaryFile()
         fname = fileobj.name
         f = h5py.File(fileobj)
         del fileobj
-
-        # can use simply
+        # ... but in your code feel free to simply
         # f = h5py.File(tempfile.TemporaryFile())
 
         f.create_dataset('test', data=list(range(12)))
