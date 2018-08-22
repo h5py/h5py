@@ -117,7 +117,7 @@ cdef void *H5FD_fileobj_fapl_get(H5FD_fileobj_t *f):
     Py_INCREF(<object>f.fileobj)
     return f.fileobj
 
-cdef void *H5FD_fileobj_fapl_copy(const PyObject *old_fa):
+cdef void *H5FD_fileobj_fapl_copy(PyObject *old_fa):
     cdef PyObject *new_fa = old_fa
     Py_INCREF(<object>new_fa)
     return new_fa
@@ -127,11 +127,13 @@ cdef herr_t H5FD_fileobj_fapl_free(PyObject *fa) except -1:
     return 0
 
 cdef H5FD_fileobj_t *H5FD_fileobj_open(const char *name, unsigned flags, hid_t fapl, haddr_t maxaddr):
-    f = <H5FD_fileobj_t *>stdlib_malloc(sizeof(H5FD_fileobj_t))
-    f.fileobj = <PyObject *>H5Pget_driver_info(fapl)
-    Py_INCREF(<object>f.fileobj)
-    f.eoa = 0
-    return f
+    cdef PyObject *fileobj = <PyObject *>H5Pget_driver_info(fapl)
+    if fileobj:
+        f = <H5FD_fileobj_t *>stdlib_malloc(sizeof(H5FD_fileobj_t))
+        f.fileobj = fileobj
+        Py_INCREF(<object>f.fileobj)
+        f.eoa = 0
+        return f
 
 cdef herr_t H5FD_fileobj_close(H5FD_fileobj_t *f) except -1:
     Py_DECREF(<object>f.fileobj)

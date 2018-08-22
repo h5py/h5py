@@ -45,7 +45,7 @@ def _set_fapl_mpio(plist, **kwargs):
 
 
 def _set_fapl_fileobj(plist, **kwargs):
-    plist.set_fileobj_driver(h5fd.fileobj_driver, kwargs['fileobj'])
+    plist.set_fileobj_driver(h5fd.fileobj_driver, kwargs.get('fileobj'))
 
 
 _drivers = {

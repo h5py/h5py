@@ -188,3 +188,27 @@ class TestFileObj(TestCase):
         self.assertTrue(os.path.isfile(fname))
         f.close()
         self.assertFalse(os.path.isfile(fname))
+
+
+    def test_invalid(self):
+        f = h5py.File('rogue', driver='fileobj')
+
+
+    def test_exception_open(self):
+        pass
+
+
+    def test_exception_write(self):
+        pass
+
+
+    def test_exception_read(self):
+        pass
+
+
+    def test_exception_close(self):
+        pass
+
+
+    def test_method_vanish(self):
+        pass
