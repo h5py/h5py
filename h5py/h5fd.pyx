@@ -107,8 +107,10 @@ ctypedef struct H5FD_fileobj_t:
 # parameters (dxpl, type) are ignored.
 
 from cpython cimport Py_INCREF, Py_DECREF
-from libc.stdint cimport *
-from libc.stdio cimport *
+from libc.stdlib cimport malloc as stdlib_malloc
+from libc.stdlib cimport free as stdlib_free
+cimport libc.stdio
+cimport libc.stdint
 
 
 cdef void *H5FD_fileobj_fapl_get(H5FD_fileobj_t *f):
@@ -125,7 +127,7 @@ cdef herr_t H5FD_fileobj_fapl_free(PyObject *fa) except -1:
     return 0
 
 cdef H5FD_fileobj_t *H5FD_fileobj_open(const char *name, unsigned flags, hid_t fapl, haddr_t maxaddr):
-    f = <H5FD_fileobj_t *>malloc(sizeof(H5FD_fileobj_t))
+    f = <H5FD_fileobj_t *>stdlib_malloc(sizeof(H5FD_fileobj_t))
     f.fileobj = <PyObject *>H5Pget_driver_info(fapl)
     Py_INCREF(<object>f.fileobj)
     f.eoa = 0
@@ -133,7 +135,7 @@ cdef H5FD_fileobj_t *H5FD_fileobj_open(const char *name, unsigned flags, hid_t f
 
 cdef herr_t H5FD_fileobj_close(H5FD_fileobj_t *f) except -1:
     Py_DECREF(<object>f.fileobj)
-    free(f)
+    stdlib_free(f)
     return 0
 
 cdef haddr_t H5FD_fileobj_get_eoa(const H5FD_fileobj_t *f, H5FD_mem_t type):
@@ -144,7 +146,7 @@ cdef herr_t H5FD_fileobj_set_eoa(H5FD_fileobj_t *f, H5FD_mem_t type, haddr_t add
     return 0
 
 cdef haddr_t H5FD_fileobj_get_eof(const H5FD_fileobj_t *f, H5FD_mem_t type) except -1:
-    (<object>f.fileobj).seek(0, SEEK_END)
+    (<object>f.fileobj).seek(0, libc.stdio.SEEK_END)
     return (<object>f.fileobj).tell()
 
 cdef herr_t H5FD_fileobj_read(H5FD_fileobj_t *f, H5FD_mem_t type, hid_t dxpl, haddr_t addr, size_t size, void *buf) except -1:
@@ -177,7 +179,7 @@ cdef H5FD_class_t info
 memset(&info, 0, sizeof(info))
 
 info.name = 'fileobj'
-info.maxaddr = SIZE_MAX - 1
+info.maxaddr = libc.stdint.SIZE_MAX - 1
 info.fc_degree = H5F_CLOSE_WEAK
 info.fapl_size = sizeof(PyObject *)
 info.fapl_get = <void *(*)(H5FD_t *)>H5FD_fileobj_fapl_get
