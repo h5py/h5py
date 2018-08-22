@@ -192,6 +192,14 @@ info.read = <herr_t (*)(H5FD_t *, H5FD_mem_t, hid_t, haddr_t, size_t, void *)>H5
 info.write = <herr_t (*)(H5FD_t *, H5FD_mem_t, hid_t, haddr_t, size_t, const void *)>H5FD_fileobj_write
 info.truncate = <herr_t (*)(H5FD_t *, hid_t, hbool_t)>H5FD_fileobj_truncate
 info.flush = <herr_t (*)(H5FD_t *, hid_t, hbool_t)>H5FD_fileobj_flush
-#info.fl_map = H5FD_FLMAP_DICHOTOMY
+# H5FD_FLMAP_DICHOTOMY
+info.fl_map = [H5FD_MEM_SUPER,  # default
+               H5FD_MEM_SUPER,  # super
+               H5FD_MEM_SUPER,  # btree
+               H5FD_MEM_DRAW,   # draw
+               H5FD_MEM_DRAW,   # gheap
+               H5FD_MEM_SUPER,  # lheap
+               H5FD_MEM_SUPER   # ohdr
+	       ]
 
 fileobj_driver = H5FDregister(&info)
