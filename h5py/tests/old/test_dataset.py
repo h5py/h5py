@@ -564,6 +564,15 @@ class TestAutoCreate(BaseDataset):
         self.assertEqual(tid.get_cset(), h5py.h5t.CSET_ASCII)
 
 
+class TestCreateLike(BaseDataset):
+    def test_no_chunks(self):
+        self.f['lol'] = np.arange(25).reshape(5, 5)
+        self.f.create_dataset_like('like_lol', self.f['lol'])
+        dslike = self.f['like_lol']
+        self.assertEqual(dslike.shape, (5, 5))
+        self.assertIs(dslike.chunks, None)
+
+
 class TestResize(BaseDataset):
 
     """
