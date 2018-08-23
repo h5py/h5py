@@ -150,7 +150,7 @@ class Group(HLObject, MutableMappingHDF5):
             Name of the dataset (absolute or relative).  Provide None to make
             an anonymous dataset.
         other
-            The dataset whom the new dataset should mimic. All properties, such
+            The dataset which the new dataset should mimic. All properties, such
             as shape, dtype, chunking, ... will be taken from it, but no data
             or attributes are being copied.
 
@@ -158,10 +158,16 @@ class Group(HLObject, MutableMappingHDF5):
         shape and dtype, in which case the provided values take precedence over
         those from `other`.
         """
-        for k in ('shape', 'dtype', 'chunks', 'maxshape', 'compression',
+        for k in ('shape', 'dtype', 'chunks', 'compression',
                   'compression_opts', 'scaleoffset', 'shuffle', 'fletcher32',
                   'fillvalue'):
             kwupdate.setdefault(k, getattr(other, k))
+
+        # Special case: the maxshape property always exists, but if we pass it
+        # to create_dataset, the new dataset will automatically get chunked
+        # layout. So we copy it only if it is different from shape.
+        if other.maxshape != other.shape:
+            kwupdate.setdefault('maxshape', other.maxshape)
 
         return self.create_dataset(name, **kwupdate)
 
