@@ -135,13 +135,11 @@ class TestCache(TestCase):
 
 class TestFileObj(TestCase):
 
-    def check_write(self, fileobj, getsize=None):
+    def check_write(self, fileobj):
         f = h5py.File(fileobj)
-        if getsize:
-            self.assertEquals(getsize(fileobj), 0)
+        self.assertEquals(f.driver, 'fileobj')
+        self.assertEquals(f.filename, repr(fileobj))
         f.create_dataset('test', data=list(range(12)))
-        if getsize:
-            self.assertGreater(getsize(fileobj), 0)
         self.assertEqual(list(f), ['test'])
         self.assertEqual(list(f['test'][:]), list(range(12)))
         f.close()
@@ -156,7 +154,9 @@ class TestFileObj(TestCase):
 
     def test_BytesIO(self):
         with io.BytesIO() as fileobj:
-            self.check_write(fileobj, lambda fileobj: len(fileobj.getvalue()))
+            self.assertEquals(len(fileobj.getvalue()), 0)
+            self.check_write(fileobj)
+            self.assertGreater(len(fileobj.getvalue()), 0)
             self.check_read(fileobj)
 
 
@@ -164,7 +164,9 @@ class TestFileObj(TestCase):
         fname = self.mktemp()
         try:
             with open(fname, 'wb+') as fileobj:
+                self.assertEquals(os.path.getsize(fname), 0)
                 self.check_write(fileobj)
+                self.assertGreater(os.path.getsize(fname), 0)
                 self.check_read(fileobj)
             with open(fname, 'rb') as fileobj:
                 self.check_read(fileobj)
@@ -190,25 +192,45 @@ class TestFileObj(TestCase):
         self.assertFalse(os.path.isfile(fname))
 
 
-    def test_invalid(self):
-        f = h5py.File('rogue', driver='fileobj')
-
-
     def test_exception_open(self):
-        pass
-
-
-    def test_exception_write(self):
-        pass
+        self.assertRaises(Exception, h5py.File, None, driver='fileobj')
+        self.assertRaises(Exception, h5py.File, 'rogue', driver='fileobj')
+        self.assertRaises(Exception, h5py.File, self, driver='fileobj')
 
 
     def test_exception_read(self):
-        pass
+
+        class BrokenBytesIO(io.BytesIO):
+            def read(self, size=-1):
+                raise Exception('I am broken')
+
+        f = h5py.File(BrokenBytesIO())
+        f.create_dataset('test', data=list(range(12)))
+        self.assertRaises(Exception, list, f['test'])
+
+
+    def test_exception_write(self):
+
+        class BrokenBytesIO(io.BytesIO):
+            def write(self, b):
+                raise Exception('I am broken')
+
+        f = h5py.File(BrokenBytesIO())
+        self.assertRaises(Exception, f.create_dataset, 'test', data=list(range(12)))
+        self.assertRaises(Exception, f.close)
 
 
     def test_exception_close(self):
-        pass
+        fileobj = io.BytesIO()
+        f = h5py.File(fileobj)
+        fileobj.close()
+        self.assertRaises(Exception, f.close)
 
 
     def test_method_vanish(self):
-        pass
+        fileobj = io.BytesIO()
+        f = h5py.File(fileobj)
+        f.create_dataset('test', data=list(range(12)))
+        self.assertEqual(list(f['test'][:]), list(range(12)))
+        fileobj.read = None
+        self.assertRaises(Exception, list, f['test'])

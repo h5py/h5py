@@ -219,10 +219,14 @@ class File(Group):
     @with_phil
     def driver(self):
         """Low-level HDF5 file driver used to open file"""
-        drivers = {h5fd.SEC2: 'sec2', h5fd.STDIO: 'stdio',
-                   h5fd.CORE: 'core', h5fd.FAMILY: 'family',
-                   h5fd.WINDOWS: 'windows', h5fd.MPIO: 'mpio',
-                   h5fd.MPIPOSIX: 'mpiposix'}
+        drivers = {h5fd.SEC2: 'sec2',
+                   h5fd.STDIO: 'stdio',
+                   h5fd.CORE: 'core',
+                   h5fd.FAMILY: 'family',
+                   h5fd.WINDOWS: 'windows',
+                   h5fd.MPIO: 'mpio',
+                   h5fd.MPIPOSIX: 'mpiposix',
+                   h5fd.fileobj_driver: 'fileobj'}
         return drivers.get(self.fid.get_access_plist().get_driver(), 'unknown')
 
     @property
@@ -351,8 +355,9 @@ class File(Group):
             if hasattr(name, 'read') and hasattr(name, 'seek'):
                 assert driver is None or driver == 'fileobj'
                 driver = 'fileobj'
+                assert 'fileobj' not in kwds or kwds.get('fileobj') == name
                 kwds.update(fileobj=name)
-                name = str(name).encode('ASCII')
+                name = repr(name).encode('ASCII')
             else:
                 name = filename_encode(name)
 

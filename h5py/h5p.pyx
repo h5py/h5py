@@ -1048,8 +1048,7 @@ cdef class PropFAID(PropInstanceID):
 
         Select the "fileobj" file driver (h5py-specific).
         """
-        return H5Pset_driver(self.id, driver_id,
-                             <PyObject *>fileobj if fileobj is not None else NULL)
+        return H5Pset_driver(self.id, driver_id, <PyObject *>fileobj)
 
 
     @with_phil
