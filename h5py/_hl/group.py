@@ -191,6 +191,34 @@ class Group(HLObject, MutableMappingHDF5):
 
             return dset
 
+    def create_dataset_like(self, name, other, **kwupdate):
+        """ Create a dataset similar to `other`.
+
+        name
+            Name of the dataset (absolute or relative).  Provide None to make
+            an anonymous dataset.
+        other
+            The dataset which the new dataset should mimic. All properties, such
+            as shape, dtype, chunking, ... will be taken from it, but no data
+            or attributes are being copied.
+
+        Any dataset keywords (see create_dataset) may be provided, including
+        shape and dtype, in which case the provided values take precedence over
+        those from `other`.
+        """
+        for k in ('shape', 'dtype', 'chunks', 'compression',
+                  'compression_opts', 'scaleoffset', 'shuffle', 'fletcher32',
+                  'fillvalue'):
+            kwupdate.setdefault(k, getattr(other, k))
+
+        # Special case: the maxshape property always exists, but if we pass it
+        # to create_dataset, the new dataset will automatically get chunked
+        # layout. So we copy it only if it is different from shape.
+        if other.maxshape != other.shape:
+            kwupdate.setdefault('maxshape', other.maxshape)
+
+        return self.create_dataset(name, **kwupdate)
+
     def require_group(self, name):
         """ Return a group, creating it if it doesn't exist.
 
