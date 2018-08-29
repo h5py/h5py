@@ -99,6 +99,11 @@ cdef extern from "hdf5.h":
     H5F_ACC_SWMR_WRITE
     H5F_ACC_SWMR_READ
 
+  cdef enum:
+    H5LT_FILE_IMAGE_OPEN_RW
+    H5LT_FILE_IMAGE_DONT_COPY
+    H5LT_FILE_IMAGE_DONT_RELEASE
+
   # The difference between a single file and a set of mounted files
   cdef enum H5F_scope_t:
     H5F_SCOPE_LOCAL     = 0,    # specified file handle only

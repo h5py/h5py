@@ -14,6 +14,9 @@
 include "config.pxi"
 
 # Compile-time imports
+from cpython.buffer cimport PyObject_CheckBuffer, \
+                            PyObject_GetBuffer, PyBuffer_Release, \
+                            PyBUF_SIMPLE
 from _objects cimport pdefault
 from h5p cimport propwrap, PropFAID, PropFCID
 from h5t cimport typewrap
@@ -60,6 +63,9 @@ UNLIMITED   = H5F_UNLIMITED
 LIBVER_EARLIEST = H5F_LIBVER_EARLIEST
 LIBVER_LATEST = H5F_LIBVER_LATEST
 
+if HDF5_VERSION >= (1, 8, 9):
+    FILE_IMAGE_OPEN_RW = H5LT_FILE_IMAGE_OPEN_RW
+
 # === File operations =========================================================
 
 @with_phil
@@ -97,6 +103,27 @@ def create(char* name, int flags=H5F_ACC_TRUNC, PropFCID fcpl=None,
     the default is ACC_TRUNC.  Be careful!
     """
     return FileID(H5Fcreate(name, flags, pdefault(fcpl), pdefault(fapl)))
+
+IF HDF5_VERSION >= (1, 8, 9):
+    @with_phil
+    def open_file_image(image, flags=0):
+        """(STRING image, INT flags=0) => FileID
+
+        Load a new HDF5 file into memory.  Keyword "flags" may be:
+
+        FILE_IMAGE_OPEN_RW
+            Specifies opening the file image in read/write mode.
+        """
+        cdef Py_buffer buf
+
+        if not PyObject_CheckBuffer(image):
+            raise TypeError("image must support the buffer protocol")
+
+        PyObject_GetBuffer(image, &buf, PyBUF_SIMPLE)
+        try:
+            return FileID(H5LTopen_file_image(buf.buf, buf.len, flags))
+        finally:
+            PyBuffer_Release(&buf)
 
 
 @with_phil
