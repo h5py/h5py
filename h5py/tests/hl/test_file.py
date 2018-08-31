@@ -201,7 +201,7 @@ class TestFileObj(TestCase):
     def test_exception_read(self):
 
         class BrokenBytesIO(io.BytesIO):
-            def read(self, size=-1):
+            def readinto(self, b):
                 raise Exception('I am broken')
 
         f = h5py.File(BrokenBytesIO())
@@ -232,5 +232,5 @@ class TestFileObj(TestCase):
         f = h5py.File(fileobj)
         f.create_dataset('test', data=list(range(12)))
         self.assertEqual(list(f['test'][:]), list(range(12)))
-        fileobj.read = None
+        fileobj.readinto = None
         self.assertRaises(Exception, list, f['test'])
