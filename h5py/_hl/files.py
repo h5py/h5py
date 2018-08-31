@@ -353,9 +353,12 @@ class File(Group):
                 fid = h5i.get_file_id(name)
         else:
             if hasattr(name, 'read') and hasattr(name, 'seek'):
-                assert driver is None or driver == 'fileobj'
+                if driver not in (None, 'fileobj'):
+                    raise ValueError("Driver must be 'fileobj' for file-like object if specified.")
                 driver = 'fileobj'
-                assert 'fileobj' not in kwds or kwds.get('fileobj') == name
+                if kwds.get('fileobj', name) != name:
+                    raise ValueError("Invalid value of 'fileobj' argument; "
+                                     "must equal to file-like object if specified.")
                 kwds.update(fileobj=name)
                 name = repr(name).encode('ASCII')
             else:
