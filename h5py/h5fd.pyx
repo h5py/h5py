@@ -168,7 +168,7 @@ cdef herr_t H5FD_fileobj_read(H5FD_fileobj_t *f, H5FD_mem_t type, hid_t dxpl, ha
 cdef herr_t H5FD_fileobj_write(H5FD_fileobj_t *f, H5FD_mem_t type, hid_t dxpl, haddr_t addr, size_t size, void *buf) except 1:
     cdef unsigned char[:] mview
     (<object>f.fileobj).seek(addr)
-    mview = <unsigned char[:size]>(buf)
+    mview = <unsigned char[:size]>buf
     (<object>f.fileobj).write(np.asarray(mview))
     return 0
 
