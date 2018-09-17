@@ -234,3 +234,27 @@ class TestFileObj(TestCase):
         self.assertEqual(list(f['test'][:]), list(range(12)))
         fileobj.readinto = None
         self.assertRaises(Exception, list, f['test'])
+
+
+class TestTrackOrder(TestCase):
+    def populate(self, f):
+        for i in range(100):
+            # Mix group and dataset creation.
+            if i % 10 == 0:
+                f.create_group(str(i))
+            else:
+                f[str(i)] = [i]
+
+    def test_track_order(self):
+        fname = self.mktemp()
+        f = h5py.File(fname, 'w', track_order=True)  # creation order
+        self.populate(f)
+        self.assertEqual(list(f),
+                         [str(i) for i in range(100)])
+
+    def test_no_track_order(self):
+        fname = self.mktemp()
+        f = h5py.File(fname, 'w', track_order=False)  # name alphanumeric
+        self.populate(f)
+        self.assertEqual(list(f),
+                         sorted([str(i) for i in range(100)]))
