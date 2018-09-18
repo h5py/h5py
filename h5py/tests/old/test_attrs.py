@@ -165,3 +165,20 @@ class TestVlen(BaseAttrs):
             dtype=h5t.special_dtype(vlen=int))
         self.f.attrs['a'] = a
         self.assertArrayEqual(self.f.attrs['a'][0], a[0])
+
+class TestTrackOrder(BaseAttrs):
+    def fill_attrs(self, track_order):
+        attrs = self.f.create_group('test', track_order=track_order).attrs
+        for i in range(100):
+            attrs[str(i)] = i
+        return attrs
+
+    def test_track_order(self):
+        attrs = self.fill_attrs(track_order=True)  # creation order
+        self.assertEqual(list(attrs),
+                         [str(i) for i in range(100)])
+
+    def test_no_track_order(self):
+        attrs = self.fill_attrs(track_order=False)  # name alphanumeric
+        self.assertEqual(list(attrs),
+                         sorted([str(i) for i in range(100)]))

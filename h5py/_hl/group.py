@@ -45,6 +45,8 @@ class Group(HLObject, MutableMappingHDF5):
     _gcpl_crt_order = h5p.create(h5p.GROUP_CREATE)
     _gcpl_crt_order.set_link_creation_order(
         h5p.CRT_ORDER_TRACKED | h5p.CRT_ORDER_INDEXED)
+    _gcpl_crt_order.set_attr_creation_order(
+        h5p.CRT_ORDER_TRACKED | h5p.CRT_ORDER_INDEXED)
 
 
     def create_group(self, name, track_order=False):

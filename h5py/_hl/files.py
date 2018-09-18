@@ -140,6 +140,8 @@ def make_fcpl(track_order=False):
         plist = h5p.create(h5p.FILE_CREATE)
         plist.set_link_creation_order(
             h5p.CRT_ORDER_TRACKED | h5p.CRT_ORDER_INDEXED)
+        plist.set_attr_creation_order(
+            h5p.CRT_ORDER_TRACKED | h5p.CRT_ORDER_INDEXED)
     else:
         plist = None
     return plist
