@@ -24,6 +24,7 @@ import collections
 
 from ..common import TestCase, ut
 
+import h5py
 from h5py import File
 from h5py import h5a,  h5t
 from h5py import AttributeManager
@@ -173,6 +174,8 @@ class TestTrackOrder(BaseAttrs):
             attrs[str(i)] = i
         return attrs
 
+    @ut.skipUnless(h5py.version.hdf5_version_tuple >= (1, 10, 4), 'HDF5 1.10.4 required')
+    # https://forum.hdfgroup.org/t/bug-h5arename-fails-unexpectedly/4881
     def test_track_order(self):
         attrs = self.fill_attrs(track_order=True)  # creation order
         self.assertEqual(list(attrs),
