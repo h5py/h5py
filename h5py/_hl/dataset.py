@@ -58,7 +58,7 @@ def make_new_dset(parent, shape=None, dtype=None, data=None,
                   chunks=None, compression=None, shuffle=None,
                   fletcher32=None, maxshape=None, compression_opts=None,
                   fillvalue=None, scaleoffset=None, track_times=None,
-                  external=None):
+                  track_order=None, external=None):
     """ Return a new low-level dataset identifier
 
     Only creates anonymous datasets.
@@ -118,7 +118,7 @@ def make_new_dset(parent, shape=None, dtype=None, data=None,
         tid = h5t.py_create(dtype, logical=1)
 
     # Legacy
-    if any((compression, shuffle, fletcher32, maxshape,scaleoffset)) and chunks is False:
+    if any((compression, shuffle, fletcher32, maxshape, scaleoffset)) and chunks is False:
         raise ValueError("Chunked format required for given storage options")
 
     # Legacy
@@ -145,6 +145,11 @@ def make_new_dset(parent, shape=None, dtype=None, data=None,
         dcpl.set_obj_track_times(track_times)
     elif track_times is not None:
         raise TypeError("track_times must be either True or False")
+    if track_order in (True, False):
+        dcpl_crt_order.set_attr_creation_order(
+            h5p.CRT_ORDER_TRACKED | h5p.CRT_ORDER_INDEXED)
+    elif track_order is not None:
+        raise TypeError("track_order must be either True or False")
 
     if maxshape is not None:
         maxshape = tuple(m if m is not None else h5s.UNLIMITED for m in maxshape)

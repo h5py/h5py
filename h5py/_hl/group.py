@@ -56,7 +56,8 @@ class Group(HLObject, MutableMappingHDF5):
         exists.
 
         track_order
-            Track dataset/group creation order under this group if True.
+            Track dataset/group/attribute creation order under this group
+            if True.
         """
         with phil:
             name, lcpl = self._e(name, lcpl=True)
@@ -115,6 +116,8 @@ class Group(HLObject, MutableMappingHDF5):
             (Scalar) Use this value for uninitialized parts of the dataset.
         track_times
             (T/F) Enable dataset creation timestamps.
+        track_order
+            Track attribute creation order if True.
         external
             (List of tuples) Sets the external storage property, thus
             designating that the dataset will be stored in one or more

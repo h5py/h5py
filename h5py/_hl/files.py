@@ -359,7 +359,8 @@ class File(Group):
             value should be set approximately 100 times that number of
             chunks. The default value is 521.
         track_order
-            Track dataset/group creation order under root group if True.
+            Track dataset/group/attribute creation order under root group
+            if True.
         Additional keywords
             Passed on to the selected file driver.
 
