@@ -20,7 +20,7 @@ import numpy
 import uuid
 import six
 
-from .. import h5s, h5t, h5a
+from .. import h5, h5s, h5t, h5a, h5p
 from . import base
 from .base import phil, with_phil, Empty, is_empty_dataspace
 from .dataset import readtime_dtype
@@ -254,7 +254,15 @@ class AttributeManager(base.MutableMappingHDF5, base.CommonStateObject):
                 """ Callback to gather attribute names """
                 attrlist.append(self._d(name))
 
-            h5a.iterate(self._id, iter_cb)
+            cpl = self._id.get_create_plist()
+            crt_order = cpl.get_attr_creation_order()
+            cpl.close()
+            if crt_order & h5p.CRT_ORDER_TRACKED:
+                idx_type = h5.INDEX_CRT_ORDER
+            else:
+                idx_type = h5.INDEX_NAME
+
+            h5a.iterate(self._id, iter_cb, index_type=idx_type)
 
         for name in attrlist:
             yield name
