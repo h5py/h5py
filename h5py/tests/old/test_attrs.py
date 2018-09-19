@@ -179,9 +179,9 @@ class TestTrackOrder(BaseAttrs):
     def test_track_order(self):
         attrs = self.fill_attrs(track_order=True)  # creation order
         self.assertEqual(list(attrs),
-                         [str(i) for i in range(100)])
+                         [u'' + str(i) for i in range(100)])
 
     def test_no_track_order(self):
         attrs = self.fill_attrs(track_order=False)  # name alphanumeric
         self.assertEqual(list(attrs),
-                         sorted([str(i) for i in range(100)]))
+                         sorted([u'' + str(i) for i in range(100)]))
