@@ -227,7 +227,7 @@ cdef class LinkProxy:
 
     @with_phil
     def visit(self, object func, *,
-              int idx_type=H5_INDEX_NAME, int order=H5_ITER_NATIVE,
+              int idx_type=H5_INDEX_NAME, int order=H5_ITER_INC,
               char* obj_name='.', PropID lapl=None, bint info=0):
         """(CALLABLE func, **kwds) => <Return value from func>
 
@@ -254,7 +254,7 @@ cdef class LinkProxy:
 
         INT idx_type (h5.INDEX_NAME)
 
-        INT order (h5.ITER_NATIVE)
+        INT order (h5.ITER_INC)
         """
         cdef _LinkVisitor it = _LinkVisitor(func)
         cdef H5L_iterate_t cfunc
@@ -272,7 +272,7 @@ cdef class LinkProxy:
 
     @with_phil
     def iterate(self, object func, *,
-              int idx_type=H5_INDEX_NAME, int order=H5_ITER_NATIVE,
+              int idx_type=H5_INDEX_NAME, int order=H5_ITER_INC,
               char* obj_name='.', PropID lapl=None, bint info=0,
               hsize_t idx=0):
         """(CALLABLE func, **kwds) => <Return value from func>, <index to restart at>
@@ -300,7 +300,7 @@ cdef class LinkProxy:
 
         INT idx_type (h5.INDEX_NAME)
 
-        INT order (h5.ITER_NATIVE)
+        INT order (h5.ITER_INC)
 
         hsize_t idx (0)
             The index to start iterating at
