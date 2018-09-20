@@ -110,10 +110,13 @@ matrix:
         TOX_TESTENV_PASSENV=LANG LC_ALL
         LANG=C
         LC_ALL=C
-    - python: 3.6
+
+    # Python 3.7
+    - python: 3.7
+      sudo: true
       env:
-      - TOXENV=py36-test-deps
-        HDF5_VERSION=1.10.1
+      - TOXENV=py37-test-deps
+        HDF5_VERSION=1.10.3
         HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION
 
     # MPI tests
