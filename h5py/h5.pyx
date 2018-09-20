@@ -59,6 +59,7 @@ cdef class H5PYConfig:
         self._f_name = b'FALSE'
         self._t_name = b'TRUE'
         self._bytestrings = ByteStringContext()
+        self._track_order = False
 
     property complex_names:
         """ Settable 2-tuple controlling how complex numbers are saved.
@@ -138,6 +139,14 @@ cdef class H5PYConfig:
         """Tuple indicating the minimum HDF5 version required for virtual dataset (VDS) features"""
         def __get__(self):
             return VDS_MIN_HDF5_VERSION
+
+    property track_order:
+        """ Default value for track_order argument of
+        File.open()/Group.create_group()/Group.create_dataset() """
+        def __get__(self):
+            return self._track_order
+        def __set__(self, val):
+            self._track_order = val
 
 cdef H5PYConfig cfg = H5PYConfig()
 

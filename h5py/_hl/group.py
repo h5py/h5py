@@ -20,7 +20,7 @@ import numpy
 
 from .compat import filename_decode, filename_encode
 
-from .. import h5g, h5i, h5o, h5r, h5t, h5l, h5p, h5s, h5d
+from .. import h5, h5g, h5i, h5o, h5r, h5t, h5l, h5p, h5s, h5d
 from . import base
 from .base import HLObject, MutableMappingHDF5, phil, with_phil
 from . import dataset
@@ -49,7 +49,7 @@ class Group(HLObject, MutableMappingHDF5):
         h5p.CRT_ORDER_TRACKED | h5p.CRT_ORDER_INDEXED)
 
 
-    def create_group(self, name, track_order=False):
+    def create_group(self, name, track_order=None):
         """ Create and return a new subgroup.
 
         Name may be absolute or relative.  Fails if the target name already
@@ -57,8 +57,11 @@ class Group(HLObject, MutableMappingHDF5):
 
         track_order
             Track dataset/group/attribute creation order under this group
-            if True.
+            if True. If None use global default h5.get_config().track_order.
         """
+        if track_order is None:
+            track_order = h5.get_config().track_order
+
         with phil:
             name, lcpl = self._e(name, lcpl=True)
             gcpl = Group._gcpl_crt_order if track_order else None
@@ -117,7 +120,8 @@ class Group(HLObject, MutableMappingHDF5):
         track_times
             (T/F) Enable dataset creation timestamps.
         track_order
-            Track attribute creation order if True.
+            (T/F) Track attribute creation order if True. If omitted use
+            global default h5.get_config().track_order.
         external
             (List of tuples) Sets the external storage property, thus
             designating that the dataset will be stored in one or more
@@ -125,6 +129,9 @@ class Group(HLObject, MutableMappingHDF5):
             tuple of (file[, offset[, size]]) to the dataset's list of
             external files.
         """
+        if 'track_order' not in kwds:
+            kwds['track_order'] = h5.get_config().track_order
+
         with phil:
             dsid = dataset.make_new_dset(self, shape, dtype, data, **kwds)
             dset = dataset.Dataset(dsid)

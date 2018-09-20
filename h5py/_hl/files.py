@@ -307,7 +307,7 @@ class File(Group):
     def __init__(self, name, mode=None, driver=None,
                  libver=None, userblock_size=None, swmr=False,
                  rdcc_nslots=None, rdcc_nbytes=None, rdcc_w0=None,
-                 track_order=False,
+                 track_order=None,
                  **kwds):
         """Create a new file object.
 
@@ -360,7 +360,7 @@ class File(Group):
             chunks. The default value is 521.
         track_order
             Track dataset/group/attribute creation order under root group
-            if True.
+            if True. If None use global default h5.get_config().track_order.
         Additional keywords
             Passed on to the selected file driver.
 
@@ -383,6 +383,9 @@ class File(Group):
                 name = repr(name).encode('ASCII', 'replace')
             else:
                 name = filename_encode(name)
+
+            if track_order is None:
+                track_order = h5.get_config().track_order
 
             with phil:
                 fapl = make_fapl(driver, libver, rdcc_nslots, rdcc_nbytes, rdcc_w0, **kwds)
