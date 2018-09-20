@@ -44,6 +44,10 @@ def _set_fapl_mpio(plist, **kwargs):
     plist.set_fapl_mpio(**kwargs)
 
 
+def _set_fapl_fileobj(plist, **kwargs):
+    plist.set_fileobj_driver(h5fd.fileobj_driver, kwargs.get('fileobj'))
+
+
 _drivers = {
     'sec2': lambda plist, **kwargs: plist.set_fapl_sec2(**kwargs),
     'stdio': lambda plist, **kwargs: plist.set_fapl_stdio(**kwargs),
@@ -53,6 +57,7 @@ _drivers = {
         **kwargs
     ),
     'mpio': _set_fapl_mpio,
+    'fileobj': _set_fapl_fileobj,
 }
 
 
@@ -214,10 +219,14 @@ class File(Group):
     @with_phil
     def driver(self):
         """Low-level HDF5 file driver used to open file"""
-        drivers = {h5fd.SEC2: 'sec2', h5fd.STDIO: 'stdio',
-                   h5fd.CORE: 'core', h5fd.FAMILY: 'family',
-                   h5fd.WINDOWS: 'windows', h5fd.MPIO: 'mpio',
-                   h5fd.MPIPOSIX: 'mpiposix'}
+        drivers = {h5fd.SEC2: 'sec2',
+                   h5fd.STDIO: 'stdio',
+                   h5fd.CORE: 'core',
+                   h5fd.FAMILY: 'family',
+                   h5fd.WINDOWS: 'windows',
+                   h5fd.MPIO: 'mpio',
+                   h5fd.MPIPOSIX: 'mpiposix',
+                   h5fd.fileobj_driver: 'fileobj'}
         return drivers.get(self.fid.get_access_plist().get_driver(), 'unknown')
 
     @property
@@ -288,8 +297,9 @@ class File(Group):
         See the h5py user guide for a detailed explanation of the options.
 
         name
-            Name of the file on disk.  Note: for files created with the 'core'
-            driver, HDF5 still requires this be non-empty.
+            Name of the file on disk, or file-like object.  Note: for files
+            created with the 'core' driver, HDF5 still requires this be
+            non-empty.
         mode
             r        Readonly, file must exist
             r+       Read/write, file must exist
@@ -342,15 +352,26 @@ class File(Group):
             with phil:
                 fid = h5i.get_file_id(name)
         else:
-            name = filename_encode(name)
+            if hasattr(name, 'read') and hasattr(name, 'seek'):
+                if driver not in (None, 'fileobj'):
+                    raise ValueError("Driver must be 'fileobj' for file-like object if specified.")
+                driver = 'fileobj'
+                if kwds.get('fileobj', name) != name:
+                    raise ValueError("Invalid value of 'fileobj' argument; "
+                                     "must equal to file-like object if specified.")
+                kwds.update(fileobj=name)
+                name = repr(name).encode('ASCII')
+            else:
+                name = filename_encode(name)
+
             with phil:
                 fapl = make_fapl(driver, libver, rdcc_nslots, rdcc_nbytes, rdcc_w0, **kwds)
                 fid = make_fid(name, mode, userblock_size, fapl, swmr=swmr)
 
-                if swmr_support:
-                    self._swmr_mode = False
-                    if swmr and mode == 'r':
-                        self._swmr_mode = True
+            if swmr_support:
+                self._swmr_mode = False
+                if swmr and mode == 'r':
+                    self._swmr_mode = True
 
         Group.__init__(self, fid)
 

@@ -77,3 +77,140 @@ LOG_TIME_IO   = H5FD_LOG_TIME_IO    # (H5FD_LOG_TIME_OPEN|H5FD_LOG_TIME_READ|H5F
 # Flag for tracking allocation of space in file
 LOG_ALLOC     = H5FD_LOG_ALLOC      # 0x4000
 LOG_ALL       = H5FD_LOG_ALL        # (H5FD_LOG_ALLOC|H5FD_LOG_TIME_IO|H5FD_LOG_NUM_IO|H5FD_LOG_FLAVOR|H5FD_LOG_FILE_IO|H5FD_LOG_LOC_IO)
+
+
+# Implementation of 'fileobj' Virtual File Driver: HDF5 Virtual File
+# Layer wrapper over Python file-like object.
+# https://support.hdfgroup.org/HDF5/doc1.8/TechNotes/VFL.html
+
+# HDF5 events (read, write, flush, ...) are dispatched via
+# H5FD_class_t (struct of callback pointers, H5FD_fileobj_*). This is
+# registered as the handler for 'fileobj' driver via H5FDregister.
+
+# File-like object is passed from Python side via FAPL with
+# PropFAID.set_fileobj_driver. Then H5FD_fileobj_open callback acts,
+# taking file-like object from FAPL and returning struct
+# H5FD_fileobj_t (descendant of base H5FD_t) which will hold file
+# state. Other callbacks receive H5FD_fileobj_t and operate on
+# f.fileobj. If successful, callbacks must return zero; otherwize
+# non-zero value.
+
+
+# H5FD_t of file-like object
+ctypedef struct H5FD_fileobj_t:
+  H5FD_t base  # must be first
+  PyObject* fileobj
+  haddr_t eoa
+
+
+# A minimal subset of callbacks is implemented. Non-essential
+# parameters (dxpl, type) are ignored.
+
+from cpython cimport Py_INCREF, Py_DECREF
+import numpy as np
+from libc.stdlib cimport malloc as stdlib_malloc
+from libc.stdlib cimport free as stdlib_free
+cimport libc.stdio
+cimport libc.stdint
+
+
+cdef void *H5FD_fileobj_fapl_get(H5FD_fileobj_t *f):
+    Py_INCREF(<object>f.fileobj)
+    return f.fileobj
+
+cdef void *H5FD_fileobj_fapl_copy(PyObject *old_fa):
+    cdef PyObject *new_fa = old_fa
+    Py_INCREF(<object>new_fa)
+    return new_fa
+
+cdef herr_t H5FD_fileobj_fapl_free(PyObject *fa) except 1:
+    Py_DECREF(<object>fa)
+    return 0
+
+cdef H5FD_fileobj_t *H5FD_fileobj_open(const char *name, unsigned flags, hid_t fapl, haddr_t maxaddr) except *:
+    cdef PyObject *fileobj = <PyObject *>H5Pget_driver_info(fapl)
+    f = <H5FD_fileobj_t *>stdlib_malloc(sizeof(H5FD_fileobj_t))
+    f.fileobj = fileobj
+    Py_INCREF(<object>f.fileobj)
+    f.eoa = 0
+    return f
+
+cdef herr_t H5FD_fileobj_close(H5FD_fileobj_t *f) except 1:
+    Py_DECREF(<object>f.fileobj)
+    stdlib_free(f)
+    return 0
+
+cdef haddr_t H5FD_fileobj_get_eoa(const H5FD_fileobj_t *f, H5FD_mem_t type):
+    return f.eoa
+
+cdef herr_t H5FD_fileobj_set_eoa(H5FD_fileobj_t *f, H5FD_mem_t type, haddr_t addr):
+    f.eoa = addr
+    return 0
+
+cdef haddr_t H5FD_fileobj_get_eof(const H5FD_fileobj_t *f, H5FD_mem_t type) except -1:  # HADDR_UNDEF
+    (<object>f.fileobj).seek(0, libc.stdio.SEEK_END)
+    return (<object>f.fileobj).tell()
+
+cdef herr_t H5FD_fileobj_read(H5FD_fileobj_t *f, H5FD_mem_t type, hid_t dxpl, haddr_t addr, size_t size, void *buf) except 1:
+    cdef unsigned char[:] mview
+    (<object>f.fileobj).seek(addr)
+    if hasattr(<object>f.fileobj, 'readinto'):
+        mview = <unsigned char[:size]>(buf)
+        (<object>f.fileobj).readinto(np.asarray(mview))
+    else:
+        b = (<object>f.fileobj).read(size)
+        if len(b) == size:
+            memcpy(buf, <unsigned char *>b, size)
+        else:
+            return 1
+    return 0
+
+cdef herr_t H5FD_fileobj_write(H5FD_fileobj_t *f, H5FD_mem_t type, hid_t dxpl, haddr_t addr, size_t size, void *buf) except 1:
+    cdef unsigned char[:] mview
+    (<object>f.fileobj).seek(addr)
+    mview = <unsigned char[:size]>buf
+    (<object>f.fileobj).write(np.asarray(mview))
+    return 0
+
+cdef herr_t H5FD_fileobj_truncate(H5FD_fileobj_t *f, hid_t dxpl, hbool_t closing) except 1:
+    (<object>f.fileobj).truncate(f.eoa)
+    return 0
+
+cdef herr_t H5FD_fileobj_flush(H5FD_fileobj_t *f, hid_t dxpl, hbool_t closing) except 1:
+    # TODO: avoid unneeded fileobj.flush() when closing for e.g. TemporaryFile
+    (<object>f.fileobj).flush()
+    return 0
+
+
+# Construct H5FD_class_t struct and register 'fileobj' driver.
+
+cdef H5FD_class_t info
+memset(&info, 0, sizeof(info))
+
+info.name = 'fileobj'
+info.maxaddr = libc.stdint.SIZE_MAX - 1
+info.fc_degree = H5F_CLOSE_WEAK
+info.fapl_size = sizeof(PyObject *)
+info.fapl_get = <void *(*)(H5FD_t *)>H5FD_fileobj_fapl_get
+info.fapl_copy = <void *(*)(const void *)>H5FD_fileobj_fapl_copy
+info.fapl_free = <herr_t (*)(void *)>H5FD_fileobj_fapl_free
+info.open = <H5FD_t *(*)(const char *name, unsigned flags, hid_t fapl, haddr_t maxaddr)>H5FD_fileobj_open
+info.close = <herr_t (*)(H5FD_t *)>H5FD_fileobj_close
+info.get_eoa = <haddr_t (*)(const H5FD_t *, H5FD_mem_t)>H5FD_fileobj_get_eoa
+info.set_eoa = <herr_t (*)(H5FD_t *, H5FD_mem_t, haddr_t)>H5FD_fileobj_set_eoa
+info.get_eof = <haddr_t (*)(const H5FD_t *, H5FD_mem_t)>H5FD_fileobj_get_eof
+info.read = <herr_t (*)(H5FD_t *, H5FD_mem_t, hid_t, haddr_t, size_t, void *)>H5FD_fileobj_read
+info.write = <herr_t (*)(H5FD_t *, H5FD_mem_t, hid_t, haddr_t, size_t, const void *)>H5FD_fileobj_write
+info.truncate = <herr_t (*)(H5FD_t *, hid_t, hbool_t)>H5FD_fileobj_truncate
+info.flush = <herr_t (*)(H5FD_t *, hid_t, hbool_t)>H5FD_fileobj_flush
+# H5FD_FLMAP_DICHOTOMY
+info.fl_map = [H5FD_MEM_SUPER,  # default
+               H5FD_MEM_SUPER,  # super
+               H5FD_MEM_SUPER,  # btree
+               H5FD_MEM_DRAW,   # draw
+               H5FD_MEM_DRAW,   # gheap
+               H5FD_MEM_SUPER,  # lheap
+               H5FD_MEM_SUPER   # ohdr
+	       ]
+
+fileobj_driver = H5FDregister(&info)

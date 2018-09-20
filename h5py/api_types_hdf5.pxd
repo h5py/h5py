@@ -189,6 +189,57 @@ cdef extern from "hdf5.h":
      H5FD_MPIO_INDEPENDENT = 0,
      H5FD_MPIO_COLLECTIVE
 
+  # Class information for each file driver
+  ctypedef struct H5FD_class_t:
+    const char *name
+    haddr_t maxaddr
+    H5F_close_degree_t fc_degree
+    herr_t  (*terminate)()
+    hsize_t (*sb_size)(H5FD_t *file)
+    herr_t  (*sb_encode)(H5FD_t *file, char *name, unsigned char *p)
+    herr_t  (*sb_decode)(H5FD_t *f, const char *name, const unsigned char *p)
+    size_t  fapl_size
+    void *  (*fapl_get)(H5FD_t *file)
+    void *  (*fapl_copy)(const void *fapl)
+    herr_t  (*fapl_free)(void *fapl)
+    size_t  dxpl_size
+    void *  (*dxpl_copy)(const void *dxpl)
+    herr_t  (*dxpl_free)(void *dxpl)
+    H5FD_t *(*open)(const char *name, unsigned flags, hid_t fapl, haddr_t maxaddr)
+    herr_t  (*close)(H5FD_t *file)
+    int     (*cmp)(const H5FD_t *f1, const H5FD_t *f2)
+    herr_t  (*query)(const H5FD_t *f1, unsigned long *flags)
+    herr_t  (*get_type_map)(const H5FD_t *file, H5FD_mem_t *type_map)
+    haddr_t (*alloc)(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id, hsize_t size)
+    herr_t  (*free)(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id, haddr_t addr, hsize_t size)
+    haddr_t (*get_eoa)(const H5FD_t *file, H5FD_mem_t type)
+    herr_t  (*set_eoa)(H5FD_t *file, H5FD_mem_t type, haddr_t addr)
+    haddr_t (*get_eof)(const H5FD_t *file, H5FD_mem_t type)
+    herr_t  (*get_handle)(H5FD_t *file, hid_t fapl, void**file_handle)
+    herr_t  (*read)(H5FD_t *file, H5FD_mem_t type, hid_t dxpl, haddr_t addr, size_t size, void *buffer)
+    herr_t  (*write)(H5FD_t *file, H5FD_mem_t type, hid_t dxpl, haddr_t addr, size_t size, const void *buffer)
+    herr_t  (*flush)(H5FD_t *file, hid_t dxpl_id, hbool_t closing)
+    herr_t  (*truncate)(H5FD_t *file, hid_t dxpl_id, hbool_t closing)
+    herr_t  (*lock)(H5FD_t *file, hbool_t rw)
+    herr_t  (*unlock)(H5FD_t *file)
+    H5FD_mem_t fl_map[<int>H5FD_MEM_NTYPES]
+
+  # The main datatype for each driver
+  ctypedef struct H5FD_t:
+    hid_t driver_id             # driver ID for this file
+    const H5FD_class_t cls      # constant class info
+    unsigned long fileno        # File 'serial' number
+    unsigned access_flags       # File access flags (from create or open)
+    unsigned long feature_flags # VFL Driver feature Flags
+    haddr_t maxaddr             # For this file, overrides class
+    haddr_t base_addr           # Base address for HDF5 data w/in file
+
+    # Space allocation management fields
+    hsize_t threshold           # Threshold for alignment
+    hsize_t alignment           # Allocation alignment
+    hbool_t paged_aggr          # Paged aggregation for file space is enabled or not
+
+
 # === H5G - Groups API ========================================================
 
   ctypedef enum H5G_link_t:

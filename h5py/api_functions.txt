@@ -160,6 +160,12 @@ hdf5:
   1.9.178   herr_t H5Fstart_swmr_write(hid_t file_id)
 
 
+  # === H5FD - Virtual File Layer =========================================================
+
+  hid_t     H5FDregister(H5FD_class_t *cls_ptr)
+  herr_t    H5FDunregister(hid_t driver_id)
+
+
   # === H5G - Groups API ======================================================
 
   hid_t     H5Gcreate(hid_t loc_id, char *name, size_t size_hint)
@@ -287,7 +293,9 @@ hdf5:
   herr_t    H5Pget_cache(hid_t plist_id, int *mdc_nelmts, size_t *rdcc_nelmts, size_t *rdcc_nbytes, double *rdcc_w0)
   herr_t    H5Pset_fapl_sec2(hid_t fapl_id)
   herr_t    H5Pset_fapl_stdio(hid_t fapl_id)
+  herr_t    H5Pset_driver(hid_t plist_id, hid_t driver_id, void *driver_info)
   hid_t     H5Pget_driver(hid_t fapl_id)
+  void*     H5Pget_driver_info(hid_t plist_id)
   herr_t    H5Pget_mdc_config(hid_t plist_id, H5AC_cache_config_t *config_ptr)
   herr_t    H5Pset_mdc_config(hid_t plist_id, H5AC_cache_config_t *config_ptr)
   1.8.9 herr_t H5Pset_file_image(hid_t plist_id, void *buf_ptr, size_t buf_len)

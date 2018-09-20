@@ -1035,6 +1035,25 @@ cdef class PropFAID(PropInstanceID):
 
 
     @with_phil
+    def set_driver(self, hid_t driver_id):
+        """(INT driver_id)
+
+        Sets the file driver identifier for this file access or data
+        transfer property list.
+        """
+        return H5Pset_driver(self.id, driver_id, NULL)
+
+
+    @with_phil
+    def set_fileobj_driver(self, hid_t driver_id, object fileobj):
+        """(INT driver_id, OBJECT fileobj)
+
+        Select the "fileobj" file driver (h5py-specific).
+        """
+        return H5Pset_driver(self.id, driver_id, <PyObject *>fileobj)
+
+
+    @with_phil
     def get_driver(self):
         """() => INT driver code
 
