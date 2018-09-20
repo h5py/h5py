@@ -9,7 +9,7 @@ addons:
       - libhdf5-serial-dev
 
 sudo: false
-dist: trusty
+dist: xenial
 
 cache:
   directories:
