@@ -92,6 +92,12 @@ matrix:
     - python: 3.6
       env:
       - TOXENV=py36-test-deps
+
+    - python: 3.6
+      env:
+      - TOXENV=py36-test-deps
+        HDF5_VERSION=1.10.3
+        HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION
     - python: 3.6
       env:
       - TOXENV=py36-test-deps-pre
