@@ -35,8 +35,8 @@ Suppose someone has sent you a HDF5 file, :code:`mytestfile.hdf5`. (To create th
 
 The :ref:`File object <file>` is your starting point. What is stored in this file? Remember :py:class:`h5py.File` acts like a Python dictionary, thus we can check the keys,
 
-    >>> f.keys()
-    [u'mydataset']
+    >>> list(f.keys())
+    ['mydataset']
 
 Based on our observation, there is one data set, :code:`mydataset` in the file.
 Let us examine the data set as a :ref:`Dataset <dataset>` object
