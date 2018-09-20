@@ -148,6 +148,8 @@ matrix:
     - python: "nightly"
       env:
       - TOXENV=nightly
+        HDF5_VERSION=1.10.3
+        HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION
 
     - python: pypy
       env:
