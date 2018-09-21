@@ -21,11 +21,11 @@ function ``h5py.get_config()``.  This object supports the following attributes:
         Whether to track dataset/group/attribute creation order.  If
         container creation order is tracked, its links and attributes
         are iterated in ascending creation order (consistent with
-        `dict` in Python 3.7+); otherwise in ascending alphanumeric
+        ``dict`` in Python 3.7+); otherwise in ascending alphanumeric
         order.  Global configuration value can be overriden for
-        particular container by specifying `track_order` argument to
-        `File()`, `Group.create_group()`, `Group.create_dataset()`.
-        The default is `False`.
+        particular container by specifying ``track_order`` argument to
+        ``File()``, ``Group.create_group()``,
+        ``Group.create_dataset()``.  The default is ``False``.
 
 
 IPython
