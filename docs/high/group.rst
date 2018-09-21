@@ -307,6 +307,9 @@ Reference
                         or relative path.  Provide None to create an anonymous
                         group, to be linked into the file later.
         :type name:     String or None
+        :track_order:   Track dataset/group/attribute creation order under
+                        this group if ``True``.  Default is
+                        `h5.get_config().track_order`.
 
         :return:        The new :class:`Group` object.
 
@@ -351,7 +354,11 @@ Reference
         :keyword fillvalue: This value will be used when reading
                             uninitialized parts of the dataset.
 
-        :keyword track_times:   Enable dataset creation timestamps (**T**/F).
+        :keyword track_times: Enable dataset creation timestamps (**T**/F).
+
+        :keyword track_order: Track attribute creation order if
+                        ``True``.  Default is
+                        `h5.get_config().track_order`.
 
 
     .. method:: require_dataset(name, shape=None, dtype=None, exact=None, **kwds)
