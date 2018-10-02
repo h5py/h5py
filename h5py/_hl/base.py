@@ -295,6 +295,9 @@ class HLObject(CommonStateObject):
             return bool(self.id)
     __nonzero__ = __bool__
 
+    def __getnewargs__(self):
+        raise Exception("h5py objects cannot be pickled")
+
 
 # --- Dictionary-style interface ----------------------------------------------
 
