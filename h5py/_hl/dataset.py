@@ -76,7 +76,7 @@ def make_new_dset(parent, shape=None, dtype=None, data=None,
         shape = data.shape
     else:
         shape = tuple(shape)
-        if data is not None and (numpy.product(shape) != numpy.product(data.shape)):
+        if data is not None and (numpy.product(shape, dtype=numpy.ulonglong) != numpy.product(data.shape, dtype=numpy.ulonglong)):
             raise ValueError("Shape tuple is incompatible with data")
 
     tmp_shape = maxshape if maxshape is not None else shape
@@ -494,7 +494,7 @@ class Dataset(HLObject):
             mshape = sel.guess_shape(sid)
             if mshape is None:
                 return numpy.array((0,), dtype=new_dtype)
-            if numpy.product(mshape) == 0:
+            if numpy.product(mshape, dtype=numpy.ulonglong) == 0:
                 return numpy.array(mshape, dtype=new_dtype)
             out = numpy.empty(mshape, dtype=new_dtype)
             sid_out = h5s.create_simple(mshape)
@@ -504,7 +504,7 @@ class Dataset(HLObject):
 
         # === Check for zero-sized datasets =====
 
-        if numpy.product(self.shape) == 0:
+        if numpy.product(self.shape, dtype=numpy.ulonglong) == 0:
             # These are the only access methods NumPy allows for such objects
             if args == (Ellipsis,) or args == tuple():
                 return numpy.empty(self.shape, dtype=new_dtype)
@@ -589,7 +589,7 @@ class Dataset(HLObject):
                 if val.ndim > 1:
                     tmp = numpy.empty(shape=val.shape[:-1], dtype=object)
                     tmp.ravel()[:] = [i for i in val.reshape(
-                        (numpy.product(val.shape[:-1]), val.shape[-1]))]
+                        (numpy.product(val.shape[:-1], dtype=numpy.ulonglong), val.shape[-1]))]
                 else:
                     tmp = numpy.array([None], dtype=object)
                     tmp[0] = val
@@ -742,7 +742,7 @@ class Dataset(HLObject):
         arr = numpy.empty(self.shape, dtype=self.dtype if dtype is None else dtype)
 
         # Special case for (0,)*-shape datasets
-        if numpy.product(self.shape) == 0:
+        if numpy.product(self.shape, dtype=numpy.ulonglong) == 0:
             return arr
 
         self.read_direct(arr)
