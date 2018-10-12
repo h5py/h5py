@@ -552,7 +552,7 @@ class Dataset(HLObject):
         if len(names) == 1:
             arr = arr[names[0]]     # Single-field recarray convention
         if arr.shape == ():
-            arr = numpy.asscalar(arr)
+            arr = arr.item()
         if single_element:
             arr = arr[0]
         return arr
