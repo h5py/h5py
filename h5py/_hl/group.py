@@ -68,7 +68,8 @@ class Group(HLObject, MutableMappingHDF5):
             gid = h5g.create(self.id, name, lcpl=lcpl, gcpl=gcpl)
             return Group(gid)
 
-    def create_dataset(self, name, shape=None, dtype=None, data=None, **kwds):
+    def create_dataset(self, name, shape=None, dtype=None, data=None,
+                       dcpl=None, **kwds):
         """ Create a new HDF5 dataset
 
         name
@@ -84,6 +85,9 @@ class Group(HLObject, MutableMappingHDF5):
         data
             Provide data to initialize the dataset.  If used, you can omit
             shape and dtype arguments.
+        dcpl
+            Dataset creation property list.  Keyword-only arguments below
+            take precedence.
 
         Keyword-only arguments:
 
@@ -133,7 +137,7 @@ class Group(HLObject, MutableMappingHDF5):
             kwds['track_order'] = h5.get_config().track_order
 
         with phil:
-            dsid = dataset.make_new_dset(self, shape, dtype, data, **kwds)
+            dsid = dataset.make_new_dset(self, shape, dtype, data, dcpl=dcpl, **kwds)
             dset = dataset.Dataset(dsid)
             if name is not None:
                 self[name] = dset
@@ -218,10 +222,7 @@ class Group(HLObject, MutableMappingHDF5):
         shape and dtype, in which case the provided values take precedence over
         those from `other`.
         """
-        # TODO: track_times, track_order
-        for k in ('shape', 'dtype', 'chunks', 'compression',
-                  'compression_opts', 'scaleoffset', 'shuffle', 'fletcher32',
-                  'fillvalue'):
+        for k in ('shape', 'dtype'):
             kwupdate.setdefault(k, getattr(other, k))
 
         # Special case: the maxshape property always exists, but if we pass it
@@ -230,7 +231,7 @@ class Group(HLObject, MutableMappingHDF5):
         if other.maxshape != other.shape:
             kwupdate.setdefault('maxshape', other.maxshape)
 
-        return self.create_dataset(name, **kwupdate)
+        return self.create_dataset(name, dcpl=other._dcpl, **kwupdate)
 
     def require_group(self, name, **kwargs):
         """Return a group, creating it if it doesn't exist.

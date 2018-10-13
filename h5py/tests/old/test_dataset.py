@@ -628,6 +628,14 @@ class TestCreateLike(BaseDataset):
         self.assertEqual(dslike.shape, (5, 5))
         self.assertIs(dslike.chunks, None)
 
+    def test_track_times(self):
+        orig = self.f.create_dataset('honda', data=np.arange(12),
+                                     track_times=False)
+        self.assertEqual(0, h5py.h5g.get_objinfo(orig._id).mtime)
+
+        similar = self.f.create_dataset_like('hyundai', self.f['honda'])
+        self.assertEqual(0, h5py.h5g.get_objinfo(similar._id).mtime)
+
 
 class TestResize(BaseDataset):
 

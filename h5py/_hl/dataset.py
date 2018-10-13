@@ -58,7 +58,7 @@ def make_new_dset(parent, shape=None, dtype=None, data=None,
                   chunks=None, compression=None, shuffle=None,
                   fletcher32=None, maxshape=None, compression_opts=None,
                   fillvalue=None, scaleoffset=None, track_times=None,
-                  external=None, track_order=None):
+                  external=None, track_order=None, dcpl=None):
     """ Return a new low-level dataset identifier
 
     Only creates anonymous datasets.
@@ -134,8 +134,10 @@ def make_new_dset(parent, shape=None, dtype=None, data=None,
         compression_opts = compression
         compression = 'gzip'
 
-    dcpl = filters.generate_dcpl(shape, dtype, chunks, compression, compression_opts,
-                  shuffle, fletcher32, maxshape, scaleoffset, external)
+    dcpl = filters.fill_dcpl(
+        dcpl or h5p.create(h5p.DATASET_CREATE), shape, dtype,
+        chunks, compression, compression_opts, shuffle, fletcher32,
+        maxshape, scaleoffset, external)
 
     if fillvalue is not None:
         fillvalue = numpy.array(fillvalue)

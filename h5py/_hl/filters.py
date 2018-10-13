@@ -106,8 +106,8 @@ def _normalize_external(external):
         external[idx] = item
     return external
 
-def generate_dcpl(shape, dtype, chunks, compression, compression_opts,
-                  shuffle, fletcher32, maxshape, scaleoffset, external):
+def fill_dcpl(plist, shape, dtype, chunks, compression, compression_opts,
+              shuffle, fletcher32, maxshape, scaleoffset, external):
     """ Generate a dataset creation property list.
 
     Undocumented and subject to change without warning.
@@ -208,7 +208,6 @@ def generate_dcpl(shape, dtype, chunks, compression, compression_opts,
     if maxshape is True:
         maxshape = (None,)*len(shape)
 
-    plist = h5p.create(h5p.DATASET_CREATE)
     if chunks is not None:
         plist.set_chunk(chunks)
         plist.set_fill_time(h5d.FILL_TIME_ALLOC)  # prevent resize glitch
