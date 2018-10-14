@@ -107,9 +107,9 @@ created is itself a group, in this case the `root group`, named ``/``:
     >>> f.name
     u'/'
 
-Creating a subgroup is accomplished via the aptly-named ``create_group``. But we need to open the file in read/write mode first ::
+Creating a subgroup is accomplished via the aptly-named ``create_group``. But we need to open the file in the "append" mode first (Read/write if exists, create otherwise) ::
 
-    >>> f = h5py.File('mydataset.hdf5', 'r+')
+    >>> f = h5py.File('mydataset.hdf5', 'a')
     >>> grp = f.create_group("subgroup")
 
 All ``Group`` objects also have the ``create_*`` methods like File::
