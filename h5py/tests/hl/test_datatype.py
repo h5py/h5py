@@ -204,16 +204,19 @@ class TestOffsets(TestCase):
                          np.issubdtype(f, np.complexfloating))
                      )
 
+        dtype_dset_map = {str(j): d
+                          for j, d in enumerate(dtypes)}
+
         fname = self.mktemp()
 
         with h5py.File(fname, 'w') as f:
-            for d in dtypes:
+            for n, d in dtype_dset_map.items():
                 data = np.arange(10,
                                  dtype=d)
 
-                f.create_dataset(d.__name__, data=data)
+                f.create_dataset(n, data=data)
 
         with h5py.File(fname, 'r') as f:
-            for d in dtypes:
-                ldata = f[d.__name__][:]
+            for n, d in dtype_dset_map.items():
+                ldata = f[n][:]
                 self.assertEqual(ldata.dtype, d)
