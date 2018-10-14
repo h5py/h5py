@@ -22,7 +22,7 @@ import tempfile
 import six
 
 from ..common import ut, TestCase, UNICODE_FILENAMES, closed_tempfile
-from h5py.highlevel import File
+from h5py import File
 import h5py
 
 try:

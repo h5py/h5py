@@ -15,6 +15,7 @@ from __future__ import absolute_import
 
 import posixpath as pp
 import sys
+from warnings import warn
 
 from threading import local
 
@@ -31,6 +32,7 @@ from . import selections2 as sel2
 from .datatype import Datatype
 from .compat import filename_decode
 from .vds import VDSmap, vds_support
+from ..h5py_warnings import H5pyDeprecationWarning
 
 _LEGACY_GZIP_COMPRESSION_VALS = frozenset(range(10))
 MPI = h5.get_config().mpi
@@ -285,8 +287,8 @@ class Dataset(HLObject):
     @with_phil
     def value(self):
         """  Alias for dataset[()] """
-        DeprecationWarning("dataset.value has been deprecated. "
-            "Use dataset[()] instead.")
+        warn("dataset.value has been deprecated. "
+            "Use dataset[()] instead.", H5pyDeprecationWarning)
         return self[()]
 
     @property

@@ -15,6 +15,7 @@ from __future__ import absolute_import
 
 import sys
 import os
+from warnings import warn
 
 from .compat import filename_decode, filename_encode
 
@@ -24,6 +25,7 @@ from .base import phil, with_phil
 from .group import Group
 from .. import h5, h5f, h5p, h5i, h5fd, _objects
 from .. import version
+from ..h5py_warnings import H5pyDeprecationWarning
 
 mpi = h5.get_config().mpi
 hdf5_version = version.hdf5_version_tuple[0:3]
@@ -213,7 +215,7 @@ class File(Group):
     @with_phil
     def filename(self):
         """File name on disk"""
-        return filename_decode(h5f.get_name(self.fid))
+        return filename_decode(h5f.get_name(self.id))
 
     @property
     @with_phil
@@ -227,19 +229,21 @@ class File(Group):
                    h5fd.MPIO: 'mpio',
                    h5fd.MPIPOSIX: 'mpiposix',
                    h5fd.fileobj_driver: 'fileobj'}
-        return drivers.get(self.fid.get_access_plist().get_driver(), 'unknown')
+        return drivers.get(self.id.get_access_plist().get_driver(), 'unknown')
 
     @property
     @with_phil
     def mode(self):
         """ Python mode used to open file """
         return {h5f.ACC_RDONLY: 'r',
-                h5f.ACC_RDWR: 'r+'}.get(self.fid.get_intent())
+                h5f.ACC_RDWR: 'r+'}.get(self.id.get_intent())
 
     @property
     @with_phil
     def fid(self):
         """File ID (backwards compatibility) """
+        warn("File.fid has been deprecated. "
+            "Use File.id instead.", H5pyDeprecationWarning)
         return self.id
 
     @property
@@ -253,7 +257,7 @@ class File(Group):
     @with_phil
     def userblock_size(self):
         """ User block size (in bytes) """
-        fcpl = self.fid.get_create_plist()
+        fcpl = self.id.get_create_plist()
         return fcpl.get_userblock()
 
 
@@ -405,7 +409,7 @@ class File(Group):
         """ Tell the HDF5 library to flush its buffers.
         """
         with phil:
-            h5f.flush(self.fid)
+            h5f.flush(self.id)
 
     @with_phil
     def __enter__(self):

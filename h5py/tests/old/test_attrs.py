@@ -24,9 +24,9 @@ import collections
 
 from ..common import TestCase, ut
 
-from h5py.highlevel import File
+from h5py import File
 from h5py import h5a,  h5t
-from h5py.highlevel import AttributeManager
+from h5py import AttributeManager
 
 
 class BaseAttrs(TestCase):

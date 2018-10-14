@@ -18,6 +18,15 @@
 
 from __future__ import absolute_import
 
+import warnings
+from .h5py_warnings import H5pyDeprecationWarning
+warnings.warn(
+    "The h5py.highlevel module is deprecated, code should import directly "
+    "from h5py, e.g. 'from h5py import File'.",
+    H5pyDeprecationWarning,
+    stacklevel=2
+)
+
 from ._hl import filters
 from ._hl.base import is_hdf5, HLObject
 from ._hl.files import File
