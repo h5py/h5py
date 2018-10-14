@@ -55,8 +55,8 @@ def readtime_dtype(basetype, names):
 
 
 def make_new_dset(parent, shape=None, dtype=None, data=None,
-                 chunks=None, compression=None, shuffle=None,
-                    fletcher32=None, maxshape=None, compression_opts=None,
+                  chunks=None, compression=None, shuffle=None,
+                  fletcher32=None, maxshape=None, compression_opts=None,
                   fillvalue=None, scaleoffset=None, track_times=None,
                   external=None):
     """ Return a new low-level dataset identifier
@@ -67,7 +67,20 @@ def make_new_dset(parent, shape=None, dtype=None, data=None,
     # Convert data to a C-contiguous ndarray
     if data is not None and not isinstance(data, Empty):
         from . import base
-        data = numpy.asarray(data, order="C", dtype=base.guess_dtype(data))
+        # normalize strings -> np.dtype objects
+        if dtype is not None:
+            _dtype = numpy.dtype(dtype)
+        else:
+            _dtype = None
+
+        # if we are going to a f2 datatype, pre-convert in python
+        # to workaround a possible h5py bug in the conversion.
+        is_small_float = (_dtype is not None and
+                          _dtype.kind == 'f' and
+                          _dtype.itemsize == 2)
+        data = numpy.asarray(data, order="C",
+                             dtype=(_dtype if is_small_float
+                                    else base.guess_dtype(data)))
 
     # Validate shape
     if shape is None:
