@@ -121,6 +121,24 @@ class TestVlen(TestCase):
                          h5py.check_dtype(enum=h5py.check_dtype(vlen=dt2)))
 
 
+class TestExplicitCast(TestCase):
+    def test_f2_casting(self):
+        fname = self.mktemp()
+
+        np.random.seed(1)
+        A = np.random.rand(1500, 20)
+
+        # Save to HDF5 file
+        with h5py.File(fname, "w") as Fid:
+            Fid.create_dataset("Data", data=A, dtype='f2')
+
+        with h5py.File(fname, "r") as Fid:
+            B = Fid["Data"][:]
+
+        # Compare
+        self.assertTrue(np.all(A.astype('f2') == B))
+
+
 class TestOffsets(TestCase):
     """
         Check that compound members with aligned or manual offsets are handled
