@@ -108,6 +108,8 @@ will take up space in memory. If you want to write large amounts of data,
 a better option may be to store temporary data on disk using the functions in
 :mod:`tempfile`.
 
+.. literalinclude:: ../../examples/bytesio.py
+
 .. _file_version:
 
 Version bounding
