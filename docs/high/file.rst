@@ -270,7 +270,7 @@ Reference
     Note that in addition to the File-specific methods and properties listed
     below, File objects inherit the full interface of :class:`Group`.
 
-    :param name:    Name of file (`str` or `unicode`), or an instance of
+    :param name:    Name of file (`bytes` or `str`), or an instance of
                     :class:`h5f.FileID` to bind to an existing
                     file identifier, or a file-like object
                     (see :ref:`file_fileobj`).
