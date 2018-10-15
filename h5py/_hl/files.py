@@ -34,14 +34,13 @@ swmr_support = False
 if hdf5_version >= h5.get_config().swmr_min_hdf5_version:
     swmr_support = True
 
-if mpi:
-    import mpi4py
 
 libver_dict = {'earliest': h5f.LIBVER_EARLIEST, 'latest': h5f.LIBVER_LATEST}
 libver_dict_r = dict((y, x) for x, y in six.iteritems(libver_dict))
 
 
 def _set_fapl_mpio(plist, **kwargs):
+    import mpi4py
     kwargs.setdefault('info', mpi4py.MPI.Info())
     plist.set_fapl_mpio(**kwargs)
 

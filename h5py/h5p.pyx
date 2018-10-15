@@ -29,14 +29,6 @@ from h5py import _objects
 
 from ._objects import phil, with_phil
 
-if MPI:
-    if MPI4PY_V2:
-        from mpi4py.libmpi cimport MPI_Comm, MPI_Info, MPI_Comm_dup, MPI_Info_dup, \
-                               MPI_Comm_free, MPI_Info_free
-    else:
-        from mpi4py.mpi_c cimport MPI_Comm, MPI_Info, MPI_Comm_dup, MPI_Info_dup, \
-                               MPI_Comm_free, MPI_Info_free
-
 # Initialization
 import_array()
 
@@ -1174,6 +1166,15 @@ cdef class PropFAID(PropInstanceID):
             0. The mpi4py.MPI.Comm Communicator
             1. The mpi4py.MPI.Comm Info
             """
+            if MPI4PY_V2:
+                from mpi4py.libmpi cimport (
+                    MPI_Comm, MPI_Info, MPI_Comm_dup, MPI_Info_dup,
+                    MPI_Comm_free, MPI_Info_free)
+            else:
+                from mpi4py.mpi_c cimport (
+                    MPI_Comm, MPI_Info, MPI_Comm_dup, MPI_Info_dup,
+                    MPI_Comm_free, MPI_Info_free)
+
             cdef MPI_Comm comm
             cdef MPI_Info info
 
