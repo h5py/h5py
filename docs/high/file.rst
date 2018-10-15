@@ -76,10 +76,43 @@ of supported drivers and their options:
 
         memb_size:  Maximum file size (default is 2**31-1).
 
+    'fileobj'
+        Store the data in a Python file-like object; see below.
+        This is the default if a file-like object is passed to :class:`File`.
+
+.. _file_fileobj:
+
+Python file-like objects
+------------------------
+
+.. versionadded:: 2.9
+
+The first argument to :class:`File` may be a Python file-like object, such as
+an :class:`io.BytesIO` or :class:`tempfile.TemporaryFile` instance.
+This is a convenient way to create temporary HDF5 files, e.g. for testing or to
+send over the network.
+
+The file-like object must be open for binary I/O, and must have these methods:
+``read()`` (or ``readinto()``), ``write()``, ``seek()``, ``tell()``,
+``truncate()`` and ``flush()``.
+
+
+    >>> tf = tempfile.TemporaryFile()
+    >>> f = h5py.File(tf)
+
+Accessing the :class:`File` instance after the underlying file object has been
+closed will result in undefined behaviour.
+
+When using an in-memory object such as :class:`io.BytesIO`, the data written
+will take up space in memory. If you want to write large amounts of data,
+a better option may be to store temporary data on disk using the functions in
+:mod:`tempfile`.
+
+.. literalinclude:: ../../examples/bytesio.py
 
 .. _file_version:
 
-Version Bounding
+Version bounding
 ----------------
 
 HDF5 has been evolving for many years now.  By default, the library will
@@ -239,9 +272,10 @@ Reference
     Note that in addition to the File-specific methods and properties listed
     below, File objects inherit the full interface of :class:`Group`.
 
-    :param name:    Name of file (`str` or `unicode`), or an instance of
+    :param name:    Name of file (`bytes` or `str`), or an instance of
                     :class:`h5f.FileID` to bind to an existing
-                    file identifier.
+                    file identifier, or a file-like object
+                    (see :ref:`file_fileobj`).
     :param mode:    Mode in which to open file; one of
                     ("w", "r", "r+", "a", "w-").  See :ref:`file_open`.
     :param driver:  File driver to use; see :ref:`file_driver`.
