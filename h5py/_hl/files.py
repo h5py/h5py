@@ -364,7 +364,7 @@ class File(Group):
                     raise ValueError("Invalid value of 'fileobj' argument; "
                                      "must equal to file-like object if specified.")
                 kwds.update(fileobj=name)
-                name = repr(name).encode('ASCII')
+                name = repr(name).encode('ASCII', 'replace')
             else:
                 name = filename_encode(name)
 

@@ -107,7 +107,6 @@ ctypedef struct H5FD_fileobj_t:
 # parameters (dxpl, type) are ignored.
 
 from cpython cimport Py_INCREF, Py_DECREF
-import numpy as np
 from libc.stdlib cimport malloc as stdlib_malloc
 from libc.stdlib cimport free as stdlib_free
 cimport libc.stdio
@@ -156,7 +155,7 @@ cdef herr_t H5FD_fileobj_read(H5FD_fileobj_t *f, H5FD_mem_t type, hid_t dxpl, ha
     (<object>f.fileobj).seek(addr)
     if hasattr(<object>f.fileobj, 'readinto'):
         mview = <unsigned char[:size]>(buf)
-        (<object>f.fileobj).readinto(np.asarray(mview))
+        (<object>f.fileobj).readinto(mview)
     else:
         b = (<object>f.fileobj).read(size)
         if len(b) == size:
@@ -169,7 +168,7 @@ cdef herr_t H5FD_fileobj_write(H5FD_fileobj_t *f, H5FD_mem_t type, hid_t dxpl, h
     cdef unsigned char[:] mview
     (<object>f.fileobj).seek(addr)
     mview = <unsigned char[:size]>buf
-    (<object>f.fileobj).write(np.asarray(mview))
+    (<object>f.fileobj).write(mview)
     return 0
 
 cdef herr_t H5FD_fileobj_truncate(H5FD_fileobj_t *f, hid_t dxpl, hbool_t closing) except 1:
