@@ -62,4 +62,3 @@ class TestArray(TestCase):
         self.assertEqual(data_as_U_array.dtype, np.dtype('U1'))
         with self.assertRaises(TypeError):
             self.f.attrs.create('y', data=data_as_U_array)
-
