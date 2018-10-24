@@ -45,3 +45,21 @@ class TestArray(TestCase):
         # See issue 498 discussion
         
         self.f.attrs.create('x', data=42, dtype='i8')
+
+    def test_tuple_of_unicode(self):
+        # Test that a tuple of unicode strings can be set as an attribute. It will
+        # be converted to a numpy array of vlen unicode type:
+        data = (u'a', u'b')
+        self.f.attrs.create('x', data=data)
+        result = self.f.attrs['x']
+        self.assertTrue(all(result == data))
+        self.assertEqual(result.dtype, np.dtype('O'))
+
+        # However, a numpy array of type U being passed in will not be
+        # automatically converted, and should raise an error as it does
+        # not map to a h5py dtype
+        data_as_U_array = np.array(data)
+        self.assertEqual(data_as_U_array.dtype, np.dtype('U1'))
+        with self.assertRaises(TypeError):
+            self.f.attrs.create('y', data=data_as_U_array)
+
