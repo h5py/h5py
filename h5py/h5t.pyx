@@ -303,7 +303,7 @@ available_ftypes = _DeprecatedMapping(available_ftypes,
 )
 
 
-def _correct_float_info(ftype_, finfo):
+cdef (int, int, int) _correct_float_info(ftype_, finfo):
     nmant = finfo.nmant
     maxexp = finfo.maxexp
     minexp = finfo.minexp
