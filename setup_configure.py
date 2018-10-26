@@ -205,6 +205,8 @@ def autodetect_version(hdf5_dir=None):
 
     if sys.platform.startswith('darwin'):
         regexp = re.compile(r'^libhdf5.dylib')
+    elif sys.platform.startswith('win'):
+        regexp = re.compile(r'^hdf5.dll')
     else:
         regexp = re.compile(r'^libhdf5.so')
 
@@ -215,7 +217,11 @@ def autodetect_version(hdf5_dir=None):
     except EnvironmentError:
         pass
     if hdf5_dir is not None:
-        libdirs.insert(0, op.join(hdf5_dir, 'lib'))
+        if sys.platform.startswith('win'):
+            lib = 'bin'
+        else:
+            lib = 'lib'
+        libdirs.insert(0, op.join(hdf5_dir, lib))
 
     path = None
     for d in libdirs:
