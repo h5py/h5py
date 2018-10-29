@@ -179,7 +179,6 @@ class TestOffsets(TestCase):
         with h5py.File(fname, 'r') as f:
             self.assertArrayEqual(f['data'], data)
 
-
     def test_out_of_order_offsets(self):
         dt = np.dtype({
             'names' : ['f1', 'f2', 'f3'],
@@ -198,3 +197,26 @@ class TestOffsets(TestCase):
 
         with h5py.File(fname, 'r') as fd:
             self.assertArrayEqual(fd['data'], data)
+
+    def test_float_round_tripping(self):
+        dtypes = set(f for f in np.typeDict.values()
+                     if (np.issubdtype(f, np.floating) or
+                         np.issubdtype(f, np.complexfloating))
+                     )
+
+        dtype_dset_map = {str(j): d
+                          for j, d in enumerate(dtypes)}
+
+        fname = self.mktemp()
+
+        with h5py.File(fname, 'w') as f:
+            for n, d in dtype_dset_map.items():
+                data = np.arange(10,
+                                 dtype=d)
+
+                f.create_dataset(n, data=data)
+
+        with h5py.File(fname, 'r') as f:
+            for n, d in dtype_dset_map.items():
+                ldata = f[n][:]
+                self.assertEqual(ldata.dtype, d)

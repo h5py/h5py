@@ -231,6 +231,14 @@ IEEE_F128LE = IEEE_F128BE.copy()
 IEEE_F128LE.set_order(H5T_ORDER_LE)
 IEEE_F128LE.lock()
 
+LDOUBLE_LE = NATIVE_LDOUBLE.copy()
+LDOUBLE_LE.set_order(H5T_ORDER_LE)
+LDOUBLE_LE.lock()
+
+LDOUBLE_BE = NATIVE_LDOUBLE.copy()
+LDOUBLE_BE.set_order(H5T_ORDER_BE)
+LDOUBLE_BE.lock()
+
 # Custom Python object pointer type
 cdef hid_t H5PY_OBJ = H5Tcreate(H5T_OPAQUE, sizeof(PyObject*))
 H5Tset_tag(H5PY_OBJ, "PYTHON:OBJECT")
@@ -293,6 +301,29 @@ available_ftypes = _DeprecatedMapping(available_ftypes,
     ("Do not use available_ftypes, this is not part of the public API of "
     "h5py. See https://github.com/h5py/h5py/pull/926 for details.")
 )
+
+
+cdef (int, int, int) _correct_float_info(ftype_, finfo):
+    nmant = finfo.nmant
+    maxexp = finfo.maxexp
+    minexp = finfo.minexp
+    # workaround for numpy's buggy finfo on float128 on ppc64 archs
+    if ftype_ == np.longdouble and MACHINE == 'ppc64':
+        # values reported by hdf5
+        nmant = 116
+        maxexp = 1024
+        minexp = -1022
+    elif ftype_ == np.longdouble and MACHINE == 'ppc64le':
+        # values reported by hdf5
+        nmant = 52
+        maxexp = 1024
+        minexp = -1022
+    elif nmant == 63 and finfo.nexp == 15:
+        # This is an 80-bit float, correct mantissa size
+        nmant += 1
+
+    return nmant, maxexp, minexp
+
 
 # === General datatype operations =============================================
 
@@ -1025,23 +1056,7 @@ cdef class TypeFloatID(TypeAtomicID):
 
         # Handle non-standard exponent and mantissa sizes.
         for ftype_, finfo, size in _available_ftypes:
-            nmant = finfo.nmant
-            maxexp = finfo.maxexp
-            minexp = finfo.minexp
-            # workaround for numpy's buggy finfo on float128 on ppc64 archs
-            if ftype_ == np.longdouble and MACHINE == 'ppc64':
-                # values reported by hdf5
-                nmant = 116
-                maxexp = 1024
-                minexp = -1022
-            elif ftype_ == np.longdouble and MACHINE == 'ppc64le':
-                # values reported by hdf5
-                nmant = 52
-                maxexp = 1024
-                minexp = -1022
-            elif nmant == 63 and finfo.nexp == 15:
-                # This is an 80-bit float, correct mantissa size
-                nmant += 1
+            nmant, maxexp, minexp = _correct_float_info(ftype_, finfo)
             if (size >= self.get_size() and m_size <= nmant and
                 (2**e_size - e_bias - 1) <= maxexp and (1 - e_bias) >= minexp):
                 new_dtype = np.dtype(ftype_).newbyteorder(order)
@@ -1353,29 +1368,30 @@ cdef class TypeEnumID(TypeCompositeID):
 def _get_float_dtype_to_hdf5():
     float_le = {}
     float_be = {}
-    h5_be_list = [IEEE_F16BE, IEEE_F32BE, IEEE_F64BE, IEEE_F128BE]
-    h5_le_list = [IEEE_F16LE, IEEE_F32LE, IEEE_F64LE, IEEE_F128LE]
+    h5_be_list = [IEEE_F16BE, IEEE_F32BE, IEEE_F64BE, IEEE_F128BE,
+                  LDOUBLE_BE]
+    h5_le_list = [IEEE_F16LE, IEEE_F32LE, IEEE_F64LE, IEEE_F128LE,
+                  LDOUBLE_LE]
     for ftype_, finfo, size in _available_ftypes:
+        nmant, maxexp, minexp = _correct_float_info(ftype_, finfo)
         for h5type in h5_be_list:
             spos, epos, esize, mpos, msize = h5type.get_fields()
             ebias = h5type.get_ebias()
-            if (finfo.iexp == esize and finfo.nmant == msize and
-                (finfo.maxexp - 1) == ebias
+            if (finfo.iexp == esize and nmant == msize and
+                (maxexp - 1) == ebias
             ):
                 float_be[ftype_] = h5type
         for h5type in h5_le_list:
             spos, epos, esize, mpos, msize = h5type.get_fields()
             ebias = h5type.get_ebias()
-            if (finfo.iexp == esize and finfo.nmant == msize and
-                (finfo.maxexp - 1) == ebias
+            if (finfo.iexp == esize and nmant == msize and
+                (maxexp - 1) == ebias
             ):
                 float_le[ftype_] = h5type
     if ORDER_NATIVE == H5T_ORDER_LE:
         float_nt = dict(float_le)
     else:
         float_nt = dict(float_be)
-    if np.longdouble not in float_nt:
-        float_nt[np.longdouble] = NATIVE_LDOUBLE
     return float_le, float_be, float_nt
 
 cdef dict _float_le
