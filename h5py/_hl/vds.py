@@ -13,7 +13,7 @@
 
 from copy import deepcopy as copy
 from collections import namedtuple
-from .selections import SimpleSelection
+from .selections import SimpleSelection, select
 from .. import h5s, h5
 from .. import version
 
@@ -95,7 +95,7 @@ class VirtualSource(object):
 
     def __getitem__(self, key):
         tmp = copy(self)
-        tmp.sel = SimpleSelection(self.shape)[key]
+        tmp.sel = select(self.shape, key, dsid=None)
         return tmp
 
 class VirtualLayout(object):
@@ -123,7 +123,7 @@ class VirtualLayout(object):
         self.sources = []
 
     def __setitem__(self, key, source):
-        sel = SimpleSelection(self.shape)[key]
+        sel = select(self.shape, key, source.sel.id)
         self.sources.append(VDSmap(sel.id,
                                    source.path,
                                    source.name,

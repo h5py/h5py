@@ -267,5 +267,45 @@ class SlicingTestCase(ut.TestCase):
     def tearDown(self):
         shutil.rmtree(self.tmpdir)
 
+@ut.skipUnless(vds_support,
+               'VDS requires HDF5 >= 1.9.233')
+class IndexingTestCase(ut.TestCase):
+
+    def setUp(self):
+        self.tmpdir = tempfile.mkdtemp()
+        # Create source file (1.h5)
+        with h5.File(osp.join(self.tmpdir, '1.h5'), 'w') as f:
+            d = f.create_dataset('data', (10,), 'i4')
+            d[:] = np.arange(10)*10
+
+    def test_index_layout(self):
+        # Assemble virtual dataset
+        layout = h5.VirtualLayout((100,), 'i4')
+
+        inds = [3,6,20,25,33,47,70,75,96,98]
+
+        filename = osp.join(self.tmpdir, "1.h5")
+        vsource = h5.VirtualSource(filename, 'data', shape=(10,))
+        layout[inds] = vsource
+
+        outfile = osp.join(self.tmpdir, 'VDS.h5')
+
+        # Add virtual dataset to output file
+        with h5.File(outfile, 'w', libver='latest') as f:
+            f.create_virtual_dataset('/data', layout, fillvalue=-5)
+
+        with h5.File(outfile, 'r') as f:
+            data = f['/data'][()]
+
+        # Verify
+        assert_array_equal(data[inds], np.arange(10)*10)
+        mask = np.zeros(100)
+        mask[inds] = 1
+        self.assertEqual(data[mask == 0].min(), -5)
+        self.assertEqual(data[mask == 0].max(), -5)
+
+    def tearDown(self):
+        shutil.rmtree(self.tmpdir)
+
 if __name__ == "__main__":
     ut.main()
