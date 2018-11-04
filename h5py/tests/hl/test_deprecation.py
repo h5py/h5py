@@ -13,6 +13,7 @@ Tests that deprecations work correctly
 from __future__ import absolute_import
 
 import h5py
+from h5py.h5py_warnings import H5pyDeprecationWarning
 
 from ..common import ut, TestCase
 
@@ -24,4 +25,4 @@ class TestDeprecations(TestCase):
             "directly from h5py, e.g. 'from h5py import File'."
         )
         with self.assertWarnsRegex(H5pyDeprecationWarning, warning_message) as warning:
-            hl = h5py.highlevel
+            File = h5py.highlevel.File
