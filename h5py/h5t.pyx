@@ -247,18 +247,10 @@ def _get_available_ftypes():
     def cmp_ftype(t):
         return np.finfo(t).maxexp
 
-    available_ftypes = defaultdict(list)
-    for ftype in np.typeDict.values():
-        if np.issubdtype(ftype, np.floating):
-            available_ftypes[np.dtype(ftype).itemsize].append(ftype)
-
     sorted_ftypes = []
-    seen_ftypes = set()
-    for size, ftypes in sorted(available_ftypes.items()):
-        for ftype in sorted(ftypes, key=cmp_ftype):
-            if ftype not in seen_ftypes:
-                seen_ftypes.add(ftype)
-                sorted_ftypes.append((ftype, np.finfo(ftype), size))
+    for ftype in sorted(np.sctypes['float'], key=cmp_ftype):
+        size = np.dtype(ftype).itemsize
+        sorted_ftypes.append((ftype, np.finfo(ftype), size))
     return tuple(sorted_ftypes)
 
 _available_ftypes = _get_available_ftypes()
