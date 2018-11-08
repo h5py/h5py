@@ -296,7 +296,13 @@ class SimpleSelection(Selection):
                 if t == 1 or count[-idx] == t:
                     tshape.append(t)
                 else:
-                    raise TypeError("Can't broadcast %s -> %s" % (target_shape, count))
+                    raise TypeError("Can't broadcast %s -> %s" % (target_shape, self.mshape))
+
+        if any([n > 1 for n in target]):
+            # All dimensions from target_shape should either have been popped
+            # to match the selection shape, or be 1.
+            raise TypeError("Can't broadcast %s -> %s" % (target_shape, self.mshape))
+
         tshape.reverse()
         tshape = tuple(tshape)
 

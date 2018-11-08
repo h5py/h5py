@@ -141,6 +141,16 @@ class TestSimpleSlicing(TestCase):
         """ Negative stop indexes work as they do in NumPy """
         self.assertArrayEqual(self.dset[2:-2], self.arr[2:-2])
 
+    def test_write(self):
+        """Assigning to a 1D slice of a 2D dataset
+        """
+        dset = self.f.create_dataset('x2', (10, 2))
+
+        x = np.zeros((10, 1))
+        dset[:, 0] = x[:, 0]
+        with self.assertRaises(TypeError):
+            dset[:, 1] = x
+
 class TestArraySlicing(BaseSlicing):
 
     """
