@@ -295,11 +295,6 @@ class TestLen(BaseMapping):
         self.f.create_group('e')
         self.assertEqual(len(self.f), len(self.groups)+1)
 
-    def test_exc(self):
-        """ len() on closed group gives ValueError """
-        self.f.close()
-        with self.assertRaises(ValueError):
-            len(self.f)
 
 class TestContains(BaseGroup):
 

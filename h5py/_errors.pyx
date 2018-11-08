@@ -74,10 +74,8 @@ _exact_table = {
     (H5E_ARGS, H5E_BADTYPE):        ValueError, # Invalid location in file
     (H5E_REFERENCE, H5E_CANTINIT):  ValueError, # Dereferencing invalid ref
 
-    # needed for 1.10.3 to maintain compatibility with 1.10.{0,1,2}
+    # needed for 1.10.3+ to maintain compatibility with 1.10.{0,1,2}
 
-    # due to changes to H5Gdeprec.c:H5Gget_num_objs
-    (H5E_SYM, H5E_BADTYPE):         ValueError, # Invalid location in file
     # due to changes to H5F.c:H5Fstart_swmr_write
     (H5E_FILE, H5E_CANTCONVERT):    ValueError, # Invalid file format
   }
