@@ -17,7 +17,7 @@ else
         pushd hdf5-$HDF5_VERSION
         chmod u+x autogen.sh
         ./configure --prefix $HDF5_DIR
-        make -j 2
+        make -j $(nproc)
         make install
         popd
         popd
