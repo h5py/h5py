@@ -169,6 +169,14 @@ in the file. When object names are read, they are returned as Unicode by default
 However, HDF5 has no predefined datatype to represent fixed-width UTF-16 or
 UTF-32 (NumPy format) strings. Therefore, the NumPy 'U' datatype is not supported.
 
+Exceptions
+----------
+
+h5py tries to map the error codes from hdf5 to the corresponding
+``Exception`` class on the Python side.  However the HDF5 group does
+not consider the error codes to be public API so we can not guarantee
+type stability of the exceptions raised.
+
 Development
 -----------
 
