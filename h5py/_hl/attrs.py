@@ -18,7 +18,7 @@ from __future__ import absolute_import
 
 import numpy
 import uuid
-
+import six
 
 from .. import h5s, h5t, h5a
 from . import base
@@ -116,10 +116,16 @@ class AttributeManager(base.MutableMappingHDF5, base.CommonStateObject):
 
         with phil:
 
-            # First, make sure we have a NumPy array.  We leave the data
-            # type conversion for HDF5 to perform.
+            # First, make sure we have a NumPy array.  We leave the data type
+            # conversion for HDF5 to perform (other than the below exception).
             if not isinstance(data, Empty):
+                is_list_or_tuple = isinstance(data, (list, tuple))
                 data = numpy.asarray(data, order='C')
+                # If we were passed a list or tuple, then we do not need to respect the
+                # datatype of the numpy array. If it is U type, convert to vlen unicode
+                # strings:
+                if is_list_or_tuple and data.dtype.type == numpy.unicode_:
+                    data = numpy.array(data, dtype=h5t.special_dtype(vlen=six.text_type))
 
             if shape is None:
                 shape = data.shape

@@ -148,6 +148,22 @@ this and "pretend" to support it, h5py will raise an error when attempting
 to create datasets or attributes of this type.
 
 
+Handling of lists/tuples of strings as attributes
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If you set an attribute equal to a Python list or tuple of unicode strings,
+such as the following:
+
+    >>> f.attrs['x'] = (u'a', u'b')
+
+h5py will save these as arrays of variable-length strings with character set
+H5T_CSET_UTF8. When read back, the results will be numpy arrays of dtype
+``'object'``, as if the original data were written as:
+
+    >>> f['x'] = np.array(('a', 'b'), dtype=h5py.special_dtype(vlen=str)) # PY3
+    >>> f['x'] = np.array((u'a', u'b'), dtype=h5py.special_dtype(vlen=unicode)) # PY2
+
+
 Object names
 ------------
 
