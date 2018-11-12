@@ -1741,7 +1741,7 @@ def enum_dtype(values_dict, basetype=np.uint8):
     appropriate integer base dtype large enough to hold the possible options.
     """
     dt = dtype(basetype)
-    if dt.kind not in "iu":
+    if not np.issubdtype(dt, np.integer):
         raise TypeError("Only integer types can be used as enums")
 
     return dtype(dt, metadata={'enum': values_dict})
