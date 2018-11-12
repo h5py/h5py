@@ -1712,6 +1712,42 @@ cpdef TypeID py_create(object dtype_in, bint logical=0, bint aligned=0):
         else:
             raise TypeError("No conversion path for dtype: %s" % repr(dt))
 
+def vlen_dtype(basetype):
+    """Make a numpy dtype for an HDF5 variable-length datatype
+
+    For variable-length string dtypes, use :func:`string_dtype` instead.
+    """
+    return dtype('O', metadata={'vlen': basetype})
+
+def string_dtype(encoding='utf-8'):
+    """Make a numpy dtype for HDF5 variable-length strings
+
+    encoding may be 'utf-8' or 'ascii'. If it is 'utf-8', the data should be
+    passed as Python str objects (unicode in Python 2). For 'ascii', data should
+    be passed as bytes.
+    """
+    if encoding == 'utf-8':
+        return dtype('O', metadata={'vlen': unicode})
+    elif encoding == 'ascii':
+        return dtype('O', metadata={'vlen': bytes})
+    else:
+        raise ValueError("Invalid encoding (%r); 'utf-8' or 'ascii' allowed"
+                         % encoding)
+
+def enum_dtype(values_dict, basetype=np.uint8):
+    """Create a NumPy representation of an HDF5 enumerated type
+
+    *values_dict* maps string names to integer values. *basetype* is an
+    appropriate integer base dtype large enough to hold the possible options.
+    """
+    dt = dtype(basetype)
+    if dt.kind not in "iu":
+        raise TypeError("Only integer types can be used as enums")
+
+    return dtype(dt, metadata={'enum': values_dict})
+
+ref_dtype = dtype('O', metadata={'ref': Reference})
+regionref_dtype = dtype('O', metadata={'ref': RegionReference})
 
 @with_phil
 def special_dtype(**kwds):
@@ -1750,18 +1786,14 @@ def special_dtype(**kwds):
         except TypeError:
             raise TypeError("Enums must be created from a 2-tuple (basetype, values_dict)")
 
-        dt = dtype(dt)
-        if dt.kind not in "iu":
-            raise TypeError("Only integer types can be used as enums")
-
-        return dtype(dt, metadata={'enum': enum_vals})
+        return enum_dtype(enum_vals, dt)
 
     if name == 'ref':
 
         if val not in (Reference, RegionReference):
             raise ValueError("Ref class must be Reference or RegionReference")
 
-        return dtype('O', metadata={'ref': val})
+        return ref_dtype if (val is Reference) else regionref_dtype
 
     raise TypeError('Unknown special type "%s"' % name)
 
