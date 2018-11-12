@@ -1803,7 +1803,10 @@ def check_vlen_dtype(dt):
 
     Returns None if the dtype does not represent an HDF5 vlen.
     """
-    return dt.metadata.get('vlen', None)
+    try:
+        return dt.metadata.get('vlen', None)
+    except AttributeError:
+        return None
 
 def check_string_dtype(dt):
     """If the dtype represents an HDF5 vlen string, returns the encoding.
@@ -1826,7 +1829,10 @@ def check_enum_dtype(dt):
 
     Returns None if the dtype does not represent an HDF5 enumerated type.
     """
-    return dt.metadata.get('enum', None)
+    try:
+        return dt.metadata.get('enum', None)
+    except AttributeError:
+        return None
 
 def check_ref_dtype(dt):
     """If the dtype represents an HDF5 reference type, returns the reference
@@ -1834,7 +1840,10 @@ def check_ref_dtype(dt):
 
     Returns None if the dtype does not represent an HDF5 reference type.
     """
-    return dt.metadata.get('ref', None)
+    try:
+        return dt.metadata.get('ref', None)
+    except AttributeError:
+        return None
 
 @with_phil
 def check_dtype(**kwds):
