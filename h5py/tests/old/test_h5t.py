@@ -30,8 +30,7 @@ class TestCompound(ut.TestCase):
     def test_ref(self):
         """ Reference types are correctly stored in compound types (issue 144)
         """
-        ref = h5py.special_dtype(ref=h5py.Reference)
-        dt = np.dtype([('a', ref), ('b', '<f4')])
+        dt = np.dtype([('a', h5py.ref_dtype), ('b', '<f4')])
         tid = h5t.py_create(dt, logical=True)
         t1, t2 = tid.get_member_type(0), tid.get_member_type(1)
         self.assertEqual(t1, h5t.STD_REF_OBJ)

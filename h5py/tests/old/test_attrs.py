@@ -162,6 +162,6 @@ class TestMutableMapping(BaseAttrs):
 class TestVlen(BaseAttrs):
     def test_vlen(self):
         a = np.array([np.arange(3), np.arange(4)],
-            dtype=h5t.special_dtype(vlen=int))
+            dtype=h5t.vlen_dtype(int))
         self.f.attrs['a'] = a
         self.assertArrayEqual(self.f.attrs['a'][0], a[0])

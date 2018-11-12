@@ -750,9 +750,9 @@ cdef class TypeStringID(TypeID):
         # Numpy translation function for string types
         if self.is_variable_str():
             if self.get_cset() == H5T_CSET_ASCII:
-                return special_dtype(vlen=bytes)
+                return string_dtype(encoding='ascii')
             elif self.get_cset() == H5T_CSET_UTF8:
-                return special_dtype(vlen=unicode)
+                return string_dtype(encoding='utf-8')
             else:
                 raise TypeError("Unknown string encoding (value %d)" % self.get_cset())
 
@@ -770,7 +770,7 @@ cdef class TypeVlenID(TypeID):
         cdef TypeID base_type
         base_type = self.get_super()
 
-        return special_dtype(vlen=base_type.dtype)
+        return vlen_dtype(base_type.dtype)
 
 cdef class TypeTimeID(TypeID):
 
@@ -794,9 +794,9 @@ cdef class TypeReferenceID(TypeID):
 
     cdef object py_dtype(self):
         if H5Tequal(self.id, H5T_STD_REF_OBJ):
-            return special_dtype(ref=Reference)
+            return ref_dtype
         elif H5Tequal(self.id, H5T_STD_REF_DSETREG):
-            return special_dtype(ref=RegionReference)
+            return regionref_dtype
         else:
             raise TypeError("Unknown reference type")
 
@@ -1356,7 +1356,7 @@ cdef class TypeEnumID(TypeCompositeID):
                 except UnicodeDecodeError:
                     pass    # Last resort: return byte string
             members_conv[name] = val
-        return special_dtype(enum=(basetype.py_dtype(), members_conv))
+        return enum_dtype(members_conv, basetype=basetype.py_dtype())
 
 
 # === Translation from NumPy dtypes to HDF5 type objects ======================
@@ -1659,7 +1659,7 @@ cpdef TypeID py_create(object dtype_in, bint logical=0, bint aligned=0):
 
             if logical:
                 # Check for an enumeration hint
-                enum_vals = check_dtype(enum=dt)
+                enum_vals = check_enum_dtype(dt)
                 if enum_vals is not None:
                     return _c_enum(dt, enum_vals)
 
@@ -1692,7 +1692,7 @@ cpdef TypeID py_create(object dtype_in, bint logical=0, bint aligned=0):
         elif kind == c'O':
 
             if logical:
-                vlen = check_dtype(vlen=dt)
+                vlen = check_vlen_dtype(dt)
                 if vlen is bytes:
                     return _c_vlen_str()
                 elif vlen is unicode:
@@ -1700,7 +1700,7 @@ cpdef TypeID py_create(object dtype_in, bint logical=0, bint aligned=0):
                 elif vlen is not None:
                     return vlen_create(py_create(vlen, logical))
 
-                refclass = check_dtype(ref=dt)
+                refclass = check_ref_dtype(dt)
                 if refclass is not None:
                     return _c_ref(refclass)
 
@@ -1924,11 +1924,11 @@ def find(TypeID src not None, TypeID dst not None):
 cpdef dtype py_new_enum(object dt_in, dict enum_vals):
     """ (DTYPE dt_in, DICT enum_vals) => DTYPE
 
-    Deprecated; use special_dtype() instead.
+    Deprecated; use enum_dtype() instead.
     """
-    warn("Deprecated; use special_dtype(enum=(dtype, values)) instead",
+    warn("Deprecated; use enum_dtype(values, dtype) instead",
         H5pyDeprecationWarning)
-    return special_dtype(enum = (dt_in, enum_vals))
+    return enum_dtype(enum_vals, dt_in)
 
 cpdef dict py_get_enum(object dt):
     """ (DTYPE dt_in) => DICT
@@ -1942,11 +1942,11 @@ cpdef dict py_get_enum(object dt):
 cpdef dtype py_new_vlen(object kind):
     """ (OBJECT kind) => DTYPE
 
-    Deprecated; use special_dtype() instead.
+    Deprecated; use vlen_dtype() instead.
     """
-    warn("Deprecated; use special_dtype(vlen=basetype) instead",
+    warn("Deprecated; use vlen_dtype(basetype) instead",
         H5pyDeprecationWarning)
-    return special_dtype(vlen=kind)
+    return vlen_dtype(kind)
 
 cpdef object py_get_vlen(object dt_in):
     """ (OBJECT dt_in) => TYPE

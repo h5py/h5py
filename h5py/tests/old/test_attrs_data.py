@@ -149,7 +149,7 @@ class TestTypes(BaseAttrs):
 
     def test_vlen_string_array(self):
         """ Storage of vlen byte string arrays"""
-        dt = h5py.special_dtype(vlen=bytes)
+        dt = h5py.string_dtype(encoding='ascii')
 
         data = np.ndarray((2,), dtype=dt)
         data[...] = b"Hello", b"Hi there!  This is HDF5!"

@@ -125,7 +125,7 @@ class AttributeManager(base.MutableMappingHDF5, base.CommonStateObject):
                 # datatype of the numpy array. If it is U type, convert to vlen unicode
                 # strings:
                 if is_list_or_tuple and data.dtype.type == numpy.unicode_:
-                    data = numpy.array(data, dtype=h5t.special_dtype(vlen=six.text_type))
+                    data = numpy.array(data, dtype=h5t.string_dtype())
 
             if shape is None:
                 shape = data.shape

@@ -26,15 +26,15 @@ class TestVlen(TestCase):
     def test_compound(self):
 
         fields = []
-        fields.append(('field_1', h5py.special_dtype(vlen=str)))
+        fields.append(('field_1', h5py.string_dtype()))
         fields.append(('field_2', np.int32))
         dt = np.dtype(fields)
         self.f['mytype'] = np.dtype(dt)
         dt_out = self.f['mytype'].dtype.fields['field_1'][0]
-        self.assertEqual(h5py.check_dtype(vlen=dt_out), str)
+        self.assertEqual(h5py.check_vlen_dtype(dt_out), str)
 
     def test_compound_vlen_bool(self):
-        vidt = h5py.special_dtype(vlen=np.uint8)
+        vidt = h5py.vlen_dtype(np.uint8)
         def a(items):
             return np.array(items, dtype=np.uint8)
 
@@ -80,8 +80,8 @@ class TestVlen(TestCase):
         self.assertArrayEqual(data['logical'], actual['logical'])
 
     def test_compound_vlen_enum(self):
-        eidt = h5py.special_dtype(enum=(np.uint8, {'OFF': 0, 'ON': 1}))
-        vidt = h5py.special_dtype(vlen=np.uint8)
+        eidt = h5py.enum_dtype({'OFF': 0, 'ON': 1}, basetype=np.uint8)
+        vidt = h5py.vlen_dtype(np.uint8)
         def a(items):
             return np.array(items, dtype=np.uint8)
 
@@ -104,8 +104,7 @@ class TestVlen(TestCase):
     def test_vlen_enum(self):
         fname = self.mktemp()
         arr1 = [[1],[1,2]]
-        dt1 = h5py.special_dtype(vlen=h5py.special_dtype(
-            enum=('i', dict(foo=1, bar=2))))
+        dt1 = h5py.vlen_dtype(h5py.enum_dtype(dict(foo=1, bar=2), 'i'))
 
         with h5py.File(fname,'w') as f:
             df1 = f.create_dataset('test', (len(arr1),), dtype=dt1)
@@ -117,8 +116,8 @@ class TestVlen(TestCase):
             arr2 = [e.tolist() for e in df2[:]]
 
         self.assertEqual(arr1, arr2)
-        self.assertEqual(h5py.check_dtype(enum=h5py.check_dtype(vlen=dt1)),
-                         h5py.check_dtype(enum=h5py.check_dtype(vlen=dt2)))
+        self.assertEqual(h5py.check_enum_dtype(h5py.check_vlen_dtype(dt1)),
+                         h5py.check_enum_dtype(h5py.check_vlen_dtype(dt2)))
 
 
 class TestExplicitCast(TestCase):
@@ -146,8 +145,8 @@ class TestOffsets(TestCase):
     """
 
     def test_compound_vlen(self):
-        vidt = h5py.special_dtype(vlen=np.uint8)
-        eidt = h5py.special_dtype(enum=(np.uint8, {'OFF': 0, 'ON': 1}))
+        vidt = h5py.vlen_dtype(np.uint8)
+        eidt = h5py.enum_dtype({'OFF': 0, 'ON': 1}, basetype=np.uint8)
 
         for np_align in (False, True):
             dt = np.dtype([
