@@ -630,10 +630,15 @@ class TestCreateLike(BaseDataset):
 
     def test_track_times(self):
         orig = self.f.create_dataset('honda', data=np.arange(12),
+                                     track_times=True)
+        self.assertNotEqual(0, h5py.h5g.get_objinfo(orig._id).mtime)
+        similar = self.f.create_dataset_like('hyundai', orig)
+        self.assertNotEqual(0, h5py.h5g.get_objinfo(similar._id).mtime)
+
+        orig = self.f.create_dataset('ibm', data=np.arange(12),
                                      track_times=False)
         self.assertEqual(0, h5py.h5g.get_objinfo(orig._id).mtime)
-
-        similar = self.f.create_dataset_like('hyundai', self.f['honda'])
+        similar = self.f.create_dataset_like('lenovo', orig)
         self.assertEqual(0, h5py.h5g.get_objinfo(similar._id).mtime)
 
 
