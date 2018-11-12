@@ -1798,6 +1798,44 @@ def special_dtype(**kwds):
     raise TypeError('Unknown special type "%s"' % name)
 
 
+def check_vlen_dtype(dt):
+    """If the dtype represents an HDF5 vlen, returns the Python base class.
+
+    Returns None if the dtype does not represent an HDF5 vlen.
+    """
+    return dt.metadata.get('vlen', None)
+
+def check_string_dtype(dt):
+    """If the dtype represents an HDF5 vlen string, returns the encoding.
+
+    Encodings can only be 'utf-8' or 'ascii'.
+
+    Returns None if the dtype does not represent an HDF5 vlen string.
+    """
+    vlen_kind = check_vlen_dtype(dt)
+    if vlen_kind is unicode:
+        return 'utf-8'
+    elif vlen_kind is bytes:
+        return 'ascii'
+    else:
+        return None
+
+def check_enum_dtype(dt):
+    """If the dtype represents an HDF5 enumerated type, returns the dictionary
+    mapping string names to integer values.
+
+    Returns None if the dtype does not represent an HDF5 enumerated type.
+    """
+    return dt.metadata.get('enum', None)
+
+def check_ref_dtype(dt):
+    """If the dtype represents an HDF5 reference type, returns the reference
+    class (either Reference or RegionReference).
+
+    Returns None if the dtype does not represent an HDF5 reference type.
+    """
+    return dt.metadata.get('ref', None)
+
 @with_phil
 def check_dtype(**kwds):
     """ Check a dtype for h5py special type "hint" information.  Only one
@@ -1897,9 +1935,9 @@ cpdef dict py_get_enum(object dt):
 
     Deprecated; use check_dtype() instead.
     """
-    warn("Deprecated; use check_dtype(enum=dtype) instead",
+    warn("Deprecated; use check_enum_dtype(dtype) instead",
         H5pyDeprecationWarning)
-    return check_dtype(enum=dt)
+    return check_enum_dtype(dt)
 
 cpdef dtype py_new_vlen(object kind):
     """ (OBJECT kind) => DTYPE
@@ -1913,8 +1951,8 @@ cpdef dtype py_new_vlen(object kind):
 cpdef object py_get_vlen(object dt_in):
     """ (OBJECT dt_in) => TYPE
 
-    Deprecated; use check_dtype() instead.
+    Deprecated; use check_vlen_dtype() instead.
     """
-    warn("Deprecated; use check_dtype(vlen=dtype) instead",
+    warn("Deprecated; use check_vlen_dtype(dtype) instead",
         H5pyDeprecationWarning)
-    return check_dtype(vlen=dt_in)
+    return check_vlen_dtype(dt_in)
