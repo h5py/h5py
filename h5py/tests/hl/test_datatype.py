@@ -31,7 +31,7 @@ class TestVlen(TestCase):
         dt = np.dtype(fields)
         self.f['mytype'] = np.dtype(dt)
         dt_out = self.f['mytype'].dtype.fields['field_1'][0]
-        self.assertEqual(h5py.check_vlen_dtype(dt_out), str)
+        self.assertEqual(h5py.check_string_dtype(dt_out), 'utf-8')
 
     def test_compound_vlen_bool(self):
         vidt = h5py.vlen_dtype(np.uint8)
