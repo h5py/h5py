@@ -174,7 +174,7 @@ class TestTrackOrder(BaseAttrs):
             attrs[str(i)] = i
         return attrs
 
-    @ut.skipUnless(h5py.version.hdf5_version_tuple >= (1, 10, 4), 'HDF5 1.10.4 required')
+    @ut.skipUnless(h5py.version.hdf5_version_tuple >= (1, 10, 5), 'HDF5 1.10.5 required')
     # https://forum.hdfgroup.org/t/bug-h5arename-fails-unexpectedly/4881
     def test_track_order(self):
         attrs = self.fill_attrs(track_order=True)  # creation order
