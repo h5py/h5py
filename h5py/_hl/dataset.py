@@ -151,7 +151,7 @@ def make_new_dset(parent, shape=None, dtype=None, data=None,
         dcpl.set_attr_creation_order(
             h5p.CRT_ORDER_TRACKED | h5p.CRT_ORDER_INDEXED)
     elif track_order == False:
-        pass
+        dcpl.set_attr_creation_order(0)
     elif track_order is not None:
         raise TypeError("track_order must be either True or False")
 
