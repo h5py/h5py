@@ -6,7 +6,8 @@ Library configuration
 
 A few library options are available to change the behavior of the library.
 You can get a reference to the global library configuration object via the
-function ``h5py.get_config()``.  This object supports the following attributes:
+function :func:`h5py.get_config`.  This object supports the following
+attributes:
 
     **complex_names**
         Set to a 2-tuple of strings (real, imag) to control how complex numbers
@@ -24,8 +25,8 @@ function ``h5py.get_config()``.  This object supports the following attributes:
         ``dict`` in Python 3.7+); otherwise in ascending alphanumeric
         order.  Global configuration value can be overriden for
         particular container by specifying ``track_order`` argument to
-        ``File()``, ``Group.create_group()``,
-        ``Group.create_dataset()``.  The default is ``False``.
+        :class:`h5py.File`, :meth:`h5py.Group.create_group`,
+        :meth:`h5py.Group.create_dataset`.  The default is ``False``.
 
 
 IPython
