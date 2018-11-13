@@ -279,7 +279,7 @@ class IndexingTestCase(ut.TestCase):
             d[:] = np.arange(10)*10
 
     def test_index_layout(self):
-        # Assemble virtual dataset
+        # Assemble virtual dataset (indexing target)
         layout = h5.VirtualLayout((100,), 'i4')
 
         inds = [3,6,20,25,33,47,70,75,96,98]
@@ -290,19 +290,33 @@ class IndexingTestCase(ut.TestCase):
 
         outfile = osp.join(self.tmpdir, 'VDS.h5')
 
-        # Add virtual dataset to output file
+        # Assembly virtual dataset (indexing source)
+        layout2 = h5.VirtualLayout((5,), 'i4')
+
+        inds2 = [0,1,4,5,8]
+        layout2 = vsource[inds2]
+
+        # Add virtual datasets to output file and close
         with h5.File(outfile, 'w', libver='latest') as f:
             f.create_virtual_dataset('/data', layout, fillvalue=-5)
+            f.create_virutal_dataset('/data2', layout2, fillvalue=-3)
 
+        # Read data from virtual datasets
         with h5.File(outfile, 'r') as f:
             data = f['/data'][()]
+            data2 = f['/data2'][()]
 
         # Verify
         assert_array_equal(data[inds], np.arange(10)*10)
+        assert_array_equal(data2, [0,10,40,50,80])
+
         mask = np.zeros(100)
         mask[inds] = 1
         self.assertEqual(data[mask == 0].min(), -5)
         self.assertEqual(data[mask == 0].max(), -5)
+
+        self.assertEqual(data2[(2,3,6,7,9)].min(), -3)
+        self.assertEqual(data2[(2,3,6,7,9)].max(), -3)
 
     def tearDown(self):
         shutil.rmtree(self.tmpdir)

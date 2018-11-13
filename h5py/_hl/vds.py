@@ -123,7 +123,7 @@ class VirtualLayout(object):
         self.sources = []
 
     def __setitem__(self, key, source):
-        sel = select(self.shape, key, source.sel.id)
+        sel = select(self.shape, key, dsid=None)
         self.sources.append(VDSmap(sel.id,
                                    source.path,
                                    source.name,
