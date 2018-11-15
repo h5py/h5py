@@ -68,8 +68,7 @@ class Group(HLObject, MutableMappingHDF5):
             gid = h5g.create(self.id, name, lcpl=lcpl, gcpl=gcpl)
             return Group(gid)
 
-    def create_dataset(self, name, shape=None, dtype=None, data=None,
-                       dcpl=None, **kwds):
+    def create_dataset(self, name, shape=None, dtype=None, data=None, **kwds):
         """ Create a new HDF5 dataset
 
         name
@@ -85,9 +84,6 @@ class Group(HLObject, MutableMappingHDF5):
         data
             Provide data to initialize the dataset.  If used, you can omit
             shape and dtype arguments.
-        dcpl
-            Dataset creation property list.  Keyword-only arguments below
-            take precedence.
 
         Keyword-only arguments:
 
@@ -137,7 +133,7 @@ class Group(HLObject, MutableMappingHDF5):
             kwds['track_order'] = h5.get_config().track_order
 
         with phil:
-            dsid = dataset.make_new_dset(self, shape, dtype, data, dcpl=dcpl, **kwds)
+            dsid = dataset.make_new_dset(self, shape, dtype, data, **kwds)
             dset = dataset.Dataset(dsid)
             if name is not None:
                 self[name] = dset
@@ -222,8 +218,14 @@ class Group(HLObject, MutableMappingHDF5):
         shape and dtype, in which case the provided values take precedence over
         those from `other`.
         """
-        for k in ('shape', 'dtype'):
+        for k in ('shape', 'dtype', 'chunks', 'compression',
+                  'compression_opts', 'scaleoffset', 'shuffle', 'fletcher32',
+                  'fillvalue'):
             kwupdate.setdefault(k, getattr(other, k))
+        # TODO: more elegant way to pass these (dcpl to create_dataset?)
+        dcpl = other.id.get_create_plist()
+        kwupdate.setdefault('track_times', dcpl.get_obj_track_times())
+        kwupdate.setdefault('track_order', dcpl.get_attr_creation_order() > 0)
 
         # Special case: the maxshape property always exists, but if we pass it
         # to create_dataset, the new dataset will automatically get chunked
@@ -231,21 +233,18 @@ class Group(HLObject, MutableMappingHDF5):
         if other.maxshape != other.shape:
             kwupdate.setdefault('maxshape', other.maxshape)
 
-        return self.create_dataset(name, dcpl=other._dcpl, **kwupdate)
+        return self.create_dataset(name, **kwupdate)
 
-    def require_group(self, name, **kwargs):
+    def require_group(self, name):
+        # TODO: support kwargs like require_dataset
         """Return a group, creating it if it doesn't exist.
-
-        Other group keywords (see create_group) may be provided, but
-        are only used if a new group is to be created.
 
         TypeError is raised if something with that name already exists that
         isn't a group.
-
         """
         with phil:
             if not name in self:
-                return self.create_group(name, **kwargs)
+                return self.create_group(name)
             grp = self[name]
             if not isinstance(grp, Group):
                 raise TypeError("Incompatible object (%s) already exists" % grp.__class__.__name__)
