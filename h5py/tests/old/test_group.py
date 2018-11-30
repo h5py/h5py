@@ -391,8 +391,7 @@ class TestIter(BaseMapping):
             hfile.close()
 
 class TestTrackOrder(BaseGroup):
-    def test_track_order(self):
-        g = self.f.create_group('order', track_order=True)
+    def populate(self, g):
         for i in range(100):
             # Mix group and dataset creation.
             if i % 10 == 0:
@@ -400,9 +399,17 @@ class TestTrackOrder(BaseGroup):
             else:
                 g[str(i)] = [i]
 
-        objs = [str(i) for i in range(100)]
-        objs2 = [o for o in g]
-        self.assertEqual(objs, objs2)
+    def test_track_order(self):
+        g = self.f.create_group('order', track_order=True)  # creation order
+        self.populate(g)
+        self.assertEqual(list(g),
+                         [str(i) for i in range(100)])
+
+    def test_no_track_order(self):
+        g = self.f.create_group('order', track_order=False)  # name alphanumeric
+        self.populate(g)
+        self.assertEqual(list(g),
+                         sorted([str(i) for i in range(100)]))
 
 @ut.skipIf(sys.version_info[0] != 2, "Py2")
 class TestPy2Dict(BaseMapping):

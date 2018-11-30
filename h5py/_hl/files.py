@@ -134,6 +134,19 @@ def make_fapl(driver, libver, rdcc_nslots, rdcc_nbytes, rdcc_w0, **kwds):
     return plist
 
 
+def make_fcpl(track_order=False):
+    """ Set up a file creation property list """
+    if track_order:
+        plist = h5p.create(h5p.FILE_CREATE)
+        plist.set_link_creation_order(
+            h5p.CRT_ORDER_TRACKED | h5p.CRT_ORDER_INDEXED)
+        plist.set_attr_creation_order(
+            h5p.CRT_ORDER_TRACKED | h5p.CRT_ORDER_INDEXED)
+    else:
+        plist = None
+    return plist
+
+
 def make_fid(name, mode, userblock_size, fapl, fcpl=None, swmr=False):
     """ Get a new FileID by opening or creating a file.
     Also validates mode argument."""
@@ -294,6 +307,7 @@ class File(Group):
     def __init__(self, name, mode=None, driver=None,
                  libver=None, userblock_size=None, swmr=False,
                  rdcc_nslots=None, rdcc_nbytes=None, rdcc_w0=None,
+                 track_order=None,
                  **kwds):
         """Create a new file object.
 
@@ -344,6 +358,9 @@ class File(Group):
             that can fit in rdcc_nbytes bytes. For maximum performance, this
             value should be set approximately 100 times that number of
             chunks. The default value is 521.
+        track_order
+            Track dataset/group/attribute creation order under root group
+            if True. If None use global default h5.get_config().track_order.
         Additional keywords
             Passed on to the selected file driver.
 
@@ -367,9 +384,14 @@ class File(Group):
             else:
                 name = filename_encode(name)
 
+            if track_order is None:
+                track_order = h5.get_config().track_order
+
             with phil:
                 fapl = make_fapl(driver, libver, rdcc_nslots, rdcc_nbytes, rdcc_w0, **kwds)
-                fid = make_fid(name, mode, userblock_size, fapl, swmr=swmr)
+                fid = make_fid(name, mode, userblock_size,
+                               fapl, fcpl=make_fcpl(track_order=track_order),
+                               swmr=swmr)
 
             if swmr_support:
                 self._swmr_mode = False

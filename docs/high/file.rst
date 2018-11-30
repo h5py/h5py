@@ -265,7 +265,7 @@ Reference
 
 .. class:: File(name, mode=None, driver=None, libver=None, \
     userblock_size=None, swmr=False, rdcc_nslots=None, rdcc_nbytes=None, \
-    rdcc_w0=None, **kwds)
+    rdcc_w0=None, track_order=None, **kwds)
 
     Open or create a new file.
 
@@ -291,6 +291,9 @@ Reference
                     0.75.
     :param rdcc_nslots:  Number of chunk slots in the raw data chunk cache for
                     this file.  Default value is 521.
+    :track_order:   Track dataset/group/attribute creation order under
+                    root group if ``True``.  Default is
+                    ``h5.get_config().track_order``.
     :param kwds:    Driver-specific keywords; see :ref:`file_driver`.
 
     .. method:: close()

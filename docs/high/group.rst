@@ -72,6 +72,15 @@ Objects can be deleted from the file using the standard syntax::
     will return view-like objects instead of lists.  These objects support
     membership testing and iteration, but can't be sliced like lists.
 
+By default, objects inside group are iterated in alphanumeric order.
+However, if group is created with ``track_order=True``, the insertion
+order for the group is remembered (tracked) in HDF5 file, and group
+contents are iterated in that order.  The latter is consistent with
+Python 3.7+ dictionaries.
+
+The default ``track_order`` for all new groups can be specified
+globally with ``h5.get_config().track_order``.
+
 
 .. _group_hardlinks:
 
@@ -299,7 +308,7 @@ Reference
         :param without_attrs:   Copy object(s) without copying HDF5 attributes.
 
 
-    .. method:: create_group(name)
+    .. method:: create_group(name, track_order=None)
 
         Create and return a new group in the file.
 
@@ -307,6 +316,9 @@ Reference
                         or relative path.  Provide None to create an anonymous
                         group, to be linked into the file later.
         :type name:     String or None
+        :track_order:   Track dataset/group/attribute creation order under
+                        this group if ``True``.  Default is
+                        ``h5.get_config().track_order``.
 
         :return:        The new :class:`Group` object.
 
@@ -351,7 +363,11 @@ Reference
         :keyword fillvalue: This value will be used when reading
                             uninitialized parts of the dataset.
 
-        :keyword track_times:   Enable dataset creation timestamps (**T**/F).
+        :keyword track_times: Enable dataset creation timestamps (**T**/F).
+
+        :keyword track_order: Track attribute creation order if
+                        ``True``.  Default is
+                        ``h5.get_config().track_order``.
 
 
     .. method:: require_dataset(name, shape=None, dtype=None, exact=None, **kwds)

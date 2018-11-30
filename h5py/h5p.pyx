@@ -277,7 +277,7 @@ cdef class PropCopyID(PropInstanceID):
 
 # File creation
 
-cdef class PropFCID(PropCreateID):
+cdef class PropFCID(PropOCID):
 
     """
         File creation property list.
@@ -1438,6 +1438,28 @@ cdef class PropOCID(PropCreateID):
 
     The documentation is somewhat hazy
     """
+
+    @with_phil
+    def set_attr_creation_order(self, unsigned int flags):
+        """ (UINT flags)
+
+        Set tracking and indexing of creation order for object attributes
+
+        flags -- h5p.CRT_ORDER_TRACKED, h5p.CRT_ORDER_INDEXED
+        """
+        H5Pset_attr_creation_order(self.id, flags)
+
+
+    @with_phil
+    def get_attr_creation_order(self):
+        """ () -> UINT flags
+
+        Get tracking and indexing of creation order for object attributes
+        """
+        cdef unsigned int flags
+        H5Pget_attr_creation_order(self.id, &flags)
+        return flags
+
 
     @with_phil
     def set_obj_track_times(self,track_times):

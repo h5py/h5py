@@ -20,7 +20,7 @@ import numpy
 
 from .compat import filename_decode, filename_encode
 
-from .. import h5g, h5i, h5o, h5r, h5t, h5l, h5p, h5s, h5d
+from .. import h5, h5g, h5i, h5o, h5r, h5t, h5l, h5p, h5s, h5d
 from . import base
 from .base import HLObject, MutableMappingHDF5, phil, with_phil
 from . import dataset
@@ -45,17 +45,23 @@ class Group(HLObject, MutableMappingHDF5):
     _gcpl_crt_order = h5p.create(h5p.GROUP_CREATE)
     _gcpl_crt_order.set_link_creation_order(
         h5p.CRT_ORDER_TRACKED | h5p.CRT_ORDER_INDEXED)
+    _gcpl_crt_order.set_attr_creation_order(
+        h5p.CRT_ORDER_TRACKED | h5p.CRT_ORDER_INDEXED)
 
 
-    def create_group(self, name, track_order=False):
+    def create_group(self, name, track_order=None):
         """ Create and return a new subgroup.
 
         Name may be absolute or relative.  Fails if the target name already
         exists.
 
         track_order
-            Track dataset/group creation order under this group if True.
+            Track dataset/group/attribute creation order under this group
+            if True. If None use global default h5.get_config().track_order.
         """
+        if track_order is None:
+            track_order = h5.get_config().track_order
+
         with phil:
             name, lcpl = self._e(name, lcpl=True)
             gcpl = Group._gcpl_crt_order if track_order else None
@@ -113,6 +119,9 @@ class Group(HLObject, MutableMappingHDF5):
             (Scalar) Use this value for uninitialized parts of the dataset.
         track_times
             (T/F) Enable dataset creation timestamps.
+        track_order
+            (T/F) Track attribute creation order if True. If omitted use
+            global default h5.get_config().track_order.
         external
             (List of tuples) Sets the external storage property, thus
             designating that the dataset will be stored in one or more
@@ -120,6 +129,9 @@ class Group(HLObject, MutableMappingHDF5):
             tuple of (file[, offset[, size]]) to the dataset's list of
             external files.
         """
+        if 'track_order' not in kwds:
+            kwds['track_order'] = h5.get_config().track_order
+
         with phil:
             dsid = dataset.make_new_dset(self, shape, dtype, data, **kwds)
             dset = dataset.Dataset(dsid)
@@ -210,6 +222,10 @@ class Group(HLObject, MutableMappingHDF5):
                   'compression_opts', 'scaleoffset', 'shuffle', 'fletcher32',
                   'fillvalue'):
             kwupdate.setdefault(k, getattr(other, k))
+        # TODO: more elegant way to pass these (dcpl to create_dataset?)
+        dcpl = other.id.get_create_plist()
+        kwupdate.setdefault('track_times', dcpl.get_obj_track_times())
+        kwupdate.setdefault('track_order', dcpl.get_attr_creation_order() > 0)
 
         # Special case: the maxshape property always exists, but if we pass it
         # to create_dataset, the new dataset will automatically get chunked
@@ -220,7 +236,8 @@ class Group(HLObject, MutableMappingHDF5):
         return self.create_dataset(name, **kwupdate)
 
     def require_group(self, name):
-        """ Return a group, creating it if it doesn't exist.
+        # TODO: support kwargs like require_dataset
+        """Return a group, creating it if it doesn't exist.
 
         TypeError is raised if something with that name already exists that
         isn't a group.

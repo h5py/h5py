@@ -24,6 +24,7 @@ import collections
 
 from ..common import TestCase, ut
 
+import h5py
 from h5py import File
 from h5py import h5a,  h5t
 from h5py import AttributeManager
@@ -165,3 +166,22 @@ class TestVlen(BaseAttrs):
             dtype=h5t.special_dtype(vlen=int))
         self.f.attrs['a'] = a
         self.assertArrayEqual(self.f.attrs['a'][0], a[0])
+
+class TestTrackOrder(BaseAttrs):
+    def fill_attrs(self, track_order):
+        attrs = self.f.create_group('test', track_order=track_order).attrs
+        for i in range(100):
+            attrs[str(i)] = i
+        return attrs
+
+    @ut.skipUnless(h5py.version.hdf5_version_tuple >= (1, 10, 5), 'HDF5 1.10.5 required')
+    # https://forum.hdfgroup.org/t/bug-h5arename-fails-unexpectedly/4881
+    def test_track_order(self):
+        attrs = self.fill_attrs(track_order=True)  # creation order
+        self.assertEqual(list(attrs),
+                         [u'' + str(i) for i in range(100)])
+
+    def test_no_track_order(self):
+        attrs = self.fill_attrs(track_order=False)  # name alphanumeric
+        self.assertEqual(list(attrs),
+                         sorted([u'' + str(i) for i in range(100)]))

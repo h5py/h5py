@@ -367,6 +367,8 @@ hdf5:
   herr_t    H5Pset_char_encoding(hid_t plist_id, H5T_cset_t encoding)
   herr_t    H5Pget_char_encoding(hid_t plist_id, H5T_cset_t *encoding)
 
+  herr_t    H5Pset_attr_creation_order(hid_t plist_id, unsigned crt_order_flags)
+  herr_t    H5Pget_attr_creation_order(hid_t plist_id, unsigned *crt_order_flags)
   herr_t    H5Pset_obj_track_times( hid_t ocpl_id, hbool_t track_times )
   herr_t    H5Pget_obj_track_times( hid_t ocpl_id, hbool_t *track_times )
 
