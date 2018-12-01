@@ -255,9 +255,10 @@ def _get_available_ftypes():
     def cmp_ftype(t):
         return np.finfo(t).maxexp
 
+    cdef dtype fdtype
     available_ftypes = defaultdict(list)
     for fdtype in map(np.dtype, np.typecodes["Float"]):
-        available_ftypes[fdtype.itemsize].append(fdtype.type)
+        available_ftypes[fdtype.itemsize].append(<object>(fdtype.typeobj))
 
     sorted_ftypes = []
     seen_ftypes = set()
