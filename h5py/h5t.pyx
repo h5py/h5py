@@ -257,9 +257,9 @@ def _get_available_ftypes():
 
     available_ftypes = defaultdict(list)
     for tc in np.typecodes["All"]:
-        ftype = np.dtype(tc).type
-        if np.issubdtype(ftype, np.floating):
-            available_ftypes[np.dtype(ftype).itemsize].append(ftype)
+        fdtype = np.dtype(tc)
+        if np.issubdtype(fdtype.type, np.floating):
+            available_ftypes[fdtype.itemsize].append(fdtype.type)
 
     sorted_ftypes = []
     seen_ftypes = set()
