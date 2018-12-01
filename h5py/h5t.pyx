@@ -255,6 +255,7 @@ cdef tuple _get_available_ftypes():
     cdef str ftc
     cdef dtype fdtype
     cdef list available_ftypes = []
+
     for ftc in floating_typecodes:
         fdtype = dtype(ftc)
         available_ftypes.append((
