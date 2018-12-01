@@ -25,7 +25,6 @@ from utils cimport  emalloc, efree, \
                     require_tuple, convert_dims, convert_tuple
 
 # Runtime imports
-from collections import defaultdict
 import sys
 import operator
 from warnings import warn
@@ -252,21 +251,17 @@ cdef dict _sign_map  = { H5T_SGN_NONE: 'u', H5T_SGN_2: 'i' }
 
 # Available floating point types
 def _get_available_ftypes():
-    def cmp_ftype(t):
-        return np.finfo(t).maxexp
-
     cdef dtype fdtype
-    available_ftypes = defaultdict(list)
+    cdef dict available_fdtypes = dict()
     for fdtype in map(np.dtype, np.typecodes["Float"]):
-        available_ftypes[fdtype.itemsize].append(<object>(fdtype.typeobj))
+        available_fdtypes[fdtype.itemsize] = fdtype
 
-    sorted_ftypes = []
-    seen_ftypes = set()
-    for size, ftypes in sorted(available_ftypes.items()):
-        for ftype in sorted(ftypes, key=cmp_ftype):
-            if ftype not in seen_ftypes:
-                seen_ftypes.add(ftype)
-                sorted_ftypes.append((ftype, np.finfo(ftype), size))
+    cdef list sorted_ftypes = []
+    for size, fdtype in sorted(available_fdtypes.items()):
+        sorted_ftypes.append((
+            <object>(fdtype.typeobj), np.finfo(fdtype), size
+        ))
+
     return tuple(sorted_ftypes)
 
 _available_ftypes = _get_available_ftypes()
