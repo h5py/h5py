@@ -252,17 +252,13 @@ cdef dict _sign_map  = { H5T_SGN_NONE: 'u', H5T_SGN_2: 'i' }
 # Available floating point types
 cdef tuple _get_available_ftypes():
     cdef dtype fdtype
-    cdef dict available_fdtypes = dict()
+    cdef list available_ftypes = []
     for fdtype in map(np.dtype, np.typecodes["Float"]):
-        available_fdtypes[fdtype.itemsize] = fdtype
-
-    cdef list sorted_ftypes = []
-    for size, fdtype in sorted(available_fdtypes.items()):
-        sorted_ftypes.append((
-            <object>(fdtype.typeobj), np.finfo(fdtype), size
+        available_ftypes.append((
+            <object>(fdtype.typeobj), np.finfo(fdtype), fdtype.itemsize
         ))
 
-    return tuple(sorted_ftypes)
+    return tuple(available_ftypes)
 
 cdef tuple _available_ftypes = _get_available_ftypes()
 
