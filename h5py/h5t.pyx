@@ -250,7 +250,7 @@ cdef dict _order_map = { H5T_ORDER_NONE: '|', H5T_ORDER_LE: '<', H5T_ORDER_BE: '
 cdef dict _sign_map  = { H5T_SGN_NONE: 'u', H5T_SGN_2: 'i' }
 
 # Available floating point types
-cpdef tuple _get_available_ftypes():
+cdef tuple _get_available_ftypes():
     cdef dtype fdtype
     cdef dict available_fdtypes = dict()
     for fdtype in map(np.dtype, np.typecodes["Float"]):
