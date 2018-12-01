@@ -256,7 +256,8 @@ def _get_available_ftypes():
         return np.finfo(t).maxexp
 
     available_ftypes = defaultdict(list)
-    for ftype in np.typeDict.values():
+    for tc in np.typecodes["All"]:
+        ftype = np.dtype(tc).type
         if np.issubdtype(ftype, np.floating):
             available_ftypes[np.dtype(ftype).itemsize].append(ftype)
 
