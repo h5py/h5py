@@ -308,8 +308,8 @@ class HLObject(CommonStateObject):
 
 class KeysViewHDF5(KeysView):
     def __str__(self):
-        k = ", ".join(repr(x) for x in self)
-        return "hdf_keys([{}])".format(k)
+        return "<KeysViewHDF5 {}>".format(list(self))
+
     __repr__ = __str__
 
 class ValuesViewHDF5(ValuesView):
