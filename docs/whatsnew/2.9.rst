@@ -7,3 +7,19 @@ Support for old Python
 Support for Python 3.3 has been dropped.
 
 Support for Python 2.6 has been dropped.
+
+TODO
+----
+
+- track order #1098
+- VDS, #1126, #1060
+- improved support for unicode attributes #1032
+- pass file-like objects into ``File`` #1105, #1116, #1061
+- add support for open_file_image #1075
+- add create_dataset_like #1085
+- Add HDF5KeysView to be returned by .keys #1049
+- add support for external datasets #1000
+- add cache manipulation parameters #1008
+
+- fix bug in float16 casting #1115
+- fix bug in float128 on windows #1114
