@@ -1,6 +1,20 @@
 What's new in h5py 2.9
 ======================
 
+New features
+------------
+
+* A convenient high-level API for creating virtual datasets, HDF5 objects which
+  act as a view over one or more real datasets (:issue:`1060`, :issue:`1126`).
+  See :ref:`vds` for details.
+* :class:`h5py.File` can now be constructed with a Python file-like object,
+  making it easy to construct an HDF5 file in memory using :class:`io.BytesIO`
+  (:issue:`1061`, :issue:`1105`, :issue:`1116`).
+  See :ref:`file_fileobj` for details.
+* New options to record the order of insertion for attributes and group entries.
+  Iterating over these collections now follows insertion order if it was
+  recorded, or name order if not (:issue:`1098`).
+
 Support for old Python
 ----------------------
 
@@ -11,10 +25,7 @@ Support for Python 2.6 has been dropped.
 TODO
 ----
 
-- track order #1098
-- VDS, #1126, #1060
 - improved support for unicode attributes #1032
-- pass file-like objects into ``File`` #1105, #1116, #1061
 - add support for open_file_image #1075
 - add create_dataset_like #1085
 - Add HDF5KeysView to be returned by .keys #1049
