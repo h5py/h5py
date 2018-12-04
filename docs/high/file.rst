@@ -201,7 +201,7 @@ filenames to avoid possible breakage.
 .. _file_cache:
 
 Chunk cache
-...........
+-----------
 
 :ref:`dataset_chunks` allows datasets to be stored on disk in separate pieces.
 When a part of any one of these pieces is needed, the entire chunk is read into
