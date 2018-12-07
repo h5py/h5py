@@ -28,16 +28,16 @@ New features
 Exposing HDF5 functions
 -----------------------
 
-* ``H5LTopen_file_image`` as :func:`h5py.h5f.open_file_image` (:issue:`1075`)
+* ``H5LTopen_file_image`` as :func:`h5py.h5f.open_file_image` (:issue:`1075`).
 * External dataset storage functions ``H5Pset_external``, ``H5Pget_external``
   and ``H5Pget_external_count`` as methods on :class:`h5py.h5p.PropDCID`
-  (:issue:`1000`)
+  (:issue:`1000`).
 
 Bugfixes
 --------
 
-* Reading float128 data on ppc64 architecture systems (:issue:`1114`)
-* Converting data to float16 when creating a dataset (:issue:`1115`)
+* Fix reading/writing of float128 data (:issue:`1114`).
+* Converting data to float16 when creating a dataset (:issue:`1115`).
 
 Support for old Python
 ----------------------
