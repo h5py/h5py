@@ -67,10 +67,15 @@ Examples
 In addition to the above example snippet, a few more complete examples can be
 found in the examples folder:
 
-- ``vds_simple.py`` is a self-contained, runnable example which creates four
+- `vds_simple.py <https://github.com/h5py/h5py/blob/master/examples/vds_simple.py>`_
+  is a self-contained, runnable example which creates four
   source files, and then maps them into a virtual dataset as shown above.
-- ``dataset_concatenation.py``
+- `dataset_concatenation.py <https://github.com/h5py/h5py/blob/master/examples/dataset_concatenation.py>`_
+  illustrates virtually stacking datasets together along a new axis.
 - A number of examples are based on the sample use cases presented in the
   `virtual datasets RFC <https://support.hdfgroup.org/HDF5/docNewFeatures/VDS/HDF5-VDS-requirements-use-cases-2014-12-10.pdf>`__:
-  ``excalibur_detector_modules.py``, ``dual_pco_edge.py``, ``eiger_use_case.py``
-  and ``percival_use_case.py``.
+
+  - `excalibur_detector_modules.py <https://github.com/h5py/h5py/blob/master/examples/excalibur_detector_modules.py>`_
+  - `dual_pco_edge.py <https://github.com/h5py/h5py/blob/master/examples/dual_pco_edge.py>`_
+  - `eiger_use_case.py <https://github.com/h5py/h5py/blob/master/examples/eiger_use_case.py>`_
+  - `percival_use_case.py <https://github.com/h5py/h5py/blob/master/examples/percival_use_case.py>`_
