@@ -60,6 +60,7 @@ cdef class H5PYConfig:
         self._t_name = b'TRUE'
         self._bytestrings = ByteStringContext()
         self._track_order = False
+        self.default_file_mode = None
 
     property complex_names:
         """ Settable 2-tuple controlling how complex numbers are saved.

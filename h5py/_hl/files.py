@@ -183,6 +183,11 @@ def make_fid(name, mode, userblock_size, fapl, fcpl=None, swmr=False):
         except IOError:
             fid = h5f.create(name, h5f.ACC_EXCL, fapl=fapl, fcpl=fcpl)
     elif mode is None:
+        warn("The default file mode will change to 'r' (read-only) in h5py 3.0. "
+             "To suppress this warning, pass the mode you need to h5py.File(), "
+             "or set the global default h5.get_config().default_file_mode. "
+             "Available modes are: 'r', 'r+', 'w', 'w-'/'x', 'a'. "
+             "See the docs for details.", H5pyDeprecationWarning, stacklevel=3)
         # Try to open in append mode (read/write).
         # If that fails, try readonly, and finally create a new file only
         # if it won't clobber an existing file (ACC_EXCL).
@@ -386,6 +391,8 @@ class File(Group):
 
             if track_order is None:
                 track_order = h5.get_config().track_order
+            if mode is None:
+                mode = h5.get_config().default_file_mode
 
             with phil:
                 fapl = make_fapl(driver, libver, rdcc_nslots, rdcc_nbytes, rdcc_w0, **kwds)
