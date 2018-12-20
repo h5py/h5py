@@ -68,14 +68,6 @@ class test(Command):
     def run(self):
         """ Called by Distutils when this command is run """
         import sys
-        py_version = sys.version_info[:2]
-        if py_version != (2, 6):
-            import unittest
-        else:
-            try:
-                import unittest2 as unittest
-            except ImportError:
-                raise ImportError( "unittest2 is required to run tests with Python 2.6")
 
         buildobj = self.distribution.get_command_obj('build')
         buildobj.run()
@@ -84,9 +76,7 @@ class test(Command):
         try:
             sys.path = [op.abspath(buildobj.build_lib)] + oldpath
             import h5py
-            result = h5py.run_tests(verbose=self.detail)
-            if not result.wasSuccessful():
-                sys.exit(1)
+            sys.exit(h5py.run_tests())
         finally:
             sys.path = oldpath
 

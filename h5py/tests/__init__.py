@@ -7,35 +7,19 @@
 # License:  Standard 3-clause BSD; see "license.txt" for full license terms
 #           and contributor agreement.
 
-from __future__ import print_function
-
-import sys
-from .common import ut
-
-from . import old, hl
-
-MODULES = old.MODULES + hl.MODULES
+from __future__ import absolute_import
 
 
-def mname(obj):
-    """ Get the full dotted name of the test method """
-    mod_name = obj.__class__.__module__.replace('h5py.tests.','')
-    return "%s.%s.%s" % (mod_name, obj.__class__.__name__, obj._testMethodName)
-
-
-def run_tests(verbose=False):
-    """ Run tests with TextTestRunner.  Returns a TestResult instance.
-
-    """
-    suite = ut.TestSuite()
-    for m in MODULES:
-        suite.addTests(ut.defaultTestLoader.loadTestsFromModule(m))
-    result = ut.TextTestRunner(verbosity=1).run(suite)
-
-    if verbose:
-        for (case, reason) in result.skipped:
-            print("S  %s (%s)" % (mname(case), reason), file=sys.stderr)
-        for (case, reason) in result.expectedFailures:
-            print("X  %s" % mname(case), file=sys.stderr)
-
-    return result
+def run_tests(args=''):
+    try:
+        from pytest import main
+    except ImportError:
+        print("Tests require pytest, pytest not installed")
+        return 1
+    else:
+        from shlex import split
+        from subprocess import call
+        from sys import executable
+        cli = [executable, "-m", "pytest", "--pyargs", "h5py"]
+        cli.extend(split(args))
+        return call(cli)

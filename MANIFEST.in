@@ -33,3 +33,4 @@ exclude *.yml
 exclude *.yaml
 recursive-exclude * __pycache__
 recursive-exclude * *.py[co]
+exclude .coveragerc

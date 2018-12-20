@@ -104,7 +104,7 @@ install:
   - "py -3.5 -m pip install --upgrade wheel pip setuptools"
   - "py -3.5 -m pip install requests"
   - "py -3.5 ci\\appveyor\\get_hdf5.py"
-  - "py -3.5 -m pip install tox"
+  - "py -3.5 -m pip install tox codecov"
 
 build: off
 
@@ -135,7 +135,5 @@ cache:
   - "%LOCALAPPDATA%\\pip\\Cache"
   - "C:\\hdf5"
 
-#on_success:
-#  You can use this step to upload your artifacts to a public website.
-#  See Appveyor's documentation for more details. Or you can simply
-#  access your wheels from the Appveyor "artifacts" tab for your build.
+on_success:
+  - "py -3.5 -m codecov"

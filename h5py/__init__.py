@@ -76,12 +76,13 @@ if version.hdf5_version_tuple != version.hdf5_built_version_tuple:
     ))
 
 
-def run_tests(verbose=False):
-    """Run tests with TextTestRunner and returns a TestResult instance.
+def run_tests(args=''):
+    """Run tests with pytest and returns the exit status as an int.
     """
-    # Lazy-loading of tests package to avoid strong dependency on unittest2
+    # Lazy-loading of tests package to avoid strong dependency on test
+    # requirements, e.g. pytest
     from .tests import run_tests
-    return run_tests(verbose=verbose)
+    return run_tests(args)
 
 
 def enable_ipython_completer():
