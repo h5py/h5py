@@ -310,7 +310,7 @@ class Dataset(HLObject):
     def value(self):
         """  Alias for dataset[()] """
         warn("dataset.value has been deprecated. "
-            "Use dataset[()] instead.", H5pyDeprecationWarning)
+            "Use dataset[()] instead.", H5pyDeprecationWarning, stacklevel=2)
         return self[()]
 
     @property
