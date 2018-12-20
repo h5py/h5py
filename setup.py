@@ -22,7 +22,7 @@ import os.path as op
 import setup_build, setup_configure
 
 
-VERSION = '2.8.0.post0'
+VERSION = '2.9.0.post0'
 
 NUMPY_DEP = 'numpy>=1.7'
 
