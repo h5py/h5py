@@ -255,7 +255,7 @@ class File(Group):
     def fid(self):
         """File ID (backwards compatibility) """
         warn("File.fid has been deprecated. "
-            "Use File.id instead.", H5pyDeprecationWarning)
+            "Use File.id instead.", H5pyDeprecationWarning, stacklevel=2)
         return self.id
 
     @property
