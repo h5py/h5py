@@ -1,3 +1,4 @@
+from __future__ import print_function
 import shutil, zipfile, tempfile, glob, urllib
 import os
 import os.path as op
@@ -10,7 +11,7 @@ ROOTPATH = op.dirname(op.abspath(__file__))
 
 def archive(fname):
     """ Currently just copies a single file to the current directory """
-    print "Archiving %s" % str(fname)
+    print("Archiving %s" % str(fname))
     if op.exists(op.join(ROOTPATH, fname)):
         os.remove(op.join(ROOTPATH, fname))
     shutil.copy(fname, ROOTPATH)
@@ -57,7 +58,7 @@ def build(vs_version):
 
 def check_zip():
     if not op.exists(ZIPFILE_NAME):
-        print "Downloading HDF5 source code..."
+        print("Downloading HDF5 source code...")
         urllib.urlretrieve(ZIPFILE_URL, ZIPFILE_NAME)
     try:
         sh('cmake --version')
