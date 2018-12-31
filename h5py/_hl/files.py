@@ -36,6 +36,8 @@ if hdf5_version >= h5.get_config().swmr_min_hdf5_version:
 
 
 libver_dict = {'earliest': h5f.LIBVER_EARLIEST, 'latest': h5f.LIBVER_LATEST}
+if hdf5_version >= (1, 10, 2):
+    libver_dict.update({'v18': h5f.LIBVER_V18})
 libver_dict_r = dict((y, x) for x, y in six.iteritems(libver_dict))
 
 
@@ -327,8 +329,8 @@ class File(Group):
             Name of the driver to use.  Legal values are None (default,
             recommended), 'core', 'sec2', 'stdio', 'mpio'.
         libver
-            Library version bounds.  Currently only the strings 'earliest'
-            and 'latest' are defined.
+            Library version bounds.  Currently defined: 'earliest', 'v18' (with
+            HDF5 1.10.2 and later), and 'latest'.
         userblock
             Desired size of user block.  Only allowed when creating a new
             file (mode w, w- or x).
