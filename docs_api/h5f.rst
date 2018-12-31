@@ -84,4 +84,5 @@ Library version bounding
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. data:: LIBVER_EARLIEST
+.. data:: LIBVER_V18
 .. data:: LIBVER_LATEST
