@@ -88,7 +88,7 @@ Other changes
 .. _`#811` : https://github.com/h5py/h5py/pull/811
 .. _`#812` : https://github.com/h5py/h5py/pull/812
 .. _`HDF5 Direct Chunk Write` : https://support.hdfgroup.org/HDF5/doc/Advanced/DirectChunkWrite/
-.. _`HDF5 File Image Operations` : http://www.hdfgroup.org/HDF5/doc/Advanced/FileImageOperations/HDF5FileImageOperations.pdf
+.. _`HDF5 File Image Operations` : https://support.hdfgroup.org/HDF5/doc/Advanced/FileImageOperations/HDF5FileImageOperations.pdf
 
 Acknowledgements
 ----------------
