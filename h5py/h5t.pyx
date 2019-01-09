@@ -1509,7 +1509,7 @@ cdef TypeStringID _c_string(dtype dt):
     tid = H5Tcopy(H5T_C_S1)
     H5Tset_size(tid, dt.itemsize)
     H5Tset_strpad(tid, H5T_STR_NULLPAD)
-    if dt.metadata.get('h5py_encoding') == 'utf-8':
+    if dt.metadata and dt.metadata.get('h5py_encoding') == 'utf-8':
         H5Tset_cset(tid, H5T_CSET_UTF8)
     return TypeStringID(tid)
 
