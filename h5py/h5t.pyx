@@ -748,15 +748,19 @@ cdef class TypeStringID(TypeID):
 
     cdef object py_dtype(self):
         # Numpy translation function for string types
-        if self.is_variable_str():
-            if self.get_cset() == H5T_CSET_ASCII:
-                return string_dtype(encoding='ascii')
-            elif self.get_cset() == H5T_CSET_UTF8:
-                return string_dtype(encoding='utf-8')
-            else:
-                raise TypeError("Unknown string encoding (value %d)" % self.get_cset())
+        if self.get_cset() == H5T_CSET_ASCII:
+            encoding = 'ascii'
+        elif self.get_cset() == H5T_CSET_UTF8:
+            encoding = 'utf-8'
+        else:
+            raise TypeError("Unknown string encoding (value %d)" % self.get_cset())
 
-        return dtype("|S" + str(self.get_size()))
+        if self.is_variable_str():
+            length = None
+        else:
+            length = self.get_size()
+
+        return string_dtype(encoding=encoding, length=length)
 
 cdef class TypeVlenID(TypeID):
 
@@ -1505,6 +1509,8 @@ cdef TypeStringID _c_string(dtype dt):
     tid = H5Tcopy(H5T_C_S1)
     H5Tset_size(tid, dt.itemsize)
     H5Tset_strpad(tid, H5T_STR_NULLPAD)
+    if dt.metadata.get('h5py_encoding') == 'utf-8':
+        H5Tset_cset(tid, H5T_CSET_UTF8)
     return TypeStringID(tid)
 
 cdef TypeCompoundID _c_complex(dtype dt):
@@ -1719,20 +1725,33 @@ def vlen_dtype(basetype):
     """
     return dtype('O', metadata={'vlen': basetype})
 
-def string_dtype(encoding='utf-8'):
-    """Make a numpy dtype for HDF5 variable-length strings
+def string_dtype(encoding='utf-8', length=None):
+    """Make a numpy dtype for HDF5 strings
 
-    encoding may be 'utf-8' or 'ascii'. If it is 'utf-8', the data should be
-    passed as Python str objects (unicode in Python 2). For 'ascii', data should
-    be passed as bytes.
+    encoding may be 'utf-8' or 'ascii'.
+
+    length may be an integer for a fixed length string dtype, or None for
+    variable length strings. String lengths for HDF5 are counted in bytes,
+    not unicode code points.
+
+    For variable length strings, the data should be passed as Python str objects
+    (unicode in Python 2) if the encoding is 'utf-8', and bytes if it is 'ascii'.
+    For fixed length strings, the data should be numpy fixed length *bytes*
+    arrays, regardless of the encoding. Fixed length unicode data is not
+    supported.
     """
-    if encoding == 'utf-8':
-        return dtype('O', metadata={'vlen': unicode})
-    elif encoding == 'ascii':
-        return dtype('O', metadata={'vlen': bytes})
-    else:
+    if encoding not in {'ascii', 'utf-8'}:
         raise ValueError("Invalid encoding (%r); 'utf-8' or 'ascii' allowed"
                          % encoding)
+
+    if isinstance(length, int):
+        # Fixed length string
+        return dtype("|S" + str(length), metadata={'h5py_encoding': encoding})
+    elif length is None:
+        vlen = unicode if (encoding == 'utf-8') else bytes
+        return dtype('O', metadata={'vlen': unicode})
+    else:
+        raise TypeError("length must be integer or None (got %r)" % length)
 
 def enum_dtype(values_dict, basetype=np.uint8):
     """Create a NumPy representation of an HDF5 enumerated type
