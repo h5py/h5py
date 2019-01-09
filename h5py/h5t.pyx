@@ -1749,7 +1749,7 @@ def string_dtype(encoding='utf-8', length=None):
         return dtype("|S" + str(length), metadata={'h5py_encoding': encoding})
     elif length is None:
         vlen = unicode if (encoding == 'utf-8') else bytes
-        return dtype('O', metadata={'vlen': unicode})
+        return dtype('O', metadata={'vlen': vlen})
     else:
         raise TypeError("length must be integer or None (got %r)" % length)
 
