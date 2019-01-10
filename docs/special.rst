@@ -16,6 +16,10 @@ store these types.  Each type is represented by a native NumPy dtype, with a
 small amount of metadata attached.  NumPy routines ignore the metadata, but
 h5py can use it to determine how to store the data.
 
+The metadata h5py attaches to dtypes is not part of the public API,
+so it may change between versions.
+Use the functions described below to create and check for these types.
+
 Variable-length strings
 -----------------------
 
