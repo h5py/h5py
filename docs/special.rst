@@ -47,22 +47,39 @@ Here's an example showing how to create a VL array of strings::
     >>> ds = f.create_dataset('VLDS', (100,100), dtype=dt)
     >>> ds.dtype.kind
     'O'
-    >>> h5py.check_vlen_dtype(ds.dtype)
-    <type 'str'>
+    >>> h5py.check_string_dtype(ds.dtype)
+    string_info(encoding='utf-8', length=None)
 
-.. function:: string_dtype(encoding='utf-8')
+.. function:: string_dtype(encoding='utf-8', length=None)
 
-   Make a numpy dtype for HDF5 variable-length strings
+   Make a numpy dtype for HDF5 strings
 
    :param encoding: ``'utf-8'`` or ``'ascii'``.
-                    If it is ``'utf-8'``, the data should be passed as Python
-                    ``str`` objects (``unicode`` in Python 2).
-                    For ``'ascii'``, data should be passed as bytes.
+   :param length: ``None`` for variable-length, or an integer for fixed-length
+                  string data, giving the length in bytes.
+
+If ``encoding`` is ``'utf-8'``, the variable length strings should be passed as
+Python ``str`` objects (``unicode`` in Python 2).
+For ``'ascii'``, they should be passed as bytes.
 
 .. function:: check_string_dtype(dt)
 
-   Check if ``dt`` is a variable-length string dtype.
-   Returns the encoding if it is, or ``None`` if not.
+   Check if ``dt`` is a string dtype.
+   Returns a *string_info* object if it is, or ``None`` if not.
+
+.. class:: string_info
+
+   A named tuple type holding string encoding and length.
+
+   .. attribute:: encoding
+
+      The character encoding associated with the string dtype,
+      which can be ``'utf-8'`` or ``'ascii'``.
+
+   .. attribute:: length
+
+      For fixed-length string dtypes, the length in bytes.
+      ``None`` for variable-length strings.
 
 .. _vlen:
 
