@@ -303,6 +303,14 @@ class TestLibver(TestCase):
         self.assertEqual(f.libver, ('v18', 'latest'))
         f.close()
 
+    @ut.skipIf(h5py.version.hdf5_version_tuple < (1, 10, 2),
+               'Requires HDF5 1.10.2 or later')
+    def test_single_v110(self):
+        """ Opening with "v110" libver arg """
+        f = File(self.mktemp(), 'w', libver='v110')
+        self.assertEqual(f.libver, ('v110', 'latest'))
+        f.close()
+
     def test_multiple(self):
         """ Opening with two libver args """
         f = File(self.mktemp(), 'w', libver=('earliest', 'latest'))
