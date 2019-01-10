@@ -43,7 +43,7 @@ install:
   - "py -3.6 -m pip install --upgrade wheel pip setuptools virtualenv"
   - "py -3.6 -m pip install requests"
   - "py -3.6 ci\\appveyor\\get_hdf5.py"
-  - "py -3.6 -m pip install tox codecov tox-appveyor"
+  - "py -3.6 -m pip install tox codecov Cython tox-appveyor"
 
 build: off
 
