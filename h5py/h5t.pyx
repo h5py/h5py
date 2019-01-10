@@ -25,6 +25,7 @@ from utils cimport  emalloc, efree, \
                     require_tuple, convert_dims, convert_tuple
 
 # Runtime imports
+import codecs
 from collections import defaultdict
 import sys
 import operator
@@ -1740,6 +1741,12 @@ def string_dtype(encoding='utf-8', length=None):
     arrays, regardless of the encoding. Fixed length unicode data is not
     supported.
     """
+    # Normalise encoding name:
+    try:
+        encoding = codecs.lookup(encoding).name
+    except LookupError:
+        pass  # Use our error below
+
     if encoding not in {'ascii', 'utf-8'}:
         raise ValueError("Invalid encoding (%r); 'utf-8' or 'ascii' allowed"
                          % encoding)
