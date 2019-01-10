@@ -137,8 +137,8 @@ class TestFileObj(TestCase):
 
     def check_write(self, fileobj):
         f = h5py.File(fileobj)
-        self.assertEquals(f.driver, 'fileobj')
-        self.assertEquals(f.filename, repr(fileobj))
+        self.assertEqual(f.driver, 'fileobj')
+        self.assertEqual(f.filename, repr(fileobj))
         f.create_dataset('test', data=list(range(12)))
         self.assertEqual(list(f), ['test'])
         self.assertEqual(list(f['test'][:]), list(range(12)))
@@ -154,7 +154,7 @@ class TestFileObj(TestCase):
 
     def test_BytesIO(self):
         with io.BytesIO() as fileobj:
-            self.assertEquals(len(fileobj.getvalue()), 0)
+            self.assertEqual(len(fileobj.getvalue()), 0)
             self.check_write(fileobj)
             self.assertGreater(len(fileobj.getvalue()), 0)
             self.check_read(fileobj)
@@ -164,7 +164,7 @@ class TestFileObj(TestCase):
         fname = self.mktemp()
         try:
             with open(fname, 'wb+') as fileobj:
-                self.assertEquals(os.path.getsize(fname), 0)
+                self.assertEqual(os.path.getsize(fname), 0)
                 self.check_write(fileobj)
                 self.assertGreater(os.path.getsize(fname), 0)
                 self.check_read(fileobj)
