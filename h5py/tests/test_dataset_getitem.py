@@ -34,6 +34,7 @@
         Ellipsis
         Empty tuple
         Regular slice
+        MultiBlockSlice
         Indexing
         Index list
         Boolean mask
@@ -83,6 +84,11 @@ class TestEmpty(TestCase):
         """ slice -> ValueError """
         with self.assertRaises(ValueError):
             self.dset[0:4]
+
+    def test_multi_block_slice(self):
+        """ MultiBlockSlice -> ValueError """
+        with self.assertRaises(ValueError):
+            self.dset[h5py.MultiBlockSlice()]
 
     def test_index(self):
         """ index -> ValueError """
@@ -135,6 +141,11 @@ class TestScalarFloat(TestCase):
         """ slice -> ValueError """
         with self.assertRaises(ValueError):
             self.dset[0:4]
+
+    def test_multi_block_slice(self):
+        """ MultiBlockSlice -> ValueError """
+        with self.assertRaises(ValueError):
+            self.dset[h5py.MultiBlockSlice()]
 
     def test_index(self):
         """ index -> ValueError """
@@ -193,6 +204,11 @@ class TestScalarCompound(TestCase):
         """ slice -> ValueError """
         with self.assertRaises(ValueError):
             self.dset[0:4]
+
+    def test_multi_block_slice(self):
+        """ MultiBlockSlice -> ValueError """
+        with self.assertRaises(ValueError):
+            self.dset[h5py.MultiBlockSlice()]
 
     def test_index(self):
         """ index -> ValueError """
@@ -253,6 +269,11 @@ class TestScalarArray(TestCase):
         """ slice -> ValueError """
         with self.assertRaises(ValueError):
             self.dset[0:4]
+
+    def test_multi_block_slice(self):
+        """ MultiBlockSlice -> ValueError """
+        with self.assertRaises(ValueError):
+            self.dset[h5py.MultiBlockSlice()]
 
     def test_index(self):
         """ index -> ValueError """

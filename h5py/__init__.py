@@ -65,6 +65,7 @@ from ._hl.files import (
 )
 from ._hl.group import Group, SoftLink, ExternalLink, HardLink
 from ._hl.dataset import Dataset
+from ._hl.selections import MultiBlockSlice
 from ._hl.datatype import Datatype
 from ._hl.attrs import AttributeManager
 
