@@ -957,11 +957,11 @@ class TestCopy(TestCase):
 
         self.f1.copy(foo, 'baz', without_attrs=True)
         self.assertArrayEqual(self.f1['baz'], np.array([1,2,3]))
-        self.assert_('bar' not in self.f1['baz'].attrs)
+        assert 'bar' not in self.f1['baz'].attrs
 
         self.f2.copy(foo, 'baz', without_attrs=True)
         self.assertArrayEqual(self.f2['baz'], np.array([1,2,3]))
-        self.assert_('bar' not in self.f2['baz'].attrs)
+        assert 'bar' not in self.f2['baz'].attrs
 
     @ut.skipIf(h5py.version.hdf5_version_tuple < (1,8,9),
                "Bug in HDF5<1.8.8 prevents copying open dataset")

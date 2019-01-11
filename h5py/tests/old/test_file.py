@@ -82,7 +82,7 @@ class TestFileOpen(TestCase):
         """ Mode 'w-' opens file in exclusive mode """
         fname = self.mktemp()
         fid = File(fname, 'w-')
-        self.assert_(fid)
+        self.assertTrue(fid)
         fid.close()
         with self.assertRaises(IOError):
             File(fname, 'w-')
@@ -92,16 +92,16 @@ class TestFileOpen(TestCase):
         fname = self.mktemp()
         fid = File(fname, 'a')
         try:
-            self.assert_(fid)
+            self.assertTrue(fid)
             fid.create_group('foo')
-            self.assert_('foo' in fid)
+            assert 'foo' in fid
         finally:
             fid.close()
         fid = File(fname, 'a')
         try:
-            self.assert_('foo' in fid)
+            assert 'foo' in fid
             fid.create_group('bar')
-            self.assert_('bar' in fid)
+            assert 'bar' in fid
         finally:
             fid.close()
 
@@ -110,9 +110,9 @@ class TestFileOpen(TestCase):
         fname = self.mktemp()
         fid = File(fname, 'w')
         fid.close()
-        self.assert_(not fid)
+        self.assertFalse(fid)
         fid = File(fname, 'r')
-        self.assert_(fid)
+        self.assertTrue(fid)
         with self.assertRaises(ValueError):
             fid.create_group('foo')
         fid.close()
@@ -124,9 +124,9 @@ class TestFileOpen(TestCase):
         fid.create_group('foo')
         fid.close()
         fid = File(fname, 'r+')
-        self.assert_('foo' in fid)
+        assert 'foo' in fid
         fid.create_group('bar')
-        self.assert_('bar' in fid)
+        assert 'bar' in fid
         fid.close()
 
     def test_nonexistent_file(self):
@@ -202,7 +202,7 @@ class TestDrivers(TestCase):
     def test_sec2(self):
         """ Sec2 driver is supported on posix """
         fid = File(self.mktemp(), 'w', driver='sec2')
-        self.assert_(fid)
+        self.assertTrue(fid)
         self.assertEqual(fid.driver, 'sec2')
         fid.close()
 
@@ -210,7 +210,7 @@ class TestDrivers(TestCase):
         """ Core driver is supported (no backing store) """
         fname = self.mktemp()
         fid = File(fname, 'w', driver='core', backing_store=False)
-        self.assert_(fid)
+        self.assertTrue(fid)
         self.assertEqual(fid.driver, 'core')
         fid.close()
         self.assertFalse(os.path.exists(fname))
@@ -222,7 +222,7 @@ class TestDrivers(TestCase):
         fid.create_group('foo')
         fid.close()
         fid = File(fname, 'r')
-        self.assert_('foo' in fid)
+        assert 'foo' in fid
         fid.close()
 
     def test_readonly(self):
@@ -232,8 +232,8 @@ class TestDrivers(TestCase):
         fid.create_group('foo')
         fid.close()
         fid = File(fname, 'r', driver='core')
-        self.assert_(fid)
-        self.assert_('foo' in fid)
+        self.assertTrue(fid)
+        assert 'foo' in fid
         with self.assertRaises(ValueError):
             fid.create_group('bar')
         fid.close()
@@ -243,7 +243,7 @@ class TestDrivers(TestCase):
         fname = self.mktemp()
         fid = File(fname, 'w', driver='core', block_size=1024,
                    backing_store=False)
-        self.assert_(fid)
+        self.assertTrue(fid)
         fid.close()
 
     @ut.skipUnless(mpi, "Parallel HDF5 is required for MPIO driver test")
@@ -384,7 +384,7 @@ class TestUserblock(TestCase):
 
         f = h5py.File(name, 'r')
         try:
-            self.assert_("Foobar" in f)
+            assert "Foobar" in f
         finally:
             f.close()
 
@@ -489,9 +489,9 @@ class TestClose(TestCase):
     def test_close(self):
         """ Close file via .close method """
         fid = File(self.mktemp())
-        self.assert_(fid)
+        self.assertTrue(fid)
         fid.close()
-        self.assert_(not fid)
+        self.assertFalse(fid)
 
     def test_closed_file(self):
         """ Trying to modify closed file raises ValueError """
