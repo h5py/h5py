@@ -276,6 +276,8 @@ class TestDrivers(TestCase):
     # TODO: family driver tests
 
 
+@ut.skipUnless(h5py.version.hdf5_version_tuple < (1, 10, 2),
+               'Requires HDF5 before 1.10.2')
 class TestLibver(TestCase):
 
     """
@@ -295,22 +297,6 @@ class TestLibver(TestCase):
         self.assertEqual(f.libver, ('latest', 'latest'))
         f.close()
 
-    @ut.skipIf(h5py.version.hdf5_version_tuple < (1, 10, 2),
-               'Requires HDF5 1.10.2 or later')
-    def test_single_v18(self):
-        """ Opening with "v18" libver arg """
-        f = File(self.mktemp(), 'w', libver='v18')
-        self.assertEqual(f.libver, ('v18', 'latest'))
-        f.close()
-
-    @ut.skipIf(h5py.version.hdf5_version_tuple < (1, 10, 2),
-               'Requires HDF5 1.10.2 or later')
-    def test_single_v110(self):
-        """ Opening with "v110" libver arg """
-        f = File(self.mktemp(), 'w', libver='v110')
-        self.assertEqual(f.libver, ('v110', 'latest'))
-        f.close()
-
     def test_multiple(self):
         """ Opening with two libver args """
         f = File(self.mktemp(), 'w', libver=('earliest', 'latest'))
@@ -321,6 +307,61 @@ class TestLibver(TestCase):
         """ Omitting libver arg results in maximum compatibility """
         f = File(self.mktemp(), 'w')
         self.assertEqual(f.libver, ('earliest', 'latest'))
+        f.close()
+
+
+@ut.skipIf(h5py.version.hdf5_version_tuple < (1, 10, 2),
+           'Requires HDF5 1.10.2 or later')
+class TestNewLibver(TestCase):
+
+    """
+        Feature: File format compatibility bounds can be specified when
+        opening a file.
+
+        Requirement: HDF5 1.10.2 or later
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        super(TestNewLibver, cls).setUpClass()
+
+        # Current latest library bound label
+        cls.latest = 'v110'
+
+    def test_default(self):
+        """ Opening with no libver arg """
+        f = File(self.mktemp(), 'w')
+        self.assertEqual(f.libver, ('earliest', self.latest))
+        f.close()
+
+    def test_single(self):
+        """ Opening with single libver arg """
+        f = File(self.mktemp(), 'w', libver='latest')
+        self.assertEqual(f.libver, (self.latest, self.latest))
+        f.close()
+
+    def test_single_v18(self):
+        """ Opening with "v18" libver arg """
+        f = File(self.mktemp(), 'w', libver='v18')
+        self.assertEqual(f.libver, ('v18', self.latest))
+        f.close()
+
+    def test_single_v110(self):
+        """ Opening with "v110" libver arg """
+        f = File(self.mktemp(), 'w', libver='v110')
+        self.assertEqual(f.libver, ('v110', self.latest))
+        f.close()
+
+    def test_multiple(self):
+        """ Opening with two libver args """
+        f = File(self.mktemp(), 'w', libver=('earliest', 'v18'))
+        self.assertEqual(f.libver, ('earliest', 'v18'))
+        f.close()
+
+    def test_none(self):
+        """ Omitting libver arg results in maximum compatibility """
+        f = File(self.mktemp(), 'w')
+        self.assertEqual(f.libver, ('earliest', self.latest))
         f.close()
 
 

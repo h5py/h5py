@@ -16,7 +16,6 @@ from __future__ import absolute_import
 import sys
 import os
 from warnings import warn
-from collections import defaultdict
 
 from .compat import filename_decode, filename_encode
 
@@ -36,12 +35,13 @@ if hdf5_version >= h5.get_config().swmr_min_hdf5_version:
     swmr_support = True
 
 
-libver_dict = {'earliest': h5f.LIBVER_EARLIEST, 'latest': h5f.LIBVER_LATEST}
+libver_dict = {'earliest': h5f.LIBVER_EARLIEST}
 if hdf5_version >= (1, 10, 2):
     libver_dict.update({'v18': h5f.LIBVER_V18, 'v110': h5f.LIBVER_V110})
-libver_dict_r = defaultdict(list)
-for k, v in six.iteritems(libver_dict):
-    libver_dict_r[v].append(k)
+libver_dict_r = dict((y, x) for x, y in six.iteritems(libver_dict))
+libver_dict.update({'latest': h5f.LIBVER_LATEST})
+if hdf5_version < (1, 10, 2):
+    libver_dict_r = dict((y, x) for x, y in six.iteritems(libver_dict))
 
 
 def _set_fapl_mpio(plist, **kwargs):
@@ -268,17 +268,7 @@ class File(Group):
     def libver(self):
         """File format version bounds (2-tuple: low, high)"""
         bounds = self.id.get_access_plist().get_libver_bounds()
-        libver = list()
-        for v, b in zip(self._libver, bounds):
-            if 'latest' in libver_dict_r[b]:
-                if v == 'latest':
-                    libver.append('latest')
-                else:
-                    idx = (libver_dict_r[b].index('latest') + 1) % 2
-                    libver.append(libver_dict_r[b][idx])
-            else:
-                libver.append(libver_dict_r[b][0])
-        return tuple(libver)
+        return tuple(libver_dict_r[x] for x in bounds)
 
     @property
     @with_phil
@@ -342,7 +332,7 @@ class File(Group):
             Name of the driver to use.  Legal values are None (default,
             recommended), 'core', 'sec2', 'stdio', 'mpio'.
         libver
-            Library version bounds.  Currently defined: 'earliest', 'v18' (HDF5
+            Library version bounds.  Supported values: 'earliest', 'v18' (HDF5
             1.10.2 or later), 'v110' (HDF5 1.10.2 or later)  and 'latest'.
         userblock
             Desired size of user block.  Only allowed when creating a new

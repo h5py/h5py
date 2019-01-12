@@ -132,14 +132,18 @@ compatible.
 
 The default is "earliest".
 
-Starting with HDF5 version 1.10.2, it is possible to specify another version:
-
-    >>> f = h5py.File('name.hdf5', libver='v18')
-
-that will store objects compatible with HDF5 1.8. For example, to ensure full
-backward compatibility up to this library version, use:
+Specifying version bounds has changed in HDF5 version 1.10.2. There are two new
+compatibility levels: `v18` (for HDF5 1.8) and `v110` (for HDF5 1.10). This
+change enables, for example, something like this:
 
     >>> f = h5py.File('name.hdf5', libver=('earliest', 'v18'))
+
+which enforces full backward compatibility up to HDF5 1.8. Using any HDF5
+feature that requires a newer format will raise an error.
+
+`latest` is now an alias to another bound label that represents the latest
+version. Because of this, the `File.libver` property will not use `latest` in
+its output for HDF5 1.10.2 or later.
 
 
 .. _file_userblock:
