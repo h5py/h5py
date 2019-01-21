@@ -37,7 +37,7 @@ if hdf5_version >= h5.get_config().swmr_min_hdf5_version:
 
 libver_dict = {'earliest': h5f.LIBVER_EARLIEST}
 if hdf5_version >= (1, 10, 2):
-    libver_dict.update({'v18': h5f.LIBVER_V18, 'v110': h5f.LIBVER_V110})
+    libver_dict.update({'v108': h5f.LIBVER_V18, 'v110': h5f.LIBVER_V110})
 libver_dict_r = dict((y, x) for x, y in six.iteritems(libver_dict))
 libver_dict.update({'latest': h5f.LIBVER_LATEST})
 if hdf5_version < (1, 10, 2):

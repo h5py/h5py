@@ -340,10 +340,10 @@ class TestNewLibver(TestCase):
         self.assertEqual(f.libver, (self.latest, self.latest))
         f.close()
 
-    def test_single_v18(self):
-        """ Opening with "v18" libver arg """
-        f = File(self.mktemp(), 'w', libver='v18')
-        self.assertEqual(f.libver, ('v18', self.latest))
+    def test_single_v108(self):
+        """ Opening with "v108" libver arg """
+        f = File(self.mktemp(), 'w', libver='v108')
+        self.assertEqual(f.libver, ('v108', self.latest))
         f.close()
 
     def test_single_v110(self):
@@ -354,8 +354,8 @@ class TestNewLibver(TestCase):
 
     def test_multiple(self):
         """ Opening with two libver args """
-        f = File(self.mktemp(), 'w', libver=('earliest', 'v18'))
-        self.assertEqual(f.libver, ('earliest', 'v18'))
+        f = File(self.mktemp(), 'w', libver=('earliest', 'v108'))
+        self.assertEqual(f.libver, ('earliest', 'v108'))
         f.close()
 
     def test_none(self):
