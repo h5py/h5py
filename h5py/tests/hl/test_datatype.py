@@ -238,3 +238,25 @@ class TestOffsets(TestCase):
             for n, d in dtype_dset_map.items():
                 ldata = f[n][:]
                 self.assertEqual(ldata.dtype, d)
+
+    def test_tuple_of_unicode(self):
+        # Test that a tuple of unicode strings can be saved as a dataset
+        # It will be converted to a numpy array of vlen unicode type:
+        data = (u'a', u'b')
+
+        fname = self.mktemp()
+
+        with h5py.File(fname, 'w') as fd:
+            fd.create_dataset('data', data=data)
+
+            # However, a numpy array of type U being passed in will not be
+            # automatically converted, and should raise an error as it does
+            # not map to a h5py dtype
+            data_as_U_array = np.array(data)
+            self.assertEqual(data_as_U_array.dtype, np.dtype('U1'))
+            with self.assertRaises(TypeError):
+                fd.create_dataset('y', data=data_as_U_array)
+
+        with h5py.File(fname, 'r') as fd:
+            self.assertTrue(all(fd['data'][...] == data))
+            self.assertEqual(fd['data'].dtype, np.dtype('O'))

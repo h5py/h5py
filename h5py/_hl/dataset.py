@@ -73,6 +73,7 @@ def make_new_dset(parent, shape=None, dtype=None, data=None,
         else:
             _dtype = None
 
+        is_list_or_tuple = isinstance(data, (list, tuple))
         # if we are going to a f2 datatype, pre-convert in python
         # to workaround a possible h5py bug in the conversion.
         is_small_float = (_dtype is not None and
@@ -81,6 +82,12 @@ def make_new_dset(parent, shape=None, dtype=None, data=None,
         data = numpy.asarray(data, order="C",
                              dtype=(_dtype if is_small_float
                                     else base.guess_dtype(data)))
+
+        # If we were passed a list or tuple, then we do not need to respect the
+        # datatype of the numpy array. If it is U type, convert to vlen unicode
+        # strings:
+        if is_list_or_tuple and data.dtype.type == numpy.unicode_:
+            data = numpy.array(data, dtype=h5t.special_dtype(vlen=six.text_type))
 
     # Validate shape
     if shape is None:
