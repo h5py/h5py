@@ -39,7 +39,7 @@ class TestSearchPaths(TestCase):
         self.assertEqual(h5pl.size(), 2)
         self.assertEqual(h5pl.get(0), b'/opt/hdf5/vendor-plugins\x00')
         self.assertTrue(h5pl.get(1).endswith(b'hdf5/plugins\x00'))
-        
+
     def test_insert(self):
         h5pl.insert(b'/opt/hdf5/vendor-plugins', 0)
         self.assertEqual(h5pl.size(), 2)
