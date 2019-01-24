@@ -11,45 +11,47 @@
     HDF5 plugin interface.
 """
 
+include "config.pxi"
 from utils cimport emalloc, efree
 
 # === C API ===================================================================
 
-cpdef append(const char* search_path):
-    """(STRING search_path)"""
-    H5PLappend(search_path)
+IF HDF5_VERSION >= (1, 10, 1):
+    cpdef append(const char* search_path):
+        """(STRING search_path)"""
+        H5PLappend(search_path)
 
-cpdef prepend(const char* search_path):
-    """(STRING search_path)"""
-    H5PLprepend(search_path)
+    cpdef prepend(const char* search_path):
+        """(STRING search_path)"""
+        H5PLprepend(search_path)
 
-cpdef replace(const char* search_path, unsigned int index):
-    """(STRING search_path, UINT index)"""
-    H5PLreplace(search_path, index)
+    cpdef replace(const char* search_path, unsigned int index):
+        """(STRING search_path, UINT index)"""
+        H5PLreplace(search_path, index)
 
-cpdef insert(const char* search_path, unsigned int index):
-    """(STRING search_path, UINT index)"""
-    H5PLinsert(search_path, index)
+    cpdef insert(const char* search_path, unsigned int index):
+        """(STRING search_path, UINT index)"""
+        H5PLinsert(search_path, index)
 
-cpdef remove(unsigned int index):
-    """(UINT index)"""
-    H5PLremove(index)
+    cpdef remove(unsigned int index):
+        """(UINT index)"""
+        H5PLremove(index)
 
-cpdef get(unsigned int index):
-    """(UINT index) => STRING"""
-    cpdef size_t n
-    cpdef char* buf = NULL
+    cpdef get(unsigned int index):
+        """(UINT index) => STRING"""
+        cpdef size_t n
+        cpdef char* buf = NULL
 
-    n = H5PLget(index, NULL, 0) + 1
-    buf = <char*>emalloc(sizeof(char)*n)
-    try:
-        H5PLget(index, buf, n)
-        return PyBytes_FromStringAndSize(buf, n)
-    finally:
-        efree(buf)
+        n = H5PLget(index, NULL, 0) + 1
+        buf = <char*>emalloc(sizeof(char)*n)
+        try:
+            H5PLget(index, buf, n)
+            return PyBytes_FromStringAndSize(buf, n)
+        finally:
+            efree(buf)
 
-cpdef size():
-    """() => UINT"""
-    cpdef unsigned int n = 0
-    H5PLsize(&n)
-    return n
+    cpdef size():
+        """() => UINT"""
+        cpdef unsigned int n = 0
+        H5PLsize(&n)
+        return n
