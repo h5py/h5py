@@ -32,7 +32,7 @@ def sandboxed(test):
         lines, start = inspect.getsourcelines(test)
         source = '\n'.join(lines[1:])  # remove this decorator
 
-        with tempfile.NamedTemporaryFile('w', dir='.', prefix='sandbox-', suffix='.py', delete=False) as f:
+        with tempfile.NamedTemporaryFile('w', prefix='sandbox-', suffix='.py', delete=False) as f:
             f.write('''
 try:
     import unittest2 as ut
@@ -44,13 +44,21 @@ from h5py import h5pl
 
 class {}(ut.TestCase):
 {}
-'''.format(test.__qualname__.split('.')[0], source, check=True))
+'''.format((test.__qualname__.split('.')[0]) if hasattr(test, '__qualname__')
+           else test.im_class.__name__,
+           source, check=True))
+
             fname = f.name
             try:
                 # support Windows
                 f.close()
-                subprocess.run((sys.executable, '-m', 'pytest', '-q', fname),
-                               check=True)
+
+                env = {**os.environ}
+                if 'HDF5_PLUGIN_PATH' in env:
+                    del env['HDF5_PLUGIN_PATH']
+
+                subprocess.check_call((sys.executable, '-m', 'pytest', '-q', fname),
+                                      env=env)
             finally:
                 os.remove(fname)
 
