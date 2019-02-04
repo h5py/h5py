@@ -53,7 +53,7 @@ class {}(ut.TestCase):
                 # support Windows
                 f.close()
 
-                env = {**os.environ}
+                env = dict(os.environ)
                 if 'HDF5_PLUGIN_PATH' in env:
                     del env['HDF5_PLUGIN_PATH']
 
