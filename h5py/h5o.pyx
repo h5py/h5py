@@ -14,11 +14,11 @@
 include 'config.pxi'
 
 # Pyrex compile-time imports
-from _objects cimport ObjectID, pdefault
-from h5g cimport GroupID
-from h5i cimport wrap_identifier
-from h5p cimport PropID
-from utils cimport emalloc, efree
+from ._objects cimport ObjectID, pdefault
+from .h5g cimport GroupID
+from .h5i cimport wrap_identifier
+from .h5p cimport PropID
+from .utils cimport emalloc, efree
 
 from ._objects import phil, with_phil
 

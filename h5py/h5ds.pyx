@@ -12,8 +12,8 @@
 """
 
 # Compile-time imports
-from h5d cimport DatasetID
-from utils cimport emalloc, efree
+from .h5d cimport DatasetID
+from .utils cimport emalloc, efree
 
 from ._objects import phil, with_phil
 

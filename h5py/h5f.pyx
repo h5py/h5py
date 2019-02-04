@@ -17,14 +17,14 @@ include "config.pxi"
 from cpython.buffer cimport PyObject_CheckBuffer, \
                             PyObject_GetBuffer, PyBuffer_Release, \
                             PyBUF_SIMPLE
-from _objects cimport pdefault
-from h5p cimport propwrap, PropFAID, PropFCID
-from h5t cimport typewrap
-from h5i cimport wrap_identifier
-from h5ac cimport CacheConfig
-from utils cimport emalloc, efree
+from ._objects cimport pdefault
+from .h5p cimport propwrap, PropFAID, PropFCID
+from .h5t cimport typewrap
+from .h5i cimport wrap_identifier
+from .h5ac cimport CacheConfig
+from .utils cimport emalloc, efree
 
-from h5py import _objects
+from .h5py import _objects
 from ._objects import phil, with_phil
 import h5fd
 

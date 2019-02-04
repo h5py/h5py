@@ -100,27 +100,27 @@ class Line(object):
 
 raw_preamble = """\
 include "config.pxi"
-from api_types_hdf5 cimport *
-from api_types_ext cimport *
+from .api_types_hdf5 cimport *
+from .api_types_ext cimport *
 
 """
 
 def_preamble = """\
 include "config.pxi"
 
-from api_types_hdf5 cimport *
-from api_types_ext cimport *
+from .api_types_hdf5 cimport *
+from .api_types_ext cimport *
 
 """
 
 imp_preamble = """\
 include "config.pxi"
-from api_types_ext cimport *
-from api_types_hdf5 cimport *
+from .api_types_ext cimport *
+from .api_types_hdf5 cimport *
 
-cimport _hdf5
+cimport h5py._hdf5 as _hdf5
 
-from _errors cimport set_exception
+from ._errors cimport set_exception
 """
 
 

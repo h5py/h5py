@@ -14,14 +14,14 @@
 include "config.pxi"
 
 # Compile-time imports
-from _objects cimport pdefault
-from utils cimport emalloc, efree
-from h5p import CRT_ORDER_TRACKED
-from h5p cimport PropID, PropGCID
-cimport _hdf5 # to implement container testing for 1.6
-from _errors cimport set_error_handler, err_cookie
+from ._objects cimport pdefault
+from .utils cimport emalloc, efree
+from .h5p import CRT_ORDER_TRACKED
+from .h5p cimport PropID, PropGCID
+cimport h5py._hdf5 as _hdf5 # to implement container testing for 1.6
+from ._errors cimport set_error_handler, err_cookie
 
-from h5py import _objects
+from .h5py import _objects
 from ._objects import phil, with_phil
 
 # === Public constants and data structures ====================================

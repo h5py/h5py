@@ -7,7 +7,7 @@
 # License:  Standard 3-clause BSD; see "license.txt" for full license terms
 #           and contributor agreement.
 
-from api_types_ext cimport *
+from .api_types_ext cimport *
 
 include "config.pxi"
 

@@ -13,8 +13,8 @@
     Low-level type-conversion routines.
 """
 
-from h5r cimport Reference, RegionReference, hobj_ref_t, hdset_reg_ref_t
-from h5t cimport H5PY_OBJ, typewrap, py_create, TypeID
+from .h5r cimport Reference, RegionReference, hobj_ref_t, hdset_reg_ref_t
+from .h5t cimport H5PY_OBJ, typewrap, py_create, TypeID
 cimport numpy as np
 from libc.stdlib cimport realloc
 

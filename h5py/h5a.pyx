@@ -12,15 +12,15 @@
 """
 
 # Compile-time imports
-from _objects cimport pdefault
-from h5t cimport TypeID, typewrap, py_create
-from h5s cimport SpaceID
-from h5p cimport PropID
+from ._objects cimport pdefault
+from .h5t cimport TypeID, typewrap, py_create
+from .h5s cimport SpaceID
+from .h5p cimport PropID
 from numpy cimport import_array, ndarray, PyArray_DATA
-from utils cimport check_numpy_read, check_numpy_write, emalloc, efree
-from _proxy cimport attr_rw
+from .utils cimport check_numpy_read, check_numpy_write, emalloc, efree
+from ._proxy cimport attr_rw
 
-from h5py import _objects
+from .h5py import _objects
 from ._objects import phil, with_phil
 
 # Initialization
@@ -168,7 +168,7 @@ cdef class AttrInfo:
         def __get__(self):
             return <int>self.info.corder
     property cset:
-        """Character set of attribute name (integer typecode from h5t)"""
+        """Character set of attribute name (integer typecode from .h5t)"""
         def __get__(self):
             return <int>self.info.cset
     property data_size:

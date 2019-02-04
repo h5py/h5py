@@ -7,9 +7,9 @@
 # License:  Standard 3-clause BSD; see "license.txt" for full license terms
 #           and contributor agreement.
 
-from defs cimport *
+from .defs cimport *
 
-from _objects cimport class ObjectID
+from ._objects cimport class ObjectID
 
 cdef class SpaceID(ObjectID):
     pass

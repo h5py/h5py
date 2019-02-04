@@ -7,7 +7,7 @@
 # License:  Standard 3-clause BSD; see "license.txt" for full license terms
 #           and contributor agreement.
 
-from api_types_hdf5 cimport *
+from .api_types_hdf5 cimport *
 
 # Auto-set exception.  Returns 1 if exception set, 0 if no HDF5 error found.
 cdef int set_exception() except -1

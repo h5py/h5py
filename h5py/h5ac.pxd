@@ -7,7 +7,7 @@
 # License:  Standard 3-clause BSD; see "license.txt" for full license terms
 #           and contributor agreement.
 
-from defs cimport *
+from .defs cimport *
 
 cdef class CacheConfig:
     cdef H5AC_cache_config_t cache_config

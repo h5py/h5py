@@ -18,14 +18,14 @@ from cpython.buffer cimport PyObject_CheckBuffer, \
                             PyObject_GetBuffer, PyBuffer_Release, \
                             PyBUF_SIMPLE
 
-from utils cimport  require_tuple, convert_dims, convert_tuple, \
+from .utils cimport  require_tuple, convert_dims, convert_tuple, \
                     emalloc, efree, \
                     check_numpy_write, check_numpy_read
 from numpy cimport ndarray, import_array
-from h5t cimport TypeID, py_create
-from h5s cimport SpaceID
-from h5ac cimport CacheConfig
-from h5py import _objects
+from .h5t cimport TypeID, py_create
+from .h5s cimport SpaceID
+from .h5ac cimport CacheConfig
+from .h5py import _objects
 
 from ._objects import phil, with_phil
 

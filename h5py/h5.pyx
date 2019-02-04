@@ -9,7 +9,7 @@
 
 include "config.pxi"
 
-from defs cimport *
+from .defs cimport *
 from ._objects import phil, with_phil
 
 ITER_INC    = H5_ITER_INC     # Increasing order

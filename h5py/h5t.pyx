@@ -16,12 +16,12 @@
 """
 # Pyrex compile-time imports
 include "config.pxi"
-from _objects cimport pdefault
+from ._objects cimport pdefault
 
 from numpy cimport dtype, ndarray
-from h5r cimport Reference, RegionReference
+from .h5r cimport Reference, RegionReference
 
-from utils cimport  emalloc, efree, \
+from .utils cimport  emalloc, efree, \
                     require_tuple, convert_dims, convert_tuple
 
 # Runtime imports
@@ -29,7 +29,7 @@ from collections import defaultdict
 import sys
 import operator
 from warnings import warn
-from h5 import get_config
+from .h5 import get_config
 import numpy as np
 from ._objects import phil, with_phil
 from .h5py_warnings import H5pyDeprecationWarning

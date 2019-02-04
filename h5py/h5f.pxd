@@ -7,10 +7,10 @@
 # License:  Standard 3-clause BSD; see "license.txt" for full license terms
 #           and contributor agreement.
 
-from defs cimport *
+from .defs cimport *
 
-from _objects cimport ObjectID
-from h5g cimport GroupID
+from ._objects cimport ObjectID
+from .h5g cimport GroupID
 
 cdef class FileID(GroupID):
     pass

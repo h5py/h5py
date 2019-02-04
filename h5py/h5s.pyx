@@ -14,11 +14,11 @@
 include "config.pxi"
 
 # Pyrex compile-time imports
-from utils cimport  require_tuple, convert_dims, convert_tuple, \
+from .utils cimport  require_tuple, convert_dims, convert_tuple, \
                     emalloc, efree, create_numpy_hsize, create_hsize_array
 from numpy cimport ndarray
 
-from h5py import _objects
+from . import _objects
 from ._objects import phil, with_phil
 
 cdef object lockid(hid_t id_):

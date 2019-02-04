@@ -12,7 +12,7 @@
 """
 
 # Pyrex compile-time imports
-from _objects cimport ObjectID
+from ._objects cimport ObjectID
 
 from ._objects import phil, with_phil
 

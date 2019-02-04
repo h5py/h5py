@@ -7,8 +7,8 @@
 # License:  Standard 3-clause BSD; see "license.txt" for full license terms
 #           and contributor agreement.
 
-from defs cimport *
+from .defs cimport *
 
-from _objects cimport ObjectID
+from ._objects cimport ObjectID
 
 cpdef ObjectID wrap_identifier(hid_t ident)
