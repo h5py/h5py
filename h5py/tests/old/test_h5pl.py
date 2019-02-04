@@ -23,6 +23,7 @@ import subprocess
 import tempfile
 import sys
 import os
+import platform
 
 
 def sandboxed(test):
@@ -54,8 +55,11 @@ class {}(ut.TestCase):
                 f.close()
 
                 env = dict(os.environ)
-                if 'HDF5_PLUGIN_PATH' in env:
-                    del env['HDF5_PLUGIN_PATH']
+                # as per https://support.hdfgroup.org/HDF5/doc/Advanced/DynamicallyLoadedFilters/HDF5DynamicallyLoadedFilters.pdf,
+                # in case your HDF5 setup has it different
+                # (e.g. https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=826522)
+                env['HDF5_PLUGIN_PATH'] = os.path.expandvars('%ALLUSERSPROFILE%/hdf5/lib/plugin') \
+                    if platform.system() == 'Windows' else '/usr/local/hdf5/lib/plugin'
 
                 subprocess.check_call((sys.executable, '-m', 'pytest', '-q', fname),
                                       env=env)
@@ -71,35 +75,34 @@ class TestSearchPaths(ut.TestCase):
     @sandboxed
     def test_default(self):
         self.assertEqual(h5pl.size(), 1)
-        print(h5pl.get(0))
-        self.assertTrue(h5pl.get(0).endswith(b'hdf5/plugins\x00'))
+        self.assertTrue(h5pl.get(0).endswith(b'hdf5/lib/plugin\x00'))
 
     @sandboxed
     def test_append(self):
-        h5pl.append(b'/opt/hdf5/vendor-plugins')
+        h5pl.append(b'/opt/hdf5/vendor-plugin')
         self.assertEqual(h5pl.size(), 2)
-        self.assertTrue(h5pl.get(0).endswith(b'hdf5/plugins\x00'))
-        self.assertEqual(h5pl.get(1), b'/opt/hdf5/vendor-plugins\x00')
+        self.assertTrue(h5pl.get(0).endswith(b'hdf5/lib/plugin\x00'))
+        self.assertEqual(h5pl.get(1), b'/opt/hdf5/vendor-plugin\x00')
 
     @sandboxed
     def test_prepend(self):
-        h5pl.prepend(b'/opt/hdf5/vendor-plugins')
+        h5pl.prepend(b'/opt/hdf5/vendor-plugin')
         self.assertEqual(h5pl.size(), 2)
-        self.assertEqual(h5pl.get(0), b'/opt/hdf5/vendor-plugins\x00')
-        self.assertTrue(h5pl.get(1).endswith(b'hdf5/plugins\x00'))
+        self.assertEqual(h5pl.get(0), b'/opt/hdf5/vendor-plugin\x00')
+        self.assertTrue(h5pl.get(1).endswith(b'hdf5/lib/plugin\x00'))
 
     @sandboxed
     def test_insert(self):
-        h5pl.insert(b'/opt/hdf5/vendor-plugins', 0)
+        h5pl.insert(b'/opt/hdf5/vendor-plugin', 0)
         self.assertEqual(h5pl.size(), 2)
-        self.assertEqual(h5pl.get(0), b'/opt/hdf5/vendor-plugins\x00')
-        self.assertTrue(h5pl.get(1).endswith(b'hdf5/plugins\x00'))
+        self.assertEqual(h5pl.get(0), b'/opt/hdf5/vendor-plugin\x00')
+        self.assertTrue(h5pl.get(1).endswith(b'hdf5/lib/plugin\x00'))
 
     @sandboxed
     def test_replace(self):
-        h5pl.replace(b'/opt/hdf5/vendor-plugins', 0)
+        h5pl.replace(b'/opt/hdf5/vendor-plugin', 0)
         self.assertEqual(h5pl.size(), 1)
-        self.assertEqual(h5pl.get(0), b'/opt/hdf5/vendor-plugins\x00')
+        self.assertEqual(h5pl.get(0), b'/opt/hdf5/vendor-plugin\x00')
 
     @sandboxed
     def test_remove(self):
