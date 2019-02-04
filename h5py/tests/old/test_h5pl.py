@@ -44,8 +44,8 @@ from h5py import h5pl
 
 class {}(ut.TestCase):
 {}
-'''.format((test.__qualname__.split('.')[0]) if hasattr(test, '__qualname__')
-           else test.im_class.__name__,
+'''.format((test.__qualname__.split('.')[0])
+           if hasattr(test, '__qualname__') else 'Test',
            source, check=True))
 
             fname = f.name
@@ -71,6 +71,7 @@ class TestSearchPaths(ut.TestCase):
     @sandboxed
     def test_default(self):
         self.assertEqual(h5pl.size(), 1)
+        print(h5pl.get(0))
         self.assertTrue(h5pl.get(0).endswith(b'hdf5/plugins\x00'))
 
     @sandboxed
