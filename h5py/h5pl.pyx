@@ -42,10 +42,10 @@ IF HDF5_VERSION >= (1, 10, 1):
         cpdef size_t n
         cpdef char* buf = NULL
 
-        n = H5PLget(index, NULL, 0) + 1
-        buf = <char*>emalloc(sizeof(char)*n)
+        n = H5PLget(index, NULL, 0)
+        buf = <char*>emalloc(sizeof(char)*(n + 1))
         try:
-            H5PLget(index, buf, n)
+            H5PLget(index, buf, n + 1)
             return PyBytes_FromStringAndSize(buf, n)
         finally:
             efree(buf)
