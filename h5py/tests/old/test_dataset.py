@@ -774,6 +774,9 @@ class TestStrings(BaseDataset):
         self.assertFalse(tid.is_variable_str())
         self.assertEqual(tid.get_size(), 10)
         self.assertEqual(tid.get_cset(), h5py.h5t.CSET_ASCII)
+        string_info = h5py.check_string_dtype(ds.dtype)
+        self.assertEqual(string_info.encoding, 'ascii')
+        self.assertEqual(string_info.length, 10)
 
     def test_fixed_unicode(self):
         """ Fixed-length unicode datasets are unsupported (raise TypeError) """
