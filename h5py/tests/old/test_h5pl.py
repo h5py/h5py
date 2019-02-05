@@ -75,34 +75,34 @@ class TestSearchPaths(ut.TestCase):
     @sandboxed
     def test_default(self):
         self.assertEqual(h5pl.size(), 1)
-        self.assertTrue(h5pl.get(0).endswith(b'hdf5/lib/plugin\x00'))
+        self.assertTrue(h5pl.get(0).endswith(b'hdf5/lib/plugin'))
 
     @sandboxed
     def test_append(self):
         h5pl.append(b'/opt/hdf5/vendor-plugin')
         self.assertEqual(h5pl.size(), 2)
-        self.assertTrue(h5pl.get(0).endswith(b'hdf5/lib/plugin\x00'))
-        self.assertEqual(h5pl.get(1), b'/opt/hdf5/vendor-plugin\x00')
+        self.assertTrue(h5pl.get(0).endswith(b'hdf5/lib/plugin'))
+        self.assertEqual(h5pl.get(1), b'/opt/hdf5/vendor-plugin')
 
     @sandboxed
     def test_prepend(self):
         h5pl.prepend(b'/opt/hdf5/vendor-plugin')
         self.assertEqual(h5pl.size(), 2)
-        self.assertEqual(h5pl.get(0), b'/opt/hdf5/vendor-plugin\x00')
-        self.assertTrue(h5pl.get(1).endswith(b'hdf5/lib/plugin\x00'))
+        self.assertEqual(h5pl.get(0), b'/opt/hdf5/vendor-plugin')
+        self.assertTrue(h5pl.get(1).endswith(b'hdf5/lib/plugin'))
 
     @sandboxed
     def test_insert(self):
         h5pl.insert(b'/opt/hdf5/vendor-plugin', 0)
         self.assertEqual(h5pl.size(), 2)
-        self.assertEqual(h5pl.get(0), b'/opt/hdf5/vendor-plugin\x00')
-        self.assertTrue(h5pl.get(1).endswith(b'hdf5/lib/plugin\x00'))
+        self.assertEqual(h5pl.get(0), b'/opt/hdf5/vendor-plugin')
+        self.assertTrue(h5pl.get(1).endswith(b'hdf5/lib/plugin'))
 
     @sandboxed
     def test_replace(self):
         h5pl.replace(b'/opt/hdf5/vendor-plugin', 0)
         self.assertEqual(h5pl.size(), 1)
-        self.assertEqual(h5pl.get(0), b'/opt/hdf5/vendor-plugin\x00')
+        self.assertEqual(h5pl.get(0), b'/opt/hdf5/vendor-plugin')
 
     @sandboxed
     def test_remove(self):
