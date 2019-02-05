@@ -751,6 +751,8 @@ class TestStrings(BaseDataset):
         tid = ds.id.get_type()
         self.assertEqual(type(tid), h5py.h5t.TypeStringID)
         self.assertEqual(tid.get_cset(), h5py.h5t.CSET_ASCII)
+        string_info = h5py.check_string_dtype(ds.dtype)
+        self.assertEqual(string_info.encoding, 'ascii')
 
     def test_vlen_unicode(self):
         """ Vlen unicode dataset maps to vlen utf-8 in the file """
@@ -759,6 +761,8 @@ class TestStrings(BaseDataset):
         tid = ds.id.get_type()
         self.assertEqual(type(tid), h5py.h5t.TypeStringID)
         self.assertEqual(tid.get_cset(), h5py.h5t.CSET_UTF8)
+        string_info = h5py.check_string_dtype(ds.dtype)
+        self.assertEqual(string_info.encoding, 'utf-8')
 
     def test_fixed_bytes(self):
         """ Fixed-length bytes dataset maps to fixed-length ascii in the file
