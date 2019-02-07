@@ -6,6 +6,7 @@ from __future__ import absolute_import
 
 from itertools import count
 import numpy as np
+import six
 import h5py
 
 from ..common import ut, TestCase
@@ -24,15 +25,16 @@ class TestVlen(TestCase):
     def test_compound(self):
 
         fields = []
-        fields.append(('field_1', h5py.special_dtype(vlen=str)))
+        fields.append(('field_1', h5py.string_dtype()))
         fields.append(('field_2', np.int32))
         dt = np.dtype(fields)
         self.f['mytype'] = np.dtype(dt)
         dt_out = self.f['mytype'].dtype.fields['field_1'][0]
-        self.assertEqual(h5py.check_dtype(vlen=dt_out), str)
+        string_inf = h5py.check_string_dtype(dt_out)
+        self.assertEqual(string_inf.encoding, 'utf-8')
 
     def test_compound_vlen_bool(self):
-        vidt = h5py.special_dtype(vlen=np.uint8)
+        vidt = h5py.vlen_dtype(np.uint8)
         def a(items):
             return np.array(items, dtype=np.uint8)
 
@@ -78,8 +80,8 @@ class TestVlen(TestCase):
         self.assertArrayEqual(data['logical'], actual['logical'])
 
     def test_compound_vlen_enum(self):
-        eidt = h5py.special_dtype(enum=(np.uint8, {'OFF': 0, 'ON': 1}))
-        vidt = h5py.special_dtype(vlen=np.uint8)
+        eidt = h5py.enum_dtype({'OFF': 0, 'ON': 1}, basetype=np.uint8)
+        vidt = h5py.vlen_dtype(np.uint8)
         def a(items):
             return np.array(items, dtype=np.uint8)
 
@@ -102,8 +104,7 @@ class TestVlen(TestCase):
     def test_vlen_enum(self):
         fname = self.mktemp()
         arr1 = [[1],[1,2]]
-        dt1 = h5py.special_dtype(vlen=h5py.special_dtype(
-            enum=('i', dict(foo=1, bar=2))))
+        dt1 = h5py.vlen_dtype(h5py.enum_dtype(dict(foo=1, bar=2), 'i'))
 
         with h5py.File(fname,'w') as f:
             df1 = f.create_dataset('test', (len(arr1),), dtype=dt1)
@@ -115,8 +116,8 @@ class TestVlen(TestCase):
             arr2 = [e.tolist() for e in df2[:]]
 
         self.assertEqual(arr1, arr2)
-        self.assertEqual(h5py.check_dtype(enum=h5py.check_dtype(vlen=dt1)),
-                         h5py.check_dtype(enum=h5py.check_dtype(vlen=dt2)))
+        self.assertEqual(h5py.check_enum_dtype(h5py.check_vlen_dtype(dt1)),
+                         h5py.check_enum_dtype(h5py.check_vlen_dtype(dt2)))
 
 
 class TestExplicitCast(TestCase):
@@ -144,8 +145,8 @@ class TestOffsets(TestCase):
     """
 
     def test_compound_vlen(self):
-        vidt = h5py.special_dtype(vlen=np.uint8)
-        eidt = h5py.special_dtype(enum=(np.uint8, {'OFF': 0, 'ON': 1}))
+        vidt = h5py.vlen_dtype(np.uint8)
+        eidt = h5py.enum_dtype({'OFF': 0, 'ON': 1}, basetype=np.uint8)
 
         for np_align in (False, True):
             dt = np.dtype([
@@ -236,3 +237,37 @@ class TestOffsets(TestCase):
             for n, d in dtype_dset_map.items():
                 ldata = f[n][:]
                 self.assertEqual(ldata.dtype, d)
+
+
+class TestStrings(TestCase):
+    def test_vlen_utf8(self):
+        dt = h5py.string_dtype()
+
+        string_info = h5py.check_string_dtype(dt)
+        assert string_info.encoding == 'utf-8'
+        assert string_info.length is None
+        assert h5py.check_vlen_dtype(dt) is six.text_type
+
+    def test_vlen_ascii(self):
+        dt = h5py.string_dtype(encoding='ascii')
+
+        string_info = h5py.check_string_dtype(dt)
+        assert string_info.encoding == 'ascii'
+        assert string_info.length is None
+        assert h5py.check_vlen_dtype(dt) is bytes
+
+    def test_fixed_utf8(self):
+        dt = h5py.string_dtype(length=10)
+
+        string_info = h5py.check_string_dtype(dt)
+        assert string_info.encoding == 'utf-8'
+        assert string_info.length == 10
+        assert h5py.check_vlen_dtype(dt) is None
+
+    def test_fixed_ascii(self):
+        dt = h5py.string_dtype(encoding='ascii', length=10)
+
+        string_info = h5py.check_string_dtype(dt)
+        assert string_info.encoding == 'ascii'
+        assert string_info.length == 10
+        assert h5py.check_vlen_dtype(dt) is None

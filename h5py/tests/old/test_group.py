@@ -228,8 +228,7 @@ class TestOpen(BaseGroup):
         """
         g = self.f.create_group('test')
 
-        rtype = h5py.special_dtype(ref=h5py.Reference)
-        dt = np.dtype([('a', 'i'),('b',rtype)])
+        dt = np.dtype([('a', 'i'),('b', h5py.ref_dtype)])
         dset = self.f.create_dataset('test_dset', (1,), dt)
 
         dset[0] =(42,g.ref)

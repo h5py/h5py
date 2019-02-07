@@ -91,9 +91,9 @@ These are created when you assign a byte string to an attribute::
 
     >>> dset.attrs["attr"] = b"Hello"
 
-or when you create a dataset with an explicit "bytes" vlen type::
+or when you create a dataset with an explicit ascii string dtype::
 
-    >>> dt = h5py.special_dtype(vlen=bytes)
+    >>> dt = h5py.string_dtype(encoding='ascii')
     >>> dset = f.create_dataset("name", (100,), dtype=dt)
 
 Note that they're `not` fully identical to Python byte strings.  You can
@@ -113,10 +113,9 @@ These are created when you assign a unicode string to an attribute::
 
     >>> dset.attrs["name"] = u"Hello"
 
-or if you create a dataset with an explicit unicode vlen type:
+or if you create a dataset with an explicit string dtype:
 
-    >>> dt = h5py.special_dtype(vlen=unicode) # PY2
-    >>> dt = h5py.special_dtype(vlen=str)     # PY3
+    >>> dt = h5py.string_dtype()
     >>> dset = f.create_dataset("name", (100,), dtype=dt)
 
 They can store any character a Python unicode string can store, with the
@@ -160,8 +159,7 @@ h5py will save these as arrays of variable-length strings with character set
 H5T_CSET_UTF8. When read back, the results will be numpy arrays of dtype
 ``'object'``, as if the original data were written as:
 
-    >>> f['x'] = np.array(('a', 'b'), dtype=h5py.special_dtype(vlen=str)) # PY3
-    >>> f['x'] = np.array((u'a', u'b'), dtype=h5py.special_dtype(vlen=unicode)) # PY2
+    >>> f['x'] = np.array((u'a', u'b'), dtype=h5py.string_dtype(encoding='utf-8'))
 
 
 Object names

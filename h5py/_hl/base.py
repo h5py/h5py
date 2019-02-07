@@ -52,13 +52,13 @@ def guess_dtype(data):
     """
     with phil:
         if isinstance(data, h5r.RegionReference):
-            return h5t.special_dtype(ref=h5r.RegionReference)
+            return h5t.regionref_dtype
         if isinstance(data, h5r.Reference):
-            return h5t.special_dtype(ref=h5r.Reference)
+            return h5t.ref_dtype
         if type(data) == bytes:
-            return h5t.special_dtype(vlen=bytes)
+            return h5t.string_dtype(encoding='ascii')
         if type(data) == six.text_type:
-            return h5t.special_dtype(vlen=six.text_type)
+            return h5t.string_dtype()
 
         return None
 

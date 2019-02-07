@@ -7,6 +7,12 @@ Functions specific to h5py
 --------------------------
 
 .. autofunction:: py_create
+.. autofunction:: string_dtype
+.. autofunction:: check_string_dtype
+.. autofunction:: vlen_dtype
+.. autofunction:: check_vlen_dtype
+.. autofunction:: enum_dtype
+.. autofunction:: check_enum_dtype
 .. autofunction:: special_dtype
 .. autofunction:: check_dtype
 
