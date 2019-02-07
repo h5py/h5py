@@ -19,6 +19,11 @@ import sys
 import os
 import os.path as op
 
+# Newer packaging standards may recommend removing the current dir from the
+# path, add it back if needed.
+if '' not in sys.path:
+    sys.path.insert(0, '')
+
 import setup_build, setup_configure
 
 
