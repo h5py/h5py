@@ -204,7 +204,7 @@ class TestOffsets(TestCase):
         })
         data = np.empty(10, dtype=dt)
         data['f1'] = np.random.rand(data.size)
-        data['f2'] = np.random.random_integers(-10, 10, data.size)
+        data['f2'] = np.random.randint(-10, 11, data.size)
         data['f3'] = np.random.rand(data.size)*-1
 
         fname = self.mktemp()
