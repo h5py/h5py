@@ -314,13 +314,9 @@ class Test1DZeroFloat(TestCase):
         with self.assertRaises(ValueError):
             self.dset[0]
 
-    # FIXME: Under NumPy this works and returns a shape-(0,) array
-    # Also, at the moment it rasies UnboundLocalError (!)
-    @ut.expectedFailure
     def test_indexlist(self):
         """ index list """
-        with self.assertRaises(ValueError):
-            self.dset[[]]
+        self.assertNumpyBehavior(self.dset, self.data, np.s_[[]])
 
     def test_mask(self):
         """ mask -> ndarray of matching shape """
@@ -416,8 +412,6 @@ class Test1DFloat(TestCase):
     def test_indexlist_numpyarray_ellipsis(self):
         self.assertNumpyBehavior(self.dset, self.data, np.s_[np.array([1, 2, 5]), ...])
 
-    # Another UnboundLocalError
-    @ut.expectedFailure
     def test_indexlist_empty(self):
         self.assertNumpyBehavior(self.dset, self.data, np.s_[[]])
 
@@ -472,7 +466,6 @@ class Test2DZeroFloat(TestCase):
         """ Verify shape """
         self.assertEqual(self.dset.shape, (0, 3))
 
-    @ut.expectedFailure
     def test_indexlist(self):
         """ see issue #473 """
         self.assertNumpyBehavior(self.dset, self.data, np.s_[:,[0,1,2]])
