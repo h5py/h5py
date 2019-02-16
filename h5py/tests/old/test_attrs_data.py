@@ -248,7 +248,7 @@ class TestWriteException(BaseAttrs):
     def test_write(self):
         """ ValueError on string write wipes out attribute """
 
-        s = b"Hello\x00\Hello"
+        s = b"Hello\x00Hello"
 
         try:
             self.f.attrs['x'] = s

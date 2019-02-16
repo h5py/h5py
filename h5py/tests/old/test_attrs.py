@@ -20,7 +20,11 @@ from __future__ import absolute_import
 import six
 
 import numpy as np
-import collections
+
+try:
+    from collections.abc import MutableMapping
+except ImportError:  # Python < 3.3
+    from collections import MutableMapping
 
 from ..common import TestCase, ut
 
@@ -147,8 +151,8 @@ class TestMutableMapping(BaseAttrs):
     behaves as expected
     '''
     def test_resolution(self):
-        assert issubclass(AttributeManager, collections.MutableMapping)
-        assert isinstance(self.f.attrs, collections.MutableMapping)
+        assert issubclass(AttributeManager, MutableMapping)
+        assert isinstance(self.f.attrs, MutableMapping)
 
     def test_validity(self):
         '''
