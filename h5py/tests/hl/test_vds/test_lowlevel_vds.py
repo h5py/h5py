@@ -41,7 +41,7 @@ class TestEigerLowLevel(ut.TestCase):
             # Create the source dataset dataspace
             k = 0
             for foo in self.fname:
-                in_data = h5.File(foo)['data']
+                in_data = h5.File(foo, 'r')['data']
                 src_shape = in_data.shape
                 max_src_shape = src_shape
                 in_data.file.close()
@@ -239,7 +239,7 @@ class TestPercivalLowLevel(ut.TestCase):
             # Create the source dataset dataspace
             k = 0
             for foo in self.fname:
-                in_data = h5.File(foo)['data']
+                in_data = h5.File(foo, 'r')['data']
                 src_shape = in_data.shape
                 max_src_shape = (num,)+src_shape[1:]
                 in_data.file.close()

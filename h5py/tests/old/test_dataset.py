@@ -1071,7 +1071,7 @@ class TestVlen(BaseDataset):
         ds = self.f.create_dataset('vlen', (1,), dtype=dt)
         fname = self.f.filename
         self.f.close()
-        self.f = h5py.File(fname)
+        self.f = h5py.File(fname, 'a')
         self.f.create_dataset('vlen2', (1,), self.f['vlen']['b'][()].dtype)
 
     def test_convert(self):

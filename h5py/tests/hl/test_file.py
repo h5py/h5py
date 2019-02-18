@@ -86,7 +86,8 @@ class TestDriverRegistration(TestCase):
         self.assertIn('new-driver', h5py.registered_drivers())
 
         fname = self.mktemp()
-        h5py.File(fname, driver='new-driver', driver_arg_0=0, driver_arg_1=1)
+        h5py.File(fname, driver='new-driver', driver_arg_0=0, driver_arg_1=1,
+                  mode='w')
 
         self.assertEqual(
             called_with,
@@ -102,7 +103,7 @@ class TestDriverRegistration(TestCase):
 
         with self.assertRaises(ValueError) as e:
             fname = self.mktemp()
-            h5py.File(fname, driver='new-driver')
+            h5py.File(fname, driver='new-driver', mode='w')
 
         self.assertEqual(str(e.exception), 'Unknown driver type "new-driver"')
 
@@ -136,7 +137,7 @@ class TestCache(TestCase):
 class TestFileObj(TestCase):
 
     def check_write(self, fileobj):
-        f = h5py.File(fileobj)
+        f = h5py.File(fileobj, 'w')
         self.assertEqual(f.driver, 'fileobj')
         self.assertEqual(f.filename, repr(fileobj))
         f.create_dataset('test', data=list(range(12)))
@@ -151,14 +152,12 @@ class TestFileObj(TestCase):
         self.assertRaises(Exception, f.create_dataset, 'another.test', data=list(range(3)))
         f.close()
 
-
     def test_BytesIO(self):
         with io.BytesIO() as fileobj:
             self.assertEqual(len(fileobj.getvalue()), 0)
             self.check_write(fileobj)
             self.assertGreater(len(fileobj.getvalue()), 0)
             self.check_read(fileobj)
-
 
     def test_file(self):
         fname = self.mktemp()
@@ -173,13 +172,12 @@ class TestFileObj(TestCase):
         finally:
             os.remove(fname)
 
-
     def test_TemporaryFile(self):
         # in this test, we check explicitly that temp file gets
         # automatically deleted upon h5py.File.close()...
         fileobj = tempfile.NamedTemporaryFile()
         fname = fileobj.name
-        f = h5py.File(fileobj)
+        f = h5py.File(fileobj, 'w')
         del fileobj
         # ... but in your code feel free to simply
         # f = h5py.File(tempfile.TemporaryFile())
@@ -191,12 +189,13 @@ class TestFileObj(TestCase):
         f.close()
         self.assertFalse(os.path.isfile(fname))
 
-
     def test_exception_open(self):
-        self.assertRaises(Exception, h5py.File, None, driver='fileobj')
-        self.assertRaises(Exception, h5py.File, 'rogue', driver='fileobj')
-        self.assertRaises(Exception, h5py.File, self, driver='fileobj')
-
+        self.assertRaises(Exception, h5py.File, None,
+                          driver='fileobj', mode='x')
+        self.assertRaises(Exception, h5py.File, 'rogue',
+                          driver='fileobj', mode='x')
+        self.assertRaises(Exception, h5py.File, self,
+                          driver='fileobj', mode='x')
 
     def test_exception_read(self):
 
@@ -204,10 +203,9 @@ class TestFileObj(TestCase):
             def readinto(self, b):
                 raise Exception('I am broken')
 
-        f = h5py.File(BrokenBytesIO())
+        f = h5py.File(BrokenBytesIO(), 'w')
         f.create_dataset('test', data=list(range(12)))
         self.assertRaises(Exception, list, f['test'])
-
 
     def test_exception_write(self):
 
@@ -215,21 +213,20 @@ class TestFileObj(TestCase):
             def write(self, b):
                 raise Exception('I am broken')
 
-        f = h5py.File(BrokenBytesIO())
-        self.assertRaises(Exception, f.create_dataset, 'test', data=list(range(12)))
+        f = h5py.File(BrokenBytesIO(), 'w')
+        self.assertRaises(Exception, f.create_dataset, 'test',
+                          data=list(range(12)))
         self.assertRaises(Exception, f.close)
-
 
     def test_exception_close(self):
         fileobj = io.BytesIO()
-        f = h5py.File(fileobj)
+        f = h5py.File(fileobj, 'w')
         fileobj.close()
         self.assertRaises(Exception, f.close)
 
-
     def test_method_vanish(self):
         fileobj = io.BytesIO()
-        f = h5py.File(fileobj)
+        f = h5py.File(fileobj, 'w')
         f.create_dataset('test', data=list(range(12)))
         self.assertEqual(list(f['test'][:]), list(range(12)))
         fileobj.readinto = None

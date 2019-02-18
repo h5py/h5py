@@ -488,7 +488,7 @@ class TestClose(TestCase):
 
     def test_close(self):
         """ Close file via .close method """
-        fid = File(self.mktemp())
+        fid = File(self.mktemp(), 'w')
         self.assertTrue(fid)
         fid.close()
         self.assertFalse(fid)
@@ -539,7 +539,7 @@ class TestRepr(TestCase):
 
     def test_repr(self):
         """ __repr__ behaves itself when files are open and closed """
-        fid = File(self.mktemp())
+        fid = File(self.mktemp(), 'w')
         self.assertIsInstance(repr(fid), six.string_types)
         fid.close()
         self.assertIsInstance(repr(fid), six.string_types)
@@ -604,15 +604,15 @@ class TestPathlibSupport(TestCase):
         """ Check that pathlib is accepted by h5py.File """
         with closed_tempfile() as f:
             path = pathlib.Path(f)
-            with File(path) as f2:
+            with File(path, 'w') as f2:
                 self.assertTrue(True)
 
     def test_pathlib_name_match(self):
         """ Check that using pathlib does not affect naming """
         with closed_tempfile() as f:
             path = pathlib.Path(f)
-            with File(path) as h5f1:
+            with File(path, 'w') as h5f1:
                 pathlib_name = h5f1.filename
-            with File(f) as h5f2:
+            with File(f, 'w') as h5f2:
                 normal_name = h5f2.filename
             self.assertEqual(pathlib_name, normal_name)
