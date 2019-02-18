@@ -58,8 +58,10 @@ class {}(ut.TestCase):
                 # as per https://support.hdfgroup.org/HDF5/doc/Advanced/DynamicallyLoadedFilters/HDF5DynamicallyLoadedFilters.pdf,
                 # in case your HDF5 setup has it different
                 # (e.g. https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=826522)
-                env['HDF5_PLUGIN_PATH'] = os.path.expandvars('%ALLUSERSPROFILE%/hdf5/lib/plugin') \
-                    if platform.system() == 'Windows' else '/usr/local/hdf5/lib/plugin'
+                if platform.system() == 'Windows':
+                    env['HDF5_PLUGIN_PATH'] = os.path.expandvars('%ALLUSERSPROFILE%/hdf5/lib/plugin')
+                else:
+                    env['HDF5_PLUGIN_PATH'] = '/usr/local/hdf5/lib/plugin'
 
                 subprocess.check_call((sys.executable, '-m', 'pytest', '-q', fname),
                                       env=env)
