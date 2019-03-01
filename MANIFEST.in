@@ -6,6 +6,7 @@ include README.rst
 include setup_build.py
 include setup_configure.py
 include tox.ini
+include pytest.ini
 
 recursive-include docs *
 prune docs/_build

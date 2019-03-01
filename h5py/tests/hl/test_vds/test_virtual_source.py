@@ -135,7 +135,8 @@ class TestVirtualSource(ut.TestCase):
         self.assertEqual((1,)+dataset.shape[1:-1]+(1,),sliced.shape)
 
     def test_extra_args(self):
-        with h5.File(name='f1', driver='core', backing_store=False) as ftest:
+        with h5.File(name='f1', driver='core',
+                     backing_store=False, mode='w') as ftest:
             ftest['a'] = [1, 2, 3]
             a = ftest['a']
 
