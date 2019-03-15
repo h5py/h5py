@@ -570,7 +570,8 @@ class Group(HLObject, MutableMappingHDF5):
             namestr = (
                 u'"%s"' % self.name
             ) if self.name is not None else u"(anonymous)"
-            r = u'<HDF5 group %s (%d members)>' % (namestr, len(self))
+            r = u'<HDF5 group %s (%d members)>\n' % (namestr, len(self))
+            r += repr(self.keys())
 
         if six.PY2:
             return r.encode('utf8')

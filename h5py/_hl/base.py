@@ -310,7 +310,9 @@ class KeysViewHDF5(KeysView):
     def __str__(self):
         return "<KeysViewHDF5 {}>".format(list(self))
 
-    __repr__ = __str__
+    def __repr__(self):
+        return '\n'.join(["<KeysViewHDF5>:"] + ["  + " + key for key in list(self)])
+
 
 class ValuesViewHDF5(ValuesView):
 

@@ -461,8 +461,9 @@ class File(Group):
             filename = self.filename
             if isinstance(filename, bytes):  # Can't decode fname
                 filename = filename.decode('utf8', 'replace')
-            r = u'<HDF5 file "%s" (mode %s)>' % (os.path.basename(filename),
+            r = u'<HDF5 file "%s" (mode %s)>\n' % (os.path.basename(filename),
                                                  self.mode)
+            r += repr(self.keys())
 
         if six.PY2:
             return r.encode('utf8')
