@@ -375,15 +375,24 @@ class FancySelection(Selection):
         if not all(len(x) == vectorlength for x in sequenceargs.values()):
             raise TypeError("All sequence arguments must have the same length %s" % sequenceargs)
 
-        # Now generate a vector of selection lists,
+        # Now generate a vector of simple selection lists,
         # consisting only of slices and ints
+        # e.g. [0:5, [1, 3]] is expanded to [[0:5, 1], [0:5, 3]]
 
-        argvector = []
-        for idx in xrange(vectorlength):
+        if vectorlength > 0:
+            argvector = []
+            for idx in xrange(vectorlength):
+                entry = list(args)
+                for position, seq in six.iteritems(sequenceargs):
+                    entry[position] = seq[idx]
+                argvector.append(entry)
+        else:
+            # Empty sequence: translate to empty slice to get the correct shape
+            # [0:5, []] -> [0:5, 0:0]
             entry = list(args)
-            for position, seq in six.iteritems(sequenceargs):
-                entry[position] = seq[idx]
-            argvector.append(entry)
+            for position in sequenceargs:
+                entry[position] = slice(0, 0)
+            argvector = [entry]
 
         # "OR" all these selection lists together to make the final selection
 
@@ -400,9 +409,9 @@ class FancySelection(Selection):
             if idx in sequenceargs:
                 mshape[idx] = len(sequenceargs[idx])
             elif scalar[idx]:
-                mshape[idx] = 0
+                mshape[idx] = -1
 
-        self._mshape = tuple(x for x in mshape if x != 0)
+        self._mshape = tuple(x for x in mshape if x >= 0)
 
     def broadcast(self, target_shape):
         if not target_shape == self.mshape:
