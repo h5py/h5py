@@ -114,13 +114,13 @@ matrix:
     - python: 3.7
       env:
       - TOXENV=py37-test-deps
-        HDF5_VERSION=1.10.3
+        HDF5_VERSION=1.10.4
         HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION
 
     - python: 3.7
       env:
       - TOXENV=py37-test-deps
-        HDF5_VERSION=1.10.4
+        HDF5_VERSION=1.10.5
         HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION
 
     # MPI tests
@@ -152,7 +152,7 @@ matrix:
     - python: "nightly"
       env:
       - TOXENV=nightly
-        HDF5_VERSION=1.10.4
+        HDF5_VERSION=1.10.5
         HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION
 
     - python: pypy
