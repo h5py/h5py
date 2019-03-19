@@ -64,6 +64,9 @@ from .h5t import (special_dtype, check_dtype,
     check_vlen_dtype, check_string_dtype, check_enum_dtype, check_ref_dtype,
 )
 
+from ._ipython import (
+    enable_ipython_completer, enable_ipython_formatter, enable_ipython)
+
 from . import version
 from .version import version as __version__
 
@@ -86,29 +89,6 @@ def run_tests(args=''):
     # requirements, e.g. pytest
     from .tests import run_tests
     return run_tests(args)
-
-
-def enable_ipython_completer():
-    """ Call this from an interactive IPython session to enable tab-completion
-    of group and attribute names.
-    """
-    import sys
-    if 'IPython' in sys.modules:
-        ip_running = False
-        try:
-            from IPython.core.interactiveshell import InteractiveShell
-            ip_running = InteractiveShell.initialized()
-        except ImportError:
-            # support <ipython-0.11
-            from IPython import ipapi as _ipapi
-            ip_running = _ipapi.get() is not None
-        except Exception:
-            pass
-        if ip_running:
-            from . import ipy_completer
-            return ipy_completer.load_ipython_extension()
-
-    raise RuntimeError('Completer must be enabled in active ipython session')
 
 
 # --- Legacy API --------------------------------------------------------------

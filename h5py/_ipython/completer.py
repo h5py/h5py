@@ -44,20 +44,11 @@ from __future__ import absolute_import
 import posixpath
 import re
 import readline
-from ._hl.attrs import AttributeManager
-from ._hl.base import HLObject
+from .utils import get_ipython
+from .._hl.attrs import AttributeManager
+from .._hl.base import HLObject
 
 
-try:
-    # >=ipython-1.0
-    from IPython import get_ipython
-except ImportError:
-    try:
-        # support >=ipython-0.11, <ipython-1.0
-        from IPython.core.ipapi import get as get_ipython
-    except ImportError:
-        # support <ipython-0.11
-        from IPython.ipapi import get as get_ipython
 try:
     # support >=ipython-0.11
     from IPython.utils import generics
