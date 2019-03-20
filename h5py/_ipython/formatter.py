@@ -58,7 +58,7 @@ def __pprint_File(obj, p, cycle):
 
     if six.PY2:
         r = r.encode('utf8')
-    
+
     p.text(r)
     __pprint_Group(obj, p, cycle)
 
@@ -67,7 +67,7 @@ def load_ipython_extension(ip=None):
     """ Load formatter function into IPython """
     if ip is None:
         ip = get_ipython()
-    
+
     from .._hl.base import KeysViewHDF5
     from .._hl.group import Group
     from .._hl.files import File
