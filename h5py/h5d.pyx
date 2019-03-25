@@ -450,6 +450,7 @@ cdef class DatasetID(ObjectID):
             cdef uint32_t filters = 0
             cdef hsize_t read_chunk_nbytes
             cdef array.array data = array.array('B')
+            cdef herr_t status
 
             if filter_mask is None or len(filter_mask) == 0:
                 # Skip all the filters
@@ -478,8 +479,10 @@ cdef class DatasetID(ObjectID):
                     raise TypeError("Error while reaching chunk storage size")
                 array.resize(data, read_chunk_nbytes)
 
-                H5DOread_chunk(dset_id, dxpl_id, offset, &filters, data.data.as_voidptr)
-                # H5DOread_chunk(dset_id, H5P_DEFAULT, offset, &filters, data.data.as_voidptr)
+                status = H5DOread_chunk(dset_id, dxpl_id, offset, &filters, data.data.as_voidptr)
+                if status < 0:
+                    raise TypeError("Error while reading chunk %s", offsets)
+
                 if filter_mask is not None:
                     filter_mask.append(filters)
             finally:
