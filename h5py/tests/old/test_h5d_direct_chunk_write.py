@@ -56,3 +56,33 @@ class TestReadDirectChunk(TestCase):
             result = dataset.id.read_direct_chunk((i, 0, 0))
             self.assertEqual(compressed_slice, result)
 
+    def test_read_write_chunk(self):
+
+        filename = self.mktemp().encode()
+        filehandle = h5py.File(filename, "w")
+
+        # create a reference
+        slice = numpy.arange(16).reshape(4, 4)
+        slice_dataset = filehandle.create_dataset("source",
+                                          data=slice,
+                                          compression="gzip",
+                                          compression_opts=9)
+        # configure an empty dataset
+        filter_mask = [0xFFFF]
+        compressed_slice = slice_dataset.id.read_direct_chunk((0, 0), filter_mask=filter_mask)
+        dataset = filehandle.create_dataset("created",
+                                            shape=slice_dataset.shape,
+                                            maxshape=slice_dataset.shape,
+                                            chunks=slice_dataset.chunks,
+                                            dtype=slice_dataset.dtype,
+                                            compression="gzip",
+                                            compression_opts=9)
+
+        # copy the data
+        dataset.id.write_direct_chunk((0, 0), compressed_slice, filter_mask=filter_mask[0])
+        filehandle.close()
+
+        # checking
+        filehandle = h5py.File(filename, "r")
+        dataset = filehandle["created"]
+        self.assertTrue((dataset[...] == slice).all())
