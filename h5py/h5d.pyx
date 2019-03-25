@@ -481,7 +481,11 @@ cdef class DatasetID(ObjectID):
                     raise TypeError("Error while reaching chunk storage size")
                 array.resize(data, read_chunk_nbytes)
 
-                status = H5DOread_chunk(dset_id, dxpl_id, offset, &filters, data.data.as_voidptr)
+                IF HDF5_VERSION >= (1, 10, 3):
+                    status = H5Dread_chunk(dset_id, dxpl_id, offset, &filters, data.data.as_voidptr)
+                ELSE:
+                    status = H5DOread_chunk(dset_id, dxpl_id, offset, &filters, data.data.as_voidptr)
+
                 if status < 0:
                     raise TypeError("Error while reading chunk %s", offsets)
 
