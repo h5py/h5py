@@ -15,6 +15,7 @@ include "config.pxi"
 # Compile-time imports
 from _objects cimport pdefault
 from numpy cimport ndarray, import_array, PyArray_DATA, NPY_WRITEABLE
+from cpython cimport array
 from utils cimport  check_numpy_read, check_numpy_write, \
                     convert_tuple, emalloc, efree
 from h5t cimport TypeID, typewrap, py_create
@@ -430,3 +431,61 @@ cdef class DatasetID(ObjectID):
                 efree(offset)
                 if space_id:
                     H5Sclose(space_id)
+
+        def read_direct_chunk(self, offsets, filter_mask=None, PropID dxpl=None):
+            """ (offsets, H5Z_filter_t filter_mask=[], PropID dxpl=None)
+
+            Reads data to a bytes array directly from a chunk at position
+            specified by the offsets argument.
+
+            Feature requires: 1.8.19 HDF5
+            """
+
+            cdef hid_t dset_id
+            cdef hid_t dxpl_id
+            cdef hid_t space_id = 0
+            cdef hsize_t *offset = NULL
+            cdef size_t data_size
+            cdef int rank
+            cdef uint32_t filters = 0
+            cdef hsize_t read_chunk_nbytes
+            cdef array.array data = array.array('B')
+
+            if filter_mask is None or len(filter_mask) == 0:
+                # Skip all the filters
+                filters = 0xFFFF
+            else:
+                filters = int(filter_mask.pop(0))
+
+            dset_id = self.id
+            dxpl_id = pdefault(dxpl)
+            space_id = H5Dget_space(self.id)
+            rank = H5Sget_simple_extent_ndims(space_id)
+
+            if offsets is not None:
+                if len(offsets) != rank:
+                    raise TypeError("offset length (%d) must match dataset rank (%d)" % (len(offsets), rank))
+
+            try:
+                if offsets is not None:
+                    offset = <hsize_t*>emalloc(sizeof(hsize_t)*rank)
+                    convert_tuple(offsets, offset, rank)
+                else:
+                    offset = NULL
+
+                status = H5Dget_chunk_storage_size(dset_id, offset, &read_chunk_nbytes)
+                if status < 0:
+                    raise TypeError("Error while reaching chunk storage size")
+                array.resize(data, read_chunk_nbytes)
+
+                H5DOread_chunk(dset_id, dxpl_id, offset, &filters, data.data.as_voidptr)
+                # H5DOread_chunk(dset_id, H5P_DEFAULT, offset, &filters, data.data.as_voidptr)
+                if filter_mask is not None:
+                    filter_mask.append(filters)
+            finally:
+                if offset:
+                    efree(offset)
+                if space_id:
+                    H5Sclose(space_id)
+
+            return bytes(data)
