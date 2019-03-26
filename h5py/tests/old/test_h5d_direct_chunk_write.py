@@ -34,7 +34,7 @@ class TestWriteDirectChunk(TestCase):
             self.assertTrue((array[i] == read_data).all())
 
 
-@ut.skipUnless(h5py.version.hdf5_version_tuple >= (1, 8, 19), 'Direct Chunk Reading requires HDF5 >= 1.8.19')
+@ut.skipUnless(h5py.version.hdf5_version_tuple >= (1, 10, 2), 'Direct Chunk Reading requires HDF5 >= 1.10.2')
 class TestReadDirectChunk(TestCase):
     def test_read_offsets(self):
 

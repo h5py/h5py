@@ -432,7 +432,7 @@ cdef class DatasetID(ObjectID):
                 if space_id:
                     H5Sclose(space_id)
 
-    IF HDF5_VERSION >= (1, 8, 19):
+    IF HDF5_VERSION >= (1, 10, 2):
 
         def read_direct_chunk(self, offsets, filter_mask=None, PropID dxpl=None):
             """ (offsets, H5Z_filter_t filter_mask=[], PropID dxpl=None)
