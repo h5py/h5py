@@ -434,13 +434,16 @@ cdef class DatasetID(ObjectID):
 
     IF HDF5_VERSION >= (1, 10, 2):
 
-        def read_direct_chunk(self, offsets, filter_mask=None, PropID dxpl=None):
+        def read_direct_chunk(self, offsets, filter_mask=0xFFFF, PropID dxpl=None):
             """ (offsets, H5Z_filter_t filter_mask=[], PropID dxpl=None)
 
             Reads data to a bytes array directly from a chunk at position
             specified by the offsets argument.
 
-            Feature requires: 1.8.19 HDF5
+            Returns a tuple containing the bytes data, and the filter_mask which
+            was used for this data.
+
+            Feature requires: 1.10.2 HDF5
             """
 
             cdef hid_t dset_id
