@@ -457,11 +457,11 @@ cdef class DatasetID(ObjectID):
             cdef array.array data = array.array('B')
             cdef herr_t status
 
-            if filter_mask is None or len(filter_mask) == 0:
+            if filter_mask is None:
                 # Skip all the filters
                 filters = 0xFFFF
             else:
-                filters = int(filter_mask.pop(0))
+                filters = int(filter_mask)
 
             dset_id = self.id
             dxpl_id = pdefault(dxpl)
@@ -491,13 +491,10 @@ cdef class DatasetID(ObjectID):
 
                 if status < 0:
                     raise TypeError("Error while reading chunk %s", offsets)
-
-                if filter_mask is not None:
-                    filter_mask.append(filters)
             finally:
                 if offset:
                     efree(offset)
                 if space_id:
                     H5Sclose(space_id)
 
-            return bytes(data)
+            return bytes(data), filters
