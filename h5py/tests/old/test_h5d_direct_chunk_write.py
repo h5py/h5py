@@ -41,20 +41,20 @@ class TestReadDirectChunk(TestCase):
         filename = self.mktemp().encode()
         filehandle = h5py.File(filename, "w")
 
-        slice = numpy.arange(16).reshape(4, 4)
-        slice_dataset = filehandle.create_dataset("slice",
-                                          data=slice,
+        frame = numpy.arange(16).reshape(4, 4)
+        frame_dataset = filehandle.create_dataset("frame",
+                                          data=frame,
                                           compression="gzip",
                                           compression_opts=9)
         dataset = filehandle.create_dataset("compressed_chunked",
-                                            data=[slice, slice, slice],
+                                            data=[frame, frame, frame],
                                             compression="gzip",
                                             compression_opts=9,
-                                            chunks=(1, ) + slice.shape)
-        compressed_slice, _filter_mask = slice_dataset.id.read_direct_chunk((0, 0))
+                                            chunks=(1, ) + frame.shape)
+        compressed_frame, _filter_mask = frame_dataset.id.read_direct_chunk((0, 0))
         for i in range(dataset.shape[0]):
             data, _filter_mask = dataset.id.read_direct_chunk((i, 0, 0))
-            self.assertEqual(compressed_slice, data)
+            self.assertEqual(compressed_frame, data)
 
     def test_read_write_chunk(self):
 
@@ -62,26 +62,26 @@ class TestReadDirectChunk(TestCase):
         filehandle = h5py.File(filename, "w")
 
         # create a reference
-        slice = numpy.arange(16).reshape(4, 4)
-        slice_dataset = filehandle.create_dataset("source",
-                                          data=slice,
+        frame = numpy.arange(16).reshape(4, 4)
+        frame_dataset = filehandle.create_dataset("source",
+                                          data=frame,
                                           compression="gzip",
                                           compression_opts=9)
         # configure an empty dataset
-        compressed_slice, filter_mask = slice_dataset.id.read_direct_chunk((0, 0))
+        compressed_frame, filter_mask = frame_dataset.id.read_direct_chunk((0, 0))
         dataset = filehandle.create_dataset("created",
-                                            shape=slice_dataset.shape,
-                                            maxshape=slice_dataset.shape,
-                                            chunks=slice_dataset.chunks,
-                                            dtype=slice_dataset.dtype,
+                                            shape=frame_dataset.shape,
+                                            maxshape=frame_dataset.shape,
+                                            chunks=frame_dataset.chunks,
+                                            dtype=frame_dataset.dtype,
                                             compression="gzip",
                                             compression_opts=9)
 
         # copy the data
-        dataset.id.write_direct_chunk((0, 0), compressed_slice, filter_mask=filter_mask)
+        dataset.id.write_direct_chunk((0, 0), compressed_frame, filter_mask=filter_mask)
         filehandle.close()
 
         # checking
         filehandle = h5py.File(filename, "r")
         dataset = filehandle["created"]
-        self.assertTrue((dataset[...] == slice).all())
+        self.assertTrue((dataset[...] == frame).all())
