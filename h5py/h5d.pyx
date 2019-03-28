@@ -473,12 +473,8 @@ cdef class DatasetID(ObjectID):
                     raise TypeError("offset length (%d) must match dataset rank (%d)" % (len(offsets), rank))
 
             try:
-                if offsets is not None:
-                    offset = <hsize_t*>emalloc(sizeof(hsize_t)*rank)
-                    convert_tuple(offsets, offset, rank)
-                else:
-                    offset = NULL
-
+                offset = <hsize_t*>emalloc(sizeof(hsize_t)*rank)
+                convert_tuple(offsets, offset, rank)
                 status = H5Dget_chunk_storage_size(dset_id, offset, &read_chunk_nbytes)
                 if status < 0:
                     raise TypeError("Error while reaching chunk storage size")
@@ -492,8 +488,7 @@ cdef class DatasetID(ObjectID):
                 if status < 0:
                     raise TypeError("Error while reading chunk %s", offsets)
             finally:
-                if offset:
-                    efree(offset)
+                efree(offset)
                 if space_id:
                     H5Sclose(space_id)
 
