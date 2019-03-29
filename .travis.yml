@@ -157,7 +157,7 @@ matrix:
 
     - python: pypy
       env:
-      - TOXENV=pypy-test-deps
+      - TOXENV=pypy3-test-deps
   allow_failures:
     - python: pypy
     - python: 'nightly'
