@@ -295,6 +295,21 @@ class HLObject(CommonStateObject):
             return bool(self.id)
     __nonzero__ = __bool__
 
+    def __getnewargs__(self):
+        """Disable pickle.
+
+        Handles for HDF5 objects can't be reliably deserialised, because the
+        recipient may not have access to the same files. So we do this to
+        fail early.
+
+        If you really want to pickle h5py objects and can live with some
+        limitations, look at the h5pickle project on PyPI.
+        """
+        raise TypeError("h5py objects cannot be pickled")
+
+    def __getstate__(self):
+        # Pickle protocols 0 and 1 use this instead of __getnewargs__
+        raise TypeError("h5py objects cannot be pickled")
 
 # --- Dictionary-style interface ----------------------------------------------
 

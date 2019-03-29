@@ -21,6 +21,8 @@ import tempfile
 
 import six
 
+from six.moves import cPickle
+
 from ..common import ut, TestCase, UNICODE_FILENAMES, closed_tempfile
 from h5py import File
 from h5py.h5py_warnings import H5pyDeprecationWarning
@@ -621,3 +623,10 @@ class TestPathlibSupport(TestCase):
             with File(f, 'w') as h5f2:
                 normal_name = h5f2.filename
             self.assertEqual(pathlib_name, normal_name)
+
+class TestPickle(TestCase):
+    """Check that h5py.File can't be pickled"""
+    def test_dump_error(self):
+        with File(self.mktemp(), 'w') as f1:
+            with self.assertRaises(TypeError):
+                cPickle.dumps(f1)
