@@ -307,6 +307,9 @@ class HLObject(CommonStateObject):
         """
         raise TypeError("h5py objects cannot be pickled")
 
+    def __getstate__(self):
+        # Pickle protocols 0 and 1 use this instead of __getnewargs__
+        raise TypeError("h5py objects cannot be pickled")
 
 # --- Dictionary-style interface ----------------------------------------------
 
