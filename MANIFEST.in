@@ -1,5 +1,6 @@
 include ANN.rst
 include api_gen.py
+include LICENSE
 include MANIFEST.in
 include pylintrc
 include README.rst
