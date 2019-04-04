@@ -159,6 +159,11 @@ hdf5:
   # SWMR functions
   1.9.178   herr_t H5Fstart_swmr_write(hid_t file_id)
 
+  # Chunk query functions
+  1.10.5    herr_t H5Dget_num_chunks(hid_t dset_id, hid_t fspace_id, hsize_t *nchunks)
+  1.10.5    herr_t H5Dget_chunk_info(hid_t dset_id, hid_t fspace_id, hsize_t chk_idx, hsize_t *offset, unsigned *filter_mask, haddr_t *addr, hsize_t *size)
+  1.10.5    herr_t H5Dget_chunk_info_by_coord(hid_t dset_id, const hsize_t *offset, unsigned *filter_mask, haddr_t *addr, hsize_t *size)
+
 
   # === H5FD - Virtual File Layer =========================================================
 
