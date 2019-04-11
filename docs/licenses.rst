@@ -7,7 +7,6 @@ Copyright Notice and Statement for the h5py Project
 ::
 
     Copyright (c) 2008 Andrew Collette and contributors
-    http://h5py.alfven.org
     All rights reserved.
 
     Redistribution and use in source and binary forms, with or without
