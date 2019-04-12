@@ -98,13 +98,10 @@ def _normalize_external(external):
     except TypeError:
         pass
     # check and rebuild each list entry to be well-formed
-    for idx, item in enumerate(external):
-        if isinstance(item, six.string_types):
-            item = _external_entry(item)
-        else:
-            item = _external_entry(*item)
-        external[idx] = item
-    return external
+    return [_external_entry(entry) 
+            if isinstance(entry, six.string_types) else 
+            _external_entry(*entry)
+            for entry in external]
 
 def fill_dcpl(plist, shape, dtype, chunks, compression, compression_opts,
               shuffle, fletcher32, maxshape, scaleoffset, external):
