@@ -552,7 +552,14 @@ class Dataset(HLObject):
         # Perform the dataspace selection.
         selection = sel.select(self.shape, args, dsid=self.id)
 
-        if selection.nselect == 0:
+        # If we are running in MPI mode we need to check if we are set in
+        # collective IO mode to ensure we actually perform all IO modes
+        if MPI:
+            is_collective = self._dxpl.get_dxpl_mpio() == h5fd.MPIO_COLLECTIVE
+        else:
+            is_collective = False
+
+        if selection.nselect == 0 and not is_collective:
             return numpy.ndarray(selection.mshape, dtype=new_dtype)
 
         # Up-converting to (1,) so that numpy.ndarray correctly creates
@@ -684,7 +691,14 @@ class Dataset(HLObject):
         # Perform the dataspace selection
         selection = sel.select(self.shape, args, dsid=self.id)
 
-        if selection.nselect == 0:
+        # If we are running in MPI mode we need to check if we are set in
+        # collective IO mode to ensure we actually perform all IO modes
+        if MPI:
+            is_collective = self._dxpl.get_dxpl_mpio() == h5fd.MPIO_COLLECTIVE
+        else:
+            is_collective = False
+
+        if selection.nselect == 0 and not is_collective:
             return
 
         # Broadcast scalars if necessary.
@@ -699,12 +713,13 @@ class Dataset(HLObject):
         # Perform the write, with broadcasting
         # Be careful to pad memory shape with ones to avoid HDF5 chunking
         # glitch, which kicks in for mismatched memory/file selections
+        # (note that zero length dimensions are given zero in collective mode)
         if len(mshape) < len(self.shape):
-            mshape_pad = (1,)*(len(self.shape)-len(mshape)) + mshape
+            mshape_pad = tuple([1 if l > 0 else 0 for l in selection.mshape[:-len(mshape)]]) + mshape
         else:
             mshape_pad = mshape
         mspace = h5s.create_simple(mshape_pad, (h5s.UNLIMITED,)*len(mshape_pad))
-        for fspace in selection.broadcast(mshape):
+        for fspace in selection.broadcast(mshape, collective=is_collective):
             self.id.write(mspace, fspace, val, mtype, dxpl=self._dxpl)
 
     def read_direct(self, dest, source_sel=None, dest_sel=None):
