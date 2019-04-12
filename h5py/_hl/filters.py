@@ -98,8 +98,8 @@ def _normalize_external(external):
     except TypeError:
         pass
     # check and rebuild each list entry to be well-formed
-    return [_external_entry(entry) 
-            if isinstance(entry, six.string_types) else 
+    return [_external_entry(entry)
+            if isinstance(entry, six.string_types) else
             _external_entry(*entry)
             for entry in external]
 
