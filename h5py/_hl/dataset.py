@@ -715,7 +715,8 @@ class Dataset(HLObject):
         # glitch, which kicks in for mismatched memory/file selections
         # (note that zero length dimensions are given zero in collective mode)
         if len(mshape) < len(self.shape):
-            mshape_pad = tuple([1 if l > 0 else 0 for l in selection.mshape[:-len(mshape)]]) + mshape
+            rsel = selection.mshape[:-len(mshape)]
+            mshape_pad = tuple(1 if l > 0 else 0 for l in rsel) + mshape
         else:
             mshape_pad = mshape
         mspace = h5s.create_simple(mshape_pad, (h5s.UNLIMITED,)*len(mshape_pad))

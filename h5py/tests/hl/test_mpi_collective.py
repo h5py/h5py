@@ -8,8 +8,11 @@
 #           and contributor agreement.
 
 """
-    Tests the h5py collective IO
+    Tests the h5py collective IO.
 
+    This must be run in an MPI job, otherwise it will be skipped. For example:
+
+        mpirun -np 4 pytest test_mpi_collective.py
 """
 from __future__ import absolute_import
 
