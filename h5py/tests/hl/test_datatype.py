@@ -308,7 +308,7 @@ class TestB8Bool(TestCase):
 
     def _test_b8(self, arr1):
         path = self.mktemp()
-        with tables.open_file(path, 'a') as f:
+        with tables.open_file(path, 'w') as f:
             if arr1.dtype.names:
                 f.create_table('/', 'test', obj=arr1)
             else:
