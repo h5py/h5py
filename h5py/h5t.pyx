@@ -784,12 +784,19 @@ cdef class TypeTimeID(TypeID):
     """
     pass
 
+
 cdef class TypeBitfieldID(TypeID):
 
     """
         HDF5 bitfield type
     """
-    pass
+
+    cdef object py_dtype(self):
+        if H5Tequal(self.id, H5T_NATIVE_B8):
+            return dtype('?')
+        else:
+            raise TypeError("No NumPy equivalent for %s exists" % self.__class__.__name__)
+
 
 cdef class TypeReferenceID(TypeID):
 
