@@ -362,6 +362,7 @@ class Dataset(HLObject):
             return None
 
     @property
+    @with_phil
     def external(self):
         """External file settings. Returns a list of tuples of
         (name, offset, size) for each external file entry, or returns None
@@ -812,9 +813,11 @@ class Dataset(HLObject):
 
     if vds_support:
         @property
+        @with_phil
         def is_virtual(self):
             return self._dcpl.get_layout() == h5d.VIRTUAL
 
+        @with_phil
         def virtual_sources(self):
             if not self.is_virtual:
                 raise RuntimeError("Not a virtual dataset")
