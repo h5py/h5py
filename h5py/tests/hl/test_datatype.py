@@ -196,6 +196,64 @@ class TestOffsets(TestCase):
         with h5py.File(fname, 'r') as f:
             self.assertArrayEqual(f['data'], data)
 
+
+    def test_compound_robustness(self):
+        #make an out of order compound type with gaps in it, and larger itemsize than minimum
+        # Idea is to be robust to type descriptions we *could* get out of HDF5 files, from custom descriptions
+        # of types in addition to numpy's flakey history on unaligned fields with non-standard or padded layouts.
+        fields = [
+            ('f0', np.float64, 25),
+            ('f1', np.uint64, 9),
+            ('f2', np.uint32, 0),
+            ('f3', np.uint16, 5)
+        ]
+        lastfield = fields[np.argmax([ x[2] for x in fields ])]
+        itemsize = lastfield[2] + np.dtype(lastfield[1]).itemsize + 6
+        extract_index = lambda index, sequence: [ x[index] for x in sequence ]
+
+        dt = np.dtype({
+            'names' : extract_index(0, fields),
+            'formats' : extract_index(1, fields),
+            'offsets' : extract_index(2, fields),
+            #'aligned': False, - already defaults to False
+            'itemsize': itemsize
+        })
+
+        self.assertTrue(dt.itemsize == itemsize)
+        data = np.empty(10, dtype=dt)
+
+        #don't trust numpy struct handling , keep fields out of band incase content insertion is erroneous
+        # yes... this has also been known to happen.
+        f1 = np.array([1 + i * 4 for i in range(data.shape[0])], dtype=dt.fields['f1'][0])
+        f2 = np.array([2 + i * 4 for i in range(data.shape[0])], dtype=dt.fields['f2'][0])
+        f3 = np.array([3 + i * 4 for i in range(data.shape[0])], dtype=dt.fields['f3'][0])
+        f0c = 3.14
+        data['f0'] = f0c
+        data['f3'] = f3
+        data['f1'] = f1
+        data['f2'] = f2
+
+        #numpy consistency checks
+        self.assertTrue(np.all(data['f0'] == f0c))
+        self.assertArrayEqual(data['f3'], f3)
+        self.assertArrayEqual(data['f1'], f1)
+        self.assertArrayEqual(data['f2'], f2)
+
+        fname = self.mktemp()
+
+        with h5py.File(fname, 'w') as fd:
+            fd.create_dataset('data', data=data)
+
+        with h5py.File(fname, 'r') as fd:
+            readback = fd['data']
+            self.assertTrue( readback.dtype == dt )
+            self.assertArrayEqual(readback, data)
+            self.assertTrue(np.all(readback['f0'] == f0c))
+            self.assertArrayEqual(readback['f1'], f1)
+            self.assertArrayEqual(readback['f2'], f2)
+            self.assertArrayEqual(readback['f3'], f3)
+
+
     def test_out_of_order_offsets(self):
         dt = np.dtype({
             'names' : ['f1', 'f2', 'f3'],
