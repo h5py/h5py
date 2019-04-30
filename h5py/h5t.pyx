@@ -26,6 +26,7 @@ from utils cimport  emalloc, efree, \
 
 # Runtime imports
 import codecs
+from collections import namedtuple
 import sys
 import operator
 from warnings import warn
