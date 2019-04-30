@@ -1,11 +1,13 @@
 include ANN.rst
 include api_gen.py
+include LICENSE
 include MANIFEST.in
 include pylintrc
 include README.rst
 include setup_build.py
 include setup_configure.py
 include tox.ini
+include pytest.ini
 
 recursive-include docs *
 prune docs/_build
@@ -33,3 +35,5 @@ exclude *.yml
 exclude *.yaml
 recursive-exclude * __pycache__
 recursive-exclude * *.py[co]
+exclude .coveragerc
+exclude .mailmap

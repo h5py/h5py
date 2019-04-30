@@ -62,23 +62,23 @@ class TestEmpty(TestCase):
 
     def test_ndim(self):
         """ Verify number of dimensions """
-        self.assertEquals(self.dset.ndim, 0)
+        self.assertEqual(self.dset.ndim, 0)
 
     def test_shape(self):
         """ Verify shape """
-        self.assertEquals(self.dset.shape, None)
+        self.assertEqual(self.dset.shape, None)
 
     def test_size(self):
         """ Verify shape """
-        self.assertEquals(self.dset.size, None)
+        self.assertEqual(self.dset.size, None)
 
     def test_ellipsis(self):
         """ Ellipsis -> ValueError """
-        self.assertEquals(self.dset[...], self.empty_obj)
+        self.assertEqual(self.dset[...], self.empty_obj)
 
     def test_tuple(self):
         """ () -> IOError """
-        self.assertEquals(self.dset[()], self.empty_obj)
+        self.assertEqual(self.dset[()], self.empty_obj)
 
     def test_slice(self):
         """ slice -> ValueError """
@@ -116,11 +116,11 @@ class TestScalarFloat(TestCase):
 
     def test_ndim(self):
         """ Verify number of dimensions """
-        self.assertEquals(self.dset.ndim, 0)
+        self.assertEqual(self.dset.ndim, 0)
 
     def test_shape(self):
         """ Verify shape """
-        self.assertEquals(self.dset.shape, tuple())
+        self.assertEqual(self.dset.shape, tuple())
 
     def test_ellipsis(self):
         """ Ellipsis -> scalar ndarray """
@@ -170,11 +170,11 @@ class TestScalarCompound(TestCase):
 
     def test_ndim(self):
         """ Verify number of dimensions """
-        self.assertEquals(self.dset.ndim, 0)
+        self.assertEqual(self.dset.ndim, 0)
 
     def test_shape(self):
         """ Verify shape """
-        self.assertEquals(self.dset.shape, tuple())
+        self.assertEqual(self.dset.shape, tuple())
 
     def test_ellipsis(self):
         """ Ellipsis -> scalar ndarray """
@@ -232,13 +232,13 @@ class TestScalarArray(TestCase):
 
     def test_ndim(self):
         """ Verify number of dimensions """
-        self.assertEquals(self.data.ndim, 2)
-        self.assertEquals(self.dset.ndim, 0)
+        self.assertEqual(self.data.ndim, 2)
+        self.assertEqual(self.dset.ndim, 0)
 
     def test_shape(self):
         """ Verify shape """
-        self.assertEquals(self.data.shape, (3, 2))
-        self.assertEquals(self.dset.shape, tuple())
+        self.assertEqual(self.data.shape, (3, 2))
+        self.assertEqual(self.dset.shape, tuple())
 
     def test_ellipsis(self):
         """ Ellipsis -> ndarray promoted to underlying shape """
@@ -287,11 +287,11 @@ class Test1DZeroFloat(TestCase):
 
     def test_ndim(self):
         """ Verify number of dimensions """
-        self.assertEquals(self.dset.ndim, 1)
+        self.assertEqual(self.dset.ndim, 1)
 
     def test_shape(self):
         """ Verify shape """
-        self.assertEquals(self.dset.shape, (0,))
+        self.assertEqual(self.dset.shape, (0,))
 
     def test_ellipsis(self):
         """ Ellipsis -> ndarray of matching shape """
@@ -314,13 +314,9 @@ class Test1DZeroFloat(TestCase):
         with self.assertRaises(ValueError):
             self.dset[0]
 
-    # FIXME: Under NumPy this works and returns a shape-(0,) array
-    # Also, at the moment it rasies UnboundLocalError (!)
-    @ut.expectedFailure
     def test_indexlist(self):
         """ index list """
-        with self.assertRaises(ValueError):
-            self.dset[[]]
+        self.assertNumpyBehavior(self.dset, self.data, np.s_[[]])
 
     def test_mask(self):
         """ mask -> ndarray of matching shape """
@@ -342,11 +338,11 @@ class Test1DFloat(TestCase):
 
     def test_ndim(self):
         """ Verify number of dimensions """
-        self.assertEquals(self.dset.ndim, 1)
+        self.assertEqual(self.dset.ndim, 1)
 
     def test_shape(self):
         """ Verify shape """
-        self.assertEquals(self.dset.shape, (13,))
+        self.assertEqual(self.dset.shape, (13,))
 
     def test_ellipsis(self):
         self.assertNumpyBehavior(self.dset, self.data, np.s_[...])
@@ -416,8 +412,6 @@ class Test1DFloat(TestCase):
     def test_indexlist_numpyarray_ellipsis(self):
         self.assertNumpyBehavior(self.dset, self.data, np.s_[np.array([1, 2, 5]), ...])
 
-    # Another UnboundLocalError
-    @ut.expectedFailure
     def test_indexlist_empty(self):
         self.assertNumpyBehavior(self.dset, self.data, np.s_[[]])
 
@@ -466,16 +460,39 @@ class Test2DZeroFloat(TestCase):
 
     def test_ndim(self):
         """ Verify number of dimensions """
-        self.assertEquals(self.dset.ndim, 2)
+        self.assertEqual(self.dset.ndim, 2)
 
     def test_shape(self):
         """ Verify shape """
-        self.assertEquals(self.dset.shape, (0, 3))
+        self.assertEqual(self.dset.shape, (0, 3))
 
-    @ut.expectedFailure
     def test_indexlist(self):
         """ see issue #473 """
         self.assertNumpyBehavior(self.dset, self.data, np.s_[:,[0,1,2]])
+
+
+class Test2DFloat(TestCase):
+
+    def setUp(self):
+        TestCase.setUp(self)
+        self.data = np.ones((5,3), dtype='f')
+        self.dset = self.f.create_dataset('x', data=self.data)
+
+    def test_ndim(self):
+        """ Verify number of dimensions """
+        self.assertEqual(self.dset.ndim, 2)
+
+    def test_shape(self):
+        """ Verify shape """
+        self.assertEqual(self.dset.shape, (5, 3))
+
+    def test_indexlist(self):
+        """ see issue #473 """
+        self.assertNumpyBehavior(self.dset, self.data, np.s_[:,[0,1,2]])
+
+    def test_index_emptylist(self):
+        self.assertNumpyBehavior(self.dset, self.data, np.s_[:, []])
+        self.assertNumpyBehavior(self.dset, self.data, np.s_[[]])
 
 
 class TestVeryLargeArray(TestCase):

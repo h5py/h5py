@@ -30,6 +30,7 @@ from __future__ import print_function
 
 import numpy as np
 import multiprocessing as mp
+from six.moves import xrange  # pylint: disable=redefined-builtin
 import h5py
 
 # === Parameters for Mandelbrot calculation ===================================

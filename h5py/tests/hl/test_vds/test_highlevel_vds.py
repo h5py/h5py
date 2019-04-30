@@ -39,7 +39,7 @@ class TestEigerHighLevel(ut.TestCase):
         # Create the virtual dataset file
         with h5.File(outfile, 'w', libver='latest') as f:
             for foo in self.fname:
-                in_data = h5.File(foo)['data']
+                in_data = h5.File(foo, 'r')['data']
                 src_shape = in_data.shape
                 in_data.file.close()
                 M = M_minus_1 + src_shape[0]

@@ -37,7 +37,7 @@ creating the file.
 
 
 The HDF Group has documented the SWMR features in details on the website:
-`Single-Writer/Multiple-Reader (SWMR) Documentation <http://www.hdfgroup.org/HDF5/docNewFeatures/NewFeaturesSwmrDocs.html>`_.
+`Single-Writer/Multiple-Reader (SWMR) Documentation <https://support.hdfgroup.org/HDF5/docNewFeatures/NewFeaturesSwmrDocs.html>`_.
 This is highly recommended reading for anyone intending to use the SWMR feature
 even through h5py. For production systems in particular pay attention to the
 file system requirements regarding POSIX I/O semantics.

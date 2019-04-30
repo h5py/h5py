@@ -1,5 +1,7 @@
 language: python
 
+dist: xenial
+
 notifications:
   email: false
 
@@ -7,9 +9,6 @@ addons:
   apt:
     packages:
       - libhdf5-serial-dev
-
-sudo: false
-dist: xenial
 
 cache:
   directories:
@@ -113,17 +112,15 @@ matrix:
 
     # Python 3.7
     - python: 3.7
-      sudo: true
-      env:
-      - TOXENV=py37-test-deps
-        HDF5_VERSION=1.10.3
-        HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION
-
-    - python: 3.7
-      sudo: true
       env:
       - TOXENV=py37-test-deps
         HDF5_VERSION=1.10.4
+        HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION
+
+    - python: 3.7
+      env:
+      - TOXENV=py37-test-deps
+        HDF5_VERSION=1.10.5
         HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION
 
     # MPI tests
@@ -155,12 +152,12 @@ matrix:
     - python: "nightly"
       env:
       - TOXENV=nightly
-        HDF5_VERSION=1.10.4
+        HDF5_VERSION=1.10.5
         HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION
 
     - python: pypy
       env:
-      - TOXENV=pypy-test-deps
+      - TOXENV=pypy3-test-deps
   allow_failures:
     - python: pypy
     - python: 'nightly'
@@ -170,8 +167,11 @@ before_install:
   - ccache -s
 
 install:
-  - pip install tox
+  - pip install tox codecov
   - ci/travis/get_hdf5_if_needed.sh
   - ls -lRa $HDF5_CACHE_DIR
 script:
   - tox
+
+after_success:
+  - codecov

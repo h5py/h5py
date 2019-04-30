@@ -280,7 +280,6 @@ dataset with shape (10, 10)::
 
 The following restrictions exist:
 
-* List selections may not be empty
 * Selection coordinates must be given in increasing order
 * Duplicate selections are ignored
 * Very long lists (> 1000 elements) may produce poor performance
@@ -296,6 +295,9 @@ list of points to select, so be careful when using it with large masks::
     >>> result.shape
     (49,)
 
+.. versionchanged:: 2.10
+   Selecting using an empty list is now allowed.
+   This returns an array with length 0 in the relevant dimension.
 
 .. _dataset_iter:
 

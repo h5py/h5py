@@ -1,7 +1,6 @@
 Build instructions for h5py on Windows:
 
-Build h5py in the normal fashion, except you are required to provide
-both the --hdf5 and --hdf5-version arguments to setup.py.
+Build h5py in the normal fashion.
 
 Build HDF5 for distribution with a single command, using the pavement
 file in this directory.  You will need to install paver first.

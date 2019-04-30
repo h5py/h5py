@@ -7,6 +7,7 @@ Prerequisites: python 2.5.0, mpi4py and numpy
 Source Codes: Already submit this 'collective io' branch to h5py master, meanwhile, can download this branch at https://github.com/valiantljk/h5py.git
 Note: Must build the h5py with parallel hdf5
 """
+from __future__ import print_function
 
 from mpi4py import MPI
 import numpy as np
@@ -50,10 +51,10 @@ comm.Barrier()
 timeend=MPI.Wtime()
 if rank==0:
     if colw==1:
-        print "collective write time %f" %(timeend-timestart)
+        print("collective write time %f" %(timeend-timestart))
     else:
-        print "independent write time %f" %(timeend-timestart)
-    print "data size x: %d y: %d" %(length_x, length_y)
-    print "file size ~%d GB" % (length_x*length_y/1024.0/1024.0/1024.0*8.0)
-    print "number of processes %d" %nproc
+        print("independent write time %f" %(timeend-timestart))
+    print("data size x: %d y: %d" %(length_x, length_y))
+    print("file size ~%d GB" % (length_x*length_y/1024.0/1024.0/1024.0*8.0))
+    print("number of processes %d" %nproc)
 f.close()

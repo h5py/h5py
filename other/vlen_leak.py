@@ -46,7 +46,7 @@ def make_data(kind):
     else:
         s = b"xx".decode('utf8')
 
-    dt = h5py.special_dtype(vlen=kind)
+    dt = h5py.vlen_dtype(kind)
     data = np.array([s*100 for idx in xrange(1000)])
 
 

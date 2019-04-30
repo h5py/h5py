@@ -759,19 +759,23 @@ class TestStrings(BaseDataset):
 
     def test_vlen_bytes(self):
         """ Vlen bytes dataset maps to vlen ascii in the file """
-        dt = h5py.special_dtype(vlen=bytes)
+        dt = h5py.string_dtype(encoding='ascii')
         ds = self.f.create_dataset('x', (100,), dtype=dt)
         tid = ds.id.get_type()
         self.assertEqual(type(tid), h5py.h5t.TypeStringID)
         self.assertEqual(tid.get_cset(), h5py.h5t.CSET_ASCII)
+        string_info = h5py.check_string_dtype(ds.dtype)
+        self.assertEqual(string_info.encoding, 'ascii')
 
     def test_vlen_unicode(self):
         """ Vlen unicode dataset maps to vlen utf-8 in the file """
-        dt = h5py.special_dtype(vlen=six.text_type)
+        dt = h5py.string_dtype()
         ds = self.f.create_dataset('x', (100,), dtype=dt)
         tid = ds.id.get_type()
         self.assertEqual(type(tid), h5py.h5t.TypeStringID)
         self.assertEqual(tid.get_cset(), h5py.h5t.CSET_UTF8)
+        string_info = h5py.check_string_dtype(ds.dtype)
+        self.assertEqual(string_info.encoding, 'utf-8')
 
     def test_fixed_bytes(self):
         """ Fixed-length bytes dataset maps to fixed-length ascii in the file
@@ -783,6 +787,9 @@ class TestStrings(BaseDataset):
         self.assertFalse(tid.is_variable_str())
         self.assertEqual(tid.get_size(), 10)
         self.assertEqual(tid.get_cset(), h5py.h5t.CSET_ASCII)
+        string_info = h5py.check_string_dtype(ds.dtype)
+        self.assertEqual(string_info.encoding, 'ascii')
+        self.assertEqual(string_info.length, 10)
 
     def test_fixed_unicode(self):
         """ Fixed-length unicode datasets are unsupported (raise TypeError) """
@@ -793,7 +800,7 @@ class TestStrings(BaseDataset):
     def test_roundtrip_vlen_bytes(self):
         """ writing and reading to vlen bytes dataset preserves type and content
         """
-        dt = h5py.special_dtype(vlen=bytes)
+        dt = h5py.string_dtype(encoding='ascii')
         ds = self.f.create_dataset('x', (100,), dtype=dt)
         data = b"Hello\xef"
         ds[0] = data
@@ -804,7 +811,7 @@ class TestStrings(BaseDataset):
     def test_roundtrip_vlen_unicode(self):
         """ Writing and reading to unicode dataset preserves type and content
         """
-        dt = h5py.special_dtype(vlen=six.text_type)
+        dt = h5py.string_dtype()
         ds = self.f.create_dataset('x', (100,), dtype=dt)
         data = u"Hello" + six.unichr(0x2034)
         ds[0] = data
@@ -827,7 +834,7 @@ class TestStrings(BaseDataset):
     def test_unicode_write_error(self):
         """ Writing a non-utf8 byte string to a unicode vlen dataset raises
         ValueError """
-        dt = h5py.special_dtype(vlen=six.text_type)
+        dt = h5py.string_dtype()
         ds = self.f.create_dataset('x', (100,), dtype=dt)
         data = "Hello\xef"
         with self.assertRaises(ValueError):
@@ -836,7 +843,7 @@ class TestStrings(BaseDataset):
     def test_unicode_write_bytes(self):
         """ Writing valid utf-8 byte strings to a unicode vlen dataset is OK
         """
-        dt = h5py.special_dtype(vlen=six.text_type)
+        dt = h5py.string_dtype()
         ds = self.f.create_dataset('x', (100,), dtype=dt)
         data = u"Hello there" + six.unichr(0x2034)
         ds[0] = data.encode('utf8')
@@ -898,15 +905,15 @@ class TestEnum(BaseDataset):
 
     def test_create(self):
         """ Enum datasets can be created and type correctly round-trips """
-        dt = h5py.special_dtype(enum=('i', self.EDICT))
+        dt = h5py.enum_dtype(self.EDICT, basetype='i')
         ds = self.f.create_dataset('x', (100, 100), dtype=dt)
         dt2 = ds.dtype
-        dict2 = h5py.check_dtype(enum=dt2)
+        dict2 = h5py.check_enum_dtype(dt2)
         self.assertEqual(dict2, self.EDICT)
 
     def test_readwrite(self):
         """ Enum datasets can be read/written as integers """
-        dt = h5py.special_dtype(enum=('i4', self.EDICT))
+        dt = h5py.enum_dtype(self.EDICT, basetype='i4')
         ds = self.f.create_dataset('x', (100, 100), dtype=dt)
         ds[35, 37] = 42
         ds[1, :] = 1
@@ -1037,7 +1044,7 @@ class TestScalarCompound(BaseDataset):
 
 class TestVlen(BaseDataset):
     def test_int(self):
-        dt = h5py.special_dtype(vlen=int)
+        dt = h5py.vlen_dtype(int)
         ds = self.f.create_dataset('vlen', (4,), dtype=dt)
         ds[0] = np.arange(3)
         ds[1] = np.arange(0)
@@ -1055,20 +1062,20 @@ class TestVlen(BaseDataset):
         self.assertArrayEqual(ds[1], np.arange(3))
 
     def test_reuse_from_other(self):
-        dt = h5py.special_dtype(vlen=int)
+        dt = h5py.vlen_dtype(int)
         ds = self.f.create_dataset('vlen', (1,), dtype=dt)
         self.f.create_dataset('vlen2', (1,), ds[()].dtype)
 
     def test_reuse_struct_from_other(self):
-        dt = [('a', int), ('b', h5py.special_dtype(vlen=int))]
+        dt = [('a', int), ('b', h5py.vlen_dtype(int))]
         ds = self.f.create_dataset('vlen', (1,), dtype=dt)
         fname = self.f.filename
         self.f.close()
-        self.f = h5py.File(fname)
+        self.f = h5py.File(fname, 'a')
         self.f.create_dataset('vlen2', (1,), self.f['vlen']['b'][()].dtype)
 
     def test_convert(self):
-        dt = h5py.special_dtype(vlen=int)
+        dt = h5py.vlen_dtype(int)
         ds = self.f.create_dataset('vlen', (3,), dtype=dt)
         ds[0] = np.array([1.4, 1.2])
         ds[1] = np.array([1.2])
@@ -1085,7 +1092,7 @@ class TestVlen(BaseDataset):
         self.assertArrayEqual(ds[1], np.arange(3))
 
     def test_multidim(self):
-        dt = h5py.special_dtype(vlen=int)
+        dt = h5py.vlen_dtype(int)
         ds = self.f.create_dataset('vlen', (2, 2), dtype=dt)
         ds[0, 0] = np.arange(1)
         ds[:, :] = np.array([[np.arange(3), np.arange(2)],
@@ -1099,7 +1106,7 @@ class TestVlen(BaseDataset):
         :param np_dt: Numpy datatype to test
         :param dataset_name: String name of the dataset to create for testing.
         """
-        dt = h5py.special_dtype(vlen=np_dt)
+        dt = h5py.vlen_dtype(np_dt)
         ds = self.f.create_dataset(dataset_name, (5,), dtype=dt)
 
         # Create some arrays, and assign them to the dataset
