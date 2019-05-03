@@ -332,8 +332,9 @@ class File(Group):
             Name of the driver to use.  Legal values are None (default,
             recommended), 'core', 'sec2', 'stdio', 'mpio'.
         libver
-            Library version bounds.  Supported values: 'earliest', 'v18' (HDF5
-            1.10.2 or later), 'v110' (HDF5 1.10.2 or later)  and 'latest'.
+            Library version bounds.  Supported values: 'earliest', 'v108',
+            'v110',  and 'latest'. The 'v108' and 'v110' options can only be
+            specified with the HDF5 1.10.2 library or later.
         userblock
             Desired size of user block.  Only allowed when creating a new
             file (mode w, w- or x).
