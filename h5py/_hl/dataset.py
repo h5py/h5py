@@ -362,6 +362,7 @@ class Dataset(HLObject):
             return None
 
     @property
+    @with_phil
     def external(self):
         """External file settings. Returns a list of tuples of
         (name, offset, size) for each external file entry, or returns None
@@ -599,7 +600,7 @@ class Dataset(HLObject):
 
         # Generally we try to avoid converting the arrays on the Python
         # side.  However, for compound literals this is unavoidable.
-        vlen = h5t.check_dtype(vlen=self.dtype)
+        vlen = h5t.check_vlen_dtype(self.dtype)
         if vlen is not None and vlen not in (bytes, six.text_type):
             try:
                 val = numpy.asarray(val, dtype=vlen)
@@ -812,9 +813,11 @@ class Dataset(HLObject):
 
     if vds_support:
         @property
+        @with_phil
         def is_virtual(self):
             return self._dcpl.get_layout() == h5d.VIRTUAL
 
+        @with_phil
         def virtual_sources(self):
             if not self.is_virtual:
                 raise RuntimeError("Not a virtual dataset")

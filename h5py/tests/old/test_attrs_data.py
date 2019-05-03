@@ -149,7 +149,7 @@ class TestTypes(BaseAttrs):
 
     def test_vlen_string_array(self):
         """ Storage of vlen byte string arrays"""
-        dt = h5py.special_dtype(vlen=bytes)
+        dt = h5py.string_dtype(encoding='ascii')
 
         data = np.ndarray((2,), dtype=dt)
         data[...] = b"Hello", b"Hi there!  This is HDF5!"
@@ -248,7 +248,7 @@ class TestWriteException(BaseAttrs):
     def test_write(self):
         """ ValueError on string write wipes out attribute """
 
-        s = b"Hello\x00\Hello"
+        s = b"Hello\x00Hello"
 
         try:
             self.f.attrs['x'] = s

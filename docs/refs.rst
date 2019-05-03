@@ -77,20 +77,21 @@ are represented with the "object" dtype (kind 'O').  A small amount of
 metadata attached to the dtype tells h5py to interpret the data as containing
 reference objects.
 
-H5py contains a convenience function to create these "hinted dtypes" for you:
+These dtypes are available from h5py for references and region references:
 
-    >>> ref_dtype = h5py.special_dtype(ref=h5py.Reference)
-    >>> type(ref_dtype)
+    >>> type(h5py.ref_dtype)
     <type 'numpy.dtype'>
     >>> ref_dtype.kind
     'O'
+    >>> type(h5py.regionref_dtype)
+    <type 'numpy.dtype'>
 
 The types accepted by this "ref=" keyword argument are h5py.Reference (for
 object references) and h5py.RegionReference (for region references).
 
 To create an array of references, use this dtype as you normally would:
 
-    >>> ref_dataset = myfile.create_dataset("MyRefs", (100,), dtype=ref_dtype)
+    >>> ref_dataset = myfile.create_dataset("MyRefs", (100,), dtype=h5py.ref_dtype)
 
 You can read from and write to the array as normal:
 

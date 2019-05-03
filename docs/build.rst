@@ -78,9 +78,11 @@ when building from source.
 Source installation
 -------------------
 To install h5py from source, you need three things installed:
+
 * A supported Python version with development headers
 * HDF5 1.8.4 or newer with development headers
 * A C compiler
+
 OS-specific instructions for installing HDF5, Python and a C compiler are in the next few
 sections.
 

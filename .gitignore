@@ -25,3 +25,4 @@ MANIFEST
 *.so
 *~
 .pytest_cache
+.coverage

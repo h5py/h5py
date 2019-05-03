@@ -16,6 +16,7 @@ try:
 except ImportError:
     import_module = __import__
 
+
 class H5pyWarning(UserWarning):
     pass
 

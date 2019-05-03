@@ -14,16 +14,18 @@
 """
 
 from __future__ import absolute_import, with_statement
-
+import pytest
 import os
 import stat
 from sys import platform
-import tempfile
 
 import six
 
+from six.moves import cPickle
+
 from ..common import ut, TestCase, UNICODE_FILENAMES, closed_tempfile
 from h5py import File
+from h5py.h5py_warnings import H5pyDeprecationWarning
 import h5py
 
 try:
@@ -46,9 +48,10 @@ class TestFileOpen(TestCase):
         fname = self.mktemp()
 
         # No existing file; create a new file and open RW
-        with File(fname) as f:
-            self.assertTrue(f)
-            self.assertEqual(f.mode, 'r+')
+        with pytest.warns(H5pyDeprecationWarning):
+            with File(fname) as f:
+                self.assertTrue(f)
+                self.assertEqual(f.mode, 'r+')
 
         # Existing readonly file; open read-only
         os.chmod(fname, stat.S_IREAD)
@@ -57,17 +60,19 @@ class TestFileOpen(TestCase):
         # https://github.com/h5py/h5py/issues/696
         exp_mode = 'r+' if os.stat(fname).st_uid == 0 and platform != "win32" else 'r'
         try:
-            with File(fname) as f:
-                self.assertTrue(f)
-                self.assertEqual(f.mode, exp_mode)
+            with pytest.warns(H5pyDeprecationWarning):
+                with File(fname) as f:
+                    self.assertTrue(f)
+                    self.assertEqual(f.mode, exp_mode)
         finally:
             os.chmod(fname, stat.S_IWRITE)
 
         # File exists but is not HDF5; raise IOError
         with open(fname, 'wb') as f:
             f.write(b'\x00')
-        with self.assertRaises(IOError):
-            File(fname)
+        with pytest.warns(H5pyDeprecationWarning):
+            with self.assertRaises(IOError):
+                File(fname)
 
     def test_create(self):
         """ Mode 'w' opens file in overwrite mode """
@@ -84,7 +89,7 @@ class TestFileOpen(TestCase):
         """ Mode 'w-' opens file in exclusive mode """
         fname = self.mktemp()
         fid = File(fname, 'w-')
-        self.assert_(fid)
+        self.assertTrue(fid)
         fid.close()
         with self.assertRaises(IOError):
             File(fname, 'w-')
@@ -94,16 +99,16 @@ class TestFileOpen(TestCase):
         fname = self.mktemp()
         fid = File(fname, 'a')
         try:
-            self.assert_(fid)
+            self.assertTrue(fid)
             fid.create_group('foo')
-            self.assert_('foo' in fid)
+            assert 'foo' in fid
         finally:
             fid.close()
         fid = File(fname, 'a')
         try:
-            self.assert_('foo' in fid)
+            assert 'foo' in fid
             fid.create_group('bar')
-            self.assert_('bar' in fid)
+            assert 'bar' in fid
         finally:
             fid.close()
 
@@ -112,9 +117,9 @@ class TestFileOpen(TestCase):
         fname = self.mktemp()
         fid = File(fname, 'w')
         fid.close()
-        self.assert_(not fid)
+        self.assertFalse(fid)
         fid = File(fname, 'r')
-        self.assert_(fid)
+        self.assertTrue(fid)
         with self.assertRaises(ValueError):
             fid.create_group('foo')
         fid.close()
@@ -126,9 +131,9 @@ class TestFileOpen(TestCase):
         fid.create_group('foo')
         fid.close()
         fid = File(fname, 'r+')
-        self.assert_('foo' in fid)
+        assert 'foo' in fid
         fid.create_group('bar')
-        self.assert_('bar' in fid)
+        assert 'bar' in fid
         fid.close()
 
     def test_nonexistent_file(self):
@@ -206,7 +211,7 @@ class TestDrivers(TestCase):
     def test_sec2(self):
         """ Sec2 driver is supported on posix """
         fid = File(self.mktemp(), 'w', driver='sec2')
-        self.assert_(fid)
+        self.assertTrue(fid)
         self.assertEqual(fid.driver, 'sec2')
         fid.close()
 
@@ -214,7 +219,7 @@ class TestDrivers(TestCase):
         """ Core driver is supported (no backing store) """
         fname = self.mktemp()
         fid = File(fname, 'w', driver='core', backing_store=False)
-        self.assert_(fid)
+        self.assertTrue(fid)
         self.assertEqual(fid.driver, 'core')
         fid.close()
         self.assertFalse(os.path.exists(fname))
@@ -226,7 +231,7 @@ class TestDrivers(TestCase):
         fid.create_group('foo')
         fid.close()
         fid = File(fname, 'r')
-        self.assert_('foo' in fid)
+        assert 'foo' in fid
         fid.close()
 
     def test_readonly(self):
@@ -236,8 +241,8 @@ class TestDrivers(TestCase):
         fid.create_group('foo')
         fid.close()
         fid = File(fname, 'r', driver='core')
-        self.assert_(fid)
-        self.assert_('foo' in fid)
+        self.assertTrue(fid)
+        assert 'foo' in fid
         with self.assertRaises(ValueError):
             fid.create_group('bar')
         fid.close()
@@ -247,7 +252,7 @@ class TestDrivers(TestCase):
         fname = self.mktemp()
         fid = File(fname, 'w', driver='core', block_size=1024,
                    backing_store=False)
-        self.assert_(fid)
+        self.assertTrue(fid)
         fid.close()
 
     @ut.skipUnless(mpi, "Parallel HDF5 is required for MPIO driver test")
@@ -447,7 +452,7 @@ class TestUserblock(TestCase):
 
         f = h5py.File(name, 'r')
         try:
-            self.assert_("Foobar" in f)
+            assert "Foobar" in f
         finally:
             f.close()
 
@@ -554,10 +559,10 @@ class TestClose(TestCase):
 
     def test_close(self):
         """ Close file via .close method """
-        fid = File(self.mktemp())
-        self.assert_(fid)
+        fid = File(self.mktemp(), 'w')
+        self.assertTrue(fid)
         fid.close()
-        self.assert_(not fid)
+        self.assertFalse(fid)
 
     def test_closed_file(self):
         """ Trying to modify closed file raises ValueError """
@@ -606,7 +611,7 @@ class TestRepr(TestCase):
 
     def test_repr(self):
         """ __repr__ behaves itself when files are open and closed """
-        fid = File(self.mktemp())
+        fid = File(self.mktemp(), 'w')
         self.assertIsInstance(repr(fid), six.string_types)
         fid.close()
         self.assertIsInstance(repr(fid), six.string_types)
@@ -637,8 +642,9 @@ class TestBackwardsCompat(TestCase):
 
     def test_fid(self):
         """ File objects provide a .fid attribute aliased to the file ID """
-        with File(self.mktemp(), 'w') as hfile:
-            self.assertIs(hfile.fid, hfile.id)
+        with pytest.warns(H5pyDeprecationWarning):
+            with File(self.mktemp(), 'w') as hfile:
+                self.assertIs(hfile.fid, hfile.id)
 
 
 class TestCloseInvalidatesOpenObjectIDs(TestCase):
@@ -674,15 +680,22 @@ class TestPathlibSupport(TestCase):
         """ Check that pathlib is accepted by h5py.File """
         with closed_tempfile() as f:
             path = pathlib.Path(f)
-            with File(path) as f2:
+            with File(path, 'w') as f2:
                 self.assertTrue(True)
 
     def test_pathlib_name_match(self):
         """ Check that using pathlib does not affect naming """
         with closed_tempfile() as f:
             path = pathlib.Path(f)
-            with File(path) as h5f1:
+            with File(path, 'w') as h5f1:
                 pathlib_name = h5f1.filename
-            with File(f) as h5f2:
+            with File(f, 'w') as h5f2:
                 normal_name = h5f2.filename
             self.assertEqual(pathlib_name, normal_name)
+
+class TestPickle(TestCase):
+    """Check that h5py.File can't be pickled"""
+    def test_dump_error(self):
+        with File(self.mktemp(), 'w') as f1:
+            with self.assertRaises(TypeError):
+                cPickle.dumps(f1)

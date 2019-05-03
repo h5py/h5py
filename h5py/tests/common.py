@@ -105,39 +105,27 @@ class TestCase(ut.TestCase):
             message = ' (%s)' % message
 
         if np.isscalar(dset) or np.isscalar(arr):
-            self.assert_(
-                np.isscalar(dset) and np.isscalar(arr),
+            assert np.isscalar(dset) and np.isscalar(arr), \
                 'Scalar/array mismatch ("%r" vs "%r")%s' % (dset, arr, message)
-                )
-            self.assert_(
-                dset - arr < precision,
+            assert dset - arr < precision, \
                 "Scalars differ by more than %.3f%s" % (precision, message)
-                )
             return
 
-        self.assert_(
-            dset.shape == arr.shape,
+        assert dset.shape == arr.shape, \
             "Shape mismatch (%s vs %s)%s" % (dset.shape, arr.shape, message)
-            )
-        self.assert_(
-            dset.dtype == arr.dtype,
+        assert dset.dtype == arr.dtype, \
             "Dtype mismatch (%s vs %s)%s" % (dset.dtype, arr.dtype, message)
-            )
 
         if arr.dtype.names is not None:
             for n in arr.dtype.names:
                 message = '[FIELD %s] %s' % (n, message)
                 self.assertArrayEqual(dset[n], arr[n], message=message, precision=precision)
         elif arr.dtype.kind in ('i', 'f'):
-            self.assert_(
-                np.all(np.abs(dset[...] - arr[...]) < precision),
+            assert np.all(np.abs(dset[...] - arr[...]) < precision), \
                 "Arrays differ by more than %.3f%s" % (precision, message)
-                )
         else:
-            self.assert_(
-                np.all(dset[...] == arr[...]),
+            assert np.all(dset[...] == arr[...]), \
                 "Arrays are not equal (dtype %s) %s" % (arr.dtype.str, message)
-                )
 
     def assertNumpyBehavior(self, dset, arr, s):
         """ Apply slicing arguments "s" to both dset and arr.
