@@ -267,6 +267,13 @@ class Dataset(HLObject):
             """ Context manager for MPI collective reads & writes """
             return CollectiveContext(self)
 
+    def _collective_mode(self):
+        """Return True if the dataset is in MPI collective mode"""
+        if MPI:
+            return self._dxpl.get_dxpl_mpio() == h5fd.MPIO_COLLECTIVE
+        else:
+            return False
+
     @property
     def dims(self):
         """ Access dimension scales attached to this dataset. """
@@ -552,14 +559,9 @@ class Dataset(HLObject):
         # Perform the dataspace selection.
         selection = sel.select(self.shape, args, dsid=self.id)
 
-        # If we are running in MPI mode we need to check if we are set in
-        # collective IO mode to ensure we actually perform all IO modes
-        if MPI:
-            is_collective = self._dxpl.get_dxpl_mpio() == h5fd.MPIO_COLLECTIVE
-        else:
-            is_collective = False
-
-        if selection.nselect == 0 and not is_collective:
+        # If we are in MPI collective mode, we need to do the read even if it's
+        # an empty selection, to ensure all MPI processes read.
+        if selection.nselect == 0 and not self._collective_mode():
             return numpy.ndarray(selection.mshape, dtype=new_dtype)
 
         # Up-converting to (1,) so that numpy.ndarray correctly creates
@@ -691,12 +693,9 @@ class Dataset(HLObject):
         # Perform the dataspace selection
         selection = sel.select(self.shape, args, dsid=self.id)
 
-        # If we are running in MPI mode we need to check if we are set in
-        # collective IO mode to ensure we actually perform all IO modes
-        if MPI:
-            is_collective = self._dxpl.get_dxpl_mpio() == h5fd.MPIO_COLLECTIVE
-        else:
-            is_collective = False
+        # If we are in MPI collective mode, we need to do the write even if it's
+        # an empty selection, to ensure all MPI processes write.
+        is_collective = self._collective_mode()
 
         if selection.nselect == 0 and not is_collective:
             return
