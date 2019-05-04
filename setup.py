@@ -148,7 +148,7 @@ setup(
   license = 'BSD',
   url = 'http://www.h5py.org',
   download_url = 'https://pypi.python.org/pypi/h5py',
-  packages = ['h5py', 'h5py._hl', 'h5py.tests',
+  packages = ['h5py', 'h5py._hl', 'h5py._ipython', 'h5py.tests',
               'h5py.tests.old', 'h5py.tests.hl',
               'h5py.tests.hl.test_vds'],
   package_data = package_data,
