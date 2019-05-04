@@ -709,6 +709,14 @@ class Dataset(HLObject):
             val = val2
             mshape = val.shape
 
+        if is_collective and (mshape != selection.mshape):
+            warn("Broadcasting in collective mode is deprecated, because "
+                 "processes may do different numbers of writes. "
+                 "Expand the data shape - {} - to match the selection: {}."
+                 .format(mshape, selection.mshape),
+                 H5pyDeprecationWarning, stacklevel=2,
+                 )
+
         # Perform the write, with broadcasting
         # Be careful to pad memory shape with ones to avoid HDF5 chunking
         # glitch, which kicks in for mismatched memory/file selections
@@ -744,6 +752,14 @@ class Dataset(HLObject):
             else:
                 dest_sel = sel.select(dest.shape, dest_sel, self.id)
 
+            if self._collective_mode() and (dest_sel.mshape != source_sel.mshape):
+                warn("Broadcasting in collective mode is deprecated, because "
+                     "processes may do different numbers of reads. "
+                     "Expand the selection shape - {} - to match the array: {}."
+                     .format(source_sel.mshape, dest_sel.mshape),
+                     H5pyDeprecationWarning, stacklevel=2,
+                     )
+
             for mspace in dest_sel.broadcast(source_sel.mshape):
                 self.id.read(mspace, fspace, dest, dxpl=self._dxpl)
 
@@ -768,6 +784,14 @@ class Dataset(HLObject):
                 dest_sel = sel.SimpleSelection(self.shape)
             else:
                 dest_sel = sel.select(self.shape, dest_sel, self.id)
+
+            if self._collective_mode() and (dest_sel.mshape != source_sel.mshape):
+                warn("Broadcasting in collective mode is deprecated, because "
+                     "processes may do different numbers of writes. "
+                     "Expand the data shape - {} - to match the selection: {}."
+                     .format(source_sel.mshape, dest_sel.mshape),
+                     H5pyDeprecationWarning, stacklevel=2,
+                     )
 
             for fspace in dest_sel.broadcast(source_sel.mshape):
                 self.id.write(mspace, fspace, source, dxpl=self._dxpl)
