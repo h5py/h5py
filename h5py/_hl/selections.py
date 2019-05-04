@@ -177,9 +177,6 @@ class Selection(object):
 
     def broadcast(self, target_shape):
         """ Get an iterable for broadcasting.
-
-        Setting `collective` includes zero length selections that are
-        required for collective operations.
         """
         if np.product(target_shape) != self.nselect:
             raise TypeError("Broadcasting is not supported for point-wise selections")
