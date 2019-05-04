@@ -727,7 +727,7 @@ class Dataset(HLObject):
         else:
             mshape_pad = mshape
         mspace = h5s.create_simple(mshape_pad, (h5s.UNLIMITED,)*len(mshape_pad))
-        for fspace in selection.broadcast(mshape, collective=is_collective):
+        for fspace in selection.broadcast(mshape):
             self.id.write(mspace, fspace, val, mtype, dxpl=self._dxpl)
 
     def read_direct(self, dest, source_sel=None, dest_sel=None):

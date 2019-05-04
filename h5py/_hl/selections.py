@@ -175,7 +175,7 @@ class Selection(object):
         """ Shape of selection (always 1-D for this class) """
         return (self.nselect,)
 
-    def broadcast(self, target_shape, collective=False):
+    def broadcast(self, target_shape):
         """ Get an iterable for broadcasting.
 
         Setting `collective` includes zero length selections that are
@@ -273,7 +273,7 @@ class SimpleSelection(Selection):
         return self
 
 
-    def broadcast(self, target_shape, collective=False):
+    def broadcast(self, target_shape):
         """ Return an iterator over target dataspaces for broadcasting.
 
         Follows the standard NumPy broadcasting rules against the current
@@ -310,10 +310,12 @@ class SimpleSelection(Selection):
         tshape.reverse()
         tshape = tuple(tshape)
 
-        chunks = tuple(x//y for x, y in zip(count, tshape))
+        # A zero-length selection needs to work for collective I/O
+        chunks = tuple(1 if (x == y == 0) else x // y
+                       for x, y in zip(count, tshape))
         nchunks = int(np.product(chunks))
 
-        if nchunks == 1 or (nchunks == 0 and collective):
+        if nchunks == 1:
             yield self._id
         else:
             sid = self._id.copy()
@@ -417,7 +419,7 @@ class FancySelection(Selection):
 
         self._mshape = tuple(x for x in mshape if x >= 0)
 
-    def broadcast(self, target_shape, collective=False):
+    def broadcast(self, target_shape):
         if not target_shape == self.mshape:
             raise TypeError("Broadcasting is not supported for complex selections")
         yield self._id
