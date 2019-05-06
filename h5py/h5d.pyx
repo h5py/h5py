@@ -455,7 +455,6 @@ cdef class DatasetID(ObjectID):
             cdef uint32_t filters = 0
             cdef hsize_t read_chunk_nbytes
             cdef array.array data = array.array('B')
-            cdef herr_t status
 
             if filter_mask is None:
                 # Skip all the filters
@@ -475,18 +474,13 @@ cdef class DatasetID(ObjectID):
             try:
                 offset = <hsize_t*>emalloc(sizeof(hsize_t)*rank)
                 convert_tuple(offsets, offset, rank)
-                status = H5Dget_chunk_storage_size(dset_id, offset, &read_chunk_nbytes)
-                if status < 0:
-                    raise TypeError("Error while reaching chunk storage size")
+                H5Dget_chunk_storage_size(dset_id, offset, &read_chunk_nbytes)
                 array.resize(data, read_chunk_nbytes)
 
                 IF HDF5_VERSION >= (1, 10, 3):
-                    status = H5Dread_chunk(dset_id, dxpl_id, offset, &filters, data.data.as_voidptr)
+                    H5Dread_chunk(dset_id, dxpl_id, offset, &filters, data.data.as_voidptr)
                 ELSE:
-                    status = H5DOread_chunk(dset_id, dxpl_id, offset, &filters, data.data.as_voidptr)
-
-                if status < 0:
-                    raise TypeError("Error while reading chunk %s", offsets)
+                    H5DOread_chunk(dset_id, dxpl_id, offset, &filters, data.data.as_voidptr)
             finally:
                 efree(offset)
                 if space_id:
