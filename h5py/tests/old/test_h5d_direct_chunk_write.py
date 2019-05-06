@@ -43,9 +43,9 @@ class TestReadDirectChunk(TestCase):
 
         frame = numpy.arange(16).reshape(4, 4)
         frame_dataset = filehandle.create_dataset("frame",
-                                          data=frame,
-                                          compression="gzip",
-                                          compression_opts=9)
+                                                  data=frame,
+                                                  compression="gzip",
+                                                  compression_opts=9)
         dataset = filehandle.create_dataset("compressed_chunked",
                                             data=[frame, frame, frame],
                                             compression="gzip",
@@ -64,9 +64,9 @@ class TestReadDirectChunk(TestCase):
         # create a reference
         frame = numpy.arange(16).reshape(4, 4)
         frame_dataset = filehandle.create_dataset("source",
-                                          data=frame,
-                                          compression="gzip",
-                                          compression_opts=9)
+                                                  data=frame,
+                                                  compression="gzip",
+                                                  compression_opts=9)
         # configure an empty dataset
         filter_mask, compressed_frame = frame_dataset.id.read_direct_chunk((0, 0))
         dataset = filehandle.create_dataset("created",
