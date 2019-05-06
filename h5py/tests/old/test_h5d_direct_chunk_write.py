@@ -51,9 +51,9 @@ class TestReadDirectChunk(TestCase):
                                             compression="gzip",
                                             compression_opts=9,
                                             chunks=(1, ) + frame.shape)
-        _filter_mask, compressed_frame = frame_dataset.id.read_direct_chunk((0, 0))
+        _filter_mask, compressed_frame = frame_dataset.id.read_direct_chunk((0, 0), filter_mask=0xFFFF)
         for i in range(dataset.shape[0]):
-            _filter_mask, data = dataset.id.read_direct_chunk((i, 0, 0))
+            _filter_mask, data = dataset.id.read_direct_chunk((i, 0, 0), filter_mask=0xFFFF)
             self.assertEqual(compressed_frame, data)
 
     def test_read_write_chunk(self):
@@ -68,7 +68,7 @@ class TestReadDirectChunk(TestCase):
                                                   compression="gzip",
                                                   compression_opts=9)
         # configure an empty dataset
-        filter_mask, compressed_frame = frame_dataset.id.read_direct_chunk((0, 0))
+        filter_mask, compressed_frame = frame_dataset.id.read_direct_chunk((0, 0), filter_mask=0xFFFF)
         dataset = filehandle.create_dataset("created",
                                             shape=frame_dataset.shape,
                                             maxshape=frame_dataset.shape,

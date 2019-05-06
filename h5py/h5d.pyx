@@ -434,11 +434,16 @@ cdef class DatasetID(ObjectID):
 
     IF HDF5_VERSION >= (1, 10, 2):
 
-        def read_direct_chunk(self, offsets, filter_mask=0xFFFF, PropID dxpl=None):
-            """ (offsets, uint32_t filter_mask=0xFFFF, PropID dxpl=None)
+        def read_direct_chunk(self, offsets, filter_mask=0x0000, PropID dxpl=None):
+            """ (offsets, uint32_t filter_mask=0x0000, PropID dxpl=None)
 
             Reads data to a bytes array directly from a chunk at position
             specified by the offsets argument.
+
+            The `filter_mask` is a bit field of up to 32 values. It specify
+            which filters in the pipeline are used with the chunk.
+            Using the default `0x0000` with use all the filters, while `0xFFFF`
+            will skip all the filters.
 
             Returns a tuple containing the filter_mask and the bytes data which
             was used for this data.
