@@ -316,5 +316,20 @@ class TestB8Bool(TestCase):
 
         with h5py.File(path, 'r') as f:
             dset = f['test']
-            arr2 = dset[:]
+
+            # read uncast dset to make sure it raises as before
+            with self.assertRaises(
+                TypeError, msg='No NumPy equivalent for TypeBitfieldID exists'
+            ):
+                dset[:]
+
+            # read cast dset and make sure it's equal
+            with dset.astype(arr1.dtype):
+                arr2 = dset[:]
             self.assertArrayEqual(arr1, arr2)
+
+            # read uncast dataset again to ensure nothing changed permanantly
+            with self.assertRaises(
+                TypeError, msg='No NumPy equivalent for TypeBitfieldID exists'
+            ):
+                dset[:]
