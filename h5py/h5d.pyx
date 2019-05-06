@@ -399,11 +399,16 @@ cdef class DatasetID(ObjectID):
 
     IF HDF5_VERSION >= (1, 8, 11):
 
-        def write_direct_chunk(self, offsets, bytes data, H5Z_filter_t filter_mask=H5Z_FILTER_NONE, PropID dxpl=None):
-            """ (offsets, bytes data, H5Z_filter_t filter_mask=H5Z_FILTER_NONE, PropID dxpl=None)
+        def write_direct_chunk(self, offsets, bytes data, filter_mask=0x0000, PropID dxpl=None):
+            """ (offsets, bytes data, uint32_t filter_mask=0x0000, PropID dxpl=None)
 
             Writes data from a bytes array (as provided e.g. by struct.pack) directly
             to a chunk at position specified by the offsets argument.
+
+            The `filter_mask` is a bit field of up to 32 values. It specify
+            which filters in the pipeline are used with the chunk.
+            Using the default `0x0000` with use all the filters, while `0xFFFF`
+            will skip all the filters.
 
             Feature requires: 1.8.11 HDF5
             """
