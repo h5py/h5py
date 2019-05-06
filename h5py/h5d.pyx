@@ -440,7 +440,7 @@ cdef class DatasetID(ObjectID):
             Reads data to a bytes array directly from a chunk at position
             specified by the offsets argument.
 
-            Returns a tuple containing the bytes data, and the filter_mask which
+            Returns a tuple containing the filter_mask and the bytes data which
             was used for this data.
 
             Feature requires: 1.10.2 HDF5
@@ -492,4 +492,4 @@ cdef class DatasetID(ObjectID):
                 if space_id:
                     H5Sclose(space_id)
 
-            return bytes(data), filters
+            return filters, bytes(data)
