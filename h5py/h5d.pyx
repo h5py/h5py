@@ -435,7 +435,7 @@ cdef class DatasetID(ObjectID):
     IF HDF5_VERSION >= (1, 10, 2):
 
         def read_direct_chunk(self, offsets, filter_mask=0xFFFF, PropID dxpl=None):
-            """ (offsets, H5Z_filter_t filter_mask=[], PropID dxpl=None)
+            """ (offsets, uint32_t filter_mask=0xFFFF, PropID dxpl=None)
 
             Reads data to a bytes array directly from a chunk at position
             specified by the offsets argument.
