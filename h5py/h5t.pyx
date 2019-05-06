@@ -26,7 +26,7 @@ from utils cimport  emalloc, efree, \
 
 # Runtime imports
 import codecs
-from collections import defaultdict, namedtuple
+from collections import namedtuple
 import sys
 import operator
 from warnings import warn
@@ -252,25 +252,21 @@ cdef dict _order_map = { H5T_ORDER_NONE: '|', H5T_ORDER_LE: '<', H5T_ORDER_BE: '
 cdef dict _sign_map  = { H5T_SGN_NONE: 'u', H5T_SGN_2: 'i' }
 
 # Available floating point types
-def _get_available_ftypes():
-    def cmp_ftype(t):
-        return np.finfo(t).maxexp
+cdef tuple _get_available_ftypes():
+    cdef str floating_typecodes = np.typecodes["Float"]
+    cdef str ftc
+    cdef dtype fdtype
+    cdef list available_ftypes = []
 
-    available_ftypes = defaultdict(list)
-    for ftype in np.typeDict.values():
-        if np.issubdtype(ftype, np.floating):
-            available_ftypes[np.dtype(ftype).itemsize].append(ftype)
+    for ftc in floating_typecodes:
+        fdtype = dtype(ftc)
+        available_ftypes.append((
+            <object>(fdtype.typeobj), np.finfo(fdtype), fdtype.itemsize
+        ))
 
-    sorted_ftypes = []
-    seen_ftypes = set()
-    for size, ftypes in sorted(available_ftypes.items()):
-        for ftype in sorted(ftypes, key=cmp_ftype):
-            if ftype not in seen_ftypes:
-                seen_ftypes.add(ftype)
-                sorted_ftypes.append((ftype, np.finfo(ftype), size))
-    return tuple(sorted_ftypes)
+    return tuple(available_ftypes)
 
-_available_ftypes = _get_available_ftypes()
+cdef tuple _available_ftypes = _get_available_ftypes()
 
 # Old code to inform about floating point changes
 class _DeprecatedMapping(Mapping):
