@@ -821,6 +821,19 @@ cdef herr_t boolenum2b8(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
     return 0
 
 # =============================================================================
+# B8 to UINT8 routines
+
+cdef herr_t b82uint8(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
+                     size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
+                     void *bkg_i, hid_t dxpl) except -1:
+    return 0
+
+cdef herr_t uint82b8(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
+                     size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
+                     void *bkg_i, hid_t dxpl) except -1:
+    return 0
+
+# =============================================================================
 
 cpdef int register_converters() except -1:
 
@@ -866,6 +879,9 @@ cpdef int register_converters() except -1:
     H5Tregister(H5T_PERS_HARD, "boolenum2b8", boolenum, H5T_NATIVE_B8, boolenum2b8)
     H5Tregister(H5T_PERS_HARD, "b82boolenum", H5T_NATIVE_B8, boolenum, b82boolenum)
 
+    H5Tregister(H5T_PERS_HARD, "uint82b8", H5T_NATIVE_UINT8, H5T_NATIVE_B8, uint82b8)
+    H5Tregister(H5T_PERS_HARD, "b82uint8", H5T_NATIVE_B8, H5T_NATIVE_UINT8, b82uint8)
+
     H5Tclose(vlstring)
     H5Tclose(vlentype)
     H5Tclose(enum)
@@ -895,5 +911,8 @@ cpdef int unregister_converters() except -1:
 
     H5Tunregister(H5T_PERS_HARD, "boolenum2b8", -1, -1, boolenum2b8)
     H5Tunregister(H5T_PERS_HARD, "b82boolenum", -1, -1, b82boolenum)
+
+    H5Tunregister(H5T_PERS_HARD, "uint82b8", -1, -1, uint82b8)
+    H5Tunregister(H5T_PERS_HARD, "b82uint8", -1, -1, b82uint8)
 
     return 0

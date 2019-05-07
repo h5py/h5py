@@ -278,19 +278,21 @@ class TestStrings(TestCase):
 
 
 @ut.skipUnless(tables is not None, 'tables is required')
-class TestB8Bool(TestCase):
+class TestB8(TestCase):
 
     """
-    Test loading of H5T_NATIVE_B8 as numpy.bool
+    Test H5T_NATIVE_B8 reading
     """
 
     def test_b8_bool(self):
         arr1 = np.array([False, True], dtype=np.bool)
         self._test_b8(arr1)
+        self._test_b8(arr1, dtype=np.uint8)
 
     def test_b8_bool_compound(self):
         arr1 = np.array([(False,), (True,)], dtype=np.dtype([('x', '?')]))
         self._test_b8(arr1)
+        self._test_b8(arr1, dtype=np.dtype([('x', 'u1')]))
 
     def test_b8_bool_compound_nested(self):
         arr1 = np.array(
@@ -298,6 +300,10 @@ class TestB8Bool(TestCase):
             dtype=np.dtype([('x', '?'), ('y', [('a', '?'), ('b', '?')])]),
         )
         self._test_b8(arr1)
+        self._test_b8(
+            arr1,
+            dtype=np.dtype([('x', 'u1'), ('y', [('a', 'u1'), ('b', 'u1')])]),
+        )
 
     def test_b8_bool_array(self):
         arr1 = np.array(
@@ -305,8 +311,12 @@ class TestB8Bool(TestCase):
             dtype=np.dtype([('x', ('?', (3,)))]),
         )
         self._test_b8(arr1)
+        self._test_b8(
+            arr1,
+            dtype=np.dtype([('x', ('?', (3,)))]),
+        )
 
-    def _test_b8(self, arr1):
+    def _test_b8(self, arr1, dtype=None):
         path = self.mktemp()
         with tables.open_file(path, 'w') as f:
             if arr1.dtype.names:
@@ -324,9 +334,11 @@ class TestB8Bool(TestCase):
                 dset[:]
 
             # read cast dset and make sure it's equal
-            with dset.astype(arr1.dtype):
+            if dtype is None:
+                dtype = arr1.dtype
+            with dset.astype(dtype):
                 arr2 = dset[:]
-            self.assertArrayEqual(arr1, arr2)
+            self.assertArrayEqual(arr2, arr1.astype(dtype, copy=False))
 
             # read uncast dataset again to ensure nothing changed permanantly
             with self.assertRaises(
