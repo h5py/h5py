@@ -36,7 +36,7 @@ class TestWriteDirectChunk(TestCase):
 
 @ut.skipUnless(h5py.version.hdf5_version_tuple >= (1, 10, 2), 'Direct Chunk Reading requires HDF5 >= 1.10.2')
 class TestReadDirectChunk(TestCase):
-    def test_read_offsets(self):
+    def test_read_compressed_offsets(self):
 
         filename = self.mktemp().encode()
         filehandle = h5py.File(filename, "w")
@@ -51,10 +51,15 @@ class TestReadDirectChunk(TestCase):
                                             compression="gzip",
                                             compression_opts=9,
                                             chunks=(1, ) + frame.shape)
-        _filter_mask, compressed_frame = frame_dataset.id.read_direct_chunk((0, 0), filter_mask=0xFFFF)
+        filter_mask, compressed_frame = frame_dataset.id.read_direct_chunk((0, 0))
+        # No filter must be disabled
+        self.assertEqual(filter_mask, 0)
+
         for i in range(dataset.shape[0]):
-            _filter_mask, data = dataset.id.read_direct_chunk((i, 0, 0), filter_mask=0xFFFF)
+            filter_mask, data = dataset.id.read_direct_chunk((i, 0, 0))
             self.assertEqual(compressed_frame, data)
+            # No filter must be disabled
+            self.assertEqual(filter_mask, 0)
 
     def test_read_write_chunk(self):
 
@@ -68,7 +73,7 @@ class TestReadDirectChunk(TestCase):
                                                   compression="gzip",
                                                   compression_opts=9)
         # configure an empty dataset
-        filter_mask, compressed_frame = frame_dataset.id.read_direct_chunk((0, 0), filter_mask=0xFFFF)
+        filter_mask, compressed_frame = frame_dataset.id.read_direct_chunk((0, 0))
         dataset = filehandle.create_dataset("created",
                                             shape=frame_dataset.shape,
                                             maxshape=frame_dataset.shape,

@@ -399,16 +399,18 @@ cdef class DatasetID(ObjectID):
 
     IF HDF5_VERSION >= (1, 8, 11):
 
-        def write_direct_chunk(self, offsets, bytes data, filter_mask=0x0000, PropID dxpl=None):
-            """ (offsets, bytes data, uint32_t filter_mask=0x0000, PropID dxpl=None)
+        def write_direct_chunk(self, offsets, bytes data, filter_mask=0x00000000, PropID dxpl=None):
+            """ (offsets, bytes data, uint32_t filter_mask=0x00000000, PropID dxpl=None)
 
             Writes data from a bytes array (as provided e.g. by struct.pack) directly
             to a chunk at position specified by the offsets argument.
 
             The `filter_mask` is a bit field of up to 32 values. It specify
-            which filters in the pipeline are used with the chunk.
-            Using the default `0x0000` with use all the filters, while `0xFFFF`
-            will skip all the filters.
+            which filters in the pipeline have to be disabled to decompress the
+            `data`.
+            Using the default `0x00000000` with use all the filters when the
+            data will be read, while `0xFFFFFFFF` will skip all the filters
+            (the data is then not compressed).
 
             Feature requires: 1.8.11 HDF5
             """
@@ -439,19 +441,20 @@ cdef class DatasetID(ObjectID):
 
     IF HDF5_VERSION >= (1, 10, 2):
 
-        def read_direct_chunk(self, offsets, filter_mask=0x0000, PropID dxpl=None):
-            """ (offsets, uint32_t filter_mask=0x0000, PropID dxpl=None)
+        def read_direct_chunk(self, offsets, PropID dxpl=None):
+            """ (offsets, PropID dxpl=None)
 
             Reads data to a bytes array directly from a chunk at position
-            specified by the offsets argument.
+            specified by the offsets argument, bypassing the filter pipeline.
+
+            Returns a tuple containing the `filter_mask` and the bytes data
+            which was used for this data.
 
             The `filter_mask` is a bit field of up to 32 values. It specify
-            which filters in the pipeline are used with the chunk.
-            Using the default `0x0000` with use all the filters, while `0xFFFF`
-            will skip all the filters.
-
-            Returns a tuple containing the filter_mask and the bytes data which
-            was used for this data.
+            which filters of the pipeline have to be disabled to read this data.
+            A result of `0x00000000` means that all the filters have to be used
+            (the data is compressed by all the filters), while `0xFFFFFFFF` means
+            that the data is not compressed.
 
             Feature requires: 1.10.2 HDF5
             """
@@ -462,15 +465,9 @@ cdef class DatasetID(ObjectID):
             cdef hsize_t *offset = NULL
             cdef size_t data_size
             cdef int rank
-            cdef uint32_t filters = 0
+            cdef uint32_t filters
             cdef hsize_t read_chunk_nbytes
             cdef array.array data = array.array('B')
-
-            if filter_mask is None:
-                # Skip all the filters
-                filters = 0xFFFF
-            else:
-                filters = int(filter_mask)
 
             dset_id = self.id
             dxpl_id = pdefault(dxpl)
