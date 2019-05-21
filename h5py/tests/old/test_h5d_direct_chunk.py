@@ -62,6 +62,26 @@ class TestReadDirectChunk(TestCase):
             # No filter must be disabled
             self.assertEqual(filter_mask, 0)
 
+    def test_read_uncompressed_offsets(self):
+
+        filename = self.mktemp().encode()
+        filehandle = h5py.File(filename, "w")
+
+        frame = numpy.arange(16).reshape(4, 4)
+        dataset = filehandle.create_dataset("frame",
+                                            maxshape=(1,) + frame.shape,
+                                            shape=(1,) + frame.shape,
+                                            compression="gzip",
+                                            compression_opts=9)
+        # Write uncompressed data
+        DISABLE_ALL_FILTERS = 0xFFFFFFFF
+        dataset.id.write_direct_chunk((0, 0, 0), frame.tostring(), filter_mask=DISABLE_ALL_FILTERS)
+
+        filter_mask, compressed_frame = dataset.id.read_direct_chunk((0, 0, 0))
+        # At least 1 filter is supposed to be disabled
+        self.assertNotEqual(filter_mask, 0)
+        self.assertEqual(compressed_frame, frame.tostring())
+
     def test_read_write_chunk(self):
 
         filename = self.mktemp().encode()
