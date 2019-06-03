@@ -3,7 +3,7 @@ from __future__ import absolute_import
 import h5py
 import numpy
 
-from .common import ut, TestCase
+from ..common import ut, TestCase
 
 
 @ut.skipUnless(h5py.version.hdf5_version_tuple >= (1, 8, 11), 'Direct Chunk Writing requires HDF5 >= 1.8.11')
@@ -31,4 +31,4 @@ class TestWriteDirectChunk(TestCase):
         filehandle = h5py.File(filename, "r")
         for i in range(10):
             read_data = filehandle["data"][i]
-            self.assertTrue(array[i] == read_data).all()
+            self.assertTrue((array[i] == read_data).all())

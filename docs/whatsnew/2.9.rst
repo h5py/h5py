@@ -1,0 +1,47 @@
+What's new in h5py 2.9
+======================
+
+New features
+------------
+
+* A convenient high-level API for creating virtual datasets, HDF5 objects which
+  act as a view over one or more real datasets (:issue:`1060`, :issue:`1126`).
+  See :ref:`vds` for details.
+* :class:`File` can now be constructed with a Python file-like object,
+  making it easy to create an HDF5 file in memory using :class:`io.BytesIO`
+  (:issue:`1061`, :issue:`1105`, :issue:`1116`).
+  See :ref:`file_fileobj` for details.
+* :class:`File` now accepts parameters to control the chunk cache
+  (:issue:`1008`). See :ref:`file_cache` for details.
+* New options to record the order of insertion for attributes and group entries.
+  Iterating over these collections now follows insertion order if it was
+  recorded, or name order if not (:issue:`1098`).
+* A new method :meth:`Group.create_dataset_like` to create a new dataset with
+  similar properties to an existing one (:issue:`1085`).
+* Datasets can now be created with storage backed by external non-HDF5 files
+  (:issue:`1000`).
+* Lists or tuples of unicode strings can now be stored as HDF5 attributes
+  (:issue:`1032`).
+* Inspecting the view returned by ``.keys()`` now shows the key names, for
+  convenient interactive use (:issue:`1049`).
+
+Exposing HDF5 functions
+-----------------------
+
+* ``H5LTopen_file_image`` as :func:`h5py.h5f.open_file_image` (:issue:`1075`).
+* External dataset storage functions ``H5Pset_external``, ``H5Pget_external``
+  and ``H5Pget_external_count`` as methods on :class:`h5py.h5p.PropDCID`
+  (:issue:`1000`).
+
+Bugfixes
+--------
+
+* Fix reading/writing of float128 data (:issue:`1114`).
+* Converting data to float16 when creating a dataset (:issue:`1115`).
+
+Support for old Python
+----------------------
+
+Support for Python 3.3 has been dropped.
+
+Support for Python 2.6 has been dropped.

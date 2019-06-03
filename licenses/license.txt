@@ -17,8 +17,8 @@ Copyright Notice and Statement for the h5py Project
        documentation and/or other materials provided with the
        distribution.
 
-    c. Neither the name of the author nor the names of contributors may 
-       be used to endorse or promote products derived from this software 
+    c. Neither the name of the author nor the names of contributors may
+       be used to endorse or promote products derived from this software
        without specific prior written permission.
 
     THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS

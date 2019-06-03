@@ -54,4 +54,3 @@ Copy flags
 .. data:: COPY_WITHOUT_ATTR_FLAG
 
     Copy object without copying attributes.
-

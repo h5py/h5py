@@ -37,7 +37,7 @@ Logging driver settings
 .. data:: LOG_LOC_SEEK
 .. data:: LOG_LOC_IO
 
-.. data:: LOG_FILE_READ 
+.. data:: LOG_FILE_READ
 .. data:: LOG_FILE_WRITE
 .. data:: LOG_FILE_IO
 
@@ -57,5 +57,3 @@ Logging driver settings
 
 .. data:: LOG_ALLOC
 .. data:: LOG_ALL
-
-

@@ -105,8 +105,3 @@ cdef extern from "numpy/arrayobject.h":
   void import_array()
 
   void* PyArray_DATA(ndarray arr)
-
-
-
-
-

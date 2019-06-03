@@ -20,7 +20,7 @@
 # Header declarations are the basenames of the C header files (without the .h);
 # for example, functions from "hdf5.h" are under the "hdf5" declaration.
 #
-# Function lines are C function signatures, optionally preceeded by:
+# Function lines are C function signatures, optionally preceded by:
 #   MPI     If present, function requires an MPI-aware build of h5py
 #   ERROR   Explicit error checks are needed (HDF5 does not use error stack)
 #   X.Y.Z   Minimum version of HDF5 required for this function
@@ -150,6 +150,7 @@ hdf5:
 
   # File Image Operations
   1.8.9     ssize_t H5Fget_file_image(hid_t file_id, void *buf_ptr, size_t buf_len)
+  1.8.9     hid_t H5LTopen_file_image(void *buf_ptr, size_t buf_len, unsigned int flags)
 
   # MPI functions
   MPI 1.8.9 herr_t H5Fset_mpi_atomicity(hid_t file_id, hbool_t flag)
@@ -157,6 +158,12 @@ hdf5:
 
   # SWMR functions
   1.9.178   herr_t H5Fstart_swmr_write(hid_t file_id)
+
+
+  # === H5FD - Virtual File Layer =========================================================
+
+  hid_t     H5FDregister(H5FD_class_t *cls_ptr)
+  herr_t    H5FDunregister(hid_t driver_id)
 
 
   # === H5G - Groups API ======================================================
@@ -286,7 +293,9 @@ hdf5:
   herr_t    H5Pget_cache(hid_t plist_id, int *mdc_nelmts, size_t *rdcc_nelmts, size_t *rdcc_nbytes, double *rdcc_w0)
   herr_t    H5Pset_fapl_sec2(hid_t fapl_id)
   herr_t    H5Pset_fapl_stdio(hid_t fapl_id)
+  herr_t    H5Pset_driver(hid_t plist_id, hid_t driver_id, void *driver_info)
   hid_t     H5Pget_driver(hid_t fapl_id)
+  void*     H5Pget_driver_info(hid_t plist_id)
   herr_t    H5Pget_mdc_config(hid_t plist_id, H5AC_cache_config_t *config_ptr)
   herr_t    H5Pset_mdc_config(hid_t plist_id, H5AC_cache_config_t *config_ptr)
   1.8.9 herr_t H5Pset_file_image(hid_t plist_id, void *buf_ptr, size_t buf_len)
@@ -315,6 +324,9 @@ hdf5:
   herr_t        H5Pset_shuffle(hid_t plist_id)
   herr_t        H5Pset_szip(hid_t plist, unsigned int options_mask, unsigned int pixels_per_block)
   herr_t        H5Pset_scaleoffset(hid_t plist, H5Z_SO_scale_type_t scale_type, int scale_factor)
+  herr_t        H5Pset_external(hid_t plist_id, const char *name, off_t offset, hsize_t size)
+  int           H5Pget_external_count(hid_t plist_id)
+  herr_t        H5Pget_external(hid_t plist, unsigned idx, size_t name_size, char *name, off_t *offset, hsize_t *size)
   1.9.233 ssize_t H5Pget_virtual_dsetname(hid_t dcpl_id, size_t index, char *name, size_t size)
   1.9.233 ssize_t H5Pget_virtual_filename(hid_t dcpl_id, size_t index, char *name, size_t size)
   1.9.233 herr_t H5Pget_virtual_count(hid_t dcpl_id, size_t *count)
@@ -355,6 +367,8 @@ hdf5:
   herr_t    H5Pset_char_encoding(hid_t plist_id, H5T_cset_t encoding)
   herr_t    H5Pget_char_encoding(hid_t plist_id, H5T_cset_t *encoding)
 
+  herr_t    H5Pset_attr_creation_order(hid_t plist_id, unsigned crt_order_flags)
+  herr_t    H5Pget_attr_creation_order(hid_t plist_id, unsigned *crt_order_flags)
   herr_t    H5Pset_obj_track_times( hid_t ocpl_id, hbool_t track_times )
   herr_t    H5Pget_obj_track_times( hid_t ocpl_id, hbool_t *track_times )
 

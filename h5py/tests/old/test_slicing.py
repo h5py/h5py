@@ -22,11 +22,11 @@ import six
 
 import numpy as np
 
-from .common import ut, TestCase
+from ..common import ut, TestCase
 
 import h5py
 from h5py import h5s, h5t, h5d
-from h5py.highlevel import File
+from h5py import File
 
 class BaseSlicing(TestCase):
 
@@ -80,12 +80,12 @@ class TestSingleElement(BaseSlicing):
 class TestObjectIndex(BaseSlicing):
 
     """
-        Feauture: numpy.object_ subtypes map to real Python objects
+        Feature: numpy.object_ subtypes map to real Python objects
     """
 
     def test_reference(self):
         """ Indexing a reference dataset returns a h5py.Reference instance """
-        dset = self.f.create_dataset('x', (1,), dtype=h5py.special_dtype(ref=h5py.Reference))
+        dset = self.f.create_dataset('x', (1,), dtype=h5py.ref_dtype)
         dset[0] = self.f.ref
         self.assertEqual(type(dset[0]), h5py.Reference)
 
@@ -94,14 +94,13 @@ class TestObjectIndex(BaseSlicing):
         """
         dset1 = self.f.create_dataset('x', (10,10))
         regref = dset1.regionref[...]
-        dset2 = self.f.create_dataset('y', (1,), dtype=h5py.special_dtype(ref=h5py.RegionReference))
+        dset2 = self.f.create_dataset('y', (1,), dtype=h5py.regionref_dtype)
         dset2[0] = regref
         self.assertEqual(type(dset2[0]), h5py.RegionReference)
 
     def test_reference_field(self):
         """ Compound types of which a reference is an element work right """
-        reftype = h5py.special_dtype(ref=h5py.Reference)
-        dt = np.dtype([('a', 'i'),('b',reftype)])
+        dt = np.dtype([('a', 'i'),('b', h5py.ref_dtype)])
 
         dset = self.f.create_dataset('x', (1,), dtype=dt)
         dset[0] = (42, self.f['/'].ref)
@@ -111,14 +110,14 @@ class TestObjectIndex(BaseSlicing):
 
     def test_scalar(self):
         """ Indexing returns a real Python object on scalar datasets """
-        dset = self.f.create_dataset('x', (), dtype=h5py.special_dtype(ref=h5py.Reference))
+        dset = self.f.create_dataset('x', (), dtype=h5py.ref_dtype)
         dset[()] = self.f.ref
         self.assertEqual(type(dset[()]), h5py.Reference)
 
     def test_bytestr(self):
         """ Indexing a byte string dataset returns a real python byte string
         """
-        dset = self.f.create_dataset('x', (1,), dtype=h5py.special_dtype(vlen=bytes))
+        dset = self.f.create_dataset('x', (1,), dtype=h5py.string_dtype(encoding='ascii'))
         dset[0] = b"Hello there!"
         self.assertEqual(type(dset[0]), bytes)
 
@@ -140,6 +139,16 @@ class TestSimpleSlicing(TestCase):
     def test_negative_stop(self):
         """ Negative stop indexes work as they do in NumPy """
         self.assertArrayEqual(self.dset[2:-2], self.arr[2:-2])
+
+    def test_write(self):
+        """Assigning to a 1D slice of a 2D dataset
+        """
+        dset = self.f.create_dataset('x2', (10, 2))
+
+        x = np.zeros((10, 1))
+        dset[:, 0] = x[:, 0]
+        with self.assertRaises(TypeError):
+            dset[:, 1] = x
 
 class TestArraySlicing(BaseSlicing):
 
@@ -284,15 +293,15 @@ class TestFieldNames(BaseSlicing):
         if six.PY2:
             # Byte strings are only allowed for field names on Py2
             self.assertArrayEqual(self.dset[b'a'], self.data['a'])
-        self.assertArrayEqual(self.dset[six.u('a')], self.data['a'])
+        self.assertArrayEqual(self.dset[u'a'], self.data['a'])
 
     def test_unicode_names(self):
         """ Unicode field names for for read and write """
-        self.assertArrayEqual(self.dset[six.u('a')], self.data['a'])
-        self.dset[six.u('a')] = 42
+        self.assertArrayEqual(self.dset[u'a'], self.data['a'])
+        self.dset[u'a'] = 42
         data = self.data.copy()
         data['a'] = 42
-        self.assertArrayEqual(self.dset[six.u('a')], data['a'])
+        self.assertArrayEqual(self.dset[u'a'], data['a'])
 
     def test_write(self):
         """ Test write with field selections """

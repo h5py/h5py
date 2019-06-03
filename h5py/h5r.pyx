@@ -30,7 +30,7 @@ def create(ObjectID loc not None, char* name, int ref_type, ObjectID space=None)
     """(ObjectID loc, STRING name, INT ref_type, SpaceID space=None)
     => ReferenceObject ref
 
-    Create a new reference. The value of ref_type detemines the kind
+    Create a new reference. The value of ref_type determines the kind
     of reference created:
 
     OBJECT
@@ -185,13 +185,3 @@ cdef class RegionReference(Reference):
 
     def __repr__(self):
         return "<HDF5 region reference%s>" % ("" if self else " (null")
-
-
-
-
-
-
-
-
-
-

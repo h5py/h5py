@@ -30,6 +30,7 @@ from __future__ import print_function
 
 import numpy as np
 import multiprocessing as mp
+from six.moves import xrange  # pylint: disable=redefined-builtin
 import h5py
 
 # === Parameters for Mandelbrot calculation ===================================
@@ -85,7 +86,7 @@ def run_calculation():
     dset.attrs['YSTART'] = YSTART
     dset.attrs['XEXTENT'] = XEXTENT
     dset.attrs['YEXTENT'] = YEXTENT
-    
+
     result = pool.imap(compute_row, (x*xincr for x in xrange(NX)))
 
     for idx, arr in enumerate(result):
@@ -126,6 +127,3 @@ if __name__ == '__main__':
     else:
         print('Fractal found in "mandelbrot.hdf5". Delete file to re-run calculation.')
     visualize_file()
-
-
-

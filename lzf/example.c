@@ -13,7 +13,7 @@
 
     $ ./example
     Success!
-    $ h5ls -v test_lzf.hdf5 
+    $ h5ls -v test_lzf.hdf5
     Opened "test_lzf.hdf5" with sec2 driver.
     dset                     Dataset {100/100, 100/100, 100/100}
         Location:  0:1:0:976
@@ -79,7 +79,7 @@ int main(){
 
     dset = H5Dcreate(fid, "dset", H5T_NATIVE_FLOAT, sid, plist);
     if(dset<0) goto failed;
-    
+
     r = H5Dwrite(dset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, &data);
     if(r<0) goto failed;
 
@@ -103,4 +103,3 @@ int main(){
 
     return return_code;
 }
-

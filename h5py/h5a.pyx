@@ -52,7 +52,7 @@ def create(ObjectID loc not None, char* name, TypeID tid not None,
 
 @with_phil
 def open(ObjectID loc not None, char* name=NULL, int index=-1, *,
-    char* obj_name='.', int index_type=H5_INDEX_NAME, int order=H5_ITER_NATIVE,
+    char* obj_name='.', int index_type=H5_INDEX_NAME, int order=H5_ITER_INC,
     PropID lapl=None):
     """(ObjectID loc, STRING name=, INT index=, **kwds) => AttrID
 
@@ -67,7 +67,7 @@ def open(ObjectID loc not None, char* name=NULL, int index=-1, *,
 
     INT index_type (h5.INDEX_NAME)
 
-    INT order (h5.ITER_NATIVE)
+    INT order (h5.ITER_INC)
 
     """
     if (name == NULL and index < 0) or (name != NULL and index >= 0):
@@ -120,7 +120,7 @@ def rename(ObjectID loc not None, char* name, char* new_name, *,
 
 @with_phil
 def delete(ObjectID loc not None, char* name=NULL, int index=-1, *,
-    char* obj_name='.', int index_type=H5_INDEX_NAME, int order=H5_ITER_NATIVE,
+    char* obj_name='.', int index_type=H5_INDEX_NAME, int order=H5_ITER_INC,
     PropID lapl=None):
     """(ObjectID loc, STRING name=, INT index=, **kwds)
 
@@ -135,7 +135,7 @@ def delete(ObjectID loc not None, char* name=NULL, int index=-1, *,
 
     INT index_type (h5.INDEX_NAME)
 
-    INT order (h5.ITER_NATIVE)
+    INT order (h5.ITER_INC)
     """
     if name != NULL and index < 0:
         H5Adelete_by_name(loc.id, obj_name, name, pdefault(lapl))
@@ -183,7 +183,7 @@ cdef class AttrInfo:
 @with_phil
 def get_info(ObjectID loc not None, char* name=NULL, int index=-1, *,
             char* obj_name='.', PropID lapl=None,
-            int index_type=H5_INDEX_NAME, int order=H5_ITER_NATIVE):
+            int index_type=H5_INDEX_NAME, int order=H5_ITER_INC):
     """(ObjectID loc, STRING name=, INT index=, **kwds) => AttrInfo
 
     Get information about an attribute, in one of two ways:
@@ -201,7 +201,7 @@ def get_info(ObjectID loc not None, char* name=NULL, int index=-1, *,
     INT index_type (h5.INDEX_NAME)
         Which index to use
 
-    INT order (h5.ITER_NATIVE)
+    INT order (h5.ITER_INC)
         What order the index is in
     """
     cdef AttrInfo info = AttrInfo()
@@ -246,7 +246,7 @@ cdef herr_t cb_attr_simple(hid_t loc_id, const char* attr_name, const H5A_info_t
 
 @with_phil
 def iterate(ObjectID loc not None, object func, int index=0, *,
-    int index_type=H5_INDEX_NAME, int order=H5_ITER_NATIVE, bint info=0):
+    int index_type=H5_INDEX_NAME, int order=H5_ITER_INC, bint info=0):
     """(ObjectID loc, CALLABLE func, INT index=0, **kwds) => <Return value from func>
 
     Iterate a callable (function, method or callable object) over the
@@ -268,7 +268,7 @@ def iterate(ObjectID loc not None, object func, int index=0, *,
     INT index_type (h5.INDEX_NAME)
         Which index to use
 
-    INT order (h5.ITER_NATIVE)
+    INT order (h5.ITER_INC)
         Index order to use
     """
     if index < 0:
@@ -328,7 +328,7 @@ cdef class AttrID(ObjectID):
                 tid = self.get_type()
                 return tid.py_dtype()
 
-    
+
     @with_phil
     def read(self, ndarray arr not None, TypeID mtype=None):
         """(NDARRAY arr, TypeID mtype=None)
@@ -339,7 +339,7 @@ cdef class AttrID(ObjectID):
 
         The Numpy array must be writable and C-contiguous.  If this is not
         the case, the read will fail with an exception.
-        
+
         If provided, the HDF5 TypeID mtype will override the array's dtype.
         """
         cdef hid_t space_id
@@ -376,10 +376,10 @@ cdef class AttrID(ObjectID):
         try:
             space_id = H5Aget_space(self.id)
             check_numpy_read(arr, space_id)
-            
+
             if mtype is None:
                 mtype = py_create(arr.dtype)
-                
+
             attr_rw(self.id, mtype.id, PyArray_DATA(arr), 0)
 
         finally:
@@ -434,11 +434,3 @@ cdef class AttrID(ObjectID):
         Get the amount of storage required for this attribute.
         """
         return H5Aget_storage_size(self.id)
-
-
-
-
-
-
-
-

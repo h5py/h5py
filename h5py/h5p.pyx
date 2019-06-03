@@ -31,11 +31,14 @@ from ._objects import phil, with_phil
 
 if MPI:
     if MPI4PY_V2:
-        from mpi4py.libmpi cimport MPI_Comm, MPI_Info, MPI_Comm_dup, MPI_Info_dup, \
-                               MPI_Comm_free, MPI_Info_free
+        from mpi4py.libmpi cimport (
+            MPI_Comm, MPI_Info, MPI_Comm_dup, MPI_Info_dup,
+            MPI_Comm_free, MPI_Info_free)
     else:
-        from mpi4py.mpi_c cimport MPI_Comm, MPI_Info, MPI_Comm_dup, MPI_Info_dup, \
-                               MPI_Comm_free, MPI_Info_free
+        from mpi4py.mpi_c cimport (
+            MPI_Comm, MPI_Info, MPI_Comm_dup, MPI_Info_dup,
+            MPI_Comm_free, MPI_Info_free)
+
 
 # Initialization
 import_array()
@@ -274,7 +277,7 @@ cdef class PropCopyID(PropInstanceID):
 
 # File creation
 
-cdef class PropFCID(PropCreateID):
+cdef class PropFCID(PropOCID):
 
     """
         File creation property list.
@@ -759,6 +762,52 @@ cdef class PropDCID(PropOCID):
         fail.'''
         H5Pset_scaleoffset(self.id, scale_type, scale_factor)
 
+
+    # === External dataset functions ===========================================
+
+    @with_phil
+    def set_external(self, name, offset, size):
+        '''(STR name, UINT offset, UINT size)
+
+        Adds an external file to the list of external files for the dataset.
+
+        The first call sets the external storage property in the property list,
+        thus designating that the dataset will be stored in one or more non-HDF5
+        file(s) external to the HDF5 file.'''
+        H5Pset_external(self.id, name, offset, size)
+
+    @with_phil
+    def get_external_count(self):
+        """() => INT
+
+        Returns the number of external files for the dataset.
+        """
+        return <int>(H5Pget_external_count(self.id))
+
+    @with_phil
+    def get_external(self, idx=0):
+        """(UINT idx=0) => TUPLE external_file_info
+
+        Returns information about the indexed external file.
+        Tuple elements are:
+
+        0. STRING name of file (256 chars max)
+        1. UINT offset
+        2. UINT size
+        """
+        cdef char name[257]
+        cdef off_t offset
+        cdef hsize_t size
+        cdef herr_t retval
+
+        retval = H5Pget_external(self.id, idx, 256, name, &offset, &size)
+        name[256] = c'\0'  # In case HDF5 doesn't terminate name properly
+
+        result = None
+        if retval==0:
+            result = (name, offset, size)
+        return result
+
     # === Virtual dataset functions ===========================================
 
     IF HDF5_VERSION >= VDS_MIN_HDF5_VERSION:
@@ -800,8 +849,9 @@ cdef class PropDCID(PropOCID):
             size = H5Pget_virtual_dsetname(self.id, index, NULL, 0)
             name = <char*>emalloc(size+1)
             try:
+                # TODO check return size
                 H5Pget_virtual_dsetname(self.id, index, name, <size_t>size+1)
-                src_dset_name = name
+                src_dset_name = bytes(name).decode('utf-8')
             finally:
                 efree(name)
 
@@ -817,11 +867,12 @@ cdef class PropDCID(PropOCID):
             cdef char* name = NULL
             cdef ssize_t size
 
-            size = H5Pget_virtual_dsetname(self.id, index, NULL, 0)
+            size = H5Pget_virtual_filename(self.id, index, NULL, 0)
             name = <char*>emalloc(size+1)
             try:
+                # TODO check return size
                 H5Pget_virtual_filename(self.id, index, name, <size_t>size+1)
-                src_fname = name
+                src_fname = bytes(name).decode('utf-8')
             finally:
                 efree(name)
 
@@ -984,6 +1035,25 @@ cdef class PropFAID(PropInstanceID):
         Select the "stdio" driver (h5fd.STDIO)
         """
         H5Pset_fapl_stdio(self.id)
+
+
+    @with_phil
+    def set_driver(self, hid_t driver_id):
+        """(INT driver_id)
+
+        Sets the file driver identifier for this file access or data
+        transfer property list.
+        """
+        return H5Pset_driver(self.id, driver_id, NULL)
+
+
+    @with_phil
+    def set_fileobj_driver(self, hid_t driver_id, object fileobj):
+        """(INT driver_id, OBJECT fileobj)
+
+        Select the "fileobj" file driver (h5py-specific).
+        """
+        return H5Pset_driver(self.id, driver_id, <PyObject *>fileobj)
 
 
     @with_phil
@@ -1370,6 +1440,28 @@ cdef class PropOCID(PropCreateID):
     """
 
     @with_phil
+    def set_attr_creation_order(self, unsigned int flags):
+        """ (UINT flags)
+
+        Set tracking and indexing of creation order for object attributes
+
+        flags -- h5p.CRT_ORDER_TRACKED, h5p.CRT_ORDER_INDEXED
+        """
+        H5Pset_attr_creation_order(self.id, flags)
+
+
+    @with_phil
+    def get_attr_creation_order(self):
+        """ () -> UINT flags
+
+        Get tracking and indexing of creation order for object attributes
+        """
+        cdef unsigned int flags
+        H5Pget_attr_creation_order(self.id, &flags)
+        return flags
+
+
+    @with_phil
     def set_obj_track_times(self,track_times):
         """Sets the recording of times associated with an object."""
         H5Pset_obj_track_times(self.id,track_times)
@@ -1494,7 +1586,7 @@ cdef class PropDXID(PropInstanceID):
         def set_dxpl_mpio(self, int xfer_mode):
             """ Set the transfer mode for MPI I/O.
             Must be one of:
-            - h5fd.MPIO_INDEPDENDENT (default)
+            - h5fd.MPIO_INDEPENDENT (default)
             - h5fd.MPIO_COLLECTIVE
             """
             H5Pset_dxpl_mpio(self.id, <H5FD_mpio_xfer_t>xfer_mode)
@@ -1502,7 +1594,7 @@ cdef class PropDXID(PropInstanceID):
         def get_dxpl_mpio(self):
             """ Get the current transfer mode for MPI I/O.
             Will be one of:
-            - h5fd.MPIO_INDEPDENDENT (default)
+            - h5fd.MPIO_INDEPENDENT (default)
             - h5fd.MPIO_COLLECTIVE
             """
             cdef H5FD_mpio_xfer_t mode

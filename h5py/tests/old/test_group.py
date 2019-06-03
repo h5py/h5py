@@ -19,20 +19,35 @@
 
 from __future__ import absolute_import
 
-import collections
 import numpy as np
 import os
 import os.path
 import sys
 from tempfile import mkdtemp
 
+try:
+    from collections.abc import MutableMapping
+except ImportError:  # Python < 3.3
+    from collections import MutableMapping
+
 import six
 
-from .common import ut, TestCase
+from ..common import ut, TestCase
 import h5py
-from h5py.highlevel import File, Group, SoftLink, HardLink, ExternalLink
-from h5py.highlevel import Dataset, Datatype
+from h5py import File, Group, SoftLink, HardLink, ExternalLink
+from h5py import Dataset, Datatype
 from h5py import h5t
+from h5py._hl.compat import filename_encode
+
+# If we can't encode unicode filenames, there's not much point failing tests
+# which must fail
+try:
+    filename_encode(u"α")
+except UnicodeEncodeError:
+    NO_FS_UNICODE = True
+else:
+    NO_FS_UNICODE = False
+
 
 class BaseGroup(TestCase):
 
@@ -80,7 +95,7 @@ class TestCreate(BaseGroup):
 
     def test_unicode(self):
         """ Unicode names are correctly stored """
-        name = six.u("/Name") + six.unichr(0x4500)
+        name = u"/Name" + six.unichr(0x4500)
         group = self.f.create_group(name)
         self.assertEqual(group.name, name)
         self.assertEqual(group.id.links.get_info(name.encode('utf8')).cset, h5t.CSET_UTF8)
@@ -88,7 +103,7 @@ class TestCreate(BaseGroup):
     def test_unicode_default(self):
         """ Unicode names convertible to ASCII are stored as ASCII (issue 239)
         """
-        name = six.u("/Hello, this is a name")
+        name = u"/Hello, this is a name"
         group = self.f.create_group(name)
         self.assertEqual(group.name, name)
         self.assertEqual(group.id.links.get_info(name.encode('utf8')).cset, h5t.CSET_ASCII)
@@ -217,8 +232,7 @@ class TestOpen(BaseGroup):
         """
         g = self.f.create_group('test')
 
-        rtype = h5py.special_dtype(ref=h5py.Reference)
-        dt = np.dtype([('a', 'i'),('b',rtype)])
+        dt = np.dtype([('a', 'i'),('b', h5py.ref_dtype)])
         dset = self.f.create_dataset('test_dset', (1,), dt)
 
         dset[0] =(42,g.ref)
@@ -284,49 +298,44 @@ class TestLen(BaseMapping):
         self.f.create_group('e')
         self.assertEqual(len(self.f), len(self.groups)+1)
 
-    def test_exc(self):
-        """ len() on closed group gives ValueError """
-        self.f.close()
-        with self.assertRaises(ValueError):
-            len(self.f)
 
 class TestContains(BaseGroup):
 
     """
-        Feature: The Python "in" builtin tests for containership
+        Feature: The Python "in" builtin tests for membership
     """
 
     def test_contains(self):
-        """ "in" builtin works for containership (byte and Unicode) """
+        """ "in" builtin works for membership (byte and Unicode) """
         self.f.create_group('a')
         self.assertIn(b'a', self.f)
-        self.assertIn(six.u('a'), self.f)
+        self.assertIn(u'a', self.f)
         self.assertIn(b'/a', self.f)
-        self.assertIn(six.u('/a'), self.f)
+        self.assertIn(u'/a', self.f)
         self.assertNotIn(b'mongoose', self.f)
-        self.assertNotIn(six.u('mongoose'), self.f)
+        self.assertNotIn(u'mongoose', self.f)
 
     def test_exc(self):
         """ "in" on closed group returns False (see also issue 174) """
         self.f.create_group('a')
         self.f.close()
         self.assertFalse(b'a' in self.f)
-        self.assertFalse(six.u('a') in self.f)
+        self.assertFalse(u'a' in self.f)
 
     def test_empty(self):
         """ Empty strings work properly and aren't contained """
-        self.assertNotIn(six.u(''), self.f)
+        self.assertNotIn(u'', self.f)
         self.assertNotIn(b'', self.f)
 
     def test_dot(self):
         """ Current group "." is always contained """
         self.assertIn(b'.', self.f)
-        self.assertIn(six.u('.'), self.f)
+        self.assertIn(u'.', self.f)
 
     def test_root(self):
         """ Root group (by itself) is contained """
         self.assertIn(b'/', self.f)
-        self.assertIn(six.u('/'), self.f)
+        self.assertIn(u'/', self.f)
 
     def test_trailing_slash(self):
         """ Trailing slashes are unconditionally ignored """
@@ -383,6 +392,27 @@ class TestIter(BaseMapping):
             self.assertEqual(lst, [])
         finally:
             hfile.close()
+
+class TestTrackOrder(BaseGroup):
+    def populate(self, g):
+        for i in range(100):
+            # Mix group and dataset creation.
+            if i % 10 == 0:
+                g.create_group(str(i))
+            else:
+                g[str(i)] = [i]
+
+    def test_track_order(self):
+        g = self.f.create_group('order', track_order=True)  # creation order
+        self.populate(g)
+        self.assertEqual(list(g),
+                         [str(i) for i in range(100)])
+
+    def test_no_track_order(self):
+        g = self.f.create_group('order', track_order=False)  # name alphanumeric
+        self.populate(g)
+        self.assertEqual(list(g),
+                         sorted([str(i) for i in range(100)]))
 
 @ut.skipIf(sys.version_info[0] != 2, "Py2")
 class TestPy2Dict(BaseMapping):
@@ -734,26 +764,40 @@ class TestExternalLinks(TestCase):
         f2.close()
         self.assertFalse(f2)
 
+    @ut.skipIf(NO_FS_UNICODE, "No unicode filename support")
     def test_unicode_encode(self):
         """
         Check that external links encode unicode filenames properly
         Testing issue #732
         """
-        ext_filename = os.path.join(mkdtemp(), "α.hdf5")
+        ext_filename = os.path.join(mkdtemp(), u"α.hdf5")
         with File(ext_filename, "w") as ext_file:
             ext_file.create_group('external')
         self.f['ext'] = ExternalLink(ext_filename, '/external')
 
+    @ut.skipIf(NO_FS_UNICODE, "No unicode filename support")
     def test_unicode_decode(self):
         """
         Check that external links decode unicode filenames properly
         Testing issue #732
         """
-        ext_filename = os.path.join(mkdtemp(), "α.hdf5")
+        ext_filename = os.path.join(mkdtemp(), u"α.hdf5")
         with File(ext_filename, "w") as ext_file:
             ext_file.create_group('external')
             ext_file["external"].attrs["ext_attr"] = "test"
         self.f['ext'] = ExternalLink(ext_filename, '/external')
+        self.assertEqual(self.f["ext"].attrs["ext_attr"], "test")
+
+    def test_unicode_hdf5_path(self):
+        """
+        Check that external links handle unicode hdf5 paths properly
+        Testing issue #333
+        """
+        ext_filename = os.path.join(mkdtemp(), "external.hdf5")
+        with File(ext_filename, "w") as ext_file:
+            ext_file.create_group(u'α')
+            ext_file[u"α"].attrs["ext_attr"] = "test"
+        self.f['ext'] = ExternalLink(ext_filename, u'/α')
         self.assertEqual(self.f["ext"].attrs["ext_attr"], "test")
 
 class TestExtLinkBugs(TestCase):
@@ -916,11 +960,11 @@ class TestCopy(TestCase):
 
         self.f1.copy(foo, 'baz', without_attrs=True)
         self.assertArrayEqual(self.f1['baz'], np.array([1,2,3]))
-        self.assert_('bar' not in self.f1['baz'].attrs)
+        assert 'bar' not in self.f1['baz'].attrs
 
         self.f2.copy(foo, 'baz', without_attrs=True)
         self.assertArrayEqual(self.f2['baz'], np.array([1,2,3]))
-        self.assert_('bar' not in self.f2['baz'].attrs)
+        assert 'bar' not in self.f2['baz'].attrs
 
     @ut.skipIf(h5py.version.hdf5_version_tuple < (1,8,9),
                "Bug in HDF5<1.8.8 prevents copying open dataset")
@@ -1026,9 +1070,9 @@ class TestMutableMapping(BaseGroup):
     behaves as expected
     '''
     def test_resolution(self):
-        assert issubclass(Group, collections.MutableMapping)
+        assert issubclass(Group, MutableMapping)
         grp = self.f.create_group("K")
-        assert isinstance(grp, collections.MutableMapping)
+        assert isinstance(grp, MutableMapping)
 
     def test_validity(self):
         '''
@@ -1039,4 +1083,3 @@ class TestMutableMapping(BaseGroup):
         Group.__delitem__
         Group.__iter__
         Group.__len__
-

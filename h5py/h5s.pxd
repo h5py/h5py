@@ -13,5 +13,3 @@ from _objects cimport class ObjectID
 
 cdef class SpaceID(ObjectID):
     pass
-
-

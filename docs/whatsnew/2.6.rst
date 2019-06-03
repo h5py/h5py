@@ -1,0 +1,91 @@
+What's new in h5py 2.6
+======================
+
+Support for HDF5 Virtual Dataset API
+------------------------------------
+Initial support for the HDF5 Virtual Dataset API, which was introduced in
+HDF5 1.10, was added to the low-level API. Ideas and input for how this should
+work as part of the high-level interface are welcome.
+
+This work was added in `#663`_ by Aleksandar Jelenak.
+
+Add MPI Collective I/O Support
+------------------------------
+Support for using MPI Collective I/O in both low-level and high-level code has
+been added. See the collective_io.py example for a simple demonstration of how
+to use MPI Collective I/O with the high level API.
+
+This work was added in `#648`_ by Jialin Liu.
+
+Numerous build/testing/CI improvements
+--------------------------------------
+There were a number of improvements to the setup.py file, which should mean that
+`pip install h5py` should work in most places. Work was also done to clean up
+the current testing system, using tox is the recommended way of testing h5py
+across different Python versions. See `#576`_ by Jakob Lombacher, `#640`_ by
+Lawrence Mitchell, and `#650`_, `#651`_ and `#658`_ by James Tocknell.
+
+Cleanup of codebase based on pylint
+-----------------------------------
+There was a large cleanup of pylint-identified problems by Andrew Collette
+(`#578`_, `#579`_).
+
+Fixes to low-level API
+----------------------
+Fixes to the typing of functions were added in `#597`_ by Ulrik Kofoed
+Pedersen, `#589`_ by Peter Chang, and `#625`_ by Spaghetti Sort. A fix for
+variable-length arrays was added in `#621`_ by Sam Mason. Fixes to compound
+types were added in `#639`_ by @nevion and `#606`_ by Yu Feng. Finally, a fix
+to type conversion was added in `#614`_ by Andrew Collette.
+
+Documentation improvements
+--------------------------
+* Updates to FAQ by Dan Guest (`#608`_) and Peter Hill (`#607`_).
+* Updates MPI-related documentation by Jens Timmerman (`#604`_) and
+  Matthias König (`#572`_).
+* Fixes to documentation building by Ghislain Antony Vaillant (`#562`_,
+  `#561`_).
+* Update PyTables link (`#574`_ by Dominik Kriegner)
+* Add File opening modes to docstring (`#563`_ by Antony Lee)
+
+Other changes
+-------------
+* Add `Dataset.ndim` (`#649`_, `#660`_ by @jakirkham, `#661`_ by James Tocknell)
+* Fix import errors in IPython completer (`#605`_ by Niru Maheswaranathan)
+* Turn off error printing in new threads (`#583`_ by Andrew Collette)
+* Use item value in `KeyError` instead of error message (`#642`_ by Matthias Geier)
+
+
+.. _`#561` : https://github.com/h5py/h5py/pull/561
+.. _`#562` : https://github.com/h5py/h5py/pull/562
+.. _`#563` : https://github.com/h5py/h5py/pull/563
+.. _`#572` : https://github.com/h5py/h5py/pull/572
+.. _`#574` : https://github.com/h5py/h5py/pull/574
+.. _`#576` : https://github.com/h5py/h5py/pull/576
+.. _`#578` : https://github.com/h5py/h5py/pull/578
+.. _`#579` : https://github.com/h5py/h5py/pull/579
+.. _`#583` : https://github.com/h5py/h5py/pull/583
+.. _`#589` : https://github.com/h5py/h5py/pull/589
+.. _`#597` : https://github.com/h5py/h5py/pull/597
+.. _`#604` : https://github.com/h5py/h5py/pull/604
+.. _`#605` : https://github.com/h5py/h5py/pull/605
+.. _`#606` : https://github.com/h5py/h5py/pull/606
+.. _`#607` : https://github.com/h5py/h5py/pull/607
+.. _`#608` : https://github.com/h5py/h5py/pull/608
+.. _`#614` : https://github.com/h5py/h5py/pull/614
+.. _`#621` : https://github.com/h5py/h5py/pull/621
+.. _`#625` : https://github.com/h5py/h5py/pull/625
+.. _`#639` : https://github.com/h5py/h5py/pull/639
+.. _`#640` : https://github.com/h5py/h5py/pull/640
+.. _`#642` : https://github.com/h5py/h5py/pull/642
+.. _`#648` : https://github.com/h5py/h5py/pull/648
+.. _`#649` : https://github.com/h5py/h5py/pull/649
+.. _`#650` : https://github.com/h5py/h5py/pull/650
+.. _`#651` : https://github.com/h5py/h5py/pull/651
+.. _`#658` : https://github.com/h5py/h5py/pull/658
+.. _`#660` : https://github.com/h5py/h5py/pull/660
+.. _`#661` : https://github.com/h5py/h5py/pull/661
+.. _`#663` : https://github.com/h5py/h5py/pull/663
+
+Acknowledgements
+----------------

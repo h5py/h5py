@@ -26,5 +26,3 @@ Attribute objects
 
 .. autoclass:: AttrID
     :members:
-
-

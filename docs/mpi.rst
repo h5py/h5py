@@ -147,4 +147,3 @@ More information
 Parallel HDF5 is a new feature in h5py.  If you have any questions, feel free to
 ask on the mailing list (h5py at google groups).  We welcome bug reports,
 enhancements and general inquiries.
-

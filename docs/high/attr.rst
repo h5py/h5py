@@ -19,6 +19,16 @@ Each Group or Dataset has a small proxy object attached to it, at
 The ``.attrs`` proxy objects are of class :class:`AttributeManager`, below.
 This class supports a dictionary-style interface.
 
+By default, attributes are iterated in alphanumeric order.  However,
+if group or dataset is created with ``track_order=True``, the
+attribute insertion order is remembered (tracked) in HDF5 file, and
+iteration uses that order.  The latter is consistent with Python 3.7+
+dictionaries.
+
+The default ``track_order`` for all new groups and datasets can be
+specified globally with ``h5.get_config().track_order``.
+
+
 Reference
 ---------
 
@@ -117,6 +127,3 @@ Reference
         :type name:     String
 
         :param value:   New value.  Will be put through ``numpy.array(value)``.
-
-
-

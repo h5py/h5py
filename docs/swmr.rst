@@ -5,42 +5,28 @@ Single Writer Multiple Reader (SWMR)
 
 Starting with version 2.5.0, h5py includes support for the HDF5 SWMR features.
 
-The SWMR feature is not available in the current release (1.8 series) of HDF5 
-library. It is planned to be released for production use in version 1.10. Until
-then it is available as an experimental prototype form from development snapshot
-version 1.9.178 on the
-`HDF Group ftp server <ftp://ftp.hdfgroup.uiuc.edu/pub/outgoing/SWMR/>`_ or the
-`HDF Group svn repository <http://svn.hdfgroup.uiuc.edu/hdf5/branches/revise_chunks>`_.
-
-.. Warning:: The SWMR feature is currently in prototype form and available for 
-             experimenting and testing. Please do not consider this a production
-             quality feature until the HDF5 library is released as 1.10.
-
-.. Warning:: FILES PRODUCED BY THE HDF5 1.9.X DEVELOPMENT SNAPSHOTS MAY NOT BE
-             READABLE BY OTHER VERSIONS OF HDF5, INCLUDING THE EXISTING 1.8
-             SERIES AND ALSO 1.10 WHEN IT IS RELEASED.
-
 What is SWMR?
 -------------
 
-The SWMR features allow simple concurrent reading of a HDF5 file while it is 
+The SWMR features allow simple concurrent reading of a HDF5 file while it is
 being written from another process. Prior to this feature addition it was not
-possible to do this as the file data and meta-data would not be syncrhonised
+possible to do this as the file data and meta-data would not be synchronised
 and attempts to read a file which was open for writing would fail or result in
 garbage data.
 
 A file which is being written to in SWMR mode is guaranteed to always be in a
-valid (non-corrupt) state for reading. This has the added benefit of leaving a 
-file in a valid state even if the writing application crashes before closing 
+valid (non-corrupt) state for reading. This has the added benefit of leaving a
+file in a valid state even if the writing application crashes before closing
 the file properly.
 
 This feature has been implemented to work with independent writer and reader
 processes. No synchronisation is required between processes and it is up to the
-user to implement either a file polling mechanism, inotify or any other IPC 
+user to implement either a file polling mechanism, inotify or any other IPC
 mechanism to notify when data has been written.
 
 The SWMR functionality requires use of the latest HDF5 file format: v110. In
-practice this implies setting the libver bounding to "latest" when opening or 
+practice this implies using at least HDF5 1.10 (this can be checked via
+`h5py.info`) and setting the libver bounding to "latest" when opening or
 creating the file.
 
 
@@ -51,7 +37,7 @@ creating the file.
 
 
 The HDF Group has documented the SWMR features in details on the website:
-`Single-Writer/Multiple-Reader (SWMR) Documentation <http://www.hdfgroup.org/HDF5/docNewFeatures/NewFeaturesSwmrDocs.html>`_.
+`Single-Writer/Multiple-Reader (SWMR) Documentation <https://support.hdfgroup.org/HDF5/docNewFeatures/NewFeaturesSwmrDocs.html>`_.
 This is highly recommended reading for anyone intending to use the SWMR feature
 even through h5py. For production systems in particular pay attention to the
 file system requirements regarding POSIX I/O semantics.
@@ -101,7 +87,7 @@ Examples
 --------
 
 In addition to the above example snippets, a few more complete examples can be
-found in the examples folder. These examples are described in the following 
+found in the examples folder. These examples are described in the following
 sections
 
 Dataset monitor with inotify
@@ -109,8 +95,8 @@ Dataset monitor with inotify
 
 The inotify example demonstrate how to use SWMR in a reading application which
 monitors live progress as a dataset is being written by another process. This
-example uses the the linux inotify 
-(`pyinotify <https://pypi.python.org/pypi/pyinotify>`_ python bindings) to 
+example uses the the linux inotify
+(`pyinotify <https://pypi.python.org/pypi/pyinotify>`_ python bindings) to
 receive a signal each time the target file has been updated.
 
 .. literalinclude:: ../examples/swmr_inotify_example.py
@@ -118,13 +104,13 @@ receive a signal each time the target file has been updated.
 Multiprocess concurrent write and read
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The SWMR multiprocess example starts starts two concurrent child processes: 
+The SWMR multiprocess example starts two concurrent child processes:
 a writer and a reader.
 The writer process first creates the target file and dataset. Then it switches
 the file into SWMR mode and the reader process is notified (with a
 multiprocessing.Event) that it is safe to open the file for reading.
 
-The writer process then continue to append chunks to the dataset. After each 
+The writer process then continue to append chunks to the dataset. After each
 write it notifies the reader that new data has been written. Whether the new
 data is visible in the file at this point is subject to OS and file system
 latencies.
@@ -140,7 +126,7 @@ it will drop out of the loop and exit.
 The example output below (from a virtual Ubuntu machine) illustrate some
 latency between the writer and reader::
 
-    python examples/swmr_multiprocess.py 
+    python examples/swmr_multiprocess.py
       INFO  2015-02-26 18:05:03,195        root  Starting reader
       INFO  2015-02-26 18:05:03,196        root  Starting reader
       INFO  2015-02-26 18:05:03,197      reader  Waiting for initial event
@@ -164,5 +150,3 @@ latency between the writer and reader::
       INFO  2015-02-26 18:05:03,217      reader  Read dset shape: (20,)
       INFO  2015-02-26 18:05:03,218      reader  Read dset shape: (20,)
       INFO  2015-02-26 18:05:03,219        root  Waiting for reader to finish
-
-

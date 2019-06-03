@@ -19,6 +19,8 @@ ITER_NATIVE = H5_ITER_NATIVE  # No particular order, whatever is fastest
 INDEX_NAME      = H5_INDEX_NAME       # Index on names
 INDEX_CRT_ORDER = H5_INDEX_CRT_ORDER  # Index on creation order
 
+HDF5_VERSION_COMPILED_AGAINST = HDF5_VERSION
+
 class ByteStringContext(object):
 
     def __init__(self):
@@ -57,6 +59,8 @@ cdef class H5PYConfig:
         self._f_name = b'FALSE'
         self._t_name = b'TRUE'
         self._bytestrings = ByteStringContext()
+        self._track_order = False
+        self._default_file_mode = None
 
     property complex_names:
         """ Settable 2-tuple controlling how complex numbers are saved.
@@ -137,6 +141,25 @@ cdef class H5PYConfig:
         def __get__(self):
             return VDS_MIN_HDF5_VERSION
 
+    property track_order:
+        """ Default value for track_order argument of
+        File.open()/Group.create_group()/Group.create_dataset() """
+        def __get__(self):
+            return self._track_order
+        def __set__(self, val):
+            self._track_order = val
+
+    property default_file_mode:
+        """Default mode for h5py.File()"""
+        def __get__(self):
+            return self._default_file_mode
+
+        def __set__(self, val):
+            if val is None or val in {'r', 'r+', 'x', 'w-', 'w', 'a'}:
+                self._default_file_mode = val
+            else:
+                raise ValueError("Invalid mode; must be one of r, r+, w, w-, x, a or None")
+
 cdef H5PYConfig cfg = H5PYConfig()
 
 cpdef H5PYConfig get_config():
@@ -160,8 +183,3 @@ def get_libversion():
     H5get_libversion(&major, &minor, &release)
 
     return (major, minor, release)
-
-
-
-
-

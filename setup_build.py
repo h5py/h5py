@@ -35,20 +35,27 @@ EXTRA_SRC = {'h5z': [ localpath("lzf/lzf_filter.c"),
               localpath("lzf/lzf/lzf_c.c"),
               localpath("lzf/lzf/lzf_d.c")]}
 
+FALLBACK_PATHS = {
+    'include_dirs': [],
+    'library_dirs': []
+}
+
+COMPILER_SETTINGS = {
+   'libraries'      : ['hdf5', 'hdf5_hl'],
+   'include_dirs'   : [localpath('lzf')],
+   'library_dirs'   : [],
+   'define_macros'  : [('H5_USE_16_API', None)]
+}
 
 if sys.platform.startswith('win'):
-    COMPILER_SETTINGS = {
-        'libraries'     : ['h5py_hdf5', 'h5py_hdf5_hl'],
-        'include_dirs'  : [localpath('lzf'), localpath('windows')],
-        'library_dirs'  : [],
-        'define_macros' : [('H5_USE_16_API', None), ('_HDF5USEDLL_', None)] }
-
+    COMPILER_SETTINGS['include_dirs'].append(localpath('windows'))
+    COMPILER_SETTINGS['define_macros'].extend([
+        ('_HDF5USEDLL_', None),
+        ('H5_BUILT_AS_DYNAMIC_LIB', None)
+    ])
 else:
-    COMPILER_SETTINGS = {
-       'libraries'      : ['hdf5', 'hdf5_hl'],
-       'include_dirs'   : [localpath('lzf'), '/opt/local/include', '/usr/local/include'],
-       'library_dirs'   : ['/opt/local/lib', '/usr/local/lib'],
-       'define_macros'  : [('H5_USE_16_API', None)] }
+    FALLBACK_PATHS['include_dirs'].extend(['/opt/local/include', '/usr/local/include'])
+    FALLBACK_PATHS['library_dirs'].extend(['/opt/local/lib', '/usr/local/lib'])
 
 
 class h5py_build_ext(build_ext):
@@ -74,14 +81,22 @@ class h5py_build_ext(build_ext):
 
         settings = COMPILER_SETTINGS.copy()
 
-        try:
-            if pkgconfig.exists('hdf5'):
-                pkgcfg = pkgconfig.parse("hdf5")
-                settings['include_dirs'].extend(pkgcfg['include_dirs'])
-                settings['library_dirs'].extend(pkgcfg['library_dirs'])
-                settings['define_macros'].extend(pkgcfg['define_macros'])
-        except EnvironmentError:
-            pass
+        # Ensure that if a custom HDF5 location is specified, prevent
+        # pkg-config and fallback locations from appearing in the settings
+        if config.hdf5 is not None:
+            settings['include_dirs'].insert(0, op.join(config.hdf5, 'include'))
+            settings['library_dirs'].insert(0, op.join(config.hdf5, 'lib'))
+        else:
+            try:
+                if pkgconfig.exists('hdf5'):
+                    pkgcfg = pkgconfig.parse("hdf5")
+                    settings['include_dirs'].extend(pkgcfg['include_dirs'])
+                    settings['library_dirs'].extend(pkgcfg['library_dirs'])
+                    settings['define_macros'].extend(pkgcfg['define_macros'])
+            except EnvironmentError:
+                pass
+            settings['include_dirs'].extend(FALLBACK_PATHS['include_dirs'])
+            settings['library_dirs'].extend(FALLBACK_PATHS['library_dirs'])
 
         try:
             numpy_includes = numpy.get_include()
@@ -94,12 +109,6 @@ class h5py_build_ext(build_ext):
         if config.mpi:
             import mpi4py
             settings['include_dirs'] += [mpi4py.get_include()]
-
-        # Ensure a custom location appears first, so we don't get a copy of
-        # HDF5 from some default location in COMPILER_SETTINGS
-        if config.hdf5 is not None:
-            settings['include_dirs'].insert(0, op.join(config.hdf5, 'include'))
-            settings['library_dirs'].insert(0, op.join(config.hdf5, 'lib'))
 
         # TODO: should this only be done on UNIX?
         if os.name != 'nt':
@@ -145,6 +154,7 @@ class h5py_build_ext(build_ext):
         """ Distutils calls this method to run the command """
 
         from Cython.Build import cythonize
+        import numpy
 
         # Provides all of our build options
         config = self.distribution.get_command_obj('configure')
@@ -176,17 +186,22 @@ DEF MPI4PY_V2 = %(mpi4py_v2)s
 DEF HDF5_VERSION = %(version)s
 DEF SWMR_MIN_HDF5_VERSION = (1,9,178)
 DEF VDS_MIN_HDF5_VERSION = (1,9,233)
+DEF COMPLEX256_SUPPORT = %(complex256_support)s
 """
-                s %= {'mpi': bool(config.mpi),
-                      'mpi4py_v2': bool(v2),
-                      'version': tuple(int(x) for x in config.hdf5_version.split('.'))}
+                s %= {
+                    'mpi': bool(config.mpi),
+                    'mpi4py_v2': bool(v2),
+                    'version': tuple(int(x) for x in config.hdf5_version.split('.')),
+                    'complex256_support': hasattr(numpy, 'complex256')
+                }
                 s = s.encode('utf-8')
                 f.write(s)
 
         # Run Cython
         print("Executing cythonize()")
         self.extensions = cythonize(self._make_extensions(config),
-                            force=config.rebuild_required or self.force)
+                                    force=config.rebuild_required or self.force,
+                                    language_level=2)
         self.check_rerun_cythonize()
 
         # Perform the build

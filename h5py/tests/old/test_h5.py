@@ -9,18 +9,15 @@
 
 from __future__ import absolute_import
 
-try:
-    import unittest2 as ut
-except ImportError:
-    import unittest as ut
-
 from h5py import h5
+
+from ..common import TestCase
 
 def fixnames():
     cfg = h5.get_config()
     cfg.complex_names = ('r','i')
 
-class TestH5(ut.TestCase):
+class TestH5(TestCase):
 
     def test_config(self):
         cfg = h5.get_config()
