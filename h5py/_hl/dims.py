@@ -12,8 +12,10 @@
 """
 
 from __future__ import absolute_import
+import warnings
 
 from .. import h5ds
+from ..h5py_warnings import H5pyDeprecationWarning
 from . import base
 from .base import phil, with_phil
 from .dataset import Dataset
@@ -180,5 +182,8 @@ class DimensionManager(base.MappingHDF5, base.CommonStateObject):
 
         Provide the dataset and a name for the scale.
         """
-        with phil:
-            h5ds.set_scale(dset.id, self._e(name))
+        warnings.warn("other_ds.dims.create_scale(ds, name) is deprecated. "
+                      "Use ds.make_scale(name) instead.",
+                      H5pyDeprecationWarning, stacklevel=2,
+                     )
+        dset.make_scale(name)
