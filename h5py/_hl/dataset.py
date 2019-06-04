@@ -24,7 +24,7 @@ from six.moves import xrange    # pylint: disable=redefined-builtin
 
 import numpy
 
-from .. import h5, h5s, h5t, h5r, h5d, h5p, h5fd
+from .. import h5, h5s, h5t, h5r, h5d, h5p, h5fd, h5ds
 from .base import HLObject, phil, with_phil, Empty, is_empty_dataspace
 from . import filters
 from . import selections as sel
@@ -828,3 +828,15 @@ class Dataset(HLObject):
                        dcpl.get_virtual_dsetname(j),
                        dcpl.get_virtual_srcspace(j))
                 for j in range(dcpl.get_virtual_count())]
+
+    @with_phil
+    def make_scale(self, name=''):
+        """Make this dataset an HDF5 dimension scale.
+
+        You can then attach it to dimensions of other datasets like this::
+
+            other_ds.dims[0].attach_scale(ds)
+
+        You can optionally pass a name to associate with this scale.
+        """
+        h5ds.set_scale(self._id, self._e(name))
