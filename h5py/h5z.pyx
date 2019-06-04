@@ -103,7 +103,7 @@ def unregister_filter(int filter_code):
     Unregister a filter
 
     '''
-    return <bint>H5Zunregister(<H5Z_filter_t>filter_code)
+    return <int>H5Zunregister(<H5Z_filter_t>filter_code) >= 0
 
 
 def _register_lzf():

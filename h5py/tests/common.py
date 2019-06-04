@@ -13,7 +13,9 @@ import sys
 import os
 import shutil
 import tempfile
+import subprocess
 from contextlib import contextmanager
+from functools import wraps
 
 from six import unichr
 
@@ -165,3 +167,32 @@ def closed_tempfile(suffix='', text=None):
             test_file.flush()
     yield file_name
     shutil.rmtree(file_name, ignore_errors=True)
+
+
+def insubprocess(f):
+    """Runs a test in its own subprocess"""
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        curr_test = os.environ.get('PYTEST_CURRENT_TEST', None)
+        if not curr_test:
+            raise ut.SkipTest("not running in pytest")
+        curr_test, _, _ = curr_test.partition(' ')
+        # get block around test name
+        insub = "IN_SUBPROCESS_" + curr_test
+        for c in "/\\,:.":
+            insub = insub.replace("/", "_")
+        defined = os.environ.get(insub, None)
+        # fork process
+        if defined:
+            return f(*args, **kwargs)
+        else:
+            os.environ[insub] = '1'
+            with closed_tempfile() as stdout:
+                with open(stdout, 'w+t') as fh:
+                    rtn = subprocess.call([sys.argv[0], curr_test],
+                                          stdout=fh, stderr=fh)
+                with open(stdout, 'rt') as fh:
+                    out = fh.read()
+            del os.environ[insub]
+            assert rtn == 0, "\n" + out
+    return wrapper
