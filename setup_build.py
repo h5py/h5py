@@ -94,7 +94,10 @@ class h5py_build_ext(build_ext):
                     settings['library_dirs'].extend(pkgcfg['library_dirs'])
                     settings['define_macros'].extend(pkgcfg['define_macros'])
             except EnvironmentError:
-                pass
+                if os.name != 'nt':
+                    print("h5py requires pkg-config unless the HDF5 path is explicitly specified",
+                          file=sys.stderr)
+                    raise
             settings['include_dirs'].extend(FALLBACK_PATHS['include_dirs'])
             settings['library_dirs'].extend(FALLBACK_PATHS['library_dirs'])
 
