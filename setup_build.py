@@ -5,6 +5,8 @@
     linking.
 """
 
+from __future__ import print_function
+
 try:
     from setuptools import Extension
 except ImportError:
