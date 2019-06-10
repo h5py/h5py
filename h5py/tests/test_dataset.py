@@ -601,7 +601,7 @@ class TestExternal(BaseDataset):
         self.f.create_dataset('car', shape, external=[ext_file, 0, h5f.UNLIMITED])
 
         N = 100
-        external = [(ext_file, x * 1000, (x + 1) * 1000) for x in range(0, N)]
+        external = [(ext_file, x * 1000, 1000) for x in range(N)]
         dset = self.f.create_dataset('poo', shape, external=external)
         assert len(dset.external) == N
 
