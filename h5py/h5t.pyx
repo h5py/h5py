@@ -247,6 +247,13 @@ H5Tlock(H5PY_OBJ)
 
 PYTHON_OBJECT = lockid(H5PY_OBJ)
 
+# Datetime64
+cdef hid_t H5PY_DATETIME64 = H5Tcreate(H5T_OPAQUE, 8)
+H5Tset_tag(H5PY_DATETIME64, "NUMPY:DATETIME64")
+H5Tlock(H5PY_DATETIME64)
+
+NUMPY_DATETIME64 = lockid(H5PY_DATETIME64)
+
 # Translation tables for HDF5 -> NumPy dtype conversion
 cdef dict _order_map = { H5T_ORDER_NONE: '|', H5T_ORDER_LE: '<', H5T_ORDER_BE: '>'}
 cdef dict _sign_map  = { H5T_SGN_NONE: 'u', H5T_SGN_2: 'i' }
@@ -669,6 +676,9 @@ cdef class TypeOpaqueID(TypeID):
             free(buf)
 
     cdef object py_dtype(self):
+        if strcmp(self.get_tag(), 'NUMPY:DATETIME64') == 0:
+            return dtype('datetime64')
+
         # Numpy translation function for opaque types
         return dtype("|V" + str(self.get_size()))
 
@@ -1710,6 +1720,9 @@ cpdef TypeID py_create(object dtype_in, bint logical=0, bint aligned=0):
                 raise TypeError("Object dtype %r has no native HDF5 equivalent" % (dt,))
 
             return PYTHON_OBJECT
+        # DateTime64
+        elif kind == c'M':
+            return NUMPY_DATETIME64
 
         # Unrecognized
         else:

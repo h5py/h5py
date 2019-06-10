@@ -329,3 +329,13 @@ class TestStrings(TestCase):
         assert string_info.encoding == 'ascii'
         assert string_info.length == 10
         assert h5py.check_vlen_dtype(dt) is None
+
+def TestDateTime(TestCase):
+    def test_datetime(self):
+        fname = self.mktemp()
+
+        arr = np.array([np.datetime64('2019-06-10')])
+
+        with h5py.File(fname, 'w') as f:
+            dset = f.create_dataset("default", data=arr)
+            self.assertArrayEqual(arr, dset)
