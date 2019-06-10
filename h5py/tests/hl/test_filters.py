@@ -64,6 +64,6 @@ class TestFilters(TestCase):
 
 
 @insubprocess
-def test_unregister_filter():
+def test_unregister_filter(request):
     if h5py.h5z.filter_avail(h5py.h5z.FILTER_LZF):
         assert h5py.h5z.unregister_filter(h5py.h5z.FILTER_LZF)

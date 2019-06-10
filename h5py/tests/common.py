@@ -181,7 +181,7 @@ def insubprocess(f):
         defined = os.environ.get(insub, None)
         # fork process
         if defined:
-            return f(*args, **kwargs)
+            return f(request, *args, **kwargs)
         else:
             os.environ[insub] = '1'
             with closed_tempfile() as stdout:
