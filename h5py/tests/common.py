@@ -172,15 +172,12 @@ def closed_tempfile(suffix='', text=None):
 def insubprocess(f):
     """Runs a test in its own subprocess"""
     @wraps(f)
-    def wrapper(*args, **kwargs):
-        curr_test = os.environ.get('PYTEST_CURRENT_TEST', None)
-        if not curr_test:
-            raise ut.SkipTest("not running in pytest")
-        curr_test, _, _ = curr_test.partition(' ')
+    def wrapper(request, *args, **kwargs):
+        curr_test = request.node.name
         # get block around test name
         insub = "IN_SUBPROCESS_" + curr_test
         for c in "/\\,:.":
-            insub = insub.replace("/", "_")
+            insub = insub.replace(c, "_")
         defined = os.environ.get(insub, None)
         # fork process
         if defined:
@@ -189,7 +186,7 @@ def insubprocess(f):
             os.environ[insub] = '1'
             with closed_tempfile() as stdout:
                 with open(stdout, 'w+t') as fh:
-                    rtn = subprocess.call([sys.argv[0], curr_test],
+                    rtn = subprocess.call([sys.executable, '-m', 'pytest', curr_test],
                                           stdout=fh, stderr=fh)
                 with open(stdout, 'rt') as fh:
                     out = fh.read()
