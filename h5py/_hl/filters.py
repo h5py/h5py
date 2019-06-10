@@ -88,7 +88,7 @@ def _normalize_external(external):
         # accept a solitary file string
         return [_external_entry(external)]
     if not isinstance(external, (list)):
-        raise ValueError('external should be a list of tuples of (file[, offset[, size]])')
+        raise TypeError('external should be a list of tuples of (file[, offset[, size]])')
     try:
         # accept a single entry, not in a list
         return [_external_entry(*external)]
