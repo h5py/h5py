@@ -565,7 +565,7 @@ class TestExternal(BaseDataset):
     """
         Feature: Datasets with the external storage property
     """
-    def test_external(self):
+    def test_contents(self):
         """ Create and access an external dataset """
 
         shape = (6, 100)
@@ -579,17 +579,12 @@ class TestExternal(BaseDataset):
 
         assert dset.external is not None
 
-        # verify file was created, and size is correct
-        import os
-        statinfo = os.stat(ext_file)
-        assert statinfo.st_size == testdata.nbytes
-
-        # verify contents
+        # verify file's existence, size, and contents
         with open(ext_file, 'rb') as fid:
             contents = fid.read()
         assert contents == testdata.tostring()
 
-    def test_external_other(self):
+    def test_other(self):
         """ Test other forms of external lists """
 
         shape = (6, 100)
@@ -605,17 +600,19 @@ class TestExternal(BaseDataset):
         dset = self.f.create_dataset('poo', shape, external=external)
         assert len(dset.external) == N
 
-    def test_external_invalid(self):
+    def test_invalid(self):
         """ Test with invalid external lists """
 
         shape = (6, 100)
         ext_file = self.mktemp()
 
-        with self.assertRaises(TypeError):
-            self.f.create_dataset('foo', shape, external=[(ext_file, 0, "h5f.UNLIMITED")])
+        for external in [
+            [(ext_file, 0, "h5f.UNLIMITED")],
+            [(ext_file, 0, h5f.UNLIMITED, 0)],
+        ]:
+            with self.assertRaises(TypeError):
+                self.f.create_dataset('foo', shape, external=external)
 
-        with self.assertRaises(TypeError):
-            self.f.create_dataset('foo', shape, external=[(ext_file, 0, h5f.UNLIMITED, 0)])
 
 class TestAutoCreate(BaseDataset):
 
