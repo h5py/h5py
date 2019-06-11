@@ -478,6 +478,12 @@ Reference
         type-appropriate default value.  Can't be changed after the dataset is
         created.
 
+    .. attribute:: external
+
+       If this dataset is stored in one or more external files, this is a list
+       of 3-tuples, like the ``external=`` parameter to
+       :meth:`Group.create_dataset`. Otherwise, it is ``None``.
+
     .. attribute:: dims
 
         Access to :ref:`dimension_scales`.
