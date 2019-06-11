@@ -408,6 +408,18 @@ Reference
         shape and dtype, in which case the provided values take precedence over
         those from `other`.
 
+    .. method:: create_virtual_dataset(name, layout, fillvalue=None)
+
+       Create a new virtual dataset in this group. See :doc:`/vds` for more
+       details.
+
+       :param str name:
+           Name of the dataset (absolute or relative).
+       :param VirtualLayout layout:
+           Defines what source data fills which parts of the virtual dataset.
+       :param fillvalue:
+           The value to use where there is no data.
+
     .. attribute:: attrs
 
         :ref:`attributes` for this group.

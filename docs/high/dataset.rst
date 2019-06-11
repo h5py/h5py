@@ -426,6 +426,14 @@ Reference
 
        You can optionally pass a name to associate with this scale.
 
+    .. method:: virtual_sources
+
+       If this dataset is a :doc:`virtual dataset </vds>`, return a list of
+       named tuples: ``(vspace, file_name, dset_name, src_space)``,
+       describing which parts of the dataset map to which source datasets.
+       The two 'space' members are low-level
+       :class:`SpaceID <low:h5py.h5s.SpaceID>` objects.
+
     .. attribute:: shape
 
         NumPy-style shape tuple giving dataset dimensions.
@@ -483,6 +491,10 @@ Reference
        If this dataset is stored in one or more external files, this is a list
        of 3-tuples, like the ``external=`` parameter to
        :meth:`Group.create_dataset`. Otherwise, it is ``None``.
+
+    .. attribute:: is_virtual
+
+       True if this dataset is a :doc:`virtual dataset </vds>`, otherwise False.
 
     .. attribute:: dims
 
