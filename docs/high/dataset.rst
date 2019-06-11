@@ -416,6 +416,16 @@ Reference
 
         Return the size of the first axis.
 
+    .. method:: make_scale(name='')
+
+       Make this dataset an HDF5 :ref:`dimension scale <dimension_scales>`.
+
+       You can then attach it to dimensions of other datasets like this::
+
+           other_ds.dims[0].attach_scale(ds)
+
+       You can optionally pass a name to associate with this scale.
+
     .. attribute:: shape
 
         NumPy-style shape tuple giving dataset dimensions.
