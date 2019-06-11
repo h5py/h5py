@@ -148,6 +148,11 @@ matrix:
             - libopenmpi-dev
             - libhdf5-openmpi-dev # 1.8.11 based on trusty
 
+    # PyTables compatibility tests
+    - python: 3.7
+      env:
+      - TOXENV=py37-test-mindeps-tables
+
     # Additional python versions which are not officially supported
     - python: "nightly"
       env:

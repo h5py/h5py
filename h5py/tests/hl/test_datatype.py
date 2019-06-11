@@ -8,6 +8,10 @@ from itertools import count
 import numpy as np
 import six
 import h5py
+try:
+    import tables
+except ImportError:
+    tables = None
 
 from ..common import ut, TestCase
 
@@ -329,3 +333,73 @@ class TestStrings(TestCase):
         assert string_info.encoding == 'ascii'
         assert string_info.length == 10
         assert h5py.check_vlen_dtype(dt) is None
+
+
+@ut.skipUnless(tables is not None, 'tables is required')
+class TestB8(TestCase):
+
+    """
+    Test H5T_NATIVE_B8 reading
+    """
+
+    def test_b8_bool(self):
+        arr1 = np.array([False, True], dtype=np.bool)
+        self._test_b8(arr1)
+        self._test_b8(arr1, dtype=np.uint8)
+
+    def test_b8_bool_compound(self):
+        arr1 = np.array([(False,), (True,)], dtype=np.dtype([('x', '?')]))
+        self._test_b8(arr1)
+        self._test_b8(arr1, dtype=np.dtype([('x', 'u1')]))
+
+    def test_b8_bool_compound_nested(self):
+        arr1 = np.array(
+            [(True, (True, False)), (True, (False, True))],
+            dtype=np.dtype([('x', '?'), ('y', [('a', '?'), ('b', '?')])]),
+        )
+        self._test_b8(arr1)
+        self._test_b8(
+            arr1,
+            dtype=np.dtype([('x', 'u1'), ('y', [('a', 'u1'), ('b', 'u1')])]),
+        )
+
+    def test_b8_bool_array(self):
+        arr1 = np.array(
+            [((True, True, False),), ((True, False, True),)],
+            dtype=np.dtype([('x', ('?', (3,)))]),
+        )
+        self._test_b8(arr1)
+        self._test_b8(
+            arr1,
+            dtype=np.dtype([('x', ('?', (3,)))]),
+        )
+
+    def _test_b8(self, arr1, dtype=None):
+        path = self.mktemp()
+        with tables.open_file(path, 'w') as f:
+            if arr1.dtype.names:
+                f.create_table('/', 'test', obj=arr1)
+            else:
+                f.create_array('/', 'test', obj=arr1)
+
+        with h5py.File(path, 'r') as f:
+            dset = f['test']
+
+            # read uncast dset to make sure it raises as before
+            with self.assertRaises(
+                TypeError, msg='No NumPy equivalent for TypeBitfieldID exists'
+            ):
+                dset[:]
+
+            # read cast dset and make sure it's equal
+            if dtype is None:
+                dtype = arr1.dtype
+            with dset.astype(dtype):
+                arr2 = dset[:]
+            self.assertArrayEqual(arr2, arr1.astype(dtype, copy=False))
+
+            # read uncast dataset again to ensure nothing changed permanantly
+            with self.assertRaises(
+                TypeError, msg='No NumPy equivalent for TypeBitfieldID exists'
+            ):
+                dset[:]
