@@ -576,13 +576,6 @@ class Group(HLObject, MutableMappingHDF5):
             return r.encode('utf8')
         return r
 
-    def _ipython_key_completions_(self):
-        """ Custom tab completions for __getitem__ in IPython >=5.0."""
-        keys = self.keys()
-        # keys() is lazy in Python 2.
-        if not isinstance(keys, list):
-            return list(keys)
-
 
 class HardLink(object):
 
