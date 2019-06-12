@@ -12,6 +12,7 @@ from __future__ import absolute_import
 import sys
 import os
 import shutil
+import inspect
 import tempfile
 import subprocess
 from contextlib import contextmanager
@@ -173,7 +174,7 @@ def insubprocess(f):
     """Runs a test in its own subprocess"""
     @wraps(f)
     def wrapper(request, *args, **kwargs):
-        curr_test = f.__module__ + "::" + request.node.name
+        curr_test = inspect.getsourcefile(f) + "::" + request.node.name
         # get block around test name
         insub = "IN_SUBPROCESS_" + curr_test
         for c in "/\\,:.":
