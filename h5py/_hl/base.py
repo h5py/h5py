@@ -416,6 +416,10 @@ class MappingHDF5(Mapping):
             """ Get a view object on member items """
             return ItemsViewHDF5(self)
 
+    def _ipython_key_completions_(self):
+        """ Custom tab completions for __getitem__ in IPython >=5.0. """
+        return sorted(self.keys())
+
 
 class MutableMappingHDF5(MappingHDF5, MutableMapping):
 
