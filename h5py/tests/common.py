@@ -173,7 +173,7 @@ def insubprocess(f):
     """Runs a test in its own subprocess"""
     @wraps(f)
     def wrapper(request, *args, **kwargs):
-        curr_test = request.node.function.__module__ + "::" + request.node.name
+        curr_test = f.__module__ + "::" + request.node.name
         # get block around test name
         insub = "IN_SUBPROCESS_" + curr_test
         for c in "/\\,:.":
