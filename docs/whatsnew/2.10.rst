@@ -14,6 +14,13 @@ New features
 - Numpy arrays of integers can now be used for fancy indexing, where previously
   a Python list was required (:issue:`963`).
 - Fancy indexing now allows an empty list or array (:issue:`1174`).
+- IPython can now tab-complete names in h5py groups and attributes without any
+  special user action (:issue:`1228`). This simple completion only matches the
+  first level of keys in a group, not subkeys. You can still call
+  ``h5py.enable_ipython_completion()`` for more complete results.
+- The ``libver`` parameter for :class:`File` now accepts ``'v108'`` and
+  ``'v110'`` to specify compatibility with HDF5 1.8 or 1.10 (:issue:`1155`).
+  See :ref:`file_version` for details.
 - New functions and constants for getting and identifying :ref:`special data
   types <special_types>` - :func:`string_dtype`, :func:`vlen_dtype`,
   :func:`enum_dtype`, ``ref_dtype`` and ``regionref_dtype`` replace
@@ -46,6 +53,8 @@ Deprecations
 Exposing HDF5 functions
 -----------------------
 
+- ``H5Zunregister`` exposed as :func:`h5z.unregister_filter` (:issue:`746`,
+  :issue:`1224`).
 
 Bugfixes
 --------
