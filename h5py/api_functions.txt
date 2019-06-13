@@ -36,7 +36,7 @@ hdf5:
   herr_t    H5open()
   herr_t    H5close()
   herr_t    H5get_libversion(unsigned *majnum, unsigned *minnum, unsigned *relnum)
-
+  herr_t    H5check_version(unsigned majnum, unsigned minnum, unsigned relnum )
 
   # === H5A - Attributes API ==================================================
 
@@ -540,7 +540,7 @@ hdf5:
 
   htri_t    H5Zfilter_avail(H5Z_filter_t id_)
   herr_t    H5Zget_filter_info(H5Z_filter_t filter_, unsigned int *filter_config_flags)
-
+  herr_t    H5Zunregister(H5Z_filter_t id_)
 
 hdf5_hl:
 

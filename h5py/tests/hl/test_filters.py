@@ -16,7 +16,7 @@ from __future__ import absolute_import
 import numpy as np
 import h5py
 
-from ..common import ut, TestCase
+from ..common import ut, TestCase, insubprocess
 
 
 class TestFilters(TestCase):
@@ -61,3 +61,9 @@ class TestFilters(TestCase):
                                   # retain 3 digits after the decimal point
                                   scaleoffset=3,
                                   )
+
+
+@insubprocess
+def test_unregister_filter(request):
+    if h5py.h5z.filter_avail(h5py.h5z.FILTER_LZF):
+        assert h5py.h5z.unregister_filter(h5py.h5z.FILTER_LZF)
