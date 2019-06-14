@@ -256,6 +256,10 @@ Broadcasting is implemented using repeated hyperslab selections, and is
 safe to use with very large target selections.  It is supported for the above
 "simple" (integer, slice and ellipsis) slicing only.
 
+.. warning::
+   Currently h5py does not support nested compound types, see :issue:`1197` for
+   more information.
+
 
 .. _dataset_fancy:
 
