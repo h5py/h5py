@@ -72,6 +72,10 @@ Bugfixes
   (:issue:`1204`).
 - Certain deprecation warnings will now show the relevant line of code which
   uses the deprecated feature (:issue:`1146`).
+- Skipped a failing test for complex floating point numbers on 32-bit x86
+  systems (:issue:`1235`).
+- Documented that nested compound types are not currently supported
+  (:issue:`1236`).
 
 Building h5py
 -------------
