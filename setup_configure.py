@@ -193,10 +193,6 @@ def autodetect_version(hdf5_dir=None):
 
     hdf5_dir: optional HDF5 install directory to look in (containing "lib")
     """
-
-    import os
-    import sys
-    import os.path as op
     import re
     import ctypes
     from ctypes import byref
