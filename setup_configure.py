@@ -238,6 +238,8 @@ def autodetect_version(hdf5_dir=None):
     if path is None:
         path = "libhdf5.so"
 
+    print("Loading library to get version:", path)
+
     lib = ctypes.cdll.LoadLibrary(path)
 
     major = ctypes.c_uint()
