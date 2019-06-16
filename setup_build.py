@@ -16,12 +16,11 @@ import sys
 import os
 import os.path as op
 import subprocess
-from functools import reduce
 import api_gen
 
 
 def localpath(*args):
-    return op.abspath(reduce(op.join, (op.dirname(__file__),)+args))
+    return op.abspath(op.join(op.dirname(__file__), *args))
 
 
 MODULES =  ['defs','_errors','_objects','_proxy', 'h5fd', 'h5z',
