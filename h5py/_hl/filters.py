@@ -69,9 +69,18 @@ def _gen_filter_tuples():
 
 decode, encode = _gen_filter_tuples()
 
-def _external_entry(name, offset=0, size=h5f.UNLIMITED):
+def _external_entry(entry):
     """ Check for and return a well-formed entry tuple for
     a call to h5p.set_external. """
+    # We require only an iterable entry but also want to guard against
+    # raising a confusing exception from unpacking below a str or bytes that
+    # was mistakenly passed as an entry.  We go further than that and accept
+    # only a tuple, which allows simpler documentation and exception
+    # messages.
+    if not isinstance(entry, tuple):
+        raise TypeError(
+            "Each external entry must be a tuple of (name, offset, size)")
+    name, offset, size = entry  # raise ValueError without three elements
     if not isinstance(name, str):
         raise TypeError("External entry's name must be a string")
     if not isinstance(offset, int):
@@ -86,11 +95,11 @@ def _normalize_external(external):
         return []
     elif isinstance(external, str):
         # accept a solitary file string
-        return [_external_entry(external)]
+        return [_external_entry((external, 0, h5f.UNLIMITED))]
     if not isinstance(external, (list)):
-        raise TypeError('external should be a list of tuples of (name[, offset[, size]])')
+        raise TypeError('external should be a list of tuples of (name, offset, size)')
     # check and rebuild each list entry to be well-formed
-    return [_external_entry(*entry) for entry in external]
+    return [_external_entry(entry) for entry in external]
 
 def fill_dcpl(plist, shape, dtype, chunks, compression, compression_opts,
               shuffle, fletcher32, maxshape, scaleoffset, external):

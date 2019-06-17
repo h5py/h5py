@@ -353,10 +353,10 @@ Reference
                         ``h5.get_config().track_order``.
 
         :keyword external: Store the dataset in one or more external, non-HDF5
-            files. This should be a list of tuples of
-            ``(name[, offset[, size]])``, to store data from ``offset`` to
-            ``offset + size`` in the named file. The last file in the list
-            may have size ``h5py.h5f.UNLIMITED`` to let it grow as needed.
+            files. This should be a list of tuples of ``(name, offset, size)``
+            to store data from ``offset`` to ``offset + size`` in the named
+            file. The last file in the list may have size
+            ``h5py.h5f.UNLIMITED`` to let it grow as needed.
 
     .. method:: require_dataset(name, shape=None, dtype=None, exact=None, **kwds)
 

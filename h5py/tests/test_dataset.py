@@ -591,8 +591,6 @@ class TestExternal(BaseDataset):
         ext_file = self.mktemp()
 
         self.f.create_dataset('foo', shape, external=ext_file)
-        self.f.create_dataset('bar', shape, external=[(ext_file,)])
-        self.f.create_dataset('moo', shape, external=[(ext_file, 0)])
 
         N = 100
         external = [(ext_file, x * 1000, 1000) for x in range(N)]
@@ -605,14 +603,16 @@ class TestExternal(BaseDataset):
         shape = (6, 100)
         ext_file = self.mktemp()
 
-        for external in [
-            [ext_file],
-            [ext_file, 0],
-            [ext_file, 0, h5f.UNLIMITED],
-            [(ext_file, 0, "h5f.UNLIMITED")],
-            [(ext_file, 0, h5f.UNLIMITED, 0)],
+        for exc_type, external in [
+            (TypeError, [ext_file]),
+            (TypeError, [ext_file, 0]),
+            (TypeError, [ext_file, 0, h5f.UNLIMITED]),
+            (ValueError, [(ext_file,)]),
+            (ValueError, [(ext_file, 0)]),
+            (ValueError, [(ext_file, 0, h5f.UNLIMITED, 0)]),
+            (TypeError, [(ext_file, 0, "h5f.UNLIMITED")]),
         ]:
-            with self.assertRaises(TypeError):
+            with self.assertRaises(exc_type):
                 self.f.create_dataset('foo', shape, external=external)
 
 
