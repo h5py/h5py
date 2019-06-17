@@ -204,10 +204,14 @@ def autodetect_version(hdf5_dir=None):
     import pkgconfig
 
     if sys.platform.startswith('darwin'):
+        default_path = 'libhdf5.dylib'
         regexp = re.compile(r'^libhdf5.dylib')
-    elif sys.platform.startswith('win'):
+    elif sys.platform.startswith('win') or \
+        sys.platform.startswith('cygwin'):
+        default_path = 'hdf5.dll'
         regexp = re.compile(r'^hdf5.dll')
     else:
+        default_path = 'libhdf5.so'
         regexp = re.compile(r'^libhdf5.so')
 
     libdirs = ['/usr/local/lib', '/opt/local/lib']
@@ -236,14 +240,7 @@ def autodetect_version(hdf5_dir=None):
             break
 
     if path is None:
-        PLATFORM_EXT_DICT = {
-            'linux': '.so',
-            'win32': '.dll',
-            'cygwin': '.dll',
-            'darwin': '.dylib',
-            'freebsd': '.so'
-        }
-        path = "libhdf5" + PLATFORM_EXT_DICT.get(sys.platform, '.so')
+        path = default_path
 
     lib = ctypes.cdll.LoadLibrary(path)
 
