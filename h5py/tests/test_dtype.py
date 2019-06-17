@@ -345,6 +345,30 @@ class TestStrings(TestCase):
         assert string_info.length == 10
         assert h5py.check_vlen_dtype(dt) is None
 
+def TestDateTime(TestCase):
+    def test_datetime(self):
+        dt_units = [
+            # Basic datetime
+            '',
+            # Dates
+            '[Y]', '[M]', '[D]',
+            # Times
+            '[h]', '[m]', '[s]', '[ms]', '[us]',
+            '[ns]', '[ps]', '[fs]', '[as]',
+        ]
+
+        for dt_kind in ['M8', 'm8']:
+            for dt_unit in dt_units:
+                for dt_order in ['<', '>']:
+                    fname = self.mktemp()
+
+                    arr = np.array([np.datetime64('2019-06-10')], dtype=(dt_order + dt_kind + dt_unit))
+
+                    with h5py.File(fname, 'w') as f:
+                        dset = f.create_dataset("default", data=arr)
+                        self.assertArrayEqual(arr, dset)
+                        self.assertEqual(arr.dtype, dset.dtype)
+
 
 @ut.skipUnless(tables is not None, 'tables is required')
 class TestB8(TestCase):

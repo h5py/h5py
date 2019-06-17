@@ -41,7 +41,6 @@ try:
 except ImportError:
     from collections import Mapping
 
-
 cfg = get_config()
 
 MACHINE = platform.machine()
@@ -248,6 +247,7 @@ PYTHON_OBJECT = lockid(H5PY_OBJ)
 # Translation tables for HDF5 -> NumPy dtype conversion
 cdef dict _order_map = { H5T_ORDER_NONE: '|', H5T_ORDER_LE: '<', H5T_ORDER_BE: '>'}
 cdef dict _sign_map  = { H5T_SGN_NONE: 'u', H5T_SGN_2: 'i' }
+cdef dict _dtype_map = {}
 
 # Available floating point types
 cdef tuple _get_available_ftypes():
@@ -667,6 +667,13 @@ cdef class TypeOpaqueID(TypeID):
             free(buf)
 
     cdef object py_dtype(self):
+        cdef bytes tag = self.get_tag()
+        cdef bytes dt_str
+        if tag.startswith(b"NUMPY:"):
+            # 6 == len(b"NUMPY:")
+            dt_str = tag[6:]
+            return dtype(dt_str)
+
         # Numpy translation function for opaque types
         return dtype("|V" + str(self.get_size()))
 
@@ -1705,6 +1712,10 @@ cpdef TypeID py_create(object dtype_in, bint logical=0, bint aligned=0):
 
             return PYTHON_OBJECT
 
+        # Custom registered dtypes
+        elif dt in _dtype_map:
+            return _dtype_map[dt]
+
         # Unrecognized
         else:
             raise TypeError("No conversion path for dtype: %s" % repr(dt))
@@ -1988,3 +1999,23 @@ cpdef object py_get_vlen(object dt_in):
     warn("Deprecated; use check_vlen_dtype(dtype) instead",
         H5pyDeprecationWarning)
     return check_vlen_dtype(dt_in)
+
+def register_dtype(dtype dt_in):
+    """ (dtype dt_in)
+
+    Register a NumPy dtype for use with h5py. Types registered in this way
+    will be stored as a custom opaque type, with a special tag to indicate
+    that it is a NumPy type.
+    """
+    descr = dt_in.descr[0][1]
+    if PY3:
+        descr = descr.encode()
+
+    if dt_in in _dtype_map:
+        return
+
+    cdef TypeID new_type = typewrap(H5Tcreate(H5T_OPAQUE, dt_in.itemsize))
+    new_type.set_tag(b"NUMPY:" + descr)
+    new_type.lock()
+
+    _dtype_map[dt_in] = new_type
