@@ -31,6 +31,16 @@ except ImportError:
     else:
         raise
 
+from . import version
+
+if version.hdf5_version_tuple != version.hdf5_built_version_tuple:
+    _warn(("h5py is running against HDF5 {0} when it was built against {1}, "
+           "this may cause problems").format(
+            '{0}.{1}.{2}'.format(*version.hdf5_version_tuple),
+            '{0}.{1}.{2}'.format(*version.hdf5_built_version_tuple)
+    ))
+
+
 _errors.silence_errors()
 
 from ._conv import register_converters as _register_converters
@@ -64,19 +74,11 @@ from .h5t import (special_dtype, check_dtype,
     check_vlen_dtype, check_string_dtype, check_enum_dtype, check_ref_dtype,
 )
 
-from . import version
 from .version import version as __version__
 
 
 if version.hdf5_version_tuple[:3] >= get_config().vds_min_hdf5_version:
     from ._hl.vds import VirtualSource, VirtualLayout
-
-if version.hdf5_version_tuple != version.hdf5_built_version_tuple:
-    _warn(("h5py is running against HDF5 {0} when it was built against {1}, "
-           "this may cause problems").format(
-            '{0}.{1}.{2}'.format(*version.hdf5_version_tuple),
-            '{0}.{1}.{2}'.format(*version.hdf5_built_version_tuple)
-    ))
 
 
 def run_tests(args=''):
