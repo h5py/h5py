@@ -125,7 +125,7 @@ class Group(HLObject, MutableMappingHDF5):
             (List of tuples) Sets the external storage property, thus
             designating that the dataset will be stored in one or more
             non-HDF5 file(s) external to the HDF5 file. Adds each listed
-            tuple of (file[, offset[, size]]) to the dataset's list of
+            tuple of (name[, offset[, size]]) to the dataset's list of
             external files.
         """
         if 'track_order' not in kwds:
