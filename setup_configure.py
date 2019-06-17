@@ -189,10 +189,6 @@ def autodetect_version(hdf5_dir=None):
 
     hdf5_dir: optional HDF5 install directory to look in (containing "lib")
     """
-
-    import os
-    import sys
-    import os.path as op
     import re
     import ctypes
     from ctypes import byref
@@ -233,6 +229,8 @@ def autodetect_version(hdf5_dir=None):
 
     if path is None:
         path = "libhdf5.so"
+
+    print("Loading library to get version:", path)
 
     lib = ctypes.cdll.LoadLibrary(path)
 
