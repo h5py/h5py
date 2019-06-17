@@ -157,12 +157,8 @@ class configure(Command):
         if self.hdf5_version is None:
             self.hdf5_version = oldsettings.get('env_hdf5_version')
         if self.hdf5_version is None:
-            try:
-                self.hdf5_version = autodetect_version(self.hdf5)
-                print("Autodetected HDF5 %s" % self.hdf5_version)
-            except Exception as e:
-                sys.stderr.write("Autodetection skipped [%s]\n" % e)
-                self.hdf5_version = '1.8.4'
+            self.hdf5_version = autodetect_version(self.hdf5)
+            print("Autodetected HDF5 %s" % self.hdf5_version)
 
         if self.mpi is None:
             self.mpi = oldsettings.get('cmd_mpi')
