@@ -356,7 +356,7 @@ Reference
             files. This should be a list of tuples of
             ``(filename[, offset[, size]])``, to store data from ``offset`` to
             ``offset + size`` in the specified file. The last file in the list
-            may have size ``h5py.h5s.UNLIMITED`` to let it grow as needed.
+            may have size ``h5py.h5f.UNLIMITED`` to let it grow as needed.
 
     .. method:: require_dataset(name, shape=None, dtype=None, exact=None, **kwds)
 
