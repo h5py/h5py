@@ -236,7 +236,14 @@ def autodetect_version(hdf5_dir=None):
             break
 
     if path is None:
-        path = "libhdf5.so"
+        PLATFORM_EXT_DICT = {
+            'linux': '.so',
+            'win32': '.dll',
+            'cygwin': '.dll',
+            'darwin': '.dylib',
+            'freebsd': '.so'
+        }
+        path = "libhdf5" + PLATFORM_EXT_DICT.get(sys.platform, '.so')
 
     lib = ctypes.cdll.LoadLibrary(path)
 
