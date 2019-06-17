@@ -66,6 +66,8 @@ from ._hl.group import Group, SoftLink, ExternalLink, HardLink
 from ._hl.dataset import Dataset
 from ._hl.datatype import Datatype
 from ._hl.attrs import AttributeManager
+from ._hl.datetime64_register import dt_units
+del dt_units
 
 from .h5 import get_config
 from .h5r import Reference, RegionReference
