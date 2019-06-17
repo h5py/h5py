@@ -89,16 +89,8 @@ def _normalize_external(external):
         return [_external_entry(external)]
     if not isinstance(external, (list)):
         raise TypeError('external should be a list of tuples of (name[, offset[, size]])')
-    try:
-        # accept a single entry, not in a list
-        return [_external_entry(*external)]
-    except TypeError:
-        pass
     # check and rebuild each list entry to be well-formed
-    return [_external_entry(entry)
-            if isinstance(entry, str) else
-            _external_entry(*entry)
-            for entry in external]
+    return [_external_entry(*entry) for entry in external]
 
 def fill_dcpl(plist, shape, dtype, chunks, compression, compression_opts,
               shuffle, fletcher32, maxshape, scaleoffset, external):
