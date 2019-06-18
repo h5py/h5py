@@ -584,17 +584,18 @@ class TestExternal(BaseDataset):
             contents = fid.read()
         assert contents == testdata.tostring()
 
-    def test_other(self):
-        """ Test other forms of external lists """
+    def test_name(self):
+        """ External argument may be a file name only """
 
-        shape = (6, 100)
+        self.f.create_dataset('foo', (6, 100), external=self.mktemp())
+
+    def test_multi(self):
+        """ External argument may contain multiple tuples """
+
         ext_file = self.mktemp()
-
-        self.f.create_dataset('foo', shape, external=ext_file)
-
         N = 100
         external = [(ext_file, x * 1000, 1000) for x in range(N)]
-        dset = self.f.create_dataset('poo', shape, external=external)
+        dset = self.f.create_dataset('poo', (6, 100), external=external)
         assert len(dset.external) == N
 
     def test_invalid(self):
