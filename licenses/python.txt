@@ -42,4 +42,3 @@ Python license
 
 #. By copying, installing or otherwise using Python Python 2.7.5, Licensee agrees
    to be bound by the terms and conditions of this License Agreement.
-

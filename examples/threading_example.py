@@ -29,12 +29,14 @@
     stores them in an HDF5 file.  The visualization/control thread reads
     datasets from the same file and displays them using matplotlib.
 """
+from __future__ import print_function
 
 import Tkinter as tk
 import threading
 
 import numpy as np
 import pylab as p
+from six.moves import xrange  # pylint: disable=redefined-builtin
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 
@@ -71,11 +73,11 @@ class ComputeThread(threading.Thread):
 
     def run(self):
         """ Perform computations and record the result to file """
-        
+
         nx, ny = self.shape
 
         arr = np.ndarray((nx,ny), dtype='i')
-        
+
         xincr = self.extent.real/nx
         yincr = self.extent.imag/ny
 
@@ -89,7 +91,7 @@ class ComputeThread(threading.Thread):
             return i
 
         for x in xrange(nx):
-            if x%25 == 0: print "Computing row %d" % x
+            if x%25 == 0: print("Computing row %d" % x)
             for y in xrange(ny):
                 pos = self.startcoords + complex(x*xincr, y*yincr)
                 arr[x,y] = compute_escape(pos, self.escape)
@@ -103,7 +105,7 @@ class ComputeThread(threading.Thread):
             dset.attrs['escape'] = self.escape
             dset[...] = arr
 
-        print "Calculation for %s done" % dsname
+        print("Calculation for %s done" % dsname)
 
         self.eventcall()
 
@@ -138,7 +140,7 @@ class ComputeWidget(object):
         self.startyfield = tk.Entry(entryframe)
         self.extentxfield = tk.Entry(entryframe)
         self.extentyfield = tk.Entry(entryframe)
-        
+
         nxlabel.grid(row=0, column=0, sticky=tk.E)
         nylabel.grid(row=1, column=0, sticky=tk.E)
         escapelabel.grid(row=2, column=0, sticky=tk.E)
@@ -183,16 +185,16 @@ class ComputeWidget(object):
                 raise ValueError("NX, NY and ESCAPE must be positive")
             if abs(extent)==0:
                 raise ValueError("Extent must be finite")
-        except (ValueError, TypeError), e:
-            print e
+        except (ValueError, TypeError) as e:
+            print(e)
             return
-        
+
         if t is not None:
             t.join()
 
         t = ComputeThread(self.f, (nx,ny), escape, start, extent, self.eventcall)
         t.start()
-        
+
     def suggest(self, *args):
         """ Populate the input fields with interesting locations """
 
@@ -263,7 +265,7 @@ class ViewWidget(object):
     def back(self):
         """ Go to the previous dataset (in ASCII order) """
         if self.index == 0:
-            print "Can't go back"
+            print("Can't go back")
             return
         self.index -= 1
         self.draw_fractal()
@@ -271,7 +273,7 @@ class ViewWidget(object):
     def forward(self):
         """ Go to the next dataset (in ASCII order) """
         if self.index == (len(self.f)-1):
-            print "Can't go forward"
+            print("Can't go forward")
             return
         self.index += 1
         self.draw_fractal()
@@ -280,7 +282,7 @@ class ViewWidget(object):
         """ Jump to the last (ASCII order) dataset and display it """
         with file_lock:
             if len(self.f) == 0:
-                print "can't jump to last (no datasets)"
+                print("can't jump to last (no datasets)")
                 return
             index = len(self.f)-1
         self.index = index
@@ -309,4 +311,3 @@ if __name__ == '__main__':
         if t is not None:
             t.join()
         f.close()
-

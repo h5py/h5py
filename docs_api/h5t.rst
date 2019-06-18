@@ -7,6 +7,12 @@ Functions specific to h5py
 --------------------------
 
 .. autofunction:: py_create
+.. autofunction:: string_dtype
+.. autofunction:: check_string_dtype
+.. autofunction:: vlen_dtype
+.. autofunction:: check_vlen_dtype
+.. autofunction:: enum_dtype
+.. autofunction:: check_enum_dtype
 .. autofunction:: special_dtype
 .. autofunction:: check_dtype
 
@@ -36,7 +42,7 @@ inherited from the base class :class:`TypeAtomicID`.
 .. autoclass:: TypeAtomicID
     :show-inheritance:
     :members:
-    
+
 .. autoclass:: TypeIntegerID
     :show-inheritance:
     :members:
@@ -138,7 +144,7 @@ Integer types
 .. data:: NATIVE_INT64
 .. data:: NATIVE_UINT64
 .. data:: NATIVE_FLOAT
-.. data:: NATIVE_DOUBLE 
+.. data:: NATIVE_DOUBLE
 
 Reference types
 ~~~~~~~~~~~~~~~
@@ -156,7 +162,7 @@ String types
 .. data:: FORTRAN_S1
 
     Zero-padded fixed-length string
-    
+
 .. data:: VARIABLE
 
     Variable-length string
@@ -219,16 +225,3 @@ API Constants
 .. data:: BKG_NO
 .. data:: BKG_TEMP
 .. data:: BKG_YES
-
-
-
-
-
-
-
-
-
-
-
-
-

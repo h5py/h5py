@@ -32,5 +32,3 @@ API constants
 .. data:: DATASET_REGION
 
     Typecode for dataset region references
-
-

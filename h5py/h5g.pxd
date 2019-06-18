@@ -14,6 +14,3 @@ from _objects cimport ObjectID
 cdef class GroupID(ObjectID):
 
     cdef readonly object links
-
-
-

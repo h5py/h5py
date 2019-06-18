@@ -13,4 +13,3 @@ from _objects cimport ObjectID
 
 cdef class AttrID(ObjectID):
     pass
-

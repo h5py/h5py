@@ -17,7 +17,7 @@
     This is the h5py completer extension for ipython.  It is loaded by
     calling the function h5py.enable_ipython_completer() from within an
     interactive IPython session.
-    
+
     It will let you do things like::
 
       f=File('foo.h5')
@@ -84,7 +84,7 @@ def _retrieve_obj(name, context):
     # we don't want to call any functions, but I couldn't find a robust regex
     # that filtered them without unintended side effects. So keys containing
     # "(" will not complete.
-    
+
     if '(' in name:
         raise ValueError()
 
@@ -172,7 +172,7 @@ def h5py_completer(self, event):
     """ Completer function to be loaded into IPython """
     base = re_object_match.split(event.line)[1]
 
-    if not isinstance(self._ofind(base)['obj'], (AttributeManager, HLObject)):
+    if not isinstance(self._ofind(base).get('obj'), (AttributeManager, HLObject)):
         raise TryNext
 
     try:

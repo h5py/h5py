@@ -13,8 +13,8 @@ import sys
 
 import numpy as np
 
-from .common import ut, TestCase
-from h5py.highlevel import File, Group, Dataset
+from ..common import ut, TestCase
+from h5py import File, Group, Dataset
 import h5py
 
 
@@ -108,12 +108,12 @@ class TestH5DSBindings(BaseDataset):
 
 class TestDimensionManager(BaseDataset):
 
-    def test_create_scale(self):
+    def test_make_scale(self):
         # test recreating or renaming an existing scale:
-        self.f['data'].dims.create_scale(self.f['x1'], b'foobar')
+        self.f['x1'].make_scale(b'foobar')
         self.assertEqual(self.f['data'].dims[2]['foobar'], self.f['x1'])
         # test creating entirely new scale:
-        self.f['data'].dims.create_scale(self.f['data2'], b'foobaz')
+        self.f['data2'].make_scale(b'foobaz')
         self.f['data'].dims[2].attach_scale(self.f['data2'])
         self.assertEqual(self.f['data'].dims[2]['foobaz'], self.f['data2'])
 

@@ -12,5 +12,3 @@ from defs cimport *
 cdef class LinkProxy:
 
     cdef hid_t id
-
-

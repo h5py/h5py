@@ -7,6 +7,7 @@ h5py/_errors.c
 h5py/config.pxi
 h5py/_hdf5.*
 h5py/*.dll
+h5py/*.so
 *.hdf5
 *.pkl
 h5py/defs.*
@@ -21,3 +22,7 @@ MANIFEST
 /h5py.egg-info
 /*.egg
 .eggs/
+*.so
+*~
+.pytest_cache
+.coverage

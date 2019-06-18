@@ -16,7 +16,8 @@ include "config.pxi"
 # Compile-time imports
 from _objects cimport pdefault
 from utils cimport emalloc, efree
-from h5p cimport PropID
+from h5p import CRT_ORDER_TRACKED
+from h5p cimport PropID, PropGCID
 cimport _hdf5 # to implement container testing for 1.6
 from _errors cimport set_error_handler, err_cookie
 
@@ -113,7 +114,16 @@ cdef class GroupIter:
             raise StopIteration
 
         if self.idx == 0:
-            self.grp.links.iterate(self.names.append)
+            cpl = self.grp.get_create_plist()
+            crt_order = cpl.get_link_creation_order()
+            cpl.close()
+            if crt_order & CRT_ORDER_TRACKED:
+                idx_type = H5_INDEX_CRT_ORDER
+            else:
+                idx_type = H5_INDEX_NAME
+
+            self.grp.links.iterate(self.names.append,
+                                   idx_type=idx_type)
 
         retval = self.names[self.idx]
         self.idx += 1
@@ -389,6 +399,16 @@ cdef class GroupID(ObjectID):
 
 
     @with_phil
+    def get_create_plist(self):
+        """() => PropGCID
+
+        Retrieve a copy of the group creation property list used to
+        create this group.
+        """
+        return PropGCID(H5Gget_create_plist(self.id))
+
+
+    @with_phil
     def set_comment(self, char* name, char* comment):
         """(STRING name, STRING comment)
 
@@ -429,7 +449,7 @@ cdef class GroupID(ObjectID):
         cdef err_cookie old_handler
         cdef err_cookie new_handler
         cdef herr_t retval
-        
+
         new_handler.func = NULL
         new_handler.data = NULL
 
@@ -510,7 +530,7 @@ IF HDF5_VERSION >= (1, 8, 5):
             # Is there any kind of link by that name in this group?
             if not current_loc.links.exists(p, lapl=lapl):
                 return False
-    
+
             # If we're at the last link in the chain, we're done.
             # We don't check to see if the last part points to a valid object;
             # it's enough that it exists.
@@ -531,4 +551,3 @@ IF HDF5_VERSION >= (1, 8, 5):
             current_loc = next_loc
 
         return True
-

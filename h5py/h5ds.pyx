@@ -120,7 +120,7 @@ def iterate(DatasetID dset not None, unsigned int dim, object func,
     => Return value from func
 
     Iterate a callable (function, method or callable object) over the
-    members of a group.  Your callable shoutld have the signature::
+    members of a group.  Your callable should have the signature::
 
         func(STRING name) => Result
 

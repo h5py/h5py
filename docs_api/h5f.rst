@@ -12,9 +12,11 @@ Functional API
 .. autofunction:: is_hdf5
 .. autofunction:: mount
 .. autofunction:: unmount
+.. autofunction:: open_file_image
 .. autofunction:: get_name
 .. autofunction:: get_obj_count
 .. autofunction:: get_obj_ids
+
 
 File objects
 ------------
@@ -82,6 +84,6 @@ Library version bounding
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. data:: LIBVER_EARLIEST
+.. data:: LIBVER_V18
+.. data:: LIBVER_V110
 .. data:: LIBVER_LATEST
-
-

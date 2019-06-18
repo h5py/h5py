@@ -19,18 +19,18 @@ import six
 
 import numpy as np
 
-from .common import TestCase, ut
+from ..common import TestCase, ut
 
 import h5py
 from h5py import h5a, h5s, h5t
-from h5py.highlevel import File
+from h5py import File
 from h5py._hl.base import is_empty_dataspace
 
 class BaseAttrs(TestCase):
 
     def setUp(self):
         self.f = File(self.mktemp(), 'w')
- 
+
     def tearDown(self):
         if self.f:
             self.f.close()
@@ -103,42 +103,42 @@ class TestTypes(BaseAttrs):
     def test_float(self):
         """ Storage of floating point types """
         dtypes = tuple(np.dtype(x) for x in ('<f4','>f4','<f8','>f8'))
-        
+
         for dt in dtypes:
             data = np.ndarray((1,), dtype=dt)
             data[...] = 42.3
             self.f.attrs['x'] = data
-            out = self.f.attrs['x'] 
+            out = self.f.attrs['x']
             self.assertEqual(out.dtype, dt)
             self.assertArrayEqual(out, data)
 
     def test_complex(self):
         """ Storage of complex types """
         dtypes = tuple(np.dtype(x) for x in ('<c8','>c8','<c16','>c16'))
-        
+
         for dt in dtypes:
             data = np.ndarray((1,), dtype=dt)
             data[...] = -4.2j+35.9
             self.f.attrs['x'] = data
-            out = self.f.attrs['x'] 
+            out = self.f.attrs['x']
             self.assertEqual(out.dtype, dt)
             self.assertArrayEqual(out, data)
 
     def test_string(self):
         """ Storage of fixed-length strings """
         dtypes = tuple(np.dtype(x) for x in ('|S1', '|S10'))
-        
+
         for dt in dtypes:
             data = np.ndarray((1,), dtype=dt)
             data[...] = 'h'
             self.f.attrs['x'] = data
-            out = self.f.attrs['x'] 
+            out = self.f.attrs['x']
             self.assertEqual(out.dtype, dt)
             self.assertEqual(out[0], data[0])
 
     def test_bool(self):
         """ Storage of NumPy booleans """
-        
+
         data = np.ndarray((2,), dtype=np.bool_)
         data[...] = True, False
         self.f.attrs['x'] = data
@@ -149,8 +149,8 @@ class TestTypes(BaseAttrs):
 
     def test_vlen_string_array(self):
         """ Storage of vlen byte string arrays"""
-        dt = h5py.special_dtype(vlen=bytes)
-        
+        dt = h5py.string_dtype(encoding='ascii')
+
         data = np.ndarray((2,), dtype=dt)
         data[...] = b"Hello", b"Hi there!  This is HDF5!"
 
@@ -178,9 +178,9 @@ class TestTypes(BaseAttrs):
     def test_unicode_scalar(self):
         """ Storage of variable-length unicode strings (auto-creation) """
 
-        self.f.attrs['x'] = six.u("Hello") + six.unichr(0x2340) + six.u("!!")
+        self.f.attrs['x'] = u"Hello" + six.unichr(0x2340) + u"!!"
         out = self.f.attrs['x']
-        self.assertEqual(out, six.u("Hello") + six.unichr(0x2340) + six.u("!!"))
+        self.assertEqual(out, u"Hello" + six.unichr(0x2340) + u"!!")
         self.assertEqual(type(out), six.text_type)
 
         aid = h5py.h5a.open(self.f.id, b"x")
@@ -223,7 +223,7 @@ class TestEmpty(BaseAttrs):
     def test_items(self):
         items = list(self.f.attrs.items())
         self.assertEqual(
-            [(six.u("x"), self.empty_obj)], items
+            [(u"x", self.empty_obj)], items
         )
 
     def test_itervalues(self):
@@ -235,7 +235,7 @@ class TestEmpty(BaseAttrs):
     def test_iteritems(self):
         items = list(six.iteritems(self.f.attrs))
         self.assertEqual(
-            [(six.u("x"), self.empty_obj)], items
+            [(u"x", self.empty_obj)], items
         )
 
 
@@ -248,7 +248,7 @@ class TestWriteException(BaseAttrs):
     def test_write(self):
         """ ValueError on string write wipes out attribute """
 
-        s = b"Hello\x00\Hello"
+        s = b"Hello\x00Hello"
 
         try:
             self.f.attrs['x'] = s
@@ -257,15 +257,3 @@ class TestWriteException(BaseAttrs):
 
         with self.assertRaises(KeyError):
             self.f.attrs['x']
-
-
-
-
-
-
-
-
-
-
-
-

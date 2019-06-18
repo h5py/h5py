@@ -12,8 +12,10 @@
 """
 
 from __future__ import absolute_import
+import warnings
 
 from .. import h5ds
+from ..h5py_warnings import H5pyDeprecationWarning
 from . import base
 from .base import phil, with_phil
 from .dataset import Dataset
@@ -24,7 +26,7 @@ class DimensionProxy(base.CommonStateObject):
     """
         Represents an HDF5 "dimension".
     """
-    
+
     @property
     @with_phil
     def label(self):
@@ -67,18 +69,18 @@ class DimensionProxy(base.CommonStateObject):
 
     @with_phil
     def __getitem__(self, item):
-    
+
         if isinstance(item, int):
             scales = []
             h5ds.iterate(self._id, self._dimension, scales.append, 0)
             return Dataset(scales[item])
-            
+
         else:
             def f(dsid):
                 """ Iterate over scales to find a matching name """
                 if h5ds.get_scale_name(dsid) == self._e(item):
                     return dsid
-                    
+
             res = h5ds.iterate(self._id, self._dimension, f, 0)
             if res is None:
                 raise KeyError(item)
@@ -86,7 +88,7 @@ class DimensionProxy(base.CommonStateObject):
 
     def attach_scale(self, dset):
         """ Attach a scale to this dimension.
-        
+
         Provide the Dataset of the scale you would like to attach.
         """
         with phil:
@@ -94,7 +96,7 @@ class DimensionProxy(base.CommonStateObject):
 
     def detach_scale(self, dset):
         """ Remove a scale from this dimension.
-        
+
         Provide the Dataset of the scale you would like to remove.
         """
         with phil:
@@ -111,7 +113,7 @@ class DimensionProxy(base.CommonStateObject):
             # rather than iterating 0 times.  See #483.
             if len(self) > 0:
                 h5ds.iterate(self._id, self._dimension, scales.append, 0)
-                
+
             return [
                 (self._d(h5ds.get_scale_name(x)), Dataset(x))
                 for x in scales
@@ -139,7 +141,7 @@ class DimensionManager(base.MappingHDF5, base.CommonStateObject):
 
     """
         Represents a collection of dimension associated with a dataset.
-        
+
         Like AttributeManager, an instance of this class is returned when
         accessing the ".dims" property on a Dataset.
     """
@@ -177,8 +179,11 @@ class DimensionManager(base.MappingHDF5, base.CommonStateObject):
 
     def create_scale(self, dset, name=''):
         """ Create a new dimension, from an initial scale.
-        
+
         Provide the dataset and a name for the scale.
         """
-        with phil:
-            h5ds.set_scale(dset.id, self._e(name))
+        warnings.warn("other_ds.dims.create_scale(ds, name) is deprecated. "
+                      "Use ds.make_scale(name) instead.",
+                      H5pyDeprecationWarning, stacklevel=2,
+                     )
+        dset.make_scale(name)

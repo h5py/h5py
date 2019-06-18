@@ -26,4 +26,3 @@ cdef class Reference:
 
 cdef class RegionReference(Reference):
     pass
-

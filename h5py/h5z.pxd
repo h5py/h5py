@@ -8,4 +8,3 @@
 #           and contributor agreement.
 
 from defs cimport *
-

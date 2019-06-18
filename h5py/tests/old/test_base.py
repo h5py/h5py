@@ -18,7 +18,7 @@ from __future__ import absolute_import
 import six
 
 from h5py import File
-from .common import ut, TestCase, unicode_filenames
+from ..common import ut, TestCase, UNICODE_FILENAMES
 
 import numpy as np
 import os
@@ -40,7 +40,7 @@ class TestName(BaseTest):
     """
 
     def test_anonymous(self):
-        """ Anomymous objects have name None """
+        """ Anonymous objects have name None """
         grp = self.f.create_group(None)
         self.assertIs(grp.name, None)
 
@@ -74,10 +74,10 @@ class TestRepr(BaseTest):
         typ = self.f['type']
         self._check_type(typ)
 
-    @ut.skipIf(not unicode_filenames, "Filesystem unicode support required")
+    @ut.skipIf(not UNICODE_FILENAMES, "Filesystem unicode support required")
     def test_file(self):
         """ File object repr() with unicode """
-        fname = tempfile.mktemp(self.USTRING+six.u('.hdf5'))
+        fname = tempfile.mktemp(self.USTRING+u'.hdf5')
         try:
             with File(fname,'w') as f:
                 self._check_type(f)
@@ -86,6 +86,3 @@ class TestRepr(BaseTest):
                 os.unlink(fname)
             except Exception:
                 pass
-
-        
-

@@ -61,5 +61,3 @@ Other flags
 .. data:: DISABLE_EDC
 .. data:: ENABLE_EDC
 .. data:: NO_EDC
-
-

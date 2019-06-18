@@ -9,14 +9,11 @@
 
 from __future__ import absolute_import
 
-try:
-    import unittest2 as ut
-except ImportError:
-    import unittest as ut
-
 from h5py import _objects as o
 
-class TestObjects(ut.TestCase):
+from ..common import TestCase
+
+class TestObjects(TestCase):
 
     def test_invalid(self):
         # Check for segfault on close
@@ -39,4 +36,3 @@ class TestObjects(ut.TestCase):
         oid = o.ObjectID(42)
         with self.assertRaises(TypeError):
             hash(oid)
-

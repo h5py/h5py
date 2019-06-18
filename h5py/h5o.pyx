@@ -135,7 +135,7 @@ cdef class ObjInfo(_ObjInfo):
 
 @with_phil
 def get_info(ObjectID loc not None, char* name=NULL, int index=-1, *,
-        char* obj_name='.', int index_type=H5_INDEX_NAME, int order=H5_ITER_NATIVE,
+        char* obj_name='.', int index_type=H5_INDEX_NAME, int order=H5_ITER_INC,
         PropID lapl=None):
     """(ObjectID loc, STRING name=, INT index=, **kwds) => ObjInfo
 
@@ -151,7 +151,7 @@ def get_info(ObjectID loc not None, char* name=NULL, int index=-1, *,
 
     INT index_type (h5.INDEX_NAME)
 
-    INT order (h5.ITER_NATIVE)
+    INT order (h5.ITER_INC)
     """
     cdef ObjInfo info
     info = ObjInfo()
@@ -308,7 +308,7 @@ cdef herr_t cb_obj_simple(hid_t obj, const char* name, const H5O_info_t *info, v
 
 @with_phil
 def visit(ObjectID loc not None, object func, *,
-          int idx_type=H5_INDEX_NAME, int order=H5_ITER_NATIVE,
+          int idx_type=H5_INDEX_NAME, int order=H5_ITER_INC,
           char* obj_name=".", PropID lapl=None, bint info=0):
     """(ObjectID loc, CALLABLE func, **kwds) => <Return value from func>
 
@@ -336,7 +336,7 @@ def visit(ObjectID loc not None, object func, *,
     INT idx_type (h5.INDEX_NAME)
         What indexing strategy to use
 
-    INT order (h5.ITER_NATIVE)
+    INT order (h5.ITER_INC)
         Order in which iteration occurs
 
     Compatibility note:  No callback is executed for the starting path ("."),
@@ -356,11 +356,3 @@ def visit(ObjectID loc not None, object func, *,
         <H5_iter_order_t>order, cfunc, <void*>visit, pdefault(lapl))
 
     return visit.retval
-
-
-
-
-
-
-
-

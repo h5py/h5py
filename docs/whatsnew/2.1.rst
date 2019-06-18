@@ -6,7 +6,7 @@ Dimension scales
 
 H5py now supports the Dimension Scales feature of HDF5!  Thanks to Darren
 Dale for implementing this.  You can find more information on using scales
-in the :ref:`dimensionscales` section of the docs.
+in the :ref:`dimension_scales` section of the docs.
 
 Unicode strings allowed in attributes
 -------------------------------------
@@ -47,15 +47,3 @@ Bug fixes
     * Highlevel objects will now complain if you try to bind them to the wrong
       HDF5 object types (issue 191)
     * Unit tests can now be run after installation (issue 201)
-
-
-
-
-
-
-
-
-
-
-
-

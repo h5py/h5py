@@ -1,13 +1,13 @@
 /***** Preamble block *********************************************************
-* 
+*
 * This file is part of h5py, a low-level Python interface to the HDF5 library.
-* 
+*
 * Copyright (C) 2008 Andrew Collette
 * http://h5py.alfven.org
 * License: BSD  (See LICENSE.txt for full license)
-* 
+*
 * $Date$
-* 
+*
 ****** End preamble block ****************************************************/
 
 /*
@@ -42,7 +42,7 @@
 
 #endif
 
-/*  Deal with the mutiple definitions for H5Z_class_t.
+/*  Deal with the multiple definitions for H5Z_class_t.
     Note: Only HDF5 1.6 and 1.8 are supported.
 
     (1) The old class should always be used for HDF5 1.6
@@ -54,7 +54,7 @@
 #if H5_VERS_MAJOR == 1 && H5_VERS_MINOR == 8 && (H5_VERS_RELEASE < 3 || !H5_USE_16_API)
 #define H5PY_H5Z_NEWCLS 1
 #else
-#define H5PY_H5Z_NEWCLS 0   
+#define H5PY_H5Z_NEWCLS 0
 #endif
 
 size_t lzf_filter(unsigned flags, size_t cd_nelmts,
@@ -209,7 +209,7 @@ size_t lzf_filter(unsigned flags, size_t cd_nelmts,
 #endif
 
         while(!status){
-            
+
             free(outbuf);
             outbuf = malloc(outbuf_size);
 
@@ -250,7 +250,7 @@ size_t lzf_filter(unsigned flags, size_t cd_nelmts,
         *buf_size = outbuf_size;
 
         return status;  /* Size of compressed/decompressed data */
-    } 
+    }
 
     failed:
 
@@ -258,16 +258,3 @@ size_t lzf_filter(unsigned flags, size_t cd_nelmts,
     return 0;
 
 } /* End filter function */
-
-
-
-
-
-
-
-
-
-
-
-
-

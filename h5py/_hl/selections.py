@@ -34,7 +34,7 @@ def select(shape, args, dsid):
     args
         Either a single argument or a tuple of arguments.  See below for
         supported classes of argument.
-    
+
     dsid
         A h5py.h5d.DatasetID instance representing the source dataset.
 
@@ -67,7 +67,7 @@ def select(shape, args, dsid):
                 raise TypeError("Mismatched selection shape")
             return arg
 
-        elif isinstance(arg, np.ndarray):
+        elif isinstance(arg, np.ndarray) and arg.dtype.kind == 'b':
             sel = PointSelection(shape)
             sel[arg]
             return sel
@@ -76,18 +76,20 @@ def select(shape, args, dsid):
             sid = h5r.get_region(arg, dsid)
             if shape != sid.shape:
                 raise TypeError("Reference shape does not match dataset shape")
-                
+
             return Selection(shape, spaceid=sid)
 
     for a in args:
         if not isinstance(a, slice) and a is not Ellipsis:
             try:
                 int(a)
+                if isinstance(a, np.ndarray) and a.shape == (1,):
+                    raise Exception()
             except Exception:
                 sel = FancySelection(shape)
                 sel[args]
                 return sel
-    
+
     sel = SimpleSelection(shape)
     sel[args]
     return sel
@@ -121,7 +123,7 @@ class Selection(object):
         Base class for HDF5 dataspace selections.  Subclasses support the
         "selection protocol", which means they have at least the following
         members:
-        
+
         __init__(shape)   => Create a new selection on "shape"-tuple
         __getitem__(args) => Perform a selection with the range specified.
                              What args are allowed depends on the
@@ -129,7 +131,7 @@ class Selection(object):
 
         id (read-only) =>      h5py.h5s.SpaceID instance
         shape (read-only) =>   The shape of the dataspace.
-        mshape  (read-only) => The shape of the selection region. 
+        mshape  (read-only) => The shape of the selection region.
                                Not guaranteed to fit within "shape", although
                                the total number of points is less than
                                product(shape).
@@ -249,7 +251,7 @@ class SimpleSelection(Selection):
 
         if not isinstance(args, tuple):
             args = (args,)
-  
+
         if self.shape == ():
             if len(args) > 0 and args[0] not in (Ellipsis, ()):
                 raise TypeError("Invalid index for scalar dataset (only ..., () allowed)")
@@ -294,7 +296,13 @@ class SimpleSelection(Selection):
                 if t == 1 or count[-idx] == t:
                     tshape.append(t)
                 else:
-                    raise TypeError("Can't broadcast %s -> %s" % (target_shape, count))
+                    raise TypeError("Can't broadcast %s -> %s" % (target_shape, self.mshape))
+
+        if any([n > 1 for n in target]):
+            # All dimensions from target_shape should either have been popped
+            # to match the selection shape, or be 1.
+            raise TypeError("Can't broadcast %s -> %s" % (target_shape, self.mshape))
+
         tshape.reverse()
         tshape = tuple(tshape)
 
@@ -353,7 +361,9 @@ class FancySelection(Selection):
                 except TypeError:
                     pass
                 else:
-                    if sorted(arg) != list(arg):
+                    list_arg = list(arg)
+                    adjacent = zip(list_arg[:-1], list_arg[1:])
+                    if any(fst >= snd for fst, snd in adjacent):
                         raise TypeError("Indexing elements must be in increasing order")
 
         if len(sequenceargs) > 1:
@@ -365,15 +375,24 @@ class FancySelection(Selection):
         if not all(len(x) == vectorlength for x in sequenceargs.values()):
             raise TypeError("All sequence arguments must have the same length %s" % sequenceargs)
 
-        # Now generate a vector of selection lists,
+        # Now generate a vector of simple selection lists,
         # consisting only of slices and ints
+        # e.g. [0:5, [1, 3]] is expanded to [[0:5, 1], [0:5, 3]]
 
-        argvector = []
-        for idx in xrange(vectorlength):
+        if vectorlength > 0:
+            argvector = []
+            for idx in xrange(vectorlength):
+                entry = list(args)
+                for position, seq in six.iteritems(sequenceargs):
+                    entry[position] = seq[idx]
+                argvector.append(entry)
+        else:
+            # Empty sequence: translate to empty slice to get the correct shape
+            # [0:5, []] -> [0:5, 0:0]
             entry = list(args)
-            for position, seq in six.iteritems(sequenceargs):
-                entry[position] = seq[idx]
-            argvector.append(entry)
+            for position in sequenceargs:
+                entry[position] = slice(0, 0)
+            argvector = [entry]
 
         # "OR" all these selection lists together to make the final selection
 
@@ -390,9 +409,9 @@ class FancySelection(Selection):
             if idx in sequenceargs:
                 mshape[idx] = len(sequenceargs[idx])
             elif scalar[idx]:
-                mshape[idx] = 0
+                mshape[idx] = -1
 
-        self._mshape = tuple(x for x in mshape if x != 0)
+        self._mshape = tuple(x for x in mshape if x >= 0)
 
     def broadcast(self, target_shape):
         if not target_shape == self.mshape:
@@ -474,14 +493,15 @@ def _translate_slice(exp, length):
         for use with the hyperslab selection routines
     """
     start, stop, step = exp.indices(length)
-        # Now if step > 0, then start and stop are in [0, length]; 
-        # if step < 0, they are in [-1, length - 1] (Python 2.6b2 and later; 
+        # Now if step > 0, then start and stop are in [0, length];
+        # if step < 0, they are in [-1, length - 1] (Python 2.6b2 and later;
         # Python issue 3004).
 
     if step < 1:
         raise ValueError("Step must be >= 1 (got %d)" % step)
     if stop < start:
-        raise ValueError("Reverse-order selections are not allowed")
+        # list/tuple and numpy consider stop < start to be an empty selection
+        return 0, 0, 1
 
     count = 1 + (stop - start - 1) // step
 
@@ -491,7 +511,7 @@ def guess_shape(sid):
     """ Given a dataspace, try to deduce the shape of the selection.
 
     Returns one of:
-        * A tuple with the selection shape, same length as the dataspace 
+        * A tuple with the selection shape, same length as the dataspace
         * A 1D selection shape for point-based and multiple-hyperslab selections
         * None, for unselected scalars and for NULL dataspaces
     """
@@ -576,6 +596,3 @@ def guess_shape(sid):
         return (N,)
 
     return shape
-
-
-

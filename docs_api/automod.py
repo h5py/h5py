@@ -11,7 +11,7 @@ from functools import partial
 role_expr = re.compile(r"(:.+:(?:`.+`)?)")
 
 def safe_replace(istr, expr, rpl):
-    """ Perform a role-safe replacement of all occurances of "expr", using
+    """ Perform a role-safe replacement of all occurrences of "expr", using
         the callable "rpl".
     """
     outparts = []
@@ -49,11 +49,11 @@ class_exprs = { "ObjectID": "h5py.h5.ObjectID",
 
 
 try:
-    class_exprs = dict( 
+    class_exprs = dict(
         (re.compile(class_base % x.replace(" ",r"\s"), re.VERBOSE), y) \
         for x, y in class_exprs.iteritems() )
 except AttributeError:
-    class_exprs = dict( 
+    class_exprs = dict(
         (re.compile(class_base % x.replace(" ",r"\s"), re.VERBOSE), y) \
         for x, y in class_exprs.items() )
 
@@ -64,9 +64,14 @@ def replace_class(istr):
         pre, name, post = match.group('pre', 'name', 'post')
         return '%s:class:`%s <%s>`%s' % (pre, name, target, post)
 
-    for expr, target in class_exprs.iteritems():
-        rpl2 = partial(rpl, target)
-        istr = safe_replace(istr, expr, rpl2)
+    try:
+        for expr, target in class_exprs.iteritems():
+            rpl2 = partial(rpl, target)
+            istr = safe_replace(istr, expr, rpl2)
+    except AttributeError:
+         for expr, target in class_exprs.items():
+            rpl2 = partial(rpl, target)
+            istr = safe_replace(istr, expr, rpl2)
 
     return istr
 
@@ -83,7 +88,7 @@ const_exclude = "|".join(const_exclude)
 
 const_expr = re.compile(r"""
 (?P<pre>
-  (?:^|\s+)                   # Must be preceeded by whitespace or string start
+  (?:^|\s+)                   # Must be preceded by whitespace or string start
   \W?                         # May have punctuation ( (CONST) or "CONST" )
   (?!%s)                      # Exclude known list of non-constant objects
 )
@@ -93,7 +98,7 @@ const_expr = re.compile(r"""
 (?P<post>
   \W?                         # May have trailing punctuation
   (?:$|\s+)                   # Must be followed by whitespace or end of string
-)                      
+)
 """ % const_exclude, re.VERBOSE)
 
 def replace_constant(istr, current_module):
@@ -125,7 +130,7 @@ def replace_constant(istr, current_module):
 
 mod_expr = re.compile(r"""
 (?P<pre>
-  (?:^|\s+)                 # Must be preceeded by whitespace
+  (?:^|\s+)                 # Must be preceded by whitespace
   \W?                       # Optional opening paren/quote/whatever
 )
 (?!h5py)                    # Don't match the package name
@@ -261,4 +266,3 @@ def setup(spx):
 
     spx.connect('autodoc-process-signature', proc_sig)
     spx.connect('autodoc-process-docstring', proc_doc)
-

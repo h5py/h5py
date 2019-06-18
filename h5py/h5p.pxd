@@ -49,7 +49,7 @@ cdef class PropDCID(PropOCID):
     """ Dataset creation property list """
     pass
 
-cdef class PropFCID(PropCreateID):
+cdef class PropFCID(PropOCID):
     """ File creation property list """
     pass
 

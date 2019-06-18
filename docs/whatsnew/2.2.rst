@@ -6,7 +6,7 @@ Support for Parallel HDF5
 -------------------------
 
 On UNIX platforms, you can now take advantage of MPI and Parallel HDF5.
-Cython, ``mpi4py`` and an MPI-enabled build of HDF5 are required..  
+Cython, ``mpi4py`` and an MPI-enabled build of HDF5 are required..
 See :ref:`parallel` in the documentation for details.
 
 
@@ -98,4 +98,3 @@ The method ``Group.move`` allows this to be performed in one step::
     >>> f.move('a', 'b')
 
 Both the source and destination must be in the same file.
-

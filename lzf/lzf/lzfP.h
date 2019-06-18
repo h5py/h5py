@@ -1,16 +1,16 @@
 /*
  * Copyright (c) 2000-2007 Marc Alexander Lehmann <schmorp@schmorp.de>
- * 
+ *
  * Redistribution and use in source and binary forms, with or without modifica-
  * tion, are permitted provided that the following conditions are met:
- * 
+ *
  *   1.  Redistributions of source code must retain the above copyright notice,
  *       this list of conditions and the following disclaimer.
- * 
+ *
  *   2.  Redistributions in binary form must reproduce the above copyright
  *       notice, this list of conditions and the following disclaimer in the
  *       documentation and/or other materials provided with the distribution.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MER-
  * CHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO
@@ -99,7 +99,7 @@
 
 /*
  * Avoid assigning values to errno variable? for some embedding purposes
- * (linux kernel for example), this is neccessary. NOTE: this breaks
+ * (linux kernel for example), this is necessary. NOTE: this breaks
  * the documentation in lzf.h.
  */
 #ifndef AVOID_ERRNO
@@ -107,7 +107,7 @@
 #endif
 
 /*
- * Wether to pass the LZF_STATE variable as argument, or allocate it
+ * Whether to pass the LZF_STATE variable as argument, or allocate it
  * on the stack. For small-stack environments, define this to 1.
  * NOTE: this breaks the prototype in lzf.h.
  */
@@ -116,11 +116,11 @@
 #endif
 
 /*
- * Wether to add extra checks for input validity in lzf_decompress
+ * Whether to add extra checks for input validity in lzf_decompress
  * and return EINVAL if the input stream has been corrupted. This
  * only shields against overflowing the input buffer and will not
  * detect most corrupted streams.
- * This check is not normally noticable on modern hardware
+ * This check is not normally noticeable on modern hardware
  * (<1% slowdown), but might slow down older cpus considerably.
  */
 
@@ -163,4 +163,3 @@ typedef const u8 *LZF_STATE[1 << (HLOG)];
 #endif
 
 #endif
-

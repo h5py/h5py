@@ -45,7 +45,7 @@ opening any other object:
 Using region references
 -----------------------
 
-Region references always contain a selection.  You create them using the 
+Region references always contain a selection.  You create them using the
 dataset property "regionref" and standard NumPy slicing syntax:
 
     >>> myds = myfile.create_dataset('dset', (200,200))
@@ -58,15 +58,9 @@ dataset:
 
     >>> subset = myds[regref]
 
-There is one complication; since HDF5 region references don't express shapes
-the same way as NumPy does, the data returned will be "flattened" into a
-1-D array:
-
-    >>> subset.shape
-    (50,)
-
-This is similar to the behavior of NumPy's fancy indexing, which returns
-a 1D array for selections which don't conform to a regular grid.
+For selections which don't conform to a regular grid, h5py copies the behavior
+of NumPy's fancy indexing, which returns a 1D array. Note that for h5py release
+before 2.2, h5py always returns a 1D array.
 
 In addition to storing a selection, region references inherit from object
 references, and can be used anywhere an object reference is accepted.  In this
@@ -83,20 +77,21 @@ are represented with the "object" dtype (kind 'O').  A small amount of
 metadata attached to the dtype tells h5py to interpret the data as containing
 reference objects.
 
-H5py contains a convenience function to create these "hinted dtypes" for you:
+These dtypes are available from h5py for references and region references:
 
-    >>> ref_dtype = h5py.special_dtype(ref=h5py.Reference)
-    >>> type(ref_dtype)
+    >>> type(h5py.ref_dtype)
     <type 'numpy.dtype'>
     >>> ref_dtype.kind
     'O'
+    >>> type(h5py.regionref_dtype)
+    <type 'numpy.dtype'>
 
 The types accepted by this "ref=" keyword argument are h5py.Reference (for
 object references) and h5py.RegionReference (for region references).
 
 To create an array of references, use this dtype as you normally would:
 
-    >>> ref_dataset = myfile.create_dataset("MyRefs", (100,), dtype=ref_dtype)
+    >>> ref_dataset = myfile.create_dataset("MyRefs", (100,), dtype=h5py.ref_dtype)
 
 You can read from and write to the array as normal:
 
@@ -125,5 +120,3 @@ indicate whether or not it is null:
     >>> nullref = ref_dataset[50]
     >>> print bool(nullref)
     False
-
-

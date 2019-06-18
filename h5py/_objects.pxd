@@ -29,4 +29,3 @@ cdef int is_h5py_obj_valid(ObjectID obj)
 # h5p
 # h5d, h5a, h5f, h5g
 # h5l
-

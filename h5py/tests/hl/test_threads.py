@@ -24,13 +24,13 @@ class TestErrorPrinting(TestCase):
     """
         Verify the error printing is squashed in all threads.
     """
-    
+
     def test_printing(self):
-        """ No console messages should be shown from containership tests """
+        """ No console messages should be shown from membership tests """
         # Unfortunately we can't have this test assert anything, as
         # HDF5 writes directly to stderr.  But it will show up in the
         # console output.
-    
+
         import threading
 
         def test():
@@ -46,9 +46,9 @@ class TestErrorPrinting(TestCase):
 
     def test_attr_printing(self):
         """ No console messages should be shown for non-existing attributes """
-        
+
         def test():
-        
+
             with h5py.File(self.mktemp(), 'w') as newfile:
                 newfile['newdata'] = [1,2,3]
                 try:
