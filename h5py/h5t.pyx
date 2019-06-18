@@ -1371,8 +1371,9 @@ def _get_float_dtype_to_hdf5():
     float_be = {}
     h5_be_list = [IEEE_F16BE, IEEE_F32BE, IEEE_F64BE, IEEE_F128BE,
                   LDOUBLE_BE]
-    h5_le_list = [IEEE_F16LE, IEEE_F32LE, IEEE_F64LE, IEEE_F128LE,
-                  LDOUBLE_LE]
+    h5_le_list = [IEEE_F16LE, IEEE_F32LE, IEEE_F64LE, IEEE_F128LE]
+    if MACHINE != 'ppc64le':
+        h5_le_list.append(LDOUBLE_LE)
     for ftype_, finfo, size in _available_ftypes:
         nmant, maxexp, minexp = _correct_float_info(ftype_, finfo)
         for h5type in h5_be_list:
