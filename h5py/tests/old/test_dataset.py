@@ -24,6 +24,10 @@ import six
 
 import numpy as np
 
+import platform
+
+import pytest 
+
 from ..common import ut, TestCase
 from h5py import File, Group, Dataset
 from h5py._hl.base import is_empty_dataspace
@@ -91,6 +95,8 @@ class TestCreateShape(BaseDataset):
     def test_long_double(self):
         """ Confirm that the default dtype is float """
         dset = self.f.create_dataset('foo', (63,), dtype=np.longdouble)
+        if platform.machine() in ['ppc64le']:
+            pytest.xfail("Storage of long double deactivated on %s"%platform.machine())
         self.assertEqual(dset.dtype, np.longdouble)
 
     @ut.skipIf(not hasattr(np, "complex256"), "No support for complex256")

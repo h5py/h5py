@@ -102,13 +102,16 @@ class TestTypes(BaseAttrs):
 
     def test_float(self):
         """ Storage of floating point types """
-        dtypes = tuple(np.dtype(x) for x in ('<f4','>f4','<f8','>f8'))
+        dtypes = tuple(np.dtype(x) for x in ('<f4','>f4','>f8','<f8'))
 
         for dt in dtypes:
             data = np.ndarray((1,), dtype=dt)
             data[...] = 42.3
             self.f.attrs['x'] = data
             out = self.f.attrs['x']
+            #TODO: Clean up after issue addressed !
+            print("dtype: ", out.dtype, dt)
+            print("value: ", out, data)
             self.assertEqual(out.dtype, dt)
             self.assertArrayEqual(out, data)
 
@@ -121,6 +124,8 @@ class TestTypes(BaseAttrs):
             data[...] = -4.2j+35.9
             self.f.attrs['x'] = data
             out = self.f.attrs['x']
+            print("dtype: ", out.dtype, dt)
+            print("value: ", out, data)
             self.assertEqual(out.dtype, dt)
             self.assertArrayEqual(out, data)
 
