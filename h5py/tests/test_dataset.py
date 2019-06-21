@@ -600,12 +600,12 @@ class TestExternal(BaseDataset):
         self.f.create_dataset('foo', (6, 100),
                               external=pathlib.Path(self.mktemp()))
 
-    def test_multi(self):
-        """ External argument may contain multiple tuples """
+    def test_iter_multi(self):
+        """ External argument may be an iterable of multiple tuples """
 
         ext_file = self.mktemp()
         N = 100
-        external = [(ext_file, x * 1000, 1000) for x in range(N)]
+        external = iter((ext_file, x * 1000, 1000) for x in range(N))
         dset = self.f.create_dataset('poo', (6, 100), external=external)
         assert len(dset.external) == N
 
