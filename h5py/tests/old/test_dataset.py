@@ -24,6 +24,10 @@ import six
 
 import numpy as np
 
+import platform
+
+import pytest
+
 from ..common import ut, TestCase
 from h5py import File, Group, Dataset
 from h5py._hl.base import is_empty_dataspace
@@ -91,6 +95,8 @@ class TestCreateShape(BaseDataset):
     def test_long_double(self):
         """ Confirm that the default dtype is float """
         dset = self.f.create_dataset('foo', (63,), dtype=np.longdouble)
+        if platform.machine() in ['ppc64le']:
+            pytest.xfail("Storage of long double deactivated on %s" % platform.machine())
         self.assertEqual(dset.dtype, np.longdouble)
 
     @ut.skipIf(not hasattr(np, "complex256"), "No support for complex256")
@@ -444,8 +450,8 @@ class TestCreateScaleOffset(BaseDataset):
 
         scalefac = 4
         shape = (100, 300)
-        range = 20*10**scalefac
-        testdata = (np.random.rand(*shape)-0.5)*range
+        range = 20 * 10 ** scalefac
+        testdata = (np.random.rand(*shape) - 0.5) * range
 
         dset = self.f.create_dataset('foo', shape, dtype=float, scaleoffset=scalefac)
 
@@ -460,7 +466,7 @@ class TestCreateScaleOffset(BaseDataset):
         readdata = self.f['foo'][...]
 
         # Test that data round-trips to requested precision
-        self.assertArrayEqual(readdata, testdata, precision=10**(-scalefac))
+        self.assertArrayEqual(readdata, testdata, precision=10 ** (-scalefac))
 
         # Test that the filter is actually active (i.e. compression is lossy)
         assert not (readdata == testdata).all()
@@ -470,7 +476,7 @@ class TestCreateScaleOffset(BaseDataset):
 
         nbits = 12
         shape = (100, 300)
-        testdata = np.random.randint(0, 2**nbits-1, size=shape)
+        testdata = np.random.randint(0, 2 ** nbits - 1, size=shape)
 
         # Create dataset; note omission of nbits (for library-determined precision)
         dset = self.f.create_dataset('foo', shape, dtype=int, scaleoffset=True)
@@ -491,7 +497,7 @@ class TestCreateScaleOffset(BaseDataset):
 
         nbits = 12
         shape = (100, 300)
-        testdata = np.random.randint(0, 2**nbits, size=shape)
+        testdata = np.random.randint(0, 2 ** nbits, size=shape)
 
         dset = self.f.create_dataset('foo', shape, dtype=int, scaleoffset=nbits)
 
@@ -511,7 +517,7 @@ class TestCreateScaleOffset(BaseDataset):
 
         nbits = 12
         shape = (100, 300)
-        testdata = np.random.randint(0, 2**(nbits+1)-1, size=shape)
+        testdata = np.random.randint(0, 2 ** (nbits + 1) - 1, size=shape)
 
         dset = self.f.create_dataset('foo', shape, dtype=int, scaleoffset=nbits)
 
@@ -569,7 +575,7 @@ class TestExternal(BaseDataset):
         self.f.create_dataset('car', shape, external=[ext_file, 0, h5f.UNLIMITED])
 
         N = 100
-        external = [(ext_file, x*1000, (x+1)*1000) for x in range(0,N)]
+        external = [(ext_file, x * 1000, (x + 1) * 1000) for x in range(0, N)]
         dset = self.f.create_dataset('poo', shape, external=external)
         assert len(dset.external) == N
 
@@ -719,14 +725,14 @@ class TestLen(BaseDataset):
 
     def test_len_big(self):
         """ Python len() vs Dataset.len() """
-        dset = self.f.create_dataset('foo', (2**33, 15))
-        self.assertEqual(dset.shape, (2**33, 15))
-        if sys.maxsize == 2**31-1:
+        dset = self.f.create_dataset('foo', (2 ** 33, 15))
+        self.assertEqual(dset.shape, (2 ** 33, 15))
+        if sys.maxsize == 2 ** 31 - 1:
             with self.assertRaises(OverflowError):
                 len(dset)
         else:
-            self.assertEqual(len(dset), 2**33)
-        self.assertEqual(dset.len(), 2**33)
+            self.assertEqual(len(dset), 2 ** 33)
+        self.assertEqual(dset.len(), 2 ** 33)
 
 
 class TestIter(BaseDataset):
@@ -861,17 +867,17 @@ class TestCompound(BaseDataset):
     def test_rt(self):
         """ Compound types are read back in correct order (issue 236)"""
 
-        dt = np.dtype( [ ('weight', np.float64),
+        dt = np.dtype([ ('weight', np.float64),
                              ('cputime', np.float64),
                              ('walltime', np.float64),
                              ('parents_offset', np.uint32),
                              ('n_parents', np.uint32),
                              ('status', np.uint8),
-                             ('endpoint_type', np.uint8), ] )
+                             ('endpoint_type', np.uint8), ])
 
         testdata = np.ndarray((16,), dtype=dt)
         for key in dt.fields:
-            testdata[key] = np.random.random((16,))*100
+            testdata[key] = np.random.random((16,)) * 100
 
         self.f['test'] = testdata
         outdata = self.f['test'][...]
@@ -879,12 +885,12 @@ class TestCompound(BaseDataset):
         self.assertEqual(outdata.dtype, testdata.dtype)
 
     def test_assign(self):
-        dt = np.dtype( [ ('weight', (np.float64, 3)),
-                         ('endpoint_type', np.uint8), ] )
+        dt = np.dtype([ ('weight', (np.float64, 3)),
+                         ('endpoint_type', np.uint8), ])
 
         testdata = np.ndarray((16,), dtype=dt)
         for key in dt.fields:
-            testdata[key] = np.random.random(size=testdata[key].shape)*100
+            testdata[key] = np.random.random(size=testdata[key].shape) * 100
 
         ds = self.f.create_dataset('test', (16,), dtype=dt)
         for key in dt.fields:
@@ -894,6 +900,7 @@ class TestCompound(BaseDataset):
 
         self.assertTrue(np.all(outdata == testdata))
         self.assertEqual(outdata.dtype, testdata.dtype)
+
 
 class TestEnum(BaseDataset):
 
@@ -918,7 +925,7 @@ class TestEnum(BaseDataset):
         ds[35, 37] = 42
         ds[1, :] = 1
         self.assertEqual(ds[35, 37], 42)
-        self.assertArrayEqual(ds[1, :], np.array((1,)*100, dtype='i4'))
+        self.assertArrayEqual(ds[1, :], np.array((1,) * 100, dtype='i4'))
 
 
 class TestFloats(BaseDataset):
@@ -939,7 +946,7 @@ class TestFloats(BaseDataset):
         """ Mini-floats round trip """
         self._exectest(np.dtype('float16'))
 
-    #TODO: move these tests to test_h5t
+    # TODO: move these tests to test_h5t
     def test_mini_mapping(self):
         """ Test mapping for float16 """
         if hasattr(np, 'float16'):
@@ -995,7 +1002,7 @@ class TestRegionRefs(BaseDataset):
 
     def setUp(self):
         BaseDataset.setUp(self)
-        self.data = np.arange(100*100).reshape((100, 100))
+        self.data = np.arange(100 * 100).reshape((100, 100))
         self.dset = self.f.create_dataset('x', data=self.data)
         self.dset[...] = self.data
 

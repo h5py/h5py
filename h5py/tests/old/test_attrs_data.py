@@ -26,6 +26,7 @@ from h5py import h5a, h5s, h5t
 from h5py import File
 from h5py._hl.base import is_empty_dataspace
 
+
 class BaseAttrs(TestCase):
 
     def setUp(self):
@@ -34,6 +35,7 @@ class BaseAttrs(TestCase):
     def tearDown(self):
         if self.f:
             self.f.close()
+
 
 class TestScalar(BaseAttrs):
 
@@ -49,13 +51,14 @@ class TestScalar(BaseAttrs):
 
     def test_compound(self):
         """ Compound scalars are read as numpy.void """
-        dt = np.dtype([('a','i'),('b','f')])
-        data = np.array((1,4.2), dtype=dt)
+        dt = np.dtype([('a', 'i'), ('b', 'f')])
+        data = np.array((1, 4.2), dtype=dt)
         self.f.attrs['x'] = data
         out = self.f.attrs['x']
         self.assertIsInstance(out, np.void)
         self.assertEqual(out, data)
         self.assertEqual(out['b'], data['b'])
+
 
 class TestArray(BaseAttrs):
 
@@ -82,6 +85,7 @@ class TestArray(BaseAttrs):
         self.assertEqual(out.shape, (42,))
         self.assertArrayEqual(out, data)
 
+
 class TestTypes(BaseAttrs):
 
     """
@@ -102,23 +106,26 @@ class TestTypes(BaseAttrs):
 
     def test_float(self):
         """ Storage of floating point types """
-        dtypes = tuple(np.dtype(x) for x in ('<f4','>f4','<f8','>f8'))
+        dtypes = tuple(np.dtype(x) for x in ('<f4', '>f4', '>f8', '<f8'))
 
         for dt in dtypes:
             data = np.ndarray((1,), dtype=dt)
             data[...] = 42.3
             self.f.attrs['x'] = data
             out = self.f.attrs['x']
+            # TODO: Clean up after issue addressed !
+            print("dtype: ", out.dtype, dt)
+            print("value: ", out, data)
             self.assertEqual(out.dtype, dt)
             self.assertArrayEqual(out, data)
 
     def test_complex(self):
         """ Storage of complex types """
-        dtypes = tuple(np.dtype(x) for x in ('<c8','>c8','<c16','>c16'))
+        dtypes = tuple(np.dtype(x) for x in ('<c8', '>c8', '<c16', '>c16'))
 
         for dt in dtypes:
             data = np.ndarray((1,), dtype=dt)
-            data[...] = -4.2j+35.9
+            data[...] = -4.2j + 35.9
             self.f.attrs['x'] = data
             out = self.f.attrs['x']
             self.assertEqual(out.dtype, dt)
@@ -166,7 +173,7 @@ class TestTypes(BaseAttrs):
         self.f.attrs['x'] = b'Hello'
         out = self.f.attrs['x']
 
-        self.assertEqual(out,b'Hello')
+        self.assertEqual(out, b'Hello')
         self.assertEqual(type(out), bytes)
 
         aid = h5py.h5a.open(self.f.id, b"x")
