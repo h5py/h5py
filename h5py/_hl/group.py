@@ -126,6 +126,9 @@ class Group(HLObject, MutableMappingHDF5):
             designating that the dataset will be stored in one or more
             non-HDF5 files external to the HDF5 file.  Adds each listed tuple
             of (name, offset, size) to the dataset's list of external files.
+            Each name must be a str, bytes, or os.PathLike; each offset and
+            size, an integer.  If only a name is given instead of a list of
+            tuples, it is equivalent to [(name, 0, h5py.h5f.UNLIMITED)].
         """
         if 'track_order' not in kwds:
             kwds['track_order'] = h5.get_config().track_order

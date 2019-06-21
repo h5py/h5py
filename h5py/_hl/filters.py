@@ -81,21 +81,23 @@ def _external_entry(entry):
         raise TypeError(
             "Each external entry must be a tuple of (name, offset, size)")
     name, offset, size = entry  # raise ValueError without three elements
-    if not isinstance(name, str):
-        raise TypeError("External entry's name must be a string")
+    name = filename_encode(name)
     if not isinstance(offset, int):
         raise TypeError("External entry's offset must be an integer")
     if not isinstance(size, int):
         raise TypeError("External entry's size must be an integer")
-    return (filename_encode(name), offset, size)
+    return (name, offset, size)
 
 def _normalize_external(external):
     """ Normalize external into a well-formed list of tuples and return. """
     if external is None:
         return []
-    elif isinstance(external, str):
-        # accept a solitary file string
+    try:
+        # Accept a solitary name---a str, bytes, or os.PathLike acceptable to
+        # filename_encode.
         return [_external_entry((external, 0, h5f.UNLIMITED))]
+    except TypeError:
+        pass
     if not isinstance(external, (list)):
         raise TypeError('external should be a list of tuples of (name, offset, size)')
     # check and rebuild each list entry to be well-formed

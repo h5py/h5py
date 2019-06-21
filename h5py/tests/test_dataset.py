@@ -16,6 +16,10 @@
     2. Type conversion for read and write (currently untested)
 """
 
+try:
+    import pathlib
+except ImportError:
+    pathlib = None
 import sys
 import numpy as np
 import platform
@@ -584,10 +588,17 @@ class TestExternal(BaseDataset):
             contents = fid.read()
         assert contents == testdata.tostring()
 
-    def test_name(self):
-        """ External argument may be a file name only """
+    def test_name_str(self):
+        """ External argument may be a file name str only """
 
         self.f.create_dataset('foo', (6, 100), external=self.mktemp())
+
+    @ut.skipIf(pathlib is None, "pathlib module not installed")
+    def test_name_path(self):
+        """ External argument may be a file name path only """
+
+        self.f.create_dataset('foo', (6, 100),
+                              external=pathlib.Path(self.mktemp()))
 
     def test_multi(self):
         """ External argument may contain multiple tuples """
