@@ -16,7 +16,8 @@ except ImportError:
 
 from ..common import ut, TestCase
 
-UNSUPPORTED_LONG_DOUBLE = ('i386', 'i486','i586','i686', 'ppc64le')
+UNSUPPORTED_LONG_DOUBLE = ('i386', 'i486', 'i586', 'i686', 'ppc64le')
+
 
 class TestVlen(TestCase):
 
@@ -51,10 +52,10 @@ class TestVlen(TestCase):
             ('foo', vidt),
             ('logical', np.bool)])
         vb = f.create_dataset('dt_vb', shape=(4,), dtype=dt_vb)
-        data = np.array([(a([1,2,3]), True),
+        data = np.array([(a([1, 2, 3]), True),
                          (a([1    ]), False),
-                         (a([1,5  ]), True),
-                         (a([],    ), False),],
+                         (a([1, 5  ]), True),
+                         (a([],), False), ],
                      dtype=dt_vb)
         vb[:] = data
         actual = f['dt_vb'][:]
@@ -77,8 +78,8 @@ class TestVlen(TestCase):
             ('foo', vidt),
             ('bar', vidt)])
         bvv = f.create_dataset('dt_bvv', shape=(2,), dtype=dt_bvv)
-        data = np.array([(True,  a([1,2,3]), a([1,2]) ),
-                         (False, a([]),      a([2,4,6])),],
+        data = np.array([(True, a([1, 2, 3]), a([1, 2])),
+                         (False, a([]), a([2, 4, 6])), ],
                          dtype=bvv)
         bvv[:] = data
         actual = bvv[:]
@@ -99,8 +100,8 @@ class TestVlen(TestCase):
             ('bar', vidt),
             ('switch', eidt)])
         vve = f.create_dataset('dt_vve', shape=(2,), dtype=dt_vve)
-        data = np.array([(a([1,2,3]), a([1,2]),   1),
-                         (a([]),      a([2,4,6]), 0),],
+        data = np.array([(a([1, 2, 3]), a([1, 2]), 1),
+                         (a([]), a([2, 4, 6]), 0), ],
                          dtype=dt_vve)
         vve[:] = data
         actual = vve[:]
@@ -110,16 +111,16 @@ class TestVlen(TestCase):
 
     def test_vlen_enum(self):
         fname = self.mktemp()
-        arr1 = [[1],[1,2]]
+        arr1 = [[1], [1, 2]]
         dt1 = h5py.vlen_dtype(h5py.enum_dtype(dict(foo=1, bar=2), 'i'))
 
-        with h5py.File(fname,'w') as f:
+        with h5py.File(fname, 'w') as f:
             df1 = f.create_dataset('test', (len(arr1),), dtype=dt1)
             df1[:] = np.array(arr1)
 
-        with h5py.File(fname,'r') as f:
-            df2  = f['test']
-            dt2  = df2.dtype
+        with h5py.File(fname, 'r') as f:
+            df2 = f['test']
+            dt2 = df2.dtype
             arr2 = [e.tolist() for e in df2[:]]
 
         self.assertEqual(arr1, arr2)
@@ -184,16 +185,15 @@ class TestOffsets(TestCase):
             [ht.get_member_offset(i) for i in range(ht.get_nmembers())]
         )
 
-
     def test_aligned_data(self):
         dt = np.dtype('i4,f8,i2', align=True)
         data = np.empty(10, dtype=dt)
 
         data['f0'] = np.array(np.random.randint(-100, 100, size=data.size),
-                dtype='i4')
+                              dtype='i4')
         data['f1'] = np.random.rand(data.size)
         data['f2'] = np.array(np.random.randint(-100, 100, size=data.size),
-                dtype='i2')
+                              dtype='i2')
 
         fname = self.mktemp()
 
@@ -203,9 +203,8 @@ class TestOffsets(TestCase):
         with h5py.File(fname, 'r') as f:
             self.assertArrayEqual(f['data'], data)
 
-
     def test_compound_robustness(self):
-        #make an out of order compound type with gaps in it, and larger itemsize than minimum
+        # make an out of order compound type with gaps in it, and larger itemsize than minimum
         # Idea is to be robust to type descriptions we *could* get out of HDF5 files, from custom descriptions
         # of types in addition to numpy's flakey history on unaligned fields with non-standard or padded layouts.
         fields = [
@@ -222,14 +221,14 @@ class TestOffsets(TestCase):
             'names' : extract_index(0, fields),
             'formats' : extract_index(1, fields),
             'offsets' : extract_index(2, fields),
-            #'aligned': False, - already defaults to False
+            # 'aligned': False, - already defaults to False
             'itemsize': itemsize
         })
 
         self.assertTrue(dt.itemsize == itemsize)
         data = np.empty(10, dtype=dt)
 
-        #don't trust numpy struct handling , keep fields out of band incase content insertion is erroneous
+        # don't trust numpy struct handling , keep fields out of band incase content insertion is erroneous
         # yes... this has also been known to happen.
         f1 = np.array([1 + i * 4 for i in range(data.shape[0])], dtype=dt.fields['f1'][0])
         f2 = np.array([2 + i * 4 for i in range(data.shape[0])], dtype=dt.fields['f2'][0])
@@ -240,7 +239,7 @@ class TestOffsets(TestCase):
         data['f1'] = f1
         data['f2'] = f2
 
-        #numpy consistency checks
+        # numpy consistency checks
         self.assertTrue(np.all(data['f0'] == f0c))
         self.assertArrayEqual(data['f3'], f3)
         self.assertArrayEqual(data['f1'], f1)
@@ -253,13 +252,12 @@ class TestOffsets(TestCase):
 
         with h5py.File(fname, 'r') as fd:
             readback = fd['data']
-            self.assertTrue( readback.dtype == dt )
+            self.assertTrue(readback.dtype == dt)
             self.assertArrayEqual(readback, data)
             self.assertTrue(np.all(readback['f0'] == f0c))
             self.assertArrayEqual(readback['f1'], f1)
             self.assertArrayEqual(readback['f2'], f2)
             self.assertArrayEqual(readback['f3'], f3)
-
 
     def test_out_of_order_offsets(self):
         dt = np.dtype({
@@ -270,7 +268,7 @@ class TestOffsets(TestCase):
         data = np.empty(10, dtype=dt)
         data['f1'] = np.random.rand(data.size)
         data['f2'] = np.random.randint(-10, 11, data.size)
-        data['f3'] = np.random.rand(data.size)*-1
+        data['f3'] = np.random.rand(data.size) * -1
 
         fname = self.mktemp()
 
@@ -283,8 +281,7 @@ class TestOffsets(TestCase):
     def test_float_round_tripping(self):
         dtypes = set(f for f in np.typeDict.values()
                      if (np.issubdtype(f, np.floating) or
-                         np.issubdtype(f, np.complexfloating))
-                     )
+                         np.issubdtype(f, np.complexfloating)))
 
         if platform.machine() in UNSUPPORTED_LONG_DOUBLE:
             dtype_dset_map = {str(j): d
