@@ -57,15 +57,17 @@ of supported drivers and their options:
         Buffered I/O using functions from stdio.h.
 
     'core'
-        Memory-map the entire file; all operations are performed in
-        memory and written back out when the file is closed.  Keywords:
+        Store and manipulate the data in memory, and optionally write it
+        back out when the file is closed. Using this with an existing file
+        and a reading mode will read the entire file into memory. Keywords:
 
-        backing_store:  If True (default), save changes to a real file
-                        when closing.  If False, the file exists purely
-                        in memory and is discarded when closed.
+        backing_store:
+          If True (default), save changes to the real file at the specified
+          path on :meth:`~.File.close` or :meth:`~.File.flush`.
+          If False, any changes are discarded when the file is closed.
 
-        block_size:     Increment (in bytes) by which memory is extended.
-                        Default is 64k.
+        block_size:
+          Increment (in bytes) by which memory is extended. Default is 64k.
 
     'family'
         Store the file on disk as a series of fixed-length chunks.  Useful
