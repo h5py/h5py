@@ -128,6 +128,17 @@ class TestVlen(TestCase):
                          h5py.check_enum_dtype(h5py.check_vlen_dtype(dt2)))
 
 
+class TestEmptyVlen(TestCase):
+    def test_write_empty_vlen(self):
+        fname = self.mktemp()
+        with h5py.File(fname, 'w') as f:
+            d = np.core.records.fromarrays([[], []], names='a,b', formats='|V16,O')
+            f = h5py.File('tmp.h5', 'w')
+            dset = f.create_dataset('test', data=d, dtype=[('a', '|V16'), ('b', h5py.special_dtype(vlen=np.float_))])
+            self.assertEqual(dset.size, 0)
+            self.assertEqual(dset[()].dtype, d.dtype)
+
+
 class TestExplicitCast(TestCase):
     def test_f2_casting(self):
         fname = self.mktemp()
