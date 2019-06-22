@@ -740,6 +740,11 @@ cdef herr_t ndarray2vlen(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
 
     elif command == H5T_CONV_CONV:
 
+        # If there are no elements to convert, pdata will not point to
+        # a valid PyObject*, so bail here to prevent accessing the dtype below
+        if nl == 0:
+            return 0
+
         # need to pass element dtype to converter
         memcpy(&pdata_elem, pdata, sizeof(pdata_elem))
         supertype = py_create((<np.ndarray> pdata_elem).dtype)
