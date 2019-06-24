@@ -40,8 +40,12 @@ Deprecations
   silently falling back to read-only depending on permissions. From h5py 3.0,
   the default will be read-only.
 
-  Ideally, code should pass an explicit mode each time a file is opened.
-  If that is not practical, and you want to suppress the deprecation warnings,
+  Ideally, code should pass an explicit mode each time a file is opened::
+
+      h5py.File("example.h5", "r")
+
+  The possible modes are described in :ref:`file_open`.
+  If you want to suppress the deprecation warnings from code you can't modify,
   you can either:
 
    - set ``h5.get_config().default_file_mode = 'r'`` (or another available mode)
