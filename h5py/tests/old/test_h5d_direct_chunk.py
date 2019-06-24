@@ -2,6 +2,7 @@ from __future__ import absolute_import
 
 import h5py
 import numpy
+import numpy.testing
 
 from ..common import ut, TestCase
 
@@ -31,7 +32,7 @@ class TestWriteDirectChunk(TestCase):
         filehandle = h5py.File(filename, "r")
         for i in range(10):
             read_data = filehandle["data"][i]
-            self.assertTrue((array[i] == read_data).all())
+            numpy.testing.assert_array_equal(array[i], read_data)
 
 
 @ut.skipUnless(h5py.version.hdf5_version_tuple >= (1, 10, 2), 'Direct Chunk Reading requires HDF5 >= 1.10.2')
@@ -88,5 +89,5 @@ class TestReadDirectChunk(TestCase):
 
         # checking
         filehandle = h5py.File(filename, "r")
-        dataset = filehandle["created"]
-        self.assertTrue((dataset[...] == frame).all())
+        dataset = filehandle["created"][...]
+        numpy.testing.assert_array_equal(dataset, frame)
