@@ -152,8 +152,9 @@ Your pull request might be accepted right away.  More commonly, the maintainers
 will post comments asking you to fix minor things, like add a few tests, clean
 up the style to be PEP-8 compliant, etc.
 
-The pull request page also shows whether the project builds correctly,
-using Travis CI. Check to see if the build succeeded (takes about 5 minutes),
+The pull request page also shows the results of building and testing the
+modified code on Travis and Appveyor CI.
+Check back after about 30 minutes to see if the build succeeded,
 and if not, try to modify your changes to make it work.
 
 When making changes after creating your pull request, just add commits to
