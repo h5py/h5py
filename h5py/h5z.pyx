@@ -95,5 +95,16 @@ def get_filter_info(int filter_code):
     H5Zget_filter_info(<H5Z_filter_t>filter_code, &flags)
     return flags
 
+
+@with_phil
+def unregister_filter(int filter_code):
+    '''(INT filter_code) => BOOL
+
+    Unregister a filter
+
+    '''
+    return <int>H5Zunregister(<H5Z_filter_t>filter_code) >= 0
+
+
 def _register_lzf():
     register_lzf()

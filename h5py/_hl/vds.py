@@ -39,7 +39,7 @@ class VirtualSource(object):
 
     path_or_dataset
         The path to a file, or an h5py dataset. If a dataset is given,
-        the other parameters are ignored, and the relevant values taken from
+        no other parameters are allowed, as the relevant values are taken from
         the dataset instead.
     name
         The name of the source dataset within the file.
@@ -113,7 +113,7 @@ class VirtualLayout(object):
     dtype
         Numpy dtype or string.
     maxshape
-        The source dataset is resizable up to this shape. Use None for
+        The virtual dataset is resizable up to this shape. Use None for
         axes you want to be unlimited.
     """
     def __init__(self, shape, dtype=None, maxshape=None):

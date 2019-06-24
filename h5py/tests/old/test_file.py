@@ -15,9 +15,9 @@
 
 from __future__ import absolute_import, with_statement
 import pytest
-import os, stat
+import os
+import stat
 from sys import platform
-import tempfile
 
 import six
 
@@ -35,6 +35,7 @@ except ImportError:
 
 
 mpi = h5py.get_config().mpi
+
 
 class TestFileOpen(TestCase):
 
@@ -148,6 +149,7 @@ class TestFileOpen(TestCase):
         with self.assertRaises(ValueError):
             File(self.mktemp(), 'mongoose')
 
+
 class TestModes(TestCase):
 
     """
@@ -170,10 +172,10 @@ class TestModes(TestCase):
         fname1 = self.mktemp()
         fname2 = self.mktemp()
 
-        f1 = File(fname1,'w')
+        f1 = File(fname1, 'w')
         f1.close()
 
-        f2 = File(fname2,'w')
+        f2 = File(fname2, 'w')
         try:
             f2['External'] = h5py.ExternalLink(fname1, '/')
             f3 = f2['External'].file
@@ -182,13 +184,14 @@ class TestModes(TestCase):
             f2.close()
             f3.close()
 
-        f2 = File(fname2,'r')
+        f2 = File(fname2, 'r')
         try:
             f3 = f2['External'].file
             self.assertEqual(f3.mode, 'r')
         finally:
             f2.close()
             f3.close()
+
 
 class TestDrivers(TestCase):
 
@@ -263,7 +266,7 @@ class TestDrivers(TestCase):
             self.assertEqual(f.driver, 'mpio')
 
     @ut.skipUnless(mpi, "Parallel HDF5 required")
-    @ut.skipIf(h5py.version.hdf5_version_tuple < (1,8,9),
+    @ut.skipIf(h5py.version.hdf5_version_tuple < (1, 8, 9),
                "mpio atomic file operations were added in HDF5 1.8.9+")
     def test_mpi_atomic(self):
         """ Enable atomic mode for MPIO driver """
@@ -275,8 +278,11 @@ class TestDrivers(TestCase):
             f.atomic = True
             self.assertTrue(f.atomic)
 
-    #TODO: family driver tests
+    # TODO: family driver tests
 
+
+@ut.skipUnless(h5py.version.hdf5_version_tuple < (1, 10, 2),
+               'Requires HDF5 before 1.10.2')
 class TestLibver(TestCase):
 
     """
@@ -287,18 +293,18 @@ class TestLibver(TestCase):
     def test_default(self):
         """ Opening with no libver arg """
         f = File(self.mktemp(), 'w')
-        self.assertEqual(f.libver, ('earliest','latest'))
+        self.assertEqual(f.libver, ('earliest', 'latest'))
         f.close()
 
     def test_single(self):
         """ Opening with single libver arg """
         f = File(self.mktemp(), 'w', libver='latest')
-        self.assertEqual(f.libver, ('latest','latest'))
+        self.assertEqual(f.libver, ('latest', 'latest'))
         f.close()
 
     def test_multiple(self):
         """ Opening with two libver args """
-        f = File(self.mktemp(), 'w', libver=('earliest','latest'))
+        f = File(self.mktemp(), 'w', libver=('earliest', 'latest'))
         self.assertEqual(f.libver, ('earliest', 'latest'))
         f.close()
 
@@ -308,6 +314,62 @@ class TestLibver(TestCase):
         self.assertEqual(f.libver, ('earliest', 'latest'))
         f.close()
 
+
+@ut.skipIf(h5py.version.hdf5_version_tuple < (1, 10, 2),
+           'Requires HDF5 1.10.2 or later')
+class TestNewLibver(TestCase):
+
+    """
+        Feature: File format compatibility bounds can be specified when
+        opening a file.
+
+        Requirement: HDF5 1.10.2 or later
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        super(TestNewLibver, cls).setUpClass()
+
+        # Current latest library bound label
+        cls.latest = 'v110'
+
+    def test_default(self):
+        """ Opening with no libver arg """
+        f = File(self.mktemp(), 'w')
+        self.assertEqual(f.libver, ('earliest', self.latest))
+        f.close()
+
+    def test_single(self):
+        """ Opening with single libver arg """
+        f = File(self.mktemp(), 'w', libver='latest')
+        self.assertEqual(f.libver, (self.latest, self.latest))
+        f.close()
+
+    def test_single_v108(self):
+        """ Opening with "v108" libver arg """
+        f = File(self.mktemp(), 'w', libver='v108')
+        self.assertEqual(f.libver, ('v108', self.latest))
+        f.close()
+
+    def test_single_v110(self):
+        """ Opening with "v110" libver arg """
+        f = File(self.mktemp(), 'w', libver='v110')
+        self.assertEqual(f.libver, ('v110', self.latest))
+        f.close()
+
+    def test_multiple(self):
+        """ Opening with two libver args """
+        f = File(self.mktemp(), 'w', libver=('earliest', 'v108'))
+        self.assertEqual(f.libver, ('earliest', 'v108'))
+        f.close()
+
+    def test_none(self):
+        """ Omitting libver arg results in maximum compatibility """
+        f = File(self.mktemp(), 'w')
+        self.assertEqual(f.libver, ('earliest', self.latest))
+        f.close()
+
+
 class TestUserblock(TestCase):
 
     """
@@ -316,19 +378,19 @@ class TestUserblock(TestCase):
 
     def test_create_blocksize(self):
         """ User blocks created with w, w-, x and properties work correctly """
-        f = File(self.mktemp(),'w-', userblock_size=512)
+        f = File(self.mktemp(), 'w-', userblock_size=512)
         try:
             self.assertEqual(f.userblock_size, 512)
         finally:
             f.close()
 
-        f = File(self.mktemp(),'x', userblock_size=512)
+        f = File(self.mktemp(), 'x', userblock_size=512)
         try:
             self.assertEqual(f.userblock_size, 512)
         finally:
             f.close()
 
-        f = File(self.mktemp(),'w', userblock_size=512)
+        f = File(self.mktemp(), 'w', userblock_size=512)
         try:
             self.assertEqual(f.userblock_size, 512)
         finally:
@@ -384,7 +446,7 @@ class TestUserblock(TestCase):
 
         pyfile = open(name, 'r+b')
         try:
-            pyfile.write(b'X'*512)
+            pyfile.write(b'X' * 512)
         finally:
             pyfile.close()
 
@@ -396,9 +458,10 @@ class TestUserblock(TestCase):
 
         pyfile = open(name, 'rb')
         try:
-            self.assertEqual(pyfile.read(512), b'X'*512)
+            self.assertEqual(pyfile.read(512), b'X' * 512)
         finally:
             pyfile.close()
+
 
 class TestContextManager(TestCase):
 
@@ -412,6 +475,7 @@ class TestContextManager(TestCase):
             self.assertTrue(fid)
         self.assertTrue(not fid)
 
+
 @ut.skipIf(not UNICODE_FILENAMES, "Filesystem unicode support required")
 class TestUnicode(TestCase):
 
@@ -422,7 +486,7 @@ class TestUnicode(TestCase):
     def test_unicode(self):
         """ Unicode filenames can be used, and retrieved properly via .filename
         """
-        fname = self.mktemp(prefix = six.unichr(0x201a))
+        fname = self.mktemp(prefix=six.unichr(0x201a))
         fid = File(fname, 'w')
         try:
             self.assertEqual(fid.filename, fname)
@@ -433,7 +497,7 @@ class TestUnicode(TestCase):
     def test_unicode_hdf5_python_consistent(self):
         """ Unicode filenames can be used, and seen correctly from python
         """
-        fname = self.mktemp(prefix = six.unichr(0x201a))
+        fname = self.mktemp(prefix=six.unichr(0x201a))
         with File(fname, 'w') as f:
             self.assertTrue(os.path.exists(fname))
 
@@ -441,7 +505,7 @@ class TestUnicode(TestCase):
         """
         Modes 'r' and 'r+' do not create files even when given unicode names
         """
-        fname = self.mktemp(prefix = six.unichr(0x201a))
+        fname = self.mktemp(prefix=six.unichr(0x201a))
         with self.assertRaises(IOError):
             File(fname, 'r')
         with self.assertRaises(IOError):
@@ -479,12 +543,13 @@ class TestFileProperty(TestCase):
 
     def test_mode(self):
         """ Retrieved File objects have a meaningful mode attribute """
-        hfile = File(self.mktemp(),'w')
+        hfile = File(self.mktemp(), 'w')
         try:
             grp = hfile.create_group('foo')
             self.assertEqual(grp.file.mode, hfile.mode)
         finally:
             hfile.close()
+
 
 class TestClose(TestCase):
 
@@ -524,6 +589,7 @@ class TestClose(TestCase):
         f.close()
         f.close()
 
+
 class TestFlush(TestCase):
 
     """
@@ -550,6 +616,7 @@ class TestRepr(TestCase):
         fid.close()
         self.assertIsInstance(repr(fid), six.string_types)
 
+
 class TestFilename(TestCase):
 
     """
@@ -565,6 +632,7 @@ class TestFilename(TestCase):
             self.assertIsInstance(fid.filename, six.text_type)
         finally:
             fid.close()
+
 
 class TestBackwardsCompat(TestCase):
 
@@ -600,6 +668,7 @@ class TestCloseInvalidatesOpenObjectIDs(TestCase):
             self.assertTrue(bool(g2.id))
             self.assertFalse(bool(f1.id))
             self.assertFalse(bool(g1.id))
+
 
 @ut.skipIf(pathlib is None, "pathlib module not installed")
 class TestPathlibSupport(TestCase):

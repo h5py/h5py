@@ -5,6 +5,8 @@
     linking.
 """
 
+from __future__ import print_function
+
 try:
     from setuptools import Extension
 except ImportError:
@@ -14,12 +16,11 @@ import sys
 import os
 import os.path as op
 import subprocess
-from functools import reduce
 import api_gen
 
 
 def localpath(*args):
-    return op.abspath(reduce(op.join, (op.dirname(__file__),)+args))
+    return op.abspath(op.join(op.dirname(__file__), *args))
 
 
 MODULES =  ['defs','_errors','_objects','_proxy', 'h5fd', 'h5z',
@@ -94,7 +95,10 @@ class h5py_build_ext(build_ext):
                     settings['library_dirs'].extend(pkgcfg['library_dirs'])
                     settings['define_macros'].extend(pkgcfg['define_macros'])
             except EnvironmentError:
-                pass
+                if os.name != 'nt':
+                    print("h5py requires pkg-config unless the HDF5 path is explicitly specified",
+                          file=sys.stderr)
+                    raise
             settings['include_dirs'].extend(FALLBACK_PATHS['include_dirs'])
             settings['library_dirs'].extend(FALLBACK_PATHS['library_dirs'])
 

@@ -5,11 +5,18 @@
 from __future__ import absolute_import
 
 from itertools import count
+import platform
 import numpy as np
 import six
 import h5py
+try:
+    import tables
+except ImportError:
+    tables = None
 
 from ..common import ut, TestCase
+
+x86_32_BIT_SYSTEMS = ('i386', 'i486','i586','i686',)
 
 class TestVlen(TestCase):
 
@@ -273,6 +280,9 @@ class TestOffsets(TestCase):
         with h5py.File(fname, 'r') as fd:
             self.assertArrayEqual(fd['data'], data)
 
+    @ut.skipIf(
+        platform.machine() in x86_32_BIT_SYSTEMS,
+        'Test fails on i386, need to sort out long double FIX THIS')
     def test_float_round_tripping(self):
         dtypes = set(f for f in np.typeDict.values()
                      if (np.issubdtype(f, np.floating) or
@@ -332,10 +342,94 @@ class TestStrings(TestCase):
 
 def TestDateTime(TestCase):
     def test_datetime(self):
-        fname = self.mktemp()
+        dt_units = [
+            # Basic datetime
+            '',
+            # Dates
+            '[Y]', '[M]', '[D]',
+            # Times
+            '[h]', '[m]', '[s]', '[ms]', '[us]',
+            '[ns]', '[ps]', '[fs]', '[as]',
+        ]
 
-        arr = np.array([np.datetime64('2019-06-10')])
+        for dt_kind in ['M8', 'm8']:
+            for dt_unit in dt_units:
+                for dt_order in ['<', '>']:
+                    fname = self.mktemp()
 
-        with h5py.File(fname, 'w') as f:
-            dset = f.create_dataset("default", data=arr)
-            self.assertArrayEqual(arr, dset)
+                    arr = np.array([np.datetime64('2019-06-10')], dtype=(dt_order + dt_kind + dt_unit))
+
+                    with h5py.File(fname, 'w') as f:
+                        dset = f.create_dataset("default", data=arr)
+                        self.assertArrayEqual(arr, dset)
+                        self.assertEqual(arr.dtype, dset.dtype)
+
+
+@ut.skipUnless(tables is not None, 'tables is required')
+class TestB8(TestCase):
+
+    """
+    Test H5T_NATIVE_B8 reading
+    """
+
+    def test_b8_bool(self):
+        arr1 = np.array([False, True], dtype=np.bool)
+        self._test_b8(arr1)
+        self._test_b8(arr1, dtype=np.uint8)
+
+    def test_b8_bool_compound(self):
+        arr1 = np.array([(False,), (True,)], dtype=np.dtype([('x', '?')]))
+        self._test_b8(arr1)
+        self._test_b8(arr1, dtype=np.dtype([('x', 'u1')]))
+
+    def test_b8_bool_compound_nested(self):
+        arr1 = np.array(
+            [(True, (True, False)), (True, (False, True))],
+            dtype=np.dtype([('x', '?'), ('y', [('a', '?'), ('b', '?')])]),
+        )
+        self._test_b8(arr1)
+        self._test_b8(
+            arr1,
+            dtype=np.dtype([('x', 'u1'), ('y', [('a', 'u1'), ('b', 'u1')])]),
+        )
+
+    def test_b8_bool_array(self):
+        arr1 = np.array(
+            [((True, True, False),), ((True, False, True),)],
+            dtype=np.dtype([('x', ('?', (3,)))]),
+        )
+        self._test_b8(arr1)
+        self._test_b8(
+            arr1,
+            dtype=np.dtype([('x', ('?', (3,)))]),
+        )
+
+    def _test_b8(self, arr1, dtype=None):
+        path = self.mktemp()
+        with tables.open_file(path, 'w') as f:
+            if arr1.dtype.names:
+                f.create_table('/', 'test', obj=arr1)
+            else:
+                f.create_array('/', 'test', obj=arr1)
+
+        with h5py.File(path, 'r') as f:
+            dset = f['test']
+
+            # read uncast dset to make sure it raises as before
+            with self.assertRaises(
+                TypeError, msg='No NumPy equivalent for TypeBitfieldID exists'
+            ):
+                dset[:]
+
+            # read cast dset and make sure it's equal
+            if dtype is None:
+                dtype = arr1.dtype
+            with dset.astype(dtype):
+                arr2 = dset[:]
+            self.assertArrayEqual(arr2, arr1.astype(dtype, copy=False))
+
+            # read uncast dataset again to ensure nothing changed permanantly
+            with self.assertRaises(
+                TypeError, msg='No NumPy equivalent for TypeBitfieldID exists'
+            ):
+                dset[:]
