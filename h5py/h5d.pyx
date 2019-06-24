@@ -402,15 +402,16 @@ cdef class DatasetID(ObjectID):
         def write_direct_chunk(self, offsets, bytes data, filter_mask=0x00000000, PropID dxpl=None):
             """ (offsets, bytes data, uint32_t filter_mask=0x00000000, PropID dxpl=None)
 
-            Writes data from a bytes array (as provided e.g. by struct.pack) directly
-            to a chunk at position specified by the offsets argument.
+            This function bypasses any filters HDF5 would normally apply to
+            written data. However, calling code may apply filters (e.g. gzip
+            compression) itself before writing the data.
 
-            The `filter_mask` is a bit field of up to 32 values. It specify
-            which filters in the pipeline have to be disabled to decompress the
-            `data`.
-            Using the default `0x00000000` with use all the filters when the
-            data will be read, while `0xFFFFFFFF` will skip all the filters
-            (the data is then not compressed).
+            `filter_mask` is a bit field of up to 32 values. It records which
+            filters have been applied to this chunk, of the filter pipeline
+            defined for that dataset. Each bit set to `1` means that the filter
+            in the corresponding position in the pipeline was not applied.
+            So the default value of `0` means that all defined filters have
+            been applied to the data before calling this function.
 
             Feature requires: 1.8.11 HDF5
             """
@@ -445,16 +446,19 @@ cdef class DatasetID(ObjectID):
             """ (offsets, PropID dxpl=None)
 
             Reads data to a bytes array directly from a chunk at position
-            specified by the offsets argument, bypassing the filter pipeline.
+            specified by the `offsets` argument and bypasses any filters HDF5
+            would normally apply to the written data. However, the written data
+            may be compressed or not.
 
             Returns a tuple containing the `filter_mask` and the bytes data
-            which was used for this data.
+            which are the raw data storing this chuck.
 
-            The `filter_mask` is a bit field of up to 32 values. It specify
-            which filters of the pipeline have to be disabled to read this data.
-            A result of `0x00000000` means that all the filters have to be used
-            (the data is compressed by all the filters), while `0xFFFFFFFF` means
-            that the data is not compressed.
+            `filter_mask` is a bit field of up to 32 values. It records which
+            filters have been applied to this chunk, of the filter pipeline
+            defined for that dataset. Each bit set to `1` means that the filter
+            in the corresponding position in the pipeline was not applied to
+            compute the raw data. So the default value of `0` means that all
+            defined filters have been applied to the raw data.
 
             Feature requires: 1.10.2 HDF5
             """
