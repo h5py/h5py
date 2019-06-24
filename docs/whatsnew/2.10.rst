@@ -74,6 +74,8 @@ Bugfixes
   uses the deprecated feature (:issue:`1146`).
 - Skipped a failing test for complex floating point numbers on 32-bit x86
   systems (:issue:`1235`).
+- Disabled the longdouble type on the ``ppc64le`` architecture, as it was
+  causing segfaults with more commonly used float types (:issue:`1243`).
 - Documented that nested compound types are not currently supported
   (:issue:`1236`).
 
@@ -82,6 +84,10 @@ Building h5py
 
 - The version of HDF5 can now be automatically detected on Windows
   (:issue:`1123`).
+- Fixed autodetecting the version from libhdf5 in default locations on Windows
+  and Mac (:issue:`1240`).
+- Fail to build if it can't detect version from libhdf5, rather than assuming
+  1.8.4 as a default (:issue:`1241`).
 - Building h5py from source on Unix platforms now requires either ``pkg-config``
   or an explicitly specified path to HDF5 (:issue:`1231`).
   Previously it had a hardcoded default path, but when this was wrong,
