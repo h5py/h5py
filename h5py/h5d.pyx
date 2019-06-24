@@ -474,9 +474,8 @@ cdef class DatasetID(ObjectID):
             space_id = H5Dget_space(self.id)
             rank = H5Sget_simple_extent_ndims(space_id)
 
-            if offsets is not None:
-                if len(offsets) != rank:
-                    raise TypeError("offset length (%d) must match dataset rank (%d)" % (len(offsets), rank))
+            if len(offsets) != rank:
+                raise TypeError("offset length (%d) must match dataset rank (%d)" % (len(offsets), rank))
 
             try:
                 offset = <hsize_t*>emalloc(sizeof(hsize_t)*rank)
