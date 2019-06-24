@@ -116,19 +116,15 @@ Then, clone your new copy of h5py to your local machine::
 Create a topic branch for your feature
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If you're fixing a bug, you'll want to check out a branch against the
-appropriate stable branch.  For example, to fix a bug you found in version
-2.1.3, you'll want to check out against branch "2.1"::
-
-    $ git checkout -b bugfix 2.1
-
-If you're contributing a new feature, it's appropriate to develop against the
-"master" branch, so you would instead do::
+Check out a new branch for the bugfix or feature you're writing::
 
     $ git checkout -b newfeature master
 
 The exact name of the branch can be anything you want.  For bug fixes, one
 approach is to put the issue number in the branch name.
+
+We develop all changes against the *master* branch.
+If we're making a bugfix release, a bot will backport merged pull requests.
 
 
 Implement the feature!
