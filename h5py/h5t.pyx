@@ -2006,7 +2006,7 @@ cpdef object py_get_vlen(object dt_in):
     return check_vlen_dtype(dt_in)
 
 
-def register_dtype(bytes tag, dtype dt_in):
+def register_dtype(dtype dt_in, bytes tag=None):
     """ (bytes tag, dtype dt_in)
 
     Register a NumPy dtype for use with h5py. Types registered in this way
@@ -2015,12 +2015,17 @@ def register_dtype(bytes tag, dtype dt_in):
 
     Opaque types with this tag will be mapped to NumPy types in the same way.
     """
-    if tag in _tag_map or dtype in _dtype_map:
-        raise RuntimeError("This tag or dtype is already registered.")
+    try:
+        py_create(dt_in)
+        raise RuntimeError("This tag or dtype is already registered or native.")
+    except TypeError:
+        pass
+
+    if tag is None:
+        tag = b"NUMPY:" + dt_in.descr[0][1].encode()
 
     cdef TypeID new_type = typewrap(H5Tcreate(H5T_OPAQUE, dt_in.itemsize))
     new_type.set_tag(tag)
-    new_type.lock()
 
     _dtype_map[dt_in] = new_type
     _tag_map[tag] = dt_in

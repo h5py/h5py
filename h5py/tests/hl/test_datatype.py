@@ -340,11 +340,9 @@ class TestStrings(TestCase):
         assert string_info.length == 10
         assert h5py.check_vlen_dtype(dt) is None
 
-def TestDateTime(TestCase):
+class TestDateTime(TestCase):
     def test_datetime(self):
         dt_units = [
-            # Basic datetime
-            '',
             # Dates
             '[Y]', '[M]', '[D]',
             # Times
@@ -356,19 +354,20 @@ def TestDateTime(TestCase):
             for dt_unit in dt_units:
                 for dt_order in ['<', '>']:
                     dt_descr = dt_order + dt_kind + dt_unit
-                    dt = dtype(dt_descr)
-                    tag = ("NUMPY:" + dt_descr).encode()
-                    h5py.register_dtype(tag, dt)
+                    dt = np.dtype(dt_descr)
+                    h5py.register_dtype(dt)
                     fname = self.mktemp()
 
-                    arr = np.array([np.datetime64('2019-06-10')], dtype=dt)
+                    arr = (np.array([np.datetime64('2019-06-10')], dtype=dt)
+                        if dt_kind == 'M8'
+                        else np.array([np.timedelta64(500, dt_unit[1:-1])], dtype=dt))
 
                     with h5py.File(fname, 'w') as f:
                         dset = f.create_dataset("default", data=arr)
                         self.assertArrayEqual(arr, dset)
                         self.assertEqual(arr.dtype, dset.dtype)
                         # So both branches are tested.
-                        h5py.deregister_dtype(tag if dt_order == '<' else dt)
+                        h5py.deregister_dtype(dt)
                         self.assertRaises(TypeError, lambda: f.create_dataset("default2", data=arr))
 
 
