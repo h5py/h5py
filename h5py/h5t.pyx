@@ -248,6 +248,7 @@ PYTHON_OBJECT = lockid(H5PY_OBJ)
 cdef dict _order_map = { H5T_ORDER_NONE: '|', H5T_ORDER_LE: '<', H5T_ORDER_BE: '>'}
 cdef dict _sign_map  = { H5T_SGN_NONE: 'u', H5T_SGN_2: 'i' }
 cdef dict _dtype_map = {}
+cdef dict _tag_map = {}
 
 # Available floating point types
 cdef tuple _get_available_ftypes():
@@ -669,10 +670,8 @@ cdef class TypeOpaqueID(TypeID):
     cdef object py_dtype(self):
         cdef bytes tag = self.get_tag()
         cdef bytes dt_str
-        if tag.startswith(b"NUMPY:"):
-            # 6 == len(b"NUMPY:")
-            dt_str = tag[6:]
-            return dtype(dt_str)
+        if tag in _tag_map:
+            return _tag_map[tag]
 
         # Numpy translation function for opaque types
         return dtype("|V" + str(self.get_size()))
@@ -2000,22 +1999,70 @@ cpdef object py_get_vlen(object dt_in):
         H5pyDeprecationWarning)
     return check_vlen_dtype(dt_in)
 
-def register_dtype(dtype dt_in):
-    """ (dtype dt_in)
+
+def register_dtype(bytes tag, dtype dt_in):
+    """ (bytes tag, dtype dt_in)
 
     Register a NumPy dtype for use with h5py. Types registered in this way
-    will be stored as a custom opaque type, with a special tag to indicate
-    that it is a NumPy type.
-    """
-    descr = dt_in.descr[0][1]
-    if PY3:
-        descr = descr.encode()
+    will be stored as a custom opaque type, with a special tag to map it to
+    the corresponding NumPy type.
 
-    if dt_in in _dtype_map:
-        return
+    Opaque types with this tag will be mapped to NumPy types in the same way.
+    """
+    if tag in _tag_map or dtype in _dtype_map:
+        raise RuntimeError("This tag or dtype is already registered.")
 
     cdef TypeID new_type = typewrap(H5Tcreate(H5T_OPAQUE, dt_in.itemsize))
-    new_type.set_tag(b"NUMPY:" + descr)
+    new_type.set_tag(tag)
     new_type.lock()
 
     _dtype_map[dt_in] = new_type
+    _tag_map[tag] = dt_in
+
+
+def deregister_dtype(object obj):
+    """ (dtype obj OR bytes obj)
+
+    Deregister a dtype/tag from the NumPy-tag mapping, along with the.
+    corresponding tag/dtype.
+    """
+    if isinstance(obj, dtype):
+        _deregister_dtype(obj)
+    elif isinstance(obj, bytes):
+        _deregister_tag(obj)
+    else:
+        raise TypeError("obj must be either a dtype or bytes object")
+
+
+def _deregister_dtype(dtype dt_in):
+    """ (dtype dt_in)
+
+    Deregister a dtype from the NumPy-tag mapping, along with the.
+    corresponding tag.
+    """
+    if dt_in not in _dtype_map:
+        raise RuntimeError("This dtype is not registered.")
+
+    cdef TypeID tid_hl = _dtype_map[dt_in]
+    cdef bytes tag = tid_hl.get_tag()
+    cdef hid_t tid = tid_hl.id
+    del _dtype_map[dt_in]
+    del _tag_map[tag]
+    H5Tclose(tid)
+
+
+def _deregister_tag(bytes tag):
+    """ (bytes tag)
+
+    Deregister a tag from the NumPy-tag mapping, along with the.
+    corresponding dtype.
+    """
+    if tag not in _tag_map:
+        raise RuntimeError("This tag is not registered.")
+
+    cdef dtype dt_in = _tag_map[tag]
+    cdef TypeID tid_hl = _tag_map[dt_in]
+    cdef hid_t tid = tid_hl.id
+    del _dtype_map[dt_in]
+    del _tag_map[tag]
+    H5Tclose(tid)

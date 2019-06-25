@@ -360,14 +360,21 @@ def TestDateTime(TestCase):
         for dt_kind in ['M8', 'm8']:
             for dt_unit in dt_units:
                 for dt_order in ['<', '>']:
+                    dt_descr = dt_order + dt_kind + dt_unit
+                    dt = dtype(dt_descr)
+                    tag = ("NUMPY:" + dt_descr).encode()
+                    h5py.register_dtype(tag, dt)
                     fname = self.mktemp()
 
-                    arr = np.array([np.datetime64('2019-06-10')], dtype=(dt_order + dt_kind + dt_unit))
+                    arr = np.array([np.datetime64('2019-06-10')], dtype=dt)
 
                     with h5py.File(fname, 'w') as f:
                         dset = f.create_dataset("default", data=arr)
                         self.assertArrayEqual(arr, dset)
                         self.assertEqual(arr.dtype, dset.dtype)
+                        # So both branches are tested.
+                        h5py.deregister_dtype(tag if dt_order == '<' else dt)
+                        self.assertRaises(TypeError, lambda: f.create_dataset("default2", data=arr))
 
 
 @ut.skipUnless(tables is not None, 'tables is required')
