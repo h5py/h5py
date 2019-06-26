@@ -26,12 +26,12 @@ mechanism to notify when data has been written.
 
 The SWMR functionality requires use of the latest HDF5 file format: v110. In
 practice this implies using at least HDF5 1.10 (this can be checked via
-`h5py.info`) and setting the libver bounding to "latest" when opening or
+``h5py.version.info``) and setting the libver bounding to "latest" when opening or
 creating the file.
 
 
-.. Warning:: New v110 format files are *not* compatible with v18 format. So
-             files, written in SWMR mode with libver='latest' cannot be opened
+.. Warning:: New v110 format files are *not* compatible with v18 format. So,
+             files written in SWMR mode with libver='latest' cannot be opened
              with older versions of the HDF5 library (basically any version
              older than the SWMR feature).
 
@@ -49,8 +49,8 @@ Using the SWMR feature from h5py
 
 The following basic steps are typically required by writer and reader processes:
 
-- Writer process create the target file and all groups, datasets and attributes.
-- Writer process switch file into SWMR mode.
+- Writer process creates the target file and all groups, datasets and attributes.
+- Writer process switches file into SWMR mode.
 - Reader process can open the file with swmr=True.
 - Writer writes and/or appends data to existing datasets (new groups and datasets *cannot* be created when in SWMR mode).
 - Writer regularly flushes the target dataset to make it visible to reader processes.
@@ -88,12 +88,12 @@ Examples
 
 In addition to the above example snippets, a few more complete examples can be
 found in the examples folder. These examples are described in the following
-sections
+sections.
 
 Dataset monitor with inotify
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The inotify example demonstrate how to use SWMR in a reading application which
+The inotify example demonstrates how to use SWMR in a reading application which
 monitors live progress as a dataset is being written by another process. This
 example uses the the linux inotify
 (`pyinotify <https://pypi.python.org/pypi/pyinotify>`_ python bindings) to

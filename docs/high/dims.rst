@@ -4,7 +4,7 @@ Dimension Scales
 ================
 
 Datasets are multidimensional arrays. HDF5 provides support for labeling the
-dimensions and associating one or "dimension scales" with each dimension. A
+dimensions and associating one or more "dimension scales" with each dimension. A
 dimension scale is simply another HDF5 dataset. In principle, the length of the
 multidimensional array along the dimension of interest should be equal to the
 length of the dimension scale, but HDF5 does not enforce this property.
