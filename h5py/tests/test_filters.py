@@ -13,6 +13,7 @@
 """
 import numpy as np
 import h5py
+import pytest
 
 from .common import ut, TestCase, insubprocess
 
@@ -78,6 +79,7 @@ def test_filter_ref_obj(writable_file):
     assert ds.compression_opts == 8
 
 
+@pytest.mark.mpi_skip
 @insubprocess
 def test_unregister_filter(request):
     if h5py.h5z.filter_avail(h5py.h5z.FILTER_LZF):
