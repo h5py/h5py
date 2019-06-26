@@ -363,7 +363,7 @@ class TestDateTime(TestCase):
                     h5py.register_dtype(dt)
                     fname = self.mktemp()
 
-                    arr = (np.array([0]).view(dtype=dt)
+                    arr = (np.array([0], dtype=np.int64).view(dtype=dt)
                         if dt_kind == 'M8'
                         else np.array([np.timedelta64(500, dt_unit[1:-1])], dtype=dt))
 
