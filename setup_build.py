@@ -82,13 +82,19 @@ class h5py_build_ext(build_ext):
 
         # Ensure that if a custom HDF5 location is specified, prevent
         # pkg-config and fallback locations from appearing in the settings
+        if config.hdf5_includedir is not None:
+            settings['include_dirs'].insert(0, config.hdf5_includedir)
+        if config.hdf5_libdir is not None:
+            settings['library_dirs'].insert(0, config.hdf5_libdir)
         if config.hdf5 is not None:
-            settings['include_dirs'].insert(0, op.join(config.hdf5, 'include'))
-            settings['library_dirs'].insert(0, op.join(config.hdf5, 'lib'))
+            if config.hdf5_includedir is None:
+                settings['include_dirs'].insert(0, op.join(config.hdf5, 'include'))
+            if config.hdf5_libdir is None:
+                settings['library_dirs'].insert(0, op.join(config.hdf5, 'lib'))
         else:
             try:
-                if pkgconfig.exists('hdf5'):
-                    pkgcfg = pkgconfig.parse("hdf5")
+                if pkgconfig.exists(config.hdf5_pkgconfig_name):
+                    pkgcfg = pkgconfig.parse(config.hdf5_pkgconfig_name)
                     settings['include_dirs'].extend(pkgcfg['include_dirs'])
                     settings['library_dirs'].extend(pkgcfg['library_dirs'])
                     settings['define_macros'].extend(pkgcfg['define_macros'])
