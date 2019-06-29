@@ -9,6 +9,8 @@
 
 """
     Provides access to the low-level HDF5 "H5PL" plugins interface.
+
+    These functions are only available with HDF5 1.10.1 or later.
 """
 
 include "config.pxi"
