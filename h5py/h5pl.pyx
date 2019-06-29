@@ -8,7 +8,7 @@
 #           and contributor agreement.
 
 """
-    HDF5 plugin interface.
+    Provides access to the low-level HDF5 "H5PL" plugins interface.
 """
 
 include "config.pxi"
@@ -18,27 +18,46 @@ from utils cimport emalloc, efree
 
 IF HDF5_VERSION >= (1, 10, 1):
     cpdef append(const char* search_path):
-        """(STRING search_path)"""
+        """(STRING search_path)
+
+        Add a directory to the end of the plugin search path.
+        """
         H5PLappend(search_path)
 
     cpdef prepend(const char* search_path):
-        """(STRING search_path)"""
+        """(STRING search_path)
+
+        Add a directory to the start of the plugin search path.
+        """
         H5PLprepend(search_path)
 
     cpdef replace(const char* search_path, unsigned int index):
-        """(STRING search_path, UINT index)"""
+        """(STRING search_path, UINT index)
+
+        Replace the directory at the given index in the plugin search path.
+        """
         H5PLreplace(search_path, index)
 
     cpdef insert(const char* search_path, unsigned int index):
-        """(STRING search_path, UINT index)"""
+        """(STRING search_path, UINT index)
+
+        Insert a directory at the given index in the plugin search path.
+        """
         H5PLinsert(search_path, index)
 
     cpdef remove(unsigned int index):
-        """(UINT index)"""
+        """(UINT index)
+
+        Remove the specified entry from the plugin search path.
+        """
         H5PLremove(index)
 
     cpdef get(unsigned int index):
-        """(UINT index) => STRING"""
+        """(UINT index) => STRING
+
+        Get the directory path at the given index (starting from 0) in the
+        plugin search path. Returns a Python bytes object.
+        """
         cpdef size_t n
         cpdef char* buf = NULL
 
@@ -51,7 +70,10 @@ IF HDF5_VERSION >= (1, 10, 1):
             efree(buf)
 
     cpdef size():
-        """() => UINT"""
+        """() => UINT
+
+        Get the number of directories currently in the plugin search path.
+        """
         cpdef unsigned int n = 0
         H5PLsize(&n)
         return n
