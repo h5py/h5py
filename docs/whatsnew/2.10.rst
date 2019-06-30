@@ -4,6 +4,10 @@ What's new in h5py 2.10
 New features
 ------------
 
+- It is now possible to register opaque HDF5 dtypes to be viewed as arrays,
+  based on their associated tag, using :func:`register_dtype`. Types used
+  like this can also be deregistered with :func:`deregister_dtype`.
+
 - HDF5 8-bit bitfield data can now be read either as uint8 or booleans
   (:issue:`821`). Pytables stores booleans as this type.
   For now, you must pick which type to use explicitly::

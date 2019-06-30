@@ -15,7 +15,7 @@ from __future__ import absolute_import
 
 import posixpath as pp
 
-from ..h5t import TypeID
+from ..h5t import TypeID, register_dtype, deregister_dtype
 from .base import HLObject, with_phil
 
 class Datatype(HLObject):

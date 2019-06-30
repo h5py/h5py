@@ -2007,16 +2007,20 @@ cpdef object py_get_vlen(object dt_in):
 
 
 def register_dtype(dtype dt_in, bytes tag=None):
-    """ (bytes tag, dtype dt_in)
+    """ (dtype dt_in, bytes tag=None)
 
     Register a NumPy dtype for use with h5py. Types registered in this way
     will be stored as a custom opaque type, with a special tag to map it to
     the corresponding NumPy type.
 
     Opaque types with this tag will be mapped to NumPy types in the same way.
+
+    The default tag is generated via the code:
+    ``b"NUMPY:" + dt_in.descr[0][1].encode()``.
     """
     try:
-        py_create(dt_in)
+        if not np.issubdtype(dt_in, np.void):
+            py_create(dt_in)
         raise RuntimeError("This tag or dtype is already registered or native.")
     except TypeError:
         pass

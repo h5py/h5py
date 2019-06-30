@@ -43,6 +43,7 @@ High-level API reference
     high/file
     high/group
     high/dataset
+    high/datatype
     high/attr
     high/dims
 
