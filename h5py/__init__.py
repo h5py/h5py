@@ -62,7 +62,7 @@ from ._hl.files import (
 )
 from ._hl.group import Group, SoftLink, ExternalLink, HardLink
 from ._hl.dataset import Dataset
-from ._hl.datatype import Datatype
+from ._hl.datatype import Datatype, register_dtype, deregister_dtype
 from ._hl.attrs import AttributeManager
 
 from .h5 import get_config
@@ -70,7 +70,6 @@ from .h5r import Reference, RegionReference
 from .h5t import (special_dtype, check_dtype,
     vlen_dtype, string_dtype, enum_dtype, ref_dtype, regionref_dtype,
     check_vlen_dtype, check_string_dtype, check_enum_dtype, check_ref_dtype,
-    register_dtype, deregister_dtype,
 )
 
 from .version import version as __version__
