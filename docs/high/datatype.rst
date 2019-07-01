@@ -6,7 +6,7 @@ Datatypes
 Usually, :class:`Datatype` objects are created for you on the fly and you do not
 have to worry about them. However, in certain cases, namely when no HDF5
 equivalent exists for a given :class:`dtype`, you must register the :class:`dtype`
-manually for use with H5Py.::
+manually for use with h5py.::
 
     arr = np.array([np.datetime64('2019-06-30')])
     h5py.register_dtype(arr.dtype)

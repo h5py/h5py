@@ -12,9 +12,9 @@ creating datasets. Each type is mapped to a native NumPy type.
 
 Fully supported types:
 
-=========================           ============================================    ======================
+=========================           ============================================    ================================
 Type                                Precisions                                      Notes
-=========================           ============================================    ======================
+=========================           ============================================    ================================
 Integer                             1, 2, 4 or 8 byte, BE/LE, signed/unsigned
 Float                               2, 4, 8, 12, 16 byte, BE/LE
 Complex                             8 or 16 byte, BE/LE                             Stored as HDF5 struct
@@ -28,7 +28,7 @@ Enumeration                         Any NumPy integer type                      
 References                          Region and object
 Variable length array               Any supported type                              See :ref:`Special Types <vlen>`
 Any other NumPy dtype               Map to opaque type with specific tag            You must register types manually
-=========================           ============================================    ======================
+=========================           ============================================    ================================
 
 Unsupported types:
 
