@@ -27,7 +27,6 @@ Array                               Any supported type
 Enumeration                         Any NumPy integer type                          Read/write as integers
 References                          Region and object
 Variable length array               Any supported type                              See :ref:`Special Types <vlen>`
-Any other NumPy dtype               Map to opaque type with specific tag            You must register types manually
 =========================           ============================================    ================================
 
 Unsupported types:
@@ -38,6 +37,8 @@ Type                                Status
 HDF5 "time" type
 NumPy "U" strings                   No HDF5 equivalent
 NumPy generic "O"                   Not planned
+Any other NumPy dtype               Map to opaque type with specific tag, You
+                                    must register types manually
 =========================           ============================================
 
 

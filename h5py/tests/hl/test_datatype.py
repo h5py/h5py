@@ -356,6 +356,7 @@ class TestDateTime(TestCase):
                     dt_descr = dt_order + dt_kind + dt_unit
                     dt = np.dtype(dt_descr)
                     h5py.register_dtype(dt)
+                    self.assertRaises(RuntimeError, h5py.register_dtype, dt)
                     fname = self.mktemp()
 
                     arr = (np.array([0], dtype=np.int64).view(dtype=dt)
@@ -368,7 +369,7 @@ class TestDateTime(TestCase):
                         self.assertEqual(arr.dtype, dset.dtype)
                         # So both branches are tested.
                         h5py.deregister_dtype(dt)
-                        self.assertRaises(TypeError, lambda: f.create_dataset("default2", data=arr))
+                        self.assertRaises(TypeError, f.create_dataset, "default2", data=arr)
 
 
 @ut.skipUnless(tables is not None, 'tables is required')

@@ -12,6 +12,15 @@ manually for use with h5py.::
     h5py.register_dtype(arr.dtype)
     dset = f.create_dataset("datetimes", data=arr)
 
+.. note::
+
+    It is important to notice that the types registered in this way will only
+    be readable be NumPy and compatible tools, and that this format may not be
+    universally accepted. In the case of a third party ``dtype``, it will only
+    be readable insofar as the ``dtype`` is binary-compatible across old
+    versions. In general, opaque datatypes are very sensitive to how you may
+    decide to encode your data.
+
 Reference
 =========
 
