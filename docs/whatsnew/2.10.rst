@@ -59,10 +59,15 @@ Exposing HDF5 functions
 
 - ``H5Zunregister`` exposed as :func:`h5z.unregister_filter` (:issue:`746`,
   :issue:`1224`).
+- The new module :mod:`h5py.h5pl` module exposes various ``H5PL`` functions
+  to inspect and modify the search path for plugins (:issue:`1166`,
+  :issue:`1256`).
+- ``H5Dread_chunk`` exposed as :func:`h5d.read_direct_chunk` (:issue:`1190`).
 
 Bugfixes
 --------
 
+- Fix crash with empty variable-length data (:issue:`1248`, :issue:`1253`).
 - Fixed random selection of data type when reading 64-bit floats on Windows
   where Python uses random dictionary order (:issue:`1051`, :issue:`1134`).
 - Pickling h5py objects now fails explicitly. It previously failed on
@@ -98,6 +103,8 @@ Building h5py
   the failures were unnecessarily confusing.
 - The Cython 'language level' is now explicitly set to 2, to prepare h5py
   for changing defaults in Cython (:issue:`1171`).
+- Avoid using ``setup_requires`` when pip calls ``setup.py egg_info``
+  (:issue:`1259`).
 
 Development
 -----------
