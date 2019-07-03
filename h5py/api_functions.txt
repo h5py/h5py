@@ -111,8 +111,11 @@ hdf5:
   1.9.178   herr_t H5Dflush(hid_t dataset_id)
   1.9.178   herr_t H5Drefresh(hid_t dataset_id)
 
-  # Direct Chunk Writing
+  # Direct Chunk Read/Write
   1.8.11    herr_t H5DOwrite_chunk(hid_t dset_id, hid_t dxpl_id, uint32_t filters, const hsize_t *offset, size_t data_size, const void *buf)
+  1.10.2    herr_t H5Dget_chunk_storage_size(hid_t dset_id, const hsize_t *offset, hsize_t *chunk_nbytes)
+  1.10.2    herr_t H5DOread_chunk(hid_t dset_id, hid_t dxpl_id, const hsize_t *offset, uint32_t *filters, void *buf)
+  1.10.3    herr_t H5Dread_chunk(hid_t dset_id, hid_t dxpl_id, const hsize_t *offset, uint32_t *filters, void *buf)
 
 
   # === H5E - Minimal error-handling interface ================================
