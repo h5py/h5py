@@ -37,7 +37,7 @@ SETUP_REQUIRES = RUN_REQUIRES + [NUMPY_DEP, 'Cython>=0.23', 'pkgconfig']
 # Needed to avoid trying to install numpy/cython on pythons which the latest
 # versions don't support
 use_setup_requires = any(parameter in sys.argv for parameter in
-    ("bdist_wheel", "build", "install", "test"))
+    ("bdist_wheel", "build", "configure", "install", "test"))
 
 
 # --- Custom Distutils commands -----------------------------------------------
