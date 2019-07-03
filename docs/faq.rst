@@ -37,8 +37,9 @@ Type                                Status
 HDF5 "time" type
 NumPy "U" strings                   No HDF5 equivalent
 NumPy generic "O"                   Not planned
-Any other NumPy dtype               Map to opaque type with specific tag, You
-                                    must register types manually
+Any other NumPy dtype               Map to opaque type with specific tag, you
+                                    must register types manually. See
+                                    :func:`register_dtype`
 =========================           ============================================
 
 
