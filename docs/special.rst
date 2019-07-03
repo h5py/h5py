@@ -191,3 +191,40 @@ compatibility, but are deprecated in favour of the functions listed above.
     :param enum:    Check for an enumerated type; returns 2-tuple ``(basetype, values_dict)``.
     :param ref:     Check for an HDF5 object or region reference; returns
                     either ``h5py.Reference`` or ``h5py.RegionReference``.
+
+Custom ``dtype`` s
+==================
+
+Usually, :class:`Datatype` objects are created for you on the fly and you do not
+have to worry about them. However, in certain cases, namely when no HDF5
+equivalent exists for a given :class:`dtype`, you must register the :class:`dtype`
+manually for use with h5py.::
+
+    arr = np.array([np.datetime64('2019-06-30')])
+    h5py.register_dtype(arr.dtype)
+    dset = f.create_dataset("datetimes", data=arr)
+
+.. note::
+
+    It is important to notice that the types registered in this way will only
+    be readable be NumPy and compatible tools, and that this format may not be
+    universally accepted. In the case of a third party ``dtype``, it will only
+    be readable insofar as the ``dtype`` is binary-compatible across old
+    versions. In general, opaque datatypes are very sensitive to how you may
+    decide to encode your data.
+
+.. function:: register_dtype(dtype dt_in, bytes tag=None)
+
+    Register a NumPy dtype for use with h5py. Types registered in this way
+    will be stored as a custom opaque type, with a special tag to map it to
+    the corresponding NumPy type.
+
+    Opaque types with this tag will be mapped to NumPy types in the same way.
+
+    The default tag is generated via the code:
+    ``b"NUMPY:" + dt_in.descr[0][1].encode()``.
+
+.. function:: deregister_dtype(object obj)
+
+    Deregister a dtype/tag from the NumPy-tag mapping, along with the
+    corresponding tag/dtype.
