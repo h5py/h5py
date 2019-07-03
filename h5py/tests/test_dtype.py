@@ -360,21 +360,23 @@ class TestDateTime(TestCase):
                 for dt_order in ['<', '>']:
                     dt_descr = dt_order + dt_kind + dt_unit
                     dt = np.dtype(dt_descr)
-                    h5py.register_dtype(dt)
-                    self.assertRaises(RuntimeError, h5py.register_dtype, dt)
-                    fname = self.mktemp()
+                    try:
+                        h5py.register_dtype(dt)
+                        self.assertRaises(RuntimeError, h5py.register_dtype, dt)
+                        fname = self.mktemp()
 
-                    arr = (np.array([0], dtype=np.int64).view(dtype=dt)
-                        if dt_kind == 'M8'
-                        else np.array([np.timedelta64(500, dt_unit[1:-1])], dtype=dt))
+                        arr = (np.array([0], dtype=np.int64).view(dtype=dt)
+                            if dt_kind == 'M8'
+                            else np.array([np.timedelta64(500, dt_unit[1:-1])], dtype=dt))
 
-                    with h5py.File(fname, 'w') as f:
-                        dset = f.create_dataset("default", data=arr)
-                        self.assertArrayEqual(arr, dset)
-                        self.assertEqual(arr.dtype, dset.dtype)
-                        # So both branches are tested.
+                        with h5py.File(fname, 'w') as f:
+                            dset = f.create_dataset("default", data=arr)
+                            self.assertArrayEqual(arr, dset)
+                            self.assertEqual(arr.dtype, dset.dtype)
+                    finally:
                         h5py.deregister_dtype(dt)
-                        self.assertRaises(TypeError, f.create_dataset, "default2", data=arr)
+                        with h5py.File(fname, 'w') as f:
+                            self.assertRaises(TypeError, f.create_dataset, "default2", data=arr)
 
 
 @ut.skipUnless(tables is not None, 'tables is required')
