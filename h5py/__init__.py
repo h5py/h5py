@@ -64,7 +64,7 @@ from ._hl.files import (
 )
 from ._hl.group import Group, SoftLink, ExternalLink, HardLink
 from ._hl.dataset import Dataset
-from ._hl.datatype import Datatype, register_dtype, deregister_dtype
+from ._hl.datatype import Datatype, create_opaque
 from ._hl.attrs import AttributeManager
 
 from .h5 import get_config

@@ -249,8 +249,6 @@ PYTHON_OBJECT = lockid(H5PY_OBJ)
 # Translation tables for HDF5 -> NumPy dtype conversion
 cdef dict _order_map = { H5T_ORDER_NONE: '|', H5T_ORDER_LE: '<', H5T_ORDER_BE: '>'}
 cdef dict _sign_map  = { H5T_SGN_NONE: 'u', H5T_SGN_2: 'i' }
-cdef dict _dtype_map = {}
-cdef dict _tag_map = {}
 
 # Available floating point types
 cdef tuple _get_available_ftypes():
@@ -669,11 +667,12 @@ cdef class TypeOpaqueID(TypeID):
         finally:
             free(buf)
 
-    cdef object py_dtype(self):
+    cdef dtype py_dtype(self):
         cdef bytes tag = self.get_tag()
         cdef bytes dt_str
-        if tag in _tag_map:
-            return _tag_map[tag]
+        if tag.startswith("NUMPY:"):
+            # 6 = len("NUMPY:")
+            return dtype(tag[6:])
 
         # Numpy translation function for opaque types
         return dtype("|V" + str(self.get_size()))
@@ -1653,12 +1652,19 @@ cpdef TypeID py_create(object dtype_in, bint logical=0, bint aligned=0):
         of kind "O" representing a string, it would return an HDF5 variable-
         length string type.
     """
-    cdef dtype dt = dtype(dtype_in)
-    cdef char kind = dt.kind
+    cdef dtype dt
+    cdef char kind
 
-    aligned = getattr(dtype_in, "isalignedstruct", aligned)
+    if hasattr(dtype_in, 'id'):
+        return dtype_in.id
+    elif isinstance(dtype_in, TypeID):
+        return dtype_in
 
     with phil:
+        dt = dtype(dtype_in)
+        kind = dt.kind
+
+        aligned = getattr(dtype_in, "isalignedstruct", aligned)
         # Float
         if kind == c'f':
             return _c_float(dt)
@@ -1716,10 +1722,6 @@ cpdef TypeID py_create(object dtype_in, bint logical=0, bint aligned=0):
                 raise TypeError("Object dtype %r has no native HDF5 equivalent" % (dt,))
 
             return PYTHON_OBJECT
-
-        # Custom registered dtypes
-        elif dt in _dtype_map:
-            return _dtype_map[dt]
 
         # Unrecognized
         else:
@@ -2006,7 +2008,8 @@ cpdef object py_get_vlen(object dt_in):
     return check_vlen_dtype(dt_in)
 
 
-def register_dtype(dtype dt_in, bytes tag=None):
+@with_phil
+def create_opaque(dtype dt_in):
     """ (dtype dt_in, bytes tag=None)
 
     Register a NumPy dtype for use with h5py. Types registered in this way
@@ -2018,66 +2021,8 @@ def register_dtype(dtype dt_in, bytes tag=None):
     The default tag is generated via the code:
     ``b"NUMPY:" + dt_in.descr[0][1].encode()``.
     """
-    try:
-        if not np.issubdtype(dt_in, np.void):
-            py_create(dt_in)
-        raise RuntimeError("This tag or dtype is already registered or native.")
-    except TypeError:
-        pass
-
-    if tag is None:
-        tag = b"NUMPY:" + dt_in.descr[0][1].encode()
-
+    cdef tag = b"NUMPY:" + dt_in.descr[0][1].encode()
     cdef TypeID new_type = typewrap(H5Tcreate(H5T_OPAQUE, dt_in.itemsize))
     new_type.set_tag(tag)
 
-    _dtype_map[dt_in] = new_type
-    _tag_map[tag] = dt_in
-
-
-def deregister_dtype(object obj):
-    """ (dtype obj OR bytes obj)
-
-    Deregister a dtype/tag from the NumPy-tag mapping, along with the.
-    corresponding tag/dtype.
-    """
-    if isinstance(obj, dtype):
-        _deregister_dtype(obj)
-    elif isinstance(obj, bytes):
-        _deregister_tag(obj)
-    else:
-        raise TypeError("obj must be either a dtype or bytes object")
-
-
-def _deregister_dtype(dtype dt_in):
-    """ (dtype dt_in)
-
-    Deregister a dtype from the NumPy-tag mapping, along with the.
-    corresponding tag.
-    """
-    if dt_in not in _dtype_map:
-        raise RuntimeError("This dtype is not registered.")
-
-    cdef TypeID tid_hl = _dtype_map[dt_in]
-    cdef bytes tag = tid_hl.get_tag()
-    cdef hid_t tid = tid_hl.id
-    del _dtype_map[dt_in]
-    del _tag_map[tag]
-    H5Tclose(tid)
-
-
-def _deregister_tag(bytes tag):
-    """ (bytes tag)
-
-    Deregister a tag from the NumPy-tag mapping, along with the.
-    corresponding dtype.
-    """
-    if tag not in _tag_map:
-        raise RuntimeError("This tag is not registered.")
-
-    cdef dtype dt_in = _tag_map[tag]
-    cdef TypeID tid_hl = _tag_map[dt_in]
-    cdef hid_t tid = tid_hl.id
-    del _dtype_map[dt_in]
-    del _tag_map[tag]
-    H5Tclose(tid)
+    return new_type
