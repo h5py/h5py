@@ -298,6 +298,9 @@ def guess_chunk(shape, maxshape, typesize):
     """
     # pylint: disable=unused-argument
 
+    if shape is None:
+        raise ValueError("Chunks not allowed for empty datasets.")
+
     # For unlimited dimensions we have to guess 1024
     shape = tuple((x if x!=0 else 1024) for i, x in enumerate(shape))
 
