@@ -279,6 +279,13 @@ class TestCreateChunked(BaseDataset):
         dset[0:2] = 12
         self.assertTrue(np.all(dset[0:2] == 12))
 
+    def test_auto_chunks_no_shape(self):
+        """ Auto-chunking of empty datasets not allowed"""
+        with pytest.raises(ValueError) as err:
+            self.f.create_dataset('foo', dtype='S100', chunks=True)
+        assert 'empty' in str(err.value)
+
+
 class TestCreateFillvalue(BaseDataset):
 
     """
