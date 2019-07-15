@@ -162,7 +162,7 @@ def make_new_dset(parent, shape=None, dtype=None, data=None,
     dset_id = h5d.create(parent.id, None, tid, sid, dcpl=dcpl)
 
     if (data is not None) and (not isinstance(data, Empty)):
-        dset_id.write(h5s.ALL, h5s.ALL, data)
+        dset_id.write(h5s.ALL, h5s.ALL, data, tid)
 
     return dset_id
 
@@ -497,7 +497,7 @@ class Dataset(HLObject):
             # This is necessary because in the case of array types, NumPy
             # discards the array information at the top level.
             new_dtype = readtime_dtype(self.id.dtype, names)
-        mtype = h5t.py_create(new_dtype)
+        mtype = self.id.get_type()
 
         # === Special-case region references ====
 
