@@ -70,12 +70,17 @@ class test(Command):
         buildobj.run()
 
         oldpath = sys.path
+        oldcwd = os.getcwd()
+        build_lib_dir = op.abspath(buildobj.build_lib)
         try:
-            sys.path = [op.abspath(buildobj.build_lib)] + oldpath
+            sys.path = [build_lib_dir] + oldpath
+            os.chdir(build_lib_dir)
+
             import h5py
             sys.exit(h5py.run_tests())
         finally:
             sys.path = oldpath
+            os.chdir(oldcwd)
 
 
 CMDCLASS = {'build_ext': setup_build.h5py_build_ext,
