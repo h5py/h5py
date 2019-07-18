@@ -76,6 +76,7 @@ Bugfixes
   systems (:issue:`1235`).
 - Documented that nested compound types are not currently supported
   (:issue:`1236`).
+- Fixed attribute ``create`` method to be consistent with ``__setattr__`` (:issue:`1265`).
 
 Building h5py
 -------------
