@@ -13,6 +13,7 @@
 
 from __future__ import absolute_import
 
+import six
 import numpy as np
 import h5py
 
@@ -45,6 +46,13 @@ class TestArray(TestCase):
         # See issue 498 discussion
 
         self.f.attrs.create('x', data=42, dtype='i8')
+
+    def test_str(self):
+        # See issue 1057
+        self.f.attrs.create('x', six.unichr(0x03A9))
+        out = self.f.attrs['x']
+        self.assertEqual(out, six.unichr(0x03A9))
+        self.assertIsInstance(out, six.string_types)
 
     def test_tuple_of_unicode(self):
         # Test that a tuple of unicode strings can be set as an attribute. It will

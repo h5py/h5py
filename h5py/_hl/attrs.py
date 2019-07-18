@@ -92,7 +92,7 @@ class AttributeManager(base.MutableMappingHDF5, base.CommonStateObject):
         use a specific type or shape, or to preserve the type of an attribute,
         use the methods create() and modify().
         """
-        self.create(name, data=value, dtype=base.guess_dtype(value))
+        self.create(name, data=value)
 
     @with_phil
     def __delitem__(self, name):
@@ -115,6 +115,8 @@ class AttributeManager(base.MutableMappingHDF5, base.CommonStateObject):
         """
 
         with phil:
+            if dtype is None:  # Guess dtype before modifying data
+                dtype = base.guess_dtype(data)
 
             # First, make sure we have a NumPy array.  We leave the data type
             # conversion for HDF5 to perform (other than the below exception).
