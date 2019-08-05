@@ -80,6 +80,13 @@ class TestAccess(BaseAttrs):
         with self.assertRaises(KeyError):
             self.f.attrs['a']
 
+    def test_get_id(self):
+        self.f.attrs['a'] = 4.0
+        aid = self.f.attrs.get_id('a')
+        assert isinstance(aid, h5a.AttrID)
+
+        with self.assertRaises(KeyError):
+            self.f.attrs.get_id('b')
 
 class TestDelete(BaseAttrs):
 

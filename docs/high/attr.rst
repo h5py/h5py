@@ -91,6 +91,11 @@ Reference
 
         Retrieve `name`, or `default` if no such attribute exists.
 
+    .. method:: get_id(name)
+
+       Get the low-level :class:`AttrID <low:h5py.h5a.AttrID>` for the named
+       attribute.
+
     .. method:: create(name, data, shape=None, dtype=None)
 
         Create a new attribute, with control over the shape and type.  Any

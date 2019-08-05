@@ -84,6 +84,11 @@ class AttributeManager(base.MutableMappingHDF5, base.CommonStateObject):
             return arr[()]
         return arr
 
+    def get_id(self, name):
+        """Get a low-level AttrID object for the named attribute.
+        """
+        return h5a.open(self._id, self._e(name))
+
     @with_phil
     def __setitem__(self, name, value):
         """ Set a new attribute, overwriting any existing attribute.
