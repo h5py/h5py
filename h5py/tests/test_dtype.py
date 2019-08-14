@@ -1,5 +1,5 @@
 """
-    Tests for the h5py.Datatype class.
+    Tests for converting between numpy dtypes and h5py data types
 """
 
 from __future__ import absolute_import
