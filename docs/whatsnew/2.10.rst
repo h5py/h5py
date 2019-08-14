@@ -29,6 +29,8 @@ New features
   :func:`check_enum_dtype` replace :func:`check_dtype` (:issue:`1132`).
 - A new method :meth:`~.Dataset.make_scale` to conveniently make a dataset into
   a :ref:`dimension scale <dimension_scales>` (:issue:`830`, :issue:`1212`).
+- A new method :meth:`AttributeManager.get_id` to get a low-level
+  :class:`~h5py.h5a.AttrID` object referring to an attribute (:issue:`1278`).
 - Several examples were updated to run on Python 3 (:issue:`1149`).
 
 Deprecations
