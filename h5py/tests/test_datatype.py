@@ -21,19 +21,9 @@ import numpy as np
 
 from .common import ut, TestCase
 
-from h5py import File
-from h5py._hl.datatype import Datatype
+from h5py import Datatype
 
-class BaseType(TestCase):
-
-    def setUp(self):
-        self.f = File(self.mktemp(), 'w')
-
-    def tearDown(self):
-        if self.f:
-            self.f.close()
-
-class TestCreation(BaseType):
+class TestCreation(TestCase):
 
     """
         Feature: repr() works sensibly on datatype objects
