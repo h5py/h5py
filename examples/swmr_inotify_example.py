@@ -1,7 +1,7 @@
 
 """
     Demonstrate the use of h5py in SWMR mode to monitor the growth of a dataset
-    on nofication of file modifications.
+    on notification of file modifications.
 
     This demo uses pyinotify as a wrapper of Linux inotify.
     https://pypi.python.org/pypi/pyinotify
