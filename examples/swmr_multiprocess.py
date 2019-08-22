@@ -16,7 +16,7 @@
     current shape of it.
 """
 
-import sys, time
+import sys
 import h5py
 import numpy as np
 import logging
