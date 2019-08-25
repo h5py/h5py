@@ -41,8 +41,8 @@ $CHANGELOG_CATEGORIES = (
     'Development',
 )
 
-def format_changelog_category(cat):
-    return cat + "\n" + "-" * len(cat) + "\n\n"
+def format_changelog_category(category):
+    return category + "\n" + "-" * len(category) + "\n\n"
 
 
 $CHANGELOG_CATEGORY_TITLE_FORMAT = format_changelog_category

@@ -40,7 +40,7 @@
   aliases:
   - valiantljk
   email: jaln.liu@ttu.edu
-  num_commits: 4
+  num_commits: 9
   first_commit: 2015-11-10 18:54:08
   github: valiantljk
 - name: James Tocknell
@@ -118,7 +118,7 @@
   aliases:
   - cgohlke
   email: cgohlke@uci.edu
-  num_commits: 1
+  num_commits: 2
   first_commit: 2016-11-08 18:01:54
   github: cgohlke
 - name: Carlos Pascual
@@ -178,7 +178,7 @@
   num_commits: 955
   first_commit: 2008-05-05 17:12:34
   aliases:
-    - andrewcollette
+  - andrewcollette
   github: andrewcollette
 - name: Evan Wright
   email: evanpw@gmail.com
@@ -193,7 +193,7 @@
   email: devnull@localhost
   aliases:
   - convert-repo
-  num_commits: 1
+  num_commits: 2
   first_commit: 2008-05-05 16:59:07
 - name: Andrey Paramonov
   email: cmr.pent@gmail.com
@@ -214,7 +214,8 @@
   num_commits: 146
   first_commit: 2016-08-06 20:10:45
   alternate_emails:
-    - tcaswell@uchicago.edu
+  - tcaswell@uchicago.edu
+  - tcaswell@gmail.com
   github: tacaswell
 - name: syhw
   email: gabriel.synnaeve@gmail.com
@@ -277,7 +278,7 @@
   - darren@f2-analysis-2.chess.cornell.edu
   aliases:
   - ddale
-  num_commits: 49
+  num_commits: 45
   first_commit: 2011-05-27 10:45:34
   github: ddale
 - name: Peter Chang
@@ -366,7 +367,7 @@
   first_commit: 2013-01-07 14:50:24
 - name: Anthony Scopatz
   email: scopatz@gmail.com
-  num_commits: 12
+  num_commits: 13
   first_commit: 2016-08-11 07:18:10
   github: scopatz
 - name: amcnicho
