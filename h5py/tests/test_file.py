@@ -260,8 +260,9 @@ class TestDrivers(TestCase):
         """ MPIO driver and options """
         from mpi4py import MPI
 
-        fname = self.mktemp()
-        with File(fname, 'w', driver='mpio', comm=MPI.COMM_WORLD) as f:
+        comm=MPI.COMM_WORLD
+        fname = self.mktemp_mpi(comm)
+        with File(fname, 'w', driver='mpio', comm=comm) as f:
             self.assertTrue(f)
             self.assertEqual(f.driver, 'mpio')
 
@@ -272,8 +273,9 @@ class TestDrivers(TestCase):
         """ Enable atomic mode for MPIO driver """
         from mpi4py import MPI
 
-        fname = self.mktemp()
-        with File(fname, 'w', driver='mpio', comm=MPI.COMM_WORLD) as f:
+        comm=MPI.COMM_WORLD
+        fname = self.mktemp_mpi(comm)
+        with File(fname, 'w', driver='mpio', comm=comm) as f:
             self.assertFalse(f.atomic)
             f.atomic = True
             self.assertTrue(f.atomic)
@@ -583,8 +585,9 @@ class TestClose(TestCase):
         """ MPIO driver and options """
         from mpi4py import MPI
 
-        fname = self.mktemp()
-        f = File(fname, 'w', driver='mpio', comm=MPI.COMM_WORLD)
+        comm=MPI.COMM_WORLD
+        fname = self.mktemp_mpi(comm)
+        f = File(fname, 'w', driver='mpio', comm=comm)
         f.create_group("test")
         f.close()
         f.close()
