@@ -1,0 +1,270 @@
+- name: joydeep bhattacharjee
+  email: joydeepubuntu@gmail.com
+- name: Konrad Hinsen
+  aliases:
+    - khinsen
+  email: konrad.hinsen@fastmail.net
+- name: Aleksandar Jelenak
+  email: ajelenak@hdfgroup.org
+- name: pharshalp
+  email: pharshalp@gmail.com
+- name: Sajid Ali
+  email: 30510036+s-sajid-ali@users.noreply.github.com
+- name: Aaron Parsons
+  email: aaron.parsons@diamond.ac.uk
+- name: lhole
+  email: laurence.hole@gmail.com
+- name: Matthias Geier
+  email: Matthias.Geier@gmail.com
+- name: Liu JiaLin
+  aliases:
+    - valiantljk
+  email: jaln.liu@ttu.edu
+- name: James Tocknell
+  email: aragilar@gmail.com
+  alternate_emails:
+    - aragilar+github@gmail.com
+- name: Toon Verstraelen
+  email: Toon.Verstraelen@UGent.be
+- name: Noel Dawe
+  email: Noel.Dawe@cern.ch
+- name: Kit Choi
+  email: kit@kychoi.org
+- name: Eric Larson
+  email: larson.eric.d@gmail.com
+- name: John Tyree
+  email: johntyree@gmail.com
+- name: Jerome Kieffer
+  email: jerome.kieffer@esrf.fr
+  alternate_emails:
+    - github@terre-adelie.org
+- name: Drew Parsons
+  email: dparsons@emerall.com
+- name: lucasb-eyer
+  email: lucasb.eyer.be@gmail.com
+- name: Robert David Grant
+  email: robert.david.grant@gmail.com
+- name: JP Dehollain
+  email: jpdehollain@users.noreply.github.com
+- name: chrisjbillington
+  email: none@none
+- name: Lars Viklund
+  email: lars@hpc2n.umu.se
+- name: Matthew Brett
+  email: matthew.brett@gmail.com
+- name: Christoph Gohlke
+  aliases:
+    - cgohlke
+  email: cgohlke@uci.edu
+- name: Carlos Pascual
+  email: cpascual@cells.es
+- name: Dan Guest
+  email: dguest@cern.ch
+- name: Dylan Nelson
+  email: dnelson@mpa-garching.mpg.de
+- name: Stan West
+  email: countrycaptain@verizon.net
+  alternate_emails:
+    - 38358698+stanwest@users.noreply.github.com
+- name: Ghislain Antony Vaillant
+  email: ghisvail@gmail.com
+  alternate_emails:
+    - ghisvail@users.noreply.github.com
+- name: Markus Gerstel
+  email: markus.gerstel@diamond.ac.uk
+- name: root
+  email: root@acdlab11.lims.acdlabs.ru
+- name: bpinsard
+  email: bpinsard@imed.jussieu.fr
+- name: Barry Wardel
+  email: barry.wardell@gmail.com
+- name: Joe Jevnik
+  email: joe@quantopian.com
+- name: Andrew Collette
+  email: andrew.collette@gmail.com
+- name: Evan Wright
+  email: evanpw@gmail.com
+- name: Johannes Meixner
+  email: xmj@chaot.net
+- name: unknown
+  email: devnull@localhost
+  aliases:
+    - convert-repo
+- name: Andrey Paramonov
+  email: cmr.pent@gmail.com
+- name: Jason Newton
+  email: nevion@gmail.com
+- name: Marc Abramowitz
+  email: abramowi@adobe.com
+- name: Thomas A Caswell
+  email: tcaswell@bnl.gov
+- name: syhw
+  email: gabriel.synnaeve@gmail.com
+- name: Will Parkin
+  email: wmparkin@gmail.com
+- name: Yu Feng
+  email: yfeng1@waterfall.dyn.berkeley.edu
+  alternate_emails:
+    - rainwoodman@gmail.com
+- name: Axel Huebl
+  email: axel.huebl@plasma.ninja
+- name: Stuart Berg
+  email: bergs@janelia.hhmi.org
+- name: Michael V. DePalatis
+  email: mike@depalatis.net
+- name: Kwat
+  email: KwatME@users.noreply.github.com
+- name: Scott Sanderson
+  email: ssanderson@quantopian.com
+- name: Devin
+  email: ''
+- name: Nathan Goldbaum
+  email: ngoldbau@illinois.edu
+- name: Mike Boyle
+  email: moble@users.noreply.github.com
+- name: Darren Dale
+  email: dsdale24@gmail.com
+  alternate_emails:
+    - darren@f2-analysis-2.chess.cornell.edu
+- name: Peter Chang
+  email: peter.chang@diamond.ac.uk
+- name: paulmueller
+  email: paulmueller@users.noreply.github.com
+- name: Lawrence Chan
+  email: element103@gmail.com
+  alternate_emails:
+    - lchan@jumptrading.com
+- name: Seth R Johnson
+  email: johnsonsr@ornl.gov
+- name: Mikhail
+  email: mihanlg@gmail.com
+- name: Florian Rathgeber
+  email: florian.rathgeber@gmail.com
+- name: Nils Werner
+  email: nils.werner@gmail.com
+- name: Antony Lee
+  email: anntzer.lee@gmail.com
+- name: Ulrik Kofoed Pedersen
+  email: ulrik.pedersen@diamond.ac.uk
+- name: Peter Hill
+  email: zed.three@gmail.com
+- name: John Benediktsson
+  email: mrjbq7@gmail.com
+- name: Hameer Abbasi
+  email: hameerabbasi@yahoo.com
+- name: Andy Salnikov
+  email: a_salnikov@yahoo.com
+- name: Yuri D'Elia
+  email: wavexx@thregr.org
+- name: Martin Raspaud
+  email: martin.raspaud@smhi.se
+- name: Thomas Kluyver
+  email: thomas.kluyver@xfel.eu
+  alternate_emails:
+    - thomas@kluyver.me.uk
+- name: Matt Zwier
+  email: mczwier@gmail.com
+- name: Anthony Scopatz
+  email: scopatz@gmail.com
+- name: amcnicho
+  email: andrew.mcnichols@gmail.com
+- name: Jonah Bernhard
+  email: jonah.bernhard@gmail.com
+- name: Matthew Turk
+  email: matthewturk@gmail.com
+- name: Bradley M. Froehle
+  email: brad.froehle@gmail.com
+- name: John Kirkham
+  email: kirkhamj@janelia.hhmi.org
+- name: Chris Billington
+  email: chrisjbillington@gmail.com
+- name: Dan Meliza
+  email: dan@meliza.org
+- name: Artem Sanakoev
+  email: enorone@gmail.com
+- name: Antoine Pitrou
+  email: antoine@python.org
+- name: Matthias König
+  email: konigmatt@googlemail.com
+- name: Charles Law
+  email: charles.law@eyenuk.com
+  alternate_emails:
+    - 39317519+claweyenuk@users.noreply.github.com
+- name: Joseph Kleinhenz
+  email: kleinhenz.joseph@gmail.com
+- name: cclauss
+  email: cclauss@me.com
+- name: Adam J. Stewart
+  email: ajstewart426@gmail.com
+- name: Kyle Sunden
+  email: sunden@wisc.edu
+- name: Caleb Morse
+  email: cdmorse@sandia.gov
+- name: Chen Yufei
+  email: cyf@ruitiancapital.com
+  alternate_emails:
+    - cyfdecyf@gmail.com
+- name: Colin Gavin
+  email: colin.m.gavin@gmail.com
+- name: Peter Colberg
+  email: peter@colberg.org
+- name: Chris Meyer
+  email: cmeyer1969@gmail.com
+- name: James Clarke
+  email: jrtc27@jrtc27.com
+- name: Thomas VINCENT
+  email: thomas.vincent@esrf.fr
+- name: Jakob Lombacher
+  email: Jakob.Lombacher@daimler.com
+  alternate_emails:
+    - Jakob@Lombacher.net
+- name: Sam Toyer
+  email: sam@qxcv.net
+- name: Simon Mutch
+  email: smutch@unimelb.edu.au
+- name: Machine User
+  email: Machine User@WINBUILD
+- name: Max Dietz
+  email: maxwell.r.dietz@gmail.com
+- name: Pierre de Buyl
+  email: pdebuyl@ulb.ac.be
+- name: Matthieu Brucher
+  email: matthieu.brucher@gmail.com
+- name: Andrea Bedini
+  email: andrea.bedini@curtin.edu.au
+- name: Michael Boyle
+  email: michael.oliver.boyle@gmail.com
+- name: Christian Sachs
+  email: sachs.christian@gmail.com
+- name: Martin Teichmann
+  email: lkb.teichmann@gmail.com
+- name: Joe Zuntz
+  email: joezuntz@googlemail.com
+- name: ebner
+  email: simon.ebner@psi.ch
+- name: Greg Allen
+  email: GregoryEAllen@yahoo.com
+- name: Sam Mason
+  email: sam@samason.uk
+- name: Valentin Valls
+  email: valentin.valls@esrf.fr
+- name: Андрей Парамонов
+  email: paramon@lims.acdlabs.ru
+- name: Geoff Wright
+  email: gpwright@gmail.com
+- name: Lawrence Mitchell
+  email: lawrence.mitchell@imperial.ac.uk
+- name: dkriegner
+  email: dominik.kriegner@gmail.com
+- name: Peter H. Li
+  email: phli@google.com
+- name: Jens Timmerman
+  email: jens.timmerman@ugent.be
+- name: Niru Maheswaranathan
+  email: nirum@users.noreply.github.com
+- name: jialin
+  email: jalnliu@lbl.gov
+- name: Paco Hope
+  email: pacohope@amazon.co.uk
+- name: Felix Yan
+  email: felixonmars@archlinux.org
