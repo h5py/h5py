@@ -4,7 +4,9 @@ $PROJECT = $GITHUB_ORG = $GITHUB_REPO = 'h5py'
 $ACTIVITIES = ['authors', 'version_bump', 'changelog',
                'tag', 'push_tag', 'ghrelease', 'pypi',
               ]
-
+#
+# Version bumping
+#
 version_re = re.compile(r"(?P<major>\d+)\.(?P<minor>\d+)\.(?P<bugfix>\d+)"
                         r"(\.(?P<pre>(?!post|dev)[^.]+))?"
                         r"(.post(?P<post>\d+))?(.dev(?P<dev>\d+))?")
@@ -21,5 +23,26 @@ $VERSION_BUMP_PATTERNS = [
     ('docs/conf.py', r'release\s*=.*', "release = '$VERSION'"),
     ('h5py/version.py', r'version_tuple\s*=.*', replace_version_tuple),
     ]
-$CHANGELOG_FILENAME = 'CHANGELOG.rst'
+
+#
+# Changelog
+#
+$CHANGELOG_FILENAME = 'docs/whatsnew/index.rst'
+$CHANGELOG_LATEST = 'docs/whatsnew/$VERSION.rst'
 $CHANGELOG_TEMPLATE = 'TEMPLATE.rst'
+$CHANGELOG_PATTERN = '.. toctree::\n\n'
+$CHANGELOG_HEADER = '.. toctree::\n\n    $VERSION\n'
+$CHANGELOG_CATEGORIES = (
+    'New features',
+    'Deprecations',
+    'Exposing HDF5 functions',
+    'Bug fixes',
+    'Building h5py',
+    'Development',
+)
+
+def format_changelog_category(cat):
+    return cat + "\n" + "-" * len(cat) + "\n\n"
+
+
+$CHANGELOG_CATEGORY_TITLE_FORMAT = format_changelog_category
