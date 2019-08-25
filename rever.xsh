@@ -19,7 +19,7 @@ def replace_version_tuple(ver):
 
 
 $VERSION_BUMP_PATTERNS = [
-    ('setup.py', r'VERSION\s*=.*', "VERSION = '$VERSION'")
+    ('setup.py', r'VERSION\s*=.*', "VERSION = '$VERSION'"),
     ('docs/conf.py', r'release\s*=.*', "release = '$VERSION'"),
     ('h5py/version.py', r'version_tuple\s*=.*', replace_version_tuple),
     ]
