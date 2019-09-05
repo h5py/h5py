@@ -27,4 +27,3 @@ Development
 -----------
 
 * <news item>
-
