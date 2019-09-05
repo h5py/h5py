@@ -40,4 +40,4 @@ exclude .coveragerc
 exclude .mailmap
 
 exclude rever.xsh
-recusive-exclude news *
+prune news
