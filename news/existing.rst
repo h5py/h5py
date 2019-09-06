@@ -1,6 +1,3 @@
-What's new in h5py 2.10
-=======================
-
 New features
 ------------
 
@@ -93,5 +90,5 @@ Building h5py
 Development
 -----------
 
-h5py's tests are now run by pytest (:issue:`1003`), and coverage reports are
-automatically generated `on Codecov <https://codecov.io/gh/h5py/h5py>`_.
+- h5py's tests are now run by pytest (:issue:`1003`), and coverage reports are
+  automatically generated `on Codecov <https://codecov.io/gh/h5py/h5py>`_.
