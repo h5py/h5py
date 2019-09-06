@@ -358,7 +358,7 @@
   alternate_emails:
   - thomas.kluyver@xfel.eu
   - takowl@gmail.com
-  num_commits: 107
+  num_commits: 111
   first_commit: 2018-06-23 08:47:27
   github: takluyver
 - name: Matt Zwier
@@ -367,7 +367,7 @@
   first_commit: 2013-01-07 14:50:24
 - name: Anthony Scopatz
   email: scopatz@gmail.com
-  num_commits: 13
+  num_commits: 18
   first_commit: 2016-08-11 07:18:10
   github: scopatz
 - name: amcnicho
