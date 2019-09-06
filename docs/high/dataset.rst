@@ -166,7 +166,7 @@ The ``compression_opts`` parameter will then be passed to this filter.
 Scale-Offset filter
 ~~~~~~~~~~~~~~~~~~~
 
-Filters enabled with the ``compression`` keywords are _lossless_; what comes
+Filters enabled with the ``compression`` keywords are *lossless*; what comes
 out of the dataset is exactly what you put in.  HDF5 also includes a lossy
 filter which trades precision for storage space.
 

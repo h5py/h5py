@@ -1,4 +1,5 @@
 include ANN.rst
+include AUTHORS
 include api_gen.py
 include LICENSE
 include MANIFEST.in
@@ -37,3 +38,6 @@ recursive-exclude * __pycache__
 recursive-exclude * *.py[co]
 exclude .coveragerc
 exclude .mailmap
+
+exclude rever.xsh
+prune news

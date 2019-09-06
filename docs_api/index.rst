@@ -35,6 +35,7 @@ Contents
     h5l
     h5o
     h5p
+    h5pl
     h5r
     h5s
     h5t

@@ -36,11 +36,8 @@ SETUP_REQUIRES = RUN_REQUIRES + [NUMPY_DEP, 'Cython>=0.23', 'pkgconfig']
 
 # Needed to avoid trying to install numpy/cython on pythons which the latest
 # versions don't support
-if ("sdist" in sys.argv and "bdist_wheel" not in sys.argv and
-    "install" not in sys.argv) or "check" in sys.argv:
-    use_setup_requires = False
-else:
-    use_setup_requires = True
+use_setup_requires = any(parameter in sys.argv for parameter in
+    ("bdist_wheel", "build", "configure", "install", "test"))
 
 
 # --- Custom Distutils commands -----------------------------------------------
@@ -73,12 +70,17 @@ class test(Command):
         buildobj.run()
 
         oldpath = sys.path
+        oldcwd = os.getcwd()
+        build_lib_dir = op.abspath(buildobj.build_lib)
         try:
-            sys.path = [op.abspath(buildobj.build_lib)] + oldpath
+            sys.path = [build_lib_dir] + oldpath
+            os.chdir(build_lib_dir)
+
             import h5py
             sys.exit(h5py.run_tests())
         finally:
             sys.path = oldpath
+            os.chdir(oldcwd)
 
 
 CMDCLASS = {'build_ext': setup_build.h5py_build_ext,
@@ -149,8 +151,7 @@ setup(
   url = 'http://www.h5py.org',
   download_url = 'https://pypi.python.org/pypi/h5py',
   packages = ['h5py', 'h5py._hl', 'h5py.tests',
-              'h5py.tests.old', 'h5py.tests.hl',
-              'h5py.tests.hl.test_vds'],
+              'h5py.tests.test_vds'],
   package_data = package_data,
   ext_modules = [Extension('h5py.x',['x.c'])],  # To trick build into running build_ext
   install_requires = RUN_REQUIRES,

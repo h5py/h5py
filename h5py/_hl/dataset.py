@@ -192,7 +192,6 @@ def make_new_virtual_dset(parent, shape, sources, dtype=None,
     for vspace, fpath, dset, src_dspace in sources:
         dcpl.set_virtual(vspace, fpath, dset, src_dspace)
 
-    dtype = dtype
     if isinstance(dtype, Datatype):
         # Named types are used as-is
         tid = dtype.id

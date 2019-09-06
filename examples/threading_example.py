@@ -181,7 +181,7 @@ class ComputeWidget(object):
             escape = int(self.escapefield.get())
             start = complex(float(self.startxfield.get()), float(self.startyfield.get()))
             extent = complex(float(self.extentxfield.get()), float(self.extentyfield.get()))
-            if (nx<=0) or (nx<=0) or (escape<=0):
+            if (nx<=0) or (ny<=0) or (escape<=0):
                 raise ValueError("NX, NY and ESCAPE must be positive")
             if abs(extent)==0:
                 raise ValueError("Extent must be finite")
