@@ -1,0 +1,116 @@
+What's new in h5py 2.10
+=======================
+
+New features
+------------
+
+- HDF5 8-bit bitfield data can now be read either as uint8 or booleans
+  (:issue:`821`). Pytables stores booleans as this type.
+  For now, you must pick which type to use explicitly::
+
+      with dset.astype(numpy.uint8):   # or numpy.bool
+          arr = dset[:]
+
+- Numpy arrays of integers can now be used for fancy indexing, where previously
+  a Python list was required (:issue:`963`).
+- Fancy indexing now allows an empty list or array (:issue:`1174`).
+- IPython can now tab-complete names in h5py groups and attributes without any
+  special user action (:issue:`1228`). This simple completion only matches the
+  first level of keys in a group, not subkeys. You can still call
+  ``h5py.enable_ipython_completion()`` for more complete results.
+- The ``libver`` parameter for :class:`File` now accepts ``'v108'`` and
+  ``'v110'`` to specify compatibility with HDF5 1.8 or 1.10 (:issue:`1155`).
+  See :ref:`file_version` for details.
+- New functions and constants for getting and identifying :ref:`special data
+  types <special_types>` - :func:`string_dtype`, :func:`vlen_dtype`,
+  :func:`enum_dtype`, ``ref_dtype`` and ``regionref_dtype`` replace
+  :func:`special_dtype`. For identifying string, vlen and enum dtypes,
+  :func:`check_string_dtype`, :func:`check_vlen_dtype` and
+  :func:`check_enum_dtype` replace :func:`check_dtype` (:issue:`1132`).
+- A new method :meth:`~.Dataset.make_scale` to conveniently make a dataset into
+  a :ref:`dimension scale <dimension_scales>` (:issue:`830`, :issue:`1212`).
+- A new method :meth:`AttributeManager.get_id` to get a low-level
+  :class:`~h5py.h5a.AttrID` object referring to an attribute (:issue:`1278`).
+- Several examples were updated to run on Python 3 (:issue:`1149`).
+
+Deprecations
+------------
+
+- The default behaviour of ``h5py.File`` with no specified mode is deprecated
+  (:issue:`1143`).
+  It currently tries to create a file or open it for read/write access,
+  silently falling back to read-only depending on permissions. From h5py 3.0,
+  the default will be read-only.
+
+  Ideally, code should pass an explicit mode each time a file is opened::
+
+      h5py.File("example.h5", "r")
+
+  The possible modes are described in :ref:`file_open`.
+  If you want to suppress the deprecation warnings from code you can't modify,
+  you can either:
+
+   - set ``h5.get_config().default_file_mode = 'r'`` (or another available mode)
+   - or set the environment variable ``H5PY_DEFAULT_READONLY`` to any non-empty
+     string, to adopt the future default.
+
+- This is expected to be the last h5py release to support Python 2.7 and 3.4.
+
+Exposing HDF5 functions
+-----------------------
+
+- ``H5Zunregister`` exposed as :func:`h5z.unregister_filter` (:issue:`746`,
+  :issue:`1224`).
+- The new module :mod:`h5py.h5pl` module exposes various ``H5PL`` functions
+  to inspect and modify the search path for plugins (:issue:`1166`,
+  :issue:`1256`).
+- ``H5Dread_chunk`` exposed as :func:`h5d.read_direct_chunk` (:issue:`1190`).
+
+Bugfixes
+--------
+
+- Fix crash with empty variable-length data (:issue:`1248`, :issue:`1253`).
+- Fixed random selection of data type when reading 64-bit floats on Windows
+  where Python uses random dictionary order (:issue:`1051`, :issue:`1134`).
+- Pickling h5py objects now fails explicitly. It previously failed on
+  unpickling, and we can't reliably serialise and restore handles to HDF5
+  objects anyway (:issue:`531`, :issue:`1194`). If you need to use these objects
+  in other processes, you could explicitly serialise the filename and the name
+  of the object inside the file. Or consider `h5pickle
+  <https://github.com/Exteris/h5pickle/>`_, which does the same implicitly.
+- Creating a dataset with external storage can no longer mutate the ``external``
+  list parameter passed in (:issue:`1205`). It also has improved error messages
+  (:issue:`1204`).
+- Certain deprecation warnings will now show the relevant line of code which
+  uses the deprecated feature (:issue:`1146`).
+- Skipped a failing test for complex floating point numbers on 32-bit x86
+  systems (:issue:`1235`).
+- Disabled the longdouble type on the ``ppc64le`` architecture, as it was
+  causing segfaults with more commonly used float types (:issue:`1243`).
+- Documented that nested compound types are not currently supported
+  (:issue:`1236`).
+- Fixed attribute ``create`` method to be consistent with ``__setattr__`` (:issue:`1265`).
+
+Building h5py
+-------------
+
+- The version of HDF5 can now be automatically detected on Windows
+  (:issue:`1123`).
+- Fixed autodetecting the version from libhdf5 in default locations on Windows
+  and Mac (:issue:`1240`).
+- Fail to build if it can't detect version from libhdf5, rather than assuming
+  1.8.4 as a default (:issue:`1241`).
+- Building h5py from source on Unix platforms now requires either ``pkg-config``
+  or an explicitly specified path to HDF5 (:issue:`1231`).
+  Previously it had a hardcoded default path, but when this was wrong,
+  the failures were unnecessarily confusing.
+- The Cython 'language level' is now explicitly set to 2, to prepare h5py
+  for changing defaults in Cython (:issue:`1171`).
+- Avoid using ``setup_requires`` when pip calls ``setup.py egg_info``
+  (:issue:`1259`).
+
+Development
+-----------
+
+- h5py's tests are now run by pytest (:issue:`1003`), and coverage reports are
+  automatically generated `on Codecov <https://codecov.io/gh/h5py/h5py>`_.
