@@ -156,6 +156,6 @@ setup(
   ext_modules = [Extension('h5py.x',['x.c'])],  # To trick build into running build_ext
   install_requires = RUN_REQUIRES,
   setup_requires = SETUP_REQUIRES if use_setup_requires else [],
-  python_requires='>=3.5',
+  python_requires='>=3.6',
   cmdclass = CMDCLASS,
 )

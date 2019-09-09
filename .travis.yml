@@ -30,25 +30,6 @@ matrix:
     # needed to work around https://github.com/travis-ci/travis-ci/issues/4794
     # TODO: We should see if we can replace this with installing python via pyenv # based on toxenv
 
-    # Python 3.5
-    - python: 3.5
-      env:
-      - TOXENV=py35-test-deps
-    - python: 3.5
-      env:
-      - TOXENV=py35-test-mindeps
-    - python: 3.5
-      env:
-      - TOXENV=py35-test-deps
-        TOX_TESTENV_PASSENV=LANG LC_ALL
-        LANG=C
-        LC_ALL=C
-    - python: 3.5
-      env:
-      - TOXENV=py35-test-deps
-        HDF5_VERSION=1.10.1
-        HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION
-
     # Python 3.6
     - python: 3.6
       env:
