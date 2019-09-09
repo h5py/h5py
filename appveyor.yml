@@ -22,7 +22,7 @@ environment:
       HDF5_VSVERSION: "14-64"
       HDF5_DIR: "C:\\hdf5\\%HDF5_VERSION%\\%HDF5_VSVERSION%"
 
-    - PYTHON: "C:\\Python37"
+    - PYTHON: "C:\\Python37-x64"
       TOXENV: "py37-test-deps"
       HDF5_VSVERSION: "14-64"
       HDF5_DIR: "C:\\hdf5\\%HDF5_VERSION%\\%HDF5_VSVERSION%"
