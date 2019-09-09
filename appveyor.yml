@@ -6,63 +6,29 @@ environment:
   matrix:
 
     ### USING HDF5 1.8 ###
-    - PYTHON: "C:\\Python27"
-      TOXENV: "py27-test-deps"
-      HDF5_VSVERSION: "9"
-      HDF5_DIR: "C:\\hdf5\\%HDF5_VERSION%\\%HDF5_VSVERSION%"
-
-    - PYTHON: "C:\\Python34"
-      TOXENV: "py34-test-deps"
-      HDF5_VSVERSION: "10"
-      HDF5_DIR: "C:\\hdf5\\%HDF5_VERSION%\\%HDF5_VSVERSION%"
-
-    - PYTHON: "C:\\Python35"
-      TOXENV: "py35-test-deps"
-      HDF5_VSVERSION: "14"
-      HDF5_DIR: "C:\\hdf5\\%HDF5_VERSION%\\%HDF5_VSVERSION%"
-
     - PYTHON: "C:\\Python36"
       TOXENV: "py36-test-deps"
       HDF5_VSVERSION: "14"
       HDF5_DIR: "C:\\hdf5\\%HDF5_VERSION%\\%HDF5_VSVERSION%"
 
-    - PYTHON: "C:\\Python27-x64"
-      TOXENV: "py27-test-deps"
-      TOX_APPVEYOR_X64: "1"
-      HDF5_VSVERSION: "9-64"
-      HDF5_DIR: "C:\\hdf5\\%HDF5_VERSION%\\%HDF5_VSVERSION%"
-
-    - PYTHON: "C:\\Python34-x64"
-      TOXENV: "py34-test-deps"
-      TOX_APPVEYOR_X64: "1"
-      HDF5_VSVERSION: "10-64"
-      DISTUTILS_USE_SDK: "1"
-      HDF5_DIR: "C:\\hdf5\\%HDF5_VERSION%\\%HDF5_VSVERSION%"
-
-    - PYTHON: "C:\\Python35-x64"
-      TOXENV: "py35-test-deps"
-      TOX_APPVEYOR_X64: "1"
-      HDF5_VSVERSION: "14-64"
+    - PYTHON: "C:\\Python37"
+      TOXENV: "py37-test-deps"
+      HDF5_VSVERSION: "14"
       HDF5_DIR: "C:\\hdf5\\%HDF5_VERSION%\\%HDF5_VSVERSION%"
 
     - PYTHON: "C:\\Python36-x64"
       TOXENV: "py36-test-deps"
+      TOX_APPVEYOR_X64: "1"
+      HDF5_VSVERSION: "14-64"
+      HDF5_DIR: "C:\\hdf5\\%HDF5_VERSION%\\%HDF5_VSVERSION%"
+
+    - PYTHON: "C:\\Python37-x64"
+      TOXENV: "py37-test-deps"
       TOX_APPVEYOR_X64: "1"
       HDF5_VSVERSION: "14-64"
       HDF5_DIR: "C:\\hdf5\\%HDF5_VERSION%\\%HDF5_VSVERSION%"
 
     ### USING HDF5 1.10 ###
-    - PYTHON: "C:\\Python27"
-      TOXENV: "py27-test-deps"
-      HDF5_VSVERSION: "9"
-      HDF5_DIR: "C:\\hdf5\\%HDF5_VERSION%\\%HDF5_VSVERSION%"
-      HDF5_VERSION: "1.10.1"
-
-    - PYTHON: "C:\\Python35"
-      TOXENV: "py35-test-deps"
-      HDF5_VSVERSION: "14"
-      HDF5_DIR: "C:\\hdf5\\%HDF5_VERSION%\\%HDF5_VSVERSION%"
-      HDF5_VERSION: "1.10.1"
 
     - PYTHON: "C:\\Python36"
       TOXENV: "py36-test-deps"
@@ -70,22 +36,21 @@ environment:
       HDF5_DIR: "C:\\hdf5\\%HDF5_VERSION%\\%HDF5_VSVERSION%"
       HDF5_VERSION: "1.10.1"
 
-    - PYTHON: "C:\\Python27-x64"
-      TOXENV: "py27-test-deps"
-      TOX_APPVEYOR_X64: "1"
-      HDF5_VSVERSION: "9-64"
-      HDF5_DIR: "C:\\hdf5\\%HDF5_VERSION%\\%HDF5_VSVERSION%"
-      HDF5_VERSION: "1.10.1"
-
-    - PYTHON: "C:\\Python35-x64"
-      TOXENV: "py35-test-deps"
-      TOX_APPVEYOR_X64: "1"
-      HDF5_VSVERSION: "14-64"
+    - PYTHON: "C:\\Python37"
+      TOXENV: "py37-test-deps"
+      HDF5_VSVERSION: "14"
       HDF5_DIR: "C:\\hdf5\\%HDF5_VERSION%\\%HDF5_VSVERSION%"
       HDF5_VERSION: "1.10.1"
 
     - PYTHON: "C:\\Python36-x64"
       TOXENV: "py36-test-deps"
+      TOX_APPVEYOR_X64: "1"
+      HDF5_VSVERSION: "14-64"
+      HDF5_DIR: "C:\\hdf5\\%HDF5_VERSION%\\%HDF5_VSVERSION%"
+      HDF5_VERSION: "1.10.1"
+
+    - PYTHON: "C:\\Python37-x64"
+      TOXENV: "py37-test-deps"
       TOX_APPVEYOR_X64: "1"
       HDF5_VSVERSION: "14-64"
       HDF5_DIR: "C:\\hdf5\\%HDF5_VERSION%\\%HDF5_VSVERSION%"
@@ -94,10 +59,10 @@ environment:
 install:
   # We need wheel installed to build wheels
   - "%PYTHON%\\python.exe -m pip install --upgrade wheel pip setuptools"
-  - "py -3.5 -m pip install --upgrade wheel pip setuptools virtualenv"
-  - "py -3.5 -m pip install requests"
-  - "py -3.5 ci\\appveyor\\get_hdf5.py"
-  - "py -3.5 -m pip install tox codecov tox-appveyor"
+  - "py -3.6 -m pip install --upgrade wheel pip setuptools virtualenv"
+  - "py -3.6 -m pip install requests"
+  - "py -3.6 ci\\appveyor\\get_hdf5.py"
+  - "py -3.6 -m pip install tox codecov tox-appveyor"
 
 build: off
 
@@ -109,7 +74,7 @@ test_script:
   # Note that you must use the environment variable %PYTHON% to refer to
   # the interpreter you're using - Appveyor does not do anything special
   # to put the Python evrsion you want to use on PATH.
-  - "ci\\appveyor\\build.cmd py -3.5 -m tox -v"
+  - "ci\\appveyor\\build.cmd py -3.6 -m tox -v"
 
 # This is commented out as there's no easy way to deal with numpy dropping
 # older python versions without a recent pip/setuptools.
@@ -129,4 +94,4 @@ cache:
   - "C:\\hdf5"
 
 on_success:
-  - "py -3.5 -m codecov"
+  - "py -3.6 -m codecov"
