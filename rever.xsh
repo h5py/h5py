@@ -4,6 +4,8 @@ $PROJECT = $GITHUB_ORG = $GITHUB_REPO = 'h5py'
 $ACTIVITIES = ['authors', 'version_bump', 'changelog',
                'tag', 'push_tag', 'ghrelease', 'pypi',
               ]
+$PYPI_SIGN = True
+
 #
 # Version bumping
 #
