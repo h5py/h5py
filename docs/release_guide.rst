@@ -42,5 +42,3 @@ You probably want to make sure (with ``git tag``) that the new version
 number is available. If any release activities fail while running this
 command, you may safely re-run this command. You can also safely undo
 previously run activities. Please see the rever docs for more details.
-
-
