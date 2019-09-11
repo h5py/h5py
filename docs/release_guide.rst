@@ -34,7 +34,7 @@ you want to release (e.g. ``X.Y.Z``) into the rever command.
 
 **Step 2**
 
-.. code-release:: sh
+.. code-block:: sh
 
     $ rever X.Y.Z
 
