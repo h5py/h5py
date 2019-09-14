@@ -10,7 +10,7 @@ import numpy as np
 
 # Create source files (1.h5 to 4.h5)
 for n in range(1, 5):
-    with h5py.File('{}.h5'.format(n), 'w') as f:
+    with h5py.File(f'{n}.h5', 'w') as f:
         d = f.create_dataset('data', (100,), 'i4')
         d[:] = np.arange(100) + n
 
