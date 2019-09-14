@@ -1,0 +1,12 @@
+What's new in h5py 3.0
+======================
+
+
+Support for old Python
+----------------------
+
+Support for Python 3.4 has been dropped.
+
+Support for Python 3.5 has been dropped.
+
+Support for Python 2.7 has been dropped.
