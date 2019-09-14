@@ -11,12 +11,18 @@ With `Anaconda <http://continuum.io/downloads>`_ or
 
     conda install h5py
 
+
+If there are wheels for your platform (mac, linux, windows on x86) and
+you do not need MPI you can install ``h5py`` via pip::
+
+  pip install h5py
+
 With `Enthought Canopy <https://www.enthought.com/products/canopy/>`_, use
 the GUI package manager or::
 
     enpkg h5py
 
-With pip or setup.py, see :ref:`install`.
+To install from source see :ref:`install`.
 
 Core concepts
 -------------
