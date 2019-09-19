@@ -1603,7 +1603,7 @@ cdef class PropDAID(PropInstanceID):
             cprefix = <char*>emalloc(size+1)
             try:
                 # TODO check return size
-                H5Pget_virtual_filename(self.id, cprefix, <size_t>size+1)
+                H5Pget_virtual_prefix(self.id, cprefix, <size_t>size+1)
                 prefix = bytes(cprefix).decode('utf-8')
             finally:
                 efree(cprefix)
