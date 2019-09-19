@@ -26,8 +26,6 @@
 
 """
 
-from __future__ import print_function
-
 import numpy as np
 import multiprocessing as mp
 import h5py
