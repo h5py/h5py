@@ -14,6 +14,7 @@ include "config.pxi"
 
 # Compile-time imports
 from _objects cimport pdefault
+from collections import namedtuple
 from numpy cimport ndarray, import_array, PyArray_DATA, NPY_WRITEABLE
 from cpython cimport array
 from utils cimport  check_numpy_read, check_numpy_write, \
@@ -58,68 +59,8 @@ IF HDF5_VERSION >= VDS_MIN_HDF5_VERSION:
     VDS_LAST_AVAILABLE  = H5D_VDS_LAST_AVAILABLE
 
 IF HDF5_VERSION >= (1, 10, 5):
-
-    cdef class StoreInfo:
-        """Represent storage information of one dataset chunk or contiguous
-        dataset.
-
-        Feature requires: 1.10.5 HDF5
-        """
-
-        cdef object index
-        cdef tuple chunk_offset
-        cdef unsigned filter_mask
-        cdef haddr_t byte_offset
-        cdef hsize_t size
-
-        def __init__(self):
-            pass
-
-        property index:
-            def __get__(self):
-                """Index of written chunk.
-
-                The None value indicates the index is not applicable/available.
-                """
-                return self.index
-
-        property filter_mask:
-            def __get__(self):
-                """Filter mask providing a record of which filters are used.
-
-                The default value of the mask is zero (0), indicating that
-                all enabled filters are applied. A filter is skipped if the
-                bit corresponding to the filter’s position in the pipeline
-                (0 <= position < 32) is turned on.
-                """
-                return self.filter_mask
-
-        property file_offset:
-            def __get__(self):
-                """File offset of the dataset chunk or contiguous dataset.
-
-                Returns None if the chunk is not written or empty dataset.
-                """
-                if self.byte_offset == HADDR_UNDEF:
-                    return None
-                return self.byte_offset
-
-        property size:
-            def __get__(self):
-                """Size of the dataset chunk or contiguous dataset in bytes."""
-                return self.size
-
-        property chunk_offset:
-            def __get__(self):
-                """Offset of the chunk or array index of the first
-                element for contiguous datasets.
-
-                Returns None if the chunk is not written or empty dataset.
-                """
-                if self.byte_offset == HADDR_UNDEF:
-                    return None
-                return self.chunk_offset
-
+    StoreInfo = namedtuple('StoreInfo',
+                           'index, chunk_offset, filter_mask, byte_offset, size')
 
 # === Dataset operations ======================================================
 
@@ -590,7 +531,6 @@ cdef class DatasetID(ObjectID):
 
             Feature requires: 1.10.5 HDF5
             """
-            cdef StoreInfo si
             cdef haddr_t byte_offset
             cdef hsize_t size
             cdef hsize_t *chunk_offset
@@ -607,17 +547,18 @@ cdef class DatasetID(ObjectID):
             chunk_offset = <hsize_t*>emalloc(sizeof(hsize_t) * rank)
             H5Dget_chunk_info(self.id, space_id, index, chunk_offset,
                               &filter_mask, &byte_offset, &size)
-            si = StoreInfo()
-            si.index = index
-            si.byte_offset = byte_offset
-            si.size = size
-            si.chunk_offset = convert_dims(chunk_offset, <hsize_t>rank)
-            si.filter_mask = filter_mask
+            cdef tuple cot = convert_dims(chunk_offset, <hsize_t>rank)
             efree(chunk_offset)
+
             if space is None:
                 H5Sclose(space_id)
 
-            return si
+            return StoreInfo(index,
+                             cot if byte_offset != HADDR_UNDEF else None,
+                             filter_mask,
+                             byte_offset if byte_offset != HADDR_UNDEF else None,
+                             size)
+
 
         @with_phil
         def get_chunk_info_by_coord(self, tuple chunk_offset not None):
@@ -628,7 +569,6 @@ cdef class DatasetID(ObjectID):
 
             Feature requires: 1.10.5 HDF5
             """
-            cdef StoreInfo si
             cdef haddr_t byte_offset
             cdef hsize_t size
             cdef unsigned filter_mask
@@ -641,17 +581,18 @@ cdef class DatasetID(ObjectID):
             H5Sclose(space_id)
             co = <hsize_t*>emalloc(sizeof(hsize_t) * rank)
             convert_tuple(chunk_offset, co, rank)
-            H5Dget_chunk_info_by_coord(self.id, co, &filter_mask, &byte_offset,
+            H5Dget_chunk_info_by_coord(self.id, co,
+                                       &filter_mask, &byte_offset,
                                        &size)
+            cdef tuple cot = convert_dims(co, <hsize_t>rank)
             efree(co)
-            si = StoreInfo()
-            si.index = None
-            si.byte_offset = byte_offset
-            si.size = size
-            si.chunk_offset = chunk_offset
-            si.filter_mask = filter_mask
 
-            return si
+            return StoreInfo(None,
+                             cot if byte_offset != HADDR_UNDEF else None,
+                             filter_mask,
+                             byte_offset if byte_offset != HADDR_UNDEF else None,
+                             size)
+
 
         @with_phil
         def get_store_info(self):
@@ -663,7 +604,6 @@ cdef class DatasetID(ObjectID):
             Feature requires: 1.10.5 HDF5
             """
             cdef list si_list = []
-            cdef StoreInfo si
             cdef int rank
             cdef hid_t space_id
             cdef haddr_t byte_offset
@@ -700,13 +640,12 @@ cdef class DatasetID(ObjectID):
                 for index in range(num_chunks):
                     H5Dget_chunk_info(self.id, space_id, index, chunk_offset,
                                       &filter_mask, &byte_offset, &size)
-                    si = StoreInfo()
-                    si.index = index
-                    si.byte_offset = byte_offset
-                    si.size = size
-                    si.chunk_offset = convert_dims(chunk_offset, <hsize_t>rank)
-                    si.filter_mask = filter_mask
-                    si_list[index] = si
+                    si_list[index] = StoreInfo(
+                        index,
+                        convert_dims(chunk_offset, <hsize_t>rank) if byte_offset != HADDR_UNDEF else None,
+                        filter_mask,
+                        byte_offset,
+                        size)
 
                 return si_list
 
