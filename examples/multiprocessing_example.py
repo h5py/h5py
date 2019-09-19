@@ -30,7 +30,6 @@ from __future__ import print_function
 
 import numpy as np
 import multiprocessing as mp
-from six.moves import xrange  # pylint: disable=redefined-builtin
 import h5py
 
 # === Parameters for Mandelbrot calculation ===================================
@@ -53,7 +52,7 @@ def compute_escape(pos):
     """ Compute the number of steps required to escape from a point on the
     complex plane """
     z = 0+0j;
-    for i in xrange(ESCAPE):
+    for i in range(ESCAPE):
         z = z**2 + pos
         if abs(z) > 2:
             break
@@ -63,7 +62,7 @@ def compute_row(xpos):
     """ Compute a 1-D array containing escape step counts for each y-position.
     """
     a = np.ndarray((NY,), dtype='i')
-    for y in xrange(NY):
+    for y in range(NY):
         pos = complex(XSTART,YSTART) + complex(xpos, y*yincr)
         a[y] = compute_escape(pos)
     return a
@@ -87,7 +86,7 @@ def run_calculation():
     dset.attrs['XEXTENT'] = XEXTENT
     dset.attrs['YEXTENT'] = YEXTENT
 
-    result = pool.imap(compute_row, (x*xincr for x in xrange(NX)))
+    result = pool.imap(compute_row, (x*xincr for x in range(NX)))
 
     for idx, arr in enumerate(result):
         if idx%25 == 0: print("Recording row %s" % idx)

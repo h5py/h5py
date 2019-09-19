@@ -24,10 +24,6 @@ if 'linux' in sys.platform:
 else:
     MAXRSS_BYTES = 1.
 
-if sys.version_info[0] == 3:
-    xrange = range
-    unicode = str
-
 memory = 0
 def print_memory():
     global memory
@@ -47,7 +43,7 @@ def make_data(kind):
         s = b"xx".decode('utf8')
 
     dt = h5py.vlen_dtype(kind)
-    data = np.array([s*100 for idx in xrange(1000)])
+    data = np.array([s*100 for idx in range(1000)])
 
 
 def ds_leak():
@@ -55,7 +51,7 @@ def ds_leak():
     print("-----------------------------")
     with h5py.File(FNAME,'w') as f:
         ds = f.create_dataset('dset', (1000,), dtype=dt)
-        for idx in xrange(500):
+        for idx in range(500):
             #print idx
             if idx%100 == 0:
                 print_memory()
@@ -67,7 +63,7 @@ def attr_leak():
     print("Testing vlens for attribute r/w")
     print("-------------------------------")
     with h5py.File(FNAME,'w') as f:
-        for idx in xrange(500):
+        for idx in range(500):
             if idx%100 == 0:
                 print_memory()
             f.attrs.create('foo', dtype=dt, data=data)

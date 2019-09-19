@@ -18,7 +18,6 @@ from warnings import warn
 from threading import local
 
 import six
-from six.moves import xrange    # pylint: disable=redefined-builtin
 
 import numpy
 
@@ -368,7 +367,7 @@ class Dataset(HLObject):
         if count<=0:
             return None
         ext_list = list()
-        for x in xrange(count):
+        for x in range(count):
             (name, offset, size) = self._dcpl.get_external(x)
             ext_list.append( (filename_decode(name), offset, size) )
         return ext_list
@@ -468,7 +467,7 @@ class Dataset(HLObject):
         shape = self.shape
         if len(shape) == 0:
             raise TypeError("Can't iterate over a scalar dataset")
-        for i in xrange(shape[0]):
+        for i in range(shape[0]):
             yield self[i]
 
     @with_phil
