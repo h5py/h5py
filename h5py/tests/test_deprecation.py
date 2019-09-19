@@ -10,8 +10,6 @@
 """
 Tests that deprecations work correctly
 """
-from __future__ import absolute_import
-
 import h5py
 from h5py.h5py_warnings import H5pyDeprecationWarning
 

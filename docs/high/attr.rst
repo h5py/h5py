@@ -61,17 +61,21 @@ Reference
 
     .. method:: keys()
 
-        Get the names of all attributes attached to this object. Set-like object.
+        Get the names of all attributes attached to this object.
+
+        :return: set-like object.
 
     .. method:: values()
 
-        Get the values of all attributes attached to this object. Collection or
-        bag-like object.
+        Get the values of all attributes attached to this object.
+
+        :return: collection or bag-like object.
 
     .. method:: items()
 
         Get ``(name, value)`` tuples for all attributes attached to this object.
-        Collection or set-like object.
+
+        :return: collection or set-like object.
 
     .. method:: get(name, default=None)
 

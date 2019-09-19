@@ -29,14 +29,12 @@
     stores them in an HDF5 file.  The visualization/control thread reads
     datasets from the same file and displays them using matplotlib.
 """
-from __future__ import print_function
 
 import Tkinter as tk
 import threading
 
 import numpy as np
 import pylab as p
-from six.moves import xrange  # pylint: disable=redefined-builtin
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 
@@ -84,15 +82,15 @@ class ComputeThread(threading.Thread):
         def compute_escape(pos, escape):
             """ Compute the number of steps required to escape """
             z = 0+0j;
-            for i in xrange(escape):
+            for i in range(escape):
                 z = z**2 + pos
                 if abs(z) > 2:
                     break
             return i
 
-        for x in xrange(nx):
+        for x in range(nx):
             if x%25 == 0: print("Computing row %d" % x)
-            for y in xrange(ny):
+            for y in range(ny):
                 pos = self.startcoords + complex(x*xincr, y*yincr)
                 arr[x,y] = compute_escape(pos, self.escape)
 

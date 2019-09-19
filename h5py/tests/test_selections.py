@@ -11,8 +11,6 @@
     Tests for the (internal) selections module
 """
 
-from __future__ import absolute_import
-
 import numpy as np
 import h5py
 import h5py._hl.selections2 as sel

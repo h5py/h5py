@@ -13,25 +13,18 @@
     Tests all aspects of File objects, including their creation.
 """
 
-from __future__ import absolute_import, with_statement
 import pytest
 import os
 import stat
+import pickle
 from sys import platform
-
-import six
-
-from six.moves import cPickle
 
 from .common import ut, TestCase, UNICODE_FILENAMES, closed_tempfile
 from h5py import File
 from h5py.h5py_warnings import H5pyDeprecationWarning
 import h5py
 
-try:
-    import pathlib
-except ImportError:
-    pathlib = None
+import pathlib
 
 
 mpi = h5py.get_config().mpi
@@ -488,18 +481,18 @@ class TestUnicode(TestCase):
     def test_unicode(self):
         """ Unicode filenames can be used, and retrieved properly via .filename
         """
-        fname = self.mktemp(prefix=six.unichr(0x201a))
+        fname = self.mktemp(prefix=chr(0x201a))
         fid = File(fname, 'w')
         try:
             self.assertEqual(fid.filename, fname)
-            self.assertIsInstance(fid.filename, six.text_type)
+            self.assertIsInstance(fid.filename, str)
         finally:
             fid.close()
 
     def test_unicode_hdf5_python_consistent(self):
         """ Unicode filenames can be used, and seen correctly from python
         """
-        fname = self.mktemp(prefix=six.unichr(0x201a))
+        fname = self.mktemp(prefix=chr(0x201a))
         with File(fname, 'w') as f:
             self.assertTrue(os.path.exists(fname))
 
@@ -507,7 +500,7 @@ class TestUnicode(TestCase):
         """
         Modes 'r' and 'r+' do not create files even when given unicode names
         """
-        fname = self.mktemp(prefix=six.unichr(0x201a))
+        fname = self.mktemp(prefix=chr(0x201a))
         with self.assertRaises(IOError):
             File(fname, 'r')
         with self.assertRaises(IOError):
@@ -615,9 +608,9 @@ class TestRepr(TestCase):
     def test_repr(self):
         """ __repr__ behaves itself when files are open and closed """
         fid = File(self.mktemp(), 'w')
-        self.assertIsInstance(repr(fid), six.string_types)
+        self.assertIsInstance(repr(fid), str)
         fid.close()
-        self.assertIsInstance(repr(fid), six.string_types)
+        self.assertIsInstance(repr(fid), str)
 
 
 class TestFilename(TestCase):
@@ -632,7 +625,7 @@ class TestFilename(TestCase):
         fid = File(fname, 'w')
         try:
             self.assertEqual(fid.filename, fname)
-            self.assertIsInstance(fid.filename, six.text_type)
+            self.assertIsInstance(fid.filename, str)
         finally:
             fid.close()
 
@@ -673,7 +666,6 @@ class TestCloseInvalidatesOpenObjectIDs(TestCase):
             self.assertFalse(bool(g1.id))
 
 
-@ut.skipIf(pathlib is None, "pathlib module not installed")
 class TestPathlibSupport(TestCase):
 
     """
@@ -696,9 +688,10 @@ class TestPathlibSupport(TestCase):
                 normal_name = h5f2.filename
             self.assertEqual(pathlib_name, normal_name)
 
+
 class TestPickle(TestCase):
     """Check that h5py.File can't be pickled"""
     def test_dump_error(self):
         with File(self.mktemp(), 'w') as f1:
             with self.assertRaises(TypeError):
-                cPickle.dumps(f1)
+                pickle.dumps(f1)

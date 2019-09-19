@@ -11,15 +11,11 @@
     Implements high-level support for HDF5 file objects.
 """
 
-from __future__ import absolute_import
-
 import sys
 import os
 from warnings import warn
 
 from .compat import filename_decode, filename_encode
-
-import six
 
 from .base import phil, with_phil
 from .group import Group
@@ -36,7 +32,7 @@ if hdf5_version >= h5.get_config().swmr_min_hdf5_version:
 
 
 libver_dict = {'earliest': h5f.LIBVER_EARLIEST, 'latest': h5f.LIBVER_LATEST}
-libver_dict_r = dict((y, x) for x, y in six.iteritems(libver_dict))
+libver_dict_r = dict((y, x) for x, y in libver_dict.items())
 if hdf5_version >= (1, 10, 2):
     libver_dict.update({'v108': h5f.LIBVER_V18, 'v110': h5f.LIBVER_V110})
     libver_dict_r.update({h5f.LIBVER_V18: 'v108', h5f.LIBVER_V110: 'v110'})
@@ -417,7 +413,7 @@ class File(Group):
                 if swmr and mode == 'r':
                     self._swmr_mode = True
 
-        Group.__init__(self, fid)
+        super(File, self).__init__(fid)
 
     def close(self):
         """ Close the file.  All open objects become invalid """
@@ -463,16 +459,14 @@ class File(Group):
     @with_phil
     def __repr__(self):
         if not self.id:
-            r = u'<Closed HDF5 file>'
+            r = '<Closed HDF5 file>'
         else:
             # Filename has to be forced to Unicode if it comes back bytes
             # Mode is always a "native" string
             filename = self.filename
             if isinstance(filename, bytes):  # Can't decode fname
                 filename = filename.decode('utf8', 'replace')
-            r = u'<HDF5 file "%s" (mode %s)>' % (os.path.basename(filename),
+            r = '<HDF5 file "%s" (mode %s)>' % (os.path.basename(filename),
                                                  self.mode)
 
-        if six.PY2:
-            return r.encode('utf8')
         return r

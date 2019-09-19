@@ -11,7 +11,6 @@
     Implements support for HDF5 dimension scales.
 """
 
-from __future__ import absolute_import
 import warnings
 
 from .. import h5ds

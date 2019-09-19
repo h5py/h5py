@@ -11,8 +11,6 @@
     Tests the h5py._hl.filters module.
 
 """
-from __future__ import absolute_import
-
 import numpy as np
 import h5py
 

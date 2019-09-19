@@ -20,8 +20,7 @@ serves as your entry point into the file:
     >>> list(f.keys())
     []
 
-Names of all objects in the file are all text strings.
-These will be encoded with the HDF5-approved UTF-8
+Names of all objects in the file are all text strings (``str``).  These will be encoded with the HDF5-approved UTF-8
 encoding before being passed to the HDF5 C library.  Objects may also be
 retrieved using byte strings, which will be passed on to HDF5 as-is.
 
@@ -197,19 +196,25 @@ Reference
 
     .. method:: keys()
 
-        Get the names of directly attached group members. Set-like object.
+        Get the names of directly attached group members.
         Use :meth:`Group.visit` or :meth:`Group.visititems` for recursive
         access to group members.
+
+       :return: set-like object.
 
     .. method:: values()
 
         Get the objects contained in the group (Group and Dataset instances).
-        Broken soft or external links show up as None. Collection or bag-like object.
+        Broken soft or external links show up as None.
+
+        :return: a collection or bag-like object.
 
     .. method:: items()
 
         Get ``(name, value)`` pairs for object directly attached to this group.
-        Values for broken soft or external links show up as None. Set-like object.
+        Values for broken soft or external links show up as None.
+
+        :return: a set-like object.
 
     .. method:: get(name, default=None, getclass=False, getlink=False)
 

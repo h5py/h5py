@@ -10,13 +10,13 @@ class TestCompletions(TestCase):
         self.f.create_dataset('data', [1, 2, 3])
         self.assertEqual(
             self.f._ipython_key_completions_(),
-            [u'data', u'g', u'h'],
+            ['data', 'g', 'h'],
         )
 
         self.f.create_group('data2', [1, 2, 3])
         self.assertEqual(
             self.f._ipython_key_completions_(),
-            [u'data', u'data2', u'g', u'h'],
+            ['data', 'data2', 'g', 'h'],
         )
 
         # Test on subgroup.
@@ -24,13 +24,13 @@ class TestCompletions(TestCase):
         g.create_dataset('g_data2', [4, 5, 6])
         self.assertEqual(
             g._ipython_key_completions_(),
-            [u'g_data1', u'g_data2'],
+            ['g_data1', 'g_data2'],
         )
 
         g.create_dataset('g_data3', [7, 8, 9])
         self.assertEqual(
             g._ipython_key_completions_(),
-            [u'g_data1', u'g_data2', u'g_data3'],
+            ['g_data1', 'g_data2', 'g_data3'],
         )
 
     def test_attrs_completions(self):
@@ -42,11 +42,11 @@ class TestCompletions(TestCase):
         attrs['a'] = 2
         self.assertEqual(
             attrs._ipython_key_completions_(),
-            [u'a', u'b']
+            ['a', 'b']
         )
 
         attrs['c'] = 3
         self.assertEqual(
             attrs._ipython_key_completions_(),
-            [u'a', u'b', u'c']
+            ['a', 'b', 'c']
         )

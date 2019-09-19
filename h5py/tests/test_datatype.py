@@ -13,10 +13,6 @@
     Tests "committed" file-resident datatype objects.
 """
 
-from __future__ import absolute_import
-
-import six
-
 import numpy as np
 
 from .common import ut, TestCase
@@ -33,9 +29,9 @@ class TestCreation(TestCase):
         """ repr() on datatype objects """
         self.f['foo'] = np.dtype('S10')
         dt = self.f['foo']
-        self.assertIsInstance(repr(dt), six.string_types)
+        self.assertIsInstance(repr(dt), str)
         self.f.close()
-        self.assertIsInstance(repr(dt), six.string_types)
+        self.assertIsInstance(repr(dt), str)
 
 
     def test_appropriate_low_level_id(self):
