@@ -29,7 +29,6 @@
     stores them in an HDF5 file.  The visualization/control thread reads
     datasets from the same file and displays them using matplotlib.
 """
-from __future__ import print_function
 
 import Tkinter as tk
 import threading
