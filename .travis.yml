@@ -46,7 +46,6 @@ matrix:
         - doctr deploy . --built-docs docs_api/_build/html
 
     # MPI tests
-    # TODO: We should test with newer versions of HDF5
     - python: 3.6
       env:
       - TOXENV=py36-test-mindeps-mpi4py
@@ -59,6 +58,42 @@ matrix:
             - openmpi-bin         # 1.6.5 based on trusty
             - libopenmpi-dev
             - libhdf5-openmpi-dev # 1.8.11 based on trusty
+    - python: 3.7
+      env:
+      - TOXENV=py37-test-mindeps-mpi4py
+      - CC="mpicc"
+      - HDF5_MPI="ON"
+      addons:
+        apt:
+          packages:
+            - openmpi-bin         # 1.6.5 based on trusty
+            - libopenmpi-dev
+            - libhdf5-openmpi-dev # 1.8.11 based on trusty
+
+    - python: 3.6
+      env:
+      - TOXENV=py36-test-mindeps-mpi4py
+      - CC="mpicc"
+      - HDF5_MPI="ON"
+        HDF5_VERSION=1.10.5
+        HDF5_DIR=$HDF5_CACHE_DIR/OPENMPI/$HDF5_VERSION
+      addons:
+        apt:
+          packages:
+            - openmpi-bin         # 1.6.5 based on trusty
+            - libopenmpi-dev
+    - python: 3.7
+      env:
+      - TOXENV=py37-test-mindeps-mpi4py
+      - CC="mpicc"
+      - HDF5_MPI="ON"
+        HDF5_VERSION=1.10.5
+        HDF5_DIR=$HDF5_CACHE_DIR/OPENMPI/$HDF5_VERSION
+      addons:
+        apt:
+          packages:
+            - openmpi-bin         # 1.6.5 based on trusty
+            - libopenmpi-dev
 
 before_install:
   # - export PATH=/usr/lib/ccache:$PATH
