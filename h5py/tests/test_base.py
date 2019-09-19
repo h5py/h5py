@@ -28,7 +28,8 @@ class BaseTest(TestCase):
     def tearDown(self):
         if self.f:
             self.f.close()
-aise TypeError("External entry's offset must be
+
+
 class TestName(BaseTest):
 
     """
