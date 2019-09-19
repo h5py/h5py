@@ -55,7 +55,7 @@ class TestCase(ut.TestCase):
     def mktemp(self, suffix='.hdf5', prefix='', dir=None):
         if dir is None:
             dir = self.tempdir
-        return tempfile.mktemp(suffix, prefix, dir=self.tempdir)
+        return tempfile.mktemp(suffix, prefix, dir=dir)
 
     def mktemp_mpi(self, comm=None, suffix='.hdf5', prefix='', dir=None):
         if comm is None:
