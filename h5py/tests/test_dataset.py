@@ -236,6 +236,21 @@ class TestCreateChunked(BaseDataset):
         dset = self.f.create_dataset('foo', shape=(3,), dtype='S100000000', chunks=True)
         self.assertEqual(dset.chunks, (1,))
 
+    def test_scalar_assignment(self):
+        """ Test scalar assignment of chunked dataset """
+        dset = self.f.create_dataset('foo', shape=(3, 50, 50),
+                                     dtype=np.int32, chunks=(1, 50, 50))
+        # test assignement of selection smaller than chunk size
+        dset[1, :, 50] = 10
+        self.assertTrue(np.all(dset[1, :, 50] == 10))
+
+        # test assignement of selection equal to chunk size
+        dset[1] = 11
+        self.assertTrue(np.all(dset[1] == 11))
+
+        # test assignement of selection bigger than chunk size
+        dset[0:2] = 12
+        self.assertTrue(np.all(dset[0:2] == 12))
 
 class TestCreateFillvalue(BaseDataset):
 
