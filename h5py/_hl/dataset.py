@@ -789,6 +789,14 @@ class Dataset(HLObject):
             return r.encode('utf8')
         return r
 
+    def __dir__(self):
+        names = set(super().__dir__())
+        # ds.value is deprecated, and we want to ensure that Jedi doesn't try
+        # to call the property (https://github.com/h5py/h5py/issues/1312), so
+        # this hides it from tab completions.
+        names.discard('value')
+        return sorted(names)
+
     if hasattr(h5d.DatasetID, "refresh"):
         @with_phil
         def refresh(self):
