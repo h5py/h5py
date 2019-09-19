@@ -72,9 +72,7 @@ cdef class H5PYConfig:
             with phil:
                 import sys
                 def handle_val(val):
-                    if sys.version[0] == '3':
-                        return val.decode('utf8')
-                    return val
+                    return val.decode('utf8')
                 return (handle_val(self._r_name), handle_val(self._i_name))
 
         def __set__(self, val):
