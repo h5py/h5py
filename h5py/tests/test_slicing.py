@@ -286,15 +286,15 @@ class TestFieldNames(BaseSlicing):
 
     def test_read(self):
         """ Test read with field selections (bytes and unicode) """
-        self.assertArrayEqual(self.dset[u'a'], self.data['a'])
+        self.assertArrayEqual(self.dset['a'], self.data['a'])
 
     def test_unicode_names(self):
         """ Unicode field names for for read and write """
-        self.assertArrayEqual(self.dset[u'a'], self.data['a'])
-        self.dset[u'a'] = 42
+        self.assertArrayEqual(self.dset['a'], self.data['a'])
+        self.dset['a'] = 42
         data = self.data.copy()
         data['a'] = 42
-        self.assertArrayEqual(self.dset[u'a'], data['a'])
+        self.assertArrayEqual(self.dset['a'], data['a'])
 
     def test_write(self):
         """ Test write with field selections """

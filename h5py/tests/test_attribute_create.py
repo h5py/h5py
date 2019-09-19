@@ -54,7 +54,7 @@ class TestArray(TestCase):
     def test_tuple_of_unicode(self):
         # Test that a tuple of unicode strings can be set as an attribute. It will
         # be converted to a numpy array of vlen unicode type:
-        data = (u'a', u'b')
+        data = ('a', 'b')
         self.f.attrs.create('x', data=data)
         result = self.f.attrs['x']
         self.assertTrue(all(result == data))

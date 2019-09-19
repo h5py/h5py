@@ -70,7 +70,7 @@ class TestRepr(BaseTest):
     @ut.skipIf(not UNICODE_FILENAMES, "Filesystem unicode support required")
     def test_file(self):
         """ File object repr() with unicode """
-        fname = tempfile.mktemp(self.USTRING+u'.hdf5')
+        fname = tempfile.mktemp(self.USTRING+'.hdf5')
         try:
             with File(fname,'w') as f:
                 self._check_type(f)

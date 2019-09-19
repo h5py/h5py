@@ -766,14 +766,14 @@ class Dataset(HLObject):
     @with_phil
     def __repr__(self):
         if not self:
-            r = u'<Closed HDF5 dataset>'
+            r = '<Closed HDF5 dataset>'
         else:
             if self.name is None:
-                namestr = u'("anonymous")'
+                namestr = '("anonymous")'
             else:
                 name = pp.basename(pp.normpath(self.name))
-                namestr = u'"%s"' % (name if name != u'' else u'/')
-            r = u'<HDF5 dataset %s: shape %s, type "%s">' % (
+                namestr = '"%s"' % (name if name != '' else '/')
+            r = '<HDF5 dataset %s: shape %s, type "%s">' % (
                 namestr, self.shape, self.dtype.str
             )
         return r
