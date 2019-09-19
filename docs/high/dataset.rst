@@ -15,6 +15,7 @@ NumPy operations like slicing, along with a variety of descriptive attributes:
   - **shape** attribute
   - **size** attribute
   - **dtype** attribute
+  - **value** attribute
 
 h5py supports most NumPy dtypes, and uses the same character codes (e.g.
 ``'f'``, ``'i8'``) and dtype machinery as
