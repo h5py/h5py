@@ -241,8 +241,8 @@ class TestCreateChunked(BaseDataset):
         dset = self.f.create_dataset('foo', shape=(3, 50, 50),
                                      dtype=np.int32, chunks=(1, 50, 50))
         # test assignement of selection smaller than chunk size
-        dset[1, :, 50] = 10
-        self.assertTrue(np.all(dset[1, :, 50] == 10))
+        dset[1, :, 40] = 10
+        self.assertTrue(np.all(dset[1, :, 40] == 10))
 
         # test assignement of selection equal to chunk size
         dset[1] = 11
