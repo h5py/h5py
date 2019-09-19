@@ -42,8 +42,8 @@ At the high-level interface, h5py exposes three kinds of strings.  Each maps
 to a specific type within Python (but see :ref:`str_py3` below):
 
 * Fixed-length ASCII (NumPy ``S`` type)
-* Variable-length ASCII (Python 2 ``str``, Python 3 ``bytes``)
-* Variable-length UTF-8 (Python 2 ``unicode``, Python 3 ``str``)
+* Variable-length ASCII (``bytes``)
+* Variable-length UTF-8 (``str``)
 
 Note that h5py currently lacks support for fixed-length UTF-8.
 
@@ -111,7 +111,7 @@ Variable-length UTF-8
 
 These are created when you assign a unicode string to an attribute::
 
-    >>> dset.attrs["name"] = u"Hello"
+    >>> dset.attrs["name"] = "Hello"
 
 or if you create a dataset with an explicit string dtype:
 
