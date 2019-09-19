@@ -17,8 +17,6 @@ from warnings import warn
 
 from .compat import filename_decode, filename_encode
 
-import six
-
 from .base import phil, with_phil
 from .group import Group
 from .. import h5, h5f, h5p, h5i, h5fd, _objects
@@ -34,7 +32,7 @@ if hdf5_version >= h5.get_config().swmr_min_hdf5_version:
 
 
 libver_dict = {'earliest': h5f.LIBVER_EARLIEST, 'latest': h5f.LIBVER_LATEST}
-libver_dict_r = dict((y, x) for x, y in six.iteritems(libver_dict))
+libver_dict_r = dict((y, x) for x, y in libver_dict.items())
 if hdf5_version >= (1, 10, 2):
     libver_dict.update({'v108': h5f.LIBVER_V18, 'v110': h5f.LIBVER_V110})
     libver_dict_r.update({h5f.LIBVER_V18: 'v108', h5f.LIBVER_V110: 'v110'})
@@ -471,6 +469,4 @@ class File(Group):
             r = u'<HDF5 file "%s" (mode %s)>' % (os.path.basename(filename),
                                                  self.mode)
 
-        if six.PY2:
-            return r.encode('utf8')
         return r
