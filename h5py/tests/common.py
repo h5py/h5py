@@ -21,13 +21,7 @@ from six import unichr
 import numpy as np
 import h5py
 
-if sys.version_info[0] == 2:
-    try:
-        import unittest2 as ut
-    except ImportError:
-        raise ImportError( "unittest2 is required to run tests with Python 2")
-else:
-    import unittest as ut
+import unittest as ut
 
 
 # Check if non-ascii filenames are supported
