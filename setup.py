@@ -27,7 +27,7 @@ VERSION = '2.10.0'
 NUMPY_DEP = 'numpy>=1.7'
 
 # these are required to use h5py
-RUN_REQUIRES = [NUMPY_DEP, 'six']
+RUN_REQUIRES = [NUMPY_DEP,]
 
 # these are required to build h5py
 # RUN_REQUIRES is included as setup.py test needs RUN_REQUIRES for testing

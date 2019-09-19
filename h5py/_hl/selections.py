@@ -14,8 +14,6 @@
     High-level access to HDF5 dataspace selections
 """
 
-import six
-
 import numpy as np
 
 from .. import h5s, h5r
@@ -380,7 +378,7 @@ class FancySelection(Selection):
             argvector = []
             for idx in range(vectorlength):
                 entry = list(args)
-                for position, seq in six.iteritems(sequenceargs):
+                for position, seq in sequenceargs.item():
                     entry[position] = seq[idx]
                 argvector.append(entry)
         else:

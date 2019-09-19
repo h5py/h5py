@@ -2,7 +2,6 @@
 Compatibility module for high-level h5py
 """
 import sys
-import six
 from os import fspath, fsencode, fsdecode
 
 WINDOWS_ENCODING = "mbcs"
@@ -18,7 +17,7 @@ def filename_encode(filename):
     """
     filename = fspath(filename)
     if sys.platform == "win32":
-        if isinstance(filename, six.text_type):
+        if isinstance(filename, str):
             return filename.encode(WINDOWS_ENCODING, "strict")
         return filename
     return fsencode(filename)
@@ -33,9 +32,9 @@ def filename_decode(filename):
     on filenames in h5py for more information.
     """
     if sys.platform == "win32":
-        if isinstance(filename, six.binary_type):
+        if isinstance(filename, bytes):
             return filename.decode(WINDOWS_ENCODING, "strict")
-        elif isinstance(filename, six.text_type):
+        elif isinstance(filename, str):
             return filename
         else:
             raise TypeError("expect bytes or str, not %s" % type(filename).__name__)

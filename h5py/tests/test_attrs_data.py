@@ -13,8 +13,6 @@
     Covers all data read/write and type-conversion operations for attributes.
 """
 
-import six
-
 import numpy as np
 
 from .common import TestCase, ut
@@ -183,10 +181,10 @@ class TestTypes(BaseAttrs):
     def test_unicode_scalar(self):
         """ Storage of variable-length unicode strings (auto-creation) """
 
-        self.f.attrs['x'] = u"Hello" + six.unichr(0x2340) + u"!!"
+        self.f.attrs['x'] = u"Hello" + chr(0x2340) + u"!!"
         out = self.f.attrs['x']
-        self.assertEqual(out, u"Hello" + six.unichr(0x2340) + u"!!")
-        self.assertEqual(type(out), six.text_type)
+        self.assertEqual(out, u"Hello" + chr(0x2340) + u"!!")
+        self.assertEqual(type(out), str)
 
         aid = h5py.h5a.open(self.f.id, b"x")
         tid = aid.get_type()
@@ -232,13 +230,13 @@ class TestEmpty(BaseAttrs):
         )
 
     def test_itervalues(self):
-        values = list(six.itervalues(self.f.attrs))
+        values = list(self.f.attrs.items())
         self.assertEqual(
             [self.empty_obj], values
         )
 
     def test_iteritems(self):
-        items = list(six.iteritems(self.f.attrs))
+        items = list(self.f.attrs.items())
         self.assertEqual(
             [(u"x", self.empty_obj)], items
         )
