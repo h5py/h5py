@@ -691,7 +691,11 @@ class Dataset(HLObject):
         if mshape == () and selection.mshape != ():
             if self.dtype.subdtype is not None:
                 raise TypeError("Scalar broadcasting is not supported for array dtypes")
-            val2 = numpy.empty(selection.mshape[-1], dtype=val.dtype)
+            if self.chunks and (numpy.prod(self.chunks) >= numpy.prod(selection.mshape)):
+                # TODO should one use the destination dtype?
+                val2 = numpy.empty(selection.mshape, dtype=val.dtype)
+            else:
+                val2 = numpy.empty(selection.mshape[-1], dtype=val.dtype)
             val2[...] = val
             val = val2
             mshape = val.shape
