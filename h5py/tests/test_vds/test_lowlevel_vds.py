@@ -276,8 +276,8 @@ class TestPercivalLowLevel(ut.TestCase):
         os.remove(self.outfile)
 
 
-@ut.skipUnless(h5.version.hdf5_version_tuple >= (1, 9, 233),
-               'VDS requires HDF5 >= 1.9.233')
+@ut.skipUnless(h5.version.hdf5_version_tuple >= (1, 10, 2),
+               'get_ / set_virtual_prefix requires HDF5 >= 1.10.2')
 def test_virtual_prefix(tmp_path):
     (tmp_path / 'a').mkdir()
     (tmp_path / 'b').mkdir()
