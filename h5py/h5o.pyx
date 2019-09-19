@@ -159,12 +159,12 @@ def get_info(ObjectID loc not None, char* name=NULL, int index=-1, *,
     if name != NULL and index >= 0:
         raise TypeError("At most one of name or index may be specified")
     elif name != NULL and index < 0:
-        H5Oget_info_by_name(loc.id, name, &info.infostruct, pdefault(lapl))
+        H5Oget_info_by_name1(loc.id, name, &info.infostruct, pdefault(lapl))
     elif name == NULL and index >= 0:
-        H5Oget_info_by_idx(loc.id, obj_name, <H5_index_t>index_type,
+        H5Oget_info_by_idx1(loc.id, obj_name, <H5_index_t>index_type,
             <H5_iter_order_t>order, index, &info.infostruct, pdefault(lapl))
     else:
-        H5Oget_info(loc.id, &info.infostruct)
+        H5Oget_info1(loc.id, &info.infostruct)
 
     return info
 
@@ -352,7 +352,7 @@ def visit(ObjectID loc not None, object func, *,
     else:
         cfunc = cb_obj_simple
 
-    H5Ovisit_by_name(loc.id, obj_name, <H5_index_t>idx_type,
+    H5Ovisit_by_name1(loc.id, obj_name, <H5_index_t>idx_type,
         <H5_iter_order_t>order, cfunc, <void*>visit, pdefault(lapl))
 
     return visit.retval
