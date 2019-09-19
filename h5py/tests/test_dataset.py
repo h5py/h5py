@@ -16,8 +16,6 @@
     2. Type conversion for read and write (currently untested)
 """
 
-from __future__ import absolute_import
-
 import sys
 
 import six

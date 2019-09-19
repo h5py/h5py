@@ -11,8 +11,6 @@
     Implements high-level support for HDF5 file objects.
 """
 
-from __future__ import absolute_import
-
 import sys
 import os
 from warnings import warn

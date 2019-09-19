@@ -11,8 +11,6 @@
     Implements support for high-level access to HDF5 groups.
 """
 
-from __future__ import absolute_import, division
-
 import posixpath as pp
 import six
 import numpy

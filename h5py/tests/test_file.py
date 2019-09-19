@@ -13,7 +13,6 @@
     Tests all aspects of File objects, including their creation.
 """
 
-from __future__ import absolute_import, with_statement
 import pytest
 import os
 import stat

@@ -17,8 +17,6 @@
     1. Method create_dataset is tested in module test_dataset
 """
 
-from __future__ import absolute_import
-
 import numpy as np
 import os
 import os.path

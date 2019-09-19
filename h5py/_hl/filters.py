@@ -38,8 +38,6 @@
         Tuple of available filter names for encoding
 """
 
-from __future__ import absolute_import, division
-
 import numpy as np
 import six
 from .compat import filename_encode

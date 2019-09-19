@@ -14,8 +14,6 @@
     High-level access to HDF5 dataspace selections
 """
 
-from __future__ import absolute_import
-
 import six
 from six.moves import xrange    # pylint: disable=redefined-builtin
 

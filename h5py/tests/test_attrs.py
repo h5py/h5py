@@ -15,8 +15,6 @@
     are tested by module test_attrs_data.
 """
 
-from __future__ import absolute_import
-
 import six
 
 import numpy as np

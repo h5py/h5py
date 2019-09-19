@@ -13,8 +13,6 @@
     Tests "committed" file-resident datatype objects.
 """
 
-from __future__ import absolute_import
-
 import six
 
 import numpy as np

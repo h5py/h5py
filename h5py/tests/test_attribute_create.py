@@ -11,8 +11,6 @@
     Tests the h5py.AttributeManager.create() method.
 """
 
-from __future__ import absolute_import
-
 import six
 import numpy as np
 import h5py

@@ -11,8 +11,6 @@
     Implements operations common to all high-level objects (File, etc.).
 """
 
-from __future__ import absolute_import
-
 import posixpath
 import os
 import six

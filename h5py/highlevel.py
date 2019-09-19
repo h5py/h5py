@@ -16,8 +16,6 @@
     New code should import directly from there, e.g. "from h5py import File".
 """
 
-from __future__ import absolute_import
-
 import warnings
 from .h5py_warnings import H5pyDeprecationWarning
 warnings.warn(

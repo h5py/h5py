@@ -11,8 +11,6 @@
     Implements support for high-level dataset access.
 """
 
-from __future__ import absolute_import
-
 import posixpath as pp
 import sys
 from warnings import warn

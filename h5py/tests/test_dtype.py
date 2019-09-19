@@ -2,8 +2,6 @@
     Tests for converting between numpy dtypes and h5py data types
 """
 
-from __future__ import absolute_import
-
 from itertools import count
 import platform
 import numpy as np

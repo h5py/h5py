@@ -39,8 +39,6 @@
       f['item1/item2/it<tab>
 """
 
-from __future__ import absolute_import
-
 import posixpath
 import re
 import readline

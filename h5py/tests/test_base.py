@@ -13,8 +13,6 @@
     Tests features common to all high-level objects, like the .name property.
 """
 
-from __future__ import absolute_import
-
 import six
 
 from h5py import File
