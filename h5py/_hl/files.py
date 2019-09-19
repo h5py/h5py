@@ -417,7 +417,7 @@ class File(Group):
                 if swmr and mode == 'r':
                     self._swmr_mode = True
 
-        Group.__init__(self, fid)
+        super(File, self).__init__(fid)
 
     def close(self):
         """ Close the file.  All open objects become invalid """
