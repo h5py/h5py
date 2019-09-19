@@ -35,7 +35,6 @@ import Tkinter as tk
 import threading
 
 import numpy as np
-import pylab as p
 from six.moves import xrange  # pylint: disable=redefined-builtin
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure

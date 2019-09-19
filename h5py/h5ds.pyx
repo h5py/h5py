@@ -8,7 +8,7 @@
 #           and contributor agreement.
 
 """
-    Low-level HDF5 "H5G" group interface.
+    Low-level HDF5 "H5DS" Dimension Scale interface.
 """
 
 # Compile-time imports
