@@ -30,7 +30,7 @@
     datasets from the same file and displays them using matplotlib.
 """
 
-import Tkinter as tk
+import tkinter as tk
 import threading
 
 import numpy as np
@@ -227,10 +227,10 @@ class ViewWidget(object):
         self.loclabel = tk.Label(self.mainframe, text='To start, enter values and click "compute"')
         self.infolabel = tk.Label(self.mainframe, text='Or, click the "suggest" button for interesting locations')
 
-        self.fig = Figure(figsize=(5,5), dpi=100)
+        self.fig = Figure(figsize=(5, 5), dpi=100)
         self.plot = self.fig.add_subplot(111)
         self.canvas = FigureCanvasTkAgg(self.fig, master=self.mainframe)
-        self.canvas.show()
+        self.canvas.draw_idle()
 
         self.loclabel.grid(row=0, column=1)
         self.infolabel.grid(row=1, column=1)
@@ -246,7 +246,7 @@ class ViewWidget(object):
         """ Read a dataset from the HDF5 file and display it """
 
         with file_lock:
-            name = self.f.keys()[self.index]
+            name = list(self.f.keys())[self.index]
             dset = self.f[name]
             arr = dset[...]
             start = dset.attrs['start']
@@ -258,7 +258,7 @@ class ViewWidget(object):
         self.plot.imshow(arr.transpose(), cmap='jet', aspect='auto', origin='lower',
                          extent=(start.real, (start.real+extent.real),
                                  start.imag, (start.imag+extent.imag)))
-        self.canvas.show()
+        self.canvas.draw_idle()
 
     def back(self):
         """ Go to the previous dataset (in ASCII order) """
@@ -289,7 +289,7 @@ class ViewWidget(object):
 
 if __name__ == '__main__':
 
-    f = h5py.File('mandelbrot_gui.hdf5','a')
+    f = h5py.File('mandelbrot_gui.hdf5', 'a')
 
     root = tk.Tk()
 
