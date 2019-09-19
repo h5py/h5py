@@ -124,7 +124,7 @@ class TestUnicode(BaseAttrs):
 
     def test_unicode(self):
         """ Access via Unicode string with non-ascii characters """
-        name = u"Omega" + chr(0x03A9)
+        name = "Omega" + chr(0x03A9)
         self.f.attrs[name] = 42
         out = self.f.attrs[name]
         self.assertEqual(out, 42)
