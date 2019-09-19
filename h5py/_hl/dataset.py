@@ -705,7 +705,8 @@ class Dataset(HLObject):
         if mshape == () and selection.mshape != ():
             if self.dtype.subdtype is not None:
                 raise TypeError("Scalar broadcasting is not supported for array dtypes")
-            if self.chunks and (numpy.prod(self.chunks) >= numpy.prod(selection.mshape)):
+            if self.chunks and (numpy.prod(self.chunks, dtype=numpy.float) >= \
+                                numpy.prod(selection.mshape, dtype=numpy.float)):
                 val2 = numpy.empty(selection.mshape, dtype=val.dtype)
             else:
                 val2 = numpy.empty(selection.mshape[-1], dtype=val.dtype)
