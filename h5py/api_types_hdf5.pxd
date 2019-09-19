@@ -58,7 +58,7 @@ cdef extern from "hdf5.h":
         H5D_COMPACT         = 0,
         H5D_CONTIGUOUS      = 1,
         H5D_CHUNKED         = 2,
-        H5D_NLAYOUTS        = 4
+        H5D_NLAYOUTS        = 3
 
   IF HDF5_VERSION >= VDS_MIN_HDF5_VERSION:
     ctypedef enum H5D_vds_view_t:
