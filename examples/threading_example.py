@@ -34,7 +34,6 @@ import tkinter as tk
 import threading
 
 import numpy as np
-import pylab as p
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 
