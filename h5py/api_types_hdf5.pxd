@@ -412,8 +412,6 @@ cdef extern from "hdf5.h":
 
   int H5P_DEFAULT
 
-  ctypedef int H5Z_filter_t
-
   # HDF5 layouts
   ctypedef enum H5D_layout_t:
     H5D_LAYOUT_ERROR    = -1,
@@ -421,54 +419,6 @@ cdef extern from "hdf5.h":
     H5D_CONTIGUOUS      = 1,    # the default
     H5D_CHUNKED         = 2,    # slow and fancy
     H5D_NLAYOUTS        = 3     # this one must be last!
-
-  ctypedef enum H5D_alloc_time_t:
-    H5D_ALLOC_TIME_ERROR    =-1,
-    H5D_ALLOC_TIME_DEFAULT  =0,
-    H5D_ALLOC_TIME_EARLY    =1,
-    H5D_ALLOC_TIME_LATE        =2,
-    H5D_ALLOC_TIME_INCR        =3
-
-  ctypedef enum H5D_space_status_t:
-    H5D_SPACE_STATUS_ERROR            =-1,
-    H5D_SPACE_STATUS_NOT_ALLOCATED    =0,
-    H5D_SPACE_STATUS_PART_ALLOCATED    =1,
-    H5D_SPACE_STATUS_ALLOCATED        =2
-
-  ctypedef enum H5D_fill_time_t:
-    H5D_FILL_TIME_ERROR    =-1,
-    H5D_FILL_TIME_ALLOC =0,
-    H5D_FILL_TIME_NEVER    =1,
-    H5D_FILL_TIME_IFSET    =2
-
-  ctypedef enum H5D_fill_value_t:
-    H5D_FILL_VALUE_ERROR        =-1,
-    H5D_FILL_VALUE_UNDEFINED    =0,
-    H5D_FILL_VALUE_DEFAULT      =1,
-    H5D_FILL_VALUE_USER_DEFINED =2
-
-  cdef enum H5Z_EDC_t:
-    H5Z_ERROR_EDC       = -1,
-    H5Z_DISABLE_EDC     = 0,
-    H5Z_ENABLE_EDC      = 1,
-    H5Z_NO_EDC          = 2
-
-  cdef enum H5F_close_degree_t:
-    H5F_CLOSE_WEAK  = 0,
-    H5F_CLOSE_SEMI  = 1,
-    H5F_CLOSE_STRONG = 2,
-    H5F_CLOSE_DEFAULT = 3
-
-  ctypedef enum H5FD_mem_t:
-    H5FD_MEM_NOLIST    = -1,
-    H5FD_MEM_DEFAULT    = 0,
-    H5FD_MEM_SUPER      = 1,
-    H5FD_MEM_BTREE      = 2,
-    H5FD_MEM_DRAW       = 3,
-    H5FD_MEM_GHEAP      = 4,
-    H5FD_MEM_LHEAP      = 5,
-    H5FD_MEM_OHDR       = 6,
-    H5FD_MEM_NTYPES
 
   # Property list classes
   hid_t H5P_NO_CLASS
