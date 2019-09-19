@@ -52,7 +52,7 @@ FLETCHER32                          Error detection                             
 Scale-offset                        Integer/float scaling and truncation        All platforms
 SZIP                                Fast, patented compression for int/float    * UNIX: if supplied with HDF5.
                                                                                 * Windows: read-only
-`LZF <http://alfven.org/lzf>`_      Very fast compression, all types            Ships with h5py, C source
+`LZF <http://h5py.org/lzf>`_        Very fast compression, all types            Ships with h5py, C source
                                                                                 available
 =================================== =========================================== ============================
 

@@ -72,9 +72,9 @@ filter by default.
 
 * Downloads and bug tracker:        http://h5py.googlecode.com
 
-* Main web site and documentation:  http://h5py.alfven.org
+* Main web site and documentation:  http://h5py.org
 
-* Contact email:  h5py at alfven dot org
+* mailing list:  https://groups.google.com/forum/#!forum/h5py
 
 
 History of changes
