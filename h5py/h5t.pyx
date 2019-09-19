@@ -1371,23 +1371,21 @@ def _get_float_dtype_to_hdf5():
     float_be = {}
     h5_be_list = [IEEE_F16BE, IEEE_F32BE, IEEE_F64BE, IEEE_F128BE, LDOUBLE_BE]
     h5_le_list = [IEEE_F16LE, IEEE_F32LE, IEEE_F64LE, IEEE_F128LE, LDOUBLE_LE]
-    
+ 
     for ftype_, finfo, size in _available_ftypes:
         nmant, maxexp, minexp = _correct_float_info(ftype_, finfo)
         for h5type in h5_be_list:
             spos, epos, esize, mpos, msize = h5type.get_fields()
             ebias = h5type.get_ebias()
             if (finfo.iexp == esize and nmant == msize and
-                (maxexp - 1) == ebias
-            ):
+                    (maxexp - 1) == ebias):
                 float_be[ftype_] = h5type
                 break # first found matches, related to #1244
         for h5type in h5_le_list:
             spos, epos, esize, mpos, msize = h5type.get_fields()
             ebias = h5type.get_ebias()
             if (finfo.iexp == esize and nmant == msize and
-                (maxexp - 1) == ebias
-            ):
+                    (maxexp - 1) == ebias):
                 float_le[ftype_] = h5type
                 break # first found matches, related to #1244
     if ORDER_NATIVE == H5T_ORDER_LE:
