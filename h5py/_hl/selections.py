@@ -378,7 +378,7 @@ class FancySelection(Selection):
             argvector = []
             for idx in range(vectorlength):
                 entry = list(args)
-                for position, seq in sequenceargs.item():
+                for position, seq in sequenceargs.items():
                     entry[position] = seq[idx]
                 argvector.append(entry)
         else:
