@@ -16,8 +16,6 @@
     specific fields of a compound type.
 """
 
-import six
-
 import numpy as np
 
 from .common import ut, TestCase
@@ -288,9 +286,6 @@ class TestFieldNames(BaseSlicing):
 
     def test_read(self):
         """ Test read with field selections (bytes and unicode) """
-        if six.PY2:
-            # Byte strings are only allowed for field names on Py2
-            self.assertArrayEqual(self.dset[b'a'], self.data['a'])
         self.assertArrayEqual(self.dset[u'a'], self.data['a'])
 
     def test_unicode_names(self):

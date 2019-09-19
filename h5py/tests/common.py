@@ -16,8 +16,6 @@ import subprocess
 from contextlib import contextmanager
 from functools import wraps
 
-from six import unichr
-
 import numpy as np
 import h5py
 
@@ -29,7 +27,7 @@ import unittest as ut
 # See also h5py issue #263 and ipython #466
 # To test for this, run the testsuite with LC_ALL=C
 try:
-    testfile, fname = tempfile.mkstemp(unichr(0x03b7))
+    testfile, fname = tempfile.mkstemp(chr(0x03b7))
 except UnicodeError:
     UNICODE_FILENAMES = False
 else:

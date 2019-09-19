@@ -17,8 +17,6 @@ from warnings import warn
 
 from threading import local
 
-import six
-
 import numpy
 
 from .. import h5, h5s, h5t, h5r, h5d, h5p, h5fd, h5ds
@@ -489,10 +487,8 @@ class Dataset(HLObject):
             return Empty(self.dtype)
 
         # Sort field indices from the rest of the args.
-        names = tuple(x for x in args if isinstance(x, six.string_types))
-        args = tuple(x for x in args if not isinstance(x, six.string_types))
-        if six.PY2:
-            names = tuple(x.encode('utf-8') if isinstance(x, six.text_type) else x for x in names)
+        names = tuple(x for x in args if isinstance(x, str))
+        args = tuple(x for x in args if not isinstance(x, str))
 
         new_dtype = getattr(self._local, 'astype', None)
         if new_dtype is not None:
@@ -589,15 +585,13 @@ class Dataset(HLObject):
         args = args if isinstance(args, tuple) else (args,)
 
         # Sort field indices from the slicing
-        names = tuple(x for x in args if isinstance(x, six.string_types))
-        args = tuple(x for x in args if not isinstance(x, six.string_types))
-        if six.PY2:
-            names = tuple(x.encode('utf-8') if isinstance(x, six.text_type) else x for x in names)
+        names = tuple(x for x in args if isinstance(x, str))
+        args = tuple(x for x in args if not isinstance(x, str))
 
         # Generally we try to avoid converting the arrays on the Python
         # side.  However, for compound literals this is unavoidable.
         vlen = h5t.check_vlen_dtype(self.dtype)
-        if vlen is not None and vlen not in (bytes, six.text_type):
+        if vlen is not None and vlen not in (bytes, str):
             try:
                 val = numpy.asarray(val, dtype=vlen)
             except ValueError:
@@ -782,8 +776,6 @@ class Dataset(HLObject):
             r = u'<HDF5 dataset %s: shape %s, type "%s">' % (
                 namestr, self.shape, self.dtype.str
             )
-        if six.PY2:
-            return r.encode('utf8')
         return r
 
     if hasattr(h5d.DatasetID, "refresh"):

@@ -10,7 +10,6 @@
 import sys
 
 import numpy as np
-from six import PY2, text_type
 
 import h5py
 from h5py import h5t
@@ -51,7 +50,7 @@ class TestCompound(ut.TestCase):
                 type_dict["names"], type_dict["offsets"], type_dict["formats"]
         ):
             tid.insert(
-                name.encode("utf8") if isinstance(name, text_type) else name,
+                name.encode("utf8") if isinstance(name, str) else name,
                 offset,
                 h5t.py_create(dt)
             )
@@ -74,13 +73,12 @@ class TestTypeFloatID(TestCase):
         dataset5 = 'DS5'
 
         # Strings are handled very differently between python2 and python3.
-        if not PY2:
-            test_filename = test_filename.encode()
-            dataset = dataset.encode()
-            dataset2 = dataset2.encode()
-            dataset3 = dataset3.encode()
-            dataset4 = dataset4.encode()
-            dataset5 = dataset5.encode()
+        test_filename = test_filename.encode()
+        dataset = dataset.encode()
+        dataset2 = dataset2.encode()
+        dataset3 = dataset3.encode()
+        dataset4 = dataset4.encode()
+        dataset5 = dataset5.encode()
 
         DIM0 = 4
         DIM1 = 7

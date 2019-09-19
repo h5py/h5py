@@ -39,7 +39,6 @@
 """
 
 import numpy as np
-import six
 from .compat import filename_encode
 from .. import h5z, h5p, h5d, h5f
 
@@ -73,11 +72,11 @@ decode, encode = _gen_filter_tuples()
 def _external_entry(name, offset=0, size=h5f.UNLIMITED):
     """ Check for and return a well-formed entry tuple for
     a call to h5p.set_external. """
-    if not isinstance(name, six.string_types):
+    if not isinstance(name, str):
         raise TypeError("External entry's name must be a string")
-    if not isinstance(offset, six.integer_types):
+    if not isinstance(offset, int):
         raise TypeError("External entry's offset must be an integer")
-    if not isinstance(size, six.integer_types):
+    if not isinstance(size, int):
         raise TypeError("External entry's size must be an integer")
     return (filename_encode(name), offset, size)
 
@@ -85,7 +84,7 @@ def _normalize_external(external):
     """ Normalize external into a well-formed list of tuples and return. """
     if external is None:
         return []
-    elif isinstance(external, six.string_types):
+    elif isinstance(external, str):
         # accept a solitary file string
         return [_external_entry(external)]
     if not isinstance(external, (list)):
@@ -97,7 +96,7 @@ def _normalize_external(external):
         pass
     # check and rebuild each list entry to be well-formed
     return [_external_entry(entry)
-            if isinstance(entry, six.string_types) else
+            if isinstance(entry, str) else
             _external_entry(*entry)
             for entry in external]
 
