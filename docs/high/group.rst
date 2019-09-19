@@ -17,7 +17,7 @@ serves as your entry point into the file:
     >>> f = h5py.File('foo.hdf5','w')
     >>> f.name
     '/'
-    >>> f.keys()
+    >>> list(f.keys())
     []
 
 Names of all objects in the file are all text strings (``str``).  These will be encoded with the HDF5-approved UTF-8
@@ -125,7 +125,7 @@ can easily create these in h5py by using ``h5py.SoftLink``::
 If the target is removed, they will "dangle":
 
     >>> del myfile['somegroup']
-    >>> print myfile['alias']
+    >>> print(myfile['alias'])
     KeyError: 'Component not found (Symbol table: Object not found)'
 
 
@@ -230,7 +230,6 @@ Reference
                         :class:`SoftLink` or :class:`ExternalLink` instance.
                         If ``getclass`` is also True, returns the corresponding
                         Link class without instantiating it.
-
 
     .. method:: visit(callable)
 

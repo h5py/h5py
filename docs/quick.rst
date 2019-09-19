@@ -133,7 +133,7 @@ You retrieve objects in the file using the item-retrieval syntax::
 Iterating over a group provides the names of its members::
 
     >>> for name in f:
-    ...     print name
+    ...     print(name)
     mydataset
     subgroup
     subgroup2
@@ -158,7 +158,7 @@ iterating over an entire file is accomplished with the ``Group`` methods
 ``visit()`` and ``visititems()``, which take a callable::
 
     >>> def printname(name):
-    ...     print name
+    ...     print(name)
     >>> f.visit(printname)
     mydataset
     subgroup

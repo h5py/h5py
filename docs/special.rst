@@ -184,7 +184,7 @@ compatibility, but are deprecated in favour of the functions listed above.
 
         >>> out = h5py.check_dtype(vlen=mydtype)
         >>> if out is not None:
-        ...     print "Vlen of type %s" % out
+        ...     print("Vlen of type %s" % out)
         str
 
     :param vlen:    Check for an HDF5 variable-length type; returns base class
