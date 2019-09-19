@@ -16,7 +16,7 @@ serves as your entry point into the file:
 
     >>> f = h5py.File('foo.hdf5','w')
     >>> f.name
-    u'/'
+    '/'
     >>> f.keys()
     []
 
@@ -249,7 +249,7 @@ Reference
             ...     if 'foo' in name:
             ...         return name
             >>> group.visit(find_foo)
-            u'some/subgroup/foo'
+            'some/subgroup/foo'
 
 
     .. method:: visititems(callable)

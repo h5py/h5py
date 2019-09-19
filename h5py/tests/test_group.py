@@ -302,33 +302,33 @@ class TestContains(BaseGroup):
         """ "in" builtin works for membership (byte and Unicode) """
         self.f.create_group('a')
         self.assertIn(b'a', self.f)
-        self.assertIn(u'a', self.f)
+        self.assertIn('a', self.f)
         self.assertIn(b'/a', self.f)
-        self.assertIn(u'/a', self.f)
+        self.assertIn('/a', self.f)
         self.assertNotIn(b'mongoose', self.f)
-        self.assertNotIn(u'mongoose', self.f)
+        self.assertNotIn('mongoose', self.f)
 
     def test_exc(self):
         """ "in" on closed group returns False (see also issue 174) """
         self.f.create_group('a')
         self.f.close()
         self.assertFalse(b'a' in self.f)
-        self.assertFalse(u'a' in self.f)
+        self.assertFalse('a' in self.f)
 
     def test_empty(self):
         """ Empty strings work properly and aren't contained """
-        self.assertNotIn(u'', self.f)
+        self.assertNotIn('', self.f)
         self.assertNotIn(b'', self.f)
 
     def test_dot(self):
         """ Current group "." is always contained """
         self.assertIn(b'.', self.f)
-        self.assertIn(u'.', self.f)
+        self.assertIn('.', self.f)
 
     def test_root(self):
         """ Root group (by itself) is contained """
         self.assertIn(b'/', self.f)
-        self.assertIn(u'/', self.f)
+        self.assertIn('/', self.f)
 
     def test_trailing_slash(self):
         """ Trailing slashes are unconditionally ignored """
@@ -750,9 +750,9 @@ class TestExternalLinks(TestCase):
         """
         ext_filename = os.path.join(mkdtemp(), "external.hdf5")
         with File(ext_filename, "w") as ext_file:
-            ext_file.create_group(u'α')
-            ext_file[u"α"].attrs["ext_attr"] = "test"
-        self.f['ext'] = ExternalLink(ext_filename, u'/α')
+            ext_file.create_group('α')
+            ext_file["α"].attrs["ext_attr"] = "test"
+        self.f['ext'] = ExternalLink(ext_filename, '/α')
         self.assertEqual(self.f["ext"].attrs["ext_attr"], "test")
 
 class TestExtLinkBugs(TestCase):

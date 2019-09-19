@@ -459,14 +459,14 @@ class File(Group):
     @with_phil
     def __repr__(self):
         if not self.id:
-            r = u'<Closed HDF5 file>'
+            r = '<Closed HDF5 file>'
         else:
             # Filename has to be forced to Unicode if it comes back bytes
             # Mode is always a "native" string
             filename = self.filename
             if isinstance(filename, bytes):  # Can't decode fname
                 filename = filename.decode('utf8', 'replace')
-            r = u'<HDF5 file "%s" (mode %s)>' % (os.path.basename(filename),
+            r = '<HDF5 file "%s" (mode %s)>' % (os.path.basename(filename),
                                                  self.mode)
 
         return r

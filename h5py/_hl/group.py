@@ -567,9 +567,9 @@ class Group(HLObject, MutableMappingHDF5):
             r = u"<Closed HDF5 group>"
         else:
             namestr = (
-                u'"%s"' % self.name
+                '"%s"' % self.name
             ) if self.name is not None else u"(anonymous)"
-            r = u'<HDF5 group %s (%d members)>' % (namestr, len(self))
+            r = '<HDF5 group %s (%d members)>' % (namestr, len(self))
 
         return r
 
