@@ -1604,7 +1604,7 @@ cdef class PropDAID(PropInstanceID):
             try:
                 # TODO check return size
                 H5Pget_virtual_prefix(self.id, cprefix, <size_t>size+1)
-                prefix = bytes(cprefix).decode('utf-8')
+                prefix = bytes(cprefix)
             finally:
                 efree(cprefix)
 
