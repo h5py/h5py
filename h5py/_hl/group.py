@@ -12,7 +12,6 @@
 """
 
 import posixpath as pp
-import six
 import numpy
 
 
@@ -572,8 +571,6 @@ class Group(HLObject, MutableMappingHDF5):
             ) if self.name is not None else u"(anonymous)"
             r = u'<HDF5 group %s (%d members)>' % (namestr, len(self))
 
-        if six.PY2:
-            return r.encode('utf8')
         return r
 
 
