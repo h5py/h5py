@@ -59,7 +59,7 @@ When filing a bug, there are two things you should include.  The first is
 the output of ``h5py.version.info``::
 
     >>> import h5py
-    >>> print h5py.version.info
+    >>> print(h5py.version.info)
 
 The second is a detailed explanation of what went wrong.  Unless the bug
 is really trivial, **include code if you can**, either via GitHub's
