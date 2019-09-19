@@ -24,10 +24,7 @@ from h5py import File
 from h5py.h5py_warnings import H5pyDeprecationWarning
 import h5py
 
-try:
-    import pathlib
-except ImportError:
-    pathlib = None
+import pathlib
 
 
 mpi = h5py.get_config().mpi
@@ -669,7 +666,6 @@ class TestCloseInvalidatesOpenObjectIDs(TestCase):
             self.assertFalse(bool(g1.id))
 
 
-@ut.skipIf(pathlib is None, "pathlib module not installed")
 class TestPathlibSupport(TestCase):
 
     """
