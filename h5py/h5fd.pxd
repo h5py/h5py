@@ -14,17 +14,6 @@ from defs cimport *
 
 cdef extern from "hdf5.h":
 
-  ctypedef enum H5FD_mem_t:
-    H5FD_MEM_NOLIST	= -1,
-    H5FD_MEM_DEFAULT	= 0,
-    H5FD_MEM_SUPER      = 1,
-    H5FD_MEM_BTREE      = 2,
-    H5FD_MEM_DRAW       = 3,
-    H5FD_MEM_GHEAP      = 4,
-    H5FD_MEM_LHEAP      = 5,
-    H5FD_MEM_OHDR       = 6,
-    H5FD_MEM_NTYPES
-
   # HDF5 uses a clever scheme wherein these are actually init() calls
   # Hopefully Pyrex won't have a problem with this.
   # Thankfully they are defined but -1 if unavailable

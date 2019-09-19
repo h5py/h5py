@@ -44,13 +44,21 @@ cdef extern from "hdf5.h":
 
 # === H5D - Dataset API =======================================================
 
-  ctypedef enum H5D_layout_t:
-      H5D_LAYOUT_ERROR    = -1,
-      H5D_COMPACT         = 0,
-      H5D_CONTIGUOUS      = 1,
-      H5D_CHUNKED         = 2,
-      H5D_VIRTUAL         = 3,  # New in 1.10
-      H5D_NLAYOUTS        = 4
+  IF HDF5_VERSION >= (1, 10, 0):
+    ctypedef enum H5D_layout_t:
+        H5D_LAYOUT_ERROR    = -1,
+        H5D_COMPACT         = 0,
+        H5D_CONTIGUOUS      = 1,
+        H5D_CHUNKED         = 2,
+        H5D_VIRTUAL         = 3,
+        H5D_NLAYOUTS        = 4
+  ELSE:
+    ctypedef enum H5D_layout_t:
+        H5D_LAYOUT_ERROR    = -1,
+        H5D_COMPACT         = 0,
+        H5D_CONTIGUOUS      = 1,
+        H5D_CHUNKED         = 2,
+        H5D_NLAYOUTS        = 4
 
   IF HDF5_VERSION >= VDS_MIN_HDF5_VERSION:
     ctypedef enum H5D_vds_view_t:
@@ -308,12 +316,6 @@ cdef extern from "hdf5.h":
 
 # === H5L/H5O - Links interface (1.8.X only) ======================================
 
-  # TODO: put both versions in h5t.pxd
-  ctypedef enum H5T_cset_t:
-    H5T_CSET_ERROR       = -1,  #
-    H5T_CSET_ASCII       = 0,   # US ASCII
-    H5T_CSET_UTF8        = 1,   # UTF-8 Unicode encoding
-
   unsigned int H5L_MAX_LINK_NAME_LEN #  ((uint32_t) (-1)) (4GB - 1)
 
   # Link class types.
@@ -412,14 +414,6 @@ cdef extern from "hdf5.h":
 
   int H5P_DEFAULT
 
-  # HDF5 layouts
-  ctypedef enum H5D_layout_t:
-    H5D_LAYOUT_ERROR    = -1,
-    H5D_COMPACT         = 0,    # raw data is very small
-    H5D_CONTIGUOUS      = 1,    # the default
-    H5D_CHUNKED         = 2,    # slow and fancy
-    H5D_NLAYOUTS        = 3     # this one must be last!
-
   # Property list classes
   hid_t H5P_NO_CLASS
   hid_t H5P_FILE_CREATE
@@ -508,8 +502,9 @@ cdef extern from "hdf5.h":
     H5T_NORM_NONE        = 2
 
   ctypedef enum H5T_cset_t:
-    H5T_CSET_ERROR       = -1,
-    H5T_CSET_ASCII       = 0
+    H5T_CSET_ERROR       = -1,  # error
+    H5T_CSET_ASCII       = 0,   # US ASCII
+    H5T_CSET_UTF8        = 1,   # UTF-8 Unicode encoding
 
   ctypedef enum H5T_str_t:
     H5T_STR_ERROR        = -1,
