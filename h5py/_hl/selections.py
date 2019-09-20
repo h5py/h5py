@@ -237,7 +237,7 @@ class SimpleSelection(Selection):
         return self._mshape
 
     def __init__(self, shape, *args, **kwds):
-        super(SimpleSelection, self).__init__(self, shape, *args, **kwds)
+        super(SimpleSelection, self).__init__(shape, *args, **kwds)
         rank = len(self.shape)
         self._sel = ((0,)*rank, self.shape, (1,)*rank, (False,)*rank)
         self._mshape = self.shape
