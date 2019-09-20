@@ -105,31 +105,30 @@ safe to use with very large target selections.  It is supported for the above
 
 
 .. warning::
-    Dataset item getter returns new numpy.ndarray. Some might find the following behavior surprising:
+    Dataset '[]' operator returns new numpy.ndarray.
+    Users chaining '[]' operators can find the following behavior surprising:
 
-   >>> a = 1
-   >>> b = np.zeros(shape=(2,2))
-   >>> f = h5py.File(file_path, 'w') as f
+   >>> f = h5py.File('my_hdf5_file.h5', 'w')
    >>> dset = f.create_dataset("test",(2,2))
-   >>> dset[0][1] = a
+   >>> dset[0][1] = 3.0
    >>> print(dset[0][1])
-   >>> 0
+   >>> 0.0
 
    dset[0] returns an in-memory array. This mean that the set item operation (``[1]``) will be operate on in-memory array, not the on-disk dataset
    This is equivalent to:
 
    >>> new_array = dset[1]
-   >>> new_array[1] = a
+   >>> new_array[1] = 3.0
    >>> print(new_array[1])
-   >>> 1
+   >>> 3.0
    >>> print(dset[0][1])
-   >>> 0
+   >>> 0.0
 
    In comparaison calling directly the Dataset setter will give you:
 
-   >>> dset[1,1] = a
-   >>> print(dset[1,1])
-   >>> 1
+   >>> dset[0,1] = 3.0
+   >>> print(dset[0,1])
+   >>> 3.0
 
 
 
