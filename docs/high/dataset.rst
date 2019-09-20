@@ -48,27 +48,72 @@ they will override ``data.shape`` and ``data.dtype``.  It's required that
 in ``data.shape``, and that (2) it's possible to cast ``data.dtype`` to
 the requested ``dtype``.
 
-Manipulating datasets
----------------------
 
-The data in a dataset can be accessed by indexing or slicing and it can be manipulated by assigning new values to indices or slices.
+.. _dataset_slicing:
 
-    >>> dset = f.create_dataset("my_dataset", data=[1,2,3,4,5])
-    >>> some_element = dset[3] # 4
-    >>> some_slice = dset[2:4] # [3, 4, 5]
-    >>> full_slice = dset[:] # [1, 2, 3, 4, 5]
+Reading & writing data
+----------------------
 
-If you're dealing with a scalar dataspace or another datatype that does not support indexing or slicing, you can still recover the full data by using ``()`` as an index:
+HDF5 datasets re-use the NumPy slicing syntax to read and write to the file.
+Slice specifications are translated directly to HDF5 "hyperslab"
+selections, and are a fast and efficient way to access data in the file. The
+following slicing arguments are recognized:
 
-    >>> dset = f.create_dataset("my_dataset", data=numpy.string_("A very compatible string."))
-    >>> my_string = dset[()]
-    
-The ``()`` index can also be used to assign a different data object to the dataset, provided it has the same shape or the dataset is resizable:
+    * Indices: anything that can be converted to a Python long
+    * Slices (i.e. ``[:]`` or ``[0:10]``)
+    * Field names, in the case of compound data
+    * At most one ``Ellipsis`` (``...``) object
+    * An empty tuple (``()``) to retrieve all data
 
-    >>> dset = f.create_dataset("my_dataset", data=[1,2,3,4,5])
-    >>> dset[()] = [5,4,3,2,1]
+Here are a few examples (output omitted)
 
+    >>> dset = f.create_dataset("MyDataset", (10,10,10), 'f')
+    >>> dset[0,0,0]
+    >>> dset[0,2:10,1:9:3]
+    >>> dset[:,::2,5]
+    >>> dset[0]
+    >>> dset[1,5]
+    >>> dset[0,...]
+    >>> dset[...,6]
+    >>> dset[()]
+
+For compound data, you can specify multiple field names alongside the
+numeric slices:
+
+    >>> dset["FieldA"]
+    >>> dset[0,:,4:5, "FieldA", "FieldB"]
+    >>> dset[0, ..., "FieldC"]
+
+To retrieve the contents of a `scalar` dataset, you can use the same
+syntax as in NumPy:  ``result = dset[()]``.  In other words, index into
+the dataset using an empty tuple.
+
+For simple slicing, broadcasting is supported:
+
+    >>> dset[0,:,:] = np.arange(10)  # Broadcasts to (10,10)
+
+Broadcasting is implemented using repeated hyperslab selections, and is
+safe to use with very large target selections.  It is supported for the above
+"simple" (integer, slice and ellipsis) slicing only.
+
+.. warning::
+   Currently h5py does not support nested compound types, see :issue:`1197` for
+   more information.
+
+.. _dataset_iter:
+
+Length and iteration
+~~~~~~~~~~~~~~~~~~~~
+
+As with NumPy arrays, the ``len()`` of a dataset is the length of the first
+axis, and iterating over a dataset iterates over the first axis.  However,
+modifications to the yielded data are not recorded in the file.  Resizing a
+dataset while iterating has undefined results.
+
+On 32-bit platforms, ``len(dataset)`` will fail if the first axis is bigger
+than 2**32. It's recommended to use :meth:`Dataset.len` for large datasets.
 .. _dataset_chunks:
+
 
 Chunked storage
 ---------------
@@ -229,57 +274,6 @@ Obviously shouldn't be used with lossy compression filters.
 
 Enable by setting :meth:`Group.create_dataset` keyword ``fletcher32`` to True.
 
-
-.. _dataset_slicing:
-
-Reading & writing data
-----------------------
-
-HDF5 datasets re-use the NumPy slicing syntax to read and write to the file.
-Slice specifications are translated directly to HDF5 "hyperslab"
-selections, and are a fast and efficient way to access data in the file. The
-following slicing arguments are recognized:
-
-    * Indices: anything that can be converted to a Python long
-    * Slices (i.e. ``[:]`` or ``[0:10]``)
-    * Field names, in the case of compound data
-    * At most one ``Ellipsis`` (``...``) object
-
-Here are a few examples (output omitted)
-
-    >>> dset = f.create_dataset("MyDataset", (10,10,10), 'f')
-    >>> dset[0,0,0]
-    >>> dset[0,2:10,1:9:3]
-    >>> dset[:,::2,5]
-    >>> dset[0]
-    >>> dset[1,5]
-    >>> dset[0,...]
-    >>> dset[...,6]
-
-For compound data, you can specify multiple field names alongside the
-numeric slices:
-
-    >>> dset["FieldA"]
-    >>> dset[0,:,4:5, "FieldA", "FieldB"]
-    >>> dset[0, ..., "FieldC"]
-
-To retrieve the contents of a `scalar` dataset, you can use the same
-syntax as in NumPy:  ``result = dset[()]``.  In other words, index into
-the dataset using an empty tuple.
-
-For simple slicing, broadcasting is supported:
-
-    >>> dset[0,:,:] = np.arange(10)  # Broadcasts to (10,10)
-
-Broadcasting is implemented using repeated hyperslab selections, and is
-safe to use with very large target selections.  It is supported for the above
-"simple" (integer, slice and ellipsis) slicing only.
-
-.. warning::
-   Currently h5py does not support nested compound types, see :issue:`1197` for
-   more information.
-
-
 .. _dataset_fancy:
 
 Fancy indexing
@@ -322,18 +316,6 @@ list of points to select, so be careful when using it with large masks::
    Selecting using an empty list is now allowed.
    This returns an array with length 0 in the relevant dimension.
 
-.. _dataset_iter:
-
-Length and iteration
---------------------
-
-As with NumPy arrays, the ``len()`` of a dataset is the length of the first
-axis, and iterating over a dataset iterates over the first axis.  However,
-modifications to the yielded data are not recorded in the file.  Resizing a
-dataset while iterating has undefined results.
-
-On 32-bit platforms, ``len(dataset)`` will fail if the first axis is bigger
-than 2**32. It's recommended to use :meth:`Dataset.len` for large datasets.
 
 Creating and Reading Empty (or Null) datasets and attributes
 ------------------------------------------------------------
