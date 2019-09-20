@@ -103,6 +103,36 @@ safe to use with very large target selections.  It is supported for the above
    Currently h5py does not support nested compound types, see :issue:`1197` for
    more information.
 
+
+.. warning::
+    Dataset item getter returns new numpy.ndarray. Some mind find the following behavior 'unexpected':
+
+   >>> a = 1
+   >>> b = np.zeros(shape=(2,2))
+   >>> f = h5py.File(file_path, 'w') as f
+   >>> dset = f.create_dataset("test",(2,2))
+   >>> dset[0][1] = a
+   >>> print(dset[0][1])
+   >>> 0
+
+   dset[0] returns an in memory array. This mean that the set item operation ('[1]') will be operate in this in memory array.
+   This is equivalent to:
+
+   >>> new_array = dset[1]
+   >>> new_array[1] = a
+   >>> print(new_array[1])
+   >>> 1
+   >>> print(dset[0][1])
+   >>> 0
+
+   In comparaison calling directly the Dataset setter will give you:
+
+   >>> dset[1,1] = a
+   >>> print(dset[1,1])
+   >>> 1
+
+
+
 .. _dataset_iter:
 
 Length and iteration
