@@ -136,6 +136,7 @@ cdef extern from "hdf5.h":
       H5F_LIBVER_V18 = 1,
       H5F_LIBVER_V110 = 2,
       H5F_LIBVER_NBOUNDS
+    int H5F_LIBVER_LATEST  # Use the latest possible format available for storing objects
 
   IF HDF5_VERSION >= (1, 11, 4):
     ctypedef enum H5F_libver_t:
