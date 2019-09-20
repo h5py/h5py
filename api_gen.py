@@ -100,27 +100,27 @@ class Line(object):
 
 raw_preamble = """\
 include "config.pxi"
-from api_types_hdf5 cimport *
-from api_types_ext cimport *
+from .api_types_hdf5 cimport *
+from .api_types_ext cimport *
 
 """
 
 def_preamble = """\
 include "config.pxi"
 
-from api_types_hdf5 cimport *
-from api_types_ext cimport *
+from .api_types_hdf5 cimport *
+from .api_types_ext cimport *
 
 """
 
 imp_preamble = """\
 include "config.pxi"
-from api_types_ext cimport *
-from api_types_hdf5 cimport *
+from .api_types_ext cimport *
+from .api_types_hdf5 cimport *
 
-cimport _hdf5
+from . cimport _hdf5
 
-from _errors cimport set_exception
+from ._errors cimport set_exception
 """
 
 
@@ -217,8 +217,9 @@ class LineProcessor(object):
         imp = """\
 cdef {0.code} {0.fname}({0.sig}) except *:
     cdef {0.code} r
-    _hdf5.H5Eset_auto(NULL, NULL)
-    r = _hdf5.{0.fname}({0.args})
+    with nogil:
+        _hdf5.H5Eset_auto(NULL, NULL)
+        r = _hdf5.{0.fname}({0.args})
     if r{condition}:
         if set_exception():
             return <{0.code}>{retval}
