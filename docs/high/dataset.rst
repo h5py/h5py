@@ -100,8 +100,6 @@ safe to use with very large target selections.  It is supported for the above
    Currently h5py does not support nested compound types, see :issue:`1197` for
    more information.
 
-.. _dataset_iter:
-
 Length and iteration
 ~~~~~~~~~~~~~~~~~~~~
 
@@ -112,8 +110,8 @@ dataset while iterating has undefined results.
 
 On 32-bit platforms, ``len(dataset)`` will fail if the first axis is bigger
 than 2**32. It's recommended to use :meth:`Dataset.len` for large datasets.
-.. _dataset_chunks:
 
+.. _dataset_chunks:
 
 Chunked storage
 ---------------
