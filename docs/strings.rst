@@ -177,5 +177,5 @@ it will be used as-is; Unicode strings will be encoded down to UTF-8.
 In the file, h5py uses the most-compatible representation; H5T_CSET_ASCII for
 characters in the ASCII range; H5T_CSET_UTF8 otherwise.
 
-    >>> grp = f.create_dataset("name")
+    >>> grp = f.create_dataset(b"name")
     >>> grp2 = f.create_dataset("name2")

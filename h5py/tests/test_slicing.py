@@ -285,7 +285,7 @@ class TestFieldNames(BaseSlicing):
         self.dset[...] = self.data
 
     def test_read(self):
-        """ Test read with field selections (bytes and unicode) """
+        """ Test read with field selections """
         self.assertArrayEqual(self.dset['a'], self.data['a'])
 
     def test_unicode_names(self):
