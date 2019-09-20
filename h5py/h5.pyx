@@ -1,3 +1,4 @@
+# cython: language_level=3str
 # This file is part of h5py, a Python interface to the HDF5 library.
 #
 # http://www.h5py.org
@@ -9,7 +10,7 @@
 
 include "config.pxi"
 
-from defs cimport *
+from .defs cimport *
 from ._objects import phil, with_phil
 
 ITER_INC    = H5_ITER_INC     # Increasing order

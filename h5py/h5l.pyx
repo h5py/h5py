@@ -12,10 +12,10 @@
     LinkProxy, which comes attached to GroupID objects as <obj>.links.
 """
 
-from _objects cimport pdefault
-from h5p cimport PropID
-from h5g cimport GroupID
-from utils cimport emalloc, efree
+from ._objects cimport pdefault
+from .h5p cimport PropID
+from .h5g cimport GroupID
+from .utils cimport emalloc, efree
 
 from ._objects import phil, with_phil
 

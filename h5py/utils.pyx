@@ -1,3 +1,4 @@
+# cython: language_level=3str
 # cython: profile=False
 
 # This file is part of h5py, a Python interface to the HDF5 library.
@@ -22,7 +23,7 @@ import_array()
 
 # === Exception-aware memory allocation =======================================
 
-cdef void* emalloc(size_t size) except? NULL:
+cdef inline void* emalloc(size_t size) nogil except? NULL:
     # Wrapper for malloc(size) with the following behavior:
     # 1. Always returns NULL for emalloc(0)
     # 2. Raises RuntimeError for emalloc(size<0) and returns NULL
@@ -35,13 +36,13 @@ cdef void* emalloc(size_t size) except? NULL:
 
     retval = malloc(size)
     if retval == NULL:
-        errmsg = "Can't malloc %d bytes" % size
-        PyErr_SetString(MemoryError, errmsg)
-        return NULL
-
+        with gil:
+            errmsg = "Can't malloc %d bytes" % size
+            PyErr_SetString(MemoryError, errmsg)
+            return NULL
     return retval
 
-cdef void efree(void* what):
+cdef inline void efree(void* what) nogil:
     free(what)
 
 def _test_emalloc(size_t size):

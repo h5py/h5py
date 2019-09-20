@@ -11,8 +11,8 @@
 """
     Low-level HDF5 "H5AC" cache configuration interface.
 """
-from _objects cimport pdefault
-from h5py import _objects
+from ._objects cimport pdefault
+from .h5py import _objects
 
 cdef class CacheConfig:
     """Represents H5AC_cache_config_t objects

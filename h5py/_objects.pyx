@@ -12,7 +12,7 @@
 """
 
 include "_locks.pxi"
-from defs cimport *
+from .defs cimport *
 
 DEF USE_LOCKING = True
 DEF DEBUG_ID = False
@@ -107,7 +107,7 @@ def print_reg():
     files = len([x for x in objs if isinstance(x, h5py.h5f.FileID)])
     groups = len([x for x in objs if isinstance(x, h5py.h5g.GroupID)])
 
-    print "REGISTRY: %d | %d None | %d FileID | %d GroupID" % (len(objs), none, files, groups)
+    print("REGISTRY: %d | %d None | %d FileID | %d GroupID" % (len(objs), none, files, groups))
 
 
 @with_phil

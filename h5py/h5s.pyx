@@ -1,3 +1,4 @@
+# cython: language_level=3str
 # This file is part of h5py, a Python interface to the HDF5 library.
 #
 # http://www.h5py.org
@@ -13,12 +14,13 @@
 
 include "config.pxi"
 
-# Pyrex compile-time imports
-from utils cimport  require_tuple, convert_dims, convert_tuple, \
+# C-level imports
+from .utils cimport  require_tuple, convert_dims, convert_tuple, \
                     emalloc, efree, create_numpy_hsize, create_hsize_array
 from numpy cimport ndarray
 
-from h5py import _objects
+#Python level imports
+from . import _objects
 from ._objects import phil, with_phil
 
 cdef object lockid(hid_t id_):

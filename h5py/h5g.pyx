@@ -1,3 +1,4 @@
+# cython: language_level=3str
 # This file is part of h5py, a Python interface to the HDF5 library.
 #
 # http://www.h5py.org
@@ -13,15 +14,16 @@
 
 include "config.pxi"
 
-# Compile-time imports
-from _objects cimport pdefault
-from utils cimport emalloc, efree
-from h5p import CRT_ORDER_TRACKED
-from h5p cimport PropID, PropGCID
-cimport _hdf5 # to implement container testing for 1.6
-from _errors cimport set_error_handler, err_cookie
+# C-level imports
+from ._objects cimport pdefault
+from .utils cimport emalloc, efree
+from .h5p import CRT_ORDER_TRACKED
+from .h5p cimport PropID, PropGCID
+from . cimport _hdf5 # to implement container testing for 1.6
+from ._errors cimport set_error_handler, err_cookie
 
-from h5py import _objects
+# Python level imports
+from . import _objects
 from ._objects import phil, with_phil
 
 # === Public constants and data structures ====================================

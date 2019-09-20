@@ -1,3 +1,4 @@
+# cython: language_level=3str
 # This file is part of h5py, a Python interface to the HDF5 library.
 #
 # http://www.h5py.org
@@ -7,12 +8,12 @@
 # License:  Standard 3-clause BSD; see "license.txt" for full license terms
 #           and contributor agreement.
 
-from defs cimport *
+from .defs cimport *
 
 from numpy cimport ndarray
 
-cdef void* emalloc(size_t size) except? NULL
-cdef void efree(void* ptr)
+cdef void* emalloc(size_t size) nogil except? NULL
+cdef void efree(void* ptr) nogil 
 
 cpdef int check_numpy_read(ndarray arr, hid_t space_id=*) except -1
 cpdef int check_numpy_write(ndarray arr, hid_t space_id=*) except -1
