@@ -48,6 +48,25 @@ they will override ``data.shape`` and ``data.dtype``.  It's required that
 in ``data.shape``, and that (2) it's possible to cast ``data.dtype`` to
 the requested ``dtype``.
 
+Manipulating datasets
+---------------------
+
+The data in a dataset can be accessed by indexing or slicing and it can be manipulated by assigning new values to indices or slices.
+
+    >>> dset = f.create_dataset("my_dataset", data=[1,2,3,4,5])
+    >>> some_element = dset[3] # 4
+    >>> some_slice = dset[2:4] # [3, 4, 5]
+    >>> full_slice = dset[:] # [1, 2, 3, 4, 5]
+
+If you're dealing with a scalar dataspace or another datatype that does not support indexing or slicing, you can still recover the full data by using ``()`` as an index:
+
+    >>> dset = f.create_dataset("my_dataset", data=numpy.string_("A very compatible string."))
+    >>> my_string = dset[()]
+    
+The ``()`` index can also be used to assign a different data object to the dataset, provided it has the same shape or the dataset is resizable:
+
+    >>> dset = f.create_dataset("my_dataset", data=[1,2,3,4,5])
+    >>> dset[()] = [5,4,3,2,1]
 
 .. _dataset_chunks:
 
