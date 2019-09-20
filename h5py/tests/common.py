@@ -12,8 +12,11 @@ from __future__ import absolute_import
 import sys
 import os
 import shutil
+import inspect
 import tempfile
+import subprocess
 from contextlib import contextmanager
+from functools import wraps
 
 from six import unichr
 
@@ -63,6 +66,16 @@ class TestCase(ut.TestCase):
         if dir is None:
             dir = self.tempdir
         return tempfile.mktemp(suffix, prefix, dir=self.tempdir)
+
+    def mktemp_mpi(self, comm=None, suffix='.hdf5', prefix='', dir=None):
+        if comm is None:
+            from mpi4py import MPI
+            comm = MPI.COMM_WORLD
+        fname = None
+        if comm.Get_rank() == 0:
+            fname = self.mktemp(suffix, prefix, dir)
+        fname = comm.bcast(fname, 0)
+        return fname
 
     def setUp(self):
         self.f = h5py.File(self.mktemp(), 'w')
@@ -165,3 +178,42 @@ def closed_tempfile(suffix='', text=None):
             test_file.flush()
     yield file_name
     shutil.rmtree(file_name, ignore_errors=True)
+
+
+def insubprocess(f):
+    """Runs a test in its own subprocess"""
+    @wraps(f)
+    def wrapper(request, *args, **kwargs):
+        curr_test = inspect.getsourcefile(f) + "::" + request.node.name
+        # get block around test name
+        insub = "IN_SUBPROCESS_" + curr_test
+        for c in "/\\,:.":
+            insub = insub.replace(c, "_")
+        defined = os.environ.get(insub, None)
+        # fork process
+        if defined:
+            return f(request, *args, **kwargs)
+        else:
+            os.environ[insub] = '1'
+            env = os.environ.copy()
+            env[insub] = '1'
+            env.update(getattr(f, 'subproc_env', {}))
+
+            with closed_tempfile() as stdout:
+                with open(stdout, 'w+t') as fh:
+                    rtn = subprocess.call([sys.executable, '-m', 'pytest', curr_test],
+                                          stdout=fh, stderr=fh, env=env)
+                with open(stdout, 'rt') as fh:
+                    out = fh.read()
+
+            assert rtn == 0, "\n" + out
+    return wrapper
+
+
+def subproc_env(d):
+    """Set environment variables for the @insubprocess decorator"""
+    def decorator(f):
+        f.subproc_env = d
+        return f
+
+    return decorator

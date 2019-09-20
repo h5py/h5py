@@ -76,11 +76,11 @@ def _external_entry(name, offset=0, size=h5f.UNLIMITED):
     """ Check for and return a well-formed entry tuple for
     a call to h5p.set_external. """
     if not isinstance(name, six.string_types):
-        raise TypeError('external entry for offset must be a string')
+        raise TypeError("External entry's name must be a string")
     if not isinstance(offset, six.integer_types):
-        raise TypeError('external entry for offset must be an integer')
+        raise TypeError("External entry's offset must be an integer")
     if not isinstance(size, six.integer_types):
-        raise TypeError('external entry for size must be an integer')
+        raise TypeError("External entry's size must be an integer")
     return (filename_encode(name), offset, size)
 
 def _normalize_external(external):
@@ -98,13 +98,10 @@ def _normalize_external(external):
     except TypeError:
         pass
     # check and rebuild each list entry to be well-formed
-    for idx, item in enumerate(external):
-        if isinstance(item, six.string_types):
-            item = _external_entry(item)
-        else:
-            item = _external_entry(*item)
-        external[idx] = item
-    return external
+    return [_external_entry(entry)
+            if isinstance(entry, six.string_types) else
+            _external_entry(*entry)
+            for entry in external]
 
 def fill_dcpl(plist, shape, dtype, chunks, compression, compression_opts,
               shuffle, fletcher32, maxshape, scaleoffset, external):

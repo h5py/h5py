@@ -116,19 +116,15 @@ Then, clone your new copy of h5py to your local machine::
 Create a topic branch for your feature
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If you're fixing a bug, you'll want to check out a branch against the
-appropriate stable branch.  For example, to fix a bug you found in version
-2.1.3, you'll want to check out against branch "2.1"::
-
-    $ git checkout -b bugfix 2.1
-
-If you're contributing a new feature, it's appropriate to develop against the
-"master" branch, so you would instead do::
+Check out a new branch for the bugfix or feature you're writing::
 
     $ git checkout -b newfeature master
 
 The exact name of the branch can be anything you want.  For bug fixes, one
 approach is to put the issue number in the branch name.
+
+We develop all changes against the *master* branch.
+If we're making a bugfix release, a bot will backport merged pull requests.
 
 
 Implement the feature!
@@ -156,8 +152,9 @@ Your pull request might be accepted right away.  More commonly, the maintainers
 will post comments asking you to fix minor things, like add a few tests, clean
 up the style to be PEP-8 compliant, etc.
 
-The pull request page also shows whether the project builds correctly,
-using Travis CI. Check to see if the build succeeded (takes about 5 minutes),
+The pull request page also shows the results of building and testing the
+modified code on Travis and Appveyor CI.
+Check back after about 30 minutes to see if the build succeeded,
 and if not, try to modify your changes to make it work.
 
 When making changes after creating your pull request, just add commits to
@@ -199,7 +196,7 @@ opening the various files as we work through the example.
 
 First, get ahold of
 the function signature; the easiest place for this is at the `online
-HDF5 Reference Manual <http://www.hdfgroup.org/HDF5/doc/RM/RM_H5Front.html>`_.
+HDF5 Reference Manual <https://support.hdfgroup.org/HDF5/doc/RM/RM_H5Front.html>`_.
 Then, add the function's C signature to the file ``api_functions.txt``::
 
   hsize_t   H5Dget_storage_size(hid_t dset_id)

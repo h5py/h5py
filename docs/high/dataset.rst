@@ -166,7 +166,7 @@ The ``compression_opts`` parameter will then be passed to this filter.
 Scale-Offset filter
 ~~~~~~~~~~~~~~~~~~~
 
-Filters enabled with the ``compression`` keywords are _lossless_; what comes
+Filters enabled with the ``compression`` keywords are *lossless*; what comes
 out of the dataset is exactly what you put in.  HDF5 also includes a lossy
 filter which trades precision for storage space.
 
@@ -255,6 +255,10 @@ For simple slicing, broadcasting is supported:
 Broadcasting is implemented using repeated hyperslab selections, and is
 safe to use with very large target selections.  It is supported for the above
 "simple" (integer, slice and ellipsis) slicing only.
+
+.. warning::
+   Currently h5py does not support nested compound types, see :issue:`1197` for
+   more information.
 
 
 .. _dataset_fancy:
@@ -416,6 +420,24 @@ Reference
 
         Return the size of the first axis.
 
+    .. method:: make_scale(name='')
+
+       Make this dataset an HDF5 :ref:`dimension scale <dimension_scales>`.
+
+       You can then attach it to dimensions of other datasets like this::
+
+           other_ds.dims[0].attach_scale(ds)
+
+       You can optionally pass a name to associate with this scale.
+
+    .. method:: virtual_sources
+
+       If this dataset is a :doc:`virtual dataset </vds>`, return a list of
+       named tuples: ``(vspace, file_name, dset_name, src_space)``,
+       describing which parts of the dataset map to which source datasets.
+       The two 'space' members are low-level
+       :class:`SpaceID <low:h5py.h5s.SpaceID>` objects.
+
     .. attribute:: shape
 
         NumPy-style shape tuple giving dataset dimensions.
@@ -467,6 +489,16 @@ Reference
         if no fill value has been defined, in which case HDF5 will use a
         type-appropriate default value.  Can't be changed after the dataset is
         created.
+
+    .. attribute:: external
+
+       If this dataset is stored in one or more external files, this is a list
+       of 3-tuples, like the ``external=`` parameter to
+       :meth:`Group.create_dataset`. Otherwise, it is ``None``.
+
+    .. attribute:: is_virtual
+
+       True if this dataset is a :doc:`virtual dataset </vds>`, otherwise False.
 
     .. attribute:: dims
 

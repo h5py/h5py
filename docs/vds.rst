@@ -36,14 +36,15 @@ Creating virtual datasets in h5py
 
 To make a virtual dataset using h5py, you need to:
 
-1. Create a ``VirtualLayout`` object representing the dimensions and data type
+1. Create a :class:`VirtualLayout` object representing the dimensions and data type
    of the virtual dataset.
-2. Create a number of ``VirtualSource`` objects, representing the datasets the
-   array will be built from. ``VirtualSource`` objects can be created either
+2. Create a number of :class:`VirtualSource` objects, representing the datasets
+   the array will be built from. These objects can be created either
    from an h5py :class:`Dataset`, or from a filename, dataset name and shape.
-   This can be done even before the file exists.
+   This can be done even before the source file exists.
 3. Map slices from the sources into the layout.
-4. Convert the ``VirtualLayout`` object into a virtual dataset in an HDF5 file.
+4. Convert the :class:`VirtualLayout` object into a virtual dataset in an HDF5
+   file.
 
 The following snippet creates a virtual dataset to stack
 together four 1D datasets from separate files into a 2D dataset::
@@ -79,3 +80,44 @@ found in the examples folder:
   - `dual_pco_edge.py <https://github.com/h5py/h5py/blob/master/examples/dual_pco_edge.py>`_
   - `eiger_use_case.py <https://github.com/h5py/h5py/blob/master/examples/eiger_use_case.py>`_
   - `percival_use_case.py <https://github.com/h5py/h5py/blob/master/examples/percival_use_case.py>`_
+
+Reference
+---------
+
+.. class:: VirtualLayout(shape, dtype=None, maxshape=None)
+
+   Object for building a virtual dataset.
+
+   Instantiate this class to define a virtual dataset, assign
+   :class:`VirtualSource` objects to slices of it, and then pass it to
+   :meth:`Group.create_virtual_dataset` to add the virtual dataset to a file.
+
+   This class does not allow access to the data; the virtual dataset must
+   be created in a file before it can be used.
+
+   :param tuple shape: The full shape of the virtual dataset.
+   :param dtype: Numpy dtype or string.
+   :param tuple maxshape: The virtual dataset is resizable up to this shape.
+     Use None for axes you want to be unlimited.
+
+.. class:: VirtualSource(path_or_dataset, name=None, shape=None, dtype=None, \
+                         maxshape=None)
+
+   Source definition for virtual data sets.
+
+   Instantiate this class to represent an entire source dataset, and then
+   slice it to indicate which regions should be used in the virtual dataset.
+
+   :param path_or_dataset:
+       The path to a file, or a :class:`Dataset` object. If a dataset is given,
+       no other parameters are allowed, as the relevant values are taken from
+       the dataset instead.
+   :param str name:
+       The name of the source dataset within the file.
+   :param tuple shape:
+       The full shape of the source dataset.
+   :param dtype:
+       Numpy dtype or string.
+   :param tuple maxshape:
+       The source dataset is resizable up to this shape. Use None for
+       axes you want to be unlimited.

@@ -24,7 +24,7 @@ from six.moves import xrange    # pylint: disable=redefined-builtin
 
 import numpy
 
-from .. import h5, h5s, h5t, h5r, h5d, h5p, h5fd
+from .. import h5, h5s, h5t, h5r, h5d, h5p, h5fd, h5ds
 from .base import HLObject, phil, with_phil, Empty, is_empty_dataspace
 from . import filters
 from . import selections as sel
@@ -192,7 +192,6 @@ def make_new_virtual_dset(parent, shape, sources, dtype=None,
     for vspace, fpath, dset, src_dspace in sources:
         dcpl.set_virtual(vspace, fpath, dset, src_dspace)
 
-    dtype = dtype
     if isinstance(dtype, Datatype):
         # Named types are used as-is
         tid = dtype.id
@@ -362,6 +361,7 @@ class Dataset(HLObject):
             return None
 
     @property
+    @with_phil
     def external(self):
         """External file settings. Returns a list of tuples of
         (name, offset, size) for each external file entry, or returns None
@@ -789,6 +789,14 @@ class Dataset(HLObject):
             return r.encode('utf8')
         return r
 
+    def __dir__(self):
+        names = set(super().__dir__())
+        # ds.value is deprecated, and we want to ensure that Jedi doesn't try
+        # to call the property (https://github.com/h5py/h5py/issues/1312), so
+        # this hides it from tab completions.
+        names.discard('value')
+        return sorted(names)
+
     if hasattr(h5d.DatasetID, "refresh"):
         @with_phil
         def refresh(self):
@@ -812,9 +820,11 @@ class Dataset(HLObject):
 
     if vds_support:
         @property
+        @with_phil
         def is_virtual(self):
             return self._dcpl.get_layout() == h5d.VIRTUAL
 
+        @with_phil
         def virtual_sources(self):
             if not self.is_virtual:
                 raise RuntimeError("Not a virtual dataset")
@@ -825,3 +835,15 @@ class Dataset(HLObject):
                        dcpl.get_virtual_dsetname(j),
                        dcpl.get_virtual_srcspace(j))
                 for j in range(dcpl.get_virtual_count())]
+
+    @with_phil
+    def make_scale(self, name=''):
+        """Make this dataset an HDF5 dimension scale.
+
+        You can then attach it to dimensions of other datasets like this::
+
+            other_ds.dims[0].attach_scale(ds)
+
+        You can optionally pass a name to associate with this scale.
+        """
+        h5ds.set_scale(self._id, self._e(name))

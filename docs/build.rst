@@ -83,6 +83,9 @@ To install h5py from source, you need three things installed:
 * HDF5 1.8.4 or newer with development headers
 * A C compiler
 
+On Unix platforms, you also need ``pkg-config`` unless you explicitly specify
+a path for HDF5 as described in :ref:`custom_install`.
+
 OS-specific instructions for installing HDF5, Python and a C compiler are in the next few
 sections.
 

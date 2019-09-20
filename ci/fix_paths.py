@@ -1,22 +1,29 @@
-import argparse
+from __future__ import print_function
+
+import distutils.sysconfig
 from glob import glob
-from os import environ
-from os.path import join as pjoin
+import os
+from os.path import join as pjoin, basename
 from shutil import copy
 from sys import platform
 
 def main():
     """
-    Fix paths to dlls
+    Copy HDF5 DLLs into installed h5py package
     """
-    p = argparse.ArgumentParser()
-    p.add_argument("sitepackagesdir")
-    args = p.parse_args()
-    hdf5_path = environ.get("HDF5_DIR")
+    # This is the function Tox also uses to locate site-packages (Apr 2019)
+    sitepackagesdir = distutils.sysconfig.get_python_lib()
+    print("site packages dir:", sitepackagesdir)
+
+    hdf5_path = os.environ.get("HDF5_DIR")
+    print("HDF5_DIR", hdf5_path)
+
     if platform.startswith('win'):
         for f in glob(pjoin(hdf5_path, 'lib/*.dll')):
-            copy(f, pjoin(args.sitepackagesdir, 'h5py'))
+            copy(f, pjoin(sitepackagesdir, 'h5py', basename(f)))
+            print("Copied", f)
 
+    print("In installed h5py:", os.listdir(pjoin(sitepackagesdir, 'h5py')))
 
 if __name__ == '__main__':
     main()

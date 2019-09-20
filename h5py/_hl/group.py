@@ -143,14 +143,16 @@ class Group(HLObject, MutableMappingHDF5):
         def create_virtual_dataset(self, name, layout, fillvalue=None):
             """Create a new virtual dataset in this group.
 
-            Creates the virtual dataset from a list of virtual maps, any
-            gaps are filled with a specified fill value.
+            See virtual datasets in the docs for more information.
 
             name
                 (str) Name of the new dataset
 
-            virtual_target
-                Defines the sources for the virtual dataset
+            layout
+                (VirtualLayout) Defines the sources for the virtual dataset
+
+            fillvalue
+                The value to use where there is no data.
 
             """
             from .vds import VDSmap

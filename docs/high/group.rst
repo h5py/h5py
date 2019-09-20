@@ -369,6 +369,11 @@ Reference
                         ``True``.  Default is
                         ``h5.get_config().track_order``.
 
+        :keyword external: Store the dataset in one or more external, non-HDF5
+            files. This should be a list of tuples of
+            ``(filename[, offset[, size]])``, to store data from ``offset`` to
+            ``offset + size`` in the specified file. The last file in the list
+            may have size ``h5py.h5s.UNLIMITED`` to let it grow as needed.
 
     .. method:: require_dataset(name, shape=None, dtype=None, exact=None, **kwds)
 
@@ -402,6 +407,18 @@ Reference
         Any dataset keywords (see create_dataset) may be provided, including
         shape and dtype, in which case the provided values take precedence over
         those from `other`.
+
+    .. method:: create_virtual_dataset(name, layout, fillvalue=None)
+
+       Create a new virtual dataset in this group. See :doc:`/vds` for more
+       details.
+
+       :param str name:
+           Name of the dataset (absolute or relative).
+       :param VirtualLayout layout:
+           Defines what source data fills which parts of the virtual dataset.
+       :param fillvalue:
+           The value to use where there is no data.
 
     .. attribute:: attrs
 

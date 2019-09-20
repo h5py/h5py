@@ -157,12 +157,8 @@ class configure(Command):
         if self.hdf5_version is None:
             self.hdf5_version = oldsettings.get('env_hdf5_version')
         if self.hdf5_version is None:
-            try:
-                self.hdf5_version = autodetect_version(self.hdf5)
-                print("Autodetected HDF5 %s" % self.hdf5_version)
-            except Exception as e:
-                sys.stderr.write("Autodetection skipped [%s]\n" % e)
-                self.hdf5_version = '1.8.4'
+            self.hdf5_version = autodetect_version(self.hdf5)
+            print("Autodetected HDF5 %s" % self.hdf5_version)
 
         if self.mpi is None:
             self.mpi = oldsettings.get('cmd_mpi')
@@ -193,10 +189,6 @@ def autodetect_version(hdf5_dir=None):
 
     hdf5_dir: optional HDF5 install directory to look in (containing "lib")
     """
-
-    import os
-    import sys
-    import os.path as op
     import re
     import ctypes
     from ctypes import byref
@@ -204,10 +196,14 @@ def autodetect_version(hdf5_dir=None):
     import pkgconfig
 
     if sys.platform.startswith('darwin'):
+        default_path = 'libhdf5.dylib'
         regexp = re.compile(r'^libhdf5.dylib')
-    elif sys.platform.startswith('win'):
+    elif sys.platform.startswith('win') or \
+        sys.platform.startswith('cygwin'):
+        default_path = 'hdf5.dll'
         regexp = re.compile(r'^hdf5.dll')
     else:
+        default_path = 'libhdf5.so'
         regexp = re.compile(r'^libhdf5.so')
 
     libdirs = ['/usr/local/lib', '/opt/local/lib']
@@ -236,7 +232,9 @@ def autodetect_version(hdf5_dir=None):
             break
 
     if path is None:
-        path = "libhdf5.so"
+        path = default_path
+
+    print("Loading library to get version:", path)
 
     lib = ctypes.cdll.LoadLibrary(path)
 

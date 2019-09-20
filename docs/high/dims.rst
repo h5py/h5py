@@ -4,7 +4,7 @@ Dimension Scales
 ================
 
 Datasets are multidimensional arrays. HDF5 provides support for labeling the
-dimensions and associating one or "dimension scales" with each dimension. A
+dimensions and associating one or more "dimension scales" with each dimension. A
 dimension scale is simply another HDF5 dataset. In principle, the length of the
 multidimensional array along the dimension of interest should be equal to the
 length of the dimension scale, but HDF5 does not enforce this property.
@@ -36,10 +36,10 @@ We can also use HDF5 datasets as dimension scales. For example, if we have::
 We are going to treat the ``x1``, ``x2``, ``y1``, and ``z1`` datasets as
 dimension scales::
 
-    f['data'].dims.create_scale(f['x1'])
-    f['data'].dims.create_scale(f['x2'], 'x2 name')
-    f['data'].dims.create_scale(f['y1'], 'y1 name')
-    f['data'].dims.create_scale(f['z1'], 'z1 name')
+    f['x1'].make_scale()
+    f['x2'].make_scale('x2 name')
+    f['y1'].make_scale('y1 name')
+    f['z1'].make_scale('z1 name')
 
 When you create a dimension scale, you may provide a name for that scale. In
 this case, the ``x1`` scale was not given a name, but the others were. Now we

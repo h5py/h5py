@@ -35,7 +35,6 @@ import Tkinter as tk
 import threading
 
 import numpy as np
-import pylab as p
 from six.moves import xrange  # pylint: disable=redefined-builtin
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
@@ -181,7 +180,7 @@ class ComputeWidget(object):
             escape = int(self.escapefield.get())
             start = complex(float(self.startxfield.get()), float(self.startyfield.get()))
             extent = complex(float(self.extentxfield.get()), float(self.extentyfield.get()))
-            if (nx<=0) or (nx<=0) or (escape<=0):
+            if (nx<=0) or (ny<=0) or (escape<=0):
                 raise ValueError("NX, NY and ESCAPE must be positive")
             if abs(extent)==0:
                 raise ValueError("Extent must be finite")

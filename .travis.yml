@@ -30,63 +30,6 @@ matrix:
     # needed to work around https://github.com/travis-ci/travis-ci/issues/4794
     # TODO: We should see if we can replace this with installing python via pyenv # based on toxenv
 
-    # Python 2.7
-    - python: 2.7
-      env:
-      - TOXENV=py27-test-deps
-    - python: 2.7
-      env:
-      - TOXENV=py27-test-mindeps
-    - python: 2.7
-      env:
-      - TOXENV=py27-test-deps
-        TOX_TESTENV_PASSENV=LANG LC_ALL
-        LANG=C
-        LC_ALL=C
-    - python: 2.7
-      env:
-      - TOXENV=py27-test-deps
-        HDF5_VERSION=1.10.1
-        HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION
-
-    # Python 3.4
-    - python: 3.4
-      env:
-      - TOXENV=py34-test-deps
-    - python: 3.4
-      env:
-      - TOXENV=py34-test-mindeps
-    - python: 3.4
-      env:
-      - TOXENV=py34-test-deps
-        TOX_TESTENV_PASSENV=LANG LC_ALL
-        LANG=C
-        LC_ALL=C
-    - python: 3.4
-      env:
-      - TOXENV=py34-test-deps
-        HDF5_VERSION=1.10.1
-        HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION
-
-    # Python 3.5
-    - python: 3.5
-      env:
-      - TOXENV=py35-test-deps
-    - python: 3.5
-      env:
-      - TOXENV=py35-test-mindeps
-    - python: 3.5
-      env:
-      - TOXENV=py35-test-deps
-        TOX_TESTENV_PASSENV=LANG LC_ALL
-        LANG=C
-        LC_ALL=C
-    - python: 3.5
-      env:
-      - TOXENV=py35-test-deps
-        HDF5_VERSION=1.10.1
-        HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION
-
     # Python 3.6
     - python: 3.6
       env:
@@ -123,19 +66,15 @@ matrix:
         HDF5_VERSION=1.10.5
         HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION
 
+    - python: 3.7
+      env:
+      - TOXENV=py37-test-deps
+        HDF5_VERSION=1.10.5
+        HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION
+      os: linux-ppc64le
+
     # MPI tests
     # TODO: We should test with newer versions of HDF5
-    - python: 2.7
-      env:
-      - TOXENV=py27-test-mindeps-mpi4py
-      - CC="mpicc"
-      - HDF5_MPI="ON"
-      addons:
-        apt:
-          packages:
-            - openmpi-bin         # 1.6.5 based on trusty
-            - libopenmpi-dev
-            - libhdf5-openmpi-dev # 1.8.11 based on trusty
     - python: 3.6
       env:
       - TOXENV=py36-test-mindeps-mpi4py
@@ -147,6 +86,11 @@ matrix:
             - openmpi-bin         # 1.6.5 based on trusty
             - libopenmpi-dev
             - libhdf5-openmpi-dev # 1.8.11 based on trusty
+
+    # PyTables compatibility tests
+    - python: 3.7
+      env:
+      - TOXENV=py37-test-mindeps-tables
 
     # Additional python versions which are not officially supported
     - python: "nightly"
