@@ -11,12 +11,8 @@
     Implements operations common to all high-level objects (File, etc.).
 """
 
-from __future__ import absolute_import
-
 import posixpath
 import os
-import six
-
 try:
     from collections.abc import (Mapping, MutableMapping, KeysView,
                                  ValuesView, ItemsView)
@@ -57,7 +53,7 @@ def guess_dtype(data):
             return h5t.ref_dtype
         if type(data) == bytes:
             return h5t.string_dtype(encoding='ascii')
-        if type(data) == six.text_type:
+        if type(data) == str:
             return h5t.string_dtype()
 
         return None
@@ -377,44 +373,17 @@ class MappingHDF5(Mapping):
         We don't inherit directly from MutableMapping because certain
         subclasses, for example DimensionManager, are read-only.
     """
-    if six.PY2:
-        def keys(self):
-            """ Get a list containing member names """
-            with phil:
-                return list(self)
+    def keys(self):
+        """ Get a view object on member names """
+        return KeysViewHDF5(self)
 
-        def values(self):
-            """ Get a list containing member objects """
-            with phil:
-                return [self.get(x) for x in self]
+    def values(self):
+        """ Get a view object on member objects """
+        return ValuesViewHDF5(self)
 
-        def itervalues(self):
-            """ Get an iterator over member objects """
-            for x in self:
-                yield self.get(x)
-
-        def items(self):
-            """ Get a list of tuples containing (name, object) pairs """
-            with phil:
-                return [(x, self.get(x)) for x in self]
-
-        def iteritems(self):
-            """ Get an iterator over (name, object) pairs """
-            for x in self:
-                yield (x, self.get(x))
-
-    else:
-        def keys(self):
-            """ Get a view object on member names """
-            return KeysViewHDF5(self)
-
-        def values(self):
-            """ Get a view object on member objects """
-            return ValuesViewHDF5(self)
-
-        def items(self):
-            """ Get a view object on member items """
-            return ItemsViewHDF5(self)
+    def items(self):
+        """ Get a view object on member items """
+        return ItemsViewHDF5(self)
 
     def _ipython_key_completions_(self):
         """ Custom tab completions for __getitem__ in IPython >=5.0. """

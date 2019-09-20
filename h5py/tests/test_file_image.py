@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-
 import h5py
 from h5py import h5f, h5p
 

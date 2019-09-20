@@ -1,4 +1,3 @@
-from __future__ import print_function
 import shutil, zipfile, tempfile, glob, urllib
 import os
 import os.path as op

@@ -15,10 +15,6 @@
     are tested by module test_attrs_data.
 """
 
-from __future__ import absolute_import
-
-import six
-
 import numpy as np
 
 try:
@@ -128,7 +124,7 @@ class TestUnicode(BaseAttrs):
 
     def test_unicode(self):
         """ Access via Unicode string with non-ascii characters """
-        name = u"Omega" + six.unichr(0x03A9)
+        name = "Omega" + chr(0x03A9)
         self.f.attrs[name] = 42
         out = self.f.attrs[name]
         self.assertEqual(out, 42)
@@ -190,9 +186,9 @@ class TestTrackOrder(BaseAttrs):
     def test_track_order(self):
         attrs = self.fill_attrs(track_order=True)  # creation order
         self.assertEqual(list(attrs),
-                         [u'' + str(i) for i in range(100)])
+                         [str(i) for i in range(100)])
 
     def test_no_track_order(self):
         attrs = self.fill_attrs(track_order=False)  # name alphanumeric
         self.assertEqual(list(attrs),
-                         sorted([u'' + str(i) for i in range(100)]))
+                         sorted([str(i) for i in range(100)]))

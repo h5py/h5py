@@ -13,5 +13,3 @@
     Don't manually import things from here; the public API lives directly
     in the top-level package namespace.
 """
-
-from __future__ import absolute_import

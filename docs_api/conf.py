@@ -44,8 +44,8 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'Low-level API for h5py'
-copyright = u'2014, Andrew Collette and contributors'
+project = 'Low-level API for h5py'
+copyright = '2014, Andrew Collette and contributors'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -198,8 +198,8 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-  ('index', 'Low-levelAPIforh5py.tex', u'Low-level API for h5py Documentation',
-   u'Andrew Collette and contributors', 'manual'),
+  ('index', 'Low-levelAPIforh5py.tex', 'Low-level API for h5py Documentation',
+   'Andrew Collette and contributors', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -228,8 +228,8 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'low-levelapiforh5py', u'Low-level API for h5py Documentation',
-     [u'Andrew Collette and contributors'], 1)
+    ('index', 'low-levelapiforh5py', 'Low-level API for h5py Documentation',
+     ['Andrew Collette and contributors'], 1)
 ]
 
 # If true, show URL addresses after external links.
@@ -242,8 +242,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'Low-levelAPIforh5py', u'Low-level API for h5py Documentation',
-   u'Andrew Collette and contributors', 'Low-levelAPIforh5py', 'One line description of project.',
+  ('index', 'Low-levelAPIforh5py', 'Low-level API for h5py Documentation',
+   'Andrew Collette and contributors', 'Low-levelAPIforh5py', 'One line description of project.',
    'Miscellaneous'),
 ]
 

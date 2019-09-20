@@ -11,8 +11,6 @@
     Tests the h5py.File object.
 """
 
-from __future__ import absolute_import
-
 import threading
 import h5py
 

@@ -11,10 +11,7 @@
     Implements support for high-level access to HDF5 groups.
 """
 
-from __future__ import absolute_import, division
-
 import posixpath as pp
-import six
 import numpy
 
 
@@ -39,7 +36,7 @@ class Group(HLObject, MutableMappingHDF5):
         with phil:
             if not isinstance(bind, h5g.GroupID):
                 raise ValueError("%s is not a GroupID" % bind)
-            HLObject.__init__(self, bind)
+            super(Group, self).__init__(bind)
 
 
     _gcpl_crt_order = h5p.create(h5p.GROUP_CREATE)
@@ -570,12 +567,10 @@ class Group(HLObject, MutableMappingHDF5):
             r = u"<Closed HDF5 group>"
         else:
             namestr = (
-                u'"%s"' % self.name
+                '"%s"' % self.name
             ) if self.name is not None else u"(anonymous)"
-            r = u'<HDF5 group %s (%d members)>' % (namestr, len(self))
+            r = '<HDF5 group %s (%d members)>' % (namestr, len(self))
 
-        if six.PY2:
-            return r.encode('utf8')
         return r
 
 

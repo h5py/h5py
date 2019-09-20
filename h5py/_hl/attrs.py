@@ -14,8 +14,6 @@
     as <obj>.attrs.
 """
 
-from __future__ import absolute_import
-
 import numpy
 import uuid
 

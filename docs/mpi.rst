@@ -21,7 +21,7 @@ excellent, complete Python bindings for MPI.  Here's an example
 "Hello World" using ``mpi4py``::
 
     >>> from mpi4py import MPI
-    >>> print "Hello World (from process %d)" % MPI.COMM_WORLD.Get_rank()
+    >>> print("Hello World (from process %d)" % MPI.COMM_WORLD.Get_rank())
 
 To run an MPI-based parallel program, use the ``mpiexec`` program to launch
 several parallel instances of Python::
