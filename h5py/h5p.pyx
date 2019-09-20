@@ -1489,6 +1489,12 @@ cdef class PropDAID(PropInstanceID):
 
     """ Dataset access property list """
 
+    def __cinit__(self, *args):
+        self._virtual_prefix_buf = NULL
+
+    def __dealloc__(self):
+        efree(self._virtual_prefix_buf)
+
     @with_phil
     def set_chunk_cache(self, size_t rdcc_nslots,size_t rdcc_nbytes, double rdcc_w0):
         """(size_t rdcc_nslots,size_t rdcc_nbytes, double rdcc_w0)
@@ -1581,6 +1587,45 @@ cdef class PropDAID(PropInstanceID):
             cdef hsize_t gap_size
             H5Pget_virtual_printf_gap(self.id, &gap_size)
             return gap_size
+
+    if HDF5_VERSION >= (1, 10, 2):
+        @with_phil
+        def get_virtual_prefix(self):
+            """() => STR
+
+            Get the filesystem path prefix configured for accessing virtual
+            datasets.
+            """
+            cdef char* cprefix = NULL
+            cdef ssize_t size
+
+            size = H5Pget_virtual_prefix(self.id, NULL, 0)
+            cprefix = <char*>emalloc(size+1)
+            try:
+                # TODO check return size
+                H5Pget_virtual_prefix(self.id, cprefix, <size_t>size+1)
+                prefix = bytes(cprefix)
+            finally:
+                efree(cprefix)
+
+            return prefix
+
+        @with_phil
+        def set_virtual_prefix(self, char* prefix):
+            """(STR prefix)
+
+            Set a filesystem path prefix for looking up virtual datasets.
+            This is prepended to all filenames specified in the virtual dataset.
+            """
+            cdef size_t size
+
+            # HDF5 requires that we hang on to this buffer
+            efree(self._virtual_prefix_buf)
+            size = strlen(prefix)
+            self._virtual_prefix_buf = <char*>emalloc(size+1)
+            strcpy(self._virtual_prefix_buf, prefix)
+
+            H5Pset_virtual_prefix(self.id, self._virtual_prefix_buf)
 
 cdef class PropDXID(PropInstanceID):
 
