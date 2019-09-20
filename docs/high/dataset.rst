@@ -115,7 +115,7 @@ safe to use with very large target selections.  It is supported for the above
    >>> print(dset[0][1])
    >>> 0
 
-   dset[0] returns an in memory array. This mean that the set item operation ('[1]') will be operate in this in memory array.
+   dset[0] returns an in-memory array. This mean that the set item operation (``[1]``) will be operate on in-memory array, not the on-disk dataset
    This is equivalent to:
 
    >>> new_array = dset[1]
