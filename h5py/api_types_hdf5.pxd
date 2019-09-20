@@ -130,6 +130,7 @@ cdef extern from "hdf5.h":
       H5F_LIBVER_EARLIEST = 0,        # Use the earliest possible format for storing objects
       H5F_LIBVER_V18 = 1,
       H5F_LIBVER_V110 = 2,
+      H5F_LIBVER_V112 = 3,
       H5F_LIBVER_NBOUNDS
 
     int H5F_LIBVER_LATEST  # Use the latest possible format available for storing objects

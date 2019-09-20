@@ -50,6 +50,12 @@ class TestLibver(TestCase):
         self.assertEqual((h5f.LIBVER_V18, h5f.LIBVER_V110),
                          plist.get_libver_bounds())
 
+    def test_libver_v112(self):
+        """ Test libver bounds set/get for H5F_LIBVER_V112"""
+        plist = h5p.create(h5p.FILE_ACCESS)
+        plist.set_libver_bounds(h5f.LIBVER_V18, h5f.LIBVER_V112)
+        self.assertEqual((h5f.LIBVER_V18, h5f.LIBVER_V112),
+                         plist.get_libver_bounds())
 
 class TestDA(TestCase):
     '''

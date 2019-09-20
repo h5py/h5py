@@ -38,8 +38,8 @@ if hdf5_version >= h5.get_config().swmr_min_hdf5_version:
 libver_dict = {'earliest': h5f.LIBVER_EARLIEST, 'latest': h5f.LIBVER_LATEST}
 libver_dict_r = dict((y, x) for x, y in six.iteritems(libver_dict))
 if hdf5_version >= (1, 10, 2):
-    libver_dict.update({'v108': h5f.LIBVER_V18, 'v110': h5f.LIBVER_V110})
-    libver_dict_r.update({h5f.LIBVER_V18: 'v108', h5f.LIBVER_V110: 'v110'})
+    libver_dict.update({'v108': h5f.LIBVER_V18, 'v110': h5f.LIBVER_V110, 'v112': h5f.LIBVER_V112})
+    libver_dict_r.update({h5f.LIBVER_V18: 'v108', h5f.LIBVER_V110: 'v110', h5f.LIBVER_V112: 'v112'})
 
 
 def _set_fapl_mpio(plist, **kwargs):
@@ -337,8 +337,8 @@ class File(Group):
             recommended), 'core', 'sec2', 'stdio', 'mpio'.
         libver
             Library version bounds.  Supported values: 'earliest', 'v108',
-            'v110',  and 'latest'. The 'v108' and 'v110' options can only be
-            specified with the HDF5 1.10.2 library or later.
+            'v110', 'v112'  and 'latest'. The 'v108', 'v110' and 'v112'
+            options can only be specified with the HDF5 1.10.2 library or later.
         userblock
             Desired size of user block.  Only allowed when creating a new
             file (mode w, w- or x).

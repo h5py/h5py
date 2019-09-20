@@ -333,7 +333,7 @@ class TestNewLibver(TestCase):
         super(TestNewLibver, cls).setUpClass()
 
         # Current latest library bound label
-        cls.latest = 'v110'
+        cls.latest = 'v112'
 
     def test_default(self):
         """ Opening with no libver arg """
@@ -357,6 +357,12 @@ class TestNewLibver(TestCase):
         """ Opening with "v110" libver arg """
         f = File(self.mktemp(), 'w', libver='v110')
         self.assertEqual(f.libver, ('v110', self.latest))
+        f.close()
+
+    def test_single_v112(self):
+        """ Opening with "v112" libver arg """
+        f = File(self.mktemp(), 'w', libver='v112')
+        self.assertEqual(f.libver, ('v112', self.latest))
         f.close()
 
     def test_multiple(self):
