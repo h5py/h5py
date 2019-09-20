@@ -31,13 +31,15 @@ New datasets are created using either :meth:`Group.create_dataset` or
 :meth:`Group.require_dataset`.  Existing datasets should be retrieved using
 the group indexing syntax (``dset = group["name"]``).
 
-To make an empty dataset, all you have to do is specify a name, shape, and
+To initialise a dataset, all you have to do is specify a name, shape, and
 optionally the data type (defaults to ``'f'``)::
 
     >>> dset = f.create_dataset("default", (100,))
     >>> dset = f.create_dataset("ints", (100,), dtype='i8')
 
-You may initialize the dataset to an existing NumPy array::
+.. note:: This is not the same as creating an :ref:`Empty dataset <dataset_empty>`.
+
+You may also initialize the dataset to an existing NumPy array by providing the `data` parameter::
 
     >>> arr = np.arange(100)
     >>> dset = f.create_dataset("init", data=arr)
@@ -47,7 +49,6 @@ they will override ``data.shape`` and ``data.dtype``.  It's required that
 (1) the total number of points in ``shape`` match the total number of points
 in ``data.shape``, and that (2) it's possible to cast ``data.dtype`` to
 the requested ``dtype``.
-
 
 .. _dataset_slicing:
 
@@ -63,9 +64,9 @@ following slicing arguments are recognized:
     * Slices (i.e. ``[:]`` or ``[0:10]``)
     * Field names, in the case of compound data
     * At most one ``Ellipsis`` (``...``) object
-    * An empty tuple (``()``) to retrieve all data
+    * An empty tuple (``()``) to retrieve all data or `scalar` data
 
-Here are a few examples (output omitted)
+Here are a few examples (output omitted).
 
     >>> dset = f.create_dataset("MyDataset", (10,10,10), 'f')
     >>> dset[0,0,0]
@@ -76,6 +77,8 @@ Here are a few examples (output omitted)
     >>> dset[0,...]
     >>> dset[...,6]
     >>> dset[()]
+
+There's more documentation on what parts of numpy's :ref:`fancy indexing <dataset_fancy>` are available in h5py.
 
 For compound data, you can specify multiple field names alongside the
 numeric slices:
@@ -99,6 +102,8 @@ safe to use with very large target selections.  It is supported for the above
 .. warning::
    Currently h5py does not support nested compound types, see :issue:`1197` for
    more information.
+
+.. _dataset_iter:
 
 Length and iteration
 ~~~~~~~~~~~~~~~~~~~~
@@ -314,6 +319,7 @@ list of points to select, so be careful when using it with large masks::
    Selecting using an empty list is now allowed.
    This returns an array with length 0 in the relevant dimension.
 
+.. _dataset_empty:
 
 Creating and Reading Empty (or Null) datasets and attributes
 ------------------------------------------------------------
