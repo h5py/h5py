@@ -1,3 +1,4 @@
+# cython: language_level=3
 # This file is part of h5py, a Python interface to the HDF5 library.
 #
 # http://www.h5py.org
@@ -155,6 +156,11 @@ cdef class Reference:
         The object's truth value indicates whether it contains a nonzero
         reference.  This does not guarantee that is valid, but is useful
         for rejecting "background" elements in a dataset.
+
+        Defined attributes:
+          cdef ref_u ref
+          cdef readonly int typecode
+          cdef readonly size_t typesize
     """
 
     def __cinit__(self, *args, **kwds):

@@ -99,6 +99,11 @@ class Line(object):
 
 
 raw_preamble = """\
+# cython: language_level=3str
+#
+# Warning: this file is auto-generated from api_gen.py. DO NOT EDIT!
+#
+
 include "config.pxi"
 from .api_types_hdf5 cimport *
 from .api_types_ext cimport *
@@ -106,6 +111,11 @@ from .api_types_ext cimport *
 """
 
 def_preamble = """\
+# cython: language_level=3str
+#
+# Warning: this file is auto-generated from api_gen.py. DO NOT EDIT!
+#
+
 include "config.pxi"
 
 from .api_types_hdf5 cimport *
@@ -114,6 +124,11 @@ from .api_types_ext cimport *
 """
 
 imp_preamble = """\
+# cython: language_level=3str
+#
+# Warning: this file is auto-generated from api_gen.py. DO NOT EDIT!
+#
+
 include "config.pxi"
 from .api_types_ext cimport *
 from .api_types_hdf5 cimport *
