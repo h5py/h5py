@@ -230,7 +230,7 @@ class TestEmpty(BaseAttrs):
         )
 
     def test_itervalues(self):
-        values = list(self.f.attrs.items())
+        values = list(self.f.attrs.values())
         self.assertEqual(
             [self.empty_obj], values
         )
