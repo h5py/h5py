@@ -229,6 +229,11 @@ class TestCreateChunked(BaseDataset):
         dset = self.f.create_dataset('foo', shape=(100,), chunks=(10,))
         self.assertEqual(dset.chunks, (10,))
 
+    def test_create_chunks_integer(self):
+        """ Create via chunks integer """
+        dset = self.f.create_dataset('foo', shape=(100,), chunks=10)
+        self.assertEqual(dset.chunks, (10,))
+
 
     def test_chunks_mismatch(self):
         """ Illegal chunk size raises ValueError """
