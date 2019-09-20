@@ -34,22 +34,22 @@ cpdef ObjectID wrap_identifier(hid_t ident):
 
     typecode = H5Iget_type(ident)
     if typecode == H5I_FILE:
-        import h5f
+        from . import h5f
         obj = h5f.FileID(ident)
     elif typecode == H5I_DATASET:
-        import h5d
+        from . import h5d
         obj = h5d.DatasetID(ident)
     elif typecode == H5I_GROUP:
-        import h5g
+        from . import h5g
         obj = h5g.GroupID(ident)
     elif typecode == H5I_ATTR:
-        import h5a
+        from . import h5a
         obj = h5a.AttrID(ident)
     elif typecode == H5I_DATATYPE:
-        import h5t
+        from . import h5t
         obj = h5t.typewrap(ident)
     elif typecode == H5I_GENPROP_LST:
-        import h5p
+        from . import h5p
         obj = h5p.propwrap(ident)
     else:
         raise ValueError("Unrecognized type code %d" % typecode)
@@ -109,7 +109,7 @@ def get_file_id(ObjectID obj not None):
 
         Obtain an identifier for the file in which this object resides.
     """
-    import h5f
+    from . import h5f
     cdef hid_t fid
     fid = H5Iget_file_id(obj.id)
     return h5f.FileID(fid)

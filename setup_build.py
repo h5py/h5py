@@ -152,7 +152,6 @@ class h5py_build_ext(build_ext):
             print("         Executing system cython on pyx files: ", str(pyx_files))
             self.run_system_cython(pyx_files)
 
-
     def run(self):
         """ Distutils calls this method to run the command """
 
@@ -204,7 +203,7 @@ DEF COMPLEX256_SUPPORT = %(complex256_support)s
         print("Executing cythonize()")
         self.extensions = cythonize(self._make_extensions(config),
                                     force=config.rebuild_required or self.force,
-                                    language_level=2)
+                                    language_level="3str")
         self.check_rerun_cythonize()
 
         # Perform the build

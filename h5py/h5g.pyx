@@ -266,7 +266,7 @@ cdef class GroupID(ObjectID):
 
     def __init__(self, hid_t id_):
         with phil:
-            import h5l
+            from . import h5l
             self.links = h5l.LinkProxy(id_)
 
 
@@ -491,7 +491,7 @@ IF HDF5_VERSION >= (1, 8, 5):
         If *path* represents an external or soft link, the link's validity is not
         checked.
         """
-        import h5o
+        from . import h5o
 
         if isinstance(path, bytes):
             path = path.decode('utf-8')

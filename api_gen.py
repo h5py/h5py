@@ -222,7 +222,7 @@ class LineProcessor(object):
           or re.match(r'H5[A-Z]+_[a-zA-Z_]+_t', self.line.code):
             condition = "<0"
             retval = "-1"
-        elif self.line.code in ('unsigned int','haddr_t','hsize_t','size_t'):
+        elif self.line.code in ('unsigned int', 'haddr_t', 'hsize_t', 'size_t'):
             condition = "==0"
             retval = 0
         else:
@@ -232,9 +232,8 @@ class LineProcessor(object):
         imp = """\
 cdef {0.code} {0.fname}({0.sig}) except *:
     cdef {0.code} r
-    with nogil:
-        _hdf5.H5Eset_auto(NULL, NULL)
-        r = _hdf5.{0.fname}({0.args})
+    _hdf5.H5Eset_auto(NULL, NULL)
+    r = _hdf5.{0.fname}({0.args})
     if r{condition}:
         if set_exception():
             return <{0.code}>{retval}

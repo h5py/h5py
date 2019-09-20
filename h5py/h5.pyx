@@ -22,6 +22,7 @@ INDEX_CRT_ORDER = H5_INDEX_CRT_ORDER  # Index on creation order
 
 HDF5_VERSION_COMPILED_AGAINST = HDF5_VERSION
 
+
 class ByteStringContext(object):
 
     def __init__(self):
@@ -38,6 +39,7 @@ class ByteStringContext(object):
 
     def __exit__(self, *args):
         self._readbytes = False
+
 
 cdef class H5PYConfig:
 
@@ -86,7 +88,8 @@ cdef class H5PYConfig:
                     else:
                         return bytes(val)
                 try:
-                    if len(val) != 2: raise TypeError()
+                    if len(val) != 2: 
+                        raise TypeError()
                     r = handle_val(val[0])
                     i = handle_val(val[1])
                 except Exception:
