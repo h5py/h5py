@@ -151,25 +151,46 @@ cdef class SpaceID(ObjectID):
         return SpaceID(H5Scopy(self.id))
 
 
-    @with_phil
-    def encode(self):
-        """() => STRING
+    IF HDF5_VERSION < VOL_MIN_HDF5_VERSION:
+        @with_phil
+        def encode(self):
+            """() => STRING
 
-        Serialize a dataspace, including its selection.  Bear in mind you
-        can also use the native Python pickling machinery to do this.
-        """
-        cdef void* buf = NULL
-        cdef size_t nalloc = 0
+            Serialize a dataspace, including its selection.  Bear in mind you
+            can also use the native Python pickling machinery to do this.
+            """
+            cdef void* buf = NULL
+            cdef size_t nalloc = 0
 
-        H5Sencode1(self.id, NULL, &nalloc)
-        buf = emalloc(nalloc)
-        try:
-            H5Sencode1(self.id, buf, &nalloc)
-            pystr = PyBytes_FromStringAndSize(<char*>buf, nalloc)
-        finally:
-            efree(buf)
+            H5Sencode(self.id, NULL, &nalloc)
+            buf = emalloc(nalloc)
+            try:
+                H5Sencode(self.id, buf, &nalloc)
+                pystr = PyBytes_FromStringAndSize(<char*>buf, nalloc)
+            finally:
+                efree(buf)
 
-        return pystr
+            return pystr
+    ELSE:
+        @with_phil
+        def encode(self):
+            """() => STRING
+
+            Serialize a dataspace, including its selection.  Bear in mind you
+            can also use the native Python pickling machinery to do this.
+            """
+            cdef void* buf = NULL
+            cdef size_t nalloc = 0
+
+            H5Sencode1(self.id, NULL, &nalloc)
+            buf = emalloc(nalloc)
+            try:
+                H5Sencode1(self.id, buf, &nalloc)
+                pystr = PyBytes_FromStringAndSize(<char*>buf, nalloc)
+            finally:
+                efree(buf)
+
+            return pystr
 
 
     def __reduce__(self):

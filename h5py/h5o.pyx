@@ -132,41 +132,77 @@ cdef class ObjInfo(_ObjInfo):
         newcopy.infostruct = self.infostruct
         return newcopy
 
+IF HDF5_VERSION < VOL_MIN_HDF5_VERSION:
+    @with_phil
+    def get_info(ObjectID loc not None, char* name=NULL, int index=-1, *,
+            char* obj_name='.', int index_type=H5_INDEX_NAME, int order=H5_ITER_INC,
+            PropID lapl=None):
+        """(ObjectID loc, STRING name=, INT index=, **kwds) => ObjInfo
 
-@with_phil
-def get_info(ObjectID loc not None, char* name=NULL, int index=-1, *,
-        char* obj_name='.', int index_type=H5_INDEX_NAME, int order=H5_ITER_INC,
-        PropID lapl=None):
-    """(ObjectID loc, STRING name=, INT index=, **kwds) => ObjInfo
+        Get information describing an object in an HDF5 file.  Provide the object
+        itself, or the containing group and exactly one of "name" or "index".
 
-    Get information describing an object in an HDF5 file.  Provide the object
-    itself, or the containing group and exactly one of "name" or "index".
+        STRING obj_name (".")
+            When "index" is specified, look in this subgroup instead.
+            Otherwise ignored.
 
-    STRING obj_name (".")
-        When "index" is specified, look in this subgroup instead.
-        Otherwise ignored.
+        PropID lapl (None)
+            Link access property list
 
-    PropID lapl (None)
-        Link access property list
+        INT index_type (h5.INDEX_NAME)
 
-    INT index_type (h5.INDEX_NAME)
+        INT order (h5.ITER_INC)
+        """
+        cdef ObjInfo info
+        info = ObjInfo()
 
-    INT order (h5.ITER_INC)
-    """
-    cdef ObjInfo info
-    info = ObjInfo()
+        if name != NULL and index >= 0:
+            raise TypeError("At most one of name or index may be specified")
+        elif name != NULL and index < 0:
+            H5Oget_info_by_name(loc.id, name, &info.infostruct, pdefault(lapl))
+        elif name == NULL and index >= 0:
+            H5Oget_info_by_idx(loc.id, obj_name, <H5_index_t>index_type,
+                <H5_iter_order_t>order, index, &info.infostruct, pdefault(lapl))
+        else:
+            H5Oget_info(loc.id, &info.infostruct)
 
-    if name != NULL and index >= 0:
-        raise TypeError("At most one of name or index may be specified")
-    elif name != NULL and index < 0:
-        H5Oget_info_by_name1(loc.id, name, &info.infostruct, pdefault(lapl))
-    elif name == NULL and index >= 0:
-        H5Oget_info_by_idx1(loc.id, obj_name, <H5_index_t>index_type,
-            <H5_iter_order_t>order, index, &info.infostruct, pdefault(lapl))
-    else:
-        H5Oget_info1(loc.id, &info.infostruct)
+        return info
 
-    return info
+ELSE:
+    @with_phil
+    def get_info(ObjectID loc not None, char* name=NULL, int index=-1, *,
+            char* obj_name='.', int index_type=H5_INDEX_NAME, int order=H5_ITER_INC,
+            PropID lapl=None):
+        """(ObjectID loc, STRING name=, INT index=, **kwds) => ObjInfo
+
+        Get information describing an object in an HDF5 file.  Provide the object
+        itself, or the containing group and exactly one of "name" or "index".
+
+        STRING obj_name (".")
+            When "index" is specified, look in this subgroup instead.
+            Otherwise ignored.
+
+        PropID lapl (None)
+            Link access property list
+
+        INT index_type (h5.INDEX_NAME)
+
+        INT order (h5.ITER_INC)
+        """
+        cdef ObjInfo info
+        info = ObjInfo()
+
+        if name != NULL and index >= 0:
+            raise TypeError("At most one of name or index may be specified")
+        elif name != NULL and index < 0:
+            H5Oget_info_by_name1(loc.id, name, &info.infostruct, pdefault(lapl))
+        elif name == NULL and index >= 0:
+            H5Oget_info_by_idx1(loc.id, obj_name, <H5_index_t>index_type,
+                <H5_iter_order_t>order, index, &info.infostruct, pdefault(lapl))
+        else:
+            H5Oget_info1(loc.id, &info.infostruct)
+
+        return info
 
 
 IF HDF5_VERSION >= (1, 8, 5):
@@ -306,53 +342,105 @@ cdef herr_t cb_obj_simple(hid_t obj, const char* name, const H5O_info_t *info, v
     return 0
 
 
-@with_phil
-def visit(ObjectID loc not None, object func, *,
-          int idx_type=H5_INDEX_NAME, int order=H5_ITER_INC,
-          char* obj_name=".", PropID lapl=None, bint info=0):
-    """(ObjectID loc, CALLABLE func, **kwds) => <Return value from func>
+IF HDF5_VERSION < VOL_MIN_HDF5_VERSION:
+    @with_phil
+    def visit(ObjectID loc not None, object func, *,
+              int idx_type=H5_INDEX_NAME, int order=H5_ITER_INC,
+              char* obj_name=".", PropID lapl=None, bint info=0):
+        """(ObjectID loc, CALLABLE func, **kwds) => <Return value from func>
 
-    Iterate a function or callable object over all objects below the
-    specified one.  Your callable should conform to the signature::
+        Iterate a function or callable object over all objects below the
+        specified one.  Your callable should conform to the signature::
 
-        func(STRING name) => Result
+            func(STRING name) => Result
 
-    or if the keyword argument "info" is True::
+        or if the keyword argument "info" is True::
 
-        func(STRING name, ObjInfo info) => Result
+            func(STRING name, ObjInfo info) => Result
 
-    Returning None continues iteration; returning anything else aborts
-    iteration and returns that value.  Keywords:
+        Returning None continues iteration; returning anything else aborts
+        iteration and returns that value.  Keywords:
 
-    BOOL info (False)
-        Callback is func(STRING, Objinfo)
+        BOOL info (False)
+            Callback is func(STRING, Objinfo)
 
-    STRING obj_name (".")
-        Visit a subgroup of "loc" instead
+        STRING obj_name (".")
+            Visit a subgroup of "loc" instead
 
-    PropLAID lapl (None)
-        Control how "obj_name" is interpreted
+        PropLAID lapl (None)
+            Control how "obj_name" is interpreted
 
-    INT idx_type (h5.INDEX_NAME)
-        What indexing strategy to use
+        INT idx_type (h5.INDEX_NAME)
+            What indexing strategy to use
 
-    INT order (h5.ITER_INC)
-        Order in which iteration occurs
+        INT order (h5.ITER_INC)
+            Order in which iteration occurs
 
-    Compatibility note:  No callback is executed for the starting path ("."),
-    as some versions of HDF5 don't correctly handle a return value for this
-    case.  This differs from the behavior of the native H5Ovisit, which
-    provides a literal "." as the first value.
-    """
-    cdef _ObjectVisitor visit = _ObjectVisitor(func)
-    cdef H5O_iterate_t cfunc
+        Compatibility note:  No callback is executed for the starting path ("."),
+        as some versions of HDF5 don't correctly handle a return value for this
+        case.  This differs from the behavior of the native H5Ovisit, which
+        provides a literal "." as the first value.
+        """
+        cdef _ObjectVisitor visit = _ObjectVisitor(func)
+        cdef H5O_iterate_t cfunc
 
-    if info:
-        cfunc = cb_obj_iterate
-    else:
-        cfunc = cb_obj_simple
+        if info:
+            cfunc = cb_obj_iterate
+        else:
+            cfunc = cb_obj_simple
 
-    H5Ovisit_by_name1(loc.id, obj_name, <H5_index_t>idx_type,
-        <H5_iter_order_t>order, cfunc, <void*>visit, pdefault(lapl))
+        H5Ovisit_by_name(loc.id, obj_name, <H5_index_t>idx_type,
+            <H5_iter_order_t>order, cfunc, <void*>visit, pdefault(lapl))
 
-    return visit.retval
+        return visit.retval
+ELSE:
+    @with_phil
+    def visit(ObjectID loc not None, object func, *,
+              int idx_type=H5_INDEX_NAME, int order=H5_ITER_INC,
+              char* obj_name=".", PropID lapl=None, bint info=0):
+        """(ObjectID loc, CALLABLE func, **kwds) => <Return value from func>
+
+        Iterate a function or callable object over all objects below the
+        specified one.  Your callable should conform to the signature::
+
+            func(STRING name) => Result
+
+        or if the keyword argument "info" is True::
+
+            func(STRING name, ObjInfo info) => Result
+
+        Returning None continues iteration; returning anything else aborts
+        iteration and returns that value.  Keywords:
+
+        BOOL info (False)
+            Callback is func(STRING, Objinfo)
+
+        STRING obj_name (".")
+            Visit a subgroup of "loc" instead
+
+        PropLAID lapl (None)
+            Control how "obj_name" is interpreted
+
+        INT idx_type (h5.INDEX_NAME)
+            What indexing strategy to use
+
+        INT order (h5.ITER_INC)
+            Order in which iteration occurs
+
+        Compatibility note:  No callback is executed for the starting path ("."),
+        as some versions of HDF5 don't correctly handle a return value for this
+        case.  This differs from the behavior of the native H5Ovisit, which
+        provides a literal "." as the first value.
+        """
+        cdef _ObjectVisitor visit = _ObjectVisitor(func)
+        cdef H5O_iterate_t cfunc
+
+        if info:
+            cfunc = cb_obj_iterate
+        else:
+            cfunc = cb_obj_simple
+
+        H5Ovisit_by_name1(loc.id, obj_name, <H5_index_t>idx_type,
+            <H5_iter_order_t>order, cfunc, <void*>visit, pdefault(lapl))
+
+        return visit.retval
