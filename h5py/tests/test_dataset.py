@@ -73,9 +73,23 @@ class TestCreateShape(BaseDataset):
         dset = self.f.create_dataset('foo', (1,))
         self.assertEqual(dset.shape, (1,))
 
+    def test_create_integer(self):
+        """ Create a size-1 dataset """
+        dset = self.f.create_dataset('foo', 1)
+        self.assertEqual(dset.shape, (1,))
+
     def test_create_extended(self):
         """ Create an extended dataset """
         dset = self.f.create_dataset('foo', (63,))
+        self.assertEqual(dset.shape, (63,))
+        self.assertEqual(dset.size, 63)
+        dset = self.f.create_dataset('bar', (6, 10))
+        self.assertEqual(dset.shape, (6, 10))
+        self.assertEqual(dset.size, (60))
+
+    def test_create_integer_extended(self):
+        """ Create an extended dataset """
+        dset = self.f.create_dataset('foo', 63)
         self.assertEqual(dset.shape, (63,))
         self.assertEqual(dset.size, 63)
         dset = self.f.create_dataset('bar', (6, 10))
@@ -214,6 +228,7 @@ class TestCreateChunked(BaseDataset):
         """ Create via chunks tuple """
         dset = self.f.create_dataset('foo', shape=(100,), chunks=(10,))
         self.assertEqual(dset.chunks, (10,))
+
 
     def test_chunks_mismatch(self):
         """ Illegal chunk size raises ValueError """
