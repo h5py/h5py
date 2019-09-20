@@ -16,16 +16,9 @@
     2. Type conversion for read and write (currently untested)
 """
 
-from __future__ import absolute_import
-
 import sys
-
-import six
-
 import numpy as np
-
 import platform
-
 import pytest
 
 from .common import ut, TestCase
@@ -52,9 +45,9 @@ class TestRepr(BaseDataset):
     def test_repr_open(self):
         """ repr() works on live and dead datasets """
         ds = self.f.create_dataset('foo', (4,))
-        self.assertIsInstance(repr(ds), six.string_types)
+        self.assertIsInstance(repr(ds), str)
         self.f.close()
-        self.assertIsInstance(repr(ds), six.string_types)
+        self.assertIsInstance(repr(ds), str)
 
 
 class TestCreateShape(BaseDataset):
@@ -608,7 +601,7 @@ class TestAutoCreate(BaseDataset):
 
     def test_vlen_unicode(self):
         """ Assignment of a unicode string produces a vlen unicode dataset """
-        self.f['x'] = u"Hello there" + six.unichr(0x2034)
+        self.f['x'] = u"Hello there" + chr(0x2034)
         ds = self.f['x']
         tid = ds.id.get_type()
         self.assertEqual(type(tid), h5py.h5t.TypeStringID)
@@ -819,10 +812,10 @@ class TestStrings(BaseDataset):
         """
         dt = h5py.string_dtype()
         ds = self.f.create_dataset('x', (100,), dtype=dt)
-        data = u"Hello" + six.unichr(0x2034)
+        data = u"Hello" + chr(0x2034)
         ds[0] = data
         out = ds[0]
-        self.assertEqual(type(out), six.text_type)
+        self.assertEqual(type(out), str)
         self.assertEqual(out, data)
 
     def test_roundtrip_fixed_bytes(self):
@@ -851,10 +844,10 @@ class TestStrings(BaseDataset):
         """
         dt = h5py.string_dtype()
         ds = self.f.create_dataset('x', (100,), dtype=dt)
-        data = u"Hello there" + six.unichr(0x2034)
+        data = u"Hello there" + chr(0x2034)
         ds[0] = data.encode('utf8')
         out = ds[0]
-        self.assertEqual(type(out), six.text_type)
+        self.assertEqual(type(out), str)
         self.assertEqual(out, data)
 
 

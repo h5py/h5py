@@ -42,8 +42,8 @@ At the high-level interface, h5py exposes three kinds of strings.  Each maps
 to a specific type within Python (but see :ref:`str_py3` below):
 
 * Fixed-length ASCII (NumPy ``S`` type)
-* Variable-length ASCII (Python 2 ``str``, Python 3 ``bytes``)
-* Variable-length UTF-8 (Python 2 ``unicode``, Python 3 ``str``)
+* Variable-length ASCII (``bytes``)
+* Variable-length UTF-8 (``str``)
 
 Note that h5py currently lacks support for fixed-length UTF-8.
 
@@ -111,7 +111,7 @@ Variable-length UTF-8
 
 These are created when you assign a unicode string to an attribute::
 
-    >>> dset.attrs["name"] = u"Hello"
+    >>> dset.attrs["name"] = "Hello"
 
 or if you create a dataset with an explicit string dtype:
 
@@ -153,13 +153,13 @@ Handling of lists/tuples of strings as attributes
 If you set an attribute equal to a Python list or tuple of unicode strings,
 such as the following:
 
-    >>> f.attrs['x'] = (u'a', u'b')
+    >>> f.attrs['x'] = ('a', 'b')
 
 h5py will save these as arrays of variable-length strings with character set
 H5T_CSET_UTF8. When read back, the results will be numpy arrays of dtype
 ``'object'``, as if the original data were written as:
 
-    >>> f['x'] = np.array((u'a', u'b'), dtype=h5py.string_dtype(encoding='utf-8'))
+    >>> f['x'] = np.array(('a', 'b'), dtype=h5py.string_dtype(encoding='utf-8'))
 
 
 Object names
@@ -168,7 +168,7 @@ Object names
 Unicode strings are used exclusively for object names in the file::
 
     >>> f.name
-    u'/'
+    '/'
 
 You can supply either byte or unicode strings (on both Python 2 and Python 3)
 when creating or retrieving objects. If a byte string is supplied,
@@ -178,4 +178,4 @@ In the file, h5py uses the most-compatible representation; H5T_CSET_ASCII for
 characters in the ASCII range; H5T_CSET_UTF8 otherwise.
 
     >>> grp = f.create_dataset(b"name")
-    >>> grp2 = f.create_dataset(u"name2")
+    >>> grp2 = f.create_dataset("name2")

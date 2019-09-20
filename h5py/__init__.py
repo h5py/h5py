@@ -12,8 +12,6 @@
     scientific data format.
 """
 
-from __future__ import absolute_import
-
 from warnings import warn as _warn
 
 

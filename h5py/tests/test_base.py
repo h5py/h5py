@@ -13,10 +13,6 @@
     Tests features common to all high-level objects, like the .name property.
 """
 
-from __future__ import absolute_import
-
-import six
-
 from h5py import File
 from .common import ut, TestCase, UNICODE_FILENAMES
 
@@ -32,6 +28,7 @@ class BaseTest(TestCase):
     def tearDown(self):
         if self.f:
             self.f.close()
+
 
 class TestName(BaseTest):
 
@@ -50,13 +47,10 @@ class TestRepr(BaseTest):
         repr() works correctly with Unicode names
     """
 
-    USTRING = six.unichr(0xfc) + six.unichr(0xdf)
+    USTRING = chr(0xfc) + chr(0xdf)
 
     def _check_type(self, obj):
-        if six.PY2:
-            self.assertIsInstance(repr(obj), bytes)
-        else:
-            self.assertIsInstance(repr(obj), six.text_type)
+        self.assertIsInstance(repr(obj), str)
 
     def test_group(self):
         """ Group repr() with unicode """
@@ -77,7 +71,7 @@ class TestRepr(BaseTest):
     @ut.skipIf(not UNICODE_FILENAMES, "Filesystem unicode support required")
     def test_file(self):
         """ File object repr() with unicode """
-        fname = tempfile.mktemp(self.USTRING+u'.hdf5')
+        fname = tempfile.mktemp(self.USTRING+'.hdf5')
         try:
             with File(fname,'w') as f:
                 self._check_type(f)

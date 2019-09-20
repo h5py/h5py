@@ -11,8 +11,6 @@
     Versioning module for h5py.
 """
 
-from __future__ import absolute_import
-
 from collections import namedtuple
 from . import h5 as _h5
 import sys

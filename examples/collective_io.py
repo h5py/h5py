@@ -7,7 +7,6 @@ Prerequisites: python 2.5.0, mpi4py and numpy
 Source Codes: Already submit this 'collective io' branch to h5py master, meanwhile, can download this branch at https://github.com/valiantljk/h5py.git
 Note: Must build the h5py with parallel hdf5
 """
-from __future__ import print_function
 
 from mpi4py import MPI
 import numpy as np

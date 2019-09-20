@@ -44,8 +44,6 @@ except ImportError:
 
 cfg = get_config()
 
-PY3 = sys.version_info[0] == 3
-
 MACHINE = platform.machine()
 
 # === Custom C API ============================================================
@@ -1216,8 +1214,7 @@ cdef class TypeCompoundID(TypeCompositeID):
 
         # 2. Otherwise, read all fields of the compound type, in HDF5 order.
         else:
-            if sys.version[0] == '3':
-                field_names = [x.decode('utf8') for x in field_names]
+            field_names = [x.decode('utf8') for x in field_names]
             typeobj = dtype({
                 'names': field_names,
                 'formats': field_types,
@@ -1347,10 +1344,8 @@ cdef class TypeEnumID(TypeCompositeID):
         # Convert strings to appropriate representation
         members_conv = {}
         for name, val in members.iteritems():
-            try:    # ASCII; Py2 -> preserve bytes, Py3 -> make unicode
-                uname = name.decode('ascii')
-                if PY3:
-                    name = uname
+            try:    # ASCII;
+                name = name.decode('ascii')
             except UnicodeDecodeError:
                 try:    # Non-ascii; all platforms try unicode
                     name = name.decode('utf8')

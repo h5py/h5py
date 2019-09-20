@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 import distutils.sysconfig
 from glob import glob
 import os

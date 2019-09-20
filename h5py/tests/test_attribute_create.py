@@ -11,9 +11,6 @@
     Tests the h5py.AttributeManager.create() method.
 """
 
-from __future__ import absolute_import
-
-import six
 import numpy as np
 import h5py
 
@@ -49,15 +46,15 @@ class TestArray(TestCase):
 
     def test_str(self):
         # See issue 1057
-        self.f.attrs.create('x', six.unichr(0x03A9))
+        self.f.attrs.create('x', chr(0x03A9))
         out = self.f.attrs['x']
-        self.assertEqual(out, six.unichr(0x03A9))
-        self.assertIsInstance(out, six.string_types)
+        self.assertEqual(out, chr(0x03A9))
+        self.assertIsInstance(out, str)
 
     def test_tuple_of_unicode(self):
         # Test that a tuple of unicode strings can be set as an attribute. It will
         # be converted to a numpy array of vlen unicode type:
-        data = (u'a', u'b')
+        data = ('a', 'b')
         self.f.attrs.create('x', data=data)
         result = self.f.attrs['x']
         self.assertTrue(all(result == data))
