@@ -98,6 +98,8 @@ def make_new_dset(parent, shape=None, dtype=None, data=None,
 
     tmp_shape = maxshape if maxshape is not None else shape
     # Validate chunk shape
+    if isinstance(chunks, int):
+        chunks = (chunks,)
     if isinstance(chunks, tuple) and any(
         chunk > dim for dim, chunk in zip(tmp_shape, chunks) if dim is not None
     ):
