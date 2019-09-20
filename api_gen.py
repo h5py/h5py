@@ -184,7 +184,7 @@ class LineProcessor(object):
     def write_raw_sig(self):
         """ Write out "cdef extern"-style definition for an HDF5 function """
 
-        raw_sig = "{0.code} {0.fname}({0.sig}) except *\n".format(self.line)
+        raw_sig = "{0.code} {0.fname}({0.sig}) nogil except *\n".format(self.line)
         raw_sig = self.add_cython_if(raw_sig)
         raw_sig = "\n".join(("  "+x if x.strip() else x) for x in raw_sig.split("\n"))
         self.raw_defs.write(raw_sig)
