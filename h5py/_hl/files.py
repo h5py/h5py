@@ -38,8 +38,12 @@ if hdf5_version >= h5.get_config().swmr_min_hdf5_version:
 libver_dict = {'earliest': h5f.LIBVER_EARLIEST, 'latest': h5f.LIBVER_LATEST}
 libver_dict_r = dict((y, x) for x, y in six.iteritems(libver_dict))
 if hdf5_version >= (1, 10, 2):
-    libver_dict.update({'v108': h5f.LIBVER_V18, 'v110': h5f.LIBVER_V110, 'v112': h5f.LIBVER_V112})
-    libver_dict_r.update({h5f.LIBVER_V18: 'v108', h5f.LIBVER_V110: 'v110', h5f.LIBVER_V112: 'v112'})
+    libver_dict.update({'v108': h5f.LIBVER_V18, 'v110': h5f.LIBVER_V110})
+    libver_dict_r.update({h5f.LIBVER_V18: 'v108', h5f.LIBVER_V110: 'v110'})
+
+if hdf5_version >= (1, 11, 4):
+    libver_dict.update({'v112': h5f.LIBVER_V112})
+    libver_dict_r.update({h5f.LIBVER_V112: 'v112'})
 
 
 def _set_fapl_mpio(plist, **kwargs):

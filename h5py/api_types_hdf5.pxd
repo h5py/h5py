@@ -125,20 +125,26 @@ cdef extern from "hdf5.h":
   int H5F_OBJ_LOCAL
   hsize_t H5F_UNLIMITED
 
+  IF HDF5_VERSION < (1, 10, 2):
+    ctypedef enum H5F_libver_t:
+      H5F_LIBVER_EARLIEST        #/* Use the earliest possible format for storing objects */
+      H5F_LIBVER_LATEST          #/* Use the latest possible format available for storing objects*/
+
   IF HDF5_VERSION >= (1, 10, 2):
+    ctypedef enum H5F_libver_t:
+      H5F_LIBVER_EARLIEST = 0,        # Use the earliest possible format for storing objects
+      H5F_LIBVER_V18 = 1,
+      H5F_LIBVER_V110 = 2,
+      H5F_LIBVER_NBOUNDS
+
+  IF HDF5_VERSION >= (1, 11, 4):
     ctypedef enum H5F_libver_t:
       H5F_LIBVER_EARLIEST = 0,        # Use the earliest possible format for storing objects
       H5F_LIBVER_V18 = 1,
       H5F_LIBVER_V110 = 2,
       H5F_LIBVER_V112 = 3,
       H5F_LIBVER_NBOUNDS
-
     int H5F_LIBVER_LATEST  # Use the latest possible format available for storing objects
-
-  ELSE:
-    ctypedef enum H5F_libver_t:
-      H5F_LIBVER_EARLIEST        #/* Use the earliest possible format for storing objects */
-      H5F_LIBVER_LATEST          #/* Use the latest possible format available for storing objects*/
 
 # === H5FD - Low-level file descriptor API ====================================
 
