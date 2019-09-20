@@ -105,7 +105,7 @@ safe to use with very large target selections.  It is supported for the above
 
 
 .. warning::
-    Dataset item getter returns new numpy.ndarray. Some mind find the following behavior 'unexpected':
+    Dataset item getter returns new numpy.ndarray. Some might find the following behavior surprising:
 
    >>> a = 1
    >>> b = np.zeros(shape=(2,2))
