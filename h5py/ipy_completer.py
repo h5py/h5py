@@ -6,7 +6,7 @@
 #
 # Copyright (C) 2009 Darren Dale
 #
-# http://h5py.alfven.org
+# http://h5py.org
 # License: BSD  (See LICENSE.txt for full license)
 #
 #-
