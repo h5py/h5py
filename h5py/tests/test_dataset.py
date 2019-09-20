@@ -1191,7 +1191,7 @@ def test_hide_value_from_jedi():
         assert 'value' not in dir(fout['test'])
 
 
-@ut.skipUnless(h5.version.hdf5_version_tuple >= (1, 10, 5),
+@ut.skipUnless(h5py.version.hdf5_version_tuple >= (1, 10, 5),
                "chunk info requires  HDF5 >= 1.10.5")
 def test_get_chunk_details():
     from io import BytesIO
