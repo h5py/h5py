@@ -541,7 +541,7 @@ cdef class DatasetID(ObjectID):
             if space is None:
                 space_id = H5Dget_space(self.id)
             else:
-                space_id = self.id
+                space_id = space.id
 
             rank = H5Sget_simple_extent_ndims(space_id)
             chunk_offset = <hsize_t*>emalloc(sizeof(hsize_t) * rank)
