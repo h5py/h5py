@@ -16,9 +16,9 @@
 from .h5 import get_config
 from .h5r cimport Reference, RegionReference, hobj_ref_t, hdset_reg_ref_t
 from .h5t cimport H5PY_OBJ, typewrap, py_create, TypeID
-cimport numpy as np
-from libc.stdlib cimport realloc, malloc, free
-
+from . cimport numpy as np
+from libc.stdlib cimport realloc
+from .utils cimport emalloc, efree
 cfg = get_config()
 
 # Initialization
@@ -92,7 +92,7 @@ cdef herr_t generic_converter(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
         return initop(src_id, dst_id, &(cdata[0].priv))
 
     elif command == H5T_CONV_FREE:
-        free(cdata[0].priv)
+        efree(cdata[0].priv)
         cdata[0].priv = NULL
 
     elif command == H5T_CONV_CONV:
@@ -145,7 +145,7 @@ ctypedef struct conv_size_t:
 cdef herr_t init_generic(hid_t src, hid_t dst, void** priv) except -1:
 
     cdef conv_size_t *sizes
-    sizes = <conv_size_t*>malloc(sizeof(conv_size_t))
+    sizes = <conv_size_t*>emalloc(sizeof(conv_size_t))
     priv[0] = sizes
     sizes[0].src_size = H5Tget_size(src)
     sizes[0].dst_size = H5Tget_size(dst)
@@ -183,7 +183,7 @@ cdef int conv_vlen2str(void* ipt, void* opt, void* bkg, void* priv) except -1:
 
     # Since all data conversions are by definition in-place, it
     # is our responsibility to free the memory used by the vlens.
-    free(buf_cstring0)
+    efree(buf_cstring0)
 
     # HDF5 will eventually overwrite this target location, so we
     # make sure to decref the object there.
@@ -258,7 +258,7 @@ cdef int conv_str2vlen(void* ipt, void* opt, void* bkg, void* priv) except -1:
         if strlen(temp_string) != temp_string_len:
             raise ValueError("VLEN strings do not support embedded NULLs")
 
-        buf_cstring0 = <char*>malloc(temp_string_len+1)
+        buf_cstring0 = <char*>emalloc(temp_string_len+1)
         memcpy(buf_cstring0, temp_string, temp_string_len+1)
         memcpy(buf_cstring, &buf_cstring0, sizeof(buf_cstring0));
 
@@ -276,7 +276,7 @@ cdef herr_t init_vlen2fixed(hid_t src, hid_t dst, void** priv) except -1:
     if not (H5Tis_variable_str(src) and (not H5Tis_variable_str(dst))):
         return -2
 
-    sizes = <conv_size_t*>malloc(sizeof(conv_size_t))
+    sizes = <conv_size_t*>emalloc(sizeof(conv_size_t))
     priv[0] = sizes
 
     sizes[0].src_size = H5Tget_size(src)
@@ -289,7 +289,7 @@ cdef herr_t init_fixed2vlen(hid_t src, hid_t dst, void** priv) except -1:
     if not (H5Tis_variable_str(dst) and (not H5Tis_variable_str(src))):
         return -2
 
-    sizes = <conv_size_t*>malloc(sizeof(conv_size_t))
+    sizes = <conv_size_t*>emalloc(sizeof(conv_size_t))
     priv[0] = sizes
     sizes[0].src_size = H5Tget_size(src)
     sizes[0].dst_size = H5Tget_size(dst)
@@ -330,7 +330,7 @@ cdef int conv_fixed2vlen(void* ipt, void* opt, void* bkg, void* priv) except -1:
     cdef char* temp_string = NULL
     cdef conv_size_t *sizes = <conv_size_t*>priv
 
-    temp_string = <char*>malloc(sizes[0].src_size+1)
+    temp_string = <char*>emalloc(sizes[0].src_size+1)
     memcpy(temp_string, buf_fixed, sizes[0].src_size)
     temp_string[sizes[0].src_size] = c'\0'
 
@@ -490,7 +490,7 @@ cdef int enum_int_converter_init(hid_t src, hid_t dst,
     cdef conv_enum_t *info
 
     cdata[0].need_bkg = H5T_BKG_NO
-    cdata[0].priv = info = <conv_enum_t*>malloc(sizeof(conv_enum_t))
+    cdata[0].priv = info = <conv_enum_t*>emalloc(sizeof(conv_enum_t))
     info[0].src_size = H5Tget_size(src)
     info[0].dst_size = H5Tget_size(dst)
 
@@ -498,7 +498,7 @@ cdef void enum_int_converter_free(H5T_cdata_t *cdata):
     cdef conv_enum_t *info
 
     info = <conv_enum_t*>cdata[0].priv
-    free(info)
+    efree(info)
     cdata[0].priv = NULL
 
 
@@ -540,7 +540,7 @@ cdef int enum_int_converter_conv(hid_t src, hid_t dst, H5T_cdata_t *cdata,
             else:
                 nalloc = info[0].dst_size*nl
 
-            cbuf = <char*>malloc(nalloc)
+            cbuf = <char*>emalloc(nalloc)
             if cbuf == NULL:
                 raise MemoryError()
 
@@ -558,7 +558,7 @@ cdef int enum_int_converter_conv(hid_t src, hid_t dst, H5T_cdata_t *cdata,
                         info[0].dst_size)
 
     finally:
-        free(cbuf)
+        efree(cbuf)
         cbuf = NULL
         if supertype > 0:
             H5Tclose(supertype)
@@ -689,7 +689,6 @@ cdef int conv_vlen2ndarray(void* ipt, void* opt, np.dtype elem_dtype,
     Py_INCREF(<PyObject*>elem_dtype)
     ndarray = PyArray_NewFromDescr(&PyArray_Type, elem_dtype, 1,
                 dims, NULL, data, flags, <object>NULL)
-    print(ndarray.flags.owndata)
     ndarray_obj = <PyObject*>ndarray
     Py_INCREF(ndarray_obj)
 
@@ -791,9 +790,9 @@ cdef int conv_ndarray2vlen(void* ipt, void* opt,
     len = ndarray.shape[0]
 
     if outtype.get_size() > intype.get_size():
-        data = malloc(outtype.get_size() * len)
+        data = emalloc(outtype.get_size() * len)
     else:
-        data = malloc(intype.get_size() * len)
+        data = emalloc(intype.get_size() * len)
     memcpy(data, ndarray.data, intype.get_size() * len)
     H5Tconvert(intype.id, outtype.id, len, data, NULL, H5P_DEFAULT)
 

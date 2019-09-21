@@ -88,7 +88,7 @@ cdef class H5PYConfig:
                     else:
                         return bytes(val)
                 try:
-                    if len(val) != 2: 
+                    if len(val) != 2:
                         raise TypeError()
                     r = handle_val(val[0])
                     i = handle_val(val[1])
