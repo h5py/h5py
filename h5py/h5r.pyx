@@ -76,7 +76,7 @@ def dereference(Reference ref not None, ObjectID id not None):
 
     The reference may be either Reference or RegionReference.
     """
-    import h5i
+    from . import h5i
     if not ref:
         return None
     return h5i.wrap_identifier(H5Rdereference(id.id, <H5R_type_t>ref.typecode, &ref.ref))
