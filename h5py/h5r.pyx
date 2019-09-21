@@ -95,7 +95,7 @@ def get_region(RegionReference ref not None, ObjectID id not None):
     The reference object must be a RegionReference.  If it is zero-filled,
     returns None.
     """
-    import h5s
+    from . import h5s
     if ref.typecode != H5R_DATASET_REGION or not ref:
         return None
     return h5s.SpaceID(H5Rget_region(id.id, <H5R_type_t>ref.typecode, &ref.ref))
