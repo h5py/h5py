@@ -671,7 +671,7 @@ cdef int conv_vlen2ndarray(void* ipt, void* opt, np.dtype elem_dtype,
 
     cdef PyObject** buf_obj = <PyObject**>opt
     cdef vlen_t* in_vlen = <vlen_t*>ipt
-    cdef int flags = np.NPY_WRITEABLE | np.NPY_C_CONTIGUOUS
+    cdef int flags = np.NPY_WRITEABLE | np.NPY_C_CONTIGUOUS | np.NPY_OWNDATA
     cdef np.npy_intp dims[1]
     cdef void* data
     cdef np.ndarray ndarray
@@ -689,7 +689,7 @@ cdef int conv_vlen2ndarray(void* ipt, void* opt, np.dtype elem_dtype,
     Py_INCREF(<PyObject*>elem_dtype)
     ndarray = PyArray_NewFromDescr(&PyArray_Type, elem_dtype, 1,
                 dims, NULL, data, flags, <object>NULL)
-    ndarray.flags |= np.NPY_OWNDATA
+    print(ndarray.flags.owndata)
     ndarray_obj = <PyObject*>ndarray
     Py_INCREF(ndarray_obj)
 
