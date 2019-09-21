@@ -1,4 +1,4 @@
-# cython: language_level=3
+# cython: language_level=3str
 # This file is part of h5py, a Python interface to the HDF5 library.
 #
 # http://www.h5py.org
@@ -15,17 +15,17 @@
     subclasses which represent things like integer/float/compound identifiers.
     The majority of the H5T API is presented as methods on these identifiers.
 """
-# Pyrex compile-time imports
+# C-level imports
 include "config.pxi"
 from ._objects cimport pdefault
 
-from numpy cimport dtype, ndarray
+from .numpy cimport dtype, ndarray
 from .h5r cimport Reference, RegionReference
 
 from .utils cimport  emalloc, efree, \
                     require_tuple, convert_dims, convert_tuple
 
-# Runtime imports
+# Python imports
 import codecs
 from collections import namedtuple
 import sys

@@ -17,7 +17,7 @@ from ._objects cimport pdefault
 from .h5t cimport TypeID, typewrap, py_create
 from .h5s cimport SpaceID
 from .h5p cimport PropID
-from numpy cimport import_array, ndarray, PyArray_DATA
+from .numpy cimport import_array, ndarray, PyArray_DATA
 from .utils cimport check_numpy_read, check_numpy_write, emalloc, efree
 from ._proxy cimport attr_rw
 

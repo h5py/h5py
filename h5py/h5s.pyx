@@ -17,7 +17,7 @@ include "config.pxi"
 # C-level imports
 from .utils cimport  require_tuple, convert_dims, convert_tuple, \
                     emalloc, efree, create_numpy_hsize, create_hsize_array
-from numpy cimport ndarray
+from .numpy cimport ndarray
 
 #Python level imports
 from . import _objects
