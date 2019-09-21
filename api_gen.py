@@ -99,7 +99,7 @@ class Line(object):
 
 
 raw_preamble = """\
-# cython: language_level=3str
+# cython: language_level=3
 #
 # Warning: this file is auto-generated from api_gen.py. DO NOT EDIT!
 #
@@ -111,7 +111,7 @@ from .api_types_ext cimport *
 """
 
 def_preamble = """\
-# cython: language_level=3str
+# cython: language_level=3
 #
 # Warning: this file is auto-generated from api_gen.py. DO NOT EDIT!
 #
@@ -124,7 +124,7 @@ from .api_types_ext cimport *
 """
 
 imp_preamble = """\
-# cython: language_level=3str
+# cython: language_level=3
 #
 # Warning: this file is auto-generated from api_gen.py. DO NOT EDIT!
 #
@@ -147,9 +147,9 @@ class LineProcessor(object):
         self.functions = open(op.join('h5py', 'api_functions.txt'), 'r')
 
         # Create output files
-        self.raw_defs =     open(op.join('h5py', '_hdf5.pxd'), 'w')
-        self.cython_defs =  open(op.join('h5py', 'defs.pxd'), 'w')
-        self.cython_imp =   open(op.join('h5py', 'defs.pyx'), 'w')
+        self.raw_defs = open(op.join('h5py', '_hdf5.pxd'), 'w')
+        self.cython_defs = open(op.join('h5py', 'defs.pxd'), 'w')
+        self.cython_imp = open(op.join('h5py', 'defs.pyx'), 'w')
 
         self.raw_defs.write(raw_preamble)
         self.cython_defs.write(def_preamble)
@@ -185,7 +185,7 @@ class LineProcessor(object):
         """ Wrap a block of code in the required "IF" checks """
 
         def wrapif(condition, code):
-            code = code.replace('\n', '\n    ', code.count('\n')-1) # Yes, -1.
+            code = code.replace('\n', '\n    ', code.count('\n') - 1)  # Yes, -1.
             code = "IF {0}:\n    {1}".format(condition, code)
             return code
 
@@ -201,7 +201,7 @@ class LineProcessor(object):
 
         raw_sig = "{0.code} {0.fname}({0.sig}) nogil except *\n".format(self.line)
         raw_sig = self.add_cython_if(raw_sig)
-        raw_sig = "\n".join(("  "+x if x.strip() else x) for x in raw_sig.split("\n"))
+        raw_sig = "\n".join(("  " + x if x.strip() else x) for x in raw_sig.split("\n"))
         self.raw_defs.write(raw_sig)
 
     def write_cython_sig(self):
@@ -218,7 +218,7 @@ class LineProcessor(object):
         if '*' in self.line.code or self.line.code in ('H5T_conv_t',):
             condition = "==NULL"
             retval = "NULL"
-        elif self.line.code in ('int', 'herr_t', 'htri_t', 'hid_t','hssize_t','ssize_t') \
+        elif self.line.code in ('int', 'herr_t', 'htri_t', 'hid_t', 'hssize_t', 'ssize_t') \
           or re.match(r'H5[A-Z]+_[a-zA-Z_]+_t', self.line.code):
             condition = "<0"
             retval = "-1"

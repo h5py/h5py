@@ -1,4 +1,4 @@
-# cython: language_level=3str
+# cython: language_level=3
 # cython: profile=False
 
 # This file is part of h5py, a Python interface to the HDF5 library.
@@ -36,7 +36,7 @@ cdef inline void* emalloc(size_t size) except? NULL:
 
     retval = malloc(size)
     if retval == NULL:
-        errmsg = "Can't malloc %d bytes" % size
+        errmsg = b"Can't malloc %d bytes" % size
         PyErr_SetString(MemoryError, errmsg)
         return NULL
     return retval
@@ -63,18 +63,18 @@ cdef int check_numpy(ndarray arr, hid_t space_id, int write):
     cdef int i
 
     if arr is None:
-        PyErr_SetString(TypeError, "Array is None")
+        PyErr_SetString(TypeError, b"Array is None")
         return -1
 
     # Validate array flags
 
     if write:
         if not (arr.flags & NPY_C_CONTIGUOUS and arr.flags & NPY_WRITEABLE):
-            PyErr_SetString(TypeError, "Array must be C-contiguous and writable")
+            PyErr_SetString(TypeError, b"Array must be C-contiguous and writable")
             return -1
     else:
         if not (arr.flags & NPY_C_CONTIGUOUS):
-            PyErr_SetString(TypeError, "Array must be C-contiguous")
+            PyErr_SetString(TypeError, b"Array must be C-contiguous")
             return -1
 
     return 1
@@ -174,9 +174,9 @@ cdef int require_tuple(object tpl, int none_allowed, int size, char* name) excep
       (isinstance(tpl, tuple) and (size < 0 or len(tpl) == size)):
         return 1
 
-    nmsg = "" if size < 0 else " of size %d" % size
-    smsg = "" if not none_allowed else " or None"
+    nmsg = b"" if size < 0 else b" of size %d" % size
+    smsg = b"" if not none_allowed else b" or None"
 
-    msg = "%s must be a tuple%s%s." % (name, smsg, nmsg)
+    msg = b"%s must be a tuple%s%s." % (name, smsg, nmsg)
     PyErr_SetString(ValueError, msg)
     return -1
