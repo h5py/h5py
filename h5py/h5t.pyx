@@ -1894,7 +1894,8 @@ def check_enum_dtype(dt):
         return None
 
 def check_opaque_dtype(dt):
-    """Return whether the dtype is tagged to store HDF5 opaque data"""
+    """Return True if the dtype given is tagged to be stored as HDF5 opaque data
+    """
     try:
         return dt.metadata.get('h5py_opaque', False)
     except AttributeError:

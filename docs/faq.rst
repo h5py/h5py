@@ -29,6 +29,11 @@ References                          Region and object
 Variable length array               Any supported type                              See :ref:`Special Types <vlen>`
 =========================           ============================================    ================================
 
+Other numpy dtypes, such as datetime64 and timedelta64, can optionally be
+stored in HDF5 opaque data using :func:`opaque_dtype`.
+h5py will read this data back with the same dtype, but other software probably
+will not understand it.
+
 Unsupported types:
 
 =========================           ============================================
@@ -37,9 +42,6 @@ Type                                Status
 HDF5 "time" type
 NumPy "U" strings                   No HDF5 equivalent
 NumPy generic "O"                   Not planned
-Any other NumPy dtype               Map to opaque type with specific tag, you
-                                    must register types manually. See
-                                    :func:`register_dtype`
 =========================           ============================================
 
 
