@@ -41,6 +41,7 @@ try:
 except ImportError:
     from collections import Mapping
 
+
 cfg = get_config()
 
 MACHINE = platform.machine()
@@ -2030,4 +2031,3 @@ cpdef object py_get_vlen(object dt_in):
     warn("Deprecated; use check_vlen_dtype(dtype) instead",
         H5pyDeprecationWarning)
     return check_vlen_dtype(dt_in)
-

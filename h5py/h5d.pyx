@@ -208,7 +208,6 @@ cdef class DatasetID(ObjectID):
         cdef void* data
         cdef int oldflags
 
-
         if mtype is None:
             mtype = py_create(arr_obj.dtype)
         check_numpy_read(arr_obj, -1)
