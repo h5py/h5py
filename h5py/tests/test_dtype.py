@@ -346,30 +346,41 @@ class TestStrings(TestCase):
         assert h5py.check_vlen_dtype(dt) is None
 
 class TestDateTime(TestCase):
+    datetime_units = [
+        # Dates
+        'Y', 'M', 'D',
+        # Times
+        'h', 'm', 's', 'ms', 'us',
+        'ns', 'ps', 'fs', 'as',
+    ]
+
     def test_datetime(self):
-        dt_units = [
-            # Dates
-            '[Y]', '[M]', '[D]',
-            # Times
-            '[h]', '[m]', '[s]', '[ms]', '[us]',
-            '[ns]', '[ps]', '[fs]', '[as]',
-        ]
+        fname = self.mktemp()
 
-        for dt_kind in ['M8', 'm8']:
-            for dt_unit in dt_units:
-                for dt_order in ['<', '>']:
-                    dt_descr = dt_order + dt_kind + dt_unit
-                    dt = h5py.opaque_dtype(np.dtype(dt_descr))
-                    fname = self.mktemp()
-                    arr = (np.array([0], dtype=np.int64).view(dtype=dt)
-                        if dt_kind == 'M8'
-                        else np.array([np.timedelta64(500, dt_unit[1:-1])], dtype=dt))
+        for dt_unit in self.datetime_units:
+            for dt_order in ['<', '>']:
+                dt_descr = f'{dt_order}M8[{dt_unit}]'
+                dt = h5py.opaque_dtype(np.dtype(dt_descr))
+                arr = np.array([0], dtype=np.int64).view(dtype=dt)
 
-                    with h5py.File(fname, 'w') as f:
-                        dset = f.create_dataset("default", data=arr, dtype=dt)
-                        self.assertArrayEqual(arr, dset)
-                        self.assertEqual(arr.dtype, dset.dtype)
+                with h5py.File(fname, 'w') as f:
+                    dset = f.create_dataset("default", data=arr, dtype=dt)
+                    self.assertArrayEqual(arr, dset)
+                    self.assertEqual(arr.dtype, dset.dtype)
 
+    def test_timedelta(self):
+        fname = self.mktemp()
+
+        for dt_unit in self.datetime_units:
+            for dt_order in ['<', '>']:
+                dt_descr = f'{dt_order}m8[{dt_unit}]'
+                dt = h5py.opaque_dtype(np.dtype(dt_descr))
+                arr = np.array([np.timedelta64(500, dt_unit)], dtype=dt)
+
+                with h5py.File(fname, 'w') as f:
+                    dset = f.create_dataset("default", data=arr, dtype=dt)
+                    self.assertArrayEqual(arr, dset)
+                    self.assertEqual(arr.dtype, dset.dtype)
 
 @ut.skipUnless(tables is not None, 'tables is required')
 class TestB8(TestCase):
