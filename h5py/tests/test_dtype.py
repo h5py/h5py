@@ -359,7 +359,7 @@ class TestDateTime(TestCase):
             for dt_unit in dt_units:
                 for dt_order in ['<', '>']:
                     dt_descr = dt_order + dt_kind + dt_unit
-                    dt = h5py.create_opaque(np.dtype(dt_descr))
+                    dt = h5py.opaque_dtype(np.dtype(dt_descr))
                     fname = self.mktemp()
                     arr = (np.array([0], dtype=np.int64).view(dtype=dt)
                         if dt_kind == 'M8'

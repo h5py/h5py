@@ -12,27 +12,9 @@
 """
 
 import posixpath as pp
-from numpy import dtype
 
-from ..h5t import TypeID, create_opaque as create_opaque_ll
+from ..h5t import TypeID
 from .base import HLObject, with_phil
-
-
-def create_opaque(dt_in):
-    """ (dtype dt_in, bytes tag=None)
-
-    Register a NumPy dtype for use with h5py. Types registered in this way
-    will be stored as a custom opaque type, with a special tag to map it to
-    the corresponding NumPy type.
-
-    Opaque types with this tag will be mapped to NumPy types in the same way.
-
-    The default tag is generated via the code:
-    ``b"NUMPY:" + dt_in.descr[0][1].encode()``.
-    """
-    dt_in = dtype(dt_in)
-    return Datatype(create_opaque_ll(dt_in))
-
 
 class Datatype(HLObject):
 

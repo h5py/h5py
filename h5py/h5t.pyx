@@ -667,8 +667,7 @@ cdef class TypeOpaqueID(TypeID):
 
     cdef dtype py_dtype(self):
         cdef bytes tag = self.get_tag()
-        cdef bytes dt_str
-        if tag.startswith("NUMPY:"):
+        if tag.startswith(b"NUMPY:"):
             # 6 = len("NUMPY:")
             return dtype(tag[6:])
 
@@ -1498,6 +1497,20 @@ cdef TypeOpaqueID _c_opaque(dtype dt):
     # Opaque
     return TypeOpaqueID(H5Tcreate(H5T_OPAQUE, dt.itemsize))
 
+cdef TypeOpaqueID _c_opaque_tagged(dtype dt):
+    """Create an HDF5 opaque data type with a tag recording the numpy dtype.
+
+    Tagged opaque types can be read back easily in h5py, but not in other tools
+    (they are *opaque*).
+
+    The default tag is generated via the code:
+    ``b"NUMPY:" + dt_in.descr[0][1].encode()``.
+    """
+    cdef TypeOpaqueID new_type = _c_opaque(dt)
+    new_type.set_tag(b"NUMPY:" + dt.descr[0][1].encode())
+
+    return new_type
+
 cdef TypeStringID _c_string(dtype dt):
     # Strings (fixed-length)
     cdef hid_t tid
@@ -1646,19 +1659,16 @@ cpdef TypeID py_create(object dtype_in, bint logical=0, bint aligned=0):
         of kind "O" representing a string, it would return an HDF5 variable-
         length string type.
     """
-    cdef dtype dt
-    cdef char kind
+    cdef dtype dt = dtype(dtype_in)
+    cdef char kind = dt.kind
 
-    if hasattr(dtype_in, 'id'):
-        return dtype_in.id
-    elif isinstance(dtype_in, TypeID):
-        return dtype_in
+    aligned = getattr(dtype_in, "isalignedstruct", aligned)
 
     with phil:
-        dt = dtype(dtype_in)
-        kind = dt.kind
+        # Tagged opaque data
+        if check_opaque_dtype(dt):
+            return _c_opaque_tagged(dt)
 
-        aligned = getattr(dtype_in, "isalignedstruct", aligned)
         # Float
         if kind == c'f':
             return _c_float(dt)
@@ -1774,6 +1784,19 @@ def enum_dtype(values_dict, basetype=np.uint8):
 
     return dtype(dt, metadata={'enum': values_dict})
 
+def opaque_dtype(np_dtype):
+    """Return an equivalent dtype tagged to be stored in an HDF5 opaque type.
+
+    This makes it easy to store numpy data like datetimes for which there is
+    no equivalent HDF5 type, but it's not interoperable: other tools won't treat
+    the opaque data as datetimes.
+    """
+    dt = dtype(np_dtype)
+    if np.issubdtype(dt, np.object_):
+        raise TypeError("Cannot store numpy object arrays as opaque data")
+
+    return dtype(dt, metadata={'h5py_opaque': True})
+
 ref_dtype = dtype('O', metadata={'ref': Reference})
 regionref_dtype = dtype('O', metadata={'ref': RegionReference})
 
@@ -1868,6 +1891,13 @@ def check_enum_dtype(dt):
         return dt.metadata.get('enum', None)
     except AttributeError:
         return None
+
+def check_opaque_dtype(dt):
+    """Return whether the dtype is tagged to store HDF5 opaque data"""
+    try:
+        return dt.metadata.get('h5py_opaque', False)
+    except AttributeError:
+        return False
 
 def check_ref_dtype(dt):
     """If the dtype represents an HDF5 reference type, returns the reference
@@ -2001,22 +2031,3 @@ cpdef object py_get_vlen(object dt_in):
         H5pyDeprecationWarning)
     return check_vlen_dtype(dt_in)
 
-
-@with_phil
-def create_opaque(dtype dt_in):
-    """ (dtype dt_in, bytes tag=None)
-
-    Register a NumPy dtype for use with h5py. Types registered in this way
-    will be stored as a custom opaque type, with a special tag to map it to
-    the corresponding NumPy type.
-
-    Opaque types with this tag will be mapped to NumPy types in the same way.
-
-    The default tag is generated via the code:
-    ``b"NUMPY:" + dt_in.descr[0][1].encode()``.
-    """
-    cdef tag = b"NUMPY:" + dt_in.descr[0][1].encode()
-    cdef TypeID new_type = typewrap(H5Tcreate(H5T_OPAQUE, dt_in.itemsize))
-    new_type.set_tag(tag)
-
-    return new_type
