@@ -647,6 +647,11 @@ class TestCreateLike(BaseDataset):
         similar = self.f.create_dataset_like('lenovo', orig)
         self.assertEqual(0, h5py.h5g.get_objinfo(similar._id).mtime)
 
+class TestChunkIterator(BaseDataset):
+    def test_no_chunks(self):
+        dset = self.f.create_dataset("no_chunks", ())
+        with self.assertRaises(TypeError):
+            dset.chunk_iter()
 
 class TestResize(BaseDataset):
 

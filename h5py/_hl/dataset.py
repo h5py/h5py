@@ -242,6 +242,7 @@ if MPI:
         def __exit__(self, *args):
             # pylint: disable=protected-access
             self._dset._dxpl.set_dxpl_mpio(h5fd.MPIO_INDEPENDENT)
+            
 class ChunkIterator(object):
     """
     Class to iterate through list of chunks of a given dataset
@@ -251,11 +252,11 @@ class ChunkIterator(object):
         self._shape = dset.shape
         rank = len(dset.shape)
 
-        if dset.chunks is None:
-            # treat the dataset as one chunk
-            self._layout = dset.shape
-        else:
-            self._layout = dset.chunks
+        if not dset.chunks:
+            # can only use with chunked datasets
+            raise TypeError("Chunked dataset required")
+        
+        self._layout = dset.chunks
         if source_sel is None:
             # select over entire dataset
             slices = []
@@ -266,10 +267,8 @@ class ChunkIterator(object):
             if isinstance(source_sel, slice):
                 self._sel = (source_sel,)
             else:
-                # tbd - check that this is a list or tuple or slices?
                 self._sel = source_sel
         if len(self._sel) != rank:
-            # TBD: how does h5py handle these type of errors?
             raise ValueError("Invalid selection")
         self._chunk_index = []
         for dim in range(rank):
@@ -553,6 +552,12 @@ class Dataset(HLObject):
             raise TypeError("Can't iterate over a scalar dataset")
         for i in xrange(shape[0]):
             yield self[i]
+
+    @with_phil
+    def iter_chunks(self):
+        """ Return chunk iterator.  TypeError if the dataset is not chunked.
+        """
+        return ChunkIterator(self)
 
     @with_phil
     def __getitem__(self, args):
