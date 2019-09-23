@@ -156,6 +156,8 @@ Object and region references
 
 References have their :ref:`own section <refs>`.
 
+.. _opaque_dtypes:
+
 Storing other types as opaque data
 ----------------------------------
 
