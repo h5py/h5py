@@ -98,7 +98,7 @@ def make_new_dset(parent, shape=None, dtype=None, data=None,
 
     tmp_shape = maxshape if maxshape is not None else shape
     # Validate chunk shape
-    if isinstance(chunks, int):
+    if isinstance(chunks, int) and not isinstance(chunks, bool):
         chunks = (chunks,)
     if isinstance(chunks, tuple) and any(
         chunk > dim for dim, chunk in zip(tmp_shape, chunks) if dim is not None
@@ -137,7 +137,6 @@ def make_new_dset(parent, shape=None, dtype=None, data=None,
             raise TypeError("Conflict in compression options")
         compression_opts = compression
         compression = 'gzip'
-
     dcpl = filters.fill_dcpl(
         dcpl or h5p.create(h5p.DATASET_CREATE), shape, dtype,
         chunks, compression, compression_opts, shuffle, fletcher32,
