@@ -242,7 +242,7 @@ if MPI:
         def __exit__(self, *args):
             # pylint: disable=protected-access
             self._dset._dxpl.set_dxpl_mpio(h5fd.MPIO_INDEPENDENT)
-            
+
 class ChunkIterator(object):
     """
     Class to iterate through list of chunks of a given dataset
@@ -255,7 +255,7 @@ class ChunkIterator(object):
         if not dset.chunks:
             # can only use with chunked datasets
             raise TypeError("Chunked dataset required")
-        
+
         self._layout = dset.chunks
         if source_sel is None:
             # select over entire dataset
