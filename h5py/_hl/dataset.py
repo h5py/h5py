@@ -554,10 +554,13 @@ class Dataset(HLObject):
             yield self[i]
 
     @with_phil
-    def iter_chunks(self):
+    def iter_chunks(self, sel=None):
         """ Return chunk iterator.  TypeError if the dataset is not chunked.
+            If sel is provided, only chunks that intersect the selected region
+            will bee reeturned, otherwise all chunks in the dataset will be
+            returned.
         """
-        return ChunkIterator(self)
+        return ChunkIterator(self, sel)
 
     @with_phil
     def __getitem__(self, args):

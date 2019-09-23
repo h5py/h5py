@@ -672,7 +672,7 @@ class TestChunkIterator(BaseDataset):
         dset = self.f.create_dataset("foo", (100,100), chunks=(32,64))
         chunk_count = 0
         s0_expected = (slice(0,32,1), slice(32,64,1), slice(64,96,1), slice(96,100,1))
-        s1_expecteed = (slice(0,64,1), slice(64,100,1))
+        s1_expected = (slice(0,64,1), slice(64,100,1))
         for s in dset.iter_chunks():
             self.assertEqual(len(s), 2)
             self.assertEqual(s[0], s0_expected[chunk_count // 2])
