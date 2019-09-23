@@ -18,7 +18,7 @@ class H5pyWarning(UserWarning):
     pass
 
 
-class H5pyDeprecationWarning(H5pyWarning):
+class H5pyDeprecationWarning(H5pyWarning,DeprecationWarning):
     pass
 
 
