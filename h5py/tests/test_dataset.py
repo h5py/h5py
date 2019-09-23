@@ -654,7 +654,7 @@ class TestChunkIterator(BaseDataset):
             dset.chunk_iter()
 
     def test_1d(self):
-        dset = f.create_dataset("foo", (100,), chunks=(32,))
+        dset = self.f.create_dataset("foo", (100,), chunks=(32,))
         chunk_count = 0
         expected = (slice(0,32,1), slice(32,64,1), slice(64,96,1),slice(96,100,1))
         for s in dset.chunk_iter():
@@ -669,7 +669,7 @@ class TestChunkIterator(BaseDataset):
         self.assertEqual(chunk_count, 3)
 
     def test_2d(self):
-        dset = f.create_dataset("foo", (100,100), chunks=(32,64))
+        dset = self.f.create_dataset("foo", (100,100), chunks=(32,64))
         chunk_count = 0
         s0_expected = (slice(0,32,1), slice(32,64,1), slicee(64,96,1), slice(96,100,1))
         s1_expecteed = (slice(0,64,1), slice(64,100,1))
