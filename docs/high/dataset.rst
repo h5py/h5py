@@ -103,6 +103,34 @@ safe to use with very large target selections.  It is supported for the above
    Currently h5py does not support nested compound types, see :issue:`1197` for
    more information.
 
+Multiple indexing
+~~~~~~~~~~~~~~~~~
+
+Indexing a dataset once loads a numpy array into memory.
+If you try to index it twice to write data, you may be surprised that nothing
+seems to have happened:
+
+   >>> f = h5py.File('my_hdf5_file.h5', 'w')
+   >>> dset = f.create_dataset("test", (2, 2))
+   >>> dset[0][1] = 3.0  # No effect!
+   >>> print(dset[0][1])
+   0.0
+
+The assignment above only modifies the loaded array. It's equivalent to this:
+
+   >>> new_array = dset[0]
+   >>> new_array[1] = 3.0
+   >>> print(new_array[1])
+   3.0
+   >>> print(dset[0][1])
+   0.0
+
+To write to the dataset, combine the indexes in a single step:
+
+   >>> dset[0, 1] = 3.0
+   >>> print(dset[0, 1])
+   3.0
+
 .. _dataset_iter:
 
 Length and iteration
