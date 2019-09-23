@@ -247,11 +247,10 @@ class Dataset(HLObject):
     """
 
     def astype(self, dtype):
-        """ Get a context manager allowing you to perform reads to a
+        """ Get a wrapper allowing you to perform reads to a
         different destination type, e.g.:
 
-        >>> with dataset.astype('f8'):
-        ...     double_precision = dataset[0:100:2]
+        >>> double_precision = dataset.astype('f8')[0:100:2]
         """
         return AstypeWrapper(self, dtype)
 
