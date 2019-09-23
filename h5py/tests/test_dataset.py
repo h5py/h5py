@@ -685,6 +685,7 @@ class TestChunkIterator(BaseDataset):
             self.assertEqual(len(s), 2)
             self.assertEqual(s[0], slice(48,52,1))
             self.assertEqual(s[1], slice(40,50,1))
+            chunk_count += 1
         self.assertEqual(chunk_count, 1)
 
 class TestResize(BaseDataset):
