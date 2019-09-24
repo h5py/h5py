@@ -192,6 +192,9 @@ class Group(HLObject, MutableMappingHDF5):
             if not name in self:
                 return self.create_dataset(name, *(shape, dtype), **kwds)
 
+            if isinstance(shape, int):
+                shape = (shape,)
+
             dset = self[name]
             if not isinstance(dset, dataset.Dataset):
                 raise TypeError("Incompatible object (%s) already exists" % dset.__class__.__name__)
