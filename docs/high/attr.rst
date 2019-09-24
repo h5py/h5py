@@ -61,35 +61,30 @@ Reference
 
     .. method:: keys()
 
-        Get the names of all attributes attached to this object.  On Py2, this
-        is a list.  On Py3, it's a set-like object.
+        Get the names of all attributes attached to this object.
+
+        :return: set-like object.
 
     .. method:: values()
 
-        Get the values of all attributes attached to this object.  On Py2, this
-        is a list.  On Py3, it's a collection or bag-like object.
+        Get the values of all attributes attached to this object.
+
+        :return: collection or bag-like object.
 
     .. method:: items()
 
         Get ``(name, value)`` tuples for all attributes attached to this object.
-        On Py2, this is a list of tuples.  On Py3, it's a collection or
-        set-like object.
 
-    .. method:: iterkeys()
-
-        (Py2 only) Get an iterator over attribute names.
-
-    .. method:: itervalues()
-
-        (Py2 only) Get an iterator over attribute values.
-
-    .. method:: iteritems()
-
-        (Py2 only) Get an iterator over ``(name, value)`` pairs.
+        :return: collection or set-like object.
 
     .. method:: get(name, default=None)
 
         Retrieve `name`, or `default` if no such attribute exists.
+
+    .. method:: get_id(name)
+
+       Get the low-level :class:`AttrID <low:h5py.h5a.AttrID>` for the named
+       attribute.
 
     .. method:: create(name, data, shape=None, dtype=None)
 

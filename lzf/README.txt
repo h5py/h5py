@@ -70,11 +70,13 @@ goal of h5py is to provide access to the majority of the HDF5 C API and feature
 set from Python.  The most recent version of h5py (1.1) includes the LZF
 filter by default.
 
-* Downloads and bug tracker:        http://h5py.googlecode.com
+* Downloads:  https://pypi.org/project/h5py/
 
-* Main web site and documentation:  http://h5py.alfven.org
+* Issue tracker:  https://github.com/h5py/h5py
 
-* Contact email:  h5py at alfven dot org
+* Main web site and documentation:  http://h5py.org
+
+* mailing list:  https://groups.google.com/forum/#!forum/h5py
 
 
 History of changes

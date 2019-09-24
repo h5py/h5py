@@ -7,8 +7,6 @@
 # License:  Standard 3-clause BSD; see "license.txt" for full license terms
 #           and contributor agreement.
 
-from __future__ import absolute_import
-
 import sys
 import os
 import shutil
@@ -18,18 +16,10 @@ import subprocess
 from contextlib import contextmanager
 from functools import wraps
 
-from six import unichr
-
 import numpy as np
 import h5py
 
-if sys.version_info[0] == 2:
-    try:
-        import unittest2 as ut
-    except ImportError:
-        raise ImportError( "unittest2 is required to run tests with Python 2")
-else:
-    import unittest as ut
+import unittest as ut
 
 
 # Check if non-ascii filenames are supported
@@ -37,7 +27,7 @@ else:
 # See also h5py issue #263 and ipython #466
 # To test for this, run the testsuite with LC_ALL=C
 try:
-    testfile, fname = tempfile.mkstemp(unichr(0x03b7))
+    testfile, fname = tempfile.mkstemp(chr(0x03b7))
 except UnicodeError:
     UNICODE_FILENAMES = False
 else:
@@ -65,7 +55,17 @@ class TestCase(ut.TestCase):
     def mktemp(self, suffix='.hdf5', prefix='', dir=None):
         if dir is None:
             dir = self.tempdir
-        return tempfile.mktemp(suffix, prefix, dir=self.tempdir)
+        return tempfile.mktemp(suffix, prefix, dir=dir)
+
+    def mktemp_mpi(self, comm=None, suffix='.hdf5', prefix='', dir=None):
+        if comm is None:
+            from mpi4py import MPI
+            comm = MPI.COMM_WORLD
+        fname = None
+        if comm.Get_rank() == 0:
+            fname = self.mktemp(suffix, prefix, dir)
+        fname = comm.bcast(fname, 0)
+        return fname
 
     def setUp(self):
         self.f = h5py.File(self.mktemp(), 'w')
@@ -185,12 +185,25 @@ def insubprocess(f):
             return f(request, *args, **kwargs)
         else:
             os.environ[insub] = '1'
+            env = os.environ.copy()
+            env[insub] = '1'
+            env.update(getattr(f, 'subproc_env', {}))
+
             with closed_tempfile() as stdout:
                 with open(stdout, 'w+t') as fh:
                     rtn = subprocess.call([sys.executable, '-m', 'pytest', curr_test],
-                                          stdout=fh, stderr=fh)
+                                          stdout=fh, stderr=fh, env=env)
                 with open(stdout, 'rt') as fh:
                     out = fh.read()
-            del os.environ[insub]
+
             assert rtn == 0, "\n" + out
     return wrapper
+
+
+def subproc_env(d):
+    """Set environment variables for the @insubprocess decorator"""
+    def decorator(f):
+        f.subproc_env = d
+        return f
+
+    return decorator

@@ -30,14 +30,14 @@ object reference:
     >>> myfile = h5py.File('myfile.hdf5')
     >>> mygroup = myfile['/some/group']
     >>> ref = mygroup.ref
-    >>> print ref
+    >>> print(ref)
     <HDF5 object reference>
 
 "Dereferencing" these objects is straightforward; use the same syntax as when
 opening any other object:
 
     >>> mygroup2 = myfile[ref]
-    >>> print mygroup2
+    >>> print(mygroup2)
     <HDF5 group "/some/group" (0 members)>
 
 .. _refs_region:
@@ -50,7 +50,7 @@ dataset property "regionref" and standard NumPy slicing syntax:
 
     >>> myds = myfile.create_dataset('dset', (200,200))
     >>> regref = myds.regionref[0:10, 0:5]
-    >>> print regref
+    >>> print(regref)
     <HDF5 region reference>
 
 The reference itself can now be used in place of slicing arguments to the
@@ -96,7 +96,7 @@ To create an array of references, use this dtype as you normally would:
 You can read from and write to the array as normal:
 
     >>> ref_dataset[0] = myfile.ref
-    >>> print ref_dataset[0]
+    >>> print(ref_dataset[0])
     <HDF5 object reference>
 
 Storing references in an attribute
@@ -115,8 +115,8 @@ When you create a dataset of reference type, the uninitialized elements are
 "null" references.  H5py uses the truth value of a reference object to
 indicate whether or not it is null:
 
-    >>> print bool(myfile.ref)
+    >>> print(bool(myfile.ref))
     True
     >>> nullref = ref_dataset[50]
-    >>> print bool(nullref)
+    >>> print(bool(nullref))
     False

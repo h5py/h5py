@@ -26,3 +26,6 @@ MANIFEST
 *~
 .pytest_cache
 .coverage
+
+# Rever
+rever/

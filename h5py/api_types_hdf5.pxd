@@ -44,13 +44,21 @@ cdef extern from "hdf5.h":
 
 # === H5D - Dataset API =======================================================
 
-  ctypedef enum H5D_layout_t:
-      H5D_LAYOUT_ERROR    = -1,
-      H5D_COMPACT         = 0,
-      H5D_CONTIGUOUS      = 1,
-      H5D_CHUNKED         = 2,
-      H5D_VIRTUAL         = 3,  # New in 1.10
-      H5D_NLAYOUTS        = 4
+  IF HDF5_VERSION >= (1, 10, 0):
+    ctypedef enum H5D_layout_t:
+        H5D_LAYOUT_ERROR    = -1,
+        H5D_COMPACT         = 0,
+        H5D_CONTIGUOUS      = 1,
+        H5D_CHUNKED         = 2,
+        H5D_VIRTUAL         = 3,
+        H5D_NLAYOUTS        = 4
+  ELSE:
+    ctypedef enum H5D_layout_t:
+        H5D_LAYOUT_ERROR    = -1,
+        H5D_COMPACT         = 0,
+        H5D_CONTIGUOUS      = 1,
+        H5D_CHUNKED         = 2,
+        H5D_NLAYOUTS        = 3
 
   IF HDF5_VERSION >= VDS_MIN_HDF5_VERSION:
     ctypedef enum H5D_vds_view_t:
@@ -157,12 +165,13 @@ cdef extern from "hdf5.h":
   # Thankfully they are defined but -1 if unavailable
   hid_t H5FD_CORE
   hid_t H5FD_FAMILY
-# hid_t H5FD_GASS  not in 1.8.X
   hid_t H5FD_LOG
   hid_t H5FD_MPIO
   hid_t H5FD_MULTI
   hid_t H5FD_SEC2
   hid_t H5FD_STDIO
+  IF UNAME_SYSNAME == "Windows":
+    hid_t H5FD_WINDOWS
 
   int H5FD_LOG_LOC_READ   # 0x0001
   int H5FD_LOG_LOC_WRITE  # 0x0002
@@ -194,10 +203,10 @@ cdef extern from "hdf5.h":
   # Flag for tracking allocation of space in file
   int H5FD_LOG_ALLOC      # 0x4000
   int H5FD_LOG_ALL        # (H5FD_LOG_ALLOC|H5FD_LOG_TIME_IO|H5FD_LOG_NUM_IO|H5FD_LOG_FLAVOR|H5FD_LOG_FILE_IO|H5FD_LOG_LOC_IO)
-  IF MPI:
-    ctypedef enum H5FD_mpio_xfer_t:
-     H5FD_MPIO_INDEPENDENT = 0,
-     H5FD_MPIO_COLLECTIVE
+
+  ctypedef enum H5FD_mpio_xfer_t:
+    H5FD_MPIO_INDEPENDENT = 0,
+    H5FD_MPIO_COLLECTIVE
 
   # Class information for each file driver
   ctypedef struct H5FD_class_t:
@@ -308,12 +317,6 @@ cdef extern from "hdf5.h":
 
 # === H5L/H5O - Links interface (1.8.X only) ======================================
 
-  # TODO: put both versions in h5t.pxd
-  ctypedef enum H5T_cset_t:
-    H5T_CSET_ERROR       = -1,  #
-    H5T_CSET_ASCII       = 0,   # US ASCII
-    H5T_CSET_UTF8        = 1,   # UTF-8 Unicode encoding
-
   unsigned int H5L_MAX_LINK_NAME_LEN #  ((uint32_t) (-1)) (4GB - 1)
 
   # Link class types.
@@ -412,64 +415,6 @@ cdef extern from "hdf5.h":
 
   int H5P_DEFAULT
 
-  ctypedef int H5Z_filter_t
-
-  # HDF5 layouts
-  ctypedef enum H5D_layout_t:
-    H5D_LAYOUT_ERROR    = -1,
-    H5D_COMPACT         = 0,    # raw data is very small
-    H5D_CONTIGUOUS      = 1,    # the default
-    H5D_CHUNKED         = 2,    # slow and fancy
-    H5D_NLAYOUTS        = 3     # this one must be last!
-
-  ctypedef enum H5D_alloc_time_t:
-    H5D_ALLOC_TIME_ERROR    =-1,
-    H5D_ALLOC_TIME_DEFAULT  =0,
-    H5D_ALLOC_TIME_EARLY    =1,
-    H5D_ALLOC_TIME_LATE        =2,
-    H5D_ALLOC_TIME_INCR        =3
-
-  ctypedef enum H5D_space_status_t:
-    H5D_SPACE_STATUS_ERROR            =-1,
-    H5D_SPACE_STATUS_NOT_ALLOCATED    =0,
-    H5D_SPACE_STATUS_PART_ALLOCATED    =1,
-    H5D_SPACE_STATUS_ALLOCATED        =2
-
-  ctypedef enum H5D_fill_time_t:
-    H5D_FILL_TIME_ERROR    =-1,
-    H5D_FILL_TIME_ALLOC =0,
-    H5D_FILL_TIME_NEVER    =1,
-    H5D_FILL_TIME_IFSET    =2
-
-  ctypedef enum H5D_fill_value_t:
-    H5D_FILL_VALUE_ERROR        =-1,
-    H5D_FILL_VALUE_UNDEFINED    =0,
-    H5D_FILL_VALUE_DEFAULT      =1,
-    H5D_FILL_VALUE_USER_DEFINED =2
-
-  cdef enum H5Z_EDC_t:
-    H5Z_ERROR_EDC       = -1,
-    H5Z_DISABLE_EDC     = 0,
-    H5Z_ENABLE_EDC      = 1,
-    H5Z_NO_EDC          = 2
-
-  cdef enum H5F_close_degree_t:
-    H5F_CLOSE_WEAK  = 0,
-    H5F_CLOSE_SEMI  = 1,
-    H5F_CLOSE_STRONG = 2,
-    H5F_CLOSE_DEFAULT = 3
-
-  ctypedef enum H5FD_mem_t:
-    H5FD_MEM_NOLIST    = -1,
-    H5FD_MEM_DEFAULT    = 0,
-    H5FD_MEM_SUPER      = 1,
-    H5FD_MEM_BTREE      = 2,
-    H5FD_MEM_DRAW       = 3,
-    H5FD_MEM_GHEAP      = 4,
-    H5FD_MEM_LHEAP      = 5,
-    H5FD_MEM_OHDR       = 6,
-    H5FD_MEM_NTYPES
-
   # Property list classes
   hid_t H5P_NO_CLASS
   hid_t H5P_FILE_CREATE
@@ -558,8 +503,9 @@ cdef extern from "hdf5.h":
     H5T_NORM_NONE        = 2
 
   ctypedef enum H5T_cset_t:
-    H5T_CSET_ERROR       = -1,
-    H5T_CSET_ASCII       = 0
+    H5T_CSET_ERROR       = -1,  # error
+    H5T_CSET_ASCII       = 0,   # US ASCII
+    H5T_CSET_UTF8        = 1,   # UTF-8 Unicode encoding
 
   ctypedef enum H5T_str_t:
     H5T_STR_ERROR        = -1,

@@ -111,8 +111,11 @@ hdf5:
   1.9.178   herr_t H5Dflush(hid_t dataset_id)
   1.9.178   herr_t H5Drefresh(hid_t dataset_id)
 
-  # Direct Chunk Writing
+  # Direct Chunk Read/Write
   1.8.11    herr_t H5DOwrite_chunk(hid_t dset_id, hid_t dxpl_id, uint32_t filters, const hsize_t *offset, size_t data_size, const void *buf)
+  1.10.2    herr_t H5Dget_chunk_storage_size(hid_t dset_id, const hsize_t *offset, hsize_t *chunk_nbytes)
+  1.10.2    herr_t H5DOread_chunk(hid_t dset_id, hid_t dxpl_id, const hsize_t *offset, uint32_t *filters, void *buf)
+  1.10.3    herr_t H5Dread_chunk(hid_t dset_id, hid_t dxpl_id, const hsize_t *offset, uint32_t *filters, void *buf)
 
 
   # === H5E - Minimal error-handling interface ================================
@@ -343,6 +346,8 @@ hdf5:
   1.9.233 herr_t H5Pget_virtual_view(hid_t plist_id, H5D_vds_view_t *view)
   1.9.233 herr_t H5Pset_virtual_printf_gap(hid_t plist_id, hsize_t gap_size)
   1.9.233 herr_t H5Pget_virtual_printf_gap(hid_t plist_id, hsize_t *gap_size)
+  1.10.2 ssize_t H5Pget_virtual_prefix(hid_t dapl_id, char *prefix, ssize_t size)
+  1.10.2  herr_t H5Pset_virtual_prefix(hid_t dapl_id, char *prefix)
 
   MPI herr_t H5Pset_dxpl_mpio( hid_t dxpl_id, H5FD_mpio_xfer_t xfer_mode )
   MPI herr_t H5Pget_dxpl_mpio( hid_t dxpl_id, H5FD_mpio_xfer_t* xfer_mode )
@@ -391,7 +396,17 @@ hdf5:
   MPI herr_t H5Pset_fapl_mpio(hid_t fapl_id, MPI_Comm comm, MPI_Info info)
   MPI herr_t H5Pget_fapl_mpio(hid_t fapl_id, MPI_Comm *comm, MPI_Info *info)
 
-  # === H5R - Reference API ===================================================
+  # === H5PL - Plugin Interface ===================================================
+
+  1.10.1 herr_t H5PLappend(const char *search_path);
+  1.10.1 herr_t H5PLprepend(const char *search_path);
+  1.10.1 herr_t H5PLreplace(const char *search_path, unsigned int index);
+  1.10.1 herr_t H5PLinsert(const char *search_path, unsigned int index);
+  1.10.1 herr_t H5PLremove(unsigned int index);
+  1.10.1 ssize_t H5PLget(unsigned int index, char *path_buf, size_t buf_size);
+  1.10.1 herr_t H5PLsize(unsigned int *num_paths);
+
+# === H5R - Reference API ===================================================
 
   herr_t    H5Rcreate(void *ref, hid_t loc_id, char *name, H5R_type_t ref_type,  hid_t space_id)
   hid_t     H5Rdereference(hid_t obj_id, H5R_type_t ref_type, void *ref)

@@ -99,13 +99,13 @@ has a name, and they're arranged in a POSIX-style hierarchy with
 ``/``-separators::
 
     >>> dset.name
-    u'/mydataset'
+    '/mydataset'
 
 The "folders" in this system are called :ref:`groups <group>`.  The ``File`` object we
 created is itself a group, in this case the `root group`, named ``/``:
 
     >>> f.name
-    u'/'
+    '/'
 
 Creating a subgroup is accomplished via the aptly-named ``create_group``. But we need to open the file in the "append" mode first (Read/write if exists, create otherwise) ::
 
@@ -116,14 +116,14 @@ All ``Group`` objects also have the ``create_*`` methods like File::
 
     >>> dset2 = grp.create_dataset("another_dataset", (50,), dtype='f')
     >>> dset2.name
-    u'/subgroup/another_dataset'
+    '/subgroup/another_dataset'
 
 By the way, you don't have to create all the intermediate groups manually.
 Specifying a full path works just fine::
 
     >>> dset3 = f.create_dataset('subgroup2/dataset_three', (10,), dtype='i')
     >>> dset3.name
-    u'/subgroup2/dataset_three'
+    '/subgroup2/dataset_three'
 
 Groups support most of the Python dictionary-style interface.
 You retrieve objects in the file using the item-retrieval syntax::
@@ -133,7 +133,7 @@ You retrieve objects in the file using the item-retrieval syntax::
 Iterating over a group provides the names of its members::
 
     >>> for name in f:
-    ...     print name
+    ...     print(name)
     mydataset
     subgroup
     subgroup2
@@ -158,7 +158,7 @@ iterating over an entire file is accomplished with the ``Group`` methods
 ``visit()`` and ``visititems()``, which take a callable::
 
     >>> def printname(name):
-    ...     print name
+    ...     print(name)
     >>> f.visit(printname)
     mydataset
     subgroup

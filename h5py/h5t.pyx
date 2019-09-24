@@ -44,8 +44,6 @@ except ImportError:
 
 cfg = get_config()
 
-PY3 = sys.version_info[0] == 3
-
 MACHINE = platform.machine()
 
 # === Custom C API ============================================================
@@ -1216,8 +1214,7 @@ cdef class TypeCompoundID(TypeCompositeID):
 
         # 2. Otherwise, read all fields of the compound type, in HDF5 order.
         else:
-            if sys.version[0] == '3':
-                field_names = [x.decode('utf8') for x in field_names]
+            field_names = [x.decode('utf8') for x in field_names]
             typeobj = dtype({
                 'names': field_names,
                 'formats': field_types,
@@ -1347,10 +1344,8 @@ cdef class TypeEnumID(TypeCompositeID):
         # Convert strings to appropriate representation
         members_conv = {}
         for name, val in members.iteritems():
-            try:    # ASCII; Py2 -> preserve bytes, Py3 -> make unicode
-                uname = name.decode('ascii')
-                if PY3:
-                    name = uname
+            try:    # ASCII;
+                name = name.decode('ascii')
             except UnicodeDecodeError:
                 try:    # Non-ascii; all platforms try unicode
                     name = name.decode('utf8')
@@ -1369,26 +1364,25 @@ cdef class TypeEnumID(TypeCompositeID):
 def _get_float_dtype_to_hdf5():
     float_le = {}
     float_be = {}
-    h5_be_list = [IEEE_F16BE, IEEE_F32BE, IEEE_F64BE, IEEE_F128BE,
-                  LDOUBLE_BE]
-    h5_le_list = [IEEE_F16LE, IEEE_F32LE, IEEE_F64LE, IEEE_F128LE,
-                  LDOUBLE_LE]
+    h5_be_list = [IEEE_F16BE, IEEE_F32BE, IEEE_F64BE, IEEE_F128BE, LDOUBLE_BE]
+    h5_le_list = [IEEE_F16LE, IEEE_F32LE, IEEE_F64LE, IEEE_F128LE, LDOUBLE_LE]
+
     for ftype_, finfo, size in _available_ftypes:
         nmant, maxexp, minexp = _correct_float_info(ftype_, finfo)
         for h5type in h5_be_list:
             spos, epos, esize, mpos, msize = h5type.get_fields()
             ebias = h5type.get_ebias()
             if (finfo.iexp == esize and nmant == msize and
-                (maxexp - 1) == ebias
-            ):
+                    (maxexp - 1) == ebias):
                 float_be[ftype_] = h5type
+                break # first found matches, related to #1244
         for h5type in h5_le_list:
             spos, epos, esize, mpos, msize = h5type.get_fields()
             ebias = h5type.get_ebias()
             if (finfo.iexp == esize and nmant == msize and
-                (maxexp - 1) == ebias
-            ):
+                    (maxexp - 1) == ebias):
                 float_le[ftype_] = h5type
+                break # first found matches, related to #1244
     if ORDER_NATIVE == H5T_ORDER_LE:
         float_nt = dict(float_le)
     else:

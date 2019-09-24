@@ -14,11 +14,6 @@
     High-level access to HDF5 dataspace selections
 """
 
-from __future__ import absolute_import
-
-import six
-from six.moves import xrange    # pylint: disable=redefined-builtin
-
 import numpy as np
 
 from .. import h5s, h5r
@@ -242,7 +237,7 @@ class SimpleSelection(Selection):
         return self._mshape
 
     def __init__(self, shape, *args, **kwds):
-        Selection.__init__(self, shape, *args, **kwds)
+        super(SimpleSelection, self).__init__(shape, *args, **kwds)
         rank = len(self.shape)
         self._sel = ((0,)*rank, self.shape, (1,)*rank, (False,)*rank)
         self._mshape = self.shape
@@ -288,7 +283,7 @@ class SimpleSelection(Selection):
         target = list(target_shape)
 
         tshape = []
-        for idx in xrange(1,rank+1):
+        for idx in range(1,rank+1):
             if len(target) == 0 or scalar[-idx]:     # Skip scalar axes
                 tshape.append(1)
             else:
@@ -314,7 +309,7 @@ class SimpleSelection(Selection):
         else:
             sid = self._id.copy()
             sid.select_hyperslab((0,)*rank, tshape, step)
-            for idx in xrange(nchunks):
+            for idx in range(nchunks):
                 offset = tuple(x*y*z + s for x, y, z, s in zip(np.unravel_index(idx, chunks), tshape, step, start))
                 sid.offset_simple(offset)
                 yield sid
@@ -337,7 +332,7 @@ class FancySelection(Selection):
         return self._mshape
 
     def __init__(self, shape, *args, **kwds):
-        Selection.__init__(self, shape, *args, **kwds)
+        super(FancySelection, self).__init__(shape, *args, **kwds)
         self._mshape = self.shape
 
     def __getitem__(self, args):
@@ -381,9 +376,9 @@ class FancySelection(Selection):
 
         if vectorlength > 0:
             argvector = []
-            for idx in xrange(vectorlength):
+            for idx in range(vectorlength):
                 entry = list(args)
-                for position, seq in six.iteritems(sequenceargs):
+                for position, seq in sequenceargs.items():
                     entry[position] = seq[idx]
                 argvector.append(entry)
         else:
@@ -405,7 +400,7 @@ class FancySelection(Selection):
         # they correspond to sequence entries
 
         mshape = list(count)
-        for idx in xrange(len(mshape)):
+        for idx in range(len(mshape)):
             if idx in sequenceargs:
                 mshape[idx] = len(sequenceargs[idx])
             elif scalar[idx]:
@@ -588,7 +583,7 @@ def guess_shape(sid):
         return N//N_leftover
 
 
-    shape = tuple(get_n_axis(sid, x) for x in xrange(rank))
+    shape = tuple(get_n_axis(sid, x) for x in range(rank))
 
     if np.product(shape) != N:
         # This means multiple hyperslab selections are in effect,

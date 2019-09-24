@@ -64,6 +64,9 @@ cdef class PropDXID(PropInstanceID):
     """ Dataset transfer property list """
     pass
 
+cdef class PropDAID(PropInstanceID):
+    """ Dataset access property list"""
+    cdef char* _virtual_prefix_buf
 
 # --- New in 1.8 ---
 

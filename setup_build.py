@@ -5,8 +5,6 @@
     linking.
 """
 
-from __future__ import print_function
-
 try:
     from setuptools import Extension
 except ImportError:
@@ -29,7 +27,8 @@ MODULES =  ['defs','_errors','_objects','_proxy', 'h5fd', 'h5z',
             'h5p',
             'h5d', 'h5a', 'h5f', 'h5g',
             'h5l', 'h5o',
-            'h5ds', 'h5ac']
+            'h5ds', 'h5ac',
+            'h5pl']
 
 
 EXTRA_SRC = {'h5z': [ localpath("lzf/lzf_filter.c"),

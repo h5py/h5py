@@ -11,16 +11,11 @@
     Implements support for high-level dataset access.
 """
 
-from __future__ import absolute_import
-
 import posixpath as pp
 import sys
 from warnings import warn
 
 from threading import local
-
-import six
-from six.moves import xrange    # pylint: disable=redefined-builtin
 
 import numpy
 
@@ -192,7 +187,6 @@ def make_new_virtual_dset(parent, shape, sources, dtype=None,
     for vspace, fpath, dset, src_dspace in sources:
         dcpl.set_virtual(vspace, fpath, dset, src_dspace)
 
-    dtype = dtype
     if isinstance(dtype, Datatype):
         # Named types are used as-is
         tid = dtype.id
@@ -371,7 +365,7 @@ class Dataset(HLObject):
         if count<=0:
             return None
         ext_list = list()
-        for x in xrange(count):
+        for x in range(count):
             (name, offset, size) = self._dcpl.get_external(x)
             ext_list.append( (filename_decode(name), offset, size) )
         return ext_list
@@ -399,7 +393,7 @@ class Dataset(HLObject):
         """
         if not isinstance(bind, h5d.DatasetID):
             raise ValueError("%s is not a DatasetID" % bind)
-        HLObject.__init__(self, bind)
+        super(Dataset, self).__init__(bind)
 
         self._dcpl = self.id.get_create_plist()
         self._dxpl = h5p.create(h5p.DATASET_XFER)
@@ -471,7 +465,7 @@ class Dataset(HLObject):
         shape = self.shape
         if len(shape) == 0:
             raise TypeError("Can't iterate over a scalar dataset")
-        for i in xrange(shape[0]):
+        for i in range(shape[0]):
             yield self[i]
 
     @with_phil
@@ -493,10 +487,8 @@ class Dataset(HLObject):
             return Empty(self.dtype)
 
         # Sort field indices from the rest of the args.
-        names = tuple(x for x in args if isinstance(x, six.string_types))
-        args = tuple(x for x in args if not isinstance(x, six.string_types))
-        if six.PY2:
-            names = tuple(x.encode('utf-8') if isinstance(x, six.text_type) else x for x in names)
+        names = tuple(x for x in args if isinstance(x, str))
+        args = tuple(x for x in args if not isinstance(x, str))
 
         new_dtype = getattr(self._local, 'astype', None)
         if new_dtype is not None:
@@ -593,15 +585,13 @@ class Dataset(HLObject):
         args = args if isinstance(args, tuple) else (args,)
 
         # Sort field indices from the slicing
-        names = tuple(x for x in args if isinstance(x, six.string_types))
-        args = tuple(x for x in args if not isinstance(x, six.string_types))
-        if six.PY2:
-            names = tuple(x.encode('utf-8') if isinstance(x, six.text_type) else x for x in names)
+        names = tuple(x for x in args if isinstance(x, str))
+        args = tuple(x for x in args if not isinstance(x, str))
 
         # Generally we try to avoid converting the arrays on the Python
         # side.  However, for compound literals this is unavoidable.
         vlen = h5t.check_vlen_dtype(self.dtype)
-        if vlen is not None and vlen not in (bytes, six.text_type):
+        if vlen is not None and vlen not in (bytes, str):
             try:
                 val = numpy.asarray(val, dtype=vlen)
             except ValueError:
@@ -776,19 +766,25 @@ class Dataset(HLObject):
     @with_phil
     def __repr__(self):
         if not self:
-            r = u'<Closed HDF5 dataset>'
+            r = '<Closed HDF5 dataset>'
         else:
             if self.name is None:
-                namestr = u'("anonymous")'
+                namestr = '("anonymous")'
             else:
                 name = pp.basename(pp.normpath(self.name))
-                namestr = u'"%s"' % (name if name != u'' else u'/')
-            r = u'<HDF5 dataset %s: shape %s, type "%s">' % (
+                namestr = '"%s"' % (name if name != '' else '/')
+            r = '<HDF5 dataset %s: shape %s, type "%s">' % (
                 namestr, self.shape, self.dtype.str
             )
-        if six.PY2:
-            return r.encode('utf8')
         return r
+
+    def __dir__(self):
+        names = set(super().__dir__())
+        # ds.value is deprecated, and we want to ensure that Jedi doesn't try
+        # to call the property (https://github.com/h5py/h5py/issues/1312), so
+        # this hides it from tab completions.
+        names.discard('value')
+        return sorted(names)
 
     if hasattr(h5d.DatasetID, "refresh"):
         @with_phil

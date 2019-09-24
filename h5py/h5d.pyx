@@ -15,6 +15,7 @@ include "config.pxi"
 # Compile-time imports
 from _objects cimport pdefault
 from numpy cimport ndarray, import_array, PyArray_DATA, NPY_WRITEABLE
+from cpython cimport array
 from utils cimport  check_numpy_read, check_numpy_write, \
                     convert_tuple, emalloc, efree
 from h5t cimport TypeID, typewrap, py_create
@@ -398,11 +399,19 @@ cdef class DatasetID(ObjectID):
 
     IF HDF5_VERSION >= (1, 8, 11):
 
-        def write_direct_chunk(self, offsets, bytes data, H5Z_filter_t filter_mask=H5Z_FILTER_NONE, PropID dxpl=None):
-            """ (offsets, bytes data, H5Z_filter_t filter_mask=H5Z_FILTER_NONE, PropID dxpl=None)
+        def write_direct_chunk(self, offsets, bytes data, filter_mask=0x00000000, PropID dxpl=None):
+            """ (offsets, bytes data, uint32_t filter_mask=0x00000000, PropID dxpl=None)
 
-            Writes data from a bytes array (as provided e.g. by struct.pack) directly
-            to a chunk at position specified by the offsets argument.
+            This function bypasses any filters HDF5 would normally apply to
+            written data. However, calling code may apply filters (e.g. gzip
+            compression) itself before writing the data.
+
+            `filter_mask` is a bit field of up to 32 values. It records which
+            filters have been applied to this chunk, of the filter pipeline
+            defined for that dataset. Each bit set to `1` means that the filter
+            in the corresponding position in the pipeline was not applied.
+            So the default value of `0` means that all defined filters have
+            been applied to the data before calling this function.
 
             Feature requires: 1.8.11 HDF5
             """
@@ -430,3 +439,61 @@ cdef class DatasetID(ObjectID):
                 efree(offset)
                 if space_id:
                     H5Sclose(space_id)
+
+    IF HDF5_VERSION >= (1, 10, 2):
+
+        def read_direct_chunk(self, offsets, PropID dxpl=None):
+            """ (offsets, PropID dxpl=None)
+
+            Reads data to a bytes array directly from a chunk at position
+            specified by the `offsets` argument and bypasses any filters HDF5
+            would normally apply to the written data. However, the written data
+            may be compressed or not.
+
+            Returns a tuple containing the `filter_mask` and the bytes data
+            which are the raw data storing this chuck.
+
+            `filter_mask` is a bit field of up to 32 values. It records which
+            filters have been applied to this chunk, of the filter pipeline
+            defined for that dataset. Each bit set to `1` means that the filter
+            in the corresponding position in the pipeline was not applied to
+            compute the raw data. So the default value of `0` means that all
+            defined filters have been applied to the raw data.
+
+            Feature requires: 1.10.2 HDF5
+            """
+
+            cdef hid_t dset_id
+            cdef hid_t dxpl_id
+            cdef hid_t space_id = 0
+            cdef hsize_t *offset = NULL
+            cdef size_t data_size
+            cdef int rank
+            cdef uint32_t filters
+            cdef hsize_t read_chunk_nbytes
+            cdef array.array data = array.array('B')
+
+            dset_id = self.id
+            dxpl_id = pdefault(dxpl)
+            space_id = H5Dget_space(self.id)
+            rank = H5Sget_simple_extent_ndims(space_id)
+
+            if len(offsets) != rank:
+                raise TypeError("offset length (%d) must match dataset rank (%d)" % (len(offsets), rank))
+
+            try:
+                offset = <hsize_t*>emalloc(sizeof(hsize_t)*rank)
+                convert_tuple(offsets, offset, rank)
+                H5Dget_chunk_storage_size(dset_id, offset, &read_chunk_nbytes)
+                array.resize(data, read_chunk_nbytes)
+
+                IF HDF5_VERSION >= (1, 10, 3):
+                    H5Dread_chunk(dset_id, dxpl_id, offset, &filters, data.data.as_voidptr)
+                ELSE:
+                    H5DOread_chunk(dset_id, dxpl_id, offset, &filters, data.data.as_voidptr)
+            finally:
+                efree(offset)
+                if space_id:
+                    H5Sclose(space_id)
+
+            return filters, bytes(data)

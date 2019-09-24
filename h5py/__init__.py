@@ -12,8 +12,6 @@
     scientific data format.
 """
 
-from __future__ import absolute_import
-
 from warnings import warn as _warn
 
 
@@ -52,7 +50,7 @@ _register_lzf()
 
 # --- Public API --------------------------------------------------------------
 
-from . import h5a, h5d, h5ds, h5f, h5fd, h5g, h5r, h5s, h5t, h5p, h5z
+from . import h5a, h5d, h5ds, h5f, h5fd, h5g, h5r, h5s, h5t, h5p, h5z, h5pl
 
 from ._hl import filters
 from ._hl.base import is_hdf5, HLObject, Empty

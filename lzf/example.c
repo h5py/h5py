@@ -1,6 +1,6 @@
 /*
     Copyright (C) 2009 Andrew Collette
-    http://h5py.alfven.org
+    http://h5py.org
     License: BSD (see LICENSE.txt)
 
     Example program demonstrating use of the LZF filter from C code.
