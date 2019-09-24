@@ -190,6 +190,20 @@ class TestCreateRequire(BaseDataset):
         dset2 = self.f.require_dataset('foo', (10, 3), 'f')
         self.assertEqual(dset, dset2)
 
+    def test_create_1D(self):
+        """ require_dataset with integer shape yields existing dataset"""
+        dset = self.f.require_dataset('foo', 10, 'f')
+        dset2 = self.f.require_dataset('foo', 10, 'f')
+        self.assertEqual(dset, dset2)
+
+        dset = self.f.require_dataset('bar', (10,), 'f')
+        dset2 = self.f.require_dataset('bar', 10, 'f')
+        self.assertEqual(dset, dset2)
+
+        dset = self.f.require_dataset('baz', 10, 'f')
+        dset2 = self.f.require_dataset('baz', (10,), 'f')
+        self.assertEqual(dset, dset2)
+
     def test_shape_conflict(self):
         """ require_dataset with shape conflict yields TypeError """
         self.f.create_dataset('foo', (10, 3), 'f')
@@ -679,7 +693,7 @@ class TestResize(BaseDataset):
         self.assertIsNot(dset.chunks, None)
         self.assertEqual(dset.maxshape, (20, 60))
 
-    def test_create_1d(self):
+    def test_create_1D(self):
         """ Create dataset with "maxshape" using integer maxshape"""
         dset = self.f.create_dataset('foo', (20,), maxshape=20)
         self.assertIsNot(dset.chunks, None)
@@ -697,7 +711,7 @@ class TestResize(BaseDataset):
         dset.resize((20, 60))
         self.assertEqual(dset.shape, (20, 60))
 
-    def test_resize_1d(self):
+    def test_resize_1D(self):
         """ Datasets may be resized up to maxshape using integer maxshape"""
         dset = self.f.create_dataset('foo', 20, maxshape=40)
         self.assertEqual(dset.shape, (20,))
