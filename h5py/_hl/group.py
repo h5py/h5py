@@ -88,10 +88,12 @@ class Group(HLObject, MutableMappingHDF5):
         Keyword-only arguments:
 
         chunks
-            (Tuple) Chunk shape, or True to enable auto-chunking.
+            (Tuple or int) Chunk shape, or True to enable auto-chunking. Integers can
+            be used for 1D shape.
+
         maxshape
-            (Tuple) Make the dataset resizable up to this shape.  Use None for
-            axes you want to be unlimited.
+            (Tuple or int) Make the dataset resizable up to this shape. Use None for
+            axes you want to be unlimited. Integers can be used for 1D shape.
         compression
             (String or int) Compression strategy.  Legal values are 'gzip',
             'szip', 'lzf'.  If an integer in range(10), this indicates gzip
