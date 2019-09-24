@@ -90,13 +90,12 @@ def make_new_dset(parent, shape=None, dtype=None, data=None,
             data = Empty(dtype)
         shape = data.shape
     else:
-        if isinstance(shape, int):
-            shape = (shape,)
-        shape = tuple(shape)
+        shape = tuple((shape,)) if isinstance(shape, int) else tuple(shape)
         if data is not None and (numpy.product(shape, dtype=numpy.ulonglong) != numpy.product(data.shape, dtype=numpy.ulonglong)):
             raise ValueError("Shape tuple is incompatible with data")
 
     tmp_shape = maxshape if maxshape is not None else shape
+
     # Validate chunk shape
     if isinstance(chunks, int) and not isinstance(chunks, bool):
         chunks = (chunks,)
