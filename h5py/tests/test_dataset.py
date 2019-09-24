@@ -74,7 +74,7 @@ class TestCreateShape(BaseDataset):
         self.assertEqual(dset.shape, (1,))
 
     def test_create_integer(self):
-        """ Create a size-1 dataset """
+        """ Create a size-1 dataset with integer shape"""
         dset = self.f.create_dataset('foo', 1)
         self.assertEqual(dset.shape, (1,))
 
@@ -679,6 +679,15 @@ class TestResize(BaseDataset):
         self.assertIsNot(dset.chunks, None)
         self.assertEqual(dset.maxshape, (20, 60))
 
+    def test_create_1d(self):
+        """ Create dataset with "maxshape" using integer maxshape"""
+        dset = self.f.create_dataset('foo', (20,), maxshape=20)
+        self.assertIsNot(dset.chunks, None)
+        self.assertEqual(dset.maxshape, (20,))
+
+        dset = self.f.create_dataset('bar', 20, maxshape=20)
+        self.assertEqual(dset.maxshape, (20,))
+
     def test_resize(self):
         """ Datasets may be resized up to maxshape """
         dset = self.f.create_dataset('foo', (20, 30), maxshape=(20, 60))
@@ -687,6 +696,13 @@ class TestResize(BaseDataset):
         self.assertEqual(dset.shape, (20, 50))
         dset.resize((20, 60))
         self.assertEqual(dset.shape, (20, 60))
+
+    def test_resize_1d(self):
+        """ Datasets may be resized up to maxshape using integer maxshape"""
+        dset = self.f.create_dataset('foo', 20, maxshape=40)
+        self.assertEqual(dset.shape, (20,))
+        dset.resize((30,))
+        self.assertEqual(dset.shape, (30,))
 
     def test_resize_over(self):
         """ Resizing past maxshape triggers ValueError """
@@ -995,10 +1011,13 @@ class TestZeroShape(BaseDataset):
 
     def test_array_conversion(self):
         """ Empty datasets can be converted to NumPy arrays """
-        ds = self.f.create_dataset('x', (0,), maxshape=(None,))
+        ds = self.f.create_dataset('x', 0, maxshape=None)
         self.assertEqual(ds.shape, np.array(ds).shape)
 
-        ds = self.f.create_dataset('y', (0, 0), maxshape=(None, None))
+        ds = self.f.create_dataset('y', (0,), maxshape=(None,))
+        self.assertEqual(ds.shape, np.array(ds).shape)
+
+        ds = self.f.create_dataset('z', (0, 0), maxshape=(None, None))
         self.assertEqual(ds.shape, np.array(ds).shape)
 
     def test_reading(self):
