@@ -1,3 +1,4 @@
+# cython: language_level=3
 # This file is part of h5py, a Python interface to the HDF5 library.
 #
 # http://www.h5py.org
@@ -7,7 +8,7 @@
 # License:  Standard 3-clause BSD; see "license.txt" for full license terms
 #           and contributor agreement.
 
-from api_types_hdf5 cimport *
+from .api_types_hdf5 cimport *
 
 # Auto-set exception.  Returns 1 if exception set, 0 if no HDF5 error found.
 cdef int set_exception() except -1

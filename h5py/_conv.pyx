@@ -1,5 +1,5 @@
 # cython: profile=False
-
+# cython: language_level=3
 # This file is part of h5py, a Python interface to the HDF5 library.
 #
 # http://www.h5py.org
@@ -13,12 +13,12 @@
     Low-level type-conversion routines.
 """
 
-from h5 import get_config
-from h5r cimport Reference, RegionReference, hobj_ref_t, hdset_reg_ref_t
-from h5t cimport H5PY_OBJ, typewrap, py_create, TypeID
-cimport numpy as np
+from .h5 import get_config
+from .h5r cimport Reference, RegionReference, hobj_ref_t, hdset_reg_ref_t
+from .h5t cimport H5PY_OBJ, typewrap, py_create, TypeID
+from . cimport numpy as np
 from libc.stdlib cimport realloc
-
+from .utils cimport emalloc, efree
 cfg = get_config()
 
 # Initialization
@@ -51,9 +51,11 @@ cdef extern from "Python.h":
     void Py_DECREF(PyObject* obj)
     void Py_XDECREF(PyObject* obj)
 
+
 cdef object objectify(PyObject* o):
     Py_INCREF(o)
     return <object>o
+
 
 cdef extern from "numpy/arrayobject.h":
     PyTypeObject PyArray_Type
@@ -75,36 +77,32 @@ ctypedef herr_t (*init_operator_t)(hid_t src, hid_t dst, void** priv) except -1
 cdef herr_t generic_converter(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
                     size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
                     void *bkg_i, hid_t dxpl, conv_operator_t op,
-                    init_operator_t initop, H5T_bkg_t need_bkg) except -1:
+                    init_operator_t initop, H5T_bkg_t need_bkg)  except -1:
 
-    cdef int command = cdata[0].command
+    cdef int command
     cdef conv_size_t *sizes
     cdef int i
 
     cdef char* buf = <char*>buf_i
     cdef char* bkg = <char*>bkg_i
 
+    command = cdata[0].command
     if command == H5T_CONV_INIT:
-
         cdata[0].need_bkg = need_bkg
         return initop(src_id, dst_id, &(cdata[0].priv))
 
     elif command == H5T_CONV_FREE:
-
-        free(cdata[0].priv)
+        efree(cdata[0].priv)
         cdata[0].priv = NULL
 
     elif command == H5T_CONV_CONV:
-
         sizes = <conv_size_t*>cdata[0].priv
-
         if H5Tis_variable_str(src_id):
             sizes.cset = H5Tget_cset(src_id)
         elif H5Tis_variable_str(dst_id):
             sizes.cset = H5Tget_cset(dst_id)
-
-        if bkg_stride==0: bkg_stride = sizes[0].dst_size;
-
+        if bkg_stride==0:
+            bkg_stride = sizes[0].dst_size;
         if buf_stride == 0:
             # No explicit stride seems to mean that the elements are packed
             # contiguously in the buffer.  In this case we must be careful
@@ -134,7 +132,6 @@ cdef herr_t generic_converter(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
                     cdata[0].priv)
     else:
         return -2   # Unrecognized command.  Note this is NOT an exception.
-
     return 0
 
 # =============================================================================
@@ -148,7 +145,7 @@ ctypedef struct conv_size_t:
 cdef herr_t init_generic(hid_t src, hid_t dst, void** priv) except -1:
 
     cdef conv_size_t *sizes
-    sizes = <conv_size_t*>malloc(sizeof(conv_size_t))
+    sizes = <conv_size_t*>emalloc(sizeof(conv_size_t))
     priv[0] = sizes
     sizes[0].src_size = H5Tget_size(src)
     sizes[0].dst_size = H5Tget_size(dst)
@@ -186,7 +183,7 @@ cdef int conv_vlen2str(void* ipt, void* opt, void* bkg, void* priv) except -1:
 
     # Since all data conversions are by definition in-place, it
     # is our responsibility to free the memory used by the vlens.
-    free(buf_cstring0)
+    efree(buf_cstring0)
 
     # HDF5 will eventually overwrite this target location, so we
     # make sure to decref the object there.
@@ -261,7 +258,7 @@ cdef int conv_str2vlen(void* ipt, void* opt, void* bkg, void* priv) except -1:
         if strlen(temp_string) != temp_string_len:
             raise ValueError("VLEN strings do not support embedded NULLs")
 
-        buf_cstring0 = <char*>malloc(temp_string_len+1)
+        buf_cstring0 = <char*>emalloc(temp_string_len+1)
         memcpy(buf_cstring0, temp_string, temp_string_len+1)
         memcpy(buf_cstring, &buf_cstring0, sizeof(buf_cstring0));
 
@@ -276,25 +273,23 @@ cdef int conv_str2vlen(void* ipt, void* opt, void* bkg, void* priv) except -1:
 cdef herr_t init_vlen2fixed(hid_t src, hid_t dst, void** priv) except -1:
 
     cdef conv_size_t *sizes
-
     if not (H5Tis_variable_str(src) and (not H5Tis_variable_str(dst))):
         return -2
 
-    sizes = <conv_size_t*>malloc(sizeof(conv_size_t))
+    sizes = <conv_size_t*>emalloc(sizeof(conv_size_t))
     priv[0] = sizes
+
     sizes[0].src_size = H5Tget_size(src)
     sizes[0].dst_size = H5Tget_size(dst)
-
     return 0
 
 cdef herr_t init_fixed2vlen(hid_t src, hid_t dst, void** priv) except -1:
 
     cdef conv_size_t *sizes
-
     if not (H5Tis_variable_str(dst) and (not H5Tis_variable_str(src))):
         return -2
 
-    sizes = <conv_size_t*>malloc(sizeof(conv_size_t))
+    sizes = <conv_size_t*>emalloc(sizeof(conv_size_t))
     priv[0] = sizes
     sizes[0].src_size = H5Tget_size(src)
     sizes[0].dst_size = H5Tget_size(dst)
@@ -335,7 +330,7 @@ cdef int conv_fixed2vlen(void* ipt, void* opt, void* bkg, void* priv) except -1:
     cdef char* temp_string = NULL
     cdef conv_size_t *sizes = <conv_size_t*>priv
 
-    temp_string = <char*>malloc(sizes[0].src_size+1)
+    temp_string = <char*>emalloc(sizes[0].src_size+1)
     memcpy(temp_string, buf_fixed, sizes[0].src_size)
     temp_string[sizes[0].src_size] = c'\0'
 
@@ -346,14 +341,13 @@ cdef int conv_fixed2vlen(void* ipt, void* opt, void* bkg, void* priv) except -1:
 # =============================================================================
 # HDF5 references to Python instances of h5r.Reference
 
-cdef int conv_objref2pyref(void* ipt, void* opt, void* bkg, void* priv) except -1:
-
+cdef inline int conv_objref2pyref(void* ipt, void* opt, void* bkg, void* priv) except -1:
     cdef PyObject** buf_obj = <PyObject**>opt
     cdef hobj_ref_t* buf_ref = <hobj_ref_t*>ipt
-
-    cdef Reference ref = Reference()
+    cdef Reference ref
     cdef PyObject* ref_ptr = NULL
 
+    ref = Reference()
     memcpy(&ref.ref.obj_ref, buf_ref, sizeof(ref.ref.obj_ref))
     ref.typecode = H5R_OBJECT
 
@@ -365,8 +359,7 @@ cdef int conv_objref2pyref(void* ipt, void* opt, void* bkg, void* priv) except -
 
     return 0
 
-cdef int conv_pyref2objref(void* ipt, void* opt, void* bkg, void* priv) except -1:
-
+cdef inline int conv_pyref2objref(void* ipt, void* opt, void* bkg, void* priv)  except -1:
     cdef PyObject** buf_obj = <PyObject**>ipt
     cdef hobj_ref_t* buf_ref = <hobj_ref_t*>opt
 
@@ -388,22 +381,20 @@ cdef int conv_pyref2objref(void* ipt, void* opt, void* bkg, void* priv) except -
 
     return 0
 
-cdef int conv_regref2pyref(void* ipt, void* opt, void* bkg, void* priv) except -1:
-
+cdef inline int conv_regref2pyref(void* ipt, void* opt, void* bkg, void* priv) except -1:
     cdef PyObject** buf_obj = <PyObject**>opt
     cdef PyObject** bkg_obj = <PyObject**>bkg
     cdef hdset_reg_ref_t* buf_ref = <hdset_reg_ref_t*>ipt
 
-    cdef RegionReference ref = RegionReference()
+    cdef RegionReference ref
     cdef PyObject* ref_ptr = NULL
 
     cdef PyObject* bkg_obj0
 
     memcpy(&bkg_obj0, bkg_obj, sizeof(bkg_obj0));
+    ref = RegionReference()
     memcpy(ref.ref.reg_ref, buf_ref, sizeof(hdset_reg_ref_t))
-
     ref.typecode = H5R_DATASET_REGION
-
     ref_ptr = <PyObject*>ref
     Py_INCREF(ref_ptr)  # because Cython discards its reference when the
                         # function exits
@@ -413,8 +404,7 @@ cdef int conv_regref2pyref(void* ipt, void* opt, void* bkg, void* priv) except -
 
     return 0
 
-cdef int conv_pyref2regref(void* ipt, void* opt, void* bkg, void* priv) except -1:
-
+cdef inline int conv_pyref2regref(void* ipt, void* opt, void* bkg, void* priv) except -1:
     cdef PyObject** buf_obj = <PyObject**>ipt
     cdef hdset_reg_ref_t* buf_ref = <hdset_reg_ref_t*>opt
 
@@ -440,51 +430,51 @@ cdef int conv_pyref2regref(void* ipt, void* opt, void* bkg, void* priv) except -
 # Conversion functions
 
 
-cdef herr_t vlen2str(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
+cdef inline herr_t vlen2str(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
                     size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
-                    void *bkg_i, hid_t dxpl) except -1:
+                    void *bkg_i, hid_t dxpl)  except -1:
     return generic_converter(src_id, dst_id, cdata, nl, buf_stride, bkg_stride,
              buf_i, bkg_i, dxpl,  conv_vlen2str, init_generic, H5T_BKG_YES)
 
-cdef herr_t str2vlen(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
+cdef inline herr_t str2vlen(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
                     size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
-                    void *bkg_i, hid_t dxpl) except -1:
+                    void *bkg_i, hid_t dxpl)  except -1:
     return generic_converter(src_id, dst_id, cdata, nl, buf_stride, bkg_stride,
              buf_i, bkg_i, dxpl, conv_str2vlen, init_generic, H5T_BKG_NO)
 
-cdef herr_t vlen2fixed(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
+cdef inline herr_t vlen2fixed(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
                     size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
-                    void *bkg_i, hid_t dxpl) except -1:
+                    void *bkg_i, hid_t dxpl)  except -1:
     return generic_converter(src_id, dst_id, cdata, nl, buf_stride, bkg_stride,
              buf_i, bkg_i, dxpl, conv_vlen2fixed, init_vlen2fixed, H5T_BKG_NO)
 
-cdef herr_t fixed2vlen(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
+cdef inline herr_t fixed2vlen(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
                     size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
-                    void *bkg_i, hid_t dxpl) except -1:
+                    void *bkg_i, hid_t dxpl)  except -1:
     return generic_converter(src_id, dst_id, cdata, nl, buf_stride, bkg_stride,
              buf_i, bkg_i, dxpl, conv_fixed2vlen, init_fixed2vlen, H5T_BKG_NO)
 
-cdef herr_t objref2pyref(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
+cdef inline herr_t objref2pyref(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
                     size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
-                    void *bkg_i, hid_t dxpl) except -1:
+                    void *bkg_i, hid_t dxpl)  except -1:
     return generic_converter(src_id, dst_id, cdata, nl, buf_stride, bkg_stride,
              buf_i, bkg_i, dxpl, conv_objref2pyref, init_generic, H5T_BKG_NO)
 
-cdef herr_t pyref2objref(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
+cdef inline herr_t pyref2objref(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
                     size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
-                    void *bkg_i, hid_t dxpl) except -1:
+                    void *bkg_i, hid_t dxpl)  except -1:
     return generic_converter(src_id, dst_id, cdata, nl, buf_stride, bkg_stride,
              buf_i, bkg_i, dxpl, conv_pyref2objref, init_generic, H5T_BKG_NO)
 
-cdef herr_t regref2pyref(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
+cdef inline herr_t regref2pyref(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
                     size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
-                    void *bkg_i, hid_t dxpl) except -1:
+                    void *bkg_i, hid_t dxpl)  except -1:
     return generic_converter(src_id, dst_id, cdata, nl, buf_stride, bkg_stride,
              buf_i, bkg_i, dxpl, conv_regref2pyref, init_generic, H5T_BKG_YES)
 
-cdef herr_t pyref2regref(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
+cdef inline herr_t pyref2regref(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
                     size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
-                    void *bkg_i, hid_t dxpl) except -1:
+                    void *bkg_i, hid_t dxpl)  except -1:
     return generic_converter(src_id, dst_id, cdata, nl, buf_stride, bkg_stride,
              buf_i, bkg_i, dxpl, conv_pyref2regref, init_generic, H5T_BKG_NO)
 
@@ -500,7 +490,7 @@ cdef int enum_int_converter_init(hid_t src, hid_t dst,
     cdef conv_enum_t *info
 
     cdata[0].need_bkg = H5T_BKG_NO
-    cdata[0].priv = info = <conv_enum_t*>malloc(sizeof(conv_enum_t))
+    cdata[0].priv = info = <conv_enum_t*>emalloc(sizeof(conv_enum_t))
     info[0].src_size = H5Tget_size(src)
     info[0].dst_size = H5Tget_size(dst)
 
@@ -508,7 +498,7 @@ cdef void enum_int_converter_free(H5T_cdata_t *cdata):
     cdef conv_enum_t *info
 
     info = <conv_enum_t*>cdata[0].priv
-    free(info)
+    efree(info)
     cdata[0].priv = NULL
 
 
@@ -550,7 +540,7 @@ cdef int enum_int_converter_conv(hid_t src, hid_t dst, H5T_cdata_t *cdata,
             else:
                 nalloc = info[0].dst_size*nl
 
-            cbuf = <char*>malloc(nalloc)
+            cbuf = <char*>emalloc(nalloc)
             if cbuf == NULL:
                 raise MemoryError()
 
@@ -568,7 +558,7 @@ cdef int enum_int_converter_conv(hid_t src, hid_t dst, H5T_cdata_t *cdata,
                         info[0].dst_size)
 
     finally:
-        free(cbuf)
+        efree(cbuf)
         cbuf = NULL
         if supertype > 0:
             H5Tclose(supertype)
@@ -681,7 +671,7 @@ cdef int conv_vlen2ndarray(void* ipt, void* opt, np.dtype elem_dtype,
 
     cdef PyObject** buf_obj = <PyObject**>opt
     cdef vlen_t* in_vlen = <vlen_t*>ipt
-    cdef int flags = np.NPY_WRITEABLE | np.NPY_C_CONTIGUOUS
+    cdef int flags = np.NPY_WRITEABLE | np.NPY_C_CONTIGUOUS | np.NPY_OWNDATA
     cdef np.npy_intp dims[1]
     cdef void* data
     cdef np.ndarray ndarray
@@ -699,7 +689,6 @@ cdef int conv_vlen2ndarray(void* ipt, void* opt, np.dtype elem_dtype,
     Py_INCREF(<PyObject*>elem_dtype)
     ndarray = PyArray_NewFromDescr(&PyArray_Type, elem_dtype, 1,
                 dims, NULL, data, flags, <object>NULL)
-    ndarray.flags |= np.NPY_OWNDATA
     ndarray_obj = <PyObject*>ndarray
     Py_INCREF(ndarray_obj)
 
@@ -801,9 +790,9 @@ cdef int conv_ndarray2vlen(void* ipt, void* opt,
     len = ndarray.shape[0]
 
     if outtype.get_size() > intype.get_size():
-        data = malloc(outtype.get_size() * len)
+        data = emalloc(outtype.get_size() * len)
     else:
-        data = malloc(intype.get_size() * len)
+        data = emalloc(intype.get_size() * len)
     memcpy(data, ndarray.data, intype.get_size() * len)
     H5Tconvert(intype.id, outtype.id, len, data, NULL, H5P_DEFAULT)
 
