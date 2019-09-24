@@ -50,8 +50,8 @@ class TestLibver(TestCase):
         self.assertEqual((h5f.LIBVER_V18, h5f.LIBVER_V110),
                          plist.get_libver_bounds())
 
-    @ut.skipIf(version.hdf5_version_tuple < (1, 10, 2),
-               'Requires HDF5 1.10.2 or later')
+    @ut.skipIf(version.hdf5_version_tuple < (1, 11, 4),
+               'Requires HDF5 1.11.4 or later')
     def test_libver_v112(self):
         """ Test libver bounds set/get for H5F_LIBVER_V112"""
         plist = h5p.create(h5p.FILE_ACCESS)
