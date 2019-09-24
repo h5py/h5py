@@ -1014,19 +1014,22 @@ class TestRegionRefs(BaseDataset):
 
 
 class TestAstype(BaseDataset):
-
+    """.astype() wrapper & context manager
     """
-        .astype context manager
-    """
-
-    def test_astype(self):
-
+    def test_astype_ctx(self):
         dset = self.f.create_dataset('x', (100,), dtype='i2')
         dset[...] = np.arange(100)
         with dset.astype('f8'):
-            self.assertEqual(dset[...].dtype, np.dtype('f8'))
-            self.assertTrue(np.all(dset[...] == np.arange(100)))
+            self.assertArrayEqual(dset[...], np.arange(100, dtype='f8'))
 
+        with dset.astype('f4') as f4ds:
+            self.assertArrayEqual(f4ds[...], np.arange(100, dtype='f4'))
+
+    def test_astype_wrapper(self):
+        dset = self.f.create_dataset('x', (100,), dtype='i2')
+        dset[...] = np.arange(100)
+        arr = dset.astype('f4')[:]
+        self.assertArrayEqual(arr, np.arange(100, dtype='f4'))
 
 class TestScalarCompound(BaseDataset):
 

@@ -432,14 +432,20 @@ Reference
 
     .. method:: astype(dtype)
 
-        Return a context manager allowing you to read data as a particular
+        Return a wrapper allowing you to read data as a particular
         type.  Conversion is handled by HDF5 directly, on the fly::
 
             >>> dset = f.create_dataset("bigint", (1000,), dtype='int64')
-            >>> with dset.astype('int16'):
-            ...     out = dset[:]
+            >>> out = dset.astype('int16')[:]
             >>> out.dtype
             dtype('int16')
+
+        .. versionchanged:: 3.0
+           Allowed reading through the wrapper object. In earlier versions,
+           :meth:`astype` had to be used as a context manager:
+
+               >>> with dset.astype('int16'):
+               ...     out = dset[:]
 
     .. method:: resize(size, axis=None)
 

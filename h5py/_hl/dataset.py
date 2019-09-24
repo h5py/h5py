@@ -201,19 +201,20 @@ def make_new_virtual_dset(parent, shape, sources, dtype=None,
                       dcpl=dcpl)
 
 
-class AstypeContext(object):
-
+class AstypeWrapper(object):
+    """Wrapper to convert data on reading from a dataset.
     """
-        Context manager which allows changing the type read from a dataset.
-    """
-
     def __init__(self, dset, dtype):
         self._dset = dset
         self._dtype = numpy.dtype(dtype)
 
+    def __getitem__(self, args):
+        return self._dset.__getitem__(args, new_dtype=self._dtype)
+
     def __enter__(self):
         # pylint: disable=protected-access
         self._dset._local.astype = self._dtype
+        return self
 
     def __exit__(self, *args):
         # pylint: disable=protected-access
@@ -246,13 +247,12 @@ class Dataset(HLObject):
     """
 
     def astype(self, dtype):
-        """ Get a context manager allowing you to perform reads to a
+        """ Get a wrapper allowing you to perform reads to a
         different destination type, e.g.:
 
-        >>> with dataset.astype('f8'):
-        ...     double_precision = dataset[0:100:2]
+        >>> double_precision = dataset.astype('f8')[0:100:2]
         """
-        return AstypeContext(self, dtype)
+        return AstypeWrapper(self, dtype)
 
     if MPI:
         @property
@@ -472,7 +472,7 @@ class Dataset(HLObject):
             yield self[i]
 
     @with_phil
-    def __getitem__(self, args):
+    def __getitem__(self, args, new_dtype=None):
         """ Read a slice from the HDF5 dataset.
 
         Takes slices and recarray-style field names (more than one is
@@ -493,7 +493,9 @@ class Dataset(HLObject):
         names = tuple(x for x in args if isinstance(x, str))
         args = tuple(x for x in args if not isinstance(x, str))
 
-        new_dtype = getattr(self._local, 'astype', None)
+        if new_dtype is None:
+            new_dtype = getattr(self._local, 'astype', None)
+
         if new_dtype is not None:
             new_dtype = readtime_dtype(new_dtype, names)
         else:
