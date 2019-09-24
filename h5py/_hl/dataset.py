@@ -377,6 +377,9 @@ class Dataset(HLObject):
         None have no resize limit. """
         space = self.id.get_space()
         dims = space.get_simple_extent_dims(True)
+        if dims is None:
+            return None
+
         return tuple(x if x != h5s.UNLIMITED else None for x in dims)
 
     @property

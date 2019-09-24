@@ -1189,3 +1189,9 @@ def test_hide_value_from_jedi():
         with pytest.warns(UserWarning):
             assert hasattr(fout['test'], 'value')
         assert 'value' not in dir(fout['test'])
+
+
+def test_empty_shape(writable_file):
+    ds = writable_file.create_dataset('empty', dtype='int32')
+    assert ds.shape is None
+    assert ds.maxshape is None
