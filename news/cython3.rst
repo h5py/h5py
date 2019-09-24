@@ -7,3 +7,4 @@ New features
 * Use the libc cimport. Note that the numpy is left untouched, cleanup needed in numpy.pxd
 * All the libhdf5 binding is now nogil-enabled but not used
 * Use *emalloc* in the _conv module to gracefully fail when no more memory is available
+
