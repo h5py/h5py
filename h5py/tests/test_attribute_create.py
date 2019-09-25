@@ -67,3 +67,12 @@ class TestArray(TestCase):
         self.assertEqual(data_as_U_array.dtype, np.dtype('U1'))
         with self.assertRaises(TypeError):
             self.f.attrs.create('y', data=data_as_U_array)
+
+    def test_shape(self):
+        self.f.attrs.create('x', data=42, shape=1)
+        result = self.f.attrs['x']
+        self.assertEqual(result.shape, (1,))
+
+        self.f.attrs.create('y', data=np.arange(3), shape=3)
+        result = self.f.attrs['y']
+        self.assertEqual(result.shape, (3,))
