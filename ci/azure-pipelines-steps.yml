@@ -61,3 +61,7 @@ steps:
 - script: |
     tox
   displayName: 'tox'
+
+- script: |
+    codecov
+  displayName: 'codecov'
