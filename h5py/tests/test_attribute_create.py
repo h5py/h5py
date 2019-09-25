@@ -79,6 +79,3 @@ class TestArray(TestCase):
         self.f.attrs.create('y', data=np.arange(3), shape=3)
         result = self.f.attrs['y']
         self.assertEqual(result.shape, (3,))
-
-
-
