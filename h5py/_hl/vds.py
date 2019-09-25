@@ -123,9 +123,9 @@ class VirtualLayout(object):
         axes you want to be unlimited.
     """
     def __init__(self, shape, dtype=None, maxshape=None):
-        self.shape = (shape,) if isinstance(shape,int) else shape
+        self.shape = (shape,) if isinstance(shape, int) else shape
         self.dtype = dtype
-        self.maxshape = maxshape
+        self.maxshape = (maxshape,) if isinstance(maxshape, int) else maxshape
         self.sources = []
 
     def __setitem__(self, key, source):
