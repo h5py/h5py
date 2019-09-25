@@ -70,5 +70,6 @@ Meta-info about the h5py project
 
     whatsnew/index
     contributing
+    release_guide
     faq
     licenses
