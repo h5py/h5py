@@ -78,6 +78,9 @@ class VirtualSource(object):
             if shape is None:
                 raise TypeError("The shape parameter is required when "
                                 "specifying a source by path")
+            elif isinstance(shape, int):
+                shape = (shape,)
+
         self.path = path
         self.name = name
         self.dtype = dtype
