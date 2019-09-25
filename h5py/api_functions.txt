@@ -37,6 +37,7 @@ hdf5:
   herr_t    H5close()
   herr_t    H5get_libversion(unsigned *majnum, unsigned *minnum, unsigned *relnum)
   herr_t    H5check_version(unsigned majnum, unsigned minnum, unsigned relnum )
+  herr_t    H5free_memory(void *mem)
 
   # === H5A - Attributes API ==================================================
 
@@ -229,8 +230,6 @@ hdf5:
   herr_t    H5Lunpack_elink_val(void *ext_linkval, size_t link_size, unsigned *flags, const char **filename, const char **obj_path)
   herr_t    H5Lcreate_external(char *file_name, char *obj_name, hid_t link_loc_id, char *link_name, hid_t lcpl_id, hid_t lapl_id)
 
-  # === H5MM -  =================================================
-  void*     H5MM_xfree(void *mem)
 
   # === H5O - General object operations =======================================
 

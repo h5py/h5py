@@ -1105,7 +1105,7 @@ cdef class TypeCompositeID(TypeID):
             assert name != NULL
             pyname = <bytes>name
         finally:
-            H5MM_xfree(name)
+            H5free_memory(name)
 
         return pyname
 

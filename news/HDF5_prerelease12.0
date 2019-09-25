@@ -13,7 +13,7 @@ Deprecations
 Exposing HDF5 functions
 -----------------------
 
-* H5MM_xfree
+* H5free_memory
 * H5Oget_info1
 * H5Oget_info_by_name1
 * H5Oget_info_by_idx1
@@ -24,7 +24,7 @@ Exposing HDF5 functions
 Bug fixes
 ---------
 
-* Some free calls replaced to H5MM_xfree calls (https://github.com/h5py/h5py/pull/1335#issuecomment-534189716)
+* Some free calls replaced to H5free_memory calls (https://github.com/h5py/h5py/pull/1335#issuecomment-534189716)
 
 * Generic exception types used in tests' assertRaise (exception types changed in new HDF5 version)
 
