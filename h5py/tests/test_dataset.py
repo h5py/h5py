@@ -712,9 +712,9 @@ class TestResize(BaseDataset):
         self.assertEqual(dset.shape, (30,))
 
     def test_resize_over(self):
-        """ Resizing past maxshape triggers ValueError """
+        """ Resizing past maxshape triggers an exception """
         dset = self.f.create_dataset('foo', (20, 30), maxshape=(20, 60))
-        with self.assertRaises(ValueError):
+        with self.assertRaises(Exception):
             dset.resize((20, 70))
 
     def test_resize_nonchunked(self):

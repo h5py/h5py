@@ -13,6 +13,8 @@
     Proxy functions for read/write, to work around the HDF5 bogus type issue.
 """
 
+include "config.pxi"
+
 cdef enum copy_dir:
     H5PY_SCATTER = 0,
     H5PY_GATHER
@@ -193,7 +195,10 @@ cdef hid_t make_reduced_type(hid_t mtype, hid_t dstype):
         try:
             mtype_fields.append(member_name)
         finally:
-            free(member_name)
+            IF HDF5_VERSION >= (1, 8, 13):
+                H5free_memory(member_name)
+            ELSE:
+                free(member_name)
             member_name = NULL
 
     # First pass: add up the sizes of matching fields so we know how large a
@@ -208,8 +213,11 @@ cdef hid_t make_reduced_type(hid_t mtype, hid_t dstype):
             newtype_size += H5Tget_size(temptype)
             H5Tclose(temptype)
         finally:
-            free(member_name)
-            member_name =  NULL
+            IF HDF5_VERSION >= (1, 8, 13):
+                H5free_memory(member_name)
+            ELSE:
+                free(member_name)
+            member_name = NULL
 
     newtype = H5Tcreate(H5T_COMPOUND, newtype_size)
 
@@ -225,7 +233,10 @@ cdef hid_t make_reduced_type(hid_t mtype, hid_t dstype):
             offset += H5Tget_size(temptype)
             H5Tclose(temptype)
         finally:
-            free(member_name)
+            IF HDF5_VERSION >= (1, 8, 13):
+                H5free_memory(member_name)
+            ELSE:
+                free(member_name)
             member_name = NULL
 
     return newtype

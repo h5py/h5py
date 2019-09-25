@@ -132,7 +132,6 @@ cdef class ObjInfo(_ObjInfo):
         newcopy.infostruct = self.infostruct
         return newcopy
 
-
 @with_phil
 def get_info(ObjectID loc not None, char* name=NULL, int index=-1, *,
         char* obj_name='.', int index_type=H5_INDEX_NAME, int order=H5_ITER_INC,
@@ -159,15 +158,24 @@ def get_info(ObjectID loc not None, char* name=NULL, int index=-1, *,
     if name != NULL and index >= 0:
         raise TypeError("At most one of name or index may be specified")
     elif name != NULL and index < 0:
-        H5Oget_info_by_name(loc.id, name, &info.infostruct, pdefault(lapl))
+        IF HDF5_VERSION < VOL_MIN_HDF5_VERSION:
+            H5Oget_info_by_name(loc.id, name, &info.infostruct, pdefault(lapl))
+        ELSE:
+            H5Oget_info_by_name1(loc.id, name, &info.infostruct, pdefault(lapl))
     elif name == NULL and index >= 0:
-        H5Oget_info_by_idx(loc.id, obj_name, <H5_index_t>index_type,
-            <H5_iter_order_t>order, index, &info.infostruct, pdefault(lapl))
+        IF HDF5_VERSION < VOL_MIN_HDF5_VERSION:
+            H5Oget_info_by_idx(loc.id, obj_name, <H5_index_t>index_type,
+                <H5_iter_order_t>order, index, &info.infostruct, pdefault(lapl))
+        ELSE:
+            H5Oget_info_by_idx1(loc.id, obj_name, <H5_index_t>index_type,
+                <H5_iter_order_t>order, index, &info.infostruct, pdefault(lapl))
     else:
-        H5Oget_info(loc.id, &info.infostruct)
+        IF HDF5_VERSION < VOL_MIN_HDF5_VERSION:
+            H5Oget_info(loc.id, &info.infostruct)
+        ELSE:
+            H5Oget_info1(loc.id, &info.infostruct)
 
     return info
-
 
 IF HDF5_VERSION >= (1, 8, 5):
     @with_phil
@@ -352,7 +360,11 @@ def visit(ObjectID loc not None, object func, *,
     else:
         cfunc = cb_obj_simple
 
-    H5Ovisit_by_name(loc.id, obj_name, <H5_index_t>idx_type,
-        <H5_iter_order_t>order, cfunc, <void*>visit, pdefault(lapl))
+    IF HDF5_VERSION < VOL_MIN_HDF5_VERSION:
+        H5Ovisit_by_name(loc.id, obj_name, <H5_index_t>idx_type,
+            <H5_iter_order_t>order, cfunc, <void*>visit, pdefault(lapl))
+    ELSE:
+        H5Ovisit_by_name1(loc.id, obj_name, <H5_index_t>idx_type,
+            <H5_iter_order_t>order, cfunc, <void*>visit, pdefault(lapl))
 
     return visit.retval
