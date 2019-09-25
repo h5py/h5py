@@ -1795,6 +1795,8 @@ def opaque_dtype(np_dtype):
     dt = dtype(np_dtype)
     if np.issubdtype(dt, np.object_):
         raise TypeError("Cannot store numpy object arrays as opaque data")
+    if dt.names is not None:
+        raise TypeError("Cannot store numpy structured arrays as opaque data")
 
     return dtype(dt, metadata={'h5py_opaque': True})
 
