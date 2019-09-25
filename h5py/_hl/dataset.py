@@ -90,7 +90,7 @@ def make_new_dset(parent, shape=None, dtype=None, data=None,
             data = Empty(dtype)
         shape = data.shape
     else:
-        shape = tuple((shape,)) if isinstance(shape, int) else tuple(shape)
+        shape = (shape,) if isinstance(shape, int) else tuple(shape)
         if data is not None and (numpy.product(shape, dtype=numpy.ulonglong) != numpy.product(data.shape, dtype=numpy.ulonglong)):
             raise ValueError("Shape tuple is incompatible with data")
 
