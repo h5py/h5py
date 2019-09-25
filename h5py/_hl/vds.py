@@ -81,6 +81,9 @@ class VirtualSource(object):
             elif isinstance(shape, int):
                 shape = (shape,)
 
+            if isinstance(maxshape, int):
+                maxshape = (maxshape,)
+
         self.path = path
         self.name = name
         self.dtype = dtype
