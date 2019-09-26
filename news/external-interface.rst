@@ -23,7 +23,7 @@ Deprecations
   * a list containing tuples such as ``(name,)`` and ``(name, offset)`` that
     lack the offset or size.
 
-  Furthermore, the *name*–*offset*–*size* triplets now must be a tuple rather
+  Furthermore, each *name*–*offset*–*size* triplet now must be a tuple rather
   than an arbitrary iterable.  See also the new feature related to the
   ``external`` argument.
 
