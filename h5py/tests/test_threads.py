@@ -14,46 +14,47 @@
 import threading
 import h5py
 
-from .common import ut, TestCase
 
+def test_thread_hdf5_silence_error_membership(tmp_path, capfd):
+    """Verify the error printing is squashed in all threads.
 
-class TestErrorPrinting(TestCase):
-
+    No console messages should be shown from membership tests
     """
-        Verify the error printing is squashed in all threads.
+    path = str((tmp_path / 'test.h5').resolve())
+    def test():
+        with h5py.File(path, 'w') as newfile:
+            try:
+                doesnt_exist = newfile['doesnt_exist'].value
+            except KeyError:
+                pass
+
+    th = threading.Thread(target=test)
+    th.start()
+    th.join()
+
+    captured = capfd.readouterr()
+    assert captured.err == ''
+    assert captured.out == ''
+
+
+def test_thread_hdf5_silence_error_attr(tmp_path, capfd):
+    """Verify the error printing is squashed in all threads.
+
+    No console messages should be shown for non-existing attributes
     """
+    path = str((tmp_path / 'test.h5').resolve())
+    def test():
+        with h5py.File(path, 'w') as newfile:
+            newfile['newdata'] = [1,2,3]
+            try:
+                nonexistent_attr = newfile['newdata'].attrs['nonexistent_attr']
+            except KeyError:
+                pass
 
-    def test_printing(self):
-        """ No console messages should be shown from membership tests """
-        # Unfortunately we can't have this test assert anything, as
-        # HDF5 writes directly to stderr.  But it will show up in the
-        # console output.
+    th = threading.Thread(target=test)
+    th.start()
+    th.join()
 
-        import threading
-
-        def test():
-            with h5py.File(self.mktemp(), 'w') as newfile:
-                try:
-                    doesnt_exist = newfile['doesnt_exist'].value
-                except KeyError:
-                    pass
-
-        th = threading.Thread(target=test)
-        th.start()
-        th.join()
-
-    def test_attr_printing(self):
-        """ No console messages should be shown for non-existing attributes """
-
-        def test():
-
-            with h5py.File(self.mktemp(), 'w') as newfile:
-                newfile['newdata'] = [1,2,3]
-                try:
-                    nonexistent_attr = newfile['newdata'].attrs['nonexistent_attr']
-                except KeyError:
-                    pass
-
-        th = threading.Thread(target=test)
-        th.start()
-        th.join()
+    captured = capfd.readouterr()
+    assert captured.err == ''
+    assert captured.out == ''
