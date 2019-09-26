@@ -14,7 +14,7 @@ We are interested in getting feedback from the broader community with respect
 to performance and the API design.
 
 For more details, check out the h5py user guide:
-http://docs.h5py.org/en/latest/swmr.html
+https://docs.h5py.org/en/latest/swmr.html
 
 SWMR support was contributed by Ulrik Pedersen (`#551`_).
 
