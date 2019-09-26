@@ -84,15 +84,8 @@ def _external_entry(entry):
             "Each external entry must be a tuple of (name, offset, size)")
     name, offset, size = entry  # raise ValueError without three elements
     name = filename_encode(name)
-<<<<<<< HEAD
-    if not isinstance(offset, int):
-        raise TypeError("External entry's offset must be an integer")
-    if not isinstance(size, int):
-        raise TypeError("External entry's size must be an integer")
-=======
     offset = operator.index(offset)
     size = operator.index(size)
->>>>>>> Ensure integral offset and size without isinstance
     return (name, offset, size)
 
 def _normalize_external(external):
