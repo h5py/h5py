@@ -688,10 +688,28 @@ class Dataset(HLObject):
             return
 
         # Broadcast scalars if necessary.
+        # In order to avoid slow broadcasting filling the destination by
+        # the scalar value, we create an intermediate array of the same
+        # size as the destination buffer provided that size is reasonable.
+        # We assume as reasonable a size smaller or equal as the used dataset
+        # chunk size if any.
+        # In case of dealing with a non-chunked destination dataset or with
+        # a selection whose size is larger than the dataset chunk size we fall
+        # back to using an intermediate array of size equal to the last dimension
+        # of the destination buffer.
+        # The reasoning behind is that it makes sense to assume the creator of
+        # the dataset used an appropriate chunk size according the available
+        # memory. In any case, if we cannot afford to create an intermediate
+        # array of the same size as the dataset chunk size, the user program has
+        # little hope to go much further. Solves h5py isue #1067
         if mshape == () and selection.mshape != ():
             if self.dtype.subdtype is not None:
                 raise TypeError("Scalar broadcasting is not supported for array dtypes")
-            val2 = numpy.empty(selection.mshape[-1], dtype=val.dtype)
+            if self.chunks and (numpy.prod(self.chunks, dtype=numpy.float) >= \
+                                numpy.prod(selection.mshape, dtype=numpy.float)):
+                val2 = numpy.empty(selection.mshape, dtype=val.dtype)
+            else:
+                val2 = numpy.empty(selection.mshape[-1], dtype=val.dtype)
             val2[...] = val
             val = val2
             mshape = val.shape
