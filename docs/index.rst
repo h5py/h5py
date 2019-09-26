@@ -3,7 +3,7 @@ HDF5 for Python
 
 The h5py package is a Pythonic interface to the HDF5 binary data format.
 
-`HDF5 <http://hdfgroup.org>`_ lets you store huge amounts of numerical
+`HDF5 <https://hdfgroup.org>`_ lets you store huge amounts of numerical
 data, and easily manipulate that data from NumPy. For example, you can slice
 into multi-terabyte datasets stored on disk, as if they were real NumPy
 arrays. Thousands of datasets can be stored in a single file, categorized and
@@ -19,7 +19,7 @@ Where to start
 Other resources
 ---------------
 
-* `Python and HDF5 O'Reilly book <http://shop.oreilly.com/product/0636920030249.do>`_
+* `Python and HDF5 O'Reilly book <https://shop.oreilly.com/product/0636920030249.do>`_
 * `Ask questions on the mailing list at Google Groups <http://groups.google.com/d/forum/h5py>`_
 * `GitHub project <https://github.com/h5py/h5py>`_
 
