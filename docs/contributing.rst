@@ -26,7 +26,7 @@ The second describes the mechanics of
 how to submit a contribution to the h5py project; for example, how to
 create a pull request, which branch to base your work on, etc.
 We assume you're are familiar with Git, the version control system used by h5py.
-If not, `here's a great place to start <http://git-scm.com/book>`_.
+If not, `here's a great place to start <https://git-scm.com/book>`_.
 
 Finally, we describe the various subsystems inside h5py, and give
 technical guidance as to how to implement your changes.
@@ -37,7 +37,7 @@ How to File a Bug Report
 
 Bug reports are always welcome!  The issue tracker is at:
 
-    http://github.com/h5py/h5py/issues
+    https://github.com/h5py/h5py/issues
 
 
 If you're unsure whether you've found a bug
