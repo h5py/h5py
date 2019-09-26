@@ -60,7 +60,7 @@ cdef class H5PYConfig:
         self._t_name = b'TRUE'
         self._bytestrings = ByteStringContext()
         self._track_order = False
-        self._default_file_mode = None
+        self._default_file_mode = 'r'
 
     property complex_names:
         """ Settable 2-tuple controlling how complex numbers are saved.
@@ -153,10 +153,10 @@ cdef class H5PYConfig:
             return self._default_file_mode
 
         def __set__(self, val):
-            if val is None or val in {'r', 'r+', 'x', 'w-', 'w', 'a'}:
+            if val in {'r', 'r+', 'x', 'w-', 'w', 'a'}:
                 self._default_file_mode = val
             else:
-                raise ValueError("Invalid mode; must be one of r, r+, w, w-, x, a or None")
+                raise ValueError("Invalid mode; must be one of r, r+, w, w-, x, a")
 
 cdef H5PYConfig cfg = H5PYConfig()
 
