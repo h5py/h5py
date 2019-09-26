@@ -15,20 +15,41 @@ import threading
 import h5py
 
 
+def _access_not_existing_object(filename):
+    """Create a file and access not existing key"""
+    with h5py.File(filename, 'w') as newfile:
+        try:
+            doesnt_exist = newfile['doesnt_exist'].value
+        except KeyError:
+            pass
+
+
+def test_unsilence_errors(tmp_path, capfd):
+    """Chech that HDF5 errors can be mute/unmute from h5py"""
+    filename = str((tmp_path / 'test.h5').resolve())
+
+    # Unmute HDF5 errors
+    h5py._errors.unsilence_errors()
+    _access_not_existing_object(filename)
+    captured = capfd.readouterr()
+    assert captured.err != ''
+    assert captured.out == ''
+
+    # Mute HDF5 errors
+    h5py._errors.silence_errors()
+    _access_not_existing_object(filename)
+    captured = capfd.readouterr()
+    assert captured.err == ''
+    assert captured.out == ''
+
+
 def test_thread_hdf5_silence_error_membership(tmp_path, capfd):
     """Verify the error printing is squashed in all threads.
 
     No console messages should be shown from membership tests
     """
-    path = str((tmp_path / 'test.h5').resolve())
-    def test():
-        with h5py.File(path, 'w') as newfile:
-            try:
-                doesnt_exist = newfile['doesnt_exist'].value
-            except KeyError:
-                pass
-
-    th = threading.Thread(target=test)
+    filename = str((tmp_path / 'test.h5').resolve())
+    th = threading.Thread(target=_access_not_existing_object, args=(filename,))
     th.start()
     th.join()
 
