@@ -98,42 +98,18 @@ jobs:
     vmImage: vs2017-win2016
   strategy:
     matrix:
-    # default tests against supported python version
-      py36-deps:
+    # -deps : test with default (latest) versions of dependencies
+    # -mindeps : test with oldest supported version of (python) dependencies
+    # -deps-pre : test pre-release versions of (python) dependencies)
+      py36:
         python.version: '3.6'
-        TOXENV: py36-test-deps
+        TOXENV: py36-test-deps,py36-test-mindeps,py36-test-deps-pre
         HDF5_VERSION: 1.10.1
         HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
         HDF5_VSVERSION: "15-64"
-      py37-deps:
+      py37:
         python.version: '3.7'
-        TOXENV: py37-test-deps
-        HDF5_VERSION: 1.10.1
-        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
-        HDF5_VSVERSION: "15-64"
-    # test minimum versions of (python) deps
-      py36-mindeps:
-        python.version: '3.6'
-        TOXENV: py36-test-mindeps
-        HDF5_VERSION: 1.10.1
-        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
-        HDF5_VSVERSION: "15-64"
-      py37-mindeps:
-        python.version: '3.7'
-        TOXENV: py37-test-mindeps
-        HDF5_VERSION: 1.10.1
-        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
-        HDF5_VSVERSION: "15-64"
-    # test pre-release versions of (python) deps
-      py36-deps-pre:
-        python.version: '3.6'
-        TOXENV: py36-test-deps-pre
-        HDF5_VERSION: 1.10.1
-        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
-        HDF5_VSVERSION: "15-64"
-      py37-deps-pre:
-        python.version: '3.7'
-        TOXENV: py37-test-deps-pre
+        TOXENV: py37-test-deps,py37-test-mindeps,py37-test-deps-pre
         HDF5_VERSION: 1.10.1
         HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
         HDF5_VSVERSION: "15-64"
