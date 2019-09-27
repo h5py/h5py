@@ -3,6 +3,24 @@ parameters:
   installer: none
 
 steps:
+- task: CacheBeta@0
+  displayName: pip cache
+  inputs:
+    key: pip | $(Agent.OS)
+    path: $(PIP_CACHE_DIR)
+
+- task: CacheBeta@0
+  displayName: HDF5 cache
+  inputs:
+    key: HDF5 | $(Agent.OS)
+    path: $(HDF5_CACHE_DIR)
+
+- task: CacheBeta@0
+  displayName: ccache cache
+  inputs:
+    key: ccache | $(Agent.OS)
+    path: $(CCACHE_DIR)
+
 - task: UsePythonVersion@0
   inputs:
     versionSpec: '$(python.version)'
