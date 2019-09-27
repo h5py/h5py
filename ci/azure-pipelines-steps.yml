@@ -34,6 +34,20 @@ steps:
   #    prerelease: true
   #  condition: and(succeeded(), eq(variables['python.version'], 'Pre'))
 
+# apparently azure's caching fails when nothing is added to the cache...
+- script: |
+    python -c "import os; os.makedirs(r'$(PIP_CACHE_DIR)', exist_ok=True); open(r'$(PIP_CACHE_DIR)/temp', 'w')"
+  displayName: 'Fix pip cache'
+
+- script: |
+    python -c "import os; os.makedirs(r'$(HDF5_CACHE_DIR)', exist_ok=True); open(r'$(HDF5_CACHE_DIR)/temp', 'w')"
+  displayName: 'Fix HDF5 cache'
+
+- script: |
+    python -c "import os; os.makedirs(r'$(CCACHE_DIR)', exist_ok=True); open(r'$(CCACHE_DIR)/temp', 'w')"
+  displayName: 'Fix ccache cache'
+
+
 - ${{ if eq(parameters.installer, 'nuget') }}:
   - task: NuGetToolInstaller@0
     displayName: 'Use latest available Nuget'
