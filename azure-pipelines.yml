@@ -106,7 +106,7 @@ jobs:
       py36:
         python.version: '3.6'
         TOXENV: py36-test-deps,py36-test-mindeps,py36-test-deps-pre
-      py37-deps:
+      py37:
         python.version: '3.7'
         TOXENV: py37-test-deps,py37-test-mindeps,py37-test-deps-pre
     # test against newer HDF5
