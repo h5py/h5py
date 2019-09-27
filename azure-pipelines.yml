@@ -52,25 +52,10 @@ jobs:
         TOXENV: py36-test-deps
         HDF5_VERSION: 1.10.3
         HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
-      py37-deps-hdf51103:
-        python.version: '3.7'
-        TOXENV: py37-test-deps
-        HDF5_VERSION: 1.10.3
-        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
-      py36-deps-hdf51104:
-        python.version: '3.6'
-        TOXENV: py36-test-deps
-        HDF5_VERSION: 1.10.4
-        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
       py37-deps-hdf51104:
         python.version: '3.7'
         TOXENV: py37-test-deps
         HDF5_VERSION: 1.10.4
-        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
-      py36-deps-hdf51105:
-        python.version: '3.6'
-        TOXENV: py36-test-deps
-        HDF5_VERSION: 1.10.5
         HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
       py37-deps-hdf51105:
         python.version: '3.7'
