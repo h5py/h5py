@@ -38,6 +38,8 @@
         Tuple of available filter names for encoding
 """
 
+import operator
+
 import numpy as np
 from .compat import filename_encode
 from .. import h5z, h5p, h5d, h5f
@@ -69,36 +71,35 @@ def _gen_filter_tuples():
 
 decode, encode = _gen_filter_tuples()
 
-def _external_entry(name, offset=0, size=h5f.UNLIMITED):
+def _external_entry(entry):
     """ Check for and return a well-formed entry tuple for
     a call to h5p.set_external. """
-    if not isinstance(name, str):
-        raise TypeError("External entry's name must be a string")
-    if not isinstance(offset, int):
-        raise TypeError("External entry's offset must be an integer")
-    if not isinstance(size, int):
-        raise TypeError("External entry's size must be an integer")
-    return (filename_encode(name), offset, size)
+    # We require only an iterable entry but also want to guard against
+    # raising a confusing exception from unpacking below a str or bytes that
+    # was mistakenly passed as an entry.  We go further than that and accept
+    # only a tuple, which allows simpler documentation and exception
+    # messages.
+    if not isinstance(entry, tuple):
+        raise TypeError(
+            "Each external entry must be a tuple of (name, offset, size)")
+    name, offset, size = entry  # raise ValueError without three elements
+    name = filename_encode(name)
+    offset = operator.index(offset)
+    size = operator.index(size)
+    return (name, offset, size)
 
 def _normalize_external(external):
     """ Normalize external into a well-formed list of tuples and return. """
     if external is None:
         return []
-    elif isinstance(external, str):
-        # accept a solitary file string
-        return [_external_entry(external)]
-    if not isinstance(external, (list)):
-        raise ValueError('external should be a list of tuples of (file[, offset[, size]])')
     try:
-        # accept a single entry, not in a list
-        return [_external_entry(*external)]
+        # Accept a solitary name---a str, bytes, or os.PathLike acceptable to
+        # filename_encode.
+        return [_external_entry((external, 0, h5f.UNLIMITED))]
     except TypeError:
         pass
-    # check and rebuild each list entry to be well-formed
-    return [_external_entry(entry)
-            if isinstance(entry, str) else
-            _external_entry(*entry)
-            for entry in external]
+    # Check and rebuild each entry to be well-formed.
+    return [_external_entry(entry) for entry in external]
 
 def fill_dcpl(plist, shape, dtype, chunks, compression, compression_opts,
               shuffle, fletcher32, maxshape, scaleoffset, external):

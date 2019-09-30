@@ -16,6 +16,7 @@
     2. Type conversion for read and write (currently untested)
 """
 
+import pathlib
 import sys
 import numpy as np
 import platform
@@ -580,7 +581,7 @@ class TestExternal(BaseDataset):
     """
         Feature: Datasets with the external storage property
     """
-    def test_external(self):
+    def test_contents(self):
         """ Create and access an external dataset """
 
         shape = (6, 100)
@@ -594,43 +595,49 @@ class TestExternal(BaseDataset):
 
         assert dset.external is not None
 
-        # verify file was created, and size is correct
-        import os
-        statinfo = os.stat(ext_file)
-        assert statinfo.st_size == testdata.nbytes
-
-        # verify contents
+        # verify file's existence, size, and contents
         with open(ext_file, 'rb') as fid:
             contents = fid.read()
         assert contents == testdata.tostring()
 
-    def test_external_other(self):
-        """ Test other forms of external lists """
+    def test_name_str(self):
+        """ External argument may be a file name str only """
 
-        shape = (6, 100)
+        self.f.create_dataset('foo', (6, 100), external=self.mktemp())
+
+    def test_name_path(self):
+        """ External argument may be a file name path only """
+
+        self.f.create_dataset('foo', (6, 100),
+                              external=pathlib.Path(self.mktemp()))
+
+    def test_iter_multi(self):
+        """ External argument may be an iterable of multiple tuples """
+
         ext_file = self.mktemp()
-
-        self.f.create_dataset('foo', shape, external=ext_file)
-        self.f.create_dataset('bar', shape, external=[ext_file])
-        self.f.create_dataset('moo', shape, external=[ext_file, 0])
-        self.f.create_dataset('car', shape, external=[ext_file, 0, h5f.UNLIMITED])
-
         N = 100
-        external = [(ext_file, x * 1000, (x + 1) * 1000) for x in range(0, N)]
-        dset = self.f.create_dataset('poo', shape, external=external)
+        external = iter((ext_file, x * 1000, 1000) for x in range(N))
+        dset = self.f.create_dataset('poo', (6, 100), external=external)
         assert len(dset.external) == N
 
-    def test_external_invalid(self):
+    def test_invalid(self):
         """ Test with invalid external lists """
 
         shape = (6, 100)
         ext_file = self.mktemp()
 
-        with self.assertRaises(TypeError):
-            self.f.create_dataset('foo', shape, external=[(ext_file, 0, "h5f.UNLIMITED")])
+        for exc_type, external in [
+            (TypeError, [ext_file]),
+            (TypeError, [ext_file, 0]),
+            (TypeError, [ext_file, 0, h5f.UNLIMITED]),
+            (ValueError, [(ext_file,)]),
+            (ValueError, [(ext_file, 0)]),
+            (ValueError, [(ext_file, 0, h5f.UNLIMITED, 0)]),
+            (TypeError, [(ext_file, 0, "h5f.UNLIMITED")]),
+        ]:
+            with self.assertRaises(exc_type):
+                self.f.create_dataset('foo', shape, external=external)
 
-        with self.assertRaises(TypeError):
-            self.f.create_dataset('foo', shape, external=[(ext_file, 0, h5f.UNLIMITED, 0)])
 
 class TestAutoCreate(BaseDataset):
 
