@@ -66,9 +66,23 @@ class TestCreateShape(BaseDataset):
         dset = self.f.create_dataset('foo', (1,))
         self.assertEqual(dset.shape, (1,))
 
+    def test_create_integer(self):
+        """ Create a size-1 dataset with integer shape"""
+        dset = self.f.create_dataset('foo', 1)
+        self.assertEqual(dset.shape, (1,))
+
     def test_create_extended(self):
         """ Create an extended dataset """
         dset = self.f.create_dataset('foo', (63,))
+        self.assertEqual(dset.shape, (63,))
+        self.assertEqual(dset.size, 63)
+        dset = self.f.create_dataset('bar', (6, 10))
+        self.assertEqual(dset.shape, (6, 10))
+        self.assertEqual(dset.size, (60))
+
+    def test_create_integer_extended(self):
+        """ Create an extended dataset """
+        dset = self.f.create_dataset('foo', 63)
         self.assertEqual(dset.shape, (63,))
         self.assertEqual(dset.size, 63)
         dset = self.f.create_dataset('bar', (6, 10))
@@ -169,6 +183,20 @@ class TestCreateRequire(BaseDataset):
         dset2 = self.f.require_dataset('foo', (10, 3), 'f')
         self.assertEqual(dset, dset2)
 
+    def test_create_1D(self):
+        """ require_dataset with integer shape yields existing dataset"""
+        dset = self.f.require_dataset('foo', 10, 'f')
+        dset2 = self.f.require_dataset('foo', 10, 'f')
+        self.assertEqual(dset, dset2)
+
+        dset = self.f.require_dataset('bar', (10,), 'f')
+        dset2 = self.f.require_dataset('bar', 10, 'f')
+        self.assertEqual(dset, dset2)
+
+        dset = self.f.require_dataset('baz', 10, 'f')
+        dset2 = self.f.require_dataset('baz', (10,), 'f')
+        self.assertEqual(dset, dset2)
+
     def test_shape_conflict(self):
         """ require_dataset with shape conflict yields TypeError """
         self.f.create_dataset('foo', (10, 3), 'f')
@@ -208,6 +236,11 @@ class TestCreateChunked(BaseDataset):
         dset = self.f.create_dataset('foo', shape=(100,), chunks=(10,))
         self.assertEqual(dset.chunks, (10,))
 
+    def test_create_chunks_integer(self):
+        """ Create via chunks integer """
+        dset = self.f.create_dataset('foo', shape=(100,), chunks=10)
+        self.assertEqual(dset.chunks, (10,))
+
     def test_chunks_mismatch(self):
         """ Illegal chunk size raises ValueError """
         with self.assertRaises(ValueError):
@@ -229,6 +262,21 @@ class TestCreateChunked(BaseDataset):
         dset = self.f.create_dataset('foo', shape=(3,), dtype='S100000000', chunks=True)
         self.assertEqual(dset.chunks, (1,))
 
+    def test_scalar_assignment(self):
+        """ Test scalar assignment of chunked dataset """
+        dset = self.f.create_dataset('foo', shape=(3, 50, 50),
+                                     dtype=np.int32, chunks=(1, 50, 50))
+        # test assignement of selection smaller than chunk size
+        dset[1, :, 40] = 10
+        self.assertTrue(np.all(dset[1, :, 40] == 10))
+
+        # test assignement of selection equal to chunk size
+        dset[1] = 11
+        self.assertTrue(np.all(dset[1] == 11))
+
+        # test assignement of selection bigger than chunk size
+        dset[0:2] = 12
+        self.assertTrue(np.all(dset[0:2] == 12))
 
 class TestCreateFillvalue(BaseDataset):
 
@@ -653,6 +701,15 @@ class TestResize(BaseDataset):
         self.assertIsNot(dset.chunks, None)
         self.assertEqual(dset.maxshape, (20, 60))
 
+    def test_create_1D(self):
+        """ Create dataset with "maxshape" using integer maxshape"""
+        dset = self.f.create_dataset('foo', (20,), maxshape=20)
+        self.assertIsNot(dset.chunks, None)
+        self.assertEqual(dset.maxshape, (20,))
+
+        dset = self.f.create_dataset('bar', 20, maxshape=20)
+        self.assertEqual(dset.maxshape, (20,))
+
     def test_resize(self):
         """ Datasets may be resized up to maxshape """
         dset = self.f.create_dataset('foo', (20, 30), maxshape=(20, 60))
@@ -662,10 +719,17 @@ class TestResize(BaseDataset):
         dset.resize((20, 60))
         self.assertEqual(dset.shape, (20, 60))
 
+    def test_resize_1D(self):
+        """ Datasets may be resized up to maxshape using integer maxshape"""
+        dset = self.f.create_dataset('foo', 20, maxshape=40)
+        self.assertEqual(dset.shape, (20,))
+        dset.resize((30,))
+        self.assertEqual(dset.shape, (30,))
+
     def test_resize_over(self):
-        """ Resizing past maxshape triggers ValueError """
+        """ Resizing past maxshape triggers an exception """
         dset = self.f.create_dataset('foo', (20, 30), maxshape=(20, 60))
-        with self.assertRaises(ValueError):
+        with self.assertRaises(Exception):
             dset.resize((20, 70))
 
     def test_resize_nonchunked(self):
@@ -969,10 +1033,13 @@ class TestZeroShape(BaseDataset):
 
     def test_array_conversion(self):
         """ Empty datasets can be converted to NumPy arrays """
-        ds = self.f.create_dataset('x', (0,), maxshape=(None,))
+        ds = self.f.create_dataset('x', 0, maxshape=None)
         self.assertEqual(ds.shape, np.array(ds).shape)
 
-        ds = self.f.create_dataset('y', (0, 0), maxshape=(None, None))
+        ds = self.f.create_dataset('y', (0,), maxshape=(None,))
+        self.assertEqual(ds.shape, np.array(ds).shape)
+
+        ds = self.f.create_dataset('z', (0, 0), maxshape=(None, None))
         self.assertEqual(ds.shape, np.array(ds).shape)
 
     def test_reading(self):
@@ -1014,19 +1081,22 @@ class TestRegionRefs(BaseDataset):
 
 
 class TestAstype(BaseDataset):
-
+    """.astype() wrapper & context manager
     """
-        .astype context manager
-    """
-
-    def test_astype(self):
-
+    def test_astype_ctx(self):
         dset = self.f.create_dataset('x', (100,), dtype='i2')
         dset[...] = np.arange(100)
         with dset.astype('f8'):
-            self.assertEqual(dset[...].dtype, np.dtype('f8'))
-            self.assertTrue(np.all(dset[...] == np.arange(100)))
+            self.assertArrayEqual(dset[...], np.arange(100, dtype='f8'))
 
+        with dset.astype('f4') as f4ds:
+            self.assertArrayEqual(f4ds[...], np.arange(100, dtype='f4'))
+
+    def test_astype_wrapper(self):
+        dset = self.f.create_dataset('x', (100,), dtype='i2')
+        dset[...] = np.arange(100)
+        arr = dset.astype('f4')[:]
+        self.assertArrayEqual(arr, np.arange(100, dtype='f4'))
 
 class TestScalarCompound(BaseDataset):
 
@@ -1221,3 +1291,9 @@ def test_get_chunk_details():
         assert si.filter_mask == 0
         assert si.byte_offset is not None
         assert si.size > 0
+
+
+def test_empty_shape(writable_file):
+    ds = writable_file.create_dataset('empty', dtype='int32')
+    assert ds.shape is None
+    assert ds.maxshape is None

@@ -10,8 +10,8 @@ HDF5 for Python
 Websites
 --------
 
-* Main website: http://www.h5py.org
-* Source code: http://github.com/h5py/h5py
+* Main website: https://www.h5py.org
+* Source code: https://github.com/h5py/h5py
 * Mailing list: https://groups.google.com/d/forum/h5py
 
 Installation
@@ -24,13 +24,13 @@ and in the MacOS package managers `Homebrew <https://brew.sh/>`_,
 `Macports <https://www.macports.org/>`_, or `Fink <http://finkproject.org/>`_.
 
 More detailed installation instructions, including how to install `h5py` with
-MPI support, can be found at: http://docs.h5py.org/en/latest/build.html.
+MPI support, can be found at: https://docs.h5py.org/en/latest/build.html.
 
 
 Reporting bugs
 --------------
 
-Open a bug at http://github.com/h5py/h5py/issues.  For general questions, ask
+Open a bug at https://github.com/h5py/h5py/issues.  For general questions, ask
 on the list (https://groups.google.com/d/forum/h5py).
 
 .. _`Continuum Anaconda`: http://continuum.io/downloads

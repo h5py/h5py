@@ -1,0 +1,228 @@
+# from matplotlib's azure setup
+
+variables:
+  HDF5_CACHE_DIR: $(Pipeline.Workspace)/cache/hdf5
+  PIP_CACHE_DIR: $(Pipeline.Workspace)/cache/pip
+  CCACHE_DIR: $(Pipeline.Workspace)/cache/ccache
+
+jobs:
+
+- job: 'ubuntu1604'
+  pool:
+    vmImage: ubuntu-16.04
+  strategy:
+    matrix:
+    # system independent tests
+      docs:
+        TOXENV: docs
+        python.version: '3.6'
+      check-manifest:
+        TOXENV: check-manifest
+        python.version: '3.6'
+      checkreadme:
+        TOXENV: checkreadme
+        python.version: '3.6'
+      pre-commit:
+        TOXENV: pre-commit
+        python.version: '3.6'
+    # default tests against supported python version
+      py36-deps:
+        python.version: '3.6'
+        TOXENV: py36-test-deps
+      py37-deps:
+        python.version: '3.7'
+        TOXENV: py37-test-deps
+    # test minimum versions of (python) deps
+      py36-mindeps:
+        python.version: '3.6'
+        TOXENV: py36-test-mindeps
+      py37-mindeps:
+        python.version: '3.7'
+        TOXENV: py37-test-mindeps
+    # test pre-release versions of (python) deps
+      py36-deps-pre:
+        python.version: '3.6'
+        TOXENV: py36-test-deps-pre
+      py37-deps-pre:
+        python.version: '3.7'
+        TOXENV: py37-test-deps-pre
+    # test against newer HDF5
+      py36-deps-hdf51103:
+        python.version: '3.6'
+        TOXENV: py36-test-deps
+        HDF5_VERSION: 1.10.3
+        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
+      py37-deps-hdf51103:
+        python.version: '3.7'
+        TOXENV: py37-test-deps
+        HDF5_VERSION: 1.10.3
+        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
+      py36-deps-hdf51104:
+        python.version: '3.6'
+        TOXENV: py36-test-deps
+        HDF5_VERSION: 1.10.4
+        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
+      py37-deps-hdf51104:
+        python.version: '3.7'
+        TOXENV: py37-test-deps
+        HDF5_VERSION: 1.10.4
+        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
+      py36-deps-hdf51105:
+        python.version: '3.6'
+        TOXENV: py36-test-deps
+        HDF5_VERSION: 1.10.5
+        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
+      py37-deps-hdf51105:
+        python.version: '3.7'
+        TOXENV: py37-test-deps
+        HDF5_VERSION: 1.10.5
+        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
+    # test pytables compat tests
+      py36-mindeps-tables:
+        python.version: '3.6'
+        TOXENV: py36-test-mindeps-tables
+      py37-mindeps-tables:
+        python.version: '3.7'
+        TOXENV: py37-test-mindeps-tables
+    # do mpi tests
+#      py36-deps-hdf51105-mpi:
+#        python.version: '3.6'
+#        TOXENV: py36-test-mindeps-mpi4py
+#        HDF5_VERSION: 1.10.5
+#        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
+#        HDF5_MPI: ON
+#        CC: mpicc
+#      py37-deps-hdf51105-mpi:
+#        python.version: '3.7'
+#        TOXENV: py37-test-mindeps-mpi4py
+#        HDF5_VERSION: 1.10.5
+#        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
+#        HDF5_MPI: ON
+#        CC: mpicc
+    maxParallel: 4
+
+  steps:
+    - template: ci/azure-pipelines-steps.yml
+      parameters:
+        platform: ubuntu
+        installer: apt
+        shell: unix
+
+- job: 'Windows'
+  pool:
+    vmImage: vs2017-win2016
+  strategy:
+    matrix:
+    # default tests against supported python version
+      py36-deps:
+        python.version: '3.6'
+        TOXENV: py36-test-deps
+        HDF5_VERSION: 1.10.1
+        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
+        HDF5_VSVERSION: "15-64"
+      py37-deps:
+        python.version: '3.7'
+        TOXENV: py37-test-deps
+        HDF5_VERSION: 1.10.1
+        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
+        HDF5_VSVERSION: "15-64"
+    # test minimum versions of (python) deps
+      py36-mindeps:
+        python.version: '3.6'
+        TOXENV: py36-test-mindeps
+        HDF5_VERSION: 1.10.1
+        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
+        HDF5_VSVERSION: "15-64"
+      py37-mindeps:
+        python.version: '3.7'
+        TOXENV: py37-test-mindeps
+        HDF5_VERSION: 1.10.1
+        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
+        HDF5_VSVERSION: "15-64"
+    # test pre-release versions of (python) deps
+      py36-deps-pre:
+        python.version: '3.6'
+        TOXENV: py36-test-deps-pre
+        HDF5_VERSION: 1.10.1
+        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
+        HDF5_VSVERSION: "15-64"
+      py37-deps-pre:
+        python.version: '3.7'
+        TOXENV: py37-test-deps-pre
+        HDF5_VERSION: 1.10.1
+        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
+        HDF5_VSVERSION: "15-64"
+    maxParallel: 4
+
+  steps:
+    - template: ci/azure-pipelines-steps.yml
+      parameters:
+        platform: windows
+        installer: nuget
+        shell: cmd
+
+- job: 'macOS1013'
+  pool:
+    vmImage: xcode9-macos10.13
+  strategy:
+    matrix:
+    # default tests against supported python version
+      py36-deps:
+        python.version: '3.6'
+        TOXENV: py36-test-deps
+      py37-deps:
+        python.version: '3.7'
+        TOXENV: py37-test-deps
+    # test minimum versions of (python) deps
+      py36-mindeps:
+        python.version: '3.6'
+        TOXENV: py36-test-mindeps
+      py37-mindeps:
+        python.version: '3.7'
+        TOXENV: py37-test-mindeps
+    # test pre-release versions of (python) deps
+      py36-deps-pre:
+        python.version: '3.6'
+        TOXENV: py36-test-deps-pre
+      py37-deps-pre:
+        python.version: '3.7'
+        TOXENV: py37-test-deps-pre
+    # test against newer HDF5
+#      py36-deps-hdf51103:
+#        python.version: '3.6'
+#        TOXENV: py36-test-deps
+#        HDF5_VERSION: 1.10.3
+#        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
+#      py37-deps-hdf51103:
+#        python.version: '3.7'
+#        TOXENV: py37-test-deps
+#        HDF5_VERSION: 1.10.3
+#        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
+#      py36-deps-hdf51104:
+#        python.version: '3.6'
+#        TOXENV: py36-test-deps
+#        HDF5_VERSION: 1.10.4
+#        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
+#      py37-deps-hdf51104:
+#        python.version: '3.7'
+#        TOXENV: py37-test-deps
+#        HDF5_VERSION: 1.10.4
+#        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
+#      py36-deps-hdf51105:
+#        python.version: '3.6'
+#        TOXENV: py36-test-deps
+#        HDF5_VERSION: 1.10.5
+#        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
+#      py37-deps-hdf51105:
+#        python.version: '3.7'
+#        TOXENV: py37-test-deps
+#        HDF5_VERSION: 1.10.5
+#        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
+    maxParallel: 4
+
+  steps:
+    - template: ci/azure-pipelines-steps.yml
+      parameters:
+        platform: macos
+        installer: brew
+        shell: unix

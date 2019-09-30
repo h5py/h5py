@@ -85,12 +85,17 @@ def make_new_dset(parent, shape=None, dtype=None, data=None,
             data = Empty(dtype)
         shape = data.shape
     else:
-        shape = tuple(shape)
+        shape = (shape,) if isinstance(shape, int) else tuple(shape)
         if data is not None and (numpy.product(shape, dtype=numpy.ulonglong) != numpy.product(data.shape, dtype=numpy.ulonglong)):
             raise ValueError("Shape tuple is incompatible with data")
 
+    if isinstance(maxshape, int):
+        maxshape = (maxshape,)
     tmp_shape = maxshape if maxshape is not None else shape
+
     # Validate chunk shape
+    if isinstance(chunks, int) and not isinstance(chunks, bool):
+        chunks = (chunks,)
     if isinstance(chunks, tuple) and any(
         chunk > dim for dim, chunk in zip(tmp_shape, chunks) if dim is not None
     ):
@@ -128,7 +133,6 @@ def make_new_dset(parent, shape=None, dtype=None, data=None,
             raise TypeError("Conflict in compression options")
         compression_opts = compression
         compression = 'gzip'
-
     dcpl = filters.fill_dcpl(
         dcpl or h5p.create(h5p.DATASET_CREATE), shape, dtype,
         chunks, compression, compression_opts, shuffle, fletcher32,
@@ -201,19 +205,20 @@ def make_new_virtual_dset(parent, shape, sources, dtype=None,
                       dcpl=dcpl)
 
 
-class AstypeContext(object):
-
+class AstypeWrapper(object):
+    """Wrapper to convert data on reading from a dataset.
     """
-        Context manager which allows changing the type read from a dataset.
-    """
-
     def __init__(self, dset, dtype):
         self._dset = dset
         self._dtype = numpy.dtype(dtype)
 
+    def __getitem__(self, args):
+        return self._dset.__getitem__(args, new_dtype=self._dtype)
+
     def __enter__(self):
         # pylint: disable=protected-access
         self._dset._local.astype = self._dtype
+        return self
 
     def __exit__(self, *args):
         # pylint: disable=protected-access
@@ -246,13 +251,12 @@ class Dataset(HLObject):
     """
 
     def astype(self, dtype):
-        """ Get a context manager allowing you to perform reads to a
+        """ Get a wrapper allowing you to perform reads to a
         different destination type, e.g.:
 
-        >>> with dataset.astype('f8'):
-        ...     double_precision = dataset[0:100:2]
+        >>> double_precision = dataset.astype('f8')[0:100:2]
         """
-        return AstypeContext(self, dtype)
+        return AstypeWrapper(self, dtype)
 
     if MPI:
         @property
@@ -377,6 +381,9 @@ class Dataset(HLObject):
         None have no resize limit. """
         space = self.id.get_space()
         dims = space.get_simple_extent_dims(True)
+        if dims is None:
+            return None
+
         return tuple(x if x != h5s.UNLIMITED else None for x in dims)
 
     @property
@@ -469,7 +476,7 @@ class Dataset(HLObject):
             yield self[i]
 
     @with_phil
-    def __getitem__(self, args):
+    def __getitem__(self, args, new_dtype=None):
         """ Read a slice from the HDF5 dataset.
 
         Takes slices and recarray-style field names (more than one is
@@ -490,7 +497,9 @@ class Dataset(HLObject):
         names = tuple(x for x in args if isinstance(x, str))
         args = tuple(x for x in args if not isinstance(x, str))
 
-        new_dtype = getattr(self._local, 'astype', None)
+        if new_dtype is None:
+            new_dtype = getattr(self._local, 'astype', None)
+
         if new_dtype is not None:
             new_dtype = readtime_dtype(new_dtype, names)
         else:
@@ -679,10 +688,28 @@ class Dataset(HLObject):
             return
 
         # Broadcast scalars if necessary.
+        # In order to avoid slow broadcasting filling the destination by
+        # the scalar value, we create an intermediate array of the same
+        # size as the destination buffer provided that size is reasonable.
+        # We assume as reasonable a size smaller or equal as the used dataset
+        # chunk size if any.
+        # In case of dealing with a non-chunked destination dataset or with
+        # a selection whose size is larger than the dataset chunk size we fall
+        # back to using an intermediate array of size equal to the last dimension
+        # of the destination buffer.
+        # The reasoning behind is that it makes sense to assume the creator of
+        # the dataset used an appropriate chunk size according the available
+        # memory. In any case, if we cannot afford to create an intermediate
+        # array of the same size as the dataset chunk size, the user program has
+        # little hope to go much further. Solves h5py isue #1067
         if mshape == () and selection.mshape != ():
             if self.dtype.subdtype is not None:
                 raise TypeError("Scalar broadcasting is not supported for array dtypes")
-            val2 = numpy.empty(selection.mshape[-1], dtype=val.dtype)
+            if self.chunks and (numpy.prod(self.chunks, dtype=numpy.float) >= \
+                                numpy.prod(selection.mshape, dtype=numpy.float)):
+                val2 = numpy.empty(selection.mshape, dtype=val.dtype)
+            else:
+                val2 = numpy.empty(selection.mshape[-1], dtype=val.dtype)
             val2[...] = val
             val = val2
             mshape = val.shape
