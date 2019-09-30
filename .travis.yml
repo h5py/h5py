@@ -104,6 +104,7 @@ matrix:
           else
             DOCTR_DEPLOY_DIR="v$TRAVIS_TAG";
           fi
+        - pip install doctr
         - doctr deploy --build-tags --built-docs docs_api/_build/html $DOCTR_DEPLOY_DIR --branch-whitelist doctr
 
     # Additional python versions which are not officially supported
