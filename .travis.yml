@@ -19,6 +19,8 @@ cache:
 env:
   global:
     - HDF5_CACHE_DIR=$HOME/.cache/hdf5
+    - secure: "PVgKiZwB5Kr7KFAmjoMYtsKsVGUhDdiYq0YoMMEk/COFHpnRt/3CUKYwW+4vTCSKcaai/1ZiPUrHruCwdnU7sUkJZZdKkh2C+Vqx+DnnfAFMbLPGqgaBG2UEMtDIinXHDtV4k9wSJB2X9KPchA+kkCeB1ZPsELo7J5y2R55AcOw="
+
   matrix:
     - TOXENV=docs
     - TOXENV=check-manifest
@@ -91,6 +93,17 @@ matrix:
     - python: 3.7
       env:
       - TOXENV=py37-test-mindeps-tables
+
+    - python: 3.7
+      env:
+        - TOXENV=apidocs
+      script:
+        - if [[ -z "$TRAVIS_TAG" ]]; then
+            export DOCTR_DEPLOY_DIR="$TRAVIS_BRANCH";
+          else
+            export DOCTR_DEPLOY_DIR="v$TRAVIS_TAG";
+          fi
+        - tox
 
     # Additional python versions which are not officially supported
     - python: "nightly"
