@@ -562,6 +562,40 @@ Tuple elements are:</p>
 </dd></dl>
 
 <dl class="attribute">
+<dt id="h5py.h5p.PropDCID.get_virtual_count">
+<code class="sig-name descname">get_virtual_count</code> &#x2192; UINT<a class="headerlink" href="#h5py.h5p.PropDCID.get_virtual_count" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the number of mappings for the virtual dataset.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="h5py.h5p.PropDCID.get_virtual_dsetname">
+<code class="sig-name descname">get_virtual_dsetname</code><span class="sig-paren">(</span><em class="sig-param">UINT index=0</em><span class="sig-paren">)</span> &#x2192; STR<a class="headerlink" href="#h5py.h5p.PropDCID.get_virtual_dsetname" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the name of a source dataset used in the mapping of the virtual
+dataset at the position index.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="h5py.h5p.PropDCID.get_virtual_filename">
+<code class="sig-name descname">get_virtual_filename</code><span class="sig-paren">(</span><em class="sig-param">UINT index=0</em><span class="sig-paren">)</span> &#x2192; STR<a class="headerlink" href="#h5py.h5p.PropDCID.get_virtual_filename" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the file name of a source dataset used in the mapping of the
+virtual dataset at the position index.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="h5py.h5p.PropDCID.get_virtual_srcspace">
+<code class="sig-name descname">get_virtual_srcspace</code><span class="sig-paren">(</span><em class="sig-param">UINT index=0</em><span class="sig-paren">)</span> &#x2192; SpaceID<a class="headerlink" href="#h5py.h5p.PropDCID.get_virtual_srcspace" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a dataspace for the selection within the source dataset used
+in the mapping.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="h5py.h5p.PropDCID.get_virtual_vspace">
+<code class="sig-name descname">get_virtual_vspace</code><span class="sig-paren">(</span><em class="sig-param">UINT index=0</em><span class="sig-paren">)</span> &#x2192; SpaceID<a class="headerlink" href="#h5py.h5p.PropDCID.get_virtual_vspace" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a dataspace for the selection within the virtual dataset used
+in the mapping.</p>
+</dd></dl>
+
+<dl class="attribute">
 <dt id="h5py.h5p.PropDCID.remove_filter">
 <code class="sig-name descname">remove_filter</code><span class="sig-paren">(</span><em class="sig-param">INT filter_class</em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropDCID.remove_filter" title="Permalink to this definition">¶</a></dt>
 <dd><p>Remove a filter from the pipeline.  The class code is one of
@@ -677,6 +711,16 @@ the deflate filter to increase the compression ratio.</p>
 <code class="sig-name descname">set_szip</code><span class="sig-paren">(</span><em class="sig-param">UINT options</em>, <em class="sig-param">UINT pixels_per_block</em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropDCID.set_szip" title="Permalink to this definition">¶</a></dt>
 <dd><p>Enable SZIP compression.  See the HDF5 docs for argument meanings,
 and general restrictions on use of the SZIP format.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="h5py.h5p.PropDCID.set_virtual">
+<code class="sig-name descname">set_virtual</code><span class="sig-paren">(</span><em class="sig-param">SpaceID vspace</em>, <em class="sig-param">STR src_file_name</em>, <em class="sig-param">STR src_dset_name</em>, <em class="sig-param">SpaceID src_space</em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropDCID.set_virtual" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the mapping between virtual and source datasets.</p>
+<p>The virtual dataset is described by its virtual dataspace (vspace)
+to the elements. The source dataset is described by the name of the
+file where it is located (src_file_name), the name of the dataset
+(src_dset_name) and its dataspace (src_space).</p>
 </dd></dl>
 
 </dd></dl>

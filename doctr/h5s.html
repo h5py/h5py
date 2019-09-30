@@ -109,6 +109,12 @@ typecode if necessary.</p>
 </dd></dl>
 
 <dl class="attribute">
+<dt id="h5py.h5s.SpaceID.get_regular_hyperslab">
+<code class="sig-name descname">get_regular_hyperslab</code><span class="sig-paren">(</span><em class="sig-param">) -&gt; (TUPLE start</em>, <em class="sig-param">TUPLE stride</em>, <em class="sig-param">TUPLE count</em>, <em class="sig-param">TUPLE block</em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5s.SpaceID.get_regular_hyperslab" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve a regular hyperslab selection.</p>
+</dd></dl>
+
+<dl class="attribute">
 <dt id="h5py.h5s.SpaceID.get_select_bounds">
 <code class="sig-name descname">get_select_bounds</code><span class="sig-paren">(</span><em class="sig-param">) -&gt; (TUPLE start</em>, <em class="sig-param">TUPLE end</em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5s.SpaceID.get_select_bounds" title="Permalink to this definition">¶</a></dt>
 <dd><p>Determine the bounding box which exactly contains
@@ -190,6 +196,12 @@ is True, retrieve the maximum dataspace size instead.</p>
 <dt id="h5py.h5s.SpaceID.get_simple_extent_type">
 <code class="sig-name descname">get_simple_extent_type</code> &#x2192; INT class_code<a class="headerlink" href="#h5py.h5s.SpaceID.get_simple_extent_type" title="Permalink to this definition">¶</a></dt>
 <dd><p>Class code is either <code class="xref py py-data docutils literal notranslate"><span class="pre">SCALAR</span></code> or <code class="xref py py-data docutils literal notranslate"><span class="pre">SIMPLE</span></code>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="h5py.h5s.SpaceID.is_regular_hyperslab">
+<code class="sig-name descname">is_regular_hyperslab</code> &#x2192; BOOL<a class="headerlink" href="#h5py.h5s.SpaceID.is_regular_hyperslab" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determine whether a hyperslab selection is regular.</p>
 </dd></dl>
 
 <dl class="attribute">

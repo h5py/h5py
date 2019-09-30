@@ -75,6 +75,18 @@ its dataspace, which are fixed when the dataset is created.</p>
 </dd></dl>
 
 <dl class="attribute">
+<dt id="h5py.h5d.DatasetID.flush">
+<code class="sig-name descname">flush</code><a class="headerlink" href="#h5py.h5d.DatasetID.flush" title="Permalink to this definition">¶</a></dt>
+<dd><p>no return</p>
+<p>Flushes all buffers associated with a dataset to disk.</p>
+<p>This function causes all buffers associated with a dataset to be
+immediately flushed to disk without removing the data from the cache.</p>
+<p>Use this in <code class="xref py py-data docutils literal notranslate"><span class="pre">SWMR</span></code> write mode to allow readers to be updated with the
+dataset changes.</p>
+<p>Feature requires: 1.9.178 HDF5</p>
+</dd></dl>
+
+<dl class="attribute">
 <dt id="h5py.h5d.DatasetID.get_access_plist">
 <code class="sig-name descname">get_access_plist</code> &#x2192; PropDAID<a class="headerlink" href="#h5py.h5d.DatasetID.get_access_plist" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create an return a new copy of the dataset access property list.</p>
@@ -148,6 +160,38 @@ based on the array’s dtype.</p>
 <p>The provided Numpy array must be writable and C-contiguous.  If
 this is not the case, ValueError will be raised and the read will
 fail.  Keyword dxpl may be a <code class="xref py py-class docutils literal notranslate"><span class="pre">dataset</span> <span class="pre">transfer</span> <span class="pre">property</span> <span class="pre">list</span></code>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="h5py.h5d.DatasetID.read_direct_chunk">
+<code class="sig-name descname">read_direct_chunk</code><span class="sig-paren">(</span><em class="sig-param">offsets</em>, <em class="sig-param">PropID dxpl=None</em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5d.DatasetID.read_direct_chunk" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads data to a bytes array directly from a chunk at position
+specified by the <cite>offsets</cite> argument and bypasses any filters HDF5
+would normally apply to the written data. However, the written data
+may be compressed or not.</p>
+<p>Returns a tuple containing the <cite>filter_mask</cite> and the bytes data
+which are the raw data storing this chuck.</p>
+<p><cite>filter_mask</cite> is a bit field of up to 32 values. It records which
+filters have been applied to this chunk, of the filter pipeline
+defined for that dataset. Each bit set to <cite>1</cite> means that the filter
+in the corresponding position in the pipeline was not applied to
+compute the raw data. So the default value of <cite>0</cite> means that all
+defined filters have been applied to the raw data.</p>
+<p>Feature requires: 1.10.2 HDF5</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="h5py.h5d.DatasetID.refresh">
+<code class="sig-name descname">refresh</code><a class="headerlink" href="#h5py.h5d.DatasetID.refresh" title="Permalink to this definition">¶</a></dt>
+<dd><p>no return</p>
+<p>Refreshes all buffers associated with a dataset.</p>
+<p>This function causes all buffers associated with a dataset to be
+cleared and immediately re-loaded with updated contents from disk.</p>
+<p>This function essentially closes the dataset, evicts all metadata
+associated with it from the cache, and then re-opens the dataset.
+The reopened dataset is automatically re-registered with the same <code class="xref py py-data docutils literal notranslate"><span class="pre">ID</span></code>.</p>
+<p>Use this in <code class="xref py py-data docutils literal notranslate"><span class="pre">SWMR</span></code> read mode to poll for dataset changes.</p>
+<p>Feature requires: 1.9.178 HDF5</p>
 </dd></dl>
 
 <dl class="attribute">

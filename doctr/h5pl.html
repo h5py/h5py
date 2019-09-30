@@ -46,6 +46,49 @@
 <p>Provides access to the low-level HDF5 “<code class="xref py py-data docutils literal notranslate"><span class="pre">H5PL</span></code>” plugins interface.</p>
 <p>These functions are only available with HDF5 1.10.1 or later.
 They are probably not thread safe.</p>
+<dl class="function">
+<dt id="h5py.h5pl.append">
+<code class="sig-prename descclassname">h5py.h5pl.</code><code class="sig-name descname">append</code><span class="sig-paren">(</span><em class="sig-param">STRING search_path</em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5pl.append" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a directory to the end of the plugin search path.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="h5py.h5pl.get">
+<code class="sig-prename descclassname">h5py.h5pl.</code><code class="sig-name descname">get</code><span class="sig-paren">(</span><em class="sig-param">UINT index</em><span class="sig-paren">)</span> &#x2192; STRING<a class="headerlink" href="#h5py.h5pl.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the directory path at the given index (starting from 0) in the
+plugin search path. Returns a Python bytes object.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="h5py.h5pl.insert">
+<code class="sig-prename descclassname">h5py.h5pl.</code><code class="sig-name descname">insert</code><span class="sig-paren">(</span><em class="sig-param">STRING search_path</em>, <em class="sig-param">UINT index</em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5pl.insert" title="Permalink to this definition">¶</a></dt>
+<dd><p>Insert a directory at the given index in the plugin search path.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="h5py.h5pl.prepend">
+<code class="sig-prename descclassname">h5py.h5pl.</code><code class="sig-name descname">prepend</code><span class="sig-paren">(</span><em class="sig-param">STRING search_path</em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5pl.prepend" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a directory to the start of the plugin search path.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="h5py.h5pl.remove">
+<code class="sig-prename descclassname">h5py.h5pl.</code><code class="sig-name descname">remove</code><span class="sig-paren">(</span><em class="sig-param">UINT index</em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5pl.remove" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove the specified entry from the plugin search path.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="h5py.h5pl.replace">
+<code class="sig-prename descclassname">h5py.h5pl.</code><code class="sig-name descname">replace</code><span class="sig-paren">(</span><em class="sig-param">STRING search_path</em>, <em class="sig-param">UINT index</em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5pl.replace" title="Permalink to this definition">¶</a></dt>
+<dd><p>Replace the directory at the given index in the plugin search path.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="h5py.h5pl.size">
+<code class="sig-prename descclassname">h5py.h5pl.</code><code class="sig-name descname">size</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; UINT<a class="headerlink" href="#h5py.h5pl.size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the number of directories currently in the plugin search path.</p>
+</dd></dl>
+
 </div>
 
 

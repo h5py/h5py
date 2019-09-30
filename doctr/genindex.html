@@ -85,6 +85,8 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="h5d.html#h5py.h5d.ALLOC_TIME_LATE">ALLOC_TIME_LATE (in module h5py.h5d)</a>
 </li>
+      <li><a href="h5pl.html#h5py.h5pl.append">append() (in module h5py.h5pl)</a>
+</li>
       <li><a href="h5ac.html#h5py.h5ac.CacheConfig.apply_empty_reserve">apply_empty_reserve (h5py.h5ac.CacheConfig attribute)</a>
 </li>
       <li><a href="h5ac.html#h5py.h5ac.CacheConfig.apply_max_decrement">apply_max_decrement (h5py.h5ac.CacheConfig attribute)</a>
@@ -373,10 +375,10 @@
 </li>
       <li><a href="h5z.html#h5py.h5z.FILTER_FLETCHER32">FILTER_FLETCHER32 (in module h5py.h5z)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="h5z.html#h5py.h5z.FILTER_LZF">FILTER_LZF (in module h5py.h5z)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="h5z.html#h5py.h5z.FILTER_NONE">FILTER_NONE (in module h5py.h5z)</a>
 </li>
       <li><a href="h5z.html#h5py.h5z.FILTER_SCALEOFFSET">FILTER_SCALEOFFSET (in module h5py.h5z)</a>
@@ -407,6 +409,8 @@
 </li>
       <li><a href="h5t.html#h5py.h5t.FLOAT">FLOAT (in module h5py.h5t)</a>
 </li>
+      <li><a href="h5d.html#h5py.h5d.DatasetID.flush">flush (h5py.h5d.DatasetID attribute)</a>
+</li>
       <li><a href="h5f.html#h5py.h5f.flush">flush() (in module h5py.h5f)</a>
 </li>
       <li><a href="h5t.html#h5py.h5t.FORTRAN_S1">FORTRAN_S1 (in module h5py.h5t)</a>
@@ -420,6 +424,8 @@
       <li><a href="h5i.html#h5py.h5i.GENPROP_CLS">GENPROP_CLS (in module h5py.h5i)</a>
 </li>
       <li><a href="h5i.html#h5py.h5i.GENPROP_LST">GENPROP_LST (in module h5py.h5i)</a>
+</li>
+      <li><a href="h5pl.html#h5py.h5pl.get">get() (in module h5py.h5pl)</a>
 </li>
       <li><a href="h5d.html#h5py.h5d.DatasetID.get_access_plist">get_access_plist (h5py.h5d.DatasetID attribute)</a>
 
@@ -541,14 +547,14 @@
 </li>
       <li><a href="h5t.html#h5py.h5t.TypeCompositeID.get_member_name">get_member_name (h5py.h5t.TypeCompositeID attribute)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="h5t.html#h5py.h5t.TypeCompoundID.get_member_offset">get_member_offset (h5py.h5t.TypeCompoundID attribute)</a>
 </li>
       <li><a href="h5t.html#h5py.h5t.TypeCompoundID.get_member_type">get_member_type (h5py.h5t.TypeCompoundID attribute)</a>
 </li>
       <li><a href="h5t.html#h5py.h5t.TypeEnumID.get_member_value">get_member_value (h5py.h5t.TypeEnumID attribute)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="h5a.html#h5py.h5a.AttrID.get_name">get_name (h5py.h5a.AttrID attribute)</a>
 </li>
       <li><a href="h5f.html#h5py.h5f.get_name">get_name() (in module h5py.h5f)</a>
@@ -594,6 +600,8 @@
       <li><a href="h5t.html#h5py.h5t.TypeAtomicID.get_precision">get_precision (h5py.h5t.TypeAtomicID attribute)</a>
 </li>
       <li><a href="h5r.html#h5py.h5r.get_region">get_region() (in module h5py.h5r)</a>
+</li>
+      <li><a href="h5s.html#h5py.h5s.SpaceID.get_regular_hyperslab">get_regular_hyperslab (h5py.h5s.SpaceID attribute)</a>
 </li>
       <li><a href="h5s.html#h5py.h5s.SpaceID.get_select_bounds">get_select_bounds (h5py.h5s.SpaceID attribute)</a>
 </li>
@@ -658,6 +666,16 @@
       <li><a href="h5p.html#h5py.h5p.PropFCID.get_version">get_version (h5py.h5p.PropFCID attribute)</a>
 </li>
       <li><a href="h5f.html#h5py.h5f.FileID.get_vfd_handle">get_vfd_handle (h5py.h5f.FileID attribute)</a>
+</li>
+      <li><a href="h5p.html#h5py.h5p.PropDCID.get_virtual_count">get_virtual_count (h5py.h5p.PropDCID attribute)</a>
+</li>
+      <li><a href="h5p.html#h5py.h5p.PropDCID.get_virtual_dsetname">get_virtual_dsetname (h5py.h5p.PropDCID attribute)</a>
+</li>
+      <li><a href="h5p.html#h5py.h5p.PropDCID.get_virtual_filename">get_virtual_filename (h5py.h5p.PropDCID attribute)</a>
+</li>
+      <li><a href="h5p.html#h5py.h5p.PropDCID.get_virtual_srcspace">get_virtual_srcspace (h5py.h5p.PropDCID attribute)</a>
+</li>
+      <li><a href="h5p.html#h5py.h5p.PropDCID.get_virtual_vspace">get_virtual_vspace (h5py.h5p.PropDCID attribute)</a>
 </li>
       <li><a href="h5g.html#h5py.h5g.GROUP">GROUP (in module h5py.h5g)</a>
 
@@ -741,11 +759,15 @@
 </li>
       <li><a href="h5t.html#h5py.h5t.TypeCompoundID.insert">insert (h5py.h5t.TypeCompoundID attribute)</a>
 </li>
+      <li><a href="h5pl.html#h5py.h5pl.insert">insert() (in module h5py.h5pl)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="h5t.html#h5py.h5t.INTEGER">INTEGER (in module h5py.h5t)</a>
 </li>
       <li><a href="h5f.html#h5py.h5f.is_hdf5">is_hdf5() (in module h5py.h5f)</a>
+</li>
+      <li><a href="h5s.html#h5py.h5s.SpaceID.is_regular_hyperslab">is_regular_hyperslab (h5py.h5s.SpaceID attribute)</a>
 </li>
       <li><a href="h5s.html#h5py.h5s.SpaceID.is_simple">is_simple (h5py.h5s.SpaceID attribute)</a>
 </li>
@@ -1009,6 +1031,8 @@
 </li>
       <li><a href="h5t.html#h5py.h5t.PAD_ZERO">PAD_ZERO (in module h5py.h5t)</a>
 </li>
+      <li><a href="h5pl.html#h5py.h5pl.prepend">prepend() (in module h5py.h5pl)</a>
+</li>
       <li><a href="h5p.html#h5py.h5p.PropClassID">PropClassID (class in h5py.h5p)</a>
 </li>
       <li><a href="h5p.html#h5py.h5p.PropCopyID">PropCopyID (class in h5py.h5p)</a>
@@ -1051,6 +1075,8 @@
         <li><a href="h5d.html#h5py.h5d.DatasetID.read">(h5py.h5d.DatasetID attribute)</a>
 </li>
       </ul></li>
+      <li><a href="h5d.html#h5py.h5d.DatasetID.read_direct_chunk">read_direct_chunk() (h5py.h5d.DatasetID method)</a>
+</li>
       <li><a href="h5r.html#h5py.h5r.Reference">Reference (class in h5py.h5r)</a>
 </li>
       <li><a href="h5i.html#h5py.h5i.REFERENCE">REFERENCE (in module h5py.h5i)</a>
@@ -1059,15 +1085,21 @@
         <li><a href="h5t.html#h5py.h5t.REFERENCE">(in module h5py.h5t)</a>
 </li>
       </ul></li>
+      <li><a href="h5d.html#h5py.h5d.DatasetID.refresh">refresh (h5py.h5d.DatasetID attribute)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="h5r.html#h5py.h5r.RegionReference">RegionReference (class in h5py.h5r)</a>
+</li>
+      <li><a href="h5pl.html#h5py.h5pl.remove">remove() (in module h5py.h5pl)</a>
 </li>
       <li><a href="h5p.html#h5py.h5p.PropDCID.remove_filter">remove_filter (h5py.h5p.PropDCID attribute)</a>
 </li>
       <li><a href="h5a.html#h5py.h5a.rename">rename() (in module h5py.h5a)</a>
 </li>
       <li><a href="h5f.html#h5py.h5f.FileID.reopen">reopen (h5py.h5f.FileID attribute)</a>
+</li>
+      <li><a href="h5pl.html#h5py.h5pl.replace">replace() (in module h5py.h5pl)</a>
 </li>
       <li><a href="h5f.html#h5py.h5f.FileID.reset_mdc_hit_rate_stats">reset_mdc_hit_rate_stats (h5py.h5f.FileID attribute)</a>
 </li>
@@ -1203,14 +1235,14 @@
         <li><a href="h5p.html#h5py.h5p.PropGCID.set_link_creation_order">(h5py.h5p.PropGCID attribute)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="h5f.html#h5py.h5f.FileID.set_mdc_config">set_mdc_config (h5py.h5f.FileID attribute)</a>
 
       <ul>
         <li><a href="h5p.html#h5py.h5p.PropFAID.set_mdc_config">(h5py.h5p.PropFAID attribute)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="h5p.html#h5py.h5p.PropLAID.set_nlinks">set_nlinks (h5py.h5p.PropLAID attribute)</a>
 </li>
       <li><a href="h5t.html#h5py.h5t.TypeFloatID.set_norm">set_norm (h5py.h5t.TypeFloatID attribute)</a>
@@ -1243,6 +1275,8 @@
 </li>
       <li><a href="h5p.html#h5py.h5p.PropFCID.set_userblock">set_userblock (h5py.h5p.PropFCID attribute)</a>
 </li>
+      <li><a href="h5p.html#h5py.h5p.PropDCID.set_virtual">set_virtual (h5py.h5p.PropDCID attribute)</a>
+</li>
       <li><a href="h5t.html#h5py.h5t.SGN_2">SGN_2 (in module h5py.h5t)</a>
 </li>
       <li><a href="h5t.html#h5py.h5t.SGN_NONE">SGN_NONE (in module h5py.h5t)</a>
@@ -1256,6 +1290,8 @@
 </li>
       </ul></li>
       <li><a href="h5s.html#h5py.h5s.SIMPLE">SIMPLE (in module h5py.h5s)</a>
+</li>
+      <li><a href="h5pl.html#h5py.h5pl.size">size() (in module h5py.h5pl)</a>
 </li>
       <li><a href="h5z.html#h5py.h5z.SO_FLOAT_DSCALE">SO_FLOAT_DSCALE (in module h5py.h5z)</a>
 </li>
@@ -1274,6 +1310,8 @@
       <li><a href="h5s.html#h5py.h5s.SpaceID">SpaceID (class in h5py.h5s)</a>
 </li>
       <li><a href="h5t.html#h5py.h5t.special_dtype">special_dtype() (in module h5py.h5t)</a>
+</li>
+      <li><a href="h5f.html#h5py.h5f.FileID.start_swmr_write">start_swmr_write (h5py.h5f.FileID attribute)</a>
 </li>
       <li><a href="h5t.html#h5py.h5t.STD_I16BE">STD_I16BE (in module h5py.h5t)</a>
 </li>
