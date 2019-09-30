@@ -1,0 +1,175 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Module H5I &#8212; Low-level API for h5py</title>
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Module H5L" href="h5l.html" />
+    <link rel="prev" title="Module H5G" href="h5g.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="h5l.html" title="Module H5L"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="h5g.html" title="Module H5G"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Low-level API for h5py</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-h5i">
+<h1>Module H5I<a class="headerlink" href="#module-h5i" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-h5py.h5i">
+<span id="functional-api"></span><h2>Functional API<a class="headerlink" href="#module-h5py.h5i" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-constants">
+<h2>Module constants<a class="headerlink" href="#module-constants" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="identifier-classes">
+<h3>Identifier classes<a class="headerlink" href="#identifier-classes" title="Permalink to this headline">¶</a></h3>
+<dl class="data">
+<dt id="h5py.h5i.BADID">
+<code class="sig-prename descclassname">h5py.h5i.</code><code class="sig-name descname">BADID</code><a class="headerlink" href="#h5py.h5i.BADID" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="data">
+<dt id="h5py.h5i.FILE">
+<code class="sig-prename descclassname">h5py.h5i.</code><code class="sig-name descname">FILE</code><a class="headerlink" href="#h5py.h5i.FILE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="data">
+<dt id="h5py.h5i.GROUP">
+<code class="sig-prename descclassname">h5py.h5i.</code><code class="sig-name descname">GROUP</code><a class="headerlink" href="#h5py.h5i.GROUP" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="data">
+<dt id="h5py.h5i.DATASPACE">
+<code class="sig-prename descclassname">h5py.h5i.</code><code class="sig-name descname">DATASPACE</code><a class="headerlink" href="#h5py.h5i.DATASPACE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="data">
+<dt id="h5py.h5i.DATASET">
+<code class="sig-prename descclassname">h5py.h5i.</code><code class="sig-name descname">DATASET</code><a class="headerlink" href="#h5py.h5i.DATASET" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="data">
+<dt id="h5py.h5i.ATTR">
+<code class="sig-prename descclassname">h5py.h5i.</code><code class="sig-name descname">ATTR</code><a class="headerlink" href="#h5py.h5i.ATTR" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="data">
+<dt id="h5py.h5i.REFERENCE">
+<code class="sig-prename descclassname">h5py.h5i.</code><code class="sig-name descname">REFERENCE</code><a class="headerlink" href="#h5py.h5i.REFERENCE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="data">
+<dt id="h5py.h5i.GENPROP_CLS">
+<code class="sig-prename descclassname">h5py.h5i.</code><code class="sig-name descname">GENPROP_CLS</code><a class="headerlink" href="#h5py.h5i.GENPROP_CLS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="data">
+<dt id="h5py.h5i.GENPROP_LST">
+<code class="sig-prename descclassname">h5py.h5i.</code><code class="sig-name descname">GENPROP_LST</code><a class="headerlink" href="#h5py.h5i.GENPROP_LST" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="data">
+<dt id="h5py.h5i.DATATYPE">
+<code class="sig-prename descclassname">h5py.h5i.</code><code class="sig-name descname">DATATYPE</code><a class="headerlink" href="#h5py.h5i.DATATYPE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Module H5I</a><ul>
+<li><a class="reference internal" href="#module-h5py.h5i">Functional API</a></li>
+<li><a class="reference internal" href="#module-constants">Module constants</a><ul>
+<li><a class="reference internal" href="#identifier-classes">Identifier classes</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="h5g.html"
+                        title="previous chapter">Module H5G</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="h5l.html"
+                        title="next chapter">Module H5L</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/h5i.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="h5l.html" title="Module H5L"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="h5g.html" title="Module H5G"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Low-level API for h5py</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2014, Andrew Collette and contributors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.0.
+    </div>
+  </body>
+</html>
