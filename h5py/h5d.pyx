@@ -565,7 +565,7 @@ cdef class DatasetID(ObjectID):
             """ (TUPLE chunk_offset) => StoreInfo
 
             Retrieve information about a chunk specified by the array
-            address of one of its dataset elements.
+            address of the chunk’s first element in each dimension.
 
             Feature requires: 1.10.5 HDF5
             """
