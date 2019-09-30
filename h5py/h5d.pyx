@@ -584,11 +584,10 @@ cdef class DatasetID(ObjectID):
             H5Dget_chunk_info_by_coord(self.id, co,
                                        &filter_mask, &byte_offset,
                                        &size)
-            cdef tuple cot = convert_dims(co, <hsize_t>rank)
             efree(co)
 
             return StoreInfo(None,
-                             cot if byte_offset != HADDR_UNDEF else None,
+                             chunk_offset if byte_offset != HADDR_UNDEF else None,
                              filter_mask,
                              byte_offset if byte_offset != HADDR_UNDEF else None,
                              size)
