@@ -97,6 +97,8 @@ matrix:
     - python: 3.7
       env:
         - TOXENV=apidocs
+        - HDF5_VERSION=1.10.5
+        - HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION
       script:
         - tox
         - if [[ -z "$TRAVIS_TAG" ]]; then
