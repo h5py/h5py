@@ -16,10 +16,7 @@
     2. Type conversion for read and write (currently untested)
 """
 
-try:
-    import pathlib
-except ImportError:
-    pathlib = None
+import pathlib
 import sys
 import numpy as np
 import platform
@@ -593,7 +590,6 @@ class TestExternal(BaseDataset):
 
         self.f.create_dataset('foo', (6, 100), external=self.mktemp())
 
-    @ut.skipIf(pathlib is None, "pathlib module not installed")
     def test_name_path(self):
         """ External argument may be a file name path only """
 
