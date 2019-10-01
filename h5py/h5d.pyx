@@ -60,7 +60,7 @@ IF HDF5_VERSION >= VDS_MIN_HDF5_VERSION:
 
 IF HDF5_VERSION >= (1, 10, 5):
     StoreInfo = namedtuple('StoreInfo',
-                           'index, chunk_offset, filter_mask, byte_offset, size')
+                           'chunk_offset, filter_mask, byte_offset, size')
 
 # === Dataset operations ======================================================
 
@@ -553,8 +553,7 @@ cdef class DatasetID(ObjectID):
             if space is None:
                 H5Sclose(space_id)
 
-            return StoreInfo(index,
-                             cot if byte_offset != HADDR_UNDEF else None,
+            return StoreInfo(cot if byte_offset != HADDR_UNDEF else None,
                              filter_mask,
                              byte_offset if byte_offset != HADDR_UNDEF else None,
                              size)
@@ -586,8 +585,7 @@ cdef class DatasetID(ObjectID):
                                        &size)
             efree(co)
 
-            return StoreInfo(None,
-                             chunk_offset if byte_offset != HADDR_UNDEF else None,
+            return StoreInfo(chunk_offset if byte_offset != HADDR_UNDEF else None,
                              filter_mask,
                              byte_offset if byte_offset != HADDR_UNDEF else None,
                              size)

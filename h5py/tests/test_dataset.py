@@ -1279,14 +1279,12 @@ def test_get_chunk_details():
             offset = tuple(np.array(np.unravel_index(j, (10, 10))) * 10)
 
             si = ds.get_chunk_info(j)
-            assert si.index == j
             assert si.chunk_offset == offset
             assert si.filter_mask == 0
             assert si.byte_offset is not None
             assert si.size > 0
 
         si = ds.get_chunk_info_by_coord((0, 0))
-        assert si.index is None
         assert si.chunk_offset == (0, 0)
         assert si.filter_mask == 0
         assert si.byte_offset is not None
