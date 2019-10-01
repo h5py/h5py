@@ -56,7 +56,8 @@ class Line(object):
 
     PATTERN = re.compile("""(?P<mpi>(MPI)[ ]+)?
                             (?P<error>(ERROR)[ ]+)?
-                            (?P<version>([0-9]+\.[0-9]+\.[0-9]+))?
+                            (?P<min_version>([0-9]+\.[0-9]+\.[0-9]+))?
+                            (-(?P<max_version>([0-9]+\.[0-9]+\.[0-9]+)))?
                             ([ ]+)?
                             (?P<code>(unsigned[ ]+)?[a-zA-Z_]+[a-zA-Z0-9_]*\**)[ ]+
                             (?P<fname>[a-zA-Z_]+[a-zA-Z0-9_]*)[ ]*
@@ -84,9 +85,12 @@ class Line(object):
 
         self.mpi = parts['mpi'] is not None
         self.error = parts['error'] is not None
-        self.version = parts['version']
-        if self.version is not None:
-            self.version = tuple(int(x) for x in self.version.split('.'))
+        self.min_version = parts['min_version']
+        if self.min_version is not None:
+            self.min_version = tuple(int(x) for x in self.min_version.split('.'))
+        self.max_version = parts['max_version']
+        if self.max_version is not None:
+            self.max_version = tuple(int(x) for x in self.max_version.split('.'))
         self.code = parts['code']
         self.fname = parts['fname']
         self.sig = parts['sig']
@@ -191,8 +195,13 @@ class LineProcessor(object):
 
         if self.line.mpi:
             block = wrapif('MPI', block)
-        if self.line.version is not None:
-            block = wrapif('HDF5_VERSION >= {0.version}'.format(self.line), block)
+
+        if self.line.min_version is not None and self.line.max_version is not None:
+            block = wrapif('HDF5_VERSION >= {0.min_version} and HDF5_VERSION <= {0.max_version}'.format(self.line), block)
+        elif self.line.min_version is not None:
+            block = wrapif('HDF5_VERSION >= {0.min_version}'.format(self.line), block)
+        elif self.line.max_version is not None:
+            block = wrapif('HDF5_VERSION <= {0.max_version}'.format(self.line), block)
 
         return block
 

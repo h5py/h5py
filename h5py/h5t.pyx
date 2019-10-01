@@ -1104,7 +1104,10 @@ cdef class TypeCompositeID(TypeID):
             assert name != NULL
             pyname = <bytes>name
         finally:
-            free(name)
+            IF HDF5_VERSION >= (1, 8, 13):
+                H5free_memory(name)
+            ELSE:
+                free(name)
 
         return pyname
 

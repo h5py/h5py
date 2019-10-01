@@ -1,4 +1,3 @@
-include ANN.rst
 include AUTHORS
 include api_gen.py
 include LICENSE

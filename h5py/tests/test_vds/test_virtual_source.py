@@ -134,6 +134,14 @@ class TestVirtualSource(ut.TestCase):
         sliced = dataset[0:1,...,5:6]
         self.assertEqual((1,)+dataset.shape[1:-1]+(1,),sliced.shape)
 
+    def test_integer_shape(self):
+        dataset = h5.VirtualSource('test','test', 20)
+        self.assertEqual(dataset.shape, (20,))
+
+    def test_integer_maxshape(self):
+        dataset = h5.VirtualSource('test','test', 20, maxshape=30)
+        self.assertEqual(dataset.maxshape, (30,))
+
     def test_extra_args(self):
         with h5.File(name='f1', driver='core',
                      backing_store=False, mode='w') as ftest:

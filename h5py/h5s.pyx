@@ -163,16 +163,21 @@ cdef class SpaceID(ObjectID):
         cdef void* buf = NULL
         cdef size_t nalloc = 0
 
-        H5Sencode(self.id, NULL, &nalloc)
+        IF HDF5_VERSION < VOL_MIN_HDF5_VERSION:
+           H5Sencode(self.id, NULL, &nalloc)
+        ELSE:
+           H5Sencode1(self.id, NULL, &nalloc)
         buf = emalloc(nalloc)
         try:
-            H5Sencode(self.id, buf, &nalloc)
+            IF HDF5_VERSION < VOL_MIN_HDF5_VERSION:
+                H5Sencode(self.id, buf, &nalloc)
+            ELSE:
+                H5Sencode1(self.id, buf, &nalloc)
             pystr = PyBytes_FromStringAndSize(<char*>buf, nalloc)
         finally:
             efree(buf)
 
         return pystr
-
 
     def __reduce__(self):
         with phil:

@@ -38,9 +38,13 @@ VSVERSION_TO_GENERATOR = {
     "9": "Visual Studio 9 2008",
     "10": "Visual Studio 10 2010",
     "14": "Visual Studio 14 2015",
+    "15": "Visual Studio 15 2017",
+    "16": "Visual Studio 16 2019",
     "9-64": "Visual Studio 9 2008 Win64",
     "10-64": "Visual Studio 10 2010 Win64",
     "14-64": "Visual Studio 14 2015 Win64",
+    "15-64": "Visual Studio 15 2017 Win64",
+    "16-64": "Visual Studio 16 2019 Win64",
 }
 
 

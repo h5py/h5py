@@ -186,6 +186,7 @@ DEF MPI4PY_V2 = %(mpi4py_v2)s
 DEF HDF5_VERSION = %(version)s
 DEF SWMR_MIN_HDF5_VERSION = (1,9,178)
 DEF VDS_MIN_HDF5_VERSION = (1,9,233)
+DEF VOL_MIN_HDF5_VERSION = (1,11,5)
 DEF COMPLEX256_SUPPORT = %(complex256_support)s
 """
                 s %= {

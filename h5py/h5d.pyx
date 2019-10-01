@@ -14,11 +14,13 @@
 include "config.pxi"
 
 # Compile-time imports
+
+from collections import namedtuple
 from ._objects cimport pdefault
 from .numpy cimport ndarray, import_array, PyArray_DATA, NPY_WRITEABLE
 from cpython cimport array
 from .utils cimport  check_numpy_read, check_numpy_write, \
-                     convert_tuple, emalloc, efree
+                     convert_tuple, convert_dims, emalloc, efree
 from .h5t cimport TypeID, typewrap, py_create
 from .h5s cimport SpaceID
 from .h5p cimport PropID, propwrap
@@ -58,29 +60,34 @@ IF HDF5_VERSION >= VDS_MIN_HDF5_VERSION:
     VDS_FIRST_MISSING   = H5D_VDS_FIRST_MISSING
     VDS_LAST_AVAILABLE  = H5D_VDS_LAST_AVAILABLE
 
+IF HDF5_VERSION >= (1, 10, 5):
+    StoreInfo = namedtuple('StoreInfo',
+                           'chunk_offset, filter_mask, byte_offset, size')
+
 # === Dataset operations ======================================================
 
 @with_phil
 def create(ObjectID loc not None, object name, TypeID tid not None,
-               SpaceID space not None, PropID dcpl=None, PropID lcpl=None, PropID dapl = None):
-        """ (objectID loc, STRING name or None, TypeID tid, SpaceID space,
-             PropDCID dcpl=None, PropID lcpl=None) => DatasetID
+           SpaceID space not None, PropID dcpl=None, PropID lcpl=None,
+           PropID dapl = None):
+    """ (objectID loc, STRING name or None, TypeID tid, SpaceID space,
+         PropDCID dcpl=None, PropID lcpl=None) => DatasetID
 
-        Create a new dataset.  If "name" is None, the dataset will be
-        anonymous.
-        """
-        cdef hid_t dsid
-        cdef char* cname = NULL
-        if name is not None:
-            cname = name
+    Create a new dataset.  If "name" is None, the dataset will be
+    anonymous.
+    """
+    cdef hid_t dsid
+    cdef char* cname = NULL
+    if name is not None:
+        cname = name
 
-        if cname != NULL:
-            dsid = H5Dcreate2(loc.id, cname, tid.id, space.id,
-                     pdefault(lcpl), pdefault(dcpl), pdefault(dapl))
-        else:
-            dsid = H5Dcreate_anon(loc.id, tid.id, space.id,
-                     pdefault(dcpl), pdefault(dapl))
-        return DatasetID(dsid)
+    if cname != NULL:
+        dsid = H5Dcreate2(loc.id, cname, tid.id, space.id,
+                 pdefault(lcpl), pdefault(dcpl), pdefault(dapl))
+    else:
+        dsid = H5Dcreate_anon(loc.id, tid.id, space.id,
+                 pdefault(dcpl), pdefault(dapl))
+    return DatasetID(dsid)
 
 @with_phil
 def open(ObjectID loc not None, char* name, PropID dapl=None):
@@ -145,8 +152,8 @@ cdef class DatasetID(ObjectID):
 
     @with_phil
     def read(self, SpaceID mspace not None, SpaceID fspace not None,
-                   ndarray arr_obj not None, TypeID mtype=None,
-                   PropID dxpl=None):
+             ndarray arr_obj not None, TypeID mtype=None,
+             PropID dxpl=None):
         """ (SpaceID mspace, SpaceID fspace, NDARRAY arr_obj,
              TypeID mtype=None, PropDXID dxpl=None)
 
@@ -185,8 +192,8 @@ cdef class DatasetID(ObjectID):
 
     @with_phil
     def write(self, SpaceID mspace not None, SpaceID fspace not None,
-                    ndarray arr_obj not None, TypeID mtype=None,
-                    PropID dxpl=None):
+              ndarray arr_obj not None, TypeID mtype=None,
+              PropID dxpl=None):
         """ (SpaceID mspace, SpaceID fspace, NDARRAY arr_obj,
              TypeID mtype=None, PropDXID dxpl=None)
 
@@ -498,3 +505,89 @@ cdef class DatasetID(ObjectID):
                     H5Sclose(space_id)
 
             return filters, bytes(data)
+
+    IF HDF5_VERSION >= (1, 10, 5):
+
+        @with_phil
+        def get_num_chunks(self, SpaceID space=None):
+            """ (SpaceID space=None) => INT num_chunks
+
+            Retrieve the number of chunks that have nonempty intersection with a
+            specified dataspace. Currently, this function only gets the number
+            of all written chunks, regardless of the dataspace.
+
+            Feature requires: 1.10.5 HDF5
+            """
+            cdef hsize_t num_chunks
+
+            if space is None:
+                space = self.get_space()
+            H5Dget_num_chunks(self.id, space.id, &num_chunks)
+            return num_chunks
+
+        @with_phil
+        def get_chunk_info(self, hsize_t index, SpaceID space=None):
+            """ (hsize_t index, SpaceID space=None) => StoreInfo
+
+            Retrieve storage information about a chunk specified by its index.
+
+            Feature requires: 1.10.5 HDF5
+            """
+            cdef haddr_t byte_offset
+            cdef hsize_t size
+            cdef hsize_t *chunk_offset
+            cdef unsigned filter_mask
+            cdef hid_t space_id = 0
+            cdef int rank
+
+            if space is None:
+                space_id = H5Dget_space(self.id)
+            else:
+                space_id = space.id
+
+            rank = H5Sget_simple_extent_ndims(space_id)
+            chunk_offset = <hsize_t*>emalloc(sizeof(hsize_t) * rank)
+            H5Dget_chunk_info(self.id, space_id, index, chunk_offset,
+                              &filter_mask, &byte_offset, &size)
+            cdef tuple cot = convert_dims(chunk_offset, <hsize_t>rank)
+            efree(chunk_offset)
+
+            if space is None:
+                H5Sclose(space_id)
+
+            return StoreInfo(cot if byte_offset != HADDR_UNDEF else None,
+                             filter_mask,
+                             byte_offset if byte_offset != HADDR_UNDEF else None,
+                             size)
+
+
+        @with_phil
+        def get_chunk_info_by_coord(self, tuple chunk_offset not None):
+            """ (TUPLE chunk_offset) => StoreInfo
+
+            Retrieve information about a chunk specified by the array
+            address of the chunk’s first element in each dimension.
+
+            Feature requires: 1.10.5 HDF5
+            """
+            cdef haddr_t byte_offset
+            cdef hsize_t size
+            cdef unsigned filter_mask
+            cdef hid_t space_id = 0
+            cdef int rank
+            cdef hsize_t *co = NULL
+
+            space_id = H5Dget_space(self.id)
+            rank = H5Sget_simple_extent_ndims(space_id)
+            H5Sclose(space_id)
+            co = <hsize_t*>emalloc(sizeof(hsize_t) * rank)
+            convert_tuple(chunk_offset, co, rank)
+            H5Dget_chunk_info_by_coord(self.id, co,
+                                       &filter_mask, &byte_offset,
+                                       &size)
+            efree(co)
+
+            return StoreInfo(chunk_offset if byte_offset != HADDR_UNDEF else None,
+                             filter_mask,
+                             byte_offset if byte_offset != HADDR_UNDEF else None,
+                             size)
