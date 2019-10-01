@@ -22,13 +22,16 @@ use.  However, there is obviously no concept of "text" vs "binary" mode.
 The file name may be a byte string or unicode string. Valid modes are:
 
     ========  ================================================
-     r        Readonly, file must exist
+     r        Readonly, file must exist (default)
      r+       Read/write, file must exist
      w        Create file, truncate if exists
      w- or x  Create file, fail if exists
-     a        Read/write if exists, create otherwise (default)
+     a        Read/write if exists, create otherwise
     ========  ================================================
 
+.. versionchanged:: 3.0
+   Files are now opened read-only by default. Earlier versions of h5py would
+   pick different modes depending on the presence and permissions of the file.
 
 .. _file_driver:
 

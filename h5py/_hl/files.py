@@ -185,23 +185,6 @@ def make_fid(name, mode, userblock_size, fapl, fcpl=None, swmr=False):
             fid = h5f.open(name, h5f.ACC_RDWR, fapl=fapl)
         except IOError:
             fid = h5f.create(name, h5f.ACC_EXCL, fapl=fapl, fcpl=fcpl)
-    elif mode is None:
-        warn("The default file mode will change to 'r' (read-only) in h5py 3.0. "
-             "To suppress this warning, pass the mode you need to h5py.File(), "
-             "or set the global default h5.get_config().default_file_mode, "
-             "or set the environment variable H5PY_DEFAULT_READONLY=1. "
-             "Available modes are: 'r', 'r+', 'w', 'w-'/'x', 'a'. "
-             "See the docs for details.", H5pyDeprecationWarning, stacklevel=3)
-        # Try to open in append mode (read/write).
-        # If that fails, try readonly, and finally create a new file only
-        # if it won't clobber an existing file (ACC_EXCL).
-        try:
-            fid = h5f.open(name, h5f.ACC_RDWR, fapl=fapl)
-        except IOError:
-            try:
-                fid = h5f.open(name, h5f.ACC_RDONLY, fapl=fapl)
-            except IOError:
-                fid = h5f.create(name, h5f.ACC_EXCL, fapl=fapl, fcpl=fcpl)
     else:
         raise ValueError("Invalid mode; must be one of r, r+, w, w-, x, a")
 
@@ -327,11 +310,11 @@ class File(Group):
             created with the 'core' driver, HDF5 still requires this be
             non-empty.
         mode
-            r        Readonly, file must exist
+            r        Readonly, file must exist (default)
             r+       Read/write, file must exist
             w        Create file, truncate if exists
             w- or x  Create file, fail if exists
-            a        Read/write if exists, create otherwise (default)
+            a        Read/write if exists, create otherwise
         driver
             Name of the driver to use.  Legal values are None (default,
             recommended), 'core', 'sec2', 'stdio', 'mpio'.
@@ -397,9 +380,7 @@ class File(Group):
             if track_order is None:
                 track_order = h5.get_config().track_order
             if mode is None:
-                mode = h5.get_config().default_file_mode
-                if mode is None and os.environ.get('H5PY_DEFAULT_READONLY', ''):
-                    mode = 'r'
+                mode = h5.get_config().default_file_mode  # default: 'r'
 
             with phil:
                 fapl = make_fapl(driver, libver, rdcc_nslots, rdcc_nbytes, rdcc_w0, **kwds)

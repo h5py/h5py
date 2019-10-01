@@ -40,32 +40,32 @@ class TestFileOpen(TestCase):
         """ Default semantics in the presence or absence of a file """
         fname = self.mktemp()
 
-        # No existing file; create a new file and open RW
-        with pytest.warns(H5pyDeprecationWarning):
-            with File(fname) as f:
-                self.assertTrue(f)
-                self.assertEqual(f.mode, 'r+')
+        # No existing file; error
+        with pytest.raises(OSError):
+            with File(fname):
+                pass
+
 
         # Existing readonly file; open read-only
+        with File(fname, 'w'):
+            pass
         os.chmod(fname, stat.S_IREAD)
         # Running as root (e.g. in a docker container) gives 'r+' as the file
         # mode, even for a read-only file.  See
         # https://github.com/h5py/h5py/issues/696
         exp_mode = 'r+' if os.stat(fname).st_uid == 0 and platform != "win32" else 'r'
         try:
-            with pytest.warns(H5pyDeprecationWarning):
-                with File(fname) as f:
-                    self.assertTrue(f)
-                    self.assertEqual(f.mode, exp_mode)
+            with File(fname) as f:
+                self.assertTrue(f)
+                self.assertEqual(f.mode, exp_mode)
         finally:
             os.chmod(fname, stat.S_IWRITE)
 
         # File exists but is not HDF5; raise IOError
         with open(fname, 'wb') as f:
             f.write(b'\x00')
-        with pytest.warns(H5pyDeprecationWarning):
-            with self.assertRaises(IOError):
-                File(fname)
+        with self.assertRaises(IOError):
+            File(fname)
 
     def test_create(self):
         """ Mode 'w' opens file in overwrite mode """
