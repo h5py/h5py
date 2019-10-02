@@ -108,12 +108,15 @@ def fill_dcpl(plist, shape, dtype, chunks, compression, compression_opts,
     Undocumented and subject to change without warning.
     """
 
-    if shape == ():
+    if shape is None or shape == ():
+        shapetype = 'Empty' if shape is None else 'Scalar'
         if any((chunks, compression, compression_opts, shuffle, fletcher32,
                 scaleoffset is not None)):
-            raise TypeError("Scalar datasets don't support chunk/filter options")
+            raise TypeError(
+                f"{shapetype} datasets don't support chunk/filter options"
+            )
         if maxshape and maxshape != ():
-            raise TypeError("Scalar datasets cannot be extended")
+            raise TypeError(f"{shapetype} datasets cannot be extended")
         return h5p.create(h5p.DATASET_CREATE)
 
     def rq_tuple(tpl, name):
