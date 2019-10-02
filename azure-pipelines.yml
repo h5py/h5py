@@ -13,77 +13,35 @@ jobs:
   strategy:
     matrix:
     # system independent tests
-      docs:
-        TOXENV: docs
+      static-checks:
+        TOXENV: docs,check-manifest,checkreadme,pre-commit
         python.version: '3.6'
-      check-manifest:
-        TOXENV: check-manifest
+      # -deps : test with default (latest) versions of dependencies
+      # -mindeps : test with oldest supported version of (python) dependencies
+      # -deps-pre : test pre-release versions of (python) dependencies)
+      # -tables : also check compatibility with pytables
+      py36:
         python.version: '3.6'
-      checkreadme:
-        TOXENV: checkreadme
-        python.version: '3.6'
-      pre-commit:
-        TOXENV: pre-commit
-        python.version: '3.6'
-    # default tests against supported python version
-      py36-deps:
-        python.version: '3.6'
-        TOXENV: py36-test-deps
-      py37-deps:
+        TOXENV: py36-test-deps,py36-test-mindeps,py36-test-deps-pre,py36-test-mindeps-tables
+      py37:
         python.version: '3.7'
-        TOXENV: py37-test-deps
-    # test minimum versions of (python) deps
-      py36-mindeps:
-        python.version: '3.6'
-        TOXENV: py36-test-mindeps
-      py37-mindeps:
-        python.version: '3.7'
-        TOXENV: py37-test-mindeps
-    # test pre-release versions of (python) deps
-      py36-deps-pre:
-        python.version: '3.6'
-        TOXENV: py36-test-deps-pre
-      py37-deps-pre:
-        python.version: '3.7'
-        TOXENV: py37-test-deps-pre
+        TOXENV: py37-test-deps,py37-test-mindeps,py37-test-deps-pre,py37-test-deps-tables
     # test against newer HDF5
       py36-deps-hdf51103:
         python.version: '3.6'
         TOXENV: py36-test-deps
         HDF5_VERSION: 1.10.3
         HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
-      py37-deps-hdf51103:
-        python.version: '3.7'
-        TOXENV: py37-test-deps
-        HDF5_VERSION: 1.10.3
-        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
-      py36-deps-hdf51104:
-        python.version: '3.6'
-        TOXENV: py36-test-deps
-        HDF5_VERSION: 1.10.4
-        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
       py37-deps-hdf51104:
         python.version: '3.7'
         TOXENV: py37-test-deps
         HDF5_VERSION: 1.10.4
-        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
-      py36-deps-hdf51105:
-        python.version: '3.6'
-        TOXENV: py36-test-deps
-        HDF5_VERSION: 1.10.5
         HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
       py37-deps-hdf51105:
         python.version: '3.7'
         TOXENV: py37-test-deps
         HDF5_VERSION: 1.10.5
         HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
-    # test pytables compat tests
-      py36-mindeps-tables:
-        python.version: '3.6'
-        TOXENV: py36-test-mindeps-tables
-      py37-mindeps-tables:
-        python.version: '3.7'
-        TOXENV: py37-test-mindeps-tables
     # do mpi tests
 #      py36-deps-hdf51105-mpi:
 #        python.version: '3.6'
@@ -113,42 +71,18 @@ jobs:
     vmImage: vs2017-win2016
   strategy:
     matrix:
-    # default tests against supported python version
-      py36-deps:
+    # -deps : test with default (latest) versions of dependencies
+    # -mindeps : test with oldest supported version of (python) dependencies
+    # -deps-pre : test pre-release versions of (python) dependencies)
+      py36:
         python.version: '3.6'
-        TOXENV: py36-test-deps
+        TOXENV: py36-test-deps,py36-test-mindeps,py36-test-deps-pre
         HDF5_VERSION: 1.10.1
         HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
         HDF5_VSVERSION: "15-64"
-      py37-deps:
+      py37:
         python.version: '3.7'
-        TOXENV: py37-test-deps
-        HDF5_VERSION: 1.10.1
-        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
-        HDF5_VSVERSION: "15-64"
-    # test minimum versions of (python) deps
-      py36-mindeps:
-        python.version: '3.6'
-        TOXENV: py36-test-mindeps
-        HDF5_VERSION: 1.10.1
-        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
-        HDF5_VSVERSION: "15-64"
-      py37-mindeps:
-        python.version: '3.7'
-        TOXENV: py37-test-mindeps
-        HDF5_VERSION: 1.10.1
-        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
-        HDF5_VSVERSION: "15-64"
-    # test pre-release versions of (python) deps
-      py36-deps-pre:
-        python.version: '3.6'
-        TOXENV: py36-test-deps-pre
-        HDF5_VERSION: 1.10.1
-        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
-        HDF5_VSVERSION: "15-64"
-      py37-deps-pre:
-        python.version: '3.7'
-        TOXENV: py37-test-deps-pre
+        TOXENV: py37-test-deps,py37-test-mindeps,py37-test-deps-pre
         HDF5_VERSION: 1.10.1
         HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
         HDF5_VSVERSION: "15-64"
@@ -166,27 +100,15 @@ jobs:
     vmImage: xcode9-macos10.13
   strategy:
     matrix:
-    # default tests against supported python version
-      py36-deps:
+      # -deps : test with default (latest) versions of dependencies
+      # -mindeps : test with oldest supported version of (python) dependencies
+      # -deps-pre : test pre-release versions of (python) dependencies)
+      py36:
         python.version: '3.6'
-        TOXENV: py36-test-deps
-      py37-deps:
+        TOXENV: py36-test-deps,py36-test-mindeps,py36-test-deps-pre
+      py37:
         python.version: '3.7'
-        TOXENV: py37-test-deps
-    # test minimum versions of (python) deps
-      py36-mindeps:
-        python.version: '3.6'
-        TOXENV: py36-test-mindeps
-      py37-mindeps:
-        python.version: '3.7'
-        TOXENV: py37-test-mindeps
-    # test pre-release versions of (python) deps
-      py36-deps-pre:
-        python.version: '3.6'
-        TOXENV: py36-test-deps-pre
-      py37-deps-pre:
-        python.version: '3.7'
-        TOXENV: py37-test-deps-pre
+        TOXENV: py37-test-deps,py37-test-mindeps,py37-test-deps-pre
     # test against newer HDF5
 #      py36-deps-hdf51103:
 #        python.version: '3.6'

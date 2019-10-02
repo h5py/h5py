@@ -63,5 +63,5 @@ steps:
   displayName: 'tox'
 
 - script: |
-    codecov
+    codecov -t 813fb6da-087d-4b36-a185-5a530cab3455
   displayName: 'codecov'
