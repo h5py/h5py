@@ -29,7 +29,6 @@ from .utils cimport  emalloc, efree, \
 import codecs
 from collections import namedtuple
 import sys
-import operator
 from .h5 import get_config
 import numpy as np
 from ._objects import phil, with_phil
