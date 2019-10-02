@@ -62,7 +62,7 @@ jobs:
   steps:
     - template: ci/azure-pipelines-steps.yml
       parameters:
-        platform: ubuntu
+        vmImage: 'ubuntu-16.04'
         installer: apt
         shell: unix
 
@@ -91,7 +91,7 @@ jobs:
   steps:
     - template: ci/azure-pipelines-steps.yml
       parameters:
-        platform: windows
+        vmImage: 'vs2017-win2016'
         installer: nuget
         shell: cmd
 
@@ -145,6 +145,6 @@ jobs:
   steps:
     - template: ci/azure-pipelines-steps.yml
       parameters:
-        platform: macos
+        vmImage: 'xcode9-macos10.13'
         installer: brew
         shell: unix

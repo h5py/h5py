@@ -3,6 +3,15 @@ parameters:
   installer: none
 
 steps:
+- task: CacheBeta@0
+  displayName: HDF5 cache
+  inputs:
+    # The key should specify enough to avoid restoring an incompatible build.
+    # HDF5_VSVERSION is only for Windows - it's just a fixed string elsewhere.
+    key: HDF5 | "$(Agent.OS)" | "${{ parameters.vmImage }}" | "$(HDF5_VERSION)" | "$(HDF5_VSVERSION)"
+    path: $(HDF5_CACHE_DIR)
+  condition: and(succeeded(), ne(variables['HDF5_VERSION'], ''))
+
 - task: UsePythonVersion@0
   inputs:
     versionSpec: '$(python.version)'
