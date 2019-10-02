@@ -6,7 +6,7 @@ steps:
 - task: CacheBeta@0
   displayName: HDF5 cache
   inputs:
-    key: HDF5 | $(Agent.OS) | $(System.JobName) | $(HDF5_VERSION)
+    key: HDF5 | "$(Agent.OS)" | "$(System.JobName)" | "$(HDF5_VERSION)"
     path: $(HDF5_CACHE_DIR)
   condition: and(succeeded(), ne(variables['HDF5_VERSION'], ''))
 
