@@ -284,6 +284,9 @@ class TestCreateChunked(BaseDataset):
         with pytest.raises(TypeError, match='Empty') as err:
             self.f.create_dataset('foo', dtype='S100', chunks=True)
 
+        with pytest.raises(TypeError, match='Empty') as err:
+            self.f.create_dataset('foo', dtype='S100', maxshape=20)
+
 
 class TestCreateFillvalue(BaseDataset):
 
