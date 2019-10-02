@@ -1,4 +1,5 @@
-# This file is part of h5py, a Python interface to the HDF5 library.
+# cython: language_level=3
+## This file is part of h5py, a Python interface to the HDF5 library.
 #
 # http://www.h5py.org
 #
@@ -13,18 +14,19 @@
 include "config.pxi"
 
 # Compile-time imports
-from _objects cimport pdefault
-from collections import namedtuple
-from numpy cimport ndarray, import_array, PyArray_DATA, NPY_WRITEABLE
-from cpython cimport array
-from utils cimport  check_numpy_read, check_numpy_write, \
-                    convert_tuple, convert_dims, emalloc, efree
-from h5t cimport TypeID, typewrap, py_create
-from h5s cimport SpaceID
-from h5p cimport PropID, propwrap
-from _proxy cimport dset_rw
 
-from h5py import _objects
+from collections import namedtuple
+from ._objects cimport pdefault
+from .numpy cimport ndarray, import_array, PyArray_DATA, NPY_WRITEABLE
+from cpython cimport array
+from .utils cimport  check_numpy_read, check_numpy_write, \
+                     convert_tuple, convert_dims, emalloc, efree
+from .h5t cimport TypeID, typewrap, py_create
+from .h5s cimport SpaceID
+from .h5p cimport PropID, propwrap
+from ._proxy cimport dset_rw
+
+from . import _objects
 from ._objects import phil, with_phil
 
 # Initialization

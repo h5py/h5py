@@ -1,3 +1,4 @@
+# cython: language_level=3
 # This file is part of h5py, a Python interface to the HDF5 library.
 #
 # http://www.h5py.org
@@ -9,7 +10,7 @@
 
 include "config.pxi"
 
-from defs cimport *
+from .defs cimport *
 from ._objects import phil, with_phil
 
 ITER_INC    = H5_ITER_INC     # Increasing order
@@ -20,6 +21,7 @@ INDEX_NAME      = H5_INDEX_NAME       # Index on names
 INDEX_CRT_ORDER = H5_INDEX_CRT_ORDER  # Index on creation order
 
 HDF5_VERSION_COMPILED_AGAINST = HDF5_VERSION
+
 
 class ByteStringContext(object):
 
@@ -37,6 +39,7 @@ class ByteStringContext(object):
 
     def __exit__(self, *args):
         self._readbytes = False
+
 
 cdef class H5PYConfig:
 
@@ -85,7 +88,8 @@ cdef class H5PYConfig:
                     else:
                         return bytes(val)
                 try:
-                    if len(val) != 2: raise TypeError()
+                    if len(val) != 2:
+                        raise TypeError()
                     r = handle_val(val[0])
                     i = handle_val(val[1])
                 except Exception:

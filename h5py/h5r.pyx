@@ -1,3 +1,4 @@
+# cython: language_level=3
 # This file is part of h5py, a Python interface to the HDF5 library.
 #
 # http://www.h5py.org
@@ -11,9 +12,10 @@
     H5R API for object and region references.
 """
 
-# Pyrex compile-time imports
-from _objects cimport ObjectID
+# Cython C-level imports
+from ._objects cimport ObjectID
 
+#Python level imports
 from ._objects import phil, with_phil
 
 
@@ -74,7 +76,7 @@ def dereference(Reference ref not None, ObjectID id not None):
 
     The reference may be either Reference or RegionReference.
     """
-    import h5i
+    from . import h5i
     if not ref:
         return None
     return h5i.wrap_identifier(H5Rdereference(id.id, <H5R_type_t>ref.typecode, &ref.ref))
@@ -93,7 +95,7 @@ def get_region(RegionReference ref not None, ObjectID id not None):
     The reference object must be a RegionReference.  If it is zero-filled,
     returns None.
     """
-    import h5s
+    from . import h5s
     if ref.typecode != H5R_DATASET_REGION or not ref:
         return None
     return h5s.SpaceID(H5Rget_region(id.id, <H5R_type_t>ref.typecode, &ref.ref))
@@ -155,6 +157,11 @@ cdef class Reference:
         The object's truth value indicates whether it contains a nonzero
         reference.  This does not guarantee that is valid, but is useful
         for rejecting "background" elements in a dataset.
+
+        Defined attributes:
+          cdef ref_u ref
+          cdef readonly int typecode
+          cdef readonly size_t typesize
     """
 
     def __cinit__(self, *args, **kwds):

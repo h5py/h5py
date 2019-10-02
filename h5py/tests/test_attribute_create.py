@@ -12,7 +12,7 @@
 """
 
 import numpy as np
-import h5py
+from .. import h5t, h5a
 
 from .common import ut, TestCase
 
@@ -30,10 +30,10 @@ class TestArray(TestCase):
 
         self.f.attrs.create('x', data=data, dtype=dt)
 
-        aid = h5py.h5a.open(self.f.id, b'x')
+        aid = h5a.open(self.f.id, b'x')
 
         htype = aid.get_type()
-        self.assertEqual(htype.get_class(), h5py.h5t.ARRAY)
+        self.assertEqual(htype.get_class(), h5t.ARRAY)
 
         out = self.f.attrs['x']
 
