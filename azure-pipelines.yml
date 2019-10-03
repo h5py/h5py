@@ -74,13 +74,28 @@ jobs:
     # -deps : test with default (latest) versions of dependencies
     # -mindeps : test with oldest supported version of (python) dependencies
     # -deps-pre : test pre-release versions of (python) dependencies)
-      py36:
+    #
+    # 64 bit - HDF5 1.8
+      py36-hdf518:
+        python.version: '3.6'
+        TOXENV: py36-test-deps,py36-test-mindeps,py36-test-deps-pre
+        HDF5_VERSION: 1.8.17
+        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
+        HDF5_VSVERSION: "15-64"
+      py37-hdf518:
+        python.version: '3.7'
+        TOXENV: py37-test-deps,py37-test-mindeps,py37-test-deps-pre
+        HDF5_VERSION: 1.8.17
+        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
+        HDF5_VSVERSION: "15-64"
+    # 64 bit - HDF5 1.10
+      py36-hdf5110:
         python.version: '3.6'
         TOXENV: py36-test-deps,py36-test-mindeps,py36-test-deps-pre
         HDF5_VERSION: 1.10.1
         HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
         HDF5_VSVERSION: "15-64"
-      py37:
+      py37-hdf5110:
         python.version: '3.7'
         TOXENV: py37-test-deps,py37-test-mindeps,py37-test-deps-pre
         HDF5_VERSION: 1.10.1
