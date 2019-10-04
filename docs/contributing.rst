@@ -134,6 +134,15 @@ You can implement the feature as a number of small changes, or as one big
 commit; there's no project policy.  Double-check to make sure you've
 included all your files; run ``git status`` and check the output.
 
+Write a release note
+~~~~~~~~~~~~~~~~~~~~
+
+In the ``news/`` folder, make a copy of ``TEMPLATE.rst`` named after your branch.
+Edit the new file, adding a sentence or two about what you've added or fixed.
+Commit this to git too. These files will be used to make the release notes.
+
+You don't need this if your change doesn't affect people building and using h5py,
+e.g. fixing a typo.
 
 Push your changes back and open a pull request
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
