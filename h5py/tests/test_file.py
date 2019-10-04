@@ -641,19 +641,6 @@ class TestFilename(TestCase):
             fid.close()
 
 
-class TestBackwardsCompat(TestCase):
-
-    """
-        Feature: Deprecated attributes are included to support 1.3 code
-    """
-
-    def test_fid(self):
-        """ File objects provide a .fid attribute aliased to the file ID """
-        with pytest.warns(H5pyDeprecationWarning):
-            with File(self.mktemp(), 'w') as hfile:
-                self.assertIs(hfile.fid, hfile.id)
-
-
 class TestCloseInvalidatesOpenObjectIDs(TestCase):
 
     """

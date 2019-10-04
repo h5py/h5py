@@ -244,14 +244,6 @@ class File(Group):
 
     @property
     @with_phil
-    def fid(self):
-        """File ID (backwards compatibility) """
-        warn("File.fid has been deprecated. "
-            "Use File.id instead.", H5pyDeprecationWarning, stacklevel=2)
-        return self.id
-
-    @property
-    @with_phil
     def libver(self):
         """File format version bounds (2-tuple: low, high)"""
         bounds = self.id.get_access_plist().get_libver_bounds()
