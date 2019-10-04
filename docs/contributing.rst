@@ -134,6 +134,18 @@ You can implement the feature as a number of small changes, or as one big
 commit; there's no project policy.  Double-check to make sure you've
 included all your files; run ``git status`` and check the output.
 
+Run the tests
+~~~~~~~~~~~~~
+
+The easiest way to run the tests is with
+`tox <https://tox.readthedocs.io/en/latest/>`_::
+
+    pip install tox  # Get tox
+
+    tox -e py37-deps  # Run tests in one environment
+    tox               # Run tests in all possible environments
+    tox -a            # List defined environments
+
 Write a release note
 ~~~~~~~~~~~~~~~~~~~~
 
