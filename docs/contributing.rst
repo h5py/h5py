@@ -142,9 +142,9 @@ The easiest way to run the tests is with
 
     pip install tox  # Get tox
 
-    tox -e py37-deps  # Run tests in one environment
-    tox               # Run tests in all possible environments
-    tox -a            # List defined environments
+    tox -e py37-test-deps  # Run tests in one environment
+    tox                    # Run tests in all possible environments
+    tox -a                 # List defined environments
 
 Write a release note
 ~~~~~~~~~~~~~~~~~~~~
