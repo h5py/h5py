@@ -9,6 +9,8 @@ addons:
   apt:
     packages:
       - libhdf5-serial-dev
+      - dh-autoreconf
+      - libtool-bin
 
 cache:
   directories:
@@ -119,9 +121,25 @@ matrix:
     - python: pypy3
       env:
       - TOXENV=pypy3-test-deps
+
+    # Development versions of HDF5
+    - python: 3.7
+      env:
+        - TOXENV=py37-test-deps
+        - HDF5_BRANCH=develop
+        - HDF5_DIR=$HDF5_CACHE_DIR/DEV/$HDF5_BRANCH
+      install:
+        - pip install tox codecov
+        - ci/travis/get_dev_hdf5.sh
+        - ls -lRa $HDF5_CACHE_DIR
   allow_failures:
     - python: pypy3
     - python: 'nightly'
+    - python: 3.7
+      env:
+        - TOXENV=py37-test-deps
+        - HDF5_BRANCH=develop
+        - HDF5_DIR=$HDF5_CACHE_DIR/DEV/$HDF5_BRANCH
 
 before_install:
   # - export PATH=/usr/lib/ccache:$PATH
