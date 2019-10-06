@@ -2,6 +2,7 @@
 environment:
   HDF5_VERSION: "1.8.17"
   TOX_TESTENV_PASSENV: "HDF5_DIR"
+  H5PY_ENFORCE_COVERAGE: "YES"
 
   matrix:
 
@@ -68,4 +69,4 @@ cache:
   - "C:\\hdf5"
 
 on_success:
-  - "py -3.6 -m codecov"
+  - "py -3.6 ci\\upload_coverage.py"

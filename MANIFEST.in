@@ -37,6 +37,8 @@ exclude *.yaml
 recursive-exclude * __pycache__
 recursive-exclude * *.py[co]
 exclude .coveragerc
+exclude .coverage_dir
+recursive-exclude .coverage_dir *
 exclude .mailmap
 exclude github_deploy_key_h5py_h5py.enc
 
