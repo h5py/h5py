@@ -29,18 +29,10 @@ from .utils cimport  emalloc, efree, \
 import codecs
 from collections import namedtuple
 import sys
-import operator
-from warnings import warn
 from .h5 import get_config
 import numpy as np
 from ._objects import phil, with_phil
-from .h5py_warnings import H5pyDeprecationWarning
 import platform
-
-try:
-    from collections.abc import Mapping
-except ImportError:
-    from collections import Mapping
 
 
 cfg = get_config()
@@ -266,37 +258,6 @@ cdef tuple _get_available_ftypes():
     return tuple(available_ftypes)
 
 cdef tuple _available_ftypes = _get_available_ftypes()
-
-# Old code to inform about floating point changes
-class _DeprecatedMapping(Mapping):
-    """
-    Mapping class which warns when members are accessed
-    """
-    def __init__(self, mapping, message):
-        self._mapping = mapping
-        self._message = message
-
-    def __len__(self):
-        warn(self._message, H5pyDeprecationWarning)
-        return len(self._mapping)
-
-    def __iter__(self):
-        warn(self._message, H5pyDeprecationWarning)
-        return iter(self._mapping)
-
-    def __getitem__(self, key):
-        warn(self._message, H5pyDeprecationWarning)
-        return self._mapping[key]
-
-available_ftypes = dict()
-for ftype in np.typeDict.values():
-    if np.issubdtype(ftype, np.floating):
-        available_ftypes[np.dtype(ftype).itemsize] = np.finfo(ftype)
-
-available_ftypes = _DeprecatedMapping(available_ftypes,
-    ("Do not use available_ftypes, this is not part of the public API of "
-    "h5py. See https://github.com/h5py/h5py/pull/926 for details.")
-)
 
 
 cdef (int, int, int) _correct_float_info(ftype_, finfo):
