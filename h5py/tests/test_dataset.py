@@ -688,15 +688,15 @@ class TestCreateLike(TestCase):
     def test_track_times(self):
         orig = self.f.create_dataset('honda', data=np.arange(12),
                                      track_times=True)
-        self.assertNotEqual(0, h5g.get_objinfo(orig._id).mtime)
+        self.assertNotEqual(0, h5g.get_objinfo(orig.id).mtime)
         similar = self.f.create_dataset_like('hyundai', orig)
-        self.assertNotEqual(0, h5g.get_objinfo(similar._id).mtime)
+        self.assertNotEqual(0, h5g.get_objinfo(similar.id).mtime)
 
         orig = self.f.create_dataset('ibm', data=np.arange(12),
                                      track_times=False)
-        self.assertEqual(0, h5g.get_objinfo(orig._id).mtime)
+        self.assertEqual(0, h5g.get_objinfo(orig.id).mtime)
         similar = self.f.create_dataset_like('lenovo', orig)
-        self.assertEqual(0, h5g.get_objinfo(similar._id).mtime)
+        self.assertEqual(0, h5g.get_objinfo(similar.id).mtime)
 
 
 class TestResize(TestCase):
@@ -1031,7 +1031,7 @@ class TestTrackTimes(TestCase):
     def test_disable_track_times(self):
         """ check that when track_times=False, the time stamp=0 (Jan 1, 1970) """
         ds = self.f.create_dataset('foo', (4,), track_times=False)
-        ds_mtime = h5g.get_objinfo(ds._id).mtime
+        ds_mtime = h5g.get_objinfo(ds.id).mtime
         self.assertEqual(0, ds_mtime)
 
 

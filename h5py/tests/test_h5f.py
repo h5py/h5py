@@ -43,8 +43,8 @@ class TestCacheConfig(TestCase):
         fn_h5 = os.path.join(dn_tmp, 'test.h5')
         try:
             with File(fn_h5, mode='x') as f:
-                hit_rate = f._id.get_mdc_hit_rate()
-                mdc_size = f._id.get_mdc_size()
+                hit_rate = f.id.get_mdc_hit_rate()
+                mdc_size = f.id.get_mdc_size()
 
         finally:
             shutil.rmtree(dn_tmp)
@@ -54,9 +54,9 @@ class TestCacheConfig(TestCase):
         fn_h5 = os.path.join(dn_tmp, 'test.h5')
         try:
             with File(fn_h5, mode='x') as f:
-                hit_rate = f._id.get_mdc_hit_rate()
-                f._id.reset_mdc_hit_rate_stats()
-                hit_rate = f._id.get_mdc_hit_rate()
+                hit_rate = f.id.get_mdc_hit_rate()
+                f.id.reset_mdc_hit_rate_stats()
+                hit_rate = f.id.get_mdc_hit_rate()
                 assert hit_rate == 0
 
         finally:
@@ -67,8 +67,8 @@ class TestCacheConfig(TestCase):
         fn_h5 = os.path.join(dn_tmp, 'test.h5')
         try:
             with File(fn_h5, mode='x') as f:
-                conf = f._id.get_mdc_config()
-                f._id.set_mdc_config(conf)
+                conf = f.id.get_mdc_config()
+                f.id.set_mdc_config(conf)
         finally:
             shutil.rmtree(dn_tmp)
 
