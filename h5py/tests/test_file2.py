@@ -11,21 +11,22 @@
     Tests the h5py.File object.
 """
 
-import h5py
+from h5py import h5f
+from h5py import File, register_driver, registered_drivers, unregister_driver
 from h5py._hl.files import _drivers
 
-from .common import ut, TestCase
+from .common import TestCase
 
 import io
-import tempfile
+from tempfile import NamedTemporaryFile
 import os
 
 
 def nfiles():
-    return h5py.h5f.get_obj_count(h5py.h5f.OBJ_ALL, h5py.h5f.OBJ_FILE)
+    return h5f.get_obj_count(h5f.OBJ_ALL, h5f.OBJ_FILE)
 
 def ngroups():
-    return h5py.h5f.get_obj_count(h5py.h5f.OBJ_ALL, h5py.h5f.OBJ_GROUP)
+    return h5f.get_obj_count(h5f.OBJ_ALL, h5f.OBJ_GROUP)
 
 
 class TestDealloc(TestCase):
@@ -43,7 +44,7 @@ class TestDealloc(TestCase):
         start_ngroups = ngroups()
 
         fname = self.mktemp()
-        f = h5py.File(fname, 'w')
+        f = File(fname, 'w')
         g = f['/']
 
         self.assertEqual(nfiles(), start_nfiles+1)
@@ -80,11 +81,11 @@ class TestDriverRegistration(TestCase):
             called_with[0] = args, kwargs
             return _drivers['sec2'](plist)
 
-        h5py.register_driver('new-driver', set_fapl)
-        self.assertIn('new-driver', h5py.registered_drivers())
+        register_driver('new-driver', set_fapl)
+        self.assertIn('new-driver', registered_drivers())
 
         fname = self.mktemp()
-        h5py.File(fname, driver='new-driver', driver_arg_0=0, driver_arg_1=1,
+        File(fname, driver='new-driver', driver_arg_0=0, driver_arg_1=1,
                   mode='w')
 
         self.assertEqual(
@@ -93,41 +94,39 @@ class TestDriverRegistration(TestCase):
         )
 
     def test_unregister_driver(self):
-        h5py.register_driver('new-driver', lambda plist: None)
-        self.assertIn('new-driver', h5py.registered_drivers())
+        register_driver('new-driver', lambda plist: None)
+        self.assertIn('new-driver', registered_drivers())
 
-        h5py.unregister_driver('new-driver')
-        self.assertNotIn('new-driver', h5py.registered_drivers())
+        unregister_driver('new-driver')
+        self.assertNotIn('new-driver', registered_drivers())
 
         with self.assertRaises(ValueError) as e:
             fname = self.mktemp()
-            h5py.File(fname, driver='new-driver', mode='w')
+            File(fname, driver='new-driver', mode='w')
 
         self.assertEqual(str(e.exception), 'Unknown driver type "new-driver"')
 
 
 class TestCache(TestCase):
     def test_defaults(self):
-        fname = self.mktemp()
-        f = h5py.File(fname, 'w')
-        self.assertEqual(list(f.id.get_access_plist().get_cache()),
+        self.assertEqual(list(self.f.id.get_access_plist().get_cache()),
                          [0, 521, 1048576, 0.75])
 
     def test_nbytes(self):
         fname = self.mktemp()
-        f = h5py.File(fname, 'w', rdcc_nbytes=1024)
+        f = File(fname, 'w', rdcc_nbytes=1024)
         self.assertEqual(list(f.id.get_access_plist().get_cache()),
                          [0, 521, 1024, 0.75])
 
     def test_nslots(self):
         fname = self.mktemp()
-        f = h5py.File(fname, 'w', rdcc_nslots=125)
+        f = File(fname, 'w', rdcc_nslots=125)
         self.assertEqual(list(f.id.get_access_plist().get_cache()),
                          [0, 125, 1048576, 0.75])
 
     def test_w0(self):
         fname = self.mktemp()
-        f = h5py.File(fname, 'w', rdcc_w0=0.25)
+        f = File(fname, 'w', rdcc_w0=0.25)
         self.assertEqual(list(f.id.get_access_plist().get_cache()),
                          [0, 521, 1048576, 0.25])
 
@@ -135,7 +134,7 @@ class TestCache(TestCase):
 class TestFileObj(TestCase):
 
     def check_write(self, fileobj):
-        f = h5py.File(fileobj, 'w')
+        f = File(fileobj, 'w')
         self.assertEqual(f.driver, 'fileobj')
         self.assertEqual(f.filename, repr(fileobj))
         f.create_dataset('test', data=list(range(12)))
@@ -144,7 +143,7 @@ class TestFileObj(TestCase):
         f.close()
 
     def check_read(self, fileobj):
-        f = h5py.File(fileobj, 'r')
+        f = File(fileobj, 'r')
         self.assertEqual(list(f), ['test'])
         self.assertEqual(list(f['test'][:]), list(range(12)))
         self.assertRaises(Exception, f.create_dataset, 'another.test', data=list(range(3)))
@@ -173,12 +172,12 @@ class TestFileObj(TestCase):
     def test_TemporaryFile(self):
         # in this test, we check explicitly that temp file gets
         # automatically deleted upon h5py.File.close()...
-        fileobj = tempfile.NamedTemporaryFile()
+        fileobj = NamedTemporaryFile()
         fname = fileobj.name
-        f = h5py.File(fileobj, 'w')
+        f = File(fileobj, 'w')
         del fileobj
         # ... but in your code feel free to simply
-        # f = h5py.File(tempfile.TemporaryFile())
+        # f = h5py.File(TemporaryFile())
 
         f.create_dataset('test', data=list(range(12)))
         self.assertEqual(list(f), ['test'])
@@ -188,11 +187,11 @@ class TestFileObj(TestCase):
         self.assertFalse(os.path.isfile(fname))
 
     def test_exception_open(self):
-        self.assertRaises(Exception, h5py.File, None,
+        self.assertRaises(Exception, File, None,
                           driver='fileobj', mode='x')
-        self.assertRaises(Exception, h5py.File, 'rogue',
+        self.assertRaises(Exception, File, 'rogue',
                           driver='fileobj', mode='x')
-        self.assertRaises(Exception, h5py.File, self,
+        self.assertRaises(Exception, File, self,
                           driver='fileobj', mode='x')
 
     def test_exception_read(self):
@@ -201,7 +200,7 @@ class TestFileObj(TestCase):
             def readinto(self, b):
                 raise Exception('I am broken')
 
-        f = h5py.File(BrokenBytesIO(), 'w')
+        f = File(BrokenBytesIO(), 'w')
         f.create_dataset('test', data=list(range(12)))
         self.assertRaises(Exception, list, f['test'])
 
@@ -211,20 +210,20 @@ class TestFileObj(TestCase):
             def write(self, b):
                 raise Exception('I am broken')
 
-        f = h5py.File(BrokenBytesIO(), 'w')
+        f = File(BrokenBytesIO(), 'w')
         self.assertRaises(Exception, f.create_dataset, 'test',
                           data=list(range(12)))
         self.assertRaises(Exception, f.close)
 
     def test_exception_close(self):
         fileobj = io.BytesIO()
-        f = h5py.File(fileobj, 'w')
+        f = File(fileobj, 'w')
         fileobj.close()
         self.assertRaises(Exception, f.close)
 
     def test_method_vanish(self):
         fileobj = io.BytesIO()
-        f = h5py.File(fileobj, 'w')
+        f = File(fileobj, 'w')
         f.create_dataset('test', data=list(range(12)))
         self.assertEqual(list(f['test'][:]), list(range(12)))
         fileobj.readinto = None
@@ -242,14 +241,14 @@ class TestTrackOrder(TestCase):
 
     def test_track_order(self):
         fname = self.mktemp()
-        f = h5py.File(fname, 'w', track_order=True)  # creation order
+        f = File(fname, 'w', track_order=True)  # creation order
         self.populate(f)
         self.assertEqual(list(f),
                          [str(i) for i in range(100)])
 
     def test_no_track_order(self):
         fname = self.mktemp()
-        f = h5py.File(fname, 'w', track_order=False)  # name alphanumeric
+        f = File(fname, 'w', track_order=False)  # name alphanumeric
         self.populate(f)
         self.assertEqual(list(f),
                          sorted([str(i) for i in range(100)]))

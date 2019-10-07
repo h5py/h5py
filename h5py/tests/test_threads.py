@@ -12,9 +12,9 @@
 """
 
 import threading
-import h5py
+from h5py import File
 
-from .common import ut, TestCase
+from .common import TestCase
 
 
 class TestErrorPrinting(TestCase):
@@ -32,7 +32,7 @@ class TestErrorPrinting(TestCase):
         import threading
 
         def test():
-            with h5py.File(self.mktemp(), 'w') as newfile:
+            with File(self.mktemp(), 'w') as newfile:
                 try:
                     doesnt_exist = newfile['doesnt_exist'].value
                 except KeyError:
@@ -47,7 +47,7 @@ class TestErrorPrinting(TestCase):
 
         def test():
 
-            with h5py.File(self.mktemp(), 'w') as newfile:
+            with File(self.mktemp(), 'w') as newfile:
                 newfile['newdata'] = [1,2,3]
                 try:
                     nonexistent_attr = newfile['newdata'].attrs['nonexistent_attr']

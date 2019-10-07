@@ -21,23 +21,11 @@ from collections.abc import MutableMapping
 
 from .common import TestCase, ut
 
-import h5py
-from h5py import File
-from h5py import h5a,  h5t
-from h5py import AttributeManager
+from h5py import h5a, h5t
+from h5py import AttributeManager, version
 
 
-class BaseAttrs(TestCase):
-
-    def setUp(self):
-        self.f = File(self.mktemp(), 'w')
-
-    def tearDown(self):
-        if self.f:
-            self.f.close()
-
-
-class TestAccess(BaseAttrs):
+class TestAccess(TestCase):
 
     """
         Feature: Attribute creation/retrieval via special methods
@@ -81,7 +69,7 @@ class TestAccess(BaseAttrs):
         with self.assertRaises(KeyError):
             self.f.attrs.get_id('b')
 
-class TestDelete(BaseAttrs):
+class TestDelete(TestCase):
 
     """
         Feature: Deletion of attributes using __delitem__
@@ -100,7 +88,7 @@ class TestDelete(BaseAttrs):
             del self.f.attrs['a']
 
 
-class TestUnicode(BaseAttrs):
+class TestUnicode(TestCase):
 
     """
         Feature: Attributes can be accessed via Unicode or byte strings
@@ -127,7 +115,7 @@ class TestUnicode(BaseAttrs):
         self.assertEqual(out, 42)
 
 
-class TestCreate(BaseAttrs):
+class TestCreate(TestCase):
 
     """
         Options for explicit attribute creation
@@ -146,7 +134,7 @@ class TestCreate(BaseAttrs):
         self.assertTrue(htype.committed())
 
 
-class TestMutableMapping(BaseAttrs):
+class TestMutableMapping(TestCase):
     '''Tests if the registration of AttributeManager as a MutableMapping
     behaves as expected
     '''
@@ -164,21 +152,21 @@ class TestMutableMapping(BaseAttrs):
         AttributeManager.__iter__
         AttributeManager.__len__
 
-class TestVlen(BaseAttrs):
+class TestVlen(TestCase):
     def test_vlen(self):
         a = np.array([np.arange(3), np.arange(4)],
             dtype=h5t.vlen_dtype(int))
         self.f.attrs['a'] = a
         self.assertArrayEqual(self.f.attrs['a'][0], a[0])
 
-class TestTrackOrder(BaseAttrs):
+class TestTrackOrder(TestCase):
     def fill_attrs(self, track_order):
         attrs = self.f.create_group('test', track_order=track_order).attrs
         for i in range(100):
             attrs[str(i)] = i
         return attrs
 
-    @ut.skipUnless(h5py.version.hdf5_version_tuple >= (1, 10, 6), 'HDF5 1.10.6 required')
+    @ut.skipUnless(version.hdf5_version_tuple >= (1, 10, 6), 'HDF5 1.10.6 required')
     # https://forum.hdfgroup.org/t/bug-h5arename-fails-unexpectedly/4881
     def test_track_order(self):
         attrs = self.fill_attrs(track_order=True)  # creation order

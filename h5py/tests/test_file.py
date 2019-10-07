@@ -20,13 +20,12 @@ import pickle
 from sys import platform
 
 from .common import ut, TestCase, UNICODE_FILENAMES, closed_tempfile
-from h5py import File
-import h5py
+from h5py import File, get_config, ExternalLink, version
 
 import pathlib
 
 
-mpi = h5py.get_config().mpi
+mpi = get_config().mpi
 
 
 class TestFileOpen(TestCase):
@@ -169,7 +168,7 @@ class TestModes(TestCase):
 
         f2 = File(fname2, 'w')
         try:
-            f2['External'] = h5py.ExternalLink(fname1, '/')
+            f2['External'] = ExternalLink(fname1, '/')
             f3 = f2['External'].file
             self.assertEqual(f3.mode, 'r+')
         finally:
@@ -259,7 +258,7 @@ class TestDrivers(TestCase):
             self.assertEqual(f.driver, 'mpio')
 
     @ut.skipUnless(mpi, "Parallel HDF5 required")
-    @ut.skipIf(h5py.version.hdf5_version_tuple < (1, 8, 9),
+    @ut.skipIf(version.hdf5_version_tuple < (1, 8, 9),
                "mpio atomic file operations were added in HDF5 1.8.9+")
     def test_mpi_atomic(self):
         """ Enable atomic mode for MPIO driver """
@@ -275,7 +274,7 @@ class TestDrivers(TestCase):
     # TODO: family driver tests
 
 
-@ut.skipUnless(h5py.version.hdf5_version_tuple < (1, 10, 2),
+@ut.skipUnless(version.hdf5_version_tuple < (1, 10, 2),
                'Requires HDF5 before 1.10.2')
 class TestLibver(TestCase):
 
@@ -309,7 +308,7 @@ class TestLibver(TestCase):
         f.close()
 
 
-@ut.skipIf(h5py.version.hdf5_version_tuple < (1, 10, 2),
+@ut.skipIf(version.hdf5_version_tuple < (1, 10, 2),
            'Requires HDF5 1.10.2 or later')
 class TestNewLibver(TestCase):
 
@@ -325,7 +324,7 @@ class TestNewLibver(TestCase):
         super(TestNewLibver, cls).setUpClass()
 
         # Current latest library bound label
-        if h5py.version.hdf5_version_tuple < (1, 11, 4):
+        if version.hdf5_version_tuple < (1, 11, 4):
             cls.latest = 'v110'
         else:
             cls.latest = 'v112'
@@ -354,7 +353,7 @@ class TestNewLibver(TestCase):
         self.assertEqual(f.libver, ('v110', self.latest))
         f.close()
 
-    @ut.skipIf(h5py.version.hdf5_version_tuple < (1, 11, 4),
+    @ut.skipIf(version.hdf5_version_tuple < (1, 11, 4),
            'Requires HDF5 1.11.4 or later')
     def test_single_v112(self):
         """ Opening with "v112" libver arg """
@@ -408,10 +407,10 @@ class TestUserblock(TestCase):
         f.close()
 
         with self.assertRaises(ValueError):
-            f = h5py.File(name, 'r', userblock_size=512)
+            f = File(name, 'r', userblock_size=512)
 
         with self.assertRaises(ValueError):
-            f = h5py.File(name, 'r+', userblock_size=512)
+            f = File(name, 'r+', userblock_size=512)
 
     def test_match_existing(self):
         """ User block size must match that of file when opening for append """
@@ -455,7 +454,7 @@ class TestUserblock(TestCase):
         finally:
             pyfile.close()
 
-        f = h5py.File(name, 'r')
+        f = File(name, 'r')
         try:
             assert "Foobar" in f
         finally:
@@ -578,7 +577,7 @@ class TestClose(TestCase):
 
     def test_close_multiple_default_driver(self):
         fname = self.mktemp()
-        f = h5py.File(fname, 'w')
+        f = File(fname, 'w')
         f.create_group("test")
         f.close()
         f.close()

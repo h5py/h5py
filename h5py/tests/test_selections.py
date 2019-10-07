@@ -12,10 +12,9 @@
 """
 
 import numpy as np
-import h5py
 import h5py._hl.selections2 as sel
 
-from .common import TestCase, ut
+from .common import TestCase
 
 class TestTypeGeneration(TestCase):
 
@@ -63,12 +62,8 @@ class TestScalarSliceRules(TestCase):
     """
 
     def setUp(self):
-        self.f = h5py.File(self.mktemp(), 'w')
+        super().setUp()
         self.dsid = self.f.create_dataset('x', ()).id
-
-    def tearDown(self):
-        if self.f:
-            self.f.close()
 
     def test_args(self):
         """ Permissible arguments for scalar slicing """

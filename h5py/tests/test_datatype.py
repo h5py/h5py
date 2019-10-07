@@ -15,7 +15,7 @@
 
 import numpy as np
 
-from .common import ut, TestCase
+from .common import TestCase
 
 from h5py import Datatype
 

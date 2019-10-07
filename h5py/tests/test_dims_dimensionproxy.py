@@ -11,10 +11,7 @@
     Tests the h5py.Dataset.dims.DimensionProxy class.
 """
 
-import numpy as np
-import h5py
-
-from .common import ut, TestCase
+from .common import TestCase
 
 class TestItems(TestCase):
 

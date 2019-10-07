@@ -12,7 +12,8 @@
 
 """
 import numpy as np
-import h5py
+from h5py import h5z
+from h5py import File
 
 from .common import ut, TestCase, insubprocess
 
@@ -22,9 +23,9 @@ class TestFilters(TestCase):
     def setUp(self):
         """ like TestCase.setUp but also store the file path """
         self.path = self.mktemp()
-        self.f = h5py.File(self.path, 'w')
+        self.f = File(self.path, 'w')
 
-    @ut.skipUnless(h5py.h5z.filter_avail(h5py.h5z.FILTER_SZIP), 'szip filter required')
+    @ut.skipUnless(h5z.filter_avail(h5z.FILTER_SZIP), 'szip filter required')
     def test_wr_szip_fletcher32_64bit(self):
         """ test combination of szip, fletcher32, and 64bit arrays
 
@@ -43,7 +44,7 @@ class TestFilters(TestCase):
                               )
         self.f.close()
 
-        with h5py.File(self.path, "r") as h5:
+        with File(self.path, "r") as h5:
             # Access the data which will compute the fletcher32
             # checksum and raise an OSError if something is wrong.
             h5["test_data"][0]
@@ -63,5 +64,5 @@ class TestFilters(TestCase):
 
 @insubprocess
 def test_unregister_filter(request):
-    if h5py.h5z.filter_avail(h5py.h5z.FILTER_LZF):
-        assert h5py.h5z.unregister_filter(h5py.h5z.FILTER_LZF)
+    if h5z.filter_avail(h5z.FILTER_LZF):
+        assert h5z.unregister_filter(h5z.FILTER_LZF)

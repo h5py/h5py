@@ -7,11 +7,9 @@
 # License:  Standard 3-clause BSD; see "license.txt" for full license terms
 #           and contributor agreement.
 
-import unittest as ut
-
 from h5py import h5p, h5f, version
 
-from .common import TestCase
+from .common import ut, TestCase
 
 
 class TestLibver(TestCase):

@@ -51,7 +51,7 @@ from .common import ut, TestCase
 class TestEmpty(TestCase):
 
     def setUp(self):
-        TestCase.setUp(self)
+        super().setUp()
         sid = h5py.h5s.create(h5py.h5s.NULL)
         tid = h5py.h5t.C_S1.copy()
         tid.set_size(10)
@@ -109,7 +109,7 @@ class TestEmpty(TestCase):
 class TestScalarFloat(TestCase):
 
     def setUp(self):
-        TestCase.setUp(self)
+        super().setUp()
         self.data = np.array(42.5, dtype='f')
         self.dset = self.f.create_dataset('x', data=self.data)
 
@@ -163,7 +163,7 @@ class TestScalarFloat(TestCase):
 class TestScalarCompound(TestCase):
 
     def setUp(self):
-        TestCase.setUp(self)
+        super().setUp()
         self.data = np.array((42.5, -118, "Hello"), dtype=[('a', 'f'), ('b', 'i'), ('c', '|S10')])
         self.dset = self.f.create_dataset('x', data=self.data)
 
@@ -223,7 +223,7 @@ class TestScalarCompound(TestCase):
 class TestScalarArray(TestCase):
 
     def setUp(self):
-        TestCase.setUp(self)
+        super().setUp()
         self.dt = np.dtype('(3,2)f')
         self.data = np.array([(3.2, -119), (42, 99.8), (3.14, 0)], dtype='f')
         self.dset = self.f.create_dataset('x', (), dtype=self.dt)
@@ -280,7 +280,7 @@ class TestScalarArray(TestCase):
 class Test1DZeroFloat(TestCase):
 
     def setUp(self):
-        TestCase.setUp(self)
+        super().setUp()
         self.data = np.ones((0,), dtype='f')
         self.dset = self.f.create_dataset('x', data=self.data)
 
@@ -331,7 +331,7 @@ class Test1DZeroFloat(TestCase):
 class Test1DFloat(TestCase):
 
     def setUp(self):
-        TestCase.setUp(self)
+        super().setUp()
         self.data = np.arange(13).astype('f')
         self.dset = self.f.create_dataset('x', data=self.data)
 
@@ -456,7 +456,7 @@ class Test1DFloat(TestCase):
 class Test2DZeroFloat(TestCase):
 
     def setUp(self):
-        TestCase.setUp(self)
+        super().setUp()
         self.data = np.ones((0,3), dtype='f')
         self.dset = self.f.create_dataset('x', data=self.data)
 
@@ -476,7 +476,7 @@ class Test2DZeroFloat(TestCase):
 class Test2DFloat(TestCase):
 
     def setUp(self):
-        TestCase.setUp(self)
+        super().setUp()
         self.data = np.ones((5,3), dtype='f')
         self.dset = self.f.create_dataset('x', data=self.data)
 
@@ -500,7 +500,7 @@ class Test2DFloat(TestCase):
 class TestVeryLargeArray(TestCase):
 
     def setUp(self):
-        TestCase.setUp(self)
+        super().setUp()
         self.dset = self.f.create_dataset('x', shape=(2**15, 2**16))
 
     @ut.skipIf(sys.maxsize < 2**31, 'Maximum integer size >= 2**31 required')

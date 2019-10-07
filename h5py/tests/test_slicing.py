@@ -18,22 +18,15 @@
 
 import numpy as np
 
-from .common import ut, TestCase
+from .common import TestCase
 
-import h5py
 from h5py import h5s, h5t, h5d
-from h5py import File
+from h5py import (
+    ref_dtype, Reference, regionref_dtype, RegionReference, string_dtype,
+)
 
-class BaseSlicing(TestCase):
 
-    def setUp(self):
-        self.f = File(self.mktemp(), 'w')
-
-    def tearDown(self):
-        if self.f:
-            self.f.close()
-
-class TestSingleElement(BaseSlicing):
+class TestSingleElement(TestCase):
 
     """
         Feature: Retrieving a single element works with NumPy semantics
@@ -73,7 +66,7 @@ class TestSingleElement(BaseSlicing):
         self.assertEqual(dset[0], v[0])
         self.assertIsInstance(dset[0], np.void)
 
-class TestObjectIndex(BaseSlicing):
+class TestObjectIndex(TestCase):
 
     """
         Feature: numpy.object_ subtypes map to real Python objects
@@ -81,39 +74,39 @@ class TestObjectIndex(BaseSlicing):
 
     def test_reference(self):
         """ Indexing a reference dataset returns a h5py.Reference instance """
-        dset = self.f.create_dataset('x', (1,), dtype=h5py.ref_dtype)
+        dset = self.f.create_dataset('x', (1,), dtype=ref_dtype)
         dset[0] = self.f.ref
-        self.assertEqual(type(dset[0]), h5py.Reference)
+        self.assertEqual(type(dset[0]), Reference)
 
     def test_regref(self):
         """ Indexing a region reference dataset returns a h5py.RegionReference
         """
         dset1 = self.f.create_dataset('x', (10,10))
         regref = dset1.regionref[...]
-        dset2 = self.f.create_dataset('y', (1,), dtype=h5py.regionref_dtype)
+        dset2 = self.f.create_dataset('y', (1,), dtype=regionref_dtype)
         dset2[0] = regref
-        self.assertEqual(type(dset2[0]), h5py.RegionReference)
+        self.assertEqual(type(dset2[0]), RegionReference)
 
     def test_reference_field(self):
         """ Compound types of which a reference is an element work right """
-        dt = np.dtype([('a', 'i'),('b', h5py.ref_dtype)])
+        dt = np.dtype([('a', 'i'),('b', ref_dtype)])
 
         dset = self.f.create_dataset('x', (1,), dtype=dt)
         dset[0] = (42, self.f['/'].ref)
 
         out = dset[0]
-        self.assertEqual(type(out[1]), h5py.Reference)  # isinstance does NOT work
+        self.assertEqual(type(out[1]), Reference)  # isinstance does NOT work
 
     def test_scalar(self):
         """ Indexing returns a real Python object on scalar datasets """
-        dset = self.f.create_dataset('x', (), dtype=h5py.ref_dtype)
+        dset = self.f.create_dataset('x', (), dtype=ref_dtype)
         dset[()] = self.f.ref
-        self.assertEqual(type(dset[()]), h5py.Reference)
+        self.assertEqual(type(dset[()]), Reference)
 
     def test_bytestr(self):
         """ Indexing a byte string dataset returns a real python byte string
         """
-        dset = self.f.create_dataset('x', (1,), dtype=h5py.string_dtype(encoding='ascii'))
+        dset = self.f.create_dataset('x', (1,), dtype=string_dtype(encoding='ascii'))
         dset[0] = b"Hello there!"
         self.assertEqual(type(dset[0]), bytes)
 
@@ -124,7 +117,7 @@ class TestSimpleSlicing(TestCase):
     """
 
     def setUp(self):
-        self.f = File(self.mktemp(), 'w')
+        super().setUp()
         self.arr = np.arange(10)
         self.dset = self.f.create_dataset('x', data=self.arr)
 
@@ -146,7 +139,7 @@ class TestSimpleSlicing(TestCase):
         with self.assertRaises(TypeError):
             dset[:, 1] = x
 
-class TestArraySlicing(BaseSlicing):
+class TestArraySlicing(TestCase):
 
     """
         Feature: Array types are handled appropriately
@@ -228,7 +221,7 @@ class TestArraySlicing(BaseSlicing):
         self.assertTrue(np.all(dset[...] == out))
 
 
-class TestZeroLengthSlicing(BaseSlicing):
+class TestZeroLengthSlicing(TestCase):
 
     """
         Slices resulting in empty arrays
@@ -270,7 +263,7 @@ class TestZeroLengthSlicing(BaseSlicing):
             self.assertIsInstance(out, np.ndarray)
             self.assertEqual(out.shape, (0,)+shape[1:])
 
-class TestFieldNames(BaseSlicing):
+class TestFieldNames(TestCase):
 
     """
         Field names for read & write
@@ -280,7 +273,7 @@ class TestFieldNames(BaseSlicing):
     data = np.ones((100,), dtype=dt)
 
     def setUp(self):
-        BaseSlicing.setUp(self)
+        super().setUp()
         self.dset = self.f.create_dataset('x', (100,), dtype=self.dt)
         self.dset[...] = self.data
 

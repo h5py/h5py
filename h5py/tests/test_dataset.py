@@ -23,22 +23,16 @@ import platform
 import pytest
 
 from .common import ut, TestCase
-from h5py import File, Group, Dataset
+from h5py import h5d, h5f, h5g, h5p, h5t, h5z
+from h5py import (
+    File, Group, Dataset, Empty, filters, string_dtype, check_string_dtype,
+    enum_dtype, check_enum_dtype, vlen_dtype, version,
+)
 from h5py._hl.base import is_empty_dataspace
-from h5py import h5f, h5t
-import h5py
+from h5py._hl import dataset
 
 
-class BaseDataset(TestCase):
-    def setUp(self):
-        self.f = File(self.mktemp(), 'w')
-
-    def tearDown(self):
-        if self.f:
-            self.f.close()
-
-
-class TestRepr(BaseDataset):
+class TestRepr(TestCase):
     """
         Feature: repr(Dataset) behaves sensibly
     """
@@ -51,7 +45,7 @@ class TestRepr(BaseDataset):
         self.assertIsInstance(repr(ds), str)
 
 
-class TestCreateShape(BaseDataset):
+class TestCreateShape(TestCase):
 
     """
         Feature: Datasets can be created from a shape only
@@ -115,7 +109,7 @@ class TestCreateShape(BaseDataset):
         self.assertEqual(dset.dtype, np.dtype('complex256'))
 
 
-class TestCreateData(BaseDataset):
+class TestCreateData(TestCase):
 
     """
         Feature: Datasets can be created from existing data
@@ -136,7 +130,7 @@ class TestCreateData(BaseDataset):
     def test_dataset_intermediate_group(self):
         """ Create dataset with missing intermediate groups """
         ds = self.f.create_dataset("/foo/bar/baz", shape=(10, 10), dtype='<i4')
-        self.assertIsInstance(ds, h5py.Dataset)
+        self.assertIsInstance(ds, Dataset)
         self.assertTrue("/foo/bar/baz" in self.f)
 
     def test_reshape(self):
@@ -162,11 +156,11 @@ class TestCreateData(BaseDataset):
         self.assertTrue(is_empty_dataspace(self.f['foo'].id))
 
     def test_empty_create_via_Empty_class(self):
-        self.f.create_dataset('foo', data=h5py.Empty(dtype='f'))
+        self.f.create_dataset('foo', data=Empty(dtype='f'))
         self.assertTrue(is_empty_dataspace(self.f['foo'].id))
 
 
-class TestCreateRequire(BaseDataset):
+class TestCreateRequire(TestCase):
 
     """
         Feature: Datasets can be created only if they don't exist in the file
@@ -226,7 +220,7 @@ class TestCreateRequire(BaseDataset):
         self.assertEqual(dset2.dtype, np.dtype('i4'))
 
 
-class TestCreateChunked(BaseDataset):
+class TestCreateChunked(TestCase):
 
     """
         Feature: Datasets can be created by manually specifying chunks
@@ -288,7 +282,7 @@ class TestCreateChunked(BaseDataset):
             self.f.create_dataset('foo', dtype='S100', maxshape=20)
 
 
-class TestCreateFillvalue(BaseDataset):
+class TestCreateFillvalue(TestCase):
 
     """
         Feature: Datasets can be created with fill value
@@ -326,7 +320,7 @@ class TestCreateFillvalue(BaseDataset):
                     dtype=[('a', 'i'), ('b', 'f')], fillvalue=42)
 
 
-class TestCreateNamedType(BaseDataset):
+class TestCreateNamedType(TestCase):
 
     """
         Feature: Datasets created from an existing named type
@@ -341,8 +335,8 @@ class TestCreateNamedType(BaseDataset):
         self.assertTrue(dset.id.get_type().committed())
 
 
-@ut.skipIf('gzip' not in h5py.filters.encode, "DEFLATE is not installed")
-class TestCreateGzip(BaseDataset):
+@ut.skipIf('gzip' not in filters.encode, "DEFLATE is not installed")
+class TestCreateGzip(TestCase):
 
     """
         Feature: Datasets created with gzip compression
@@ -367,13 +361,13 @@ class TestCreateGzip(BaseDataset):
         self.assertEqual(dset.compression, 'gzip')
         self.assertEqual(dset.compression_opts, 7)
 
-        original_compression_vals = h5py._hl.dataset._LEGACY_GZIP_COMPRESSION_VALS
+        original_compression_vals = dataset._LEGACY_GZIP_COMPRESSION_VALS
         try:
-            h5py._hl.dataset._LEGACY_GZIP_COMPRESSION_VALS = tuple()
+            dataset._LEGACY_GZIP_COMPRESSION_VALS = tuple()
             with self.assertRaises(ValueError):
                 dset = self.f.create_dataset('foo', (20, 30), compression=7)
         finally:
-            h5py._hl.dataset._LEGACY_GZIP_COMPRESSION_VALS = original_compression_vals
+            dataset._LEGACY_GZIP_COMPRESSION_VALS = original_compression_vals
 
     def test_gzip_exc(self):
         """ Illegal gzip level (explicit or implicit) raises ValueError """
@@ -386,8 +380,8 @@ class TestCreateGzip(BaseDataset):
                                   compression_opts=14)
 
 
-@ut.skipIf('gzip' not in h5py.filters.encode, "DEFLATE is not installed")
-class TestCreateCompressionNumber(BaseDataset):
+@ut.skipIf('gzip' not in filters.encode, "DEFLATE is not installed")
+class TestCreateCompressionNumber(TestCase):
 
     """
         Feature: Datasets created with a compression code
@@ -395,12 +389,12 @@ class TestCreateCompressionNumber(BaseDataset):
 
     def test_compression_number(self):
         """ Create with compression number of gzip (h5py.h5z.FILTER_DEFLATE) and a compression level of 7"""
-        original_compression_vals = h5py._hl.dataset._LEGACY_GZIP_COMPRESSION_VALS
+        original_compression_vals = dataset._LEGACY_GZIP_COMPRESSION_VALS
         try:
-            h5py._hl.dataset._LEGACY_GZIP_COMPRESSION_VALS = tuple()
-            dset = self.f.create_dataset('foo', (20, 30), compression=h5py.h5z.FILTER_DEFLATE, compression_opts=(7,))
+            dataset._LEGACY_GZIP_COMPRESSION_VALS = tuple()
+            dset = self.f.create_dataset('foo', (20, 30), compression=h5z.FILTER_DEFLATE, compression_opts=(7,))
         finally:
-            h5py._hl.dataset._LEGACY_GZIP_COMPRESSION_VALS = original_compression_vals
+            dataset._LEGACY_GZIP_COMPRESSION_VALS = original_compression_vals
 
         self.assertEqual(dset.compression, 'gzip')
         self.assertEqual(dset.compression_opts, 7)
@@ -415,19 +409,19 @@ class TestCreateCompressionNumber(BaseDataset):
             self.f.create_dataset('foo', (20, 30), compression=100)
         self.assertIn("Unknown compression", str(e.exception))
 
-        original_compression_vals = h5py._hl.dataset._LEGACY_GZIP_COMPRESSION_VALS
+        original_compression_vals = dataset._LEGACY_GZIP_COMPRESSION_VALS
         try:
-            h5py._hl.dataset._LEGACY_GZIP_COMPRESSION_VALS = tuple()
+            dataset._LEGACY_GZIP_COMPRESSION_VALS = tuple()
 
             # Using gzip compression requires a compression level specified in compression_opts
             with self.assertRaises(IndexError):
-                self.f.create_dataset('foo', (20, 30), compression=h5py.h5z.FILTER_DEFLATE)
+                self.f.create_dataset('foo', (20, 30), compression=h5z.FILTER_DEFLATE)
         finally:
-            h5py._hl.dataset._LEGACY_GZIP_COMPRESSION_VALS = original_compression_vals
+            dataset._LEGACY_GZIP_COMPRESSION_VALS = original_compression_vals
 
 
-@ut.skipIf('lzf' not in h5py.filters.encode, "LZF is not installed")
-class TestCreateLZF(BaseDataset):
+@ut.skipIf('lzf' not in filters.encode, "LZF is not installed")
+class TestCreateLZF(TestCase):
 
     """
         Feature: Datasets created with LZF compression
@@ -446,8 +440,8 @@ class TestCreateLZF(BaseDataset):
                                   compression_opts=4)
 
 
-@ut.skipIf('szip' not in h5py.filters.encode, "SZIP is not installed")
-class TestCreateSZIP(BaseDataset):
+@ut.skipIf('szip' not in filters.encode, "SZIP is not installed")
+class TestCreateSZIP(TestCase):
 
     """
         Feature: Datasets created with LZF compression
@@ -459,8 +453,8 @@ class TestCreateSZIP(BaseDataset):
                                      compression_opts=('ec', 16))
 
 
-@ut.skipIf('shuffle' not in h5py.filters.encode, "SHUFFLE is not installed")
-class TestCreateShuffle(BaseDataset):
+@ut.skipIf('shuffle' not in filters.encode, "SHUFFLE is not installed")
+class TestCreateShuffle(TestCase):
 
     """
         Feature: Datasets can use shuffling filter
@@ -472,8 +466,8 @@ class TestCreateShuffle(BaseDataset):
         self.assertTrue(dset.shuffle)
 
 
-@ut.skipIf('fletcher32' not in h5py.filters.encode, "FLETCHER32 is not installed")
-class TestCreateFletcher32(BaseDataset):
+@ut.skipIf('fletcher32' not in filters.encode, "FLETCHER32 is not installed")
+class TestCreateFletcher32(TestCase):
     """
         Feature: Datasets can use the fletcher32 filter
     """
@@ -484,8 +478,8 @@ class TestCreateFletcher32(BaseDataset):
         self.assertTrue(dset.fletcher32)
 
 
-@ut.skipIf('scaleoffset' not in h5py.filters.encode, "SCALEOFFSET is not installed")
-class TestCreateScaleOffset(BaseDataset):
+@ut.skipIf('scaleoffset' not in filters.encode, "SCALEOFFSET is not installed")
+class TestCreateScaleOffset(TestCase):
     """
         Feature: Datasets can use the scale/offset filter
     """
@@ -513,7 +507,7 @@ class TestCreateScaleOffset(BaseDataset):
         dset[...] = testdata
         filename = self.f.filename
         self.f.close()
-        self.f = h5py.File(filename, 'r')
+        self.f = File(filename, 'r')
         readdata = self.f['foo'][...]
 
         # Test that data round-trips to requested precision
@@ -539,7 +533,7 @@ class TestCreateScaleOffset(BaseDataset):
         dset[...] = testdata
         filename = self.f.filename
         self.f.close()
-        self.f = h5py.File(filename, 'r')
+        self.f = File(filename, 'r')
         readdata = self.f['foo'][...]
         self.assertArrayEqual(readdata, testdata)
 
@@ -559,7 +553,7 @@ class TestCreateScaleOffset(BaseDataset):
         dset[...] = testdata
         filename = self.f.filename
         self.f.close()
-        self.f = h5py.File(filename, 'r')
+        self.f = File(filename, 'r')
         readdata = self.f['foo'][...]
         self.assertArrayEqual(readdata, testdata)
 
@@ -579,14 +573,14 @@ class TestCreateScaleOffset(BaseDataset):
         dset[...] = testdata
         filename = self.f.filename
         self.f.close()
-        self.f = h5py.File(filename, 'r')
+        self.f = File(filename, 'r')
         readdata = self.f['foo'][...]
 
         # Compression is lossy
         assert not (readdata == testdata).all()
 
 
-class TestExternal(BaseDataset):
+class TestExternal(TestCase):
     """
         Feature: Datasets with the external storage property
     """
@@ -648,7 +642,7 @@ class TestExternal(BaseDataset):
                 self.f.create_dataset('foo', shape, external=external)
 
 
-class TestAutoCreate(BaseDataset):
+class TestAutoCreate(TestCase):
 
     """
         Feature: Datasets auto-created from data produce the correct types
@@ -659,18 +653,18 @@ class TestAutoCreate(BaseDataset):
         self.f['x'] = b"Hello there"
         ds = self.f['x']
         tid = ds.id.get_type()
-        self.assertEqual(type(tid), h5py.h5t.TypeStringID)
+        self.assertEqual(type(tid), h5t.TypeStringID)
         self.assertTrue(tid.is_variable_str())
-        self.assertEqual(tid.get_cset(), h5py.h5t.CSET_ASCII)
+        self.assertEqual(tid.get_cset(), h5t.CSET_ASCII)
 
     def test_vlen_unicode(self):
         """ Assignment of a unicode string produces a vlen unicode dataset """
         self.f['x'] = u"Hello there" + chr(0x2034)
         ds = self.f['x']
         tid = ds.id.get_type()
-        self.assertEqual(type(tid), h5py.h5t.TypeStringID)
+        self.assertEqual(type(tid), h5t.TypeStringID)
         self.assertTrue(tid.is_variable_str())
-        self.assertEqual(tid.get_cset(), h5py.h5t.CSET_UTF8)
+        self.assertEqual(tid.get_cset(), h5t.CSET_UTF8)
 
     def test_string_fixed(self):
         """ Assignment of fixed-length byte string produces a fixed-length
@@ -678,12 +672,12 @@ class TestAutoCreate(BaseDataset):
         self.f['x'] = np.string_("Hello there")
         ds = self.f['x']
         tid = ds.id.get_type()
-        self.assertEqual(type(tid), h5py.h5t.TypeStringID)
+        self.assertEqual(type(tid), h5t.TypeStringID)
         self.assertEqual(tid.get_size(), 11)
-        self.assertEqual(tid.get_cset(), h5py.h5t.CSET_ASCII)
+        self.assertEqual(tid.get_cset(), h5t.CSET_ASCII)
 
 
-class TestCreateLike(BaseDataset):
+class TestCreateLike(TestCase):
     def test_no_chunks(self):
         self.f['lol'] = np.arange(25).reshape(5, 5)
         self.f.create_dataset_like('like_lol', self.f['lol'])
@@ -694,18 +688,18 @@ class TestCreateLike(BaseDataset):
     def test_track_times(self):
         orig = self.f.create_dataset('honda', data=np.arange(12),
                                      track_times=True)
-        self.assertNotEqual(0, h5py.h5g.get_objinfo(orig._id).mtime)
+        self.assertNotEqual(0, h5g.get_objinfo(orig._id).mtime)
         similar = self.f.create_dataset_like('hyundai', orig)
-        self.assertNotEqual(0, h5py.h5g.get_objinfo(similar._id).mtime)
+        self.assertNotEqual(0, h5g.get_objinfo(similar._id).mtime)
 
         orig = self.f.create_dataset('ibm', data=np.arange(12),
                                      track_times=False)
-        self.assertEqual(0, h5py.h5g.get_objinfo(orig._id).mtime)
+        self.assertEqual(0, h5g.get_objinfo(orig._id).mtime)
         similar = self.f.create_dataset_like('lenovo', orig)
-        self.assertEqual(0, h5py.h5g.get_objinfo(similar._id).mtime)
+        self.assertEqual(0, h5g.get_objinfo(similar._id).mtime)
 
 
-class TestResize(BaseDataset):
+class TestResize(TestCase):
 
     """
         Feature: Datasets created with "maxshape" may be resized
@@ -773,7 +767,7 @@ class TestResize(BaseDataset):
         self.assertEqual(dset.maxshape, (15, None))
 
 
-class TestDtype(BaseDataset):
+class TestDtype(TestCase):
 
     """
         Feature: Dataset dtype is available as .dtype property
@@ -785,7 +779,7 @@ class TestDtype(BaseDataset):
         self.assertEqual(dset.dtype, np.dtype('|S10'))
 
 
-class TestLen(BaseDataset):
+class TestLen(TestCase):
 
     """
         Feature: Size of first axis is available via Python's len
@@ -808,7 +802,7 @@ class TestLen(BaseDataset):
         self.assertEqual(dset.len(), 2 ** 33)
 
 
-class TestIter(BaseDataset):
+class TestIter(TestCase):
 
     """
         Feature: Iterating over a dataset yields rows
@@ -829,7 +823,7 @@ class TestIter(BaseDataset):
             [x for x in dset]
 
 
-class TestStrings(BaseDataset):
+class TestStrings(TestCase):
 
     """
         Feature: Datasets created with vlen and fixed datatypes correctly
@@ -838,22 +832,22 @@ class TestStrings(BaseDataset):
 
     def test_vlen_bytes(self):
         """ Vlen bytes dataset maps to vlen ascii in the file """
-        dt = h5py.string_dtype(encoding='ascii')
+        dt = string_dtype(encoding='ascii')
         ds = self.f.create_dataset('x', (100,), dtype=dt)
         tid = ds.id.get_type()
-        self.assertEqual(type(tid), h5py.h5t.TypeStringID)
-        self.assertEqual(tid.get_cset(), h5py.h5t.CSET_ASCII)
-        string_info = h5py.check_string_dtype(ds.dtype)
+        self.assertEqual(type(tid), h5t.TypeStringID)
+        self.assertEqual(tid.get_cset(), h5t.CSET_ASCII)
+        string_info = check_string_dtype(ds.dtype)
         self.assertEqual(string_info.encoding, 'ascii')
 
     def test_vlen_unicode(self):
         """ Vlen unicode dataset maps to vlen utf-8 in the file """
-        dt = h5py.string_dtype()
+        dt = string_dtype()
         ds = self.f.create_dataset('x', (100,), dtype=dt)
         tid = ds.id.get_type()
-        self.assertEqual(type(tid), h5py.h5t.TypeStringID)
-        self.assertEqual(tid.get_cset(), h5py.h5t.CSET_UTF8)
-        string_info = h5py.check_string_dtype(ds.dtype)
+        self.assertEqual(type(tid), h5t.TypeStringID)
+        self.assertEqual(tid.get_cset(), h5t.CSET_UTF8)
+        string_info = check_string_dtype(ds.dtype)
         self.assertEqual(string_info.encoding, 'utf-8')
 
     def test_fixed_bytes(self):
@@ -862,11 +856,11 @@ class TestStrings(BaseDataset):
         dt = np.dtype("|S10")
         ds = self.f.create_dataset('x', (100,), dtype=dt)
         tid = ds.id.get_type()
-        self.assertEqual(type(tid), h5py.h5t.TypeStringID)
+        self.assertEqual(type(tid), h5t.TypeStringID)
         self.assertFalse(tid.is_variable_str())
         self.assertEqual(tid.get_size(), 10)
-        self.assertEqual(tid.get_cset(), h5py.h5t.CSET_ASCII)
-        string_info = h5py.check_string_dtype(ds.dtype)
+        self.assertEqual(tid.get_cset(), h5t.CSET_ASCII)
+        string_info = check_string_dtype(ds.dtype)
         self.assertEqual(string_info.encoding, 'ascii')
         self.assertEqual(string_info.length, 10)
 
@@ -879,7 +873,7 @@ class TestStrings(BaseDataset):
     def test_roundtrip_vlen_bytes(self):
         """ writing and reading to vlen bytes dataset preserves type and content
         """
-        dt = h5py.string_dtype(encoding='ascii')
+        dt = string_dtype(encoding='ascii')
         ds = self.f.create_dataset('x', (100,), dtype=dt)
         data = b"Hello\xef"
         ds[0] = data
@@ -890,7 +884,7 @@ class TestStrings(BaseDataset):
     def test_roundtrip_vlen_unicode(self):
         """ Writing and reading to unicode dataset preserves type and content
         """
-        dt = h5py.string_dtype()
+        dt = string_dtype()
         ds = self.f.create_dataset('x', (100,), dtype=dt)
         data = u"Hello" + chr(0x2034)
         ds[0] = data
@@ -913,7 +907,7 @@ class TestStrings(BaseDataset):
     def test_unicode_write_error(self):
         """ Writing a non-utf8 byte string to a unicode vlen dataset raises
         ValueError """
-        dt = h5py.string_dtype()
+        dt = string_dtype()
         ds = self.f.create_dataset('x', (100,), dtype=dt)
         data = "Hello\xef"
         with self.assertRaises(ValueError):
@@ -922,7 +916,7 @@ class TestStrings(BaseDataset):
     def test_unicode_write_bytes(self):
         """ Writing valid utf-8 byte strings to a unicode vlen dataset is OK
         """
-        dt = h5py.string_dtype()
+        dt = string_dtype()
         ds = self.f.create_dataset('x', (100,), dtype=dt)
         data = u"Hello there" + chr(0x2034)
         ds[0] = data.encode('utf8')
@@ -931,7 +925,7 @@ class TestStrings(BaseDataset):
         self.assertEqual(out, data)
 
 
-class TestCompound(BaseDataset):
+class TestCompound(TestCase):
 
     """
         Feature: Compound types correctly round-trip
@@ -975,7 +969,7 @@ class TestCompound(BaseDataset):
         self.assertEqual(outdata.dtype, testdata.dtype)
 
 
-class TestEnum(BaseDataset):
+class TestEnum(TestCase):
 
     """
         Feature: Enum datatype info is preserved, read/write as integer
@@ -985,15 +979,15 @@ class TestEnum(BaseDataset):
 
     def test_create(self):
         """ Enum datasets can be created and type correctly round-trips """
-        dt = h5py.enum_dtype(self.EDICT, basetype='i')
+        dt = enum_dtype(self.EDICT, basetype='i')
         ds = self.f.create_dataset('x', (100, 100), dtype=dt)
         dt2 = ds.dtype
-        dict2 = h5py.check_enum_dtype(dt2)
+        dict2 = check_enum_dtype(dt2)
         self.assertEqual(dict2, self.EDICT)
 
     def test_readwrite(self):
         """ Enum datasets can be read/written as integers """
-        dt = h5py.enum_dtype(self.EDICT, basetype='i4')
+        dt = enum_dtype(self.EDICT, basetype='i4')
         ds = self.f.create_dataset('x', (100, 100), dtype=dt)
         ds[35, 37] = 42
         ds[1, :] = 1
@@ -1001,7 +995,7 @@ class TestEnum(BaseDataset):
         self.assertArrayEqual(ds[1, :], np.array((1,) * 100, dtype='i4'))
 
 
-class TestFloats(BaseDataset):
+class TestFloats(TestCase):
 
     """
         Test support for mini and extended-precision floats
@@ -1028,7 +1022,7 @@ class TestFloats(BaseDataset):
             self.assertEqual(h5t.IEEE_F16LE.dtype, np.dtype('<f4'))
 
 
-class TestTrackTimes(BaseDataset):
+class TestTrackTimes(TestCase):
 
     """
         Feature: track_times
@@ -1037,11 +1031,11 @@ class TestTrackTimes(BaseDataset):
     def test_disable_track_times(self):
         """ check that when track_times=False, the time stamp=0 (Jan 1, 1970) """
         ds = self.f.create_dataset('foo', (4,), track_times=False)
-        ds_mtime = h5py.h5g.get_objinfo(ds._id).mtime
+        ds_mtime = h5g.get_objinfo(ds._id).mtime
         self.assertEqual(0, ds_mtime)
 
 
-class TestZeroShape(BaseDataset):
+class TestZeroShape(TestCase):
 
     """
         Features of datasets with (0,)-shape axes
@@ -1070,14 +1064,14 @@ class TestZeroShape(BaseDataset):
         self.assertEqual(ds[()].dtype, arr.dtype)
 
 
-class TestRegionRefs(BaseDataset):
+class TestRegionRefs(TestCase):
 
     """
         Various features of region references
     """
 
     def setUp(self):
-        BaseDataset.setUp(self)
+        super().setUp()
         self.data = np.arange(100 * 100).reshape((100, 100))
         self.dset = self.f.create_dataset('x', data=self.data)
         self.dset[...] = self.data
@@ -1096,7 +1090,7 @@ class TestRegionRefs(BaseDataset):
         self.assertEqual(self.dset.regionref.selection(ref), (10, 18))
 
 
-class TestAstype(BaseDataset):
+class TestAstype(TestCase):
     """.astype() wrapper & context manager
     """
     def test_astype_ctx(self):
@@ -1114,7 +1108,7 @@ class TestAstype(BaseDataset):
         arr = dset.astype('f4')[:]
         self.assertArrayEqual(arr, np.arange(100, dtype='f4'))
 
-class TestScalarCompound(BaseDataset):
+class TestScalarCompound(TestCase):
 
     """
         Retrieval of a single field from a scalar compound dataset should
@@ -1128,9 +1122,9 @@ class TestScalarCompound(BaseDataset):
         self.assertEqual(dset['a'].dtype, np.dtype('i'))
 
 
-class TestVlen(BaseDataset):
+class TestVlen(TestCase):
     def test_int(self):
-        dt = h5py.vlen_dtype(int)
+        dt = vlen_dtype(int)
         ds = self.f.create_dataset('vlen', (4,), dtype=dt)
         ds[0] = np.arange(3)
         ds[1] = np.arange(0)
@@ -1148,20 +1142,20 @@ class TestVlen(BaseDataset):
         self.assertArrayEqual(ds[1], np.arange(3))
 
     def test_reuse_from_other(self):
-        dt = h5py.vlen_dtype(int)
+        dt = vlen_dtype(int)
         ds = self.f.create_dataset('vlen', (1,), dtype=dt)
         self.f.create_dataset('vlen2', (1,), ds[()].dtype)
 
     def test_reuse_struct_from_other(self):
-        dt = [('a', int), ('b', h5py.vlen_dtype(int))]
+        dt = [('a', int), ('b', vlen_dtype(int))]
         ds = self.f.create_dataset('vlen', (1,), dtype=dt)
         fname = self.f.filename
         self.f.close()
-        self.f = h5py.File(fname, 'a')
+        self.f = File(fname, 'a')
         self.f.create_dataset('vlen2', (1,), self.f['vlen']['b'][()].dtype)
 
     def test_convert(self):
-        dt = h5py.vlen_dtype(int)
+        dt = vlen_dtype(int)
         ds = self.f.create_dataset('vlen', (3,), dtype=dt)
         ds[0] = np.array([1.4, 1.2])
         ds[1] = np.array([1.2])
@@ -1178,7 +1172,7 @@ class TestVlen(BaseDataset):
         self.assertArrayEqual(ds[1], np.arange(3))
 
     def test_multidim(self):
-        dt = h5py.vlen_dtype(int)
+        dt = vlen_dtype(int)
         ds = self.f.create_dataset('vlen', (2, 2), dtype=dt)
         ds[0, 0] = np.arange(1)
         ds[:, :] = np.array([[np.arange(3), np.arange(2)],
@@ -1192,7 +1186,7 @@ class TestVlen(BaseDataset):
         :param np_dt: Numpy datatype to test
         :param dataset_name: String name of the dataset to create for testing.
         """
-        dt = h5py.vlen_dtype(np_dt)
+        dt = vlen_dtype(np_dt)
         ds = self.f.create_dataset(dataset_name, (5,), dtype=dt)
 
         # Create some arrays, and assign them to the dataset
@@ -1251,7 +1245,7 @@ class TestVlen(BaseDataset):
         self._help_float_testing(np_dt)
 
 
-class TestLowOpen(BaseDataset):
+class TestLowOpen(TestCase):
 
     def test_get_access_list(self):
         """ Test H5Dget_access_plist """
@@ -1260,24 +1254,34 @@ class TestLowOpen(BaseDataset):
 
     def test_dapl(self):
         """ Test the dapl keyword to h5d.open """
-        dapl = h5py.h5p.create(h5py.h5p.DATASET_ACCESS)
+        dapl = h5p.create(h5p.DATASET_ACCESS)
         dset = self.f.create_dataset('x', (100,))
         del dset
-        dsid = h5py.h5d.open(self.f.id, b'x', dapl)
-        self.assertIsInstance(dsid, h5py.h5d.DatasetID)
+        dsid = h5d.open(self.f.id, b'x', dapl)
+        self.assertIsInstance(dsid, h5d.DatasetID)
 
 
-@ut.skipUnless(h5py.version.hdf5_version_tuple >= (1, 10, 5),
+def test_hide_value_from_jedi():
+    from io import BytesIO
+    buf = BytesIO()
+    with File(buf, 'w') as fout:
+        fout['test'] = [1, 2, 3]
+        with pytest.warns(UserWarning):
+            assert hasattr(fout['test'], 'value')
+        assert 'value' not in dir(fout['test'])
+
+
+@ut.skipUnless(version.hdf5_version_tuple >= (1, 10, 5),
                "chunk info requires  HDF5 >= 1.10.5")
 def test_get_chunk_details():
     from io import BytesIO
     buf = BytesIO()
-    with h5py.File(buf, 'w') as fout:
+    with File(buf, 'w') as fout:
         fout.create_dataset('test', shape=(100, 100), chunks=(10, 10), dtype='i4')
         fout['test'][:] = 1
 
     buf.seek(0)
-    with h5py.File(buf, 'r') as fin:
+    with File(buf, 'r') as fin:
         ds = fin['test'].id
 
         assert ds.get_num_chunks() == 100

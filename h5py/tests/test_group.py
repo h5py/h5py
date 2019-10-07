@@ -20,16 +20,16 @@
 import numpy as np
 import os
 import os.path
-import sys
 from tempfile import mkdtemp
 
 from collections.abc import MutableMapping
 
 from .common import ut, TestCase
-import h5py
-from h5py import File, Group, SoftLink, HardLink, ExternalLink
-from h5py import Dataset, Datatype
-from h5py import h5t
+from h5py import (
+    File, Group, SoftLink, HardLink, ExternalLink, Dataset, Datatype, ref_dtype,
+    version,
+)
+from h5py import h5t, h5r
 from h5py._hl.compat import filename_encode
 
 # If we can't encode unicode filenames, there's not much point failing tests
@@ -42,16 +42,7 @@ else:
     NO_FS_UNICODE = False
 
 
-class BaseGroup(TestCase):
-
-    def setUp(self):
-        self.f = File(self.mktemp(), 'w')
-
-    def tearDown(self):
-        if self.f:
-            self.f.close()
-
-class TestRepr(BaseGroup):
+class TestRepr(TestCase):
 
     """
         Feature: repr() works sensibly on Group objects
@@ -64,7 +55,7 @@ class TestRepr(BaseGroup):
         self.f.close()
         self.assertIsInstance(g, str)
 
-class TestCreate(BaseGroup):
+class TestCreate(TestCase):
 
     """
         Feature: New groups can be created via .create_group method
@@ -107,7 +98,7 @@ class TestCreate(BaseGroup):
         with self.assertRaises(ValueError):
             Group(dset.id)
 
-class TestDatasetAssignment(BaseGroup):
+class TestDatasetAssignment(TestCase):
 
     """
         Feature: Datasets can be created by direct assignment of data
@@ -120,7 +111,7 @@ class TestDatasetAssignment(BaseGroup):
         self.assertIsInstance(self.f['a'], Dataset)
         self.assertArrayEqual(self.f['a'][...], data)
 
-class TestDtypeAssignment(BaseGroup):
+class TestDtypeAssignment(TestCase):
 
     """
         Feature: Named types can be created by direct assignment of dtypes
@@ -133,7 +124,7 @@ class TestDtypeAssignment(BaseGroup):
         self.assertIsInstance(self.f['a'], Datatype)
         self.assertEqual(self.f['a'].dtype, dtype)
 
-class TestRequire(BaseGroup):
+class TestRequire(TestCase):
 
     """
         Feature: Groups can be auto-created, or opened via .require_group
@@ -157,7 +148,7 @@ class TestRequire(BaseGroup):
         with self.assertRaises(TypeError):
             self.f.require_group('foo')
 
-class TestDelete(BaseGroup):
+class TestDelete(TestCase):
 
     """
         Feature: Objects can be unlinked via "del" operator
@@ -193,7 +184,7 @@ class TestDelete(BaseGroup):
         finally:
             hfile.close()
 
-class TestOpen(BaseGroup):
+class TestOpen(TestCase):
 
     """
         Feature: Objects can be opened via indexing syntax obj[name]
@@ -225,7 +216,7 @@ class TestOpen(BaseGroup):
         """
         g = self.f.create_group('test')
 
-        dt = np.dtype([('a', 'i'),('b', h5py.ref_dtype)])
+        dt = np.dtype([('a', 'i'),('b', ref_dtype)])
         dset = self.f.create_dataset('test_dset', (1,), dt)
 
         dset[0] =(42,g.ref)
@@ -235,7 +226,7 @@ class TestOpen(BaseGroup):
     def test_invalid_ref(self):
         """ Invalid region references should raise an exception """
 
-        ref = h5py.h5r.Reference()
+        ref = h5r.Reference()
 
         with self.assertRaises(ValueError):
             self.f[ref]
@@ -249,7 +240,7 @@ class TestOpen(BaseGroup):
 
     # TODO: check that regionrefs also work with __getitem__
 
-class TestRepr(BaseGroup):
+class TestRepr(TestCase):
 
     """
         Feature: Opened and closed groups provide a useful __repr__ string
@@ -262,7 +253,7 @@ class TestRepr(BaseGroup):
         g.id._close()
         self.assertIsInstance(repr(g), str)
 
-class BaseMapping(BaseGroup):
+class BaseMapping(TestCase):
 
     """
         Base class for mapping tests
@@ -272,7 +263,7 @@ class BaseMapping(BaseGroup):
         self.groups = ('a', 'b', 'c', 'd')
         for x in self.groups:
             self.f.create_group(x)
-        self.f['x'] = h5py.SoftLink('/mongoose')
+        self.f['x'] = SoftLink('/mongoose')
         self.groups = self.groups + ('x',)
 
     def tearDown(self):
@@ -292,7 +283,7 @@ class TestLen(BaseMapping):
         self.assertEqual(len(self.f), len(self.groups)+1)
 
 
-class TestContains(BaseGroup):
+class TestContains(TestCase):
 
     """
         Feature: The Python "in" builtin tests for membership
@@ -342,8 +333,8 @@ class TestContains(BaseGroup):
     def test_softlinks(self):
         """ Broken softlinks are contained, but their members are not """
         self.f.create_group('grp')
-        self.f['/grp/soft'] = h5py.SoftLink('/mongoose')
-        self.f['/grp/external'] = h5py.ExternalLink('mongoose.hdf5', '/mongoose')
+        self.f['/grp/soft'] = SoftLink('/mongoose')
+        self.f['/grp/external'] = ExternalLink('mongoose.hdf5', '/mongoose')
         self.assertIn('/grp/soft', self.f)
         self.assertNotIn('/grp/soft/something', self.f)
         self.assertIn('/grp/external', self.f)
@@ -386,7 +377,7 @@ class TestIter(BaseMapping):
         finally:
             hfile.close()
 
-class TestTrackOrder(BaseGroup):
+class TestTrackOrder(TestCase):
     def populate(self, g):
         for i in range(100):
             # Mix group and dataset creation.
@@ -518,7 +509,7 @@ class TestAdditionalMappingFuncs(BaseMapping):
             self.group.setdefault('e')
 
 
-class TestGet(BaseGroup):
+class TestGet(TestCase):
 
     """
         Feature: The .get method allows access to objects and metadata
@@ -626,7 +617,7 @@ class TestVisit(TestCase):
         x = self.f.visititems(lambda x, y: (x,y))
         self.assertEqual(x, (self.groups[0], self.f[self.groups[0]]))
 
-class TestSoftLinks(BaseGroup):
+class TestSoftLinks(TestCase):
 
     """
         Feature: Create and manage soft links with the high-level interface
@@ -805,7 +796,7 @@ class TestCopy(TestCase):
         if self.f2:
             self.f2.close()
 
-    @ut.skipIf(h5py.version.hdf5_version_tuple < (1,8,9),
+    @ut.skipIf(version.hdf5_version_tuple < (1,8,9),
                "Bug in HDF5<1.8.8 prevents copying open dataset")
     def test_copy_path_to_path(self):
         foo = self.f1.create_group('foo')
@@ -816,7 +807,7 @@ class TestCopy(TestCase):
         self.assertIsInstance(baz, Group)
         self.assertArrayEqual(baz['bar'], np.array([1,2,3]))
 
-    @ut.skipIf(h5py.version.hdf5_version_tuple < (1,8,9),
+    @ut.skipIf(version.hdf5_version_tuple < (1,8,9),
                "Bug in HDF5<1.8.8 prevents copying open dataset")
     def test_copy_path_to_group(self):
         foo = self.f1.create_group('foo')
@@ -832,7 +823,7 @@ class TestCopy(TestCase):
         self.assertIsInstance(self.f2['/foo'], Group)
         self.assertArrayEqual(self.f2['foo/bar'], np.array([1,2,3]))
 
-    @ut.skipIf(h5py.version.hdf5_version_tuple < (1,8,9),
+    @ut.skipIf(version.hdf5_version_tuple < (1,8,9),
                "Bug in HDF5<1.8.8 prevents copying open dataset")
     def test_copy_group_to_path(self):
 
@@ -848,7 +839,7 @@ class TestCopy(TestCase):
         self.assertIsInstance(self.f2['/foo'], Group)
         self.assertArrayEqual(self.f2['foo/bar'], np.array([1,2,3]))
 
-    @ut.skipIf(h5py.version.hdf5_version_tuple < (1,8,9),
+    @ut.skipIf(version.hdf5_version_tuple < (1,8,9),
                "Bug in HDF5<1.8.8 prevents copying open dataset")
     def test_copy_group_to_group(self):
 
@@ -865,7 +856,7 @@ class TestCopy(TestCase):
         self.assertIsInstance(self.f2['/foo'], Group)
         self.assertArrayEqual(self.f2['foo/bar'], np.array([1,2,3]))
 
-    @ut.skipIf(h5py.version.hdf5_version_tuple < (1,8,9),
+    @ut.skipIf(version.hdf5_version_tuple < (1,8,9),
                "Bug in HDF5<1.8.8 prevents copying open dataset")
     def test_copy_dataset(self):
         self.f1['foo'] = [1,2,3]
@@ -883,7 +874,7 @@ class TestCopy(TestCase):
         self.f2.copy(self.f1['foo'], self.f2, 'bar')
         self.assertArrayEqual(self.f2['bar'], np.array([1,2,3]))
 
-    @ut.skipIf(h5py.version.hdf5_version_tuple < (1,8,9),
+    @ut.skipIf(version.hdf5_version_tuple < (1,8,9),
                "Bug in HDF5<1.8.8 prevents copying open dataset")
     def test_copy_shallow(self):
 
@@ -905,7 +896,7 @@ class TestCopy(TestCase):
         self.assertEqual(len(self.f2['foo/bar']), 0)
         self.assertArrayEqual(self.f2['foo/qux'], np.array([1,2,3]))
 
-    @ut.skipIf(h5py.version.hdf5_version_tuple < (1,8,9),
+    @ut.skipIf(version.hdf5_version_tuple < (1,8,9),
                "Bug in HDF5<1.8.8 prevents copying open dataset")
     def test_copy_without_attributes(self):
 
@@ -921,7 +912,7 @@ class TestCopy(TestCase):
         self.assertArrayEqual(self.f2['baz'], np.array([1,2,3]))
         assert 'bar' not in self.f2['baz'].attrs
 
-    @ut.skipIf(h5py.version.hdf5_version_tuple < (1,8,9),
+    @ut.skipIf(version.hdf5_version_tuple < (1,8,9),
                "Bug in HDF5<1.8.8 prevents copying open dataset")
     def test_copy_soft_links(self):
 
@@ -939,7 +930,7 @@ class TestCopy(TestCase):
         self.assertIsInstance(self.f2['/foo'], Group)
         self.assertArrayEqual(self.f2['foo/baz'], np.array([1, 2, 3]))
 
-    @ut.skipIf(h5py.version.hdf5_version_tuple < (1,8,9),
+    @ut.skipIf(version.hdf5_version_tuple < (1,8,9),
                "Bug in HDF5<1.8.8 prevents copying open dataset")
     def test_copy_external_links(self):
 
@@ -955,7 +946,7 @@ class TestCopy(TestCase):
         os.unlink(filename)
         self.assertArrayEqual(self.f2['baz'], np.array([1,2,3]))
 
-    @ut.skipIf(h5py.version.hdf5_version_tuple < (1,8,9),
+    @ut.skipIf(version.hdf5_version_tuple < (1,8,9),
                "Bug in HDF5<1.8.8 prevents copying open dataset")
     def test_copy_refs(self):
 
@@ -986,7 +977,7 @@ class TestCopy(TestCase):
         self.assertEqual(self.f2[foo_bar], self.f2['root/bar'])
 
 
-class TestMove(BaseGroup):
+class TestMove(TestCase):
 
     """
         Feature: Group.move moves links in a file
@@ -1002,7 +993,7 @@ class TestMove(BaseGroup):
 
     def test_move_softlink(self):
         """ Moving a soft link """
-        self.f['soft'] = h5py.SoftLink("relative/path")
+        self.f['soft'] = SoftLink("relative/path")
         self.f.move('soft', 'new_soft')
         lnk = self.f.get('new_soft', getlink=True)
         self.assertEqual(lnk.path, "relative/path")
@@ -1020,7 +1011,7 @@ class TestMove(BaseGroup):
         self.f.move("X", "X")
 
 
-class TestMutableMapping(BaseGroup):
+class TestMutableMapping(TestCase):
     '''Tests if the registration of Group as a MutableMapping
     behaves as expected
     '''

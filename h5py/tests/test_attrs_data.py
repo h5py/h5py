@@ -15,25 +15,14 @@
 
 import numpy as np
 
-from .common import TestCase, ut
+from .common import TestCase
 
-import h5py
 from h5py import h5a, h5s, h5t
-from h5py import File
+from h5py import Empty, string_dtype
 from h5py._hl.base import is_empty_dataspace
 
 
-class BaseAttrs(TestCase):
-
-    def setUp(self):
-        self.f = File(self.mktemp(), 'w')
-
-    def tearDown(self):
-        if self.f:
-            self.f.close()
-
-
-class TestScalar(BaseAttrs):
+class TestScalar(TestCase):
 
     """
         Feature: Scalar types map correctly to array scalars
@@ -56,7 +45,7 @@ class TestScalar(BaseAttrs):
         self.assertEqual(out['b'], data['b'])
 
 
-class TestArray(BaseAttrs):
+class TestArray(TestCase):
 
     """
         Feature: Non-scalar types are correctly retrieved as ndarrays
@@ -82,7 +71,7 @@ class TestArray(BaseAttrs):
         self.assertArrayEqual(out, data)
 
 
-class TestTypes(BaseAttrs):
+class TestTypes(TestCase):
 
     """
         Feature: All supported types can be stored in attributes
@@ -152,7 +141,7 @@ class TestTypes(BaseAttrs):
 
     def test_vlen_string_array(self):
         """ Storage of vlen byte string arrays"""
-        dt = h5py.string_dtype(encoding='ascii')
+        dt = string_dtype(encoding='ascii')
 
         data = np.ndarray((2,), dtype=dt)
         data[...] = b"Hello", b"Hi there!  This is HDF5!"
@@ -172,10 +161,10 @@ class TestTypes(BaseAttrs):
         self.assertEqual(out, b'Hello')
         self.assertEqual(type(out), bytes)
 
-        aid = h5py.h5a.open(self.f.id, b"x")
+        aid = h5a.open(self.f.id, b"x")
         tid = aid.get_type()
-        self.assertEqual(type(tid), h5py.h5t.TypeStringID)
-        self.assertEqual(tid.get_cset(), h5py.h5t.CSET_ASCII)
+        self.assertEqual(type(tid), h5t.TypeStringID)
+        self.assertEqual(tid.get_cset(), h5t.CSET_ASCII)
         self.assertTrue(tid.is_variable_str())
 
     def test_unicode_scalar(self):
@@ -186,22 +175,22 @@ class TestTypes(BaseAttrs):
         self.assertEqual(out, u"Hello" + chr(0x2340) + u"!!")
         self.assertEqual(type(out), str)
 
-        aid = h5py.h5a.open(self.f.id, b"x")
+        aid = h5a.open(self.f.id, b"x")
         tid = aid.get_type()
-        self.assertEqual(type(tid), h5py.h5t.TypeStringID)
-        self.assertEqual(tid.get_cset(), h5py.h5t.CSET_UTF8)
+        self.assertEqual(type(tid), h5t.TypeStringID)
+        self.assertEqual(tid.get_cset(), h5t.CSET_UTF8)
         self.assertTrue(tid.is_variable_str())
 
 
-class TestEmpty(BaseAttrs):
+class TestEmpty(TestCase):
 
     def setUp(self):
-        BaseAttrs.setUp(self)
+        super().setUp()
         sid = h5s.create(h5s.NULL)
         tid = h5t.C_S1.copy()
         tid.set_size(10)
         aid = h5a.create(self.f.id, b'x', tid, sid)
-        self.empty_obj = h5py.Empty(np.dtype("S10"))
+        self.empty_obj = Empty(np.dtype("S10"))
 
     def test_read(self):
         self.assertEqual(
@@ -242,7 +231,7 @@ class TestEmpty(BaseAttrs):
         )
 
 
-class TestWriteException(BaseAttrs):
+class TestWriteException(TestCase):
 
     """
         Ensure failed attribute writes don't leave garbage behind.

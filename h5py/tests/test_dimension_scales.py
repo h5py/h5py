@@ -7,13 +7,11 @@
 # License:  Standard 3-clause BSD; see "license.txt" for full license terms
 #           and contributor agreement.
 
-import sys
-
 import numpy as np
 
 from .common import ut, TestCase
-from h5py import File, Group, Dataset
-import h5py
+from h5py import h5ds
+from h5py import File, Group, Dataset, version
 
 
 class BaseDataset(TestCase):
@@ -29,26 +27,22 @@ class BaseDataset(TestCase):
     """
 
     def setUp(self):
-        self.f = File(self.mktemp(), 'w')
+        super().setUp()
         self.f['data'] = np.ones((4, 3, 2), 'f')
         self.f['data2'] = np.ones((4, 3, 2), 'f')
         self.f['x1'] = np.ones((2), 'f')
-        h5py.h5ds.set_scale(self.f['x1'].id)
-        h5py.h5ds.attach_scale(self.f['data'].id, self.f['x1'].id, 2)
+        h5ds.set_scale(self.f['x1'].id)
+        h5ds.attach_scale(self.f['data'].id, self.f['x1'].id, 2)
         self.f['x2'] = np.ones((2), 'f')
-        h5py.h5ds.set_scale(self.f['x2'].id, b'x2 name')
-        h5py.h5ds.attach_scale(self.f['data'].id, self.f['x2'].id, 2)
+        h5ds.set_scale(self.f['x2'].id, b'x2 name')
+        h5ds.attach_scale(self.f['data'].id, self.f['x2'].id, 2)
         self.f['y1'] = np.ones((3), 'f')
-        h5py.h5ds.set_scale(self.f['y1'].id, b'y1 name')
-        h5py.h5ds.attach_scale(self.f['data'].id, self.f['y1'].id, 1)
+        h5ds.set_scale(self.f['y1'].id, b'y1 name')
+        h5ds.attach_scale(self.f['data'].id, self.f['y1'].id, 1)
         self.f['z1'] = np.ones((4), 'f')
 
-        h5py.h5ds.set_label(self.f['data'].id, 0, b'z')
-        h5py.h5ds.set_label(self.f['data'].id, 2, b'x')
-
-    def tearDown(self):
-        if self.f:
-            self.f.close()
+        h5ds.set_label(self.f['data'].id, 0, b'z')
+        h5ds.set_label(self.f['data'].id, 2, b'x')
 
 
 class TestH5DSBindings(BaseDataset):
@@ -59,49 +53,55 @@ class TestH5DSBindings(BaseDataset):
 
     def test_create_dimensionscale(self):
         """ Create a dimension scale from existing dataset """
-        self.assertTrue(h5py.h5ds.is_scale(self.f['x1'].id))
-        self.assertEqual(h5py.h5ds.get_scale_name(self.f['x1'].id), b'')
+        self.assertTrue(h5ds.is_scale(self.f['x1'].id))
+        self.assertEqual(h5ds.get_scale_name(self.f['x1'].id), b'')
         self.assertEqual(self.f['x1'].attrs['CLASS'], b"DIMENSION_SCALE")
-        self.assertEqual(h5py.h5ds.get_scale_name(self.f['x2'].id), b'x2 name')
+        self.assertEqual(h5ds.get_scale_name(self.f['x2'].id), b'x2 name')
 
     def test_attach_dimensionscale(self):
         self.assertTrue(
-            h5py.h5ds.is_attached(self.f['data'].id, self.f['x1'].id, 2)
-            )
+            h5ds.is_attached(self.f['data'].id, self.f['x1'].id, 2)
+        )
+
         self.assertFalse(
-            h5py.h5ds.is_attached(self.f['data'].id, self.f['x1'].id, 1))
-        self.assertEqual(h5py.h5ds.get_num_scales(self.f['data'].id, 0), 0)
-        self.assertEqual(h5py.h5ds.get_num_scales(self.f['data'].id, 1), 1)
-        self.assertEqual(h5py.h5ds.get_num_scales(self.f['data'].id, 2), 2)
+            h5ds.is_attached(self.f['data'].id, self.f['x1'].id, 1)
+        )
+
+        self.assertEqual(h5ds.get_num_scales(self.f['data'].id, 0), 0)
+        self.assertEqual(h5ds.get_num_scales(self.f['data'].id, 1), 1)
+        self.assertEqual(h5ds.get_num_scales(self.f['data'].id, 2), 2)
 
     def test_detach_dimensionscale(self):
         self.assertTrue(
-            h5py.h5ds.is_attached(self.f['data'].id, self.f['x1'].id, 2)
-            )
-        h5py.h5ds.detach_scale(self.f['data'].id, self.f['x1'].id, 2)
+            h5ds.is_attached(self.f['data'].id, self.f['x1'].id, 2)
+        )
+
+        h5ds.detach_scale(self.f['data'].id, self.f['x1'].id, 2)
+
         self.assertFalse(
-            h5py.h5ds.is_attached(self.f['data'].id, self.f['x1'].id, 2)
-            )
-        self.assertEqual(h5py.h5ds.get_num_scales(self.f['data'].id, 2), 1)
+            h5ds.is_attached(self.f['data'].id, self.f['x1'].id, 2)
+        )
+
+        self.assertEqual(h5ds.get_num_scales(self.f['data'].id, 2), 1)
 
     # TODO: update condition once the bug is fixed upstream
     @ut.skipUnless(
-        h5py.version.hdf5_version_tuple > (2, 0, 0),
+        version.hdf5_version_tuple > (2, 0, 0),
         "Reading non-existent label segfaults"
         )
     def test_label_dimensionscale(self):
-        self.assertEqual(h5py.h5ds.get_label(self.f['data'].id, 0), b'z')
-        self.assertEqual(h5py.h5ds.get_label(self.f['data'].id, 1), b'')
-        self.assertEqual(h5py.h5ds.get_label(self.f['data'].id, 2), b'x')
+        self.assertEqual(h5ds.get_label(self.f['data'].id, 0), b'z')
+        self.assertEqual(h5ds.get_label(self.f['data'].id, 1), b'')
+        self.assertEqual(h5ds.get_label(self.f['data'].id, 2), b'x')
 
     def test_iter_dimensionscales(self):
         def func(dsid):
-            res = h5py.h5ds.get_scale_name(dsid)
+            res = h5ds.get_scale_name(dsid)
             if res == b'x2 name':
                 return dsid
 
-        res = h5py.h5ds.iterate(self.f['data'].id, 2, func, 0)
-        self.assertEqual(h5py.h5ds.get_scale_name(res), b'x2 name')
+        res = h5ds.iterate(self.f['data'].id, 2, func, 0)
+        self.assertEqual(h5ds.get_scale_name(res), b'x2 name')
 
 
 class TestDimensionManager(BaseDataset):

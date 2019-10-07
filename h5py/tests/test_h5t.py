@@ -9,13 +9,14 @@
 
 import numpy as np
 
-import h5py
-from h5py import h5t
+from h5py import h5t, h5f, h5d, h5s
+from h5py import ref_dtype, File
+from h5py.h5py_warnings import H5pyDeprecationWarning
 
-from .common import TestCase, ut
+from .common import TestCase
 
 
-class TestCompound(ut.TestCase):
+class TestCompound(TestCase):
 
     """
         Feature: Compound types can be created from Python dtypes
@@ -24,7 +25,7 @@ class TestCompound(ut.TestCase):
     def test_ref(self):
         """ Reference types are correctly stored in compound types (issue 144)
         """
-        dt = np.dtype([('a', h5py.ref_dtype), ('b', '<f4')])
+        dt = np.dtype([('a', ref_dtype), ('b', '<f4')])
         tid = h5t.py_create(dt, logical=True)
         t1, t2 = tid.get_member_type(0), tid.get_member_type(1)
         self.assertEqual(t1, h5t.STD_REF_OBJ)
@@ -107,10 +108,10 @@ class TestTypeFloatID(TestCase):
                             4.06089384e-10]], dtype=np.float32)
 
         # Create a new file using the default properties.
-        fid = h5py.h5f.create(test_filename)
+        fid = h5f.create(test_filename)
         # Create the dataspace.  No maximum size parameter needed.
         dims = (DIM0, DIM1)
-        space = h5py.h5s.create_simple(dims)
+        space = h5s.create_simple(dims)
 
         # create a custom type with larger bias
         mytype = h5t.IEEE_F16LE
@@ -120,8 +121,8 @@ class TestTypeFloatID(TestCase):
         mytype.set_ebias(53)
         mytype.lock()
 
-        dset = h5py.h5d.create(fid, dataset, mytype, space)
-        dset.write(h5py.h5s.ALL, h5py.h5s.ALL, wdata)
+        dset = h5d.create(fid, dataset, mytype, space)
+        dset.write(h5s.ALL, h5s.ALL, wdata)
 
         del dset
 
@@ -133,8 +134,8 @@ class TestTypeFloatID(TestCase):
         mytype2.set_ebias(53)
         mytype2.lock()
 
-        dset = h5py.h5d.create(fid, dataset2, mytype2, space)
-        dset.write(h5py.h5s.ALL, h5py.h5s.ALL, wdata2)
+        dset = h5d.create(fid, dataset2, mytype2, space)
+        dset.write(h5s.ALL, h5s.ALL, wdata2)
 
         del dset
 
@@ -146,8 +147,8 @@ class TestTypeFloatID(TestCase):
         mytype3.set_ebias(15)
         mytype3.lock()
 
-        dset = h5py.h5d.create(fid, dataset3, mytype3, space)
-        dset.write(h5py.h5s.ALL, h5py.h5s.ALL, wdata2)
+        dset = h5d.create(fid, dataset3, mytype3, space)
+        dset.write(h5s.ALL, h5s.ALL, wdata2)
 
         del dset
 
@@ -159,44 +160,44 @@ class TestTypeFloatID(TestCase):
         mytype4.set_ebias(258)
         mytype4.lock()
 
-        dset = h5py.h5d.create(fid, dataset4, mytype4, space)
-        dset.write(h5py.h5s.ALL, h5py.h5s.ALL, wdata2)
+        dset = h5d.create(fid, dataset4, mytype4, space)
+        dset.write(h5s.ALL, h5s.ALL, wdata2)
 
         del dset
 
         # create a dataset with long doubles
-        dset = h5py.h5d.create(fid, dataset5, h5t.NATIVE_LDOUBLE, space)
-        dset.write(h5py.h5s.ALL, h5py.h5s.ALL, wdata2)
+        dset = h5d.create(fid, dataset5, h5t.NATIVE_LDOUBLE, space)
+        dset.write(h5s.ALL, h5s.ALL, wdata2)
 
         # Explicitly close and release resources.
         del space
         del dset
         del fid
 
-        f = h5py.File(test_filename, 'r')
+        with File(test_filename, 'r') as f:
 
-        # ebias promotion to float32
-        values = f[dataset][:]
-        self.assertTrue(np.all(values == wdata))
-        self.assertEqual(values.dtype, np.dtype('<f4'))
+            # ebias promotion to float32
+            values = f[dataset][:]
+            self.assertTrue(np.all(values == wdata))
+            self.assertEqual(values.dtype, np.dtype('<f4'))
 
-        # esize promotion to float32
-        values = f[dataset2][:]
-        self.assertTrue(np.all(values == wdata2))
-        self.assertEqual(values.dtype, np.dtype('<f4'))
+            # esize promotion to float32
+            values = f[dataset2][:]
+            self.assertTrue(np.all(values == wdata2))
+            self.assertEqual(values.dtype, np.dtype('<f4'))
 
-        # regular half floats
-        dset = f[dataset3]
-        try:
-            self.assertEqual(dset.dtype, np.dtype('<f2'))
-        except AttributeError:
-            self.assertEqual(dset.dtype, np.dtype('<f4'))
+            # regular half floats
+            dset = f[dataset3]
+            try:
+                self.assertEqual(dset.dtype, np.dtype('<f2'))
+            except AttributeError:
+                # Presumably a fallback when there's no float16?
+                self.assertEqual(dset.dtype, np.dtype('<f4'))
 
-        # ebias promotion to float64
-        dset = f[dataset4]
-        self.assertEqual(dset.dtype, np.dtype('<f8'))
+            # ebias promotion to float64
+            dset = f[dataset4]
+            self.assertEqual(dset.dtype, np.dtype('<f8'))
 
-        # long double floats
-
-        dset = f[dataset5]
-        self.assertEqual(dset.dtype, np.longdouble)
+            # long double floats
+            dset = f[dataset5]
+            self.assertEqual(dset.dtype, np.longdouble)

@@ -4,14 +4,20 @@
 
 from itertools import count
 import platform
+
 import numpy as np
-import h5py
+
 try:
     import tables
 except ImportError:
     tables = None
 
 from .common import ut, TestCase
+from h5py import h5t
+from h5py import (
+    string_dtype, check_string_dtype, vlen_dtype, check_vlen_dtype, enum_dtype,
+    check_enum_dtype, File,
+)
 
 UNSUPPORTED_LONG_DOUBLE = ('i386', 'i486', 'i586', 'i686', 'ppc64le')
 
@@ -30,16 +36,16 @@ class TestVlen(TestCase):
     def test_compound(self):
 
         fields = []
-        fields.append(('field_1', h5py.string_dtype()))
+        fields.append(('field_1', string_dtype()))
         fields.append(('field_2', np.int32))
         dt = np.dtype(fields)
         self.f['mytype'] = np.dtype(dt)
         dt_out = self.f['mytype'].dtype.fields['field_1'][0]
-        string_inf = h5py.check_string_dtype(dt_out)
+        string_inf = check_string_dtype(dt_out)
         self.assertEqual(string_inf.encoding, 'utf-8')
 
     def test_compound_vlen_bool(self):
-        vidt = h5py.vlen_dtype(np.uint8)
+        vidt = vlen_dtype(np.uint8)
         def a(items):
             return np.array(items, dtype=np.uint8)
 
@@ -85,8 +91,8 @@ class TestVlen(TestCase):
         self.assertArrayEqual(data['logical'], actual['logical'])
 
     def test_compound_vlen_enum(self):
-        eidt = h5py.enum_dtype({'OFF': 0, 'ON': 1}, basetype=np.uint8)
-        vidt = h5py.vlen_dtype(np.uint8)
+        eidt = enum_dtype({'OFF': 0, 'ON': 1}, basetype=np.uint8)
+        vidt = vlen_dtype(np.uint8)
         def a(items):
             return np.array(items, dtype=np.uint8)
 
@@ -109,44 +115,45 @@ class TestVlen(TestCase):
     def test_vlen_enum(self):
         fname = self.mktemp()
         arr1 = [[1], [1, 2]]
-        dt1 = h5py.vlen_dtype(h5py.enum_dtype(dict(foo=1, bar=2), 'i'))
+        dt1 = vlen_dtype(enum_dtype(dict(foo=1, bar=2), 'i'))
 
-        with h5py.File(fname, 'w') as f:
+        with File(fname, 'w') as f:
             df1 = f.create_dataset('test', (len(arr1),), dtype=dt1)
             df1[:] = np.array(arr1)
 
-        with h5py.File(fname, 'r') as f:
+        with File(fname, 'r') as f:
             df2 = f['test']
             dt2 = df2.dtype
             arr2 = [e.tolist() for e in df2[:]]
 
         self.assertEqual(arr1, arr2)
-        self.assertEqual(h5py.check_enum_dtype(h5py.check_vlen_dtype(dt1)),
-                         h5py.check_enum_dtype(h5py.check_vlen_dtype(dt2)))
+        self.assertEqual(check_enum_dtype(check_vlen_dtype(dt1)),
+                         check_enum_dtype(check_vlen_dtype(dt2)))
 
 
 class TestEmptyVlen(TestCase):
     def test_write_empty_vlen(self):
-        fname = self.mktemp()
-        with h5py.File(fname, 'w') as f:
-            d = np.core.records.fromarrays([[], []], names='a,b', formats='|V16,O')
-            dset = f.create_dataset('test', data=d, dtype=[('a', '|V16'), ('b', h5py.special_dtype(vlen=np.float_))])
-            self.assertEqual(dset.size, 0)
+        d = np.core.records.fromarrays([[], []], names='a,b', formats='|V16,O')
+        dset = self.f.create_dataset(
+            'test', data=d, dtype=[
+                ('a', '|V16'), ('b', vlen_dtype(np.float_))
+            ]
+        )
+        self.assertEqual(dset.size, 0)
 
 
 class TestExplicitCast(TestCase):
     def test_f2_casting(self):
-        fname = self.mktemp()
 
         np.random.seed(1)
         A = np.random.rand(1500, 20)
 
         # Save to HDF5 file
-        with h5py.File(fname, "w") as Fid:
-            Fid.create_dataset("Data", data=A, dtype='f2')
+        self.f.create_dataset("Data", data=A, dtype='f2')
+        fname = self.f.filename
 
-        with h5py.File(fname, "r") as Fid:
-            B = Fid["Data"][:]
+        with File(fname, "r") as f:
+            B = f["Data"][:]
 
         # Compare
         self.assertTrue(np.all(A.astype('f2') == B))
@@ -159,8 +166,8 @@ class TestOffsets(TestCase):
     """
 
     def test_compound_vlen(self):
-        vidt = h5py.vlen_dtype(np.uint8)
-        eidt = h5py.enum_dtype({'OFF': 0, 'ON': 1}, basetype=np.uint8)
+        vidt = vlen_dtype(np.uint8)
+        eidt = enum_dtype({'OFF': 0, 'ON': 1}, basetype=np.uint8)
 
         for np_align in (False, True):
             dt = np.dtype([
@@ -173,10 +180,10 @@ class TestOffsets(TestCase):
             for logical in (False, True):
                 if logical and np_align:
                     # Vlen types have different size in the numpy struct
-                    self.assertRaises(TypeError, h5py.h5t.py_create, dt,
+                    self.assertRaises(TypeError, h5t.py_create, dt,
                             logical=logical)
                 else:
-                    ht = h5py.h5t.py_create(dt, logical=logical)
+                    ht = h5t.py_create(dt, logical=logical)
                     offsets = [ht.get_member_offset(i)
                                for i in range(ht.get_nmembers())]
                     if np_align:
@@ -184,7 +191,7 @@ class TestOffsets(TestCase):
 
     def test_aligned_offsets(self):
         dt = np.dtype('i4,i8,i2', align=True)
-        ht = h5py.h5t.py_create(dt)
+        ht = h5t.py_create(dt)
         self.assertEqual(dt.itemsize, ht.get_size())
         self.assertEqual(
             [dt.fields[i][1] for i in dt.names],
@@ -201,12 +208,11 @@ class TestOffsets(TestCase):
         data['f2'] = np.array(np.random.randint(-100, 100, size=data.size),
                               dtype='i2')
 
-        fname = self.mktemp()
+        self.f['data'] = data
+        fname = self.f.filename
+        self.f.close()
 
-        with h5py.File(fname, 'w') as f:
-            f['data'] = data
-
-        with h5py.File(fname, 'r') as f:
+        with File(fname, 'r') as f:
             self.assertArrayEqual(f['data'], data)
 
     def test_compound_robustness(self):
@@ -251,13 +257,12 @@ class TestOffsets(TestCase):
         self.assertArrayEqual(data['f1'], f1)
         self.assertArrayEqual(data['f2'], f2)
 
-        fname = self.mktemp()
+        self.f.create_dataset('data', data=data)
+        fname = self.f.filename
+        self.f.close()
 
-        with h5py.File(fname, 'w') as fd:
-            fd.create_dataset('data', data=data)
-
-        with h5py.File(fname, 'r') as fd:
-            readback = fd['data']
+        with File(fname, 'r') as f:
+            readback = f['data']
             self.assertTrue(readback.dtype == dt)
             self.assertArrayEqual(readback, data)
             self.assertTrue(np.all(readback['f0'] == f0c))
@@ -276,13 +281,13 @@ class TestOffsets(TestCase):
         data['f2'] = np.random.randint(-10, 11, data.size)
         data['f3'] = np.random.rand(data.size) * -1
 
-        fname = self.mktemp()
 
-        with h5py.File(fname, 'w') as fd:
-            fd.create_dataset('data', data=data)
+        self.f.create_dataset('data', data=data)
+        fname = self.f.filename
+        self.f.close()
 
-        with h5py.File(fname, 'r') as fd:
-            self.assertArrayEqual(fd['data'], data)
+        with File(fname, 'r') as f:
+            self.assertArrayEqual(f['data'], data)
 
     def test_float_round_tripping(self):
         dtypes = set(f for f in np.typeDict.values()
@@ -297,16 +302,14 @@ class TestOffsets(TestCase):
             dtype_dset_map = {str(j): d
                               for j, d in enumerate(dtypes)}
 
-        fname = self.mktemp()
+        for n, d in dtype_dset_map.items():
+            data = np.arange(10, dtype=d)
+            self.f.create_dataset(n, data=data)
 
-        with h5py.File(fname, 'w') as f:
-            for n, d in dtype_dset_map.items():
-                data = np.arange(10,
-                                 dtype=d)
+        fname = self.f.filename
+        self.f.close()
 
-                f.create_dataset(n, data=data)
-
-        with h5py.File(fname, 'r') as f:
+        with File(fname, 'r') as f:
             for n, d in dtype_dset_map.items():
                 ldata = f[n][:]
                 self.assertEqual(ldata.dtype, d)
@@ -314,36 +317,36 @@ class TestOffsets(TestCase):
 
 class TestStrings(TestCase):
     def test_vlen_utf8(self):
-        dt = h5py.string_dtype()
+        dt = string_dtype()
 
-        string_info = h5py.check_string_dtype(dt)
+        string_info = check_string_dtype(dt)
         assert string_info.encoding == 'utf-8'
         assert string_info.length is None
-        assert h5py.check_vlen_dtype(dt) is str
+        assert check_vlen_dtype(dt) is str
 
     def test_vlen_ascii(self):
-        dt = h5py.string_dtype(encoding='ascii')
+        dt = string_dtype(encoding='ascii')
 
-        string_info = h5py.check_string_dtype(dt)
+        string_info = check_string_dtype(dt)
         assert string_info.encoding == 'ascii'
         assert string_info.length is None
-        assert h5py.check_vlen_dtype(dt) is bytes
+        assert check_vlen_dtype(dt) is bytes
 
     def test_fixed_utf8(self):
-        dt = h5py.string_dtype(length=10)
+        dt = string_dtype(length=10)
 
-        string_info = h5py.check_string_dtype(dt)
+        string_info = check_string_dtype(dt)
         assert string_info.encoding == 'utf-8'
         assert string_info.length == 10
-        assert h5py.check_vlen_dtype(dt) is None
+        assert check_vlen_dtype(dt) is None
 
     def test_fixed_ascii(self):
-        dt = h5py.string_dtype(encoding='ascii', length=10)
+        dt = string_dtype(encoding='ascii', length=10)
 
-        string_info = h5py.check_string_dtype(dt)
+        string_info = check_string_dtype(dt)
         assert string_info.encoding == 'ascii'
         assert string_info.length == 10
-        assert h5py.check_vlen_dtype(dt) is None
+        assert check_vlen_dtype(dt) is None
 
 
 @ut.skipUnless(tables is not None, 'tables is required')
@@ -393,7 +396,7 @@ class TestB8(TestCase):
             else:
                 f.create_array('/', 'test', obj=arr1)
 
-        with h5py.File(path, 'r') as f:
+        with File(path, 'r') as f:
             dset = f['test']
 
             # read uncast dset to make sure it raises as before

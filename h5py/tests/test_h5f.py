@@ -7,11 +7,14 @@
 # License:  Standard 3-clause BSD; see "license.txt" for full license terms
 #           and contributor agreement.
 
-import tempfile
+from tempfile import mkdtemp
 import shutil
 import os
+import os.path
+
 import numpy as np
-from h5py import File, special_dtype
+
+from h5py import File
 
 from .common import TestCase
 
@@ -23,7 +26,7 @@ class TestFileID(TestCase):
             assert isinstance(f.id.get_vfd_handle(), int)
 
     def test_descriptor_sec2(self):
-        dn_tmp = tempfile.mkdtemp('h5py.lowtest.test_h5f.TestFileID.test_descriptor_sec2')
+        dn_tmp = mkdtemp('h5py.lowtest.test_h5f.TestFileID.test_descriptor_sec2')
         fn_h5 = os.path.join(dn_tmp, 'test.h5')
         try:
             with File(fn_h5, driver='sec2', mode='x') as f:
@@ -36,7 +39,7 @@ class TestFileID(TestCase):
 
 class TestCacheConfig(TestCase):
     def test_simple_gets(self):
-        dn_tmp = tempfile.mkdtemp('h5py.lowtest.test_h5f.TestFileID.TestCacheConfig.test_simple_gets')
+        dn_tmp = mkdtemp('h5py.lowtest.test_h5f.TestFileID.TestCacheConfig.test_simple_gets')
         fn_h5 = os.path.join(dn_tmp, 'test.h5')
         try:
             with File(fn_h5, mode='x') as f:
@@ -47,7 +50,7 @@ class TestCacheConfig(TestCase):
             shutil.rmtree(dn_tmp)
 
     def test_hitrate_reset(self):
-        dn_tmp = tempfile.mkdtemp('h5py.lowtest.test_h5f.TestFileID.TestCacheConfig.test_hitrate_reset')
+        dn_tmp = mkdtemp('h5py.lowtest.test_h5f.TestFileID.TestCacheConfig.test_hitrate_reset')
         fn_h5 = os.path.join(dn_tmp, 'test.h5')
         try:
             with File(fn_h5, mode='x') as f:
@@ -60,7 +63,7 @@ class TestCacheConfig(TestCase):
             shutil.rmtree(dn_tmp)
 
     def test_mdc_config_get(self):
-        dn_tmp = tempfile.mkdtemp('h5py.lowtest.test_h5f.TestFileID.TestCacheConfig.test_mdc_config_get')
+        dn_tmp = mkdtemp('h5py.lowtest.test_h5f.TestFileID.TestCacheConfig.test_mdc_config_get')
         fn_h5 = os.path.join(dn_tmp, 'test.h5')
         try:
             with File(fn_h5, mode='x') as f:

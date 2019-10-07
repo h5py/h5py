@@ -14,23 +14,12 @@
 """
 
 from h5py import File
-from .common import ut, TestCase, UNICODE_FILENAMES
+from .common import ut, TestCase, UNICODE_FILENAMES, closed_tempfile
 
 import numpy as np
-import os
-import tempfile
-
-class BaseTest(TestCase):
-
-    def setUp(self):
-        self.f = File(self.mktemp(), 'w')
-
-    def tearDown(self):
-        if self.f:
-            self.f.close()
 
 
-class TestName(BaseTest):
+class TestName(TestCase):
 
     """
         Feature: .name attribute returns the object name
@@ -41,7 +30,7 @@ class TestName(BaseTest):
         grp = self.f.create_group(None)
         self.assertIs(grp.name, None)
 
-class TestRepr(BaseTest):
+class TestRepr(TestCase):
 
     """
         repr() works correctly with Unicode names
@@ -71,12 +60,6 @@ class TestRepr(BaseTest):
     @ut.skipIf(not UNICODE_FILENAMES, "Filesystem unicode support required")
     def test_file(self):
         """ File object repr() with unicode """
-        fname = tempfile.mktemp(self.USTRING+'.hdf5')
-        try:
+        with closed_tempfile(suffix=self.USTRING) as fname:
             with File(fname,'w') as f:
                 self._check_type(f)
-        finally:
-            try:
-                os.unlink(fname)
-            except Exception:
-                pass
