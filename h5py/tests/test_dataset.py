@@ -1267,16 +1267,6 @@ class TestLowOpen(BaseDataset):
         self.assertIsInstance(dsid, h5py.h5d.DatasetID)
 
 
-def test_hide_value_from_jedi():
-    from io import BytesIO
-    buf = BytesIO()
-    with h5py.File(buf, 'w') as fout:
-        fout['test'] = [1, 2, 3]
-        with pytest.warns(UserWarning):
-            assert hasattr(fout['test'], 'value')
-        assert 'value' not in dir(fout['test'])
-
-
 @ut.skipUnless(h5py.version.hdf5_version_tuple >= (1, 10, 5),
                "chunk info requires  HDF5 >= 1.10.5")
 def test_get_chunk_details():
