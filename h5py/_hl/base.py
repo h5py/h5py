@@ -13,11 +13,7 @@
 
 import posixpath
 import os
-try:
-    from collections.abc import (Mapping, MutableMapping, KeysView,
-                                 ValuesView, ItemsView)
-except ImportError:
-    from collections import (Mapping, MutableMapping, KeysView,
+from collections.abc import (Mapping, MutableMapping, KeysView,
                              ValuesView, ItemsView)
 
 from .compat import fspath, filename_encode
