@@ -16,13 +16,14 @@
 from .h5 import get_config
 from .h5r cimport Reference, RegionReference, hobj_ref_t, hdset_reg_ref_t
 from .h5t cimport H5PY_OBJ, typewrap, py_create, TypeID
-from . cimport numpy as np
 from libc.stdlib cimport realloc
 from .utils cimport emalloc, efree
 cfg = get_config()
 
 # Initialization
-np.import_array()
+from numpy cimport _import_array, npy_intp, dtype as np_dtype, ndarray as np_ndarray,\
+        NPY_WRITEABLE, NPY_C_CONTIGUOUS, NPY_OWNDATA
+_import_array()
 
 # Minimal interface for Python objects immune to Cython refcounting
 cdef extern from "Python.h":
@@ -59,7 +60,7 @@ cdef object objectify(PyObject* o):
 
 cdef extern from "numpy/arrayobject.h":
     PyTypeObject PyArray_Type
-    object PyArray_NewFromDescr(PyTypeObject* subtype, np.dtype descr, int nd, np.npy_intp* dims, np.npy_intp* strides, void* data, int flags, object obj)
+    object PyArray_NewFromDescr(PyTypeObject* subtype, np_dtype descr, int nd, npy_intp* dims, npy_intp* strides, void* data, int flags, object obj)
 
 
 ctypedef int (*conv_operator_t)(void* ipt, void* opt, void* bkg, void* priv) except -1
@@ -603,7 +604,7 @@ cdef herr_t vlen2ndarray(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
     cdef size_t src_size, dst_size
     cdef TypeID supertype
     cdef TypeID outtype
-    cdef np.dtype dt
+    cdef np_dtype dt
     cdef int i
 
     cdef char* buf = <char*>buf_i
@@ -660,15 +661,15 @@ cdef struct vlen_t:
     size_t len
     void* ptr
 
-cdef int conv_vlen2ndarray(void* ipt, void* opt, np.dtype elem_dtype,
+cdef int conv_vlen2ndarray(void* ipt, void* opt, np_dtype elem_dtype,
         TypeID intype, TypeID outtype) except -1:
 
     cdef PyObject** buf_obj = <PyObject**>opt
     cdef vlen_t* in_vlen = <vlen_t*>ipt
-    cdef int flags = np.NPY_WRITEABLE | np.NPY_C_CONTIGUOUS | np.NPY_OWNDATA
-    cdef np.npy_intp dims[1]
+    cdef int flags = NPY_WRITEABLE | NPY_C_CONTIGUOUS | NPY_OWNDATA
+    cdef npy_intp dims[1]
     cdef void* data
-    cdef np.ndarray ndarray
+    cdef np_ndarray ndarray
     cdef PyObject* ndarray_obj
     cdef vlen_t in_vlen0
 
@@ -700,7 +701,7 @@ cdef herr_t ndarray2vlen(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
     cdef size_t src_size, dst_size
     cdef TypeID supertype
     cdef TypeID outtype
-    cdef np.dtype dt
+    cdef np_dtype dt
     cdef int i
     cdef PyObject **pdata = <PyObject **> buf_i
     cdef PyObject *pdata_elem
@@ -715,9 +716,9 @@ cdef herr_t ndarray2vlen(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
         supertype = typewrap(H5Tget_super(dst_id))
         for i from 0 <= i < nl:
             memcpy(&pdata_elem, pdata+i, sizeof(pdata_elem))
-            if supertype != py_create((<np.ndarray> pdata_elem).dtype, 1):
+            if supertype != py_create((<np_ndarray> pdata_elem).dtype, 1):
                 return -2
-            if (<np.ndarray> pdata_elem).ndim != 1:
+            if (<np_ndarray> pdata_elem).ndim != 1:
                 return -2
 
     elif command == H5T_CONV_FREE:
@@ -733,7 +734,7 @@ cdef herr_t ndarray2vlen(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
 
         # need to pass element dtype to converter
         memcpy(&pdata_elem, pdata, sizeof(pdata_elem))
-        supertype = py_create((<np.ndarray> pdata_elem).dtype)
+        supertype = py_create((<np_ndarray> pdata_elem).dtype)
         outtype = typewrap(H5Tget_super(dst_id))
 
         if buf_stride == 0:
@@ -772,15 +773,15 @@ cdef int conv_ndarray2vlen(void* ipt, void* opt,
 
     cdef PyObject** buf_obj = <PyObject**>ipt
     cdef vlen_t* in_vlen = <vlen_t*>opt
-    cdef int flags = np.NPY_WRITEABLE | np.NPY_C_CONTIGUOUS
-    cdef np.npy_intp dims[1]
+    cdef int flags = NPY_WRITEABLE | NPY_C_CONTIGUOUS
+    cdef npy_intp dims[1]
     cdef void* data
-    cdef np.ndarray ndarray
+    cdef np_ndarray ndarray
     cdef size_t len
     cdef PyObject* buf_obj0
 
     memcpy(&buf_obj0, buf_obj, sizeof(buf_obj0))
-    ndarray = <np.ndarray> buf_obj0
+    ndarray = <np_ndarray> buf_obj0
     len = ndarray.shape[0]
 
     if outtype.get_size() > intype.get_size():
