@@ -156,6 +156,13 @@ class h5py_build_ext(build_ext):
         from Cython.Build import cythonize
         import numpy
 
+        # This allows ccache to recognise the files when pip builds in a temp
+        # directory. It speeds up repeatedly running tests through tox with
+        # ccache configured (CC="ccache gcc"). It should have no effect if
+        # ccache is not in use.
+        os.environ['CCACHE_BASEDIR'] = op.dirname(op.abspath(__file__))
+        os.environ['CCACHE_NOHASHDIR'] = '1'
+
         # Provides all of our build options
         config = self.distribution.get_command_obj('configure')
         config.run()
