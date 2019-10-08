@@ -13,7 +13,6 @@
 
 import posixpath as pp
 import sys
-from warnings import warn
 
 from threading import local
 
@@ -27,7 +26,6 @@ from . import selections2 as sel2
 from .datatype import Datatype
 from .compat import filename_decode
 from .vds import VDSmap, vds_support
-from ..h5py_warnings import H5pyDeprecationWarning
 
 _LEGACY_GZIP_COMPRESSION_VALS = frozenset(range(10))
 MPI = h5.get_config().mpi
@@ -302,14 +300,6 @@ class Dataset(HLObject):
     def dtype(self):
         """Numpy dtype representing the datatype"""
         return self.id.dtype
-
-    @property
-    @with_phil
-    def value(self):
-        """  Alias for dataset[()] """
-        warn("dataset.value has been deprecated. "
-            "Use dataset[()] instead.", H5pyDeprecationWarning, stacklevel=2)
-        return self[()]
 
     @property
     @with_phil
