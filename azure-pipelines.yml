@@ -26,6 +26,13 @@ jobs:
       py37:
         python.version: '3.7'
         TOXENV: py37-test-deps,py37-test-mindeps,py37-test-deps-pre,py37-test-deps-tables
+    # test when we're not in a unicode locale
+      py36-Clocale:
+        python.version: '3.6'
+        TOXENV: py36-test-deps
+        TOX_TESTENV_PASSENV: LANG LC_ALL
+        LANG: C
+        LC_ALL: C
     # test against newer HDF5
       py36-deps-hdf51103:
         python.version: '3.6'
