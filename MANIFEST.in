@@ -19,6 +19,7 @@ recursive-include h5py *.h *.pyx *.pxd *.pxi *.py *.txt
 exclude h5py/config.pxi
 exclude h5py/defs.pxd
 exclude h5py/defs.pyx
+exclude h5py/_hdf5.pxd
 
 recursive-include licenses *
 recursive-include lzf *
