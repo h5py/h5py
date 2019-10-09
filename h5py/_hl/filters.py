@@ -101,6 +101,20 @@ def _normalize_external(external):
     # Check and rebuild each entry to be well-formed.
     return [_external_entry(entry) for entry in external]
 
+class FilterRefBase:
+    """Base class for referring to an HDF5 and describing its options
+
+    Your subclass must define filter_id, and may define a filter_options tuple.
+    """
+    filter_id = None
+    filter_options = ()
+
+class Gzip(FilterRefBase):
+    filter_id = h5z.FILTER_DEFLATE
+
+    def __init__(self, level=DEFAULT_GZIP):
+        self.filter_options = (level,)
+
 def fill_dcpl(plist, shape, dtype, chunks, compression, compression_opts,
               shuffle, fletcher32, maxshape, scaleoffset, external):
     """ Generate a dataset creation property list.
@@ -134,6 +148,9 @@ def fill_dcpl(plist, shape, dtype, chunks, compression, compression_opts,
     rq_tuple(maxshape, 'maxshape')
 
     if compression is not None:
+        if isinstance(compression, FilterRefBase):
+            compression_opts = compression.filter_options
+            compression = compression.filter_id
 
         if compression not in encode and not isinstance(compression, int):
             raise ValueError('Compression filter "%s" is unavailable' % compression)
