@@ -19,7 +19,7 @@
 include "config.pxi"
 from ._objects cimport pdefault
 
-from .numpy cimport dtype, ndarray
+from numpy cimport dtype, ndarray
 from .h5r cimport Reference, RegionReference
 
 from .utils cimport  emalloc, efree, \
@@ -1390,22 +1390,22 @@ cdef TypeIntegerID _c_int(dtype dt):
     try:
         if dt.kind == c'i':
             if dt.byteorder == c'<':
-                tid = _int_le[dt.elsize]
+                tid = _int_le[dt.itemsize]
             elif dt.byteorder == c'>':
-                tid = _int_be[dt.elsize]
+                tid = _int_be[dt.itemsize]
             else:
-                tid = _int_nt[dt.elsize]
+                tid = _int_nt[dt.itemsize]
         elif dt.kind == c'u':
             if dt.byteorder == c'<':
-                tid = _uint_le[dt.elsize]
+                tid = _uint_le[dt.itemsize]
             elif dt.byteorder == c'>':
-                tid = _uint_be[dt.elsize]
+                tid = _uint_be[dt.itemsize]
             else:
-                tid = _uint_nt[dt.elsize]
+                tid = _uint_nt[dt.itemsize]
         else:
             raise TypeError('Illegal int kind "%s"' % dt.kind)
     except KeyError:
-        raise TypeError("Unsupported integer size (%s)" % dt.elsize)
+        raise TypeError("Unsupported integer size (%s)" % dt.itemsize)
 
     return TypeIntegerID(H5Tcopy(tid))
 
