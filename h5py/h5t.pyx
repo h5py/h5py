@@ -19,7 +19,9 @@
 include "config.pxi"
 from ._objects cimport pdefault
 
-from numpy cimport dtype, ndarray
+# TODO This remains to cleanup !
+from .numpy cimport dtype, ndarray
+
 from .h5r cimport Reference, RegionReference
 
 from .utils cimport  emalloc, efree, \
@@ -1373,11 +1375,11 @@ cdef TypeFloatID _c_float(dtype dt):
 
     try:
         if dt.byteorder == c'<':
-            tid =  _float_le[np.dtype(dt).type]
+            tid = _float_le[np.dtype(dt).type]
         elif dt.byteorder == c'>':
-            tid =  _float_be[np.dtype(dt).type]
+            tid = _float_be[np.dtype(dt).type]
         else:
-            tid =  _float_nt[np.dtype(dt).type]
+            tid = _float_nt[np.dtype(dt).type]
     except KeyError:
         raise TypeError("Unsupported float type (%s)" % dt)
 
@@ -1390,22 +1392,22 @@ cdef TypeIntegerID _c_int(dtype dt):
     try:
         if dt.kind == c'i':
             if dt.byteorder == c'<':
-                tid = _int_le[dt.itemsize]
+                tid = _int_le[dt.elsize]
             elif dt.byteorder == c'>':
-                tid = _int_be[dt.itemsize]
+                tid = _int_be[dt.elsize]
             else:
-                tid = _int_nt[dt.itemsize]
+                tid = _int_nt[dt.elsize]
         elif dt.kind == c'u':
             if dt.byteorder == c'<':
-                tid = _uint_le[dt.itemsize]
+                tid = _uint_le[dt.elsize]
             elif dt.byteorder == c'>':
-                tid = _uint_be[dt.itemsize]
+                tid = _uint_be[dt.elsize]
             else:
-                tid = _uint_nt[dt.itemsize]
+                tid = _uint_nt[dt.elsize]
         else:
             raise TypeError('Illegal int kind "%s"' % dt.kind)
     except KeyError:
-        raise TypeError("Unsupported integer size (%s)" % dt.itemsize)
+        raise TypeError("Unsupported integer size (%s)" % dt.elsize)
 
     return TypeIntegerID(H5Tcopy(tid))
 
