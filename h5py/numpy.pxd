@@ -37,7 +37,7 @@ cdef extern from "numpy/arrayobject.h":
 
 #   # Classes
     ctypedef extern class numpy.dtype [object PyArray_Descr]:
-        cdef: 
+        cdef:
             int type_num, elsize, alignment
             char type, kind, byteorder, hasobject
             object fields, typeobj
