@@ -531,8 +531,8 @@ class Dataset(HLObject):
         # === Check for zero-sized datasets =====
 
         if numpy.product(self.shape, dtype=numpy.ulonglong) == 0:
-            # These are the only access methods NumPy allows for such objects
-            if args == (Ellipsis,) or args == tuple():
+            # Avoid checking 'args ==' - causes problems if it contains an array
+            if args == () or (len(args) == 1 and args[0] is Ellipsis):
                 return numpy.empty(self.shape, dtype=new_dtype)
 
         # === Scalar dataspaces =================
