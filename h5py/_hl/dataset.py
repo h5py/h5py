@@ -489,9 +489,11 @@ class Dataset(HLObject):
         """
         args = args if isinstance(args, tuple) else (args,)
         if is_empty_dataspace(self.id):
-            if not (args == tuple() or args == (Ellipsis,)):
-                raise ValueError("Empty datasets cannot be sliced")
-            return Empty(self.dtype)
+            # Check 'is Ellipsis' to avoid equality comparison with an array:
+            # array equality returns an array, not a boolean.
+            if args == () or (len(args) == 1 and args[0] is Ellipsis):
+                return Empty(self.dtype)
+            raise ValueError("Empty datasets cannot be sliced")
 
         # Sort field indices from the rest of the args.
         names = tuple(x for x in args if isinstance(x, str))
@@ -531,7 +533,8 @@ class Dataset(HLObject):
         # === Check for zero-sized datasets =====
 
         if numpy.product(self.shape, dtype=numpy.ulonglong) == 0:
-            # Avoid checking 'args ==' - causes problems if it contains an array
+            # Check 'is Ellipsis' to avoid equality comparison with an array:
+            # array equality returns an array, not a boolean.
             if args == () or (len(args) == 1 and args[0] is Ellipsis):
                 return numpy.empty(self.shape, dtype=new_dtype)
 
