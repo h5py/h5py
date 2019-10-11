@@ -71,6 +71,9 @@ steps:
     tox
   displayName: 'tox'
 
-- script: |
-    codecov -t 813fb6da-087d-4b36-a185-5a530cab3455
+- task: PythonScript@0
+  inputs:
+    scriptSource: 'filePath'
+    scriptPath: 'ci/upload_coverage.py'
+    arguments: --codecov-token 813fb6da-087d-4b36-a185-5a530cab3455
   displayName: 'codecov'

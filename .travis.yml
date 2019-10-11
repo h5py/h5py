@@ -31,6 +31,7 @@ matrix:
       - TOXENV=py37-test-deps
       - HDF5_VERSION=1.10.5
       - HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION
+      - H5PY_ENFORCE_COVERAGE=yes
       os: linux-ppc64le
 
     # Builds the API docs
@@ -56,6 +57,7 @@ matrix:
       - TOXENV=py36-test-mindeps-mpi4py
       - CC="mpicc"
       - HDF5_MPI="ON"
+      - H5PY_ENFORCE_COVERAGE=yes
       addons:
         apt:
           packages:
@@ -69,10 +71,12 @@ matrix:
       - TOXENV=nightly
       - HDF5_VERSION=1.10.5
       - HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION
+      - H5PY_ENFORCE_COVERAGE=yes
 
     - python: pypy3
       env:
       - TOXENV=pypy3-test-deps
+      - H5PY_ENFORCE_COVERAGE=yes
   allow_failures:
     - python: pypy3
     - python: 'nightly'
@@ -89,4 +93,4 @@ script:
   - tox
 
 after_success:
-  - codecov
+  - python ci/upload_coverage.py
