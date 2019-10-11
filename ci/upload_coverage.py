@@ -8,8 +8,7 @@ from os import chdir, listdir, environ
 from pathlib import Path
 import platform
 from pprint import pprint
-import shlex
-from subprocess import run, PIPE
+from subprocess import run, PIPE, CalledProcessError
 import sys
 
 THIS_FILE = Path(__file__)
@@ -39,13 +38,13 @@ def run_with_python(args, **kwargs):
         msg("STDOUT:")
         sys.stdout.buffer.write(e.stdout)
         msg("STDERR:")
-        sys.stderr.buffer.write(e.stdout)
+        sys.stderr.buffer.write(e.stderr)
         raise
     else:
         msg("STDOUT:")
         sys.stdout.buffer.write(res.stdout)
         msg("STDERR:")
-        sys.stderr.buffer.write(res.stdout)
+        sys.stderr.buffer.write(res.stderr)
         return res
 
 
