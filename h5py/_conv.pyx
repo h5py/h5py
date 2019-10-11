@@ -17,7 +17,7 @@ from .h5 import get_config
 from .h5r cimport Reference, RegionReference, hobj_ref_t, hdset_reg_ref_t
 from .h5t cimport H5PY_OBJ, typewrap, py_create, TypeID
 from . cimport numpy as np
-from libc.stdlib cimport realloc
+from libc.stdlib cimport realloc, malloc
 from .utils cimport emalloc, efree
 cfg = get_config()
 
@@ -162,10 +162,8 @@ cdef int conv_vlen2str(void* ipt, void* opt, void* bkg, void* priv) except -1:
     cdef char** buf_cstring = <char**>ipt
     cdef PyObject* temp_obj = NULL
     cdef conv_size_t *sizes = <conv_size_t*>priv
-    cdef PyObject* bkg_obj0
     cdef char* buf_cstring0
 
-    memcpy(&bkg_obj0, bkg_obj, sizeof(bkg_obj0))
     memcpy(&buf_cstring0, buf_cstring, sizeof(buf_cstring0))
 
     # When reading we identify H5T_CSET_ASCII as a byte string and
@@ -184,10 +182,6 @@ cdef int conv_vlen2str(void* ipt, void* opt, void* bkg, void* priv) except -1:
     # Since all data conversions are by definition in-place, it
     # is our responsibility to free the memory used by the vlens.
     efree(buf_cstring0)
-
-    # HDF5 will eventually overwrite this target location, so we
-    # make sure to decref the object there.
-    Py_XDECREF(bkg_obj0)
 
     # Write the new string object to the buffer in-place
     memcpy(buf_obj, &temp_obj, sizeof(temp_obj));
@@ -684,7 +678,10 @@ cdef int conv_vlen2ndarray(void* ipt, void* opt, np.dtype elem_dtype,
     data = in_vlen0.ptr
     if outtype.get_size() > intype.get_size():
         data = realloc(data, outtype.get_size() * in_vlen0.len)
-    H5Tconvert(intype.id, outtype.id, in_vlen0.len, data, NULL, H5P_DEFAULT)
+
+    # if there is string in compound, a backbuf is required
+    back_buf = malloc(outtype.get_size() * in_vlen0.len)
+    H5Tconvert(intype.id, outtype.id, in_vlen0.len, data, back_buf, H5P_DEFAULT)
 
     Py_INCREF(<PyObject*>elem_dtype)
     ndarray = PyArray_NewFromDescr(&PyArray_Type, elem_dtype, 1,
@@ -696,6 +693,7 @@ cdef int conv_vlen2ndarray(void* ipt, void* opt, np.dtype elem_dtype,
     in_vlen0.ptr = NULL
     memcpy(buf_obj, &ndarray_obj, sizeof(ndarray_obj))
 
+    free(back_buf)
     return 0
 
 cdef herr_t ndarray2vlen(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
