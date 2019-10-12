@@ -17,7 +17,7 @@ from .h5 import get_config
 from .h5r cimport Reference, RegionReference, hobj_ref_t, hdset_reg_ref_t
 from .h5t cimport H5PY_OBJ, typewrap, py_create, TypeID
 from . cimport numpy as np
-from libc.stdlib cimport realloc, malloc
+from libc.stdlib cimport realloc
 from .utils cimport emalloc, efree
 cfg = get_config()
 
@@ -678,10 +678,7 @@ cdef int conv_vlen2ndarray(void* ipt, void* opt, np.dtype elem_dtype,
     data = in_vlen0.ptr
     if outtype.get_size() > intype.get_size():
         data = realloc(data, outtype.get_size() * in_vlen0.len)
-
-    # if there is string in compound, a backbuf is required
-    back_buf = malloc(outtype.get_size() * in_vlen0.len)
-    H5Tconvert(intype.id, outtype.id, in_vlen0.len, data, back_buf, H5P_DEFAULT)
+    H5Tconvert(intype.id, outtype.id, in_vlen0.len, data, NULL, H5P_DEFAULT)
 
     Py_INCREF(<PyObject*>elem_dtype)
     ndarray = PyArray_NewFromDescr(&PyArray_Type, elem_dtype, 1,
@@ -693,7 +690,6 @@ cdef int conv_vlen2ndarray(void* ipt, void* opt, np.dtype elem_dtype,
     in_vlen0.ptr = NULL
     memcpy(buf_obj, &ndarray_obj, sizeof(ndarray_obj))
 
-    free(back_buf)
     return 0
 
 cdef herr_t ndarray2vlen(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
