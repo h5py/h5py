@@ -61,6 +61,7 @@ class TestFilters(TestCase):
                                   )
 
 
+@ut.skipIf('gzip' not in h5py.filters.encode, "DEFLATE is not installed")
 def test_filter_ref_obj(writable_file):
     gzip8 = h5py.filters.Gzip(level=8)
     # **kwargs unpacking (compatible with earlier h5py versions)
