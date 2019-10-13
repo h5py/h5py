@@ -162,10 +162,8 @@ cdef int conv_vlen2str(void* ipt, void* opt, void* bkg, void* priv) except -1:
     cdef char** buf_cstring = <char**>ipt
     cdef PyObject* temp_obj = NULL
     cdef conv_size_t *sizes = <conv_size_t*>priv
-    cdef PyObject* bkg_obj0
     cdef char* buf_cstring0
 
-    memcpy(&bkg_obj0, bkg_obj, sizeof(bkg_obj0))
     memcpy(&buf_cstring0, buf_cstring, sizeof(buf_cstring0))
 
     # When reading we identify H5T_CSET_ASCII as a byte string and
@@ -184,10 +182,6 @@ cdef int conv_vlen2str(void* ipt, void* opt, void* bkg, void* priv) except -1:
     # Since all data conversions are by definition in-place, it
     # is our responsibility to free the memory used by the vlens.
     efree(buf_cstring0)
-
-    # HDF5 will eventually overwrite this target location, so we
-    # make sure to decref the object there.
-    Py_XDECREF(bkg_obj0)
 
     # Write the new string object to the buffer in-place
     memcpy(buf_obj, &temp_obj, sizeof(temp_obj));
