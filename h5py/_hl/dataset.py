@@ -13,7 +13,6 @@
 
 import posixpath as pp
 import sys
-from warnings import warn
 
 from threading import local
 
@@ -27,7 +26,6 @@ from . import selections2 as sel2
 from .datatype import Datatype
 from .compat import filename_decode
 from .vds import VDSmap, vds_support
-from ..h5py_warnings import H5pyDeprecationWarning
 
 _LEGACY_GZIP_COMPRESSION_VALS = frozenset(range(10))
 MPI = h5.get_config().mpi
@@ -302,14 +300,6 @@ class Dataset(HLObject):
     def dtype(self):
         """Numpy dtype representing the datatype"""
         return self.id.dtype
-
-    @property
-    @with_phil
-    def value(self):
-        """  Alias for dataset[()] """
-        warn("dataset.value has been deprecated. "
-            "Use dataset[()] instead.", H5pyDeprecationWarning, stacklevel=2)
-        return self[()]
 
     @property
     @with_phil
@@ -807,14 +797,6 @@ class Dataset(HLObject):
                 namestr, self.shape, self.dtype.str
             )
         return r
-
-    def __dir__(self):
-        names = set(super().__dir__())
-        # ds.value is deprecated, and we want to ensure that Jedi doesn't try
-        # to call the property (https://github.com/h5py/h5py/issues/1312), so
-        # this hides it from tab completions.
-        names.discard('value')
-        return sorted(names)
 
     if hasattr(h5d.DatasetID, "refresh"):
         @with_phil

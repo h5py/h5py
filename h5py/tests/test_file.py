@@ -21,7 +21,6 @@ from sys import platform
 
 from .common import ut, TestCase, UNICODE_FILENAMES, closed_tempfile
 from h5py import File
-from h5py.h5py_warnings import H5pyDeprecationWarning
 import h5py
 
 import pathlib
