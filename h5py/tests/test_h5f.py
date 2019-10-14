@@ -14,7 +14,7 @@ import os.path
 
 import numpy as np
 
-from h5py import File
+from h5py import File, vlen_dtype, string_dtype
 
 from .common import TestCase
 
@@ -76,12 +76,12 @@ class TestCacheConfig(TestCase):
 class TestVlenData(TestCase):
     def test_vlen_strings(self):
         # Create file with dataset containing vlen arrays of vlen strings
-        dn_tmp = tempfile.mkdtemp('h5py.lowtest.test_h5f.TestVlenStrings.test_vlen_strings')
+        dn_tmp = mkdtemp('h5py.lowtest.test_h5f.TestVlenStrings.test_vlen_strings')
         fn_h5 = os.path.join(dn_tmp, 'test.h5')
         try:
             with File(fn_h5, mode='w') as h:
-                vlen_str = special_dtype(vlen=str)
-                vlen_vlen_str = special_dtype(vlen=vlen_str)
+                vlen_str = string_dtype()
+                vlen_vlen_str = vlen_dtype(vlen_str)
 
                 ds = h.create_dataset('/com', (2,), dtype=vlen_vlen_str)
                 ds[0] = (np.array(["a", "b", "c"], dtype=vlen_vlen_str))
