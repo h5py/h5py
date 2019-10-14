@@ -20,31 +20,26 @@ from libc.stdlib cimport realloc
 from .utils cimport emalloc, efree
 cfg = get_config()
 
-# Initialization
-from numpy cimport _import_array, npy_intp, dtype as np_dtype, ndarray as np_ndarray,\
-        NPY_WRITEABLE, NPY_C_CONTIGUOUS, NPY_OWNDATA
+
+# Initialization of numpy
+from numpy cimport _import_array, npy_intp, dtype as np_dtype, ndarray as np_ndarray
+from numpy cimport NPY_WRITEABLE, NPY_C_CONTIGUOUS, NPY_OWNDATA
 _import_array()
 
-# Minimal interface for Python objects immune to Cython refcounting
+from cpython.object cimport PyObject, PyTypeObject
+
+# It would be nice to be able to replace PyObject* with object and use the pxd provided by cython
 cdef extern from "Python.h":
-
     # From Cython declarations
-    ctypedef int PyTypeObject
-    ctypedef struct PyObject:
-        Py_ssize_t ob_refcnt
-        PyTypeObject *ob_type
-
     PyObject* PyBytes_FromString(char* str) except NULL
+    PyObject* PyUnicode_DecodeUTF8(char *s, Py_ssize_t size, char *errors) except NULL
     int PyBytes_CheckExact(PyObject* str) except *
     int PyBytes_Size(PyObject* obj) except *
     PyObject* PyString_AsDecodedObject(PyObject* s, char *encoding, char *errors) except NULL
-
     PyObject* PyUnicode_DecodeUTF8(char *s, Py_ssize_t size, char *errors) except NULL
     int PyUnicode_CheckExact(PyObject* str) except *
     PyObject* PyUnicode_AsUTF8String(PyObject* s) except NULL
-
     PyObject* PyObject_Str(PyObject* obj) except NULL
-    #PyObject* (PyObject* obj) except NULL
     char* PyBytes_AsString(PyObject* obj) except NULL
 
     PyObject* Py_None
@@ -52,15 +47,13 @@ cdef extern from "Python.h":
     void Py_DECREF(PyObject* obj)
     void Py_XDECREF(PyObject* obj)
 
+cdef extern from "numpy/arrayobject.h":
+    PyTypeObject PyArray_Type
+    object PyArray_NewFromDescr(PyTypeObject* subtype, np_dtype descr, int nd, npy_intp* dims, npy_intp* strides, void* data, int flags, object obj)
 
 cdef object objectify(PyObject* o):
     Py_INCREF(o)
     return <object>o
-
-
-cdef extern from "numpy/arrayobject.h":
-    PyTypeObject PyArray_Type
-    object PyArray_NewFromDescr(PyTypeObject* subtype, np_dtype descr, int nd, npy_intp* dims, npy_intp* strides, void* data, int flags, object obj)
 
 
 ctypedef int (*conv_operator_t)(void* ipt, void* opt, void* bkg, void* priv) except -1
@@ -157,13 +150,13 @@ cdef herr_t init_generic(hid_t src, hid_t dst, void** priv) except -1:
 # Vlen string conversion
 
 cdef int conv_vlen2str(void* ipt, void* opt, void* bkg, void* priv) except -1:
-
-    cdef PyObject** buf_obj = <PyObject**>opt
-    cdef PyObject** bkg_obj = <PyObject**>bkg
-    cdef char** buf_cstring = <char**>ipt
-    cdef PyObject* temp_obj = NULL
-    cdef conv_size_t *sizes = <conv_size_t*>priv
-    cdef char* buf_cstring0
+    cdef:
+        PyObject** buf_obj = <PyObject**>opt
+        PyObject** bkg_obj = <PyObject**>bkg
+        char** buf_cstring = <char**>ipt
+        PyObject* temp_obj = NULL
+        conv_size_t *sizes = <conv_size_t*>priv
+        char* buf_cstring0
 
     memcpy(&buf_cstring0, buf_cstring, sizeof(buf_cstring0))
 
