@@ -28,22 +28,8 @@ cnp._import_array()
 
 from cpython.object cimport PyObject, PyTypeObject
 from cpython.unicode cimport PyUnicode_DecodeUTF8
-# It would be nice to be able to replace PyObject* with object and use the pxd provided by cython
-cdef extern from "Python.h":
-    # From Cython declarations
-    int PyBytes_CheckExact(PyObject* str) except *
-    int PyBytes_Size(PyObject* obj) except *
-    PyObject* PyString_AsDecodedObject(PyObject* s, char *encoding, char *errors) except NULL
-    
-    int PyUnicode_CheckExact(PyObject* str) except *
-    PyObject* PyUnicode_AsUTF8String(PyObject* s) except NULL
-    PyObject* PyObject_Str(PyObject* obj) except NULL
-    char* PyBytes_AsString(PyObject* obj) except NULL
-
-    PyObject* Py_None
-    void Py_INCREF(PyObject* obj)
-    void Py_DECREF(PyObject* obj)
-    void Py_XDECREF(PyObject* obj)
+from cpython.ref cimport Py_INCREF, Py_DECREF, Py_XDECREF, Py_XINCREF
+cdef PyObject* Py_None = <PyObject*> None  
 
 
 cdef extern from "numpy/arrayobject.h":
@@ -181,7 +167,7 @@ cdef int conv_vlen2str(void* ipt, void* opt, void* bkg, void* priv) except -1:
 
     # Write the new unicode object to the buffer in-place and ensure it is not destroyed
     buf_obj[0] = tmp_object
-    Py_INCREF(tmp_object)
+    Py_XINCREF(tmp_object)
     return 0
 
 cdef int conv_str2vlen(void* ipt, void* opt, void* bkg, void* priv) except -1:
@@ -189,70 +175,54 @@ cdef int conv_str2vlen(void* ipt, void* opt, void* bkg, void* priv) except -1:
         PyObject** buf_obj = <PyObject**>ipt
         char** buf_cstring = <char**>opt
         conv_size_t* sizes = <conv_size_t*>priv
-        PyObject* temp_object = NULL
-        PyObject* temp_encoded = NULL
+#         PyObject* temp_encoded = NULL
         char* temp_string = NULL
         size_t temp_string_len = 0  # Not including null term
         PyObject* buf_obj0
         char* buf_cstring0
+        object temp_object
 
-    memcpy(&buf_obj0, buf_obj, sizeof(buf_obj0))
+    buf_obj0 = buf_obj[0]
+    if buf_obj0 == NULL:
+        temp_object = None
+    else:
+        temp_object = <object> buf_obj0
 
-    try:
-        if buf_obj0 == NULL or buf_obj0 == Py_None:
-            temp_string = ""
-            temp_string_len = 0
-        else:
-            if PyBytes_CheckExact(buf_obj0):
-
-                # Input is a byte string.  If we're using CSET_UTF8, make sure
-                # it's valid UTF-8.  Otherwise just store it.
-                temp_object = buf_obj0
-                Py_INCREF(temp_object)
-                if sizes.cset == H5T_CSET_UTF8:
-                    try:
-                        pass # disabled for Python 3 compatibility
-                        #temp_encoded = PyString_AsDecodedObject(temp_object, "utf8", NULL)
-                    except:
-                        raise ValueError("Byte string is not valid utf-8 and can't be stored in a utf-8 dataset")
-                temp_string = PyBytes_AsString(temp_object)
-                temp_string_len = PyBytes_Size(temp_object)
-
-            # We are given a Unicode object.  Encode it to utf-8 regardless of
-            # the HDF5 character set.
-            elif PyUnicode_CheckExact(buf_obj0):
-                temp_object = buf_obj0
-                Py_INCREF(temp_object)
-                temp_encoded = PyUnicode_AsUTF8String(temp_object)
-                temp_string = PyBytes_AsString(temp_encoded)
-                temp_string_len = PyBytes_Size(temp_encoded)
-
+    if temp_object is None:
+        temp_string = ""
+        temp_string_len = 0
+    else:
+    
+        if isinstance(temp_object, unicode):
+            temp_object = temp_object.encode('utf-8')
+    
+        elif not isinstance(temp_object, bytes):
+            # There is not test on this !
+            if sizes.cset == H5T_CSET_ASCII:
+                temp_object = bytes(temp_object)
+            elif sizes.cset == H5T_CSET_UTF8:
+                temp_object = str(temp_object)
             else:
-                if sizes.cset == H5T_CSET_ASCII:
-                    temp_object = PyObject_Str(buf_obj0)
-                    temp_string = PyBytes_AsString(temp_object)
-                    temp_string_len = PyBytes_Size(temp_object)
-                elif sizes.cset == H5T_CSET_UTF8:
-                    temp_object = PyObject_Str(buf_obj0)
-                    Py_INCREF(temp_object)
-                    temp_encoded = PyUnicode_AsUTF8String(temp_object)
-                    Py_INCREF(temp_encoded)
-                    temp_string = PyBytes_AsString(temp_encoded)
-                    temp_string_len = PyBytes_Size(temp_encoded)
-                else:
-                    raise TypeError("Unrecognized dataset encoding")
+                raise TypeError("Unrecognized dataset encoding")
+    
+        if sizes.cset == H5T_CSET_UTF8:
+            try:
+                temp_object.decode('utf-8')
+            except UnicodeError as err:
+                raise ValueError("Byte string is not valid utf-8 and can't be stored in a utf-8 dataset: %s" % err)
+    
+        # temp_object is bytes
+        temp_string = temp_object  # cython cast it as char *
+        temp_string_len = len(temp_object)
 
         if strlen(temp_string) != temp_string_len:
             raise ValueError("VLEN strings do not support embedded NULLs")
 
         buf_cstring0 = <char*>emalloc(temp_string_len+1)
         memcpy(buf_cstring0, temp_string, temp_string_len+1)
-        memcpy(buf_cstring, &buf_cstring0, sizeof(buf_cstring0));
+        buf_cstring[0] = buf_cstring0
 
         return 0
-    finally:
-        Py_XDECREF(temp_object)
-        Py_XDECREF(temp_encoded)
 
 # =============================================================================
 # VLEN to fixed-width strings
@@ -340,7 +310,7 @@ cdef inline int conv_objref2pyref(void* ipt, void* opt, void* bkg, void* priv) e
     ref.typecode = H5R_OBJECT
 
     ref_ptr = <PyObject*>ref
-    Py_INCREF(ref_ptr)  # because Cython discards its reference when the
+    Py_INCREF(ref)  # because Cython discards its reference when the
                         # function exits
     memcpy(buf_obj, &ref_ptr, sizeof(ref_ptr))
 
@@ -381,7 +351,7 @@ cdef inline int conv_regref2pyref(void* ipt, void* opt, void* bkg, void* priv) e
     memcpy(ref.ref.reg_ref, buf_ref, sizeof(hdset_reg_ref_t))
     ref.typecode = H5R_DATASET_REGION
     ref_ptr = <PyObject*>ref
-    Py_INCREF(ref_ptr)  # because Cython discards its reference when the
+    Py_INCREF(ref)  # because Cython discards its reference when the
                         # function exits
 
     Py_XDECREF(bkg_obj0)
@@ -667,11 +637,11 @@ cdef int conv_vlen2ndarray(void* ipt, void* opt, cnp.dtype elem_dtype,
         data = realloc(data, outtype.get_size() * in_vlen0.len)
     H5Tconvert(intype.id, outtype.id, in_vlen0.len, data, NULL, H5P_DEFAULT)
 
-    Py_INCREF(<PyObject*>elem_dtype)
+    Py_INCREF(elem_dtype)
     ndarray = PyArray_NewFromDescr(&PyArray_Type, elem_dtype, 1,
                 dims, NULL, data, flags, <object>NULL)
     ndarray_obj = <PyObject*>ndarray
-    Py_INCREF(ndarray_obj)
+    Py_INCREF(ndarray)
 
     # Write the new object to the buffer in-place
     in_vlen0.ptr = NULL
@@ -687,7 +657,7 @@ cdef herr_t ndarray2vlen(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
         size_t src_size, dst_size
         TypeID supertype
         TypeID outtype
-        cnp.dtype dt
+#         cnp.dtype dt
         int i
         PyObject **pdata = <PyObject **> buf_i
         PyObject *pdata_elem
@@ -758,8 +728,6 @@ cdef int conv_ndarray2vlen(void* ipt, void* opt,
     cdef:
         PyObject** buf_obj = <PyObject**>ipt
         vlen_t* in_vlen = <vlen_t*>opt
-        int flags = NPY_WRITEABLE | NPY_C_CONTIGUOUS
-        npy_intp dims[1]
         void* data
         cnp.ndarray ndarray
         size_t len
