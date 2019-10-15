@@ -32,16 +32,9 @@ from cpython.ref cimport Py_INCREF, Py_DECREF, Py_XDECREF, Py_XINCREF
 
 cdef PyObject* Py_None = <PyObject*> None  
 
-
 cdef extern from "numpy/arrayobject.h":
     PyTypeObject PyArray_Type
     object PyArray_NewFromDescr(PyTypeObject* subtype, cnp.dtype descr, int nd, npy_intp* dims, npy_intp* strides, void* data, int flags, object obj)
-
-
-cdef object objectify(PyObject* o):
-    Py_INCREF(o)
-    return <object>o
-
 
 ctypedef int (*conv_operator_t)(void* ipt, void* opt, void* bkg, void* priv) except -1
 ctypedef herr_t (*init_operator_t)(hid_t src, hid_t dst, void** priv) except -1
