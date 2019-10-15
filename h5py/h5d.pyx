@@ -17,7 +17,7 @@ include "config.pxi"
 
 from collections import namedtuple
 from ._objects cimport pdefault
-from .numpy cimport ndarray, import_array, PyArray_DATA, NPY_WRITEABLE
+from numpy cimport ndarray, import_array, PyArray_DATA, NPY_WRITEABLE
 from cpython cimport array
 from .utils cimport  check_numpy_read, check_numpy_write, \
                      convert_tuple, convert_dims, emalloc, efree

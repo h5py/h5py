@@ -19,7 +19,9 @@
 include "config.pxi"
 from ._objects cimport pdefault
 
+# TODO This remains to cleanup !
 from .numpy cimport dtype, ndarray
+
 from .h5r cimport Reference, RegionReference
 
 from .utils cimport  emalloc, efree, \
@@ -1373,11 +1375,11 @@ cdef TypeFloatID _c_float(dtype dt):
 
     try:
         if dt.byteorder == c'<':
-            tid =  _float_le[np.dtype(dt).type]
+            tid = _float_le[np.dtype(dt).type]
         elif dt.byteorder == c'>':
-            tid =  _float_be[np.dtype(dt).type]
+            tid = _float_be[np.dtype(dt).type]
         else:
-            tid =  _float_nt[np.dtype(dt).type]
+            tid = _float_nt[np.dtype(dt).type]
     except KeyError:
         raise TypeError("Unsupported float type (%s)" % dt)
 

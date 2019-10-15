@@ -17,7 +17,7 @@ include "config.pxi"
 # C-level imports
 from .utils cimport  require_tuple, convert_dims, convert_tuple, \
                     emalloc, efree, create_numpy_hsize, create_hsize_array
-from .numpy cimport ndarray
+from numpy cimport ndarray
 
 #Python level imports
 from . import _objects
@@ -492,10 +492,10 @@ cdef class SpaceID(ObjectID):
 
         hcoords = create_hsize_array(coords)
 
-        if hcoords.nd != 2 or hcoords.dimensions[1] != H5Sget_simple_extent_ndims(self.id):
+        if hcoords.ndim != 2 or hcoords.shape[1] != H5Sget_simple_extent_ndims(self.id):
             raise ValueError("Coordinate array must have shape (<npoints>, %d)" % self.get_simple_extent_ndims())
 
-        nelements = hcoords.dimensions[0]
+        nelements = hcoords.shape[0]
 
         H5Sselect_elements(self.id, <H5S_seloper_t>op, nelements, <hsize_t*>hcoords.data)
 
