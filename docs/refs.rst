@@ -79,17 +79,11 @@ reference objects.
 
 These dtypes are available from h5py for references and region references:
 
-    >>> type(h5py.ref_dtype)
-    <type 'numpy.dtype'>
-    >>> ref_dtype.kind
-    'O'
-    >>> type(h5py.regionref_dtype)
-    <type 'numpy.dtype'>
+* ``h5py.ref_dtype`` - for object references
+* ``h5py.regionref_dtype`` - for region references
 
-The types accepted by this "ref=" keyword argument are h5py.Reference (for
-object references) and h5py.RegionReference (for region references).
-
-To create an array of references, use this dtype as you normally would:
+To store an array of references, use the appropriate dtype when creating the
+dataset:
 
     >>> ref_dataset = myfile.create_dataset("MyRefs", (100,), dtype=h5py.ref_dtype)
 
