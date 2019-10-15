@@ -4,7 +4,7 @@
 #
 # http://www.h5py.org
 #
-# Copyright 2008-2013 Andrew Collette and contributors
+# Copyright 2008-2019 Andrew Collette and contributors
 #
 # License:  Standard 3-clause BSD; see "license.txt" for full license terms
 #           and contributor agreement.
@@ -16,34 +16,30 @@
 from .h5 import get_config
 from .h5r cimport Reference, RegionReference, hobj_ref_t, hdset_reg_ref_t
 from .h5t cimport H5PY_OBJ, typewrap, py_create, TypeID
-from . cimport numpy as np
 from libc.stdlib cimport realloc
 from .utils cimport emalloc, efree
 cfg = get_config()
 
-# Initialization
-np.import_array()
 
-# Minimal interface for Python objects immune to Cython refcounting
+# Initialization of numpy
+from numpy cimport _import_array, npy_intp, dtype as np_dtype, ndarray as np_ndarray
+from numpy cimport NPY_WRITEABLE, NPY_C_CONTIGUOUS, NPY_OWNDATA
+_import_array()
+
+from cpython.object cimport PyObject, PyTypeObject
+
+# It would be nice to be able to replace PyObject* with object and use the pxd provided by cython
 cdef extern from "Python.h":
-
     # From Cython declarations
-    ctypedef int PyTypeObject
-    ctypedef struct PyObject:
-        Py_ssize_t ob_refcnt
-        PyTypeObject *ob_type
-
     PyObject* PyBytes_FromString(char* str) except NULL
+    PyObject* PyUnicode_DecodeUTF8(char *s, Py_ssize_t size, char *errors) except NULL
     int PyBytes_CheckExact(PyObject* str) except *
     int PyBytes_Size(PyObject* obj) except *
     PyObject* PyString_AsDecodedObject(PyObject* s, char *encoding, char *errors) except NULL
-
     PyObject* PyUnicode_DecodeUTF8(char *s, Py_ssize_t size, char *errors) except NULL
     int PyUnicode_CheckExact(PyObject* str) except *
     PyObject* PyUnicode_AsUTF8String(PyObject* s) except NULL
-
     PyObject* PyObject_Str(PyObject* obj) except NULL
-    #PyObject* (PyObject* obj) except NULL
     char* PyBytes_AsString(PyObject* obj) except NULL
 
     PyObject* Py_None
@@ -51,15 +47,13 @@ cdef extern from "Python.h":
     void Py_DECREF(PyObject* obj)
     void Py_XDECREF(PyObject* obj)
 
+cdef extern from "numpy/arrayobject.h":
+    PyTypeObject PyArray_Type
+    object PyArray_NewFromDescr(PyTypeObject* subtype, np_dtype descr, int nd, npy_intp* dims, npy_intp* strides, void* data, int flags, object obj)
 
 cdef object objectify(PyObject* o):
     Py_INCREF(o)
     return <object>o
-
-
-cdef extern from "numpy/arrayobject.h":
-    PyTypeObject PyArray_Type
-    object PyArray_NewFromDescr(PyTypeObject* subtype, np.dtype descr, int nd, np.npy_intp* dims, np.npy_intp* strides, void* data, int flags, object obj)
 
 
 ctypedef int (*conv_operator_t)(void* ipt, void* opt, void* bkg, void* priv) except -1
@@ -156,13 +150,13 @@ cdef herr_t init_generic(hid_t src, hid_t dst, void** priv) except -1:
 # Vlen string conversion
 
 cdef int conv_vlen2str(void* ipt, void* opt, void* bkg, void* priv) except -1:
-
-    cdef PyObject** buf_obj = <PyObject**>opt
-    cdef PyObject** bkg_obj = <PyObject**>bkg
-    cdef char** buf_cstring = <char**>ipt
-    cdef PyObject* temp_obj = NULL
-    cdef conv_size_t *sizes = <conv_size_t*>priv
-    cdef char* buf_cstring0
+    cdef:
+        PyObject** buf_obj = <PyObject**>opt
+        PyObject** bkg_obj = <PyObject**>bkg
+        char** buf_cstring = <char**>ipt
+        PyObject* temp_obj = NULL
+        conv_size_t *sizes = <conv_size_t*>priv
+        char* buf_cstring0
 
     memcpy(&buf_cstring0, buf_cstring, sizeof(buf_cstring0))
 
@@ -603,7 +597,7 @@ cdef herr_t vlen2ndarray(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
     cdef size_t src_size, dst_size
     cdef TypeID supertype
     cdef TypeID outtype
-    cdef np.dtype dt
+    cdef np_dtype dt
     cdef int i
 
     cdef char* buf = <char*>buf_i
@@ -660,15 +654,15 @@ cdef struct vlen_t:
     size_t len
     void* ptr
 
-cdef int conv_vlen2ndarray(void* ipt, void* opt, np.dtype elem_dtype,
+cdef int conv_vlen2ndarray(void* ipt, void* opt, np_dtype elem_dtype,
         TypeID intype, TypeID outtype) except -1:
 
     cdef PyObject** buf_obj = <PyObject**>opt
     cdef vlen_t* in_vlen = <vlen_t*>ipt
-    cdef int flags = np.NPY_WRITEABLE | np.NPY_C_CONTIGUOUS | np.NPY_OWNDATA
-    cdef np.npy_intp dims[1]
+    cdef int flags = NPY_WRITEABLE | NPY_C_CONTIGUOUS | NPY_OWNDATA
+    cdef npy_intp dims[1]
     cdef void* data
-    cdef np.ndarray ndarray
+    cdef np_ndarray ndarray
     cdef PyObject* ndarray_obj
     cdef vlen_t in_vlen0
 
@@ -700,7 +694,7 @@ cdef herr_t ndarray2vlen(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
     cdef size_t src_size, dst_size
     cdef TypeID supertype
     cdef TypeID outtype
-    cdef np.dtype dt
+    cdef np_dtype dt
     cdef int i
     cdef PyObject **pdata = <PyObject **> buf_i
     cdef PyObject *pdata_elem
@@ -715,9 +709,9 @@ cdef herr_t ndarray2vlen(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
         supertype = typewrap(H5Tget_super(dst_id))
         for i from 0 <= i < nl:
             memcpy(&pdata_elem, pdata+i, sizeof(pdata_elem))
-            if supertype != py_create((<np.ndarray> pdata_elem).dtype, 1):
+            if supertype != py_create((<np_ndarray> pdata_elem).dtype, 1):
                 return -2
-            if (<np.ndarray> pdata_elem).ndim != 1:
+            if (<np_ndarray> pdata_elem).ndim != 1:
                 return -2
 
     elif command == H5T_CONV_FREE:
@@ -733,7 +727,7 @@ cdef herr_t ndarray2vlen(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
 
         # need to pass element dtype to converter
         memcpy(&pdata_elem, pdata, sizeof(pdata_elem))
-        supertype = py_create((<np.ndarray> pdata_elem).dtype)
+        supertype = py_create((<np_ndarray> pdata_elem).dtype)
         outtype = typewrap(H5Tget_super(dst_id))
 
         if buf_stride == 0:
@@ -772,15 +766,15 @@ cdef int conv_ndarray2vlen(void* ipt, void* opt,
 
     cdef PyObject** buf_obj = <PyObject**>ipt
     cdef vlen_t* in_vlen = <vlen_t*>opt
-    cdef int flags = np.NPY_WRITEABLE | np.NPY_C_CONTIGUOUS
-    cdef np.npy_intp dims[1]
+    cdef int flags = NPY_WRITEABLE | NPY_C_CONTIGUOUS
+    cdef npy_intp dims[1]
     cdef void* data
-    cdef np.ndarray ndarray
+    cdef np_ndarray ndarray
     cdef size_t len
     cdef PyObject* buf_obj0
 
     memcpy(&buf_obj0, buf_obj, sizeof(buf_obj0))
-    ndarray = <np.ndarray> buf_obj0
+    ndarray = <np_ndarray> buf_obj0
     len = ndarray.shape[0]
 
     if outtype.get_size() > intype.get_size():

@@ -10,7 +10,7 @@
 
 from .defs cimport *
 
-from .numpy cimport ndarray
+from numpy cimport ndarray
 
 cdef void* emalloc(size_t size) except? NULL
 cdef void efree(void* ptr)
