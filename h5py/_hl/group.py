@@ -271,7 +271,7 @@ class Group(HLObject, MutableMappingHDF5):
         if otype == h5i.GROUP:
             return Group(oid)
         elif otype == h5i.DATASET:
-            return dataset.Dataset(oid)
+            return dataset.Dataset(oid, readonly=(self.file.mode == 'r'))
         elif otype == h5i.DATATYPE:
             return datatype.Datatype(oid)
         else:
