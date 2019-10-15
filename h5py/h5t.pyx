@@ -18,7 +18,7 @@
 # C-level imports
 include "config.pxi"
 from ._objects cimport pdefault
-cimport numpy as npc
+cimport numpy as cnp
 from .h5r cimport Reference, RegionReference
 
 from .utils cimport  emalloc, efree, require_tuple, convert_dims,\
@@ -247,7 +247,7 @@ cdef tuple _get_available_ftypes():
     cdef: 
         str floating_typecodes = np.typecodes["Float"]
         str ftc
-        npc.dtype fdtype
+        cnp.dtype fdtype
         list available_ftypes = []
 
     for ftc in floating_typecodes:
@@ -1366,7 +1366,7 @@ cdef dict _uint_le = {1: H5Tcopy(H5T_STD_U8LE), 2: H5Tcopy(H5T_STD_U16LE), 4: H5
 cdef dict _uint_be = {1: H5Tcopy(H5T_STD_U8BE), 2: H5Tcopy(H5T_STD_U16BE), 4: H5Tcopy(H5T_STD_U32BE), 8: H5Tcopy(H5T_STD_U64BE)}
 cdef dict _uint_nt = {1: H5Tcopy(H5T_NATIVE_UINT8), 2: H5Tcopy(H5T_NATIVE_UINT16), 4: H5Tcopy(H5T_NATIVE_UINT32), 8: H5Tcopy(H5T_NATIVE_UINT64)}
 
-cdef TypeFloatID _c_float(npc.dtype dt):
+cdef TypeFloatID _c_float(cnp.dtype dt):
     # Floats (single and double)
     cdef TypeFloatID tid
 
@@ -1382,7 +1382,7 @@ cdef TypeFloatID _c_float(npc.dtype dt):
 
     return tid.copy()
 
-cdef TypeIntegerID _c_int(npc.dtype dt):
+cdef TypeIntegerID _c_int(cnp.dtype dt):
     # Integers (ints and uints)
     cdef hid_t tid
 
@@ -1409,7 +1409,7 @@ cdef TypeIntegerID _c_int(npc.dtype dt):
     return TypeIntegerID(H5Tcopy(tid))
 
 
-cdef TypeEnumID _c_enum(npc.dtype dt, dict vals):
+cdef TypeEnumID _c_enum(cnp.dtype dt, dict vals):
     # Enums
     cdef:
         TypeIntegerID base
@@ -1427,7 +1427,7 @@ cdef TypeEnumID _c_enum(npc.dtype dt, dict vals):
     return out
 
 
-cdef TypeEnumID _c_bool(npc.dtype dt):
+cdef TypeEnumID _c_bool(cnp.dtype dt):
     # Booleans
     global cfg
 
@@ -1440,10 +1440,10 @@ cdef TypeEnumID _c_bool(npc.dtype dt):
     return out
 
 
-cdef TypeArrayID _c_array(npc.dtype dt, int logical):
+cdef TypeArrayID _c_array(cnp.dtype dt, int logical):
     # Arrays
     cdef:
-        npc.dtype base
+        cnp.dtype base
         TypeID type_base
         object shape
 
@@ -1459,11 +1459,11 @@ cdef TypeArrayID _c_array(npc.dtype dt, int logical):
     return array_create(type_base, shape)
 
 
-cdef TypeOpaqueID _c_opaque(npc.dtype dt):
+cdef TypeOpaqueID _c_opaque(cnp.dtype dt):
     # Opaque
     return TypeOpaqueID(H5Tcreate(H5T_OPAQUE, dt.itemsize))
 
-cdef TypeStringID _c_string(npc.dtype dt):
+cdef TypeStringID _c_string(cnp.dtype dt):
     # Strings (fixed-length)
     cdef hid_t tid
 
@@ -1474,7 +1474,7 @@ cdef TypeStringID _c_string(npc.dtype dt):
         H5Tset_cset(tid, H5T_CSET_UTF8)
     return TypeStringID(tid)
 
-cdef TypeCompoundID _c_complex(npc.dtype dt):
+cdef TypeCompoundID _c_complex(cnp.dtype dt):
     # Complex numbers (names depend on cfg)
     global cfg
 
@@ -1611,7 +1611,7 @@ cpdef TypeID py_create(object dtype_in, bint logical=0, bint aligned=0):
         length string type.
     """
     cdef:
-        npc.dtype dt
+        cnp.dtype dt
         char kind
 
     if isinstance(dtype_in, np.dtype):
@@ -1879,7 +1879,7 @@ def check_dtype(**kwds):
 
 @with_phil
 def convert(TypeID src not None, TypeID dst not None, size_t n,
-            npc.ndarray buf not None, npc.ndarray bkg=None, ObjectID dxpl=None):
+            cnp.ndarray buf not None, cnp.ndarray bkg=None, ObjectID dxpl=None):
     """ (TypeID src, TypeID dst, UINT n, NDARRAY buf, NDARRAY bkg=None,
     PropID dxpl=None)
 

@@ -22,21 +22,19 @@ cfg = get_config()
 
 
 # Initialization of numpy
-from numpy cimport _import_array, npy_intp, dtype as np_dtype, ndarray as np_ndarray
-from numpy cimport NPY_WRITEABLE, NPY_C_CONTIGUOUS, NPY_OWNDATA
-_import_array()
+cimport numpy as cnp
+from numpy cimport npy_intp, NPY_WRITEABLE, NPY_C_CONTIGUOUS, NPY_OWNDATA
+cnp._import_array()
 
 from cpython.object cimport PyObject, PyTypeObject
-
+from cpython.unicode cimport PyUnicode_DecodeUTF8
 # It would be nice to be able to replace PyObject* with object and use the pxd provided by cython
 cdef extern from "Python.h":
     # From Cython declarations
-    PyObject* PyBytes_FromString(char* str) except NULL
-    PyObject* PyUnicode_DecodeUTF8(char *s, Py_ssize_t size, char *errors) except NULL
     int PyBytes_CheckExact(PyObject* str) except *
     int PyBytes_Size(PyObject* obj) except *
     PyObject* PyString_AsDecodedObject(PyObject* s, char *encoding, char *errors) except NULL
-    PyObject* PyUnicode_DecodeUTF8(char *s, Py_ssize_t size, char *errors) except NULL
+    
     int PyUnicode_CheckExact(PyObject* str) except *
     PyObject* PyUnicode_AsUTF8String(PyObject* s) except NULL
     PyObject* PyObject_Str(PyObject* obj) except NULL
@@ -47,9 +45,11 @@ cdef extern from "Python.h":
     void Py_DECREF(PyObject* obj)
     void Py_XDECREF(PyObject* obj)
 
+
 cdef extern from "numpy/arrayobject.h":
     PyTypeObject PyArray_Type
-    object PyArray_NewFromDescr(PyTypeObject* subtype, np_dtype descr, int nd, npy_intp* dims, npy_intp* strides, void* data, int flags, object obj)
+    object PyArray_NewFromDescr(PyTypeObject* subtype, cnp.dtype descr, int nd, npy_intp* dims, npy_intp* strides, void* data, int flags, object obj)
+
 
 cdef object objectify(PyObject* o):
     Py_INCREF(o)
@@ -72,13 +72,12 @@ cdef herr_t generic_converter(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
                     size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
                     void *bkg_i, hid_t dxpl, conv_operator_t op,
                     init_operator_t initop, H5T_bkg_t need_bkg)  except -1:
-
-    cdef int command
-    cdef conv_size_t *sizes
-    cdef int i
-
-    cdef char* buf = <char*>buf_i
-    cdef char* bkg = <char*>bkg_i
+    cdef:
+        int command
+        conv_size_t *sizes
+        int i
+        char* buf = <char*>buf_i
+        char* bkg = <char*>bkg_i
 
     command = cdata[0].command
     if command == H5T_CONV_INIT:
@@ -153,48 +152,49 @@ cdef int conv_vlen2str(void* ipt, void* opt, void* bkg, void* priv) except -1:
     cdef:
         PyObject** buf_obj = <PyObject**>opt
         char** buf_cstring = <char**>ipt
-        PyObject* temp_obj = NULL
+        PyObject* tmp_object
+        bytes tmp_bytes
+        unicode tmp_unicode
         conv_size_t *sizes = <conv_size_t*>priv
         char* buf_cstring0
 
-    memcpy(&buf_cstring0, buf_cstring, sizeof(buf_cstring0))
+    buf_cstring0 = buf_cstring[0]
 
     # When reading we identify H5T_CSET_ASCII as a byte string and
     # H5T_CSET_UTF8 as a utf8-encoded unicode string
     if sizes.cset == H5T_CSET_ASCII:
         if buf_cstring0 == NULL:
-            temp_obj = PyBytes_FromString("")
+            tmp_bytes =  b""
         else:
-            temp_obj = PyBytes_FromString(buf_cstring0)
+            tmp_bytes = buf_cstring0 # Cython converts char* -> bytes for us
+        tmp_object = <PyObject *>tmp_bytes
     elif sizes.cset == H5T_CSET_UTF8:
         if buf_cstring0 == NULL:
-            temp_obj = PyUnicode_DecodeUTF8("", 0, NULL)
+            tmp_unicode =  u""
         else:
-            temp_obj = PyUnicode_DecodeUTF8(buf_cstring0, strlen(buf_cstring0), NULL)
-
+            tmp_unicode = PyUnicode_DecodeUTF8(buf_cstring0, strlen(buf_cstring0), NULL)
+        tmp_object = <PyObject *>tmp_unicode
+        
     # Since all data conversions are by definition in-place, it
     # is our responsibility to free the memory used by the vlens.
     efree(buf_cstring0)
 
-    # Write the new string object to the buffer in-place
-    memcpy(buf_obj, &temp_obj, sizeof(temp_obj));
-
+    # Write the new unicode object to the buffer in-place and ensure it is not destroyed
+    buf_obj[0] = tmp_object
+    Py_INCREF(tmp_object)
     return 0
 
 cdef int conv_str2vlen(void* ipt, void* opt, void* bkg, void* priv) except -1:
-
-    cdef PyObject** buf_obj = <PyObject**>ipt
-    cdef char** buf_cstring = <char**>opt
-    cdef conv_size_t* sizes = <conv_size_t*>priv
-
-    cdef PyObject* temp_object = NULL
-    cdef PyObject* temp_encoded = NULL
-
-    cdef char* temp_string = NULL
-    cdef size_t temp_string_len = 0  # Not including null term
-
-    cdef PyObject* buf_obj0
-    cdef char* buf_cstring0
+    cdef:
+        PyObject** buf_obj = <PyObject**>ipt
+        char** buf_cstring = <char**>opt
+        conv_size_t* sizes = <conv_size_t*>priv
+        PyObject* temp_object = NULL
+        PyObject* temp_encoded = NULL
+        char* temp_string = NULL
+        size_t temp_string_len = 0  # Not including null term
+        PyObject* buf_obj0
+        char* buf_cstring0
 
     memcpy(&buf_obj0, buf_obj, sizeof(buf_obj0))
 
@@ -284,13 +284,13 @@ cdef herr_t init_fixed2vlen(hid_t src, hid_t dst, void** priv) except -1:
     return 0
 
 cdef int conv_vlen2fixed(void* ipt, void* opt, void* bkg, void* priv) except -1:
-
-    cdef char** buf_vlen = <char**>ipt
-    cdef char* buf_fixed = <char*>opt
-    cdef char* temp_string = NULL
-    cdef size_t temp_string_len = 0  # Without null term
-    cdef conv_size_t *sizes = <conv_size_t*>priv
-    cdef char* buf_vlen0
+    cdef:
+        char** buf_vlen = <char**>ipt
+        char* buf_fixed = <char*>opt
+        char* temp_string = NULL
+        size_t temp_string_len = 0  # Without null term
+        conv_size_t *sizes = <conv_size_t*>priv
+        char* buf_vlen0
 
     memcpy(&buf_vlen0, buf_vlen, sizeof(buf_vlen0));
 
@@ -311,11 +311,11 @@ cdef int conv_vlen2fixed(void* ipt, void* opt, void* bkg, void* priv) except -1:
     return 0
 
 cdef int conv_fixed2vlen(void* ipt, void* opt, void* bkg, void* priv) except -1:
-
-    cdef char** buf_vlen = <char**>opt
-    cdef char* buf_fixed = <char*>ipt
-    cdef char* temp_string = NULL
-    cdef conv_size_t *sizes = <conv_size_t*>priv
+    cdef:
+        char** buf_vlen = <char**>opt
+        char* buf_fixed = <char*>ipt
+        char* temp_string = NULL
+        conv_size_t *sizes = <conv_size_t*>priv
 
     temp_string = <char*>emalloc(sizes[0].src_size+1)
     memcpy(temp_string, buf_fixed, sizes[0].src_size)
@@ -329,10 +329,11 @@ cdef int conv_fixed2vlen(void* ipt, void* opt, void* bkg, void* priv) except -1:
 # HDF5 references to Python instances of h5r.Reference
 
 cdef inline int conv_objref2pyref(void* ipt, void* opt, void* bkg, void* priv) except -1:
-    cdef PyObject** buf_obj = <PyObject**>opt
-    cdef hobj_ref_t* buf_ref = <hobj_ref_t*>ipt
-    cdef Reference ref
-    cdef PyObject* ref_ptr = NULL
+    cdef:
+        PyObject** buf_obj = <PyObject**>opt
+        hobj_ref_t* buf_ref = <hobj_ref_t*>ipt
+        Reference ref
+        PyObject* ref_ptr = NULL
 
     ref = Reference()
     memcpy(&ref.ref.obj_ref, buf_ref, sizeof(ref.ref.obj_ref))
@@ -341,19 +342,17 @@ cdef inline int conv_objref2pyref(void* ipt, void* opt, void* bkg, void* priv) e
     ref_ptr = <PyObject*>ref
     Py_INCREF(ref_ptr)  # because Cython discards its reference when the
                         # function exits
-
     memcpy(buf_obj, &ref_ptr, sizeof(ref_ptr))
 
     return 0
 
 cdef inline int conv_pyref2objref(void* ipt, void* opt, void* bkg, void* priv)  except -1:
-    cdef PyObject** buf_obj = <PyObject**>ipt
-    cdef hobj_ref_t* buf_ref = <hobj_ref_t*>opt
-
-    cdef object obj
-    cdef Reference ref
-
-    cdef PyObject* buf_obj0
+    cdef:
+        PyObject** buf_obj = <PyObject**>ipt
+        hobj_ref_t* buf_ref = <hobj_ref_t*>opt
+        object obj
+        Reference ref
+        PyObject* buf_obj0
 
     memcpy(&buf_obj0, buf_obj, sizeof(buf_obj0));
 
@@ -369,14 +368,13 @@ cdef inline int conv_pyref2objref(void* ipt, void* opt, void* bkg, void* priv)  
     return 0
 
 cdef inline int conv_regref2pyref(void* ipt, void* opt, void* bkg, void* priv) except -1:
-    cdef PyObject** buf_obj = <PyObject**>opt
-    cdef PyObject** bkg_obj = <PyObject**>bkg
-    cdef hdset_reg_ref_t* buf_ref = <hdset_reg_ref_t*>ipt
-
-    cdef RegionReference ref
-    cdef PyObject* ref_ptr = NULL
-
-    cdef PyObject* bkg_obj0
+    cdef:
+        PyObject** buf_obj = <PyObject**>opt
+        PyObject** bkg_obj = <PyObject**>bkg
+        hdset_reg_ref_t* buf_ref = <hdset_reg_ref_t*>ipt
+        RegionReference ref
+        PyObject* ref_ptr = NULL
+        PyObject* bkg_obj0
 
     memcpy(&bkg_obj0, bkg_obj, sizeof(bkg_obj0));
     ref = RegionReference()
@@ -392,13 +390,12 @@ cdef inline int conv_regref2pyref(void* ipt, void* opt, void* bkg, void* priv) e
     return 0
 
 cdef inline int conv_pyref2regref(void* ipt, void* opt, void* bkg, void* priv) except -1:
-    cdef PyObject** buf_obj = <PyObject**>ipt
-    cdef hdset_reg_ref_t* buf_ref = <hdset_reg_ref_t*>opt
-
-    cdef object obj
-    cdef RegionReference ref
-
-    cdef PyObject* buf_obj0
+    cdef:
+        PyObject** buf_obj = <PyObject**>ipt
+        hdset_reg_ref_t* buf_ref = <hdset_reg_ref_t*>opt
+        object obj
+        RegionReference ref
+        PyObject* buf_obj0
 
     memcpy(&buf_obj0, buf_obj, sizeof(buf_obj0));
 
@@ -492,13 +489,14 @@ cdef void enum_int_converter_free(H5T_cdata_t *cdata):
 cdef int enum_int_converter_conv(hid_t src, hid_t dst, H5T_cdata_t *cdata,
                                   size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
                                  void *bkg_i, hid_t dxpl, int forward) except -1 with gil:
-    cdef conv_enum_t *info
-    cdef size_t nalloc
-    cdef int i
-    cdef char* cbuf = NULL
-    cdef char* buf = <char*>buf_i
-    cdef int identical
-    cdef hid_t supertype = -1
+    cdef:
+        conv_enum_t *info
+        size_t nalloc
+        int i
+        char* cbuf = NULL
+        char* buf = <char*>buf_i
+        int identical
+        hid_t supertype = -1
 
     info = <conv_enum_t*>cdata[0].priv
 
@@ -591,28 +589,24 @@ cdef herr_t int2enum(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
 cdef herr_t vlen2ndarray(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
                     size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
                     void *bkg_i, hid_t dxpl) except -1:
-
-    cdef int command = cdata[0].command
-    cdef size_t src_size, dst_size
-    cdef TypeID supertype
-    cdef TypeID outtype
-    cdef np_dtype dt
-    cdef int i
-
-    cdef char* buf = <char*>buf_i
+    cdef:
+        int command = cdata[0].command
+        size_t src_size, dst_size
+        TypeID supertype
+        TypeID outtype
+        cnp.dtype dt
+        int i
+        char* buf = <char*>buf_i
 
     if command == H5T_CONV_INIT:
-
         cdata[0].need_bkg = H5T_BKG_NO
         if H5Tget_class(src_id) != H5T_VLEN or H5Tget_class(dst_id) != H5T_OPAQUE:
             return -2
 
     elif command == H5T_CONV_FREE:
-
         pass
 
     elif command == H5T_CONV_CONV:
-
         # need to pass element dtype to converter
         supertype = typewrap(H5Tget_super(src_id))
         dt = supertype.dtype
@@ -653,17 +647,17 @@ cdef struct vlen_t:
     size_t len
     void* ptr
 
-cdef int conv_vlen2ndarray(void* ipt, void* opt, np_dtype elem_dtype,
+cdef int conv_vlen2ndarray(void* ipt, void* opt, cnp.dtype elem_dtype,
         TypeID intype, TypeID outtype) except -1:
-
-    cdef PyObject** buf_obj = <PyObject**>opt
-    cdef vlen_t* in_vlen = <vlen_t*>ipt
-    cdef int flags = NPY_WRITEABLE | NPY_C_CONTIGUOUS | NPY_OWNDATA
-    cdef npy_intp dims[1]
-    cdef void* data
-    cdef np_ndarray ndarray
-    cdef PyObject* ndarray_obj
-    cdef vlen_t in_vlen0
+    cdef:
+        PyObject** buf_obj = <PyObject**>opt
+        vlen_t* in_vlen = <vlen_t*>ipt
+        int flags = NPY_WRITEABLE | NPY_C_CONTIGUOUS | NPY_OWNDATA
+        npy_intp dims[1]
+        void* data
+        cnp.ndarray ndarray
+        PyObject* ndarray_obj
+        vlen_t in_vlen0
 
     memcpy(&in_vlen0, in_vlen, sizeof(in_vlen0))
 
@@ -688,17 +682,16 @@ cdef int conv_vlen2ndarray(void* ipt, void* opt, np_dtype elem_dtype,
 cdef herr_t ndarray2vlen(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
                     size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
                     void *bkg_i, hid_t dxpl) except -1:
-
-    cdef int command = cdata[0].command
-    cdef size_t src_size, dst_size
-    cdef TypeID supertype
-    cdef TypeID outtype
-    cdef np_dtype dt
-    cdef int i
-    cdef PyObject **pdata = <PyObject **> buf_i
-    cdef PyObject *pdata_elem
-
-    cdef char* buf = <char*>buf_i
+    cdef:
+        int command = cdata[0].command
+        size_t src_size, dst_size
+        TypeID supertype
+        TypeID outtype
+        cnp.dtype dt
+        int i
+        PyObject **pdata = <PyObject **> buf_i
+        PyObject *pdata_elem
+        char* buf = <char*>buf_i
 
     if command == H5T_CONV_INIT:
 
@@ -708,9 +701,9 @@ cdef herr_t ndarray2vlen(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
         supertype = typewrap(H5Tget_super(dst_id))
         for i from 0 <= i < nl:
             memcpy(&pdata_elem, pdata+i, sizeof(pdata_elem))
-            if supertype != py_create((<np_ndarray> pdata_elem).dtype, 1):
+            if supertype != py_create((<cnp.ndarray> pdata_elem).dtype, 1):
                 return -2
-            if (<np_ndarray> pdata_elem).ndim != 1:
+            if (<cnp.ndarray> pdata_elem).ndim != 1:
                 return -2
 
     elif command == H5T_CONV_FREE:
@@ -726,7 +719,7 @@ cdef herr_t ndarray2vlen(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
 
         # need to pass element dtype to converter
         memcpy(&pdata_elem, pdata, sizeof(pdata_elem))
-        supertype = py_create((<np_ndarray> pdata_elem).dtype)
+        supertype = py_create((<cnp.ndarray> pdata_elem).dtype)
         outtype = typewrap(H5Tget_super(dst_id))
 
         if buf_stride == 0:
@@ -762,18 +755,18 @@ cdef herr_t ndarray2vlen(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
 
 cdef int conv_ndarray2vlen(void* ipt, void* opt,
         TypeID intype, TypeID outtype) except -1:
-
-    cdef PyObject** buf_obj = <PyObject**>ipt
-    cdef vlen_t* in_vlen = <vlen_t*>opt
-    cdef int flags = NPY_WRITEABLE | NPY_C_CONTIGUOUS
-    cdef npy_intp dims[1]
-    cdef void* data
-    cdef np_ndarray ndarray
-    cdef size_t len
-    cdef PyObject* buf_obj0
+    cdef:
+        PyObject** buf_obj = <PyObject**>ipt
+        vlen_t* in_vlen = <vlen_t*>opt
+        int flags = NPY_WRITEABLE | NPY_C_CONTIGUOUS
+        npy_intp dims[1]
+        void* data
+        cnp.ndarray ndarray
+        size_t len
+        PyObject* buf_obj0
 
     memcpy(&buf_obj0, buf_obj, sizeof(buf_obj0))
-    ndarray = <np_ndarray> buf_obj0
+    ndarray = <cnp.ndarray> buf_obj0
     len = ndarray.shape[0]
 
     if outtype.get_size() > intype.get_size():
@@ -817,14 +810,14 @@ cdef herr_t uint82b8(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
 # =============================================================================
 
 cpdef int register_converters() except -1:
-
-    cdef hid_t vlstring
-    cdef hid_t vlentype
-    cdef hid_t pyobj
-    cdef hid_t enum
-    cdef hid_t boolenum = -1
-    cdef int8_t f_value = 0
-    cdef int8_t t_value = 1
+    cdef:
+        hid_t vlstring
+        hid_t vlentype
+        hid_t pyobj
+        hid_t enum
+        hid_t boolenum = -1
+        int8_t f_value = 0
+        int8_t t_value = 1
 
     vlstring = H5Tcopy(H5T_C_S1)
     H5Tset_size(vlstring, H5T_VARIABLE)
