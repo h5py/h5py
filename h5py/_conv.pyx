@@ -29,6 +29,7 @@ cnp._import_array()
 from cpython.object cimport PyObject, PyTypeObject
 from cpython.unicode cimport PyUnicode_DecodeUTF8
 from cpython.ref cimport Py_INCREF, Py_DECREF, Py_XDECREF, Py_XINCREF
+
 cdef PyObject* Py_None = <PyObject*> None  
 
 
@@ -181,7 +182,7 @@ cdef int conv_str2vlen(void* ipt, void* opt, void* bkg, void* priv) except -1:
         PyObject* buf_obj0
         char* buf_cstring0
         object temp_object
-
+    
     buf_obj0 = buf_obj[0]
     if buf_obj0 == NULL:
         temp_object = None
@@ -228,8 +229,10 @@ cdef int conv_str2vlen(void* ipt, void* opt, void* bkg, void* priv) except -1:
 # VLEN to fixed-width strings
 
 cdef herr_t init_vlen2fixed(hid_t src, hid_t dst, void** priv) except -1:
-
     cdef conv_size_t *sizes
+
+    # /!\ Untested
+    
     if not (H5Tis_variable_str(src) and (not H5Tis_variable_str(dst))):
         return -2
 
@@ -245,7 +248,9 @@ cdef herr_t init_fixed2vlen(hid_t src, hid_t dst, void** priv) except -1:
     cdef conv_size_t *sizes
     if not (H5Tis_variable_str(dst) and (not H5Tis_variable_str(src))):
         return -2
-
+    
+    # /!\ untested !
+    
     sizes = <conv_size_t*>emalloc(sizeof(conv_size_t))
     priv[0] = sizes
     sizes[0].src_size = H5Tget_size(src)
@@ -261,8 +266,10 @@ cdef int conv_vlen2fixed(void* ipt, void* opt, void* bkg, void* priv) except -1:
         size_t temp_string_len = 0  # Without null term
         conv_size_t *sizes = <conv_size_t*>priv
         char* buf_vlen0
-
-    memcpy(&buf_vlen0, buf_vlen, sizeof(buf_vlen0));
+    
+    # /!\ untested !
+    
+    buf_vlen0 = buf_vlen[0]
 
     if buf_vlen0 != NULL:
         temp_string = buf_vlen0
@@ -286,6 +293,8 @@ cdef int conv_fixed2vlen(void* ipt, void* opt, void* bkg, void* priv) except -1:
         char* buf_fixed = <char*>ipt
         char* temp_string = NULL
         conv_size_t *sizes = <conv_size_t*>priv
+        
+    # /!\ untested !    
 
     temp_string = <char*>emalloc(sizes[0].src_size+1)
     memcpy(temp_string, buf_fixed, sizes[0].src_size)
@@ -310,8 +319,7 @@ cdef inline int conv_objref2pyref(void* ipt, void* opt, void* bkg, void* priv) e
     ref.typecode = H5R_OBJECT
 
     ref_ptr = <PyObject*>ref
-    Py_INCREF(ref)  # because Cython discards its reference when the
-                        # function exits
+    Py_INCREF(ref)  # prevent ref from garbage collection
     memcpy(buf_obj, &ref_ptr, sizeof(ref_ptr))
 
     return 0
@@ -331,7 +339,8 @@ cdef inline int conv_pyref2objref(void* ipt, void* opt, void* bkg, void* priv)  
         if not isinstance(obj, Reference):
             raise TypeError("Can't convert incompatible object to HDF5 object reference")
         ref = <Reference>(buf_obj0)
-        memcpy(buf_ref, &ref.ref.obj_ref, sizeof(ref.ref.obj_ref))
+        with nogil:
+            memcpy(buf_ref, &ref.ref.obj_ref, sizeof(ref.ref.obj_ref))
     else:
         memset(buf_ref, c'\0', sizeof(hobj_ref_t))
 
