@@ -11,6 +11,7 @@
     Implements support for high-level dataset access.
 """
 
+from cached_property import cached_property
 import posixpath as pp
 import sys
 
@@ -19,7 +20,7 @@ from threading import local
 import numpy
 
 from .. import h5, h5s, h5t, h5r, h5d, h5p, h5fd, h5ds
-from .base import HLObject, phil, with_phil, Empty, is_empty_dataspace
+from .base import HLObject, phil, with_phil, Empty
 from . import filters
 from . import selections as sel
 from . import selections2 as sel2
@@ -384,6 +385,15 @@ class Dataset(HLObject):
         self._dcpl.get_fill_value(arr)
         return arr[0]
 
+    @cached_property
+    @with_phil
+    def _extent_type(self):
+        return self.id.get_space().get_simple_extent_type()
+
+    @cached_property
+    def _is_empty(self):
+        return self._extent_type == h5s.NULL
+
     @with_phil
     def __init__(self, bind):
         """ Create a new Dataset object by binding to a low-level DatasetID.
@@ -478,7 +488,7 @@ class Dataset(HLObject):
         * Boolean "mask" array indexing
         """
         args = args if isinstance(args, tuple) else (args,)
-        if is_empty_dataspace(self.id):
+        if self._is_empty:
             # Check 'is Ellipsis' to avoid equality comparison with an array:
             # array equality returns an array, not a boolean.
             if args == () or (len(args) == 1 and args[0] is Ellipsis):
@@ -727,7 +737,7 @@ class Dataset(HLObject):
         Broadcasting is supported for simple indexing.
         """
         with phil:
-            if is_empty_dataspace(self.id):
+            if self._is_empty:
                 raise TypeError("Empty datasets have no numpy representation")
             if source_sel is None:
                 source_sel = sel.SimpleSelection(self.shape)
@@ -752,7 +762,7 @@ class Dataset(HLObject):
         Broadcasting is supported for simple indexing.
         """
         with phil:
-            if is_empty_dataspace(self.id):
+            if self._is_empty:
                 raise TypeError("Empty datasets cannot be written to")
             if source_sel is None:
                 source_sel = sel.SimpleSelection(source.shape)
