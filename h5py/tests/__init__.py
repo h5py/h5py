@@ -18,6 +18,6 @@ def run_tests(args=''):
         from shlex import split
         from subprocess import call
         from sys import executable
-        cli = [executable, "-m", "pytest", "--pyargs", "h5py"]
+        cli = [executable, "-m", "pytest", "--pyargs", "h5py", "-x"]
         cli.extend(split(args))
         return call(cli)

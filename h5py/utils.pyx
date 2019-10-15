@@ -5,7 +5,7 @@
 #
 # http://www.h5py.org
 #
-# Copyright 2008-2013 Andrew Collette and contributors
+# Copyright 2008-2019 Andrew Collette and contributors
 #
 # License:  Standard 3-clause BSD; see "license.txt" for full license terms
 #           and contributor agreement.
