@@ -152,7 +152,6 @@ cdef herr_t init_generic(hid_t src, hid_t dst, void** priv) except -1:
 cdef int conv_vlen2str(void* ipt, void* opt, void* bkg, void* priv) except -1:
     cdef:
         PyObject** buf_obj = <PyObject**>opt
-        PyObject** bkg_obj = <PyObject**>bkg
         char** buf_cstring = <char**>ipt
         PyObject* temp_obj = NULL
         conv_size_t *sizes = <conv_size_t*>priv
