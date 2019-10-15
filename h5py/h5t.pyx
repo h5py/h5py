@@ -244,7 +244,7 @@ cdef dict _sign_map  = { H5T_SGN_NONE: 'u', H5T_SGN_2: 'i' }
 
 # Available floating point types
 cdef tuple _get_available_ftypes():
-    cdef: 
+    cdef:
         str floating_typecodes = np.typecodes["Float"]
         str ftc
         cnp.dtype fdtype

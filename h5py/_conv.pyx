@@ -30,7 +30,7 @@ from cpython.object cimport PyObject, PyTypeObject
 from cpython.unicode cimport PyUnicode_DecodeUTF8
 from cpython.ref cimport Py_INCREF, Py_DECREF, Py_XDECREF, Py_XINCREF
 
-cdef PyObject* Py_None = <PyObject*> None  
+cdef PyObject* Py_None = <PyObject*> None
 
 cdef extern from "numpy/arrayobject.h":
     PyTypeObject PyArray_Type
@@ -154,7 +154,7 @@ cdef int conv_vlen2str(void* ipt, void* opt, void* bkg, void* priv) except -1:
         else:
             tmp_unicode = PyUnicode_DecodeUTF8(buf_cstring0, strlen(buf_cstring0), NULL)
         tmp_object = <PyObject *>tmp_unicode
-        
+
     # Since all data conversions are by definition in-place, it
     # is our responsibility to free the memory used by the vlens.
     efree(buf_cstring0)
@@ -175,7 +175,7 @@ cdef int conv_str2vlen(void* ipt, void* opt, void* bkg, void* priv) except -1:
         PyObject* buf_obj0
         char* buf_cstring0
         object temp_object
-    
+
     buf_obj0 = buf_obj[0]
     if buf_obj0 == NULL:
         temp_object = None
@@ -186,10 +186,10 @@ cdef int conv_str2vlen(void* ipt, void* opt, void* bkg, void* priv) except -1:
         temp_string = ""
         temp_string_len = 0
     else:
-    
+
         if isinstance(temp_object, unicode):
             temp_object = temp_object.encode('utf-8')
-    
+
         elif not isinstance(temp_object, bytes):
             # There is not test on this !
             if sizes.cset == H5T_CSET_ASCII:
@@ -198,13 +198,13 @@ cdef int conv_str2vlen(void* ipt, void* opt, void* bkg, void* priv) except -1:
                 temp_object = str(temp_object)
             else:
                 raise TypeError("Unrecognized dataset encoding")
-    
+
         if sizes.cset == H5T_CSET_UTF8:
             try:
                 temp_object.decode('utf-8')
             except UnicodeError as err:
                 raise ValueError("Byte string is not valid utf-8 and can't be stored in a utf-8 dataset: %s" % err)
-    
+
         # temp_object is bytes
         temp_string = temp_object  # cython cast it as char *
         temp_string_len = len(temp_object)
@@ -225,7 +225,7 @@ cdef herr_t init_vlen2fixed(hid_t src, hid_t dst, void** priv) except -1:
     cdef conv_size_t *sizes
 
     # /!\ Untested
-    
+
     if not (H5Tis_variable_str(src) and (not H5Tis_variable_str(dst))):
         return -2
 
@@ -241,9 +241,9 @@ cdef herr_t init_fixed2vlen(hid_t src, hid_t dst, void** priv) except -1:
     cdef conv_size_t *sizes
     if not (H5Tis_variable_str(dst) and (not H5Tis_variable_str(src))):
         return -2
-    
+
     # /!\ untested !
-    
+
     sizes = <conv_size_t*>emalloc(sizeof(conv_size_t))
     priv[0] = sizes
     sizes[0].src_size = H5Tget_size(src)
@@ -259,9 +259,9 @@ cdef int conv_vlen2fixed(void* ipt, void* opt, void* bkg, void* priv) except -1:
         size_t temp_string_len = 0  # Without null term
         conv_size_t *sizes = <conv_size_t*>priv
         char* buf_vlen0
-    
+
     # /!\ untested !
-    
+
     buf_vlen0 = buf_vlen[0]
 
     if buf_vlen0 != NULL:
@@ -286,8 +286,8 @@ cdef int conv_fixed2vlen(void* ipt, void* opt, void* bkg, void* priv) except -1:
         char* buf_fixed = <char*>ipt
         char* temp_string = NULL
         conv_size_t *sizes = <conv_size_t*>priv
-        
-    # /!\ untested !    
+
+    # /!\ untested !
 
     temp_string = <char*>emalloc(sizes[0].src_size+1)
     memcpy(temp_string, buf_fixed, sizes[0].src_size)
