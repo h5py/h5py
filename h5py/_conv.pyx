@@ -29,6 +29,7 @@ cnp._import_array()
 from cpython.object cimport PyObject, PyTypeObject
 from cpython.unicode cimport PyUnicode_DecodeUTF8
 from cpython.ref cimport Py_INCREF, Py_DECREF, Py_XDECREF, Py_XINCREF
+from cython.view cimport array as cvarray
 
 cdef PyObject* Py_None = <PyObject*> None
 
@@ -169,7 +170,6 @@ cdef int conv_str2vlen(void* ipt, void* opt, void* bkg, void* priv) except -1:
         PyObject** buf_obj = <PyObject**>ipt
         char** buf_cstring = <char**>opt
         conv_size_t* sizes = <conv_size_t*>priv
-#         PyObject* temp_encoded = NULL
         char* temp_string = NULL
         size_t temp_string_len = 0  # Not including null term
         PyObject* buf_obj0
@@ -211,7 +211,6 @@ cdef int conv_str2vlen(void* ipt, void* opt, void* bkg, void* priv) except -1:
 
         if strlen(temp_string) != temp_string_len:
             raise ValueError("VLEN strings do not support embedded NULLs")
-
         buf_cstring0 = <char*>emalloc(temp_string_len+1)
         memcpy(buf_cstring0, temp_string, temp_string_len+1)
         buf_cstring[0] = buf_cstring0
@@ -637,9 +636,10 @@ cdef int conv_vlen2ndarray(void* ipt,
     """Convert variable length strings to numpy array
     
     :param ipt: input pointer: Point to the input data
-    :param opt: output pointer: contains the numpy array after 
-    :param elem_dtype
-    
+    :param opt: output pointer: will contains the numpy array after exit 
+    :param elem_dtype: dtype of the elemnt
+    :param intype: ?
+    :param outtype: ?
     """
     cdef:
         PyObject** buf_obj = <PyObject**>opt
@@ -651,7 +651,9 @@ cdef int conv_vlen2ndarray(void* ipt,
         PyObject* ndarray_obj
         vlen_t in_vlen0
 
-    memcpy(&in_vlen0, in_vlen, sizeof(in_vlen0))
+    #Replaces the memcpy
+    in_vlen0.len = in_vlen[0].len
+    in_vlen0.ptr = in_vlen[0].ptr
 
     dims[0] = in_vlen0.len
     data = in_vlen0.ptr
