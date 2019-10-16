@@ -23,7 +23,8 @@ cfg = get_config()
 
 # Initialization of numpy
 cimport numpy as cnp
-from numpy cimport npy_intp, NPY_WRITEABLE, NPY_C_CONTIGUOUS, NPY_OWNDATA
+import numpy as np
+from numpy cimport npy_intp, NPY_WRITEABLE, NPY_C_CONTIGUOUS, NPY_OWNDATA, NPY_OBJECT
 cnp._import_array()
 
 from cpython.object cimport PyObject, PyTypeObject
@@ -34,8 +35,8 @@ from cython.view cimport array as cvarray
 cdef PyObject* Py_None = <PyObject*> None
 
 cdef extern from "numpy/arrayobject.h":
-    PyTypeObject PyArray_Type
-    object PyArray_NewFromDescr(PyTypeObject* subtype, cnp.dtype descr, int nd, npy_intp* dims, npy_intp* strides, void* data, int flags, object obj)
+    void PyArray_ENABLEFLAGS(cnp.ndarray arr, int flags)
+    
 
 ctypedef int (*conv_operator_t)(void* ipt, void* opt, void* bkg, void* priv) except -1
 ctypedef herr_t (*init_operator_t)(hid_t src, hid_t dst, void** priv) except -1
@@ -307,12 +308,12 @@ cdef inline int conv_objref2pyref(void* ipt, void* opt, void* bkg, void* priv) e
         PyObject* ref_ptr = NULL
 
     ref = Reference()
-    memcpy(&ref.ref.obj_ref, buf_ref, sizeof(ref.ref.obj_ref))
+    ref.ref.obj_ref = buf_ref[0]
     ref.typecode = H5R_OBJECT
 
     ref_ptr = <PyObject*>ref
     Py_INCREF(ref)  # prevent ref from garbage collection
-    memcpy(buf_obj, &ref_ptr, sizeof(ref_ptr))
+    buf_obj[0] = ref_ptr
 
     return 0
 
@@ -324,15 +325,14 @@ cdef inline int conv_pyref2objref(void* ipt, void* opt, void* bkg, void* priv)  
         Reference ref
         PyObject* buf_obj0
 
-    memcpy(&buf_obj0, buf_obj, sizeof(buf_obj0));
+    buf_obj0 = buf_obj[0]
 
     if buf_obj0 != NULL and buf_obj0 != Py_None:
         obj = <object>(buf_obj0)
         if not isinstance(obj, Reference):
             raise TypeError("Can't convert incompatible object to HDF5 object reference")
         ref = <Reference>(buf_obj0)
-        with nogil:
-            memcpy(buf_ref, &ref.ref.obj_ref, sizeof(ref.ref.obj_ref))
+        buf_ref[0] = ref.ref.obj_ref
     else:
         memset(buf_ref, c'\0', sizeof(hobj_ref_t))
 
@@ -347,16 +347,16 @@ cdef inline int conv_regref2pyref(void* ipt, void* opt, void* bkg, void* priv) e
         PyObject* ref_ptr = NULL
         PyObject* bkg_obj0
 
-    memcpy(&bkg_obj0, bkg_obj, sizeof(bkg_obj0));
+    bkg_obj0 = bkg_obj[0]
     ref = RegionReference()
-    memcpy(ref.ref.reg_ref, buf_ref, sizeof(hdset_reg_ref_t))
+    ref.ref.reg_ref = buf_ref[0]
     ref.typecode = H5R_DATASET_REGION
     ref_ptr = <PyObject*>ref
     Py_INCREF(ref)  # because Cython discards its reference when the
                         # function exits
 
     Py_XDECREF(bkg_obj0)
-    memcpy(buf_obj, &ref_ptr, sizeof(ref_ptr))
+    buf_obj[0] = ref_ptr
 
     return 0
 
@@ -368,7 +368,7 @@ cdef inline int conv_pyref2regref(void* ipt, void* opt, void* bkg, void* priv) e
         RegionReference ref
         PyObject* buf_obj0
 
-    memcpy(&buf_obj0, buf_obj, sizeof(buf_obj0));
+    buf_obj0 = buf_obj[0]
 
     if buf_obj0 != NULL and buf_obj0 != Py_None:
         obj = <object>(buf_obj0)
@@ -650,38 +650,43 @@ cdef int conv_vlen2ndarray(void* ipt,
         cnp.ndarray ndarray
         PyObject* ndarray_obj
         vlen_t in_vlen0
+        size_t size, itemsize
 
     #Replaces the memcpy
-    in_vlen0.len = in_vlen[0].len
-    in_vlen0.ptr = in_vlen[0].ptr
+    size = in_vlen0.len = in_vlen[0].len
+    data = in_vlen0.ptr = in_vlen[0].ptr
 
-    dims[0] = in_vlen0.len
-    data = in_vlen0.ptr
-    if outtype.get_size() > intype.get_size():
-        data = realloc(data, outtype.get_size() * in_vlen0.len)
-    H5Tconvert(intype.id, outtype.id, in_vlen0.len, data, NULL, H5P_DEFAULT)
-
-    Py_INCREF(elem_dtype)
-    ndarray = PyArray_NewFromDescr(&PyArray_Type, elem_dtype, 1,
-                dims, NULL, data, flags, <object>NULL)
+    dims[0] = size
+    itemsize = outtype.get_size()
+    if itemsize > intype.get_size():
+        data = realloc(data, itemsize * size)
+    H5Tconvert(intype.id, outtype.id, size, data, NULL, H5P_DEFAULT)
+    
+    ndarray = cnp.PyArray_SimpleNewFromData(1, dims, elem_dtype.num, data)
+    PyArray_ENABLEFLAGS(ndarray, flags)
     ndarray_obj = <PyObject*>ndarray
-    Py_INCREF(ndarray)
-
-    # Write the new object to the buffer in-place
+    
     in_vlen0.ptr = NULL
-    memcpy(buf_obj, &ndarray_obj, sizeof(ndarray_obj))
-
+    
+    # Write the new unicode object to the buffer in-place and ensure it is not destroyed
+    buf_obj[0] = ndarray_obj
+    Py_INCREF(ndarray)
+    Py_INCREF(elem_dtype)
     return 0
 
-cdef herr_t ndarray2vlen(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
-                    size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
-                    void *bkg_i, hid_t dxpl) except -1:
+cdef herr_t ndarray2vlen(hid_t src_id, 
+                         hid_t dst_id, 
+                         H5T_cdata_t *cdata,
+                         size_t nl, 
+                         size_t buf_stride, 
+                         size_t bkg_stride, 
+                         void *buf_i,
+                         void *bkg_i, hid_t dxpl) except -1:
     cdef:
         int command = cdata[0].command
         size_t src_size, dst_size
         TypeID supertype
         TypeID outtype
-#         cnp.dtype dt
         int i
         PyObject **pdata = <PyObject **> buf_i
         PyObject *pdata_elem
@@ -693,7 +698,8 @@ cdef herr_t ndarray2vlen(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
         if not H5Tequal(src_id, H5PY_OBJ) or H5Tget_class(dst_id) != H5T_VLEN:
             return -2
         supertype = typewrap(H5Tget_super(dst_id))
-        for i from 0 <= i < nl:
+        for i in range(nl):
+            # smells a lot
             memcpy(&pdata_elem, pdata+i, sizeof(pdata_elem))
             if supertype != py_create((<cnp.ndarray> pdata_elem).dtype, 1):
                 return -2
@@ -712,7 +718,7 @@ cdef herr_t ndarray2vlen(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
             return 0
 
         # need to pass element dtype to converter
-        memcpy(&pdata_elem, pdata, sizeof(pdata_elem))
+        pdata_elem = pdata[0]
         supertype = py_create((<cnp.ndarray> pdata_elem).dtype)
         outtype = typewrap(H5Tget_super(dst_id))
 
@@ -730,7 +736,7 @@ cdef herr_t ndarray2vlen(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
                     conv_ndarray2vlen(buf + (i*src_size), buf + (i*dst_size),
                                       supertype, outtype)
             else:
-                for i from nl>i>=0:
+                for i in range(nl-1, -1, -1):
                     conv_ndarray2vlen(buf + (i*src_size), buf + (i*dst_size),
                                       supertype, outtype)
         else:
@@ -747,8 +753,10 @@ cdef herr_t ndarray2vlen(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
     return 0
 
 
-cdef int conv_ndarray2vlen(void* ipt, void* opt,
-        TypeID intype, TypeID outtype) except -1:
+cdef int conv_ndarray2vlen(void* ipt, 
+                           void* opt,
+                           TypeID intype, 
+                           TypeID outtype) except -1:
     cdef:
         PyObject** buf_obj = <PyObject**>ipt
         vlen_t* in_vlen = <vlen_t*>opt
@@ -757,7 +765,7 @@ cdef int conv_ndarray2vlen(void* ipt, void* opt,
         size_t len
         PyObject* buf_obj0
 
-    memcpy(&buf_obj0, buf_obj, sizeof(buf_obj0))
+    buf_obj0 = buf_obj[0]
     ndarray = <cnp.ndarray> buf_obj0
     len = ndarray.shape[0]
 
@@ -768,8 +776,8 @@ cdef int conv_ndarray2vlen(void* ipt, void* opt,
     memcpy(data, ndarray.data, intype.get_size() * len)
     H5Tconvert(intype.id, outtype.id, len, data, NULL, H5P_DEFAULT)
 
-    memcpy(&in_vlen[0].len, &len, sizeof(len))
-    memcpy(&in_vlen[0].ptr, &data, sizeof(data))
+    in_vlen[0].len = len
+    in_vlen[0].ptr = data
 
     return 0
 

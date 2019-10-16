@@ -24,11 +24,12 @@ import_array()
 # === Exception-aware memory allocation =======================================
 
 cdef inline void* emalloc(size_t size) except? NULL:
-    # Wrapper for malloc(size) with the following behavior:
-    # 1. Always returns NULL for emalloc(0)
-    # 2. Raises RuntimeError for emalloc(size<0) and returns NULL
-    # 3. Raises RuntimeError if allocation fails and returns NULL
-
+    """Wrapper for malloc(size) with the following behavior:
+    
+    1. Always returns NULL for emalloc(0)
+    2. Raises RuntimeError for emalloc(size<0) and returns NULL
+    3. Raises RuntimeError if allocation fails and returns NULL
+    """
     cdef void *retval = NULL
 
     if size == 0:
@@ -38,7 +39,6 @@ cdef inline void* emalloc(size_t size) except? NULL:
     if retval == NULL:
         errmsg = b"Can't malloc %d bytes" % size
         PyErr_SetString(MemoryError, errmsg)
-        return NULL
     return retval
 
 cdef inline void efree(void* what):
