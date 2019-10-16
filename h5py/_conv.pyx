@@ -36,7 +36,7 @@ cdef PyObject* Py_None = <PyObject*> None
 
 cdef extern from "numpy/arrayobject.h":
     void PyArray_ENABLEFLAGS(cnp.ndarray arr, int flags)
-    
+
 
 ctypedef int (*conv_operator_t)(void* ipt, void* opt, void* bkg, void* priv) except -1
 ctypedef herr_t (*init_operator_t)(hid_t src, hid_t dst, void** priv) except -1
@@ -557,19 +557,19 @@ cdef herr_t int2enum(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
 # =============================================================================
 # ndarray to VLEN routines
 
-cdef herr_t vlen2ndarray(hid_t src_id, 
-                         hid_t dst_id, 
+cdef herr_t vlen2ndarray(hid_t src_id,
+                         hid_t dst_id,
                          H5T_cdata_t *cdata,
-                         size_t nl, 
-                         size_t buf_stride, 
-                         size_t bkg_stride, 
+                         size_t nl,
+                         size_t buf_stride,
+                         size_t bkg_stride,
                          void *buf_i,
                          void *bkg_i, hid_t dxpl) except -1:
     """Convert variable length object to numpy array
-    
+
     :param nl: number of element
-    
-    """     
+
+    """
     cdef:
         int command = cdata[0].command
         size_t src_size, dst_size
@@ -628,15 +628,15 @@ cdef struct vlen_t:
     size_t len
     void* ptr
 
-cdef int conv_vlen2ndarray(void* ipt, 
-                           void* opt, 
+cdef int conv_vlen2ndarray(void* ipt,
+                           void* opt,
                            cnp.dtype elem_dtype,
-                           TypeID intype, 
+                           TypeID intype,
                            TypeID outtype) except -1:
     """Convert variable length strings to numpy array
-    
+
     :param ipt: input pointer: Point to the input data
-    :param opt: output pointer: will contains the numpy array after exit 
+    :param opt: output pointer: will contains the numpy array after exit
     :param elem_dtype: dtype of the elemnt
     :param intype: ?
     :param outtype: ?
@@ -661,25 +661,25 @@ cdef int conv_vlen2ndarray(void* ipt,
     if itemsize > intype.get_size():
         data = realloc(data, itemsize * size)
     H5Tconvert(intype.id, outtype.id, size, data, NULL, H5P_DEFAULT)
-    
+
     ndarray = cnp.PyArray_SimpleNewFromData(1, dims, elem_dtype.num, data)
     PyArray_ENABLEFLAGS(ndarray, flags)
     ndarray_obj = <PyObject*>ndarray
-    
+
     in_vlen0.ptr = NULL
-    
+
     # Write the new unicode object to the buffer in-place and ensure it is not destroyed
     buf_obj[0] = ndarray_obj
     Py_INCREF(ndarray)
     Py_INCREF(elem_dtype)
     return 0
 
-cdef herr_t ndarray2vlen(hid_t src_id, 
-                         hid_t dst_id, 
+cdef herr_t ndarray2vlen(hid_t src_id,
+                         hid_t dst_id,
                          H5T_cdata_t *cdata,
-                         size_t nl, 
-                         size_t buf_stride, 
-                         size_t bkg_stride, 
+                         size_t nl,
+                         size_t buf_stride,
+                         size_t bkg_stride,
                          void *buf_i,
                          void *bkg_i, hid_t dxpl) except -1:
     cdef:
@@ -753,9 +753,9 @@ cdef herr_t ndarray2vlen(hid_t src_id,
     return 0
 
 
-cdef int conv_ndarray2vlen(void* ipt, 
+cdef int conv_ndarray2vlen(void* ipt,
                            void* opt,
-                           TypeID intype, 
+                           TypeID intype,
                            TypeID outtype) except -1:
     cdef:
         PyObject** buf_obj = <PyObject**>ipt
