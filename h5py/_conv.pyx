@@ -83,7 +83,7 @@ cdef herr_t generic_converter(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
             # of a larger size.
 
             if sizes[0].src_size >= sizes[0].dst_size:
-                for i from 0<=i<nl:
+                for i in range(nl):
                     op( buf + (i*sizes[0].src_size),    # input pointer
                         buf + (i*sizes[0].dst_size),    # output pointer
                         bkg + (i*bkg_stride),           # backing buffer
@@ -98,7 +98,7 @@ cdef herr_t generic_converter(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
             # With explicit strides, we assume that the library knows the
             # alignment better than us.  Therefore we use the given stride
             # offsets exclusively.
-            for i from 0<=i<nl:
+            for i in range(nl):
                 op( buf + (i*buf_stride),
                     buf + (i*buf_stride),   # note this is the same!
                     bkg + (i*bkg_stride),
@@ -146,7 +146,7 @@ cdef int conv_vlen2str(void* ipt, void* opt, void* bkg, void* priv) except -1:
         if buf_cstring0 == NULL:
             tmp_bytes =  b""
         else:
-            tmp_bytes = buf_cstring0 # Cython converts char* -> bytes for us
+            tmp_bytes = buf_cstring0 # Let cython converts char* -> bytes for us
         tmp_object = <PyObject *>tmp_bytes
     elif sizes.cset == H5T_CSET_UTF8:
         if buf_cstring0 == NULL:
@@ -501,7 +501,7 @@ cdef int enum_int_converter_conv(hid_t src, hid_t dst, H5T_cdata_t *cdata,
             if cbuf == NULL:
                 raise MemoryError()
 
-            for i from 0<=i<nl:
+            for i in range(nl):
                 memcpy(cbuf + (i*info[0].src_size), buf + (i*buf_stride),
                         info[0].src_size)
 
@@ -510,7 +510,7 @@ cdef int enum_int_converter_conv(hid_t src, hid_t dst, H5T_cdata_t *cdata,
             else:
                 H5Tconvert(src, supertype, nl, cbuf, NULL, dxpl)
 
-            for i from 0<=i<nl:
+            for i in range(nl):
                 memcpy(buf + (i*buf_stride), cbuf + (i*info[0].dst_size),
                         info[0].dst_size)
 
@@ -558,9 +558,19 @@ cdef herr_t int2enum(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
 # =============================================================================
 # ndarray to VLEN routines
 
-cdef herr_t vlen2ndarray(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
-                    size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
-                    void *bkg_i, hid_t dxpl) except -1:
+cdef herr_t vlen2ndarray(hid_t src_id, 
+                         hid_t dst_id, 
+                         H5T_cdata_t *cdata,
+                         size_t nl, 
+                         size_t buf_stride, 
+                         size_t bkg_stride, 
+                         void *buf_i,
+                         void *bkg_i, hid_t dxpl) except -1:
+    """Convert variable length object to numpy array
+    
+    :param nl: number of element
+    
+    """     
     cdef:
         int command = cdata[0].command
         size_t src_size, dst_size
@@ -594,7 +604,7 @@ cdef herr_t vlen2ndarray(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
             dst_size = H5Tget_size(dst_id)
 
             if src_size >= dst_size:
-                for i from 0<=i<nl:
+                for i in range(nl):
                     conv_vlen2ndarray(buf + (i*src_size), buf + (i*dst_size),
                                       dt, supertype, outtype)
             else:
@@ -605,7 +615,7 @@ cdef herr_t vlen2ndarray(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
             # With explicit strides, we assume that the library knows the
             # alignment better than us.  Therefore we use the given stride
             # offsets exclusively.
-            for i from 0<=i<nl:
+            for i in range(nl):
                 conv_vlen2ndarray(buf + (i*buf_stride), buf + (i*buf_stride),
                                   dt, supertype, outtype)
 
@@ -619,8 +629,18 @@ cdef struct vlen_t:
     size_t len
     void* ptr
 
-cdef int conv_vlen2ndarray(void* ipt, void* opt, cnp.dtype elem_dtype,
-        TypeID intype, TypeID outtype) except -1:
+cdef int conv_vlen2ndarray(void* ipt, 
+                           void* opt, 
+                           cnp.dtype elem_dtype,
+                           TypeID intype, 
+                           TypeID outtype) except -1:
+    """Convert variable length strings to numpy array
+    
+    :param ipt: input pointer: Point to the input data
+    :param opt: output pointer: contains the numpy array after 
+    :param elem_dtype
+    
+    """
     cdef:
         PyObject** buf_obj = <PyObject**>opt
         vlen_t* in_vlen = <vlen_t*>ipt
@@ -704,7 +724,7 @@ cdef herr_t ndarray2vlen(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
             dst_size = H5Tget_size(dst_id)
 
             if src_size >= dst_size:
-                for i from 0<=i<nl:
+                for i in range(nl):
                     conv_ndarray2vlen(buf + (i*src_size), buf + (i*dst_size),
                                       supertype, outtype)
             else:
@@ -715,7 +735,7 @@ cdef herr_t ndarray2vlen(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
             # With explicit strides, we assume that the library knows the
             # alignment better than us.  Therefore we use the given stride
             # offsets exclusively.
-            for i from 0<=i<nl:
+            for i in range(nl):
                 conv_ndarray2vlen(buf + (i*buf_stride), buf + (i*buf_stride),
                                   supertype, outtype)
 
