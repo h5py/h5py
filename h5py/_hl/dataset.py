@@ -414,7 +414,7 @@ class Dataset(HLObject):
         return self._extent_type == h5s.NULL
 
     @with_phil
-    def __init__(self, bind, readonly=False):
+    def __init__(self, bind, *, readonly=False):
         """ Create a new Dataset object by binding to a low-level DatasetID.
         """
         if not isinstance(bind, h5d.DatasetID):
