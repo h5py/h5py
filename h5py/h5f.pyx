@@ -386,17 +386,20 @@ cdef class FileID(GroupID):
 
 
     @with_phil
-    def get_vfd_handle(self):
-        """ () => INT
+    def get_vfd_handle(self, fapl=None):
+        """ (PropFAID) => INT
 
         Retrieve the file handle used by the virtual file driver.
 
-        This method is only functional when the the SEC2 driver is used.
+        This may not be supported for all file drivers, and the meaning of the
+        return value may depend on the file driver.
+
+        The 'family' and 'multi' drivers access multiple files, and a file
+        access property list (fapl) can be used to indicate which to access,
+        with H5Pset_family_offset or H5Pset_multi_type.
         """
-        if H5Pget_driver(H5Fget_access_plist(self.id)) != h5fd.SEC2:
-            raise NotImplementedError
         cdef int *handle
-        H5Fget_vfd_handle(self.id, H5Fget_access_plist(self.id), <void**>&handle)
+        H5Fget_vfd_handle(self.id, pdefault(fapl), <void**>&handle)
         return handle[0]
 
     IF HDF5_VERSION >= (1, 8, 9):
