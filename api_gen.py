@@ -35,6 +35,7 @@ class Line(object):
 
         Exists to provide the following attributes:
 
+        nogil:      Bool indicating if the function is pure C (not calling any Python callback)
         mpi:        Bool indicating if MPI required
         error:      Bool indicating if special error handling required
         version:    None or a minimum-version tuple
@@ -45,6 +46,7 @@ class Line(object):
 
         Example:    MPI ERROR 1.8.12 int foo(char* a, size_t b)
 
+        .nogil:     False
         .mpi:       True
         .error:     True
         .version:   (1, 8, 12)
@@ -54,7 +56,8 @@ class Line(object):
         .args:      "a, b"
     """
 
-    PATTERN = re.compile("""(?P<mpi>(MPI)[ ]+)?
+    PATTERN = re.compile("""(?P<nogil>(NOGIL)[ ]+)?
+                            (?P<mpi>(MPI)[ ]+)?
                             (?P<error>(ERROR)[ ]+)?
                             (?P<min_version>([0-9]+\.[0-9]+\.[0-9]+))?
                             (-(?P<max_version>([0-9]+\.[0-9]+\.[0-9]+)))?
@@ -83,6 +86,7 @@ class Line(object):
 
         parts = m.groupdict()
 
+        self.nogil = "nogil" if parts['nogil'] else ""
         self.mpi = parts['mpi'] is not None
         self.error = parts['error'] is not None
         self.min_version = parts['min_version']
@@ -207,16 +211,14 @@ class LineProcessor(object):
 
     def write_raw_sig(self):
         """ Write out "cdef extern"-style definition for an HDF5 function """
-
-        raw_sig = "{0.code} {0.fname}({0.sig}) except *\n".format(self.line)
+        raw_sig = "{0.code} {0.fname}({0.sig}) {0.nogil} except *\n".format(self.line)
         raw_sig = self.add_cython_if(raw_sig)
         raw_sig = "\n".join(("  " + x if x.strip() else x) for x in raw_sig.split("\n"))
         self.raw_defs.write(raw_sig)
 
     def write_cython_sig(self):
         """ Write out Cython signature for wrapper function """
-
-        cython_sig = "cdef {0.code} {0.fname}({0.sig}) except *\n".format(self.line)
+        cython_sig = "cdef {0.code} {0.fname}({0.sig}) {0.nogil} except *\n".format(self.line)
         cython_sig = self.add_cython_if(cython_sig)
         self.cython_defs.write(cython_sig)
 
@@ -238,7 +240,24 @@ class LineProcessor(object):
             raise ValueError("Return code <<%s>> unknown" % self.line.code)
 
         # Have to use except * because Cython can't handle special types here
-        imp = """\
+        if self.line.nogil:    
+            imp = """\
+cdef {0.code} {0.fname}({0.sig}) nogil except *:
+    cdef {0.code} r
+    with nogil:
+        _hdf5.H5Eset_auto(NULL, NULL)
+        r = _hdf5.{0.fname}({0.args})
+        if r{condition}:
+            if set_exception():
+                return <{0.code}>{retval}
+            elif {0.error}:
+                with gil:
+                    raise RuntimeError("Unspecified error in {0.fname} (return value {condition})")
+    return r
+    
+    """
+        else:
+            imp = """\
 cdef {0.code} {0.fname}({0.sig}) except *:
     cdef {0.code} r
     _hdf5.H5Eset_auto(NULL, NULL)
@@ -249,7 +268,7 @@ cdef {0.code} {0.fname}({0.sig}) except *:
         elif {0.error}:
             raise RuntimeError("Unspecified error in {0.fname} (return value {condition})")
     return r
-
+    
 """
         imp = imp.format(self.line, condition=condition, retval=retval)
         imp = self.add_cython_if(imp)

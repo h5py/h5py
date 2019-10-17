@@ -122,7 +122,7 @@ hdf5:
   # === H5E - Minimal error-handling interface ================================
 
   # This is used only for defs.py, to disable printing in new threads
-  herr_t H5Eset_auto(void* a, void* b)
+  herr_t H5Eset_auto(void* a, void* b) nogil
 
 
   # === H5F - File API ========================================================
@@ -496,7 +496,7 @@ hdf5:
   herr_t        H5Tencode(hid_t obj_id, unsigned char *buf, size_t *nalloc)
 
   H5T_conv_t    H5Tfind(hid_t src_id, hid_t dst_id, H5T_cdata_t **pcdata)
-  herr_t        H5Tconvert(hid_t src_id, hid_t dst_id, size_t nelmts, void *buf, void *background, hid_t plist_id)
+  herr_t        H5Tconvert(hid_t src_id, hid_t dst_id, size_t nelmts, void *buf, void *background, hid_t plist_id) nogil
   herr_t        H5Tregister(H5T_pers_t pers, char *name, hid_t src_id, hid_t dst_id, H5T_conv_t func)
   herr_t        H5Tunregister(H5T_pers_t pers, char *name, hid_t src_id, hid_t dst_id, H5T_conv_t func)
 

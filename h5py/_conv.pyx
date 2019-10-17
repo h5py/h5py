@@ -762,22 +762,21 @@ cdef int conv_ndarray2vlen(void* ipt,
         vlen_t* in_vlen = <vlen_t*>opt
         void* data
         cnp.ndarray ndarray
-        size_t len
+        size_t len, nbytes
         PyObject* buf_obj0
 
     buf_obj0 = buf_obj[0]
     ndarray = <cnp.ndarray> buf_obj0
     len = ndarray.shape[0]
-
-    if outtype.get_size() > intype.get_size():
-        data = emalloc(outtype.get_size() * len)
-    else:
-        data = emalloc(intype.get_size() * len)
-    memcpy(data, ndarray.data, intype.get_size() * len)
-    H5Tconvert(intype.id, outtype.id, len, data, NULL, H5P_DEFAULT)
-
-    in_vlen[0].len = len
-    in_vlen[0].ptr = data
+    nbytes = len * max(outtype.get_size(), intype.get_size()) 
+    
+    with nogil:
+        data = emalloc(nbytes)
+        memcpy(data, ndarray.data, nbytes)
+        H5Tconvert(intype.id, outtype.id, len, data, NULL, H5P_DEFAULT)
+    
+        in_vlen[0].len = len
+        in_vlen[0].ptr = data
 
     return 0
 
