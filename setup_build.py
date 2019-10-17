@@ -20,6 +20,7 @@ import api_gen
 def localpath(*args):
     return op.abspath(op.join(op.dirname(__file__), *args))
 
+FREE_GIL = True
 
 MODULES = ['defs', '_errors', '_objects', '_proxy', 'h5fd', 'h5z',
             'h5', 'h5i', 'h5r', 'utils',
@@ -195,12 +196,14 @@ DEF SWMR_MIN_HDF5_VERSION = (1,9,178)
 DEF VDS_MIN_HDF5_VERSION = (1,9,233)
 DEF VOL_MIN_HDF5_VERSION = (1,11,5)
 DEF COMPLEX256_SUPPORT = %(complex256_support)s
+DEF FREE_GIL = %(free_gil)s
 """
                 s %= {
                     'mpi': bool(config.mpi),
                     'mpi4py_v2': bool(v2),
                     'version': tuple(int(x) for x in config.hdf5_version.split('.')),
-                    'complex256_support': hasattr(numpy, 'complex256')
+                    'complex256_support': hasattr(numpy, 'complex256'),
+                    'free_gil': FREE_GIL
                 }
                 s = s.encode('utf-8')
                 f.write(s)
