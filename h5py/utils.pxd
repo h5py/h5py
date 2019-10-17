@@ -10,7 +10,7 @@
 
 from .defs cimport *
 from numpy cimport ndarray
-cdef void* emalloc(size_t size) except? NULL
+cdef void* emalloc(size_t size) nogil except? NULL
 cdef void efree(void* ptr)
 
 cpdef int check_numpy_read(ndarray arr, hid_t space_id=*) except -1
