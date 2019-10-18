@@ -674,7 +674,7 @@ cdef int conv_vlen2ndarray(void* ipt,
 
     in_vlen0.ptr = NULL
 
-    # Write the new unicode object to the buffer in-place and ensure it is not destroyed
+    # Write the new ndarray object to the buffer in-place and ensure it is not destroyed
     buf_obj[0] = ndarray_obj
     Py_INCREF(ndarray)
     Py_INCREF(elem_dtype)
