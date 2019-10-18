@@ -240,7 +240,7 @@ class LineProcessor(object):
             raise ValueError("Return code <<%s>> unknown" % self.line.code)
 
         # Have to use except * because Cython can't handle special types here
-        if self.line.nogil:    
+        if self.line.nogil:
             imp = """\
 cdef {0.code} {0.fname}({0.sig}) except *:
     cdef {0.code} r
@@ -248,13 +248,13 @@ cdef {0.code} {0.fname}({0.sig}) except *:
         _hdf5.H5Eset_auto(NULL, NULL)
         r = _hdf5.{0.fname}({0.args})
         if r{condition}:
-            with gil:            
+            with gil:
                 if set_exception():
                     return <{0.code}>{retval}
                 elif {0.error}:
                     raise RuntimeError("Unspecified error in {0.fname} (return value {condition})")
     return r
-    
+
 """
         else:
             imp = """\
@@ -268,7 +268,7 @@ cdef {0.code} {0.fname}({0.sig}) except *:
         elif {0.error}:
             raise RuntimeError("Unspecified error in {0.fname} (return value {condition})")
     return r
-    
+
 """
         imp = imp.format(self.line, condition=condition, retval=retval)
         imp = self.add_cython_if(imp)

@@ -768,14 +768,14 @@ cdef int conv_ndarray2vlen(void* ipt,
     buf_obj0 = buf_obj[0]
     ndarray = <cnp.ndarray> buf_obj0
     len = ndarray.shape[0]
-    nbytes = len * max(outtype.get_size(), intype.get_size()) 
-    
+    nbytes = len * max(outtype.get_size(), intype.get_size())
+
     #with nogil:
     if 1:
         data = emalloc(nbytes)
         memcpy(data, ndarray.data, nbytes)
         H5Tconvert(intype.id, outtype.id, len, data, NULL, H5P_DEFAULT)
-    
+
         in_vlen[0].len = len
         in_vlen[0].ptr = data
 
