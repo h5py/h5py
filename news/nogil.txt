@@ -1,0 +1,8 @@
+New features
+------------
+
+* It is now possible to call certain hdf5 function without the GIL
+  For this, just append the nogil argument in api-function.txt and rebuild
+
+* Conversion callback (in H5T) are re-acquiring the GIL as needed.
+
