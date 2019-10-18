@@ -1522,7 +1522,7 @@ cdef TypeCompoundID _c_complex(cnp.dtype dt):
 
     return TypeCompoundID(tid)
 
-cdef TypeCompoundID _c_compound(object dt, int logical, int aligned):
+cdef TypeCompoundID _c_compound(cnp.dtype dt, int logical, int aligned):
     # Compound datatypes
     cdef:
         hid_t tid
