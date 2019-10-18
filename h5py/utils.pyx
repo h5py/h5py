@@ -21,7 +21,7 @@ import_array()
 
 # === Exception-aware memory allocation =======================================
 
-cdef inline void* emalloc(size_t size) nogil except? NULL :
+cdef inline void* emalloc(size_t size) except? NULL :
     """Wrapper for malloc(size) with the following behavior:
 
     1. Always returns NULL for emalloc(0)
@@ -35,7 +35,7 @@ cdef inline void* emalloc(size_t size) nogil except? NULL :
 
     retval = malloc(size)
     if retval == NULL:
-        with gil:
+#         with gil:
             errmsg = b"Can't malloc %d bytes" % size
             PyErr_SetString(MemoryError, errmsg)
     return retval

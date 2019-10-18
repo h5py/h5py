@@ -2,7 +2,7 @@
 #
 # http://www.h5py.org
 #
-# Copyright 2008-2013 Andrew Collette and contributors
+# Copyright 2008-2019 Andrew Collette and contributors
 #
 # License:  Standard 3-clause BSD; see "license.txt" for full license terms
 #           and contributor agreement.
@@ -13,7 +13,7 @@
 """
 
 from warnings import warn as _warn
-
+import atexit
 
 # --- Library setup -----------------------------------------------------------
 
@@ -38,11 +38,12 @@ if version.hdf5_version_tuple != version.hdf5_built_version_tuple:
             '{0}.{1}.{2}'.format(*version.hdf5_built_version_tuple)
     ))
 
-
 _errors.silence_errors()
 
-from ._conv import register_converters as _register_converters
+from ._conv import register_converters as _register_converters, \
+                   unregister_converters as  _unregister_converters
 _register_converters()
+atexit.register(_unregister_converters)
 
 from .h5z import _register_lzf
 _register_lzf()
@@ -54,12 +55,8 @@ from . import h5a, h5d, h5ds, h5f, h5fd, h5g, h5r, h5s, h5t, h5p, h5z, h5pl
 
 from ._hl import filters
 from ._hl.base import is_hdf5, HLObject, Empty
-from ._hl.files import (
-    File,
-    register_driver,
-    unregister_driver,
-    registered_drivers,
-)
+from ._hl.files import File, register_driver, unregister_driver,\
+                       registered_drivers
 from ._hl.group import Group, SoftLink, ExternalLink, HardLink
 from ._hl.dataset import Dataset
 from ._hl.datatype import Datatype
@@ -67,10 +64,9 @@ from ._hl.attrs import AttributeManager
 
 from .h5 import get_config
 from .h5r import Reference, RegionReference
-from .h5t import (special_dtype, check_dtype,
-    vlen_dtype, string_dtype, enum_dtype, ref_dtype, regionref_dtype,
-    check_vlen_dtype, check_string_dtype, check_enum_dtype, check_ref_dtype,
-)
+from .h5t import special_dtype, check_dtype, vlen_dtype, string_dtype,\
+                 enum_dtype, ref_dtype, regionref_dtype,\
+                 check_vlen_dtype, check_string_dtype, check_enum_dtype, check_ref_dtype
 
 from .version import version as __version__
 

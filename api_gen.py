@@ -56,8 +56,7 @@ class Line(object):
         .args:      "a, b"
     """
 
-    PATTERN = re.compile("""(?P<nogil>(NOGIL)[ ]+)?
-                            (?P<mpi>(MPI)[ ]+)?
+    PATTERN = re.compile("""(?P<mpi>(MPI)[ ]+)?
                             (?P<error>(ERROR)[ ]+)?
                             (?P<min_version>([0-9]+\.[0-9]+\.[0-9]+))?
                             (-(?P<max_version>([0-9]+\.[0-9]+\.[0-9]+)))?
@@ -65,6 +64,8 @@ class Line(object):
                             (?P<code>(unsigned[ ]+)?[a-zA-Z_]+[a-zA-Z0-9_]*\**)[ ]+
                             (?P<fname>[a-zA-Z_]+[a-zA-Z0-9_]*)[ ]*
                             \((?P<sig>[a-zA-Z0-9_,* ]*)\)
+                            ([ ]+)?
+                            (?P<nogil>(nogil))?
                             """, re.VERBOSE)
 
     SIG_PATTERN = re.compile("""
@@ -85,7 +86,6 @@ class Line(object):
             raise ValueError("Invalid line encountered: {0}".format(text))
 
         parts = m.groupdict()
-
         self.nogil = "nogil" if parts['nogil'] else ""
         self.mpi = parts['mpi'] is not None
         self.error = parts['error'] is not None
@@ -213,12 +213,12 @@ class LineProcessor(object):
         """ Write out "cdef extern"-style definition for an HDF5 function """
         raw_sig = "{0.code} {0.fname}({0.sig}) {0.nogil} except *\n".format(self.line)
         raw_sig = self.add_cython_if(raw_sig)
-        raw_sig = "\n".join(("  " + x if x.strip() else x) for x in raw_sig.split("\n"))
+        raw_sig = "\n".join(("    " + x if x.strip() else x) for x in raw_sig.split("\n"))
         self.raw_defs.write(raw_sig)
 
     def write_cython_sig(self):
         """ Write out Cython signature for wrapper function """
-        cython_sig = "cdef {0.code} {0.fname}({0.sig}) {0.nogil} except *\n".format(self.line)
+        cython_sig = "cdef {0.code} {0.fname}({0.sig}) except *\n".format(self.line)
         cython_sig = self.add_cython_if(cython_sig)
         self.cython_defs.write(cython_sig)
 
@@ -242,20 +242,20 @@ class LineProcessor(object):
         # Have to use except * because Cython can't handle special types here
         if self.line.nogil:    
             imp = """\
-cdef {0.code} {0.fname}({0.sig}) nogil except *:
+cdef {0.code} {0.fname}({0.sig}) except *:
     cdef {0.code} r
     with nogil:
         _hdf5.H5Eset_auto(NULL, NULL)
         r = _hdf5.{0.fname}({0.args})
         if r{condition}:
-            if set_exception():
-                return <{0.code}>{retval}
-            elif {0.error}:
-                with gil:
+            with gil:            
+                if set_exception():
+                    return <{0.code}>{retval}
+                elif {0.error}:
                     raise RuntimeError("Unspecified error in {0.fname} (return value {condition})")
     return r
     
-    """
+"""
         else:
             imp = """\
 cdef {0.code} {0.fname}({0.sig}) except *:

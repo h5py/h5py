@@ -387,49 +387,49 @@ cdef inline int conv_pyref2regref(void* ipt, void* opt, void* bkg, void* priv) e
 
 cdef inline herr_t vlen2str(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
                     size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
-                    void *bkg_i, hid_t dxpl)  except -1:
+                    void *bkg_i, hid_t dxpl) except -1 with gil:
     return generic_converter(src_id, dst_id, cdata, nl, buf_stride, bkg_stride,
              buf_i, bkg_i, dxpl,  conv_vlen2str, init_generic, H5T_BKG_YES)
 
 cdef inline herr_t str2vlen(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
                     size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
-                    void *bkg_i, hid_t dxpl)  except -1:
+                    void *bkg_i, hid_t dxpl)except -1 with gil:
     return generic_converter(src_id, dst_id, cdata, nl, buf_stride, bkg_stride,
              buf_i, bkg_i, dxpl, conv_str2vlen, init_generic, H5T_BKG_NO)
 
 cdef inline herr_t vlen2fixed(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
                     size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
-                    void *bkg_i, hid_t dxpl)  except -1:
+                    void *bkg_i, hid_t dxpl) except -1 with gil:
     return generic_converter(src_id, dst_id, cdata, nl, buf_stride, bkg_stride,
              buf_i, bkg_i, dxpl, conv_vlen2fixed, init_vlen2fixed, H5T_BKG_NO)
 
 cdef inline herr_t fixed2vlen(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
                     size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
-                    void *bkg_i, hid_t dxpl)  except -1:
+                    void *bkg_i, hid_t dxpl) except -1 with gil:
     return generic_converter(src_id, dst_id, cdata, nl, buf_stride, bkg_stride,
              buf_i, bkg_i, dxpl, conv_fixed2vlen, init_fixed2vlen, H5T_BKG_NO)
 
 cdef inline herr_t objref2pyref(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
                     size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
-                    void *bkg_i, hid_t dxpl)  except -1:
+                    void *bkg_i, hid_t dxpl) except -1 with gil:
     return generic_converter(src_id, dst_id, cdata, nl, buf_stride, bkg_stride,
              buf_i, bkg_i, dxpl, conv_objref2pyref, init_generic, H5T_BKG_NO)
 
 cdef inline herr_t pyref2objref(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
                     size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
-                    void *bkg_i, hid_t dxpl)  except -1:
+                    void *bkg_i, hid_t dxpl) except -1 with gil:
     return generic_converter(src_id, dst_id, cdata, nl, buf_stride, bkg_stride,
              buf_i, bkg_i, dxpl, conv_pyref2objref, init_generic, H5T_BKG_NO)
 
 cdef inline herr_t regref2pyref(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
                     size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
-                    void *bkg_i, hid_t dxpl)  except -1:
+                    void *bkg_i, hid_t dxpl) except -1 with gil:
     return generic_converter(src_id, dst_id, cdata, nl, buf_stride, bkg_stride,
              buf_i, bkg_i, dxpl, conv_regref2pyref, init_generic, H5T_BKG_YES)
 
 cdef inline herr_t pyref2regref(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
                     size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
-                    void *bkg_i, hid_t dxpl)  except -1:
+                    void *bkg_i, hid_t dxpl) except -1 with gil:
     return generic_converter(src_id, dst_id, cdata, nl, buf_stride, bkg_stride,
              buf_i, bkg_i, dxpl, conv_pyref2regref, init_generic, H5T_BKG_NO)
 
@@ -441,7 +441,7 @@ cdef struct conv_enum_t:
     size_t dst_size
 
 cdef int enum_int_converter_init(hid_t src, hid_t dst,
-                                 H5T_cdata_t *cdata, int forward) except -1 with gil:
+                                 H5T_cdata_t *cdata, int forward) except -1:
     cdef conv_enum_t *info
 
     cdata[0].need_bkg = H5T_BKG_NO
@@ -459,7 +459,7 @@ cdef void enum_int_converter_free(H5T_cdata_t *cdata):
 
 cdef int enum_int_converter_conv(hid_t src, hid_t dst, H5T_cdata_t *cdata,
                                   size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
-                                 void *bkg_i, hid_t dxpl, int forward) except -1 with gil:
+                                 void *bkg_i, hid_t dxpl, int forward) except -1:
     cdef:
         conv_enum_t *info
         size_t nalloc
@@ -544,13 +544,13 @@ cdef herr_t enum_int_converter(hid_t src, hid_t dst, H5T_cdata_t *cdata,
 
 cdef herr_t enum2int(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
                     size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
-                    void *bkg_i, hid_t dxpl) except -1:
+                    void *bkg_i, hid_t dxpl) except -1 with gil:
     return enum_int_converter(src_id, dst_id, cdata, nl, buf_stride, bkg_stride,
              buf_i, bkg_i, dxpl, 1)
 
 cdef herr_t int2enum(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
                     size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
-                    void *bkg_i, hid_t dxpl) except -1:
+                    void *bkg_i, hid_t dxpl) except -1 with gil:
     return enum_int_converter(src_id, dst_id, cdata, nl, buf_stride, bkg_stride,
              buf_i, bkg_i, dxpl, 0)
 
@@ -564,7 +564,7 @@ cdef herr_t vlen2ndarray(hid_t src_id,
                          size_t buf_stride,
                          size_t bkg_stride,
                          void *buf_i,
-                         void *bkg_i, hid_t dxpl) except -1:
+                         void *bkg_i, hid_t dxpl) except -1 with gil:
     """Convert variable length object to numpy array
 
     :param nl: number of element
@@ -681,7 +681,7 @@ cdef herr_t ndarray2vlen(hid_t src_id,
                          size_t buf_stride,
                          size_t bkg_stride,
                          void *buf_i,
-                         void *bkg_i, hid_t dxpl) except -1:
+                         void *bkg_i, hid_t dxpl) except -1  with gil:
     cdef:
         int command = cdata[0].command
         size_t src_size, dst_size
@@ -770,7 +770,8 @@ cdef int conv_ndarray2vlen(void* ipt,
     len = ndarray.shape[0]
     nbytes = len * max(outtype.get_size(), intype.get_size()) 
     
-    with nogil:
+    #with nogil:
+    if 1:
         data = emalloc(nbytes)
         memcpy(data, ndarray.data, nbytes)
         H5Tconvert(intype.id, outtype.id, len, data, NULL, H5P_DEFAULT)
