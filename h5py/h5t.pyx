@@ -1600,25 +1600,24 @@ cpdef TypeID py_create(object dtype_in, bint logical=0, bint aligned=0):
     HDF5 datatype object.  The result is guaranteed to be transient and
     unlocked.
 
-    Argument dtype_in may be a dtype object, or anything which can be
-    converted to a dtype, including strings like '<i4'.
-
-    logical
-        If this flag is set, instead of returning a byte-for-byte identical
-        representation of the type, the function returns the closest logically
-        appropriate HDF5 type.  For example, in the case of a "hinted" dtype
-        of kind "O" representing a string, it would return an HDF5 variable-
+    :param dtype_in: may be a dtype object, or anything which can be
+        converted to a dtype, including strings like '<i4' or an "int".
+    :param logical: when this flag is set, instead of returning a byte-for-byte
+        identical representation of the type, the function returns the closest 
+        logically appropriate HDF5 type.  For example, in the case of a "hinted" 
+        dtype of kind "O" representing a string, it would return an HDF5 variable-
         length string type.
     """
     cdef:
         cnp.dtype dt
         char kind
-
+    
     if isinstance(dtype_in, np.dtype):
         dt = np.dtype(dtype_in)
-    else:
+    else:    
         dt = dtype_in = np.dtype(dtype_in)
-
+    # From now ondtype_in is actually a numpy.dtype
+    
     kind = dt.kind
     aligned = getattr(dtype_in, "isalignedstruct", aligned)
 
