@@ -25,8 +25,10 @@ cdef inline void* emalloc(size_t size) except? NULL:
     """Wrapper for malloc(size) with the following behavior:
 
     1. Always returns NULL for emalloc(0)
-    2. Raises RuntimeError for emalloc(size<0) and returns NULL
-    3. Raises RuntimeError if allocation fails and returns NULL
+    2. Raises MemoryError for emalloc(size<0) and returns NULL
+    3. Raises MemoryError if allocation fails and returns NULL
+    
+    :param size: Size of the memory (in bytes) to allocate
     """
     cdef void *retval = NULL
 
