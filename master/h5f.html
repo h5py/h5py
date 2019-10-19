@@ -247,9 +247,13 @@ only tracks free space until the file is closed.</p>
 
 <dl class="attribute">
 <dt id="h5py.h5f.FileID.get_vfd_handle">
-<code class="sig-name descname">get_vfd_handle</code> &#x2192; INT<a class="headerlink" href="#h5py.h5f.FileID.get_vfd_handle" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_vfd_handle</code><span class="sig-paren">(</span><em class="sig-param">PropFAID</em><span class="sig-paren">)</span> &#x2192; INT<a class="headerlink" href="#h5py.h5f.FileID.get_vfd_handle" title="Permalink to this definition">¶</a></dt>
 <dd><p>Retrieve the file handle used by the virtual file driver.</p>
-<p>This method is only functional when the the <code class="xref py py-data docutils literal notranslate"><span class="pre">SEC2</span></code> driver is used.</p>
+<p>This may not be supported for all file drivers, and the meaning of the
+return value may depend on the file driver.</p>
+<p>The ‘family’ and ‘multi’ drivers access multiple files, and a file
+access property list (fapl) can be used to indicate which to access,
+with H5Pset_family_offset or H5Pset_multi_type.</p>
 </dd></dl>
 
 <dl class="attribute">
