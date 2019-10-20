@@ -2,6 +2,8 @@
    :target: https://travis-ci.org/h5py/h5py
 .. image:: https://ci.appveyor.com/api/projects/status/h3iajp4d1myotprc/branch/master?svg=true
    :target: https://ci.appveyor.com/project/h5py/h5py/branch/master
+.. image:: https://dev.azure.com/h5pyappveyor/h5py/_apis/build/status/h5py.h5py?branchName=master
+   :target: https://dev.azure.com/h5pyappveyor/h5py/_build/latest?definitionId=1&branchName=master
 
 HDF5 for Python
 ===============
