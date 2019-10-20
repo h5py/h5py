@@ -151,6 +151,7 @@ class TestExplicitCast(TestCase):
         # Save to HDF5 file
         self.f.create_dataset("Data", data=A, dtype='f2')
         fname = self.f.filename
+        self.f.close()
 
         with File(fname, "r") as f:
             B = f["Data"][:]
