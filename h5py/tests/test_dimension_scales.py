@@ -11,7 +11,7 @@ import numpy as np
 
 from .common import ut, TestCase
 from h5py import h5ds
-from h5py import File, Group, Dataset, version
+from h5py import File, Group, Dataset, version as h5py_version
 
 
 class BaseDataset(TestCase):
@@ -86,7 +86,7 @@ class TestH5DSBindings(BaseDataset):
 
     # TODO: update condition once the bug is fixed upstream
     @ut.skipUnless(
-        version.hdf5_version_tuple > (2, 0, 0),
+        h5py_version.hdf5_version_tuple > (2, 0, 0),
         "Reading non-existent label segfaults"
         )
     def test_label_dimensionscale(self):

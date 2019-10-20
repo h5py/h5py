@@ -27,7 +27,7 @@ from .common import ut, TestCase, UNICODE_FILENAMES, closed_tempfile
 
 from h5py import h5f
 from h5py import (
-    File, get_config, ExternalLink, version, register_driver,
+    File, get_config, ExternalLink, version as h5py_version, register_driver,
     registered_drivers, unregister_driver
 )
 from h5py._hl.files import _drivers
@@ -265,7 +265,7 @@ class TestDrivers(TestCase):
             self.assertEqual(f.driver, 'mpio')
 
     @ut.skipUnless(mpi, "Parallel HDF5 required")
-    @ut.skipIf(version.hdf5_version_tuple < (1, 8, 9),
+    @ut.skipIf(h5py_version.hdf5_version_tuple < (1, 8, 9),
                "mpio atomic file operations were added in HDF5 1.8.9+")
     def test_mpi_atomic(self):
         """ Enable atomic mode for MPIO driver """
@@ -281,7 +281,7 @@ class TestDrivers(TestCase):
     # TODO: family driver tests
 
 
-@ut.skipUnless(version.hdf5_version_tuple < (1, 10, 2),
+@ut.skipUnless(h5py_version.hdf5_version_tuple < (1, 10, 2),
                'Requires HDF5 before 1.10.2')
 class TestLibver(TestCase):
 
@@ -315,7 +315,7 @@ class TestLibver(TestCase):
         f.close()
 
 
-@ut.skipIf(version.hdf5_version_tuple < (1, 10, 2),
+@ut.skipIf(h5py_version.hdf5_version_tuple < (1, 10, 2),
            'Requires HDF5 1.10.2 or later')
 class TestNewLibver(TestCase):
 
@@ -331,7 +331,7 @@ class TestNewLibver(TestCase):
         super(TestNewLibver, cls).setUpClass()
 
         # Current latest library bound label
-        if version.hdf5_version_tuple < (1, 11, 4):
+        if h5py_version.hdf5_version_tuple < (1, 11, 4):
             cls.latest = 'v110'
         else:
             cls.latest = 'v112'
@@ -360,7 +360,7 @@ class TestNewLibver(TestCase):
         self.assertEqual(f.libver, ('v110', self.latest))
         f.close()
 
-    @ut.skipIf(version.hdf5_version_tuple < (1, 11, 4),
+    @ut.skipIf(h5py_version.hdf5_version_tuple < (1, 11, 4),
            'Requires HDF5 1.11.4 or later')
     def test_single_v112(self):
         """ Opening with "v112" libver arg """

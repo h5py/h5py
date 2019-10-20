@@ -1,13 +1,12 @@
 from binascii import a2b_base64
 from zlib import decompress
 
-import h5py
 from h5py import h5f, h5p
-from h5py import version, File
+from h5py import version as h5py_version, File
 
 from .common import ut, TestCase
 
-@ut.skipUnless(version.hdf5_version_tuple >= (1, 8, 9), 'file image operations require HDF5 >= 1.8.9')
+@ut.skipUnless(h5py_version.hdf5_version_tuple >= (1, 8, 9), 'file image operations require HDF5 >= 1.8.9')
 class TestFileImage(TestCase):
     def test_load_from_image(self):
 

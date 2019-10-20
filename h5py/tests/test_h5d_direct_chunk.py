@@ -1,11 +1,11 @@
 import numpy
 import numpy.testing
 
-from h5py import File, version
+from h5py import File, version as h5py_version
 from .common import ut, TestCase
 
 
-@ut.skipUnless(version.hdf5_version_tuple >= (1, 8, 11), 'Direct Chunk Writing requires HDF5 >= 1.8.11')
+@ut.skipUnless(h5py_version.hdf5_version_tuple >= (1, 8, 11), 'Direct Chunk Writing requires HDF5 >= 1.8.11')
 class TestWriteDirectChunk(TestCase):
     def test_write_direct_chunk(self):
         dataset = self.f.create_dataset(
@@ -32,7 +32,7 @@ class TestWriteDirectChunk(TestCase):
                 numpy.testing.assert_array_equal(array[i], read_data)
 
 
-@ut.skipUnless(version.hdf5_version_tuple >= (1, 10, 2), 'Direct Chunk Reading requires HDF5 >= 1.10.2')
+@ut.skipUnless(h5py_version.hdf5_version_tuple >= (1, 10, 2), 'Direct Chunk Reading requires HDF5 >= 1.10.2')
 class TestReadDirectChunk(TestCase):
     def test_read_compressed_offsets(self):
         frame = numpy.arange(16).reshape(4, 4)

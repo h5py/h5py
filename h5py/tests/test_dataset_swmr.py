@@ -1,10 +1,10 @@
 import numpy as np
-from h5py import version, File
+from h5py import version as h5py_version, File
 
 from .common import ut, TestCase
 
 
-@ut.skipUnless(version.hdf5_version_tuple < (1, 9, 178), 'SWMR is available. Skipping backwards compatible tests')
+@ut.skipUnless(h5py_version.hdf5_version_tuple < (1, 9, 178), 'SWMR is available. Skipping backwards compatible tests')
 class TestSwmrNotAvailable(TestCase):
     """ Test backwards compatibility behaviour when using SWMR functions with
     an older version of HDF5 which does not have this feature available.
@@ -40,7 +40,7 @@ class TestSwmrNotAvailable(TestCase):
         with self.assertRaises(AttributeError):
             self.f.swmr_mode
 
-@ut.skipUnless(version.hdf5_version_tuple >= (1, 9, 178), 'SWMR requires HDF5 >= 1.9.178')
+@ut.skipUnless(h5py_version.hdf5_version_tuple >= (1, 9, 178), 'SWMR requires HDF5 >= 1.9.178')
 class TestDatasetSwmrRead(TestCase):
     """ Testing SWMR functions when reading a dataset.
     Skip this test if the HDF5 library does not have the SWMR features.
@@ -81,7 +81,7 @@ class TestDatasetSwmrRead(TestCase):
             self.f.swmr_mode = False
         self.assertTrue(self.f.swmr_mode)
 
-@ut.skipUnless(version.hdf5_version_tuple >= (1, 9, 178), 'SWMR requires HDF5 >= 1.9.178')
+@ut.skipUnless(h5py_version.hdf5_version_tuple >= (1, 9, 178), 'SWMR requires HDF5 >= 1.9.178')
 class TestDatasetSwmrWrite(TestCase):
     """ Testing SWMR functions when reading a dataset.
     Skip this test if the HDF5 library does not have the SWMR features.

@@ -27,7 +27,7 @@ from collections.abc import MutableMapping
 from .common import ut, TestCase
 from h5py import (
     File, Group, SoftLink, HardLink, ExternalLink, Dataset, Datatype, ref_dtype,
-    version,
+    version as h5py_version,
 )
 from h5py import h5t, h5r
 from h5py._hl.compat import filename_encode
@@ -796,7 +796,7 @@ class TestCopy(TestCase):
         if self.f2:
             self.f2.close()
 
-    @ut.skipIf(version.hdf5_version_tuple < (1,8,9),
+    @ut.skipIf(h5py_version.hdf5_version_tuple < (1,8,9),
                "Bug in HDF5<1.8.8 prevents copying open dataset")
     def test_copy_path_to_path(self):
         foo = self.f1.create_group('foo')
@@ -807,7 +807,7 @@ class TestCopy(TestCase):
         self.assertIsInstance(baz, Group)
         self.assertArrayEqual(baz['bar'], np.array([1,2,3]))
 
-    @ut.skipIf(version.hdf5_version_tuple < (1,8,9),
+    @ut.skipIf(h5py_version.hdf5_version_tuple < (1,8,9),
                "Bug in HDF5<1.8.8 prevents copying open dataset")
     def test_copy_path_to_group(self):
         foo = self.f1.create_group('foo')
@@ -823,7 +823,7 @@ class TestCopy(TestCase):
         self.assertIsInstance(self.f2['/foo'], Group)
         self.assertArrayEqual(self.f2['foo/bar'], np.array([1,2,3]))
 
-    @ut.skipIf(version.hdf5_version_tuple < (1,8,9),
+    @ut.skipIf(h5py_version.hdf5_version_tuple < (1,8,9),
                "Bug in HDF5<1.8.8 prevents copying open dataset")
     def test_copy_group_to_path(self):
 
@@ -839,7 +839,7 @@ class TestCopy(TestCase):
         self.assertIsInstance(self.f2['/foo'], Group)
         self.assertArrayEqual(self.f2['foo/bar'], np.array([1,2,3]))
 
-    @ut.skipIf(version.hdf5_version_tuple < (1,8,9),
+    @ut.skipIf(h5py_version.hdf5_version_tuple < (1,8,9),
                "Bug in HDF5<1.8.8 prevents copying open dataset")
     def test_copy_group_to_group(self):
 
@@ -856,7 +856,7 @@ class TestCopy(TestCase):
         self.assertIsInstance(self.f2['/foo'], Group)
         self.assertArrayEqual(self.f2['foo/bar'], np.array([1,2,3]))
 
-    @ut.skipIf(version.hdf5_version_tuple < (1,8,9),
+    @ut.skipIf(h5py_version.hdf5_version_tuple < (1,8,9),
                "Bug in HDF5<1.8.8 prevents copying open dataset")
     def test_copy_dataset(self):
         self.f1['foo'] = [1,2,3]
@@ -874,7 +874,7 @@ class TestCopy(TestCase):
         self.f2.copy(self.f1['foo'], self.f2, 'bar')
         self.assertArrayEqual(self.f2['bar'], np.array([1,2,3]))
 
-    @ut.skipIf(version.hdf5_version_tuple < (1,8,9),
+    @ut.skipIf(h5py_version.hdf5_version_tuple < (1,8,9),
                "Bug in HDF5<1.8.8 prevents copying open dataset")
     def test_copy_shallow(self):
 
@@ -896,7 +896,7 @@ class TestCopy(TestCase):
         self.assertEqual(len(self.f2['foo/bar']), 0)
         self.assertArrayEqual(self.f2['foo/qux'], np.array([1,2,3]))
 
-    @ut.skipIf(version.hdf5_version_tuple < (1,8,9),
+    @ut.skipIf(h5py_version.hdf5_version_tuple < (1,8,9),
                "Bug in HDF5<1.8.8 prevents copying open dataset")
     def test_copy_without_attributes(self):
 
@@ -912,7 +912,7 @@ class TestCopy(TestCase):
         self.assertArrayEqual(self.f2['baz'], np.array([1,2,3]))
         assert 'bar' not in self.f2['baz'].attrs
 
-    @ut.skipIf(version.hdf5_version_tuple < (1,8,9),
+    @ut.skipIf(h5py_version.hdf5_version_tuple < (1,8,9),
                "Bug in HDF5<1.8.8 prevents copying open dataset")
     def test_copy_soft_links(self):
 
@@ -930,7 +930,7 @@ class TestCopy(TestCase):
         self.assertIsInstance(self.f2['/foo'], Group)
         self.assertArrayEqual(self.f2['foo/baz'], np.array([1, 2, 3]))
 
-    @ut.skipIf(version.hdf5_version_tuple < (1,8,9),
+    @ut.skipIf(h5py_version.hdf5_version_tuple < (1,8,9),
                "Bug in HDF5<1.8.8 prevents copying open dataset")
     def test_copy_external_links(self):
 
@@ -946,7 +946,7 @@ class TestCopy(TestCase):
         os.unlink(filename)
         self.assertArrayEqual(self.f2['baz'], np.array([1,2,3]))
 
-    @ut.skipIf(version.hdf5_version_tuple < (1,8,9),
+    @ut.skipIf(h5py_version.hdf5_version_tuple < (1,8,9),
                "Bug in HDF5<1.8.8 prevents copying open dataset")
     def test_copy_refs(self):
 

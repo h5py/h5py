@@ -43,7 +43,8 @@
 import sys
 
 import numpy as np
-import h5py
+from h5py import version as h5py_version, Dataset, Empty
+from h5py import h5d, h5s, h5t
 
 from .common import ut, TestCase
 
@@ -52,12 +53,12 @@ class TestEmpty(TestCase):
 
     def setUp(self):
         super().setUp()
-        sid = h5py.h5s.create(h5py.h5s.NULL)
-        tid = h5py.h5t.C_S1.copy()
+        sid = h5s.create(h5s.NULL)
+        tid = h5t.C_S1.copy()
         tid.set_size(10)
-        dsid = h5py.h5d.create(self.f.id, b'x', tid, sid)
-        self.dset = h5py.Dataset(dsid)
-        self.empty_obj = h5py.Empty(np.dtype("S10"))
+        dsid = h5d.create(self.f.id, b'x', tid, sid)
+        self.dset = Dataset(dsid)
+        self.empty_obj = Empty(np.dtype("S10"))
 
     def test_ndim(self):
         """ Verify number of dimensions """
@@ -276,7 +277,7 @@ class TestScalarArray(TestCase):
             self.dset['field']
 
 
-@ut.skipUnless(h5py.version.hdf5_version_tuple >= (1, 8, 7), 'HDF5 1.8.7+ required')
+@ut.skipUnless(h5py_version.hdf5_version_tuple >= (1, 8, 7), 'HDF5 1.8.7+ required')
 class Test1DZeroFloat(TestCase):
 
     def setUp(self):
@@ -452,7 +453,7 @@ class Test1DFloat(TestCase):
             self.dset['field']
 
 
-@ut.skipUnless(h5py.version.hdf5_version_tuple >= (1, 8, 7), 'HDF5 1.8.7+ required')
+@ut.skipUnless(h5py_version.hdf5_version_tuple >= (1, 8, 7), 'HDF5 1.8.7+ required')
 class Test2DZeroFloat(TestCase):
 
     def setUp(self):

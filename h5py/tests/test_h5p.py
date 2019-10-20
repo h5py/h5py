@@ -7,7 +7,7 @@
 # License:  Standard 3-clause BSD; see "license.txt" for full license terms
 #           and contributor agreement.
 
-from h5py import h5p, h5f, version
+from h5py import h5p, h5f, version as h5py_version
 
 from .common import ut, TestCase
 
@@ -25,7 +25,7 @@ class TestLibver(TestCase):
         self.assertEqual((h5f.LIBVER_EARLIEST, h5f.LIBVER_LATEST),
                          plist.get_libver_bounds())
 
-    @ut.skipIf(version.hdf5_version_tuple < (1, 10, 2),
+    @ut.skipIf(h5py_version.hdf5_version_tuple < (1, 10, 2),
                'Requires HDF5 1.10.2 or later')
     def test_libver_v18(self):
         """ Test libver bounds set/get for H5F_LIBVER_V18"""
@@ -34,7 +34,7 @@ class TestLibver(TestCase):
         self.assertEqual((h5f.LIBVER_EARLIEST, h5f.LIBVER_V18),
                          plist.get_libver_bounds())
 
-    @ut.skipIf(version.hdf5_version_tuple < (1, 10, 2),
+    @ut.skipIf(h5py_version.hdf5_version_tuple < (1, 10, 2),
                'Requires HDF5 1.10.2 or later')
     def test_libver_v110(self):
         """ Test libver bounds set/get for H5F_LIBVER_V110"""
@@ -43,7 +43,7 @@ class TestLibver(TestCase):
         self.assertEqual((h5f.LIBVER_V18, h5f.LIBVER_V110),
                          plist.get_libver_bounds())
 
-    @ut.skipIf(version.hdf5_version_tuple < (1, 11, 4),
+    @ut.skipIf(h5py_version.hdf5_version_tuple < (1, 11, 4),
                'Requires HDF5 1.11.4 or later')
     def test_libver_v112(self):
         """ Test libver bounds set/get for H5F_LIBVER_V112"""

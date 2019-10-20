@@ -22,7 +22,7 @@ from collections.abc import MutableMapping
 from .common import TestCase, ut
 
 from h5py import h5a, h5t
-from h5py import AttributeManager, version
+from h5py import AttributeManager, version as h5py_version
 
 
 class TestAccess(TestCase):
@@ -166,7 +166,7 @@ class TestTrackOrder(TestCase):
             attrs[str(i)] = i
         return attrs
 
-    @ut.skipUnless(version.hdf5_version_tuple >= (1, 10, 6), 'HDF5 1.10.6 required')
+    @ut.skipUnless(h5py_version.hdf5_version_tuple >= (1, 10, 6), 'HDF5 1.10.6 required')
     # https://forum.hdfgroup.org/t/bug-h5arename-fails-unexpectedly/4881
     def test_track_order(self):
         attrs = self.fill_attrs(track_order=True)  # creation order

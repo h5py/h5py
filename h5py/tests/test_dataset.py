@@ -26,7 +26,7 @@ from .common import ut, TestCase
 from h5py import h5d, h5f, h5g, h5p, h5t, h5z
 from h5py import (
     File, Group, Dataset, Empty, filters, string_dtype, check_string_dtype,
-    enum_dtype, check_enum_dtype, vlen_dtype, version,
+    enum_dtype, check_enum_dtype, vlen_dtype, version as h5py_version,
 )
 from h5py._hl.base import is_empty_dataspace
 from h5py._hl import dataset
@@ -1261,7 +1261,7 @@ class TestLowOpen(TestCase):
         self.assertIsInstance(dsid, h5d.DatasetID)
 
 
-@ut.skipUnless(version.hdf5_version_tuple >= (1, 10, 5),
+@ut.skipUnless(h5py_version.hdf5_version_tuple >= (1, 10, 5),
                "chunk info requires  HDF5 >= 1.10.5")
 def test_get_chunk_details():
     from io import BytesIO
