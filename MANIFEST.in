@@ -44,3 +44,6 @@ exclude github_deploy_key_h5py_h5py.enc
 
 exclude rever.xsh
 prune news
+
+include asv.conf.json
+recursive-include benchmarks *.py

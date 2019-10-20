@@ -26,4 +26,3 @@ class TimeSuite:
         ds = self.f['a']
         for i in range(10000):
             arr = ds[i * 10:(i + 1) * 10]
-
