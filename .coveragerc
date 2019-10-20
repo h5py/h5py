@@ -1,3 +1,2 @@
 [run]
-omit=*/tests/*
 parallel=true

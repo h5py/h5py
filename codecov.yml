@@ -3,3 +3,15 @@ coverage:
     project:
       default:
         threshold: 0.5%
+      tests:
+        flags: tests
+      main:
+        flags: main
+
+flags:
+  tests:
+    paths:
+      - h5py/tests/
+  main:
+    paths:
+      - !h5py/tests/
