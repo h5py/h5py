@@ -183,6 +183,14 @@ Here's an example of storing and reading a datetime array::
 
    Return True if the dtype given is tagged to be stored as HDF5 opaque data.
 
+.. note::
+
+   With some exceptions, you can use :func:`opaque_dtype` with any numpy
+   dtype. While this may seem like a convenient way to get arbitrary data into
+   HDF5, remember that it's not a standard format. It's better to fit your
+   data into HDF5's native structures, or use a file format better suited to
+   your data.
+
 Older API
 ---------
 
