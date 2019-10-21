@@ -1797,6 +1797,8 @@ def opaque_dtype(np_dtype):
         raise TypeError("Cannot store numpy object arrays as opaque data")
     if dt.names is not None:
         raise TypeError("Cannot store numpy structured arrays as opaque data")
+    if dt.itemsize == 0:
+        raise TypeError("dtype for opaque data must have explicit size")
 
     return dtype(dt, metadata={'h5py_opaque': True})
 
