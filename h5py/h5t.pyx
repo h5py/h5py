@@ -1612,12 +1612,7 @@ cpdef TypeID py_create(object dtype_in, bint logical=0, bint aligned=0):
         cnp.dtype dt
         char kind
 
-    if isinstance(dtype_in, np.dtype):
-        dt = np.dtype(dtype_in)
-    else:
-        dt = dtype_in = np.dtype(dtype_in)
-    # From now ondtype_in is actually a numpy.dtype
-
+    dt = np.dtype(dtype_in)
     kind = dt.kind
     aligned = getattr(dtype_in, "isalignedstruct", aligned)
 
@@ -1642,7 +1637,7 @@ cpdef TypeID py_create(object dtype_in, bint logical=0, bint aligned=0):
             return _c_complex(dt)
 
         # Compound
-        elif (kind == c'V') and (dtype_in.names is not None):
+        elif (kind == c'V') and (getattr(dt, "names") is not None):
             return _c_compound(dt, logical, aligned)
 
         # Array or opaque
