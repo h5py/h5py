@@ -1793,7 +1793,7 @@ def opaque_dtype(np_dtype):
     the opaque data as datetimes.
     """
     dt = dtype(np_dtype)
-    if dt.hasobject:
+    if np.issubdtype(dt, np.object_):
         raise TypeError("Cannot store numpy object arrays as opaque data")
     if dt.names is not None:
         raise TypeError("Cannot store numpy structured arrays as opaque data")
