@@ -43,7 +43,7 @@ matrix:
       script:
         - tox
         - pip install doctr
-        - doctr deploy --built-docs docs_api/_build/html
+        - doctr deploy . --built-docs docs_api/_build/html
 
     # MPI tests
     # TODO: We should test with newer versions of HDF5
