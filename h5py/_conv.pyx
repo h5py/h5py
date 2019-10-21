@@ -564,9 +564,9 @@ cdef herr_t vlen2ndarray(hid_t src_id,
                          size_t buf_stride,
                          size_t bkg_stride,
                          void *buf_i,
-                         void *bkg_i, 
+                         void *bkg_i,
                          hid_t dxpl) except -1:
-    """Convert variable length object to numpy array, typically a list of strings 
+    """Convert variable length object to numpy array, typically a list of strings
 
     :param src_id: Identifier for the source datatype.
     :param dst_id: Identifier for the destination datatype.
@@ -574,7 +574,7 @@ cdef herr_t vlen2ndarray(hid_t src_id,
     :param buf_stride: Array containing pre- and post-conversion values.
     :param bkg_stride: Optional background buffer
     :param dxpl: Dataset transfer property list identifier.
-    :return: error-code    
+    :return: error-code
     """
     cdef:
         int command = cdata[0].command
