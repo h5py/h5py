@@ -1637,7 +1637,7 @@ cpdef TypeID py_create(object dtype_in, bint logical=0, bint aligned=0):
             return _c_complex(dt)
 
         # Compound
-        elif (kind == c'V') and (getattr(dt, "names") is not None):
+        elif (kind == c'V') and ((<object> dt).names is not None):
             return _c_compound(dt, logical, aligned)
 
         # Array or opaque
