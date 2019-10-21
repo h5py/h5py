@@ -687,7 +687,8 @@ cdef herr_t ndarray2vlen(hid_t src_id,
                          size_t buf_stride,
                          size_t bkg_stride,
                          void *buf_i,
-                         void *bkg_i, hid_t dxpl) except -1:
+                         void *bkg_i, 
+                         hid_t dxpl) except -1:
     cdef:
         int command = cdata[0].command
         size_t src_size, dst_size
