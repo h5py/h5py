@@ -263,6 +263,13 @@ class Dataset(HLObject):
             """ Context manager for MPI collective reads & writes """
             return CollectiveContext(self)
 
+    def _collective_mode(self):
+        """Return True if the dataset is in MPI collective mode"""
+        if MPI:
+            return self._dxpl.get_dxpl_mpio() == h5fd.MPIO_COLLECTIVE
+        else:
+            return False
+
     @property
     def dims(self):
         """ Access dimension scales attached to this dataset. """
@@ -547,7 +554,9 @@ class Dataset(HLObject):
         # Perform the dataspace selection.
         selection = sel.select(self.shape, args, dsid=self.id)
 
-        if selection.nselect == 0:
+        # If we are in MPI collective mode, we need to do the read even if it's
+        # an empty selection, to ensure all MPI processes read.
+        if selection.nselect == 0 and not self._collective_mode():
             return numpy.ndarray(selection.mshape, dtype=new_dtype)
 
         # Up-converting to (1,) so that numpy.ndarray correctly creates
@@ -677,7 +686,11 @@ class Dataset(HLObject):
         # Perform the dataspace selection
         selection = sel.select(self.shape, args, dsid=self.id)
 
-        if selection.nselect == 0:
+        # If we are in MPI collective mode, we need to do the write even if it's
+        # an empty selection, to ensure all MPI processes write.
+        is_collective = self._collective_mode()
+
+        if selection.nselect == 0 and not is_collective:
             return
 
         # Broadcast scalars if necessary.
@@ -707,11 +720,21 @@ class Dataset(HLObject):
             val = val2
             mshape = val.shape
 
+        if is_collective and (mshape != selection.mshape):
+            warn("Broadcasting in collective mode is deprecated, because "
+                 "processes may do different numbers of writes. "
+                 "Expand the data shape - {} - to match the selection: {}."
+                 .format(mshape, selection.mshape),
+                 H5pyDeprecationWarning, stacklevel=2,
+                 )
+
         # Perform the write, with broadcasting
         # Be careful to pad memory shape with ones to avoid HDF5 chunking
         # glitch, which kicks in for mismatched memory/file selections
+        # (note that zero length dimensions are given zero in collective mode)
         if len(mshape) < len(self.shape):
-            mshape_pad = (1,)*(len(self.shape)-len(mshape)) + mshape
+            rsel = selection.mshape[:-len(mshape)]
+            mshape_pad = tuple(1 if l > 0 else 0 for l in rsel) + mshape
         else:
             mshape_pad = mshape
         mspace = h5s.create_simple(mshape_pad, (h5s.UNLIMITED,)*len(mshape_pad))
@@ -740,6 +763,14 @@ class Dataset(HLObject):
             else:
                 dest_sel = sel.select(dest.shape, dest_sel, self.id)
 
+            if self._collective_mode() and (dest_sel.mshape != source_sel.mshape):
+                warn("Broadcasting in collective mode is deprecated, because "
+                     "processes may do different numbers of reads. "
+                     "Expand the selection shape - {} - to match the array: {}."
+                     .format(source_sel.mshape, dest_sel.mshape),
+                     H5pyDeprecationWarning, stacklevel=2,
+                     )
+
             for mspace in dest_sel.broadcast(source_sel.mshape):
                 self.id.read(mspace, fspace, dest, dxpl=self._dxpl)
 
@@ -764,6 +795,14 @@ class Dataset(HLObject):
                 dest_sel = sel.SimpleSelection(self.shape)
             else:
                 dest_sel = sel.select(self.shape, dest_sel, self.id)
+
+            if self._collective_mode() and (dest_sel.mshape != source_sel.mshape):
+                warn("Broadcasting in collective mode is deprecated, because "
+                     "processes may do different numbers of writes. "
+                     "Expand the data shape - {} - to match the selection: {}."
+                     .format(source_sel.mshape, dest_sel.mshape),
+                     H5pyDeprecationWarning, stacklevel=2,
+                     )
 
             for fspace in dest_sel.broadcast(source_sel.mshape):
                 self.id.write(mspace, fspace, source, dxpl=self._dxpl)

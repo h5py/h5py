@@ -171,7 +171,8 @@ class Selection(object):
         return (self.nselect,)
 
     def broadcast(self, target_shape):
-        """ Get an iterable for broadcasting """
+        """ Get an iterable for broadcasting.
+        """
         if np.product(target_shape) != self.nselect:
             raise TypeError("Broadcasting is not supported for point-wise selections")
         yield self._id
@@ -301,7 +302,9 @@ class SimpleSelection(Selection):
         tshape.reverse()
         tshape = tuple(tshape)
 
-        chunks = tuple(x//y for x, y in zip(count, tshape))
+        # A zero-length selection needs to work for collective I/O
+        chunks = tuple(1 if (x == y == 0) else x // y
+                       for x, y in zip(count, tshape))
         nchunks = int(np.product(chunks))
 
         if nchunks == 1:
