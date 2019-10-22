@@ -200,12 +200,6 @@ cdef int conv_str2vlen(void* ipt, void* opt, void* bkg, void* priv) except -1:
             else:
                 raise TypeError("Unrecognized dataset encoding")
 
-        if sizes.cset == H5T_CSET_UTF8:
-            try:
-                temp_object.decode('utf-8')
-            except UnicodeError as err:
-                raise ValueError("Byte string is not valid utf-8 and can't be stored in a utf-8 dataset: %s" % err)
-
         # temp_object is bytes
         temp_string = temp_object  # cython cast it as char *
         temp_string_len = len(temp_object)
