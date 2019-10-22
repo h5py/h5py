@@ -204,13 +204,13 @@ cdef int conv_str2vlen(void* ipt, void* opt, void* bkg, void* priv) except -1:
         temp_string = temp_object  # cython cast it as char *
         temp_string_len = len(temp_object)
 
-        if strlen(temp_string) != temp_string_len:
-            raise ValueError("VLEN strings do not support embedded NULLs")
-        buf_cstring0 = <char*>emalloc(temp_string_len+1)
-        memcpy(buf_cstring0, temp_string, temp_string_len+1)
-        buf_cstring[0] = buf_cstring0
+    if strlen(temp_string) != temp_string_len:
+        raise ValueError("VLEN strings do not support embedded NULLs")
+    buf_cstring0 = <char*>emalloc(temp_string_len+1)
+    memcpy(buf_cstring0, temp_string, temp_string_len+1)
+    buf_cstring[0] = buf_cstring0
 
-        return 0
+    return 0
 
 # =============================================================================
 # VLEN to fixed-width strings
