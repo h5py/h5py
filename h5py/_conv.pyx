@@ -194,29 +194,24 @@ cdef int conv_str2vlen(void* ipt, void* opt, void* bkg, void* priv) except -1:
         elif not isinstance(temp_object, bytes):
             # There is not test on this !
             if sizes.cset == H5T_CSET_ASCII:
-                temp_object = bytes(temp_object)
+                encoding = 'ascii'
             elif sizes.cset == H5T_CSET_UTF8:
-                temp_object = str(temp_object)
+                encoding = 'utf-8'
             else:
                 raise TypeError("Unrecognized dataset encoding")
-
-        if sizes.cset == H5T_CSET_UTF8:
-            try:
-                temp_object.decode('utf-8')
-            except UnicodeError as err:
-                raise ValueError("Byte string is not valid utf-8 and can't be stored in a utf-8 dataset: %s" % err)
+            temp_object = str(temp_object).encode(encoding)
 
         # temp_object is bytes
         temp_string = temp_object  # cython cast it as char *
         temp_string_len = len(temp_object)
 
-        if strlen(temp_string) != temp_string_len:
-            raise ValueError("VLEN strings do not support embedded NULLs")
-        buf_cstring0 = <char*>emalloc(temp_string_len+1)
-        memcpy(buf_cstring0, temp_string, temp_string_len+1)
-        buf_cstring[0] = buf_cstring0
+    if strlen(temp_string) != temp_string_len:
+        raise ValueError("VLEN strings do not support embedded NULLs")
+    buf_cstring0 = <char*>emalloc(temp_string_len+1)
+    memcpy(buf_cstring0, temp_string, temp_string_len+1)
+    buf_cstring[0] = buf_cstring0
 
-        return 0
+    return 0
 
 # =============================================================================
 # VLEN to fixed-width strings
@@ -687,7 +682,7 @@ cdef herr_t ndarray2vlen(hid_t src_id,
                          size_t buf_stride,
                          size_t bkg_stride,
                          void *buf_i,
-                         void *bkg_i, 
+                         void *bkg_i,
                          hid_t dxpl) except -1:
     cdef:
         int command = cdata[0].command
