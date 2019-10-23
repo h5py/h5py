@@ -26,7 +26,7 @@ def _access_not_existing_object(filename):
 
 def test_unsilence_errors(tmp_path, capfd):
     """Chech that HDF5 errors can be mute/unmute from h5py"""
-    filename = str((tmp_path / 'test.h5').resolve())
+    filename = tmp_path / 'test.h5'
 
     # Unmute HDF5 errors
     h5py._errors.unsilence_errors()
@@ -48,8 +48,8 @@ def test_thread_hdf5_silence_error_membership(tmp_path, capfd):
 
     No console messages should be shown from membership tests
     """
-    filename = str((tmp_path / 'test.h5').resolve())
-    th = threading.Thread(target=_access_not_existing_object, args=(filename,))
+    th = threading.Thread(target=_access_not_existing_object,
+                          args=(tmp_path / 'test.h5',))
     th.start()
     th.join()
 
@@ -63,9 +63,8 @@ def test_thread_hdf5_silence_error_attr(tmp_path, capfd):
 
     No console messages should be shown for non-existing attributes
     """
-    path = str((tmp_path / 'test.h5').resolve())
     def test():
-        with h5py.File(path, 'w') as newfile:
+        with h5py.File(tmp_path/'test.h5', 'w') as newfile:
             newfile['newdata'] = [1,2,3]
             try:
                 nonexistent_attr = newfile['newdata'].attrs['nonexistent_attr']
