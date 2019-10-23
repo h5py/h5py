@@ -1613,7 +1613,7 @@ cpdef TypeID py_create(object dtype_in, bint logical=0, bint aligned=0):
         char kind
 
     dt = np.dtype(dtype_in)
-    # dt is now the C side of dtype_in. Sometimes the Python behavour is easier to handle than the C-version  
+    # dt is now the C side of dtype_in. Sometimes the Python behavour is easier to handle than the C-version
     kind = dt.kind
     aligned = getattr(dtype_in, "isalignedstruct", aligned)
 
@@ -1637,7 +1637,7 @@ cpdef TypeID py_create(object dtype_in, bint logical=0, bint aligned=0):
         elif kind == c'c':
             return _c_complex(dt)
 
-        # Compound. The explicit cast to object is used to force Python attribute access, 
+        # Compound. The explicit cast to object is used to force Python attribute access,
         # as dt.names may be a NULL pointer at the C level when undefined.
         elif (kind == c'V') and ((<object> dt).names is not None):
             return _c_compound(dt, logical, aligned)
