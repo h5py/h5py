@@ -930,6 +930,59 @@ class TestStrings(BaseDataset):
         self.assertEqual(type(out), str)
         self.assertEqual(out, data)
 
+    def test_vlen_unicode_write_object(self):
+        """ Writing an object to unicode vlen dataset is OK
+        """
+        dt = h5py.string_dtype('utf-8')
+        ds = self.f.create_dataset('x', (100,), dtype=dt)
+        data = object()
+        ds[0] = data
+        out = ds[0]
+        self.assertEqual(type(out), str)
+        self.assertEqual(out, str(data))
+
+    def test_vlen_unicode_write_none(self):
+        """ Writing None to unicode vlen dataset is OK
+        """
+        dt = h5py.string_dtype('utf-8')
+        ds = self.f.create_dataset('x', (100,), dtype=dt)
+        ds[0] = None
+        out = ds[0]
+        self.assertEqual(type(out), str)
+        self.assertEqual(out, '')
+
+    def test_vlen_bytes_write_object(self):
+        """ Writing an object to ascii vlen dataset is OK
+        """
+        dt = h5py.string_dtype('ascii')
+        ds = self.f.create_dataset('x', (100,), dtype=dt)
+        data = object()
+        ds[0] = data
+        out = ds[0]
+        self.assertEqual(type(out), bytes)
+        self.assertEqual(out, str(data).encode('ascii'))
+
+    def test_vlen_bytes_write_none(self):
+        """ Writing None to ascii vlen dataset is OK
+        """
+        dt = h5py.string_dtype('ascii')
+        ds = self.f.create_dataset('x', (100,), dtype=dt)
+        ds[0] = None
+        out = ds[0]
+        self.assertEqual(type(out), bytes)
+        self.assertEqual(out, b'')
+
+    def test_vlen_bytes_write_ascii_str(self):
+        """ Writing an ascii str to ascii vlen dataset is OK
+        """
+        dt = h5py.string_dtype('ascii')
+        ds = self.f.create_dataset('x', (100,), dtype=dt)
+        data = "ASCII string"
+        ds[0] = data
+        out = ds[0]
+        self.assertEqual(type(out), bytes)
+        self.assertEqual(out, data.encode('ascii'))
+
 
 class TestCompound(BaseDataset):
 
