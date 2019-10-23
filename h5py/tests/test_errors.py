@@ -29,14 +29,18 @@ def test_unsilence_errors(tmp_path, capfd):
     filename = tmp_path / 'test.h5'
 
     # Unmute HDF5 errors
-    h5py._errors.unsilence_errors()
-    _access_not_existing_object(filename)
-    captured = capfd.readouterr()
-    assert captured.err != ''
-    assert captured.out == ''
+    try:
+        h5py._errors.unsilence_errors()
+
+        _access_not_existing_object(filename)
+        captured = capfd.readouterr()
+        assert captured.err != ''
+        assert captured.out == ''
 
     # Mute HDF5 errors
-    h5py._errors.silence_errors()
+    finally:
+        h5py._errors.silence_errors()
+
     _access_not_existing_object(filename)
     captured = capfd.readouterr()
     assert captured.err == ''
