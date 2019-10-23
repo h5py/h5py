@@ -17,7 +17,7 @@ include "config.pxi"
 # C-level imports
 from .utils cimport  require_tuple, convert_dims, convert_tuple, \
                     emalloc, efree, create_numpy_hsize, create_hsize_array
-from numpy cimport ndarray
+cimport numpy as cnp
 
 #Python level imports
 from . import _objects
@@ -164,9 +164,9 @@ cdef class SpaceID(ObjectID):
         cdef size_t nalloc = 0
 
         IF HDF5_VERSION < VOL_MIN_HDF5_VERSION:
-           H5Sencode(self.id, NULL, &nalloc)
+            H5Sencode(self.id, NULL, &nalloc)
         ELSE:
-           H5Sencode1(self.id, NULL, &nalloc)
+            H5Sencode1(self.id, NULL, &nalloc)
         buf = emalloc(nalloc)
         try:
             IF HDF5_VERSION < VOL_MIN_HDF5_VERSION:
@@ -451,7 +451,7 @@ cdef class SpaceID(ObjectID):
         unsigned ints, with shape ``(<npoints>, <space rank)``.
         """
         cdef hsize_t dims[2]
-        cdef ndarray buf
+        cdef cnp.ndarray buf
 
         dims[0] = H5Sget_select_elem_npoints(self.id)
         dims[1] = H5Sget_simple_extent_ndims(self.id)
@@ -482,7 +482,7 @@ cdef class SpaceID(ObjectID):
         A zero-length selection (i.e. shape ``(0, <rank>)``) is not allowed
         by the HDF5 library.
         """
-        cdef ndarray hcoords
+        cdef cnp.ndarray hcoords
         cdef size_t nelements
 
         # The docs say the selection list should be an hsize_t**, but it seems
@@ -526,7 +526,7 @@ cdef class SpaceID(ObjectID):
         with length equal to the total number of blocks.
         """
         cdef hsize_t dims[3]  # 0=nblocks 1=(#2), 2=rank
-        cdef ndarray buf
+        cdef cnp.ndarray buf
 
         dims[0] = H5Sget_select_hyper_nblocks(self.id)
         dims[1] = 2

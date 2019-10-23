@@ -5,7 +5,7 @@
 #
 # http://www.h5py.org
 #
-# Copyright 2008-2013 Andrew Collette and contributors
+# Copyright 2008-2019 Andrew Collette and contributors
 #
 # License:  Standard 3-clause BSD; see "license.txt" for full license terms
 #           and contributor agreement.
@@ -14,9 +14,7 @@ from numpy cimport ndarray, import_array,\
                    NPY_UINT16, NPY_UINT32, NPY_UINT64,  npy_intp,\
                    PyArray_SimpleNew, PyArray_ContiguousFromAny,\
                    PyArray_FROM_OTF, PyArray_DIM,\
-                   NPY_CONTIGUOUS, NPY_NOTSWAPPED, NPY_FORCECAST,\
-                   NPY_C_CONTIGUOUS, NPY_WRITEABLE
-
+                   NPY_CONTIGUOUS, NPY_NOTSWAPPED, NPY_FORCECAST
 
 # Initialization
 import_array()
@@ -24,11 +22,14 @@ import_array()
 # === Exception-aware memory allocation =======================================
 
 cdef inline void* emalloc(size_t size) except? NULL:
-    # Wrapper for malloc(size) with the following behavior:
-    # 1. Always returns NULL for emalloc(0)
-    # 2. Raises RuntimeError for emalloc(size<0) and returns NULL
-    # 3. Raises RuntimeError if allocation fails and returns NULL
+    """Wrapper for malloc(size) with the following behavior:
 
+    1. Always returns NULL for emalloc(0)
+    2. Raises MemoryError for emalloc(size<0) and returns NULL
+    3. Raises MemoryError if allocation fails and returns NULL
+
+    :param size: Size of the memory (in bytes) to allocate
+    """
     cdef void *retval = NULL
 
     if size == 0:
@@ -38,7 +39,6 @@ cdef inline void* emalloc(size_t size) except? NULL:
     if retval == NULL:
         errmsg = b"Can't malloc %d bytes" % size
         PyErr_SetString(MemoryError, errmsg)
-        return NULL
     return retval
 
 cdef inline void efree(void* what):
@@ -69,11 +69,11 @@ cdef int check_numpy(ndarray arr, hid_t space_id, int write):
     # Validate array flags
 
     if write:
-        if not (arr.flags & NPY_C_CONTIGUOUS and arr.flags & NPY_WRITEABLE):
+        if not (arr.flags["C_CONTIGUOUS"] and arr.flags["WRITEABLE"]):
             PyErr_SetString(TypeError, b"Array must be C-contiguous and writable")
             return -1
     else:
-        if not (arr.flags & NPY_C_CONTIGUOUS):
+        if not arr.flags["C_CONTIGUOUS"]:
             PyErr_SetString(TypeError, b"Array must be C-contiguous")
             return -1
 
