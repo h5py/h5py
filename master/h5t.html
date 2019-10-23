@@ -55,14 +55,17 @@ The majority of the <code class="xref py py-data docutils literal notranslate"><
 <dd><p>Given a Numpy dtype object, generate a byte-for-byte memory-compatible
 HDF5 datatype object.  The result is guaranteed to be transient and
 unlocked.</p>
-<p>Argument dtype_in may be a dtype object, or anything which can be
-converted to a dtype, including strings like ‘&lt;i4’.</p>
-<dl class="simple">
-<dt>logical</dt><dd><p>If this flag is set, instead of returning a byte-for-byte identical
-representation of the type, the function returns the closest logically
-appropriate HDF5 type.  For example, in the case of a “hinted” dtype
-of kind “O” representing a string, it would return an HDF5 variable-
-length string type.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dtype_in</strong> – may be a dtype object, or anything which can be
+converted to a dtype, including strings like ‘&lt;i4’ or an “int”.</p></li>
+<li><p><strong>logical</strong> – when this flag is set, instead of returning a byte-for-byte
+identical representation of the type, the function returns the closest
+logically appropriate HDF5 type.  For example, in the case of a “hinted”
+dtype of kind “O” representing a string, it would return an HDF5 variable-
+length string type.</p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>
