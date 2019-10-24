@@ -89,28 +89,6 @@ def select(shape, args, dsid):
     sel[args]
     return sel
 
-class _RegionProxy(object):
-
-    """
-        Thin proxy object which takes __getitem__-style index arguments and
-        produces RegionReference objects.  Example:
-
-        >>> dset = myfile['dataset']
-        >>> myref = dset.regionref[0:100,20:30]
-        >>> data = dset[myref]
-
-    """
-
-    def __init__(self, dsid):
-        """ Supply a h5py.h5d.DatasetID instance """
-        self.id = dsid
-
-    def __getitem__(self, args):
-        """ Takes arbitrary selection terms and produces a RegionReference
-        object.  Selection must be compatible with the dataset.
-        """
-        selection = select(self.id.shape, args, self.id)
-        return h5r.create(self.id, '.', h5r.DATASET_REGION, selection.id)
 
 class Selection(object):
 
