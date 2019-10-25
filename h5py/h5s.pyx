@@ -228,7 +228,7 @@ cdef class SpaceID(ObjectID):
                 # The HDF5 docs say passing in NULL resets the offset to 0.
                 # Instead it raises an exception.  Imagine my surprise. We'll
                 # do this manually.
-                for i from 0<=i<rank:
+                for i in range(rank):
                     dims[i] = 0
 
             H5Soffset_simple(self.id, dims)

@@ -97,7 +97,7 @@ cdef int convert_tuple(object tpl, hsize_t *dims, hsize_t rank) except -1:
         raise ValueError("Tuple length incompatible with array")
 
     try:
-        for i from 0<=i<rank:
+        for i in range(rank):
             dims[i] = tpl[i]
     except TypeError:
         raise TypeError("Can't convert element %d (%s) to hsize_t" % (i, tpl[i]))
@@ -111,7 +111,7 @@ cdef object convert_dims(hsize_t* dims, hsize_t rank):
     cdef int i
     dims_list = []
 
-    for i from 0<=i<rank:
+    for i in range(rank):
         dims_list.append(int(dims[i]))
 
     return tuple(dims_list)
@@ -137,7 +137,7 @@ cdef object create_numpy_hsize(int rank, hsize_t* dims):
     dims_npy = <npy_intp*>emalloc(sizeof(npy_intp)*rank)
 
     try:
-        for i from 0<=i<rank:
+        for i in range(rank):
             dims_npy[i] = dims[i]
         arr = PyArray_SimpleNew(rank, dims_npy, typecode)
     finally:

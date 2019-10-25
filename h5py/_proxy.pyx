@@ -361,7 +361,7 @@ cdef htri_t needs_proxy(hid_t tid) except -1:
     elif cls == H5T_COMPOUND:
 
         n = H5Tget_nmembers(tid)
-        for i from 0<=i<n:
+        for i in range(n):
             supertype = H5Tget_member_type(tid, i)
             try:
                 result = needs_proxy(supertype)

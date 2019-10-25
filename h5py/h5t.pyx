@@ -1156,7 +1156,7 @@ cdef class TypeCompoundID(TypeCompositeID):
             TypeID tmp_type
             list field_names
             list field_types
-            int nfields
+            int i, nfields
         field_names = []
         field_types = []
         field_offsets = []
@@ -1164,7 +1164,7 @@ cdef class TypeCompoundID(TypeCompositeID):
 
         # First step: read field names and their Numpy dtypes into
         # two separate arrays.
-        for i from 0 <= i < nfields:
+        for i in range(nfields):
             tmp_type = self.get_member_type(i)
             name = self.get_member_name(i)
             field_names.append(name)
