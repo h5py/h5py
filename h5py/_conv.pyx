@@ -23,14 +23,12 @@ cfg = get_config()
 
 # Initialization of numpy
 cimport numpy as cnp
-import numpy as np
-from numpy cimport npy_intp, NPY_WRITEABLE, NPY_C_CONTIGUOUS, NPY_OWNDATA, NPY_OBJECT
+from numpy cimport npy_intp, NPY_WRITEABLE, NPY_C_CONTIGUOUS, NPY_OWNDATA
 cnp._import_array()
 
-from cpython.object cimport PyObject, PyTypeObject
+from cpython.object cimport PyObject
 from cpython.unicode cimport PyUnicode_DecodeUTF8
-from cpython.ref cimport Py_INCREF, Py_DECREF, Py_XDECREF, Py_XINCREF
-from cython.view cimport array as cvarray
+from cpython.ref cimport Py_INCREF, Py_XDECREF, Py_XINCREF
 
 cdef PyObject* Py_None = <PyObject*> None
 

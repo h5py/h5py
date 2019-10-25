@@ -20,7 +20,6 @@ from .utils cimport  require_tuple, convert_dims, convert_tuple, \
 cimport numpy as cnp
 
 #Python level imports
-from . import _objects
 from ._objects import phil, with_phil
 
 cdef object lockid(hid_t id_):

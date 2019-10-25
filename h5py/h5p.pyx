@@ -28,7 +28,6 @@ from .h5s cimport SpaceID
 from .h5ac cimport CacheConfig
 
 # Python level imports
-from . import _objects
 from ._objects import phil, with_phil
 
 if MPI:

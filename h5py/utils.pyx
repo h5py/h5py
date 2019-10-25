@@ -12,8 +12,7 @@
 
 from numpy cimport ndarray, import_array,\
                    NPY_UINT16, NPY_UINT32, NPY_UINT64,  npy_intp,\
-                   PyArray_SimpleNew, PyArray_ContiguousFromAny,\
-                   PyArray_FROM_OTF, PyArray_DIM,\
+                   PyArray_SimpleNew, PyArray_FROM_OTF,\
                    NPY_CONTIGUOUS, NPY_NOTSWAPPED, NPY_FORCECAST
 
 # Initialization

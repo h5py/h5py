@@ -19,7 +19,6 @@ from cpython.buffer cimport PyObject_CheckBuffer, \
                             PyBUF_SIMPLE
 from ._objects cimport pdefault
 from .h5p cimport propwrap, PropFAID, PropFCID
-from .h5t cimport typewrap
 from .h5i cimport wrap_identifier
 from .h5ac cimport CacheConfig
 from .utils cimport emalloc, efree
@@ -27,7 +26,6 @@ from .utils cimport emalloc, efree
 # Python level imports
 from . import _objects
 from ._objects import phil, with_phil
-from . import h5fd
 
 from cpython.bytes cimport PyBytes_FromStringAndSize, PyBytes_AsString
 
