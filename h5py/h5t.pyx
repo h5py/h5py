@@ -1778,7 +1778,7 @@ def opaque_dtype(np_dtype):
 
     return np.dtype(dt, metadata={'h5py_opaque': True})
 
-  
+
 ref_dtype = np.dtype('O', metadata={'ref': Reference})
 regionref_dtype = np.dtype('O', metadata={'ref': RegionReference})
 
