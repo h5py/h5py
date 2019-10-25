@@ -1299,7 +1299,7 @@ cdef class TypeEnumID(TypeCompositeID):
         nmembers = self.get_nmembers()
         members = {}
 
-        for idx in xrange(nmembers):
+        for idx in range(nmembers):
             name = self.get_member_name(idx)
             val = self.get_member_value(idx)
             members[name] = val
