@@ -69,7 +69,9 @@ from .h5 import get_config
 from .h5r import Reference, RegionReference
 from .h5t import (special_dtype, check_dtype,
     vlen_dtype, string_dtype, enum_dtype, ref_dtype, regionref_dtype,
+    opaque_dtype,
     check_vlen_dtype, check_string_dtype, check_enum_dtype, check_ref_dtype,
+    check_opaque_dtype,
 )
 
 from .version import version as __version__

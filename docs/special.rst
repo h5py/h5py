@@ -156,6 +156,41 @@ Object and region references
 
 References have their :ref:`own section <refs>`.
 
+.. _opaque_dtypes:
+
+Storing other types as opaque data
+----------------------------------
+
+.. versionadded:: 3.0
+
+Numpy datetime64 and timedelta64 dtypes have no equivalent in HDF5 (the HDF5
+time type is broken and deprecated). h5py allows you to store such data with
+an HDF5 opaque type; it can be read back correctly by h5py, but won't be
+interoperable with other tools.
+
+Here's an example of storing and reading a datetime array::
+
+    >>> arr = np.array([np.datetime64('2019-09-22T17:38:30')])
+    >>> f['data'] = arr.astype(h5py.opaque_dtype(arr.dtype))
+    >>> print(f['data'][:])
+    ['2019-09-22T17:38:30']
+
+.. function:: opaque_dtype(dt)
+
+   Return a dtype like the input, tagged to be stored as HDF5 opaque type.
+
+.. function:: check_opaque_dtype(dt)
+
+   Return True if the dtype given is tagged to be stored as HDF5 opaque data.
+
+.. note::
+
+   With some exceptions, you can use :func:`opaque_dtype` with any numpy
+   dtype. While this may seem like a convenient way to get arbitrary data into
+   HDF5, remember that it's not a standard format. It's better to fit your
+   data into HDF5's native structures, or use a file format better suited to
+   your data.
+
 Older API
 ---------
 
