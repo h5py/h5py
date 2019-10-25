@@ -91,7 +91,7 @@ cdef herr_t generic_converter(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
                         bkg + (i*bkg_stride),           # backing buffer
                         cdata[0].priv)                  # conversion context
             else:
-                for i from nl>i>=0:
+                for i in range(nl-1, -1, -1):
                     op( buf + (i*sizes[0].src_size),
                         buf + (i*sizes[0].dst_size),
                         bkg + (i*bkg_stride),
@@ -608,7 +608,7 @@ cdef herr_t vlen2ndarray(hid_t src_id,
                     conv_vlen2ndarray(buf + (i*src_size), buf + (i*dst_size),
                                       dt, supertype, outtype)
             else:
-                for i from nl>i>=0:
+                for i in range(nl-1, -1, -1):
                     conv_vlen2ndarray(buf + (i*src_size), buf + (i*dst_size),
                                       dt, supertype, outtype)
         else:
