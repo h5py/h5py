@@ -75,7 +75,7 @@ cdef herr_t generic_converter(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
         elif H5Tis_variable_str(dst_id):
             sizes.cset = H5Tget_cset(dst_id)
         if bkg_stride==0:
-            bkg_stride = sizes[0].dst_size;
+            bkg_stride = sizes[0].dst_size
         if buf_stride == 0:
             # No explicit stride seems to mean that the elements are packed
             # contiguously in the buffer.  In this case we must be careful
@@ -286,7 +286,7 @@ cdef int conv_fixed2vlen(void* ipt, void* opt, void* bkg, void* priv) except -1:
     memcpy(temp_string, buf_fixed, sizes[0].src_size)
     temp_string[sizes[0].src_size] = c'\0'
 
-    memcpy(buf_vlen, &temp_string, sizeof(temp_string));
+    memcpy(buf_vlen, &temp_string, sizeof(temp_string))
 
     return 0
 
