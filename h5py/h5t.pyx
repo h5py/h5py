@@ -629,11 +629,11 @@ cdef class TypeOpaqueID(TypeID):
         finally:
             free(buf)
 
-    cdef dtype py_dtype(self):
+    cdef object py_dtype(self):
         cdef bytes tag = self.get_tag()
         if tag.startswith(b"NUMPY:"):
             # 6 = len("NUMPY:")
-            return dtype(tag[6:], metadata={'h5py_opaque': True})
+            return np.dtype(tag[6:], metadata={'h5py_opaque': True})
 
         # Numpy translation function for opaque types
         return np.dtype("|V" + str(self.get_size()))
