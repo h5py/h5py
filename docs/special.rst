@@ -194,7 +194,7 @@ Here's an example of storing and reading a datetime array::
 Older API
 ---------
 
-Before h5py 2.9, a single pair of functions was used to create and check for
+Before h5py 2.10, a single pair of functions was used to create and check for
 all of these special dtypes. These are still available for backwards
 compatibility, but are deprecated in favour of the functions listed above.
 

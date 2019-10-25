@@ -111,14 +111,3 @@ def enable_ipython_completer():
             return ipy_completer.load_ipython_extension()
 
     raise RuntimeError('Completer must be enabled in active ipython session')
-
-
-# --- Legacy API --------------------------------------------------------------
-
-from .h5t import py_new_vlen as new_vlen
-from .h5t import py_get_vlen as get_vlen
-from .h5t import py_new_enum as new_enum
-from .h5t import py_get_enum as get_enum
-
-from .h5py_warnings import ModuleWrapper as _ModuleWrapper
-highlevel = _ModuleWrapper("h5py.highlevel")

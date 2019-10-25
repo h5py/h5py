@@ -1,3 +1,4 @@
+# cython: language_level=3
 # This file is part of h5py, a Python interface to the HDF5 library.
 #
 # http://www.h5py.org
@@ -7,7 +8,7 @@
 # License:  Standard 3-clause BSD; see "license.txt" for full license terms
 #           and contributor agreement.
 
-from api_types_ext cimport *
+from .api_types_ext cimport *
 
 include "config.pxi"
 
@@ -133,19 +134,27 @@ cdef extern from "hdf5.h":
   int H5F_OBJ_LOCAL
   hsize_t H5F_UNLIMITED
 
-  IF HDF5_VERSION >= (1, 10, 2):
+  IF HDF5_VERSION < (1, 10, 2):
+    ctypedef enum H5F_libver_t:
+      H5F_LIBVER_EARLIEST        #/* Use the earliest possible format for storing objects */
+      H5F_LIBVER_LATEST          #/* Use the latest possible format available for storing objects*/
+
+  IF HDF5_VERSION >= (1, 10, 2) and HDF5_VERSION < (1,11,4):
     ctypedef enum H5F_libver_t:
       H5F_LIBVER_EARLIEST = 0,        # Use the earliest possible format for storing objects
       H5F_LIBVER_V18 = 1,
       H5F_LIBVER_V110 = 2,
       H5F_LIBVER_NBOUNDS
-
     int H5F_LIBVER_LATEST  # Use the latest possible format available for storing objects
 
-  ELSE:
+  IF HDF5_VERSION >= (1, 11, 4):
     ctypedef enum H5F_libver_t:
-      H5F_LIBVER_EARLIEST        #/* Use the earliest possible format for storing objects */
-      H5F_LIBVER_LATEST          #/* Use the latest possible format available for storing objects*/
+      H5F_LIBVER_EARLIEST = 0,        # Use the earliest possible format for storing objects
+      H5F_LIBVER_V18 = 1,
+      H5F_LIBVER_V110 = 2,
+      H5F_LIBVER_V112 = 3,
+      H5F_LIBVER_NBOUNDS
+    int H5F_LIBVER_LATEST  # Use the latest possible format available for storing objects
 
 # === H5FD - Low-level file descriptor API ====================================
 
@@ -297,23 +306,45 @@ cdef extern from "hdf5.h":
 
 # === H5I - Identifier and reflection interface ===============================
 
-  ctypedef enum H5I_type_t:
-    H5I_UNINIT       = -2,  # uninitialized Group
-    H5I_BADID        = -1,  # invalid Group
-    H5I_FILE        = 1,    # group ID for File objects
-    H5I_GROUP,              # group ID for Group objects
-    H5I_DATATYPE,           # group ID for Datatype objects
-    H5I_DATASPACE,          # group ID for Dataspace objects
-    H5I_DATASET,            # group ID for Dataset objects
-    H5I_ATTR,               # group ID for Attribute objects
-    H5I_REFERENCE,          # group ID for Reference objects
-    H5I_VFL,                # group ID for virtual file layer
-    H5I_GENPROP_CLS,        # group ID for generic property list classes
-    H5I_GENPROP_LST,        # group ID for generic property lists
-    H5I_ERROR_CLASS,        # group ID for error classes
-    H5I_ERROR_MSG,          # group ID for error messages
-    H5I_ERROR_STACK,        # group ID for error stacks
-    H5I_NTYPES              # number of valid groups, MUST BE LAST!
+  IF HDF5_VERSION < VOL_MIN_HDF5_VERSION:
+    ctypedef enum H5I_type_t:
+      H5I_UNINIT       = -2,  # uninitialized Group
+      H5I_BADID        = -1,  # invalid Group
+      H5I_FILE        = 1,    # type ID for File objects
+      H5I_GROUP,              # type ID for Group objects
+      H5I_DATATYPE,           # type ID for Datatype objects
+      H5I_DATASPACE,          # type ID for Dataspace objects
+      H5I_DATASET,            # type ID for Dataset objects
+      H5I_ATTR,               # type ID for Attribute objects
+      H5I_REFERENCE,          # type ID for Reference objects
+      H5I_VFL,                # type ID for virtual file layer
+      H5I_GENPROP_CLS,        # type ID for generic property list classes
+      H5I_GENPROP_LST,        # type ID for generic property lists
+      H5I_ERROR_CLASS,        # type ID for error classes
+      H5I_ERROR_MSG,          # type ID for error messages
+      H5I_ERROR_STACK,        # type ID for error stacks
+      H5I_NTYPES              # number of valid groups, MUST BE LAST!
+
+  ELSE:
+    ctypedef enum H5I_type_t:
+      H5I_UNINIT      = -2,     # uninitialized type
+      H5I_BADID       = -1,     # invalid Type
+      H5I_FILE        = 1,      # type ID for File objects
+      H5I_GROUP,                # type ID for Group objects
+      H5I_DATATYPE,             # type ID for Datatype objects
+      H5I_DATASPACE,            # type ID for Dataspace object
+      H5I_DATASET,              # type ID for Dataset object
+      H5I_MAP,                  # type ID for Map object
+      H5I_ATTR,                 # type ID for Attribute objects
+      H5I_VFL,                  # type ID for virtual file layer
+      H5I_VOL,                  # type ID for virtual object layer
+      H5I_GENPROP_CLS,          # type ID for generic property list classes
+      H5I_GENPROP_LST,          # type ID for generic property lists
+      H5I_ERROR_CLASS,          # type ID for error classes
+      H5I_ERROR_MSG,            # type ID for error messages
+      H5I_ERROR_STACK,          # type ID for error stacks
+      H5I_SPACE_SEL_ITER,       # type ID for dataspace selection iterator
+      H5I_NTYPES                # number of library types, MUST BE LAST!
 
 # === H5L/H5O - Links interface (1.8.X only) ======================================
 

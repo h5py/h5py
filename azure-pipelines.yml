@@ -1,0 +1,183 @@
+# from matplotlib's azure setup
+
+variables:
+  HDF5_CACHE_DIR: $(Pipeline.Workspace)/cache/hdf5
+  PIP_CACHE_DIR: $(Pipeline.Workspace)/cache/pip
+  CCACHE_DIR: $(Pipeline.Workspace)/cache/ccache
+
+jobs:
+
+- job: 'ubuntu1604'
+  pool:
+    vmImage: ubuntu-16.04
+  strategy:
+    matrix:
+    # system independent tests
+      static-checks:
+        TOXENV: docs,checkreadme,pre-commit
+        python.version: '3.6'
+      # -deps : test with default (latest) versions of dependencies
+      # -mindeps : test with oldest supported version of (python) dependencies
+      # -deps-pre : test pre-release versions of (python) dependencies)
+      # -tables : also check compatibility with pytables
+      py36:
+        python.version: '3.6'
+        TOXENV: py36-test-deps,py36-test-mindeps,py36-test-deps-pre,py36-test-mindeps-tables
+        H5PY_ENFORCE_COVERAGE: yes
+      py37:
+        python.version: '3.7'
+        TOXENV: py37-test-deps,py37-test-mindeps,py37-test-deps-pre,py37-test-deps-tables
+    # test when we're not in a unicode locale
+      py36-Clocale:
+        python.version: '3.6'
+        TOXENV: py36-test-deps
+        TOX_TESTENV_PASSENV: LANG LC_ALL
+        LANG: C
+        LC_ALL: C
+        H5PY_ENFORCE_COVERAGE: yes
+    # test against newer HDF5
+      py36-deps-hdf51103:
+        python.version: '3.6'
+        TOXENV: py36-test-deps
+        HDF5_VERSION: 1.10.3
+        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
+        H5PY_ENFORCE_COVERAGE: yes
+      py37-deps-hdf51104:
+        python.version: '3.7'
+        TOXENV: py37-test-deps
+        HDF5_VERSION: 1.10.4
+        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
+        H5PY_ENFORCE_COVERAGE: yes
+      py37-deps-hdf51105:
+        python.version: '3.7'
+        TOXENV: py37-test-deps
+        HDF5_VERSION: 1.10.5
+        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
+        H5PY_ENFORCE_COVERAGE: yes
+    # do mpi tests
+#      py36-deps-hdf51105-mpi:
+#        python.version: '3.6'
+#        TOXENV: py36-test-mindeps-mpi4py
+#        HDF5_VERSION: 1.10.5
+#        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
+#        HDF5_MPI: ON
+#        CC: mpicc
+#      py37-deps-hdf51105-mpi:
+#        python.version: '3.7'
+#        TOXENV: py37-test-mindeps-mpi4py
+#        HDF5_VERSION: 1.10.5
+#        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
+#        HDF5_MPI: ON
+#        CC: mpicc
+    maxParallel: 4
+
+  steps:
+    - template: ci/azure-pipelines-steps.yml
+      parameters:
+        vmImage: 'ubuntu-16.04'
+        installer: apt
+        shell: unix
+
+- job: 'Windows'
+  pool:
+    vmImage: vs2017-win2016
+  strategy:
+    matrix:
+    # -deps : test with default (latest) versions of dependencies
+    # -mindeps : test with oldest supported version of (python) dependencies
+    # -deps-pre : test pre-release versions of (python) dependencies)
+    #
+    # 64 bit - HDF5 1.8
+      py36-hdf518:
+        python.version: '3.6'
+        TOXENV: py36-test-deps,py36-test-mindeps,py36-test-deps-pre
+        HDF5_VERSION: 1.8.17
+        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
+        HDF5_VSVERSION: "15-64"
+        H5PY_ENFORCE_COVERAGE: yes
+      py37-hdf518:
+        python.version: '3.7'
+        TOXENV: py37-test-deps,py37-test-mindeps,py37-test-deps-pre
+        HDF5_VERSION: 1.8.17
+        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
+        HDF5_VSVERSION: "15-64"
+        H5PY_ENFORCE_COVERAGE: yes
+    # 64 bit - HDF5 1.10
+      py36-hdf5110:
+        python.version: '3.6'
+        TOXENV: py36-test-deps,py36-test-mindeps,py36-test-deps-pre
+        HDF5_VERSION: 1.10.1
+        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
+        HDF5_VSVERSION: "15-64"
+        H5PY_ENFORCE_COVERAGE: yes
+      py37-hdf5110:
+        python.version: '3.7'
+        TOXENV: py37-test-deps,py37-test-mindeps,py37-test-deps-pre
+        HDF5_VERSION: 1.10.1
+        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
+        HDF5_VSVERSION: "15-64"
+        H5PY_ENFORCE_COVERAGE: yes
+    maxParallel: 4
+
+  steps:
+    - template: ci/azure-pipelines-steps.yml
+      parameters:
+        vmImage: 'vs2017-win2016'
+        installer: nuget
+        shell: cmd
+
+- job: 'macOS1013'
+  pool:
+    vmImage: xcode9-macos10.13
+  strategy:
+    matrix:
+      # -deps : test with default (latest) versions of dependencies
+      # -mindeps : test with oldest supported version of (python) dependencies
+      # -deps-pre : test pre-release versions of (python) dependencies)
+      py36:
+        python.version: '3.6'
+        TOXENV: py36-test-deps,py36-test-mindeps,py36-test-deps-pre
+        H5PY_ENFORCE_COVERAGE: yes
+      py37:
+        python.version: '3.7'
+        TOXENV: py37-test-deps,py37-test-mindeps,py37-test-deps-pre
+        H5PY_ENFORCE_COVERAGE: yes
+    # test against newer HDF5
+#      py36-deps-hdf51103:
+#        python.version: '3.6'
+#        TOXENV: py36-test-deps
+#        HDF5_VERSION: 1.10.3
+#        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
+#      py37-deps-hdf51103:
+#        python.version: '3.7'
+#        TOXENV: py37-test-deps
+#        HDF5_VERSION: 1.10.3
+#        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
+#      py36-deps-hdf51104:
+#        python.version: '3.6'
+#        TOXENV: py36-test-deps
+#        HDF5_VERSION: 1.10.4
+#        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
+#      py37-deps-hdf51104:
+#        python.version: '3.7'
+#        TOXENV: py37-test-deps
+#        HDF5_VERSION: 1.10.4
+#        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
+#      py36-deps-hdf51105:
+#        python.version: '3.6'
+#        TOXENV: py36-test-deps
+#        HDF5_VERSION: 1.10.5
+#        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
+#      py37-deps-hdf51105:
+#        python.version: '3.7'
+#        TOXENV: py37-test-deps
+#        HDF5_VERSION: 1.10.5
+#        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
+    maxParallel: 4
+
+  steps:
+    - template: ci/azure-pipelines-steps.yml
+      parameters:
+        vmImage: 'xcode9-macos10.13'
+        installer: brew
+        shell: unix

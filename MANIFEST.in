@@ -1,4 +1,3 @@
-include ANN.rst
 include AUTHORS
 include api_gen.py
 include LICENSE
@@ -20,6 +19,7 @@ recursive-include h5py *.h *.pyx *.pxd *.pxi *.py *.txt
 exclude h5py/config.pxi
 exclude h5py/defs.pxd
 exclude h5py/defs.pyx
+exclude h5py/_hdf5.pxd
 
 recursive-include licenses *
 recursive-include lzf *
@@ -37,7 +37,10 @@ exclude *.yaml
 recursive-exclude * __pycache__
 recursive-exclude * *.py[co]
 exclude .coveragerc
+exclude .coverage_dir
+recursive-exclude .coverage_dir *
 exclude .mailmap
+exclude github_deploy_key_h5py_h5py.enc
 
 exclude rever.xsh
 prune news

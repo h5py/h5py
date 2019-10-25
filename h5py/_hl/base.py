@@ -13,11 +13,7 @@
 
 import posixpath
 import os
-try:
-    from collections.abc import (Mapping, MutableMapping, KeysView,
-                                 ValuesView, ItemsView)
-except ImportError:
-    from collections import (Mapping, MutableMapping, KeysView,
+from collections.abc import (Mapping, MutableMapping, KeysView,
                              ValuesView, ItemsView)
 
 from .compat import fspath, filename_encode
@@ -422,3 +418,15 @@ class Empty(object):
 
     def __repr__(self):
         return "Empty(dtype={0!r})".format(self.dtype)
+
+
+def product(nums):
+    """Calculate a numeric product
+
+    For small amounts of data (e.g. shape tuples), this simple code is much
+    faster than calling numpy.prod().
+    """
+    prod = 1
+    for n in nums:
+        prod *= n
+    return prod

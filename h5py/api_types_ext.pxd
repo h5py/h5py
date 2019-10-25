@@ -14,39 +14,19 @@ include 'config.pxi'
 IF MPI:
     from mpi4py.MPI cimport MPI_Comm, MPI_Info, Comm, Info
 
-cdef extern from "stdlib.h":
-  ctypedef long size_t
-  void *malloc(size_t size)
-  void free(void *ptr)
+from libc.stdlib cimport malloc, free
+from libc.string cimport strlen, strchr, strcpy, strncpy, strcmp,\
+                         strdup, strdup, memcpy, memset
+ctypedef long size_t
+from libc.time cimport time_t
 
-cdef extern from "string.h":
-  size_t strlen(char* s)
-  char *strchr(char *s, int c)
-  char *strcpy(char *dest, char *src)
-  char *strncpy(char *dest, char *src, size_t n)
-  int strcmp(char *s1, char *s2)
-  char *strdup(char *s)
-  void *memcpy(void *dest, void *src, size_t n)
-  void *memset(void *s, int c, size_t n)
-
-cdef extern from "time.h":
-  ctypedef int time_t
+from numpy cimport int8_t, uint8_t, int16_t, uint16_t, int32_t, uint32_t, int64_t, uint64_t
 
 IF UNAME_SYSNAME != "Windows":
   cdef extern from "unistd.h":
     ctypedef long ssize_t
 ELSE:
   ctypedef long ssize_t
-
-cdef extern from "stdint.h":
-  ctypedef signed char int8_t
-  ctypedef unsigned char uint8_t
-  ctypedef signed int int16_t
-  ctypedef unsigned int uint16_t
-  ctypedef signed long int int32_t
-  ctypedef unsigned long int uint32_t
-  ctypedef signed long long int int64_t
-  ctypedef unsigned long long int uint64_t
 
 # Can't use Cython defs because they keep moving them around
 cdef extern from "Python.h":

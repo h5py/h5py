@@ -1,3 +1,4 @@
+# cython: language_level=3
 # This file is part of h5py, a Python interface to the HDF5 library.
 #
 # http://www.h5py.org
@@ -11,16 +12,17 @@
     Provides access to the low-level HDF5 "H5A" attribute interface.
 """
 
-# Compile-time imports
-from _objects cimport pdefault
-from h5t cimport TypeID, typewrap, py_create
-from h5s cimport SpaceID
-from h5p cimport PropID
+# C-level imports
+from ._objects cimport pdefault
+from .h5t cimport TypeID, typewrap, py_create
+from .h5s cimport SpaceID
+from .h5p cimport PropID
 from numpy cimport import_array, ndarray, PyArray_DATA
-from utils cimport check_numpy_read, check_numpy_write, emalloc, efree
-from _proxy cimport attr_rw
+from .utils cimport check_numpy_read, check_numpy_write, emalloc, efree
+from ._proxy cimport attr_rw
 
-from h5py import _objects
+#Python level imports
+from . import _objects
 from ._objects import phil, with_phil
 
 # Initialization

@@ -133,6 +133,8 @@ class AttributeManager(base.MutableMappingHDF5, base.CommonStateObject):
 
             if shape is None:
                 shape = data.shape
+            elif isinstance(shape, int):
+                shape = (shape,)
 
             use_htype = None    # If a committed type is given, we must use it
                                 # in the call to h5a.create.

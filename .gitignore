@@ -26,6 +26,8 @@ MANIFEST
 *~
 .pytest_cache
 .coverage
+.coverage_dir
+coverage.xml
 
 # Rever
 rever/

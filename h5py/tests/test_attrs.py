@@ -17,10 +17,7 @@
 
 import numpy as np
 
-try:
-    from collections.abc import MutableMapping
-except ImportError:  # Python < 3.3
-    from collections import MutableMapping
+from collections.abc import MutableMapping
 
 from .common import TestCase, ut
 

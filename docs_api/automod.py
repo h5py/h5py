@@ -48,14 +48,9 @@ class_exprs = { "ObjectID": "h5py.h5.ObjectID",
                 "[Gg]roup creation property list": "h5py.h5p.PropGCID"}
 
 
-try:
-    class_exprs = dict(
-        (re.compile(class_base % x.replace(" ",r"\s"), re.VERBOSE), y) \
-        for x, y in class_exprs.iteritems() )
-except AttributeError:
-    class_exprs = dict(
-        (re.compile(class_base % x.replace(" ",r"\s"), re.VERBOSE), y) \
-        for x, y in class_exprs.items() )
+class_exprs = dict(
+    (re.compile(class_base % x.replace(" ",r"\s"), re.VERBOSE), y) \
+    for x, y in class_exprs.items() )
 
 
 def replace_class(istr):
@@ -64,7 +59,7 @@ def replace_class(istr):
         pre, name, post = match.group('pre', 'name', 'post')
         return '%s:class:`%s <%s>`%s' % (pre, name, target, post)
 
-     for expr, target in class_exprs.items():
+    for expr, target in class_exprs.items():
         rpl2 = partial(rpl, target)
         istr = safe_replace(istr, expr, rpl2)
 
@@ -155,17 +150,17 @@ param_expr = re.compile(r"""
 \+
 \s+
 (?P<desc>
-  [^\s\(]
+  [^\s(]
   .*
-  [^\s\)]
+  [^\s)]
 )
 (?:
   \s+
   \(
   (?P<default>
-    [^\s\(]
+    [^\s(]
     .*
-    [^\s\)]
+    [^\s)]
   )
   \)
 )?

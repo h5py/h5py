@@ -20,17 +20,3 @@ class H5pyWarning(UserWarning):
 
 class H5pyDeprecationWarning(H5pyWarning):
     pass
-
-
-class ModuleWrapper(object):
-    def __init__(self, mod):
-        self._imported = False
-        self._mod = mod
-
-    def __getattr__(self, attr):
-        if not self._imported:
-            self._mod = self._import()
-        return getattr(self._mod, attr)
-
-    def _import(self):
-        return import_module(self._mod)

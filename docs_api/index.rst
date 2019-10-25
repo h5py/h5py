@@ -14,7 +14,7 @@ main documentation; this means roughly once per minor (X.Y) release.
 This may not be what you're looking for!
 ----------------------------------------
 
-**The main docs for h5py are at** http://docs.h5py.org.  **These are
+**The main docs for h5py are at** https://docs.h5py.org.  **These are
 the docs specifically for the h5py low-level interface.**
 
 Contents
