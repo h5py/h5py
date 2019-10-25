@@ -16,6 +16,7 @@
 
 import numpy as np
 
+from .base import product
 from .. import h5s, h5r
 
 
@@ -280,7 +281,7 @@ class SimpleSelection(Selection):
         tshape = tuple(tshape)
 
         chunks = tuple(x//y for x, y in zip(count, tshape))
-        nchunks = int(np.product(chunks))
+        nchunks = product(chunks)
 
         if nchunks == 1:
             yield self._id
