@@ -13,7 +13,7 @@
 """
     High-level access to HDF5 dataspace selections
 """
-
+from operator import index
 import numpy as np
 
 from .base import product
@@ -54,9 +54,10 @@ def select(shape, args, dsid):
     if not isinstance(args, tuple):
         args = (args,)
 
-    # "Special" indexing objects
-    if len(args) == 1:
+    ellipsis_ix = nargs = len(args)
 
+    # "Special" indexing objects
+    if nargs == 1:
         arg = args[0]
         if isinstance(arg, Selection):
             if arg.shape != shape:
@@ -75,20 +76,64 @@ def select(shape, args, dsid):
 
             return Selection(shape, spaceid=sid)
 
-    for a in args:
-        if not isinstance(a, slice) and a is not Ellipsis:
-            try:
-                int(a)
-                if isinstance(a, np.ndarray) and a.shape == (1,):
-                    raise Exception()
-            except Exception:
-                sel = FancySelection(shape)
-                sel[args]
-                return sel
+    rank = len(shape)
+    dim_ix = 0
+    sequence_ix = None
+    starts = [0] * rank
+    counts = [1] * rank
+    steps  = [1] * rank
+    scalar = [False] * rank
+    seen_ellipsis = False
 
-    sel = SimpleSelection(shape)
-    sel[args]
-    return sel
+    for a in args:
+        if a is Ellipsis:
+            if seen_ellipsis:
+                raise ValueError("Only one ellipsis may be used.")
+            seen_ellipsis = True
+            ellipsis_ix = dim_ix
+            nargs -= 1
+            dim_ix += rank - nargs  # Skip ahead to the remaining dimensions
+            continue
+
+        l = shape[dim_ix]
+        if isinstance(a, slice):
+            starts[dim_ix], counts[dim_ix], steps[dim_ix] = _translate_slice(a, l)
+        else:
+            try:
+                a = index(a)
+            except Exception:
+                if sequence_ix is not None:
+                    raise ValueError("Second non-simple index argument")
+                sequence_ix = dim_ix
+            else:
+                if a < 0:
+                    a += l
+
+                if not 0 <= a < l:
+                    raise ValueError(f"Index ({a}) out of range (0-{l-1})")
+
+                starts[dim_ix] = a
+                scalar[dim_ix] = True
+
+        dim_ix += 1
+
+    if nargs == 0:
+        return SimpleSelection(shape)  # Select all
+    elif nargs < rank:
+        # Fill in ellipsis or trailing dimensions
+        ellipsis_end = ellipsis_ix + (rank - nargs)
+        counts[ellipsis_ix:ellipsis_end] = shape[ellipsis_ix:ellipsis_end]
+    elif nargs > rank:
+        raise ValueError(f"{nargs} indexing arguments for {rank} dimensions")
+
+    if sequence_ix is not None:
+        sel = FancySelection(shape)
+        sel[args]
+        return sel
+    else:
+        return SimpleSelection(shape, sel=(
+            tuple(starts), tuple(counts), tuple(steps), tuple(scalar)
+        ))
 
 
 class Selection(object):
@@ -215,11 +260,18 @@ class SimpleSelection(Selection):
         """ Shape of current selection """
         return self._mshape
 
-    def __init__(self, shape, *args, **kwds):
-        super(SimpleSelection, self).__init__(shape, *args, **kwds)
-        rank = len(self.shape)
-        self._sel = ((0,)*rank, self.shape, (1,)*rank, (False,)*rank)
-        self._mshape = self.shape
+    def __init__(self, shape, spaceid=None, sel=None):
+        super(SimpleSelection, self).__init__(shape, spaceid=spaceid)
+        if sel is None:
+            self._id.select_all()
+            rank = len(self.shape)
+            self._sel = ((0,)*rank, self.shape, (1,)*rank, (False,)*rank)
+            self._mshape = self.shape
+        else:
+            starts, counts, steps, scalar = sel
+            self._id.select_hyperslab(starts, counts, steps)
+            self._sel = sel
+            self._mshape = tuple([x for x, y in zip(counts, scalar) if not y])
 
     def __getitem__(self, args):
 
