@@ -307,10 +307,9 @@ class Test1DZeroFloat(TestCase):
     def test_slice_stop_less_than_start(self):
         self.assertNumpyBehavior(self.dset, self.data, np.s_[7:5])
 
-    # FIXME: NumPy raises IndexError
     def test_index(self):
         """ index -> out of range """
-        with self.assertRaises(ValueError):
+        with self.assertRaises(IndexError):
             self.dset[0]
 
     def test_indexlist(self):
@@ -386,17 +385,13 @@ class Test1DFloat(TestCase):
         with self.assertRaises(TypeError):
             self.dset[None]
 
-    # FIXME: NumPy raises IndexError
-    # Also this currently raises UnboundLocalError. :(
-    @ut.expectedFailure
     def test_index_illegal(self):
         """ Illegal slicing argument """
         with self.assertRaises(TypeError):
             self.dset[{}]
 
-    # FIXME: NumPy raises IndexError
     def test_index_outofrange(self):
-        with self.assertRaises(ValueError):
+        with self.assertRaises(IndexError):
             self.dset[100]
 
     def test_indexlist_simple(self):
@@ -417,15 +412,23 @@ class Test1DFloat(TestCase):
     def test_indexlist_empty(self):
         self.assertNumpyBehavior(self.dset, self.data, np.s_[[]])
 
-    # FIXME: NumPy has IndexError
     def test_indexlist_outofrange(self):
-        with self.assertRaises(ValueError):
+        with self.assertRaises(IndexError):
             self.dset[[100]]
 
     def test_indexlist_nonmonotonic(self):
         """ we require index list values to be strictly increasing """
         with self.assertRaises(TypeError):
             self.dset[[1,3,2]]
+
+    def test_indexlist_nonmonotonic_negative(self):
+        """ we require index list values to be strictly increasing """
+        with self.assertRaises(TypeError):
+            self.dset[[1,-3,2]]
+
+    def test_indexlist_negative(self):
+        # Mixing positive & negative is allowed if they're logically in order
+        self.assertNumpyBehavior(self.dset, self.data, np.s_[[1, -3, -1]])
 
     def test_indexlist_repeated(self):
         """ we forbid repeated index values """

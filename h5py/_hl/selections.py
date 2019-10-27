@@ -78,7 +78,7 @@ def select(shape, args, dsid):
 
     rank = len(shape)
     dim_ix = 0
-    sequence_ix = None
+    seq_dim = seq_arr = None
     starts = [0] * rank
     counts = [1] * rank
     steps  = [1] * rank
@@ -87,6 +87,7 @@ def select(shape, args, dsid):
 
     for a in args:
         if a is Ellipsis:
+            # [...] (Ellipsis -> fill as many other dimensions as needed)
             if seen_ellipsis:
                 raise ValueError("Only one ellipsis may be used.")
             seen_ellipsis = True
@@ -96,21 +97,36 @@ def select(shape, args, dsid):
             continue
 
         l = shape[dim_ix]
+
         if isinstance(a, slice):
+            # [0:10]
             starts[dim_ix], counts[dim_ix], steps[dim_ix] = _translate_slice(a, l)
         else:
             try:
                 a = index(a)
             except Exception:
-                if sequence_ix is not None:
-                    raise ValueError("Second non-simple index argument")
-                sequence_ix = dim_ix
+                # [[0, 1, 2]] - list/array (potentially): fancy indexing
+                arr = np.asarray(a)
+                if arr.shape == (0,):
+                    # Empty coordinate list -> like slice(0, 0)
+                    # asarray([]) -> float, so check this before dtype
+                    counts[dim_ix] = 0
+
+                else:
+                    arr = _validate_sequence_arg(arr, l)
+                    if seq_dim is not None:
+                        raise TypeError("Only one indexing vector or array is currently allowed for advanced selection")
+
+                    seq_dim = dim_ix
+                    seq_arr = arr
+
             else:
+                # [0] - simple integer indices
                 if a < 0:
                     a += l
 
                 if not 0 <= a < l:
-                    raise ValueError(f"Index ({a}) out of range (0-{l-1})")
+                    _out_of_range(a, l)
 
                 starts[dim_ix] = a
                 scalar[dim_ix] = True
@@ -126,15 +142,45 @@ def select(shape, args, dsid):
     elif nargs > rank:
         raise ValueError(f"{nargs} indexing arguments for {rank} dimensions")
 
-    if sequence_ix is not None:
-        sel = FancySelection(shape)
-        sel[args]
-        return sel
+    if seq_dim is not None:
+        return FancySelection(shape, sel=(
+            (tuple(starts), tuple(counts), tuple(steps), tuple(scalar)),
+            (seq_dim, seq_arr)
+        ))
     else:
         return SimpleSelection(shape, sel=(
             tuple(starts), tuple(counts), tuple(steps), tuple(scalar)
         ))
 
+def _validate_sequence_arg(arr: np.ndarray, l: int):
+    # Array must be integers...
+    if not np.issubdtype(arr.dtype, np.integer):
+        raise TypeError("Coordinate arrays must be integers")
+
+    # ... 1D...
+    if arr.ndim != 1:
+        raise TypeError("Coordinate arrays for indexing must be 1D")
+
+    # (Convert negative indices to positive)
+    arr[arr < 0] += l
+
+    # ... all values in 0 <= a < l ...
+    oob = (arr < 0) | (arr > l)
+    if np.any(oob):
+        _out_of_range(arr[oob], l)
+
+    # ... increasing, unique values.
+    if np.any(np.diff(arr) < 1):
+        raise TypeError("Indexing elements must be in increasing order & unique")
+
+    return arr
+
+def _out_of_range(val, l):
+    if l == 0:
+        msg = f"Index ({val}) out of range (empty dimension)"
+    else:
+        msg = f"Index ({val}) out of range (0-{l - 1})"
+    raise IndexError(msg)
 
 class Selection(object):
 
@@ -362,9 +408,25 @@ class FancySelection(Selection):
     def mshape(self):
         return self._mshape
 
-    def __init__(self, shape, *args, **kwds):
-        super(FancySelection, self).__init__(shape, *args, **kwds)
-        self._mshape = self.shape
+    def __init__(self, shape, spaceid=None, sel=None):
+        super(FancySelection, self).__init__(shape, spaceid=spaceid)
+        if sel is None:
+            self._mshape = self.shape
+        else:
+            (starts, counts, steps, scalar), (seq_dim, seq_arg)  = sel
+            self._id.select_hyperslab(starts, counts, steps)
+
+            # Find shape of selection
+            mshape = list(counts)
+            mshape[seq_dim] = len(seq_arg)
+            self._mshape = tuple([x for x, y in zip(mshape, scalar) if not y])
+
+            # Apply the selection by making several HDF5 hyperslab selections
+            var_starts = list(starts)
+            self._id.select_none()
+            for coord in seq_arg:
+                var_starts[seq_dim] = coord
+                self._id.select_hyperslab(tuple(var_starts), counts, steps, op=h5s.SELECT_OR)
 
     def __getitem__(self, args):
 
