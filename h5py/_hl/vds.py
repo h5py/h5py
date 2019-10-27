@@ -13,7 +13,7 @@
 
 from copy import deepcopy as copy
 from collections import namedtuple
-from .selections import SimpleSelection, select
+from .selections import AllSelection, select
 from .. import h5s, h5
 from .. import version
 
@@ -93,7 +93,7 @@ class VirtualSource(object):
         else:
             self.maxshape = tuple([h5s.UNLIMITED if ix is None else ix
                                    for ix in maxshape])
-        self.sel = SimpleSelection(shape)
+        self.sel = AllSelection(shape)
 
     @property
     def shape(self):

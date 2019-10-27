@@ -761,13 +761,13 @@ class Dataset(HLObject):
             if self._is_empty:
                 raise TypeError("Empty datasets have no numpy representation")
             if source_sel is None:
-                source_sel = sel.SimpleSelection(self.shape)
+                source_sel = sel.AllSelection(self.shape)
             else:
                 source_sel = sel.select(self.shape, source_sel, self.id)  # for numpy.s_
             fspace = source_sel.id
 
             if dest_sel is None:
-                dest_sel = sel.SimpleSelection(dest.shape)
+                dest_sel = sel.AllSelection(dest.shape)
             else:
                 dest_sel = sel.select(dest.shape, dest_sel, self.id)
 
@@ -786,13 +786,13 @@ class Dataset(HLObject):
             if self._is_empty:
                 raise TypeError("Empty datasets cannot be written to")
             if source_sel is None:
-                source_sel = sel.SimpleSelection(source.shape)
+                source_sel = sel.AllSelection(source.shape)
             else:
                 source_sel = sel.select(source.shape, source_sel, self.id)  # for numpy.s_
             mspace = source_sel.id
 
             if dest_sel is None:
-                dest_sel = sel.SimpleSelection(self.shape)
+                dest_sel = sel.AllSelection(self.shape)
             else:
                 dest_sel = sel.select(self.shape, dest_sel, self.id)
 

@@ -59,7 +59,7 @@ def select(shape, args, dsid):
     # "Special" indexing objects
     if nargs == 1:
         arg = args[0]
-        if isinstance(arg, Selection):
+        if isinstance(arg, SelectionBase):
             if arg.shape != shape:
                 raise TypeError("Mismatched selection shape")
             return arg
@@ -72,7 +72,7 @@ def select(shape, args, dsid):
             if shape != sid.shape:
                 raise TypeError("Reference shape does not match dataset shape")
 
-            return Selection(shape, spaceid=sid)
+            return OpaqueSelection(shape, spaceid=sid)
 
     rank = len(shape)
     dim_ix = 0
@@ -132,7 +132,7 @@ def select(shape, args, dsid):
         dim_ix += 1
 
     if nargs == 0:
-        return SimpleSelection(shape)  # Select all
+        return AllSelection(shape)
     elif nargs < rank:
         # Fill in ellipsis or trailing dimensions
         ellipsis_end = ellipsis_ix + (rank - nargs)
@@ -141,14 +141,12 @@ def select(shape, args, dsid):
         raise ValueError(f"{nargs} indexing arguments for {rank} dimensions")
 
     if seq_dim is not None:
-        return FancySelection(shape, sel=(
-            (tuple(starts), tuple(counts), tuple(steps), tuple(scalar)),
-            (seq_dim, seq_arr)
-        ))
+        return FancySelection(shape, starts=tuple(starts), counts=tuple(counts),
+                               steps=tuple(steps), scalar=tuple(scalar),
+                              seq_dim=seq_dim, seq_arr=seq_arr)
     else:
-        return SimpleSelection(shape, sel=(
-            tuple(starts), tuple(counts), tuple(steps), tuple(scalar)
-        ))
+        return SimpleSelection(shape, starts=tuple(starts), counts=tuple(counts),
+                               steps=tuple(steps), scalar=tuple(scalar))
 
 def _validate_sequence_arg(arr: np.ndarray, l: int):
     # Array must be integers...
@@ -180,7 +178,97 @@ def _out_of_range(val, l):
         msg = f"Index ({val}) out of range (0-{l - 1})"
     raise IndexError(msg)
 
-class Selection(object):
+class SelectionBase:
+    shape = ()  # Override in subclasses
+
+    @property
+    def id(self):
+        id = h5s.create_simple(self.shape)
+        self.apply_to_spaceid(id)
+        return id
+
+    def apply_to_spaceid(self, spaceid):
+        raise NotImplementedError
+
+    @property
+    def mshape(self):
+        raise NotImplementedError
+
+    @property
+    def nselect(self):
+        raise NotImplementedError
+
+
+class AllSelection(SelectionBase):
+    def __init__(self, shape):
+        self.shape = shape
+
+    @property
+    def mshape(self):
+        return self.shape
+
+    @property
+    def nselect(self):
+        return product(self.shape)
+
+    def apply_to_spaceid(self, spaceid: h5s.SpaceID):
+        spaceid.select_all()
+
+    def broadcast(self, target_shape):
+        """ Return an iterator over target dataspaces for broadcasting.
+
+        Follows the standard NumPy broadcasting rules against the current
+        selection shape (self.mshape).
+        """
+        if self.shape == ():
+            if np.product(target_shape) != 1:
+                raise TypeError("Can't broadcast %s to scalar" % target_shape)
+            space = h5s.create(h5s.SCALAR)
+            space.select_all()
+            yield space
+            return
+
+        rank = len(self.shape)
+
+        start = [0] * rank
+        count = self.shape
+        step = [1] * rank
+
+        target = list(target_shape)
+
+        tshape = []
+        for idx in range(1,rank+1):
+            if len(target) == 0:
+                tshape.append(1)
+            else:
+                t = target.pop()
+                if t == 1 or count[-idx] == t:
+                    tshape.append(t)
+                else:
+                    raise TypeError("Can't broadcast %s -> %s" % (target_shape, self.mshape))
+
+        if any([n > 1 for n in target]):
+            # All dimensions from target_shape should either have been popped
+            # to match the selection shape, or be 1.
+            raise TypeError("Can't broadcast %s -> %s" % (target_shape, self.mshape))
+
+        tshape.reverse()
+        tshape = tuple(tshape)
+
+        chunks = tuple(x//y for x, y in zip(count, tshape))
+        nchunks = product(chunks)
+
+        if nchunks == 1:
+            yield self.id
+        else:
+            sid = self.id.copy()
+            sid.select_hyperslab((0,)*rank, tshape)
+            for idx in range(nchunks):
+                offset = tuple(x*y*z + s for x, y, z, s in zip(np.unravel_index(idx, chunks), tshape, step, start))
+                sid.offset_simple(offset)
+                yield sid
+
+class OpaqueSelection(SelectionBase):
 
     """
         Base class for HDF5 dataspace selections.  Subclasses support the
@@ -209,24 +297,13 @@ class Selection(object):
 
     def __init__(self, shape, spaceid=None):
         """ Create a selection.  Shape may be None if spaceid is given. """
-        if spaceid is not None:
-            self._id = spaceid
-            self._shape = spaceid.shape
-        else:
-            shape = tuple(shape)
-            self._shape = shape
-            self._id = h5s.create_simple(shape, (h5s.UNLIMITED,)*len(shape))
-            self._id.select_all()
+        self.shape = shape
+        self._id = spaceid
 
     @property
     def id(self):
         """ SpaceID instance """
         return self._id
-
-    @property
-    def shape(self):
-        """ Shape of whole dataspace """
-        return self._shape
 
     @property
     def nselect(self):
@@ -240,62 +317,67 @@ class Selection(object):
 
     def broadcast(self, target_shape):
         """ Get an iterable for broadcasting """
-        if np.product(target_shape) != self.nselect:
+        if product(target_shape) != self.nselect:
             raise TypeError("Broadcasting is not supported for point-wise selections")
         yield self._id
 
 
-class PointSelection(Selection):
-
+class PointSelection(SelectionBase):
     """
         Represents a point-wise selection.  You can supply sequences of
         points to the three methods append(), prepend() and set(), or a
-        single boolean array to __getitem__.
+        single boolean array to the constructor.
     """
-    def __init__(self, shape, spaceid=None, mask=None):
-        super().__init__(shape, spaceid=spaceid)
+    def __init__(self, shape, mask=None):
+        self.shape = shape
         if mask is not None:
-            self._apply_mask(mask)
+            self.points = self.mask_to_points(mask)
+        else:
+            # Empty list of points
+            self.points = np.zeros((0, len(shape)), dtype=np.uint64)
 
-    def _perform_selection(self, points, op):
+    def apply_to_spaceid(self, spaceid):
         """ Internal method which actually performs the selection """
-        points = np.asarray(points, order='C', dtype='u8')
+        points = np.asarray(self.points, order='C', dtype='u8')
         if len(points.shape) == 1:
             points.shape = (1,points.shape[0])
 
-        if self._id.get_select_type() != h5s.SEL_POINTS:
-            op = h5s.SELECT_SET
-
         if len(points) == 0:
-            self._id.select_none()
+            spaceid.select_none()
         else:
-            self._id.select_elements(points, op)
+            spaceid.select_elements(points, h5s.SELECT_SET)
 
-    def _apply_mask(self, arg):
+    def mask_to_points(self, arg):
         """ Perform point-wise selection from a NumPy boolean array """
         if not (isinstance(arg, np.ndarray) and arg.dtype.kind == 'b'):
-            raise TypeError("PointSelection __getitem__ only works with bool arrays")
+            raise TypeError("PointSelection only works with bool arrays")
         if not arg.shape == self.shape:
             raise TypeError("Boolean indexing array has incompatible shape")
 
-        points = np.transpose(arg.nonzero())
-        self.set(points)
-        return self
+        return np.transpose(arg.nonzero())
 
     def append(self, points):
         """ Add the sequence of points to the end of the current selection """
-        self._perform_selection(points, h5s.SELECT_APPEND)
+        self.points = np.concatenate((self.points, points), axis=0)
 
     def prepend(self, points):
         """ Add the sequence of points to the beginning of the current selection """
-        self._perform_selection(points, h5s.SELECT_PREPEND)
+        self.points = np.concatenate((self.points, points), axis=0)
 
     def set(self, points):
         """ Replace the current selection with the given sequence of points"""
-        self._perform_selection(points, h5s.SELECT_SET)
+        self.points = points
+
+    @property
+    def nselect(self):
+        return self.points.shape[0]
+
+    @property
+    def mshape(self):
+        return (self.nselect,)
 
 
-class SimpleSelection(Selection):
+class SimpleSelection(SelectionBase):
 
     """ A single "rectangular" (regular) selection composed of only slices
         and integer arguments.  Can participate in broadcasting.
@@ -306,18 +388,20 @@ class SimpleSelection(Selection):
         """ Shape of current selection """
         return self._mshape
 
-    def __init__(self, shape, spaceid=None, sel=None):
-        super(SimpleSelection, self).__init__(shape, spaceid=spaceid)
-        if sel is None:
-            self._id.select_all()
-            rank = len(self.shape)
-            self._sel = ((0,)*rank, self.shape, (1,)*rank, (False,)*rank)
-            self._mshape = self.shape
-        else:
-            starts, counts, steps, scalar = sel
-            self._id.select_hyperslab(starts, counts, steps)
-            self._sel = sel
-            self._mshape = tuple([x for x, y in zip(counts, scalar) if not y])
+    @property
+    def nselect(self):
+        return product(self._mshape)
+
+    def __init__(self, shape, starts, counts, steps, scalar):
+        self.shape = shape
+        self.starts = starts
+        self.counts = counts
+        self.steps = steps
+        self.scalar = scalar
+        self._mshape = tuple([x for x, y in zip(counts, scalar) if not y])
+
+    def apply_to_spaceid(self, spaceid):
+        spaceid.select_hyperslab(self.starts, self.counts, self.steps)
 
     def broadcast(self, target_shape):
         """ Return an iterator over target dataspaces for broadcasting.
@@ -328,11 +412,15 @@ class SimpleSelection(Selection):
         if self.shape == ():
             if np.product(target_shape) != 1:
                 raise TypeError("Can't broadcast %s to scalar" % target_shape)
-            self._id.select_all()
-            yield self._id
+            space = h5s.create(h5s.SCALAR)
+            space.select_all()
+            yield space
             return
 
-        start, count, step, scalar = self._sel
+        start = self.starts
+        count = self.counts
+        step = self.steps
+        scalar = self.scalar
 
         rank = len(count)
         target = list(target_shape)
@@ -360,17 +448,17 @@ class SimpleSelection(Selection):
         nchunks = product(chunks)
 
         if nchunks == 1:
-            yield self._id
+            yield self.id
         else:
-            sid = self._id.copy()
-            sid.select_hyperslab((0,)*rank, tshape, step)
+            sid = self.id.copy()
+            sid.select_hyperslab((0,)*rank, tshape, self.steps)
             for idx in range(nchunks):
                 offset = tuple(x*y*z + s for x, y, z, s in zip(np.unravel_index(idx, chunks), tshape, step, start))
                 sid.offset_simple(offset)
                 yield sid
 
 
-class FancySelection(Selection):
+class FancySelection(SelectionBase):
 
     """
         Implements advanced NumPy-style selection operations in addition to
@@ -386,30 +474,39 @@ class FancySelection(Selection):
     def mshape(self):
         return self._mshape
 
-    def __init__(self, shape, spaceid=None, sel=None):
-        super(FancySelection, self).__init__(shape, spaceid=spaceid)
-        if sel is None:
-            self._mshape = self.shape
-        else:
-            (starts, counts, steps, scalar), (seq_dim, seq_arg)  = sel
-            self._id.select_hyperslab(starts, counts, steps)
+    @property
+    def nselect(self):
+        return product(self._mshape)
 
-            # Find shape of selection
-            mshape = list(counts)
-            mshape[seq_dim] = len(seq_arg)
-            self._mshape = tuple([x for x, y in zip(mshape, scalar) if not y])
+    def __init__(self, shape, starts, counts, steps, scalar, seq_dim, seq_arr):
+        self.shape = shape
+        self.counts = counts
+        self.starts = starts
+        self.steps = steps
+        self.scalar = scalar
+        self.seq_dim = seq_dim
+        self.seq_arr = seq_arr
 
-            # Apply the selection by making several HDF5 hyperslab selections
-            var_starts = list(starts)
-            self._id.select_none()
-            for coord in seq_arg:
-                var_starts[seq_dim] = coord
-                self._id.select_hyperslab(tuple(var_starts), counts, steps, op=h5s.SELECT_OR)
+        # Find shape of selection
+        mshape = list(counts)
+        mshape[seq_dim] = len(seq_arr)
+        self._mshape = tuple([x for x, y in zip(mshape, scalar) if not y])
+
+    def apply_to_spaceid(self, spaceid):
+        # Apply the selection by making several HDF5 hyperslab selections
+        var_starts = list(self.starts)
+        counts = self.counts
+        steps = self.steps
+        seq_dim = self.seq_dim
+        spaceid.select_none()
+        for coord in self.seq_arr:
+            var_starts[seq_dim] = coord
+            spaceid.select_hyperslab(tuple(var_starts), counts, steps, op=h5s.SELECT_OR)
 
     def broadcast(self, target_shape):
         if not target_shape == self.mshape:
             raise TypeError("Broadcasting is not supported for complex selections")
-        yield self._id
+        yield self.id
 
 
 def _translate_slice(exp, length):
