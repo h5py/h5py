@@ -65,9 +65,7 @@ def select(shape, args, dsid):
             return arg
 
         elif isinstance(arg, np.ndarray) and arg.dtype.kind == 'b':
-            sel = PointSelection(shape)
-            sel[arg]
-            return sel
+            return PointSelection(shape, mask=arg)
 
         elif isinstance(arg, h5r.RegionReference):
             sid = h5r.get_region(arg, dsid)
@@ -246,8 +244,6 @@ class Selection(object):
             raise TypeError("Broadcasting is not supported for point-wise selections")
         yield self._id
 
-    def __getitem__(self, args):
-        raise NotImplementedError("This class does not support indexing")
 
 class PointSelection(Selection):
 
@@ -256,6 +252,10 @@ class PointSelection(Selection):
         points to the three methods append(), prepend() and set(), or a
         single boolean array to __getitem__.
     """
+    def __init__(self, shape, spaceid=None, mask=None):
+        super().__init__(shape, spaceid=spaceid)
+        if mask is not None:
+            self._apply_mask(mask)
 
     def _perform_selection(self, points, op):
         """ Internal method which actually performs the selection """
@@ -271,7 +271,7 @@ class PointSelection(Selection):
         else:
             self._id.select_elements(points, op)
 
-    def __getitem__(self, arg):
+    def _apply_mask(self, arg):
         """ Perform point-wise selection from a NumPy boolean array """
         if not (isinstance(arg, np.ndarray) and arg.dtype.kind == 'b'):
             raise TypeError("PointSelection __getitem__ only works with bool arrays")
@@ -318,28 +318,6 @@ class SimpleSelection(Selection):
             self._id.select_hyperslab(starts, counts, steps)
             self._sel = sel
             self._mshape = tuple([x for x, y in zip(counts, scalar) if not y])
-
-    def __getitem__(self, args):
-
-        if not isinstance(args, tuple):
-            args = (args,)
-
-        if self.shape == ():
-            if len(args) > 0 and args[0] not in (Ellipsis, ()):
-                raise TypeError("Invalid index for scalar dataset (only ..., () allowed)")
-            self._id.select_all()
-            return self
-
-        start, count, step, scalar = _handle_simple(self.shape,args)
-
-        self._id.select_hyperslab(start, count, step)
-
-        self._sel = (start, count, step, scalar)
-
-        self._mshape = tuple(x for x, y in zip(count, scalar) if not y)
-
-        return self
-
 
     def broadcast(self, target_shape):
         """ Return an iterator over target dataspaces for broadcasting.
@@ -427,79 +405,6 @@ class FancySelection(Selection):
             for coord in seq_arg:
                 var_starts[seq_dim] = coord
                 self._id.select_hyperslab(tuple(var_starts), counts, steps, op=h5s.SELECT_OR)
-
-    def __getitem__(self, args):
-
-        if not isinstance(args, tuple):
-            args = (args,)
-
-        args = _expand_ellipsis(args, len(self.shape))
-
-        # First build up a dictionary of (position:sequence) pairs
-
-        sequenceargs = {}
-        for idx, arg in enumerate(args):
-            if not isinstance(arg, slice):
-                if hasattr(arg, 'dtype') and arg.dtype == np.dtype('bool'):
-                    if len(arg.shape) != 1:
-                        raise TypeError("Boolean indexing arrays must be 1-D")
-                    arg = arg.nonzero()[0]
-                try:
-                    sequenceargs[idx] = list(arg)
-                except TypeError:
-                    pass
-                else:
-                    list_arg = list(arg)
-                    adjacent = zip(list_arg[:-1], list_arg[1:])
-                    if any(fst >= snd for fst, snd in adjacent):
-                        raise TypeError("Indexing elements must be in increasing order")
-
-        if len(sequenceargs) > 1:
-            raise TypeError("Only one indexing vector or array is currently allowed for advanced selection")
-        if len(sequenceargs) == 0:
-            raise TypeError("Advanced selection inappropriate")
-
-        vectorlength = len(list(sequenceargs.values())[0])
-        if not all(len(x) == vectorlength for x in sequenceargs.values()):
-            raise TypeError("All sequence arguments must have the same length %s" % sequenceargs)
-
-        # Now generate a vector of simple selection lists,
-        # consisting only of slices and ints
-        # e.g. [0:5, [1, 3]] is expanded to [[0:5, 1], [0:5, 3]]
-
-        if vectorlength > 0:
-            argvector = []
-            for idx in range(vectorlength):
-                entry = list(args)
-                for position, seq in sequenceargs.items():
-                    entry[position] = seq[idx]
-                argvector.append(entry)
-        else:
-            # Empty sequence: translate to empty slice to get the correct shape
-            # [0:5, []] -> [0:5, 0:0]
-            entry = list(args)
-            for position in sequenceargs:
-                entry[position] = slice(0, 0)
-            argvector = [entry]
-
-        # "OR" all these selection lists together to make the final selection
-
-        self._id.select_none()
-        for idx, vector in enumerate(argvector):
-            start, count, step, scalar = _handle_simple(self.shape, vector)
-            self._id.select_hyperslab(start, count, step, op=h5s.SELECT_OR)
-
-        # Final shape excludes scalars, except where
-        # they correspond to sequence entries
-
-        mshape = list(count)
-        for idx in range(len(mshape)):
-            if idx in sequenceargs:
-                mshape[idx] = len(sequenceargs[idx])
-            elif scalar[idx]:
-                mshape[idx] = -1
-
-        self._mshape = tuple(x for x in mshape if x >= 0)
 
     def broadcast(self, target_shape):
         if not target_shape == self.mshape:
