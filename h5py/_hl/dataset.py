@@ -496,6 +496,28 @@ class Dataset(HLObject):
         for i in range(shape[0]):
             yield self[i]
 
+    @property
+    def _internal_read_space(self):
+        """A (potentially) cached SpaceID for reading, for internal use only.
+
+        For a readonly dataset, this avoids creating a new dataspace instance
+        for each read. The cached dataspace is modified instead. This is safe
+        because __getitem__ and read_direct() are synchronous methods protected
+        by the phil lock, so they can't be running in different coroutines or
+        threads simultaneously.
+        """
+        if '_internal_read_space' in self._cache_props:
+            return self._cache_props['_internal_read_space']
+
+        with phil:
+            space = self.id.get_space()
+
+        # If the file is read-only, cache the space to speed-up future uses.
+        # This cache is invalidated by .refresh() when using SWMR.
+        if self._readonly:
+            self._cache_props['_internal_read_space'] = space
+        return space
+
     @with_phil
     def __getitem__(self, args, new_dtype=None):
         """ Read a slice from the HDF5 dataset.
@@ -593,9 +615,15 @@ class Dataset(HLObject):
             # pad with ones
             mshape = (1,)*(len(self.shape)-len(mshape)) + mshape
 
+        # Get a SpaceID for the selection
+        fspace = self._internal_read_space
+        try:
+            selection.apply_to_spaceid(fspace)
+        except NotImplementedError:
+            fspace = selection.id
+
         # Perform the actual read
         mspace = h5s.create_simple(mshape)
-        fspace = selection.id
         self.id.read(mspace, fspace, arr, mtype, dxpl=self._dxpl)
 
         # Patch up the output for NumPy
@@ -764,7 +792,13 @@ class Dataset(HLObject):
                 source_sel = sel.AllSelection(self.shape)
             else:
                 source_sel = sel.select(self.shape, source_sel, self.id)  # for numpy.s_
-            fspace = source_sel.id
+
+            # Get a SpaceID for the selection
+            fspace = self._internal_read_space
+            try:
+                source_sel.apply_to_spaceid(fspace)
+            except NotImplementedError:
+                fspace = source_sel.id
 
             if dest_sel is None:
                 dest_sel = sel.AllSelection(dest.shape)
