@@ -54,54 +54,87 @@ def select(shape, args, dsid):
     if not isinstance(args, tuple):
         args = (args,)
 
-    ellipsis_ix = nargs = len(args)
+    # Try standard slicing & indexing first, to avoid checking special cases
+    # when doing small reads in a tight loop.
+    try:
+        # integers, slices, ellipsis, lists/arrays
+        return select_standard(shape, args)
 
-    # "Special" indexing objects
-    if nargs == 1:
-        arg = args[0]
-        if isinstance(arg, SelectionBase):
-            if arg.shape != shape:
-                raise TypeError("Mismatched selection shape")
-            return arg
+    except TypeError:
+        if len(args) == 1:
+            arg = args[0]
+            # Selection objects
+            if isinstance(arg, SelectionBase):
+                if arg.shape != shape:
+                    raise TypeError("Mismatched selection shape")
+                return arg
 
-        elif isinstance(arg, np.ndarray) and arg.dtype.kind == 'b':
-            return PointSelection(shape, mask=arg)
+            # Mask arrays
+            elif isinstance(arg, np.ndarray) and arg.dtype.kind == 'b':
+                return PointSelection(shape, mask=arg)
 
-        elif isinstance(arg, h5r.RegionReference):
-            sid = h5r.get_region(arg, dsid)
-            if shape != sid.shape:
-                raise TypeError("Reference shape does not match dataset shape")
+            # HDF5 Region references
+            elif isinstance(arg, h5r.RegionReference):
+                sid = h5r.get_region(arg, dsid)
+                if shape != sid.shape:
+                    raise TypeError(
+                        "Reference shape does not match dataset shape")
 
-            return OpaqueSelection(shape, spaceid=sid)
+                return OpaqueSelection(shape, spaceid=sid)
 
+        raise
+
+
+def select_standard(shape: tuple, args: tuple):
+    """Make a selection with numpy style slicing & indexing.
+
+    The aim is to translate Python indexing & slicing into a selection object,
+    which provides the shape of a numpy array read from this selection (mshape),
+    and a SpaceID object to pass to libhdf5.
+
+    This function might well be clearer broken up into smaller pieces.
+    But I'm attempting to optimise a fast path for reading small amounts
+    of data in a tight loop, and the nice abstractions slow it down.
+    Hopefully thorough commenting helps make up for that.
+    """
     rank = len(shape)
-    dim_ix = 0
-    seq_dim = seq_arr = None
+
+    # If there's no explicit ... argument, it's implicitly at the end
+    ellipsis_ix = nargs = len(args)
+    seen_ellipsis = False
+
+    # Our starting point is a [0:1] slice in every dimension.
     starts = [0] * rank
     counts = [1] * rank
     steps  = [1] * rank
-    scalar = [False] * rank
-    seen_ellipsis = False
+    scalar = [False] * rank  # distinguish [0] (scalar) from [0:1]
+
+    # Position & value of a sequence for numpy-style fancy indexing
+    seq_dim = seq_arr = None
+
+    dim_ix = 0
 
     for a in args:
         if a is Ellipsis:
-            # [...] (Ellipsis -> fill as many other dimensions as needed)
+            # [...] - Ellipsis (fill any unspecified dimensions here)
             if seen_ellipsis:
                 raise ValueError("Only one ellipsis may be used.")
             seen_ellipsis = True
+
             ellipsis_ix = dim_ix
-            nargs -= 1
+            nargs -= 1  # Don't count the ... itself
             dim_ix += rank - nargs  # Skip ahead to the remaining dimensions
             continue
 
+        # Length of the relevant dimension
         l = shape[dim_ix]
 
         if isinstance(a, slice):
-            # [0:10]
+            # [0:10] - slicing
             starts[dim_ix], counts[dim_ix], steps[dim_ix] = _translate_slice(a, l)
         else:
             try:
-                a = index(a)
+                a = index(a)  # is a suitable for integer indexing?
             except Exception:
                 # [[0, 1, 2]] - list/array (potentially): fancy indexing
                 arr = np.asarray(a)
@@ -132,6 +165,7 @@ def select(shape, args, dsid):
         dim_ix += 1
 
     if nargs == 0:
+        # [()] or [...] -> select all
         return AllSelection(shape)
     elif nargs < rank:
         # Fill in ellipsis or trailing dimensions
@@ -142,11 +176,12 @@ def select(shape, args, dsid):
 
     if seq_dim is not None:
         return FancySelection(shape, starts=tuple(starts), counts=tuple(counts),
-                               steps=tuple(steps), scalar=tuple(scalar),
+                              steps=tuple(steps), scalar=tuple(scalar),
                               seq_dim=seq_dim, seq_arr=seq_arr)
     else:
         return SimpleSelection(shape, starts=tuple(starts), counts=tuple(counts),
                                steps=tuple(steps), scalar=tuple(scalar))
+
 
 def _validate_sequence_arg(arr: np.ndarray, l: int):
     # Array must be integers...
@@ -171,12 +206,14 @@ def _validate_sequence_arg(arr: np.ndarray, l: int):
 
     return arr
 
+
 def _out_of_range(val, l):
     if l == 0:
         msg = f"Index ({val}) out of range (empty dimension)"
     else:
         msg = f"Index ({val}) out of range (0-{l - 1})"
     raise IndexError(msg)
+
 
 class SelectionBase:
     shape = ()  # Override in subclasses
