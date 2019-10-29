@@ -170,7 +170,7 @@ cdef class Reference:
 
     def __nonzero__(self):
         cdef int i
-        for i from 0<=i<self.typesize:
+        for i in range(self.typesize):
             if (<unsigned char*>&self.ref)[i] != 0: return True
         return False
 

@@ -17,7 +17,7 @@ include "config.pxi"
 
 from collections import namedtuple
 from ._objects cimport pdefault
-from numpy cimport ndarray, import_array, PyArray_DATA, NPY_WRITEABLE
+from numpy cimport ndarray, import_array, PyArray_DATA
 from cpython cimport array
 from .utils cimport  check_numpy_read, check_numpy_write, \
                      convert_tuple, convert_dims, emalloc, efree
@@ -26,7 +26,6 @@ from .h5s cimport SpaceID
 from .h5p cimport PropID, propwrap
 from ._proxy cimport dset_rw
 
-from . import _objects
 from ._objects import phil, with_phil
 
 # Initialization

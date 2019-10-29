@@ -20,7 +20,6 @@ from .utils cimport  require_tuple, convert_dims, convert_tuple, \
 cimport numpy as cnp
 
 #Python level imports
-from . import _objects
 from ._objects import phil, with_phil
 
 cdef object lockid(hid_t id_):
@@ -228,7 +227,7 @@ cdef class SpaceID(ObjectID):
                 # The HDF5 docs say passing in NULL resets the offset to 0.
                 # Instead it raises an exception.  Imagine my surprise. We'll
                 # do this manually.
-                for i from 0<=i<rank:
+                for i in range(rank):
                     dims[i] = 0
 
             H5Soffset_simple(self.id, dims)

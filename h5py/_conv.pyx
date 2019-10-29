@@ -23,14 +23,12 @@ cfg = get_config()
 
 # Initialization of numpy
 cimport numpy as cnp
-import numpy as np
-from numpy cimport npy_intp, NPY_WRITEABLE, NPY_C_CONTIGUOUS, NPY_OWNDATA, NPY_OBJECT
+from numpy cimport npy_intp, NPY_WRITEABLE, NPY_C_CONTIGUOUS, NPY_OWNDATA
 cnp._import_array()
 
-from cpython.object cimport PyObject, PyTypeObject
+from cpython.object cimport PyObject
 from cpython.unicode cimport PyUnicode_DecodeUTF8
-from cpython.ref cimport Py_INCREF, Py_DECREF, Py_XDECREF, Py_XINCREF
-from cython.view cimport array as cvarray
+from cpython.ref cimport Py_INCREF, Py_XDECREF, Py_XINCREF
 
 cdef PyObject* Py_None = <PyObject*> None
 
@@ -77,7 +75,7 @@ cdef herr_t generic_converter(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
         elif H5Tis_variable_str(dst_id):
             sizes.cset = H5Tget_cset(dst_id)
         if bkg_stride==0:
-            bkg_stride = sizes[0].dst_size;
+            bkg_stride = sizes[0].dst_size
         if buf_stride == 0:
             # No explicit stride seems to mean that the elements are packed
             # contiguously in the buffer.  In this case we must be careful
@@ -91,7 +89,7 @@ cdef herr_t generic_converter(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
                         bkg + (i*bkg_stride),           # backing buffer
                         cdata[0].priv)                  # conversion context
             else:
-                for i from nl>i>=0:
+                for i in range(nl-1, -1, -1):
                     op( buf + (i*sizes[0].src_size),
                         buf + (i*sizes[0].dst_size),
                         bkg + (i*bkg_stride),
@@ -288,7 +286,7 @@ cdef int conv_fixed2vlen(void* ipt, void* opt, void* bkg, void* priv) except -1:
     memcpy(temp_string, buf_fixed, sizes[0].src_size)
     temp_string[sizes[0].src_size] = c'\0'
 
-    memcpy(buf_vlen, &temp_string, sizeof(temp_string));
+    memcpy(buf_vlen, &temp_string, sizeof(temp_string))
 
     return 0
 
@@ -608,7 +606,7 @@ cdef herr_t vlen2ndarray(hid_t src_id,
                     conv_vlen2ndarray(buf + (i*src_size), buf + (i*dst_size),
                                       dt, supertype, outtype)
             else:
-                for i from nl>i>=0:
+                for i in range(nl-1, -1, -1):
                     conv_vlen2ndarray(buf + (i*src_size), buf + (i*dst_size),
                                       dt, supertype, outtype)
         else:
