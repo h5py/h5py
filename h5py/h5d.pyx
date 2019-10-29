@@ -26,7 +26,6 @@ from .h5s cimport SpaceID
 from .h5p cimport PropID, propwrap
 from ._proxy cimport dset_rw
 
-from . import _objects
 from ._objects import phil, with_phil
 
 # Initialization

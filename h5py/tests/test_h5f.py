@@ -20,8 +20,7 @@ class TestFileID(TestCase):
     def test_descriptor_core(self):
         with File('TestFileID.test_descriptor_core', driver='core',
                   backing_store=False, mode='x') as f:
-            with self.assertRaises(NotImplementedError):
-                f.id.get_vfd_handle()
+            assert isinstance(f.id.get_vfd_handle(), int)
 
     def test_descriptor_sec2(self):
         dn_tmp = tempfile.mkdtemp('h5py.lowtest.test_h5f.TestFileID.test_descriptor_sec2')

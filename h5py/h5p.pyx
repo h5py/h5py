@@ -28,7 +28,6 @@ from .h5s cimport SpaceID
 from .h5ac cimport CacheConfig
 
 # Python level imports
-from . import _objects
 from ._objects import phil, with_phil
 
 if MPI:
@@ -587,7 +586,7 @@ cdef class PropDCID(PropOCID):
                 nelements = len(values)
                 cd_values = <unsigned int*>emalloc(sizeof(unsigned int)*nelements)
 
-                for i from 0<=i<nelements:
+                for i in range(nelements):
                     cd_values[i] = int(values[i])
 
             H5Pset_filter(self.id, <H5Z_filter_t>filter_code, flags, nelements, cd_values)
@@ -643,7 +642,7 @@ cdef class PropDCID(PropOCID):
         name[256] = c'\0'  # in case it's > 256 chars
 
         vlist = []
-        for i from 0<=i<nelements:
+        for i in range(nelements):
             vlist.append(cd_values[i])
 
         return (filter_code, flags, tuple(vlist), name)
@@ -657,9 +656,9 @@ cdef class PropDCID(PropOCID):
         property list.  Used because the HDF5 function H5Pget_filter_by_id
         is broken.
         """
-        cdef int nfilters
+        cdef int i, nfilters
         nfilters = self.get_nfilters()
-        for i from 0<=i<nfilters:
+        for i in range(nfilters):
             if self.get_filter(i)[0] == filter_code:
                 return True
         return False
@@ -697,7 +696,7 @@ cdef class PropDCID(PropOCID):
         name[256] = c'\0'  # In case HDF5 doesn't terminate it properly
 
         vlist = []
-        for i from 0<=i<nelements:
+        for i in range(nelements):
             vlist.append(cd_values[i])
 
         return (flags, tuple(vlist), name)

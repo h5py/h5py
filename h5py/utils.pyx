@@ -12,8 +12,7 @@
 
 from numpy cimport ndarray, import_array,\
                    NPY_UINT16, NPY_UINT32, NPY_UINT64,  npy_intp,\
-                   PyArray_SimpleNew, PyArray_ContiguousFromAny,\
-                   PyArray_FROM_OTF, PyArray_DIM,\
+                   PyArray_SimpleNew, PyArray_FROM_OTF,\
                    NPY_CONTIGUOUS, NPY_NOTSWAPPED, NPY_FORCECAST
 
 # Initialization
@@ -25,8 +24,10 @@ cdef inline void* emalloc(size_t size) except? NULL :
     """Wrapper for malloc(size) with the following behavior:
 
     1. Always returns NULL for emalloc(0)
-    2. Raises RuntimeError for emalloc(size<0) and returns NULL
-    3. Raises RuntimeError if allocation fails and returns NULL
+    2. Raises MemoryError for emalloc(size<0) and returns NULL
+    3. Raises MemoryError if allocation fails and returns NULL
+
+    :param size: Size of the memory (in bytes) to allocate
     """
     cdef void *retval = NULL
 
@@ -96,7 +97,7 @@ cdef int convert_tuple(object tpl, hsize_t *dims, hsize_t rank) except -1:
         raise ValueError("Tuple length incompatible with array")
 
     try:
-        for i from 0<=i<rank:
+        for i in range(rank):
             dims[i] = tpl[i]
     except TypeError:
         raise TypeError("Can't convert element %d (%s) to hsize_t" % (i, tpl[i]))
@@ -110,7 +111,7 @@ cdef object convert_dims(hsize_t* dims, hsize_t rank):
     cdef int i
     dims_list = []
 
-    for i from 0<=i<rank:
+    for i in range(rank):
         dims_list.append(int(dims[i]))
 
     return tuple(dims_list)
@@ -136,7 +137,7 @@ cdef object create_numpy_hsize(int rank, hsize_t* dims):
     dims_npy = <npy_intp*>emalloc(sizeof(npy_intp)*rank)
 
     try:
-        for i from 0<=i<rank:
+        for i in range(rank):
             dims_npy[i] = dims[i]
         arr = PyArray_SimpleNew(rank, dims_npy, typecode)
     finally:

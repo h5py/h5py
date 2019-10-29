@@ -56,7 +56,7 @@ def send_coverage(*, workdir, coverage_files, codecov_token):
     run_with_python(['coverage', 'xml', '--ignore-errors'])
     msg(f"Created coverage xml, listing {GIT_MAIN_DIR}")
     pmsg(sorted(listdir(GIT_MAIN_DIR)))
-    codecov_args = ["--required"]
+    codecov_args = []
     if codecov_token is not None:
         codecov_args.extend(['-t', codecov_token])
     codecov_args.extend(['--file', 'coverage.xml'])

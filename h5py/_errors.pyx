@@ -140,18 +140,30 @@ cdef int set_exception() except -1:
 
     return 1
 
+
 cdef extern from "stdio.h":
     void *stderr
 
+cdef err_cookie _error_handler  # Store error handler used by h5py
+_error_handler.func = NULL
+_error_handler.data = NULL
+
+cdef void set_default_error_handler():
+    """Set h5py's current default error handler"""
+    H5Eset_auto(_error_handler.func, _error_handler.data)
+
 def silence_errors():
     """ Disable HDF5's automatic error printing in this thread """
-    if H5Eset_auto(NULL, NULL) < 0:
-        raise RuntimeError("Failed to disable automatic error printing")
+    _error_handler.func = NULL
+    _error_handler.data = NULL
+    set_default_error_handler()
 
 def unsilence_errors():
     """ Re-enable HDF5's automatic error printing in this thread """
-    if H5Eset_auto(<H5E_auto_t> H5Eprint, stderr) < 0:
-        raise RuntimeError("Failed to enable automatic error printing")
+    _error_handler.func = <H5E_auto_t> H5Eprint
+    _error_handler.data = stderr
+    set_default_error_handler()
+
 
 cdef err_cookie set_error_handler(err_cookie handler):
     # Note: exceptions here will be printed instead of raised.

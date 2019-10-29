@@ -187,10 +187,11 @@ cdef hid_t make_reduced_type(hid_t mtype, hid_t dstype):
     cdef hid_t newtype, temptype
     cdef hsize_t newtype_size, offset
     cdef char* member_name = NULL
+    cdef int idx
 
     # Make a list of all names in the memory type.
     mtype_fields = []
-    for idx in xrange(H5Tget_nmembers(mtype)):
+    for idx in range(H5Tget_nmembers(mtype)):
         member_name = H5Tget_member_name(mtype, idx)
         try:
             mtype_fields.append(member_name)
@@ -204,7 +205,7 @@ cdef hid_t make_reduced_type(hid_t mtype, hid_t dstype):
     # First pass: add up the sizes of matching fields so we know how large a
     # type to make
     newtype_size = 0
-    for idx in xrange(H5Tget_nmembers(dstype)):
+    for idx in range(H5Tget_nmembers(dstype)):
         member_name = H5Tget_member_name(dstype, idx)
         try:
             if member_name not in mtype_fields:
@@ -223,7 +224,7 @@ cdef hid_t make_reduced_type(hid_t mtype, hid_t dstype):
 
     # Second pass: pick out the matching fields and pack them in the new type
     offset = 0
-    for idx in xrange(H5Tget_nmembers(dstype)):
+    for idx in range(H5Tget_nmembers(dstype)):
         member_name = H5Tget_member_name(dstype, idx)
         try:
             if member_name not in mtype_fields:
@@ -361,7 +362,7 @@ cdef htri_t needs_proxy(hid_t tid) except -1:
     elif cls == H5T_COMPOUND:
 
         n = H5Tget_nmembers(tid)
-        for i from 0<=i<n:
+        for i in range(n):
             supertype = H5Tget_member_type(tid, i)
             try:
                 result = needs_proxy(supertype)

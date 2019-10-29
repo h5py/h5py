@@ -236,3 +236,6 @@ ctypedef struct err_cookie:
 # Set (via H5Eset_auto) the HDF5 error handler for this thread.  Returns
 # the old (presently installed) handler.
 cdef err_cookie set_error_handler(err_cookie handler)
+
+# Set the default error handler set by silence_errors/unsilence_errors
+cdef void set_default_error_handler()

@@ -23,14 +23,12 @@ cfg = get_config()
 
 # Initialization of numpy
 cimport numpy as cnp
-import numpy as np
-from numpy cimport npy_intp, NPY_WRITEABLE, NPY_C_CONTIGUOUS, NPY_OWNDATA, NPY_OBJECT
+from numpy cimport npy_intp, NPY_WRITEABLE, NPY_C_CONTIGUOUS, NPY_OWNDATA
 cnp._import_array()
 
-from cpython.object cimport PyObject, PyTypeObject
+from cpython.object cimport PyObject
 from cpython.unicode cimport PyUnicode_DecodeUTF8
-from cpython.ref cimport Py_INCREF, Py_DECREF, Py_XDECREF, Py_XINCREF
-from cython.view cimport array as cvarray
+from cpython.ref cimport Py_INCREF, Py_XDECREF, Py_XINCREF
 
 cdef PyObject* Py_None = <PyObject*> None
 
@@ -77,7 +75,7 @@ cdef herr_t generic_converter(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
         elif H5Tis_variable_str(dst_id):
             sizes.cset = H5Tget_cset(dst_id)
         if bkg_stride==0:
-            bkg_stride = sizes[0].dst_size;
+            bkg_stride = sizes[0].dst_size
         if buf_stride == 0:
             # No explicit stride seems to mean that the elements are packed
             # contiguously in the buffer.  In this case we must be careful
@@ -91,7 +89,7 @@ cdef herr_t generic_converter(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
                         bkg + (i*bkg_stride),           # backing buffer
                         cdata[0].priv)                  # conversion context
             else:
-                for i from nl>i>=0:
+                for i in range(nl-1, -1, -1):
                     op( buf + (i*sizes[0].src_size),
                         buf + (i*sizes[0].dst_size),
                         bkg + (i*bkg_stride),
@@ -194,29 +192,24 @@ cdef int conv_str2vlen(void* ipt, void* opt, void* bkg, void* priv) except -1:
         elif not isinstance(temp_object, bytes):
             # There is not test on this !
             if sizes.cset == H5T_CSET_ASCII:
-                temp_object = bytes(temp_object)
+                encoding = 'ascii'
             elif sizes.cset == H5T_CSET_UTF8:
-                temp_object = str(temp_object)
+                encoding = 'utf-8'
             else:
                 raise TypeError("Unrecognized dataset encoding")
-
-        if sizes.cset == H5T_CSET_UTF8:
-            try:
-                temp_object.decode('utf-8')
-            except UnicodeError as err:
-                raise ValueError("Byte string is not valid utf-8 and can't be stored in a utf-8 dataset: %s" % err)
+            temp_object = str(temp_object).encode(encoding)
 
         # temp_object is bytes
         temp_string = temp_object  # cython cast it as char *
         temp_string_len = len(temp_object)
 
-        if strlen(temp_string) != temp_string_len:
-            raise ValueError("VLEN strings do not support embedded NULLs")
-        buf_cstring0 = <char*>emalloc(temp_string_len+1)
-        memcpy(buf_cstring0, temp_string, temp_string_len+1)
-        buf_cstring[0] = buf_cstring0
+    if strlen(temp_string) != temp_string_len:
+        raise ValueError("VLEN strings do not support embedded NULLs")
+    buf_cstring0 = <char*>emalloc(temp_string_len+1)
+    memcpy(buf_cstring0, temp_string, temp_string_len+1)
+    buf_cstring[0] = buf_cstring0
 
-        return 0
+    return 0
 
 # =============================================================================
 # VLEN to fixed-width strings
@@ -293,7 +286,7 @@ cdef int conv_fixed2vlen(void* ipt, void* opt, void* bkg, void* priv) except -1:
     memcpy(temp_string, buf_fixed, sizes[0].src_size)
     temp_string[sizes[0].src_size] = c'\0'
 
-    memcpy(buf_vlen, &temp_string, sizeof(temp_string));
+    memcpy(buf_vlen, &temp_string, sizeof(temp_string))
 
     return 0
 
@@ -564,11 +557,17 @@ cdef herr_t vlen2ndarray(hid_t src_id,
                          size_t buf_stride,
                          size_t bkg_stride,
                          void *buf_i,
-                         void *bkg_i, hid_t dxpl) except -1 with gil:
-    """Convert variable length object to numpy array
+                         void *bkg_i,
+                         hid_t dxpl) except -1:
+    """Convert variable length object to numpy array, typically a list of strings
 
+    :param src_id: Identifier for the source datatype.
+    :param dst_id: Identifier for the destination datatype.
     :param nl: number of element
-
+    :param buf_stride: Array containing pre- and post-conversion values.
+    :param bkg_stride: Optional background buffer
+    :param dxpl: Dataset transfer property list identifier.
+    :return: error-code
     """
     cdef:
         int command = cdata[0].command
@@ -607,7 +606,7 @@ cdef herr_t vlen2ndarray(hid_t src_id,
                     conv_vlen2ndarray(buf + (i*src_size), buf + (i*dst_size),
                                       dt, supertype, outtype)
             else:
-                for i from nl>i>=0:
+                for i in range(nl-1, -1, -1):
                     conv_vlen2ndarray(buf + (i*src_size), buf + (i*dst_size),
                                       dt, supertype, outtype)
         else:
@@ -668,7 +667,7 @@ cdef int conv_vlen2ndarray(void* ipt,
 
     in_vlen0.ptr = NULL
 
-    # Write the new unicode object to the buffer in-place and ensure it is not destroyed
+    # Write the new ndarray object to the buffer in-place and ensure it is not destroyed
     buf_obj[0] = ndarray_obj
     Py_INCREF(ndarray)
     Py_INCREF(elem_dtype)
@@ -681,7 +680,8 @@ cdef herr_t ndarray2vlen(hid_t src_id,
                          size_t buf_stride,
                          size_t bkg_stride,
                          void *buf_i,
-                         void *bkg_i, hid_t dxpl) except -1  with gil:
+                         void *bkg_i,
+                         hid_t dxpl) except -1:
     cdef:
         int command = cdata[0].command
         size_t src_size, dst_size
