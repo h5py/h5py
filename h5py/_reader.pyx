@@ -64,6 +64,9 @@ cdef class Reader:
                 dim_ix += self.rank - nargs  # Skip ahead to the remaining dimensions
                 continue
 
+            if dim_ix >= self.rank:
+                raise ValueError(f"{nargs} indexing arguments for {self.rank} dimensions")
+
             # Length of the relevant dimension
             l = self.dims[dim_ix]
 
@@ -120,8 +123,6 @@ cdef class Reader:
                 self.stride[dim_ix] = 1
                 self.count[dim_ix] = self.dims[dim_ix]
                 self.scalar[dim_ix] = False
-        elif nargs > self.rank:
-            raise ValueError(f"{nargs} indexing arguments for {self.rank} dimensions")
 
         H5Sselect_hyperslab(self.space, H5S_SELECT_SET, self.start, self.stride, self.count, NULL)
         return True
