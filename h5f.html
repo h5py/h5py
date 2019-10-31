@@ -1,0 +1,520 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Module H5F &#8212; Low-level API for h5py</title>
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Module H5FD" href="h5fd.html" />
+    <link rel="prev" title="Module H5D" href="h5d.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="h5fd.html" title="Module H5FD"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="h5d.html" title="Module H5D"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Low-level API for h5py</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-h5py.h5f">
+<span id="module-h5f"></span><h1>Module H5F<a class="headerlink" href="#module-h5py.h5f" title="Permalink to this headline">¶</a></h1>
+<p>Low-level operations on HDF5 file objects.</p>
+<div class="section" id="functional-api">
+<h2>Functional API<a class="headerlink" href="#functional-api" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="h5py.h5f.open">
+<code class="sig-prename descclassname">h5py.h5f.</code><code class="sig-name descname">open</code><span class="sig-paren">(</span><em class="sig-param">STRING name</em>, <em class="sig-param">UINT flags=ACC_RDWR</em>, <em class="sig-param">PropFAID fapl=None</em><span class="sig-paren">)</span> &#x2192; FileID<a class="headerlink" href="#h5py.h5f.open" title="Permalink to this definition">¶</a></dt>
+<dd><p>Open an existing HDF5 file.  Keyword “flags” may be:</p>
+<dl class="simple">
+<dt><code class="xref py py-data docutils literal notranslate"><span class="pre">ACC_RDWR</span></code></dt><dd><p>Open in read-write mode</p>
+</dd>
+<dt><code class="xref py py-data docutils literal notranslate"><span class="pre">ACC_RDONLY</span></code></dt><dd><p>Open in readonly mode</p>
+</dd>
+</dl>
+<p>Keyword fapl may be a <a class="reference internal" href="h5p.html#h5py.h5p.PropFAID" title="h5py.h5p.PropFAID"><code class="xref py py-class docutils literal notranslate"><span class="pre">file</span> <span class="pre">access</span> <span class="pre">property</span> <span class="pre">list</span></code></a>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="h5py.h5f.create">
+<code class="sig-prename descclassname">h5py.h5f.</code><code class="sig-name descname">create</code><span class="sig-paren">(</span><em class="sig-param">STRING name</em>, <em class="sig-param">INT flags=ACC_TRUNC</em>, <em class="sig-param">PropFCID fcpl=None</em>, <em class="sig-param">PropFAID fapl=None</em><span class="sig-paren">)</span> &#x2192; FileID<a class="headerlink" href="#h5py.h5f.create" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a new HDF5 file.  Keyword “flags” may be:</p>
+<dl class="simple">
+<dt><code class="xref py py-data docutils literal notranslate"><span class="pre">ACC_TRUNC</span></code></dt><dd><p>Truncate an existing file, discarding its data</p>
+</dd>
+<dt><code class="xref py py-data docutils literal notranslate"><span class="pre">ACC_EXCL</span></code></dt><dd><p>Fail if a conflicting file exists</p>
+</dd>
+</dl>
+<p>To keep the behavior in line with that of Python’s built-in functions,
+the default is <code class="xref py py-data docutils literal notranslate"><span class="pre">ACC_TRUNC</span></code>.  Be careful!</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="h5py.h5f.flush">
+<code class="sig-prename descclassname">h5py.h5f.</code><code class="sig-name descname">flush</code><span class="sig-paren">(</span><em class="sig-param">ObjectID obj</em>, <em class="sig-param">INT scope=SCOPE_LOCAL</em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5f.flush" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tell the HDF5 library to flush file buffers to disk.  “obj” may
+be the file identifier, or the identifier of any object residing in
+the file.  Keyword “scope” may be:</p>
+<dl class="simple">
+<dt><code class="xref py py-data docutils literal notranslate"><span class="pre">SCOPE_LOCAL</span></code></dt><dd><p>Flush only the given file</p>
+</dd>
+<dt><code class="xref py py-data docutils literal notranslate"><span class="pre">SCOPE_GLOBAL</span></code></dt><dd><p>Flush the entire virtual file</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="h5py.h5f.is_hdf5">
+<code class="sig-prename descclassname">h5py.h5f.</code><code class="sig-name descname">is_hdf5</code><span class="sig-paren">(</span><em class="sig-param">STRING name</em><span class="sig-paren">)</span> &#x2192; BOOL<a class="headerlink" href="#h5py.h5f.is_hdf5" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determine if a given file is an HDF5 file.  Note this raises an
+exception if the file doesn’t exist.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="h5py.h5f.mount">
+<code class="sig-prename descclassname">h5py.h5f.</code><code class="sig-name descname">mount</code><span class="sig-paren">(</span><em class="sig-param">ObjectID loc</em>, <em class="sig-param">STRING name</em>, <em class="sig-param">FileID fid</em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5f.mount" title="Permalink to this definition">¶</a></dt>
+<dd><p>Mount an open file on the group “name” under group loc_id.  Note that
+“name” must already exist.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="h5py.h5f.unmount">
+<code class="sig-prename descclassname">h5py.h5f.</code><code class="sig-name descname">unmount</code><span class="sig-paren">(</span><em class="sig-param">ObjectID loc</em>, <em class="sig-param">STRING name</em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5f.unmount" title="Permalink to this definition">¶</a></dt>
+<dd><p>Unmount a file, mounted at “name” under group loc_id.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="h5py.h5f.open_file_image">
+<code class="sig-prename descclassname">h5py.h5f.</code><code class="sig-name descname">open_file_image</code><span class="sig-paren">(</span><em class="sig-param">STRING image</em>, <em class="sig-param">INT flags=0</em><span class="sig-paren">)</span> &#x2192; FileID<a class="headerlink" href="#h5py.h5f.open_file_image" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load a new HDF5 file into memory.  Keyword “flags” may be:</p>
+<dl class="simple">
+<dt><code class="xref py py-data docutils literal notranslate"><span class="pre">FILE_IMAGE_OPEN_RW</span></code></dt><dd><p>Specifies opening the file image in read/write mode.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="h5py.h5f.get_name">
+<code class="sig-prename descclassname">h5py.h5f.</code><code class="sig-name descname">get_name</code><span class="sig-paren">(</span><em class="sig-param">ObjectID obj</em><span class="sig-paren">)</span> &#x2192; STRING<a class="headerlink" href="#h5py.h5f.get_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determine the name of the file in which the specified object resides.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="h5py.h5f.get_obj_count">
+<code class="sig-prename descclassname">h5py.h5f.</code><code class="sig-name descname">get_obj_count</code><span class="sig-paren">(</span><em class="sig-param">OBJECT where=OBJ_ALL</em>, <em class="sig-param">types=OBJ_ALL</em><span class="sig-paren">)</span> &#x2192; INT<a class="headerlink" href="#h5py.h5f.get_obj_count" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the number of open objects.</p>
+<dl>
+<dt>where</dt><dd><p>Either a <a class="reference internal" href="#h5py.h5f.FileID" title="h5py.h5f.FileID"><code class="xref py py-class docutils literal notranslate"><span class="pre">FileID</span></code></a> instance representing an HDF5 file, or the
+special constant <code class="xref py py-data docutils literal notranslate"><span class="pre">OBJ_ALL</span></code>, to count objects in all files.</p>
+</dd>
+<dt>type</dt><dd><p>Specify what kinds of object to include.  May be one of <code class="docutils literal notranslate"><span class="pre">OBJ*</span></code>,
+or any bitwise combination (e.g. <code class="docutils literal notranslate"><span class="pre">OBJ_FILE</span> <span class="pre">|</span> <span class="pre">OBJ_ATTR</span></code>).</p>
+<p>The special value <code class="xref py py-data docutils literal notranslate"><span class="pre">OBJ_ALL</span></code> matches all object types, and
+<code class="xref py py-data docutils literal notranslate"><span class="pre">OBJ_LOCAL</span></code> will only match objects opened through a specific
+identifier.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="h5py.h5f.get_obj_ids">
+<code class="sig-prename descclassname">h5py.h5f.</code><code class="sig-name descname">get_obj_ids</code><span class="sig-paren">(</span><em class="sig-param">OBJECT where=OBJ_ALL</em>, <em class="sig-param">types=OBJ_ALL</em><span class="sig-paren">)</span> &#x2192; LIST<a class="headerlink" href="#h5py.h5f.get_obj_ids" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a list of identifier instances for open objects.</p>
+<dl>
+<dt>where</dt><dd><p>Either a <a class="reference internal" href="#h5py.h5f.FileID" title="h5py.h5f.FileID"><code class="xref py py-class docutils literal notranslate"><span class="pre">FileID</span></code></a> instance representing an HDF5 file, or the
+special constant <code class="xref py py-data docutils literal notranslate"><span class="pre">OBJ_ALL</span></code>, to list objects in all files.</p>
+</dd>
+<dt>type</dt><dd><p>Specify what kinds of object to include.  May be one of <code class="docutils literal notranslate"><span class="pre">OBJ*</span></code>,
+or any bitwise combination (e.g. <code class="docutils literal notranslate"><span class="pre">OBJ_FILE</span> <span class="pre">|</span> <span class="pre">OBJ_ATTR</span></code>).</p>
+<p>The special value <code class="xref py py-data docutils literal notranslate"><span class="pre">OBJ_ALL</span></code> matches all object types, and
+<code class="xref py py-data docutils literal notranslate"><span class="pre">OBJ_LOCAL</span></code> will only match objects opened through a specific
+identifier.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="file-objects">
+<h2>File objects<a class="headerlink" href="#file-objects" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="h5py.h5f.FileID">
+<em class="property">class </em><code class="sig-prename descclassname">h5py.h5f.</code><code class="sig-name descname">FileID</code><a class="headerlink" href="#h5py.h5f.FileID" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents an HDF5 file identifier.</p>
+<p>These objects wrap a small portion of the H5F interface; all the
+H5F functions which can take arbitrary objects in addition to
+file identifiers are provided as functions in the <a class="reference internal" href="#module-h5py.h5f" title="h5py.h5f"><code class="xref py py-mod docutils literal notranslate"><span class="pre">h5f</span></code></a> module.</p>
+<p>Properties:</p>
+<ul class="simple">
+<li><p>name:   File name on disk</p></li>
+</ul>
+<p>Behavior:</p>
+<ul class="simple">
+<li><p>Hashable: Yes, unique to the file (but not the access mode)</p></li>
+<li><p>Equality: Hash comparison</p></li>
+</ul>
+<dl class="attribute">
+<dt id="h5py.h5f.FileID.close">
+<code class="sig-name descname">close</code><a class="headerlink" href="#h5py.h5f.FileID.close" title="Permalink to this definition">¶</a></dt>
+<dd><p>Terminate access through this identifier.  Note that depending on
+what property list settings were used to open the file, the
+physical file might not be closed until all remaining open
+identifiers are freed.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="h5py.h5f.FileID.get_access_plist">
+<code class="sig-name descname">get_access_plist</code> &#x2192; PropFAID<a class="headerlink" href="#h5py.h5f.FileID.get_access_plist" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve a copy of the <a class="reference internal" href="h5p.html#h5py.h5p.PropFAID" title="h5py.h5p.PropFAID"><code class="xref py py-class docutils literal notranslate"><span class="pre">file</span> <span class="pre">access</span> <span class="pre">property</span> <span class="pre">list</span></code></a> which manages access
+to this file.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="h5py.h5f.FileID.get_create_plist">
+<code class="sig-name descname">get_create_plist</code> &#x2192; PropFCID<a class="headerlink" href="#h5py.h5f.FileID.get_create_plist" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve a copy of the <a class="reference internal" href="h5p.html#h5py.h5p.PropFCID" title="h5py.h5p.PropFCID"><code class="xref py py-class docutils literal notranslate"><span class="pre">file</span> <span class="pre">creation</span> <span class="pre">property</span> <span class="pre">list</span></code></a> used to
+create this file.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="h5py.h5f.FileID.get_file_image">
+<code class="sig-name descname">get_file_image</code> &#x2192; BYTES<a class="headerlink" href="#h5py.h5f.FileID.get_file_image" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieves a copy of the image of an existing, open file.</p>
+<p>Feature requires: 1.8.9</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="h5py.h5f.FileID.get_filesize">
+<code class="sig-name descname">get_filesize</code> &#x2192; LONG size<a class="headerlink" href="#h5py.h5f.FileID.get_filesize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determine the total size (in bytes) of the HDF5 file,
+including any user block.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="h5py.h5f.FileID.get_freespace">
+<code class="sig-name descname">get_freespace</code> &#x2192; LONG freespace<a class="headerlink" href="#h5py.h5f.FileID.get_freespace" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determine the amount of free space in this file.  Note that this
+only tracks free space until the file is closed.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="h5py.h5f.FileID.get_intent">
+<code class="sig-name descname">get_intent</code> &#x2192; INT<a class="headerlink" href="#h5py.h5f.FileID.get_intent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determine the file’s write intent, either of:
+- <code class="xref py py-data docutils literal notranslate"><span class="pre">H5F_ACC_RDONLY</span></code>
+- <code class="xref py py-data docutils literal notranslate"><span class="pre">H5F_ACC_RDWR</span></code></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="h5py.h5f.FileID.get_mdc_config">
+<code class="sig-name descname">get_mdc_config</code> &#x2192; CacheConfig Returns an object that stores all the information about the meta-data cache configuration<a class="headerlink" href="#h5py.h5f.FileID.get_mdc_config" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="h5py.h5f.FileID.get_mdc_hit_rate">
+<code class="sig-name descname">get_mdc_hit_rate</code> &#x2192; DOUBLE<a class="headerlink" href="#h5py.h5f.FileID.get_mdc_hit_rate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve the cache hit rate</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="h5py.h5f.FileID.get_mdc_size">
+<code class="sig-name descname">get_mdc_size</code> &#x2192; (max_size, min_clean_size, cur_size, cur_num_entries) [SIZE_T, SIZE_T, SIZE_T, INT]<a class="headerlink" href="#h5py.h5f.FileID.get_mdc_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Obtain current metadata cache size data for specified file.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="h5py.h5f.FileID.get_vfd_handle">
+<code class="sig-name descname">get_vfd_handle</code><span class="sig-paren">(</span><em class="sig-param">PropFAID</em><span class="sig-paren">)</span> &#x2192; INT<a class="headerlink" href="#h5py.h5f.FileID.get_vfd_handle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve the file handle used by the virtual file driver.</p>
+<p>This may not be supported for all file drivers, and the meaning of the
+return value may depend on the file driver.</p>
+<p>The ‘family’ and ‘multi’ drivers access multiple files, and a file
+access property list (fapl) can be used to indicate which to access,
+with H5Pset_family_offset or H5Pset_multi_type.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="h5py.h5f.FileID.name">
+<code class="sig-name descname">name</code><a class="headerlink" href="#h5py.h5f.FileID.name" title="Permalink to this definition">¶</a></dt>
+<dd><p>File name on disk (according to h5f.get_name())</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="h5py.h5f.FileID.reopen">
+<code class="sig-name descname">reopen</code> &#x2192; FileID<a class="headerlink" href="#h5py.h5f.FileID.reopen" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve another identifier for a file (which must still be open).
+The new identifier is guaranteed to neither be mounted nor contain
+a mounted file.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="h5py.h5f.FileID.reset_mdc_hit_rate_stats">
+<code class="sig-name descname">reset_mdc_hit_rate_stats</code><a class="headerlink" href="#h5py.h5f.FileID.reset_mdc_hit_rate_stats" title="Permalink to this definition">¶</a></dt>
+<dd><p>no return</p>
+<p>rests the hit-rate statistics</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="h5py.h5f.FileID.set_mdc_config">
+<code class="sig-name descname">set_mdc_config</code><span class="sig-paren">(</span><em class="sig-param">CacheConfig</em><span class="sig-paren">)</span> &#x2192; None Returns an object that stores all the information about the meta-data cache configuration<a class="headerlink" href="#h5py.h5f.FileID.set_mdc_config" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="h5py.h5f.FileID.start_swmr_write">
+<code class="sig-name descname">start_swmr_write</code><a class="headerlink" href="#h5py.h5f.FileID.start_swmr_write" title="Permalink to this definition">¶</a></dt>
+<dd><p>no return</p>
+<p>Enables <code class="xref py py-data docutils literal notranslate"><span class="pre">SWMR</span></code> writing mode for a file.</p>
+<p>This function will activate <code class="xref py py-data docutils literal notranslate"><span class="pre">SWMR</span></code> writing mode for a file associated
+with file_id. This routine will prepare and ensure the file is safe
+for <code class="xref py py-data docutils literal notranslate"><span class="pre">SWMR</span></code> writing as follows:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Check that the file is opened with write access (H5F_ACC_RDWR).</p></li>
+<li><p>Check that the file is opened with the latest library format
+to ensure data structures with check-summed metadata are used.</p></li>
+<li><p>Check that the file is not already marked in <code class="xref py py-data docutils literal notranslate"><span class="pre">SWMR</span></code> writing mode.</p></li>
+<li><p>Enable reading retries for check-summed metadata to remedy
+possible checksum failures from reading inconsistent metadata
+on a system that is not atomic.</p></li>
+<li><p>Turn off usage of the library’s accumulator to avoid possible
+ordering problem on a system that is not atomic.</p></li>
+<li><p>Perform a flush of the file’s data buffers and metadata to set
+a consistent state for starting <code class="xref py py-data docutils literal notranslate"><span class="pre">SWMR</span></code> write operations.</p></li>
+</ul>
+</div></blockquote>
+<p>Library objects are groups, datasets, and committed datatypes. For
+the current implementation, groups and datasets can remain open when
+activating <code class="xref py py-data docutils literal notranslate"><span class="pre">SWMR</span></code> writing mode, but not committed datatypes. Attributes
+attached to objects cannot remain open.</p>
+<p>Feature requires: 1.9.178 HDF5</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-constants">
+<h2>Module constants<a class="headerlink" href="#module-constants" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="file-access-flags">
+<span id="ref-h5f-acc"></span><h3>File access flags<a class="headerlink" href="#file-access-flags" title="Permalink to this headline">¶</a></h3>
+<dl class="data">
+<dt id="h5py.h5f.ACC_TRUNC">
+<code class="sig-prename descclassname">h5py.h5f.</code><code class="sig-name descname">ACC_TRUNC</code><a class="headerlink" href="#h5py.h5f.ACC_TRUNC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create/truncate file</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="h5py.h5f.ACC_EXCL">
+<code class="sig-prename descclassname">h5py.h5f.</code><code class="sig-name descname">ACC_EXCL</code><a class="headerlink" href="#h5py.h5f.ACC_EXCL" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create file if it doesn’t exist; fail otherwise</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="h5py.h5f.ACC_RDWR">
+<code class="sig-prename descclassname">h5py.h5f.</code><code class="sig-name descname">ACC_RDWR</code><a class="headerlink" href="#h5py.h5f.ACC_RDWR" title="Permalink to this definition">¶</a></dt>
+<dd><p>Open in read/write mode</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="h5py.h5f.ACC_RDONLY">
+<code class="sig-prename descclassname">h5py.h5f.</code><code class="sig-name descname">ACC_RDONLY</code><a class="headerlink" href="#h5py.h5f.ACC_RDONLY" title="Permalink to this definition">¶</a></dt>
+<dd><p>Open in read-only mode</p>
+</dd></dl>
+
+</div>
+<div class="section" id="file-close-strength">
+<span id="ref-h5f-close"></span><h3>File close strength<a class="headerlink" href="#file-close-strength" title="Permalink to this headline">¶</a></h3>
+<dl class="data">
+<dt id="h5py.h5f.CLOSE_WEAK">
+<code class="sig-prename descclassname">h5py.h5f.</code><code class="sig-name descname">CLOSE_WEAK</code><a class="headerlink" href="#h5py.h5f.CLOSE_WEAK" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="data">
+<dt id="h5py.h5f.CLOSE_SEMI">
+<code class="sig-prename descclassname">h5py.h5f.</code><code class="sig-name descname">CLOSE_SEMI</code><a class="headerlink" href="#h5py.h5f.CLOSE_SEMI" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="data">
+<dt id="h5py.h5f.CLOSE_STRONG">
+<code class="sig-prename descclassname">h5py.h5f.</code><code class="sig-name descname">CLOSE_STRONG</code><a class="headerlink" href="#h5py.h5f.CLOSE_STRONG" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="data">
+<dt id="h5py.h5f.CLOSE_DEFAULT">
+<code class="sig-prename descclassname">h5py.h5f.</code><code class="sig-name descname">CLOSE_DEFAULT</code><a class="headerlink" href="#h5py.h5f.CLOSE_DEFAULT" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="file-scope">
+<span id="ref-h5f-scope"></span><h3>File scope<a class="headerlink" href="#file-scope" title="Permalink to this headline">¶</a></h3>
+<dl class="data">
+<dt id="h5py.h5f.SCOPE_LOCAL">
+<code class="sig-prename descclassname">h5py.h5f.</code><code class="sig-name descname">SCOPE_LOCAL</code><a class="headerlink" href="#h5py.h5f.SCOPE_LOCAL" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="data">
+<dt id="h5py.h5f.SCOPE_GLOBAL">
+<code class="sig-prename descclassname">h5py.h5f.</code><code class="sig-name descname">SCOPE_GLOBAL</code><a class="headerlink" href="#h5py.h5f.SCOPE_GLOBAL" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="object-types">
+<span id="ref-h5f-obj"></span><h3>Object types<a class="headerlink" href="#object-types" title="Permalink to this headline">¶</a></h3>
+<dl class="data">
+<dt id="h5py.h5f.OBJ_FILE">
+<code class="sig-prename descclassname">h5py.h5f.</code><code class="sig-name descname">OBJ_FILE</code><a class="headerlink" href="#h5py.h5f.OBJ_FILE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="data">
+<dt id="h5py.h5f.OBJ_DATASET">
+<code class="sig-prename descclassname">h5py.h5f.</code><code class="sig-name descname">OBJ_DATASET</code><a class="headerlink" href="#h5py.h5f.OBJ_DATASET" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="data">
+<dt id="h5py.h5f.OBJ_GROUP">
+<code class="sig-prename descclassname">h5py.h5f.</code><code class="sig-name descname">OBJ_GROUP</code><a class="headerlink" href="#h5py.h5f.OBJ_GROUP" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="data">
+<dt id="h5py.h5f.OBJ_DATATYPE">
+<code class="sig-prename descclassname">h5py.h5f.</code><code class="sig-name descname">OBJ_DATATYPE</code><a class="headerlink" href="#h5py.h5f.OBJ_DATATYPE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="data">
+<dt id="h5py.h5f.OBJ_ATTR">
+<code class="sig-prename descclassname">h5py.h5f.</code><code class="sig-name descname">OBJ_ATTR</code><a class="headerlink" href="#h5py.h5f.OBJ_ATTR" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="data">
+<dt id="h5py.h5f.OBJ_ALL">
+<code class="sig-prename descclassname">h5py.h5f.</code><code class="sig-name descname">OBJ_ALL</code><a class="headerlink" href="#h5py.h5f.OBJ_ALL" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="data">
+<dt id="h5py.h5f.OBJ_LOCAL">
+<code class="sig-prename descclassname">h5py.h5f.</code><code class="sig-name descname">OBJ_LOCAL</code><a class="headerlink" href="#h5py.h5f.OBJ_LOCAL" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="library-version-bounding">
+<h3>Library version bounding<a class="headerlink" href="#library-version-bounding" title="Permalink to this headline">¶</a></h3>
+<dl class="data">
+<dt id="h5py.h5f.LIBVER_EARLIEST">
+<code class="sig-prename descclassname">h5py.h5f.</code><code class="sig-name descname">LIBVER_EARLIEST</code><a class="headerlink" href="#h5py.h5f.LIBVER_EARLIEST" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="data">
+<dt id="h5py.h5f.LIBVER_V18">
+<code class="sig-prename descclassname">h5py.h5f.</code><code class="sig-name descname">LIBVER_V18</code><a class="headerlink" href="#h5py.h5f.LIBVER_V18" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="data">
+<dt id="h5py.h5f.LIBVER_V110">
+<code class="sig-prename descclassname">h5py.h5f.</code><code class="sig-name descname">LIBVER_V110</code><a class="headerlink" href="#h5py.h5f.LIBVER_V110" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="data">
+<dt id="h5py.h5f.LIBVER_LATEST">
+<code class="sig-prename descclassname">h5py.h5f.</code><code class="sig-name descname">LIBVER_LATEST</code><a class="headerlink" href="#h5py.h5f.LIBVER_LATEST" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Module H5F</a><ul>
+<li><a class="reference internal" href="#functional-api">Functional API</a></li>
+<li><a class="reference internal" href="#file-objects">File objects</a></li>
+<li><a class="reference internal" href="#module-constants">Module constants</a><ul>
+<li><a class="reference internal" href="#file-access-flags">File access flags</a></li>
+<li><a class="reference internal" href="#file-close-strength">File close strength</a></li>
+<li><a class="reference internal" href="#file-scope">File scope</a></li>
+<li><a class="reference internal" href="#object-types">Object types</a></li>
+<li><a class="reference internal" href="#library-version-bounding">Library version bounding</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="h5d.html"
+                        title="previous chapter">Module H5D</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="h5fd.html"
+                        title="next chapter">Module H5FD</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/h5f.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="h5fd.html" title="Module H5FD"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="h5d.html" title="Module H5D"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Low-level API for h5py</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2014, Andrew Collette and contributors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.1.
+    </div>
+  </body>
+</html>

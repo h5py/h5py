@@ -1,0 +1,209 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Low-Level API Reference &#8212; Low-level API for h5py</title>
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Base object classes" href="objects.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="objects.html" title="Base object classes"
+             accesskey="N">next</a> |</li>
+        <li class="nav-item nav-item-0"><a href="#">Low-level API for h5py</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="low-level-api-reference">
+<h1>Low-Level API Reference<a class="headerlink" href="#low-level-api-reference" title="Permalink to this headline">¶</a></h1>
+<p>This documentation contains the auto-generated API information for the
+HDF5 for Python “low-level” interface, a collection of Cython modules
+which form the interface to the HDF5 C library.  It’s hosted separately from
+our main documentation as it requires autodoc.</p>
+<p>These docs are updated less frequently than the spiffy ReadTheDocs-hosted
+main documentation; this means roughly once per minor (X.Y) release.</p>
+<div class="section" id="this-may-not-be-what-you-re-looking-for">
+<h2>This may not be what you’re looking for!<a class="headerlink" href="#this-may-not-be-what-you-re-looking-for" title="Permalink to this headline">¶</a></h2>
+<p><strong>The main docs for h5py are at</strong> <a class="reference external" href="https://docs.h5py.org">https://docs.h5py.org</a>.  <strong>These are
+the docs specifically for the h5py low-level interface.</strong></p>
+</div>
+<div class="section" id="contents">
+<h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="objects.html">Base object classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="h5.html">Module H5</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="h5.html#library-api">Library API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="h5.html#configuration-class">Configuration class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="h5.html#module-constants">Module constants</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="h5a.html">Module H5A</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="h5a.html#functional-api">Functional API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="h5a.html#info-objects">Info objects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="h5a.html#attribute-objects">Attribute objects</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="h5ac.html">Module H5AC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="h5d.html">Module H5D</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="h5d.html#module-constants">Module constants</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="h5f.html">Module H5F</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="h5f.html#functional-api">Functional API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="h5f.html#file-objects">File objects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="h5f.html#module-constants">Module constants</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="h5fd.html">Module H5FD</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="h5fd.html#module-constants">Module constants</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="h5g.html">Module H5G</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="h5g.html#functional-api">Functional API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="h5g.html#info-objects">Info objects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="h5g.html#group-objects">Group objects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="h5g.html#module-constants">Module constants</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="h5i.html">Module H5I</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="h5i.html#module-h5py.h5i">Functional API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="h5i.html#module-constants">Module constants</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="h5l.html">Module H5L</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="h5l.html#module-h5py.h5l">Linkproxy objects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="h5l.html#module-constants">Module constants</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="h5o.html">Module H5O</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="h5o.html#functional-api">Functional API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="h5o.html#info-classes">Info classes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="h5o.html#module-constants">Module constants</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="h5p.html">Module H5P</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="h5p.html#functional-api">Functional API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="h5p.html#base-classes">Base classes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="h5p.html#file-creation">File creation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="h5p.html#file-access">File access</a></li>
+<li class="toctree-l2"><a class="reference internal" href="h5p.html#dataset-creation">Dataset creation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="h5p.html#link-creation">Link creation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="h5p.html#link-access">Link access</a></li>
+<li class="toctree-l2"><a class="reference internal" href="h5p.html#group-creation">Group creation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="h5p.html#module-constants">Module constants</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="h5pl.html">Module H5PL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="h5r.html">Module H5R</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="h5r.html#functional-api">Functional API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="h5r.html#reference-classes">Reference classes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="h5r.html#api-constants">API constants</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="h5s.html">Module H5S</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="h5s.html#functional-api">Functional API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="h5s.html#dataspace-objects">Dataspace objects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="h5s.html#module-constants">Module constants</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="h5t.html">Module H5T</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="h5t.html#functions-specific-to-h5py">Functions specific to h5py</a></li>
+<li class="toctree-l2"><a class="reference internal" href="h5t.html#functional-api">Functional API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="h5t.html#type-classes">Type classes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="h5t.html#predefined-datatypes">Predefined Datatypes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="h5t.html#module-constants">Module constants</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="h5z.html">Module H5Z</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="h5z.html#module-constants">Module constants</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="#">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Low-Level API Reference</a><ul>
+<li><a class="reference internal" href="#this-may-not-be-what-you-re-looking-for">This may not be what you’re looking for!</a></li>
+<li><a class="reference internal" href="#contents">Contents</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Next topic</h4>
+  <p class="topless"><a href="objects.html"
+                        title="next chapter">Base object classes</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/index.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="objects.html" title="Base object classes"
+             >next</a> |</li>
+        <li class="nav-item nav-item-0"><a href="#">Low-level API for h5py</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2014, Andrew Collette and contributors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.1.
+    </div>
+  </body>
+</html>

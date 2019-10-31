@@ -1,0 +1,226 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Module H5R &#8212; Low-level API for h5py</title>
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Module H5S" href="h5s.html" />
+    <link rel="prev" title="Module H5PL" href="h5pl.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="h5s.html" title="Module H5S"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="h5pl.html" title="Module H5PL"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Low-level API for h5py</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-h5py.h5r">
+<span id="module-h5r"></span><h1>Module H5R<a class="headerlink" href="#module-h5py.h5r" title="Permalink to this headline">¶</a></h1>
+<p><code class="xref py py-data docutils literal notranslate"><span class="pre">H5R</span></code> API for object and region references.</p>
+<div class="section" id="functional-api">
+<h2>Functional API<a class="headerlink" href="#functional-api" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="h5py.h5r.create">
+<code class="sig-prename descclassname">h5py.h5r.</code><code class="sig-name descname">create</code><span class="sig-paren">(</span><em class="sig-param">ObjectID loc</em>, <em class="sig-param">STRING name</em>, <em class="sig-param">INT ref_type</em>, <em class="sig-param">SpaceID space=None</em><span class="sig-paren">)</span> &#x2192; ReferenceObject ref<a class="headerlink" href="#h5py.h5r.create" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a new reference. The value of ref_type determines the kind
+of reference created:</p>
+<dl class="simple">
+<dt><code class="xref py py-data docutils literal notranslate"><span class="pre">OBJECT</span></code></dt><dd><p>Reference to an object in an HDF5 file.  Parameters “loc”
+and “name” identify the object; “space” is unused.</p>
+</dd>
+<dt><code class="xref py py-data docutils literal notranslate"><span class="pre">DATASET_REGION</span></code></dt><dd><p>Reference to a dataset region.  Parameters “loc” and
+“name” identify the dataset; the selection on “space”
+identifies the region.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="h5py.h5r.dereference">
+<code class="sig-prename descclassname">h5py.h5r.</code><code class="sig-name descname">dereference</code><span class="sig-paren">(</span><em class="sig-param">Reference ref</em>, <em class="sig-param">ObjectID id</em><span class="sig-paren">)</span> &#x2192; ObjectID or None<a class="headerlink" href="#h5py.h5r.dereference" title="Permalink to this definition">¶</a></dt>
+<dd><p>Open the object pointed to by the reference and return its
+identifier.  The file identifier (or the identifier for any object
+in the file) must also be provided.  Returns None if the reference
+is zero-filled.</p>
+<p>The reference may be either Reference or RegionReference.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="h5py.h5r.get_region">
+<code class="sig-prename descclassname">h5py.h5r.</code><code class="sig-name descname">get_region</code><span class="sig-paren">(</span><em class="sig-param">Reference ref</em>, <em class="sig-param">ObjectID id</em><span class="sig-paren">)</span> &#x2192; SpaceID or None<a class="headerlink" href="#h5py.h5r.get_region" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve the dataspace selection pointed to by the reference.
+Returns a copy of the dataset’s dataspace, with the appropriate
+elements selected.  The file identifier or the identifier of any
+object in the file (including the dataset itself) must also be
+provided.</p>
+<p>The reference object must be a RegionReference.  If it is zero-filled,
+returns None.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="h5py.h5r.get_obj_type">
+<code class="sig-prename descclassname">h5py.h5r.</code><code class="sig-name descname">get_obj_type</code><span class="sig-paren">(</span><em class="sig-param">Reference ref</em>, <em class="sig-param">ObjectID id</em><span class="sig-paren">)</span> &#x2192; INT obj_code or None<a class="headerlink" href="#h5py.h5r.get_obj_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determine what type of object the reference points to.  The
+reference may be a Reference or RegionReference.  The file
+identifier or the identifier of any object in the file must also
+be provided.</p>
+<p>The return value is one of:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="h5g.html#h5py.h5g.LINK" title="h5py.h5g.LINK"><code class="xref py py-data docutils literal notranslate"><span class="pre">h5g.LINK</span></code></a></p></li>
+<li><p><a class="reference internal" href="h5g.html#h5py.h5g.GROUP" title="h5py.h5g.GROUP"><code class="xref py py-data docutils literal notranslate"><span class="pre">h5g.GROUP</span></code></a></p></li>
+<li><p><a class="reference internal" href="h5g.html#h5py.h5g.DATASET" title="h5py.h5g.DATASET"><code class="xref py py-data docutils literal notranslate"><span class="pre">h5g.DATASET</span></code></a></p></li>
+<li><p><a class="reference internal" href="h5g.html#h5py.h5g.TYPE" title="h5py.h5g.TYPE"><code class="xref py py-data docutils literal notranslate"><span class="pre">h5g.TYPE</span></code></a></p></li>
+</ul>
+<p>If the reference is zero-filled, returns None.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="h5py.h5r.get_name">
+<code class="sig-prename descclassname">h5py.h5r.</code><code class="sig-name descname">get_name</code><span class="sig-paren">(</span><em class="sig-param">Reference ref</em>, <em class="sig-param">ObjectID loc</em><span class="sig-paren">)</span> &#x2192; STRING name<a class="headerlink" href="#h5py.h5r.get_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determine the name of the object pointed to by this reference.
+Requires the HDF5 1.8 API.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="reference-classes">
+<h2>Reference classes<a class="headerlink" href="#reference-classes" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="h5py.h5r.Reference">
+<em class="property">class </em><code class="sig-prename descclassname">h5py.h5r.</code><code class="sig-name descname">Reference</code><a class="headerlink" href="#h5py.h5r.Reference" title="Permalink to this definition">¶</a></dt>
+<dd><p>Opaque representation of an HDF5 reference.</p>
+<p>Objects of this class are created exclusively by the library and
+cannot be modified.  The read-only attribute “typecode” determines
+whether the reference is to an object in an HDF5 file (<a class="reference internal" href="#h5py.h5r.OBJECT" title="h5py.h5r.OBJECT"><code class="xref py py-data docutils literal notranslate"><span class="pre">OBJECT</span></code></a>)
+or a dataset region (DATASET_REGION).</p>
+<p>The object’s truth value indicates whether it contains a nonzero
+reference.  This does not guarantee that is valid, but is useful
+for rejecting “background” elements in a dataset.</p>
+<dl class="simple">
+<dt>Defined attributes:</dt><dd><p>cdef ref_u ref
+cdef readonly int typecode
+cdef readonly size_t typesize</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="class">
+<dt id="h5py.h5r.RegionReference">
+<em class="property">class </em><code class="sig-prename descclassname">h5py.h5r.</code><code class="sig-name descname">RegionReference</code><a class="headerlink" href="#h5py.h5r.RegionReference" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#h5py.h5r.Reference" title="h5py.h5r.Reference"><code class="xref py py-class docutils literal notranslate"><span class="pre">h5py.h5r.Reference</span></code></a></p>
+<p>Opaque representation of an HDF5 region reference.</p>
+<p>This is a subclass of Reference which exists mainly for programming
+convenience.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="api-constants">
+<h2>API constants<a class="headerlink" href="#api-constants" title="Permalink to this headline">¶</a></h2>
+<dl class="data">
+<dt id="h5py.h5r.OBJECT">
+<code class="sig-prename descclassname">h5py.h5r.</code><code class="sig-name descname">OBJECT</code><a class="headerlink" href="#h5py.h5r.OBJECT" title="Permalink to this definition">¶</a></dt>
+<dd><p>Typecode for object references</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="h5py.h5r.DATASET_REGION">
+<code class="sig-prename descclassname">h5py.h5r.</code><code class="sig-name descname">DATASET_REGION</code><a class="headerlink" href="#h5py.h5r.DATASET_REGION" title="Permalink to this definition">¶</a></dt>
+<dd><p>Typecode for dataset region references</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Module H5R</a><ul>
+<li><a class="reference internal" href="#functional-api">Functional API</a></li>
+<li><a class="reference internal" href="#reference-classes">Reference classes</a></li>
+<li><a class="reference internal" href="#api-constants">API constants</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="h5pl.html"
+                        title="previous chapter">Module H5PL</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="h5s.html"
+                        title="next chapter">Module H5S</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/h5r.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="h5s.html" title="Module H5S"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="h5pl.html" title="Module H5PL"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Low-level API for h5py</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2014, Andrew Collette and contributors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.1.
+    </div>
+  </body>
+</html>
