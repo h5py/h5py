@@ -11,10 +11,7 @@
     Implements support for high-level access to HDF5 groups.
 """
 
-from __future__ import absolute_import, division
-
 import posixpath as pp
-import six
 import numpy
 
 
@@ -39,7 +36,7 @@ class Group(HLObject, MutableMappingHDF5):
         with phil:
             if not isinstance(bind, h5g.GroupID):
                 raise ValueError("%s is not a GroupID" % bind)
-            HLObject.__init__(self, bind)
+            super(Group, self).__init__(bind)
 
 
     _gcpl_crt_order = h5p.create(h5p.GROUP_CREATE)
@@ -88,10 +85,12 @@ class Group(HLObject, MutableMappingHDF5):
         Keyword-only arguments:
 
         chunks
-            (Tuple) Chunk shape, or True to enable auto-chunking.
+            (Tuple or int) Chunk shape, or True to enable auto-chunking. Integers can
+            be used for 1D shape.
+
         maxshape
-            (Tuple) Make the dataset resizable up to this shape.  Use None for
-            axes you want to be unlimited.
+            (Tuple or int) Make the dataset resizable up to this shape. Use None for
+            axes you want to be unlimited. Integers can be used for 1D shape.
         compression
             (String or int) Compression strategy.  Legal values are 'gzip',
             'szip', 'lzf'.  If an integer in range(10), this indicates gzip
@@ -123,11 +122,13 @@ class Group(HLObject, MutableMappingHDF5):
             (T/F) Track attribute creation order if True. If omitted use
             global default h5.get_config().track_order.
         external
-            (List of tuples) Sets the external storage property, thus
+            (Iterable of tuples) Sets the external storage property, thus
             designating that the dataset will be stored in one or more
-            non-HDF5 file(s) external to the HDF5 file. Adds each listed
-            tuple of (file[, offset[, size]]) to the dataset's list of
-            external files.
+            non-HDF5 files external to the HDF5 file.  Adds each tuple
+            of (name, offset, size) to the dataset's list of external files.
+            Each name must be a str, bytes, or os.PathLike; each offset and
+            size, an integer.  If only a name is given instead of an iterable
+            of tuples, it is equivalent to [(name, 0, h5py.h5f.UNLIMITED)].
         """
         if 'track_order' not in kwds:
             kwds['track_order'] = h5.get_config().track_order
@@ -189,6 +190,9 @@ class Group(HLObject, MutableMappingHDF5):
         with phil:
             if not name in self:
                 return self.create_dataset(name, *(shape, dtype), **kwds)
+
+            if isinstance(shape, int):
+                shape = (shape,)
 
             dset = self[name]
             if not isinstance(dset, dataset.Dataset):
@@ -267,7 +271,7 @@ class Group(HLObject, MutableMappingHDF5):
         if otype == h5i.GROUP:
             return Group(oid)
         elif otype == h5i.DATASET:
-            return dataset.Dataset(oid)
+            return dataset.Dataset(oid, readonly=(self.file.mode == 'r'))
         elif otype == h5i.DATATYPE:
             return datatype.Datatype(oid)
         else:
@@ -570,12 +574,10 @@ class Group(HLObject, MutableMappingHDF5):
             r = u"<Closed HDF5 group>"
         else:
             namestr = (
-                u'"%s"' % self.name
+                '"%s"' % self.name
             ) if self.name is not None else u"(anonymous)"
-            r = u'<HDF5 group %s (%d members)>' % (namestr, len(self))
+            r = '<HDF5 group %s (%d members)>' % (namestr, len(self))
 
-        if six.PY2:
-            return r.encode('utf8')
         return r
 
 

@@ -1,3 +1,4 @@
+# cython: language_level=3
 # This file is part of h5py, a Python interface to the HDF5 library.
 #
 # http://www.h5py.org
@@ -13,20 +14,20 @@
 
 include "config.pxi"
 
-# Compile-time imports
+# C-level imports
 from cpython.buffer cimport PyObject_CheckBuffer, \
                             PyObject_GetBuffer, PyBuffer_Release, \
                             PyBUF_SIMPLE
 
-from utils cimport  require_tuple, convert_dims, convert_tuple, \
+from .utils cimport  require_tuple, convert_dims, convert_tuple, \
                     emalloc, efree, \
                     check_numpy_write, check_numpy_read
 from numpy cimport ndarray, import_array
-from h5t cimport TypeID, py_create
-from h5s cimport SpaceID
-from h5ac cimport CacheConfig
-from h5py import _objects
+from .h5t cimport TypeID, py_create
+from .h5s cimport SpaceID
+from .h5ac cimport CacheConfig
 
+# Python level imports
 from ._objects import phil, with_phil
 
 if MPI:
@@ -585,7 +586,7 @@ cdef class PropDCID(PropOCID):
                 nelements = len(values)
                 cd_values = <unsigned int*>emalloc(sizeof(unsigned int)*nelements)
 
-                for i from 0<=i<nelements:
+                for i in range(nelements):
                     cd_values[i] = int(values[i])
 
             H5Pset_filter(self.id, <H5Z_filter_t>filter_code, flags, nelements, cd_values)
@@ -641,7 +642,7 @@ cdef class PropDCID(PropOCID):
         name[256] = c'\0'  # in case it's > 256 chars
 
         vlist = []
-        for i from 0<=i<nelements:
+        for i in range(nelements):
             vlist.append(cd_values[i])
 
         return (filter_code, flags, tuple(vlist), name)
@@ -655,9 +656,9 @@ cdef class PropDCID(PropOCID):
         property list.  Used because the HDF5 function H5Pget_filter_by_id
         is broken.
         """
-        cdef int nfilters
+        cdef int i, nfilters
         nfilters = self.get_nfilters()
-        for i from 0<=i<nfilters:
+        for i in range(nfilters):
             if self.get_filter(i)[0] == filter_code:
                 return True
         return False
@@ -695,7 +696,7 @@ cdef class PropDCID(PropOCID):
         name[256] = c'\0'  # In case HDF5 doesn't terminate it properly
 
         vlist = []
-        for i from 0<=i<nelements:
+        for i in range(nelements):
             vlist.append(cd_values[i])
 
         return (flags, tuple(vlist), name)
@@ -1489,6 +1490,12 @@ cdef class PropDAID(PropInstanceID):
 
     """ Dataset access property list """
 
+    def __cinit__(self, *args):
+        self._virtual_prefix_buf = NULL
+
+    def __dealloc__(self):
+        efree(self._virtual_prefix_buf)
+
     @with_phil
     def set_chunk_cache(self, size_t rdcc_nslots,size_t rdcc_nbytes, double rdcc_w0):
         """(size_t rdcc_nslots,size_t rdcc_nbytes, double rdcc_w0)
@@ -1581,6 +1588,45 @@ cdef class PropDAID(PropInstanceID):
             cdef hsize_t gap_size
             H5Pget_virtual_printf_gap(self.id, &gap_size)
             return gap_size
+
+    if HDF5_VERSION >= (1, 10, 2):
+        @with_phil
+        def get_virtual_prefix(self):
+            """() => STR
+
+            Get the filesystem path prefix configured for accessing virtual
+            datasets.
+            """
+            cdef char* cprefix = NULL
+            cdef ssize_t size
+
+            size = H5Pget_virtual_prefix(self.id, NULL, 0)
+            cprefix = <char*>emalloc(size+1)
+            try:
+                # TODO check return size
+                H5Pget_virtual_prefix(self.id, cprefix, <size_t>size+1)
+                prefix = bytes(cprefix)
+            finally:
+                efree(cprefix)
+
+            return prefix
+
+        @with_phil
+        def set_virtual_prefix(self, char* prefix):
+            """(STR prefix)
+
+            Set a filesystem path prefix for looking up virtual datasets.
+            This is prepended to all filenames specified in the virtual dataset.
+            """
+            cdef size_t size
+
+            # HDF5 requires that we hang on to this buffer
+            efree(self._virtual_prefix_buf)
+            size = strlen(prefix)
+            self._virtual_prefix_buf = <char*>emalloc(size+1)
+            strcpy(self._virtual_prefix_buf, prefix)
+
+            H5Pset_virtual_prefix(self.id, self._virtual_prefix_buf)
 
 cdef class PropDXID(PropInstanceID):
 

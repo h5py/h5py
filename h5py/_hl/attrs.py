@@ -14,11 +14,8 @@
     as <obj>.attrs.
 """
 
-from __future__ import absolute_import
-
 import numpy
 import uuid
-import six
 
 from .. import h5, h5s, h5t, h5a, h5p
 from . import base
@@ -136,6 +133,8 @@ class AttributeManager(base.MutableMappingHDF5, base.CommonStateObject):
 
             if shape is None:
                 shape = data.shape
+            elif isinstance(shape, int):
+                shape = (shape,)
 
             use_htype = None    # If a committed type is given, we must use it
                                 # in the call to h5a.create.

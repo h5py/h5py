@@ -1,3 +1,4 @@
+# cython: language_level=3
 # This file is part of h5py, a Python interface to the HDF5 library.
 #
 # http://www.h5py.org
@@ -7,7 +8,7 @@
 # License:  Standard 3-clause BSD; see "license.txt" for full license terms
 #           and contributor agreement.
 
-from api_types_ext cimport *
+from .api_types_ext cimport *
 
 include "config.pxi"
 
@@ -44,13 +45,21 @@ cdef extern from "hdf5.h":
 
 # === H5D - Dataset API =======================================================
 
-  ctypedef enum H5D_layout_t:
-      H5D_LAYOUT_ERROR    = -1,
-      H5D_COMPACT         = 0,
-      H5D_CONTIGUOUS      = 1,
-      H5D_CHUNKED         = 2,
-      H5D_VIRTUAL         = 3,  # New in 1.10
-      H5D_NLAYOUTS        = 4
+  IF HDF5_VERSION >= (1, 10, 0):
+    ctypedef enum H5D_layout_t:
+        H5D_LAYOUT_ERROR    = -1,
+        H5D_COMPACT         = 0,
+        H5D_CONTIGUOUS      = 1,
+        H5D_CHUNKED         = 2,
+        H5D_VIRTUAL         = 3,
+        H5D_NLAYOUTS        = 4
+  ELSE:
+    ctypedef enum H5D_layout_t:
+        H5D_LAYOUT_ERROR    = -1,
+        H5D_COMPACT         = 0,
+        H5D_CONTIGUOUS      = 1,
+        H5D_CHUNKED         = 2,
+        H5D_NLAYOUTS        = 3
 
   IF HDF5_VERSION >= VDS_MIN_HDF5_VERSION:
     ctypedef enum H5D_vds_view_t:
@@ -125,19 +134,27 @@ cdef extern from "hdf5.h":
   int H5F_OBJ_LOCAL
   hsize_t H5F_UNLIMITED
 
-  IF HDF5_VERSION >= (1, 10, 2):
+  IF HDF5_VERSION < (1, 10, 2):
+    ctypedef enum H5F_libver_t:
+      H5F_LIBVER_EARLIEST        #/* Use the earliest possible format for storing objects */
+      H5F_LIBVER_LATEST          #/* Use the latest possible format available for storing objects*/
+
+  IF HDF5_VERSION >= (1, 10, 2) and HDF5_VERSION < (1,11,4):
     ctypedef enum H5F_libver_t:
       H5F_LIBVER_EARLIEST = 0,        # Use the earliest possible format for storing objects
       H5F_LIBVER_V18 = 1,
       H5F_LIBVER_V110 = 2,
       H5F_LIBVER_NBOUNDS
-
     int H5F_LIBVER_LATEST  # Use the latest possible format available for storing objects
 
-  ELSE:
+  IF HDF5_VERSION >= (1, 11, 4):
     ctypedef enum H5F_libver_t:
-      H5F_LIBVER_EARLIEST        #/* Use the earliest possible format for storing objects */
-      H5F_LIBVER_LATEST          #/* Use the latest possible format available for storing objects*/
+      H5F_LIBVER_EARLIEST = 0,        # Use the earliest possible format for storing objects
+      H5F_LIBVER_V18 = 1,
+      H5F_LIBVER_V110 = 2,
+      H5F_LIBVER_V112 = 3,
+      H5F_LIBVER_NBOUNDS
+    int H5F_LIBVER_LATEST  # Use the latest possible format available for storing objects
 
 # === H5FD - Low-level file descriptor API ====================================
 
@@ -157,12 +174,13 @@ cdef extern from "hdf5.h":
   # Thankfully they are defined but -1 if unavailable
   hid_t H5FD_CORE
   hid_t H5FD_FAMILY
-# hid_t H5FD_GASS  not in 1.8.X
   hid_t H5FD_LOG
   hid_t H5FD_MPIO
   hid_t H5FD_MULTI
   hid_t H5FD_SEC2
   hid_t H5FD_STDIO
+  IF UNAME_SYSNAME == "Windows":
+    hid_t H5FD_WINDOWS
 
   int H5FD_LOG_LOC_READ   # 0x0001
   int H5FD_LOG_LOC_WRITE  # 0x0002
@@ -194,10 +212,10 @@ cdef extern from "hdf5.h":
   # Flag for tracking allocation of space in file
   int H5FD_LOG_ALLOC      # 0x4000
   int H5FD_LOG_ALL        # (H5FD_LOG_ALLOC|H5FD_LOG_TIME_IO|H5FD_LOG_NUM_IO|H5FD_LOG_FLAVOR|H5FD_LOG_FILE_IO|H5FD_LOG_LOC_IO)
-  IF MPI:
-    ctypedef enum H5FD_mpio_xfer_t:
-     H5FD_MPIO_INDEPENDENT = 0,
-     H5FD_MPIO_COLLECTIVE
+
+  ctypedef enum H5FD_mpio_xfer_t:
+    H5FD_MPIO_INDEPENDENT = 0,
+    H5FD_MPIO_COLLECTIVE
 
   # Class information for each file driver
   ctypedef struct H5FD_class_t:
@@ -288,31 +306,47 @@ cdef extern from "hdf5.h":
 
 # === H5I - Identifier and reflection interface ===============================
 
-  ctypedef enum H5I_type_t:
-    H5I_UNINIT       = -2,  # uninitialized Group
-    H5I_BADID        = -1,  # invalid Group
-    H5I_FILE        = 1,    # group ID for File objects
-    H5I_GROUP,              # group ID for Group objects
-    H5I_DATATYPE,           # group ID for Datatype objects
-    H5I_DATASPACE,          # group ID for Dataspace objects
-    H5I_DATASET,            # group ID for Dataset objects
-    H5I_ATTR,               # group ID for Attribute objects
-    H5I_REFERENCE,          # group ID for Reference objects
-    H5I_VFL,                # group ID for virtual file layer
-    H5I_GENPROP_CLS,        # group ID for generic property list classes
-    H5I_GENPROP_LST,        # group ID for generic property lists
-    H5I_ERROR_CLASS,        # group ID for error classes
-    H5I_ERROR_MSG,          # group ID for error messages
-    H5I_ERROR_STACK,        # group ID for error stacks
-    H5I_NTYPES              # number of valid groups, MUST BE LAST!
+  IF HDF5_VERSION < VOL_MIN_HDF5_VERSION:
+    ctypedef enum H5I_type_t:
+      H5I_UNINIT       = -2,  # uninitialized Group
+      H5I_BADID        = -1,  # invalid Group
+      H5I_FILE        = 1,    # type ID for File objects
+      H5I_GROUP,              # type ID for Group objects
+      H5I_DATATYPE,           # type ID for Datatype objects
+      H5I_DATASPACE,          # type ID for Dataspace objects
+      H5I_DATASET,            # type ID for Dataset objects
+      H5I_ATTR,               # type ID for Attribute objects
+      H5I_REFERENCE,          # type ID for Reference objects
+      H5I_VFL,                # type ID for virtual file layer
+      H5I_GENPROP_CLS,        # type ID for generic property list classes
+      H5I_GENPROP_LST,        # type ID for generic property lists
+      H5I_ERROR_CLASS,        # type ID for error classes
+      H5I_ERROR_MSG,          # type ID for error messages
+      H5I_ERROR_STACK,        # type ID for error stacks
+      H5I_NTYPES              # number of valid groups, MUST BE LAST!
+
+  ELSE:
+    ctypedef enum H5I_type_t:
+      H5I_UNINIT      = -2,     # uninitialized type
+      H5I_BADID       = -1,     # invalid Type
+      H5I_FILE        = 1,      # type ID for File objects
+      H5I_GROUP,                # type ID for Group objects
+      H5I_DATATYPE,             # type ID for Datatype objects
+      H5I_DATASPACE,            # type ID for Dataspace object
+      H5I_DATASET,              # type ID for Dataset object
+      H5I_MAP,                  # type ID for Map object
+      H5I_ATTR,                 # type ID for Attribute objects
+      H5I_VFL,                  # type ID for virtual file layer
+      H5I_VOL,                  # type ID for virtual object layer
+      H5I_GENPROP_CLS,          # type ID for generic property list classes
+      H5I_GENPROP_LST,          # type ID for generic property lists
+      H5I_ERROR_CLASS,          # type ID for error classes
+      H5I_ERROR_MSG,            # type ID for error messages
+      H5I_ERROR_STACK,          # type ID for error stacks
+      H5I_SPACE_SEL_ITER,       # type ID for dataspace selection iterator
+      H5I_NTYPES                # number of library types, MUST BE LAST!
 
 # === H5L/H5O - Links interface (1.8.X only) ======================================
-
-  # TODO: put both versions in h5t.pxd
-  ctypedef enum H5T_cset_t:
-    H5T_CSET_ERROR       = -1,  #
-    H5T_CSET_ASCII       = 0,   # US ASCII
-    H5T_CSET_UTF8        = 1,   # UTF-8 Unicode encoding
 
   unsigned int H5L_MAX_LINK_NAME_LEN #  ((uint32_t) (-1)) (4GB - 1)
 
@@ -412,64 +446,6 @@ cdef extern from "hdf5.h":
 
   int H5P_DEFAULT
 
-  ctypedef int H5Z_filter_t
-
-  # HDF5 layouts
-  ctypedef enum H5D_layout_t:
-    H5D_LAYOUT_ERROR    = -1,
-    H5D_COMPACT         = 0,    # raw data is very small
-    H5D_CONTIGUOUS      = 1,    # the default
-    H5D_CHUNKED         = 2,    # slow and fancy
-    H5D_NLAYOUTS        = 3     # this one must be last!
-
-  ctypedef enum H5D_alloc_time_t:
-    H5D_ALLOC_TIME_ERROR    =-1,
-    H5D_ALLOC_TIME_DEFAULT  =0,
-    H5D_ALLOC_TIME_EARLY    =1,
-    H5D_ALLOC_TIME_LATE        =2,
-    H5D_ALLOC_TIME_INCR        =3
-
-  ctypedef enum H5D_space_status_t:
-    H5D_SPACE_STATUS_ERROR            =-1,
-    H5D_SPACE_STATUS_NOT_ALLOCATED    =0,
-    H5D_SPACE_STATUS_PART_ALLOCATED    =1,
-    H5D_SPACE_STATUS_ALLOCATED        =2
-
-  ctypedef enum H5D_fill_time_t:
-    H5D_FILL_TIME_ERROR    =-1,
-    H5D_FILL_TIME_ALLOC =0,
-    H5D_FILL_TIME_NEVER    =1,
-    H5D_FILL_TIME_IFSET    =2
-
-  ctypedef enum H5D_fill_value_t:
-    H5D_FILL_VALUE_ERROR        =-1,
-    H5D_FILL_VALUE_UNDEFINED    =0,
-    H5D_FILL_VALUE_DEFAULT      =1,
-    H5D_FILL_VALUE_USER_DEFINED =2
-
-  cdef enum H5Z_EDC_t:
-    H5Z_ERROR_EDC       = -1,
-    H5Z_DISABLE_EDC     = 0,
-    H5Z_ENABLE_EDC      = 1,
-    H5Z_NO_EDC          = 2
-
-  cdef enum H5F_close_degree_t:
-    H5F_CLOSE_WEAK  = 0,
-    H5F_CLOSE_SEMI  = 1,
-    H5F_CLOSE_STRONG = 2,
-    H5F_CLOSE_DEFAULT = 3
-
-  ctypedef enum H5FD_mem_t:
-    H5FD_MEM_NOLIST    = -1,
-    H5FD_MEM_DEFAULT    = 0,
-    H5FD_MEM_SUPER      = 1,
-    H5FD_MEM_BTREE      = 2,
-    H5FD_MEM_DRAW       = 3,
-    H5FD_MEM_GHEAP      = 4,
-    H5FD_MEM_LHEAP      = 5,
-    H5FD_MEM_OHDR       = 6,
-    H5FD_MEM_NTYPES
-
   # Property list classes
   hid_t H5P_NO_CLASS
   hid_t H5P_FILE_CREATE
@@ -558,8 +534,9 @@ cdef extern from "hdf5.h":
     H5T_NORM_NONE        = 2
 
   ctypedef enum H5T_cset_t:
-    H5T_CSET_ERROR       = -1,
-    H5T_CSET_ASCII       = 0
+    H5T_CSET_ERROR       = -1,  # error
+    H5T_CSET_ASCII       = 0,   # US ASCII
+    H5T_CSET_UTF8        = 1,   # UTF-8 Unicode encoding
 
   ctypedef enum H5T_str_t:
     H5T_STR_ERROR        = -1,

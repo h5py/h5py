@@ -7,12 +7,11 @@
 # License:  Standard 3-clause BSD; see "license.txt" for full license terms
 #           and contributor agreement.
 
-from __future__ import absolute_import
-
 import tempfile
 import shutil
 import os
-from h5py import File
+import numpy as np
+from h5py import File, special_dtype
 
 from .common import TestCase
 
@@ -21,8 +20,7 @@ class TestFileID(TestCase):
     def test_descriptor_core(self):
         with File('TestFileID.test_descriptor_core', driver='core',
                   backing_store=False, mode='x') as f:
-            with self.assertRaises(NotImplementedError):
-                f.id.get_vfd_handle()
+            assert isinstance(f.id.get_vfd_handle(), int)
 
     def test_descriptor_sec2(self):
         dn_tmp = tempfile.mkdtemp('h5py.lowtest.test_h5f.TestFileID.test_descriptor_sec2')
@@ -68,5 +66,28 @@ class TestCacheConfig(TestCase):
             with File(fn_h5, mode='x') as f:
                 conf = f._id.get_mdc_config()
                 f._id.set_mdc_config(conf)
+        finally:
+            shutil.rmtree(dn_tmp)
+
+
+class TestVlenData(TestCase):
+    def test_vlen_strings(self):
+        # Create file with dataset containing vlen arrays of vlen strings
+        dn_tmp = tempfile.mkdtemp('h5py.lowtest.test_h5f.TestVlenStrings.test_vlen_strings')
+        fn_h5 = os.path.join(dn_tmp, 'test.h5')
+        try:
+            with File(fn_h5, mode='w') as h:
+                vlen_str = special_dtype(vlen=str)
+                vlen_vlen_str = special_dtype(vlen=vlen_str)
+
+                ds = h.create_dataset('/com', (2,), dtype=vlen_vlen_str)
+                ds[0] = (np.array(["a", "b", "c"], dtype=vlen_vlen_str))
+                ds[1] = (np.array(["d", "e", "f","g"], dtype=vlen_vlen_str))
+
+            with File(fn_h5, "r") as h:
+                ds = h["com"]
+                assert ds[0].tolist() == ['a', 'b', 'c']
+                assert ds[1].tolist() == ['d', 'e', 'f', 'g']
+
         finally:
             shutil.rmtree(dn_tmp)

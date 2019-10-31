@@ -12,7 +12,7 @@
 """
 
 include "_locks.pxi"
-from defs cimport *
+from .defs cimport *
 
 DEF USE_LOCKING = True
 DEF DEBUG_ID = False
@@ -107,7 +107,7 @@ def print_reg():
     files = len([x for x in objs if isinstance(x, h5py.h5f.FileID)])
     groups = len([x for x in objs if isinstance(x, h5py.h5g.GroupID)])
 
-    print "REGISTRY: %d | %d None | %d FileID | %d GroupID" % (len(objs), none, files, groups)
+    print("REGISTRY: %d | %d None | %d FileID | %d GroupID" % (len(objs), none, files, groups))
 
 
 @with_phil
@@ -160,6 +160,12 @@ cdef class ObjectID:
     """
         Represents an HDF5 identifier.
 
+    attributes:
+    cdef object __weakref__
+    cdef readonly hid_t id
+    cdef public int locked              # Cannot be closed, explicitly or auto
+    cdef object _hash
+    cdef size_t _pyid
     """
 
     property fileno:
@@ -215,17 +221,14 @@ cdef class ObjectID:
                     )
             self.id = 0
 
-
     def close(self):
         """ Close this identifier. """
         # Note this is the default close method.  Subclasses, e.g. FileID,
         # which have nonlocal effects should override this.
         self._close()
 
-
     def __nonzero__(self):
         return self.valid
-
 
     def __copy__(self):
         cdef ObjectID cpy

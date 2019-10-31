@@ -7,16 +7,10 @@
 # License:  Standard 3-clause BSD; see "license.txt" for full license terms
 #           and contributor agreement.
 
-from __future__ import absolute_import
-
-import sys
-
 import numpy as np
-from six import PY2, text_type
 
 import h5py
 from h5py import h5t
-from h5py.h5py_warnings import H5pyDeprecationWarning
 
 from .common import TestCase, ut
 
@@ -53,7 +47,7 @@ class TestCompound(ut.TestCase):
                 type_dict["names"], type_dict["offsets"], type_dict["formats"]
         ):
             tid.insert(
-                name.encode("utf8") if isinstance(name, text_type) else name,
+                name.encode("utf8") if isinstance(name, str) else name,
                 offset,
                 h5t.py_create(dt)
             )
@@ -76,13 +70,12 @@ class TestTypeFloatID(TestCase):
         dataset5 = 'DS5'
 
         # Strings are handled very differently between python2 and python3.
-        if not PY2:
-            test_filename = test_filename.encode()
-            dataset = dataset.encode()
-            dataset2 = dataset2.encode()
-            dataset3 = dataset3.encode()
-            dataset4 = dataset4.encode()
-            dataset5 = dataset5.encode()
+        test_filename = test_filename.encode()
+        dataset = dataset.encode()
+        dataset2 = dataset2.encode()
+        dataset3 = dataset3.encode()
+        dataset4 = dataset4.encode()
+        dataset5 = dataset5.encode()
 
         DIM0 = 4
         DIM1 = 7
@@ -207,13 +200,3 @@ class TestTypeFloatID(TestCase):
 
         dset = f[dataset5]
         self.assertEqual(dset.dtype, np.longdouble)
-
-
-class TestDeprecation(TestCase):
-    def test_deprecation_available_ftypes(self):
-        warning_message = ("Do not use available_ftypes, this is not part of "
-            "the public API of h5py. See "
-            "https://github.com/h5py/h5py/pull/926 for details.")
-        with self.assertWarnsRegex(H5pyDeprecationWarning, warning_message) as warning:
-            from h5py.h5t import available_ftypes
-            available_ftypes[np.dtype(np.float).itemsize]

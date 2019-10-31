@@ -19,6 +19,11 @@ import sys
 import os
 import os.path as op
 
+# Newer packaging standards may recommend removing the current dir from the
+# path, add it back if needed.
+if '' not in sys.path:
+    sys.path.insert(0, '')
+
 import setup_build, setup_configure
 
 
@@ -27,12 +32,12 @@ VERSION = '2.10.0'
 NUMPY_DEP = 'numpy>=1.7'
 
 # these are required to use h5py
-RUN_REQUIRES = [NUMPY_DEP, 'six']
+RUN_REQUIRES = [NUMPY_DEP, "cached-property"]
 
 # these are required to build h5py
 # RUN_REQUIRES is included as setup.py test needs RUN_REQUIRES for testing
 # RUN_REQUIRES can be removed when setup.py test is removed
-SETUP_REQUIRES = RUN_REQUIRES + [NUMPY_DEP, 'Cython>=0.23', 'pkgconfig']
+SETUP_REQUIRES = RUN_REQUIRES + [NUMPY_DEP, 'Cython>=0.25', 'pkgconfig']
 
 # Needed to avoid trying to install numpy/cython on pythons which the latest
 # versions don't support
@@ -99,12 +104,9 @@ Intended Audience :: Science/Research
 License :: OSI Approved :: BSD License
 Programming Language :: Cython
 Programming Language :: Python
-Programming Language :: Python :: 2
-Programming Language :: Python :: 2.7
 Programming Language :: Python :: 3
-Programming Language :: Python :: 3.4
-Programming Language :: Python :: 3.5
 Programming Language :: Python :: 3.6
+Programming Language :: Python :: 3.7
 Programming Language :: Python :: Implementation :: CPython
 Topic :: Scientific/Engineering
 Topic :: Database

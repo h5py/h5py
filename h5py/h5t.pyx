@@ -1,8 +1,9 @@
+# cython: language_level=3
 # This file is part of h5py, a Python interface to the HDF5 library.
 #
 # http://www.h5py.org
 #
-# Copyright 2008-2013 Andrew Collette and contributors
+# Copyright 2008-2019 Andrew Collette and contributors
 #
 # License:  Standard 3-clause BSD; see "license.txt" for full license terms
 #           and contributor agreement.
@@ -14,37 +15,27 @@
     subclasses which represent things like integer/float/compound identifiers.
     The majority of the H5T API is presented as methods on these identifiers.
 """
-# Pyrex compile-time imports
+# C-level imports
 include "config.pxi"
-from _objects cimport pdefault
+from ._objects cimport pdefault
+cimport numpy as cnp
+from .h5r cimport Reference, RegionReference
 
-from numpy cimport dtype, ndarray
-from h5r cimport Reference, RegionReference
+from .utils cimport  emalloc, efree, require_tuple, convert_dims,\
+                     convert_tuple
 
-from utils cimport  emalloc, efree, \
-                    require_tuple, convert_dims, convert_tuple
-
-# Runtime imports
+# Python imports
 import codecs
 from collections import namedtuple
 import sys
-import operator
-from warnings import warn
-from h5 import get_config
 import numpy as np
-from ._objects import phil, with_phil
-from .h5py_warnings import H5pyDeprecationWarning
-import platform
+from .h5 import get_config
 
-try:
-    from collections.abc import Mapping
-except ImportError:
-    from collections import Mapping
+from ._objects import phil, with_phil
+import platform
 
 
 cfg = get_config()
-
-PY3 = sys.version_info[0] == 3
 
 MACHINE = platform.machine()
 
@@ -253,51 +244,21 @@ cdef dict _sign_map  = { H5T_SGN_NONE: 'u', H5T_SGN_2: 'i' }
 
 # Available floating point types
 cdef tuple _get_available_ftypes():
-    cdef str floating_typecodes = np.typecodes["Float"]
-    cdef str ftc
-    cdef dtype fdtype
-    cdef list available_ftypes = []
+    cdef:
+        str floating_typecodes = np.typecodes["Float"]
+        str ftc
+        cnp.dtype fdtype
+        list available_ftypes = []
 
     for ftc in floating_typecodes:
-        fdtype = dtype(ftc)
-        available_ftypes.append((
-            <object>(fdtype.typeobj), np.finfo(fdtype), fdtype.itemsize
-        ))
+        fdtype = np.dtype(ftc)
+        available_ftypes.append(
+            (<object>(fdtype.typeobj), np.finfo(fdtype), fdtype.itemsize)
+            )
 
     return tuple(available_ftypes)
 
 cdef tuple _available_ftypes = _get_available_ftypes()
-
-# Old code to inform about floating point changes
-class _DeprecatedMapping(Mapping):
-    """
-    Mapping class which warns when members are accessed
-    """
-    def __init__(self, mapping, message):
-        self._mapping = mapping
-        self._message = message
-
-    def __len__(self):
-        warn(self._message, H5pyDeprecationWarning)
-        return len(self._mapping)
-
-    def __iter__(self):
-        warn(self._message, H5pyDeprecationWarning)
-        return iter(self._mapping)
-
-    def __getitem__(self, key):
-        warn(self._message, H5pyDeprecationWarning)
-        return self._mapping[key]
-
-available_ftypes = dict()
-for ftype in np.typeDict.values():
-    if np.issubdtype(ftype, np.floating):
-        available_ftypes[np.dtype(ftype).itemsize] = np.finfo(ftype)
-
-available_ftypes = _DeprecatedMapping(available_ftypes,
-    ("Do not use available_ftypes, this is not part of the public API of "
-    "h5py. See https://github.com/h5py/h5py/pull/926 for details.")
-)
 
 
 cdef (int, int, int) _correct_float_info(ftype_, finfo):
@@ -632,7 +593,7 @@ cdef class TypeArrayID(TypeID):
         base_dtype = tmp_type.py_dtype()
 
         shape = self.get_array_dims()
-        return dtype( (base_dtype, shape) )
+        return np.dtype( (base_dtype, shape) )
 
 
 cdef class TypeOpaqueID(TypeID):
@@ -669,8 +630,13 @@ cdef class TypeOpaqueID(TypeID):
             free(buf)
 
     cdef object py_dtype(self):
+        cdef bytes tag = self.get_tag()
+        if tag.startswith(b"NUMPY:"):
+            # 6 = len("NUMPY:")
+            return np.dtype(tag[6:], metadata={'h5py_opaque': True})
+
         # Numpy translation function for opaque types
-        return dtype("|V" + str(self.get_size()))
+        return np.dtype("|V" + str(self.get_size()))
 
 
 cdef class TypeStringID(TypeID):
@@ -938,8 +904,8 @@ cdef class TypeIntegerID(TypeAtomicID):
 
     cdef object py_dtype(self):
         # Translation function for integer types
-        return dtype( _order_map[self.get_order()] +
-                      _sign_map[self.get_sign()] + str(self.get_size()) )
+        return np.dtype( _order_map[self.get_order()] +
+                         _sign_map[self.get_sign()] + str(self.get_size()) )
 
 
 cdef class TypeFloatID(TypeAtomicID):
@@ -1105,7 +1071,10 @@ cdef class TypeCompositeID(TypeID):
             assert name != NULL
             pyname = <bytes>name
         finally:
-            free(name)
+            IF HDF5_VERSION >= (1, 8, 13):
+                H5free_memory(name)
+            ELSE:
+                free(name)
 
         return pyname
 
@@ -1183,11 +1152,11 @@ cdef class TypeCompoundID(TypeCompositeID):
         H5Tpack(self.id)
 
     cdef object py_dtype(self):
-
-        cdef TypeID tmp_type
-        cdef list field_names
-        cdef list field_types
-        cdef int nfields
+        cdef:
+            TypeID tmp_type
+            list field_names
+            list field_types
+            int i, nfields
         field_names = []
         field_types = []
         field_offsets = []
@@ -1195,7 +1164,7 @@ cdef class TypeCompoundID(TypeCompositeID):
 
         # First step: read field names and their Numpy dtypes into
         # two separate arrays.
-        for i from 0 <= i < nfields:
+        for i in range(nfields):
             tmp_type = self.get_member_type(i)
             name = self.get_member_name(i)
             field_names.append(name)
@@ -1212,18 +1181,15 @@ cdef class TypeCompoundID(TypeCompositeID):
             bstring = field_types[0].str
             blen = int(bstring[2:])
             nstring = bstring[0] + "c" + str(2*blen)
-            typeobj = dtype(nstring)
+            typeobj = np.dtype(nstring)
 
         # 2. Otherwise, read all fields of the compound type, in HDF5 order.
         else:
-            if sys.version[0] == '3':
-                field_names = [x.decode('utf8') for x in field_names]
-            typeobj = dtype({
-                'names': field_names,
-                'formats': field_types,
-                'offsets': field_offsets,
-                'itemsize': self.get_size()
-            })
+            field_names = [x.decode('utf8') for x in field_names]
+            typeobj = np.dtype({'names': field_names,
+                                'formats': field_types,
+                                'offsets': field_offsets,
+                                'itemsize': self.get_size()})
 
         return typeobj
 
@@ -1333,7 +1299,7 @@ cdef class TypeEnumID(TypeCompositeID):
         nmembers = self.get_nmembers()
         members = {}
 
-        for idx in xrange(nmembers):
+        for idx in range(nmembers):
             name = self.get_member_name(idx)
             val = self.get_member_value(idx)
             members[name] = val
@@ -1342,15 +1308,13 @@ cdef class TypeEnumID(TypeCompositeID):
 
         # Boolean types have priority over standard enums
         if members == ref:
-            return dtype('bool')
+            return np.dtype('bool')
 
         # Convert strings to appropriate representation
         members_conv = {}
         for name, val in members.iteritems():
-            try:    # ASCII; Py2 -> preserve bytes, Py3 -> make unicode
-                uname = name.decode('ascii')
-                if PY3:
-                    name = uname
+            try:    # ASCII;
+                name = name.decode('ascii')
             except UnicodeDecodeError:
                 try:    # Non-ascii; all platforms try unicode
                     name = name.decode('utf8')
@@ -1369,27 +1333,25 @@ cdef class TypeEnumID(TypeCompositeID):
 def _get_float_dtype_to_hdf5():
     float_le = {}
     float_be = {}
-    h5_be_list = [IEEE_F16BE, IEEE_F32BE, IEEE_F64BE, IEEE_F128BE,
-                  LDOUBLE_BE]
-    h5_le_list = [IEEE_F16LE, IEEE_F32LE, IEEE_F64LE, IEEE_F128LE]
-    if MACHINE != 'ppc64le':
-        h5_le_list.append(LDOUBLE_LE)
+    h5_be_list = [IEEE_F16BE, IEEE_F32BE, IEEE_F64BE, IEEE_F128BE, LDOUBLE_BE]
+    h5_le_list = [IEEE_F16LE, IEEE_F32LE, IEEE_F64LE, IEEE_F128LE, LDOUBLE_LE]
+
     for ftype_, finfo, size in _available_ftypes:
         nmant, maxexp, minexp = _correct_float_info(ftype_, finfo)
         for h5type in h5_be_list:
             spos, epos, esize, mpos, msize = h5type.get_fields()
             ebias = h5type.get_ebias()
             if (finfo.iexp == esize and nmant == msize and
-                (maxexp - 1) == ebias
-            ):
+                    (maxexp - 1) == ebias):
                 float_be[ftype_] = h5type
+                break # first found matches, related to #1244
         for h5type in h5_le_list:
             spos, epos, esize, mpos, msize = h5type.get_fields()
             ebias = h5type.get_ebias()
             if (finfo.iexp == esize and nmant == msize and
-                (maxexp - 1) == ebias
-            ):
+                    (maxexp - 1) == ebias):
                 float_le[ftype_] = h5type
+                break # first found matches, related to #1244
     if ORDER_NATIVE == H5T_ORDER_LE:
         float_nt = dict(float_le)
     else:
@@ -1409,52 +1371,54 @@ cdef dict _uint_le = {1: H5Tcopy(H5T_STD_U8LE), 2: H5Tcopy(H5T_STD_U16LE), 4: H5
 cdef dict _uint_be = {1: H5Tcopy(H5T_STD_U8BE), 2: H5Tcopy(H5T_STD_U16BE), 4: H5Tcopy(H5T_STD_U32BE), 8: H5Tcopy(H5T_STD_U64BE)}
 cdef dict _uint_nt = {1: H5Tcopy(H5T_NATIVE_UINT8), 2: H5Tcopy(H5T_NATIVE_UINT16), 4: H5Tcopy(H5T_NATIVE_UINT32), 8: H5Tcopy(H5T_NATIVE_UINT64)}
 
-cdef TypeFloatID _c_float(dtype dt):
+cdef TypeFloatID _c_float(cnp.dtype dt):
     # Floats (single and double)
     cdef TypeFloatID tid
 
     try:
         if dt.byteorder == c'<':
-            tid =  _float_le[np.dtype(dt).type]
+            tid = _float_le[np.dtype(dt).type]
         elif dt.byteorder == c'>':
-            tid =  _float_be[np.dtype(dt).type]
+            tid = _float_be[np.dtype(dt).type]
         else:
-            tid =  _float_nt[np.dtype(dt).type]
+            tid = _float_nt[np.dtype(dt).type]
     except KeyError:
         raise TypeError("Unsupported float type (%s)" % dt)
 
     return tid.copy()
 
-cdef TypeIntegerID _c_int(dtype dt):
+cdef TypeIntegerID _c_int(cnp.dtype dt):
     # Integers (ints and uints)
     cdef hid_t tid
 
     try:
         if dt.kind == c'i':
             if dt.byteorder == c'<':
-                tid = _int_le[dt.elsize]
+                tid = _int_le[dt.itemsize]
             elif dt.byteorder == c'>':
-                tid = _int_be[dt.elsize]
+                tid = _int_be[dt.itemsize]
             else:
-                tid = _int_nt[dt.elsize]
+                tid = _int_nt[dt.itemsize]
         elif dt.kind == c'u':
             if dt.byteorder == c'<':
-                tid = _uint_le[dt.elsize]
+                tid = _uint_le[dt.itemsize]
             elif dt.byteorder == c'>':
-                tid = _uint_be[dt.elsize]
+                tid = _uint_be[dt.itemsize]
             else:
-                tid = _uint_nt[dt.elsize]
+                tid = _uint_nt[dt.itemsize]
         else:
             raise TypeError('Illegal int kind "%s"' % dt.kind)
     except KeyError:
-        raise TypeError("Unsupported integer size (%s)" % dt.elsize)
+        raise TypeError("Unsupported integer size (%s)" % dt.itemsize)
 
     return TypeIntegerID(H5Tcopy(tid))
 
-cdef TypeEnumID _c_enum(dtype dt, dict vals):
+
+cdef TypeEnumID _c_enum(cnp.dtype dt, dict vals):
     # Enums
-    cdef TypeIntegerID base
-    cdef TypeEnumID out
+    cdef:
+        TypeIntegerID base
+        TypeEnumID out
 
     base = _c_int(dt)
 
@@ -1467,7 +1431,8 @@ cdef TypeEnumID _c_enum(dtype dt, dict vals):
         out.enum_insert(bname, vals[name])
     return out
 
-cdef TypeEnumID _c_bool(dtype dt):
+
+cdef TypeEnumID _c_bool(cnp.dtype dt):
     # Booleans
     global cfg
 
@@ -1479,11 +1444,13 @@ cdef TypeEnumID _c_bool(dtype dt):
 
     return out
 
-cdef TypeArrayID _c_array(dtype dt, int logical):
+
+cdef TypeArrayID _c_array(cnp.dtype dt, int logical):
     # Arrays
-    cdef dtype base
-    cdef TypeID type_base
-    cdef object shape
+    cdef:
+        cnp.dtype base
+        TypeID type_base
+        object shape
 
     base, shape = dt.subdtype
     try:
@@ -1496,11 +1463,27 @@ cdef TypeArrayID _c_array(dtype dt, int logical):
     type_base = py_create(base, logical=logical)
     return array_create(type_base, shape)
 
-cdef TypeOpaqueID _c_opaque(dtype dt):
+
+cdef TypeOpaqueID _c_opaque(cnp.dtype dt):
     # Opaque
     return TypeOpaqueID(H5Tcreate(H5T_OPAQUE, dt.itemsize))
 
-cdef TypeStringID _c_string(dtype dt):
+
+cdef TypeOpaqueID _c_opaque_tagged(cnp.dtype dt):
+    """Create an HDF5 opaque data type with a tag recording the numpy dtype.
+
+    Tagged opaque types can be read back easily in h5py, but not in other tools
+    (they are *opaque*).
+
+    The default tag is generated via the code:
+    ``b"NUMPY:" + dt_in.descr[0][1].encode()``.
+    """
+    cdef TypeOpaqueID new_type = _c_opaque(dt)
+    new_type.set_tag(b"NUMPY:" + dt.descr[0][1].encode())
+
+    return new_type
+
+cdef TypeStringID _c_string(cnp.dtype dt):
     # Strings (fixed-length)
     cdef hid_t tid
 
@@ -1511,7 +1494,7 @@ cdef TypeStringID _c_string(dtype dt):
         H5Tset_cset(tid, H5T_CSET_UTF8)
     return TypeStringID(tid)
 
-cdef TypeCompoundID _c_complex(dtype dt):
+cdef TypeCompoundID _c_complex(cnp.dtype dt):
     # Complex numbers (names depend on cfg)
     global cfg
 
@@ -1559,15 +1542,14 @@ cdef TypeCompoundID _c_complex(dtype dt):
 
     return TypeCompoundID(tid)
 
-cdef TypeCompoundID _c_compound(dtype dt, int logical, int aligned):
+cdef TypeCompoundID _c_compound(cnp.dtype dt, int logical, int aligned):
     # Compound datatypes
-
-    cdef hid_t tid
-    cdef TypeID member_type
-    cdef dtype member_dt
-    cdef size_t member_offset = 0
-
-    cdef dict fields = {}
+    cdef:
+        hid_t tid
+        TypeID member_type
+        object member_dt
+        size_t member_offset = 0
+        dict fields = {}
 
     # The challenge with correctly converting a numpy/h5py dtype to a HDF5 type
     # which is composed of subtypes has three aspects we must consider
@@ -1638,22 +1620,28 @@ cpdef TypeID py_create(object dtype_in, bint logical=0, bint aligned=0):
     HDF5 datatype object.  The result is guaranteed to be transient and
     unlocked.
 
-    Argument dtype_in may be a dtype object, or anything which can be
-    converted to a dtype, including strings like '<i4'.
-
-    logical
-        If this flag is set, instead of returning a byte-for-byte identical
-        representation of the type, the function returns the closest logically
-        appropriate HDF5 type.  For example, in the case of a "hinted" dtype
-        of kind "O" representing a string, it would return an HDF5 variable-
+    :param dtype_in: may be a dtype object, or anything which can be
+        converted to a dtype, including strings like '<i4' or an "int".
+    :param logical: when this flag is set, instead of returning a byte-for-byte
+        identical representation of the type, the function returns the closest
+        logically appropriate HDF5 type.  For example, in the case of a "hinted"
+        dtype of kind "O" representing a string, it would return an HDF5 variable-
         length string type.
     """
-    cdef dtype dt = dtype(dtype_in)
-    cdef char kind = dt.kind
+    cdef:
+        cnp.dtype dt
+        char kind
 
+    dt = np.dtype(dtype_in)
+    # dt is now the C side of dtype_in. Sometimes the Python behavour is easier to handle than the C-version
+    kind = dt.kind
     aligned = getattr(dtype_in, "isalignedstruct", aligned)
 
     with phil:
+        # Tagged opaque data
+        if check_opaque_dtype(dt):
+            return _c_opaque_tagged(dt)
+
         # Float
         if kind == c'f':
             return _c_float(dt)
@@ -1673,8 +1661,9 @@ cpdef TypeID py_create(object dtype_in, bint logical=0, bint aligned=0):
         elif kind == c'c':
             return _c_complex(dt)
 
-        # Compound
-        elif kind == c'V' and dt.names is not None:
+        # Compound. The explicit cast to object is used to force Python attribute access,
+        # as dt.names may be a NULL pointer at the C level when undefined.
+        elif (kind == c'V') and ((<object> dt).names is not None):
             return _c_compound(dt, logical, aligned)
 
         # Array or opaque
@@ -1721,7 +1710,7 @@ def vlen_dtype(basetype):
 
     For variable-length string dtypes, use :func:`string_dtype` instead.
     """
-    return dtype('O', metadata={'vlen': basetype})
+    return np.dtype('O', metadata={'vlen': basetype})
 
 def string_dtype(encoding='utf-8', length=None):
     """Make a numpy dtype for HDF5 strings
@@ -1750,10 +1739,10 @@ def string_dtype(encoding='utf-8', length=None):
 
     if isinstance(length, int):
         # Fixed length string
-        return dtype("|S" + str(length), metadata={'h5py_encoding': encoding})
+        return np.dtype("|S" + str(length), metadata={'h5py_encoding': encoding})
     elif length is None:
         vlen = unicode if (encoding == 'utf-8') else bytes
-        return dtype('O', metadata={'vlen': vlen})
+        return np.dtype('O', metadata={'vlen': vlen})
     else:
         raise TypeError("length must be integer or None (got %r)" % length)
 
@@ -1763,14 +1752,36 @@ def enum_dtype(values_dict, basetype=np.uint8):
     *values_dict* maps string names to integer values. *basetype* is an
     appropriate integer base dtype large enough to hold the possible options.
     """
-    dt = dtype(basetype)
+    dt = np.dtype(basetype)
     if not np.issubdtype(dt, np.integer):
         raise TypeError("Only integer types can be used as enums")
 
-    return dtype(dt, metadata={'enum': values_dict})
+    return np.dtype(dt, metadata={'enum': values_dict})
 
-ref_dtype = dtype('O', metadata={'ref': Reference})
-regionref_dtype = dtype('O', metadata={'ref': RegionReference})
+
+def opaque_dtype(np_dtype):
+    """Return an equivalent dtype tagged to be stored in an HDF5 opaque type.
+
+    This makes it easy to store numpy data like datetimes for which there is
+    no equivalent HDF5 type, but it's not interoperable: other tools won't treat
+    the opaque data as datetimes.
+    """
+    dt = np.dtype(np_dtype)
+    if np.issubdtype(dt, np.object_):
+        raise TypeError("Cannot store numpy object arrays as opaque data")
+    if dt.names is not None:
+        raise TypeError("Cannot store numpy structured arrays as opaque data")
+    if dt.subdtype is not None:
+        raise TypeError("Cannot store numpy sub-array dtype as opaque data")
+    if dt.itemsize == 0:
+        raise TypeError("dtype for opaque data must have explicit size")
+
+    return np.dtype(dt, metadata={'h5py_opaque': True})
+
+
+ref_dtype = np.dtype('O', metadata={'ref': Reference})
+regionref_dtype = np.dtype('O', metadata={'ref': RegionReference})
+
 
 @with_phil
 def special_dtype(**kwds):
@@ -1799,23 +1810,18 @@ def special_dtype(**kwds):
     name, val = kwds.popitem()
 
     if name == 'vlen':
-
-        return dtype('O', metadata={'vlen': val})
+        return np.dtype('O', metadata={'vlen': val})
 
     if name == 'enum':
-
         try:
             dt, enum_vals = val
         except TypeError:
             raise TypeError("Enums must be created from a 2-tuple (basetype, values_dict)")
-
         return enum_dtype(enum_vals, dt)
 
     if name == 'ref':
-
         if val not in (Reference, RegionReference):
             raise ValueError("Ref class must be Reference or RegionReference")
-
         return ref_dtype if (val is Reference) else regionref_dtype
 
     raise TypeError('Unknown special type "%s"' % name)
@@ -1863,6 +1869,14 @@ def check_enum_dtype(dt):
         return dt.metadata.get('enum', None)
     except AttributeError:
         return None
+
+def check_opaque_dtype(dt):
+    """Return True if the dtype given is tagged to be stored as HDF5 opaque data
+    """
+    try:
+        return dt.metadata.get('h5py_opaque', False)
+    except AttributeError:
+        return False
 
 def check_ref_dtype(dt):
     """If the dtype represents an HDF5 reference type, returns the reference
@@ -1914,7 +1928,7 @@ def check_dtype(**kwds):
 
 @with_phil
 def convert(TypeID src not None, TypeID dst not None, size_t n,
-            ndarray buf not None, ndarray bkg=None, ObjectID dxpl=None):
+            cnp.ndarray buf not None, cnp.ndarray bkg=None, ObjectID dxpl=None):
     """ (TypeID src, TypeID dst, UINT n, NDARRAY buf, NDARRAY bkg=None,
     PropID dxpl=None)
 
@@ -1923,8 +1937,9 @@ def convert(TypeID src not None, TypeID dst not None, size_t n,
     types, a temporary copy of conversion buffer will used for backing if
     one is not supplied.
     """
-    cdef void* bkg_ = NULL
-    cdef void* buf_ = buf.data
+    cdef:
+        void* bkg_ = NULL
+        void* buf_ = buf.data
 
     if bkg is None and (src.detect_class(H5T_COMPOUND) or
                         dst.detect_class(H5T_COMPOUND)):
@@ -1945,8 +1960,9 @@ def find(TypeID src not None, TypeID dst not None):
     1. INT need_bkg:    Whether this routine requires a backing buffer.
                         Values are BKG_NO, BKG_TEMP and BKG_YES.
     """
-    cdef H5T_cdata_t *data
-    cdef H5T_conv_t result = NULL
+    cdef:
+        H5T_cdata_t *data
+        H5T_conv_t result = NULL
 
     try:
         result = H5Tfind(src.id, dst.id, &data)
@@ -1955,43 +1971,3 @@ def find(TypeID src not None, TypeID dst not None):
         return (data[0].need_bkg,)
     except:
         return None
-
-
-# ============================================================================
-# Deprecated functions
-
-cpdef dtype py_new_enum(object dt_in, dict enum_vals):
-    """ (DTYPE dt_in, DICT enum_vals) => DTYPE
-
-    Deprecated; use enum_dtype() instead.
-    """
-    warn("Deprecated; use enum_dtype(values, dtype) instead",
-        H5pyDeprecationWarning)
-    return enum_dtype(enum_vals, dt_in)
-
-cpdef dict py_get_enum(object dt):
-    """ (DTYPE dt_in) => DICT
-
-    Deprecated; use check_dtype() instead.
-    """
-    warn("Deprecated; use check_enum_dtype(dtype) instead",
-        H5pyDeprecationWarning)
-    return check_enum_dtype(dt)
-
-cpdef dtype py_new_vlen(object kind):
-    """ (OBJECT kind) => DTYPE
-
-    Deprecated; use vlen_dtype() instead.
-    """
-    warn("Deprecated; use vlen_dtype(basetype) instead",
-        H5pyDeprecationWarning)
-    return vlen_dtype(kind)
-
-cpdef object py_get_vlen(object dt_in):
-    """ (OBJECT dt_in) => TYPE
-
-    Deprecated; use check_vlen_dtype() instead.
-    """
-    warn("Deprecated; use check_vlen_dtype(dtype) instead",
-        H5pyDeprecationWarning)
-    return check_vlen_dtype(dt_in)

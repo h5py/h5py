@@ -16,16 +16,10 @@
     2. Type conversion for read and write (currently untested)
 """
 
-from __future__ import absolute_import
-
+import pathlib
 import sys
-
-import six
-
 import numpy as np
-
 import platform
-
 import pytest
 
 from .common import ut, TestCase
@@ -52,9 +46,9 @@ class TestRepr(BaseDataset):
     def test_repr_open(self):
         """ repr() works on live and dead datasets """
         ds = self.f.create_dataset('foo', (4,))
-        self.assertIsInstance(repr(ds), six.string_types)
+        self.assertIsInstance(repr(ds), str)
         self.f.close()
-        self.assertIsInstance(repr(ds), six.string_types)
+        self.assertIsInstance(repr(ds), str)
 
 
 class TestCreateShape(BaseDataset):
@@ -73,9 +67,23 @@ class TestCreateShape(BaseDataset):
         dset = self.f.create_dataset('foo', (1,))
         self.assertEqual(dset.shape, (1,))
 
+    def test_create_integer(self):
+        """ Create a size-1 dataset with integer shape"""
+        dset = self.f.create_dataset('foo', 1)
+        self.assertEqual(dset.shape, (1,))
+
     def test_create_extended(self):
         """ Create an extended dataset """
         dset = self.f.create_dataset('foo', (63,))
+        self.assertEqual(dset.shape, (63,))
+        self.assertEqual(dset.size, 63)
+        dset = self.f.create_dataset('bar', (6, 10))
+        self.assertEqual(dset.shape, (6, 10))
+        self.assertEqual(dset.size, (60))
+
+    def test_create_integer_extended(self):
+        """ Create an extended dataset """
+        dset = self.f.create_dataset('foo', 63)
         self.assertEqual(dset.shape, (63,))
         self.assertEqual(dset.size, 63)
         dset = self.f.create_dataset('bar', (6, 10))
@@ -176,6 +184,20 @@ class TestCreateRequire(BaseDataset):
         dset2 = self.f.require_dataset('foo', (10, 3), 'f')
         self.assertEqual(dset, dset2)
 
+    def test_create_1D(self):
+        """ require_dataset with integer shape yields existing dataset"""
+        dset = self.f.require_dataset('foo', 10, 'f')
+        dset2 = self.f.require_dataset('foo', 10, 'f')
+        self.assertEqual(dset, dset2)
+
+        dset = self.f.require_dataset('bar', (10,), 'f')
+        dset2 = self.f.require_dataset('bar', 10, 'f')
+        self.assertEqual(dset, dset2)
+
+        dset = self.f.require_dataset('baz', 10, 'f')
+        dset2 = self.f.require_dataset('baz', (10,), 'f')
+        self.assertEqual(dset, dset2)
+
     def test_shape_conflict(self):
         """ require_dataset with shape conflict yields TypeError """
         self.f.create_dataset('foo', (10, 3), 'f')
@@ -215,6 +237,11 @@ class TestCreateChunked(BaseDataset):
         dset = self.f.create_dataset('foo', shape=(100,), chunks=(10,))
         self.assertEqual(dset.chunks, (10,))
 
+    def test_create_chunks_integer(self):
+        """ Create via chunks integer """
+        dset = self.f.create_dataset('foo', shape=(100,), chunks=10)
+        self.assertEqual(dset.chunks, (10,))
+
     def test_chunks_mismatch(self):
         """ Illegal chunk size raises ValueError """
         with self.assertRaises(ValueError):
@@ -235,6 +262,30 @@ class TestCreateChunked(BaseDataset):
         """ Auto-chunking with pathologically large element sizes """
         dset = self.f.create_dataset('foo', shape=(3,), dtype='S100000000', chunks=True)
         self.assertEqual(dset.chunks, (1,))
+
+    def test_scalar_assignment(self):
+        """ Test scalar assignment of chunked dataset """
+        dset = self.f.create_dataset('foo', shape=(3, 50, 50),
+                                     dtype=np.int32, chunks=(1, 50, 50))
+        # test assignement of selection smaller than chunk size
+        dset[1, :, 40] = 10
+        self.assertTrue(np.all(dset[1, :, 40] == 10))
+
+        # test assignement of selection equal to chunk size
+        dset[1] = 11
+        self.assertTrue(np.all(dset[1] == 11))
+
+        # test assignement of selection bigger than chunk size
+        dset[0:2] = 12
+        self.assertTrue(np.all(dset[0:2] == 12))
+
+    def test_auto_chunks_no_shape(self):
+        """ Auto-chunking of empty datasets not allowed"""
+        with pytest.raises(TypeError, match='Empty') as err:
+            self.f.create_dataset('foo', dtype='S100', chunks=True)
+
+        with pytest.raises(TypeError, match='Empty') as err:
+            self.f.create_dataset('foo', dtype='S100', maxshape=20)
 
 
 class TestCreateFillvalue(BaseDataset):
@@ -539,7 +590,7 @@ class TestExternal(BaseDataset):
     """
         Feature: Datasets with the external storage property
     """
-    def test_external(self):
+    def test_contents(self):
         """ Create and access an external dataset """
 
         shape = (6, 100)
@@ -553,43 +604,49 @@ class TestExternal(BaseDataset):
 
         assert dset.external is not None
 
-        # verify file was created, and size is correct
-        import os
-        statinfo = os.stat(ext_file)
-        assert statinfo.st_size == testdata.nbytes
-
-        # verify contents
+        # verify file's existence, size, and contents
         with open(ext_file, 'rb') as fid:
             contents = fid.read()
         assert contents == testdata.tostring()
 
-    def test_external_other(self):
-        """ Test other forms of external lists """
+    def test_name_str(self):
+        """ External argument may be a file name str only """
 
-        shape = (6, 100)
+        self.f.create_dataset('foo', (6, 100), external=self.mktemp())
+
+    def test_name_path(self):
+        """ External argument may be a file name path only """
+
+        self.f.create_dataset('foo', (6, 100),
+                              external=pathlib.Path(self.mktemp()))
+
+    def test_iter_multi(self):
+        """ External argument may be an iterable of multiple tuples """
+
         ext_file = self.mktemp()
-
-        self.f.create_dataset('foo', shape, external=ext_file)
-        self.f.create_dataset('bar', shape, external=[ext_file])
-        self.f.create_dataset('moo', shape, external=[ext_file, 0])
-        self.f.create_dataset('car', shape, external=[ext_file, 0, h5f.UNLIMITED])
-
         N = 100
-        external = [(ext_file, x * 1000, (x + 1) * 1000) for x in range(0, N)]
-        dset = self.f.create_dataset('poo', shape, external=external)
+        external = iter((ext_file, x * 1000, 1000) for x in range(N))
+        dset = self.f.create_dataset('poo', (6, 100), external=external)
         assert len(dset.external) == N
 
-    def test_external_invalid(self):
+    def test_invalid(self):
         """ Test with invalid external lists """
 
         shape = (6, 100)
         ext_file = self.mktemp()
 
-        with self.assertRaises(TypeError):
-            self.f.create_dataset('foo', shape, external=[(ext_file, 0, "h5f.UNLIMITED")])
+        for exc_type, external in [
+            (TypeError, [ext_file]),
+            (TypeError, [ext_file, 0]),
+            (TypeError, [ext_file, 0, h5f.UNLIMITED]),
+            (ValueError, [(ext_file,)]),
+            (ValueError, [(ext_file, 0)]),
+            (ValueError, [(ext_file, 0, h5f.UNLIMITED, 0)]),
+            (TypeError, [(ext_file, 0, "h5f.UNLIMITED")]),
+        ]:
+            with self.assertRaises(exc_type):
+                self.f.create_dataset('foo', shape, external=external)
 
-        with self.assertRaises(TypeError):
-            self.f.create_dataset('foo', shape, external=[(ext_file, 0, h5f.UNLIMITED, 0)])
 
 class TestAutoCreate(BaseDataset):
 
@@ -608,7 +665,7 @@ class TestAutoCreate(BaseDataset):
 
     def test_vlen_unicode(self):
         """ Assignment of a unicode string produces a vlen unicode dataset """
-        self.f['x'] = u"Hello there" + six.unichr(0x2034)
+        self.f['x'] = u"Hello there" + chr(0x2034)
         ds = self.f['x']
         tid = ds.id.get_type()
         self.assertEqual(type(tid), h5py.h5t.TypeStringID)
@@ -700,6 +757,15 @@ class TestResize(BaseDataset):
         self.assertIsNot(dset.chunks, None)
         self.assertEqual(dset.maxshape, (20, 60))
 
+    def test_create_1D(self):
+        """ Create dataset with "maxshape" using integer maxshape"""
+        dset = self.f.create_dataset('foo', (20,), maxshape=20)
+        self.assertIsNot(dset.chunks, None)
+        self.assertEqual(dset.maxshape, (20,))
+
+        dset = self.f.create_dataset('bar', 20, maxshape=20)
+        self.assertEqual(dset.maxshape, (20,))
+
     def test_resize(self):
         """ Datasets may be resized up to maxshape """
         dset = self.f.create_dataset('foo', (20, 30), maxshape=(20, 60))
@@ -709,10 +775,17 @@ class TestResize(BaseDataset):
         dset.resize((20, 60))
         self.assertEqual(dset.shape, (20, 60))
 
+    def test_resize_1D(self):
+        """ Datasets may be resized up to maxshape using integer maxshape"""
+        dset = self.f.create_dataset('foo', 20, maxshape=40)
+        self.assertEqual(dset.shape, (20,))
+        dset.resize((30,))
+        self.assertEqual(dset.shape, (30,))
+
     def test_resize_over(self):
-        """ Resizing past maxshape triggers ValueError """
+        """ Resizing past maxshape triggers an exception """
         dset = self.f.create_dataset('foo', (20, 30), maxshape=(20, 60))
-        with self.assertRaises(ValueError):
+        with self.assertRaises(Exception):
             dset.resize((20, 70))
 
     def test_resize_nonchunked(self):
@@ -859,10 +932,10 @@ class TestStrings(BaseDataset):
         """
         dt = h5py.string_dtype()
         ds = self.f.create_dataset('x', (100,), dtype=dt)
-        data = u"Hello" + six.unichr(0x2034)
+        data = u"Hello" + chr(0x2034)
         ds[0] = data
         out = ds[0]
-        self.assertEqual(type(out), six.text_type)
+        self.assertEqual(type(out), str)
         self.assertEqual(out, data)
 
     def test_roundtrip_fixed_bytes(self):
@@ -891,11 +964,64 @@ class TestStrings(BaseDataset):
         """
         dt = h5py.string_dtype()
         ds = self.f.create_dataset('x', (100,), dtype=dt)
-        data = u"Hello there" + six.unichr(0x2034)
+        data = u"Hello there" + chr(0x2034)
         ds[0] = data.encode('utf8')
         out = ds[0]
-        self.assertEqual(type(out), six.text_type)
+        self.assertEqual(type(out), str)
         self.assertEqual(out, data)
+
+    def test_vlen_unicode_write_object(self):
+        """ Writing an object to unicode vlen dataset is OK
+        """
+        dt = h5py.string_dtype('utf-8')
+        ds = self.f.create_dataset('x', (100,), dtype=dt)
+        data = object()
+        ds[0] = data
+        out = ds[0]
+        self.assertEqual(type(out), str)
+        self.assertEqual(out, str(data))
+
+    def test_vlen_unicode_write_none(self):
+        """ Writing None to unicode vlen dataset is OK
+        """
+        dt = h5py.string_dtype('utf-8')
+        ds = self.f.create_dataset('x', (100,), dtype=dt)
+        ds[0] = None
+        out = ds[0]
+        self.assertEqual(type(out), str)
+        self.assertEqual(out, '')
+
+    def test_vlen_bytes_write_object(self):
+        """ Writing an object to ascii vlen dataset is OK
+        """
+        dt = h5py.string_dtype('ascii')
+        ds = self.f.create_dataset('x', (100,), dtype=dt)
+        data = object()
+        ds[0] = data
+        out = ds[0]
+        self.assertEqual(type(out), bytes)
+        self.assertEqual(out, str(data).encode('ascii'))
+
+    def test_vlen_bytes_write_none(self):
+        """ Writing None to ascii vlen dataset is OK
+        """
+        dt = h5py.string_dtype('ascii')
+        ds = self.f.create_dataset('x', (100,), dtype=dt)
+        ds[0] = None
+        out = ds[0]
+        self.assertEqual(type(out), bytes)
+        self.assertEqual(out, b'')
+
+    def test_vlen_bytes_write_ascii_str(self):
+        """ Writing an ascii str to ascii vlen dataset is OK
+        """
+        dt = h5py.string_dtype('ascii')
+        ds = self.f.create_dataset('x', (100,), dtype=dt)
+        data = "ASCII string"
+        ds[0] = data
+        out = ds[0]
+        self.assertEqual(type(out), bytes)
+        self.assertEqual(out, data.encode('ascii'))
 
 
 class TestCompound(BaseDataset):
@@ -1016,10 +1142,13 @@ class TestZeroShape(BaseDataset):
 
     def test_array_conversion(self):
         """ Empty datasets can be converted to NumPy arrays """
-        ds = self.f.create_dataset('x', (0,), maxshape=(None,))
+        ds = self.f.create_dataset('x', 0, maxshape=None)
         self.assertEqual(ds.shape, np.array(ds).shape)
 
-        ds = self.f.create_dataset('y', (0, 0), maxshape=(None, None))
+        ds = self.f.create_dataset('y', (0,), maxshape=(None,))
+        self.assertEqual(ds.shape, np.array(ds).shape)
+
+        ds = self.f.create_dataset('z', (0, 0), maxshape=(None, None))
         self.assertEqual(ds.shape, np.array(ds).shape)
 
     def test_reading(self):
@@ -1061,19 +1190,22 @@ class TestRegionRefs(BaseDataset):
 
 
 class TestAstype(BaseDataset):
-
+    """.astype() wrapper & context manager
     """
-        .astype context manager
-    """
-
-    def test_astype(self):
-
+    def test_astype_ctx(self):
         dset = self.f.create_dataset('x', (100,), dtype='i2')
         dset[...] = np.arange(100)
         with dset.astype('f8'):
-            self.assertEqual(dset[...].dtype, np.dtype('f8'))
-            self.assertTrue(np.all(dset[...] == np.arange(100)))
+            self.assertArrayEqual(dset[...], np.arange(100, dtype='f8'))
 
+        with dset.astype('f4') as f4ds:
+            self.assertArrayEqual(f4ds[...], np.arange(100, dtype='f4'))
+
+    def test_astype_wrapper(self):
+        dset = self.f.create_dataset('x', (100,), dtype='i2')
+        dset[...] = np.arange(100)
+        arr = dset.astype('f4')[:]
+        self.assertArrayEqual(arr, np.arange(100, dtype='f4'))
 
 class TestScalarCompound(BaseDataset):
 
@@ -1226,3 +1358,39 @@ class TestLowOpen(BaseDataset):
         del dset
         dsid = h5py.h5d.open(self.f.id, b'x', dapl)
         self.assertIsInstance(dsid, h5py.h5d.DatasetID)
+
+
+@ut.skipUnless(h5py.version.hdf5_version_tuple >= (1, 10, 5),
+               "chunk info requires  HDF5 >= 1.10.5")
+def test_get_chunk_details():
+    from io import BytesIO
+    buf = BytesIO()
+    with h5py.File(buf, 'w') as fout:
+        fout.create_dataset('test', shape=(100, 100), chunks=(10, 10), dtype='i4')
+        fout['test'][:] = 1
+
+    buf.seek(0)
+    with h5py.File(buf, 'r') as fin:
+        ds = fin['test'].id
+
+        assert ds.get_num_chunks() == 100
+        for j in range(100):
+            offset = tuple(np.array(np.unravel_index(j, (10, 10))) * 10)
+
+            si = ds.get_chunk_info(j)
+            assert si.chunk_offset == offset
+            assert si.filter_mask == 0
+            assert si.byte_offset is not None
+            assert si.size > 0
+
+        si = ds.get_chunk_info_by_coord((0, 0))
+        assert si.chunk_offset == (0, 0)
+        assert si.filter_mask == 0
+        assert si.byte_offset is not None
+        assert si.size > 0
+
+
+def test_empty_shape(writable_file):
+    ds = writable_file.create_dataset('empty', dtype='int32')
+    assert ds.shape is None
+    assert ds.maxshape is None

@@ -11,8 +11,6 @@
     Implements a portion of the selection operations.
 """
 
-from __future__ import absolute_import
-
 import numpy as np
 from .. import h5s
 

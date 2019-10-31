@@ -2,12 +2,9 @@
     Tests for converting between numpy dtypes and h5py data types
 """
 
-from __future__ import absolute_import
-
 from itertools import count
 import platform
 import numpy as np
-import six
 import h5py
 try:
     import tables
@@ -322,7 +319,7 @@ class TestStrings(TestCase):
         string_info = h5py.check_string_dtype(dt)
         assert string_info.encoding == 'utf-8'
         assert string_info.length is None
-        assert h5py.check_vlen_dtype(dt) is six.text_type
+        assert h5py.check_vlen_dtype(dt) is str
 
     def test_vlen_ascii(self):
         dt = h5py.string_dtype(encoding='ascii')
@@ -348,6 +345,42 @@ class TestStrings(TestCase):
         assert string_info.length == 10
         assert h5py.check_vlen_dtype(dt) is None
 
+class TestDateTime(TestCase):
+    datetime_units = [
+        # Dates
+        'Y', 'M', 'D',
+        # Times
+        'h', 'm', 's', 'ms', 'us',
+        'ns', 'ps', 'fs', 'as',
+    ]
+
+    def test_datetime(self):
+        fname = self.mktemp()
+
+        for dt_unit in self.datetime_units:
+            for dt_order in ['<', '>']:
+                dt_descr = f'{dt_order}M8[{dt_unit}]'
+                dt = h5py.opaque_dtype(np.dtype(dt_descr))
+                arr = np.array([0], dtype=np.int64).view(dtype=dt)
+
+                with h5py.File(fname, 'w') as f:
+                    dset = f.create_dataset("default", data=arr, dtype=dt)
+                    self.assertArrayEqual(arr, dset)
+                    self.assertEqual(arr.dtype, dset.dtype)
+
+    def test_timedelta(self):
+        fname = self.mktemp()
+
+        for dt_unit in self.datetime_units:
+            for dt_order in ['<', '>']:
+                dt_descr = f'{dt_order}m8[{dt_unit}]'
+                dt = h5py.opaque_dtype(np.dtype(dt_descr))
+                arr = np.array([np.timedelta64(500, dt_unit)], dtype=dt)
+
+                with h5py.File(fname, 'w') as f:
+                    dset = f.create_dataset("default", data=arr, dtype=dt)
+                    self.assertArrayEqual(arr, dset)
+                    self.assertEqual(arr.dtype, dset.dtype)
 
 @ut.skipUnless(tables is not None, 'tables is required')
 class TestB8(TestCase):

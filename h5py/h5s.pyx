@@ -1,3 +1,4 @@
+# cython: language_level=3
 # This file is part of h5py, a Python interface to the HDF5 library.
 #
 # http://www.h5py.org
@@ -13,12 +14,12 @@
 
 include "config.pxi"
 
-# Pyrex compile-time imports
-from utils cimport  require_tuple, convert_dims, convert_tuple, \
+# C-level imports
+from .utils cimport  require_tuple, convert_dims, convert_tuple, \
                     emalloc, efree, create_numpy_hsize, create_hsize_array
-from numpy cimport ndarray
+cimport numpy as cnp
 
-from h5py import _objects
+#Python level imports
 from ._objects import phil, with_phil
 
 cdef object lockid(hid_t id_):
@@ -161,16 +162,21 @@ cdef class SpaceID(ObjectID):
         cdef void* buf = NULL
         cdef size_t nalloc = 0
 
-        H5Sencode(self.id, NULL, &nalloc)
+        IF HDF5_VERSION < VOL_MIN_HDF5_VERSION:
+            H5Sencode(self.id, NULL, &nalloc)
+        ELSE:
+            H5Sencode1(self.id, NULL, &nalloc)
         buf = emalloc(nalloc)
         try:
-            H5Sencode(self.id, buf, &nalloc)
+            IF HDF5_VERSION < VOL_MIN_HDF5_VERSION:
+                H5Sencode(self.id, buf, &nalloc)
+            ELSE:
+                H5Sencode1(self.id, buf, &nalloc)
             pystr = PyBytes_FromStringAndSize(<char*>buf, nalloc)
         finally:
             efree(buf)
 
         return pystr
-
 
     def __reduce__(self):
         with phil:
@@ -221,7 +227,7 @@ cdef class SpaceID(ObjectID):
                 # The HDF5 docs say passing in NULL resets the offset to 0.
                 # Instead it raises an exception.  Imagine my surprise. We'll
                 # do this manually.
-                for i from 0<=i<rank:
+                for i in range(rank):
                     dims[i] = 0
 
             H5Soffset_simple(self.id, dims)
@@ -444,7 +450,7 @@ cdef class SpaceID(ObjectID):
         unsigned ints, with shape ``(<npoints>, <space rank)``.
         """
         cdef hsize_t dims[2]
-        cdef ndarray buf
+        cdef cnp.ndarray buf
 
         dims[0] = H5Sget_select_elem_npoints(self.id)
         dims[1] = H5Sget_simple_extent_ndims(self.id)
@@ -475,7 +481,7 @@ cdef class SpaceID(ObjectID):
         A zero-length selection (i.e. shape ``(0, <rank>)``) is not allowed
         by the HDF5 library.
         """
-        cdef ndarray hcoords
+        cdef cnp.ndarray hcoords
         cdef size_t nelements
 
         # The docs say the selection list should be an hsize_t**, but it seems
@@ -485,10 +491,10 @@ cdef class SpaceID(ObjectID):
 
         hcoords = create_hsize_array(coords)
 
-        if hcoords.nd != 2 or hcoords.dimensions[1] != H5Sget_simple_extent_ndims(self.id):
+        if hcoords.ndim != 2 or hcoords.shape[1] != H5Sget_simple_extent_ndims(self.id):
             raise ValueError("Coordinate array must have shape (<npoints>, %d)" % self.get_simple_extent_ndims())
 
-        nelements = hcoords.dimensions[0]
+        nelements = hcoords.shape[0]
 
         H5Sselect_elements(self.id, <H5S_seloper_t>op, nelements, <hsize_t*>hcoords.data)
 
@@ -519,7 +525,7 @@ cdef class SpaceID(ObjectID):
         with length equal to the total number of blocks.
         """
         cdef hsize_t dims[3]  # 0=nblocks 1=(#2), 2=rank
-        cdef ndarray buf
+        cdef cnp.ndarray buf
 
         dims[0] = H5Sget_select_hyper_nblocks(self.id)
         dims[1] = 2

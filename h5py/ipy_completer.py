@@ -6,7 +6,7 @@
 #
 # Copyright (C) 2009 Darren Dale
 #
-# http://h5py.alfven.org
+# http://h5py.org
 # License: BSD  (See LICENSE.txt for full license)
 #
 #-
@@ -38,8 +38,6 @@
 
       f['item1/item2/it<tab>
 """
-
-from __future__ import absolute_import
 
 import posixpath
 import re

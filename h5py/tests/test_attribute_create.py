@@ -11,11 +11,8 @@
     Tests the h5py.AttributeManager.create() method.
 """
 
-from __future__ import absolute_import
-
-import six
 import numpy as np
-import h5py
+from .. import h5t, h5a
 
 from .common import ut, TestCase
 
@@ -33,10 +30,10 @@ class TestArray(TestCase):
 
         self.f.attrs.create('x', data=data, dtype=dt)
 
-        aid = h5py.h5a.open(self.f.id, b'x')
+        aid = h5a.open(self.f.id, b'x')
 
         htype = aid.get_type()
-        self.assertEqual(htype.get_class(), h5py.h5t.ARRAY)
+        self.assertEqual(htype.get_class(), h5t.ARRAY)
 
         out = self.f.attrs['x']
 
@@ -49,15 +46,15 @@ class TestArray(TestCase):
 
     def test_str(self):
         # See issue 1057
-        self.f.attrs.create('x', six.unichr(0x03A9))
+        self.f.attrs.create('x', chr(0x03A9))
         out = self.f.attrs['x']
-        self.assertEqual(out, six.unichr(0x03A9))
-        self.assertIsInstance(out, six.string_types)
+        self.assertEqual(out, chr(0x03A9))
+        self.assertIsInstance(out, str)
 
     def test_tuple_of_unicode(self):
         # Test that a tuple of unicode strings can be set as an attribute. It will
         # be converted to a numpy array of vlen unicode type:
-        data = (u'a', u'b')
+        data = ('a', 'b')
         self.f.attrs.create('x', data=data)
         result = self.f.attrs['x']
         self.assertTrue(all(result == data))
@@ -70,3 +67,12 @@ class TestArray(TestCase):
         self.assertEqual(data_as_U_array.dtype, np.dtype('U1'))
         with self.assertRaises(TypeError):
             self.f.attrs.create('y', data=data_as_U_array)
+
+    def test_shape(self):
+        self.f.attrs.create('x', data=42, shape=1)
+        result = self.f.attrs['x']
+        self.assertEqual(result.shape, (1,))
+
+        self.f.attrs.create('y', data=np.arange(3), shape=3)
+        result = self.f.attrs['y']
+        self.assertEqual(result.shape, (3,))

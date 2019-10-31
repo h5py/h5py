@@ -1,3 +1,4 @@
+# cython: language_level=3
 # This file is part of h5py, a Python interface to the HDF5 library.
 #
 # http://www.h5py.org
@@ -13,15 +14,15 @@
 
 include "config.pxi"
 
-# Compile-time imports
-from _objects cimport pdefault
-from utils cimport emalloc, efree
-from h5p import CRT_ORDER_TRACKED
-from h5p cimport PropID, PropGCID
-cimport _hdf5 # to implement container testing for 1.6
-from _errors cimport set_error_handler, err_cookie
+# C-level imports
+from ._objects cimport pdefault
+from .utils cimport emalloc, efree
+from .h5p import CRT_ORDER_TRACKED
+from .h5p cimport PropID, PropGCID
+from . cimport _hdf5 # to implement container testing for 1.6
+from ._errors cimport set_error_handler, err_cookie
 
-from h5py import _objects
+# Python level imports
 from ._objects import phil, with_phil
 
 # === Public constants and data structures ====================================
@@ -264,7 +265,7 @@ cdef class GroupID(ObjectID):
 
     def __init__(self, hid_t id_):
         with phil:
-            import h5l
+            from . import h5l
             self.links = h5l.LinkProxy(id_)
 
 
@@ -489,7 +490,7 @@ IF HDF5_VERSION >= (1, 8, 5):
         If *path* represents an external or soft link, the link's validity is not
         checked.
         """
-        import h5o
+        from . import h5o
 
         if isinstance(path, bytes):
             path = path.decode('utf-8')

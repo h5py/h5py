@@ -11,28 +11,22 @@
     Implements support for high-level dataset access.
 """
 
-from __future__ import absolute_import
-
+from cached_property import cached_property
 import posixpath as pp
 import sys
-from warnings import warn
 
 from threading import local
-
-import six
-from six.moves import xrange    # pylint: disable=redefined-builtin
 
 import numpy
 
 from .. import h5, h5s, h5t, h5r, h5d, h5p, h5fd, h5ds
-from .base import HLObject, phil, with_phil, Empty, is_empty_dataspace
+from .base import HLObject, phil, with_phil, Empty
 from . import filters
 from . import selections as sel
 from . import selections2 as sel2
 from .datatype import Datatype
 from .compat import filename_decode
 from .vds import VDSmap, vds_support
-from ..h5py_warnings import H5pyDeprecationWarning
 
 _LEGACY_GZIP_COMPRESSION_VALS = frozenset(range(10))
 MPI = h5.get_config().mpi
@@ -90,12 +84,17 @@ def make_new_dset(parent, shape=None, dtype=None, data=None,
             data = Empty(dtype)
         shape = data.shape
     else:
-        shape = tuple(shape)
+        shape = (shape,) if isinstance(shape, int) else tuple(shape)
         if data is not None and (numpy.product(shape, dtype=numpy.ulonglong) != numpy.product(data.shape, dtype=numpy.ulonglong)):
             raise ValueError("Shape tuple is incompatible with data")
 
+    if isinstance(maxshape, int):
+        maxshape = (maxshape,)
     tmp_shape = maxshape if maxshape is not None else shape
+
     # Validate chunk shape
+    if isinstance(chunks, int) and not isinstance(chunks, bool):
+        chunks = (chunks,)
     if isinstance(chunks, tuple) and any(
         chunk > dim for dim, chunk in zip(tmp_shape, chunks) if dim is not None
     ):
@@ -133,7 +132,6 @@ def make_new_dset(parent, shape=None, dtype=None, data=None,
             raise TypeError("Conflict in compression options")
         compression_opts = compression
         compression = 'gzip'
-
     dcpl = filters.fill_dcpl(
         dcpl or h5p.create(h5p.DATASET_CREATE), shape, dtype,
         chunks, compression, compression_opts, shuffle, fletcher32,
@@ -206,19 +204,20 @@ def make_new_virtual_dset(parent, shape, sources, dtype=None,
                       dcpl=dcpl)
 
 
-class AstypeContext(object):
-
+class AstypeWrapper(object):
+    """Wrapper to convert data on reading from a dataset.
     """
-        Context manager which allows changing the type read from a dataset.
-    """
-
     def __init__(self, dset, dtype):
         self._dset = dset
         self._dtype = numpy.dtype(dtype)
 
+    def __getitem__(self, args):
+        return self._dset.__getitem__(args, new_dtype=self._dtype)
+
     def __enter__(self):
         # pylint: disable=protected-access
         self._dset._local.astype = self._dtype
+        return self
 
     def __exit__(self, *args):
         # pylint: disable=protected-access
@@ -331,13 +330,12 @@ class Dataset(HLObject):
     """
 
     def astype(self, dtype):
-        """ Get a context manager allowing you to perform reads to a
+        """ Get a wrapper allowing you to perform reads to a
         different destination type, e.g.:
 
-        >>> with dataset.astype('f8'):
-        ...     double_precision = dataset[0:100:2]
+        >>> double_precision = dataset.astype('f8')[0:100:2]
         """
-        return AstypeContext(self, dtype)
+        return AstypeWrapper(self, dtype)
 
     if MPI:
         @property
@@ -360,10 +358,20 @@ class Dataset(HLObject):
         return self.id.rank
 
     @property
-    @with_phil
     def shape(self):
         """Numpy-style shape tuple giving dataset dimensions"""
-        return self.id.shape
+        if 'shape' in self._cache_props:
+            return self._cache_props['shape']
+
+        with phil:
+            shape = self.id.shape
+
+        # If the file is read-only, cache the shape to speed-up future uses.
+        # This cache is invalidated by .refresh() when using SWMR.
+        if self._readonly:
+            self._cache_props['shape'] = shape
+        return shape
+
     @shape.setter
     @with_phil
     def shape(self, shape):
@@ -371,26 +379,27 @@ class Dataset(HLObject):
         self.resize(shape)
 
     @property
-    @with_phil
     def size(self):
         """Numpy-style attribute giving the total dataset size"""
-        if is_empty_dataspace(self.id):
-            return None
-        return numpy.prod(self.shape, dtype=numpy.intp)
+        if 'size' in self._cache_props:
+            return self._cache_props['size']
+
+        if self._is_empty:
+            size = None
+        else:
+            size = numpy.prod(self.shape, dtype=numpy.intp)
+
+        # If the file is read-only, cache the size to speed-up future uses.
+        # This cache is invalidated by .refresh() when using SWMR.
+        if self._readonly:
+            self._cache_props['size'] = size
+        return size
 
     @property
     @with_phil
     def dtype(self):
         """Numpy dtype representing the datatype"""
         return self.id.dtype
-
-    @property
-    @with_phil
-    def value(self):
-        """  Alias for dataset[()] """
-        warn("dataset.value has been deprecated. "
-            "Use dataset[()] instead.", H5pyDeprecationWarning, stacklevel=2)
-        return self[()]
 
     @property
     @with_phil
@@ -450,7 +459,7 @@ class Dataset(HLObject):
         if count<=0:
             return None
         ext_list = list()
-        for x in xrange(count):
+        for x in range(count):
             (name, offset, size) = self._dcpl.get_external(x)
             ext_list.append( (filename_decode(name), offset, size) )
         return ext_list
@@ -462,6 +471,9 @@ class Dataset(HLObject):
         None have no resize limit. """
         space = self.id.get_space()
         dims = space.get_simple_extent_dims(True)
+        if dims is None:
+            return None
+
         return tuple(x if x != h5s.UNLIMITED else None for x in dims)
 
     @property
@@ -472,17 +484,28 @@ class Dataset(HLObject):
         self._dcpl.get_fill_value(arr)
         return arr[0]
 
+    @cached_property
     @with_phil
-    def __init__(self, bind):
+    def _extent_type(self):
+        return self.id.get_space().get_simple_extent_type()
+
+    @cached_property
+    def _is_empty(self):
+        return self._extent_type == h5s.NULL
+
+    @with_phil
+    def __init__(self, bind, *, readonly=False):
         """ Create a new Dataset object by binding to a low-level DatasetID.
         """
         if not isinstance(bind, h5d.DatasetID):
             raise ValueError("%s is not a DatasetID" % bind)
-        HLObject.__init__(self, bind)
+        super(Dataset, self).__init__(bind)
 
         self._dcpl = self.id.get_create_plist()
         self._dxpl = h5p.create(h5p.DATASET_XFER)
         self._filters = filters.get_filters(self._dcpl)
+        self._readonly = readonly
+        self._cache_props = {}
         self._local = local()
         self._local.astype = None
 
@@ -550,7 +573,7 @@ class Dataset(HLObject):
         shape = self.shape
         if len(shape) == 0:
             raise TypeError("Can't iterate over a scalar dataset")
-        for i in xrange(shape[0]):
+        for i in range(shape[0]):
             yield self[i]
 
     @with_phil
@@ -562,8 +585,7 @@ class Dataset(HLObject):
         """
         return ChunkIterator(self, sel)
 
-    @with_phil
-    def __getitem__(self, args):
+    def __getitem__(self, args, new_dtype=None):
         """ Read a slice from the HDF5 dataset.
 
         Takes slices and recarray-style field names (more than one is
@@ -575,18 +597,20 @@ class Dataset(HLObject):
         * Boolean "mask" array indexing
         """
         args = args if isinstance(args, tuple) else (args,)
-        if is_empty_dataspace(self.id):
-            if not (args == tuple() or args == (Ellipsis,)):
-                raise ValueError("Empty datasets cannot be sliced")
-            return Empty(self.dtype)
+        if self._is_empty:
+            # Check 'is Ellipsis' to avoid equality comparison with an array:
+            # array equality returns an array, not a boolean.
+            if args == () or (len(args) == 1 and args[0] is Ellipsis):
+                return Empty(self.dtype)
+            raise ValueError("Empty datasets cannot be sliced")
 
         # Sort field indices from the rest of the args.
-        names = tuple(x for x in args if isinstance(x, six.string_types))
-        args = tuple(x for x in args if not isinstance(x, six.string_types))
-        if six.PY2:
-            names = tuple(x.encode('utf-8') if isinstance(x, six.text_type) else x for x in names)
+        names = tuple(x for x in args if isinstance(x, str))
+        args = tuple(x for x in args if not isinstance(x, str))
 
-        new_dtype = getattr(self._local, 'astype', None)
+        if new_dtype is None:
+            new_dtype = getattr(self._local, 'astype', None)
+
         if new_dtype is not None:
             new_dtype = readtime_dtype(new_dtype, names)
         else:
@@ -617,9 +641,10 @@ class Dataset(HLObject):
 
         # === Check for zero-sized datasets =====
 
-        if numpy.product(self.shape, dtype=numpy.ulonglong) == 0:
-            # These are the only access methods NumPy allows for such objects
-            if args == (Ellipsis,) or args == tuple():
+        if self.size == 0:
+            # Check 'is Ellipsis' to avoid equality comparison with an array:
+            # array equality returns an array, not a boolean.
+            if args == () or (len(args) == 1 and args[0] is Ellipsis):
                 return numpy.empty(self.shape, dtype=new_dtype)
 
         # === Scalar dataspaces =================
@@ -681,15 +706,13 @@ class Dataset(HLObject):
         args = args if isinstance(args, tuple) else (args,)
 
         # Sort field indices from the slicing
-        names = tuple(x for x in args if isinstance(x, six.string_types))
-        args = tuple(x for x in args if not isinstance(x, six.string_types))
-        if six.PY2:
-            names = tuple(x.encode('utf-8') if isinstance(x, six.text_type) else x for x in names)
+        names = tuple(x for x in args if isinstance(x, str))
+        args = tuple(x for x in args if not isinstance(x, str))
 
         # Generally we try to avoid converting the arrays on the Python
         # side.  However, for compound literals this is unavoidable.
         vlen = h5t.check_vlen_dtype(self.dtype)
-        if vlen is not None and vlen not in (bytes, six.text_type):
+        if vlen is not None and vlen not in (bytes, str):
             try:
                 val = numpy.asarray(val, dtype=vlen)
             except ValueError:
@@ -777,10 +800,28 @@ class Dataset(HLObject):
             return
 
         # Broadcast scalars if necessary.
+        # In order to avoid slow broadcasting filling the destination by
+        # the scalar value, we create an intermediate array of the same
+        # size as the destination buffer provided that size is reasonable.
+        # We assume as reasonable a size smaller or equal as the used dataset
+        # chunk size if any.
+        # In case of dealing with a non-chunked destination dataset or with
+        # a selection whose size is larger than the dataset chunk size we fall
+        # back to using an intermediate array of size equal to the last dimension
+        # of the destination buffer.
+        # The reasoning behind is that it makes sense to assume the creator of
+        # the dataset used an appropriate chunk size according the available
+        # memory. In any case, if we cannot afford to create an intermediate
+        # array of the same size as the dataset chunk size, the user program has
+        # little hope to go much further. Solves h5py isue #1067
         if mshape == () and selection.mshape != ():
             if self.dtype.subdtype is not None:
                 raise TypeError("Scalar broadcasting is not supported for array dtypes")
-            val2 = numpy.empty(selection.mshape[-1], dtype=val.dtype)
+            if self.chunks and (numpy.prod(self.chunks, dtype=numpy.float) >= \
+                                numpy.prod(selection.mshape, dtype=numpy.float)):
+                val2 = numpy.empty(selection.mshape, dtype=val.dtype)
+            else:
+                val2 = numpy.empty(selection.mshape[-1], dtype=val.dtype)
             val2[...] = val
             val = val2
             mshape = val.shape
@@ -805,7 +846,7 @@ class Dataset(HLObject):
         Broadcasting is supported for simple indexing.
         """
         with phil:
-            if is_empty_dataspace(self.id):
+            if self._is_empty:
                 raise TypeError("Empty datasets have no numpy representation")
             if source_sel is None:
                 source_sel = sel.SimpleSelection(self.shape)
@@ -830,7 +871,7 @@ class Dataset(HLObject):
         Broadcasting is supported for simple indexing.
         """
         with phil:
-            if is_empty_dataspace(self.id):
+            if self._is_empty:
                 raise TypeError("Empty datasets cannot be written to")
             if source_sel is None:
                 source_sel = sel.SimpleSelection(source.shape)
@@ -864,18 +905,16 @@ class Dataset(HLObject):
     @with_phil
     def __repr__(self):
         if not self:
-            r = u'<Closed HDF5 dataset>'
+            r = '<Closed HDF5 dataset>'
         else:
             if self.name is None:
-                namestr = u'("anonymous")'
+                namestr = '("anonymous")'
             else:
                 name = pp.basename(pp.normpath(self.name))
-                namestr = u'"%s"' % (name if name != u'' else u'/')
-            r = u'<HDF5 dataset %s: shape %s, type "%s">' % (
+                namestr = '"%s"' % (name if name != '' else '/')
+            r = '<HDF5 dataset %s: shape %s, type "%s">' % (
                 namestr, self.shape, self.dtype.str
             )
-        if six.PY2:
-            return r.encode('utf8')
         return r
 
     if hasattr(h5d.DatasetID, "refresh"):
@@ -887,6 +926,7 @@ class Dataset(HLObject):
             library version >=1.9.178
             """
             self._id.refresh()
+            self._cache_props.clear()
 
     if hasattr(h5d.DatasetID, "flush"):
         @with_phil

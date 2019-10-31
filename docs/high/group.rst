@@ -16,12 +16,11 @@ serves as your entry point into the file:
 
     >>> f = h5py.File('foo.hdf5','w')
     >>> f.name
-    u'/'
-    >>> f.keys()
+    '/'
+    >>> list(f.keys())
     []
 
-Names of all objects in the file are all text strings (``unicode`` on
-Py2, ``str`` on Py3).  These will be encoded with the HDF5-approved UTF-8
+Names of all objects in the file are all text strings (``str``).  These will be encoded with the HDF5-approved UTF-8
 encoding before being passed to the HDF5 C library.  Objects may also be
 retrieved using byte strings, which will be passed on to HDF5 as-is.
 
@@ -126,7 +125,7 @@ can easily create these in h5py by using ``h5py.SoftLink``::
 If the target is removed, they will "dangle":
 
     >>> del myfile['somegroup']
-    >>> print myfile['alias']
+    >>> print(myfile['alias'])
     KeyError: 'Component not found (Symbol table: Object not found)'
 
 
@@ -197,40 +196,25 @@ Reference
 
     .. method:: keys()
 
-        Get the names of directly attached group members.  On Py2, this is
-        a list.  On Py3, it's a set-like object.
+        Get the names of directly attached group members.
         Use :meth:`Group.visit` or :meth:`Group.visititems` for recursive
         access to group members.
+
+       :return: set-like object.
 
     .. method:: values()
 
         Get the objects contained in the group (Group and Dataset instances).
-        Broken soft or external links show up as None.  On Py2, this is a list.
-        On Py3, it's a collection or bag-like object.
+        Broken soft or external links show up as None.
+
+        :return: a collection or bag-like object.
 
     .. method:: items()
 
         Get ``(name, value)`` pairs for object directly attached to this group.
-        Values for broken soft or external links show up as None.  On Py2,
-        this is a list.  On Py3, it's a set-like object.
+        Values for broken soft or external links show up as None.
 
-    .. method:: iterkeys()
-
-        (Py2 only) Get an iterator over key names.  Exactly equivalent to
-        ``iter(group)``.
-        Use :meth:`Group.visit` or :meth:`Group.visititems` for recursive
-        access to group members.
-
-    .. method:: itervalues()
-
-        (Py2 only) Get an iterator over objects attached to the group.
-        Broken soft and external links will show up as ``None``.
-
-    .. method:: iteritems()
-
-        (Py2 only) Get an iterator over ``(name, value)`` pairs for objects
-        directly attached to the group.  Broken soft and external link values
-        show up as ``None``.
+        :return: a set-like object.
 
     .. method:: get(name, default=None, getclass=False, getlink=False)
 
@@ -246,7 +230,6 @@ Reference
                         :class:`SoftLink` or :class:`ExternalLink` instance.
                         If ``getclass`` is also True, returns the corresponding
                         Link class without instantiating it.
-
 
     .. method:: visit(callable)
 
@@ -265,7 +248,7 @@ Reference
             ...     if 'foo' in name:
             ...         return name
             >>> group.visit(find_foo)
-            u'some/subgroup/foo'
+            'some/subgroup/foo'
 
 
     .. method:: visititems(callable)
@@ -370,10 +353,14 @@ Reference
                         ``h5.get_config().track_order``.
 
         :keyword external: Store the dataset in one or more external, non-HDF5
-            files. This should be a list of tuples of
-            ``(filename[, offset[, size]])``, to store data from ``offset`` to
-            ``offset + size`` in the specified file. The last file in the list
-            may have size ``h5py.h5s.UNLIMITED`` to let it grow as needed.
+            files. This should be an iterable (such as a list) of tuples of
+            ``(name, offset, size)`` to store data from ``offset`` to
+            ``offset + size`` in the named file. Each name must be a str,
+            bytes, or os.PathLike; each offset and size, an integer. The last
+            file in the sequence may have size ``h5py.h5f.UNLIMITED`` to let
+            it grow as needed. If only a name is given instead of an iterable
+            of tuples, it is equivalent to
+            ``[(name, 0, h5py.h5f.UNLIMITED)]``.
 
     .. method:: require_dataset(name, shape=None, dtype=None, exact=None, **kwds)
 

@@ -2,6 +2,7 @@
 environment:
   HDF5_VERSION: "1.8.17"
   TOX_TESTENV_PASSENV: "HDF5_DIR"
+  H5PY_ENFORCE_COVERAGE: "YES"
 
   matrix:
 
@@ -16,18 +17,6 @@ environment:
       HDF5_VSVERSION: "14"
       HDF5_DIR: "C:\\hdf5\\%HDF5_VERSION%\\%HDF5_VSVERSION%"
 
-    - PYTHON: "C:\\Python36-x64"
-      TOXENV: "py36-test-deps"
-      TOX_APPVEYOR_X64: "1"
-      HDF5_VSVERSION: "14-64"
-      HDF5_DIR: "C:\\hdf5\\%HDF5_VERSION%\\%HDF5_VSVERSION%"
-
-    - PYTHON: "C:\\Python37-x64"
-      TOXENV: "py37-test-deps"
-      TOX_APPVEYOR_X64: "1"
-      HDF5_VSVERSION: "14-64"
-      HDF5_DIR: "C:\\hdf5\\%HDF5_VERSION%\\%HDF5_VSVERSION%"
-
     ### USING HDF5 1.10 ###
 
     - PYTHON: "C:\\Python36"
@@ -39,20 +28,6 @@ environment:
     - PYTHON: "C:\\Python37"
       TOXENV: "py37-test-deps"
       HDF5_VSVERSION: "14"
-      HDF5_DIR: "C:\\hdf5\\%HDF5_VERSION%\\%HDF5_VSVERSION%"
-      HDF5_VERSION: "1.10.1"
-
-    - PYTHON: "C:\\Python36-x64"
-      TOXENV: "py36-test-deps"
-      TOX_APPVEYOR_X64: "1"
-      HDF5_VSVERSION: "14-64"
-      HDF5_DIR: "C:\\hdf5\\%HDF5_VERSION%\\%HDF5_VSVERSION%"
-      HDF5_VERSION: "1.10.1"
-
-    - PYTHON: "C:\\Python37-x64"
-      TOXENV: "py37-test-deps"
-      TOX_APPVEYOR_X64: "1"
-      HDF5_VSVERSION: "14-64"
       HDF5_DIR: "C:\\hdf5\\%HDF5_VERSION%\\%HDF5_VSVERSION%"
       HDF5_VERSION: "1.10.1"
 
@@ -94,4 +69,4 @@ cache:
   - "C:\\hdf5"
 
 on_success:
-  - "py -3.6 -m codecov"
+  - "py -3.6 ci\\upload_coverage.py"

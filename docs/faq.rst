@@ -12,9 +12,9 @@ creating datasets. Each type is mapped to a native NumPy type.
 
 Fully supported types:
 
-=========================           ============================================    ======================
+=========================           ============================================    ================================
 Type                                Precisions                                      Notes
-=========================           ============================================    ======================
+=========================           ============================================    ================================
 Integer                             1, 2, 4 or 8 byte, BE/LE, signed/unsigned
 Float                               2, 4, 8, 12, 16 byte, BE/LE
 Complex                             8 or 16 byte, BE/LE                             Stored as HDF5 struct
@@ -27,7 +27,12 @@ Array                               Any supported type
 Enumeration                         Any NumPy integer type                          Read/write as integers
 References                          Region and object
 Variable length array               Any supported type                              See :ref:`Special Types <vlen>`
-=========================           ============================================    ======================
+=========================           ============================================    ================================
+
+Other numpy dtypes, such as datetime64 and timedelta64, can optionally be
+stored in HDF5 opaque data using :func:`opaque_dtype`.
+h5py will read this data back with the same dtype, but other software probably
+will not understand it.
 
 Unsupported types:
 
@@ -52,7 +57,7 @@ FLETCHER32                          Error detection                             
 Scale-offset                        Integer/float scaling and truncation        All platforms
 SZIP                                Fast, patented compression for int/float    * UNIX: if supplied with HDF5.
                                                                                 * Windows: read-only
-`LZF <http://alfven.org/lzf>`_      Very fast compression, all types            Ships with h5py, C source
+`LZF <http://h5py.org/lzf>`_        Very fast compression, all types            Ships with h5py, C source
                                                                                 available
 =================================== =========================================== ============================
 

@@ -30,14 +30,14 @@ object reference:
     >>> myfile = h5py.File('myfile.hdf5')
     >>> mygroup = myfile['/some/group']
     >>> ref = mygroup.ref
-    >>> print ref
+    >>> print(ref)
     <HDF5 object reference>
 
 "Dereferencing" these objects is straightforward; use the same syntax as when
 opening any other object:
 
     >>> mygroup2 = myfile[ref]
-    >>> print mygroup2
+    >>> print(mygroup2)
     <HDF5 group "/some/group" (0 members)>
 
 .. _refs_region:
@@ -50,7 +50,7 @@ dataset property "regionref" and standard NumPy slicing syntax:
 
     >>> myds = myfile.create_dataset('dset', (200,200))
     >>> regref = myds.regionref[0:10, 0:5]
-    >>> print regref
+    >>> print(regref)
     <HDF5 region reference>
 
 The reference itself can now be used in place of slicing arguments to the
@@ -79,24 +79,18 @@ reference objects.
 
 These dtypes are available from h5py for references and region references:
 
-    >>> type(h5py.ref_dtype)
-    <type 'numpy.dtype'>
-    >>> ref_dtype.kind
-    'O'
-    >>> type(h5py.regionref_dtype)
-    <type 'numpy.dtype'>
+* ``h5py.ref_dtype`` - for object references
+* ``h5py.regionref_dtype`` - for region references
 
-The types accepted by this "ref=" keyword argument are h5py.Reference (for
-object references) and h5py.RegionReference (for region references).
-
-To create an array of references, use this dtype as you normally would:
+To store an array of references, use the appropriate dtype when creating the
+dataset:
 
     >>> ref_dataset = myfile.create_dataset("MyRefs", (100,), dtype=h5py.ref_dtype)
 
 You can read from and write to the array as normal:
 
     >>> ref_dataset[0] = myfile.ref
-    >>> print ref_dataset[0]
+    >>> print(ref_dataset[0])
     <HDF5 object reference>
 
 Storing references in an attribute
@@ -115,8 +109,8 @@ When you create a dataset of reference type, the uninitialized elements are
 "null" references.  H5py uses the truth value of a reference object to
 indicate whether or not it is null:
 
-    >>> print bool(myfile.ref)
+    >>> print(bool(myfile.ref))
     True
     >>> nullref = ref_dataset[50]
-    >>> print bool(nullref)
+    >>> print(bool(nullref))
     False

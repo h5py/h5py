@@ -11,21 +11,15 @@
     Implements high-level support for HDF5 file objects.
 """
 
-from __future__ import absolute_import
-
 import sys
 import os
-from warnings import warn
 
 from .compat import filename_decode, filename_encode
-
-import six
 
 from .base import phil, with_phil
 from .group import Group
 from .. import h5, h5f, h5p, h5i, h5fd, _objects
 from .. import version
-from ..h5py_warnings import H5pyDeprecationWarning
 
 mpi = h5.get_config().mpi
 hdf5_version = version.hdf5_version_tuple[0:3]
@@ -36,10 +30,14 @@ if hdf5_version >= h5.get_config().swmr_min_hdf5_version:
 
 
 libver_dict = {'earliest': h5f.LIBVER_EARLIEST, 'latest': h5f.LIBVER_LATEST}
-libver_dict_r = dict((y, x) for x, y in six.iteritems(libver_dict))
+libver_dict_r = dict((y, x) for x, y in libver_dict.items())
 if hdf5_version >= (1, 10, 2):
     libver_dict.update({'v108': h5f.LIBVER_V18, 'v110': h5f.LIBVER_V110})
     libver_dict_r.update({h5f.LIBVER_V18: 'v108', h5f.LIBVER_V110: 'v110'})
+
+if hdf5_version >= (1, 11, 4):
+    libver_dict.update({'v112': h5f.LIBVER_V112})
+    libver_dict_r.update({h5f.LIBVER_V112: 'v112'})
 
 
 def _set_fapl_mpio(plist, **kwargs):
@@ -185,23 +183,6 @@ def make_fid(name, mode, userblock_size, fapl, fcpl=None, swmr=False):
             fid = h5f.open(name, h5f.ACC_RDWR, fapl=fapl)
         except IOError:
             fid = h5f.create(name, h5f.ACC_EXCL, fapl=fapl, fcpl=fcpl)
-    elif mode is None:
-        warn("The default file mode will change to 'r' (read-only) in h5py 3.0. "
-             "To suppress this warning, pass the mode you need to h5py.File(), "
-             "or set the global default h5.get_config().default_file_mode, "
-             "or set the environment variable H5PY_DEFAULT_READONLY=1. "
-             "Available modes are: 'r', 'r+', 'w', 'w-'/'x', 'a'. "
-             "See the docs for details.", H5pyDeprecationWarning, stacklevel=3)
-        # Try to open in append mode (read/write).
-        # If that fails, try readonly, and finally create a new file only
-        # if it won't clobber an existing file (ACC_EXCL).
-        try:
-            fid = h5f.open(name, h5f.ACC_RDWR, fapl=fapl)
-        except IOError:
-            try:
-                fid = h5f.open(name, h5f.ACC_RDONLY, fapl=fapl)
-            except IOError:
-                fid = h5f.create(name, h5f.ACC_EXCL, fapl=fapl, fcpl=fcpl)
     else:
         raise ValueError("Invalid mode; must be one of r, r+, w, w-, x, a")
 
@@ -258,14 +239,6 @@ class File(Group):
         """ Python mode used to open file """
         return {h5f.ACC_RDONLY: 'r',
                 h5f.ACC_RDWR: 'r+'}.get(self.id.get_intent())
-
-    @property
-    @with_phil
-    def fid(self):
-        """File ID (backwards compatibility) """
-        warn("File.fid has been deprecated. "
-            "Use File.id instead.", H5pyDeprecationWarning, stacklevel=2)
-        return self.id
 
     @property
     @with_phil
@@ -327,18 +300,18 @@ class File(Group):
             created with the 'core' driver, HDF5 still requires this be
             non-empty.
         mode
-            r        Readonly, file must exist
+            r        Readonly, file must exist (default)
             r+       Read/write, file must exist
             w        Create file, truncate if exists
             w- or x  Create file, fail if exists
-            a        Read/write if exists, create otherwise (default)
+            a        Read/write if exists, create otherwise
         driver
             Name of the driver to use.  Legal values are None (default,
             recommended), 'core', 'sec2', 'stdio', 'mpio'.
         libver
             Library version bounds.  Supported values: 'earliest', 'v108',
-            'v110',  and 'latest'. The 'v108' and 'v110' options can only be
-            specified with the HDF5 1.10.2 library or later.
+            'v110', 'v112'  and 'latest'. The 'v108', 'v110' and 'v112'
+            options can only be specified with the HDF5 1.10.2 library or later.
         userblock
             Desired size of user block.  Only allowed when creating a new
             file (mode w, w- or x).
@@ -397,9 +370,7 @@ class File(Group):
             if track_order is None:
                 track_order = h5.get_config().track_order
             if mode is None:
-                mode = h5.get_config().default_file_mode
-                if mode is None and os.environ.get('H5PY_DEFAULT_READONLY', ''):
-                    mode = 'r'
+                mode = h5.get_config().default_file_mode  # default: 'r'
 
             with phil:
                 fapl = make_fapl(driver, libver, rdcc_nslots, rdcc_nbytes, rdcc_w0, **kwds)
@@ -417,7 +388,7 @@ class File(Group):
                 if swmr and mode == 'r':
                     self._swmr_mode = True
 
-        Group.__init__(self, fid)
+        super(File, self).__init__(fid)
 
     def close(self):
         """ Close the file.  All open objects become invalid """
@@ -463,16 +434,14 @@ class File(Group):
     @with_phil
     def __repr__(self):
         if not self.id:
-            r = u'<Closed HDF5 file>'
+            r = '<Closed HDF5 file>'
         else:
             # Filename has to be forced to Unicode if it comes back bytes
             # Mode is always a "native" string
             filename = self.filename
             if isinstance(filename, bytes):  # Can't decode fname
                 filename = filename.decode('utf8', 'replace')
-            r = u'<HDF5 file "%s" (mode %s)>' % (os.path.basename(filename),
+            r = '<HDF5 file "%s" (mode %s)>' % (os.path.basename(filename),
                                                  self.mode)
 
-        if six.PY2:
-            return r.encode('utf8')
         return r

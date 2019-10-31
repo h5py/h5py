@@ -11,8 +11,6 @@
     Implements high-level access to committed datatypes in the file.
 """
 
-from __future__ import absolute_import
-
 import posixpath as pp
 
 from ..h5t import TypeID
@@ -42,7 +40,7 @@ class Datatype(HLObject):
         """
         if not isinstance(bind, TypeID):
             raise ValueError("%s is not a TypeID" % bind)
-        HLObject.__init__(self, bind)
+        super(Datatype, self).__init__(bind)
 
     @with_phil
     def __repr__(self):

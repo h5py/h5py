@@ -13,25 +13,17 @@
     Tests all aspects of File objects, including their creation.
 """
 
-from __future__ import absolute_import, with_statement
 import pytest
 import os
 import stat
+import pickle
 from sys import platform
-
-import six
-
-from six.moves import cPickle
 
 from .common import ut, TestCase, UNICODE_FILENAMES, closed_tempfile
 from h5py import File
-from h5py.h5py_warnings import H5pyDeprecationWarning
 import h5py
 
-try:
-    import pathlib
-except ImportError:
-    pathlib = None
+import pathlib
 
 
 mpi = h5py.get_config().mpi
@@ -47,32 +39,32 @@ class TestFileOpen(TestCase):
         """ Default semantics in the presence or absence of a file """
         fname = self.mktemp()
 
-        # No existing file; create a new file and open RW
-        with pytest.warns(H5pyDeprecationWarning):
-            with File(fname) as f:
-                self.assertTrue(f)
-                self.assertEqual(f.mode, 'r+')
+        # No existing file; error
+        with pytest.raises(OSError):
+            with File(fname):
+                pass
+
 
         # Existing readonly file; open read-only
+        with File(fname, 'w'):
+            pass
         os.chmod(fname, stat.S_IREAD)
         # Running as root (e.g. in a docker container) gives 'r+' as the file
         # mode, even for a read-only file.  See
         # https://github.com/h5py/h5py/issues/696
         exp_mode = 'r+' if os.stat(fname).st_uid == 0 and platform != "win32" else 'r'
         try:
-            with pytest.warns(H5pyDeprecationWarning):
-                with File(fname) as f:
-                    self.assertTrue(f)
-                    self.assertEqual(f.mode, exp_mode)
+            with File(fname) as f:
+                self.assertTrue(f)
+                self.assertEqual(f.mode, exp_mode)
         finally:
             os.chmod(fname, stat.S_IWRITE)
 
         # File exists but is not HDF5; raise IOError
         with open(fname, 'wb') as f:
             f.write(b'\x00')
-        with pytest.warns(H5pyDeprecationWarning):
-            with self.assertRaises(IOError):
-                File(fname)
+        with self.assertRaises(IOError):
+            File(fname)
 
     def test_create(self):
         """ Mode 'w' opens file in overwrite mode """
@@ -333,7 +325,10 @@ class TestNewLibver(TestCase):
         super(TestNewLibver, cls).setUpClass()
 
         # Current latest library bound label
-        cls.latest = 'v110'
+        if h5py.version.hdf5_version_tuple < (1, 11, 4):
+            cls.latest = 'v110'
+        else:
+            cls.latest = 'v112'
 
     def test_default(self):
         """ Opening with no libver arg """
@@ -357,6 +352,14 @@ class TestNewLibver(TestCase):
         """ Opening with "v110" libver arg """
         f = File(self.mktemp(), 'w', libver='v110')
         self.assertEqual(f.libver, ('v110', self.latest))
+        f.close()
+
+    @ut.skipIf(h5py.version.hdf5_version_tuple < (1, 11, 4),
+           'Requires HDF5 1.11.4 or later')
+    def test_single_v112(self):
+        """ Opening with "v112" libver arg """
+        f = File(self.mktemp(), 'w', libver='v112')
+        self.assertEqual(f.libver, ('v112', self.latest))
         f.close()
 
     def test_multiple(self):
@@ -488,18 +491,18 @@ class TestUnicode(TestCase):
     def test_unicode(self):
         """ Unicode filenames can be used, and retrieved properly via .filename
         """
-        fname = self.mktemp(prefix=six.unichr(0x201a))
+        fname = self.mktemp(prefix=chr(0x201a))
         fid = File(fname, 'w')
         try:
             self.assertEqual(fid.filename, fname)
-            self.assertIsInstance(fid.filename, six.text_type)
+            self.assertIsInstance(fid.filename, str)
         finally:
             fid.close()
 
     def test_unicode_hdf5_python_consistent(self):
         """ Unicode filenames can be used, and seen correctly from python
         """
-        fname = self.mktemp(prefix=six.unichr(0x201a))
+        fname = self.mktemp(prefix=chr(0x201a))
         with File(fname, 'w') as f:
             self.assertTrue(os.path.exists(fname))
 
@@ -507,7 +510,7 @@ class TestUnicode(TestCase):
         """
         Modes 'r' and 'r+' do not create files even when given unicode names
         """
-        fname = self.mktemp(prefix=six.unichr(0x201a))
+        fname = self.mktemp(prefix=chr(0x201a))
         with self.assertRaises(IOError):
             File(fname, 'r')
         with self.assertRaises(IOError):
@@ -615,9 +618,9 @@ class TestRepr(TestCase):
     def test_repr(self):
         """ __repr__ behaves itself when files are open and closed """
         fid = File(self.mktemp(), 'w')
-        self.assertIsInstance(repr(fid), six.string_types)
+        self.assertIsInstance(repr(fid), str)
         fid.close()
-        self.assertIsInstance(repr(fid), six.string_types)
+        self.assertIsInstance(repr(fid), str)
 
 
 class TestFilename(TestCase):
@@ -632,22 +635,9 @@ class TestFilename(TestCase):
         fid = File(fname, 'w')
         try:
             self.assertEqual(fid.filename, fname)
-            self.assertIsInstance(fid.filename, six.text_type)
+            self.assertIsInstance(fid.filename, str)
         finally:
             fid.close()
-
-
-class TestBackwardsCompat(TestCase):
-
-    """
-        Feature: Deprecated attributes are included to support 1.3 code
-    """
-
-    def test_fid(self):
-        """ File objects provide a .fid attribute aliased to the file ID """
-        with pytest.warns(H5pyDeprecationWarning):
-            with File(self.mktemp(), 'w') as hfile:
-                self.assertIs(hfile.fid, hfile.id)
 
 
 class TestCloseInvalidatesOpenObjectIDs(TestCase):
@@ -673,7 +663,6 @@ class TestCloseInvalidatesOpenObjectIDs(TestCase):
             self.assertFalse(bool(g1.id))
 
 
-@ut.skipIf(pathlib is None, "pathlib module not installed")
 class TestPathlibSupport(TestCase):
 
     """
@@ -696,9 +685,10 @@ class TestPathlibSupport(TestCase):
                 normal_name = h5f2.filename
             self.assertEqual(pathlib_name, normal_name)
 
+
 class TestPickle(TestCase):
     """Check that h5py.File can't be pickled"""
     def test_dump_error(self):
         with File(self.mktemp(), 'w') as f1:
             with self.assertRaises(TypeError):
-                cPickle.dumps(f1)
+                pickle.dumps(f1)

@@ -5,8 +5,6 @@
     linking.
 """
 
-from __future__ import print_function
-
 try:
     from setuptools import Extension
 except ImportError:
@@ -23,15 +21,14 @@ def localpath(*args):
     return op.abspath(op.join(op.dirname(__file__), *args))
 
 
-MODULES =  ['defs','_errors','_objects','_proxy', 'h5fd', 'h5z',
-            'h5','h5i','h5r','utils',
-            '_conv', 'h5t','h5s',
+MODULES = ['defs', '_errors', '_objects', '_proxy', 'h5fd', 'h5z',
+            'h5', 'h5i', 'h5r', 'utils',
+            '_conv', 'h5t', 'h5s',
             'h5p',
             'h5d', 'h5a', 'h5f', 'h5g',
             'h5l', 'h5o',
             'h5ds', 'h5ac',
             'h5pl']
-
 
 EXTRA_SRC = {'h5z': [ localpath("lzf/lzf_filter.c"),
               localpath("lzf/lzf/lzf_c.c"),
@@ -120,11 +117,10 @@ class h5py_build_ext(build_ext):
             settings['runtime_library_dirs'] = settings['library_dirs']
 
         def make_extension(module):
-            sources = [localpath('h5py', module+'.pyx')] + EXTRA_SRC.get(module, [])
-            return Extension('h5py.'+module, sources, **settings)
+            sources = [localpath('h5py', module + '.pyx')] + EXTRA_SRC.get(module, [])
+            return Extension('h5py.' + module, sources, **settings)
 
         return [make_extension(m) for m in MODULES]
-
 
     @staticmethod
     def run_system_cython(pyx_files):
@@ -147,19 +143,25 @@ class h5py_build_ext(build_ext):
         missing_c_src_files = []
         for c_src_file in [ext.sources[0] for ext in self.extensions]:
             if not op.isfile(c_src_file):
-                missing_c_src_files.append( c_src_file )
+                missing_c_src_files.append(c_src_file)
         if missing_c_src_files:
             print("WARNING: cythonize() failed to create all .c files (setuptools too old?)")
             pyx_files = [os.path.splitext(fname)[0] + ".pyx" for fname in missing_c_src_files]
             print("         Executing system cython on pyx files: ", str(pyx_files))
             self.run_system_cython(pyx_files)
 
-
     def run(self):
         """ Distutils calls this method to run the command """
 
         from Cython.Build import cythonize
         import numpy
+
+        # This allows ccache to recognise the files when pip builds in a temp
+        # directory. It speeds up repeatedly running tests through tox with
+        # ccache configured (CC="ccache gcc"). It should have no effect if
+        # ccache is not in use.
+        os.environ['CCACHE_BASEDIR'] = op.dirname(op.abspath(__file__))
+        os.environ['CCACHE_NOHASHDIR'] = '1'
 
         # Provides all of our build options
         config = self.distribution.get_command_obj('configure')
@@ -191,6 +193,7 @@ DEF MPI4PY_V2 = %(mpi4py_v2)s
 DEF HDF5_VERSION = %(version)s
 DEF SWMR_MIN_HDF5_VERSION = (1,9,178)
 DEF VDS_MIN_HDF5_VERSION = (1,9,233)
+DEF VOL_MIN_HDF5_VERSION = (1,11,5)
 DEF COMPLEX256_SUPPORT = %(complex256_support)s
 """
                 s %= {
@@ -206,7 +209,7 @@ DEF COMPLEX256_SUPPORT = %(complex256_support)s
         print("Executing cythonize()")
         self.extensions = cythonize(self._make_extensions(config),
                                     force=config.rebuild_required or self.force,
-                                    language_level=2)
+                                    language_level=3)
         self.check_rerun_cythonize()
 
         # Perform the build

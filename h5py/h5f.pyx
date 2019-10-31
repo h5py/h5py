@@ -13,20 +13,19 @@
 
 include "config.pxi"
 
-# Compile-time imports
+# C level imports
 from cpython.buffer cimport PyObject_CheckBuffer, \
                             PyObject_GetBuffer, PyBuffer_Release, \
                             PyBUF_SIMPLE
-from _objects cimport pdefault
-from h5p cimport propwrap, PropFAID, PropFCID
-from h5t cimport typewrap
-from h5i cimport wrap_identifier
-from h5ac cimport CacheConfig
-from utils cimport emalloc, efree
+from ._objects cimport pdefault
+from .h5p cimport propwrap, PropFAID, PropFCID
+from .h5i cimport wrap_identifier
+from .h5ac cimport CacheConfig
+from .utils cimport emalloc, efree
 
-from h5py import _objects
+# Python level imports
+from . import _objects
 from ._objects import phil, with_phil
-import h5fd
 
 from cpython.bytes cimport PyBytes_FromStringAndSize, PyBytes_AsString
 
@@ -65,6 +64,9 @@ LIBVER_LATEST = H5F_LIBVER_LATEST
 IF HDF5_VERSION >= (1, 10, 2):
     LIBVER_V18 = H5F_LIBVER_V18
     LIBVER_V110 = H5F_LIBVER_V110
+
+IF HDF5_VERSION >= VOL_MIN_HDF5_VERSION:
+    LIBVER_V112 = H5F_LIBVER_V112
 
 if HDF5_VERSION >= (1, 8, 9):
     FILE_IMAGE_OPEN_RW = H5LT_FILE_IMAGE_OPEN_RW
@@ -207,8 +209,8 @@ def get_obj_count(object where=OBJ_ALL, int types=H5F_OBJ_ALL):
         special constant OBJ_ALL, to count objects in all files.
 
     type
-        Specify what kinds of object to include.  May be one of OBJ*,
-        or any bitwise combination (e.g. OBJ_FILE | OBJ_ATTR).
+        Specify what kinds of object to include.  May be one of ``OBJ*``,
+        or any bitwise combination (e.g. ``OBJ_FILE | OBJ_ATTR``).
 
         The special value OBJ_ALL matches all object types, and
         OBJ_LOCAL will only match objects opened through a specific
@@ -217,7 +219,7 @@ def get_obj_count(object where=OBJ_ALL, int types=H5F_OBJ_ALL):
     cdef hid_t where_id
     if isinstance(where, FileID):
         where_id = where.id
-    elif isinstance(where, int) or isinstance(where, long):
+    elif isinstance(where, int):
         where_id = where
     else:
         raise TypeError("Location must be a FileID or OBJ_ALL.")
@@ -236,8 +238,8 @@ def get_obj_ids(object where=OBJ_ALL, int types=H5F_OBJ_ALL):
         special constant OBJ_ALL, to list objects in all files.
 
     type
-        Specify what kinds of object to include.  May be one of OBJ*,
-        or any bitwise combination (e.g. OBJ_FILE | OBJ_ATTR).
+        Specify what kinds of object to include.  May be one of ``OBJ*``,
+        or any bitwise combination (e.g. ``OBJ_FILE | OBJ_ATTR``).
 
         The special value OBJ_ALL matches all object types, and
         OBJ_LOCAL will only match objects opened through a specific
@@ -263,7 +265,7 @@ def get_obj_ids(object where=OBJ_ALL, int types=H5F_OBJ_ALL):
 
         if count > 0: # HDF5 complains that obj_list is NULL, even if count==0
             H5Fget_obj_ids(where_id, types, count, obj_list)
-            for i from 0<=i<count:
+            for i in range(count):
                 py_obj_list.append(wrap_identifier(obj_list[i]))
                 # The HDF5 function returns a borrowed reference for each hid_t.
                 H5Iinc_ref(obj_list[i])
@@ -382,17 +384,20 @@ cdef class FileID(GroupID):
 
 
     @with_phil
-    def get_vfd_handle(self):
-        """ () => INT
+    def get_vfd_handle(self, fapl=None):
+        """ (PropFAID) => INT
 
         Retrieve the file handle used by the virtual file driver.
 
-        This method is only functional when the the SEC2 driver is used.
+        This may not be supported for all file drivers, and the meaning of the
+        return value may depend on the file driver.
+
+        The 'family' and 'multi' drivers access multiple files, and a file
+        access property list (fapl) can be used to indicate which to access,
+        with H5Pset_family_offset or H5Pset_multi_type.
         """
-        if H5Pget_driver(H5Fget_access_plist(self.id)) != h5fd.SEC2:
-            raise NotImplementedError
         cdef int *handle
-        H5Fget_vfd_handle(self.id, H5Fget_access_plist(self.id), <void**>&handle)
+        H5Fget_vfd_handle(self.id, pdefault(fapl), <void**>&handle)
         return handle[0]
 
     IF HDF5_VERSION >= (1, 8, 9):

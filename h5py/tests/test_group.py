@@ -17,20 +17,13 @@
     1. Method create_dataset is tested in module test_dataset
 """
 
-from __future__ import absolute_import
-
 import numpy as np
 import os
 import os.path
 import sys
 from tempfile import mkdtemp
 
-try:
-    from collections.abc import MutableMapping
-except ImportError:  # Python < 3.3
-    from collections import MutableMapping
-
-import six
+from collections.abc import MutableMapping
 
 from .common import ut, TestCase
 import h5py
@@ -67,9 +60,9 @@ class TestRepr(BaseGroup):
     def test_repr(self):
         """ repr() works on Group objects """
         g = self.f.create_group('foo')
-        self.assertIsInstance(g, six.string_types)
+        self.assertIsInstance(g, str)
         self.f.close()
-        self.assertIsInstance(g, six.string_types)
+        self.assertIsInstance(g, str)
 
 class TestCreate(BaseGroup):
 
@@ -95,7 +88,7 @@ class TestCreate(BaseGroup):
 
     def test_unicode(self):
         """ Unicode names are correctly stored """
-        name = u"/Name" + six.unichr(0x4500)
+        name = u"/Name" + chr(0x4500)
         group = self.f.create_group(name)
         self.assertEqual(group.name, name)
         self.assertEqual(group.id.links.get_info(name.encode('utf8')).cset, h5t.CSET_UTF8)
@@ -187,7 +180,7 @@ class TestDelete(BaseGroup):
         # Note: it is impossible to restore the old behavior (ValueError)
         # without breaking the above test (non-existing objects)
         fname = self.mktemp()
-        hfile = File(fname,'w')
+        hfile = File(fname, 'w')
         try:
             hfile.create_group('foo')
         finally:
@@ -240,7 +233,7 @@ class TestOpen(BaseGroup):
         self.assertEqual(self.f[data[1]], g)
 
     def test_invalid_ref(self):
-        """ Invalid region references should raise ValueError """
+        """ Invalid region references should raise an exception """
 
         ref = h5py.h5r.Reference()
 
@@ -251,7 +244,7 @@ class TestOpen(BaseGroup):
         ref = self.f['x'].ref
         del self.f['x']
 
-        with self.assertRaises(ValueError):
+        with self.assertRaises(Exception):
             self.f[ref]
 
     # TODO: check that regionrefs also work with __getitem__
@@ -265,9 +258,9 @@ class TestRepr(BaseGroup):
     def test_repr(self):
         """ Opened and closed groups provide a useful __repr__ string """
         g = self.f.create_group('foo')
-        self.assertIsInstance(repr(g), six.string_types)
+        self.assertIsInstance(repr(g), str)
         g.id._close()
-        self.assertIsInstance(repr(g), six.string_types)
+        self.assertIsInstance(repr(g), str)
 
 class BaseMapping(BaseGroup):
 
@@ -276,7 +269,7 @@ class BaseMapping(BaseGroup):
     """
     def setUp(self):
         self.f = File(self.mktemp(), 'w')
-        self.groups = ('a','b','c','d')
+        self.groups = ('a', 'b', 'c', 'd')
         for x in self.groups:
             self.f.create_group(x)
         self.f['x'] = h5py.SoftLink('/mongoose')
@@ -309,33 +302,33 @@ class TestContains(BaseGroup):
         """ "in" builtin works for membership (byte and Unicode) """
         self.f.create_group('a')
         self.assertIn(b'a', self.f)
-        self.assertIn(u'a', self.f)
+        self.assertIn('a', self.f)
         self.assertIn(b'/a', self.f)
-        self.assertIn(u'/a', self.f)
+        self.assertIn('/a', self.f)
         self.assertNotIn(b'mongoose', self.f)
-        self.assertNotIn(u'mongoose', self.f)
+        self.assertNotIn('mongoose', self.f)
 
     def test_exc(self):
         """ "in" on closed group returns False (see also issue 174) """
         self.f.create_group('a')
         self.f.close()
         self.assertFalse(b'a' in self.f)
-        self.assertFalse(u'a' in self.f)
+        self.assertFalse('a' in self.f)
 
     def test_empty(self):
         """ Empty strings work properly and aren't contained """
-        self.assertNotIn(u'', self.f)
+        self.assertNotIn('', self.f)
         self.assertNotIn(b'', self.f)
 
     def test_dot(self):
         """ Current group "." is always contained """
         self.assertIn(b'.', self.f)
-        self.assertIn(u'.', self.f)
+        self.assertIn('.', self.f)
 
     def test_root(self):
         """ Root group (by itself) is contained """
         self.assertIn(b'/', self.f)
-        self.assertIn(u'/', self.f)
+        self.assertIn('/', self.f)
 
     def test_trailing_slash(self):
         """ Trailing slashes are unconditionally ignored """
@@ -414,44 +407,6 @@ class TestTrackOrder(BaseGroup):
         self.assertEqual(list(g),
                          sorted([str(i) for i in range(100)]))
 
-@ut.skipIf(sys.version_info[0] != 2, "Py2")
-class TestPy2Dict(BaseMapping):
-
-    """
-        Feature: Standard Python 2 .keys, .values, etc. methods are available
-    """
-
-    def test_keys(self):
-        """ .keys method """
-        self.assertIsInstance(self.f.keys(), list)
-        self.assertSameElements(self.f.keys(), self.groups)
-
-    def test_values(self):
-        """ .values method """
-        self.assertIsInstance(self.f.values(), list)
-        self.assertSameElements(self.f.values(), [self.f.get(x) for x in self.groups])
-
-    def test_items(self):
-        """ .items method """
-        self.assertIsInstance(self.f.items(), list)
-        self.assertSameElements(self.f.items(),
-            [(x, self.f.get(x)) for x in self.groups])
-
-    def test_iterkeys(self):
-        """ .iterkeys method """
-        self.assertSameElements([x for x in self.f.iterkeys()], self.groups)
-
-    def test_itervalues(self):
-        """ .itervalues method """
-        self.assertSameElements([x for x in self.f.itervalues()],
-            [self.f.get(x) for x in self.groups])
-
-    def test_iteritems(self):
-        """ .iteritems method """
-        self.assertSameElements([x for x in self.f.iteritems()],
-            [(x, self.f.get(x)) for x in self.groups])
-
-@ut.skipIf(six.PY2, "Py3")
 class TestPy3Dict(BaseMapping):
 
     def test_keys(self):
@@ -485,7 +440,7 @@ class TestAdditionalMappingFuncs(BaseMapping):
     """
     def setUp(self):
         self.f = File(self.mktemp(), 'w')
-        for x in ('/test/a','/test/b','/test/c','/test/d'):
+        for x in ('/test/a', '/test/b', '/test/c', '/test/d'):
             self.f.create_group(x)
         self.group = self.f['test']
 
@@ -685,7 +640,7 @@ class TestSoftLinks(BaseGroup):
     def test_srepr(self):
         """ SoftLink path repr """
         sl = SoftLink('/foo')
-        self.assertIsInstance(repr(sl), six.string_types)
+        self.assertIsInstance(repr(sl), str)
 
     def test_create(self):
         """ Create new soft link by assignment """
@@ -729,7 +684,7 @@ class TestExternalLinks(TestCase):
     def test_erepr(self):
         """ External link repr """
         el = ExternalLink('foo.hdf5','/foo')
-        self.assertIsInstance(repr(el), six.string_types)
+        self.assertIsInstance(repr(el), str)
 
     def test_create(self):
         """ Creating external links """
@@ -795,9 +750,9 @@ class TestExternalLinks(TestCase):
         """
         ext_filename = os.path.join(mkdtemp(), "external.hdf5")
         with File(ext_filename, "w") as ext_file:
-            ext_file.create_group(u'α')
-            ext_file[u"α"].attrs["ext_attr"] = "test"
-        self.f['ext'] = ExternalLink(ext_filename, u'/α')
+            ext_file.create_group('α')
+            ext_file["α"].attrs["ext_attr"] = "test"
+        self.f['ext'] = ExternalLink(ext_filename, '/α')
         self.assertEqual(self.f["ext"].attrs["ext_attr"], "test")
 
 class TestExtLinkBugs(TestCase):
@@ -970,7 +925,7 @@ class TestCopy(TestCase):
                "Bug in HDF5<1.8.8 prevents copying open dataset")
     def test_copy_soft_links(self):
 
-        self.f1['bar'] = [1,2,3]
+        self.f1['bar'] = [1, 2, 3]
         foo = self.f1.create_group('foo')
         foo['baz'] = SoftLink('/bar')
 
@@ -979,10 +934,10 @@ class TestCopy(TestCase):
         del self.f1['bar']
 
         self.assertIsInstance(self.f1['qux'], Group)
-        self.assertArrayEqual(self.f1['qux/baz'], np.array([1,2,3]))
+        self.assertArrayEqual(self.f1['qux/baz'], np.array([1, 2, 3]))
 
         self.assertIsInstance(self.f2['/foo'], Group)
-        self.assertArrayEqual(self.f2['foo/baz'], np.array([1,2,3]))
+        self.assertArrayEqual(self.f2['foo/baz'], np.array([1, 2, 3]))
 
     @ut.skipIf(h5py.version.hdf5_version_tuple < (1,8,9),
                "Bug in HDF5<1.8.8 prevents copying open dataset")

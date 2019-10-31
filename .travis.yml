@@ -19,52 +19,36 @@ cache:
 env:
   global:
     - HDF5_CACHE_DIR=$HOME/.cache/hdf5
-  matrix:
-    - TOXENV=docs
-    - TOXENV=check-manifest
-    - TOXENV=checkreadme
-    - TOXENV=pre-commit
+    - secure: "PVgKiZwB5Kr7KFAmjoMYtsKsVGUhDdiYq0YoMMEk/COFHpnRt/3CUKYwW+4vTCSKcaai/1ZiPUrHruCwdnU7sUkJZZdKkh2C+Vqx+DnnfAFMbLPGqgaBG2UEMtDIinXHDtV4k9wSJB2X9KPchA+kkCeB1ZPsELo7J5y2R55AcOw="
 
 matrix:
   include:
     # needed to work around https://github.com/travis-ci/travis-ci/issues/4794
     # TODO: We should see if we can replace this with installing python via pyenv # based on toxenv
-
-    # Python 3.6
-    - python: 3.6
-      env:
-      - TOXENV=py36-test-deps
-
-    - python: 3.6
-      env:
-      - TOXENV=py36-test-deps
-        HDF5_VERSION=1.10.3
-        HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION
-    - python: 3.6
-      env:
-      - TOXENV=py36-test-deps-pre
-    - python: 3.6
-      env:
-      - TOXENV=py36-test-mindeps
-    - python: 3.6
-      env:
-      - TOXENV=py36-test-deps
-        TOX_TESTENV_PASSENV=LANG LC_ALL
-        LANG=C
-        LC_ALL=C
-
-    # Python 3.7
+    # Test on ppc64le
     - python: 3.7
       env:
       - TOXENV=py37-test-deps
-        HDF5_VERSION=1.10.4
-        HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION
+      - HDF5_VERSION=1.10.5
+      - HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION
+      - H5PY_ENFORCE_COVERAGE=yes
+      os: linux-ppc64le
 
+    # Builds the API docs
     - python: 3.7
       env:
-      - TOXENV=py37-test-deps
-        HDF5_VERSION=1.10.5
-        HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION
+        - TOXENV=apidocs
+        - HDF5_VERSION=1.10.5
+        - HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION
+      script:
+        - tox
+        - if [[ -z "$TRAVIS_TAG" ]]; then
+            DOCTR_DEPLOY_DIR="$TRAVIS_BRANCH";
+          else
+            DOCTR_DEPLOY_DIR="v$TRAVIS_TAG";
+          fi
+        - pip install doctr
+        - doctr deploy --build-tags --built-docs docs_api/_build/html $DOCTR_DEPLOY_DIR
 
     # MPI tests
     # TODO: We should test with newer versions of HDF5
@@ -73,6 +57,7 @@ matrix:
       - TOXENV=py36-test-mindeps-mpi4py
       - CC="mpicc"
       - HDF5_MPI="ON"
+      - H5PY_ENFORCE_COVERAGE=yes
       addons:
         apt:
           packages:
@@ -80,23 +65,20 @@ matrix:
             - libopenmpi-dev
             - libhdf5-openmpi-dev # 1.8.11 based on trusty
 
-    # PyTables compatibility tests
-    - python: 3.7
-      env:
-      - TOXENV=py37-test-mindeps-tables
-
     # Additional python versions which are not officially supported
     - python: "nightly"
       env:
       - TOXENV=nightly
-        HDF5_VERSION=1.10.5
-        HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION
+      - HDF5_VERSION=1.10.5
+      - HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION
+      - H5PY_ENFORCE_COVERAGE=yes
 
-    - python: pypy
+    - python: pypy3
       env:
       - TOXENV=pypy3-test-deps
+      - H5PY_ENFORCE_COVERAGE=yes
   allow_failures:
-    - python: pypy
+    - python: pypy3
     - python: 'nightly'
 
 before_install:
@@ -111,4 +93,4 @@ script:
   - tox
 
 after_success:
-  - codecov
+  - python ci/upload_coverage.py
