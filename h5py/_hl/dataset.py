@@ -48,7 +48,7 @@ def readtime_dtype(basetype, names):
     return numpy.dtype([(name, basetype.fields[name][0]) for name in names])
 
 
-def make_new_dset(parent, shape=None, dtype=None, data=None,
+def make_new_dset(parent, shape=None, dtype=None, data=None, name=None,
                   chunks=None, compression=None, shuffle=None,
                   fletcher32=None, maxshape=None, compression_opts=None,
                   fillvalue=None, scaleoffset=None, track_times=None,
@@ -162,7 +162,7 @@ def make_new_dset(parent, shape=None, dtype=None, data=None,
         sid = h5s.create_simple(shape, maxshape)
 
 
-    dset_id = h5d.create(parent.id, None, tid, sid, dcpl=dcpl)
+    dset_id = h5d.create(parent.id, name, tid, sid, dcpl=dcpl)
 
     if (data is not None) and (not isinstance(data, Empty)):
         dset_id.write(h5s.ALL, h5s.ALL, data)

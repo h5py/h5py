@@ -134,10 +134,8 @@ class Group(HLObject, MutableMappingHDF5):
             kwds['track_order'] = h5.get_config().track_order
 
         with phil:
-            dsid = dataset.make_new_dset(self, shape, dtype, data, **kwds)
+            dsid = dataset.make_new_dset(self, shape, dtype, data, name **kwds)
             dset = dataset.Dataset(dsid)
-            if name is not None:
-                self[name] = dset
             return dset
 
     if vds_support:
