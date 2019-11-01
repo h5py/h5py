@@ -167,10 +167,12 @@ class Group(HLObject, MutableMappingHDF5):
                 if name:
                     name = str.encode(name)
                 dsid = dataset.make_new_virtual_dset(self, layout.shape,
-                         sources=sources, dtype=layout.dtype, name=name,
+                         sources=sources, dtype=layout.dtype,
                          maxshape=layout.maxshape, fillvalue=fillvalue)
 
                 dset = dataset.Dataset(dsid)
+                if name is not None:
+                    self[name] = dset
 
             return dset
 

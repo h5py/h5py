@@ -167,7 +167,7 @@ def make_new_dset(parent, shape=None, dtype=None, data=None, name=None,
     return dset_id
 
 
-def make_new_virtual_dset(parent, shape, sources, dtype=None, name=None,
+def make_new_virtual_dset(parent, shape, sources, dtype=None,
                           maxshape=None, fillvalue=None):
     """ Return a new low-level dataset identifier for a virtual dataset """
 
@@ -194,7 +194,7 @@ def make_new_virtual_dset(parent, shape, sources, dtype=None, name=None,
             dtype = numpy.dtype(dtype)
         tid = h5t.py_create(dtype, logical=1)
 
-    return h5d.create(parent.id, name=name, tid=tid, space=virt_dspace,
+    return h5d.create(parent.id, name=None, tid=tid, space=virt_dspace,
                       dcpl=dcpl)
 
 
