@@ -163,12 +163,10 @@ class Group(HLObject, MutableMappingHDF5):
 
             with phil:
                 dsid = dataset.make_new_virtual_dset(self, layout.shape,
-                         sources=sources, dtype=layout.dtype,
+                         sources=sources, dtype=layout.dtype, name=name,
                          maxshape=layout.maxshape, fillvalue=fillvalue)
 
                 dset = dataset.Dataset(dsid)
-                if name is not None:
-                    self[name] = dset
 
             return dset
 
