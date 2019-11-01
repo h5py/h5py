@@ -4,9 +4,9 @@ Date: October 27, 2019
 Requirements: h5py>=2.10.0, unyt>=v2.4.0
 Notes: This short example script shows how to save unit information attached
 to a `unyt_array` using `attrs` in HDF5, and recover it upon reading the file.
-It uses the Unyt package (https://github.com/yt-project/unyt) because that's 
+It uses the Unyt package (https://github.com/yt-project/unyt) because that's
 what I'm familiar with, but presumably similar options exist for Pint and
-astropy.units. 
+astropy.units.
 """
 
 import h5py
@@ -17,7 +17,7 @@ import unyt as u
 tf = tempfile.TemporaryFile()
 f = h5py.File(tf, 'a')
 
-# Create some mock data with moderately complicated units (this is the 
+# Create some mock data with moderately complicated units (this is the
 # dimensional representation of Joules of energy).
 test_data = [1, 2, 3, 4, 5] * u.kg * ( u.m / u.s ) ** 2
 print(test_data.units)
