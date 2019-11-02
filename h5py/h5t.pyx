@@ -627,7 +627,10 @@ cdef class TypeOpaqueID(TypeID):
             tag = buf
             return tag
         finally:
-            free(buf)
+            IF HDF5_VERSION >= (1, 8, 13):
+                H5free_memory(buf)
+            ELSE:
+                free(buf)
 
     cdef object py_dtype(self):
         cdef bytes tag = self.get_tag()
