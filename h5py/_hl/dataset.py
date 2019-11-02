@@ -53,10 +53,7 @@ def make_new_dset(parent, shape=None, dtype=None, data=None, name=None,
                   fletcher32=None, maxshape=None, compression_opts=None,
                   fillvalue=None, scaleoffset=None, track_times=None,
                   external=None, track_order=None, dcpl=None):
-    """ Return a new low-level dataset identifier
-
-    Only creates anonymous datasets.
-    """
+    """ Return a new low-level dataset identifier """
 
     # Convert data to a C-contiguous ndarray
     if data is not None and not isinstance(data, Empty):
@@ -172,11 +169,8 @@ def make_new_dset(parent, shape=None, dtype=None, data=None, name=None,
 
 def make_new_virtual_dset(parent, shape, sources, dtype=None, name=None,
                           maxshape=None, fillvalue=None):
-    """Return a new low-level dataset identifier for a virtual dataset
+    """ Return a new low-level dataset identifier for a virtual dataset """
 
-    Like make_new_dset(), this creates an anonymous dataset, which can be given
-    a name later.
-    """
     # create the creation property list
     dcpl = h5p.create(h5p.DATASET_CREATE)
     if fillvalue is not None:
