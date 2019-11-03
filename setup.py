@@ -138,8 +138,8 @@ package_data = {'h5py': [], "h5py.tests.data_files": ["*.h5"]}
 if os.name == 'nt':
     package_data['h5py'].append('*.dll')
 
-if os.environ.get('CYTHON_COVERAGE'):
-    package_data['h5py'].extend(["*.pyx", "*.pxd"])
+#if os.environ.get('CYTHON_COVERAGE'):
+#    package_data['h5py'].extend(["*.pyx", "*.pxd"])
 
 setup(
   name = 'h5py',

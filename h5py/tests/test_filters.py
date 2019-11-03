@@ -12,6 +12,7 @@
 
 """
 import numpy as np
+import pytest
 import h5py
 import pytest
 
@@ -80,6 +81,7 @@ def test_filter_ref_obj(writable_file):
 
 
 @pytest.mark.mpi_skip
+@pytest.mark.subprocess
 @insubprocess
 def test_unregister_filter(request):
     if h5py.h5z.filter_avail(h5py.h5z.FILTER_LZF):
