@@ -1,6 +1,6 @@
 # cython: language_level=3
-from numpy cimport npy_intp, PyArray_SimpleNew, PyArray_DATA, import_array
-from cpython cimport PyIndex_Check
+from numpy cimport ndarray, npy_intp, PyArray_SimpleNew, PyArray_DATA, import_array
+from cpython cimport PyIndex_Check, PyNumber_Index
 
 from .defs cimport *
 from .h5d cimport DatasetID
@@ -43,14 +43,15 @@ cdef class Reader:
         efree(self.count)
         efree(self.scalar)
 
-    cdef bint apply_args(self, tuple args):
+    cdef bint apply_args(self, tuple args) except 0:
         cdef:
             int nargs, ellipsis_ix
-            bint seen_ellipsis
+            bint seen_ellipsis = False
             int dim_ix = 0
             hsize_t l
 
-        nargs = len(args)
+        # If no explicit ellipsis, implicit ellipsis is after args
+        nargs = ellipsis_ix = len(args)
 
         for a in args:
             if a is Ellipsis:
@@ -91,6 +92,7 @@ cdef class Reader:
                 self.scalar[dim_ix] = False
 
             elif PyIndex_Check(a):
+                a = PyNumber_Index(a)
                 # [0] - simple integer indices
                 if a < 0:
                     a += l
@@ -107,15 +109,11 @@ cdef class Reader:
                 self.count[dim_ix] = 1
                 self.scalar[dim_ix] = True
             else:
-                return False
+                raise TypeError("Simple selection can't process %r" % a)
 
             dim_ix += 1
 
-        if nargs == 0:
-            # [()] or [...] -> select all
-            H5Sselect_all(self.space)
-            return True
-        elif nargs < self.rank:
+        if nargs < self.rank:
             # Fill in ellipsis or trailing dimensions
             ellipsis_end = ellipsis_ix + (self.rank - nargs)
             for dim_ix in range(ellipsis_ix, ellipsis_end):
@@ -124,10 +122,13 @@ cdef class Reader:
                 self.count[dim_ix] = self.dims[dim_ix]
                 self.scalar[dim_ix] = False
 
-        H5Sselect_hyperslab(self.space, H5S_SELECT_SET, self.start, self.stride, self.count, NULL)
+        if nargs == 0:
+            H5Sselect_all(self.space)
+        else:
+            H5Sselect_hyperslab(self.space, H5S_SELECT_SET, self.start, self.stride, self.count, NULL)
         return True
 
-    cdef make_array(self):
+    cdef ndarray make_array(self):
         cdef int i, arr_rank = 0
         cdef npy_intp* arr_shape
 
@@ -147,11 +148,11 @@ cdef class Reader:
 
     def read(self, tuple args):
         cdef void* buf
+        cdef ndarray arr
         cdef hid_t mspace
         cdef int i
 
-        if not self.apply_args(args):
-            raise TypeError("Unsuitable arguments for simple read")
+        self.apply_args(args)
 
         arr = self.make_array()
         buf = PyArray_DATA(arr)
@@ -160,4 +161,7 @@ cdef class Reader:
 
         H5Dread(self.dataset, self.h5_type.id, mspace, self.space, H5P_DEFAULT, buf)
 
-        return arr
+        if arr.ndim == 0:
+            return arr[()]
+        else:
+            return arr
