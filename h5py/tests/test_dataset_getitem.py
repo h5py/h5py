@@ -307,10 +307,9 @@ class Test1DZeroFloat(TestCase):
     def test_slice_stop_less_than_start(self):
         self.assertNumpyBehavior(self.dset, self.data, np.s_[7:5])
 
-    # FIXME: NumPy raises IndexError
     def test_index(self):
         """ index -> out of range """
-        with self.assertRaises(ValueError):
+        with self.assertRaises(IndexError):
             self.dset[0]
 
     def test_indexlist(self):
@@ -394,9 +393,8 @@ class Test1DFloat(TestCase):
         with self.assertRaises(TypeError):
             self.dset[{}]
 
-    # FIXME: NumPy raises IndexError
     def test_index_outofrange(self):
-        with self.assertRaises(ValueError):
+        with self.assertRaises(IndexError):
             self.dset[100]
 
     def test_indexlist_simple(self):

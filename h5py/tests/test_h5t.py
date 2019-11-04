@@ -177,12 +177,12 @@ class TestTypeFloatID(TestCase):
 
         # ebias promotion to float32
         values = f[dataset][:]
-        self.assertTrue(np.all(values == wdata))
+        np.testing.assert_array_equal(values, wdata)
         self.assertEqual(values.dtype, np.dtype('<f4'))
 
         # esize promotion to float32
         values = f[dataset2][:]
-        self.assertTrue(np.all(values == wdata2))
+        np.testing.assert_array_equal(values, wdata2)
         self.assertEqual(values.dtype, np.dtype('<f4'))
 
         # regular half floats
