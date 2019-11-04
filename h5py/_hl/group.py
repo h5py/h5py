@@ -144,7 +144,7 @@ class Group(HLObject, MutableMappingHDF5):
                     for new_group in h5objects:
                         group = self.get(new_group) or group.create_group(new_group)
 
-                name = str.encode(name)
+                name = self._e(name)
 
             dsid = dataset.make_new_dset(group, shape, dtype, data, name, **kwds)
             dset = dataset.Dataset(dsid)
@@ -183,9 +183,9 @@ class Group(HLObject, MutableMappingHDF5):
                         h5objects = h5objects[:-1]
 
                         for new_group in h5objects:
-                            group = self.get(new_group) or group.create_group(new_group)
+                            group = group.get(new_group) or group.create_group(new_group)
 
-                    name = str.encode(name)
+                    name = self._e(name)
 
                 dsid = dataset.make_new_virtual_dset(group, layout.shape,
                          sources=sources, dtype=layout.dtype, name=name,
