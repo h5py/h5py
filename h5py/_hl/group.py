@@ -142,7 +142,7 @@ class Group(HLObject, MutableMappingHDF5):
                     h5objects = h5objects[:-1]
 
                     for new_group in h5objects:
-                        group = self.get(new_group) or group.create_group(new_group)
+                        group = group.get(new_group) or group.create_group(new_group)
 
                 name = self._e(name)
 
