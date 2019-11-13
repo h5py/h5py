@@ -48,15 +48,12 @@ def readtime_dtype(basetype, names):
     return numpy.dtype([(name, basetype.fields[name][0]) for name in names])
 
 
-def make_new_dset(parent, shape=None, dtype=None, data=None,
+def make_new_dset(parent, shape=None, dtype=None, data=None, name=None,
                   chunks=None, compression=None, shuffle=None,
                   fletcher32=None, maxshape=None, compression_opts=None,
                   fillvalue=None, scaleoffset=None, track_times=None,
                   external=None, track_order=None, dcpl=None):
-    """ Return a new low-level dataset identifier
-
-    Only creates anonymous datasets.
-    """
+    """ Return a new low-level dataset identifier """
 
     # Convert data to a C-contiguous ndarray
     if data is not None and not isinstance(data, Empty):
@@ -162,7 +159,7 @@ def make_new_dset(parent, shape=None, dtype=None, data=None,
         sid = h5s.create_simple(shape, maxshape)
 
 
-    dset_id = h5d.create(parent.id, None, tid, sid, dcpl=dcpl)
+    dset_id = h5d.create(parent.id, name, tid, sid, dcpl=dcpl)
 
     if (data is not None) and (not isinstance(data, Empty)):
         dset_id.write(h5s.ALL, h5s.ALL, data)
@@ -170,13 +167,10 @@ def make_new_dset(parent, shape=None, dtype=None, data=None,
     return dset_id
 
 
-def make_new_virtual_dset(parent, shape, sources, dtype=None,
+def make_new_virtual_dset(parent, shape, sources, dtype=None, name=None,
                           maxshape=None, fillvalue=None):
-    """Return a new low-level dataset identifier for a virtual dataset
+    """ Return a new low-level dataset identifier for a virtual dataset """
 
-    Like make_new_dset(), this creates an anonymous dataset, which can be given
-    a name later.
-    """
     # create the creation property list
     dcpl = h5p.create(h5p.DATASET_CREATE)
     if fillvalue is not None:
@@ -200,7 +194,7 @@ def make_new_virtual_dset(parent, shape, sources, dtype=None,
             dtype = numpy.dtype(dtype)
         tid = h5t.py_create(dtype, logical=1)
 
-    return h5d.create(parent.id, name=None, tid=tid, space=virt_dspace,
+    return h5d.create(parent.id, name=name, tid=tid, space=virt_dspace,
                       dcpl=dcpl)
 
 
