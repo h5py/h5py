@@ -19,7 +19,7 @@ from threading import local
 
 import numpy
 
-from .. import h5, h5s, h5t, h5r, h5d, h5p, h5fd, h5ds
+from .. import h5, h5s, h5t, h5r, h5d, h5p, h5fd, h5ds, _reader
 from .base import HLObject, phil, with_phil, Empty
 from . import filters
 from . import selections as sel
@@ -310,6 +310,20 @@ class Dataset(HLObject):
         return size
 
     @property
+    def _fast_reader(self):
+        """Numpy-style attribute giving the total dataset size"""
+        if '_fast_reader' in self._cache_props:
+            return self._cache_props['_fast_reader']
+
+        rdr = _reader.Reader(self.id)
+
+        # If the file is read-only, cache the reader to speed up future uses.
+        # This cache is invalidated by .refresh() when using SWMR.
+        if self._readonly:
+            self._cache_props['_fast_reader'] = rdr
+        return rdr
+
+    @property
     @with_phil
     def dtype(self):
         """Numpy dtype representing the datatype"""
@@ -490,6 +504,15 @@ class Dataset(HLObject):
         for i in range(shape[0]):
             yield self[i]
 
+    @cached_property
+    def _fast_read_ok(self):
+        """Is this dataset suitable for simple reading"""
+        return (
+            self._extent_type == h5s.SIMPLE
+            and isinstance(self.id.get_type(), (h5t.TypeIntegerID, h5t.TypeFloatID))
+            and h5t.py_create(self.dtype) == self.id.get_type()  # No float promotion
+        )
+
     @with_phil
     def __getitem__(self, args, new_dtype=None):
         """ Read a slice from the HDF5 dataset.
@@ -503,6 +526,13 @@ class Dataset(HLObject):
         * Boolean "mask" array indexing
         """
         args = args if isinstance(args, tuple) else (args,)
+
+        if self._fast_read_ok and (new_dtype is None) and (self._local.astype is None):
+            try:
+                return self._fast_reader.read(args)
+            except TypeError:
+                pass  # Fall back to Python read pathway below
+
         if self._is_empty:
             # Check 'is Ellipsis' to avoid equality comparison with an array:
             # array equality returns an array, not a boolean.
