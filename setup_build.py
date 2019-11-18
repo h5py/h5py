@@ -23,7 +23,7 @@ def localpath(*args):
 FREE_GIL = True
 
 MODULES = ['defs', '_errors', '_objects', '_proxy', 'h5fd', 'h5z',
-            'h5', 'h5i', 'h5r', 'utils',
+            'h5', 'h5i', 'h5r', 'utils', '_reader',
             '_conv', 'h5t', 'h5s',
             'h5p',
             'h5d', 'h5a', 'h5f', 'h5g',

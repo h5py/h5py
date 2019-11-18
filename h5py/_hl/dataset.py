@@ -19,7 +19,7 @@ from threading import local
 
 import numpy
 
-from .. import h5, h5s, h5t, h5r, h5d, h5p, h5fd, h5ds
+from .. import h5, h5s, h5t, h5r, h5d, h5p, h5fd, h5ds, _reader
 from .base import HLObject, phil, with_phil, Empty
 from . import filters
 from . import selections as sel
@@ -48,15 +48,12 @@ def readtime_dtype(basetype, names):
     return numpy.dtype([(name, basetype.fields[name][0]) for name in names])
 
 
-def make_new_dset(parent, shape=None, dtype=None, data=None,
+def make_new_dset(parent, shape=None, dtype=None, data=None, name=None,
                   chunks=None, compression=None, shuffle=None,
                   fletcher32=None, maxshape=None, compression_opts=None,
                   fillvalue=None, scaleoffset=None, track_times=None,
                   external=None, track_order=None, dcpl=None):
-    """ Return a new low-level dataset identifier
-
-    Only creates anonymous datasets.
-    """
+    """ Return a new low-level dataset identifier """
 
     # Convert data to a C-contiguous ndarray
     if data is not None and not isinstance(data, Empty):
@@ -162,7 +159,7 @@ def make_new_dset(parent, shape=None, dtype=None, data=None,
         sid = h5s.create_simple(shape, maxshape)
 
 
-    dset_id = h5d.create(parent.id, None, tid, sid, dcpl=dcpl)
+    dset_id = h5d.create(parent.id, name, tid, sid, dcpl=dcpl)
 
     if (data is not None) and (not isinstance(data, Empty)):
         dset_id.write(h5s.ALL, h5s.ALL, data)
@@ -170,13 +167,10 @@ def make_new_dset(parent, shape=None, dtype=None, data=None,
     return dset_id
 
 
-def make_new_virtual_dset(parent, shape, sources, dtype=None,
+def make_new_virtual_dset(parent, shape, sources, dtype=None, name=None,
                           maxshape=None, fillvalue=None):
-    """Return a new low-level dataset identifier for a virtual dataset
+    """ Return a new low-level dataset identifier for a virtual dataset """
 
-    Like make_new_dset(), this creates an anonymous dataset, which can be given
-    a name later.
-    """
     # create the creation property list
     dcpl = h5p.create(h5p.DATASET_CREATE)
     if fillvalue is not None:
@@ -200,7 +194,7 @@ def make_new_virtual_dset(parent, shape, sources, dtype=None,
             dtype = numpy.dtype(dtype)
         tid = h5t.py_create(dtype, logical=1)
 
-    return h5d.create(parent.id, name=None, tid=tid, space=virt_dspace,
+    return h5d.create(parent.id, name=name, tid=tid, space=virt_dspace,
                       dcpl=dcpl)
 
 
@@ -314,6 +308,20 @@ class Dataset(HLObject):
         if self._readonly:
             self._cache_props['size'] = size
         return size
+
+    @property
+    def _fast_reader(self):
+        """Numpy-style attribute giving the total dataset size"""
+        if '_fast_reader' in self._cache_props:
+            return self._cache_props['_fast_reader']
+
+        rdr = _reader.Reader(self.id)
+
+        # If the file is read-only, cache the reader to speed up future uses.
+        # This cache is invalidated by .refresh() when using SWMR.
+        if self._readonly:
+            self._cache_props['_fast_reader'] = rdr
+        return rdr
 
     @property
     @with_phil
@@ -496,6 +504,15 @@ class Dataset(HLObject):
         for i in range(shape[0]):
             yield self[i]
 
+    @cached_property
+    def _fast_read_ok(self):
+        """Is this dataset suitable for simple reading"""
+        return (
+            self._extent_type == h5s.SIMPLE
+            and isinstance(self.id.get_type(), (h5t.TypeIntegerID, h5t.TypeFloatID))
+            and h5t.py_create(self.dtype) == self.id.get_type()  # No float promotion
+        )
+
     @with_phil
     def __getitem__(self, args, new_dtype=None):
         """ Read a slice from the HDF5 dataset.
@@ -509,6 +526,13 @@ class Dataset(HLObject):
         * Boolean "mask" array indexing
         """
         args = args if isinstance(args, tuple) else (args,)
+
+        if self._fast_read_ok and (new_dtype is None) and (self._local.astype is None):
+            try:
+                return self._fast_reader.read(args)
+            except TypeError:
+                pass  # Fall back to Python read pathway below
+
         if self._is_empty:
             # Check 'is Ellipsis' to avoid equality comparison with an array:
             # array equality returns an array, not a boolean.
