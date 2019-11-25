@@ -248,12 +248,13 @@ cdef tuple _get_available_ftypes():
     cdef:
         str floating_typecodes = np.typecodes["Float"]
         str ftc
+        cnp.dtype fdtype
         list available_ftypes = []
 
     for ftc in floating_typecodes:
-        fdtype = np.dtype(ftc)
+        fdtype = cnp.dtype(ftc)
         available_ftypes.append(
-            (fdtype, np.finfo(fdtype), fdtype.itemsize))
+            (<object>fdtype.typeobj, np.finfo(fdtype), fdtype.itemsize))
 
     return tuple(available_ftypes)
 
