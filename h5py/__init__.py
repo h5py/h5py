@@ -13,6 +13,7 @@
 """
 
 from warnings import warn as _warn
+import atexit
 
 
 # --- Library setup -----------------------------------------------------------
@@ -41,8 +42,10 @@ if version.hdf5_version_tuple != version.hdf5_built_version_tuple:
 
 _errors.silence_errors()
 
-from ._conv import register_converters as _register_converters
+from ._conv import register_converters as _register_converters, \
+                   unregister_converters as _unregister_converters
 _register_converters()
+atexit.register(_unregister_converters)
 
 from .h5z import _register_lzf
 _register_lzf()
