@@ -611,5 +611,23 @@
   num_commits: 1
   first_commit: 2017-03-22 04:40:26
   github: felixonmars
+- name: Julia Garriga Ferrer
+  email: julia.garriga@esrf.fr
+  aliases:
+    - juliagarriga
+  alternate_emails:
+    - juliiaa28@gmail.com
+- name: Henri Payno
+  email: henri.payno@esrf.fr
+  aliases:
+    - payno
+  alternate_emails:
+    - payno@linazimov.esrf.fr
+    - payno@users.noreply.github.com
+    - henri.payno@gmail.com
+- name: Jerome Kieffer
+  email: kieffer@esrf.fr
+  alternate_emails:
+    - jerome.kieffer@terre-adelie.org
 - name: Pierlauro Sciarelli
   email: foss@pstux.dev

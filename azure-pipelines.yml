@@ -14,7 +14,7 @@ jobs:
     matrix:
     # system independent tests
       static-checks:
-        TOXENV: docs,checkreadme,pre-commit
+        TOXENV: docs,checkreadme,pre-commit,rever
         python.version: '3.6'
       # -deps : test with default (latest) versions of dependencies
       # -mindeps : test with oldest supported version of (python) dependencies
