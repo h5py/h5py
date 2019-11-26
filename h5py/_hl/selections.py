@@ -154,6 +154,12 @@ class Selection(object):
         """Shape of array to read/write (always 1-D for this class)"""
         return self.mshape
 
+    # expand_shape and broadcast only really make sense for SimpleSelection
+    def expand_shape(self, source_shape):
+        if product(source_shape) != self.nselect:
+            raise TypeError("Broadcasting is not supported for point-wise selections")
+        return source_shape
+
     def broadcast(self, source_shape):
         """ Get an iterable for broadcasting """
         if product(source_shape) != self.nselect:
@@ -252,16 +258,54 @@ class SimpleSelection(Selection):
 
         return self
 
+    def expand_shape(self, source_shape):
+        """Match the dimensions of an array to be broadcast to the selection
 
-    def broadcast(self, target_shape):
+        The returned shape describes an array of the same size as the input
+        shape, but its dimensions
+
+        E.g. with a dataset shape (10, 5, 4, 2), writing like this::
+
+            ds[..., 0] = np.ones((5, 4))
+
+        The source shape (5, 4) will expand to (1, 5, 4, 1).
+        Then the broadcast method below repeats that chunk 10
+        times to write to an effective shape of (10, 5, 4, 1).
+        """
+        start, count, step, scalar = self._sel
+
+        rank = len(count)
+        remaining_src_dims = list(source_shape)
+
+        eshape = []
+        for idx in range(1, rank + 1):
+            if len(remaining_src_dims) == 0 or scalar[-idx]:  # Skip scalar axes
+                eshape.append(1)
+            else:
+                t = remaining_src_dims.pop()
+                if t == 1 or count[-idx] == t:
+                    eshape.append(t)
+                else:
+                    raise TypeError("Can't broadcast %s -> %s" % (source_shape, self.array_shape))  # array shape
+
+        if any([n > 1 for n in remaining_src_dims]):
+            # All dimensions from target_shape should either have been popped
+            # to match the selection shape, or be 1.
+            raise TypeError("Can't broadcast %s -> %s" % (source_shape, self.array_shape))  # array shape
+
+        # We have built eshape backwards, so now reverse it
+        return tuple(eshape[::-1])
+
+
+    def broadcast(self, source_shape):
         """ Return an iterator over target dataspaces for broadcasting.
 
         Follows the standard NumPy broadcasting rules against the current
         selection shape (self.mshape).
         """
         if self.shape == ():
-            if np.product(target_shape) != 1:
-                raise TypeError("Can't broadcast %s to scalar" % target_shape)
+            if product(source_shape) != 1:
+                raise TypeError("Can't broadcast %s to scalar" % source_shape)
             self._id.select_all()
             yield self._id
             return
@@ -269,26 +313,7 @@ class SimpleSelection(Selection):
         start, count, step, scalar = self._sel
 
         rank = len(count)
-        target = list(target_shape)
-
-        tshape = []
-        for idx in range(1,rank+1):
-            if len(target) == 0 or scalar[-idx]:     # Skip scalar axes
-                tshape.append(1)
-            else:
-                t = target.pop()
-                if t == 1 or count[-idx] == t:
-                    tshape.append(t)
-                else:
-                    raise TypeError("Can't broadcast %s -> %s" % (target_shape, self.mshape))
-
-        if any([n > 1 for n in target]):
-            # All dimensions from target_shape should either have been popped
-            # to match the selection shape, or be 1.
-            raise TypeError("Can't broadcast %s -> %s" % (target_shape, self.mshape))
-
-        tshape.reverse()
-        tshape = tuple(tshape)
+        tshape = self.expand_shape(source_shape)
 
         chunks = tuple(x//y for x, y in zip(count, tshape))
         nchunks = product(chunks)
@@ -402,7 +427,12 @@ class FancySelection(Selection):
         self._mshape = tuple(abs(x) for x in mshape)  # Convert -1 back to 1
         self._array_shape = tuple(x for x in mshape if x >= 0)
 
-    def broadcast(self, target_shape):
+    def expand_shape(self, source_shape):
+        if not source_shape == self.array_shape:
+            raise TypeError("Broadcasting is not supported for complex selections")
+        return source_shape
+
+    def broadcast(self, source_shape):
         if not source_shape == self.array_shape:
             raise TypeError("Broadcasting is not supported for complex selections")
         yield self._id

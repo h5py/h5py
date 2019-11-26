@@ -757,13 +757,7 @@ class Dataset(HLObject):
             mshape = val.shape
 
         # Perform the write, with broadcasting
-        # Be careful to pad memory shape with ones to avoid HDF5 chunking
-        # glitch, which kicks in for mismatched memory/file selections
-        if len(mshape) < len(self.shape):
-            mshape_pad = (1,)*(len(self.shape)-len(mshape)) + mshape
-        else:
-            mshape_pad = mshape
-        mspace = h5s.create_simple(mshape_pad, (h5s.UNLIMITED,)*len(mshape_pad))
+        mspace = h5s.create_simple(selection.expand_shape(mshape))
         for fspace in selection.broadcast(mshape):
             self.id.write(mspace, fspace, val, mtype, dxpl=self._dxpl)
 
