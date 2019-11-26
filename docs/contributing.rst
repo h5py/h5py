@@ -354,3 +354,59 @@ In the Cython code, these show up as "preprocessor" defines ``MPI`` and
 
 High-level code can check the version of the HDF5 library, or check to see if
 the method is present on ``FileID`` objects.
+
+
+Testing MPI-only features/code
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Typically to run code under MPI, ``mpirun`` must be used to start the MPI
+processes. Similarly, tests using MPI features (such as collective IO), must
+also be run under ``mpirun``. h5py uses pytest markers (specifically
+``pytest.mark.mpi`` and other markers from
+`pytest-mpi <https://pytest-mpi.readthedocs.io>`_) to specify which tests
+require usage of ``mpirun``, and will handle skipping the tests as needed. A
+simple example of how to do this is::
+
+   @pytest.mark.mpi
+   def test_mpi_feature():
+      import mpi4py
+      # test the MPI feature
+
+To run these tests, you'll need to:
+
+1. Have ``tox`` installed (e.g. via ``pip install tox``)
+2. Have HDF5 built with MPI as per :ref:`build_mpi`
+
+Then running::
+
+   $ CC='mpicc' HDF5_MPI=ON tox -e py37-test-deps-mpi4py
+
+should run the tests. You may need to pass ``HDF5_DIR`` depending on the
+location of the HDF5 with MPI support. You can choose which python version to
+build against by changing py37 (e.g. py36 runs python 3.6, this is a tox
+feature), and test with the minimum version requirements by using ``mindeps``
+rather than ``deps``.
+
+If you get an error similar to::
+
+   There are not enough slots available in the system to satisfy the 4 slots
+   that were requested by the application:
+     python
+
+   Either request fewer slots for your application, or make more slots available
+   for use.
+
+then you need to reduce the number of MPI processes you are asking MPI to use.
+If you have already reduced the number of processes requested (or are running
+the default number which is 2), you will need to look up the documentation for
+your MPI implementation for handling this error. On OpenMPI (which is usually
+the default MPI implementation on most systems), running::
+
+    $ export OMPI_MCA_rmaps_base_oversubscribe=1
+
+will instruct OpenMPI to allow more MPI processes than available cores on your
+system.
+
+If you need to pass additional environment variables to your MPI implementation,
+add these variables to the `passenv` setting in the `tox.ini`, and send us a PR
+with that change noting the MPI implementation.

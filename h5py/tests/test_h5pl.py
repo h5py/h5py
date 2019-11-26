@@ -20,6 +20,7 @@ pytestmark = pytest.mark.skipif(
 )
 
 
+@pytest.mark.mpi_skip
 @insubprocess
 @subproc_env({'HDF5_PLUGIN_PATH': 'h5py_plugin_test'})
 def test_default(request):
@@ -27,6 +28,7 @@ def test_default(request):
     assert h5pl.get(0) == b'h5py_plugin_test'
 
 
+@pytest.mark.mpi_skip
 @insubprocess
 @subproc_env({'HDF5_PLUGIN_PATH': 'h5py_plugin_test'})
 def test_append(request):
@@ -36,6 +38,7 @@ def test_append(request):
     assert h5pl.get(1) == b'/opt/hdf5/vendor-plugin'
 
 
+@pytest.mark.mpi_skip
 @insubprocess
 @subproc_env({'HDF5_PLUGIN_PATH': 'h5py_plugin_test'})
 def test_prepend(request):
@@ -45,6 +48,7 @@ def test_prepend(request):
     assert h5pl.get(1) == b'h5py_plugin_test'
 
 
+@pytest.mark.mpi_skip
 @insubprocess
 @subproc_env({'HDF5_PLUGIN_PATH': 'h5py_plugin_test'})
 def test_insert(request):
@@ -54,6 +58,7 @@ def test_insert(request):
     assert h5pl.get(1) == b'h5py_plugin_test'
 
 
+@pytest.mark.mpi_skip
 @insubprocess
 @subproc_env({'HDF5_PLUGIN_PATH': 'h5py_plugin_test'})
 def test_replace(request):
@@ -62,6 +67,7 @@ def test_replace(request):
     assert  h5pl.get(0) == b'/opt/hdf5/vendor-plugin'
 
 
+@pytest.mark.mpi_skip
 @insubprocess
 def test_remove(request):
     h5pl.remove(0)
