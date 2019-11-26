@@ -245,7 +245,6 @@ if MPI:
 class ChunkIterator(object):
     """
     Class to iterate through list of chunks of a given dataset
-    # Note: Only works with PY3 since as is doesn't have a "next = __next__" redef
     """
     def __init__(self, dset, source_sel=None):
         self._shape = dset.shape
@@ -268,12 +267,12 @@ class ChunkIterator(object):
             else:
                 self._sel = source_sel
         if len(self._sel) != rank:
-            raise ValueError("Invalid selection")
+            raise ValueError("Invalid selection - selection region must have same rank as dataset")
         self._chunk_index = []
         for dim in range(rank):
             s = self._sel[dim]
             if s.start < 0 or s.stop > self._shape[dim] or s.stop <= s.start:
-                raise ValueError("Invalid selection")
+                raise ValueError("Invalid selection - selection region must be within dataset space")
             index = s.start // self._layout[dim]
             self._chunk_index.append(index)
 
@@ -284,10 +283,7 @@ class ChunkIterator(object):
     def __next__(self):
 
         def get_ret(item):
-            if len(item) == 1:
-                return item[0]
-            else:
-                return tuple(item)
+            return tuple(item)
         rank = len(self._shape)
         slices = []
         if rank == 0 or self._chunk_index[0] * self._layout[0] >= self._sel[0].stop:
@@ -578,10 +574,18 @@ class Dataset(HLObject):
 
     @with_phil
     def iter_chunks(self, sel=None):
-        """ Return chunk iterator.  TypeError if the dataset is not chunked.
-            If sel is provided, only chunks that intersect the selected region
-            will bee reeturned, otherwise all chunks in the dataset will be
-            returned.
+        """ Return chunk iterator.  If set, the sel argument is a slice or
+        tuple of slices that defines the region to be used. If not set, the
+        entire dataspace will be used for the iterator.
+
+        For each chunk within the given region, the iterator yields a tuple of
+        slices that gives the intersection of the given chunk with the
+        selection area.
+
+        A TypeError will be raised if the dataset is not chunked.
+
+        A ValueError will be raised if the selection region is invalid.
+
         """
         return ChunkIterator(self, sel)
 

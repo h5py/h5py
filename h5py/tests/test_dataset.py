@@ -712,18 +712,11 @@ class TestChunkIterator(BaseDataset):
 
     def test_1d(self):
         dset = self.f.create_dataset("foo", (100,), chunks=(32,))
-        chunk_count = 0
         expected = (slice(0,32,1), slice(32,64,1), slice(64,96,1),slice(96,100,1))
-        for s in dset.iter_chunks():
-            self.assertEqual(s, expected[chunk_count])
-            chunk_count += 1
-        self.assertEqual(chunk_count, 4)
+        self.assertEqual(list(dset.iter_chunks()), expected)
         chunk_count = 0
         expected = (slice(50,64,1), slice(64,96,1), slice(96,97,1))
-        for s in dset.iter_chunks(np.s_[50:97]):
-            self.assertEqual(s, expected[chunk_count])
-            chunk_count += 1
-        self.assertEqual(chunk_count, 3)
+        self.assertEqual(list(dset.iter_chunks(np.s_[50:97])), expected)
 
     def test_2d(self):
         dset = self.f.create_dataset("foo", (100,100), chunks=(32,64))
