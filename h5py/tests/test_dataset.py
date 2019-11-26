@@ -726,7 +726,7 @@ class TestChunkIterator(BaseDataset):
         slice(0, 64, 1)), (slice(64, 96, 1), slice(64, 100, 1)),
         (slice(96, 100, 1), slice(0, 64, 1)), (slice(96, 100, 1),
         slice(64, 100, 1)))
-        self.assertEqual(list(dset.iter_chunks), list(expected))
+        self.assertEqual(list(dset.iter_chunks()), list(expected))
 
         expected = ((slice(48, 52, 1), slice(40, 50, 1)),)
         self.assertEqual(list(dset.iter_chunks(np.s_[48:52,40:50])), list(expected))
