@@ -149,9 +149,14 @@ class Selection(object):
         """ Shape of selection (always 1-D for this class) """
         return (self.nselect,)
 
-    def broadcast(self, target_shape):
+    @property
+    def array_shape(self):
+        """Shape of array to read/write (always 1-D for this class)"""
+        return self.mshape
+
+    def broadcast(self, source_shape):
         """ Get an iterable for broadcasting """
-        if np.product(target_shape) != self.nselect:
+        if product(source_shape) != self.nselect:
             raise TypeError("Broadcasting is not supported for point-wise selections")
         yield self._id
 
@@ -213,13 +218,17 @@ class SimpleSelection(Selection):
     @property
     def mshape(self):
         """ Shape of current selection """
-        return self._mshape
+        return self._sel[1]
+
+    @property
+    def array_shape(self):
+        return self._array_shape
 
     def __init__(self, shape, *args, **kwds):
         super(SimpleSelection, self).__init__(shape, *args, **kwds)
         rank = len(self.shape)
         self._sel = ((0,)*rank, self.shape, (1,)*rank, (False,)*rank)
-        self._mshape = self.shape
+        self._array_shape = self.shape
 
     def __getitem__(self, args):
 
@@ -238,7 +247,8 @@ class SimpleSelection(Selection):
 
         self._sel = (start, count, step, scalar)
 
-        self._mshape = tuple(x for x, y in zip(count, scalar) if not y)
+        # array shape drops dimensions where a scalar index was selected
+        self._array_shape = tuple(x for x, y in zip(count, scalar) if not y)
 
         return self
 
@@ -310,9 +320,13 @@ class FancySelection(Selection):
     def mshape(self):
         return self._mshape
 
+    @property
+    def array_shape(self):
+        return self._array_shape
+
     def __init__(self, shape, *args, **kwds):
         super(FancySelection, self).__init__(shape, *args, **kwds)
-        self._mshape = self.shape
+        self._mshape = self._array_shape = self.shape
 
     def __getitem__(self, args):
 
@@ -385,10 +399,11 @@ class FancySelection(Selection):
             elif scalar[idx]:
                 mshape[idx] = -1
 
-        self._mshape = tuple(x for x in mshape if x >= 0)
+        self._mshape = tuple(abs(x) for x in mshape)  # Convert -1 back to 1
+        self._array_shape = tuple(x for x in mshape if x >= 0)
 
     def broadcast(self, target_shape):
-        if not target_shape == self.mshape:
+        if not source_shape == self.array_shape:
             raise TypeError("Broadcasting is not supported for complex selections")
         yield self._id
 
