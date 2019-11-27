@@ -20,7 +20,6 @@ from libc.stdlib cimport realloc
 from .utils cimport emalloc, efree
 cfg = get_config()
 
-
 # Initialization of numpy
 cimport numpy as cnp
 from numpy cimport npy_intp, NPY_WRITEABLE, NPY_C_CONTIGUOUS, NPY_OWNDATA
@@ -558,7 +557,7 @@ cdef herr_t vlen2ndarray(hid_t src_id,
                          size_t bkg_stride,
                          void *buf_i,
                          void *bkg_i,
-                         hid_t dxpl) except -1:
+                         hid_t dxpl) except -1 with gil:
     """Convert variable length object to numpy array, typically a list of strings
 
     :param src_id: Identifier for the source datatype.
@@ -681,7 +680,7 @@ cdef herr_t ndarray2vlen(hid_t src_id,
                          size_t bkg_stride,
                          void *buf_i,
                          void *bkg_i,
-                         hid_t dxpl) except -1:
+                         hid_t dxpl) except -1 with gil:
     cdef:
         int command = cdata[0].command
         size_t src_size, dst_size
@@ -693,7 +692,6 @@ cdef herr_t ndarray2vlen(hid_t src_id,
         char* buf = <char*>buf_i
 
     if command == H5T_CONV_INIT:
-
         cdata[0].need_bkg = H5T_BKG_NO
         if not H5Tequal(src_id, H5PY_OBJ) or H5Tget_class(dst_id) != H5T_VLEN:
             return -2
@@ -707,11 +705,9 @@ cdef herr_t ndarray2vlen(hid_t src_id,
                 return -2
 
     elif command == H5T_CONV_FREE:
-
         pass
 
     elif command == H5T_CONV_CONV:
-
         # If there are no elements to convert, pdata will not point to
         # a valid PyObject*, so bail here to prevent accessing the dtype below
         if nl == 0:
