@@ -453,6 +453,23 @@ Reference
                >>> with dset.astype('int16'):
                ...     out = dset[:]
 
+    .. method:: iter_chunks
+
+       Iterate over chunks in a chunked dataset. The optional ``sel`` argument
+       is a slice or tuple of slices that defines the region to be used.
+       If not set, the entire dataspace will be used for the iterator.
+
+       For each chunk within the given region, the iterator yields a tuple of
+       slices that gives the intersection of the given chunk with the
+       selection area. This can be used to :ref:`read or write data in that
+       chunk <dataset_slicing>`.
+
+       A TypeError will be raised if the dataset is not chunked.
+
+       A ValueError will be raised if the selection region is invalid.
+
+       .. versionadded:: 3.0
+
     .. method:: resize(size, axis=None)
 
         Change the shape of a dataset.  `size` may be a tuple giving the new
