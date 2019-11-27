@@ -11,7 +11,7 @@ Deprecations
 Exposing HDF5 functions
 -----------------------
 
-* <news item> 
+* <news item>
 
 Bug fixes
 ---------
