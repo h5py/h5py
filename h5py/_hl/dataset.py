@@ -281,9 +281,6 @@ class ChunkIterator(object):
         return self
 
     def __next__(self):
-
-        def get_ret(item):
-            return tuple(item)
         rank = len(self._shape)
         slices = []
         if rank == 0 or self._chunk_index[0] * self._layout[0] >= self._sel[0].stop:
@@ -311,13 +308,13 @@ class ChunkIterator(object):
             chunk_end = self._chunk_index[dim] * self._layout[dim]
             if chunk_end < s.stop:
                 # we still have room to extend along this dimensions
-                return get_ret(slices)
+                return tuple(slices)
 
             if dim > 0:
                 # reset to the start and continue iterating with higher dimension
                 self._chunk_index[dim] = 0
             dim -= 1
-        return get_ret(slices)
+        return tuple(slices)
 
 class Dataset(HLObject):
 
