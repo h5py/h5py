@@ -242,6 +242,7 @@ if MPI:
             # pylint: disable=protected-access
             self._dset._dxpl.set_dxpl_mpio(h5fd.MPIO_INDEPENDENT)
 
+
 class ChunkIterator(object):
     """
     Class to iterate through list of chunks of a given dataset
@@ -275,7 +276,6 @@ class ChunkIterator(object):
                 raise ValueError("Invalid selection - selection region must be within dataset space")
             index = s.start // self._layout[dim]
             self._chunk_index.append(index)
-
 
     def __iter__(self):
         return self
