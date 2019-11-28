@@ -24,8 +24,7 @@ cdef inline void* emalloc(size_t size) except? NULL:
     """Wrapper for malloc(size) with the following behavior:
 
     1. Always returns NULL for emalloc(0)
-    2. Raises MemoryError for emalloc(size<0) and returns NULL **IMPOSSIBLE as size>=0** 
-    3. Raises MemoryError if allocation fails and returns NULL
+    2. Raises MemoryError if allocation fails and returns NULL
 
     This function expects to be called with the GIL held
 
