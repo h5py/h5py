@@ -35,7 +35,7 @@ class Line(object):
 
         Exists to provide the following attributes:
 
-        nogil:      Bool indicating if the function is pure C (not calling any Python callback)
+        nogil:      String indicating if the function is pure C hence not requireing the GIL and not calling any Python callback
         mpi:        Bool indicating if MPI required
         error:      Bool indicating if special error handling required
         version:    None or a minimum-version tuple
@@ -247,12 +247,11 @@ cdef {0.code} {0.fname}({0.sig}) except *:
     with nogil:
         _hdf5.H5Eset_auto(NULL, NULL)
         r = _hdf5.{0.fname}({0.args})
-        if r{condition}:
-            with gil:
-                if set_exception():
-                    return <{0.code}>{retval}
-                elif {0.error}:
-                    raise RuntimeError("Unspecified error in {0.fname} (return value {condition})")
+    if r{condition}:
+        if set_exception():
+            return <{0.code}>{retval}
+        elif {0.error}:
+            raise RuntimeError("Unspecified error in {0.fname} (return value {condition})")
     return r
 
 """
