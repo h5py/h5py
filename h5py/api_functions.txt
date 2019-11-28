@@ -47,8 +47,8 @@ hdf5:
   herr_t    H5Aclose(hid_t attr_id)
   herr_t    H5Adelete(hid_t loc_id, char *name)
 
-  herr_t    H5Aread(hid_t attr_id, hid_t mem_type_id, void *buf) nogil
-  herr_t    H5Awrite(hid_t attr_id, hid_t mem_type_id, void *buf ) nogil
+  herr_t    H5Aread(hid_t attr_id, hid_t mem_type_id, void *buf)
+  herr_t    H5Awrite(hid_t attr_id, hid_t mem_type_id, void *buf )
 
   int       H5Aget_num_attrs(hid_t loc_id)
   ssize_t   H5Aget_name(hid_t attr_id, size_t buf_size, char *buf)
