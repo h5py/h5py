@@ -54,7 +54,7 @@ cdef extern from "hdf5.h":
         H5E_CLOSEERROR     # Close failed
         H5E_OVERFLOW       # Address overflowed
         H5E_FCNTL          # File control (fcntl) failed
-    
+
         # Resource errors
         H5E_NOSPACE        # No space available for allocation
         H5E_CANTALLOC      # Can't allocate space
@@ -66,7 +66,7 @@ cdef extern from "hdf5.h":
         H5E_CANTGC         # Unable to garbage collect
         H5E_CANTGETSIZE    # Unable to compute size
         H5E_OBJOPEN        # Object is already open
-    
+
         # Heap errors
         H5E_CANTRESTORE    # Can't restore condition
         H5E_CANTCOMPUTE    # Can't compute value
@@ -74,22 +74,22 @@ cdef extern from "hdf5.h":
         H5E_CANTATTACH     # Can't attach object
         H5E_CANTUPDATE     # Can't update object
         H5E_CANTOPERATE    # Can't operate on object
-    
+
         # Function entry/exit interface errors
         H5E_CANTINIT       # Unable to initialize object
         H5E_ALREADYINIT    # Object already initialized
         H5E_CANTRELEASE    # Unable to release object
-    
+
         # Property list errors
         H5E_CANTGET        # Can't get value
         H5E_CANTSET        # Can't set value
         H5E_DUPCLASS       # Duplicate class name in parent class
-    
+
         # Free space errors
         H5E_CANTMERGE      # Can't merge objects
         H5E_CANTREVIVE     # Can't revive object
         H5E_CANTSHRINK     # Can't shrink container
-    
+
         # Object header related errors
         H5E_LINKCOUNT      # Bad object header link
         H5E_VERSION        # Wrong version number
@@ -99,10 +99,10 @@ cdef extern from "hdf5.h":
         H5E_BADITER        # Iteration failed
         H5E_CANTPACK       # Can't pack messages
         H5E_CANTRESET      # Can't reset object count
-    
+
         # System level errors
         H5E_SYSERRSTR      # System error message
-    
+
         # I/O pipeline errors
         H5E_NOFILTER       # Requested filter is not available
         H5E_CALLBACK       # Callback failed
@@ -110,16 +110,16 @@ cdef extern from "hdf5.h":
         H5E_SETLOCAL       # Error from filter 'set local' callback
         H5E_NOENCODER      # Filter present but encoding disabled
         H5E_CANTFILTER     # Filter operation failed
-    
+
         # Group related errors
         H5E_CANTOPENOBJ    # Can't open object
         H5E_CANTCLOSEOBJ   # Can't close object
         H5E_COMPLEN        # Name component is too long
         H5E_PATH           # Problem with path to object
-    
+
         # No error
         H5E_NONE_MINOR     # No error
-    
+
         # File accessability errors
         H5E_FILEEXISTS     # File already exists
         H5E_FILEOPEN       # File already open
@@ -130,7 +130,7 @@ cdef extern from "hdf5.h":
         H5E_BADFILE        # Bad file ID accessed
         H5E_TRUNCATED      # File has been truncated
         H5E_MOUNT          # File mount error
-    
+
         # Object atom related errors
         H5E_BADATOM        # Unable to find atom information (already closed?)
         H5E_BADGROUP       # Unable to find ID group information
@@ -138,7 +138,7 @@ cdef extern from "hdf5.h":
         H5E_CANTINC        # Unable to increment reference count
         H5E_CANTDEC        # Unable to decrement reference count
         H5E_NOIDS          # Out of IDs for group
-    
+
         # Cache related errors
         H5E_CANTFLUSH      # Unable to flush data from cache
         H5E_CANTSERIALIZE  # Unable to serialize data from cache
@@ -156,19 +156,19 @@ cdef extern from "hdf5.h":
         H5E_CANTDIRTY      # Unable to mark metadata as dirty
         H5E_CANTEXPUNGE    # Unable to expunge a metadata cache entry
         H5E_CANTRESIZE     # Unable to resize a metadata cache entry
-    
+
         # Link related errors
         H5E_TRAVERSE       # Link traversal failure
         H5E_NLINKS         # Too many soft links in path
         H5E_NOTREGISTERED  # Link class not registered
         H5E_CANTMOVE       # Move callback returned error
         H5E_CANTSORT       # Can't sort objects
-    
+
         # Parallel MPI errors
         H5E_MPI           # Some MPI function failed
         H5E_MPIERRSTR     # MPI Error String
         H5E_CANTRECV      # Can't receive data
-    
+
         # Dataspace errors
         H5E_CANTCLIP      # Can't clip hyperslab region
         H5E_CANTCOUNT     # Can't count elements
@@ -176,14 +176,14 @@ cdef extern from "hdf5.h":
         H5E_CANTNEXT      # Can't move to next iterator location
         H5E_BADSELECT     # Invalid selection
         H5E_CANTCOMPARE   # Can't compare objects
-    
+
         # Argument errors
         H5E_UNINITIALIZED  # Information is uinitialized
         H5E_UNSUPPORTED    # Feature is unsupported
         H5E_BADTYPE        # Inappropriate type
         H5E_BADRANGE       # Out of range
         H5E_BADVALUE       # Bad value
-    
+
         # B-tree related errors
         H5E_NOTFOUND            # Object not found
         H5E_EXISTS              # Object already exists
@@ -196,7 +196,7 @@ cdef extern from "hdf5.h":
         H5E_CANTLIST            # Unable to list node
         H5E_CANTMODIFY          # Unable to modify record
         H5E_CANTREMOVE          # Unable to remove object
-    
+
         # Datatype conversion errors
         H5E_CANTCONVERT         # Can't convert datatypes
         H5E_BADSIZE             # Bad size for object
@@ -220,12 +220,12 @@ cdef extern from "hdf5.h":
     ctypedef herr_t (*H5E_auto_t)(void *client_data)
     herr_t    H5Eset_auto(H5E_auto_t func, void *client_data) nogil
     herr_t    H5Eget_auto(H5E_auto_t *func, void** client_data)
-    
+
     herr_t    H5Eprint(void *stream)
-    
+
     ctypedef herr_t (*H5E_walk_t)(int n, H5E_error_t *err_desc, void* client_data)
     herr_t    H5Ewalk(H5E_direction_t direction, H5E_walk_t func, void* client_data)
-    
+
 # --- Functions for managing the HDF5 error callback mechanism ---
 
 ctypedef struct err_cookie:
