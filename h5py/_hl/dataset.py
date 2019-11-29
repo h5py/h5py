@@ -616,7 +616,10 @@ class Dataset(HLObject):
         """
         args = args if isinstance(args, tuple) else (args,)
 
-        if self._fast_read_ok and (new_dtype is None) and (self._local.astype is None):
+        if new_dtype is None:
+            new_dtype = getattr(self._local, 'astype', None)
+
+        if self._fast_read_ok and (new_dtype is None):
             try:
                 return self._fast_reader.read(args)
             except TypeError:
@@ -632,9 +635,6 @@ class Dataset(HLObject):
         # Sort field indices from the rest of the args.
         names = tuple(x for x in args if isinstance(x, str))
         args = tuple(x for x in args if not isinstance(x, str))
-
-        if new_dtype is None:
-            new_dtype = getattr(self._local, 'astype', None)
 
         if new_dtype is not None:
             new_dtype = readtime_dtype(new_dtype, names)
