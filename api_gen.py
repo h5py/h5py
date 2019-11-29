@@ -247,7 +247,7 @@ class LineProcessor(object):
 cdef {0.code} {0.fname}({0.sig}) except *:
     cdef {0.code} r
     with nogil:
-        _hdf5.H5Eset_auto(NULL, NULL)
+        set_default_error_handler()
         r = _hdf5.{0.fname}({0.args})
     if r{condition}:
         if set_exception():

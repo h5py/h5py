@@ -148,7 +148,7 @@ cdef err_cookie _error_handler  # Store error handler used by h5py
 _error_handler.func = NULL
 _error_handler.data = NULL
 
-cdef void set_default_error_handler():
+cdef void set_default_error_handler() nogil:
     """Set h5py's current default error handler"""
     H5Eset_auto(_error_handler.func, _error_handler.data)
 
