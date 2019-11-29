@@ -35,7 +35,9 @@ class Line(object):
 
         Exists to provide the following attributes:
 
-        nogil:      String indicating if the function is pure C hence not requireing the GIL and not calling any Python callback
+        nogil:      String indicating if we should release the GIL to call this
+                    function. Any Python callbacks it could trigger must
+                    acquire the GIL (e.g. using 'with gil' in Cython).
         mpi:        Bool indicating if MPI required
         error:      Bool indicating if special error handling required
         version:    None or a minimum-version tuple
@@ -46,7 +48,7 @@ class Line(object):
 
         Example:    MPI ERROR 1.8.12 int foo(char* a, size_t b)
 
-        .nogil:     False
+        .nogil:     ""
         .mpi:       True
         .error:     True
         .version:   (1, 8, 12)
