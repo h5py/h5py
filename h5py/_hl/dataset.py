@@ -237,6 +237,79 @@ if MPI:
             self._dset._dxpl.set_dxpl_mpio(h5fd.MPIO_INDEPENDENT)
 
 
+class ChunkIterator(object):
+    """
+    Class to iterate through list of chunks of a given dataset
+    """
+    def __init__(self, dset, source_sel=None):
+        self._shape = dset.shape
+        rank = len(dset.shape)
+
+        if not dset.chunks:
+            # can only use with chunked datasets
+            raise TypeError("Chunked dataset required")
+
+        self._layout = dset.chunks
+        if source_sel is None:
+            # select over entire dataset
+            slices = []
+            for dim in range(rank):
+                slices.append(slice(0, self._shape[dim]))
+            self._sel = tuple(slices)
+        else:
+            if isinstance(source_sel, slice):
+                self._sel = (source_sel,)
+            else:
+                self._sel = source_sel
+        if len(self._sel) != rank:
+            raise ValueError("Invalid selection - selection region must have same rank as dataset")
+        self._chunk_index = []
+        for dim in range(rank):
+            s = self._sel[dim]
+            if s.start < 0 or s.stop > self._shape[dim] or s.stop <= s.start:
+                raise ValueError("Invalid selection - selection region must be within dataset space")
+            index = s.start // self._layout[dim]
+            self._chunk_index.append(index)
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        rank = len(self._shape)
+        slices = []
+        if rank == 0 or self._chunk_index[0] * self._layout[0] >= self._sel[0].stop:
+            # ran past the last chunk, end iteration
+            raise StopIteration()
+
+        for dim in range(rank):
+            s = self._sel[dim]
+            start = self._chunk_index[dim] * self._layout[dim]
+            stop = (self._chunk_index[dim] + 1) * self._layout[dim]
+            # adjust the start if this is an edge chunk
+            if start < s.start:
+                start = s.start
+            if stop > s.stop:
+                stop = s.stop  # trim to end of the selection
+            s = slice(start, stop, 1)
+            slices.append(s)
+
+        # bump up the last index and carry forward if we run outside the selection
+        dim = rank - 1
+        while dim >= 0:
+            s = self._sel[dim]
+            self._chunk_index[dim] += 1
+
+            chunk_end = self._chunk_index[dim] * self._layout[dim]
+            if chunk_end < s.stop:
+                # we still have room to extend along this dimensions
+                return tuple(slices)
+
+            if dim > 0:
+                # reset to the start and continue iterating with higher dimension
+                self._chunk_index[dim] = 0
+            dim -= 1
+        return tuple(slices)
+
 class Dataset(HLObject):
 
     """
@@ -514,6 +587,22 @@ class Dataset(HLObject):
         )
 
     @with_phil
+    def iter_chunks(self, sel=None):
+        """ Return chunk iterator.  If set, the sel argument is a slice or
+        tuple of slices that defines the region to be used. If not set, the
+        entire dataspace will be used for the iterator.
+
+        For each chunk within the given region, the iterator yields a tuple of
+        slices that gives the intersection of the given chunk with the
+        selection area.
+
+        A TypeError will be raised if the dataset is not chunked.
+
+        A ValueError will be raised if the selection region is invalid.
+
+        """
+        return ChunkIterator(self, sel)
+
     def __getitem__(self, args, new_dtype=None):
         """ Read a slice from the HDF5 dataset.
 
@@ -527,7 +616,10 @@ class Dataset(HLObject):
         """
         args = args if isinstance(args, tuple) else (args,)
 
-        if self._fast_read_ok and (new_dtype is None) and (self._local.astype is None):
+        if new_dtype is None:
+            new_dtype = getattr(self._local, 'astype', None)
+
+        if self._fast_read_ok and (new_dtype is None):
             try:
                 return self._fast_reader.read(args)
             except TypeError:
@@ -543,9 +635,6 @@ class Dataset(HLObject):
         # Sort field indices from the rest of the args.
         names = tuple(x for x in args if isinstance(x, str))
         args = tuple(x for x in args if not isinstance(x, str))
-
-        if new_dtype is None:
-            new_dtype = getattr(self._local, 'astype', None)
 
         if new_dtype is not None:
             new_dtype = readtime_dtype(new_dtype, names)
