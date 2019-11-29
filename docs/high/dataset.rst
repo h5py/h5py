@@ -180,6 +180,12 @@ shape for you::
 Auto-chunking is also enabled when using compression or ``maxshape``, etc.,
 if a chunk shape is not manually specified.
 
+The chunk_iter method returns an iterator that can be used to perform chunk by chunk
+reads or writes::
+
+    >>> for s in dset.chunk_iter():
+    >>>     arr = dset[s]  # get numpy array for chunk
+
 
 .. _dataset_resize:
 
@@ -446,6 +452,23 @@ Reference
 
                >>> with dset.astype('int16'):
                ...     out = dset[:]
+
+    .. method:: iter_chunks
+
+       Iterate over chunks in a chunked dataset. The optional ``sel`` argument
+       is a slice or tuple of slices that defines the region to be used.
+       If not set, the entire dataspace will be used for the iterator.
+
+       For each chunk within the given region, the iterator yields a tuple of
+       slices that gives the intersection of the given chunk with the
+       selection area. This can be used to :ref:`read or write data in that
+       chunk <dataset_slicing>`.
+
+       A TypeError will be raised if the dataset is not chunked.
+
+       A ValueError will be raised if the selection region is invalid.
+
+       .. versionadded:: 3.0
 
     .. method:: resize(size, axis=None)
 
