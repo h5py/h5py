@@ -24,10 +24,12 @@ cdef inline void* emalloc(size_t size) except? NULL:
     """Wrapper for malloc(size) with the following behavior:
 
     1. Always returns NULL for emalloc(0)
-    2. Raises MemoryError for emalloc(size<0) and returns NULL
-    3. Raises MemoryError if allocation fails and returns NULL
+    2. Raises MemoryError if allocation fails and returns NULL
+
+    This function expects to be called with the GIL held
 
     :param size: Size of the memory (in bytes) to allocate
+    :return: memory address with the given memory
     """
     cdef void *retval = NULL
 
@@ -40,8 +42,10 @@ cdef inline void* emalloc(size_t size) except? NULL:
         PyErr_SetString(MemoryError, errmsg)
     return retval
 
+
 cdef inline void efree(void* what):
     free(what)
+
 
 def _test_emalloc(size_t size):
     """Stub to simplify unit tests"""
@@ -50,6 +54,7 @@ def _test_emalloc(size_t size):
     if size == 0:
         assert mem == NULL
     efree(mem)
+
 
 # === Testing of NumPy arrays =================================================
 

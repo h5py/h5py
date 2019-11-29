@@ -218,7 +218,7 @@ cdef extern from "hdf5.h":
   herr_t    H5Eclear() except *
 
   ctypedef herr_t (*H5E_auto_t)(void *client_data)
-  herr_t    H5Eset_auto(H5E_auto_t func, void *client_data)
+  herr_t    H5Eset_auto(H5E_auto_t func, void *client_data) nogil
   herr_t    H5Eget_auto(H5E_auto_t *func, void** client_data)
 
   herr_t    H5Eprint(void *stream)
@@ -238,4 +238,4 @@ ctypedef struct err_cookie:
 cdef err_cookie set_error_handler(err_cookie handler)
 
 # Set the default error handler set by silence_errors/unsilence_errors
-cdef void set_default_error_handler()
+cdef void set_default_error_handler() nogil

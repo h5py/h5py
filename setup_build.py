@@ -1,4 +1,4 @@
-
+#!/usr/bin/env python3
 """
     Implements a custom Distutils build_ext replacement, which handles the
     full extension module build process, from api_gen to C compilation and
@@ -200,7 +200,7 @@ DEF COMPLEX256_SUPPORT = %(complex256_support)s
                     'mpi': bool(config.mpi),
                     'mpi4py_v2': bool(v2),
                     'version': tuple(int(x) for x in config.hdf5_version.split('.')),
-                    'complex256_support': hasattr(numpy, 'complex256')
+                    'complex256_support': hasattr(numpy, 'complex256'),
                 }
                 s = s.encode('utf-8')
                 f.write(s)
