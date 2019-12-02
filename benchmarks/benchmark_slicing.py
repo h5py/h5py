@@ -8,19 +8,11 @@ logger = logging.getLogger(__name__)
 import h5py
 import hdf5plugin
 
-#Needed for 
+#Needed for
 from queue import Queue
 from threading import Thread, Event
 import multiprocessing
 
-# Some constants
-ndim = 3
-size = 1024
-chunk = 64
-dtype = numpy.dtype("float32")
-precision = 16
-nb_read = 64
-workspace = "/tmp"
 
 class Reader(Thread):
     """Thread executing tasks from a given tasks queue"""
@@ -55,12 +47,12 @@ class Reader(Thread):
 class SlicingBenchmark:
     """
     Benchmark for reading slices in the most pathlogical way in a chunked dataset
-    Allows the test  
+    Allows the test
     """
     def __init__(self, ndim=3, size=1024, chunk=64, dtype="float32", precision=16, compression_kwargs=None):
         """
         Defines some parameters for the benchmark, can be tuned later on.
-         
+
         :param ndim: work in 3D datasets
         :param size: Volume size 1024**3 elements
         :param chunk: size of one chunk, with itemsize = 32bits this makes block size of 1MB by default
@@ -82,41 +74,41 @@ class SlicingBenchmark:
             self.compression = {}
         else:
             self.compression = dict(compression_kwargs)
-        
+
     def setup(self):
         self.filename = os.path.join(self.tmpdir.name, "benchmark_slicing.h5")
         logger.info("Saving data in %s" % self.filename)
         logger.info("Total volume size: %.3fGB, Needed memory: %.3fGB"%(self.total_size/1e9, self.needed_memory/1e9))
-        
-        shape = [size]  * ndim
-        chunks = (chunk,) * ndim
-        if precision and self.dtype.char in "dfDF":
+
+        shape = [self.size]  * self.ndim
+        chunks = (self.chunk,) * self.ndim
+        if self.precision and self.dtype.char in "df":
             if self.dtype.itemsize == 4:
-                mask = numpy.uint32(((1<<32) - (1<<(precision))))
+                mask = numpy.uint32(((1<<32) - (1<<(self.precision))))
             elif self.dtype.itemsize == 8:
-                mask = numpy.uint64(((1<<64) - (1<<(precision))))
+                mask = numpy.uint64(((1<<64) - (1<<(self.precision))))
             else:
                 logger.warning("only float32 and float64 are supported")
         else:
             self.precision = 0
         t0 = time.time()
         with h5py.File(self.filename, 'w') as h:
-            ds = h.create_dataset(self.h5path, 
-                                  shape, 
+            ds = h.create_dataset(self.h5path,
+                                  shape,
                                   chunks=chunks,
                                   **self.compression)
             for i in range(0, self.size, self.chunk):
                 x, y, z = numpy.ogrid[i:i+self.chunk, :self.size, :self.size]
-                data = (numpy.sin(x/3)*numpy.sin(y/5)*numpy.sin(z/7)).astype(dtype)
+                data = (numpy.sin(x/3)*numpy.sin(y/5)*numpy.sin(z/7)).astype(self.dtype)
                 if self.precision:
                     idata = data.view(mask.dtype)
                     idata &= mask # mask out the last XX bits
-                ds[i:i+chunk] = data
+                ds[i:i+self.chunk] = data
         t1 = time.time()
         filesize = os.stat(self.filename).st_size
-        logger.info("Compression: %.3f "%(self.total_size/filesize) + 
+        logger.info("Compression: %.3f "%(self.total_size/filesize) +
                     "time %.3fs "%(t1-t0) +
-                    "uncompressed data saving speed %.3f MB/s " % (self.total_size/(t1-t0)/1e6) +  
+                    "uncompressed data saving speed %.3f MB/s " % (self.total_size/(t1-t0)/1e6) +
                     "effective write speed  %.3f MB/s "%(filesize/(t1-t0)/1e6))
 
     def teardown(self):
@@ -132,9 +124,9 @@ class SlicingBenchmark:
         res = []
         noneslice = slice(None)
         for i, w in enumerate(position):
-            where = [noneslice]*i + [w] + [noneslice]*(l-1-i) 
+            where = [noneslice]*i + [w] + [noneslice]*(l-1-i)
             res.append(dataset[tuple(where)])
-        return res 
+        return res
 
     def time_sequential_reads(self, nb_read=64):
         "Perform the reading of many orthogonal hyperplanes"
@@ -145,7 +137,7 @@ class SlicingBenchmark:
             for i in where:
                 data = self.read_slice(ds, i)
             t1 = time.time()
-        logger.info("Time for reading %sx%s slices: %.3fs fps: %.3f "%(self.ndim, nb_read, t1-t0, self.ndim*nb_read/(t1-t0)) + 
+        logger.info("Time for reading %sx%s slices: %.3fs fps: %.3f "%(self.ndim, nb_read, t1-t0, self.ndim*nb_read/(t1-t0)) +
                     "Uncompressed data read speed %.3f MB/s"%(self.ndim*nb_read*self.needed_memory/(t1-t0)/1e6))
         return t1 - t0
 
@@ -173,7 +165,7 @@ class SlicingBenchmark:
         quit.set()
         for i in range(nthreads):
             tasks.put(None)
-        logger.info("Time for %s-threaded reading %sx%s slices: %.3fs fps: %.3f "%(nthreads, self.ndim, nb_read, t1-t0, self.ndim*nb_read/(t1-t0)) + 
+        logger.info("Time for %s-threaded reading %sx%s slices: %.3fs fps: %.3f "%(nthreads, self.ndim, nb_read, t1-t0, self.ndim*nb_read/(t1-t0)) +
                     "Uncompressed data read speed %.3f MB/s"%(self.ndim*nb_read*self.needed_memory/(t1-t0)/1e6))
         return t1 - t0
 
@@ -189,4 +181,4 @@ if __name__ == "__main__":
     benckmark.time_sequential_reads(64)
     benckmark.time_threaded_reads(64)
     benckmark.teardown()
-    
+
