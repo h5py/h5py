@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-import sys
 import os
 import time
 import numpy
@@ -7,6 +6,7 @@ from tempfile import TemporaryDirectory
 import logging
 logger = logging.getLogger(__name__)
 import h5py
+import hdf5plugin
 
 #Needed for 
 from queue import Queue
@@ -180,7 +180,11 @@ class SlicingBenchmark:
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
-    benckmark = SlicingBenchmark()#compression_kwargs={"compression":"gzip", "compression_opts": 1})
+    #cmp = hdf5plugin.Blosc(cname='lz4', clevel=5, shuffle=2)
+    #cmp = hdf5plugin.Bitshuffle()
+    #print(dict(cmp))
+    cmp = None
+    benckmark = SlicingBenchmark(compression_kwargs=cmp)
     benckmark.setup()
     benckmark.time_sequential_reads(64)
     benckmark.time_threaded_reads(64)
