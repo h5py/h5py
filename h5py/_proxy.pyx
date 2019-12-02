@@ -76,26 +76,6 @@ cdef herr_t attr_rw(hid_t attr, hid_t mtype, void *progbuf, int read) except -1:
 
     return 0
 
-# =============================================================================
-# Proxy functions to safely release the GIL around read/write operations
-
-cdef herr_t H5PY_H5Dread(hid_t dset, hid_t mtype, hid_t mspace,
-                        hid_t fspace, hid_t dxpl, void* buf) except -1:
-    cdef herr_t retval
-    #with nogil:
-    retval = H5Dread(dset, mtype, mspace, fspace, dxpl, buf)
-    if retval < 0:
-        return -1
-    return retval
-
-cdef herr_t H5PY_H5Dwrite(hid_t dset, hid_t mtype, hid_t mspace,
-                        hid_t fspace, hid_t dxpl, void* buf) except -1:
-    cdef herr_t retval
-    #with nogil:
-    retval = H5Dwrite(dset, mtype, mspace, fspace, dxpl, buf)
-    if retval < 0:
-        return -1
-    return retval
 
 # =============================================================================
 # Proxy for vlen buf workaround
@@ -129,9 +109,9 @@ cdef herr_t dset_rw(hid_t dset, hid_t mtype, hid_t mspace, hid_t fspace,
 
         if not (needs_proxy(dstype) or needs_proxy(mtype)):
             if read:
-                H5PY_H5Dread(dset, mtype, mspace, fspace, dxpl, progbuf)
+                H5Dread(dset, mtype, mspace, fspace, dxpl, progbuf)
             else:
-                H5PY_H5Dwrite(dset, mtype, mspace, fspace, dxpl, progbuf)
+                H5Dwrite(dset, mtype, mspace, fspace, dxpl, progbuf)
         else:
 
             if mspace == H5S_ALL and fspace != H5S_ALL:
@@ -157,13 +137,13 @@ cdef herr_t dset_rw(hid_t dset, hid_t mtype, hid_t mspace, hid_t fspace,
                 h5py_copy(mtype, mspace, back_buf, progbuf, H5PY_GATHER)
 
             if read:
-                H5PY_H5Dread(dset, dstype, cspace, fspace, dxpl, conv_buf)
+                H5Dread(dset, dstype, cspace, fspace, dxpl, conv_buf)
                 H5Tconvert(dstype, mtype, npoints, conv_buf, back_buf, dxpl)
                 h5py_copy(mtype, mspace, conv_buf, progbuf, H5PY_SCATTER)
             else:
                 h5py_copy(mtype, mspace, conv_buf, progbuf, H5PY_GATHER)
                 H5Tconvert(mtype, dstype, npoints, conv_buf, back_buf, dxpl)
-                H5PY_H5Dwrite(dset, dstype, cspace, fspace, dxpl, conv_buf)
+                H5Dwrite(dset, dstype, cspace, fspace, dxpl, conv_buf)
                 H5Dvlen_reclaim(dstype, cspace, H5P_DEFAULT, conv_buf)
 
     finally:
