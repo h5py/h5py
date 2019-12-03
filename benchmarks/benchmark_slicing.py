@@ -40,9 +40,6 @@ class Reader(Thread):
                 self._queue_in.task_done()
 
 
-# Write the benchmarking functions here.
-# See "Writing benchmarks" in the asv docs for more information.
-
 class SlicingBenchmark:
     """
     Benchmark for reading slices in the most pathlogical way in a chunked dataset
@@ -76,8 +73,9 @@ class SlicingBenchmark:
 
     def setup(self):
         self.filename = os.path.join(self.tmpdir.name, "benchmark_slicing.h5")
-        logger.info("Saving data in %s" % self.filename)
-        logger.info("Total volume size: %.3fGB, Needed memory: %.3fGB"%(self.total_size/1e9, self.needed_memory/1e9))
+        logger.info("Saving data in %s", self.filename)
+        logger.info("Total size: %i^%i volume size: %.3fGB, Needed memory: %.3fGB", 
+                    self.size, self.ndim, self.total_size/1e9, self.needed_memory/1e9)
 
         shape = [self.size]  * self.ndim
         chunks = (self.chunk,) * self.ndim
@@ -87,7 +85,7 @@ class SlicingBenchmark:
             elif self.dtype.itemsize == 8:
                 mask = numpy.uint64(((1<<64) - (1<<(self.precision))))
             else:
-                logger.warning("only float32 and float64 are supported")
+                logger.warning("Precision reduction: only float32 and float64 are supported")
         else:
             self.precision = 0
         t0 = time.time()
@@ -106,10 +104,8 @@ class SlicingBenchmark:
             t1 = time.time()
         dt = t1 - t0
         filesize = os.stat(self.filename).st_size
-        logger.info("Compression: %.3f "%(self.total_size/filesize) +
-                    "time %.3fs "%dt +
-                    "uncompressed data saving speed %.3f MB/s " % (self.total_size/dt/1e6) +
-                    "effective write speed  %.3f MB/s "%(filesize/dt/1e6))
+        logger.info("Compression: %.3f time %.3fs uncompressed data saving speed %.3f MB/s effective write speed  %.3f MB/s ",
+                    self.total_size/filesize, dt,  self.total_size/dt/1e6, filesize/dt/1e6)
 
     def teardown(self):
         self.tmpdir.cleanup()
@@ -143,7 +139,7 @@ class SlicingBenchmark:
         return dt
 
     def time_threaded_reads(self, nb_read=64, nthreads=multiprocessing.cpu_count()):
-        "Perform the reading of many orthogonal hyperplanes"
+        "Perform the reading of many orthogonal hyperplanes, threaded version"
         where = [[(i*(self.chunk+1+j))%self.size for j in range(self.ndim)] for i in range(nb_read)]
         tasks = Queue()
         results = Queue()
@@ -168,9 +164,9 @@ class SlicingBenchmark:
             tasks.put(None)
 
         dt = t1 - t0
-        logger.info("Time for %s-threaded reading %sx%s slices: %.3fs fps: %.3f "%(nthreads, self.ndim, nb_read, dt, self.ndim*nb_read/(dt)) +
-                    "Uncompressed data read speed %.3f MB/s"%(self.ndim*nb_read*self.needed_memory/(dt)/1e6))
-        return t1 - t0
+        logger.info("Time for %s-threaded reading %sx%s slices: %.3fs fps: %.3f "%(nthreads, self.ndim, nb_read, dt, self.ndim*nb_read/dt) +
+                    "Uncompressed data read speed %.3f MB/s"%(self.ndim*nb_read*self.needed_memory/dt/1e6))
+        return dt
 
 
 if __name__ == "__main__":
