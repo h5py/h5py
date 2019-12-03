@@ -6,9 +6,8 @@ from tempfile import TemporaryDirectory
 import logging
 logger = logging.getLogger(__name__)
 import h5py
-import hdf5plugin
 
-#Needed for
+#Needed for mutithreading:
 from queue import Queue
 from threading import Thread, Event
 import multiprocessing
@@ -104,12 +103,13 @@ class SlicingBenchmark:
                     idata = data.view(mask.dtype)
                     idata &= mask # mask out the last XX bits
                 ds[i:i+self.chunk] = data
-        t1 = time.time()
+            t1 = time.time()
+        dt = t1 - t0
         filesize = os.stat(self.filename).st_size
         logger.info("Compression: %.3f "%(self.total_size/filesize) +
-                    "time %.3fs "%(t1-t0) +
-                    "uncompressed data saving speed %.3f MB/s " % (self.total_size/(t1-t0)/1e6) +
-                    "effective write speed  %.3f MB/s "%(filesize/(t1-t0)/1e6))
+                    "time %.3fs "%dt +
+                    "uncompressed data saving speed %.3f MB/s " % (self.total_size/dt/1e6) +
+                    "effective write speed  %.3f MB/s "%(filesize/dt/1e6))
 
     def teardown(self):
         self.tmpdir.cleanup()
@@ -124,7 +124,7 @@ class SlicingBenchmark:
         res = []
         noneslice = slice(None)
         for i, w in enumerate(position):
-            where = [noneslice]*i + [w] + [noneslice]*(l-1-i)
+            where = [noneslice]*i + [w] + [noneslice]*(l - 1 - i)
             res.append(dataset[tuple(where)])
         return res
 
@@ -135,19 +135,20 @@ class SlicingBenchmark:
             ds = h[self.h5path]
             t0 = time.time()
             for i in where:
-                data = self.read_slice(ds, i)
+                self.read_slice(ds, i)
             t1 = time.time()
-        logger.info("Time for reading %sx%s slices: %.3fs fps: %.3f "%(self.ndim, nb_read, t1-t0, self.ndim*nb_read/(t1-t0)) +
-                    "Uncompressed data read speed %.3f MB/s"%(self.ndim*nb_read*self.needed_memory/(t1-t0)/1e6))
-        return t1 - t0
+        dt = t1 - t0
+        logger.info("Time for reading %sx%s slices: %.3fs fps: %.3f "%(self.ndim, nb_read, dt, self.ndim*nb_read/dt) +
+                    "Uncompressed data read speed %.3f MB/s"%(self.ndim*nb_read*self.needed_memory/dt/1e6))
+        return dt
 
     def time_threaded_reads(self, nb_read=64, nthreads=multiprocessing.cpu_count()):
         "Perform the reading of many orthogonal hyperplanes"
         where = [[(i*(self.chunk+1+j))%self.size for j in range(self.ndim)] for i in range(nb_read)]
         tasks = Queue()
         results = Queue()
-        quit = Event()
-        pool = [Reader(tasks, results, quit) for i in range(nthreads)]
+        quitevent = Event()
+        pool = [Reader(tasks, results, quitevent) for i in range(nthreads)]
         res = []
         with h5py.File(self.filename, "r") as h:
             ds = h[self.h5path]
@@ -161,24 +162,21 @@ class SlicingBenchmark:
             tasks.join()
             results.join()
             t1 = time.time()
-        # destroy the threads
-        quit.set()
+        # destroy the threads in the pool
+        quitevent.set()
         for i in range(nthreads):
             tasks.put(None)
-        logger.info("Time for %s-threaded reading %sx%s slices: %.3fs fps: %.3f "%(nthreads, self.ndim, nb_read, t1-t0, self.ndim*nb_read/(t1-t0)) +
-                    "Uncompressed data read speed %.3f MB/s"%(self.ndim*nb_read*self.needed_memory/(t1-t0)/1e6))
+
+        dt = t1 - t0
+        logger.info("Time for %s-threaded reading %sx%s slices: %.3fs fps: %.3f "%(nthreads, self.ndim, nb_read, dt, self.ndim*nb_read/(dt)) +
+                    "Uncompressed data read speed %.3f MB/s"%(self.ndim*nb_read*self.needed_memory/(dt)/1e6))
         return t1 - t0
 
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
-    #cmp = hdf5plugin.Blosc(cname='lz4', clevel=5, shuffle=2)
-    #cmp = hdf5plugin.Bitshuffle()
-    #print(dict(cmp))
-    cmp = None
-    benckmark = SlicingBenchmark(compression_kwargs=cmp)
+    benckmark = SlicingBenchmark()
     benckmark.setup()
-    benckmark.time_sequential_reads(64)
-    benckmark.time_threaded_reads(64)
+    benckmark.time_sequential_reads()
+    benckmark.time_threaded_reads()
     benckmark.teardown()
-
