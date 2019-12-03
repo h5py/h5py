@@ -74,7 +74,7 @@ class SlicingBenchmark:
     def setup(self):
         self.filename = os.path.join(self.tmpdir.name, "benchmark_slicing.h5")
         logger.info("Saving data in %s", self.filename)
-        logger.info("Total size: %i^%i volume size: %.3fGB, Needed memory: %.3fGB", 
+        logger.info("Total size: %i^%i volume size: %.3fGB, Needed memory: %.3fGB",
                     self.size, self.ndim, self.total_size/1e9, self.needed_memory/1e9)
 
         shape = [self.size]  * self.ndim
