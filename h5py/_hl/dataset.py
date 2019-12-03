@@ -603,6 +603,7 @@ class Dataset(HLObject):
         """
         return ChunkIterator(self, sel)
 
+    @with_phil
     def __getitem__(self, args, new_dtype=None):
         """ Read a slice from the HDF5 dataset.
 
