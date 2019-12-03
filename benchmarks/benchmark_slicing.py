@@ -61,7 +61,7 @@ class SlicingBenchmark:
         self.dtype = numpy.dtype(dtype)
         self.chunk = chunk
         self.precision = precision
-        self.tmpdir = TemporaryDirectory()
+        self.tmpdir = None
         self.filename = None
         self.h5path = "data"
         self.total_size = self.size ** self.ndim * self.dtype.itemsize
@@ -72,6 +72,7 @@ class SlicingBenchmark:
             self.compression = dict(compression_kwargs)
 
     def setup(self):
+        self.tmpdir = TemporaryDirectory()
         self.filename = os.path.join(self.tmpdir.name, "benchmark_slicing.h5")
         logger.info("Saving data in %s", self.filename)
         logger.info("Total size: %i^%i volume size: %.3fGB, Needed memory: %.3fGB",
@@ -109,6 +110,7 @@ class SlicingBenchmark:
 
     def teardown(self):
         self.tmpdir.cleanup()
+        self.filename = None
 
     @staticmethod
     def read_slice(dataset, position):
