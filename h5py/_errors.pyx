@@ -2,7 +2,7 @@
 #
 # http://www.h5py.org
 #
-# Copyright 2008-2013 Andrew Collette and contributors
+# Copyright 2008-2019 Andrew Collette and contributors
 #
 # License:  Standard 3-clause BSD; see "license.txt" for full license terms
 #           and contributor agreement.
@@ -84,7 +84,7 @@ cdef struct err_data_t:
     H5E_error_t err
     int n
 
-cdef herr_t walk_cb(int n, H5E_error_t *desc, void *e) with gil:
+cdef herr_t walk_cb(int n, H5E_error_t *desc, void *e) nogil:
 
     cdef err_data_t *ee = <err_data_t*>e
 
