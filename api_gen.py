@@ -107,6 +107,20 @@ class Line(object):
             raise ValueError("Invalid function signature: {0}".format(self.sig))
         self.args = ", ".join(self.args)
 
+        # Figure out what test and return value to use with error reporting
+        if '*' in self.code or self.code in ('H5T_conv_t',):
+            self.err_condition = "==NULL"
+            self.err_value = f"<{self.code}>NULL"
+        elif self.code in ('int', 'herr_t', 'htri_t', 'hid_t', 'hssize_t', 'ssize_t') \
+                or re.match(r'H5[A-Z]+_[a-zA-Z_]+_t', self.code):
+            self.err_condition = "<0"
+            self.err_value = f"<{self.code}>-1"
+        elif self.code in ('unsigned int', 'haddr_t', 'hsize_t', 'size_t'):
+            self.err_condition = "==0"
+            self.err_value = f"<{self.code}>0"
+        else:
+            raise ValueError("Return code <<%s>> unknown" % self.code)
+
 
 raw_preamble = """\
 # cython: language_level=3
@@ -213,65 +227,49 @@ class LineProcessor(object):
 
     def write_raw_sig(self):
         """ Write out "cdef extern"-style definition for an HDF5 function """
-        raw_sig = "{0.code} {0.fname}({0.sig}) {0.nogil} except *\n".format(self.line)
+        raw_sig = "{0.code} {0.fname}({0.sig}) {0.nogil}\n".format(self.line)
         raw_sig = self.add_cython_if(raw_sig)
         raw_sig = "\n".join(("    " + x if x.strip() else x) for x in raw_sig.split("\n"))
         self.raw_defs.write(raw_sig)
 
     def write_cython_sig(self):
         """ Write out Cython signature for wrapper function """
-        cython_sig = "cdef {0.code} {0.fname}({0.sig}) except *\n".format(self.line)
+        cython_sig = "cdef {0.code} {0.fname}({0.sig}) except {0.err_value}\n".format(self.line)
         cython_sig = self.add_cython_if(cython_sig)
         self.cython_defs.write(cython_sig)
 
     def write_cython_imp(self):
         """ Write out Cython wrapper implementation """
-
-        # Figure out what test and return value to use with error reporting
-        if '*' in self.line.code or self.line.code in ('H5T_conv_t',):
-            condition = "==NULL"
-            retval = "NULL"
-        elif self.line.code in ('int', 'herr_t', 'htri_t', 'hid_t', 'hssize_t', 'ssize_t') \
-          or re.match(r'H5[A-Z]+_[a-zA-Z_]+_t', self.line.code):
-            condition = "<0"
-            retval = "-1"
-        elif self.line.code in ('unsigned int', 'haddr_t', 'hsize_t', 'size_t'):
-            condition = "==0"
-            retval = 0
-        else:
-            raise ValueError("Return code <<%s>> unknown" % self.line.code)
-
-        # Have to use except * because Cython can't handle special types here
         if self.line.nogil:
             imp = """\
-cdef {0.code} {0.fname}({0.sig}) except *:
+cdef {0.code} {0.fname}({0.sig}) except {0.err_value}:
     cdef {0.code} r
     with nogil:
         set_default_error_handler()
         r = _hdf5.{0.fname}({0.args})
-    if r{condition}:
+    if r{0.err_condition}:
         if set_exception():
-            return <{0.code}>{retval}
+            return {0.err_value}
         elif {0.error}:
-            raise RuntimeError("Unspecified error in {0.fname} (return value {condition})")
+            raise RuntimeError("Unspecified error in {0.fname} (return value {0.err_condition})")
     return r
 
 """
         else:
             imp = """\
-cdef {0.code} {0.fname}({0.sig}) except *:
+cdef {0.code} {0.fname}({0.sig}) except {0.err_value}:
     cdef {0.code} r
     set_default_error_handler()
     r = _hdf5.{0.fname}({0.args})
-    if r{condition}:
+    if r{0.err_condition}:
         if set_exception():
-            return <{0.code}>{retval}
+            return {0.err_value}
         elif {0.error}:
-            raise RuntimeError("Unspecified error in {0.fname} (return value {condition})")
+            raise RuntimeError("Unspecified error in {0.fname} (return value {0.err_condition})")
     return r
 
 """
-        imp = imp.format(self.line, condition=condition, retval=retval)
+        imp = imp.format(self.line)
         imp = self.add_cython_if(imp)
         self.cython_imp.write(imp)
 
