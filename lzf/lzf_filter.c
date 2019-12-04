@@ -43,18 +43,22 @@
 #endif
 
 /*  Deal with the multiple definitions for H5Z_class_t.
-    Note: Only HDF5 1.6 and 1.8 are supported.
+    Note: HDF5 >=1.6 are supported.
 
     (1) The old class should always be used for HDF5 1.6
     (2) The new class should always be used for HDF5 1.8 < 1.8.3
-    (3) The old class should be used for HDF5 1.8 >= 1.8.3 only if the
+    (3) The old class should be used for HDF5 >= 1.8.3 only if the
         macro H5_USE_16_API is set
 */
 
-#if H5_VERS_MAJOR == 1 && H5_VERS_MINOR == 8 && (H5_VERS_RELEASE < 3 || !H5_USE_16_API)
-#define H5PY_H5Z_NEWCLS 1
-#else
+#if H5_VERS_MAJOR == 1 && H5_VERS_MINOR == 6
 #define H5PY_H5Z_NEWCLS 0
+#elif H5_VERS_MAJOR == 1 && H5_VERS_MINOR == 8 && H5_VERS_RELEASE < 3
+#define H5PY_H5Z_NEWCLS 1
+#elif H5_USE_16_API
+#define H5PY_H5Z_NEWCLS 0
+#else /* Default: use new class */
+#define H5PY_H5Z_NEWCLS 1
 #endif
 
 size_t lzf_filter(unsigned flags, size_t cd_nelmts,
