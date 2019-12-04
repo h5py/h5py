@@ -39,18 +39,16 @@ class Line(object):
                     function. Any Python callbacks it could trigger must
                     acquire the GIL (e.g. using 'with gil' in Cython).
         mpi:        Bool indicating if MPI required
-        error:      Bool indicating if special error handling required
         version:    None or a minimum-version tuple
         code:       String with function return type
         fname:      String with function name
         sig:        String with raw function signature
         args:       String with sequence of arguments to call function
 
-        Example:    MPI ERROR 1.8.12 int foo(char* a, size_t b)
+        Example:    MPI 1.8.12 int foo(char* a, size_t b)
 
         .nogil:     ""
         .mpi:       True
-        .error:     True
         .version:   (1, 8, 12)
         .code:      "int"
         .fname:     "foo"
@@ -59,7 +57,6 @@ class Line(object):
     """
 
     PATTERN = re.compile("""(?P<mpi>(MPI)[ ]+)?
-                            (?P<error>(ERROR)[ ]+)?
                             (?P<min_version>([0-9]+\.[0-9]+\.[0-9]+))?
                             (-(?P<max_version>([0-9]+\.[0-9]+\.[0-9]+)))?
                             ([ ]+)?
@@ -90,7 +87,6 @@ class Line(object):
         parts = m.groupdict()
         self.nogil = "nogil" if parts['nogil'] else ""
         self.mpi = parts['mpi'] is not None
-        self.error = parts['error'] is not None
         self.min_version = parts['min_version']
         if self.min_version is not None:
             self.min_version = tuple(int(x) for x in self.min_version.split('.'))
@@ -160,6 +156,7 @@ from .api_types_hdf5 cimport *
 from . cimport _hdf5
 
 from ._errors cimport set_exception, set_default_error_handler
+
 """
 
 
@@ -250,7 +247,7 @@ cdef {0.code} {0.fname}({0.sig}) except {0.err_value}:
     if r{0.err_condition}:
         if set_exception():
             return {0.err_value}
-        elif {0.error}:
+        else:
             raise RuntimeError("Unspecified error in {0.fname} (return value {0.err_condition})")
     return r
 
@@ -264,7 +261,7 @@ cdef {0.code} {0.fname}({0.sig}) except {0.err_value}:
     if r{0.err_condition}:
         if set_exception():
             return {0.err_value}
-        elif {0.error}:
+        else:
             raise RuntimeError("Unspecified error in {0.fname} (return value {0.err_condition})")
     return r
 
