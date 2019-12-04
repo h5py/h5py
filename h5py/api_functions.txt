@@ -80,8 +80,8 @@ hdf5:
 
   # === H5D - Dataset API =====================================================
 
-  hid_t     H5Dcreate2(hid_t loc_id, char *name, hid_t type_id, hid_t space_id, hid_t lcpl_id, hid_t dcpl_id, hid_t dapl_id)
-  hid_t     H5Dcreate_anon(hid_t file_id, hid_t type_id, hid_t space_id, hid_t plist_id, hid_t dapl_id)
+  hid_t     H5Dcreate2(hid_t loc_id, char *name, hid_t type_id, hid_t space_id, hid_t lcpl_id, hid_t dcpl_id, hid_t dapl_id) nogil
+  hid_t     H5Dcreate_anon(hid_t file_id, hid_t type_id, hid_t space_id, hid_t plist_id, hid_t dapl_id) nogil
 
   hid_t     H5Dopen(hid_t file_id, char *name)
   hid_t     H5Dopen2(hid_t loc_id, char *name, hid_t dapl_id )
@@ -96,27 +96,27 @@ hdf5:
   haddr_t   H5Dget_offset(hid_t dset_id)
   hsize_t   H5Dget_storage_size(hid_t dset_id)
 
-  herr_t    H5Dread(hid_t dset_id, hid_t mem_type_id, hid_t mem_space_id, hid_t file_space_id, hid_t plist_id, void *buf)
-  herr_t    H5Dwrite(hid_t dset_id, hid_t mem_type, hid_t mem_space, hid_t file_space, hid_t xfer_plist, void* buf)
+  herr_t    H5Dread(hid_t dset_id, hid_t mem_type_id, hid_t mem_space_id, hid_t file_space_id, hid_t plist_id, void *buf) nogil
+  herr_t    H5Dwrite(hid_t dset_id, hid_t mem_type, hid_t mem_space, hid_t file_space, hid_t xfer_plist, void* buf) nogil
 
-  herr_t    H5Dextend(hid_t dataset_id, hsize_t *size)
+  herr_t    H5Dextend(hid_t dataset_id, hsize_t *size) nogil
 
-  herr_t    H5Dfill(void *fill, hid_t fill_type_id, void *buf,  hid_t buf_type_id, hid_t space_id )
+  herr_t    H5Dfill(void *fill, hid_t fill_type_id, void *buf,  hid_t buf_type_id, hid_t space_id) nogil
   herr_t    H5Dvlen_get_buf_size(hid_t dset_id, hid_t type_id, hid_t space_id, hsize_t *size)
   herr_t    H5Dvlen_reclaim(hid_t type_id, hid_t space_id,  hid_t plist, void *buf)
 
-  herr_t    H5Diterate(void *buf, hid_t type_id, hid_t space_id,  H5D_operator_t op, void* operator_data)
-  herr_t    H5Dset_extent(hid_t dset_id, hsize_t* size)
+  herr_t    H5Diterate(void *buf, hid_t type_id, hid_t space_id,  H5D_operator_t op, void* operator_data) nogil
+  herr_t    H5Dset_extent(hid_t dset_id, hsize_t* size) nogil
 
   # SWMR functions
-  1.9.178   herr_t H5Dflush(hid_t dataset_id)
-  1.9.178   herr_t H5Drefresh(hid_t dataset_id)
+  1.9.178   herr_t H5Dflush(hid_t dataset_id) nogil
+  1.9.178   herr_t H5Drefresh(hid_t dataset_id) nogil
 
   # Direct Chunk Read/Write
-  1.8.11    herr_t H5DOwrite_chunk(hid_t dset_id, hid_t dxpl_id, uint32_t filters, const hsize_t *offset, size_t data_size, const void *buf)
-  1.10.2    herr_t H5Dget_chunk_storage_size(hid_t dset_id, const hsize_t *offset, hsize_t *chunk_nbytes)
-  1.10.2    herr_t H5DOread_chunk(hid_t dset_id, hid_t dxpl_id, const hsize_t *offset, uint32_t *filters, void *buf)
-  1.10.3    herr_t H5Dread_chunk(hid_t dset_id, hid_t dxpl_id, const hsize_t *offset, uint32_t *filters, void *buf)
+  1.8.11    herr_t H5DOwrite_chunk(hid_t dset_id, hid_t dxpl_id, uint32_t filters, const hsize_t *offset, size_t data_size, const void *buf) nogil
+  1.10.2    herr_t H5Dget_chunk_storage_size(hid_t dset_id, const hsize_t *offset, hsize_t *chunk_nbytes) nogil
+  1.10.2    herr_t H5DOread_chunk(hid_t dset_id, hid_t dxpl_id, const hsize_t *offset, uint32_t *filters, void *buf) nogil
+  1.10.3    herr_t H5Dread_chunk(hid_t dset_id, hid_t dxpl_id, const hsize_t *offset, uint32_t *filters, void *buf) nogil
 
 
   # === H5E - Minimal error-handling interface ================================
@@ -131,7 +131,7 @@ hdf5:
   hid_t     H5Fopen(char *name, unsigned flags, hid_t access_id)
   herr_t    H5Fclose (hid_t file_id)
   htri_t    H5Fis_hdf5(char *name)
-  herr_t    H5Fflush(hid_t object_id, H5F_scope_t scope)
+  herr_t    H5Fflush(hid_t object_id, H5F_scope_t scope) nogil
 
   hid_t     H5Freopen(hid_t file_id)
   herr_t    H5Fmount(hid_t loc_id, char *name, hid_t child_id, hid_t plist_id)

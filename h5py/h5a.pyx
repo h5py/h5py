@@ -228,7 +228,8 @@ cdef class _AttrVisitor:
         self.func = func
         self.retval = None
 
-cdef herr_t cb_attr_iter(hid_t loc_id, const char* attr_name, const H5A_info_t *ainfo, void* vis_in) except 2:
+
+cdef herr_t cb_attr_iter(hid_t loc_id, const char* attr_name, const H5A_info_t *ainfo, void* vis_in) except 2 with gil:
     cdef _AttrVisitor vis = <_AttrVisitor>vis_in
     cdef AttrInfo info = AttrInfo()
     info.info = ainfo[0]
@@ -237,7 +238,8 @@ cdef herr_t cb_attr_iter(hid_t loc_id, const char* attr_name, const H5A_info_t *
         return 1
     return 0
 
-cdef herr_t cb_attr_simple(hid_t loc_id, const char* attr_name, const H5A_info_t *ainfo, void* vis_in) except 2:
+
+cdef herr_t cb_attr_simple(hid_t loc_id, const char* attr_name, const H5A_info_t *ainfo, void* vis_in) except 2 with gil:
     cdef _AttrVisitor vis = <_AttrVisitor>vis_in
     vis.retval = vis.func(attr_name)
     if vis.retval is not None:
