@@ -573,15 +573,15 @@ hdf5_hl:
 
   # === H5DS - Dimension Scales API =============================================
 
-  ERROR herr_t  H5DSattach_scale(hid_t did, hid_t dsid, unsigned int idx)
-  ERROR herr_t  H5DSdetach_scale(hid_t did, hid_t dsid, unsigned int idx)
-  ERROR htri_t  H5DSis_attached(hid_t did, hid_t dsid, unsigned int idx)
-  ERROR herr_t  H5DSset_scale(hid_t dsid, char *dimname)
-  ERROR int     H5DSget_num_scales(hid_t did, unsigned int dim)
+  herr_t  H5DSattach_scale(hid_t did, hid_t dsid, unsigned int idx)
+  herr_t  H5DSdetach_scale(hid_t did, hid_t dsid, unsigned int idx)
+  htri_t  H5DSis_attached(hid_t did, hid_t dsid, unsigned int idx)
+  herr_t  H5DSset_scale(hid_t dsid, char *dimname)
+  int     H5DSget_num_scales(hid_t did, unsigned int dim)
 
-  ERROR herr_t  H5DSset_label(hid_t did, unsigned int idx, char *label)
-  ERROR ssize_t H5DSget_label(hid_t did, unsigned int idx, char *label, size_t size)
+  herr_t  H5DSset_label(hid_t did, unsigned int idx, char *label)
+  ssize_t H5DSget_label(hid_t did, unsigned int idx, char *label, size_t size)
 
-  ERROR ssize_t H5DSget_scale_name(hid_t did, char *name, size_t size)
-  ERROR htri_t  H5DSis_scale(hid_t did)
-  ERROR herr_t  H5DSiterate_scales(hid_t did, unsigned int dim, int *idx, H5DS_iterate_t visitor, void *visitor_data)
+  ssize_t H5DSget_scale_name(hid_t did, char *name, size_t size)
+  htri_t  H5DSis_scale(hid_t did)
+  herr_t  H5DSiterate_scales(hid_t did, unsigned int dim, int *idx, H5DS_iterate_t visitor, void *visitor_data)

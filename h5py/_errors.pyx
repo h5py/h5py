@@ -10,7 +10,7 @@
 # Python-style minor error classes.  If the minor error code matches an entry
 # in this dict, the generated exception will be used.
 
-from ._hl.compat import filename_encode, filename_decode
+from cpython cimport PyErr_Occurred
 
 _minor_table = {
     H5E_SEEKERROR:      IOError,    # Seek failed
@@ -99,6 +99,12 @@ cdef int set_exception() except -1:
     cdef const char *desc = NULL          # Note: HDF5 forbids freeing these
     cdef const char *desc_bottom = NULL
 
+    if PyErr_Occurred():
+        # An exception was already set, e.g. by a Python callback within the
+        # HDF5 call. Skip translating the HDF5 error, and let the Python
+        # exception propagate.
+        return 1
+
     # First, extract the major & minor error codes from the top of the
     # stack, along with the top-level error description
 
@@ -128,10 +134,7 @@ cdef int set_exception() except -1:
     if desc_bottom is NULL:
         raise RuntimeError("Failed to extract bottom-level error description")
 
-    msg = filename_encode(u"{0} ({1})".format(
-        filename_decode(desc).capitalize(),
-        filename_decode(desc_bottom)
-    ))
+    msg = b"%b (%b)" % (bytes(desc).capitalize(), bytes(desc_bottom))
 
     # Finally, set the exception.  We do this with the Python C function
     # so that the traceback doesn't point here.
