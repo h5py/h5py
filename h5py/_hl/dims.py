@@ -136,7 +136,7 @@ class DimensionProxy(base.CommonStateObject):
                % (self.label, self._dimension, id(self._id)))
 
 
-class DimensionManager(base.MappingHDF5, base.CommonStateObject):
+class DimensionManager(base.CommonStateObject):
 
     """
         Represents a collection of dimension associated with a dataset.
