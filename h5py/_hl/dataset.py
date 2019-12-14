@@ -693,22 +693,16 @@ class Dataset(HLObject):
         selection = sel.select(self.shape, args, dsid=self.id)
 
         if selection.nselect == 0:
-            return numpy.ndarray(selection.mshape, dtype=new_dtype)
+            return numpy.ndarray(selection.array_shape, dtype=new_dtype)
 
         # Up-converting to (1,) so that numpy.ndarray correctly creates
         # np.void rows in case of multi-field dtype. (issue 135)
-        single_element = selection.mshape == ()
-        mshape = (1,) if single_element else selection.mshape
-        arr = numpy.ndarray(mshape, new_dtype, order='C')
-
-        # HDF5 has a bug where if the memory shape has a different rank
-        # than the dataset, the read is very slow
-        if len(mshape) < len(self.shape):
-            # pad with ones
-            mshape = (1,)*(len(self.shape)-len(mshape)) + mshape
+        single_element = selection.array_shape == ()
+        arr_shape = (1,) if single_element else selection.array_shape
+        arr = numpy.ndarray(arr_shape, new_dtype, order='C')
 
         # Perform the actual read
-        mspace = h5s.create_simple(mshape)
+        mspace = h5s.create_simple(selection.mshape)
         fspace = selection.id
         self.id.read(mspace, fspace, arr, mtype, dxpl=self._dxpl)
 
@@ -840,26 +834,20 @@ class Dataset(HLObject):
         # memory. In any case, if we cannot afford to create an intermediate
         # array of the same size as the dataset chunk size, the user program has
         # little hope to go much further. Solves h5py isue #1067
-        if mshape == () and selection.mshape != ():
+        if mshape == () and selection.array_shape != ():
             if self.dtype.subdtype is not None:
                 raise TypeError("Scalar broadcasting is not supported for array dtypes")
-            if self.chunks and (numpy.prod(self.chunks, dtype=numpy.float) >= \
-                                numpy.prod(selection.mshape, dtype=numpy.float)):
-                val2 = numpy.empty(selection.mshape, dtype=val.dtype)
+            if self.chunks and (numpy.prod(self.chunks, dtype=numpy.float) >=
+                                numpy.prod(selection.array_shape, dtype=numpy.float)):
+                val2 = numpy.empty(selection.array_shape, dtype=val.dtype)
             else:
-                val2 = numpy.empty(selection.mshape[-1], dtype=val.dtype)
+                val2 = numpy.empty(selection.array_shape[-1], dtype=val.dtype)
             val2[...] = val
             val = val2
             mshape = val.shape
 
         # Perform the write, with broadcasting
-        # Be careful to pad memory shape with ones to avoid HDF5 chunking
-        # glitch, which kicks in for mismatched memory/file selections
-        if len(mshape) < len(self.shape):
-            mshape_pad = (1,)*(len(self.shape)-len(mshape)) + mshape
-        else:
-            mshape_pad = mshape
-        mspace = h5s.create_simple(mshape_pad, (h5s.UNLIMITED,)*len(mshape_pad))
+        mspace = h5s.create_simple(selection.expand_shape(mshape))
         for fspace in selection.broadcast(mshape):
             self.id.write(mspace, fspace, val, mtype, dxpl=self._dxpl)
 

@@ -97,7 +97,7 @@ class VirtualSource(object):
 
     @property
     def shape(self):
-        return self.sel.mshape
+        return self.sel.array_shape
 
     def __getitem__(self, key):
         tmp = copy(self)
