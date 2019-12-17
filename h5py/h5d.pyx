@@ -515,7 +515,9 @@ cdef class DatasetID(ObjectID):
             specified dataspace. Currently, this function only gets the number
             of all written chunks, regardless of the dataspace.
 
-            Feature requires: 1.10.5 HDF5
+            Feature requires: HDF5 1.10.5
+
+            .. versionadded:: 3.0
             """
             cdef hsize_t num_chunks
 
@@ -530,7 +532,9 @@ cdef class DatasetID(ObjectID):
 
             Retrieve storage information about a chunk specified by its index.
 
-            Feature requires: 1.10.5 HDF5
+            Feature requires: HDF5 1.10.5
+
+            .. versionadded:: 3.0
             """
             cdef haddr_t byte_offset
             cdef hsize_t size
@@ -567,7 +571,9 @@ cdef class DatasetID(ObjectID):
             Retrieve information about a chunk specified by the array
             address of the chunk’s first element in each dimension.
 
-            Feature requires: 1.10.5 HDF5
+            Feature requires: HDF5 1.10.5
+
+            .. versionadded:: 3.0
             """
             cdef haddr_t byte_offset
             cdef hsize_t size
