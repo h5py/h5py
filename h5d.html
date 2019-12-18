@@ -96,7 +96,10 @@ dataset changes.</p>
 <dt id="h5py.h5d.DatasetID.get_chunk_info">
 <code class="sig-name descname">get_chunk_info</code><span class="sig-paren">(</span><em class="sig-param">hsize_t index</em>, <em class="sig-param">SpaceID space=None</em><span class="sig-paren">)</span> &#x2192; StoreInfo<a class="headerlink" href="#h5py.h5d.DatasetID.get_chunk_info" title="Permalink to this definition">¶</a></dt>
 <dd><p>Retrieve storage information about a chunk specified by its index.</p>
-<p>Feature requires: 1.10.5 HDF5</p>
+<p>Feature requires: HDF5 1.10.5</p>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 3.0.</span></p>
+</div>
 </dd></dl>
 
 <dl class="attribute">
@@ -104,7 +107,10 @@ dataset changes.</p>
 <code class="sig-name descname">get_chunk_info_by_coord</code><span class="sig-paren">(</span><em class="sig-param">TUPLE chunk_offset</em><span class="sig-paren">)</span> &#x2192; StoreInfo<a class="headerlink" href="#h5py.h5d.DatasetID.get_chunk_info_by_coord" title="Permalink to this definition">¶</a></dt>
 <dd><p>Retrieve information about a chunk specified by the array
 address of the chunk’s first element in each dimension.</p>
-<p>Feature requires: 1.10.5 HDF5</p>
+<p>Feature requires: HDF5 1.10.5</p>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 3.0.</span></p>
+</div>
 </dd></dl>
 
 <dl class="attribute">
@@ -120,7 +126,10 @@ used when this dataset was created.</p>
 <dd><p>Retrieve the number of chunks that have nonempty intersection with a
 specified dataspace. Currently, this function only gets the number
 of all written chunks, regardless of the dataspace.</p>
-<p>Feature requires: 1.10.5 HDF5</p>
+<p>Feature requires: HDF5 1.10.5</p>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 3.0.</span></p>
+</div>
 </dd></dl>
 
 <dl class="attribute">
@@ -433,7 +442,7 @@ been applied to the data before calling this function.</p>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2014, Andrew Collette and contributors.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.3.0.
     </div>
   </body>
 </html>
