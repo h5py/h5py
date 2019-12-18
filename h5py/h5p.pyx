@@ -114,10 +114,7 @@ OBJECT_CREATE = lockcls(H5P_OBJECT_CREATE)
 CRT_ORDER_TRACKED = H5P_CRT_ORDER_TRACKED
 CRT_ORDER_INDEXED = H5P_CRT_ORDER_INDEXED
 
-DEFAULT = None   # In the HDF5 header files this is actually 0, which is an
-                 # invalid identifier.  The new strategy for default options
-                 # is to make them all None, to better match the Python style
-                 # for keyword arguments.
+DEFAULT = H5P_DEFAULT
 
 
 # === Property list functional API ============================================
@@ -1037,6 +1034,14 @@ cdef class PropFAID(PropInstanceID):
         """
         H5Pset_fapl_stdio(self.id)
 
+    @with_phil
+    def set_fapl_split(self, const char* meta_ext, hid_t meta_plist_id, const char*raw_ext, hid_t raw_plist_id):
+        """()
+
+        Select the "split" driver (h5fd.SPLIT)
+        """
+        H5Pset_fapl_split(self.id, meta_ext, meta_plist_id, raw_ext, raw_plist_id)
+
 
     @with_phil
     def set_driver(self, hid_t driver_id):
@@ -1073,6 +1078,7 @@ cdef class PropFAID(PropInstanceID):
         - h5fd.MULTI
         - h5fd.SEC2
         - h5fd.STDIO
+        - h5fd.SPLIT
         """
         return H5Pget_driver(self.id)
 
