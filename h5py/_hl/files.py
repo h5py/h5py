@@ -52,13 +52,6 @@ def _set_fapl_mpio(plist, **kwargs):
 def _set_fapl_fileobj(plist, **kwargs):
     plist.set_fileobj_driver(h5fd.fileobj_driver, kwargs.get('fileobj'))
 
-def _set_fapl_split(plist, **kwargs):
-    kwargs.setdefault('meta_ext', b'-m.h5')
-    kwargs.setdefault('meta_plist_id', h5p.DEFAULT)
-    kwargs.setdefault('raw_ext', b'-r.h5')
-    kwargs.setdefault('raw_plist_id', h5p.DEFAULT)
-    plist.set_fapl_split(**kwargs)
-
 
 _drivers = {
     'sec2': lambda plist, **kwargs: plist.set_fapl_sec2(**kwargs),
@@ -70,7 +63,7 @@ _drivers = {
     ),
     'mpio': _set_fapl_mpio,
     'fileobj': _set_fapl_fileobj,
-    'split': _set_fapl_split,
+    'split': lambda plist, **kwargs: plist.set_fapl_split(**kwargs),
 }
 
 
