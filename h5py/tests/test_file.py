@@ -253,6 +253,7 @@ class TestDrivers(TestCase):
         self.assertTrue(os.path.exists(fname + '-m.h5'))
         fid = File(fname, 'r', driver='split')
         self.assertTrue(fid)
+        fid.close()
 
     # TODO: family driver tests
 
