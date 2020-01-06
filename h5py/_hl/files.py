@@ -63,6 +63,7 @@ _drivers = {
     ),
     'mpio': _set_fapl_mpio,
     'fileobj': _set_fapl_fileobj,
+    'split': lambda plist, **kwargs: plist.set_fapl_split(**kwargs),
 }
 
 

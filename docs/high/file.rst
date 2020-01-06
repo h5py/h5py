@@ -85,6 +85,15 @@ of supported drivers and their options:
         Store the data in a Python file-like object; see below.
         This is the default if a file-like object is passed to :class:`File`.
 
+    'split'
+        Splits the meta data and raw data into separate files. Keywords:
+
+        meta_ext:
+          Metadata filename extension. Default is '-m.h5'.
+
+        raw_ext:
+          Raw data filename extension. Default is '-r.h5'.
+
 .. _file_fileobj:
 
 Python file-like objects

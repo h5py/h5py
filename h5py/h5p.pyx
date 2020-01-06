@@ -1037,6 +1037,14 @@ cdef class PropFAID(PropInstanceID):
         """
         H5Pset_fapl_stdio(self.id)
 
+    @with_phil
+    def set_fapl_split(self, const char* meta_ext="-m.h5", PropID meta_plist_id=None, const char* raw_ext="-r.h5", PropID raw_plist_id=None):
+        """()
+
+        Select the "split" driver (h5fd.SPLIT)
+        """
+        H5Pset_fapl_split(self.id, meta_ext, pdefault(meta_plist_id), raw_ext, pdefault(raw_plist_id))
+
 
     @with_phil
     def set_driver(self, hid_t driver_id):
