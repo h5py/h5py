@@ -299,7 +299,7 @@ Reference
                         or relative path.  Provide None to create an anonymous
                         group, to be linked into the file later.
         :type name:     String or None
-        :track_order:   Track dataset/group/attribute creation order under
+        :param track_order:  Track dataset/group/attribute creation order under
                         this group if ``True``.  Default is
                         ``h5.get_config().track_order``.
 
