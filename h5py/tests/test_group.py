@@ -1038,3 +1038,30 @@ class TestMutableMapping(BaseGroup):
         Group.__delitem__
         Group.__iter__
         Group.__len__
+
+class TestRequire(TestCase):
+    """
+    Test that intermediate groups are automatically created
+    if present in path of a new dataset/group
+    """
+
+    def setUp(self):
+        self.f = File(self.mktemp(), 'w')
+
+    def test_create_dataset(self):
+        dt = h5py.string_dtype()
+        self.f.require_dataset("foo/bar/baz", (1,), dtype=dt)
+        group = self.f.get('foo')
+        assert isinstance(group, Group)
+        group = self.f.get('foo/bar')
+        assert isinstance(group, Group)
+
+    def test_create_group(self):
+        dt = h5py.string_dtype()
+        self.f.require_group("foo/bar/baz")
+        group = self.f.get('foo')
+        assert isinstance(group, Group)
+        group = self.f.get('foo/bar')
+        assert isinstance(group, Group)
+        group = self.f.get('foo/bar/baz')
+        assert isinstance(group, Group)
