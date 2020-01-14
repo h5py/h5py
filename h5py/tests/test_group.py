@@ -156,7 +156,7 @@ class TestRequire(BaseGroup):
         self.f.create_dataset('foo', (1,), 'f')
         with self.assertRaises(TypeError):
             self.f.require_group('foo')
-    
+
     def test_intermediate_create_dataset(self):
         """ Intermediate is created if it doesn't exist """
         dt = h5py.string_dtype()
