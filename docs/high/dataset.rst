@@ -313,6 +313,31 @@ Obviously shouldn't be used with lossy compression filters.
 
 Enable by setting :meth:`Group.create_dataset` keyword ``fletcher32`` to True.
 
+.. _dataset_multi_block:
+
+Multi-Block Selection
+---------------------
+
+The full H5Sselect_hyperslab API is exposed via the MultiBlockSlice object.
+This takes four elements to define the selection (start, count, stride and
+block) in constrast to the built-in slice object, which takes three elements.
+A MultiBlockSlice can be used in place of a slice to select a number of (count)
+blocks of multiple elements separated by a stride, rather than a set of single
+elements separated by a step.
+
+For an explanation of how this slicing works, see the `HDF5 documentation <https://support.hdfgroup.org/HDF5/Tutor/selectsimple.html>`_.
+
+For example::
+
+    >>> dset[...]
+    array([ 0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10])
+    >>> dset[MultiBlockSlice(start=1, count=3, stride=4, block=2)]
+    array([ 1,  2,  5,  6,  9, 10])
+
+They can be used in multi-dimensional slices alongside any slicing object,
+including other MultiBlockSlices. For a more complete example of this,
+see the multiblockslice_interleave.py example script.
+
 .. _dataset_fancy:
 
 Fancy indexing
