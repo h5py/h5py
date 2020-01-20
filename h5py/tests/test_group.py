@@ -157,6 +157,25 @@ class TestRequire(BaseGroup):
         with self.assertRaises(TypeError):
             self.f.require_group('foo')
 
+    def test_intermediate_create_dataset(self):
+        """ Intermediate is created if it doesn't exist """
+        dt = h5py.string_dtype()
+        self.f.require_dataset("foo/bar/baz", (1,), dtype=dt)
+        group = self.f.get('foo')
+        assert isinstance(group, Group)
+        group = self.f.get('foo/bar')
+        assert isinstance(group, Group)
+
+    def test_intermediate_create_group(self):
+        dt = h5py.string_dtype()
+        self.f.require_group("foo/bar/baz")
+        group = self.f.get('foo')
+        assert isinstance(group, Group)
+        group = self.f.get('foo/bar')
+        assert isinstance(group, Group)
+        group = self.f.get('foo/bar/baz')
+        assert isinstance(group, Group)
+
 class TestDelete(BaseGroup):
 
     """
