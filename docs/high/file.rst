@@ -318,7 +318,7 @@ Reference
                     0.75.
     :param rdcc_nslots:  Number of chunk slots in the raw data chunk cache for
                     this file.  Default value is 521.
-    :track_order:   Track dataset/group/attribute creation order under
+    :param track_order:  Track dataset/group/attribute creation order under
                     root group if ``True``.  Default is
                     ``h5.get_config().track_order``.
     :param kwds:    Driver-specific keywords; see :ref:`file_driver`.
