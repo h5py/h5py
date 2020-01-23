@@ -657,9 +657,10 @@ class Dataset(HLObject):
             mshape = sel.guess_shape(sid)
             if mshape is None:
                 return numpy.array((0,), dtype=new_dtype)
-            if numpy.product(mshape, dtype=numpy.ulonglong) == 0:
-                return numpy.array(mshape, dtype=new_dtype)
             out = numpy.empty(mshape, dtype=new_dtype)
+            if out.size == 0:
+                return out
+
             sid_out = h5s.create_simple(mshape)
             sid_out.select_all()
             self.id.read(sid_out, sid, out, mtype)

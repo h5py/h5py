@@ -1168,6 +1168,12 @@ class TestRegionRefs(BaseDataset):
         ref = self.dset.regionref[slic]
         self.assertArrayEqual(self.dset[ref], self.data[slic])
 
+    def test_empty_region(self):
+        ref = self.dset.regionref[:0]
+        out = self.dset[ref]
+        assert out.size == 0
+        # Ideally we should preserve shape (0, 100), but it seems this is lost.
+
     def test_ref_shape(self):
         """ Region reference shape and selection shape """
         slic = np.s_[25:35, 10:100:5]
