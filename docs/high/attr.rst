@@ -1,3 +1,4 @@
+.. currentmodule:: h5py
 .. _attributes:
 
 
