@@ -656,7 +656,8 @@ class Dataset(HLObject):
             sid = h5r.get_region(args[0], self.id)
             mshape = sel.guess_shape(sid)
             if mshape is None:
-                return numpy.array((0,), dtype=new_dtype)
+                # 0D with no data (NULL or deselected SCALAR)
+                return Empty(new_dtype)
             out = numpy.empty(mshape, dtype=new_dtype)
             if out.size == 0:
                 return out
