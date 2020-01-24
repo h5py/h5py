@@ -240,7 +240,7 @@ class SlicingTestCase(ut.TestCase):
                 d = f.create_dataset('data', (100,), 'i4')
                 d[:] = np.arange(100) + n
 
-    def test_slice_source(self):
+    def make_virtual_ds(self):
         # Assemble virtual dataset
         layout = h5.VirtualLayout((4, 100), 'i4', maxshape=(4, None))
 
@@ -258,11 +258,30 @@ class SlicingTestCase(ut.TestCase):
         with h5.File(outfile, 'w', libver='latest') as f:
             f.create_virtual_dataset('/group/data', layout, fillvalue=-5)
 
+        return outfile
+
+    def test_slice_source(self):
+        outfile = self.make_virtual_ds()
+
         with h5.File(outfile, 'r') as f:
             assert_array_equal(f['/group/data'][0][:3], [1, 3, 5])
             assert_array_equal(f['/group/data'][0][50:53], [2, 4, 6])
             assert_array_equal(f['/group/data'][3][:3], [4, 6, 8])
             assert_array_equal(f['/group/data'][3][50:53], [5, 7, 9])
+
+    def test_inspection(self):
+        with h5.File(osp.join(self.tmpdir, '1.h5'), 'r') as f:
+            assert not f['data'].is_virtual
+
+        outfile = self.make_virtual_ds()
+
+        with h5.File(outfile, 'r') as f:
+            ds = f['/group/data']
+            assert ds.is_virtual
+
+            src_files = {osp.join(self.tmpdir, '{}.h5'.format(n))
+                         for n in range(1, 5)}
+            assert {s.file_name for s in ds.virtual_sources()} == src_files
 
     def tearDown(self):
         shutil.rmtree(self.tmpdir)
