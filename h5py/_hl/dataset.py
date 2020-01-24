@@ -695,11 +695,7 @@ class Dataset(HLObject):
         if selection.nselect == 0:
             return numpy.ndarray(selection.array_shape, dtype=new_dtype)
 
-        # Up-converting to (1,) so that numpy.ndarray correctly creates
-        # np.void rows in case of multi-field dtype. (issue 135)
-        single_element = selection.array_shape == ()
-        arr_shape = (1,) if single_element else selection.array_shape
-        arr = numpy.ndarray(arr_shape, new_dtype, order='C')
+        arr = numpy.ndarray(selection.array_shape, new_dtype, order='C')
 
         # Perform the actual read
         mspace = h5s.create_simple(selection.mshape)
@@ -710,9 +706,7 @@ class Dataset(HLObject):
         if len(names) == 1:
             arr = arr[names[0]]     # Single-field recarray convention
         if arr.shape == ():
-            arr = arr.item()
-        if single_element:
-            arr = arr[0]
+            return arr[()]   # 0 dim array -> numpy scalar
         return arr
 
     @with_phil
