@@ -1168,6 +1168,26 @@ class TestRegionRefs(BaseDataset):
         ref = self.dset.regionref[slic]
         self.assertArrayEqual(self.dset[ref], self.data[slic])
 
+    def test_empty_region(self):
+        ref = self.dset.regionref[:0]
+        out = self.dset[ref]
+        assert out.size == 0
+        # Ideally we should preserve shape (0, 100), but it seems this is lost.
+
+    def test_scalar_dataset(self):
+        ds = self.f.create_dataset("scalar", data=1.0, dtype='f4')
+        sid = h5py.h5s.create(h5py.h5s.SCALAR)
+
+        # Deselected
+        sid.select_none()
+        ref = h5py.h5r.create(ds.id, b'.', h5py.h5r.DATASET_REGION, sid)
+        assert ds[ref] == h5py.Empty(np.dtype('f4'))
+
+        # Selected
+        sid.select_all()
+        ref = h5py.h5r.create(ds.id, b'.', h5py.h5r.DATASET_REGION, sid)
+        assert ds[ref] == ds[()]
+
     def test_ref_shape(self):
         """ Region reference shape and selection shape """
         slic = np.s_[25:35, 10:100:5]
