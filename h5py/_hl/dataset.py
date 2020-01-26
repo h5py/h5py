@@ -583,7 +583,6 @@ class Dataset(HLObject):
         return (
             self._extent_type == h5s.SIMPLE
             and isinstance(self.id.get_type(), (h5t.TypeIntegerID, h5t.TypeFloatID))
-            and h5t.py_create(self.dtype) == self.id.get_type()  # No float promotion
         )
 
     @with_phil

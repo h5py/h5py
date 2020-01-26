@@ -4,14 +4,14 @@ from cpython cimport PyIndex_Check, PyNumber_Index
 
 from .defs cimport *
 from .h5d cimport DatasetID
-from .h5t cimport TypeID, typewrap
+from .h5t cimport TypeID, typewrap, py_create
 from .utils cimport emalloc, efree
 
 import_array()
 
 cdef class Reader:
     cdef hid_t dataset, space
-    cdef TypeID h5_type
+    cdef TypeID h5_memory_datatype
     cdef int rank, np_typenum
     cdef hsize_t* dims
     cdef hsize_t* start
@@ -24,9 +24,14 @@ cdef class Reader:
         self.space = H5Dget_space(self.dataset)
         self.rank = H5Sget_simple_extent_ndims(self.space)
 
-        self.h5_type = typewrap(H5Dget_type(self.dataset))
-        dtype = self.h5_type.py_dtype()
-        self.np_typenum = dtype.num
+        # HDF5 can use e.g. custom float datatypes which don't have an exact
+        # match in numpy. Translating it to a numpy dtype chooses the smallest
+        # dtype which won't lose any data, then we translate that back to a
+        # HDF5 datatype (h5_memory_datatype).
+        h5_stored_datatype = typewrap(H5Dget_type(self.dataset))
+        np_dtype = h5_stored_datatype.py_dtype()
+        self.np_typenum = np_dtype.num
+        self.h5_memory_datatype = py_create(np_dtype)
 
         self.dims = <hsize_t*>emalloc(sizeof(hsize_t) * self.rank)
         self.start = <hsize_t*>emalloc(sizeof(hsize_t) * self.rank)
@@ -159,7 +164,7 @@ cdef class Reader:
 
         mspace = H5Screate_simple(self.rank, self.count, NULL)
 
-        H5Dread(self.dataset, self.h5_type.id, mspace, self.space, H5P_DEFAULT, buf)
+        H5Dread(self.dataset, self.h5_memory_datatype.id, mspace, self.space, H5P_DEFAULT, buf)
 
         if arr.ndim == 0:
             return arr[()]
