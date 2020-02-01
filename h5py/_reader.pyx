@@ -125,8 +125,6 @@ cdef class Reader:
                     raise TypeError("Only 1D arrays allowed for fancy indexing")
                 if not np.issubdtype(a.dtype, np.integer):
                     raise TypeError("Indexing arrays must have integer dtypes")
-                if np.any(np.diff(a) <= 0):
-                    raise TypeError("Indexing elements must be in increasing order")
                 if array_ix != -1:
                     raise TypeError("Only one indexing vector or array is currently allowed for fancy indexing")
 
@@ -137,6 +135,9 @@ cdef class Reader:
                     else:
                         msg = f"Fancy indexing our of range for (0-{l-1})"
                     raise IndexError(msg)
+
+                if np.any(np.diff(a) <= 0):
+                    raise TypeError("Indexing elements must be in increasing order")
 
                 array_ix = dim_ix
                 array_arg = a

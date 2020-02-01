@@ -424,6 +424,13 @@ class Test1DFloat(TestCase):
         with self.assertRaises(TypeError):
             self.dset[[1,3,2]]
 
+    def test_indexlist_monotonic_negative(self):
+        # This should work: indices are logically increasing
+        self.assertNumpyBehavior(self.dset, self.data,  np.s_[[0, 2, -2]])
+
+        with self.assertRaises(TypeError):
+            self.dset[[-2, -3]]
+
     def test_indexlist_repeated(self):
         """ we forbid repeated index values """
         with self.assertRaises(TypeError):
