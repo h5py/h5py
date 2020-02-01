@@ -69,6 +69,8 @@ cdef class Reader:
 
                 ellipsis_ix = dim_ix
                 nargs -= 1  # Don't count the ... itself
+                if nargs > self.rank:
+                    raise ValueError(f"{nargs} indexing arguments for {self.rank} dimensions")
                 dim_ix += self.rank - nargs  # Skip ahead to the remaining dimensions
                 continue
 
