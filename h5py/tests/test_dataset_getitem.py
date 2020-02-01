@@ -415,9 +415,8 @@ class Test1DFloat(TestCase):
     def test_indexlist_empty(self):
         self.assertNumpyBehavior(self.dset, self.data, np.s_[[]])
 
-    # FIXME: NumPy has IndexError
     def test_indexlist_outofrange(self):
-        with self.assertRaises(ValueError):
+        with self.assertRaises(IndexError):
             self.dset[[100]]
 
     def test_indexlist_nonmonotonic(self):
