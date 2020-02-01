@@ -1,4 +1,9 @@
 # cython: language_level=3
+"""Class to efficiently select and read data from an HDF5 dataset
+
+This is written in Cython to reduce overhead when reading small amounts of
+data. But it doesn't (yet) handle all cases that the Python machinery covers.
+"""
 from numpy cimport ndarray, npy_intp, PyArray_SimpleNew, PyArray_DATA, import_array
 from cpython cimport PyIndex_Check, PyNumber_Index
 
@@ -50,6 +55,7 @@ cdef class Reader:
         efree(self.scalar)
 
     cdef bint apply_args(self, tuple args) except 0:
+        """Apply indexing arguments to this reader object"""
         cdef:
             int nargs, ellipsis_ix, array_ix = -1
             bint seen_ellipsis = False
@@ -192,6 +198,11 @@ cdef class Reader:
             efree(tmp_count)
 
     cdef ndarray make_array(self):
+        """Create an array to read the selected data into.
+
+        .apply_args() should be called first, to set self.count and self.scalar.
+        Only works for simple numeric dtypes which can be defined with typenum.
+        """
         cdef int i, arr_rank = 0
         cdef npy_intp* arr_shape
 
@@ -210,6 +221,10 @@ cdef class Reader:
         return arr
 
     def read(self, tuple args):
+        """Index the dataset using args and read into a new numpy array
+
+        Only works for simple numeric dtypes.
+        """
         cdef void* buf
         cdef ndarray arr
         cdef hid_t mspace
