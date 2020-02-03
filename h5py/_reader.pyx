@@ -134,7 +134,10 @@ cdef class Reader:
                 if array_ix != -1:
                     raise TypeError("Only one indexing vector or array is currently allowed for fancy indexing")
 
+                # Convert negative indices to positive
                 a[a < 0] += l
+
+                # Bounds check
                 if np.any((a < 0) | (a > l)):
                     if l == 0:
                         msg = "Fancy indexing out of range for empty dimension"
