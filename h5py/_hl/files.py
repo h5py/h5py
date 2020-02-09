@@ -139,14 +139,17 @@ def make_fapl(driver, libver, rdcc_nslots, rdcc_nbytes, rdcc_w0, **kwds):
     return plist
 
 
-def make_fcpl(track_order=False):
+def make_fcpl(track_order=False, strategy=None, persist=False, threshold=1):
     """ Set up a file creation property list """
-    if track_order:
+    if track_order or strategy:
         plist = h5p.create(h5p.FILE_CREATE)
-        plist.set_link_creation_order(
-            h5p.CRT_ORDER_TRACKED | h5p.CRT_ORDER_INDEXED)
-        plist.set_attr_creation_order(
-            h5p.CRT_ORDER_TRACKED | h5p.CRT_ORDER_INDEXED)
+        if track_order:
+            plist.set_link_creation_order(
+                h5p.CRT_ORDER_TRACKED | h5p.CRT_ORDER_INDEXED)
+            plist.set_attr_creation_order(
+                h5p.CRT_ORDER_TRACKED | h5p.CRT_ORDER_INDEXED)
+        if strategy:
+            plist.set_file_space_strategy(strategy, persist, threshold)
     else:
         plist = None
     return plist
@@ -293,7 +296,7 @@ class File(Group):
     def __init__(self, name, mode=None, driver=None,
                  libver=None, userblock_size=None, swmr=False,
                  rdcc_nslots=None, rdcc_nbytes=None, rdcc_w0=None,
-                 track_order=None,
+                 track_order=None, strategy=None, persist=False, threshold=1,
                  **kwds):
         """Create a new file object.
 
@@ -323,7 +326,7 @@ class File(Group):
             Open the file in SWMR read mode. Only used when mode = 'r'.
         rdcc_nbytes
             Total size of the raw data chunk cache in bytes. The default size
-            is 1024**2 (1 MB) per dataset.
+            
         rdcc_w0
             The chunk preemption policy for all datasets.  This must be
             between 0 and 1 inclusive and indicates the weighting according to
@@ -348,6 +351,22 @@ class File(Group):
         track_order
             Track dataset/group/attribute creation order under root group
             if True. If None use global default h5.get_config().track_order.
+        strategy
+            The file space handling strategy to be used.  Only allowed when
+            creating a new file (mode w, w- or x).  Defined as:
+            h5f.FSPACE_STRATEGY_FSM_AGGR = 0  FSM, Aggregators, VFD
+            h5f.FSPACE_STRATEGY_PAGE = 1      Paged FSM, VFD
+            h5f.FSPACE_STRATEGY_AGGR = 2      Aggregators, VFD
+            h5f.FSPACE_STRATEGY_NONE = 3      VFD
+            If None use HDF5 defaults.
+        persist
+            A boolean value to indicate whether free space should be persistent
+            or not.  Only allowed when creating a new file.  The default value
+            is False.
+        threshold
+            The smallest free-space section size that the free space manager 
+            will track.  Only allowed when creating a new file.  The default 
+            value is 1.
         Additional keywords
             Passed on to the selected file driver.
 
@@ -379,7 +398,8 @@ class File(Group):
             with phil:
                 fapl = make_fapl(driver, libver, rdcc_nslots, rdcc_nbytes, rdcc_w0, **kwds)
                 fid = make_fid(name, mode, userblock_size,
-                               fapl, fcpl=make_fcpl(track_order=track_order),
+                               fapl, fcpl=make_fcpl(track_order=track_order, strategy=strategy,
+                               persist=persist, threshold=threshold),
                                swmr=swmr)
 
             if isinstance(libver, tuple):
