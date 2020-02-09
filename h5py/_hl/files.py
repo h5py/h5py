@@ -326,7 +326,7 @@ class File(Group):
             Open the file in SWMR read mode. Only used when mode = 'r'.
         rdcc_nbytes
             Total size of the raw data chunk cache in bytes. The default size
-            
+            is 1024**2 (1 MB) per dataset.
         rdcc_w0
             The chunk preemption policy for all datasets.  This must be
             between 0 and 1 inclusive and indicates the weighting according to
