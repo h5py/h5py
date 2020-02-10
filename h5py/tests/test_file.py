@@ -139,10 +139,15 @@ class TestFileOpen(TestCase):
             File(self.mktemp(), 'mongoose')
 
 class TestSpaceStrategy(TestCase):
+
+    """
+        Feature: Create file with specified file space strategy
+    """
+
     def test_create_with_space_strategy(self):
         """ Create file with file space strategy """
-        name = self.mktemp()
-        fid = File(fname, 'w', strategy=h5py.h5f.H5F_FSPACE_STRATEGY_PAGE,
+        fname = self.mktemp()
+        fid = File(fname, 'w', strategy=h5py.h5f.FSPACE_STRATEGY_PAGE,
                    persist=True, threshold=100)
         self.assertTrue(fid)
         dset = fid.create_dataset('foo', (100,), dtype='uint8')
