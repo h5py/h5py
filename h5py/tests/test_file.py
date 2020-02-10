@@ -69,7 +69,7 @@ class TestFileOpen(TestCase):
         fid = File(fname, 'w')
         self.assertTrue(fid)
         fid.create_group('foo')
-        fid. close()
+        fid.close()
         fid = File(fname, 'w')
         self.assertNotIn('foo', fid)
         fid.close()
