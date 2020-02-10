@@ -69,7 +69,7 @@ class TestFileOpen(TestCase):
         fid = File(fname, 'w')
         self.assertTrue(fid)
         fid.create_group('foo')
-        fid.close()
+        fid. close()
         fid = File(fname, 'w')
         self.assertNotIn('foo', fid)
         fid.close()
@@ -138,6 +138,23 @@ class TestFileOpen(TestCase):
         with self.assertRaises(ValueError):
             File(self.mktemp(), 'mongoose')
 
+class TestSpaceStrategy(TestCase):
+    def test_create_with_space_strategy(self):
+        """ Create file with file space strategy """
+        name = self.mktemp()
+        fid = File(fname, 'w', strategy=h5py.h5f.H5F_FSPACE_STRATEGY_PAGE,
+                   persist=True, threshold=100)
+        self.assertTrue(fid)
+        dset = fid.create_dataset('foo', (100,), dtype='uint8')
+        dset[...] = 0
+        dset = fid.create_dataset('bar', (100,), dtype='uint8')
+        dset[...] = 0
+        del fid['foo']
+        fid.close()
+        fid = File(fname, 'a')
+        dset = fid.create_dataset('foo2', (100,), dtype='uint8')
+        dset[...] = 0
+        fid.close()
 
 class TestModes(TestCase):
 
