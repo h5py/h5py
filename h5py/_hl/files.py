@@ -364,8 +364,8 @@ class File(Group):
             or not.  Only allowed when creating a new file.  The default value
             is False.
         threshold
-            The smallest free-space section size that the free space manager 
-            will track.  Only allowed when creating a new file.  The default 
+            The smallest free-space section size that the free space manager
+            will track.  Only allowed when creating a new file.  The default
             value is 1.
         Additional keywords
             Passed on to the selected file driver.
