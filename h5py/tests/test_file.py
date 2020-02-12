@@ -151,14 +151,14 @@ class TestSpaceStrategy(TestCase):
                    persist=True, threshold=100)
         self.assertTrue(fid)
         dset = fid.create_dataset('foo', (100,), dtype='uint8')
-        dset[...] = 0
+        dset[...] = 1
         dset = fid.create_dataset('bar', (100,), dtype='uint8')
-        dset[...] = 0
+        dset[...] = 1
         del fid['foo']
         fid.close()
         fid = File(fname, 'a')
         dset = fid.create_dataset('foo2', (100,), dtype='uint8')
-        dset[...] = 0
+        dset[...] = 1
         fid.close()
 
 class TestModes(TestCase):
