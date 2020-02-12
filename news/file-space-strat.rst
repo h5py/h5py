@@ -1,7 +1,7 @@
 New features
 ------------
 
-* Support for setting file space strategy at file creation.  Includes open to
+* Support for setting file space strategy at file creation.  Includes option to
   presist empty space tracking between sessions.
 
 Deprecations
