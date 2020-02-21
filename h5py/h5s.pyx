@@ -87,9 +87,9 @@ def create_simple(object dims_tpl, object max_dims_tpl=None):
     cdef hsize_t* dims = NULL
     cdef hsize_t* max_dims = NULL
 
-    require_tuple(dims_tpl, 0, -1, "dims_tpl")
+    require_tuple(dims_tpl, 0, -1, b"dims_tpl")
     rank = len(dims_tpl)
-    require_tuple(max_dims_tpl, 1, rank, "max_dims_tpl")
+    require_tuple(max_dims_tpl, 1, rank, b"max_dims_tpl")
 
     try:
         dims = <hsize_t*>emalloc(sizeof(hsize_t)*rank)
@@ -219,7 +219,7 @@ cdef class SpaceID(ObjectID):
 
             rank = H5Sget_simple_extent_ndims(self.id)
 
-            require_tuple(offset, 1, rank, "offset")
+            require_tuple(offset, 1, rank, b"offset")
             dims = <hssize_t*>emalloc(sizeof(hssize_t)*rank)
             if(offset is not None):
                 convert_tuple(offset, <hsize_t*>dims, rank)
@@ -318,9 +318,9 @@ cdef class SpaceID(ObjectID):
         cdef hsize_t* dims = NULL
         cdef hsize_t* max_dims = NULL
 
-        require_tuple(dims_tpl, 0, -1, "dims_tpl")
+        require_tuple(dims_tpl, 0, -1, b"dims_tpl")
         rank = len(dims_tpl)
-        require_tuple(max_dims_tpl, 1, rank, "max_dims_tpl")
+        require_tuple(max_dims_tpl, 1, rank, b"max_dims_tpl")
 
         try:
             dims = <hsize_t*>emalloc(sizeof(hsize_t)*rank)
@@ -556,10 +556,10 @@ cdef class SpaceID(ObjectID):
         # Dataspace rank.  All provided tuples must match this.
         rank = H5Sget_simple_extent_ndims(self.id)
 
-        require_tuple(start, 0, rank, "start")
-        require_tuple(count, 0, rank, "count")
-        require_tuple(stride, 1, rank, "stride")
-        require_tuple(block, 1, rank, "block")
+        require_tuple(start, 0, rank, b"start")
+        require_tuple(count, 0, rank, b"count")
+        require_tuple(stride, 1, rank, b"stride")
+        require_tuple(block, 1, rank, b"block")
 
         try:
             start_array = <hsize_t*>emalloc(sizeof(hsize_t)*rank)
