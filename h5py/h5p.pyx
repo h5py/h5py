@@ -72,6 +72,8 @@ cdef object propwrap(hid_t id_in):
             pcls = PropLAID
         elif H5Pequal(clsid, H5P_GROUP_CREATE):
             pcls = PropGCID
+        elif H5Pequal(clsid, H5P_DATATYPE_CREATE):
+            pcls = PropTCID
         elif H5Pequal(clsid, H5P_DATASET_ACCESS):
             pcls = PropDAID
         elif H5Pequal(clsid, H5P_OBJECT_CREATE):
@@ -1415,6 +1417,11 @@ cdef class PropLAID(PropInstanceID):
             H5Idec_ref(fid)
         return propwrap(fid)
 
+# Datatype creation
+cdef class PropTCID(PropOCID):
+    """ Datatype creation property list """
+
+    pass
 
 # Group creation
 cdef class PropGCID(PropOCID):

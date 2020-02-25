@@ -189,3 +189,14 @@ class TestTrackOrder(BaseAttrs):
         attrs = self.fill_attrs(track_order=False)  # name alphanumeric
         self.assertEqual(list(attrs),
                          sorted([str(i) for i in range(100)]))
+
+
+class TestDatatype(BaseAttrs):
+
+    def test_datatype(self):
+        self.f['foo'] = np.dtype('f')
+        dt = self.f['foo']
+        self.assertEqual(list(dt.attrs.keys()), [])
+        dt.attrs.create('a', 4.0)
+        self.assertEqual(list(dt.attrs.keys()), ['a'])
+        self.assertEqual(list(dt.attrs.values()), [4.0])

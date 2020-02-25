@@ -459,6 +459,7 @@ cdef extern from "hdf5.h":
   hid_t H5P_LINK_CREATE
   hid_t H5P_LINK_ACCESS
   hid_t H5P_GROUP_CREATE
+  hid_t H5P_DATATYPE_CREATE
   hid_t H5P_CRT_ORDER_TRACKED
   hid_t H5P_CRT_ORDER_INDEXED
 
