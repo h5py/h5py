@@ -60,6 +60,12 @@ jobs:
         HDF5_VERSION: 1.10.5
         HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
         H5PY_ENFORCE_COVERAGE: yes
+      py38-deps-hdf51120:
+        python.version: '3.8'
+        TOXENV: py37-test-deps
+        HDF5_VERSION: 1.12.0
+        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
+        H5PY_ENFORCE_COVERAGE: yes
     # do mpi tests
 #      py36-deps-hdf51105-mpi:
 #        python.version: '3.6'
