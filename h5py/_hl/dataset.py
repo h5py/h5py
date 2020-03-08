@@ -32,22 +32,6 @@ _LEGACY_GZIP_COMPRESSION_VALS = frozenset(range(10))
 MPI = h5.get_config().mpi
 
 
-def readtime_dtype(basetype, names):
-    """ Make a NumPy dtype appropriate for reading """
-
-    if len(names) == 0:  # Not compound, or we want all fields
-        return basetype
-
-    if basetype.names is None:  # Names provided, but not compound
-        raise ValueError("Field names only allowed for compound types")
-
-    for name in names:  # Check all names are legal
-        if not name in basetype.names:
-            raise ValueError("Field %s does not appear in this type." % name)
-
-    return numpy.dtype([(name, basetype.fields[name][0]) for name in names])
-
-
 def make_new_dset(parent, shape=None, dtype=None, data=None, name=None,
                   chunks=None, compression=None, shuffle=None,
                   fletcher32=None, maxshape=None, compression_opts=None,
@@ -218,6 +202,36 @@ class AstypeWrapper(object):
         self._dset._local.astype = None
 
 
+class FieldsWrapper:
+    """Wrapper to extract named fields from a dataset with a struct dtype"""
+    extract_field = None
+
+    def __init__(self, dset, prior_dtype, names):
+        self.dset = dset
+        if isinstance(names, str):
+            self.extract_field = names
+            names = [names]
+        self.read_dtype = readtime_dtype(prior_dtype, names)
+
+    def __getitem__(self, args):
+        data = self.dset.__getitem__(args, new_dtype=self.read_dtype)
+        if self.extract_field is not None:
+            data = data[self.extract_field]
+        return data
+
+
+def readtime_dtype(basetype, names):
+    """Make a NumPy compound dtype with a subset of available fields"""
+    if basetype.names is None:  # Names provided, but not compound
+        raise ValueError("Field names only allowed for compound types")
+
+    for name in names:  # Check all names are legal
+        if not name in basetype.names:
+            raise ValueError("Field %s does not appear in this type." % name)
+
+    return numpy.dtype([(name, basetype.fields[name][0]) for name in names])
+
+
 if MPI:
     class CollectiveContext(object):
 
@@ -323,6 +337,19 @@ class Dataset(HLObject):
         >>> double_precision = dataset.astype('f8')[0:100:2]
         """
         return AstypeWrapper(self, dtype)
+
+    def fields(self, names, prior_dtype=None):
+        """Get a wrapper to read a subset of fields from a compound data type:
+
+        >>> 2d_coords = dataset.fields(['x', 'y'])[:]
+
+        If names is a string, a single field is extracted, and the resulting
+        arrays will have that dtype. Otherwise, it should be an iterable,
+        and the read data will have a compound dtype.
+        """
+        if prior_dtype is None:
+            prior_dtype = self.dtype
+        return FieldsWrapper(self, prior_dtype, names)
 
     if MPI:
         @property
@@ -577,14 +604,6 @@ class Dataset(HLObject):
         for i in range(shape[0]):
             yield self[i]
 
-    @cached_property
-    def _fast_read_ok(self):
-        """Is this dataset suitable for simple reading"""
-        return (
-            self._extent_type == h5s.SIMPLE
-            and isinstance(self.id.get_type(), (h5t.TypeIntegerID, h5t.TypeFloatID))
-        )
-
     @with_phil
     def iter_chunks(self, sel=None):
         """ Return chunk iterator.  If set, the sel argument is a slice or
@@ -601,6 +620,14 @@ class Dataset(HLObject):
 
         """
         return ChunkIterator(self, sel)
+
+    @cached_property
+    def _fast_read_ok(self):
+        """Is this dataset suitable for simple reading"""
+        return (
+            self._extent_type == h5s.SIMPLE
+            and isinstance(self.id.get_type(), (h5t.TypeIntegerID, h5t.TypeFloatID))
+        )
 
     @with_phil
     def __getitem__(self, args, new_dtype=None):
@@ -632,16 +659,18 @@ class Dataset(HLObject):
                 return Empty(self.dtype)
             raise ValueError("Empty datasets cannot be sliced")
 
-        # Sort field indices from the rest of the args.
+        # Sort field names from the rest of the args.
         names = tuple(x for x in args if isinstance(x, str))
-        args = tuple(x for x in args if not isinstance(x, str))
 
-        if new_dtype is not None:
-            new_dtype = readtime_dtype(new_dtype, names)
-        else:
-            # This is necessary because in the case of array types, NumPy
-            # discards the array information at the top level.
-            new_dtype = readtime_dtype(self.id.dtype, names)
+        if names:
+            # Read a subset of the fields in this structured dtype
+            if len(names) == 1:
+                names = names[0]  # Read with simpler dtype of this field
+            args = tuple(x for x in args if not isinstance(x, str))
+            return self.fields(names, new_dtype)[args]
+
+        if new_dtype is None:
+            new_dtype = self.dtype
         mtype = h5t.py_create(new_dtype)
 
         # === Special-case region references ====
@@ -682,8 +711,6 @@ class Dataset(HLObject):
             arr = numpy.ndarray(selection.mshape, dtype=new_dtype)
             for mspace, fspace in selection:
                 self.id.read(mspace, fspace, arr, mtype)
-            if len(names) == 1:
-                arr = arr[names[0]]
             if selection.mshape is None:
                 return arr[()]
             return arr
@@ -704,8 +731,6 @@ class Dataset(HLObject):
         self.id.read(mspace, fspace, arr, mtype, dxpl=self._dxpl)
 
         # Patch up the output for NumPy
-        if len(names) == 1:
-            arr = arr[names[0]]     # Single-field recarray convention
         if arr.shape == ():
             return arr[()]   # 0 dim array -> numpy scalar
         return arr
