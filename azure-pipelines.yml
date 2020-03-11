@@ -155,7 +155,7 @@ jobs:
         python.version: '3.7'
         TOXENV: py37-test-deps,py37-test-mindeps,py37-test-deps-pre
         H5PY_ENFORCE_COVERAGE: yes
-      py37:
+      py38:
         python.version: '3.8'
         TOXENV: py38-test-deps,py38-test-mindeps,py38-test-deps-pre
         H5PY_ENFORCE_COVERAGE: yes
