@@ -139,9 +139,9 @@ jobs:
         installer: nuget
         shell: cmd
 
-- job: 'macOS1013'
+- job: 'macOS1015'
   pool:
-    vmImage: xcode9-macos10.15
+    vmImage: macos10.15
   strategy:
     matrix:
       # -deps : test with default (latest) versions of dependencies
