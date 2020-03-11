@@ -31,6 +31,12 @@ environment:
       HDF5_DIR: "C:\\hdf5\\%HDF5_VERSION%\\%HDF5_VSVERSION%"
       HDF5_VERSION: "1.10.1"
 
+    - PYTHON: "C:\\Python38"
+      TOXENV: "py38-test-deps"
+      HDF5_VSVERSION: "14"
+      HDF5_DIR: "C:\\hdf5\\%HDF5_VERSION%\\%HDF5_VSVERSION%"
+      HDF5_VERSION: "1.10.5"
+
 install:
   # We need wheel installed to build wheels
   - "%PYTHON%\\python.exe -m pip install --upgrade wheel pip setuptools"
