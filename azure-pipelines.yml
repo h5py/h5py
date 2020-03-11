@@ -128,7 +128,7 @@ jobs:
 
 - job: 'macOS1013'
   pool:
-    vmImage: xcode9-macos10.13
+    vmImage: xcode9-macos10.15
   strategy:
     matrix:
       # -deps : test with default (latest) versions of dependencies
