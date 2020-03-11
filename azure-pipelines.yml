@@ -141,7 +141,7 @@ jobs:
 
 - job: 'macOS1015'
   pool:
-    vmImage: macos10.15
+    vmImage: macOS-10.15
   strategy:
     matrix:
       # -deps : test with default (latest) versions of dependencies
