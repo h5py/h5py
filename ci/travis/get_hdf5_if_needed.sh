@@ -17,7 +17,11 @@ else
         tar -xzvf hdf5-$HDF5_VERSION.tar.gz
         pushd hdf5-$HDF5_VERSION
         chmod u+x autogen.sh
-        ./configure --prefix $HDF5_DIR
+        if [[ "${HDF5_VERSION%.*}" = "1.12" ]]; then
+          ./configure --prefix $HDF5_DIR --with-default-api-version=v110
+        else
+          ./configure --prefix $HDF5_DIR
+        fi
         make -j $(nproc)
         make install
         popd
