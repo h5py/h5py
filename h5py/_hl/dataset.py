@@ -338,7 +338,7 @@ class Dataset(HLObject):
         """
         return AstypeWrapper(self, dtype)
 
-    def fields(self, names, prior_dtype=None):
+    def fields(self, names, *, _prior_dtype=None):
         """Get a wrapper to read a subset of fields from a compound data type:
 
         >>> 2d_coords = dataset.fields(['x', 'y'])[:]
@@ -347,9 +347,9 @@ class Dataset(HLObject):
         arrays will have that dtype. Otherwise, it should be an iterable,
         and the read data will have a compound dtype.
         """
-        if prior_dtype is None:
-            prior_dtype = self.dtype
-        return FieldsWrapper(self, prior_dtype, names)
+        if _prior_dtype is None:
+            _prior_dtype = self.dtype
+        return FieldsWrapper(self, _prior_dtype, names)
 
     if MPI:
         @property
@@ -667,7 +667,7 @@ class Dataset(HLObject):
             if len(names) == 1:
                 names = names[0]  # Read with simpler dtype of this field
             args = tuple(x for x in args if not isinstance(x, str))
-            return self.fields(names, new_dtype)[args]
+            return self.fields(names, _prior_dtype=new_dtype)[args]
 
         if new_dtype is None:
             new_dtype = self.dtype
