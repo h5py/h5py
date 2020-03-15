@@ -1247,7 +1247,7 @@ class TestVlen(BaseDataset):
         self.assertArrayEqual(ds[1], np.arange(0))
         self.assertArrayEqual(ds[2], np.array([1, 2, 3]))
         self.assertArrayEqual(ds[1], np.arange(0))
-        ds[0:2] = np.array([np.arange(5), np.arange(4)])
+        ds[0:2] = np.array([np.arange(5), np.arange(4)], dtype=object)
         self.assertArrayEqual(ds[0], np.arange(5))
         self.assertArrayEqual(ds[1], np.arange(4))
         ds[0:2] = np.array([np.arange(3), np.arange(3)])
@@ -1276,7 +1276,7 @@ class TestVlen(BaseDataset):
         self.assertArrayEqual(ds[0], np.array([1, 1]))
         self.assertArrayEqual(ds[1], np.array([1]))
         self.assertArrayEqual(ds[2], np.array([1, 2, 3]))
-        ds[0:2] = np.array([[0.1, 1.1, 2.1, 3.1, 4], np.arange(4)])
+        ds[0:2] = np.array([[0.1, 1.1, 2.1, 3.1, 4], np.arange(4)], dtype=object)
         self.assertArrayEqual(ds[0], np.arange(5))
         self.assertArrayEqual(ds[1], np.arange(4))
         ds[0:2] = np.array([np.array([0.1, 1.2, 2.2]),
@@ -1289,7 +1289,7 @@ class TestVlen(BaseDataset):
         ds = self.f.create_dataset('vlen', (2, 2), dtype=dt)
         ds[0, 0] = np.arange(1)
         ds[:, :] = np.array([[np.arange(3), np.arange(2)],
-                            [np.arange(1), np.arange(2)]])
+                            [np.arange(1), np.arange(2)]], dtype=object)
         ds[:, :] = np.array([[np.arange(2), np.arange(2)],
                              [np.arange(2), np.arange(2)]])
 
