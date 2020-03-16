@@ -51,19 +51,6 @@ class BaseGroup(TestCase):
         if self.f:
             self.f.close()
 
-class TestRepr(BaseGroup):
-
-    """
-        Feature: repr() works sensibly on Group objects
-    """
-
-    def test_repr(self):
-        """ repr() works on Group objects """
-        g = self.f.create_group('foo')
-        self.assertIsInstance(g, str)
-        self.f.close()
-        self.assertIsInstance(g, str)
-
 class TestCreate(BaseGroup):
 
     """
@@ -269,16 +256,17 @@ class TestOpen(BaseGroup):
     # TODO: check that regionrefs also work with __getitem__
 
 class TestRepr(BaseGroup):
-
-    """
-        Feature: Opened and closed groups provide a useful __repr__ string
-    """
+    """Opened and closed groups provide a useful __repr__ string"""
 
     def test_repr(self):
         """ Opened and closed groups provide a useful __repr__ string """
         g = self.f.create_group('foo')
         self.assertIsInstance(repr(g), str)
         g.id._close()
+        self.assertIsInstance(repr(g), str)
+        g = self.f['foo']
+        # Closing the file shouldn't break it
+        self.f.close()
         self.assertIsInstance(repr(g), str)
 
 class BaseMapping(BaseGroup):
