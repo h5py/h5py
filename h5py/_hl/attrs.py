@@ -20,7 +20,6 @@ import uuid
 from .. import h5, h5s, h5t, h5a, h5p
 from . import base
 from .base import phil, with_phil, Empty, is_empty_dataspace
-from .dataset import readtime_dtype
 from .datatype import Datatype
 
 
@@ -59,7 +58,7 @@ class AttributeManager(base.MutableMappingHDF5, base.CommonStateObject):
         if is_empty_dataspace(attr):
             return Empty(attr.dtype)
 
-        dtype = readtime_dtype(attr.dtype, [])
+        dtype = attr.dtype
         shape = attr.shape
 
         # Do this first, as we'll be fiddling with the dtype for top-level

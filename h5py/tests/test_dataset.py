@@ -1054,6 +1054,27 @@ class TestCompound(BaseDataset):
         self.assertTrue(np.all(outdata == testdata))
         self.assertEqual(outdata.dtype, testdata.dtype)
 
+    def test_fields(self):
+        dt = np.dtype([
+            ('x', np.float64),
+            ('y', np.float64),
+            ('z', np.float64),
+        ])
+
+        testdata = np.ndarray((16,), dtype=dt)
+        for key in dt.fields:
+            testdata[key] = np.random.random((16,)) * 100
+
+        self.f['test'] = testdata
+
+        # Extract multiple fields
+        np.testing.assert_array_equal(
+            self.f['test'].fields(['x', 'y'])[:], testdata[['x', 'y']]
+        )
+        # Extract single field
+        np.testing.assert_array_equal(
+            self.f['test'].fields('x')[:], testdata['x']
+        )
 
 class TestEnum(BaseDataset):
 

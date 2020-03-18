@@ -454,6 +454,18 @@ Reference
                >>> with dset.astype('int16'):
                ...     out = dset[:]
 
+    .. method:: fields(names)
+
+        Get a wrapper to read a subset of fields from a compound data type::
+
+            >>> 2d_coords = dataset.fields(['x', 'y'])[:]
+
+        If names is a string, a single field is extracted, and the resulting
+        arrays will have that dtype. Otherwise, it should be an iterable,
+        and the read data will have a compound dtype.
+
+        .. versionadded:: 3.0
+
     .. method:: iter_chunks
 
        Iterate over chunks in a chunked dataset. The optional ``sel`` argument
