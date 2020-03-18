@@ -18,7 +18,6 @@ include "config.pxi"
 from collections import namedtuple
 from ._objects cimport pdefault
 from numpy cimport ndarray, import_array, PyArray_DATA
-from cpython cimport array
 from .utils cimport  check_numpy_read, check_numpy_write, \
                      convert_tuple, convert_dims, emalloc, efree
 from .h5t cimport TypeID, typewrap, py_create
@@ -478,7 +477,8 @@ cdef class DatasetID(ObjectID):
             cdef int rank
             cdef uint32_t filters
             cdef hsize_t read_chunk_nbytes
-            cdef array.array data = array.array('B')
+            cdef char *data = NULL
+            cdef bytes ret
 
             dset_id = self.id
             dxpl_id = pdefault(dxpl)
@@ -492,18 +492,21 @@ cdef class DatasetID(ObjectID):
                 offset = <hsize_t*>emalloc(sizeof(hsize_t)*rank)
                 convert_tuple(offsets, offset, rank)
                 H5Dget_chunk_storage_size(dset_id, offset, &read_chunk_nbytes)
-                array.resize(data, read_chunk_nbytes)
+                data = <char *>emalloc(read_chunk_nbytes)
 
                 IF HDF5_VERSION >= (1, 10, 3):
-                    H5Dread_chunk(dset_id, dxpl_id, offset, &filters, data.data.as_voidptr)
+                    H5Dread_chunk(dset_id, dxpl_id, offset, &filters, data)
                 ELSE:
-                    H5DOread_chunk(dset_id, dxpl_id, offset, &filters, data.data.as_voidptr)
+                    H5DOread_chunk(dset_id, dxpl_id, offset, &filters, data)
+                ret = data[:read_chunk_nbytes]
             finally:
                 efree(offset)
+                if data:
+                    efree(data)
                 if space_id:
                     H5Sclose(space_id)
 
-            return filters, bytes(data)
+            return filters, ret
 
     IF HDF5_VERSION >= (1, 10, 5):
 
