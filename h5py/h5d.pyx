@@ -26,6 +26,10 @@ from .h5p cimport PropID, propwrap
 from ._proxy cimport dset_rw
 
 from ._objects import phil, with_phil
+from cpython cimport PyObject_GetBuffer, \
+                     PyBUF_ANY_CONTIGUOUS, \
+                     PyBuffer_Release
+
 
 # Initialization
 import_array()
@@ -405,7 +409,7 @@ cdef class DatasetID(ObjectID):
 
     IF HDF5_VERSION >= (1, 8, 11):
 
-        def write_direct_chunk(self, offsets, bytes data, filter_mask=0x00000000, PropID dxpl=None):
+        def write_direct_chunk(self, offsets, data, filter_mask=0x00000000, PropID dxpl=None):
             """ (offsets, bytes data, uint32_t filter_mask=0x00000000, PropID dxpl=None)
 
             This function bypasses any filters HDF5 would normally apply to
@@ -428,6 +432,7 @@ cdef class DatasetID(ObjectID):
             cdef hsize_t *offset = NULL
             cdef size_t data_size
             cdef int rank
+            cdef Py_buffer view
 
             dset_id = self.id
             dxpl_id = pdefault(dxpl)
@@ -440,9 +445,11 @@ cdef class DatasetID(ObjectID):
             try:
                 offset = <hsize_t*>emalloc(sizeof(hsize_t)*rank)
                 convert_tuple(offsets, offset, rank)
-                H5DOwrite_chunk(dset_id, dxpl_id, filter_mask, offset, len(data), <char *> data)
+                PyObject_GetBuffer(data, &view, PyBUF_ANY_CONTIGUOUS)
+                H5DOwrite_chunk(dset_id, dxpl_id, filter_mask, offset, view.len, view.buf)
             finally:
                 efree(offset)
+                PyBuffer_Release(&view)
                 if space_id:
                     H5Sclose(space_id)
 
