@@ -8,3 +8,4 @@ New features
 * Multi-threaded I/O is possible but no performance gain is to be expected !
 * Conversion callback (in H5T) are re-acquiring the GIL as needed.
 * All other callbacks are now re-acquiring the GIL as needed.
+* Release GIL for internal HDF5 reference counting operation (inc, dec, count)
