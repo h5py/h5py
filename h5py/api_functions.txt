@@ -208,8 +208,8 @@ hdf5:
   ssize_t    H5Iget_name( hid_t obj_id, char *name, size_t size)
   hid_t      H5Iget_file_id(hid_t obj_id)
   int        H5Idec_ref(hid_t obj_id) nogil
-  int        H5Iget_ref(hid_t obj_id)
-  int        H5Iinc_ref(hid_t obj_id)
+  int        H5Iget_ref(hid_t obj_id) nogil
+  int        H5Iinc_ref(hid_t obj_id) nogil
   htri_t     H5Iis_valid( hid_t obj_id )
 
 
