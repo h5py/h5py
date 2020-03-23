@@ -418,7 +418,7 @@ cdef class DatasetID(ObjectID):
 
             `data` is a Python object that implements the Py_buffer interface.
             In case of a ndarray the shape and dtype are ignored. It's the
-            users responsibility to make sure they are compatible with the
+            user's responsibility to make sure they are compatible with the
             dataset.
 
             `filter_mask` is a bit field of up to 32 values. It records which
