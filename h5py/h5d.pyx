@@ -410,11 +410,16 @@ cdef class DatasetID(ObjectID):
     IF HDF5_VERSION >= (1, 8, 11):
 
         def write_direct_chunk(self, offsets, data, filter_mask=0x00000000, PropID dxpl=None):
-            """ (offsets, bytes data, uint32_t filter_mask=0x00000000, PropID dxpl=None)
+            """ (offsets, data, uint32_t filter_mask=0x00000000, PropID dxpl=None)
 
             This function bypasses any filters HDF5 would normally apply to
             written data. However, calling code may apply filters (e.g. gzip
             compression) itself before writing the data.
+            
+            `data` is a Python object that implements the Py_buffer interface.
+            In case of a ndarray the shape and dtype are ignored. It's the 
+            users responsibility to make sure they are compatible with the 
+            dataset.
 
             `filter_mask` is a bit field of up to 32 values. It records which
             filters have been applied to this chunk, of the filter pipeline

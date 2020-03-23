@@ -641,3 +641,8 @@
   num_commits: 1
   first_commit: 2020-02-05 02:54:41
   github: jordan-farq
+
+- name: Clemens Weninger
+  email: clemens.weninger@maxiv.lu.se
+  alternate_emails:
+    - clemens@m-info.de
