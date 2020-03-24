@@ -259,10 +259,14 @@ case, ValueError will be raised and the read will fail.</p>
 
 <dl class="method">
 <dt id="h5py.h5d.DatasetID.write_direct_chunk">
-<code class="sig-name descname">write_direct_chunk</code><span class="sig-paren">(</span><em class="sig-param">offsets</em>, <em class="sig-param">bytes data</em>, <em class="sig-param">uint32_t filter_mask=0x00000000</em>, <em class="sig-param">PropID dxpl=None</em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5d.DatasetID.write_direct_chunk" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">write_direct_chunk</code><span class="sig-paren">(</span><em class="sig-param">offsets</em>, <em class="sig-param">data</em>, <em class="sig-param">uint32_t filter_mask=0x00000000</em>, <em class="sig-param">PropID dxpl=None</em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5d.DatasetID.write_direct_chunk" title="Permalink to this definition">¶</a></dt>
 <dd><p>This function bypasses any filters HDF5 would normally apply to
 written data. However, calling code may apply filters (e.g. gzip
 compression) itself before writing the data.</p>
+<p><cite>data</cite> is a Python object that implements the Py_buffer interface.
+In case of a ndarray the shape and dtype are ignored. It’s the
+user’s responsibility to make sure they are compatible with the
+dataset.</p>
 <p><cite>filter_mask</cite> is a bit field of up to 32 values. It records which
 filters have been applied to this chunk, of the filter pipeline
 defined for that dataset. Each bit set to <cite>1</cite> means that the filter
