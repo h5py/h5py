@@ -21,6 +21,7 @@ from numpy cimport import_array, ndarray, PyArray_DATA
 from .utils cimport check_numpy_read, check_numpy_write, emalloc, efree
 from ._proxy cimport attr_rw
 
+cimport cython
 #Python level imports
 from ._objects import phil, with_phil
 
@@ -31,6 +32,7 @@ import_array()
 
 # --- create, create_by_name ---
 
+@cython.binding(False)
 @with_phil
 def create(ObjectID loc not None, char* name, TypeID tid not None,
     SpaceID space not None, *, char* obj_name='.', PropID lapl=None):
@@ -50,7 +52,7 @@ def create(ObjectID loc not None, char* name, TypeID tid not None,
 
 
 # --- open, open_by_name, open_by_idx ---
-
+@cython.binding(False)
 @with_phil
 def open(ObjectID loc not None, char* name=NULL, int index=-1, *,
     char* obj_name='.', int index_type=H5_INDEX_NAME, int order=H5_ITER_INC,
@@ -119,6 +121,7 @@ def rename(ObjectID loc not None, char* name, char* new_name, *,
     H5Arename_by_name(loc.id, obj_name, name, new_name, pdefault(lapl))
 
 
+@cython.binding(False)
 @with_phil
 def delete(ObjectID loc not None, char* name=NULL, int index=-1, *,
     char* obj_name='.', int index_type=H5_INDEX_NAME, int order=H5_ITER_INC,
@@ -181,6 +184,7 @@ cdef class AttrInfo:
         return hash((self.corder_valid, self.corder, self.cset, self.data_size))
 
 
+@cython.binding(False)
 @with_phil
 def get_info(ObjectID loc not None, char* name=NULL, int index=-1, *,
             char* obj_name='.', PropID lapl=None,

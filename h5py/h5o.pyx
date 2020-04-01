@@ -19,7 +19,7 @@ from .h5g cimport GroupID
 from .h5i cimport wrap_identifier
 from .h5p cimport PropID
 from .utils cimport emalloc, efree
-
+cimport cython
 # Python level imports:
 from ._objects import phil, with_phil
 
@@ -133,6 +133,7 @@ cdef class ObjInfo(_ObjInfo):
         newcopy.infostruct = self.infostruct
         return newcopy
 
+@cython.binding(False)
 @with_phil
 def get_info(ObjectID loc not None, char* name=NULL, int index=-1, *,
         char* obj_name='.', int index_type=H5_INDEX_NAME, int order=H5_ITER_INC,
