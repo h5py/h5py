@@ -19,7 +19,7 @@ from threading import local
 
 import numpy
 
-from .. import h5, h5s, h5t, h5r, h5d, h5p, h5fd, h5ds, _reader
+from .. import h5, h5s, h5t, h5r, h5d, h5p, h5fd, h5ds, _selector
 from .base import HLObject, phil, with_phil, Empty
 from . import filters
 from . import selections as sel
@@ -415,7 +415,7 @@ class Dataset(HLObject):
         if '_fast_reader' in self._cache_props:
             return self._cache_props['_fast_reader']
 
-        rdr = _reader.Reader(self.id)
+        rdr = _selector.Reader(self.id)
 
         # If the file is read-only, cache the reader to speed up future uses.
         # This cache is invalidated by .refresh() when using SWMR.
