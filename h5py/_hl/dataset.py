@@ -410,8 +410,22 @@ class Dataset(HLObject):
         return size
 
     @property
+    def _selector(self):
+        """Internal object for optimised selection of data"""
+        if '_selector' in self._cache_props:
+            return self._cache_props['_selector']
+
+        slr = _selector.Selector(self.id.get_space())
+
+        # If the file is read-only, cache the reader to speed up future uses.
+        # This cache is invalidated by .refresh() when using SWMR.
+        if self._readonly:
+            self._cache_props['_selector'] = slr
+        return slr
+
+    @property
     def _fast_reader(self):
-        """Numpy-style attribute giving the total dataset size"""
+        """Internal object for optimised reading of data"""
         if '_fast_reader' in self._cache_props:
             return self._cache_props['_fast_reader']
 
@@ -718,7 +732,7 @@ class Dataset(HLObject):
         # === Everything else ===================
 
         # Perform the dataspace selection.
-        selection = sel.select(self.shape, args, dsid=self.id)
+        selection = sel.select(self.shape, args, dataset=self)
 
         if selection.nselect == 0:
             return numpy.ndarray(selection.array_shape, dtype=new_dtype)
@@ -834,7 +848,7 @@ class Dataset(HLObject):
             mtype = None
 
         # Perform the dataspace selection
-        selection = sel.select(self.shape, args, dsid=self.id)
+        selection = sel.select(self.shape, args, dataset=self)
 
         if selection.nselect == 0:
             return
@@ -885,13 +899,13 @@ class Dataset(HLObject):
             if source_sel is None:
                 source_sel = sel.SimpleSelection(self.shape)
             else:
-                source_sel = sel.select(self.shape, source_sel, self.id)  # for numpy.s_
+                source_sel = sel.select(self.shape, source_sel, self)  # for numpy.s_
             fspace = source_sel.id
 
             if dest_sel is None:
                 dest_sel = sel.SimpleSelection(dest.shape)
             else:
-                dest_sel = sel.select(dest.shape, dest_sel, self.id)
+                dest_sel = sel.select(dest.shape, dest_sel, self)
 
             for mspace in dest_sel.broadcast(source_sel.mshape):
                 self.id.read(mspace, fspace, dest, dxpl=self._dxpl)
@@ -910,13 +924,13 @@ class Dataset(HLObject):
             if source_sel is None:
                 source_sel = sel.SimpleSelection(source.shape)
             else:
-                source_sel = sel.select(source.shape, source_sel, self.id)  # for numpy.s_
+                source_sel = sel.select(source.shape, source_sel, self)  # for numpy.s_
             mspace = source_sel.id
 
             if dest_sel is None:
                 dest_sel = sel.SimpleSelection(self.shape)
             else:
-                dest_sel = sel.select(self.shape, dest_sel, self.id)
+                dest_sel = sel.select(self.shape, dest_sel, self)
 
             for fspace in dest_sel.broadcast(source_sel.mshape):
                 self.id.write(mspace, fspace, source, dxpl=self._dxpl)

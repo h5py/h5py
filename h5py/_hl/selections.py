@@ -17,10 +17,9 @@
 import numpy as np
 
 from .base import product
-from .. import h5s, h5r
+from .. import h5s, h5r, _selector
 
-
-def select(shape, args, dsid):
+def select(shape, args, dataset=None):
     """ High-level routine to generate a selection from arbitrary arguments
     to __getitem__.  The arguments should be the following:
 
@@ -31,8 +30,8 @@ def select(shape, args, dsid):
         Either a single argument or a tuple of arguments.  See below for
         supported classes of argument.
 
-    dsid
-        A h5py.h5d.DatasetID instance representing the source dataset.
+    dataset
+        A h5py.Dataset instance representing the source dataset.
 
     Argument classes:
 
@@ -69,26 +68,21 @@ def select(shape, args, dsid):
             return sel
 
         elif isinstance(arg, h5r.RegionReference):
-            sid = h5r.get_region(arg, dsid)
+            if dataset is None:
+                raise TypeError("Cannot apply a region reference without a dataset")
+            sid = h5r.get_region(arg, dataset.id)
             if shape != sid.shape:
                 raise TypeError("Reference shape does not match dataset shape")
 
             return Selection(shape, spaceid=sid)
 
-    for a in args:
-        if not isinstance(a, (slice, MultiBlockSlice)) and a is not Ellipsis:
-            try:
-                int(a)
-                if isinstance(a, np.ndarray) and a.shape == (1,):
-                    raise Exception()
-            except Exception:
-                sel = FancySelection(shape)
-                sel[args]
-                return sel
+    if dataset is not None:
+        selector = dataset._selector
+    else:
+        space = h5s.create_simple(shape)
+        selector = _selector.Selector(space)
 
-    sel = SimpleSelection(shape)
-    sel[args]
-    return sel
+    return selector.make_selection(args)
 
 
 class MultiBlockSlice(object):

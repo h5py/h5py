@@ -101,7 +101,7 @@ class VirtualSource(object):
 
     def __getitem__(self, key):
         tmp = copy(self)
-        tmp.sel = select(self.shape, key, dsid=None)
+        tmp.sel = select(self.shape, key, dataset=None)
         return tmp
 
 class VirtualLayout(object):
@@ -129,7 +129,7 @@ class VirtualLayout(object):
         self.sources = []
 
     def __setitem__(self, key, source):
-        sel = select(self.shape, key, dsid=None)
+        sel = select(self.shape, key, dataset=None)
         self.sources.append(VDSmap(sel.id,
                                    source.path,
                                    source.name,

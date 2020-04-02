@@ -174,6 +174,7 @@ class _RegionProxy(object):
     """
 
     def __init__(self, obj):
+        self.obj = obj
         self.id = obj.id
 
     def __getitem__(self, args):
@@ -181,7 +182,7 @@ class _RegionProxy(object):
             raise TypeError("Region references can only be made to datasets")
         from . import selections
         with phil:
-            selection = selections.select(self.id.shape, args, dsid=self.id)
+            selection = selections.select(self.id.shape, args, dataset=self.obj)
             return h5r.create(self.id, b'.', h5r.DATASET_REGION, selection.id)
 
     def shape(self, ref):
