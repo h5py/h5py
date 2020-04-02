@@ -63,9 +63,9 @@ def select(shape, args, dataset=None):
             return arg
 
         elif isinstance(arg, np.ndarray) and arg.dtype.kind == 'b':
-            sel = PointSelection(shape)
-            sel[arg]
-            return sel
+            if arg.shape != shape:
+                raise TypeError("Boolean indexing array has incompatible shape")
+            return PointSelection.from_mask(arg)
 
         elif isinstance(arg, h5r.RegionReference):
             if dataset is None:
@@ -232,9 +232,13 @@ class PointSelection(Selection):
 
     """
         Represents a point-wise selection.  You can supply sequences of
-        points to the three methods append(), prepend() and set(), or a
-        single boolean array to __getitem__.
+        points to the three methods append(), prepend() and set(), or
+        instantiate it with a single boolean array using from_mask().
     """
+    def __init__(self, shape, spaceid=None, points=None):
+        super().__init__(shape, spaceid)
+        if points is not None:
+            self._perform_selection(points, h5s.SELECT_SET)
 
     def _perform_selection(self, points, op):
         """ Internal method which actually performs the selection """
@@ -250,16 +254,14 @@ class PointSelection(Selection):
         else:
             self._id.select_elements(points, op)
 
-    def __getitem__(self, arg):
-        """ Perform point-wise selection from a NumPy boolean array """
-        if not (isinstance(arg, np.ndarray) and arg.dtype.kind == 'b'):
-            raise TypeError("PointSelection __getitem__ only works with bool arrays")
-        if not arg.shape == self.shape:
-            raise TypeError("Boolean indexing array has incompatible shape")
+    @classmethod
+    def from_mask(cls, mask, spaceid=None):
+        """Create a point-wise selection from a NumPy boolean array """
+        if not (isinstance(mask, np.ndarray) and mask.dtype.kind == 'b'):
+            raise TypeError("PointSelection.from_mask only works with bool arrays")
 
-        points = np.transpose(arg.nonzero())
-        self.set(points)
-        return self
+        points = np.transpose(mask.nonzero())
+        return cls(mask.shape, spaceid, points=points)
 
     def append(self, points):
         """ Add the sequence of points to the end of the current selection """
