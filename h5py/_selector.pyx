@@ -59,7 +59,7 @@ cdef class Reader:
         cdef:
             int nargs, ellipsis_ix, array_ix = -1
             bint seen_ellipsis = False
-            int dim_ix = 0
+            int dim_ix = -1
             hsize_t l
             ndarray array_arg
 
@@ -67,6 +67,7 @@ cdef class Reader:
         nargs = ellipsis_ix = len(args)
 
         for a in args:
+            dim_ix += 1
             if a is Ellipsis:
                 # [...] - Ellipsis (fill any unspecified dimensions here)
                 if seen_ellipsis:
@@ -106,9 +107,16 @@ cdef class Reader:
                 self.count[dim_ix] = count
                 self.scalar[dim_ix] = False
 
+                continue
+
             # [0] - simple integer indices
-            elif PyIndex_Check(a):
+            try:
+                # PyIndex_Check only checks the type - e.g. all numpy arrays
+                # pass PyIndex_Check, but only scalar arrays are valid.
                 a = PyNumber_Index(a)
+            except TypeError:
+                pass  # Fall through to check for list/array
+            else:
                 if a < 0:
                     a += l
 
@@ -124,9 +132,14 @@ cdef class Reader:
                 self.count[dim_ix] = 1
                 self.scalar[dim_ix] = True
 
+                continue
+
             # [[0, 2, 10]] - list/array of indices ('fancy indexing')
-            elif isinstance(a, (list, np.ndarray)):
-                a = np.asarray(a)
+            if isinstance(a, (list, np.ndarray)):
+                if isinstance(a, list) and len(a) == 0:
+                    a = np.asarray(a, dtype=np.intp)
+                else:
+                    a = np.asarray(a)
                 if a.ndim != 1:
                     raise TypeError("Only 1D arrays allowed for fancy indexing")
                 if not np.issubdtype(a.dtype, np.integer):
@@ -135,14 +148,16 @@ cdef class Reader:
                     raise TypeError("Only one indexing vector or array is currently allowed for fancy indexing")
 
                 # Convert negative indices to positive
-                a[a < 0] += l
+                if np.any(a < 0):
+                    a = a.copy()
+                    a[a < 0] += l
 
                 # Bounds check
                 if np.any((a < 0) | (a > l)):
                     if l == 0:
                         msg = "Fancy indexing out of range for empty dimension"
                     else:
-                        msg = f"Fancy indexing our of range for (0-{l-1})"
+                        msg = f"Fancy indexing out of range for (0-{l-1})"
                     raise IndexError(msg)
 
                 if np.any(np.diff(a) <= 0):
@@ -155,10 +170,9 @@ cdef class Reader:
                 self.count[dim_ix] = a.shape[0]
                 self.scalar[dim_ix] = False
 
-            else:
-                raise TypeError("Simple selection can't process %r" % a)
+                continue
 
-            dim_ix += 1
+            raise TypeError("Simple selection can't process %r" % a)
 
         if nargs < self.rank:
             # Fill in ellipsis or trailing dimensions
