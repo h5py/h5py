@@ -238,7 +238,6 @@ cdef class Selector:
         cdef:
             SpaceID space
             tuple shape, start, count, step, scalar, arr_shape
-            list arr_shape_l
             int arr_rank, i
             npy_intp* arr_shape_p
 
@@ -246,31 +245,20 @@ cdef class Selector:
         space = SpaceID(H5Scopy(self.space))
 
         shape = convert_dims(self.dims, self.rank)
-        start = convert_dims(self.start, self.rank)
         count = convert_dims(self.count, self.rank)
-        step = convert_dims(self.stride, self.rank)
-        scalar = convert_bools(self.scalar, self.rank)
-
-        arr_shape_l = []
-
-        for i in range(self.rank):
-            if not self.scalar[i]:
-                arr_shape_l.append(int(self.count[i]))
-
-        arr_shape = tuple(arr_shape_l)
 
         from ._hl.selections import SimpleSelection, FancySelection
 
         if self.is_fancy:
-            sel = FancySelection(shape, space)
-            sel._mshape = count
-            sel._array_shape = arr_shape
+            arr_shape = tuple(
+                int(self.count[i]) for i in range(self.rank) if self.scalar[i]
+            )
+            return FancySelection(shape, space, count, arr_shape)
         else:
-            sel = SimpleSelection(shape, space)
-            sel._sel = (start, count, step, scalar)
-            sel._array_shape = arr_shape
-
-        return sel
+            start = convert_dims(self.start, self.rank)
+            step = convert_dims(self.stride, self.rank)
+            scalar = convert_bools(self.scalar, self.rank)
+            return SimpleSelection(shape, space, (start, count, step, scalar))
 
 
 cdef class Reader:

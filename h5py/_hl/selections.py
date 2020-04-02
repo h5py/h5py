@@ -287,13 +287,17 @@ class SimpleSelection(Selection):
 
     @property
     def array_shape(self):
-        return self._array_shape
+        scalar = self._sel[3]
+        return tuple(x for x, s in zip(self.mshape, scalar) if not s)
 
-    def __init__(self, shape, *args, **kwds):
-        super(SimpleSelection, self).__init__(shape, *args, **kwds)
-        rank = len(self.shape)
-        self._sel = ((0,)*rank, self.shape, (1,)*rank, (False,)*rank)
-        self._array_shape = self.shape
+    def __init__(self, shape, spaceid=None, hyperslab=None):
+        super(SimpleSelection, self).__init__(shape, spaceid)
+        if hyperslab is not None:
+            self._sel = hyperslab
+        else:
+            # No hyperslab specified - select all
+            rank = len(self.shape)
+            self._sel = ((0,)*rank, self.shape, (1,)*rank, (False,)*rank)
 
     def __getitem__(self, args):
 
@@ -411,9 +415,14 @@ class FancySelection(Selection):
     def array_shape(self):
         return self._array_shape
 
-    def __init__(self, shape, *args, **kwds):
-        super(FancySelection, self).__init__(shape, *args, **kwds)
-        self._mshape = self._array_shape = self.shape
+    def __init__(self, shape, spaceid=None, mshape=None, array_shape=None):
+        super(FancySelection, self).__init__(shape, spaceid)
+        if mshape is None:
+            mshape = self.shape
+        if array_shape is None:
+            array_shape = mshape
+        self._mshape = mshape
+        self._array_shape = array_shape
 
     def __getitem__(self, args):
 
