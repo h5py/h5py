@@ -12,15 +12,28 @@ from .defs cimport *
 from .h5d cimport DatasetID
 from .h5s cimport SpaceID
 from .h5t cimport TypeID, typewrap, py_create
-from .utils cimport emalloc, efree
+from .utils cimport emalloc, efree, convert_dims
 
 import_array()
+
+
+cdef object convert_bools(bint* data, hsize_t rank):
+    # Convert a bint array to a Python tuple of bools.
+    cdef list bools_l
+    cdef int i
+    bools_l = []
+
+    for i in range(rank):
+        bools_l.append(bool(data[i]))
+
+    return tuple(bools_l)
 
 
 cdef class Selector:
     cdef SpaceID spaceobj
     cdef hid_t space
     cdef int rank
+    cdef bint is_fancy
     cdef hsize_t* dims
     cdef hsize_t* start
     cdef hsize_t* stride
@@ -31,6 +44,7 @@ cdef class Selector:
         self.spaceobj = space
         self.space = space.id
         self.rank = H5Sget_simple_extent_ndims(self.space)
+        self.is_fancy = False
 
         self.dims = <hsize_t*>emalloc(sizeof(hsize_t) * self.rank)
         self.start = <hsize_t*>emalloc(sizeof(hsize_t) * self.rank)
@@ -182,10 +196,13 @@ cdef class Selector:
 
         if nargs == 0:
             H5Sselect_all(self.space)
+            self.is_fancy = False
         elif array_ix != -1:
             self.select_fancy(array_ix, array_arg)
+            self.is_fancy = True
         else:
             H5Sselect_hyperslab(self.space, H5S_SELECT_SET, self.start, self.stride, self.count, NULL)
+            self.is_fancy = False
         return True
 
     cdef select_fancy(self, int array_ix, ndarray array_arg):
@@ -210,6 +227,50 @@ cdef class Selector:
         finally:
             efree(tmp_start)
             efree(tmp_count)
+
+
+    def make_selection(self, tuple args):
+        """Apply indexing/slicing args and create a high-level selection object
+
+        Returns an instance of SimpleSelection or FancySelection, with a copy
+        of the selector's dataspace.
+        """
+        cdef:
+            SpaceID space
+            tuple shape, start, count, step, scalar, arr_shape
+            list arr_shape_l
+            int arr_rank, i
+            npy_intp* arr_shape_p
+
+        self.apply_args(args)
+        space = SpaceID(H5Scopy(self.space))
+
+        shape = convert_dims(self.dims, self.rank)
+        start = convert_dims(self.start, self.rank)
+        count = convert_dims(self.count, self.rank)
+        step = convert_dims(self.stride, self.rank)
+        scalar = convert_bools(self.scalar, self.rank)
+
+        arr_shape_l = []
+
+        for i in range(self.rank):
+            if not self.scalar[i]:
+                arr_shape_l.append(int(self.count[i]))
+
+        arr_shape = tuple(arr_shape_l)
+
+        from ._hl.selections import SimpleSelection, FancySelection
+
+        if self.is_fancy:
+            sel = FancySelection(shape, space)
+            sel._mshape = count
+            sel._array_shape = arr_shape
+        else:
+            sel = SimpleSelection(shape, space)
+            sel._sel = (start, count, step, scalar)
+            sel._array_shape = arr_shape
+
+        return sel
 
 
 cdef class Reader:
