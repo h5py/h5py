@@ -72,7 +72,10 @@ cdef class Selector:
                 nargs -= 1  # Don't count the ... itself
                 if nargs > self.rank:
                     raise ValueError(f"{nargs} indexing arguments for {self.rank} dimensions")
-                dim_ix += self.rank - nargs  # Skip ahead to the remaining dimensions
+
+                # Skip ahead to the remaining dimensions
+                # -1 because the next iteration will increment dim_ix
+                dim_ix += self.rank - nargs - 1
                 continue
 
             if dim_ix >= self.rank:
