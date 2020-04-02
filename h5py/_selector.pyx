@@ -5,39 +5,32 @@ This is written in Cython to reduce overhead when reading small amounts of
 data. But it doesn't (yet) handle all cases that the Python machinery covers.
 """
 from numpy cimport ndarray, npy_intp, PyArray_SimpleNew, PyArray_DATA, import_array
-from cpython cimport PyIndex_Check, PyNumber_Index
+from cpython cimport PyNumber_Index
 
 import numpy as np
 from .defs cimport *
 from .h5d cimport DatasetID
+from .h5s cimport SpaceID
 from .h5t cimport TypeID, typewrap, py_create
 from .utils cimport emalloc, efree
 
 import_array()
 
-cdef class Reader:
-    cdef hid_t dataset, space
-    cdef TypeID h5_memory_datatype
-    cdef int rank, np_typenum
+
+cdef class Selector:
+    cdef SpaceID spaceobj
+    cdef hid_t space
+    cdef int rank
     cdef hsize_t* dims
     cdef hsize_t* start
     cdef hsize_t* stride
     cdef hsize_t* count
     cdef bint* scalar
 
-    def __cinit__(self, DatasetID dsid):
-        self.dataset = dsid.id
-        self.space = H5Dget_space(self.dataset)
+    def __cinit__(self, SpaceID space):
+        self.spaceobj = space
+        self.space = space.id
         self.rank = H5Sget_simple_extent_ndims(self.space)
-
-        # HDF5 can use e.g. custom float datatypes which don't have an exact
-        # match in numpy. Translating it to a numpy dtype chooses the smallest
-        # dtype which won't lose any data, then we translate that back to a
-        # HDF5 datatype (h5_memory_datatype).
-        h5_stored_datatype = typewrap(H5Dget_type(self.dataset))
-        np_dtype = h5_stored_datatype.py_dtype()
-        self.np_typenum = np_dtype.num
-        self.h5_memory_datatype = py_create(np_dtype)
 
         self.dims = <hsize_t*>emalloc(sizeof(hsize_t) * self.rank)
         self.start = <hsize_t*>emalloc(sizeof(hsize_t) * self.rank)
@@ -68,6 +61,7 @@ cdef class Reader:
 
         for a in args:
             dim_ix += 1
+
             if a is Ellipsis:
                 # [...] - Ellipsis (fill any unspecified dimensions here)
                 if seen_ellipsis:
@@ -214,6 +208,26 @@ cdef class Reader:
             efree(tmp_start)
             efree(tmp_count)
 
+
+cdef class Reader:
+    cdef hid_t dataset
+    cdef Selector selector
+    cdef TypeID h5_memory_datatype
+    cdef int np_typenum
+
+    def __cinit__(self, DatasetID dsid):
+        self.dataset = dsid.id
+        self.selector = Selector(dsid.get_space())
+
+        # HDF5 can use e.g. custom float datatypes which don't have an exact
+        # match in numpy. Translating it to a numpy dtype chooses the smallest
+        # dtype which won't lose any data, then we translate that back to a
+        # HDF5 datatype (h5_memory_datatype).
+        h5_stored_datatype = typewrap(H5Dget_type(self.dataset))
+        np_dtype = h5_stored_datatype.py_dtype()
+        self.np_typenum = np_dtype.num
+        self.h5_memory_datatype = py_create(np_dtype)
+
     cdef ndarray make_array(self):
         """Create an array to read the selected data into.
 
@@ -223,12 +237,12 @@ cdef class Reader:
         cdef int i, arr_rank = 0
         cdef npy_intp* arr_shape
 
-        arr_shape = <npy_intp*>emalloc(sizeof(npy_intp) * self.rank)
+        arr_shape = <npy_intp*>emalloc(sizeof(npy_intp) * self.selector.rank)
         try:
             # Copy any non-scalar selection dimensions for the array shape
-            for i in range(self.rank):
-                if not self.scalar[i]:
-                    arr_shape[arr_rank] = self.count[i]
+            for i in range(self.selector.rank):
+                if not self.selector.scalar[i]:
+                    arr_shape[arr_rank] = self.selector.count[i]
                     arr_rank += 1
 
             arr = PyArray_SimpleNew(arr_rank, arr_shape, self.np_typenum)
@@ -247,14 +261,15 @@ cdef class Reader:
         cdef hid_t mspace
         cdef int i
 
-        self.apply_args(args)
+        self.selector.apply_args(args)
 
         arr = self.make_array()
         buf = PyArray_DATA(arr)
 
-        mspace = H5Screate_simple(self.rank, self.count, NULL)
+        mspace = H5Screate_simple(self.selector.rank, self.selector.count, NULL)
 
-        H5Dread(self.dataset, self.h5_memory_datatype.id, mspace, self.space, H5P_DEFAULT, buf)
+        H5Dread(self.dataset, self.h5_memory_datatype.id, mspace,
+                self.selector.space, H5P_DEFAULT, buf)
 
         if arr.ndim == 0:
             return arr[()]
