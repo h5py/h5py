@@ -90,3 +90,12 @@ such that::
 though, beware that if you attempt to index the dimension scales with a string,
 the first dimension scale whose name matches the string is the one that will be
 returned. There is no guarantee that the name of the dimension scale is unique.
+
+
+
+Nested dimension scales are not permitted: if a dataset has a dimension scale 
+attached to it, converting the dataset to a dimension scale will fail, since the  
+`HDF5 specification doesn't allow this <https://confluence.hdfgroup.org/display/HDF5/H5DS_SET_SCALE>`_. ::
+
+   >>> f['data'].make_scale()
+   RuntimeError: Unspecified error in H5DSset_scale (return value <0)
