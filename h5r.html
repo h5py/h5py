@@ -46,7 +46,7 @@
 <p><code class="xref py py-data docutils literal notranslate"><span class="pre">H5R</span></code> API for object and region references.</p>
 <div class="section" id="functional-api">
 <h2>Functional API<a class="headerlink" href="#functional-api" title="Permalink to this headline">¶</a></h2>
-<dl class="function">
+<dl class="py function">
 <dt id="h5py.h5r.create">
 <code class="sig-prename descclassname">h5py.h5r.</code><code class="sig-name descname">create</code><span class="sig-paren">(</span><em class="sig-param">ObjectID loc</em>, <em class="sig-param">STRING name</em>, <em class="sig-param">INT ref_type</em>, <em class="sig-param">SpaceID space=None</em><span class="sig-paren">)</span> &#x2192; ReferenceObject ref<a class="headerlink" href="#h5py.h5r.create" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a new reference. The value of ref_type determines the kind
@@ -62,7 +62,7 @@ identifies the region.</p>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="h5py.h5r.dereference">
 <code class="sig-prename descclassname">h5py.h5r.</code><code class="sig-name descname">dereference</code><span class="sig-paren">(</span><em class="sig-param">Reference ref</em>, <em class="sig-param">ObjectID id</em><span class="sig-paren">)</span> &#x2192; ObjectID or None<a class="headerlink" href="#h5py.h5r.dereference" title="Permalink to this definition">¶</a></dt>
 <dd><p>Open the object pointed to by the reference and return its
@@ -72,7 +72,7 @@ is zero-filled.</p>
 <p>The reference may be either Reference or RegionReference.</p>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="h5py.h5r.get_region">
 <code class="sig-prename descclassname">h5py.h5r.</code><code class="sig-name descname">get_region</code><span class="sig-paren">(</span><em class="sig-param">Reference ref</em>, <em class="sig-param">ObjectID id</em><span class="sig-paren">)</span> &#x2192; SpaceID or None<a class="headerlink" href="#h5py.h5r.get_region" title="Permalink to this definition">¶</a></dt>
 <dd><p>Retrieve the dataspace selection pointed to by the reference.
@@ -84,7 +84,7 @@ provided.</p>
 returns None.</p>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="h5py.h5r.get_obj_type">
 <code class="sig-prename descclassname">h5py.h5r.</code><code class="sig-name descname">get_obj_type</code><span class="sig-paren">(</span><em class="sig-param">Reference ref</em>, <em class="sig-param">ObjectID id</em><span class="sig-paren">)</span> &#x2192; INT obj_code or None<a class="headerlink" href="#h5py.h5r.get_obj_type" title="Permalink to this definition">¶</a></dt>
 <dd><p>Determine what type of object the reference points to.  The
@@ -101,7 +101,7 @@ be provided.</p>
 <p>If the reference is zero-filled, returns None.</p>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="h5py.h5r.get_name">
 <code class="sig-prename descclassname">h5py.h5r.</code><code class="sig-name descname">get_name</code><span class="sig-paren">(</span><em class="sig-param">Reference ref</em>, <em class="sig-param">ObjectID loc</em><span class="sig-paren">)</span> &#x2192; STRING name<a class="headerlink" href="#h5py.h5r.get_name" title="Permalink to this definition">¶</a></dt>
 <dd><p>Determine the name of the object pointed to by this reference.
@@ -111,7 +111,7 @@ Requires the HDF5 1.8 API.</p>
 </div>
 <div class="section" id="reference-classes">
 <h2>Reference classes<a class="headerlink" href="#reference-classes" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
+<dl class="py class">
 <dt id="h5py.h5r.Reference">
 <em class="property">class </em><code class="sig-prename descclassname">h5py.h5r.</code><code class="sig-name descname">Reference</code><a class="headerlink" href="#h5py.h5r.Reference" title="Permalink to this definition">¶</a></dt>
 <dd><p>Opaque representation of an HDF5 reference.</p>
@@ -130,7 +130,7 @@ cdef readonly size_t typesize</p>
 </dl>
 </dd></dl>
 
-<dl class="class">
+<dl class="py class">
 <dt id="h5py.h5r.RegionReference">
 <em class="property">class </em><code class="sig-prename descclassname">h5py.h5r.</code><code class="sig-name descname">RegionReference</code><a class="headerlink" href="#h5py.h5r.RegionReference" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#h5py.h5r.Reference" title="h5py.h5r.Reference"><code class="xref py py-class docutils literal notranslate"><span class="pre">h5py.h5r.Reference</span></code></a></p>
@@ -142,13 +142,13 @@ convenience.</p>
 </div>
 <div class="section" id="api-constants">
 <h2>API constants<a class="headerlink" href="#api-constants" title="Permalink to this headline">¶</a></h2>
-<dl class="data">
+<dl class="py data">
 <dt id="h5py.h5r.OBJECT">
 <code class="sig-prename descclassname">h5py.h5r.</code><code class="sig-name descname">OBJECT</code><a class="headerlink" href="#h5py.h5r.OBJECT" title="Permalink to this definition">¶</a></dt>
 <dd><p>Typecode for object references</p>
 </dd></dl>
 
-<dl class="data">
+<dl class="py data">
 <dt id="h5py.h5r.DATASET_REGION">
 <code class="sig-prename descclassname">h5py.h5r.</code><code class="sig-name descname">DATASET_REGION</code><a class="headerlink" href="#h5py.h5r.DATASET_REGION" title="Permalink to this definition">¶</a></dt>
 <dd><p>Typecode for dataset region references</p>
@@ -220,7 +220,7 @@ convenience.</p>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2014, Andrew Collette and contributors.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.4.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.0.0.
     </div>
   </body>
 </html>

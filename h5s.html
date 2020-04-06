@@ -46,14 +46,14 @@
 <p>Low-level interface to the “<code class="xref py py-data docutils literal notranslate"><span class="pre">H5S</span></code>” family of data-space functions.</p>
 <div class="section" id="functional-api">
 <h2>Functional API<a class="headerlink" href="#functional-api" title="Permalink to this headline">¶</a></h2>
-<dl class="function">
+<dl class="py function">
 <dt id="h5py.h5s.create">
 <code class="sig-prename descclassname">h5py.h5s.</code><code class="sig-name descname">create</code><span class="sig-paren">(</span><em class="sig-param">INT class_code</em><span class="sig-paren">)</span> &#x2192; SpaceID<a class="headerlink" href="#h5py.h5s.create" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a new HDF5 dataspace object, of the given class.
 Legal values are <code class="xref py py-data docutils literal notranslate"><span class="pre">SCALAR</span></code> and <code class="xref py py-data docutils literal notranslate"><span class="pre">SIMPLE</span></code>.</p>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="h5py.h5s.create_simple">
 <code class="sig-prename descclassname">h5py.h5s.</code><code class="sig-name descname">create_simple</code><span class="sig-paren">(</span><em class="sig-param">TUPLE dims_tpl</em>, <em class="sig-param">TUPLE max_dims_tpl</em><span class="sig-paren">)</span> &#x2192; SpaceID<a class="headerlink" href="#h5py.h5s.create_simple" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a simple (slab) dataspace from a tuple of dimensions.
@@ -63,7 +63,7 @@ special value <code class="xref py py-data docutils literal notranslate"><span c
 an unlimited dimension.</p>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="h5py.h5s.decode">
 <code class="sig-prename descclassname">h5py.h5s.</code><code class="sig-name descname">decode</code><span class="sig-paren">(</span><em class="sig-param">STRING buf</em><span class="sig-paren">)</span> &#x2192; SpaceID<a class="headerlink" href="#h5py.h5s.decode" title="Permalink to this definition">¶</a></dt>
 <dd><p>Unserialize a dataspace.  Bear in mind you can also use the native
@@ -73,7 +73,7 @@ Python pickling machinery to do this.</p>
 </div>
 <div class="section" id="dataspace-objects">
 <h2>Dataspace objects<a class="headerlink" href="#dataspace-objects" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
+<dl class="py class">
 <dt id="h5py.h5s.SpaceID">
 <em class="property">class </em><code class="sig-prename descclassname">h5py.h5s.</code><code class="sig-name descname">SpaceID</code><a class="headerlink" href="#h5py.h5s.SpaceID" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="objects.html#h5py._objects.ObjectID" title="h5py._objects.ObjectID"><code class="xref py py-class docutils literal notranslate"><span class="pre">h5py._objects.ObjectID</span></code></a></p>
@@ -88,55 +88,55 @@ Python pickling machinery to do this.</p>
 <li><p>Equality: Unimplemented</p></li>
 </ul>
 <p>Can be pickled if HDF5 1.8 is available.</p>
-<dl class="attribute">
+<dl class="py method">
 <dt id="h5py.h5s.SpaceID.copy">
-<code class="sig-name descname">copy</code> &#x2192; SpaceID<a class="headerlink" href="#h5py.h5s.SpaceID.copy" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">copy</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; SpaceID<a class="headerlink" href="#h5py.h5s.SpaceID.copy" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a new copy of this dataspace.</p>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py method">
 <dt id="h5py.h5s.SpaceID.encode">
-<code class="sig-name descname">encode</code> &#x2192; STRING<a class="headerlink" href="#h5py.h5s.SpaceID.encode" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">encode</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; STRING<a class="headerlink" href="#h5py.h5s.SpaceID.encode" title="Permalink to this definition">¶</a></dt>
 <dd><p>Serialize a dataspace, including its selection.  Bear in mind you
 can also use the native Python pickling machinery to do this.</p>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py method">
 <dt id="h5py.h5s.SpaceID.extent_copy">
 <code class="sig-name descname">extent_copy</code><span class="sig-paren">(</span><em class="sig-param">SpaceID source</em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5s.SpaceID.extent_copy" title="Permalink to this definition">¶</a></dt>
 <dd><p>Replace this dataspace’s extent with another’s, changing its
 typecode if necessary.</p>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py method">
 <dt id="h5py.h5s.SpaceID.get_regular_hyperslab">
 <code class="sig-name descname">get_regular_hyperslab</code><span class="sig-paren">(</span><em class="sig-param">) -&gt; (TUPLE start</em>, <em class="sig-param">TUPLE stride</em>, <em class="sig-param">TUPLE count</em>, <em class="sig-param">TUPLE block</em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5s.SpaceID.get_regular_hyperslab" title="Permalink to this definition">¶</a></dt>
 <dd><p>Retrieve a regular hyperslab selection.</p>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py method">
 <dt id="h5py.h5s.SpaceID.get_select_bounds">
 <code class="sig-name descname">get_select_bounds</code><span class="sig-paren">(</span><em class="sig-param">) -&gt; (TUPLE start</em>, <em class="sig-param">TUPLE end</em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5s.SpaceID.get_select_bounds" title="Permalink to this definition">¶</a></dt>
 <dd><p>Determine the bounding box which exactly contains
 the current selection.</p>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py method">
 <dt id="h5py.h5s.SpaceID.get_select_elem_npoints">
-<code class="sig-name descname">get_select_elem_npoints</code> &#x2192; LONG npoints<a class="headerlink" href="#h5py.h5s.SpaceID.get_select_elem_npoints" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_select_elem_npoints</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; LONG npoints<a class="headerlink" href="#h5py.h5s.SpaceID.get_select_elem_npoints" title="Permalink to this definition">¶</a></dt>
 <dd><p>Determine the number of elements selected in point-selection mode.</p>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py method">
 <dt id="h5py.h5s.SpaceID.get_select_elem_pointlist">
-<code class="sig-name descname">get_select_elem_pointlist</code> &#x2192; NDARRAY<a class="headerlink" href="#h5py.h5s.SpaceID.get_select_elem_pointlist" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_select_elem_pointlist</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; NDARRAY<a class="headerlink" href="#h5py.h5s.SpaceID.get_select_elem_pointlist" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get a list of all selected elements.  Return is a Numpy array of
 unsigned ints, with shape <code class="docutils literal notranslate"><span class="pre">(&lt;npoints&gt;,</span> <span class="pre">&lt;space</span> <span class="pre">rank)</span></code>.</p>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py method">
 <dt id="h5py.h5s.SpaceID.get_select_hyper_blocklist">
-<code class="sig-name descname">get_select_hyper_blocklist</code> &#x2192; NDARRAY<a class="headerlink" href="#h5py.h5s.SpaceID.get_select_hyper_blocklist" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_select_hyper_blocklist</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; NDARRAY<a class="headerlink" href="#h5py.h5s.SpaceID.get_select_hyper_blocklist" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the current hyperslab selection.  The returned array has shape:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="o">&lt;</span><span class="n">npoints</span><span class="o">&gt;</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">rank</span><span class="o">&gt;</span><span class="p">)</span>
 </pre></div>
@@ -148,22 +148,22 @@ unsigned ints, with shape <code class="docutils literal notranslate"><span class
 <p>with length equal to the total number of blocks.</p>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py method">
 <dt id="h5py.h5s.SpaceID.get_select_hyper_nblocks">
-<code class="sig-name descname">get_select_hyper_nblocks</code> &#x2192; LONG nblocks<a class="headerlink" href="#h5py.h5s.SpaceID.get_select_hyper_nblocks" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_select_hyper_nblocks</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; LONG nblocks<a class="headerlink" href="#h5py.h5s.SpaceID.get_select_hyper_nblocks" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the number of hyperslab blocks currently selected.</p>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py method">
 <dt id="h5py.h5s.SpaceID.get_select_npoints">
-<code class="sig-name descname">get_select_npoints</code> &#x2192; LONG npoints<a class="headerlink" href="#h5py.h5s.SpaceID.get_select_npoints" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_select_npoints</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; LONG npoints<a class="headerlink" href="#h5py.h5s.SpaceID.get_select_npoints" title="Permalink to this definition">¶</a></dt>
 <dd><p>Determine the total number of points currently selected.
 Works for all selection techniques.</p>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py method">
 <dt id="h5py.h5s.SpaceID.get_select_type">
-<code class="sig-name descname">get_select_type</code> &#x2192; INT select_code<a class="headerlink" href="#h5py.h5s.SpaceID.get_select_type" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_select_type</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; INT select_code<a class="headerlink" href="#h5py.h5s.SpaceID.get_select_type" title="Permalink to this definition">¶</a></dt>
 <dd><p>Determine selection type.  Return values are:</p>
 <ul class="simple">
 <li><p><code class="xref py py-data docutils literal notranslate"><span class="pre">SEL_NONE</span></code></p></li>
@@ -173,45 +173,45 @@ Works for all selection techniques.</p>
 </ul>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py method">
 <dt id="h5py.h5s.SpaceID.get_simple_extent_dims">
 <code class="sig-name descname">get_simple_extent_dims</code><span class="sig-paren">(</span><em class="sig-param">BOOL maxdims=False</em><span class="sig-paren">)</span> &#x2192; TUPLE shape<a class="headerlink" href="#h5py.h5s.SpaceID.get_simple_extent_dims" title="Permalink to this definition">¶</a></dt>
 <dd><p>Determine the shape of a “simple” (slab) dataspace.  If “maxdims”
 is True, retrieve the maximum dataspace size instead.</p>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py method">
 <dt id="h5py.h5s.SpaceID.get_simple_extent_ndims">
-<code class="sig-name descname">get_simple_extent_ndims</code> &#x2192; INT rank<a class="headerlink" href="#h5py.h5s.SpaceID.get_simple_extent_ndims" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_simple_extent_ndims</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; INT rank<a class="headerlink" href="#h5py.h5s.SpaceID.get_simple_extent_ndims" title="Permalink to this definition">¶</a></dt>
 <dd><p>Determine the rank of a “simple” (slab) dataspace.</p>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py method">
 <dt id="h5py.h5s.SpaceID.get_simple_extent_npoints">
-<code class="sig-name descname">get_simple_extent_npoints</code> &#x2192; LONG npoints<a class="headerlink" href="#h5py.h5s.SpaceID.get_simple_extent_npoints" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_simple_extent_npoints</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; LONG npoints<a class="headerlink" href="#h5py.h5s.SpaceID.get_simple_extent_npoints" title="Permalink to this definition">¶</a></dt>
 <dd><p>Determine the total number of elements in a dataspace.</p>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py method">
 <dt id="h5py.h5s.SpaceID.get_simple_extent_type">
-<code class="sig-name descname">get_simple_extent_type</code> &#x2192; INT class_code<a class="headerlink" href="#h5py.h5s.SpaceID.get_simple_extent_type" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_simple_extent_type</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; INT class_code<a class="headerlink" href="#h5py.h5s.SpaceID.get_simple_extent_type" title="Permalink to this definition">¶</a></dt>
 <dd><p>Class code is either <code class="xref py py-data docutils literal notranslate"><span class="pre">SCALAR</span></code> or <code class="xref py py-data docutils literal notranslate"><span class="pre">SIMPLE</span></code>.</p>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py method">
 <dt id="h5py.h5s.SpaceID.is_regular_hyperslab">
-<code class="sig-name descname">is_regular_hyperslab</code> &#x2192; BOOL<a class="headerlink" href="#h5py.h5s.SpaceID.is_regular_hyperslab" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">is_regular_hyperslab</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; BOOL<a class="headerlink" href="#h5py.h5s.SpaceID.is_regular_hyperslab" title="Permalink to this definition">¶</a></dt>
 <dd><p>Determine whether a hyperslab selection is regular.</p>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py method">
 <dt id="h5py.h5s.SpaceID.is_simple">
-<code class="sig-name descname">is_simple</code> &#x2192; BOOL is_simple<a class="headerlink" href="#h5py.h5s.SpaceID.is_simple" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">is_simple</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; BOOL is_simple<a class="headerlink" href="#h5py.h5s.SpaceID.is_simple" title="Permalink to this definition">¶</a></dt>
 <dd><p>Determine if an existing dataspace is “simple” (including scalar
 dataspaces). Currently all HDF5 dataspaces are simple.</p>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py method">
 <dt id="h5py.h5s.SpaceID.offset_simple">
 <code class="sig-name descname">offset_simple</code><span class="sig-paren">(</span><em class="sig-param">TUPLE offset=None</em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5s.SpaceID.offset_simple" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set the offset of a dataspace.  The length of the given tuple must
@@ -219,13 +219,13 @@ match the rank of the dataspace. If None is provided (default),
 the offsets on all axes will be set to 0.</p>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py method">
 <dt id="h5py.h5s.SpaceID.select_all">
-<code class="sig-name descname">select_all</code><a class="headerlink" href="#h5py.h5s.SpaceID.select_all" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">select_all</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5s.SpaceID.select_all" title="Permalink to this definition">¶</a></dt>
 <dd><p>Select all points in the dataspace.</p>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py method">
 <dt id="h5py.h5s.SpaceID.select_elements">
 <code class="sig-name descname">select_elements</code><span class="sig-paren">(</span><em class="sig-param">SEQUENCE coords</em>, <em class="sig-param">INT op=SELECT_SET</em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5s.SpaceID.select_elements" title="Permalink to this definition">¶</a></dt>
 <dd><p>Select elements by specifying coordinates points.  The argument
@@ -244,33 +244,33 @@ converted to an array of uints with the shape:</p>
 by the HDF5 library.</p>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py method">
 <dt id="h5py.h5s.SpaceID.select_hyperslab">
 <code class="sig-name descname">select_hyperslab</code><span class="sig-paren">(</span><em class="sig-param">TUPLE start</em>, <em class="sig-param">TUPLE count</em>, <em class="sig-param">TUPLE stride=None</em>, <em class="sig-param">TUPLE block=None</em>, <em class="sig-param">INT op=SELECT_SET</em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5s.SpaceID.select_hyperslab" title="Permalink to this definition">¶</a></dt>
 <dd><p>Select a block region from an existing dataspace.  See the HDF5
 documentation for the meaning of the “block” and “op” keywords.</p>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py method">
 <dt id="h5py.h5s.SpaceID.select_none">
-<code class="sig-name descname">select_none</code><a class="headerlink" href="#h5py.h5s.SpaceID.select_none" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">select_none</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5s.SpaceID.select_none" title="Permalink to this definition">¶</a></dt>
 <dd><p>Deselect entire dataspace.</p>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py method">
 <dt id="h5py.h5s.SpaceID.select_valid">
-<code class="sig-name descname">select_valid</code> &#x2192; BOOL<a class="headerlink" href="#h5py.h5s.SpaceID.select_valid" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">select_valid</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; BOOL<a class="headerlink" href="#h5py.h5s.SpaceID.select_valid" title="Permalink to this definition">¶</a></dt>
 <dd><p>Determine if the current selection falls within
 the dataspace extent.</p>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py method">
 <dt id="h5py.h5s.SpaceID.set_extent_none">
-<code class="sig-name descname">set_extent_none</code><a class="headerlink" href="#h5py.h5s.SpaceID.set_extent_none" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">set_extent_none</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5s.SpaceID.set_extent_none" title="Permalink to this definition">¶</a></dt>
 <dd><p>Remove the dataspace extent; typecode changes to <code class="xref py py-data docutils literal notranslate"><span class="pre">NO_CLASS</span></code>.</p>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py method">
 <dt id="h5py.h5s.SpaceID.set_extent_simple">
 <code class="sig-name descname">set_extent_simple</code><span class="sig-paren">(</span><em class="sig-param">TUPLE dims_tpl</em>, <em class="sig-param">TUPLE max_dims_tpl=None</em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5s.SpaceID.set_extent_simple" title="Permalink to this definition">¶</a></dt>
 <dd><p>Reset the dataspace extent via a tuple of dimensions.
@@ -280,7 +280,7 @@ special value <code class="xref py py-data docutils literal notranslate"><span c
 an unlimited dimension.</p>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="h5py.h5s.SpaceID.shape">
 <code class="sig-name descname">shape</code><a class="headerlink" href="#h5py.h5s.SpaceID.shape" title="Permalink to this definition">¶</a></dt>
 <dd><p>Numpy-style shape tuple representing dimensions.  () == scalar.</p>
@@ -291,13 +291,13 @@ an unlimited dimension.</p>
 </div>
 <div class="section" id="module-constants">
 <h2>Module constants<a class="headerlink" href="#module-constants" title="Permalink to this headline">¶</a></h2>
-<dl class="data">
+<dl class="py data">
 <dt id="h5py.h5s.ALL">
 <code class="sig-prename descclassname">h5py.h5s.</code><code class="sig-name descname">ALL</code><a class="headerlink" href="#h5py.h5s.ALL" title="Permalink to this definition">¶</a></dt>
 <dd><p>Accepted in place of an actual dataspace; means “every point”</p>
 </dd></dl>
 
-<dl class="data">
+<dl class="py data">
 <dt id="h5py.h5s.UNLIMITED">
 <code class="sig-prename descclassname">h5py.h5s.</code><code class="sig-name descname">UNLIMITED</code><a class="headerlink" href="#h5py.h5s.UNLIMITED" title="Permalink to this definition">¶</a></dt>
 <dd><p>Indicates an unlimited maximum dimension</p>
@@ -305,17 +305,17 @@ an unlimited dimension.</p>
 
 <div class="section" id="dataspace-class-codes">
 <h3>Dataspace class codes<a class="headerlink" href="#dataspace-class-codes" title="Permalink to this headline">¶</a></h3>
-<dl class="data">
+<dl class="py data">
 <dt id="h5py.h5s.NO_CLASS">
 <code class="sig-prename descclassname">h5py.h5s.</code><code class="sig-name descname">NO_CLASS</code><a class="headerlink" href="#h5py.h5s.NO_CLASS" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="data">
+<dl class="py data">
 <dt id="h5py.h5s.SCALAR">
 <code class="sig-prename descclassname">h5py.h5s.</code><code class="sig-name descname">SCALAR</code><a class="headerlink" href="#h5py.h5s.SCALAR" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="data">
+<dl class="py data">
 <dt id="h5py.h5s.SIMPLE">
 <code class="sig-prename descclassname">h5py.h5s.</code><code class="sig-name descname">SIMPLE</code><a class="headerlink" href="#h5py.h5s.SIMPLE" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -323,52 +323,52 @@ an unlimited dimension.</p>
 </div>
 <div class="section" id="selection-codes">
 <h3>Selection codes<a class="headerlink" href="#selection-codes" title="Permalink to this headline">¶</a></h3>
-<dl class="data">
+<dl class="py data">
 <dt id="h5py.h5s.SELECT_NOOP">
 <code class="sig-prename descclassname">h5py.h5s.</code><code class="sig-name descname">SELECT_NOOP</code><a class="headerlink" href="#h5py.h5s.SELECT_NOOP" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="data">
+<dl class="py data">
 <dt id="h5py.h5s.SELECT_SET">
 <code class="sig-prename descclassname">h5py.h5s.</code><code class="sig-name descname">SELECT_SET</code><a class="headerlink" href="#h5py.h5s.SELECT_SET" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="data">
+<dl class="py data">
 <dt id="h5py.h5s.SELECT_OR">
 <code class="sig-prename descclassname">h5py.h5s.</code><code class="sig-name descname">SELECT_OR</code><a class="headerlink" href="#h5py.h5s.SELECT_OR" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="data">
+<dl class="py data">
 <dt id="h5py.h5s.SELECT_AND">
 <code class="sig-prename descclassname">h5py.h5s.</code><code class="sig-name descname">SELECT_AND</code><a class="headerlink" href="#h5py.h5s.SELECT_AND" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="data">
+<dl class="py data">
 <dt id="h5py.h5s.SELECT_XOR">
 <code class="sig-prename descclassname">h5py.h5s.</code><code class="sig-name descname">SELECT_XOR</code><a class="headerlink" href="#h5py.h5s.SELECT_XOR" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="data">
+<dl class="py data">
 <dt id="h5py.h5s.SELECT_NOTB">
 <code class="sig-prename descclassname">h5py.h5s.</code><code class="sig-name descname">SELECT_NOTB</code><a class="headerlink" href="#h5py.h5s.SELECT_NOTB" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="data">
+<dl class="py data">
 <dt id="h5py.h5s.SELECT_NOTA">
 <code class="sig-prename descclassname">h5py.h5s.</code><code class="sig-name descname">SELECT_NOTA</code><a class="headerlink" href="#h5py.h5s.SELECT_NOTA" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="data">
+<dl class="py data">
 <dt id="h5py.h5s.SELECT_APPEND">
 <code class="sig-prename descclassname">h5py.h5s.</code><code class="sig-name descname">SELECT_APPEND</code><a class="headerlink" href="#h5py.h5s.SELECT_APPEND" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="data">
+<dl class="py data">
 <dt id="h5py.h5s.SELECT_PREPEND">
 <code class="sig-prename descclassname">h5py.h5s.</code><code class="sig-name descname">SELECT_PREPEND</code><a class="headerlink" href="#h5py.h5s.SELECT_PREPEND" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="data">
+<dl class="py data">
 <dt id="h5py.h5s.SELECT_INVALID">
 <code class="sig-prename descclassname">h5py.h5s.</code><code class="sig-name descname">SELECT_INVALID</code><a class="headerlink" href="#h5py.h5s.SELECT_INVALID" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -376,22 +376,22 @@ an unlimited dimension.</p>
 </div>
 <div class="section" id="existing-selection-type">
 <h3>Existing selection type<a class="headerlink" href="#existing-selection-type" title="Permalink to this headline">¶</a></h3>
-<dl class="data">
+<dl class="py data">
 <dt id="h5py.h5s.SEL_NONE">
 <code class="sig-prename descclassname">h5py.h5s.</code><code class="sig-name descname">SEL_NONE</code><a class="headerlink" href="#h5py.h5s.SEL_NONE" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="data">
+<dl class="py data">
 <dt id="h5py.h5s.SEL_POINTS">
 <code class="sig-prename descclassname">h5py.h5s.</code><code class="sig-name descname">SEL_POINTS</code><a class="headerlink" href="#h5py.h5s.SEL_POINTS" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="data">
+<dl class="py data">
 <dt id="h5py.h5s.SEL_HYPERSLABS">
 <code class="sig-prename descclassname">h5py.h5s.</code><code class="sig-name descname">SEL_HYPERSLABS</code><a class="headerlink" href="#h5py.h5s.SEL_HYPERSLABS" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="data">
+<dl class="py data">
 <dt id="h5py.h5s.SEL_ALL">
 <code class="sig-prename descclassname">h5py.h5s.</code><code class="sig-name descname">SEL_ALL</code><a class="headerlink" href="#h5py.h5s.SEL_ALL" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -468,7 +468,7 @@ an unlimited dimension.</p>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2014, Andrew Collette and contributors.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.4.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.0.0.
     </div>
   </body>
 </html>

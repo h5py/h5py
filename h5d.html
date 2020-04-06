@@ -44,7 +44,7 @@
   <div class="section" id="module-h5py.h5d">
 <span id="module-h5d"></span><h1>Module H5D<a class="headerlink" href="#module-h5py.h5d" title="Permalink to this headline">¶</a></h1>
 <p>Provides access to the low-level HDF5 “H5D” dataset interface.</p>
-<dl class="class">
+<dl class="py class">
 <dt id="h5py.h5d.DatasetID">
 <em class="property">class </em><code class="sig-prename descclassname">h5py.h5d.</code><code class="sig-name descname">DatasetID</code><a class="headerlink" href="#h5py.h5d.DatasetID" title="Permalink to this definition">¶</a></dt>
 <dd><p>Represents an HDF5 dataset identifier.</p>
@@ -60,13 +60,13 @@ rank:   Integer giving dataset rank</p>
 <li><p>Hashable: Yes, unless anonymous</p></li>
 <li><p>Equality: True HDF5 identity if unless anonymous</p></li>
 </ul>
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="h5py.h5d.DatasetID.dtype">
 <code class="sig-name descname">dtype</code><a class="headerlink" href="#h5py.h5d.DatasetID.dtype" title="Permalink to this definition">¶</a></dt>
 <dd><p>Numpy dtype object representing the dataset type</p>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py method">
 <dt id="h5py.h5d.DatasetID.extend">
 <code class="sig-name descname">extend</code><span class="sig-paren">(</span><em class="sig-param">TUPLE shape</em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5d.DatasetID.extend" title="Permalink to this definition">¶</a></dt>
 <dd><p>Extend the given dataset so it’s at least as big as “shape”.  Note
@@ -74,9 +74,9 @@ that a dataset may only be extended up to the maximum dimensions of
 its dataspace, which are fixed when the dataset is created.</p>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py method">
 <dt id="h5py.h5d.DatasetID.flush">
-<code class="sig-name descname">flush</code><a class="headerlink" href="#h5py.h5d.DatasetID.flush" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">flush</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5d.DatasetID.flush" title="Permalink to this definition">¶</a></dt>
 <dd><p>no return</p>
 <p>Flushes all buffers associated with a dataset to disk.</p>
 <p>This function causes all buffers associated with a dataset to be
@@ -86,13 +86,13 @@ dataset changes.</p>
 <p>Feature requires: 1.9.178 HDF5</p>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py method">
 <dt id="h5py.h5d.DatasetID.get_access_plist">
-<code class="sig-name descname">get_access_plist</code> &#x2192; PropDAID<a class="headerlink" href="#h5py.h5d.DatasetID.get_access_plist" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_access_plist</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; PropDAID<a class="headerlink" href="#h5py.h5d.DatasetID.get_access_plist" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create an return a new copy of the dataset access property list.</p>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py method">
 <dt id="h5py.h5d.DatasetID.get_chunk_info">
 <code class="sig-name descname">get_chunk_info</code><span class="sig-paren">(</span><em class="sig-param">hsize_t index</em>, <em class="sig-param">SpaceID space=None</em><span class="sig-paren">)</span> &#x2192; StoreInfo<a class="headerlink" href="#h5py.h5d.DatasetID.get_chunk_info" title="Permalink to this definition">¶</a></dt>
 <dd><p>Retrieve storage information about a chunk specified by its index.</p>
@@ -102,7 +102,7 @@ dataset changes.</p>
 </div>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py method">
 <dt id="h5py.h5d.DatasetID.get_chunk_info_by_coord">
 <code class="sig-name descname">get_chunk_info_by_coord</code><span class="sig-paren">(</span><em class="sig-param">TUPLE chunk_offset</em><span class="sig-paren">)</span> &#x2192; StoreInfo<a class="headerlink" href="#h5py.h5d.DatasetID.get_chunk_info_by_coord" title="Permalink to this definition">¶</a></dt>
 <dd><p>Retrieve information about a chunk specified by the array
@@ -113,14 +113,14 @@ address of the chunk’s first element in each dimension.</p>
 </div>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py method">
 <dt id="h5py.h5d.DatasetID.get_create_plist">
-<code class="sig-name descname">get_create_plist</code> &#x2192; PropDCID<a class="headerlink" href="#h5py.h5d.DatasetID.get_create_plist" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_create_plist</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; PropDCID<a class="headerlink" href="#h5py.h5d.DatasetID.get_create_plist" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create an return a new copy of the dataset creation property list
 used when this dataset was created.</p>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py method">
 <dt id="h5py.h5d.DatasetID.get_num_chunks">
 <code class="sig-name descname">get_num_chunks</code><span class="sig-paren">(</span><em class="sig-param">SpaceID space=None</em><span class="sig-paren">)</span> &#x2192; INT num_chunks<a class="headerlink" href="#h5py.h5d.DatasetID.get_num_chunks" title="Permalink to this definition">¶</a></dt>
 <dd><p>Retrieve the number of chunks that have nonempty intersection with a
@@ -132,24 +132,24 @@ of all written chunks, regardless of the dataspace.</p>
 </div>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py method">
 <dt id="h5py.h5d.DatasetID.get_offset">
-<code class="sig-name descname">get_offset</code> &#x2192; LONG offset or None<a class="headerlink" href="#h5py.h5d.DatasetID.get_offset" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_offset</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; LONG offset or None<a class="headerlink" href="#h5py.h5d.DatasetID.get_offset" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the offset of this dataset in the file, in bytes, or None if
 it doesn’t have one.  This is always the case for datasets which
 use chunked storage, compact datasets, and datasets for which space
 has not yet been allocated in the file.</p>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py method">
 <dt id="h5py.h5d.DatasetID.get_space">
-<code class="sig-name descname">get_space</code> &#x2192; SpaceID<a class="headerlink" href="#h5py.h5d.DatasetID.get_space" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_space</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; SpaceID<a class="headerlink" href="#h5py.h5d.DatasetID.get_space" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create and return a new copy of the dataspace for this dataset.</p>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py method">
 <dt id="h5py.h5d.DatasetID.get_space_status">
-<code class="sig-name descname">get_space_status</code> &#x2192; INT space_status_code<a class="headerlink" href="#h5py.h5d.DatasetID.get_space_status" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_space_status</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; INT space_status_code<a class="headerlink" href="#h5py.h5d.DatasetID.get_space_status" title="Permalink to this definition">¶</a></dt>
 <dd><p>Determine if space has been allocated for a dataset.
 Return value is one of:</p>
 <ul class="simple">
@@ -159,27 +159,27 @@ Return value is one of:</p>
 </ul>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py method">
 <dt id="h5py.h5d.DatasetID.get_storage_size">
-<code class="sig-name descname">get_storage_size</code> &#x2192; LONG storage_size<a class="headerlink" href="#h5py.h5d.DatasetID.get_storage_size" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_storage_size</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; LONG storage_size<a class="headerlink" href="#h5py.h5d.DatasetID.get_storage_size" title="Permalink to this definition">¶</a></dt>
 <dd><p>Determine the amount of file space required for a dataset.  Note
 this only counts the space which has actually been allocated; it
 may even be zero.</p>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py method">
 <dt id="h5py.h5d.DatasetID.get_type">
-<code class="sig-name descname">get_type</code> &#x2192; TypeID<a class="headerlink" href="#h5py.h5d.DatasetID.get_type" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_type</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; TypeID<a class="headerlink" href="#h5py.h5d.DatasetID.get_type" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create and return a new copy of the datatype for this dataset.</p>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="h5py.h5d.DatasetID.rank">
 <code class="sig-name descname">rank</code><a class="headerlink" href="#h5py.h5d.DatasetID.rank" title="Permalink to this definition">¶</a></dt>
 <dd><p>Integer giving the dataset rank (0 = scalar)</p>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py method">
 <dt id="h5py.h5d.DatasetID.read">
 <code class="sig-name descname">read</code><span class="sig-paren">(</span><em class="sig-param">SpaceID mspace</em>, <em class="sig-param">SpaceID fspace</em>, <em class="sig-param">NDARRAY arr_obj</em>, <em class="sig-param">TypeID mtype=None</em>, <em class="sig-param">PropDXID dxpl=None</em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5d.DatasetID.read" title="Permalink to this definition">¶</a></dt>
 <dd><p>Read data from an HDF5 dataset into a Numpy array.</p>
@@ -195,7 +195,7 @@ this is not the case, ValueError will be raised and the read will
 fail.  Keyword dxpl may be a <code class="xref py py-class docutils literal notranslate"><span class="pre">dataset</span> <span class="pre">transfer</span> <span class="pre">property</span> <span class="pre">list</span></code>.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="h5py.h5d.DatasetID.read_direct_chunk">
 <code class="sig-name descname">read_direct_chunk</code><span class="sig-paren">(</span><em class="sig-param">offsets</em>, <em class="sig-param">PropID dxpl=None</em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5d.DatasetID.read_direct_chunk" title="Permalink to this definition">¶</a></dt>
 <dd><p>Reads data to a bytes array directly from a chunk at position
@@ -213,9 +213,9 @@ defined filters have been applied to the raw data.</p>
 <p>Feature requires: 1.10.2 HDF5</p>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py method">
 <dt id="h5py.h5d.DatasetID.refresh">
-<code class="sig-name descname">refresh</code><a class="headerlink" href="#h5py.h5d.DatasetID.refresh" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">refresh</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5d.DatasetID.refresh" title="Permalink to this definition">¶</a></dt>
 <dd><p>no return</p>
 <p>Refreshes all buffers associated with a dataset.</p>
 <p>This function causes all buffers associated with a dataset to be
@@ -227,7 +227,7 @@ The reopened dataset is automatically re-registered with the same <code class="x
 <p>Feature requires: 1.9.178 HDF5</p>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py method">
 <dt id="h5py.h5d.DatasetID.set_extent">
 <code class="sig-name descname">set_extent</code><span class="sig-paren">(</span><em class="sig-param">TUPLE shape</em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5d.DatasetID.set_extent" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set the size of the dataspace to match the given shape.  If the new
@@ -235,13 +235,13 @@ size is larger in any dimension, it must be compatible with the
 maximum dataspace size.</p>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="h5py.h5d.DatasetID.shape">
 <code class="sig-name descname">shape</code><a class="headerlink" href="#h5py.h5d.DatasetID.shape" title="Permalink to this definition">¶</a></dt>
 <dd><p>Numpy-style shape tuple representing the dataspace</p>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py method">
 <dt id="h5py.h5d.DatasetID.write">
 <code class="sig-name descname">write</code><span class="sig-paren">(</span><em class="sig-param">SpaceID mspace</em>, <em class="sig-param">SpaceID fspace</em>, <em class="sig-param">NDARRAY arr_obj</em>, <em class="sig-param">TypeID mtype=None</em>, <em class="sig-param">PropDXID dxpl=None</em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5d.DatasetID.write" title="Permalink to this definition">¶</a></dt>
 <dd><p>Write data from a Numpy array to an HDF5 dataset. Keyword dxpl may
@@ -257,7 +257,7 @@ based on the array’s dtype.</p>
 case, ValueError will be raised and the read will fail.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="h5py.h5d.DatasetID.write_direct_chunk">
 <code class="sig-name descname">write_direct_chunk</code><span class="sig-paren">(</span><em class="sig-param">offsets</em>, <em class="sig-param">data</em>, <em class="sig-param">uint32_t filter_mask=0x00000000</em>, <em class="sig-param">PropID dxpl=None</em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5d.DatasetID.write_direct_chunk" title="Permalink to this definition">¶</a></dt>
 <dd><p>This function bypasses any filters HDF5 would normally apply to
@@ -282,17 +282,17 @@ been applied to the data before calling this function.</p>
 <h2>Module constants<a class="headerlink" href="#module-constants" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="storage-strategies">
 <h3>Storage strategies<a class="headerlink" href="#storage-strategies" title="Permalink to this headline">¶</a></h3>
-<dl class="data">
+<dl class="py data">
 <dt id="h5py.h5d.COMPACT">
 <code class="sig-prename descclassname">h5py.h5d.</code><code class="sig-name descname">COMPACT</code><a class="headerlink" href="#h5py.h5d.COMPACT" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="data">
+<dl class="py data">
 <dt id="h5py.h5d.CONTIGUOUS">
 <code class="sig-prename descclassname">h5py.h5d.</code><code class="sig-name descname">CONTIGUOUS</code><a class="headerlink" href="#h5py.h5d.CONTIGUOUS" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="data">
+<dl class="py data">
 <dt id="h5py.h5d.CHUNKED">
 <code class="sig-prename descclassname">h5py.h5d.</code><code class="sig-name descname">CHUNKED</code><a class="headerlink" href="#h5py.h5d.CHUNKED" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -300,22 +300,22 @@ been applied to the data before calling this function.</p>
 </div>
 <div class="section" id="allocation-times">
 <span id="ref-h5d-alloc-time"></span><h3>Allocation times<a class="headerlink" href="#allocation-times" title="Permalink to this headline">¶</a></h3>
-<dl class="data">
+<dl class="py data">
 <dt id="h5py.h5d.ALLOC_TIME_DEFAULT">
 <code class="sig-prename descclassname">h5py.h5d.</code><code class="sig-name descname">ALLOC_TIME_DEFAULT</code><a class="headerlink" href="#h5py.h5d.ALLOC_TIME_DEFAULT" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="data">
+<dl class="py data">
 <dt id="h5py.h5d.ALLOC_TIME_LATE">
 <code class="sig-prename descclassname">h5py.h5d.</code><code class="sig-name descname">ALLOC_TIME_LATE</code><a class="headerlink" href="#h5py.h5d.ALLOC_TIME_LATE" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="data">
+<dl class="py data">
 <dt id="h5py.h5d.ALLOC_TIME_EARLY">
 <code class="sig-prename descclassname">h5py.h5d.</code><code class="sig-name descname">ALLOC_TIME_EARLY</code><a class="headerlink" href="#h5py.h5d.ALLOC_TIME_EARLY" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="data">
+<dl class="py data">
 <dt id="h5py.h5d.ALLOC_TIME_INCR">
 <code class="sig-prename descclassname">h5py.h5d.</code><code class="sig-name descname">ALLOC_TIME_INCR</code><a class="headerlink" href="#h5py.h5d.ALLOC_TIME_INCR" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -323,17 +323,17 @@ been applied to the data before calling this function.</p>
 </div>
 <div class="section" id="allocation-status">
 <h3>Allocation status<a class="headerlink" href="#allocation-status" title="Permalink to this headline">¶</a></h3>
-<dl class="data">
+<dl class="py data">
 <dt id="h5py.h5d.SPACE_STATUS_NOT_ALLOCATED">
 <code class="sig-prename descclassname">h5py.h5d.</code><code class="sig-name descname">SPACE_STATUS_NOT_ALLOCATED</code><a class="headerlink" href="#h5py.h5d.SPACE_STATUS_NOT_ALLOCATED" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="data">
+<dl class="py data">
 <dt id="h5py.h5d.SPACE_STATUS_PART_ALLOCATED">
 <code class="sig-prename descclassname">h5py.h5d.</code><code class="sig-name descname">SPACE_STATUS_PART_ALLOCATED</code><a class="headerlink" href="#h5py.h5d.SPACE_STATUS_PART_ALLOCATED" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="data">
+<dl class="py data">
 <dt id="h5py.h5d.SPACE_STATUS_ALLOCATED">
 <code class="sig-prename descclassname">h5py.h5d.</code><code class="sig-name descname">SPACE_STATUS_ALLOCATED</code><a class="headerlink" href="#h5py.h5d.SPACE_STATUS_ALLOCATED" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -341,17 +341,17 @@ been applied to the data before calling this function.</p>
 </div>
 <div class="section" id="fill-time">
 <h3>Fill time<a class="headerlink" href="#fill-time" title="Permalink to this headline">¶</a></h3>
-<dl class="data">
+<dl class="py data">
 <dt id="h5py.h5d.FILL_TIME_ALLOC">
 <code class="sig-prename descclassname">h5py.h5d.</code><code class="sig-name descname">FILL_TIME_ALLOC</code><a class="headerlink" href="#h5py.h5d.FILL_TIME_ALLOC" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="data">
+<dl class="py data">
 <dt id="h5py.h5d.FILL_TIME_NEVER">
 <code class="sig-prename descclassname">h5py.h5d.</code><code class="sig-name descname">FILL_TIME_NEVER</code><a class="headerlink" href="#h5py.h5d.FILL_TIME_NEVER" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="data">
+<dl class="py data">
 <dt id="h5py.h5d.FILL_TIME_IFSET">
 <code class="sig-prename descclassname">h5py.h5d.</code><code class="sig-name descname">FILL_TIME_IFSET</code><a class="headerlink" href="#h5py.h5d.FILL_TIME_IFSET" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -359,17 +359,17 @@ been applied to the data before calling this function.</p>
 </div>
 <div class="section" id="fill-values">
 <h3>Fill values<a class="headerlink" href="#fill-values" title="Permalink to this headline">¶</a></h3>
-<dl class="data">
+<dl class="py data">
 <dt id="h5py.h5d.FILL_VALUE_UNDEFINED">
 <code class="sig-prename descclassname">h5py.h5d.</code><code class="sig-name descname">FILL_VALUE_UNDEFINED</code><a class="headerlink" href="#h5py.h5d.FILL_VALUE_UNDEFINED" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="data">
+<dl class="py data">
 <dt id="h5py.h5d.FILL_VALUE_DEFAULT">
 <code class="sig-prename descclassname">h5py.h5d.</code><code class="sig-name descname">FILL_VALUE_DEFAULT</code><a class="headerlink" href="#h5py.h5d.FILL_VALUE_DEFAULT" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="data">
+<dl class="py data">
 <dt id="h5py.h5d.FILL_VALUE_USER_DEFINED">
 <code class="sig-prename descclassname">h5py.h5d.</code><code class="sig-name descname">FILL_VALUE_USER_DEFINED</code><a class="headerlink" href="#h5py.h5d.FILL_VALUE_USER_DEFINED" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -446,7 +446,7 @@ been applied to the data before calling this function.</p>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2014, Andrew Collette and contributors.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.4.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.0.0.
     </div>
   </body>
 </html>
