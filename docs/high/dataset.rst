@@ -15,6 +15,7 @@ NumPy operations like slicing, along with a variety of descriptive attributes:
 
   - **shape** attribute
   - **size** attribute
+  - **ndim** attribute
   - **dtype** attribute
 
 h5py supports most NumPy dtypes, and uses the same character codes (e.g.
@@ -524,6 +525,10 @@ Reference
     .. attribute:: size
 
         Integer giving the total number of elements in the dataset.
+
+    .. attribute:: ndim
+
+        Integer giving the total number of dimensions in the dataset.
 
     .. attribute:: maxshape
 
