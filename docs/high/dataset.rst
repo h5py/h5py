@@ -614,3 +614,16 @@ Reference
     .. attribute:: parent
 
         :class:`Group` instance containing this dataset.
+
+    .. attribute:: __bool__
+
+        Check that the dataset is accessible:
+
+        >>> f = h5py.open(filename)
+        >>> dset = f["MyDS"]
+        >>> f.close()
+        >>> if dset:
+        ...     print("dset is accessible")
+        ... else:
+        ...     print("dset is unaccessible")
+        dset is unaccessible

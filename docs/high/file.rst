@@ -113,7 +113,7 @@ The file-like object must be open for binary I/O, and must have these methods:
 
 
     >>> tf = tempfile.TemporaryFile()
-    >>> f = h5py.File(tf)
+    >>> f = h5py.File(tf, 'w')
 
 Accessing the :class:`File` instance after the underlying file object has been
 closed will result in undefined behaviour.
@@ -359,3 +359,15 @@ Reference
     .. attribute:: userblock_size
 
         Size of user block (in bytes).  Generally 0.  See :ref:`file_userblock`.
+
+    .. attribute:: __bool__
+
+        Check that the file descriptor is valid and the file open:
+
+            >>> f = h5py.File(filename)
+            >>> f.close()
+            >>> if f:
+            ...     print("file is open")
+            ... else:
+            ...     print("file is closed")
+            file is closed
