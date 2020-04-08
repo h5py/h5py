@@ -324,6 +324,18 @@ Reference
                     ``h5.get_config().track_order``.
     :param kwds:    Driver-specific keywords; see :ref:`file_driver`.
 
+    .. method:: __bool__()
+
+        Check that the file descriptor is valid and the file open:
+
+            >>> f = h5py.File(filename)
+            >>> f.close()
+            >>> if f:
+            ...     print("file is open")
+            ... else:
+            ...     print("file is closed")
+            file is closed
+
     .. method:: close()
 
         Close this file.  All open objects will become invalid.
@@ -359,15 +371,3 @@ Reference
     .. attribute:: userblock_size
 
         Size of user block (in bytes).  Generally 0.  See :ref:`file_userblock`.
-
-    .. attribute:: __bool__
-
-        Check that the file descriptor is valid and the file open:
-
-            >>> f = h5py.File(filename)
-            >>> f.close()
-            >>> if f:
-            ...     print("file is open")
-            ... else:
-            ...     print("file is closed")
-            file is closed

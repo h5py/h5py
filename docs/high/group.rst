@@ -195,6 +195,19 @@ Reference
         Create a new link, or automatically create a dataset.
         See :ref:`group_links`.
 
+    .. method:: __bool__()
+
+        Check that the file the group belongs to is open:
+
+        >>> f = h5py.open(filename)
+        >>> group = f["MyGroup"]
+        >>> f.close()
+        >>> if group:
+        ...     print("group is accessible")
+        ... else:
+        ...     print("group is inaccessible")
+        group is inaccessible
+
     .. method:: keys()
 
         Get the names of directly attached group members.
@@ -438,19 +451,6 @@ Reference
     .. attribute:: parent
 
         :class:`Group` instance containing this group.
-
-    .. attribute:: __bool__
-
-        Check that the group is accessible:
-
-        >>> f = h5py.open(filename)
-        >>> group = f["MyDS"]
-        >>> f.close()
-        >>> if group:
-        ...     print("group is accessible")
-        ... else:
-        ...     print("group is unaccessible")
-        group is unaccessible
 
 
 Link classes
