@@ -197,7 +197,9 @@ Reference
 
     .. method:: __bool__()
 
-        Check that the file the group belongs to is open:
+        Check that the group is accessible.
+        A group could be inaccessible for several reasons. For instance, the
+        group, or the file it belongs to, may have been closed elsewhere.
 
         >>> f = h5py.open(filename)
         >>> group = f["MyGroup"]
