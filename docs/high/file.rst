@@ -113,7 +113,7 @@ The file-like object must be open for binary I/O, and must have these methods:
 
 
     >>> tf = tempfile.TemporaryFile()
-    >>> f = h5py.File(tf)
+    >>> f = h5py.File(tf, 'w')
 
 Accessing the :class:`File` instance after the underlying file object has been
 closed will result in undefined behaviour.
@@ -323,6 +323,18 @@ Reference
                     root group if ``True``.  Default is
                     ``h5.get_config().track_order``.
     :param kwds:    Driver-specific keywords; see :ref:`file_driver`.
+
+    .. method:: __bool__()
+
+        Check that the file descriptor is valid and the file open:
+
+            >>> f = h5py.File(filename)
+            >>> f.close()
+            >>> if f:
+            ...     print("file is open")
+            ... else:
+            ...     print("file is closed")
+            file is closed
 
     .. method:: close()
 

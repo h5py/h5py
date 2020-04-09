@@ -195,6 +195,21 @@ Reference
         Create a new link, or automatically create a dataset.
         See :ref:`group_links`.
 
+    .. method:: __bool__()
+
+        Check that the group is accessible.
+        A group could be inaccessible for several reasons. For instance, the
+        group, or the file it belongs to, may have been closed elsewhere.
+
+        >>> f = h5py.open(filename)
+        >>> group = f["MyGroup"]
+        >>> f.close()
+        >>> if group:
+        ...     print("group is accessible")
+        ... else:
+        ...     print("group is inaccessible")
+        group is inaccessible
+
     .. method:: keys()
 
         Get the names of directly attached group members.

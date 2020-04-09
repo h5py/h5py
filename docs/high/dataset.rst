@@ -414,6 +414,21 @@ Reference
 
         NumPy-style slicing to write data.  See :ref:`dataset_slicing`.
 
+    .. method:: __bool__()
+
+        Check that the dataset is accessible.
+        A dataset could be inaccessible for several reasons. For instance, the
+        dataset, or the file it belongs to, may have been closed elsewhere.
+
+        >>> f = h5py.open(filename)
+        >>> dset = f["MyDS"]
+        >>> f.close()
+        >>> if dset:
+        ...     print("datset accessible")
+        ... else:
+        ...     print("dataset is inaccessible")
+        dataset unaccessible
+
     .. method:: read_direct(array, source_sel=None, dest_sel=None)
 
         Read from an HDF5 dataset directly into a NumPy array, which can
