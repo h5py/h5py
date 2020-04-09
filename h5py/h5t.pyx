@@ -321,7 +321,7 @@ def array_create(TypeID base not None, object dims_tpl):
     cdef hsize_t rank
     cdef hsize_t *dims = NULL
 
-    require_tuple(dims_tpl, 0, -1, "dims_tpl")
+    require_tuple(dims_tpl, 0, -1, b"dims_tpl")
     rank = len(dims_tpl)
     dims = <hsize_t*>emalloc(sizeof(hsize_t)*rank)
 

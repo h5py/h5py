@@ -424,7 +424,7 @@ cdef class PropDCID(PropOCID):
         cdef hsize_t* dims
         dims = NULL
 
-        require_tuple(chunksize, 0, -1, "chunksize")
+        require_tuple(chunksize, 0, -1, b"chunksize")
         rank = len(chunksize)
 
         dims = <hsize_t*>emalloc(sizeof(hsize_t)*rank)
@@ -578,7 +578,7 @@ cdef class PropDCID(PropOCID):
         cdef int i
         cd_values = NULL
 
-        require_tuple(values, 1, -1, "values")
+        require_tuple(values, 1, -1, b"values")
 
         try:
             if values is None or len(values) == 0:
