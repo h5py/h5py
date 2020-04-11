@@ -363,14 +363,22 @@ cdef class DatasetID(ObjectID):
     def get_storage_size(self):
         """ () => LONG storage_size
 
-            Determine the amount of file space required for a dataset.  Note
-            this only counts the space which has actually been allocated; it
-            may even be zero.
+            Report the size of storage, in bytes, that is allocated in the
+            file for the dataset's raw data. The reported amount is the storage
+            allocated in the written file, which will typically differ from the
+            space required to hold a dataset in working memory (any associated
+            HDF5 metadata is excluded).
+
+            For contiguous datasets, the returned size equals the current
+            allocated size of the raw data. For unfiltered chunked datasets, the
+            returned size is the number of allocated chunks times the chunk
+            size. For filtered chunked datasets, the returned size is the space
+            required to store the filtered data.
         """
         return H5Dget_storage_size(self.id)
 
-    IF HDF5_VERSION >= SWMR_MIN_HDF5_VERSION:
 
+    IF HDF5_VERSION >= SWMR_MIN_HDF5_VERSION:
         @with_phil
         def flush(self):
             """ no return

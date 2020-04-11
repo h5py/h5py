@@ -113,7 +113,11 @@ class Line(object):
             self.err_value = f"<{self.code}>-1"
         elif self.code in ('unsigned int', 'haddr_t', 'hsize_t', 'size_t'):
             self.err_condition = "==0"
-            self.err_value = f"<{self.code}>0"
+            if self.fname == 'H5Dget_storage_size':
+                # Special case: https://github.com/h5py/h5py/issues/1475
+                self.err_value = f"<{self.code}>-1"
+            else:
+                self.err_value = f"<{self.code}>0"
         else:
             raise ValueError("Return code <<%s>> unknown" % self.code)
 
@@ -253,7 +257,21 @@ cdef {0.code} {0.fname}({0.sig}) except {0.err_value}:
 
 """
         else:
-            imp = """\
+            if self.line.fname == 'H5Dget_storage_size':
+                # Special case: https://github.com/h5py/h5py/issues/1475
+                imp = """\
+cdef {0.code} {0.fname}({0.sig}) except {0.err_value}:
+    cdef {0.code} r
+    set_default_error_handler()
+    r = _hdf5.{0.fname}({0.args})
+    if r{0.err_condition}:
+        if set_exception():
+            return {0.err_value}
+    return r
+
+"""
+            else:
+                imp = """\
 cdef {0.code} {0.fname}({0.sig}) except {0.err_value}:
     cdef {0.code} r
     set_default_error_handler()
