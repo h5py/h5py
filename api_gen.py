@@ -113,11 +113,7 @@ class Line(object):
             self.err_value = f"<{self.code}>-1"
         elif self.code in ('unsigned int', 'haddr_t', 'hsize_t', 'size_t'):
             self.err_condition = "==0"
-            if self.fname == 'H5Dget_storage_size':
-                # Special case: https://github.com/h5py/h5py/issues/1475
-                self.err_value = f"<{self.code}>-1"
-            else:
-                self.err_value = f"<{self.code}>0"
+            self.err_value = f"<{self.code}>0"
         else:
             raise ValueError("Return code <<%s>> unknown" % self.code)
 
@@ -235,7 +231,11 @@ class LineProcessor(object):
 
     def write_cython_sig(self):
         """ Write out Cython signature for wrapper function """
-        cython_sig = "cdef {0.code} {0.fname}({0.sig}) except {0.err_value}\n".format(self.line)
+        if self.line.fname == 'H5Dget_storage_size':
+            # Special case: https://github.com/h5py/h5py/issues/1475
+            cython_sig = "cdef {0.code} {0.fname}({0.sig}) except? {0.err_value}\n".format(self.line)
+        else:
+            cython_sig = "cdef {0.code} {0.fname}({0.sig}) except {0.err_value}\n".format(self.line)
         cython_sig = self.add_cython_if(cython_sig)
         self.cython_defs.write(cython_sig)
 
@@ -260,7 +260,7 @@ cdef {0.code} {0.fname}({0.sig}) except {0.err_value}:
             if self.line.fname == 'H5Dget_storage_size':
                 # Special case: https://github.com/h5py/h5py/issues/1475
                 imp = """\
-cdef {0.code} {0.fname}({0.sig}) except {0.err_value}:
+cdef {0.code} {0.fname}({0.sig}) except? {0.err_value}:
     cdef {0.code} r
     set_default_error_handler()
     r = _hdf5.{0.fname}({0.args})
