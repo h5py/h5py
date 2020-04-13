@@ -11,6 +11,8 @@
   github: khinsen
 - name: Aleksandar Jelenak
   email: ajelenak@hdfgroup.org
+  alternate_emails:
+    - ajelenak@users.noreply.github.com
   github: ajelenak
   num_commits: 27
   first_commit: 2015-12-14 09:41:05
