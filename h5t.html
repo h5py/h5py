@@ -72,7 +72,7 @@ length string type.</p></li>
 
 <dl class="py function">
 <dt id="h5py.h5t.string_dtype">
-<code class="sig-prename descclassname">h5py.h5t.</code><code class="sig-name descname">string_dtype</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5t.string_dtype" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">h5py.h5t.</code><code class="sig-name descname">string_dtype</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">encoding</span><span class="o">=</span><span class="default_value">'utf-8'</span></em>, <em class="sig-param"><span class="n">length</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5t.string_dtype" title="Permalink to this definition">¶</a></dt>
 <dd><p>Make a numpy dtype for HDF5 strings</p>
 <p>encoding may be ‘utf-8’ or ‘ascii’.</p>
 <p>length may be an integer for a fixed length string dtype, or None for
@@ -87,7 +87,7 @@ supported.</p>
 
 <dl class="py function">
 <dt id="h5py.h5t.check_string_dtype">
-<code class="sig-prename descclassname">h5py.h5t.</code><code class="sig-name descname">check_string_dtype</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5t.check_string_dtype" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">h5py.h5t.</code><code class="sig-name descname">check_string_dtype</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dt</span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5t.check_string_dtype" title="Permalink to this definition">¶</a></dt>
 <dd><p>If the dtype represents an HDF5 string, returns a string_info object.</p>
 <p>The returned string_info object holds the encoding and the length.
 The encoding can only be ‘utf-8’ or ‘ascii’. The length may be None
@@ -97,21 +97,21 @@ for a variable-length string, or a fixed length in bytes.</p>
 
 <dl class="py function">
 <dt id="h5py.h5t.vlen_dtype">
-<code class="sig-prename descclassname">h5py.h5t.</code><code class="sig-name descname">vlen_dtype</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5t.vlen_dtype" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">h5py.h5t.</code><code class="sig-name descname">vlen_dtype</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">basetype</span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5t.vlen_dtype" title="Permalink to this definition">¶</a></dt>
 <dd><p>Make a numpy dtype for an HDF5 variable-length datatype</p>
 <p>For variable-length string dtypes, use <a class="reference internal" href="#h5py.h5t.string_dtype" title="h5py.h5t.string_dtype"><code class="xref py py-func docutils literal notranslate"><span class="pre">string_dtype()</span></code></a> instead.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt id="h5py.h5t.check_vlen_dtype">
-<code class="sig-prename descclassname">h5py.h5t.</code><code class="sig-name descname">check_vlen_dtype</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5t.check_vlen_dtype" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">h5py.h5t.</code><code class="sig-name descname">check_vlen_dtype</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dt</span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5t.check_vlen_dtype" title="Permalink to this definition">¶</a></dt>
 <dd><p>If the dtype represents an HDF5 vlen, returns the Python base class.</p>
 <p>Returns None if the dtype does not represent an HDF5 vlen.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt id="h5py.h5t.enum_dtype">
-<code class="sig-prename descclassname">h5py.h5t.</code><code class="sig-name descname">enum_dtype</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5t.enum_dtype" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">h5py.h5t.</code><code class="sig-name descname">enum_dtype</code><span class="sig-paren">(</span><em class="sig-param">values_dict</em>, <em class="sig-param">basetype=&lt;class 'numpy.uint8'&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5t.enum_dtype" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a NumPy representation of an HDF5 enumerated type</p>
 <p><em>values_dict</em> maps string names to integer values. <em>basetype</em> is an
 appropriate integer base dtype large enough to hold the possible options.</p>
@@ -119,7 +119,7 @@ appropriate integer base dtype large enough to hold the possible options.</p>
 
 <dl class="py function">
 <dt id="h5py.h5t.check_enum_dtype">
-<code class="sig-prename descclassname">h5py.h5t.</code><code class="sig-name descname">check_enum_dtype</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5t.check_enum_dtype" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">h5py.h5t.</code><code class="sig-name descname">check_enum_dtype</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dt</span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5t.check_enum_dtype" title="Permalink to this definition">¶</a></dt>
 <dd><p>If the dtype represents an HDF5 enumerated type, returns the dictionary
 mapping string names to integer values.</p>
 <p>Returns None if the dtype does not represent an HDF5 enumerated type.</p>
@@ -127,7 +127,7 @@ mapping string names to integer values.</p>
 
 <dl class="py function">
 <dt id="h5py.h5t.special_dtype">
-<code class="sig-prename descclassname">h5py.h5t.</code><code class="sig-name descname">special_dtype</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5t.special_dtype" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">h5py.h5t.</code><code class="sig-name descname">special_dtype</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">kwds</span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5t.special_dtype" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a new h5py “special” type.  Only one keyword may be given.</p>
 <p>Legal keywords are:</p>
 <dl class="simple">
@@ -147,7 +147,7 @@ type.</p>
 
 <dl class="py function">
 <dt id="h5py.h5t.check_dtype">
-<code class="sig-prename descclassname">h5py.h5t.</code><code class="sig-name descname">check_dtype</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5t.check_dtype" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">h5py.h5t.</code><code class="sig-name descname">check_dtype</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">kwds</span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5t.check_dtype" title="Permalink to this definition">¶</a></dt>
 <dd><p>Check a dtype for h5py special type “hint” information.  Only one
 keyword may be given.</p>
 <dl class="simple">

@@ -162,9 +162,16 @@ Return value is one of:</p>
 <dl class="py method">
 <dt id="h5py.h5d.DatasetID.get_storage_size">
 <code class="sig-name descname">get_storage_size</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; LONG storage_size<a class="headerlink" href="#h5py.h5d.DatasetID.get_storage_size" title="Permalink to this definition">¶</a></dt>
-<dd><p>Determine the amount of file space required for a dataset.  Note
-this only counts the space which has actually been allocated; it
-may even be zero.</p>
+<dd><p>Report the size of storage, in bytes, that is allocated in the
+file for the dataset’s raw data. The reported amount is the storage
+allocated in the written file, which will typically differ from the
+space required to hold a dataset in working memory (any associated
+HDF5 metadata is excluded).</p>
+<p>For contiguous datasets, the returned size equals the current
+allocated size of the raw data. For unfiltered chunked datasets, the
+returned size is the number of allocated chunks times the chunk
+size. For filtered chunked datasets, the returned size is the space
+required to store the filtered data.</p>
 </dd></dl>
 
 <dl class="py method">
