@@ -1429,3 +1429,17 @@ def test_empty_shape(writable_file):
     ds = writable_file.create_dataset('empty', dtype='int32')
     assert ds.shape is None
     assert ds.maxshape is None
+
+
+def test_zero_storage_size():
+    # https://github.com/h5py/h5py/issues/1475
+    from io import BytesIO
+    buf = BytesIO()
+    with h5py.File(buf, 'w') as fout:
+        fout.create_dataset('empty', dtype='uint8')
+
+    buf.seek(0)
+    with h5py.File(buf, 'r') as fin:
+        assert fin['empty'].chunks is None
+        assert fin['empty'].id.get_offset() is None
+        assert fin['empty'].id.get_storage_size() == 0
