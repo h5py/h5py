@@ -653,34 +653,43 @@ class TestAutoCreate(BaseDataset):
     """
         Feature: Datasets auto-created from data produce the correct types
     """
+    def assert_string_type(self, ds, cset, variable=True):
+        tid = ds.id.get_type()
+        self.assertEqual(type(tid), h5py.h5t.TypeStringID)
+        self.assertEqual(tid.get_cset(), cset)
+        if variable:
+            assert tid.is_variable_str()
 
     def test_vlen_bytes(self):
-        """ Assignment of a byte string produces a vlen ascii dataset """
+        """Assigning byte strings produces a vlen string ASCII dataset """
         self.f['x'] = b"Hello there"
-        ds = self.f['x']
-        tid = ds.id.get_type()
-        self.assertEqual(type(tid), h5py.h5t.TypeStringID)
-        self.assertTrue(tid.is_variable_str())
-        self.assertEqual(tid.get_cset(), h5py.h5t.CSET_ASCII)
+        self.assert_string_type(self.f['x'], h5py.h5t.CSET_ASCII)
+
+        self.f['y'] = [b"a", b"bc"]
+        self.assert_string_type(self.f['y'], h5py.h5t.CSET_ASCII)
+
+        self.f['z'] = np.array([b"a", b"bc"], dtype=np.object_)
+        self.assert_string_type(self.f['z'], h5py.h5t.CSET_ASCII)
 
     def test_vlen_unicode(self):
-        """ Assignment of a unicode string produces a vlen unicode dataset """
-        self.f['x'] = u"Hello there" + chr(0x2034)
-        ds = self.f['x']
-        tid = ds.id.get_type()
-        self.assertEqual(type(tid), h5py.h5t.TypeStringID)
-        self.assertTrue(tid.is_variable_str())
-        self.assertEqual(tid.get_cset(), h5py.h5t.CSET_UTF8)
+        """Assigning unicode strings produces a vlen string UTF-8 dataset """
+        self.f['x'] = "Hello there" + chr(0x2034)
+        self.assert_string_type(self.f['x'], h5py.h5t.CSET_UTF8)
+
+        self.f['y'] = ["a", "bc"]
+        self.assert_string_type(self.f['y'], h5py.h5t.CSET_UTF8)
+
+        # 2D array; this only works with an array, not nested lists
+        self.f['z'] = np.array([["a", "bc"]], dtype=np.object_)
+        self.assert_string_type(self.f['z'], h5py.h5t.CSET_UTF8)
 
     def test_string_fixed(self):
         """ Assignment of fixed-length byte string produces a fixed-length
         ascii dataset """
         self.f['x'] = np.string_("Hello there")
         ds = self.f['x']
-        tid = ds.id.get_type()
-        self.assertEqual(type(tid), h5py.h5t.TypeStringID)
-        self.assertEqual(tid.get_size(), 11)
-        self.assertEqual(tid.get_cset(), h5py.h5t.CSET_ASCII)
+        self.assert_string_type(ds, h5py.h5t.CSET_ASCII, variable=False)
+        self.assertEqual(ds.id.get_type().get_size(), 11)
 
 
 class TestCreateLike(BaseDataset):

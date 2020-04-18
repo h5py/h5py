@@ -11,6 +11,7 @@
     Implements operations common to all high-level objects (File, etc.).
 """
 
+import numpy as np
 import posixpath
 import os
 from collections.abc import (Mapping, MutableMapping, KeysView,
@@ -37,6 +38,32 @@ def is_hdf5(fname):
         return False
 
 
+def object_collection_of(data):
+    """Check if data is a list/tuple/numpy object array (without h5py tag)
+
+    If so, and its contents are homogeneous, return their type.
+    Otherwise, return None.
+
+    The aim is to treat numpy arrays of Python objects like normal Python
+    collections, while treating arrays with specific dtypes differently.
+    """
+    if isinstance(data, (list, tuple)):
+        item_types = {type(e) for e in data}
+
+    elif isinstance(data, np.ndarray) and (
+        data.dtype.kind == 'O'
+        and not h5t.check_string_dtype(data.dtype)
+        and not h5t.check_vlen_dtype(data.dtype)
+    ):
+        item_types = {type(e) for e in data.flat}
+    else:
+        return None
+
+    if len(item_types) != 1:
+        return None
+    return item_types.pop()
+
+
 def guess_dtype(data):
     """ Attempt to guess an appropriate dtype for the object, returning None
     if nothing is appropriate (or if it should be left up the the array
@@ -47,9 +74,15 @@ def guess_dtype(data):
             return h5t.regionref_dtype
         if isinstance(data, h5r.Reference):
             return h5t.ref_dtype
-        if type(data) == bytes:
+
+        item_type = object_collection_of(data)
+        if item_type is None:
+            # Potentially scalar
+            item_type = type(data)
+
+        if item_type is bytes:
             return h5t.string_dtype(encoding='ascii')
-        if type(data) == str:
+        if item_type is str:
             return h5t.string_dtype()
 
         return None
