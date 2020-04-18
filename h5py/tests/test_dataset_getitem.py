@@ -415,15 +415,21 @@ class Test1DFloat(TestCase):
     def test_indexlist_empty(self):
         self.assertNumpyBehavior(self.dset, self.data, np.s_[[]])
 
-    # FIXME: NumPy has IndexError
     def test_indexlist_outofrange(self):
-        with self.assertRaises(ValueError):
+        with self.assertRaises(IndexError):
             self.dset[[100]]
 
     def test_indexlist_nonmonotonic(self):
         """ we require index list values to be strictly increasing """
         with self.assertRaises(TypeError):
             self.dset[[1,3,2]]
+
+    def test_indexlist_monotonic_negative(self):
+        # This should work: indices are logically increasing
+        self.assertNumpyBehavior(self.dset, self.data,  np.s_[[0, 2, -2]])
+
+        with self.assertRaises(TypeError):
+            self.dset[[-2, -3]]
 
     def test_indexlist_repeated(self):
         """ we forbid repeated index values """

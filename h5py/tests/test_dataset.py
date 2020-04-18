@@ -1054,6 +1054,27 @@ class TestCompound(BaseDataset):
         self.assertTrue(np.all(outdata == testdata))
         self.assertEqual(outdata.dtype, testdata.dtype)
 
+    def test_fields(self):
+        dt = np.dtype([
+            ('x', np.float64),
+            ('y', np.float64),
+            ('z', np.float64),
+        ])
+
+        testdata = np.ndarray((16,), dtype=dt)
+        for key in dt.fields:
+            testdata[key] = np.random.random((16,)) * 100
+
+        self.f['test'] = testdata
+
+        # Extract multiple fields
+        np.testing.assert_array_equal(
+            self.f['test'].fields(['x', 'y'])[:], testdata[['x', 'y']]
+        )
+        # Extract single field
+        np.testing.assert_array_equal(
+            self.f['test'].fields('x')[:], testdata['x']
+        )
 
 class TestEnum(BaseDataset):
 
@@ -1149,6 +1170,11 @@ class TestZeroShape(BaseDataset):
         self.assertEqual(ds[()].shape, arr.shape)
         self.assertEqual(ds[()].dtype, arr.dtype)
 
+# https://github.com/h5py/h5py/issues/1492
+empty_regionref_xfail = pytest.mark.xfail(
+    h5py.version.hdf5_version_tuple == (1, 10, 6),
+    reason="Issue with empty region refs in HDF5 1.10.6",
+)
 
 class TestRegionRefs(BaseDataset):
 
@@ -1168,12 +1194,14 @@ class TestRegionRefs(BaseDataset):
         ref = self.dset.regionref[slic]
         self.assertArrayEqual(self.dset[ref], self.data[slic])
 
+    @empty_regionref_xfail
     def test_empty_region(self):
         ref = self.dset.regionref[:0]
         out = self.dset[ref]
         assert out.size == 0
         # Ideally we should preserve shape (0, 100), but it seems this is lost.
 
+    @empty_regionref_xfail
     def test_scalar_dataset(self):
         ds = self.f.create_dataset("scalar", data=1.0, dtype='f4')
         sid = h5py.h5s.create(h5py.h5s.SCALAR)
@@ -1240,7 +1268,7 @@ class TestVlen(BaseDataset):
         self.assertArrayEqual(ds[1], np.arange(0))
         self.assertArrayEqual(ds[2], np.array([1, 2, 3]))
         self.assertArrayEqual(ds[1], np.arange(0))
-        ds[0:2] = np.array([np.arange(5), np.arange(4)])
+        ds[0:2] = np.array([np.arange(5), np.arange(4)], dtype=object)
         self.assertArrayEqual(ds[0], np.arange(5))
         self.assertArrayEqual(ds[1], np.arange(4))
         ds[0:2] = np.array([np.arange(3), np.arange(3)])
@@ -1269,7 +1297,7 @@ class TestVlen(BaseDataset):
         self.assertArrayEqual(ds[0], np.array([1, 1]))
         self.assertArrayEqual(ds[1], np.array([1]))
         self.assertArrayEqual(ds[2], np.array([1, 2, 3]))
-        ds[0:2] = np.array([[0.1, 1.1, 2.1, 3.1, 4], np.arange(4)])
+        ds[0:2] = np.array([[0.1, 1.1, 2.1, 3.1, 4], np.arange(4)], dtype=object)
         self.assertArrayEqual(ds[0], np.arange(5))
         self.assertArrayEqual(ds[1], np.arange(4))
         ds[0:2] = np.array([np.array([0.1, 1.2, 2.2]),
@@ -1282,7 +1310,7 @@ class TestVlen(BaseDataset):
         ds = self.f.create_dataset('vlen', (2, 2), dtype=dt)
         ds[0, 0] = np.arange(1)
         ds[:, :] = np.array([[np.arange(3), np.arange(2)],
-                            [np.arange(1), np.arange(2)]])
+                            [np.arange(1), np.arange(2)]], dtype=object)
         ds[:, :] = np.array([[np.arange(2), np.arange(2)],
                              [np.arange(2), np.arange(2)]])
 
@@ -1401,3 +1429,17 @@ def test_empty_shape(writable_file):
     ds = writable_file.create_dataset('empty', dtype='int32')
     assert ds.shape is None
     assert ds.maxshape is None
+
+
+def test_zero_storage_size():
+    # https://github.com/h5py/h5py/issues/1475
+    from io import BytesIO
+    buf = BytesIO()
+    with h5py.File(buf, 'w') as fout:
+        fout.create_dataset('empty', dtype='uint8')
+
+    buf.seek(0)
+    with h5py.File(buf, 'r') as fin:
+        assert fin['empty'].chunks is None
+        assert fin['empty'].id.get_offset() is None
+        assert fin['empty'].id.get_storage_size() == 0

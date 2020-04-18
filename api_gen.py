@@ -231,7 +231,11 @@ class LineProcessor(object):
 
     def write_cython_sig(self):
         """ Write out Cython signature for wrapper function """
-        cython_sig = "cdef {0.code} {0.fname}({0.sig}) except {0.err_value}\n".format(self.line)
+        if self.line.fname == 'H5Dget_storage_size':
+            # Special case: https://github.com/h5py/h5py/issues/1475
+            cython_sig = "cdef {0.code} {0.fname}({0.sig}) except? {0.err_value}\n".format(self.line)
+        else:
+            cython_sig = "cdef {0.code} {0.fname}({0.sig}) except {0.err_value}\n".format(self.line)
         cython_sig = self.add_cython_if(cython_sig)
         self.cython_defs.write(cython_sig)
 
@@ -253,7 +257,21 @@ cdef {0.code} {0.fname}({0.sig}) except {0.err_value}:
 
 """
         else:
-            imp = """\
+            if self.line.fname == 'H5Dget_storage_size':
+                # Special case: https://github.com/h5py/h5py/issues/1475
+                imp = """\
+cdef {0.code} {0.fname}({0.sig}) except? {0.err_value}:
+    cdef {0.code} r
+    set_default_error_handler()
+    r = _hdf5.{0.fname}({0.args})
+    if r{0.err_condition}:
+        if set_exception():
+            return {0.err_value}
+    return r
+
+"""
+            else:
+                imp = """\
 cdef {0.code} {0.fname}({0.sig}) except {0.err_value}:
     cdef {0.code} r
     set_default_error_handler()

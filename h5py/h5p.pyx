@@ -72,6 +72,8 @@ cdef object propwrap(hid_t id_in):
             pcls = PropLAID
         elif H5Pequal(clsid, H5P_GROUP_CREATE):
             pcls = PropGCID
+        elif H5Pequal(clsid, H5P_DATATYPE_CREATE):
+            pcls = PropTCID
         elif H5Pequal(clsid, H5P_DATASET_ACCESS):
             pcls = PropDAID
         elif H5Pequal(clsid, H5P_OBJECT_CREATE):
@@ -430,7 +432,7 @@ cdef class PropDCID(PropOCID):
         cdef hsize_t* dims
         dims = NULL
 
-        require_tuple(chunksize, 0, -1, "chunksize")
+        require_tuple(chunksize, 0, -1, b"chunksize")
         rank = len(chunksize)
 
         dims = <hsize_t*>emalloc(sizeof(hsize_t)*rank)
@@ -584,7 +586,7 @@ cdef class PropDCID(PropOCID):
         cdef int i
         cd_values = NULL
 
-        require_tuple(values, 1, -1, "values")
+        require_tuple(values, 1, -1, b"values")
 
         try:
             if values is None or len(values) == 0:
@@ -1423,6 +1425,11 @@ cdef class PropLAID(PropInstanceID):
             H5Idec_ref(fid)
         return propwrap(fid)
 
+# Datatype creation
+cdef class PropTCID(PropOCID):
+    """ Datatype creation property list """
+
+    pass
 
 # Group creation
 cdef class PropGCID(PropOCID):

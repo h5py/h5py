@@ -113,7 +113,7 @@ class TestVlen(TestCase):
 
         with h5py.File(fname, 'w') as f:
             df1 = f.create_dataset('test', (len(arr1),), dtype=dt1)
-            df1[:] = np.array(arr1)
+            df1[:] = np.array(arr1, dtype=object)
 
         with h5py.File(fname, 'r') as f:
             df2 = f['test']

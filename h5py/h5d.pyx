@@ -18,7 +18,6 @@ include "config.pxi"
 from collections import namedtuple
 from ._objects cimport pdefault
 from numpy cimport ndarray, import_array, PyArray_DATA
-from cpython cimport array
 from .utils cimport  check_numpy_read, check_numpy_write, \
                      convert_tuple, convert_dims, emalloc, efree
 from .h5t cimport TypeID, typewrap, py_create
@@ -27,6 +26,10 @@ from .h5p cimport PropID, propwrap
 from ._proxy cimport dset_rw
 
 from ._objects import phil, with_phil
+from cpython cimport PyObject_GetBuffer, \
+                     PyBUF_ANY_CONTIGUOUS, \
+                     PyBuffer_Release
+
 
 # Initialization
 import_array()
@@ -360,14 +363,22 @@ cdef class DatasetID(ObjectID):
     def get_storage_size(self):
         """ () => LONG storage_size
 
-            Determine the amount of file space required for a dataset.  Note
-            this only counts the space which has actually been allocated; it
-            may even be zero.
+            Report the size of storage, in bytes, that is allocated in the
+            file for the dataset's raw data. The reported amount is the storage
+            allocated in the written file, which will typically differ from the
+            space required to hold a dataset in working memory (any associated
+            HDF5 metadata is excluded).
+
+            For contiguous datasets, the returned size equals the current
+            allocated size of the raw data. For unfiltered chunked datasets, the
+            returned size is the number of allocated chunks times the chunk
+            size. For filtered chunked datasets, the returned size is the space
+            required to store the filtered data.
         """
         return H5Dget_storage_size(self.id)
 
-    IF HDF5_VERSION >= SWMR_MIN_HDF5_VERSION:
 
+    IF HDF5_VERSION >= SWMR_MIN_HDF5_VERSION:
         @with_phil
         def flush(self):
             """ no return
@@ -406,12 +417,17 @@ cdef class DatasetID(ObjectID):
 
     IF HDF5_VERSION >= (1, 8, 11):
 
-        def write_direct_chunk(self, offsets, bytes data, filter_mask=0x00000000, PropID dxpl=None):
-            """ (offsets, bytes data, uint32_t filter_mask=0x00000000, PropID dxpl=None)
+        def write_direct_chunk(self, offsets, data, filter_mask=0x00000000, PropID dxpl=None):
+            """ (offsets, data, uint32_t filter_mask=0x00000000, PropID dxpl=None)
 
             This function bypasses any filters HDF5 would normally apply to
             written data. However, calling code may apply filters (e.g. gzip
             compression) itself before writing the data.
+
+            `data` is a Python object that implements the Py_buffer interface.
+            In case of a ndarray the shape and dtype are ignored. It's the
+            user's responsibility to make sure they are compatible with the
+            dataset.
 
             `filter_mask` is a bit field of up to 32 values. It records which
             filters have been applied to this chunk, of the filter pipeline
@@ -429,6 +445,7 @@ cdef class DatasetID(ObjectID):
             cdef hsize_t *offset = NULL
             cdef size_t data_size
             cdef int rank
+            cdef Py_buffer view
 
             dset_id = self.id
             dxpl_id = pdefault(dxpl)
@@ -441,9 +458,11 @@ cdef class DatasetID(ObjectID):
             try:
                 offset = <hsize_t*>emalloc(sizeof(hsize_t)*rank)
                 convert_tuple(offsets, offset, rank)
-                H5DOwrite_chunk(dset_id, dxpl_id, filter_mask, offset, len(data), <char *> data)
+                PyObject_GetBuffer(data, &view, PyBUF_ANY_CONTIGUOUS)
+                H5DOwrite_chunk(dset_id, dxpl_id, filter_mask, offset, view.len, view.buf)
             finally:
                 efree(offset)
+                PyBuffer_Release(&view)
                 if space_id:
                     H5Sclose(space_id)
 
@@ -478,7 +497,8 @@ cdef class DatasetID(ObjectID):
             cdef int rank
             cdef uint32_t filters
             cdef hsize_t read_chunk_nbytes
-            cdef array.array data = array.array('B')
+            cdef char *data = NULL
+            cdef bytes ret
 
             dset_id = self.id
             dxpl_id = pdefault(dxpl)
@@ -492,18 +512,21 @@ cdef class DatasetID(ObjectID):
                 offset = <hsize_t*>emalloc(sizeof(hsize_t)*rank)
                 convert_tuple(offsets, offset, rank)
                 H5Dget_chunk_storage_size(dset_id, offset, &read_chunk_nbytes)
-                array.resize(data, read_chunk_nbytes)
+                data = <char *>emalloc(read_chunk_nbytes)
 
                 IF HDF5_VERSION >= (1, 10, 3):
-                    H5Dread_chunk(dset_id, dxpl_id, offset, &filters, data.data.as_voidptr)
+                    H5Dread_chunk(dset_id, dxpl_id, offset, &filters, data)
                 ELSE:
-                    H5DOread_chunk(dset_id, dxpl_id, offset, &filters, data.data.as_voidptr)
+                    H5DOread_chunk(dset_id, dxpl_id, offset, &filters, data)
+                ret = data[:read_chunk_nbytes]
             finally:
                 efree(offset)
+                if data:
+                    efree(data)
                 if space_id:
                     H5Sclose(space_id)
 
-            return filters, bytes(data)
+            return filters, ret
 
     IF HDF5_VERSION >= (1, 10, 5):
 

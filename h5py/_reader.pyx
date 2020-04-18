@@ -1,7 +1,13 @@
 # cython: language_level=3
+"""Class to efficiently select and read data from an HDF5 dataset
+
+This is written in Cython to reduce overhead when reading small amounts of
+data. But it doesn't (yet) handle all cases that the Python machinery covers.
+"""
 from numpy cimport ndarray, npy_intp, PyArray_SimpleNew, PyArray_DATA, import_array
 from cpython cimport PyIndex_Check, PyNumber_Index
 
+import numpy as np
 from .defs cimport *
 from .h5d cimport DatasetID
 from .h5t cimport TypeID, typewrap, py_create
@@ -49,11 +55,13 @@ cdef class Reader:
         efree(self.scalar)
 
     cdef bint apply_args(self, tuple args) except 0:
+        """Apply indexing arguments to this reader object"""
         cdef:
-            int nargs, ellipsis_ix
+            int nargs, ellipsis_ix, array_ix = -1
             bint seen_ellipsis = False
             int dim_ix = 0
             hsize_t l
+            ndarray array_arg
 
         # If no explicit ellipsis, implicit ellipsis is after args
         nargs = ellipsis_ix = len(args)
@@ -67,6 +75,8 @@ cdef class Reader:
 
                 ellipsis_ix = dim_ix
                 nargs -= 1  # Don't count the ... itself
+                if nargs > self.rank:
+                    raise ValueError(f"{nargs} indexing arguments for {self.rank} dimensions")
                 dim_ix += self.rank - nargs  # Skip ahead to the remaining dimensions
                 continue
 
@@ -76,8 +86,8 @@ cdef class Reader:
             # Length of the relevant dimension
             l = self.dims[dim_ix]
 
+            # [0:10] - slicing
             if isinstance(a, slice):
-                # [0:10] - slicing
                 start, stop, step = a.indices(l)
                 # Now if step > 0, then start and stop are in [0, length];
                 # if step < 0, they are in [-1, length - 1] (Python 2.6b2 and later;
@@ -96,9 +106,9 @@ cdef class Reader:
                 self.count[dim_ix] = count
                 self.scalar[dim_ix] = False
 
+            # [0] - simple integer indices
             elif PyIndex_Check(a):
                 a = PyNumber_Index(a)
-                # [0] - simple integer indices
                 if a < 0:
                     a += l
 
@@ -113,6 +123,38 @@ cdef class Reader:
                 self.stride[dim_ix] = 1
                 self.count[dim_ix] = 1
                 self.scalar[dim_ix] = True
+
+            # [[0, 2, 10]] - list/array of indices ('fancy indexing')
+            elif isinstance(a, (list, np.ndarray)):
+                a = np.asarray(a)
+                if a.ndim != 1:
+                    raise TypeError("Only 1D arrays allowed for fancy indexing")
+                if not np.issubdtype(a.dtype, np.integer):
+                    raise TypeError("Indexing arrays must have integer dtypes")
+                if array_ix != -1:
+                    raise TypeError("Only one indexing vector or array is currently allowed for fancy indexing")
+
+                # Convert negative indices to positive
+                a[a < 0] += l
+
+                # Bounds check
+                if np.any((a < 0) | (a > l)):
+                    if l == 0:
+                        msg = "Fancy indexing out of range for empty dimension"
+                    else:
+                        msg = f"Fancy indexing our of range for (0-{l-1})"
+                    raise IndexError(msg)
+
+                if np.any(np.diff(a) <= 0):
+                    raise TypeError("Indexing elements must be in increasing order")
+
+                array_ix = dim_ix
+                array_arg = a
+                self.start[dim_ix] = 0
+                self.stride[dim_ix] = 1
+                self.count[dim_ix] = a.shape[0]
+                self.scalar[dim_ix] = False
+
             else:
                 raise TypeError("Simple selection can't process %r" % a)
 
@@ -129,11 +171,41 @@ cdef class Reader:
 
         if nargs == 0:
             H5Sselect_all(self.space)
+        elif array_ix != -1:
+            self.select_fancy(array_ix, array_arg)
         else:
             H5Sselect_hyperslab(self.space, H5S_SELECT_SET, self.start, self.stride, self.count, NULL)
         return True
 
+    cdef select_fancy(self, int array_ix, ndarray array_arg):
+        """Apply a 'fancy' selection (array of indices) to the dataspace"""
+        cdef hsize_t* tmp_start
+        cdef hsize_t* tmp_count
+        cdef uint64_t i
+
+        H5Sselect_none(self.space)
+
+        tmp_start = <hsize_t*>emalloc(sizeof(hsize_t) * self.rank)
+        tmp_count = <hsize_t*>emalloc(sizeof(hsize_t) * self.rank)
+        try:
+            memcpy(tmp_start, self.start, sizeof(hsize_t) * self.rank)
+            memcpy(tmp_count, self.count, sizeof(hsize_t) * self.rank)
+            tmp_count[array_ix] = 1
+
+            # Iterate over the array of indices, add each hyperslab to the selection
+            for i in array_arg:
+                tmp_start[array_ix] = i
+                H5Sselect_hyperslab(self.space, H5S_SELECT_OR, tmp_start, self.stride, tmp_count, NULL)
+        finally:
+            efree(tmp_start)
+            efree(tmp_count)
+
     cdef ndarray make_array(self):
+        """Create an array to read the selected data into.
+
+        .apply_args() should be called first, to set self.count and self.scalar.
+        Only works for simple numeric dtypes which can be defined with typenum.
+        """
         cdef int i, arr_rank = 0
         cdef npy_intp* arr_shape
 
@@ -152,6 +224,10 @@ cdef class Reader:
         return arr
 
     def read(self, tuple args):
+        """Index the dataset using args and read into a new numpy array
+
+        Only works for simple numeric dtypes.
+        """
         cdef void* buf
         cdef ndarray arr
         cdef hid_t mspace

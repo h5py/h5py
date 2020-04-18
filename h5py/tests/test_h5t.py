@@ -62,23 +62,15 @@ class TestTypeFloatID(TestCase):
     def test_custom_float_promotion(self):
         """Custom floats are correctly promoted to standard floats on read."""
 
-        test_filename = self.mktemp()
-        dataset = 'DS1'
-        dataset2 = 'DS2'
-        dataset3 = 'DS3'
-        dataset4 = 'DS4'
-        dataset5 = 'DS5'
+        # This test uses the low-level API, so we need names as byte strings
+        test_filename = self.mktemp().encode()
+        dataset = b'DS1'
+        dataset2 = b'DS2'
+        dataset3 = b'DS3'
+        dataset4 = b'DS4'
+        dataset5 = b'DS5'
 
-        # Strings are handled very differently between python2 and python3.
-        test_filename = test_filename.encode()
-        dataset = dataset.encode()
-        dataset2 = dataset2.encode()
-        dataset3 = dataset3.encode()
-        dataset4 = dataset4.encode()
-        dataset5 = dataset5.encode()
-
-        DIM0 = 4
-        DIM1 = 7
+        dims = (4, 7)
 
         wdata = np.array([[-1.50066626e-09,   1.40062184e-09,   1.81216819e-10,
                            4.01087163e-10,   4.27917257e-10,  -7.04858394e-11,
@@ -109,11 +101,9 @@ class TestTypeFloatID(TestCase):
         # Create a new file using the default properties.
         fid = h5py.h5f.create(test_filename)
         # Create the dataspace.  No maximum size parameter needed.
-        dims = (DIM0, DIM1)
         space = h5py.h5s.create_simple(dims)
 
         # create a custom type with larger bias
-        mytype = h5t.IEEE_F16LE
         mytype = h5t.IEEE_F16LE.copy()
         mytype.set_fields(14, 9, 5, 0, 9)
         mytype.set_size(2)
@@ -126,7 +116,6 @@ class TestTypeFloatID(TestCase):
         del dset
 
         # create a custom type with larger exponent
-        mytype2 = h5t.IEEE_F16LE
         mytype2 = h5t.IEEE_F16LE.copy()
         mytype2.set_fields(15, 9, 6, 0, 9)
         mytype2.set_size(2)
@@ -139,7 +128,6 @@ class TestTypeFloatID(TestCase):
         del dset
 
         # create a custom type which reimplements 16-bit floats
-        mytype3 = h5t.IEEE_F16LE
         mytype3 = h5t.IEEE_F16LE.copy()
         mytype3.set_fields(15, 10, 5, 0, 10)
         mytype3.set_size(2)
@@ -152,7 +140,6 @@ class TestTypeFloatID(TestCase):
         del dset
 
         # create a custom type with larger bias
-        mytype4 = h5t.IEEE_F16LE
         mytype4 = h5t.IEEE_F16LE.copy()
         mytype4.set_fields(15, 10, 5, 0, 10)
         mytype4.set_size(2)
@@ -197,6 +184,5 @@ class TestTypeFloatID(TestCase):
         self.assertEqual(dset.dtype, np.dtype('<f8'))
 
         # long double floats
-
         dset = f[dataset5]
         self.assertEqual(dset.dtype, np.longdouble)

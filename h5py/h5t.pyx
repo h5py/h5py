@@ -20,6 +20,7 @@ include "config.pxi"
 from ._objects cimport pdefault
 cimport numpy as cnp
 from .h5r cimport Reference, RegionReference
+from .h5p cimport PropID, propwrap
 
 from .utils cimport  emalloc, efree, require_tuple, convert_dims,\
                      convert_tuple
@@ -320,7 +321,7 @@ def array_create(TypeID base not None, object dims_tpl):
     cdef hsize_t rank
     cdef hsize_t *dims = NULL
 
-    require_tuple(dims_tpl, 0, -1, "dims_tpl")
+    require_tuple(dims_tpl, 0, -1, b"dims_tpl")
     rank = len(dims_tpl)
     dims = <hsize_t*>emalloc(sizeof(hsize_t)*rank)
 
@@ -537,6 +538,15 @@ cdef class TypeID(ObjectID):
             efree(buf)
 
         return pystr
+
+    @with_phil
+    def get_create_plist(self):
+        """ () => PropTCID
+
+            Create and return a new copy of the datatype creation property list
+            used when this datatype was created.
+        """
+        return propwrap(H5Tget_create_plist(self.id))
 
 
     def __reduce__(self):

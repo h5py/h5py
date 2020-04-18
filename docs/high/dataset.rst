@@ -15,6 +15,7 @@ NumPy operations like slicing, along with a variety of descriptive attributes:
 
   - **shape** attribute
   - **size** attribute
+  - **ndim** attribute
   - **dtype** attribute
 
 h5py supports most NumPy dtypes, and uses the same character codes (e.g.
@@ -413,6 +414,21 @@ Reference
 
         NumPy-style slicing to write data.  See :ref:`dataset_slicing`.
 
+    .. method:: __bool__()
+
+        Check that the dataset is accessible.
+        A dataset could be inaccessible for several reasons. For instance, the
+        dataset, or the file it belongs to, may have been closed elsewhere.
+
+        >>> f = h5py.open(filename)
+        >>> dset = f["MyDS"]
+        >>> f.close()
+        >>> if dset:
+        ...     print("datset accessible")
+        ... else:
+        ...     print("dataset is inaccessible")
+        dataset unaccessible
+
     .. method:: read_direct(array, source_sel=None, dest_sel=None)
 
         Read from an HDF5 dataset directly into a NumPy array, which can
@@ -453,6 +469,18 @@ Reference
 
                >>> with dset.astype('int16'):
                ...     out = dset[:]
+
+    .. method:: fields(names)
+
+        Get a wrapper to read a subset of fields from a compound data type::
+
+            >>> 2d_coords = dataset.fields(['x', 'y'])[:]
+
+        If names is a string, a single field is extracted, and the resulting
+        arrays will have that dtype. Otherwise, it should be an iterable,
+        and the read data will have a compound dtype.
+
+        .. versionadded:: 3.0
 
     .. method:: iter_chunks
 
@@ -512,6 +540,10 @@ Reference
     .. attribute:: size
 
         Integer giving the total number of elements in the dataset.
+
+    .. attribute:: ndim
+
+        Integer giving the total number of dimensions in the dataset.
 
     .. attribute:: maxshape
 

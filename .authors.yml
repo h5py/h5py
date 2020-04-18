@@ -11,6 +11,9 @@
   github: khinsen
 - name: Aleksandar Jelenak
   email: ajelenak@hdfgroup.org
+  alternate_emails:
+    - ajelenak@users.noreply.github.com
+  github: ajelenak
   num_commits: 27
   first_commit: 2015-12-14 09:41:05
 - name: pharshalp
@@ -634,3 +637,15 @@
   alternate_emails:
     - pierlauro@users.noreply.github.com
     - sciarellip@gmail.com
+- name: Jordan Farquhar
+  email: jordan.a.farquhar@gmail.com
+  aliases:
+    - jordan-farq
+  num_commits: 1
+  first_commit: 2020-02-05 02:54:41
+  github: jordan-farq
+
+- name: Clemens Weninger
+  email: clemens.weninger@maxiv.lu.se
+  alternate_emails:
+    - clemens@m-info.de

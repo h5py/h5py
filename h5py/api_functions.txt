@@ -207,7 +207,7 @@ hdf5:
   H5I_type_t H5Iget_type(hid_t obj_id)
   ssize_t    H5Iget_name( hid_t obj_id, char *name, size_t size)
   hid_t      H5Iget_file_id(hid_t obj_id)
-  int        H5Idec_ref(hid_t obj_id)
+  int        H5Idec_ref(hid_t obj_id) nogil
   int        H5Iget_ref(hid_t obj_id)
   int        H5Iinc_ref(hid_t obj_id)
   htri_t     H5Iis_valid( hid_t obj_id )
@@ -492,6 +492,7 @@ hdf5:
   herr_t        H5Tclose(hid_t type_id)
   hid_t         H5Tget_native_type(hid_t type_id, H5T_direction_t direction)
   herr_t        H5Tcommit2(hid_t loc_id, char *name, hid_t dtype_id, hid_t lcpl_id, hid_t tcpl_id, hid_t tapl_id)
+  hid_t         H5Tget_create_plist(hid_t dtype_id)
 
   hid_t         H5Tdecode(unsigned char *buf)
   herr_t        H5Tencode(hid_t obj_id, unsigned char *buf, size_t *nalloc)
