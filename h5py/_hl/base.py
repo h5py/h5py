@@ -88,6 +88,38 @@ def guess_dtype(data):
         return None
 
 
+def is_float16_dtype(dt):
+    if dt is None:
+        return False
+
+    dt = np.dtype(dt)  # normalize strings -> np.dtype objects
+    return dt.kind == 'f' and dt.itemsize == 2
+
+
+def array_for_new_object(data, specified_dtype=None):
+    """Prepare an array from data used to create a new dataset or attribute"""
+
+    # We mostly let HDF5 convert data as necessary when it's written.
+    # But if we are going to a float16 datatype, pre-convert in python
+    # to workaround a bug in the conversion.
+    # https://github.com/h5py/h5py/issues/819
+    if is_float16_dtype(specified_dtype):
+        as_dtype = specified_dtype
+    else:
+        as_dtype = guess_dtype(data)
+
+    data = np.asarray(data, order="C", dtype=as_dtype)
+
+    # In most cases, this does nothing. But if data was already an array,
+    # and guess_dtype made a tagged version of the dtype it already had
+    # (e.g. an object array of strings), asarray() doesn't replace its
+    # dtype object. This gives it the tagged dtype:
+    if as_dtype is not None:
+        data.dtype = as_dtype
+
+    return data
+
+
 def default_lapl():
     """ Default link access property list """
     lapl = h5p.create(h5p.LINK_ACCESS)

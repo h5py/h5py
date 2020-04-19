@@ -32,14 +32,6 @@ _LEGACY_GZIP_COMPRESSION_VALS = frozenset(range(10))
 MPI = h5.get_config().mpi
 
 
-def is_float16_dtype(dt):
-    if dt is None:
-        return False
-
-    dt = numpy.dtype(dt)  # normalize strings -> np.dtype objects
-    return dt.kind == 'f' and dt.itemsize == 2
-
-
 def make_new_dset(parent, shape=None, dtype=None, data=None, name=None,
                   chunks=None, compression=None, shuffle=None,
                   fletcher32=None, maxshape=None, compression_opts=None,
@@ -50,23 +42,7 @@ def make_new_dset(parent, shape=None, dtype=None, data=None, name=None,
     # Convert data to a C-contiguous ndarray
     if data is not None and not isinstance(data, Empty):
         from . import base
-
-        if is_float16_dtype(dtype):
-            # if we are going to a float16 datatype, pre-convert in python
-            # to workaround a possible h5py bug in the conversion.
-            # https://github.com/h5py/h5py/issues/819
-            as_dtype = dtype
-        else:
-            as_dtype = base.guess_dtype(data)
-
-        data = numpy.asarray(data, order="C", dtype=as_dtype)
-
-        # In most cases, this does nothing. But if data was already an array,
-        # and guess_dtype made a tagged version of the dtype it already had
-        # (e.g. an object array of strings), asarray() doesn't replace its
-        # dtype object. This gives it the tagged dtype:
-        if as_dtype is not None:
-            data.dtype = as_dtype
+        data = base.array_for_new_object(data, specified_dtype=dtype)
 
     # Validate shape
     if shape is None:

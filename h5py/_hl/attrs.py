@@ -116,19 +116,10 @@ class AttributeManager(base.MutableMappingHDF5, base.CommonStateObject):
         """
 
         with phil:
-            if dtype is None:  # Guess dtype before modifying data
-                dtype = base.guess_dtype(data)
-
             # First, make sure we have a NumPy array.  We leave the data type
-            # conversion for HDF5 to perform (other than the below exception).
+            # conversion for HDF5 to perform.
             if not isinstance(data, Empty):
-                is_list_or_tuple = isinstance(data, (list, tuple))
-                data = numpy.asarray(data, order='C')
-                # If we were passed a list or tuple, then we do not need to respect the
-                # datatype of the numpy array. If it is U type, convert to vlen unicode
-                # strings:
-                if is_list_or_tuple and data.dtype.type == numpy.unicode_:
-                    data = numpy.array(data, dtype=h5t.string_dtype())
+                data = base.array_for_new_object(data, specified_dtype=dtype)
 
             if shape is None:
                 shape = data.shape
