@@ -290,7 +290,8 @@ hdf5:
   herr_t    H5Pget_sym_k(hid_t plist, unsigned int *ik, unsigned int *lk)
   herr_t    H5Pset_istore_k(hid_t plist, unsigned int ik)
   herr_t    H5Pget_istore_k(hid_t plist, unsigned int *ik)
-  herr_t    H5Pset_file_space_strategy(hid_t fcpl, H5F_fspace_strategy_t strategy, hbool_t persist, hsize_t threshold)
+  1.10.1 herr_t    H5Pset_file_space_strategy(hid_t fcpl, H5F_fspace_strategy_t strategy, hbool_t persist, hsize_t threshold)
+  1.10.1 herr_t    H5Pget_file_space_strategy(hid_t fcpl, H5F_fspace_strategy_t *strategy, hbool_t *persist, hsize_t *threshold)
 
   # File access
   herr_t    H5Pset_fclose_degree(hid_t fapl_id, H5F_close_degree_t fc_degree)

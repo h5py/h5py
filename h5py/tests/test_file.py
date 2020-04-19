@@ -138,6 +138,8 @@ class TestFileOpen(TestCase):
         with self.assertRaises(ValueError):
             File(self.mktemp(), 'mongoose')
 
+@ut.skipIf(h5py.version.hdf5_version_tuple < (1, 10, 1),
+               'Requires HDF5 1.10.1 or later')
 class TestSpaceStrategy(TestCase):
 
     """
@@ -147,8 +149,8 @@ class TestSpaceStrategy(TestCase):
     def test_create_with_space_strategy(self):
         """ Create file with file space strategy """
         fname = self.mktemp()
-        fid = File(fname, 'w', strategy=h5py.h5f.FSPACE_STRATEGY_PAGE,
-                   persist=True, threshold=100)
+        fid = File(fname, 'w', fs_strategy="page",
+                   fs_persist=True, fs_threshold=100)
         self.assertTrue(fid)
         dset = fid.create_dataset('foo', (100,), dtype='uint8')
         dset[...] = 1

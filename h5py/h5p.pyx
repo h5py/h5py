@@ -378,13 +378,30 @@ cdef class PropFCID(PropOCID):
         H5Pget_link_creation_order(self.id, &flags)
         return flags
 
-    @with_phil
-    def set_file_space_strategy(self, unsigned int strategy, bint persist, unsigned long long threshold):
-        """ (UINT strategy, BOOL persist, ULONGLONG threshold)
+    if HDF5_VERSION >= (1, 10, 1):
+        @with_phil
+        def set_file_space_strategy(self, unsigned int strategy, bint persist,
+                unsigned long long threshold):
+            """ (UINT strategy, BOOL persist, ULONGLONG threshold)
 
-        Set the file space handling strategy and persisting free-space values
-        """
-        H5Pset_file_space_strategy(self.id, <H5F_fspace_strategy_t>strategy, <hbool_t>persist, <hsize_t>threshold)
+            Set the file space handling strategy and persisting free-space values.
+            """
+            H5Pset_file_space_strategy(self.id, <H5F_fspace_strategy_t>strategy,
+                    <hbool_t>persist, <hsize_t>threshold)
+
+        @with_phil
+        def get_file_space_strategy(self):
+            """ () => TUPLE(UINT strategy, BOOL persist, ULONGLONG threshold)
+
+            Retrieve the file space handling strategy, persisting free-space
+            condition and threshold value for a file creation property list.
+            """
+            cdef H5F_fspace_strategy_t strategy
+            cdef hbool_t persist
+            cdef hsize_t threshold
+
+            H5Pget_file_space_strategy(self.id, &strategy, &persist, &threshold)
+            return (strategy, persist, threshold)
 
 
 # Dataset creation
