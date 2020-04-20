@@ -158,7 +158,14 @@ class TestSpaceStrategy(TestCase):
         dset[...] = 1
         del fid['foo']
         fid.close()
+
         fid = File(fname, 'a')
+        plist = fid.id.get_create_plist()
+        fs_strat = plist.get_file_space_strategy()
+        assert(fs_strat[0] == 1)
+        assert(fs_strat[1] == True)
+        assert(fs_strat[2] == 100)
+
         dset = fid.create_dataset('foo2', (100,), dtype='uint8')
         dset[...] = 1
         fid.close()
