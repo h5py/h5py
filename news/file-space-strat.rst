@@ -12,7 +12,7 @@ Deprecations
 Exposing HDF5 functions
 -----------------------
 
-* H5Pset_file_space_strategy
+* H5Pset_file_space_strategy & H5Pget_file_space_strategy
 
 Bug fixes
 ---------
