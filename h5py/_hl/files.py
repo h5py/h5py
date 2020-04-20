@@ -139,14 +139,27 @@ def make_fapl(driver, libver, rdcc_nslots, rdcc_nbytes, rdcc_w0, **kwds):
     return plist
 
 
-def make_fcpl(track_order=False):
+def make_fcpl(track_order=False, fs_strategy=None, fs_persist=False, fs_threshold=1):
     """ Set up a file creation property list """
-    if track_order:
+    if track_order or fs_strategy:
         plist = h5p.create(h5p.FILE_CREATE)
-        plist.set_link_creation_order(
-            h5p.CRT_ORDER_TRACKED | h5p.CRT_ORDER_INDEXED)
-        plist.set_attr_creation_order(
-            h5p.CRT_ORDER_TRACKED | h5p.CRT_ORDER_INDEXED)
+        if track_order:
+            plist.set_link_creation_order(
+                h5p.CRT_ORDER_TRACKED | h5p.CRT_ORDER_INDEXED)
+            plist.set_attr_creation_order(
+                h5p.CRT_ORDER_TRACKED | h5p.CRT_ORDER_INDEXED)
+        if fs_strategy:
+            strategies = {
+                'fsm': h5f.FSPACE_STRATEGY_FSM_AGGR,
+                'page': h5f.FSPACE_STRATEGY_PAGE,
+                'aggregate': h5f.FSPACE_STRATEGY_AGGR,
+                'none': h5f.FSPACE_STRATEGY_NONE
+            }
+            fs_strat_num = strategies.get(fs_strategy, -1)
+            if fs_strat_num == -1:
+                raise ValueError("Invalid file space strategy type")
+
+            plist.set_file_space_strategy(fs_strat_num, fs_persist, fs_threshold)
     else:
         plist = None
     return plist
@@ -258,7 +271,6 @@ class File(Group):
         fcpl = self.id.get_create_plist()
         return fcpl.get_userblock()
 
-
     if mpi and hdf5_version >= (1, 8, 9):
 
         @property
@@ -293,7 +305,7 @@ class File(Group):
     def __init__(self, name, mode=None, driver=None,
                  libver=None, userblock_size=None, swmr=False,
                  rdcc_nslots=None, rdcc_nbytes=None, rdcc_w0=None,
-                 track_order=None,
+                 track_order=None, fs_strategy=None, fs_persist=False, fs_threshold=1,
                  **kwds):
         """Create a new file object.
 
@@ -348,14 +360,36 @@ class File(Group):
         track_order
             Track dataset/group/attribute creation order under root group
             if True. If None use global default h5.get_config().track_order.
+        fs_strategy
+            The file space handling strategy to be used.  Only allowed when
+            creating a new file (mode w, w- or x).  Defined as:
+            "fsm"        FSM, Aggregators, VFD
+            "page"       Paged FSM, VFD
+            "aggregate"  Aggregators, VFD
+            "none"       VFD
+            If None use HDF5 defaults.
+        fs_persist
+            A boolean value to indicate whether free space should be persistent
+            or not.  Only allowed when creating a new file.  The default value
+            is False.
+        fs_threshold
+            The smallest free-space section size that the free space manager
+            will track.  Only allowed when creating a new file.  The default
+            value is 1.
         Additional keywords
             Passed on to the selected file driver.
 
         """
+        if fs_strategy and hdf5_version < (1, 10, 1):
+            raise ValueError("HDF version 1.10.1 or greater required for file space strategy support.")
+
         if swmr and not swmr_support:
             raise ValueError("The SWMR feature is not available in this version of the HDF5 library")
 
         if isinstance(name, _objects.ObjectID):
+            if fs_strategy:
+                raise ValueError("Unable to set file space strategy of an existing file")
+
             with phil:
                 fid = h5i.get_file_id(name)
         else:
@@ -376,10 +410,14 @@ class File(Group):
             if mode is None:
                 mode = h5.get_config().default_file_mode  # default: 'r'
 
+            if fs_strategy and mode not in ('w', 'w-', 'x'):
+                raise ValueError("Unable to set file space strategy of an existing file")
+
             with phil:
                 fapl = make_fapl(driver, libver, rdcc_nslots, rdcc_nbytes, rdcc_w0, **kwds)
                 fid = make_fid(name, mode, userblock_size,
-                               fapl, fcpl=make_fcpl(track_order=track_order),
+                               fapl, fcpl=make_fcpl(track_order=track_order, fs_strategy=fs_strategy,
+                               fs_persist=fs_persist, fs_threshold=fs_threshold),
                                swmr=swmr)
 
             if isinstance(libver, tuple):

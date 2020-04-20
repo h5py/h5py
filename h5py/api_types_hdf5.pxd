@@ -125,6 +125,12 @@ cdef extern from "hdf5.h":
     H5F_CLOSE_STRONG = 2,
     H5F_CLOSE_DEFAULT = 3
 
+  cdef enum H5F_fspace_strategy_t:
+    H5F_FSPACE_STRATEGY_FSM_AGGR = 0,  # FSM, Aggregators, VFD
+    H5F_FSPACE_STRATEGY_PAGE     = 1,  # Paged FSM, VFD
+    H5F_FSPACE_STRATEGY_AGGR     = 2,  # Aggregators, VFD
+    H5F_FSPACE_STRATEGY_NONE     = 3   # VFD
+
   int H5F_OBJ_FILE
   int H5F_OBJ_DATASET
   int H5F_OBJ_GROUP

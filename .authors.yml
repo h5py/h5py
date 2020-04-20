@@ -649,3 +649,12 @@
   email: clemens.weninger@maxiv.lu.se
   alternate_emails:
     - clemens@m-info.de
+- name: Alex Migon
+  email: alexmigon@gmail.com
+  github: alemigo
+  aliases:
+    - alemigo
+    - alemig
+  alternate_emails:
+    - alemigo@github.com
+    - 32462069+alemigo@users.noreply.github.com
