@@ -5,7 +5,7 @@
 # Copyright 2008-2013 Andrew Collette and contributors
 #
 # License:  Standard 3-clause BSD; see "license.txt" for full license terms
-#           and contributor agreement.
+#           and contributor agreement. 
 
 """
     Implements high-level support for HDF5 file objects.
