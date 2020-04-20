@@ -650,4 +650,8 @@
   alternate_emails:
     - clemens@m-info.de
 - name: Alex Migon
-  email: alemigo@github.com
+  email: alexmigon@gmail.com
+  aliases:
+    - alemigo
+  alternate_emails:
+    - alemigo@github.com
