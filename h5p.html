@@ -163,6 +163,13 @@ from the <a class="reference internal" href="h5o.html#ref-h5o-copy"><span class=
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">h5py.h5p.PropOCID</span></code></p>
 <p>File creation property list.</p>
 <dl class="py method">
+<dt id="h5py.h5p.PropFCID.get_file_space_strategy">
+<code class="sig-name descname">get_file_space_strategy</code><span class="sig-paren">(</span><em class="sig-param">) -&gt; TUPLE(UINT strategy</em>, <em class="sig-param">BOOL persist</em>, <em class="sig-param">ULONGLONG threshold</em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropFCID.get_file_space_strategy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve the file space handling strategy, persisting free-space
+condition and threshold value for a <a class="reference internal" href="#h5py.h5p.PropFCID" title="h5py.h5p.PropFCID"><code class="xref py py-class docutils literal notranslate"><span class="pre">file</span> <span class="pre">creation</span> <span class="pre">property</span> <span class="pre">list</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py method">
 <dt id="h5py.h5p.PropFCID.get_link_creation_order">
 <code class="sig-name descname">get_link_creation_order</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; UINT flags<a class="headerlink" href="#h5py.h5p.PropFCID.get_link_creation_order" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get tracking and indexing of creation order for links added to this group</p>
@@ -196,6 +203,12 @@ Elements are:</p>
 <li><p>UINT Symbol table version number</p></li>
 <li><p>UINT Shared object header version number</p></li>
 </ol>
+</dd></dl>
+
+<dl class="py method">
+<dt id="h5py.h5p.PropFCID.set_file_space_strategy">
+<code class="sig-name descname">set_file_space_strategy</code><span class="sig-paren">(</span><em class="sig-param">UINT strategy</em>, <em class="sig-param">BOOL persist</em>, <em class="sig-param">ULONGLONG threshold</em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropFCID.set_file_space_strategy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the file space handling strategy and persisting free-space values.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -968,7 +981,7 @@ file where it is located (src_file_name), the name of the dataset
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2014, Andrew Collette and contributors.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.0.1.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.0.2.
     </div>
   </body>
 </html>
