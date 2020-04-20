@@ -388,7 +388,7 @@ class File(Group):
 
         if isinstance(name, _objects.ObjectID):
             if fs_strategy:
-                raise ValueErorr("Unable to set file space strategy of an existing file")
+                raise ValueError("Unable to set file space strategy of an existing file")
 
             with phil:
                 fid = h5i.get_file_id(name)
