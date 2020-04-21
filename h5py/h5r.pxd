@@ -13,7 +13,9 @@ from .defs cimport *
 cdef extern from "hdf5.h":
 
   ctypedef haddr_t hobj_ref_t
-  ctypedef unsigned char hdset_reg_ref_t[12]
+
+cdef struct hdset_reg_ref_t:
+    uint8_t data[12] # sizeof(haddr_t) + 4 == sizeof(signed long long) + 4
 
 cdef union ref_u:
     hobj_ref_t         obj_ref

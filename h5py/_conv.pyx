@@ -367,7 +367,7 @@ cdef inline int conv_pyref2regref(void* ipt, void* opt, void* bkg, void* priv) e
         if not isinstance(obj, RegionReference):
             raise TypeError("Can't convert incompatible object to HDF5 region reference")
         ref = <RegionReference>(buf_obj0)
-        memcpy(buf_ref, ref.ref.reg_ref, sizeof(hdset_reg_ref_t))
+        memcpy(buf_ref, ref.ref.reg_ref.data, sizeof(hdset_reg_ref_t))
     else:
         memset(buf_ref, c'\0', sizeof(hdset_reg_ref_t))
 
