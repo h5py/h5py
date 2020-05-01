@@ -18,7 +18,7 @@ else
         pushd hdf5-$HDF5_VERSION
         chmod u+x autogen.sh
         if [[ "${HDF5_VERSION%.*}" = "1.12" ]]; then
-          ./configure --prefix $HDF5_DIR --with-default-api-version=v110
+          ./configure --prefix $HDF5_DIR
         else
           ./configure --prefix $HDF5_DIR
         fi
