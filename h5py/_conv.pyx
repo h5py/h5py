@@ -342,10 +342,7 @@ cdef inline int conv_regref2pyref(void* ipt, void* opt, void* bkg, void* priv) e
 
     bkg_obj0 = bkg_obj[0]
     ref = RegionReference()
-    IF HDF5_VERSION >= (1, 12, 0):
-        ref.ref.reg_ref.data = buf_ref[0]
-    ELSE:
-        ref.ref.reg_ref = buf_ref[0]
+    ref.ref.reg_ref = buf_ref[0]
     ref.typecode = H5R_DATASET_REGION
     ref_ptr = <PyObject*>ref
     Py_INCREF(ref)  # because Cython discards its reference when the
