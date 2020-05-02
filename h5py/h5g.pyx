@@ -140,7 +140,7 @@ def open(ObjectID loc not None, char* name):
 
     Open an existing HDF5 group, attached to some other group.
     """
-    return GroupID(H5Gopen(loc.id, name))
+    return GroupID(H5Gopen2(loc.id, name, H5P_DEFAULT))
 
 
 @with_phil

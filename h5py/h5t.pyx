@@ -302,12 +302,13 @@ def create(int classtype, size_t size):
 
 
 @with_phil
-def open(ObjectID group not None, char* name):
+def open(ObjectID group not None, char* name, ObjectID tapl=None):
     """(ObjectID group, STRING name) => TypeID
 
     Open a named datatype from a file.
+    If present, tapl must be a datatype access property list.
     """
-    return typewrap(H5Topen(group.id, name))
+    return typewrap(H5Topen(group.id, name, pdefault(tapl)))
 
 
 @with_phil
@@ -327,7 +328,7 @@ def array_create(TypeID base not None, object dims_tpl):
 
     try:
         convert_tuple(dims_tpl, dims, rank)
-        return TypeArrayID(H5Tarray_create(base.id, rank, dims, NULL))
+        return TypeArrayID(H5Tarray_create(base.id, rank, dims))
     finally:
         efree(dims)
 
@@ -587,10 +588,10 @@ cdef class TypeArrayID(TypeID):
         cdef hsize_t rank
         cdef hsize_t* dims = NULL
 
-        rank = H5Tget_array_dims(self.id, NULL, NULL)
+        rank = H5Tget_array_dims(self.id, NULL)
         dims = <hsize_t*>emalloc(sizeof(hsize_t)*rank)
         try:
-            H5Tget_array_dims(self.id, dims, NULL)
+            H5Tget_array_dims(self.id, dims)
             return convert_dims(dims, rank)
         finally:
             efree(dims)

@@ -665,7 +665,7 @@ cdef class PropDCID(PropOCID):
             raise ValueError("Filter index must be a non-negative integer")
 
         filter_code = <int>H5Pget_filter(self.id, filter_idx, &flags,
-                                         &nelements, cd_values, 256, name)
+                                         &nelements, cd_values, 256, name, NULL)
         name[256] = c'\0'  # in case it's > 256 chars
 
         vlist = []
@@ -717,7 +717,7 @@ cdef class PropDCID(PropOCID):
             return None
 
         retval = H5Pget_filter_by_id(self.id, <H5Z_filter_t>filter_code,
-                                     &flags, &nelements, cd_values, 256, name)
+                                     &flags, &nelements, cd_values, 256, name, NULL)
         assert nelements <= 16
 
         name[256] = c'\0'  # In case HDF5 doesn't terminate it properly

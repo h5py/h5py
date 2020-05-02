@@ -41,7 +41,7 @@ hdf5:
 
   # === H5A - Attributes API ==================================================
 
-  hid_t     H5Acreate(hid_t loc_id, char *name, hid_t type_id, hid_t space_id, hid_t create_plist)
+  hid_t     H5Acreate(hid_t loc_id, char *name, hid_t type_id, hid_t space_id, hid_t acpl_id, hid_t aapl_id)
   hid_t     H5Aopen_idx(hid_t loc_id, unsigned int idx)
   hid_t     H5Aopen_name(hid_t loc_id, char *name)
   herr_t    H5Aclose(hid_t attr_id)
@@ -54,7 +54,6 @@ hdf5:
   ssize_t   H5Aget_name(hid_t attr_id, size_t buf_size, char *buf)
   hid_t     H5Aget_space(hid_t attr_id)
   hid_t     H5Aget_type(hid_t attr_id)
-  herr_t    H5Aiterate(hid_t loc_id, unsigned * idx, H5A_operator_t op, void* op_data)
 
   herr_t    H5Adelete_by_name(hid_t loc_id, char *obj_name, char *attr_name, hid_t lapl_id)
   herr_t    H5Adelete_by_idx(hid_t loc_id, char *obj_name, H5_index_t idx_type, H5_iter_order_t order, hsize_t n, hid_t lapl_id)
@@ -83,7 +82,6 @@ hdf5:
   hid_t     H5Dcreate2(hid_t loc_id, char *name, hid_t type_id, hid_t space_id, hid_t lcpl_id, hid_t dcpl_id, hid_t dapl_id) nogil
   hid_t     H5Dcreate_anon(hid_t file_id, hid_t type_id, hid_t space_id, hid_t plist_id, hid_t dapl_id) nogil
 
-  hid_t     H5Dopen(hid_t file_id, char *name)
   hid_t     H5Dopen2(hid_t loc_id, char *name, hid_t dapl_id )
   herr_t    H5Dclose(hid_t dset_id)
 
@@ -176,8 +174,6 @@ hdf5:
 
   # === H5G - Groups API ======================================================
 
-  hid_t     H5Gcreate(hid_t loc_id, char *name, size_t size_hint)
-  hid_t     H5Gopen(hid_t loc_id, char *name)
   herr_t    H5Gclose(hid_t group_id)
   herr_t    H5Glink2( hid_t curr_loc_id, char *current_name, H5G_link_t link_type, hid_t new_loc_id, char *new_name)
 
@@ -332,8 +328,8 @@ hdf5:
   herr_t        H5Pset_filter(hid_t plist, H5Z_filter_t filter, unsigned int flags, size_t cd_nelmts, unsigned int* cd_values )
   htri_t        H5Pall_filters_avail(hid_t dcpl_id)
   int           H5Pget_nfilters(hid_t plist)
-  H5Z_filter_t  H5Pget_filter(hid_t plist, unsigned int filter_number,   unsigned int *flags, size_t *cd_nelmts,  unsigned int* cd_values, size_t namelen, char* name )
-  herr_t        H5Pget_filter_by_id( hid_t plist_id, H5Z_filter_t filter,  unsigned int *flags, size_t *cd_nelmts,  unsigned int* cd_values, size_t namelen, char* name)
+  H5Z_filter_t  H5Pget_filter(hid_t plist, unsigned int filter_number,   unsigned int *flags, size_t *cd_nelmts,  unsigned int* cd_values, size_t namelen, char* name, unsigned int* filter_config)
+  herr_t        H5Pget_filter_by_id( hid_t plist_id, H5Z_filter_t filter,  unsigned int *flags, size_t *cd_nelmts,  unsigned int* cd_values, size_t namelen, char* name, unsigned int* filter_config)
   herr_t        H5Pmodify_filter(hid_t plist, H5Z_filter_t filter, unsigned int flags, size_t cd_nelmts, unsigned int *cd_values)
   herr_t        H5Premove_filter(hid_t plist, H5Z_filter_t filter )
   herr_t        H5Pset_fletcher32(hid_t plist)
@@ -424,7 +420,7 @@ hdf5:
   herr_t    H5Rcreate(void *ref, hid_t loc_id, char *name, H5R_type_t ref_type,  hid_t space_id)
   hid_t     H5Rdereference(hid_t obj_id, H5R_type_t ref_type, void *ref)
   hid_t     H5Rget_region(hid_t dataset, H5R_type_t ref_type, void *ref)
-  H5G_obj_t H5Rget_obj_type(hid_t id, H5R_type_t ref_type, void *ref)
+  herr_t    H5Rget_obj_type(hid_t id, H5R_type_t ref_type, void *ref, H5O_type_t *obj_type)
   ssize_t   H5Rget_name(hid_t loc_id, H5R_type_t ref_type, void *ref, char *name, size_t size)
 
 
@@ -480,8 +476,7 @@ hdf5:
 
   # General operations
   hid_t         H5Tcreate(H5T_class_t type, size_t size)
-  hid_t         H5Topen(hid_t loc, char* name)
-  herr_t        H5Tcommit(hid_t loc_id, char* name, hid_t type)
+  hid_t         H5Topen(hid_t loc, char* name, hid_t tapl_id)
   htri_t        H5Tcommitted(hid_t type)
   hid_t         H5Tcopy(hid_t type_id)
   htri_t        H5Tequal(hid_t type_id1, hid_t type_id2 )
@@ -557,9 +552,9 @@ hdf5:
   herr_t        H5Tget_member_value(hid_t type,  unsigned int memb_no, void *value )
 
   # Array data types
-  hid_t         H5Tarray_create(hid_t base_id, int ndims, hsize_t *dims, int *perm)
+  hid_t         H5Tarray_create(hid_t base_id, int ndims, hsize_t *dims)
   int           H5Tget_array_ndims(hid_t type_id)
-  int           H5Tget_array_dims(hid_t type_id, hsize_t *dims, int *perm)
+  int           H5Tget_array_dims(hid_t type_id, hsize_t *dims)
 
   # Opaque data types
   herr_t    H5Tset_tag(hid_t type_id, char* tag)

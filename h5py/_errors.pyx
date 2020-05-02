@@ -110,7 +110,7 @@ cdef int set_exception() except -1:
 
     err.n = -1
 
-    if H5Ewalk(H5E_WALK_UPWARD, walk_cb, &err) < 0:
+    if H5Ewalk(<hid_t>H5E_DEFAULT, H5E_WALK_UPWARD, walk_cb, &err) < 0:
         raise RuntimeError("Failed to walk error stack")
 
     if err.n < 0:   # No HDF5 exception information found
@@ -127,7 +127,7 @@ cdef int set_exception() except -1:
 
     err.n = -1
 
-    if H5Ewalk(H5E_WALK_DOWNWARD, walk_cb, &err) < 0:
+    if H5Ewalk(<hid_t>H5E_DEFAULT, H5E_WALK_DOWNWARD, walk_cb, &err) < 0:
         raise RuntimeError("Failed to walk error stack")
 
     desc_bottom = err.err.desc
@@ -153,7 +153,7 @@ _error_handler.data = NULL
 
 cdef void set_default_error_handler() nogil:
     """Set h5py's current default error handler"""
-    H5Eset_auto(_error_handler.func, _error_handler.data)
+    H5Eset_auto(<hid_t>H5E_DEFAULT, _error_handler.func, _error_handler.data)
 
 def silence_errors():
     """ Disable HDF5's automatic error printing in this thread """
@@ -173,10 +173,10 @@ cdef err_cookie set_error_handler(err_cookie handler):
 
     cdef err_cookie old_handler
 
-    if H5Eget_auto(&old_handler.func, &old_handler.data) < 0:
+    if H5Eget_auto(<hid_t>H5E_DEFAULT, &old_handler.func, &old_handler.data) < 0:
         raise RuntimeError("Failed to retrieve old handler")
 
-    if H5Eset_auto(handler.func, handler.data) < 0:
+    if H5Eset_auto(<hid_t>H5E_DEFAULT, handler.func, handler.data) < 0:
         raise RuntimeError("Failed to install new handler")
 
     return old_handler
