@@ -8,11 +8,16 @@
 # License:  Standard 3-clause BSD; see "license.txt" for full license terms
 #           and contributor agreement.
 
+include "config.pxi"
 from .defs cimport *
 
 cdef extern from "hdf5.h":
 
   ctypedef haddr_t hobj_ref_t
+IF HDF5_VERSION >= (1, 12, 0):
+  cdef struct hdset_reg_ref_t:
+    uint8_t data[12] # sizeof(haddr_t) + 4 == sizeof(signed long long) + 4
+ELSE:
   ctypedef unsigned char hdset_reg_ref_t[12]
 
 cdef union ref_u:
