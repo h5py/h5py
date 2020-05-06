@@ -73,16 +73,16 @@ hdf5:
   herr_t    H5Aget_info_by_name(hid_t loc_id, char *obj_name, char *attr_name, H5A_info_t *ainfo, hid_t lapl_id)
   herr_t    H5Aget_info_by_idx(hid_t loc_id, char *obj_name, H5_index_t idx_type, H5_iter_order_t order, hsize_t n, H5A_info_t *ainfo, hid_t lapl_id)
 
-  herr_t    H5Aiterate2(hid_t obj_id, H5_index_t idx_type, H5_iter_order_t order, hsize_t *n, H5A_operator2_t op, void *op_data)
+  herr_t    H5Aiterate(hid_t obj_id, H5_index_t idx_type, H5_iter_order_t order, hsize_t *n, H5A_operator2_t op, void *op_data)
   hsize_t   H5Aget_storage_size(hid_t attr_id)
 
 
   # === H5D - Dataset API =====================================================
 
-  hid_t     H5Dcreate2(hid_t loc_id, char *name, hid_t type_id, hid_t space_id, hid_t lcpl_id, hid_t dcpl_id, hid_t dapl_id) nogil
+  hid_t     H5Dcreate(hid_t loc_id, char *name, hid_t type_id, hid_t space_id, hid_t lcpl_id, hid_t dcpl_id, hid_t dapl_id) nogil
   hid_t     H5Dcreate_anon(hid_t file_id, hid_t type_id, hid_t space_id, hid_t plist_id, hid_t dapl_id) nogil
 
-  hid_t     H5Dopen2(hid_t loc_id, char *name, hid_t dapl_id )
+  hid_t     H5Dopen(hid_t loc_id, char *name, hid_t dapl_id )
   herr_t    H5Dclose(hid_t dset_id)
 
   hid_t     H5Dget_space(hid_t dset_id)
@@ -191,8 +191,8 @@ hdf5:
   int       H5Gget_comment(hid_t loc_id, char *name, size_t bufsize, char *comment)
 
   hid_t     H5Gcreate_anon( hid_t loc_id, hid_t gcpl_id, hid_t gapl_id)
-  hid_t     H5Gcreate2(hid_t loc_id, char *name, hid_t lcpl_id, hid_t gcpl_id, hid_t gapl_id)
-  hid_t     H5Gopen2( hid_t loc_id, char * name, hid_t gapl_id)
+  hid_t     H5Gcreate(hid_t loc_id, char *name, hid_t lcpl_id, hid_t gcpl_id, hid_t gapl_id)
+  hid_t     H5Gopen( hid_t loc_id, char * name, hid_t gapl_id)
   herr_t    H5Gget_info( hid_t group_id, H5G_info_t *group_info)
   herr_t    H5Gget_info_by_name( hid_t loc_id, char *group_name, H5G_info_t *group_info, hid_t lapl_id)
   hid_t     H5Gget_create_plist(hid_t group_id)
@@ -481,7 +481,7 @@ hdf5:
   htri_t        H5Tdetect_class(hid_t type_id, H5T_class_t dtype_class)
   herr_t        H5Tclose(hid_t type_id)
   hid_t         H5Tget_native_type(hid_t type_id, H5T_direction_t direction)
-  herr_t        H5Tcommit2(hid_t loc_id, char *name, hid_t dtype_id, hid_t lcpl_id, hid_t tcpl_id, hid_t tapl_id)
+  herr_t        H5Tcommit(hid_t loc_id, char *name, hid_t dtype_id, hid_t lcpl_id, hid_t tcpl_id, hid_t tapl_id)
   hid_t         H5Tget_create_plist(hid_t dtype_id)
 
   hid_t         H5Tdecode(unsigned char *buf)

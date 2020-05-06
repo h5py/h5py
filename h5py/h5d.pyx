@@ -84,7 +84,7 @@ def create(ObjectID loc not None, object name, TypeID tid not None,
         cname = name
 
     if cname != NULL:
-        dsid = H5Dcreate2(loc.id, cname, tid.id, space.id,
+        dsid = H5Dcreate(loc.id, cname, tid.id, space.id,
                  pdefault(lcpl), pdefault(dcpl), pdefault(dapl))
     else:
         dsid = H5Dcreate_anon(loc.id, tid.id, space.id,
@@ -99,7 +99,7 @@ def open(ObjectID loc not None, char* name, PropID dapl=None):
 
     If specified, dapl may be a dataset access property list.
     """
-    return DatasetID(H5Dopen2(loc.id, name, pdefault(dapl)))
+    return DatasetID(H5Dopen(loc.id, name, pdefault(dapl)))
 
 # --- Proxy functions for safe(r) threading -----------------------------------
 

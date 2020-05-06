@@ -430,7 +430,7 @@ cdef class TypeID(ObjectID):
         Commit this (transient) datatype to a named datatype in a file.
         If present, lcpl may be a link creation property list.
         """
-        H5Tcommit2(group.id, name, self.id, pdefault(lcpl),
+        H5Tcommit(group.id, name, self.id, pdefault(lcpl),
             H5P_DEFAULT, H5P_DEFAULT)
 
 
