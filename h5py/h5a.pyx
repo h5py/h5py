@@ -290,7 +290,7 @@ def iterate(ObjectID loc not None, object func, int index=0, *,
     else:
         cfunc = cb_attr_simple
 
-    H5Aiterate2(loc.id, <H5_index_t>index_type, <H5_iter_order_t>order,
+    H5Aiterate(loc.id, <H5_index_t>index_type, <H5_iter_order_t>order,
         &i, cfunc, <void*>vis)
 
     return vis.retval

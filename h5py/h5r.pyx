@@ -112,16 +112,17 @@ def get_obj_type(Reference ref not None, ObjectID id not None):
 
     The return value is one of:
 
-    - h5g.LINK
-    - h5g.GROUP
-    - h5g.DATASET
-    - h5g.TYPE
+    - h5o.TYPE_GROUP
+    - h5o.TYPE_DATASET
+    - h5o.TYPE_NAMED_DATATYPE
 
     If the reference is zero-filled, returns None.
     """
+    cdef H5O_type_t obj_type
     if not ref:
         return None
-    return <int>H5Rget_obj_type(id.id, <H5R_type_t>ref.typecode, &ref.ref)
+    H5Rget_obj_type(id.id, <H5R_type_t>ref.typecode, &ref.ref, &obj_type)
+    return <int>obj_type
 
 
 @with_phil

@@ -213,18 +213,20 @@ cdef extern from "hdf5.h":
         unsigned    line            #  line in file where error occurs
         char    *desc               #  optional supplied description
 
+    int H5E_DEFAULT  # ID for default error stack
+
     char      *H5Eget_major(H5E_major_t n)
     char      *H5Eget_minor(H5E_minor_t n)
-    herr_t    H5Eclear() except *
+    herr_t    H5Eclear(hid_t estack_id) except *
 
     ctypedef herr_t (*H5E_auto_t)(void *client_data)
-    herr_t    H5Eset_auto(H5E_auto_t func, void *client_data) nogil
-    herr_t    H5Eget_auto(H5E_auto_t *func, void** client_data)
+    herr_t    H5Eset_auto(hid_t estack_id, H5E_auto_t func, void *client_data) nogil
+    herr_t    H5Eget_auto(hid_t estack_id, H5E_auto_t *func, void** client_data)
 
-    herr_t    H5Eprint(void *stream)
+    herr_t    H5Eprint(hid_t estack_id, void *stream)
 
     ctypedef herr_t (*H5E_walk_t)(int n, H5E_error_t *err_desc, void* client_data)
-    herr_t    H5Ewalk(H5E_direction_t direction, H5E_walk_t func, void* client_data)
+    herr_t    H5Ewalk(hid_t estack_id, H5E_direction_t direction, H5E_walk_t func, void* client_data)
 
 # --- Functions for managing the HDF5 error callback mechanism ---
 
