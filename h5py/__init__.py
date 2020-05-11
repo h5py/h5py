@@ -15,6 +15,15 @@
 from warnings import warn as _warn
 import atexit
 
+# Tell mpi4py to not automatically initialize MPI at import;
+# required to avoid problems with 'import h5py' in some environment
+# when h5py was built with MPI support
+try:
+    import mpi4py
+    mpi4py.rc.initialize = False
+except ImportError:
+    pass
+
 
 # --- Library setup -----------------------------------------------------------
 

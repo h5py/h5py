@@ -58,9 +58,11 @@ class TestCase(ut.TestCase):
         return tempfile.mktemp(suffix, prefix, dir=dir)
 
     def mktemp_mpi(self, comm=None, suffix='.hdf5', prefix='', dir=None):
+        from mpi4py import MPI
         if comm is None:
-            from mpi4py import MPI
             comm = MPI.COMM_WORLD
+        if not MPI.Is_initialized():
+            MPI.Init()
         fname = None
         if comm.Get_rank() == 0:
             fname = self.mktemp(suffix, prefix, dir)
