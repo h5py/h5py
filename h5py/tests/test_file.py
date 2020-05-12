@@ -699,6 +699,17 @@ class TestPickle(TestCase):
 # hence no subclassing TestCase
 @pytest.mark.mpi
 class TestMPI(object):
+
+    @pytest.fixture(autouse=True)
+    def init_mpi(self):
+        # make sure MPI is initialized;
+        # this is required because:
+        # i) mpi4py is told not to initialize on import by h5py
+        # ii) the mpi_file_name fixture provides by pytest-mpi calls MPI_Comm_rank
+        from mpi4py import MPI
+        if not MPI.Is_initialized():
+            MPI.Init()
+
     def test_mpio(self, mpi_file_name):
         """ MPIO driver and options """
         from mpi4py import MPI
