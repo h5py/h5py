@@ -1200,9 +1200,9 @@ cdef class PropFAID(PropInstanceID):
             Comm: An mpi4py.MPI.Comm instance
             Info: An mpi4py.MPI.Info instance
             """
-            from mpi4py.MPI import Comm, Info
-            assert isinstance(comm, Comm)
-            assert isinstance(info, Info)
+            from mpi4py import MPI
+            assert isinstance(comm, MPI.Comm)
+            assert isinstance(info, MPI.Info)
             cdef Py_uintptr_t _comm = MPI._handleof(comm)
             cdef Py_uintptr_t _info = MPI._handleof(info)
             H5Pset_fapl_mpio(self.id, <MPI_Comm>_comm, <MPI_Info>_info)
