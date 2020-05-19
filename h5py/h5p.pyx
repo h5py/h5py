@@ -18,6 +18,7 @@ include "config.pxi"
 from cpython.buffer cimport PyObject_CheckBuffer, \
                             PyObject_GetBuffer, PyBuffer_Release, \
                             PyBUF_SIMPLE
+from cpython.long cimport PyLong_AsVoidPtr
 
 from .utils cimport  require_tuple, convert_dims, convert_tuple, \
                     emalloc, efree, \
@@ -1218,13 +1219,22 @@ cdef class PropFAID(PropInstanceID):
             """
             cdef MPI_Comm comm
             cdef MPI_Info info
+            from mpi4py import MPI
 
             H5Pget_fapl_mpio(self.id, &comm, &info)
-            pycomm = Comm()
-            pyinfo = Info()
-            MPI_Comm_dup(comm, &pycomm.ob_mpi)
-            MPI_Info_dup(info, &pyinfo.ob_mpi)
+
+            # TODO: Do we actually need these dup steps? Could we pass the
+            # addresses directly to H5Pget_fapl_mpio?
+            pycomm = MPI.Comm()
+            MPI_Comm_dup(
+                comm, <MPI_Comm *>PyLong_AsVoidPtr(MPI._addressof(pycomm))
+            )
             MPI_Comm_free(&comm)
+
+            pyinfo = MPI.Info()
+            MPI_Info_dup(
+                info, <MPI_Info *>PyLong_AsVoidPtr(MPI._addressof(pyinfo))
+            )
             MPI_Info_free(&info)
 
             return (pycomm, pyinfo)
