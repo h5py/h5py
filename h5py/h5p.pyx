@@ -1201,11 +1201,11 @@ cdef class PropFAID(PropInstanceID):
             Comm: An mpi4py.MPI.Comm instance
             Info: An mpi4py.MPI.Info instance
             """
-            from mpi4py import MPI
-            assert isinstance(comm, MPI.Comm)
-            assert isinstance(info, MPI.Info)
-            cdef Py_uintptr_t _comm = MPI._handleof(comm)
-            cdef Py_uintptr_t _info = MPI._handleof(info)
+            from mpi4py.MPI import Comm, Info, _handleof
+            assert isinstance(comm, Comm)
+            assert isinstance(info, Info)
+            cdef Py_uintptr_t _comm = _handleof(comm)
+            cdef Py_uintptr_t _info = _handleof(info)
             H5Pset_fapl_mpio(self.id, <MPI_Comm>_comm, <MPI_Info>_info)
 
         @with_phil
@@ -1219,22 +1219,18 @@ cdef class PropFAID(PropInstanceID):
             """
             cdef MPI_Comm comm
             cdef MPI_Info info
-            from mpi4py import MPI
+            from mpi4py.MPI import Comm, Info, _addressof
 
             H5Pget_fapl_mpio(self.id, &comm, &info)
 
             # TODO: Do we actually need these dup steps? Could we pass the
             # addresses directly to H5Pget_fapl_mpio?
-            pycomm = MPI.Comm()
-            MPI_Comm_dup(
-                comm, <MPI_Comm *>PyLong_AsVoidPtr(MPI._addressof(pycomm))
-            )
+            pycomm = Comm()
+            MPI_Comm_dup(comm, <MPI_Comm *>PyLong_AsVoidPtr(_addressof(pycomm)))
             MPI_Comm_free(&comm)
 
-            pyinfo = MPI.Info()
-            MPI_Info_dup(
-                info, <MPI_Info *>PyLong_AsVoidPtr(MPI._addressof(pyinfo))
-            )
+            pyinfo = Info()
+            MPI_Info_dup(info, <MPI_Info *>PyLong_AsVoidPtr(_addressof(pyinfo)))
             MPI_Info_free(&info)
 
             return (pycomm, pyinfo)
