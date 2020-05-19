@@ -1192,7 +1192,7 @@ cdef class PropFAID(PropInstanceID):
 
     IF MPI:
         @with_phil
-        def set_fapl_mpio(self, Comm comm not None, Info info not None):
+        def set_fapl_mpio(self, comm, info):
             """ (Comm comm, Info info)
 
             Set MPI-I/O Parallel HDF5 driver.
@@ -1200,8 +1200,12 @@ cdef class PropFAID(PropInstanceID):
             Comm: An mpi4py.MPI.Comm instance
             Info: An mpi4py.MPI.Info instance
             """
-            H5Pset_fapl_mpio(self.id, comm.ob_mpi, info.ob_mpi)
-
+            from mpi4py.MPI import Comm, Info
+            assert isinstance(comm, Comm)
+            assert isinstance(info, Info)
+            cdef Py_uintptr_t _comm = MPI._handleof(comm)
+            cdef Py_uintptr_t _info = MPI._handleof(info)
+            H5Pset_fapl_mpio(self.id, <MPI_Comm>_comm, <MPI_Info>_info)
 
         @with_phil
         def get_fapl_mpio(self):
