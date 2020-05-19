@@ -31,14 +31,9 @@ from .h5ac cimport CacheConfig
 from ._objects import phil, with_phil
 
 if MPI:
-    if MPI4PY_V2:
-        from mpi4py.libmpi cimport (
-            MPI_Comm, MPI_Info, MPI_Comm_dup, MPI_Info_dup,
-            MPI_Comm_free, MPI_Info_free)
-    else:
-        from mpi4py.mpi_c cimport (
-            MPI_Comm, MPI_Info, MPI_Comm_dup, MPI_Info_dup,
-            MPI_Comm_free, MPI_Info_free)
+    from mpi4py.libmpi cimport (
+        MPI_Comm, MPI_Info, MPI_Comm_dup, MPI_Info_dup,
+        MPI_Comm_free, MPI_Info_free)
 
 
 # Initialization
