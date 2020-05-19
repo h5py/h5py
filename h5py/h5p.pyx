@@ -1231,7 +1231,7 @@ cdef class PropFAID(PropInstanceID):
 
 
         @with_phil
-        def set_fapl_mpiposix(self, Comm comm not None, bint use_gpfs_hints=0):
+        def set_fapl_mpiposix(self, comm, bint use_gpfs_hints=0):
             """ Obsolete.
             """
             raise RuntimeError("MPI-POSIX driver is broken; removed in h5py 2.3.1")
