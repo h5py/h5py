@@ -12,7 +12,7 @@
 include 'config.pxi'
 
 IF MPI:
-    from mpi4py.MPI cimport MPI_Comm, MPI_Info, Comm, Info
+    from mpi4py.libmpi cimport MPI_Comm, MPI_Info
 
 from libc.stdlib cimport malloc, free
 from libc.string cimport strlen, strchr, strcpy, strncpy, strcmp,\
@@ -32,6 +32,7 @@ ELSE:
 cdef extern from "Python.h":
     ctypedef void PyObject
     ctypedef ssize_t Py_ssize_t
+    ctypedef size_t Py_uintptr_t
 
     PyObject* PyErr_Occurred()
     void PyErr_SetString(object type, char *message)

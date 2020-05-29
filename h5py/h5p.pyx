@@ -18,6 +18,7 @@ include "config.pxi"
 from cpython.buffer cimport PyObject_CheckBuffer, \
                             PyObject_GetBuffer, PyBuffer_Release, \
                             PyBUF_SIMPLE
+from cpython.long cimport PyLong_AsVoidPtr
 
 from .utils cimport  require_tuple, convert_dims, convert_tuple, \
                     emalloc, efree, \
@@ -31,14 +32,9 @@ from .h5ac cimport CacheConfig
 from ._objects import phil, with_phil
 
 if MPI:
-    if MPI4PY_V2:
-        from mpi4py.libmpi cimport (
-            MPI_Comm, MPI_Info, MPI_Comm_dup, MPI_Info_dup,
-            MPI_Comm_free, MPI_Info_free)
-    else:
-        from mpi4py.mpi_c cimport (
-            MPI_Comm, MPI_Info, MPI_Comm_dup, MPI_Info_dup,
-            MPI_Comm_free, MPI_Info_free)
+    from mpi4py.libmpi cimport (
+        MPI_Comm, MPI_Info, MPI_Comm_dup, MPI_Info_dup,
+        MPI_Comm_free, MPI_Info_free)
 
 
 # Initialization
@@ -1197,7 +1193,7 @@ cdef class PropFAID(PropInstanceID):
 
     IF MPI:
         @with_phil
-        def set_fapl_mpio(self, Comm comm not None, Info info not None):
+        def set_fapl_mpio(self, comm, info):
             """ (Comm comm, Info info)
 
             Set MPI-I/O Parallel HDF5 driver.
@@ -1205,8 +1201,12 @@ cdef class PropFAID(PropInstanceID):
             Comm: An mpi4py.MPI.Comm instance
             Info: An mpi4py.MPI.Info instance
             """
-            H5Pset_fapl_mpio(self.id, comm.ob_mpi, info.ob_mpi)
-
+            from mpi4py.MPI import Comm, Info, _handleof
+            assert isinstance(comm, Comm)
+            assert isinstance(info, Info)
+            cdef Py_uintptr_t _comm = _handleof(comm)
+            cdef Py_uintptr_t _info = _handleof(info)
+            H5Pset_fapl_mpio(self.id, <MPI_Comm>_comm, <MPI_Info>_info)
 
         @with_phil
         def get_fapl_mpio(self):
@@ -1219,20 +1219,25 @@ cdef class PropFAID(PropInstanceID):
             """
             cdef MPI_Comm comm
             cdef MPI_Info info
+            from mpi4py.MPI import Comm, Info, _addressof
 
             H5Pget_fapl_mpio(self.id, &comm, &info)
+
+            # TODO: Do we actually need these dup steps? Could we pass the
+            # addresses directly to H5Pget_fapl_mpio?
             pycomm = Comm()
-            pyinfo = Info()
-            MPI_Comm_dup(comm, &pycomm.ob_mpi)
-            MPI_Info_dup(info, &pyinfo.ob_mpi)
+            MPI_Comm_dup(comm, <MPI_Comm *>PyLong_AsVoidPtr(_addressof(pycomm)))
             MPI_Comm_free(&comm)
+
+            pyinfo = Info()
+            MPI_Info_dup(info, <MPI_Info *>PyLong_AsVoidPtr(_addressof(pyinfo)))
             MPI_Info_free(&info)
 
             return (pycomm, pyinfo)
 
 
         @with_phil
-        def set_fapl_mpiposix(self, Comm comm not None, bint use_gpfs_hints=0):
+        def set_fapl_mpiposix(self, comm, bint use_gpfs_hints=0):
             """ Obsolete.
             """
             raise RuntimeError("MPI-POSIX driver is broken; removed in h5py 2.3.1")
