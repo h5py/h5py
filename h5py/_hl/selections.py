@@ -293,7 +293,7 @@ class SimpleSelection(Selection):
         return tuple(x for x, s in zip(self.mshape, scalar) if not s)
 
     def __init__(self, shape, spaceid=None, hyperslab=None):
-        super(SimpleSelection, self).__init__(shape, spaceid)
+        super().__init__(shape, spaceid)
         if hyperslab is not None:
             self._sel = hyperslab
         else:
@@ -393,7 +393,7 @@ class FancySelection(Selection):
         return self._array_shape
 
     def __init__(self, shape, spaceid=None, mshape=None, array_shape=None):
-        super(FancySelection, self).__init__(shape, spaceid)
+        super().__init__(shape, spaceid)
         if mshape is None:
             mshape = self.shape
         if array_shape is None:
