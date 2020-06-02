@@ -197,6 +197,9 @@ hdf5:
   herr_t    H5Gget_info_by_name( hid_t loc_id, char *group_name, H5G_info_t *group_info, hid_t lapl_id)
   hid_t     H5Gget_create_plist(hid_t group_id)
 
+  # SWMR functions
+  1.10.2   herr_t H5Gflush(hid_t group_id) nogil
+  1.10.2   herr_t H5Grefresh(hid_t group_id) nogil
 
   # === H5I - Identifier and reflection interface =============================
 
@@ -259,7 +262,6 @@ hdf5:
 
   # Version-limited functions
   1.8.5 htri_t H5Oexists_by_name(hid_t loc_id, char * name, hid_t lapl_id )
-
 
   # === H5P - Property list API ===============================================
 

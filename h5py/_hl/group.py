@@ -150,6 +150,28 @@ class Group(HLObject, MutableMappingHDF5):
             dset = dataset.Dataset(dsid)
             return dset
 
+
+    if hasattr(h5d.GroupID, "refresh"):
+        @with_phil
+        def refresh(self):
+            """ Refresh the group metadata by reloading from the file.
+
+            This is part of the SWMR features and only exist when the HDF5
+            library version >=1.10.2
+            """
+            self._id.refresh()
+
+    if hasattr(h5d.GroupID, "flush"):
+        @with_phil
+        def flush(self):
+            """ Flush the group data and metadata to the file.
+            If the group is chunked, raw data chunks are written to the file.
+
+            This is part of the SWMR features and only exist when the HDF5
+            library version >=1.10.2
+            """
+            self._id.flush()
+
     if vds_support:
         def create_virtual_dataset(self, name, layout, fillvalue=None):
             """Create a new virtual dataset in this group.

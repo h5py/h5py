@@ -439,6 +439,42 @@ cdef class GroupID(ObjectID):
         finally:
             efree(cmnt)
 
+    IF HDF5_VERSION >= SWMR_MIN_HDF5_VERSION:
+        @with_phil
+        def flush(self):
+            """ no return
+
+            Flushes all buffers associated with a group to disk.
+
+            This function causes all buffers associated with a group to be
+            immediately flushed to disk without removing the data from the cache.
+
+            Use this in SWMR write mode to allow readers to be updated with the
+            group changes.
+
+            Feature requires: 1.10.2 HDF5
+            """
+            H5Gflush(self.id)
+
+        @with_phil
+        def refresh(self):
+            """ no return
+
+            Refreshes all buffers associated with a group.
+
+            This function causes all buffers associated with a group to be
+            cleared and immediately re-loaded with updated contents from disk.
+
+            This function essentially closes the group, evicts all metadata
+            associated with it from the cache, and then re-opens the group.
+            The reopened group is automatically re-registered with the same ID.
+
+            Use this in SWMR read mode to poll for group changes.
+
+            Feature requires: 1.10.2 HDF5
+            """
+            H5Grefresh(self.id)
+
 
     # === Special methods =====================================================
 
