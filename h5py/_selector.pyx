@@ -62,7 +62,7 @@ cdef class Selector:
         efree(self.scalar)
 
     cdef bint apply_args(self, tuple args) except 0:
-        """Apply indexing arguments to this reader object"""
+        """Apply indexing arguments to this Selector object"""
         cdef:
             int nargs, ellipsis_ix, array_ix = -1
             bint seen_ellipsis = False
