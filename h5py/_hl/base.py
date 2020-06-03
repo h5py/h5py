@@ -11,21 +11,21 @@
     Implements operations common to all high-level objects (File, etc.).
 """
 
-import numpy as np
-import posixpath
+from collections.abc import (
+    Mapping, MutableMapping, KeysView, ValuesView, ItemsView
+)
 import os
-from collections.abc import (Mapping, MutableMapping, KeysView,
-                             ValuesView, ItemsView)
+import posixpath
 
-from .compat import fspath, filename_encode
-
-from .. import h5d, h5i, h5r, h5p, h5f, h5t, h5s
+import numpy as np
 
 # The high-level interface is serialized; every public API function & method
 # is wrapped in a lock.  We re-use the low-level lock because (1) it's fast,
 # and (2) it eliminates the possibility of deadlocks due to out-of-order
 # lock acquisition.
 from .._objects import phil, with_phil
+from .. import h5d, h5i, h5r, h5p, h5f, h5t, h5s
+from .compat import fspath, filename_encode
 
 
 def is_hdf5(fname):
