@@ -327,3 +327,67 @@ cdef class Reader:
             return arr[()]
         else:
             return arr
+
+
+class MultiBlockSlice(object):
+    """
+        A conceptual extension of the built-in slice object to allow selections
+        using start, stride, count and block.
+
+        If given, these parameters will be passed directly to
+        H5Sselect_hyperslab. The defaults are start=0, stride=1, block=1,
+        count=length, which will select the full extent.
+
+        __init__(start, stride, count, block) => Create a new MultiBlockSlice, storing
+            any given selection parameters and using defaults for the others
+        start => The offset of the starting element of the specified hyperslab
+        stride => The number of elements between the start of one block and the next
+        count => The number of blocks to select
+        block => The number of elements in each block
+
+    """
+
+    def __init__(self, start=0, stride=1, count=None, block=1):
+        if start < 0:
+            raise ValueError("Start can't be negative")
+        if stride < 1 or (count is not None and count < 1) or block < 1:
+            raise ValueError("Stride, count and block can't be 0 or negative")
+        if block > stride:
+            raise ValueError("Blocks will overlap if block > stride")
+
+        self.start = start
+        self.stride = stride
+        self.count = count
+        self.block = block
+
+    def indices(self, length):
+        """Calculate and validate start, count, stride and block for the given length"""
+        if self.count is None:
+            # Select as many full blocks as possible without exceeding extent
+            count = (length - self.start - self.block) // self.stride + 1
+            if count < 1:
+                raise ValueError(
+                    "No full blocks can be selected using {} "
+                    "on dimension of length {}".format(self._repr(), length)
+                )
+        else:
+            count = self.count
+
+        end_index = self.start + self.block + (count - 1) * self.stride - 1
+        if end_index >= length:
+            raise ValueError(
+                "{} range ({} - {}) extends beyond maximum index ({})".format(
+                    self._repr(count), self.start, end_index, length - 1
+                ))
+
+        return self.start, count, self.stride, self.block
+
+    def _repr(self, count=None):
+        if count is None:
+            count = self.count
+        return "{}(start={}, stride={}, count={}, block={})".format(
+            self.__class__.__name__, self.start, self.stride, count, self.block
+        )
+
+    def __repr__(self):
+        return self._repr(count=None)
