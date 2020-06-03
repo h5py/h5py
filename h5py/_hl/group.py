@@ -151,7 +151,7 @@ class Group(HLObject, MutableMappingHDF5):
             return dset
 
 
-    if hasattr(h5d.GroupID, "refresh"):
+    if hasattr(h5g.GroupID, "refresh"):
         @with_phil
         def refresh(self):
             """ Refresh the group metadata by reloading from the file.
@@ -161,7 +161,7 @@ class Group(HLObject, MutableMappingHDF5):
             """
             self._id.refresh()
 
-    if hasattr(h5d.GroupID, "flush"):
+    if hasattr(h5g.GroupID, "flush"):
         @with_phil
         def flush(self):
             """ Flush the group data and metadata to the file.
