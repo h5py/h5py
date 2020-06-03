@@ -45,7 +45,7 @@ def select(shape, args, dsid):
     RegionReference
         Returns a Selection instance.
 
-    Indices, slices, ellipses only
+    Indices, slices, ellipses, MultiBlockSlices only
         Returns a SimpleSelection instance
 
     Indices, slices, ellipses, lists or boolean index arrays
@@ -76,7 +76,7 @@ def select(shape, args, dsid):
             return Selection(shape, spaceid=sid)
 
     for a in args:
-        if not isinstance(a, slice) and a is not Ellipsis:
+        if not isinstance(a, (slice, MultiBlockSlice)) and a is not Ellipsis:
             try:
                 int(a)
                 if isinstance(a, np.ndarray) and a.shape == (1,):
@@ -89,6 +89,71 @@ def select(shape, args, dsid):
     sel = SimpleSelection(shape)
     sel[args]
     return sel
+
+
+class MultiBlockSlice(object):
+
+    """
+        A conceptual extension of the built-in slice object to allow selections
+        using start, stride, count and block.
+
+        If given, these parameters will be passed directly to
+        H5Sselect_hyperslab. The defaults are start=0, stride=1, block=1,
+        count=length, which will select the full extent.
+
+        __init__(start, stride, count, block) => Create a new MultiBlockSlice, storing
+            any given selection parameters and using defaults for the others
+        start => The offset of the starting element of the specified hyperslab
+        stride => The number of elements between the start of one block and the next
+        count => The number of blocks to select
+        block => The number of elements in each block
+
+    """
+
+    def __init__(self, start=0, stride=1, count=None, block=1):
+        if start < 0:
+            raise ValueError("Start can't be negative")
+        if stride < 1 or (count is not None and count < 1) or block < 1:
+            raise ValueError("Stride, count and block can't be 0 or negative")
+        if block > stride:
+            raise ValueError("Blocks will overlap if block > stride")
+
+        self.start = start
+        self.stride = stride
+        self.count = count
+        self.block = block
+
+    def indices(self, length):
+        """Calculate and validate start, count, stride and block for the given length"""
+        if self.count is None:
+            # Select as many full blocks as possible without exceeding extent
+            count = (length - self.start - self.block) // self.stride + 1
+            if count < 1:
+                raise ValueError(
+                    "No full blocks can be selected using {} "
+                    "on dimension of length {}".format(self._repr(), length)
+                )
+        else:
+            count = self.count
+
+        end_index = self.start + self.block + (count - 1) * self.stride - 1
+        if end_index >= length:
+            raise ValueError(
+                "{} range ({} - {}) extends beyond maximum index ({})".format(
+                    self._repr(count), self.start, end_index, length - 1
+                ))
+
+        return self.start, count, self.stride, self.block
+
+    def _repr(self, count=None):
+        if count is None:
+            count = self.count
+        return "{}(start={}, stride={}, count={}, block={})".format(
+            self.__class__.__name__, self.start, self.stride, count, self.block
+        )
+
+    def __repr__(self):
+        return self._repr(count=None)
 
 
 class Selection(object):
@@ -247,14 +312,17 @@ class SimpleSelection(Selection):
             self._id.select_all()
             return self
 
-        start, count, step, scalar = _handle_simple(self.shape,args)
+        start, count, stride, block, scalar = _handle_simple(self.shape, args)
 
-        self._id.select_hyperslab(start, count, step)
+        self._id.select_hyperslab(start, count, stride, block)
 
-        self._sel = (start, count, step, scalar)
+        length = tuple(count * block for count, block in zip(count, block))
+        self._sel = (start, length, stride, scalar)
 
         # array shape drops dimensions where a scalar index was selected
-        self._array_shape = tuple(x for x, y in zip(count, scalar) if not y)
+        self._array_shape = tuple(
+            dim_length for dim_length, scalar in zip(length, scalar) if not scalar
+        )
 
         return self
 
@@ -411,8 +479,8 @@ class FancySelection(Selection):
 
         self._id.select_none()
         for idx, vector in enumerate(argvector):
-            start, count, step, scalar = _handle_simple(self.shape, vector)
-            self._id.select_hyperslab(start, count, step, op=h5s.SELECT_OR)
+            start, count, stride, block, scalar = _handle_simple(self.shape, vector)
+            self._id.select_hyperslab(start, count, stride, block, op=h5s.SELECT_OR)
 
         # Final shape excludes scalars, except where
         # they correspond to sequence entries
@@ -460,38 +528,48 @@ def _expand_ellipsis(args, rank):
 
     return final_args
 
+
 def _handle_simple(shape, args):
-    """ Process a "simple" selection tuple, containing only slices and
-        integer objects.  Return is a 4-tuple with tuples for start,
-        count, step, and a flag which tells if the axis is a "scalar"
-        selection (indexed by an integer).
+    """ Process a "simple" selection tuple, containing only integers, slices
+        or MultiBlockSlices.
+        Return is a 5-tuple with tuples for start, count, stride, block plus a
+        flag which tells us if the axis is a "scalar" selection (indexed by an
+        integer).
 
         If "args" is shorter than "shape", the remaining axes are fully
         selected.
     """
-    args = _expand_ellipsis(args, len(shape))
-
     start = []
     count = []
-    step  = []
+    stride = []
+    block = []
     scalar = []
 
+    args = _expand_ellipsis(args, len(shape))
+
     for arg, length in zip(args, shape):
+        _scalar = False
         if isinstance(arg, slice):
-            x,y,z = _translate_slice(arg, length)
-            s = False
+            _start, _count, _stride = _translate_slice(arg, length)
+            _block = 1
+        elif isinstance(arg, MultiBlockSlice):
+            _start, _count, _stride, _block = _translate_multi_block_slice(arg, length)
         else:
             try:
-                x,y,z = _translate_int(int(arg), length)
-                s = True
+                _start, _count, _stride = _translate_int(int(arg), length)
+                _block = 1
+                _scalar = True
             except TypeError:
                 raise TypeError('Illegal index "%s" (must be a slice or number)' % arg)
-        start.append(x)
-        count.append(y)
-        step.append(z)
-        scalar.append(s)
 
-    return tuple(start), tuple(count), tuple(step), tuple(scalar)
+        start.append(_start)
+        count.append(_count)
+        stride.append(_stride)
+        block.append(_block)
+        scalar.append(_scalar)
+
+    return tuple(start), tuple(count), tuple(stride), tuple(block), tuple(scalar)
+
 
 def _translate_int(exp, length):
     """ Given an integer index, return a 3-tuple
@@ -525,6 +603,15 @@ def _translate_slice(exp, length):
     count = 1 + (stop - start - 1) // step
 
     return start, count, step
+
+
+def _translate_multi_block_slice(exp, length):
+    """ Given a MultiBlockSlice object, return a 4-tuple
+        (start, count, stride, block) for use with the hyperslab selection
+        routines.
+    """
+    return exp.indices(length)
+
 
 def guess_shape(sid):
     """ Given a dataspace, try to deduce the shape of the selection.
