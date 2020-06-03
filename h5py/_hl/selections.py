@@ -344,14 +344,6 @@ class FancySelection(Selection):
         yield self._id
 
 
-def _translate_multi_block_slice(exp, length):
-    """ Given a MultiBlockSlice object, return a 4-tuple
-        (start, count, stride, block) for use with the hyperslab selection
-        routines.
-    """
-    return exp.indices(length)
-
-
 def guess_shape(sid):
     """ Given a dataspace, try to deduce the shape of the selection.
 

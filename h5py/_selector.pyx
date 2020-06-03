@@ -38,6 +38,7 @@ cdef class Selector:
     cdef hsize_t* start
     cdef hsize_t* stride
     cdef hsize_t* count
+    cdef hsize_t* block
     cdef bint* scalar
 
     def __cinit__(self, SpaceID space):
@@ -50,6 +51,7 @@ cdef class Selector:
         self.start = <hsize_t*>emalloc(sizeof(hsize_t) * self.rank)
         self.stride = <hsize_t*>emalloc(sizeof(hsize_t) * self.rank)
         self.count = <hsize_t*>emalloc(sizeof(hsize_t) * self.rank)
+        self.block = <hsize_t*>emalloc(sizeof(hsize_t) * self.rank)
         self.scalar = <bint*>emalloc(sizeof(bint) * self.rank)
 
         H5Sget_simple_extent_dims(self.space, self.dims, NULL)
@@ -59,6 +61,7 @@ cdef class Selector:
         efree(self.start)
         efree(self.stride)
         efree(self.count)
+        efree(self.block)
         efree(self.scalar)
 
     cdef bint apply_args(self, tuple args) except 0:
@@ -116,6 +119,7 @@ cdef class Selector:
                 self.start[dim_ix] = start
                 self.stride[dim_ix] = step
                 self.count[dim_ix] = count
+                self.block[dim_ix] = 1
                 self.scalar[dim_ix] = False
 
                 continue
@@ -141,7 +145,22 @@ cdef class Selector:
                 self.start[dim_ix] = a
                 self.stride[dim_ix] = 1
                 self.count[dim_ix] = 1
+                self.block[dim_ix] = 1
                 self.scalar[dim_ix] = True
+
+                continue
+
+            # MultiBlockSlice exposes h5py's separate count & block parameters
+            # to allow more complex repeating selections.
+            if isinstance(a, MultiBlockSlice):
+                (
+                    self.start[dim_ix],
+                    self.stride[dim_ix],
+                    self.count[dim_ix],
+                    self.block[dim_ix],
+                ) = a.indices(l)
+                print("MBS indices", a.indices(l))
+                self.scalar[dim_ix] = False
 
                 continue
 
@@ -179,6 +198,7 @@ cdef class Selector:
                 self.start[dim_ix] = 0
                 self.stride[dim_ix] = 1
                 self.count[dim_ix] = a.shape[0]
+                self.block[dim_ix] = 1
                 self.scalar[dim_ix] = False
 
                 continue
@@ -192,6 +212,7 @@ cdef class Selector:
                 self.start[dim_ix] = 0
                 self.stride[dim_ix] = 1
                 self.count[dim_ix] = self.dims[dim_ix]
+                self.block[dim_ix] = 1
                 self.scalar[dim_ix] = False
 
         if nargs == 0:
@@ -201,7 +222,7 @@ cdef class Selector:
             self.select_fancy(array_ix, array_arg)
             self.is_fancy = True
         else:
-            H5Sselect_hyperslab(self.space, H5S_SELECT_SET, self.start, self.stride, self.count, NULL)
+            H5Sselect_hyperslab(self.space, H5S_SELECT_SET, self.start, self.stride, self.count, self.block)
             self.is_fancy = False
         return True
 
@@ -223,7 +244,7 @@ cdef class Selector:
             # Iterate over the array of indices, add each hyperslab to the selection
             for i in array_arg:
                 tmp_start[array_ix] = i
-                H5Sselect_hyperslab(self.space, H5S_SELECT_OR, tmp_start, self.stride, tmp_count, NULL)
+                H5Sselect_hyperslab(self.space, H5S_SELECT_OR, tmp_start, self.stride, tmp_count, self.block)
         finally:
             efree(tmp_start)
             efree(tmp_count)
@@ -246,19 +267,21 @@ cdef class Selector:
 
         shape = convert_dims(self.dims, self.rank)
         count = convert_dims(self.count, self.rank)
+        block = convert_dims(self.block, self.rank)
+        mshape = tuple(c * b for c, b in zip(count, block))
 
         from ._hl.selections import SimpleSelection, FancySelection
 
         if self.is_fancy:
             arr_shape = tuple(
-                int(self.count[i]) for i in range(self.rank) if self.scalar[i]
+                mshape[i] for i in range(self.rank) if self.scalar[i]
             )
             return FancySelection(shape, space, count, arr_shape)
         else:
             start = convert_dims(self.start, self.rank)
             step = convert_dims(self.stride, self.rank)
             scalar = convert_bools(self.scalar, self.rank)
-            return SimpleSelection(shape, space, (start, count, step, scalar))
+            return SimpleSelection(shape, space, (start, mshape, step, scalar))
 
 
 cdef class Reader:
@@ -280,7 +303,7 @@ cdef class Reader:
         self.np_typenum = np_dtype.num
         self.h5_memory_datatype = py_create(np_dtype)
 
-    cdef ndarray make_array(self):
+    cdef ndarray make_array(self, hsize_t* mshape):
         """Create an array to read the selected data into.
 
         .apply_args() should be called first, to set self.count and self.scalar.
@@ -294,7 +317,7 @@ cdef class Reader:
             # Copy any non-scalar selection dimensions for the array shape
             for i in range(self.selector.rank):
                 if not self.selector.scalar[i]:
-                    arr_shape[arr_rank] = self.selector.count[i]
+                    arr_shape[arr_rank] = mshape[i]
                     arr_rank += 1
 
             arr = PyArray_SimpleNew(arr_rank, arr_shape, self.np_typenum)
@@ -310,15 +333,23 @@ cdef class Reader:
         """
         cdef void* buf
         cdef ndarray arr
+        cdef hsize_t* mshape
         cdef hid_t mspace
         cdef int i
 
         self.selector.apply_args(args)
 
-        arr = self.make_array()
-        buf = PyArray_DATA(arr)
+        # The selected length of each dimension is count * block
+        mshape = <hsize_t*>emalloc(sizeof(hsize_t) * self.selector.rank)
+        try:
+            for i in range(self.selector.rank):
+                mshape[i] = self.selector.count[i] * self.selector.block[i]
+            arr = self.make_array(mshape)
+            buf = PyArray_DATA(arr)
 
-        mspace = H5Screate_simple(self.selector.rank, self.selector.count, NULL)
+            mspace = H5Screate_simple(self.selector.rank, mshape, NULL)
+        finally:
+            efree(mshape)
 
         H5Dread(self.dataset, self.h5_memory_datatype.id, mspace,
                 self.selector.space, H5P_DEFAULT, buf)
@@ -361,7 +392,7 @@ class MultiBlockSlice(object):
         self.block = block
 
     def indices(self, length):
-        """Calculate and validate start, count, stride and block for the given length"""
+        """Calculate and validate start, stride, count and block for the given length"""
         if self.count is None:
             # Select as many full blocks as possible without exceeding extent
             count = (length - self.start - self.block) // self.stride + 1
@@ -380,7 +411,7 @@ class MultiBlockSlice(object):
                     self._repr(count), self.start, end_index, length - 1
                 ))
 
-        return self.start, count, self.stride, self.block
+        return self.start, self.stride, count, self.block
 
     def _repr(self, count=None):
         if count is None:
