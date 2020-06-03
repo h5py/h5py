@@ -7,9 +7,6 @@
 # License:  Standard 3-clause BSD; see "license.txt" for full license terms
 #           and contributor agreement.
 
-# We use __getitem__ side effects, which pylint doesn't like.
-# pylint: disable=pointless-statement
-
 """
     High-level access to HDF5 dataspace selections
 """
