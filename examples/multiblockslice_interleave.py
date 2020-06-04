@@ -25,12 +25,12 @@ for file_idx, file_path in enumerate(files):
 
     # A single raw file maps to every len(files)th block of frames in the VDS
     start = file_idx * block_size  # 0, 1000, 2000, 3000
-    count = dataset_frames // block_size  # 25
     stride = len(files) * block_size  # 4000
+    count = dataset_frames // block_size  # 25
     block = block_size  # 1000
 
     # MultiBlockSlice for frame dimension and full extent for height and width
-    v_layout[h5py.MultiBlockSlice(start, count, stride, block), :, :] = v_source
+    v_layout[h5py.MultiBlockSlice(start, stride, count, block), :, :] = v_source
 
 with h5py.File("interleave_vds.h5", "w", libver="latest") as f:
     f.create_virtual_dataset(dataset_name, v_layout, fillvalue=0)
