@@ -28,6 +28,30 @@ and in the MacOS package managers `Homebrew <https://brew.sh/>`_,
 More detailed installation instructions, including how to install `h5py` with
 MPI support, can be found at: https://docs.h5py.org/en/latest/build.html.
 
+Build
+--------------
+
+```
+$ python3 -m venv .venv
+$ source .venv/bin/activate
+$ pip install mpi4py
+$ python3 setup.py configure --mpi
+$ python3 setup.py build
+```
+
+Run tests
+--------------
+
+- go to built directory h5py
+
+```
+$ python3 -m venv .venv
+$ source .venv/bin/activate
+$ pip install mpi4py
+$ pip install pytest
+$ pip install pytest-mpi
+$ pytest
+```
 
 Reporting bugs
 --------------
