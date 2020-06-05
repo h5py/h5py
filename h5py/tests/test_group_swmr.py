@@ -96,6 +96,7 @@ class TestDatasetSwmrRead(TestCase):
 def writer_loop(queue: JoinableQueue):
     stop = False
     file = None
+    group = None
 
     while not stop:
         item = queue.get()
@@ -103,6 +104,7 @@ def writer_loop(queue: JoinableQueue):
         assert 'action' in item
         action = item['action']
 
+        # get parameter if any
         parameters = {}
         if 'parameters' in item:
             parameters = item['parameters']
@@ -110,8 +112,59 @@ def writer_loop(queue: JoinableQueue):
         if action == 'create_file':
             assert 'fname' in parameters
 
-            file = h5py.File(parameters['fname'], 'w', libver='latest')
+            fname = parameters['fname']
+
+            file = h5py.File(fname, 'w', libver='latest')
+
+            group = file.create_group('group')
+
+            pass
+
+        elif action == 'set_swmr_mode':
             file.swmr_mode = True
+
+        elif action == 'create_dataset':
+            assert 'name' in parameters
+            assert 'value' in parameters
+
+            name = parameters['name']
+            data = parameters['value']
+
+            group.create_dataset(name, maxshape=data.shape, data=data)
+
+        elif action == 'update_dataset':
+            assert 'name' in parameters
+            assert 'value' in parameters
+
+            name = parameters['name']
+            data = parameters['value']
+
+            group[name][:] = data
+
+        elif action == 'create_attribute':
+            assert 'name' in parameters
+            assert 'value' in parameters
+
+            name = parameters['name']
+            value = parameters['value']
+
+            group.attrs.create(name, value)
+
+        elif action == 'update_attribute':
+            assert 'name' in parameters
+            assert 'value' in parameters
+
+            name = parameters['name']
+            value = parameters['value']
+
+            group.attrs[name] = value
+
+        elif action == 'flush_file':
+            file.flush()
+
+        elif action == 'flush_group':
+            group.flush()
+
         elif action == 'close_file':
             file.close()
         elif action == 'stop':
@@ -139,74 +192,140 @@ class TestDatasetSwmrWriteRead(TestCase):
         # Note that when creating the file, the swmr=True is not required for
         # write, but libver='latest' is required.
 
-        fname = self.mktemp()
+        self.fname = self.mktemp()
 
-        writer_queue = JoinableQueue()
-        writer_process = Process(target=writer_loop, args=(writer_queue,), daemon=True)
-        writer_process.start()
+        self.writer_queue = JoinableQueue()
+        self.writer_process = Process(target=writer_loop, args=(self.writer_queue,), daemon=True)
+        self.writer_process.start()
 
-        parameters = {'fname': fname}
+    def test_create_open_read_update_file(self):
+        """ Update and read dataset and
+         an attribute in group with SWMR mode
+        """
+
+        self.data = np.arange(13).astype('f')
+        self.new_data = np.arange(13).astype('f') + 2
+
+        writer_queue = self.writer_queue
+
+        parameters = {'fname': self.fname}
         writer_queue.put({'action': 'create_file', 'parameters': parameters})
         writer_queue.join()
+
+        parameters = {'name': 'data', 'value': self.data}
+        writer_queue.put({'action': 'create_dataset', 'parameters': parameters})
+        writer_queue.join()
+
+        # create attributes to test
+        attributes = [
+            {'name': 'attr_bool', 'value': False, 'new_value': True},
+            {'name': 'attr_int', 'value': 1, 'new_value': 2},
+            {'name': 'attr_float', 'value': 1.4, 'new_value': 3.2},
+        ]
+
+        for attribute in attributes:
+            attribute_name = attribute['name']
+            attribute_value = attribute['value']
+
+            parameters = {'name': attribute_name, 'value': attribute_value}
+            writer_queue.put({'action': 'create_attribute', 'parameters': parameters})
+            writer_queue.join()
+
+        # try opening the file in swmr
+
+        file = None
+        with self.assertRaises(OSError):
+            file = h5py.File(self.fname, 'r', libver='latest', swmr=True)
+
+        writer_queue.put({'action': 'set_swmr_mode'})
+        writer_queue.join()
+
+        # open file and check group
+        file = h5py.File(self.fname, 'r', libver='latest', swmr=True)
+        self.assertIn('group', file)
+
+        # check attributes
+
+        group = file['group']
+
+        for attribute in attributes:
+            attribute_name = attribute['name']
+            attribute_value = attribute['value']
+            attribute_new_value = attribute['new_value']
+
+            self.assertIn(attribute_name, group.attrs)
+
+            attribute = group.attrs[attribute_name]
+            self.assertEqual(attribute, attribute_value)
+
+            parameters = {'name': attribute_name, 'value': attribute_new_value}
+            writer_queue.put({'action': 'update_attribute', 'parameters': parameters})
+            writer_queue.join()
+
+            attribute = group.attrs[attribute_name]
+            self.assertEqual(attribute, attribute_value)
+
+            writer_queue.put({'action': 'flush_group'})
+            writer_queue.join()
+
+            # check that read group attribute has not changed
+            attribute = group.attrs[attribute_name]
+            self.assertEqual(attribute, attribute_value)
+
+            group.refresh()
+
+            # check that read group attribute has changed
+            try:
+                attribute = group.attrs[attribute_name]
+                self.assertEqual(attribute, attribute_new_value)
+            except KeyError as e:
+                test = group.attrs['attr_int']
+                pass
+
+        # check that dataset has been recorder
+        data = group['data']
+        self.assertArrayEqual(data[:], self.data)
+
+        # update data
+        parameters = {'name': 'data', 'value': self.new_data}
+        writer_queue.put({'action': 'update_dataset', 'parameters': parameters})
+        writer_queue.join()
+
+        # check that data has not been updated
+        data = group['data']
+        self.assertArrayEqual(data[:], self.data)
+
+        # flush group
+        writer_queue.put({'action': 'flush_group'})
+        writer_queue.join()
+
+        # check that data has not been updated
+        data = group['data']
+        self.assertArrayEqual(data[:], self.data)
+
+        # refresh group, this won't update dataset
+        group.refresh()
+
+        # check that data has not been updated
+        data = group['data']
+        self.assertArrayEqual(data[:], self.data)
+
+        # refresh dataset, this will update data
+        data.refresh()
+
+        # check that data has been updated
+        self.assertArrayEqual(data[:], self.new_data)
 
         writer_queue.put({'action': 'close_file'})
         writer_queue.join()
 
-        writer_queue.put({'action': "stop"})
-        writer_queue.join()
-
-        writer_process.join()
-
-        self.f_write = h5py.File(fname, 'w', libver='latest')
-        self.f_write.swmr_mode = True
-
-        self.f_read = h5py.File(fname, 'r', swmr=True)
-
-        self.group_write = self.f_write.create_group('group')
-
-        self.data = np.arange(13).astype('f')
-
-        self.dset_write = self.group_write.create_dataset('data', chunks=(13,), maxshape=(None,), data=self.data)
-
-        self.attribute_value = 'test'
-        self.group_write.attrs.create('attribute', self.attribute_value)
-        self.attr_write = self.group_write.attrs['attribute']
+        file.close()
 
         pass
 
     def tearDown(self):
-        self.f_read.close()
-        self.f_write.close()
 
-    def test_update_attribute(self):
-        """ Extend and flush a SWMR dataset
-        """
+        self.writer_queue.put({'action': "stop"})
+        self.writer_queue.join()
 
-        # check file writer data and attr
-        self.assertArrayEqual(self.dset_write, self.data)
-        self.assertEqual(self.attr_write, self.attribute_value)
-
-        # check that file reader has knowledge of this
-        self.group_read = self.f_read['group']
-        self.assertTrue('attribute' in self.group_read.attrs)
-
-        self.attr_read = self.group_read.attrs['attribute']
-        self.assertEqual(self.attr_read, self.attribute_value)
-
-        self.new_attribute_value = 'test2'
-
-        self.group_write.attrs['attribute'] = self.new_attribute_value
-        self.attr_write = self.group_write.attrs['attribute']
-        self.assertEqual(self.attr_write, self.new_attribute_value)
-
-        self.attr_read = self.group_read.attrs['attribute']
-        self.assertEqual(self.attr_read, self.new_attribute_value)
-
-        self.group_write.flush()
-
-        self.attr_read = self.group_read.attrs['attribute']
-        self.assertEqual(self.attr_read, self.new_attribute_value)
-
-        self.group_read.refresh()
-
-        pass
+        self.writer_process.join()
