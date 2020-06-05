@@ -159,7 +159,6 @@ cdef class Selector:
                     self.count[dim_ix],
                     self.block[dim_ix],
                 ) = a.indices(l)
-                print("MBS indices", a.indices(l))
                 self.scalar[dim_ix] = False
 
                 continue
