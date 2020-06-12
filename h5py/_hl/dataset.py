@@ -42,20 +42,7 @@ def make_new_dset(parent, shape=None, dtype=None, data=None, name=None,
     # Convert data to a C-contiguous ndarray
     if data is not None and not isinstance(data, Empty):
         from . import base
-        # normalize strings -> np.dtype objects
-        if dtype is not None:
-            _dtype = numpy.dtype(dtype)
-        else:
-            _dtype = None
-
-        # if we are going to a f2 datatype, pre-convert in python
-        # to workaround a possible h5py bug in the conversion.
-        is_small_float = (_dtype is not None and
-                          _dtype.kind == 'f' and
-                          _dtype.itemsize == 2)
-        data = numpy.asarray(data, order="C",
-                             dtype=(_dtype if is_small_float
-                                    else base.guess_dtype(data)))
+        data = base.array_for_new_object(data, specified_dtype=dtype)
 
     # Validate shape
     if shape is None:

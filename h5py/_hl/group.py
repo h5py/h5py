@@ -409,7 +409,7 @@ class Group(HLObject, MutableMappingHDF5):
                 htype.commit(self.id, name, lcpl=lcpl)
 
             else:
-                ds = self.create_dataset(None, data=obj, dtype=base.guess_dtype(obj))
+                ds = self.create_dataset(None, data=obj)
                 h5o.link(ds.id, self.id, name, lcpl=lcpl)
 
         if do_link:
