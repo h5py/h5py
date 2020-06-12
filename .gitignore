@@ -4,7 +4,7 @@ h5py/_conv.c
 h5py/_proxy.c
 h5py/_objects.c
 h5py/_errors.c
-h5py/_reader.c
+h5py/_selector.c
 h5py/config.pxi
 h5py/_hdf5.*
 h5py/*.dll

@@ -329,25 +329,25 @@ class TestMultiBlockSlice(BaseSlicing):
         # Default selects entire dataset as one block
         mbslice = MultiBlockSlice()
 
-        self.assertEqual(mbslice.indices(10), (0, 10, 1, 1))
+        self.assertEqual(mbslice.indices(10), (0, 1, 10, 1))
         np.testing.assert_array_equal(self.dset[mbslice], self.arr)
 
     def test_default_explicit(self):
         mbslice = MultiBlockSlice(start=0, count=10, stride=1, block=1)
 
-        self.assertEqual(mbslice.indices(10), (0, 10, 1, 1))
+        self.assertEqual(mbslice.indices(10), (0, 1, 10, 1))
         np.testing.assert_array_equal(self.dset[mbslice], self.arr)
 
     def test_start(self):
         mbslice = MultiBlockSlice(start=4)
 
-        self.assertEqual(mbslice.indices(10), (4, 6, 1, 1))
+        self.assertEqual(mbslice.indices(10), (4, 1, 6, 1))
         np.testing.assert_array_equal(self.dset[mbslice], np.array([4, 5, 6, 7, 8, 9]))
 
     def test_count(self):
         mbslice = MultiBlockSlice(count=7)
 
-        self.assertEqual(mbslice.indices(10), (0, 7, 1, 1))
+        self.assertEqual(mbslice.indices(10), (0, 1, 7, 1))
         np.testing.assert_array_equal(
             self.dset[mbslice], np.array([0, 1, 2, 3, 4, 5, 6])
         )
@@ -360,7 +360,7 @@ class TestMultiBlockSlice(BaseSlicing):
     def test_stride(self):
         mbslice = MultiBlockSlice(stride=2)
 
-        self.assertEqual(mbslice.indices(10), (0, 5, 2, 1))
+        self.assertEqual(mbslice.indices(10), (0, 2, 5, 1))
         np.testing.assert_array_equal(self.dset[mbslice], np.array([0, 2, 4, 6, 8]))
 
     def test_stride_zero_error(self):
@@ -371,7 +371,7 @@ class TestMultiBlockSlice(BaseSlicing):
     def test_stride_block_equal(self):
         mbslice = MultiBlockSlice(stride=2, block=2)
 
-        self.assertEqual(mbslice.indices(10), (0, 5, 2, 2))
+        self.assertEqual(mbslice.indices(10), (0, 2, 5, 2))
         np.testing.assert_array_equal(self.dset[mbslice], self.arr)
 
     def test_block_more_than_stride_error(self):
@@ -396,7 +396,7 @@ class TestMultiBlockSlice(BaseSlicing):
     def test_fully_described(self):
         mbslice = MultiBlockSlice(start=1, count=2, stride=5, block=4)
 
-        self.assertEqual(mbslice.indices(10), (1, 2, 5, 4))
+        self.assertEqual(mbslice.indices(10), (1, 5, 2, 4))
         np.testing.assert_array_equal(
             self.dset[mbslice], np.array([1, 2, 3, 4, 6, 7, 8, 9])
         )

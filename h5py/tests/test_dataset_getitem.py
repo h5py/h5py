@@ -406,9 +406,6 @@ class Test1DFloat(TestCase):
         with self.assertRaises(TypeError):
             self.dset[None]
 
-    # FIXME: NumPy raises IndexError
-    # Also this currently raises UnboundLocalError. :(
-    @ut.expectedFailure
     def test_index_illegal(self):
         """ Illegal slicing argument """
         with self.assertRaises(TypeError):

@@ -22,7 +22,7 @@ def localpath(*args):
 
 
 MODULES = ['defs', '_errors', '_objects', '_proxy', 'h5fd', 'h5z',
-            'h5', 'h5i', 'h5r', 'utils', '_reader',
+            'h5', 'h5i', 'h5r', 'utils', '_selector',
             '_conv', 'h5t', 'h5s',
             'h5p',
             'h5d', 'h5a', 'h5f', 'h5g',
