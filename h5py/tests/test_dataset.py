@@ -934,6 +934,36 @@ class TestStrings(BaseDataset):
         self.assertEqual(type(out), np.string_)
         self.assertEqual(out, data)
 
+    def test_retrieve_vlen_unicode(self):
+        dt = h5py.string_dtype()
+        ds = self.f.create_dataset('x', (10,), dtype=dt)
+        data = "fàilte"
+        ds[0] = data
+        self.assertIsInstance(ds[0], bytes)
+        out = ds.asstr()[0]
+        self.assertIsInstance(out, str)
+        self.assertEqual(out, data)
+
+    def test_asstr(self):
+        ds = self.f.create_dataset('x', (10,), dtype=h5py.string_dtype())
+        data = "fàilte"
+        ds[0] = data
+
+        strwrap1 = ds.asstr('ascii')
+        with self.assertRaises(UnicodeDecodeError):
+            out = strwrap1[0]
+
+        # Different errors parameter
+        self.assertEqual(ds.asstr('ascii', 'ignore')[0], 'filte')
+
+        # latin-1 will decode it but give the wrong text
+        self.assertNotEqual(ds.asstr('latin-1')[0], data)
+
+        # Array output
+        np.testing.assert_array_equal(
+            ds.asstr()[:1], np.array([data], dtype=object)
+        )
+
     @ut.expectedFailure
     def test_unicode_write_error(self):
         """ Writing a non-utf8 byte string to a unicode vlen dataset raises

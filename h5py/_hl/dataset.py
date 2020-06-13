@@ -189,6 +189,31 @@ class AstypeWrapper(object):
         self._dset._local.astype = None
 
 
+class AsStrWrapper:
+    """Wrapper to decode strings on reading the dataset"""
+    def __init__(self, dset, encoding, errors='strict'):
+        self.dset = dset
+        if encoding is None:
+            encoding = h5t.check_string_dtype(dset.dtype).encoding
+        self.encoding = encoding
+        self.errors = errors
+
+    def __getitem__(self, args):
+        bytes_arr = self.dset[args]
+        # numpy.char.decode() seems like the obvious thing to use. But it only
+        # accepts numpy string arrays, not object arrays of bytes (which we
+        # return from HDF5 variable-length strings). And the numpy
+        # implementation is not faster than doing it with a loop; in fact, by
+        # not converting the result to a numpy unicode array, the
+        # naive way can be faster! (Comparing with numpy 1.18.4, June 2020)
+        if numpy.isscalar(bytes_arr):
+            return bytes_arr.decode(self.encoding, self.errors)
+
+        return numpy.array([
+            b.decode(self.encoding, self.errors) for b in bytes_arr.flat
+        ], dtype=object).reshape(bytes_arr.shape)
+
+
 class FieldsWrapper:
     """Wrapper to extract named fields from a dataset with a struct dtype"""
     extract_field = None
@@ -324,6 +349,25 @@ class Dataset(HLObject):
         >>> double_precision = dataset.astype('f8')[0:100:2]
         """
         return AstypeWrapper(self, dtype)
+
+    def asstr(self, encoding=None, errors='strict'):
+        """Get a wrapper to read string data as Python strings:
+
+        >>> str_array = dataset.asstr()[:]
+
+        The parameters have the same meaning as in ``bytes.decode()``.
+        If ``encoding`` is unspecified, it will use the encoding in the HDF5
+        datatype (either ascii or utf-8).
+        """
+        string_info = h5t.check_string_dtype(self.dtype)
+        if string_info is None:
+            raise TypeError(
+                "dset.asstr() can only be used on datasets with "
+                "an HDF5 string datatype"
+            )
+        if encoding is None:
+            encoding = string_info.encoding
+        return AsStrWrapper(self, encoding, errors=errors)
 
     def fields(self, names, *, _prior_dtype=None):
         """Get a wrapper to read a subset of fields from a compound data type:
