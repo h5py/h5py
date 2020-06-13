@@ -183,8 +183,8 @@ class TestTypes(BaseAttrs):
 
         self.f.attrs['x'] = u"Hello" + chr(0x2340) + u"!!"
         out = self.f.attrs['x']
-        self.assertEqual(out, u"Hello" + chr(0x2340) + u"!!")
-        self.assertEqual(type(out), str)
+        self.assertEqual(out.decode('utf-8'), u"Hello" + chr(0x2340) + u"!!")
+        self.assertEqual(type(out), bytes)
 
         aid = h5py.h5a.open(self.f.id, b"x")
         tid = aid.get_type()

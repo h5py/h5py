@@ -748,7 +748,7 @@ class TestExternalLinks(TestCase):
             ext_file.create_group('external')
             ext_file["external"].attrs["ext_attr"] = "test"
         self.f['ext'] = ExternalLink(ext_filename, '/external')
-        self.assertEqual(self.f["ext"].attrs["ext_attr"], "test")
+        self.assertEqual(self.f["ext"].attrs["ext_attr"], b"test")
 
     def test_unicode_hdf5_path(self):
         """
@@ -760,7 +760,7 @@ class TestExternalLinks(TestCase):
             ext_file.create_group('α')
             ext_file["α"].attrs["ext_attr"] = "test"
         self.f['ext'] = ExternalLink(ext_filename, '/α')
-        self.assertEqual(self.f["ext"].attrs["ext_attr"], "test")
+        self.assertEqual(self.f["ext"].attrs["ext_attr"], b"test")
 
 class TestExtLinkBugs(TestCase):
 

@@ -923,17 +923,6 @@ class TestStrings(BaseDataset):
         self.assertEqual(type(out), bytes)
         self.assertEqual(out, data)
 
-    def test_roundtrip_vlen_unicode(self):
-        """ Writing and reading to unicode dataset preserves type and content
-        """
-        dt = h5py.string_dtype()
-        ds = self.f.create_dataset('x', (100,), dtype=dt)
-        data = u"Hello" + chr(0x2034)
-        ds[0] = data
-        out = ds[0]
-        self.assertEqual(type(out), str)
-        self.assertEqual(out, data)
-
     def test_roundtrip_fixed_bytes(self):
         """ Writing to and reading from fixed-length bytes dataset preserves
         type and content """
@@ -960,32 +949,11 @@ class TestStrings(BaseDataset):
         """
         dt = h5py.string_dtype()
         ds = self.f.create_dataset('x', (100,), dtype=dt)
-        data = u"Hello there" + chr(0x2034)
-        ds[0] = data.encode('utf8')
-        out = ds[0]
-        self.assertEqual(type(out), str)
-        self.assertEqual(out, data)
-
-    def test_vlen_unicode_write_object(self):
-        """ Writing an object to unicode vlen dataset is OK
-        """
-        dt = h5py.string_dtype('utf-8')
-        ds = self.f.create_dataset('x', (100,), dtype=dt)
-        data = object()
+        data = (u"Hello there" + chr(0x2034)).encode('utf8')
         ds[0] = data
         out = ds[0]
-        self.assertEqual(type(out), str)
-        self.assertEqual(out, str(data))
-
-    def test_vlen_unicode_write_none(self):
-        """ Writing None to unicode vlen dataset is OK
-        """
-        dt = h5py.string_dtype('utf-8')
-        ds = self.f.create_dataset('x', (100,), dtype=dt)
-        ds[0] = None
-        out = ds[0]
-        self.assertEqual(type(out), str)
-        self.assertEqual(out, '')
+        self.assertEqual(type(out), bytes)
+        self.assertEqual(out, data)
 
     def test_vlen_bytes_write_object(self):
         """ Writing an object to ascii vlen dataset is OK
