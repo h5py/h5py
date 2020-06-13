@@ -439,6 +439,16 @@ cdef class GroupID(ObjectID):
         finally:
             efree(cmnt)
 
+
+    @with_phil
+    def close(self):
+        """
+        Close group.
+        """
+
+        H5Gclose(self.id)
+
+
     IF HDF5_VERSION >= SWMR_MIN_HDF5_VERSION:
         @with_phil
         def flush(self):
