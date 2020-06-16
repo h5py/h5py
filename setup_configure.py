@@ -61,22 +61,6 @@ def get_env_options():
     }
 
 
-def settings_from_pkgconfig(name='hdf5', require_pkg_config=True):
-    import pkgconfig
-    try:
-        if pkgconfig.exists(name):
-            return pkgconfig.parse(name)
-        else:
-            raise ValueError(f"No pkgconfig information for {name}")
-    except EnvironmentError:
-        if require_pkg_config:
-            print("h5py requires pkg-config unless the HDF5 path is explicitly specified",
-                  file=sys.stderr)
-            raise
-
-    return {}
-
-
 class configure(Command):
 
     """
