@@ -52,9 +52,9 @@ if sys.platform.startswith('win'):
         ('_HDF5USEDLL_', None),
         ('H5_BUILT_AS_DYNAMIC_LIB', None)
     ])
-else:
-    FALLBACK_PATHS['include_dirs'].extend(['/opt/local/include', '/usr/local/include'])
-    FALLBACK_PATHS['library_dirs'].extend(['/opt/local/lib', '/usr/local/lib'])
+# else:
+#     FALLBACK_PATHS['include_dirs'].extend(['/opt/local/include', '/usr/local/include'])
+#     FALLBACK_PATHS['library_dirs'].extend(['/opt/local/lib', '/usr/local/lib'])
 
 
 class h5py_build_ext(build_ext):
@@ -76,35 +76,12 @@ class h5py_build_ext(build_ext):
         enter the build process.
         """
         import numpy
-        import pkgconfig
 
         settings = COMPILER_SETTINGS.copy()
 
-        # Ensure that if a custom HDF5 location is specified, prevent
-        # pkg-config and fallback locations from appearing in the settings
-        if config.hdf5_includedir is not None:
-            settings['include_dirs'].insert(0, config.hdf5_includedir)
-        if config.hdf5_libdir is not None:
-            settings['library_dirs'].insert(0, config.hdf5_libdir)
-        if config.hdf5 is not None:
-            if config.hdf5_includedir is None:
-                settings['include_dirs'].insert(0, op.join(config.hdf5, 'include'))
-            if config.hdf5_libdir is None:
-                settings['library_dirs'].insert(0, op.join(config.hdf5, 'lib'))
-        else:
-            try:
-                if pkgconfig.exists(config.hdf5_pkgconfig_name):
-                    pkgcfg = pkgconfig.parse(config.hdf5_pkgconfig_name)
-                    settings['include_dirs'].extend(pkgcfg['include_dirs'])
-                    settings['library_dirs'].extend(pkgcfg['library_dirs'])
-                    settings['define_macros'].extend(pkgcfg['define_macros'])
-            except EnvironmentError:
-                if os.name != 'nt':
-                    print("h5py requires pkg-config unless the HDF5 path is explicitly specified",
-                          file=sys.stderr)
-                    raise
-            settings['include_dirs'].extend(FALLBACK_PATHS['include_dirs'])
-            settings['library_dirs'].extend(FALLBACK_PATHS['library_dirs'])
+        settings['include_dirs'][:0] = config.hdf5_includedirs
+        settings['library_dirs'][:0] = config.hdf5_libdirs
+        settings['define_macros'].extend(config.hdf5_define_macros)
 
         try:
             numpy_includes = numpy.get_include()
