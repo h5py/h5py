@@ -34,11 +34,6 @@ EXTRA_SRC = {'h5z': [ localpath("lzf/lzf_filter.c"),
               localpath("lzf/lzf/lzf_c.c"),
               localpath("lzf/lzf/lzf_d.c")]}
 
-FALLBACK_PATHS = {
-    'include_dirs': [],
-    'library_dirs': []
-}
-
 COMPILER_SETTINGS = {
    'libraries'      : ['hdf5', 'hdf5_hl'],
    'include_dirs'   : [localpath('lzf')],
@@ -52,9 +47,6 @@ if sys.platform.startswith('win'):
         ('_HDF5USEDLL_', None),
         ('H5_BUILT_AS_DYNAMIC_LIB', None)
     ])
-# else:
-#     FALLBACK_PATHS['include_dirs'].extend(['/opt/local/include', '/usr/local/include'])
-#     FALLBACK_PATHS['library_dirs'].extend(['/opt/local/lib', '/usr/local/lib'])
 
 
 class h5py_build_ext(build_ext):
