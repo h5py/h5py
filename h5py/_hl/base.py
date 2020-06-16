@@ -11,20 +11,21 @@
     Implements operations common to all high-level objects (File, etc.).
 """
 
-import posixpath
+from collections.abc import (
+    Mapping, MutableMapping, KeysView, ValuesView, ItemsView
+)
 import os
-from collections.abc import (Mapping, MutableMapping, KeysView,
-                             ValuesView, ItemsView)
+import posixpath
 
-from .compat import fspath, filename_encode
-
-from .. import h5d, h5i, h5r, h5p, h5f, h5t, h5s
+import numpy as np
 
 # The high-level interface is serialized; every public API function & method
 # is wrapped in a lock.  We re-use the low-level lock because (1) it's fast,
 # and (2) it eliminates the possibility of deadlocks due to out-of-order
 # lock acquisition.
 from .._objects import phil, with_phil
+from .. import h5d, h5i, h5r, h5p, h5f, h5t, h5s
+from .compat import fspath, filename_encode
 
 
 def is_hdf5(fname):
@@ -37,6 +38,32 @@ def is_hdf5(fname):
         return False
 
 
+def object_collection_of(data):
+    """Check if data is a list/tuple/numpy object array (without h5py tag)
+
+    If so, and its contents are homogeneous, return their type.
+    Otherwise, return None.
+
+    The aim is to treat numpy arrays of Python objects like normal Python
+    collections, while treating arrays with specific dtypes differently.
+    """
+    if isinstance(data, (list, tuple)):
+        item_types = {type(e) for e in data}
+
+    elif isinstance(data, np.ndarray) and (
+        data.dtype.kind == 'O'
+        and not h5t.check_string_dtype(data.dtype)
+        and not h5t.check_vlen_dtype(data.dtype)
+    ):
+        item_types = {type(e) for e in data.flat}
+    else:
+        return None
+
+    if len(item_types) != 1:
+        return None
+    return item_types.pop()
+
+
 def guess_dtype(data):
     """ Attempt to guess an appropriate dtype for the object, returning None
     if nothing is appropriate (or if it should be left up the the array
@@ -47,12 +74,50 @@ def guess_dtype(data):
             return h5t.regionref_dtype
         if isinstance(data, h5r.Reference):
             return h5t.ref_dtype
-        if type(data) == bytes:
+
+        item_type = object_collection_of(data)
+        if item_type is None:
+            # Potentially scalar
+            item_type = type(data)
+
+        if item_type is bytes:
             return h5t.string_dtype(encoding='ascii')
-        if type(data) == str:
+        if item_type is str:
             return h5t.string_dtype()
 
         return None
+
+
+def is_float16_dtype(dt):
+    if dt is None:
+        return False
+
+    dt = np.dtype(dt)  # normalize strings -> np.dtype objects
+    return dt.kind == 'f' and dt.itemsize == 2
+
+
+def array_for_new_object(data, specified_dtype=None):
+    """Prepare an array from data used to create a new dataset or attribute"""
+
+    # We mostly let HDF5 convert data as necessary when it's written.
+    # But if we are going to a float16 datatype, pre-convert in python
+    # to workaround a bug in the conversion.
+    # https://github.com/h5py/h5py/issues/819
+    if is_float16_dtype(specified_dtype):
+        as_dtype = specified_dtype
+    else:
+        as_dtype = guess_dtype(data)
+
+    data = np.asarray(data, order="C", dtype=as_dtype)
+
+    # In most cases, this does nothing. But if data was already an array,
+    # and guess_dtype made a tagged version of the dtype it already had
+    # (e.g. an object array of strings), asarray() doesn't replace its
+    # dtype object. This gives it the tagged dtype:
+    if as_dtype is not None:
+        data.dtype = as_dtype
+
+    return data
 
 
 def default_lapl():
@@ -174,6 +239,7 @@ class _RegionProxy(object):
     """
 
     def __init__(self, obj):
+        self.obj = obj
         self.id = obj.id
 
     def __getitem__(self, args):
@@ -181,7 +247,7 @@ class _RegionProxy(object):
             raise TypeError("Region references can only be made to datasets")
         from . import selections
         with phil:
-            selection = selections.select(self.id.shape, args, dsid=self.id)
+            selection = selections.select(self.id.shape, args, dataset=self.obj)
             return h5r.create(self.id, b'.', h5r.DATASET_REGION, selection.id)
 
     def shape(self, ref):
@@ -418,3 +484,15 @@ class Empty(object):
 
     def __repr__(self):
         return "Empty(dtype={0!r})".format(self.dtype)
+
+
+def product(nums):
+    """Calculate a numeric product
+
+    For small amounts of data (e.g. shape tuples), this simple code is much
+    faster than calling numpy.prod().
+    """
+    prod = 1
+    for n in nums:
+        prod *= n
+    return prod

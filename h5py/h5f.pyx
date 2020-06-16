@@ -19,7 +19,6 @@ from cpython.buffer cimport PyObject_CheckBuffer, \
                             PyBUF_SIMPLE
 from ._objects cimport pdefault
 from .h5p cimport propwrap, PropFAID, PropFCID
-from .h5t cimport typewrap
 from .h5i cimport wrap_identifier
 from .h5ac cimport CacheConfig
 from .utils cimport emalloc, efree
@@ -27,7 +26,6 @@ from .utils cimport emalloc, efree
 # Python level imports
 from . import _objects
 from ._objects import phil, with_phil
-from . import h5fd
 
 from cpython.bytes cimport PyBytes_FromStringAndSize, PyBytes_AsString
 
@@ -72,6 +70,12 @@ IF HDF5_VERSION >= VOL_MIN_HDF5_VERSION:
 
 if HDF5_VERSION >= (1, 8, 9):
     FILE_IMAGE_OPEN_RW = H5LT_FILE_IMAGE_OPEN_RW
+
+IF HDF5_VERSION >= (1, 10, 1):
+    FSPACE_STRATEGY_FSM_AGGR = H5F_FSPACE_STRATEGY_FSM_AGGR
+    FSPACE_STRATEGY_PAGE = H5F_FSPACE_STRATEGY_PAGE
+    FSPACE_STRATEGY_AGGR = H5F_FSPACE_STRATEGY_AGGR
+    FSPACE_STRATEGY_NONE = H5F_FSPACE_STRATEGY_NONE
 
 # === File operations =========================================================
 
@@ -221,7 +225,7 @@ def get_obj_count(object where=OBJ_ALL, int types=H5F_OBJ_ALL):
     cdef hid_t where_id
     if isinstance(where, FileID):
         where_id = where.id
-    elif isinstance(where, int) or isinstance(where, long):
+    elif isinstance(where, int):
         where_id = where
     else:
         raise TypeError("Location must be a FileID or OBJ_ALL.")
@@ -267,7 +271,7 @@ def get_obj_ids(object where=OBJ_ALL, int types=H5F_OBJ_ALL):
 
         if count > 0: # HDF5 complains that obj_list is NULL, even if count==0
             H5Fget_obj_ids(where_id, types, count, obj_list)
-            for i from 0<=i<count:
+            for i in range(count):
                 py_obj_list.append(wrap_identifier(obj_list[i]))
                 # The HDF5 function returns a borrowed reference for each hid_t.
                 H5Iinc_ref(obj_list[i])

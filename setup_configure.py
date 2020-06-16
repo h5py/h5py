@@ -280,14 +280,17 @@ def autodetect_version(libdirs):
     if path is None:
         path = default_path
 
-    print("Loading library to get version:", path)
-
-    lib = ctypes.cdll.LoadLibrary(path)
-
     major = ctypes.c_uint()
     minor = ctypes.c_uint()
     release = ctypes.c_uint()
 
-    lib.H5get_libversion(byref(major), byref(minor), byref(release))
+    print("Loading library to get version:", path)
+
+    try:
+        lib = ctypes.cdll.LoadLibrary(path)
+        lib.H5get_libversion(byref(major), byref(minor), byref(release))
+    except:
+        print("error: Unable to load dependency HDF5, make sure HDF5 is installed properly")
+        raise
 
     return "{0}.{1}.{2}".format(int(major.value), int(minor.value), int(release.value))

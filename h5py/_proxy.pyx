@@ -76,26 +76,6 @@ cdef herr_t attr_rw(hid_t attr, hid_t mtype, void *progbuf, int read) except -1:
 
     return 0
 
-# =============================================================================
-# Proxy functions to safely release the GIL around read/write operations
-
-cdef herr_t H5PY_H5Dread(hid_t dset, hid_t mtype, hid_t mspace,
-                        hid_t fspace, hid_t dxpl, void* buf) except -1:
-    cdef herr_t retval
-    #with nogil:
-    retval = H5Dread(dset, mtype, mspace, fspace, dxpl, buf)
-    if retval < 0:
-        return -1
-    return retval
-
-cdef herr_t H5PY_H5Dwrite(hid_t dset, hid_t mtype, hid_t mspace,
-                        hid_t fspace, hid_t dxpl, void* buf) except -1:
-    cdef herr_t retval
-    #with nogil:
-    retval = H5Dwrite(dset, mtype, mspace, fspace, dxpl, buf)
-    if retval < 0:
-        return -1
-    return retval
 
 # =============================================================================
 # Proxy for vlen buf workaround
@@ -129,9 +109,9 @@ cdef herr_t dset_rw(hid_t dset, hid_t mtype, hid_t mspace, hid_t fspace,
 
         if not (needs_proxy(dstype) or needs_proxy(mtype)):
             if read:
-                H5PY_H5Dread(dset, mtype, mspace, fspace, dxpl, progbuf)
+                H5Dread(dset, mtype, mspace, fspace, dxpl, progbuf)
             else:
-                H5PY_H5Dwrite(dset, mtype, mspace, fspace, dxpl, progbuf)
+                H5Dwrite(dset, mtype, mspace, fspace, dxpl, progbuf)
         else:
 
             if mspace == H5S_ALL and fspace != H5S_ALL:
@@ -157,13 +137,13 @@ cdef herr_t dset_rw(hid_t dset, hid_t mtype, hid_t mspace, hid_t fspace,
                 h5py_copy(mtype, mspace, back_buf, progbuf, H5PY_GATHER)
 
             if read:
-                H5PY_H5Dread(dset, dstype, cspace, fspace, dxpl, conv_buf)
+                H5Dread(dset, dstype, cspace, fspace, dxpl, conv_buf)
                 H5Tconvert(dstype, mtype, npoints, conv_buf, back_buf, dxpl)
                 h5py_copy(mtype, mspace, conv_buf, progbuf, H5PY_SCATTER)
             else:
                 h5py_copy(mtype, mspace, conv_buf, progbuf, H5PY_GATHER)
                 H5Tconvert(mtype, dstype, npoints, conv_buf, back_buf, dxpl)
-                H5PY_H5Dwrite(dset, dstype, cspace, fspace, dxpl, conv_buf)
+                H5Dwrite(dset, dstype, cspace, fspace, dxpl, conv_buf)
                 H5Dvlen_reclaim(dstype, cspace, H5P_DEFAULT, conv_buf)
 
     finally:
@@ -187,10 +167,11 @@ cdef hid_t make_reduced_type(hid_t mtype, hid_t dstype):
     cdef hid_t newtype, temptype
     cdef hsize_t newtype_size, offset
     cdef char* member_name = NULL
+    cdef int idx
 
     # Make a list of all names in the memory type.
     mtype_fields = []
-    for idx in xrange(H5Tget_nmembers(mtype)):
+    for idx in range(H5Tget_nmembers(mtype)):
         member_name = H5Tget_member_name(mtype, idx)
         try:
             mtype_fields.append(member_name)
@@ -204,7 +185,7 @@ cdef hid_t make_reduced_type(hid_t mtype, hid_t dstype):
     # First pass: add up the sizes of matching fields so we know how large a
     # type to make
     newtype_size = 0
-    for idx in xrange(H5Tget_nmembers(dstype)):
+    for idx in range(H5Tget_nmembers(dstype)):
         member_name = H5Tget_member_name(dstype, idx)
         try:
             if member_name not in mtype_fields:
@@ -223,7 +204,7 @@ cdef hid_t make_reduced_type(hid_t mtype, hid_t dstype):
 
     # Second pass: pick out the matching fields and pack them in the new type
     offset = 0
-    for idx in xrange(H5Tget_nmembers(dstype)):
+    for idx in range(H5Tget_nmembers(dstype)):
         member_name = H5Tget_member_name(dstype, idx)
         try:
             if member_name not in mtype_fields:
@@ -267,8 +248,7 @@ ctypedef struct h5py_scatter_t:
     void* buf
 
 cdef herr_t h5py_scatter_cb(void* elem, hid_t type_id, unsigned ndim,
-                const hsize_t *point, void *operator_data) except -1:
-
+                const hsize_t *point, void *operator_data) nogil except -1:
     cdef h5py_scatter_t* info = <h5py_scatter_t*>operator_data
 
     memcpy(elem, (<char*>info[0].buf)+((info[0].i)*(info[0].elsize)),
@@ -279,8 +259,7 @@ cdef herr_t h5py_scatter_cb(void* elem, hid_t type_id, unsigned ndim,
     return 0
 
 cdef herr_t h5py_gather_cb(void* elem, hid_t type_id, unsigned ndim,
-                const hsize_t *point, void *operator_data) except -1:
-
+                const hsize_t *point, void *operator_data) nogil except -1:
     cdef h5py_scatter_t* info = <h5py_scatter_t*>operator_data
 
     memcpy((<char*>info[0].buf)+((info[0].i)*(info[0].elsize)), elem,
@@ -361,7 +340,7 @@ cdef htri_t needs_proxy(hid_t tid) except -1:
     elif cls == H5T_COMPOUND:
 
         n = H5Tget_nmembers(tid)
-        for i from 0<=i<n:
+        for i in range(n):
             supertype = H5Tget_member_type(tid, i)
             try:
                 result = needs_proxy(supertype)

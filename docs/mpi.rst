@@ -3,9 +3,14 @@
 Parallel HDF5
 =============
 
-Starting with version 2.2.0, h5py includes support for Parallel HDF5.  This
-is the "native" way to use HDF5 in a parallel computing environment.
+Read-only parallel access to HDF5 files works with no special preparation:
+each process should open the file independently and read data normally
+(avoid opening the file and then forking).
 
+`Parallel HDF5 <https://portal.hdfgroup.org/display/HDF5/Parallel+HDF5>`_ is a
+feature built on MPI which also supports *writing* an HDF5 file in parallel.
+To use this, both HDF5 and h5py must be compiled with MPI support turned on,
+as described below.
 
 How does Parallel HDF5 work?
 ----------------------------

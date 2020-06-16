@@ -653,34 +653,43 @@ class TestAutoCreate(BaseDataset):
     """
         Feature: Datasets auto-created from data produce the correct types
     """
+    def assert_string_type(self, ds, cset, variable=True):
+        tid = ds.id.get_type()
+        self.assertEqual(type(tid), h5py.h5t.TypeStringID)
+        self.assertEqual(tid.get_cset(), cset)
+        if variable:
+            assert tid.is_variable_str()
 
     def test_vlen_bytes(self):
-        """ Assignment of a byte string produces a vlen ascii dataset """
+        """Assigning byte strings produces a vlen string ASCII dataset """
         self.f['x'] = b"Hello there"
-        ds = self.f['x']
-        tid = ds.id.get_type()
-        self.assertEqual(type(tid), h5py.h5t.TypeStringID)
-        self.assertTrue(tid.is_variable_str())
-        self.assertEqual(tid.get_cset(), h5py.h5t.CSET_ASCII)
+        self.assert_string_type(self.f['x'], h5py.h5t.CSET_ASCII)
+
+        self.f['y'] = [b"a", b"bc"]
+        self.assert_string_type(self.f['y'], h5py.h5t.CSET_ASCII)
+
+        self.f['z'] = np.array([b"a", b"bc"], dtype=np.object_)
+        self.assert_string_type(self.f['z'], h5py.h5t.CSET_ASCII)
 
     def test_vlen_unicode(self):
-        """ Assignment of a unicode string produces a vlen unicode dataset """
-        self.f['x'] = u"Hello there" + chr(0x2034)
-        ds = self.f['x']
-        tid = ds.id.get_type()
-        self.assertEqual(type(tid), h5py.h5t.TypeStringID)
-        self.assertTrue(tid.is_variable_str())
-        self.assertEqual(tid.get_cset(), h5py.h5t.CSET_UTF8)
+        """Assigning unicode strings produces a vlen string UTF-8 dataset """
+        self.f['x'] = "Hello there" + chr(0x2034)
+        self.assert_string_type(self.f['x'], h5py.h5t.CSET_UTF8)
+
+        self.f['y'] = ["a", "bc"]
+        self.assert_string_type(self.f['y'], h5py.h5t.CSET_UTF8)
+
+        # 2D array; this only works with an array, not nested lists
+        self.f['z'] = np.array([["a", "bc"]], dtype=np.object_)
+        self.assert_string_type(self.f['z'], h5py.h5t.CSET_UTF8)
 
     def test_string_fixed(self):
         """ Assignment of fixed-length byte string produces a fixed-length
         ascii dataset """
         self.f['x'] = np.string_("Hello there")
         ds = self.f['x']
-        tid = ds.id.get_type()
-        self.assertEqual(type(tid), h5py.h5t.TypeStringID)
-        self.assertEqual(tid.get_size(), 11)
-        self.assertEqual(tid.get_cset(), h5py.h5t.CSET_ASCII)
+        self.assert_string_type(ds, h5py.h5t.CSET_ASCII, variable=False)
+        self.assertEqual(ds.id.get_type().get_size(), 11)
 
 
 class TestCreateLike(BaseDataset):
@@ -703,6 +712,33 @@ class TestCreateLike(BaseDataset):
         self.assertEqual(0, h5py.h5g.get_objinfo(orig._id).mtime)
         similar = self.f.create_dataset_like('lenovo', orig)
         self.assertEqual(0, h5py.h5g.get_objinfo(similar._id).mtime)
+
+class TestChunkIterator(BaseDataset):
+    def test_no_chunks(self):
+        dset = self.f.create_dataset("foo", ())
+        with self.assertRaises(TypeError):
+            dset.iter_chunks()
+
+    def test_1d(self):
+        dset = self.f.create_dataset("foo", (100,), chunks=(32,))
+        expected = ((slice(0,32,1),), (slice(32,64,1),), (slice(64,96,1),),
+            (slice(96,100,1),))
+        self.assertEqual(list(dset.iter_chunks()), list(expected))
+        expected = ((slice(50,64,1),), (slice(64,96,1),), (slice(96,97,1),))
+        self.assertEqual(list(dset.iter_chunks(np.s_[50:97])), list(expected))
+
+    def test_2d(self):
+        dset = self.f.create_dataset("foo", (100,100), chunks=(32,64))
+        expected = ((slice(0, 32, 1), slice(0, 64, 1)), (slice(0, 32, 1),
+        slice(64, 100, 1)), (slice(32, 64, 1), slice(0, 64, 1)),
+        (slice(32, 64, 1), slice(64, 100, 1)), (slice(64, 96, 1),
+        slice(0, 64, 1)), (slice(64, 96, 1), slice(64, 100, 1)),
+        (slice(96, 100, 1), slice(0, 64, 1)), (slice(96, 100, 1),
+        slice(64, 100, 1)))
+        self.assertEqual(list(dset.iter_chunks()), list(expected))
+
+        expected = ((slice(48, 52, 1), slice(40, 50, 1)),)
+        self.assertEqual(list(dset.iter_chunks(np.s_[48:52,40:50])), list(expected))
 
 
 class TestResize(BaseDataset):
@@ -930,6 +966,59 @@ class TestStrings(BaseDataset):
         self.assertEqual(type(out), str)
         self.assertEqual(out, data)
 
+    def test_vlen_unicode_write_object(self):
+        """ Writing an object to unicode vlen dataset is OK
+        """
+        dt = h5py.string_dtype('utf-8')
+        ds = self.f.create_dataset('x', (100,), dtype=dt)
+        data = object()
+        ds[0] = data
+        out = ds[0]
+        self.assertEqual(type(out), str)
+        self.assertEqual(out, str(data))
+
+    def test_vlen_unicode_write_none(self):
+        """ Writing None to unicode vlen dataset is OK
+        """
+        dt = h5py.string_dtype('utf-8')
+        ds = self.f.create_dataset('x', (100,), dtype=dt)
+        ds[0] = None
+        out = ds[0]
+        self.assertEqual(type(out), str)
+        self.assertEqual(out, '')
+
+    def test_vlen_bytes_write_object(self):
+        """ Writing an object to ascii vlen dataset is OK
+        """
+        dt = h5py.string_dtype('ascii')
+        ds = self.f.create_dataset('x', (100,), dtype=dt)
+        data = object()
+        ds[0] = data
+        out = ds[0]
+        self.assertEqual(type(out), bytes)
+        self.assertEqual(out, str(data).encode('ascii'))
+
+    def test_vlen_bytes_write_none(self):
+        """ Writing None to ascii vlen dataset is OK
+        """
+        dt = h5py.string_dtype('ascii')
+        ds = self.f.create_dataset('x', (100,), dtype=dt)
+        ds[0] = None
+        out = ds[0]
+        self.assertEqual(type(out), bytes)
+        self.assertEqual(out, b'')
+
+    def test_vlen_bytes_write_ascii_str(self):
+        """ Writing an ascii str to ascii vlen dataset is OK
+        """
+        dt = h5py.string_dtype('ascii')
+        ds = self.f.create_dataset('x', (100,), dtype=dt)
+        data = "ASCII string"
+        ds[0] = data
+        out = ds[0]
+        self.assertEqual(type(out), bytes)
+        self.assertEqual(out, data.encode('ascii'))
+
 
 class TestCompound(BaseDataset):
 
@@ -974,6 +1063,27 @@ class TestCompound(BaseDataset):
         self.assertTrue(np.all(outdata == testdata))
         self.assertEqual(outdata.dtype, testdata.dtype)
 
+    def test_fields(self):
+        dt = np.dtype([
+            ('x', np.float64),
+            ('y', np.float64),
+            ('z', np.float64),
+        ])
+
+        testdata = np.ndarray((16,), dtype=dt)
+        for key in dt.fields:
+            testdata[key] = np.random.random((16,)) * 100
+
+        self.f['test'] = testdata
+
+        # Extract multiple fields
+        np.testing.assert_array_equal(
+            self.f['test'].fields(['x', 'y'])[:], testdata[['x', 'y']]
+        )
+        # Extract single field
+        np.testing.assert_array_equal(
+            self.f['test'].fields('x')[:], testdata['x']
+        )
 
 class TestEnum(BaseDataset):
 
@@ -1069,6 +1179,11 @@ class TestZeroShape(BaseDataset):
         self.assertEqual(ds[()].shape, arr.shape)
         self.assertEqual(ds[()].dtype, arr.dtype)
 
+# https://github.com/h5py/h5py/issues/1492
+empty_regionref_xfail = pytest.mark.xfail(
+    h5py.version.hdf5_version_tuple == (1, 10, 6),
+    reason="Issue with empty region refs in HDF5 1.10.6",
+)
 
 class TestRegionRefs(BaseDataset):
 
@@ -1087,6 +1202,28 @@ class TestRegionRefs(BaseDataset):
         slic = np.s_[25:35, 10:100:5]
         ref = self.dset.regionref[slic]
         self.assertArrayEqual(self.dset[ref], self.data[slic])
+
+    @empty_regionref_xfail
+    def test_empty_region(self):
+        ref = self.dset.regionref[:0]
+        out = self.dset[ref]
+        assert out.size == 0
+        # Ideally we should preserve shape (0, 100), but it seems this is lost.
+
+    @empty_regionref_xfail
+    def test_scalar_dataset(self):
+        ds = self.f.create_dataset("scalar", data=1.0, dtype='f4')
+        sid = h5py.h5s.create(h5py.h5s.SCALAR)
+
+        # Deselected
+        sid.select_none()
+        ref = h5py.h5r.create(ds.id, b'.', h5py.h5r.DATASET_REGION, sid)
+        assert ds[ref] == h5py.Empty(np.dtype('f4'))
+
+        # Selected
+        sid.select_all()
+        ref = h5py.h5r.create(ds.id, b'.', h5py.h5r.DATASET_REGION, sid)
+        assert ds[ref] == ds[()]
 
     def test_ref_shape(self):
         """ Region reference shape and selection shape """
@@ -1140,7 +1277,7 @@ class TestVlen(BaseDataset):
         self.assertArrayEqual(ds[1], np.arange(0))
         self.assertArrayEqual(ds[2], np.array([1, 2, 3]))
         self.assertArrayEqual(ds[1], np.arange(0))
-        ds[0:2] = np.array([np.arange(5), np.arange(4)])
+        ds[0:2] = np.array([np.arange(5), np.arange(4)], dtype=object)
         self.assertArrayEqual(ds[0], np.arange(5))
         self.assertArrayEqual(ds[1], np.arange(4))
         ds[0:2] = np.array([np.arange(3), np.arange(3)])
@@ -1169,7 +1306,7 @@ class TestVlen(BaseDataset):
         self.assertArrayEqual(ds[0], np.array([1, 1]))
         self.assertArrayEqual(ds[1], np.array([1]))
         self.assertArrayEqual(ds[2], np.array([1, 2, 3]))
-        ds[0:2] = np.array([[0.1, 1.1, 2.1, 3.1, 4], np.arange(4)])
+        ds[0:2] = np.array([[0.1, 1.1, 2.1, 3.1, 4], np.arange(4)], dtype=object)
         self.assertArrayEqual(ds[0], np.arange(5))
         self.assertArrayEqual(ds[1], np.arange(4))
         ds[0:2] = np.array([np.array([0.1, 1.2, 2.2]),
@@ -1182,7 +1319,7 @@ class TestVlen(BaseDataset):
         ds = self.f.create_dataset('vlen', (2, 2), dtype=dt)
         ds[0, 0] = np.arange(1)
         ds[:, :] = np.array([[np.arange(3), np.arange(2)],
-                            [np.arange(1), np.arange(2)]])
+                            [np.arange(1), np.arange(2)]], dtype=object)
         ds[:, :] = np.array([[np.arange(2), np.arange(2)],
                              [np.arange(2), np.arange(2)]])
 
@@ -1301,3 +1438,17 @@ def test_empty_shape(writable_file):
     ds = writable_file.create_dataset('empty', dtype='int32')
     assert ds.shape is None
     assert ds.maxshape is None
+
+
+def test_zero_storage_size():
+    # https://github.com/h5py/h5py/issues/1475
+    from io import BytesIO
+    buf = BytesIO()
+    with h5py.File(buf, 'w') as fout:
+        fout.create_dataset('empty', dtype='uint8')
+
+    buf.seek(0)
+    with h5py.File(buf, 'r') as fin:
+        assert fin['empty'].chunks is None
+        assert fin['empty'].id.get_offset() is None
+        assert fin['empty'].id.get_storage_size() == 0

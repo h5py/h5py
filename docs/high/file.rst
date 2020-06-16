@@ -1,3 +1,4 @@
+.. currentmodule:: h5py
 .. _file:
 
 
@@ -85,6 +86,15 @@ of supported drivers and their options:
         Store the data in a Python file-like object; see below.
         This is the default if a file-like object is passed to :class:`File`.
 
+    'split'
+        Splits the meta data and raw data into separate files. Keywords:
+
+        meta_ext:
+          Metadata filename extension. Default is '-m.h5'.
+
+        raw_ext:
+          Raw data filename extension. Default is '-r.h5'.
+
 .. _file_fileobj:
 
 Python file-like objects
@@ -103,7 +113,7 @@ The file-like object must be open for binary I/O, and must have these methods:
 
 
     >>> tf = tempfile.TemporaryFile()
-    >>> f = h5py.File(tf)
+    >>> f = h5py.File(tf, 'w')
 
 Accessing the :class:`File` instance after the underlying file object has been
 closed will result in undefined behaviour.
@@ -309,10 +319,22 @@ Reference
                     0.75.
     :param rdcc_nslots:  Number of chunk slots in the raw data chunk cache for
                     this file.  Default value is 521.
-    :track_order:   Track dataset/group/attribute creation order under
+    :param track_order:  Track dataset/group/attribute creation order under
                     root group if ``True``.  Default is
                     ``h5.get_config().track_order``.
     :param kwds:    Driver-specific keywords; see :ref:`file_driver`.
+
+    .. method:: __bool__()
+
+        Check that the file descriptor is valid and the file open:
+
+            >>> f = h5py.File(filename)
+            >>> f.close()
+            >>> if f:
+            ...     print("file is open")
+            ... else:
+            ...     print("file is closed")
+            file is closed
 
     .. method:: close()
 

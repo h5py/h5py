@@ -113,7 +113,7 @@ class TestVlen(TestCase):
 
         with h5py.File(fname, 'w') as f:
             df1 = f.create_dataset('test', (len(arr1),), dtype=dt1)
-            df1[:] = np.array(arr1)
+            df1[:] = np.array(arr1, dtype=object)
 
         with h5py.File(fname, 'r') as f:
             df2 = f['test']
@@ -345,6 +345,42 @@ class TestStrings(TestCase):
         assert string_info.length == 10
         assert h5py.check_vlen_dtype(dt) is None
 
+class TestDateTime(TestCase):
+    datetime_units = [
+        # Dates
+        'Y', 'M', 'D',
+        # Times
+        'h', 'm', 's', 'ms', 'us',
+        'ns', 'ps', 'fs', 'as',
+    ]
+
+    def test_datetime(self):
+        fname = self.mktemp()
+
+        for dt_unit in self.datetime_units:
+            for dt_order in ['<', '>']:
+                dt_descr = f'{dt_order}M8[{dt_unit}]'
+                dt = h5py.opaque_dtype(np.dtype(dt_descr))
+                arr = np.array([0], dtype=np.int64).view(dtype=dt)
+
+                with h5py.File(fname, 'w') as f:
+                    dset = f.create_dataset("default", data=arr, dtype=dt)
+                    self.assertArrayEqual(arr, dset)
+                    self.assertEqual(arr.dtype, dset.dtype)
+
+    def test_timedelta(self):
+        fname = self.mktemp()
+
+        for dt_unit in self.datetime_units:
+            for dt_order in ['<', '>']:
+                dt_descr = f'{dt_order}m8[{dt_unit}]'
+                dt = h5py.opaque_dtype(np.dtype(dt_descr))
+                arr = np.array([np.timedelta64(500, dt_unit)], dtype=dt)
+
+                with h5py.File(fname, 'w') as f:
+                    dset = f.create_dataset("default", data=arr, dtype=dt)
+                    self.assertArrayEqual(arr, dset)
+                    self.assertEqual(arr.dtype, dset.dtype)
 
 @ut.skipUnless(tables is not None, 'tables is required')
 class TestB8(TestCase):

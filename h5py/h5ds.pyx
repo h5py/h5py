@@ -101,7 +101,7 @@ cdef class _DimensionScaleVisitor:
         self.retval = None
 
 
-cdef herr_t cb_ds_iter(hid_t dset, unsigned int dim, hid_t scale, void* vis_in) except 2:
+cdef herr_t cb_ds_iter(hid_t dset, unsigned int dim, hid_t scale, void* vis_in) except 2 with gil:
 
     cdef _DimensionScaleVisitor vis = <_DimensionScaleVisitor>vis_in
 

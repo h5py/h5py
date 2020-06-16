@@ -23,7 +23,6 @@ from . cimport _hdf5 # to implement container testing for 1.6
 from ._errors cimport set_error_handler, err_cookie
 
 # Python level imports
-from . import _objects
 from ._objects import phil, with_phil
 
 # === Public constants and data structures ====================================
@@ -141,7 +140,7 @@ def open(ObjectID loc not None, char* name):
 
     Open an existing HDF5 group, attached to some other group.
     """
-    return GroupID(H5Gopen(loc.id, name))
+    return GroupID(H5Gopen(loc.id, name, H5P_DEFAULT))
 
 
 @with_phil
@@ -160,7 +159,7 @@ def create(ObjectID loc not None, object name, PropID lcpl=None,
         cname = name
 
     if cname != NULL:
-        gid = H5Gcreate2(loc.id, cname, pdefault(lcpl), pdefault(gcpl), H5P_DEFAULT)
+        gid = H5Gcreate(loc.id, cname, pdefault(lcpl), pdefault(gcpl), H5P_DEFAULT)
     else:
         gid = H5Gcreate_anon(loc.id, pdefault(gcpl), H5P_DEFAULT)
 

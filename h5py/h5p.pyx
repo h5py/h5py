@@ -18,6 +18,7 @@ include "config.pxi"
 from cpython.buffer cimport PyObject_CheckBuffer, \
                             PyObject_GetBuffer, PyBuffer_Release, \
                             PyBUF_SIMPLE
+from cpython.long cimport PyLong_AsVoidPtr
 
 from .utils cimport  require_tuple, convert_dims, convert_tuple, \
                     emalloc, efree, \
@@ -28,18 +29,12 @@ from .h5s cimport SpaceID
 from .h5ac cimport CacheConfig
 
 # Python level imports
-from . import _objects
 from ._objects import phil, with_phil
 
 if MPI:
-    if MPI4PY_V2:
-        from mpi4py.libmpi cimport (
-            MPI_Comm, MPI_Info, MPI_Comm_dup, MPI_Info_dup,
-            MPI_Comm_free, MPI_Info_free)
-    else:
-        from mpi4py.mpi_c cimport (
-            MPI_Comm, MPI_Info, MPI_Comm_dup, MPI_Info_dup,
-            MPI_Comm_free, MPI_Info_free)
+    from mpi4py.libmpi cimport (
+        MPI_Comm, MPI_Info, MPI_Comm_dup, MPI_Info_dup,
+        MPI_Comm_free, MPI_Info_free)
 
 
 # Initialization
@@ -73,6 +68,8 @@ cdef object propwrap(hid_t id_in):
             pcls = PropLAID
         elif H5Pequal(clsid, H5P_GROUP_CREATE):
             pcls = PropGCID
+        elif H5Pequal(clsid, H5P_DATATYPE_CREATE):
+            pcls = PropTCID
         elif H5Pequal(clsid, H5P_DATASET_ACCESS):
             pcls = PropDAID
         elif H5Pequal(clsid, H5P_OBJECT_CREATE):
@@ -377,6 +374,31 @@ cdef class PropFCID(PropOCID):
         H5Pget_link_creation_order(self.id, &flags)
         return flags
 
+    if HDF5_VERSION >= (1, 10, 1):
+        @with_phil
+        def set_file_space_strategy(self, unsigned int strategy, bint persist,
+                unsigned long long threshold):
+            """ (UINT strategy, BOOL persist, ULONGLONG threshold)
+
+            Set the file space handling strategy and persisting free-space values.
+            """
+            H5Pset_file_space_strategy(self.id, <H5F_fspace_strategy_t>strategy,
+                    <hbool_t>persist, <hsize_t>threshold)
+
+        @with_phil
+        def get_file_space_strategy(self):
+            """ () => TUPLE(UINT strategy, BOOL persist, ULONGLONG threshold)
+
+            Retrieve the file space handling strategy, persisting free-space
+            condition and threshold value for a file creation property list.
+            """
+            cdef H5F_fspace_strategy_t strategy
+            cdef hbool_t persist
+            cdef hsize_t threshold
+
+            H5Pget_file_space_strategy(self.id, &strategy, &persist, &threshold)
+            return (strategy, persist, threshold)
+
 
 # Dataset creation
 cdef class PropDCID(PropOCID):
@@ -423,7 +445,7 @@ cdef class PropDCID(PropOCID):
         cdef hsize_t* dims
         dims = NULL
 
-        require_tuple(chunksize, 0, -1, "chunksize")
+        require_tuple(chunksize, 0, -1, b"chunksize")
         rank = len(chunksize)
 
         dims = <hsize_t*>emalloc(sizeof(hsize_t)*rank)
@@ -577,7 +599,7 @@ cdef class PropDCID(PropOCID):
         cdef int i
         cd_values = NULL
 
-        require_tuple(values, 1, -1, "values")
+        require_tuple(values, 1, -1, b"values")
 
         try:
             if values is None or len(values) == 0:
@@ -587,7 +609,7 @@ cdef class PropDCID(PropOCID):
                 nelements = len(values)
                 cd_values = <unsigned int*>emalloc(sizeof(unsigned int)*nelements)
 
-                for i from 0<=i<nelements:
+                for i in range(nelements):
                     cd_values[i] = int(values[i])
 
             H5Pset_filter(self.id, <H5Z_filter_t>filter_code, flags, nelements, cd_values)
@@ -639,11 +661,11 @@ cdef class PropDCID(PropOCID):
             raise ValueError("Filter index must be a non-negative integer")
 
         filter_code = <int>H5Pget_filter(self.id, filter_idx, &flags,
-                                         &nelements, cd_values, 256, name)
+                                         &nelements, cd_values, 256, name, NULL)
         name[256] = c'\0'  # in case it's > 256 chars
 
         vlist = []
-        for i from 0<=i<nelements:
+        for i in range(nelements):
             vlist.append(cd_values[i])
 
         return (filter_code, flags, tuple(vlist), name)
@@ -657,9 +679,9 @@ cdef class PropDCID(PropOCID):
         property list.  Used because the HDF5 function H5Pget_filter_by_id
         is broken.
         """
-        cdef int nfilters
+        cdef int i, nfilters
         nfilters = self.get_nfilters()
-        for i from 0<=i<nfilters:
+        for i in range(nfilters):
             if self.get_filter(i)[0] == filter_code:
                 return True
         return False
@@ -691,13 +713,13 @@ cdef class PropDCID(PropOCID):
             return None
 
         retval = H5Pget_filter_by_id(self.id, <H5Z_filter_t>filter_code,
-                                     &flags, &nelements, cd_values, 256, name)
+                                     &flags, &nelements, cd_values, 256, name, NULL)
         assert nelements <= 16
 
         name[256] = c'\0'  # In case HDF5 doesn't terminate it properly
 
         vlist = []
-        for i from 0<=i<nelements:
+        for i in range(nelements):
             vlist.append(cd_values[i])
 
         return (flags, tuple(vlist), name)
@@ -1038,6 +1060,14 @@ cdef class PropFAID(PropInstanceID):
         """
         H5Pset_fapl_stdio(self.id)
 
+    @with_phil
+    def set_fapl_split(self, const char* meta_ext="-m.h5", PropID meta_plist_id=None, const char* raw_ext="-r.h5", PropID raw_plist_id=None):
+        """()
+
+        Select the "split" driver (h5fd.SPLIT)
+        """
+        H5Pset_fapl_split(self.id, meta_ext, pdefault(meta_plist_id), raw_ext, pdefault(raw_plist_id))
+
 
     @with_phil
     def set_driver(self, hid_t driver_id):
@@ -1163,7 +1193,7 @@ cdef class PropFAID(PropInstanceID):
 
     IF MPI:
         @with_phil
-        def set_fapl_mpio(self, Comm comm not None, Info info not None):
+        def set_fapl_mpio(self, comm, info):
             """ (Comm comm, Info info)
 
             Set MPI-I/O Parallel HDF5 driver.
@@ -1171,8 +1201,12 @@ cdef class PropFAID(PropInstanceID):
             Comm: An mpi4py.MPI.Comm instance
             Info: An mpi4py.MPI.Info instance
             """
-            H5Pset_fapl_mpio(self.id, comm.ob_mpi, info.ob_mpi)
-
+            from mpi4py.MPI import Comm, Info, _handleof
+            assert isinstance(comm, Comm)
+            assert isinstance(info, Info)
+            cdef Py_uintptr_t _comm = _handleof(comm)
+            cdef Py_uintptr_t _info = _handleof(info)
+            H5Pset_fapl_mpio(self.id, <MPI_Comm>_comm, <MPI_Info>_info)
 
         @with_phil
         def get_fapl_mpio(self):
@@ -1185,20 +1219,25 @@ cdef class PropFAID(PropInstanceID):
             """
             cdef MPI_Comm comm
             cdef MPI_Info info
+            from mpi4py.MPI import Comm, Info, _addressof
 
             H5Pget_fapl_mpio(self.id, &comm, &info)
+
+            # TODO: Do we actually need these dup steps? Could we pass the
+            # addresses directly to H5Pget_fapl_mpio?
             pycomm = Comm()
-            pyinfo = Info()
-            MPI_Comm_dup(comm, &pycomm.ob_mpi)
-            MPI_Info_dup(info, &pyinfo.ob_mpi)
+            MPI_Comm_dup(comm, <MPI_Comm *>PyLong_AsVoidPtr(_addressof(pycomm)))
             MPI_Comm_free(&comm)
+
+            pyinfo = Info()
+            MPI_Info_dup(info, <MPI_Info *>PyLong_AsVoidPtr(_addressof(pyinfo)))
             MPI_Info_free(&info)
 
             return (pycomm, pyinfo)
 
 
         @with_phil
-        def set_fapl_mpiposix(self, Comm comm not None, bint use_gpfs_hints=0):
+        def set_fapl_mpiposix(self, comm, bint use_gpfs_hints=0):
             """ Obsolete.
             """
             raise RuntimeError("MPI-POSIX driver is broken; removed in h5py 2.3.1")
@@ -1408,6 +1447,11 @@ cdef class PropLAID(PropInstanceID):
             H5Idec_ref(fid)
         return propwrap(fid)
 
+# Datatype creation
+cdef class PropTCID(PropOCID):
+    """ Datatype creation property list """
+
+    pass
 
 # Group creation
 cdef class PropGCID(PropOCID):

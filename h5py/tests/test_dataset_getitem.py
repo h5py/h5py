@@ -34,6 +34,7 @@
         Ellipsis
         Empty tuple
         Regular slice
+        MultiBlockSlice
         Indexing
         Index list
         Boolean mask
@@ -83,6 +84,11 @@ class TestEmpty(TestCase):
         """ slice -> ValueError """
         with self.assertRaises(ValueError):
             self.dset[0:4]
+
+    def test_multi_block_slice(self):
+        """ MultiBlockSlice -> ValueError """
+        with self.assertRaises(ValueError):
+            self.dset[h5py.MultiBlockSlice()]
 
     def test_index(self):
         """ index -> ValueError """
@@ -135,6 +141,11 @@ class TestScalarFloat(TestCase):
         """ slice -> ValueError """
         with self.assertRaises(ValueError):
             self.dset[0:4]
+
+    def test_multi_block_slice(self):
+        """ MultiBlockSlice -> ValueError """
+        with self.assertRaises(ValueError):
+            self.dset[h5py.MultiBlockSlice()]
 
     def test_index(self):
         """ index -> ValueError """
@@ -193,6 +204,11 @@ class TestScalarCompound(TestCase):
         """ slice -> ValueError """
         with self.assertRaises(ValueError):
             self.dset[0:4]
+
+    def test_multi_block_slice(self):
+        """ MultiBlockSlice -> ValueError """
+        with self.assertRaises(ValueError):
+            self.dset[h5py.MultiBlockSlice()]
 
     def test_index(self):
         """ index -> ValueError """
@@ -254,6 +270,11 @@ class TestScalarArray(TestCase):
         with self.assertRaises(ValueError):
             self.dset[0:4]
 
+    def test_multi_block_slice(self):
+        """ MultiBlockSlice -> ValueError """
+        with self.assertRaises(ValueError):
+            self.dset[h5py.MultiBlockSlice()]
+
     def test_index(self):
         """ index -> ValueError """
         with self.assertRaises(ValueError):
@@ -307,10 +328,9 @@ class Test1DZeroFloat(TestCase):
     def test_slice_stop_less_than_start(self):
         self.assertNumpyBehavior(self.dset, self.data, np.s_[7:5])
 
-    # FIXME: NumPy raises IndexError
     def test_index(self):
         """ index -> out of range """
-        with self.assertRaises(ValueError):
+        with self.assertRaises(IndexError):
             self.dset[0]
 
     def test_indexlist(self):
@@ -386,17 +406,13 @@ class Test1DFloat(TestCase):
         with self.assertRaises(TypeError):
             self.dset[None]
 
-    # FIXME: NumPy raises IndexError
-    # Also this currently raises UnboundLocalError. :(
-    @ut.expectedFailure
     def test_index_illegal(self):
         """ Illegal slicing argument """
         with self.assertRaises(TypeError):
             self.dset[{}]
 
-    # FIXME: NumPy raises IndexError
     def test_index_outofrange(self):
-        with self.assertRaises(ValueError):
+        with self.assertRaises(IndexError):
             self.dset[100]
 
     def test_indexlist_simple(self):
@@ -417,15 +433,21 @@ class Test1DFloat(TestCase):
     def test_indexlist_empty(self):
         self.assertNumpyBehavior(self.dset, self.data, np.s_[[]])
 
-    # FIXME: NumPy has IndexError
     def test_indexlist_outofrange(self):
-        with self.assertRaises(ValueError):
+        with self.assertRaises(IndexError):
             self.dset[[100]]
 
     def test_indexlist_nonmonotonic(self):
         """ we require index list values to be strictly increasing """
         with self.assertRaises(TypeError):
             self.dset[[1,3,2]]
+
+    def test_indexlist_monotonic_negative(self):
+        # This should work: indices are logically increasing
+        self.assertNumpyBehavior(self.dset, self.data,  np.s_[[0, 2, -2]])
+
+        with self.assertRaises(TypeError):
+            self.dset[[-2, -3]]
 
     def test_indexlist_repeated(self):
         """ we forbid repeated index values """

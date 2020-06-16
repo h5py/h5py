@@ -134,10 +134,20 @@ class Group(HLObject, MutableMappingHDF5):
             kwds['track_order'] = h5.get_config().track_order
 
         with phil:
-            dsid = dataset.make_new_dset(self, shape, dtype, data, **kwds)
+            group = self
+            if name:
+                if '/' in name:
+                    h5objects = [obj for obj in name.split('/') if len(obj)]
+                    name = h5objects[-1]
+                    h5objects = h5objects[:-1]
+
+                    for new_group in h5objects:
+                        group = group.get(new_group) or group.create_group(new_group)
+
+                name = self._e(name)
+
+            dsid = dataset.make_new_dset(group, shape, dtype, data, name, **kwds)
             dset = dataset.Dataset(dsid)
-            if name is not None:
-                self[name] = dset
             return dset
 
     if vds_support:
@@ -164,13 +174,24 @@ class Group(HLObject, MutableMappingHDF5):
                        in layout.sources]
 
             with phil:
-                dsid = dataset.make_new_virtual_dset(self, layout.shape,
-                         sources=sources, dtype=layout.dtype,
+                group = self
+
+                if name:
+                    if '/' in name:
+                        h5objects = [obj for obj in name.split('/') if len(obj)]
+                        name = h5objects[-1]
+                        h5objects = h5objects[:-1]
+
+                        for new_group in h5objects:
+                            group = group.get(new_group) or group.create_group(new_group)
+
+                    name = self._e(name)
+
+                dsid = dataset.make_new_virtual_dset(group, layout.shape,
+                         sources=sources, dtype=layout.dtype, name=name,
                          maxshape=layout.maxshape, fillvalue=fillvalue)
 
                 dset = dataset.Dataset(dsid)
-                if name is not None:
-                    self[name] = dset
 
             return dset
 
@@ -271,7 +292,7 @@ class Group(HLObject, MutableMappingHDF5):
         if otype == h5i.GROUP:
             return Group(oid)
         elif otype == h5i.DATASET:
-            return dataset.Dataset(oid)
+            return dataset.Dataset(oid, readonly=(self.file.mode == 'r'))
         elif otype == h5i.DATATYPE:
             return datatype.Datatype(oid)
         else:
@@ -388,7 +409,7 @@ class Group(HLObject, MutableMappingHDF5):
                 htype.commit(self.id, name, lcpl=lcpl)
 
             else:
-                ds = self.create_dataset(None, data=obj, dtype=base.guess_dtype(obj))
+                ds = self.create_dataset(None, data=obj)
                 h5o.link(ds.id, self.id, name, lcpl=lcpl)
 
         if do_link:

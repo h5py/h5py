@@ -35,18 +35,20 @@ class Line(object):
 
         Exists to provide the following attributes:
 
+        nogil:      String indicating if we should release the GIL to call this
+                    function. Any Python callbacks it could trigger must
+                    acquire the GIL (e.g. using 'with gil' in Cython).
         mpi:        Bool indicating if MPI required
-        error:      Bool indicating if special error handling required
         version:    None or a minimum-version tuple
         code:       String with function return type
         fname:      String with function name
         sig:        String with raw function signature
         args:       String with sequence of arguments to call function
 
-        Example:    MPI ERROR 1.8.12 int foo(char* a, size_t b)
+        Example:    MPI 1.8.12 int foo(char* a, size_t b)
 
+        .nogil:     ""
         .mpi:       True
-        .error:     True
         .version:   (1, 8, 12)
         .code:      "int"
         .fname:     "foo"
@@ -55,13 +57,14 @@ class Line(object):
     """
 
     PATTERN = re.compile("""(?P<mpi>(MPI)[ ]+)?
-                            (?P<error>(ERROR)[ ]+)?
                             (?P<min_version>([0-9]+\.[0-9]+\.[0-9]+))?
                             (-(?P<max_version>([0-9]+\.[0-9]+\.[0-9]+)))?
                             ([ ]+)?
                             (?P<code>(unsigned[ ]+)?[a-zA-Z_]+[a-zA-Z0-9_]*\**)[ ]+
                             (?P<fname>[a-zA-Z_]+[a-zA-Z0-9_]*)[ ]*
                             \((?P<sig>[a-zA-Z0-9_,* ]*)\)
+                            ([ ]+)?
+                            (?P<nogil>(nogil))?
                             """, re.VERBOSE)
 
     SIG_PATTERN = re.compile("""
@@ -82,9 +85,8 @@ class Line(object):
             raise ValueError("Invalid line encountered: {0}".format(text))
 
         parts = m.groupdict()
-
+        self.nogil = "nogil" if parts['nogil'] else ""
         self.mpi = parts['mpi'] is not None
-        self.error = parts['error'] is not None
         self.min_version = parts['min_version']
         if self.min_version is not None:
             self.min_version = tuple(int(x) for x in self.min_version.split('.'))
@@ -100,6 +102,20 @@ class Line(object):
         if self.args is None:
             raise ValueError("Invalid function signature: {0}".format(self.sig))
         self.args = ", ".join(self.args)
+
+        # Figure out what test and return value to use with error reporting
+        if '*' in self.code or self.code in ('H5T_conv_t',):
+            self.err_condition = "==NULL"
+            self.err_value = f"<{self.code}>NULL"
+        elif self.code in ('int', 'herr_t', 'htri_t', 'hid_t', 'hssize_t', 'ssize_t') \
+                or re.match(r'H5[A-Z]+_[a-zA-Z_]+_t', self.code):
+            self.err_condition = "<0"
+            self.err_value = f"<{self.code}>-1"
+        elif self.code in ('unsigned int', 'haddr_t', 'hsize_t', 'size_t'):
+            self.err_condition = "==0"
+            self.err_value = f"<{self.code}>0"
+        else:
+            raise ValueError("Return code <<%s>> unknown" % self.code)
 
 
 raw_preamble = """\
@@ -139,7 +155,8 @@ from .api_types_hdf5 cimport *
 
 from . cimport _hdf5
 
-from ._errors cimport set_exception
+from ._errors cimport set_exception, set_default_error_handler
+
 """
 
 
@@ -207,51 +224,67 @@ class LineProcessor(object):
 
     def write_raw_sig(self):
         """ Write out "cdef extern"-style definition for an HDF5 function """
-
-        raw_sig = "{0.code} {0.fname}({0.sig}) except *\n".format(self.line)
+        raw_sig = "{0.code} {0.fname}({0.sig}) {0.nogil}\n".format(self.line)
         raw_sig = self.add_cython_if(raw_sig)
-        raw_sig = "\n".join(("  " + x if x.strip() else x) for x in raw_sig.split("\n"))
+        raw_sig = "\n".join(("    " + x if x.strip() else x) for x in raw_sig.split("\n"))
         self.raw_defs.write(raw_sig)
 
     def write_cython_sig(self):
         """ Write out Cython signature for wrapper function """
-
-        cython_sig = "cdef {0.code} {0.fname}({0.sig}) except *\n".format(self.line)
+        if self.line.fname == 'H5Dget_storage_size':
+            # Special case: https://github.com/h5py/h5py/issues/1475
+            cython_sig = "cdef {0.code} {0.fname}({0.sig}) except? {0.err_value}\n".format(self.line)
+        else:
+            cython_sig = "cdef {0.code} {0.fname}({0.sig}) except {0.err_value}\n".format(self.line)
         cython_sig = self.add_cython_if(cython_sig)
         self.cython_defs.write(cython_sig)
 
     def write_cython_imp(self):
         """ Write out Cython wrapper implementation """
-
-        # Figure out what test and return value to use with error reporting
-        if '*' in self.line.code or self.line.code in ('H5T_conv_t',):
-            condition = "==NULL"
-            retval = "NULL"
-        elif self.line.code in ('int', 'herr_t', 'htri_t', 'hid_t', 'hssize_t', 'ssize_t') \
-          or re.match(r'H5[A-Z]+_[a-zA-Z_]+_t', self.line.code):
-            condition = "<0"
-            retval = "-1"
-        elif self.line.code in ('unsigned int', 'haddr_t', 'hsize_t', 'size_t'):
-            condition = "==0"
-            retval = 0
-        else:
-            raise ValueError("Return code <<%s>> unknown" % self.line.code)
-
-        # Have to use except * because Cython can't handle special types here
-        imp = """\
-cdef {0.code} {0.fname}({0.sig}) except *:
+        if self.line.nogil:
+            imp = """\
+cdef {0.code} {0.fname}({0.sig}) except {0.err_value}:
     cdef {0.code} r
-    _hdf5.H5Eset_auto(NULL, NULL)
-    r = _hdf5.{0.fname}({0.args})
-    if r{condition}:
+    with nogil:
+        set_default_error_handler()
+        r = _hdf5.{0.fname}({0.args})
+    if r{0.err_condition}:
         if set_exception():
-            return <{0.code}>{retval}
-        elif {0.error}:
-            raise RuntimeError("Unspecified error in {0.fname} (return value {condition})")
+            return {0.err_value}
+        else:
+            raise RuntimeError("Unspecified error in {0.fname} (return value {0.err_condition})")
     return r
 
 """
-        imp = imp.format(self.line, condition=condition, retval=retval)
+        else:
+            if self.line.fname == 'H5Dget_storage_size':
+                # Special case: https://github.com/h5py/h5py/issues/1475
+                imp = """\
+cdef {0.code} {0.fname}({0.sig}) except? {0.err_value}:
+    cdef {0.code} r
+    set_default_error_handler()
+    r = _hdf5.{0.fname}({0.args})
+    if r{0.err_condition}:
+        if set_exception():
+            return {0.err_value}
+    return r
+
+"""
+            else:
+                imp = """\
+cdef {0.code} {0.fname}({0.sig}) except {0.err_value}:
+    cdef {0.code} r
+    set_default_error_handler()
+    r = _hdf5.{0.fname}({0.args})
+    if r{0.err_condition}:
+        if set_exception():
+            return {0.err_value}
+        else:
+            raise RuntimeError("Unspecified error in {0.fname} (return value {0.err_condition})")
+    return r
+
+"""
+        imp = imp.format(self.line)
         imp = self.add_cython_if(imp)
         self.cython_imp.write(imp)
 

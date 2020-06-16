@@ -19,7 +19,7 @@ from .h5g cimport GroupID
 from .h5i cimport wrap_identifier
 from .h5p cimport PropID
 from .utils cimport emalloc, efree
-
+cimport cython
 # Python level imports:
 from ._objects import phil, with_phil
 
@@ -133,6 +133,7 @@ cdef class ObjInfo(_ObjInfo):
         newcopy.infostruct = self.infostruct
         return newcopy
 
+@cython.binding(False)
 @with_phil
 def get_info(ObjectID loc not None, char* name=NULL, int index=-1, *,
         char* obj_name='.', int index_type=H5_INDEX_NAME, int order=H5_ITER_INC,
@@ -159,22 +160,12 @@ def get_info(ObjectID loc not None, char* name=NULL, int index=-1, *,
     if name != NULL and index >= 0:
         raise TypeError("At most one of name or index may be specified")
     elif name != NULL and index < 0:
-        IF HDF5_VERSION < VOL_MIN_HDF5_VERSION:
-            H5Oget_info_by_name(loc.id, name, &info.infostruct, pdefault(lapl))
-        ELSE:
-            H5Oget_info_by_name1(loc.id, name, &info.infostruct, pdefault(lapl))
+        H5Oget_info_by_name(loc.id, name, &info.infostruct, pdefault(lapl))
     elif name == NULL and index >= 0:
-        IF HDF5_VERSION < VOL_MIN_HDF5_VERSION:
-            H5Oget_info_by_idx(loc.id, obj_name, <H5_index_t>index_type,
-                <H5_iter_order_t>order, index, &info.infostruct, pdefault(lapl))
-        ELSE:
-            H5Oget_info_by_idx1(loc.id, obj_name, <H5_index_t>index_type,
-                <H5_iter_order_t>order, index, &info.infostruct, pdefault(lapl))
+        H5Oget_info_by_idx(loc.id, obj_name, <H5_index_t>index_type,
+            <H5_iter_order_t>order, index, &info.infostruct, pdefault(lapl))
     else:
-        IF HDF5_VERSION < VOL_MIN_HDF5_VERSION:
-            H5Oget_info(loc.id, &info.infostruct)
-        ELSE:
-            H5Oget_info1(loc.id, &info.infostruct)
+        H5Oget_info(loc.id, &info.infostruct)
 
     return info
 
@@ -283,7 +274,7 @@ cdef class _ObjectVisitor:
         self.retval = None
         self.objinfo = ObjInfo()
 
-cdef herr_t cb_obj_iterate(hid_t obj, const char* name, const H5O_info_t *info, void* data) except 2:
+cdef herr_t cb_obj_iterate(hid_t obj, const char* name, const H5O_info_t *info, void* data) except 2 with gil:
 
     cdef _ObjectVisitor visit
 
@@ -299,7 +290,7 @@ cdef herr_t cb_obj_iterate(hid_t obj, const char* name, const H5O_info_t *info, 
         return 1
     return 0
 
-cdef herr_t cb_obj_simple(hid_t obj, const char* name, const H5O_info_t *info, void* data) except 2:
+cdef herr_t cb_obj_simple(hid_t obj, const char* name, const H5O_info_t *info, void* data) except 2 with gil:
 
     cdef _ObjectVisitor visit
 
@@ -361,11 +352,7 @@ def visit(ObjectID loc not None, object func, *,
     else:
         cfunc = cb_obj_simple
 
-    IF HDF5_VERSION < VOL_MIN_HDF5_VERSION:
-        H5Ovisit_by_name(loc.id, obj_name, <H5_index_t>idx_type,
-            <H5_iter_order_t>order, cfunc, <void*>visit, pdefault(lapl))
-    ELSE:
-        H5Ovisit_by_name1(loc.id, obj_name, <H5_index_t>idx_type,
-            <H5_iter_order_t>order, cfunc, <void*>visit, pdefault(lapl))
+    H5Ovisit_by_name(loc.id, obj_name, <H5_index_t>idx_type,
+        <H5_iter_order_t>order, cfunc, <void*>visit, pdefault(lapl))
 
     return visit.retval

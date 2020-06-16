@@ -13,6 +13,7 @@
 """
 
 from warnings import warn as _warn
+import atexit
 
 
 # --- Library setup -----------------------------------------------------------
@@ -41,8 +42,10 @@ if version.hdf5_version_tuple != version.hdf5_built_version_tuple:
 
 _errors.silence_errors()
 
-from ._conv import register_converters as _register_converters
+from ._conv import register_converters as _register_converters, \
+                   unregister_converters as _unregister_converters
 _register_converters()
+atexit.register(_unregister_converters)
 
 from .h5z import _register_lzf
 _register_lzf()
@@ -65,11 +68,14 @@ from ._hl.dataset import Dataset
 from ._hl.datatype import Datatype
 from ._hl.attrs import AttributeManager
 
+from ._selector import MultiBlockSlice
 from .h5 import get_config
 from .h5r import Reference, RegionReference
 from .h5t import (special_dtype, check_dtype,
     vlen_dtype, string_dtype, enum_dtype, ref_dtype, regionref_dtype,
+    opaque_dtype,
     check_vlen_dtype, check_string_dtype, check_enum_dtype, check_ref_dtype,
+    check_opaque_dtype,
 )
 
 from .version import version as __version__

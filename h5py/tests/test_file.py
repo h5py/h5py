@@ -26,9 +26,6 @@ import h5py
 import pathlib
 
 
-mpi = h5py.get_config().mpi
-
-
 class TestFileOpen(TestCase):
 
     """
@@ -141,6 +138,37 @@ class TestFileOpen(TestCase):
         with self.assertRaises(ValueError):
             File(self.mktemp(), 'mongoose')
 
+@ut.skipIf(h5py.version.hdf5_version_tuple < (1, 10, 1),
+               'Requires HDF5 1.10.1 or later')
+class TestSpaceStrategy(TestCase):
+
+    """
+        Feature: Create file with specified file space strategy
+    """
+
+    def test_create_with_space_strategy(self):
+        """ Create file with file space strategy """
+        fname = self.mktemp()
+        fid = File(fname, 'w', fs_strategy="page",
+                   fs_persist=True, fs_threshold=100)
+        self.assertTrue(fid)
+        dset = fid.create_dataset('foo', (100,), dtype='uint8')
+        dset[...] = 1
+        dset = fid.create_dataset('bar', (100,), dtype='uint8')
+        dset[...] = 1
+        del fid['foo']
+        fid.close()
+
+        fid = File(fname, 'a')
+        plist = fid.id.get_create_plist()
+        fs_strat = plist.get_file_space_strategy()
+        assert(fs_strat[0] == 1)
+        assert(fs_strat[1] == True)
+        assert(fs_strat[2] == 100)
+
+        dset = fid.create_dataset('foo2', (100,), dtype='uint8')
+        dset[...] = 1
+        fid.close()
 
 class TestModes(TestCase):
 
@@ -188,7 +216,8 @@ class TestModes(TestCase):
 class TestDrivers(TestCase):
 
     """
-        Feature: Files can be opened with low-level HDF5 drivers
+        Feature: Files can be opened with low-level HDF5 drivers. Does not
+        include MPI drivers (see bottom).
     """
 
     @ut.skipUnless(os.name == 'posix', "Stdio driver is supported on posix")
@@ -247,30 +276,15 @@ class TestDrivers(TestCase):
         self.assertTrue(fid)
         fid.close()
 
-    @ut.skipUnless(mpi, "Parallel HDF5 is required for MPIO driver test")
-    def test_mpio(self):
-        """ MPIO driver and options """
-        from mpi4py import MPI
-
-        comm=MPI.COMM_WORLD
-        fname = self.mktemp_mpi(comm)
-        with File(fname, 'w', driver='mpio', comm=comm) as f:
-            self.assertTrue(f)
-            self.assertEqual(f.driver, 'mpio')
-
-    @ut.skipUnless(mpi, "Parallel HDF5 required")
-    @ut.skipIf(h5py.version.hdf5_version_tuple < (1, 8, 9),
-               "mpio atomic file operations were added in HDF5 1.8.9+")
-    def test_mpi_atomic(self):
-        """ Enable atomic mode for MPIO driver """
-        from mpi4py import MPI
-
-        comm=MPI.COMM_WORLD
-        fname = self.mktemp_mpi(comm)
-        with File(fname, 'w', driver='mpio', comm=comm) as f:
-            self.assertFalse(f.atomic)
-            f.atomic = True
-            self.assertTrue(f.atomic)
+    def test_split(self):
+        """ Split stores metadata in a separate file """
+        fname = self.mktemp()
+        fid = File(fname, 'w', driver='split')
+        fid.close()
+        self.assertTrue(os.path.exists(fname + '-m.h5'))
+        fid = File(fname, 'r', driver='split')
+        self.assertTrue(fid)
+        fid.close()
 
     # TODO: family driver tests
 
@@ -583,19 +597,6 @@ class TestClose(TestCase):
         f.close()
         f.close()
 
-    @ut.skipUnless(mpi, "Parallel HDF5 is required for MPIO driver test")
-    def test_close_multiple_mpio_driver(self):
-        """ MPIO driver and options """
-        from mpi4py import MPI
-
-        comm=MPI.COMM_WORLD
-        fname = self.mktemp_mpi(comm)
-        f = File(fname, 'w', driver='mpio', comm=comm)
-        f.create_group("test")
-        f.close()
-        f.close()
-
-
 class TestFlush(TestCase):
 
     """
@@ -692,3 +693,36 @@ class TestPickle(TestCase):
         with File(self.mktemp(), 'w') as f1:
             with self.assertRaises(TypeError):
                 pickle.dumps(f1)
+
+
+# unittest doesn't work with pytest fixtures (and possibly other features),
+# hence no subclassing TestCase
+@pytest.mark.mpi
+class TestMPI(object):
+    def test_mpio(self, mpi_file_name):
+        """ MPIO driver and options """
+        from mpi4py import MPI
+
+        with File(mpi_file_name, 'w', driver='mpio', comm=MPI.COMM_WORLD) as f:
+            assert f
+            assert f.driver == 'mpio'
+
+    @pytest.mark.skipif(h5py.version.hdf5_version_tuple < (1, 8, 9),
+        reason="mpio atomic file operations were added in HDF5 1.8.9+")
+    def test_mpi_atomic(self, mpi_file_name):
+        """ Enable atomic mode for MPIO driver """
+        from mpi4py import MPI
+
+        with File(mpi_file_name, 'w', driver='mpio', comm=MPI.COMM_WORLD) as f:
+            assert not f.atomic
+            f.atomic = True
+            assert f.atomic
+
+    def test_close_multiple_mpio_driver(self, mpi_file_name):
+        """ MPIO driver and options """
+        from mpi4py import MPI
+
+        f = File(mpi_file_name, 'w', driver='mpio', comm=MPI.COMM_WORLD)
+        f.create_group("test")
+        f.close()
+        f.close()

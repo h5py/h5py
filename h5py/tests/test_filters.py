@@ -13,6 +13,7 @@
 """
 import numpy as np
 import h5py
+import pytest
 
 from .common import ut, TestCase, insubprocess
 
@@ -61,7 +62,26 @@ class TestFilters(TestCase):
                                   )
 
 
+@ut.skipIf('gzip' not in h5py.filters.encode, "DEFLATE is not installed")
+def test_filter_ref_obj(writable_file):
+    gzip8 = h5py.filters.Gzip(level=8)
+    # **kwargs unpacking (compatible with earlier h5py versions)
+    assert dict(**gzip8) == {
+        'compression': h5py.h5z.FILTER_DEFLATE,
+        'compression_opts': (8,)
+    }
+
+    # Pass object as compression argument (new in h5py 3.0)
+    ds = writable_file.create_dataset(
+        'x', shape=(100,), dtype=np.uint32, compression=gzip8
+    )
+    assert ds.compression == 'gzip'
+    assert ds.compression_opts == 8
+
+
+@pytest.mark.mpi_skip
 @insubprocess
 def test_unregister_filter(request):
     if h5py.h5z.filter_avail(h5py.h5z.FILTER_LZF):
-        assert h5py.h5z.unregister_filter(h5py.h5z.FILTER_LZF)
+        res = h5py.h5z.unregister_filter(h5py.h5z.FILTER_LZF)
+        assert res

@@ -17,10 +17,9 @@ include "config.pxi"
 # C-level imports
 from .utils cimport  require_tuple, convert_dims, convert_tuple, \
                     emalloc, efree, create_numpy_hsize, create_hsize_array
-from numpy cimport ndarray
+cimport numpy as cnp
 
 #Python level imports
-from . import _objects
 from ._objects import phil, with_phil
 
 cdef object lockid(hid_t id_):
@@ -88,9 +87,9 @@ def create_simple(object dims_tpl, object max_dims_tpl=None):
     cdef hsize_t* dims = NULL
     cdef hsize_t* max_dims = NULL
 
-    require_tuple(dims_tpl, 0, -1, "dims_tpl")
+    require_tuple(dims_tpl, 0, -1, b"dims_tpl")
     rank = len(dims_tpl)
-    require_tuple(max_dims_tpl, 1, rank, "max_dims_tpl")
+    require_tuple(max_dims_tpl, 1, rank, b"max_dims_tpl")
 
     try:
         dims = <hsize_t*>emalloc(sizeof(hsize_t)*rank)
@@ -163,16 +162,10 @@ cdef class SpaceID(ObjectID):
         cdef void* buf = NULL
         cdef size_t nalloc = 0
 
-        IF HDF5_VERSION < VOL_MIN_HDF5_VERSION:
-           H5Sencode(self.id, NULL, &nalloc)
-        ELSE:
-           H5Sencode1(self.id, NULL, &nalloc)
+        H5Sencode(self.id, NULL, &nalloc)
         buf = emalloc(nalloc)
         try:
-            IF HDF5_VERSION < VOL_MIN_HDF5_VERSION:
-                H5Sencode(self.id, buf, &nalloc)
-            ELSE:
-                H5Sencode1(self.id, buf, &nalloc)
+            H5Sencode(self.id, buf, &nalloc)
             pystr = PyBytes_FromStringAndSize(<char*>buf, nalloc)
         finally:
             efree(buf)
@@ -220,7 +213,7 @@ cdef class SpaceID(ObjectID):
 
             rank = H5Sget_simple_extent_ndims(self.id)
 
-            require_tuple(offset, 1, rank, "offset")
+            require_tuple(offset, 1, rank, b"offset")
             dims = <hssize_t*>emalloc(sizeof(hssize_t)*rank)
             if(offset is not None):
                 convert_tuple(offset, <hsize_t*>dims, rank)
@@ -228,7 +221,7 @@ cdef class SpaceID(ObjectID):
                 # The HDF5 docs say passing in NULL resets the offset to 0.
                 # Instead it raises an exception.  Imagine my surprise. We'll
                 # do this manually.
-                for i from 0<=i<rank:
+                for i in range(rank):
                     dims[i] = 0
 
             H5Soffset_simple(self.id, dims)
@@ -319,9 +312,9 @@ cdef class SpaceID(ObjectID):
         cdef hsize_t* dims = NULL
         cdef hsize_t* max_dims = NULL
 
-        require_tuple(dims_tpl, 0, -1, "dims_tpl")
+        require_tuple(dims_tpl, 0, -1, b"dims_tpl")
         rank = len(dims_tpl)
-        require_tuple(max_dims_tpl, 1, rank, "max_dims_tpl")
+        require_tuple(max_dims_tpl, 1, rank, b"max_dims_tpl")
 
         try:
             dims = <hsize_t*>emalloc(sizeof(hsize_t)*rank)
@@ -451,7 +444,7 @@ cdef class SpaceID(ObjectID):
         unsigned ints, with shape ``(<npoints>, <space rank)``.
         """
         cdef hsize_t dims[2]
-        cdef ndarray buf
+        cdef cnp.ndarray buf
 
         dims[0] = H5Sget_select_elem_npoints(self.id)
         dims[1] = H5Sget_simple_extent_ndims(self.id)
@@ -482,7 +475,7 @@ cdef class SpaceID(ObjectID):
         A zero-length selection (i.e. shape ``(0, <rank>)``) is not allowed
         by the HDF5 library.
         """
-        cdef ndarray hcoords
+        cdef cnp.ndarray hcoords
         cdef size_t nelements
 
         # The docs say the selection list should be an hsize_t**, but it seems
@@ -526,7 +519,7 @@ cdef class SpaceID(ObjectID):
         with length equal to the total number of blocks.
         """
         cdef hsize_t dims[3]  # 0=nblocks 1=(#2), 2=rank
-        cdef ndarray buf
+        cdef cnp.ndarray buf
 
         dims[0] = H5Sget_select_hyper_nblocks(self.id)
         dims[1] = 2
@@ -557,10 +550,10 @@ cdef class SpaceID(ObjectID):
         # Dataspace rank.  All provided tuples must match this.
         rank = H5Sget_simple_extent_ndims(self.id)
 
-        require_tuple(start, 0, rank, "start")
-        require_tuple(count, 0, rank, "count")
-        require_tuple(stride, 1, rank, "stride")
-        require_tuple(block, 1, rank, "block")
+        require_tuple(start, 0, rank, b"start")
+        require_tuple(count, 0, rank, b"count")
+        require_tuple(stride, 1, rank, b"stride")
+        require_tuple(block, 1, rank, b"block")
 
         try:
             start_array = <hsize_t*>emalloc(sizeof(hsize_t)*rank)

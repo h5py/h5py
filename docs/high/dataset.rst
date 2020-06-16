@@ -1,3 +1,4 @@
+.. currentmodule:: h5py
 .. _dataset:
 
 
@@ -14,6 +15,7 @@ NumPy operations like slicing, along with a variety of descriptive attributes:
 
   - **shape** attribute
   - **size** attribute
+  - **ndim** attribute
   - **dtype** attribute
 
 h5py supports most NumPy dtypes, and uses the same character codes (e.g.
@@ -180,6 +182,12 @@ shape for you::
 Auto-chunking is also enabled when using compression or ``maxshape``, etc.,
 if a chunk shape is not manually specified.
 
+The chunk_iter method returns an iterator that can be used to perform chunk by chunk
+reads or writes::
+
+    >>> for s in dset.chunk_iter():
+    >>>     arr = dset[s]  # get numpy array for chunk
+
 
 .. _dataset_resize:
 
@@ -305,6 +313,31 @@ Obviously shouldn't be used with lossy compression filters.
 
 Enable by setting :meth:`Group.create_dataset` keyword ``fletcher32`` to True.
 
+.. _dataset_multi_block:
+
+Multi-Block Selection
+---------------------
+
+The full H5Sselect_hyperslab API is exposed via the MultiBlockSlice object.
+This takes four elements to define the selection (start, count, stride and
+block) in constrast to the built-in slice object, which takes three elements.
+A MultiBlockSlice can be used in place of a slice to select a number of (count)
+blocks of multiple elements separated by a stride, rather than a set of single
+elements separated by a step.
+
+For an explanation of how this slicing works, see the `HDF5 documentation <https://support.hdfgroup.org/HDF5/Tutor/selectsimple.html>`_.
+
+For example::
+
+    >>> dset[...]
+    array([ 0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10])
+    >>> dset[MultiBlockSlice(start=1, count=3, stride=4, block=2)]
+    array([ 1,  2,  5,  6,  9, 10])
+
+They can be used in multi-dimensional slices alongside any slicing object,
+including other MultiBlockSlices. For a more complete example of this,
+see the multiblockslice_interleave.py example script.
+
 .. _dataset_fancy:
 
 Fancy indexing
@@ -406,6 +439,21 @@ Reference
 
         NumPy-style slicing to write data.  See :ref:`dataset_slicing`.
 
+    .. method:: __bool__()
+
+        Check that the dataset is accessible.
+        A dataset could be inaccessible for several reasons. For instance, the
+        dataset, or the file it belongs to, may have been closed elsewhere.
+
+        >>> f = h5py.open(filename)
+        >>> dset = f["MyDS"]
+        >>> f.close()
+        >>> if dset:
+        ...     print("datset accessible")
+        ... else:
+        ...     print("dataset is inaccessible")
+        dataset unaccessible
+
     .. method:: read_direct(array, source_sel=None, dest_sel=None)
 
         Read from an HDF5 dataset directly into a NumPy array, which can
@@ -446,6 +494,35 @@ Reference
 
                >>> with dset.astype('int16'):
                ...     out = dset[:]
+
+    .. method:: fields(names)
+
+        Get a wrapper to read a subset of fields from a compound data type::
+
+            >>> 2d_coords = dataset.fields(['x', 'y'])[:]
+
+        If names is a string, a single field is extracted, and the resulting
+        arrays will have that dtype. Otherwise, it should be an iterable,
+        and the read data will have a compound dtype.
+
+        .. versionadded:: 3.0
+
+    .. method:: iter_chunks
+
+       Iterate over chunks in a chunked dataset. The optional ``sel`` argument
+       is a slice or tuple of slices that defines the region to be used.
+       If not set, the entire dataspace will be used for the iterator.
+
+       For each chunk within the given region, the iterator yields a tuple of
+       slices that gives the intersection of the given chunk with the
+       selection area. This can be used to :ref:`read or write data in that
+       chunk <dataset_slicing>`.
+
+       A TypeError will be raised if the dataset is not chunked.
+
+       A ValueError will be raised if the selection region is invalid.
+
+       .. versionadded:: 3.0
 
     .. method:: resize(size, axis=None)
 
@@ -488,6 +565,10 @@ Reference
     .. attribute:: size
 
         Integer giving the total number of elements in the dataset.
+
+    .. attribute:: ndim
+
+        Integer giving the total number of dimensions in the dataset.
 
     .. attribute:: maxshape
 

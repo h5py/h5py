@@ -14,7 +14,7 @@ jobs:
     matrix:
     # system independent tests
       static-checks:
-        TOXENV: docs,checkreadme,pre-commit
+        TOXENV: docs,checkreadme,pre-commit,rever
         python.version: '3.6'
       # -deps : test with default (latest) versions of dependencies
       # -mindeps : test with oldest supported version of (python) dependencies
@@ -52,6 +52,18 @@ jobs:
         python.version: '3.7'
         TOXENV: py37-test-deps
         HDF5_VERSION: 1.10.5
+        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
+        H5PY_ENFORCE_COVERAGE: yes
+      py38-deps-hdf51105:
+        python.version: '3.8'
+        TOXENV: py38-test-deps
+        HDF5_VERSION: 1.10.5
+        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
+        H5PY_ENFORCE_COVERAGE: yes
+      py38-deps-hdf51120:
+        python.version: '3.8'
+        TOXENV: py38-test-deps
+        HDF5_VERSION: 1.12.0
         HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
         H5PY_ENFORCE_COVERAGE: yes
     # do mpi tests
@@ -117,6 +129,13 @@ jobs:
         HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
         HDF5_VSVERSION: "15-64"
         H5PY_ENFORCE_COVERAGE: yes
+      py38-hdf5110:
+        python.version: '3.8'
+        TOXENV: py38-test-deps,py38-test-mindeps,py38-test-deps-pre
+        HDF5_VERSION: 1.10.1
+        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
+        HDF5_VSVERSION: "15-64"
+        H5PY_ENFORCE_COVERAGE: yes
     maxParallel: 4
 
   steps:
@@ -126,9 +145,9 @@ jobs:
         installer: nuget
         shell: cmd
 
-- job: 'macOS1013'
+- job: 'macOS1015'
   pool:
-    vmImage: xcode9-macos10.13
+    vmImage: macOS-10.15
   strategy:
     matrix:
       # -deps : test with default (latest) versions of dependencies
@@ -141,6 +160,10 @@ jobs:
       py37:
         python.version: '3.7'
         TOXENV: py37-test-deps,py37-test-mindeps,py37-test-deps-pre
+        H5PY_ENFORCE_COVERAGE: yes
+      py38:
+        python.version: '3.8'
+        TOXENV: py38-test-deps,py38-test-mindeps,py38-test-deps-pre
         H5PY_ENFORCE_COVERAGE: yes
     # test against newer HDF5
 #      py36-deps-hdf51103:

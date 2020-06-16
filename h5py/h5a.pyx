@@ -21,8 +21,8 @@ from numpy cimport import_array, ndarray, PyArray_DATA
 from .utils cimport check_numpy_read, check_numpy_write, emalloc, efree
 from ._proxy cimport attr_rw
 
+cimport cython
 #Python level imports
-from . import _objects
 from ._objects import phil, with_phil
 
 # Initialization
@@ -32,6 +32,7 @@ import_array()
 
 # --- create, create_by_name ---
 
+@cython.binding(False)
 @with_phil
 def create(ObjectID loc not None, char* name, TypeID tid not None,
     SpaceID space not None, *, char* obj_name='.', PropID lapl=None):
@@ -51,7 +52,7 @@ def create(ObjectID loc not None, char* name, TypeID tid not None,
 
 
 # --- open, open_by_name, open_by_idx ---
-
+@cython.binding(False)
 @with_phil
 def open(ObjectID loc not None, char* name=NULL, int index=-1, *,
     char* obj_name='.', int index_type=H5_INDEX_NAME, int order=H5_ITER_INC,
@@ -120,6 +121,7 @@ def rename(ObjectID loc not None, char* name, char* new_name, *,
     H5Arename_by_name(loc.id, obj_name, name, new_name, pdefault(lapl))
 
 
+@cython.binding(False)
 @with_phil
 def delete(ObjectID loc not None, char* name=NULL, int index=-1, *,
     char* obj_name='.', int index_type=H5_INDEX_NAME, int order=H5_ITER_INC,
@@ -182,6 +184,7 @@ cdef class AttrInfo:
         return hash((self.corder_valid, self.corder, self.cset, self.data_size))
 
 
+@cython.binding(False)
 @with_phil
 def get_info(ObjectID loc not None, char* name=NULL, int index=-1, *,
             char* obj_name='.', PropID lapl=None,
@@ -229,7 +232,8 @@ cdef class _AttrVisitor:
         self.func = func
         self.retval = None
 
-cdef herr_t cb_attr_iter(hid_t loc_id, const char* attr_name, const H5A_info_t *ainfo, void* vis_in) except 2:
+
+cdef herr_t cb_attr_iter(hid_t loc_id, const char* attr_name, const H5A_info_t *ainfo, void* vis_in) except 2 with gil:
     cdef _AttrVisitor vis = <_AttrVisitor>vis_in
     cdef AttrInfo info = AttrInfo()
     info.info = ainfo[0]
@@ -238,7 +242,8 @@ cdef herr_t cb_attr_iter(hid_t loc_id, const char* attr_name, const H5A_info_t *
         return 1
     return 0
 
-cdef herr_t cb_attr_simple(hid_t loc_id, const char* attr_name, const H5A_info_t *ainfo, void* vis_in) except 2:
+
+cdef herr_t cb_attr_simple(hid_t loc_id, const char* attr_name, const H5A_info_t *ainfo, void* vis_in) except 2 with gil:
     cdef _AttrVisitor vis = <_AttrVisitor>vis_in
     vis.retval = vis.func(attr_name)
     if vis.retval is not None:
@@ -285,7 +290,7 @@ def iterate(ObjectID loc not None, object func, int index=0, *,
     else:
         cfunc = cb_attr_simple
 
-    H5Aiterate2(loc.id, <H5_index_t>index_type, <H5_iter_order_t>order,
+    H5Aiterate(loc.id, <H5_index_t>index_type, <H5_iter_order_t>order,
         &i, cfunc, <void*>vis)
 
     return vis.retval
