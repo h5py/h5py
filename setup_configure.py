@@ -165,8 +165,10 @@ class configure(Command):
         # Fallback: query pkgconfig for default hdf5 names
         import pkgconfig
         pc_name = 'hdf5-openmpi' if mpi else 'hdf5'
+        pc = {}
         try:
-            pc = pkgconfig.parse(pc_name)
+            if pkgconfig.exists(pc_name):
+                pc = pkgconfig.parse(pc_name)
         except EnvironmentError:
             if os.name != 'nt':
                 print(
@@ -174,7 +176,6 @@ class configure(Command):
                     "is explicitly specified", file=sys.stderr
                 )
                 raise
-            pc = {}
 
         return (
             pc.get('include_dirs', []),
