@@ -141,7 +141,7 @@ class h5py_build_ext(build_ext):
         os.environ['CCACHE_NOHASHDIR'] = '1'
 
         # Provides all of our build options
-        config = self.distribution.get_command_obj('configure')
+        config = self.get_finalized_command('configure')
         config.run()
 
         defs_file = localpath('h5py', 'defs.pyx')
