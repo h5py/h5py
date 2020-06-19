@@ -160,6 +160,38 @@ feature that requires a newer format will raise an error.
 version. Because of this, the `File.libver` property will not use `latest` in
 its output for HDF5 1.10.2 or later.
 
+.. _file_closing:
+
+Closing files
+-------------
+
+If you call :meth:`File.close`, or leave a ``with h5py.File(...)`` block,
+the file will be closed and any objects (such as groups or datasets) you have
+from that file will become unusable. This is equivalent to what HDF5 calls
+'strong' closing.
+
+If a file object goes out of scope in your Python code, the file will only
+be closed when there are no remaining objects belonging to it. This is what
+HDF5 calls 'weak' closing.
+
+.. code-block::
+
+    with h5py.File('f1.h5', 'r') as f1:
+        ds = f1['dataset']
+
+    # ERROR - can't access dataset, because f1 is closed:
+    ds[0]
+
+    def get_dataset():
+        f2 = h5py.File('f2.h5', 'r')
+        return f2['dataset']
+    ds = get_dataset()
+
+    # OK - f2 is out of scope, but the dataset reference keeps it open:
+    ds[0]
+
+    del ds  # Now f2.h5 will be closed
+
 
 .. _file_userblock:
 
