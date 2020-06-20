@@ -48,8 +48,8 @@ class TestArray(TestCase):
         # See issue 1057
         self.f.attrs.create('x', chr(0x03A9))
         out = self.f.attrs['x']
-        self.assertEqual(out, chr(0x03A9).encode('utf-8'))
-        self.assertIsInstance(out, bytes)
+        self.assertEqual(out, chr(0x03A9))
+        self.assertIsInstance(out, str)
 
     def test_tuple_of_unicode(self):
         # Test that a tuple of unicode strings can be set as an attribute. It will
@@ -57,7 +57,7 @@ class TestArray(TestCase):
         data = ('a', 'b')
         self.f.attrs.create('x', data=data)
         result = self.f.attrs['x']
-        self.assertTrue(all(result == [s.encode() for s in data]))
+        self.assertTrue(all(result == data))
         self.assertEqual(result.dtype, np.dtype('O'))
 
         # However, a numpy array of type U being passed in will not be

@@ -35,7 +35,7 @@ class DimensionProxy(base.CommonStateObject):
         # Here is a workaround:
         try:
             dset = Dataset(self._id)
-            return self._d(dset.attrs['DIMENSION_LABELS'][self._dimension])
+            return dset.attrs['DIMENSION_LABELS'][self._dimension]
         except (KeyError, IndexError):
             return ''
     @label.setter

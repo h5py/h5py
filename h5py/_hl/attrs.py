@@ -76,6 +76,13 @@ class AttributeManager(base.MutableMappingHDF5, base.CommonStateObject):
         arr = numpy.ndarray(shape, dtype=dtype, order='C')
         attr.read(arr, mtype=htype)
 
+        string_info = h5t.check_string_dtype(dtype)
+        if string_info and (string_info.length is None):
+            # Vlen strings: convert bytes to Python str
+            arr = numpy.array([
+                b.decode('utf-8', 'surrogateescape') for b in arr.flat
+            ], dtype=dtype).reshape(arr.shape)
+
         if len(arr.shape) == 0:
             return arr[()]
         return arr

@@ -155,7 +155,7 @@ class TestTypes(BaseAttrs):
         dt = h5py.string_dtype(encoding='ascii')
 
         data = np.ndarray((2,), dtype=dt)
-        data[...] = b"Hello", b"Hi there!  This is HDF5!"
+        data[...] = "Hello", "Hi there!  This is HDF5!"
 
         self.f.attrs['x'] = data
         out = self.f.attrs['x']
@@ -169,8 +169,8 @@ class TestTypes(BaseAttrs):
         self.f.attrs['x'] = b'Hello'
         out = self.f.attrs['x']
 
-        self.assertEqual(out, b'Hello')
-        self.assertEqual(type(out), bytes)
+        self.assertEqual(out, 'Hello')
+        self.assertEqual(type(out), str)
 
         aid = h5py.h5a.open(self.f.id, b"x")
         tid = aid.get_type()
@@ -183,8 +183,8 @@ class TestTypes(BaseAttrs):
 
         self.f.attrs['x'] = u"Hello" + chr(0x2340) + u"!!"
         out = self.f.attrs['x']
-        self.assertEqual(out.decode('utf-8'), u"Hello" + chr(0x2340) + u"!!")
-        self.assertEqual(type(out), bytes)
+        self.assertEqual(out, u"Hello" + chr(0x2340) + u"!!")
+        self.assertEqual(type(out), str)
 
         aid = h5py.h5a.open(self.f.id, b"x")
         tid = aid.get_type()
