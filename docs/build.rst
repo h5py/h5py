@@ -175,13 +175,16 @@ when installing via ``pip``, as you don't have direct access to setup.py::
 
 Here's a list of all the configure options currently supported:
 
-======================= =========================== ===========================
-Option                  Via setup.py                Via environment variable
-======================= =========================== ===========================
-Custom path to HDF5     ``--hdf5=/path/to/hdf5``    ``HDF5_DIR=/path/to/hdf5``
-Force HDF5 version      ``--hdf5-version=X.Y.Z``    ``HDF5_VERSION=X.Y.Z``
-Enable MPI mode         ``--mpi``                   ``HDF5_MPI=ON``
-======================= =========================== ===========================
+=========================== ====================================== ===========================
+Option                      Via setup.py                           Via environment variable
+=========================== ====================================== ===========================
+Custom path to HDF5         ``--hdf5=/path/to/hdf5``               ``HDF5_DIR=/path/to/hdf5``
+Force HDF5 version          ``--hdf5-version=X.Y.Z``               ``HDF5_VERSION=X.Y.Z``
+Enable MPI mode             ``--mpi``                              ``HDF5_MPI=ON``
+Custom HDF5 include path    ``--hdf5-includedir=/path/to/headers`` ``HDF5_INCLUDEDIR=/path/to/headers``
+Custom HDF5 library path    ``--hdf5-libdir=/path/to/lib``         ``HDF5_LIBDIR=/path/to/lib``
+Custom HDF5 pkg-config name ``--hdf5-pkgconfig-name=hdf5``         ``HDF5_PKGCONFIG_NAME=hdf5``
+=========================== ====================================== ===========================
 
 .. _build_mpi:
 
