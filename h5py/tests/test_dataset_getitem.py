@@ -272,11 +272,11 @@ class TestScalarArray(TestCase):
 
     def test_size(self):
         """ Verify size """
-        self.assertEqual(self.dset.size, 6)
+        self.assertEqual(self.dset.size, 1)
 
     def test_nbytes(self):
         """ Verify nbytes """
-        self.assertEqual(self.dset.nbytes, 6*self.data.dtype.itemsize)  # not sure if 'f' is always alias for 'f4'
+        self.assertEqual(self.dset.nbytes, self.data.dtype.itemsize)  # not sure if 'f' is always alias for 'f4'
 
     def test_shape(self):
         """ Verify shape """
@@ -536,11 +536,11 @@ class Test2DFloat(TestCase):
 
     def test_size(self):
         """ Verify size """
-        self.assertEqual(self.dset.size, 2)
+        self.assertEqual(self.dset.size, 15)
 
     def test_nbytes(self):
         """ Verify nbytes """
-        self.assertEqual(self.dset.nbytes, 2*self.data.dtype.itemsize)  # not sure if 'f' is always alias for 'f4'
+        self.assertEqual(self.dset.nbytes, 15*self.data.dtype.itemsize)  # not sure if 'f' is always alias for 'f4'
 
     def test_shape(self):
         """ Verify shape """
