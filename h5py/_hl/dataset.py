@@ -397,6 +397,14 @@ class Dataset(HLObject):
         return size
 
     @property
+    def nbytes(self):
+        """Numpy-style attribute giving the dataset size as the number of bytes"""
+        size = self.size
+        if size is None:  # if we are empty, return None
+            return None
+        return numpy.dtype(self.dtype).itemsize * size
+
+    @property
     def _selector(self):
         """Internal object for optimised selection of data"""
         if '_selector' in self._cache_props:

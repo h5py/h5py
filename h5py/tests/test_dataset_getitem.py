@@ -72,6 +72,10 @@ class TestEmpty(TestCase):
         """ Verify shape """
         self.assertEqual(self.dset.size, None)
 
+    def test_nbytes(self):
+        """ Verify nbytes """
+        self.assertEqual(self.dset.nbytes, None)
+
     def test_ellipsis(self):
         """ Ellipsis -> ValueError """
         self.assertEqual(self.dset[...], self.empty_obj)
@@ -122,6 +126,14 @@ class TestScalarFloat(TestCase):
     def test_ndim(self):
         """ Verify number of dimensions """
         self.assertEqual(self.dset.ndim, 0)
+
+    def test_size(self):
+        """ Verify size """
+        self.assertEqual(self.dset.size, 1)
+
+    def test_nbytes(self):
+        """ Verify nbytes """
+        self.assertEqual(self.dset.nbytes, self.data.dtype.itemsize)  # not sure if 'f' is always alias for 'f4'
 
     def test_shape(self):
         """ Verify shape """
@@ -186,6 +198,14 @@ class TestScalarCompound(TestCase):
         """ Verify shape """
         self.assertEqual(self.dset.shape, tuple())
 
+    def test_size(self):
+        """ Verify size """
+        self.assertEqual(self.dset.size, 1)
+
+    def test_nbytes(self):
+        """ Verify nbytes """
+        self.assertEqual(self.dset.nbytes, self.data.dtype.itemsize)
+
     def test_ellipsis(self):
         """ Ellipsis -> scalar ndarray """
         out = self.dset[...]
@@ -249,6 +269,14 @@ class TestScalarArray(TestCase):
         """ Verify number of dimensions """
         self.assertEqual(self.data.ndim, 2)
         self.assertEqual(self.dset.ndim, 0)
+
+    def test_size(self):
+        """ Verify size """
+        self.assertEqual(self.dset.size, 6)
+
+    def test_nbytes(self):
+        """ Verify nbytes """
+        self.assertEqual(self.dset.nbytes, 6*self.data.dtype.itemsize)  # not sure if 'f' is always alias for 'f4'
 
     def test_shape(self):
         """ Verify shape """
@@ -505,6 +533,14 @@ class Test2DFloat(TestCase):
     def test_ndim(self):
         """ Verify number of dimensions """
         self.assertEqual(self.dset.ndim, 2)
+
+    def test_size(self):
+        """ Verify size """
+        self.assertEqual(self.dset.size, 2)
+
+    def test_nbytes(self):
+        """ Verify nbytes """
+        self.assertEqual(self.dset.nbytes, 2*self.data.dtype.itemsize)  # not sure if 'f' is always alias for 'f4'
 
     def test_shape(self):
         """ Verify shape """
