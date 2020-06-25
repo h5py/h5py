@@ -276,7 +276,7 @@ class TestScalarArray(TestCase):
 
     def test_nbytes(self):
         """ Verify nbytes """
-        self.assertEqual(self.dset.nbytes, self.data.dtype.itemsize)  # not sure if 'f' is always alias for 'f4'
+        self.assertEqual(self.dset.nbytes, self.dset.dtype.itemsize)  # not sure if 'f' is always alias for 'f4'
 
     def test_shape(self):
         """ Verify shape """
