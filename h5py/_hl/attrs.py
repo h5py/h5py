@@ -222,12 +222,15 @@ class AttributeManager(base.MutableMappingHDF5, base.CommonStateObject):
             if not name in self:
                 self[name] = value
             else:
-                value = numpy.asarray(value, order='C')
-
                 attr = h5a.open(self._id, self._e(name))
 
                 if is_empty_dataspace(attr):
                     raise IOError("Empty attributes can't be modified")
+
+                # If the input data is already an array, let HDF5 do the conversion.
+                # If it's a list or similar, don't make numpy guess a dtype for it.
+                dt = None if isinstance(value, numpy.ndarray) else attr.dtype
+                value = numpy.asarray(value, order='C', dtype=dt)
 
                 # Allow the case of () <-> (1,)
                 if (value.shape != attr.shape) and not \
