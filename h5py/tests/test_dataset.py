@@ -1457,6 +1457,12 @@ def test_zero_storage_size():
 def test_create_uint64(writable_file):
     # https://github.com/h5py/h5py/issues/1547
     data = [np.iinfo(np.int64).max, np.iinfo(np.int64).max + 1]
+
+    # Check creating a new dataset
     ds = writable_file.create_dataset('x', data=data, dtype=np.uint64)
     assert ds.dtype == np.dtype(np.uint64)
+    np.testing.assert_array_equal(ds[:], np.array(data, dtype=np.uint64))
+
+    # Check writing to an existing dataset
+    ds[:] = data
     np.testing.assert_array_equal(ds[:], np.array(data, dtype=np.uint64))
