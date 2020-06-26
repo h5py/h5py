@@ -790,7 +790,10 @@ class Dataset(HLObject):
                 val = val.view(numpy.dtype([(names[0], dtype)]))
                 val = val.reshape(val.shape[:len(val.shape) - len(dtype.shape)])
         else:
-            val = numpy.asarray(val, order='C')
+            # If the input data is already an array, let HDF5 do the conversion.
+            # If it's a list or similar, don't make numpy guess a dtype for it.
+            dt = None if isinstance(val, numpy.ndarray) else self.dtype
+            val = numpy.asarray(val, order='C', dtype=dt)
 
         # Check for array dtype compatibility and convert
         if self.dtype.subdtype is not None:
