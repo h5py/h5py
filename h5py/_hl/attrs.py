@@ -19,7 +19,7 @@ import uuid
 
 from .. import h5, h5s, h5t, h5a, h5p
 from . import base
-from .base import phil, with_phil, Empty, is_empty_dataspace
+from .base import phil, with_phil, Empty, is_empty_dataspace, product
 from .datatype import Datatype
 
 
@@ -234,7 +234,7 @@ class AttributeManager(base.MutableMappingHDF5, base.CommonStateObject):
 
                 # Allow the case of () <-> (1,)
                 if (value.shape != attr.shape) and not \
-                   (numpy.product(value.shape, dtype=numpy.ulonglong) == 1 and numpy.product(attr.shape, dtype=numpy.ulonglong) == 1):
+                   (value.size == 1 and product(attr.shape) == 1):
                     raise TypeError("Shape of data is incompatible with existing attribute")
                 attr.write(value)
 
