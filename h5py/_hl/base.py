@@ -105,17 +105,20 @@ def array_for_new_object(data, specified_dtype=None):
     # https://github.com/h5py/h5py/issues/819
     if is_float16_dtype(specified_dtype):
         as_dtype = specified_dtype
+    elif not isinstance(data, np.ndarray) and (specified_dtype is not None):
+        # If we need to convert e.g. a list to an array, don't leave numpy
+        # to guess a dtype we already know.
+        as_dtype = specified_dtype
     else:
         as_dtype = guess_dtype(data)
 
     data = np.asarray(data, order="C", dtype=as_dtype)
 
     # In most cases, this does nothing. But if data was already an array,
-    # and guess_dtype made a tagged version of the dtype it already had
-    # (e.g. an object array of strings), asarray() doesn't replace its
-    # dtype object. This gives it the tagged dtype:
+    # and as_dtype is a tagged h5py dtype (e.g. for an object array of strings),
+    # asarray() doesn't replace its dtype object. This gives it the tagged dtype:
     if as_dtype is not None:
-        data.dtype = as_dtype
+        data = data.view(dtype=as_dtype)
 
     return data
 
