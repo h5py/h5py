@@ -402,7 +402,7 @@ class Dataset(HLObject):
         size = self.size
         if size is None:  # if we are empty, return None
             return None
-        return numpy.dtype(self.dtype).itemsize * size
+        return self.dtype.itemsize * size
 
     @property
     def _selector(self):
