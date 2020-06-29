@@ -200,3 +200,16 @@ class TestDatatype(BaseAttrs):
         dt.attrs.create('a', 4.0)
         self.assertEqual(list(dt.attrs.keys()), ['a'])
         self.assertEqual(list(dt.attrs.values()), [4.0])
+
+def test_python_int_uint64(writable_file):
+    f = writable_file
+    data = [np.iinfo(np.int64).max, np.iinfo(np.int64).max + 1]
+
+    # Check creating a new attribute
+    f.attrs.create('a', data, dtype=np.uint64)
+    assert f.attrs['a'].dtype == np.dtype(np.uint64)
+    np.testing.assert_array_equal(f.attrs['a'], np.array(data, dtype=np.uint64))
+
+    # Check modifying an existing attribute
+    f.attrs.modify('a', data)
+    np.testing.assert_array_equal(f.attrs['a'], np.array(data, dtype=np.uint64))
