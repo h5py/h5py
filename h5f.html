@@ -232,7 +232,7 @@ only tracks free space until the file is closed.</p>
 
 <dl class="py method">
 <dt id="h5py.h5f.FileID.get_mdc_config">
-<code class="sig-name descname">get_mdc_config</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; CacheConfig Returns an object that stores all the information about the meta-data cache configuration<a class="headerlink" href="#h5py.h5f.FileID.get_mdc_config" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_mdc_config</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; CacheConfig Returns an object that stores all the information about the meta-data cache configuration. This config is created for every file in-memory with the default cache config values, it is not saved to the hdf5 file.<a class="headerlink" href="#h5py.h5f.FileID.get_mdc_config" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -281,7 +281,7 @@ a mounted file.</p>
 
 <dl class="py method">
 <dt id="h5py.h5f.FileID.set_mdc_config">
-<code class="sig-name descname">set_mdc_config</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">CacheConfig</span></em><span class="sig-paren">)</span> &#x2192; None Returns an object that stores all the information about the meta-data cache configuration<a class="headerlink" href="#h5py.h5f.FileID.set_mdc_config" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">set_mdc_config</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">CacheConfig</span></em><span class="sig-paren">)</span> &#x2192; None Sets the meta-data cache configuration for a file. This config is created for every file in-memory with the default config values, it is not saved to the hdf5 file. Any change to the configuration lives until the hdf5 file is closed.<a class="headerlink" href="#h5py.h5f.FileID.set_mdc_config" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
