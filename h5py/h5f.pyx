@@ -514,7 +514,7 @@ cdef class FileID(GroupID):
     def set_mdc_config(self, CacheConfig config not None):
         """(CacheConfig) => None
         Sets the meta-data cache configuration for a file. This config is created for every file
-        in-memory with the default config values, it is not saved to the hdf5 file. Any changes to
+        in-memory with the default config values, it is not saved to the hdf5 file. Any change to
         the configuration lives until the hdf5 file is closed.
         """
         # I feel this should have some sanity checking to make sure that
