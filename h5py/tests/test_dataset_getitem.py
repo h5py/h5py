@@ -74,7 +74,7 @@ class TestEmpty(TestCase):
 
     def test_nbytes(self):
         """ Verify nbytes """
-        self.assertEqual(self.dset.nbytes, None)
+        self.assertEqual(self.dset.nbytes, 0)
 
     def test_ellipsis(self):
         """ Ellipsis -> ValueError """

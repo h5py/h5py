@@ -398,10 +398,10 @@ class Dataset(HLObject):
 
     @property
     def nbytes(self):
-        """Numpy-style attribute giving the dataset size as the number of bytes"""
+        """Numpy-style attribute giving the raw dataset size as the number of bytes"""
         size = self.size
-        if size is None:  # if we are empty, return None
-            return None
+        if size is None:  # if we are an empty 0-D array, then there are no bytes in the dataset
+            return 0
         return self.dtype.itemsize * size
 
     @property
