@@ -572,7 +572,7 @@ Reference
         Integer giving the total number of bytes required to load the full dataset into RAM (i.e. `dset[()]`).
         This may not be the amount of disk space occupied by the dataset,
         as datasets may be compressed when written or only partly filled with data.
-        Also note that this value does not include the array overhead, as it only describes the size of the data itself.
+        This value also does not include the array overhead, as it only describes the size of the data itself.
         Thus the real amount of RAM occupied by this dataset may be slightly greater.
 
     .. attribute:: ndim
