@@ -17,6 +17,7 @@ NumPy operations like slicing, along with a variety of descriptive attributes:
   - **size** attribute
   - **ndim** attribute
   - **dtype** attribute
+  - **nbytes** attribute
 
 h5py supports most NumPy dtypes, and uses the same character codes (e.g.
 ``'f'``, ``'i8'``) and dtype machinery as
@@ -565,6 +566,16 @@ Reference
     .. attribute:: size
 
         Integer giving the total number of elements in the dataset.
+
+    .. attribute:: nbytes
+
+        Integer giving the total number of bytes required to load the full dataset into RAM (i.e. `dset[()]`).
+        This may not be the amount of disk space occupied by the dataset,
+        as datasets may be compressed when written or only partly filled with data.
+        This value also does not include the array overhead, as it only describes the size of the data itself.
+        Thus the real amount of RAM occupied by this dataset may be slightly greater.
+
+        .. versionadded:: 3.0
 
     .. attribute:: ndim
 
