@@ -574,6 +574,8 @@ Reference
         as datasets may be compressed when written or only partly filled with data.
         This value also does not include the array overhead, as it only describes the size of the data itself.
         Thus the real amount of RAM occupied by this dataset may be slightly greater.
+        
+        .. versionadded:: 3.0
 
     .. attribute:: ndim
 
