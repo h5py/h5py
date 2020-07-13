@@ -254,14 +254,10 @@ class File(Group):
     @with_phil
     def mode(self):
         """ Python mode used to open file """
+        write_intent = h5f.ACC_RDWR
         if swmr_support:
-            intent = self.id.get_intent() & (h5f.ACC_SWMR_WRITE | h5f.ACC_RDWR)
-        else:
-            intent = self.id.get_intent() & h5f.ACC_RDWR
-        if 0 < intent:
-            return 'r+'
-        else:
-            return 'r'
+            write_intent |= h5f.ACC_SWMR_WRITE
+        return 'r+' if self.id.get_intent() & write_intent else 'r'
 
     @property
     @with_phil
@@ -292,23 +288,23 @@ class File(Group):
             # pylint: disable=missing-docstring
             self.id.set_mpi_atomicity(value)
 
-    if swmr_support:
-        @property
-        @with_phil
-        def swmr_mode(self):
-            """ Controls single-writer multiple-reader mode """
-            return 0 < (self.id.get_intent() & (h5f.ACC_SWMR_READ | h5f.ACC_SWMR_WRITE))
+    @property
+    @with_phil
+    def swmr_mode(self):
+        """ Controls single-writer multiple-reader mode """
+        return swmr_support and bool(self.id.get_intent() & (h5f.ACC_SWMR_READ | h5f.ACC_SWMR_WRITE))
 
-        @swmr_mode.setter
-        @with_phil
-        def swmr_mode(self, value):
-            # pylint: disable=missing-docstring
+    @swmr_mode.setter
+    @with_phil
+    def swmr_mode(self, value):
+        # pylint: disable=missing-docstring
+        if swmr_support:
             if value:
                 self.id.start_swmr_write()
             else:
                 raise ValueError("It is not possible to forcibly switch SWMR mode off.")
-    else:
-        swmr_mode = False
+        else:
+            raise RuntimeError('SWMR support is not available for version {}.{}.{}.'.format(*hdf5_version))
 
     def __init__(self, name, mode=None, driver=None,
                  libver=None, userblock_size=None, swmr=False,

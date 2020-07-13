@@ -36,9 +36,17 @@ class TestSwmrNotAvailable(TestCase):
         with self.assertRaises(AttributeError):
             self.dset.flush()
 
-    def test_swmr_mode_raises(self):
-        with self.assertRaises(AttributeError):
-            self.f.swmr_mode
+    def test_swmr_mode_false(self):
+        """ The SWMR getter should just be False
+        """
+        assert not self.f.swmr_mode
+
+    def test_set_swmr_mode_raises(self):
+        """ If the SWMR feature is not available, setting swmr_mode = True
+        should raise a RuntimeError
+        """
+        with self.assertRaises(RuntimeError):
+            self.f.swmr_mode = True
 
 @ut.skipUnless(h5py.version.hdf5_version_tuple >= (1, 9, 178), 'SWMR requires HDF5 >= 1.9.178')
 class TestDatasetSwmrRead(TestCase):
