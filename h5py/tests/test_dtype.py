@@ -445,7 +445,7 @@ class TestB8(TestCase):
                 arr2 = dset[:]
             self.assertArrayEqual(arr2, arr1.astype(dtype, copy=False))
 
-            # read uncast dataset again to ensure nothing changed permanantly
+            # read uncast dataset again to ensure nothing changed permanently
             with self.assertRaises(
                 TypeError, msg='No NumPy equivalent for TypeBitfieldID exists'
             ):
