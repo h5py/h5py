@@ -254,7 +254,10 @@ class File(Group):
     @with_phil
     def mode(self):
         """ Python mode used to open file """
-        intent = self.id.get_intent() & (h5f.ACC_SWMR_WRITE | h5f.ACC_RDWR)
+        if swmr_support:
+            intent = self.id.get_intent() & (h5f.ACC_SWMR_WRITE | h5f.ACC_RDWR)
+        else:
+            intent = self.id.get_intent() & h5f.ACC_RDWR
         if 0 < intent:
             return 'r+'
         else:
