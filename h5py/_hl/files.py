@@ -254,8 +254,11 @@ class File(Group):
     @with_phil
     def mode(self):
         """ Python mode used to open file """
-        return {h5f.ACC_RDONLY: 'r',
-                h5f.ACC_RDWR: 'r+'}.get(self.id.get_intent())
+        intent = self.id.get_intent() & (h5f.ACC_SWMR_WRITE | h5f.ACC_RDWR)
+        if 0 < intent:
+            return 'r+'
+        else:
+            return 'r'
 
     @property
     @with_phil
@@ -288,9 +291,10 @@ class File(Group):
 
     if swmr_support:
         @property
+        @with_phil
         def swmr_mode(self):
             """ Controls single-writer multiple-reader mode """
-            return self._swmr_mode
+            return 0 < (self.id.get_intent() & (h5f.ACC_SWMR_READ | h5f.ACC_SWMR_WRITE))
 
         @swmr_mode.setter
         @with_phil
@@ -298,9 +302,10 @@ class File(Group):
             # pylint: disable=missing-docstring
             if value:
                 self.id.start_swmr_write()
-                self._swmr_mode = True
             else:
                 raise ValueError("It is not possible to forcibly switch SWMR mode off.")
+    else:
+        swmr_mode = False
 
     def __init__(self, name, mode=None, driver=None,
                  libver=None, userblock_size=None, swmr=False,
@@ -424,11 +429,6 @@ class File(Group):
                 self._libver = libver
             else:
                 self._libver = (libver, 'latest')
-
-            if swmr_support:
-                self._swmr_mode = False
-                if swmr and mode == 'r':
-                    self._swmr_mode = True
 
         super(File, self).__init__(fid)
 
