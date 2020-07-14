@@ -304,7 +304,7 @@ class File(Group):
             else:
                 raise ValueError("It is not possible to forcibly switch SWMR mode off.")
         else:
-            raise RuntimeError('SWMR support is not available for version {}.{}.{}.'.format(*hdf5_version))
+            raise RuntimeError('SWMR support is not available in HDF5 version {}.{}.{}.'.format(*hdf5_version))
 
     def __init__(self, name, mode=None, driver=None,
                  libver=None, userblock_size=None, swmr=False,
