@@ -47,6 +47,7 @@ class TestSwmrNotAvailable(TestCase):
         """
         with self.assertRaises(RuntimeError):
             self.f.swmr_mode = True
+        assert not self.f.swmr_mode
 
 @ut.skipUnless(h5py.version.hdf5_version_tuple >= (1, 9, 178), 'SWMR requires HDF5 >= 1.9.178')
 class TestDatasetSwmrRead(TestCase):
