@@ -726,3 +726,34 @@ class TestMPI(object):
         f.create_group("test")
         f.close()
         f.close()
+
+
+@ut.skipIf(h5py.version.hdf5_version_tuple < (1, 10, 1),
+               'Requires HDF5 1.10.1 or later')
+class TestSWMRMode(TestCase):
+
+    """
+        Feature: Create file that switches on SWMR mode
+    """
+
+    def test_file_mode_generalizes(self):
+        fname = self.mktemp()
+        fid = File(fname, 'w', libver='latest')
+        g = fid.create_group('foo')
+        # fid and group member file attribute should have the same mode
+        assert fid.mode == g.file.mode == 'r+'
+        fid.swmr_mode = True
+        # fid and group member file attribute should still be 'r+'
+        # even though file intent has changed
+        assert fid.mode == g.file.mode == 'r+'
+        fid.close()
+
+    def test_swmr_mode_consistency(self):
+        fname = self.mktemp()
+        fid = File(fname, 'w', libver='latest')
+        g = fid.create_group('foo')
+        assert fid.swmr_mode == g.file.swmr_mode == False
+        fid.swmr_mode = True
+        # This setter should affect both fid and group member file attribute
+        assert fid.swmr_mode == g.file.swmr_mode == True
+        fid.close()
