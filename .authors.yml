@@ -124,6 +124,13 @@
   num_commits: 2
   first_commit: 2016-11-08 18:01:54
   github: cgohlke
+- name: Chen
+  email: chenguopingdota@163.com
+  aliases:
+  - chenguoping
+  num_commits: 1
+  first_commit: 2020-07-15 20:34:45
+  github: dota17
 - name: Carlos Pascual
   email: cpascual@cells.es
   num_commits: 2
