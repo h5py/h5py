@@ -157,10 +157,11 @@ You don't need this if your change doesn't affect people building and using h5py
 e.g. fixing a typo.
 
 Add yourself into author list
-~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If it's your first time to contribute to this project, you should add yourself into
 `author list <https://github.com/h5py/h5py/blob/master/.authors.yml>`_  and follow the format below::
+
     - name: xxx                   # your name on Github, which can be found in your public profile if you set it up
       aliases: (optional)
         - xxx                     # your name whatever you like
