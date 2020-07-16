@@ -4,7 +4,7 @@
   first_commit: 2016-05-15 02:39:55
 - name: Konrad Hinsen
   aliases:
-  - khinsen
+    - khinsen
   email: konrad.hinsen@fastmail.net
   num_commits: 4
   first_commit: 2013-06-20 00:12:49
@@ -41,7 +41,7 @@
   github: mgeier
 - name: Liu JiaLin
   aliases:
-  - valiantljk
+    - valiantljk
   email: jaln.liu@ttu.edu
   num_commits: 9
   first_commit: 2015-11-10 18:54:08
@@ -49,7 +49,7 @@
 - name: James Tocknell
   email: aragilar@gmail.com
   alternate_emails:
-  - aragilar+github@gmail.com
+    - aragilar+github@gmail.com
   num_commits: 112
   first_commit: 2014-12-10 23:30:56
   github: aragilar
@@ -81,7 +81,7 @@
 - name: Jerome Kieffer
   email: jerome.kieffer@esrf.fr
   alternate_emails:
-  - github@terre-adelie.org
+    - github@terre-adelie.org
   num_commits: 4
   first_commit: 2019-06-18 07:43:59
   github: kif
@@ -119,7 +119,7 @@
   first_commit: 2014-05-02 23:39:07
 - name: Christoph Gohlke
   aliases:
-  - cgohlke
+    - cgohlke
   email: cgohlke@uci.edu
   num_commits: 2
   first_commit: 2016-11-08 18:01:54
@@ -127,7 +127,7 @@
 - name: Chen
   email: chenguopingdota@163.com
   aliases:
-  - chenguoping
+    - chenguoping
   num_commits: 1
   first_commit: 2020-07-15 20:34:45
   github: dota17
@@ -149,14 +149,14 @@
 - name: Stan West
   email: countrycaptain@verizon.net
   alternate_emails:
-  - 38358698+stanwest@users.noreply.github.com
+    - 38358698+stanwest@users.noreply.github.com
   num_commits: 6
   first_commit: 2011-07-25 10:45:28
   github: stanwest
 - name: Ghislain Antony Vaillant
   email: ghisvail@gmail.com
   alternate_emails:
-  - ghisvail@users.noreply.github.com
+    - ghisvail@users.noreply.github.com
   num_commits: 8
   first_commit: 2015-04-01 14:25:49
   github: ghisvail
@@ -188,7 +188,7 @@
   num_commits: 955
   first_commit: 2008-05-05 17:12:34
   aliases:
-  - andrewcollette
+    - andrewcollette
   github: andrewcollette
 - name: Evan Wright
   email: evanpw@gmail.com
@@ -202,7 +202,7 @@
 - name: unknown
   email: devnull@localhost
   aliases:
-  - convert-repo
+    - convert-repo
   num_commits: 2
   first_commit: 2008-05-05 16:59:07
 - name: Andrey Paramonov
@@ -224,8 +224,8 @@
   num_commits: 146
   first_commit: 2016-08-06 20:10:45
   alternate_emails:
-  - tcaswell@uchicago.edu
-  - tcaswell@gmail.com
+    - tcaswell@uchicago.edu
+    - tcaswell@gmail.com
   github: tacaswell
 - name: syhw
   email: gabriel.synnaeve@gmail.com
@@ -240,8 +240,8 @@
 - name: Yu Feng
   email: yfeng1@waterfall.dyn.berkeley.edu
   alternate_emails:
-  - rainwoodman@gmail.com
-  - feyu@google.com
+    - rainwoodman@gmail.com
+    - feyu@google.com
   num_commits: 8
   first_commit: 2015-08-14 19:43:46
   github: rainwoodman
@@ -286,9 +286,9 @@
 - name: Darren Dale
   email: dsdale24@gmail.com
   alternate_emails:
-  - darren@f2-analysis-2.chess.cornell.edu
+    - darren@f2-analysis-2.chess.cornell.edu
   aliases:
-  - ddale
+    - ddale
   num_commits: 45
   first_commit: 2011-05-27 10:45:34
   github: ddale
@@ -304,7 +304,7 @@
 - name: Lawrence Chan
   email: element103@gmail.com
   alternate_emails:
-  - lchan@jumptrading.com
+    - lchan@jumptrading.com
   num_commits: 12
   first_commit: 2015-12-12 16:31:49
   github: llchan
@@ -367,8 +367,8 @@
 - name: Thomas Kluyver
   email: thomas@kluyver.me.uk
   alternate_emails:
-  - thomas.kluyver@xfel.eu
-  - takowl@gmail.com
+    - thomas.kluyver@xfel.eu
+    - takowl@gmail.com
   num_commits: 111
   first_commit: 2018-06-23 08:47:27
   github: takluyver
@@ -433,7 +433,7 @@
 - name: Charles Law
   email: charles.law@eyenuk.com
   alternate_emails:
-  - 39317519+claweyenuk@users.noreply.github.com
+    - 39317519+claweyenuk@users.noreply.github.com
   num_commits: 3
   first_commit: 2019-04-02 17:25:47
   github: claweyenuk
@@ -464,7 +464,7 @@
 - name: Chen Yufei
   email: cyf@ruitiancapital.com
   alternate_emails:
-  - cyfdecyf@gmail.com
+    - cyfdecyf@gmail.com
   num_commits: 3
   first_commit: 2017-12-24 08:23:13
   github: cyfdecyf
@@ -495,7 +495,7 @@
 - name: Jakob Lombacher
   email: Jakob.Lombacher@daimler.com
   alternate_emails:
-  - Jakob@Lombacher.net
+    - Jakob@Lombacher.net
   num_commits: 2
   first_commit: 2015-05-22 08:14:50
   github: jlombacher
@@ -532,7 +532,7 @@
   num_commits: 8
   first_commit: 2016-02-23 21:01:20
   alternate_emails:
-  - andreabedini@users.noreply.github.com
+    - andreabedini@users.noreply.github.com
   github: andreabedini
 - name: Michael Boyle
   email: michael.oliver.boyle@gmail.com
