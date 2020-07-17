@@ -156,8 +156,8 @@ Commit this to git too. These files will be used to make the release notes.
 You don't need this if your change doesn't affect people building and using h5py,
 e.g. fixing a typo.
 
-Add yourself into author list
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Add yourself to the author list
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If it's your first time to contribute to this project, you should add yourself into
 `author list <https://github.com/h5py/h5py/blob/master/.authors.yml>`_  and follow the format below::
