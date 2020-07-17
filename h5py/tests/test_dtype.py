@@ -234,7 +234,7 @@ class TestOffsets(TestCase):
         self.assertTrue(dt.itemsize == itemsize)
         data = np.empty(10, dtype=dt)
 
-        # don't trust numpy struct handling , keep fields out of band incase content insertion is erroneous
+        # don't trust numpy struct handling, keep fields out of band in case content insertion is erroneous
         # yes... this has also been known to happen.
         f1 = np.array([1 + i * 4 for i in range(data.shape[0])], dtype=dt.fields['f1'][0])
         f2 = np.array([2 + i * 4 for i in range(data.shape[0])], dtype=dt.fields['f2'][0])

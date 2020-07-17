@@ -429,7 +429,7 @@ Reference
 
     .. attribute:: id
 
-        The groups's low-level identifer; an instance of
+        The groups's low-level identifier; an instance of
         :class:`GroupID <low:h5py.h5g.GroupID>`.
 
     .. attribute:: ref

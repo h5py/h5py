@@ -310,7 +310,7 @@ class FancySelection(Selection):
         Implements advanced NumPy-style selection operations in addition to
         the standard slice-and-int behavior.
 
-        Indexing arguments may be ints, slices, lists of indicies, or
+        Indexing arguments may be ints, slices, lists of indices, or
         per-axis (1D) boolean arrays.
 
         Broadcasting is not supported for these selections.

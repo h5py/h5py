@@ -23,7 +23,7 @@ attributes:
         container creation order is tracked, its links and attributes
         are iterated in ascending creation order (consistent with
         ``dict`` in Python 3.7+); otherwise in ascending alphanumeric
-        order.  Global configuration value can be overriden for
+        order.  Global configuration value can be overridden for
         particular container by specifying ``track_order`` argument to
         :class:`h5py.File`, :meth:`h5py.Group.create_group`,
         :meth:`h5py.Group.create_dataset`.  The default is ``False``.

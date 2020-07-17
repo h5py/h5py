@@ -358,7 +358,7 @@ def vlen_create(TypeID base not None):
 def decode(char* buf):
     """(STRING buf) => TypeID
 
-    Unserialize an HDF5 type.  You can also do this with the native
+    Deserialize an HDF5 type.  You can also do this with the native
     Python pickling machinery.
     """
     return typewrap(H5Tdecode(<unsigned char*>buf))
@@ -1647,7 +1647,7 @@ cpdef TypeID py_create(object dtype_in, bint logical=0, bint aligned=0):
         char kind
 
     dt = np.dtype(dtype_in)
-    # dt is now the C side of dtype_in. Sometimes the Python behavour is easier to handle than the C-version
+    # dt is now the C side of dtype_in. Sometimes the Python behaviour is easier to handle than the C-version
     kind = dt.kind
     aligned = getattr(dtype_in, "isalignedstruct", aligned)
 

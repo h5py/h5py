@@ -3,7 +3,7 @@ What's new in h5py 2.7
 
 Python 3.2 is no longer supported
 ---------------------------------
-``h5py`` 2.7 drops Python 3.2 support, and testing is not longer preformed on Python 3.2. The latest versions of ``pip``, ``virtualenv``, ``setuptools`` and ``numpy`` do not support Python 3.2, and dropping 3.2 allows both ``u`` and ``b`` prefixes to be used for strings. A clean up of some of the legacy code was done in `#675`_ by Andrew Collette.
+``h5py`` 2.7 drops Python 3.2 support, and testing is not longer performed on Python 3.2. The latest versions of ``pip``, ``virtualenv``, ``setuptools`` and ``numpy`` do not support Python 3.2, and dropping 3.2 allows both ``u`` and ``b`` prefixes to be used for strings. A clean up of some of the legacy code was done in `#675`_ by Andrew Collette.
 
 Additionally, support for Python 2.6 is soon to be dropped for ``pip`` (See https://github.com/pypa/pip/issues/3955) and ``setuptools`` (See https://github.com/pypa/setuptools/issues/878), and ``numpy`` has dropped Python 2.6 also in the latest release. While ``h5py`` has not dropped Python 2.6 this release, users are strongly encouraged to move to Python 2.7 where possible.
 

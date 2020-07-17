@@ -64,7 +64,7 @@ def with_phil(func):
 #
 # With HDF5 1.8, when an identifier is closed its value may be immediately
 # re-used for a new object.  This leads to odd behavior when an ObjectID
-# with an old identifier is left hanging around... for example, a GroupID
+# with an old identifier is left hanging around... For example, a GroupID
 # belonging to a closed file could suddenly "mutate" into one from a
 # different file.
 #
@@ -79,7 +79,7 @@ def with_phil(func):
 # nonlocal_close() does.  We maintain an inventory of all live ObjectID
 # instances in the registry dict.  Then, when a nonlocal event occurs,
 # nonlocal_close() walks through the inventory and sets the stale identifiers
-# to 0.  It must be explictly called; currently, this happens in FileID.close()
+# to 0.  It must be explicitly called; currently, this happens in FileID.close()
 # as well as the high-level File.close().
 #
 # The entire low-level API is now explicitly locked, so only one thread at at

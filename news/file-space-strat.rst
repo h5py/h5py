@@ -2,7 +2,7 @@ New features
 ------------
 
 * Support for setting file space strategy at file creation.  Includes option to
-  presist empty space tracking between sessions.
+  persist empty space tracking between sessions.
 
 Deprecations
 ------------
