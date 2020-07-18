@@ -639,7 +639,7 @@ cdef int conv_vlen2ndarray(void* ipt,
 
     :param ipt: input pointer: Point to the input data
     :param opt: output pointer: will contains the numpy array after exit
-    :param elem_dtype: dtype of the elemnt
+    :param elem_dtype: dtype of the element
     :param intype: ?
     :param outtype: ?
     """

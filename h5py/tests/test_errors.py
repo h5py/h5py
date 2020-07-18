@@ -25,7 +25,7 @@ def _access_not_existing_object(filename):
 
 
 def test_unsilence_errors(tmp_path, capfd):
-    """Chech that HDF5 errors can be mute/unmute from h5py"""
+    """Check that HDF5 errors can be muted/unmuted from h5py"""
     filename = tmp_path / 'test.h5'
 
     # Unmute HDF5 errors

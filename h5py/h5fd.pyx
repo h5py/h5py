@@ -92,7 +92,7 @@ LOG_ALL       = H5FD_LOG_ALL        # (H5FD_LOG_ALLOC|H5FD_LOG_TIME_IO|H5FD_LOG_
 # taking file-like object from FAPL and returning struct
 # H5FD_fileobj_t (descendant of base H5FD_t) which will hold file
 # state. Other callbacks receive H5FD_fileobj_t and operate on
-# f.fileobj. If successful, callbacks must return zero; otherwize
+# f.fileobj. If successful, callbacks must return zero; otherwise
 # non-zero value.
 
 

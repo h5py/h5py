@@ -1,7 +1,7 @@
 New features
 ------------
 
-* Efficient handling of scalar assignement of chunked datasets when the number of assigned elements is smaller or equal to the size of one chunk.
+* Efficient handling of scalar assignment of chunked datasets when the number of assigned elements is smaller or equal to the size of one chunk.
 
 Deprecations
 ------------

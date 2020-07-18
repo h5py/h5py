@@ -865,7 +865,7 @@ class Dataset(HLObject):
         # the dataset used an appropriate chunk size according the available
         # memory. In any case, if we cannot afford to create an intermediate
         # array of the same size as the dataset chunk size, the user program has
-        # little hope to go much further. Solves h5py isue #1067
+        # little hope to go much further. Solves h5py issue #1067
         if mshape == () and selection.array_shape != ():
             if self.dtype.subdtype is not None:
                 raise TypeError("Scalar broadcasting is not supported for array dtypes")

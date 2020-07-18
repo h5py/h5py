@@ -321,7 +321,7 @@ Multi-Block Selection
 
 The full H5Sselect_hyperslab API is exposed via the MultiBlockSlice object.
 This takes four elements to define the selection (start, count, stride and
-block) in constrast to the built-in slice object, which takes three elements.
+block) in contrast to the built-in slice object, which takes three elements.
 A MultiBlockSlice can be used in place of a slice to select a number of (count)
 blocks of multiple elements separated by a stride, rather than a set of single
 elements separated by a step.
@@ -413,7 +413,7 @@ or by ``data`` to an instance of ``h5py.Empty``::
 An empty dataset has shape defined as ``None``, which is the best way of
 determining whether a dataset is empty or not. An empty dataset can be "read" in
 a similar way to scalar datasets, i.e. if ``empty_dataset`` is an empty
-dataset,::
+dataset::
 
     >>> empty_dataset[()]
     h5py.Empty(dtype="f")
@@ -452,8 +452,8 @@ Reference
         >>> if dset:
         ...     print("datset accessible")
         ... else:
-        ...     print("dataset is inaccessible")
-        dataset unaccessible
+        ...     print("dataset inaccessible")
+        dataset inaccessible
 
     .. method:: read_direct(array, source_sel=None, dest_sel=None)
 
@@ -583,7 +583,7 @@ Reference
 
     .. attribute:: maxshape
 
-        NumPy-style shape tuple indicating the maxiumum dimensions up to which
+        NumPy-style shape tuple indicating the maximum dimensions up to which
         the dataset may be resized.  Axes with ``None`` are unlimited.
 
     .. attribute:: chunks
@@ -641,7 +641,7 @@ Reference
 
     .. attribute:: id
 
-        The dataset's low-level identifer; an instance of
+        The dataset's low-level identifier; an instance of
         :class:`DatasetID <low:h5py.h5d.DatasetID>`.
 
     .. attribute:: ref
