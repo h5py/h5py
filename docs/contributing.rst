@@ -156,6 +156,22 @@ Commit this to git too. These files will be used to make the release notes.
 You don't need this if your change doesn't affect people building and using h5py,
 e.g. fixing a typo.
 
+Add yourself to the author list
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If it's your first time to contribute to this project, you should add yourself into
+`author list <https://github.com/h5py/h5py/blob/master/.authors.yml>`_  and follow the format below::
+
+    - name: xxx                   # your name in Github, which can be found in your public profile if you set it up
+      aliases: (optional)
+        - xxx                     # your username alias in Github commits
+      email: xxx                  # your email address
+      alternate_emails: (optional)
+        - xxx                     # if you committed your code with another email address, you can put it there
+      num_commit: xxx             # the number of commits you have submitted to this project
+      first_commit: xxx           # your first commit time, run `git log` to see it
+      github: xxx                 # your username or account name in Github
+
 Push your changes back and open a pull request
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -174,7 +190,7 @@ will post comments asking you to fix minor things, like add a few tests, clean
 up the style to be PEP-8 compliant, etc.
 
 The pull request page also shows the results of building and testing the
-modified code on Travis and Appveyor CI.
+modified code on Travis and Appveyor CI and Azure Pipelines.
 Check back after about 30 minutes to see if the build succeeded,
 and if not, try to modify your changes to make it work.
 
@@ -408,5 +424,5 @@ will instruct OpenMPI to allow more MPI processes than available cores on your
 system.
 
 If you need to pass additional environment variables to your MPI implementation,
-add these variables to the `passenv` setting in the `tox.ini`, and send us a PR
+add these variables to the ``passenv`` setting in the ``tox.ini``, and send us a PR
 with that change noting the MPI implementation.
