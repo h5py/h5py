@@ -524,7 +524,7 @@ class Dataset(HLObject):
     @cached_property
     @with_phil
     def _extent_type(self):
-        """Get simple extent type for this dataset"""
+        """Get extent type for this dataset - SIMPLE, SCALAR or NULL"""
         return self.id.get_space().get_simple_extent_type()
 
     @cached_property
