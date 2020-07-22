@@ -41,6 +41,7 @@ if hdf5_version >= (1, 11, 4):
 
 
 def _set_fapl_mpio(plist, **kwargs):
+    """Set file access property list for mpio driver"""
     if not mpi:
         raise ValueError("h5py was built without MPI support, can't use mpio driver")
 
@@ -50,6 +51,7 @@ def _set_fapl_mpio(plist, **kwargs):
 
 
 def _set_fapl_fileobj(plist, **kwargs):
+    """Set file access property list for file objects"""
     plist.set_fileobj_driver(h5fd.fileobj_driver, kwargs.get('fileobj'))
 
 
