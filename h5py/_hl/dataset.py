@@ -524,10 +524,12 @@ class Dataset(HLObject):
     @cached_property
     @with_phil
     def _extent_type(self):
+        """Get extent type for this dataset - SIMPLE, SCALAR or NULL"""
         return self.id.get_space().get_simple_extent_type()
 
     @cached_property
     def _is_empty(self):
+        """Check if extent type is empty"""
         return self._extent_type == h5s.NULL
 
     @with_phil
@@ -989,10 +991,12 @@ class Dataset(HLObject):
         @property
         @with_phil
         def is_virtual(self):
+            """Check if this is a virtual dataset"""
             return self._dcpl.get_layout() == h5d.VIRTUAL
 
         @with_phil
         def virtual_sources(self):
+            """Get a list of the data mappings for a virtual dataset"""
             if not self.is_virtual:
                 raise RuntimeError("Not a virtual dataset")
             dcpl = self._dcpl
