@@ -991,7 +991,7 @@ class Dataset(HLObject):
         @property
         @with_phil
         def is_virtual(self):
-            """Check if a dataset creation property list layout is virtual"""
+            """Check if this is a virtual dataset"""
             return self._dcpl.get_layout() == h5d.VIRTUAL
 
         @with_phil
