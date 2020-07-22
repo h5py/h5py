@@ -51,7 +51,7 @@ def _set_fapl_mpio(plist, **kwargs):
 
 
 def _set_fapl_fileobj(plist, **kwargs):
-    """Set file access property list for file objects"""
+    """Set the Python file object driver in a file access property list"""
     plist.set_fileobj_driver(h5fd.fileobj_driver, kwargs.get('fileobj'))
 
 
