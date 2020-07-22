@@ -100,12 +100,10 @@ def make_new_dset(parent, shape=None, dtype=None, data=None, name=None,
             raise TypeError("Conflict in compression options")
         compression_opts = compression
         compression = 'gzip'
-    if dcpl is None:
-        plist = h5p.create(h5p.DATASET_CREATE)
-    else:
-        plist = dcpl
-    dcpl = filters.fill_dcpl(plist, shape, dtype, chunks, compression, compression_opts,
-                             shuffle, fletcher32, maxshape, scaleoffset, external)
+    dcpl = filters.fill_dcpl(
+        dcpl or h5p.create(h5p.DATASET_CREATE), shape, dtype,
+        chunks, compression, compression_opts, shuffle, fletcher32,
+        maxshape, scaleoffset, external)
 
     if fillvalue is not None:
         fillvalue = numpy.array(fillvalue)
