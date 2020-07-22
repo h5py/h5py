@@ -996,7 +996,7 @@ class Dataset(HLObject):
 
         @with_phil
         def virtual_sources(self):
-            """Get all dataset creation property list virtual sources if they exist"""
+            """Get a list of the data mappings for a virtual dataset"""
             if not self.is_virtual:
                 raise RuntimeError("Not a virtual dataset")
             dcpl = self._dcpl
