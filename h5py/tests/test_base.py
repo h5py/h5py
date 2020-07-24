@@ -14,6 +14,7 @@
 """
 
 from h5py import File
+from h5py._hl.base import is_hdf5, Empty
 from .common import ut, TestCase, UNICODE_FILENAMES
 
 import numpy as np
@@ -41,6 +42,78 @@ class TestName(BaseTest):
         grp = self.f.create_group(None)
         self.assertIs(grp.name, None)
 
+class TestParent(BaseTest):
+
+    """
+        test the parent group of the high-level interface objects
+    """
+
+    def test_object_parent(self):
+        # Anonymous objects
+        try:
+            grp = self.f.create_group(None)
+            bar_parent = grp.parent
+        except ValueError:
+            pass
+
+        # Named objects
+        grp = self.f.create_group("bar")
+        sub_grp = grp.create_group("foo")
+        parent = sub_grp.parent
+        self.assertEqual(r'<HDF5 group "/bar" (1 members)>', repr(parent))
+
+class TestMapping(BaseTest):
+
+    """
+        Test if the registration of Group, AttributeManager as a
+        Mapping behaves as expected
+    """
+
+    def setUp(self):
+        data = ('a', 'b')
+        self.f = File('foo.hdf5', 'w')
+        self.grp = self.f.create_group('bar')
+        self.attr = self.f.attrs.create('x', data)
+
+    def TearDown(self):
+        if self.f:
+            self.close()
+
+    def test_keys(self):
+        key_1 = self.f.keys()
+        self.assertEqual(r"<KeysViewHDF5 ['bar']>", repr(key_1))
+        key_2 = self.grp.keys()
+        self.assertEqual(r"<KeysViewHDF5 []>", repr(key_2))
+
+    def test_values(self):
+        value_1 = self.f.values()
+        self.assertEqual(r'ValuesViewHDF5(<HDF5 file "foo.hdf5" (mode r+)>)', repr(value_1))
+        value_2 = self.grp.values()
+        self.assertEqual(r'ValuesViewHDF5(<HDF5 group "/bar" (0 members)>)', repr(value_2))
+
+    def test_items(self):
+        item_1 = self.f.items()
+        self.assertEqual(r'ItemsViewHDF5(<HDF5 file "foo.hdf5" (mode r+)>)', repr(item_1))
+        item_2 = self.grp.items()
+        self.assertEqual(r'ItemsViewHDF5(<HDF5 group "/bar" (0 members)>)', repr(item_2))
+
+class TestFileType(BaseTest):
+
+    """
+        Test if a file is a HDF5 type
+    """
+
+    def test_is_hdf5(self):
+        filename = File("data.hdf5", "w").filename
+        fname = os.path.basename(filename)
+        fid = is_hdf5(fname)
+        self.assertTrue(fid)
+        # non-existing HDF5 file
+        filename = tempfile.mktemp()
+        fname = os.path.basename(filename)
+        fid = is_hdf5(fname)
+        self.assertFalse(fid)
+
 class TestRepr(BaseTest):
 
     """
@@ -67,6 +140,11 @@ class TestRepr(BaseTest):
         self.f['type'] = np.dtype('f')
         typ = self.f['type']
         self._check_type(typ)
+
+    def test_empty(self):
+        data = Empty(dtype='f')
+        self.assertNotEqual(Empty(dtype='i'), data)
+        self._check_type(data)
 
     @ut.skipIf(not UNICODE_FILENAMES, "Filesystem unicode support required")
     def test_file(self):

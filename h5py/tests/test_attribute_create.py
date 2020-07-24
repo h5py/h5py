@@ -76,3 +76,16 @@ class TestArray(TestCase):
         self.f.attrs.create('y', data=np.arange(3), shape=3)
         result = self.f.attrs['y']
         self.assertEqual(result.shape, (3,))
+
+    def test_dtype(self):
+        dt = np.dtype('(3,)i')
+        array = np.arange(3, dtype='i')
+        self.f.attrs.create('x', data=array, dtype=dt)
+        # Array dtype shape is incompatible with data shape
+        array = np.arange(4, dtype='i')
+        with self.assertRaises(ValueError):
+            self.f.attrs.create('x', data=array, dtype=dt)
+        # Shape of new attribute conflicts with shape of data
+        dt = np.dtype('()i')
+        with self.assertRaises(ValueError):
+            self.f.attrs.create('x', data=array, shape=(5,), dtype=dt)
