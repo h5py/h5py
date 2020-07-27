@@ -147,7 +147,7 @@ def make_fcpl(track_order=False, fs_strategy=None, fs_persist=False, fs_threshol
             h5p.CRT_ORDER_TRACKED | h5p.CRT_ORDER_INDEXED)
         plist.set_attr_creation_order(
             h5p.CRT_ORDER_TRACKED | h5p.CRT_ORDER_INDEXED)
-    elif fs_strategy:
+    if fs_strategy:
         strategies = {
             'fsm': h5f.FSPACE_STRATEGY_FSM_AGGR,
             'page': h5f.FSPACE_STRATEGY_PAGE,
