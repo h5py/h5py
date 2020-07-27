@@ -1466,3 +1466,10 @@ def test_python_int_uint64(writable_file):
     # Check writing to an existing dataset
     ds[:] = data
     np.testing.assert_array_equal(ds[:], np.array(data, dtype=np.uint64))
+
+
+def test_setitem_fancy_indexing(writable_file):
+    # https://github.com/h5py/h5py/issues/1593
+    arr = writable_file.create_dataset('data', (5, 1000, 2), dtype=np.uint8)
+    block = np.random.randint(255, size=(5, 3, 2))
+    arr[:, [0, 2, 4], ...] = block
