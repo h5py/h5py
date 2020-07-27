@@ -141,24 +141,25 @@ def make_fapl(driver, libver, rdcc_nslots, rdcc_nbytes, rdcc_w0, **kwds):
 
 def make_fcpl(track_order=False, fs_strategy=None, fs_persist=False, fs_threshold=1):
     """ Set up a file creation property list """
-    plist = h5p.create(h5p.FILE_CREATE)
-    if track_order:
-        plist.set_link_creation_order(
-            h5p.CRT_ORDER_TRACKED | h5p.CRT_ORDER_INDEXED)
-        plist.set_attr_creation_order(
-            h5p.CRT_ORDER_TRACKED | h5p.CRT_ORDER_INDEXED)
-    if fs_strategy:
-        strategies = {
-            'fsm': h5f.FSPACE_STRATEGY_FSM_AGGR,
-            'page': h5f.FSPACE_STRATEGY_PAGE,
-            'aggregate': h5f.FSPACE_STRATEGY_AGGR,
-            'none': h5f.FSPACE_STRATEGY_NONE
-        }
-        fs_strat_num = strategies.get(fs_strategy, -1)
-        if fs_strat_num == -1:
-            raise ValueError("Invalid file space strategy type")
+    if track_order or fs_strategy:
+        plist = h5p.create(h5p.FILE_CREATE)
+        if track_order:
+            plist.set_link_creation_order(
+                h5p.CRT_ORDER_TRACKED | h5p.CRT_ORDER_INDEXED)
+            plist.set_attr_creation_order(
+                h5p.CRT_ORDER_TRACKED | h5p.CRT_ORDER_INDEXED)
+        if fs_strategy:
+            strategies = {
+                'fsm': h5f.FSPACE_STRATEGY_FSM_AGGR,
+                'page': h5f.FSPACE_STRATEGY_PAGE,
+                'aggregate': h5f.FSPACE_STRATEGY_AGGR,
+                'none': h5f.FSPACE_STRATEGY_NONE
+            }
+            fs_strat_num = strategies.get(fs_strategy, -1)
+            if fs_strat_num == -1:
+                raise ValueError("Invalid file space strategy type")
 
-        plist.set_file_space_strategy(fs_strat_num, fs_persist, fs_threshold)
+            plist.set_file_space_strategy(fs_strat_num, fs_persist, fs_threshold)
     else:
         plist = None
     return plist
