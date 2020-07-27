@@ -273,7 +273,7 @@ cdef class Selector:
 
         if self.is_fancy:
             arr_shape = tuple(
-                mshape[i] for i in range(self.rank) if self.scalar[i]
+                mshape[i] for i in range(self.rank) if not self.scalar[i]
             )
             return FancySelection(shape, space, count, arr_shape)
         else:
