@@ -353,27 +353,6 @@ cdef class PropFCID(PropOCID):
         return (addr, size)
 
 
-    @with_phil
-    def set_link_creation_order(self, unsigned int flags):
-        """ (UINT flags)
-
-        Set tracking and indexing of creation order for links added to this group
-
-        flags -- h5p.CRT_ORDER_TRACKED, h5p.CRT_ORDER_INDEXED
-        """
-        H5Pset_link_creation_order(self.id, flags)
-
-
-    @with_phil
-    def get_link_creation_order(self):
-        """ () -> UINT flags
-
-        Get tracking and indexing of creation order for links added to this group
-        """
-        cdef unsigned int flags
-        H5Pget_link_creation_order(self.id, &flags)
-        return flags
-
     if HDF5_VERSION >= (1, 10, 1):
         @with_phil
         def set_file_space_strategy(self, unsigned int strategy, bint persist,
@@ -1457,26 +1436,7 @@ cdef class PropTCID(PropOCID):
 cdef class PropGCID(PropOCID):
     """ Group creation property list """
 
-    @with_phil
-    def set_link_creation_order(self, unsigned int flags):
-        """ (UINT flags)
-
-        Set tracking and indexing of creation order for links added to this group
-
-        flags -- h5p.CRT_ORDER_TRACKED, h5p.CRT_ORDER_INDEXED
-        """
-        H5Pset_link_creation_order(self.id, flags)
-
-
-    @with_phil
-    def get_link_creation_order(self):
-        """ () -> UINT flags
-
-        Get tracking and indexing of creation order for links added to this group
-        """
-        cdef unsigned int flags
-        H5Pget_link_creation_order(self.id, &flags)
-        return flags
+    pass
 
 
 # Object creation property list
@@ -1528,6 +1488,27 @@ cdef class PropOCID(PropCreateID):
         H5Pget_obj_track_times(self.id,&track_times)
 
         return track_times
+
+    @with_phil
+    def set_link_creation_order(self, unsigned int flags):
+        """ (UINT flags)
+
+        Set tracking and indexing of creation order for links added to this group
+
+        flags -- h5p.CRT_ORDER_TRACKED, h5p.CRT_ORDER_INDEXED
+        """
+        H5Pset_link_creation_order(self.id, flags)
+
+
+    @with_phil
+    def get_link_creation_order(self):
+        """ () -> UINT flags
+
+        Get tracking and indexing of creation order for links added to this group
+        """
+        cdef unsigned int flags
+        H5Pget_link_creation_order(self.id, &flags)
+        return flags
 
 
 # Dataset access
