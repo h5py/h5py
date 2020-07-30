@@ -792,7 +792,7 @@ class TestCreateLike(BaseDataset):
         similar = self.f.create_dataset_like('lenovo', orig)
         self.assertEqual(0, h5py.h5g.get_objinfo(similar._id).mtime)
 
-    def test_special_case(self):
+    def test_maxshape(self):
         """ Test when other.maxshape != other.shape """
 
         other = self.f.create_dataset('other', (10,), maxshape=20)
