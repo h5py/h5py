@@ -849,9 +849,6 @@ class TestResize(BaseDataset):
         dset = self.f.create_dataset('bar', 20, maxshape=20)
         self.assertEqual(dset.maxshape, (20,))
 
-        dset = self.f.create_dataset('fun', (1,), maxshape=True)
-        self.assertEqual(dset.maxshape, (1,))
-
     def test_resize(self):
         """ Datasets may be resized up to maxshape """
         dset = self.f.create_dataset('foo', (20, 30), maxshape=(20, 60))
