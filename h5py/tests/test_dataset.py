@@ -562,6 +562,7 @@ class TestCreateScaleOffset(BaseDataset):
 
         with self.assertRaises(ValueError):
             dset = self.f.create_dataset('foo', (20, 30), dtype=float, scaleoffset=True)
+
     def test_non_integer(self):
         """ Check when scaleoffset is negetive"""
 
