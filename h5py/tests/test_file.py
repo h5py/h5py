@@ -258,7 +258,7 @@ class TestDrivers(TestCase):
         fid = File(fname, 'r')
         assert 'foo' in fid
         fid.close()
-        # When driver is None, any kwds is invalid
+        # keywords for other drivers are invalid when using the default driver
         with self.assertRaises(TypeError):
             File(fname, 'w', backing_store=True)
 
