@@ -141,7 +141,7 @@ class TestSelection(BaseSelection):
 
         # args is a Selection instance, return a FancySelection
         st3 = sel.select((100,100), st, dset)
-        self.assertIsInstance(st, sel.FancySelection)
+        assert st3 == st
 
         # args is a single Selection instance, but args shape doesn't match Shape
         with self.assertRaises(TypeError):
