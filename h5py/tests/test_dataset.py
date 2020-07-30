@@ -167,9 +167,9 @@ class TestCreateData(BaseDataset):
         self.assertTrue(is_empty_dataspace(self.f['foo'].id))
 
     def test_create_incompatible_data(self):
-        data = self.f.create_dataset('dset', (3,))
+        # Shape tuple is incompatible with data
         with self.assertRaises(ValueError):
-            self.f.create_dataset('bar', shape=4, data=data)
+            self.f.create_dataset('bar', shape=4, data= np.arange(3))
 
 
 class TestReadDirectly(BaseDataset):
@@ -180,24 +180,20 @@ class TestReadDirectly(BaseDataset):
 
     def test_read_direct(self):
         dset = self.f.create_dataset("dset", (100,), dtype='int64')
-        source_dset = self.f.create_dataset("source_dset", (100,), dtype='int64')
-        dest_dset = self.f.create_dataset("dest_dset", (100,), dtype='int64')
         empty_dset = self.f.create_dataset("edset", dtype='int64')
+        arr = np.zeros((100,))
+        arr2 = np.zeros((200,))
 
-        source_sel = sel.select((100,), ..., source_dset)
-        dest_sel = sel.select((100,), ..., dest_dset)
-        arr = np.zeros((100,), dtype='int32')
+        # read empty dataset
+        with self.assertRaises(TypeError):
+            empty_dset.read_direct(arr, np.s_[0:10], np.s_[50:60])
 
-        if arr.flags.c_contiguous:
-            # read empty dataset
-            with self.assertRaises(TypeError):
-                empty_dset.read_direct(arr, np.s_[0:10], np.s_[50:60])
+        dset.read_direct(arr2, np.s_[0:10], np.s_[50:60])
+        self.assertEqual(dset.shape, (100,))
 
-            dset.read_direct(arr, np.s_[0:10], np.s_[50:60])
-            self.assertEqual(dset.shape, (100,))
-
-            dset.read_direct(arr, source_sel, dest_sel)
-            self.assertEqual(dset.shape, (100,))
+        # Can't broadcast from source shape (100,) to array shape (200,)
+        with self.assertRaises(TypeError):
+            dset.read_direct(arr2)
 
 class TestWriteDirectly(BaseDataset):
 
@@ -208,20 +204,19 @@ class TestWriteDirectly(BaseDataset):
     def test_write_direct(self):
         dset = self.f.create_dataset('dset', (100,), dtype='int32')
         empty_dset = self.f.create_dataset("edset", dtype='int64')
+        arr = np.ones((100,))
+        arr2 = np.zeros((200,))
 
-        arr = np.ones((100,), dtype='int64')
+        # write into empty dataset
+        with self.assertRaises(TypeError):
+            empty_dset.write_direct(arr, np.s_[0:10], np.s_[50:60])
 
-        if arr.flags.c_contiguous:
-            # write into empty dataset
-            # FIXME: write data into empty datase should be allowed
-            with self.assertRaises(TypeError):
-                empty_dset.write_direct(arr, np.s_[0:10], np.s_[50:60])
+        dset.write_direct(arr2, np.s_[0:10], np.s_[50:60])
+        self.assertEqual(dset.shape, (100,))
 
-            dset.write_direct(arr, np.s_[0:10], np.s_[50:60])
-            self.assertEqual(dset.shape, (100,))
-
-            dset.write_direct(arr)
-            self.assertEqual(dset.shape, (100,))
+        # Can't broadcast from dset shape (100,) to arr2 shape (200,)
+        with self.assertRaises(TypeError):
+            dset.write_direct(arr2)
 
 
 class TestCreateRequire(BaseDataset):
