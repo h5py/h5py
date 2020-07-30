@@ -179,14 +179,7 @@ cdef int conv_str2vlen(void* ipt, void* opt, void* bkg, void* priv) except -1:
             temp_object = temp_object.encode('utf-8')
 
         elif not isinstance(temp_object, bytes):
-            # There is not test on this !
-            if sizes.cset == H5T_CSET_ASCII:
-                encoding = 'ascii'
-            elif sizes.cset == H5T_CSET_UTF8:
-                encoding = 'utf-8'
-            else:
-                raise TypeError("Unrecognized dataset encoding")
-            temp_object = str(temp_object).encode(encoding)
+            raise TypeError("Can't implicitly convert non-string objects to strings")
 
         # temp_object is bytes
         temp_string = temp_object  # cython cast it as char *
