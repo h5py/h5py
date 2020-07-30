@@ -101,35 +101,21 @@ class TestSelection(BaseSelection):
         dset = self.f.create_dataset('dset', (100,100))
         regref = dset.regionref[0:100, 0:100]
 
-        # args is numpy.ndarray, return a FancySelection
-        st = sel.select((10,), np.array([1,2,3], dtype='b'), dset)
+        # args is list, return a FancySelection
+        st = sel.select((10,), list([1,2,3]), dset)
         self.assertIsInstance(st, sel.FancySelection)
 
-        self.assertEqual(st.mshape, (3,100))
-        self.assertEqual(st.array_shape, ())
-
-        # expand shape
-        self.assertEqual(st.expand_shape(()), ())
-        with self.assertRaises(TypeError):
-            st.expand_shape((4,100))
-
-        # broadcast in FancySelection
-        st.broadcast((5,100))
+        # args is a Boolean mask, return a PointSelection
+        st1 = sel.select((5,), np.array([True,False,False,False,True]), dset)
+        self.assertIsInstance(st1, sel.PointSelection)
 
         # args is int, return a SimpleSelection
         st2 = sel.select((10,), 1, dset)
         self.assertIsInstance(st2, sel.SimpleSelection)
 
-        self.assertEqual(st2.mshape, (1,100))
-        self.assertEqual(st2.array_shape, (100,))
-
-        # expand shape
-        self.assertEqual(st2.expand_shape(()), (1,1))
-        with self.assertRaises(TypeError):
-            st2.expand_shape((4,100))
-
-        # broadcast in SimpleSelection
-        st2.broadcast((5,100))
+        # args is RegionReference, return a Selection instance
+        st3 = sel.select((100,100), regref, dset)
+        self.assertIsInstance(st3, sel.Selection)
 
         # args is RegionReference, but dataset is None
         with self.assertRaises(TypeError):
@@ -139,10 +125,10 @@ class TestSelection(BaseSelection):
         with self.assertRaises(TypeError):
             sel.select((100,), regref, dset)
 
-        # args is a Selection instance, return a FancySelection
-        st3 = sel.select((100,100), st, dset)
-        assert st3 == st
+        # args is a single Selection instance, return the arg
+        st4 = sel.select((100,100), st3, dset)
+        self.assertEqual(st4,st3)
 
         # args is a single Selection instance, but args shape doesn't match Shape
         with self.assertRaises(TypeError):
-            sel.select((100,), st, dset)
+            sel.select((100,), st3, dset)
