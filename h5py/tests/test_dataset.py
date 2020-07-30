@@ -923,17 +923,6 @@ class TestStrings(BaseDataset):
         self.assertEqual(type(out), bytes)
         self.assertEqual(out, data)
 
-    def test_roundtrip_vlen_unicode(self):
-        """ Writing and reading to unicode dataset preserves type and content
-        """
-        dt = h5py.string_dtype()
-        ds = self.f.create_dataset('x', (100,), dtype=dt)
-        data = u"Hello" + chr(0x2034)
-        ds[0] = data
-        out = ds[0]
-        self.assertEqual(type(out), str)
-        self.assertEqual(out, data)
-
     def test_roundtrip_fixed_bytes(self):
         """ Writing to and reading from fixed-length bytes dataset preserves
         type and content """
@@ -944,6 +933,58 @@ class TestStrings(BaseDataset):
         out = ds[0]
         self.assertEqual(type(out), np.string_)
         self.assertEqual(out, data)
+
+    def test_retrieve_vlen_unicode(self):
+        dt = h5py.string_dtype()
+        ds = self.f.create_dataset('x', (10,), dtype=dt)
+        data = "fàilte"
+        ds[0] = data
+        self.assertIsInstance(ds[0], bytes)
+        out = ds.asstr()[0]
+        self.assertIsInstance(out, str)
+        self.assertEqual(out, data)
+
+    def test_asstr(self):
+        ds = self.f.create_dataset('x', (10,), dtype=h5py.string_dtype())
+        data = "fàilte"
+        ds[0] = data
+
+        strwrap1 = ds.asstr('ascii')
+        with self.assertRaises(UnicodeDecodeError):
+            out = strwrap1[0]
+
+        # Different errors parameter
+        self.assertEqual(ds.asstr('ascii', 'ignore')[0], 'filte')
+
+        # latin-1 will decode it but give the wrong text
+        self.assertNotEqual(ds.asstr('latin-1')[0], data)
+
+        # Array output
+        np.testing.assert_array_equal(
+            ds.asstr()[:1], np.array([data], dtype=object)
+        )
+
+    def test_asstr_fixed(self):
+        dt = h5py.string_dtype(length=5)
+        ds = self.f.create_dataset('x', (10,), dtype=dt)
+        data = 'cù'
+        ds[0] = np.array(data.encode('utf-8'), dtype=dt)
+
+        self.assertIsInstance(ds[0], np.bytes_)
+        out = ds.asstr()[0]
+        self.assertIsInstance(out, str)
+        self.assertEqual(out, data)
+
+        # Different errors parameter
+        self.assertEqual(ds.asstr('ascii', 'ignore')[0], 'c')
+
+        # latin-1 will decode it but give the wrong text
+        self.assertNotEqual(ds.asstr('latin-1')[0], data)
+
+        # Array output
+        np.testing.assert_array_equal(
+            ds.asstr()[:1], np.array([data], dtype=object)
+        )
 
     @ut.expectedFailure
     def test_unicode_write_error(self):
@@ -960,32 +1001,11 @@ class TestStrings(BaseDataset):
         """
         dt = h5py.string_dtype()
         ds = self.f.create_dataset('x', (100,), dtype=dt)
-        data = u"Hello there" + chr(0x2034)
-        ds[0] = data.encode('utf8')
-        out = ds[0]
-        self.assertEqual(type(out), str)
-        self.assertEqual(out, data)
-
-    def test_vlen_unicode_write_object(self):
-        """ Writing an object to unicode vlen dataset is OK
-        """
-        dt = h5py.string_dtype('utf-8')
-        ds = self.f.create_dataset('x', (100,), dtype=dt)
-        data = object()
+        data = (u"Hello there" + chr(0x2034)).encode('utf8')
         ds[0] = data
         out = ds[0]
-        self.assertEqual(type(out), str)
-        self.assertEqual(out, str(data))
-
-    def test_vlen_unicode_write_none(self):
-        """ Writing None to unicode vlen dataset is OK
-        """
-        dt = h5py.string_dtype('utf-8')
-        ds = self.f.create_dataset('x', (100,), dtype=dt)
-        ds[0] = None
-        out = ds[0]
-        self.assertEqual(type(out), str)
-        self.assertEqual(out, '')
+        self.assertEqual(type(out), bytes)
+        self.assertEqual(out, data)
 
     def test_vlen_bytes_write_object(self):
         """ Writing an object to ascii vlen dataset is OK

@@ -27,7 +27,6 @@ from numpy cimport npy_intp, NPY_WRITEABLE, NPY_C_CONTIGUOUS, NPY_OWNDATA
 cnp._import_array()
 
 from cpython.object cimport PyObject
-from cpython.unicode cimport PyUnicode_DecodeUTF8
 from cpython.ref cimport Py_INCREF, Py_XDECREF, Py_XINCREF
 
 cdef PyObject* Py_None = <PyObject*> None
@@ -134,26 +133,16 @@ cdef int conv_vlen2str(void* ipt, void* opt, void* bkg, void* priv) except -1:
         char** buf_cstring = <char**>ipt
         PyObject* tmp_object
         bytes tmp_bytes
-        unicode tmp_unicode
         conv_size_t *sizes = <conv_size_t*>priv
         char* buf_cstring0
 
     buf_cstring0 = buf_cstring[0]
 
-    # When reading we identify H5T_CSET_ASCII as a byte string and
-    # H5T_CSET_UTF8 as a utf8-encoded unicode string
-    if sizes.cset == H5T_CSET_ASCII:
-        if buf_cstring0 == NULL:
-            tmp_bytes =  b""
-        else:
-            tmp_bytes = buf_cstring0 # Let cython converts char* -> bytes for us
-        tmp_object = <PyObject *>tmp_bytes
-    elif sizes.cset == H5T_CSET_UTF8:
-        if buf_cstring0 == NULL:
-            tmp_unicode =  u""
-        else:
-            tmp_unicode = PyUnicode_DecodeUTF8(buf_cstring0, strlen(buf_cstring0), NULL)
-        tmp_object = <PyObject *>tmp_unicode
+    if buf_cstring0 == NULL:
+        tmp_bytes =  b""
+    else:
+        tmp_bytes = buf_cstring0 # Let cython converts char* -> bytes for us
+    tmp_object = <PyObject *>tmp_bytes
 
     # Since all data conversions are by definition in-place, it
     # is our responsibility to free the memory used by the vlens.

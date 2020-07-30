@@ -86,8 +86,8 @@ class TestVlenData(TestCase):
 
             with File(fn_h5, "r") as h:
                 ds = h["com"]
-                assert ds[0].tolist() == ['a', 'b', 'c']
-                assert ds[1].tolist() == ['d', 'e', 'f', 'g']
+                assert ds[0].tolist() == [b'a', b'b', b'c']
+                assert ds[1].tolist() == [b'd', b'e', b'f', b'g']
 
         finally:
             shutil.rmtree(dn_tmp)
