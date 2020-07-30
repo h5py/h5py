@@ -165,25 +165,17 @@ cdef int conv_str2vlen(void* ipt, void* opt, void* bkg, void* priv) except -1:
         object temp_object
 
     buf_obj0 = buf_obj[0]
-    if buf_obj0 == NULL:
-        temp_object = None
-    else:
-        temp_object = <object> buf_obj0
+    temp_object = <object> buf_obj0
 
-    if temp_object is None:
-        temp_string = ""
-        temp_string_len = 0
-    else:
+    if isinstance(temp_object, unicode):
+        temp_object = temp_object.encode('utf-8')
 
-        if isinstance(temp_object, unicode):
-            temp_object = temp_object.encode('utf-8')
+    elif not isinstance(temp_object, bytes):
+        raise TypeError("Can't implicitly convert non-string objects to strings")
 
-        elif not isinstance(temp_object, bytes):
-            raise TypeError("Can't implicitly convert non-string objects to strings")
-
-        # temp_object is bytes
-        temp_string = temp_object  # cython cast it as char *
-        temp_string_len = len(temp_object)
+    # temp_object is bytes
+    temp_string = temp_object  # cython cast it as char *
+    temp_string_len = len(temp_object)
 
     if strlen(temp_string) != temp_string_len:
         raise ValueError("VLEN strings do not support embedded NULLs")

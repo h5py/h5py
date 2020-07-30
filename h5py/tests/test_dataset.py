@@ -1007,16 +1007,6 @@ class TestStrings(BaseDataset):
         self.assertEqual(type(out), bytes)
         self.assertEqual(out, data)
 
-    def test_vlen_bytes_write_none(self):
-        """ Writing None to ascii vlen dataset is OK
-        """
-        dt = h5py.string_dtype('ascii')
-        ds = self.f.create_dataset('x', (100,), dtype=dt)
-        ds[0] = None
-        out = ds[0]
-        self.assertEqual(type(out), bytes)
-        self.assertEqual(out, b'')
-
     def test_vlen_bytes_write_ascii_str(self):
         """ Writing an ascii str to ascii vlen dataset is OK
         """
