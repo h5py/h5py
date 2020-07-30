@@ -168,7 +168,8 @@ cdef int conv_str2vlen(void* ipt, void* opt, void* bkg, void* priv) except -1:
     temp_object = <object> buf_obj0
 
     if isinstance(temp_object, unicode):
-        temp_object = temp_object.encode('utf-8')
+        enc = 'utf-8' if (sizes[0].cset == H5T_CSET_UTF8) else 'ascii'
+        temp_object = temp_object.encode(enc)
 
     elif not isinstance(temp_object, bytes):
         raise TypeError("Can't implicitly convert non-string objects to strings")

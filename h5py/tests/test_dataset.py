@@ -986,14 +986,12 @@ class TestStrings(BaseDataset):
             ds.asstr()[:1], np.array([data], dtype=object)
         )
 
-    @ut.expectedFailure
     def test_unicode_write_error(self):
-        """ Writing a non-utf8 byte string to a unicode vlen dataset raises
-        ValueError """
-        dt = h5py.string_dtype()
+        """Encoding error when writing a non-ASCII string to an ASCII vlen dataset"""
+        dt = h5py.string_dtype('ascii')
         ds = self.f.create_dataset('x', (100,), dtype=dt)
-        data = "Hello\xef"
-        with self.assertRaises(ValueError):
+        data = "fàilte"
+        with self.assertRaises(UnicodeEncodeError):
             ds[0] = data
 
     def test_unicode_write_bytes(self):
