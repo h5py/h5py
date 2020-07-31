@@ -2,7 +2,12 @@
 """Class to efficiently select and read data from an HDF5 dataset
 
 This is written in Cython to reduce overhead when reading small amounts of
-data. But it doesn't (yet) handle all cases that the Python machinery covers.
+data. The core of it is translating between numpy-style slicing & indexing and
+HDF5's H5Sselect_hyperslab calls.
+
+Python & numpy distinguish indexing a[3] from slicing a single element a[3:4],
+but there is no equivalent to this when selecting data in HDF5. So we store a
+separate boolean ('scalar') for each dimension to distinguish these cases.
 """
 from numpy cimport ndarray, npy_intp, PyArray_SimpleNew, PyArray_DATA, import_array
 from cpython cimport PyNumber_Index
@@ -273,7 +278,7 @@ cdef class Selector:
 
         if self.is_fancy:
             arr_shape = tuple(
-                mshape[i] for i in range(self.rank) if self.scalar[i]
+                mshape[i] for i in range(self.rank) if not self.scalar[i]
             )
             return FancySelection(shape, space, count, arr_shape)
         else:
