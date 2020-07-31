@@ -98,20 +98,6 @@ class TestMapping(BaseTest):
         item_2 = self.grp.items()
         self.assertIsInstance(repr(item_1), str)
 
-class TestFileType(BaseTest):
-
-    """
-        Test if a file is a HDF5 type
-    """
-
-    def test_is_hdf5(self):
-        filename = File(self.mktemp(), "w").filename
-        fid = is_hdf5(filename)
-        self.assertTrue(fid)
-        # non-existing HDF5 file
-        filename = tempfile.mktemp()
-        fid = is_hdf5(filename)
-        self.assertFalse(fid)
 
 class TestRepr(BaseTest):
 
@@ -157,3 +143,12 @@ class TestRepr(BaseTest):
                 os.unlink(fname)
             except Exception:
                 pass
+
+def test_is_hdf5():
+    filename = File(tempfile.mktemp(), "w").filename
+    fid = is_hdf5(filename)
+    assert fid is True
+    # non-existing HDF5 file
+    filename = tempfile.mktemp()
+    fid = is_hdf5(filename)
+    assert fid is False
