@@ -59,10 +59,6 @@ Here's an example showing how to create a VL array of strings::
    :param length: ``None`` for variable-length, or an integer for fixed-length
                   string data, giving the length in bytes.
 
-If ``encoding`` is ``'utf-8'``, the variable length strings should be passed as
-Python ``str`` objects (``unicode`` in Python 2).
-For ``'ascii'``, they should be passed as bytes.
-
 .. function:: check_string_dtype(dt)
 
    Check if ``dt`` is a string dtype.

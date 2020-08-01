@@ -3,17 +3,50 @@
 Strings in HDF5
 ===============
 
-The Most Important Thing
-------------------------
+.. note::
 
-If you remember nothing else, remember this:
+   The rules around reading & writing string data were redesigned for h5py
+   3.0. Refer to `the h5py 2.10 docs <https://docs.h5py.org/en/2.10.0/strings.html>`__
+   for how to store strings in older versions.
 
-    **All strings in HDF5 hold encoded text.**
+Reading strings
+---------------
 
-You *can't* store arbitrary binary data in HDF5 strings.  Not only will this
-break, it will break in odd, hard-to-discover ways that will leave
-you confused and cursing.
+String data in HDF5 datasets is read as bytes by default: ``bytes`` objects
+for variable-length strings, or numpy bytes arrays (``'S'`` dtypes) for
+fixed-length strings. Use :meth:`.Dataset.asstr` to retrieve ``str`` objects.
 
+Variable-length strings in attributes are read as ``str`` objects. These are
+decoded as UTF-8 with surrogate escaping for unrecognised bytes.
+
+Storing strings
+---------------
+
+When creating a new dataset or attribute, Python ``str`` or ``bytes`` objects
+will be treated as variable-length strings, marked as UTF-8 and ASCII respectively.
+Numpy bytes arrays (``'S'`` dtypes) make fixed-length strings.
+You can use :func:`.string_dtype` to explictly specify any HDF5 string datatype.
+
+When writing data to an existing dataset or attribute, data passed as bytes is
+written without checking the encoding. Data passed as Python ``str`` objects
+is encoded as either ASCII or UTF-8, based on the HDF5 datatype.
+In either case, null bytes (``'\x00'``) in the data will cause an error.
+
+.. warning::
+
+   Fixed-length string datasets will silently truncate longer strings which
+   are written to them. Numpy byte string arrays do the same thing.
+
+   Fixed-length strings in HDF5 hold a set number of bytes.
+   It may take multiple bytes to store one character.
+
+What about NumPy's ``U`` type?
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+NumPy also has a Unicode type, a UTF-32 fixed-width format (4-byte characters).
+HDF5 has no support for wide characters.  Rather than trying to hack around
+this and "pretend" to support it, h5py will raise an error if you try to store
+data of this type.
 
 .. _str_binary:
 
@@ -32,135 +65,6 @@ recover it::
     >>> dset.attrs["attribute_name"] = np.void(binary_blob)
     >>> out = dset.attrs["attribute_name"]
     >>> binary_blob = out.tostring()
-
-
-
-How to store text strings
--------------------------
-
-At the high-level interface, h5py exposes three kinds of strings.  Each maps
-to a specific type within Python (but see :ref:`str_py3` below):
-
-* Fixed-length ASCII (NumPy ``S`` type)
-* Variable-length ASCII (``bytes``)
-* Variable-length UTF-8 (``str``)
-
-Note that h5py currently lacks support for fixed-length UTF-8.
-
-.. _str_py3:
-
-Compatibility
-^^^^^^^^^^^^^
-
-If you want to write maximally-compatible files and don't want to read the
-whole chapter:
-
-* Use ``numpy.string_`` for scalar attributes
-* Use the NumPy ``S`` dtype for datasets and array attributes
-
-
-Fixed-length ASCII
-^^^^^^^^^^^^^^^^^^
-
-These are created when you use ``numpy.string_``:
-
-    >>> dset.attrs["name"] = numpy.string_("Hello")
-
-or the ``S`` dtype::
-
-    >>> dset = f.create_dataset("string_ds", (100,), dtype="S10")
-
-In the file, these map to fixed-width ASCII strings.  One byte per character
-is used.  The representation is "null-padded", which is the internal
-representation used by NumPy (and the only one which round-trips through HDF5).
-
-Technically, these strings are supposed to store `only` ASCII-encoded text,
-although in practice anything you can store in NumPy will round-trip.  But
-for compatibility with other programs using HDF5 (IDL, MATLAB, etc.), you
-should use ASCII only.
-
-.. note::
-
-    This is the most-compatible way to store a string.  Everything else
-    can read it.
-
-Variable-length ASCII
-^^^^^^^^^^^^^^^^^^^^^
-
-These are created when you assign a byte string to an attribute::
-
-    >>> dset.attrs["attr"] = b"Hello"
-
-or when you create a dataset with an explicit ascii string dtype::
-
-    >>> dt = h5py.string_dtype(encoding='ascii')
-    >>> dset = f.create_dataset("name", (100,), dtype=dt)
-
-Note that they're `not` fully identical to Python byte strings.  You can
-only store ASCII-encoded text, without NULL bytes::
-
-    >>> dset.attrs["name"] = b"Hello\x00there"
-    ValueError: VLEN strings do not support embedded NULLs
-
-In the file, these are created as variable-length strings with character set
-H5T_CSET_ASCII.
-
-
-Variable-length UTF-8
-^^^^^^^^^^^^^^^^^^^^^
-
-These are created when you assign a unicode string to an attribute::
-
-    >>> dset.attrs["name"] = "Hello"
-
-or if you create a dataset with an explicit string dtype:
-
-    >>> dt = h5py.string_dtype()
-    >>> dset = f.create_dataset("name", (100,), dtype=dt)
-
-They can store any character a Python unicode string can store, with the
-exception of NULLs.  In the file these are created as variable-length strings
-with character set H5T_CSET_UTF8.
-
-
-Exceptions for Python 3
-^^^^^^^^^^^^^^^^^^^^^^^
-
-Most strings in the HDF5 world are stored in ASCII, which means they map to
-byte strings.  But in Python 3, there's a strict separation between `data` and
-`text`, which intentionally makes it painful to handle encoded strings
-directly.
-
-So, when reading or writing scalar string attributes, on Python 3 they will
-`always` be returned as type ``str``, regardless of the underlying storage
-mechanism.  The regular rules for writing apply; to get a fixed-width ASCII
-string, use ``numpy.string_``, and to get a variable-length ASCII string, use
-``bytes``.
-
-
-What about NumPy's ``U`` type?
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-NumPy also has a Unicode type, a UTF-32 fixed-width format (4-byte characters).
-HDF5 has no support for wide characters.  Rather than trying to hack around
-this and "pretend" to support it, h5py will raise an error when attempting
-to create datasets or attributes of this type.
-
-
-Handling of lists/tuples of strings as attributes
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-If you set an attribute equal to a Python list or tuple of unicode strings,
-such as the following:
-
-    >>> f.attrs['x'] = ('a', 'b')
-
-h5py will save these as arrays of variable-length strings with character set
-H5T_CSET_UTF8. When read back, the results will be numpy arrays of dtype
-``'object'``, as if the original data were written as:
-
-    >>> f['x'] = np.array(('a', 'b'), dtype=h5py.string_dtype(encoding='utf-8'))
-
 
 Object names
 ------------
