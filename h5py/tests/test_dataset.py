@@ -151,11 +151,44 @@ class TestCreateData(BaseDataset):
         with self.assertRaises(ValueError):
             Dataset(self.f['/'].id)
 
-    @ut.expectedFailure
+    def check_h5_string(self, dset, cset, length):
+        tid = dset.id.get_type()
+        assert isinstance(tid, h5t.TypeStringID)
+        assert tid.get_cset() == cset
+        if length is None:
+            assert tid.is_variable_str()
+        else:
+            assert not tid.is_variable_str()
+            assert tid.get_size() == length
+
     def test_create_bytestring(self):
         """ Creating dataset with byte string yields vlen ASCII dataset """
-        # there was no test here!
-        self.assertEqual(True, False)
+        def check_vlen_ascii(dset):
+            self.check_h5_string(dset, h5t.CSET_ASCII, length=None)
+        check_vlen_ascii(self.f.create_dataset('a', data=b'abc'))
+        check_vlen_ascii(self.f.create_dataset('b', data=[b'abc', b'def']))
+        check_vlen_ascii(self.f.create_dataset('c', data=[[b'abc'], [b'def']]))
+        check_vlen_ascii(self.f.create_dataset(
+            'd', data=np.array([b'abc', b'def'], dtype=object)
+        ))
+
+    def test_create_np_s(self):
+        dset = self.f.create_dataset('a', data=np.array([b'abc', b'def'], dtype='S3'))
+        self.check_h5_string(dset, h5t.CSET_ASCII, length=3)
+
+    def test_create_strings(self):
+        def check_vlen_utf8(dset):
+            self.check_h5_string(dset, h5t.CSET_UTF8, length=None)
+        check_vlen_utf8(self.f.create_dataset('a', data='abc'))
+        check_vlen_utf8(self.f.create_dataset('b', data=['abc', 'def']))
+        check_vlen_utf8(self.f.create_dataset('c', data=[['abc'], ['def']]))
+        check_vlen_utf8(self.f.create_dataset(
+            'd', data=np.array(['abc', 'def'], dtype=object)
+        ))
+
+    def test_create_np_u(self):
+        with self.assertRaises(TypeError):
+            self.f.create_dataset('a', data=np.array([b'abc', b'def'], dtype='U3'))
 
     def test_empty_create_via_None_shape(self):
         self.f.create_dataset('foo', dtype='f')
