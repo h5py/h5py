@@ -20,31 +20,33 @@ from distutils.cmd import Command
 import os
 import os.path as op
 import sys
-import pickle
+import json
 
-def loadpickle():
+
+def load_stashed_config():
     """ Load settings dict from the pickle file """
     try:
-        with open('h5config.pkl','rb') as f:
-            cfg = pickle.load(f)
-        if not isinstance(cfg, dict): raise TypeError
+        with open('h5config.json', 'r') as f:
+            cfg = json.load(f)
+        if not isinstance(cfg, dict):
+            raise TypeError
     except Exception:
         return {}
     return cfg
 
 
-def savepickle(dct):
-    """ Save settings dict to the pickle file """
-    with open('h5config.pkl','wb') as f:
-        pickle.dump(dct, f, protocol=0)
+def stash_config(dct):
+    """Save settings dict to the pickle file."""
+    with open('h5config.json', 'w') as f:
+        json.dump(dct, f)
 
 
 def validate_version(s):
-    """ Ensure that s contains an X.Y.Z format version string, or ValueError.
-    """
+    """Ensure that s contains an X.Y.Z format version string, or ValueError."""
     try:
         tpl = tuple(int(x) for x in s.split('.'))
-        if len(tpl) != 3: raise ValueError
+        if len(tpl) != 3:
+            raise ValueError
     except Exception:
         raise ValueError("HDF5 version string must be in X.Y.Z format")
 
@@ -123,9 +125,9 @@ class configure(Command):
 
     def reset_rebuild(self):
         """ Mark this configuration as built """
-        dct = loadpickle()
+        dct = load_stashed_config()
         dct['rebuild'] = False
-        savepickle(dct)
+        stash_config(dct)
 
 
     def _find_hdf5_compiler_settings(self, olds, mpi):
@@ -187,7 +189,7 @@ class configure(Command):
         """ Distutils calls this when the command is run """
 
         # Step 1: Load previous settings and combine with current ones
-        oldsettings = {} if self.reset else loadpickle()
+        oldsettings = {} if self.reset else load_stashed_config()
 
         if self.mpi is None:
             self.mpi = oldsettings.get('mpi', False)
@@ -219,10 +221,10 @@ class configure(Command):
             or current_settings != oldsettings
             # Corner case: If options reset, but only if they previously
             # had non-default values (to handle multiple resets in a row)
-            or bool(self.reset and any(loadpickle().values()))
+            or bool(self.reset and any(load_stashed_config().values()))
         )
 
-        savepickle(current_settings)
+        stash_config(current_settings)
 
         # Step 3: print the resulting configuration to stdout
 
@@ -289,7 +291,7 @@ def autodetect_version(libdirs):
     try:
         lib = ctypes.cdll.LoadLibrary(path)
         lib.H5get_libversion(byref(major), byref(minor), byref(release))
-    except:
+    except Exception:
         print("error: Unable to load dependency HDF5, make sure HDF5 is installed properly")
         raise
 
