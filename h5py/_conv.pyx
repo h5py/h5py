@@ -805,8 +805,8 @@ cpdef int register_converters() except -1:
     H5Tenum_insert(boolenum, cfg._f_name, &f_value)
     H5Tenum_insert(boolenum, cfg._t_name, &t_value)
 
-    H5Tregister(H5T_PERS_HARD, "vlen2str", vlstring, pyobj, vlen2str)
-    H5Tregister(H5T_PERS_HARD, "str2vlen", pyobj, vlstring, str2vlen)
+    H5Tregister(H5T_PERS_SOFT, "vlen2str", vlstring, pyobj, vlen2str)
+    H5Tregister(H5T_PERS_SOFT, "str2vlen", pyobj, vlstring, str2vlen)
 
     H5Tregister(H5T_PERS_SOFT, "vlen2fixed", vlstring, H5T_C_S1, vlen2fixed)
     H5Tregister(H5T_PERS_SOFT, "fixed2vlen", H5T_C_S1, vlstring, fixed2vlen)
@@ -838,8 +838,8 @@ cpdef int register_converters() except -1:
 
 cpdef int unregister_converters() except -1:
 
-    H5Tunregister(H5T_PERS_HARD, "vlen2str", -1, -1, vlen2str)
-    H5Tunregister(H5T_PERS_HARD, "str2vlen", -1, -1, str2vlen)
+    H5Tunregister(H5T_PERS_SOFT, "vlen2str", -1, -1, vlen2str)
+    H5Tunregister(H5T_PERS_SOFT, "str2vlen", -1, -1, str2vlen)
 
     H5Tunregister(H5T_PERS_SOFT, "vlen2fixed", -1, -1, vlen2fixed)
     H5Tunregister(H5T_PERS_SOFT, "fixed2vlen", -1, -1, fixed2vlen)
