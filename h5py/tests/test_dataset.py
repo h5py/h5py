@@ -23,6 +23,7 @@ import platform
 import pytest
 
 from .common import ut, TestCase
+from .data_files import get_data_file_path
 from h5py import File, Group, Dataset
 from h5py._hl.base import is_empty_dataspace
 from h5py import h5f, h5t
@@ -1470,3 +1471,13 @@ def test_setitem_fancy_indexing(writable_file):
     arr = writable_file.create_dataset('data', (5, 1000, 2), dtype=np.uint8)
     block = np.random.randint(255, size=(5, 3, 2))
     arr[:, [0, 2, 4], ...] = block
+
+
+def test_vlen_spacepad():
+    with File(get_data_file_path("vlen_string_dset.h5")) as f:
+        assert f["DS1"][0] == b"Parting"
+
+
+def test_vlen_nullterm():
+    with File(get_data_file_path("vlen_string_dset_utc.h5")) as f:
+        assert f["ds1"][0] == b"2009-12-20T10:16:18.662409Z"

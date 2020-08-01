@@ -20,6 +20,7 @@ exclude h5py/config.pxi
 exclude h5py/defs.pxd
 exclude h5py/defs.pyx
 exclude h5py/_hdf5.pxd
+recursive-include h5py/tests *.h5
 
 recursive-include licenses *
 recursive-include lzf *
