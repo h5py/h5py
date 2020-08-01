@@ -925,7 +925,7 @@ class TestStrings(BaseDataset):
         string_info = h5py.check_string_dtype(ds.dtype)
         self.assertEqual(string_info.encoding, 'utf-8')
 
-    def test_fixed_bytes(self):
+    def test_fixed_ascii(self):
         """ Fixed-length bytes dataset maps to fixed-length ascii in the file
         """
         dt = np.dtype("|S10")
@@ -938,6 +938,22 @@ class TestStrings(BaseDataset):
         string_info = h5py.check_string_dtype(ds.dtype)
         self.assertEqual(string_info.encoding, 'ascii')
         self.assertEqual(string_info.length, 10)
+
+    def test_fixed_utf8(self):
+        dt = h5py.string_dtype(encoding='utf-8', length=5)
+        ds = self.f.create_dataset('x', (100,), dtype=dt)
+        tid = ds.id.get_type()
+        self.assertEqual(tid.get_cset(), h5py.h5t.CSET_UTF8)
+        s = 'cù'
+        ds[0] = s.encode('utf-8')
+        ds[1] = s
+        ds[2:4] = [s, s]
+        ds[4:6] = np.array([s, s], dtype=object)
+        ds[6:8] = np.array([s.encode('utf-8')] * 2, dtype=dt)
+        with self.assertRaises(TypeError):
+            ds[8:10] = np.array([s, s], dtype='U')
+
+        np.testing.assert_array_equal(ds[:8], np.array([s.encode('utf-8')] * 8, dtype='S'))
 
     def test_fixed_unicode(self):
         """ Fixed-length unicode datasets are unsupported (raise TypeError) """
