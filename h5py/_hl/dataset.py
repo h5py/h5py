@@ -20,7 +20,7 @@ from threading import local
 import numpy
 
 from .. import h5, h5s, h5t, h5r, h5d, h5p, h5fd, h5ds, _selector
-from .base import HLObject, phil, with_phil, Empty
+from .base import HLObject, phil, with_phil, Empty, find_item_type
 from . import filters
 from . import selections as sel
 from . import selections2 as sel2
@@ -843,6 +843,20 @@ class Dataset(HLObject):
             if cast_compound:
                 val = val.view(numpy.dtype([(names[0], dtype)]))
                 val = val.reshape(val.shape[:len(val.shape) - len(dtype.shape)])
+        elif (self.dtype.kind == 'S'
+              and (h5t.check_string_dtype(self.dtype).encoding == 'utf-8')
+              and (find_item_type(val) is str)
+        ):
+            # Writing str objects to a fixed-length UTF-8 string dataset.
+            # Numpy's normal conversion only handles ASCII characters, but
+            # when the destination is UTF-8, we want to allow any unicode.
+            # This *doesn't* handle numpy fixed-length unicode data ('U' dtype),
+            # as HDF5 has no equivalent, and converting fixed length UTF-32
+            # to variable length UTF-8 would obscure what's going on.
+            str_array = numpy.asarray(val, order='C', dtype=object)
+            val = numpy.array([
+                s.encode('utf-8') for s in str_array.flat
+            ], dtype=self.dtype).reshape(str_array.shape)
         else:
             # If the input data is already an array, let HDF5 do the conversion.
             # If it's a list or similar, don't make numpy guess a dtype for it.
