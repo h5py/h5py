@@ -20,6 +20,7 @@ from .h5 import get_config
 from .h5r cimport Reference, RegionReference, hobj_ref_t, hdset_reg_ref_t
 from .h5t cimport H5PY_OBJ, typewrap, py_create, TypeID, H5PY_PYTHON_OPAQUE_TAG
 from libc.stdlib cimport realloc
+from libc.string cimport strcmp
 from .utils cimport emalloc, efree
 cfg = get_config()
 
@@ -139,7 +140,6 @@ cdef herr_t init_generic(hid_t src, hid_t dst, void** priv) except -1:
 # =============================================================================
 # Vlen string conversion
 
-_H5PY_PY_TAG = str(H5PY_PYTHON_OPAQUE_TAG)  # cache this
 cdef bint _is_pyobject_opaque(hid_t obj):
     # This complexity is needed to sure:
     #   1) That ctag is freed
@@ -150,8 +150,7 @@ cdef bint _is_pyobject_opaque(hid_t obj):
         if H5Tget_class(obj) == H5T_OPAQUE:
             ctag = H5Tget_tag(obj)
             if ctag != NULL:
-                tag = str(ctag)
-                if tag == _H5PY_PY_TAG:
+                if strcmp(ctag, H5PY_PYTHON_OPAQUE_TAG) == 0:
                     return True
         return False
     finally:
