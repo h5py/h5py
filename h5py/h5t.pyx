@@ -39,6 +39,7 @@ import platform
 cfg = get_config()
 
 MACHINE = platform.machine()
+cdef char* H5PY_PYTHON_OPAQUE_TAG = "PYTHON:OBJECT"
 
 # === Custom C API ============================================================
 
@@ -234,7 +235,7 @@ LDOUBLE_BE.lock()
 
 # Custom Python object pointer type
 cdef hid_t H5PY_OBJ = H5Tcreate(H5T_OPAQUE, sizeof(PyObject*))
-H5Tset_tag(H5PY_OBJ, "PYTHON:OBJECT")
+H5Tset_tag(H5PY_OBJ, H5PY_PYTHON_OPAQUE_TAG)
 H5Tlock(H5PY_OBJ)
 
 PYTHON_OBJECT = lockid(H5PY_OBJ)
