@@ -141,9 +141,24 @@ cdef herr_t init_generic(hid_t src, hid_t dst, void** priv) except -1:
 
 _H5PY_PY_TAG = str(H5PY_PYTHON_OPAQUE_TAG)  # cache this
 cdef bint _is_pyobject_opaque(hid_t obj):
-    if H5Tget_class(obj) == H5T_OPAQUE and str(H5Tget_tag(obj)) == _H5PY_PY_TAG:
-        return True
-    return False
+    # This complexity is needed to sure:
+    #   1) That ctag is freed
+    #   2) We don't segfault (for some reason a try-finally statement is needed,
+    #   even if we do (what I think are) the right steps in copying and freeing.
+    cdef char* ctag = NULL
+    try:
+        if H5Tget_class(obj) == H5T_OPAQUE:
+            ctag = H5Tget_tag(obj)
+            if ctag != NULL:
+                tag = str(ctag)
+                if tag == _H5PY_PY_TAG:
+                    return True
+        return False
+    finally:
+        IF HDF5_VERSION >= (1, 8, 13):
+            H5free_memory(ctag)
+        ELSE:
+            free(ctag)
 
 cdef herr_t init_vlen2str(hid_t src_vlen, hid_t dst_str, void** priv) except -1:
     # /!\ Untested
