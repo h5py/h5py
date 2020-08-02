@@ -10,7 +10,7 @@ h5py/_hdf5.*
 h5py/*.dll
 h5py/*.so
 *.hdf5
-*.pkl
+h5config.json
 h5py/defs.*
 build/
 *.pyc
