@@ -496,6 +496,19 @@ Reference
                >>> with dset.astype('int16'):
                ...     out = dset[:]
 
+    .. method:: asstr(encoding=None, errors='strict')
+
+       Only for string datasets. Returns a wrapper to read data as Python
+       string objects::
+
+           >>> s = dataset.asstr()[0]
+
+       encoding and errors work like ``bytes.decode()``, but the default
+       encoding is defined by the datatype - ASCII or UTF-8.
+       This is not guaranteed to be correct.
+
+       .. versionadded:: 3.0
+
     .. method:: fields(names)
 
         Get a wrapper to read a subset of fields from a compound data type::
