@@ -146,8 +146,7 @@ class TestRepr(BaseTest):
 
 def test_is_hdf5():
     filename = File(tempfile.mktemp(), "w").filename
-    fid = is_hdf5(filename)
-    assert fid is True
+    assert is_hdf5(filename)
     # non-existing HDF5 file
     filename = tempfile.mktemp()
     fid = is_hdf5(filename)
