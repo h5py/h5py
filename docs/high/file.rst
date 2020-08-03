@@ -95,6 +95,10 @@ of supported drivers and their options:
         raw_ext:
           Raw data filename extension. Default is '-r.h5'.
 
+    'mpio'
+        Support the MPI 'atomic' file access mode, which treads speed for
+        more stringent consistency requirements in Parallel HDF5 file access
+
 .. _file_fileobj:
 
 Python file-like objects

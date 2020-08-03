@@ -77,6 +77,8 @@ stdio                               Buffered I/O using stdio.h
 core                                In-memory file (optionally backed to disk)
 family                              Multi-file driver
 mpio                                Parallel HDF5 file access
+fileobj                             Store the data in a Python file-like object
+split                               Split data into separate files
 =================================== =========================================== ============================
 
 
