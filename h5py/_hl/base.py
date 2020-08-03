@@ -38,26 +38,32 @@ def is_hdf5(fname):
         return False
 
 
-def object_collection_of(data):
-    """Check if data is a list/tuple/numpy object array (without h5py tag)
+def find_item_type(data):
+    """Find the item type of a simple object or collection of objects.
 
-    If so, and its contents are homogeneous, return their type.
-    Otherwise, return None.
+    E.g. [[['a']]] -> str
+
+    The focus is on collections where all items have the same type; we'll return
+    None if that's not the case.
 
     The aim is to treat numpy arrays of Python objects like normal Python
     collections, while treating arrays with specific dtypes differently.
+    We're also only interested in array-like collections - lists and tuples,
+    possibly nested - not things like sets or dicts.
     """
-    if isinstance(data, (list, tuple)):
-        item_types = {type(e) for e in data}
-
-    elif isinstance(data, np.ndarray) and (
-        data.dtype.kind == 'O'
-        and not h5t.check_string_dtype(data.dtype)
-        and not h5t.check_vlen_dtype(data.dtype)
-    ):
-        item_types = {type(e) for e in data.flat}
+    if isinstance(data, np.ndarray):
+        if (
+            data.dtype.kind == 'O'
+            and not h5t.check_string_dtype(data.dtype)
+            and not h5t.check_vlen_dtype(data.dtype)
+        ):
+            item_types = {type(e) for e in data.flat}
+        else:
+            return None
+    elif isinstance(data, (list, tuple)):
+        item_types = {find_item_type(e) for e in data}
     else:
-        return None
+        return type(data)
 
     if len(item_types) != 1:
         return None
@@ -75,10 +81,7 @@ def guess_dtype(data):
         if isinstance(data, h5r.Reference):
             return h5t.ref_dtype
 
-        item_type = object_collection_of(data)
-        if item_type is None:
-            # Potentially scalar
-            item_type = type(data)
+        item_type = find_item_type(data)
 
         if item_type is bytes:
             return h5t.string_dtype(encoding='ascii')

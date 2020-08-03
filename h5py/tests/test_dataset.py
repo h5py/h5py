@@ -151,11 +151,44 @@ class TestCreateData(BaseDataset):
         with self.assertRaises(ValueError):
             Dataset(self.f['/'].id)
 
-    @ut.expectedFailure
+    def check_h5_string(self, dset, cset, length):
+        tid = dset.id.get_type()
+        assert isinstance(tid, h5t.TypeStringID)
+        assert tid.get_cset() == cset
+        if length is None:
+            assert tid.is_variable_str()
+        else:
+            assert not tid.is_variable_str()
+            assert tid.get_size() == length
+
     def test_create_bytestring(self):
         """ Creating dataset with byte string yields vlen ASCII dataset """
-        # there was no test here!
-        self.assertEqual(True, False)
+        def check_vlen_ascii(dset):
+            self.check_h5_string(dset, h5t.CSET_ASCII, length=None)
+        check_vlen_ascii(self.f.create_dataset('a', data=b'abc'))
+        check_vlen_ascii(self.f.create_dataset('b', data=[b'abc', b'def']))
+        check_vlen_ascii(self.f.create_dataset('c', data=[[b'abc'], [b'def']]))
+        check_vlen_ascii(self.f.create_dataset(
+            'd', data=np.array([b'abc', b'def'], dtype=object)
+        ))
+
+    def test_create_np_s(self):
+        dset = self.f.create_dataset('a', data=np.array([b'abc', b'def'], dtype='S3'))
+        self.check_h5_string(dset, h5t.CSET_ASCII, length=3)
+
+    def test_create_strings(self):
+        def check_vlen_utf8(dset):
+            self.check_h5_string(dset, h5t.CSET_UTF8, length=None)
+        check_vlen_utf8(self.f.create_dataset('a', data='abc'))
+        check_vlen_utf8(self.f.create_dataset('b', data=['abc', 'def']))
+        check_vlen_utf8(self.f.create_dataset('c', data=[['abc'], ['def']]))
+        check_vlen_utf8(self.f.create_dataset(
+            'd', data=np.array(['abc', 'def'], dtype=object)
+        ))
+
+    def test_create_np_u(self):
+        with self.assertRaises(TypeError):
+            self.f.create_dataset('a', data=np.array([b'abc', b'def'], dtype='U3'))
 
     def test_empty_create_via_None_shape(self):
         self.f.create_dataset('foo', dtype='f')
@@ -892,7 +925,7 @@ class TestStrings(BaseDataset):
         string_info = h5py.check_string_dtype(ds.dtype)
         self.assertEqual(string_info.encoding, 'utf-8')
 
-    def test_fixed_bytes(self):
+    def test_fixed_ascii(self):
         """ Fixed-length bytes dataset maps to fixed-length ascii in the file
         """
         dt = np.dtype("|S10")
@@ -905,6 +938,22 @@ class TestStrings(BaseDataset):
         string_info = h5py.check_string_dtype(ds.dtype)
         self.assertEqual(string_info.encoding, 'ascii')
         self.assertEqual(string_info.length, 10)
+
+    def test_fixed_utf8(self):
+        dt = h5py.string_dtype(encoding='utf-8', length=5)
+        ds = self.f.create_dataset('x', (100,), dtype=dt)
+        tid = ds.id.get_type()
+        self.assertEqual(tid.get_cset(), h5py.h5t.CSET_UTF8)
+        s = 'cù'
+        ds[0] = s.encode('utf-8')
+        ds[1] = s
+        ds[2:4] = [s, s]
+        ds[4:6] = np.array([s, s], dtype=object)
+        ds[6:8] = np.array([s.encode('utf-8')] * 2, dtype=dt)
+        with self.assertRaises(TypeError):
+            ds[8:10] = np.array([s, s], dtype='U')
+
+        np.testing.assert_array_equal(ds[:8], np.array([s.encode('utf-8')] * 8, dtype='S'))
 
     def test_fixed_unicode(self):
         """ Fixed-length unicode datasets are unsupported (raise TypeError) """
