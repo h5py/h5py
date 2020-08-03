@@ -78,6 +78,7 @@ Source installation
 To install h5py from source, you need three things installed:
 
 * A supported Python version with development headers
+* Cython >=0.29
 * HDF5 1.8.4 or newer with development headers
 * A C compiler
 
