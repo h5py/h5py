@@ -181,15 +181,16 @@ class TestReadDirectly(BaseDataset):
     def test_read_direct(self):
         dset = self.f.create_dataset("dset", (100,), dtype='int64')
         empty_dset = self.f.create_dataset("edset", dtype='int64')
-        arr = np.zeros((100,))
-        arr2 = np.zeros((200,))
+        arr = np.ones((100,))
+        arr2 = np.ones((200,))
 
         # read empty dataset
         with self.assertRaises(TypeError):
             empty_dset.read_direct(arr, np.s_[0:10], np.s_[50:60])
 
         dset.read_direct(arr2, np.s_[0:10], np.s_[50:60])
-        self.assertEqual(dset.shape, (100,))
+        for e in arr2[50:60]:
+            self.assertEqual(e, 0)
 
         # Can't broadcast from source shape (100,) to array shape (200,)
         with self.assertRaises(TypeError):
@@ -205,14 +206,15 @@ class TestWriteDirectly(BaseDataset):
         dset = self.f.create_dataset('dset', (100,), dtype='int32')
         empty_dset = self.f.create_dataset("edset", dtype='int64')
         arr = np.ones((100,))
-        arr2 = np.zeros((200,))
+        arr2 = np.ones((200,))
 
         # write into empty dataset
         with self.assertRaises(TypeError):
             empty_dset.write_direct(arr, np.s_[0:10], np.s_[50:60])
 
         dset.write_direct(arr2, np.s_[0:10], np.s_[50:60])
-        self.assertEqual(dset.shape, (100,))
+        for e in dset[50:60]:
+            self.assertEqual(e, 1)
 
         # Can't broadcast from dset shape (100,) to arr2 shape (200,)
         with self.assertRaises(TypeError):
@@ -276,8 +278,6 @@ class TestCreateRequire(BaseDataset):
         dset = self.f.create_dataset('foo', (10, 3), 'f')
         dset2 = self.f.require_dataset('foo', (10, 3), 'f', exact=True)
         self.assertEqual(dset, dset2)
-        with self.assertRaises(TypeError):
-            self.f.require_dataset('foo', (10, 3), 'i', exact=True)
 
     def test_dtype_close(self):
         """ require_dataset with convertible type succeeds (non-strict mode)

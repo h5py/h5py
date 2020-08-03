@@ -64,7 +64,7 @@ class TestParent(BaseTest):
 class TestMapping(BaseTest):
 
     """
-        Test if the registration of Group, AttributeManager as a
+        Test if the registration of Group as a
         Mapping behaves as expected
     """
 
@@ -80,8 +80,6 @@ class TestMapping(BaseTest):
 
     def test_keys(self):
         key_1 = self.f.keys()
-        print(type(key_1))
-        print(dir(key_1))
         self.assertIsInstance(repr(key_1), str)
         key_2 = self.grp.keys()
         self.assertIsInstance(repr(key_2), str)
