@@ -394,25 +394,59 @@ class TestIter(BaseMapping):
             hfile.close()
 
 class TestTrackOrder(BaseGroup):
-    def populate(self, g):
-        for i in range(100):
-            # Mix group and dataset creation.
-            if i % 10 == 0:
-                g.create_group(str(i))
-            else:
-                g[str(i)] = [i]
 
-    def test_track_order(self):
-        g = self.f.create_group('order', track_order=True)  # creation order
-        self.populate(g)
-        self.assertEqual(list(g),
-                         [str(i) for i in range(100)])
+    def test_with_track_order(self):
+        grp = self.f.create_group('b', track_order=True)
+        self.f.create_group('a', track_order=True)
+        self.f.create_group('c', track_order=True)
 
-    def test_no_track_order(self):
-        g = self.f.create_group('order', track_order=False)  # name alphanumeric
-        self.populate(g)
-        self.assertEqual(list(g),
-                         sorted([str(i) for i in range(100)]))
+        # create sub-group
+        sub_grp = grp.create_group('c2', track_order=True)
+        grp.create_group('c1', track_order=True)
+        grp.create_group('c3', track_order=True)
+
+        # when issue #1577 fixed, then the test below can work
+        # result = []
+        # expected = ['b','a','c']
+        # for e in self.f.keys():
+        #    result.append(e)
+        # for i in range(len(expected)):
+        #    self.assertEqual(result[i], expected[i])
+
+        # test sub-group
+        result = []
+        expected = ['c2','c1','c3']
+        for e in grp.keys():
+            result.append(e)
+        for i in range(len(expected)):
+            self.assertEqual(result[i], expected[i])
+
+    def test_without_track_order(self):
+        # without track_order, its default value is False
+        grp = self.f.create_group('b')
+        self.f.create_group('a')
+        self.f.create_group('c')
+
+        # create sub-group
+        grp.create_group('c2')
+        grp.create_group('c1')
+        grp.create_group('c3')
+
+        result = []
+        expected = ['a','b','c']
+        for e in self.f.keys():
+            result.append(e)
+        for i in range(len(expected)):
+            self.assertEqual(result[i], expected[i])
+
+        # test sub-group
+        result = []
+        expected = ['c1','c2','c3']
+        for e in grp.keys():
+            result.append(e)
+        for i in range(len(expected)):
+            self.assertEqual(result[i], expected[i])
+
 
 class TestPy3Dict(BaseMapping):
 
