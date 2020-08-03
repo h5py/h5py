@@ -149,5 +149,4 @@ def test_is_hdf5():
     assert is_hdf5(filename)
     # non-existing HDF5 file
     filename = tempfile.mktemp()
-    fid = is_hdf5(filename)
-    assert fid is False
+    assert not is_hdf5(filename)
