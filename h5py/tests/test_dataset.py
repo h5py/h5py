@@ -27,6 +27,7 @@ from h5py import File, Group, Dataset
 from h5py._hl.base import is_empty_dataspace
 from h5py import h5f, h5t
 import h5py
+import h5py._hl.selections as sel
 
 
 class BaseDataset(TestCase):
@@ -198,6 +199,60 @@ class TestCreateData(BaseDataset):
         self.f.create_dataset('foo', data=h5py.Empty(dtype='f'))
         self.assertTrue(is_empty_dataspace(self.f['foo'].id))
 
+    def test_create_incompatible_data(self):
+        # Shape tuple is incompatible with data
+        with self.assertRaises(ValueError):
+            self.f.create_dataset('bar', shape=4, data= np.arange(3))
+
+
+class TestReadDirectly(BaseDataset):
+
+    """
+        Feature: Read data directly from Dataset into a Numpy array
+    """
+
+    def test_read_direct(self):
+        dset = self.f.create_dataset("dset", (100,), dtype='int64')
+        empty_dset = self.f.create_dataset("edset", dtype='int64')
+        arr = np.ones((100,))
+        arr2 = np.ones((200,))
+
+        # read empty dataset
+        with self.assertRaises(TypeError):
+            empty_dset.read_direct(arr, np.s_[0:10], np.s_[50:60])
+
+        dset.read_direct(arr2, np.s_[0:10], np.s_[50:60])
+        for e in arr2[50:60]:
+            self.assertEqual(e, 0)
+
+        # Can't broadcast from source shape (100,) to array shape (200,)
+        with self.assertRaises(TypeError):
+            dset.read_direct(arr2)
+
+class TestWriteDirectly(BaseDataset):
+
+    """
+        Feature: Write Numpy array directly into Dataset
+    """
+
+    def test_write_direct(self):
+        dset = self.f.create_dataset('dset', (100,), dtype='int32')
+        empty_dset = self.f.create_dataset("edset", dtype='int64')
+        arr = np.ones((100,))
+        arr2 = np.ones((200,))
+
+        # write into empty dataset
+        with self.assertRaises(TypeError):
+            empty_dset.write_direct(arr, np.s_[0:10], np.s_[50:60])
+
+        dset.write_direct(arr2, np.s_[0:10], np.s_[50:60])
+        for e in dset[50:60]:
+            self.assertEqual(e, 1)
+
+        # Can't broadcast from dset shape (100,) to arr2 shape (200,)
+        with self.assertRaises(TypeError):
+            dset.write_direct(arr2)
+
 
 class TestCreateRequire(BaseDataset):
 
@@ -250,6 +305,13 @@ class TestCreateRequire(BaseDataset):
         with self.assertRaises(TypeError):
             self.f.require_dataset('foo', (10, 3), 'S10')
 
+    def test_dtype_exact(self):
+        """ require_dataset with exactly dtype match """
+
+        dset = self.f.create_dataset('foo', (10, 3), 'f')
+        dset2 = self.f.require_dataset('foo', (10, 3), 'f', exact=True)
+        self.assertEqual(dset, dset2)
+
     def test_dtype_close(self):
         """ require_dataset with convertible type succeeds (non-strict mode)
         """
@@ -279,6 +341,11 @@ class TestCreateChunked(BaseDataset):
         """ Illegal chunk size raises ValueError """
         with self.assertRaises(ValueError):
             self.f.create_dataset('foo', shape=(100,), chunks=(200,))
+
+    def test_chunks_false(self):
+        """ Chunked format required for given storage options """
+        with self.assertRaises(ValueError):
+            self.f.create_dataset('foo', shape=(10,), maxshape=100, chunks=False)
 
     def test_chunks_scalar(self):
         """ Attempting to create chunked scalar dataset raises TypeError """
@@ -529,6 +596,18 @@ class TestCreateScaleOffset(BaseDataset):
         with self.assertRaises(ValueError):
             dset = self.f.create_dataset('foo', (20, 30), dtype=float, scaleoffset=True)
 
+    def test_non_integer(self):
+        """ Check when scaleoffset is negetive"""
+
+        with self.assertRaises(ValueError):
+            dset = self.f.create_dataset('foo', (20, 30), dtype=float, scaleoffset=-0.1)
+
+    def test_unsupport_dtype(self):
+        """ Check when dtype is unsupported type"""
+
+        with self.assertRaises(TypeError):
+            dset = self.f.create_dataset('foo', (20, 30), dtype=bool, scaleoffset=True)
+
     def test_float(self):
         """ Scaleoffset filter works for floating point data """
 
@@ -745,6 +824,14 @@ class TestCreateLike(BaseDataset):
         self.assertEqual(0, h5py.h5g.get_objinfo(orig._id).mtime)
         similar = self.f.create_dataset_like('lenovo', orig)
         self.assertEqual(0, h5py.h5g.get_objinfo(similar._id).mtime)
+
+    def test_maxshape(self):
+        """ Test when other.maxshape != other.shape """
+
+        other = self.f.create_dataset('other', (10,), maxshape=20)
+        similar = self.f.create_dataset_like('sim', other)
+        self.assertEqual(similar.shape, (10,))
+        self.assertEqual(similar.maxshape, (20,))
 
 class TestChunkIterator(BaseDataset):
     def test_no_chunks(self):
@@ -1195,6 +1282,11 @@ class TestTrackTimes(BaseDataset):
         ds = self.f.create_dataset('foo', (4,), track_times=False)
         ds_mtime = h5py.h5g.get_objinfo(ds._id).mtime
         self.assertEqual(0, ds_mtime)
+
+    def test_invalid_track_times(self):
+        """ check that when give track_times an invalid value """
+        with self.assertRaises(TypeError):
+            self.f.create_dataset('foo', (4,), track_times='null')
 
 
 class TestZeroShape(BaseDataset):

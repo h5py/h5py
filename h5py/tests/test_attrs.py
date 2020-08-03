@@ -36,6 +36,19 @@ class BaseAttrs(TestCase):
         if self.f:
             self.f.close()
 
+class TestRepr(TestCase):
+
+    """ Feature: AttributeManager provide a helpful
+        __repr__ string
+    """
+
+    def test_repr(self):
+        grp = self.f.create_group('grp')
+        grp.attrs.create('att', 1)
+        self.assertIsInstance(repr(grp.attrs), str)
+        grp.id.close()
+        self.assertIsInstance(repr(grp.attrs), str)
+
 
 class TestAccess(BaseAttrs):
 
@@ -48,6 +61,42 @@ class TestAccess(BaseAttrs):
         self.f.attrs['a'] = 4.0
         self.assertEqual(list(self.f.attrs.keys()), ['a'])
         self.assertEqual(self.f.attrs['a'], 4.0)
+
+    def test_create_2(self):
+        """ Attribute creation by create() method """
+        self.f.attrs.create('a', 4.0)
+        self.assertEqual(list(self.f.attrs.keys()), ['a'])
+        self.assertEqual(self.f.attrs['a'], 4.0)
+
+    def test_modify(self):
+        """ Attributes are modified by direct assignment"""
+        self.f.attrs['a'] = 3
+        self.assertEqual(list(self.f.attrs.keys()), ['a'])
+        self.assertEqual(self.f.attrs['a'], 3)
+        self.f.attrs['a'] = 4
+        self.assertEqual(list(self.f.attrs.keys()), ['a'])
+        self.assertEqual(self.f.attrs['a'], 4)
+
+    def test_modify_2(self):
+        """ Attributes are modified by modify() method """
+        self.f.attrs.modify('a',3)
+        self.assertEqual(list(self.f.attrs.keys()), ['a'])
+        self.assertEqual(self.f.attrs['a'], 3)
+
+        self.f.attrs.modify('a', 4)
+        self.assertEqual(list(self.f.attrs.keys()), ['a'])
+        self.assertEqual(self.f.attrs['a'], 4)
+
+        # If the attribute doesn't exist, create new
+        self.f.attrs.modify('b', 5)
+        self.assertEqual(list(self.f.attrs.keys()), ['a', 'b'])
+        self.assertEqual(self.f.attrs['a'], 4)
+        self.assertEqual(self.f.attrs['b'], 5)
+
+        # Shape of new value is incompatible with the previous
+        new_value = np.arange(5)
+        with self.assertRaises(TypeError):
+            self.f.attrs.modify('b', new_value)
 
     def test_overwrite(self):
         """ Attributes are silently overwritten """

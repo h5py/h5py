@@ -17,14 +17,15 @@ import pytest
 import os
 import stat
 import pickle
+import tempfile
 from sys import platform
 
 from .common import ut, TestCase, UNICODE_FILENAMES, closed_tempfile
 from h5py import File
 import h5py
+from .. import h5
 
 import pathlib
-
 
 class TestFileOpen(TestCase):
 
@@ -148,6 +149,13 @@ class TestSpaceStrategy(TestCase):
         fid = File(fname, 'w', fs_strategy="page",
                    fs_persist=True, fs_threshold=100)
         self.assertTrue(fid)
+        # Unable to set file space strategy of an existing file
+        with self.assertRaises(ValueError):
+            File(fname, 'a', fs_strategy="page")
+        # Invalid file space strategy type
+        with self.assertRaises(ValueError):
+            File(self.mktemp(), 'w', fs_strategy="invalid")
+
         dset = fid.create_dataset('foo', (100,), dtype='uint8')
         dset[...] = 1
         dset = fid.create_dataset('bar', (100,), dtype='uint8')
@@ -250,6 +258,9 @@ class TestDrivers(TestCase):
         fid = File(fname, 'r')
         assert 'foo' in fid
         fid.close()
+        # keywords for other drivers are invalid when using the default driver
+        with self.assertRaises(TypeError):
+            File(fname, 'w', backing_store=True)
 
     def test_readonly(self):
         """ Core driver can be used to open existing files """
@@ -281,6 +292,18 @@ class TestDrivers(TestCase):
         fid = File(fname, 'r', driver='split')
         self.assertTrue(fid)
         fid.close()
+
+    def test_fileobj(self):
+        """ Python file object driver is supported """
+        tf = tempfile.TemporaryFile()
+        fid = File(tf, 'w', driver='fileobj')
+        self.assertTrue(fid)
+        self.assertEqual(fid.driver, 'fileobj')
+        fid.close()
+        # Driver must be 'fileobj' for file-like object if specified
+        with self.assertRaises(ValueError):
+            File(tf, 'w', driver='core')
+
 
     # TODO: family driver tests
 
@@ -410,6 +433,10 @@ class TestUserblock(TestCase):
             self.assertEqual(f.userblock_size, 512)
         finally:
             f.close()
+        # User block size must be an integer
+        with self.assertRaises(ValueError):
+            File(self.mktemp(), 'w', userblock_size='non')
+
 
     def test_write_only(self):
         """ User block only allowed for write """

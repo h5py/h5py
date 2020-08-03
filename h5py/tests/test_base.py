@@ -14,6 +14,7 @@
 """
 
 from h5py import File
+from h5py._hl.base import is_hdf5, Empty
 from .common import ut, TestCase, UNICODE_FILENAMES
 
 import numpy as np
@@ -40,6 +41,61 @@ class TestName(BaseTest):
         """ Anonymous objects have name None """
         grp = self.f.create_group(None)
         self.assertIs(grp.name, None)
+
+class TestParent(BaseTest):
+
+    """
+        test the parent group of the high-level interface objects
+    """
+
+    def test_object_parent(self):
+        # Anonymous objects
+        grp = self.f.create_group(None)
+        # Parent of an anonymous object is undefined
+        with self.assertRaises(ValueError):
+            grp.parent
+
+        # Named objects
+        grp = self.f.create_group("bar")
+        sub_grp = grp.create_group("foo")
+        parent = sub_grp.parent.name
+        self.assertEqual(parent, "/bar")
+
+class TestMapping(BaseTest):
+
+    """
+        Test if the registration of Group as a
+        Mapping behaves as expected
+    """
+
+    def setUp(self):
+        data = ('a', 'b')
+        self.f = File('foo.hdf5', 'w')
+        self.grp = self.f.create_group('bar')
+        self.attr = self.f.attrs.create('x', data)
+
+    def TearDown(self):
+        if self.f:
+            self.close()
+
+    def test_keys(self):
+        key_1 = self.f.keys()
+        self.assertIsInstance(repr(key_1), str)
+        key_2 = self.grp.keys()
+        self.assertIsInstance(repr(key_2), str)
+
+    def test_values(self):
+        value_1 = self.f.values()
+        self.assertIsInstance(repr(value_1), str)
+        value_2 = self.grp.values()
+        self.assertIsInstance(repr(value_2), str)
+
+    def test_items(self):
+        item_1 = self.f.items()
+        self.assertIsInstance(repr(item_1), str)
+        item_2 = self.grp.items()
+        self.assertIsInstance(repr(item_1), str)
+
 
 class TestRepr(BaseTest):
 
@@ -68,6 +124,11 @@ class TestRepr(BaseTest):
         typ = self.f['type']
         self._check_type(typ)
 
+    def test_empty(self):
+        data = Empty(dtype='f')
+        self.assertNotEqual(Empty(dtype='i'), data)
+        self._check_type(data)
+
     @ut.skipIf(not UNICODE_FILENAMES, "Filesystem unicode support required")
     def test_file(self):
         """ File object repr() with unicode """
@@ -80,3 +141,10 @@ class TestRepr(BaseTest):
                 os.unlink(fname)
             except Exception:
                 pass
+
+def test_is_hdf5():
+    filename = File(tempfile.mktemp(), "w").filename
+    assert is_hdf5(filename)
+    # non-existing HDF5 file
+    filename = tempfile.mktemp()
+    assert not is_hdf5(filename)
