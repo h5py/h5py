@@ -8,13 +8,8 @@
     for h5py, and setup_build, which handles the actual compilation process.
 """
 
-try:
-    from setuptools import Extension, setup
-except ImportError:
-    from distutils.core import setup
-    from distutils.extension import Extension
+from setuptools import Extension, setup
 from distutils.cmd import Command
-from distutils.dist import Distribution
 import sys
 import os
 import os.path as op
