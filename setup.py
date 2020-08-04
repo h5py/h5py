@@ -30,18 +30,18 @@ import setup_build, setup_configure
 VERSION = '2.10.0'
 
 # Minimum supported versions of Numpy & Cython depend on the Python version
-NUMPY_MIN_VERSION = '1.17.4'  # Python 3.8 +
-if sys.version_info[:2] == (3, 7):
-    NUMPY_MIN_VERSION = '1.14.3'
-elif sys.version_info[:2] == (3, 6):
-    NUMPY_MIN_VERSION = '1.12'
-
-CYTHON_MIN_VERSION = '0.29.14'  # Python 3.8 +
-if sys.version_info[:2] < (3, 8):
-    CYTHON_MIN_VERSION = '0.29'
+NUMPY_MIN_VERSIONS = [
+    # Numpy    Python
+    ('1.12',   "=='3.6'"),
+    ('1.14.3', "=='3.7'"),
+    ('1.17.4', ">='3.8'"),
+]
 
 # these are required to use h5py
-RUN_REQUIRES = [f'numpy >={NUMPY_MIN_VERSION}', "cached-property"]
+RUN_REQUIRES = ["cached-property"] + [
+    f"numpy >={np_min}; python_version{py_condition}"
+    for np_min, py_condition in NUMPY_MIN_VERSIONS
+]
 
 # these are required to build h5py
 # For packages we link to (numpy, mpi4py), we build against the oldest
@@ -49,9 +49,12 @@ RUN_REQUIRES = [f'numpy >={NUMPY_MIN_VERSION}', "cached-property"]
 # Downstream packagers - e.g. Linux distros - can safely build with newer
 # versions.
 SETUP_REQUIRES = [
-    f'numpy =={NUMPY_MIN_VERSION}',
-    f'Cython >={CYTHON_MIN_VERSION}',
     'pkgconfig',
+    f"Cython >=0.29; python_version<'3.8'",
+    f"Cython >=0.29.14; python_version>='3.8'",
+] + [
+    f"numpy =={np_min}; python_version{py_condition}"
+    for np_min, py_condition in NUMPY_MIN_VERSIONS
 ]
 
 if setup_configure.mpi_enabled():
