@@ -112,7 +112,7 @@ Reference
 
    When `creating a virtual dataset <creating_vds_>`_, paths to sources present
    in the same file are changed to a ".", refering to the current file (see
-   `set virtual <https://portal.hdfgroup.org/display/HDF5/H5P_SET_VIRTUAL>`_).
+   `H5Pset_virtual <https://portal.hdfgroup.org/display/HDF5/H5P_SET_VIRTUAL>`_).
    This will keep such sources valid in case the file is renamed.
 
    :param path_or_dataset:
