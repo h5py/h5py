@@ -172,7 +172,7 @@ class Group(HLObject, MutableMappingHDF5):
             for vspace, file_name, dset_name, src_space in layout.sources:
                 if file_name == self.file.filename:
                     # use relative path if the source dataset is in the same
-                    # file, in order to keed the virtual dataset valid in case
+                    # file, in order to keep the virtual dataset valid in case
                     # the file is renamed.
                     file_name = '.'
                 sources.append(VDSmap(vspace, filename_encode(file_name),
