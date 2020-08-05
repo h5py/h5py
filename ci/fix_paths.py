@@ -10,7 +10,7 @@ def main():
     Copy HDF5 DLLs into installed h5py package
     """
     # This is the function Tox also uses to locate site-packages (Apr 2019)
-    sitepackagesdir = distutils.sysconfig.get_python_lib()
+    sitepackagesdir = distutils.sysconfig.get_python_lib(plat_specific=True)
     print("site packages dir:", sitepackagesdir)
 
     hdf5_path = os.environ.get("HDF5_DIR")
