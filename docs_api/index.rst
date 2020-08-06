@@ -4,7 +4,7 @@ h5py Low-Level API Reference
 
 
 This documentation contains the auto-generated API information for the
-HDF5 for Python "low-level" interface, a collection of Cython modules
+h5py |release| "low-level" interface, a collection of Cython modules
 which form the interface to the HDF5 C library.  It's hosted separately from
 our main documentation as it requires autodoc.
 
