@@ -96,8 +96,7 @@ of supported drivers and their options:
           Raw data filename extension. Default is '-r.h5'.
 
     'mpio'
-        Support the MPI 'atomic' file access mode, which treads speed for
-        more stringent consistency requirements in Parallel HDF5 file access
+        See :doc:`mpi`. Only available if h5py is built with MPI support.
 
 .. _file_fileobj:
 

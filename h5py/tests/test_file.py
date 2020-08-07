@@ -306,10 +306,8 @@ class TestDrivers(TestCase):
 
     def test_family(self):
         """multi-file driver"""
-        chunk = self.mktemp("data1.h5")
-        chunk2 = self.mktemp("data2.h5")
-        chunk3 = self.mktemp("data3.h5")
-        fid = File("data%d.h5", 'w', driver='family', memb_size=3)
+        f = self.mktemp('data%d.h5')
+        fid = File(f, 'w', driver='family')
         self.assertTrue(fid)
         self.assertEqual(fid.driver, 'family')
         fid.close()
