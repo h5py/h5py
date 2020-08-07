@@ -60,6 +60,7 @@ Advanced topics
     mpi
     swmr
     vds
+    related_projects
 
 
 Meta-info about the h5py project
