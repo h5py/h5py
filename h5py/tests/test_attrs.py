@@ -194,6 +194,15 @@ class TestCreate(BaseAttrs):
         self.assertEqual(htype, htype2)
         self.assertTrue(htype.committed())
 
+    def test_empty(self):
+        # https://github.com/h5py/h5py/issues/1540
+        """ Create attribute with h5py.Empty value
+        """
+        self.f.attrs.create('empty', h5py.Empty('f'))
+        self.assertEqual(self.f.attrs['empty'], h5py.Empty('f'))
+
+        self.f.attrs.create('empty', h5py.Empty(None))
+        self.assertEqual(self.f.attrs['empty'], h5py.Empty(None))
 
 class TestMutableMapping(BaseAttrs):
     '''Tests if the registration of AttributeManager as a MutableMapping

@@ -481,7 +481,7 @@ class Empty(object):
     size = None
 
     def __init__(self, dtype):
-        self.dtype = dtype
+        self.dtype = np.dtype(dtype)
 
     def __eq__(self, other):
         if isinstance(other, Empty) and self.dtype == other.dtype:
