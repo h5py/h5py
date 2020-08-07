@@ -96,7 +96,7 @@ of supported drivers and their options:
           Raw data filename extension. Default is '-r.h5'.
 
     'mpio'
-        See :doc:`mpi`. Only available if h5py is built with MPI support.
+        See :doc:`/mpi`. Only available if h5py is built with MPI support.
 
 .. _file_fileobj:
 
