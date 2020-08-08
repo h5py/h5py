@@ -215,7 +215,7 @@ def get_obj_count(object where=OBJ_ALL, int types=H5F_OBJ_ALL):
         special constant OBJ_ALL, to count objects in all files.
 
     type
-        Specify what kinds of object to include.  May be one of ``OBJ*``,
+        Specify what kinds of object to include.  May be one of OBJ*,
         or any bitwise combination (e.g. ``OBJ_FILE | OBJ_ATTR``).
 
         The special value OBJ_ALL matches all object types, and
@@ -244,7 +244,7 @@ def get_obj_ids(object where=OBJ_ALL, int types=H5F_OBJ_ALL):
         special constant OBJ_ALL, to list objects in all files.
 
     type
-        Specify what kinds of object to include.  May be one of ``OBJ*``,
+        Specify what kinds of object to include.  May be one of OBJ*,
         or any bitwise combination (e.g. ``OBJ_FILE | OBJ_ATTR``).
 
         The special value OBJ_ALL matches all object types, and
