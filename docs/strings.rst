@@ -89,68 +89,57 @@ characters in the ASCII range; H5T_CSET_UTF8 otherwise.
 Encodings
 ---------
 
-As noted above, HDF5 supports two string encodings:
-`ASCII <https://en.wikipedia.org/wiki/ASCII>`_ (via H5T_CSET_ASCII) and
-`UTF-8 <https://en.wikipedia.org/wiki/UTF-8>`_ (via H5T_CSET_UTF8). The safest
-thing to do when writing (unless otherwise restricted by other compatibility
-concerns) is to always use UTF-8: this allows other software (and other users of
-h5py) to be sure exactly how the text is encoded. If you are required to write
-H5T_CSET_ASCII for compatibility reasons, *ensure you only write pure ASCII*
-(this can be done by ``your_string.encode("ascii")``), as otherwise you will run
-into `mojibake <https://en.wikipedia.org/wiki/Mojibake>`_. Additionally, use
-:func:`.string_dtype` to ensure that the encoding is the one you expect.
+HDF5 supports two string encodings: ASCII and UTF-8.
+We recommend using UTF-8 when creating HDF5 files, and this is what h5py does
+by default with Python ``str`` objects.
+If you need to write ASCII for compatibility reasons, you should ensure you only
+write pure ASCII characters (this can be done by
+``your_string.encode("ascii")``), as otherwise your text may turn into
+`mojibake <https://en.wikipedia.org/wiki/Mojibake>`_.
+You can use :func:`.string_dtype` to specify the encoding for string data.
 
-Reading is somewhat more complex (and changes were made in h5py 3.0 to make it
-easier to do the correct thing). As long as the encoding of the string matches
-that given by the file, using the defaults for :meth:`.Dataset.asstr` will
-always work. However, there are a non-insubstantial number of files where ASCII
-was treated as the same as
-`"Extended ASCII" <https://en.wikipedia.org/wiki/Extended_ASCII>`_. Examples of
-encodings you may see include
-`ISO-8859-1/Latin-1 <https://en.wikipedia.org/wiki/ISO/IEC_8859-1>`_ and
-`Windows-1252 <https://en.wikipedia.org/wiki/Windows-1252>`_, or even multi-byte
-encodings such as `Shift JIS <https://en.wikipedia.org/wiki/Shift_JIS>`_ or
-`UCS-2 <https://en.wikipedia.org/wiki/Universal_Coded_Character_Set>`_.
-Depending on how you are using strings, you may want to error when the encodings
-do not match, or take a different action—h5py supports all the
-`builtin python error handlers <https://docs.python.org/3/library/codecs.html#error-handlers>`_.
-Note that for convenience, variable-length strings in attributes are read as
-``str`` objects and are decoded as UTF-8 with the ``'surrogateescape'`` error
-handler. Some examples showing how misencoded data within attributes behaves
-follow.
+For reading, as long as the encoding metadata is correct, the defaults for
+:meth:`.Dataset.asstr` will always work.
+However, HDF5 does not enforce the string encoding, and there are files where
+the encoding metadata doesn't match what's really stored.
+Most commonly, data marked as ASCII may be in one of the many "Extended ASCII"
+encodings such as Latin-1. If you know what encoding your data is in,
+you can specify this using :meth:`.Dataset.asstr`. If you have data
+in an unknown encoding, you can also use any of the `builtin python error
+handlers <https://docs.python.org/3/library/codecs.html#error-handlers>`_.
 
-In this case, we are going to write some Latin-1 data as ASCII (note that in
-this case, the string will have a variable length)::
+Variable-length strings in attributes are read as ``str`` objects, decoded as
+UTF-8 with the ``'surrogateescape'`` error handler. If an attribute is
+incorrectly encoded, you'll see 'surrogate' characters such as ``'\udcb1'``
+when reading it::
 
-    >>> unicode_string = "2.0±0.1"
-    >>> unicode_string.encode("latin-1")
-    b'2.0\xb10.1'
-    >>> f.attrs["ascii_example"] = unicode_string.encode("latin-1")
-    >>> f.attrs["ascii_example"]
+    >>> s = "2.0±0.1"
+    >>> f.attrs["string_good"] = s  # Good - h5py uses UTF-8
+    >>> f.attrs["string_bad"] = s.encode("latin-1")  # Bad!
+    >>> f.attrs["string_bad"]
     '2.0\udcb10.1'
 
-The bytes were read in with the UTF-8 encoding and as the data was not valid
-UTF-8, there is a ``'\udcb1'`` handling the misencoded data. Re-encoding as UTF-8,
-then decoding as Latin-1, will get us back the original string.
+To recover the original string, you'll need to *encode* it with UTF-8,
+and then decode it with the correct encoding::
 
-In the next case we are going to use Latin-1 data again, but this time save the
-string as fixed length::
+    >>> f.attrs["string_bad"].encode('utf-8', 'surrogateescape').decode('latin-1')
+    '2.0±0.1'
 
-    >>> unicode_string = "2.0±0.1"
+Fixed length strings are different; h5py doesn't try to decode them::
+
+    >>> s = "2.0±0.1"
+    >>> utf8_type = h5py.string_dtype('utf-8', 30)
     >>> ascii_type = h5py.string_dtype('ascii', 30)
-    >>> np_string = np.array(unicode_string.encode("latin-1"), dtype=ascii_type)
-    >>> f.attrs["fixed_example"] = np_string
-    >>> f.attrs["fixed_example"]
+    >>> f.attrs["fixed_good"] = np.array(s.encode("utf-8"), dtype=utf8_type)
+    >>> f.attrs["fixed_bad"] = np.array(s.encode("latin-1"), dtype=ascii_type)
+    >>> f.attrs["fixed_bad"]
     b'2.0\xb10.1'
-    >>> f.attrs["fixed_example"].decode("utf-8")
+    >>> f.attrs["fixed_bad"].decode("utf-8")
     Traceback (most recent call last):
       File "<input>", line 1, in <module>
-        f.attrs["fixed_example"].decode("utf-8")
+        f.attrs["fixed_bad"].decode("utf-8")
     UnicodeDecodeError: 'utf-8' codec can't decode byte 0xb1 in position 3: invalid start byte
-    >>> f.attrs["fixed_example"].decode("utf-8", errors="surrogateescape")
+    >>> f.attrs["fixed_bad"].decode("latin-1")
     '2.0\udcb10.1'
 
-We see here we get bytes back, and if we try using the ``decode`` method with
-UTF-8, without ``"surrogateescape"`` we get a ``UnicodeDecodeError`` (with the
-``"surrogateescape"`` we get back the same string as we had in the variable length
-case).
+As we get bytes back, we only need to decode them with the correct encoding.
