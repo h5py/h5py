@@ -98,6 +98,11 @@ write pure ASCII characters (this can be done by
 `mojibake <https://en.wikipedia.org/wiki/Mojibake>`_.
 You can use :func:`.string_dtype` to specify the encoding for string data.
 
+.. seealso::
+
+   `Joel Spolsky's introduction to Unicode & character sets <https://www.joelonsoftware.com/2003/10/08/the-absolute-minimum-every-software-developer-absolutely-positively-must-know-about-unicode-and-character-sets-no-excuses/>`_
+     If this section looks like gibberish, try this.
+
 For reading, as long as the encoding metadata is correct, the defaults for
 :meth:`.Dataset.asstr` will always work.
 However, HDF5 does not enforce the string encoding, and there are files where
