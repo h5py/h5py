@@ -54,8 +54,9 @@ SETUP_REQUIRES = [
 ]
 
 if setup_configure.mpi_enabled():
-    RUN_REQUIRES.append('mpi4py >=2.0.0')
-    SETUP_REQUIRES.append('mpi4py ==2.0.0')
+    RUN_REQUIRES.append('mpi4py >=3.0.0')
+    SETUP_REQUIRES.append("mpi4py ==3.0.0; python_version<'3.8'")
+    SETUP_REQUIRES.append("mpi4py >=3.0.3; python_version>='3.8'")
 
 # setup_requires provides setuptools with PEP 517 get_requires_for_build_*,
 # which we want. But setuptools also tries to install them itself, which we
