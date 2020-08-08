@@ -34,7 +34,7 @@ extensions = [
         'sphinx.ext.mathjax',
 ]
 
-intersphinx_mapping = {'low': ('http://api.h5py.org', None)}
+intersphinx_mapping = {'low': ('https://api.h5py.org', None)}
 
 extlinks = {'issue': ('https://github.com/h5py/h5py/issues/%s',
                       'GH')}
