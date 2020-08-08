@@ -155,9 +155,9 @@ has not yet been allocated in the file.</p>
 <dd><p>Determine if space has been allocated for a dataset.
 Return value is one of:</p>
 <ul class="simple">
-<li><p><code class="xref py py-data docutils literal notranslate"><span class="pre">SPACE_STATUS_NOT_ALLOCATED</span></code></p></li>
-<li><p><code class="xref py py-data docutils literal notranslate"><span class="pre">SPACE_STATUS_PART_ALLOCATED</span></code></p></li>
-<li><p><code class="xref py py-data docutils literal notranslate"><span class="pre">SPACE_STATUS_ALLOCATED</span></code></p></li>
+<li><p><a class="reference internal" href="#h5py.h5d.SPACE_STATUS_NOT_ALLOCATED" title="h5py.h5d.SPACE_STATUS_NOT_ALLOCATED"><code class="xref py py-data docutils literal notranslate"><span class="pre">SPACE_STATUS_NOT_ALLOCATED</span></code></a></p></li>
+<li><p><a class="reference internal" href="#h5py.h5d.SPACE_STATUS_PART_ALLOCATED" title="h5py.h5d.SPACE_STATUS_PART_ALLOCATED"><code class="xref py py-data docutils literal notranslate"><span class="pre">SPACE_STATUS_PART_ALLOCATED</span></code></a></p></li>
+<li><p><a class="reference internal" href="#h5py.h5d.SPACE_STATUS_ALLOCATED" title="h5py.h5d.SPACE_STATUS_ALLOCATED"><code class="xref py py-data docutils literal notranslate"><span class="pre">SPACE_STATUS_ALLOCATED</span></code></a></p></li>
 </ul>
 </dd></dl>
 
@@ -285,6 +285,20 @@ been applied to the data before calling this function.</p>
 <p>Feature requires: 1.8.11 HDF5</p>
 </dd></dl>
 
+</dd></dl>
+
+<dl class="py function">
+<dt id="h5py.h5d.create">
+<code class="sig-prename descclassname">h5py.h5d.</code><code class="sig-name descname">create</code><span class="sig-paren">(</span><em class="sig-param">objectID loc</em>, <em class="sig-param">STRING name or None</em>, <em class="sig-param">TypeID tid</em>, <em class="sig-param">SpaceID space</em>, <em class="sig-param">PropDCID dcpl=None</em>, <em class="sig-param">PropID lcpl=None</em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#h5py.h5d.DatasetID" title="h5py.h5d.DatasetID">DatasetID</a><a class="headerlink" href="#h5py.h5d.create" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a new dataset.  If “name” is None, the dataset will be
+anonymous.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="h5py.h5d.open">
+<code class="sig-prename descclassname">h5py.h5d.</code><code class="sig-name descname">open</code><span class="sig-paren">(</span><em class="sig-param">ObjectID loc</em>, <em class="sig-param">STRING name</em>, <em class="sig-param">PropID dapl=None</em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#h5py.h5d.DatasetID" title="h5py.h5d.DatasetID">DatasetID</a><a class="headerlink" href="#h5py.h5d.open" title="Permalink to this definition">¶</a></dt>
+<dd><p>Open an existing dataset attached to a group or file object, by name.</p>
+<p>If specified, dapl may be a dataset access property list.</p>
 </dd></dl>
 
 <div class="section" id="module-constants">

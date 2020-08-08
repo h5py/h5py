@@ -175,7 +175,7 @@ does not represent an HDF5 reference type.</p>
 <dt id="h5py.h5t.create">
 <code class="sig-prename descclassname">h5py.h5t.</code><code class="sig-name descname">create</code><span class="sig-paren">(</span><em class="sig-param">INT classtype</em>, <em class="sig-param">UINT size</em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#h5py.h5t.TypeID" title="h5py.h5t.TypeID">TypeID</a><a class="headerlink" href="#h5py.h5t.create" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a new HDF5 type object.  Legal class values are
-<code class="xref py py-data docutils literal notranslate"><span class="pre">COMPOUND</span></code> and <code class="xref py py-data docutils literal notranslate"><span class="pre">OPAQUE</span></code>.  Use enum_create for enums.</p>
+<a class="reference internal" href="#h5py.h5t.COMPOUND" title="h5py.h5t.COMPOUND"><code class="xref py py-data docutils literal notranslate"><span class="pre">COMPOUND</span></code></a> and <a class="reference internal" href="#h5py.h5t.OPAQUE" title="h5py.h5t.OPAQUE"><code class="xref py py-data docutils literal notranslate"><span class="pre">OPAQUE</span></code></a>.  Use enum_create for enums.</p>
 </dd></dl>
 
 <dl class="py function">
@@ -230,7 +230,7 @@ one is not supplied.</p>
 or a tuple describing the conversion path.  Currently tuple entries are:</p>
 <ol class="arabic simple">
 <li><dl class="simple">
-<dt>INT need_bkg:    Whether this routine requires a backing buffer.</dt><dd><p>Values are <code class="xref py py-data docutils literal notranslate"><span class="pre">BKG_NO</span></code>, BKG_TEMP and <code class="xref py py-data docutils literal notranslate"><span class="pre">BKG_YES</span></code>.</p>
+<dt>INT need_bkg:    Whether this routine requires a backing buffer.</dt><dd><p>Values are <a class="reference internal" href="#h5py.h5t.BKG_NO" title="h5py.h5t.BKG_NO"><code class="xref py py-data docutils literal notranslate"><span class="pre">BKG_NO</span></code></a>, BKG_TEMP and <a class="reference internal" href="#h5py.h5t.BKG_YES" title="h5py.h5t.BKG_YES"><code class="xref py py-data docutils literal notranslate"><span class="pre">BKG_YES</span></code></a>.</p>
 </dd>
 </dl>
 </li>
@@ -355,8 +355,8 @@ inherited from the base class <a class="reference internal" href="#h5py.h5t.Type
 <code class="sig-name descname">get_order</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; INT order<a class="headerlink" href="#h5py.h5t.TypeAtomicID.get_order" title="Permalink to this definition">¶</a></dt>
 <dd><p>Obtain the byte order of the datatype; one of:</p>
 <ul class="simple">
-<li><p><code class="xref py py-data docutils literal notranslate"><span class="pre">ORDER_LE</span></code></p></li>
-<li><p><code class="xref py py-data docutils literal notranslate"><span class="pre">ORDER_BE</span></code></p></li>
+<li><p><a class="reference internal" href="#h5py.h5t.ORDER_LE" title="h5py.h5t.ORDER_LE"><code class="xref py py-data docutils literal notranslate"><span class="pre">ORDER_LE</span></code></a></p></li>
+<li><p><a class="reference internal" href="#h5py.h5t.ORDER_BE" title="h5py.h5t.ORDER_BE"><code class="xref py py-data docutils literal notranslate"><span class="pre">ORDER_BE</span></code></a></p></li>
 </ul>
 </dd></dl>
 
@@ -365,9 +365,9 @@ inherited from the base class <a class="reference internal" href="#h5py.h5t.Type
 <code class="sig-name descname">get_pad</code><span class="sig-paren">(</span><em class="sig-param">) -&gt; (INT lsb_pad_code</em>, <em class="sig-param">INT msb_pad_code</em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5t.TypeAtomicID.get_pad" title="Permalink to this definition">¶</a></dt>
 <dd><p>Determine the padding type.  Possible values are:</p>
 <ul class="simple">
-<li><p><code class="xref py py-data docutils literal notranslate"><span class="pre">PAD_ZERO</span></code></p></li>
-<li><p><code class="xref py py-data docutils literal notranslate"><span class="pre">PAD_ONE</span></code></p></li>
-<li><p><code class="xref py py-data docutils literal notranslate"><span class="pre">PAD_BACKGROUND</span></code></p></li>
+<li><p><a class="reference internal" href="#h5py.h5t.PAD_ZERO" title="h5py.h5t.PAD_ZERO"><code class="xref py py-data docutils literal notranslate"><span class="pre">PAD_ZERO</span></code></a></p></li>
+<li><p><a class="reference internal" href="#h5py.h5t.PAD_ONE" title="h5py.h5t.PAD_ONE"><code class="xref py py-data docutils literal notranslate"><span class="pre">PAD_ONE</span></code></a></p></li>
+<li><p><a class="reference internal" href="#h5py.h5t.PAD_BACKGROUND" title="h5py.h5t.PAD_BACKGROUND"><code class="xref py py-data docutils literal notranslate"><span class="pre">PAD_BACKGROUND</span></code></a></p></li>
 </ul>
 </dd></dl>
 
@@ -388,8 +388,8 @@ inherited from the base class <a class="reference internal" href="#h5py.h5t.Type
 <code class="sig-name descname">set_order</code><span class="sig-paren">(</span><em class="sig-param">INT order</em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5t.TypeAtomicID.set_order" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set the byte order of the datatype; one of:</p>
 <ul class="simple">
-<li><p><code class="xref py py-data docutils literal notranslate"><span class="pre">ORDER_LE</span></code></p></li>
-<li><p><code class="xref py py-data docutils literal notranslate"><span class="pre">ORDER_BE</span></code></p></li>
+<li><p><a class="reference internal" href="#h5py.h5t.ORDER_LE" title="h5py.h5t.ORDER_LE"><code class="xref py py-data docutils literal notranslate"><span class="pre">ORDER_LE</span></code></a></p></li>
+<li><p><a class="reference internal" href="#h5py.h5t.ORDER_BE" title="h5py.h5t.ORDER_BE"><code class="xref py py-data docutils literal notranslate"><span class="pre">ORDER_BE</span></code></a></p></li>
 </ul>
 </dd></dl>
 
@@ -398,9 +398,9 @@ inherited from the base class <a class="reference internal" href="#h5py.h5t.Type
 <code class="sig-name descname">set_pad</code><span class="sig-paren">(</span><em class="sig-param">INT lsb_pad_code</em>, <em class="sig-param">INT msb_pad_code</em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5t.TypeAtomicID.set_pad" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set the padding type.  Possible values are:</p>
 <ul class="simple">
-<li><p><code class="xref py py-data docutils literal notranslate"><span class="pre">PAD_ZERO</span></code></p></li>
-<li><p><code class="xref py py-data docutils literal notranslate"><span class="pre">PAD_ONE</span></code></p></li>
-<li><p><code class="xref py py-data docutils literal notranslate"><span class="pre">PAD_BACKGROUND</span></code></p></li>
+<li><p><a class="reference internal" href="#h5py.h5t.PAD_ZERO" title="h5py.h5t.PAD_ZERO"><code class="xref py py-data docutils literal notranslate"><span class="pre">PAD_ZERO</span></code></a></p></li>
+<li><p><a class="reference internal" href="#h5py.h5t.PAD_ONE" title="h5py.h5t.PAD_ONE"><code class="xref py py-data docutils literal notranslate"><span class="pre">PAD_ONE</span></code></a></p></li>
+<li><p><a class="reference internal" href="#h5py.h5t.PAD_BACKGROUND" title="h5py.h5t.PAD_BACKGROUND"><code class="xref py py-data docutils literal notranslate"><span class="pre">PAD_BACKGROUND</span></code></a></p></li>
 </ul>
 </dd></dl>
 
@@ -422,9 +422,9 @@ inherited from the base class <a class="reference internal" href="#h5py.h5t.Type
 <code class="sig-name descname">get_sign</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; INT sign<a class="headerlink" href="#h5py.h5t.TypeIntegerID.get_sign" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the “signedness” of the datatype; one of:</p>
 <dl class="simple">
-<dt><code class="xref py py-data docutils literal notranslate"><span class="pre">SGN_NONE</span></code></dt><dd><p>Unsigned</p>
+<dt><a class="reference internal" href="#h5py.h5t.SGN_NONE" title="h5py.h5t.SGN_NONE"><code class="xref py py-data docutils literal notranslate"><span class="pre">SGN_NONE</span></code></a></dt><dd><p>Unsigned</p>
 </dd>
-<dt><code class="xref py py-data docutils literal notranslate"><span class="pre">SGN_2</span></code></dt><dd><p>Signed 2’s complement</p>
+<dt><a class="reference internal" href="#h5py.h5t.SGN_2" title="h5py.h5t.SGN_2"><code class="xref py py-data docutils literal notranslate"><span class="pre">SGN_2</span></code></a></dt><dd><p>Signed 2’s complement</p>
 </dd>
 </dl>
 </dd></dl>
@@ -434,9 +434,9 @@ inherited from the base class <a class="reference internal" href="#h5py.h5t.Type
 <code class="sig-name descname">set_sign</code><span class="sig-paren">(</span><em class="sig-param">INT sign</em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5t.TypeIntegerID.set_sign" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set the “signedness” of the datatype; one of:</p>
 <dl class="simple">
-<dt><code class="xref py py-data docutils literal notranslate"><span class="pre">SGN_NONE</span></code></dt><dd><p>Unsigned</p>
+<dt><a class="reference internal" href="#h5py.h5t.SGN_NONE" title="h5py.h5t.SGN_NONE"><code class="xref py py-data docutils literal notranslate"><span class="pre">SGN_NONE</span></code></a></dt><dd><p>Unsigned</p>
 </dd>
-<dt><code class="xref py py-data docutils literal notranslate"><span class="pre">SGN_2</span></code></dt><dd><p>Signed 2’s complement</p>
+<dt><a class="reference internal" href="#h5py.h5t.SGN_2" title="h5py.h5t.SGN_2"><code class="xref py py-data docutils literal notranslate"><span class="pre">SGN_2</span></code></a></dt><dd><p>Signed 2’s complement</p>
 </dd>
 </dl>
 </dd></dl>
@@ -473,9 +473,9 @@ docs for a full description.  Tuple has the following members:</p>
 <code class="sig-name descname">get_inpad</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; INT pad_code<a class="headerlink" href="#h5py.h5t.TypeFloatID.get_inpad" title="Permalink to this definition">¶</a></dt>
 <dd><p>Determine the internal padding strategy.  Legal values are:</p>
 <ul class="simple">
-<li><p><code class="xref py py-data docutils literal notranslate"><span class="pre">PAD_ZERO</span></code></p></li>
-<li><p><code class="xref py py-data docutils literal notranslate"><span class="pre">PAD_ONE</span></code></p></li>
-<li><p><code class="xref py py-data docutils literal notranslate"><span class="pre">PAD_BACKGROUND</span></code></p></li>
+<li><p><a class="reference internal" href="#h5py.h5t.PAD_ZERO" title="h5py.h5t.PAD_ZERO"><code class="xref py py-data docutils literal notranslate"><span class="pre">PAD_ZERO</span></code></a></p></li>
+<li><p><a class="reference internal" href="#h5py.h5t.PAD_ONE" title="h5py.h5t.PAD_ONE"><code class="xref py py-data docutils literal notranslate"><span class="pre">PAD_ONE</span></code></a></p></li>
+<li><p><a class="reference internal" href="#h5py.h5t.PAD_BACKGROUND" title="h5py.h5t.PAD_BACKGROUND"><code class="xref py py-data docutils literal notranslate"><span class="pre">PAD_BACKGROUND</span></code></a></p></li>
 </ul>
 </dd></dl>
 
@@ -484,9 +484,9 @@ docs for a full description.  Tuple has the following members:</p>
 <code class="sig-name descname">get_norm</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; INT normalization_code<a class="headerlink" href="#h5py.h5t.TypeFloatID.get_norm" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the normalization strategy.  Legal values are:</p>
 <ul class="simple">
-<li><p><code class="xref py py-data docutils literal notranslate"><span class="pre">NORM_IMPLIED</span></code></p></li>
-<li><p><code class="xref py py-data docutils literal notranslate"><span class="pre">NORM_MSBSET</span></code></p></li>
-<li><p><code class="xref py py-data docutils literal notranslate"><span class="pre">NORM_NONE</span></code></p></li>
+<li><p><a class="reference internal" href="#h5py.h5t.NORM_IMPLIED" title="h5py.h5t.NORM_IMPLIED"><code class="xref py py-data docutils literal notranslate"><span class="pre">NORM_IMPLIED</span></code></a></p></li>
+<li><p><a class="reference internal" href="#h5py.h5t.NORM_MSBSET" title="h5py.h5t.NORM_MSBSET"><code class="xref py py-data docutils literal notranslate"><span class="pre">NORM_MSBSET</span></code></a></p></li>
+<li><p><a class="reference internal" href="#h5py.h5t.NORM_NONE" title="h5py.h5t.NORM_NONE"><code class="xref py py-data docutils literal notranslate"><span class="pre">NORM_NONE</span></code></a></p></li>
 </ul>
 </dd></dl>
 
@@ -508,9 +508,9 @@ argument definitions.</p>
 <code class="sig-name descname">set_inpad</code><span class="sig-paren">(</span><em class="sig-param">INT pad_code</em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5t.TypeFloatID.set_inpad" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set the internal padding strategy.  Legal values are:</p>
 <ul class="simple">
-<li><p><code class="xref py py-data docutils literal notranslate"><span class="pre">PAD_ZERO</span></code></p></li>
-<li><p><code class="xref py py-data docutils literal notranslate"><span class="pre">PAD_ONE</span></code></p></li>
-<li><p><code class="xref py py-data docutils literal notranslate"><span class="pre">PAD_BACKGROUND</span></code></p></li>
+<li><p><a class="reference internal" href="#h5py.h5t.PAD_ZERO" title="h5py.h5t.PAD_ZERO"><code class="xref py py-data docutils literal notranslate"><span class="pre">PAD_ZERO</span></code></a></p></li>
+<li><p><a class="reference internal" href="#h5py.h5t.PAD_ONE" title="h5py.h5t.PAD_ONE"><code class="xref py py-data docutils literal notranslate"><span class="pre">PAD_ONE</span></code></a></p></li>
+<li><p><a class="reference internal" href="#h5py.h5t.PAD_BACKGROUND" title="h5py.h5t.PAD_BACKGROUND"><code class="xref py py-data docutils literal notranslate"><span class="pre">PAD_BACKGROUND</span></code></a></p></li>
 </ul>
 </dd></dl>
 
@@ -519,9 +519,9 @@ argument definitions.</p>
 <code class="sig-name descname">set_norm</code><span class="sig-paren">(</span><em class="sig-param">INT normalization_code</em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5t.TypeFloatID.set_norm" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set the normalization strategy.  Legal values are:</p>
 <ul class="simple">
-<li><p><code class="xref py py-data docutils literal notranslate"><span class="pre">NORM_IMPLIED</span></code></p></li>
-<li><p><code class="xref py py-data docutils literal notranslate"><span class="pre">NORM_MSBSET</span></code></p></li>
-<li><p><code class="xref py py-data docutils literal notranslate"><span class="pre">NORM_NONE</span></code></p></li>
+<li><p><a class="reference internal" href="#h5py.h5t.NORM_IMPLIED" title="h5py.h5t.NORM_IMPLIED"><code class="xref py py-data docutils literal notranslate"><span class="pre">NORM_IMPLIED</span></code></a></p></li>
+<li><p><a class="reference internal" href="#h5py.h5t.NORM_MSBSET" title="h5py.h5t.NORM_MSBSET"><code class="xref py py-data docutils literal notranslate"><span class="pre">NORM_MSBSET</span></code></a></p></li>
+<li><p><a class="reference internal" href="#h5py.h5t.NORM_NONE" title="h5py.h5t.NORM_NONE"><code class="xref py py-data docutils literal notranslate"><span class="pre">NORM_NONE</span></code></a></p></li>
 </ul>
 </dd></dl>
 
@@ -546,11 +546,11 @@ argument definitions.</p>
 <code class="sig-name descname">get_strpad</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; INT padding_type<a class="headerlink" href="#h5py.h5t.TypeStringID.get_strpad" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the padding type.  Legal values are:</p>
 <dl class="simple">
-<dt><code class="xref py py-data docutils literal notranslate"><span class="pre">STR_NULLTERM</span></code></dt><dd><p>NULL termination only (C style)</p>
+<dt><a class="reference internal" href="#h5py.h5t.STR_NULLTERM" title="h5py.h5t.STR_NULLTERM"><code class="xref py py-data docutils literal notranslate"><span class="pre">STR_NULLTERM</span></code></a></dt><dd><p>NULL termination only (C style)</p>
 </dd>
-<dt><code class="xref py py-data docutils literal notranslate"><span class="pre">STR_NULLPAD</span></code></dt><dd><p>Pad buffer with NULLs</p>
+<dt><a class="reference internal" href="#h5py.h5t.STR_NULLPAD" title="h5py.h5t.STR_NULLPAD"><code class="xref py py-data docutils literal notranslate"><span class="pre">STR_NULLPAD</span></code></a></dt><dd><p>Pad buffer with NULLs</p>
 </dd>
-<dt><code class="xref py py-data docutils literal notranslate"><span class="pre">STR_SPACEPAD</span></code></dt><dd><p>Pad buffer with spaces (FORTRAN style)</p>
+<dt><a class="reference internal" href="#h5py.h5t.STR_SPACEPAD" title="h5py.h5t.STR_SPACEPAD"><code class="xref py py-data docutils literal notranslate"><span class="pre">STR_SPACEPAD</span></code></a></dt><dd><p>Pad buffer with spaces (FORTRAN style)</p>
 </dd>
 </dl>
 </dd></dl>
@@ -572,11 +572,11 @@ argument definitions.</p>
 <code class="sig-name descname">set_strpad</code><span class="sig-paren">(</span><em class="sig-param">INT pad</em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5t.TypeStringID.set_strpad" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set the padding type.  Legal values are:</p>
 <dl class="simple">
-<dt><code class="xref py py-data docutils literal notranslate"><span class="pre">STR_NULLTERM</span></code></dt><dd><p>NULL termination only (C style)</p>
+<dt><a class="reference internal" href="#h5py.h5t.STR_NULLTERM" title="h5py.h5t.STR_NULLTERM"><code class="xref py py-data docutils literal notranslate"><span class="pre">STR_NULLTERM</span></code></a></dt><dd><p>NULL termination only (C style)</p>
 </dd>
-<dt><code class="xref py py-data docutils literal notranslate"><span class="pre">STR_NULLPAD</span></code></dt><dd><p>Pad buffer with NULLs</p>
+<dt><a class="reference internal" href="#h5py.h5t.STR_NULLPAD" title="h5py.h5t.STR_NULLPAD"><code class="xref py py-data docutils literal notranslate"><span class="pre">STR_NULLPAD</span></code></a></dt><dd><p>Pad buffer with NULLs</p>
 </dd>
-<dt><code class="xref py py-data docutils literal notranslate"><span class="pre">STR_SPACEPAD</span></code></dt><dd><p>Pad buffer with spaces (FORTRAN style)</p>
+<dt><a class="reference internal" href="#h5py.h5t.STR_SPACEPAD" title="h5py.h5t.STR_SPACEPAD"><code class="xref py py-data docutils literal notranslate"><span class="pre">STR_SPACEPAD</span></code></a></dt><dd><p>Pad buffer with spaces (FORTRAN style)</p>
 </dd>
 </dl>
 </dd></dl>

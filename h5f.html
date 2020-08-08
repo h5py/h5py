@@ -53,9 +53,9 @@
 <code class="sig-prename descclassname">h5py.h5f.</code><code class="sig-name descname">open</code><span class="sig-paren">(</span><em class="sig-param">STRING name</em>, <em class="sig-param">UINT flags=ACC_RDWR</em>, <em class="sig-param">PropFAID fapl=None</em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#h5py.h5f.FileID" title="h5py.h5f.FileID">FileID</a><a class="headerlink" href="#h5py.h5f.open" title="Permalink to this definition">¶</a></dt>
 <dd><p>Open an existing HDF5 file.  Keyword “flags” may be:</p>
 <dl class="simple">
-<dt><code class="xref py py-data docutils literal notranslate"><span class="pre">ACC_RDWR</span></code></dt><dd><p>Open in read-write mode</p>
+<dt><a class="reference internal" href="#h5py.h5f.ACC_RDWR" title="h5py.h5f.ACC_RDWR"><code class="xref py py-data docutils literal notranslate"><span class="pre">ACC_RDWR</span></code></a></dt><dd><p>Open in read-write mode</p>
 </dd>
-<dt><code class="xref py py-data docutils literal notranslate"><span class="pre">ACC_RDONLY</span></code></dt><dd><p>Open in readonly mode</p>
+<dt><a class="reference internal" href="#h5py.h5f.ACC_RDONLY" title="h5py.h5f.ACC_RDONLY"><code class="xref py py-data docutils literal notranslate"><span class="pre">ACC_RDONLY</span></code></a></dt><dd><p>Open in readonly mode</p>
 </dd>
 </dl>
 <p>Keyword fapl may be a <a class="reference internal" href="h5p.html#h5py.h5p.PropFAID" title="h5py.h5p.PropFAID"><code class="xref py py-class docutils literal notranslate"><span class="pre">file</span> <span class="pre">access</span> <span class="pre">property</span> <span class="pre">list</span></code></a>.</p>
@@ -66,13 +66,13 @@
 <code class="sig-prename descclassname">h5py.h5f.</code><code class="sig-name descname">create</code><span class="sig-paren">(</span><em class="sig-param">STRING name</em>, <em class="sig-param">INT flags=ACC_TRUNC</em>, <em class="sig-param">PropFCID fcpl=None</em>, <em class="sig-param">PropFAID fapl=None</em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#h5py.h5f.FileID" title="h5py.h5f.FileID">FileID</a><a class="headerlink" href="#h5py.h5f.create" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a new HDF5 file.  Keyword “flags” may be:</p>
 <dl class="simple">
-<dt><code class="xref py py-data docutils literal notranslate"><span class="pre">ACC_TRUNC</span></code></dt><dd><p>Truncate an existing file, discarding its data</p>
+<dt><a class="reference internal" href="#h5py.h5f.ACC_TRUNC" title="h5py.h5f.ACC_TRUNC"><code class="xref py py-data docutils literal notranslate"><span class="pre">ACC_TRUNC</span></code></a></dt><dd><p>Truncate an existing file, discarding its data</p>
 </dd>
-<dt><code class="xref py py-data docutils literal notranslate"><span class="pre">ACC_EXCL</span></code></dt><dd><p>Fail if a conflicting file exists</p>
+<dt><a class="reference internal" href="#h5py.h5f.ACC_EXCL" title="h5py.h5f.ACC_EXCL"><code class="xref py py-data docutils literal notranslate"><span class="pre">ACC_EXCL</span></code></a></dt><dd><p>Fail if a conflicting file exists</p>
 </dd>
 </dl>
 <p>To keep the behavior in line with that of Python’s built-in functions,
-the default is <code class="xref py py-data docutils literal notranslate"><span class="pre">ACC_TRUNC</span></code>.  Be careful!</p>
+the default is <a class="reference internal" href="#h5py.h5f.ACC_TRUNC" title="h5py.h5f.ACC_TRUNC"><code class="xref py py-data docutils literal notranslate"><span class="pre">ACC_TRUNC</span></code></a>.  Be careful!</p>
 </dd></dl>
 
 <dl class="py function">
@@ -82,9 +82,9 @@ the default is <code class="xref py py-data docutils literal notranslate"><span 
 be the file identifier, or the identifier of any object residing in
 the file.  Keyword “scope” may be:</p>
 <dl class="simple">
-<dt><code class="xref py py-data docutils literal notranslate"><span class="pre">SCOPE_LOCAL</span></code></dt><dd><p>Flush only the given file</p>
+<dt><a class="reference internal" href="#h5py.h5f.SCOPE_LOCAL" title="h5py.h5f.SCOPE_LOCAL"><code class="xref py py-data docutils literal notranslate"><span class="pre">SCOPE_LOCAL</span></code></a></dt><dd><p>Flush only the given file</p>
 </dd>
-<dt><code class="xref py py-data docutils literal notranslate"><span class="pre">SCOPE_GLOBAL</span></code></dt><dd><p>Flush the entire virtual file</p>
+<dt><a class="reference internal" href="#h5py.h5f.SCOPE_GLOBAL" title="h5py.h5f.SCOPE_GLOBAL"><code class="xref py py-data docutils literal notranslate"><span class="pre">SCOPE_GLOBAL</span></code></a></dt><dd><p>Flush the entire virtual file</p>
 </dd>
 </dl>
 </dd></dl>
@@ -131,12 +131,12 @@ exception if the file doesn’t exist.</p>
 <dd><p>Get the number of open objects.</p>
 <dl>
 <dt>where</dt><dd><p>Either a <a class="reference internal" href="#h5py.h5f.FileID" title="h5py.h5f.FileID"><code class="xref py py-class docutils literal notranslate"><span class="pre">FileID</span></code></a> instance representing an HDF5 file, or the
-special constant <code class="xref py py-data docutils literal notranslate"><span class="pre">OBJ_ALL</span></code>, to count objects in all files.</p>
+special constant <a class="reference internal" href="#h5py.h5f.OBJ_ALL" title="h5py.h5f.OBJ_ALL"><code class="xref py py-data docutils literal notranslate"><span class="pre">OBJ_ALL</span></code></a>, to count objects in all files.</p>
 </dd>
-<dt>type</dt><dd><p>Specify what kinds of object to include.  May be one of <code class="docutils literal notranslate"><span class="pre">OBJ*</span></code>,
+<dt>type</dt><dd><p>Specify what kinds of object to include.  May be one of <a class="reference internal" href="#ref-h5f-obj"><span class="std std-ref">OBJ*</span></a>,
 or any bitwise combination (e.g. <code class="docutils literal notranslate"><span class="pre">OBJ_FILE</span> <span class="pre">|</span> <span class="pre">OBJ_ATTR</span></code>).</p>
-<p>The special value <code class="xref py py-data docutils literal notranslate"><span class="pre">OBJ_ALL</span></code> matches all object types, and
-<code class="xref py py-data docutils literal notranslate"><span class="pre">OBJ_LOCAL</span></code> will only match objects opened through a specific
+<p>The special value <a class="reference internal" href="#h5py.h5f.OBJ_ALL" title="h5py.h5f.OBJ_ALL"><code class="xref py py-data docutils literal notranslate"><span class="pre">OBJ_ALL</span></code></a> matches all object types, and
+<a class="reference internal" href="#h5py.h5f.OBJ_LOCAL" title="h5py.h5f.OBJ_LOCAL"><code class="xref py py-data docutils literal notranslate"><span class="pre">OBJ_LOCAL</span></code></a> will only match objects opened through a specific
 identifier.</p>
 </dd>
 </dl>
@@ -148,12 +148,12 @@ identifier.</p>
 <dd><p>Get a list of identifier instances for open objects.</p>
 <dl>
 <dt>where</dt><dd><p>Either a <a class="reference internal" href="#h5py.h5f.FileID" title="h5py.h5f.FileID"><code class="xref py py-class docutils literal notranslate"><span class="pre">FileID</span></code></a> instance representing an HDF5 file, or the
-special constant <code class="xref py py-data docutils literal notranslate"><span class="pre">OBJ_ALL</span></code>, to list objects in all files.</p>
+special constant <a class="reference internal" href="#h5py.h5f.OBJ_ALL" title="h5py.h5f.OBJ_ALL"><code class="xref py py-data docutils literal notranslate"><span class="pre">OBJ_ALL</span></code></a>, to list objects in all files.</p>
 </dd>
-<dt>type</dt><dd><p>Specify what kinds of object to include.  May be one of <code class="docutils literal notranslate"><span class="pre">OBJ*</span></code>,
+<dt>type</dt><dd><p>Specify what kinds of object to include.  May be one of <a class="reference internal" href="#ref-h5f-obj"><span class="std std-ref">OBJ*</span></a>,
 or any bitwise combination (e.g. <code class="docutils literal notranslate"><span class="pre">OBJ_FILE</span> <span class="pre">|</span> <span class="pre">OBJ_ATTR</span></code>).</p>
-<p>The special value <code class="xref py py-data docutils literal notranslate"><span class="pre">OBJ_ALL</span></code> matches all object types, and
-<code class="xref py py-data docutils literal notranslate"><span class="pre">OBJ_LOCAL</span></code> will only match objects opened through a specific
+<p>The special value <a class="reference internal" href="#h5py.h5f.OBJ_ALL" title="h5py.h5f.OBJ_ALL"><code class="xref py py-data docutils literal notranslate"><span class="pre">OBJ_ALL</span></code></a> matches all object types, and
+<a class="reference internal" href="#h5py.h5f.OBJ_LOCAL" title="h5py.h5f.OBJ_LOCAL"><code class="xref py py-data docutils literal notranslate"><span class="pre">OBJ_LOCAL</span></code></a> will only match objects opened through a specific
 identifier.</p>
 </dd>
 </dl>

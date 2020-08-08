@@ -42,6 +42,43 @@
   <div class="section" id="module-h5py.h5z">
 <span id="module-h5z"></span><h1>Module H5Z<a class="headerlink" href="#module-h5py.h5z" title="Permalink to this headline">¶</a></h1>
 <p>Filter API and constants.</p>
+<dl class="py function">
+<dt id="h5py.h5z.filter_avail">
+<code class="sig-prename descclassname">h5py.h5z.</code><code class="sig-name descname">filter_avail</code><span class="sig-paren">(</span><em class="sig-param">INT filter_code</em><span class="sig-paren">)</span> &#x2192; BOOL<a class="headerlink" href="#h5py.h5z.filter_avail" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determine if the given filter is available to the library. The
+filter code should be one of:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#h5py.h5z.FILTER_DEFLATE" title="h5py.h5z.FILTER_DEFLATE"><code class="xref py py-data docutils literal notranslate"><span class="pre">FILTER_DEFLATE</span></code></a></p></li>
+<li><p><a class="reference internal" href="#h5py.h5z.FILTER_SHUFFLE" title="h5py.h5z.FILTER_SHUFFLE"><code class="xref py py-data docutils literal notranslate"><span class="pre">FILTER_SHUFFLE</span></code></a></p></li>
+<li><p><a class="reference internal" href="#h5py.h5z.FILTER_FLETCHER32" title="h5py.h5z.FILTER_FLETCHER32"><code class="xref py py-data docutils literal notranslate"><span class="pre">FILTER_FLETCHER32</span></code></a></p></li>
+<li><p><a class="reference internal" href="#h5py.h5z.FILTER_SZIP" title="h5py.h5z.FILTER_SZIP"><code class="xref py py-data docutils literal notranslate"><span class="pre">FILTER_SZIP</span></code></a></p></li>
+</ul>
+</dd></dl>
+
+<dl class="py function">
+<dt id="h5py.h5z.get_filter_info">
+<code class="sig-prename descclassname">h5py.h5z.</code><code class="sig-name descname">get_filter_info</code><span class="sig-paren">(</span><em class="sig-param">INT filter_code</em><span class="sig-paren">)</span> &#x2192; INT filter_flags<a class="headerlink" href="#h5py.h5z.get_filter_info" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve a bitfield with information about the given filter. The
+filter code should be one of:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#h5py.h5z.FILTER_DEFLATE" title="h5py.h5z.FILTER_DEFLATE"><code class="xref py py-data docutils literal notranslate"><span class="pre">FILTER_DEFLATE</span></code></a></p></li>
+<li><p><a class="reference internal" href="#h5py.h5z.FILTER_SHUFFLE" title="h5py.h5z.FILTER_SHUFFLE"><code class="xref py py-data docutils literal notranslate"><span class="pre">FILTER_SHUFFLE</span></code></a></p></li>
+<li><p><a class="reference internal" href="#h5py.h5z.FILTER_FLETCHER32" title="h5py.h5z.FILTER_FLETCHER32"><code class="xref py py-data docutils literal notranslate"><span class="pre">FILTER_FLETCHER32</span></code></a></p></li>
+<li><p><a class="reference internal" href="#h5py.h5z.FILTER_SZIP" title="h5py.h5z.FILTER_SZIP"><code class="xref py py-data docutils literal notranslate"><span class="pre">FILTER_SZIP</span></code></a></p></li>
+</ul>
+<p>Valid bitmasks for use with the returned bitfield are:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#h5py.h5z.FILTER_CONFIG_ENCODE_ENABLED" title="h5py.h5z.FILTER_CONFIG_ENCODE_ENABLED"><code class="xref py py-data docutils literal notranslate"><span class="pre">FILTER_CONFIG_ENCODE_ENABLED</span></code></a></p></li>
+<li><p><a class="reference internal" href="#h5py.h5z.FILTER_CONFIG_DECODE_ENABLED" title="h5py.h5z.FILTER_CONFIG_DECODE_ENABLED"><code class="xref py py-data docutils literal notranslate"><span class="pre">FILTER_CONFIG_DECODE_ENABLED</span></code></a></p></li>
+</ul>
+</dd></dl>
+
+<dl class="py function">
+<dt id="h5py.h5z.unregister_filter">
+<code class="sig-prename descclassname">h5py.h5z.</code><code class="sig-name descname">unregister_filter</code><span class="sig-paren">(</span><em class="sig-param">INT filter_code</em><span class="sig-paren">)</span> &#x2192; BOOL<a class="headerlink" href="#h5py.h5z.unregister_filter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Unregister a filter</p>
+</dd></dl>
+
 <div class="section" id="module-constants">
 <h2>Module constants<a class="headerlink" href="#module-constants" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="predefined-filters">

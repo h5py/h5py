@@ -47,6 +47,54 @@
 <h1>Module H5I<a class="headerlink" href="#module-h5i" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="module-h5py.h5i">
 <span id="functional-api"></span><h2>Functional API<a class="headerlink" href="#module-h5py.h5i" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt id="h5py.h5i.dec_ref">
+<code class="sig-prename descclassname">h5py.h5i.</code><code class="sig-name descname">dec_ref</code><span class="sig-paren">(</span><em class="sig-param">ObjectID obj</em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5i.dec_ref" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decrement the reference count for the given object.</p>
+<p>This function is provided for debugging only.  Reference counting
+is automatically synchronized with Python, and you can easily break
+ObjectID instances by abusing this function.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="h5py.h5i.get_file_id">
+<code class="sig-prename descclassname">h5py.h5i.</code><code class="sig-name descname">get_file_id</code><span class="sig-paren">(</span><em class="sig-param">ObjectID obj</em><span class="sig-paren">)</span> &#x2192; FileID<a class="headerlink" href="#h5py.h5i.get_file_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Obtain an identifier for the file in which this object resides.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="h5py.h5i.get_name">
+<code class="sig-prename descclassname">h5py.h5i.</code><code class="sig-name descname">get_name</code><span class="sig-paren">(</span><em class="sig-param">ObjectID obj</em><span class="sig-paren">)</span> &#x2192; STRING name, or None<a class="headerlink" href="#h5py.h5i.get_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determine (a) name of an HDF5 object.  Because an object has as many
+names as there are hard links to it, this may not be unique.</p>
+<p>If the identifier is invalid or is not associated with a name
+(in the case of transient datatypes, dataspaces, etc), returns None.</p>
+<p>For some reason, this does not work on dereferenced objects.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="h5py.h5i.get_ref">
+<code class="sig-prename descclassname">h5py.h5i.</code><code class="sig-name descname">get_ref</code><span class="sig-paren">(</span><em class="sig-param">ObjectID obj</em><span class="sig-paren">)</span> &#x2192; INT<a class="headerlink" href="#h5py.h5i.get_ref" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve the reference count for the given object.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="h5py.h5i.get_type">
+<code class="sig-prename descclassname">h5py.h5i.</code><code class="sig-name descname">get_type</code><span class="sig-paren">(</span><em class="sig-param">ObjectID obj</em><span class="sig-paren">)</span> &#x2192; INT type_code<a class="headerlink" href="#h5py.h5i.get_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determine the HDF5 typecode of an arbitrary HDF5 object.  The return
+value is always one of the type constants defined in this module; if
+the <code class="xref py py-data docutils literal notranslate"><span class="pre">ID</span></code> is invalid, <a class="reference internal" href="#h5py.h5i.BADID" title="h5py.h5i.BADID"><code class="xref py py-data docutils literal notranslate"><span class="pre">BADID</span></code></a> is returned.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="h5py.h5i.inc_ref">
+<code class="sig-prename descclassname">h5py.h5i.</code><code class="sig-name descname">inc_ref</code><span class="sig-paren">(</span><em class="sig-param">ObjectID obj</em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5i.inc_ref" title="Permalink to this definition">¶</a></dt>
+<dd><p>Increment the reference count for the given object.</p>
+<p>This function is provided for debugging only.  Reference counting
+is automatically synchronized with Python, and you can easily break
+ObjectID instances by abusing this function.</p>
+</dd></dl>
+
 </div>
 <div class="section" id="module-constants">
 <h2>Module constants<a class="headerlink" href="#module-constants" title="Permalink to this headline">¶</a></h2>
