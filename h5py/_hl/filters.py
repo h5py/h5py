@@ -137,7 +137,8 @@ class Gzip(FilterRefBase):
         self.filter_options = (level,)
 
 def fill_dcpl(plist, shape, dtype, chunks, compression, compression_opts,
-              shuffle, fletcher32, maxshape, scaleoffset, external):
+              shuffle, fletcher32, maxshape, scaleoffset, external,
+              allow_unknown_filter=False):
     """ Generate a dataset creation property list.
 
     Undocumented and subject to change without warning.
@@ -269,7 +270,7 @@ def fill_dcpl(plist, shape, dtype, chunks, compression, compression_opts,
         opts = {'ec': h5z.SZIP_EC_OPTION_MASK, 'nn': h5z.SZIP_NN_OPTION_MASK}
         plist.set_szip(opts[szmethod], szpix)
     elif isinstance(compression, int):
-        if not h5z.filter_avail(compression):
+        if not allow_unknown_filter and not h5z.filter_avail(compression):
             raise ValueError("Unknown compression filter number: %s" % compression)
 
         plist.set_filter(compression, h5z.FLAG_OPTIONAL, compression_opts)

@@ -1622,3 +1622,13 @@ def test_vlen_spacepad():
 def test_vlen_nullterm():
     with File(get_data_file_path("vlen_string_dset_utc.h5")) as f:
         assert f["ds1"][0] == b"2009-12-20T10:16:18.662409Z"
+
+
+def test_allow_unknown_filter(writable_file):
+    # apparently 256-511 are reserved for testing purposes
+    fake_filter_id = 256
+    ds = writable_file.create_dataset(
+        'data', shape=(10, 10), dtype=np.uint8, compression=fake_filter_id,
+        allow_unknown_filter=True
+    )
+    assert str(fake_filter_id) in ds._filters
