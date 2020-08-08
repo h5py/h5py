@@ -45,6 +45,7 @@ High-level API reference
     high/dataset
     high/attr
     high/dims
+    high/lowlevel
 
 
 Advanced topics
