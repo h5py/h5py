@@ -4,7 +4,7 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Module H5F &#8212; Low-level API for h5py (v2.10.0)</title>
     <link rel="stylesheet" href="_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -50,7 +50,7 @@
 <h2>Functional API<a class="headerlink" href="#functional-api" title="Permalink to this headline">¶</a></h2>
 <dl class="py function">
 <dt id="h5py.h5f.open">
-<code class="sig-prename descclassname">h5py.h5f.</code><code class="sig-name descname">open</code><span class="sig-paren">(</span><em class="sig-param">STRING name</em>, <em class="sig-param">UINT flags=ACC_RDWR</em>, <em class="sig-param">PropFAID fapl=None</em><span class="sig-paren">)</span> &#x2192; FileID<a class="headerlink" href="#h5py.h5f.open" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">h5py.h5f.</code><code class="sig-name descname">open</code><span class="sig-paren">(</span><em class="sig-param">STRING name</em>, <em class="sig-param">UINT flags=ACC_RDWR</em>, <em class="sig-param">PropFAID fapl=None</em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#h5py.h5f.FileID" title="h5py.h5f.FileID">FileID</a><a class="headerlink" href="#h5py.h5f.open" title="Permalink to this definition">¶</a></dt>
 <dd><p>Open an existing HDF5 file.  Keyword “flags” may be:</p>
 <dl class="simple">
 <dt><code class="xref py py-data docutils literal notranslate"><span class="pre">ACC_RDWR</span></code></dt><dd><p>Open in read-write mode</p>
@@ -63,7 +63,7 @@
 
 <dl class="py function">
 <dt id="h5py.h5f.create">
-<code class="sig-prename descclassname">h5py.h5f.</code><code class="sig-name descname">create</code><span class="sig-paren">(</span><em class="sig-param">STRING name</em>, <em class="sig-param">INT flags=ACC_TRUNC</em>, <em class="sig-param">PropFCID fcpl=None</em>, <em class="sig-param">PropFAID fapl=None</em><span class="sig-paren">)</span> &#x2192; FileID<a class="headerlink" href="#h5py.h5f.create" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">h5py.h5f.</code><code class="sig-name descname">create</code><span class="sig-paren">(</span><em class="sig-param">STRING name</em>, <em class="sig-param">INT flags=ACC_TRUNC</em>, <em class="sig-param">PropFCID fcpl=None</em>, <em class="sig-param">PropFAID fapl=None</em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#h5py.h5f.FileID" title="h5py.h5f.FileID">FileID</a><a class="headerlink" href="#h5py.h5f.create" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a new HDF5 file.  Keyword “flags” may be:</p>
 <dl class="simple">
 <dt><code class="xref py py-data docutils literal notranslate"><span class="pre">ACC_TRUNC</span></code></dt><dd><p>Truncate an existing file, discarding its data</p>
@@ -111,7 +111,7 @@ exception if the file doesn’t exist.</p>
 
 <dl class="py function">
 <dt id="h5py.h5f.open_file_image">
-<code class="sig-prename descclassname">h5py.h5f.</code><code class="sig-name descname">open_file_image</code><span class="sig-paren">(</span><em class="sig-param">STRING image</em>, <em class="sig-param">INT flags=0</em><span class="sig-paren">)</span> &#x2192; FileID<a class="headerlink" href="#h5py.h5f.open_file_image" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">h5py.h5f.</code><code class="sig-name descname">open_file_image</code><span class="sig-paren">(</span><em class="sig-param">STRING image</em>, <em class="sig-param">INT flags=0</em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#h5py.h5f.FileID" title="h5py.h5f.FileID">FileID</a><a class="headerlink" href="#h5py.h5f.open_file_image" title="Permalink to this definition">¶</a></dt>
 <dd><p>Load a new HDF5 file into memory.  Keyword “flags” may be:</p>
 <dl class="simple">
 <dt><code class="xref py py-data docutils literal notranslate"><span class="pre">FILE_IMAGE_OPEN_RW</span></code></dt><dd><p>Specifies opening the file image in read/write mode.</p>
@@ -266,7 +266,7 @@ with H5Pset_family_offset or H5Pset_multi_type.</p>
 
 <dl class="py method">
 <dt id="h5py.h5f.FileID.reopen">
-<code class="sig-name descname">reopen</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; FileID<a class="headerlink" href="#h5py.h5f.FileID.reopen" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">reopen</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#h5py.h5f.FileID" title="h5py.h5f.FileID">FileID</a><a class="headerlink" href="#h5py.h5f.FileID.reopen" title="Permalink to this definition">¶</a></dt>
 <dd><p>Retrieve another identifier for a file (which must still be open).
 The new identifier is guaranteed to neither be mounted nor contain
 a mounted file.</p>
@@ -518,8 +518,8 @@ attached to objects cannot remain open.</p>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2014, Andrew Collette and contributors.
-      Last updated on Aug 07, 2020.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.1.2.
+      Last updated on Aug 08, 2020.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.2.0.
     </div>
   </body>
 </html>

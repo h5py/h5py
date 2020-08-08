@@ -4,7 +4,7 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Module H5S &#8212; Low-level API for h5py (v2.10.0)</title>
     <link rel="stylesheet" href="_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -50,14 +50,14 @@
 <h2>Functional API<a class="headerlink" href="#functional-api" title="Permalink to this headline">¶</a></h2>
 <dl class="py function">
 <dt id="h5py.h5s.create">
-<code class="sig-prename descclassname">h5py.h5s.</code><code class="sig-name descname">create</code><span class="sig-paren">(</span><em class="sig-param">INT class_code</em><span class="sig-paren">)</span> &#x2192; SpaceID<a class="headerlink" href="#h5py.h5s.create" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">h5py.h5s.</code><code class="sig-name descname">create</code><span class="sig-paren">(</span><em class="sig-param">INT class_code</em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#h5py.h5s.SpaceID" title="h5py.h5s.SpaceID">SpaceID</a><a class="headerlink" href="#h5py.h5s.create" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a new HDF5 dataspace object, of the given class.
 Legal values are <code class="xref py py-data docutils literal notranslate"><span class="pre">SCALAR</span></code> and <code class="xref py py-data docutils literal notranslate"><span class="pre">SIMPLE</span></code>.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt id="h5py.h5s.create_simple">
-<code class="sig-prename descclassname">h5py.h5s.</code><code class="sig-name descname">create_simple</code><span class="sig-paren">(</span><em class="sig-param">TUPLE dims_tpl</em>, <em class="sig-param">TUPLE max_dims_tpl</em><span class="sig-paren">)</span> &#x2192; SpaceID<a class="headerlink" href="#h5py.h5s.create_simple" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">h5py.h5s.</code><code class="sig-name descname">create_simple</code><span class="sig-paren">(</span><em class="sig-param">TUPLE dims_tpl</em>, <em class="sig-param">TUPLE max_dims_tpl</em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#h5py.h5s.SpaceID" title="h5py.h5s.SpaceID">SpaceID</a><a class="headerlink" href="#h5py.h5s.create_simple" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a simple (slab) dataspace from a tuple of dimensions.
 Every element of dims_tpl must be a positive integer.</p>
 <p>You can optionally specify the maximum dataspace size. The
@@ -67,7 +67,7 @@ an unlimited dimension.</p>
 
 <dl class="py function">
 <dt id="h5py.h5s.decode">
-<code class="sig-prename descclassname">h5py.h5s.</code><code class="sig-name descname">decode</code><span class="sig-paren">(</span><em class="sig-param">STRING buf</em><span class="sig-paren">)</span> &#x2192; SpaceID<a class="headerlink" href="#h5py.h5s.decode" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">h5py.h5s.</code><code class="sig-name descname">decode</code><span class="sig-paren">(</span><em class="sig-param">STRING buf</em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#h5py.h5s.SpaceID" title="h5py.h5s.SpaceID">SpaceID</a><a class="headerlink" href="#h5py.h5s.decode" title="Permalink to this definition">¶</a></dt>
 <dd><p>Unserialize a dataspace.  Bear in mind you can also use the native
 Python pickling machinery to do this.</p>
 </dd></dl>
@@ -92,7 +92,7 @@ Python pickling machinery to do this.</p>
 <p>Can be pickled if HDF5 1.8 is available.</p>
 <dl class="py method">
 <dt id="h5py.h5s.SpaceID.copy">
-<code class="sig-name descname">copy</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; SpaceID<a class="headerlink" href="#h5py.h5s.SpaceID.copy" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">copy</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#h5py.h5s.SpaceID" title="h5py.h5s.SpaceID">SpaceID</a><a class="headerlink" href="#h5py.h5s.SpaceID.copy" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a new copy of this dataspace.</p>
 </dd></dl>
 
@@ -472,8 +472,8 @@ an unlimited dimension.</p>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2014, Andrew Collette and contributors.
-      Last updated on Aug 07, 2020.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.1.2.
+      Last updated on Aug 08, 2020.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.2.0.
     </div>
   </body>
 </html>
