@@ -49,7 +49,7 @@ Python  %(python)s
 sys.platform    %(platform)s
 sys.maxsize     %(maxsize)s
 numpy   %(numpy)s
-cython (built against) %(cython_version)s
+cython (built with) %(cython_version)s
 numpy (built against) %(numpy_build_version)s
 HDF5 (built against) %(hdf5_build_version)s
 """ % {
@@ -59,7 +59,7 @@ HDF5 (built against) %(hdf5_build_version)s
     'platform': sys.platform,
     'maxsize': sys.maxsize,
     'numpy': numpy.__version__,
-    'cython_version': _h5.CYTHON_VERSION_COMPILED_AGAINST,
+    'cython_version': _h5.CYTHON_VERSION_COMPILED_WITH,
     'numpy_build_version': _h5.NUMPY_VERSION_COMPILED_AGAINST,
     'hdf5_build_version': "%d.%d.%d" % hdf5_built_version_tuple,
 }
