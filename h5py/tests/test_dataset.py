@@ -1624,6 +1624,10 @@ def test_vlen_nullterm():
         assert f["ds1"][0] == b"2009-12-20T10:16:18.662409Z"
 
 
+@pytest.mark.skipif(
+    h5py.version.hdf5_version_tuple < (1, 10, 3),
+    reason="Appears you cannot pass an unknown filter id for HDF5 < 1.10.3"
+)
 def test_allow_unknown_filter(writable_file):
     # apparently 256-511 are reserved for testing purposes
     fake_filter_id = 256
