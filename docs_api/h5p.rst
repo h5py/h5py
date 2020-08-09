@@ -94,7 +94,7 @@ Group creation
     :members:
 
 Datatype creation
-----------------
+-----------------
 
 .. autoclass:: PropTCID
     :show-inheritance:
