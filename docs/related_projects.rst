@@ -6,7 +6,13 @@ Tools and Related Projects
 There are a number of projects which build upon h5py, or who build upon HDF5,
 which will likely be of interest to users of h5py. This page is non-exhaustive,
 but if you think there should be a project added, feel free to create an issue
-or  pull request at https://github.com/h5py/h5py/.
+or pull request at https://github.com/h5py/h5py/.
+
+`PyTables <https://www.pytables.org/>`_ is the most significant related project,
+providing a higher level wrapper around HDF5 then h5py, and optimised to fully
+take advantage of some of HDF5's features. h5py provides a comparison between
+the two projects (see :ref:`h5py_pytable_cmp`), as does
+`PyTables <https://www.pytables.org/FAQ.html#how-does-pytables-compare-with-the-h5py-project>`_.
 
 .. contents::
    :local:
@@ -41,29 +47,29 @@ IPython session::
 
    In [2]: h5py.enable_ipython_completer()
 
-It is also possible to configure IPython to enable the completer every time you
-start a new session. For >=ipython-0.11, "h5py.ipy_completer" just needs to be
-added to the list of extensions in your ipython config file, for example
+The completer can be enabled for every session by adding "h5py.ipy_completer" to
+the list of extensions in your ipython config file, for example
 :file:`~/.config/ipython/profile_default/ipython_config.py` (if this file does
 not exist, you can create it by invoking `ipython profile create`)::
 
    c = get_config()
    c.InteractiveShellApp.extensions = ['h5py.ipy_completer']
 
-For <ipython-0.11, the completer can be enabled by adding the following lines
-to the :func:`main` in :file:`.ipython/ipy_user_conf.py`::
-
-   def main():
-       ip.ex('from h5py import ipy_completer')
-       ip.ex('ipy_completer.load_ipython_extension()')
-
 Exploring and Visualising HDF5 files
 ------------------------------------
 
 h5py does not contain a tool for exploring or visualising HDF5 files, but tools
-built on h5py that can display the structure of h5py include:
+that can display the structure of h5py include:
 
- * `h5glance <https://github.com/European-XFEL/h5glance>`_
+ * `h5glance <https://github.com/European-XFEL/h5glance>`_ shows the structure
+   of HDF5 files in IPython & Jupyter, as well as at the command line.
+ * `HDFView <https://confluence.hdfgroup.org/display/HDFVIEW/HDFView>`_ is a
+   visual tool for browsing and editing HDF4 and HDF5 files.
+ * `ViTables <https://vitables.org/>`_ is a GUI for browsing and editing files
+   in both PyTables and HDF5 formats, and is built on top of PyTables.
+
+PaNOSC also provides a list of
+`more tools <https://github.com/panosc-eu/panosc/blob/master/Work%20Packages/WP4%20Data%20analysis%20services/resources/hdf5-viewers.rst>`_.
 
 
 Additional Filters
@@ -75,16 +81,6 @@ include:
  * `hdf5plugin <https://github.com/silx-kit/hdf5plugin>`_: this provides several
    plugins (currently blosc, bitshuffle, lz4, FCIDECOMP and ZFP), and newer
    plugins should look to supporting h5py via inclusion into hdf5plugin.
-
-
-Field/Format Specific Libraries
--------------------------------
-
-The are projects which build upon h5py to read and write to HDF5 files with a
-specific schema, users of these formats may be interested in using these
-higher-level wrappers of h5py:
-
- *
 
 
 Other projects/tools
