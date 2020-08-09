@@ -27,6 +27,10 @@ Base classes
     :show-inheritance:
     :members:
 
+.. autoclass:: PropOCID
+    :show-inheritance:
+    :members:
+
 .. autoclass:: PropCopyID
     :show-inheritance:
     :members:
@@ -52,6 +56,19 @@ Dataset creation
     :show-inheritance:
     :members:
 
+Dataset access
+--------------
+
+.. autoclass:: PropDAID
+    :show-inheritance:
+    :members:
+
+Dataset transfer
+----------------
+
+.. autoclass:: PropDXID
+    :show-inheritance:
+    :members:
 
 Link creation
 -------------
@@ -76,6 +93,12 @@ Group creation
     :show-inheritance:
     :members:
 
+Datatype creation
+----------------
+
+.. autoclass:: PropTCID
+    :show-inheritance:
+    :members:
 
 Module constants
 ----------------
@@ -88,7 +111,15 @@ Predefined classes
 .. data:: FILE_ACCESS
 .. data:: DATASET_CREATE
 .. data:: DATASET_XFER
+.. data:: DATASET_ACCESS
 .. data:: OBJECT_COPY
 .. data:: LINK_CREATE
 .. data:: LINK_ACCESS
 .. data:: GROUP_CREATE
+.. data:: OBJECT_CREATE
+
+Order tracking flags
+~~~~~~~~~~~~~~~~~~~~
+
+.. data:: CRT_ORDER_TRACKED
+.. data:: CRT_ORDER_INDEXED
