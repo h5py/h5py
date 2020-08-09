@@ -134,10 +134,9 @@ Supports HDF5 versions 1.8.4 and higher.  On Windows, HDF5 is included with
 the installer.
 """
 
+package_data = {'h5py': [], "h5py.tests.data_files": ["*.h5"]}
 if os.name == 'nt':
-    package_data = {'h5py': ['*.dll']}
-else:
-    package_data = {'h5py': []}
+    package_data['h5py'].append('*.dll')
 
 setup(
   name = 'h5py',
@@ -152,8 +151,13 @@ setup(
   license = 'BSD',
   url = 'http://www.h5py.org',
   download_url = 'https://pypi.python.org/pypi/h5py',
-  packages = ['h5py', 'h5py._hl', 'h5py.tests',
-              'h5py.tests.test_vds'],
+  packages = [
+      'h5py',
+      'h5py._hl',
+      'h5py.tests',
+      'h5py.tests.data_files',
+      'h5py.tests.test_vds',
+  ],
   package_data = package_data,
   ext_modules = [Extension('h5py.x',['x.c'])],  # To trick build into running build_ext
   install_requires = RUN_REQUIRES,
