@@ -11,8 +11,8 @@ or pull request at https://github.com/h5py/h5py/.
 `PyTables <https://www.pytables.org/>`_ is the most significant related project,
 providing a higher level wrapper around HDF5 then h5py, and optimised to fully
 take advantage of some of HDF5's features. h5py provides a comparison between
-the two projects (see :ref:`h5py_pytable_cmp`), as does
-`PyTables <https://www.pytables.org/FAQ.html#how-does-pytables-compare-with-the-h5py-project>`_.
+the two projects (see :ref:`h5py_pytable_cmp`), as does the
+`PyTables project <https://www.pytables.org/FAQ.html#how-does-pytables-compare-with-the-h5py-project>`_.
 
 .. contents::
    :local:
