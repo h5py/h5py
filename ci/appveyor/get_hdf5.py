@@ -17,11 +17,7 @@ from subprocess import run, PIPE, STDOUT
 from zipfile import ZipFile
 import requests
 
-HDF5_18_URL = "https://www.hdfgroup.org/ftp/HDF5/releases/hdf5-1.8/hdf5-{version}/src/"
-HDF5_110_URL = "https://www.hdfgroup.org/ftp/HDF5/releases/hdf5-1.10/hdf5-{version}/src/"
-HDF5_18_FILE = HDF5_18_URL + "hdf5-{version}.zip"
-HDF5_110_FILE = HDF5_110_URL + "hdf5-{version}.zip"
-
+HDF5_URL = "https://www.hdfgroup.org/ftp/HDF5/releases/hdf5-{series}/hdf5-{version}/src/hdf5-{version}.zip"
 
 CMAKE_CONFIGURE_CMD = [
     "cmake", "-DBUILD_SHARED_LIBS:BOOL=ON", "-DCMAKE_BUILD_TYPE:STRING=RELEASE",
@@ -49,10 +45,8 @@ VSVERSION_TO_GENERATOR = {
 
 
 def download_hdf5(version, outfile):
-    if version.split(".")[:2] == ["1", "10"]:
-        file = HDF5_110_FILE.format(version=version)
-    else:
-        file = HDF5_18_FILE.format(version=version)
+    series = '.'.join(version.split(".")[:2])
+    file = HDF5_URL.format(version=version, series=series)
 
     print("Downloading " + file, file=stderr)
     r = requests.get(file, stream=True)
