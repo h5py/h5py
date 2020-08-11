@@ -137,3 +137,22 @@ class TestPL(TestCase):
         fcpl = h5p.create(h5p.FILE_CREATE)
         fcpl.set_link_creation_order(flags)
         self.assertEqual(flags, fcpl.get_link_creation_order())
+
+    def test_attr_phase_change(self):
+        """
+        test the attribute phase change
+        """
+
+        cid = h5p.create(h5p.OBJECT_CREATE)
+        # test default value
+        ret = cid.get_attr_phase_change()
+        self.assertEqual((8,6), ret)
+
+        # max_compact must < 65536 (64kb)
+        with self.assertRaises(ValueError):
+            cid.set_attr_phase_change(65536, 6)
+
+        # Using dense attributes storage to avoid 64kb size limitation
+        # for a single attribute in compact attribute storage.
+        cid.set_attr_phase_change(0, 0)
+        self.assertEqual((0,0), cid.get_attr_phase_change())
