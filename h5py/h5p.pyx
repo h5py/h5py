@@ -1510,6 +1510,33 @@ cdef class PropOCID(PropCreateID):
         H5Pget_attr_creation_order(self.id, &flags)
         return flags
 
+    @with_phil
+    def set_attr_phase_change(self, max_compact=8, min_dense=6):
+        """ (UINT max_compact, UINT min_dense)
+
+        Set threshold value for attribute storage on an object
+
+        max_compact -- maximum number of attributes to be stored in compact storage(default:8)
+        must be greater than or equal to min_dense
+        min_dense  -- minmum number of attributes to be stored in dense storage(default:6)
+
+        """
+        if max_compact >= min_dense:
+            H5Pset_attr_phase_change(self.id, max_compact, min_dense)
+        else:
+            raise ValueError("max_compact must be greater than or equal to min_dense.")
+
+    @with_phil
+    def get_attr_phase_change(self):
+        """ () -> (max_compact, min_dense)
+
+        Retrieves threshold values for attribute storage on an object.
+
+        """
+        cdef unsigned int max_compact
+        cdef unsigned int min_dense
+        H5Pget_attr_phase_change(self.id, &max_compact, &min_dense)
+        return (max_compact, min_dense)
 
     @with_phil
     def set_obj_track_times(self,track_times):
