@@ -395,57 +395,39 @@ class TestIter(BaseMapping):
 
 class TestTrackOrder(BaseGroup):
 
+    def populate(self, g, track_order):
+        for i in range(9,0,-1):
+            if i % 2 == 0:
+                self.f.create_group(str(i), track_order) # create root group
+            else:
+                g.create_group(str(i), track_order)  # create sub-group
+
+    @ut.expectedFailure
     def test_with_track_order(self):
-        grp = self.f.create_group('b', track_order=True)
-        self.f.create_group('a', track_order=True)
-        self.f.create_group('c', track_order=True)
+        grp = self.f.create_group('0', track_order=True)
+        self.populate(grp, True)
 
-        # create sub-group
-        sub_grp = grp.create_group('c2', track_order=True)
-        grp.create_group('c1', track_order=True)
-        grp.create_group('c3', track_order=True)
-
-        # when issue #1577 fixed, then the test below can work
-        # result = []
-        # expected = ['b','a','c']
-        # for e in self.f.keys():
-        #    result.append(e)
-        # for i in range(len(expected)):
-        #    self.assertEqual(result[i], expected[i])
+        # test root group
+        # this will fail util issue #1577 has fixed
+        expected = ['8','6','4','2','0']
+        self.assertEqual(list(self.f.keys()), expected)
 
         # test sub-group
-        result = []
-        expected = ['c2','c1','c3']
-        for e in grp.keys():
-            result.append(e)
-        for i in range(len(expected)):
-            self.assertEqual(result[i], expected[i])
+        expected = ['9','7','5','3','1']
+        self.assertEqual(list(grp.keys()), expected)
 
     def test_without_track_order(self):
-        # without track_order, its default value is False
-        grp = self.f.create_group('b')
-        self.f.create_group('a')
-        self.f.create_group('c')
 
-        # create sub-group
-        grp.create_group('c2')
-        grp.create_group('c1')
-        grp.create_group('c3')
+        grp = self.f.create_group('0', track_order=False)
+        self.populate(grp, False)
 
-        result = []
-        expected = ['a','b','c']
-        for e in self.f.keys():
-            result.append(e)
-        for i in range(len(expected)):
-            self.assertEqual(result[i], expected[i])
+        # test root group
+        expected = ['0','2','4','6','8']
+        self.assertEqual(list(self.f.keys()), expected)
 
         # test sub-group
-        result = []
-        expected = ['c1','c2','c3']
-        for e in grp.keys():
-            result.append(e)
-        for i in range(len(expected)):
-            self.assertEqual(result[i], expected[i])
+        expected = ['1','3','5','7','9']
+        self.assertEqual(list(grp.keys()), expected)
 
 
 class TestPy3Dict(BaseMapping):
