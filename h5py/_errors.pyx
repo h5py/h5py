@@ -46,7 +46,7 @@ _minor_table = {
     H5E_CANTINSERT:     ValueError,  # Unable to insert object
 
     H5E_BADTYPE:        TypeError,   # Inappropriate type
-    H5E_BADRANGE:       ValueError,  # Out of range
+    H5E_BADRANGE:       IndexError,  # Out of range
     H5E_BADVALUE:       ValueError,  # Bad value
 
     H5E_EXISTS:         ValueError,  # Object already exists

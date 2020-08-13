@@ -420,7 +420,7 @@ dataset::
 
 The dtype of the dataset can be accessed via ``<dset>.dtype`` as per normal.
 As empty datasets cannot be sliced, some methods of datasets such as
-``read_direct`` will raise an exception if used on a empty dataset.
+``read_direct`` will raise an **TypeError** exception if used on a empty dataset.
 
 Reference
 ---------
