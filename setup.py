@@ -58,14 +58,6 @@ if setup_configure.mpi_enabled():
     SETUP_REQUIRES.append("mpi4py ==3.0.0; python_version<'3.8'")
     SETUP_REQUIRES.append("mpi4py >=3.0.3; python_version>='3.8'")
 
-# setup_requires provides setuptools with PEP 517 get_requires_for_build_*,
-# which we want. But setuptools also tries to install them itself, which we
-# don't want - e.g. it will install dependencies when run by
-# "pip install --no-build-isolation .", which pip itself doesn't.
-# When PEP 517 queries the build requirements, it uses the egg_info command to
-# do so. So we'll suppress setup_requires if we don't see that.
-use_setup_requires = 'egg_info' in sys.argv
-
 # --- Custom Distutils commands -----------------------------------------------
 
 class test(Command):
@@ -178,7 +170,7 @@ setup(
   package_data = package_data,
   ext_modules = [Extension('h5py.x',['x.c'])],  # To trick build into running build_ext
   install_requires = RUN_REQUIRES,
-  setup_requires = SETUP_REQUIRES if use_setup_requires else [],
+  setup_requires = SETUP_REQUIRES,
   python_requires='>=3.6',
   cmdclass = CMDCLASS,
 )
