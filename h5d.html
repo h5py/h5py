@@ -46,6 +46,25 @@
   <div class="section" id="module-h5py.h5d">
 <span id="module-h5d"></span><h1>Module H5D<a class="headerlink" href="#module-h5py.h5d" title="Permalink to this headline">¶</a></h1>
 <p>Provides access to the low-level HDF5 “H5D” dataset interface.</p>
+<div class="section" id="functional-api">
+<h2>Functional API<a class="headerlink" href="#functional-api" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt id="h5py.h5d.open">
+<code class="sig-prename descclassname">h5py.h5d.</code><code class="sig-name descname">open</code><span class="sig-paren">(</span><em class="sig-param">ObjectID loc</em>, <em class="sig-param">STRING name</em>, <em class="sig-param">PropID dapl=None</em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#h5py.h5d.DatasetID" title="h5py.h5d.DatasetID">DatasetID</a><a class="headerlink" href="#h5py.h5d.open" title="Permalink to this definition">¶</a></dt>
+<dd><p>Open an existing dataset attached to a group or file object, by name.</p>
+<p>If specified, dapl may be a dataset access property list.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="h5py.h5d.create">
+<code class="sig-prename descclassname">h5py.h5d.</code><code class="sig-name descname">create</code><span class="sig-paren">(</span><em class="sig-param">objectID loc</em>, <em class="sig-param">STRING name or None</em>, <em class="sig-param">TypeID tid</em>, <em class="sig-param">SpaceID space</em>, <em class="sig-param">PropDCID dcpl=None</em>, <em class="sig-param">PropID lcpl=None</em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#h5py.h5d.DatasetID" title="h5py.h5d.DatasetID">DatasetID</a><a class="headerlink" href="#h5py.h5d.create" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a new dataset.  If “name” is None, the dataset will be
+anonymous.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="dataset-objects">
+<h2>Dataset Objects<a class="headerlink" href="#dataset-objects" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt id="h5py.h5d.DatasetID">
 <em class="property">class </em><code class="sig-prename descclassname">h5py.h5d.</code><code class="sig-name descname">DatasetID</code><a class="headerlink" href="#h5py.h5d.DatasetID" title="Permalink to this definition">¶</a></dt>
@@ -201,7 +220,7 @@ large a dataspace.</p>
 based on the array’s dtype.</p>
 <p>The provided Numpy array must be writable and C-contiguous.  If
 this is not the case, ValueError will be raised and the read will
-fail.  Keyword dxpl may be a <code class="xref py py-class docutils literal notranslate"><span class="pre">dataset</span> <span class="pre">transfer</span> <span class="pre">property</span> <span class="pre">list</span></code>.</p>
+fail.  Keyword dxpl may be a <a class="reference internal" href="h5p.html#h5py.h5p.PropDXID" title="h5py.h5p.PropDXID"><code class="xref py py-class docutils literal notranslate"><span class="pre">dataset</span> <span class="pre">transfer</span> <span class="pre">property</span> <span class="pre">list</span></code></a>.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -254,7 +273,7 @@ maximum dataspace size.</p>
 <dt id="h5py.h5d.DatasetID.write">
 <code class="sig-name descname">write</code><span class="sig-paren">(</span><em class="sig-param">SpaceID mspace</em>, <em class="sig-param">SpaceID fspace</em>, <em class="sig-param">NDARRAY arr_obj</em>, <em class="sig-param">TypeID mtype=None</em>, <em class="sig-param">PropDXID dxpl=None</em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5d.DatasetID.write" title="Permalink to this definition">¶</a></dt>
 <dd><p>Write data from a Numpy array to an HDF5 dataset. Keyword dxpl may
-be a <code class="xref py py-class docutils literal notranslate"><span class="pre">dataset</span> <span class="pre">transfer</span> <span class="pre">property</span> <span class="pre">list</span></code>.</p>
+be a <a class="reference internal" href="h5p.html#h5py.h5p.PropDXID" title="h5py.h5p.PropDXID"><code class="xref py py-class docutils literal notranslate"><span class="pre">dataset</span> <span class="pre">transfer</span> <span class="pre">property</span> <span class="pre">list</span></code></a>.</p>
 <p>It is your responsibility to ensure that the memory dataspace
 provided is compatible with the shape of the Numpy array.  Since a
 wide variety of dataspace configurations are possible, this is not
@@ -287,20 +306,7 @@ been applied to the data before calling this function.</p>
 
 </dd></dl>
 
-<dl class="py function">
-<dt id="h5py.h5d.create">
-<code class="sig-prename descclassname">h5py.h5d.</code><code class="sig-name descname">create</code><span class="sig-paren">(</span><em class="sig-param">objectID loc</em>, <em class="sig-param">STRING name or None</em>, <em class="sig-param">TypeID tid</em>, <em class="sig-param">SpaceID space</em>, <em class="sig-param">PropDCID dcpl=None</em>, <em class="sig-param">PropID lcpl=None</em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#h5py.h5d.DatasetID" title="h5py.h5d.DatasetID">DatasetID</a><a class="headerlink" href="#h5py.h5d.create" title="Permalink to this definition">¶</a></dt>
-<dd><p>Create a new dataset.  If “name” is None, the dataset will be
-anonymous.</p>
-</dd></dl>
-
-<dl class="py function">
-<dt id="h5py.h5d.open">
-<code class="sig-prename descclassname">h5py.h5d.</code><code class="sig-name descname">open</code><span class="sig-paren">(</span><em class="sig-param">ObjectID loc</em>, <em class="sig-param">STRING name</em>, <em class="sig-param">PropID dapl=None</em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#h5py.h5d.DatasetID" title="h5py.h5d.DatasetID">DatasetID</a><a class="headerlink" href="#h5py.h5d.open" title="Permalink to this definition">¶</a></dt>
-<dd><p>Open an existing dataset attached to a group or file object, by name.</p>
-<p>If specified, dapl may be a dataset access property list.</p>
-</dd></dl>
-
+</div>
 <div class="section" id="module-constants">
 <h2>Module constants<a class="headerlink" href="#module-constants" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="storage-strategies">
@@ -411,6 +417,8 @@ anonymous.</p>
   <h3><a href="index.html">Table of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Module H5D</a><ul>
+<li><a class="reference internal" href="#functional-api">Functional API</a></li>
+<li><a class="reference internal" href="#dataset-objects">Dataset Objects</a></li>
 <li><a class="reference internal" href="#module-constants">Module constants</a><ul>
 <li><a class="reference internal" href="#storage-strategies">Storage strategies</a></li>
 <li><a class="reference internal" href="#allocation-times">Allocation times</a></li>
@@ -471,7 +479,7 @@ anonymous.</p>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2014, Andrew Collette and contributors.
-      Last updated on Aug 10, 2020.
+      Last updated on Aug 14, 2020.
       Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.2.0.
     </div>
   </body>

@@ -57,12 +57,12 @@
 <li><p><a class="reference internal" href="#h5py.h5p.FILE_ACCESS" title="h5py.h5p.FILE_ACCESS"><code class="xref py py-data docutils literal notranslate"><span class="pre">FILE_ACCESS</span></code></a></p></li>
 <li><p><a class="reference internal" href="#h5py.h5p.DATASET_CREATE" title="h5py.h5p.DATASET_CREATE"><code class="xref py py-data docutils literal notranslate"><span class="pre">DATASET_CREATE</span></code></a></p></li>
 <li><p><a class="reference internal" href="#h5py.h5p.DATASET_XFER" title="h5py.h5p.DATASET_XFER"><code class="xref py py-data docutils literal notranslate"><span class="pre">DATASET_XFER</span></code></a></p></li>
-<li><p><code class="xref py py-data docutils literal notranslate"><span class="pre">DATASET_ACCESS</span></code></p></li>
+<li><p><a class="reference internal" href="#h5py.h5p.DATASET_ACCESS" title="h5py.h5p.DATASET_ACCESS"><code class="xref py py-data docutils literal notranslate"><span class="pre">DATASET_ACCESS</span></code></a></p></li>
 <li><p><a class="reference internal" href="#h5py.h5p.LINK_CREATE" title="h5py.h5p.LINK_CREATE"><code class="xref py py-data docutils literal notranslate"><span class="pre">LINK_CREATE</span></code></a></p></li>
 <li><p><a class="reference internal" href="#h5py.h5p.LINK_ACCESS" title="h5py.h5p.LINK_ACCESS"><code class="xref py py-data docutils literal notranslate"><span class="pre">LINK_ACCESS</span></code></a></p></li>
 <li><p><a class="reference internal" href="#h5py.h5p.GROUP_CREATE" title="h5py.h5p.GROUP_CREATE"><code class="xref py py-data docutils literal notranslate"><span class="pre">GROUP_CREATE</span></code></a></p></li>
 <li><p><a class="reference internal" href="#h5py.h5p.OBJECT_COPY" title="h5py.h5p.OBJECT_COPY"><code class="xref py py-data docutils literal notranslate"><span class="pre">OBJECT_COPY</span></code></a></p></li>
-<li><p><code class="xref py py-data docutils literal notranslate"><span class="pre">OBJECT_CREATE</span></code></p></li>
+<li><p><a class="reference internal" href="#h5py.h5p.OBJECT_CREATE" title="h5py.h5p.OBJECT_CREATE"><code class="xref py py-data docutils literal notranslate"><span class="pre">OBJECT_CREATE</span></code></a></p></li>
 </ul>
 </dd></dl>
 
@@ -125,6 +125,41 @@ are common across all HDF5 property list classes.</p>
 </dd></dl>
 
 <dl class="py class">
+<dt id="h5py.h5p.PropOCID">
+<em class="property">class </em><code class="sig-prename descclassname">h5py.h5p.</code><code class="sig-name descname">PropOCID</code><a class="headerlink" href="#h5py.h5p.PropOCID" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#h5py.h5p.PropCreateID" title="h5py.h5p.PropCreateID"><code class="xref py py-class docutils literal notranslate"><span class="pre">h5py.h5p.PropCreateID</span></code></a></p>
+<p>Object creation property list</p>
+<p>This seems to be a super class for dataset creation property list
+and <a class="reference internal" href="#h5py.h5p.PropGCID" title="h5py.h5p.PropGCID"><code class="xref py py-class docutils literal notranslate"><span class="pre">group</span> <span class="pre">creation</span> <span class="pre">property</span> <span class="pre">list</span></code></a>.</p>
+<p>The documentation is somewhat hazy</p>
+<dl class="py method">
+<dt id="h5py.h5p.PropOCID.get_attr_creation_order">
+<code class="sig-name descname">get_attr_creation_order</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; UINT flags<a class="headerlink" href="#h5py.h5p.PropOCID.get_attr_creation_order" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get tracking and indexing of creation order for object attributes</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="h5py.h5p.PropOCID.get_obj_track_times">
+<code class="sig-name descname">get_obj_track_times</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropOCID.get_obj_track_times" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determines whether times associated with an object are being recorded.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="h5py.h5p.PropOCID.set_attr_creation_order">
+<code class="sig-name descname">set_attr_creation_order</code><span class="sig-paren">(</span><em class="sig-param">UINT flags</em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropOCID.set_attr_creation_order" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set tracking and indexing of creation order for object attributes</p>
+<p>flags – <a class="reference internal" href="#h5py.h5p.CRT_ORDER_TRACKED" title="h5py.h5p.CRT_ORDER_TRACKED"><code class="xref py py-data docutils literal notranslate"><span class="pre">h5p.CRT_ORDER_TRACKED</span></code></a>, h5p.CRT_ORDER_INDEXED</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="h5py.h5p.PropOCID.set_obj_track_times">
+<code class="sig-name descname">set_obj_track_times</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">track_times</span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropOCID.set_obj_track_times" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the recording of times associated with an object.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
 <dt id="h5py.h5p.PropCopyID">
 <em class="property">class </em><code class="sig-prename descclassname">h5py.h5p.</code><code class="sig-name descname">PropCopyID</code><a class="headerlink" href="#h5py.h5p.PropCopyID" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#h5py.h5p.PropInstanceID" title="h5py.h5p.PropInstanceID"><code class="xref py py-class docutils literal notranslate"><span class="pre">h5py.h5p.PropInstanceID</span></code></a></p>
@@ -162,7 +197,7 @@ from the <a class="reference internal" href="h5o.html#ref-h5o-copy"><span class=
 <dl class="py class">
 <dt id="h5py.h5p.PropFCID">
 <em class="property">class </em><code class="sig-prename descclassname">h5py.h5p.</code><code class="sig-name descname">PropFCID</code><a class="headerlink" href="#h5py.h5p.PropFCID" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">h5py.h5p.PropOCID</span></code></p>
+<dd><p>Bases: <a class="reference internal" href="#h5py.h5p.PropOCID" title="h5py.h5p.PropOCID"><code class="xref py py-class docutils literal notranslate"><span class="pre">h5py.h5p.PropOCID</span></code></a></p>
 <p>File creation property list.</p>
 <dl class="py method">
 <dt id="h5py.h5p.PropFCID.get_file_space_strategy">
@@ -217,7 +252,7 @@ Elements are:</p>
 <dt id="h5py.h5p.PropFCID.set_link_creation_order">
 <code class="sig-name descname">set_link_creation_order</code><span class="sig-paren">(</span><em class="sig-param">UINT flags</em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropFCID.set_link_creation_order" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set tracking and indexing of creation order for links added to this group</p>
-<p>flags – <code class="xref py py-data docutils literal notranslate"><span class="pre">h5p.CRT_ORDER_TRACKED</span></code>, h5p.CRT_ORDER_INDEXED</p>
+<p>flags – <a class="reference internal" href="#h5py.h5p.CRT_ORDER_TRACKED" title="h5py.h5p.CRT_ORDER_TRACKED"><code class="xref py py-data docutils literal notranslate"><span class="pre">h5p.CRT_ORDER_TRACKED</span></code></a>, h5p.CRT_ORDER_INDEXED</p>
 </dd></dl>
 
 <dl class="py method">
@@ -468,7 +503,7 @@ reads and writes into blocks of the given size.  The default is 64k.</p>
 <dl class="py class">
 <dt id="h5py.h5p.PropDCID">
 <em class="property">class </em><code class="sig-prename descclassname">h5py.h5p.</code><code class="sig-name descname">PropDCID</code><a class="headerlink" href="#h5py.h5p.PropDCID" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">h5py.h5p.PropOCID</span></code></p>
+<dd><p>Bases: <a class="reference internal" href="#h5py.h5p.PropOCID" title="h5py.h5p.PropOCID"><code class="xref py py-class docutils literal notranslate"><span class="pre">h5py.h5p.PropOCID</span></code></a></p>
 <p>Dataset creation property list.</p>
 <dl class="py method">
 <dt id="h5py.h5p.PropDCID.all_filters_avail">
@@ -747,6 +782,105 @@ file where it is located (src_file_name), the name of the dataset
 </dd></dl>
 
 </div>
+<div class="section" id="dataset-access">
+<h2>Dataset access<a class="headerlink" href="#dataset-access" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="h5py.h5p.PropDAID">
+<em class="property">class </em><code class="sig-prename descclassname">h5py.h5p.</code><code class="sig-name descname">PropDAID</code><a class="headerlink" href="#h5py.h5p.PropDAID" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#h5py.h5p.PropInstanceID" title="h5py.h5p.PropInstanceID"><code class="xref py py-class docutils literal notranslate"><span class="pre">h5py.h5p.PropInstanceID</span></code></a></p>
+<p>Dataset access property list</p>
+<dl class="py method">
+<dt id="h5py.h5p.PropDAID.get_chunk_cache">
+<code class="sig-name descname">get_chunk_cache</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; TUPLE chunk cache info<a class="headerlink" href="#h5py.h5p.PropDAID.get_chunk_cache" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the metadata and raw data chunk cache settings.  See the HDF5
+docs for element definitions.  Return is a 3-tuple with entries:</p>
+<ol class="arabic simple" start="0">
+<li><p>size_t rdcc_nslots: Number of chunk slots in the raw data chunk cache hash table.</p></li>
+<li><p>size_t rdcc_nbytes: Total size of the raw data chunk cache, in bytes.</p></li>
+<li><p><code class="xref py py-data docutils literal notranslate"><span class="pre">DOUBLE</span></code> rdcc_w0:     Preemption policy.</p></li>
+</ol>
+</dd></dl>
+
+<dl class="py method">
+<dt id="h5py.h5p.PropDAID.get_virtual_prefix">
+<code class="sig-name descname">get_virtual_prefix</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; STR<a class="headerlink" href="#h5py.h5p.PropDAID.get_virtual_prefix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the filesystem path prefix configured for accessing virtual
+datasets.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="h5py.h5p.PropDAID.get_virtual_printf_gap">
+<code class="sig-name descname">get_virtual_printf_gap</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; LONG gap_size<a class="headerlink" href="#h5py.h5p.PropDAID.get_virtual_printf_gap" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the maximum number of missing source files and/or datasets
+with the printf-style names when getting the extent for an
+unlimited virtual dataset.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="h5py.h5p.PropDAID.get_virtual_view">
+<code class="sig-name descname">get_virtual_view</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; UINT view<a class="headerlink" href="#h5py.h5p.PropDAID.get_virtual_view" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve the view of the virtual dataset.</p>
+<p>Valid values are:</p>
+<ul class="simple">
+<li><p><code class="xref py py-data docutils literal notranslate"><span class="pre">h5d.VDS_FIRST_MISSING</span></code></p></li>
+<li><p><code class="xref py py-data docutils literal notranslate"><span class="pre">h5d.VDS_LAST_AVAILABLE</span></code></p></li>
+</ul>
+</dd></dl>
+
+<dl class="py method">
+<dt id="h5py.h5p.PropDAID.set_chunk_cache">
+<code class="sig-name descname">set_chunk_cache</code><span class="sig-paren">(</span><em class="sig-param">size_t rdcc_nslots</em>, <em class="sig-param">size_t rdcc_nbytes</em>, <em class="sig-param">double rdcc_w0</em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropDAID.set_chunk_cache" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the raw data chunk cache parameters.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="h5py.h5p.PropDAID.set_virtual_prefix">
+<code class="sig-name descname">set_virtual_prefix</code><span class="sig-paren">(</span><em class="sig-param">STR prefix</em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropDAID.set_virtual_prefix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set a filesystem path prefix for looking up virtual datasets.
+This is prepended to all filenames specified in the virtual dataset.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="h5py.h5p.PropDAID.set_virtual_printf_gap">
+<code class="sig-name descname">set_virtual_printf_gap</code><span class="sig-paren">(</span><em class="sig-param">LONG gap_size=0</em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropDAID.set_virtual_printf_gap" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the maximum number of missing source files and/or datasets
+with the printf-style names when getting the extent of an unlimited
+virtual dataset.</p>
+<p>Instruct the library to stop looking for the mapped data stored in
+the files and/or datasets with the printf-style names after not
+finding gap_size files and/or datasets. The found source files and
+datasets will determine the extent of the unlimited virtual dataset
+with the printf-style mappings. Default value: 0.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="h5py.h5p.PropDAID.set_virtual_view">
+<code class="sig-name descname">set_virtual_view</code><span class="sig-paren">(</span><em class="sig-param">UINT view</em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropDAID.set_virtual_view" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the view of the virtual dataset (<code class="xref py py-data docutils literal notranslate"><span class="pre">VDS</span></code>) to include or exclude
+missing mapped elements.</p>
+<p>If view is set to <code class="xref py py-data docutils literal notranslate"><span class="pre">h5d.VDS_FIRST_MISSING</span></code>, the view includes all data
+before the first missing mapped data. This setting provides a view
+containing only the continuous data starting with the dataset’s
+first data element. Any break in continuity terminates the view.</p>
+<p>If view is set to <code class="xref py py-data docutils literal notranslate"><span class="pre">h5d.VDS_LAST_AVAILABLE</span></code>, the view includes all
+available mapped data.</p>
+<p>Missing mapped data is filled with the fill value set in the
+virtual dataset’s creation property list.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="dataset-transfer">
+<h2>Dataset transfer<a class="headerlink" href="#dataset-transfer" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="h5py.h5p.PropDXID">
+<em class="property">class </em><code class="sig-prename descclassname">h5py.h5p.</code><code class="sig-name descname">PropDXID</code><a class="headerlink" href="#h5py.h5p.PropDXID" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#h5py.h5p.PropInstanceID" title="h5py.h5p.PropInstanceID"><code class="xref py py-class docutils literal notranslate"><span class="pre">h5py.h5p.PropInstanceID</span></code></a></p>
+<p>Data transfer property list</p>
+</dd></dl>
+
+</div>
 <div class="section" id="link-creation">
 <h2>Link creation<a class="headerlink" href="#link-creation" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
@@ -840,7 +974,7 @@ file where it is located (src_file_name), the name of the dataset
 <dl class="py class">
 <dt id="h5py.h5p.PropGCID">
 <em class="property">class </em><code class="sig-prename descclassname">h5py.h5p.</code><code class="sig-name descname">PropGCID</code><a class="headerlink" href="#h5py.h5p.PropGCID" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">h5py.h5p.PropOCID</span></code></p>
+<dd><p>Bases: <a class="reference internal" href="#h5py.h5p.PropOCID" title="h5py.h5p.PropOCID"><code class="xref py py-class docutils literal notranslate"><span class="pre">h5py.h5p.PropOCID</span></code></a></p>
 <p>Group creation property list</p>
 <dl class="py method">
 <dt id="h5py.h5p.PropGCID.get_link_creation_order">
@@ -852,9 +986,20 @@ file where it is located (src_file_name), the name of the dataset
 <dt id="h5py.h5p.PropGCID.set_link_creation_order">
 <code class="sig-name descname">set_link_creation_order</code><span class="sig-paren">(</span><em class="sig-param">UINT flags</em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropGCID.set_link_creation_order" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set tracking and indexing of creation order for links added to this group</p>
-<p>flags – <code class="xref py py-data docutils literal notranslate"><span class="pre">h5p.CRT_ORDER_TRACKED</span></code>, h5p.CRT_ORDER_INDEXED</p>
+<p>flags – <a class="reference internal" href="#h5py.h5p.CRT_ORDER_TRACKED" title="h5py.h5p.CRT_ORDER_TRACKED"><code class="xref py py-data docutils literal notranslate"><span class="pre">h5p.CRT_ORDER_TRACKED</span></code></a>, h5p.CRT_ORDER_INDEXED</p>
 </dd></dl>
 
+</dd></dl>
+
+</div>
+<div class="section" id="datatype-creation">
+<h2>Datatype creation<a class="headerlink" href="#datatype-creation" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="h5py.h5p.PropTCID">
+<em class="property">class </em><code class="sig-prename descclassname">h5py.h5p.</code><code class="sig-name descname">PropTCID</code><a class="headerlink" href="#h5py.h5p.PropTCID" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#h5py.h5p.PropOCID" title="h5py.h5p.PropOCID"><code class="xref py py-class docutils literal notranslate"><span class="pre">h5py.h5p.PropOCID</span></code></a></p>
+<p>Datatype creation property list</p>
+<p>No methods yet.</p>
 </dd></dl>
 
 </div>
@@ -888,6 +1033,11 @@ file where it is located (src_file_name), the name of the dataset
 <dd></dd></dl>
 
 <dl class="py data">
+<dt id="h5py.h5p.DATASET_ACCESS">
+<code class="sig-prename descclassname">h5py.h5p.</code><code class="sig-name descname">DATASET_ACCESS</code><a class="headerlink" href="#h5py.h5p.DATASET_ACCESS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
 <dt id="h5py.h5p.OBJECT_COPY">
 <code class="sig-prename descclassname">h5py.h5p.</code><code class="sig-name descname">OBJECT_COPY</code><a class="headerlink" href="#h5py.h5p.OBJECT_COPY" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -905,6 +1055,24 @@ file where it is located (src_file_name), the name of the dataset
 <dl class="py data">
 <dt id="h5py.h5p.GROUP_CREATE">
 <code class="sig-prename descclassname">h5py.h5p.</code><code class="sig-name descname">GROUP_CREATE</code><a class="headerlink" href="#h5py.h5p.GROUP_CREATE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt id="h5py.h5p.OBJECT_CREATE">
+<code class="sig-prename descclassname">h5py.h5p.</code><code class="sig-name descname">OBJECT_CREATE</code><a class="headerlink" href="#h5py.h5p.OBJECT_CREATE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="order-tracking-flags">
+<h3>Order tracking flags<a class="headerlink" href="#order-tracking-flags" title="Permalink to this headline">¶</a></h3>
+<dl class="py data">
+<dt id="h5py.h5p.CRT_ORDER_TRACKED">
+<code class="sig-prename descclassname">h5py.h5p.</code><code class="sig-name descname">CRT_ORDER_TRACKED</code><a class="headerlink" href="#h5py.h5p.CRT_ORDER_TRACKED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt id="h5py.h5p.CRT_ORDER_INDEXED">
+<code class="sig-prename descclassname">h5py.h5p.</code><code class="sig-name descname">CRT_ORDER_INDEXED</code><a class="headerlink" href="#h5py.h5p.CRT_ORDER_INDEXED" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </div>
@@ -926,11 +1094,15 @@ file where it is located (src_file_name), the name of the dataset
 <li><a class="reference internal" href="#file-creation">File creation</a></li>
 <li><a class="reference internal" href="#file-access">File access</a></li>
 <li><a class="reference internal" href="#dataset-creation">Dataset creation</a></li>
+<li><a class="reference internal" href="#dataset-access">Dataset access</a></li>
+<li><a class="reference internal" href="#dataset-transfer">Dataset transfer</a></li>
 <li><a class="reference internal" href="#link-creation">Link creation</a></li>
 <li><a class="reference internal" href="#link-access">Link access</a></li>
 <li><a class="reference internal" href="#group-creation">Group creation</a></li>
+<li><a class="reference internal" href="#datatype-creation">Datatype creation</a></li>
 <li><a class="reference internal" href="#module-constants">Module constants</a><ul>
 <li><a class="reference internal" href="#predefined-classes">Predefined classes</a></li>
+<li><a class="reference internal" href="#order-tracking-flags">Order tracking flags</a></li>
 </ul>
 </li>
 </ul>
@@ -985,7 +1157,7 @@ file where it is located (src_file_name), the name of the dataset
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2014, Andrew Collette and contributors.
-      Last updated on Aug 10, 2020.
+      Last updated on Aug 14, 2020.
       Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.2.0.
     </div>
   </body>
