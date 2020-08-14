@@ -1449,7 +1449,10 @@ cdef class PropLAID(PropInstanceID):
 
 # Datatype creation
 cdef class PropTCID(PropOCID):
-    """ Datatype creation property list """
+    """ Datatype creation property list
+
+    No methods yet.
+    """
 
     pass
 
