@@ -122,7 +122,7 @@ cdef void *H5FD_fileobj_fapl_copy(PyObject *old_fa) with gil:
     Py_INCREF(<object>new_fa)
     return new_fa
 
-cdef herr_t H5FD_fileobj_fapl_free(PyObject *fa) except 1 with gil:
+cdef herr_t H5FD_fileobj_fapl_free(PyObject *fa) except -1 with gil:
     Py_DECREF(<object>fa)
     return 0
 
@@ -134,7 +134,7 @@ cdef H5FD_fileobj_t *H5FD_fileobj_open(const char *name, unsigned flags, hid_t f
     f.eoa = 0
     return f
 
-cdef herr_t H5FD_fileobj_close(H5FD_fileobj_t *f) except 1 with gil:
+cdef herr_t H5FD_fileobj_close(H5FD_fileobj_t *f) except -1 with gil:
     Py_DECREF(<object>f.fileobj)
     stdlib_free(f)
     return 0
@@ -150,7 +150,7 @@ cdef haddr_t H5FD_fileobj_get_eof(const H5FD_fileobj_t *f, H5FD_mem_t type) exce
     (<object>f.fileobj).seek(0, libc.stdio.SEEK_END)
     return (<object>f.fileobj).tell()
 
-cdef herr_t H5FD_fileobj_read(H5FD_fileobj_t *f, H5FD_mem_t type, hid_t dxpl, haddr_t addr, size_t size, void *buf) except 1 with gil:
+cdef herr_t H5FD_fileobj_read(H5FD_fileobj_t *f, H5FD_mem_t type, hid_t dxpl, haddr_t addr, size_t size, void *buf) except -1 with gil:
     cdef unsigned char[:] mview
     (<object>f.fileobj).seek(addr)
     if hasattr(<object>f.fileobj, 'readinto'):
@@ -164,18 +164,18 @@ cdef herr_t H5FD_fileobj_read(H5FD_fileobj_t *f, H5FD_mem_t type, hid_t dxpl, ha
             return 1
     return 0
 
-cdef herr_t H5FD_fileobj_write(H5FD_fileobj_t *f, H5FD_mem_t type, hid_t dxpl, haddr_t addr, size_t size, void *buf) except 1 with gil:
+cdef herr_t H5FD_fileobj_write(H5FD_fileobj_t *f, H5FD_mem_t type, hid_t dxpl, haddr_t addr, size_t size, void *buf) except -1 with gil:
     cdef unsigned char[:] mview
     (<object>f.fileobj).seek(addr)
     mview = <unsigned char[:size]>buf
     (<object>f.fileobj).write(mview)
     return 0
 
-cdef herr_t H5FD_fileobj_truncate(H5FD_fileobj_t *f, hid_t dxpl, hbool_t closing) except 1 with gil:
+cdef herr_t H5FD_fileobj_truncate(H5FD_fileobj_t *f, hid_t dxpl, hbool_t closing) except -1 with gil:
     (<object>f.fileobj).truncate(f.eoa)
     return 0
 
-cdef herr_t H5FD_fileobj_flush(H5FD_fileobj_t *f, hid_t dxpl, hbool_t closing) except 1 with gil:
+cdef herr_t H5FD_fileobj_flush(H5FD_fileobj_t *f, hid_t dxpl, hbool_t closing) except -1 with gil:
     # TODO: avoid unneeded fileobj.flush() when closing for e.g. TemporaryFile
     (<object>f.fileobj).flush()
     return 0
