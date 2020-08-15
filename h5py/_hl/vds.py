@@ -16,7 +16,7 @@ from collections import namedtuple
 from .selections import SimpleSelection, select
 from .. import h5s, h5
 from .. import version
-
+import numpy as np
 
 class VDSmap(namedtuple('VDSmap', ('vspace', 'file_name',
                                    'dset_name', 'src_space'))):
@@ -124,7 +124,10 @@ class VirtualLayout(object):
     """
     def __init__(self, shape, dtype=None, maxshape=None):
         self.shape = (shape,) if isinstance(shape, int) else shape
-        self.dtype = dtype
+        if dtype is None:
+            self.dtype = np.dtype("=f8")
+        else:
+            self.dtype = np.dtype(dtype)
         self.maxshape = (maxshape,) if isinstance(maxshape, int) else maxshape
         self.sources = []
 
