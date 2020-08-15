@@ -77,7 +77,7 @@ def make_new_dset(parent, shape=None, dtype=None, data=None, name=None,
     else:
         # Validate dtype
         if dtype is None and data is None:
-            dtype = numpy.dtype("=f4")
+            dtype = numpy.dtype("=f8")
         elif dtype is None and data is not None:
             dtype = data.dtype
         else:

@@ -95,7 +95,7 @@ class TestCreateShape(BaseDataset):
     def test_default_dtype(self):
         """ Confirm that the default dtype is float """
         dset = self.f.create_dataset('foo', (63,))
-        self.assertEqual(dset.dtype, np.dtype('=f4'))
+        self.assertEqual(dset.dtype, np.dtype('=f8'))
 
     def test_missing_shape(self):
         """ Missing shape raises TypeError """
