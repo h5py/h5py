@@ -47,6 +47,9 @@ def create(ObjectID loc not None, char* name, TypeID tid not None,
         Link access property list for obj_name
     """
 
+    if space.get_simple_extent_npoints() > 3116:
+        # reset the dataspace extent
+        space.set_extent_simple(())
     return AttrID(H5Acreate_by_name(loc.id, obj_name, name, tid.id,
             space.id, H5P_DEFAULT, H5P_DEFAULT, pdefault(lapl)))
 
