@@ -262,16 +262,3 @@ def test_python_int_uint64(writable_file):
     # Check modifying an existing attribute
     f.attrs.modify('a', data)
     np.testing.assert_array_equal(f.attrs['a'], np.array(data, dtype=np.uint64))
-
-
-def test_attr_phase_change(writable_file):
-    f = writable_file
-    data = np.arange(3117, dtype=np.int64).astype('S')
-
-    f.attrs['data'] = data
-
-    grp = f.create_group("grp")
-    grp.attrs['data'] = data
-
-    dt = f.create_dataset('dset', (10,), 'int64')
-    dt.attrs['data'] = data
