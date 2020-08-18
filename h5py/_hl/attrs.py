@@ -126,6 +126,9 @@ class AttributeManager(base.MutableMappingHDF5, base.CommonStateObject):
             # First, make sure we have a NumPy array.  We leave the data type
             # conversion for HDF5 to perform.
             if not isinstance(data, Empty):
+                if numpy.size(data) > 3116:
+                    plist = self._id.get_create_plist()
+                    plist.set_attr_phase_change(0, 0)
                 data = base.array_for_new_object(data, specified_dtype=dtype)
 
             if shape is None:
