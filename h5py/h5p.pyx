@@ -1521,10 +1521,7 @@ cdef class PropOCID(PropCreateID):
         min_dense  -- minmum number of attributes to be stored in dense storage(default:6)
 
         """
-        if max_compact >= min_dense:
-            H5Pset_attr_phase_change(self.id, max_compact, min_dense)
-        else:
-            raise ValueError("max_compact must be greater than or equal to min_dense.")
+        H5Pset_attr_phase_change(self.id, max_compact, min_dense)
 
     @with_phil
     def get_attr_phase_change(self):
