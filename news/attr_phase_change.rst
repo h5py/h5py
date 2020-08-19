@@ -12,7 +12,7 @@ Deprecations
 Exposing HDF5 functions
 -----------------------
 
-* H5Pset_attr_phase_change - https://support.hdfgroup.org/HDF5/doc/RM/RM_H5T.html#Property-SetAttrPhaseChange
+* H5Pset_attr_phase_change - https://portal.hdfgroup.org/display/HDF5/H5P_SET_ATTR_PHASE_CHANGE
 
 Bug fixes
 ---------
