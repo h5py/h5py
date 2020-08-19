@@ -139,6 +139,12 @@ and <a class="reference internal" href="#h5py.h5p.PropGCID" title="h5py.h5p.Prop
 </dd></dl>
 
 <dl class="py method">
+<dt id="h5py.h5p.PropOCID.get_attr_phase_change">
+<code class="sig-name descname">get_attr_phase_change</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropOCID.get_attr_phase_change" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieves threshold values for attribute storage on an object.</p>
+</dd></dl>
+
+<dl class="py method">
 <dt id="h5py.h5p.PropOCID.get_obj_track_times">
 <code class="sig-name descname">get_obj_track_times</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropOCID.get_obj_track_times" title="Permalink to this definition">¶</a></dt>
 <dd><p>Determines whether times associated with an object are being recorded.</p>
@@ -149,6 +155,15 @@ and <a class="reference internal" href="#h5py.h5p.PropGCID" title="h5py.h5p.Prop
 <code class="sig-name descname">set_attr_creation_order</code><span class="sig-paren">(</span><em class="sig-param">UINT flags</em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropOCID.set_attr_creation_order" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set tracking and indexing of creation order for object attributes</p>
 <p>flags – <a class="reference internal" href="#h5py.h5p.CRT_ORDER_TRACKED" title="h5py.h5p.CRT_ORDER_TRACKED"><code class="xref py py-data docutils literal notranslate"><span class="pre">h5p.CRT_ORDER_TRACKED</span></code></a>, h5p.CRT_ORDER_INDEXED</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="h5py.h5p.PropOCID.set_attr_phase_change">
+<code class="sig-name descname">set_attr_phase_change</code><span class="sig-paren">(</span><em class="sig-param">UINT max_compact</em>, <em class="sig-param">UINT min_dense</em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropOCID.set_attr_phase_change" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set threshold value for attribute storage on an object</p>
+<p>max_compact – maximum number of attributes to be stored in compact storage(default:8)
+must be greater than or equal to min_dense
+min_dense  – minmum number of attributes to be stored in dense storage(default:6)</p>
 </dd></dl>
 
 <dl class="py method">
@@ -1157,8 +1172,8 @@ virtual dataset’s creation property list.</p>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2014, Andrew Collette and contributors.
-      Last updated on Aug 14, 2020.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.2.0.
+      Last updated on Aug 19, 2020.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.2.1.
     </div>
   </body>
 </html>
