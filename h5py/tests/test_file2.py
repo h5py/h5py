@@ -225,6 +225,7 @@ class TestFileObj(TestCase):
             bio.allow_write = True
             f.close()
 
+    @ut.skip("Incompletely closed files can cause segfaults")
     def test_exception_close(self):
         fileobj = io.BytesIO()
         f = h5py.File(fileobj, 'w')
