@@ -130,6 +130,7 @@ class h5py_build_ext(build_ext):
     def run(self):
         """ Distutils calls this method to run the command """
 
+        from Cython import __version__ as cython_version
         from Cython.Build import cythonize
         import numpy
 
@@ -165,11 +166,15 @@ DEF SWMR_MIN_HDF5_VERSION = (1,9,178)
 DEF VDS_MIN_HDF5_VERSION = (1,9,233)
 DEF VOL_MIN_HDF5_VERSION = (1,11,5)
 DEF COMPLEX256_SUPPORT = %(complex256_support)s
+DEF NUMPY_BUILD_VERSION = '%(numpy_version)s'
+DEF CYTHON_BUILD_VERSION = '%(cython_version)s'
 """
                 s %= {
                     'mpi': bool(config.mpi),
                     'version': tuple(int(x) for x in config.hdf5_version.split('.')),
                     'complex256_support': hasattr(numpy, 'complex256'),
+                    'numpy_version': numpy.__version__,
+                    'cython_version': cython_version,
                 }
                 s = s.encode('utf-8')
                 f.write(s)
