@@ -252,12 +252,8 @@ class Group(HLObject, MutableMappingHDF5):
         """
         for k in ('shape', 'dtype', 'chunks', 'compression',
                   'compression_opts', 'scaleoffset', 'shuffle', 'fletcher32',
-                  'fillvalue'):
+                  'fillvalue', 'track_times', 'track_order'):
             kwupdate.setdefault(k, getattr(other, k))
-        # TODO: more elegant way to pass these (dcpl to create_dataset?)
-        dcpl = other.id.get_create_plist()
-        kwupdate.setdefault('track_times', dcpl.get_obj_track_times())
-        kwupdate.setdefault('track_order', dcpl.get_attr_creation_order() > 0)
 
         # Special case: the maxshape property always exists, but if we pass it
         # to create_dataset, the new dataset will automatically get chunked
@@ -267,8 +263,7 @@ class Group(HLObject, MutableMappingHDF5):
 
         return self.create_dataset(name, **kwupdate)
 
-    def require_group(self, name):
-        # TODO: support kwargs like require_dataset
+    def require_group(self, name, track_order=None):
         """Return a group, creating it if it doesn't exist.
 
         TypeError is raised if something with that name already exists that
@@ -276,7 +271,7 @@ class Group(HLObject, MutableMappingHDF5):
         """
         with phil:
             if not name in self:
-                return self.create_group(name)
+                return self.create_group(name, track_order)
             grp = self[name]
             if not isinstance(grp, Group):
                 raise TypeError("Incompatible object (%s) already exists" % grp.__class__.__name__)

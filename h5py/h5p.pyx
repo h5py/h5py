@@ -873,9 +873,9 @@ cdef class PropDCID(PropOCID):
             size = H5Pget_virtual_dsetname(self.id, index, NULL, 0)
             name = <char*>emalloc(size+1)
             try:
-                # TODO check return size
-                H5Pget_virtual_dsetname(self.id, index, name, <size_t>size+1)
-                src_dset_name = bytes(name).decode('utf-8')
+                len = H5Pget_virtual_dsetname(self.id, index, name, <size_t>size+1)
+                if len > 0:
+                    src_dset_name = bytes(name).decode('utf-8')
             finally:
                 efree(name)
 
@@ -894,9 +894,9 @@ cdef class PropDCID(PropOCID):
             size = H5Pget_virtual_filename(self.id, index, NULL, 0)
             name = <char*>emalloc(size+1)
             try:
-                # TODO check return size
-                H5Pget_virtual_filename(self.id, index, name, <size_t>size+1)
-                src_fname = bytes(name).decode('utf-8')
+                len = H5Pget_virtual_filename(self.id, index, name, <size_t>size+1)
+                if len > 0:
+                    src_fname = bytes(name).decode('utf-8')
             finally:
                 efree(name)
 
@@ -1675,9 +1675,9 @@ cdef class PropDAID(PropInstanceID):
             size = H5Pget_virtual_prefix(self.id, NULL, 0)
             cprefix = <char*>emalloc(size+1)
             try:
-                # TODO check return size
-                H5Pget_virtual_prefix(self.id, cprefix, <size_t>size+1)
-                prefix = bytes(cprefix)
+                len = H5Pget_virtual_prefix(self.id, cprefix, <size_t>size+1)
+                if len > 0:
+                    prefix = bytes(cprefix)
             finally:
                 efree(cprefix)
 

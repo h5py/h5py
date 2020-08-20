@@ -109,9 +109,6 @@ class TestTypes(BaseAttrs):
             data[...] = 42.3
             self.f.attrs['x'] = data
             out = self.f.attrs['x']
-            # TODO: Clean up after issue addressed !
-            print("dtype: ", out.dtype, dt)
-            print("value: ", out, data)
             self.assertEqual(out.dtype, dt)
             self.assertArrayEqual(out, data)
 
