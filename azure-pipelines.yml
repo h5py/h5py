@@ -118,21 +118,43 @@ jobs:
       py36-hdf5110:
         python.version: '3.6'
         TOXENV: py36-test-deps,py36-test-mindeps,py36-test-deps-pre
-        HDF5_VERSION: 1.10.1
+        HDF5_VERSION: 1.10.6
         HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
         HDF5_VSVERSION: "15-64"
         H5PY_ENFORCE_COVERAGE: yes
       py37-hdf5110:
         python.version: '3.7'
         TOXENV: py37-test-deps,py37-test-mindeps,py37-test-deps-pre
-        HDF5_VERSION: 1.10.1
+        HDF5_VERSION: 1.10.6
         HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
         HDF5_VSVERSION: "15-64"
         H5PY_ENFORCE_COVERAGE: yes
       py38-hdf5110:
         python.version: '3.8'
         TOXENV: py38-test-deps,py38-test-mindeps,py38-test-deps-pre
-        HDF5_VERSION: 1.10.1
+        HDF5_VERSION: 1.10.6
+        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
+        HDF5_VSVERSION: "15-64"
+        H5PY_ENFORCE_COVERAGE: yes
+    # 64 bit - HDF5 1.10
+      py36-hdf5112:
+        python.version: '3.6'
+        TOXENV: py36-test-deps,py36-test-mindeps,py36-test-deps-pre
+        HDF5_VERSION: 1.12.0
+        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
+        HDF5_VSVERSION: "15-64"
+        H5PY_ENFORCE_COVERAGE: yes
+      py37-hdf5112:
+        python.version: '3.7'
+        TOXENV: py37-test-deps,py37-test-mindeps,py37-test-deps-pre
+        HDF5_VERSION: 1.12.0
+        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
+        HDF5_VSVERSION: "15-64"
+        H5PY_ENFORCE_COVERAGE: yes
+      py38-hdf5112:
+        python.version: '3.8'
+        TOXENV: py38-test-deps,py38-test-mindeps,py38-test-deps-pre
+        HDF5_VERSION: 1.12.0
         HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
         HDF5_VSVERSION: "15-64"
         H5PY_ENFORCE_COVERAGE: yes
