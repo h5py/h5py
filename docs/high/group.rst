@@ -377,6 +377,10 @@ Reference
             it grow as needed. If only a name is given instead of an iterable
             of tuples, it is equivalent to
             ``[(name, 0, h5py.h5f.UNLIMITED)]``.
+        :keyword allow_unknown_filter: Do not check that the requested filter is
+            available for use (T/F) .  This should only be used for
+            ``write_direct_chunk``, and if incorrectly used, can render a
+            dataset unreadable.
 
     .. method:: require_dataset(name, shape=None, dtype=None, exact=None, **kwds)
 

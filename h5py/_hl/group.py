@@ -129,6 +129,10 @@ class Group(HLObject, MutableMappingHDF5):
             Each name must be a str, bytes, or os.PathLike; each offset and
             size, an integer.  If only a name is given instead of an iterable
             of tuples, it is equivalent to [(name, 0, h5py.h5f.UNLIMITED)].
+        allow_unknown_filter
+            (T/F) Do not check that the requested filter is available for use.
+            This should only be used for write_direct_chunk, and if incorrectly
+            used, can render a dataset unreadable.
         """
         if 'track_order' not in kwds:
             kwds['track_order'] = h5.get_config().track_order
