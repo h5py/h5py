@@ -125,6 +125,12 @@ a better option may be to store temporary data on disk using the functions in
 
 .. literalinclude:: ../../examples/bytesio.py
 
+.. warning::
+
+   When using a Python file-like object for an HDF5 file, make sure to close
+   the HDF5 file before closing the file object it's wrapping. If there is an
+   error while trying to close the HDF5 file, segfaults may occur.
+
 .. _file_version:
 
 Version bounding
