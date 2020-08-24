@@ -273,6 +273,14 @@ class Group(HLObject, MutableMappingHDF5):
             if not name in self:
                 return self.create_group(name, track_order)
             grp = self[name]
+            if track_order is None:
+                track_order = h5.get_config().track_order
+            if grp._id.get_create_plist().get_attr_creation_order() == 0:
+                order = False
+            else:
+                order = True
+            if not order == track_order:
+                raise TypeError("tack_order do not match (existing %s vs new %s)" % (order, track_order))
             if not isinstance(grp, Group):
                 raise TypeError("Incompatible object (%s) already exists" % grp.__class__.__name__)
             return grp
