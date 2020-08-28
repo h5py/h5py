@@ -131,8 +131,8 @@ class Group(HLObject, MutableMappingHDF5):
             of tuples, it is equivalent to [(name, 0, h5py.h5f.UNLIMITED)].
         allow_unknown_filter
             (T/F) Do not check that the requested filter is available for use.
-            This should only be used for write_direct_chunk, and if incorrectly
-            used, can render a dataset unreadable.
+            This should only be used with ``write_direct_chunk``, where the caller
+            compresses the data before handing it to h5py.
         """
         if 'track_order' not in kwds:
             kwds['track_order'] = h5.get_config().track_order
