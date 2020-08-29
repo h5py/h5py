@@ -45,6 +45,9 @@ class SlicingBenchmark:
     Benchmark for reading slices in the most pathlogical way in a chunked dataset
     Allows the test
     """
+
+    timeout = 120
+
     def __init__(self, ndim=3, size=1024, chunk=64, dtype="float32", precision=16, compression_kwargs=None):
         """
         Defines some parameters for the benchmark, can be tuned later on.
@@ -170,11 +173,3 @@ class SlicingBenchmark:
                     "Uncompressed data read speed %.3f MB/s"%(self.ndim*nb_read*self.needed_memory/dt/1e6))
         return dt
 
-
-if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
-    benckmark = SlicingBenchmark()
-    benckmark.setup()
-    benckmark.time_sequential_reads()
-    benckmark.time_threaded_reads()
-    benckmark.teardown()

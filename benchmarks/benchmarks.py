@@ -6,10 +6,7 @@ from tempfile import TemporaryDirectory
 import h5py
 
 class TimeSuite:
-    """
-    An example benchmark that times the performance of various kinds
-    of iterating over dictionaries in Python.
-    """
+
     def setup(self):
         self._td = TemporaryDirectory()
         path = osp.join(self._td.name, 'test.h5')
