@@ -59,7 +59,7 @@ def get_env_options():
         'hdf5_libdir': os.environ.get('HDF5_LIBDIR'),
         'hdf5_pkgconfig_name': os.environ.get('HDF5_PKGCONFIG_NAME'),
         'hdf5_version': os.environ.get('HDF5_VERSION'),
-        'mpi': os.environ.get('HDF5_MPI'),
+        'mpi': True if os.environ.get('HDF5_MPI') == "ON" else None,
     }
 
 
