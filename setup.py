@@ -57,6 +57,11 @@ if setup_configure.mpi_enabled():
     SETUP_REQUIRES.append("mpi4py ==3.0.0; python_version<'3.8'")
     SETUP_REQUIRES.append("mpi4py >=3.0.3; python_version>='3.8'")
 
+# Set the environment variable H5PY_SETUP_REQUIRES=0 if we need to skip
+# setup_requires for any reason.
+if os.environ.get('H5PY_SETUP_REQUIRES', '1') == '0':
+    SETUP_REQUIRES = []
+
 # --- Custom Distutils commands -----------------------------------------------
 
 class test(Command):
