@@ -36,7 +36,8 @@ def make_new_dset(parent, shape=None, dtype=None, data=None, name=None,
                   chunks=None, compression=None, shuffle=None,
                   fletcher32=None, maxshape=None, compression_opts=None,
                   fillvalue=None, scaleoffset=None, track_times=None,
-                  external=None, track_order=None, dcpl=None):
+                  external=None, track_order=None, dcpl=None,
+                  allow_unknown_filter=False):
     """ Return a new low-level dataset identifier """
 
     # Convert data to a C-contiguous ndarray
@@ -103,7 +104,7 @@ def make_new_dset(parent, shape=None, dtype=None, data=None, name=None,
     dcpl = filters.fill_dcpl(
         dcpl or h5p.create(h5p.DATASET_CREATE), shape, dtype,
         chunks, compression, compression_opts, shuffle, fletcher32,
-        maxshape, scaleoffset, external)
+        maxshape, scaleoffset, external, allow_unknown_filter)
 
     if fillvalue is not None:
         fillvalue = numpy.array(fillvalue)
