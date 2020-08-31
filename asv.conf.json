@@ -127,12 +127,12 @@
     "html_dir": ".asv/html",
 
     // The number of characters to retain in the commit hashes.
-    // "hash_length": 8,
+    "hash_length": 8,
 
     // `asv` will cache results of the recent builds in each
     // environment, making them faster to install next time.  This is
     // the number of builds to keep, per environment.
-    // "build_cache_size": 2,
+    "build_cache_size": 2,
 
     // The commits after which the regression search in `asv publish`
     // should start looking for regressions. Dictionary whose keys are
