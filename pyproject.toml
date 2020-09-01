@@ -1,0 +1,5 @@
+[build-system]
+# Further build requirements - like numpy & cython - come from setup.py via
+# the PEP 517 interface.
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"

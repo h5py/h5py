@@ -81,7 +81,7 @@ before_install:
   - ccache -s
 
 install:
-  - pip install tox codecov
+  - pip install -U tox codecov virtualenv
   - ci/travis/get_hdf5_if_needed.sh
   - ls -lRa $HDF5_CACHE_DIR
 script:

@@ -8,13 +8,8 @@
     for h5py, and setup_build, which handles the actual compilation process.
 """
 
-try:
-    from setuptools import Extension, setup
-except ImportError:
-    from distutils.core import setup
-    from distutils.extension import Extension
+from setuptools import Extension, setup
 from distutils.cmd import Command
-from distutils.dist import Distribution
 import sys
 import os
 import os.path as op
@@ -29,21 +24,43 @@ import setup_build, setup_configure
 
 VERSION = '2.10.0'
 
-NUMPY_DEP = 'numpy>=1.7'
+# Minimum supported versions of Numpy & Cython depend on the Python version
+NUMPY_MIN_VERSIONS = [
+    # Numpy    Python
+    ('1.12',   "=='3.6'"),
+    ('1.14.3', "=='3.7'"),
+    ('1.17.4', ">='3.8'"),
+]
 
 # these are required to use h5py
-RUN_REQUIRES = [NUMPY_DEP, "cached-property"]
+RUN_REQUIRES = ["cached-property"] + [
+    f"numpy >={np_min}; python_version{py_condition}"
+    for np_min, py_condition in NUMPY_MIN_VERSIONS
+]
 
 # these are required to build h5py
-# RUN_REQUIRES is included as setup.py test needs RUN_REQUIRES for testing
-# RUN_REQUIRES can be removed when setup.py test is removed
-SETUP_REQUIRES = RUN_REQUIRES + [NUMPY_DEP, 'Cython>=0.29', 'pkgconfig']
+# For packages we link to (numpy, mpi4py), we build against the oldest
+# supported version; h5py wheels should then work with newer versions of these.
+# Downstream packagers - e.g. Linux distros - can safely build with newer
+# versions.
+SETUP_REQUIRES = [
+    'pkgconfig',
+    f"Cython >=0.29; python_version<'3.8'",
+    f"Cython >=0.29.14; python_version>='3.8'",
+] + [
+    f"numpy =={np_min}; python_version{py_condition}"
+    for np_min, py_condition in NUMPY_MIN_VERSIONS
+]
 
-# Needed to avoid trying to install numpy/cython on pythons which the latest
-# versions don't support
-use_setup_requires = any(parameter in sys.argv for parameter in
-    ("bdist_wheel", "build", "configure", "install", "test"))
+if setup_configure.mpi_enabled():
+    RUN_REQUIRES.append('mpi4py >=3.0.0')
+    SETUP_REQUIRES.append("mpi4py ==3.0.0; python_version<'3.8'")
+    SETUP_REQUIRES.append("mpi4py >=3.0.3; python_version>='3.8'")
 
+# Set the environment variable H5PY_SETUP_REQUIRES=0 if we need to skip
+# setup_requires for any reason.
+if os.environ.get('H5PY_SETUP_REQUIRES', '1') == '0':
+    SETUP_REQUIRES = []
 
 # --- Custom Distutils commands -----------------------------------------------
 
@@ -161,7 +178,7 @@ setup(
   package_data = package_data,
   ext_modules = [Extension('h5py.x',['x.c'])],  # To trick build into running build_ext
   install_requires = RUN_REQUIRES,
-  setup_requires = SETUP_REQUIRES if use_setup_requires else [],
+  setup_requires = SETUP_REQUIRES,
   python_requires='>=3.6',
   cmdclass = CMDCLASS,
 )

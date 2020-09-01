@@ -63,6 +63,10 @@ def get_env_options():
     }
 
 
+def mpi_enabled():
+    return os.environ.get('HDF5_MPI') == "ON"
+
+
 class configure(Command):
 
     """
