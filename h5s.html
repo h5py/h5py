@@ -168,10 +168,10 @@ Works for all selection techniques.</p>
 <code class="sig-name descname">get_select_type</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; INT select_code<a class="headerlink" href="#h5py.h5s.SpaceID.get_select_type" title="Permalink to this definition">¶</a></dt>
 <dd><p>Determine selection type.  Return values are:</p>
 <ul class="simple">
-<li><p><a class="reference internal" href="#h5py.h5s.SEL_NONE" title="h5py.h5s.SEL_NONE"><code class="xref py py-data docutils literal notranslate"><span class="pre">SEL_NONE</span></code></a></p></li>
-<li><p><a class="reference internal" href="#h5py.h5s.SEL_ALL" title="h5py.h5s.SEL_ALL"><code class="xref py py-data docutils literal notranslate"><span class="pre">SEL_ALL</span></code></a></p></li>
-<li><p><a class="reference internal" href="#h5py.h5s.SEL_POINTS" title="h5py.h5s.SEL_POINTS"><code class="xref py py-data docutils literal notranslate"><span class="pre">SEL_POINTS</span></code></a></p></li>
-<li><p><a class="reference internal" href="#h5py.h5s.SEL_HYPERSLABS" title="h5py.h5s.SEL_HYPERSLABS"><code class="xref py py-data docutils literal notranslate"><span class="pre">SEL_HYPERSLABS</span></code></a></p></li>
+<li><p><code class="xref py py-data docutils literal notranslate"><span class="pre">SEL_NONE</span></code></p></li>
+<li><p><code class="xref py py-data docutils literal notranslate"><span class="pre">SEL_ALL</span></code></p></li>
+<li><p><code class="xref py py-data docutils literal notranslate"><span class="pre">SEL_POINTS</span></code></p></li>
+<li><p><code class="xref py py-data docutils literal notranslate"><span class="pre">SEL_HYPERSLABS</span></code></p></li>
 </ul>
 </dd></dl>
 
@@ -197,7 +197,7 @@ is True, retrieve the maximum dataspace size instead.</p>
 <dl class="py method">
 <dt id="h5py.h5s.SpaceID.get_simple_extent_type">
 <code class="sig-name descname">get_simple_extent_type</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; INT class_code<a class="headerlink" href="#h5py.h5s.SpaceID.get_simple_extent_type" title="Permalink to this definition">¶</a></dt>
-<dd><p>Class code is either <a class="reference internal" href="#h5py.h5s.SCALAR" title="h5py.h5s.SCALAR"><code class="xref py py-data docutils literal notranslate"><span class="pre">SCALAR</span></code></a> or <a class="reference internal" href="#h5py.h5s.SIMPLE" title="h5py.h5s.SIMPLE"><code class="xref py py-data docutils literal notranslate"><span class="pre">SIMPLE</span></code></a>.</p>
+<dd><p>Class code is either <code class="xref py py-data docutils literal notranslate"><span class="pre">SCALAR</span></code> or <code class="xref py py-data docutils literal notranslate"><span class="pre">SIMPLE</span></code>.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -269,7 +269,7 @@ the dataspace extent.</p>
 <dl class="py method">
 <dt id="h5py.h5s.SpaceID.set_extent_none">
 <code class="sig-name descname">set_extent_none</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5s.SpaceID.set_extent_none" title="Permalink to this definition">¶</a></dt>
-<dd><p>Remove the dataspace extent; typecode changes to <a class="reference internal" href="#h5py.h5s.NO_CLASS" title="h5py.h5s.NO_CLASS"><code class="xref py py-data docutils literal notranslate"><span class="pre">NO_CLASS</span></code></a>.</p>
+<dd><p>Remove the dataspace extent; typecode changes to <code class="xref py py-data docutils literal notranslate"><span class="pre">NO_CLASS</span></code>.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -278,7 +278,7 @@ the dataspace extent.</p>
 <dd><p>Reset the dataspace extent via a tuple of dimensions.
 Every element of dims_tpl must be a positive integer.</p>
 <p>You can optionally specify the maximum dataspace size. The
-special value <a class="reference internal" href="#h5py.h5s.UNLIMITED" title="h5py.h5s.UNLIMITED"><code class="xref py py-data docutils literal notranslate"><span class="pre">UNLIMITED</span></code></a>, as an element of max_dims, indicates
+special value <code class="xref py py-data docutils literal notranslate"><span class="pre">UNLIMITED</span></code>, as an element of max_dims, indicates
 an unlimited dimension.</p>
 </dd></dl>
 
@@ -472,7 +472,7 @@ an unlimited dimension.</p>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2014, Andrew Collette and contributors.
-      Last updated on Aug 30, 2020.
+      Last updated on Sep 01, 2020.
       Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.2.1.
     </div>
   </body>
