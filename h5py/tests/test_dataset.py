@@ -720,7 +720,7 @@ class TestExternal(BaseDataset):
         # verify file's existence, size, and contents
         with open(ext_file, 'rb') as fid:
             contents = fid.read()
-        assert contents == testdata.tostring()
+        assert contents == testdata.tobytes()
 
     def test_name_str(self):
         """ External argument may be a file name str only """

@@ -21,7 +21,7 @@ class TestWriteDirectChunk(TestCase):
             array = numpy.zeros((10, 100, 100))
             for index in range(10):
                 a = numpy.random.rand(100, 100).astype('float32')
-                dataset.id.write_direct_chunk((index, 0, 0), a.tostring(), filter_mask=1)
+                dataset.id.write_direct_chunk((index, 0, 0), a.tobytes(), filter_mask=1)
                 array[index] = a
 
 
