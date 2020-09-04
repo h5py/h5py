@@ -29,6 +29,8 @@ cimport numpy as cnp
 from numpy cimport npy_intp, NPY_WRITEABLE, NPY_C_CONTIGUOUS, NPY_OWNDATA
 cnp._import_array()
 
+import numpy as np
+
 from cpython.object cimport PyObject
 from cpython.ref cimport Py_INCREF, Py_XDECREF, Py_XINCREF
 
@@ -814,11 +816,12 @@ cdef int conv_ndarray2vlen(void* ipt,
         PyObject* buf_obj0
 
     buf_obj0 = buf_obj[0]
-    ndarray = <cnp.ndarray> buf_obj0
+    ndarray = np.ascontiguousarray(<cnp.ndarray> buf_obj0)
     len = ndarray.shape[0]
     nbytes = len * max(outtype.get_size(), intype.get_size())
 
     data = emalloc(nbytes)
+
     memcpy(data, ndarray.data, intype.get_size() * len)
     H5Tconvert(intype.id, outtype.id, len, data, NULL, H5P_DEFAULT)
 
