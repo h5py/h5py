@@ -520,20 +520,6 @@ class Dataset(HLObject):
 
     @property
     @with_phil
-    def track_order(self):
-        """ Whether dataset creation order are tracked (T/F)"""
-        dcpl = self._dcpl
-        return dcpl.get_attr_creation_order() > 0
-
-    @property
-    @with_phil
-    def track_times(self):
-        """ Whether times associated with an object are tracked (T/F)"""
-        dcpl = self._dcpl
-        return dcpl.get_obj_track_times()
-
-    @property
-    @with_phil
     def scaleoffset(self):
         """Scale/offset filter settings. For integer data types, this is
         the number of bits stored, or 0 for auto-detected. For floating

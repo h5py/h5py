@@ -816,18 +816,14 @@ class TestCreateLike(BaseDataset):
     def test_track_times(self):
         orig = self.f.create_dataset('honda', data=np.arange(12),
                                      track_times=True)
-        self.assertTrue(orig.track_times)
         self.assertNotEqual(0, h5py.h5g.get_objinfo(orig._id).mtime)
         similar = self.f.create_dataset_like('hyundai', orig)
-        self.assertTrue(similar.track_times)
         self.assertNotEqual(0, h5py.h5g.get_objinfo(similar._id).mtime)
 
         orig = self.f.create_dataset('ibm', data=np.arange(12),
                                      track_times=False)
-        self.assertFalse(orig.track_times)
         self.assertEqual(0, h5py.h5g.get_objinfo(orig._id).mtime)
         similar = self.f.create_dataset_like('lenovo', orig)
-        self.assertFalse(similar.track_times)
         self.assertEqual(0, h5py.h5g.get_objinfo(similar._id).mtime)
 
     def test_maxshape(self):
@@ -1287,7 +1283,6 @@ class TestTrackTimes(BaseDataset):
         ds = self.f.create_dataset('foo', (4,), track_times=False)
         ds_mtime = h5py.h5g.get_objinfo(ds._id).mtime
         self.assertEqual(0, ds_mtime)
-        self.assertEqual(ds.track_times, False)
 
     def test_invalid_track_times(self):
         """ check that when give track_times an invalid value """

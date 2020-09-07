@@ -132,14 +132,6 @@ class TestRequire(BaseGroup):
         grp2 = self.f.require_group('foo')
         self.assertEqual(grp, grp2)
 
-        grp = self.f.create_group('bar', track_order=True)
-        grp2 = self.f.require_group('bar', track_order=True)
-        self.assertEqual(grp, grp2)
-
-        grp = self.f.create_group('fun', track_order=True)
-        with self.assertRaises(TypeError):
-            self.f.require_group('fun', track_order=False)
-
     def test_create(self):
         """ Group is created if it doesn't exist """
         grp = self.f.require_group('foo')
