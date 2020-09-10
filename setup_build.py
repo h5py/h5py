@@ -172,7 +172,7 @@ DEF CYTHON_BUILD_VERSION = '%(cython_version)s'
 """
         s %= {
             'mpi': bool(config.mpi),
-            'version': tuple(int(x) for x in config.hdf5_version.split('.')),
+            'version': config.hdf5_version,
             'complex256_support': hasattr(numpy, 'complex256'),
             'numpy_version': numpy.__version__,
             'cython_version': cython_version,

@@ -19,6 +19,7 @@
 from distutils.cmd import Command
 import os
 import os.path as op
+import re
 import sys
 import json
 
@@ -43,12 +44,10 @@ def stash_config(dct):
 
 def validate_version(s):
     """Ensure that s contains an X.Y.Z format version string, or ValueError."""
-    try:
-        tpl = tuple(int(x) for x in s.split('.'))
-        if len(tpl) != 3:
-            raise ValueError
-    except Exception:
-        raise ValueError("HDF5 version string must be in X.Y.Z format")
+    m = re.match('(\d+)\.(\d+)\.(\d+)$', s)
+    if m:
+        return tuple(int(x) for x in m.groups())
+    raise ValueError(f"HDF5 version string {s!r} not in X.Y.Z format")
 
 
 def mpi_enabled():
@@ -63,14 +62,15 @@ class BuildConfig:
         self.hdf5_version = hdf5_version
         self.mpi = mpi
 
-        validate_version(self.hdf5_version)
-
     @classmethod
     def from_env(cls):
         mpi = mpi_enabled()
         h5_inc, h5_lib, h5_macros = cls._find_hdf5_compiler_settings(mpi)
-        h5_version = os.environ.get('HDF5_VERSION')
-        if not h5_version:
+
+        h5_version_s = os.environ.get('HDF5_VERSION')
+        if h5_version_s:
+            h5_version = validate_version(h5_version_s)
+        else:
             h5_version = autodetect_version(h5_lib)
 
         return cls(h5_inc, h5_lib, h5_macros, h5_version, mpi)
@@ -145,7 +145,7 @@ class BuildConfig:
             'hdf5_includedirs': self.hdf5_includedirs,
             'hdf5_libdirs': self.hdf5_libdirs,
             'hdf5_define_macros': self.hdf5_define_macros,
-            'hdf5_version': self.hdf5_version,
+            'hdf5_version': list(self.hdf5_version),  # list() to match the JSON
             'mpi': self.mpi,
         }
 
@@ -229,4 +229,4 @@ def autodetect_version(libdirs):
         print("error: Unable to load dependency HDF5, make sure HDF5 is installed properly")
         raise
 
-    return "{0}.{1}.{2}".format(int(major.value), int(minor.value), int(release.value))
+    return int(major.value), int(minor.value), int(release.value)
