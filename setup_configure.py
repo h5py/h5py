@@ -150,11 +150,7 @@ class BuildConfig:
         }
 
     def changed(self):
-        """Has the config changed since the last build?
-
-        If not, avoid rewriting the Cython config file, so we don't need to
-        rebuild everything just because the mtime changed.
-        """
+        """Has the config changed since the last build?"""
         return self.as_dict() != load_stashed_config()
 
     def record_built(self):
