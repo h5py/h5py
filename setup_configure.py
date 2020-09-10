@@ -51,122 +51,73 @@ def validate_version(s):
         raise ValueError("HDF5 version string must be in X.Y.Z format")
 
 
-def get_env_options():
-    # The keys here match the option attributes on *configure*
-    return {
-        'hdf5': os.environ.get('HDF5_DIR'),
-        'hdf5_includedir': os.environ.get('HDF5_INCLUDEDIR'),
-        'hdf5_libdir': os.environ.get('HDF5_LIBDIR'),
-        'hdf5_pkgconfig_name': os.environ.get('HDF5_PKGCONFIG_NAME'),
-        'hdf5_version': os.environ.get('HDF5_VERSION'),
-        'mpi': True if os.environ.get('HDF5_MPI') == "ON" else None,
-    }
-
-
 def mpi_enabled():
     return os.environ.get('HDF5_MPI') == "ON"
 
 
-class configure(Command):
+class BuildConfig:
+    def __init__(self, hdf5_includedirs, hdf5_libdirs, hdf5_define_macros, hdf5_version, mpi):
+        self.hdf5_includedirs = hdf5_includedirs
+        self.hdf5_libdirs = hdf5_libdirs
+        self.hdf5_define_macros = hdf5_define_macros
+        self.hdf5_version = hdf5_version
+        self.mpi = mpi
 
-    """
-        Configure build options for h5py: custom path to HDF5, version of
-        the HDF5 library, and whether MPI is enabled.
+        validate_version(self.hdf5_version)
 
-        Options can come from either command line options or environment
-        variables (but specifying the same option in both is an error).
-        Options not specified will be loaded from the previous configuration,
-        so they are 'sticky' (except hdf5-version).
+    @classmethod
+    def from_env(cls):
+        mpi = mpi_enabled()
+        h5_inc, h5_lib, h5_macros = cls._find_hdf5_compiler_settings(mpi)
+        h5_version = os.environ.get('HDF5_VERSION')
+        if not h5_version:
+            h5_version = autodetect_version(h5_lib)
 
-        When options change, the rebuild_required attribute is set, and
-        may only be reset by calling reset_rebuild().  The custom build_ext
-        command does this.
-    """
+        return cls(h5_inc, h5_lib, h5_macros, h5_version, mpi)
 
-    description = "Configure h5py build options"
+    @staticmethod
+    def _find_hdf5_compiler_settings(mpi=False):
+        """Get compiler settings from environment or pkgconfig.
 
-    user_options = [('hdf5=', 'h', 'Custom path prefix to HDF5'),
-                    ('hdf5-version=', '5', 'HDF5 version "X.Y.Z"'),
-                    ('hdf5-includedir=', 'i', 'path to HDF5 headers'),
-                    ('hdf5-libdir=', 'l', 'path to HDF5 library'),
-                    ('hdf5-pkgconfig-name=', 'p', 'name of HDF5 pkgconfig file'),
-                    ('mpi', 'm', 'Enable MPI building'),
-                    ('reset', 'r', 'Reset config options') ]
-
-    def initialize_options(self):
-        self.hdf5 = None
-        self.hdf5_version = None
-        self.hdf5_includedir = None
-        self.hdf5_libdir = None
-        self.hdf5_pkgconfig_name = None
-        self.mpi = None
-        self.reset = None
-
-    def finalize_options(self):
-        # Merge environment options with command-line
-        for setting, env_val in get_env_options().items():
-            if env_val is not None:
-                if getattr(self, setting) is not None:
-                    raise ValueError(
-                        f"Provide {setting} in command line or environment "
-                        f"variable, not both."
-                    )
-                setattr(self, setting, env_val)
+        Returns (include_dirs, lib_dirs, define_macros)
+        """
+        hdf5 = os.environ.get('HDF5_DIR')
+        hdf5_includedir = os.environ.get('HDF5_INCLUDEDIR')
+        hdf5_libdir = os.environ.get('HDF5_LIBDIR')
+        hdf5_pkgconfig_name = os.environ.get('HDF5_PKGCONFIG_NAME')
 
         if sum([
-            bool(self.hdf5_includedir or self.hdf5_libdir),
-            bool(self.hdf5),
-            bool(self.hdf5_pkgconfig_name)
+            bool(hdf5_includedir or hdf5_libdir),
+            bool(hdf5),
+            bool(hdf5_pkgconfig_name)
         ]) > 1:
             raise ValueError(
                 "Specify only one of: HDF5 lib/include dirs, HDF5 prefix dir, "
                 "or HDF5 pkgconfig name"
             )
 
-        # Check version number format
-        if self.hdf5_version is not None:
-            validate_version(self.hdf5_version)
-
-    def reset_rebuild(self):
-        """ Mark this configuration as built """
-        dct = load_stashed_config()
-        dct['rebuild'] = False
-        stash_config(dct)
-
-
-    def _find_hdf5_compiler_settings(self, olds, mpi):
-        """Returns (include_dirs, lib_dirs, define_macros)"""
-        # Specified lib/include dirs explicitly
-        if self.hdf5_includedir or self.hdf5_libdir:
-            inc_dirs = [self.hdf5_includedir] if self.hdf5_includedir else []
-            lib_dirs = [self.hdf5_libdir] if self.hdf5_libdir else []
+        if hdf5_includedir or hdf5_libdir:
+            inc_dirs = [hdf5_includedir] if hdf5_includedir else []
+            lib_dirs = [hdf5_libdir] if hdf5_libdir else []
             return (inc_dirs, lib_dirs, [])
 
         # Specified a prefix dir (e.g. '/usr/local')
-        if self.hdf5:
-            inc_dirs = [op.join(self.hdf5, 'include')]
-            lib_dirs = [op.join(self.hdf5, 'lib')]
+        if hdf5:
+            inc_dirs = [op.join(hdf5, 'include')]
+            lib_dirs = [op.join(hdf5, 'lib')]
             if sys.platform.startswith('win'):
-                lib_dirs.append(op.join(self.hdf5, 'bin'))
+                lib_dirs.append(op.join(hdf5, 'bin'))
             return (inc_dirs, lib_dirs, [])
 
         # Specified a name to be looked up in pkgconfig
-        if self.hdf5_pkgconfig_name:
+        if hdf5_pkgconfig_name:
             import pkgconfig
-            if not pkgconfig.exists(self.hdf5_pkgconfig_name):
+            if not pkgconfig.exists(hdf5_pkgconfig_name):
                 raise ValueError(
-                    f"No pkgconfig information for {self.hdf5_pkgconfig_name}"
+                    f"No pkgconfig information for {hdf5_pkgconfig_name}"
                 )
-            pc = pkgconfig.parse(self.hdf5_pkgconfig_name)
+            pc = pkgconfig.parse(hdf5_pkgconfig_name)
             return (pc['include_dirs'], pc['library_dirs'], pc['define_macros'])
-
-        # Re-use previously specified settings
-        if olds.get('hdf5_includedirs') and olds.get('hdf5_libdirs'):
-            return (
-                olds['hdf5_includedirs'],
-                olds['hdf5_libdirs'],
-                olds.get('hdf5_define_macros', []),
-            )
 
         # Fallback: query pkgconfig for default hdf5 names
         import pkgconfig
@@ -189,49 +140,28 @@ class configure(Command):
             pc.get('define_macros', []),
         )
 
-    def run(self):
-        """ Distutils calls this when the command is run """
-
-        # Step 1: Load previous settings and combine with current ones
-        oldsettings = {} if self.reset else load_stashed_config()
-
-        if self.mpi is None:
-            self.mpi = oldsettings.get('mpi', False)
-
-        self.hdf5_includedirs, self.hdf5_libdirs, self.hdf5_define_macros = \
-            self._find_hdf5_compiler_settings(oldsettings, self.mpi)
-
-        # Don't use the HDF5 version saved previously - that may be referring
-        # to another library. It should always be specified or autodetected.
-        # The HDF5 version is persisted only so we can check if it changed.
-        if self.hdf5_version is None:
-            self.hdf5_version = autodetect_version(self.hdf5_libdirs)
-
-        # Step 2: determine if a rebuild is needed & save the settings
-
-        current_settings = {
+    def as_dict(self):
+        return {
             'hdf5_includedirs': self.hdf5_includedirs,
             'hdf5_libdirs': self.hdf5_libdirs,
             'hdf5_define_macros': self.hdf5_define_macros,
             'hdf5_version': self.hdf5_version,
             'mpi': self.mpi,
-            'rebuild': False,
         }
 
-        self.rebuild_required = current_settings['rebuild'] = (
-            # If we haven't built since a previous config change
-            oldsettings.get('rebuild')
-            # If the config has changed now
-            or current_settings != oldsettings
-            # Corner case: If options reset, but only if they previously
-            # had non-default values (to handle multiple resets in a row)
-            or bool(self.reset and any(load_stashed_config().values()))
-        )
+    def changed(self):
+        """Has the config changed since the last build?
 
-        stash_config(current_settings)
+        If not, avoid rewriting the Cython config file, so we don't need to
+        rebuild everything just because the mtime changed.
+        """
+        return self.as_dict() != load_stashed_config()
 
-        # Step 3: print the resulting configuration to stdout
+    def record_built(self):
+        """Record config after a successful build"""
+        stash_config(self.as_dict())
 
+    def summarise(self):
         def fmt_dirs(l):
             return '\n'.join((['['] + [f'  {d!r}' for d in l] + [']'])) if l else '[]'
 
@@ -242,7 +172,7 @@ class configure(Command):
         print("HDF5 library dirs:", fmt_dirs(self.hdf5_libdirs))
         print("     HDF5 Version:", repr(self.hdf5_version))
         print("      MPI Enabled:", self.mpi)
-        print(" Rebuild Required:", self.rebuild_required)
+        print(" Rebuild Required:", self.changed())
         print('')
         print('*' * 80)
 
