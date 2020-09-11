@@ -285,7 +285,7 @@ def test_virtual_prefix(tmp_path):
     src_file['data'] = np.arange(10)
 
     vds_file = h5.File(tmp_path / 'b' / 'vds.h5', 'w')
-    layout = h5.VirtualLayout(shape=(10,))
+    layout = h5.VirtualLayout(shape=(10,), dtype=np.int64)
     layout[:] = h5.VirtualSource('src.h5', 'data', shape=(10,))
     vds_file.create_virtual_dataset('data', layout, fillvalue=-1)
 
