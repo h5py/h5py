@@ -5,7 +5,7 @@ import numpy as np
 from tempfile import TemporaryDirectory
 import h5py
 
-class TimeSuite:
+class TimeReadSuite:
 
     def setup(self):
         self._td = TemporaryDirectory()
@@ -24,7 +24,7 @@ class TimeSuite:
         for i in range(10000):
             arr = ds[i * 10:(i + 1) * 10]
 
-class TimeWritingSuite:
+class TimeSliceSuite:
     """Based on example in GitHub issue 492:
     https://github.com/h5py/h5py/issues/492
     """
@@ -61,7 +61,7 @@ class TimeWritingSuite:
             self.ds[..., i:i+1] = self.data[..., np.newaxis]
 
 
-class TimeDatasetSuite:
+class TimeCreateSuite:
 
     def setup(self):
         self._td = TemporaryDirectory()
@@ -76,13 +76,13 @@ class TimeDatasetSuite:
         self.f.create_dataset('dataset', (100,), dtype='f')
 
     def time_create_empty_dataset(self):
-        self.f.create_dataset('empty', dtyp='f')
+        self.f.create_dataset('empty', dtype='f')
 
-class TimeSuite:
+class TimeRWDirectSuite:
 
     def setup(self):
         self._td = TemporaryDirectory()
-        self.path = osp.join(self._td.name, '_operate.h5')
+        self.path = osp.join(self._td.name, '_data.h5')
         self.f = h5py.File(self.path, 'w')
 
         self.dset = self.f.create_dataset('dset', (100,))
@@ -100,7 +100,7 @@ class TimeSuite:
         self.dset.write_direct(self.arr2, np.s_[0:10], np.s_[50:60])
 
 
-class TimeVirtualDataset:
+class TimeVirtualDatasetSuite:
 
     def setup(self):
         self.layout = h5py.VirtualLayout(shape=(4,100), dtype='i4')
@@ -117,7 +117,7 @@ class TimeVirtualDataset:
     def time_virtual_dataset(self):
         self.f.create_virtual_dataset('vdata', self.layout, fillvalue=-1)
 
-class TimeChunkedDataset:
+class TimeChunkedDatasetSuite:
 
     def setup(self):
         self._td = TemporaryDirectory()
@@ -131,7 +131,7 @@ class TimeChunkedDataset:
     def time_chunked_dataset(self):
         self.f.create_dataset('chunked', shape=(100,100,100), chunks=(10,10,10))
 
-class TimeBroadcast:
+class TimeBroadcastSuite:
 
     def setup(self):
         self._td = TemporaryDirectory()
@@ -153,12 +153,12 @@ class TimeIndices:
         self._td = TemporaryDirectory()
         self.path = osp.join(self._td.name, '_dataset.h5')
         self.f = h5py.File(self.path, 'w')
-        self.dset = self.f.create_dataset('data', data= np.arange(512).reshape(8,8,8))
-        self.indices = slice(2,8).indices(4)
+        self.dset = self.f.create_dataset('data', shape=(64,64,64))
+        self.x,*_ = np.indices((64,64,64))
 
     def teardown(self):
         self.f.close()
         self._td.cleanup()
 
     def time_write_with_indices(self):
-        self.dset[self.indices] = 0
+        self.dset[...] = self.x
