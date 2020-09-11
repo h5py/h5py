@@ -126,7 +126,7 @@
     "html_dir": ".asv/html",
 
     // The number of characters to retain in the commit hashes.
-    "hash_length": 8,
+    // "hash_length": 8,
 
     // `asv` will cache results of the recent builds in each
     // environment, making them faster to install next time.  This is
