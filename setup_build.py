@@ -99,34 +99,6 @@ class h5py_build_ext(build_ext):
 
         return [make_extension(m) for m in MODULES]
 
-    @staticmethod
-    def run_system_cython(pyx_files):
-        try:
-            retcode = subprocess.call(['cython', '--fast-fail', '--verbose'] + pyx_files)
-            if not retcode == 0:
-                raise Exception('ERROR: Cython failed')
-        except OSError as e:
-            print("ERROR: cython exec failed. Is cython not in the path? ", str(e))
-            raise
-        except Exception as e:
-            print("ERROR: cython exec failed", str(e))
-            raise
-
-    def check_rerun_cythonize(self):
-        """ Check whether the cythonize() call produced the expected .c files.
-        If the expected .c files are not found then cython from the system path will
-        be executed in order to produce the missing files. """
-
-        missing_c_src_files = []
-        for c_src_file in [ext.sources[0] for ext in self.extensions]:
-            if not op.isfile(c_src_file):
-                missing_c_src_files.append(c_src_file)
-        if missing_c_src_files:
-            print("WARNING: cythonize() failed to create all .c files (setuptools too old?)")
-            pyx_files = [os.path.splitext(fname)[0] + ".pyx" for fname in missing_c_src_files]
-            print("         Executing system cython on pyx files: ", str(pyx_files))
-            self.run_system_cython(pyx_files)
-
     def run(self):
         """ Distutils calls this method to run the command """
 
@@ -184,7 +156,6 @@ DEF CYTHON_BUILD_VERSION = '%(cython_version)s'
         self.extensions = cythonize(self._make_extensions(config),
                                     force=config.rebuild_required or self.force,
                                     language_level=3)
-        self.check_rerun_cythonize()
 
         # Perform the build
         build_ext.run(self)
