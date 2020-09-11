@@ -152,40 +152,29 @@ Custom installation
     or build from a git checkout or downloaded tarball to avoid getting
     a pre-built version of h5py.
 
-You can specify build options for h5py with the ``configure`` option to
-setup.py.  Options may be given together or separately::
-
-    $ python setup.py configure --hdf5=/path/to/hdf5
-    $ python setup.py configure --hdf5-version=X.Y.Z
-    $ python setup.py configure --mpi
-
-Note the ``--hdf5-version`` option is generally not needed, as h5py
-auto-detects the installed version of HDF5 (even for custom locations).
-
-Once set, build options apply to all future builds in the source directory.
-You can reset to the defaults with the ``--reset`` option::
-
-    $ python setup.py configure --reset
-
-You can also configure h5py using environment variables.  This is handy
-when installing via ``pip``, as you don't have direct access to setup.py::
+You can specify build options for h5py as environment variables when you build
+it from source::
 
     $ HDF5_DIR=/path/to/hdf5 pip install --no-binary=h5py h5py
     $ HDF5_VERSION=X.Y.Z pip install --no-binary=h5py h5py
     $ CC="mpicc" HDF5_MPI="ON" HDF5_DIR=/path/to/parallel-hdf5 pip install --no-binary=h5py h5py
 
-Here's a list of all the configure options currently supported:
+The supported build options are::
 
-=========================== ====================================== ===========================
-Option                      Via setup.py                           Via environment variable
-=========================== ====================================== ===========================
-Custom path to HDF5         ``--hdf5=/path/to/hdf5``               ``HDF5_DIR=/path/to/hdf5``
-Force HDF5 version          ``--hdf5-version=X.Y.Z``               ``HDF5_VERSION=X.Y.Z``
-Enable MPI mode             ``--mpi``                              ``HDF5_MPI=ON``
-Custom HDF5 include path    ``--hdf5-includedir=/path/to/headers`` ``HDF5_INCLUDEDIR=/path/to/headers``
-Custom HDF5 library path    ``--hdf5-libdir=/path/to/lib``         ``HDF5_LIBDIR=/path/to/lib``
-Custom HDF5 pkg-config name ``--hdf5-pkgconfig-name=hdf5``         ``HDF5_PKGCONFIG_NAME=hdf5``
-=========================== ====================================== ===========================
+- To specify where to find HDF5, use one of these options:
+
+  - ``HDF5_LIBDIR`` and ``HDF5_INCLUDEDIR``: the directory containing the
+    compiled HDF5 libraries and the directory containing the C header files,
+    respectively.
+  - ``HDF5_DIR``: a shortcut for common installations, a directory with ``lib``
+    and ``include`` subdirectories containing compiled libraries and C headers.
+  - ``HDF5_PKGCONFIG_NAME``: A name to query ``pkg-config`` for.
+    If none of these options are specified, h5py will query ``pkg-config`` by
+    default for ``hdf5``, or ``hdf5-openmpi`` if building with MPI support.
+
+- ``HDF5_MPI=ON`` to build with MPI integration - see :ref:`build_mpi`.
+- ``HDF5_VERSION`` to force a specified HDF5 version. In most cases, you don't
+  need to set this; the version number will be detected from the HDF5 library.
 
 .. _build_mpi:
 
@@ -199,19 +188,12 @@ HDF5 features in h5py itself::
     $ pip install --no-binary=h5py h5py
 
 If you want access to the full Parallel HDF5 feature set in h5py
-(:ref:`parallel`), you will further have to build in MPI mode.  This can either
-be done with command-line options from the h5py tarball or by::
-
-    $ export HDF5_MPI="ON"
-
-**You will need a shared-library build of Parallel HDF5 (i.e. built with
-./configure --enable-shared --enable-parallel).**
-
-To build in MPI mode, use the ``--mpi`` option to ``setup.py configure`` or
-export ``HDF5_MPI="ON"`` beforehand::
+(:ref:`parallel`), you will further have to build in MPI mode. This can be done
+by setting the ``HDF5_MPI`` environment variable::
 
     $ export CC=mpicc
     $ export HDF5_MPI="ON"
     $ pip install --no-binary=h5py h5py
 
-See also :ref:`parallel`.
+You will need a shared-library build of Parallel HDF5 as well, i.e. built with
+``./configure --enable-shared --enable-parallel``.
