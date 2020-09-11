@@ -99,10 +99,6 @@ or, from a tarball or git :ref:`checkout <git_checkout>` ::
 
     $ pip install -v .
 
-or ::
-
-    $ python setup.py install
-
 If you are working on a development version and the underlying cython files change
 it may be necessary to force a full rebuild.  The easiest way to achieve this is ::
 
