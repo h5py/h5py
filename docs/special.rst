@@ -91,11 +91,6 @@ For example, you can create a "ragged" array of integers::
     >>> dset[0] = [1,2,3]
     >>> dset[1] = [1,2,3,4,5]
 
-But unfortunately, NumPy in particular has no real support for "ragged" array, so
-everything is workarounds. The `awkward-array <https://github.com/scikit-hep/awkward-array>`_
-package has some functionality built on top of h5py for saving ragged array as HDF5
-datasets.
-
 Single elements are read as NumPy arrays::
 
     >>> dset[0]
