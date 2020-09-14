@@ -1526,6 +1526,20 @@ class TestVlen(BaseDataset):
         np_dt = np.float64
         self._help_float_testing(np_dt)
 
+    def test_non_contiguous_arrays(self):
+        """Test that non-contiguous arrays are stored correctly"""
+        self.f.create_dataset('nc', (10,), dtype=h5py.vlen_dtype('bool'))
+        x = np.array([True, False, True, True, False, False, False])
+        self.f['nc'][0] = x[::2]
+
+        assert all(self.f['nc'][0] == x[::2]), f"{self.f['nc'][0]} != {x[::2]}"
+
+        self.f.create_dataset('nc2', (10,), dtype=h5py.vlen_dtype('int8'))
+        y = np.array([2, 4, 1, 5, -1, 3, 7])
+        self.f['nc2'][0] = y[::2]
+
+        assert all(self.f['nc2'][0] == y[::2]), f"{self.f['nc2'][0]} != {y[::2]}"
+
 
 class TestLowOpen(BaseDataset):
 
