@@ -1,4 +1,5 @@
 ..  -*- rst -*-
+.. _benchmark:
 
 ================
 H5Py benchmarks
