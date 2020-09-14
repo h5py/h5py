@@ -172,4 +172,3 @@ class SlicingBenchmark:
         logger.info("Time for %s-threaded reading %sx%s slices: %.3fs fps: %.3f "%(nthreads, self.ndim, nb_read, dt, self.ndim*nb_read/dt) +
                     "Uncompressed data read speed %.3f MB/s"%(self.ndim*nb_read*self.needed_memory/dt/1e6))
         return dt
-

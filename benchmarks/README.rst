@@ -14,7 +14,7 @@ Usage
 
 Airspeed Velocity(asv)is a tool for benchmarking Python packages
 over their lifetime. The latest released version can be installed
-from PyPI using:: 
+from PyPI using::
 
     pip install asv
 
