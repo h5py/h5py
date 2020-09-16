@@ -16,7 +16,7 @@ Exposing HDF5 functions
 Bug fixes
 ---------
 
-* Correctly store non-contiguous arrays, such as numpy slices.
+* Fix the storage of non-contiguous arrays, such as numpy slices, as HDF5 vlen data.
   Resolves https://github.com/h5py/h5py/issues/1649
 
 Building h5py
