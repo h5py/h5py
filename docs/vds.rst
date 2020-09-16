@@ -86,7 +86,7 @@ found in the examples folder:
 Reference
 ---------
 
-.. class:: VirtualLayout(shape, dtype=None, maxshape=None)
+.. class:: VirtualLayout(shape, dtype, maxshape=None)
 
    Object for building a virtual dataset.
 

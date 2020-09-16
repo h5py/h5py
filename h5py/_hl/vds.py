@@ -122,7 +122,7 @@ class VirtualLayout(object):
         The virtual dataset is resizable up to this shape. Use None for
         axes you want to be unlimited.
     """
-    def __init__(self, shape, dtype=None, maxshape=None):
+    def __init__(self, shape, dtype, maxshape=None):
         self.shape = (shape,) if isinstance(shape, int) else shape
         self.dtype = dtype
         self.maxshape = (maxshape,) if isinstance(maxshape, int) else maxshape
