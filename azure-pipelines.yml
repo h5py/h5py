@@ -95,10 +95,8 @@ jobs:
     vmImage: ubuntu-16.04
 
   variables:
-    HDF5_VERSION: 1.12.0
-    HDF5_DIR: /usr/local
     CIBW_BUILD: cp3[678]-manylinux_x86_64
-    CIBW_BEFORE_BUILD: bash ci/travis/get_hdf5_if_needed.sh
+    CIBW_BEFORE_BUILD: HDF5_VERSION=1.12.0 HDF5_DIR=/usr/local bash ci/travis/get_hdf5_if_needed.sh
 
   steps:
     - template: ci/azure-pipelines-wheels.yml
