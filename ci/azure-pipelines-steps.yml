@@ -81,7 +81,8 @@ steps:
   displayName: 'codecov'
 
 - script: |
-    cibuildwheel --print-build-identifiers --output-dir wheelhouse .
+    cibuildwheel --print-build-identifiers
+    cibuildwheel --output-dir wheelhouse .
   condition: and(succeeded(), ne(variables['CIBW_BUILD'], ''))
 - task: PublishBuildArtifacts@1
   inputs: {pathtoPublish: 'wheelhouse'}
