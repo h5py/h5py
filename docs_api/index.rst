@@ -24,6 +24,7 @@ Contents
     h5a
     h5ac
     h5d
+    h5ds
     h5f
     h5fd
     h5g
