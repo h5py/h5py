@@ -2,6 +2,7 @@
 ./_sources/h5a.rst.txt
 ./_sources/h5ac.rst.txt
 ./_sources/h5d.rst.txt
+./_sources/h5ds.rst.txt
 ./_sources/h5f.rst.txt
 ./_sources/h5fd.rst.txt
 ./_sources/h5g.rst.txt
@@ -35,6 +36,7 @@
 ./h5a.html
 ./h5ac.html
 ./h5d.html
+./h5ds.html
 ./h5f.html
 ./h5fd.html
 ./h5g.html

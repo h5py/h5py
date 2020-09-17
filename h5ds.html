@@ -1,0 +1,169 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Module H5DS &#8212; Low-level API for h5py (v2.10.0)</title>
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Module H5F" href="h5f.html" />
+    <link rel="prev" title="Module H5D" href="h5d.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="h5f.html" title="Module H5F"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="h5d.html" title="Module H5D"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Low-level API for h5py (v2.10.0)</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Module H5DS</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-h5py.h5ds">
+<span id="module-h5ds"></span><h1>Module H5DS<a class="headerlink" href="#module-h5py.h5ds" title="Permalink to this headline">¶</a></h1>
+<p>Low-level HDF5 “<code class="xref py py-data docutils literal notranslate"><span class="pre">H5DS</span></code>” Dimension Scale interface.</p>
+<dl class="py function">
+<dt id="h5py.h5ds.attach_scale">
+<code class="sig-prename descclassname">h5py.h5ds.</code><code class="sig-name descname">attach_scale</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5ds.attach_scale" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="h5py.h5ds.detach_scale">
+<code class="sig-prename descclassname">h5py.h5ds.</code><code class="sig-name descname">detach_scale</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5ds.detach_scale" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="h5py.h5ds.get_label">
+<code class="sig-prename descclassname">h5py.h5ds.</code><code class="sig-name descname">get_label</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5ds.get_label" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="h5py.h5ds.get_num_scales">
+<code class="sig-prename descclassname">h5py.h5ds.</code><code class="sig-name descname">get_num_scales</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5ds.get_num_scales" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="h5py.h5ds.get_scale_name">
+<code class="sig-prename descclassname">h5py.h5ds.</code><code class="sig-name descname">get_scale_name</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5ds.get_scale_name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="h5py.h5ds.is_attached">
+<code class="sig-prename descclassname">h5py.h5ds.</code><code class="sig-name descname">is_attached</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5ds.is_attached" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="h5py.h5ds.is_scale">
+<code class="sig-prename descclassname">h5py.h5ds.</code><code class="sig-name descname">is_scale</code><span class="sig-paren">(</span><em class="sig-param">DatasetID dset</em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5ds.is_scale" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determines whether dset is a dimension scale.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="h5py.h5ds.iterate">
+<code class="sig-prename descclassname">h5py.h5ds.</code><code class="sig-name descname">iterate</code><span class="sig-paren">(</span><em class="sig-param">DatasetID loc</em>, <em class="sig-param">UINT dim</em>, <em class="sig-param">CALLABLE func</em>, <em class="sig-param">UINT startidx=0</em><span class="sig-paren">)</span> &#x2192; Return value from func<a class="headerlink" href="#h5py.h5ds.iterate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Iterate a callable (function, method or callable object) over the
+members of a group.  Your callable should have the signature:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">func</span><span class="p">(</span><span class="n">STRING</span> <span class="n">name</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="n">Result</span>
+</pre></div>
+</div>
+<p>Returning None continues iteration; returning anything else aborts
+iteration and returns that value. Keywords:</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="h5py.h5ds.set_label">
+<code class="sig-prename descclassname">h5py.h5ds.</code><code class="sig-name descname">set_label</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5ds.set_label" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="h5py.h5ds.set_scale">
+<code class="sig-prename descclassname">h5py.h5ds.</code><code class="sig-name descname">set_scale</code><span class="sig-paren">(</span><em class="sig-param">DatasetID dset</em>, <em class="sig-param">STRING dimname</em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5ds.set_scale" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert dataset dset to a dimension scale, with optional name dimname.</p>
+</dd></dl>
+
+</div>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="h5d.html"
+                        title="previous chapter">Module H5D</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="h5f.html"
+                        title="next chapter">Module H5F</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/h5ds.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="h5f.html" title="Module H5F"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="h5d.html" title="Module H5D"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Low-level API for h5py (v2.10.0)</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Module H5DS</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2014, Andrew Collette and contributors.
+      Last updated on Sep 17, 2020.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.2.1.
+    </div>
+  </body>
+</html>

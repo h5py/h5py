@@ -48,6 +48,8 @@
 <p>File driver constants (H5FD*).</p>
 <div class="section" id="module-constants">
 <h2>Module constants<a class="headerlink" href="#module-constants" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="memory-usage-types-for-multi-file-driver">
+<h3>Memory usage types for MULTI file driver<a class="headerlink" href="#memory-usage-types-for-multi-file-driver" title="Permalink to this headline">¶</a></h3>
 <dl class="py data">
 <dt id="h5py.h5fd.MEM_DEFAULT">
 <code class="sig-prename descclassname">h5py.h5fd.</code><code class="sig-name descname">MEM_DEFAULT</code><a class="headerlink" href="#h5py.h5fd.MEM_DEFAULT" title="Permalink to this definition">¶</a></dt>
@@ -88,8 +90,22 @@
 <code class="sig-prename descclassname">h5py.h5fd.</code><code class="sig-name descname">MEM_NTYPES</code><a class="headerlink" href="#h5py.h5fd.MEM_NTYPES" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<div class="section" id="file-drivers">
-<h3>File drivers<a class="headerlink" href="#file-drivers" title="Permalink to this headline">¶</a></h3>
+</div>
+<div class="section" id="data-transfer-modes-for-mpio-driver">
+<h3>Data transfer modes for MPIO driver<a class="headerlink" href="#data-transfer-modes-for-mpio-driver" title="Permalink to this headline">¶</a></h3>
+<dl class="py data">
+<dt id="h5py.h5fd.MPIO_INDEPENDENT">
+<code class="sig-prename descclassname">h5py.h5fd.</code><code class="sig-name descname">MPIO_INDEPENDENT</code><a class="headerlink" href="#h5py.h5fd.MPIO_INDEPENDENT" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt id="h5py.h5fd.MPIO_COLLECTIVE">
+<code class="sig-prename descclassname">h5py.h5fd.</code><code class="sig-name descname">MPIO_COLLECTIVE</code><a class="headerlink" href="#h5py.h5fd.MPIO_COLLECTIVE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="file-drivers-types">
+<h3>File drivers types<a class="headerlink" href="#file-drivers-types" title="Permalink to this headline">¶</a></h3>
 <dl class="py data">
 <dt id="h5py.h5fd.CORE">
 <code class="sig-prename descclassname">h5py.h5fd.</code><code class="sig-name descname">CORE</code><a class="headerlink" href="#h5py.h5fd.CORE" title="Permalink to this definition">¶</a></dt>
@@ -252,7 +268,9 @@
   <ul>
 <li><a class="reference internal" href="#">Module H5FD</a><ul>
 <li><a class="reference internal" href="#module-constants">Module constants</a><ul>
-<li><a class="reference internal" href="#file-drivers">File drivers</a></li>
+<li><a class="reference internal" href="#memory-usage-types-for-multi-file-driver">Memory usage types for MULTI file driver</a></li>
+<li><a class="reference internal" href="#data-transfer-modes-for-mpio-driver">Data transfer modes for MPIO driver</a></li>
+<li><a class="reference internal" href="#file-drivers-types">File drivers types</a></li>
 <li><a class="reference internal" href="#logging-driver-settings">Logging driver settings</a></li>
 </ul>
 </li>
