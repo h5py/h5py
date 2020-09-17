@@ -96,7 +96,7 @@ jobs:
 
   variables:
     CIBW_BUILD: cp3[678]-manylinux_x86_64
-    CIBW_BEFORE_BUILD: HDF5_VERSION=1.12.0 HDF5_DIR=/usr/local bash ci/travis/get_hdf5_if_needed.sh
+    CIBW_MANYLINUX_X86_64_IMAGE: docker.io/takluyver/manylinux_2010_hdf5_x86_64
 
   steps:
     - template: ci/azure-pipelines-wheels.yml
