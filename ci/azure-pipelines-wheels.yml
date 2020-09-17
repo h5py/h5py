@@ -1,0 +1,20 @@
+steps:
+
+- task: UsePythonVersion@0
+  inputs:
+    versionSpec: '3.8'
+    architecture: 'x64'
+
+- script: |
+    python -m pip install --upgrade pip
+    pip install cibuildwheel==1.6.0
+  displayName: 'Install cibuildwheel'
+
+- script: env
+  displayName: 'print env'
+
+- script: |
+    cibuildwheel --print-build-identifiers
+    cibuildwheel --output-dir wheelhouse .
+- task: PublishBuildArtifacts@1
+  inputs: {pathtoPublish: 'wheelhouse'}

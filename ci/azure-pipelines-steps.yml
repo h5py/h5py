@@ -80,10 +80,3 @@ steps:
     arguments: --codecov-token 813fb6da-087d-4b36-a185-5a530cab3455
   displayName: 'codecov'
 
-- script: |
-    cibuildwheel --print-build-identifiers
-    cibuildwheel --output-dir wheelhouse .
-  condition: and(succeeded(), ne(variables['CIBW_BUILD'], ''))
-- task: PublishBuildArtifacts@1
-  inputs: {pathtoPublish: 'wheelhouse'}
-  condition: and(succeeded(), ne(variables['CIBW_BUILD'], ''))
