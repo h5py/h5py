@@ -6,8 +6,8 @@ Module H5FD
 Module constants
 ----------------
 
-Multi-file drivers
-~~~~~~~~~~~~~~~~~~
+Memory usage types for MULTI file driver
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. data:: MEM_DEFAULT
 .. data:: MEM_SUPER
@@ -19,8 +19,8 @@ Multi-file drivers
 .. data:: MEM_NTYPES
 
 
-MPI drivers
-~~~~~~~~~~~
+Data transfer modes for MPIO driver
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. data:: MPIO_INDEPENDENT
 .. data:: MPIO_COLLECTIVE
