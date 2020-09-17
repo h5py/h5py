@@ -169,6 +169,7 @@ jobs:
         HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
         HDF5_VSVERSION: "15-64"
         H5PY_ENFORCE_COVERAGE: yes
+        CIBW_BUILD: cp38-win_amd64
     maxParallel: 4
 
   steps:
