@@ -24,7 +24,6 @@ recursive-include h5py/tests *.h5
 
 recursive-include licenses *
 recursive-include lzf *
-recursive-include windows *
 
 recursive-exclude * .DS_Store
 
@@ -32,7 +31,6 @@ exclude ci other .github
 recursive-exclude ci *
 recursive-exclude other *
 recursive-exclude .github *
-exclude pavement.py
 exclude *.yml
 exclude *.yaml
 recursive-exclude * __pycache__
