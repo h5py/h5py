@@ -96,7 +96,7 @@ jobs:
 
   variables:
     CIBW_BUILD: cp3[678]-manylinux_x86_64
-    CIBW_MANYLINUX_X86_64_IMAGE: docker.io/takluyver/manylinux_2010_hdf5_x86_64
+    CIBW_MANYLINUX_X86_64_IMAGE: docker.io/h5py/manylinux_2010_x86_64-hdf5
 
   steps:
     - template: ci/azure-pipelines-wheels.yml
