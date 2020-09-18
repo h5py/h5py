@@ -111,6 +111,7 @@ jobs:
     - task: DownloadBuildArtifacts@0
       inputs:
         artifactName: manylinux_wheels
+        downloadPath: $(System.DefaultWorkingDirectory)
     - script: |
         ls
 
