@@ -119,7 +119,7 @@ jobs:
     - script: |
         python -m pip install --upgrade pip
         pip install tox codecov
-    - displayName: Install tox
+      displayName: Install tox
     - script: |
         ls manylinux_wheels/
         tox -e py38-test-deps --installpackage manylinux_wheels/h5py-2.10.0-cp38-cp38-manylinux1_x86_64.whl
