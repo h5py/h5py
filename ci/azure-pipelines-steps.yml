@@ -36,22 +36,22 @@ steps:
       echo ##vso[task.prependpath]$(build.BinariesDirectory)\zlib-msvc14-x64\build\native\bin_release
       echo ##vso[task.setvariable variable=CL]/I$(build.BinariesDirectory)\libpng-msvc14-x64\build\native\include /I$(build.BinariesDirectory)\zlib-msvc14-x64\build\native\include
       echo ##vso[task.setvariable variable=LINK]/LIBPATH:$(build.BinariesDirectory)\libpng-msvc14-x64\build\native\lib_release /LIBPATH:$(build.BinariesDirectory)\zlib-msvc14-x64\build\native\lib_release
-    displayName: 'Install dependencies with nuget'
+    displayName: 'Install nuget dependencies'
 - ${{ if eq(parameters.installer, 'brew') }}:
   - script: |
       brew install pkg-config hdf5@1.10 ccache open-mpi
       brew link --force hdf5@1.10
-    displayName: 'Install dependencies with brew'
+    displayName: 'Install brew dependencies'
 - ${{ if eq(parameters.installer, 'apt') }}:
   - script: |
       sudo apt-get update
       sudo apt-get install libhdf5-serial-dev ccache openmpi-bin libopenmpi-dev
-    displayName: 'Install dependencies with apt'
+    displayName: 'Install apt dependencies'
 
 - script: |
     python -m pip install --upgrade pip
     pip install tox codecov cibuildwheel==1.6.0
-  displayName: 'Install dependencies with pip'
+  displayName: 'Install pip dependencies'
 
 - script: env
   displayName: 'print env'
