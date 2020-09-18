@@ -101,6 +101,20 @@ jobs:
   steps:
     - template: ci/azure-pipelines-wheels.yml
 
+- job: 'test_linux_wheels'
+  pool:
+    vmImage: ubuntu-16.04
+  dependsOn: linux_wheels
+
+  steps:
+    - checkout: none
+    - task: DownloadBuildArtifacts@2
+      inputs:
+        artifactName: manylinux_wheels
+    - script: |
+        ls
+
+
 - job: 'Windows'
   pool:
     vmImage: vs2017-win2016

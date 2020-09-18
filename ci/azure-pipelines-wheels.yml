@@ -17,4 +17,6 @@ steps:
     cibuildwheel --print-build-identifiers
     cibuildwheel --output-dir wheelhouse .
 - task: PublishBuildArtifacts@1
-  inputs: {pathtoPublish: 'wheelhouse'}
+  inputs:
+    pathtoPublish: 'wheelhouse'
+    artifact: manylinux_wheels
