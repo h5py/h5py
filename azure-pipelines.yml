@@ -121,7 +121,6 @@ jobs:
   dependsOn: linux_wheels
 
   steps:
-    - checkout: none
     - task: DownloadBuildArtifacts@0
       inputs:
         artifactName: manylinux_wheels
