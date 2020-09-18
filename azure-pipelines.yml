@@ -7,15 +7,29 @@ variables:
 
 jobs:
 
+- job: 'static_checks'
+  pool:
+    vmImage: ubuntu-16.04
+  variables:
+    TOXENV: docs,checkreadme,pre-commit,rever
+
+  steps:
+    - task: UsePythonVersion@0
+      inputs:
+        versionSpec: '3.8'
+        architecture: 'x64'
+    - script: |
+        pip install tox
+      displayName: Install tox
+    - script: |
+        tox
+      displayName: tox
+
 - job: 'ubuntu1604'
   pool:
     vmImage: ubuntu-16.04
   strategy:
     matrix:
-    # system independent tests
-      static-checks:
-        TOXENV: docs,checkreadme,pre-commit,rever
-        python.version: '3.6'
       # -deps : test with default (latest) versions of dependencies
       # -mindeps : test with oldest supported version of (python) dependencies
       # -deps-pre : test pre-release versions of (python) dependencies)
