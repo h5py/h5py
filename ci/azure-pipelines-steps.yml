@@ -47,6 +47,8 @@ steps:
       sudo apt-get update
       sudo apt-get install libhdf5-serial-dev ccache openmpi-bin libopenmpi-dev
     displayName: 'Install apt dependencies'
+    # If HDF5_DIR is specified, HDF5 is built from source, so don't get it from apt
+    condition: and(succeeded(), eq(variables['HDF5_DIR'], ''))
 
 - script: |
     python -m pip install --upgrade pip
