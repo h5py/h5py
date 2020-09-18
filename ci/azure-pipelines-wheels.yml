@@ -19,4 +19,4 @@ steps:
 - task: PublishBuildArtifacts@1
   inputs:
     pathtoPublish: 'wheelhouse'
-    artifact: manylinux_wheels
+    artifactName: manylinux_wheels
