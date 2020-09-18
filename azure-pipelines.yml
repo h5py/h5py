@@ -108,7 +108,7 @@ jobs:
 
   steps:
     - checkout: none
-    - task: DownloadBuildArtifacts@2
+    - task: DownloadPipelineArtifacts@2
       inputs:
         artifactName: manylinux_wheels
     - script: |
