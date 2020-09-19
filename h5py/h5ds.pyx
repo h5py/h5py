@@ -37,28 +37,54 @@ def is_scale(DatasetID dset not None):
 @with_phil
 def attach_scale(DatasetID dset not None, DatasetID dscale not None, unsigned
                  int idx):
+    """(DatasetID dset, DatasetID dscale, UINT idx)
+
+    Attach Dimension Scale dscale to Dimension idx of Dataset dset.
+    """
     H5DSattach_scale(dset.id, dscale.id, idx)
 
 @with_phil
 def is_attached(DatasetID dset not None, DatasetID dscale not None,
                 unsigned int idx):
+    """(DatasetID dset, DatasetID dscale, UINT idx)
+
+    Report if Dimension Scale dscale is currently attached to Dimension
+    idx of Dataset dset.
+    """
     return <bint>(H5DSis_attached(dset.id, dscale.id, idx))
 
 @with_phil
 def detach_scale(DatasetID dset not None, DatasetID dscale not None,
                  unsigned int idx):
+    """(DatasetID dset, DatasetID dscale, UINT idx)
+
+    Detach Dimension Scale dscale from the Dimension idx of Dataset dset.
+    """
     H5DSdetach_scale(dset.id, dscale.id, idx)
 
 @with_phil
 def get_num_scales(DatasetID dset not None, unsigned int dim):
+    """(DatasetID dset, UINT dim) => INT number_of_scales
+
+    Determines how many Dimension Scales are attached to Dimension dim
+    of Dataset dset.
+    """
     return H5DSget_num_scales(dset.id, dim)
 
 @with_phil
 def set_label(DatasetID dset not None, unsigned int idx, char* label):
+    """(DatasetID dset, UINT idx, STRING label)
+
+    Set label for the Dimension idx of Dataset dset to the value label.
+    """
     H5DSset_label(dset.id, idx, label)
 
 @with_phil
 def get_label(DatasetID dset not None, unsigned int idx):
+    """(DatasetID dset, UINT idx) => STRING name_of_label
+
+    Read the label for Dimension idx of Dataset dset into buffer label.
+    """
     cdef ssize_t size
     cdef char* label
     label = NULL
@@ -76,6 +102,10 @@ def get_label(DatasetID dset not None, unsigned int idx):
 
 @with_phil
 def get_scale_name(DatasetID dscale not None):
+    """(DatasetID dscale) => STRING name_of_scale
+
+    Retrieves name of Dimension Scale dscale into buffer name.
+    """
     cdef ssize_t namelen
     cdef char* name = NULL
 
