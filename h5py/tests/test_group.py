@@ -877,12 +877,16 @@ class TestCopy(TestCase):
     def test_copy_dataset(self):
         self.f1['foo'] = [1,2,3]
         foo = self.f1['foo']
+        grp = self.f1.create_group("grp")
 
         self.f1.copy(foo, 'bar')
         self.assertArrayEqual(self.f1['bar'], np.array([1,2,3]))
 
         self.f1.copy('foo', 'baz')
         self.assertArrayEqual(self.f1['baz'], np.array([1,2,3]))
+
+        self.f1.copy(foo, grp)
+        self.assertArrayEqual(self.f1['/grp/grp'], np.array([1,2,3]))
 
         self.f1.copy('foo', self.f2)
         self.assertArrayEqual(self.f2['foo'], np.array([1,2,3]))

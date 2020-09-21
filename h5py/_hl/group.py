@@ -499,7 +499,10 @@ class Group(HLObject, MutableMappingHDF5):
                     dest_path = name
                 else:
                     # copy source into dest group: dest_name/source_name
-                    dest_path = pp.basename(h5i.get_name(source[source_path].id))
+                    if isinstance(source, dataset.Dataset):
+                        dest_path = pp.basename(h5i.get_name(dest.id))
+                    else:
+                        dest_path = pp.basename(h5i.get_name(source[source_path].id))
 
             elif isinstance(dest, HLObject):
                 raise TypeError("Destination must be path or Group object")
