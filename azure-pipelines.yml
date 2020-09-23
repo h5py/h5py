@@ -161,8 +161,8 @@ stages:
             pip install tox codecov
           displayName: Install tox
         - script: |
-            ls manylinux_wheels/
-            tox -e py38-test-deps --installpkg manylinux_wheels/h5py-2.10.0-cp38-cp38-manylinux1_x86_64.whl
+            ls linux_wheels/
+            tox -e py38-test-deps --installpkg linux_wheels/h5py-2.10.0-cp38-cp38-manylinux1_x86_64.whl
 
 
 
