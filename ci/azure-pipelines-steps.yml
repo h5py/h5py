@@ -87,5 +87,7 @@ steps:
     cibuildwheel --output-dir wheelhouse .
   condition: and(succeeded(), ne(variables['CIBW_BUILD'], ''))
 - task: PublishBuildArtifacts@1
-  inputs: {pathtoPublish: 'wheelhouse'}
+  inputs:
+    pathtoPublish: 'wheelhouse'
+    artifactName: ${{ platform }}_wheels
   condition: and(succeeded(), ne(variables['CIBW_BUILD'], ''))
