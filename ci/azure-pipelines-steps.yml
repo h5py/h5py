@@ -81,14 +81,3 @@ steps:
     scriptPath: 'ci/upload_coverage.py'
     arguments: --codecov-token 813fb6da-087d-4b36-a185-5a530cab3455
   displayName: 'codecov'
-
-- script: |
-    cibuildwheel --print-build-identifiers
-    cibuildwheel --output-dir wheelhouse .
-    python ci/bundle_hdf5_whl.py wheelhouse
-  condition: and(succeeded(), ne(variables['CIBW_BUILD'], ''))
-- task: PublishBuildArtifacts@1
-  inputs:
-    pathtoPublish: 'wheelhouse'
-    artifactName: ${{ parameters.platform }}_wheels
-  condition: and(succeeded(), ne(variables['CIBW_BUILD'], ''))

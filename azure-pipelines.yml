@@ -247,8 +247,6 @@ stages:
     - job: 'macOS1015'
       pool:
         vmImage: macOS-10.15
-      variables:
-        CIBW_ENVIRONMENT: "HDF5_DIR='/usr/local'"
       strategy:
         matrix:
           # -deps : test with default (latest) versions of dependencies
@@ -258,17 +256,14 @@ stages:
             python.version: '3.6'
             TOXENV: py36-test-deps,py36-test-mindeps,py36-test-deps-pre
             H5PY_ENFORCE_COVERAGE: yes
-            CIBW_BUILD: cp36-macosx_x86_64
           py37:
             python.version: '3.7'
             TOXENV: py37-test-deps,py37-test-mindeps,py37-test-deps-pre
             H5PY_ENFORCE_COVERAGE: yes
-            CIBW_BUILD: cp37-macosx_x86_64
           py38:
             python.version: '3.8'
             TOXENV: py38-test-deps,py38-test-mindeps,py38-test-deps-pre
             H5PY_ENFORCE_COVERAGE: yes
-            CIBW_BUILD: cp38-macosx_x86_64
         # test against newer HDF5
     #      py36-deps-hdf51103:
     #        python.version: '3.6'
