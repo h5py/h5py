@@ -29,6 +29,7 @@ stages:
       pool:
         vmImage: ubuntu-16.04
       variables:
+        python.version: '3.8'
         CIBW_BUILD: cp3[678]-manylinux_x86_64
         CIBW_MANYLINUX_X86_64_IMAGE: docker.io/h5py/manylinux2010_x86_64-hdf5
       steps:
