@@ -57,7 +57,7 @@ stages:
             HDF5_VSVERSION: "15-64"
             CIBW_BUILD: cp38-win_amd64
       steps:
-        - template: ci/azure-pipelines-wheel.yml
+        - template: ci/azure-pipelines-wheels.yml
           parameters:
             platform: windows
 
@@ -82,7 +82,7 @@ stages:
             CIBW_BUILD: cp38-macosx_x86_64
 
       steps:
-        - template: ci/azure-pipelines-wheel.yml
+        - template: ci/azure-pipelines-wheels.yml
           parameters:
             platform: macos
 
