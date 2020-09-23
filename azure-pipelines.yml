@@ -158,7 +158,7 @@ stages:
           py37:
             python.version: '3.7'
             TOXENV: py37-test-deps,py37-test-mindeps,py37-test-deps-pre,py37-test-deps-tables
-            WHL_TAG: 'cp38'
+            WHL_TAG: 'cp37'
           py38:
             python.version: '3.8'
             TOXENV: py38-test-deps,py38-test-mindeps,py38-test-deps-pre
