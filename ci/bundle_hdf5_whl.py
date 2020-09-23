@@ -4,10 +4,14 @@ This is meant to do something like auditwheel on Linux & delocate on Mac,
 but h5py-specific.
 """
 from base64 import urlsafe_b64encode
+from contextlib import contextmanager
 from glob import glob
 import hashlib
 import os
+import os.path as osp
+import shutil
 import sys
+import tempfile
 from zipfile import ZipFile, ZIP_DEFLATED
 
 def find_dlls():
@@ -28,28 +32,47 @@ def file_sha256(path):
 
 def find_wheels():
     wheelhouse_dir = sys.argv[1]
-    return glob(os.path.join(wheelhouse_dir, '*.whl'))
+    return glob(osp.join(wheelhouse_dir, '*.whl'))
+
+@contextmanager
+def modify_zip(zip_file):
+    with tempfile.TemporaryDirectory() as td:
+        with ZipFile(zip_file, 'r') as zf:
+            zf.extractall(path=td)
+        yield td
+
+        with ZipFile(zip_file, 'w', compression=ZIP_DEFLATED) as zf:
+            for root, dirs, files in os.walk(td):
+                for f in sorted(files):
+                    path = osp.join(root, f)
+                    zf.write(path, arcname=osp.relpath(path, td))
+
+                dirs.sort()
 
 def bundle(whl_file):
     print("Adding DLLs to", whl_file)
 
-    with ZipFile(whl_file, 'a', compression=ZIP_DEFLATED) as zf:
-        record_zinfos = {zi for zi in zf.infolist() if zi.filename.endswith('RECORD')}
-        assert len(record_zinfos) == 1, record_zinfos
-        record_zinfo = record_zinfos.pop()
-        record = zf.read(record_zinfo).strip() + b'\n'
+    with modify_zip(whl_file) as td:
+        # Find & read RECORD file
+        records = glob(osp.join(td, '*.dist-info', 'RECORD'))
+        assert len(records) == 1, records
+        record_f = records[0]
+        with open(record_f, encoding='utf-8') as f:
+            record = f.read().strip() + '\n'
 
+        # Copy DLLs & add them to RECORD
         for dll in find_dlls():
             size = os.stat(dll).st_size
             sha = file_sha256(dll)
             dest = 'h5py/' + os.path.basename(dll)
             print(f"{dest} ({size} bytes)")
-            zf.write(dll, dest)
+            shutil.copy2(dll, osp.join(td, dest))
 
-            record += f'{dest},sha256={sha},{size}\n'.encode('utf-8')
+            record += f'{dest},sha256={sha},{size}\n'
 
-        print("Writing modified", record_zinfo.filename)
-        zf.writestr(record_zinfo, record)
+        print("Writing modified", record_f)
+        with open(record_f, 'w', encoding='utf-8') as f:
+            f.write(record)
 
 
 def main():
