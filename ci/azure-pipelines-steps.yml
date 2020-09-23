@@ -89,5 +89,5 @@ steps:
 - task: PublishBuildArtifacts@1
   inputs:
     pathtoPublish: 'wheelhouse'
-    artifactName: ${{ platform }}_wheels
+    artifactName: ${{ parameters.platform }}_wheels
   condition: and(succeeded(), ne(variables['CIBW_BUILD'], ''))
