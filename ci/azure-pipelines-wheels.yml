@@ -1,9 +1,37 @@
 steps:
 
+- task: CacheBeta@0
+  displayName: HDF5 cache
+  inputs:
+    # The key should specify enough to avoid restoring an incompatible build.
+    # HDF5_VSVERSION is only for Windows - it's just a fixed string elsewhere.
+    key: HDF5 | "$(Agent.OS)" | "${{ parameters.vmImage }}" | "$(HDF5_VERSION)" | "$(HDF5_VSVERSION)"
+    path: $(HDF5_CACHE_DIR)
+  condition: and(succeeded(), ne(variables['HDF5_VERSION'], ''))
+
 - task: UsePythonVersion@0
   inputs:
-    versionSpec: '3.8'
+    versionSpec: '$(python.version)'
     architecture: 'x64'
+  displayName: 'Use Python $(python.version)'
+
+- ${{ if eq(parameters.platform, 'windows') }}:
+  - task: NuGetToolInstaller@0
+    displayName: 'Use latest Nuget'
+
+  - script: |
+      nuget install libpng-msvc14-x64 -ExcludeVersion -OutputDirectory "$(build.BinariesDirectory)"
+      nuget install zlib-msvc14-x64 -ExcludeVersion -OutputDirectory "$(build.BinariesDirectory)"
+      echo ##vso[task.prependpath]$(build.BinariesDirectory)\libpng-msvc14-x64\build\native\bin_release
+      echo ##vso[task.prependpath]$(build.BinariesDirectory)\zlib-msvc14-x64\build\native\bin_release
+      echo ##vso[task.setvariable variable=CL]/I$(build.BinariesDirectory)\libpng-msvc14-x64\build\native\include /I$(build.BinariesDirectory)\zlib-msvc14-x64\build\native\include
+      echo ##vso[task.setvariable variable=LINK]/LIBPATH:$(build.BinariesDirectory)\libpng-msvc14-x64\build\native\lib_release /LIBPATH:$(build.BinariesDirectory)\zlib-msvc14-x64\build\native\lib_release
+    displayName: 'Install nuget dependencies'
+- ${{ if eq(parameters.platform, 'macos') }}:
+  - script: |
+      brew install pkg-config hdf5@1.12 ccache open-mpi
+      brew link --force hdf5@1.12
+    displayName: 'Install brew dependencies'
 
 - script: |
     python -m pip install --upgrade pip
@@ -13,10 +41,19 @@ steps:
 - script: env
   displayName: 'print env'
 
+# On Mac, we already installed HDF5 from brew. On Linux, the wheel will be
+# built inside a Docker image which already contains HDF5.
+- ${{ if eq(parameters.platform, 'windows') }}:
+    - script: |
+        py -3.7 -m pip install requests
+        py -3.7 ci\\appveyor\\get_hdf5.py
+      displayName: 'ensure HDF5'
+
 - script: |
     cibuildwheel --print-build-identifiers
     cibuildwheel --output-dir wheelhouse .
+    python ci/bundle_hdf5_whl.py wheelhouse
 - task: PublishBuildArtifacts@1
   inputs:
     pathtoPublish: 'wheelhouse'
-    artifactName: manylinux_wheels
+    artifactName: ${{ parameters.platform }}_wheels
