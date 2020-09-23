@@ -11,9 +11,9 @@ steps:
 
 - task: UsePythonVersion@0
   inputs:
-    versionSpec: '$(python.version)'
+    versionSpec: '3.8'
     architecture: 'x64'
-  displayName: 'Use Python $(python.version)'
+  displayName: 'Use Python 3.8'
 
 - ${{ if eq(parameters.platform, 'windows') }}:
   - task: NuGetToolInstaller@0
@@ -45,8 +45,8 @@ steps:
 # built inside a Docker image which already contains HDF5.
 - ${{ if eq(parameters.platform, 'windows') }}:
     - script: |
-        py -3.7 -m pip install requests
-        py -3.7 ci\\appveyor\\get_hdf5.py
+        python -m pip install requests
+        python ci\\appveyor\\get_hdf5.py
       displayName: 'Ensure HDF5'
 
 - script: |
