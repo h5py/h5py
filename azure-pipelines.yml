@@ -150,10 +150,8 @@ stages:
         vmImage: ubuntu-16.04
 
       steps:
-        - task: DownloadBuildArtifacts@0
-          inputs:
-            artifactName: manylinux_wheels
-            downloadPath: $(System.DefaultWorkingDirectory)
+        - download: current
+          artifact: linux_wheels
         - task: UsePythonVersion@0
           inputs:
             versionSpec: '3.8'

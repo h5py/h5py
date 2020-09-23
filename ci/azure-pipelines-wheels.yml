@@ -54,8 +54,6 @@ steps:
     cibuildwheel --output-dir wheelhouse .
     python ci/bundle_hdf5_whl.py wheelhouse
   displayName: 'Build wheels'
-- task: PublishBuildArtifacts@1
-  inputs:
-    pathtoPublish: 'wheelhouse'
-    artifactName: ${{ parameters.platform }}_wheels
+- publish: $(System.DefaultWorkingDirectory)/wheelhouse
+  artifact: ${{ parameters.platform }}_wheels
   displayName: 'Publish wheels'
