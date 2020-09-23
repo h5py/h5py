@@ -6,345 +6,335 @@ variables:
   CCACHE_DIR: $(Pipeline.Workspace)/cache/ccache
 
 stages:
-  - stage: build
-    jobs:
-      - job: static_checks
-      - job: linux_wheels
-      - job: windows_wheels
-      - job: macos_wheels
-  - stage: test
-    jobs:
-      - job: ubuntu1604
-      - job: test_linux_wheels
-      - job: Windows
-      - job: macOS1015
+- stage: build
+  jobs:
+    - job: 'static_checks'
+      pool:
+        vmImage: ubuntu-16.04
+      variables:
+        TOXENV: docs,checkreadme,pre-commit,rever
+      steps:
+        - task: UsePythonVersion@0
+          inputs:
+            versionSpec: '3.8'
+            architecture: 'x64'
+        - script: |
+            pip install tox
+          displayName: Install tox
+        - script: |
+            tox
+          displayName: tox
 
-jobs:
+    - job: 'linux_wheels'
+      pool:
+        vmImage: ubuntu-16.04
+      variables:
+        CIBW_BUILD: cp3[678]-manylinux_x86_64
+        CIBW_MANYLINUX_X86_64_IMAGE: docker.io/h5py/manylinux2010_x86_64-hdf5
+      steps:
+        - template: ci/azure-pipelines-wheels.yml
+          parameters:
+            platform: linux
 
-- job: 'static_checks'
-  pool:
-    vmImage: ubuntu-16.04
-  variables:
-    TOXENV: docs,checkreadme,pre-commit,rever
-
-  steps:
-    - task: UsePythonVersion@0
-      inputs:
-        versionSpec: '3.8'
-        architecture: 'x64'
-    - script: |
-        pip install tox
-      displayName: Install tox
-    - script: |
-        tox
-      displayName: tox
-
-- job: 'ubuntu1604'
-  pool:
-    vmImage: ubuntu-16.04
-  strategy:
-    matrix:
-      # -deps : test with default (latest) versions of dependencies
-      # -mindeps : test with oldest supported version of (python) dependencies
-      # -deps-pre : test pre-release versions of (python) dependencies)
-      # -tables : also check compatibility with pytables
-      py36:
-        python.version: '3.6'
-        TOXENV: py36-test-deps,py36-test-mindeps,py36-test-deps-pre,py36-test-mindeps-tables
-        H5PY_ENFORCE_COVERAGE: yes
-      py37:
-        python.version: '3.7'
-        TOXENV: py37-test-deps,py37-test-mindeps,py37-test-deps-pre,py37-test-deps-tables
-    # test when we're not in a unicode locale
-      py36-Clocale:
-        python.version: '3.6'
-        TOXENV: py36-test-deps
-        TOX_TESTENV_PASSENV: LANG LC_ALL
-        LANG: C
-        LC_ALL: C
-        H5PY_ENFORCE_COVERAGE: yes
-    # test against newer HDF5
-      py36-deps-hdf51103:
-        python.version: '3.6'
-        TOXENV: py36-test-deps
-        HDF5_VERSION: 1.10.3
-        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
-        H5PY_ENFORCE_COVERAGE: yes
-      py37-deps-hdf51104:
-        python.version: '3.7'
-        TOXENV: py37-test-deps
-        HDF5_VERSION: 1.10.4
-        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
-        H5PY_ENFORCE_COVERAGE: yes
-      py37-deps-hdf51105:
-        python.version: '3.7'
-        TOXENV: py37-test-deps
-        HDF5_VERSION: 1.10.5
-        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
-        H5PY_ENFORCE_COVERAGE: yes
-      py38-deps-hdf51105:
-        python.version: '3.8'
-        TOXENV: py38-test-deps
-        HDF5_VERSION: 1.10.5
-        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
-        H5PY_ENFORCE_COVERAGE: yes
-      py38-deps-hdf51120:
-        python.version: '3.8'
-        TOXENV: py38-test-deps
+    - job: 'windows_wheels'
+      pool:
+        vmImage: vs2017-win2016
+      variables:
         HDF5_VERSION: 1.12.0
         HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
-        H5PY_ENFORCE_COVERAGE: yes
-    # do mpi tests
-#      py36-deps-hdf51105-mpi:
-#        python.version: '3.6'
-#        TOXENV: py36-test-mindeps-mpi4py
-#        HDF5_VERSION: 1.10.5
-#        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
-#        HDF5_MPI: ON
-#        CC: mpicc
-#      py37-deps-hdf51105-mpi:
-#        python.version: '3.7'
-#        TOXENV: py37-test-mindeps-mpi4py
-#        HDF5_VERSION: 1.10.5
-#        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
-#        HDF5_MPI: ON
-#        CC: mpicc
-    maxParallel: 4
+      strategy:
+        matrix:
+          py36-hdf5112:
+            python.version: '3.6'
+            HDF5_VSVERSION: "15-64"
+            CIBW_BUILD: cp36-win_amd64
+          py37-hdf5112:
+            python.version: '3.7'
+            HDF5_VSVERSION: "15-64"
+            CIBW_BUILD: cp37-win_amd64
+          py38-hdf5112:
+            python.version: '3.8'
+            HDF5_VSVERSION: "15-64"
+            CIBW_BUILD: cp38-win_amd64
+      steps:
+        - template: ci/azure-pipelines-wheel.yml
+          parameters:
+            platform: windows
 
-  steps:
-    - template: ci/azure-pipelines-steps.yml
-      parameters:
-        vmImage: 'ubuntu-16.04'
-        platform: linux
-        installer: apt
-        shell: unix
+    - job: 'macos_wheels'
+      pool:
+        vmImage: macOS-10.15
+      variables:
+        CIBW_ENVIRONMENT: "HDF5_DIR='/usr/local'"
+      strategy:
+        matrix:
+          # -deps : test with default (latest) versions of dependencies
+          # -mindeps : test with oldest supported version of (python) dependencies
+          # -deps-pre : test pre-release versions of (python) dependencies)
+          py36:
+            python.version: '3.6'
+            CIBW_BUILD: cp36-macosx_x86_64
+          py37:
+            python.version: '3.7'
+            CIBW_BUILD: cp37-macosx_x86_64
+          py38:
+            python.version: '3.8'
+            CIBW_BUILD: cp38-macosx_x86_64
 
-- job: 'linux_wheels'
-  pool:
-    vmImage: ubuntu-16.04
+      steps:
+        - template: ci/azure-pipelines-wheel.yml
+          parameters:
+            platform: macos
 
-  variables:
-    CIBW_BUILD: cp3[678]-manylinux_x86_64
-    CIBW_MANYLINUX_X86_64_IMAGE: docker.io/h5py/manylinux2010_x86_64-hdf5
 
-  steps:
-    - template: ci/azure-pipelines-wheels.yml
-      parameters:
-        platform: linux
+- stage: test
+  jobs:
+    - job: 'ubuntu1604'
+      pool:
+        vmImage: ubuntu-16.04
+      strategy:
+        matrix:
+          # -deps : test with default (latest) versions of dependencies
+          # -mindeps : test with oldest supported version of (python) dependencies
+          # -deps-pre : test pre-release versions of (python) dependencies)
+          # -tables : also check compatibility with pytables
+          py36:
+            python.version: '3.6'
+            TOXENV: py36-test-deps,py36-test-mindeps,py36-test-deps-pre,py36-test-mindeps-tables
+            H5PY_ENFORCE_COVERAGE: yes
+          py37:
+            python.version: '3.7'
+            TOXENV: py37-test-deps,py37-test-mindeps,py37-test-deps-pre,py37-test-deps-tables
+        # test when we're not in a unicode locale
+          py36-Clocale:
+            python.version: '3.6'
+            TOXENV: py36-test-deps
+            TOX_TESTENV_PASSENV: LANG LC_ALL
+            LANG: C
+            LC_ALL: C
+            H5PY_ENFORCE_COVERAGE: yes
+        # test against newer HDF5
+          py36-deps-hdf51103:
+            python.version: '3.6'
+            TOXENV: py36-test-deps
+            HDF5_VERSION: 1.10.3
+            HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
+            H5PY_ENFORCE_COVERAGE: yes
+          py37-deps-hdf51104:
+            python.version: '3.7'
+            TOXENV: py37-test-deps
+            HDF5_VERSION: 1.10.4
+            HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
+            H5PY_ENFORCE_COVERAGE: yes
+          py37-deps-hdf51105:
+            python.version: '3.7'
+            TOXENV: py37-test-deps
+            HDF5_VERSION: 1.10.5
+            HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
+            H5PY_ENFORCE_COVERAGE: yes
+          py38-deps-hdf51105:
+            python.version: '3.8'
+            TOXENV: py38-test-deps
+            HDF5_VERSION: 1.10.5
+            HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
+            H5PY_ENFORCE_COVERAGE: yes
+          py38-deps-hdf51120:
+            python.version: '3.8'
+            TOXENV: py38-test-deps
+            HDF5_VERSION: 1.12.0
+            HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
+            H5PY_ENFORCE_COVERAGE: yes
+        # do mpi tests
+    #      py36-deps-hdf51105-mpi:
+    #        python.version: '3.6'
+    #        TOXENV: py36-test-mindeps-mpi4py
+    #        HDF5_VERSION: 1.10.5
+    #        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
+    #        HDF5_MPI: ON
+    #        CC: mpicc
+    #      py37-deps-hdf51105-mpi:
+    #        python.version: '3.7'
+    #        TOXENV: py37-test-mindeps-mpi4py
+    #        HDF5_VERSION: 1.10.5
+    #        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
+    #        HDF5_MPI: ON
+    #        CC: mpicc
+        maxParallel: 4
 
-- job: 'test_linux_wheels'
-  pool:
-    vmImage: ubuntu-16.04
-  dependsOn: linux_wheels
+      steps:
+        - template: ci/azure-pipelines-steps.yml
+          parameters:
+            vmImage: 'ubuntu-16.04'
+            platform: linux
+            installer: apt
+            shell: unix
 
-  steps:
-    - task: DownloadBuildArtifacts@0
-      inputs:
-        artifactName: manylinux_wheels
-        downloadPath: $(System.DefaultWorkingDirectory)
-    - task: UsePythonVersion@0
-      inputs:
-        versionSpec: '3.8'
-        architecture: 'x64'
-    - script: |
-        python -m pip install --upgrade pip
-        pip install tox codecov
-      displayName: Install tox
-    - script: |
-        ls manylinux_wheels/
-        tox -e py38-test-deps --installpkg manylinux_wheels/h5py-2.10.0-cp38-cp38-manylinux1_x86_64.whl
 
-- job: 'windows_wheels'
-  pool:
-    vmImage: vs2017-win2016
-  variables:
-    HDF5_VERSION: 1.12.0
-    HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
-  strategy:
-    matrix:
-      py36-hdf5112:
-        python.version: '3.6'
-        HDF5_VSVERSION: "15-64"
-        CIBW_BUILD: cp36-win_amd64
-      py37-hdf5112:
-        python.version: '3.7'
-        HDF5_VSVERSION: "15-64"
-        CIBW_BUILD: cp37-win_amd64
-      py38-hdf5112:
-        python.version: '3.8'
-        HDF5_VSVERSION: "15-64"
-        CIBW_BUILD: cp38-win_amd64
 
-  steps:
-    - template: ci/azure-pipelines-wheel.yml
-      parameters:
-        platform: windows
+    - job: 'test_linux_wheels'
+      pool:
+        vmImage: ubuntu-16.04
+      dependsOn: linux_wheels
 
-- job: 'Windows'
-  pool:
-    vmImage: vs2017-win2016
-  strategy:
-    matrix:
-    # -deps : test with default (latest) versions of dependencies
-    # -mindeps : test with oldest supported version of (python) dependencies
-    # -deps-pre : test pre-release versions of (python) dependencies)
-    #
-    # 64 bit - HDF5 1.8
-      py36-hdf518:
-        python.version: '3.6'
-        TOXENV: py36-test-deps,py36-test-mindeps,py36-test-deps-pre
-        HDF5_VERSION: 1.8.17
-        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
-        HDF5_VSVERSION: "15-64"
-        H5PY_ENFORCE_COVERAGE: yes
-      py37-hdf518:
-        python.version: '3.7'
-        TOXENV: py37-test-deps,py37-test-mindeps,py37-test-deps-pre
-        HDF5_VERSION: 1.8.17
-        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
-        HDF5_VSVERSION: "15-64"
-        H5PY_ENFORCE_COVERAGE: yes
-    # 64 bit - HDF5 1.10
-      py36-hdf5110:
-        python.version: '3.6'
-        TOXENV: py36-test-deps,py36-test-mindeps,py36-test-deps-pre
-        HDF5_VERSION: 1.10.6
-        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
-        HDF5_VSVERSION: "15-64"
-        H5PY_ENFORCE_COVERAGE: yes
-      py37-hdf5110:
-        python.version: '3.7'
-        TOXENV: py37-test-deps,py37-test-mindeps,py37-test-deps-pre
-        HDF5_VERSION: 1.10.6
-        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
-        HDF5_VSVERSION: "15-64"
-        H5PY_ENFORCE_COVERAGE: yes
-      py38-hdf5110:
-        python.version: '3.8'
-        TOXENV: py38-test-deps,py38-test-mindeps,py38-test-deps-pre
-        HDF5_VERSION: 1.10.6
-        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
-        HDF5_VSVERSION: "15-64"
-        H5PY_ENFORCE_COVERAGE: yes
-    # 64 bit - HDF5 1.12
-      py36-hdf5112:
-        python.version: '3.6'
-        TOXENV: py36-test-deps,py36-test-mindeps,py36-test-deps-pre
-        HDF5_VERSION: 1.12.0
-        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
-        HDF5_VSVERSION: "15-64"
-        H5PY_ENFORCE_COVERAGE: yes
-      py37-hdf5112:
-        python.version: '3.7'
-        TOXENV: py37-test-deps,py37-test-mindeps,py37-test-deps-pre
-        HDF5_VERSION: 1.12.0
-        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
-        HDF5_VSVERSION: "15-64"
-        H5PY_ENFORCE_COVERAGE: yes
-      py38-hdf5112:
-        python.version: '3.8'
-        TOXENV: py38-test-deps,py38-test-mindeps,py38-test-deps-pre
-        HDF5_VERSION: 1.12.0
-        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
-        HDF5_VSVERSION: "15-64"
-        H5PY_ENFORCE_COVERAGE: yes
-    maxParallel: 4
+      steps:
+        - task: DownloadBuildArtifacts@0
+          inputs:
+            artifactName: manylinux_wheels
+            downloadPath: $(System.DefaultWorkingDirectory)
+        - task: UsePythonVersion@0
+          inputs:
+            versionSpec: '3.8'
+            architecture: 'x64'
+        - script: |
+            python -m pip install --upgrade pip
+            pip install tox codecov
+          displayName: Install tox
+        - script: |
+            ls manylinux_wheels/
+            tox -e py38-test-deps --installpkg manylinux_wheels/h5py-2.10.0-cp38-cp38-manylinux1_x86_64.whl
 
-  steps:
-    - template: ci/azure-pipelines-steps.yml
-      parameters:
-        vmImage: 'vs2017-win2016'
-        platform: windows
-        installer: nuget
-        shell: cmd
 
-- job: 'macos_wheels'
-  pool:
-    vmImage: macOS-10.15
-  variables:
-    CIBW_ENVIRONMENT: "HDF5_DIR='/usr/local'"
-  strategy:
-    matrix:
-      # -deps : test with default (latest) versions of dependencies
-      # -mindeps : test with oldest supported version of (python) dependencies
-      # -deps-pre : test pre-release versions of (python) dependencies)
-      py36:
-        python.version: '3.6'
-        CIBW_BUILD: cp36-macosx_x86_64
-      py37:
-        python.version: '3.7'
-        CIBW_BUILD: cp37-macosx_x86_64
-      py38:
-        python.version: '3.8'
-        CIBW_BUILD: cp38-macosx_x86_64
 
-  steps:
-    - template: ci/azure-pipelines-wheel.yml
-      parameters:
-        platform: macos
+    - job: 'Windows'
+      pool:
+        vmImage: vs2017-win2016
+      strategy:
+        matrix:
+        # -deps : test with default (latest) versions of dependencies
+        # -mindeps : test with oldest supported version of (python) dependencies
+        # -deps-pre : test pre-release versions of (python) dependencies)
+        #
+        # 64 bit - HDF5 1.8
+          py36-hdf518:
+            python.version: '3.6'
+            TOXENV: py36-test-deps,py36-test-mindeps,py36-test-deps-pre
+            HDF5_VERSION: 1.8.17
+            HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
+            HDF5_VSVERSION: "15-64"
+            H5PY_ENFORCE_COVERAGE: yes
+          py37-hdf518:
+            python.version: '3.7'
+            TOXENV: py37-test-deps,py37-test-mindeps,py37-test-deps-pre
+            HDF5_VERSION: 1.8.17
+            HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
+            HDF5_VSVERSION: "15-64"
+            H5PY_ENFORCE_COVERAGE: yes
+        # 64 bit - HDF5 1.10
+          py36-hdf5110:
+            python.version: '3.6'
+            TOXENV: py36-test-deps,py36-test-mindeps,py36-test-deps-pre
+            HDF5_VERSION: 1.10.6
+            HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
+            HDF5_VSVERSION: "15-64"
+            H5PY_ENFORCE_COVERAGE: yes
+          py37-hdf5110:
+            python.version: '3.7'
+            TOXENV: py37-test-deps,py37-test-mindeps,py37-test-deps-pre
+            HDF5_VERSION: 1.10.6
+            HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
+            HDF5_VSVERSION: "15-64"
+            H5PY_ENFORCE_COVERAGE: yes
+          py38-hdf5110:
+            python.version: '3.8'
+            TOXENV: py38-test-deps,py38-test-mindeps,py38-test-deps-pre
+            HDF5_VERSION: 1.10.6
+            HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
+            HDF5_VSVERSION: "15-64"
+            H5PY_ENFORCE_COVERAGE: yes
+        # 64 bit - HDF5 1.12
+          py36-hdf5112:
+            python.version: '3.6'
+            TOXENV: py36-test-deps,py36-test-mindeps,py36-test-deps-pre
+            HDF5_VERSION: 1.12.0
+            HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
+            HDF5_VSVERSION: "15-64"
+            H5PY_ENFORCE_COVERAGE: yes
+          py37-hdf5112:
+            python.version: '3.7'
+            TOXENV: py37-test-deps,py37-test-mindeps,py37-test-deps-pre
+            HDF5_VERSION: 1.12.0
+            HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
+            HDF5_VSVERSION: "15-64"
+            H5PY_ENFORCE_COVERAGE: yes
+          py38-hdf5112:
+            python.version: '3.8'
+            TOXENV: py38-test-deps,py38-test-mindeps,py38-test-deps-pre
+            HDF5_VERSION: 1.12.0
+            HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
+            HDF5_VSVERSION: "15-64"
+            H5PY_ENFORCE_COVERAGE: yes
+        maxParallel: 4
 
-- job: 'macOS1015'
-  pool:
-    vmImage: macOS-10.15
-  variables:
-    CIBW_ENVIRONMENT: "HDF5_DIR='/usr/local'"
-  strategy:
-    matrix:
-      # -deps : test with default (latest) versions of dependencies
-      # -mindeps : test with oldest supported version of (python) dependencies
-      # -deps-pre : test pre-release versions of (python) dependencies)
-      py36:
-        python.version: '3.6'
-        TOXENV: py36-test-deps,py36-test-mindeps,py36-test-deps-pre
-        H5PY_ENFORCE_COVERAGE: yes
-        CIBW_BUILD: cp36-macosx_x86_64
-      py37:
-        python.version: '3.7'
-        TOXENV: py37-test-deps,py37-test-mindeps,py37-test-deps-pre
-        H5PY_ENFORCE_COVERAGE: yes
-        CIBW_BUILD: cp37-macosx_x86_64
-      py38:
-        python.version: '3.8'
-        TOXENV: py38-test-deps,py38-test-mindeps,py38-test-deps-pre
-        H5PY_ENFORCE_COVERAGE: yes
-        CIBW_BUILD: cp38-macosx_x86_64
-    # test against newer HDF5
-#      py36-deps-hdf51103:
-#        python.version: '3.6'
-#        TOXENV: py36-test-deps
-#        HDF5_VERSION: 1.10.3
-#        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
-#      py37-deps-hdf51103:
-#        python.version: '3.7'
-#        TOXENV: py37-test-deps
-#        HDF5_VERSION: 1.10.3
-#        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
-#      py36-deps-hdf51104:
-#        python.version: '3.6'
-#        TOXENV: py36-test-deps
-#        HDF5_VERSION: 1.10.4
-#        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
-#      py37-deps-hdf51104:
-#        python.version: '3.7'
-#        TOXENV: py37-test-deps
-#        HDF5_VERSION: 1.10.4
-#        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
-#      py36-deps-hdf51105:
-#        python.version: '3.6'
-#        TOXENV: py36-test-deps
-#        HDF5_VERSION: 1.10.5
-#        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
-#      py37-deps-hdf51105:
-#        python.version: '3.7'
-#        TOXENV: py37-test-deps
-#        HDF5_VERSION: 1.10.5
-#        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
-    maxParallel: 4
+      steps:
+        - template: ci/azure-pipelines-steps.yml
+          parameters:
+            vmImage: 'vs2017-win2016'
+            platform: windows
+            installer: nuget
+            shell: cmd
 
-  steps:
-    - template: ci/azure-pipelines-steps.yml
-      parameters:
-        vmImage: 'xcode9-macos10.13'
-        platform: macos
-        installer: brew
-        shell: unix
+    - job: 'macOS1015'
+      pool:
+        vmImage: macOS-10.15
+      variables:
+        CIBW_ENVIRONMENT: "HDF5_DIR='/usr/local'"
+      strategy:
+        matrix:
+          # -deps : test with default (latest) versions of dependencies
+          # -mindeps : test with oldest supported version of (python) dependencies
+          # -deps-pre : test pre-release versions of (python) dependencies)
+          py36:
+            python.version: '3.6'
+            TOXENV: py36-test-deps,py36-test-mindeps,py36-test-deps-pre
+            H5PY_ENFORCE_COVERAGE: yes
+            CIBW_BUILD: cp36-macosx_x86_64
+          py37:
+            python.version: '3.7'
+            TOXENV: py37-test-deps,py37-test-mindeps,py37-test-deps-pre
+            H5PY_ENFORCE_COVERAGE: yes
+            CIBW_BUILD: cp37-macosx_x86_64
+          py38:
+            python.version: '3.8'
+            TOXENV: py38-test-deps,py38-test-mindeps,py38-test-deps-pre
+            H5PY_ENFORCE_COVERAGE: yes
+            CIBW_BUILD: cp38-macosx_x86_64
+        # test against newer HDF5
+    #      py36-deps-hdf51103:
+    #        python.version: '3.6'
+    #        TOXENV: py36-test-deps
+    #        HDF5_VERSION: 1.10.3
+    #        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
+    #      py37-deps-hdf51103:
+    #        python.version: '3.7'
+    #        TOXENV: py37-test-deps
+    #        HDF5_VERSION: 1.10.3
+    #        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
+    #      py36-deps-hdf51104:
+    #        python.version: '3.6'
+    #        TOXENV: py36-test-deps
+    #        HDF5_VERSION: 1.10.4
+    #        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
+    #      py37-deps-hdf51104:
+    #        python.version: '3.7'
+    #        TOXENV: py37-test-deps
+    #        HDF5_VERSION: 1.10.4
+    #        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
+    #      py36-deps-hdf51105:
+    #        python.version: '3.6'
+    #        TOXENV: py36-test-deps
+    #        HDF5_VERSION: 1.10.5
+    #        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
+    #      py37-deps-hdf51105:
+    #        python.version: '3.7'
+    #        TOXENV: py37-test-deps
+    #        HDF5_VERSION: 1.10.5
+    #        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
+        maxParallel: 4
+
+      steps:
+        - template: ci/azure-pipelines-steps.yml
+          parameters:
+            vmImage: 'xcode9-macos10.13'
+            platform: macos
+            installer: brew
+            shell: unix
