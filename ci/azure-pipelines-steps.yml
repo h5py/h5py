@@ -85,6 +85,7 @@ steps:
 - script: |
     cibuildwheel --print-build-identifiers
     cibuildwheel --output-dir wheelhouse .
+    python ci/bundle_hdf5_whl.py wheelhouse
   condition: and(succeeded(), ne(variables['CIBW_BUILD'], ''))
 - task: PublishBuildArtifacts@1
   inputs:
