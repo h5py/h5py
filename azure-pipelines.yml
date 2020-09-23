@@ -174,7 +174,6 @@ stages:
     - job: 'test_linux_wheels'
       pool:
         vmImage: ubuntu-16.04
-      dependsOn: linux_wheels
 
       steps:
         - task: DownloadBuildArtifacts@0
