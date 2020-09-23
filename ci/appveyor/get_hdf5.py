@@ -13,7 +13,7 @@ from tempfile import TemporaryFile, TemporaryDirectory
 from sys import exit, stderr
 from shutil import copy
 from glob import glob
-from subprocess import run, PIPE, STDOUT
+from subprocess import run
 from zipfile import ZipFile
 import requests
 
@@ -82,19 +82,17 @@ def build_hdf5(version, hdf5_file, install_path, cmake_generator, use_prefix):
                     get_cmake_install_path(install_path),
                     get_cmake_config_path(version, hdf5_extract_path),
                 ] + generator_args + prefix_args
+                print("Configuring HDF5 version {version}...".format(version=version))
+                print(' '.join(cfg_cmd), file=stderr)
+                run(cfg_cmd, check=True)
+
                 build_cmd = CMAKE_BUILD_CMD + [
                     '.',
                 ] + CMAKE_INSTALL_ARG
-                print("Configuring HDF5 version {version}...".format(version=version), file=stderr)
-                print(' '.join(cfg_cmd), file=stderr)
-                p = run(cfg_cmd, stdout=PIPE, stderr=STDOUT, universal_newlines=True)
-                print(p.stdout)
-                p.check_returncode()
-                print("Building HDF5 version {version}...".format(version=version), file=stderr)
+                print("Building HDF5 version {version}...".format(version=version))
                 print(' '.join(build_cmd), file=stderr)
-                p = run(build_cmd, stdout=PIPE, stderr=STDOUT, universal_newlines=True)
-                print(p.stdout)
-                p.check_returncode()
+                run(build_cmd, check=True)
+
                 print("Installed HDF5 version {version} to {install_path}".format(
                     version=version, install_path=install_path,
                 ), file=stderr)
@@ -139,6 +137,8 @@ def main():
             # Needed for
             # http://help.appveyor.com/discussions/kb/38-visual-studio-2008-64-bit-builds
             run("ci\\appveyor\\vs2008_patch\\setup_x64.bat")
+    else:
+        cmake_generator = None
 
     if not hdf5_install_cached(install_path):
         with TemporaryFile() as f:
