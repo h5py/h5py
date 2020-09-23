@@ -39,7 +39,7 @@ steps:
   displayName: 'Install cibuildwheel'
 
 - script: env
-  displayName: 'print env'
+  displayName: 'Print env'
 
 # On Mac, we already installed HDF5 from brew. On Linux, the wheel will be
 # built inside a Docker image which already contains HDF5.
@@ -47,13 +47,15 @@ steps:
     - script: |
         py -3.7 -m pip install requests
         py -3.7 ci\\appveyor\\get_hdf5.py
-      displayName: 'ensure HDF5'
+      displayName: 'Ensure HDF5'
 
 - script: |
     cibuildwheel --print-build-identifiers
     cibuildwheel --output-dir wheelhouse .
     python ci/bundle_hdf5_whl.py wheelhouse
+  displayName: 'Build wheels'
 - task: PublishBuildArtifacts@1
   inputs:
     pathtoPublish: 'wheelhouse'
     artifactName: ${{ parameters.platform }}_wheels
+  displayName: 'Publish wheels'
