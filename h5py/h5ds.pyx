@@ -104,7 +104,7 @@ def get_label(DatasetID dset not None, unsigned int idx):
 def get_scale_name(DatasetID dscale not None):
     """(DatasetID dscale) => STRING name_of_scale
 
-    Retrieves name of Dimension Scale dscale into buffer name.
+    Retrieves name of Dimension Scale dscale.
     """
     cdef ssize_t namelen
     cdef char* name = NULL
