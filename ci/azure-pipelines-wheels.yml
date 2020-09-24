@@ -5,7 +5,7 @@ steps:
   inputs:
     # The key should specify enough to avoid restoring an incompatible build.
     # HDF5_VSVERSION is only for Windows - it's just a fixed string elsewhere.
-    key: HDF5 | "$(Agent.OS)" | "${{ parameters.vmImage }}" | "$(HDF5_VERSION)" | "$(HDF5_VSVERSION)"
+    key: HDF5_ | "$(Agent.OS)" | "${{ parameters.vmImage }}" | "$(HDF5_VERSION)" | "$(HDF5_VSVERSION)"
     path: $(HDF5_CACHE_DIR)
   condition: and(succeeded(), ne(variables['HDF5_VERSION'], ''))
 
@@ -20,12 +20,10 @@ steps:
     displayName: 'Use latest Nuget'
 
   - script: |
-      nuget install libpng-msvc14-x64 -ExcludeVersion -OutputDirectory "$(build.BinariesDirectory)"
-      nuget install zlib-msvc14-x64 -ExcludeVersion -OutputDirectory "$(build.BinariesDirectory)"
-      echo ##vso[task.prependpath]$(build.BinariesDirectory)\libpng-msvc14-x64\build\native\bin_release
-      echo ##vso[task.prependpath]$(build.BinariesDirectory)\zlib-msvc14-x64\build\native\bin_release
-      echo ##vso[task.setvariable variable=CL]/I$(build.BinariesDirectory)\libpng-msvc14-x64\build\native\include /I$(build.BinariesDirectory)\zlib-msvc14-x64\build\native\include
-      echo ##vso[task.setvariable variable=LINK]/LIBPATH:$(build.BinariesDirectory)\libpng-msvc14-x64\build\native\lib_release /LIBPATH:$(build.BinariesDirectory)\zlib-msvc14-x64\build\native\lib_release
+      nuget install zlib-msvc-x64 -ExcludeVersion -OutputDirectory "$(build.BinariesDirectory)"
+      echo ##vso[task.prependpath]$(build.BinariesDirectory)\zlib-msvc-x64\build\native\bin_release
+      echo ##vso[task.setvariable variable=CL]/I$(build.BinariesDirectory)\zlib-msvc-x64\build\native\include
+      echo ##vso[task.setvariable variable=LINK]/LIBPATH:$(build.BinariesDirectory)\zlib-msvc-x64\build\native\lib_release
     displayName: 'Install nuget dependencies'
 - ${{ if eq(parameters.platform, 'macos') }}:
   - script: |
