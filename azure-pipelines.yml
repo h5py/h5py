@@ -150,31 +150,20 @@ jobs:
       py36:
         python.version: '3.6'
         TOXENV: py36-test-deps,py36-test-mindeps,py36-test-deps-pre
-        WHL_TAG: 'cp36'
+        WHL_FILE: h5py*-cp36-*manylinux1_x86_64.whl
       py37:
         python.version: '3.7'
         TOXENV: py37-test-deps,py37-test-mindeps,py37-test-deps-pre,py37-test-deps-tables
-        WHL_TAG: 'cp37'
+        WHL_FILE: h5py*-cp37-*manylinux1_x86_64.whl
       py38:
         python.version: '3.8'
         TOXENV: py38-test-deps,py38-test-mindeps,py38-test-deps-pre
-        WHL_TAG: 'cp38'
+        WHL_FILE: h5py*-cp38-*manylinux1_x86_64.whl
 
   steps:
-    - download: current
-      artifact: linux_wheels
-    - task: UsePythonVersion@0
-      inputs:
-        versionSpec: '$(python.version)'
-        architecture: 'x64'
-    - script: |
-        python -m pip install --upgrade pip
-        pip install tox codecov
-      displayName: Install tox
-    - script: |
-        ls $PIPELINE_WORKSPACE/linux_wheels/
-        tox --installpkg $PIPELINE_WORKSPACE/linux_wheels/h5py*-$WHL_TAG-*manylinux1_x86_64.whl
-
+    - template: ci/azure-pipelines-test-wheels.yml
+      parameters:
+        platform: linux
 
 
 - job: 'Windows'
@@ -255,6 +244,31 @@ jobs:
         installer: nuget
         shell: cmd
 
+- job: 'test_windows_wheels'
+  dependsOn: windows_wheels
+  pool:
+    vmImage: vs2017-win2016
+
+  strategy:
+    matrix:
+      py36:
+        python.version: '3.6'
+        TOXENV: py36-test-deps,py36-test-mindeps,py36-test-deps-pre
+        WHL_FILE: h5py*-cp36-*.whl
+      py37:
+        python.version: '3.7'
+        TOXENV: py37-test-deps,py37-test-mindeps,py37-test-deps-pre,py37-test-deps-tables
+        WHL_FILE: h5py*-cp37-*.whl
+      py38:
+        python.version: '3.8'
+        TOXENV: py38-test-deps,py38-test-mindeps,py38-test-deps-pre
+        WHL_FILE: h5py*-cp38-*.whl
+
+  steps:
+    - template: ci/azure-pipelines-test-wheels.yml
+      parameters:
+        platform: windows
+
 - job: 'macOS1015'
   pool:
     vmImage: macOS-10.15
@@ -315,3 +329,28 @@ jobs:
         platform: macos
         installer: brew
         shell: unix
+
+- job: 'test_macos_wheels'
+  dependsOn: macos_wheels
+  pool:
+    vmImage: macOS-10.15
+
+  strategy:
+    matrix:
+      py36:
+        python.version: '3.6'
+        TOXENV: py36-test-deps,py36-test-mindeps,py36-test-deps-pre
+        WHL_FILE: h5py*-cp36-*.whl
+      py37:
+        python.version: '3.7'
+        TOXENV: py37-test-deps,py37-test-mindeps,py37-test-deps-pre,py37-test-deps-tables
+        WHL_FILE: h5py*-cp37-*.whl
+      py38:
+        python.version: '3.8'
+        TOXENV: py38-test-deps,py38-test-mindeps,py38-test-deps-pre
+        WHL_FILE: h5py*-cp38-*.whl
+
+  steps:
+    - template: ci/azure-pipelines-test-wheels.yml
+      parameters:
+        platform: macos
