@@ -28,7 +28,7 @@ def set_scale(DatasetID dset not None, char* dimname=''):
 
 @with_phil
 def is_scale(DatasetID dset not None):
-    """(DatasetID dset)
+    """(DatasetID dset) => BOOL
 
     Determines whether dset is a dimension scale.
     """
