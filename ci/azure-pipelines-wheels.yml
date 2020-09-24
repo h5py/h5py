@@ -5,7 +5,9 @@ steps:
   inputs:
     # The key should specify enough to avoid restoring an incompatible build.
     # HDF5_VSVERSION is only for Windows - it's just a fixed string elsewhere.
-    key: HDF5_ | "$(Agent.OS)" | "${{ parameters.vmImage }}" | "$(HDF5_VERSION)" | "$(HDF5_VSVERSION)"
+    # Increment the first number to clear the cache if you change e.g.
+    # dependencies or build options.
+    key: 1 | HDF5 | "$(Agent.OS)" | "${{ parameters.vmImage }}" | "$(HDF5_VERSION)" | "$(HDF5_VSVERSION)"
     path: $(HDF5_CACHE_DIR)
   condition: and(succeeded(), ne(variables['HDF5_VERSION'], ''))
 

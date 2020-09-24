@@ -22,7 +22,7 @@ HDF5_URL = "https://www.hdfgroup.org/ftp/HDF5/releases/hdf5-{series}/hdf5-{versi
 CMAKE_CONFIGURE_CMD = [
     "cmake", "-DBUILD_SHARED_LIBS:BOOL=ON", "-DCMAKE_BUILD_TYPE:STRING=RELEASE",
     "-DHDF5_BUILD_CPP_LIB=OFF", "-DHDF5_BUILD_HL_LIB=ON",
-    "-DHDF5_BUILD_TOOLS:BOOL=ON",
+    "-DHDF5_BUILD_TOOLS:BOOL=ON", "-DHDF5_ENABLE_Z_LIB_SUPPORT=ON",
 ]
 CMAKE_BUILD_CMD = ["cmake", "--build"]
 CMAKE_INSTALL_ARG = ["--target", "install", '--config', 'Release']
