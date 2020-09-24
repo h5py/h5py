@@ -11,7 +11,7 @@ steps:
     python -m pip install --upgrade pip
     pip install tox codecov
   displayName: Install tox
-- script: |
+- bash: |
     ls $PIPELINE_WORKSPACE/${{ parameters.platform }}_wheels/
     tox --installpkg $PIPELINE_WORKSPACE/${{ parameters.platform }}_wheels/$WHL_FILE
   displayName: Run tests
