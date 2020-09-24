@@ -178,14 +178,14 @@ jobs:
     # 64 bit - HDF5 1.8
       py36-hdf518:
         python.version: '3.6'
-        TOXENV: py36-test-deps,py36-test-mindeps,py36-test-deps-pre
+        TOXENV: py36-test-deps,py36-test-mindeps
         HDF5_VERSION: 1.8.17
         HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
         HDF5_VSVERSION: "15-64"
         H5PY_ENFORCE_COVERAGE: yes
       py37-hdf518:
         python.version: '3.7'
-        TOXENV: py37-test-deps,py37-test-mindeps,py37-test-deps-pre
+        TOXENV: py37-test-deps,py37-test-deps-pre
         HDF5_VERSION: 1.8.17
         HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
         HDF5_VSVERSION: "15-64"
@@ -198,13 +198,6 @@ jobs:
         HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
         HDF5_VSVERSION: "15-64"
         H5PY_ENFORCE_COVERAGE: yes
-      py37-hdf5110:
-        python.version: '3.7'
-        TOXENV: py37-test-deps,py37-test-mindeps,py37-test-deps-pre
-        HDF5_VERSION: 1.10.6
-        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
-        HDF5_VSVERSION: "15-64"
-        H5PY_ENFORCE_COVERAGE: yes
       py38-hdf5110:
         python.version: '3.8'
         TOXENV: py38-test-deps,py38-test-mindeps,py38-test-deps-pre
@@ -213,23 +206,24 @@ jobs:
         HDF5_VSVERSION: "15-64"
         H5PY_ENFORCE_COVERAGE: yes
     # 64 bit - HDF5 1.12
+    # Fewer tox environments here; test_windows_wheels also tests HDF5 1.12
       py36-hdf5112:
         python.version: '3.6'
-        TOXENV: py36-test-deps,py36-test-mindeps,py36-test-deps-pre
+        TOXENV: py36-test-deps
         HDF5_VERSION: 1.12.0
         HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
         HDF5_VSVERSION: "15-64"
         H5PY_ENFORCE_COVERAGE: yes
       py37-hdf5112:
         python.version: '3.7'
-        TOXENV: py37-test-deps,py37-test-mindeps,py37-test-deps-pre
+        TOXENV: py37-test-deps
         HDF5_VERSION: 1.12.0
         HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
         HDF5_VSVERSION: "15-64"
         H5PY_ENFORCE_COVERAGE: yes
       py38-hdf5112:
         python.version: '3.8'
-        TOXENV: py38-test-deps,py38-test-mindeps,py38-test-deps-pre
+        TOXENV: py38-test-deps
         HDF5_VERSION: 1.12.0
         HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
         HDF5_VSVERSION: "15-64"
