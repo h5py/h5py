@@ -29,7 +29,7 @@ def main():
             copy(f, pjoin(sitepackagesdir, 'h5py', 'zlib.dll'))
             print("Copied", f)
 
-    print("In installed h5py:", os.listdir(pjoin(sitepackagesdir, 'h5py')))
+        print("In installed h5py:", sorted(os.listdir(pjoin(sitepackagesdir, 'h5py'))))
 
 if __name__ == '__main__':
     main()
