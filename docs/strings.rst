@@ -64,7 +64,7 @@ recover it::
     >>> binary_blob = b"Hello\x00Hello\x00"
     >>> dset.attrs["attribute_name"] = np.void(binary_blob)
     >>> out = dset.attrs["attribute_name"]
-    >>> binary_blob = out.tostring()
+    >>> binary_blob = out.tobytes()
 
 Object names
 ------------

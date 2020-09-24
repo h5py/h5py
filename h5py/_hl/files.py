@@ -45,7 +45,7 @@ def _set_fapl_mpio(plist, **kwargs):
     if not mpi:
         raise ValueError("h5py was built without MPI support, can't use mpio driver")
 
-    import mpi4py
+    import mpi4py.MPI
     kwargs.setdefault('info', mpi4py.MPI.Info())
     plist.set_fapl_mpio(**kwargs)
 
