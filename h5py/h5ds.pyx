@@ -46,7 +46,7 @@ def attach_scale(DatasetID dset not None, DatasetID dscale not None, unsigned
 @with_phil
 def is_attached(DatasetID dset not None, DatasetID dscale not None,
                 unsigned int idx):
-    """(DatasetID dset, DatasetID dscale, UINT idx)
+    """(DatasetID dset, DatasetID dscale, UINT idx) => BOOL
 
     Report if Dimension Scale dscale is currently attached to Dimension
     idx of Dataset dset.
