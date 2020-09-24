@@ -29,7 +29,7 @@ NUMPY_MIN_VERSIONS = [
     # Numpy    Python
     ('1.12',   "=='3.6'"),
     ('1.14.3', "=='3.7'"),
-    ('1.17.4', ">='3.8'"),
+    ('1.17.5', ">='3.8'"),
 ]
 
 # these are required to use h5py
