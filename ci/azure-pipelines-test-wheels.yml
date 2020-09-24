@@ -1,10 +1,12 @@
 steps:
 - download: current
   artifact: ${{ parameters.platform }}_wheels
+  displayName: Download wheels
 - task: UsePythonVersion@0
   inputs:
     versionSpec: '$(python.version)'
     architecture: 'x64'
+  displayName: 'Use Python $(python.version)'
 - script: |
     python -m pip install --upgrade pip
     pip install tox codecov
@@ -12,3 +14,4 @@ steps:
 - script: |
     ls $PIPELINE_WORKSPACE/${{ parameters.platform }}_wheels/
     tox --installpkg $PIPELINE_WORKSPACE/${{ parameters.platform }}_wheels/$WHL_FILE
+  displayName: Run tests
