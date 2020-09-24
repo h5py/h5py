@@ -18,12 +18,20 @@ from zipfile import ZipFile
 import requests
 
 HDF5_URL = "https://www.hdfgroup.org/ftp/HDF5/releases/hdf5-{series}/hdf5-{version}/src/hdf5-{version}.zip"
+ZLIB_ROOT = environ.get('ZLIB_ROOT')
 
 CMAKE_CONFIGURE_CMD = [
     "cmake", "-DBUILD_SHARED_LIBS:BOOL=ON", "-DCMAKE_BUILD_TYPE:STRING=RELEASE",
     "-DHDF5_BUILD_CPP_LIB=OFF", "-DHDF5_BUILD_HL_LIB=ON",
-    "-DHDF5_BUILD_TOOLS:BOOL=ON", "-DHDF5_ENABLE_Z_LIB_SUPPORT=ON",
+    "-DHDF5_BUILD_TOOLS:BOOL=ON",
 ]
+if ZLIB_ROOT:
+    CMAKE_CONFIGURE_CMD += [
+        "-DHDF5_ENABLE_Z_LIB_SUPPORT=ON",
+        f"-DZLIB_INCLUDE_DIR={ZLIB_ROOT}\\include",
+        f"-DZLIB_LIBRARY_RELEASE={ZLIB_ROOT}\\lib_release\\zlib.lib",
+        f"-DZLIB_LIBRARY_DEBUG={ZLIB_ROOT}\\lib_debug\\zlibd.lib",
+    ]
 CMAKE_BUILD_CMD = ["cmake", "--build"]
 CMAKE_INSTALL_ARG = ["--target", "install", '--config', 'Release']
 CMAKE_INSTALL_PATH_ARG = "-DCMAKE_INSTALL_PREFIX={install_path}"
