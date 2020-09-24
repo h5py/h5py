@@ -17,7 +17,7 @@ from zipfile import ZipFile, ZIP_DEFLATED
 def find_dlls():
     hdf5_path = os.environ.get("HDF5_DIR")
     print("HDF5_DIR", hdf5_path)
-    return glob(os.path.join(hdf5_path, 'lib', '*.dll'))
+    return glob(os.path.join(hdf5_path, 'lib', 'hdf*.dll'))
 
 def file_sha256(path):
     h = hashlib.sha256()
