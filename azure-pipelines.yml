@@ -67,7 +67,7 @@ jobs:
       # -mindeps : test with oldest supported version of (python) dependencies
       # -deps-pre : test pre-release versions of (python) dependencies)
       # -tables : also check compatibility with pytables
-      py36:
+      py36:  # HDF5 1.8 installed from apt on Ubuntu
         python.version: '3.6'
         TOXENV: py36-test-deps,py36-test-deps-pre,py36-test-mindeps-tables
         H5PY_ENFORCE_COVERAGE: yes
@@ -82,29 +82,23 @@ jobs:
         LANG: C
         LC_ALL: C
         H5PY_ENFORCE_COVERAGE: yes
-    # test against newer HDF5
+    # Build HDF5 1.10 or 1.12 in the test environment
       py36-deps-hdf51103:
         python.version: '3.6'
         TOXENV: py36-test-deps
         HDF5_VERSION: 1.10.3
         HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
         H5PY_ENFORCE_COVERAGE: yes
-      py37-deps-hdf51104:
+      py37-deps-hdf51106:
         python.version: '3.7'
         TOXENV: py37-test-deps
-        HDF5_VERSION: 1.10.4
+        HDF5_VERSION: 1.10.6
         HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
         H5PY_ENFORCE_COVERAGE: yes
-      py37-deps-hdf51105:
-        python.version: '3.7'
-        TOXENV: py37-test-deps
-        HDF5_VERSION: 1.10.5
-        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
-        H5PY_ENFORCE_COVERAGE: yes
-      py38-deps-hdf51105:
+      py38-deps-hdf51107:
         python.version: '3.8'
         TOXENV: py38-test-deps
-        HDF5_VERSION: 1.10.5
+        HDF5_VERSION: 1.10.7
         HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
         H5PY_ENFORCE_COVERAGE: yes
       py38-deps-hdf51120:
@@ -237,7 +231,7 @@ jobs:
         WHL_FILE: h5py*-cp36-*.whl
       py37:
         python.version: '3.7'
-        TOXENV: py37-test-deps,py37-test-mindeps,py37-test-deps-pre,py37-test-deps-tables
+        TOXENV: py37-test-deps,py37-test-mindeps,py37-test-deps-tables
         WHL_FILE: h5py*-cp37-*.whl
       py38:
         python.version: '3.8'
@@ -259,11 +253,11 @@ jobs:
       # -deps-pre : test pre-release versions of (python) dependencies)
       py36:
         python.version: '3.6'
-        TOXENV: py36-test-deps,py36-test-mindeps,py36-test-deps-pre
+        TOXENV: py36-test-deps,py36-test-mindeps
         H5PY_ENFORCE_COVERAGE: yes
       py37:
         python.version: '3.7'
-        TOXENV: py37-test-deps,py37-test-mindeps,py37-test-deps-pre
+        TOXENV: py37-test-deps,py37-test-mindeps
         H5PY_ENFORCE_COVERAGE: yes
       py38:
         python.version: '3.8'
@@ -323,7 +317,7 @@ jobs:
         WHL_FILE: h5py*-cp36-*.whl
       py37:
         python.version: '3.7'
-        TOXENV: py37-test-deps,py37-test-mindeps,py37-test-deps-pre,py37-test-deps-tables
+        TOXENV: py37-test-deps,py37-test-mindeps,py37-test-deps-tables
         WHL_FILE: h5py*-cp37-*.whl
       py38:
         python.version: '3.8'
