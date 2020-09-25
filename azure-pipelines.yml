@@ -29,6 +29,8 @@ jobs:
   variables:
     CIBW_BUILD: cp3[678]-manylinux_x86_64
     CIBW_MANYLINUX_X86_64_IMAGE: docker.io/h5py/manylinux2010_x86_64-hdf5
+    # Include less debugging info for smaller wheels (default is -g2)
+    CIBW_ENVIRONMENT: "CFLAGS=-g1"
   steps:
     - template: ci/azure-pipelines-wheels.yml
       parameters:
