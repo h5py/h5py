@@ -605,7 +605,7 @@ class Dataset(HLObject):
         fixed.
         """
         with phil:
-            if self.chunks is None and not self.is_virtual:
+            if self.chunks is None and vds_support and not self.is_virtual:
                 raise TypeError("Only chunked datasets can be resized")
 
             if axis is not None:
