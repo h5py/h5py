@@ -13,17 +13,25 @@ from tempfile import TemporaryFile, TemporaryDirectory
 from sys import exit, stderr
 from shutil import copy
 from glob import glob
-from subprocess import run, PIPE, STDOUT
+from subprocess import run
 from zipfile import ZipFile
 import requests
 
 HDF5_URL = "https://www.hdfgroup.org/ftp/HDF5/releases/hdf5-{series}/hdf5-{version}/src/hdf5-{version}.zip"
+ZLIB_ROOT = environ.get('ZLIB_ROOT')
 
 CMAKE_CONFIGURE_CMD = [
     "cmake", "-DBUILD_SHARED_LIBS:BOOL=ON", "-DCMAKE_BUILD_TYPE:STRING=RELEASE",
     "-DHDF5_BUILD_CPP_LIB=OFF", "-DHDF5_BUILD_HL_LIB=ON",
-    "-DHDF5_BUILD_TOOLS:BOOL=ON",
+    "-DHDF5_BUILD_TOOLS:BOOL=OFF",
 ]
+if ZLIB_ROOT:
+    CMAKE_CONFIGURE_CMD += [
+        "-DHDF5_ENABLE_Z_LIB_SUPPORT=ON",
+        f"-DZLIB_INCLUDE_DIR={ZLIB_ROOT}\\include",
+        f"-DZLIB_LIBRARY_RELEASE={ZLIB_ROOT}\\lib_release\\zlib.lib",
+        f"-DZLIB_LIBRARY_DEBUG={ZLIB_ROOT}\\lib_debug\\zlibd.lib",
+    ]
 CMAKE_BUILD_CMD = ["cmake", "--build"]
 CMAKE_INSTALL_ARG = ["--target", "install", '--config', 'Release']
 CMAKE_INSTALL_PATH_ARG = "-DCMAKE_INSTALL_PREFIX={install_path}"
@@ -82,19 +90,17 @@ def build_hdf5(version, hdf5_file, install_path, cmake_generator, use_prefix):
                     get_cmake_install_path(install_path),
                     get_cmake_config_path(version, hdf5_extract_path),
                 ] + generator_args + prefix_args
+                print("Configuring HDF5 version {version}...".format(version=version))
+                print(' '.join(cfg_cmd), file=stderr)
+                run(cfg_cmd, check=True)
+
                 build_cmd = CMAKE_BUILD_CMD + [
                     '.',
                 ] + CMAKE_INSTALL_ARG
-                print("Configuring HDF5 version {version}...".format(version=version), file=stderr)
-                print(' '.join(cfg_cmd), file=stderr)
-                p = run(cfg_cmd, stdout=PIPE, stderr=STDOUT, universal_newlines=True)
-                print(p.stdout)
-                p.check_returncode()
-                print("Building HDF5 version {version}...".format(version=version), file=stderr)
+                print("Building HDF5 version {version}...".format(version=version))
                 print(' '.join(build_cmd), file=stderr)
-                p = run(build_cmd, stdout=PIPE, stderr=STDOUT, universal_newlines=True)
-                print(p.stdout)
-                p.check_returncode()
+                run(build_cmd, check=True)
+
                 print("Installed HDF5 version {version} to {install_path}".format(
                     version=version, install_path=install_path,
                 ), file=stderr)
@@ -139,6 +145,8 @@ def main():
             # Needed for
             # http://help.appveyor.com/discussions/kb/38-visual-studio-2008-64-bit-builds
             run("ci\\appveyor\\vs2008_patch\\setup_x64.bat")
+    else:
+        cmake_generator = None
 
     if not hdf5_install_cached(install_path):
         with TemporaryFile() as f:

@@ -9,11 +9,11 @@ else
     #python3 -m pip install requests
     #python3 ci/get_hdf5.py
     if [ -f $HDF5_DIR/lib/libhdf5.so ]; then
-	echo "using cached build"
+        echo "using cached build"
     else
         pushd /tmp
-        #                             Remove trailing .*, to get e.g. '1.12' ↓
-        wget "https://www.hdfgroup.org/ftp/HDF5/releases/hdf5-${HDF5_VERSION%.*}/hdf5-$HDF5_VERSION/src/hdf5-$HDF5_VERSION.tar.gz"
+        #                                   Remove trailing .*, to get e.g. '1.12' ↓
+        curl -fsSLO "https://www.hdfgroup.org/ftp/HDF5/releases/hdf5-${HDF5_VERSION%.*}/hdf5-$HDF5_VERSION/src/hdf5-$HDF5_VERSION.tar.gz"
         tar -xzvf hdf5-$HDF5_VERSION.tar.gz
         pushd hdf5-$HDF5_VERSION
         chmod u+x autogen.sh

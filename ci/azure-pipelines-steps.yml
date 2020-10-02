@@ -8,7 +8,9 @@ steps:
   inputs:
     # The key should specify enough to avoid restoring an incompatible build.
     # HDF5_VSVERSION is only for Windows - it's just a fixed string elsewhere.
-    key: HDF5 | "$(Agent.OS)" | "${{ parameters.vmImage }}" | "$(HDF5_VERSION)" | "$(HDF5_VSVERSION)"
+    # Increment the first number to clear the cache if you change e.g.
+    # dependencies or build options.
+    key: 1 | HDF5 | "$(Agent.OS)" | "${{ parameters.vmImage }}" | "$(HDF5_VERSION)" | "$(HDF5_VSVERSION)"
     path: $(HDF5_CACHE_DIR)
   condition: and(succeeded(), ne(variables['HDF5_VERSION'], ''))
 
@@ -30,28 +32,29 @@ steps:
     displayName: 'Use latest available Nuget'
 
   - script: |
-      nuget install libpng-msvc14-x64 -ExcludeVersion -OutputDirectory "$(build.BinariesDirectory)"
-      nuget install zlib-msvc14-x64 -ExcludeVersion -OutputDirectory "$(build.BinariesDirectory)"
-      echo ##vso[task.prependpath]$(build.BinariesDirectory)\libpng-msvc14-x64\build\native\bin_release
-      echo ##vso[task.prependpath]$(build.BinariesDirectory)\zlib-msvc14-x64\build\native\bin_release
-      echo ##vso[task.setvariable variable=CL]/I$(build.BinariesDirectory)\libpng-msvc14-x64\build\native\include /I$(build.BinariesDirectory)\zlib-msvc14-x64\build\native\include
-      echo ##vso[task.setvariable variable=LINK]/LIBPATH:$(build.BinariesDirectory)\libpng-msvc14-x64\build\native\lib_release /LIBPATH:$(build.BinariesDirectory)\zlib-msvc14-x64\build\native\lib_release
-    displayName: 'Install dependencies with nuget'
+      nuget install zlib-msvc-x64 -ExcludeVersion -OutputDirectory "$(build.BinariesDirectory)"
+      echo ##vso[task.prependpath]$(build.BinariesDirectory)\zlib-msvc-x64\build\native\bin_release
+      echo ##vso[task.setvariable variable=CL]/I$(build.BinariesDirectory)\zlib-msvc-x64\build\native\include
+      echo ##vso[task.setvariable variable=LINK]/LIBPATH:$(build.BinariesDirectory)\zlib-msvc-x64\build\native\lib_release
+      echo ##vso[task.setvariable variable=ZLIB_ROOT]$(build.BinariesDirectory)\zlib-msvc-x64\build\native
+    displayName: 'Install nuget dependencies'
 - ${{ if eq(parameters.installer, 'brew') }}:
   - script: |
       brew install pkg-config hdf5@1.10 ccache open-mpi
       brew link --force hdf5@1.10
-    displayName: 'Install dependencies with brew'
+    displayName: 'Install brew dependencies'
 - ${{ if eq(parameters.installer, 'apt') }}:
   - script: |
       sudo apt-get update
       sudo apt-get install libhdf5-serial-dev ccache openmpi-bin libopenmpi-dev
-    displayName: 'Install dependencies with apt'
+    displayName: 'Install apt dependencies'
+    # If HDF5_DIR is specified, HDF5 is built from source, so don't get it from apt
+    condition: and(succeeded(), eq(variables['HDF5_DIR'], ''))
 
 - script: |
     python -m pip install --upgrade pip
-    pip install tox codecov
-  displayName: 'Install dependencies with pip'
+    pip install tox codecov cibuildwheel==1.6.0
+  displayName: 'Install pip dependencies'
 
 - script: env
   displayName: 'print env'
