@@ -474,7 +474,7 @@ class Group(HLObject, MutableMappingHDF5):
 
        Example:
 
-        >>> f = File('myfile.hdf5')
+        >>> f = File('myfile.hdf5', 'w')
         >>> f.create_group("MyGroup")
         >>> list(f.keys())
         ['MyGroup']
