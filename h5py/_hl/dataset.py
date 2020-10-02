@@ -14,12 +14,14 @@
 from cached_property import cached_property
 import posixpath as pp
 import sys
+from warnings import warn
 
 from threading import local
 
 import numpy
 
 from .. import h5, h5s, h5t, h5r, h5d, h5p, h5fd, h5ds, _selector
+from ..h5py_warnings import H5pyDeprecationWarning
 from .base import HLObject, phil, with_phil, Empty, find_item_type
 from . import filters
 from . import selections as sel
@@ -386,6 +388,13 @@ class Dataset(HLObject):
         def collective(self):
             """ Context manager for MPI collective reads & writes """
             return CollectiveContext(self)
+
+    def _collective_mode(self):
+        """Return True if the dataset is in MPI collective mode"""
+        if MPI:
+            return self._dxpl.get_dxpl_mpio() == h5fd.MPIO_COLLECTIVE
+        else:
+            return False
 
     @property
     def dims(self):
@@ -773,7 +782,9 @@ class Dataset(HLObject):
         # Perform the dataspace selection.
         selection = sel.select(self.shape, args, dataset=self)
 
-        if selection.nselect == 0:
+        # If we are in MPI collective mode, we need to do the read even if it's
+        # an empty selection, to ensure all MPI processes read.
+        if selection.nselect == 0 and not self._collective_mode():
             return numpy.ndarray(selection.array_shape, dtype=new_dtype)
 
         arr = numpy.ndarray(selection.array_shape, new_dtype, order='C')
@@ -906,7 +917,11 @@ class Dataset(HLObject):
         # Perform the dataspace selection
         selection = sel.select(self.shape, args, dataset=self)
 
-        if selection.nselect == 0:
+        # If we are in MPI collective mode, we need to do the write even if it's
+        # an empty selection, to ensure all MPI processes write.
+        is_collective = self._collective_mode()
+
+        if selection.nselect == 0 and not is_collective:
             return
 
         # Broadcast scalars if necessary.
@@ -936,6 +951,14 @@ class Dataset(HLObject):
             val = val2
             mshape = val.shape
 
+        if is_collective and (mshape != selection.mshape):
+            warn("Broadcasting in collective mode is deprecated, because "
+                 "processes may do different numbers of writes. "
+                 "Expand the data shape - {} - to match the selection: {}."
+                 .format(mshape, selection.mshape),
+                 H5pyDeprecationWarning, stacklevel=2,
+                 )
+
         # Perform the write, with broadcasting
         mspace = h5s.create_simple(selection.expand_shape(mshape))
         for fspace in selection.broadcast(mshape):
@@ -963,6 +986,14 @@ class Dataset(HLObject):
             else:
                 dest_sel = sel.select(dest.shape, dest_sel, self)
 
+            if self._collective_mode() and (dest_sel.mshape != source_sel.mshape):
+                warn("Broadcasting in collective mode is deprecated, because "
+                     "processes may do different numbers of reads. "
+                     "Expand the selection shape - {} - to match the array: {}."
+                     .format(source_sel.mshape, dest_sel.mshape),
+                     H5pyDeprecationWarning, stacklevel=2,
+                     )
+
             for mspace in dest_sel.broadcast(source_sel.mshape):
                 self.id.read(mspace, fspace, dest, dxpl=self._dxpl)
 
@@ -987,6 +1018,14 @@ class Dataset(HLObject):
                 dest_sel = sel.SimpleSelection(self.shape)
             else:
                 dest_sel = sel.select(self.shape, dest_sel, self)
+
+            if self._collective_mode() and (dest_sel.mshape != source_sel.mshape):
+                warn("Broadcasting in collective mode is deprecated, because "
+                     "processes may do different numbers of writes. "
+                     "Expand the data shape - {} - to match the selection: {}."
+                     .format(source_sel.mshape, dest_sel.mshape),
+                     H5pyDeprecationWarning, stacklevel=2,
+                     )
 
             for fspace in dest_sel.broadcast(source_sel.mshape):
                 self.id.write(mspace, fspace, source, dxpl=self._dxpl)

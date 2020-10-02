@@ -290,7 +290,9 @@ class SimpleSelection(Selection):
         rank = len(count)
         tshape = self.expand_shape(source_shape)
 
-        chunks = tuple(x//y for x, y in zip(count, tshape))
+        # A zero-length selection needs to work for collective I/O
+        chunks = tuple(1 if (x == y == 0) else x // y
+                       for x, y in zip(count, tshape))
         nchunks = product(chunks)
 
         if nchunks == 1:
