@@ -18,7 +18,7 @@ include "config.pxi"
 from ._objects cimport pdefault
 from .utils cimport emalloc, efree
 from .h5p import CRT_ORDER_TRACKED
-from .h5p cimport PropID, PropGCID
+from .h5p cimport PropID, PropGCID, propwrap
 from . cimport _hdf5 # to implement container testing for 1.6
 from ._errors cimport set_error_handler, err_cookie
 
@@ -406,7 +406,7 @@ cdef class GroupID(ObjectID):
         Retrieve a copy of the group creation property list used to
         create this group.
         """
-        return PropGCID(H5Gget_create_plist(self.id))
+        return propwrap(H5Gget_create_plist(self.id))
 
 
     @with_phil
