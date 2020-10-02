@@ -667,3 +667,10 @@
   alternate_emails:
     - alemigo@github.com
     - 32462069+alemigo@users.noreply.github.com
+- name: Alex Porter
+  email: bomber8013@gmail.com
+  github: bomer8013
+  aliases:
+    - bomber8013
+  num_commits: 1
+  first_commit: Fri Oct 2 21:14:36 2020 +1000
