@@ -45,6 +45,13 @@ matrix:
         - pip install doctr
         - doctr deploy . --built-docs docs_api/_build/html
 
+    # Checks the asv benchmarks
+    - python: 3.8
+      env:
+        - TOXENV=asv
+        - HDF5_VERSION=1.10.5
+        - HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION
+
     # MPI tests
     # TODO: We should test with newer versions of HDF5
     - python: 3.6
