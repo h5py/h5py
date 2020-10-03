@@ -398,5 +398,37 @@ class RelativeLinkTestCase(ut.TestCase):
     def tearDown(self):
         shutil.rmtree(self.tmpdir)
 
+
+@ut.skipUnless(vds_support,
+               'VDS requires HDF5 >= 1.9.233')
+class ResizeTestCase(ut.TestCase):
+
+    def setUp(self):
+        self.tmpdir = tempfile.mkdtemp()
+        self.fpath = osp.join(self.tmpdir, 'testfile.h5')
+        self.source_shape = (10, 2)
+        self.max_shape = (20, 2)
+        self.comp = np.arange(1, 20, 2).reshape(10, 1)
+
+    def test_resize_vds(self):
+        with h5.File(self.fpath, "w") as f:
+            source_dset = f.create_dataset(
+                "source",
+                data=np.arange(20),
+                shape=self.source_shape,
+                maxshape=self.max_shape,
+                chunks=(10, 1)
+            )
+            layout = h5.VirtualLayout(shape=(10, 1), dtype=np.int, maxshape=self.max_shape)
+            layout_source = h5.VirtualSource(source_dset)
+            layout[:, 0] = layout_source[:, 1]
+            virtual_dset = f.create_virtual_dataset("virtual", layout)
+            assert (self.comp[:] == virtual_dset[:]).all()
+            virtual_dset.resize(20, 0)
+            assert virtual_dset.shape == (20, 1)
+
+    def tearDown(self):
+        shutil.rmtree(self.tmpdir)
+
 if __name__ == "__main__":
     ut.main()
