@@ -87,6 +87,7 @@ def test_unregister_filter(request):
         res = h5py.h5z.unregister_filter(h5py.h5z.FILTER_LZF)
         assert res
 
+
 @ut.skipIf(not os.getenv('H5PY_TEST_CHECK_FILTERS'),  "H5PY_TEST_CHECK_FILTERS not set")
 def test_filters_available():
     assert 'gzip' in h5py.filters.decode
