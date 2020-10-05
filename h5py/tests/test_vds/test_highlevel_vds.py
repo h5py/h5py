@@ -398,5 +398,48 @@ class RelativeLinkTestCase(ut.TestCase):
     def tearDown(self):
         shutil.rmtree(self.tmpdir)
 
+@ut.skipUnless(vds_support,
+               'VDS requires HDF5 >= 1.9.233')
+class VDSUnlimitedTestCase(ut.TestCase):
+
+    def setUp(self):
+        self.tmpdir = tempfile.mkdtemp()
+
+    def test_unlimited_axis(self):
+        comp1 = np.arange(1, 20, 2).reshape(10, 1)
+        comp2 = np.vstack((
+            comp1,
+            np.full(shape=(10, 1), fill_value=-1)
+        ))
+        comp3 = np.vstack((
+            comp1,
+            np.full(shape=(10, 1), fill_value=0)
+        ))
+        path = osp.join(self.tmpdir, "resize.h5")
+
+        with h5.File(path, "w") as f:
+            source_dset = f.create_dataset(
+                "source",
+                data=np.arange(20),
+                shape=(10, 2),
+                maxshape=(None, 2),
+                chunks=(10, 1),
+                fillvalue=-1
+            )
+            layout = h5.VirtualLayout((10, 1), np.int, (None, 1))
+            layout_source = h5.VirtualSource(source_dset)
+            layout[:, 0] = layout_source[:, 1]
+            layout.sources[0].set_unlimited(0)
+            
+            virtual_dset = f.create_virtual_dataset("virtual", layout)
+            assert (comp1 == virtual_dset).all()
+            source_dset.resize(20, 0)
+            assert (comp2 == virtual_dset).all()
+            source_dset[10:, 1] = np.zeros((10,), dtype=np.int)
+            assert (comp3 == virtual_dset).all()
+
+    def tearDown(self):
+        shutil.rmtree(self.tmpdir)
+
 if __name__ == "__main__":
     ut.main()

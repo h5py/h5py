@@ -22,6 +22,25 @@ class VDSmap(namedtuple('VDSmap', ('vspace', 'file_name',
                                    'dset_name', 'src_space'))):
     '''Defines a region in a virtual dataset mapping to part of a source dataset
     '''
+    def set_unlimited(self, axis: int):
+        """
+        Sets the specified axis for this source to have an unlimited selection
+        """
+        if not isinstance(axis, int):
+            raise TypeError("Axis must be an integer")
+        if axis < 0:
+            raise ValueError("Axis must be greater than 0")
+
+        for space in (self.vspace, self.src_space):
+            rank = space.get_simple_extent_ndims()
+            if not axis < rank:
+                raise ValueError("Axis {} value must be less than rank {}".format(axis, rank))
+
+            start, stride, count, block = space.get_regular_hyperslab()
+            counts = list(count)
+            counts[axis] = h5s.UNLIMITED
+            count = tuple(counts)
+            space.select_hyperslab(start, count, stride, block)
 
 
 vds_support = False
