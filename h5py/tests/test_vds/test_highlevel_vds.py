@@ -434,7 +434,6 @@ class VDSUnlimitedTestCase(ut.TestCase):
         with h5.File(self.path, "a") as f:
             source_dset = f['source']
             virtual_dset = f['virtual']
-        
             assert (comp1 == virtual_dset).all()
             source_dset.resize(20, 0)
             assert (comp2 == virtual_dset).all()
