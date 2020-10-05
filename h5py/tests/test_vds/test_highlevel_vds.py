@@ -416,8 +416,7 @@ class VDSUnlimitedTestCase(ut.TestCase):
             )
             self.layout = h5.VirtualLayout((10, 1), np.int, (None, 1))
             layout_source = h5.VirtualSource(source_dset)
-            self.layout[:, 0] = layout_source[:, 1]
-            self.layout.sources[0].set_unlimited(0)
+            self.layout[:h5.UNLIMITED, 0] = layout_source[:h5.UNLIMITED, 1]
 
             virtual_dset = f.create_virtual_dataset("virtual", self.layout)
 
@@ -439,16 +438,6 @@ class VDSUnlimitedTestCase(ut.TestCase):
             assert (comp2 == virtual_dset).all()
             source_dset[10:, 1] = np.zeros((10,), dtype=np.int)
             assert (comp3 == virtual_dset).all()
-
-    def test_set_unlimited_errors(self):
-        with self.assertRaises(TypeError):
-            self.layout.sources[0].set_unlimited("hello")
-
-        with self.assertRaises(ValueError):
-            self.layout.sources[0].set_unlimited(-1)
-
-        with self.assertRaises(ValueError):
-            self.layout.sources[0].set_unlimited(2)
 
     def tearDown(self):
         shutil.rmtree(self.tmpdir)

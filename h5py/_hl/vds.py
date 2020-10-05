@@ -22,25 +22,7 @@ class VDSmap(namedtuple('VDSmap', ('vspace', 'file_name',
                                    'dset_name', 'src_space'))):
     '''Defines a region in a virtual dataset mapping to part of a source dataset
     '''
-    def set_unlimited(self, axis: int):
-        """
-        Sets the specified axis for this source to have an unlimited selection
-        """
-        if not isinstance(axis, int):
-            raise TypeError("Axis must be an integer")
-        if axis < 0:
-            raise ValueError("Axis must be greater than 0")
 
-        for space in (self.vspace, self.src_space):
-            rank = space.get_simple_extent_ndims()
-            if not axis < rank:
-                raise ValueError("Axis {} value must be less than rank {}".format(axis, rank))
-
-            start, stride, count, block = space.get_regular_hyperslab()
-            counts = list(count)
-            counts[axis] = h5s.UNLIMITED
-            count = tuple(counts)
-            space.select_hyperslab(start, count, stride, block)
 
 
 vds_support = False
@@ -121,6 +103,20 @@ class VirtualSource(object):
     def __getitem__(self, key):
         tmp = copy(self)
         tmp.sel = select(self.shape, key, dataset=None)
+        try:
+            key = tuple(key)
+        except TypeError:
+            key = (key,)
+        for i, sl in enumerate(key):
+            if isinstance(sl, slice):
+                if sl.stop == h5s.UNLIMITED:
+                    space = tmp.sel.id
+                    rank = space.get_simple_extent_ndims()
+                    start, stride, count, block = space.get_regular_hyperslab()
+                    counts = list(count)
+                    counts[i] = h5s.UNLIMITED
+                    count = tuple(counts)
+                    space.select_hyperslab(start, count, stride, block)
         return tmp
 
 class VirtualLayout(object):
@@ -149,6 +145,20 @@ class VirtualLayout(object):
 
     def __setitem__(self, key, source):
         sel = select(self.shape, key, dataset=None)
+        try:
+            key = tuple(key)
+        except TypeError:
+            key = (key,)
+        for i, sl in enumerate(key):
+            if isinstance(sl, slice):
+                if sl.stop == h5s.UNLIMITED:
+                    space = sel.id
+                    rank = space.get_simple_extent_ndims()
+                    start, stride, count, block = space.get_regular_hyperslab()
+                    counts = list(count)
+                    counts[i] = h5s.UNLIMITED
+                    count = tuple(counts)
+                    space.select_hyperslab(start, count, stride, block)
         self.sources.append(VDSmap(sel.id,
                                    source.path,
                                    source.name,
