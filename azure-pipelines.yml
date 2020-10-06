@@ -27,7 +27,7 @@ jobs:
   pool:
     vmImage: ubuntu-16.04
   variables:
-    CIBW_BUILD: cp3[78]-manylinux_x86_64
+    CIBW_BUILD: cp3[789]-manylinux_x86_64
     CIBW_MANYLINUX_X86_64_IMAGE: docker.io/h5py/manylinux2010_x86_64-hdf5
     # Include less debugging info for smaller wheels (default is -g2)
     CIBW_ENVIRONMENT: "CFLAGS=-g1"
@@ -43,7 +43,7 @@ jobs:
     HDF5_VERSION: 1.12.0
     HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
     HDF5_VSVERSION: "15-64"
-    CIBW_BUILD: cp3[78]-win_amd64
+    CIBW_BUILD: cp3[789]-win_amd64
   steps:
     - template: ci/azure-pipelines-wheels.yml
       parameters:
@@ -54,7 +54,7 @@ jobs:
     vmImage: macOS-10.15
   variables:
     CIBW_ENVIRONMENT: "HDF5_DIR='/usr/local'"  # HDF5 installed with brew
-    CIBW_BUILD: cp3[78]-macosx_x86_64
+    CIBW_BUILD: cp3[789]-macosx_x86_64
   steps:
     - template: ci/azure-pipelines-wheels.yml
       parameters:
@@ -105,6 +105,12 @@ jobs:
         HDF5_VERSION: 1.12.0
         HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
         H5PY_ENFORCE_COVERAGE: yes
+      py39-deps-hdf51120:
+        python.version: '3.9'
+        TOXENV: py39-test-deps
+        HDF5_VERSION: 1.12.0
+        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
+        H5PY_ENFORCE_COVERAGE: yes
     # do mpi tests
 #      py37-deps-hdf51105-mpi:
 #        python.version: '3.7'
@@ -142,6 +148,10 @@ jobs:
         python.version: '3.8'
         TOXENV: py38-test-deps,py38-test-mindeps,py38-test-deps-pre
         WHL_FILE: h5py*-cp38-*manylinux1_x86_64.whl
+      py39:
+        python.version: '3.9'
+        TOXENV: py39-test-deps,py39-test-mindeps,py39-test-deps-pre
+        WHL_FILE: h5py*-cp39-*manylinux1_x86_64.whl
 
   steps:
     - template: ci/azure-pipelines-test-wheels.yml
@@ -170,6 +180,13 @@ jobs:
       py38-hdf5110:
         python.version: '3.8'
         TOXENV: py38-test-deps,py38-test-mindeps,py38-test-deps-pre
+        HDF5_VERSION: 1.10.6
+        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
+        HDF5_VSVERSION: "15-64"
+        H5PY_ENFORCE_COVERAGE: yes
+      py39-hdf5110:
+        python.version: '3.9'
+        TOXENV: py39-test-deps,py39-test-mindeps,py39-test-deps-pre
         HDF5_VERSION: 1.10.6
         HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
         HDF5_VSVERSION: "15-64"
@@ -210,6 +227,10 @@ jobs:
         python.version: '3.8'
         TOXENV: py38-test-deps,py38-test-mindeps,py38-test-deps-pre
         WHL_FILE: h5py*-cp38-*.whl
+      py39:
+        python.version: '3.9'
+        TOXENV: py39-test-deps,py39-test-mindeps,py39-test-deps-pre
+        WHL_FILE: h5py*-cp39-*.whl
 
   steps:
     - template: ci/azure-pipelines-test-wheels.yml
@@ -231,6 +252,10 @@ jobs:
       py38:
         python.version: '3.8'
         TOXENV: py38-test-deps,py38-test-mindeps,py38-test-deps-pre
+        H5PY_ENFORCE_COVERAGE: yes
+      py39:
+        python.version: '3.9'
+        TOXENV: py39-test-deps,py39-test-mindeps,py39-test-deps-pre
         H5PY_ENFORCE_COVERAGE: yes
     # test against newer HDF5
 #      py37-deps-hdf51103:
@@ -275,6 +300,10 @@ jobs:
         python.version: '3.8'
         TOXENV: py38-test-deps,py38-test-mindeps,py38-test-deps-pre
         WHL_FILE: h5py*-cp38-*.whl
+      py39:
+        python.version: '3.9'
+        TOXENV: py39-test-deps,py39-test-mindeps,py39-test-deps-pre
+        WHL_FILE: h5py*-cp39-*.whl
 
   steps:
     - template: ci/azure-pipelines-test-wheels.yml
