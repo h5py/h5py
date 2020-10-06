@@ -414,7 +414,7 @@ class VDSUnlimitedTestCase(ut.TestCase):
                 chunks=(10, 1),
                 fillvalue=-1
             )
-            self.layout = h5.VirtualLayout((10, 1), np.int, (None, 1))
+            self.layout = h5.VirtualLayout((10, 1), np.int, maxshape=(None, 1))
             layout_source = h5.VirtualSource(source_dset)
             self.layout[:h5.UNLIMITED, 0] = layout_source[:h5.UNLIMITED, 1]
 
@@ -434,7 +434,7 @@ class VDSUnlimitedTestCase(ut.TestCase):
             source_dset = f['source']
             virtual_dset = f['virtual']
             assert (comp1 == virtual_dset).all()
-            source_dset.resize(20, 0)
+            source_dset.resize(20, axis=0)
             assert (comp2 == virtual_dset).all()
             source_dset[10:, 1] = np.zeros((10,), dtype=np.int)
             assert (comp3 == virtual_dset).all()

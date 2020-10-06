@@ -103,10 +103,7 @@ class VirtualSource(object):
     def __getitem__(self, key):
         tmp = copy(self)
         tmp.sel = select(self.shape, key, dataset=None)
-        try:
-            key = tuple(key)
-        except TypeError:
-            key = (key,)
+        key = key if isinstance(key, tuple) else (key,)
         for i, sl in enumerate(key):
             if isinstance(sl, slice):
                 if sl.stop == h5s.UNLIMITED:
