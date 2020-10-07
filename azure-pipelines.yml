@@ -140,6 +140,8 @@ jobs:
   dependsOn: linux_wheels
   pool:
     vmImage: ubuntu-16.04
+  variables:
+    H5PY_TEST_CHECK_FILTERS: 1
 
   strategy:
     matrix:
@@ -224,6 +226,8 @@ jobs:
   dependsOn: windows_wheels
   pool:
     vmImage: vs2017-win2016
+  variables:
+    H5PY_TEST_CHECK_FILTERS: 1
 
   strategy:
     matrix:
@@ -310,6 +314,8 @@ jobs:
   dependsOn: macos_wheels
   pool:
     vmImage: macOS-10.15
+  variables:
+    H5PY_TEST_CHECK_FILTERS: 1
 
   strategy:
     matrix:
