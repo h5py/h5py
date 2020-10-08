@@ -418,7 +418,7 @@ class VDSUnlimitedTestCase(ut.TestCase):
             layout_source = h5.VirtualSource(source_dset)
             self.layout[:h5.UNLIMITED, 0] = layout_source[:h5.UNLIMITED, 1]
 
-            virtual_dset = f.create_virtual_dataset("virtual", self.layout)
+            f.create_virtual_dataset("virtual", self.layout)
 
     def test_unlimited_axis(self):
         comp1 = np.arange(1, 20, 2).reshape(10, 1)
@@ -433,11 +433,11 @@ class VDSUnlimitedTestCase(ut.TestCase):
         with h5.File(self.path, "a") as f:
             source_dset = f['source']
             virtual_dset = f['virtual']
-            assert (comp1 == virtual_dset).all()
+            np.testing.assert_array_equal(comp1, virtual_dset)
             source_dset.resize(20, axis=0)
-            assert (comp2 == virtual_dset).all()
+            np.testing.assert_array_equal(comp2, virtual_dset)
             source_dset[10:, 1] = np.zeros((10,), dtype=np.int)
-            assert (comp3 == virtual_dset).all()
+            np.testing.assert_array_equal(comp3, virtual_dset)
 
     def tearDown(self):
         shutil.rmtree(self.tmpdir)
