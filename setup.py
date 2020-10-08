@@ -106,7 +106,6 @@ class test(Command):
 
 
 CMDCLASS = {'build_ext': setup_build.h5py_build_ext,
-            'configure': setup_configure.configure,
             'test': test, }
 
 
