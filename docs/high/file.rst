@@ -331,7 +331,8 @@ Reference
 
 .. class:: File(name, mode=None, driver=None, libver=None, \
     userblock_size=None, swmr=False, rdcc_nslots=None, rdcc_nbytes=None, \
-    rdcc_w0=None, track_order=None, **kwds)
+    rdcc_w0=None, track_order=None, fs_strategy=None, fs_persist=False, \
+    fs_threshold=1, **kwds)
 
     Open or create a new file.
 
@@ -360,6 +361,15 @@ Reference
     :param track_order:  Track dataset/group/attribute creation order under
                     root group if ``True``.  Default is
                     ``h5.get_config().track_order``.
+    :param fs_strategy: The file space handling strategy to be used.
+            Only allowed when creating a new file. One of "fsm", "page",
+            "aggregate", "none", or None (to use the HDF5 default).
+    :param fs_persist: A boolean to indicate whether free space should be
+            persistent or not. Only allowed when creating a new file. The
+            default is False.
+    :param fs_threshold: The smallest free-space section size that the free
+            space manager will track. Only allowed when creating a new file.
+            The default is 1.
     :param kwds:    Driver-specific keywords; see :ref:`file_driver`.
 
     .. method:: __bool__()
@@ -396,6 +406,11 @@ Reference
         String indicating if the file is open readonly ("r") or read-write
         ("r+").  Will always be one of these two values, regardless of the
         mode used to open the file.
+
+    .. attribute:: swmr_mode
+
+       True if the file access is using :doc:`/swmr`. Use :attr:`mode` to
+       distinguish SWMR read from write.
 
     .. attribute:: driver
 

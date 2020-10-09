@@ -36,8 +36,10 @@ extensions = [
 
 intersphinx_mapping = {'low': ('https://api.h5py.org', None)}
 
-extlinks = {'issue': ('https://github.com/h5py/h5py/issues/%s',
-                      'GH')}
+extlinks = {
+    'issue': ('https://github.com/h5py/h5py/issues/%s', 'GH'),
+    'pr': ('https://github.com/h5py/h5py/pull/%s', 'PR '),
+}
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 

@@ -74,9 +74,9 @@ Unicode strings are used exclusively for object names in the file::
     >>> f.name
     '/'
 
-You can supply either byte or unicode strings (on both Python 2 and Python 3)
+You can supply either byte or unicode strings
 when creating or retrieving objects. If a byte string is supplied,
-it will be used as-is; Unicode strings will be encoded down to UTF-8.
+it will be used as-is; Unicode strings will be encoded as UTF-8.
 
 In the file, h5py uses the most-compatible representation; H5T_CSET_ASCII for
 characters in the ASCII range; H5T_CSET_UTF8 otherwise.
