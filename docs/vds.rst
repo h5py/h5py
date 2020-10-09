@@ -64,6 +64,19 @@ together four 1D datasets from separate files into a 2D dataset::
 
 This is an extract from the ``vds_simple.py`` example in the examples folder.
 
+.. note::
+
+   Slices up to ``h5py.h5s.UNLIMITED`` can be used to create an unlimited selection
+   along a single axis. Resizing the source data along this axis will cause the
+   virtual dataset to grow. E.g.::
+
+       layout[n - 1, :UNLIMITED] = vsource[:UNLIMITED]
+
+   A normal slice with no defined end point (``[:]``) is fixed based on the
+   shape when you define it.
+
+   .. versionadded:: 3.0
+
 Examples
 --------
 

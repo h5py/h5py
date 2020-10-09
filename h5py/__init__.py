@@ -77,6 +77,7 @@ from .h5t import (special_dtype, check_dtype,
     check_vlen_dtype, check_string_dtype, check_enum_dtype, check_ref_dtype,
     check_opaque_dtype,
 )
+from .h5s import UNLIMITED
 
 from .version import version as __version__
 
