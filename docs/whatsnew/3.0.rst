@@ -190,7 +190,5 @@ Building h5py
 Development
 -----------
 
-
 * Unregistering converter functions on exit (:pr:`1440`) should allow profiling
   and code coverage tools to work on Cython code.
-
