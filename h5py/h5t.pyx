@@ -33,12 +33,10 @@ import numpy as np
 from .h5 import get_config
 
 from ._objects import phil, with_phil
-import platform
-
 
 cfg = get_config()
 
-MACHINE = platform.machine()
+DEF MACHINE = UNAME_MACHINE  # processor architecture, provided by Cython
 cdef char* H5PY_PYTHON_OPAQUE_TAG = "PYTHON:OBJECT"
 
 # === Custom C API ============================================================
