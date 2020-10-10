@@ -10,43 +10,68 @@
 # gives no duplicates.
 
 Andrew Collette <andrew.collette@gmail.com> andrewcollette <andrew.collette@gmail.com>
+Thomas Kluyver <thomas@kluyver.me.uk> Thomas Kluyver <thomas.kluyver@xfel.eu>
+Thomas Kluyver <thomas@kluyver.me.uk> Thomas Kluyver <takowl@gmail.com>
 Thomas A Caswell <tcaswell@bnl.gov> Thomas A Caswell <tcaswell@uchicago.edu>
 Thomas A Caswell <tcaswell@bnl.gov> Thomas A Caswell <tcaswell@gmail.com>
 James Tocknell <aragilar@gmail.com> James Tocknell <aragilar+github@gmail.com>
-Thomas Kluyver <thomas@kluyver.me.uk> Thomas Kluyver <thomas.kluyver@xfel.eu>
-Thomas Kluyver <thomas@kluyver.me.uk> Thomas Kluyver <takowl@gmail.com>
+Jerome Kieffer <jerome.kieffer@esrf.fr> Jerome Kieffer <github@terre-adelie.org>
 Андрей Парамонов <paramon@lims.acdlabs.ru>
+Henri Payno <henri.payno@esrf.fr> payno <payno@linazimov.esrf.fr>
+Henri Payno <henri.payno@esrf.fr> payno <payno@users.noreply.github.com>
+Henri Payno <henri.payno@esrf.fr> payno <henri.payno@gmail.com>
 Darren Dale <dsdale24@gmail.com> ddale <darren@f2-analysis-2.chess.cornell.edu>
-Aleksandar Jelenak <ajelenak@hdfgroup.org>
-Valentin Valls <valentin.valls@esrf.fr>
-Ulrik Kofoed Pedersen <ulrik.pedersen@diamond.ac.uk>
-Martin Raspaud <martin.raspaud@smhi.se>
+Aleksandar Jelenak <ajelenak@hdfgroup.org> Aleksandar Jelenak <ajelenak@users.noreply.github.com>
+Pierlauro Sciarelli <foss@pstux.dev> Pierlauro Sciarelli <pierlauro@users.noreply.github.com>
+Pierlauro Sciarelli <foss@pstux.dev> Pierlauro Sciarelli <sciarellip@gmail.com>
+Thomas VINCENT <thomas.vincent@esrf.fr>
 Anthony Scopatz <scopatz@gmail.com>
+Valentin Valls <valentin.valls@esrf.fr>
+Chen <chenguopingdota@163.com> chenguoping <chenguopingdota@163.com>
+Chen <chenguopingdota@163.com> Chenguoping <chenguopingdota@163.com>
+Ulrik Kofoed Pedersen <ulrik.pedersen@diamond.ac.uk>
+Stan West <countrycaptain@verizon.net> Stan West <38358698+stanwest@users.noreply.github.com>
+Martin Raspaud <martin.raspaud@smhi.se>
 John Kirkham <kirkhamj@janelia.hhmi.org>
 Aaron Parsons <aaron.parsons@diamond.ac.uk>
+Julia Garriga Ferrer <julia.garriga@esrf.fr> juliagarriga <juliiaa28@gmail.com>
+Jerome Kieffer <kieffer@esrf.fr> Jerome Kieffer <jerome.kieffer@terre-adelie.org>
+Hameer Abbasi <hameerabbasi@yahoo.com>
+John Readey <jreadey@hdfgroup.org>
 Lawrence Chan <element103@gmail.com> Lawrence Chan <lchan@jumptrading.com>
 Andrey Paramonov <cmr.pent@gmail.com>
+Cyril Danilevski <cydanil@gmail.com>
+Yu Feng <yfeng1@waterfall.dyn.berkeley.edu> Yu Feng <rainwoodman@gmail.com>
+Yu Feng <yfeng1@waterfall.dyn.berkeley.edu> Yu Feng <feyu@google.com>
 Liu JiaLin <jaln.liu@ttu.edu> valiantljk <jaln.liu@ttu.edu>
 lhole <laurence.hole@gmail.com>
 Ghislain Antony Vaillant <ghisvail@gmail.com> Ghislain Antony Vaillant <ghisvail@users.noreply.github.com>
-Yu Feng <yfeng1@waterfall.dyn.berkeley.edu> Yu Feng <rainwoodman@gmail.com>
 Seth R Johnson <johnsonsr@ornl.gov>
 Matthieu Brucher <matthieu.brucher@gmail.com>
 Andrea Bedini <andrea.bedini@curtin.edu.au> Andrea Bedini <andreabedini@users.noreply.github.com>
 Martin Teichmann <lkb.teichmann@gmail.com>
-Stan West <countrycaptain@verizon.net> Stan West <38358698+stanwest@users.noreply.github.com>
 Axel Huebl <axel.huebl@plasma.ninja>
 Pierre de Buyl <pdebuyl@ulb.ac.be>
+miketrumpis <mtrumpis@gmail.com>
+Vladimir Brankov <vbrankov@janestreet.com>
+V. Armando Solé <sole@esrf.fr>
 Florian Rathgeber <florian.rathgeber@gmail.com>
 Chris Billington <chrisjbillington@gmail.com>
-Thomas VINCENT <thomas.vincent@esrf.fr>
 Max Dietz <maxwell.r.dietz@gmail.com>
+Silas-Asamoah <silasbempong@gmail.com>
+tmichela <thomas.michelat@gmail.com>
+Anna Padee <anna.padee@gmail.com>
+nitrocalcite <jonathan.okasinski@gmail.com>
 Konrad Hinsen <konrad.hinsen@fastmail.net> khinsen <konrad.hinsen@fastmail.net>
 Toon Verstraelen <Toon.Verstraelen@UGent.be>
-Jerome Kieffer <jerome.kieffer@esrf.fr> Jerome Kieffer <github@terre-adelie.org>
 Markus Gerstel <markus.gerstel@diamond.ac.uk>
 Machine User <Machine User@WINBUILD>
 Geoff Wright <gpwright@gmail.com>
+Jordan Farquhar <jordan.a.farquhar@gmail.com> jordan-farq <jordan.a.farquhar@gmail.com>
+Clemens Weninger <clemens.weninger@maxiv.lu.se> Clemens Weninger <clemens@m-info.de>
+Robin De Schepper <robin.deschepper93@gmail.com>
+aporter <aporter@blueorigin.com>
+Kai Muehlbauer <kai.muehlbauer@uni-bonn.de>
 Kit Choi <kit@kychoi.org>
 lucasb-eyer <lucasb.eyer.be@gmail.com>
 Matthew Brett <matthew.brett@gmail.com>
@@ -59,6 +84,8 @@ Chen Yufei <cyf@ruitiancapital.com> Chen Yufei <cyfdecyf@gmail.com>
 Simon Mutch <smutch@unimelb.edu.au>
 Christian Sachs <sachs.christian@gmail.com>
 ebner <simon.ebner@psi.ch>
+egachen <ramon.chen2014@gmail.com>
+Gary Yendell <gary.yendell@diamond.ac.uk>
 Sajid Ali <30510036+s-sajid-ali@users.noreply.github.com>
 Noel Dawe <Noel.Dawe@cern.ch>
 John Tyree <johntyree@gmail.com>
@@ -71,7 +98,6 @@ Will Parkin <wmparkin@gmail.com>
 Devin <>
 Nathan Goldbaum <ngoldbau@illinois.edu>
 paulmueller <paulmueller@users.noreply.github.com>
-Hameer Abbasi <hameerabbasi@yahoo.com>
 Andy Salnikov <a_salnikov@yahoo.com>
 amcnicho <andrew.mcnichols@gmail.com>
 Jonah Bernhard <jonah.bernhard@gmail.com>
@@ -85,6 +111,13 @@ Michael Boyle <michael.oliver.boyle@gmail.com>
 Sam Mason <sam@samason.uk>
 Peter H. Li <phli@google.com>
 jialin <jalnliu@lbl.gov>
+Alex Porter <bomber8013@gmail.com> bomber8013 <bomber8013@gmail.com>
+jhofinger <jonathan.hofinger@gmx.de>
+Aaron Meurer <asmeurer@gmail.com>
+Guinnes Singh <gswebspace@gmail.com>
+Jonathan Okasinski <nitrocalcite@users.noreply.github.com>
+mattip <matti.picus@gmail.com>
+Daniel Berke <berke.daniel@gmail.com>
 joydeep bhattacharjee <joydeepubuntu@gmail.com>
 pharshalp <pharshalp@gmail.com>
 Matthias Geier <Matthias.Geier@gmail.com>
@@ -131,3 +164,16 @@ Jens Timmerman <jens.timmerman@ugent.be>
 Niru Maheswaranathan <nirum@users.noreply.github.com>
 Paco Hope <pacohope@amazon.co.uk>
 Felix Yan <felixonmars@archlinux.org>
+Alex Migon <alexmigon@gmail.com> alemigo <alemigo@github.com>
+Alex Migon <alexmigon@gmail.com> alemigo <32462069+alemigo@users.noreply.github.com>
+Alex Migon <alexmigon@gmail.com> alemig <alemigo@github.com>
+Alex Migon <alexmigon@gmail.com> alemig <32462069+alemigo@users.noreply.github.com>
+Lisandro Dalcin <dalcinl@gmail.com>
+Alexei Colin <acolin@isi.edu>
+Marco Paolini <markopaolini@gmail.com>
+pierlauro <pierlauro.sciarelli@bsc.es>
+Philipp A <flying-sheep@web.de>
+Csaba Kertész <csaba.kertesz@gmail.com>
+Thomas Michelat <32831491+tmichela@users.noreply.github.com>
+Luke Tudge <luketudge@gmail.com>
+Gang Chen <gang.chen@zenuity.com>

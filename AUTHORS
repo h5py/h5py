@@ -2,41 +2,61 @@ All of the people who have made at least one contribution to h5py.
 Authors are sorted by number of commits.
 
 * Andrew Collette
+* Thomas Kluyver
 * Thomas A Caswell
 * James Tocknell
-* Thomas Kluyver
+* Jerome Kieffer
 * Андрей Парамонов
+* Henri Payno
 * Darren Dale
 * Aleksandar Jelenak
-* Valentin Valls
-* Ulrik Kofoed Pedersen
-* Martin Raspaud
+* Pierlauro Sciarelli
+* Thomas VINCENT
 * Anthony Scopatz
+* Valentin Valls
+* Chen
+* Ulrik Kofoed Pedersen
+* Stan West
+* Martin Raspaud
 * John Kirkham
 * Aaron Parsons
+* Julia Garriga Ferrer
+* Jerome Kieffer
+* Hameer Abbasi
+* John Readey
 * Lawrence Chan
 * Andrey Paramonov
+* Cyril Danilevski
+* Yu Feng
 * Liu JiaLin
 * lhole
 * Ghislain Antony Vaillant
-* Yu Feng
 * Seth R Johnson
 * Matthieu Brucher
 * Andrea Bedini
 * Martin Teichmann
-* Stan West
 * Axel Huebl
 * Pierre de Buyl
+* miketrumpis
+* Vladimir Brankov
+* V. Armando Solé
 * Florian Rathgeber
 * Chris Billington
-* Thomas VINCENT
 * Max Dietz
+* Silas-Asamoah
+* tmichela
+* Anna Padee
+* nitrocalcite
 * Konrad Hinsen
 * Toon Verstraelen
-* Jerome Kieffer
 * Markus Gerstel
 * Machine User
 * Geoff Wright
+* Jordan Farquhar
+* Clemens Weninger
+* Robin De Schepper
+* aporter
+* Kai Muehlbauer
 * Kit Choi
 * lucasb-eyer
 * Matthew Brett
@@ -49,6 +69,8 @@ Authors are sorted by number of commits.
 * Simon Mutch
 * Christian Sachs
 * ebner
+* egachen
+* Gary Yendell
 * Sajid Ali
 * Noel Dawe
 * John Tyree
@@ -61,7 +83,6 @@ Authors are sorted by number of commits.
 * Devin
 * Nathan Goldbaum
 * paulmueller
-* Hameer Abbasi
 * Andy Salnikov
 * amcnicho
 * Jonah Bernhard
@@ -75,6 +96,13 @@ Authors are sorted by number of commits.
 * Sam Mason
 * Peter H. Li
 * jialin
+* Alex Porter
+* jhofinger
+* Aaron Meurer
+* Guinnes Singh
+* Jonathan Okasinski
+* mattip
+* Daniel Berke
 * joydeep bhattacharjee
 * pharshalp
 * Matthias Geier
@@ -121,3 +149,13 @@ Authors are sorted by number of commits.
 * Niru Maheswaranathan
 * Paco Hope
 * Felix Yan
+* Alex Migon
+* Lisandro Dalcin
+* Alexei Colin
+* Marco Paolini
+* pierlauro
+* Philipp A
+* Csaba Kertész
+* Thomas Michelat
+* Luke Tudge
+* Gang Chen
