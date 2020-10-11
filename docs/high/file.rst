@@ -353,7 +353,7 @@ Reference
     :param swmr:    If ``True`` open the file in single-writer-multiple-reader
                     mode. Only used when mode="r".
     :param rdcc_nbytes:  Total size of the raw data chunk cache in bytes. The
-                    default size is :math:`1024^2` (1 MB) per dataset.
+                    default size is :math:`1024^2` (1 MiB) per dataset.
     :param rdcc_w0: Chunk preemption policy for all datasets.  Default value is
                     0.75.
     :param rdcc_nslots:  Number of chunk slots in the raw data chunk cache for
