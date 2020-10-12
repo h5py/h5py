@@ -286,7 +286,7 @@ the decimal point to retain.
 .. warning::
     Currently the scale-offset filter does not preserve special float values
     (i.e. NaN, inf), see
-    https://lists.hdfgroup.org/pipermail/hdf-forum_lists.hdfgroup.org/2015-January/008296.html
+    https://forum.hdfgroup.org/t/scale-offset-filter-and-special-float-values-nan-infinity/3379
     for more information and follow-up.
 
 
