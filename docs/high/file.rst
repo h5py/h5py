@@ -131,6 +131,18 @@ a better option may be to store temporary data on disk using the functions in
    the HDF5 file before closing the file object it's wrapping. If there is an
    error while trying to close the HDF5 file, segfaults may occur.
 
+.. note::
+
+   Using a Python file-like object for HDF5 is internally more complex,
+   as the HDF5 C code calls back into Python to access it. It inevitably
+   has more ways to go wrong, and the failures may be less clear when it does.
+   For some common use cases, you can easily avoid it:
+
+   - To create a file in memory and never write it to disk, use the ``'core'``
+     driver with ``mode='w', backing_store=False`` (see :ref:`file_driver`).
+   - To use a temporary file securely, make a temporary directory and
+     :ref:`open a file path <file_open>` inside it.
+
 .. _file_version:
 
 Version bounding
