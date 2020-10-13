@@ -28,11 +28,6 @@ steps:
       echo ##vso[task.setvariable variable=LINK]/LIBPATH:$(build.BinariesDirectory)\zlib-msvc-x64\build\native\lib_release
       echo ##vso[task.setvariable variable=ZLIB_ROOT]$(build.BinariesDirectory)\zlib-msvc-x64\build\native
     displayName: 'Install nuget dependencies'
-- ${{ if eq(parameters.platform, 'macos') }}:
-  - script: |
-      brew install pkg-config hdf5@1.12 ccache open-mpi
-      brew link --force hdf5@1.12
-    displayName: 'Install brew dependencies'
 
 - script: |
     python -m pip install --upgrade pip
@@ -42,12 +37,16 @@ steps:
 - script: env
   displayName: 'Print env'
 
-# On Mac, we already installed HDF5 from brew. On Linux, the wheel will be
+# On Linux, the wheel will be
 # built inside a Docker image which already contains HDF5.
 - ${{ if eq(parameters.platform, 'windows') }}:
     - script: |
         python -m pip install requests
         python ci\\appveyor\\get_hdf5.py
+      displayName: 'Ensure HDF5'
+- ${{ if eq(parameters.platform, 'macos') }}:
+    - script: |
+        ci/travis/get_hdf5_if_needed.sh
       displayName: 'Ensure HDF5'
 
 - script: |
