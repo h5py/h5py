@@ -69,8 +69,8 @@ class TestMapping(BaseTest):
     """
 
     def setUp(self):
+        super().setUp()
         data = ('a', 'b')
-        self.f = File('foo.hdf5', 'w')
         self.grp = self.f.create_group('bar')
         self.attr = self.f.attrs.create('x', data)
 
