@@ -74,10 +74,6 @@ class TestMapping(BaseTest):
         self.grp = self.f.create_group('bar')
         self.attr = self.f.attrs.create('x', data)
 
-    def TearDown(self):
-        if self.f:
-            self.close()
-
     def test_keys(self):
         key_1 = self.f.keys()
         self.assertIsInstance(repr(key_1), str)
