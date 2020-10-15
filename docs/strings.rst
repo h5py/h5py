@@ -145,6 +145,6 @@ Fixed length strings are different; h5py doesn't try to decode them::
         f.attrs["fixed_bad"].decode("utf-8")
     UnicodeDecodeError: 'utf-8' codec can't decode byte 0xb1 in position 3: invalid start byte
     >>> f.attrs["fixed_bad"].decode("latin-1")
-    '2.0\udcb10.1'
+    '2.0±0.1'
 
 As we get bytes back, we only need to decode them with the correct encoding.
