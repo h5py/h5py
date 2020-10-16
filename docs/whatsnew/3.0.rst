@@ -4,12 +4,13 @@ What's new in h5py 3.0
 New features
 ------------
 
-
+* The interface for storing & reading strings has changed - see :doc:`/strings`.
+  The new rules are hopefully more consistent, but may well require some changes
+  in coding using h5py.
 * Reading & writing data now releases the GIL, so another Python thread can
   continue while HDF5 accesses data. Where HDF5 can call back into Python, such
   as for data conversion, h5py re-acquires the GIL. However, HDF5 has its own
   global lock, so this won't speed up parallel data access using multithreading.
-* The interface for storing strings is more consistent - see :doc:`/strings`.
 * Numpy datetime and timedelta arrays can now be stored and read as HDF5
   opaque data (:issue:`1339`), though other tools will not understand them.
   See :ref:`opaque_dtypes` for more information.
@@ -62,12 +63,17 @@ New features
 Breaking changes & deprecations
 -------------------------------
 
+* h5py now requires Python 3.6 or above; it is no longer compatible with Python
+  2.7.
 * The default mode for opening files is now 'r' (read-only).
   See :ref:`file_open` for other possible modes if you need to write to a file.
 * In previous versions, creating a dataset from a list of bytes objects would
   choose a fixed length string datatype to fit the biggest item. It will now
   use a variable length string datatype. To store fixed length strings, use a
   suitable dtype from :func:`h5py.string_dtype`.
+* Variable-length UTF-8 strings in datasets are now read as ``bytes`` objects
+  instead of ``str`` by default, for consistency with other kinds of strings.
+  See :doc:`/strings` for more details.
 * When making a virtual dataset, a dtype must be specified in
   :class:`.VirtualLayout`. There is no longer a default dtype, as this was
   surprising in some cases.
