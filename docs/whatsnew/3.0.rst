@@ -63,6 +63,8 @@ New features
 Breaking changes & deprecations
 -------------------------------
 
+* h5py now requires Python 3.6 or above; it is no longer compatible with Python
+  2.7.
 * The default mode for opening files is now 'r' (read-only).
   See :ref:`file_open` for other possible modes if you need to write to a file.
 * In previous versions, creating a dataset from a list of bytes objects would
