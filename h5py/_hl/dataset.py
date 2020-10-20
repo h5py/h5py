@@ -11,7 +11,10 @@
     Implements support for high-level dataset access.
 """
 
-from cached_property import cached_property
+try:
+    from functools import cached_property
+except ImportError:
+    from cached_property import cached_property
 import posixpath as pp
 import sys
 
