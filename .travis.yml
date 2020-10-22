@@ -82,7 +82,7 @@ before_install:
 
 install:
   - pip install -U tox codecov virtualenv
-  - ci/travis/get_hdf5_if_needed.sh
+  - ci/get_hdf5_if_needed.sh
   - ls -lRa $HDF5_CACHE_DIR
 script:
   - tox

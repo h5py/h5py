@@ -61,7 +61,7 @@ steps:
 
 - ${{ if eq(parameters.shell, 'unix') }}:
     - script: |
-        ./ci/travis/get_hdf5_if_needed.sh
+        ./ci/get_hdf5_if_needed.sh
       displayName: 'ensure HDF5'
 - ${{ if eq(parameters.shell, 'cmd') }}:
     - script: |

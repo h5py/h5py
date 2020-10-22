@@ -46,7 +46,7 @@ steps:
       displayName: 'Ensure HDF5'
 - ${{ if eq(parameters.platform, 'macos') }}:
     - script: |
-        ci/travis/get_hdf5_if_needed.sh
+        ci/get_hdf5_if_needed.sh
       displayName: 'Ensure HDF5'
 
 - script: |
