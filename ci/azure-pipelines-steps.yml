@@ -7,10 +7,12 @@ steps:
   displayName: HDF5 cache
   inputs:
     # The key should specify enough to avoid restoring an incompatible build.
-    # HDF5_VSVERSION is only for Windows - it's just a fixed string elsewhere.
-    # Increment the first number to clear the cache if you change e.g.
-    # dependencies or build options.
-    key: 2 | HDF5 | "$(Agent.OS)" | "${{ parameters.vmImage }}" | "$(HDF5_VERSION)" | "$(HDF5_VSVERSION)"
+    # Increment the first number to clear the cache if you change something
+    # not captured by the key, e.g. dependencies.
+    ${{ if eq(parameters.platform, 'windows') }}:
+      key: 0 | HDF5 | "$(Agent.OS)" | "$(Agent.OSArchitecture)" | "$(HDF5_VERSION)" | "$(HDF5_VSVERSION)" | ci/get_hdf5_win.py
+    ${{ if ne(parameters.platform, 'windows') }}:
+      key: 0 | HDF5 | "$(Agent.OS)" | "$(Agent.OSArchitecture)" | "$(HDF5_VERSION)" | ci/get_hdf5_if_needed.sh
     path: $(HDF5_CACHE_DIR)
   condition: and(succeeded(), ne(variables['HDF5_VERSION'], ''))
 
@@ -66,7 +68,7 @@ steps:
 - ${{ if eq(parameters.shell, 'cmd') }}:
     - script: |
         py -3.7 -m pip install requests
-        py -3.7 ci\\appveyor\\get_hdf5.py
+        py -3.7 ci\\get_hdf5_win.py
       displayName: 'ensure HDF5'
 
 - script: env
