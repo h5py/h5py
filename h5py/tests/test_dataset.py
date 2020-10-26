@@ -540,6 +540,16 @@ class TestCreateLZF(BaseDataset):
         self.assertEqual(dset.compression, 'lzf')
         self.assertEqual(dset.compression_opts, None)
 
+        testdata = np.arange(100)
+        dset = self.f.create_dataset('bar', data=testdata, compression='lzf')
+        self.assertEqual(dset.compression, 'lzf')
+        self.assertEqual(dset.compression_opts, None)
+
+        self.f.flush()  # Actually write to file
+
+        readdata = self.f['bar'][()]
+        self.assertArrayEqual(readdata, testdata)
+
     def test_lzf_exc(self):
         """ Giving lzf options raises ValueError """
         with self.assertRaises(ValueError):

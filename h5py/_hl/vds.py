@@ -24,11 +24,45 @@ class VDSmap(namedtuple('VDSmap', ('vspace', 'file_name',
     '''
 
 
+
 vds_support = False
 hdf5_version = version.hdf5_version_tuple[0:3]
 
 if hdf5_version >= h5.get_config().vds_min_hdf5_version:
     vds_support = True
+
+
+def _convert_space_for_key(space, key):
+    """
+    Converts the space with the given key. Mainly used to allow unlimited
+    dimensions in virtual space selection.
+    """
+    key = key if isinstance(key, tuple) else (key,)
+    type_code = space.get_select_type()
+
+    # check for unlimited selections in case where selection is regular
+    # hyperslab, which is the only allowed case for h5s.UNLIMITED to be
+    # in the selection
+    if type_code == h5s.SEL_HYPERSLABS and space.is_regular_hyperslab():
+        rank = space.get_simple_extent_ndims()
+        nargs = len(key)
+
+        idx_offset = 0
+        start, stride, count, block = space.get_regular_hyperslab()
+        # iterate through keys. we ignore numeral indices. if we get a
+        # slice, we check for an h5s.UNLIMITED value as the stop
+        # if we get an ellipsis, we offset index by (rank - nargs)
+        for i, sl in enumerate(key):
+            if isinstance(sl, slice):
+                if sl.stop == h5s.UNLIMITED:
+                    counts = list(count)
+                    idx = i + idx_offset
+                    counts[idx] = h5s.UNLIMITED
+                    count = tuple(counts)
+            elif sl is Ellipsis:
+                idx_offset = rank - nargs
+
+        space.select_hyperslab(start, count, stride, block)
 
 
 class VirtualSource(object):
@@ -102,6 +136,7 @@ class VirtualSource(object):
     def __getitem__(self, key):
         tmp = copy(self)
         tmp.sel = select(self.shape, key, dataset=None)
+        _convert_space_for_key(tmp.sel.id, key)
         return tmp
 
 class VirtualLayout(object):
@@ -130,6 +165,7 @@ class VirtualLayout(object):
 
     def __setitem__(self, key, source):
         sel = select(self.shape, key, dataset=None)
+        _convert_space_for_key(sel.id, key)
         self.sources.append(VDSmap(sel.id,
                                    source.path,
                                    source.name,
