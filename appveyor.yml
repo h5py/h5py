@@ -62,7 +62,7 @@ install:
   - "%PYTHON%\\python.exe -m pip install --upgrade wheel pip setuptools"
   - "py -3.6 -m pip install --upgrade wheel pip setuptools virtualenv"
   - "py -3.6 -m pip install requests"
-  - "py -3.6 ci\\appveyor\\get_hdf5.py"
+  - "py -3.6 ci\\get_hdf5_win.py"
   - "py -3.6 -m pip install tox codecov tox-appveyor"
 
 build: off

@@ -6,9 +6,14 @@ if [ -z ${HDF5_DIR+x} ]; then
     echo "Using OS HDF5"
 else
     echo "Using downloaded HDF5"
-    #python3 -m pip install requests
-    #python3 ci/get_hdf5.py
-    if [ -f $HDF5_DIR/lib/libhdf5.so ]; then
+
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        lib_name=libhdf5.dylib
+    else
+        lib_name=libhdf5.so
+    fi
+
+    if [ -f $HDF5_DIR/lib/$lib_name ]; then
         echo "using cached build"
     else
         pushd /tmp
