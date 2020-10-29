@@ -149,12 +149,26 @@ The easiest way to run the tests is with
 Write a release note
 ~~~~~~~~~~~~~~~~~~~~
 
+Changes which could affect people building and using h5py after the next release
+should have a news entry. You don't need to do this if your changes don't affect
+usage, e.g. adding tests or correcting comments.
+
 In the ``news/`` folder, make a copy of ``TEMPLATE.rst`` named after your branch.
 Edit the new file, adding a sentence or two about what you've added or fixed.
-Commit this to git too. These files will be used to make the release notes.
+Commit this to git too.
 
-You don't need this if your change doesn't affect people building and using h5py,
-e.g. fixing a typo.
+News entries are merged into the :doc:`what's new documents <whatsnew/index>`
+for each release. They should allow someone to quickly understand what a new
+feature is, or whether a bug they care about has been fixed. E.g.::
+
+    Bug fixes
+    ---------
+
+    * Fix reading data for region references pointing to an empty selection.
+
+The *Building h5py* section is for changes which affect how people build h5py
+from source. It's not about how we make prebuilt wheels; changes to that which
+make a visible difference can go in *New features* or *Bug fixes*.
 
 Add yourself to the author list
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
