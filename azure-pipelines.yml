@@ -27,7 +27,7 @@ jobs:
   pool:
     vmImage: ubuntu-16.04
   variables:
-    CIBW_BUILD: cp3[789]-manylinux_x86_64
+    CIBW_BUILD: cp3[6789]-manylinux_x86_64
     CIBW_MANYLINUX_X86_64_IMAGE: docker.io/h5py/manylinux2010_x86_64-hdf5
     # Include less debugging info for smaller wheels (default is -g2)
     CIBW_ENVIRONMENT: "CFLAGS=-g1"
@@ -43,7 +43,7 @@ jobs:
     HDF5_VERSION: 1.12.0
     HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
     HDF5_VSVERSION: "15-64"
-    CIBW_BUILD: cp3[789]-win_amd64
+    CIBW_BUILD: cp3[6789]-win_amd64
   steps:
     - template: ci/azure-pipelines-wheels.yml
       parameters:
@@ -56,7 +56,7 @@ jobs:
     MACOSX_DEPLOYMENT_TARGET: 10.9
     HDF5_VERSION: 1.12.0
     HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
-    CIBW_BUILD: cp3[789]-macosx_x86_64
+    CIBW_BUILD: cp3[6789]-macosx_x86_64
   steps:
     - template: ci/azure-pipelines-wheels.yml
       parameters:
@@ -142,6 +142,10 @@ jobs:
 
   strategy:
     matrix:
+      py36:
+        python.version: '3.6'
+        TOXENV: py36-test-deps,py36-test-mindeps,py36-test-deps-pre,py36-test-deps-tables
+        WHL_FILE: h5py*-cp36-*manylinux1_x86_64.whl
       py37:
         python.version: '3.7'
         TOXENV: py37-test-deps,py37-test-mindeps,py37-test-deps-pre,py37-test-deps-tables
@@ -221,6 +225,10 @@ jobs:
 
   strategy:
     matrix:
+      py36:
+        python.version: '3.6'
+        TOXENV: py36-test-deps,py36-test-mindeps,py36-test-deps-tables
+        WHL_FILE: h5py*-cp36-*.whl
       py37:
         python.version: '3.7'
         TOXENV: py37-test-deps,py37-test-mindeps,py37-test-deps-tables
@@ -294,6 +302,10 @@ jobs:
 
   strategy:
     matrix:
+      py36:
+        python.version: '3.6'
+        TOXENV: py36-test-deps,py36-test-mindeps,py36-test-deps-tables
+        WHL_FILE: h5py*-cp36-*.whl
       py37:
         python.version: '3.7'
         TOXENV: py37-test-deps,py37-test-mindeps,py37-test-deps-tables
