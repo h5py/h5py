@@ -83,12 +83,14 @@ Here are a few examples (output omitted).
 
 There's more documentation on what parts of numpy's :ref:`fancy indexing <dataset_fancy>` are available in h5py.
 
-For compound data, you can specify multiple field names alongside the
-numeric slices:
+For compound data, it is advised to separate field names from the
+numeric slices::
 
-    >>> dset["FieldA"]
-    >>> dset[0,:,4:5, "FieldA", "FieldB"]
-    >>> dset[0, ..., "FieldC"]
+    >>> dset.fields("FieldA")[:10]   # Read a single field
+    >>> dset[:10]["FieldA"]          # Read all fields, select in NumPy
+
+It is also possible to mix indexing and field names (``dset[:10, "FieldA"]``),
+but this might be removed in a future version of h5py.
 
 To retrieve the contents of a `scalar` dataset, you can use the same
 syntax as in NumPy:  ``result = dset[()]``.  In other words, index into
