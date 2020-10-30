@@ -34,7 +34,7 @@ NUMPY_MIN_VERSIONS = [
 ]
 
 # these are required to use h5py
-RUN_REQUIRES = ["cached-property"] + [
+RUN_REQUIRES = ["cached-property; python_version<'3.8'"] + [
     f"numpy >={np_min}; python_version{py_condition}"
     for np_min, py_condition in NUMPY_MIN_VERSIONS
 ]
