@@ -14,7 +14,7 @@
   alternate_emails:
   - ajelenak@users.noreply.github.com
   github: ajelenak
-  num_commits: 40
+  num_commits: 41
   first_commit: 2015-12-14 09:41:05
 - name: pharshalp
   email: pharshalp@gmail.com
@@ -129,7 +129,7 @@
   aliases:
   - chenguoping
   - Chenguoping
-  num_commits: 25
+  num_commits: 51
   first_commit: 2020-07-15 20:34:45
   github: dota17
 - name: Carlos Pascual
@@ -370,7 +370,7 @@
   alternate_emails:
   - thomas.kluyver@xfel.eu
   - takowl@gmail.com
-  num_commits: 476
+  num_commits: 497
   first_commit: 2018-06-23 08:47:27
   github: takluyver
 - name: Matt Zwier
@@ -490,7 +490,7 @@
   github: jrtc27
 - name: Thomas VINCENT
   email: thomas.vincent@esrf.fr
-  num_commits: 28
+  num_commits: 33
   first_commit: 2018-03-12 04:31:25
   github: t20100
 - name: Jakob Lombacher
@@ -640,7 +640,7 @@
   - payno@linazimov.esrf.fr
   - payno@users.noreply.github.com
   - henri.payno@gmail.com
-  num_commits: 46
+  num_commits: 39
   first_commit: 2019-08-22 13:25:35
   github: payno
 - name: Jerome Kieffer
@@ -823,3 +823,8 @@
   email: gang.chen@zenuity.com
   num_commits: 1
   first_commit: 2019-10-11 13:25:05
+- name: Orion Poplawski
+  email: orion@nwra.com
+  num_commits: 2
+  first_commit: 2020-10-13 03:57:42
+  github: opoplawski
