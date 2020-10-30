@@ -27,7 +27,7 @@ jobs:
   pool:
     vmImage: ubuntu-16.04
   variables:
-    CIBW_BUILD: cp3[678]-manylinux_x86_64
+    CIBW_BUILD: cp3[6789]-manylinux_x86_64
     CIBW_MANYLINUX_X86_64_IMAGE: docker.io/h5py/manylinux2010_x86_64-hdf5
     # Include less debugging info for smaller wheels (default is -g2)
     CIBW_ENVIRONMENT: "CFLAGS=-g1"
@@ -43,7 +43,7 @@ jobs:
     HDF5_VERSION: 1.12.0
     HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
     HDF5_VSVERSION: "15-64"
-    CIBW_BUILD: cp3[678]-win_amd64
+    CIBW_BUILD: cp3[6789]-win_amd64
   steps:
     - template: ci/azure-pipelines-wheels.yml
       parameters:
@@ -56,7 +56,7 @@ jobs:
     MACOSX_DEPLOYMENT_TARGET: 10.9
     HDF5_VERSION: 1.12.0
     HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
-    CIBW_BUILD: cp3[678]-macosx_x86_64
+    CIBW_BUILD: cp3[6789]-macosx_x86_64
   steps:
     - template: ci/azure-pipelines-wheels.yml
       parameters:
@@ -71,25 +71,21 @@ jobs:
       # -mindeps : test with oldest supported version of (python) dependencies
       # -deps-pre : test pre-release versions of (python) dependencies)
       # -tables : also check compatibility with pytables
-      py36:  # HDF5 1.8 installed from apt on Ubuntu
-        python.version: '3.6'
-        TOXENV: py36-test-deps,py36-test-deps-pre,py36-test-mindeps-tables
-        H5PY_ENFORCE_COVERAGE: yes
-      py37:
+      py37:  # HDF5 1.8 installed from apt on Ubuntu
         python.version: '3.7'
         TOXENV: py37-test-deps,py37-test-mindeps,py37-test-deps-tables
     # test when we're not in a unicode locale
-      py36-Clocale:
-        python.version: '3.6'
-        TOXENV: py36-test-deps
+      py37-Clocale:
+        python.version: '3.7'
+        TOXENV: py37-test-deps
         TOX_TESTENV_PASSENV: LANG LC_ALL
         LANG: C
         LC_ALL: C
         H5PY_ENFORCE_COVERAGE: yes
     # Build HDF5 1.10 or 1.12 in the test environment
-      py36-deps-hdf51103:
-        python.version: '3.6'
-        TOXENV: py36-test-deps
+      py37-deps-hdf51103:
+        python.version: '3.7'
+        TOXENV: py37-test-deps
         HDF5_VERSION: 1.10.3
         HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
         H5PY_ENFORCE_COVERAGE: yes
@@ -111,14 +107,13 @@ jobs:
         HDF5_VERSION: 1.12.0
         HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
         H5PY_ENFORCE_COVERAGE: yes
+      py39-deps-hdf51120:
+        python.version: '3.9'
+        TOXENV: py39-test-deps
+        HDF5_VERSION: 1.12.0
+        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
+        H5PY_ENFORCE_COVERAGE: yes
     # do mpi tests
-#      py36-deps-hdf51105-mpi:
-#        python.version: '3.6'
-#        TOXENV: py36-test-mindeps-mpi4py
-#        HDF5_VERSION: 1.10.5
-#        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
-#        HDF5_MPI: ON
-#        CC: mpicc
 #      py37-deps-hdf51105-mpi:
 #        python.version: '3.7'
 #        TOXENV: py37-test-mindeps-mpi4py
@@ -148,7 +143,7 @@ jobs:
     matrix:
       py36:
         python.version: '3.6'
-        TOXENV: py36-test-deps,py36-test-mindeps,py36-test-deps-pre
+        TOXENV: py36-test-deps,py36-test-mindeps,py36-test-deps-pre,py36-test-deps-tables
         WHL_FILE: h5py*-cp36-*manylinux1_x86_64.whl
       py37:
         python.version: '3.7'
@@ -158,6 +153,10 @@ jobs:
         python.version: '3.8'
         TOXENV: py38-test-deps,py38-test-mindeps,py38-test-deps-pre
         WHL_FILE: h5py*-cp38-*manylinux1_x86_64.whl
+      py39:
+        python.version: '3.9'
+        TOXENV: py39-test-deps,py39-test-mindeps,py39-test-deps-pre
+        WHL_FILE: h5py*-cp39-*manylinux1_x86_64.whl
 
   steps:
     - template: ci/azure-pipelines-test-wheels.yml
@@ -175,13 +174,6 @@ jobs:
     # -deps-pre : test pre-release versions of (python) dependencies)
     #
     # 64 bit - HDF5 1.8
-      py36-hdf518:
-        python.version: '3.6'
-        TOXENV: py36-test-deps,py36-test-mindeps
-        HDF5_VERSION: 1.8.17
-        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
-        HDF5_VSVERSION: "15-64"
-        H5PY_ENFORCE_COVERAGE: yes
       py37-hdf518:
         python.version: '3.7'
         TOXENV: py37-test-deps,py37-test-deps-pre
@@ -190,16 +182,16 @@ jobs:
         HDF5_VSVERSION: "15-64"
         H5PY_ENFORCE_COVERAGE: yes
     # 64 bit - HDF5 1.10
-      py36-hdf5110:
-        python.version: '3.6'
-        TOXENV: py36-test-deps,py36-test-mindeps,py36-test-deps-pre
+      py38-hdf5110:
+        python.version: '3.8'
+        TOXENV: py38-test-deps,py38-test-mindeps,py38-test-deps-pre
         HDF5_VERSION: 1.10.6
         HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
         HDF5_VSVERSION: "15-64"
         H5PY_ENFORCE_COVERAGE: yes
-      py38-hdf5110:
-        python.version: '3.8'
-        TOXENV: py38-test-deps,py38-test-mindeps,py38-test-deps-pre
+      py39-hdf5110:
+        python.version: '3.9'
+        TOXENV: py39-test-deps,py39-test-mindeps,py39-test-deps-pre
         HDF5_VERSION: 1.10.6
         HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
         HDF5_VSVERSION: "15-64"
@@ -233,7 +225,7 @@ jobs:
     matrix:
       py36:
         python.version: '3.6'
-        TOXENV: py36-test-deps,py36-test-mindeps,py36-test-deps-pre
+        TOXENV: py36-test-deps,py36-test-mindeps,py36-test-deps-tables
         WHL_FILE: h5py*-cp36-*.whl
       py37:
         python.version: '3.7'
@@ -243,6 +235,10 @@ jobs:
         python.version: '3.8'
         TOXENV: py38-test-deps,py38-test-mindeps,py38-test-deps-pre
         WHL_FILE: h5py*-cp38-*.whl
+      py39:
+        python.version: '3.9'
+        TOXENV: py39-test-deps,py39-test-mindeps,py39-test-deps-pre
+        WHL_FILE: h5py*-cp39-*.whl
 
   steps:
     - template: ci/azure-pipelines-test-wheels.yml
@@ -257,10 +253,6 @@ jobs:
       # -deps : test with default (latest) versions of dependencies
       # -mindeps : test with oldest supported version of (python) dependencies
       # -deps-pre : test pre-release versions of (python) dependencies)
-      py36:
-        python.version: '3.6'
-        TOXENV: py36-test-deps,py36-test-mindeps
-        H5PY_ENFORCE_COVERAGE: yes
       py37:
         python.version: '3.7'
         TOXENV: py37-test-deps,py37-test-mindeps
@@ -269,31 +261,20 @@ jobs:
         python.version: '3.8'
         TOXENV: py38-test-deps,py38-test-mindeps,py38-test-deps-pre
         H5PY_ENFORCE_COVERAGE: yes
+      py39:
+        python.version: '3.9'
+        TOXENV: py39-test-deps,py39-test-mindeps,py39-test-deps-pre
+        H5PY_ENFORCE_COVERAGE: yes
     # test against newer HDF5
-#      py36-deps-hdf51103:
-#        python.version: '3.6'
-#        TOXENV: py36-test-deps
-#        HDF5_VERSION: 1.10.3
-#        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
 #      py37-deps-hdf51103:
 #        python.version: '3.7'
 #        TOXENV: py37-test-deps
 #        HDF5_VERSION: 1.10.3
 #        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
-#      py36-deps-hdf51104:
-#        python.version: '3.6'
-#        TOXENV: py36-test-deps
-#        HDF5_VERSION: 1.10.4
-#        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
 #      py37-deps-hdf51104:
 #        python.version: '3.7'
 #        TOXENV: py37-test-deps
 #        HDF5_VERSION: 1.10.4
-#        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
-#      py36-deps-hdf51105:
-#        python.version: '3.6'
-#        TOXENV: py36-test-deps
-#        HDF5_VERSION: 1.10.5
 #        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
 #      py37-deps-hdf51105:
 #        python.version: '3.7'
@@ -320,7 +301,7 @@ jobs:
     matrix:
       py36:
         python.version: '3.6'
-        TOXENV: py36-test-deps,py36-test-mindeps,py36-test-deps-pre
+        TOXENV: py36-test-deps,py36-test-mindeps,py36-test-deps-tables
         WHL_FILE: h5py*-cp36-*.whl
       py37:
         python.version: '3.7'
@@ -330,6 +311,10 @@ jobs:
         python.version: '3.8'
         TOXENV: py38-test-deps,py38-test-mindeps,py38-test-deps-pre
         WHL_FILE: h5py*-cp38-*.whl
+      py39:
+        python.version: '3.9'
+        TOXENV: py39-test-deps,py39-test-mindeps,py39-test-deps-pre
+        WHL_FILE: h5py*-cp39-*.whl
 
   steps:
     - template: ci/azure-pipelines-test-wheels.yml

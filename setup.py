@@ -29,7 +29,8 @@ NUMPY_MIN_VERSIONS = [
     # Numpy    Python
     ('1.12',   "=='3.6'"),
     ('1.14.5', "=='3.7'"),
-    ('1.17.5', ">='3.8'"),
+    ('1.17.5', "=='3.8'"),
+    ('1.19.3', ">='3.9'"),
 ]
 
 # these are required to use h5py
@@ -55,7 +56,7 @@ SETUP_REQUIRES = [
 if setup_configure.mpi_enabled():
     RUN_REQUIRES.append('mpi4py >=3.0.0')
     SETUP_REQUIRES.append("mpi4py ==3.0.0; python_version<'3.8'")
-    SETUP_REQUIRES.append("mpi4py >=3.0.3; python_version>='3.8'")
+    SETUP_REQUIRES.append("mpi4py ==3.0.3; python_version>='3.8'")
 
 # Set the environment variable H5PY_SETUP_REQUIRES=0 if we need to skip
 # setup_requires for any reason.
