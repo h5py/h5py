@@ -26,7 +26,7 @@
 #include <stdio.h>
 #include <errno.h>
 #include "hdf5.h"
-#include "lzf/lzf.h"
+#include "lzf.h"
 #include "lzf_filter.h"
 
 /* Our own versions of H5Epush_sim, as it changed in 1.8 */

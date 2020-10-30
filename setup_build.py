@@ -33,10 +33,6 @@ MODULES = ['defs', '_errors', '_objects', '_proxy', 'h5fd', 'h5z',
             'h5ds', 'h5ac',
             'h5pl']
 
-EXTRA_SRC = {'h5z': [ localpath("lzf/lzf_filter.c"),
-              localpath("lzf/lzf/lzf_c.c"),
-              localpath("lzf/lzf/lzf_d.c")]}
-
 COMPILER_SETTINGS = {
    'libraries'      : ['hdf5', 'hdf5_hl'],
    'include_dirs'   : [localpath('lzf')],
@@ -45,6 +41,22 @@ COMPILER_SETTINGS = {
                        ('NPY_NO_DEPRECATED_API', 0),
                       ]
 }
+
+EXTRA_SRC = {'h5z': [ localpath("lzf/lzf_filter.c") ]}
+
+# Set the environment variable H5PY_SYSTEM_LZF=1 if we want to
+# use the system lzf library
+if os.environ.get('H5PY_SYSTEM_LZF', '0') == '1':
+    EXTRA_LIBRARIES = {
+       'h5z': [ 'lzf' ]
+    }
+else:
+    COMPILER_SETTINGS['include_dirs'] += [localpath('lzf/lzf')]
+
+    EXTRA_SRC['h5z'] += [localpath("lzf/lzf/lzf_c.c"),
+                  localpath("lzf/lzf/lzf_d.c")]
+
+    EXTRA_LIBRARIES = {}
 
 if sys.platform.startswith('win'):
     COMPILER_SETTINGS['include_dirs'].append(localpath('windows'))
@@ -98,6 +110,7 @@ class h5py_build_ext(build_ext):
 
         def make_extension(module):
             sources = [localpath('h5py', module + '.pyx')] + EXTRA_SRC.get(module, [])
+            settings['libraries'] += EXTRA_LIBRARIES.get(module, [])
             return Extension('h5py.' + module, sources, **settings)
 
         return [make_extension(m) for m in MODULES]
