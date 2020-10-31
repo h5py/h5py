@@ -47,9 +47,9 @@ matrix:
 
     # MPI tests
     # TODO: We should test with newer versions of HDF5
-    - python: 3.6
+    - python: 3.8
       env:
-      - TOXENV=py36-test-mindeps-mpi4py
+      - TOXENV=py38-test-mindeps-mpi4py
       - CC="mpicc"
       - HDF5_MPI="ON"
       - H5PY_ENFORCE_COVERAGE=yes
