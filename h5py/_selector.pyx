@@ -19,6 +19,8 @@ from .h5s cimport SpaceID
 from .h5t cimport TypeID, typewrap, py_create
 from .utils cimport emalloc, efree, convert_dims
 
+import sys
+
 import_array()
 
 
@@ -293,6 +295,7 @@ cdef class Reader:
     cdef Selector selector
     cdef TypeID h5_memory_datatype
     cdef int np_typenum
+    cdef char np_byteorder
 
     def __cinit__(self, DatasetID dsid):
         self.dataset = dsid.id
@@ -305,6 +308,7 @@ cdef class Reader:
         h5_stored_datatype = typewrap(H5Dget_type(self.dataset))
         np_dtype = h5_stored_datatype.py_dtype()
         self.np_typenum = np_dtype.num
+        self.np_byteorder = np_dtype.byteorder
         self.h5_memory_datatype = py_create(np_dtype)
 
     cdef ndarray make_array(self, hsize_t* mshape):
@@ -325,6 +329,8 @@ cdef class Reader:
                     arr_rank += 1
 
             arr = PyArray_SimpleNew(arr_rank, arr_shape, self.np_typenum)
+            if self.np_byteorder == (sys.byteorder == 'little' and '>' or '<'):
+                arr = arr.byteswap().newbyteorder()
         finally:
             efree(arr_shape)
 
