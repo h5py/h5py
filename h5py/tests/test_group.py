@@ -62,10 +62,16 @@ class TestCreate(BaseGroup):
         grp = self.f.create_group('foo')
         self.assertIsInstance(grp, Group)
 
+        grp2 = self.f.create_group(b'bar')
+        self.assertIsInstance(grp, Group)
+
     def test_create_intermediate(self):
         """ Intermediate groups can be created automatically """
         grp = self.f.create_group('foo/bar/baz')
         self.assertEqual(grp.name, '/foo/bar/baz')
+
+        grp2 = self.f.create_group(b'boo/bar/baz')
+        self.assertEqual(grp2.name, '/boo/bar/baz')
 
     def test_create_exception(self):
         """ Name conflict causes group creation to fail with ValueError """
@@ -107,6 +113,11 @@ class TestDatasetAssignment(BaseGroup):
         self.assertIsInstance(self.f['a'], Dataset)
         self.assertArrayEqual(self.f['a'][...], data)
 
+    def test_name_bytes(self):
+        data = np.ones((4, 4), dtype='f')
+        self.f[b'b'] = data
+        self.assertIsInstance(self.f[b'b'], Dataset)
+
 class TestDtypeAssignment(BaseGroup):
 
     """
@@ -120,6 +131,13 @@ class TestDtypeAssignment(BaseGroup):
         self.assertIsInstance(self.f['a'], Datatype)
         self.assertEqual(self.f['a'].dtype, dtype)
 
+    def test_name_bytes(self):
+        """ Named type creation """
+        dtype = np.dtype('|S10')
+        self.f[b'b'] = dtype
+        self.assertIsInstance(self.f[b'b'], Datatype)
+
+
 class TestRequire(BaseGroup):
 
     """
@@ -130,7 +148,10 @@ class TestRequire(BaseGroup):
         """ Existing group is opened and returned """
         grp = self.f.create_group('foo')
         grp2 = self.f.require_group('foo')
-        self.assertEqual(grp, grp2)
+        self.assertEqual(grp2, grp)
+
+        grp3 = self.f.require_group(b'foo')
+        self.assertEqual(grp3, grp)
 
     def test_create(self):
         """ Group is created if it doesn't exist """
@@ -538,7 +559,7 @@ class TestGet(BaseGroup):
         self.assertIs(out, default)
 
         grp = self.f.create_group('a')
-        out = self.f.get('a')
+        out = self.f.get(b'a')
         self.assertEqual(out, grp)
 
     def test_get_class(self):
