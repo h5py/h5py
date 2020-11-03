@@ -1229,6 +1229,25 @@ class TestCompound(BaseDataset):
             self.f['test'].fields('x')[:], testdata['x']
         )
 
+
+class TestSubarray(BaseDataset):
+    def test_write_list(self):
+        ds = self.f.create_dataset("a", (1,), dtype="3int8")
+        ds[0] = [1, 2, 3]
+        np.testing.assert_array_equal(ds[:], [[1, 2, 3]])
+
+        ds[:] = [[4, 5, 6]]
+        np.testing.assert_array_equal(ds[:], [[4, 5, 6]])
+
+    def test_write_array(self):
+        ds = self.f.create_dataset("a", (1,), dtype="3int8")
+        ds[0] = np.array([1, 2, 3])
+        np.testing.assert_array_equal(ds[:], [[1, 2, 3]])
+
+        ds[:] = np.array([[4, 5, 6]])
+        np.testing.assert_array_equal(ds[:], [[4, 5, 6]])
+
+
 class TestEnum(BaseDataset):
 
     """
