@@ -60,22 +60,6 @@ matrix:
             - libopenmpi-dev
             - libhdf5-openmpi-dev # 1.8.11 based on trusty
 
-    # Additional python versions which are not officially supported
-    - python: "nightly"
-      env:
-      - TOXENV=nightly
-      - HDF5_VERSION=1.10.5
-      - HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION
-      - H5PY_ENFORCE_COVERAGE=yes
-
-    - python: pypy3
-      env:
-      - TOXENV=pypy3-test-deps
-      - H5PY_ENFORCE_COVERAGE=yes
-  allow_failures:
-    - python: pypy3
-    - python: 'nightly'
-
 before_install:
   # - export PATH=/usr/lib/ccache:$PATH
   - ccache -s
