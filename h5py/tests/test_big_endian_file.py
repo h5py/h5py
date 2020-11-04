@@ -29,7 +29,7 @@ def test_vlen_big_endian():
         assert f["DSBEfloat"].dtype == ">f8"
 
         assert f["DSLEint"][0] == 1
-        assert f["DSLEint"].dtype == "uint64"
+        assert f["DSLEint"].dtype == "<u8"
 
         # Same int values with big endianess
         assert f["DSBEint"][0] == 1
