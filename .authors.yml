@@ -166,6 +166,8 @@
   num_commits: 4
   first_commit: 2019-07-02 14:30:12
   github: Anthchirp
+  alternate_emails:
+  - 2102431+Anthchirp@users.noreply.github.com
 - name: root
   email: root@acdlab11.lims.acdlabs.ru
   num_commits: 1
