@@ -319,7 +319,7 @@ class IndexingTestCase(ut.TestCase):
         # Add virtual datasets to output file and close
         with h5.File(outfile, 'w', libver='latest') as f:
             f.create_virtual_dataset('/data', layout, fillvalue=-5)
-            f.create_virtual_dataset('/data2', layout2, fillvalue=-3)
+            f.create_virtual_dataset(b'/data2', layout2, fillvalue=-3)
 
         # Read data from virtual datasets
         with h5.File(outfile, 'r') as f:
