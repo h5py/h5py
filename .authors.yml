@@ -838,3 +838,10 @@
   first_commit: 2020-10-31 18:30:45
   github: Xarthisius
   num_commits: 3
+- name: Dieter Weber
+  email: d.weber@fz-juelich.de
+  aliases:
+  - uellue
+  num_commit: 2
+  first_commit: 2020-11-06 23:32:13
+  github: uellue
