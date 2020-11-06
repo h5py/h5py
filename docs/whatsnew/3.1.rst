@@ -23,4 +23,3 @@ Development
 * If pytest is missing `pytest-mpi <https://pytest-mpi.readthedocs.io/en/latest/>`_
   it will now fail with a clear error.
 * Fix a test which was failing on big-endian systems.
-
