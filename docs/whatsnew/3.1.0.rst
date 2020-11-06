@@ -1,0 +1,19 @@
+Bug fixes
+---------
+
+* Fix using bytes as names for :meth:`~Group.create_dataset` and
+  :meth:`~Group.create_virtual_dataset`.
+* Fix writing data as a list to a dataset with a sub-array data type.
+* Preserve endianess in Cython dataset Reader (:issue:`1729`).
+
+Building h5py
+-------------
+
+* Allow building against system lzf library by setting H5PY_SYSTEM_LZF=1
+
+Development
+-----------
+
+* If pytest is missing pytest-mpi then it will now fail immediately with a clear warning message.
+* Fix a test which was failing on big-endian systems.
+
