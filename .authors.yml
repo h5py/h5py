@@ -840,6 +840,8 @@
   num_commits: 3
 - name: Dieter Weber
   email: d.weber@fz-juelich.de
+  alternate_emails:
+  - d.weber@materials-scientist.com
   aliases:
   - uellue
   num_commit: 2
