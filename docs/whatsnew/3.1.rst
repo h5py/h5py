@@ -10,7 +10,6 @@ Bug fixes
   :meth:`.Group.create_virtual_dataset` (:issue:`1732`).
 * Fix writing data as a list to a dataset with a sub-array data type
   (:issue:`1735`).
-* Fix exception handling in :meth:`.File.visititems` (:issue:`1740`)
 
 Building h5py
 -------------
