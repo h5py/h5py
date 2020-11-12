@@ -293,8 +293,8 @@ hdf5:
   herr_t    H5Pget_fapl_family ( hid_t fapl_id, hsize_t *memb_size, hid_t *memb_fapl_id )
   herr_t    H5Pset_family_offset ( hid_t fapl_id, hsize_t offset)
   herr_t    H5Pget_family_offset ( hid_t fapl_id, hsize_t *offset)
-  herr_t    H5Pget_fapl_ros3(hid_t fapl_id, H5FD_ros3_fapl_t *fa_out);
-  herr_t    H5Pset_fapl_ros3(hid_t fapl_id, H5FD_ros3_fapl_t *fa);
+  1.10.6 herr_t    H5Pget_fapl_ros3(hid_t fapl_id, H5FD_ros3_fapl_t *fa_out);
+  1.10.6 herr_t    H5Pset_fapl_ros3(hid_t fapl_id, H5FD_ros3_fapl_t *fa);
   herr_t    H5Pset_fapl_log(hid_t fapl_id, char *logfile, unsigned int flags, size_t buf_size)
   herr_t    H5Pset_fapl_multi(hid_t fapl_id, H5FD_mem_t *memb_map, hid_t *memb_fapl, const char * const *memb_name, haddr_t *memb_addr, hbool_t relax)
   herr_t    H5Pset_cache(hid_t plist_id, int mdc_nelmts, int rdcc_nelmts,  size_t rdcc_nbytes, double rdcc_w0)
