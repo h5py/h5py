@@ -273,6 +273,12 @@ cdef extern from "hdf5.h":
     hsize_t alignment           # Allocation alignment
     hbool_t paged_aggr          # Paged aggregation for file space is enabled or not
 
+  ctypedef struct H5FD_ros3_fapl_t:
+    int32_t version
+    hbool_t authenticate
+    char    aws_region[33]
+    char    secret_id[129]
+    char    secret_key[129]
 
 # === H5G - Groups API ========================================================
 
