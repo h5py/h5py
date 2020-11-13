@@ -48,8 +48,13 @@ steps:
 - ${{ if eq(parameters.installer, 'apt') }}:
   - script: |
       sudo apt-get update
-      sudo apt-get install libhdf5-serial-dev ccache openmpi-bin libopenmpi-dev
+      sudo apt-get install ccache openmpi-bin libopenmpi-dev
     displayName: 'Install apt dependencies'
+- ${{ if eq(parameters.installer, 'apt') }}:
+  - script: |
+      sudo apt-get update
+      sudo apt-get install libhdf5-serial-dev
+    displayName: 'Install HDF5 via apt'
     # If HDF5_DIR is specified, HDF5 is built from source, so don't get it from apt
     condition: and(succeeded(), eq(variables['HDF5_DIR'], ''))
 
