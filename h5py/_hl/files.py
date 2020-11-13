@@ -69,7 +69,7 @@ _drivers = {
     'split': lambda plist, **kwargs: plist.set_fapl_split(**kwargs),
 }
 
-if hdf5_version >= (1, 10, 6) and ros3:
+if ros3:
     _drivers['ros3'] = lambda plist, **kwargs: plist.set_fapl_ros3(**kwargs)
 
 
@@ -254,7 +254,7 @@ class File(Group):
                    h5fd.MPIO: 'mpio',
                    h5fd.MPIPOSIX: 'mpiposix',
                    h5fd.fileobj_driver: 'fileobj'}
-        if hdf5_version >= (1, 10, 6) and ros3:
+        if ros3:
             drivers[h5fd.ROS3] = 'ros3'
         return drivers.get(self.id.get_access_plist().get_driver(), 'unknown')
 

@@ -1033,16 +1033,13 @@ cdef class PropFAID(PropInstanceID):
         return (msize, plist)
 
 
-    if ROS3 and HDF5_VERSION >= (1, 10, 6):
+    if ROS3:
         @with_phil
         def set_fapl_ros3(self, char* aws_region="", char* secret_id="",
                           char* secret_key=""):
-            """(FAConfig config=None)
+            """(STRING aws_region, STRING secret_id, STRING secret_key)
 
             Set up the ros3 driver.
-
-            config
-                File access config params
             """
             cdef H5FD_ros3_fapl_t config
             config.version = H5FD_CURR_ROS3_FAPL_T_VERSION
@@ -1058,7 +1055,7 @@ cdef class PropFAID(PropInstanceID):
 
         @with_phil
         def get_fapl_ros3(self):
-            """ () => FAConfig config
+            """ () => STRUCT config
 
             Retrieve the ROS3 config
             """
