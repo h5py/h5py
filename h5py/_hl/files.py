@@ -22,6 +22,7 @@ from .. import h5, h5f, h5p, h5i, h5fd, _objects
 from .. import version
 
 mpi = h5.get_config().mpi
+ros3 = h5.get_config().ros3
 hdf5_version = version.hdf5_version_tuple[0:3]
 
 swmr_support = False
@@ -68,7 +69,7 @@ _drivers = {
     'split': lambda plist, **kwargs: plist.set_fapl_split(**kwargs),
 }
 
-if hdf5_version >= (1, 10, 6):
+if hdf5_version >= (1, 10, 6) and ros3:
     _drivers['ros3'] = lambda plist, **kwargs: plist.set_fapl_ros3(**kwargs)
 
 
@@ -253,7 +254,7 @@ class File(Group):
                    h5fd.MPIO: 'mpio',
                    h5fd.MPIPOSIX: 'mpiposix',
                    h5fd.fileobj_driver: 'fileobj'}
-        if hdf5_version >= (1, 10, 6):
+        if hdf5_version >= (1, 10, 6) and ros3:
             drivers[h5fd.ROS3] = 'ros3'
         return drivers.get(self.id.get_access_plist().get_driver(), 'unknown')
 
@@ -396,6 +397,10 @@ class File(Group):
 
         if swmr and not swmr_support:
             raise ValueError("The SWMR feature is not available in this version of the HDF5 library")
+
+        if not ros3:
+            raise ValueError(
+                "h5py was built without ROS3 support, can't use ros3 driver")
 
         if isinstance(name, _objects.ObjectID):
             if fs_strategy:

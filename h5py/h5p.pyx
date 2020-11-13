@@ -1033,10 +1033,9 @@ cdef class PropFAID(PropInstanceID):
         return (msize, plist)
 
 
-    if HDF5_VERSION >= (1, 10, 6):
+    if ROS3 and HDF5_VERSION >= (1, 10, 6):
         @with_phil
-        def set_fapl_ros3(self, unsigned int version=1, hbool_t authenticate=0,
-                          char* aws_region="", char* secret_id="",
+        def set_fapl_ros3(self, char* aws_region="", char* secret_id="",
                           char* secret_key=""):
             """(FAConfig config=None)
 
@@ -1046,8 +1045,11 @@ cdef class PropFAID(PropInstanceID):
                 File access config params
             """
             cdef H5FD_ros3_fapl_t config
-            config.version = version
-            config.authenticate = authenticate
+            config.version = H5FD_CURR_ROS3_FAPL_T_VERSION
+            if len(aws_region) and len(secret_id) and len(secret_key):
+                config.authenticate = <hbool_t>1
+            else:
+                config.authenticate = <hbool_t>0
             config.aws_region = aws_region
             config.secret_id = secret_id
             config.secret_key = secret_key

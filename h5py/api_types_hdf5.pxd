@@ -283,6 +283,7 @@ cdef extern from "hdf5.h":
       char    secret_id[129]
       char    secret_key[129]
 
+    unsigned int H5FD_CURR_ROS3_FAPL_T_VERSION # version of struct
 # === H5G - Groups API ========================================================
 
   ctypedef enum H5G_link_t:

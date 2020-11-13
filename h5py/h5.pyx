@@ -137,6 +137,14 @@ cdef class H5PYConfig:
             ELSE:
                 return False
 
+    property ros3:
+        """ Boolean indicating if ROS3 VDS is available """
+        def __get__(self):
+            IF ROS3:
+                return True
+            ELSE:
+                return False
+
     property swmr_min_hdf5_version:
         """ Tuple indicating the minimum HDF5 version required for SWMR features"""
         def __get__(self):

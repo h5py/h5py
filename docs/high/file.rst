@@ -98,15 +98,6 @@ of supported drivers and their options:
     'ros3'
         Allows read only access to HDF5 files on S3. Keywords:
 
-        version:
-          Virtual file driver version. Default is 1.
-
-        authenticate:
-           Flag TRUE or FALSE whether or not requests are to be authenticated
-           with the AWS4 algorithm. If TRUE, `aws_region`, `secret_id`, and
-           `secret_key` must be populated. If FALSE (default), those three
-           components are unused. Default is 0.
-
         aws_region:
           Name of the AWS "region" of the host, e.g. "us-east-1". Default is ''.
 

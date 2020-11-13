@@ -849,3 +849,12 @@
   num_commit: 2
   first_commit: 2020-11-06 23:32:13
   github: uellue
+- name: Satrajit Ghosh
+  email: satra@mit.edu
+  alternate_emails:
+  - satrajit.ghosh@gmail.com
+  aliases:
+  - satra
+  num_commit: 2
+  first_commit: 2020-11-12 08:35:38
+  github: satra

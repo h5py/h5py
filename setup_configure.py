@@ -53,18 +53,30 @@ def validate_version(s):
 def mpi_enabled():
     return os.environ.get('HDF5_MPI') == "ON"
 
+def ros3_enabled():
+    hdf5 = os.environ.get('HDF5_DIR')
+
+    # Specified a prefix dir (e.g. '/usr/local')
+    if hdf5:
+        with open(op.join(hdf5, 'lib', 'libhdf5.settings')) as fp:
+            for line in fp.readlines():
+                if '(Read-Only) S3 VFD: yes' in line:
+                    return True
+    return False
 
 class BuildConfig:
-    def __init__(self, hdf5_includedirs, hdf5_libdirs, hdf5_define_macros, hdf5_version, mpi):
+    def __init__(self, hdf5_includedirs, hdf5_libdirs, hdf5_define_macros, hdf5_version, mpi, ros3):
         self.hdf5_includedirs = hdf5_includedirs
         self.hdf5_libdirs = hdf5_libdirs
         self.hdf5_define_macros = hdf5_define_macros
         self.hdf5_version = hdf5_version
         self.mpi = mpi
+        self.ros3 = ros3
 
     @classmethod
     def from_env(cls):
         mpi = mpi_enabled()
+        ros3 = ros3_enabled()
         h5_inc, h5_lib, h5_macros = cls._find_hdf5_compiler_settings(mpi)
 
         h5_version_s = os.environ.get('HDF5_VERSION')
@@ -73,7 +85,7 @@ class BuildConfig:
         else:
             h5_version = autodetect_version(h5_lib)
 
-        return cls(h5_inc, h5_lib, h5_macros, h5_version, mpi)
+        return cls(h5_inc, h5_lib, h5_macros, h5_version, mpi, ros3)
 
     @staticmethod
     def _find_hdf5_compiler_settings(mpi=False):
@@ -147,6 +159,7 @@ class BuildConfig:
             'hdf5_define_macros': self.hdf5_define_macros,
             'hdf5_version': list(self.hdf5_version),  # list() to match the JSON
             'mpi': self.mpi,
+            'ros3': self.ros3,
         }
 
     def changed(self):
@@ -168,6 +181,7 @@ class BuildConfig:
         print("HDF5 library dirs:", fmt_dirs(self.hdf5_libdirs))
         print("     HDF5 Version:", repr(self.hdf5_version))
         print("      MPI Enabled:", self.mpi)
+        print(" ROS3 VFD Enabled:", self.ros3)
         print(" Rebuild Required:", self.changed())
         print('')
         print('*' * 80)
