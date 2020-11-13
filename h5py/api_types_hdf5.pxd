@@ -187,6 +187,8 @@ cdef extern from "hdf5.h":
   hid_t H5FD_STDIO
   IF UNAME_SYSNAME == "Windows":
     hid_t H5FD_WINDOWS
+  IF HDF5_VERSION >= (1, 10, 6):
+    hid_t H5FD_ROS3
 
   int H5FD_LOG_LOC_READ   # 0x0001
   int H5FD_LOG_LOC_WRITE  # 0x0002
@@ -273,12 +275,13 @@ cdef extern from "hdf5.h":
     hsize_t alignment           # Allocation alignment
     hbool_t paged_aggr          # Paged aggregation for file space is enabled or not
 
-  ctypedef struct H5FD_ros3_fapl_t:
-    int32_t version
-    hbool_t authenticate
-    char    aws_region[33]
-    char    secret_id[129]
-    char    secret_key[129]
+  IF HDF5_VERSION >= (1, 10, 6):
+    ctypedef struct H5FD_ros3_fapl_t:
+      int32_t version
+      hbool_t authenticate
+      char    aws_region[33]
+      char    secret_id[129]
+      char    secret_key[129]
 
 # === H5G - Groups API ========================================================
 

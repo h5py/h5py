@@ -1033,6 +1033,39 @@ cdef class PropFAID(PropInstanceID):
         return (msize, plist)
 
 
+    if HDF5_VERSION >= (1, 10, 6):
+        @with_phil
+        def set_fapl_ros3(self, unsigned int version=1, hbool_t authenticate=0,
+                          char* aws_region="", char* secret_id="",
+                          char* secret_key=""):
+            """(FAConfig config=None)
+
+            Set up the ros3 driver.
+
+            config
+                File access config params
+            """
+            cdef H5FD_ros3_fapl_t config
+            config.version = version
+            config.authenticate = authenticate
+            config.aws_region = aws_region
+            config.secret_id = secret_id
+            config.secret_key = secret_key
+            H5Pset_fapl_ros3(self.id, &config)
+
+
+        @with_phil
+        def get_fapl_ros3(self):
+            """ () => FAConfig config
+
+            Retrieve the ROS3 config
+            """
+            cdef H5FD_ros3_fapl_t config
+
+            H5Pget_fapl_ros3(self.id, &config)
+            return config
+
+
     @with_phil
     def set_fapl_log(self, char* logfile, unsigned int flags, size_t buf_size):
         """(STRING logfile, UINT flags, UINT buf_size)
