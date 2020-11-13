@@ -95,6 +95,28 @@ of supported drivers and their options:
         raw_ext:
           Raw data filename extension. Default is '-r.h5'.
 
+    'ros3'
+        Allows read only access to HDF5 files on S3. Keywords:
+
+        version:
+          Virtual file driver version. Default is 1.
+
+        authenticate:
+           Flag TRUE or FALSE whether or not requests are to be authenticated
+           with the AWS4 algorithm. If TRUE, `aws_region`, `secret_id`, and
+           `secret_key` must be populated. If FALSE (default), those three
+           components are unused. Default is 0.
+
+        aws_region:
+          Name of the AWS "region" of the host, e.g. "us-east-1". Default is ''.
+
+        secret_id:
+          "Access ID" for the resource. Default is ''.
+
+        secret_key:
+          "Secret Access Key" associated with the ID and resource. Default is ''.
+
+
 .. _file_fileobj:
 
 Python file-like objects
