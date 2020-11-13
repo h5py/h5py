@@ -335,7 +335,7 @@ class File(Group):
             a        Read/write if exists, create otherwise
         driver
             Name of the driver to use.  Legal values are None (default,
-            recommended), 'core', 'sec2', 'stdio', 'mpio'.
+            recommended), 'core', 'sec2', 'stdio', 'mpio', 'ros3'.
         libver
             Library version bounds.  Supported values: 'earliest', 'v108',
             'v110', 'v112'  and 'latest'. The 'v108', 'v110' and 'v112'
@@ -398,7 +398,7 @@ class File(Group):
         if swmr and not swmr_support:
             raise ValueError("The SWMR feature is not available in this version of the HDF5 library")
 
-        if not ros3:
+        if driver == 'ros3' and not ros3:
             raise ValueError(
                 "h5py was built without ROS3 support, can't use ros3 driver")
 
