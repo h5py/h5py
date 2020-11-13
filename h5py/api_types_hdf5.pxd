@@ -187,8 +187,7 @@ cdef extern from "hdf5.h":
   hid_t H5FD_STDIO
   IF UNAME_SYSNAME == "Windows":
     hid_t H5FD_WINDOWS
-  IF HDF5_VERSION >= (1, 10, 6):
-    hid_t H5FD_ROS3
+  hid_t H5FD_ROS3
 
   int H5FD_LOG_LOC_READ   # 0x0001
   int H5FD_LOG_LOC_WRITE  # 0x0002
