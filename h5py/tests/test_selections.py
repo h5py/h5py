@@ -105,6 +105,10 @@ class TestSelection(BaseSelection):
         st = sel.select((10,), list([1,2,3]), dset)
         self.assertIsInstance(st, sel.FancySelection)
 
+        # args is a tuple, return a FancySelection
+        st = sel.select((3,), (0, (1,2,3)), dset)
+        self.assertIsInstance(st, sel.FancySelection)
+
         # args is a Boolean mask, return a PointSelection
         st1 = sel.select((5,), np.array([True,False,False,False,True]), dset)
         self.assertIsInstance(st1, sel.PointSelection)

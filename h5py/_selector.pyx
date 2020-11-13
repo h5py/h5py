@@ -14,6 +14,7 @@ from numpy cimport (
     PyArray_IsNativeByteOrder,
 )
 from cpython cimport PyNumber_Index
+from collections.abc import Iterable
 
 import numpy as np
 from .defs cimport *
@@ -172,8 +173,8 @@ cdef class Selector:
                 continue
 
             # [[0, 2, 10]] - list/array of indices ('fancy indexing')
-            if isinstance(a, (list, np.ndarray)):
-                if isinstance(a, list) and len(a) == 0:
+            if isinstance(a, Iterable):
+                if not isinstance(a, np.ndarray) and len(a) == 0:
                     a = np.asarray(a, dtype=np.intp)
                 else:
                     a = np.asarray(a)
