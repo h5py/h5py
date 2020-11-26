@@ -50,6 +50,7 @@ steps:
       sudo apt-get update
       sudo apt-get install ccache openmpi-bin libopenmpi-dev
     displayName: 'Install apt dependencies'
+    condition: and(succeeded(), ne(variables['HDF5_MPI'], ''))
 - ${{ if eq(parameters.installer, 'apt') }}:
   - script: |
       sudo apt-get update
