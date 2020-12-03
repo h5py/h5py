@@ -24,21 +24,15 @@ def create_datasets():
 
 def create_vds():
     """create virtual dataset"""
+    # fancy selection using a list
     v_source_1 = h5py.VirtualSource(file_path, "original_data/d1",
-                                    shape=(2, 10, 10))
-    with h5py.File(file_path, mode='r') as rh5s:
-        sel = selection.select((10, 10, 10), [2, 3],
-                               rh5s['original_data/d1'])
-        v_source_1.sel = sel
+                                    shape=(10, 10, 10))
+    v_source_1 = v_source_1[[2, 3]]
 
+    # fancy selection using a slice
     v_source_2 = h5py.VirtualSource(file_path, "original_data/d2",
-                                    shape=(3, 10, 10))
-
-    # args is list, return a FancySelection
-    with h5py.File(file_path, mode='r') as rh5s:
-        sel = selection.select((10, 10, 10), slice(7, 10),
-                               rh5s["original_data/d2"])
-    v_source_2.sel = sel
+                                    shape=(10, 10, 10))
+    v_source_2 = v_source_2[slice(7, 10)]
 
     with h5py.File(file_path, mode="a") as h5s:
         layout = h5py.VirtualLayout(shape=(5, 10, 10), dtype="i4")
