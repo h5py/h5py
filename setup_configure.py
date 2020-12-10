@@ -53,16 +53,6 @@ def validate_version(s):
 def mpi_enabled():
     return os.environ.get('HDF5_MPI') == "ON"
 
-def ros3_enabled():
-    hdf5 = os.environ.get('HDF5_DIR')
-
-    # Specified a prefix dir (e.g. '/usr/local')
-    if hdf5:
-        with open(op.join(hdf5, 'lib', 'libhdf5.settings')) as fp:
-            for line in fp.readlines():
-                if '(Read-Only) S3 VFD: yes' in line:
-                    return True
-    return False
 
 class BuildConfig:
     def __init__(self, hdf5_includedirs, hdf5_libdirs, hdf5_define_macros, hdf5_version, mpi, ros3):
@@ -76,17 +66,18 @@ class BuildConfig:
     @classmethod
     def from_env(cls):
         mpi = mpi_enabled()
-        ros3 = ros3_enabled()
         h5_inc, h5_lib, h5_macros = cls._find_hdf5_compiler_settings(mpi)
 
         h5_version_s = os.environ.get('HDF5_VERSION')
         if h5_version_s:
             h5_version = validate_version(h5_version_s)
+            h5_wrapper = HDF5LibWrapper(h5_lib)
         else:
             h5_wrapper = HDF5LibWrapper(h5_lib)
             h5_version = h5_wrapper.autodetect_version()
             if mpi and not h5_wrapper.has_mpi_support():
                 raise RuntimeError("MPI support not detected")
+        ros3 = h5_wrapper.has_ros3_support()
 
         return cls(h5_inc, h5_lib, h5_macros, h5_version, mpi, ros3)
 
@@ -280,3 +271,6 @@ class HDF5LibWrapper:
 
     def has_mpi_support(self):
         return self.has_functions("H5Pget_fapl_mpio", "H5Pset_fapl_mpio")
+
+    def has_ros3_support(self):
+        return self.has_functions("H5Pget_fapl_ros3", "H5Pset_fapl_ros3")
