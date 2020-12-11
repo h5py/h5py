@@ -818,6 +818,8 @@
   github: kmuehlbauer
 - name: V. Armando Solé
   email: sole@esrf.fr
+  alternate_emails:
+    - vasole@users.noreply.github.com
   num_commits: 6
   first_commit: 2019-09-19 13:06:48
   github: vasole
