@@ -414,7 +414,7 @@ class VDSUnlimitedTestCase(ut.TestCase):
                 chunks=(10, 1),
                 fillvalue=-1
             )
-            self.layout = h5.VirtualLayout((10, 1), np.int, maxshape=(None, 1))
+            self.layout = h5.VirtualLayout((10, 1), int, maxshape=(None, 1))
             layout_source = h5.VirtualSource(source_dset)
             self.layout[:h5.UNLIMITED, 0] = layout_source[:h5.UNLIMITED, 1]
 
@@ -436,7 +436,7 @@ class VDSUnlimitedTestCase(ut.TestCase):
             np.testing.assert_array_equal(comp1, virtual_dset)
             source_dset.resize(20, axis=0)
             np.testing.assert_array_equal(comp2, virtual_dset)
-            source_dset[10:, 1] = np.zeros((10,), dtype=np.int)
+            source_dset[10:, 1] = np.zeros((10,), dtype=int)
             np.testing.assert_array_equal(comp3, virtual_dset)
 
     def tearDown(self):
