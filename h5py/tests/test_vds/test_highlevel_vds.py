@@ -188,7 +188,7 @@ class TestPercivalHighLevel(ut.TestCase):
         outfile = osp.join(self.working_dir,  'percival.h5')
 
         # Virtual layout is a representation of the output dataset
-        layout = h5.VirtualLayout(shape=(79, 200, 200), dtype=np.float)
+        layout = h5.VirtualLayout(shape=(79, 200, 200), dtype=np.float64)
         for k, filename in enumerate(self.fname):
             dim1 = 19 if k == 3 else 20
             vsource = h5.VirtualSource(filename, 'data',shape=(dim1, 200, 200))
@@ -209,7 +209,7 @@ class TestPercivalHighLevel(ut.TestCase):
         outfile = osp.join(self.working_dir,  'percival.h5')
 
         # Virtual layout is a representation of the output dataset
-        layout = h5.VirtualLayout(shape=(79, 200, 200), dtype=np.float)
+        layout = h5.VirtualLayout(shape=(79, 200, 200), dtype=np.float64)
         for k, filename in enumerate(self.fname):
             with h5.File(filename, 'r') as f:
                 vsource = h5.VirtualSource(f['data'])
