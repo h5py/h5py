@@ -197,6 +197,8 @@ class HDF5LibWrapper:
         import re
         import ctypes
 
+        # extra keyword args to pass to LoadLibrary
+        load_kw = {}
         if sys.platform.startswith('darwin'):
             default_path = 'libhdf5.dylib'
             regexp = re.compile(r'^libhdf5.dylib')
@@ -204,6 +206,10 @@ class HDF5LibWrapper:
             sys.platform.startswith('cygwin'):
             default_path = 'hdf5.dll'
             regexp = re.compile(r'^hdf5.dll')
+            if sys.version_info >= (3, 8):
+                # To overcome "difficulty" loading the library on windows
+                # https://bugs.python.org/issue42114
+                load_kw['winmode'] = 0
         else:
             default_path = 'libhdf5.so'
             regexp = re.compile(r'^libhdf5.so')
@@ -231,7 +237,7 @@ class HDF5LibWrapper:
             raise FileNotFoundError(f"{path} is missing")
 
         try:
-            lib = ctypes.cdll.LoadLibrary(path)
+            lib = ctypes.CDLL(path, **load_kw)
         except Exception:
             print("error: Unable to load dependency HDF5, make sure HDF5 is installed properly")
             raise
