@@ -227,6 +227,9 @@ class HDF5LibWrapper:
 
         self._lib_path = path
 
+        if op.isabs(path) and not op.exists(path):
+            raise FileNotFoundError(f"{path} is missing")
+
         try:
             lib = ctypes.cdll.LoadLibrary(path)
         except Exception:
