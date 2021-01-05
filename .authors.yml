@@ -858,3 +858,12 @@
   num_commit: 2
   first_commit: 2020-11-12 08:35:38
   github: satra
+- name: Yaroslav Halchenko
+  email: debian@onerussian.com
+  alternate_emails:
+  - yarikoptic@gmail.com
+  aliases:
+  - yarikoptic
+  num_commit: 2
+  first_commit: 2021-01-04 17:28:58
+  github: yarikoptic
