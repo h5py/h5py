@@ -47,7 +47,8 @@ RUN_REQUIRES = ["cached-property; python_version<'3.8'"] + [
 SETUP_REQUIRES = [
     'pkgconfig',
     f"Cython >=0.29; python_version<'3.8'",
-    f"Cython >=0.29.14; python_version>='3.8'",
+    f"Cython >=0.29.14; python_version=='3.8'",
+    f"Cython >=0.29.15; python_version>='3.9'",
 ] + [
     f"numpy =={np_min}; python_version{py_condition}"
     for np_min, py_condition in NUMPY_MIN_VERSIONS
