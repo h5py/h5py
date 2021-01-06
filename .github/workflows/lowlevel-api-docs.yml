@@ -41,7 +41,7 @@ jobs:
 
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
-        if: github.repository == 'h5py/h5py' && github.ref == 'refs/heads/master'
+        if: github.repository == 'h5py/h5py' && github.ref == 'refs/heads/master' && github.event_name == 'push'
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: docs_api/_build/html
