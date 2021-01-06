@@ -6,7 +6,7 @@ New features
 Deprecations
 ------------
 
-* Replace np.float by np.float64, np.int by int and np.bool by bool
+* <news item>
 
 Exposing HDF5 functions
 -----------------------
