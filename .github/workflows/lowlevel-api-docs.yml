@@ -40,6 +40,12 @@ jobs:
       - name: Build API docs
         run: tox
 
+      - name: Upload built docs
+        uses: actions/upload-artifact@v2
+        with:
+          name: docs-html
+          path: docs_api/_build/html
+
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
         if: github.repository == 'h5py/h5py' && github.ref == 'refs/heads/master' && github.event_name == 'push'
