@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - master
-      - apidocs-gh-actions  # Temporary, for testing before workflow merged
     pull_request:
 
 jobs:
