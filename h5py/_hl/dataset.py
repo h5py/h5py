@@ -2,7 +2,7 @@
 #
 # http://www.h5py.org
 #
-# Copyright 2008-2013 Andrew Collette and contributors
+# Copyright 2008-2020 Andrew Collette and contributors
 #
 # License:  Standard 3-clause BSD; see "license.txt" for full license terms
 #           and contributor agreement.
@@ -764,7 +764,10 @@ class Dataset(HLObject):
         if self.shape == ():
             fspace = self.id.get_space()
             selection = sel2.select_read(fspace, args)
-            arr = numpy.ndarray(selection.mshape, dtype=new_dtype)
+            if selection.mshape is None:
+                arr = numpy.ndarray((), dtype=new_dtype)
+            else:
+                arr = numpy.ndarray(selection.mshape, dtype=new_dtype)
             for mspace, fspace in selection:
                 self.id.read(mspace, fspace, arr, mtype)
             if selection.mshape is None:
@@ -930,8 +933,8 @@ class Dataset(HLObject):
         if mshape == () and selection.array_shape != ():
             if self.dtype.subdtype is not None:
                 raise TypeError("Scalar broadcasting is not supported for array dtypes")
-            if self.chunks and (numpy.prod(self.chunks, dtype=numpy.float) >=
-                                numpy.prod(selection.array_shape, dtype=numpy.float)):
+            if self.chunks and (numpy.prod(self.chunks, dtype=numpy.float64) >=
+                                numpy.prod(selection.array_shape, dtype=numpy.float64)):
                 val2 = numpy.empty(selection.array_shape, dtype=val.dtype)
             else:
                 val2 = numpy.empty(selection.array_shape[-1], dtype=val.dtype)
