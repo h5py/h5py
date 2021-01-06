@@ -8,7 +8,7 @@ on:
     pull_request:
 
 jobs:
-  deploy:
+  api-docs:
     runs-on: ubuntu-18.04
     env:
       HDF5_VERSION: 1.12.0
