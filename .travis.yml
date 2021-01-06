@@ -19,7 +19,6 @@ cache:
 env:
   global:
     - HDF5_CACHE_DIR=$HOME/.cache/hdf5
-    - secure: "PVgKiZwB5Kr7KFAmjoMYtsKsVGUhDdiYq0YoMMEk/COFHpnRt/3CUKYwW+4vTCSKcaai/1ZiPUrHruCwdnU7sUkJZZdKkh2C+Vqx+DnnfAFMbLPGqgaBG2UEMtDIinXHDtV4k9wSJB2X9KPchA+kkCeB1ZPsELo7J5y2R55AcOw="
 
 matrix:
   include:
@@ -33,17 +32,6 @@ matrix:
       - HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION
       - H5PY_ENFORCE_COVERAGE=yes
       os: linux-ppc64le
-
-    # Builds the API docs
-    - python: 3.8
-      env:
-        - TOXENV=apidocs
-        - HDF5_VERSION=1.10.5
-        - HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION
-      script:
-        - tox
-        - pip install doctr
-        - doctr deploy . --built-docs docs_api/_build/html
 
 before_install:
   # - export PATH=/usr/lib/ccache:$PATH
