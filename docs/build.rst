@@ -155,7 +155,7 @@ it from source::
     $ HDF5_VERSION=X.Y.Z pip install --no-binary=h5py h5py
     $ CC="mpicc" HDF5_MPI="ON" HDF5_DIR=/path/to/parallel-hdf5 pip install --no-binary=h5py h5py
 
-The supported build options are::
+The supported build options are:
 
 - To specify where to find HDF5, use one of these options:
 
@@ -171,6 +171,9 @@ The supported build options are::
 - ``HDF5_MPI=ON`` to build with MPI integration - see :ref:`build_mpi`.
 - ``HDF5_VERSION`` to force a specified HDF5 version. In most cases, you don't
   need to set this; the version number will be detected from the HDF5 library.
+- ``H5PY_SYSTEM_LZF=1`` to build the bundled LZF compression filter
+  (see :ref:`dataset_compression`) against an external LZF library, rather than
+  using the bundled LZF C code.
 
 .. _build_mpi:
 

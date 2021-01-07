@@ -140,15 +140,10 @@ class Group(HLObject, MutableMappingHDF5):
         with phil:
             group = self
             if name:
-                if '/' in name:
-                    h5objects = [obj for obj in name.split('/') if len(obj)]
-                    name = h5objects[-1]
-                    h5objects = h5objects[:-1]
-
-                    for new_group in h5objects:
-                        group = group.get(new_group) or group.create_group(new_group)
-
                 name = self._e(name)
+                if b'/' in name.lstrip(b'/'):
+                    parent_path, name = name.rsplit(b'/', 1)
+                    group = self.require_group(parent_path)
 
             dsid = dataset.make_new_dset(group, shape, dtype, data, name, **kwds)
             dset = dataset.Dataset(dsid)
@@ -186,15 +181,10 @@ class Group(HLObject, MutableMappingHDF5):
                 group = self
 
                 if name:
-                    if '/' in name:
-                        h5objects = [obj for obj in name.split('/') if len(obj)]
-                        name = h5objects[-1]
-                        h5objects = h5objects[:-1]
-
-                        for new_group in h5objects:
-                            group = group.get(new_group) or group.create_group(new_group)
-
                     name = self._e(name)
+                    if b'/' in name.lstrip(b'/'):
+                        parent_path, name = name.rsplit(b'/', 1)
+                        group = self.require_group(parent_path)
 
                 dsid = dataset.make_new_virtual_dset(group, layout.shape,
                          sources=sources, dtype=layout.dtype, name=name,

@@ -188,7 +188,7 @@ class TestPercivalHighLevel(ut.TestCase):
         outfile = osp.join(self.working_dir,  'percival.h5')
 
         # Virtual layout is a representation of the output dataset
-        layout = h5.VirtualLayout(shape=(79, 200, 200), dtype=np.float)
+        layout = h5.VirtualLayout(shape=(79, 200, 200), dtype=np.float64)
         for k, filename in enumerate(self.fname):
             dim1 = 19 if k == 3 else 20
             vsource = h5.VirtualSource(filename, 'data',shape=(dim1, 200, 200))
@@ -209,7 +209,7 @@ class TestPercivalHighLevel(ut.TestCase):
         outfile = osp.join(self.working_dir,  'percival.h5')
 
         # Virtual layout is a representation of the output dataset
-        layout = h5.VirtualLayout(shape=(79, 200, 200), dtype=np.float)
+        layout = h5.VirtualLayout(shape=(79, 200, 200), dtype=np.float64)
         for k, filename in enumerate(self.fname):
             with h5.File(filename, 'r') as f:
                 vsource = h5.VirtualSource(f['data'])
@@ -319,7 +319,7 @@ class IndexingTestCase(ut.TestCase):
         # Add virtual datasets to output file and close
         with h5.File(outfile, 'w', libver='latest') as f:
             f.create_virtual_dataset('/data', layout, fillvalue=-5)
-            f.create_virtual_dataset('/data2', layout2, fillvalue=-3)
+            f.create_virtual_dataset(b'/data2', layout2, fillvalue=-3)
 
         # Read data from virtual datasets
         with h5.File(outfile, 'r') as f:
@@ -414,7 +414,7 @@ class VDSUnlimitedTestCase(ut.TestCase):
                 chunks=(10, 1),
                 fillvalue=-1
             )
-            self.layout = h5.VirtualLayout((10, 1), np.int, maxshape=(None, 1))
+            self.layout = h5.VirtualLayout((10, 1), int, maxshape=(None, 1))
             layout_source = h5.VirtualSource(source_dset)
             self.layout[:h5.UNLIMITED, 0] = layout_source[:h5.UNLIMITED, 1]
 
@@ -436,7 +436,7 @@ class VDSUnlimitedTestCase(ut.TestCase):
             np.testing.assert_array_equal(comp1, virtual_dset)
             source_dset.resize(20, axis=0)
             np.testing.assert_array_equal(comp2, virtual_dset)
-            source_dset[10:, 1] = np.zeros((10,), dtype=np.int)
+            source_dset[10:, 1] = np.zeros((10,), dtype=int)
             np.testing.assert_array_equal(comp3, virtual_dset)
 
     def tearDown(self):

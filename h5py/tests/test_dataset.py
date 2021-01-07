@@ -116,6 +116,12 @@ class TestCreateShape(BaseDataset):
                                      dtype=np.dtype('complex256'))
         self.assertEqual(dset.dtype, np.dtype('complex256'))
 
+    def test_name_bytes(self):
+        dset = self.f.create_dataset(b'foo', (1,))
+        self.assertEqual(dset.shape, (1,))
+
+        dset2 = self.f.create_dataset(b'bar/baz', (2,))
+        self.assertEqual(dset2.shape, (2,))
 
 class TestCreateData(BaseDataset):
 
@@ -284,7 +290,7 @@ class TestCreateRequire(BaseDataset):
         self.assertEqual(dset, dset2)
 
         dset = self.f.require_dataset('baz', 10, 'f')
-        dset2 = self.f.require_dataset('baz', (10,), 'f')
+        dset2 = self.f.require_dataset(b'baz', (10,), 'f')
         self.assertEqual(dset, dset2)
 
     def test_shape_conflict(self):
@@ -1228,6 +1234,25 @@ class TestCompound(BaseDataset):
         np.testing.assert_array_equal(
             self.f['test'].fields('x')[:], testdata['x']
         )
+
+
+class TestSubarray(BaseDataset):
+    def test_write_list(self):
+        ds = self.f.create_dataset("a", (1,), dtype="3int8")
+        ds[0] = [1, 2, 3]
+        np.testing.assert_array_equal(ds[:], [[1, 2, 3]])
+
+        ds[:] = [[4, 5, 6]]
+        np.testing.assert_array_equal(ds[:], [[4, 5, 6]])
+
+    def test_write_array(self):
+        ds = self.f.create_dataset("a", (1,), dtype="3int8")
+        ds[0] = np.array([1, 2, 3])
+        np.testing.assert_array_equal(ds[:], [[1, 2, 3]])
+
+        ds[:] = np.array([[4, 5, 6]])
+        np.testing.assert_array_equal(ds[:], [[4, 5, 6]])
+
 
 class TestEnum(BaseDataset):
 

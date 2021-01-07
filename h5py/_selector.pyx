@@ -9,7 +9,10 @@ Python & numpy distinguish indexing a[3] from slicing a single element a[3:4],
 but there is no equivalent to this when selecting data in HDF5. So we store a
 separate boolean ('scalar') for each dimension to distinguish these cases.
 """
-from numpy cimport ndarray, npy_intp, PyArray_SimpleNew, PyArray_DATA, import_array
+from numpy cimport (
+    ndarray, npy_intp, PyArray_SimpleNew, PyArray_DATA, import_array,
+    PyArray_IsNativeByteOrder,
+)
 from cpython cimport PyNumber_Index
 
 import numpy as np
@@ -293,6 +296,7 @@ cdef class Reader:
     cdef Selector selector
     cdef TypeID h5_memory_datatype
     cdef int np_typenum
+    cdef bint native_byteorder
 
     def __cinit__(self, DatasetID dsid):
         self.dataset = dsid.id
@@ -305,6 +309,7 @@ cdef class Reader:
         h5_stored_datatype = typewrap(H5Dget_type(self.dataset))
         np_dtype = h5_stored_datatype.py_dtype()
         self.np_typenum = np_dtype.num
+        self.native_byteorder = PyArray_IsNativeByteOrder(np_dtype.byteorder)
         self.h5_memory_datatype = py_create(np_dtype)
 
     cdef ndarray make_array(self, hsize_t* mshape):
@@ -325,6 +330,8 @@ cdef class Reader:
                     arr_rank += 1
 
             arr = PyArray_SimpleNew(arr_rank, arr_shape, self.np_typenum)
+            if not self.native_byteorder:
+                arr = arr.newbyteorder()
         finally:
             efree(arr_shape)
 

@@ -446,7 +446,7 @@ cdef extern from "hdf5.h":
     meta_size       meta_size
 
   ctypedef herr_t (*H5O_iterate_t)(hid_t obj, char *name, H5O_info_t *info,
-                    void *op_data) except 2
+                    void *op_data) except -1
 
 # === H5P - Property list API =================================================
 

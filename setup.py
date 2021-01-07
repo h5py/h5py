@@ -22,7 +22,7 @@ if '' not in sys.path:
 import setup_build, setup_configure
 
 
-VERSION = '3.0.0'
+VERSION = '3.1.0'
 
 # Minimum supported versions of Numpy & Cython depend on the Python version
 NUMPY_MIN_VERSIONS = [
@@ -45,8 +45,9 @@ RUN_REQUIRES = ["cached-property; python_version<'3.8'"] + [
 # versions.
 SETUP_REQUIRES = [
     'pkgconfig',
-    f"Cython >=0.29; python_version<'3.8'",
-    f"Cython >=0.29.14; python_version>='3.8'",
+    "Cython >=0.29; python_version<'3.8'",
+    "Cython >=0.29.14; python_version=='3.8'",
+    "Cython >=0.29.15; python_version>='3.9'",
 ] + [
     f"numpy =={np_min}; python_version{py_condition}"
     for np_min, py_condition in NUMPY_MIN_VERSIONS

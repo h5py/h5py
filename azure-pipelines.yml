@@ -114,13 +114,20 @@ jobs:
         HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
         H5PY_ENFORCE_COVERAGE: yes
     # do mpi tests
-#      py37-deps-hdf51105-mpi:
-#        python.version: '3.7'
-#        TOXENV: py37-test-mindeps-mpi4py
-#        HDF5_VERSION: 1.10.5
-#        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
-#        HDF5_MPI: ON
-#        CC: mpicc
+      py36-deps-hdf51103-mpi:
+        python.version: '3.6'
+        TOXENV: py36-test-mindeps-mpi4py
+        HDF5_VERSION: 1.10.3
+        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
+        HDF5_MPI: ON
+        CC: mpicc
+      py37-deps-hdf51103-mpi:
+        python.version: '3.7'
+        TOXENV: py37-test-mindeps-mpi4py
+        HDF5_VERSION: 1.10.3
+        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
+        HDF5_MPI: ON
+        CC: mpicc
     maxParallel: 4
 
   steps:
