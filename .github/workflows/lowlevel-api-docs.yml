@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - master
-    pull_request:
+  pull_request:
 
 jobs:
   api-docs:
@@ -37,7 +37,9 @@ jobs:
           python3 -m pip install tox
 
       - name: Build API docs
-        run: tox
+        run: |
+          tox
+          echo -n "api.h5py.org" > docs_api/_build/html/CNAME
 
       - name: Upload built docs
         uses: actions/upload-artifact@v2
