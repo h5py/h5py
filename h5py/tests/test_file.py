@@ -784,10 +784,11 @@ class TestSWMRMode(TestCase):
 # unittest doesn't work with pytest fixtures (and possibly other features),
 # hence no subclassing TestCase
 class TestROS3(object):
-    @pytest.mark.skipif(h5py.version.hdf5_version_tuple < (1, 10, 6),
+    @pytest.mark.skipif(h5py.version.hdf5_version_tuple < (1, 10, 6)
+                        or not h5py.h5.H5PYConfig().ros3,
                         reason="ros3 file operations were added in HDF5 1.10.6+")
     def test_ros3(self):
-        """ MPIO driver and options """
+        """ ROS3 driver and options """
 
         with File("https://s3.us-east-2.amazonaws.com/hdf5ros3/GMODO-SVM01.h5", 'r', driver='ros3') as f:
             assert f
