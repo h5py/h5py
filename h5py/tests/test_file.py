@@ -780,3 +780,15 @@ class TestSWMRMode(TestCase):
         # This setter should affect both fid and group member file attribute
         assert fid.swmr_mode == g.file.swmr_mode == True
         fid.close()
+
+# unittest doesn't work with pytest fixtures (and possibly other features),
+# hence no subclassing TestCase
+class TestROS3(object):
+    @pytest.mark.skipif(h5py.version.hdf5_version_tuple < (1, 10, 6),
+                        reason="ros3 file operations were added in HDF5 1.10.6+")
+    def test_ros3(self):
+        """ MPIO driver and options """
+
+        with File("https://s3.us-east-2.amazonaws.com/hdf5ros3/GMODO-SVM01.h5", 'r', driver='ros3') as f:
+            assert f
+            assert 'All_Data' in f.keys()
