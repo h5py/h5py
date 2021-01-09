@@ -185,10 +185,10 @@ shape for you::
 Auto-chunking is also enabled when using compression or ``maxshape``, etc.,
 if a chunk shape is not manually specified.
 
-The chunk_iter method returns an iterator that can be used to perform chunk by chunk
+The iter_chunks method returns an iterator that can be used to perform chunk by chunk
 reads or writes::
 
-    >>> for s in dset.chunk_iter():
+    >>> for s in dset.iter_chunks():
     >>>     arr = dset[s]  # get numpy array for chunk
 
 
