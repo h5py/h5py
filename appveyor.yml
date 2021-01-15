@@ -7,10 +7,6 @@ environment:
   matrix:
 
     ### USING HDF5 1.8 ###
-    - PYTHON: "C:\\Python36"
-      TOXENV: "py36-test-deps"
-      HDF5_VSVERSION: "14"
-      HDF5_DIR: "C:\\hdf5\\%HDF5_VERSION%\\%HDF5_VSVERSION%"
 
     - PYTHON: "C:\\Python37"
       TOXENV: "py37-test-deps"
@@ -18,12 +14,6 @@ environment:
       HDF5_DIR: "C:\\hdf5\\%HDF5_VERSION%\\%HDF5_VSVERSION%"
 
     ### USING HDF5 1.10 ###
-
-    - PYTHON: "C:\\Python36"
-      TOXENV: "py36-test-deps"
-      HDF5_VSVERSION: "14"
-      HDF5_DIR: "C:\\hdf5\\%HDF5_VERSION%\\%HDF5_VSVERSION%"
-      HDF5_VERSION: "1.10.6"
 
     - PYTHON: "C:\\Python37"
       TOXENV: "py37-test-deps"
@@ -38,12 +28,6 @@ environment:
       HDF5_VERSION: "1.10.6"
 
     ### USING HDF5 1.12 ###
-
-    - PYTHON: "C:\\Python36"
-      TOXENV: "py36-test-deps"
-      HDF5_VSVERSION: "14"
-      HDF5_DIR: "C:\\hdf5\\%HDF5_VERSION%\\%HDF5_VSVERSION%"
-      HDF5_VERSION: "1.12.0"
 
     - PYTHON: "C:\\Python37"
       TOXENV: "py37-test-deps"
