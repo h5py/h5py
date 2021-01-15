@@ -1685,3 +1685,20 @@ def test_allow_unknown_filter(writable_file):
         allow_unknown_filter=True
     )
     assert str(fake_filter_id) in ds._filters
+
+
+def test_read_points(writable_file):
+    ds = writable_file.create_dataset('a', data=np.arange(30).reshape(5, 6))
+    res = ds.points[[(0, 0), (1, 0), (2, 2)]]
+    np.testing.assert_array_equal(res, [0, 6, 14])
+
+
+def test_write_points(writable_file):
+    ds = writable_file.create_dataset('a', shape=(3, 3))
+    ds.points[[(0, 0), (1, 0), (2, 2)]] = [1, 2, 3]
+
+    np.testing.assert_array_equal(ds[:], [
+        [1, 0, 0],
+        [2, 0, 0],
+        [0, 0, 3],
+    ])
