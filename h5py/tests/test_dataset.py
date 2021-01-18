@@ -218,23 +218,48 @@ class TestReadDirectly(BaseDataset):
         Feature: Read data directly from Dataset into a Numpy array
     """
 
-    def test_read_direct(self):
-        dset = self.f.create_dataset("dset", (100,), dtype='int64')
-        empty_dset = self.f.create_dataset("edset", dtype='int64')
-        arr = np.ones((100,))
-        arr2 = np.ones((200,))
+    def _test(self, dset_shape, out_shape, source_sel, dest_sel):
+        dset_values = np.arange(np.product(dset_shape), dtype='int64').reshape(dset_shape)
+        dset = self.f.create_dataset("dset", dset_shape, data=dset_values)
+        arr = np.full(out_shape, -1)
+        expected = arr.copy()
+        expected[dest_sel] = dset_values[source_sel]
 
-        # read empty dataset
+        dset.read_direct(arr, source_sel, dest_sel)
+        np.testing.assert_array_equal(arr, expected)
+
+    def test_read_direct_1d_simple(self):
+        self._test((100,), (100,), np.s_[0:10], np.s_[50:60])
+
+    def test_read_direct_1d_open_slice(self):
+        self._test((70,), (100,), np.s_[50:60], np.s_[90:])
+
+    def test_read_direct_2d(self):
+        self._test((30, 10), (20, 20), np.s_[:20, :], np.s_[:, :10])
+
+    def test_read_direct_no_sel(self):
+        dset = self.f.create_dataset("dset", (10,), data=np.arange(10, dtype="int64"))
+        arr = np.ones((10,), dtype="int64")
+        dset.read_direct(arr)
+        np.testing.assert_array_equal(arr, np.arange(10, dtype="int64"))
+
+    def test_read_empty(self):
+        empty_dset = self.f.create_dataset("edset", dtype='int64')
+        arr = np.ones((100,), 'int64')
         with self.assertRaises(TypeError):
             empty_dset.read_direct(arr, np.s_[0:10], np.s_[50:60])
 
-        dset.read_direct(arr2, np.s_[0:10], np.s_[50:60])
-        for e in arr2[50:60]:
-            self.assertEqual(e, 0)
-
-        # Can't broadcast from source shape (100,) to array shape (200,)
+    def test_read_wrong_shape(self):
+        dset = self.f.create_dataset("dset", (100,), dtype='int64')
+        arr = np.ones((200,))
         with self.assertRaises(TypeError):
-            dset.read_direct(arr2)
+            dset.read_direct(arr)
+
+    def test_not_c_contiguous(self):
+        dset = self.f.create_dataset("dset", (10, 10), dtype='int64')
+        arr = np.ones((10, 10), order='F')
+        with self.assertRaises(TypeError):
+            dset.read_direct(arr)
 
 class TestWriteDirectly(BaseDataset):
 

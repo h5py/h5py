@@ -967,7 +967,7 @@ class Dataset(HLObject):
             if dest_sel is None:
                 dest_sel = sel.SimpleSelection(dest.shape)
             else:
-                dest_sel = sel.select(dest.shape, dest_sel, self)
+                dest_sel = sel.select(dest.shape, dest_sel)
 
             for mspace in dest_sel.broadcast(source_sel.mshape):
                 self.id.read(mspace, fspace, dest, dxpl=self._dxpl)
