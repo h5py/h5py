@@ -986,7 +986,7 @@ class Dataset(HLObject):
             if source_sel is None:
                 source_sel = sel.SimpleSelection(source.shape)
             else:
-                source_sel = sel.select(source.shape, source_sel, self)  # for numpy.s_
+                source_sel = sel.select(source.shape, source_sel)  # for numpy.s_
             mspace = source_sel.id
 
             if dest_sel is None:

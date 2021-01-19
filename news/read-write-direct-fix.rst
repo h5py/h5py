@@ -16,7 +16,8 @@ Exposing HDF5 functions
 Bug fixes
 ---------
 
-* Fix ``read_direct`` when the source and destination have different shapes.
+* Fix :meth:`.DataSet.read_direct` and :meth:`.DataSet.write_direct` when the
+  source and destination have different shapes.
 
 Building h5py
 -------------
