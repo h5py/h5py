@@ -850,7 +850,9 @@
   first_commit: 2020-11-06 23:32:13
   github: uellue
 - name: Bruce Merry
-  email: 1963944+bmerry@users.noreply.github.com
+  email: bmerry@ska.ac.za
+  alternate_emails:
+    - 1963944+bmerry@users.noreply.github.com
   num_commit: 1
   first_commit: 2021-01-18 09:30:28
   github: bmerry
