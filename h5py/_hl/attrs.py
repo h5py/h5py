@@ -215,6 +215,8 @@ class AttributeManager(base.MutableMappingHDF5, base.CommonStateObject):
                         attr.close()
                         h5a.delete(self._id, self._e(tempname))
                         raise
+                finally:
+                    attr.close()
 
     def modify(self, name, value):
         """ Change the value of an attribute while preserving its type.
