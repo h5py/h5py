@@ -212,53 +212,90 @@ class TestCreateData(BaseDataset):
             self.f.create_dataset('bar', shape=4, data= np.arange(3))
 
 
-class TestReadDirectly(BaseDataset):
+class TestReadDirectly:
 
     """
         Feature: Read data directly from Dataset into a Numpy array
     """
 
-    def test_read_direct(self):
-        dset = self.f.create_dataset("dset", (100,), dtype='int64')
-        empty_dset = self.f.create_dataset("edset", dtype='int64')
-        arr = np.ones((100,))
-        arr2 = np.ones((200,))
+    @pytest.mark.parametrize(
+        'source_shape,dest_shape,source_sel,dest_sel',
+        [
+            ((100,), (100,), np.s_[0:10], np.s_[50:60]),
+            ((70,), (100,), np.s_[50:60], np.s_[90:]),
+            ((30, 10), (20, 20), np.s_[:20, :], np.s_[:, :10])
+        ])
+    def test_read_direct(self, writable_file, source_shape, dest_shape, source_sel, dest_sel):
+        source_values = np.arange(np.product(source_shape), dtype="int64").reshape(source_shape)
+        dset = writable_file.create_dataset("dset", source_shape, data=source_values)
+        arr = np.full(dest_shape, -1, dtype="int64")
+        expected = arr.copy()
+        expected[dest_sel] = source_values[source_sel]
 
-        # read empty dataset
-        with self.assertRaises(TypeError):
+        dset.read_direct(arr, source_sel, dest_sel)
+        np.testing.assert_array_equal(arr, expected)
+
+    def test_no_sel(self, writable_file):
+        dset = writable_file.create_dataset("dset", (10,), data=np.arange(10, dtype="int64"))
+        arr = np.ones((10,), dtype="int64")
+        dset.read_direct(arr)
+        np.testing.assert_array_equal(arr, np.arange(10, dtype="int64"))
+
+    def test_empty(self, writable_file):
+        empty_dset = writable_file.create_dataset("edset", dtype='int64')
+        arr = np.ones((100,), 'int64')
+        with pytest.raises(TypeError):
             empty_dset.read_direct(arr, np.s_[0:10], np.s_[50:60])
 
-        dset.read_direct(arr2, np.s_[0:10], np.s_[50:60])
-        for e in arr2[50:60]:
-            self.assertEqual(e, 0)
+    def test_wrong_shape(self, writable_file):
+        dset = writable_file.create_dataset("dset", (100,), dtype='int64')
+        arr = np.ones((200,))
+        with pytest.raises(TypeError):
+            dset.read_direct(arr)
 
-        # Can't broadcast from source shape (100,) to array shape (200,)
-        with self.assertRaises(TypeError):
-            dset.read_direct(arr2)
+    def test_not_c_contiguous(self, writable_file):
+        dset = writable_file.create_dataset("dset", (10, 10), dtype='int64')
+        arr = np.ones((10, 10), order='F')
+        with pytest.raises(TypeError):
+            dset.read_direct(arr)
 
-class TestWriteDirectly(BaseDataset):
+class TestWriteDirectly:
 
     """
         Feature: Write Numpy array directly into Dataset
     """
 
-    def test_write_direct(self):
-        dset = self.f.create_dataset('dset', (100,), dtype='int32')
-        empty_dset = self.f.create_dataset("edset", dtype='int64')
-        arr = np.ones((100,))
-        arr2 = np.ones((200,))
+    @pytest.mark.parametrize(
+        'source_shape,dest_shape,source_sel,dest_sel',
+        [
+            ((100,), (100,), np.s_[0:10], np.s_[50:60]),
+            ((70,), (100,), np.s_[50:60], np.s_[90:]),
+            ((30, 10), (20, 20), np.s_[:20, :], np.s_[:, :10])
+        ])
+    def test_write_direct(self, writable_file, source_shape, dest_shape, source_sel, dest_sel):
+        dset = writable_file.create_dataset('dset', dest_shape, dtype='int32', fillvalue=-1)
+        arr = np.arange(np.product(source_shape)).reshape(source_shape)
+        expected = np.full(dest_shape, -1, dtype='int32')
+        expected[dest_sel] = arr[source_sel]
+        dset.write_direct(arr, source_sel, dest_sel)
+        np.testing.assert_array_equal(dset[:], expected)
 
-        # write into empty dataset
-        with self.assertRaises(TypeError):
-            empty_dset.write_direct(arr, np.s_[0:10], np.s_[50:60])
+    def test_empty(self, writable_file):
+        empty_dset = writable_file.create_dataset("edset", dtype='int64')
+        with pytest.raises(TypeError):
+            empty_dset.write_direct(np.ones((100,)), np.s_[0:10], np.s_[50:60])
 
-        dset.write_direct(arr2, np.s_[0:10], np.s_[50:60])
-        for e in dset[50:60]:
-            self.assertEqual(e, 1)
+    def test_wrong_shape(self, writable_file):
+        dset = writable_file.create_dataset("dset", (100,), dtype='int64')
+        arr = np.ones((200,))
+        with pytest.raises(TypeError):
+            dset.write_direct(arr)
 
-        # Can't broadcast from dset shape (100,) to arr2 shape (200,)
-        with self.assertRaises(TypeError):
-            dset.write_direct(arr2)
+    def test_not_c_contiguous(self, writable_file):
+        dset = writable_file.create_dataset("dset", (10, 10), dtype='int64')
+        arr = np.ones((10, 10), order='F')
+        with pytest.raises(TypeError):
+            dset.write_direct(arr)
 
 
 class TestCreateRequire(BaseDataset):
