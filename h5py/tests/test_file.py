@@ -790,6 +790,8 @@ class TestROS3(object):
     def test_ros3(self):
         """ ROS3 driver and options """
 
-        with File("https://s3.us-east-2.amazonaws.com/hdf5ros3/GMODO-SVM01.h5", 'r', driver='ros3') as f:
+        with File("https://dandiarchive.s3.amazonaws.com/ros3test.hdf5", 'r',
+                  driver='ros3') as f:
             assert f
-            assert 'All_Data' in f.keys()
+            assert 'mydataset' in f.keys()
+            assert f["mydataset"].shape == (100,)
