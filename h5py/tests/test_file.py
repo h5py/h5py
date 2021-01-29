@@ -785,7 +785,7 @@ class TestSWMRMode(TestCase):
 # hence no subclassing TestCase
 class TestROS3(object):
     @pytest.mark.skipif(h5py.version.hdf5_version_tuple < (1, 10, 6)
-                        or not h5py.h5.H5PYConfig().ros3,
+                        or not h5.get_config().ros3,
                         reason="ros3 file operations were added in HDF5 1.10.6+")
     def test_ros3(self):
         """ ROS3 driver and options """
