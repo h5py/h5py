@@ -781,9 +781,10 @@ class TestSWMRMode(TestCase):
         assert fid.swmr_mode == g.file.swmr_mode == True
         fid.close()
 
+
 # unittest doesn't work with pytest fixtures (and possibly other features),
 # hence no subclassing TestCase
-class TestROS3(object):
+class TestROS3:
     @pytest.mark.skipif(h5py.version.hdf5_version_tuple < (1, 10, 6)
                         or not h5.get_config().ros3,
                         reason="ros3 file operations were added in HDF5 1.10.6+")
