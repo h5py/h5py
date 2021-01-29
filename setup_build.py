@@ -21,7 +21,7 @@ from setup_configure import BuildConfig
 
 
 def localpath(*args):
-    return op.abspath(op.join(op.dirname(__file__), *args))
+    return op.join(*args)
 
 
 MODULES = ['defs', '_errors', '_objects', '_proxy', 'h5fd', 'h5z',
