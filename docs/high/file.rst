@@ -95,6 +95,19 @@ of supported drivers and their options:
         raw_ext:
           Raw data filename extension. Default is '-r.h5'.
 
+    'ros3'
+        Allows read only access to HDF5 files on S3. Keywords:
+
+        aws_region:
+          Name of the AWS "region" of the host, e.g. "us-east-1". Default is ''.
+
+        secret_id:
+          "Access ID" for the resource. Default is ''.
+
+        secret_key:
+          "Secret Access Key" associated with the ID and resource. Default is ''.
+
+
 .. _file_fileobj:
 
 Python file-like objects
