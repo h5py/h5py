@@ -10,7 +10,8 @@
 # Python-style minor error classes.  If the minor error code matches an entry
 # in this dict, the generated exception will be used.
 
-from cpython cimport PyErr_Occurred
+from cpython cimport PyErr_Occurred, PyErr_SetObject
+import re
 
 _minor_table = {
     H5E_SEEKERROR:      IOError,    # Seek failed
@@ -136,10 +137,17 @@ cdef int set_exception() except -1:
 
     msg = b"%b (%b)" % (bytes(desc).capitalize(), bytes(desc_bottom))
 
-    # Finally, set the exception.  We do this with the Python C function
+    # Finally, set the exception.  We do this with a Python C function
     # so that the traceback doesn't point here.
 
-    PyErr_SetString(eclass, msg)
+    m = re.search(b'errno\s*=\s*(\d+)', desc_bottom)
+    if m:
+        # An errno was found in the message. Python can automatically create
+        # the appropriate OSError subclass (e.g. FileNotFoundError) from this.
+        errno = int(m.group(1))
+        PyErr_SetObject(OSError, (errno, msg.decode('utf-8', 'replace')))
+    else:
+        PyErr_SetString(eclass, msg)
 
     return 1
 
