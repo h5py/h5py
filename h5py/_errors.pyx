@@ -141,9 +141,9 @@ cdef int set_exception() except -1:
     # so that the traceback doesn't point here.
 
     m = re.search(b'errno\s*=\s*(\d+)', desc_bottom)
-    if m:
-        # An errno was found in the message. Python can automatically create
-        # the appropriate OSError subclass (e.g. FileNotFoundError) from this.
+    if m and eclass is OSError:
+        # Python can automatically create an appropriate OSError subclass
+        # (e.g. FileNotFoundError) given the POSIX errno (e.g. ENOENT)
         errno = int(m.group(1))
         PyErr_SetObject(OSError, (errno, msg.decode('utf-8', 'replace')))
     else:
