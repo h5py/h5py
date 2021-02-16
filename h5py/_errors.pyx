@@ -14,28 +14,28 @@ from cpython cimport PyErr_Occurred, PyErr_SetObject
 import re
 
 _minor_table = {
-    H5E_SEEKERROR:      IOError,    # Seek failed
-    H5E_READERROR:      IOError,    # Read failed
-    H5E_WRITEERROR:     IOError,    # Write failed
-    H5E_CLOSEERROR:     IOError,    # Close failed
-    H5E_OVERFLOW:       IOError,    # Address overflowed
-    H5E_FCNTL:          IOError,    # File control (fcntl) failed
+    H5E_SEEKERROR:      OSError,    # Seek failed
+    H5E_READERROR:      OSError,    # Read failed
+    H5E_WRITEERROR:     OSError,    # Write failed
+    H5E_CLOSEERROR:     OSError,    # Close failed
+    H5E_OVERFLOW:       OSError,    # Address overflowed
+    H5E_FCNTL:          OSError,    # File control (fcntl) failed
 
-    H5E_FILEEXISTS:     IOError,    # File already exists
-    H5E_FILEOPEN:       IOError,    # File already open
-    H5E_CANTCREATE:     IOError,    # Unable to create file
-    H5E_CANTOPENFILE:   IOError,    # Unable to open file
-    H5E_CANTCLOSEFILE:  IOError,    # Unable to close file
-    H5E_NOTHDF5:        IOError,    # Not an HDF5 file
+    H5E_FILEEXISTS:     OSError,    # File already exists
+    H5E_FILEOPEN:       OSError,    # File already open
+    H5E_CANTCREATE:     OSError,    # Unable to create file
+    H5E_CANTOPENFILE:   OSError,    # Unable to open file
+    H5E_CANTCLOSEFILE:  OSError,    # Unable to close file
+    H5E_NOTHDF5:        OSError,    # Not an HDF5 file
     H5E_BADFILE:        ValueError, # Bad file ID accessed
-    H5E_TRUNCATED:      IOError,    # File has been truncated
-    H5E_MOUNT:          IOError,    # File mount error
+    H5E_TRUNCATED:      OSError,    # File has been truncated
+    H5E_MOUNT:          OSError,    # File mount error
 
-    H5E_NOFILTER:       IOError,    # Requested filter is not available
-    H5E_CALLBACK:       IOError,    # Callback failed
-    H5E_CANAPPLY:       IOError,    # Error from filter 'can apply' callback
-    H5E_SETLOCAL:       IOError,    # Error from filter 'set local' callback
-    H5E_NOENCODER:      IOError,    # Filter present but encoding disabled
+    H5E_NOFILTER:       OSError,    # Requested filter is not available
+    H5E_CALLBACK:       OSError,    # Callback failed
+    H5E_CANAPPLY:       OSError,    # Error from filter 'can apply' callback
+    H5E_SETLOCAL:       OSError,    # Error from filter 'set local' callback
+    H5E_NOENCODER:      OSError,    # Filter present but encoding disabled
 
     H5E_BADATOM:        ValueError,  # Unable to find atom information (already closed?)
     H5E_BADGROUP:       ValueError,  # Unable to find ID group information
@@ -65,9 +65,9 @@ _minor_table = {
 # of the minor error codes.  If a (major, minor) entry appears here,
 # it will override any entry in the minor error table.
 _exact_table = {
-    (H5E_CACHE, H5E_BADVALUE):      IOError,  # obj create w/o write intent 1.8
-    (H5E_RESOURCE, H5E_CANTINIT):   IOError,  # obj create w/o write intent 1.6
-    (H5E_INTERNAL, H5E_SYSERRSTR):  IOError,  # e.g. wrong file permissions
+    (H5E_CACHE, H5E_BADVALUE):      OSError,  # obj create w/o write intent 1.8
+    (H5E_RESOURCE, H5E_CANTINIT):   OSError,  # obj create w/o write intent 1.6
+    (H5E_INTERNAL, H5E_SYSERRSTR):  OSError,  # e.g. wrong file permissions
     (H5E_DATATYPE, H5E_CANTINIT):   TypeError,  # No conversion path
     (H5E_DATASET, H5E_CANTINIT):    ValueError, # bad param for dataset setup
     (H5E_ARGS, H5E_CANTINIT):       TypeError,  # Illegal operation on object

@@ -54,10 +54,10 @@ class TestFileOpen(TestCase):
         finally:
             os.chmod(fname, stat.S_IWRITE)
 
-        # File exists but is not HDF5; raise IOError
+        # File exists but is not HDF5; raise OSError
         with open(fname, 'wb') as f:
             f.write(b'\x00')
-        with self.assertRaises(IOError):
+        with self.assertRaises(OSError):
             File(fname)
 
     def test_create(self):
