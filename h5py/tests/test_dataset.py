@@ -223,7 +223,8 @@ class TestReadDirectly:
         [
             ((100,), (100,), np.s_[0:10], np.s_[50:60]),
             ((70,), (100,), np.s_[50:60], np.s_[90:]),
-            ((30, 10), (20, 20), np.s_[:20, :], np.s_[:, :10])
+            ((30, 10), (20, 20), np.s_[:20, :], np.s_[:, :10]),
+            ((5, 7, 9), (6,), np.s_[2, :6, 3], np.s_[:]),
         ])
     def test_read_direct(self, writable_file, source_shape, dest_shape, source_sel, dest_sel):
         source_values = np.arange(np.product(source_shape), dtype="int64").reshape(source_shape)
@@ -270,7 +271,8 @@ class TestWriteDirectly:
         [
             ((100,), (100,), np.s_[0:10], np.s_[50:60]),
             ((70,), (100,), np.s_[50:60], np.s_[90:]),
-            ((30, 10), (20, 20), np.s_[:20, :], np.s_[:, :10])
+            ((30, 10), (20, 20), np.s_[:20, :], np.s_[:, :10]),
+            ((5, 7, 9), (6,), np.s_[2, :6, 3], np.s_[:]),
         ])
     def test_write_direct(self, writable_file, source_shape, dest_shape, source_sel, dest_sel):
         dset = writable_file.create_dataset('dset', dest_shape, dtype='int32', fillvalue=-1)

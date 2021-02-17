@@ -969,7 +969,7 @@ class Dataset(HLObject):
             else:
                 dest_sel = sel.select(dest.shape, dest_sel)
 
-            for mspace in dest_sel.broadcast(source_sel.mshape):
+            for mspace in dest_sel.broadcast(source_sel.array_shape):
                 self.id.read(mspace, fspace, dest, dxpl=self._dxpl)
 
     def write_direct(self, source, source_sel=None, dest_sel=None):
@@ -994,7 +994,7 @@ class Dataset(HLObject):
             else:
                 dest_sel = sel.select(self.shape, dest_sel, self)
 
-            for fspace in dest_sel.broadcast(source_sel.mshape):
+            for fspace in dest_sel.broadcast(source_sel.array_shape):
                 self.id.write(mspace, fspace, source, dxpl=self._dxpl)
 
     @with_phil
