@@ -102,6 +102,13 @@ arrays::
     >>> dset[0:2]
     array([array([1, 2, 3], dtype=int32), array([1, 2, 3, 4, 5], dtype=int32)], dtype=object)
 
+.. note::
+
+   NumPy doesn't support ragged arrays, and the 'arrays of arrays' h5py uses
+   as a workaround are not as convenient or efficient as regular NumPy arrays.
+   If you're deciding how to store data, consider whether there's a sensible
+   way to do it without a variable-length type.
+
 .. function:: vlen_dtype(basetype)
 
    Make a numpy dtype for an HDF5 variable-length datatype.
