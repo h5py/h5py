@@ -831,7 +831,7 @@ cdef int conv_ndarray2vlen(void* ipt,
     buf_obj0 = buf_obj[0]
     ndarray = <cnp.ndarray> buf_obj0
     len = ndarray.shape[0]
-    nbytes = len * max(H5Tget_size(outtype.id), H5Tget_size(outtype.id))
+    nbytes = len * max(H5Tget_size(outtype.id), H5Tget_size(intype.id))
 
     data = emalloc(nbytes)
 
