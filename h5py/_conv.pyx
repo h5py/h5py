@@ -711,8 +711,8 @@ cdef int conv_vlen2ndarray(void* ipt,
     data = in_vlen0.ptr = in_vlen[0].ptr
 
     dims[0] = size
-    itemsize = outtype.get_size()
-    if itemsize > intype.get_size():
+    itemsize = H5Tget_size(outtype.id)
+    if itemsize > H5Tget_size(intype.id):
         data = realloc(data, itemsize * size)
     H5Tconvert(intype.id, outtype.id, size, data, NULL, H5P_DEFAULT)
 
@@ -831,7 +831,7 @@ cdef int conv_ndarray2vlen(void* ipt,
     buf_obj0 = buf_obj[0]
     ndarray = <cnp.ndarray> buf_obj0
     len = ndarray.shape[0]
-    nbytes = len * max(outtype.get_size(), intype.get_size())
+    nbytes = len * max(H5Tget_size(outtype.id), H5Tget_size(outtype.id))
 
     data = emalloc(nbytes)
 
