@@ -49,20 +49,20 @@
 <h2>Functional API<a class="headerlink" href="#functional-api" title="Permalink to this headline">¶</a></h2>
 <dl class="py function">
 <dt id="h5py.h5g.open">
-<code class="sig-prename descclassname">h5py.h5g.</code><code class="sig-name descname">open</code><span class="sig-paren">(</span><em class="sig-param">ObjectID loc</em>, <em class="sig-param">STRING name</em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#h5py.h5g.GroupID" title="h5py.h5g.GroupID">GroupID</a><a class="headerlink" href="#h5py.h5g.open" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">h5py.h5g.</span></code><code class="sig-name descname"><span class="pre">open</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">ObjectID</span> <span class="pre">loc</span></em>, <em class="sig-param"><span class="pre">STRING</span> <span class="pre">name</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#h5py.h5g.GroupID" title="h5py.h5g.GroupID"><span class="pre">GroupID</span></a><a class="headerlink" href="#h5py.h5g.open" title="Permalink to this definition">¶</a></dt>
 <dd><p>Open an existing HDF5 group, attached to some other group.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt id="h5py.h5g.create">
-<code class="sig-prename descclassname">h5py.h5g.</code><code class="sig-name descname">create</code><span class="sig-paren">(</span><em class="sig-param">ObjectID loc</em>, <em class="sig-param">STRING name or None</em>, <em class="sig-param">PropLCID lcpl=None</em>, <em class="sig-param">PropGCID gcpl=None</em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#h5py.h5g.GroupID" title="h5py.h5g.GroupID">GroupID</a><a class="headerlink" href="#h5py.h5g.create" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">h5py.h5g.</span></code><code class="sig-name descname"><span class="pre">create</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">ObjectID</span> <span class="pre">loc</span></em>, <em class="sig-param"><span class="pre">STRING</span> <span class="pre">name</span> <span class="pre">or</span> <span class="pre">None</span></em>, <em class="sig-param"><span class="pre">PropLCID</span> <span class="pre">lcpl=None</span></em>, <em class="sig-param"><span class="pre">PropGCID</span> <span class="pre">gcpl=None</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#h5py.h5g.GroupID" title="h5py.h5g.GroupID"><span class="pre">GroupID</span></a><a class="headerlink" href="#h5py.h5g.create" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a new group, under a given parent group.  If name is None,
 an anonymous group will be created in the file.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt id="h5py.h5g.iterate">
-<code class="sig-prename descclassname">h5py.h5g.</code><code class="sig-name descname">iterate</code><span class="sig-paren">(</span><em class="sig-param">GroupID loc</em>, <em class="sig-param">CALLABLE func</em>, <em class="sig-param">UINT startidx=0</em>, <em class="sig-param">**kwds</em><span class="sig-paren">)</span> &#x2192; Return value from func<a class="headerlink" href="#h5py.h5g.iterate" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">h5py.h5g.</span></code><code class="sig-name descname"><span class="pre">iterate</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">GroupID</span> <span class="pre">loc</span></em>, <em class="sig-param"><span class="pre">CALLABLE</span> <span class="pre">func</span></em>, <em class="sig-param"><span class="pre">UINT</span> <span class="pre">startidx=0</span></em>, <em class="sig-param"><span class="pre">**kwds</span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">Return</span> <span class="pre">value</span> <span class="pre">from</span> <span class="pre">func</span><a class="headerlink" href="#h5py.h5g.iterate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Iterate a callable (function, method or callable object) over the
 members of a group.  Your callable should have the signature:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">func</span><span class="p">(</span><span class="n">STRING</span> <span class="n">name</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="n">Result</span>
@@ -78,7 +78,7 @@ iteration and returns that value. Keywords:</p>
 
 <dl class="py function">
 <dt id="h5py.h5g.get_objinfo">
-<code class="sig-prename descclassname">h5py.h5g.</code><code class="sig-name descname">get_objinfo</code><span class="sig-paren">(</span><em class="sig-param">ObjectID obj</em>, <em class="sig-param">STRING name='.'</em>, <em class="sig-param">BOOL follow_link=True</em><span class="sig-paren">)</span> &#x2192; GroupStat object<a class="headerlink" href="#h5py.h5g.get_objinfo" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">h5py.h5g.</span></code><code class="sig-name descname"><span class="pre">get_objinfo</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">ObjectID</span> <span class="pre">obj</span></em>, <em class="sig-param"><span class="pre">STRING</span> <span class="pre">name='.'</span></em>, <em class="sig-param"><span class="pre">BOOL</span> <span class="pre">follow_link=True</span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">GroupStat</span> <span class="pre">object</span><a class="headerlink" href="#h5py.h5g.get_objinfo" title="Permalink to this definition">¶</a></dt>
 <dd><p>Obtain information about a named object.  If “name” is provided,
 “obj” is taken to be a <a class="reference internal" href="#h5py.h5g.GroupID" title="h5py.h5g.GroupID"><code class="xref py py-class docutils literal notranslate"><span class="pre">GroupID</span></code></a> object containing the target.
 The return value is a GroupStat object; see that class’s docstring
@@ -93,7 +93,7 @@ information describes the link itself.</p>
 <h2>Info objects<a class="headerlink" href="#info-objects" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt id="h5py.h5g.GroupStat">
-<em class="property">class </em><code class="sig-prename descclassname">h5py.h5g.</code><code class="sig-name descname">GroupStat</code><a class="headerlink" href="#h5py.h5g.GroupStat" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">h5py.h5g.</span></code><code class="sig-name descname"><span class="pre">GroupStat</span></code><a class="headerlink" href="#h5py.h5g.GroupStat" title="Permalink to this definition">¶</a></dt>
 <dd><p>Represents the H5G_stat_t structure containing group member info.</p>
 <p>Fields (read-only):</p>
 <ul class="simple">
@@ -116,7 +116,7 @@ not universally unique.</p>
 <h2>Group objects<a class="headerlink" href="#group-objects" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt id="h5py.h5g.GroupID">
-<em class="property">class </em><code class="sig-prename descclassname">h5py.h5g.</code><code class="sig-name descname">GroupID</code><a class="headerlink" href="#h5py.h5g.GroupID" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">h5py.h5g.</span></code><code class="sig-name descname"><span class="pre">GroupID</span></code><a class="headerlink" href="#h5py.h5g.GroupID" title="Permalink to this definition">¶</a></dt>
 <dd><p>Represents an HDF5 group identifier</p>
 <p>Python extensions:</p>
 <dl class="simple">
@@ -136,39 +136,39 @@ for h5py.h5l.LinkProxy for more information.</p>
 </ul>
 <dl class="py method">
 <dt id="h5py.h5g.GroupID.get_comment">
-<code class="sig-name descname">get_comment</code><span class="sig-paren">(</span><em class="sig-param">STRING name</em><span class="sig-paren">)</span> &#x2192; STRING comment<a class="headerlink" href="#h5py.h5g.GroupID.get_comment" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">get_comment</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">STRING</span> <span class="pre">name</span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">STRING</span> <span class="pre">comment</span><a class="headerlink" href="#h5py.h5g.GroupID.get_comment" title="Permalink to this definition">¶</a></dt>
 <dd><p>Retrieve the comment for a group member.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="h5py.h5g.GroupID.get_create_plist">
-<code class="sig-name descname">get_create_plist</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; PropGCID<a class="headerlink" href="#h5py.h5g.GroupID.get_create_plist" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">get_create_plist</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; <span class="pre">PropGCID</span><a class="headerlink" href="#h5py.h5g.GroupID.get_create_plist" title="Permalink to this definition">¶</a></dt>
 <dd><p>Retrieve a copy of the <a class="reference internal" href="h5p.html#h5py.h5p.PropGCID" title="h5py.h5p.PropGCID"><code class="xref py py-class docutils literal notranslate"><span class="pre">group</span> <span class="pre">creation</span> <span class="pre">property</span> <span class="pre">list</span></code></a> used to
 create this group.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="h5py.h5g.GroupID.get_linkval">
-<code class="sig-name descname">get_linkval</code><span class="sig-paren">(</span><em class="sig-param">STRING name</em><span class="sig-paren">)</span> &#x2192; STRING link_value<a class="headerlink" href="#h5py.h5g.GroupID.get_linkval" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">get_linkval</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">STRING</span> <span class="pre">name</span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">STRING</span> <span class="pre">link_value</span><a class="headerlink" href="#h5py.h5g.GroupID.get_linkval" title="Permalink to this definition">¶</a></dt>
 <dd><p>Retrieve the value (target name) of a symbolic link.
 Limited to 2048 characters on Windows.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="h5py.h5g.GroupID.get_num_objs">
-<code class="sig-name descname">get_num_objs</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; INT number_of_objects<a class="headerlink" href="#h5py.h5g.GroupID.get_num_objs" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">get_num_objs</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; <span class="pre">INT</span> <span class="pre">number_of_objects</span><a class="headerlink" href="#h5py.h5g.GroupID.get_num_objs" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the number of objects directly attached to a given group.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="h5py.h5g.GroupID.get_objname_by_idx">
-<code class="sig-name descname">get_objname_by_idx</code><span class="sig-paren">(</span><em class="sig-param">INT idx</em><span class="sig-paren">)</span> &#x2192; STRING<a class="headerlink" href="#h5py.h5g.GroupID.get_objname_by_idx" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">get_objname_by_idx</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">INT</span> <span class="pre">idx</span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">STRING</span><a class="headerlink" href="#h5py.h5g.GroupID.get_objname_by_idx" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the name of a group member given its zero-based index.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="h5py.h5g.GroupID.get_objtype_by_idx">
-<code class="sig-name descname">get_objtype_by_idx</code><span class="sig-paren">(</span><em class="sig-param">INT idx</em><span class="sig-paren">)</span> &#x2192; INT object_type_code<a class="headerlink" href="#h5py.h5g.GroupID.get_objtype_by_idx" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">get_objtype_by_idx</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">INT</span> <span class="pre">idx</span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">INT</span> <span class="pre">object_type_code</span><a class="headerlink" href="#h5py.h5g.GroupID.get_objtype_by_idx" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the type of an object attached to a group, given its zero-based
 index.  Possible return values are:</p>
 <ul class="simple">
@@ -181,7 +181,7 @@ index.  Possible return values are:</p>
 
 <dl class="py method">
 <dt id="h5py.h5g.GroupID.link">
-<code class="sig-name descname">link</code><span class="sig-paren">(</span><em class="sig-param">STRING current_name</em>, <em class="sig-param">STRING new_name</em>, <em class="sig-param">INT link_type=LINK_HARD</em>, <em class="sig-param">GroupID remote=None</em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5g.GroupID.link" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">link</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">STRING</span> <span class="pre">current_name</span></em>, <em class="sig-param"><span class="pre">STRING</span> <span class="pre">new_name</span></em>, <em class="sig-param"><span class="pre">INT</span> <span class="pre">link_type=LINK_HARD</span></em>, <em class="sig-param"><span class="pre">GroupID</span> <span class="pre">remote=None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5g.GroupID.link" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a new hard or soft link.  current_name identifies
 the link target (object the link will point to).  The new link is
 identified by new_name and (optionally) another group “remote”.</p>
@@ -196,7 +196,7 @@ identified by new_name and (optionally) another group “remote”.</p>
 
 <dl class="py method">
 <dt id="h5py.h5g.GroupID.move">
-<code class="sig-name descname">move</code><span class="sig-paren">(</span><em class="sig-param">STRING current_name</em>, <em class="sig-param">STRING new_name</em>, <em class="sig-param">GroupID remote=None</em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5g.GroupID.move" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">move</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">STRING</span> <span class="pre">current_name</span></em>, <em class="sig-param"><span class="pre">STRING</span> <span class="pre">new_name</span></em>, <em class="sig-param"><span class="pre">GroupID</span> <span class="pre">remote=None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5g.GroupID.move" title="Permalink to this definition">¶</a></dt>
 <dd><p>Relink an object.  current_name identifies the object.
 new_name and (optionally) another group “remote” determine
 where it should be moved.</p>
@@ -204,13 +204,13 @@ where it should be moved.</p>
 
 <dl class="py method">
 <dt id="h5py.h5g.GroupID.set_comment">
-<code class="sig-name descname">set_comment</code><span class="sig-paren">(</span><em class="sig-param">STRING name</em>, <em class="sig-param">STRING comment</em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5g.GroupID.set_comment" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">set_comment</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">STRING</span> <span class="pre">name</span></em>, <em class="sig-param"><span class="pre">STRING</span> <span class="pre">comment</span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5g.GroupID.set_comment" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set the comment on a group member.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="h5py.h5g.GroupID.unlink">
-<code class="sig-name descname">unlink</code><span class="sig-paren">(</span><em class="sig-param">STRING name</em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5g.GroupID.unlink" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">unlink</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">STRING</span> <span class="pre">name</span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5g.GroupID.unlink" title="Permalink to this definition">¶</a></dt>
 <dd><p>Remove a link to an object from this group.</p>
 </dd></dl>
 
@@ -223,25 +223,25 @@ where it should be moved.</p>
 <h3>Object type codes<a class="headerlink" href="#object-type-codes" title="Permalink to this headline">¶</a></h3>
 <dl class="py data">
 <dt id="h5py.h5g.LINK">
-<code class="sig-prename descclassname">h5py.h5g.</code><code class="sig-name descname">LINK</code><a class="headerlink" href="#h5py.h5g.LINK" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">h5py.h5g.</span></code><code class="sig-name descname"><span class="pre">LINK</span></code><a class="headerlink" href="#h5py.h5g.LINK" title="Permalink to this definition">¶</a></dt>
 <dd><p>Symbolic link</p>
 </dd></dl>
 
 <dl class="py data">
 <dt id="h5py.h5g.GROUP">
-<code class="sig-prename descclassname">h5py.h5g.</code><code class="sig-name descname">GROUP</code><a class="headerlink" href="#h5py.h5g.GROUP" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">h5py.h5g.</span></code><code class="sig-name descname"><span class="pre">GROUP</span></code><a class="headerlink" href="#h5py.h5g.GROUP" title="Permalink to this definition">¶</a></dt>
 <dd><p>HDF5 group</p>
 </dd></dl>
 
 <dl class="py data">
 <dt id="h5py.h5g.DATASET">
-<code class="sig-prename descclassname">h5py.h5g.</code><code class="sig-name descname">DATASET</code><a class="headerlink" href="#h5py.h5g.DATASET" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">h5py.h5g.</span></code><code class="sig-name descname"><span class="pre">DATASET</span></code><a class="headerlink" href="#h5py.h5g.DATASET" title="Permalink to this definition">¶</a></dt>
 <dd><p>HDF5 dataset</p>
 </dd></dl>
 
 <dl class="py data">
 <dt id="h5py.h5g.TYPE">
-<code class="sig-prename descclassname">h5py.h5g.</code><code class="sig-name descname">TYPE</code><a class="headerlink" href="#h5py.h5g.TYPE" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">h5py.h5g.</span></code><code class="sig-name descname"><span class="pre">TYPE</span></code><a class="headerlink" href="#h5py.h5g.TYPE" title="Permalink to this definition">¶</a></dt>
 <dd><p>Named (file-resident) datatype</p>
 </dd></dl>
 
@@ -250,12 +250,12 @@ where it should be moved.</p>
 <h3>Link type codes<a class="headerlink" href="#link-type-codes" title="Permalink to this headline">¶</a></h3>
 <dl class="py data">
 <dt id="h5py.h5g.LINK_HARD">
-<code class="sig-prename descclassname">h5py.h5g.</code><code class="sig-name descname">LINK_HARD</code><a class="headerlink" href="#h5py.h5g.LINK_HARD" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">h5py.h5g.</span></code><code class="sig-name descname"><span class="pre">LINK_HARD</span></code><a class="headerlink" href="#h5py.h5g.LINK_HARD" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
 <dt id="h5py.h5g.LINK_SOFT">
-<code class="sig-prename descclassname">h5py.h5g.</code><code class="sig-name descname">LINK_SOFT</code><a class="headerlink" href="#h5py.h5g.LINK_SOFT" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">h5py.h5g.</span></code><code class="sig-name descname"><span class="pre">LINK_SOFT</span></code><a class="headerlink" href="#h5py.h5g.LINK_SOFT" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </div>
@@ -332,8 +332,8 @@ where it should be moved.</p>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2014, Andrew Collette and contributors.
-      Last updated on Feb 12, 2021.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.4.3.
+      Last updated on Feb 19, 2021.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.5.1.
     </div>
   </body>
 </html>

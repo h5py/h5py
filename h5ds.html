@@ -47,51 +47,51 @@
 <p>Low-level HDF5 “<code class="xref py py-data docutils literal notranslate"><span class="pre">H5DS</span></code>” Dimension Scale interface.</p>
 <dl class="py function">
 <dt id="h5py.h5ds.attach_scale">
-<code class="sig-prename descclassname">h5py.h5ds.</code><code class="sig-name descname">attach_scale</code><span class="sig-paren">(</span><em class="sig-param">DatasetID dset</em>, <em class="sig-param">DatasetID dscale</em>, <em class="sig-param">UINT idx</em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5ds.attach_scale" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">h5py.h5ds.</span></code><code class="sig-name descname"><span class="pre">attach_scale</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">DatasetID</span> <span class="pre">dset</span></em>, <em class="sig-param"><span class="pre">DatasetID</span> <span class="pre">dscale</span></em>, <em class="sig-param"><span class="pre">UINT</span> <span class="pre">idx</span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5ds.attach_scale" title="Permalink to this definition">¶</a></dt>
 <dd><p>Attach Dimension Scale dscale to Dimension idx of Dataset dset.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt id="h5py.h5ds.detach_scale">
-<code class="sig-prename descclassname">h5py.h5ds.</code><code class="sig-name descname">detach_scale</code><span class="sig-paren">(</span><em class="sig-param">DatasetID dset</em>, <em class="sig-param">DatasetID dscale</em>, <em class="sig-param">UINT idx</em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5ds.detach_scale" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">h5py.h5ds.</span></code><code class="sig-name descname"><span class="pre">detach_scale</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">DatasetID</span> <span class="pre">dset</span></em>, <em class="sig-param"><span class="pre">DatasetID</span> <span class="pre">dscale</span></em>, <em class="sig-param"><span class="pre">UINT</span> <span class="pre">idx</span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5ds.detach_scale" title="Permalink to this definition">¶</a></dt>
 <dd><p>Detach Dimension Scale dscale from the Dimension idx of Dataset dset.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt id="h5py.h5ds.get_label">
-<code class="sig-prename descclassname">h5py.h5ds.</code><code class="sig-name descname">get_label</code><span class="sig-paren">(</span><em class="sig-param">DatasetID dset</em>, <em class="sig-param">UINT idx</em><span class="sig-paren">)</span> &#x2192; STRING name_of_label<a class="headerlink" href="#h5py.h5ds.get_label" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">h5py.h5ds.</span></code><code class="sig-name descname"><span class="pre">get_label</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">DatasetID</span> <span class="pre">dset</span></em>, <em class="sig-param"><span class="pre">UINT</span> <span class="pre">idx</span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">STRING</span> <span class="pre">name_of_label</span><a class="headerlink" href="#h5py.h5ds.get_label" title="Permalink to this definition">¶</a></dt>
 <dd><p>Read the label for Dimension idx of Dataset dset into buffer label.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt id="h5py.h5ds.get_num_scales">
-<code class="sig-prename descclassname">h5py.h5ds.</code><code class="sig-name descname">get_num_scales</code><span class="sig-paren">(</span><em class="sig-param">DatasetID dset</em>, <em class="sig-param">UINT dim</em><span class="sig-paren">)</span> &#x2192; INT number_of_scales<a class="headerlink" href="#h5py.h5ds.get_num_scales" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">h5py.h5ds.</span></code><code class="sig-name descname"><span class="pre">get_num_scales</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">DatasetID</span> <span class="pre">dset</span></em>, <em class="sig-param"><span class="pre">UINT</span> <span class="pre">dim</span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">INT</span> <span class="pre">number_of_scales</span><a class="headerlink" href="#h5py.h5ds.get_num_scales" title="Permalink to this definition">¶</a></dt>
 <dd><p>Determines how many Dimension Scales are attached to Dimension dim
 of Dataset dset.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt id="h5py.h5ds.get_scale_name">
-<code class="sig-prename descclassname">h5py.h5ds.</code><code class="sig-name descname">get_scale_name</code><span class="sig-paren">(</span><em class="sig-param">DatasetID dscale</em><span class="sig-paren">)</span> &#x2192; STRING name_of_scale<a class="headerlink" href="#h5py.h5ds.get_scale_name" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">h5py.h5ds.</span></code><code class="sig-name descname"><span class="pre">get_scale_name</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">DatasetID</span> <span class="pre">dscale</span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">STRING</span> <span class="pre">name_of_scale</span><a class="headerlink" href="#h5py.h5ds.get_scale_name" title="Permalink to this definition">¶</a></dt>
 <dd><p>Retrieves name of Dimension Scale dscale.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt id="h5py.h5ds.is_attached">
-<code class="sig-prename descclassname">h5py.h5ds.</code><code class="sig-name descname">is_attached</code><span class="sig-paren">(</span><em class="sig-param">DatasetID dset</em>, <em class="sig-param">DatasetID dscale</em>, <em class="sig-param">UINT idx</em><span class="sig-paren">)</span> &#x2192; BOOL<a class="headerlink" href="#h5py.h5ds.is_attached" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">h5py.h5ds.</span></code><code class="sig-name descname"><span class="pre">is_attached</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">DatasetID</span> <span class="pre">dset</span></em>, <em class="sig-param"><span class="pre">DatasetID</span> <span class="pre">dscale</span></em>, <em class="sig-param"><span class="pre">UINT</span> <span class="pre">idx</span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">BOOL</span><a class="headerlink" href="#h5py.h5ds.is_attached" title="Permalink to this definition">¶</a></dt>
 <dd><p>Report if Dimension Scale dscale is currently attached to Dimension
 idx of Dataset dset.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt id="h5py.h5ds.is_scale">
-<code class="sig-prename descclassname">h5py.h5ds.</code><code class="sig-name descname">is_scale</code><span class="sig-paren">(</span><em class="sig-param">DatasetID dset</em><span class="sig-paren">)</span> &#x2192; BOOL<a class="headerlink" href="#h5py.h5ds.is_scale" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">h5py.h5ds.</span></code><code class="sig-name descname"><span class="pre">is_scale</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">DatasetID</span> <span class="pre">dset</span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">BOOL</span><a class="headerlink" href="#h5py.h5ds.is_scale" title="Permalink to this definition">¶</a></dt>
 <dd><p>Determines whether dset is a dimension scale.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt id="h5py.h5ds.iterate">
-<code class="sig-prename descclassname">h5py.h5ds.</code><code class="sig-name descname">iterate</code><span class="sig-paren">(</span><em class="sig-param">DatasetID loc</em>, <em class="sig-param">UINT dim</em>, <em class="sig-param">CALLABLE func</em>, <em class="sig-param">UINT startidx=0</em><span class="sig-paren">)</span> &#x2192; Return value from func<a class="headerlink" href="#h5py.h5ds.iterate" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">h5py.h5ds.</span></code><code class="sig-name descname"><span class="pre">iterate</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">DatasetID</span> <span class="pre">loc</span></em>, <em class="sig-param"><span class="pre">UINT</span> <span class="pre">dim</span></em>, <em class="sig-param"><span class="pre">CALLABLE</span> <span class="pre">func</span></em>, <em class="sig-param"><span class="pre">UINT</span> <span class="pre">startidx=0</span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">Return</span> <span class="pre">value</span> <span class="pre">from</span> <span class="pre">func</span><a class="headerlink" href="#h5py.h5ds.iterate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Iterate a callable (function, method or callable object) over the
 members of a group.  Your callable should have the signature:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">func</span><span class="p">(</span><span class="n">STRING</span> <span class="n">name</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="n">Result</span>
@@ -103,13 +103,13 @@ iteration and returns that value. Keywords:</p>
 
 <dl class="py function">
 <dt id="h5py.h5ds.set_label">
-<code class="sig-prename descclassname">h5py.h5ds.</code><code class="sig-name descname">set_label</code><span class="sig-paren">(</span><em class="sig-param">DatasetID dset</em>, <em class="sig-param">UINT idx</em>, <em class="sig-param">STRING label</em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5ds.set_label" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">h5py.h5ds.</span></code><code class="sig-name descname"><span class="pre">set_label</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">DatasetID</span> <span class="pre">dset</span></em>, <em class="sig-param"><span class="pre">UINT</span> <span class="pre">idx</span></em>, <em class="sig-param"><span class="pre">STRING</span> <span class="pre">label</span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5ds.set_label" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set label for the Dimension idx of Dataset dset to the value label.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt id="h5py.h5ds.set_scale">
-<code class="sig-prename descclassname">h5py.h5ds.</code><code class="sig-name descname">set_scale</code><span class="sig-paren">(</span><em class="sig-param">DatasetID dset</em>, <em class="sig-param">STRING dimname</em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5ds.set_scale" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">h5py.h5ds.</span></code><code class="sig-name descname"><span class="pre">set_scale</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">DatasetID</span> <span class="pre">dset</span></em>, <em class="sig-param"><span class="pre">STRING</span> <span class="pre">dimname</span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5ds.set_scale" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convert dataset dset to a dimension scale, with optional name dimname.</p>
 </dd></dl>
 
@@ -170,8 +170,8 @@ iteration and returns that value. Keywords:</p>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2014, Andrew Collette and contributors.
-      Last updated on Feb 12, 2021.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.4.3.
+      Last updated on Feb 19, 2021.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.5.1.
     </div>
   </body>
 </html>

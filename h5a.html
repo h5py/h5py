@@ -49,7 +49,7 @@
 <h2>Functional API<a class="headerlink" href="#functional-api" title="Permalink to this headline">¶</a></h2>
 <dl class="py function">
 <dt id="h5py.h5a.create">
-<code class="sig-prename descclassname">h5py.h5a.</code><code class="sig-name descname">create</code><span class="sig-paren">(</span><em class="sig-param">ObjectID loc</em>, <em class="sig-param">STRING name</em>, <em class="sig-param">TypeID tid</em>, <em class="sig-param">SpaceID space</em>, <em class="sig-param">**kwds</em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#h5py.h5a.AttrID" title="h5py.h5a.AttrID">AttrID</a><a class="headerlink" href="#h5py.h5a.create" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">h5py.h5a.</span></code><code class="sig-name descname"><span class="pre">create</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">ObjectID</span> <span class="pre">loc</span></em>, <em class="sig-param"><span class="pre">STRING</span> <span class="pre">name</span></em>, <em class="sig-param"><span class="pre">TypeID</span> <span class="pre">tid</span></em>, <em class="sig-param"><span class="pre">SpaceID</span> <span class="pre">space</span></em>, <em class="sig-param"><span class="pre">**kwds</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#h5py.h5a.AttrID" title="h5py.h5a.AttrID"><span class="pre">AttrID</span></a><a class="headerlink" href="#h5py.h5a.create" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a new attribute, attached to an existing object.</p>
 <dl class="simple">
 <dt>STRING obj_name (“.”)</dt><dd><p>Attach attribute to this group member instead</p>
@@ -61,7 +61,7 @@
 
 <dl class="py function">
 <dt id="h5py.h5a.open">
-<code class="sig-prename descclassname">h5py.h5a.</code><code class="sig-name descname">open</code><span class="sig-paren">(</span><em class="sig-param">ObjectID loc</em>, <em class="sig-param">STRING name=</em>, <em class="sig-param">INT index=</em>, <em class="sig-param">**kwds</em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#h5py.h5a.AttrID" title="h5py.h5a.AttrID">AttrID</a><a class="headerlink" href="#h5py.h5a.open" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">h5py.h5a.</span></code><code class="sig-name descname"><span class="pre">open</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">ObjectID</span> <span class="pre">loc</span></em>, <em class="sig-param"><span class="pre">STRING</span> <span class="pre">name=</span></em>, <em class="sig-param"><span class="pre">INT</span> <span class="pre">index=</span></em>, <em class="sig-param"><span class="pre">**kwds</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#h5py.h5a.AttrID" title="h5py.h5a.AttrID"><span class="pre">AttrID</span></a><a class="headerlink" href="#h5py.h5a.open" title="Permalink to this definition">¶</a></dt>
 <dd><p>Open an attribute attached to an existing object.  You must specify
 exactly one of either name or idx.  Keywords are:</p>
 <dl class="simple">
@@ -76,7 +76,7 @@ exactly one of either name or idx.  Keywords are:</p>
 
 <dl class="py function">
 <dt id="h5py.h5a.exists">
-<code class="sig-prename descclassname">h5py.h5a.</code><code class="sig-name descname">exists</code><span class="sig-paren">(</span><em class="sig-param">ObjectID loc</em>, <em class="sig-param">STRING name</em>, <em class="sig-param">**kwds</em><span class="sig-paren">)</span> &#x2192; BOOL<a class="headerlink" href="#h5py.h5a.exists" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">h5py.h5a.</span></code><code class="sig-name descname"><span class="pre">exists</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">ObjectID</span> <span class="pre">loc</span></em>, <em class="sig-param"><span class="pre">STRING</span> <span class="pre">name</span></em>, <em class="sig-param"><span class="pre">**kwds</span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">BOOL</span><a class="headerlink" href="#h5py.h5a.exists" title="Permalink to this definition">¶</a></dt>
 <dd><p>Determine if an attribute is attached to this object.  Keywords:</p>
 <dl class="simple">
 <dt>STRING obj_name (“.”)</dt><dd><p>Look for attributes attached to this group member</p>
@@ -88,7 +88,7 @@ exactly one of either name or idx.  Keywords are:</p>
 
 <dl class="py function">
 <dt id="h5py.h5a.rename">
-<code class="sig-prename descclassname">h5py.h5a.</code><code class="sig-name descname">rename</code><span class="sig-paren">(</span><em class="sig-param">ObjectID loc</em>, <em class="sig-param">STRING name</em>, <em class="sig-param">STRING new_name</em>, <em class="sig-param">**kwds</em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5a.rename" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">h5py.h5a.</span></code><code class="sig-name descname"><span class="pre">rename</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">ObjectID</span> <span class="pre">loc</span></em>, <em class="sig-param"><span class="pre">STRING</span> <span class="pre">name</span></em>, <em class="sig-param"><span class="pre">STRING</span> <span class="pre">new_name</span></em>, <em class="sig-param"><span class="pre">**kwds</span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5a.rename" title="Permalink to this definition">¶</a></dt>
 <dd><p>Rename an attribute.  Keywords:</p>
 <dl class="simple">
 <dt>STRING obj_name (“.”)</dt><dd><p>Attribute is attached to this group member</p>
@@ -100,7 +100,7 @@ exactly one of either name or idx.  Keywords are:</p>
 
 <dl class="py function">
 <dt id="h5py.h5a.delete">
-<code class="sig-prename descclassname">h5py.h5a.</code><code class="sig-name descname">delete</code><span class="sig-paren">(</span><em class="sig-param">ObjectID loc</em>, <em class="sig-param">STRING name=</em>, <em class="sig-param">INT index=</em>, <em class="sig-param">**kwds</em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5a.delete" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">h5py.h5a.</span></code><code class="sig-name descname"><span class="pre">delete</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">ObjectID</span> <span class="pre">loc</span></em>, <em class="sig-param"><span class="pre">STRING</span> <span class="pre">name=</span></em>, <em class="sig-param"><span class="pre">INT</span> <span class="pre">index=</span></em>, <em class="sig-param"><span class="pre">**kwds</span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5a.delete" title="Permalink to this definition">¶</a></dt>
 <dd><p>Remove an attribute from an object.  Specify exactly one of “name”
 or “index”. Keyword-only arguments:</p>
 <dl class="simple">
@@ -115,13 +115,13 @@ or “index”. Keyword-only arguments:</p>
 
 <dl class="py function">
 <dt id="h5py.h5a.get_num_attrs">
-<code class="sig-prename descclassname">h5py.h5a.</code><code class="sig-name descname">get_num_attrs</code><span class="sig-paren">(</span><em class="sig-param">ObjectID loc</em><span class="sig-paren">)</span> &#x2192; INT<a class="headerlink" href="#h5py.h5a.get_num_attrs" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">h5py.h5a.</span></code><code class="sig-name descname"><span class="pre">get_num_attrs</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">ObjectID</span> <span class="pre">loc</span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">INT</span><a class="headerlink" href="#h5py.h5a.get_num_attrs" title="Permalink to this definition">¶</a></dt>
 <dd><p>Determine the number of attributes attached to an HDF5 object.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt id="h5py.h5a.get_info">
-<code class="sig-prename descclassname">h5py.h5a.</code><code class="sig-name descname">get_info</code><span class="sig-paren">(</span><em class="sig-param">ObjectID loc</em>, <em class="sig-param">STRING name=</em>, <em class="sig-param">INT index=</em>, <em class="sig-param">**kwds</em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#h5py.h5a.AttrInfo" title="h5py.h5a.AttrInfo">AttrInfo</a><a class="headerlink" href="#h5py.h5a.get_info" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">h5py.h5a.</span></code><code class="sig-name descname"><span class="pre">get_info</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">ObjectID</span> <span class="pre">loc</span></em>, <em class="sig-param"><span class="pre">STRING</span> <span class="pre">name=</span></em>, <em class="sig-param"><span class="pre">INT</span> <span class="pre">index=</span></em>, <em class="sig-param"><span class="pre">**kwds</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#h5py.h5a.AttrInfo" title="h5py.h5a.AttrInfo"><span class="pre">AttrInfo</span></a><a class="headerlink" href="#h5py.h5a.get_info" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get information about an attribute, in one of two ways:</p>
 <ol class="arabic simple">
 <li><p>If you have the attribute identifier, just pass it in</p></li>
@@ -142,7 +142,7 @@ either name or index.</p></li>
 
 <dl class="py function">
 <dt id="h5py.h5a.iterate">
-<code class="sig-prename descclassname">h5py.h5a.</code><code class="sig-name descname">iterate</code><span class="sig-paren">(</span><em class="sig-param">ObjectID loc</em>, <em class="sig-param">CALLABLE func</em>, <em class="sig-param">INT index=0</em>, <em class="sig-param">**kwds</em><span class="sig-paren">)</span> &#x2192; &lt;Return value from func&gt;<a class="headerlink" href="#h5py.h5a.iterate" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">h5py.h5a.</span></code><code class="sig-name descname"><span class="pre">iterate</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">ObjectID</span> <span class="pre">loc</span></em>, <em class="sig-param"><span class="pre">CALLABLE</span> <span class="pre">func</span></em>, <em class="sig-param"><span class="pre">INT</span> <span class="pre">index=0</span></em>, <em class="sig-param"><span class="pre">**kwds</span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">&lt;Return</span> <span class="pre">value</span> <span class="pre">from</span> <span class="pre">func&gt;</span><a class="headerlink" href="#h5py.h5a.iterate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Iterate a callable (function, method or callable object) over the
 attributes attached to this object.  You callable should have the
 signature:</p>
@@ -170,28 +170,28 @@ iteration and returns that value.  Keywords:</p>
 <h2>Info objects<a class="headerlink" href="#info-objects" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt id="h5py.h5a.AttrInfo">
-<em class="property">class </em><code class="sig-prename descclassname">h5py.h5a.</code><code class="sig-name descname">AttrInfo</code><a class="headerlink" href="#h5py.h5a.AttrInfo" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">h5py.h5a.</span></code><code class="sig-name descname"><span class="pre">AttrInfo</span></code><a class="headerlink" href="#h5py.h5a.AttrInfo" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="py attribute">
 <dt id="h5py.h5a.AttrInfo.corder">
-<code class="sig-name descname">corder</code><a class="headerlink" href="#h5py.h5a.AttrInfo.corder" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">corder</span></code><a class="headerlink" href="#h5py.h5a.AttrInfo.corder" title="Permalink to this definition">¶</a></dt>
 <dd><p>Creation order</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt id="h5py.h5a.AttrInfo.corder_valid">
-<code class="sig-name descname">corder_valid</code><a class="headerlink" href="#h5py.h5a.AttrInfo.corder_valid" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">corder_valid</span></code><a class="headerlink" href="#h5py.h5a.AttrInfo.corder_valid" title="Permalink to this definition">¶</a></dt>
 <dd><p>Indicates if the creation order is valid</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt id="h5py.h5a.AttrInfo.cset">
-<code class="sig-name descname">cset</code><a class="headerlink" href="#h5py.h5a.AttrInfo.cset" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">cset</span></code><a class="headerlink" href="#h5py.h5a.AttrInfo.cset" title="Permalink to this definition">¶</a></dt>
 <dd><p>Character set of attribute name (integer typecode from <a class="reference internal" href="h5t.html#module-h5py.h5t" title="h5py.h5t"><code class="xref py py-mod docutils literal notranslate"><span class="pre">h5t</span></code></a>)</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt id="h5py.h5a.AttrInfo.data_size">
-<code class="sig-name descname">data_size</code><a class="headerlink" href="#h5py.h5a.AttrInfo.data_size" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">data_size</span></code><a class="headerlink" href="#h5py.h5a.AttrInfo.data_size" title="Permalink to this definition">¶</a></dt>
 <dd><p>Size of raw data</p>
 </dd></dl>
 
@@ -202,7 +202,7 @@ iteration and returns that value.  Keywords:</p>
 <h2>Attribute objects<a class="headerlink" href="#attribute-objects" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt id="h5py.h5a.AttrID">
-<em class="property">class </em><code class="sig-prename descclassname">h5py.h5a.</code><code class="sig-name descname">AttrID</code><a class="headerlink" href="#h5py.h5a.AttrID" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">h5py.h5a.</span></code><code class="sig-name descname"><span class="pre">AttrID</span></code><a class="headerlink" href="#h5py.h5a.AttrID" title="Permalink to this definition">¶</a></dt>
 <dd><p>Logical representation of an HDF5 attribute identifier.</p>
 <p>Objects of this class can be used in any HDF5 function call
 which expects an attribute identifier.  Additionally, all <code class="docutils literal notranslate"><span class="pre">H5A*</span></code>
@@ -214,43 +214,43 @@ argument are presented as methods of this class.</p>
 </ul>
 <dl class="py attribute">
 <dt id="h5py.h5a.AttrID.dtype">
-<code class="sig-name descname">dtype</code><a class="headerlink" href="#h5py.h5a.AttrID.dtype" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">dtype</span></code><a class="headerlink" href="#h5py.h5a.AttrID.dtype" title="Permalink to this definition">¶</a></dt>
 <dd><p>A Numpy-stype dtype object representing the attribute’s datatype</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="h5py.h5a.AttrID.get_name">
-<code class="sig-name descname">get_name</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; STRING name<a class="headerlink" href="#h5py.h5a.AttrID.get_name" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">get_name</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; <span class="pre">STRING</span> <span class="pre">name</span><a class="headerlink" href="#h5py.h5a.AttrID.get_name" title="Permalink to this definition">¶</a></dt>
 <dd><p>Determine the name of this attribute.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="h5py.h5a.AttrID.get_space">
-<code class="sig-name descname">get_space</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; SpaceID<a class="headerlink" href="#h5py.h5a.AttrID.get_space" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">get_space</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; <span class="pre">SpaceID</span><a class="headerlink" href="#h5py.h5a.AttrID.get_space" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create and return a copy of the attribute’s dataspace.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="h5py.h5a.AttrID.get_storage_size">
-<code class="sig-name descname">get_storage_size</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; INT<a class="headerlink" href="#h5py.h5a.AttrID.get_storage_size" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">get_storage_size</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; <span class="pre">INT</span><a class="headerlink" href="#h5py.h5a.AttrID.get_storage_size" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the amount of storage required for this attribute.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="h5py.h5a.AttrID.get_type">
-<code class="sig-name descname">get_type</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; TypeID<a class="headerlink" href="#h5py.h5a.AttrID.get_type" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">get_type</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; <span class="pre">TypeID</span><a class="headerlink" href="#h5py.h5a.AttrID.get_type" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create and return a copy of the attribute’s datatype.</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt id="h5py.h5a.AttrID.name">
-<code class="sig-name descname">name</code><a class="headerlink" href="#h5py.h5a.AttrID.name" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">name</span></code><a class="headerlink" href="#h5py.h5a.AttrID.name" title="Permalink to this definition">¶</a></dt>
 <dd><p>The attribute’s name</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="h5py.h5a.AttrID.read">
-<code class="sig-name descname">read</code><span class="sig-paren">(</span><em class="sig-param">NDARRAY arr</em>, <em class="sig-param">TypeID mtype=None</em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5a.AttrID.read" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">read</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">NDARRAY</span> <span class="pre">arr</span></em>, <em class="sig-param"><span class="pre">TypeID</span> <span class="pre">mtype=None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5a.AttrID.read" title="Permalink to this definition">¶</a></dt>
 <dd><p>Read the attribute data into the given Numpy array.  Note that the
 Numpy array must have the same shape as the HDF5 attribute, and a
 conversion-compatible datatype.</p>
@@ -261,13 +261,13 @@ the case, the read will fail with an exception.</p>
 
 <dl class="py attribute">
 <dt id="h5py.h5a.AttrID.shape">
-<code class="sig-name descname">shape</code><a class="headerlink" href="#h5py.h5a.AttrID.shape" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">shape</span></code><a class="headerlink" href="#h5py.h5a.AttrID.shape" title="Permalink to this definition">¶</a></dt>
 <dd><p>A Numpy-style shape tuple representing the attribute’s dataspace</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="h5py.h5a.AttrID.write">
-<code class="sig-name descname">write</code><span class="sig-paren">(</span><em class="sig-param">NDARRAY arr</em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5a.AttrID.write" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">write</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">NDARRAY</span> <span class="pre">arr</span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5a.AttrID.write" title="Permalink to this definition">¶</a></dt>
 <dd><p>Write the contents of a Numpy array to the attribute.  Note that
 the Numpy array must have the same shape as the HDF5 attribute, and
 a conversion-compatible datatype.</p>
@@ -345,8 +345,8 @@ the write will fail with an exception.</p>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2014, Andrew Collette and contributors.
-      Last updated on Feb 12, 2021.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.4.3.
+      Last updated on Feb 19, 2021.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.5.1.
     </div>
   </body>
 </html>

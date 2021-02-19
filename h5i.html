@@ -48,7 +48,7 @@
 <span id="functional-api"></span><h2>Functional API<a class="headerlink" href="#module-h5py.h5i" title="Permalink to this headline">¶</a></h2>
 <dl class="py function">
 <dt id="h5py.h5i.dec_ref">
-<code class="sig-prename descclassname">h5py.h5i.</code><code class="sig-name descname">dec_ref</code><span class="sig-paren">(</span><em class="sig-param">ObjectID obj</em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5i.dec_ref" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">h5py.h5i.</span></code><code class="sig-name descname"><span class="pre">dec_ref</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">ObjectID</span> <span class="pre">obj</span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5i.dec_ref" title="Permalink to this definition">¶</a></dt>
 <dd><p>Decrement the reference count for the given object.</p>
 <p>This function is provided for debugging only.  Reference counting
 is automatically synchronized with Python, and you can easily break
@@ -57,13 +57,13 @@ ObjectID instances by abusing this function.</p>
 
 <dl class="py function">
 <dt id="h5py.h5i.get_file_id">
-<code class="sig-prename descclassname">h5py.h5i.</code><code class="sig-name descname">get_file_id</code><span class="sig-paren">(</span><em class="sig-param">ObjectID obj</em><span class="sig-paren">)</span> &#x2192; FileID<a class="headerlink" href="#h5py.h5i.get_file_id" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">h5py.h5i.</span></code><code class="sig-name descname"><span class="pre">get_file_id</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">ObjectID</span> <span class="pre">obj</span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">FileID</span><a class="headerlink" href="#h5py.h5i.get_file_id" title="Permalink to this definition">¶</a></dt>
 <dd><p>Obtain an identifier for the file in which this object resides.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt id="h5py.h5i.get_name">
-<code class="sig-prename descclassname">h5py.h5i.</code><code class="sig-name descname">get_name</code><span class="sig-paren">(</span><em class="sig-param">ObjectID obj</em><span class="sig-paren">)</span> &#x2192; STRING name, or None<a class="headerlink" href="#h5py.h5i.get_name" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">h5py.h5i.</span></code><code class="sig-name descname"><span class="pre">get_name</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">ObjectID</span> <span class="pre">obj</span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">STRING</span> <span class="pre">name,</span> <span class="pre">or</span> <span class="pre">None</span><a class="headerlink" href="#h5py.h5i.get_name" title="Permalink to this definition">¶</a></dt>
 <dd><p>Determine (a) name of an HDF5 object.  Because an object has as many
 names as there are hard links to it, this may not be unique.</p>
 <p>If the identifier is invalid or is not associated with a name
@@ -73,13 +73,13 @@ names as there are hard links to it, this may not be unique.</p>
 
 <dl class="py function">
 <dt id="h5py.h5i.get_ref">
-<code class="sig-prename descclassname">h5py.h5i.</code><code class="sig-name descname">get_ref</code><span class="sig-paren">(</span><em class="sig-param">ObjectID obj</em><span class="sig-paren">)</span> &#x2192; INT<a class="headerlink" href="#h5py.h5i.get_ref" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">h5py.h5i.</span></code><code class="sig-name descname"><span class="pre">get_ref</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">ObjectID</span> <span class="pre">obj</span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">INT</span><a class="headerlink" href="#h5py.h5i.get_ref" title="Permalink to this definition">¶</a></dt>
 <dd><p>Retrieve the reference count for the given object.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt id="h5py.h5i.get_type">
-<code class="sig-prename descclassname">h5py.h5i.</code><code class="sig-name descname">get_type</code><span class="sig-paren">(</span><em class="sig-param">ObjectID obj</em><span class="sig-paren">)</span> &#x2192; INT type_code<a class="headerlink" href="#h5py.h5i.get_type" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">h5py.h5i.</span></code><code class="sig-name descname"><span class="pre">get_type</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">ObjectID</span> <span class="pre">obj</span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">INT</span> <span class="pre">type_code</span><a class="headerlink" href="#h5py.h5i.get_type" title="Permalink to this definition">¶</a></dt>
 <dd><p>Determine the HDF5 typecode of an arbitrary HDF5 object.  The return
 value is always one of the type constants defined in this module; if
 the <code class="xref py py-data docutils literal notranslate"><span class="pre">ID</span></code> is invalid, <a class="reference internal" href="#h5py.h5i.BADID" title="h5py.h5i.BADID"><code class="xref py py-data docutils literal notranslate"><span class="pre">BADID</span></code></a> is returned.</p>
@@ -87,7 +87,7 @@ the <code class="xref py py-data docutils literal notranslate"><span class="pre"
 
 <dl class="py function">
 <dt id="h5py.h5i.inc_ref">
-<code class="sig-prename descclassname">h5py.h5i.</code><code class="sig-name descname">inc_ref</code><span class="sig-paren">(</span><em class="sig-param">ObjectID obj</em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5i.inc_ref" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">h5py.h5i.</span></code><code class="sig-name descname"><span class="pre">inc_ref</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">ObjectID</span> <span class="pre">obj</span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5i.inc_ref" title="Permalink to this definition">¶</a></dt>
 <dd><p>Increment the reference count for the given object.</p>
 <p>This function is provided for debugging only.  Reference counting
 is automatically synchronized with Python, and you can easily break
@@ -101,52 +101,52 @@ ObjectID instances by abusing this function.</p>
 <h3>Identifier classes<a class="headerlink" href="#identifier-classes" title="Permalink to this headline">¶</a></h3>
 <dl class="py data">
 <dt id="h5py.h5i.BADID">
-<code class="sig-prename descclassname">h5py.h5i.</code><code class="sig-name descname">BADID</code><a class="headerlink" href="#h5py.h5i.BADID" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">h5py.h5i.</span></code><code class="sig-name descname"><span class="pre">BADID</span></code><a class="headerlink" href="#h5py.h5i.BADID" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
 <dt id="h5py.h5i.FILE">
-<code class="sig-prename descclassname">h5py.h5i.</code><code class="sig-name descname">FILE</code><a class="headerlink" href="#h5py.h5i.FILE" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">h5py.h5i.</span></code><code class="sig-name descname"><span class="pre">FILE</span></code><a class="headerlink" href="#h5py.h5i.FILE" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
 <dt id="h5py.h5i.GROUP">
-<code class="sig-prename descclassname">h5py.h5i.</code><code class="sig-name descname">GROUP</code><a class="headerlink" href="#h5py.h5i.GROUP" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">h5py.h5i.</span></code><code class="sig-name descname"><span class="pre">GROUP</span></code><a class="headerlink" href="#h5py.h5i.GROUP" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
 <dt id="h5py.h5i.DATASPACE">
-<code class="sig-prename descclassname">h5py.h5i.</code><code class="sig-name descname">DATASPACE</code><a class="headerlink" href="#h5py.h5i.DATASPACE" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">h5py.h5i.</span></code><code class="sig-name descname"><span class="pre">DATASPACE</span></code><a class="headerlink" href="#h5py.h5i.DATASPACE" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
 <dt id="h5py.h5i.DATASET">
-<code class="sig-prename descclassname">h5py.h5i.</code><code class="sig-name descname">DATASET</code><a class="headerlink" href="#h5py.h5i.DATASET" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">h5py.h5i.</span></code><code class="sig-name descname"><span class="pre">DATASET</span></code><a class="headerlink" href="#h5py.h5i.DATASET" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
 <dt id="h5py.h5i.ATTR">
-<code class="sig-prename descclassname">h5py.h5i.</code><code class="sig-name descname">ATTR</code><a class="headerlink" href="#h5py.h5i.ATTR" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">h5py.h5i.</span></code><code class="sig-name descname"><span class="pre">ATTR</span></code><a class="headerlink" href="#h5py.h5i.ATTR" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
 <dt id="h5py.h5i.REFERENCE">
-<code class="sig-prename descclassname">h5py.h5i.</code><code class="sig-name descname">REFERENCE</code><a class="headerlink" href="#h5py.h5i.REFERENCE" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">h5py.h5i.</span></code><code class="sig-name descname"><span class="pre">REFERENCE</span></code><a class="headerlink" href="#h5py.h5i.REFERENCE" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
 <dt id="h5py.h5i.GENPROP_CLS">
-<code class="sig-prename descclassname">h5py.h5i.</code><code class="sig-name descname">GENPROP_CLS</code><a class="headerlink" href="#h5py.h5i.GENPROP_CLS" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">h5py.h5i.</span></code><code class="sig-name descname"><span class="pre">GENPROP_CLS</span></code><a class="headerlink" href="#h5py.h5i.GENPROP_CLS" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
 <dt id="h5py.h5i.GENPROP_LST">
-<code class="sig-prename descclassname">h5py.h5i.</code><code class="sig-name descname">GENPROP_LST</code><a class="headerlink" href="#h5py.h5i.GENPROP_LST" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">h5py.h5i.</span></code><code class="sig-name descname"><span class="pre">GENPROP_LST</span></code><a class="headerlink" href="#h5py.h5i.GENPROP_LST" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
 <dt id="h5py.h5i.DATATYPE">
-<code class="sig-prename descclassname">h5py.h5i.</code><code class="sig-name descname">DATATYPE</code><a class="headerlink" href="#h5py.h5i.DATATYPE" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">h5py.h5i.</span></code><code class="sig-name descname"><span class="pre">DATATYPE</span></code><a class="headerlink" href="#h5py.h5i.DATATYPE" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </div>
@@ -220,8 +220,8 @@ ObjectID instances by abusing this function.</p>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2014, Andrew Collette and contributors.
-      Last updated on Feb 12, 2021.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.4.3.
+      Last updated on Feb 19, 2021.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.5.1.
     </div>
   </body>
 </html>
