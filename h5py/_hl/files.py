@@ -13,6 +13,7 @@
 
 import sys
 import os
+from warnings import warn
 
 from .compat import filename_decode, filename_encode
 
@@ -428,6 +429,13 @@ class File(Group):
 
             if fs_strategy and mode not in ('w', 'w-', 'x'):
                 raise ValueError("Unable to set file space strategy of an existing file")
+
+            if swmr and mode != 'r':
+                warn(
+                    "swmr=True only affects read ('r') mode. For swmr write "
+                    "mode, set f.swmr_mode = True after opening the file.",
+                    stacklevel=2,
+                )
 
             with phil:
                 fapl = make_fapl(driver, libver, rdcc_nslots, rdcc_nbytes, rdcc_w0, **kwds)
