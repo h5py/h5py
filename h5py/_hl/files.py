@@ -205,7 +205,7 @@ def make_fid(name, mode, userblock_size, fapl, fcpl=None, swmr=False):
         # existing one (ACC_EXCL)
         try:
             fid = h5f.open(name, h5f.ACC_RDWR, fapl=fapl)
-        except IOError:
+        except OSError:
             fid = h5f.create(name, h5f.ACC_EXCL, fapl=fapl, fcpl=fcpl)
     else:
         raise ValueError("Invalid mode; must be one of r, r+, w, w-, x, a")

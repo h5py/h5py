@@ -38,7 +38,7 @@ class TestFileOpen(TestCase):
         fname = self.mktemp()
 
         # No existing file; error
-        with pytest.raises(OSError):
+        with pytest.raises(FileNotFoundError):
             with File(fname):
                 pass
 
@@ -54,10 +54,10 @@ class TestFileOpen(TestCase):
         finally:
             os.chmod(fname, stat.S_IWRITE)
 
-        # File exists but is not HDF5; raise IOError
+        # File exists but is not HDF5; raise OSError
         with open(fname, 'wb') as f:
             f.write(b'\x00')
-        with self.assertRaises(IOError):
+        with self.assertRaises(OSError):
             File(fname)
 
     def test_create(self):
@@ -77,7 +77,7 @@ class TestFileOpen(TestCase):
         fid = File(fname, 'w-')
         self.assertTrue(fid)
         fid.close()
-        with self.assertRaises(IOError):
+        with self.assertRaises(FileExistsError):
             File(fname, 'w-')
 
     def test_append(self):
@@ -125,9 +125,9 @@ class TestFileOpen(TestCase):
     def test_nonexistent_file(self):
         """ Modes 'r' and 'r+' do not create files """
         fname = self.mktemp()
-        with self.assertRaises(IOError):
+        with self.assertRaises(FileNotFoundError):
             File(fname, 'r')
-        with self.assertRaises(IOError):
+        with self.assertRaises(FileNotFoundError):
             File(fname, 'r+')
 
     def test_invalid_mode(self):
