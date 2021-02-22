@@ -99,12 +99,27 @@ or, from a tarball or git :ref:`checkout <git_checkout>` ::
 
     $ pip install -v .
 
-If you are working on a development version and the underlying cython files change
-it may be necessary to force a full rebuild.  The easiest way to achieve this is ::
+Development installation
+........................
+
+When modifying h5py, you often want to reinstall it quickly to test your changes.
+To benefit from caching and use NumPy & Cython from your existing Python
+environment, run::
+
+    $ H5PY_SETUP_REQUIRES=0 python3 setup.py build
+    $ python3 -m pip install . --no-build-isolation
+
+For convenience, these commands are also in a script ``dev-install.sh`` in the
+h5py git repository.
+
+This will normally rebuild Cython files automatically when they change, but
+sometimes it may be necessary to force a full rebuild. The easiest way to
+achieve this is to discard everything but the code committed to git. In the root
+of your git checkout, run::
 
     $ git clean -xfd
 
-from the top of your clone and then rebuilding.
+Then build h5py again as above.
 
 Source installation on OSX/MacOS
 ................................
