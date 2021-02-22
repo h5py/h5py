@@ -75,29 +75,31 @@ when building from source.
 
 Source installation
 -------------------
-To install h5py from source, you need three things installed:
+To install h5py from source, you need:
 
 * A supported Python version with development headers
-* Cython >=0.29
 * HDF5 1.8.4 or newer with development headers
 * A C compiler
 
 On Unix platforms, you also need ``pkg-config`` unless you explicitly specify
 a path for HDF5 as described in :ref:`custom_install`.
 
-OS-specific instructions for installing HDF5, Python and a C compiler are in the next few
-sections.
+There are notes below on installing HDF5, Python and a C compiler on different
+platforms.
 
-Additional Python-level requirements should be installed automatically (which
-will require an internet connection).
+Building h5py also requires several Python packages, but in most cases pip will
+automatically install these in a build environment for you, so you don't need to
+deal with them manually. See :ref:`dev_install` for a list.
 
 The actual installation of h5py should be done via::
 
     $ pip install --no-binary=h5py h5py
 
-or, from a tarball or git :ref:`checkout <git_checkout>` ::
+or, from a tarball or git :ref:`checkout <git_checkout>`::
 
     $ pip install -v .
+
+.. _dev_install:
 
 Development installation
 ........................
@@ -111,6 +113,11 @@ environment, run::
 
 For convenience, these commands are also in a script ``dev-install.sh`` in the
 h5py git repository.
+
+This skips setting up a build environment, so you should
+have already installed Cython, NumPy, pkgconfig (a Python interface to
+``pkg-config``) and mpi4py (if you want MPI integration - see :ref:`build_mpi`).
+See ``setup.py`` for minimum versions.
 
 This will normally rebuild Cython files automatically when they change, but
 sometimes it may be necessary to force a full rebuild. The easiest way to
@@ -135,7 +142,7 @@ Source installation on Linux/Other Unix
 .......................................
 HDF5 and Python are most likely in your package manager. A C compiler almost
 definitely is, usually there is some kind of metapackage to install the
-default build tools, e.g. `build-essential`, which should be sufficient for our
+default build tools, e.g. ``build-essential``, which should be sufficient for our
 needs. Make sure that that you have the development headers, as they are
 usually not installed by default. They can usually be found in ``python-dev`` or
 similar and ``libhdf5-dev`` or similar.
