@@ -450,3 +450,12 @@ class TestB8(TestCase):
                 TypeError, msg='No NumPy equivalent for TypeBitfieldID exists'
             ):
                 dset[:]
+
+
+def test_opaque(writable_file):
+    # opaque without an h5py tag corresponds to numpy void dtypes
+    arr = np.zeros(3, dtype='V2')
+    ds = writable_file.create_dataset('v', data=arr)
+    assert isinstance(ds.id.get_type(), h5py.h5t.TypeOpaqueID)
+    assert ds.id.get_type().get_size() == 2
+    np.testing.assert_array_equal(ds[:], arr)
