@@ -1,5 +1,6 @@
 include AUTHORS
 include api_gen.py
+include dev-install.sh
 include LICENSE
 include MANIFEST.in
 include pylintrc
