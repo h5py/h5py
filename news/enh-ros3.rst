@@ -1,7 +1,7 @@
 New features
 ------------
 
-* <news item>
+* Added support to use the HDF5 ROS3 driver to access HDF5 files on S3.
 
 Deprecations
 ------------
@@ -11,7 +11,7 @@ Deprecations
 Exposing HDF5 functions
 -----------------------
 
-* <news item>
+* Enabled support for the ROS3 driver available in HDF5 1.10.6 and higher.
 
 Bug fixes
 ---------
