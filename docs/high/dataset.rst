@@ -261,6 +261,18 @@ dynamically loaded by the underlying HDF5 library. This is done by passing a
 filter number to :meth:`Group.create_dataset` as the ``compression`` parameter.
 The ``compression_opts`` parameter will then be passed to this filter.
 
+.. seealso::
+
+   `hdf5plugin <https://pypi.org/project/hdf5plugin/>`_
+     A Python package with several popular filters, including Blosc and LZ4,
+     for convenient use with h5py
+
+   `HDF5 Filter Plugins <https://portal.hdfgroup.org/display/support/HDF5+Filter+Plugins>`_
+     A collection of filters as a single download from The HDF Group
+
+   `Registered filter plugins <https://portal.hdfgroup.org/display/support/Filters>`_
+     The index of publicly announced filter plugins
+
 .. note:: The underlying implementation of the compression filter will have the
     ``H5Z_FLAG_OPTIONAL`` flag set. This indicates that if the compression
     filter doesn't compress a block while writing, no error will be thrown. The
