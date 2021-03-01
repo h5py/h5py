@@ -264,7 +264,7 @@ The ``compression_opts`` parameter will then be passed to this filter.
 .. seealso::
 
    `hdf5plugin <https://pypi.org/project/hdf5plugin/>`_
-     A Python package with several popular filters, including Blosc and LZ4,
+     A Python package of several popular filters, including Blosc, LZ4 and ZFP,
      for convenient use with h5py
 
    `HDF5 Filter Plugins <https://portal.hdfgroup.org/display/support/HDF5+Filter+Plugins>`_
