@@ -1,0 +1,28 @@
+New features
+------------
+
+* Added support to use the HDF5 ROS3 driver to access HDF5 files on S3.
+* Suppress numpy 1.20 deprecation warnings concerning the use of None as shape, np.float, np.int and np.bool
+
+Deprecations
+------------
+
+* Setting the config option ``default_file_mode`` to values other than ``'r'``
+  is deprecated. Pass the desired mode when opening a :class:`~.File` instead.
+
+Exposing HDF5 functions
+-----------------------
+
+* Enabled support for the ROS3 driver available in HDF5 1.10.6 and higher.
+
+Bug fixes
+---------
+
+* Fix reading data with a datatype of variable-length arrays of fixed length
+  strings (:issue:`1817`).
+* Fix :meth:`.DataSet.read_direct` and :meth:`.DataSet.write_direct` when the
+  source and destination have different shapes.
+* Fix selecting data using integer indices in :meth:`.DataSet.read_direct`
+  and :meth:`.DataSet.write_direct`.
+* Fix exception handling in :meth:`.File.visititems` (:issue:`1740`)
+
