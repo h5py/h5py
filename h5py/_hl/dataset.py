@@ -17,12 +17,14 @@ except ImportError:
     from cached_property import cached_property
 import posixpath as pp
 import sys
+from warnings import warn
 
 from threading import local
 
 import numpy
 
 from .. import h5, h5s, h5t, h5r, h5d, h5p, h5fd, h5ds, _selector
+from ..h5py_warnings import H5pyDeprecationWarning
 from .base import HLObject, phil, with_phil, Empty, find_item_type
 from . import filters
 from . import selections as sel
@@ -182,6 +184,11 @@ class AstypeWrapper(object):
 
     def __enter__(self):
         # pylint: disable=protected-access
+        warn(
+            "Using astype() as a context manager is deprecated. "
+            "Slice the returned object instead, like: ds.astype(np.int32)[:10]",
+            category=H5pyDeprecationWarning, stacklevel=2,
+        )
         self._dset._local.astype = self._dtype
         return self
 
