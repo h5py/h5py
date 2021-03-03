@@ -441,8 +441,7 @@ class TestB8(TestCase):
             # read cast dset and make sure it's equal
             if dtype is None:
                 dtype = arr1.dtype
-            with dset.astype(dtype):
-                arr2 = dset[:]
+            arr2 = dset.astype(dtype)[:]
             self.assertArrayEqual(arr2, arr1.astype(dtype, copy=False))
 
             # read uncast dataset again to ensure nothing changed permanently
