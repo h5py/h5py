@@ -169,13 +169,18 @@ cdef class H5PYConfig:
             return self._default_file_mode
 
         def __set__(self, val):
-            if val in {'r', 'r+', 'x', 'w-', 'w', 'a'}:
-                if val != 'r':
-                    warn("Using default_file_mode other than 'r' is deprecated. "
-                         "Pass the mode to h5py.File() instead.",
-                         category=H5pyDeprecationWarning,
-                    )
-                self._default_file_mode = val
+            if val == 'r':
+                warn(
+                    "Setting h5py.default_file_mode is deprecated. "
+                    "'r' (read-only) is the default from h5py 3.0.",
+                    category=H5pyDeprecationWarning,
+                )
+            elif val in {'r+', 'x', 'w-', 'w', 'a'}:
+                raise ValueError(
+                    "Using default_file_mode other than 'r' is no longer "
+                    "supported. Pass the mode to h5py.File() instead."
+
+                )
             else:
                 raise ValueError("Invalid mode; must be one of r, r+, w, w-, x, a")
 
