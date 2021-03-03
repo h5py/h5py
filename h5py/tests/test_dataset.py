@@ -1456,6 +1456,8 @@ class TestAstype(BaseDataset):
         dset[...] = np.arange(100)
 
         with warnings.catch_warnings(record=True) as warn_rec:
+            warnings.simplefilter("always")
+
             with dset.astype('f8'):
                 self.assertArrayEqual(dset[...], np.arange(100, dtype='f8'))
 
