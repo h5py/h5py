@@ -22,7 +22,7 @@ if '' not in sys.path:
 import setup_build, setup_configure
 
 
-VERSION = '3.2.0'
+VERSION = '3.2.1'
 
 # Minimum supported versions of Numpy & Cython depend on the Python version
 NUMPY_MIN_VERSIONS = [
