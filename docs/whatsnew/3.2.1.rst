@@ -1,0 +1,5 @@
+Bug fixes
+---------
+
+* Fix :attr:`.File.driver` when the read-only S3 driver is available (:pr:`1844`).
+
