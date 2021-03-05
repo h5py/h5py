@@ -256,7 +256,7 @@ class File(Group):
                    h5fd.MPIPOSIX: 'mpiposix',
                    h5fd.fileobj_driver: 'fileobj'}
         if ros3:
-            drivers[h5fd.ROS3] = 'ros3'
+            drivers[h5fd.ROS3D] = 'ros3'
         return drivers.get(self.id.get_access_plist().get_driver(), 'unknown')
 
     @property
