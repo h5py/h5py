@@ -16,8 +16,7 @@ Exposing HDF5 functions
 Bug fixes
 ---------
 
-* Fix so that h5py builds cleanly on systems with and without HDF5 drivers with
-  ROS3 enabled.
+* Fix :attr:`.File.driver` when the read-only S3 driver is available (:pr:`1844`).
 
 Building h5py
 -------------
