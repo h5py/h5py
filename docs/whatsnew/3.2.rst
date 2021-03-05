@@ -41,3 +41,8 @@ Bug fixes
   than ``'r'``, as the SWMR option is ignored in these cases (:pr:`1812`).
 * Fix NumPy 1.20 deprecation warnings concerning the use of None as shape, and
   the deprecated aliases np.float, np.int and np.bool (:pr:`1780`).
+
+3.2.1 bug fix release
+---------------------
+
+* Fix :attr:`.File.driver` when the read-only S3 driver is available (:pr:`1844`).
