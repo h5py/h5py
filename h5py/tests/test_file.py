@@ -686,6 +686,28 @@ class TestCloseInvalidatesOpenObjectIDs(TestCase):
             self.assertFalse(bool(f1.id))
             self.assertFalse(bool(g1.id))
 
+    def test_close_one_handle(self):
+        fname = self.mktemp()
+        with File(fname, 'w') as f:
+            f.create_group('foo')
+
+        f1 = File(fname)
+        f2 = File(fname)
+        g1 = f1['foo']
+        g2 = f2['foo']
+        assert g1.id.valid
+        assert g2.id.valid
+        f1.close()
+        assert not g1.id.valid
+        # Closing f1 shouldn't close f2 or objects belonging to it
+        assert f2.id.valid
+        assert g2.id.valid
+
+        f2.close()
+        assert not f2.id.valid
+        assert not g2.id.valid
+
+
 
 class TestPathlibSupport(TestCase):
 

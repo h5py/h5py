@@ -330,6 +330,25 @@ cdef class FileID(GroupID):
         self._close()
         _objects.nonlocal_close()
 
+    @with_phil
+    def _close_open_objects(self, int types):
+        # Used by File.close(). This avoids the get_obj_ids wrapper, which
+        # creates Python objects and increments HDF5 ref counts while we're
+        # trying to clean up. E.g. that can be problematic at Python shutdown.
+        cdef int count, i
+        cdef hid_t *obj_list = NULL
+
+        count = H5Fget_obj_count(self.id, types)
+        if count == 0:
+            return
+        obj_list = <hid_t*> emalloc(sizeof(hid_t) * count)
+        try:
+            H5Fget_obj_ids(self.id, types, count, obj_list)
+            for i in range(count):
+                while H5Iis_valid(obj_list[i]):
+                    H5Idec_ref(obj_list[i])
+        finally:
+            efree(obj_list)
 
     @with_phil
     def reopen(self):
