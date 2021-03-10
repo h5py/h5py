@@ -202,6 +202,9 @@ class CommonStateObject(object):
             except UnicodeEncodeError:
                 name = name.encode('utf8')
                 coding = h5t.CSET_UTF8
+            except AttributeError:
+                raise ValueError('Accessing a group expects bytes or strings, '
+                                 'not {}'.format(type(name)))
 
         if lcpl:
             return name, get_lcpl(coding)

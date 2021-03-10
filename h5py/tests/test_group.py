@@ -274,6 +274,16 @@ class TestOpen(BaseGroup):
         with self.assertRaises(Exception):
             self.f[ref]
 
+    def test_path_type_validation(self):
+        """ Access with non bytes or str types should raise an exception """
+        self.f.create_group('group')
+
+        with self.assertRaises(ValueError):
+            self.f[0]
+
+        with self.assertRaises(ValueError):
+            self.f[...]
+
     # TODO: check that regionrefs also work with __getitem__
 
 class TestRepr(BaseGroup):
