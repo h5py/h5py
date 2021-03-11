@@ -37,7 +37,7 @@ _minor_table = {
     H5E_SETLOCAL:       OSError,    # Error from filter 'set local' callback
     H5E_NOENCODER:      OSError,    # Filter present but encoding disabled
 
-    H5E_BADATOM:        ValueError,  # Unable to find atom information (already closed?)
+    H5E_BADID:        ValueError,  # Unable to find atom information (already closed?)
     H5E_BADGROUP:       ValueError,  # Unable to find ID group information
     H5E_BADSELECT:      ValueError,  # Invalid selection (hyperslabs)
     H5E_UNINITIALIZED:  ValueError,  # Information is uninitialized

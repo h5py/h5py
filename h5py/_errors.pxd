@@ -23,7 +23,7 @@ cdef extern from "hdf5.h":
         H5E_FILE,                   # file Accessability
         H5E_IO,                     # Low-level I/O
         H5E_FUNC,                   # function Entry/Exit
-        H5E_ATOM,                   # object Atom
+        H5E_ID,                     # object ID
         H5E_CACHE,                  # object Cache
         H5E_BTREE,                  # B-Tree Node
         H5E_SYM,                    # symbol Table
@@ -132,7 +132,7 @@ cdef extern from "hdf5.h":
         H5E_MOUNT          # File mount error
 
         # Object atom related errors
-        H5E_BADATOM        # Unable to find atom information (already closed?)
+        H5E_BADID        # Unable to find atom information (already closed?)
         H5E_BADGROUP       # Unable to find ID group information
         H5E_CANTREGISTER   # Unable to register new atom
         H5E_CANTINC        # Unable to increment reference count
