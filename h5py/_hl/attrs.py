@@ -193,28 +193,26 @@ class AttributeManager(base.MutableMappingHDF5, base.CommonStateObject):
 
             tempname = uuid.uuid4().hex
 
+            attr = h5a.create(self._id, self._e(tempname), htype, space)
             try:
-                attr = h5a.create(self._id, self._e(tempname), htype, space)
+                if not isinstance(data, Empty):
+                    attr.write(data, mtype=htype2)
             except:
+                attr.close()
+                h5a.delete(self._id, self._e(tempname))
                 raise
             else:
                 try:
-                    if not isinstance(data, Empty):
-                        attr.write(data, mtype=htype2)
+                    # No atomic rename in HDF5 :(
+                    if h5a.exists(self._id, self._e(name)):
+                        h5a.delete(self._id, self._e(name))
+                    h5a.rename(self._id, self._e(tempname), self._e(name))
                 except:
                     attr.close()
                     h5a.delete(self._id, self._e(tempname))
                     raise
-                else:
-                    try:
-                        # No atomic rename in HDF5 :(
-                        if h5a.exists(self._id, self._e(name)):
-                            h5a.delete(self._id, self._e(name))
-                        h5a.rename(self._id, self._e(tempname), self._e(name))
-                    except:
-                        attr.close()
-                        h5a.delete(self._id, self._e(tempname))
-                        raise
+            finally:
+                attr.close()
 
     def modify(self, name, value):
         """ Change the value of an attribute while preserving its type.
