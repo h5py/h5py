@@ -278,10 +278,10 @@ class TestOpen(BaseGroup):
         """ Access with non bytes or str types should raise an exception """
         self.f.create_group('group')
 
-        with self.assertRaises(ValueError):
+        with self.assertRaises(TypeError):
             self.f[0]
 
-        with self.assertRaises(ValueError):
+        with self.assertRaises(TypeError):
             self.f[...]
 
     # TODO: check that regionrefs also work with __getitem__

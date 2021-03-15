@@ -284,6 +284,9 @@ class Group(HLObject, MutableMappingHDF5):
             oid = h5r.dereference(name, self.id)
             if oid is None:
                 raise ValueError("Invalid HDF5 object reference")
+        elif not isinstance(name, (bytes, str)):
+            raise TypeError("Accessing a group is done with bytes or str, "
+                            " not {}".format(type(name)))
         else:
             oid = h5o.open(self.id, self._e(name), lapl=self._lapl)
 
