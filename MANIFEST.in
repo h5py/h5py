@@ -1,5 +1,6 @@
 include AUTHORS
 include api_gen.py
+include dev-install.sh
 include LICENSE
 include MANIFEST.in
 include pylintrc
@@ -8,6 +9,7 @@ include setup_build.py
 include setup_configure.py
 include tox.ini
 include pytest.ini
+include *.toml
 
 recursive-include docs *
 prune docs/_build

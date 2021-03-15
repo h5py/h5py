@@ -10,8 +10,10 @@
 
 include "config.pxi"
 
+from warnings import warn
 from .defs cimport *
 from ._objects import phil, with_phil
+from .h5py_warnings import H5pyDeprecationWarning
 
 ITER_INC    = H5_ITER_INC     # Increasing order
 ITER_DEC    = H5_ITER_DEC     # Decreasing order
@@ -135,6 +137,14 @@ cdef class H5PYConfig:
             ELSE:
                 return False
 
+    property ros3:
+        """ Boolean indicating if ROS3 VDS is available """
+        def __get__(self):
+            IF ROS3:
+                return True
+            ELSE:
+                return False
+
     property swmr_min_hdf5_version:
         """ Tuple indicating the minimum HDF5 version required for SWMR features"""
         def __get__(self):
@@ -160,6 +170,11 @@ cdef class H5PYConfig:
 
         def __set__(self, val):
             if val in {'r', 'r+', 'x', 'w-', 'w', 'a'}:
+                if val != 'r':
+                    warn("Using default_file_mode other than 'r' is deprecated. "
+                         "Pass the mode to h5py.File() instead.",
+                         category=H5pyDeprecationWarning,
+                    )
                 self._default_file_mode = val
             else:
                 raise ValueError("Invalid mode; must be one of r, r+, w, w-, x, a")

@@ -22,12 +22,11 @@ if '' not in sys.path:
 import setup_build, setup_configure
 
 
-VERSION = '3.1.0'
+VERSION = '3.2.1'
 
 # Minimum supported versions of Numpy & Cython depend on the Python version
 NUMPY_MIN_VERSIONS = [
     # Numpy    Python
-    ('1.12',   "=='3.6'"),
     ('1.14.5', "=='3.7'"),
     ('1.17.5', "=='3.8'"),
     ('1.19.3', ">='3.9'"),
@@ -46,8 +45,9 @@ RUN_REQUIRES = ["cached-property; python_version<'3.8'"] + [
 # versions.
 SETUP_REQUIRES = [
     'pkgconfig',
-    f"Cython >=0.29; python_version<'3.8'",
-    f"Cython >=0.29.14; python_version>='3.8'",
+    "Cython >=0.29; python_version<'3.8'",
+    "Cython >=0.29.14; python_version=='3.8'",
+    "Cython >=0.29.15; python_version>='3.9'",
 ] + [
     f"numpy =={np_min}; python_version{py_condition}"
     for np_min, py_condition in NUMPY_MIN_VERSIONS
@@ -122,8 +122,6 @@ License :: OSI Approved :: BSD License
 Programming Language :: Cython
 Programming Language :: Python
 Programming Language :: Python :: 3
-Programming Language :: Python :: 3.6
-Programming Language :: Python :: 3.7
 Programming Language :: Python :: Implementation :: CPython
 Topic :: Scientific/Engineering
 Topic :: Database
@@ -179,6 +177,6 @@ setup(
   ext_modules = [Extension('h5py.x',['x.c'])],  # To trick build into running build_ext
   install_requires = RUN_REQUIRES,
   setup_requires = SETUP_REQUIRES,
-  python_requires='>=3.6',
+  python_requires='>=3.7',
   cmdclass = CMDCLASS,
 )

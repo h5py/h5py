@@ -77,11 +77,9 @@ class TestEmpty(TestCase):
         self.assertEqual(self.dset.nbytes, 0)
 
     def test_ellipsis(self):
-        """ Ellipsis -> ValueError """
         self.assertEqual(self.dset[...], self.empty_obj)
 
     def test_tuple(self):
-        """ () -> IOError """
         self.assertEqual(self.dset[()], self.empty_obj)
 
     def test_slice(self):

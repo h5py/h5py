@@ -25,7 +25,7 @@ Storing strings
 When creating a new dataset or attribute, Python ``str`` or ``bytes`` objects
 will be treated as variable-length strings, marked as UTF-8 and ASCII respectively.
 Numpy bytes arrays (``'S'`` dtypes) make fixed-length strings.
-You can use :func:`.string_dtype` to explictly specify any HDF5 string datatype.
+You can use :func:`.string_dtype` to explicitly specify any HDF5 string datatype.
 
 When writing data to an existing dataset or attribute, data passed as bytes is
 written without checking the encoding. Data passed as Python ``str`` objects

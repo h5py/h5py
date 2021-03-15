@@ -1,0 +1,48 @@
+What's new in h5py 3.2
+======================
+
+New features
+------------
+
+* Added support to use the HDF5 ROS3 driver to access HDF5 files on S3
+  (:pr:`1755`). This is not enabled in the pre-built packages on PyPI. To use
+  it, ensure HDF5 is built with read-only S3 support enabled, and then
+  :ref:`build h5py from source <source_install>` using that HDF5 library.
+
+Breaking changes & deprecations
+-------------------------------
+
+* Python 3.7 is now the minimum supported version. It may still be possible to
+  use this release with Python 3.6, but it isn't tested and wheels are not
+  provided for Python 3.6.
+* Setting the config option ``default_file_mode`` to values other than ``'r'``
+  is deprecated. Pass the desired mode when opening a :class:`~.File` instead.
+
+Exposing HDF5 functions
+-----------------------
+
+* ``H5Pset_fapl_ros3`` & ``H5Pget_fapl_ros3`` (where HDF5 is built with
+  read-only S3 support).
+
+Bug fixes
+---------
+
+* :exc:`OSError` exceptions raised by h5py should now have a useful ``.errno``
+  attribute, where HDF5 provides this information. Subclasses such as
+  :exc:`FileNotFoundError` should also be raised where appropriate (:pr:`1815`).
+* Fix reading data with a datatype of variable-length arrays of fixed length
+  strings (:issue:`1817`).
+* Fix :meth:`.Dataset.read_direct` and :meth:`.Dataset.write_direct` when the
+  source and destination have different shapes (:pr:`1796`).
+* Fix selecting data using integer indices in :meth:`.Dataset.read_direct`
+  and :meth:`.Dataset.write_direct` (:pr:`1818`).
+* Fix exception handling in :meth:`.Group.visititems` (:issue:`1740`).
+* Issue a warning when ``File(..., swmr=True)`` is specified with any mode other
+  than ``'r'``, as the SWMR option is ignored in these cases (:pr:`1812`).
+* Fix NumPy 1.20 deprecation warnings concerning the use of None as shape, and
+  the deprecated aliases np.float, np.int and np.bool (:pr:`1780`).
+
+3.2.1 bug fix release
+---------------------
+
+* Fix :attr:`.File.driver` when the read-only S3 driver is available (:pr:`1844`).

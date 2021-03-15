@@ -50,7 +50,7 @@
   email: aragilar@gmail.com
   alternate_emails:
   - aragilar+github@gmail.com
-  num_commits: 150
+  num_commits: 154
   first_commit: 2014-12-10 23:30:56
   github: aragilar
 - name: Toon Verstraelen
@@ -372,7 +372,7 @@
   alternate_emails:
   - thomas.kluyver@xfel.eu
   - takowl@gmail.com
-  num_commits: 518
+  num_commits: 576
   first_commit: 2018-06-23 08:47:27
   github: takluyver
 - name: Matt Zwier
@@ -818,7 +818,9 @@
   github: kmuehlbauer
 - name: V. Armando Solé
   email: sole@esrf.fr
-  num_commits: 6
+  alternate_emails:
+  - vasole@users.noreply.github.com
+  num_commits: 12
   first_commit: 2019-09-19 13:06:48
   github: vasole
 - name: Gang Chen
@@ -847,3 +849,42 @@
   num_commit: 2
   first_commit: 2020-11-06 23:32:13
   github: uellue
+  num_commits: 5
+- name: Satrajit Ghosh
+  email: satra@mit.edu
+  alternate_emails:
+  - satrajit.ghosh@gmail.com
+  aliases:
+  - satra
+  num_commit: 2
+  first_commit: 2020-11-12 08:35:38
+  github: satra
+  num_commits: 24
+- name: Yaroslav Halchenko
+  email: debian@onerussian.com
+  alternate_emails:
+  - yarikoptic@gmail.com
+  aliases:
+  - yarikoptic
+  num_commit: 2
+  first_commit: 2021-01-04 17:28:58
+  github: yarikoptic
+  num_commits: 3
+- name: Bruce Merry
+  email: bmerry@ska.ac.za
+  alternate_emails:
+  - 1963944+bmerry@users.noreply.github.com
+  num_commit: 1
+  first_commit: 2021-01-18 09:30:28
+  github: bmerry
+  num_commits: 6
+- name: patiencedaur
+  email: patiencedaur@gmail.com
+  num_commits: 1
+  first_commit: 2021-01-09 15:10:20
+  github: patiencedaur
+- name: Tim Gates
+  email: tim.gates@iress.com
+  num_commits: 1
+  first_commit: 2020-12-29 19:51:32
+  github: timgates42

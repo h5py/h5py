@@ -38,7 +38,7 @@ class TestFileOpen(TestCase):
         fname = self.mktemp()
 
         # No existing file; error
-        with pytest.raises(OSError):
+        with pytest.raises(FileNotFoundError):
             with File(fname):
                 pass
 
@@ -54,10 +54,10 @@ class TestFileOpen(TestCase):
         finally:
             os.chmod(fname, stat.S_IWRITE)
 
-        # File exists but is not HDF5; raise IOError
+        # File exists but is not HDF5; raise OSError
         with open(fname, 'wb') as f:
             f.write(b'\x00')
-        with self.assertRaises(IOError):
+        with self.assertRaises(OSError):
             File(fname)
 
     def test_create(self):
@@ -77,7 +77,7 @@ class TestFileOpen(TestCase):
         fid = File(fname, 'w-')
         self.assertTrue(fid)
         fid.close()
-        with self.assertRaises(IOError):
+        with self.assertRaises(FileExistsError):
             File(fname, 'w-')
 
     def test_append(self):
@@ -125,9 +125,9 @@ class TestFileOpen(TestCase):
     def test_nonexistent_file(self):
         """ Modes 'r' and 'r+' do not create files """
         fname = self.mktemp()
-        with self.assertRaises(IOError):
+        with self.assertRaises(FileNotFoundError):
             File(fname, 'r')
-        with self.assertRaises(IOError):
+        with self.assertRaises(FileNotFoundError):
             File(fname, 'r+')
 
     def test_invalid_mode(self):
@@ -780,3 +780,19 @@ class TestSWMRMode(TestCase):
         # This setter should affect both fid and group member file attribute
         assert fid.swmr_mode == g.file.swmr_mode == True
         fid.close()
+
+
+# unittest doesn't work with pytest fixtures (and possibly other features),
+# hence no subclassing TestCase
+class TestROS3:
+    @pytest.mark.skipif(h5py.version.hdf5_version_tuple < (1, 10, 6)
+                        or not h5.get_config().ros3,
+                        reason="ros3 file operations were added in HDF5 1.10.6+")
+    def test_ros3(self):
+        """ ROS3 driver and options """
+
+        with File("https://dandiarchive.s3.amazonaws.com/ros3test.hdf5", 'r',
+                  driver='ros3') as f:
+            assert f
+            assert 'mydataset' in f.keys()
+            assert f["mydataset"].shape == (100,)

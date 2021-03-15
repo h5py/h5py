@@ -185,10 +185,10 @@ shape for you::
 Auto-chunking is also enabled when using compression or ``maxshape``, etc.,
 if a chunk shape is not manually specified.
 
-The chunk_iter method returns an iterator that can be used to perform chunk by chunk
+The iter_chunks method returns an iterator that can be used to perform chunk by chunk
 reads or writes::
 
-    >>> for s in dset.chunk_iter():
+    >>> for s in dset.iter_chunks():
     >>>     arr = dset[s]  # get numpy array for chunk
 
 
@@ -260,6 +260,18 @@ In addition to the compression filters listed above, compression filters can be
 dynamically loaded by the underlying HDF5 library. This is done by passing a
 filter number to :meth:`Group.create_dataset` as the ``compression`` parameter.
 The ``compression_opts`` parameter will then be passed to this filter.
+
+.. seealso::
+
+   `hdf5plugin <https://pypi.org/project/hdf5plugin/>`_
+     A Python package of several popular filters, including Blosc, LZ4 and ZFP,
+     for convenient use with h5py
+
+   `HDF5 Filter Plugins <https://portal.hdfgroup.org/display/support/HDF5+Filter+Plugins>`_
+     A collection of filters as a single download from The HDF Group
+
+   `Registered filter plugins <https://portal.hdfgroup.org/display/support/Filters>`_
+     The index of publicly announced filter plugins
 
 .. note:: The underlying implementation of the compression filter will have the
     ``H5Z_FLAG_OPTIONAL`` flag set. This indicates that if the compression

@@ -47,7 +47,7 @@ class TestVlen(TestCase):
 
         dt_vb = np.dtype([
             ('foo', vidt),
-            ('logical', np.bool)])
+            ('logical', bool)])
         vb = f.create_dataset('dt_vb', shape=(4,), dtype=dt_vb)
         data = np.array([(a([1, 2, 3]), True),
                          (a([1    ]), False),
@@ -67,11 +67,11 @@ class TestVlen(TestCase):
         dt_vvb = np.dtype([
             ('foo', vidt),
             ('bar', vidt),
-            ('logical', np.bool)])
+            ('logical', bool)])
         vvb = f.create_dataset('dt_vvb', shape=(2,), dtype=dt_vvb)
 
         dt_bvv = np.dtype([
-            ('logical', np.bool),
+            ('logical', bool),
             ('foo', vidt),
             ('bar', vidt)])
         bvv = f.create_dataset('dt_bvv', shape=(2,), dtype=dt_bvv)
@@ -390,7 +390,7 @@ class TestB8(TestCase):
     """
 
     def test_b8_bool(self):
-        arr1 = np.array([False, True], dtype=np.bool)
+        arr1 = np.array([False, True], dtype=bool)
         self._test_b8(arr1)
         self._test_b8(arr1, dtype=np.uint8)
 
@@ -450,3 +450,12 @@ class TestB8(TestCase):
                 TypeError, msg='No NumPy equivalent for TypeBitfieldID exists'
             ):
                 dset[:]
+
+
+def test_opaque(writable_file):
+    # opaque without an h5py tag corresponds to numpy void dtypes
+    arr = np.zeros(3, dtype='V2')
+    ds = writable_file.create_dataset('v', data=arr)
+    assert isinstance(ds.id.get_type(), h5py.h5t.TypeOpaqueID)
+    assert ds.id.get_type().get_size() == 2
+    np.testing.assert_array_equal(ds[:], arr)

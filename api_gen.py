@@ -39,6 +39,7 @@ class Line(object):
                     function. Any Python callbacks it could trigger must
                     acquire the GIL (e.g. using 'with gil' in Cython).
         mpi:        Bool indicating if MPI required
+        ros3:       Bool indicating if ROS3 required
         version:    None or a minimum-version tuple
         code:       String with function return type
         fname:      String with function name
@@ -49,6 +50,7 @@ class Line(object):
 
         .nogil:     ""
         .mpi:       True
+        .ros3:      True
         .version:   (1, 8, 12)
         .code:      "int"
         .fname:     "foo"
@@ -57,6 +59,7 @@ class Line(object):
     """
 
     PATTERN = re.compile("""(?P<mpi>(MPI)[ ]+)?
+                            (?P<ros3>(ROS3)[ ]+)?
                             (?P<min_version>([0-9]+\.[0-9]+\.[0-9]+))?
                             (-(?P<max_version>([0-9]+\.[0-9]+\.[0-9]+)))?
                             ([ ]+)?
@@ -87,6 +90,7 @@ class Line(object):
         parts = m.groupdict()
         self.nogil = "nogil" if parts['nogil'] else ""
         self.mpi = parts['mpi'] is not None
+        self.ros3 = parts['ros3'] is not None
         self.min_version = parts['min_version']
         if self.min_version is not None:
             self.min_version = tuple(int(x) for x in self.min_version.split('.'))
@@ -212,6 +216,9 @@ class LineProcessor(object):
 
         if self.line.mpi:
             block = wrapif('MPI', block)
+
+        if self.line.ros3:
+            block = wrapif('ROS3', block)
 
         if self.line.min_version is not None and self.line.max_version is not None:
             block = wrapif('HDF5_VERSION >= {0.min_version} and HDF5_VERSION <= {0.max_version}'.format(self.line), block)

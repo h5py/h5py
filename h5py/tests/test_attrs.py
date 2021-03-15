@@ -229,6 +229,15 @@ class TestVlen(BaseAttrs):
         self.f.attrs['a'] = a
         self.assertArrayEqual(self.f.attrs['a'][0], a[0])
 
+    def test_vlen_s1(self):
+        dt = h5py.vlen_dtype(np.dtype('S1'))
+        a = np.empty((1,), dtype=dt)
+        a[0] = np.array([b'a', b'b'], dtype='S1')
+
+        self.f.attrs.create('test', a)
+        self.assertArrayEqual(self.f.attrs['test'][0], a[0])
+
+
 class TestTrackOrder(BaseAttrs):
     def fill_attrs(self, track_order):
         attrs = self.f.create_group('test', track_order=track_order).attrs

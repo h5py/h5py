@@ -232,7 +232,7 @@ class AttributeManager(base.MutableMappingHDF5, base.CommonStateObject):
                 attr = h5a.open(self._id, self._e(name))
 
                 if is_empty_dataspace(attr):
-                    raise IOError("Empty attributes can't be modified")
+                    raise OSError("Empty attributes can't be modified")
 
                 # If the input data is already an array, let HDF5 do the conversion.
                 # If it's a list or similar, don't make numpy guess a dtype for it.

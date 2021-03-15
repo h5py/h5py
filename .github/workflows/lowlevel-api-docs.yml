@@ -1,0 +1,55 @@
+name: Build low-level API docs
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+jobs:
+  api-docs:
+    runs-on: ubuntu-18.04
+    env:
+      HDF5_VERSION: 1.12.0
+      HDF5_DIR: ${{ github.workspace }}/cache/hdf5
+      TOXENV: apidocs
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Cache HDF5
+        uses: actions/cache@v2
+        with:
+          path: ${{ env.HDF5_DIR }}
+          key: ${{ runner.os }}-hdf5-${{ env.HDF5_VERSION }}
+
+      - name: Build HDF5
+        run: |
+          ./ci/get_hdf5_if_needed.sh
+
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+
+      - name: Install tox
+        run: |
+          python -m pip install --upgrade pip
+          python3 -m pip install tox
+
+      - name: Build API docs
+        run: |
+          tox
+          echo -n "api.h5py.org" > docs_api/_build/html/CNAME
+
+      - name: Upload built docs
+        uses: actions/upload-artifact@v2
+        with:
+          name: docs-html
+          path: docs_api/_build/html
+
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v3
+        if: github.repository == 'h5py/h5py' && github.ref == 'refs/heads/master' && github.event_name == 'push'
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: docs_api/_build/html
