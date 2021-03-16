@@ -284,6 +284,14 @@ class SlicingTestCase(ut.TestCase):
                          for n in range(1, 5)}
             assert {s.file_name for s in ds.virtual_sources()} == src_files
 
+    def test_mismatched_selections(self):
+        layout = h5.VirtualLayout((4, 100), 'i4', maxshape=(4, None))
+
+        filename = osp.join(self.tmpdir, "1.h5")
+        vsource = h5.VirtualSource(filename, 'data', shape=(100,))
+        with self.assertRaisesRegex(ValueError, r'49 points'):
+            layout[0, :49] = vsource[0:100:2]
+
     def tearDown(self):
         shutil.rmtree(self.tmpdir)
 

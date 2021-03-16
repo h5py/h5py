@@ -65,6 +65,17 @@ def _convert_space_for_key(space, key):
         space.select_hyperslab(start, count, stride, block)
 
 
+def _sel_is_finite(s: h5s.SpaceID):
+    if s.get_select_type() != h5s.SEL_HYPERSLABS or not s.is_regular_hyperslab():
+        # Theoretically, I think you could make an unlimited selection with
+        # multiple hyperslabs (i.e. not 'regular'). But you can't create that
+        # with h5py's high-level API, and hopefully it's unlikely to come up.
+        return True
+
+    _start, _stride, count, _blocks = s.get_regular_hyperslab()
+    return h5s.UNLIMITED not in count
+
+
 class VirtualSource(object):
     """Source definition for virtual data sets.
 
@@ -166,6 +177,16 @@ class VirtualLayout(object):
     def __setitem__(self, key, source):
         sel = select(self.shape, key, dataset=None)
         _convert_space_for_key(sel.id, key)
+        if _sel_is_finite(sel.id) and _sel_is_finite(source.sel.id)\
+                and source.sel.nselect != sel.nselect:
+            # HDF5 would give a similar error when we call H5Pset_virtual(),
+            # but we can raise nearer the source of the problem & with more info
+            raise ValueError(
+                f"Can't map {source.sel.nselect} points from source (selected "
+                f"shape {source.sel.mshape}) to {sel.nselect} points in "
+                f"virtual dataset (selected shape {sel.mshape})."
+            )
+
         self.sources.append(VDSmap(sel.id,
                                    source.path,
                                    source.name,
