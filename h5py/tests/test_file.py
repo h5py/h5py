@@ -686,6 +686,28 @@ class TestCloseInvalidatesOpenObjectIDs(TestCase):
             self.assertFalse(bool(f1.id))
             self.assertFalse(bool(g1.id))
 
+    def test_close_one_handle(self):
+        fname = self.mktemp()
+        with File(fname, 'w') as f:
+            f.create_group('foo')
+
+        f1 = File(fname)
+        f2 = File(fname)
+        g1 = f1['foo']
+        g2 = f2['foo']
+        assert g1.id.valid
+        assert g2.id.valid
+        f1.close()
+        assert not g1.id.valid
+        # Closing f1 shouldn't close f2 or objects belonging to it
+        assert f2.id.valid
+        assert g2.id.valid
+
+        f2.close()
+        assert not f2.id.valid
+        assert not g2.id.valid
+
+
 
 class TestPathlibSupport(TestCase):
 
@@ -796,3 +818,21 @@ class TestROS3:
             assert f
             assert 'mydataset' in f.keys()
             assert f["mydataset"].shape == (100,)
+
+
+def test_close_gc(writable_file):
+    # https://github.com/h5py/h5py/issues/1852
+    for i in range(100):
+        writable_file[str(i)] = []
+
+    filename = writable_file.filename
+    writable_file.close()
+
+    # Ensure that Python's garbage collection doesn't interfere with closing
+    # a file. Try a few times - the problem is not 100% consistent, but
+    # normally showed up on the 1st or 2nd iteration for me. -TAK, 2021
+    for i in range(10):
+        with h5py.File(filename, 'r') as f:
+            refs = [d.id for d in f.values()]
+            refs.append(refs)   # Make a reference cycle so GC is involved
+            del refs  # GC is likely to fire while closing the file

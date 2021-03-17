@@ -24,6 +24,7 @@ from .h5ac cimport CacheConfig
 from .utils cimport emalloc, efree
 
 # Python level imports
+import gc
 from . import _objects
 from ._objects import phil, with_phil
 
@@ -270,11 +271,18 @@ def get_obj_ids(object where=OBJ_ALL, int types=H5F_OBJ_ALL):
         obj_list = <hid_t*>emalloc(sizeof(hid_t)*count)
 
         if count > 0: # HDF5 complains that obj_list is NULL, even if count==0
-            H5Fget_obj_ids(where_id, types, count, obj_list)
-            for i in range(count):
-                py_obj_list.append(wrap_identifier(obj_list[i]))
-                # The HDF5 function returns a borrowed reference for each hid_t.
-                H5Iinc_ref(obj_list[i])
+            # Garbage collection might dealloc a Python object & call H5Idec_ref
+            # between getting an HDF5 ID and calling H5Iinc_ref, breaking it.
+            # Disable GC until we have inc_ref'd the IDs to keep them alive.
+            gc.disable()
+            try:
+                H5Fget_obj_ids(where_id, types, count, obj_list)
+                for i in range(count):
+                    py_obj_list.append(wrap_identifier(obj_list[i]))
+                    # The HDF5 function returns a borrowed reference for each hid_t.
+                    H5Iinc_ref(obj_list[i])
+            finally:
+                gc.enable()
 
         return py_obj_list
 
@@ -322,6 +330,25 @@ cdef class FileID(GroupID):
         self._close()
         _objects.nonlocal_close()
 
+    @with_phil
+    def _close_open_objects(self, int types):
+        # Used by File.close(). This avoids the get_obj_ids wrapper, which
+        # creates Python objects and increments HDF5 ref counts while we're
+        # trying to clean up. E.g. that can be problematic at Python shutdown.
+        cdef int count, i
+        cdef hid_t *obj_list = NULL
+
+        count = H5Fget_obj_count(self.id, types)
+        if count == 0:
+            return
+        obj_list = <hid_t*> emalloc(sizeof(hid_t) * count)
+        try:
+            H5Fget_obj_ids(self.id, types, count, obj_list)
+            for i in range(count):
+                while H5Iis_valid(obj_list[i]):
+                    H5Idec_ref(obj_list[i])
+        finally:
+            efree(obj_list)
 
     @with_phil
     def reopen(self):
