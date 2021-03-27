@@ -172,7 +172,8 @@ def make_fcpl(track_order=False, fs_strategy=None, fs_persist=False, fs_threshol
     return plist
 
 
-def make_fid(name, mode, userblock_size, fapl, fcpl=None, swmr=False):
+def make_fid(name, mode, userblock_size, fapl, fcpl=None, swmr=False,
+             sync=True):
     """ Get a new FileID by opening or creating a file.
     Also validates mode argument."""
 
@@ -318,7 +319,9 @@ class File(Group):
     def __init__(self, name, mode=None, driver=None,
                  libver=None, userblock_size=None, swmr=False,
                  rdcc_nslots=None, rdcc_nbytes=None, rdcc_w0=None,
-                 track_order=None, fs_strategy=None, fs_persist=False, fs_threshold=1,
+                 track_order=None, fs_strategy=None, fs_persist=False,
+                 sync=True,
+                 fs_threshold=1,
                  **kwds):
         """Create a new file object.
 
