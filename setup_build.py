@@ -14,7 +14,6 @@ import sys
 import os
 import os.path as op
 from pathlib import Path
-import subprocess
 
 import api_gen
 from setup_configure import BuildConfig
