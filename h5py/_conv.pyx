@@ -395,12 +395,16 @@ cdef int conv_regref2pyref(void* ipt, void* opt, void* bkg, void* priv) except -
     cdef hdset_reg_ref_t* buf_ref = <hdset_reg_ref_t*>ipt
 
     cdef RegionReference ref = RegionReference()
+    cdef void* conv_ptr  = <void *>&(ref.ref.reg_ref)
+    cdef int** int_pptr = <int**>conv_ptr
+    cdef int* s_ptr = <int*>(int_pptr[0])
+
     cdef PyObject* ref_ptr = NULL
 
     cdef PyObject* bkg_obj0
 
     memcpy(&bkg_obj0, bkg_obj, sizeof(bkg_obj0));
-    memcpy(ref.ref.reg_ref, buf_ref, sizeof(hdset_reg_ref_t))
+    memcpy(s_ptr, buf_ref, sizeof(hdset_reg_ref_t))
 
     ref.typecode = H5R_DATASET_REGION
 
@@ -422,6 +426,9 @@ cdef int conv_pyref2regref(void* ipt, void* opt, void* bkg, void* priv) except -
     cdef RegionReference ref
 
     cdef PyObject* buf_obj0
+    cdef void* conv_ptr
+    cdef int** int_pptr
+    cdef int* s_ptr
 
     memcpy(&buf_obj0, buf_obj, sizeof(buf_obj0));
 
@@ -430,7 +437,10 @@ cdef int conv_pyref2regref(void* ipt, void* opt, void* bkg, void* priv) except -
         if not isinstance(obj, RegionReference):
             raise TypeError("Can't convert incompatible object to HDF5 region reference")
         ref = <RegionReference>(buf_obj0)
-        memcpy(buf_ref, ref.ref.reg_ref, sizeof(hdset_reg_ref_t))
+        conv_ptr  = <void *>&(ref.ref.reg_ref)
+        int_pptr = <int**>conv_ptr
+        s_ptr = <int*>(int_pptr[0]) 
+        memcpy(buf_ref, s_ptr, sizeof(hdset_reg_ref_t))
     else:
         memset(buf_ref, c'\0', sizeof(hdset_reg_ref_t))
 

@@ -24,6 +24,9 @@ typedef void *PyMPI_MPI_Message;
 #include <stddef.h>
 #include "Python.h"
 #include "numpy/arrayobject.h"
+
+#define H5_USE_110_API
+
 #include "hdf5.h"
 
 /* The HOFFSET macro can't be used from Cython. */
