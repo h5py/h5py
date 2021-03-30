@@ -16,7 +16,6 @@
     the currently installed HDF5 version.
 """
 
-from distutils.cmd import Command
 import os
 import os.path as op
 import re
@@ -194,7 +193,6 @@ class HDF5LibWrapper:
 
         libdirs: the library paths to search for the library
         """
-        import re
         import ctypes
 
         # extra keyword args to pass to LoadLibrary
