@@ -65,11 +65,12 @@ _minor_table = {
 # of the minor error codes.  If a (major, minor) entry appears here,
 # it will override any entry in the minor error table.
 _exact_table = {
-    (H5E_CACHE, H5E_BADVALUE):      OSError,  # obj create w/o write intent 1.8
-    (H5E_RESOURCE, H5E_CANTINIT):   OSError,  # obj create w/o write intent 1.6
-    (H5E_INTERNAL, H5E_SYSERRSTR):  OSError,  # e.g. wrong file permissions
+    (H5E_CACHE, H5E_BADVALUE):      OSError,    # obj create w/o write intent 1.8
+    (H5E_RESOURCE, H5E_CANTINIT):   OSError,    # obj create w/o write intent 1.6
+    (H5E_INTERNAL, H5E_SYSERRSTR):  OSError,    # e.g. wrong file permissions
     (H5E_DATATYPE, H5E_CANTINIT):   TypeError,  # No conversion path
     (H5E_DATASET, H5E_CANTINIT):    ValueError, # bad param for dataset setup
+    (H5E_DATASET, H5E_CANTCREATE):  ValueError, # bad param for dataset setup
     (H5E_ARGS, H5E_CANTINIT):       TypeError,  # Illegal operation on object
     (H5E_SYM, H5E_CANTINIT):        ValueError, # Object already exists/1.8
     (H5E_ARGS, H5E_BADTYPE):        ValueError, # Invalid location in file
