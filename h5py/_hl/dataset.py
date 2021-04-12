@@ -832,7 +832,7 @@ class Dataset(HLObject):
         elif self.dtype.kind == "O" or \
           (self.dtype.kind == 'V' and \
           (not isinstance(val, numpy.ndarray) or val.dtype.kind != 'V') and \
-          (self.dtype.subdtype == None)):
+          (self.dtype.subdtype is None)):
             if len(names) == 1 and self.dtype.fields is not None:
                 # Single field selected for write, from a non-array source
                 if not names[0] in self.dtype.fields:
