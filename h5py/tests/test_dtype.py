@@ -13,8 +13,6 @@ except ImportError:
 
 from .common import ut, TestCase
 
-UNSUPPORTED_LONG_DOUBLE = ('i386', 'i486', 'i586', 'i686', 'ppc64le')
-
 
 class TestVlen(TestCase):
 
@@ -289,13 +287,9 @@ class TestOffsets(TestCase):
                      if (np.issubdtype(f, np.floating) or
                          np.issubdtype(f, np.complexfloating)))
 
-        if platform.machine() in UNSUPPORTED_LONG_DOUBLE:
-            dtype_dset_map = {str(j): d
-                              for j, d in enumerate(dtypes)
-                              if d not in (np.float128, np.complex256)}
-        else:
-            dtype_dset_map = {str(j): d
-                              for j, d in enumerate(dtypes)}
+        dtype_dset_map = {str(j): d
+                          for j, d in enumerate(dtypes)
+                          if d().nbytes in [4, 8, 16, 32]}
 
         fname = self.mktemp()
 
