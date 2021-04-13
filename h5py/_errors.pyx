@@ -10,56 +10,107 @@
 # Python-style minor error classes.  If the minor error code matches an entry
 # in this dict, the generated exception will be used.
 
+include "config.pxi"
+
 from cpython cimport PyErr_Occurred, PyErr_SetObject
 import re
 
-_minor_table = {
-    H5E_SEEKERROR:      OSError,    # Seek failed
-    H5E_READERROR:      OSError,    # Read failed
-    H5E_WRITEERROR:     OSError,    # Write failed
-    H5E_CLOSEERROR:     OSError,    # Close failed
-    H5E_OVERFLOW:       OSError,    # Address overflowed
-    H5E_FCNTL:          OSError,    # File control (fcntl) failed
+IF HDF5_VERSION < (1, 13, 0):
+    _minor_table = {
+        H5E_SEEKERROR:      OSError,    # Seek failed
+        H5E_READERROR:      OSError,    # Read failed
+        H5E_WRITEERROR:     OSError,    # Write failed
+        H5E_CLOSEERROR:     OSError,    # Close failed
+        H5E_OVERFLOW:       OSError,    # Address overflowed
+        H5E_FCNTL:          OSError,    # File control (fcntl) failed
 
-    H5E_FILEEXISTS:     OSError,    # File already exists
-    H5E_FILEOPEN:       OSError,    # File already open
-    H5E_CANTCREATE:     OSError,    # Unable to create file
-    H5E_CANTOPENFILE:   OSError,    # Unable to open file
-    H5E_CANTCLOSEFILE:  OSError,    # Unable to close file
-    H5E_NOTHDF5:        OSError,    # Not an HDF5 file
-    H5E_BADFILE:        ValueError, # Bad file ID accessed
-    H5E_TRUNCATED:      OSError,    # File has been truncated
-    H5E_MOUNT:          OSError,    # File mount error
+        H5E_FILEEXISTS:     OSError,    # File already exists
+        H5E_FILEOPEN:       OSError,    # File already open
+        H5E_CANTCREATE:     OSError,    # Unable to create file
+        H5E_CANTOPENFILE:   OSError,    # Unable to open file
+        H5E_CANTCLOSEFILE:  OSError,    # Unable to close file
+        H5E_NOTHDF5:        OSError,    # Not an HDF5 file
+        H5E_BADFILE:        ValueError, # Bad file ID accessed
+        H5E_TRUNCATED:      OSError,    # File has been truncated
+        H5E_MOUNT:          OSError,    # File mount error
 
-    H5E_NOFILTER:       OSError,    # Requested filter is not available
-    H5E_CALLBACK:       OSError,    # Callback failed
-    H5E_CANAPPLY:       OSError,    # Error from filter 'can apply' callback
-    H5E_SETLOCAL:       OSError,    # Error from filter 'set local' callback
-    H5E_NOENCODER:      OSError,    # Filter present but encoding disabled
+        H5E_NOFILTER:       OSError,    # Requested filter is not available
+        H5E_CALLBACK:       OSError,    # Callback failed
+        H5E_CANAPPLY:       OSError,    # Error from filter 'can apply' callback
+        H5E_SETLOCAL:       OSError,    # Error from filter 'set local' callback
+        H5E_NOENCODER:      OSError,    # Filter present but encoding disabled
 
-    H5E_BADATOM:        ValueError,  # Unable to find atom information (already closed?)
-    H5E_BADGROUP:       ValueError,  # Unable to find ID group information
-    H5E_BADSELECT:      ValueError,  # Invalid selection (hyperslabs)
-    H5E_UNINITIALIZED:  ValueError,  # Information is uninitialized
-    H5E_UNSUPPORTED:    NotImplementedError,    # Feature is unsupported
+        H5E_BADATOM:        ValueError,  # Unable to find atom information (already closed?)
+        H5E_BADGROUP:       ValueError,  # Unable to find ID group information
+        H5E_BADSELECT:      ValueError,  # Invalid selection (hyperslabs)
+        H5E_UNINITIALIZED:  ValueError,  # Information is uninitialized
+        H5E_UNSUPPORTED:    NotImplementedError,    # Feature is unsupported
 
-    H5E_NOTFOUND:       KeyError,    # Object not found
-    H5E_CANTINSERT:     ValueError,  # Unable to insert object
+        H5E_NOTFOUND:       KeyError,    # Object not found
+        H5E_CANTINSERT:     ValueError,  # Unable to insert object
 
-    H5E_BADTYPE:        TypeError,   # Inappropriate type
-    H5E_BADRANGE:       ValueError,  # Out of range
-    H5E_BADVALUE:       ValueError,  # Bad value
+        H5E_BADTYPE:        TypeError,   # Inappropriate type
+        H5E_BADRANGE:       ValueError,  # Out of range
+        H5E_BADVALUE:       ValueError,  # Bad value
 
-    H5E_EXISTS:         ValueError,  # Object already exists
-    H5E_ALREADYEXISTS:  ValueError,  # Object already exists, part II
-    H5E_CANTCONVERT:    TypeError,   # Can't convert datatypes
+        H5E_EXISTS:         ValueError,  # Object already exists
+        H5E_ALREADYEXISTS:  ValueError,  # Object already exists, part II
+        H5E_CANTCONVERT:    TypeError,   # Can't convert datatypes
 
-    H5E_CANTDELETE:     KeyError,    # Can't delete message
+        H5E_CANTDELETE:     KeyError,    # Can't delete message
 
-    H5E_CANTOPENOBJ:    KeyError,
+        H5E_CANTOPENOBJ:    KeyError,
 
-    H5E_CANTMOVE:       ValueError,  # Can't move a link
-  }
+        H5E_CANTMOVE:       ValueError,  # Can't move a link
+    }
+ELSE:
+    _minor_table = {
+        H5E_SEEKERROR:      OSError,    # Seek failed
+        H5E_READERROR:      OSError,    # Read failed
+        H5E_WRITEERROR:     OSError,    # Write failed
+        H5E_CLOSEERROR:     OSError,    # Close failed
+        H5E_OVERFLOW:       OSError,    # Address overflowed
+        H5E_FCNTL:          OSError,    # File control (fcntl) failed
+
+        H5E_FILEEXISTS:     OSError,    # File already exists
+        H5E_FILEOPEN:       OSError,    # File already open
+        H5E_CANTCREATE:     OSError,    # Unable to create file
+        H5E_CANTOPENFILE:   OSError,    # Unable to open file
+        H5E_CANTCLOSEFILE:  OSError,    # Unable to close file
+        H5E_NOTHDF5:        OSError,    # Not an HDF5 file
+        H5E_BADFILE:        ValueError, # Bad file ID accessed
+        H5E_TRUNCATED:      OSError,    # File has been truncated
+        H5E_MOUNT:          OSError,    # File mount error
+
+        H5E_NOFILTER:       OSError,    # Requested filter is not available
+        H5E_CALLBACK:       OSError,    # Callback failed
+        H5E_CANAPPLY:       OSError,    # Error from filter 'can apply' callback
+        H5E_SETLOCAL:       OSError,    # Error from filter 'set local' callback
+        H5E_NOENCODER:      OSError,    # Filter present but encoding disabled
+
+        H5E_BADID:          ValueError,  # Unable to find ID information
+        H5E_BADGROUP:       ValueError,  # Unable to find ID group information
+        H5E_BADSELECT:      ValueError,  # Invalid selection (hyperslabs)
+        H5E_UNINITIALIZED:  ValueError,  # Information is uninitialized
+        H5E_UNSUPPORTED:    NotImplementedError,    # Feature is unsupported
+
+        H5E_NOTFOUND:       KeyError,    # Object not found
+        H5E_CANTINSERT:     ValueError,  # Unable to insert object
+
+        H5E_BADTYPE:        TypeError,   # Inappropriate type
+        H5E_BADRANGE:       ValueError,  # Out of range
+        H5E_BADVALUE:       ValueError,  # Bad value
+
+        H5E_EXISTS:         ValueError,  # Object already exists
+        H5E_ALREADYEXISTS:  ValueError,  # Object already exists, part II
+        H5E_CANTCONVERT:    TypeError,   # Can't convert datatypes
+
+        H5E_CANTDELETE:     KeyError,    # Can't delete message
+
+        H5E_CANTOPENOBJ:    KeyError,
+
+        H5E_CANTMOVE:       ValueError,  # Can't move a link
+    }
 
 # "Fudge" table to accommodate annoying inconsistencies in HDF5's use
 # of the minor error codes.  If a (major, minor) entry appears here,
