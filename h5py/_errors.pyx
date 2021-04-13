@@ -63,6 +63,25 @@ IF HDF5_VERSION < (1, 13, 0):
 
         H5E_CANTMOVE:       ValueError,  # Can't move a link
     }
+
+    # "Fudge" table to accommodate annoying inconsistencies in HDF5's use
+    # of the minor error codes.  If a (major, minor) entry appears here,
+    # it will override any entry in the minor error table.
+    _exact_table = {
+        (H5E_CACHE, H5E_BADVALUE):      OSError,    # obj create w/o write intent
+        (H5E_RESOURCE, H5E_CANTINIT):   OSError,    # obj create w/o write intent
+        (H5E_INTERNAL, H5E_SYSERRSTR):  OSError,    # e.g. wrong file permissions
+        (H5E_DATATYPE, H5E_CANTINIT):   TypeError,  # No conversion path
+        (H5E_DATASET, H5E_CANTINIT):    ValueError, # bad param for dataset setup
+        (H5E_DATASET, H5E_CANTCREATE):  ValueError, # bad param for dataset setup
+        (H5E_ARGS, H5E_CANTINIT):       TypeError,  # Illegal operation on object
+        (H5E_SYM, H5E_CANTINIT):        ValueError, # Object already exists/1.8
+        (H5E_ARGS, H5E_BADTYPE):        ValueError, # Invalid location in file
+        (H5E_REFERENCE, H5E_CANTINIT):  ValueError, # Dereferencing invalid ref
+
+        # due to changes to H5F.c:H5Fstart_swmr_write
+        (H5E_FILE, H5E_CANTCONVERT):    ValueError, # Invalid file format
+    }
 ELSE:
     _minor_table = {
         H5E_SEEKERROR:      OSError,    # Seek failed
@@ -112,26 +131,24 @@ ELSE:
         H5E_CANTMOVE:       ValueError,  # Can't move a link
     }
 
-# "Fudge" table to accommodate annoying inconsistencies in HDF5's use
-# of the minor error codes.  If a (major, minor) entry appears here,
-# it will override any entry in the minor error table.
-_exact_table = {
-    (H5E_CACHE, H5E_BADVALUE):      OSError,    # obj create w/o write intent 1.8
-    (H5E_RESOURCE, H5E_CANTINIT):   OSError,    # obj create w/o write intent 1.6
-    (H5E_INTERNAL, H5E_SYSERRSTR):  OSError,    # e.g. wrong file permissions
-    (H5E_DATATYPE, H5E_CANTINIT):   TypeError,  # No conversion path
-    (H5E_DATASET, H5E_CANTINIT):    ValueError, # bad param for dataset setup
-    (H5E_DATASET, H5E_CANTCREATE):  ValueError, # bad param for dataset setup
-    (H5E_ARGS, H5E_CANTINIT):       TypeError,  # Illegal operation on object
-    (H5E_SYM, H5E_CANTINIT):        ValueError, # Object already exists/1.8
-    (H5E_ARGS, H5E_BADTYPE):        ValueError, # Invalid location in file
-    (H5E_REFERENCE, H5E_CANTINIT):  ValueError, # Dereferencing invalid ref
+    # "Fudge" table to accommodate annoying inconsistencies in HDF5's use
+    # of the minor error codes.  If a (major, minor) entry appears here,
+    # it will override any entry in the minor error table.
+    _exact_table = {
+        (H5E_CACHE, H5E_BADVALUE):      OSError,    # obj create w/o write intent
+        (H5E_RESOURCE, H5E_CANTINIT):   OSError,    # obj create w/o write intent
+        (H5E_INTERNAL, H5E_SYSERRSTR):  OSError,    # e.g. wrong file permissions
+        (H5E_DATATYPE, H5E_CANTINIT):   TypeError,  # No conversion path
+        (H5E_DATASET, H5E_CANTINIT):    ValueError, # bad param for dataset setup
+        (H5E_DATASET, H5E_CANTCREATE):  ValueError, # bad param for dataset setup
+        (H5E_ARGS, H5E_CANTINIT):       TypeError,  # Illegal operation on object
+        (H5E_SYM, H5E_CANTCREATE):        ValueError, # Object already exists
+        (H5E_ARGS, H5E_BADTYPE):        ValueError, # Invalid location in file
+        (H5E_REFERENCE, H5E_CANTINIT):  ValueError, # Dereferencing invalid ref
 
-    # needed for 1.10.3+ to maintain compatibility with 1.10.{0,1,2}
-
-    # due to changes to H5F.c:H5Fstart_swmr_write
-    (H5E_FILE, H5E_CANTCONVERT):    ValueError, # Invalid file format
-  }
+        # due to changes to H5F.c:H5Fstart_swmr_write
+        (H5E_FILE, H5E_CANTCONVERT):    ValueError, # Invalid file format
+    }
 
 cdef struct err_data_t:
     H5E_error_t err
