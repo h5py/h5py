@@ -3,3 +3,9 @@ coverage:
     project:
       default:
         threshold: 0.5%
+  notify:
+    after_n_builds: 10
+# do not notify until at least 5 builds have been uploaded from the CI pipeline
+# you can also set after_n_builds on comments independently
+comment:
+  after_n_builds: 10
