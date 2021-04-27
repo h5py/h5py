@@ -40,7 +40,7 @@ def make_data(kind):
     if kind is bytes:
         s = b"xx"
     else:
-        s = b"xx".decode('utf8')
+        s = "xx"
 
     dt = h5py.vlen_dtype(kind)
     data = np.array([s*100 for idx in range(1000)])
@@ -80,6 +80,6 @@ if __name__ == '__main__':
     ds_leak()
     print("Unicode test")
     print("============")
-    make_data(unicode)
+    make_data(str)
     attr_leak()
     ds_leak()
