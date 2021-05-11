@@ -764,7 +764,14 @@ cdef class TypeBitfieldID(TypeID):
     """
         HDF5 bitfield type
     """
-    pass
+    cdef object py_dtype(self):
+        if H5Tequal(self.id, H5T_NATIVE_B8):
+            return np.dtype("u1") # Cast to np.uint8
+        else:
+            raise TypeError(
+                "No NumPy equivelant for {classname} exists".format(
+                classname=self.__class__.__name__)
+            )
 
 cdef class TypeReferenceID(TypeID):
 

@@ -394,23 +394,59 @@ class TestB8(TestCase):
 
     def test_b8_bool(self):
         arr1 = np.array([False, True], dtype=bool)
-        self._test_b8(arr1)
-        self._test_b8(arr1, dtype=np.uint8)
+        self._test_b8(
+            arr1,
+            expected_default_cast_dtype=np.uint8
+        )
+        self._test_b8(
+            arr1,
+            expected_default_cast_dtype=np.uint8,
+            cast_dtype=np.uint8
+        )
 
     def test_b8_bool_compound(self):
         arr1 = np.array([(False,), (True,)], dtype=np.dtype([('x', '?')]))
-        self._test_b8(arr1)
-        self._test_b8(arr1, dtype=np.dtype([('x', 'u1')]))
+        self._test_b8(
+            arr1,
+            expected_default_cast_dtype=np.dtype([('x', 'u1')])
+        )
+        self._test_b8(
+            arr1,
+            expected_default_cast_dtype=np.dtype([('x', 'u1')]),
+            cast_dtype=np.dtype([('x', 'u1')])
+        )
 
     def test_b8_bool_compound_nested(self):
         arr1 = np.array(
             [(True, (True, False)), (True, (False, True))],
             dtype=np.dtype([('x', '?'), ('y', [('a', '?'), ('b', '?')])]),
         )
-        self._test_b8(arr1)
         self._test_b8(
             arr1,
-            dtype=np.dtype([('x', 'u1'), ('y', [('a', 'u1'), ('b', 'u1')])]),
+            expected_default_cast_dtype=np.dtype(
+                [('x', 'u1'), ('y', [('a', 'u1'), ('b', 'u1')])]
+            )
+        )
+        self._test_b8(
+            arr1,
+            expected_default_cast_dtype=np.dtype(
+                [('x', 'u1'), ('y', [('a', 'u1'), ('b', 'u1')])]
+            ),
+            cast_dtype=np.dtype([('x', 'u1'), ('y', [('a', 'u1'), ('b', 'u1')])]),
+        )
+
+    def test_b8_bool_compound_mixed_types(self):
+        arr1 = np.array(
+            [(True, 0.5), (False, 0.2)], dtype=np.dtype([('x','?'), ('y', '<f8')])
+        )
+        self._test_b8(
+            arr1,
+            expected_default_cast_dtype=np.dtype([('x', 'u1'), ('y', '<f8')])
+        )
+        self._test_b8(
+            arr1,
+            expected_default_cast_dtype=np.dtype([('x', 'u1'), ('y', '<f8')]),
+            cast_dtype=np.dtype([('x', 'u1'), ('y', '<f8')])
         )
 
     def test_b8_bool_array(self):
@@ -418,13 +454,17 @@ class TestB8(TestCase):
             [((True, True, False),), ((True, False, True),)],
             dtype=np.dtype([('x', ('?', (3,)))]),
         )
-        self._test_b8(arr1)
         self._test_b8(
             arr1,
-            dtype=np.dtype([('x', ('?', (3,)))]),
+            expected_default_cast_dtype=np.dtype([('x', ('u1', (3,)))])
+        )
+        self._test_b8(
+            arr1,
+            expected_default_cast_dtype=np.dtype([('x', ('u1', (3,)))]),
+            cast_dtype=np.dtype([('x', ('?', (3,)))]),
         )
 
-    def _test_b8(self, arr1, dtype=None):
+    def _test_b8(self, arr1, expected_default_cast_dtype, cast_dtype=None):
         path = self.mktemp()
         with tables.open_file(path, 'w') as f:
             if arr1.dtype.names:
@@ -435,25 +475,22 @@ class TestB8(TestCase):
         with h5py.File(path, 'r') as f:
             dset = f['test']
 
-            # read uncast dset to make sure it raises as before
-            with self.assertRaises(
-                TypeError, msg='No NumPy equivalent for TypeBitfieldID exists'
-            ):
-                dset[:]
+            # This should do an implicit uint8 cast
+            # Expect that the "No NumPy equivalent for TypeBitfieldID exists"
+            # error is not thrown.
+            arr2 = dset[:]
+
+            self.assertArrayEqual(
+                arr2,
+                arr1.astype(expected_default_cast_dtype, copy=False)
+            )
 
             # read cast dset and make sure it's equal
-            if dtype is None:
-                dtype = arr1.dtype
-            with dset.astype(dtype):
-                arr2 = dset[:]
-            self.assertArrayEqual(arr2, arr1.astype(dtype, copy=False))
-
-            # read uncast dataset again to ensure nothing changed permanently
-            with self.assertRaises(
-                TypeError, msg='No NumPy equivalent for TypeBitfieldID exists'
-            ):
-                dset[:]
-
+            if cast_dtype is None:
+                cast_dtype = arr1.dtype
+            with dset.astype(cast_dtype):
+                arr3 = dset[:]
+            self.assertArrayEqual(arr3, arr1.astype(cast_dtype, copy=False))
 
 def test_opaque(writable_file):
     # opaque without an h5py tag corresponds to numpy void dtypes
