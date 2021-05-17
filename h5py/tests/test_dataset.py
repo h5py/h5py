@@ -1024,6 +1024,10 @@ class TestAppend(BaseDataset):
     """
         Feature: H5DOappend testing
     """
+    @ut.skipIf(
+        h5py.version.hdf5_version_tuple < (1, 10, 0),
+        "Reading non-existent label segfaults"
+        )
     def test_append_1(self):
         dset = self.f.create_dataset('foo', (0, 10), maxshape=(None, 10))
         for i in range(10):
@@ -1032,6 +1036,10 @@ class TestAppend(BaseDataset):
             np.testing.assert_array_equal(dset[-1], data)
         self.assertEqual(len(dset), 10)
 
+    @ut.skipIf(
+        h5py.version.hdf5_version_tuple < (1, 10, 0),
+        "Reading non-existent label segfaults"
+        )
     def test_append_2(self):
         dset = self.f.create_dataset('foo', (0, 10), maxshape=(None, 10))
         for i in range(5):
