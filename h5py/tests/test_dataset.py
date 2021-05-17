@@ -1020,6 +1020,27 @@ class TestLen(BaseDataset):
         self.assertEqual(dset.len(), 2 ** 33)
 
 
+class TestAppend(BaseDataset):
+    """
+        Feature: H5DOappend testing
+    """
+    def test_append_1(self):
+        dset = self.f.create_dataset('foo', (0, 10), maxshape=(None, 10))
+        for i in range(10):
+            data = np.full(10, i)
+            dset.id.append(data, 0, 1)
+            np.testing.assert_array_equal(dset[-1], data)
+        self.assertEqual(len(dset), 10)
+
+    def test_append_2(self):
+        dset = self.f.create_dataset('foo', (0, 10), maxshape=(None, 10))
+        for i in range(5):
+            data = np.full((2, 10), i)
+            dset.id.append(data, 0, 2)
+            np.testing.assert_array_equal(dset[-2:], data)
+        self.assertEqual(len(dset), 10)
+
+
 class TestIter(BaseDataset):
 
     """

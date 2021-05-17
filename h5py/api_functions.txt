@@ -121,6 +121,9 @@ hdf5:
   1.10.5    herr_t H5Dget_chunk_info(hid_t dset_id, hid_t fspace_id, hsize_t chk_idx, hsize_t *offset, unsigned *filter_mask, haddr_t *addr, hsize_t *size)
   1.10.5    herr_t H5Dget_chunk_info_by_coord(hid_t dset_id, const hsize_t *offset, unsigned *filter_mask, haddr_t *addr, hsize_t *size)
 
+  # HDF5 Append
+  1.10.0    herr_t H5DOappend(hid_t dset_id, hid_t dxpl_id, unsigned index, size_t num_elem, hid_t memtype, const void *buffer)
+
 
   # === H5E - Minimal error-handling interface ================================
 

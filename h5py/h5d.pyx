@@ -231,6 +231,43 @@ cdef class DatasetID(ObjectID):
 
         dset_rw(self_id, mtype_id, mspace_id, fspace_id, plist_id, data, 0)
 
+    IF HDF5_VERSION >= (1, 10, 2):
+        @with_phil
+        def append(self, ndarray arr_obj not None, uint32_t index, size_t num_elem,
+                TypeID mtype=None, PropID dxpl=None):
+            """ (SpaceID mspace, SpaceID fspace, NDARRAY arr_obj,
+                TypeID mtype=None, PropDXID dxpl=None)
+
+                Write data from a Numpy array to an HDF5 dataset. Keyword dxpl may
+                be a dataset transfer property list.
+
+                It is your responsibility to ensure that the memory dataspace
+                provided is compatible with the shape of the Numpy array.  Since a
+                wide variety of dataspace configurations are possible, this is not
+                checked.  You can easily crash Python by writing data from too
+                large a dataspace.
+
+                If a memory datatype is not specified, one will be auto-created
+                based on the array's dtype.
+
+                The provided Numpy array must be C-contiguous.  If this is not the
+                case, ValueError will be raised and the read will fail.
+            """
+            cdef hid_t self_id, mtype_id, plist_id
+            cdef void* data
+            cdef int oldflags
+
+            if mtype is None:
+                mtype = py_create(arr_obj.dtype)
+            check_numpy_read(arr_obj, -1)
+
+            self_id = self.id
+            mtype_id = mtype.id
+            plist_id = pdefault(dxpl)
+            data = PyArray_DATA(arr_obj)
+
+            H5DOappend(self_id, plist_id, index, num_elem, mtype_id, data)
+
 
     @with_phil
     def extend(self, tuple shape):
