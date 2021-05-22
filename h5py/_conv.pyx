@@ -860,14 +860,14 @@ cdef herr_t boolenum2b8(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
     return 0
 
 # =============================================================================
-# B8 to UINT8 routines
+# BITFIELD to UINT routines
 
-cdef herr_t b82uint8(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
+cdef herr_t bitfield2uint(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
                      size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
                      void *bkg_i, hid_t dxpl) except -1:
     return 0
 
-cdef herr_t uint82b8(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
+cdef herr_t uint2bitfield(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
                      size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
                      void *bkg_i, hid_t dxpl) except -1:
     return 0
@@ -915,8 +915,29 @@ cpdef int register_converters() except -1:
     H5Tregister(H5T_PERS_HARD, "boolenum2b8", boolenum, H5T_NATIVE_B8, boolenum2b8)
     H5Tregister(H5T_PERS_HARD, "b82boolenum", H5T_NATIVE_B8, boolenum, b82boolenum)
 
-    H5Tregister(H5T_PERS_HARD, "uint82b8", H5T_NATIVE_UINT8, H5T_NATIVE_B8, uint82b8)
-    H5Tregister(H5T_PERS_HARD, "b82uint8", H5T_NATIVE_B8, H5T_NATIVE_UINT8, b82uint8)
+    H5Tregister(H5T_PERS_HARD, "uint82b8", H5T_STD_U8BE, H5T_STD_B8BE, uint2bitfield)
+    H5Tregister(H5T_PERS_HARD, "b82uint8", H5T_STD_B8BE, H5T_STD_U8BE, bitfield2uint)
+
+    H5Tregister(H5T_PERS_HARD, "uint82b8", H5T_STD_U8LE, H5T_STD_B8LE, uint2bitfield)
+    H5Tregister(H5T_PERS_HARD, "b82uint8", H5T_STD_B8LE, H5T_STD_U8LE, bitfield2uint)
+
+    H5Tregister(H5T_PERS_HARD, "uint162b16", H5T_STD_U16BE, H5T_STD_B16BE, uint2bitfield)
+    H5Tregister(H5T_PERS_HARD, "b162uint16", H5T_STD_B16BE, H5T_STD_U16BE, bitfield2uint)
+
+    H5Tregister(H5T_PERS_HARD, "uint162b16", H5T_STD_U16LE, H5T_STD_B16LE, uint2bitfield)
+    H5Tregister(H5T_PERS_HARD, "b162uint16", H5T_STD_B16LE, H5T_STD_U16LE, bitfield2uint)
+
+    H5Tregister(H5T_PERS_HARD, "uint322b32", H5T_STD_U32BE, H5T_STD_B32BE, uint2bitfield)
+    H5Tregister(H5T_PERS_HARD, "b322uint32", H5T_STD_B32BE, H5T_STD_U32BE, bitfield2uint)
+
+    H5Tregister(H5T_PERS_HARD, "uint322b32", H5T_STD_U32LE, H5T_STD_B32LE, uint2bitfield)
+    H5Tregister(H5T_PERS_HARD, "b322uint32", H5T_STD_B32LE, H5T_STD_U32LE, bitfield2uint)
+
+    H5Tregister(H5T_PERS_HARD, "uint642b64", H5T_STD_U64BE, H5T_STD_B64BE, uint2bitfield)
+    H5Tregister(H5T_PERS_HARD, "b642uint64", H5T_STD_B64BE, H5T_STD_U64BE, bitfield2uint)
+
+    H5Tregister(H5T_PERS_HARD, "uint642b64", H5T_STD_U64LE, H5T_STD_B64LE, uint2bitfield)
+    H5Tregister(H5T_PERS_HARD, "b642uint64", H5T_STD_B64LE, H5T_STD_U64LE, bitfield2uint)
 
     H5Tregister(H5T_PERS_SOFT, "vlen2str", vlstring, pyobj, vlen2str)
     H5Tregister(H5T_PERS_SOFT, "str2vlen", pyobj, vlstring, str2vlen)
@@ -951,7 +972,7 @@ cpdef int unregister_converters() except -1:
     H5Tunregister(H5T_PERS_HARD, "boolenum2b8", -1, -1, boolenum2b8)
     H5Tunregister(H5T_PERS_HARD, "b82boolenum", -1, -1, b82boolenum)
 
-    H5Tunregister(H5T_PERS_HARD, "uint82b8", -1, -1, uint82b8)
-    H5Tunregister(H5T_PERS_HARD, "b82uint8", -1, -1, b82uint8)
+    H5Tunregister(H5T_PERS_SOFT, "uint2bitfield", -1, -1, uint2bitfield)
+    H5Tunregister(H5T_PERS_SOFT, "bitfield2uint", -1, -1, bitfield2uint)
 
     return 0

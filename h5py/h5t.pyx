@@ -22,11 +22,13 @@ cimport numpy as cnp
 from .h5r cimport Reference, RegionReference
 from .h5p cimport PropID, propwrap
 
+
 from .utils cimport  emalloc, efree, require_tuple, convert_dims,\
                      convert_tuple
 
 # Python imports
 import codecs
+import sys
 from collections import namedtuple
 import sys
 import numpy as np
@@ -764,14 +766,39 @@ cdef class TypeBitfieldID(TypeID):
     """
         HDF5 bitfield type
     """
+    @with_phil
+    def get_sign(self):
+        """() => INT sign
+
+        Get the "signedness" of the datatype; one of:
+
+        SGN_NONE
+            Unsigned
+
+        SGN_2
+            Signed 2's complement
+        """
+
+        # This will always return SGN_NONE to cast bitfield types to unsigned integer
+        return SGN_NONE
+
+    @with_phil
+    def get_order(self):
+        """() => INT order
+
+        Obtain the byte order of the datatype; one of:
+
+        - ORDER_LE
+        - ORDER_BE
+        """
+        return <int>H5Tget_order(self.id)
+
     cdef object py_dtype(self):
-        if H5Tequal(self.id, H5T_NATIVE_B8):
-            return np.dtype("u1") # Cast to np.uint8
-        else:
-            raise TypeError(
-                "No NumPy equivelant for {classname} exists".format(
-                classname=self.__class__.__name__)
-            )
+
+        # Translation function for bitfield types
+        return np.dtype( _order_map[self.get_order()] +
+                         _sign_map[self.get_sign()] + str(self.get_size()) )
+
 
 cdef class TypeReferenceID(TypeID):
 
