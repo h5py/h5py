@@ -972,7 +972,7 @@ cpdef int unregister_converters() except -1:
     H5Tunregister(H5T_PERS_HARD, "boolenum2b8", -1, -1, boolenum2b8)
     H5Tunregister(H5T_PERS_HARD, "b82boolenum", -1, -1, b82boolenum)
 
-    H5Tunregister(H5T_PERS_SOFT, "uint2bitfield", -1, -1, uint2bitfield)
-    H5Tunregister(H5T_PERS_SOFT, "bitfield2uint", -1, -1, bitfield2uint)
+    H5Tunregister(H5T_PERS_HARD, "uint2bitfield", -1, -1, uint2bitfield)
+    H5Tunregister(H5T_PERS_HARD, "bitfield2uint", -1, -1, bitfield2uint)
 
     return 0
