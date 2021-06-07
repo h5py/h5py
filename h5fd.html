@@ -4,11 +4,12 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
     <title>Module H5FD &#8212; Low-level API for h5py (v3.2.1)</title>
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
-    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/nature.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
     <script src="_static/doctools.js"></script>
@@ -42,218 +43,218 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <div class="section" id="module-h5py.h5fd">
+  <section id="module-h5py.h5fd">
 <span id="module-h5fd"></span><h1>Module H5FD<a class="headerlink" href="#module-h5py.h5fd" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="module-constants">
+<section id="module-constants">
 <h2>Module constants<a class="headerlink" href="#module-constants" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="memory-usage-types-for-multi-file-driver">
+<section id="memory-usage-types-for-multi-file-driver">
 <h3>Memory usage types for MULTI file driver<a class="headerlink" href="#memory-usage-types-for-multi-file-driver" title="Permalink to this headline">¶</a></h3>
 <dl class="py data">
-<dt id="h5py.h5fd.MEM_DEFAULT">
-<code class="sig-prename descclassname"><span class="pre">h5py.h5fd.</span></code><code class="sig-name descname"><span class="pre">MEM_DEFAULT</span></code><a class="headerlink" href="#h5py.h5fd.MEM_DEFAULT" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="h5py.h5fd.MEM_DEFAULT">
+<span class="sig-prename descclassname"><span class="pre">h5py.h5fd.</span></span><span class="sig-name descname"><span class="pre">MEM_DEFAULT</span></span><a class="headerlink" href="#h5py.h5fd.MEM_DEFAULT" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
-<dt id="h5py.h5fd.MEM_SUPER">
-<code class="sig-prename descclassname"><span class="pre">h5py.h5fd.</span></code><code class="sig-name descname"><span class="pre">MEM_SUPER</span></code><a class="headerlink" href="#h5py.h5fd.MEM_SUPER" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="h5py.h5fd.MEM_SUPER">
+<span class="sig-prename descclassname"><span class="pre">h5py.h5fd.</span></span><span class="sig-name descname"><span class="pre">MEM_SUPER</span></span><a class="headerlink" href="#h5py.h5fd.MEM_SUPER" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
-<dt id="h5py.h5fd.MEM_BTREE">
-<code class="sig-prename descclassname"><span class="pre">h5py.h5fd.</span></code><code class="sig-name descname"><span class="pre">MEM_BTREE</span></code><a class="headerlink" href="#h5py.h5fd.MEM_BTREE" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="h5py.h5fd.MEM_BTREE">
+<span class="sig-prename descclassname"><span class="pre">h5py.h5fd.</span></span><span class="sig-name descname"><span class="pre">MEM_BTREE</span></span><a class="headerlink" href="#h5py.h5fd.MEM_BTREE" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
-<dt id="h5py.h5fd.MEM_DRAW">
-<code class="sig-prename descclassname"><span class="pre">h5py.h5fd.</span></code><code class="sig-name descname"><span class="pre">MEM_DRAW</span></code><a class="headerlink" href="#h5py.h5fd.MEM_DRAW" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="h5py.h5fd.MEM_DRAW">
+<span class="sig-prename descclassname"><span class="pre">h5py.h5fd.</span></span><span class="sig-name descname"><span class="pre">MEM_DRAW</span></span><a class="headerlink" href="#h5py.h5fd.MEM_DRAW" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
-<dt id="h5py.h5fd.MEM_GHEAP">
-<code class="sig-prename descclassname"><span class="pre">h5py.h5fd.</span></code><code class="sig-name descname"><span class="pre">MEM_GHEAP</span></code><a class="headerlink" href="#h5py.h5fd.MEM_GHEAP" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="h5py.h5fd.MEM_GHEAP">
+<span class="sig-prename descclassname"><span class="pre">h5py.h5fd.</span></span><span class="sig-name descname"><span class="pre">MEM_GHEAP</span></span><a class="headerlink" href="#h5py.h5fd.MEM_GHEAP" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
-<dt id="h5py.h5fd.MEM_LHEAP">
-<code class="sig-prename descclassname"><span class="pre">h5py.h5fd.</span></code><code class="sig-name descname"><span class="pre">MEM_LHEAP</span></code><a class="headerlink" href="#h5py.h5fd.MEM_LHEAP" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="h5py.h5fd.MEM_LHEAP">
+<span class="sig-prename descclassname"><span class="pre">h5py.h5fd.</span></span><span class="sig-name descname"><span class="pre">MEM_LHEAP</span></span><a class="headerlink" href="#h5py.h5fd.MEM_LHEAP" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
-<dt id="h5py.h5fd.MEM_OHDR">
-<code class="sig-prename descclassname"><span class="pre">h5py.h5fd.</span></code><code class="sig-name descname"><span class="pre">MEM_OHDR</span></code><a class="headerlink" href="#h5py.h5fd.MEM_OHDR" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="h5py.h5fd.MEM_OHDR">
+<span class="sig-prename descclassname"><span class="pre">h5py.h5fd.</span></span><span class="sig-name descname"><span class="pre">MEM_OHDR</span></span><a class="headerlink" href="#h5py.h5fd.MEM_OHDR" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
-<dt id="h5py.h5fd.MEM_NTYPES">
-<code class="sig-prename descclassname"><span class="pre">h5py.h5fd.</span></code><code class="sig-name descname"><span class="pre">MEM_NTYPES</span></code><a class="headerlink" href="#h5py.h5fd.MEM_NTYPES" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="h5py.h5fd.MEM_NTYPES">
+<span class="sig-prename descclassname"><span class="pre">h5py.h5fd.</span></span><span class="sig-name descname"><span class="pre">MEM_NTYPES</span></span><a class="headerlink" href="#h5py.h5fd.MEM_NTYPES" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-</div>
-<div class="section" id="data-transfer-modes-for-mpio-driver">
+</section>
+<section id="data-transfer-modes-for-mpio-driver">
 <h3>Data transfer modes for MPIO driver<a class="headerlink" href="#data-transfer-modes-for-mpio-driver" title="Permalink to this headline">¶</a></h3>
 <dl class="py data">
-<dt id="h5py.h5fd.MPIO_INDEPENDENT">
-<code class="sig-prename descclassname"><span class="pre">h5py.h5fd.</span></code><code class="sig-name descname"><span class="pre">MPIO_INDEPENDENT</span></code><a class="headerlink" href="#h5py.h5fd.MPIO_INDEPENDENT" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="h5py.h5fd.MPIO_INDEPENDENT">
+<span class="sig-prename descclassname"><span class="pre">h5py.h5fd.</span></span><span class="sig-name descname"><span class="pre">MPIO_INDEPENDENT</span></span><a class="headerlink" href="#h5py.h5fd.MPIO_INDEPENDENT" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
-<dt id="h5py.h5fd.MPIO_COLLECTIVE">
-<code class="sig-prename descclassname"><span class="pre">h5py.h5fd.</span></code><code class="sig-name descname"><span class="pre">MPIO_COLLECTIVE</span></code><a class="headerlink" href="#h5py.h5fd.MPIO_COLLECTIVE" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="h5py.h5fd.MPIO_COLLECTIVE">
+<span class="sig-prename descclassname"><span class="pre">h5py.h5fd.</span></span><span class="sig-name descname"><span class="pre">MPIO_COLLECTIVE</span></span><a class="headerlink" href="#h5py.h5fd.MPIO_COLLECTIVE" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-</div>
-<div class="section" id="file-drivers-types">
+</section>
+<section id="file-drivers-types">
 <h3>File drivers types<a class="headerlink" href="#file-drivers-types" title="Permalink to this headline">¶</a></h3>
 <dl class="py data">
-<dt id="h5py.h5fd.CORE">
-<code class="sig-prename descclassname"><span class="pre">h5py.h5fd.</span></code><code class="sig-name descname"><span class="pre">CORE</span></code><a class="headerlink" href="#h5py.h5fd.CORE" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="h5py.h5fd.CORE">
+<span class="sig-prename descclassname"><span class="pre">h5py.h5fd.</span></span><span class="sig-name descname"><span class="pre">CORE</span></span><a class="headerlink" href="#h5py.h5fd.CORE" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
-<dt id="h5py.h5fd.FAMILY">
-<code class="sig-prename descclassname"><span class="pre">h5py.h5fd.</span></code><code class="sig-name descname"><span class="pre">FAMILY</span></code><a class="headerlink" href="#h5py.h5fd.FAMILY" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="h5py.h5fd.FAMILY">
+<span class="sig-prename descclassname"><span class="pre">h5py.h5fd.</span></span><span class="sig-name descname"><span class="pre">FAMILY</span></span><a class="headerlink" href="#h5py.h5fd.FAMILY" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
-<dt id="h5py.h5fd.LOG">
-<code class="sig-prename descclassname"><span class="pre">h5py.h5fd.</span></code><code class="sig-name descname"><span class="pre">LOG</span></code><a class="headerlink" href="#h5py.h5fd.LOG" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="h5py.h5fd.LOG">
+<span class="sig-prename descclassname"><span class="pre">h5py.h5fd.</span></span><span class="sig-name descname"><span class="pre">LOG</span></span><a class="headerlink" href="#h5py.h5fd.LOG" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
-<dt id="h5py.h5fd.MPIO">
-<code class="sig-prename descclassname"><span class="pre">h5py.h5fd.</span></code><code class="sig-name descname"><span class="pre">MPIO</span></code><a class="headerlink" href="#h5py.h5fd.MPIO" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="h5py.h5fd.MPIO">
+<span class="sig-prename descclassname"><span class="pre">h5py.h5fd.</span></span><span class="sig-name descname"><span class="pre">MPIO</span></span><a class="headerlink" href="#h5py.h5fd.MPIO" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
-<dt id="h5py.h5fd.MULTI">
-<code class="sig-prename descclassname"><span class="pre">h5py.h5fd.</span></code><code class="sig-name descname"><span class="pre">MULTI</span></code><a class="headerlink" href="#h5py.h5fd.MULTI" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="h5py.h5fd.MULTI">
+<span class="sig-prename descclassname"><span class="pre">h5py.h5fd.</span></span><span class="sig-name descname"><span class="pre">MULTI</span></span><a class="headerlink" href="#h5py.h5fd.MULTI" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
-<dt id="h5py.h5fd.SEC2">
-<code class="sig-prename descclassname"><span class="pre">h5py.h5fd.</span></code><code class="sig-name descname"><span class="pre">SEC2</span></code><a class="headerlink" href="#h5py.h5fd.SEC2" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="h5py.h5fd.SEC2">
+<span class="sig-prename descclassname"><span class="pre">h5py.h5fd.</span></span><span class="sig-name descname"><span class="pre">SEC2</span></span><a class="headerlink" href="#h5py.h5fd.SEC2" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
-<dt id="h5py.h5fd.STDIO">
-<code class="sig-prename descclassname"><span class="pre">h5py.h5fd.</span></code><code class="sig-name descname"><span class="pre">STDIO</span></code><a class="headerlink" href="#h5py.h5fd.STDIO" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="h5py.h5fd.STDIO">
+<span class="sig-prename descclassname"><span class="pre">h5py.h5fd.</span></span><span class="sig-name descname"><span class="pre">STDIO</span></span><a class="headerlink" href="#h5py.h5fd.STDIO" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
-<dt id="h5py.h5fd.WINDOWS">
-<code class="sig-prename descclassname"><span class="pre">h5py.h5fd.</span></code><code class="sig-name descname"><span class="pre">WINDOWS</span></code><a class="headerlink" href="#h5py.h5fd.WINDOWS" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="h5py.h5fd.WINDOWS">
+<span class="sig-prename descclassname"><span class="pre">h5py.h5fd.</span></span><span class="sig-name descname"><span class="pre">WINDOWS</span></span><a class="headerlink" href="#h5py.h5fd.WINDOWS" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-</div>
-<div class="section" id="logging-driver-settings">
+</section>
+<section id="logging-driver-settings">
 <h3>Logging driver settings<a class="headerlink" href="#logging-driver-settings" title="Permalink to this headline">¶</a></h3>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Not all logging flags are currently implemented by HDF5.</p>
 </div>
 <dl class="py data">
-<dt id="h5py.h5fd.LOG_LOC_READ">
-<code class="sig-prename descclassname"><span class="pre">h5py.h5fd.</span></code><code class="sig-name descname"><span class="pre">LOG_LOC_READ</span></code><a class="headerlink" href="#h5py.h5fd.LOG_LOC_READ" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="h5py.h5fd.LOG_LOC_READ">
+<span class="sig-prename descclassname"><span class="pre">h5py.h5fd.</span></span><span class="sig-name descname"><span class="pre">LOG_LOC_READ</span></span><a class="headerlink" href="#h5py.h5fd.LOG_LOC_READ" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
-<dt id="h5py.h5fd.LOG_LOC_WRITE">
-<code class="sig-prename descclassname"><span class="pre">h5py.h5fd.</span></code><code class="sig-name descname"><span class="pre">LOG_LOC_WRITE</span></code><a class="headerlink" href="#h5py.h5fd.LOG_LOC_WRITE" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="h5py.h5fd.LOG_LOC_WRITE">
+<span class="sig-prename descclassname"><span class="pre">h5py.h5fd.</span></span><span class="sig-name descname"><span class="pre">LOG_LOC_WRITE</span></span><a class="headerlink" href="#h5py.h5fd.LOG_LOC_WRITE" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
-<dt id="h5py.h5fd.LOG_LOC_SEEK">
-<code class="sig-prename descclassname"><span class="pre">h5py.h5fd.</span></code><code class="sig-name descname"><span class="pre">LOG_LOC_SEEK</span></code><a class="headerlink" href="#h5py.h5fd.LOG_LOC_SEEK" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="h5py.h5fd.LOG_LOC_SEEK">
+<span class="sig-prename descclassname"><span class="pre">h5py.h5fd.</span></span><span class="sig-name descname"><span class="pre">LOG_LOC_SEEK</span></span><a class="headerlink" href="#h5py.h5fd.LOG_LOC_SEEK" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
-<dt id="h5py.h5fd.LOG_LOC_IO">
-<code class="sig-prename descclassname"><span class="pre">h5py.h5fd.</span></code><code class="sig-name descname"><span class="pre">LOG_LOC_IO</span></code><a class="headerlink" href="#h5py.h5fd.LOG_LOC_IO" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="h5py.h5fd.LOG_LOC_IO">
+<span class="sig-prename descclassname"><span class="pre">h5py.h5fd.</span></span><span class="sig-name descname"><span class="pre">LOG_LOC_IO</span></span><a class="headerlink" href="#h5py.h5fd.LOG_LOC_IO" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
-<dt id="h5py.h5fd.LOG_FILE_READ">
-<code class="sig-prename descclassname"><span class="pre">h5py.h5fd.</span></code><code class="sig-name descname"><span class="pre">LOG_FILE_READ</span></code><a class="headerlink" href="#h5py.h5fd.LOG_FILE_READ" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="h5py.h5fd.LOG_FILE_READ">
+<span class="sig-prename descclassname"><span class="pre">h5py.h5fd.</span></span><span class="sig-name descname"><span class="pre">LOG_FILE_READ</span></span><a class="headerlink" href="#h5py.h5fd.LOG_FILE_READ" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
-<dt id="h5py.h5fd.LOG_FILE_WRITE">
-<code class="sig-prename descclassname"><span class="pre">h5py.h5fd.</span></code><code class="sig-name descname"><span class="pre">LOG_FILE_WRITE</span></code><a class="headerlink" href="#h5py.h5fd.LOG_FILE_WRITE" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="h5py.h5fd.LOG_FILE_WRITE">
+<span class="sig-prename descclassname"><span class="pre">h5py.h5fd.</span></span><span class="sig-name descname"><span class="pre">LOG_FILE_WRITE</span></span><a class="headerlink" href="#h5py.h5fd.LOG_FILE_WRITE" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
-<dt id="h5py.h5fd.LOG_FILE_IO">
-<code class="sig-prename descclassname"><span class="pre">h5py.h5fd.</span></code><code class="sig-name descname"><span class="pre">LOG_FILE_IO</span></code><a class="headerlink" href="#h5py.h5fd.LOG_FILE_IO" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="h5py.h5fd.LOG_FILE_IO">
+<span class="sig-prename descclassname"><span class="pre">h5py.h5fd.</span></span><span class="sig-name descname"><span class="pre">LOG_FILE_IO</span></span><a class="headerlink" href="#h5py.h5fd.LOG_FILE_IO" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
-<dt id="h5py.h5fd.LOG_FLAVOR">
-<code class="sig-prename descclassname"><span class="pre">h5py.h5fd.</span></code><code class="sig-name descname"><span class="pre">LOG_FLAVOR</span></code><a class="headerlink" href="#h5py.h5fd.LOG_FLAVOR" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="h5py.h5fd.LOG_FLAVOR">
+<span class="sig-prename descclassname"><span class="pre">h5py.h5fd.</span></span><span class="sig-name descname"><span class="pre">LOG_FLAVOR</span></span><a class="headerlink" href="#h5py.h5fd.LOG_FLAVOR" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
-<dt id="h5py.h5fd.LOG_NUM_READ">
-<code class="sig-prename descclassname"><span class="pre">h5py.h5fd.</span></code><code class="sig-name descname"><span class="pre">LOG_NUM_READ</span></code><a class="headerlink" href="#h5py.h5fd.LOG_NUM_READ" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="h5py.h5fd.LOG_NUM_READ">
+<span class="sig-prename descclassname"><span class="pre">h5py.h5fd.</span></span><span class="sig-name descname"><span class="pre">LOG_NUM_READ</span></span><a class="headerlink" href="#h5py.h5fd.LOG_NUM_READ" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
-<dt id="h5py.h5fd.LOG_NUM_WRITE">
-<code class="sig-prename descclassname"><span class="pre">h5py.h5fd.</span></code><code class="sig-name descname"><span class="pre">LOG_NUM_WRITE</span></code><a class="headerlink" href="#h5py.h5fd.LOG_NUM_WRITE" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="h5py.h5fd.LOG_NUM_WRITE">
+<span class="sig-prename descclassname"><span class="pre">h5py.h5fd.</span></span><span class="sig-name descname"><span class="pre">LOG_NUM_WRITE</span></span><a class="headerlink" href="#h5py.h5fd.LOG_NUM_WRITE" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
-<dt id="h5py.h5fd.LOG_NUM_SEEK">
-<code class="sig-prename descclassname"><span class="pre">h5py.h5fd.</span></code><code class="sig-name descname"><span class="pre">LOG_NUM_SEEK</span></code><a class="headerlink" href="#h5py.h5fd.LOG_NUM_SEEK" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="h5py.h5fd.LOG_NUM_SEEK">
+<span class="sig-prename descclassname"><span class="pre">h5py.h5fd.</span></span><span class="sig-name descname"><span class="pre">LOG_NUM_SEEK</span></span><a class="headerlink" href="#h5py.h5fd.LOG_NUM_SEEK" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
-<dt id="h5py.h5fd.LOG_NUM_IO">
-<code class="sig-prename descclassname"><span class="pre">h5py.h5fd.</span></code><code class="sig-name descname"><span class="pre">LOG_NUM_IO</span></code><a class="headerlink" href="#h5py.h5fd.LOG_NUM_IO" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="h5py.h5fd.LOG_NUM_IO">
+<span class="sig-prename descclassname"><span class="pre">h5py.h5fd.</span></span><span class="sig-name descname"><span class="pre">LOG_NUM_IO</span></span><a class="headerlink" href="#h5py.h5fd.LOG_NUM_IO" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
-<dt id="h5py.h5fd.LOG_TIME_OPEN">
-<code class="sig-prename descclassname"><span class="pre">h5py.h5fd.</span></code><code class="sig-name descname"><span class="pre">LOG_TIME_OPEN</span></code><a class="headerlink" href="#h5py.h5fd.LOG_TIME_OPEN" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="h5py.h5fd.LOG_TIME_OPEN">
+<span class="sig-prename descclassname"><span class="pre">h5py.h5fd.</span></span><span class="sig-name descname"><span class="pre">LOG_TIME_OPEN</span></span><a class="headerlink" href="#h5py.h5fd.LOG_TIME_OPEN" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
-<dt id="h5py.h5fd.LOG_TIME_READ">
-<code class="sig-prename descclassname"><span class="pre">h5py.h5fd.</span></code><code class="sig-name descname"><span class="pre">LOG_TIME_READ</span></code><a class="headerlink" href="#h5py.h5fd.LOG_TIME_READ" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="h5py.h5fd.LOG_TIME_READ">
+<span class="sig-prename descclassname"><span class="pre">h5py.h5fd.</span></span><span class="sig-name descname"><span class="pre">LOG_TIME_READ</span></span><a class="headerlink" href="#h5py.h5fd.LOG_TIME_READ" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
-<dt id="h5py.h5fd.LOG_TIME_WRITE">
-<code class="sig-prename descclassname"><span class="pre">h5py.h5fd.</span></code><code class="sig-name descname"><span class="pre">LOG_TIME_WRITE</span></code><a class="headerlink" href="#h5py.h5fd.LOG_TIME_WRITE" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="h5py.h5fd.LOG_TIME_WRITE">
+<span class="sig-prename descclassname"><span class="pre">h5py.h5fd.</span></span><span class="sig-name descname"><span class="pre">LOG_TIME_WRITE</span></span><a class="headerlink" href="#h5py.h5fd.LOG_TIME_WRITE" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
-<dt id="h5py.h5fd.LOG_TIME_SEEK">
-<code class="sig-prename descclassname"><span class="pre">h5py.h5fd.</span></code><code class="sig-name descname"><span class="pre">LOG_TIME_SEEK</span></code><a class="headerlink" href="#h5py.h5fd.LOG_TIME_SEEK" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="h5py.h5fd.LOG_TIME_SEEK">
+<span class="sig-prename descclassname"><span class="pre">h5py.h5fd.</span></span><span class="sig-name descname"><span class="pre">LOG_TIME_SEEK</span></span><a class="headerlink" href="#h5py.h5fd.LOG_TIME_SEEK" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
-<dt id="h5py.h5fd.LOG_TIME_CLOSE">
-<code class="sig-prename descclassname"><span class="pre">h5py.h5fd.</span></code><code class="sig-name descname"><span class="pre">LOG_TIME_CLOSE</span></code><a class="headerlink" href="#h5py.h5fd.LOG_TIME_CLOSE" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="h5py.h5fd.LOG_TIME_CLOSE">
+<span class="sig-prename descclassname"><span class="pre">h5py.h5fd.</span></span><span class="sig-name descname"><span class="pre">LOG_TIME_CLOSE</span></span><a class="headerlink" href="#h5py.h5fd.LOG_TIME_CLOSE" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
-<dt id="h5py.h5fd.LOG_TIME_IO">
-<code class="sig-prename descclassname"><span class="pre">h5py.h5fd.</span></code><code class="sig-name descname"><span class="pre">LOG_TIME_IO</span></code><a class="headerlink" href="#h5py.h5fd.LOG_TIME_IO" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="h5py.h5fd.LOG_TIME_IO">
+<span class="sig-prename descclassname"><span class="pre">h5py.h5fd.</span></span><span class="sig-name descname"><span class="pre">LOG_TIME_IO</span></span><a class="headerlink" href="#h5py.h5fd.LOG_TIME_IO" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
-<dt id="h5py.h5fd.LOG_ALLOC">
-<code class="sig-prename descclassname"><span class="pre">h5py.h5fd.</span></code><code class="sig-name descname"><span class="pre">LOG_ALLOC</span></code><a class="headerlink" href="#h5py.h5fd.LOG_ALLOC" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="h5py.h5fd.LOG_ALLOC">
+<span class="sig-prename descclassname"><span class="pre">h5py.h5fd.</span></span><span class="sig-name descname"><span class="pre">LOG_ALLOC</span></span><a class="headerlink" href="#h5py.h5fd.LOG_ALLOC" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
-<dt id="h5py.h5fd.LOG_ALL">
-<code class="sig-prename descclassname"><span class="pre">h5py.h5fd.</span></code><code class="sig-name descname"><span class="pre">LOG_ALL</span></code><a class="headerlink" href="#h5py.h5fd.LOG_ALL" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="h5py.h5fd.LOG_ALL">
+<span class="sig-prename descclassname"><span class="pre">h5py.h5fd.</span></span><span class="sig-name descname"><span class="pre">LOG_ALL</span></span><a class="headerlink" href="#h5py.h5fd.LOG_ALL" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-</div>
-</div>
-</div>
+</section>
+</section>
+</section>
 
 
             <div class="clearer"></div>
@@ -324,8 +325,8 @@
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2014, Andrew Collette and contributors.
-      Last updated on Apr 28, 2021.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.5.4.
+      Last updated on Jun 07, 2021.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.0.2.
     </div>
   </body>
 </html>
