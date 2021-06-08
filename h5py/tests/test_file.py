@@ -98,6 +98,10 @@ class TestFileOpen(TestCase):
         finally:
             fid.close()
 
+        os.chmod(fname, stat.S_IREAD)  # Make file read-only
+        with pytest.raises(PermissionError):
+            File(fname, 'a')
+
     def test_readonly(self):
         """ Mode 'r' opens file in readonly mode """
         fname = self.mktemp()
