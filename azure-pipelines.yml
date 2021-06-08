@@ -8,7 +8,7 @@ variables:
 jobs:
 - job: 'static_checks'
   pool:
-    vmImage: ubuntu-16.04
+    vmImage: ubuntu-20.04
   variables:
     TOXENV: docs,checkreadme,pre-commit,rever
   steps:
@@ -25,7 +25,7 @@ jobs:
 
 - job: 'linux_wheels'
   pool:
-    vmImage: ubuntu-16.04
+    vmImage: ubuntu-20.04
   variables:
     CIBW_BUILD: cp3[789]-manylinux_x86_64
     CIBW_MANYLINUX_X86_64_IMAGE: docker.io/h5py/manylinux2010_x86_64-hdf5
@@ -64,7 +64,7 @@ jobs:
 
 - job: 'ubuntu1604'
   pool:
-    vmImage: ubuntu-16.04
+    vmImage: ubuntu-20.04
   strategy:
     matrix:
       # -deps : test with default (latest) versions of dependencies
@@ -135,7 +135,7 @@ jobs:
 - job: 'test_linux_wheels'
   dependsOn: linux_wheels
   pool:
-    vmImage: ubuntu-16.04
+    vmImage: ubuntu-20.04
   variables:
     H5PY_TEST_CHECK_FILTERS: 1
 
