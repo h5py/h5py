@@ -427,6 +427,26 @@ Reference
        :param fillvalue:
            The value to use where there is no data.
 
+    .. method:: build_virtual_dataset()
+
+       Assemble a virtual dataset in this group.
+
+       This is used as a context manager::
+
+           with f.build_virtual_dataset('virt', (10, 1000), np.uint32) as layout:
+               layout[0] = h5py.VirtualSource('foo.h5', 'data', (1000,))
+
+       Inside the context, you populate a :class:`VirtualLayout` object.
+       The file is only modified when you leave the context, and if there's
+       no error.
+
+       :param str name: Name of the dataset (absolute or relative)
+       :param tuple shape: Shape of the dataset
+       :param dtype: A numpy dtype for data read from the virtual dataset
+       :param tuple maxshape: Maximum dimensions if the dataset can grow
+           (optional). Use None for unlimited dimensions.
+       :param fillvalue: The value used where no data is available.
+
     .. attribute:: attrs
 
         :ref:`attributes` for this group.
