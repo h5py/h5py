@@ -13,8 +13,13 @@
 
 from copy import deepcopy as copy
 from collections import namedtuple
+
+import numpy as np
+
+from .compat import filename_encode
+from .datatype import Datatype
 from .selections import SimpleSelection, select
-from .. import h5s, h5
+from .. import h5d, h5p, h5s, h5t, h5
 from .. import version
 
 
@@ -156,17 +161,83 @@ class VirtualLayout(object):
     maxshape
         The virtual dataset is resizable up to this shape. Use None for
         axes you want to be unlimited.
+    filename
+        The name of the destination file, if known in advance. Mappings from
+        data in the same file will be stored with filename '.', allowing the
+        file to be renamed later.
     """
-    def __init__(self, shape, dtype, maxshape=None):
+    def __init__(self, shape, dtype, maxshape=None, filename=None):
         self.shape = (shape,) if isinstance(shape, int) else shape
         self.dtype = dtype
         self.maxshape = (maxshape,) if isinstance(maxshape, int) else maxshape
-        self.sources = []
+        self.filename = filename
+        self._src_filenames = set()
+        self.dcpl = h5p.create(h5p.DATASET_CREATE)
 
     def __setitem__(self, key, source):
         sel = select(self.shape, key, dataset=None)
         _convert_space_for_key(sel.id, key)
-        self.sources.append(VDSmap(sel.id,
-                                   source.path,
-                                   source.name,
-                                   source.sel.id))
+        src_filename = self._source_file_name(source.path, self.filename)
+
+        self.dcpl.set_virtual(
+            sel.id, src_filename, source.name.encode('utf-8'), source.sel.id
+        )
+        if self.filename is None:
+            self._src_filenames.add(src_filename)
+
+    @staticmethod
+    def _source_file_name(src_filename, dst_filename) -> bytes:
+        src_filename = filename_encode(src_filename)
+        if dst_filename and (src_filename == filename_encode(dst_filename)):
+            # use relative path if the source dataset is in the same
+            # file, in order to keep the virtual dataset valid in case
+            # the file is renamed.
+            return b'.'
+        return filename_encode(src_filename)
+
+    def get_dcpl(self, dst_filename=None):
+        """Get the property list containing virtual dataset mappings
+
+        If the destination filename wasn't known when the VirtualLayout was
+        created, it is handled here.
+        """
+        dst_filename = filename_encode(dst_filename)
+        if (self.filename is None) and (dst_filename in self._src_filenames):
+            # At least 1 source file is the same as the destination file,
+            # but we didn't know this when making the mapping. Copy the mappings
+            # to a new property list, replacing the dest filename with '.'
+            new_dcpl = h5p.create(h5p.DATASET_CREATE)
+            for i in range(self.dcpl.get_virtual_count()):
+                src_filename = self.dcpl.get_virtual_filename(i)
+                new_dcpl.set_virtual(
+                    self.dcpl.get_virtual_vspace(i),
+                    self._source_file_name(src_filename, dst_filename),
+                    self.dcpl.get_virtual_dsetname(i).encode('utf-8'),
+                    self.dcpl.get_virtual_srcspace(i),
+                )
+            return new_dcpl
+        else:
+            return self.dcpl
+
+    def make_dataset(self, parent, name, fillvalue=None):
+        """ Return a new low-level dataset identifier for a virtual dataset """
+        dcpl = self.get_dcpl(parent.file.filename)
+
+        if fillvalue is not None:
+            dcpl.set_fill_value(np.array([fillvalue]))
+
+        maxshape = self.maxshape
+        if maxshape is not None:
+            maxshape = tuple(m if m is not None else h5s.UNLIMITED for m in maxshape)
+
+        virt_dspace = h5s.create_simple(self.shape, maxshape)
+
+        if isinstance(self.dtype, Datatype):
+            # Named types are used as-is
+            tid = self.dtype.id
+        else:
+            dtype = np.dtype(self.dtype)
+            tid = h5t.py_create(dtype, logical=1)
+
+        return h5d.create(parent.id, name=name, tid=tid, space=virt_dspace,
+                          dcpl=dcpl)

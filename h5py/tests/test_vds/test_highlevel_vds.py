@@ -284,6 +284,14 @@ class SlicingTestCase(ut.TestCase):
                          for n in range(1, 5)}
             assert {s.file_name for s in ds.virtual_sources()} == src_files
 
+    def test_mismatched_selections(self):
+        layout = h5.VirtualLayout((4, 100), 'i4', maxshape=(4, None))
+
+        filename = osp.join(self.tmpdir, "1.h5")
+        vsource = h5.VirtualSource(filename, 'data', shape=(100,))
+        with self.assertRaisesRegex(ValueError, r'different number'):
+            layout[0, :49] = vsource[0:100:2]
+
     def tearDown(self):
         shutil.rmtree(self.tmpdir)
 
@@ -360,19 +368,22 @@ class RelativeLinkTestCase(ut.TestCase):
             # dataset
             ds = f.create_dataset('data', (10,), 'f4')
             ds[:] = self.data2
-            # virtual dataset
-            layout = h5.VirtualLayout((2, 10), 'f4')
-            vsource1 = h5.VirtualSource(self.f1, 'data', shape=(10,))
-            vsource2 = h5.VirtualSource(self.f2, 'data', shape=(10,))
-            layout[0] = vsource1
-            layout[1] = vsource2
-            f.create_virtual_dataset('virtual', layout)
+            self.make_vds(f)
+
+    def make_vds(self, f):
+        # virtual dataset
+        layout = h5.VirtualLayout((2, 10), 'f4')
+        vsource1 = h5.VirtualSource(self.f1, 'data', shape=(10,))
+        vsource2 = h5.VirtualSource(self.f2, 'data', shape=(10,))
+        layout[0] = vsource1
+        layout[1] = vsource2
+        f.create_virtual_dataset('virtual', layout)
 
     def test_relative_vds(self):
         with h5.File(self.f2) as f:
             data = f['virtual'][:]
-            assert (data[0] == self.data1).all()
-            assert (data[1] == self.data2).all()
+            np.testing.assert_array_equal(data[0], self.data1)
+            np.testing.assert_array_equal(data[1], self.data2)
 
         # move f2 -> f3
         f3 = osp.join(self.tmpdir, 'testfile3.h5')
@@ -381,8 +392,8 @@ class RelativeLinkTestCase(ut.TestCase):
         with h5.File(f3) as f:
             data = f['virtual'][:]
             assert data.dtype == 'f4'
-            assert (data[0] == self.data1).all()
-            assert (data[1] == self.data2).all()
+            np.testing.assert_array_equal(data[0], self.data1)
+            np.testing.assert_array_equal(data[1], self.data2)
 
         # moving other file
         f4 = osp.join(self.tmpdir, 'testfile4.h5')
@@ -392,11 +403,19 @@ class RelativeLinkTestCase(ut.TestCase):
             data = f['virtual'][:]
             assert data.dtype == 'f4'
             # unavailable data is silently converted to default value
-            assert (data[0] == 0).all()
-            assert (data[1] == self.data2).all()
+            np.testing.assert_array_equal(data[0], 0)
+            np.testing.assert_array_equal(data[1], self.data2)
 
     def tearDown(self):
         shutil.rmtree(self.tmpdir)
+
+class RelativeLinkBuildVDSTestCase(RelativeLinkTestCase):
+    # Test a link to the same file with the virtual dataset created by
+    # File.build_virtual_dataset()
+    def make_vds(self, f):
+        with f.build_virtual_dataset('virtual', (2, 10), dtype='f4') as layout:
+            layout[0] = h5.VirtualSource(self.f1, 'data', shape=(10,))
+            layout[1] = h5.VirtualSource(self.f2, 'data', shape=(10,))
 
 @ut.skipUnless(vds_support,
                'VDS requires HDF5 >= 1.9.233')

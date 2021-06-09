@@ -11,6 +11,7 @@
     Implements support for high-level access to HDF5 groups.
 """
 
+from contextlib import contextmanager
 import posixpath as pp
 import numpy
 
@@ -165,18 +166,6 @@ class Group(HLObject, MutableMappingHDF5):
                 The value to use where there is no data.
 
             """
-            from .vds import VDSmap
-            # Encode filenames and dataset names appropriately.
-            sources = []
-            for vspace, file_name, dset_name, src_space in layout.sources:
-                if file_name == self.file.filename:
-                    # use relative path if the source dataset is in the same
-                    # file, in order to keep the virtual dataset valid in case
-                    # the file is renamed.
-                    file_name = '.'
-                sources.append(VDSmap(vspace, filename_encode(file_name),
-                                      self._e(dset_name), src_space))
-
             with phil:
                 group = self
 
@@ -186,13 +175,41 @@ class Group(HLObject, MutableMappingHDF5):
                         parent_path, name = name.rsplit(b'/', 1)
                         group = self.require_group(parent_path)
 
-                dsid = dataset.make_new_virtual_dset(group, layout.shape,
-                         sources=sources, dtype=layout.dtype, name=name,
-                         maxshape=layout.maxshape, fillvalue=fillvalue)
-
+                dsid = layout.make_dataset(
+                    group, name=name, fillvalue=fillvalue,
+                )
                 dset = dataset.Dataset(dsid)
 
             return dset
+
+        @contextmanager
+        def build_virtual_dataset(
+                self, name, shape, dtype, maxshape=None, fillvalue=None
+        ):
+            """Assemble a virtual dataset in this group.
+
+            This is used as a context manager::
+
+                with f.build_virtual_dataset('virt', (10, 1000), np.uint32) as layout:
+                    layout[0] = h5py.VirtualSource('foo.h5', 'data', (1000,))
+
+            name
+                (str) Name of the new dataset
+            shape
+                (tuple) Shape of the dataset
+            dtype
+                A numpy dtype for data read from the virtual dataset
+            maxshape
+                (tuple, optional) Maximum dimensions if the dataset can grow.
+                Use None for unlimited dimensions.
+            fillvalue
+                The value used where no data is available.
+            """
+            from .vds import VirtualLayout
+            layout = VirtualLayout(shape, dtype, maxshape, self.file.filename)
+            yield layout
+
+            self.create_virtual_dataset(name, layout, fillvalue)
 
     def require_dataset(self, name, shape, dtype, exact=False, **kwds):
         """ Open a dataset, creating it if it doesn't exist.
