@@ -142,34 +142,6 @@ def make_new_dset(parent, shape=None, dtype=None, data=None, name=None,
     return dset_id
 
 
-def make_new_virtual_dset(parent, shape, sources, dtype, name=None,
-                          maxshape=None, fillvalue=None):
-    """ Return a new low-level dataset identifier for a virtual dataset """
-
-    # create the creation property list
-    dcpl = h5p.create(h5p.DATASET_CREATE)
-    if fillvalue is not None:
-        dcpl.set_fill_value(numpy.array([fillvalue]))
-
-    if maxshape is not None:
-        maxshape = tuple(m if m is not None else h5s.UNLIMITED for m in maxshape)
-
-    virt_dspace = h5s.create_simple(shape, maxshape)
-
-    for vspace, fpath, dset, src_dspace in sources:
-        dcpl.set_virtual(vspace, fpath, dset, src_dspace)
-
-    if isinstance(dtype, Datatype):
-        # Named types are used as-is
-        tid = dtype.id
-    else:
-        dtype = numpy.dtype(dtype)
-        tid = h5t.py_create(dtype, logical=1)
-
-    return h5d.create(parent.id, name=name, tid=tid, space=virt_dspace,
-                      dcpl=dcpl)
-
-
 class AstypeWrapper(object):
     """Wrapper to convert data on reading from a dataset.
     """

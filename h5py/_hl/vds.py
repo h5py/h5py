@@ -29,7 +29,6 @@ class VDSmap(namedtuple('VDSmap', ('vspace', 'file_name',
     '''
 
 
-
 vds_support = False
 hdf5_version = version.hdf5_version_tuple[0:3]
 
