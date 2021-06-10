@@ -31,6 +31,7 @@ else
         # pushd hdf5-$HDF5_VERSION
         pushd hdf5
         chmod u+x autogen.sh
+        ./autogen.sh
         if [[ "${HDF5_VERSION%.*}" = "1.12" ]]; then
           ./configure --prefix $HDF5_DIR $EXTRA_MPI_FLAGS --enable-build-mode=production
         else
