@@ -28,7 +28,7 @@ jobs:
     vmImage: ubuntu-16.04
   variables:
     CIBW_BUILD: cp3[789]-manylinux_x86_64
-    CIBW_MANYLINUX_X86_64_IMAGE: docker.io/h5py/manylinux2010_x86_64-hdf5
+    CIBW_MANYLINUX_X86_64_IMAGE: ghcr.io/h5py/manylinux2010_x86_64-hdf5
     # Include less debugging info for smaller wheels (default is -g2)
     CIBW_ENVIRONMENT: "CFLAGS=-g1"
   steps:
@@ -144,15 +144,15 @@ jobs:
       py37:
         python.version: '3.7'
         TOXENV: py37-test-deps,py37-test-mindeps,py37-test-deps-pre,py37-test-deps-tables
-        WHL_FILE: h5py*-cp37-*manylinux1_x86_64.whl
+        WHL_FILE: h5py*-cp37-*manylinux2010_x86_64.whl
       py38:
         python.version: '3.8'
         TOXENV: py38-test-deps,py38-test-mindeps,py38-test-deps-pre
-        WHL_FILE: h5py*-cp38-*manylinux1_x86_64.whl
+        WHL_FILE: h5py*-cp38-*manylinux2010_x86_64.whl
       py39:
         python.version: '3.9'
         TOXENV: py39-test-deps,py39-test-mindeps,py39-test-deps-pre
-        WHL_FILE: h5py*-cp39-*manylinux1_x86_64.whl
+        WHL_FILE: h5py*-cp39-*manylinux2010_x86_64.whl
 
   steps:
     - template: ci/azure-pipelines-test-wheels.yml
