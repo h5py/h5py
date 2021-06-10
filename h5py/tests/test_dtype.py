@@ -195,7 +195,7 @@ class TestOffsets(TestCase):
 
     def test_aligned_data(self):
         dt = np.dtype('i4,f8,i2', align=True)
-        data = np.empty(10, dtype=dt)
+        data = np.zeros(10, dtype=dt)
 
         data['f0'] = np.array(np.random.randint(-100, 100, size=data.size),
                               dtype='i4')
@@ -234,7 +234,7 @@ class TestOffsets(TestCase):
         })
 
         self.assertTrue(dt.itemsize == itemsize)
-        data = np.empty(10, dtype=dt)
+        data = np.zeros(10, dtype=dt)
 
         # don't trust numpy struct handling, keep fields out of band in case content insertion is erroneous
         # yes... this has also been known to happen.
@@ -273,7 +273,7 @@ class TestOffsets(TestCase):
             'formats' : ['<f4', '<i4', '<f8'],
             'offsets' : [0, 16, 8]
         })
-        data = np.empty(10, dtype=dt)
+        data = np.zeros(10, dtype=dt)
         data['f1'] = np.random.rand(data.size)
         data['f2'] = np.random.randint(-10, 11, data.size)
         data['f3'] = np.random.rand(data.size) * -1
@@ -304,8 +304,8 @@ class TestOffsets(TestCase):
 
         with h5py.File(fname, 'w') as f:
             for n, d in dtype_dset_map.items():
-                data = np.arange(10,
-                                 dtype=d)
+                data = np.zeros(10, dtype=d)
+                data[...] = np.arange(10)
 
                 f.create_dataset(n, data=data)
 
