@@ -10,7 +10,7 @@ jobs:
   api-docs:
     runs-on: ubuntu-18.04
     env:
-      HDF5_VERSION: 1.12.0
+      HDF5_VERSION: 1.13.0
       HDF5_DIR: ${{ github.workspace }}/cache/hdf5
       TOXENV: apidocs
     steps:
@@ -24,6 +24,8 @@ jobs:
 
       - name: Build HDF5
         run: |
+          sudo apt-get install ninja-build
+          sudo apt-get install automake autoconf libtool libtool-bin
           ./ci/get_hdf5_if_needed.sh
 
       - name: Setup Python
