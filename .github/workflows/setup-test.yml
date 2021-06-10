@@ -7,7 +7,7 @@ on:
   pull_request:
 
 jobs:
-  api-docs:
+  setup-test:
     runs-on: ubuntu-latest
     env:
       HDF5_VERSION: 1.13.0
@@ -33,9 +33,10 @@ jobs:
         with:
           python-version: '3.8'
 
-      - name: Install pip
+      - name: Install pip and pytest
         run: |
           python -m pip install --upgrade pip
+          python -m pip install pytest
 
       - name: Test h5py
         run: |
