@@ -10,4 +10,4 @@ def insert_request(self):
     cdef hid_t es_id
     cdef hid_t connector_id
     cdef void* request
-    return H5ESinsert_request( es_id,  connector_id, request)
+    return H5ESinsert_request(es_id, connector_id, request)
