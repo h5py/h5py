@@ -1,0 +1,44 @@
+name: Run python setup.py test
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+jobs:
+  api-docs:
+    runs-on: ubuntu-latest
+    env:
+      HDF5_VERSION: 1.13.0
+      HDF5_DIR: ${{ github.workspace }}/cache/hdf5
+      TOXENV: apidocs
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Cache HDF5
+        uses: actions/cache@v2
+        with:
+          path: ${{ env.HDF5_DIR }}
+          key: ${{ runner.os }}-hdf5-${{ env.HDF5_VERSION }}
+
+      - name: Build HDF5
+        run: |
+          sudo apt-get install ninja-build
+          sudo apt-get install automake autoconf libtool libtool-bin
+          ./ci/get_hdf5_if_needed.sh
+
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+
+      - name: Install pip
+        run: |
+          python -m pip install --upgrade pip
+
+      - name: Test h5py
+        run: |
+          python setup.py build
+          python setup.py test        
+
