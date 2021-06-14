@@ -10,9 +10,9 @@ steps:
     # Increment the first number to clear the cache if you change something
     # not captured by the key, e.g. dependencies.
     ${{ if eq(parameters.platform, 'windows') }}:
-      key: 0 | HDF5 | "$(Agent.OS)" | "$(Agent.OSArchitecture)" | "$(HDF5_VERSION)" | "$(HDF5_VSVERSION)" | "$(HDF5_MPI)" | ci/get_hdf5_win.py
+      key: 0 | HDF5 | "$(Agent.OS)" | "$(Agent.Name)" | "$(Agent.OSArchitecture)" | "$(HDF5_VERSION)" | "$(HDF5_VSVERSION)" | "$(HDF5_MPI)" | ci/get_hdf5_win.py
     ${{ if ne(parameters.platform, 'windows') }}:
-      key: 0 | HDF5 | "$(Agent.OS)" | "$(Agent.OSArchitecture)" | "$(HDF5_VERSION)" | "$(HDF5_MPI)" | ci/get_hdf5_if_needed.sh
+      key: 0 | HDF5 | "$(Agent.OS)" | "$(Agent.Name)" | "$(Agent.OSArchitecture)" | "$(HDF5_VERSION)" | "$(HDF5_MPI)" | ci/get_hdf5_if_needed.sh
     path: $(HDF5_CACHE_DIR)
   condition: and(succeeded(), ne(variables['HDF5_VERSION'], ''))
 
