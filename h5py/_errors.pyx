@@ -84,10 +84,10 @@ IF HDF5_VERSION > (1, 12, 0):
     _exact_table[(H5E_DATASET, H5E_CANTCREATE)] = ValueError  # bad param for dataset setup
 
 IF HDF5_VERSION < (1, 13, 0):
-    _minor_table["H5E_BADATOM"] = ValueError  # Unable to find atom information (already closed?)
+    _minor_table[H5E_BADATOM] = ValueError  # Unable to find atom information (already closed?)
     _exact_table[(H5E_SYM, H5E_CANTINIT)] = ValueError  # Object already exists/1.8
 ELSE:
-    _minor_table["H5E_BADID"] = ValueError  # Unable to find ID information
+    _minor_table[H5E_BADID] = ValueError  # Unable to find ID information
     _exact_table[(H5E_SYM, H5E_CANTCREATE)] = ValueError  # Object already exists
 
 cdef struct err_data_t:
