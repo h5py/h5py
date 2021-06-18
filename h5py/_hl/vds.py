@@ -194,7 +194,7 @@ class VirtualLayout(object):
             return b'.'
         return filename_encode(src_filename)
 
-    def get_dcpl(self, dst_filename=None):
+    def get_dcpl(self, dst_filename):
         """Get the property list containing virtual dataset mappings
 
         If the destination filename wasn't known when the VirtualLayout was
