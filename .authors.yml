@@ -898,3 +898,8 @@
   num_commits: 1
   first_commit: 2021-03-15 16:31:00
   github: TomDonoghue
+- name: Samuel Dowling
+  email: samuel.dowling@protonmail.com
+  num_commits: 1
+  first_commit: 2021-05-11 10:15:56
+  github: samuel-emrys

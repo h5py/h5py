@@ -604,6 +604,9 @@ cdef extern from "hdf5.h":
   # --- Predefined datatypes --------------------------------------------------
 
   cdef hid_t H5T_NATIVE_B8
+  cdef hid_t H5T_NATIVE_B16
+  cdef hid_t H5T_NATIVE_B32
+  cdef hid_t H5T_NATIVE_B64
   cdef hid_t H5T_NATIVE_CHAR
   cdef hid_t H5T_NATIVE_SCHAR
   cdef hid_t H5T_NATIVE_UCHAR
