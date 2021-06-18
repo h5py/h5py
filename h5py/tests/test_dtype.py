@@ -386,7 +386,7 @@ class TestDateTime(TestCase):
                     self.assertEqual(arr.dtype, dset.dtype)
 
 @ut.skipUnless(tables is not None, 'tables is required')
-class TestB8(TestCase):
+class TestBitfield(TestCase):
 
     """
     Test H5T_NATIVE_B8 reading
@@ -466,6 +466,7 @@ class TestB8(TestCase):
 
     def _test_b8(self, arr1, expected_default_cast_dtype, cast_dtype=None):
         path = self.mktemp()
+
         with tables.open_file(path, 'w') as f:
             if arr1.dtype.names:
                 f.create_table('/', 'test', obj=arr1)
@@ -491,6 +492,23 @@ class TestB8(TestCase):
             with dset.astype(cast_dtype):
                 arr3 = dset[:]
             self.assertArrayEqual(arr3, arr1.astype(cast_dtype, copy=False))
+
+    def test_b16_uint16(self):
+        arr1 = np.array(np.arange(10), dtype=np.dtype(np.uint16))
+        path = self.mktemp()
+        with h5py.File(path, 'w') as f:
+            space = h5py.h5s.create_simple(arr1.shape)
+            dset_id = h5py.h5d.create(f.id, b'test', h5py.h5t.STD_B16LE, space)
+            dset = h5py.Dataset(dset_id)
+            dset[:] = arr1
+
+        with h5py.File(path, 'r') as f:
+            dset = f['test']
+            arr2 = dset[:]
+            self.assertArrayEqual(
+                arr2,
+                arr1.astype(np.dtype(np.uint16), copy=False)
+            )
 
 def test_opaque(writable_file):
     # opaque without an h5py tag corresponds to numpy void dtypes
