@@ -372,6 +372,8 @@ disk when the file is closed.</p></li>
 <li><p><a class="reference internal" href="h5f.html#h5py.h5f.LIBVER_EARLIEST" title="h5py.h5f.LIBVER_EARLIEST"><code class="xref py py-data docutils literal notranslate"><span class="pre">h5f.LIBVER_EARLIEST</span></code></a></p></li>
 <li><p><a class="reference internal" href="h5f.html#h5py.h5f.LIBVER_V18" title="h5py.h5f.LIBVER_V18"><code class="xref py py-data docutils literal notranslate"><span class="pre">h5f.LIBVER_V18</span></code></a> (HDF5 1.10.2 or later)</p></li>
 <li><p><a class="reference internal" href="h5f.html#h5py.h5f.LIBVER_V110" title="h5py.h5f.LIBVER_V110"><code class="xref py py-data docutils literal notranslate"><span class="pre">h5f.LIBVER_V110</span></code></a> (HDF5 1.10.2 or later)</p></li>
+<li><p><code class="xref py py-data docutils literal notranslate"><span class="pre">h5f.LIBVER_V112</span></code> (HDF5 1.11.4 or later)</p></li>
+<li><p><code class="xref py py-data docutils literal notranslate"><span class="pre">h5f.LIBVER_V114</span></code> (HDF5 1.13.0 or later)</p></li>
 <li><p><a class="reference internal" href="h5f.html#h5py.h5f.LIBVER_LATEST" title="h5py.h5f.LIBVER_LATEST"><code class="xref py py-data docutils literal notranslate"><span class="pre">h5f.LIBVER_LATEST</span></code></a></p></li>
 </ul>
 </dd></dl>
@@ -488,11 +490,13 @@ None or support the buffer protocol.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropFAID.set_libver_bounds">
 <span class="sig-name descname"><span class="pre">set_libver_bounds</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">INT</span> <span class="pre">low</span></em>, <em class="sig-param"><span class="pre">INT</span> <span class="pre">high</span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropFAID.set_libver_bounds" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set the compatibility level for file format.  Legal values are:</p>
+<dd><p>Set the compatibility level for file format. Legal values are:</p>
 <ul class="simple">
 <li><p><a class="reference internal" href="h5f.html#h5py.h5f.LIBVER_EARLIEST" title="h5py.h5f.LIBVER_EARLIEST"><code class="xref py py-data docutils literal notranslate"><span class="pre">h5f.LIBVER_EARLIEST</span></code></a></p></li>
 <li><p><a class="reference internal" href="h5f.html#h5py.h5f.LIBVER_V18" title="h5py.h5f.LIBVER_V18"><code class="xref py py-data docutils literal notranslate"><span class="pre">h5f.LIBVER_V18</span></code></a> (HDF5 1.10.2 or later)</p></li>
 <li><p><a class="reference internal" href="h5f.html#h5py.h5f.LIBVER_V110" title="h5py.h5f.LIBVER_V110"><code class="xref py py-data docutils literal notranslate"><span class="pre">h5f.LIBVER_V110</span></code></a> (HDF5 1.10.2 or later)</p></li>
+<li><p><code class="xref py py-data docutils literal notranslate"><span class="pre">h5f.LIBVER_V112</span></code> (HDF5 1.11.4 or later)</p></li>
+<li><p><code class="xref py py-data docutils literal notranslate"><span class="pre">h5f.LIBVER_V114</span></code> (HDF5 1.13.0 or later)</p></li>
 <li><p><a class="reference internal" href="h5f.html#h5py.h5f.LIBVER_LATEST" title="h5py.h5f.LIBVER_LATEST"><code class="xref py py-data docutils literal notranslate"><span class="pre">h5f.LIBVER_LATEST</span></code></a></p></li>
 </ul>
 </dd></dl>
@@ -1172,7 +1176,7 @@ virtual dataset’s creation property list.</p>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2014, Andrew Collette and contributors.
-      Last updated on Jun 14, 2021.
+      Last updated on Jun 18, 2021.
       Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.0.2.
     </div>
   </body>
