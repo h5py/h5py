@@ -466,7 +466,7 @@ class TestCreateFillvalue(BaseDataset):
         self.assertAlmostEqual(dset[4], v)
 
     def test_exc(self):
-        """ Bogus fill value raises TypeError """
+        """ Bogus fill value raises ValueError """
         with self.assertRaises(ValueError):
             dset = self.f.create_dataset('foo', (10,),
                     dtype=[('a', 'i'), ('b', 'f')], fillvalue=42)
