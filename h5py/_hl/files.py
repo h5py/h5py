@@ -319,7 +319,7 @@ class File(Group):
         else:
             raise RuntimeError('SWMR support is not available in HDF5 version {}.{}.{}.'.format(*hdf5_version))
 
-    def __init__(self, name, mode=None, driver=None,
+    def __init__(self, name, mode='r', driver=None,
                  libver=None, userblock_size=None, swmr=False,
                  rdcc_nslots=None, rdcc_nbytes=None, rdcc_w0=None,
                  track_order=None, fs_strategy=None, fs_persist=False, fs_threshold=1,
@@ -428,8 +428,6 @@ class File(Group):
 
             if track_order is None:
                 track_order = h5.get_config().track_order
-            if mode is None:
-                mode = h5.get_config().default_file_mode  # default: 'r'
 
             if fs_strategy and mode not in ('w', 'w-', 'x'):
                 raise ValueError("Unable to set file space strategy of an existing file")
