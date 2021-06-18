@@ -372,7 +372,7 @@
   alternate_emails:
   - thomas.kluyver@xfel.eu
   - takowl@gmail.com
-  num_commits: 570
+  num_commits: 576
   first_commit: 2018-06-23 08:47:27
   github: takluyver
 - name: Matt Zwier
@@ -859,7 +859,7 @@
   num_commit: 2
   first_commit: 2020-11-12 08:35:38
   github: satra
-  num_commits: 19
+  num_commits: 24
 - name: Yaroslav Halchenko
   email: debian@onerussian.com
   alternate_emails:
@@ -888,3 +888,18 @@
   num_commits: 1
   first_commit: 2020-12-29 19:51:32
   github: timgates42
+- name: Thomas Donoghue
+  email: tdonoghue.research@gmail.com
+  alternate_emails:
+  - tdonoghue@ucsd.edu
+  aliases:
+  - Tom Donoghue
+  - Tom
+  num_commits: 1
+  first_commit: 2021-03-15 16:31:00
+  github: TomDonoghue
+- name: Samuel Dowling
+  email: samuel.dowling@protonmail.com
+  num_commits: 1
+  first_commit: 2021-05-11 10:15:56
+  github: samuel-emrys

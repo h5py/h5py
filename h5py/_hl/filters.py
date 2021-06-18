@@ -121,6 +121,13 @@ class FilterRefBase(Mapping):
     def __hash__(self):
         return hash((self.filter_id, self.filter_options))
 
+    def __eq__(self, other):
+        return (
+            isinstance(other, FilterRefBase)
+            and self.filter_id == other.filter_id
+            and self.filter_options == other.filter_options
+        )
+
     def __len__(self):
         return len(self._kwargs)
 

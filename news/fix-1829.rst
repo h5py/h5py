@@ -1,0 +1,29 @@
+New features
+------------
+
+* Validate key types when accessing groups.
+
+Deprecations
+------------
+
+* <news item>
+
+Exposing HDF5 functions
+-----------------------
+
+* <news item>
+
+Bug fixes
+---------
+
+* <news item>
+
+Building h5py
+-------------
+
+* <news item>
+
+Development
+-----------
+
+* <news item>

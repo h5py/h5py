@@ -22,7 +22,7 @@ if '' not in sys.path:
 import setup_build, setup_configure
 
 
-VERSION = '3.2.0'
+VERSION = '3.2.1'
 
 # Minimum supported versions of Numpy & Cython depend on the Python version
 NUMPY_MIN_VERSIONS = [
@@ -54,8 +54,8 @@ SETUP_REQUIRES = [
 ]
 
 if setup_configure.mpi_enabled():
-    RUN_REQUIRES.append('mpi4py >=3.0.0')
-    SETUP_REQUIRES.append("mpi4py ==3.0.0; python_version<'3.8'")
+    RUN_REQUIRES.append('mpi4py >=3.0.2')
+    SETUP_REQUIRES.append("mpi4py ==3.0.2; python_version<'3.8'")
     SETUP_REQUIRES.append("mpi4py ==3.0.3; python_version>='3.8'")
 
 # Set the environment variable H5PY_SETUP_REQUIRES=0 if we need to skip

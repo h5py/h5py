@@ -41,6 +41,10 @@ if hdf5_version >= (1, 11, 4):
     libver_dict.update({'v112': h5f.LIBVER_V112})
     libver_dict_r.update({h5f.LIBVER_V112: 'v112'})
 
+if hdf5_version >= (1, 13, 0):
+    libver_dict.update({'v114': h5f.LIBVER_V114})
+    libver_dict_r.update({h5f.LIBVER_V114: 'v114'})
+
 
 def _set_fapl_mpio(plist, **kwargs):
     """Set file access property list for mpio driver"""
@@ -205,7 +209,7 @@ def make_fid(name, mode, userblock_size, fapl, fcpl=None, swmr=False):
         # existing one (ACC_EXCL)
         try:
             fid = h5f.open(name, h5f.ACC_RDWR, fapl=fapl)
-        except OSError:
+        except FileNotFoundError:
             fid = h5f.create(name, h5f.ACC_EXCL, fapl=fapl, fcpl=fcpl)
     else:
         raise ValueError("Invalid mode; must be one of r, r+, w, w-, x, a")
@@ -256,7 +260,7 @@ class File(Group):
                    h5fd.MPIPOSIX: 'mpiposix',
                    h5fd.fileobj_driver: 'fileobj'}
         if ros3:
-            drivers[h5fd.ROS3] = 'ros3'
+            drivers[h5fd.ROS3D] = 'ros3'
         return drivers.get(self.id.get_access_plist().get_driver(), 'unknown')
 
     @property
@@ -460,19 +464,8 @@ class File(Group):
 
                 # Close file-resident objects first, then the files.
                 # Otherwise we get errors in MPI mode.
-                id_list = h5f.get_obj_ids(self.id, ~h5f.OBJ_FILE)
-                file_list = h5f.get_obj_ids(self.id, h5f.OBJ_FILE)
-
-                id_list = [x for x in id_list if h5i.get_file_id(x).id == self.id.id]
-                file_list = [x for x in file_list if h5i.get_file_id(x).id == self.id.id]
-
-                for id_ in id_list:
-                    while id_.valid:
-                        h5i.dec_ref(id_)
-
-                for id_ in file_list:
-                    while id_.valid:
-                        h5i.dec_ref(id_)
+                self.id._close_open_objects(h5f.OBJ_LOCAL | ~h5f.OBJ_FILE)
+                self.id._close_open_objects(h5f.OBJ_LOCAL | h5f.OBJ_FILE)
 
                 self.id.close()
                 _objects.nonlocal_close()
