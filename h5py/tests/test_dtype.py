@@ -494,7 +494,7 @@ class TestBitfield(TestCase):
             self.assertArrayEqual(arr3, arr1.astype(cast_dtype, copy=False))
 
     def test_b16_uint16(self):
-        arr1 = np.array(np.arange(10), dtype=np.dtype(np.uint16))
+        arr1 = np.arange(10, dtype=np.uint16)
         path = self.mktemp()
         with h5py.File(path, 'w') as f:
             space = h5py.h5s.create_simple(arr1.shape)
@@ -504,11 +504,7 @@ class TestBitfield(TestCase):
 
         with h5py.File(path, 'r') as f:
             dset = f['test']
-            arr2 = dset[:]
-            self.assertArrayEqual(
-                arr2,
-                arr1.astype(np.dtype(np.uint16), copy=False)
-            )
+            self.assertArrayEqual(dset[:], arr1)
 
 def test_opaque(writable_file):
     # opaque without an h5py tag corresponds to numpy void dtypes
