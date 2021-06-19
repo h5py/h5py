@@ -169,19 +169,19 @@ class VirtualLayout(object):
         self.shape = (shape,) if isinstance(shape, int) else shape
         self.dtype = dtype
         self.maxshape = (maxshape,) if isinstance(maxshape, int) else maxshape
-        self.filename = filename
+        self._filename = filename
         self._src_filenames = set()
         self.dcpl = h5p.create(h5p.DATASET_CREATE)
 
     def __setitem__(self, key, source):
         sel = select(self.shape, key, dataset=None)
         _convert_space_for_key(sel.id, key)
-        src_filename = self._source_file_name(source.path, self.filename)
+        src_filename = self._source_file_name(source.path, self._filename)
 
         self.dcpl.set_virtual(
             sel.id, src_filename, source.name.encode('utf-8'), source.sel.id
         )
-        if self.filename is None:
+        if self._filename is None:
             self._src_filenames.add(src_filename)
 
     @staticmethod
@@ -194,14 +194,21 @@ class VirtualLayout(object):
             return b'.'
         return filename_encode(src_filename)
 
-    def get_dcpl(self, dst_filename):
+    def _get_dcpl(self, dst_filename):
         """Get the property list containing virtual dataset mappings
 
         If the destination filename wasn't known when the VirtualLayout was
         created, it is handled here.
         """
         dst_filename = filename_encode(dst_filename)
-        if (self.filename is None) and (dst_filename in self._src_filenames):
+        if self._filename is not None:
+            # filename was known in advance; check dst_filename matches
+            if dst_filename != filename_encode(self._filename):
+                raise Exception(f"{dst_filename!r} != {self._filename!r}")
+            return self.dcpl
+
+        # destination file not known in advance
+        if dst_filename in self._src_filenames:
             # At least 1 source file is the same as the destination file,
             # but we didn't know this when making the mapping. Copy the mappings
             # to a new property list, replacing the dest filename with '.'
@@ -216,11 +223,11 @@ class VirtualLayout(object):
                 )
             return new_dcpl
         else:
-            return self.dcpl
+            return self.dcpl  # Mappings are all from other files
 
     def make_dataset(self, parent, name, fillvalue=None):
         """ Return a new low-level dataset identifier for a virtual dataset """
-        dcpl = self.get_dcpl(parent.file.filename)
+        dcpl = self._get_dcpl(parent.file.filename)
 
         if fillvalue is not None:
             dcpl.set_fill_value(np.array([fillvalue]))
