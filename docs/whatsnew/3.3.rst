@@ -1,0 +1,49 @@
+What's new in h5py 3.3
+======================
+
+New features
+------------
+
+* Compatibility with the upcoming HDF5 1.12.1 and possibly 1.14 (:pr:`1875`).
+* H5T_BITFIELD types will now be cast to their ``numpy.uint`` equivalent by default
+  (:issue:`1258`). This means that no knowledge of mixed type compound dataset
+  schemas is required to read these types, and can simply be read as follows:
+
+  .. code::
+
+     arr = dset[:]
+
+  Alternatively, 8-bit bitfields can still be cast to booleans explicitly:
+
+  .. code::
+
+     arr = dset.astype(numpy.bool_)[:]
+
+* Key types are validated when accessing groups, to give more helpful errors
+  when a group is indexed like a dataset (:pr:`1856`).
+* A new :meth:`.Group.build_virtual_dataset` method acting as a context manager
+  to assemble virtual datasets (:pr:`1905`).
+* If the source and target of a virtual dataset mapping have different numbers
+  of points, an error should now be thrown when you make the mapping in the
+  :class:`VirtualLayout`, rather than later when writing this into the file.
+  This should make it easier to find the source of such errors.
+
+Deprecations
+------------
+
+* Linux wheels are now manylinux2010 rather than manylinux1
+* The ``default_file_mode`` config option is deprecated, and setting it to
+  values other than 'r' (for read-only mode) is no longer allowed. Pass the
+  mode when creating a :class:`.File` object instead of setting a global
+  default.
+
+Bug fixes
+---------
+
+* Trying to open a file in append mode (``'a'``) should now give clearer
+  error messages when the file exists but can't be opened (:pr:`1902`).
+* Protect :func:`h5py.h5f.get_obj_ids` against garbage collection invalidating
+  HDF5 IDs while it is retrieving them (:issue:`1852`).
+* Make file closing more robust, including when closing files while the
+  interpreter is shutting down, by using lower-level code to close HDF5 IDs
+  of objects inside the file (:issue:`1495`).
