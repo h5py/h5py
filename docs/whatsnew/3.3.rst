@@ -47,4 +47,3 @@ Bug fixes
 * Make file closing more robust, including when closing files while the
   interpreter is shutting down, by using lower-level code to close HDF5 IDs
   of objects inside the file (:issue:`1495`).
-
