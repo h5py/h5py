@@ -161,6 +161,9 @@ class AstypeWrapper(object):
         # pylint: disable=protected-access
         self._dset._local.astype = None
 
+    def __len__(self):
+        return len(self._dset)
+
 
 class AsStrWrapper:
     """Wrapper to decode strings on reading the dataset"""
@@ -186,6 +189,9 @@ class AsStrWrapper:
             b.decode(self.encoding, self.errors) for b in bytes_arr.flat
         ], dtype=object).reshape(bytes_arr.shape)
 
+    def __len__(self):
+        return len(self._dset)
+
 
 class FieldsWrapper:
     """Wrapper to extract named fields from a dataset with a struct dtype"""
@@ -203,6 +209,9 @@ class FieldsWrapper:
         if self.extract_field is not None:
             data = data[self.extract_field]
         return data
+
+    def __len__(self):
+        return len(self._dset)
 
 
 def readtime_dtype(basetype, names):
