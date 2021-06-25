@@ -32,7 +32,26 @@ matrix:
       - HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION
       - H5PY_ENFORCE_COVERAGE=yes
       os: linux-ppc64le
-
+    - os: linux
+      python: 3.7
+      virt: vm
+      group: edge
+      arch: arm64
+      env:
+        - TOXENV=py37-test-deps
+        - HDF5_VERSION=1.10.5
+        - HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION
+        - H5PY_ENFORCE_COVERAGE=yes
+    - os: linux
+      python: 3.8
+      virt: vm
+      group: edge
+      arch: arm64
+      env:
+        - TOXENV=py38-test-deps
+        - HDF5_VERSION=1.10.5
+        - HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION
+        - H5PY_ENFORCE_COVERAGE=yes
 before_install:
   # - export PATH=/usr/lib/ccache:$PATH
   - ccache -s
