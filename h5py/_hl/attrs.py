@@ -92,6 +92,11 @@ class AttributeManager(base.MutableMappingHDF5, base.CommonStateObject):
         """
         return h5a.open(self._id, self._e(name))
 
+    def order_tracked(self):
+        """Whether attribute creation order is tracked (T/F)"""
+        cpl = self._id.get_create_plist()
+        return cpl.get_attr_creation_order() > 0
+
     @with_phil
     def __setitem__(self, name, value):
         """ Set a new attribute, overwriting any existing attribute.

@@ -312,9 +312,13 @@ class TestDrivers(TestCase):
         with self.assertRaises(ValueError):
             File(tf, 'w', driver='core')
 
-
-    # TODO: family driver tests
-
+    def test_family(self):
+        """multi-file driver"""
+        file_family = self.mktemp('data%d.h5')
+        fid = File(file_family, 'w', driver='family')
+        self.assertTrue(fid)
+        self.assertEqual(fid.driver, 'family')
+        fid.close()
 
 @ut.skipUnless(h5py.version.hdf5_version_tuple < (1, 10, 2),
                'Requires HDF5 before 1.10.2')

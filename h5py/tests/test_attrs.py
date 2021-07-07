@@ -251,11 +251,13 @@ class TestTrackOrder(BaseAttrs):
         attrs = self.fill_attrs(track_order=True)  # creation order
         self.assertEqual(list(attrs),
                          [str(i) for i in range(100)])
+        self.assertEqual(attrs.order_tracked(), True)
 
     def test_no_track_order(self):
         attrs = self.fill_attrs(track_order=False)  # name alphanumeric
         self.assertEqual(list(attrs),
                          sorted([str(i) for i in range(100)]))
+        self.assertEqual(attrs.order_tracked(), False)
 
 
 class TestDatatype(BaseAttrs):
