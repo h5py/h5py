@@ -209,7 +209,18 @@ def make_fid(name, mode, userblock_size, fapl, fcpl=None, swmr=False):
         # existing one (ACC_EXCL)
         try:
             fid = h5f.open(name, h5f.ACC_RDWR, fapl=fapl)
-        except FileNotFoundError:
+        # Not all drivers raise FileNotFoundError (commented those that do not)
+        except FileNotFoundError if fapl.get_driver() in (
+            h5fd.SEC2,
+            # h5fd.STDIO,
+            # h5fd.CORE,
+            h5fd.FAMILY,
+            h5fd.WINDOWS,
+            # h5fd.MPIO,
+            # h5fd.MPIPOSIX,
+            h5fd.fileobj_driver,
+            h5fd.ROS3D if ros3 else -1,
+        ) else OSError:
             fid = h5f.create(name, h5f.ACC_EXCL, fapl=fapl, fcpl=fcpl)
     else:
         raise ValueError("Invalid mode; must be one of r, r+, w, w-, x, a")
