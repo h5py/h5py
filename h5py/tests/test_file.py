@@ -784,7 +784,6 @@ class TestMPI(object):
         """ Testing creation of file with append """
         from mpi4py import MPI
 
-        if os.path.exists(mpi_file_name): os.remove(mpi_file_name)
         with File(mpi_file_name, 'a', driver='mpio', comm=MPI.COMM_WORLD) as f:
             assert f
             assert f.driver == 'mpio'
