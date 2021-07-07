@@ -1,0 +1,4 @@
+Bug fixes
+---------
+
+* Fix bug introduced in version 3.3 that did not allow the creation of files using the flag "a" for certain drivers (e.g. mpiio, core and stdio)
