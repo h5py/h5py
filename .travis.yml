@@ -1,5 +1,5 @@
 language: python
-
+services: docker
 dist: xenial
 
 notifications:
@@ -38,30 +38,38 @@ matrix:
       group: edge
       arch: arm64
       env:
+        - secure: j7516m880cagQvknX5hkyucFo/VImiNLwmTUfpWs+naUo6+yzyI/9qH4/4ba6woY42tZNO9gZ9p6o7nL/UDSr+ChT9tWBBqbAh3gQWqWonDDzvym3EOTdHXyERd1ecgYtAg02jAcrbgiNaIG+5BbB31eiRrRdEz+XE1Lfqz37xair1pM+ZIOZ2E9ZFecmYWrLMn60pwcTWQI4alFLZU5F+rauSHL6pnBorLLv3HewbBPXsuE5W90Nep8S01aTNPWFGYde6hXhH1E/HOM5u3mAdWBzGNgbqsOd58KEm/U9MS/qDAFJyPbyRPIxGrZB2UcCvRgWND6F5Kgvbav3Qvd6RyncULnf/mrKFR8ic9gbIO9tepf16d4EEs+tFHNlXiqk9ByglUEHgphTs7O1JOPFceI1O9pBk3RPzqzC10Wn3BwfPScYd6kHLDBxCCHMdcDOBV2/Gb5XYrwkhMPnDQLi5Tzo6TM9meYgBktuY5tyATc6Q7e/+hl5IasaRI5KmBZl8sQxY1bP6FcMxXdMZ//8sBbMRogAl+3Z2kbzaIBvl9ZutMMJlXeTUt3E4ixEnfkxe9xSBhkBwuP7MdSEQn8ndCKZ6dV9cLxmODM8DgkW7RjQ6BwAdYwjYGc2UIpAE4iabJZiXwPdqVH7R52DwVmk6pzYdfZFJQfDMJ8PglLpes=
         - TOXENV=py37-test-deps
         - HDF5_VERSION=1.10.5
         - HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION
         - H5PY_ENFORCE_COVERAGE=yes
-    - os: linux
-      python: 3.8
-      virt: vm
-      group: edge
-      arch: arm64
-      env:
-        - TOXENV=py38-test-deps
-        - HDF5_VERSION=1.10.5
-        - HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION
-        - H5PY_ENFORCE_COVERAGE=yes
-before_install:
-  # - export PATH=/usr/lib/ccache:$PATH
-  - ccache -s
+        - CIBW_BUILD: cp3[789]-*
+        - CIBW_MANYLINUX_AARCH64_IMAGE: ghcr.io/h5py/manylinux2014_aarch64-hdf5
+        - CIBW_ARCHS: aarch64
+
+  before_install:
+    # - export PATH=/usr/lib/ccache:$PATH
+    - ccache -s
 
 install:
-  - pip install -U tox codecov virtualenv
-  - ci/get_hdf5_if_needed.sh
-  - ls -lRa $HDF5_CACHE_DIR
+    - pip install -U tox codecov virtualenv
+    - ci/get_hdf5_if_needed.sh
+    - ls -lRa $HDF5_CACHE_DIR
+    - if [[ $CIBW_ARCHS == aarch64 ]]; then python -m pip install cibuildwheel==1.9.0; fi
+
 script:
-  - tox
+    - tox
+    - if [[ $CIBW_ARCHS == aarch64 ]]; then python3 -m cibuildwheel --output-dir wheelhouse; fi
 
 after_success:
-  - python ci/upload_coverage.py
+    - python ci/upload_coverage.py
+  
+  # trigger an upload to the shared ecosystem
+  # infrastructure at: https://anaconda.org/scipy-wheels-nightly
+  # for cron jobs only (restricted to master branch once
+  # per week)
+  # ANACONDA_ORG_UPLOAD_TOKEN is a secret token
+  # used in Travis CI config, originally
+  # generated at anaconda.org for scipy-wheels-nightly (cron jobs).
+    - if [[ $CIBW_ARCHS == aarch64 && "$TRAVIS_EVENT_TYPE" == "cron" ]]; then bash ci/upload_wheels.sh; fi
+
