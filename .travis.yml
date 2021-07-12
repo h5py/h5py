@@ -45,6 +45,7 @@ matrix:
         - H5PY_ENFORCE_COVERAGE=yes
         - CIBW_BUILD: cp3[789]-*
         - CIBW_MANYLINUX_AARCH64_IMAGE: ghcr.io/h5py/manylinux2014_aarch64-hdf5
+        - CIBW_BEFORE_BUILD: ./ci/get_hdf5_arm64.sh
         - CIBW_ARCHS: aarch64
 
   before_install:
