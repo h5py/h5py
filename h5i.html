@@ -58,13 +58,13 @@ ObjectID instances by abusing this function.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="h5py.h5i.get_file_id">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5i.</span></span><span class="sig-name descname"><span class="pre">get_file_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">ObjectID</span> <span class="pre">obj</span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">FileID</span><a class="headerlink" href="#h5py.h5i.get_file_id" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5i.</span></span><span class="sig-name descname"><span class="pre">get_file_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">ObjectID</span> <span class="pre">obj</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">FileID</span></span></span><a class="headerlink" href="#h5py.h5i.get_file_id" title="Permalink to this definition">¶</a></dt>
 <dd><p>Obtain an identifier for the file in which this object resides.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="h5py.h5i.get_name">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5i.</span></span><span class="sig-name descname"><span class="pre">get_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">ObjectID</span> <span class="pre">obj</span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">STRING</span> <span class="pre">name,</span> <span class="pre">or</span> <span class="pre">None</span><a class="headerlink" href="#h5py.h5i.get_name" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5i.</span></span><span class="sig-name descname"><span class="pre">get_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">ObjectID</span> <span class="pre">obj</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">STRING</span> <span class="pre">name,</span> <span class="pre">or</span> <span class="pre">None</span></span></span><a class="headerlink" href="#h5py.h5i.get_name" title="Permalink to this definition">¶</a></dt>
 <dd><p>Determine (a) name of an HDF5 object.  Because an object has as many
 names as there are hard links to it, this may not be unique.</p>
 <p>If the identifier is invalid or is not associated with a name
@@ -74,13 +74,13 @@ names as there are hard links to it, this may not be unique.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="h5py.h5i.get_ref">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5i.</span></span><span class="sig-name descname"><span class="pre">get_ref</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">ObjectID</span> <span class="pre">obj</span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">INT</span><a class="headerlink" href="#h5py.h5i.get_ref" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5i.</span></span><span class="sig-name descname"><span class="pre">get_ref</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">ObjectID</span> <span class="pre">obj</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">INT</span></span></span><a class="headerlink" href="#h5py.h5i.get_ref" title="Permalink to this definition">¶</a></dt>
 <dd><p>Retrieve the reference count for the given object.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="h5py.h5i.get_type">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5i.</span></span><span class="sig-name descname"><span class="pre">get_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">ObjectID</span> <span class="pre">obj</span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">INT</span> <span class="pre">type_code</span><a class="headerlink" href="#h5py.h5i.get_type" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5i.</span></span><span class="sig-name descname"><span class="pre">get_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">ObjectID</span> <span class="pre">obj</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">INT</span> <span class="pre">type_code</span></span></span><a class="headerlink" href="#h5py.h5i.get_type" title="Permalink to this definition">¶</a></dt>
 <dd><p>Determine the HDF5 typecode of an arbitrary HDF5 object.  The return
 value is always one of the type constants defined in this module; if
 the <code class="xref py py-data docutils literal notranslate"><span class="pre">ID</span></code> is invalid, <a class="reference internal" href="#h5py.h5i.BADID" title="h5py.h5i.BADID"><code class="xref py py-data docutils literal notranslate"><span class="pre">BADID</span></code></a> is returned.</p>
@@ -190,7 +190,7 @@ ObjectID instances by abusing this function.</p>
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
       <input type="submit" value="Go" />
     </form>
     </div>
@@ -221,8 +221,8 @@ ObjectID instances by abusing this function.</p>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2014, Andrew Collette and contributors.
-      Last updated on Jul 08, 2021.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.0.3.
+      Last updated on Jul 20, 2021.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.1.1.
     </div>
   </body>
 </html>

@@ -50,7 +50,7 @@
 <h2>Functional API<a class="headerlink" href="#functional-api" title="Permalink to this headline">¶</a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="h5py.h5o.open">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5o.</span></span><span class="sig-name descname"><span class="pre">open</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">ObjectID</span> <span class="pre">loc</span></em>, <em class="sig-param"><span class="pre">STRING</span> <span class="pre">name</span></em>, <em class="sig-param"><span class="pre">PropID</span> <span class="pre">lapl=None</span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">ObjectID</span><a class="headerlink" href="#h5py.h5o.open" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5o.</span></span><span class="sig-name descname"><span class="pre">open</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">ObjectID</span> <span class="pre">loc</span></em>, <em class="sig-param"><span class="pre">STRING</span> <span class="pre">name</span></em>, <em class="sig-param"><span class="pre">PropID</span> <span class="pre">lapl=None</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ObjectID</span></span></span><a class="headerlink" href="#h5py.h5o.open" title="Permalink to this definition">¶</a></dt>
 <dd><p>Open a group, dataset, or named datatype attached to an existing group.</p>
 </dd></dl>
 
@@ -96,7 +96,7 @@ below it.  This behavior is modified via the “copypl” property list.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="h5py.h5o.visit">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5o.</span></span><span class="sig-name descname"><span class="pre">visit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">ObjectID</span> <span class="pre">loc</span></em>, <em class="sig-param"><span class="pre">CALLABLE</span> <span class="pre">func</span></em>, <em class="sig-param"><span class="pre">**kwds</span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">&lt;Return</span> <span class="pre">value</span> <span class="pre">from</span> <span class="pre">func&gt;</span><a class="headerlink" href="#h5py.h5o.visit" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5o.</span></span><span class="sig-name descname"><span class="pre">visit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">ObjectID</span> <span class="pre">loc</span></em>, <em class="sig-param"><span class="pre">CALLABLE</span> <span class="pre">func</span></em>, <em class="sig-param"><span class="pre">**kwds</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">&lt;Return</span> <span class="pre">value</span> <span class="pre">from</span> <span class="pre">func&gt;</span></span></span><a class="headerlink" href="#h5py.h5o.visit" title="Permalink to this definition">¶</a></dt>
 <dd><p>Iterate a function or callable object over all objects below the
 specified one.  Your callable should conform to the signature:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">func</span><span class="p">(</span><span class="n">STRING</span> <span class="n">name</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="n">Result</span>
@@ -128,7 +128,7 @@ provides a literal “.” as the first value.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="h5py.h5o.get_info">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5o.</span></span><span class="sig-name descname"><span class="pre">get_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">ObjectID</span> <span class="pre">loc</span></em>, <em class="sig-param"><span class="pre">STRING</span> <span class="pre">name=</span></em>, <em class="sig-param"><span class="pre">INT</span> <span class="pre">index=</span></em>, <em class="sig-param"><span class="pre">**kwds</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#h5py.h5o.ObjInfo" title="h5py.h5o.ObjInfo"><span class="pre">ObjInfo</span></a><a class="headerlink" href="#h5py.h5o.get_info" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5o.</span></span><span class="sig-name descname"><span class="pre">get_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">ObjectID</span> <span class="pre">loc</span></em>, <em class="sig-param"><span class="pre">STRING</span> <span class="pre">name=</span></em>, <em class="sig-param"><span class="pre">INT</span> <span class="pre">index=</span></em>, <em class="sig-param"><span class="pre">**kwds</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#h5py.h5o.ObjInfo" title="h5py.h5o.ObjInfo"><span class="pre">ObjInfo</span></a></span></span><a class="headerlink" href="#h5py.h5o.get_info" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get information describing an object in an HDF5 file.  Provide the object
 itself, or the containing group and exactly one of “name” or “index”.</p>
 <dl class="simple">
@@ -246,7 +246,7 @@ Otherwise ignored.</p>
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
       <input type="submit" value="Go" />
     </form>
     </div>
@@ -277,8 +277,8 @@ Otherwise ignored.</p>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2014, Andrew Collette and contributors.
-      Last updated on Jul 08, 2021.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.0.3.
+      Last updated on Jul 20, 2021.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.1.1.
     </div>
   </body>
 </html>

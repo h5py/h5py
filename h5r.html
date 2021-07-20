@@ -50,7 +50,7 @@
 <h2>Functional API<a class="headerlink" href="#functional-api" title="Permalink to this headline">¶</a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="h5py.h5r.create">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5r.</span></span><span class="sig-name descname"><span class="pre">create</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">ObjectID</span> <span class="pre">loc</span></em>, <em class="sig-param"><span class="pre">STRING</span> <span class="pre">name</span></em>, <em class="sig-param"><span class="pre">INT</span> <span class="pre">ref_type</span></em>, <em class="sig-param"><span class="pre">SpaceID</span> <span class="pre">space=None</span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">ReferenceObject</span> <span class="pre">ref</span><a class="headerlink" href="#h5py.h5r.create" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5r.</span></span><span class="sig-name descname"><span class="pre">create</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">ObjectID</span> <span class="pre">loc</span></em>, <em class="sig-param"><span class="pre">STRING</span> <span class="pre">name</span></em>, <em class="sig-param"><span class="pre">INT</span> <span class="pre">ref_type</span></em>, <em class="sig-param"><span class="pre">SpaceID</span> <span class="pre">space=None</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ReferenceObject</span> <span class="pre">ref</span></span></span><a class="headerlink" href="#h5py.h5r.create" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a new reference. The value of ref_type determines the kind
 of reference created:</p>
 <dl class="simple">
@@ -66,7 +66,7 @@ identifies the region.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="h5py.h5r.dereference">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5r.</span></span><span class="sig-name descname"><span class="pre">dereference</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">Reference</span> <span class="pre">ref</span></em>, <em class="sig-param"><span class="pre">ObjectID</span> <span class="pre">id</span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">ObjectID</span> <span class="pre">or</span> <span class="pre">None</span><a class="headerlink" href="#h5py.h5r.dereference" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5r.</span></span><span class="sig-name descname"><span class="pre">dereference</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">Reference</span> <span class="pre">ref</span></em>, <em class="sig-param"><span class="pre">ObjectID</span> <span class="pre">id</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ObjectID</span> <span class="pre">or</span> <span class="pre">None</span></span></span><a class="headerlink" href="#h5py.h5r.dereference" title="Permalink to this definition">¶</a></dt>
 <dd><p>Open the object pointed to by the reference and return its
 identifier.  The file identifier (or the identifier for any object
 in the file) must also be provided.  Returns None if the reference
@@ -76,7 +76,7 @@ is zero-filled.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="h5py.h5r.get_region">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5r.</span></span><span class="sig-name descname"><span class="pre">get_region</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">Reference</span> <span class="pre">ref</span></em>, <em class="sig-param"><span class="pre">ObjectID</span> <span class="pre">id</span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">SpaceID</span> <span class="pre">or</span> <span class="pre">None</span><a class="headerlink" href="#h5py.h5r.get_region" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5r.</span></span><span class="sig-name descname"><span class="pre">get_region</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">Reference</span> <span class="pre">ref</span></em>, <em class="sig-param"><span class="pre">ObjectID</span> <span class="pre">id</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">SpaceID</span> <span class="pre">or</span> <span class="pre">None</span></span></span><a class="headerlink" href="#h5py.h5r.get_region" title="Permalink to this definition">¶</a></dt>
 <dd><p>Retrieve the dataspace selection pointed to by the reference.
 Returns a copy of the dataset’s dataspace, with the appropriate
 elements selected.  The file identifier or the identifier of any
@@ -88,7 +88,7 @@ returns None.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="h5py.h5r.get_obj_type">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5r.</span></span><span class="sig-name descname"><span class="pre">get_obj_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">Reference</span> <span class="pre">ref</span></em>, <em class="sig-param"><span class="pre">ObjectID</span> <span class="pre">id</span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">INT</span> <span class="pre">obj_code</span> <span class="pre">or</span> <span class="pre">None</span><a class="headerlink" href="#h5py.h5r.get_obj_type" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5r.</span></span><span class="sig-name descname"><span class="pre">get_obj_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">Reference</span> <span class="pre">ref</span></em>, <em class="sig-param"><span class="pre">ObjectID</span> <span class="pre">id</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">INT</span> <span class="pre">obj_code</span> <span class="pre">or</span> <span class="pre">None</span></span></span><a class="headerlink" href="#h5py.h5r.get_obj_type" title="Permalink to this definition">¶</a></dt>
 <dd><p>Determine what type of object the reference points to.  The
 reference may be a Reference or RegionReference.  The file
 identifier or the identifier of any object in the file must also
@@ -104,7 +104,7 @@ be provided.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="h5py.h5r.get_name">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5r.</span></span><span class="sig-name descname"><span class="pre">get_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">Reference</span> <span class="pre">ref</span></em>, <em class="sig-param"><span class="pre">ObjectID</span> <span class="pre">loc</span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">STRING</span> <span class="pre">name</span><a class="headerlink" href="#h5py.h5r.get_name" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5r.</span></span><span class="sig-name descname"><span class="pre">get_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">Reference</span> <span class="pre">ref</span></em>, <em class="sig-param"><span class="pre">ObjectID</span> <span class="pre">loc</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">STRING</span> <span class="pre">name</span></span></span><a class="headerlink" href="#h5py.h5r.get_name" title="Permalink to this definition">¶</a></dt>
 <dd><p>Determine the name of the object pointed to by this reference.
 Requires the HDF5 1.8 API.</p>
 </dd></dl>
@@ -192,7 +192,7 @@ convenience.</p>
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
       <input type="submit" value="Go" />
     </form>
     </div>
@@ -223,8 +223,8 @@ convenience.</p>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2014, Andrew Collette and contributors.
-      Last updated on Jul 08, 2021.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.0.3.
+      Last updated on Jul 20, 2021.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.1.1.
     </div>
   </body>
 </html>

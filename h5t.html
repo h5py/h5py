@@ -53,7 +53,7 @@ The majority of the <code class="xref py py-data docutils literal notranslate"><
 <h2>Functions specific to h5py<a class="headerlink" href="#functions-specific-to-h5py" title="Permalink to this headline">¶</a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="h5py.h5t.py_create">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5t.</span></span><span class="sig-name descname"><span class="pre">py_create</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">OBJECT</span> <span class="pre">dtype_in</span></em>, <em class="sig-param"><span class="pre">BOOL</span> <span class="pre">logical=False</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#h5py.h5t.TypeID" title="h5py.h5t.TypeID"><span class="pre">TypeID</span></a><a class="headerlink" href="#h5py.h5t.py_create" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5t.</span></span><span class="sig-name descname"><span class="pre">py_create</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">OBJECT</span> <span class="pre">dtype_in</span></em>, <em class="sig-param"><span class="pre">BOOL</span> <span class="pre">logical=False</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#h5py.h5t.TypeID" title="h5py.h5t.TypeID"><span class="pre">TypeID</span></a></span></span><a class="headerlink" href="#h5py.h5t.py_create" title="Permalink to this definition">¶</a></dt>
 <dd><p>Given a Numpy dtype object, generate a byte-for-byte memory-compatible
 HDF5 datatype object.  The result is guaranteed to be transient and
 unlocked.</p>
@@ -173,21 +173,21 @@ does not represent an HDF5 reference type.</p>
 <h2>Functional API<a class="headerlink" href="#functional-api" title="Permalink to this headline">¶</a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="h5py.h5t.create">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5t.</span></span><span class="sig-name descname"><span class="pre">create</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">INT</span> <span class="pre">classtype</span></em>, <em class="sig-param"><span class="pre">UINT</span> <span class="pre">size</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#h5py.h5t.TypeID" title="h5py.h5t.TypeID"><span class="pre">TypeID</span></a><a class="headerlink" href="#h5py.h5t.create" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5t.</span></span><span class="sig-name descname"><span class="pre">create</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">INT</span> <span class="pre">classtype</span></em>, <em class="sig-param"><span class="pre">UINT</span> <span class="pre">size</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#h5py.h5t.TypeID" title="h5py.h5t.TypeID"><span class="pre">TypeID</span></a></span></span><a class="headerlink" href="#h5py.h5t.create" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a new HDF5 type object.  Legal class values are
 <a class="reference internal" href="#h5py.h5t.COMPOUND" title="h5py.h5t.COMPOUND"><code class="xref py py-data docutils literal notranslate"><span class="pre">COMPOUND</span></code></a> and <a class="reference internal" href="#h5py.h5t.OPAQUE" title="h5py.h5t.OPAQUE"><code class="xref py py-data docutils literal notranslate"><span class="pre">OPAQUE</span></code></a>.  Use enum_create for enums.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="h5py.h5t.open">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5t.</span></span><span class="sig-name descname"><span class="pre">open</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">ObjectID</span> <span class="pre">group</span></em>, <em class="sig-param"><span class="pre">STRING</span> <span class="pre">name</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#h5py.h5t.TypeID" title="h5py.h5t.TypeID"><span class="pre">TypeID</span></a><a class="headerlink" href="#h5py.h5t.open" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5t.</span></span><span class="sig-name descname"><span class="pre">open</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">ObjectID</span> <span class="pre">group</span></em>, <em class="sig-param"><span class="pre">STRING</span> <span class="pre">name</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#h5py.h5t.TypeID" title="h5py.h5t.TypeID"><span class="pre">TypeID</span></a></span></span><a class="headerlink" href="#h5py.h5t.open" title="Permalink to this definition">¶</a></dt>
 <dd><p>Open a named datatype from a file.
 If present, tapl must be a datatype access property list.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="h5py.h5t.array_create">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5t.</span></span><span class="sig-name descname"><span class="pre">array_create</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">TypeID</span> <span class="pre">base</span></em>, <em class="sig-param"><span class="pre">TUPLE</span> <span class="pre">dimensions</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#h5py.h5t.TypeArrayID" title="h5py.h5t.TypeArrayID"><span class="pre">TypeArrayID</span></a><a class="headerlink" href="#h5py.h5t.array_create" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5t.</span></span><span class="sig-name descname"><span class="pre">array_create</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">TypeID</span> <span class="pre">base</span></em>, <em class="sig-param"><span class="pre">TUPLE</span> <span class="pre">dimensions</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#h5py.h5t.TypeArrayID" title="h5py.h5t.TypeArrayID"><span class="pre">TypeArrayID</span></a></span></span><a class="headerlink" href="#h5py.h5t.array_create" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a new array datatype, using and HDF5 parent type and
 dimensions given via a tuple of positive integers.  “Unlimited”
 dimensions are not allowed.</p>
@@ -195,13 +195,13 @@ dimensions are not allowed.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="h5py.h5t.enum_create">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5t.</span></span><span class="sig-name descname"><span class="pre">enum_create</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">TypeID</span> <span class="pre">base</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#h5py.h5t.TypeID" title="h5py.h5t.TypeID"><span class="pre">TypeID</span></a><a class="headerlink" href="#h5py.h5t.enum_create" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5t.</span></span><span class="sig-name descname"><span class="pre">enum_create</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">TypeID</span> <span class="pre">base</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#h5py.h5t.TypeID" title="h5py.h5t.TypeID"><span class="pre">TypeID</span></a></span></span><a class="headerlink" href="#h5py.h5t.enum_create" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a new enumerated type based on an (integer) parent type.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="h5py.h5t.vlen_create">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5t.</span></span><span class="sig-name descname"><span class="pre">vlen_create</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">TypeID</span> <span class="pre">base</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#h5py.h5t.TypeID" title="h5py.h5t.TypeID"><span class="pre">TypeID</span></a><a class="headerlink" href="#h5py.h5t.vlen_create" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5t.</span></span><span class="sig-name descname"><span class="pre">vlen_create</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">TypeID</span> <span class="pre">base</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#h5py.h5t.TypeID" title="h5py.h5t.TypeID"><span class="pre">TypeID</span></a></span></span><a class="headerlink" href="#h5py.h5t.vlen_create" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a new variable-length datatype, using any HDF5 type as a base.</p>
 <p>Although the Python interface can manipulate these types, there is no
 provision for reading/writing vlen data.</p>
@@ -209,7 +209,7 @@ provision for reading/writing vlen data.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="h5py.h5t.decode">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5t.</span></span><span class="sig-name descname"><span class="pre">decode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">STRING</span> <span class="pre">buf</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#h5py.h5t.TypeID" title="h5py.h5t.TypeID"><span class="pre">TypeID</span></a><a class="headerlink" href="#h5py.h5t.decode" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5t.</span></span><span class="sig-name descname"><span class="pre">decode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">STRING</span> <span class="pre">buf</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#h5py.h5t.TypeID" title="h5py.h5t.TypeID"><span class="pre">TypeID</span></a></span></span><a class="headerlink" href="#h5py.h5t.decode" title="Permalink to this definition">¶</a></dt>
 <dd><p>Deserialize an HDF5 type.  You can also do this with the native
 Python pickling machinery.</p>
 </dd></dl>
@@ -225,7 +225,7 @@ one is not supplied.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="h5py.h5t.find">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5t.</span></span><span class="sig-name descname"><span class="pre">find</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">TypeID</span> <span class="pre">src</span></em>, <em class="sig-param"><span class="pre">TypeID</span> <span class="pre">dst</span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">TUPLE</span> <span class="pre">or</span> <span class="pre">None</span><a class="headerlink" href="#h5py.h5t.find" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5t.</span></span><span class="sig-name descname"><span class="pre">find</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">TypeID</span> <span class="pre">src</span></em>, <em class="sig-param"><span class="pre">TypeID</span> <span class="pre">dst</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">TUPLE</span> <span class="pre">or</span> <span class="pre">None</span></span></span><a class="headerlink" href="#h5py.h5t.find" title="Permalink to this definition">¶</a></dt>
 <dd><p>Determine if a conversion path exists from src to dst.  Result is None
 or a tuple describing the conversion path.  Currently tuple entries are:</p>
 <ol class="arabic simple">
@@ -257,19 +257,19 @@ If present, lcpl may be a <a class="reference internal" href="h5p.html#h5py.h5p.
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5t.TypeID.committed">
-<span class="sig-name descname"><span class="pre">committed</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; <span class="pre">BOOL</span> <span class="pre">is_comitted</span><a class="headerlink" href="#h5py.h5t.TypeID.committed" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">committed</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">BOOL</span> <span class="pre">is_comitted</span></span></span><a class="headerlink" href="#h5py.h5t.TypeID.committed" title="Permalink to this definition">¶</a></dt>
 <dd><p>Determine if a given type object is named (T) or transient (F).</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5t.TypeID.copy">
-<span class="sig-name descname"><span class="pre">copy</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#h5py.h5t.TypeID" title="h5py.h5t.TypeID"><span class="pre">TypeID</span></a><a class="headerlink" href="#h5py.h5t.TypeID.copy" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">copy</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#h5py.h5t.TypeID" title="h5py.h5t.TypeID"><span class="pre">TypeID</span></a></span></span><a class="headerlink" href="#h5py.h5t.TypeID.copy" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a copy of this type object.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5t.TypeID.detect_class">
-<span class="sig-name descname"><span class="pre">detect_class</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">INT</span> <span class="pre">classtype</span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">BOOL</span> <span class="pre">class_is_present</span><a class="headerlink" href="#h5py.h5t.TypeID.detect_class" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">detect_class</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">INT</span> <span class="pre">classtype</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">BOOL</span> <span class="pre">class_is_present</span></span></span><a class="headerlink" href="#h5py.h5t.TypeID.detect_class" title="Permalink to this definition">¶</a></dt>
 <dd><p>Determine if a member of the given class exists in a compound
 datatype.  The search is recursive.</p>
 </dd></dl>
@@ -282,7 +282,7 @@ datatype.  The search is recursive.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5t.TypeID.encode">
-<span class="sig-name descname"><span class="pre">encode</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#h5py.h5t.STRING" title="h5py.h5t.STRING"><span class="pre">STRING</span></a><a class="headerlink" href="#h5py.h5t.TypeID.encode" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">encode</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#h5py.h5t.STRING" title="h5py.h5t.STRING"><span class="pre">STRING</span></a></span></span><a class="headerlink" href="#h5py.h5t.TypeID.encode" title="Permalink to this definition">¶</a></dt>
 <dd><p>Serialize an HDF5 type.  Bear in mind you can also use the
 native Python pickle/unpickle machinery to do this.  The
 returned string may contain binary values, including NULLs.</p>
@@ -290,33 +290,33 @@ returned string may contain binary values, including NULLs.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5t.TypeID.equal">
-<span class="sig-name descname"><span class="pre">equal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">TypeID</span> <span class="pre">typeid</span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">BOOL</span><a class="headerlink" href="#h5py.h5t.TypeID.equal" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">equal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">TypeID</span> <span class="pre">typeid</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">BOOL</span></span></span><a class="headerlink" href="#h5py.h5t.TypeID.equal" title="Permalink to this definition">¶</a></dt>
 <dd><p>Logical comparison between datatypes.  Also called by
 Python’s “==” operator.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5t.TypeID.get_class">
-<span class="sig-name descname"><span class="pre">get_class</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; <span class="pre">INT</span> <span class="pre">classcode</span><a class="headerlink" href="#h5py.h5t.TypeID.get_class" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_class</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">INT</span> <span class="pre">classcode</span></span></span><a class="headerlink" href="#h5py.h5t.TypeID.get_class" title="Permalink to this definition">¶</a></dt>
 <dd><p>Determine the datatype’s class code.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5t.TypeID.get_create_plist">
-<span class="sig-name descname"><span class="pre">get_create_plist</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; <span class="pre">PropTCID</span><a class="headerlink" href="#h5py.h5t.TypeID.get_create_plist" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_create_plist</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">PropTCID</span></span></span><a class="headerlink" href="#h5py.h5t.TypeID.get_create_plist" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create and return a new copy of the datatype creation property list
 used when this datatype was created.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5t.TypeID.get_size">
-<span class="sig-name descname"><span class="pre">get_size</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; <span class="pre">INT</span> <span class="pre">size</span><a class="headerlink" href="#h5py.h5t.TypeID.get_size" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_size</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">INT</span> <span class="pre">size</span></span></span><a class="headerlink" href="#h5py.h5t.TypeID.get_size" title="Permalink to this definition">¶</a></dt>
 <dd><p>Determine the total size of a datatype, in bytes.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5t.TypeID.get_super">
-<span class="sig-name descname"><span class="pre">get_super</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#h5py.h5t.TypeID" title="h5py.h5t.TypeID"><span class="pre">TypeID</span></a><a class="headerlink" href="#h5py.h5t.TypeID.get_super" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_super</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#h5py.h5t.TypeID" title="h5py.h5t.TypeID"><span class="pre">TypeID</span></a></span></span><a class="headerlink" href="#h5py.h5t.TypeID.get_super" title="Permalink to this definition">¶</a></dt>
 <dd><p>Determine the parent type of an array, enumeration or vlen datatype.</p>
 </dd></dl>
 
@@ -346,13 +346,13 @@ inherited from the base class <a class="reference internal" href="#h5py.h5t.Type
 <p>Base class for atomic datatypes (float or integer)</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5t.TypeAtomicID.get_offset">
-<span class="sig-name descname"><span class="pre">get_offset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; <span class="pre">INT</span> <span class="pre">offset</span><a class="headerlink" href="#h5py.h5t.TypeAtomicID.get_offset" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_offset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">INT</span> <span class="pre">offset</span></span></span><a class="headerlink" href="#h5py.h5t.TypeAtomicID.get_offset" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the offset of the first significant bit.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5t.TypeAtomicID.get_order">
-<span class="sig-name descname"><span class="pre">get_order</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; <span class="pre">INT</span> <span class="pre">order</span><a class="headerlink" href="#h5py.h5t.TypeAtomicID.get_order" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_order</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">INT</span> <span class="pre">order</span></span></span><a class="headerlink" href="#h5py.h5t.TypeAtomicID.get_order" title="Permalink to this definition">¶</a></dt>
 <dd><p>Obtain the byte order of the datatype; one of:</p>
 <ul class="simple">
 <li><p><code class="xref py py-data docutils literal notranslate"><span class="pre">ORDER_LE</span></code></p></li>
@@ -373,7 +373,7 @@ inherited from the base class <a class="reference internal" href="#h5py.h5t.Type
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5t.TypeAtomicID.get_precision">
-<span class="sig-name descname"><span class="pre">get_precision</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; <span class="pre">UINT</span> <span class="pre">precision</span><a class="headerlink" href="#h5py.h5t.TypeAtomicID.get_precision" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_precision</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">UINT</span> <span class="pre">precision</span></span></span><a class="headerlink" href="#h5py.h5t.TypeAtomicID.get_precision" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the number of significant bits (excludes padding).</p>
 </dd></dl>
 
@@ -419,7 +419,7 @@ inherited from the base class <a class="reference internal" href="#h5py.h5t.Type
 <p>Integer atomic datatypes</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5t.TypeIntegerID.get_sign">
-<span class="sig-name descname"><span class="pre">get_sign</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; <span class="pre">INT</span> <span class="pre">sign</span><a class="headerlink" href="#h5py.h5t.TypeIntegerID.get_sign" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_sign</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">INT</span> <span class="pre">sign</span></span></span><a class="headerlink" href="#h5py.h5t.TypeIntegerID.get_sign" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the “signedness” of the datatype; one of:</p>
 <dl class="simple">
 <dt><code class="xref py py-data docutils literal notranslate"><span class="pre">SGN_NONE</span></code></dt><dd><p>Unsigned</p>
@@ -450,13 +450,13 @@ inherited from the base class <a class="reference internal" href="#h5py.h5t.Type
 <p>Floating-point atomic datatypes</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5t.TypeFloatID.get_ebias">
-<span class="sig-name descname"><span class="pre">get_ebias</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; <span class="pre">UINT</span> <span class="pre">ebias</span><a class="headerlink" href="#h5py.h5t.TypeFloatID.get_ebias" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_ebias</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">UINT</span> <span class="pre">ebias</span></span></span><a class="headerlink" href="#h5py.h5t.TypeFloatID.get_ebias" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the exponent bias.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5t.TypeFloatID.get_fields">
-<span class="sig-name descname"><span class="pre">get_fields</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; <span class="pre">TUPLE</span> <span class="pre">field_info</span><a class="headerlink" href="#h5py.h5t.TypeFloatID.get_fields" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_fields</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">TUPLE</span> <span class="pre">field_info</span></span></span><a class="headerlink" href="#h5py.h5t.TypeFloatID.get_fields" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get information about floating-point bit fields.  See the HDF5
 docs for a full description.  Tuple has the following members:</p>
 <ol class="arabic simple" start="0">
@@ -470,7 +470,7 @@ docs for a full description.  Tuple has the following members:</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5t.TypeFloatID.get_inpad">
-<span class="sig-name descname"><span class="pre">get_inpad</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; <span class="pre">INT</span> <span class="pre">pad_code</span><a class="headerlink" href="#h5py.h5t.TypeFloatID.get_inpad" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_inpad</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">INT</span> <span class="pre">pad_code</span></span></span><a class="headerlink" href="#h5py.h5t.TypeFloatID.get_inpad" title="Permalink to this definition">¶</a></dt>
 <dd><p>Determine the internal padding strategy.  Legal values are:</p>
 <ul class="simple">
 <li><p><code class="xref py py-data docutils literal notranslate"><span class="pre">PAD_ZERO</span></code></p></li>
@@ -481,7 +481,7 @@ docs for a full description.  Tuple has the following members:</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5t.TypeFloatID.get_norm">
-<span class="sig-name descname"><span class="pre">get_norm</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; <span class="pre">INT</span> <span class="pre">normalization_code</span><a class="headerlink" href="#h5py.h5t.TypeFloatID.get_norm" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_norm</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">INT</span> <span class="pre">normalization_code</span></span></span><a class="headerlink" href="#h5py.h5t.TypeFloatID.get_norm" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the normalization strategy.  Legal values are:</p>
 <ul class="simple">
 <li><p><code class="xref py py-data docutils literal notranslate"><span class="pre">NORM_IMPLIED</span></code></p></li>
@@ -537,13 +537,13 @@ argument definitions.</p>
 <p>String datatypes, both fixed and vlen.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5t.TypeStringID.get_cset">
-<span class="sig-name descname"><span class="pre">get_cset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; <span class="pre">INT</span> <span class="pre">character_set</span><a class="headerlink" href="#h5py.h5t.TypeStringID.get_cset" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_cset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">INT</span> <span class="pre">character_set</span></span></span><a class="headerlink" href="#h5py.h5t.TypeStringID.get_cset" title="Permalink to this definition">¶</a></dt>
 <dd><p>Retrieve the character set used for a string.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5t.TypeStringID.get_strpad">
-<span class="sig-name descname"><span class="pre">get_strpad</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; <span class="pre">INT</span> <span class="pre">padding_type</span><a class="headerlink" href="#h5py.h5t.TypeStringID.get_strpad" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_strpad</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">INT</span> <span class="pre">padding_type</span></span></span><a class="headerlink" href="#h5py.h5t.TypeStringID.get_strpad" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the padding type.  Legal values are:</p>
 <dl class="simple">
 <dt><code class="xref py py-data docutils literal notranslate"><span class="pre">STR_NULLTERM</span></code></dt><dd><p>NULL termination only (C style)</p>
@@ -557,7 +557,7 @@ argument definitions.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5t.TypeStringID.is_variable_str">
-<span class="sig-name descname"><span class="pre">is_variable_str</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; <span class="pre">BOOL</span> <span class="pre">is_variable</span><a class="headerlink" href="#h5py.h5t.TypeStringID.is_variable_str" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">is_variable_str</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">BOOL</span> <span class="pre">is_variable</span></span></span><a class="headerlink" href="#h5py.h5t.TypeStringID.is_variable_str" title="Permalink to this definition">¶</a></dt>
 <dd><p>Determine if the given string datatype is a variable-length string.</p>
 </dd></dl>
 
@@ -595,21 +595,21 @@ a base class, <a class="reference internal" href="#h5py.h5t.TypeCompositeID" tit
 <p>Base class for enumerated and compound types.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5t.TypeCompositeID.get_member_index">
-<span class="sig-name descname"><span class="pre">get_member_index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">STRING</span> <span class="pre">name</span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">INT</span> <span class="pre">index</span><a class="headerlink" href="#h5py.h5t.TypeCompositeID.get_member_index" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_member_index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">STRING</span> <span class="pre">name</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">INT</span> <span class="pre">index</span></span></span><a class="headerlink" href="#h5py.h5t.TypeCompositeID.get_member_index" title="Permalink to this definition">¶</a></dt>
 <dd><p>Determine the index of a member of a compound or enumerated datatype
 identified by a string name.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5t.TypeCompositeID.get_member_name">
-<span class="sig-name descname"><span class="pre">get_member_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">INT</span> <span class="pre">member</span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">STRING</span> <span class="pre">name</span><a class="headerlink" href="#h5py.h5t.TypeCompositeID.get_member_name" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_member_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">INT</span> <span class="pre">member</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">STRING</span> <span class="pre">name</span></span></span><a class="headerlink" href="#h5py.h5t.TypeCompositeID.get_member_name" title="Permalink to this definition">¶</a></dt>
 <dd><p>Determine the name of a member of a compound or enumerated type,
 identified by its index (0 &lt;= member &lt; nmembers).</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5t.TypeCompositeID.get_nmembers">
-<span class="sig-name descname"><span class="pre">get_nmembers</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; <span class="pre">INT</span> <span class="pre">number_of_members</span><a class="headerlink" href="#h5py.h5t.TypeCompositeID.get_nmembers" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_nmembers</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">INT</span> <span class="pre">number_of_members</span></span></span><a class="headerlink" href="#h5py.h5t.TypeCompositeID.get_nmembers" title="Permalink to this definition">¶</a></dt>
 <dd><p>Determine the number of members in a compound or enumerated type.</p>
 </dd></dl>
 
@@ -622,21 +622,21 @@ identified by its index (0 &lt;= member &lt; nmembers).</p>
 <p>Represents a compound datatype</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5t.TypeCompoundID.get_member_class">
-<span class="sig-name descname"><span class="pre">get_member_class</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">INT</span> <span class="pre">member</span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">INT</span> <span class="pre">class</span><a class="headerlink" href="#h5py.h5t.TypeCompoundID.get_member_class" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_member_class</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">INT</span> <span class="pre">member</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">INT</span> <span class="pre">class</span></span></span><a class="headerlink" href="#h5py.h5t.TypeCompoundID.get_member_class" title="Permalink to this definition">¶</a></dt>
 <dd><p>Determine the datatype class of the member of a compound type,
 identified by its index (0 &lt;= member &lt; nmembers).</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5t.TypeCompoundID.get_member_offset">
-<span class="sig-name descname"><span class="pre">get_member_offset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">INT</span> <span class="pre">member</span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">INT</span> <span class="pre">offset</span><a class="headerlink" href="#h5py.h5t.TypeCompoundID.get_member_offset" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_member_offset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">INT</span> <span class="pre">member</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">INT</span> <span class="pre">offset</span></span></span><a class="headerlink" href="#h5py.h5t.TypeCompoundID.get_member_offset" title="Permalink to this definition">¶</a></dt>
 <dd><p>Determine the offset, in bytes, of the beginning of the specified
 member of a compound datatype.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5t.TypeCompoundID.get_member_type">
-<span class="sig-name descname"><span class="pre">get_member_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">INT</span> <span class="pre">member</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#h5py.h5t.TypeID" title="h5py.h5t.TypeID"><span class="pre">TypeID</span></a><a class="headerlink" href="#h5py.h5t.TypeCompoundID.get_member_type" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_member_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">INT</span> <span class="pre">member</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#h5py.h5t.TypeID" title="h5py.h5t.TypeID"><span class="pre">TypeID</span></a></span></span><a class="headerlink" href="#h5py.h5t.TypeCompoundID.get_member_type" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a copy of a member of a compound datatype, identified by its
 index.</p>
 </dd></dl>
@@ -674,7 +674,7 @@ clipped.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5t.TypeEnumID.enum_nameof">
-<span class="sig-name descname"><span class="pre">enum_nameof</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">LONG</span> <span class="pre">value</span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">STRING</span> <span class="pre">name</span><a class="headerlink" href="#h5py.h5t.TypeEnumID.enum_nameof" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">enum_nameof</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">LONG</span> <span class="pre">value</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">STRING</span> <span class="pre">name</span></span></span><a class="headerlink" href="#h5py.h5t.TypeEnumID.enum_nameof" title="Permalink to this definition">¶</a></dt>
 <dd><p>Determine the name associated with the given value.  Due to a
 limitation of the HDF5 library, this can only retrieve names up to
 1023 characters in length.</p>
@@ -682,13 +682,13 @@ limitation of the HDF5 library, this can only retrieve names up to
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5t.TypeEnumID.enum_valueof">
-<span class="sig-name descname"><span class="pre">enum_valueof</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">STRING</span> <span class="pre">name</span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">LONG</span> <span class="pre">value</span><a class="headerlink" href="#h5py.h5t.TypeEnumID.enum_valueof" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">enum_valueof</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">STRING</span> <span class="pre">name</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">LONG</span> <span class="pre">value</span></span></span><a class="headerlink" href="#h5py.h5t.TypeEnumID.enum_valueof" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the value associated with an enum name.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5t.TypeEnumID.get_member_value">
-<span class="sig-name descname"><span class="pre">get_member_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">UINT</span> <span class="pre">index</span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">LONG</span> <span class="pre">value</span><a class="headerlink" href="#h5py.h5t.TypeEnumID.get_member_value" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_member_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">UINT</span> <span class="pre">index</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">LONG</span> <span class="pre">value</span></span></span><a class="headerlink" href="#h5py.h5t.TypeEnumID.get_member_value" title="Permalink to this definition">¶</a></dt>
 <dd><p>Determine the value for the member at the given zero-based index.</p>
 </dd></dl>
 
@@ -704,14 +704,14 @@ limitation of the HDF5 library, this can only retrieve names up to
 <p>Represents an array datatype</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5t.TypeArrayID.get_array_dims">
-<span class="sig-name descname"><span class="pre">get_array_dims</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; <span class="pre">TUPLE</span> <span class="pre">dimensions</span><a class="headerlink" href="#h5py.h5t.TypeArrayID.get_array_dims" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_array_dims</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">TUPLE</span> <span class="pre">dimensions</span></span></span><a class="headerlink" href="#h5py.h5t.TypeArrayID.get_array_dims" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the dimensions of the given array datatype as
 a tuple of integers.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5t.TypeArrayID.get_array_ndims">
-<span class="sig-name descname"><span class="pre">get_array_ndims</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; <span class="pre">INT</span> <span class="pre">rank</span><a class="headerlink" href="#h5py.h5t.TypeArrayID.get_array_ndims" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_array_ndims</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">INT</span> <span class="pre">rank</span></span></span><a class="headerlink" href="#h5py.h5t.TypeArrayID.get_array_ndims" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the rank of the given array datatype.</p>
 </dd></dl>
 
@@ -724,7 +724,7 @@ a tuple of integers.</p>
 <p>Represents an opaque type</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5t.TypeOpaqueID.get_tag">
-<span class="sig-name descname"><span class="pre">get_tag</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; <span class="pre">STRING</span> <span class="pre">tag</span><a class="headerlink" href="#h5py.h5t.TypeOpaqueID.get_tag" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_tag</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">STRING</span> <span class="pre">tag</span></span></span><a class="headerlink" href="#h5py.h5t.TypeOpaqueID.get_tag" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the tag associated with an opaque datatype.</p>
 </dd></dl>
 
@@ -751,7 +751,7 @@ Limited to 256 characters.</p>
 <p>HDF5 bitfield type</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5t.TypeBitfieldID.get_order">
-<span class="sig-name descname"><span class="pre">get_order</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; <span class="pre">INT</span> <span class="pre">order</span><a class="headerlink" href="#h5py.h5t.TypeBitfieldID.get_order" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_order</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">INT</span> <span class="pre">order</span></span></span><a class="headerlink" href="#h5py.h5t.TypeBitfieldID.get_order" title="Permalink to this definition">¶</a></dt>
 <dd><p>Obtain the byte order of the datatype; one of:</p>
 <ul class="simple">
 <li><p><code class="xref py py-data docutils literal notranslate"><span class="pre">ORDER_LE</span></code></p></li>
@@ -1216,7 +1216,7 @@ Limited to 256 characters.</p>
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
       <input type="submit" value="Go" />
     </form>
     </div>
@@ -1247,8 +1247,8 @@ Limited to 256 characters.</p>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2014, Andrew Collette and contributors.
-      Last updated on Jul 08, 2021.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.0.3.
+      Last updated on Jul 20, 2021.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.1.1.
     </div>
   </body>
 </html>

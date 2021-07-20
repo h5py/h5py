@@ -50,14 +50,14 @@
 <h2>Functional API<a class="headerlink" href="#functional-api" title="Permalink to this headline">¶</a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="h5py.h5d.open">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5d.</span></span><span class="sig-name descname"><span class="pre">open</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">ObjectID</span> <span class="pre">loc</span></em>, <em class="sig-param"><span class="pre">STRING</span> <span class="pre">name</span></em>, <em class="sig-param"><span class="pre">PropID</span> <span class="pre">dapl=None</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#h5py.h5d.DatasetID" title="h5py.h5d.DatasetID"><span class="pre">DatasetID</span></a><a class="headerlink" href="#h5py.h5d.open" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5d.</span></span><span class="sig-name descname"><span class="pre">open</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">ObjectID</span> <span class="pre">loc</span></em>, <em class="sig-param"><span class="pre">STRING</span> <span class="pre">name</span></em>, <em class="sig-param"><span class="pre">PropID</span> <span class="pre">dapl=None</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#h5py.h5d.DatasetID" title="h5py.h5d.DatasetID"><span class="pre">DatasetID</span></a></span></span><a class="headerlink" href="#h5py.h5d.open" title="Permalink to this definition">¶</a></dt>
 <dd><p>Open an existing dataset attached to a group or file object, by name.</p>
 <p>If specified, dapl may be a dataset access property list.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="h5py.h5d.create">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5d.</span></span><span class="sig-name descname"><span class="pre">create</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">objectID</span> <span class="pre">loc</span></em>, <em class="sig-param"><span class="pre">STRING</span> <span class="pre">name</span> <span class="pre">or</span> <span class="pre">None</span></em>, <em class="sig-param"><span class="pre">TypeID</span> <span class="pre">tid</span></em>, <em class="sig-param"><span class="pre">SpaceID</span> <span class="pre">space</span></em>, <em class="sig-param"><span class="pre">PropDCID</span> <span class="pre">dcpl=None</span></em>, <em class="sig-param"><span class="pre">PropID</span> <span class="pre">lcpl=None</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#h5py.h5d.DatasetID" title="h5py.h5d.DatasetID"><span class="pre">DatasetID</span></a><a class="headerlink" href="#h5py.h5d.create" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5d.</span></span><span class="sig-name descname"><span class="pre">create</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">objectID</span> <span class="pre">loc</span></em>, <em class="sig-param"><span class="pre">STRING</span> <span class="pre">name</span> <span class="pre">or</span> <span class="pre">None</span></em>, <em class="sig-param"><span class="pre">TypeID</span> <span class="pre">tid</span></em>, <em class="sig-param"><span class="pre">SpaceID</span> <span class="pre">space</span></em>, <em class="sig-param"><span class="pre">PropDCID</span> <span class="pre">dcpl=None</span></em>, <em class="sig-param"><span class="pre">PropID</span> <span class="pre">lcpl=None</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#h5py.h5d.DatasetID" title="h5py.h5d.DatasetID"><span class="pre">DatasetID</span></a></span></span><a class="headerlink" href="#h5py.h5d.create" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a new dataset.  If “name” is None, the dataset will be
 anonymous.</p>
 </dd></dl>
@@ -109,13 +109,13 @@ dataset changes.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5d.DatasetID.get_access_plist">
-<span class="sig-name descname"><span class="pre">get_access_plist</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; <span class="pre">PropDAID</span><a class="headerlink" href="#h5py.h5d.DatasetID.get_access_plist" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_access_plist</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">PropDAID</span></span></span><a class="headerlink" href="#h5py.h5d.DatasetID.get_access_plist" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create an return a new copy of the dataset access property list.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5d.DatasetID.get_chunk_info">
-<span class="sig-name descname"><span class="pre">get_chunk_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">hsize_t</span> <span class="pre">index</span></em>, <em class="sig-param"><span class="pre">SpaceID</span> <span class="pre">space=None</span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">StoreInfo</span><a class="headerlink" href="#h5py.h5d.DatasetID.get_chunk_info" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_chunk_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">hsize_t</span> <span class="pre">index</span></em>, <em class="sig-param"><span class="pre">SpaceID</span> <span class="pre">space=None</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">StoreInfo</span></span></span><a class="headerlink" href="#h5py.h5d.DatasetID.get_chunk_info" title="Permalink to this definition">¶</a></dt>
 <dd><p>Retrieve storage information about a chunk specified by its index.</p>
 <p>Feature requires: HDF5 1.10.5</p>
 <div class="versionadded">
@@ -125,7 +125,7 @@ dataset changes.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5d.DatasetID.get_chunk_info_by_coord">
-<span class="sig-name descname"><span class="pre">get_chunk_info_by_coord</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">TUPLE</span> <span class="pre">chunk_offset</span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">StoreInfo</span><a class="headerlink" href="#h5py.h5d.DatasetID.get_chunk_info_by_coord" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_chunk_info_by_coord</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">TUPLE</span> <span class="pre">chunk_offset</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">StoreInfo</span></span></span><a class="headerlink" href="#h5py.h5d.DatasetID.get_chunk_info_by_coord" title="Permalink to this definition">¶</a></dt>
 <dd><p>Retrieve information about a chunk specified by the array
 address of the chunk’s first element in each dimension.</p>
 <p>Feature requires: HDF5 1.10.5</p>
@@ -136,14 +136,14 @@ address of the chunk’s first element in each dimension.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5d.DatasetID.get_create_plist">
-<span class="sig-name descname"><span class="pre">get_create_plist</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; <span class="pre">PropDCID</span><a class="headerlink" href="#h5py.h5d.DatasetID.get_create_plist" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_create_plist</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">PropDCID</span></span></span><a class="headerlink" href="#h5py.h5d.DatasetID.get_create_plist" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create an return a new copy of the dataset creation property list
 used when this dataset was created.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5d.DatasetID.get_num_chunks">
-<span class="sig-name descname"><span class="pre">get_num_chunks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">SpaceID</span> <span class="pre">space=None</span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">INT</span> <span class="pre">num_chunks</span><a class="headerlink" href="#h5py.h5d.DatasetID.get_num_chunks" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_num_chunks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">SpaceID</span> <span class="pre">space=None</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">INT</span> <span class="pre">num_chunks</span></span></span><a class="headerlink" href="#h5py.h5d.DatasetID.get_num_chunks" title="Permalink to this definition">¶</a></dt>
 <dd><p>Retrieve the number of chunks that have nonempty intersection with a
 specified dataspace. Currently, this function only gets the number
 of all written chunks, regardless of the dataspace.</p>
@@ -155,7 +155,7 @@ of all written chunks, regardless of the dataspace.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5d.DatasetID.get_offset">
-<span class="sig-name descname"><span class="pre">get_offset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; <span class="pre">LONG</span> <span class="pre">offset</span> <span class="pre">or</span> <span class="pre">None</span><a class="headerlink" href="#h5py.h5d.DatasetID.get_offset" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_offset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">LONG</span> <span class="pre">offset</span> <span class="pre">or</span> <span class="pre">None</span></span></span><a class="headerlink" href="#h5py.h5d.DatasetID.get_offset" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the offset of this dataset in the file, in bytes, or None if
 it doesn’t have one.  This is always the case for datasets which
 use chunked storage, compact datasets, and datasets for which space
@@ -164,13 +164,13 @@ has not yet been allocated in the file.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5d.DatasetID.get_space">
-<span class="sig-name descname"><span class="pre">get_space</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; <span class="pre">SpaceID</span><a class="headerlink" href="#h5py.h5d.DatasetID.get_space" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_space</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">SpaceID</span></span></span><a class="headerlink" href="#h5py.h5d.DatasetID.get_space" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create and return a new copy of the dataspace for this dataset.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5d.DatasetID.get_space_status">
-<span class="sig-name descname"><span class="pre">get_space_status</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; <span class="pre">INT</span> <span class="pre">space_status_code</span><a class="headerlink" href="#h5py.h5d.DatasetID.get_space_status" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_space_status</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">INT</span> <span class="pre">space_status_code</span></span></span><a class="headerlink" href="#h5py.h5d.DatasetID.get_space_status" title="Permalink to this definition">¶</a></dt>
 <dd><p>Determine if space has been allocated for a dataset.
 Return value is one of:</p>
 <ul class="simple">
@@ -182,7 +182,7 @@ Return value is one of:</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5d.DatasetID.get_storage_size">
-<span class="sig-name descname"><span class="pre">get_storage_size</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; <span class="pre">LONG</span> <span class="pre">storage_size</span><a class="headerlink" href="#h5py.h5d.DatasetID.get_storage_size" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_storage_size</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">LONG</span> <span class="pre">storage_size</span></span></span><a class="headerlink" href="#h5py.h5d.DatasetID.get_storage_size" title="Permalink to this definition">¶</a></dt>
 <dd><p>Report the size of storage, in bytes, that is allocated in the
 file for the dataset’s raw data. The reported amount is the storage
 allocated in the written file, which will typically differ from the
@@ -197,7 +197,7 @@ required to store the filtered data.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5d.DatasetID.get_type">
-<span class="sig-name descname"><span class="pre">get_type</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; <span class="pre">TypeID</span><a class="headerlink" href="#h5py.h5d.DatasetID.get_type" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_type</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">TypeID</span></span></span><a class="headerlink" href="#h5py.h5d.DatasetID.get_type" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create and return a new copy of the datatype for this dataset.</p>
 </dd></dl>
 
@@ -448,7 +448,7 @@ been applied to the data before calling this function.</p>
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
       <input type="submit" value="Go" />
     </form>
     </div>
@@ -479,8 +479,8 @@ been applied to the data before calling this function.</p>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2014, Andrew Collette and contributors.
-      Last updated on Jul 08, 2021.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.0.3.
+      Last updated on Jul 20, 2021.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.1.1.
     </div>
   </body>
 </html>
