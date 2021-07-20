@@ -162,20 +162,24 @@ class AstypeWrapper(object):
         self._dset._local.astype = None
 
     def __len__(self):
+        """ Get the length of the underlying dataset
+
+        >>> length = len(dataset.astype('f8'))
+        """
         return len(self._dset)
 
 
 class AsStrWrapper:
     """Wrapper to decode strings on reading the dataset"""
     def __init__(self, dset, encoding, errors='strict'):
-        self.dset = dset
+        self._dset = dset
         if encoding is None:
             encoding = h5t.check_string_dtype(dset.dtype).encoding
         self.encoding = encoding
         self.errors = errors
 
     def __getitem__(self, args):
-        bytes_arr = self.dset[args]
+        bytes_arr = self._dset[args]
         # numpy.char.decode() seems like the obvious thing to use. But it only
         # accepts numpy string arrays, not object arrays of bytes (which we
         # return from HDF5 variable-length strings). And the numpy
@@ -190,6 +194,10 @@ class AsStrWrapper:
         ], dtype=object).reshape(bytes_arr.shape)
 
     def __len__(self):
+        """ Get the length of the underlying dataset
+
+        >>> length = len(dataset.asstr())
+        """
         return len(self._dset)
 
 
@@ -198,19 +206,23 @@ class FieldsWrapper:
     extract_field = None
 
     def __init__(self, dset, prior_dtype, names):
-        self.dset = dset
+        self._dset = dset
         if isinstance(names, str):
             self.extract_field = names
             names = [names]
         self.read_dtype = readtime_dtype(prior_dtype, names)
 
     def __getitem__(self, args):
-        data = self.dset.__getitem__(args, new_dtype=self.read_dtype)
+        data = self._dset.__getitem__(args, new_dtype=self.read_dtype)
         if self.extract_field is not None:
             data = data[self.extract_field]
         return data
 
     def __len__(self):
+        """ Get the length of the underlying dataset
+
+        >>> length = len(dataset.fields(['x', 'y']))
+        """
         return len(self._dset)
 
 
