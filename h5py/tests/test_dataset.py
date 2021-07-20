@@ -1468,7 +1468,7 @@ class TestAstype(BaseDataset):
         arr = dset.astype('f4')[:]
         self.assertArrayEqual(arr, np.arange(100, dtype='f4'))
 
-    
+
     def test_astype_wrapper_len(self):
         dset = self.f.create_dataset('x', (100,), dtype='i2')
         dset[...] = np.arange(100)
