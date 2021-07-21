@@ -1472,8 +1472,7 @@ class TestAstype(BaseDataset):
     def test_astype_wrapper_len(self):
         dset = self.f.create_dataset('x', (100,), dtype='i2')
         dset[...] = np.arange(100)
-        arr = dset.astype('f4')[:]
-        self.assertEqual(100, len(arr))
+        self.assertEqual(100, len(dset.astype('f4')))
 
 
 class TestScalarCompound(BaseDataset):
