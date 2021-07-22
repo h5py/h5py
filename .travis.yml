@@ -38,14 +38,12 @@ matrix:
       group: edge
       arch: arm64
       env:
-        - secure: j7516m880cagQvknX5hkyucFo/VImiNLwmTUfpWs+naUo6+yzyI/9qH4/4ba6woY42tZNO9gZ9p6o7nL/UDSr+ChT9tWBBqbAh3gQWqWonDDzvym3EOTdHXyERd1ecgYtAg02jAcrbgiNaIG+5BbB31eiRrRdEz+XE1Lfqz37xair1pM+ZIOZ2E9ZFecmYWrLMn60pwcTWQI4alFLZU5F+rauSHL6pnBorLLv3HewbBPXsuE5W90Nep8S01aTNPWFGYde6hXhH1E/HOM5u3mAdWBzGNgbqsOd58KEm/U9MS/qDAFJyPbyRPIxGrZB2UcCvRgWND6F5Kgvbav3Qvd6RyncULnf/mrKFR8ic9gbIO9tepf16d4EEs+tFHNlXiqk9ByglUEHgphTs7O1JOPFceI1O9pBk3RPzqzC10Wn3BwfPScYd6kHLDBxCCHMdcDOBV2/Gb5XYrwkhMPnDQLi5Tzo6TM9meYgBktuY5tyATc6Q7e/+hl5IasaRI5KmBZl8sQxY1bP6FcMxXdMZ//8sBbMRogAl+3Z2kbzaIBvl9ZutMMJlXeTUt3E4ixEnfkxe9xSBhkBwuP7MdSEQn8ndCKZ6dV9cLxmODM8DgkW7RjQ6BwAdYwjYGc2UIpAE4iabJZiXwPdqVH7R52DwVmk6pzYdfZFJQfDMJ8PglLpes=
         - TOXENV=py37-test-deps
         - HDF5_VERSION=1.10.5
         - HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION
         - H5PY_ENFORCE_COVERAGE=yes
         - CIBW_BUILD: cp3[789]-*
         - CIBW_MANYLINUX_AARCH64_IMAGE: ghcr.io/h5py/manylinux2014_aarch64-hdf5
-        - CIBW_BEFORE_BUILD: ./ci/get_hdf5_arm64.sh
         - CIBW_ARCHS: aarch64
 
   before_install:
