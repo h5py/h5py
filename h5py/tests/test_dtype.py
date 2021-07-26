@@ -287,7 +287,7 @@ class TestOffsets(TestCase):
             self.assertArrayEqual(fd['data'], data)
 
     def test_float_round_tripping(self):
-        dtypes = set(f for f in np.typeDict.values()
+        dtypes = set(f for f in np.sctypeDict.values()
                      if (np.issubdtype(f, np.floating) or
                          np.issubdtype(f, np.complexfloating)))
 
