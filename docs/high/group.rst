@@ -106,7 +106,7 @@ made to the object::
 Note that this is `not` a copy of the dataset!  Like hard links in a UNIX file
 system, objects in an HDF5 file can be stored in multiple groups::
 
-    >>> f["other name"] == f["name"]
+    >>> grp["other name"] == grp["name"]
     True
 
 
