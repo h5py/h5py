@@ -1278,6 +1278,9 @@ class TestCompound(BaseDataset):
             self.f['test'].fields('x')[:], testdata['x']
         )
 
+        # Check len() on fields wrapper
+        assert len(self.f['test'].fields('x')) == 16
+
 
 class TestSubarray(BaseDataset):
     def test_write_list(self):
