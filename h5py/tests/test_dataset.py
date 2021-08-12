@@ -1151,6 +1151,10 @@ class TestStrings(BaseDataset):
         # latin-1 will decode it but give the wrong text
         self.assertNotEqual(ds.asstr('latin-1')[0], data)
 
+        # len of ds
+        self.assertEqual(10, len(ds.asstr()))
+
+
         # Array output
         np.testing.assert_array_equal(
             ds.asstr()[:1], np.array([data], dtype=object)
@@ -1273,6 +1277,9 @@ class TestCompound(BaseDataset):
         np.testing.assert_array_equal(
             self.f['test'].fields('x')[:], testdata['x']
         )
+
+        # Check len() on fields wrapper
+        assert len(self.f['test'].fields('x')) == 16
 
 
 class TestSubarray(BaseDataset):
@@ -1463,6 +1470,13 @@ class TestAstype(BaseDataset):
         dset[...] = np.arange(100)
         arr = dset.astype('f4')[:]
         self.assertArrayEqual(arr, np.arange(100, dtype='f4'))
+
+
+    def test_astype_wrapper_len(self):
+        dset = self.f.create_dataset('x', (100,), dtype='i2')
+        dset[...] = np.arange(100)
+        self.assertEqual(100, len(dset.astype('f4')))
+
 
 class TestScalarCompound(BaseDataset):
 
