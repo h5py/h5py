@@ -1,0 +1,15 @@
+New features
+------------
+
+* The pre-built wheels now bundle HDF5 1.12.1.
+* __len__ function for AstypeWrapper
+* __len__ function for AsStrWrapper
+* __len__ function for FieldsWrapper
+
+Bug fixes
+---------
+
+* Fix bug introduced in version 3.3 that did not allow the creation of files using the flag "a" for certain drivers (e.g. mpiio, core and stdio)
+* Dataset indexing will now use the optimized fast path, which was accidentally disabled in a previous version.
+* Fix an error building with Cython 3.0 alpha 8 (``cpdef`` inside functions).
+
