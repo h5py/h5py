@@ -18,4 +18,3 @@ Bug fixes
   disabled in a previous version (:pr:`1944`).
 * Fix an error building with Cython 3.0 alpha 8 (``cpdef`` inside functions)
   (:pr:`1923`).
-
