@@ -1,0 +1,20 @@
+What's new in h5py 3.4
+======================
+
+New features
+------------
+
+* The pre-built wheels now bundle HDF5 1.12.1 (:pr:`1945`).
+* ``len()`` now works on ``dset.astype()``, ``.asstr()`` and ``.fields()``
+  wrappers (:pr:`1913`).
+
+Bug fixes
+---------
+
+* Fix bug introduced in version 3.3 that did not allow the creation of files
+  using the flag "a" for certain drivers (e.g. mpiio, core and stdio)
+  (:pr:`1922`).
+* Dataset indexing will now use the optimized fast path, which was accidentally
+  disabled in a previous version (:pr:`1944`).
+* Fix an error building with Cython 3.0 alpha 8 (``cpdef`` inside functions)
+  (:pr:`1923`).
