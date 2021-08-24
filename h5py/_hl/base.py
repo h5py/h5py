@@ -348,7 +348,7 @@ class HLObject(CommonStateObject):
     def __eq__(self, other):
         if hasattr(other, 'id'):
             return self.id == other.id
-        return False
+        return NotImplemented
 
     @with_phil
     def __ne__(self, other):
