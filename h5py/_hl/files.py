@@ -347,6 +347,7 @@ class File(Group):
                  libver=None, userblock_size=None, swmr=False,
                  rdcc_nslots=None, rdcc_nbytes=None, rdcc_w0=None,
                  track_order=None, fs_strategy=None, fs_persist=False, fs_threshold=1,
+                 locking=None,
                  **kwds):
         """Create a new file object.
 
@@ -417,6 +418,15 @@ class File(Group):
             The smallest free-space section size that the free space manager
             will track.  Only allowed when creating a new file.  The default
             value is 1.
+        locking
+            The file locking behavior. Defined as:
+            "false" (or False)  Disable file locking
+            "true" (or True)    Enable file locking
+            "best-effort"       Enable file locking but ignores some errors
+            None                Use HDF5 defaults
+            Warning: The HDF5_USE_FILE_LOCKING environment variable can override
+            this parameter.
+            Only available with HDF5 >= 1.12.1.
         Additional keywords
             Passed on to the selected file driver.
 
@@ -430,6 +440,9 @@ class File(Group):
         if driver == 'ros3' and not ros3:
             raise ValueError(
                 "h5py was built without ROS3 support, can't use ros3 driver")
+
+        if locking is not None and hdf5_version < (1, 12, 1):
+            raise ValueError("HDF version 1.12.1 or greater required for file locking.")
 
         if isinstance(name, _objects.ObjectID):
             if fs_strategy:
@@ -464,7 +477,7 @@ class File(Group):
                 )
 
             with phil:
-                fapl = make_fapl(driver, libver, rdcc_nslots, rdcc_nbytes, rdcc_w0, **kwds)
+                fapl = make_fapl(driver, libver, rdcc_nslots, rdcc_nbytes, rdcc_w0, locking, **kwds)
                 fid = make_fid(name, mode, userblock_size,
                                fapl, fcpl=make_fcpl(track_order=track_order, fs_strategy=fs_strategy,
                                fs_persist=fs_persist, fs_threshold=fs_threshold),
