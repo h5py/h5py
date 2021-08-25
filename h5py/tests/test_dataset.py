@@ -1738,3 +1738,21 @@ def test_allow_unknown_filter(writable_file):
         allow_unknown_filter=True
     )
     assert str(fake_filter_id) in ds._filters
+
+
+class TestCommutative(BaseDataset):
+    """
+    Test the symmetry of operators, at least with the numpy types. 
+    Issue: https://github.com/h5py/h5py/issues/1947
+    """
+    def test_commutative(self,):
+        """
+        Create a h5py dataset and convert to numpy. Check that it returns correct result
+        """
+        shape = (100,1)
+        dset = self.f.create_dataset("test", shape, dtype=float)
+        # dset[:] = np.random.random(100)
+
+        # check that mask arrays are symmetric
+        val = dset[0]
+        assert np.all((val == dset) == (dset == val))
