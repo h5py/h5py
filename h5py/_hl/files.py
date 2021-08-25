@@ -108,7 +108,7 @@ def registered_drivers():
     return frozenset(_drivers)
 
 
-def make_fapl(driver, libver, rdcc_nslots, rdcc_nbytes, rdcc_w0, **kwds):
+def make_fapl(driver, libver, rdcc_nslots, rdcc_nbytes, rdcc_w0, locking=None, **kwds):
     """ Set up a file access property list """
     plist = h5p.create(h5p.FILE_ACCESS)
 
@@ -131,6 +131,19 @@ def make_fapl(driver, libver, rdcc_nslots, rdcc_nbytes, rdcc_w0, **kwds):
     if rdcc_w0 is not None:
         cache_settings[3] = rdcc_w0
     plist.set_cache(*cache_settings)
+
+    if locking is not None:
+        if hdf5_version < (1, 12, 1):
+            raise ValueError("HDF version 1.12.1 or greater required for file locking.")
+
+        if locking in ("false", False):
+            plist.set_file_locking(False, ignore_when_disabled=False)
+        elif locking in ("true", True):
+            plist.set_file_locking(True, ignore_when_disabled=False)
+        elif locking == "best-effort":
+            plist.set_file_locking(True, ignore_when_disabled=True)
+        else:
+            raise ValueError("Unsupported locking value: %s" % locking)
 
     if driver is None or (driver == 'windows' and sys.platform == 'win32'):
         # Prevent swallowing unused key arguments
