@@ -1756,7 +1756,7 @@ class TestCommutative(BaseDataset):
 
         # grab a value from the elements, ie dset[0]
         # check that mask arrays are commutative wrt ==, !=
-        val = np.float32(dset[0])
+        val = np.float64(dset[0])
 
         assert np.all((val == dset) == (dset == val))
         assert np.all((val != dset) == (dset != val))
