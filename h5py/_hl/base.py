@@ -350,13 +350,6 @@ class HLObject(CommonStateObject):
             return self.id == other.id
         return NotImplemented
 
-    @with_phil
-    def __ne__(self, other):
-        eq = self.__eq__(other)
-        if type(eq) == 'bool':
-            return not eq
-        return NotImplemented
-
     def __bool__(self):
         with phil:
             return bool(self.id)
