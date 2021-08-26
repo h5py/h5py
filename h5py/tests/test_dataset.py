@@ -1742,12 +1742,12 @@ def test_allow_unknown_filter(writable_file):
 
 class TestCommutative(BaseDataset):
     """
-    Test the symmetry of operators, at least with the numpy types. 
+    Test the symmetry of operators, at least with the numpy types.
     Issue: https://github.com/h5py/h5py/issues/1947
     """
     def test_numpy_commutative(self,):
         """
-        Create a h5py dataset and convert to numpy. 
+        Create a h5py dataset and convert to numpy.
 
         Check that it returns symmetric response to == and !=
         """
@@ -1772,7 +1772,7 @@ class TestCommutative(BaseDataset):
 
     def test_basetype_commutative(self,):
         """
-        Create a h5py dataset and check basetype compatibility. 
+        Create a h5py dataset and check basetype compatibility.
         Check that it returns correct result
         """
         shape = (100,1)
