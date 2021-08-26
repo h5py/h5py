@@ -1747,8 +1747,7 @@ class TestCommutative(BaseDataset):
     """
     def test_numpy_commutative(self,):
         """
-        Create a h5py dataset and convert to numpy.
-
+        Create a h5py dataset, extract one element convert to numpy
         Check that it returns symmetric response to == and !=
         """
         shape = (100,1)
@@ -1757,7 +1756,7 @@ class TestCommutative(BaseDataset):
 
         # grab a value from the elements, ie dset[0]
         # check that mask arrays are commutative wrt ==, !=
-        val = dset[0]
+        val = np.float32(dset[0])
 
         assert np.all((val == dset) == (dset == val))
         assert np.all((val != dset) == (dset != val))
@@ -1773,7 +1772,8 @@ class TestCommutative(BaseDataset):
     def test_basetype_commutative(self,):
         """
         Create a h5py dataset and check basetype compatibility.
-        Check that it returns correct result
+        Check that operation is symmetric, even if it is potentially
+        not meaningful.
         """
         shape = (100,1)
         dset = self.f.create_dataset("test", shape, dtype=float,
