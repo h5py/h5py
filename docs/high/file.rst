@@ -99,13 +99,15 @@ of supported drivers and their options:
         Allows read only access to HDF5 files on S3. Keywords:
 
         aws_region:
-          Name of the AWS "region" of the host, e.g. "us-east-1". Default is ''.
+          Name of the AWS "region" where the S3 bucket with the file is, e.g. "us-east-1". Default is ``b''``.
 
         secret_id:
-          "Access ID" for the resource. Default is ''.
+          "Access ID" for the resource. Default is ``b''``.
 
         secret_key:
-          "Secret Access Key" associated with the ID and resource. Default is ''.
+          "Secret Access Key" associated with the ID and resource. Default is ``b''``.
+
+        The argument values must be ``bytes`` objects.
 
 
 .. _file_fileobj:
