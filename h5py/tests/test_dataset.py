@@ -1738,3 +1738,49 @@ def test_allow_unknown_filter(writable_file):
         allow_unknown_filter=True
     )
     assert str(fake_filter_id) in ds._filters
+
+
+class TestCommutative(BaseDataset):
+    """
+    Test the symmetry of operators, at least with the numpy types.
+    Issue: https://github.com/h5py/h5py/issues/1947
+    """
+    def test_numpy_commutative(self,):
+        """
+        Create a h5py dataset, extract one element convert to numpy
+        Check that it returns symmetric response to == and !=
+        """
+        shape = (100,1)
+        dset = self.f.create_dataset("test", shape, dtype=float,
+                                     data=np.random.rand(*shape))
+
+        # grab a value from the elements, ie dset[0]
+        # check that mask arrays are commutative wrt ==, !=
+        val = np.float64(dset[0])
+
+        assert np.all((val == dset) == (dset == val))
+        assert np.all((val != dset) == (dset != val))
+
+        # generate sample not in the dset, ie max(dset)+delta
+        # check that mask arrays are commutative wrt ==, !=
+        delta = 0.001
+        nval = np.nanmax(dset)+delta
+
+        assert np.all((nval == dset) == (dset == nval))
+        assert np.all((nval != dset) == (dset != nval))
+
+    def test_basetype_commutative(self,):
+        """
+        Create a h5py dataset and check basetype compatibility.
+        Check that operation is symmetric, even if it is potentially
+        not meaningful.
+        """
+        shape = (100,1)
+        dset = self.f.create_dataset("test", shape, dtype=float,
+                                     data=np.random.rand(*shape))
+
+        # generate float type, sample float(0.)
+        # check that operation is symmetric (but potentially meaningless)
+        val = float(0.)
+        assert (val == dset) == (dset == val)
+        assert (val != dset) == (dset != val)
