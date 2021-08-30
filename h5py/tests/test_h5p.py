@@ -91,8 +91,10 @@ class TestFA(TestCase):
         self.assertEqual((threshold, alignment),
                          falist.get_alignment())
 
-    @ut.skipIf(version.hdf5_version_tuple < (1, 12, 1),
-               'Requires HDF5 1.12.1 or later')
+    @ut.skipUnless(
+        version.hdf5_version_tuple >= (1, 12, 1) or
+        (version.hdf5_version_tuple[:2] == (1, 10) and version.hdf5_version_tuple[2] >= 7),
+        'Requires HDF5 1.12.1 or later or 1.10.x >= 1.10.7')
     def test_set_file_locking(self):
         '''test get/set file locking'''
         falist = h5p.create(h5p.FILE_ACCESS)

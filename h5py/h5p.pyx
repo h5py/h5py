@@ -1342,7 +1342,7 @@ cdef class PropFAID(PropInstanceID):
             finally:
                 PyBuffer_Release(&buf)
 
-    IF HDF5_VERSION >= (1, 12, 1):
+    IF HDF5_VERSION >= (1, 12, 1) or (HDF5_VERSION[:2] == (1, 10) and HDF5_VERSION[2] >= 7):
 
         @with_phil
         def get_file_locking(self):
