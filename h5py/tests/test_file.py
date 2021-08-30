@@ -895,7 +895,7 @@ def test_file_locking_multiprocess(tmp_path):
         assert not open_in_subprocess(fname, mode="r", locking=True)
 
         # Opening again without locking is expected to work
-        assert open_in_subprocess(fname, mode="r", locking=False) is True
+        assert open_in_subprocess(fname, mode="r", locking=False)
 
 
 # unittest doesn't work with pytest fixtures (and possibly other features),
