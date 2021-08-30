@@ -133,8 +133,9 @@ def make_fapl(driver, libver, rdcc_nslots, rdcc_nbytes, rdcc_w0, locking=None, *
     plist.set_cache(*cache_settings)
 
     if locking is not None:
-        if hdf5_version < (1, 12, 1):
-            raise ValueError("HDF version 1.12.1 or greater required for file locking.")
+        if hdf5_version < (1, 12, 1) and (hdf5_version[:2] != (1, 10) or hdf5_version[2] < 7):
+            raise ValueError(
+                "HDF version >= 1.12.1 or 1.10.x >= 1.10.7 required for file locking.")
 
         if locking in ("false", False):
             plist.set_file_locking(False, ignore_when_disabled=False)
@@ -426,7 +427,7 @@ class File(Group):
             None                Use HDF5 defaults
             Warning: The HDF5_USE_FILE_LOCKING environment variable can override
             this parameter.
-            Only available with HDF5 >= 1.12.1.
+            Only available with HDF5 >= 1.12.1 or 1.10.x >= 1.10.7.
         Additional keywords
             Passed on to the selected file driver.
 
@@ -441,8 +442,9 @@ class File(Group):
             raise ValueError(
                 "h5py was built without ROS3 support, can't use ros3 driver")
 
-        if locking is not None and hdf5_version < (1, 12, 1):
-            raise ValueError("HDF version 1.12.1 or greater required for file locking.")
+        if locking is not None and hdf5_version < (1, 12, 1) and (
+                hdf5_version[:2] != (1, 10) or hdf5_version[2] < 7):
+            raise ValueError("HDF version >= 1.12.1 or 1.10.x >= 1.10.7 required for file locking.")
 
         if isinstance(name, _objects.ObjectID):
             if fs_strategy:
