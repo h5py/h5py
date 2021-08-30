@@ -421,8 +421,8 @@ class File(Group):
             value is 1.
         locking
             The file locking behavior. Defined as:
-            "false" (or False)  Disable file locking
-            "true" (or True)    Enable file locking
+            False (or "false")  Disable file locking
+            True (or "true")    Enable file locking
             "best-effort"       Enable file locking but ignores some errors
             None                Use HDF5 defaults
             Warning: The HDF5_USE_FILE_LOCKING environment variable can override
