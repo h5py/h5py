@@ -878,24 +878,23 @@ def test_file_locking_multiprocess(tmp_path):
 
     def open_in_subprocess(filename, mode, locking):
         """Try to open HDF5 file a subprocess and return CompletedProcess"""
+        escaped_filename = "\\\\".join(str(filename).split("\\"))
         process = subprocess.run(
             [
                 sys.executable,
                 "-c",
-                f"import h5py; f = h5py.File('{str(filename)}', mode='{mode}', locking={locking})",
+                f"import h5py; f = h5py.File('{escaped_filename}', mode='{mode}', locking={locking})",
             ],
             capture_output=True)
         return process.returncode == 0 and not process.stderr
 
-
+    # Create test file
     with h5py.File(fname, mode="w", locking=True) as f:
-        f.flush()
+        f["data"] = 1
 
-        # Opening again with locking is expected to fail
-        assert not open_in_subprocess(fname, mode="r", locking=True)
-
-        # Opening again without locking is expected to work
-        assert open_in_subprocess(fname, mode="r", locking=False)
+    with h5py.File(fname, mode="r", locking=False) as f:
+        # Opening in write mode with locking is expected to work
+        assert open_in_subprocess(fname, mode="w", locking=True)
 
 
 # unittest doesn't work with pytest fixtures (and possibly other features),
