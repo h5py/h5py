@@ -113,6 +113,9 @@ def make_new_dset(parent, shape=None, dtype=None, data=None, name=None,
         fillvalue = numpy.array(fillvalue)
         dcpl.set_fill_value(fillvalue)
 
+    if track_times is None:
+        # In case someone explicitly passes None for the default
+        track_times = False
     if track_times in (True, False):
         dcpl.set_obj_track_times(track_times)
     else:
