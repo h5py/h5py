@@ -92,14 +92,16 @@ cdef class GroupIter:
     cdef unsigned long nobjs
     cdef GroupID grp
     cdef list names
+    cdef bint reversed
 
 
-    def __init__(self, GroupID grp not None):
+    def __init__(self, GroupID grp not None, bint reversed=False):
 
         self.idx = 0
         self.grp = grp
         self.nobjs = grp.get_num_objs()
         self.names = []
+        self.reversed = reversed
 
 
     def __iter__(self):
@@ -125,6 +127,8 @@ cdef class GroupIter:
 
             self.grp.links.iterate(self.names.append,
                                    idx_type=idx_type)
+            if self.reversed:
+                self.names.reverse()
 
         retval = self.names[self.idx]
         self.idx += 1
@@ -473,6 +477,10 @@ cdef class GroupID(ObjectID):
         with phil:
             return GroupIter(self)
 
+    def __reversed__(self):
+        """ Return an iterator over group member names in reverse order. """
+        with phil:
+            return GroupIter(self, reversed=True)
 
     def __len__(self):
         """ Number of group members """
