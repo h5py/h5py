@@ -32,6 +32,8 @@ MANIFEST
 .coverage
 .coverage_dir
 coverage.xml
+.vscode/
+.mypy_cache/
 
 # Rever
 rever/
