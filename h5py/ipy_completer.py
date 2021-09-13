@@ -41,7 +41,6 @@
 
 import posixpath
 import re
-import readline
 from ._hl.attrs import AttributeManager
 from ._hl.base import HLObject
 
@@ -116,7 +115,6 @@ def h5py_item_completer(context, command):
         return []
 
     items = list(items)
-    readline.set_completer_delims(' \t\n`!@#$^&*()=+[{]}\\|;:\'",<>?')
 
     return [i for i in items if i[:len(item)] == item]
 
@@ -160,8 +158,6 @@ def h5py_attr_completer(context, command):
         attrs = [a for a in attrs if not a.startswith('__')]
     elif omit__names == 2:
         attrs = [a for a in attrs if not a.startswith('_')]
-
-    readline.set_completer_delims(' =')
 
     return ["%s.%s" % (base, a) for a in attrs if a[:len(attr)] == attr]
 
