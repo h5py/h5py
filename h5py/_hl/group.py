@@ -454,6 +454,12 @@ class Group(HLObject, MutableMappingHDF5):
             yield self._d(x)
 
     @with_phil
+    def __reversed__(self):
+        """ Iterate over member names in reverse order. """
+        for x in self.id.__reversed__():
+            yield self._d(x)
+
+    @with_phil
     def __contains__(self, name):
         """ Test if a member name exists """
         return self._e(name) in self.id
