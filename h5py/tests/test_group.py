@@ -445,8 +445,7 @@ class TestTrackOrder(BaseGroup):
         g = self.f.create_group('order', track_order=False)  # name alphanumeric
         self.populate(g)
 
-        ref = [str(i) for i in range(100)]
-        ref.sort()
+        ref = sorted([str(i) for i in range(100)])
         self.assertEqual(list(g), ref)
         self.assertEqual(list(reversed(g)), list(reversed(ref)))
 

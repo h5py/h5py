@@ -1,7 +1,7 @@
 New features
 ------------
 
-The ``__reversed__`` method has been added to the following iterables:
+The built-in ``reversed()`` function now works with the following iterables:
 * `GroupID`
 * `Group`
 * `KeysViewHDF5`
