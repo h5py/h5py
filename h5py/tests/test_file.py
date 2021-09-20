@@ -879,11 +879,19 @@ def test_file_locking_multiprocess(tmp_path):
     def open_in_subprocess(filename, mode, locking):
         """Try to open HDF5 file a subprocess and return CompletedProcess"""
         escaped_filename = "\\\\".join(str(filename).split("\\"))
+        h5py_import_dir = pathlib.Path(h5py.__file__).parent.parent
+        escaped_h5py_import_dir = "\\\\".join(str(h5py_import_dir).split("\\"))
+
         process = subprocess.run(
             [
                 sys.executable,
                 "-c",
-                f"import h5py; f = h5py.File('{escaped_filename}', mode='{mode}', locking={locking})",
+                f"""
+import sys
+sys.path.insert(0, '{escaped_h5py_import_dir}')
+import h5py
+f = h5py.File('{escaped_filename}', mode='{mode}', locking={locking})
+                """,
             ],
             capture_output=True)
         return process.returncode == 0 and not process.stderr
