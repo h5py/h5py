@@ -38,7 +38,7 @@ MPI = h5.get_config().mpi
 def make_new_dset(parent, shape=None, dtype=None, data=None, name=None,
                   chunks=None, compression=None, shuffle=None,
                   fletcher32=None, maxshape=None, compression_opts=None,
-                  fillvalue=None, scaleoffset=None, track_times=None,
+                  fillvalue=None, scaleoffset=None, track_times=False,
                   external=None, track_order=None, dcpl=None,
                   allow_unknown_filter=False):
     """ Return a new low-level dataset identifier """
@@ -113,9 +113,12 @@ def make_new_dset(parent, shape=None, dtype=None, data=None, name=None,
         fillvalue = numpy.array(fillvalue)
         dcpl.set_fill_value(fillvalue)
 
+    if track_times is None:
+        # In case someone explicitly passes None for the default
+        track_times = False
     if track_times in (True, False):
         dcpl.set_obj_track_times(track_times)
-    elif track_times is not None:
+    else:
         raise TypeError("track_times must be either True or False")
     if track_order is True:
         dcpl.set_attr_creation_order(
