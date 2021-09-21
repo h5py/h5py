@@ -868,6 +868,13 @@ class TestFileLocking:
             with h5py.File(fname, mode="r", locking='best-effort') as h5f_read:
                 pass
 
+    def test_unsupported_locking(self, tmp_path):
+        """Test with erroneous file locking value"""
+        fname = tmp_path / "test.h5"
+        with pytest.raises(ValueError):
+            with h5py.File(fname, mode="r", locking='unsupported-value') as h5f_read:
+                pass
+
     def test_multiprocess(self, tmp_path):
         """Test file locking option from different concurrent processes"""
         fname = tmp_path / "test.h5"
