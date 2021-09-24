@@ -82,6 +82,14 @@ IF HDF5_VERSION >= (1, 10, 1):
     FSPACE_STRATEGY_AGGR = H5F_FSPACE_STRATEGY_AGGR
     FSPACE_STRATEGY_NONE = H5F_FSPACE_STRATEGY_NONE
 
+    # Used in FileID.get_page_buffering_stats()
+    PageBufStats = namedtuple('PageBufferStats', ['meta', 'raw'])
+    MetaStats = namedtuple(
+        'MetaStats', ['accesses', 'hits', 'misses', 'evictions', 'bypasses'])
+    RawStats = namedtuple(
+        'RawStats', ['accesses', 'hits', 'misses', 'evictions', 'bypasses'])
+
+
 # === File operations =========================================================
 
 @with_phil
@@ -611,11 +619,6 @@ cdef class FileID(GroupID):
 
             H5Fget_page_buffering_stats(
                 self.id, &accesses[0], &hits[0], &misses[0], &evictions[0], &bypasses[0])
-            PageBufStats = namedtuple('PageBufferStats', ['meta', 'raw'])
-            MetaStats = namedtuple(
-                'MetaStats', ['accesses', 'hits', 'misses', 'evictions', 'bypasses'])
-            RawStats = namedtuple(
-                'RawStats', ['accesses', 'hits', 'misses', 'evictions', 'bypasses'])
             meta = MetaStats(int(accesses[0]), int(hits[0]), int(misses[0]),
                              int(evictions[0]), int(bypasses[0]))
             raw = RawStats(int(accesses[1]), int(hits[1]), int(misses[1]),
