@@ -24,6 +24,7 @@ from .h5ac cimport CacheConfig
 from .utils cimport emalloc, efree
 
 # Python level imports
+from collections import namedtuple
 import gc
 from . import _objects
 from ._objects import phil, with_phil
@@ -582,3 +583,42 @@ cdef class FileID(GroupID):
             Feature requires: 1.9.178 HDF5
             """
             H5Fstart_swmr_write(self.id)
+
+    IF HDF5_VERSION >= (1, 10, 1):
+
+        @with_phil
+        def reset_page_buffering_stats(self):
+            """ ()
+
+            Reset page buffer statistics for the file.
+            """
+            H5Freset_page_buffering_stats(self.id)
+
+        @with_phil
+        def get_page_buffering_stats(self):
+            """ () -> PageBufStats(MetaStats, RawStats)
+
+            Retrieve page buffering statistics for the file as the number of
+            metadata and raw data accesses, hits, misses, evictions, and
+            accesses that bypass the page buffer (bypasses).
+            """
+            cdef:
+                unsigned int accesses[2]
+                unsigned int hits[2]
+                unsigned int misses[2]
+                unsigned int evictions[2]
+                unsigned int bypasses[2]
+
+            H5Fget_page_buffering_stats(
+                self.id, &accesses[0], &hits[0], &misses[0], &evictions[0], &bypasses[0])
+            PageBufStats = namedtuple('PageBufferStats', ['meta', 'raw'])
+            MetaStats = namedtuple(
+                'MetaStats', ['accesses', 'hits', 'misses', 'evictions', 'bypasses'])
+            RawStats = namedtuple(
+                'RawStats', ['accesses', 'hits', 'misses', 'evictions', 'bypasses'])
+            meta = MetaStats(int(accesses[0]), int(hits[0]), int(misses[0]),
+                             int(evictions[0]), int(bypasses[0]))
+            raw = RawStats(int(accesses[1]), int(hits[1]), int(misses[1]),
+                           int(evictions[1]), int(bypasses[1]))
+
+            return PageBufStats(meta, raw)

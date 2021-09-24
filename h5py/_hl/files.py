@@ -108,7 +108,8 @@ def registered_drivers():
     return frozenset(_drivers)
 
 
-def make_fapl(driver, libver, rdcc_nslots, rdcc_nbytes, rdcc_w0, **kwds):
+def make_fapl(driver, libver, rdcc_nslots, rdcc_nbytes, rdcc_w0, page_buf_size,
+              min_meta_keep, min_raw_keep, **kwds):
     """ Set up a file access property list """
     plist = h5p.create(h5p.FILE_ACCESS)
 
@@ -132,6 +133,10 @@ def make_fapl(driver, libver, rdcc_nslots, rdcc_nbytes, rdcc_w0, **kwds):
         cache_settings[3] = rdcc_w0
     plist.set_cache(*cache_settings)
 
+    if page_buf_size:
+        plist.set_page_buffer_size(int(page_buf_size), int(min_meta_keep),
+                                   int(min_raw_keep))
+
     if driver is None or (driver == 'windows' and sys.platform == 'win32'):
         # Prevent swallowing unused key arguments
         if kwds:
@@ -150,7 +155,8 @@ def make_fapl(driver, libver, rdcc_nslots, rdcc_nbytes, rdcc_w0, **kwds):
     return plist
 
 
-def make_fcpl(track_order=False, fs_strategy=None, fs_persist=False, fs_threshold=1):
+def make_fcpl(track_order=False, fs_strategy=None, fs_persist=False,
+              fs_threshold=1, fs_page_size=None):
     """ Set up a file creation property list """
     if track_order or fs_strategy:
         plist = h5p.create(h5p.FILE_CREATE)
@@ -171,6 +177,8 @@ def make_fcpl(track_order=False, fs_strategy=None, fs_persist=False, fs_threshol
                 raise ValueError("Invalid file space strategy type")
 
             plist.set_file_space_strategy(fs_strat_num, fs_persist, fs_threshold)
+            if fs_page_size and fs_strategy == 'page':
+                plist.set_file_space_page_size(int(fs_page_size))
     else:
         plist = None
     return plist
@@ -230,9 +238,9 @@ def make_fid(name, mode, userblock_size, fapl, fcpl=None, swmr=False):
             existing_fcpl = fid.get_create_plist()
             if existing_fcpl.get_userblock() != userblock_size:
                 raise ValueError("Requested userblock size (%d) does not match that of existing file (%d)" % (userblock_size, existing_fcpl.get_userblock()))
-    except:
+    except Exception as e:
         fid.close()
-        raise
+        raise e
 
     return fid
 
@@ -332,8 +340,9 @@ class File(Group):
 
     def __init__(self, name, mode='r', driver=None,
                  libver=None, userblock_size=None, swmr=False,
-                 rdcc_nslots=None, rdcc_nbytes=None, rdcc_w0=None,
-                 track_order=None, fs_strategy=None, fs_persist=False, fs_threshold=1,
+                 rdcc_nslots=None, rdcc_nbytes=None, rdcc_w0=None, track_order=None,
+                 fs_strategy=None, fs_persist=False, fs_threshold=1, fs_page_size=None,
+                 page_buf_size=None, min_meta_keep=0, min_raw_keep=0,
                  **kwds):
         """Create a new file object.
 
@@ -396,6 +405,9 @@ class File(Group):
             "aggregate"  Aggregators, VFD
             "none"       VFD
             If None use HDF5 defaults.
+        fs_page_size
+            File space page size in bytes. Only used when fs_strategy="page". If
+            None use HDF5 defaults.
         fs_persist
             A boolean value to indicate whether free space should be persistent
             or not.  Only allowed when creating a new file.  The default value
@@ -404,12 +416,24 @@ class File(Group):
             The smallest free-space section size that the free space manager
             will track.  Only allowed when creating a new file.  The default
             value is 1.
+        page_buf_size
+            Page buffer size in bytes. Only allowed in "r" or "r+" modes and for
+            HDF5 files created with fs_strategy="page". Must be a power of two
+            value and greater or equal than the file space page size when
+            creating the file. It is not used by default.
+        min_meta_keep
+            Minimum percentage of metadata to keep in the page buffer before
+            allowing pages containing metadata to be evicted. Applicable only if
+            page_buf_size is set. Default value is zero.
+        min_raw_keep
+            Minimum percentage of raw data to keep in the page buffer before
+            allowing pages containing raw data to be evicted. Applicable only if
+            page_buf_size is set. Default value is zero.
         Additional keywords
             Passed on to the selected file driver.
-
         """
-        if fs_strategy and hdf5_version < (1, 10, 1):
-            raise ValueError("HDF version 1.10.1 or greater required for file space strategy support.")
+        if (fs_strategy or page_buf_size) and hdf5_version < (1, 10, 1):
+            raise ValueError("HDF version 1.10.1 or greater required for file space strategy or page buffering support.")
 
         if swmr and not swmr_support:
             raise ValueError("The SWMR feature is not available in this version of the HDF5 library")
@@ -443,6 +467,9 @@ class File(Group):
             if fs_strategy and mode not in ('w', 'w-', 'x'):
                 raise ValueError("Unable to set file space strategy of an existing file")
 
+            if page_buf_size and mode not in ('r', 'r+'):
+                raise ValueError("Unable to set page buffer size if creating file")
+
             if swmr and mode != 'r':
                 warn(
                     "swmr=True only affects read ('r') mode. For swmr write "
@@ -451,11 +478,12 @@ class File(Group):
                 )
 
             with phil:
-                fapl = make_fapl(driver, libver, rdcc_nslots, rdcc_nbytes, rdcc_w0, **kwds)
-                fid = make_fid(name, mode, userblock_size,
-                               fapl, fcpl=make_fcpl(track_order=track_order, fs_strategy=fs_strategy,
-                               fs_persist=fs_persist, fs_threshold=fs_threshold),
-                               swmr=swmr)
+                fapl = make_fapl(driver, libver, rdcc_nslots, rdcc_nbytes, rdcc_w0,
+                                 page_buf_size, min_meta_keep, min_raw_keep, **kwds)
+                fcpl = make_fcpl(track_order=track_order, fs_strategy=fs_strategy,
+                                 fs_persist=fs_persist, fs_threshold=fs_threshold,
+                                 fs_page_size=fs_page_size)
+                fid = make_fid(name, mode, userblock_size, fapl, fcpl, swmr=swmr)
 
             if isinstance(libver, tuple):
                 self._libver = libver
@@ -504,7 +532,6 @@ class File(Group):
             filename = self.filename
             if isinstance(filename, bytes):  # Can't decode fname
                 filename = filename.decode('utf8', 'replace')
-            r = '<HDF5 file "%s" (mode %s)>' % (os.path.basename(filename),
-                                                 self.mode)
+            r = f'<HDF5 file "{os.path.basename(filename)}" (mode {self.mode})>'
 
         return r
