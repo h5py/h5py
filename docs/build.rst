@@ -158,6 +158,26 @@ to work together.
 We recommend examining the appveyor build scripts, and using those to build and
 install HDF5 and h5py.
 
+Downstream packagers
+....................
+If you are building h5py for another packaging system - e.g. Linux distros or
+packaging aimed at HPC users - you probably want to satisfy build dependencies
+from your packaging system. To build without automatically fetching
+dependencies, use a command like::
+
+    H5PY_SETUP_REQUIRES=0 pip install . --no-deps --no-build-isolation
+
+Depending on your packaging system, you may need to use the ``--prefix`` or
+``--root`` options to control where files get installed.
+
+h5py's Python packaging has build dependencies on the oldest compatible
+versions of NumPy and mpi4py. You can build with newer versions of these,
+but the resulting h5py binaries will only work with the NumPy & mpi4py versions
+they were built with (or newer). Mpi4py is an optional dependency, only required
+for :ref:`parallel` features.
+
+You should also look at the build options under :ref:`custom_install`.
+
 .. _custom_install:
 
 Custom installation
