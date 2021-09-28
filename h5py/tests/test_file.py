@@ -880,10 +880,8 @@ class TestFileLocking:
         fname = tmp_path / "test.h5"
 
         def open_in_subprocess(filename, mode, locking):
-            """Try to open HDF5 file a subprocess and return CompletedProcess"""
-            escaped_filename = "\\\\".join(str(filename).split("\\"))
-            h5py_import_dir = pathlib.Path(h5py.__file__).parent.parent
-            escaped_h5py_import_dir = "\\\\".join(str(h5py_import_dir).split("\\"))
+            """Open HDF5 file in a subprocess and return True on success"""
+            h5py_import_dir = str(pathlib.Path(h5py.__file__).parent.parent)
 
             process = subprocess.run(
                 [
@@ -891,9 +889,9 @@ class TestFileLocking:
                     "-c",
                     f"""
 import sys
-sys.path.insert(0, '{escaped_h5py_import_dir}')
+sys.path.insert(0, {h5py_import_dir!r})
 import h5py
-f = h5py.File('{escaped_filename}', mode='{mode}', locking={locking})
+f = h5py.File({str(filename)!r}, mode={mode!r}, locking={locking})
                     """,
                 ],
                 capture_output=True)
