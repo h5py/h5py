@@ -444,7 +444,7 @@ class File(Group):
 
         if locking is not None and hdf5_version < (1, 12, 1) and (
                 hdf5_version[:2] != (1, 10) or hdf5_version[2] < 7):
-            raise ValueError("HDF version >= 1.12.1 or 1.10.x >= 1.10.7 required for file locking.")
+            raise ValueError("HDF version >= 1.12.1 or 1.10.x >= 1.10.7 required for file locking options.")
 
         if isinstance(name, _objects.ObjectID):
             if fs_strategy:
