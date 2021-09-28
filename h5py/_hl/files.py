@@ -108,7 +108,7 @@ def registered_drivers():
     return frozenset(_drivers)
 
 
-def make_fapl(driver, libver, rdcc_nslots, rdcc_nbytes, rdcc_w0, **kwds):
+def make_fapl(driver, libver, rdcc_nslots, rdcc_nbytes, rdcc_w0, locking=None, **kwds):
     """ Set up a file access property list """
     plist = h5p.create(h5p.FILE_ACCESS)
 
@@ -131,6 +131,20 @@ def make_fapl(driver, libver, rdcc_nslots, rdcc_nbytes, rdcc_w0, **kwds):
     if rdcc_w0 is not None:
         cache_settings[3] = rdcc_w0
     plist.set_cache(*cache_settings)
+
+    if locking is not None:
+        if hdf5_version < (1, 12, 1) and (hdf5_version[:2] != (1, 10) or hdf5_version[2] < 7):
+            raise ValueError(
+                "HDF version >= 1.12.1 or 1.10.x >= 1.10.7 required for file locking.")
+
+        if locking in ("false", False):
+            plist.set_file_locking(False, ignore_when_disabled=False)
+        elif locking in ("true", True):
+            plist.set_file_locking(True, ignore_when_disabled=False)
+        elif locking == "best-effort":
+            plist.set_file_locking(True, ignore_when_disabled=True)
+        else:
+            raise ValueError("Unsupported locking value: %s" % locking)
 
     if driver is None or (driver == 'windows' and sys.platform == 'win32'):
         # Prevent swallowing unused key arguments
@@ -334,6 +348,7 @@ class File(Group):
                  libver=None, userblock_size=None, swmr=False,
                  rdcc_nslots=None, rdcc_nbytes=None, rdcc_w0=None,
                  track_order=None, fs_strategy=None, fs_persist=False, fs_threshold=1,
+                 locking=None,
                  **kwds):
         """Create a new file object.
 
@@ -404,6 +419,15 @@ class File(Group):
             The smallest free-space section size that the free space manager
             will track.  Only allowed when creating a new file.  The default
             value is 1.
+        locking
+            The file locking behavior. Defined as:
+            False (or "false")  Disable file locking
+            True (or "true")    Enable file locking
+            "best-effort"       Enable file locking but ignores some errors
+            None                Use HDF5 defaults
+            Warning: The HDF5_USE_FILE_LOCKING environment variable can override
+            this parameter.
+            Only available with HDF5 >= 1.12.1 or 1.10.x >= 1.10.7.
         Additional keywords
             Passed on to the selected file driver.
 
@@ -417,6 +441,10 @@ class File(Group):
         if driver == 'ros3' and not ros3:
             raise ValueError(
                 "h5py was built without ROS3 support, can't use ros3 driver")
+
+        if locking is not None and hdf5_version < (1, 12, 1) and (
+                hdf5_version[:2] != (1, 10) or hdf5_version[2] < 7):
+            raise ValueError("HDF version >= 1.12.1 or 1.10.x >= 1.10.7 required for file locking options.")
 
         if isinstance(name, _objects.ObjectID):
             if fs_strategy:
@@ -451,7 +479,7 @@ class File(Group):
                 )
 
             with phil:
-                fapl = make_fapl(driver, libver, rdcc_nslots, rdcc_nbytes, rdcc_w0, **kwds)
+                fapl = make_fapl(driver, libver, rdcc_nslots, rdcc_nbytes, rdcc_w0, locking, **kwds)
                 fid = make_fid(name, mode, userblock_size,
                                fapl, fcpl=make_fcpl(track_order=track_order, fs_strategy=fs_strategy,
                                fs_persist=fs_persist, fs_threshold=fs_threshold),
