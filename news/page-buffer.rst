@@ -1,9 +1,9 @@
 New features
 ------------
 
-* Enable setting file space page size when creating new HDF5 files. A new named argument ``fs_page_size`` was added to ``File()`` class.
-* Enable HDF5 page buffering, a low-level caching feature, that may improve overall I/O performance in some cases. Three new named arguments were added to ``File()`` class: ``page_buf_size``, ``min_meta_keep``, and ``min_raw_keep``.
-* Get and reset HDF5 page buffering statistics. Only available as the low-level API of the ``FileID`` class.
+* Enable setting file space page size when creating new HDF5 files. A new named argument ``fs_page_size`` is added to ``File()`` class.
+* Enable HDF5 page buffering, a low-level caching feature, that may improve overall I/O performance in some cases. Three new named arguments are added to ``File()`` class: ``page_buf_size``, ``min_meta_keep``, and ``min_raw_keep``.
+* Get and reset HDF5 page buffering statistics. Available as the low-level API of the ``FileID`` class.
 
 Exposing HDF5 functions
 -----------------------

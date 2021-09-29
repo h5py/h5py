@@ -108,8 +108,8 @@ def registered_drivers():
     return frozenset(_drivers)
 
 
-def make_fapl(driver, libver, rdcc_nslots, rdcc_nbytes, rdcc_w0, page_buf_size,
-              min_meta_keep, min_raw_keep, **kwds):
+def make_fapl(driver, libver, rdcc_nslots, rdcc_nbytes, rdcc_w0, locking,
+              page_buf_size, min_meta_keep, min_raw_keep, **kwds):
     """ Set up a file access property list """
     plist = h5p.create(h5p.FILE_ACCESS)
 
@@ -136,6 +136,19 @@ def make_fapl(driver, libver, rdcc_nslots, rdcc_nbytes, rdcc_w0, page_buf_size,
     if page_buf_size:
         plist.set_page_buffer_size(int(page_buf_size), int(min_meta_keep),
                                    int(min_raw_keep))
+    if locking is not None:
+        if hdf5_version < (1, 12, 1) and (hdf5_version[:2] != (1, 10) or hdf5_version[2] < 7):
+            raise ValueError(
+                "HDF version >= 1.12.1 or 1.10.x >= 1.10.7 required for file locking.")
+
+        if locking in ("false", False):
+            plist.set_file_locking(False, ignore_when_disabled=False)
+        elif locking in ("true", True):
+            plist.set_file_locking(True, ignore_when_disabled=False)
+        elif locking == "best-effort":
+            plist.set_file_locking(True, ignore_when_disabled=True)
+        else:
+            raise ValueError(f"Unsupported locking value: {locking}")
 
     if driver is None or (driver == 'windows' and sys.platform == 'win32'):
         # Prevent swallowing unused key arguments
@@ -338,12 +351,10 @@ class File(Group):
         else:
             raise RuntimeError('SWMR support is not available in HDF5 version {}.{}.{}.'.format(*hdf5_version))
 
-    def __init__(self, name, mode='r', driver=None,
-                 libver=None, userblock_size=None, swmr=False,
+    def __init__(self, name, mode='r', driver=None, libver=None, userblock_size=None, swmr=False,
                  rdcc_nslots=None, rdcc_nbytes=None, rdcc_w0=None, track_order=None,
                  fs_strategy=None, fs_persist=False, fs_threshold=1, fs_page_size=None,
-                 page_buf_size=None, min_meta_keep=0, min_raw_keep=0,
-                 **kwds):
+                 page_buf_size=None, min_meta_keep=0, min_raw_keep=0, locking=None, **kwds):
         """Create a new file object.
 
         See the h5py user guide for a detailed explanation of the options.
@@ -429,6 +440,15 @@ class File(Group):
             Minimum percentage of raw data to keep in the page buffer before
             allowing pages containing raw data to be evicted. Applicable only if
             page_buf_size is set. Default value is zero.
+        locking
+            The file locking behavior. Defined as:
+            False (or "false")  Disable file locking
+            True (or "true")    Enable file locking
+            "best-effort"       Enable file locking but ignore some errors
+            None                Use HDF5 defaults
+            Warning: The HDF5_USE_FILE_LOCKING environment variable can override
+            this parameter.
+            Only available with HDF5 >= 1.12.1 or 1.10.x >= 1.10.7.
         Additional keywords
             Passed on to the selected file driver.
         """
@@ -441,6 +461,10 @@ class File(Group):
         if driver == 'ros3' and not ros3:
             raise ValueError(
                 "h5py was built without ROS3 support, can't use ros3 driver")
+
+        if locking is not None and hdf5_version < (1, 12, 1) and (
+                hdf5_version[:2] != (1, 10) or hdf5_version[2] < 7):
+            raise ValueError("HDF version >= 1.12.1 or 1.10.x >= 1.10.7 required for file locking options.")
 
         if isinstance(name, _objects.ObjectID):
             if fs_strategy:
@@ -476,7 +500,7 @@ class File(Group):
 
             with phil:
                 fapl = make_fapl(driver, libver, rdcc_nslots, rdcc_nbytes, rdcc_w0,
-                                 page_buf_size, min_meta_keep, min_raw_keep, **kwds)
+                                 locking, page_buf_size, min_meta_keep, min_raw_keep, **kwds)
                 fcpl = make_fcpl(track_order=track_order, fs_strategy=fs_strategy,
                                  fs_persist=fs_persist, fs_threshold=fs_threshold,
                                  fs_page_size=fs_page_size)
