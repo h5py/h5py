@@ -186,6 +186,7 @@ class TestSpaceStrategy(TestCase):
 
 @ut.skipIf(h5py.version.hdf5_version_tuple < (1, 10, 1),
            'Requires HDF5 1.10.1 or later')
+@pytest.mark.mpi_skip
 class TestPageBuffering(TestCase):
     """
         Feature: Use page buffering
