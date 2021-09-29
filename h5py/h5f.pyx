@@ -84,10 +84,7 @@ IF HDF5_VERSION >= (1, 10, 1):
 
     # Used in FileID.get_page_buffering_stats()
     PageBufStats = namedtuple('PageBufferStats', ['meta', 'raw'])
-    MetaStats = namedtuple(
-        'MetaStats', ['accesses', 'hits', 'misses', 'evictions', 'bypasses'])
-    RawStats = namedtuple(
-        'RawStats', ['accesses', 'hits', 'misses', 'evictions', 'bypasses'])
+    PageStats = namedtuple('PageStats', ['accesses', 'hits', 'misses', 'evictions', 'bypasses'])
 
 
 # === File operations =========================================================
@@ -604,7 +601,7 @@ cdef class FileID(GroupID):
 
         @with_phil
         def get_page_buffering_stats(self):
-            """ () -> PageBufStats(MetaStats, RawStats)
+            """ () -> NAMEDTUPLE PageBufStats(NAMEDTUPLE meta=PageStats, NAMEDTUPLE raw=PageStats)
 
             Retrieve page buffering statistics for the file as the number of
             metadata and raw data accesses, hits, misses, evictions, and
@@ -617,11 +614,11 @@ cdef class FileID(GroupID):
                 unsigned int evictions[2]
                 unsigned int bypasses[2]
 
-            H5Fget_page_buffering_stats(
-                self.id, &accesses[0], &hits[0], &misses[0], &evictions[0], &bypasses[0])
-            meta = MetaStats(int(accesses[0]), int(hits[0]), int(misses[0]),
+            H5Fget_page_buffering_stats(self.id, &accesses[0], &hits[0],
+                                        &misses[0], &evictions[0], &bypasses[0])
+            meta = PageStats(int(accesses[0]), int(hits[0]), int(misses[0]),
                              int(evictions[0]), int(bypasses[0]))
-            raw = RawStats(int(accesses[1]), int(hits[1]), int(misses[1]),
-                           int(evictions[1]), int(bypasses[1]))
+            raw = PageStats(int(accesses[1]), int(hits[1]), int(misses[1]),
+                            int(evictions[1]), int(bypasses[1]))
 
             return PageBufStats(meta, raw)

@@ -407,7 +407,7 @@ class File(Group):
             If None use HDF5 defaults.
         fs_page_size
             File space page size in bytes. Only used when fs_strategy="page". If
-            None use HDF5 defaults.
+            None use the HDF5 default (4096 bytes).
         fs_persist
             A boolean value to indicate whether free space should be persistent
             or not.  Only allowed when creating a new file.  The default value
@@ -417,10 +417,10 @@ class File(Group):
             will track.  Only allowed when creating a new file.  The default
             value is 1.
         page_buf_size
-            Page buffer size in bytes. Only allowed in "r" or "r+" modes and for
-            HDF5 files created with fs_strategy="page". Must be a power of two
-            value and greater or equal than the file space page size when
-            creating the file. It is not used by default.
+            Page buffer size in bytes. Only allowed for HDF5 files created with
+            fs_strategy="page". Must be a power of two value and greater or
+            equal than the file space page size when creating the file. It is
+            not used by default.
         min_meta_keep
             Minimum percentage of metadata to keep in the page buffer before
             allowing pages containing metadata to be evicted. Applicable only if
@@ -466,9 +466,6 @@ class File(Group):
 
             if fs_strategy and mode not in ('w', 'w-', 'x'):
                 raise ValueError("Unable to set file space strategy of an existing file")
-
-            if page_buf_size and mode not in ('r', 'r+'):
-                raise ValueError("Unable to set page buffer size if creating file")
 
             if swmr and mode != 'r':
                 warn(
