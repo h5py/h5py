@@ -1,4 +1,4 @@
-ANACONDA_ORG="scipy-wheels-nightly";
+ANACONDA_ORG="test-upload";
 pip install git+https://github.com/Anaconda-Server/anaconda-client;
 
 # rename wheels
