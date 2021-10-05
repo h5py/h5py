@@ -348,11 +348,7 @@ class HLObject(CommonStateObject):
     def __eq__(self, other):
         if hasattr(other, 'id'):
             return self.id == other.id
-        return False
-
-    @with_phil
-    def __ne__(self, other):
-        return not self.__eq__(other)
+        return NotImplemented
 
     def __bool__(self):
         with phil:
@@ -389,6 +385,9 @@ class KeysViewHDF5(KeysView):
     def __str__(self):
         return "<KeysViewHDF5 {}>".format(list(self))
 
+    def __reversed__(self):
+        yield from reversed(self._mapping)
+
     __repr__ = __str__
 
 class ValuesViewHDF5(ValuesView):
@@ -412,6 +411,11 @@ class ValuesViewHDF5(ValuesView):
             for key in self._mapping:
                 yield self._mapping.get(key)
 
+    def __reversed__(self):
+        with phil:
+            for key in reversed(self._mapping):
+                yield self._mapping.get(key)
+
 
 class ItemsViewHDF5(ItemsView):
 
@@ -429,6 +433,11 @@ class ItemsViewHDF5(ItemsView):
     def __iter__(self):
         with phil:
             for key in self._mapping:
+                yield (key, self._mapping.get(key))
+
+    def __reversed__(self):
+        with phil:
+            for key in reversed(self._mapping):
                 yield (key, self._mapping.get(key))
 
 

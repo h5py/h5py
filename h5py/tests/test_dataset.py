@@ -1151,6 +1151,10 @@ class TestStrings(BaseDataset):
         # latin-1 will decode it but give the wrong text
         self.assertNotEqual(ds.asstr('latin-1')[0], data)
 
+        # len of ds
+        self.assertEqual(10, len(ds.asstr()))
+
+
         # Array output
         np.testing.assert_array_equal(
             ds.asstr()[:1], np.array([data], dtype=object)
@@ -1273,6 +1277,9 @@ class TestCompound(BaseDataset):
         np.testing.assert_array_equal(
             self.f['test'].fields('x')[:], testdata['x']
         )
+
+        # Check len() on fields wrapper
+        assert len(self.f['test'].fields('x')) == 16
 
 
 class TestSubarray(BaseDataset):
@@ -1463,6 +1470,13 @@ class TestAstype(BaseDataset):
         dset[...] = np.arange(100)
         arr = dset.astype('f4')[:]
         self.assertArrayEqual(arr, np.arange(100, dtype='f4'))
+
+
+    def test_astype_wrapper_len(self):
+        dset = self.f.create_dataset('x', (100,), dtype='i2')
+        dset[...] = np.arange(100)
+        self.assertEqual(100, len(dset.astype('f4')))
+
 
 class TestScalarCompound(BaseDataset):
 
@@ -1724,3 +1738,49 @@ def test_allow_unknown_filter(writable_file):
         allow_unknown_filter=True
     )
     assert str(fake_filter_id) in ds._filters
+
+
+class TestCommutative(BaseDataset):
+    """
+    Test the symmetry of operators, at least with the numpy types.
+    Issue: https://github.com/h5py/h5py/issues/1947
+    """
+    def test_numpy_commutative(self,):
+        """
+        Create a h5py dataset, extract one element convert to numpy
+        Check that it returns symmetric response to == and !=
+        """
+        shape = (100,1)
+        dset = self.f.create_dataset("test", shape, dtype=float,
+                                     data=np.random.rand(*shape))
+
+        # grab a value from the elements, ie dset[0]
+        # check that mask arrays are commutative wrt ==, !=
+        val = np.float64(dset[0])
+
+        assert np.all((val == dset) == (dset == val))
+        assert np.all((val != dset) == (dset != val))
+
+        # generate sample not in the dset, ie max(dset)+delta
+        # check that mask arrays are commutative wrt ==, !=
+        delta = 0.001
+        nval = np.nanmax(dset)+delta
+
+        assert np.all((nval == dset) == (dset == nval))
+        assert np.all((nval != dset) == (dset != nval))
+
+    def test_basetype_commutative(self,):
+        """
+        Create a h5py dataset and check basetype compatibility.
+        Check that operation is symmetric, even if it is potentially
+        not meaningful.
+        """
+        shape = (100,1)
+        dset = self.f.create_dataset("test", shape, dtype=float,
+                                     data=np.random.rand(*shape))
+
+        # generate float type, sample float(0.)
+        # check that operation is symmetric (but potentially meaningless)
+        val = float(0.)
+        assert (val == dset) == (dset == val)
+        assert (val != dset) == (dset != val)

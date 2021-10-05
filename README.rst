@@ -34,7 +34,7 @@ Reporting bugs
 --------------
 
 Open a bug at https://github.com/h5py/h5py/issues.  For general questions, ask
-on the list (https://groups.google.com/d/forum/h5py).
+on the HDF forum (https://forum.hdfgroup.org/c/hdf-tools/h5py).
 
 .. _`Continuum Anaconda`: http://continuum.io/downloads
 .. _`Enthought Canopy`: https://www.enthought.com/products/canopy/

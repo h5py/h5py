@@ -436,21 +436,28 @@ class TestTrackOrder(BaseGroup):
     def test_track_order(self):
         g = self.f.create_group('order', track_order=True)  # creation order
         self.populate(g)
-        self.assertEqual(list(g),
-                         [str(i) for i in range(100)])
+
+        ref = [str(i) for i in range(100)]
+        self.assertEqual(list(g), ref)
+        self.assertEqual(list(reversed(g)), list(reversed(ref)))
 
     def test_no_track_order(self):
         g = self.f.create_group('order', track_order=False)  # name alphanumeric
         self.populate(g)
-        self.assertEqual(list(g),
-                         sorted([str(i) for i in range(100)]))
+
+        ref = sorted([str(i) for i in range(100)])
+        self.assertEqual(list(g), ref)
+        self.assertEqual(list(reversed(g)), list(reversed(ref)))
 
 class TestPy3Dict(BaseMapping):
 
     def test_keys(self):
         """ .keys provides a key view """
         kv = getattr(self.f, 'keys')()
-        self.assertSameElements(list(kv), self.groups)
+        ref = self.groups
+        self.assertSameElements(list(kv), ref)
+        self.assertSameElements(list(reversed(kv)), list(reversed(ref)))
+
         for x in self.groups:
             self.assertIn(x, kv)
         self.assertEqual(len(kv), len(self.groups))
@@ -458,7 +465,10 @@ class TestPy3Dict(BaseMapping):
     def test_values(self):
         """ .values provides a value view """
         vv = getattr(self.f, 'values')()
-        self.assertSameElements(list(vv), [self.f.get(x) for x in self.groups])
+        ref = [self.f.get(x) for x in self.groups]
+        self.assertSameElements(list(vv), ref)
+        self.assertSameElements(list(reversed(vv)), list(reversed(ref)))
+
         self.assertEqual(len(vv), len(self.groups))
         for x in self.groups:
             self.assertIn(self.f.get(x), vv)
@@ -466,7 +476,10 @@ class TestPy3Dict(BaseMapping):
     def test_items(self):
         """ .items provides an item view """
         iv = getattr(self.f, 'items')()
-        self.assertSameElements(list(iv), [(x,self.f.get(x)) for x in self.groups])
+        ref = [(x,self.f.get(x)) for x in self.groups]
+        self.assertSameElements(list(iv), ref)
+        self.assertSameElements(list(reversed(iv)), list(reversed(ref)))
+
         self.assertEqual(len(iv), len(self.groups))
         for x in self.groups:
             self.assertIn((x, self.f.get(x)), iv)

@@ -38,7 +38,7 @@ MPI = h5.get_config().mpi
 def make_new_dset(parent, shape=None, dtype=None, data=None, name=None,
                   chunks=None, compression=None, shuffle=None,
                   fletcher32=None, maxshape=None, compression_opts=None,
-                  fillvalue=None, scaleoffset=None, track_times=None,
+                  fillvalue=None, scaleoffset=None, track_times=False,
                   external=None, track_order=None, dcpl=None,
                   allow_unknown_filter=False):
     """ Return a new low-level dataset identifier """
@@ -113,9 +113,12 @@ def make_new_dset(parent, shape=None, dtype=None, data=None, name=None,
         fillvalue = numpy.array(fillvalue)
         dcpl.set_fill_value(fillvalue)
 
+    if track_times is None:
+        # In case someone explicitly passes None for the default
+        track_times = False
     if track_times in (True, False):
         dcpl.set_obj_track_times(track_times)
-    elif track_times is not None:
+    else:
         raise TypeError("track_times must be either True or False")
     if track_order is True:
         dcpl.set_attr_creation_order(
@@ -161,18 +164,25 @@ class AstypeWrapper(object):
         # pylint: disable=protected-access
         self._dset._local.astype = None
 
+    def __len__(self):
+        """ Get the length of the underlying dataset
+
+        >>> length = len(dataset.astype('f8'))
+        """
+        return len(self._dset)
+
 
 class AsStrWrapper:
     """Wrapper to decode strings on reading the dataset"""
     def __init__(self, dset, encoding, errors='strict'):
-        self.dset = dset
+        self._dset = dset
         if encoding is None:
             encoding = h5t.check_string_dtype(dset.dtype).encoding
         self.encoding = encoding
         self.errors = errors
 
     def __getitem__(self, args):
-        bytes_arr = self.dset[args]
+        bytes_arr = self._dset[args]
         # numpy.char.decode() seems like the obvious thing to use. But it only
         # accepts numpy string arrays, not object arrays of bytes (which we
         # return from HDF5 variable-length strings). And the numpy
@@ -186,23 +196,37 @@ class AsStrWrapper:
             b.decode(self.encoding, self.errors) for b in bytes_arr.flat
         ], dtype=object).reshape(bytes_arr.shape)
 
+    def __len__(self):
+        """ Get the length of the underlying dataset
+
+        >>> length = len(dataset.asstr())
+        """
+        return len(self._dset)
+
 
 class FieldsWrapper:
     """Wrapper to extract named fields from a dataset with a struct dtype"""
     extract_field = None
 
     def __init__(self, dset, prior_dtype, names):
-        self.dset = dset
+        self._dset = dset
         if isinstance(names, str):
             self.extract_field = names
             names = [names]
         self.read_dtype = readtime_dtype(prior_dtype, names)
 
     def __getitem__(self, args):
-        data = self.dset.__getitem__(args, new_dtype=self.read_dtype)
+        data = self._dset.__getitem__(args, new_dtype=self.read_dtype)
         if self.extract_field is not None:
             data = data[self.extract_field]
         return data
+
+    def __len__(self):
+        """ Get the length of the underlying dataset
+
+        >>> length = len(dataset.fields(['x', 'y']))
+        """
+        return len(self._dset)
 
 
 def readtime_dtype(basetype, names):
