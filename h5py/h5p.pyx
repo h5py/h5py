@@ -399,6 +399,25 @@ cdef class PropFCID(PropOCID):
             H5Pget_file_space_strategy(self.id, &strategy, &persist, &threshold)
             return (strategy, persist, threshold)
 
+        @with_phil
+        def set_file_space_page_size(self, hsize_t fsp_size):
+            """ (LONG fsp_size)
+
+            Set the file space page size used in paged aggregation and paged
+            buffering. Minimum page size is 512 bytes. A value less than 512 will raise
+            an error. The size set may not be changed for the life of the file.
+            """
+            H5Pset_file_space_page_size(self.id, <hsize_t>fsp_size)
+
+        @with_phil
+        def get_file_space_page_size(self):
+            """ () -> LONG fsp_size
+
+            Retrieve the file space page size.
+            """
+            cdef hsize_t fsp_size
+            H5Pget_file_space_page_size(self.id, &fsp_size)
+            return fsp_size
 
 # Dataset creation
 cdef class PropDCID(PropOCID):
@@ -1341,6 +1360,36 @@ cdef class PropFAID(PropInstanceID):
                 H5Pset_file_image(self.id, buf.buf, buf.len)
             finally:
                 PyBuffer_Release(&buf)
+
+    IF HDF5_VERSION >= (1, 10, 1):
+
+        @with_phil
+        def set_page_buffer_size(self, size_t buf_size, unsigned int min_meta_per=0,
+                                 unsigned int min_raw_per=0):
+            """ (LONG buf_size, UINT min_meta_per, UINT min_raw_per)
+
+            Set the maximum size in bytes of the page buffer. The default value is
+            zero, meaning that page buffering is disabled. When a non-zero page
+            buffer size is set, HDF5 library will enable page buffering if that size
+            is larger or equal than a single page size if a paged file space
+            strategy was set at file creation.
+
+            The function also allows setting the criteria for metadata and raw data
+            page eviction from the buffer. The default values for both are zero.
+            """
+            H5Pset_page_buffer_size(self.id, buf_size, min_meta_per, min_raw_per)
+
+        @with_phil
+        def get_page_buffer_size(self):
+            """ () -> (LONG buf_size, UINT min_meta_per, UINT min_raw_per)
+
+            Retrieves the maximum size for the page buffer and the minimum
+            percentage for metadata and raw data pages evicition criteria.
+            """
+            cdef size_t buf_size
+            cdef unsigned int min_meta_per, min_raw_per
+            H5Pget_page_buffer_size(self.id, &buf_size, &min_meta_per, &min_raw_per)
+            return (buf_size, min_meta_per, min_raw_per)
 
     IF HDF5_VERSION >= (1, 12, 1) or (HDF5_VERSION[:2] == (1, 10) and HDF5_VERSION[2] >= 7):
 

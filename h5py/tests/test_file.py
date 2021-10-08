@@ -25,8 +25,8 @@ from .common import ut, TestCase, UNICODE_FILENAMES, closed_tempfile
 from h5py import File
 import h5py
 from .. import h5
-
 import pathlib
+
 
 class TestFileOpen(TestCase):
 
@@ -42,7 +42,6 @@ class TestFileOpen(TestCase):
         with pytest.raises(FileNotFoundError):
             with File(fname):
                 pass
-
 
         # Existing readonly file; open read-only
         with File(fname, 'w'):
@@ -144,8 +143,9 @@ class TestFileOpen(TestCase):
         with self.assertRaises(ValueError):
             File(self.mktemp(), 'mongoose')
 
+
 @ut.skipIf(h5py.version.hdf5_version_tuple < (1, 10, 1),
-               'Requires HDF5 1.10.1 or later')
+           'Requires HDF5 1.10.1 or later')
 class TestSpaceStrategy(TestCase):
 
     """
@@ -182,6 +182,60 @@ class TestSpaceStrategy(TestCase):
         dset = fid.create_dataset('foo2', (100,), dtype='uint8')
         dset[...] = 1
         fid.close()
+
+
+@ut.skipIf(h5py.version.hdf5_version_tuple < (1, 10, 1),
+           'Requires HDF5 1.10.1 or later')
+@pytest.mark.mpi_skip
+class TestPageBuffering(TestCase):
+    """
+        Feature: Use page buffering
+    """
+
+    def test_only_with_page_strategy(self):
+        """Allow page buffering only with fs_strategy="page".
+        """
+        fname = self.mktemp()
+        with File(fname, mode='w', fs_strategy='page', page_buf_size=16*1024):
+            pass
+        with self.assertRaises(OSError):
+            File(fname, mode='w', page_buf_size=16*1024)
+        with self.assertRaises(OSError):
+            File(fname, mode='w', fs_strategy='fsm', page_buf_size=16*1024)
+        with self.assertRaises(OSError):
+            File(fname, mode='w', fs_strategy='aggregate', page_buf_size=16*1024)
+
+    def test_check_page_buf_size(self):
+        """Verify set page buffer size, and minimum meta and raw eviction criteria."""
+        fname = self.mktemp()
+        pbs = 16 * 1024
+        mm = 19
+        mr = 67
+        with File(fname, mode='w', fs_strategy='page',
+                  page_buf_size=pbs, min_meta_keep=mm, min_raw_keep=mr) as f:
+            fapl = f.id.get_access_plist()
+            self.assertEqual(fapl.get_page_buffer_size(), (pbs, mm, mr))
+
+    def test_too_small_pbs(self):
+        """Page buffer size must be greater than file space page size."""
+        fname = self.mktemp()
+        fsp = 16 * 1024
+        with File(fname, mode='w', fs_strategy='page', fs_page_size=fsp):
+            pass
+        with self.assertRaises(OSError):
+            File(fname, mode="r", page_buf_size=fsp-1)
+
+    def test_actual_pbs(self):
+        """Verify actual page buffer size."""
+        fname = self.mktemp()
+        fsp = 16 * 1024
+        pbs = 2 * fsp
+        with File(fname, mode='w', fs_strategy='page', fs_page_size=fsp):
+            pass
+        with File(fname, mode='r', page_buf_size=pbs-1) as f:
+            fapl = f.id.get_access_plist()
+            self.assertEqual(fapl.get_page_buffer_size()[0], fsp)
+
 
 class TestModes(TestCase):
 
@@ -331,7 +385,6 @@ class TestDrivers(TestCase):
         with self.assertRaises(ValueError):
             File(tf, 'w', driver='core')
 
-
     # TODO: family driver tests
 
 
@@ -417,7 +470,7 @@ class TestNewLibver(TestCase):
         f.close()
 
     @ut.skipIf(h5py.version.hdf5_version_tuple < (1, 11, 4),
-           'Requires HDF5 1.11.4 or later')
+               'Requires HDF5 1.11.4 or later')
     def test_single_v112(self):
         """ Opening with "v112" libver arg """
         f = File(self.mktemp(), 'w', libver='v112')
@@ -465,7 +518,6 @@ class TestUserblock(TestCase):
         # User block size must be an integer
         with self.assertRaises(ValueError):
             File(self.mktemp(), 'w', userblock_size='non')
-
 
     def test_write_only(self):
         """ User block only allowed for write """
@@ -649,6 +701,7 @@ class TestClose(TestCase):
         f.close()
         f.close()
 
+
 class TestFlush(TestCase):
 
     """
@@ -737,7 +790,6 @@ class TestCloseInvalidatesOpenObjectIDs(TestCase):
         assert not g2.id.valid
 
 
-
 class TestPathlibSupport(TestCase):
 
     """
@@ -790,7 +842,7 @@ class TestMPI(object):
             assert f.driver == 'mpio'
 
     @pytest.mark.skipif(h5py.version.hdf5_version_tuple < (1, 8, 9),
-        reason="mpio atomic file operations were added in HDF5 1.8.9+")
+                        reason="mpio atomic file operations were added in HDF5 1.8.9+")
     def test_mpi_atomic(self, mpi_file_name):
         """ Enable atomic mode for MPIO driver """
         from mpi4py import MPI
@@ -811,7 +863,7 @@ class TestMPI(object):
 
 
 @ut.skipIf(h5py.version.hdf5_version_tuple < (1, 10, 1),
-               'Requires HDF5 1.10.1 or later')
+           'Requires HDF5 1.10.1 or later')
 class TestSWMRMode(TestCase):
 
     """
