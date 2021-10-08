@@ -248,6 +248,14 @@ only tracks free space until the file is closed.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="h5py.h5f.FileID.get_page_buffering_stats">
+<span class="sig-name descname"><span class="pre">get_page_buffering_stats</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">)</span> <span class="pre">-&gt;</span> <span class="pre">NAMEDTUPLE</span> <span class="pre">PageBufStats(NAMEDTUPLE</span> <span class="pre">meta=PageStats</span></em>, <em class="sig-param"><span class="pre">NAMEDTUPLE</span> <span class="pre">raw=PageStats</span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5f.FileID.get_page_buffering_stats" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve page buffering statistics for the file as the number of
+metadata and raw data accesses, hits, misses, evictions, and
+accesses that bypass the page buffer (bypasses).</p>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5f.FileID.get_vfd_handle">
 <span class="sig-name descname"><span class="pre">get_vfd_handle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">PropFAID</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">INT</span></span></span><a class="headerlink" href="#h5py.h5f.FileID.get_vfd_handle" title="Permalink to this definition">¶</a></dt>
 <dd><p>Retrieve the file handle used by the virtual file driver.</p>
@@ -277,6 +285,12 @@ a mounted file.</p>
 <span class="sig-name descname"><span class="pre">reset_mdc_hit_rate_stats</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5f.FileID.reset_mdc_hit_rate_stats" title="Permalink to this definition">¶</a></dt>
 <dd><p>no return</p>
 <p>rests the hit-rate statistics</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="h5py.h5f.FileID.reset_page_buffering_stats">
+<span class="sig-name descname"><span class="pre">reset_page_buffering_stats</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5f.FileID.reset_page_buffering_stats" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reset page buffer statistics for the file.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -518,7 +532,7 @@ attached to objects cannot remain open.</p>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2014, Andrew Collette and contributors.
-      Last updated on Sep 28, 2021.
+      Last updated on Oct 08, 2021.
       Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.2.0.
     </div>
   </body>

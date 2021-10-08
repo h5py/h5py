@@ -215,6 +215,12 @@ from the <a class="reference internal" href="h5o.html#ref-h5o-copy"><span class=
 <dd><p>Bases: <a class="reference internal" href="#h5py.h5p.PropOCID" title="h5py.h5p.PropOCID"><code class="xref py py-class docutils literal notranslate"><span class="pre">h5py.h5p.PropOCID</span></code></a></p>
 <p>File creation property list.</p>
 <dl class="py method">
+<dt class="sig sig-object py" id="h5py.h5p.PropFCID.get_file_space_page_size">
+<span class="sig-name descname"><span class="pre">get_file_space_page_size</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">LONG</span> <span class="pre">fsp_size</span></span></span><a class="headerlink" href="#h5py.h5p.PropFCID.get_file_space_page_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve the file space page size.</p>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropFCID.get_file_space_strategy">
 <span class="sig-name descname"><span class="pre">get_file_space_strategy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">)</span> <span class="pre">-&gt;</span> <span class="pre">TUPLE(UINT</span> <span class="pre">strategy</span></em>, <em class="sig-param"><span class="pre">BOOL</span> <span class="pre">persist</span></em>, <em class="sig-param"><span class="pre">ULONGLONG</span> <span class="pre">threshold</span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropFCID.get_file_space_strategy" title="Permalink to this definition">¶</a></dt>
 <dd><p>Retrieve the file space handling strategy, persisting free-space
@@ -255,6 +261,14 @@ Elements are:</p>
 <li><p>UINT Symbol table version number</p></li>
 <li><p>UINT Shared object header version number</p></li>
 </ol>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="h5py.h5p.PropFCID.set_file_space_page_size">
+<span class="sig-name descname"><span class="pre">set_file_space_page_size</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">LONG</span> <span class="pre">fsp_size</span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropFCID.set_file_space_page_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the file space page size used in paged aggregation and paged
+buffering. Minimum page size is 512 bytes. A value less than 512 will raise
+an error. The size set may not be changed for the life of the file.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -384,6 +398,13 @@ disk when the file is closed.</p></li>
 <dd></dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="h5py.h5p.PropFAID.get_page_buffer_size">
+<span class="sig-name descname"><span class="pre">get_page_buffer_size</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">)</span> <span class="pre">-&gt;</span> <span class="pre">(LONG</span> <span class="pre">buf_size</span></em>, <em class="sig-param"><span class="pre">UINT</span> <span class="pre">min_meta_per</span></em>, <em class="sig-param"><span class="pre">UINT</span> <span class="pre">min_raw_per</span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropFAID.get_page_buffer_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieves the maximum size for the page buffer and the minimum
+percentage for metadata and raw data pages evicition criteria.</p>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropFAID.get_sieve_buf_size">
 <span class="sig-name descname"><span class="pre">get_sieve_buf_size</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">UINT</span> <span class="pre">size</span></span></span><a class="headerlink" href="#h5py.h5p.PropFAID.get_sieve_buf_size" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the current maximum size of the data sieve buffer (in bytes).</p>
@@ -505,6 +526,18 @@ None or support the buffer protocol.</p>
 <dt class="sig sig-object py" id="h5py.h5p.PropFAID.set_mdc_config">
 <span class="sig-name descname"><span class="pre">set_mdc_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">CacheConfig</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span> <span class="pre">Returns</span> <span class="pre">an</span> <span class="pre">object</span> <span class="pre">that</span> <span class="pre">stores</span> <span class="pre">all</span> <span class="pre">the</span> <span class="pre">information</span> <span class="pre">about</span> <span class="pre">the</span> <span class="pre">meta-data</span> <span class="pre">cache</span> <span class="pre">configuration</span></span></span><a class="headerlink" href="#h5py.h5p.PropFAID.set_mdc_config" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="h5py.h5p.PropFAID.set_page_buffer_size">
+<span class="sig-name descname"><span class="pre">set_page_buffer_size</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">LONG</span> <span class="pre">buf_size</span></em>, <em class="sig-param"><span class="pre">UINT</span> <span class="pre">min_meta_per</span></em>, <em class="sig-param"><span class="pre">UINT</span> <span class="pre">min_raw_per</span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropFAID.set_page_buffer_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the maximum size in bytes of the page buffer. The default value is
+zero, meaning that page buffering is disabled. When a non-zero page
+buffer size is set, HDF5 library will enable page buffering if that size
+is larger or equal than a single page size if a paged file space
+strategy was set at file creation.</p>
+<p>The function also allows setting the criteria for metadata and raw data
+page eviction from the buffer. The default values for both are zero.</p>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropFAID.set_sieve_buf_size">
@@ -1176,7 +1209,7 @@ virtual dataset’s creation property list.</p>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2014, Andrew Collette and contributors.
-      Last updated on Sep 28, 2021.
+      Last updated on Oct 08, 2021.
       Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.2.0.
     </div>
   </body>
