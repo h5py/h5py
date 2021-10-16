@@ -345,7 +345,7 @@ cdef class Reader:
         cdef void* buf
         cdef ndarray arr
         cdef hsize_t* mshape
-        cdef SpaceID mspace
+        cdef hid_t mspace
         cdef int i
 
         self.selector.apply_args(args)
@@ -358,12 +358,13 @@ cdef class Reader:
             arr = self.make_array(mshape)
             buf = PyArray_DATA(arr)
 
-            mspace = SpaceID(H5Screate_simple(self.selector.rank, mshape, NULL))
+            mspace = H5Screate_simple(self.selector.rank, mshape, NULL)
+            H5Dread(self.dataset, self.h5_memory_datatype.id, mspace,
+                    self.selector.space, H5P_DEFAULT, buf)
+
         finally:
             efree(mshape)
-
-        H5Dread(self.dataset, self.h5_memory_datatype.id, mspace.id,
-                self.selector.space, H5P_DEFAULT, buf)
+            H5Idec_ref(mspace)
 
         if arr.ndim == 0:
             return arr[()]
