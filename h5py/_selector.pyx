@@ -364,7 +364,7 @@ cdef class Reader:
 
         finally:
             efree(mshape)
-            H5Idec_ref(mspace)
+            H5Sclose(mspace)
 
         if arr.ndim == 0:
             return arr[()]
