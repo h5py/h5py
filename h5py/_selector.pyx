@@ -359,11 +359,13 @@ cdef class Reader:
             buf = PyArray_DATA(arr)
 
             mspace = H5Screate_simple(self.selector.rank, mshape, NULL)
-            H5Dread(self.dataset, self.h5_memory_datatype.id, mspace,
-                    self.selector.space, H5P_DEFAULT, buf)
-
         finally:
             efree(mshape)
+
+        try:
+            H5Dread(self.dataset, self.h5_memory_datatype.id, mspace,
+                    self.selector.space, H5P_DEFAULT, buf)
+        finally:
             H5Sclose(mspace)
 
         if arr.ndim == 0:
