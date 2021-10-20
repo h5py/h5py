@@ -1,0 +1,48 @@
+What's new in h5py 3.5
+======================
+
+New features
+------------
+
+* Datasets are now created without timestamps by default, making it easier to
+  create more consistent files. Pass ``track_times=True`` to
+  :meth:`.Group.create_dataset` to add timestamps again.
+* Added ``locking`` :class:`.File` argument to select HDF5 file locking behavior.
+* Enable setting file space page size when creating new HDF5 files. A new named
+  argument ``fs_page_size`` is added to the :class:`.File` class.
+* Enable HDF5 page buffering, a low-level caching feature that may improve
+  overall I/O performance in some cases. Three new named arguments are added to
+  the :class:`.File` class: ``page_buf_size``, ``min_meta_keep``, and ``min_raw_keep``.
+* Get and reset HDF5 page buffering statistics. Available as the low-level API
+  of the :class:`.FileID` class.
+* The built-in ``reversed()`` function now works with various dictionary-like
+  interfaces: :class:`.Group`, :class:`.GroupID`, :meth:`.Group.keys`,
+  :meth:`.Group.values` and :meth:`.Group.items`.
+
+Exposing HDF5 functions
+-----------------------
+
+* ``H5Pset_file_locking`` and ``H5Pget_file_locking`` (for HDF5 >= 1.12.1 or 1.10.x >= 1.10.7)
+* ``H5Freset_page_buffering_stats``
+* ``H5Fget_page_buffering_stats``
+* ``H5Pset_file_space_page_size``
+* ``H5Pget_file_space_page_size``
+* ``H5Pset_page_buffer_size``
+* ``H5Pget_page_buffer_size``
+
+Breaking changes & deprecations
+-------------------------------
+
+* Dataset timestamps are no longer written by default for new datasets. Pass
+  ``track_times=True`` to :meth:`.Group.create_dataset` if you need them.
+* The IPython completer code no longer tries to work with very old versions of
+  IPython (before 1.0).
+
+Bug fixes
+---------
+
+* Fix a memory leak when reading data. This particularly affected code making
+  many small reads.
+* ``dataset == array`` now behaves the same way as ``array == dataset``: the
+  HDF5 dataset is read and NumPy makes a boolean array.
+* The IPython completer code no longer imports the ``readline`` module.
