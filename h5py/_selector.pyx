@@ -362,8 +362,11 @@ cdef class Reader:
         finally:
             efree(mshape)
 
-        H5Dread(self.dataset, self.h5_memory_datatype.id, mspace,
-                self.selector.space, H5P_DEFAULT, buf)
+        try:
+            H5Dread(self.dataset, self.h5_memory_datatype.id, mspace,
+                    self.selector.space, H5P_DEFAULT, buf)
+        finally:
+            H5Sclose(mspace)
 
         if arr.ndim == 0:
             return arr[()]
