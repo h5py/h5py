@@ -1,5 +1,4 @@
 language: python
-services: docker
 dist: xenial
 
 notifications:
@@ -33,6 +32,7 @@ matrix:
       - H5PY_ENFORCE_COVERAGE=yes
       os: linux-ppc64le
     - os: linux
+      services: docker
       python: 3.7
       virt: vm
       group: edge
@@ -57,8 +57,8 @@ install:
     - if [[ $CIBW_ARCHS == aarch64 ]]; then python -m pip install cibuildwheel==1.9.0; fi
 
 script:
-    - tox
     - if [[ $CIBW_ARCHS == aarch64 ]]; then python3 -m cibuildwheel --output-dir wheelhouse; fi
+    - tox
 
 after_success:
     - python ci/upload_coverage.py
