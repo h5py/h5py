@@ -38,7 +38,7 @@ jobs:
 
 - job: 'windows_wheels'
   pool:
-    vmImage: vs2017-win2016
+    vmImage: windows-2019
   variables:
     HDF5_VERSION: 1.12.1
     HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
@@ -162,7 +162,7 @@ jobs:
 
 - job: 'Windows'
   pool:
-    vmImage: vs2017-win2016
+    vmImage: windows-2019
   strategy:
     matrix:
     # -deps : test with default (latest) versions of dependencies
@@ -213,7 +213,7 @@ jobs:
 - job: 'test_windows_wheels'
   dependsOn: windows_wheels
   pool:
-    vmImage: vs2017-win2016
+    vmImage: windows-2019
   variables:
     H5PY_TEST_CHECK_FILTERS: 1
 
