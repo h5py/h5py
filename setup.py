@@ -65,49 +65,7 @@ if os.environ.get('H5PY_SETUP_REQUIRES', '1') == '0':
 
 # --- Custom Distutils commands -----------------------------------------------
 
-class test(Command):
-
-    """
-        Custom Distutils command to run the h5py test suite.
-
-        This command will invoke build/build_ext if the project has not
-        already been built.  It then patches in the build directory to
-        sys.path and runs the test suite directly.
-    """
-
-    description = "Run the test suite"
-
-    user_options = [('detail', 'd', 'Display additional test information')]
-
-    def initialize_options(self):
-        self.detail = False
-
-    def finalize_options(self):
-        self.detail = bool(self.detail)
-
-    def run(self):
-        """ Called by Distutils when this command is run """
-        import sys
-
-        buildobj = self.distribution.get_command_obj('build')
-        buildobj.run()
-
-        oldpath = sys.path
-        oldcwd = os.getcwd()
-        build_lib_dir = op.abspath(buildobj.build_lib)
-        try:
-            sys.path = [build_lib_dir] + oldpath
-            os.chdir(build_lib_dir)
-
-            import h5py
-            sys.exit(h5py.run_tests())
-        finally:
-            sys.path = oldpath
-            os.chdir(oldcwd)
-
-
-CMDCLASS = {'build_ext': setup_build.h5py_build_ext,
-            'test': test, }
+CMDCLASS = {'build_ext': setup_build.h5py_build_ext}
 
 
 # --- Distutils setup and metadata --------------------------------------------
