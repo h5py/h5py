@@ -513,7 +513,7 @@ Link classes
 
     .. attribute:: filename
 
-        Name of the external file
+        Name of the external file as a Unicode string
 
     .. attribute::  path
 
