@@ -158,11 +158,11 @@ link resides.
 
 .. note::
 
-    How the filename is processed is operating system dependent, it is
-    recommended to read :ref:`file_filenames` to understand potential limitations on
-    filenames on your operating system. Note especially that Windows is
-    particularly susceptible to problems with external links, due to possible
-    encoding errors and how filenames are structured.
+    The filename is stored in the file as bytes, normally UTF-8 encoded.
+    In most cases, this should work reliably, but problems are possible if a
+    file created on one platform is accessed on another. Older versions of HDF5
+    may have problems on Windows in particular. See :ref:`file_filenames` for
+    more details.
 
 Reference
 ---------
