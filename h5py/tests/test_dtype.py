@@ -489,8 +489,7 @@ class TestBitfield(TestCase):
             # read cast dset and make sure it's equal
             if cast_dtype is None:
                 cast_dtype = arr1.dtype
-            with dset.astype(cast_dtype):
-                arr3 = dset[:]
+            arr3 = dset.astype(cast_dtype)[:]
             self.assertArrayEqual(arr3, arr1.astype(cast_dtype, copy=False))
 
     def test_b16_uint16(self):
