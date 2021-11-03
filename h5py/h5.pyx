@@ -67,7 +67,6 @@ cdef class H5PYConfig:
         self._t_name = b'TRUE'
         self._bytestrings = ByteStringContext()
         self._track_order = False
-        self._default_file_mode = 'r'
 
     property complex_names:
         """ Settable 2-tuple controlling how complex numbers are saved.
@@ -166,7 +165,12 @@ cdef class H5PYConfig:
     property default_file_mode:
         """Default mode for h5py.File()"""
         def __get__(self):
-            return self._default_file_mode
+            warn(
+                "h5py.get_config().default_file_mode is deprecated. "
+                "The default mode is now always 'r' (read-only).",
+                category=H5pyDeprecationWarning,
+            )
+            return 'r'
 
         def __set__(self, val):
             if val == 'r':
