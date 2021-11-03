@@ -8,30 +8,35 @@ We want to create a virtual dataset from slices 2 and 3 of "d1" and
 """
 
 import h5py
-import numpy.random
-import h5py._hl.selections as selection
+import numpy
 
 
-file_path = "output_vds_advance.hdf5"
+file_path = "output_vds_fancy.hdf5"
 
 
 def create_datasets():
     """create original dataset"""
     with h5py.File(file_path, mode="w") as h5s:
-        h5s["original_data/d1"] = numpy.arange(10*10*10).reshape(10, 10, 10)
-        h5s["original_data/d2"] = numpy.arange(10*10*10, 10*10*10*2).reshape(10, 10, 10)
+        d1 = numpy.arange(10 * 10 * 10)
+        d1 = d1.reshape(10, 10, 10)
+        h5s["original_data/d1"] = d1
+        d2 = numpy.arange(10 * 10 * 10, 10 * 10 * 10 * 2)
+        d2 = d2.reshape(10, 10, 10)
+        h5s["original_data/d2"] = d2
 
 
 def create_vds():
     """create virtual dataset"""
     # fancy selection using a list
-    v_source_1 = h5py.VirtualSource(file_path, "original_data/d1",
-                                    shape=(10, 10, 10))
+    v_source_1 = h5py.VirtualSource(
+        file_path, name="original_data/d1", shape=(10, 10, 10)
+    )
     v_source_1 = v_source_1[[2, 3]]
 
     # fancy selection using a slice
-    v_source_2 = h5py.VirtualSource(file_path, "original_data/d2",
-                                    shape=(10, 10, 10))
+    v_source_2 = h5py.VirtualSource(
+        file_path, name="original_data/d2", shape=(10, 10, 10)
+    )
     v_source_2 = v_source_2[slice(7, 10)]
 
     with h5py.File(file_path, mode="a") as h5s:
