@@ -49,10 +49,7 @@ SETUP_REQUIRES = [
     "Cython >=0.29; python_version<'3.8'",
     "Cython >=0.29.14; python_version=='3.8'",
     "Cython >=0.29.15; python_version>='3.9'",
-] # + [
-#     f"numpy =={np_min}; python_version{py_condition}"
-#     for np_min, py_condition in NUMPY_MIN_VERSIONS
-# ]
+]
 
 if setup_configure.mpi_enabled():
     RUN_REQUIRES.append('mpi4py >=3.0.2')
