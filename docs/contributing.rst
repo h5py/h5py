@@ -170,22 +170,6 @@ The *Building h5py* section is for changes which affect how people build h5py
 from source. It's not about how we make prebuilt wheels; changes to that which
 make a visible difference can go in *New features* or *Bug fixes*.
 
-Add yourself to the author list
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-If it's your first time to contribute to this project, you should add yourself into
-`author list <https://github.com/h5py/h5py/blob/master/.authors.yml>`_  and follow the format below::
-
-    - name: xxx                   # your name in Github, which can be found in your public profile if you set it up
-      aliases: (optional)
-        - xxx                     # your username alias in Github commits
-      email: xxx                  # your email address
-      alternate_emails: (optional)
-        - xxx                     # if you committed your code with another email address, you can put it there
-      num_commit: xxx             # the number of commits you have submitted to this project
-      first_commit: xxx           # your first commit time, run `git log` to see it
-      github: xxx                 # your username or account name in Github
-
 Push your changes back and open a pull request
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
