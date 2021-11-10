@@ -9,10 +9,8 @@
 """
 
 from setuptools import Extension, setup
-from distutils.cmd import Command
 import sys
 import os
-import os.path as op
 
 # Newer packaging standards may recommend removing the current dir from the
 # path, add it back if needed.
