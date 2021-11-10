@@ -37,17 +37,13 @@ RUN_REQUIRES = [
     "numpy >=1.14.5",
 ]
 
-# these are required to build h5py
+# Packages needed to build h5py (in addition to static list in pyproject.toml)
 # For packages we link to (numpy, mpi4py), we build against the oldest
 # supported version; h5py wheels should then work with newer versions of these.
 # Downstream packagers - e.g. Linux distros - can safely build with newer
 # versions.
-SETUP_REQUIRES = [
-    'pkgconfig',
-    "Cython >=0.29; python_version<'3.8'",
-    "Cython >=0.29.14; python_version=='3.8'",
-    "Cython >=0.29.15; python_version>='3.9'",
-]
+# TODO: setup_requires is deprecated in setuptools.
+SETUP_REQUIRES = []
 
 if setup_configure.mpi_enabled():
     RUN_REQUIRES.append('mpi4py >=3.0.2')
