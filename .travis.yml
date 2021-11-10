@@ -46,9 +46,9 @@ matrix:
         - CIBW_MANYLINUX_AARCH64_IMAGE: ghcr.io/h5py/manylinux2014_aarch64-hdf5
         - CIBW_ARCHS: aarch64
 
-  before_install:
-    # - export PATH=/usr/lib/ccache:$PATH
-    - ccache -s
+before_install:
+  # - export PATH=/usr/lib/ccache:$PATH
+  - ccache -s
 
 install:
     - pip install -U tox codecov virtualenv
