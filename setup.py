@@ -9,10 +9,8 @@
 """
 
 from setuptools import Extension, setup
-from distutils.cmd import Command
 import sys
 import os
-import os.path as op
 
 # Newer packaging standards may recommend removing the current dir from the
 # path, add it back if needed.
@@ -24,35 +22,26 @@ import setup_build, setup_configure
 
 VERSION = '3.5.0'
 
-# Minimum supported versions of Numpy & Cython depend on the Python version
-NUMPY_MIN_VERSIONS = [
-    # Numpy    Python
-    ('1.14.5', "=='3.7'"),
-    ('1.17.5', "=='3.8'"),
-    ('1.19.3', "=='3.9'"),
-    ('1.21.3', ">='3.10'"),
-]
 
 # these are required to use h5py
-RUN_REQUIRES = ["cached-property; python_version<'3.8'"] + [
-    f"numpy >={np_min}; python_version{py_condition}"
-    for np_min, py_condition in NUMPY_MIN_VERSIONS
+RUN_REQUIRES = [
+    "cached-property; python_version<'3.8'",
+    # We only really aim to support NumPy & Python combinations for which
+    # there are wheels on PyPI (e.g. NumPy >=1.17.5 for Python 3.8).
+    # But we don't want to duplicate the information in oldest-supported-numpy
+    # here, and if you can build an older NumPy on a newer Python, h5py probably
+    # works (assuming you build it from source too).
+    # NumPy 1.14.5 is the first with wheels for Python 3.7, our minimum Python.
+    "numpy >=1.14.5",
 ]
 
-# these are required to build h5py
+# Packages needed to build h5py (in addition to static list in pyproject.toml)
 # For packages we link to (numpy, mpi4py), we build against the oldest
 # supported version; h5py wheels should then work with newer versions of these.
 # Downstream packagers - e.g. Linux distros - can safely build with newer
 # versions.
-SETUP_REQUIRES = [
-    'pkgconfig',
-    "Cython >=0.29; python_version<'3.8'",
-    "Cython >=0.29.14; python_version=='3.8'",
-    "Cython >=0.29.15; python_version>='3.9'",
-] + [
-    f"numpy =={np_min}; python_version{py_condition}"
-    for np_min, py_condition in NUMPY_MIN_VERSIONS
-]
+# TODO: setup_requires is deprecated in setuptools.
+SETUP_REQUIRES = []
 
 if setup_configure.mpi_enabled():
     RUN_REQUIRES.append('mpi4py >=3.0.2')
