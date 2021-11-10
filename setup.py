@@ -24,19 +24,17 @@ import setup_build, setup_configure
 
 VERSION = '3.5.0'
 
-# Minimum supported versions of Numpy & Cython depend on the Python version
-NUMPY_MIN_VERSIONS = [
-    # Numpy    Python
-    ('1.14.5', "=='3.7'"),
-    ('1.17.5', "=='3.8'"),
-    ('1.19.3', "=='3.9'"),
-    ('1.21.3', ">='3.10'"),
-]
 
 # these are required to use h5py
-RUN_REQUIRES = ["cached-property; python_version<'3.8'"] + [
-    f"numpy >={np_min}; python_version{py_condition}"
-    for np_min, py_condition in NUMPY_MIN_VERSIONS
+RUN_REQUIRES = [
+    "cached-property; python_version<'3.8'",
+    # We only really aim to support NumPy & Python combinations for which
+    # there are wheels on PyPI (e.g. NumPy >=1.17.5 for Python 3.8).
+    # But we don't want to duplicate the information in oldest-supported-numpy
+    # here, and if you can build an older NumPy on a newer Python, h5py probably
+    # works (assuming you build it from source too).
+    # NumPy 1.14.5 is the first with wheels for Python 3.7, our minimum Python.
+    "numpy >=1.14.5",
 ]
 
 # these are required to build h5py
