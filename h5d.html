@@ -50,14 +50,14 @@
 <h2>Functional API<a class="headerlink" href="#functional-api" title="Permalink to this headline">¶</a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="h5py.h5d.open">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5d.</span></span><span class="sig-name descname"><span class="pre">open</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">ObjectID</span> <span class="pre">loc</span></em>, <em class="sig-param"><span class="pre">STRING</span> <span class="pre">name</span></em>, <em class="sig-param"><span class="pre">PropID</span> <span class="pre">dapl=None</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#h5py.h5d.DatasetID" title="h5py.h5d.DatasetID"><span class="pre">DatasetID</span></a></span></span><a class="headerlink" href="#h5py.h5d.open" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5d.</span></span><span class="sig-name descname"><span class="pre">open</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ObjectID</span> <span class="pre">loc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">STRING</span> <span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">PropID</span> <span class="pre">dapl=None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#h5py.h5d.DatasetID" title="h5py.h5d.DatasetID"><span class="pre">DatasetID</span></a></span></span><a class="headerlink" href="#h5py.h5d.open" title="Permalink to this definition">¶</a></dt>
 <dd><p>Open an existing dataset attached to a group or file object, by name.</p>
 <p>If specified, dapl may be a dataset access property list.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="h5py.h5d.create">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5d.</span></span><span class="sig-name descname"><span class="pre">create</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">objectID</span> <span class="pre">loc</span></em>, <em class="sig-param"><span class="pre">STRING</span> <span class="pre">name</span> <span class="pre">or</span> <span class="pre">None</span></em>, <em class="sig-param"><span class="pre">TypeID</span> <span class="pre">tid</span></em>, <em class="sig-param"><span class="pre">SpaceID</span> <span class="pre">space</span></em>, <em class="sig-param"><span class="pre">PropDCID</span> <span class="pre">dcpl=None</span></em>, <em class="sig-param"><span class="pre">PropID</span> <span class="pre">lcpl=None</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#h5py.h5d.DatasetID" title="h5py.h5d.DatasetID"><span class="pre">DatasetID</span></a></span></span><a class="headerlink" href="#h5py.h5d.create" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5d.</span></span><span class="sig-name descname"><span class="pre">create</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">objectID</span> <span class="pre">loc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">STRING</span> <span class="pre">name</span> <span class="pre">or</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">TypeID</span> <span class="pre">tid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">SpaceID</span> <span class="pre">space</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">PropDCID</span> <span class="pre">dcpl=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">PropID</span> <span class="pre">lcpl=None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#h5py.h5d.DatasetID" title="h5py.h5d.DatasetID"><span class="pre">DatasetID</span></a></span></span><a class="headerlink" href="#h5py.h5d.create" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a new dataset.  If “name” is None, the dataset will be
 anonymous.</p>
 </dd></dl>
@@ -67,7 +67,7 @@ anonymous.</p>
 <h2>Dataset Objects<a class="headerlink" href="#dataset-objects" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="h5py.h5d.DatasetID">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">h5py.h5d.</span></span><span class="sig-name descname"><span class="pre">DatasetID</span></span><a class="headerlink" href="#h5py.h5d.DatasetID" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5d.</span></span><span class="sig-name descname"><span class="pre">DatasetID</span></span><a class="headerlink" href="#h5py.h5d.DatasetID" title="Permalink to this definition">¶</a></dt>
 <dd><p>Represents an HDF5 dataset identifier.</p>
 <p>Objects of this class may be used in any HDF5 function which expects
 a dataset identifier.  Also, all H5D* functions which take a dataset
@@ -89,7 +89,7 @@ rank:   Integer giving dataset rank</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5d.DatasetID.extend">
-<span class="sig-name descname"><span class="pre">extend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">TUPLE</span> <span class="pre">shape</span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5d.DatasetID.extend" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">extend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">TUPLE</span> <span class="pre">shape</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5d.DatasetID.extend" title="Permalink to this definition">¶</a></dt>
 <dd><p>Extend the given dataset so it’s at least as big as “shape”.  Note
 that a dataset may only be extended up to the maximum dimensions of
 its dataspace, which are fixed when the dataset is created.</p>
@@ -115,7 +115,7 @@ dataset changes.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5d.DatasetID.get_chunk_info">
-<span class="sig-name descname"><span class="pre">get_chunk_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">hsize_t</span> <span class="pre">index</span></em>, <em class="sig-param"><span class="pre">SpaceID</span> <span class="pre">space=None</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">StoreInfo</span></span></span><a class="headerlink" href="#h5py.h5d.DatasetID.get_chunk_info" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_chunk_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hsize_t</span> <span class="pre">index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">SpaceID</span> <span class="pre">space=None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">StoreInfo</span></span></span><a class="headerlink" href="#h5py.h5d.DatasetID.get_chunk_info" title="Permalink to this definition">¶</a></dt>
 <dd><p>Retrieve storage information about a chunk specified by its index.</p>
 <p>Feature requires: HDF5 1.10.5</p>
 <div class="versionadded">
@@ -125,7 +125,7 @@ dataset changes.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5d.DatasetID.get_chunk_info_by_coord">
-<span class="sig-name descname"><span class="pre">get_chunk_info_by_coord</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">TUPLE</span> <span class="pre">chunk_offset</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">StoreInfo</span></span></span><a class="headerlink" href="#h5py.h5d.DatasetID.get_chunk_info_by_coord" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_chunk_info_by_coord</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">TUPLE</span> <span class="pre">chunk_offset</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">StoreInfo</span></span></span><a class="headerlink" href="#h5py.h5d.DatasetID.get_chunk_info_by_coord" title="Permalink to this definition">¶</a></dt>
 <dd><p>Retrieve information about a chunk specified by the array
 address of the chunk’s first element in each dimension.</p>
 <p>Feature requires: HDF5 1.10.5</p>
@@ -143,7 +143,7 @@ used when this dataset was created.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5d.DatasetID.get_num_chunks">
-<span class="sig-name descname"><span class="pre">get_num_chunks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">SpaceID</span> <span class="pre">space=None</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">INT</span> <span class="pre">num_chunks</span></span></span><a class="headerlink" href="#h5py.h5d.DatasetID.get_num_chunks" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_num_chunks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">SpaceID</span> <span class="pre">space=None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">INT</span> <span class="pre">num_chunks</span></span></span><a class="headerlink" href="#h5py.h5d.DatasetID.get_num_chunks" title="Permalink to this definition">¶</a></dt>
 <dd><p>Retrieve the number of chunks that have nonempty intersection with a
 specified dataspace. Currently, this function only gets the number
 of all written chunks, regardless of the dataspace.</p>
@@ -209,7 +209,7 @@ required to store the filtered data.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5d.DatasetID.read">
-<span class="sig-name descname"><span class="pre">read</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">SpaceID</span> <span class="pre">mspace</span></em>, <em class="sig-param"><span class="pre">SpaceID</span> <span class="pre">fspace</span></em>, <em class="sig-param"><span class="pre">NDARRAY</span> <span class="pre">arr_obj</span></em>, <em class="sig-param"><span class="pre">TypeID</span> <span class="pre">mtype=None</span></em>, <em class="sig-param"><span class="pre">PropDXID</span> <span class="pre">dxpl=None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5d.DatasetID.read" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">read</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">SpaceID</span> <span class="pre">mspace</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">SpaceID</span> <span class="pre">fspace</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">NDARRAY</span> <span class="pre">arr_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">TypeID</span> <span class="pre">mtype=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">PropDXID</span> <span class="pre">dxpl=None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5d.DatasetID.read" title="Permalink to this definition">¶</a></dt>
 <dd><p>Read data from an HDF5 dataset into a Numpy array.</p>
 <p>It is your responsibility to ensure that the memory dataspace
 provided is compatible with the shape of the Numpy array.  Since a
@@ -225,7 +225,7 @@ fail.  Keyword dxpl may be a <a class="reference internal" href="h5p.html#h5py.h
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5d.DatasetID.read_direct_chunk">
-<span class="sig-name descname"><span class="pre">read_direct_chunk</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">offsets</span></em>, <em class="sig-param"><span class="pre">PropID</span> <span class="pre">dxpl=None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5d.DatasetID.read_direct_chunk" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">read_direct_chunk</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">offsets</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">PropID</span> <span class="pre">dxpl=None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5d.DatasetID.read_direct_chunk" title="Permalink to this definition">¶</a></dt>
 <dd><p>Reads data to a bytes array directly from a chunk at position
 specified by the <cite>offsets</cite> argument and bypasses any filters HDF5
 would normally apply to the written data. However, the written data
@@ -257,7 +257,7 @@ The reopened dataset is automatically re-registered with the same <code class="x
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5d.DatasetID.set_extent">
-<span class="sig-name descname"><span class="pre">set_extent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">TUPLE</span> <span class="pre">shape</span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5d.DatasetID.set_extent" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_extent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">TUPLE</span> <span class="pre">shape</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5d.DatasetID.set_extent" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set the size of the dataspace to match the given shape.  If the new
 size is larger in any dimension, it must be compatible with the
 maximum dataspace size.</p>
@@ -271,7 +271,7 @@ maximum dataspace size.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5d.DatasetID.write">
-<span class="sig-name descname"><span class="pre">write</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">SpaceID</span> <span class="pre">mspace</span></em>, <em class="sig-param"><span class="pre">SpaceID</span> <span class="pre">fspace</span></em>, <em class="sig-param"><span class="pre">NDARRAY</span> <span class="pre">arr_obj</span></em>, <em class="sig-param"><span class="pre">TypeID</span> <span class="pre">mtype=None</span></em>, <em class="sig-param"><span class="pre">PropDXID</span> <span class="pre">dxpl=None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5d.DatasetID.write" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">write</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">SpaceID</span> <span class="pre">mspace</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">SpaceID</span> <span class="pre">fspace</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">NDARRAY</span> <span class="pre">arr_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">TypeID</span> <span class="pre">mtype=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">PropDXID</span> <span class="pre">dxpl=None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5d.DatasetID.write" title="Permalink to this definition">¶</a></dt>
 <dd><p>Write data from a Numpy array to an HDF5 dataset. Keyword dxpl may
 be a <a class="reference internal" href="h5p.html#h5py.h5p.PropDXID" title="h5py.h5p.PropDXID"><code class="xref py py-class docutils literal notranslate"><span class="pre">dataset</span> <span class="pre">transfer</span> <span class="pre">property</span> <span class="pre">list</span></code></a>.</p>
 <p>It is your responsibility to ensure that the memory dataspace
@@ -287,7 +287,7 @@ case, ValueError will be raised and the read will fail.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5d.DatasetID.write_direct_chunk">
-<span class="sig-name descname"><span class="pre">write_direct_chunk</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">offsets</span></em>, <em class="sig-param"><span class="pre">data</span></em>, <em class="sig-param"><span class="pre">uint32_t</span> <span class="pre">filter_mask=0x00000000</span></em>, <em class="sig-param"><span class="pre">PropID</span> <span class="pre">dxpl=None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5d.DatasetID.write_direct_chunk" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">write_direct_chunk</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">offsets</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uint32_t</span> <span class="pre">filter_mask=0x00000000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">PropID</span> <span class="pre">dxpl=None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5d.DatasetID.write_direct_chunk" title="Permalink to this definition">¶</a></dt>
 <dd><p>This function bypasses any filters HDF5 would normally apply to
 written data. However, calling code may apply filters (e.g. gzip
 compression) itself before writing the data.</p>
@@ -479,8 +479,8 @@ been applied to the data before calling this function.</p>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2014, Andrew Collette and contributors.
-      Last updated on Nov 10, 2021.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.2.0.
+      Last updated on Nov 12, 2021.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.3.0.
     </div>
   </body>
 </html>

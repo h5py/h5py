@@ -50,20 +50,20 @@
 <h2>Functional API<a class="headerlink" href="#functional-api" title="Permalink to this headline">¶</a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="h5py.h5o.open">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5o.</span></span><span class="sig-name descname"><span class="pre">open</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">ObjectID</span> <span class="pre">loc</span></em>, <em class="sig-param"><span class="pre">STRING</span> <span class="pre">name</span></em>, <em class="sig-param"><span class="pre">PropID</span> <span class="pre">lapl=None</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ObjectID</span></span></span><a class="headerlink" href="#h5py.h5o.open" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5o.</span></span><span class="sig-name descname"><span class="pre">open</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ObjectID</span> <span class="pre">loc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">STRING</span> <span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">PropID</span> <span class="pre">lapl=None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ObjectID</span></span></span><a class="headerlink" href="#h5py.h5o.open" title="Permalink to this definition">¶</a></dt>
 <dd><p>Open a group, dataset, or named datatype attached to an existing group.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="h5py.h5o.link">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5o.</span></span><span class="sig-name descname"><span class="pre">link</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">ObjectID</span> <span class="pre">obj</span></em>, <em class="sig-param"><span class="pre">GroupID</span> <span class="pre">loc</span></em>, <em class="sig-param"><span class="pre">STRING</span> <span class="pre">name</span></em>, <em class="sig-param"><span class="pre">PropID</span> <span class="pre">lcpl=None</span></em>, <em class="sig-param"><span class="pre">PropID</span> <span class="pre">lapl=None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5o.link" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5o.</span></span><span class="sig-name descname"><span class="pre">link</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ObjectID</span> <span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">GroupID</span> <span class="pre">loc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">STRING</span> <span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">PropID</span> <span class="pre">lcpl=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">PropID</span> <span class="pre">lapl=None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5o.link" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a new hard link to an object.  Useful for objects created with
 h5g.create_anon() or h5d.create_anon().</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="h5py.h5o.copy">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5o.</span></span><span class="sig-name descname"><span class="pre">copy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">ObjectID</span> <span class="pre">src_loc</span></em>, <em class="sig-param"><span class="pre">STRING</span> <span class="pre">src_name</span></em>, <em class="sig-param"><span class="pre">GroupID</span> <span class="pre">dst_loc</span></em>, <em class="sig-param"><span class="pre">STRING</span> <span class="pre">dst_name</span></em>, <em class="sig-param"><span class="pre">PropID</span> <span class="pre">copypl=None</span></em>, <em class="sig-param"><span class="pre">PropID</span> <span class="pre">lcpl=None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5o.copy" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5o.</span></span><span class="sig-name descname"><span class="pre">copy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ObjectID</span> <span class="pre">src_loc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">STRING</span> <span class="pre">src_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">GroupID</span> <span class="pre">dst_loc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">STRING</span> <span class="pre">dst_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">PropID</span> <span class="pre">copypl=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">PropID</span> <span class="pre">lcpl=None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5o.copy" title="Permalink to this definition">¶</a></dt>
 <dd><p>Copy a group, dataset or named datatype from one location to another.  The
 source and destination need not be in the same file.</p>
 <p>The default behavior is a recursive copy of the object and all objects
@@ -72,7 +72,7 @@ below it.  This behavior is modified via the “copypl” property list.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="h5py.h5o.set_comment">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5o.</span></span><span class="sig-name descname"><span class="pre">set_comment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">ObjectID</span> <span class="pre">loc</span></em>, <em class="sig-param"><span class="pre">STRING</span> <span class="pre">comment</span></em>, <em class="sig-param"><span class="pre">**kwds</span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5o.set_comment" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5o.</span></span><span class="sig-name descname"><span class="pre">set_comment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ObjectID</span> <span class="pre">loc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">STRING</span> <span class="pre">comment</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwds</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5o.set_comment" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set the comment for any-file resident object.  Keywords:</p>
 <dl class="simple">
 <dt>STRING obj_name (“.”)</dt><dd><p>Set comment on this group member instead</p>
@@ -84,7 +84,7 @@ below it.  This behavior is modified via the “copypl” property list.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="h5py.h5o.get_comment">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5o.</span></span><span class="sig-name descname"><span class="pre">get_comment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">ObjectID</span> <span class="pre">loc</span></em>, <em class="sig-param"><span class="pre">STRING</span> <span class="pre">comment</span></em>, <em class="sig-param"><span class="pre">**kwds</span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5o.get_comment" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5o.</span></span><span class="sig-name descname"><span class="pre">get_comment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ObjectID</span> <span class="pre">loc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">STRING</span> <span class="pre">comment</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwds</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5o.get_comment" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the comment for any-file resident object.  Keywords:</p>
 <dl class="simple">
 <dt>STRING obj_name (“.”)</dt><dd><p>Set comment on this group member instead</p>
@@ -96,7 +96,7 @@ below it.  This behavior is modified via the “copypl” property list.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="h5py.h5o.visit">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5o.</span></span><span class="sig-name descname"><span class="pre">visit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">ObjectID</span> <span class="pre">loc</span></em>, <em class="sig-param"><span class="pre">CALLABLE</span> <span class="pre">func</span></em>, <em class="sig-param"><span class="pre">**kwds</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">&lt;Return</span> <span class="pre">value</span> <span class="pre">from</span> <span class="pre">func&gt;</span></span></span><a class="headerlink" href="#h5py.h5o.visit" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5o.</span></span><span class="sig-name descname"><span class="pre">visit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ObjectID</span> <span class="pre">loc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">CALLABLE</span> <span class="pre">func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwds</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">&lt;Return</span> <span class="pre">value</span> <span class="pre">from</span> <span class="pre">func&gt;</span></span></span><a class="headerlink" href="#h5py.h5o.visit" title="Permalink to this definition">¶</a></dt>
 <dd><p>Iterate a function or callable object over all objects below the
 specified one.  Your callable should conform to the signature:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">func</span><span class="p">(</span><span class="n">STRING</span> <span class="n">name</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="n">Result</span>
@@ -128,7 +128,7 @@ provides a literal “.” as the first value.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="h5py.h5o.get_info">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5o.</span></span><span class="sig-name descname"><span class="pre">get_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">ObjectID</span> <span class="pre">loc</span></em>, <em class="sig-param"><span class="pre">STRING</span> <span class="pre">name=</span></em>, <em class="sig-param"><span class="pre">INT</span> <span class="pre">index=</span></em>, <em class="sig-param"><span class="pre">**kwds</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#h5py.h5o.ObjInfo" title="h5py.h5o.ObjInfo"><span class="pre">ObjInfo</span></a></span></span><a class="headerlink" href="#h5py.h5o.get_info" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5o.</span></span><span class="sig-name descname"><span class="pre">get_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ObjectID</span> <span class="pre">loc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">STRING</span> <span class="pre">name=</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">INT</span> <span class="pre">index=</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwds</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#h5py.h5o.ObjInfo" title="h5py.h5o.ObjInfo"><span class="pre">ObjInfo</span></a></span></span><a class="headerlink" href="#h5py.h5o.get_info" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get information describing an object in an HDF5 file.  Provide the object
 itself, or the containing group and exactly one of “name” or “index”.</p>
 <dl class="simple">
@@ -147,7 +147,7 @@ Otherwise ignored.</p>
 <h2>Info classes<a class="headerlink" href="#info-classes" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="h5py.h5o.ObjInfo">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">h5py.h5o.</span></span><span class="sig-name descname"><span class="pre">ObjInfo</span></span><a class="headerlink" href="#h5py.h5o.ObjInfo" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5o.</span></span><span class="sig-name descname"><span class="pre">ObjInfo</span></span><a class="headerlink" href="#h5py.h5o.ObjInfo" title="Permalink to this definition">¶</a></dt>
 <dd><p>Represents the H5O_info_t structure</p>
 </dd></dl>
 
@@ -277,8 +277,8 @@ Otherwise ignored.</p>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2014, Andrew Collette and contributors.
-      Last updated on Nov 10, 2021.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.2.0.
+      Last updated on Nov 12, 2021.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.3.0.
     </div>
   </body>
 </html>

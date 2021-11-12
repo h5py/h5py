@@ -51,7 +51,7 @@
 LinkProxy, which comes attached to <a class="reference internal" href="h5g.html#h5py.h5g.GroupID" title="h5py.h5g.GroupID"><code class="xref py py-class docutils literal notranslate"><span class="pre">GroupID</span></code></a> objects as &lt;obj&gt;.links.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="h5py.h5l.LinkProxy">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">h5py.h5l.</span></span><span class="sig-name descname"><span class="pre">LinkProxy</span></span><a class="headerlink" href="#h5py.h5l.LinkProxy" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5l.</span></span><span class="sig-name descname"><span class="pre">LinkProxy</span></span><a class="headerlink" href="#h5py.h5l.LinkProxy" title="Permalink to this definition">¶</a></dt>
 <dd><p>Proxy class which provides access to the HDF5 “<code class="xref py py-data docutils literal notranslate"><span class="pre">H5L</span></code>” API.</p>
 <p>These come attached to <a class="reference internal" href="h5g.html#h5py.h5g.GroupID" title="h5py.h5g.GroupID"><code class="xref py py-class docutils literal notranslate"><span class="pre">GroupID</span></code></a> objects as “obj.links”.  Since every
 <code class="xref py py-data docutils literal notranslate"><span class="pre">H5L</span></code> function operates on at least one group, the methods provided
@@ -70,47 +70,47 @@ operate on their parent group identifier.  For example:</p>
 <p>You will note that this class does <em>not</em> inherit from <code class="xref py py-class docutils literal notranslate"><span class="pre">ObjectID</span></code>.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5l.LinkProxy.create_external">
-<span class="sig-name descname"><span class="pre">create_external</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">STRING</span> <span class="pre">link_name</span></em>, <em class="sig-param"><span class="pre">STRING</span> <span class="pre">file_name</span></em>, <em class="sig-param"><span class="pre">STRING</span> <span class="pre">obj_name</span></em>, <em class="sig-param"><span class="pre">PropLCID</span> <span class="pre">lcpl=None</span></em>, <em class="sig-param"><span class="pre">PropLAID</span> <span class="pre">lapl=None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5l.LinkProxy.create_external" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">create_external</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">STRING</span> <span class="pre">link_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">STRING</span> <span class="pre">file_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">STRING</span> <span class="pre">obj_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">PropLCID</span> <span class="pre">lcpl=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">PropLAID</span> <span class="pre">lapl=None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5l.LinkProxy.create_external" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a new external link, pointing to an object in another file.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5l.LinkProxy.create_hard">
-<span class="sig-name descname"><span class="pre">create_hard</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">STRING</span> <span class="pre">new_name</span></em>, <em class="sig-param"><span class="pre">GroupID</span> <span class="pre">cur_loc</span></em>, <em class="sig-param"><span class="pre">STRING</span> <span class="pre">cur_name</span></em>, <em class="sig-param"><span class="pre">PropID</span> <span class="pre">lcpl=None</span></em>, <em class="sig-param"><span class="pre">PropID</span> <span class="pre">lapl=None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5l.LinkProxy.create_hard" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">create_hard</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">STRING</span> <span class="pre">new_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">GroupID</span> <span class="pre">cur_loc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">STRING</span> <span class="pre">cur_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">PropID</span> <span class="pre">lcpl=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">PropID</span> <span class="pre">lapl=None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5l.LinkProxy.create_hard" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a new hard link in this group pointing to an existing link
 in another group.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5l.LinkProxy.create_soft">
-<span class="sig-name descname"><span class="pre">create_soft</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">STRING</span> <span class="pre">new_name</span></em>, <em class="sig-param"><span class="pre">STRING</span> <span class="pre">target</span></em>, <em class="sig-param"><span class="pre">PropID</span> <span class="pre">lcpl=None</span></em>, <em class="sig-param"><span class="pre">PropID</span> <span class="pre">lapl=None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5l.LinkProxy.create_soft" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">create_soft</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">STRING</span> <span class="pre">new_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">STRING</span> <span class="pre">target</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">PropID</span> <span class="pre">lcpl=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">PropID</span> <span class="pre">lapl=None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5l.LinkProxy.create_soft" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a new soft link in this group, with the given string value.
 The link target does not need to exist.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5l.LinkProxy.exists">
-<span class="sig-name descname"><span class="pre">exists</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">STRING</span> <span class="pre">name</span></em>, <em class="sig-param"><span class="pre">PropID</span> <span class="pre">lapl=None</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">BOOL</span></span></span><a class="headerlink" href="#h5py.h5l.LinkProxy.exists" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">exists</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">STRING</span> <span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">PropID</span> <span class="pre">lapl=None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">BOOL</span></span></span><a class="headerlink" href="#h5py.h5l.LinkProxy.exists" title="Permalink to this definition">¶</a></dt>
 <dd><p>Check if a link of the specified name exists in this group.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5l.LinkProxy.get_info">
-<span class="sig-name descname"><span class="pre">get_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">STRING</span> <span class="pre">name=</span></em>, <em class="sig-param"><span class="pre">INT</span> <span class="pre">index=</span></em>, <em class="sig-param"><span class="pre">**kwds</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">LinkInfo</span> <span class="pre">instance</span></span></span><a class="headerlink" href="#h5py.h5l.LinkProxy.get_info" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">STRING</span> <span class="pre">name=</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">INT</span> <span class="pre">index=</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwds</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">LinkInfo</span> <span class="pre">instance</span></span></span><a class="headerlink" href="#h5py.h5l.LinkProxy.get_info" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get information about a link, either by name or its index.</p>
 <p>Keywords:</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5l.LinkProxy.get_val">
-<span class="sig-name descname"><span class="pre">get_val</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">STRING</span> <span class="pre">name</span></em>, <em class="sig-param"><span class="pre">PropLAID</span> <span class="pre">lapl=None)</span> <span class="pre">-&gt;</span> <span class="pre">STRING</span> <span class="pre">or</span> <span class="pre">TUPLE(file</span></em>, <em class="sig-param"><span class="pre">obj</span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5l.LinkProxy.get_val" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_val</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">STRING</span> <span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">PropLAID</span> <span class="pre">lapl=None)</span> <span class="pre">-&gt;</span> <span class="pre">STRING</span> <span class="pre">or</span> <span class="pre">TUPLE(file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">obj</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5l.LinkProxy.get_val" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the string value of a soft link, or a 2-tuple representing
 the contents of an external link.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5l.LinkProxy.iterate">
-<span class="sig-name descname"><span class="pre">iterate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">CALLABLE</span> <span class="pre">func</span></em>, <em class="sig-param"><span class="pre">**kwds</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">&lt;Return</span> <span class="pre">value</span> <span class="pre">from</span> <span class="pre">func&gt;,</span> <span class="pre">&lt;index</span> <span class="pre">to</span> <span class="pre">restart</span> <span class="pre">at&gt;</span></span></span><a class="headerlink" href="#h5py.h5l.LinkProxy.iterate" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">iterate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">CALLABLE</span> <span class="pre">func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwds</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">&lt;Return</span> <span class="pre">value</span> <span class="pre">from</span> <span class="pre">func&gt;,</span> <span class="pre">&lt;index</span> <span class="pre">to</span> <span class="pre">restart</span> <span class="pre">at&gt;</span></span></span><a class="headerlink" href="#h5py.h5l.LinkProxy.iterate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Iterate a function or callable object over all groups in this
 one.  Your callable should conform to the signature:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">func</span><span class="p">(</span><span class="n">STRING</span> <span class="n">name</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="n">Result</span>
@@ -140,13 +140,13 @@ anything else aborts iteration and returns that value.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5l.LinkProxy.move">
-<span class="sig-name descname"><span class="pre">move</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">STRING</span> <span class="pre">src_name</span></em>, <em class="sig-param"><span class="pre">GroupID</span> <span class="pre">dst_loc</span></em>, <em class="sig-param"><span class="pre">STRING</span> <span class="pre">dst_name</span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5l.LinkProxy.move" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">move</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">STRING</span> <span class="pre">src_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">GroupID</span> <span class="pre">dst_loc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">STRING</span> <span class="pre">dst_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5l.LinkProxy.move" title="Permalink to this definition">¶</a></dt>
 <dd><p>Move a link to a new location in the file.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5l.LinkProxy.visit">
-<span class="sig-name descname"><span class="pre">visit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">CALLABLE</span> <span class="pre">func</span></em>, <em class="sig-param"><span class="pre">**kwds</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">&lt;Return</span> <span class="pre">value</span> <span class="pre">from</span> <span class="pre">func&gt;</span></span></span><a class="headerlink" href="#h5py.h5l.LinkProxy.visit" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">visit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">CALLABLE</span> <span class="pre">func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwds</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">&lt;Return</span> <span class="pre">value</span> <span class="pre">from</span> <span class="pre">func&gt;</span></span></span><a class="headerlink" href="#h5py.h5l.LinkProxy.visit" title="Permalink to this definition">¶</a></dt>
 <dd><p>Iterate a function or callable object over all groups below this
 one.  Your callable should conform to the signature:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">func</span><span class="p">(</span><span class="n">STRING</span> <span class="n">name</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="n">Result</span>
@@ -263,8 +263,8 @@ anything else aborts iteration and returns that value.</p>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2014, Andrew Collette and contributors.
-      Last updated on Nov 10, 2021.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.2.0.
+      Last updated on Nov 12, 2021.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.3.0.
     </div>
   </body>
 </html>

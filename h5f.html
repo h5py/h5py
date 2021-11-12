@@ -50,7 +50,7 @@
 <h2>Functional API<a class="headerlink" href="#functional-api" title="Permalink to this headline">¶</a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="h5py.h5f.open">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5f.</span></span><span class="sig-name descname"><span class="pre">open</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">STRING</span> <span class="pre">name</span></em>, <em class="sig-param"><span class="pre">UINT</span> <span class="pre">flags=ACC_RDWR</span></em>, <em class="sig-param"><span class="pre">PropFAID</span> <span class="pre">fapl=None</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#h5py.h5f.FileID" title="h5py.h5f.FileID"><span class="pre">FileID</span></a></span></span><a class="headerlink" href="#h5py.h5f.open" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5f.</span></span><span class="sig-name descname"><span class="pre">open</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">STRING</span> <span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">UINT</span> <span class="pre">flags=ACC_RDWR</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">PropFAID</span> <span class="pre">fapl=None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#h5py.h5f.FileID" title="h5py.h5f.FileID"><span class="pre">FileID</span></a></span></span><a class="headerlink" href="#h5py.h5f.open" title="Permalink to this definition">¶</a></dt>
 <dd><p>Open an existing HDF5 file.  Keyword “flags” may be:</p>
 <dl class="simple">
 <dt><a class="reference internal" href="#h5py.h5f.ACC_RDWR" title="h5py.h5f.ACC_RDWR"><code class="xref py py-data docutils literal notranslate"><span class="pre">ACC_RDWR</span></code></a></dt><dd><p>Open in read-write mode</p>
@@ -63,7 +63,7 @@
 
 <dl class="py function">
 <dt class="sig sig-object py" id="h5py.h5f.create">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5f.</span></span><span class="sig-name descname"><span class="pre">create</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">STRING</span> <span class="pre">name</span></em>, <em class="sig-param"><span class="pre">INT</span> <span class="pre">flags=ACC_TRUNC</span></em>, <em class="sig-param"><span class="pre">PropFCID</span> <span class="pre">fcpl=None</span></em>, <em class="sig-param"><span class="pre">PropFAID</span> <span class="pre">fapl=None</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#h5py.h5f.FileID" title="h5py.h5f.FileID"><span class="pre">FileID</span></a></span></span><a class="headerlink" href="#h5py.h5f.create" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5f.</span></span><span class="sig-name descname"><span class="pre">create</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">STRING</span> <span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">INT</span> <span class="pre">flags=ACC_TRUNC</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">PropFCID</span> <span class="pre">fcpl=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">PropFAID</span> <span class="pre">fapl=None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#h5py.h5f.FileID" title="h5py.h5f.FileID"><span class="pre">FileID</span></a></span></span><a class="headerlink" href="#h5py.h5f.create" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a new HDF5 file.  Keyword “flags” may be:</p>
 <dl class="simple">
 <dt><a class="reference internal" href="#h5py.h5f.ACC_TRUNC" title="h5py.h5f.ACC_TRUNC"><code class="xref py py-data docutils literal notranslate"><span class="pre">ACC_TRUNC</span></code></a></dt><dd><p>Truncate an existing file, discarding its data</p>
@@ -77,7 +77,7 @@ the default is <a class="reference internal" href="#h5py.h5f.ACC_TRUNC" title="h
 
 <dl class="py function">
 <dt class="sig sig-object py" id="h5py.h5f.flush">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5f.</span></span><span class="sig-name descname"><span class="pre">flush</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">ObjectID</span> <span class="pre">obj</span></em>, <em class="sig-param"><span class="pre">INT</span> <span class="pre">scope=SCOPE_LOCAL</span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5f.flush" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5f.</span></span><span class="sig-name descname"><span class="pre">flush</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ObjectID</span> <span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">INT</span> <span class="pre">scope=SCOPE_LOCAL</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5f.flush" title="Permalink to this definition">¶</a></dt>
 <dd><p>Tell the HDF5 library to flush file buffers to disk.  “obj” may
 be the file identifier, or the identifier of any object residing in
 the file.  Keyword “scope” may be:</p>
@@ -91,27 +91,27 @@ the file.  Keyword “scope” may be:</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="h5py.h5f.is_hdf5">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5f.</span></span><span class="sig-name descname"><span class="pre">is_hdf5</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">STRING</span> <span class="pre">name</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">BOOL</span></span></span><a class="headerlink" href="#h5py.h5f.is_hdf5" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5f.</span></span><span class="sig-name descname"><span class="pre">is_hdf5</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">STRING</span> <span class="pre">name</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">BOOL</span></span></span><a class="headerlink" href="#h5py.h5f.is_hdf5" title="Permalink to this definition">¶</a></dt>
 <dd><p>Determine if a given file is an HDF5 file.  Note this raises an
 exception if the file doesn’t exist.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="h5py.h5f.mount">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5f.</span></span><span class="sig-name descname"><span class="pre">mount</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">ObjectID</span> <span class="pre">loc</span></em>, <em class="sig-param"><span class="pre">STRING</span> <span class="pre">name</span></em>, <em class="sig-param"><span class="pre">FileID</span> <span class="pre">fid</span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5f.mount" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5f.</span></span><span class="sig-name descname"><span class="pre">mount</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ObjectID</span> <span class="pre">loc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">STRING</span> <span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">FileID</span> <span class="pre">fid</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5f.mount" title="Permalink to this definition">¶</a></dt>
 <dd><p>Mount an open file on the group “name” under group loc_id.  Note that
 “name” must already exist.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="h5py.h5f.unmount">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5f.</span></span><span class="sig-name descname"><span class="pre">unmount</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">ObjectID</span> <span class="pre">loc</span></em>, <em class="sig-param"><span class="pre">STRING</span> <span class="pre">name</span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5f.unmount" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5f.</span></span><span class="sig-name descname"><span class="pre">unmount</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ObjectID</span> <span class="pre">loc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">STRING</span> <span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5f.unmount" title="Permalink to this definition">¶</a></dt>
 <dd><p>Unmount a file, mounted at “name” under group loc_id.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="h5py.h5f.open_file_image">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5f.</span></span><span class="sig-name descname"><span class="pre">open_file_image</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">STRING</span> <span class="pre">image</span></em>, <em class="sig-param"><span class="pre">INT</span> <span class="pre">flags=0</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#h5py.h5f.FileID" title="h5py.h5f.FileID"><span class="pre">FileID</span></a></span></span><a class="headerlink" href="#h5py.h5f.open_file_image" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5f.</span></span><span class="sig-name descname"><span class="pre">open_file_image</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">STRING</span> <span class="pre">image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">INT</span> <span class="pre">flags=0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#h5py.h5f.FileID" title="h5py.h5f.FileID"><span class="pre">FileID</span></a></span></span><a class="headerlink" href="#h5py.h5f.open_file_image" title="Permalink to this definition">¶</a></dt>
 <dd><p>Load a new HDF5 file into memory.  Keyword “flags” may be:</p>
 <dl class="simple">
 <dt><code class="xref py py-data docutils literal notranslate"><span class="pre">FILE_IMAGE_OPEN_RW</span></code></dt><dd><p>Specifies opening the file image in read/write mode.</p>
@@ -121,13 +121,13 @@ exception if the file doesn’t exist.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="h5py.h5f.get_name">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5f.</span></span><span class="sig-name descname"><span class="pre">get_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">ObjectID</span> <span class="pre">obj</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">STRING</span></span></span><a class="headerlink" href="#h5py.h5f.get_name" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5f.</span></span><span class="sig-name descname"><span class="pre">get_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ObjectID</span> <span class="pre">obj</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">STRING</span></span></span><a class="headerlink" href="#h5py.h5f.get_name" title="Permalink to this definition">¶</a></dt>
 <dd><p>Determine the name of the file in which the specified object resides.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="h5py.h5f.get_obj_count">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5f.</span></span><span class="sig-name descname"><span class="pre">get_obj_count</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">OBJECT</span> <span class="pre">where=OBJ_ALL</span></em>, <em class="sig-param"><span class="pre">types=OBJ_ALL</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">INT</span></span></span><a class="headerlink" href="#h5py.h5f.get_obj_count" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5f.</span></span><span class="sig-name descname"><span class="pre">get_obj_count</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">OBJECT</span> <span class="pre">where=OBJ_ALL</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">types=OBJ_ALL</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">INT</span></span></span><a class="headerlink" href="#h5py.h5f.get_obj_count" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the number of open objects.</p>
 <dl>
 <dt>where</dt><dd><p>Either a <a class="reference internal" href="#h5py.h5f.FileID" title="h5py.h5f.FileID"><code class="xref py py-class docutils literal notranslate"><span class="pre">FileID</span></code></a> instance representing an HDF5 file, or the
@@ -144,7 +144,7 @@ identifier.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="h5py.h5f.get_obj_ids">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5f.</span></span><span class="sig-name descname"><span class="pre">get_obj_ids</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">OBJECT</span> <span class="pre">where=OBJ_ALL</span></em>, <em class="sig-param"><span class="pre">types=OBJ_ALL</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">LIST</span></span></span><a class="headerlink" href="#h5py.h5f.get_obj_ids" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5f.</span></span><span class="sig-name descname"><span class="pre">get_obj_ids</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">OBJECT</span> <span class="pre">where=OBJ_ALL</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">types=OBJ_ALL</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">LIST</span></span></span><a class="headerlink" href="#h5py.h5f.get_obj_ids" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get a list of identifier instances for open objects.</p>
 <dl>
 <dt>where</dt><dd><p>Either a <a class="reference internal" href="#h5py.h5f.FileID" title="h5py.h5f.FileID"><code class="xref py py-class docutils literal notranslate"><span class="pre">FileID</span></code></a> instance representing an HDF5 file, or the
@@ -164,7 +164,7 @@ identifier.</p>
 <h2>File objects<a class="headerlink" href="#file-objects" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="h5py.h5f.FileID">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">h5py.h5f.</span></span><span class="sig-name descname"><span class="pre">FileID</span></span><a class="headerlink" href="#h5py.h5f.FileID" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5f.</span></span><span class="sig-name descname"><span class="pre">FileID</span></span><a class="headerlink" href="#h5py.h5f.FileID" title="Permalink to this definition">¶</a></dt>
 <dd><p>Represents an HDF5 file identifier.</p>
 <p>These objects wrap a small portion of the H5F interface; all the
 H5F functions which can take arbitrary objects in addition to
@@ -243,13 +243,13 @@ only tracks free space until the file is closed.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5f.FileID.get_mdc_size">
-<span class="sig-name descname"><span class="pre">get_mdc_size</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">max_size</span><span class="p"><span class="pre">,</span> </span><span class="pre">min_clean_size</span><span class="p"><span class="pre">,</span> </span><span class="pre">cur_size</span><span class="p"><span class="pre">,</span> </span><span class="pre">cur_num_entries</span><span class="p"><span class="pre">[</span></span><span class="pre">SIZE_T</span><span class="p"><span class="pre">,</span> </span><span class="pre">SIZE_T</span><span class="p"><span class="pre">,</span> </span><span class="pre">SIZE_T</span><span class="p"><span class="pre">,</span> </span><span class="pre">INT</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#h5py.h5f.FileID.get_mdc_size" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_mdc_size</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">max_size</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">min_clean_size</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">cur_size</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">cur_num_entries</span><span class="p"><span class="pre">[</span></span><span class="pre">SIZE_T</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">SIZE_T</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">SIZE_T</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">INT</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#h5py.h5f.FileID.get_mdc_size" title="Permalink to this definition">¶</a></dt>
 <dd><p>Obtain current metadata cache size data for specified file.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5f.FileID.get_page_buffering_stats">
-<span class="sig-name descname"><span class="pre">get_page_buffering_stats</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">)</span> <span class="pre">-&gt;</span> <span class="pre">NAMEDTUPLE</span> <span class="pre">PageBufStats(NAMEDTUPLE</span> <span class="pre">meta=PageStats</span></em>, <em class="sig-param"><span class="pre">NAMEDTUPLE</span> <span class="pre">raw=PageStats</span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5f.FileID.get_page_buffering_stats" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_page_buffering_stats</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">)</span> <span class="pre">-&gt;</span> <span class="pre">NAMEDTUPLE</span> <span class="pre">PageBufStats(NAMEDTUPLE</span> <span class="pre">meta=PageStats</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">NAMEDTUPLE</span> <span class="pre">raw=PageStats</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5f.FileID.get_page_buffering_stats" title="Permalink to this definition">¶</a></dt>
 <dd><p>Retrieve page buffering statistics for the file as the number of
 metadata and raw data accesses, hits, misses, evictions, and
 accesses that bypass the page buffer (bypasses).</p>
@@ -532,8 +532,8 @@ attached to objects cannot remain open.</p>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2014, Andrew Collette and contributors.
-      Last updated on Nov 10, 2021.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.2.0.
+      Last updated on Nov 12, 2021.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.3.0.
     </div>
   </body>
 </html>
