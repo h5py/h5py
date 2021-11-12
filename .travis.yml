@@ -1,5 +1,4 @@
 language: python
-
 dist: xenial
 
 notifications:
@@ -32,17 +31,43 @@ matrix:
       - HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION
       - H5PY_ENFORCE_COVERAGE=yes
       os: linux-ppc64le
+    - os: linux
+      services: docker
+      python: 3.7
+      virt: vm
+      group: edge
+      arch: arm64
+      env:
+        - TOXENV=py37-test-deps
+        - HDF5_VERSION=1.10.5
+        - HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION
+        - H5PY_ENFORCE_COVERAGE=yes
+        - CIBW_BUILD: cp3[789]-*
+        - CIBW_MANYLINUX_AARCH64_IMAGE: ghcr.io/h5py/manylinux2014_aarch64-hdf5
+        - CIBW_ARCHS: aarch64
 
 before_install:
   # - export PATH=/usr/lib/ccache:$PATH
   - ccache -s
 
 install:
-  - pip install -U tox codecov virtualenv
-  - ci/get_hdf5_if_needed.sh
-  - ls -lRa $HDF5_CACHE_DIR
+    - pip install -U tox codecov virtualenv
+    - ci/get_hdf5_if_needed.sh
+    - ls -lRa $HDF5_CACHE_DIR
+    - if [[ $CIBW_ARCHS == aarch64 ]]; then python -m pip install cibuildwheel==1.9.0; fi
+
 script:
-  - tox
+    - if [[ $CIBW_ARCHS == aarch64 ]]; then python3 -m cibuildwheel --output-dir wheelhouse; fi
+    - tox
 
 after_success:
-  - python ci/upload_coverage.py
+    - python ci/upload_coverage.py
+
+  # trigger an upload to the shared ecosystem
+  # infrastructure at: https://anaconda.org/scipy-wheels-nightly
+  # for cron jobs only (restricted to master branch once
+  # per week)
+  # ANACONDA_ORG_UPLOAD_TOKEN is a secret token
+  # used in Travis CI config, originally
+  # generated at anaconda.org for scipy-wheels-nightly (cron jobs).
+    - if [[ $CIBW_ARCHS == aarch64 && "$TRAVIS_EVENT_TYPE" == "cron" ]]; then bash ci/upload_wheels.sh; fi
