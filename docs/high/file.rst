@@ -325,7 +325,7 @@ chunk cache*.
   closer to 0, and if the application does not, the value should be set closer
   to 1.
 * ``rdcc_nslots`` is the number of chunk slots in
-  the cache for this entire file.  In order to allow the chunks to be looked up
+  the cache for each dataset.  In order to allow the chunks to be looked up
   quickly in cache, each chunk is assigned a unique hash value that is used to
   look up the chunk.  The cache contains a simple array of pointers to chunks,
   which is called a hash table.  A chunk's hash value is simply the index into
