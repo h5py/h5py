@@ -409,7 +409,6 @@ class Group(HLObject, MutableMappingHDF5):
             values are stored as scalar datasets. Raise ValueError if we
             can't understand the resulting array dtype.
         """
-        do_link = False
         with phil:
             name, lcpl = self._e(name, lcpl=True)
 
@@ -421,7 +420,9 @@ class Group(HLObject, MutableMappingHDF5):
                               lcpl=lcpl, lapl=self._lapl)
 
             elif isinstance(obj, ExternalLink):
-                do_link = True
+                fn = filename_encode(obj.filename)
+                self.id.links.create_external(name, fn, self._e(obj.path),
+                                              lcpl=lcpl, lapl=self._lapl)
 
             elif isinstance(obj, numpy.dtype):
                 htype = h5t.py_create(obj, logical=True)
@@ -430,12 +431,6 @@ class Group(HLObject, MutableMappingHDF5):
             else:
                 ds = self.create_dataset(None, data=obj)
                 h5o.link(ds.id, self.id, name, lcpl=lcpl)
-
-        if do_link:
-            fn = filename_encode(obj.filename)
-            with phil:
-                self.id.links.create_external(name, fn, self._e(obj.path),
-                                              lcpl=lcpl, lapl=self._lapl)
 
     @with_phil
     def __delitem__(self, name):
