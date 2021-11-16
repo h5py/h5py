@@ -134,6 +134,8 @@ You can implement the feature as a number of small changes, or as one big
 commit; there's no project policy.  Double-check to make sure you've
 included all your files; run ``git status`` and check the output.
 
+.. _contrib-run-tests:
+
 Run the tests
 ~~~~~~~~~~~~~
 
