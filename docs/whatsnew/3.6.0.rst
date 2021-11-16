@@ -1,0 +1,21 @@
+Deprecations
+------------
+
+* Using :meth:`.Dataset.astype` as a context manager (``with dset.astype(t):``)
+  is deprecated. Slice the object returned by astype instead
+  (``data = dset.astype(t)[:10]``). This works from h5py 3.0 onwards.
+
+Building h5py
+-------------
+
+* h5py now requires the ``oldest-supported-numpy`` package at build time,
+  instead of maintaining its own list of the oldest supported NumPy versions.
+  The effect should be similar, but hopefully more reliable.
+
+Development
+-----------
+
+* The custom ``setup.py test`` has been removed.
+  `tox <https://tox.wiki/en/latest/>`_ should be used instead during
+  development, and `pytest --pyargs h5py` can be used for installed h5py.
+
