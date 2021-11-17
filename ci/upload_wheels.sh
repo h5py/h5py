@@ -7,12 +7,14 @@ if [[ "$TRAVIS_EVENT_TYPE" != "cron" && -z "$TRAVIS_TAG" ]] ; then
 fi
 
 # rename wheels if not on a tag
-# inserting short commit hash as build tag in wheel filename
+# inserting commit count & hash from git describe
 # e.g. h5py-3.3.0-cp37-cp37m-manylinux_2_17_aarch64.manylinux2014_aarch64.whl to
-#   h5py-3.3.0-0e2d161a0-cp37-cp37m-manylinux_2_17_aarch64.manylinux2014_aarch64.whl
+#   h5py-3.3.0-3-g4320f2ea-cp37-cp37m-manylinux_2_17_aarch64.manylinux2014_aarch64.whl
 if [[ -z "$TRAVIS_TAG" ]] ; then
-  # build tag has to start with a decimal digit, so prefix 0 on commit hash
-  build_tag="0$(git rev-parse --short=8 HEAD)"
+  descr=$(git describe --tags)
+  descr=${descr#*-}  # Chop off tag (should be version number)
+  build_tag=${descr//-/_}  # Convert - to _ for build tag
+  echo "Setting build tag to ${build_tag}"
   for whl in "${TRAVIS_BUILD_DIR}"/wheelhouse/h5py-*.whl; do
     newname=$(echo "$whl" | sed "s/\(h5py-[0-9][0-9]*[.[0-9]*]*-\)\(cp*\)/\1${build_tag}-\2/")
      if [ "$newname" != "$whl" ]; then
