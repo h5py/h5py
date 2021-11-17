@@ -70,4 +70,4 @@ after_success:
   # ANACONDA_ORG_UPLOAD_TOKEN is a secret token
   # used in Travis CI config, originally
   # generated at anaconda.org for scipy-wheels-nightly (cron jobs).
-    - if [[ $CIBW_ARCHS == aarch64 && "$TRAVIS_EVENT_TYPE" == "cron" ]]; then bash ci/upload_wheels.sh; fi
+    - if [[ $CIBW_ARCHS == aarch64 ]]; then bash ci/upload_wheels.sh; fi
