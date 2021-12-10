@@ -9,3 +9,6 @@ repos:
     rev: "0.39"
     hooks:
     -   id: check-manifest
+
+ci:
+    autoupdate_schedule: monthly
