@@ -10,7 +10,7 @@ jobs:
   pool:
     vmImage: ubuntu-20.04
   variables:
-    TOXENV: docs,checkreadme,pre-commit,rever
+    TOXENV: docs,checkreadme,rever
   steps:
     - task: UsePythonVersion@0
       inputs:
