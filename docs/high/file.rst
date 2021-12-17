@@ -160,7 +160,7 @@ a better option may be to store temporary data on disk using the functions in
    not release it until the service thread completes its work.
 
    If possible, avoid creating circular references (either via ``weakrefs`` or
-   manually breaking the cycles) so that keep ``h5py`` objects alive.  If this
+   manually breaking the cycles) that keep ``h5py`` objects alive.  If this
    is not possible, manually triggering a garbage collection from the correct
    thread or temporarily disable garbage collection may help.
 
