@@ -119,11 +119,13 @@ def nonlocal_close():
 
     # create a cached list of ids whilst the gc is disabled to avoid hitting
     # the cyclic gc while iterating through the registry dict
+    gc_was_enabled = gc.isenabled()
     gc.disable()
     try:
         reg_ids = list(registry)
     finally:
-        gc.enable()
+        if gc_was_enabled:
+            gc.enable()
 
     for python_id in reg_ids:
         ref = registry.get(python_id)

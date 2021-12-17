@@ -283,6 +283,7 @@ def get_obj_ids(object where=OBJ_ALL, int types=H5F_OBJ_ALL):
             # Garbage collection might dealloc a Python object & call H5Idec_ref
             # between getting an HDF5 ID and calling H5Iinc_ref, breaking it.
             # Disable GC until we have inc_ref'd the IDs to keep them alive.
+            gc_was_enabled = gc.isenabled()
             gc.disable()
             try:
                 H5Fget_obj_ids(where_id, types, count, obj_list)
@@ -291,7 +292,8 @@ def get_obj_ids(object where=OBJ_ALL, int types=H5F_OBJ_ALL):
                     # The HDF5 function returns a borrowed reference for each hid_t.
                     H5Iinc_ref(obj_list[i])
             finally:
-                gc.enable()
+                if gc_was_enabled:
+                    gc.enable()
 
         return py_obj_list
 
