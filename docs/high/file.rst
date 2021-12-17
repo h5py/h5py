@@ -159,9 +159,10 @@ a better option may be to store temporary data on disk using the functions in
    can not continue until it acquires the lock and thread holding the lock will
    not release it until the service thread completes its work.
 
-   To work around this issue either temporarily disable garbage collection or
-   ensure that you always manually break any reference cycles that maybe
-   keeping ``h5py`` objects alive.
+   If possible, avoid creating circular references (either via ``weakrefs`` or
+   manually breaking the cycles) so that keep ``h5py`` objects alive.  If this
+   is not possible, manually triggering a garbage collection from the correct
+   thread or temporarily disable garbage collection may help.
 
 
 .. note::
