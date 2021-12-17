@@ -146,6 +146,24 @@ a better option may be to store temporary data on disk using the functions in
    the HDF5 file before closing the file object it's wrapping. If there is an
    error while trying to close the HDF5 file, segfaults may occur.
 
+
+.. warning::
+
+   When using a Python file-like object, using service threads to implement the
+   file-like API can lead to process deadlocks.
+
+   ``h5py`` serializes access to low-level hdf5 functions via a global lock.
+   This lock is held when the file-like methods are called and is required to
+   delete/deallocate ``h5py`` objects.  Thus, if cyclic garbage collected is
+   triggered on a service thread the program will deadlock.  The service thread
+   can not continue until it acquires the lock and thread holding the lock will
+   not release it until the service thread completes its work.
+
+   To work around this issue either temporarily disable garbage collection or
+   ensure that you always manually break any reference cycles that maybe
+   keeping ``h5py`` objects alive.
+
+
 .. note::
 
    Using a Python file-like object for HDF5 is internally more complex,
