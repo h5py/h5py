@@ -154,15 +154,15 @@ a better option may be to store temporary data on disk using the functions in
 
    ``h5py`` serializes access to low-level hdf5 functions via a global lock.
    This lock is held when the file-like methods are called and is required to
-   delete/deallocate ``h5py`` objects.  Thus, if cyclic garbage collected is
+   delete/deallocate ``h5py`` objects.  Thus, if cyclic garbage collection is
    triggered on a service thread the program will deadlock.  The service thread
-   can not continue until it acquires the lock and thread holding the lock will
+   can not continue until it acquires the lock, and the thread holding the lock will
    not release it until the service thread completes its work.
 
    If possible, avoid creating circular references (either via ``weakrefs`` or
    manually breaking the cycles) that keep ``h5py`` objects alive.  If this
    is not possible, manually triggering a garbage collection from the correct
-   thread or temporarily disable garbage collection may help.
+   thread or temporarily disabling garbage collection may help.
 
 
 .. note::
