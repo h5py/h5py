@@ -824,7 +824,7 @@ class TestPickle(TestCase):
 # unittest doesn't work with pytest fixtures (and possibly other features),
 # hence no subclassing TestCase
 @pytest.mark.mpi
-class TestMPI(object):
+class TestMPI:
     def test_mpio(self, mpi_file_name):
         """ MPIO driver and options """
         from mpi4py import MPI

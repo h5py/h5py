@@ -82,7 +82,7 @@ def select(shape, args, dataset=None):
     return selector.make_selection(args)
 
 
-class Selection(object):
+class Selection:
 
     """
         Base class for HDF5 dataspace selections.  Subclasses support the

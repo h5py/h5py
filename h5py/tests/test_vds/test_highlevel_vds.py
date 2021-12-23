@@ -64,7 +64,7 @@ Unit test for the high level vds interface for excalibur
 https://support.hdfgroup.org/HDF5/docNewFeatures/VDS/HDF5-VDS-requirements-use-cases-2014-12-10.pdf
 '''
 
-class ExcaliburData(object):
+class ExcaliburData:
     FEM_PIXELS_PER_CHIP_X = 256
     FEM_PIXELS_PER_CHIP_Y = 256
     FEM_CHIPS_PER_STRIPE_X = 8

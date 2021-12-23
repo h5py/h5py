@@ -625,7 +625,7 @@ class Group(HLObject, MutableMappingHDF5):
         return r
 
 
-class HardLink(object):
+class HardLink:
 
     """
         Represents a hard link in an HDF5 file.  Provided only so that
@@ -635,7 +635,7 @@ class HardLink(object):
     pass
 
 
-class SoftLink(object):
+class SoftLink:
 
     """
         Represents a symbolic ("soft") link in an HDF5 file.  The path
@@ -655,7 +655,7 @@ class SoftLink(object):
         return '<SoftLink to "%s">' % self.path
 
 
-class ExternalLink(object):
+class ExternalLink:
 
     """
         Represents an HDF5 external link.  Paths may be absolute or relative.

@@ -69,7 +69,7 @@ def _convert_space_for_key(space, key):
         space.select_hyperslab(start, count, stride, block)
 
 
-class VirtualSource(object):
+class VirtualSource:
     """Source definition for virtual data sets.
 
     Instantiate this class to represent an entire source dataset, and then
@@ -143,7 +143,7 @@ class VirtualSource(object):
         _convert_space_for_key(tmp.sel.id, key)
         return tmp
 
-class VirtualLayout(object):
+class VirtualLayout:
     """Object for building a virtual dataset.
 
     Instantiate this class to define a virtual dataset, assign to slices of it

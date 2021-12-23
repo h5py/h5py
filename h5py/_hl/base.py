@@ -152,7 +152,7 @@ def is_empty_dataspace(obj):
     return False
 
 
-class CommonStateObject(object):
+class CommonStateObject:
 
     """
         Mixin class that allows sharing information between objects which
@@ -225,7 +225,7 @@ class CommonStateObject(object):
         return name
 
 
-class _RegionProxy(object):
+class _RegionProxy:
 
     """
         Proxy object which handles region references.
@@ -478,7 +478,7 @@ class MutableMappingHDF5(MappingHDF5, MutableMapping):
     pass
 
 
-class Empty(object):
+class Empty:
 
     """
         Proxy object to represent empty/null dataspaces (a.k.a H5S_NULL).
