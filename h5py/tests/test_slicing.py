@@ -321,7 +321,7 @@ class TestFieldNames(BaseSlicing):
 class TestMultiBlockSlice(BaseSlicing):
 
     def setUp(self):
-        super(TestMultiBlockSlice, self).setUp()
+        super().setUp()
         self.arr = np.arange(10)
         self.dset = self.f.create_dataset('x', data=self.arr)
 
