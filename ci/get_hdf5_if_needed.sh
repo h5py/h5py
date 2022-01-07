@@ -29,7 +29,7 @@ else
         tar -xzvf hdf5-$HDF5_VERSION.tar.gz
         pushd hdf5-$HDF5_VERSION
         chmod u+x autogen.sh
-        ./configure --prefix --enable-tests=no $HDF5_DIR $EXTRA_MPI_FLAGS
+        ./configure --prefix $HDF5_DIR --enable-tests=no $EXTRA_MPI_FLAGS
         make -j $(nproc)
         make install
         popd
