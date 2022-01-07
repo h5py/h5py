@@ -27,6 +27,8 @@ matrix:
     - python: 3.7
       env:
       - TOXENV=py37-test-deps
+      # NumPy 1.21.5 fails to compile: https://github.com/numpy/numpy/issues/20761
+      - TOX_OPTS="--force-dep numpy!=1.21.5"
       - HDF5_VERSION=1.10.5
       - HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION
       - H5PY_ENFORCE_COVERAGE=yes
@@ -39,6 +41,7 @@ matrix:
       arch: arm64
       env:
         - TOXENV=py37-test-deps
+        - TOX_OPTS=""
         - HDF5_VERSION=1.10.5
         - HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION
         - H5PY_ENFORCE_COVERAGE=yes
@@ -58,7 +61,7 @@ install:
 
 script:
     - if [[ $CIBW_ARCHS == aarch64 ]]; then python3 -m cibuildwheel --output-dir wheelhouse; fi
-    - tox
+    - tox $TOX_OPTS
 
 after_success:
     - python ci/upload_coverage.py
