@@ -6,10 +6,9 @@ repos:
     -   id: trailing-whitespace
 
 -   repo: https://github.com/mgedmin/check-manifest
-    rev: "0.47"
+    rev: "0.39"
     hooks:
     -   id: check-manifest
-        args: [--no-build-isolation]
 
 ci:
     autoupdate_schedule: monthly
