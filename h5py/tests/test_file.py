@@ -435,7 +435,7 @@ class TestNewLibver(TestCase):
 
     @classmethod
     def setUpClass(cls):
-        super(TestNewLibver, cls).setUpClass()
+        super().setUpClass()
 
         # Current latest library bound label
         if h5py.version.hdf5_version_tuple < (1, 11, 4):

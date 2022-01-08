@@ -511,7 +511,7 @@ class File(Group):
             else:
                 self._libver = (libver, 'latest')
 
-        super(File, self).__init__(fid)
+        super().__init__(fid)
 
     def close(self):
         """ Close the file.  All open objects become invalid """
