@@ -147,7 +147,7 @@ def make_new_dset(parent, shape=None, dtype=None, data=None, name=None,
     return dset_id
 
 
-class AstypeWrapper(object):
+class AstypeWrapper:
     """Wrapper to convert data on reading from a dataset.
     """
     def __init__(self, dset, dtype):
@@ -249,7 +249,7 @@ def readtime_dtype(basetype, names):
 
 
 if MPI:
-    class CollectiveContext(object):
+    class CollectiveContext:
 
         """ Manages collective I/O in MPI mode """
 
@@ -267,7 +267,7 @@ if MPI:
             self._dset._dxpl.set_dxpl_mpio(h5fd.MPIO_INDEPENDENT)
 
 
-class ChunkIterator(object):
+class ChunkIterator:
     """
     Class to iterate through list of chunks of a given dataset
     """

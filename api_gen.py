@@ -28,7 +28,7 @@ import re
 import os.path as op
 
 
-class Line(object):
+class Line:
 
     """
         Represents one line from the api_functions.txt file.
@@ -164,7 +164,7 @@ from ._errors cimport set_exception, set_default_error_handler
 """
 
 
-class LineProcessor(object):
+class LineProcessor:
 
     def run(self):
 

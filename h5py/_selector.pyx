@@ -374,7 +374,7 @@ cdef class Reader:
             return arr
 
 
-class MultiBlockSlice(object):
+class MultiBlockSlice:
     """
         A conceptual extension of the built-in slice object to allow selections
         using start, stride, count and block.

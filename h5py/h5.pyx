@@ -27,7 +27,7 @@ NUMPY_VERSION_COMPILED_AGAINST = NUMPY_BUILD_VERSION
 CYTHON_VERSION_COMPILED_WITH = CYTHON_BUILD_VERSION
 
 
-class ByteStringContext(object):
+class ByteStringContext:
 
     def __init__(self):
         self._readbytes = False
