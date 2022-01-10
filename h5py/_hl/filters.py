@@ -345,20 +345,21 @@ def guess_chunk(shape, maxshape, typesize):
     """
     # pylint: disable=unused-argument
 
+    is_unlimited = np.array([x == 0 for x in shape])
+
     # For unlimited dimensions we have to guess 1024
-    shape = tuple((x if x!=0 else 1024) for i, x in enumerate(shape))
+    chunks = np.array([x if x!=0 else 1024 for x in shape], dtype='=f8')
 
     ndims = len(shape)
     if ndims == 0:
         raise ValueError("Chunks not allowed for scalar datasets.")
 
-    chunks = np.array(shape, dtype='=f8')
     if not np.all(np.isfinite(chunks)):
         raise ValueError("Illegal value in chunk tuple")
 
     # Determine the optimal chunk size in bytes using a PyTables expression.
     # This is kept as a float.
-    dset_size = np.product(chunks)*typesize
+    dset_size = np.product(chunks[~is_unlimited])*typesize
     target_size = CHUNK_BASE * (2**np.log10(dset_size/(1024.*1024)))
 
     if target_size > CHUNK_MAX:
@@ -366,12 +367,16 @@ def guess_chunk(shape, maxshape, typesize):
     elif target_size < CHUNK_MIN:
         target_size = CHUNK_MIN
 
-    idx = 0
+    i = 0
     while True:
-        # Repeatedly loop over the axes, dividing them by 2.  Stop when:
+        # Repeatedly loop over the axes, dividing them by 2.
+        # Start by reducing unlimited axes first.
+        # Stop when:
         # 1a. We're smaller than the target chunk size, OR
         # 1b. We're within 50% of the target chunk size, AND
         #  2. The chunk is smaller than the maximum chunk size
+
+        idx = i % ndims
 
         chunk_bytes = np.product(chunks)*typesize
 
@@ -383,7 +388,11 @@ def guess_chunk(shape, maxshape, typesize):
         if np.product(chunks) == 1:
             break  # Element size larger than CHUNK_MAX
 
-        chunks[idx%ndims] = np.ceil(chunks[idx%ndims] / 2.0)
-        idx += 1
+        nelem_unlim = np.product(chunks[is_unlimited])
+
+        if nelem_unlim == 1 or is_unlimited[idx]:
+            chunks[idx] = np.ceil(chunks[idx] / 2.0)
+
+        i += 1
 
     return tuple(int(x) for x in chunks)
