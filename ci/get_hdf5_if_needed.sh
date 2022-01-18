@@ -18,8 +18,14 @@ else
         lib_name=libhdf5.dylib
     else
         lib_name=libhdf5.so
+        # Test with the direct file driver on Linux. This setting does not
+        # affect the HDF5 bundled in Linux wheels - that is built into a Docker
+        # image from a separate repository.
+        ENABLE_DIRECT_VFD="--enable-direct-vfd"
     fi
-
+    if [[ "${HDF5_VERSION%.*}" = "1.12" ]]; then
+        ENABLE_BUILD_MODE="--enable-build-mode=production"
+    fi
     if [ -f $HDF5_DIR/lib/$lib_name ]; then
         echo "using cached build"
     else
@@ -29,11 +35,10 @@ else
         tar -xzvf hdf5-$HDF5_VERSION.tar.gz
         pushd hdf5-$HDF5_VERSION
         chmod u+x autogen.sh
-        if [[ "${HDF5_VERSION%.*}" = "1.12" ]]; then
-          ./configure --prefix $HDF5_DIR $EXTRA_MPI_FLAGS --enable-build-mode=production
-        else
-          ./configure --prefix $HDF5_DIR $EXTRA_MPI_FLAGS
-        fi
+        ./configure --prefix $HDF5_DIR \
+            ${EXTRA_MPI_FLAGS} \
+            ${ENABLE_DIRECT_VFD} \
+            ${ENABLE_BUILD_MODE}
         make -j $(nproc)
         make install
         popd

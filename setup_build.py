@@ -147,6 +147,7 @@ class h5py_build_ext(build_ext):
 
 DEF MPI = %(mpi)s
 DEF ROS3 = %(ros3)s
+DEF DIRECT_VFD = %(direct_vfd)s
 DEF HDF5_VERSION = %(version)s
 DEF SWMR_MIN_HDF5_VERSION = (1,9,178)
 DEF VDS_MIN_HDF5_VERSION = (1,9,233)
@@ -158,6 +159,7 @@ DEF CYTHON_BUILD_VERSION = '%(cython_version)s'
         s %= {
             'mpi': bool(config.mpi),
             'ros3': bool(config.ros3),
+            'direct_vfd': bool(config.direct_vfd),
             'version': config.hdf5_version,
             'complex256_support': hasattr(numpy, 'complex256'),
             'numpy_version': numpy.__version__,
