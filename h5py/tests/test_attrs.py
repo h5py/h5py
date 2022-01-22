@@ -263,6 +263,7 @@ class TestTrackOrder(BaseAttrs):
             group.attrs[str(i)] = i
         return group
 
+    @ut.skipUnless(h5py.version.hdf5_version_tuple >= (1, 10, 6), 'HDF5 1.10.6 required')
     def test_track_order_overwrite_delete(self):
         # issue 1385
         group = self.fill_attrs2(track_order=True)  # creation order
