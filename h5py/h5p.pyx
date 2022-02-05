@@ -504,9 +504,23 @@ cdef class PropDCID(PropOCID):
         0-dimensional NumPy array; otherwise, the value will be read from
         the first element.
         """
+        from .h5t import check_string_dtype
         cdef TypeID tid
+        cdef char * c_ptr
 
         check_numpy_read(value, -1)
+
+        # check for vlen strings
+        # create correct typeID and pointer to c_str
+        string_info = check_string_dtype(value.dtype)
+        if string_info is not None:
+            if string_info[0] in ["utf-8", "ascii"] and string_info[1] is None:
+                fill_value = value.item()
+                c_ptr = fill_value
+                tid = py_create(value.dtype, logical=1)
+                H5Pset_fill_value(self.id, tid.id, &c_ptr)
+                return
+
         tid = py_create(value.dtype)
         H5Pset_fill_value(self.id, tid.id, value.data)
 
