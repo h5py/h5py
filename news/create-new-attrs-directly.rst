@@ -16,9 +16,9 @@ Exposing HDF5 functions
 Bug fixes
 ---------
 
-* New attributes are created directly instead via a temporary
-attribute with subsequent renaming. This fixes overwriting
-attributes with ``track_order=True``.
+* New attributes are created directly, instead of via a temporary
+  attribute with subsequent renaming. This fixes overwriting
+  attributes with ``track_order=True``.
 
 Building h5py
 -------------
