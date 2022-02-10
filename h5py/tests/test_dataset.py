@@ -1764,7 +1764,7 @@ def test_write_points(writable_file):
         [0, 0, 3],
     ])
 
-    
+
 class TestCommutative(BaseDataset):
     """
     Test the symmetry of operators, at least with the numpy types.
