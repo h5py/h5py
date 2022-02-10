@@ -257,6 +257,25 @@ class TestTrackOrder(BaseAttrs):
         self.assertEqual(list(attrs),
                          sorted([str(i) for i in range(100)]))
 
+    def fill_attrs2(self, track_order):
+        group = self.f.create_group('test', track_order=track_order)
+        for i in range(12):
+            group.attrs[str(i)] = i
+        return group
+
+    @ut.skipUnless(h5py.version.hdf5_version_tuple >= (1, 10, 6), 'HDF5 1.10.6 required')
+    def test_track_order_overwrite_delete(self):
+        # issue 1385
+        group = self.fill_attrs2(track_order=True)  # creation order
+        self.assertEqual(group.attrs["11"], 11)
+        # overwrite attribute
+        group.attrs['11'] = 42.0
+        self.assertEqual(group.attrs["11"], 42.0)
+        # delete attribute
+        self.assertIn('10', group.attrs)
+        del group.attrs['10']
+        self.assertNotIn('10', group.attrs)
+
 
 class TestDatatype(BaseAttrs):
 
