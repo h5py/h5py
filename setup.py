@@ -9,10 +9,8 @@
 """
 
 from setuptools import Extension, setup
-from distutils.cmd import Command
 import sys
 import os
-import os.path as op
 
 # Newer packaging standards may recommend removing the current dir from the
 # path, add it back if needed.
@@ -22,40 +20,32 @@ if '' not in sys.path:
 import setup_build, setup_configure
 
 
-VERSION = '3.1.0'
+VERSION = '3.6.0'
 
-# Minimum supported versions of Numpy & Cython depend on the Python version
-NUMPY_MIN_VERSIONS = [
-    # Numpy    Python
-    ('1.14.5', "=='3.7'"),
-    ('1.17.5', "=='3.8'"),
-    ('1.19.3', ">='3.9'"),
-]
 
 # these are required to use h5py
-RUN_REQUIRES = ["cached-property; python_version<'3.8'"] + [
-    f"numpy >={np_min}; python_version{py_condition}"
-    for np_min, py_condition in NUMPY_MIN_VERSIONS
+RUN_REQUIRES = [
+    "cached-property; python_version<'3.8'",
+    # We only really aim to support NumPy & Python combinations for which
+    # there are wheels on PyPI (e.g. NumPy >=1.17.5 for Python 3.8).
+    # But we don't want to duplicate the information in oldest-supported-numpy
+    # here, and if you can build an older NumPy on a newer Python, h5py probably
+    # works (assuming you build it from source too).
+    # NumPy 1.14.5 is the first with wheels for Python 3.7, our minimum Python.
+    "numpy >=1.14.5",
 ]
 
-# these are required to build h5py
+# Packages needed to build h5py (in addition to static list in pyproject.toml)
 # For packages we link to (numpy, mpi4py), we build against the oldest
 # supported version; h5py wheels should then work with newer versions of these.
 # Downstream packagers - e.g. Linux distros - can safely build with newer
 # versions.
-SETUP_REQUIRES = [
-    'pkgconfig',
-    "Cython >=0.29; python_version<'3.8'",
-    "Cython >=0.29.14; python_version=='3.8'",
-    "Cython >=0.29.15; python_version>='3.9'",
-] + [
-    f"numpy =={np_min}; python_version{py_condition}"
-    for np_min, py_condition in NUMPY_MIN_VERSIONS
-]
+# TODO: setup_requires is deprecated in setuptools.
+SETUP_REQUIRES = []
 
 if setup_configure.mpi_enabled():
-    RUN_REQUIRES.append('mpi4py >=3.0.0')
-    SETUP_REQUIRES.append("mpi4py ==3.0.0; python_version<'3.8'")
+    RUN_REQUIRES.append('mpi4py >=3.0.2')
+    SETUP_REQUIRES.append("mpi4py ==3.0.2; python_version<'3.8'")
     SETUP_REQUIRES.append("mpi4py ==3.0.3; python_version>='3.8'")
 
 # Set the environment variable H5PY_SETUP_REQUIRES=0 if we need to skip
@@ -65,49 +55,7 @@ if os.environ.get('H5PY_SETUP_REQUIRES', '1') == '0':
 
 # --- Custom Distutils commands -----------------------------------------------
 
-class test(Command):
-
-    """
-        Custom Distutils command to run the h5py test suite.
-
-        This command will invoke build/build_ext if the project has not
-        already been built.  It then patches in the build directory to
-        sys.path and runs the test suite directly.
-    """
-
-    description = "Run the test suite"
-
-    user_options = [('detail', 'd', 'Display additional test information')]
-
-    def initialize_options(self):
-        self.detail = False
-
-    def finalize_options(self):
-        self.detail = bool(self.detail)
-
-    def run(self):
-        """ Called by Distutils when this command is run """
-        import sys
-
-        buildobj = self.distribution.get_command_obj('build')
-        buildobj.run()
-
-        oldpath = sys.path
-        oldcwd = os.getcwd()
-        build_lib_dir = op.abspath(buildobj.build_lib)
-        try:
-            sys.path = [build_lib_dir] + oldpath
-            os.chdir(build_lib_dir)
-
-            import h5py
-            sys.exit(h5py.run_tests())
-        finally:
-            sys.path = oldpath
-            os.chdir(oldcwd)
-
-
-CMDCLASS = {'build_ext': setup_build.h5py_build_ext,
-            'test': test, }
+CMDCLASS = {'build_ext': setup_build.h5py_build_ext}
 
 
 # --- Distutils setup and metadata --------------------------------------------

@@ -106,7 +106,7 @@ made to the object::
 Note that this is `not` a copy of the dataset!  Like hard links in a UNIX file
 system, objects in an HDF5 file can be stored in multiple groups::
 
-    >>> f["other name"] == f["name"]
+    >>> grp["other name"] == grp["name"]
     True
 
 
@@ -158,11 +158,11 @@ link resides.
 
 .. note::
 
-    How the filename is processed is operating system dependent, it is
-    recommended to read :ref:`file_filenames` to understand potential limitations on
-    filenames on your operating system. Note especially that Windows is
-    particularly susceptible to problems with external links, due to possible
-    encoding errors and how filenames are structured.
+    The filename is stored in the file as bytes, normally UTF-8 encoded.
+    In most cases, this should work reliably, but problems are possible if a
+    file created on one platform is accessed on another. Older versions of HDF5
+    may have problems on Windows in particular. See :ref:`file_filenames` for
+    more details.
 
 Reference
 ---------
@@ -427,6 +427,26 @@ Reference
        :param fillvalue:
            The value to use where there is no data.
 
+    .. method:: build_virtual_dataset()
+
+       Assemble a virtual dataset in this group.
+
+       This is used as a context manager::
+
+           with f.build_virtual_dataset('virt', (10, 1000), np.uint32) as layout:
+               layout[0] = h5py.VirtualSource('foo.h5', 'data', (1000,))
+
+       Inside the context, you populate a :class:`VirtualLayout` object.
+       The file is only modified when you leave the context, and if there's
+       no error.
+
+       :param str name: Name of the dataset (absolute or relative)
+       :param tuple shape: Shape of the dataset
+       :param dtype: A numpy dtype for data read from the virtual dataset
+       :param tuple maxshape: Maximum dimensions if the dataset can grow
+           (optional). Use None for unlimited dimensions.
+       :param fillvalue: The value used where no data is available.
+
     .. attribute:: attrs
 
         :ref:`attributes` for this group.
@@ -493,7 +513,7 @@ Link classes
 
     .. attribute:: filename
 
-        Name of the external file
+        Name of the external file as a Unicode string
 
     .. attribute::  path
 

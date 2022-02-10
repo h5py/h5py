@@ -229,6 +229,15 @@ class TestVlen(BaseAttrs):
         self.f.attrs['a'] = a
         self.assertArrayEqual(self.f.attrs['a'][0], a[0])
 
+    def test_vlen_s1(self):
+        dt = h5py.vlen_dtype(np.dtype('S1'))
+        a = np.empty((1,), dtype=dt)
+        a[0] = np.array([b'a', b'b'], dtype='S1')
+
+        self.f.attrs.create('test', a)
+        self.assertArrayEqual(self.f.attrs['test'][0], a[0])
+
+
 class TestTrackOrder(BaseAttrs):
     def fill_attrs(self, track_order):
         attrs = self.f.create_group('test', track_order=track_order).attrs
@@ -247,6 +256,25 @@ class TestTrackOrder(BaseAttrs):
         attrs = self.fill_attrs(track_order=False)  # name alphanumeric
         self.assertEqual(list(attrs),
                          sorted([str(i) for i in range(100)]))
+
+    def fill_attrs2(self, track_order):
+        group = self.f.create_group('test', track_order=track_order)
+        for i in range(12):
+            group.attrs[str(i)] = i
+        return group
+
+    @ut.skipUnless(h5py.version.hdf5_version_tuple >= (1, 10, 6), 'HDF5 1.10.6 required')
+    def test_track_order_overwrite_delete(self):
+        # issue 1385
+        group = self.fill_attrs2(track_order=True)  # creation order
+        self.assertEqual(group.attrs["11"], 11)
+        # overwrite attribute
+        group.attrs['11'] = 42.0
+        self.assertEqual(group.attrs["11"], 42.0)
+        # delete attribute
+        self.assertIn('10', group.attrs)
+        del group.attrs['10']
+        self.assertNotIn('10', group.attrs)
 
 
 class TestDatatype(BaseAttrs):

@@ -399,6 +399,25 @@ cdef class PropFCID(PropOCID):
             H5Pget_file_space_strategy(self.id, &strategy, &persist, &threshold)
             return (strategy, persist, threshold)
 
+        @with_phil
+        def set_file_space_page_size(self, hsize_t fsp_size):
+            """ (LONG fsp_size)
+
+            Set the file space page size used in paged aggregation and paged
+            buffering. Minimum page size is 512 bytes. A value less than 512 will raise
+            an error. The size set may not be changed for the life of the file.
+            """
+            H5Pset_file_space_page_size(self.id, <hsize_t>fsp_size)
+
+        @with_phil
+        def get_file_space_page_size(self):
+            """ () -> LONG fsp_size
+
+            Retrieve the file space page size.
+            """
+            cdef hsize_t fsp_size
+            H5Pget_file_space_page_size(self.id, &fsp_size)
+            return fsp_size
 
 # Dataset creation
 cdef class PropDCID(PropOCID):
@@ -1033,6 +1052,38 @@ cdef class PropFAID(PropInstanceID):
         return (msize, plist)
 
 
+    if ROS3:
+        @with_phil
+        def set_fapl_ros3(self, char* aws_region="", char* secret_id="",
+                          char* secret_key=""):
+            """(STRING aws_region, STRING secret_id, STRING secret_key)
+
+            Set up the ros3 driver.
+            """
+            cdef H5FD_ros3_fapl_t config
+            config.version = H5FD_CURR_ROS3_FAPL_T_VERSION
+            if len(aws_region) or len(secret_id) or len(secret_key):
+                config.authenticate = <hbool_t>1
+            else:
+                config.authenticate = <hbool_t>0
+            config.aws_region = aws_region
+            config.secret_id = secret_id
+            config.secret_key = secret_key
+            H5Pset_fapl_ros3(self.id, &config)
+
+
+        @with_phil
+        def get_fapl_ros3(self):
+            """ () => STRUCT config
+
+            Retrieve the ROS3 config
+            """
+            cdef H5FD_ros3_fapl_t config
+
+            H5Pget_fapl_ros3(self.id, &config)
+            return config
+
+
     @with_phil
     def set_fapl_log(self, char* logfile, unsigned int flags, size_t buf_size):
         """(STRING logfile, UINT flags, UINT buf_size)
@@ -1164,11 +1215,13 @@ cdef class PropFAID(PropInstanceID):
     def set_libver_bounds(self, int low, int high):
         """ (INT low, INT high)
 
-        Set the compatibility level for file format.  Legal values are:
+        Set the compatibility level for file format. Legal values are:
 
         - h5f.LIBVER_EARLIEST
         - h5f.LIBVER_V18 (HDF5 1.10.2 or later)
         - h5f.LIBVER_V110 (HDF5 1.10.2 or later)
+        - h5f.LIBVER_V112 (HDF5 1.11.4 or later)
+        - h5f.LIBVER_V114 (HDF5 1.13.0 or later)
         - h5f.LIBVER_LATEST
         """
         H5Pset_libver_bounds(self.id, <H5F_libver_t>low, <H5F_libver_t>high)
@@ -1183,6 +1236,8 @@ cdef class PropFAID(PropInstanceID):
         - h5f.LIBVER_EARLIEST
         - h5f.LIBVER_V18 (HDF5 1.10.2 or later)
         - h5f.LIBVER_V110 (HDF5 1.10.2 or later)
+        - h5f.LIBVER_V112 (HDF5 1.11.4 or later)
+        - h5f.LIBVER_V114 (HDF5 1.13.0 or later)
         - h5f.LIBVER_LATEST
         """
         cdef H5F_libver_t low
@@ -1305,6 +1360,61 @@ cdef class PropFAID(PropInstanceID):
                 H5Pset_file_image(self.id, buf.buf, buf.len)
             finally:
                 PyBuffer_Release(&buf)
+
+    IF HDF5_VERSION >= (1, 10, 1):
+
+        @with_phil
+        def set_page_buffer_size(self, size_t buf_size, unsigned int min_meta_per=0,
+                                 unsigned int min_raw_per=0):
+            """ (LONG buf_size, UINT min_meta_per, UINT min_raw_per)
+
+            Set the maximum size in bytes of the page buffer. The default value is
+            zero, meaning that page buffering is disabled. When a non-zero page
+            buffer size is set, HDF5 library will enable page buffering if that size
+            is larger or equal than a single page size if a paged file space
+            strategy was set at file creation.
+
+            The function also allows setting the criteria for metadata and raw data
+            page eviction from the buffer. The default values for both are zero.
+            """
+            H5Pset_page_buffer_size(self.id, buf_size, min_meta_per, min_raw_per)
+
+        @with_phil
+        def get_page_buffer_size(self):
+            """ () -> (LONG buf_size, UINT min_meta_per, UINT min_raw_per)
+
+            Retrieves the maximum size for the page buffer and the minimum
+            percentage for metadata and raw data pages evicition criteria.
+            """
+            cdef size_t buf_size
+            cdef unsigned int min_meta_per, min_raw_per
+            H5Pget_page_buffer_size(self.id, &buf_size, &min_meta_per, &min_raw_per)
+            return (buf_size, min_meta_per, min_raw_per)
+
+    IF HDF5_VERSION >= (1, 12, 1) or (HDF5_VERSION[:2] == (1, 10) and HDF5_VERSION[2] >= 7):
+
+        @with_phil
+        def get_file_locking(self):
+            """ () => (BOOL, BOOL)
+
+            Return file locking information as a 2-tuple of boolean:
+            (use_file_locking, ignore_when_disabled)
+            """
+            cdef hbool_t use_file_locking = 0
+            cdef hbool_t ignore_when_disabled = 0
+
+            H5Pget_file_locking(self.id, &use_file_locking, &ignore_when_disabled)
+            return use_file_locking, ignore_when_disabled
+
+        @with_phil
+        def set_file_locking(self, bint use_file_locking, bint ignore_when_disabled):
+            """ (BOOL use_file_locking, BOOL ignore_when_disabled)
+
+            Set HDF5 file locking behavior.
+            Warning: This setting is overridden by the HDF5_USE_FILE_LOCKING environment variable.
+            """
+            H5Pset_file_locking(
+                self.id, <hbool_t>use_file_locking, <hbool_t>ignore_when_disabled)
 
 
 # Link creation

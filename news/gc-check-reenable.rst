@@ -1,7 +1,7 @@
 New features
 ------------
 
-* Suppress numpy 1.20 deprecation warnings concerning the use of None as shape, np.float, np.int and np.bool
+* <news item>
 
 Deprecations
 ------------
@@ -16,7 +16,8 @@ Exposing HDF5 functions
 Bug fixes
 ---------
 
-* <news item>
+* Closing a file or calling ``get_obj_ids()`` no longer re-enables Python
+  garbage collection if it was previously disabled.
 
 Building h5py
 -------------

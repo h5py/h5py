@@ -80,6 +80,13 @@ def test_filter_ref_obj(writable_file):
     assert ds.compression_opts == 8
 
 
+def test_filter_ref_obj_eq():
+    gzip8 = h5py.filters.Gzip(level=8)
+
+    assert gzip8 == h5py.filters.Gzip(level=8)
+    assert gzip8 != h5py.filters.Gzip(level=7)
+
+
 @pytest.mark.mpi_skip
 @insubprocess
 def test_unregister_filter(request):

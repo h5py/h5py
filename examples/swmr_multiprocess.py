@@ -24,7 +24,7 @@ from multiprocessing import Process, Event
 
 class SwmrReader(Process):
     def __init__(self, event, fname, dsetname, timeout = 2.0):
-        super(SwmrReader, self).__init__()
+        super().__init__()
         self._event = event
         self._fname = fname
         self._dsetname = dsetname
@@ -54,7 +54,7 @@ class SwmrReader(Process):
 
 class SwmrWriter(Process):
     def __init__(self, event, fname, dsetname):
-        super(SwmrWriter, self).__init__()
+        super().__init__()
         self._event = event
         self._fname = fname
         self._dsetname = dsetname

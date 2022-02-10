@@ -6,8 +6,7 @@ New features
 Deprecations
 ------------
 
-* Setting the config option ``default_file_mode`` to values other than ``'r'``
-  is deprecated. Pass the desired mode when opening a :class:`~.File` instead.
+* <news item>
 
 Exposing HDF5 functions
 -----------------------
@@ -17,7 +16,9 @@ Exposing HDF5 functions
 Bug fixes
 ---------
 
-* <news item>
+* New attributes are created directly, instead of via a temporary
+  attribute with subsequent renaming. This fixes overwriting
+  attributes with ``track_order=True``.
 
 Building h5py
 -------------

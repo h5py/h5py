@@ -77,11 +77,9 @@ class TestEmpty(TestCase):
         self.assertEqual(self.dset.nbytes, 0)
 
     def test_ellipsis(self):
-        """ Ellipsis -> ValueError """
         self.assertEqual(self.dset[...], self.empty_obj)
 
     def test_tuple(self):
-        """ () -> IOError """
         self.assertEqual(self.dset[()], self.empty_obj)
 
     def test_slice(self):
@@ -368,7 +366,13 @@ class Test1DZeroFloat(TestCase):
     def test_mask(self):
         """ mask -> ndarray of matching shape """
         mask = np.ones((0,), dtype='bool')
-        self.assertNumpyBehavior(self.dset, self.data, np.s_[mask])
+        self.assertNumpyBehavior(
+            self.dset,
+            self.data,
+            np.s_[mask],
+            # Fast reader doesn't work with boolean masks
+            skip_fast_reader=True,
+        )
 
     def test_fieldnames(self):
         """ field name -> ValueError (no fields) """
@@ -483,13 +487,31 @@ class Test1DFloat(TestCase):
             self.dset[[1,1,2]]
 
     def test_mask_true(self):
-        self.assertNumpyBehavior(self.dset, self.data, np.s_[self.data > -100])
+        self.assertNumpyBehavior(
+            self.dset,
+            self.data,
+            np.s_[self.data > -100],
+            # Fast reader doesn't work with boolean masks
+            skip_fast_reader=True,
+        )
 
     def test_mask_false(self):
-        self.assertNumpyBehavior(self.dset, self.data, np.s_[self.data > 100])
+        self.assertNumpyBehavior(
+            self.dset,
+            self.data,
+            np.s_[self.data > 100],
+            # Fast reader doesn't work with boolean masks
+            skip_fast_reader=True,
+        )
 
     def test_mask_partial(self):
-        self.assertNumpyBehavior(self.dset, self.data, np.s_[self.data > 5])
+        self.assertNumpyBehavior(
+            self.dset,
+            self.data,
+            np.s_[self.data > 5],
+            # Fast reader doesn't work with boolean masks
+            skip_fast_reader=True,
+        )
 
     def test_mask_wrongsize(self):
         """ we require the boolean mask shape to match exactly """

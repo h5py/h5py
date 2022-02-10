@@ -24,6 +24,8 @@ from .h5ac cimport CacheConfig
 from .utils cimport emalloc, efree
 
 # Python level imports
+from collections import namedtuple
+import gc
 from . import _objects
 from ._objects import phil, with_phil
 
@@ -68,6 +70,9 @@ IF HDF5_VERSION >= (1, 10, 2):
 IF HDF5_VERSION >= VOL_MIN_HDF5_VERSION:
     LIBVER_V112 = H5F_LIBVER_V112
 
+IF HDF5_VERSION >= (1, 13, 0):
+    LIBVER_V114 = H5F_LIBVER_V114
+
 if HDF5_VERSION >= (1, 8, 9):
     FILE_IMAGE_OPEN_RW = H5LT_FILE_IMAGE_OPEN_RW
 
@@ -76,6 +81,11 @@ IF HDF5_VERSION >= (1, 10, 1):
     FSPACE_STRATEGY_PAGE = H5F_FSPACE_STRATEGY_PAGE
     FSPACE_STRATEGY_AGGR = H5F_FSPACE_STRATEGY_AGGR
     FSPACE_STRATEGY_NONE = H5F_FSPACE_STRATEGY_NONE
+
+    # Used in FileID.get_page_buffering_stats()
+    PageBufStats = namedtuple('PageBufferStats', ['meta', 'raw'])
+    PageStats = namedtuple('PageStats', ['accesses', 'hits', 'misses', 'evictions', 'bypasses'])
+
 
 # === File operations =========================================================
 
@@ -270,11 +280,20 @@ def get_obj_ids(object where=OBJ_ALL, int types=H5F_OBJ_ALL):
         obj_list = <hid_t*>emalloc(sizeof(hid_t)*count)
 
         if count > 0: # HDF5 complains that obj_list is NULL, even if count==0
-            H5Fget_obj_ids(where_id, types, count, obj_list)
-            for i in range(count):
-                py_obj_list.append(wrap_identifier(obj_list[i]))
-                # The HDF5 function returns a borrowed reference for each hid_t.
-                H5Iinc_ref(obj_list[i])
+            # Garbage collection might dealloc a Python object & call H5Idec_ref
+            # between getting an HDF5 ID and calling H5Iinc_ref, breaking it.
+            # Disable GC until we have inc_ref'd the IDs to keep them alive.
+            gc_was_enabled = gc.isenabled()
+            gc.disable()
+            try:
+                H5Fget_obj_ids(where_id, types, count, obj_list)
+                for i in range(count):
+                    py_obj_list.append(wrap_identifier(obj_list[i]))
+                    # The HDF5 function returns a borrowed reference for each hid_t.
+                    H5Iinc_ref(obj_list[i])
+            finally:
+                if gc_was_enabled:
+                    gc.enable()
 
         return py_obj_list
 
@@ -322,6 +341,25 @@ cdef class FileID(GroupID):
         self._close()
         _objects.nonlocal_close()
 
+    @with_phil
+    def _close_open_objects(self, int types):
+        # Used by File.close(). This avoids the get_obj_ids wrapper, which
+        # creates Python objects and increments HDF5 ref counts while we're
+        # trying to clean up. E.g. that can be problematic at Python shutdown.
+        cdef int count, i
+        cdef hid_t *obj_list = NULL
+
+        count = H5Fget_obj_count(self.id, types)
+        if count == 0:
+            return
+        obj_list = <hid_t*> emalloc(sizeof(hid_t) * count)
+        try:
+            H5Fget_obj_ids(self.id, types, count, obj_list)
+            for i in range(count):
+                while H5Iis_valid(obj_list[i]):
+                    H5Idec_ref(obj_list[i])
+        finally:
+            efree(obj_list)
 
     @with_phil
     def reopen(self):
@@ -552,3 +590,37 @@ cdef class FileID(GroupID):
             Feature requires: 1.9.178 HDF5
             """
             H5Fstart_swmr_write(self.id)
+
+    IF HDF5_VERSION >= (1, 10, 1):
+
+        @with_phil
+        def reset_page_buffering_stats(self):
+            """ ()
+
+            Reset page buffer statistics for the file.
+            """
+            H5Freset_page_buffering_stats(self.id)
+
+        @with_phil
+        def get_page_buffering_stats(self):
+            """ () -> NAMEDTUPLE PageBufStats(NAMEDTUPLE meta=PageStats, NAMEDTUPLE raw=PageStats)
+
+            Retrieve page buffering statistics for the file as the number of
+            metadata and raw data accesses, hits, misses, evictions, and
+            accesses that bypass the page buffer (bypasses).
+            """
+            cdef:
+                unsigned int accesses[2]
+                unsigned int hits[2]
+                unsigned int misses[2]
+                unsigned int evictions[2]
+                unsigned int bypasses[2]
+
+            H5Fget_page_buffering_stats(self.id, &accesses[0], &hits[0],
+                                        &misses[0], &evictions[0], &bypasses[0])
+            meta = PageStats(int(accesses[0]), int(hits[0]), int(misses[0]),
+                             int(evictions[0]), int(bypasses[0]))
+            raw = PageStats(int(accesses[1]), int(hits[1]), int(misses[1]),
+                            int(evictions[1]), int(bypasses[1]))
+
+            return PageBufStats(meta, raw)

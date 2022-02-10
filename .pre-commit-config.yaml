@@ -1,6 +1,6 @@
 repos:
 -   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v1.2.3
+    rev: v4.1.0
     hooks:
     -   id: end-of-file-fixer
     -   id: trailing-whitespace
@@ -9,3 +9,6 @@ repos:
     rev: "0.39"
     hooks:
     -   id: check-manifest
+
+ci:
+    autoupdate_schedule: monthly

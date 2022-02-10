@@ -18,14 +18,15 @@ import os
 import stat
 import pickle
 import tempfile
-from sys import platform
+import subprocess
+import sys
 
 from .common import ut, TestCase, UNICODE_FILENAMES, closed_tempfile
 from h5py import File
 import h5py
 from .. import h5
-
 import pathlib
+
 
 class TestFileOpen(TestCase):
 
@@ -38,10 +39,9 @@ class TestFileOpen(TestCase):
         fname = self.mktemp()
 
         # No existing file; error
-        with pytest.raises(OSError):
+        with pytest.raises(FileNotFoundError):
             with File(fname):
                 pass
-
 
         # Existing readonly file; open read-only
         with File(fname, 'w'):
@@ -54,10 +54,10 @@ class TestFileOpen(TestCase):
         finally:
             os.chmod(fname, stat.S_IWRITE)
 
-        # File exists but is not HDF5; raise IOError
+        # File exists but is not HDF5; raise OSError
         with open(fname, 'wb') as f:
             f.write(b'\x00')
-        with self.assertRaises(IOError):
+        with self.assertRaises(OSError):
             File(fname)
 
     def test_create(self):
@@ -77,7 +77,7 @@ class TestFileOpen(TestCase):
         fid = File(fname, 'w-')
         self.assertTrue(fid)
         fid.close()
-        with self.assertRaises(IOError):
+        with self.assertRaises(FileExistsError):
             File(fname, 'w-')
 
     def test_append(self):
@@ -97,6 +97,14 @@ class TestFileOpen(TestCase):
             assert 'bar' in fid
         finally:
             fid.close()
+
+        os.chmod(fname, stat.S_IREAD)  # Make file read-only
+        try:
+            with pytest.raises(PermissionError):
+                File(fname, 'a')
+        finally:
+            # Make it writable again so it can be deleted on Windows
+            os.chmod(fname, stat.S_IREAD | stat.S_IWRITE)
 
     def test_readonly(self):
         """ Mode 'r' opens file in readonly mode """
@@ -125,9 +133,9 @@ class TestFileOpen(TestCase):
     def test_nonexistent_file(self):
         """ Modes 'r' and 'r+' do not create files """
         fname = self.mktemp()
-        with self.assertRaises(IOError):
+        with self.assertRaises(FileNotFoundError):
             File(fname, 'r')
-        with self.assertRaises(IOError):
+        with self.assertRaises(FileNotFoundError):
             File(fname, 'r+')
 
     def test_invalid_mode(self):
@@ -135,8 +143,9 @@ class TestFileOpen(TestCase):
         with self.assertRaises(ValueError):
             File(self.mktemp(), 'mongoose')
 
+
 @ut.skipIf(h5py.version.hdf5_version_tuple < (1, 10, 1),
-               'Requires HDF5 1.10.1 or later')
+           'Requires HDF5 1.10.1 or later')
 class TestSpaceStrategy(TestCase):
 
     """
@@ -173,6 +182,60 @@ class TestSpaceStrategy(TestCase):
         dset = fid.create_dataset('foo2', (100,), dtype='uint8')
         dset[...] = 1
         fid.close()
+
+
+@ut.skipIf(h5py.version.hdf5_version_tuple < (1, 10, 1),
+           'Requires HDF5 1.10.1 or later')
+@pytest.mark.mpi_skip
+class TestPageBuffering(TestCase):
+    """
+        Feature: Use page buffering
+    """
+
+    def test_only_with_page_strategy(self):
+        """Allow page buffering only with fs_strategy="page".
+        """
+        fname = self.mktemp()
+        with File(fname, mode='w', fs_strategy='page', page_buf_size=16*1024):
+            pass
+        with self.assertRaises(OSError):
+            File(fname, mode='w', page_buf_size=16*1024)
+        with self.assertRaises(OSError):
+            File(fname, mode='w', fs_strategy='fsm', page_buf_size=16*1024)
+        with self.assertRaises(OSError):
+            File(fname, mode='w', fs_strategy='aggregate', page_buf_size=16*1024)
+
+    def test_check_page_buf_size(self):
+        """Verify set page buffer size, and minimum meta and raw eviction criteria."""
+        fname = self.mktemp()
+        pbs = 16 * 1024
+        mm = 19
+        mr = 67
+        with File(fname, mode='w', fs_strategy='page',
+                  page_buf_size=pbs, min_meta_keep=mm, min_raw_keep=mr) as f:
+            fapl = f.id.get_access_plist()
+            self.assertEqual(fapl.get_page_buffer_size(), (pbs, mm, mr))
+
+    def test_too_small_pbs(self):
+        """Page buffer size must be greater than file space page size."""
+        fname = self.mktemp()
+        fsp = 16 * 1024
+        with File(fname, mode='w', fs_strategy='page', fs_page_size=fsp):
+            pass
+        with self.assertRaises(OSError):
+            File(fname, mode="r", page_buf_size=fsp-1)
+
+    def test_actual_pbs(self):
+        """Verify actual page buffer size."""
+        fname = self.mktemp()
+        fsp = 16 * 1024
+        pbs = 2 * fsp
+        with File(fname, mode='w', fs_strategy='page', fs_page_size=fsp):
+            pass
+        with File(fname, mode='r', page_buf_size=pbs-1) as f:
+            fapl = f.id.get_access_plist()
+            self.assertEqual(fapl.get_page_buffer_size()[0], fsp)
+
 
 class TestModes(TestCase):
 
@@ -232,10 +295,22 @@ class TestDrivers(TestCase):
         self.assertEqual(fid.driver, 'stdio')
         fid.close()
 
+        # Testing creation with append flag
+        fid = File(self.mktemp(), 'a', driver='stdio')
+        self.assertTrue(fid)
+        self.assertEqual(fid.driver, 'stdio')
+        fid.close()
+
     @ut.skipUnless(os.name == 'posix', "Sec2 driver is supported on posix")
     def test_sec2(self):
         """ Sec2 driver is supported on posix """
         fid = File(self.mktemp(), 'w', driver='sec2')
+        self.assertTrue(fid)
+        self.assertEqual(fid.driver, 'sec2')
+        fid.close()
+
+        # Testing creation with append flag
+        fid = File(self.mktemp(), 'a', driver='sec2')
         self.assertTrue(fid)
         self.assertEqual(fid.driver, 'sec2')
         fid.close()
@@ -248,6 +323,12 @@ class TestDrivers(TestCase):
         self.assertEqual(fid.driver, 'core')
         fid.close()
         self.assertFalse(os.path.exists(fname))
+
+        # Testing creation with append flag
+        fid = File(self.mktemp(), 'a', driver='core')
+        self.assertTrue(fid)
+        self.assertEqual(fid.driver, 'core')
+        fid.close()
 
     def test_backing(self):
         """ Core driver saves to file when backing store used """
@@ -304,7 +385,6 @@ class TestDrivers(TestCase):
         with self.assertRaises(ValueError):
             File(tf, 'w', driver='core')
 
-
     # TODO: family driver tests
 
 
@@ -355,13 +435,15 @@ class TestNewLibver(TestCase):
 
     @classmethod
     def setUpClass(cls):
-        super(TestNewLibver, cls).setUpClass()
+        super().setUpClass()
 
         # Current latest library bound label
         if h5py.version.hdf5_version_tuple < (1, 11, 4):
             cls.latest = 'v110'
-        else:
+        elif h5py.version.hdf5_version_tuple < (1, 13, 0):
             cls.latest = 'v112'
+        else:
+            cls.latest = 'v114'
 
     def test_default(self):
         """ Opening with no libver arg """
@@ -388,7 +470,7 @@ class TestNewLibver(TestCase):
         f.close()
 
     @ut.skipIf(h5py.version.hdf5_version_tuple < (1, 11, 4),
-           'Requires HDF5 1.11.4 or later')
+               'Requires HDF5 1.11.4 or later')
     def test_single_v112(self):
         """ Opening with "v112" libver arg """
         f = File(self.mktemp(), 'w', libver='v112')
@@ -436,7 +518,6 @@ class TestUserblock(TestCase):
         # User block size must be an integer
         with self.assertRaises(ValueError):
             File(self.mktemp(), 'w', userblock_size='non')
-
 
     def test_write_only(self):
         """ User block only allowed for write """
@@ -620,6 +701,7 @@ class TestClose(TestCase):
         f.close()
         f.close()
 
+
 class TestFlush(TestCase):
 
     """
@@ -686,6 +768,27 @@ class TestCloseInvalidatesOpenObjectIDs(TestCase):
             self.assertFalse(bool(f1.id))
             self.assertFalse(bool(g1.id))
 
+    def test_close_one_handle(self):
+        fname = self.mktemp()
+        with File(fname, 'w') as f:
+            f.create_group('foo')
+
+        f1 = File(fname)
+        f2 = File(fname)
+        g1 = f1['foo']
+        g2 = f2['foo']
+        assert g1.id.valid
+        assert g2.id.valid
+        f1.close()
+        assert not g1.id.valid
+        # Closing f1 shouldn't close f2 or objects belonging to it
+        assert f2.id.valid
+        assert g2.id.valid
+
+        f2.close()
+        assert not f2.id.valid
+        assert not g2.id.valid
+
 
 class TestPathlibSupport(TestCase):
 
@@ -721,7 +824,7 @@ class TestPickle(TestCase):
 # unittest doesn't work with pytest fixtures (and possibly other features),
 # hence no subclassing TestCase
 @pytest.mark.mpi
-class TestMPI(object):
+class TestMPI:
     def test_mpio(self, mpi_file_name):
         """ MPIO driver and options """
         from mpi4py import MPI
@@ -730,8 +833,16 @@ class TestMPI(object):
             assert f
             assert f.driver == 'mpio'
 
+    def test_mpio_append(self, mpi_file_name):
+        """ Testing creation of file with append """
+        from mpi4py import MPI
+
+        with File(mpi_file_name, 'a', driver='mpio', comm=MPI.COMM_WORLD) as f:
+            assert f
+            assert f.driver == 'mpio'
+
     @pytest.mark.skipif(h5py.version.hdf5_version_tuple < (1, 8, 9),
-        reason="mpio atomic file operations were added in HDF5 1.8.9+")
+                        reason="mpio atomic file operations were added in HDF5 1.8.9+")
     def test_mpi_atomic(self, mpi_file_name):
         """ Enable atomic mode for MPIO driver """
         from mpi4py import MPI
@@ -752,7 +863,7 @@ class TestMPI(object):
 
 
 @ut.skipIf(h5py.version.hdf5_version_tuple < (1, 10, 1),
-               'Requires HDF5 1.10.1 or later')
+           'Requires HDF5 1.10.1 or later')
 class TestSWMRMode(TestCase):
 
     """
@@ -780,3 +891,102 @@ class TestSWMRMode(TestCase):
         # This setter should affect both fid and group member file attribute
         assert fid.swmr_mode == g.file.swmr_mode == True
         fid.close()
+
+
+@pytest.mark.skipif(
+    h5py.version.hdf5_version_tuple < (1, 12, 1) and (
+    h5py.version.hdf5_version_tuple[:2] != (1, 10) or h5py.version.hdf5_version_tuple[2] < 7),
+    reason="Requires HDF5 >= 1.12.1 or 1.10.x >= 1.10.7")
+@pytest.mark.skipif("HDF5_USE_FILE_LOCKING" in os.environ,
+                    reason="HDF5_USE_FILE_LOCKING env. var. is set")
+class TestFileLocking:
+    """Test h5py.File file locking option"""
+
+    def test_reopen(self, tmp_path):
+        """Test file locking when opening twice the same file"""
+        fname = tmp_path / "test.h5"
+
+        with h5py.File(fname, mode="w", locking=True) as f:
+            f.flush()
+
+            # Opening same file in same process without locking is expected to fail
+            with pytest.raises(OSError):
+                with h5py.File(fname, mode="r", locking=False) as h5f_read:
+                    pass
+
+            with h5py.File(fname, mode="r", locking=True) as h5f_read:
+                pass
+
+            with h5py.File(fname, mode="r", locking='best-effort') as h5f_read:
+                pass
+
+    def test_unsupported_locking(self, tmp_path):
+        """Test with erroneous file locking value"""
+        fname = tmp_path / "test.h5"
+        with pytest.raises(ValueError):
+            with h5py.File(fname, mode="r", locking='unsupported-value') as h5f_read:
+                pass
+
+    def test_multiprocess(self, tmp_path):
+        """Test file locking option from different concurrent processes"""
+        fname = tmp_path / "test.h5"
+
+        def open_in_subprocess(filename, mode, locking):
+            """Open HDF5 file in a subprocess and return True on success"""
+            h5py_import_dir = str(pathlib.Path(h5py.__file__).parent.parent)
+
+            process = subprocess.run(
+                [
+                    sys.executable,
+                    "-c",
+                    f"""
+import sys
+sys.path.insert(0, {h5py_import_dir!r})
+import h5py
+f = h5py.File({str(filename)!r}, mode={mode!r}, locking={locking})
+                    """,
+                ],
+                capture_output=True)
+            return process.returncode == 0 and not process.stderr
+
+        # Create test file
+        with h5py.File(fname, mode="w", locking=True) as f:
+            f["data"] = 1
+
+        with h5py.File(fname, mode="r", locking=False) as f:
+            # Opening in write mode with locking is expected to work
+            assert open_in_subprocess(fname, mode="w", locking=True)
+
+
+# unittest doesn't work with pytest fixtures (and possibly other features),
+# hence no subclassing TestCase
+class TestROS3:
+    @pytest.mark.skipif(h5py.version.hdf5_version_tuple < (1, 10, 6)
+                        or not h5.get_config().ros3,
+                        reason="ros3 file operations were added in HDF5 1.10.6+")
+    def test_ros3(self):
+        """ ROS3 driver and options """
+
+        with File("https://dandiarchive.s3.amazonaws.com/ros3test.hdf5", 'r',
+                  driver='ros3') as f:
+            assert f
+            assert 'mydataset' in f.keys()
+            assert f["mydataset"].shape == (100,)
+
+
+def test_close_gc(writable_file):
+    # https://github.com/h5py/h5py/issues/1852
+    for i in range(100):
+        writable_file[str(i)] = []
+
+    filename = writable_file.filename
+    writable_file.close()
+
+    # Ensure that Python's garbage collection doesn't interfere with closing
+    # a file. Try a few times - the problem is not 100% consistent, but
+    # normally showed up on the 1st or 2nd iteration for me. -TAK, 2021
+    for i in range(10):
+        with h5py.File(filename, 'r') as f:
+            refs = [d.id for d in f.values()]
+            refs.append(refs)   # Make a reference cycle so GC is involved
+            del refs  # GC is likely to fire while closing the file

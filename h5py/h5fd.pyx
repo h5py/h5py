@@ -10,6 +10,8 @@
 # This file contains code or comments from the HDF5 library.  See the file
 # licenses/hdf5.txt for the full HDF5 software license.
 
+include "config.pxi"
+
 """
     File driver constants (H5FD*).
 """
@@ -40,6 +42,8 @@ MPIPOSIX = -1
 MULTI = H5FD_MULTI
 SEC2 = H5FD_SEC2
 STDIO = H5FD_STDIO
+IF HDF5_VERSION >= (1, 10, 6):
+    ROS3D = H5FD_ROS3
 IF UNAME_SYSNAME == "Windows":
     WINDOWS = H5FD_WINDOWS
 ELSE:

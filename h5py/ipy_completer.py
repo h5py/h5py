@@ -41,35 +41,14 @@
 
 import posixpath
 import re
-import readline
 from ._hl.attrs import AttributeManager
 from ._hl.base import HLObject
 
 
-try:
-    # >=ipython-1.0
-    from IPython import get_ipython
-except ImportError:
-    try:
-        # support >=ipython-0.11, <ipython-1.0
-        from IPython.core.ipapi import get as get_ipython
-    except ImportError:
-        # support <ipython-0.11
-        from IPython.ipapi import get as get_ipython
-try:
-    # support >=ipython-0.11
-    from IPython.utils import generics
-except ImportError:
-    # support <ipython-0.11
-    from IPython import generics
+from IPython import get_ipython
 
-try:
-    from IPython.core.error import TryNext
-except ImportError:
-    try:
-        from IPython import TryNext
-    except ImportError:
-        from IPython.ipapi import TryNext
+from IPython.core.error import TryNext
+from IPython.utils import generics
 
 re_attr_match = re.compile(r"(?:.*\=)?(.+\[.*\].*)\.(\w*)$")
 re_item_match = re.compile(r"""(?:.*\=)?(.*)\[(?P<s>['|"])(?!.*(?P=s))(.*)$""")
@@ -86,13 +65,7 @@ def _retrieve_obj(name, context):
     if '(' in name:
         raise ValueError()
 
-    try:
-        # older versions of IPython:
-        obj = eval(name, context.shell.user_ns)
-    except AttributeError:
-        # as of IPython-1.0:
-        obj = eval(name, context.user_ns)
-    return obj
+    return eval(name, context.user_ns)
 
 
 def h5py_item_completer(context, command):
@@ -116,7 +89,6 @@ def h5py_item_completer(context, command):
         return []
 
     items = list(items)
-    readline.set_completer_delims(' \t\n`!@#$^&*()=+[{]}\\|;:\'",<>?')
 
     return [i for i in items if i[:len(item)] == item]
 
@@ -138,30 +110,16 @@ def h5py_attr_completer(context, command):
     except TryNext:
         pass
 
-    omit__names = None
     try:
         # support >=ipython-0.12
         omit__names = get_ipython().Completer.omit__names
     except AttributeError:
-        pass
-    if omit__names is None:
-        try:
-            # support ipython-0.11
-            omit__names = get_ipython().readline_omit__names
-        except AttributeError:
-            pass
-    if omit__names is None:
-        try:
-            # support <ipython-0.11
-            omit__names = get_ipython().options.readline_omit__names
-        except AttributeError:
-            omit__names = 0
+        omit__names = 0
+
     if omit__names == 1:
         attrs = [a for a in attrs if not a.startswith('__')]
     elif omit__names == 2:
         attrs = [a for a in attrs if not a.startswith('_')]
-
-    readline.set_completer_delims(' =')
 
     return ["%s.%s" % (base, a) for a in attrs if a[:len(attr)] == attr]
 

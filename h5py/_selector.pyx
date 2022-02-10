@@ -309,7 +309,7 @@ cdef class Reader:
         h5_stored_datatype = typewrap(H5Dget_type(self.dataset))
         np_dtype = h5_stored_datatype.py_dtype()
         self.np_typenum = np_dtype.num
-        self.native_byteorder = PyArray_IsNativeByteOrder(np_dtype.byteorder)
+        self.native_byteorder = PyArray_IsNativeByteOrder(ord(np_dtype.byteorder))
         self.h5_memory_datatype = py_create(np_dtype)
 
     cdef ndarray make_array(self, hsize_t* mshape):
@@ -362,8 +362,11 @@ cdef class Reader:
         finally:
             efree(mshape)
 
-        H5Dread(self.dataset, self.h5_memory_datatype.id, mspace,
-                self.selector.space, H5P_DEFAULT, buf)
+        try:
+            H5Dread(self.dataset, self.h5_memory_datatype.id, mspace,
+                    self.selector.space, H5P_DEFAULT, buf)
+        finally:
+            H5Sclose(mspace)
 
         if arr.ndim == 0:
             return arr[()]
@@ -371,7 +374,7 @@ cdef class Reader:
             return arr
 
 
-class MultiBlockSlice(object):
+class MultiBlockSlice:
     """
         A conceptual extension of the built-in slice object to allow selections
         using start, stride, count and block.

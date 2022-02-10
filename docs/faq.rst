@@ -15,6 +15,7 @@ Fully supported types:
 =========================           ============================================    ================================
 Type                                Precisions                                      Notes
 =========================           ============================================    ================================
+Bitfield                            1, 2, 4 or 8 byte, BE/LE                        Read as unsigned integers
 Integer                             1, 2, 4 or 8 byte, BE/LE, signed/unsigned
 Float                               2, 4, 8, 12, 16 byte, BE/LE
 Complex                             8 or 16 byte, BE/LE                             Stored as HDF5 struct

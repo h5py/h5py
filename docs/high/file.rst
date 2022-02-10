@@ -95,6 +95,21 @@ of supported drivers and their options:
         raw_ext:
           Raw data filename extension. Default is '-r.h5'.
 
+    'ros3'
+        Allows read only access to HDF5 files on S3. Keywords:
+
+        aws_region:
+          Name of the AWS "region" where the S3 bucket with the file is, e.g. ``b"us-east-1"``. Default is ``b''``.
+
+        secret_id:
+          "Access ID" for the resource. Default is ``b''``.
+
+        secret_key:
+          "Secret Access Key" associated with the ID and resource. Default is ``b''``.
+
+        The argument values must be ``bytes`` objects.
+
+
 .. _file_fileobj:
 
 Python file-like objects
@@ -130,6 +145,25 @@ a better option may be to store temporary data on disk using the functions in
    When using a Python file-like object for an HDF5 file, make sure to close
    the HDF5 file before closing the file object it's wrapping. If there is an
    error while trying to close the HDF5 file, segfaults may occur.
+
+
+.. warning::
+
+   When using a Python file-like object, using service threads to implement the
+   file-like API can lead to process deadlocks.
+
+   ``h5py`` serializes access to low-level hdf5 functions via a global lock.
+   This lock is held when the file-like methods are called and is required to
+   delete/deallocate ``h5py`` objects.  Thus, if cyclic garbage collection is
+   triggered on a service thread the program will deadlock.  The service thread
+   can not continue until it acquires the lock, and the thread holding the lock will
+   not release it until the service thread completes its work.
+
+   If possible, avoid creating circular references (either via ``weakrefs`` or
+   manually breaking the cycles) that keep ``h5py`` objects alive.  If this
+   is not possible, manually triggering a garbage collection from the correct
+   thread or temporarily disabling garbage collection may help.
+
 
 .. note::
 
@@ -237,44 +271,46 @@ Filenames on different systems
 
 Different operating systems (and different file systems) store filenames with
 different encodings. Additionally, in Python there are at least two different
-representations of filenames, as encoded bytes (via str on Python 2, bytes on
-Python 3) or as a unicode string (via unicode on Python 2 and str on Python 3).
-The safest bet when creating a new file is to use unicode strings on all
-systems.
+representations of filenames, as encoded ``bytes`` or as a Unicode string
+(``str`` on Python 3).
+
+h5py's high-level interfaces always return filenames as ``str``, e.g.
+:attr:`File.filename`. h5py accepts filenames as either ``str`` or ``bytes``.
+In most cases, using Unicode (``str``) paths is preferred, but there are some
+caveats.
+
+.. note::
+
+   HDF5 handles filenames as bytes (C ``char *``), and the h5py :doc:`lowlevel`
+   matches this.
 
 macOS (OSX)
 ...........
 macOS is the simplest system to deal with, it only accepts UTF-8, so using
-unicode paths will just work (and should be preferred).
+Unicode paths will just work (and should be preferred).
 
 Linux (and non-macOS Unix)
 ..........................
-Unix-like systems use locale settings to determine the correct encoding to use.
-These are set via a number of different environment variables, of which ``LANG``
-and ``LC_ALL`` are the ones of most interest. Of special interest is the ``C``
-locale, which Python will interpret as only allowing ASCII, meaning unicode
-paths should be pre-encoded. This will likely change in Python 3.7 with
-https://www.python.org/dev/peps/pep-0538/, but this will likely be backported by
-distributions to earlier versions.
+Filenames on Unix-like systems are natively bytes. By convention, the locale
+encoding is used to convert to and from unicode; on most modern systems this
+will be UTF-8 by default (especially since Python 3.7, with :pep:`538`).
 
-To summarise, use unicode strings where possible, but be aware that sometimes
-using encoded bytes may be necessary to read incorrectly encoded filenames.
+Passing Unicode paths will mostly work, and Unicode paths from system
+functions like ``os.listdir()`` should always work. But if there are filenames
+that aren't in the expected encoding (e.g. on a network filesystem or a
+removable drive, or because something is misconfigured), you may want to handle
+them as bytes.
 
 Windows
 .......
-Windows systems have two different APIs to perform file-related operations, a
-ANSI (char, legacy) interface and a unicode (wchar) interface. HDF5 currently
-only supports the ANSI interface, which is limited in what it can encode. This
-means that it may not be possible to open certain files, and because
-:ref:`group_extlinks` do not specify their encoding, it is possible that opening an
-external link may not work. There is work being done to fix this (see
-https://github.com/h5py/h5py/issues/839), but it is likely there will need to be
-breaking changes make to allow Windows to have the same level of support for
-unicode filenames as other operating systems.
+Windows systems natively handle filenames as Unicode, and with HDF5 1.10.6 and
+above filenames passed to h5py as bytes will be used as UTF-8 encoded text,
+regardless of system configuration.
 
-The best suggestion is to use unicode strings, but to keep to ASCII for
-filenames to avoid possible breakage.
-
+HDF5 1.10.5 and below could only use filenames with characters from the active
+code page, e.g. `Windows-1252 <https://en.wikipedia.org/wiki/Windows-1252>`_ on
+many systems configured for European languages. This limitation applies whether
+you use ``str`` or ``bytes`` with h5py.
 
 .. _file_cache:
 
@@ -308,7 +344,7 @@ chunk cache*.
   closer to 0, and if the application does not, the value should be set closer
   to 1.
 * ``rdcc_nslots`` is the number of chunk slots in
-  the cache for this entire file.  In order to allow the chunks to be looked up
+  the cache for each dataset.  In order to allow the chunks to be looked up
   quickly in cache, each chunk is assigned a unique hash value that is used to
   look up the chunk.  The cache contains a simple array of pointers to chunks,
   which is called a hash table.  A chunk's hash value is simply the index into
@@ -410,8 +446,7 @@ Reference
 
     .. attribute:: filename
 
-        Name of this file on disk.  Generally a Unicode string; a byte string
-        will be used if HDF5 returns a non-UTF-8 encoded string.
+        Name of this file on disk, as a Unicode string.
 
     .. attribute:: mode
 

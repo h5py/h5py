@@ -62,8 +62,8 @@ IF HDF5_VERSION >= (1, 10, 1):
         Get the directory path at the given index (starting from 0) in the
         plugin search path. Returns a Python bytes object.
         """
-        cpdef size_t n
-        cpdef char* buf = NULL
+        cdef size_t n
+        cdef char* buf = NULL
 
         n = H5PLget(index, NULL, 0)
         buf = <char*>emalloc(sizeof(char)*(n + 1))
@@ -78,6 +78,6 @@ IF HDF5_VERSION >= (1, 10, 1):
 
         Get the number of directories currently in the plugin search path.
         """
-        cpdef unsigned int n = 0
+        cdef unsigned int n = 0
         H5PLsize(&n)
         return n
