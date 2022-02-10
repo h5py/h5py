@@ -367,6 +367,24 @@ chunk cache*.
 Chunks and caching are described in greater detail in the `HDF5 documentation
 <https://portal.hdfgroup.org/display/HDF5/Chunking+in+HDF5>`_.
 
+.. _file_alignment:
+
+Data alignment
+--------------
+
+When creating datasets within files, it may be advantageous to align the offset
+within the file itself. This can help optimize read and write times if the data
+become aligned with the underlying hardware, or may help with parallelism with
+MPI. Unfortunately, aligning small variables to large blocks can leave alot of
+empty space in a file. To this effect, application developers are left with two
+options to tune the alignment of data within their file.  The two variables
+``alignment_threshold`` and ``alignment_interval``  in the :class:`File`
+constructor help control the threshold in bytes where the data alignment policy
+takes effect and the alignment in bytes within the file. The alignment is
+measured from the end of the user block.
+
+For more information, see the official HDF5 documentation `H5P_SET_ALIGNMENT
+<https://portal.hdfgroup.org/display/HDF5/H5P_SET_ALIGNMENT>`_.
 
 Reference
 ---------
@@ -418,6 +436,13 @@ Reference
     :param fs_threshold: The smallest free-space section size that the free
             space manager will track. Only allowed when creating a new file.
             The default is 1.
+    :param alignment_threshold: Together with ``alignment_interval``, this
+            property ensures that any file object greater than or equal
+            in size to the alignement threshold (in bytes) will be
+            aligned on an address which is a multiple of alignment interval.
+    :param alignment_interval: This property should be used in conjunction with
+            ``alignment_threshold``. See the description above. For more
+            details, see :ref:`file_alignment`.
     :param kwds:    Driver-specific keywords; see :ref:`file_driver`.
 
     .. method:: __bool__()

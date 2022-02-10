@@ -109,7 +109,8 @@ def registered_drivers():
 
 
 def make_fapl(driver, libver, rdcc_nslots, rdcc_nbytes, rdcc_w0, locking,
-              page_buf_size, min_meta_keep, min_raw_keep, **kwds):
+              page_buf_size, min_meta_keep, min_raw_keep,
+              alignment_threshold, alignment_interval, **kwds):
     """ Set up a file access property list """
     plist = h5p.create(h5p.FILE_ACCESS)
 
@@ -123,6 +124,7 @@ def make_fapl(driver, libver, rdcc_nslots, rdcc_nbytes, rdcc_w0, locking,
         # we default to earliest
         low, high = h5f.LIBVER_EARLIEST, h5f.LIBVER_LATEST
     plist.set_libver_bounds(low, high)
+    plist.set_alignment(alignment_threshold, alignment_interval)
 
     cache_settings = list(plist.get_cache())
     if rdcc_nslots is not None:
@@ -354,7 +356,8 @@ class File(Group):
     def __init__(self, name, mode='r', driver=None, libver=None, userblock_size=None, swmr=False,
                  rdcc_nslots=None, rdcc_nbytes=None, rdcc_w0=None, track_order=None,
                  fs_strategy=None, fs_persist=False, fs_threshold=1, fs_page_size=None,
-                 page_buf_size=None, min_meta_keep=0, min_raw_keep=0, locking=None, **kwds):
+                 page_buf_size=None, min_meta_keep=0, min_raw_keep=0, locking=None,
+                 alignment_threshold=1, alignment_interval=1, **kwds):
         """Create a new file object.
 
         See the h5py user guide for a detailed explanation of the options.
@@ -449,6 +452,19 @@ class File(Group):
             Warning: The HDF5_USE_FILE_LOCKING environment variable can override
             this parameter.
             Only available with HDF5 >= 1.12.1 or 1.10.x >= 1.10.7.
+
+        alignment_threshold
+            Together with ``alignment_interval``, this property ensures that
+            any file object greater than or equal in size to the alignement
+            threshold (in bytes) will be aligned on an address which is a
+            multiple of alignment interval.
+
+        alignment_interval
+            This property should be used in conjunction with
+            ``alignment_threshold``. See the description above. For more
+            details, see
+            https://portal.hdfgroup.org/display/HDF5/H5P_SET_ALIGNMENT
+
         Additional keywords
             Passed on to the selected file driver.
         """
@@ -500,7 +516,10 @@ class File(Group):
 
             with phil:
                 fapl = make_fapl(driver, libver, rdcc_nslots, rdcc_nbytes, rdcc_w0,
-                                 locking, page_buf_size, min_meta_keep, min_raw_keep, **kwds)
+                                 locking, page_buf_size, min_meta_keep, min_raw_keep,
+                                 alignment_threshold=alignment_threshold,
+                                 alignment_interval=alignment_interval,
+                                 **kwds)
                 fcpl = make_fcpl(track_order=track_order, fs_strategy=fs_strategy,
                                  fs_persist=fs_persist, fs_threshold=fs_threshold,
                                  fs_page_size=fs_page_size)
