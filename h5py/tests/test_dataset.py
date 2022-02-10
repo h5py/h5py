@@ -1063,8 +1063,10 @@ class TestStrings(BaseDataset):
     def test_vlen_bytes_fillvalue(self):
         """ Vlen bytes dataset handles fillvalue """
         dt = h5py.string_dtype(encoding='ascii')
-        ds = self.f.create_dataset('x', (100,), dtype=dt, fillvalue='bar'.encode("ascii"))
-        self.assertEqual(self.f['x'][0], b'bar')
+        fill_value = b'bar'
+        ds = self.f.create_dataset('x', (100,), dtype=dt, fillvalue=fill_value)
+        self.assertEqual(self.f['x'][0], fill_value)
+        self.assertEqual(self.f['x'].asstr()[0], fill_value.decode())
 
     def test_vlen_unicode(self):
         """ Vlen unicode dataset maps to vlen utf-8 in the file """
@@ -1079,8 +1081,10 @@ class TestStrings(BaseDataset):
     def test_vlen_unicode_fillvalue(self):
         """ Vlen unicode dataset handles fillvalue """
         dt = h5py.string_dtype()
-        ds = self.f.create_dataset('x', (100,), dtype=dt, fillvalue='bar'.encode("utf-8"))
-        self.assertEqual(self.f['x'][0], b'bar')
+        fill_value = 'bár'
+        ds = self.f.create_dataset('x', (100,), dtype=dt, fillvalue=fill_value)
+        self.assertEqual(self.f['x'][0], fill_value.encode("utf-8"))
+        self.assertEqual(self.f['x'].asstr()[0], fill_value)
 
     def test_fixed_ascii(self):
         """ Fixed-length bytes dataset maps to fixed-length ascii in the file

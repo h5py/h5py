@@ -510,16 +510,18 @@ cdef class PropDCID(PropOCID):
 
         check_numpy_read(value, -1)
 
-        # check for vlen strings
+        # check for strings
         # create correct typeID and pointer to c_str
         string_info = check_string_dtype(value.dtype)
         if string_info is not None:
-            if string_info[0] in ["utf-8", "ascii"] and string_info[1] is None:
-                fill_value = value.item()
-                c_ptr = fill_value
-                tid = py_create(value.dtype, logical=1)
-                H5Pset_fill_value(self.id, tid.id, &c_ptr)
-                return
+            # if needed encode fill_value
+            fill_value = value.item()
+            if not isinstance(fill_value, bytes):
+                fill_value = fill_value.encode(string_info.encoding)
+            c_ptr = fill_value
+            tid = py_create(value.dtype, logical=1)
+            H5Pset_fill_value(self.id, tid.id, &c_ptr)
+            return
 
         tid = py_create(value.dtype)
         H5Pset_fill_value(self.id, tid.id, value.data)

@@ -112,6 +112,13 @@ def make_new_dset(parent, shape=None, dtype=None, data=None, name=None,
         maxshape, scaleoffset, external, allow_unknown_filter)
 
     if fillvalue is not None:
+        # prepare string-type dtypes for fillvalue
+        string_info = h5t.check_string_dtype(dtype)
+        if string_info is not None:
+            # fake vlen dtype for fixed len string fillvalue
+            # to not trigger unwanted encoding
+            dtype = h5t.string_dtype(string_info.encoding)
+
         fillvalue = numpy.array(fillvalue, dtype=dtype)
         dcpl.set_fill_value(fillvalue)
 
