@@ -206,20 +206,15 @@ class AttributeManager(base.MutableMappingHDF5, base.CommonStateObject):
             try:
                 if not isinstance(data, Empty):
                     attr.write(data, mtype=htype2)
+                if attr_exists:
+                    # Rename temp attribute to proper name
+                    # No atomic rename in HDF5 :(
+                    h5a.delete(self._id, self._e(name))
+                    h5a.rename(self._id, self._e(tempname), self._e(name))
             except:
                 attr.close()
                 h5a.delete(self._id, self._e(tempname))
                 raise
-            else:
-                if attr_exists:
-                    try:
-                        # No atomic rename in HDF5 :(
-                        h5a.delete(self._id, self._e(name))
-                        h5a.rename(self._id, self._e(tempname), self._e(name))
-                    except:
-                        attr.close()
-                        h5a.delete(self._id, self._e(tempname))
-                        raise
             finally:
                 attr.close()
 
