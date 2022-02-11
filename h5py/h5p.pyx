@@ -541,10 +541,10 @@ cdef class PropDCID(PropOCID):
 
         check_numpy_write(value, -1)
 
-        # check for strings
+        # check for vlen strings
         # create correct typeID and convert from c_str pointer to string
         string_info = check_string_dtype(value.dtype)
-        if string_info is not None:
+        if string_info is not None and string_info.length is None:
             tid = py_create(value.dtype, logical=1)
             ret = H5Pget_fill_value(self.id, tid.id, &c_ptr)
             fill_value = c_ptr
@@ -553,7 +553,6 @@ cdef class PropDCID(PropOCID):
 
         tid = py_create(value.dtype)
         H5Pget_fill_value(self.id, tid.id, value.data)
-
 
     @with_phil
     def fill_value_defined(self):
