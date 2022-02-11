@@ -535,9 +535,22 @@ cdef class PropDCID(PropOCID):
         converted to match the array dtype.  If the array has nonzero
         rank, only the first element will contain the value.
         """
+        from .h5t import check_string_dtype
         cdef TypeID tid
+        cdef char * c_ptr = NULL
 
         check_numpy_write(value, -1)
+
+        # check for strings
+        # create correct typeID and convert from c_str pointer to string
+        string_info = check_string_dtype(value.dtype)
+        if string_info is not None:
+            tid = py_create(value.dtype, logical=1)
+            ret = H5Pget_fill_value(self.id, tid.id, &c_ptr)
+            fill_value = c_ptr
+            value[0] = fill_value.decode(string_info.encoding, "surrogateescape")
+            return
+
         tid = py_create(value.dtype)
         H5Pget_fill_value(self.id, tid.id, value.data)
 
