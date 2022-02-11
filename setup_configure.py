@@ -135,7 +135,9 @@ class BuildConfig:
             if os.name != 'nt':
                 print(
                     "Building h5py requires pkg-config unless the HDF5 path "
-                    "is explicitly specified", file=sys.stderr
+                    "is explicitly specified using the environment variable HDF5_DIR. "
+                    "For more information and details, "
+                    "see https://docs.h5py.org/en/stable/build.html#custom-installation", file=sys.stderr
                 )
                 raise
 
