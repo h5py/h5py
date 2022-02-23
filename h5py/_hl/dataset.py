@@ -118,8 +118,9 @@ def make_new_dset(parent, shape=None, dtype=None, data=None, name=None,
             # fake vlen dtype for fixed len string fillvalue
             # to not trigger unwanted encoding
             dtype = h5t.string_dtype(string_info.encoding)
-
-        fillvalue = numpy.array(fillvalue, dtype=dtype)
+            fillvalue = numpy.array(fillvalue, dtype=dtype)
+        else:
+            fillvalue = numpy.array(fillvalue)
         dcpl.set_fill_value(fillvalue)
 
     if track_times is None:
