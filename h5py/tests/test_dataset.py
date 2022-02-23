@@ -1067,7 +1067,7 @@ class TestStrings(BaseDataset):
         ds = self.f.create_dataset('x', (100,), dtype=dt, fillvalue=fill_value)
         self.assertEqual(self.f['x'][0], fill_value)
         self.assertEqual(self.f['x'].asstr()[0], fill_value.decode())
-        self.assertEqual(self.f['x'].fillvalue, fill_value.decode())
+        self.assertEqual(self.f['x'].fillvalue, fill_value)
 
     def test_vlen_unicode(self):
         """ Vlen unicode dataset maps to vlen utf-8 in the file """
@@ -1086,7 +1086,7 @@ class TestStrings(BaseDataset):
         ds = self.f.create_dataset('x', (100,), dtype=dt, fillvalue=fill_value)
         self.assertEqual(self.f['x'][0], fill_value.encode("utf-8"))
         self.assertEqual(self.f['x'].asstr()[0], fill_value)
-        self.assertEqual(self.f['x'].fillvalue, fill_value)
+        self.assertEqual(self.f['x'].fillvalue, fill_value.encode("utf-8"))
 
     def test_fixed_ascii(self):
         """ Fixed-length bytes dataset maps to fixed-length ascii in the file

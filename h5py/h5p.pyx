@@ -548,7 +548,7 @@ cdef class PropDCID(PropOCID):
             tid = py_create(value.dtype, logical=1)
             ret = H5Pget_fill_value(self.id, tid.id, &c_ptr)
             fill_value = c_ptr
-            value[0] = fill_value.decode(string_info.encoding, "surrogateescape")
+            value[0] = fill_value
             return
 
         tid = py_create(value.dtype)
