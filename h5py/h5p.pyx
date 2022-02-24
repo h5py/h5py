@@ -504,9 +504,25 @@ cdef class PropDCID(PropOCID):
         0-dimensional NumPy array; otherwise, the value will be read from
         the first element.
         """
+        from .h5t import check_string_dtype
         cdef TypeID tid
+        cdef char * c_ptr
 
         check_numpy_read(value, -1)
+
+        # check for strings
+        # create correct typeID and pointer to c_str
+        string_info = check_string_dtype(value.dtype)
+        if string_info is not None:
+            # if needed encode fill_value
+            fill_value = value.item()
+            if not isinstance(fill_value, bytes):
+                fill_value = fill_value.encode(string_info.encoding)
+            c_ptr = fill_value
+            tid = py_create(value.dtype, logical=1)
+            H5Pset_fill_value(self.id, tid.id, &c_ptr)
+            return
+
         tid = py_create(value.dtype)
         H5Pset_fill_value(self.id, tid.id, value.data)
 
@@ -519,12 +535,24 @@ cdef class PropDCID(PropOCID):
         converted to match the array dtype.  If the array has nonzero
         rank, only the first element will contain the value.
         """
+        from .h5t import check_string_dtype
         cdef TypeID tid
+        cdef char * c_ptr = NULL
 
         check_numpy_write(value, -1)
+
+        # check for vlen strings
+        # create correct typeID and convert from c_str pointer to string
+        string_info = check_string_dtype(value.dtype)
+        if string_info is not None and string_info.length is None:
+            tid = py_create(value.dtype, logical=1)
+            ret = H5Pget_fill_value(self.id, tid.id, &c_ptr)
+            fill_value = c_ptr
+            value[0] = fill_value
+            return
+
         tid = py_create(value.dtype)
         H5Pget_fill_value(self.id, tid.id, value.data)
-
 
     @with_phil
     def fill_value_defined(self):
