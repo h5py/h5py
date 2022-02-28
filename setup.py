@@ -113,6 +113,9 @@ setup(
   maintainer_email = 'andrew.collette@gmail.com',
   license = 'BSD',
   url = 'http://www.h5py.org',
+  project_urls = {
+      'Source': 'https://github.com/h5py/h5py',
+  },
   download_url = 'https://pypi.python.org/pypi/h5py',
   packages = [
       'h5py',
