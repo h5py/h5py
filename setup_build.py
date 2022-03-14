@@ -19,8 +19,11 @@ import api_gen
 from setup_configure import BuildConfig
 
 
-def localpath(*args):
-    return op.abspath(op.join(op.dirname(__file__), *args))
+src_path = build_path = op.dirname(__file__)
+
+
+def localpath(*args, root=src_path):
+    return op.abspath(op.join(root, *args))
 
 
 MODULES = ['defs', '_errors', '_objects', '_proxy', 'h5fd', 'h5z',
@@ -98,7 +101,7 @@ class h5py_build_ext(build_ext):
             import numpy.core
             numpy_includes = os.path.join(os.path.dirname(numpy.core.__file__), 'include')
 
-        settings['include_dirs'].insert(0, numpy_includes)
+        settings['include_dirs'] += [numpy_includes]
         if config.mpi:
             import mpi4py
             settings['include_dirs'] += [mpi4py.get_include()]
@@ -113,6 +116,17 @@ class h5py_build_ext(build_ext):
             return Extension('h5py.' + module, sources, **settings)
 
         return [make_extension(m) for m in MODULES]
+
+    def finalize_options(self):
+        retval = super().finalize_options()
+
+        global build_path
+        if (self.build_lib is not None and op.exists(self.build_lib) and
+                not self.inplace):
+            build_path = self.build_lib
+            print("Updated build directory to: {}".format(build_path))
+
+        return retval
 
     def run(self):
         """ Distutils calls this method to run the command """
@@ -134,7 +148,6 @@ class h5py_build_ext(build_ext):
 
         defs_file = localpath('h5py', 'defs.pyx')
         func_file = localpath('h5py', 'api_functions.txt')
-        config_file = localpath('h5py', 'config.pxi')
 
         # Rebuild low-level defs if missing or stale
         if not op.isfile(defs_file) or os.stat(func_file).st_mtime > os.stat(defs_file).st_mtime:
@@ -163,7 +176,8 @@ DEF CYTHON_BUILD_VERSION = '%(cython_version)s'
             'numpy_version': numpy.__version__,
             'cython_version': cython_version,
         }
-        write_if_changed(config_file, s)
+        write_if_changed(localpath('h5py', 'config.pxi'), s)
+        write_if_changed(localpath('h5py', 'config.pxi', root=build_path), s)
 
         # Run Cython
         print("Executing cythonize()")
@@ -192,3 +206,4 @@ def write_if_changed(target_path, s: str):
         pass
 
     p.write_bytes(b)
+    print(f'Updated {p}')
