@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+set -e -x
 
 if [ -z ${HDF5_DIR+x} ]; then
     echo "Using OS HDF5"
