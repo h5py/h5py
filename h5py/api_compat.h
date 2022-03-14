@@ -33,6 +33,8 @@ typedef void *PyMPI_MPI_Message;
 
 #ifdef NPY_COMPLEX256
 #define h5py_size_n256 (sizeof(npy_complex256))
+#else
+#define h5py_size_n256 0
 #endif
 
 #define h5py_offset_n64_real (HOFFSET(npy_complex64, real))
@@ -43,6 +45,9 @@ typedef void *PyMPI_MPI_Message;
 #ifdef NPY_COMPLEX256
 #define h5py_offset_n256_real (HOFFSET(npy_complex256, real))
 #define h5py_offset_n256_imag (HOFFSET(npy_complex256, imag))
+#else
+#define h5py_offset_n256_real 0
+#define h5py_offset_n256_imag 0
 #endif
 
 #endif

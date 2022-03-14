@@ -221,4 +221,3 @@ def write_if_changed(target_path, s: str):
 
     p.write_bytes(b)
     print(f'Updated {p}')
-    print(b.decode())

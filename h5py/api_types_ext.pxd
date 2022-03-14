@@ -49,10 +49,9 @@ cdef extern from "api_compat.h":
     size_t h5py_offset_n128_real
     size_t h5py_offset_n128_imag
 
-    IF COMPLEX256_SUPPORT:
-        size_t h5py_size_n256
-        size_t h5py_offset_n256_real
-        size_t h5py_offset_n256_imag
+    size_t h5py_size_n256
+    size_t h5py_offset_n256_real
+    size_t h5py_offset_n256_imag
 
 cdef extern from "lzf_filter.h":
 
