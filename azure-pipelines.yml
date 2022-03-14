@@ -40,7 +40,7 @@ jobs:
   pool:
     vmImage: windows-2019
   variables:
-    HDF5_VERSION: 1.13.1
+    HDF5_VERSION: 1.12.1
     HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
     HDF5_VSVERSION: "16-64"
     CIBW_BUILD: cp3{7,8,9,10}-win_amd64
@@ -54,7 +54,7 @@ jobs:
     vmImage: macOS-11
   variables:
     MACOSX_DEPLOYMENT_TARGET: 10.9
-    HDF5_VERSION: 1.13.1
+    HDF5_VERSION: 1.12.1
     HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
     CIBW_BUILD_VERBOSITY_MACOS: 3
     CIBW_BUILD: cp3{7,8,9,10}-macosx_*
