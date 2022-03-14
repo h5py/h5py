@@ -98,7 +98,7 @@ class h5py_build_ext(build_ext):
             import numpy.core
             numpy_includes = os.path.join(os.path.dirname(numpy.core.__file__), 'include')
 
-        settings['include_dirs'] += [numpy_includes]
+        settings['include_dirs'].insert(0, numpy_includes)
         if config.mpi:
             import mpi4py
             settings['include_dirs'] += [mpi4py.get_include()]
