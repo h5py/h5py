@@ -68,6 +68,7 @@ libbz2.dylib: \$(OBJS)
 EOF
             sed -i "" "s/CFLAGS=-Wall/CFLAGS=-fPIC -Wall/g" Makefile
             sed -i "" "s/all: libbz2.a/all: libbz2.dylib libbz2.a/g" Makefile
+            cat Makefile
             make install PREFIX="$HDF5_DIR"
             popd
 
