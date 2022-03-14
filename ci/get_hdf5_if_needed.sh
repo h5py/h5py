@@ -60,10 +60,10 @@ else
             cat << EOF >> Makefile
 
 libbz2.dylib: \$(OBJS)
-  \$(CC) \$(LDFLAGS) -shared -Wl,-install_name -Wl,libbz2.dylib -o libbz2.$BZIP_VERSION.dylib \$(OBJS)
-  cp libbz2.$BZIP_VERSION.dylib \${PREFIX}/lib/
-  ln -s libbz2.$BZIP_VERSION.dylib \${PREFIX}/lib/libbz2.1.0.dylib
-  ln -s libbz2.$BZIP_VERSION.dylib \${PREFIX}/lib/libbz2.dylib
+	\$(CC) \$(LDFLAGS) -shared -Wl,-install_name -Wl,libbz2.dylib -o libbz2.$BZIP_VERSION.dylib \$(OBJS)
+	cp libbz2.$BZIP_VERSION.dylib \${PREFIX}/lib/
+	ln -s libbz2.$BZIP_VERSION.dylib \${PREFIX}/lib/libbz2.1.0.dylib
+	ln -s libbz2.$BZIP_VERSION.dylib \${PREFIX}/lib/libbz2.dylib
 
 EOF
             sed -i "" "s/CFLAGS=-Wall/CFLAGS=-fPIC -Wall/g" Makefile
