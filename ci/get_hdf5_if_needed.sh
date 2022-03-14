@@ -11,7 +11,7 @@ else
         EXTRA_MPI_FLAGS=''
     else
         echo "Building with MPI"
-        EXTRA_MPI_FLAGS="--enable-parallel --enable-shared"
+        EXTRA_MPI_FLAGS="-DHDF5_ENABLE_PARALLEL:bool=on"
     fi
 
     if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -20,6 +20,7 @@ else
         lib_name=libhdf5.so
     fi
 
+    extra_arch_flags=()
     if [ -f $HDF5_DIR/lib/$lib_name ]; then
         echo "using cached build"
     else
@@ -29,13 +30,12 @@ else
         MINOR_V=${MINOR_V%.*}
         MAJOR_V=${HDF5_VERSION/%.*.*}
         if [[ "$OSTYPE" == "darwin"* && ( $MAJOR_V -gt 1 || $MINOR_V -ge 13 ) ]]; then
-            brew install automake pkg-config
+            brew install automake pkg-config cmake
 
             export LD_LIBRARY_PATH="$HDF5_DIR/lib:${LD_LIBRARY_PATH}"
             export PKG_CONFIG_PATH="$HDF5_DIR/lib/pkgconfig:${PKG_CONFIG_PATH}"
-            export CFLAGS="$CFLAGS -arch x86_64 -arch arm64"
-            export CC="/usr/bin/clang"
-            export CXX="/usr/bin/clang"
+            extra_arch_flags=("-DCMAKE_OSX_ARCHITECTURES='x86_64;arm64'")
+            FLAGS="-arch x86_64 -arch arm64"
             ZLIB_VERSION="1.2.11"
 
             pushd /tmp
@@ -43,8 +43,10 @@ else
             curl -sLO https://zlib.net/zlib-$ZLIB_VERSION.tar.gz
             tar xzf zlib-$ZLIB_VERSION.tar.gz
             cd zlib-$ZLIB_VERSION
-            CPPFLAGS="$CPPFLAGS -arch x86_64 -arch arm64" CXXFLAGS="$CXXFLAGS -arch x86_64 -arch arm64" ./configure --prefix="$HDF5_DIR"
-            CPPFLAGS="$CPPFLAGS -arch x86_64 -arch arm64" CXXFLAGS="$CXXFLAGS -arch x86_64 -arch arm64" make
+            CXX="/usr/bin/clang" CC="/usr/bin/clang" CFLAGS="$CFLAGS $FLAGS" CPPFLAGS="$CPPFLAGS \
+                $FLAGS" CXXFLAGS="$CXXFLAGS $FLAGS" ./configure --prefix="$HDF5_DIR"
+            CXX="/usr/bin/clang" CC="/usr/bin/clang" CFLAGS="$CFLAGS $FLAGS" CPPFLAGS="$CPPFLAGS \
+                $FLAGS" CXXFLAGS="$CXXFLAGS $FLAGS" make
             make install
             popd
         fi
@@ -54,17 +56,12 @@ else
         curl -fsSLO "https://www.hdfgroup.org/ftp/HDF5/releases/hdf5-${HDF5_VERSION%.*}/hdf5-$HDF5_VERSION/src/hdf5-$HDF5_VERSION.tar.gz"
         tar -xzvf hdf5-$HDF5_VERSION.tar.gz
         pushd hdf5-$HDF5_VERSION
-        chmod u+x autogen.sh
-        if [[ $MAJOR_V -gt 1 || $MINOR_V -ge 12 ]]; then
-          ./configure --prefix $HDF5_DIR $EXTRA_MPI_FLAGS --enable-build-mode=production
-        else
-          ./configure --prefix $HDF5_DIR $EXTRA_MPI_FLAGS
-        fi
+        mkdir build
+        cd build
+        cmake -DCMAKE_INSTALL_PREFIX="$HDF5_DIR" -DENABLE_SHARED:bool=on $EXTRA_MPI_FLAGS "${extra_arch_flags[@]}" ../
         make -j $(nproc)
         make install
         popd
         popd
-
-        file "$HDF5_DIR"/lib/*
     fi
 fi
