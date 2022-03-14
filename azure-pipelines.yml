@@ -51,9 +51,9 @@ jobs:
 
 - job: 'macos_wheels'
   pool:
-    vmImage: macOS-10.15
+    vmImage: macOS-11
   variables:
-    MACOSX_DEPLOYMENT_TARGET: 10.15
+    MACOSX_DEPLOYMENT_TARGET: 10.9
     HDF5_VERSION: 1.13.1
     HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
     CIBW_BUILD_VERBOSITY_MACOS: 3
