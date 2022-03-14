@@ -19,7 +19,7 @@ import api_gen
 from setup_configure import BuildConfig
 
 
-src_path = build_path = op.dirname(__file__)
+src_path = build_path = op.abspath(op.dirname(__file__))
 
 
 def localpath(*args, root=src_path):
@@ -123,7 +123,7 @@ class h5py_build_ext(build_ext):
         global build_path
         if (self.build_lib is not None and op.exists(self.build_lib) and
                 not self.inplace):
-            build_path = self.build_lib
+            build_path = op.abspath(self.build_lib)
             print("Updated build directory to: {}".format(build_path))
 
         return retval
@@ -134,6 +134,7 @@ class h5py_build_ext(build_ext):
         from Cython import __version__ as cython_version
         from Cython.Build import cythonize
         import numpy
+        print(f'Getting numpy from {numpy.__file__}')
 
         # This allows ccache to recognise the files when pip builds in a temp
         # directory. It speeds up repeatedly running tests through tox with
@@ -207,3 +208,4 @@ def write_if_changed(target_path, s: str):
 
     p.write_bytes(b)
     print(f'Updated {p}')
+    print(b.decode())
