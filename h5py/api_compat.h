@@ -45,10 +45,4 @@ typedef void *PyMPI_MPI_Message;
 #define h5py_offset_n256_imag (HOFFSET(npy_complex256, imag))
 #endif
 
-#if defined(__arm64__) && defined(__APPLE__)
-#define h5py_apple_arm64 1
-#else
-#define h5py_apple_arm64 0
-#endif
-
 #endif
