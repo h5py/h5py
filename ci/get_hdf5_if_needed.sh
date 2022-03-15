@@ -15,7 +15,7 @@ else
     else
         echo "Building with MPI"
         EXTRA_CMAKE_MPI_FLAGS="-DHDF5_ENABLE_PARALLEL:bool=on"
-        EXTRA_MPI_FLAGS="--enable-parallel"
+        EXTRA_MPI_FLAGS="--enable-parallel --enable-shared"
     fi
 
     if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -39,19 +39,30 @@ else
 
             export LD_LIBRARY_PATH="$HDF5_DIR/lib:${LD_LIBRARY_PATH}"
             export PKG_CONFIG_PATH="$HDF5_DIR/lib/pkgconfig:${PKG_CONFIG_PATH}"
+            export CC="/usr/bin/clang"
+            export CXX="/usr/bin/clang"
             extra_arch_flags=("-DCMAKE_OSX_ARCHITECTURES='x86_64;arm64'")
             FLAGS="-arch x86_64 -arch arm64"
             ZLIB_VERSION="1.2.11"
+            GZIP_VERSION="1.2.11"
 
             pushd /tmp
             # zlib
             curl -sLO https://zlib.net/zlib-$ZLIB_VERSION.tar.gz
             tar xzf zlib-$ZLIB_VERSION.tar.gz
             cd zlib-$ZLIB_VERSION
-            CXX="/usr/bin/clang" CC="/usr/bin/clang" CFLAGS="$CFLAGS $FLAGS" CPPFLAGS="$CPPFLAGS \
-                $FLAGS" CXXFLAGS="$CXXFLAGS $FLAGS" ./configure --prefix="$HDF5_DIR"
-            CXX="/usr/bin/clang" CC="/usr/bin/clang" CFLAGS="$CFLAGS $FLAGS" CPPFLAGS="$CPPFLAGS \
-                $FLAGS" CXXFLAGS="$CXXFLAGS $FLAGS" make
+            CFLAGS="$CFLAGS $FLAGS" ./configure --prefix="$HDF5_DIR"
+            CFLAGS="$CFLAGS $FLAGS" make
+            make install
+            popd
+
+            pushd /tmp
+            # gzip
+            curl -sLO https://ftp.sotirov-bg.net/pub/mirrors/gnu/gzip/gzip-$GZIP_VERSION.tar.xz
+            tar xf gzip-$GZIP_VERSION.tar.xz
+            cd gzip-$GZIP_VERSION
+            CFLAGS="$CFLAGS $FLAGS" ./configure --prefix="$HDF5_DIR"
+            CFLAGS="$CFLAGS $FLAGS" make
             make install
             popd
         fi
@@ -66,8 +77,10 @@ else
             mkdir build
             cd build
             cmake -DCMAKE_INSTALL_PREFIX="$HDF5_DIR" -DENABLE_SHARED:bool=on $EXTRA_CMAKE_MPI_FLAGS "${extra_arch_flags[@]}" ../
+        elif [ $MINOR_V -eq 12 ]; then
+            ./configure --prefix "$HDF5_DIR" $EXTRA_MPI_FLAGS --enable-build-mode=production
         else
-            ./configure --prefix "$HDF5_DIR" $EXTRA_MPI_FLAGS --enable-shared
+            ./configure --prefix "$HDF5_DIR" $EXTRA_MPI_FLAGS
         fi
         make -j "$NPROC"
         make install
