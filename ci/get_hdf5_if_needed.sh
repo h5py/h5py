@@ -44,7 +44,7 @@ else
             extra_arch_flags=("-DCMAKE_OSX_ARCHITECTURES='x86_64;arm64'")
             FLAGS="-arch x86_64 -arch arm64"
             ZLIB_VERSION="1.2.11"
-            GZIP_VERSION="1.2.11"
+            GZIP_VERSION="1.11"
 
             pushd /tmp
             # zlib
