@@ -11,10 +11,6 @@
     Implements support for high-level dataset access.
 """
 
-try:
-    from functools import cached_property
-except ImportError:
-    from cached_property import cached_property
 import posixpath as pp
 import sys
 from warnings import warn
@@ -25,7 +21,7 @@ import numpy
 
 from .. import h5, h5s, h5t, h5r, h5d, h5p, h5fd, h5ds, _selector
 from ..h5py_warnings import H5pyDeprecationWarning
-from .base import HLObject, phil, with_phil, Empty, find_item_type
+from .base import HLObject, phil, with_phil, Empty, cached_property, find_item_type
 from . import filters
 from . import selections as sel
 from . import selections2 as sel2

@@ -511,3 +511,25 @@ def product(nums):
     for n in nums:
         prod *= n
     return prod
+
+
+# Simple variant of cached_property:
+# Unlike functools, this has no locking, so we don't have to worry about
+# deadlocks with phil (see issue gh-2064). Unlike cached-property on PyPI, it
+# doesn't try to import asyncio (which can be ~100 extra modules).
+# Many projects seem to have similar variants of this, often without attribution,
+# but to be cautious, this code comes from cached-property (Copyright (c) 2015,
+# Daniel Greenfeld, BSD license), where it is attributed to bottle (Copyright
+# (c) 2009-2022, Marcel Hellkamp, MIT license).
+
+class cached_property(object):
+    def __init__(self, func):
+        self.__doc__ = getattr(func, "__doc__")
+        self.func = func
+
+    def __get__(self, obj, cls):
+        if obj is None:
+            return self
+
+        value = obj.__dict__[self.func.__name__] = self.func(obj)
+        return value
