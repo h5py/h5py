@@ -30,9 +30,9 @@ else
         pushd hdf5-$HDF5_VERSION
         chmod u+x autogen.sh
         if [[ "${HDF5_VERSION%.*}" = "1.12" ]]; then
-          ./configure --prefix $HDF5_DIR $EXTRA_MPI_FLAGS --enable-build-mode=production
+          ./configure --prefix $HDF5_DIR --enable-tests=no $EXTRA_MPI_FLAGS --enable-build-mode=production
         else
-          ./configure --prefix $HDF5_DIR $EXTRA_MPI_FLAGS
+          ./configure --prefix $HDF5_DIR --enable-tests=no $EXTRA_MPI_FLAGS
         fi
         make -j $(nproc)
         make install
