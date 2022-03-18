@@ -35,6 +35,11 @@ else
 
         if [[ "$OSTYPE" == "darwin"* ]]; then
             ZLIB_ARG="--with-zlib=$HDF5_DIR"
+            HOST_ARG=""
+            if [[ "$CIBW_ARCHS_MACOS" = "arm64" ]]; then
+                HOST_ARG="--host=aarch64-apple-darwin"
+            fi
+
             export LD_LIBRARY_PATH="$HDF5_DIR/lib:${LD_LIBRARY_PATH}"
             export PKG_CONFIG_PATH="$HDF5_DIR/lib/pkgconfig:${PKG_CONFIG_PATH}"
             export CC="/usr/bin/clang"
@@ -61,7 +66,7 @@ else
             curl -sLO https://ftp.sotirov-bg.net/pub/mirrors/gnu/gzip/gzip-$GZIP_VERSION.tar.xz
             tar xf gzip-$GZIP_VERSION.tar.xz
             cd gzip-$GZIP_VERSION
-            ./configure --prefix="$HDF5_DIR"
+            ./configure --prefix="$HDF5_DIR" $HOST_ARG
             make
             make install
             popd
