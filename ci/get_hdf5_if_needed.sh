@@ -36,6 +36,7 @@ else
         pushd hdf5-$HDF5_VERSION
         chmod u+x autogen.sh
         ./configure --prefix $HDF5_DIR \
+            --enable-tests=no \
             ${EXTRA_MPI_FLAGS} \
             ${ENABLE_DIRECT_VFD} \
             ${ENABLE_BUILD_MODE}

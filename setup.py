@@ -25,7 +25,6 @@ VERSION = '3.6.0'
 
 # these are required to use h5py
 RUN_REQUIRES = [
-    "cached-property; python_version<'3.8'",
     # We only really aim to support NumPy & Python combinations for which
     # there are wheels on PyPI (e.g. NumPy >=1.17.5 for Python 3.8).
     # But we don't want to duplicate the information in oldest-supported-numpy
@@ -113,6 +112,9 @@ setup(
   maintainer_email = 'andrew.collette@gmail.com',
   license = 'BSD',
   url = 'http://www.h5py.org',
+  project_urls = {
+      'Source': 'https://github.com/h5py/h5py',
+  },
   download_url = 'https://pypi.python.org/pypi/h5py',
   packages = [
       'h5py',
