@@ -1,8 +1,7 @@
 New features
 ------------
 
-* The pre-built wheels now bundle HDF5 1.13.1 (:pr:`2065`).
-* The Mac wheels are now universal, including binaries for Apple Silicon and x86_64 (:pr:`2065`).
+* Both Apple Silicon (arm64) and Intel (x86_64) wheels are now provided (:pr:`2065`).
 
 Deprecations
 ------------
