@@ -134,5 +134,7 @@ else
         make install
         popd
         popd
+
+        file "$HDF5_DIR"/lib/*
     fi
 fi
