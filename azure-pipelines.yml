@@ -71,7 +71,7 @@ jobs:
   steps:
     - template: ci/azure-pipelines-wheels.yml
       parameters:
-        platform: macos_${{ variables.CIBW_ARCHS_MACOS }}
+        platform: macos_$[variables.CIBW_ARCHS_MACOS]
 
 - job: 'ubuntu1604'
   pool:

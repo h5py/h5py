@@ -120,9 +120,9 @@ else
             popd
             export PATH=$(pwd)/native-build/bin:$PATH
         elif [[ $MAJOR_V -gt 1 || $MINOR_V -ge 12 ]]; then
-            ./configure --prefix "$HDF5_DIR" $ZLIB_ARG $EXTRA_MPI_FLAGS --enable-build-mode=production --enable-tests=no
+            ./configure --prefix="$HDF5_DIR" $ZLIB_ARG $EXTRA_MPI_FLAGS --enable-build-mode=production --enable-tests=no
         else
-            ./configure --prefix "$HDF5_DIR" $EXTRA_MPI_FLAGS --enable-tests=no
+            ./configure --prefix="$HDF5_DIR" $EXTRA_MPI_FLAGS --enable-tests=no
         fi
 
         make -j "$NPROC"
