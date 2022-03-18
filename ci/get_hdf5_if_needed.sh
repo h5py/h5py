@@ -39,9 +39,9 @@ else
             export PKG_CONFIG_PATH="$HDF5_DIR/lib/pkgconfig:${PKG_CONFIG_PATH}"
             export CC="/usr/bin/clang"
             export CXX="/usr/bin/clang"
-            export CFLAGS="$CFLAGS $CIBW_ARCHS_MACOS"
-            export CPPFLAGS="$CPPFLAGS $CIBW_ARCHS_MACOS"
-            export CXXFLAGS="$CXXFLAGS $CIBW_ARCHS_MACOS"
+            export CFLAGS="$CFLAGS -arch $CIBW_ARCHS_MACOS"
+            export CPPFLAGS="$CPPFLAGS -arch $CIBW_ARCHS_MACOS"
+            export CXXFLAGS="$CXXFLAGS -arch $CIBW_ARCHS_MACOS"
 
             ZLIB_VERSION="1.2.11"
             GZIP_VERSION="1.11"
