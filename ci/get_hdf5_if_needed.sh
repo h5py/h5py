@@ -39,9 +39,9 @@ else
             export PKG_CONFIG_PATH="$HDF5_DIR/lib/pkgconfig:${PKG_CONFIG_PATH}"
             export CC="/usr/bin/clang"
             export CXX="/usr/bin/clang"
-            export CFLAGS="$CFLAGS $CIBW_ARCHS"
-            export CPPFLAGS="$CPPFLAGS $CIBW_ARCHS"
-            export CXXFLAGS="$CXXFLAGS $CIBW_ARCHS"
+            export CFLAGS="$CFLAGS $CIBW_ARCHS_MACOS"
+            export CPPFLAGS="$CPPFLAGS $CIBW_ARCHS_MACOS"
+            export CXXFLAGS="$CXXFLAGS $CIBW_ARCHS_MACOS"
 
             ZLIB_VERSION="1.2.11"
             GZIP_VERSION="1.11"
@@ -73,7 +73,7 @@ else
         tar -xzvf hdf5-$HDF5_VERSION.tar.gz
         pushd hdf5-$HDF5_VERSION
 
-        if [[ "$OSTYPE" == "darwin"* && "$CIBW_ARCHS" = "arm64"  ]]; then
+        if [[ "$OSTYPE" == "darwin"* && "$CIBW_ARCHS_MACOS" = "arm64"  ]]; then
             # from https://github.com/conda-forge/hdf5-feedstock/commit/2cb83b63965985fa8795b0a13150bf0fd2525ebd
             export ac_cv_sizeof_long_double=8
             export hdf5_cv_ldouble_to_long_special=no
