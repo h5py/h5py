@@ -57,6 +57,7 @@ jobs:
     HDF5_VERSION: 1.12.1
     HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
     CIBW_BUILD_VERBOSITY_MACOS: 3
+    CIBW_ARCHS_MACOS: $(arch)
     CIBW_BUILD: cp3{7,8,9,10}-macosx_*
     CIBW_ENVIRONMENT_MACOS: LD_LIBRARY_PATH="$(HDF5_CACHE_DIR)/$(HDF5_VERSION)/lib:${LD_LIBRARY_PATH}" PKG_CONFIG_PATH="$(HDF5_CACHE_DIR)/$(HDF5_VERSION)/lib/pkgconfig:${PKG_CONFIG_PATH}"
     CIBW_REPAIR_WHEEL_COMMAND_MACOS: >
@@ -70,8 +71,6 @@ jobs:
         arch: 'arm64'
   steps:
     - template: ci/azure-pipelines-wheels.yml
-      variables:
-        CIBW_ARCHS_MACOS: $(arch)
       parameters:
         platform: macos_$(arch)
 
