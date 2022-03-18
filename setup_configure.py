@@ -68,15 +68,26 @@ class BuildConfig:
         h5_inc, h5_lib, h5_macros = cls._find_hdf5_compiler_settings(mpi)
 
         h5_version_s = os.environ.get('HDF5_VERSION')
+        hdf5_ros3 = os.environ.get('HDF5_ROS3')
+
+        if h5_version_s and not mpi and hdf5_ros3:
+            # if we know config, don't use wrapper
+            return cls(
+                h5_inc, h5_lib, h5_macros, validate_version(h5_version_s), mpi,
+                hdf5_ros3 == '1')
+
+        h5_wrapper = HDF5LibWrapper(h5_lib)
         if h5_version_s:
             h5_version = validate_version(h5_version_s)
-            h5_wrapper = HDF5LibWrapper(h5_lib)
         else:
-            h5_wrapper = HDF5LibWrapper(h5_lib)
             h5_version = h5_wrapper.autodetect_version()
             if mpi and not h5_wrapper.has_mpi_support():
                 raise RuntimeError("MPI support not detected")
-        ros3 = h5_wrapper.has_ros3_support()
+
+        if hdf5_ros3:
+            ros3 = hdf5_ros3 == '1'
+        else:
+            ros3 = h5_wrapper.has_ros3_support()
 
         return cls(h5_inc, h5_lib, h5_macros, h5_version, mpi, ros3)
 
