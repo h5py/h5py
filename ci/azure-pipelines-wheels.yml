@@ -47,7 +47,7 @@ steps:
         python -m pip install requests
         python ci\\get_hdf5_win.py
       displayName: 'Ensure HDF5'
-- ${{ if eq(parameters.platform, 'macos') }}:
+- ${{ if startsWith(parameters.platform, 'macos') }}:
     - script: |
         brew install automake pkg-config
         ci/get_hdf5_if_needed.sh
