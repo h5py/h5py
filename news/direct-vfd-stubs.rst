@@ -7,8 +7,12 @@ New features
   Direct VFD by passing the keyword argument ``driver="direct"`` to the
   ``h5py.File`` constructor.
 
-  To use the Direct VFD users must recompile h5py linking to a version of
-  HDF5 that enabled support for the Direct VFD at compile time.
+  To use the Direct VFD HDF5 and h5py must have both been compiled with 
+  the Direct VFD Driver enabled. Currently, h5py as released on pypi
+  does not include the Direct VFD driver.
+  Other packages such as the conda package on conda-forge might include it.
+  Alternatively, you can build h5py from source against an HDF5 build 
+  with the direct driver enabled.
 
 Deprecations
 ------------
