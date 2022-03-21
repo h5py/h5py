@@ -54,13 +54,15 @@ def mpi_enabled():
 
 
 class BuildConfig:
-    def __init__(self, hdf5_includedirs, hdf5_libdirs, hdf5_define_macros, hdf5_version, mpi, ros3):
+    def __init__(self, hdf5_includedirs, hdf5_libdirs, hdf5_define_macros,
+                 hdf5_version, mpi, ros3, direct_vfd):
         self.hdf5_includedirs = hdf5_includedirs
         self.hdf5_libdirs = hdf5_libdirs
         self.hdf5_define_macros = hdf5_define_macros
         self.hdf5_version = hdf5_version
         self.mpi = mpi
         self.ros3 = ros3
+        self.direct_vfd = direct_vfd
 
     @classmethod
     def from_env(cls):
@@ -77,8 +79,9 @@ class BuildConfig:
             if mpi and not h5_wrapper.has_mpi_support():
                 raise RuntimeError("MPI support not detected")
         ros3 = h5_wrapper.has_ros3_support()
+        direct_vfd = h5_wrapper.has_direct_vfd_support()
 
-        return cls(h5_inc, h5_lib, h5_macros, h5_version, mpi, ros3)
+        return cls(h5_inc, h5_lib, h5_macros, h5_version, mpi, ros3, direct_vfd)
 
     @staticmethod
     def _find_hdf5_compiler_settings(mpi=False):
@@ -155,6 +158,7 @@ class BuildConfig:
             'hdf5_version': list(self.hdf5_version),  # list() to match the JSON
             'mpi': self.mpi,
             'ros3': self.ros3,
+            'direct_vfd': self.direct_vfd,
         }
 
     def changed(self):
@@ -177,6 +181,7 @@ class BuildConfig:
         print("     HDF5 Version:", repr(self.hdf5_version))
         print("      MPI Enabled:", self.mpi)
         print(" ROS3 VFD Enabled:", self.ros3)
+        print("DIRECT VFD Enabled:", self.direct_vfd)
         print(" Rebuild Required:", self.changed())
         print('')
         print('*' * 80)
@@ -285,3 +290,6 @@ class HDF5LibWrapper:
 
     def has_ros3_support(self):
         return self.has_functions("H5Pget_fapl_ros3", "H5Pset_fapl_ros3")
+
+    def has_direct_vfd_support(self):
+        return self.has_functions("H5Pget_fapl_direct", "H5Pset_fapl_direct")

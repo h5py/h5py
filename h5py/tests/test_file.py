@@ -22,6 +22,7 @@ import subprocess
 import sys
 
 from .common import ut, TestCase, UNICODE_FILENAMES, closed_tempfile
+from h5py._hl.files import direct_vfd
 from h5py import File
 import h5py
 from .. import h5
@@ -300,6 +301,56 @@ class TestDrivers(TestCase):
         self.assertTrue(fid)
         self.assertEqual(fid.driver, 'stdio')
         fid.close()
+
+    @ut.skipUnless(direct_vfd,
+                   "DIRECT driver is supported on Linux if hdf5 is "
+                   "built with the appriorate flags.")
+    def test_direct(self):
+        """ DIRECT driver is supported on Linux"""
+        fid = File(self.mktemp(), 'w', driver='direct')
+        self.assertTrue(fid)
+        self.assertEqual(fid.driver, 'direct')
+        default_fapl = fid.id.get_access_plist().get_fapl_direct()
+        fid.close()
+
+        # Testing creation with append flag
+        fid = File(self.mktemp(), 'a', driver='direct')
+        self.assertTrue(fid)
+        self.assertEqual(fid.driver, 'direct')
+        fid.close()
+
+        # 2022/02/26: hnmaarrfk
+        # I'm actually not too sure of the restriction on the
+        # different valid block_sizes and cbuf_sizes on different hardware
+        # platforms.
+        #
+        # I've learned a few things:
+        #    * cbuf_size: Copy buffer size must be a multiple of block size
+        # The alignment (on my platform x86-64bit with an NVMe SSD
+        # could be an integer multiple of 512
+        #
+        # To allow HDF5 to do the heavy lifting for different platform,
+        # We didn't provide any argumnets to the first call
+        # and obtained HDF5's default values there.
+
+        # Testing creation with a few different property lists
+        for alignment, block_size, cbuf_size in [
+                default_fapl,
+                (default_fapl[0], default_fapl[1], 3 * default_fapl[1]),
+                (default_fapl[0] * 2, default_fapl[1], 3 * default_fapl[1]),
+                (default_fapl[0], 2 * default_fapl[1], 6 * default_fapl[1]),
+                ]:
+            with File(self.mktemp(), 'w', driver='direct',
+                      alignment=alignment,
+                      block_size=block_size,
+                      cbuf_size=cbuf_size) as fid:
+                actual_fapl = fid.id.get_access_plist().get_fapl_direct()
+                actual_alignment = actual_fapl[0]
+                actual_block_size = actual_fapl[1]
+                actual_cbuf_size = actual_fapl[2]
+                assert actual_alignment == alignment
+                assert actual_block_size == block_size
+                assert actual_cbuf_size == actual_cbuf_size
 
     @ut.skipUnless(os.name == 'posix', "Sec2 driver is supported on posix")
     def test_sec2(self):
