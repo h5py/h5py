@@ -3,7 +3,9 @@ repos:
     rev: v4.1.0
     hooks:
     -   id: end-of-file-fixer
+        exclude: .+\.patch
     -   id: trailing-whitespace
+        exclude: .+\.patch
 
 -   repo: https://github.com/mgedmin/check-manifest
     rev: "0.39"
