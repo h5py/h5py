@@ -1130,6 +1130,37 @@ cdef class PropFAID(PropInstanceID):
         """
         H5Pset_fapl_sec2(self.id)
 
+    if DIRECT_VFD:
+        @with_phil
+        def set_fapl_direct(self, size_t alignment=0, size_t block_size=0, size_t cbuf_size=0):
+            """(size_t alignment, size_t block_size, size_t cbuf_size)
+
+            Select the "direct" driver (h5fd.DIRECT).
+
+            Parameters:
+                hid_t fapl_id       IN: File access property list identifier
+                size_t alignment    IN: Required memory alignment boundary
+                size_t block_size   IN: File system block size
+                size_t cbuf_size    IN: Copy buffer size
+
+            Properites with value of 0 indicate that the HDF5 library should
+            choose the value.
+            """
+            H5Pset_fapl_direct(self.id, alignment, block_size, cbuf_size)
+
+        @with_phil
+        def get_fapl_direct(self):
+            """ () => (alignment, block_size, cbuf_size)
+
+            Retrieve the DIRECT VFD config
+            """
+            cdef size_t alignment
+            cdef size_t block_size
+            cdef size_t cbuf_size
+
+            H5Pget_fapl_direct(self.id, &alignment, &block_size, &cbuf_size)
+            return alignment, block_size, cbuf_size
+
 
     @with_phil
     def set_fapl_stdio(self):
@@ -1182,7 +1213,9 @@ cdef class PropFAID(PropInstanceID):
         - h5fd.MPIO
         - h5fd.MULTI
         - h5fd.SEC2
+        - h5fd.DIRECT  (if available)
         - h5fd.STDIO
+        - h5fd.ROS3    (if available)
         """
         return H5Pget_driver(self.id)
 

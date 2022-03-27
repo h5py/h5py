@@ -23,6 +23,10 @@ else
     else
         lib_name=libhdf5.so
         NPROC=$(nproc)
+        # Test with the direct file driver on Linux. This setting does not
+        # affect the HDF5 bundled in Linux wheels - that is built into a Docker
+        # image from a separate repository.
+        ENABLE_DIRECT_VFD="--enable-direct-vfd"
     fi
 
     if [ -f $HDF5_DIR/lib/$lib_name ]; then
@@ -59,7 +63,13 @@ else
             patch_hdf5 "$PROJECT_ROOT"
         fi
 
-        ./configure --prefix="$HDF5_DIR" $ZLIB_ARG $EXTRA_MPI_FLAGS $BUILD_MODE $HOST_ARG --enable-tests=no
+        ./configure --prefix="$HDF5_DIR" \
+            ${ZLIB_ARG} \
+            ${EXTRA_MPI_FLAGS} \
+            ${BUILD_MODE} \
+            ${ENABLE_DIRECT_VFD} \
+            ${HOST_ARG} \
+            --enable-tests=no
 
         if [[ "$OSTYPE" == "darwin"* && "$CIBW_ARCHS_MACOS" = "arm64"  ]]; then
             build_h5detect

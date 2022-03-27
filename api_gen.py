@@ -40,6 +40,7 @@ class Line:
                     acquire the GIL (e.g. using 'with gil' in Cython).
         mpi:        Bool indicating if MPI required
         ros3:       Bool indicating if ROS3 required
+        direct_vfd: Bool indicating if DIRECT_VFD required
         version:    None or a minimum-version tuple
         code:       String with function return type
         fname:      String with function name
@@ -50,7 +51,8 @@ class Line:
 
         .nogil:     ""
         .mpi:       True
-        .ros3:      True
+        .ros3:      False
+        .direct_vfd: False
         .version:   (1, 8, 12)
         .code:      "int"
         .fname:     "foo"
@@ -60,6 +62,7 @@ class Line:
 
     PATTERN = re.compile("""(?P<mpi>(MPI)[ ]+)?
                             (?P<ros3>(ROS3)[ ]+)?
+                            (?P<direct_vfd>(DIRECT_VFD)[ ]+)?
                             (?P<min_version>([0-9]+\.[0-9]+\.[0-9]+))?
                             (-(?P<max_version>([0-9]+\.[0-9]+\.[0-9]+)))?
                             ([ ]+)?
@@ -91,6 +94,7 @@ class Line:
         self.nogil = "nogil" if parts['nogil'] else ""
         self.mpi = parts['mpi'] is not None
         self.ros3 = parts['ros3'] is not None
+        self.direct_vfd = parts['direct_vfd'] is not None
         self.min_version = parts['min_version']
         if self.min_version is not None:
             self.min_version = tuple(int(x) for x in self.min_version.split('.'))
@@ -219,6 +223,9 @@ class LineProcessor:
 
         if self.line.ros3:
             block = wrapif('ROS3', block)
+
+        if self.line.direct_vfd:
+            block = wrapif('DIRECT_VFD', block)
 
         if self.line.min_version is not None and self.line.max_version is not None:
             block = wrapif('HDF5_VERSION >= {0.min_version} and HDF5_VERSION <= {0.max_version}'.format(self.line), block)

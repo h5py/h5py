@@ -21,7 +21,9 @@
 # for example, functions from "hdf5.h" are under the "hdf5" declaration.
 #
 # Function lines are C function signatures, optionally preceded by:
-#   MPI     If present, function requires an MPI-aware build of h5py
+#   MPI     If present, function requires an MPI-aware build of hdf5
+#   ROS3    If present, function requires a ROS3 enabled build of hdf5
+#   DIRECT_VFD If present, function requires an DIRECT VFD enabled build of hdf5
 #   ERROR   Explicit error checks are needed (HDF5 does not use error stack)
 #   X.Y.Z   Minimum version of HDF5 required for this function
 #
@@ -301,6 +303,8 @@ hdf5:
   herr_t    H5Pget_family_offset ( hid_t fapl_id, hsize_t *offset)
   ROS3 herr_t    H5Pget_fapl_ros3(hid_t fapl_id, H5FD_ros3_fapl_t *fa_out);
   ROS3 herr_t    H5Pset_fapl_ros3(hid_t fapl_id, H5FD_ros3_fapl_t *fa);
+  DIRECT_VFD 1.8.0 herr_t H5Pget_fapl_direct(hid_t fapl_id, size_t *boundary, size_t *block_size, size_t *cbuf_size);
+  DIRECT_VFD 1.8.0 herr_t H5Pset_fapl_direct(hid_t fapl_id, size_t alignment, size_t block_size, size_t cbuf_size);
   herr_t    H5Pset_fapl_log(hid_t fapl_id, char *logfile, unsigned int flags, size_t buf_size)
   herr_t    H5Pset_fapl_multi(hid_t fapl_id, H5FD_mem_t *memb_map, hid_t *memb_fapl, const char * const *memb_name, haddr_t *memb_addr, hbool_t relax)
   herr_t    H5Pset_cache(hid_t plist_id, int mdc_nelmts, int rdcc_nelmts,  size_t rdcc_nbytes, double rdcc_w0)
