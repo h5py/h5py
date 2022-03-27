@@ -10,7 +10,7 @@ if [ -z ${HDF5_DIR+x} ]; then
 else
     echo "Using downloaded HDF5"
 
-    if [[ $(HDF5_MPI) != "ON" ]]; then
+    if [[ ${HDF5_MPI} != "ON" ]]; then
         echo "Building serial"
     else
         echo "Building with MPI"
