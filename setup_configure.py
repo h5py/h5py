@@ -91,7 +91,7 @@ class BuildConfig:
             ros3 = hdf5_ros3 == '1'
         else:
             ros3 = h5_wrapper.has_ros3_support()
-        
+
         if hdf5_direct_vfd:
             direct_vfd = hdf5_direct_vfd == '1'
         else:
