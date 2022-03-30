@@ -9,7 +9,7 @@ function set_compiler_vars() {
 
 
 function build_zlib() {
-    ZLIB_VERSION="1.2.11"
+    ZLIB_VERSION="1.2.12"
 
     pushd /tmp
     curl -sLO https://zlib.net/zlib-$ZLIB_VERSION.tar.gz
