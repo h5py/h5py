@@ -19,11 +19,8 @@ import api_gen
 from setup_configure import BuildConfig
 
 
-src_path = build_path = op.abspath(op.dirname(__file__))
-
-
-def localpath(*args, root=src_path):
-    return op.abspath(op.join(root, *args))
+def localpath(*args):
+    return op.abspath(op.join(op.dirname(__file__), *args))
 
 
 MODULES = ['defs', '_errors', '_objects', '_proxy', 'h5fd', 'h5z',
@@ -117,17 +114,6 @@ class h5py_build_ext(build_ext):
 
         return [make_extension(m) for m in MODULES]
 
-    def finalize_options(self):
-        retval = super().finalize_options()
-
-        global build_path
-        if (self.build_lib is not None and op.exists(self.build_lib) and
-                not self.inplace):
-            build_path = op.abspath(self.build_lib)
-            print("Updated build directory to: {}".format(build_path))
-
-        return retval
-
     def run(self):
         """ Distutils calls this method to run the command """
 
@@ -151,6 +137,7 @@ class h5py_build_ext(build_ext):
 
         defs_file = localpath('h5py', 'defs.pyx')
         func_file = localpath('h5py', 'api_functions.txt')
+        config_file = localpath('h5py', 'config.pxi')
 
         # Rebuild low-level defs if missing or stale
         if not op.isfile(defs_file) or os.stat(func_file).st_mtime > os.stat(defs_file).st_mtime:
@@ -172,8 +159,7 @@ DEF COMPLEX256_SUPPORT = {complex256_support}
 DEF NUMPY_BUILD_VERSION = '{numpy.__version__}'
 DEF CYTHON_BUILD_VERSION = '{cython_version}'
 """
-        write_if_changed(localpath('h5py', 'config.pxi'), s)
-        write_if_changed(localpath('h5py', 'config.pxi', root=build_path), s)
+        write_if_changed(config_file, s)
 
         # Run Cython
         print("Executing cythonize()")
