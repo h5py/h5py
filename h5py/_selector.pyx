@@ -177,11 +177,11 @@ cdef class Selector:
                     a = np.asarray(a, dtype=np.intp)
                 else:
                     a = np.asarray(a)
+                if a.ndim != 1:
+                    raise TypeError("Only 1D arrays allowed for fancy indexing")
                 # Fix for issue #1847, not sure this is optimal but it works
                 if np.issubdtype(a.dtype, np.bool):
                     a = a.nonzero()[0]
-                if a.ndim != 1:
-                    raise TypeError("Only 1D arrays allowed for fancy indexing")
                 if not np.issubdtype(a.dtype, np.integer):
                     raise TypeError("Indexing arrays must have integer dtypes")
                 if array_ix != -1:
