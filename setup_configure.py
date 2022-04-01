@@ -70,16 +70,32 @@ class BuildConfig:
         h5_inc, h5_lib, h5_macros = cls._find_hdf5_compiler_settings(mpi)
 
         h5_version_s = os.environ.get('HDF5_VERSION')
+        h5py_ros3 = os.environ.get('H5PY_ROS3')
+        h5py_direct_vfd = os.environ.get('H5PY_DIRECT_VFD')
+
+        if h5_version_s and not mpi and h5py_ros3 and h5py_direct_vfd:
+            # if we know config, don't use wrapper, it may not be supported
+            return cls(
+                h5_inc, h5_lib, h5_macros, validate_version(h5_version_s), mpi,
+                h5py_ros3 == '1', h5py_direct_vfd == '1')
+
+        h5_wrapper = HDF5LibWrapper(h5_lib)
         if h5_version_s:
             h5_version = validate_version(h5_version_s)
-            h5_wrapper = HDF5LibWrapper(h5_lib)
         else:
-            h5_wrapper = HDF5LibWrapper(h5_lib)
             h5_version = h5_wrapper.autodetect_version()
             if mpi and not h5_wrapper.has_mpi_support():
                 raise RuntimeError("MPI support not detected")
-        ros3 = h5_wrapper.has_ros3_support()
-        direct_vfd = h5_wrapper.has_direct_vfd_support()
+
+        if h5py_ros3:
+            ros3 = h5py_ros3 == '1'
+        else:
+            ros3 = h5_wrapper.has_ros3_support()
+
+        if h5py_direct_vfd:
+            direct_vfd = h5py_direct_vfd == '1'
+        else:
+            direct_vfd = h5_wrapper.has_direct_vfd_support()
 
         return cls(h5_inc, h5_lib, h5_macros, h5_version, mpi, ros3, direct_vfd)
 
