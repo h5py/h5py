@@ -1,4 +1,4 @@
 Bug fixes
 ---------
 
-* Fixed issue #1847: fancy indexing with boolian arrays was broken.
+* Fixed issue #1847: fancy indexing with boolean arrays was broken.
