@@ -181,7 +181,7 @@ cdef class Selector:
                     raise TypeError("Only 1D arrays allowed for fancy indexing")
                 if a.dtype.kind == 'b':
                     if a.size != l:
-                        raise IndexError("boolean index did not match indexed array")
+                        raise TypeError("boolean index did not match indexed array")
                     a = a.nonzero()[0]
                 if not np.issubdtype(a.dtype, np.integer):
                     raise TypeError("Indexing arrays must have integer dtypes")
