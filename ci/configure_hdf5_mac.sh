@@ -10,6 +10,7 @@ function set_compiler_vars() {
 
 function build_zlib() {
     ZLIB_VERSION="1.2.12"
+    # export needed to fix 1.2.12. Next release won't need the export (madler/zlib#615)
     export cc=$CC
 
     pushd /tmp
