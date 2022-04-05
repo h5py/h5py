@@ -51,16 +51,30 @@ jobs:
 
 - job: 'macos_wheels'
   pool:
-    vmImage: macOS-10.15
+    vmImage: macOS-11
   variables:
     MACOSX_DEPLOYMENT_TARGET: 10.9
     HDF5_VERSION: 1.12.1
+    H5PY_ROS3: '0'
+    H5PY_DIRECT_VFD: '0'
     HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
-    CIBW_BUILD: cp3{7,8,9,10}-macosx_x86_64
+    CIBW_BUILD_VERBOSITY_MACOS: 3
+    CIBW_ARCHS_MACOS: $(arch)
+    CIBW_BUILD: cp3{7,8,9,10}-macosx_*
+    CIBW_ENVIRONMENT_MACOS: LD_LIBRARY_PATH="$(HDF5_CACHE_DIR)/$(HDF5_VERSION)/lib:${LD_LIBRARY_PATH}" PKG_CONFIG_PATH="$(HDF5_CACHE_DIR)/$(HDF5_VERSION)/lib/pkgconfig:${PKG_CONFIG_PATH}"
+    CIBW_REPAIR_WHEEL_COMMAND_MACOS: >
+      DYLD_FALLBACK_LIBRARY_PATH=$(HDF5_CACHE_DIR)/$(HDF5_VERSION)/lib delocate-listdeps {wheel} &&
+      DYLD_FALLBACK_LIBRARY_PATH=$(HDF5_CACHE_DIR)/$(HDF5_VERSION)/lib delocate-wheel --require-archs {delocate_archs} -w {dest_dir} {wheel}
+  strategy:
+    matrix:
+      x86_64:
+        arch: 'x86_64'
+      arm64:
+        arch: 'arm64'
   steps:
     - template: ci/azure-pipelines-wheels.yml
       parameters:
-        platform: macos
+        platform: macos_$(arch)
 
 - job: 'ubuntu1604'
   pool:
@@ -319,4 +333,4 @@ jobs:
   steps:
     - template: ci/azure-pipelines-test-wheels.yml
       parameters:
-        platform: macos
+        platform: macos_x86_64

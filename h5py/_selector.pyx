@@ -10,7 +10,7 @@ but there is no equivalent to this when selecting data in HDF5. So we store a
 separate boolean ('scalar') for each dimension to distinguish these cases.
 """
 from numpy cimport (
-    ndarray, npy_intp, PyArray_SimpleNew, PyArray_DATA, import_array,
+    ndarray, npy_intp, PyArray_ZEROS, PyArray_DATA, import_array,
     PyArray_IsNativeByteOrder,
 )
 from cpython cimport PyNumber_Index
@@ -333,7 +333,7 @@ cdef class Reader:
                     arr_shape[arr_rank] = mshape[i]
                     arr_rank += 1
 
-            arr = PyArray_SimpleNew(arr_rank, arr_shape, self.np_typenum)
+            arr = PyArray_ZEROS(arr_rank, arr_shape, self.np_typenum, 0)
             if not self.native_byteorder:
                 arr = arr.newbyteorder()
         finally:
