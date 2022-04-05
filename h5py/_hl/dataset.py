@@ -569,7 +569,7 @@ class Dataset(HLObject):
     @with_phil
     def fillvalue(self):
         """Fill value for this dataset (0 by default)"""
-        arr = numpy.ndarray((1,), dtype=self.dtype)
+        arr = numpy.zeros((1,), dtype=self.dtype)
         self._dcpl.get_fill_value(arr)
         return arr[0]
 
@@ -749,7 +749,7 @@ class Dataset(HLObject):
             if mshape is None:
                 # 0D with no data (NULL or deselected SCALAR)
                 return Empty(new_dtype)
-            out = numpy.empty(mshape, dtype=new_dtype)
+            out = numpy.zeros(mshape, dtype=new_dtype)
             if out.size == 0:
                 return out
 
@@ -764,7 +764,7 @@ class Dataset(HLObject):
             # Check 'is Ellipsis' to avoid equality comparison with an array:
             # array equality returns an array, not a boolean.
             if args == () or (len(args) == 1 and args[0] is Ellipsis):
-                return numpy.empty(self.shape, dtype=new_dtype)
+                return numpy.zeros(self.shape, dtype=new_dtype)
 
         # === Scalar dataspaces =================
 
@@ -772,9 +772,9 @@ class Dataset(HLObject):
             fspace = self.id.get_space()
             selection = sel2.select_read(fspace, args)
             if selection.mshape is None:
-                arr = numpy.ndarray((), dtype=new_dtype)
+                arr = numpy.zeros((), dtype=new_dtype)
             else:
-                arr = numpy.ndarray(selection.mshape, dtype=new_dtype)
+                arr = numpy.zeros(selection.mshape, dtype=new_dtype)
             for mspace, fspace in selection:
                 self.id.read(mspace, fspace, arr, mtype)
             if selection.mshape is None:
@@ -787,9 +787,9 @@ class Dataset(HLObject):
         selection = sel.select(self.shape, args, dataset=self)
 
         if selection.nselect == 0:
-            return numpy.ndarray(selection.array_shape, dtype=new_dtype)
+            return numpy.zeros(selection.array_shape, dtype=new_dtype)
 
-        arr = numpy.ndarray(selection.array_shape, new_dtype, order='C')
+        arr = numpy.zeros(selection.array_shape, new_dtype, order='C')
 
         # Perform the actual read
         mspace = h5s.create_simple(selection.mshape)
@@ -1010,7 +1010,7 @@ class Dataset(HLObject):
         THIS MEANS DATASETS ARE INTERCHANGEABLE WITH ARRAYS.  For one thing,
         you have to read the whole dataset every time this method is called.
         """
-        arr = numpy.empty(self.shape, dtype=self.dtype if dtype is None else dtype)
+        arr = numpy.zeros(self.shape, dtype=self.dtype if dtype is None else dtype)
 
         # Special case for (0,)*-shape datasets
         if numpy.product(self.shape, dtype=numpy.ulonglong) == 0:

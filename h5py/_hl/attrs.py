@@ -73,7 +73,7 @@ class AttributeManager(base.MutableMappingHDF5, base.CommonStateObject):
             shape = attr.shape + subshape   # (5, 3)
             dtype = subdtype                # 'f'
 
-        arr = numpy.ndarray(shape, dtype=dtype, order='C')
+        arr = numpy.zeros(shape, dtype=dtype, order='C')
         attr.read(arr, mtype=htype)
 
         string_info = h5t.check_string_dtype(dtype)
