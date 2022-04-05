@@ -599,7 +599,7 @@ def test_read_no_fill_value(writable_file):
         writable_file.id, b'a', h5py.h5t.IEEE_F64LE, h5py.h5s.create_simple((5,)), dcpl
     ))
     np.testing.assert_array_equal(ds[:3], np.zeros(3, np.float64))
-    
+
 
 class TestBoolIndex(TestCase):
     """
