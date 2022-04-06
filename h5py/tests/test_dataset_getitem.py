@@ -599,3 +599,22 @@ def test_read_no_fill_value(writable_file):
         writable_file.id, b'a', h5py.h5t.IEEE_F64LE, h5py.h5s.create_simple((5,)), dcpl
     ))
     np.testing.assert_array_equal(ds[:3], np.zeros(3, np.float64))
+
+
+class TestBoolIndex(TestCase):
+    """
+    Tests for indexing with Boolean arrays
+    """
+    def setUp(self):
+        super().setUp()
+        self.arr = np.arange(9).reshape(3,-1)
+        self.dset = self.f.create_dataset('x', data=self.arr)
+
+    def test_select_first_axis(self):
+        sel = np.s_[[False, True, False],:]
+        self.assertNumpyBehavior(self.dset, self.arr, sel)
+
+    def test_wrong_size(self):
+        sel = np.s_[[False, True, False, False],:]
+        with self.assertRaises(TypeError):
+            self.dset[sel]
