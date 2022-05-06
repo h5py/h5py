@@ -249,8 +249,14 @@ class Group(HLObject, MutableMappingHDF5):
             if isinstance(shape, int):
                 shape = (shape,)
 
-            dsid = dataset.open_dset(self, self._e(name), **kwds)
-            dset = dataset.Dataset(dsid)
+            try:
+                dsid = dataset.open_dset(self, self._e(name), **kwds)
+                dset = dataset.Dataset(dsid)
+            except KeyError:
+                dset = self[name]
+                raise TypeError("Incompatible object (%s) already exists" % dset.__class__.__name__)
+            except:
+                raise
 
             if not shape == dset.shape:
                 raise TypeError("Shapes do not match (existing %s vs new %s)" % (dset.shape, shape))
