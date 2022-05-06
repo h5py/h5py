@@ -37,7 +37,8 @@ def make_new_dset(parent, shape=None, dtype=None, data=None, name=None,
                   chunks=None, compression=None, shuffle=None,
                   fletcher32=None, maxshape=None, compression_opts=None,
                   fillvalue=None, scaleoffset=None, track_times=False,
-                  external=None, track_order=None, dcpl=None,
+                  external=None, track_order=None, dcpl=None, dapl=None,
+                  efile_prefix=None, virtual_prefix=None,
                   allow_unknown_filter=False):
     """ Return a new low-level dataset identifier """
 
@@ -137,19 +138,45 @@ def make_new_dset(parent, shape=None, dtype=None, data=None, name=None,
     if maxshape is not None:
         maxshape = tuple(m if m is not None else h5s.UNLIMITED for m in maxshape)
 
+    if efile_prefix is not None or virtual_prefix is not None:
+        dapl = dapl or h5p.create(h5p.DATASET_ACCESS)
+
+    if efile_prefix is not None:
+        dapl.set_efile_prefix(efile_prefix)
+
+    if virtual_prefix is not None:
+        dapl.set_virtual_prefix(virtual_prefix)
+
     if isinstance(data, Empty):
         sid = h5s.create(h5s.NULL)
     else:
         sid = h5s.create_simple(shape, maxshape)
 
 
-    dset_id = h5d.create(parent.id, name, tid, sid, dcpl=dcpl)
+    dset_id = h5d.create(parent.id, name, tid, sid, dcpl=dcpl, dapl=dapl)
 
     if (data is not None) and (not isinstance(data, Empty)):
         dset_id.write(h5s.ALL, h5s.ALL, data)
 
     return dset_id
 
+def open_dset(parent, name, dapl=None, efile_prefix=None, virtual_prefix=None, **kwds):
+    """ Return an existing low-level dataset identifier """
+
+    if efile_prefix is not None or virtual_prefix is not None:
+        dapl = dapl or h5p.create(h5p.DATASET_ACCESS)
+    else:
+        dapl = dapl or None
+
+    if efile_prefix is not None:
+        dapl.set_efile_prefix(efile_prefix)
+
+    if virtual_prefix is not None:
+        dapl.set_efile_prefix(virtual_prefix)
+
+    dset_id = h5d.open(parent.id, name, dapl=dapl)
+
+    return dset_id
 
 class AstypeWrapper:
     """Wrapper to convert data on reading from a dataset.
