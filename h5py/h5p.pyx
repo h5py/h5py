@@ -1588,6 +1588,7 @@ cdef class PropLAID(PropInstanceID):
 
         size = H5Pget_elink_prefix(self.id, NULL, 0)
         buf = <char*>emalloc(size+1)
+        buf[0] = 0
         try:
             H5Pget_elink_prefix(self.id, buf, size+1)
             pstr = buf
@@ -1734,9 +1735,11 @@ cdef class PropDAID(PropInstanceID):
     """ Dataset access property list """
 
     def __cinit__(self, *args):
+        self._efile_prefix_buf = NULL
         self._virtual_prefix_buf = NULL
 
     def __dealloc__(self):
+        efree(self._efile_prefix_buf)
         efree(self._virtual_prefix_buf)
 
     @with_phil
@@ -1765,6 +1768,46 @@ cdef class PropDAID(PropInstanceID):
 
         H5Pget_chunk_cache(self.id, &rdcc_nslots, &rdcc_nbytes, &rdcc_w0 )
         return (rdcc_nslots,rdcc_nbytes,rdcc_w0)
+
+    if HDF5_VERSION >= (1, 8, 7):
+        @with_phil
+        def get_efile_prefix(self):
+            """() => STR
+
+            Get the filesystem path prefix configured for accessing external
+            datasets.
+            """
+            cdef char* cprefix = NULL
+            cdef ssize_t size
+
+            size = H5Pget_efile_prefix(self.id, NULL, 0)
+            cprefix = <char*>emalloc(size+1)
+            cprefix[0] = 0
+            try:
+                # TODO check return size
+                H5Pget_efile_prefix(self.id, cprefix, <size_t>size+1)
+                prefix = bytes(cprefix)
+            finally:
+                efree(cprefix)
+
+            return prefix
+
+        @with_phil
+        def set_efile_prefix(self, char* prefix):
+            """(STR prefix)
+
+            Set a filesystem path prefix for looking up external datasets.
+            This is prepended to all filenames specified in the external dataset.
+            """
+            cdef size_t size
+
+            # HDF5 requires that we hang on to this buffer
+            efree(self._efile_prefix_buf)
+            size = strlen(prefix)
+            self._efile_prefix_buf = <char*>emalloc(size+1)
+            strcpy(self._efile_prefix_buf, prefix)
+
+            H5Pset_efile_prefix(self.id, self._efile_prefix_buf)
 
     # === Virtual dataset functions ===========================================
     IF HDF5_VERSION >= VDS_MIN_HDF5_VERSION:
@@ -1845,6 +1888,7 @@ cdef class PropDAID(PropInstanceID):
 
             size = H5Pget_virtual_prefix(self.id, NULL, 0)
             cprefix = <char*>emalloc(size+1)
+            cprefix[0] = 0
             try:
                 # TODO check return size
                 H5Pget_virtual_prefix(self.id, cprefix, <size_t>size+1)
