@@ -69,6 +69,31 @@ class TestDA(TestCase):
         self.assertEqual((nslots, nbytes, w0),
                          dalist.get_chunk_cache())
 
+    def test_efile_prefix(self):
+        '''test get/set efile prefix '''
+        dalist = h5p.create(h5p.DATASET_ACCESS)
+        self.assertEqual(dalist.get_efile_prefix().decode(), '')
+
+        efile_prefix = "path/to/external/dataset"
+        dalist.set_efile_prefix(efile_prefix.encode('utf-8'))
+        self.assertEqual(dalist.get_efile_prefix().decode(),
+                         efile_prefix)
+
+        efile_prefix = "${ORIGIN}"
+        dalist.set_efile_prefix(efile_prefix.encode('utf-8'))
+        self.assertEqual(dalist.get_efile_prefix().decode(),
+                         efile_prefix)
+
+    def test_virtual_prefix(self):
+        '''test get/set virtual prefix '''
+        dalist = h5p.create(h5p.DATASET_ACCESS)
+        self.assertEqual(dalist.get_virtual_prefix().decode(), '')
+
+        virtual_prefix = "path/to/virtual/dataset"
+        dalist.set_virtual_prefix(virtual_prefix.encode('utf-8'))
+        self.assertEqual(dalist.get_virtual_prefix().decode(),
+                         virtual_prefix)
+
 
 class TestFA(TestCase):
     '''

@@ -29,6 +29,7 @@ from h5py import File, Group, Dataset
 from h5py._hl.base import is_empty_dataspace
 from h5py import h5f, h5t
 from h5py.h5py_warnings import H5pyDeprecationWarning
+from h5py import version
 import h5py
 import h5py._hl.selections as sel
 
@@ -769,7 +770,7 @@ class TestExternal(BaseDataset):
         # create a dataset in an external file and set it
         ext_file = self.mktemp()
         external = [(ext_file, 0, h5f.UNLIMITED)]
-        dset = self.f.create_dataset('foo', shape, dtype=testdata.dtype, external=external, efile_prefix="\${ORIGIN}")
+        dset = self.f.create_dataset('foo', shape, dtype=testdata.dtype, external=external, efile_prefix="${ORIGIN}")
         dset[...] = testdata
 
         assert dset.external is not None
@@ -779,8 +780,11 @@ class TestExternal(BaseDataset):
             contents = fid.read()
         assert contents == testdata.tobytes()
 
-        # check efile_prefix
-        assert dset.id.get_access_plist().get_efile_prefix().decode() == "\${ORIGIN}"
+        # check efile_prefix, only for 1.10.0 due to HDFFV-9716
+        if h5py.version.hdf5_version_tuple >= (1,10,0):
+            efile_prefix = pathlib.Path(dset.id.get_access_plist().get_efile_prefix().decode()).as_posix()
+            parent = pathlib.Path(self.f.filename).parent.as_posix()
+            assert efile_prefix == parent
 
     def test_name_str(self):
         """ External argument may be a file name str only """

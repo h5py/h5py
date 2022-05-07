@@ -1769,7 +1769,7 @@ cdef class PropDAID(PropInstanceID):
         H5Pget_chunk_cache(self.id, &rdcc_nslots, &rdcc_nbytes, &rdcc_w0 )
         return (rdcc_nslots,rdcc_nbytes,rdcc_w0)
 
-    if HDF5_VERSION >= (1, 8, 7):
+    if HDF5_VERSION >= (1, 8, 17):
         @with_phil
         def get_efile_prefix(self):
             """() => STR
