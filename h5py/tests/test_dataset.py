@@ -769,7 +769,7 @@ class TestExternal(BaseDataset):
         # create a dataset in an external file and set it
         ext_file = self.mktemp()
         external = [(ext_file, 0, h5f.UNLIMITED)]
-        dset = self.f.create_dataset('foo', shape, dtype=testdata.dtype, external=external)
+        dset = self.f.create_dataset('foo', shape, dtype=testdata.dtype, external=external, efile_prefix="\${ORIGIN}")
         dset[...] = testdata
 
         assert dset.external is not None
@@ -778,6 +778,9 @@ class TestExternal(BaseDataset):
         with open(ext_file, 'rb') as fid:
             contents = fid.read()
         assert contents == testdata.tobytes()
+
+        # check efile_prefix
+        assert dset.id.get_access_plist().get_efile_prefix().decode() == "\${ORIGIN}"
 
     def test_name_str(self):
         """ External argument may be a file name str only """
