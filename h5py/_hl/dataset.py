@@ -172,7 +172,7 @@ def open_dset(parent, name, dapl=None, efile_prefix=None, virtual_prefix=None, *
         dapl.set_efile_prefix(efile_prefix)
 
     if virtual_prefix is not None:
-        dapl.set_efile_prefix(virtual_prefix)
+        dapl.set_virtual_prefix(virtual_prefix)
 
     dset_id = h5d.open(parent.id, name, dapl=dapl)
 

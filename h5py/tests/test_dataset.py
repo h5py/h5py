@@ -1869,6 +1869,9 @@ class TestVirtualPrefix(BaseDataset):
     @ut.skipIf(version.hdf5_version_tuple < (1, 10, 2),
                reason = "Virtual prefix does not exist before HDF5 version 1.10.2")
     def test_virtual_prefix_require(self):
-        dset = self.f.require_dataset('foo', (10, 3), 'f', virtual_prefix = "/path/to/virtual")
+        virtual_prefix = "/path/to/virtual"
+        dset = self.f.require_dataset('foo', (10, 3), 'f', virtual_prefix = virtual_prefix)
+        virtual_prefix_readback = pathlib.Path(dset.id.get_access_plist().get_virtual_prefix().decode()).as_posix()
+        self.assertEqual(virtual_prefix, virtual_prefix_readback)
         self.assertIsInstance(dset, Dataset)
         self.assertEqual(dset.shape, (10, 3))
