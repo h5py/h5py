@@ -771,6 +771,7 @@ class TestExternal(BaseDataset):
         # create a dataset in an external file and set it
         ext_file = self.mktemp()
         external = [(ext_file, 0, h5f.UNLIMITED)]
+        # ${ORIGIN} should be replaced by the parent dir of the HDF5 file
         dset = self.f.create_dataset('foo', shape, dtype=testdata.dtype, external=external, efile_prefix="${ORIGIN}")
         dset[...] = testdata
 
@@ -795,6 +796,7 @@ class TestExternal(BaseDataset):
 
         # create a dataset in an external file and set it
         ext_file = self.mktemp()
+        # set only the basename, let the efile_prefix do the rest
         external = [(os.path.basename(ext_file), 0, h5f.UNLIMITED)]
         dset = self.f.create_dataset('foo', shape, dtype=testdata.dtype, external=external, efile_prefix=os.path.dirname(ext_file))
         dset[...] = testdata
@@ -809,7 +811,8 @@ class TestExternal(BaseDataset):
         # check efile_prefix, only for 1.10.0 due to HDFFV-9716
         if h5py.version.hdf5_version_tuple >= (1,10,0):
             efile_prefix = pathlib.Path(dset.id.get_access_plist().get_efile_prefix().decode()).as_posix()
-            assert efile_prefix == os.path.dirname(ext_file)
+            parent = pathlib.Path(ext_file).parent.as_posix()
+            assert efile_prefix == parent
 
         dset2 = self.f.require_dataset('foo', shape, testdata.dtype, efile_prefix=os.path.dirname(ext_file))
         assert dset2.external is not None
@@ -1863,6 +1866,8 @@ class TestVirtualPrefix(BaseDataset):
         virtual_prefix_readback = pathlib.Path(dset.id.get_access_plist().get_virtual_prefix().decode()).as_posix()
         assert virtual_prefix_readback == virtual_prefix
 
+    @ut.skipIf(version.hdf5_version_tuple < (1, 10, 2),
+               reason = "Virtual prefix does not exist before HDF5 version 1.10.2")
     def test_virtual_prefix_require(self):
         dset = self.f.require_dataset('foo', (10, 3), 'f', virtual_prefix = "/path/to/virtual")
         self.assertIsInstance(dset, Dataset)
