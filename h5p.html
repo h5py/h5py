@@ -360,6 +360,12 @@ disk when the file is closed.</p></li>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="h5py.h5p.PropFAID.get_fapl_direct">
+<span class="sig-name descname"><span class="pre">get_fapl_direct</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropFAID.get_fapl_direct" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve the <code class="xref py py-data docutils literal notranslate"><span class="pre">DIRECT</span></code> VFD config</p>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropFAID.get_fapl_family">
 <span class="sig-name descname"><span class="pre">get_fapl_family</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">TUPLE</span> <span class="pre">info</span></span></span><a class="headerlink" href="#h5py.h5p.PropFAID.get_fapl_family" title="Permalink to this definition">¶</a></dt>
 <dd><p>Determine family driver settings. Tuple values are:</p>
@@ -444,6 +450,21 @@ on-disk file, which is updated when the file is closed.
 Set to False for a purely in-memory file.</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="h5py.h5p.PropFAID.set_fapl_direct">
+<span class="sig-name descname"><span class="pre">set_fapl_direct</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size_t</span> <span class="pre">alignment</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size_t</span> <span class="pre">block_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size_t</span> <span class="pre">cbuf_size</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropFAID.set_fapl_direct" title="Permalink to this definition">¶</a></dt>
+<dd><p>Select the “direct” driver (h5fd.DIRECT).</p>
+<dl class="simple">
+<dt>Parameters:</dt><dd><p>hid_t fapl_id       <code class="xref py py-data docutils literal notranslate"><span class="pre">IN</span></code>: <a class="reference internal" href="#h5py.h5p.PropFAID" title="h5py.h5p.PropFAID"><code class="xref py py-class docutils literal notranslate"><span class="pre">File</span> <span class="pre">access</span> <span class="pre">property</span> <span class="pre">list</span></code></a> identifier
+size_t alignment    <code class="xref py py-data docutils literal notranslate"><span class="pre">IN</span></code>: Required memory alignment boundary
+size_t block_size   <code class="xref py py-data docutils literal notranslate"><span class="pre">IN</span></code>: File system block size
+size_t cbuf_size    <code class="xref py py-data docutils literal notranslate"><span class="pre">IN</span></code>: Copy buffer size</p>
+</dd>
+</dl>
+<p>Properites with value of 0 indicate that the HDF5 library should
+choose the value.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -1217,7 +1238,7 @@ virtual dataset’s creation property list.</p>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2014, Andrew Collette and contributors.
-      Last updated on Apr 06, 2022.
+      Last updated on May 10, 2022.
       Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.5.0.
     </div>
   </body>
