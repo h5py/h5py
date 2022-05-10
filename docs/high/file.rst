@@ -395,15 +395,17 @@ Reference
     HDF5 name of the root group, "``/``". To access the on-disk name, use
     :attr:`File.filename`.
 
-.. class:: File(name, mode=None, driver=None, libver=None, \
-    userblock_size=None, swmr=False, rdcc_nslots=None, rdcc_nbytes=None, \
-    rdcc_w0=None, track_order=None, fs_strategy=None, fs_persist=False, \
-    fs_threshold=1, **kwds)
+.. class:: File(name, mode='r', driver=None, libver=None, userblock_size=None, \
+    swmr=False, rdcc_nslots=None, rdcc_nbytes=None, rdcc_w0=None, \
+    track_order=None, fs_strategy=None, fs_persist=False, fs_threshold=1, \
+    fs_page_size=None, page_buf_size=None, min_meta_keep=0, min_raw_keep=0, \
+    locking=None, alignment_threshold=1, alignment_interval=1, **kwds)
 
     Open or create a new file.
 
-    Note that in addition to the File-specific methods and properties listed
-    below, File objects inherit the full interface of :class:`Group`.
+    Note that in addition to the :class:`File`-specific methods and properties
+    listed below, :class:`File` objects inherit the full interface of
+    :class:`Group`.
 
     :param name:    Name of file (`bytes` or `str`), or an instance of
                     :class:`h5f.FileID` to bind to an existing
@@ -436,6 +438,20 @@ Reference
     :param fs_threshold: The smallest free-space section size that the free
             space manager will track. Only allowed when creating a new file.
             The default is 1.
+    :param page_buf_size: Page buffer size in bytes. Only allowed for HDF5 files
+            created with fs_strategy="page". Must be a power of two value and
+            greater or equal than the file space page size when creating the
+            file. It is not used by default.
+    :param min_meta_keep: Minimum percentage of metadata to keep in the page
+            buffer before allowing pages containing metadata to be evicted.
+            Applicable only if ``page_buf_size`` is set. Default value is zero.
+    :param min_raw_keep: Minimum percentage of raw data to keep in the page
+            buffer before allowing pages containing raw data to be evicted.
+            Applicable only if ``page_buf_size`` is set. Default value is zero.
+    :param locking: The file locking behavior. One of False (or "false"), True
+            (or "true"), "best-effort", or None. Warning: The
+            HDF5_USE_FILE_LOCKING environment variable can override this
+            parameter. Only available with HDF5 >= 1.12.1 or 1.10.x >= 1.10.7.
     :param alignment_threshold: Together with ``alignment_interval``, this
             property ensures that any file object greater than or equal
             in size to the alignement threshold (in bytes) will be
