@@ -7,13 +7,13 @@ import h5py
 import numpy as np
 
 # create files: 7 images each, (120,130) pixels
-for i in range(1,6):
-    data = np.random.randint(0,1<<16,(7,120,130) )
-    with h5py.File(str(i)+".h5","w") as h:
-        h["/data"]=data
-
-
 files = ['1.h5', '2.h5', '3.h5', '4.h5', '5.h5']
+
+for filename in files:
+    data = np.random.randint(0, 1<<16, (7,120,130))
+    with h5py.File(filename, "w") as h:
+        h["/data"] = data
+
 entry_key = 'data' # where the data is inside of the source files.
 sh = h5py.File(files[0], 'r')[entry_key].shape # get the first ones shape.
 
