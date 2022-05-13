@@ -292,9 +292,16 @@ Reference
 
     .. method:: copy(source, dest, name=None, shallow=False, expand_soft=False, expand_external=False, expand_refs=False, without_attrs=False)
 
-        Copy an object or group.  The source and destination need not be in
-        the same file.  If the source is a Group object, by default all objects
-        within that group will be copied recursively.
+        Copy an object or group.  The source can be a path, Group, Dataset, or
+        Datatype object.  The destination can be either a path or a Group
+        object.  The source and destination need not be in the same file.
+
+        If the source is a Group object, by default all objects within that
+        group will be copied recursively.
+
+        When the destination is a Group object, by default the target will be
+        created in that group with its current name (basename of obj.name). You
+        can override that by setting "name" to a string.
 
         :param source:  What to copy.  May be a path in the file or a Group/Dataset object.
         :param dest:    Where to copy it.  May be a path or Group object.
