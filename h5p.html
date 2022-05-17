@@ -877,6 +877,13 @@ docs for element definitions.  Return is a 3-tuple with entries:</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="h5py.h5p.PropDAID.get_efile_prefix">
+<span class="sig-name descname"><span class="pre">get_efile_prefix</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">STR</span></span></span><a class="headerlink" href="#h5py.h5p.PropDAID.get_efile_prefix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the filesystem path prefix configured for accessing external
+datasets.</p>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropDAID.get_virtual_prefix">
 <span class="sig-name descname"><span class="pre">get_virtual_prefix</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">STR</span></span></span><a class="headerlink" href="#h5py.h5p.PropDAID.get_virtual_prefix" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the filesystem path prefix configured for accessing virtual
@@ -906,6 +913,13 @@ unlimited virtual dataset.</p>
 <dt class="sig sig-object py" id="h5py.h5p.PropDAID.set_chunk_cache">
 <span class="sig-name descname"><span class="pre">set_chunk_cache</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size_t</span> <span class="pre">rdcc_nslots</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size_t</span> <span class="pre">rdcc_nbytes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">rdcc_w0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropDAID.set_chunk_cache" title="Permalink to this definition">¶</a></dt>
 <dd><p>Sets the raw data chunk cache parameters.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="h5py.h5p.PropDAID.set_efile_prefix">
+<span class="sig-name descname"><span class="pre">set_efile_prefix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">STR</span> <span class="pre">prefix</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropDAID.set_efile_prefix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set a filesystem path prefix for looking up external datasets.
+This is prepended to all filenames specified in the external dataset.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -1238,7 +1252,7 @@ virtual dataset’s creation property list.</p>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2014, Andrew Collette and contributors.
-      Last updated on May 15, 2022.
+      Last updated on May 17, 2022.
       Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.5.0.
     </div>
   </body>
