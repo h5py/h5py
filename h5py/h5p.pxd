@@ -68,6 +68,7 @@ cdef class PropDXID(PropInstanceID):
 cdef class PropDAID(PropInstanceID):
     """ Dataset access property list"""
     cdef char* _virtual_prefix_buf
+    cdef char* _efile_prefix_buf
 
 # --- New in 1.8 ---
 

@@ -17,6 +17,7 @@
 """
 
 import pathlib
+import os
 import sys
 import numpy as np
 import platform
@@ -29,6 +30,7 @@ from h5py import File, Group, Dataset
 from h5py._hl.base import is_empty_dataspace
 from h5py import h5f, h5t
 from h5py.h5py_warnings import H5pyDeprecationWarning
+from h5py import version
 import h5py
 import h5py._hl.selections as sel
 
@@ -769,7 +771,8 @@ class TestExternal(BaseDataset):
         # create a dataset in an external file and set it
         ext_file = self.mktemp()
         external = [(ext_file, 0, h5f.UNLIMITED)]
-        dset = self.f.create_dataset('foo', shape, dtype=testdata.dtype, external=external)
+        # ${ORIGIN} should be replaced by the parent dir of the HDF5 file
+        dset = self.f.create_dataset('foo', shape, dtype=testdata.dtype, external=external, efile_prefix="${ORIGIN}")
         dset[...] = testdata
 
         assert dset.external is not None
@@ -778,6 +781,42 @@ class TestExternal(BaseDataset):
         with open(ext_file, 'rb') as fid:
             contents = fid.read()
         assert contents == testdata.tobytes()
+
+        # check efile_prefix, only for 1.10.0 due to HDFFV-9716
+        if h5py.version.hdf5_version_tuple >= (1,10,0):
+            efile_prefix = pathlib.Path(dset.id.get_access_plist().get_efile_prefix().decode()).as_posix()
+            parent = pathlib.Path(self.f.filename).parent.as_posix()
+            assert efile_prefix == parent
+
+    def test_contents_efile_prefix(self):
+        """ Create and access an external dataset using an efile_prefix"""
+
+        shape = (6, 100)
+        testdata = np.random.random(shape)
+
+        # create a dataset in an external file and set it
+        ext_file = self.mktemp()
+        # set only the basename, let the efile_prefix do the rest
+        external = [(os.path.basename(ext_file), 0, h5f.UNLIMITED)]
+        dset = self.f.create_dataset('foo', shape, dtype=testdata.dtype, external=external, efile_prefix=os.path.dirname(ext_file))
+        dset[...] = testdata
+
+        assert dset.external is not None
+
+        # verify file's existence, size, and contents
+        with open(ext_file, 'rb') as fid:
+            contents = fid.read()
+        assert contents == testdata.tobytes()
+
+        # check efile_prefix, only for 1.10.0 due to HDFFV-9716
+        if h5py.version.hdf5_version_tuple >= (1,10,0):
+            efile_prefix = pathlib.Path(dset.id.get_access_plist().get_efile_prefix().decode()).as_posix()
+            parent = pathlib.Path(ext_file).parent.as_posix()
+            assert efile_prefix == parent
+
+        dset2 = self.f.require_dataset('foo', shape, testdata.dtype, efile_prefix=os.path.dirname(ext_file))
+        assert dset2.external is not None
+        dset2[()] == testdata
 
     def test_name_str(self):
         """ External argument may be a file name str only """
@@ -1810,3 +1849,29 @@ class TestCommutative(BaseDataset):
         val = float(0.)
         assert (val == dset) == (dset == val)
         assert (val != dset) == (dset != val)
+
+class TestVirtualPrefix(BaseDataset):
+    """
+    Test setting virtual prefix
+    """
+    @ut.skipIf(version.hdf5_version_tuple < (1, 10, 2),
+               reason = "Virtual prefix does not exist before HDF5 version 1.10.2")
+    def test_virtual_prefix_create(self):
+        shape = (100,1)
+        virtual_prefix = "/path/to/virtual"
+        dset = self.f.create_dataset("test", shape, dtype=float,
+                                     data=np.random.rand(*shape),
+                                     virtual_prefix = virtual_prefix)
+
+        virtual_prefix_readback = pathlib.Path(dset.id.get_access_plist().get_virtual_prefix().decode()).as_posix()
+        assert virtual_prefix_readback == virtual_prefix
+
+    @ut.skipIf(version.hdf5_version_tuple < (1, 10, 2),
+               reason = "Virtual prefix does not exist before HDF5 version 1.10.2")
+    def test_virtual_prefix_require(self):
+        virtual_prefix = "/path/to/virtual"
+        dset = self.f.require_dataset('foo', (10, 3), 'f', virtual_prefix = virtual_prefix)
+        virtual_prefix_readback = pathlib.Path(dset.id.get_access_plist().get_virtual_prefix().decode()).as_posix()
+        self.assertEqual(virtual_prefix, virtual_prefix_readback)
+        self.assertIsInstance(dset, Dataset)
+        self.assertEqual(dset.shape, (10, 3))

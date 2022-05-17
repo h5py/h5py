@@ -365,6 +365,8 @@ hdf5:
   H5Z_EDC_t H5Pget_edc_check(hid_t plist)
   herr_t    H5Pset_chunk_cache( hid_t dapl_id, size_t rdcc_nslots, size_t rdcc_nbytes, double rdcc_w0 )
   herr_t    H5Pget_chunk_cache( hid_t dapl_id, size_t *rdcc_nslots, size_t *rdcc_nbytes, double *rdcc_w0 )
+  1.8.17  herr_t H5Pget_efile_prefix(hid_t dapl_id, char *prefix, ssize_t size)
+  1.8.17  herr_t H5Pset_efile_prefix(hid_t dapl_id, char *prefix)
   1.9.233 herr_t H5Pset_virtual_view(hid_t plist_id, H5D_vds_view_t view)
   1.9.233 herr_t H5Pget_virtual_view(hid_t plist_id, H5D_vds_view_t *view)
   1.9.233 herr_t H5Pset_virtual_printf_gap(hid_t plist_id, hsize_t gap_size)
