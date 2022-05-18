@@ -40,7 +40,7 @@ jobs:
   pool:
     vmImage: windows-2019
   variables:
-    HDF5_VERSION: 1.12.1
+    HDF5_VERSION: 1.12.2
     HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
     HDF5_VSVERSION: "16-64"
     CIBW_BUILD: cp3{7,8,9,10}-win_amd64
@@ -54,7 +54,7 @@ jobs:
     vmImage: macOS-11
   variables:
     MACOSX_DEPLOYMENT_TARGET: 10.9
-    HDF5_VERSION: 1.12.1
+    HDF5_VERSION: 1.12.2
     H5PY_ROS3: '0'
     H5PY_DIRECT_VFD: '0'
     HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
@@ -124,7 +124,7 @@ jobs:
       py39-deps-hdf51120:
         python.version: '3.9'
         TOXENV: py39-test-deps
-        HDF5_VERSION: 1.12.0
+        HDF5_VERSION: 1.12.2
         HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
         H5PY_ENFORCE_COVERAGE: yes
     # do mpi tests
