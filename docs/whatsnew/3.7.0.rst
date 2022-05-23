@@ -1,0 +1,34 @@
+New features
+------------
+
+* Provide the ability to use the Direct Virtual File Driver (VFD) from
+  HDF5 (Linux only).
+  If the Direct VFD driver is present at the time of compilation, users can use the
+  Direct VFD by passing the keyword argument ``driver="direct"`` to the
+  ``h5py.File`` constructor.
+
+  To use the Direct VFD HDF5 and h5py must have both been compiled with
+  the Direct VFD Driver enabled. Currently, h5py as released on pypi
+  does not include the Direct VFD driver.
+  Other packages such as the conda package on conda-forge might include it.
+  Alternatively, you can build h5py from source against an HDF5 build
+  with the direct driver enabled.
+* The ``File`` constructor contains two new parameters ``alignment_threshold``,
+  and ``alignment_interval`` controling the data alignment within the HDF5
+  file.
+* h5py wheels on PyPI now bundle HDF5 version 1.12.2.
+* Both Apple Silicon (arm64) and Intel (x86_64) wheels are now provided (:pr:`2065`).
+
+Bug fixes
+---------
+
+* Fix a deadlock which was possible when the same dataset was accessed from
+  multiple threads (:issue:`2064`).
+* New attributes are created directly, instead of via a temporary
+  attribute with subsequent renaming. This fixes overwriting
+  attributes with ``track_order=True``.
+* Fixed issue #1847: fancy indexing with boolean arrays was broken.
+* Enable setting of fillvalue for datasets with variable length string dtype
+* Closing a file or calling ``get_obj_ids()`` no longer re-enables Python
+  garbage collection if it was previously disabled.
+
