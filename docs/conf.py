@@ -61,7 +61,7 @@ copyright = '2014, Andrew Collette and contributors'
 # built documents.
 #
 # The full version, including alpha/beta/rc tags.
-release = '3.6.0'
+release = '3.7.0'
 # The short X.Y version.
 version = '.'.join(release.split('.')[:2])
 
