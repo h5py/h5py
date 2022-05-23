@@ -1,3 +1,6 @@
+What's new in h5py 3.6
+======================
+
 New features
 ------------
 
