@@ -121,7 +121,7 @@ jobs:
         HDF5_VERSION: 1.12.0
         HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
         H5PY_ENFORCE_COVERAGE: yes
-      py39-deps-hdf51120:
+      py39-deps-hdf51122:
         python.version: '3.9'
         TOXENV: py39-test-deps
         HDF5_VERSION: 1.12.2
