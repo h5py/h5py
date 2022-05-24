@@ -15,7 +15,7 @@ Websites
 
 * Main website: https://www.h5py.org
 * Source code: https://github.com/h5py/h5py
-* Mailing list: https://groups.google.com/d/forum/h5py
+* Discussion forum: https://forum.hdfgroup.org/c/hdf-tools/h5py
 
 Installation
 ------------

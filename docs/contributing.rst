@@ -7,14 +7,12 @@ scale-offset filter, came from user code contributions.
 
 Since we use GitHub, the workflow will be familiar to many people.
 If you have questions about the process or about the details of implementing
-your feature, always feel free to ask on the Google Groups list, either
-by emailing:
+your feature, feel free to ask on Github itself, or on the h5py section of the
+HDF5 forum:
 
-     h5py@googlegroups.com
+    https://forum.hdfgroup.org/c/hdf-tools/h5py
 
-or via the web interface at:
-
-    https://groups.google.com/forum/#!forum/h5py
+Posting on this forum requires registering for a free account with HDF group.
 
 Anyone can post to this list. Your first message will be approved by a
 moderator, so don't worry if there's a brief delay.
