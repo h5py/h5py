@@ -224,8 +224,12 @@ class HDF5LibWrapper:
             default_path = 'libhdf5.dylib'
             regexp = re.compile(r'^libhdf5.dylib')
         elif sys.platform.startswith('win'):
-            default_path = 'hdf5.dll'
-            regexp = re.compile(r'^hdf5.dll')
+            if 'MSC' in sys.version:
+                default_path = 'hdf5.dll'
+                regexp = re.compile(r'^hdf5.dll')
+            else:
+                default_path = 'libhdf5-0.dll'
+                regexp = re.compile(r'^libhdf5-[0-9].dll')
             if sys.version_info >= (3, 8):
                 # To overcome "difficulty" loading the library on windows
                 # https://bugs.python.org/issue42114
