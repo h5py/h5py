@@ -475,7 +475,7 @@ Reference
             ``alignment_threshold``. See the description above. For more
             details, see :ref:`file_alignment`.
     :param meta_block_size: Determines the current minimum size, in bytes, of
-            new metadata block allocations. See :ref:`meta_block_size`.
+            new metadata block allocations. See :ref:`file_meta_block_size`.
     :param kwds:    Driver-specific keywords; see :ref:`file_driver`.
 
     .. method:: __bool__()
