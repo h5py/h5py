@@ -273,3 +273,36 @@ class TestTrackOrder(TestCase):
         self.populate(f)
         self.assertEqual(list(f),
                          sorted([str(i) for i in range(100)]))
+
+
+class TestFileMetaBlockSize(TestCase):
+
+    """
+        Feature: The minimum meta data block size can be set.
+    """
+
+    def test_file_create_with_meta_block_size(self):
+        meta_block_size = 4096
+        with File(
+            self.mktemp(), 'w',
+            meta_block_size=meta_block_size
+        ) as f:
+            self.assertTrue(f)
+            f["test"] = 5
+            self.assertTrue(f.meta_block_size) == meta_block_size
+            self.assertTrue(f["test"].id.get_offset()) == meta_block_size
+
+    @pytest.mark.skipif(h5py.version.hdf5_version_tuple < (1, 10, 2),
+                        reason="HDF5 header became smaller in version v1.8")
+    def test_file_create_with_meta_block_size_libver(self):
+        meta_block_size = 512
+        libver = "v108"
+        with File(
+            self.mktemp(), 'w',
+            meta_block_size=meta_block_size,
+            libver=libver
+        ) as f:
+            self.assertTrue(f)
+            f["test"] = 3
+            self.assertTrue(f.meta_block_size) == meta_block_size
+            self.assertTrue(f["test"].id.get_offset()) == meta_block_size
