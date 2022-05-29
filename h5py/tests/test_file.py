@@ -637,6 +637,39 @@ class TestUserblock(TestCase):
             pyfile.close()
 
 
+class TestFileMetaBlockSize(TestCase):
+
+    """
+        Feature: The minimum meta data block size can be set.
+    """
+
+    def test_file_create_with_meta_block_size(self):
+        meta_block_size = 4096
+        with File(
+            self.mktemp(), 'w',
+            meta_block_size=meta_block_size
+        ) as fid:
+            self.assertTrue(fid)
+            fid["test"] = 5
+            self.assertTrue(fid.meta_block_size) == meta_block_size
+            self.assertTrue(fid["test"].id.get_offset()) == meta_block_size
+
+    @pytest.mark.skipif(h5py.version.hdf5_version_tuple < (1, 8, 0),
+                        reason="HDF5 header became smaller in version v1.8")
+    def test_file_create_with_meta_block_size_libver(self):
+        meta_block_size = 512
+        libver = "v108"
+        with File(
+            self.mktemp(), 'w',
+            meta_block_size=meta_block_size,
+            libver=libver
+        ) as fid:
+            self.assertTrue(fid)
+            fid["test"] = 3
+            self.assertTrue(fid.meta_block_size) == meta_block_size
+            self.assertTrue(fid["test"].id.get_offset()) == meta_block_size
+
+
 class TestContextManager(TestCase):
 
     """

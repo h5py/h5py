@@ -114,7 +114,8 @@ def registered_drivers():
 
 def make_fapl(driver, libver, rdcc_nslots, rdcc_nbytes, rdcc_w0, locking,
               page_buf_size, min_meta_keep, min_raw_keep,
-              alignment_threshold, alignment_interval, **kwds):
+              alignment_threshold, alignment_interval, meta_block_size,
+              **kwds):
     """ Set up a file access property list """
     plist = h5p.create(h5p.FILE_ACCESS)
 
@@ -142,6 +143,10 @@ def make_fapl(driver, libver, rdcc_nslots, rdcc_nbytes, rdcc_w0, locking,
     if page_buf_size:
         plist.set_page_buffer_size(int(page_buf_size), int(min_meta_keep),
                                    int(min_raw_keep))
+
+    if meta_block_size is not None:
+        plist.set_meta_block_size(int(meta_block_size))
+
     if locking is not None:
         if hdf5_version < (1, 12, 1) and (hdf5_version[:2] != (1, 10) or hdf5_version[2] < 7):
             raise ValueError(
@@ -327,6 +332,13 @@ class File(Group):
         fcpl = self.id.get_create_plist()
         return fcpl.get_userblock()
 
+    @property
+    @with_phil
+    def meta_block_size(self):
+        """ Meta block size (in bytes) """
+        fapl = self.id.get_access_plist()
+        return fapl.get_meta_block_size()
+
     if mpi and hdf5_version >= (1, 8, 9):
 
         @property
@@ -364,7 +376,7 @@ class File(Group):
                  rdcc_nslots=None, rdcc_nbytes=None, rdcc_w0=None, track_order=None,
                  fs_strategy=None, fs_persist=False, fs_threshold=1, fs_page_size=None,
                  page_buf_size=None, min_meta_keep=0, min_raw_keep=0, locking=None,
-                 alignment_threshold=1, alignment_interval=1, **kwds):
+                 alignment_threshold=1, alignment_interval=1, meta_block_size=None, **kwds):
         """Create a new file object.
 
         See the h5py user guide for a detailed explanation of the options.
@@ -472,6 +484,10 @@ class File(Group):
             details, see
             https://portal.hdfgroup.org/display/HDF5/H5P_SET_ALIGNMENT
 
+        meta_block_size
+            Set the current minimum size, in bytes, of new metadata block allocations.
+            See https://portal.hdfgroup.org/display/HDF5/H5P_SET_META_BLOCK_SIZE
+
         Additional keywords
             Passed on to the selected file driver.
         """
@@ -526,6 +542,7 @@ class File(Group):
                                  locking, page_buf_size, min_meta_keep, min_raw_keep,
                                  alignment_threshold=alignment_threshold,
                                  alignment_interval=alignment_interval,
+                                 meta_block_size=meta_block_size,
                                  **kwds)
                 fcpl = make_fcpl(track_order=track_order, fs_strategy=fs_strategy,
                                  fs_persist=fs_persist, fs_threshold=fs_threshold,
