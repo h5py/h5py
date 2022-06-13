@@ -33,20 +33,7 @@ def run_with_python(args, **kwargs):
         exe = []
     cmd = exe + args
     msg("Running:", *cmd)
-    try:
-        res = run(cmd, check=True, stdout=PIPE, stderr=PIPE, **kwargs)
-    except CalledProcessError as e:
-        msg("STDOUT:")
-        sys.stdout.buffer.write(e.stdout)
-        msg("STDERR:")
-        sys.stderr.buffer.write(e.stderr)
-        raise
-    else:
-        msg("STDOUT:")
-        sys.stdout.buffer.write(res.stdout)
-        msg("STDERR:")
-        sys.stderr.buffer.write(res.stderr)
-        return res
+    return run(cmd, check=True, input=b'', **kwargs)
 
 
 def send_coverage(*, workdir, coverage_files, codecov_token):
