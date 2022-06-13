@@ -64,7 +64,7 @@ def send_coverage(*, workdir, coverage_files, codecov_token):
 
 
 def main():
-    print("In upload_coverage main()")
+    print("In upload_coverage main()", flush=True)
     parser = argparse.ArgumentParser()
     parser.add_argument("--codecov-token", default=None)
     args = parser.parse_args()
@@ -86,5 +86,5 @@ def main():
 
 
 if __name__ == '__main__':
-    print("Starting upload_coverage script")
+    print("Starting upload_coverage script", flush=True)
     main()
