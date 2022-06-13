@@ -63,7 +63,7 @@ script:
     - tox $TOX_OPTS
 
 after_success:
-    #- python ci/upload_coverage.py
+    - python ci/upload_coverage.py
 
   # trigger an upload to the shared ecosystem
   # infrastructure at: https://anaconda.org/scipy-wheels-nightly
