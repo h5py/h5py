@@ -18,11 +18,12 @@ PYVERSION = '{}.{}'.format(sys.version_info[0], sys.version_info[1])
 
 
 def msg(*args):
-    print('ERR:', *args, file=sys.stderr)
+    print('ERR:', *args, file=sys.stderr, flush=True)
 
 
 def pmsg(*args):
     pprint(*args, stream=sys.stderr)
+    sys.stderr.flush()
 
 
 def run_with_python(args, **kwargs):
