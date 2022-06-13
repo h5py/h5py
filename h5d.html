@@ -1,10 +1,10 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
     <title>Module H5D &#8212; Low-level API for h5py (v3.7.0)</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
@@ -12,6 +12,7 @@
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -44,10 +45,10 @@
           <div class="body" role="main">
             
   <section id="module-h5py.h5d">
-<span id="module-h5d"></span><h1>Module H5D<a class="headerlink" href="#module-h5py.h5d" title="Permalink to this headline">¶</a></h1>
+<span id="module-h5d"></span><h1>Module H5D<a class="headerlink" href="#module-h5py.h5d" title="Permalink to this heading">¶</a></h1>
 <p>Provides access to the low-level HDF5 “H5D” dataset interface.</p>
 <section id="functional-api">
-<h2>Functional API<a class="headerlink" href="#functional-api" title="Permalink to this headline">¶</a></h2>
+<h2>Functional API<a class="headerlink" href="#functional-api" title="Permalink to this heading">¶</a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="h5py.h5d.open">
 <span class="sig-prename descclassname"><span class="pre">h5py.h5d.</span></span><span class="sig-name descname"><span class="pre">open</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ObjectID</span> <span class="pre">loc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">STRING</span> <span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">PropID</span> <span class="pre">dapl=None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#h5py.h5d.DatasetID" title="h5py.h5d.DatasetID"><span class="pre">DatasetID</span></a></span></span><a class="headerlink" href="#h5py.h5d.open" title="Permalink to this definition">¶</a></dt>
@@ -64,7 +65,7 @@ anonymous.</p>
 
 </section>
 <section id="dataset-objects">
-<h2>Dataset Objects<a class="headerlink" href="#dataset-objects" title="Permalink to this headline">¶</a></h2>
+<h2>Dataset Objects<a class="headerlink" href="#dataset-objects" title="Permalink to this heading">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="h5py.h5d.DatasetID">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5d.</span></span><span class="sig-name descname"><span class="pre">DatasetID</span></span><a class="headerlink" href="#h5py.h5d.DatasetID" title="Permalink to this definition">¶</a></dt>
@@ -308,9 +309,9 @@ been applied to the data before calling this function.</p>
 
 </section>
 <section id="module-constants">
-<h2>Module constants<a class="headerlink" href="#module-constants" title="Permalink to this headline">¶</a></h2>
+<h2>Module constants<a class="headerlink" href="#module-constants" title="Permalink to this heading">¶</a></h2>
 <section id="storage-strategies">
-<h3>Storage strategies<a class="headerlink" href="#storage-strategies" title="Permalink to this headline">¶</a></h3>
+<h3>Storage strategies<a class="headerlink" href="#storage-strategies" title="Permalink to this heading">¶</a></h3>
 <dl class="py data">
 <dt class="sig sig-object py" id="h5py.h5d.COMPACT">
 <span class="sig-prename descclassname"><span class="pre">h5py.h5d.</span></span><span class="sig-name descname"><span class="pre">COMPACT</span></span><a class="headerlink" href="#h5py.h5d.COMPACT" title="Permalink to this definition">¶</a></dt>
@@ -328,7 +329,7 @@ been applied to the data before calling this function.</p>
 
 </section>
 <section id="allocation-times">
-<span id="ref-h5d-alloc-time"></span><h3>Allocation times<a class="headerlink" href="#allocation-times" title="Permalink to this headline">¶</a></h3>
+<span id="ref-h5d-alloc-time"></span><h3>Allocation times<a class="headerlink" href="#allocation-times" title="Permalink to this heading">¶</a></h3>
 <dl class="py data">
 <dt class="sig sig-object py" id="h5py.h5d.ALLOC_TIME_DEFAULT">
 <span class="sig-prename descclassname"><span class="pre">h5py.h5d.</span></span><span class="sig-name descname"><span class="pre">ALLOC_TIME_DEFAULT</span></span><a class="headerlink" href="#h5py.h5d.ALLOC_TIME_DEFAULT" title="Permalink to this definition">¶</a></dt>
@@ -351,7 +352,7 @@ been applied to the data before calling this function.</p>
 
 </section>
 <section id="allocation-status">
-<h3>Allocation status<a class="headerlink" href="#allocation-status" title="Permalink to this headline">¶</a></h3>
+<h3>Allocation status<a class="headerlink" href="#allocation-status" title="Permalink to this heading">¶</a></h3>
 <dl class="py data">
 <dt class="sig sig-object py" id="h5py.h5d.SPACE_STATUS_NOT_ALLOCATED">
 <span class="sig-prename descclassname"><span class="pre">h5py.h5d.</span></span><span class="sig-name descname"><span class="pre">SPACE_STATUS_NOT_ALLOCATED</span></span><a class="headerlink" href="#h5py.h5d.SPACE_STATUS_NOT_ALLOCATED" title="Permalink to this definition">¶</a></dt>
@@ -369,7 +370,7 @@ been applied to the data before calling this function.</p>
 
 </section>
 <section id="fill-time">
-<h3>Fill time<a class="headerlink" href="#fill-time" title="Permalink to this headline">¶</a></h3>
+<h3>Fill time<a class="headerlink" href="#fill-time" title="Permalink to this heading">¶</a></h3>
 <dl class="py data">
 <dt class="sig sig-object py" id="h5py.h5d.FILL_TIME_ALLOC">
 <span class="sig-prename descclassname"><span class="pre">h5py.h5d.</span></span><span class="sig-name descname"><span class="pre">FILL_TIME_ALLOC</span></span><a class="headerlink" href="#h5py.h5d.FILL_TIME_ALLOC" title="Permalink to this definition">¶</a></dt>
@@ -387,7 +388,7 @@ been applied to the data before calling this function.</p>
 
 </section>
 <section id="fill-values">
-<h3>Fill values<a class="headerlink" href="#fill-values" title="Permalink to this headline">¶</a></h3>
+<h3>Fill values<a class="headerlink" href="#fill-values" title="Permalink to this heading">¶</a></h3>
 <dl class="py data">
 <dt class="sig sig-object py" id="h5py.h5d.FILL_VALUE_UNDEFINED">
 <span class="sig-prename descclassname"><span class="pre">h5py.h5d.</span></span><span class="sig-name descname"><span class="pre">FILL_VALUE_UNDEFINED</span></span><a class="headerlink" href="#h5py.h5d.FILL_VALUE_UNDEFINED" title="Permalink to this definition">¶</a></dt>
@@ -459,7 +460,7 @@ been applied to the data before calling this function.</p>
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -485,8 +486,8 @@ been applied to the data before calling this function.</p>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2014, Andrew Collette and contributors.
-      Last updated on May 24, 2022.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.5.0.
+      Last updated on Jun 13, 2022.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.0.1.
     </div>
   </body>
 </html>

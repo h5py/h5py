@@ -1,10 +1,10 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
     <title>Module H5F &#8212; Low-level API for h5py (v3.7.0)</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
@@ -12,6 +12,7 @@
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -44,10 +45,10 @@
           <div class="body" role="main">
             
   <section id="module-h5py.h5f">
-<span id="module-h5f"></span><h1>Module H5F<a class="headerlink" href="#module-h5py.h5f" title="Permalink to this headline">¶</a></h1>
+<span id="module-h5f"></span><h1>Module H5F<a class="headerlink" href="#module-h5py.h5f" title="Permalink to this heading">¶</a></h1>
 <p>Low-level operations on HDF5 file objects.</p>
 <section id="functional-api">
-<h2>Functional API<a class="headerlink" href="#functional-api" title="Permalink to this headline">¶</a></h2>
+<h2>Functional API<a class="headerlink" href="#functional-api" title="Permalink to this heading">¶</a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="h5py.h5f.open">
 <span class="sig-prename descclassname"><span class="pre">h5py.h5f.</span></span><span class="sig-name descname"><span class="pre">open</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">STRING</span> <span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">UINT</span> <span class="pre">flags=ACC_RDWR</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">PropFAID</span> <span class="pre">fapl=None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#h5py.h5f.FileID" title="h5py.h5f.FileID"><span class="pre">FileID</span></a></span></span><a class="headerlink" href="#h5py.h5f.open" title="Permalink to this definition">¶</a></dt>
@@ -161,7 +162,7 @@ identifier.</p>
 
 </section>
 <section id="file-objects">
-<h2>File objects<a class="headerlink" href="#file-objects" title="Permalink to this headline">¶</a></h2>
+<h2>File objects<a class="headerlink" href="#file-objects" title="Permalink to this heading">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="h5py.h5f.FileID">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5f.</span></span><span class="sig-name descname"><span class="pre">FileID</span></span><a class="headerlink" href="#h5py.h5f.FileID" title="Permalink to this definition">¶</a></dt>
@@ -332,9 +333,9 @@ attached to objects cannot remain open.</p>
 
 </section>
 <section id="module-constants">
-<h2>Module constants<a class="headerlink" href="#module-constants" title="Permalink to this headline">¶</a></h2>
+<h2>Module constants<a class="headerlink" href="#module-constants" title="Permalink to this heading">¶</a></h2>
 <section id="file-access-flags">
-<span id="ref-h5f-acc"></span><h3>File access flags<a class="headerlink" href="#file-access-flags" title="Permalink to this headline">¶</a></h3>
+<span id="ref-h5f-acc"></span><h3>File access flags<a class="headerlink" href="#file-access-flags" title="Permalink to this heading">¶</a></h3>
 <dl class="py data">
 <dt class="sig sig-object py" id="h5py.h5f.ACC_TRUNC">
 <span class="sig-prename descclassname"><span class="pre">h5py.h5f.</span></span><span class="sig-name descname"><span class="pre">ACC_TRUNC</span></span><a class="headerlink" href="#h5py.h5f.ACC_TRUNC" title="Permalink to this definition">¶</a></dt>
@@ -361,7 +362,7 @@ attached to objects cannot remain open.</p>
 
 </section>
 <section id="file-close-strength">
-<span id="ref-h5f-close"></span><h3>File close strength<a class="headerlink" href="#file-close-strength" title="Permalink to this headline">¶</a></h3>
+<span id="ref-h5f-close"></span><h3>File close strength<a class="headerlink" href="#file-close-strength" title="Permalink to this heading">¶</a></h3>
 <dl class="py data">
 <dt class="sig sig-object py" id="h5py.h5f.CLOSE_WEAK">
 <span class="sig-prename descclassname"><span class="pre">h5py.h5f.</span></span><span class="sig-name descname"><span class="pre">CLOSE_WEAK</span></span><a class="headerlink" href="#h5py.h5f.CLOSE_WEAK" title="Permalink to this definition">¶</a></dt>
@@ -384,7 +385,7 @@ attached to objects cannot remain open.</p>
 
 </section>
 <section id="file-scope">
-<span id="ref-h5f-scope"></span><h3>File scope<a class="headerlink" href="#file-scope" title="Permalink to this headline">¶</a></h3>
+<span id="ref-h5f-scope"></span><h3>File scope<a class="headerlink" href="#file-scope" title="Permalink to this heading">¶</a></h3>
 <dl class="py data">
 <dt class="sig sig-object py" id="h5py.h5f.SCOPE_LOCAL">
 <span class="sig-prename descclassname"><span class="pre">h5py.h5f.</span></span><span class="sig-name descname"><span class="pre">SCOPE_LOCAL</span></span><a class="headerlink" href="#h5py.h5f.SCOPE_LOCAL" title="Permalink to this definition">¶</a></dt>
@@ -397,7 +398,7 @@ attached to objects cannot remain open.</p>
 
 </section>
 <section id="object-types">
-<span id="ref-h5f-obj"></span><h3>Object types<a class="headerlink" href="#object-types" title="Permalink to this headline">¶</a></h3>
+<span id="ref-h5f-obj"></span><h3>Object types<a class="headerlink" href="#object-types" title="Permalink to this heading">¶</a></h3>
 <dl class="py data">
 <dt class="sig sig-object py" id="h5py.h5f.OBJ_FILE">
 <span class="sig-prename descclassname"><span class="pre">h5py.h5f.</span></span><span class="sig-name descname"><span class="pre">OBJ_FILE</span></span><a class="headerlink" href="#h5py.h5f.OBJ_FILE" title="Permalink to this definition">¶</a></dt>
@@ -435,7 +436,7 @@ attached to objects cannot remain open.</p>
 
 </section>
 <section id="library-version-bounding">
-<h3>Library version bounding<a class="headerlink" href="#library-version-bounding" title="Permalink to this headline">¶</a></h3>
+<h3>Library version bounding<a class="headerlink" href="#library-version-bounding" title="Permalink to this heading">¶</a></h3>
 <dl class="py data">
 <dt class="sig sig-object py" id="h5py.h5f.LIBVER_EARLIEST">
 <span class="sig-prename descclassname"><span class="pre">h5py.h5f.</span></span><span class="sig-name descname"><span class="pre">LIBVER_EARLIEST</span></span><a class="headerlink" href="#h5py.h5f.LIBVER_EARLIEST" title="Permalink to this definition">¶</a></dt>
@@ -512,7 +513,7 @@ attached to objects cannot remain open.</p>
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -538,8 +539,8 @@ attached to objects cannot remain open.</p>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2014, Andrew Collette and contributors.
-      Last updated on May 24, 2022.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.5.0.
+      Last updated on Jun 13, 2022.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.0.1.
     </div>
   </body>
 </html>

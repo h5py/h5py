@@ -1,10 +1,10 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
     <title>Module H5S &#8212; Low-level API for h5py (v3.7.0)</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
@@ -12,6 +12,7 @@
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -44,10 +45,10 @@
           <div class="body" role="main">
             
   <section id="module-h5py.h5s">
-<span id="module-h5s"></span><h1>Module H5S<a class="headerlink" href="#module-h5py.h5s" title="Permalink to this headline">¶</a></h1>
+<span id="module-h5s"></span><h1>Module H5S<a class="headerlink" href="#module-h5py.h5s" title="Permalink to this heading">¶</a></h1>
 <p>Low-level interface to the “<code class="xref py py-data docutils literal notranslate"><span class="pre">H5S</span></code>” family of data-space functions.</p>
 <section id="functional-api">
-<h2>Functional API<a class="headerlink" href="#functional-api" title="Permalink to this headline">¶</a></h2>
+<h2>Functional API<a class="headerlink" href="#functional-api" title="Permalink to this heading">¶</a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="h5py.h5s.create">
 <span class="sig-prename descclassname"><span class="pre">h5py.h5s.</span></span><span class="sig-name descname"><span class="pre">create</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">INT</span> <span class="pre">class_code</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#h5py.h5s.SpaceID" title="h5py.h5s.SpaceID"><span class="pre">SpaceID</span></a></span></span><a class="headerlink" href="#h5py.h5s.create" title="Permalink to this definition">¶</a></dt>
@@ -74,11 +75,11 @@ Python pickling machinery to do this.</p>
 
 </section>
 <section id="dataspace-objects">
-<h2>Dataspace objects<a class="headerlink" href="#dataspace-objects" title="Permalink to this headline">¶</a></h2>
+<h2>Dataspace objects<a class="headerlink" href="#dataspace-objects" title="Permalink to this heading">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="h5py.h5s.SpaceID">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5s.</span></span><span class="sig-name descname"><span class="pre">SpaceID</span></span><a class="headerlink" href="#h5py.h5s.SpaceID" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="objects.html#h5py._objects.ObjectID" title="h5py._objects.ObjectID"><code class="xref py py-class docutils literal notranslate"><span class="pre">h5py._objects.ObjectID</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="objects.html#h5py._objects.ObjectID" title="h5py._objects.ObjectID"><code class="xref py py-class docutils literal notranslate"><span class="pre">ObjectID</span></code></a></p>
 <p>Represents a dataspace identifier.</p>
 <p>Properties:</p>
 <dl class="simple">
@@ -292,7 +293,7 @@ an unlimited dimension.</p>
 
 </section>
 <section id="module-constants">
-<h2>Module constants<a class="headerlink" href="#module-constants" title="Permalink to this headline">¶</a></h2>
+<h2>Module constants<a class="headerlink" href="#module-constants" title="Permalink to this heading">¶</a></h2>
 <dl class="py data">
 <dt class="sig sig-object py" id="h5py.h5s.ALL">
 <span class="sig-prename descclassname"><span class="pre">h5py.h5s.</span></span><span class="sig-name descname"><span class="pre">ALL</span></span><a class="headerlink" href="#h5py.h5s.ALL" title="Permalink to this definition">¶</a></dt>
@@ -306,7 +307,7 @@ an unlimited dimension.</p>
 </dd></dl>
 
 <section id="dataspace-class-codes">
-<h3>Dataspace class codes<a class="headerlink" href="#dataspace-class-codes" title="Permalink to this headline">¶</a></h3>
+<h3>Dataspace class codes<a class="headerlink" href="#dataspace-class-codes" title="Permalink to this heading">¶</a></h3>
 <dl class="py data">
 <dt class="sig sig-object py" id="h5py.h5s.NO_CLASS">
 <span class="sig-prename descclassname"><span class="pre">h5py.h5s.</span></span><span class="sig-name descname"><span class="pre">NO_CLASS</span></span><a class="headerlink" href="#h5py.h5s.NO_CLASS" title="Permalink to this definition">¶</a></dt>
@@ -324,7 +325,7 @@ an unlimited dimension.</p>
 
 </section>
 <section id="selection-codes">
-<h3>Selection codes<a class="headerlink" href="#selection-codes" title="Permalink to this headline">¶</a></h3>
+<h3>Selection codes<a class="headerlink" href="#selection-codes" title="Permalink to this heading">¶</a></h3>
 <dl class="py data">
 <dt class="sig sig-object py" id="h5py.h5s.SELECT_NOOP">
 <span class="sig-prename descclassname"><span class="pre">h5py.h5s.</span></span><span class="sig-name descname"><span class="pre">SELECT_NOOP</span></span><a class="headerlink" href="#h5py.h5s.SELECT_NOOP" title="Permalink to this definition">¶</a></dt>
@@ -377,7 +378,7 @@ an unlimited dimension.</p>
 
 </section>
 <section id="existing-selection-type">
-<h3>Existing selection type<a class="headerlink" href="#existing-selection-type" title="Permalink to this headline">¶</a></h3>
+<h3>Existing selection type<a class="headerlink" href="#existing-selection-type" title="Permalink to this heading">¶</a></h3>
 <dl class="py data">
 <dt class="sig sig-object py" id="h5py.h5s.SEL_NONE">
 <span class="sig-prename descclassname"><span class="pre">h5py.h5s.</span></span><span class="sig-name descname"><span class="pre">SEL_NONE</span></span><a class="headerlink" href="#h5py.h5s.SEL_NONE" title="Permalink to this definition">¶</a></dt>
@@ -452,7 +453,7 @@ an unlimited dimension.</p>
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -478,8 +479,8 @@ an unlimited dimension.</p>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2014, Andrew Collette and contributors.
-      Last updated on May 24, 2022.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.5.0.
+      Last updated on Jun 13, 2022.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.0.1.
     </div>
   </body>
 </html>

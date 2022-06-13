@@ -1,10 +1,10 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
     <title>Module H5P &#8212; Low-level API for h5py (v3.7.0)</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
@@ -12,6 +12,7 @@
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -44,10 +45,10 @@
           <div class="body" role="main">
             
   <section id="module-h5py.h5p">
-<span id="module-h5p"></span><h1>Module H5P<a class="headerlink" href="#module-h5py.h5p" title="Permalink to this headline">¶</a></h1>
+<span id="module-h5p"></span><h1>Module H5P<a class="headerlink" href="#module-h5py.h5p" title="Permalink to this heading">¶</a></h1>
 <p>HDF5 property list interface.</p>
 <section id="functional-api">
-<h2>Functional API<a class="headerlink" href="#functional-api" title="Permalink to this headline">¶</a></h2>
+<h2>Functional API<a class="headerlink" href="#functional-api" title="Permalink to this heading">¶</a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="h5py.h5p.create">
 <span class="sig-prename descclassname"><span class="pre">h5py.h5p.</span></span><span class="sig-name descname"><span class="pre">create</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">PropClassID</span> <span class="pre">cls</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#h5py.h5p.PropID" title="h5py.h5p.PropID"><span class="pre">PropID</span></a></span></span><a class="headerlink" href="#h5py.h5p.create" title="Permalink to this definition">¶</a></dt>
@@ -68,11 +69,11 @@
 
 </section>
 <section id="base-classes">
-<h2>Base classes<a class="headerlink" href="#base-classes" title="Permalink to this headline">¶</a></h2>
+<h2>Base classes<a class="headerlink" href="#base-classes" title="Permalink to this heading">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="h5py.h5p.PropID">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5p.</span></span><span class="sig-name descname"><span class="pre">PropID</span></span><a class="headerlink" href="#h5py.h5p.PropID" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="objects.html#h5py._objects.ObjectID" title="h5py._objects.ObjectID"><code class="xref py py-class docutils literal notranslate"><span class="pre">h5py._objects.ObjectID</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="objects.html#h5py._objects.ObjectID" title="h5py._objects.ObjectID"><code class="xref py py-class docutils literal notranslate"><span class="pre">ObjectID</span></code></a></p>
 <p>Base class for all property lists and classes</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropID.equal">
@@ -85,7 +86,7 @@
 <dl class="py class">
 <dt class="sig sig-object py" id="h5py.h5p.PropClassID">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5p.</span></span><span class="sig-name descname"><span class="pre">PropClassID</span></span><a class="headerlink" href="#h5py.h5p.PropClassID" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#h5py.h5p.PropID" title="h5py.h5p.PropID"><code class="xref py py-class docutils literal notranslate"><span class="pre">h5py.h5p.PropID</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#h5py.h5p.PropID" title="h5py.h5p.PropID"><code class="xref py py-class docutils literal notranslate"><span class="pre">PropID</span></code></a></p>
 <p>An HDF5 property list class.</p>
 <ul class="simple">
 <li><p>Hashable: Yes, by identifier</p></li>
@@ -96,7 +97,7 @@
 <dl class="py class">
 <dt class="sig sig-object py" id="h5py.h5p.PropInstanceID">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5p.</span></span><span class="sig-name descname"><span class="pre">PropInstanceID</span></span><a class="headerlink" href="#h5py.h5p.PropInstanceID" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#h5py.h5p.PropID" title="h5py.h5p.PropID"><code class="xref py py-class docutils literal notranslate"><span class="pre">h5py.h5p.PropID</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#h5py.h5p.PropID" title="h5py.h5p.PropID"><code class="xref py py-class docutils literal notranslate"><span class="pre">PropID</span></code></a></p>
 <p>Base class for property list instance objects.  Provides methods which
 are common across all HDF5 property list classes.</p>
 <ul class="simple">
@@ -120,14 +121,14 @@ are common across all HDF5 property list classes.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="h5py.h5p.PropCreateID">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5p.</span></span><span class="sig-name descname"><span class="pre">PropCreateID</span></span><a class="headerlink" href="#h5py.h5p.PropCreateID" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#h5py.h5p.PropInstanceID" title="h5py.h5p.PropInstanceID"><code class="xref py py-class docutils literal notranslate"><span class="pre">h5py.h5p.PropInstanceID</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#h5py.h5p.PropInstanceID" title="h5py.h5p.PropInstanceID"><code class="xref py py-class docutils literal notranslate"><span class="pre">PropInstanceID</span></code></a></p>
 <p>Generic object creation property list.</p>
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="h5py.h5p.PropOCID">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5p.</span></span><span class="sig-name descname"><span class="pre">PropOCID</span></span><a class="headerlink" href="#h5py.h5p.PropOCID" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#h5py.h5p.PropCreateID" title="h5py.h5p.PropCreateID"><code class="xref py py-class docutils literal notranslate"><span class="pre">h5py.h5p.PropCreateID</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#h5py.h5p.PropCreateID" title="h5py.h5p.PropCreateID"><code class="xref py py-class docutils literal notranslate"><span class="pre">PropCreateID</span></code></a></p>
 <p>Object creation property list</p>
 <p>This seems to be a super class for dataset creation property list
 and <a class="reference internal" href="#h5py.h5p.PropGCID" title="h5py.h5p.PropGCID"><code class="xref py py-class docutils literal notranslate"><span class="pre">group</span> <span class="pre">creation</span> <span class="pre">property</span> <span class="pre">list</span></code></a>.</p>
@@ -177,7 +178,7 @@ min_dense  – minmum number of attributes to be stored in dense storage(default
 <dl class="py class">
 <dt class="sig sig-object py" id="h5py.h5p.PropCopyID">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5p.</span></span><span class="sig-name descname"><span class="pre">PropCopyID</span></span><a class="headerlink" href="#h5py.h5p.PropCopyID" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#h5py.h5p.PropInstanceID" title="h5py.h5p.PropInstanceID"><code class="xref py py-class docutils literal notranslate"><span class="pre">h5py.h5p.PropInstanceID</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#h5py.h5p.PropInstanceID" title="h5py.h5p.PropInstanceID"><code class="xref py py-class docutils literal notranslate"><span class="pre">PropInstanceID</span></code></a></p>
 <p>Generic object copy property list</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropCopyID.get_copy_object">
@@ -208,11 +209,11 @@ from the <a class="reference internal" href="h5o.html#ref-h5o-copy"><span class=
 
 </section>
 <section id="file-creation">
-<h2>File creation<a class="headerlink" href="#file-creation" title="Permalink to this headline">¶</a></h2>
+<h2>File creation<a class="headerlink" href="#file-creation" title="Permalink to this heading">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="h5py.h5p.PropFCID">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5p.</span></span><span class="sig-name descname"><span class="pre">PropFCID</span></span><a class="headerlink" href="#h5py.h5p.PropFCID" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#h5py.h5p.PropOCID" title="h5py.h5p.PropOCID"><code class="xref py py-class docutils literal notranslate"><span class="pre">h5py.h5p.PropOCID</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#h5py.h5p.PropOCID" title="h5py.h5p.PropOCID"><code class="xref py py-class docutils literal notranslate"><span class="pre">PropOCID</span></code></a></p>
 <p>File creation property list.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropFCID.get_file_space_page_size">
@@ -302,11 +303,11 @@ Must be a power of 2, and at least 512.</p>
 
 </section>
 <section id="file-access">
-<h2>File access<a class="headerlink" href="#file-access" title="Permalink to this headline">¶</a></h2>
+<h2>File access<a class="headerlink" href="#file-access" title="Permalink to this heading">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="h5py.h5p.PropFAID">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5p.</span></span><span class="sig-name descname"><span class="pre">PropFAID</span></span><a class="headerlink" href="#h5py.h5p.PropFAID" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#h5py.h5p.PropInstanceID" title="h5py.h5p.PropInstanceID"><code class="xref py py-class docutils literal notranslate"><span class="pre">h5py.h5p.PropInstanceID</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#h5py.h5p.PropInstanceID" title="h5py.h5p.PropInstanceID"><code class="xref py py-class docutils literal notranslate"><span class="pre">PropInstanceID</span></code></a></p>
 <p>File access property list</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropFAID.get_alignment">
@@ -574,11 +575,11 @@ reads and writes into blocks of the given size.  The default is 64k.</p>
 
 </section>
 <section id="dataset-creation">
-<h2>Dataset creation<a class="headerlink" href="#dataset-creation" title="Permalink to this headline">¶</a></h2>
+<h2>Dataset creation<a class="headerlink" href="#dataset-creation" title="Permalink to this heading">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="h5py.h5p.PropDCID">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5p.</span></span><span class="sig-name descname"><span class="pre">PropDCID</span></span><a class="headerlink" href="#h5py.h5p.PropDCID" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#h5py.h5p.PropOCID" title="h5py.h5p.PropOCID"><code class="xref py py-class docutils literal notranslate"><span class="pre">h5py.h5p.PropOCID</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#h5py.h5p.PropOCID" title="h5py.h5p.PropOCID"><code class="xref py py-class docutils literal notranslate"><span class="pre">PropOCID</span></code></a></p>
 <p>Dataset creation property list.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropDCID.all_filters_avail">
@@ -858,11 +859,11 @@ file where it is located (src_file_name), the name of the dataset
 
 </section>
 <section id="dataset-access">
-<h2>Dataset access<a class="headerlink" href="#dataset-access" title="Permalink to this headline">¶</a></h2>
+<h2>Dataset access<a class="headerlink" href="#dataset-access" title="Permalink to this heading">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="h5py.h5p.PropDAID">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5p.</span></span><span class="sig-name descname"><span class="pre">PropDAID</span></span><a class="headerlink" href="#h5py.h5p.PropDAID" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#h5py.h5p.PropInstanceID" title="h5py.h5p.PropInstanceID"><code class="xref py py-class docutils literal notranslate"><span class="pre">h5py.h5p.PropInstanceID</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#h5py.h5p.PropInstanceID" title="h5py.h5p.PropInstanceID"><code class="xref py py-class docutils literal notranslate"><span class="pre">PropInstanceID</span></code></a></p>
 <p>Dataset access property list</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropDAID.get_chunk_cache">
@@ -961,21 +962,21 @@ virtual dataset’s creation property list.</p>
 
 </section>
 <section id="dataset-transfer">
-<h2>Dataset transfer<a class="headerlink" href="#dataset-transfer" title="Permalink to this headline">¶</a></h2>
+<h2>Dataset transfer<a class="headerlink" href="#dataset-transfer" title="Permalink to this heading">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="h5py.h5p.PropDXID">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5p.</span></span><span class="sig-name descname"><span class="pre">PropDXID</span></span><a class="headerlink" href="#h5py.h5p.PropDXID" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#h5py.h5p.PropInstanceID" title="h5py.h5p.PropInstanceID"><code class="xref py py-class docutils literal notranslate"><span class="pre">h5py.h5p.PropInstanceID</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#h5py.h5p.PropInstanceID" title="h5py.h5p.PropInstanceID"><code class="xref py py-class docutils literal notranslate"><span class="pre">PropInstanceID</span></code></a></p>
 <p>Data transfer property list</p>
 </dd></dl>
 
 </section>
 <section id="link-creation">
-<h2>Link creation<a class="headerlink" href="#link-creation" title="Permalink to this headline">¶</a></h2>
+<h2>Link creation<a class="headerlink" href="#link-creation" title="Permalink to this heading">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="h5py.h5p.PropLCID">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5p.</span></span><span class="sig-name descname"><span class="pre">PropLCID</span></span><a class="headerlink" href="#h5py.h5p.PropLCID" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#h5py.h5p.PropCreateID" title="h5py.h5p.PropCreateID"><code class="xref py py-class docutils literal notranslate"><span class="pre">h5py.h5p.PropCreateID</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#h5py.h5p.PropCreateID" title="h5py.h5p.PropCreateID"><code class="xref py py-class docutils literal notranslate"><span class="pre">PropCreateID</span></code></a></p>
 <p>Link creation property list</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropLCID.get_char_encoding">
@@ -1013,11 +1014,11 @@ virtual dataset’s creation property list.</p>
 
 </section>
 <section id="link-access">
-<h2>Link access<a class="headerlink" href="#link-access" title="Permalink to this headline">¶</a></h2>
+<h2>Link access<a class="headerlink" href="#link-access" title="Permalink to this heading">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="h5py.h5p.PropLAID">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5p.</span></span><span class="sig-name descname"><span class="pre">PropLAID</span></span><a class="headerlink" href="#h5py.h5p.PropLAID" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#h5py.h5p.PropInstanceID" title="h5py.h5p.PropInstanceID"><code class="xref py py-class docutils literal notranslate"><span class="pre">h5py.h5p.PropInstanceID</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#h5py.h5p.PropInstanceID" title="h5py.h5p.PropInstanceID"><code class="xref py py-class docutils literal notranslate"><span class="pre">PropInstanceID</span></code></a></p>
 <p>Link access property list</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropLAID.get_elink_fapl">
@@ -1059,11 +1060,11 @@ virtual dataset’s creation property list.</p>
 
 </section>
 <section id="group-creation">
-<h2>Group creation<a class="headerlink" href="#group-creation" title="Permalink to this headline">¶</a></h2>
+<h2>Group creation<a class="headerlink" href="#group-creation" title="Permalink to this heading">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="h5py.h5p.PropGCID">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5p.</span></span><span class="sig-name descname"><span class="pre">PropGCID</span></span><a class="headerlink" href="#h5py.h5p.PropGCID" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#h5py.h5p.PropOCID" title="h5py.h5p.PropOCID"><code class="xref py py-class docutils literal notranslate"><span class="pre">h5py.h5p.PropOCID</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#h5py.h5p.PropOCID" title="h5py.h5p.PropOCID"><code class="xref py py-class docutils literal notranslate"><span class="pre">PropOCID</span></code></a></p>
 <p>Group creation property list</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropGCID.get_link_creation_order">
@@ -1082,20 +1083,20 @@ virtual dataset’s creation property list.</p>
 
 </section>
 <section id="datatype-creation">
-<h2>Datatype creation<a class="headerlink" href="#datatype-creation" title="Permalink to this headline">¶</a></h2>
+<h2>Datatype creation<a class="headerlink" href="#datatype-creation" title="Permalink to this heading">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="h5py.h5p.PropTCID">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5p.</span></span><span class="sig-name descname"><span class="pre">PropTCID</span></span><a class="headerlink" href="#h5py.h5p.PropTCID" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#h5py.h5p.PropOCID" title="h5py.h5p.PropOCID"><code class="xref py py-class docutils literal notranslate"><span class="pre">h5py.h5p.PropOCID</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#h5py.h5p.PropOCID" title="h5py.h5p.PropOCID"><code class="xref py py-class docutils literal notranslate"><span class="pre">PropOCID</span></code></a></p>
 <p>Datatype creation property list</p>
 <p>No methods yet.</p>
 </dd></dl>
 
 </section>
 <section id="module-constants">
-<h2>Module constants<a class="headerlink" href="#module-constants" title="Permalink to this headline">¶</a></h2>
+<h2>Module constants<a class="headerlink" href="#module-constants" title="Permalink to this heading">¶</a></h2>
 <section id="predefined-classes">
-<h3>Predefined classes<a class="headerlink" href="#predefined-classes" title="Permalink to this headline">¶</a></h3>
+<h3>Predefined classes<a class="headerlink" href="#predefined-classes" title="Permalink to this heading">¶</a></h3>
 <dl class="py data">
 <dt class="sig sig-object py" id="h5py.h5p.DEFAULT">
 <span class="sig-prename descclassname"><span class="pre">h5py.h5p.</span></span><span class="sig-name descname"><span class="pre">DEFAULT</span></span><a class="headerlink" href="#h5py.h5p.DEFAULT" title="Permalink to this definition">¶</a></dt>
@@ -1153,7 +1154,7 @@ virtual dataset’s creation property list.</p>
 
 </section>
 <section id="order-tracking-flags">
-<h3>Order tracking flags<a class="headerlink" href="#order-tracking-flags" title="Permalink to this headline">¶</a></h3>
+<h3>Order tracking flags<a class="headerlink" href="#order-tracking-flags" title="Permalink to this heading">¶</a></h3>
 <dl class="py data">
 <dt class="sig sig-object py" id="h5py.h5p.CRT_ORDER_TRACKED">
 <span class="sig-prename descclassname"><span class="pre">h5py.h5p.</span></span><span class="sig-name descname"><span class="pre">CRT_ORDER_TRACKED</span></span><a class="headerlink" href="#h5py.h5p.CRT_ORDER_TRACKED" title="Permalink to this definition">¶</a></dt>
@@ -1226,7 +1227,7 @@ virtual dataset’s creation property list.</p>
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -1252,8 +1253,8 @@ virtual dataset’s creation property list.</p>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2014, Andrew Collette and contributors.
-      Last updated on May 24, 2022.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.5.0.
+      Last updated on Jun 13, 2022.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.0.1.
     </div>
   </body>
 </html>
