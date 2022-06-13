@@ -389,7 +389,7 @@ Reference
             write any data with ``write_direct_chunk``, compressing the
             data before passing it to h5py.
 
-    .. method:: require_dataset(name, shape=None, dtype=None, exact=None, **kwds)
+    .. method:: require_dataset(name, shape, dtype, exact=False, **kwds)
 
         Open a dataset, creating it if it doesn't exist.
 
