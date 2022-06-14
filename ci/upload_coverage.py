@@ -48,7 +48,7 @@ def send_coverage(*, workdir, coverage_files, codecov_token):
     if codecov_token is not None:
         codecov_args.extend(['-t', codecov_token])
     codecov_args.extend(['--file', 'coverage.xml'])
-    run_with_python(['codecov'] + codecov_args)
+    run_with_python(['codecov'] + codecov_args, timeout=60)
 
 
 def main():
