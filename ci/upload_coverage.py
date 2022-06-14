@@ -4,7 +4,7 @@ Written in python to be cross-platform
 """
 
 import argparse
-from os import chdir, listdir, environ
+from os import chdir, environ
 from pathlib import Path
 import platform
 from pprint import pprint
@@ -27,7 +27,8 @@ def pmsg(*args):
     sys.stderr.flush()
 
 
-def _run(proc: Popen, timeout=None):
+def _run(proc: Popen, timeout):
+    """Run process, with several steps of signalling if timeout is reached"""
     try:
         return proc.wait(timeout=timeout)
     except TimeoutExpired:
@@ -39,16 +40,16 @@ def _run(proc: Popen, timeout=None):
         except TimeoutExpired:
             pass
 
-    proc.terminate()
+    proc.terminate()  # SIGTERM
     try:
         return proc.wait(timeout=5)
     except TimeoutExpired:
         pass
 
-    proc.kill()
+    proc.kill()  # SIGKILL
     return proc.wait(timeout=5)
 
-def run_with_python(args, timeout=None, **kwargs):
+def run_with_python(args, timeout=30, **kwargs):
     if platform.system() == 'Windows':
         exe = ['py', '-' + PYVERSION, '-m']
     else:
@@ -58,7 +59,7 @@ def run_with_python(args, timeout=None, **kwargs):
 
     proc = Popen(cmd, stdin=PIPE, **kwargs)
     proc.stdin.close()
-    retcode = _run(proc, timeout=timeout)
+    retcode = _run(proc, timeout)
 
     if retcode != 0:
         raise CalledProcessError(retcode, cmd)
@@ -67,25 +68,25 @@ def run_with_python(args, timeout=None, **kwargs):
 def send_coverage(*, workdir, coverage_files, codecov_token):
     chdir(workdir)
     run_with_python(['coverage', 'combine'] + coverage_files)
-    msg(f"Combined coverage, listing {GIT_MAIN_DIR}")
-    pmsg(sorted(listdir(GIT_MAIN_DIR)))
+    msg(f"Combined coverage")
     run_with_python(['coverage', 'xml', '--ignore-errors'])
-    msg(f"Created coverage xml, listing {GIT_MAIN_DIR}")
-    pmsg(sorted(listdir(GIT_MAIN_DIR)))
+    msg(f"Created coverage xml")
+
+    # Upload coverage.xml to codecov
     codecov_args = []
     if codecov_token is not None:
         codecov_args.extend(['-t', codecov_token])
     codecov_args.extend(['--file', 'coverage.xml'])
-    run_with_python(['codecov'] + codecov_args, timeout=60)
+    run_with_python(['codecov'] + codecov_args)
 
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--codecov-token", default=None)
     args = parser.parse_args()
-    msg(f"Working in {GIT_MAIN_DIR}, listing coverage dir {COVERAGE_DIR}")
-    pmsg(sorted(listdir(COVERAGE_DIR)))
+    msg(f"Working in {GIT_MAIN_DIR}, looking for coverage files...")
     coverage_files = [str(f) for f in COVERAGE_DIR.glob('coverage-*')]
+    pmsg(sorted(coverage_files))
     if coverage_files:
         send_coverage(
             workdir=GIT_MAIN_DIR,
