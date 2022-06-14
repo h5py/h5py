@@ -8,7 +8,7 @@ from os import chdir, listdir, environ
 from pathlib import Path
 import platform
 from pprint import pprint
-from subprocess import run, PIPE, CalledProcessError
+from subprocess import PIPE, Popen, CalledProcessError, TimeoutExpired
 import sys
 
 THIS_FILE = Path(__file__)
@@ -26,14 +26,28 @@ def pmsg(*args):
     sys.stderr.flush()
 
 
-def run_with_python(args, **kwargs):
+def run_with_python(args, timeout=None, **kwargs):
     if platform.system() == 'Windows':
         exe = ['py', '-' + PYVERSION, '-m']
     else:
         exe = []
     cmd = exe + args
     msg("Running:", *cmd)
-    return run(cmd, check=True, input=b'', **kwargs)
+
+    proc = Popen(cmd, stdin=PIPE, **kwargs)
+    proc.stdin.close()
+    try:
+        retcode = proc.wait(timeout=timeout)
+    except TimeoutExpired:
+        proc.terminate()
+        try:
+            retcode = proc.wait(timeout=5)
+        except TimeoutExpired:
+            proc.kill()
+            retcode = proc.wait(timeout=5)
+
+    if retcode != 0:
+        raise CalledProcessError(retcode, cmd)
 
 
 def send_coverage(*, workdir, coverage_files, codecov_token):
