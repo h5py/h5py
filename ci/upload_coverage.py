@@ -8,6 +8,7 @@ from os import chdir, listdir, environ
 from pathlib import Path
 import platform
 from pprint import pprint
+import signal
 from subprocess import PIPE, Popen, CalledProcessError, TimeoutExpired
 import sys
 
@@ -26,6 +27,27 @@ def pmsg(*args):
     sys.stderr.flush()
 
 
+def _run(proc: Popen, timeout=None):
+    try:
+        return proc.wait(timeout=timeout)
+    except TimeoutExpired:
+        pass
+    if sys.platform != 'win32':
+        proc.send_signal(signal.SIGINT)
+        try:
+            return proc.wait(timeout=5)
+        except TimeoutExpired:
+            pass
+
+    proc.terminate()
+    try:
+        return proc.wait(timeout=5)
+    except TimeoutExpired:
+        pass
+
+    proc.kill()
+    return proc.wait(timeout=5)
+
 def run_with_python(args, timeout=None, **kwargs):
     if platform.system() == 'Windows':
         exe = ['py', '-' + PYVERSION, '-m']
@@ -36,15 +58,7 @@ def run_with_python(args, timeout=None, **kwargs):
 
     proc = Popen(cmd, stdin=PIPE, **kwargs)
     proc.stdin.close()
-    try:
-        retcode = proc.wait(timeout=timeout)
-    except TimeoutExpired:
-        proc.terminate()
-        try:
-            retcode = proc.wait(timeout=5)
-        except TimeoutExpired:
-            proc.kill()
-            retcode = proc.wait(timeout=5)
+    retcode = _run(proc, timeout=timeout)
 
     if retcode != 0:
         raise CalledProcessError(retcode, cmd)
