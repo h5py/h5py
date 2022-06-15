@@ -1,7 +1,7 @@
 New features
 ------------
 
-* `File` now has an `meta_block_size` argument and `meta_block_size` property. This influences how the space for meta data, including the initial header, is allocated.
+* `File` now has an `meta_block_size` argument and `meta_block_size` property. This influences how the space for metadata, including the initial header, is allocated.
 
 Deprecations
 ------------

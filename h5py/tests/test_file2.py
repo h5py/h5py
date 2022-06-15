@@ -280,7 +280,7 @@ class TestTrackOrder(TestCase):
 class TestFileMetaBlockSize(TestCase):
 
     """
-        Feature: The minimum meta data block size can be set.
+        Feature: The minimum metadata block size can be set.
     """
 
     def test_file_create_with_meta_block_size(self):
