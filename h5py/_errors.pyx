@@ -80,6 +80,12 @@ _exact_table = {
     (H5E_FILE, H5E_CANTCONVERT):    ValueError, # Invalid file format
 }
 
+# Further fudge: In some cases, the error numbers we care about are those from
+# the bottom (innermost) error in the stack.
+_bottom_exact_table = {
+    (H5E_DATASPACE, H5E_BADRANGE):  IndexError, # Out of range selection
+}
+
 IF HDF5_VERSION > (1, 12, 0):
     _exact_table[(H5E_DATASET, H5E_CANTCREATE)] = ValueError  # bad param for dataset setup
 
@@ -139,6 +145,8 @@ cdef int set_exception() except -1:
 
     if H5Ewalk(<hid_t>H5E_DEFAULT, H5E_WALK_DOWNWARD, walk_cb, &err) < 0:
         raise RuntimeError("Failed to walk error stack")
+
+    eclass = _bottom_exact_table.get((err.err.maj_num, err.err.min_num), eclass)
 
     desc_bottom = err.err.desc
     if desc_bottom is NULL:

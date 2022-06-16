@@ -1753,6 +1753,11 @@ def test_read_points(writable_file):
     res = ds.points[[(0, 0), (1, 0), (2, 2)]]
     np.testing.assert_array_equal(res, [0, 6, 14])
 
+    with pytest.raises(IndexError):
+        ds.points[[(0, 7)]]
+
+    with pytest.raises(IndexError):
+        ds.points[[(-1, 0)]]
 
 def test_write_points(writable_file):
     ds = writable_file.create_dataset('a', shape=(3, 3))
@@ -1763,6 +1768,12 @@ def test_write_points(writable_file):
         [2, 0, 0],
         [0, 0, 3],
     ])
+
+    with pytest.raises(IndexError):
+        ds.points[[(0, 4)]] = [4]
+
+    with pytest.raises(IndexError):
+        ds.points[[(-1, 0)]] = [5]
 
 
 class TestCommutative(BaseDataset):
