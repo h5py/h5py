@@ -289,10 +289,9 @@ class TestFileMetaBlockSize(TestCase):
             self.mktemp(), 'w',
             meta_block_size=meta_block_size
         ) as f:
-            self.assertTrue(f)
             f["test"] = 5
-            self.assertTrue(f.meta_block_size) == meta_block_size
-            self.assertTrue(f["test"].id.get_offset()) == meta_block_size
+            self.assertEqual(f.meta_block_size, meta_block_size)
+            self.assertEqual(f["test"].id.get_offset(), meta_block_size)
 
     @pytest.mark.skipif(h5py.version.hdf5_version_tuple < (1, 10, 2),
                         reason="HDF5 header became smaller in version v1.8")
@@ -304,7 +303,6 @@ class TestFileMetaBlockSize(TestCase):
             meta_block_size=meta_block_size,
             libver=libver
         ) as f:
-            self.assertTrue(f)
             f["test"] = 3
-            self.assertTrue(f.meta_block_size) == meta_block_size
-            self.assertTrue(f["test"].id.get_offset()) == meta_block_size
+            self.assertEqual(f.meta_block_size, meta_block_size)
+            self.assertEqual(f["test"].id.get_offset(), meta_block_size)
