@@ -311,3 +311,5 @@ class TestFileMetaBlockSize(TestCase):
             self.assertEqual(f.meta_block_size, meta_block_size)
             # Equality is expected for HDF5 1.10
             self.assertGreaterEqual(f["test"].id.get_offset(), meta_block_size)
+            # Default meta_block_size is 2048. This should fail if meta_block_size is not set.
+            self.assertLess(f["test"].id.get_offset(), meta_block_size*2)
