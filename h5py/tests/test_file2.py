@@ -280,10 +280,12 @@ class TestTrackOrder(TestCase):
 class TestFileMetaBlockSize(TestCase):
 
     """
-        Feature: The minimum metadata block size can be set.
+        Feature: The meta block size can be manipulated, changing how metadata
+        is aggregated and the offset of the first dataset.
     """
 
-    def test_file_create_with_meta_block_size(self):
+    def test_file_create_with_meta_block_size_4096(self):
+        # Test a large meta block size of 4 kibibytes
         meta_block_size = 4096
         with File(
             self.mktemp(), 'w',
@@ -292,13 +294,14 @@ class TestFileMetaBlockSize(TestCase):
         ) as f:
             f["test"] = 5
             self.assertEqual(f.meta_block_size, meta_block_size)
+            # Equality is expected for HDF5 1.10
             self.assertGreaterEqual(f["test"].id.get_offset(), meta_block_size)
 
-    @pytest.mark.skipif(h5py.version.hdf5_version_tuple < (1, 10, 2),
-                        reason="HDF5 header became smaller in version v1.8")
-    def test_file_create_with_meta_block_size_libver(self):
+    def test_file_create_with_meta_block_size_512(self):
+        # Test a small meta block size of 512 bytes
+        # The smallest verifiable meta_block_size is 463
         meta_block_size = 512
-        libver = "v108"
+        libver = "latest"
         with File(
             self.mktemp(), 'w',
             meta_block_size=meta_block_size,
@@ -306,4 +309,5 @@ class TestFileMetaBlockSize(TestCase):
         ) as f:
             f["test"] = 3
             self.assertEqual(f.meta_block_size, meta_block_size)
-            self.assertEqual(f["test"].id.get_offset(), meta_block_size)
+            # Equality is expected for HDF5 1.10
+            self.assertGreaterEqual(f["test"].id.get_offset(), meta_block_size)
