@@ -287,7 +287,8 @@ class TestFileMetaBlockSize(TestCase):
         meta_block_size = 4096
         with File(
             self.mktemp(), 'w',
-            meta_block_size=meta_block_size
+            meta_block_size=meta_block_size,
+            libver="latest"
         ) as f:
             f["test"] = 5
             self.assertEqual(f.meta_block_size, meta_block_size)
