@@ -292,7 +292,7 @@ class TestFileMetaBlockSize(TestCase):
         ) as f:
             f["test"] = 5
             self.assertEqual(f.meta_block_size, meta_block_size)
-            self.assertEqual(f["test"].id.get_offset(), meta_block_size)
+            self.assertGreaterEqual(f["test"].id.get_offset(), meta_block_size)
 
     @pytest.mark.skipif(h5py.version.hdf5_version_tuple < (1, 10, 2),
                         reason="HDF5 header became smaller in version v1.8")
