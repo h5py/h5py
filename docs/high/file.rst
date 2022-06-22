@@ -391,12 +391,12 @@ For more information, see the official HDF5 documentation `H5P_SET_ALIGNMENT
 Meta block size
 ---------------
 
-Space for meta data is allocated in blocks within the HDF5 file. The argument
+Space for metadata is allocated in blocks within the HDF5 file. The argument
 ``meta_block_size`` of the :class:`File` constructor sets the minimum size of
-these blocks.  Setting a large value can consolidate meta data into a small
+these blocks.  Setting a large value can consolidate metadata into a small
 number of regions. Setting a small value can reduce the overall file size,
 especially in combination with the ``libver`` option. This controls how the
-overall data and meta data are laid out within the file.
+overall data and metadata are laid out within the file.
 
 For more information, see the offical HDF5 documentation `H5P_SET_META_BLOCK_SIZE
 <https://portal.hdfgroup.org/display/HDF5/H5P_SET_META_BLOCK_SIZE>`_.
