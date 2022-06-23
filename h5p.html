@@ -407,6 +407,12 @@ disk when the file is closed.</p></li>
 <dd></dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="h5py.h5p.PropFAID.get_meta_block_size">
+<span class="sig-name descname"><span class="pre">get_meta_block_size</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">UINT</span> <span class="pre">size</span></span></span><a class="headerlink" href="#h5py.h5p.PropFAID.get_meta_block_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the current minimum size, in bytes, of new metadata block allocations.</p>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropFAID.get_page_buffer_size">
 <span class="sig-name descname"><span class="pre">get_page_buffer_size</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">)</span> <span class="pre">-&gt;</span> <span class="pre">(LONG</span> <span class="pre">buf_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">UINT</span> <span class="pre">min_meta_per</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">UINT</span> <span class="pre">min_raw_per</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropFAID.get_page_buffer_size" title="Permalink to this definition">¶</a></dt>
 <dd><p>Retrieves the maximum size for the page buffer and the minimum
@@ -550,6 +556,12 @@ None or support the buffer protocol.</p>
 <dt class="sig sig-object py" id="h5py.h5p.PropFAID.set_mdc_config">
 <span class="sig-name descname"><span class="pre">set_mdc_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">CacheConfig</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span> <span class="pre">Returns</span> <span class="pre">an</span> <span class="pre">object</span> <span class="pre">that</span> <span class="pre">stores</span> <span class="pre">all</span> <span class="pre">the</span> <span class="pre">information</span> <span class="pre">about</span> <span class="pre">the</span> <span class="pre">meta-data</span> <span class="pre">cache</span> <span class="pre">configuration</span></span></span><a class="headerlink" href="#h5py.h5p.PropFAID.set_mdc_config" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="h5py.h5p.PropFAID.set_meta_block_size">
+<span class="sig-name descname"><span class="pre">set_meta_block_size</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">UINT</span> <span class="pre">size</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropFAID.set_meta_block_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the current minimum size, in bytes, of new metadata block allocations.</p>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropFAID.set_page_buffer_size">
@@ -1253,8 +1265,8 @@ virtual dataset’s creation property list.</p>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2014, Andrew Collette and contributors.
-      Last updated on Jun 15, 2022.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.0.1.
+      Last updated on Jun 23, 2022.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.0.2.
     </div>
   </body>
 </html>
