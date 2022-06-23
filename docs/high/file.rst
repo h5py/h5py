@@ -386,6 +386,21 @@ measured from the end of the user block.
 For more information, see the official HDF5 documentation `H5P_SET_ALIGNMENT
 <https://portal.hdfgroup.org/display/HDF5/H5P_SET_ALIGNMENT>`_.
 
+.. _file_meta_block_size:
+
+Meta block size
+---------------
+
+Space for metadata is allocated in blocks within the HDF5 file. The argument
+``meta_block_size`` of the :class:`File` constructor sets the minimum size of
+these blocks.  Setting a large value can consolidate metadata into a small
+number of regions. Setting a small value can reduce the overall file size,
+especially in combination with the ``libver`` option. This controls how the
+overall data and metadata are laid out within the file.
+
+For more information, see the offical HDF5 documentation `H5P_SET_META_BLOCK_SIZE
+<https://portal.hdfgroup.org/display/HDF5/H5P_SET_META_BLOCK_SIZE>`_.
+
 Reference
 ---------
 
@@ -459,6 +474,8 @@ Reference
     :param alignment_interval: This property should be used in conjunction with
             ``alignment_threshold``. See the description above. For more
             details, see :ref:`file_alignment`.
+    :param meta_block_size: Determines the current minimum size, in bytes, of
+            new metadata block allocations. See :ref:`file_meta_block_size`.
     :param kwds:    Driver-specific keywords; see :ref:`file_driver`.
 
     .. method:: __bool__()
@@ -512,3 +529,8 @@ Reference
     .. attribute:: userblock_size
 
         Size of user block (in bytes).  Generally 0.  See :ref:`file_userblock`.
+
+    .. attribute:: meta_block_size
+
+        Minimum size, in bytes, of metadata block allocations. Default: 2048.
+        See :ref`file_meta_block_size`.

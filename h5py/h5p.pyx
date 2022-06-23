@@ -1287,6 +1287,23 @@ cdef class PropFAID(PropInstanceID):
         """
         H5Pset_libver_bounds(self.id, <H5F_libver_t>low, <H5F_libver_t>high)
 
+    @with_phil
+    def set_meta_block_size(self, size_t size):
+        """ (UINT size)
+
+        Set the current minimum size, in bytes, of new metadata block allocations.
+        """
+        H5Pset_meta_block_size(self.id, size)
+
+    @with_phil
+    def get_meta_block_size(self):
+        """ () => UINT size
+
+        Get the current minimum size, in bytes, of new metadata block allocations.
+        """
+        cdef hsize_t size
+        H5Pget_meta_block_size(self.id, &size)
+        return size
 
     @with_phil
     def get_libver_bounds(self):

@@ -317,6 +317,8 @@ hdf5:
   void*     H5Pget_driver_info(hid_t plist_id)
   herr_t    H5Pget_mdc_config(hid_t plist_id, H5AC_cache_config_t *config_ptr)
   herr_t    H5Pset_mdc_config(hid_t plist_id, H5AC_cache_config_t *config_ptr)
+  herr_t    H5Pset_meta_block_size(hid_t fapl_id, hsize_t size)
+  herr_t    H5Pget_meta_block_size(hid_t fapl_id, hsize_t * size)
   1.8.9 herr_t H5Pset_file_image(hid_t plist_id, void *buf_ptr, size_t buf_len)
   1.10.1 herr_t H5Pset_page_buffer_size(hid_t plist_id, size_t buf_size, unsigned min_meta_per, unsigned min_raw_per)
   1.10.1 herr_t H5Pget_page_buffer_size(hid_t plist_id, size_t *buf_size, unsigned *min_meta_per, unsigned *min_raw_per)
