@@ -228,8 +228,11 @@ class Group(HLObject, MutableMappingHDF5):
             if not isinstance(dset, dataset.Dataset):
                 raise TypeError("Incompatible object (%s) already exists" % dset.__class__.__name__)
 
-            if not shape == dset.shape:
-                raise TypeError("Shapes do not match (existing %s vs new %s)" % (dset.shape, shape))
+            if shape != dset.shape:
+                if "maxshape" not in kwds:
+                    raise TypeError("Shapes do not match (existing %s vs new %s)" % (dset.shape, shape))
+                elif kwds["maxshape"] != dset.maxshape:
+                    raise TypeError("Max shapes do not match (existing %s vs new %s)" % (dset.maxshape, kwds["maxshape"]))
 
             if exact:
                 if not dtype == dset.dtype:
