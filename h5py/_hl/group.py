@@ -218,7 +218,7 @@ class Group(HLObject, MutableMappingHDF5):
         shape or dtype don't match according to the above rules.
         """
         with phil:
-            if not name in self:
+            if name not in self:
                 return self.create_dataset(name, *(shape, dtype), **kwds)
 
             if isinstance(shape, int):
@@ -235,7 +235,7 @@ class Group(HLObject, MutableMappingHDF5):
                     raise TypeError("Max shapes do not match (existing %s vs new %s)" % (dset.maxshape, kwds["maxshape"]))
 
             if exact:
-                if not dtype == dset.dtype:
+                if dtype != dset.dtype:
                     raise TypeError("Datatypes do not exactly match (existing %s vs new %s)" % (dset.dtype, dtype))
             elif not numpy.can_cast(dtype, dset.dtype):
                 raise TypeError("Datatypes cannot be safely cast (existing %s vs new %s)" % (dset.dtype, dtype))
