@@ -164,16 +164,16 @@ class TestRequire(BaseGroup):
         assert isinstance(group, Group)
 
     def test_require_shape(self):
-        ds = self.f.require_dataset("foo/resizable", maxshape=(None, 3), dtype=int)
+        ds = self.f.require_dataset("foo/resizable", shape=(0, 3), maxshape=(None, 3), dtype=int)
         ds.resize(20, axis=0)
-        self.f.require_dataset("foo/resizable", maxshape=(None, 3), dtype=int)
+        self.f.require_dataset("foo/resizable", shape=(0, 3), maxshape=(None, 3), dtype=int)
         self.f.require_dataset("foo/resizable", shape=(20, 3), dtype=int)
         with self.assertRaises(TypeError):
-            self.f.require_dataset("foo/resizable", maxshape=(3, None), dtype=int)
+            self.f.require_dataset("foo/resizable", shape=(0, 0), maxshape=(3, None), dtype=int)
         with self.assertRaises(TypeError):
-            self.f.require_dataset("foo/resizable", maxshape=(None, 5), dtype=int)
+            self.f.require_dataset("foo/resizable", shape=(0, 0), maxshape=(None, 5), dtype=int)
         with self.assertRaises(TypeError):
-            self.f.require_dataset("foo/resizable", maxshape=(None, 5, 2), dtype=int)
+            self.f.require_dataset("foo/resizable", shape=(0, 0), maxshape=(None, 5, 2), dtype=int)
         with self.assertRaises(TypeError):
             self.f.require_dataset("foo/resizable", shape=(10, 3), dtype=int)
 
