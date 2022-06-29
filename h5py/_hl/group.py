@@ -20,7 +20,7 @@ from .compat import filename_decode, filename_encode
 from .. import h5, h5g, h5i, h5o, h5r, h5t, h5l, h5p, h5s, h5d
 from . import base
 from .base import HLObject, MutableMappingHDF5, phil, with_phil
-from . import dataset
+from . import datasetu
 from . import datatype
 from .vds import vds_support
 
@@ -211,11 +211,14 @@ class Group(HLObject, MutableMappingHDF5):
         the same shape and a conversion-compatible dtype to be returned.  If
         True, the shape and dtype must match exactly.
 
+        If keyword "maxshape" is given, the maxshape and dtype must match
+        instead.
+
         Other dataset keywords (see create_dataset) may be provided, but are
         only used if a new dataset is to be created.
 
         Raises TypeError if an incompatible object already exists, or if the
-        shape or dtype don't match according to the above rules.
+        shape, maxshape or dtype don't match according to the above rules.
         """
         with phil:
             if name not in self:
