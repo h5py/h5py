@@ -390,11 +390,14 @@ Reference
         the same shape and a conversion-compatible dtype to be returned.  If
         True, the shape and dtype must match exactly.
 
+        If keyword "maxshape" is given, the maxshape and dtype must match
+        instead.
+
         Other dataset keywords (see create_dataset) may be provided, but are
         only used if a new dataset is to be created.
 
         Raises TypeError if an incompatible object already exists, or if the
-        shape or dtype don't match according to the above rules.
+        shape, maxshape or dtype don't match according to the above rules.
 
         :keyword exact:     Require shape and type to match exactly (T/**F**)
 
