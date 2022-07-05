@@ -171,9 +171,9 @@ cdef class Selector:
 
                 continue
 
-            # [[0, 2, 10]] - list/array of indices ('fancy indexing')
-            if isinstance(a, (list, np.ndarray)):
-                if isinstance(a, list) and len(a) == 0:
+            # [[0, 2, 10]] - list/range/array of indices ('fancy indexing')
+            if isinstance(a, (list, range, np.ndarray)):
+                if isinstance(a, (list, range)) and len(a) == 0:
                     a = np.asarray(a, dtype=np.intp)
                 else:
                     a = np.asarray(a)

@@ -37,6 +37,7 @@
         MultiBlockSlice
         Indexing
         Index list
+        Index range
         Boolean mask
         Field names
 """
@@ -101,6 +102,11 @@ class TestEmpty(TestCase):
         """ index list -> ValueError """
         with self.assertRaises(ValueError):
             self.dset[[1,2,5]]
+
+    def test_indexrange(self):
+        """ index range -> ValueError """
+        with self.assertRaises(ValueError):
+            self.dset[range(5)]
 
     def test_mask(self):
         """ mask -> ValueError """
@@ -167,6 +173,12 @@ class TestScalarFloat(TestCase):
         """ index list -> ValueError """
         with self.assertRaises(ValueError):
             self.dset[[1,2,5]]
+
+    # FIXME: NumPy has IndexError instead
+    def test_indexrange(self):
+        """ index range -> ValueError """
+        with self.assertRaises(ValueError):
+            self.dset[range(5)]
 
     # FIXME: NumPy permits this
     def test_mask(self):
@@ -238,6 +250,12 @@ class TestScalarCompound(TestCase):
         """ index list -> ValueError """
         with self.assertRaises(ValueError):
             self.dset[[1,2,5]]
+
+    # FIXME: NumPy has IndexError instead
+    def test_indexrange(self):
+        """ index range -> ValueError """
+        with self.assertRaises(ValueError):
+            self.dset[range(5)]
 
     # FIXME: NumPy permits this
     def test_mask(self):
@@ -311,6 +329,11 @@ class TestScalarArray(TestCase):
         with self.assertRaises(ValueError):
             self.dset[[]]
 
+    def test_indexrange(self):
+        """ index range -> ValueError """
+        with self.assertRaises(ValueError):
+            self.dset[range(0)]
+
     def test_mask(self):
         """ mask -> ValueError """
         mask = np.array(True, dtype='bool')
@@ -362,6 +385,10 @@ class Test1DZeroFloat(TestCase):
     def test_indexlist(self):
         """ index list """
         self.assertNumpyBehavior(self.dset, self.data, np.s_[[]])
+
+    def test_indexrange(self):
+        """ index range """
+        self.assertNumpyBehavior(self.dset, self.data, np.s_[range(0)])
 
     def test_mask(self):
         """ mask -> ndarray of matching shape """
@@ -486,6 +513,26 @@ class Test1DFloat(TestCase):
         with self.assertRaises(TypeError):
             self.dset[[1,1,2]]
 
+    def test_indexrange_simple(self):
+        self.assertNumpyBehavior(self.dset, self.data, np.s_[range(5)])
+
+    def test_indexrange_single_index_ellipsis(self):
+        self.assertNumpyBehavior(self.dset, self.data, np.s_[range(1), ...])
+
+    def test_indexrange_ellipsis(self):
+        self.assertNumpyBehavior(self.dset, self.data, np.s_[range(4), ...])
+
+    def test_indexrange_empty(self):
+        self.assertNumpyBehavior(self.dset, self.data, np.s_[range(0)])
+
+    def test_indexrange_outofrange(self):
+        with self.assertRaises(IndexError):
+            self.dset[range(100, 101)]
+
+    def test_indexrange_negative(self):
+        with self.assertRaises(TypeError):
+            self.assertNumpyBehavior(self.dset, self.data,  np.s_[range(-2, 2)])
+
     def test_mask_true(self):
         self.assertNumpyBehavior(
             self.dset,
@@ -544,6 +591,9 @@ class Test2DZeroFloat(TestCase):
         """ see issue #473 """
         self.assertNumpyBehavior(self.dset, self.data, np.s_[:,[0,1,2]])
 
+    def test_indexrange(self):
+        self.assertNumpyBehavior(self.dset, self.data, np.s_[:,range(3)])
+
 
 class Test2DFloat(TestCase):
 
@@ -571,6 +621,9 @@ class Test2DFloat(TestCase):
     def test_indexlist(self):
         """ see issue #473 """
         self.assertNumpyBehavior(self.dset, self.data, np.s_[:,[0,1,2]])
+
+    def test_indexrange(self):
+        self.assertNumpyBehavior(self.dset, self.data, np.s_[:,range(3)])
 
     def test_index_emptylist(self):
         self.assertNumpyBehavior(self.dset, self.data, np.s_[:, []])
