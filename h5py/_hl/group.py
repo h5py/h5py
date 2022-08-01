@@ -39,13 +39,11 @@ class Group(HLObject, MutableMappingHDF5):
                 raise ValueError("%s is not a GroupID" % bind)
             super().__init__(bind)
 
-
     _gcpl_crt_order = h5p.create(h5p.GROUP_CREATE)
     _gcpl_crt_order.set_link_creation_order(
         h5p.CRT_ORDER_TRACKED | h5p.CRT_ORDER_INDEXED)
     _gcpl_crt_order.set_attr_creation_order(
         h5p.CRT_ORDER_TRACKED | h5p.CRT_ORDER_INDEXED)
-
 
     def create_group(self, name, track_order=None):
         """ Create and return a new subgroup.
@@ -140,6 +138,30 @@ class Group(HLObject, MutableMappingHDF5):
             (T/F) Do not check that the requested filter is available for use.
             This should only be used with ``write_direct_chunk``, where the caller
             compresses the data before handing it to h5py.
+        rdcc_nbytes
+            Total size of the dataset's chunk cache in bytes. The default size
+            is 1024**2 (1 MiB).
+        rdcc_w0
+            The chunk preemption policy for this dataset.  This must be
+            between 0 and 1 inclusive and indicates the weighting according to
+            which chunks which have been fully read or written are penalized
+            when determining which chunks to flush from cache.  A value of 0
+            means fully read or written chunks are treated no differently than
+            other chunks (the preemption is strictly LRU) while a value of 1
+            means fully read or written chunks are always preempted before
+            other chunks.  If your application only reads or writes data once,
+            this can be safely set to 1.  Otherwise, this should be set lower
+            depending on how often you re-read or re-write the same data.  The
+            default value is 0.75.
+        rdcc_nslots
+            The number of chunk slots in the dataset's chunk cache. Increasing
+            this value reduces the number of cache collisions, but slightly
+            increases the memory used. Due to the hashing strategy, this value
+            should ideally be a prime number. As a rule of thumb, this value
+            should be at least 10 times the number of chunks that can fit in
+            rdcc_nbytes bytes. For maximum performance, this value should be set
+            approximately 100 times that number of chunks. The default value is
+            521.
         """
         if 'track_order' not in kwds:
             kwds['track_order'] = h5.get_config().track_order
@@ -233,6 +255,9 @@ class Group(HLObject, MutableMappingHDF5):
         If keyword "maxshape" is given, the maxshape and dtype must match
         instead.
 
+        If any of the keywords "rdcc_nslots", "rdcc_nbytes", or "rdcc_w0" are
+        given, they will be used to configure the dataset's chunk cache.
+
         Other dataset keywords (see create_dataset) may be provided, but are
         only used if a new dataset is to be created.
 
@@ -258,7 +283,7 @@ class Group(HLObject, MutableMappingHDF5):
             except KeyError:
                 dset = self[name]
                 raise TypeError("Incompatible object (%s) already exists" % dset.__class__.__name__)
-            except:
+            except Exception:
                 raise
 
             if shape != dset.shape:
@@ -315,7 +340,7 @@ class Group(HLObject, MutableMappingHDF5):
         isn't a group.
         """
         with phil:
-            if not name in self:
+            if name not in self:
                 return self.create_group(name)
             grp = self[name]
             if not isinstance(grp, Group):
@@ -378,7 +403,7 @@ class Group(HLObject, MutableMappingHDF5):
                 except KeyError:
                     return default
 
-            if not name in self:
+            if name not in self:
                 return default
 
             elif getclass and not getlink:
@@ -445,8 +470,7 @@ class Group(HLObject, MutableMappingHDF5):
                 h5o.link(obj.id, self.id, name, lcpl=lcpl, lapl=self._lapl)
 
             elif isinstance(obj, SoftLink):
-                self.id.links.create_soft(name, self._e(obj.path),
-                              lcpl=lcpl, lapl=self._lapl)
+                self.id.links.create_soft(name, self._e(obj.path), lcpl=lcpl, lapl=self._lapl)
 
             elif isinstance(obj, ExternalLink):
                 fn = filename_encode(obj.filename)

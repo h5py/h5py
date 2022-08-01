@@ -404,8 +404,8 @@ class File(Group):
         swmr
             Open the file in SWMR read mode. Only used when mode = 'r'.
         rdcc_nbytes
-            Total size of the raw data chunk cache in bytes. The default size
-            is 1024**2 (1 MB) per dataset.
+            Total size of the dataset chunk cache in bytes. The default size
+            is 1024**2 (1 MiB) per dataset. Applies to all datasets unless individually changed.
         rdcc_w0
             The chunk preemption policy for all datasets.  This must be
             between 0 and 1 inclusive and indicates the weighting according to
@@ -417,7 +417,7 @@ class File(Group):
             other chunks.  If your application only reads or writes data once,
             this can be safely set to 1.  Otherwise, this should be set lower
             depending on how often you re-read or re-write the same data.  The
-            default value is 0.75.
+            default value is 0.75. Applies to all datasets unless individually changed.
         rdcc_nslots
             The number of chunk slots in the raw data chunk cache for this
             file. Increasing this value reduces the number of cache collisions,
@@ -426,7 +426,7 @@ class File(Group):
             thumb, this value should be at least 10 times the number of chunks
             that can fit in rdcc_nbytes bytes. For maximum performance, this
             value should be set approximately 100 times that number of
-            chunks. The default value is 521.
+            chunks. The default value is 521. Applies to all datasets unless individually changed.
         track_order
             Track dataset/group/attribute creation order under root group
             if True. If None use global default h5.get_config().track_order.
