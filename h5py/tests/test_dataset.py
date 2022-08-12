@@ -1340,6 +1340,30 @@ class TestCompound(BaseDataset):
         # Check len() on fields wrapper
         assert len(self.f['test'].fields('x')) == 16
 
+    def test_nested_compound_vlen(self):
+        dt_inner = np.dtype([('a', h5py.vlen_dtype(np.int32)),
+                            ('b', h5py.vlen_dtype(np.int32))])
+
+        dt = np.dtype([('f1', h5py.vlen_dtype(dt_inner)),
+                       ('f2', np.int64)])
+
+        inner1 = (np.array(range(1, 3), dtype=np.int32),
+                  np.array(range(6, 9), dtype=np.int32))
+
+        inner2 = (np.array(range(10, 14), dtype=np.int32),
+                  np.array(range(16, 21), dtype=np.int32))
+
+        data = np.array([(np.array([inner1, inner2], dtype=dt_inner), 2),
+                        (np.array([inner1], dtype=dt_inner), 3)],
+                        dtype=dt)
+
+        self.f["ds"] = data
+        out = self.f["ds"]
+
+        # Specifying ignore_alignment=True because vlen fields have 8 bytes of padding
+        # because the vlen datatype in hdf5 occupies 16 bytes
+        self.assertArrayEqual(out, data, ignore_alignment=True)
+
 
 class TestSubarray(BaseDataset):
     def test_write_list(self):

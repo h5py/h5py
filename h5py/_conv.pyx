@@ -22,11 +22,12 @@ from .h5t cimport H5PY_OBJ, typewrap, py_create, TypeID, H5PY_PYTHON_OPAQUE_TAG
 from libc.stdlib cimport realloc
 from libc.string cimport strcmp
 from .utils cimport emalloc, efree
+from ._proxy cimport needs_bkg_buffer
 cfg = get_config()
 
 # Initialization of numpy
 cimport numpy as cnp
-from numpy cimport npy_intp, NPY_WRITEABLE, NPY_C_CONTIGUOUS, NPY_OWNDATA
+from numpy cimport npy_intp, NPY_WRITEABLE, NPY_C_CONTIGUOUS, NPY_OWNDATA, PyArray_DATA
 cnp._import_array()
 import numpy as np
 
@@ -700,6 +701,7 @@ cdef int conv_vlen2ndarray(void* ipt,
         int flags = NPY_WRITEABLE | NPY_C_CONTIGUOUS | NPY_OWNDATA
         npy_intp dims[1]
         void* data
+        void* back_buf = NULL
         cdef char[:] buf
         cnp.ndarray ndarray
         PyObject* ndarray_obj
@@ -714,17 +716,30 @@ cdef int conv_vlen2ndarray(void* ipt,
     itemsize = H5Tget_size(outtype.id)
     if itemsize > H5Tget_size(intype.id):
         data = realloc(data, itemsize * size)
-    H5Tconvert(intype.id, outtype.id, size, data, NULL, H5P_DEFAULT)
+
+    if needs_bkg_buffer(intype.id, outtype.id):
+        back_buf = malloc(H5Tget_size(outtype.id)*size)
+
+    H5Tconvert(intype.id, outtype.id, size, data, back_buf, H5P_DEFAULT)
+
+    # We need to use different approaches to creating the ndarray with the converted
+    # data depending on the destination dtype.
+    # For simple dtypes, we can use SimpleNewFromData, but types like
+    # string & void need a size specified, so this function can't be used.
+    # Additionally, Cython doesn't expose NumPy C-API functions like NewFromDescr,
+    # so we fall back on the Python frombuffer() function. Finally, that function does
+    # not support object arrays, so in that case we copy directly to the underlying buffer
+    # of a new ndarray.
 
     if elem_dtype.kind in b"biufcmMO":
         # type_num is enough to create an array for these dtypes
         ndarray = cnp.PyArray_SimpleNewFromData(1, dims, elem_dtype.type_num, data)
-    else:
-        # dtypes like string & void need a size specified, so can't be used with
-        # SimpleNewFromData. Cython doesn't expose NumPy C-API functions
-        # like NewFromDescr, so we'll construct this with a Python function.
+    elif elem_dtype.kind != b'V':
         buf = <char[:itemsize * size]> data
         ndarray = np.frombuffer(buf, dtype=elem_dtype)
+    else:
+        ndarray = np.empty(size, dtype=elem_dtype)
+        memcpy(PyArray_DATA(ndarray), data, itemsize * size)
 
     PyArray_ENABLEFLAGS(ndarray, flags)
     ndarray_obj = <PyObject*>ndarray
@@ -827,22 +842,29 @@ cdef int conv_ndarray2vlen(void* ipt,
         size_t len, nbytes
         PyObject* buf_obj0
         Py_buffer view
+        void* back_buf = NULL
+    try:
+        buf_obj0 = buf_obj[0]
+        ndarray = <cnp.ndarray> buf_obj0
+        len = ndarray.shape[0]
+        nbytes = len * max(H5Tget_size(outtype.id), H5Tget_size(intype.id))
 
-    buf_obj0 = buf_obj[0]
-    ndarray = <cnp.ndarray> buf_obj0
-    len = ndarray.shape[0]
-    nbytes = len * max(H5Tget_size(outtype.id), H5Tget_size(intype.id))
+        data = emalloc(nbytes)
 
-    data = emalloc(nbytes)
+        PyObject_GetBuffer(ndarray, &view, PyBUF_INDIRECT)
+        PyBuffer_ToContiguous(data, &view, view.len, b'C')
+        PyBuffer_Release(&view)
 
-    PyObject_GetBuffer(ndarray, &view, PyBUF_INDIRECT)
-    PyBuffer_ToContiguous(data, &view, view.len, b'C')
-    PyBuffer_Release(&view)
+        if needs_bkg_buffer(intype.id, outtype.id):
+            back_buf = malloc(H5Tget_size(outtype.id)*len)
 
-    H5Tconvert(intype.id, outtype.id, len, data, NULL, H5P_DEFAULT)
+        H5Tconvert(intype.id, outtype.id, len, data, back_buf, H5P_DEFAULT)
 
-    in_vlen[0].len = len
-    in_vlen[0].ptr = data
+        in_vlen[0].len = len
+        in_vlen[0].ptr = data
+
+    finally:
+        free(back_buf)
 
     return 0
 
