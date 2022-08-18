@@ -283,8 +283,6 @@ class Group(HLObject, MutableMappingHDF5):
             except KeyError:
                 dset = self[name]
                 raise TypeError("Incompatible object (%s) already exists" % dset.__class__.__name__)
-            except Exception:
-                raise
 
             if shape != dset.shape:
                 if "maxshape" not in kwds:
