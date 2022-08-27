@@ -485,9 +485,9 @@ class TestCreateFillvalue(BaseDataset):
     (np.float64, 0.0),
     (h5py.string_dtype(encoding='utf-8', length=5), b''),
     (h5py.string_dtype(encoding='ascii', length=5), b''),
-    (h5py.string_dtype(encoding='utf-8'), ''),
-    (h5py.string_dtype(encoding='ascii'), ''),
-    (h5py.string_dtype(), ''),
+    (h5py.string_dtype(encoding='utf-8'), b''),
+    (h5py.string_dtype(encoding='ascii'), b''),
+    (h5py.string_dtype(), b''),
 
 ])
 def test_get_unset_fill_value(dt, expected, writable_file):
