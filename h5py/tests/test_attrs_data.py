@@ -66,9 +66,9 @@ class TestScalar(BaseAttrs):
         self.f.attrs['x'] = data
         out = self.f.attrs['x']
 
-        # Specifying ignore_alignment=True because vlen fields have 8 bytes of padding
+        # Specifying check_alignment=False because vlen fields have 8 bytes of padding
         # because the vlen datatype in hdf5 occupies 16 bytes
-        self.assertArrayEqual(out, data, ignore_alignment=True)
+        self.assertArrayEqual(out, data, check_alignment=False)
 
     def test_nesting_compound_with_vlen_fields(self):
         """ Compound scalars with nested compound vlen fields can be written and read """
@@ -90,7 +90,7 @@ class TestScalar(BaseAttrs):
 
         self.f.attrs['x'] = data
         out = self.f.attrs['x']
-        self.assertArrayEqual(out, data, ignore_alignment=True)
+        self.assertArrayEqual(out, data, check_alignment=False)
 
     def test_vlen_compound_with_vlen_string(self):
         """ Compound scalars with vlen compounds containing vlen strings can be written and read """
@@ -102,7 +102,7 @@ class TestScalar(BaseAttrs):
         data = np.array((np.array([(b"apples", b"bananas"), (b"peaches", b"oranges")], dtype=dt_inner),),dtype=dt)[()]
         self.f.attrs['x'] = data
         out = self.f.attrs['x']
-        self.assertArrayEqual(out, data, ignore_alignment=True)
+        self.assertArrayEqual(out, data, check_alignment=False)
 
 
 class TestArray(BaseAttrs):

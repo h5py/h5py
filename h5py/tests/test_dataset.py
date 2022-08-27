@@ -1360,9 +1360,9 @@ class TestCompound(BaseDataset):
         self.f["ds"] = data
         out = self.f["ds"]
 
-        # Specifying ignore_alignment=True because vlen fields have 8 bytes of padding
+        # Specifying check_alignment=False because vlen fields have 8 bytes of padding
         # because the vlen datatype in hdf5 occupies 16 bytes
-        self.assertArrayEqual(out, data, ignore_alignment=True)
+        self.assertArrayEqual(out, data, check_alignment=False)
 
 
 class TestSubarray(BaseDataset):
