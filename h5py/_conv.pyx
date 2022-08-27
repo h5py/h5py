@@ -702,7 +702,6 @@ cdef int conv_vlen2ndarray(void* ipt,
         npy_intp dims[1]
         void* data
         void* back_buf = NULL
-        cdef char[:] buf
         cnp.ndarray ndarray
         PyObject* ndarray_obj
         vlen_t in_vlen0
@@ -727,16 +726,12 @@ cdef int conv_vlen2ndarray(void* ipt,
     # For simple dtypes, we can use SimpleNewFromData, but types like
     # string & void need a size specified, so this function can't be used.
     # Additionally, Cython doesn't expose NumPy C-API functions like NewFromDescr,
-    # so we fall back on the Python frombuffer() function. Finally, that function does
-    # not support object arrays, so in that case we copy directly to the underlying buffer
-    # of a new ndarray.
+    # so we fall back on copying directly to the underlying buffer
+    # of a new ndarray for other types.
 
     if elem_dtype.kind in b"biufcmMO":
         # type_num is enough to create an array for these dtypes
         ndarray = cnp.PyArray_SimpleNewFromData(1, dims, elem_dtype.type_num, data)
-    elif elem_dtype.kind != b'V':
-        buf = <char[:itemsize * size]> data
-        ndarray = np.frombuffer(buf, dtype=elem_dtype)
     else:
         ndarray = np.empty(size, dtype=elem_dtype)
         memcpy(PyArray_DATA(ndarray), data, itemsize * size)
