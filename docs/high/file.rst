@@ -465,10 +465,19 @@ Reference
     :param min_raw_keep: Minimum percentage of raw data to keep in the page
             buffer before allowing pages containing raw data to be evicted.
             Applicable only if ``page_buf_size`` is set. Default value is zero.
-    :param locking: The file locking behavior. One of False (or "false"), True
-            (or "true"), "best-effort", or None. Warning: The
-            HDF5_USE_FILE_LOCKING environment variable can override this
-            parameter. Only available with HDF5 >= 1.12.1 or 1.10.x >= 1.10.7.
+    :param locking: The file locking behavior. One of:
+
+            - False (or "false") --  Disable file locking
+            - True (or "true")   --  Enable file locking
+            - "best-effort"      --  Enable file locking but ignore some errors
+            - None               --  Use HDF5 defaults
+
+            .. warning::
+
+                The HDF5_USE_FILE_LOCKING environment variable can override
+                this parameter.
+
+            Only available with HDF5 >= 1.12.1 or 1.10.x >= 1.10.7.
     :param alignment_threshold: Together with ``alignment_interval``, this
             property ensures that any file object greater than or equal
             in size to the alignement threshold (in bytes) will be
