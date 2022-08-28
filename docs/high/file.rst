@@ -96,18 +96,20 @@ of supported drivers and their options:
           Raw data filename extension. Default is '-r.h5'.
 
     'ros3'
-        Allows read only access to HDF5 files on S3. Keywords:
+        Allows read only access to HDF5 files in AWS S3. Keywords:
 
         aws_region:
-          Name of the AWS "region" where the S3 bucket with the file is, e.g. ``b"us-east-1"``. Default is ``b''``.
+          AWS region of the S3 bucket with the file, e.g. ``b"us-east-1"``.
+          Default is ``b''``.
 
         secret_id:
-          "Access ID" for the resource. Default is ``b''``.
+          AWS access key ID. Default is ``b''``.
 
         secret_key:
-          "Secret Access Key" associated with the ID and resource. Default is ``b''``.
+          AWS secret access key. Default is ``b''``.
 
-        The argument values must be ``bytes`` objects.
+        The argument values must be ``bytes`` objects. All three arguments are
+        required to activate AWS authentication.
 
 
 .. _file_fileobj:

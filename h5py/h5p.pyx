@@ -1090,7 +1090,7 @@ cdef class PropFAID(PropInstanceID):
             """
             cdef H5FD_ros3_fapl_t config
             config.version = H5FD_CURR_ROS3_FAPL_T_VERSION
-            if len(aws_region) or len(secret_id) or len(secret_key):
+            if len(aws_region) and len(secret_id) and len(secret_key):
                 config.authenticate = <hbool_t>1
             else:
                 config.authenticate = <hbool_t>0
