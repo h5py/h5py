@@ -334,7 +334,7 @@ class Group(HLObject, MutableMappingHDF5):
             oid = h5o.open(self.id, self._e(name), lapl=self._lapl)
         else:
             raise TypeError("Accessing a group is done with bytes or str, "
-                            " not {}".format(type(name)))
+                            "not {}".format(type(name)))
 
         otype = h5i.get_type(oid)
         if otype == h5i.GROUP:
