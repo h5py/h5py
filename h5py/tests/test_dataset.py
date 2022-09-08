@@ -1805,6 +1805,34 @@ def test_allow_unknown_filter(writable_file):
     assert str(fake_filter_id) in ds._filters
 
 
+def test_read_points(writable_file):
+    ds = writable_file.create_dataset('a', data=np.arange(30).reshape(5, 6))
+    res = ds.points[[(0, 0), (1, 0), (2, 2)]]
+    np.testing.assert_array_equal(res, [0, 6, 14])
+
+    with pytest.raises(IndexError):
+        ds.points[[(0, 7)]]
+
+    with pytest.raises(IndexError):
+        ds.points[[(-1, 0)]]
+
+def test_write_points(writable_file):
+    ds = writable_file.create_dataset('a', shape=(3, 3))
+    ds.points[[(0, 0), (1, 0), (2, 2)]] = [1, 2, 3]
+
+    np.testing.assert_array_equal(ds[:], [
+        [1, 0, 0],
+        [2, 0, 0],
+        [0, 0, 3],
+    ])
+
+    with pytest.raises(IndexError):
+        ds.points[[(0, 4)]] = [4]
+
+    with pytest.raises(IndexError):
+        ds.points[[(-1, 0)]] = [5]
+
+
 class TestCommutative(BaseDataset):
     """
     Test the symmetry of operators, at least with the numpy types.

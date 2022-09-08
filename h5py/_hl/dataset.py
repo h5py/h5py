@@ -279,6 +279,31 @@ def readtime_dtype(basetype, names):
     return numpy.dtype([(name, basetype.fields[name][0]) for name in names])
 
 
+class PointsAccessor:
+    def __init__(self, dset: 'Dataset'):
+        self.dset = dset
+
+    def __getitem__(self, points):
+        ps = sel.PointSelection(
+            self.dset.shape, self.dset.id.get_space(), points
+        )
+        arr = numpy.empty(ps.array_shape, self.dset.dtype)
+        self.dset.read_direct(arr, source_sel=ps)
+        return arr
+
+    def __setitem__(self, points, values):
+        ps = sel.PointSelection(
+            self.dset.shape, self.dset.id.get_space(), points
+        )
+        values = numpy.asarray(values, order='C')
+
+        # Require shape to match exactly
+        if values.shape != ps.array_shape:
+            raise ValueError(f"Expected data shape {ps.array_shape}, got {values.shape}")
+
+        self.dset.write_direct(values, dest_sel=ps)
+
+
 if MPI:
     class CollectiveContext:
 
@@ -416,6 +441,17 @@ class Dataset(HLObject):
         if _prior_dtype is None:
             _prior_dtype = self.dtype
         return FieldsWrapper(self, _prior_dtype, names)
+
+    @property
+    def points(self):
+        """Read/write data to specfied individual points within the dataset
+
+        E.g. for a 2D dataset:
+
+        >>> arr = dataset.points[[(1, 3), (5, 1), (2, 7)]]
+        >>> dataset.points[[(1, 3), (5, 1), (2, 7)]] = [4, 5, 6]
+        """
+        return PointsAccessor(self)
 
     if MPI:
         @property
