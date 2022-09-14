@@ -1383,6 +1383,47 @@ cdef class PropFAID(PropInstanceID):
             """
             raise RuntimeError("MPI-POSIX driver is broken; removed in h5py 2.3.1")
 
+        if HDF5_VERSION >= (1, 10, 0):
+
+            @with_phil
+            def set_all_coll_metadata_ops(self, is_collective):
+                """ (BOOL is_collective)
+
+                Sets metadata I/O mode for read operations to collective if
+                is_collective is True or independent if is_collective is False.
+                """
+                H5Pset_all_coll_metadata_ops(self.id, is_collective)
+
+            @with_phil
+            def set_coll_metadata_write(self, is_collective):
+                """ (BOOL is_collective)
+
+                Sets metadata I/O mode for write operations to collective if
+                is_collective is True or independent if is_collective is False.
+                """
+                H5Pset_coll_metadata_write(self.id, is_collective)
+
+            @with_phil
+            def get_all_coll_metadata_ops(self):
+                """ () => BOOL is_collective
+
+                Return True if collective metadata I/O mode for read
+                operations is enabled, or False otherwise.
+                """
+                cdef hbool_t is_collective = 0
+                H5Pget_all_coll_metadata_ops(self.id, &is_collective)
+                return <bint> is_collective
+
+            @with_phil
+            def get_coll_metadata_write(self):
+                """ () => BOOL is_collective
+
+                Return True if collective metadata I/O mode for write
+                operations is enabled, or False otherwise.
+                """
+                cdef hbool_t is_collective = 0
+                H5Pget_coll_metadata_write(self.id, &is_collective)
+                return <bint> is_collective
 
     @with_phil
     def get_mdc_config(self):
