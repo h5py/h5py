@@ -9,7 +9,7 @@
 
 import unittest as ut
 
-from h5py import h5p, h5f, version
+from h5py import h5p, h5f, version, get_config
 
 from .common import TestCase
 
@@ -133,6 +133,32 @@ class TestFA(TestCase):
         falist.set_file_locking(use_file_locking, ignore_when_disabled)
         self.assertEqual((use_file_locking, ignore_when_disabled),
                          falist.get_file_locking())
+
+    @ut.skipUnless(
+        version.hdf5_version_tuple >= (1, 10, 0) and get_config().mpi,
+        'Requires HDF5 1.10.0 or later and MPI')
+    def test_set_all_coll_metadata_ops(self):
+        """
+        Test get/set collective metadata read mode
+        """
+        falist = h5p.create(h5p.FILE_ACCESS)
+        falist.set_all_coll_metadata_ops(True)
+        self.assertEqual(falist.get_all_coll_metadata_ops(), True)
+        falist.set_all_coll_metadata_ops(False)
+        self.assertEqual(falist.get_all_coll_metadata_ops(), False)
+
+    @ut.skipUnless(
+        version.hdf5_version_tuple >= (1, 10, 0) and get_config().mpi,
+        'Requires HDF5 1.10.0 or later and MPI')
+    def test_set_coll_metadata_write(self):
+        """
+        Test get/set collective metadata write mode
+        """
+        falist = h5p.create(h5p.FILE_ACCESS)
+        falist.set_coll_metadata_write(True)
+        self.assertEqual(falist.get_coll_metadata_write(), True)
+        falist.set_coll_metadata_write(False)
+        self.assertEqual(falist.get_coll_metadata_write(), False)
 
 
 class TestPL(TestCase):
