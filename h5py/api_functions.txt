@@ -328,7 +328,10 @@ hdf5:
   1.12.1 herr_t H5Pget_file_locking(hid_t fapl_id, hbool_t *use_file_locking, hbool_t *ignore_when_disabled)
   1.10.7-1.10.99 herr_t H5Pset_file_locking(hid_t fapl_id, hbool_t use_file_locking, hbool_t ignore_when_disabled)
   1.12.1 herr_t H5Pset_file_locking(hid_t fapl_id, hbool_t use_file_locking, hbool_t ignore_when_disabled)
-
+  MPI 1.10.0 herr_t H5Pset_all_coll_metadata_ops(hid_t accpl_id, hbool_t is_collective)
+  MPI 1.10.0 herr_t H5Pget_all_coll_metadata_ops(hid_t accpl_id, hbool_t *is_collective)
+  MPI 1.10.0 herr_t H5Pset_coll_metadata_write(hid_t fapl_id, hbool_t is_collective)
+  MPI 1.10.0 herr_t H5Pget_coll_metadata_write(hid_t fapl_id, hbool_t *is_collective)
 
   # Dataset creation
   herr_t        H5Pset_layout(hid_t plist, int layout)
