@@ -259,9 +259,9 @@ jobs:
       parameters:
         platform: windows
 
-- job: 'macOS1015'
+- job: 'macOS11'
   pool:
-    vmImage: macOS-10.15
+    vmImage: macOS-11
   strategy:
     matrix:
       # -deps : test with default (latest) versions of dependencies
@@ -307,7 +307,7 @@ jobs:
 - job: 'test_macos_wheels'
   dependsOn: macos_wheels
   pool:
-    vmImage: macOS-10.15
+    vmImage: macOS-11
   variables:
     H5PY_TEST_CHECK_FILTERS: 1
 
