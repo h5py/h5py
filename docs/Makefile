@@ -177,4 +177,4 @@ pseudoxml:
 	@echo "Build finished. The pseudo-XML files are in $(BUILDDIR)/pseudoxml."
 
 show:
-	@python -c "import webbrowser; webbrowser.open_new_tab('file://$(shell pwd)/_build/html/index.html')"
+	@python -m webbrowser -t "file://$(shell pwd)/_build/html/index.html"
