@@ -93,8 +93,15 @@ A strong emphasis on automatic conversion between Python (Numpy) datatypes and
 data structures and their HDF5 equivalents vastly simplifies the process of
 reading and writing data from Python.
 
-Supports HDF5 versions 1.8.4 and higher.  On Windows, HDF5 is included with
-the installer.
+Wheels are provided for several popular platforms, with an included copy of
+the HDF5 library (usually the latest version when h5py is released).
+
+You can also `build h5py from source
+<https://docs.h5py.org/en/stable/build.html#source-installation>`_
+with any HDF5 stable release from version 1.8.4 onwards, although naturally new
+HDF5 versions released after this version of h5py may not work.
+Odd-numbered minor versions of HDF5 (e.g. 1.13) are experimental, and may not
+be supported.
 """
 
 package_data = {'h5py': [], "h5py.tests.data_files": ["*.h5"]}
@@ -112,11 +119,12 @@ setup(
   maintainer = 'Andrew Collette',
   maintainer_email = 'andrew.collette@gmail.com',
   license = 'BSD',
-  url = 'http://www.h5py.org',
+  url = 'https://www.h5py.org',
   project_urls = {
       'Source': 'https://github.com/h5py/h5py',
+      'Documentation': 'https://docs.h5py.org/en/stable/',
+      'Release notes': 'https://docs.h5py.org/en/stable/whatsnew/index.html'
   },
-  download_url = 'https://pypi.python.org/pypi/h5py',
   packages = [
       'h5py',
       'h5py._hl',
