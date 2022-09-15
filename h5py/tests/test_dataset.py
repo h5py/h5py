@@ -1336,6 +1336,16 @@ class TestCompound(BaseDataset):
         np.testing.assert_array_equal(
             self.f['test'].fields('x')[:], testdata['x']
         )
+        # Check __array__() method of fields wrapper
+        np.testing.assert_array_equal(
+            np.asarray(self.f['test'].fields(['x', 'y'])), testdata[['x', 'y']]
+        )
+        # Check type conversion of __array__() method
+        dt_int = np.dtype([('x', np.int32)])
+        np.testing.assert_array_equal(
+            np.asarray(self.f['test'].fields(['x']), dtype=dt_int),
+            testdata[['x']].astype(dt_int)
+        )
 
         # Check len() on fields wrapper
         assert len(self.f['test'].fields('x')) == 16
