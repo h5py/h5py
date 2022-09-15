@@ -1,7 +1,7 @@
 New features
 ------------
 
-* `FieldsWrapper` now implements the `__array__()` method. This speeds up accessing fields with functions that expect an `__array__()` method, like `np.asarray()`.  
+* `FieldsWrapper` now implements the `__array__()` method. This speeds up accessing fields with functions that expect an `__array__()` method, like `np.asarray()`.
 
 Deprecations
 ------------
