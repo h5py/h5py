@@ -253,6 +253,12 @@ class FieldsWrapper:
             names = [names]
         self.read_dtype = readtime_dtype(prior_dtype, names)
 
+    def __array__(self, dtype=None):
+        data = self[:]
+        if dtype is not None:
+            data = data.astype(dtype)
+        return data
+
     def __getitem__(self, args):
         data = self._dset.__getitem__(args, new_dtype=self.read_dtype)
         if self.extract_field is not None:
