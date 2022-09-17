@@ -38,8 +38,8 @@ def make_new_dset(parent, shape=None, dtype=None, data=None, name=None,
                   fletcher32=None, maxshape=None, compression_opts=None,
                   fillvalue=None, scaleoffset=None, track_times=False,
                   external=None, track_order=None, dcpl=None, dapl=None,
-                  efile_prefix=None, virtual_prefix=None,
-                  allow_unknown_filter=False):
+                  efile_prefix=None, virtual_prefix=None, allow_unknown_filter=False,
+                  rdcc_nslots=None, rdcc_nbytes=None, rdcc_w0=None):
     """ Return a new low-level dataset identifier """
 
     # Convert data to a C-contiguous ndarray
@@ -138,7 +138,7 @@ def make_new_dset(parent, shape=None, dtype=None, data=None, name=None,
     if maxshape is not None:
         maxshape = tuple(m if m is not None else h5s.UNLIMITED for m in maxshape)
 
-    if efile_prefix is not None or virtual_prefix is not None:
+    if any([efile_prefix, virtual_prefix, rdcc_nbytes, rdcc_nslots, rdcc_w0]):
         dapl = dapl or h5p.create(h5p.DATASET_ACCESS)
 
     if efile_prefix is not None:
@@ -147,11 +147,20 @@ def make_new_dset(parent, shape=None, dtype=None, data=None, name=None,
     if virtual_prefix is not None:
         dapl.set_virtual_prefix(virtual_prefix)
 
+    if rdcc_nbytes or rdcc_nslots or rdcc_w0:
+        cache_settings = list(dapl.get_chunk_cache())
+        if rdcc_nslots is not None:
+            cache_settings[0] = rdcc_nslots
+        if rdcc_nbytes is not None:
+            cache_settings[1] = rdcc_nbytes
+        if rdcc_w0 is not None:
+            cache_settings[2] = rdcc_w0
+        dapl.set_chunk_cache(*cache_settings)
+
     if isinstance(data, Empty):
         sid = h5s.create(h5s.NULL)
     else:
         sid = h5s.create_simple(shape, maxshape)
-
 
     dset_id = h5d.create(parent.id, name, tid, sid, dcpl=dcpl, dapl=dapl)
 
@@ -160,13 +169,13 @@ def make_new_dset(parent, shape=None, dtype=None, data=None, name=None,
 
     return dset_id
 
-def open_dset(parent, name, dapl=None, efile_prefix=None, virtual_prefix=None, **kwds):
+
+def open_dset(parent, name, dapl=None, efile_prefix=None, virtual_prefix=None,
+              rdcc_nslots=None, rdcc_nbytes=None, rdcc_w0=None, **kwds):
     """ Return an existing low-level dataset identifier """
 
-    if efile_prefix is not None or virtual_prefix is not None:
+    if any([efile_prefix, virtual_prefix, rdcc_nbytes, rdcc_nslots, rdcc_w0]):
         dapl = dapl or h5p.create(h5p.DATASET_ACCESS)
-    else:
-        dapl = dapl or None
 
     if efile_prefix is not None:
         dapl.set_efile_prefix(efile_prefix)
@@ -174,9 +183,20 @@ def open_dset(parent, name, dapl=None, efile_prefix=None, virtual_prefix=None, *
     if virtual_prefix is not None:
         dapl.set_virtual_prefix(virtual_prefix)
 
+    if rdcc_nbytes or rdcc_nslots or rdcc_w0:
+        cache_settings = list(dapl.get_chunk_cache())
+        if rdcc_nslots is not None:
+            cache_settings[0] = rdcc_nslots
+        if rdcc_nbytes is not None:
+            cache_settings[1] = rdcc_nbytes
+        if rdcc_w0 is not None:
+            cache_settings[2] = rdcc_w0
+        dapl.set_chunk_cache(*cache_settings)
+
     dset_id = h5d.open(parent.id, name, dapl=dapl)
 
     return dset_id
+
 
 class AstypeWrapper:
     """Wrapper to convert data on reading from a dataset.
@@ -279,7 +299,7 @@ def readtime_dtype(basetype, names):
         raise ValueError("Field names only allowed for compound types")
 
     for name in names:  # Check all names are legal
-        if not name in basetype.names:
+        if name not in basetype.names:
             raise ValueError("Field %s does not appear in this type." % name)
 
     return numpy.dtype([(name, basetype.fields[name][0]) for name in names])
@@ -376,6 +396,7 @@ class ChunkIterator:
                 self._chunk_index[dim] = 0
             dim -= 1
         return tuple(slices)
+
 
 class Dataset(HLObject):
 
