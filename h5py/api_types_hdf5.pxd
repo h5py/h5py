@@ -237,6 +237,7 @@ cdef extern from "hdf5.h":
 
   # Class information for each file driver
   ctypedef struct H5FD_class_t:
+    unsigned version;
     const char *name
     haddr_t maxaddr
     H5F_close_degree_t fc_degree
