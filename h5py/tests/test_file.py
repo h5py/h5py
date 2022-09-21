@@ -1011,15 +1011,33 @@ f = h5py.File({str(filename)!r}, mode={mode!r}, locking={locking})
 
 # unittest doesn't work with pytest fixtures (and possibly other features),
 # hence no subclassing TestCase
+@pytest.mark.skipif(h5py.version.hdf5_version_tuple < (1, 10, 6)
+                    or not h5.get_config().ros3,
+                    reason="ros3 driver not available")
 class TestROS3:
-    @pytest.mark.skipif(h5py.version.hdf5_version_tuple < (1, 10, 6)
-                        or not h5.get_config().ros3,
-                        reason="ros3 file operations were added in HDF5 1.10.6+")
     def test_ros3(self):
         """ ROS3 driver and options """
 
         with File("https://dandiarchive.s3.amazonaws.com/ros3test.hdf5", 'r',
                   driver='ros3') as f:
+            assert f
+            assert 'mydataset' in f.keys()
+            assert f["mydataset"].shape == (100,)
+
+    def test_ros3_s3_fails(self):
+        """ROS3 exceptions for s3:// location"""
+        with pytest.raises(ValueError,
+                           match='AWS region required for s3:// location'):
+            File('s3://fakebucket/fakekey', 'r', driver='ros3')
+
+        with pytest.raises(ValueError,
+                           match=r'^foo://wrong/scheme: S3 location must begin with'):
+            File('foo://wrong/scheme', 'r', driver='ros3')
+
+    def test_ros3_s3uri(self):
+        """Use S3 URI with ROS3 driver"""
+        with File('s3://dandiarchive/ros3test.hdf5', 'r', driver='ros3',
+                  aws_region=b'us-east-2') as f:
             assert f
             assert 'mydataset' in f.keys()
             assert f["mydataset"].shape == (100,)
