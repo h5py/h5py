@@ -14,9 +14,12 @@
 import h5py
 import pytest
 
-pytestmark = pytest.mark.skipif(
-    h5py.version.hdf5_version_tuple < (1, 10, 6) or not h5py.h5.get_config().ros3,
-    reason="ros3 driver not available")
+pytestmark = [
+    pytest.mark.skipif(
+        h5py.version.hdf5_version_tuple < (1, 10, 6) or not h5py.h5.get_config().ros3,
+        reason="ros3 driver not available"),
+    pytest.mark.nonetwork
+]
 
 
 def test_ros3():
