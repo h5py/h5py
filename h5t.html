@@ -14,6 +14,7 @@
     <script src="_static/underscore.js"></script>
     <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Module H5Z" href="h5z.html" />
@@ -1175,26 +1176,229 @@ Limited to 256 characters.</p>
     <h3><a href="index.html">Table of Contents</a></h3>
     <ul>
 <li><a class="reference internal" href="#">Module H5T</a><ul>
-<li><a class="reference internal" href="#functions-specific-to-h5py">Functions specific to h5py</a></li>
-<li><a class="reference internal" href="#functional-api">Functional API</a></li>
+<li><a class="reference internal" href="#functions-specific-to-h5py">Functions specific to h5py</a><ul>
+<li><a class="reference internal" href="#h5py.h5t.py_create"><code class="docutils literal notranslate"><span class="pre">py_create()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.string_dtype"><code class="docutils literal notranslate"><span class="pre">string_dtype()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.check_string_dtype"><code class="docutils literal notranslate"><span class="pre">check_string_dtype()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.vlen_dtype"><code class="docutils literal notranslate"><span class="pre">vlen_dtype()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.check_vlen_dtype"><code class="docutils literal notranslate"><span class="pre">check_vlen_dtype()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.enum_dtype"><code class="docutils literal notranslate"><span class="pre">enum_dtype()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.check_enum_dtype"><code class="docutils literal notranslate"><span class="pre">check_enum_dtype()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.special_dtype"><code class="docutils literal notranslate"><span class="pre">special_dtype()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.check_dtype"><code class="docutils literal notranslate"><span class="pre">check_dtype()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#functional-api">Functional API</a><ul>
+<li><a class="reference internal" href="#h5py.h5t.create"><code class="docutils literal notranslate"><span class="pre">create()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.open"><code class="docutils literal notranslate"><span class="pre">open()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.array_create"><code class="docutils literal notranslate"><span class="pre">array_create()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.enum_create"><code class="docutils literal notranslate"><span class="pre">enum_create()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.vlen_create"><code class="docutils literal notranslate"><span class="pre">vlen_create()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.decode"><code class="docutils literal notranslate"><span class="pre">decode()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.convert"><code class="docutils literal notranslate"><span class="pre">convert()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.find"><code class="docutils literal notranslate"><span class="pre">find()</span></code></a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#type-classes">Type classes</a><ul>
-<li><a class="reference internal" href="#atomic-classes">Atomic classes</a></li>
-<li><a class="reference internal" href="#strings">Strings</a></li>
-<li><a class="reference internal" href="#compound-types">Compound Types</a></li>
-<li><a class="reference internal" href="#other-types">Other types</a></li>
+<li><a class="reference internal" href="#h5py.h5t.TypeID"><code class="docutils literal notranslate"><span class="pre">TypeID</span></code></a><ul>
+<li><a class="reference internal" href="#h5py.h5t.TypeID.commit"><code class="docutils literal notranslate"><span class="pre">TypeID.commit()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.TypeID.committed"><code class="docutils literal notranslate"><span class="pre">TypeID.committed()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.TypeID.copy"><code class="docutils literal notranslate"><span class="pre">TypeID.copy()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.TypeID.detect_class"><code class="docutils literal notranslate"><span class="pre">TypeID.detect_class()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.TypeID.dtype"><code class="docutils literal notranslate"><span class="pre">TypeID.dtype</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.TypeID.encode"><code class="docutils literal notranslate"><span class="pre">TypeID.encode()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.TypeID.equal"><code class="docutils literal notranslate"><span class="pre">TypeID.equal()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.TypeID.get_class"><code class="docutils literal notranslate"><span class="pre">TypeID.get_class()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.TypeID.get_create_plist"><code class="docutils literal notranslate"><span class="pre">TypeID.get_create_plist()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.TypeID.get_size"><code class="docutils literal notranslate"><span class="pre">TypeID.get_size()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.TypeID.get_super"><code class="docutils literal notranslate"><span class="pre">TypeID.get_super()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.TypeID.lock"><code class="docutils literal notranslate"><span class="pre">TypeID.lock()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.TypeID.set_size"><code class="docutils literal notranslate"><span class="pre">TypeID.set_size()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#atomic-classes">Atomic classes</a><ul>
+<li><a class="reference internal" href="#h5py.h5t.TypeAtomicID"><code class="docutils literal notranslate"><span class="pre">TypeAtomicID</span></code></a><ul>
+<li><a class="reference internal" href="#h5py.h5t.TypeAtomicID.get_offset"><code class="docutils literal notranslate"><span class="pre">TypeAtomicID.get_offset()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.TypeAtomicID.get_order"><code class="docutils literal notranslate"><span class="pre">TypeAtomicID.get_order()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.TypeAtomicID.get_pad"><code class="docutils literal notranslate"><span class="pre">TypeAtomicID.get_pad()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.TypeAtomicID.get_precision"><code class="docutils literal notranslate"><span class="pre">TypeAtomicID.get_precision()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.TypeAtomicID.set_offset"><code class="docutils literal notranslate"><span class="pre">TypeAtomicID.set_offset()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.TypeAtomicID.set_order"><code class="docutils literal notranslate"><span class="pre">TypeAtomicID.set_order()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.TypeAtomicID.set_pad"><code class="docutils literal notranslate"><span class="pre">TypeAtomicID.set_pad()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.TypeAtomicID.set_precision"><code class="docutils literal notranslate"><span class="pre">TypeAtomicID.set_precision()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#h5py.h5t.TypeIntegerID"><code class="docutils literal notranslate"><span class="pre">TypeIntegerID</span></code></a><ul>
+<li><a class="reference internal" href="#h5py.h5t.TypeIntegerID.get_sign"><code class="docutils literal notranslate"><span class="pre">TypeIntegerID.get_sign()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.TypeIntegerID.set_sign"><code class="docutils literal notranslate"><span class="pre">TypeIntegerID.set_sign()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#h5py.h5t.TypeFloatID"><code class="docutils literal notranslate"><span class="pre">TypeFloatID</span></code></a><ul>
+<li><a class="reference internal" href="#h5py.h5t.TypeFloatID.get_ebias"><code class="docutils literal notranslate"><span class="pre">TypeFloatID.get_ebias()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.TypeFloatID.get_fields"><code class="docutils literal notranslate"><span class="pre">TypeFloatID.get_fields()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.TypeFloatID.get_inpad"><code class="docutils literal notranslate"><span class="pre">TypeFloatID.get_inpad()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.TypeFloatID.get_norm"><code class="docutils literal notranslate"><span class="pre">TypeFloatID.get_norm()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.TypeFloatID.set_ebias"><code class="docutils literal notranslate"><span class="pre">TypeFloatID.set_ebias()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.TypeFloatID.set_fields"><code class="docutils literal notranslate"><span class="pre">TypeFloatID.set_fields()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.TypeFloatID.set_inpad"><code class="docutils literal notranslate"><span class="pre">TypeFloatID.set_inpad()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.TypeFloatID.set_norm"><code class="docutils literal notranslate"><span class="pre">TypeFloatID.set_norm()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#strings">Strings</a><ul>
+<li><a class="reference internal" href="#h5py.h5t.TypeStringID"><code class="docutils literal notranslate"><span class="pre">TypeStringID</span></code></a><ul>
+<li><a class="reference internal" href="#h5py.h5t.TypeStringID.get_cset"><code class="docutils literal notranslate"><span class="pre">TypeStringID.get_cset()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.TypeStringID.get_strpad"><code class="docutils literal notranslate"><span class="pre">TypeStringID.get_strpad()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.TypeStringID.is_variable_str"><code class="docutils literal notranslate"><span class="pre">TypeStringID.is_variable_str()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.TypeStringID.set_cset"><code class="docutils literal notranslate"><span class="pre">TypeStringID.set_cset()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.TypeStringID.set_strpad"><code class="docutils literal notranslate"><span class="pre">TypeStringID.set_strpad()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#compound-types">Compound Types</a><ul>
+<li><a class="reference internal" href="#h5py.h5t.TypeCompositeID"><code class="docutils literal notranslate"><span class="pre">TypeCompositeID</span></code></a><ul>
+<li><a class="reference internal" href="#h5py.h5t.TypeCompositeID.get_member_index"><code class="docutils literal notranslate"><span class="pre">TypeCompositeID.get_member_index()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.TypeCompositeID.get_member_name"><code class="docutils literal notranslate"><span class="pre">TypeCompositeID.get_member_name()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.TypeCompositeID.get_nmembers"><code class="docutils literal notranslate"><span class="pre">TypeCompositeID.get_nmembers()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#h5py.h5t.TypeCompoundID"><code class="docutils literal notranslate"><span class="pre">TypeCompoundID</span></code></a><ul>
+<li><a class="reference internal" href="#h5py.h5t.TypeCompoundID.get_member_class"><code class="docutils literal notranslate"><span class="pre">TypeCompoundID.get_member_class()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.TypeCompoundID.get_member_offset"><code class="docutils literal notranslate"><span class="pre">TypeCompoundID.get_member_offset()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.TypeCompoundID.get_member_type"><code class="docutils literal notranslate"><span class="pre">TypeCompoundID.get_member_type()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.TypeCompoundID.insert"><code class="docutils literal notranslate"><span class="pre">TypeCompoundID.insert()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.TypeCompoundID.pack"><code class="docutils literal notranslate"><span class="pre">TypeCompoundID.pack()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#h5py.h5t.TypeEnumID"><code class="docutils literal notranslate"><span class="pre">TypeEnumID</span></code></a><ul>
+<li><a class="reference internal" href="#h5py.h5t.TypeEnumID.enum_insert"><code class="docutils literal notranslate"><span class="pre">TypeEnumID.enum_insert()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.TypeEnumID.enum_nameof"><code class="docutils literal notranslate"><span class="pre">TypeEnumID.enum_nameof()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.TypeEnumID.enum_valueof"><code class="docutils literal notranslate"><span class="pre">TypeEnumID.enum_valueof()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.TypeEnumID.get_member_value"><code class="docutils literal notranslate"><span class="pre">TypeEnumID.get_member_value()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#other-types">Other types</a><ul>
+<li><a class="reference internal" href="#h5py.h5t.TypeArrayID"><code class="docutils literal notranslate"><span class="pre">TypeArrayID</span></code></a><ul>
+<li><a class="reference internal" href="#h5py.h5t.TypeArrayID.get_array_dims"><code class="docutils literal notranslate"><span class="pre">TypeArrayID.get_array_dims()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.TypeArrayID.get_array_ndims"><code class="docutils literal notranslate"><span class="pre">TypeArrayID.get_array_ndims()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#h5py.h5t.TypeOpaqueID"><code class="docutils literal notranslate"><span class="pre">TypeOpaqueID</span></code></a><ul>
+<li><a class="reference internal" href="#h5py.h5t.TypeOpaqueID.get_tag"><code class="docutils literal notranslate"><span class="pre">TypeOpaqueID.get_tag()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.TypeOpaqueID.set_tag"><code class="docutils literal notranslate"><span class="pre">TypeOpaqueID.set_tag()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#h5py.h5t.TypeVlenID"><code class="docutils literal notranslate"><span class="pre">TypeVlenID</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.TypeBitfieldID"><code class="docutils literal notranslate"><span class="pre">TypeBitfieldID</span></code></a><ul>
+<li><a class="reference internal" href="#h5py.h5t.TypeBitfieldID.get_order"><code class="docutils literal notranslate"><span class="pre">TypeBitfieldID.get_order()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#h5py.h5t.TypeReferenceID"><code class="docutils literal notranslate"><span class="pre">TypeReferenceID</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li><a class="reference internal" href="#predefined-datatypes">Predefined Datatypes</a><ul>
-<li><a class="reference internal" href="#floating-point">Floating-point</a></li>
-<li><a class="reference internal" href="#integer-types">Integer types</a></li>
-<li><a class="reference internal" href="#reference-types">Reference types</a></li>
-<li><a class="reference internal" href="#string-types">String types</a></li>
-<li><a class="reference internal" href="#python-object-type">Python object type</a></li>
+<li><a class="reference internal" href="#floating-point">Floating-point</a><ul>
+<li><a class="reference internal" href="#h5py.h5t.IEEE_F32LE"><code class="docutils literal notranslate"><span class="pre">IEEE_F32LE</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.IEEE_F32BE"><code class="docutils literal notranslate"><span class="pre">IEEE_F32BE</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.IEEE_F64LE"><code class="docutils literal notranslate"><span class="pre">IEEE_F64LE</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.IEEE_F64BE"><code class="docutils literal notranslate"><span class="pre">IEEE_F64BE</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#integer-types">Integer types</a><ul>
+<li><a class="reference internal" href="#h5py.h5t.STD_I8LE"><code class="docutils literal notranslate"><span class="pre">STD_I8LE</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.STD_I16LE"><code class="docutils literal notranslate"><span class="pre">STD_I16LE</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.STD_I32LE"><code class="docutils literal notranslate"><span class="pre">STD_I32LE</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.STD_I64LE"><code class="docutils literal notranslate"><span class="pre">STD_I64LE</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.STD_I8BE"><code class="docutils literal notranslate"><span class="pre">STD_I8BE</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.STD_I16BE"><code class="docutils literal notranslate"><span class="pre">STD_I16BE</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.STD_I32BE"><code class="docutils literal notranslate"><span class="pre">STD_I32BE</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.STD_I64BE"><code class="docutils literal notranslate"><span class="pre">STD_I64BE</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.STD_U8LE"><code class="docutils literal notranslate"><span class="pre">STD_U8LE</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.STD_U16LE"><code class="docutils literal notranslate"><span class="pre">STD_U16LE</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.STD_U32LE"><code class="docutils literal notranslate"><span class="pre">STD_U32LE</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.STD_U64LE"><code class="docutils literal notranslate"><span class="pre">STD_U64LE</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.STD_U8BE"><code class="docutils literal notranslate"><span class="pre">STD_U8BE</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.STD_U16BE"><code class="docutils literal notranslate"><span class="pre">STD_U16BE</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.STD_U32BE"><code class="docutils literal notranslate"><span class="pre">STD_U32BE</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.STD_U64BE"><code class="docutils literal notranslate"><span class="pre">STD_U64BE</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.NATIVE_INT8"><code class="docutils literal notranslate"><span class="pre">NATIVE_INT8</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.NATIVE_UINT8"><code class="docutils literal notranslate"><span class="pre">NATIVE_UINT8</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.NATIVE_INT16"><code class="docutils literal notranslate"><span class="pre">NATIVE_INT16</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.NATIVE_UINT16"><code class="docutils literal notranslate"><span class="pre">NATIVE_UINT16</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.NATIVE_INT32"><code class="docutils literal notranslate"><span class="pre">NATIVE_INT32</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.NATIVE_UINT32"><code class="docutils literal notranslate"><span class="pre">NATIVE_UINT32</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.NATIVE_INT64"><code class="docutils literal notranslate"><span class="pre">NATIVE_INT64</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.NATIVE_UINT64"><code class="docutils literal notranslate"><span class="pre">NATIVE_UINT64</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.NATIVE_FLOAT"><code class="docutils literal notranslate"><span class="pre">NATIVE_FLOAT</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.NATIVE_DOUBLE"><code class="docutils literal notranslate"><span class="pre">NATIVE_DOUBLE</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#reference-types">Reference types</a><ul>
+<li><a class="reference internal" href="#h5py.h5t.STD_REF_OBJ"><code class="docutils literal notranslate"><span class="pre">STD_REF_OBJ</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.STD_REF_DSETREG"><code class="docutils literal notranslate"><span class="pre">STD_REF_DSETREG</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#string-types">String types</a><ul>
+<li><a class="reference internal" href="#h5py.h5t.C_S1"><code class="docutils literal notranslate"><span class="pre">C_S1</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.FORTRAN_S1"><code class="docutils literal notranslate"><span class="pre">FORTRAN_S1</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.VARIABLE"><code class="docutils literal notranslate"><span class="pre">VARIABLE</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#python-object-type">Python object type</a><ul>
+<li><a class="reference internal" href="#h5py.h5t.PYTHON_OBJECT"><code class="docutils literal notranslate"><span class="pre">PYTHON_OBJECT</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li><a class="reference internal" href="#module-constants">Module constants</a><ul>
-<li><a class="reference internal" href="#datatype-class-codes">Datatype class codes</a></li>
-<li><a class="reference internal" href="#api-constants">API Constants</a></li>
+<li><a class="reference internal" href="#datatype-class-codes">Datatype class codes</a><ul>
+<li><a class="reference internal" href="#h5py.h5t.NO_CLASS"><code class="docutils literal notranslate"><span class="pre">NO_CLASS</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.INTEGER"><code class="docutils literal notranslate"><span class="pre">INTEGER</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.FLOAT"><code class="docutils literal notranslate"><span class="pre">FLOAT</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.TIME"><code class="docutils literal notranslate"><span class="pre">TIME</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.STRING"><code class="docutils literal notranslate"><span class="pre">STRING</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.BITFIELD"><code class="docutils literal notranslate"><span class="pre">BITFIELD</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.OPAQUE"><code class="docutils literal notranslate"><span class="pre">OPAQUE</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.COMPOUND"><code class="docutils literal notranslate"><span class="pre">COMPOUND</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.REFERENCE"><code class="docutils literal notranslate"><span class="pre">REFERENCE</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.ENUM"><code class="docutils literal notranslate"><span class="pre">ENUM</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.VLEN"><code class="docutils literal notranslate"><span class="pre">VLEN</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.ARRAY"><code class="docutils literal notranslate"><span class="pre">ARRAY</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#api-constants">API Constants</a><ul>
+<li><a class="reference internal" href="#h5py.h5t.SGN_NONE"><code class="docutils literal notranslate"><span class="pre">SGN_NONE</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.SGN_2"><code class="docutils literal notranslate"><span class="pre">SGN_2</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.ORDER_LE"><code class="docutils literal notranslate"><span class="pre">ORDER_LE</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.ORDER_BE"><code class="docutils literal notranslate"><span class="pre">ORDER_BE</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.ORDER_VAX"><code class="docutils literal notranslate"><span class="pre">ORDER_VAX</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.ORDER_NONE"><code class="docutils literal notranslate"><span class="pre">ORDER_NONE</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.ORDER_NATIVE"><code class="docutils literal notranslate"><span class="pre">ORDER_NATIVE</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.DIR_DEFAULT"><code class="docutils literal notranslate"><span class="pre">DIR_DEFAULT</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.DIR_ASCEND"><code class="docutils literal notranslate"><span class="pre">DIR_ASCEND</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.DIR_DESCEND"><code class="docutils literal notranslate"><span class="pre">DIR_DESCEND</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.STR_NULLTERM"><code class="docutils literal notranslate"><span class="pre">STR_NULLTERM</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.STR_NULLPAD"><code class="docutils literal notranslate"><span class="pre">STR_NULLPAD</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.STR_SPACEPAD"><code class="docutils literal notranslate"><span class="pre">STR_SPACEPAD</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.NORM_IMPLIED"><code class="docutils literal notranslate"><span class="pre">NORM_IMPLIED</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.NORM_MSBSET"><code class="docutils literal notranslate"><span class="pre">NORM_MSBSET</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.NORM_NONE"><code class="docutils literal notranslate"><span class="pre">NORM_NONE</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.CSET_ASCII"><code class="docutils literal notranslate"><span class="pre">CSET_ASCII</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.CSET_UTF8"><code class="docutils literal notranslate"><span class="pre">CSET_UTF8</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.PAD_ZERO"><code class="docutils literal notranslate"><span class="pre">PAD_ZERO</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.PAD_ONE"><code class="docutils literal notranslate"><span class="pre">PAD_ONE</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.PAD_BACKGROUND"><code class="docutils literal notranslate"><span class="pre">PAD_BACKGROUND</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.BKG_NO"><code class="docutils literal notranslate"><span class="pre">BKG_NO</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.BKG_TEMP"><code class="docutils literal notranslate"><span class="pre">BKG_TEMP</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5t.BKG_YES"><code class="docutils literal notranslate"><span class="pre">BKG_YES</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -1254,8 +1458,8 @@ Limited to 256 characters.</p>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2014, Andrew Collette and contributors.
-      Last updated on Sep 17, 2022.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.1.1.
+      Last updated on Oct 10, 2022.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.2.3.
     </div>
   </body>
 </html>

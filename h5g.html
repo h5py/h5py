@@ -14,6 +14,7 @@
     <script src="_static/underscore.js"></script>
     <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Module H5I" href="h5i.html" />
@@ -275,12 +276,46 @@ where it should be moved.</p>
     <h3><a href="index.html">Table of Contents</a></h3>
     <ul>
 <li><a class="reference internal" href="#">Module H5G</a><ul>
-<li><a class="reference internal" href="#functional-api">Functional API</a></li>
-<li><a class="reference internal" href="#info-objects">Info objects</a></li>
-<li><a class="reference internal" href="#group-objects">Group objects</a></li>
+<li><a class="reference internal" href="#functional-api">Functional API</a><ul>
+<li><a class="reference internal" href="#h5py.h5g.open"><code class="docutils literal notranslate"><span class="pre">open()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5g.create"><code class="docutils literal notranslate"><span class="pre">create()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5g.iterate"><code class="docutils literal notranslate"><span class="pre">iterate()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5g.get_objinfo"><code class="docutils literal notranslate"><span class="pre">get_objinfo()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#info-objects">Info objects</a><ul>
+<li><a class="reference internal" href="#h5py.h5g.GroupStat"><code class="docutils literal notranslate"><span class="pre">GroupStat</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#group-objects">Group objects</a><ul>
+<li><a class="reference internal" href="#h5py.h5g.GroupID"><code class="docutils literal notranslate"><span class="pre">GroupID</span></code></a><ul>
+<li><a class="reference internal" href="#h5py.h5g.GroupID.get_comment"><code class="docutils literal notranslate"><span class="pre">GroupID.get_comment()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5g.GroupID.get_create_plist"><code class="docutils literal notranslate"><span class="pre">GroupID.get_create_plist()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5g.GroupID.get_linkval"><code class="docutils literal notranslate"><span class="pre">GroupID.get_linkval()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5g.GroupID.get_num_objs"><code class="docutils literal notranslate"><span class="pre">GroupID.get_num_objs()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5g.GroupID.get_objname_by_idx"><code class="docutils literal notranslate"><span class="pre">GroupID.get_objname_by_idx()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5g.GroupID.get_objtype_by_idx"><code class="docutils literal notranslate"><span class="pre">GroupID.get_objtype_by_idx()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5g.GroupID.link"><code class="docutils literal notranslate"><span class="pre">GroupID.link()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5g.GroupID.move"><code class="docutils literal notranslate"><span class="pre">GroupID.move()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5g.GroupID.set_comment"><code class="docutils literal notranslate"><span class="pre">GroupID.set_comment()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5g.GroupID.unlink"><code class="docutils literal notranslate"><span class="pre">GroupID.unlink()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li><a class="reference internal" href="#module-constants">Module constants</a><ul>
-<li><a class="reference internal" href="#object-type-codes">Object type codes</a></li>
-<li><a class="reference internal" href="#link-type-codes">Link type codes</a></li>
+<li><a class="reference internal" href="#object-type-codes">Object type codes</a><ul>
+<li><a class="reference internal" href="#h5py.h5g.LINK"><code class="docutils literal notranslate"><span class="pre">LINK</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5g.GROUP"><code class="docutils literal notranslate"><span class="pre">GROUP</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5g.DATASET"><code class="docutils literal notranslate"><span class="pre">DATASET</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5g.TYPE"><code class="docutils literal notranslate"><span class="pre">TYPE</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#link-type-codes">Link type codes</a><ul>
+<li><a class="reference internal" href="#h5py.h5g.LINK_HARD"><code class="docutils literal notranslate"><span class="pre">LINK_HARD</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5g.LINK_SOFT"><code class="docutils literal notranslate"><span class="pre">LINK_SOFT</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -340,8 +375,8 @@ where it should be moved.</p>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2014, Andrew Collette and contributors.
-      Last updated on Sep 17, 2022.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.1.1.
+      Last updated on Oct 10, 2022.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.2.3.
     </div>
   </body>
 </html>

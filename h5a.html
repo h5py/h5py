@@ -14,6 +14,7 @@
     <script src="_static/underscore.js"></script>
     <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Module H5AC" href="h5ac.html" />
@@ -293,9 +294,42 @@ the write will fail with an exception.</p>
     <h3><a href="index.html">Table of Contents</a></h3>
     <ul>
 <li><a class="reference internal" href="#">Module H5A</a><ul>
-<li><a class="reference internal" href="#functional-api">Functional API</a></li>
-<li><a class="reference internal" href="#info-objects">Info objects</a></li>
-<li><a class="reference internal" href="#attribute-objects">Attribute objects</a></li>
+<li><a class="reference internal" href="#functional-api">Functional API</a><ul>
+<li><a class="reference internal" href="#h5py.h5a.create"><code class="docutils literal notranslate"><span class="pre">create()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5a.open"><code class="docutils literal notranslate"><span class="pre">open()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5a.exists"><code class="docutils literal notranslate"><span class="pre">exists()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5a.rename"><code class="docutils literal notranslate"><span class="pre">rename()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5a.delete"><code class="docutils literal notranslate"><span class="pre">delete()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5a.get_num_attrs"><code class="docutils literal notranslate"><span class="pre">get_num_attrs()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5a.get_info"><code class="docutils literal notranslate"><span class="pre">get_info()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5a.iterate"><code class="docutils literal notranslate"><span class="pre">iterate()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#info-objects">Info objects</a><ul>
+<li><a class="reference internal" href="#h5py.h5a.AttrInfo"><code class="docutils literal notranslate"><span class="pre">AttrInfo</span></code></a><ul>
+<li><a class="reference internal" href="#h5py.h5a.AttrInfo.corder"><code class="docutils literal notranslate"><span class="pre">AttrInfo.corder</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5a.AttrInfo.corder_valid"><code class="docutils literal notranslate"><span class="pre">AttrInfo.corder_valid</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5a.AttrInfo.cset"><code class="docutils literal notranslate"><span class="pre">AttrInfo.cset</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5a.AttrInfo.data_size"><code class="docutils literal notranslate"><span class="pre">AttrInfo.data_size</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#attribute-objects">Attribute objects</a><ul>
+<li><a class="reference internal" href="#h5py.h5a.AttrID"><code class="docutils literal notranslate"><span class="pre">AttrID</span></code></a><ul>
+<li><a class="reference internal" href="#h5py.h5a.AttrID.dtype"><code class="docutils literal notranslate"><span class="pre">AttrID.dtype</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5a.AttrID.get_name"><code class="docutils literal notranslate"><span class="pre">AttrID.get_name()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5a.AttrID.get_space"><code class="docutils literal notranslate"><span class="pre">AttrID.get_space()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5a.AttrID.get_storage_size"><code class="docutils literal notranslate"><span class="pre">AttrID.get_storage_size()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5a.AttrID.get_type"><code class="docutils literal notranslate"><span class="pre">AttrID.get_type()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5a.AttrID.name"><code class="docutils literal notranslate"><span class="pre">AttrID.name</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5a.AttrID.read"><code class="docutils literal notranslate"><span class="pre">AttrID.read()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5a.AttrID.shape"><code class="docutils literal notranslate"><span class="pre">AttrID.shape</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5a.AttrID.write"><code class="docutils literal notranslate"><span class="pre">AttrID.write()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -353,8 +387,8 @@ the write will fail with an exception.</p>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2014, Andrew Collette and contributors.
-      Last updated on Sep 17, 2022.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.1.1.
+      Last updated on Oct 10, 2022.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.2.3.
     </div>
   </body>
 </html>

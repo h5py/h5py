@@ -14,6 +14,7 @@
     <script src="_static/underscore.js"></script>
     <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Module H5O" href="h5o.html" />
@@ -208,9 +209,28 @@ anything else aborts iteration and returns that value.</p>
     <h3><a href="index.html">Table of Contents</a></h3>
     <ul>
 <li><a class="reference internal" href="#">Module H5L</a><ul>
-<li><a class="reference internal" href="#module-h5py.h5l">Linkproxy objects</a></li>
+<li><a class="reference internal" href="#module-h5py.h5l">Linkproxy objects</a><ul>
+<li><a class="reference internal" href="#h5py.h5l.LinkProxy"><code class="docutils literal notranslate"><span class="pre">LinkProxy</span></code></a><ul>
+<li><a class="reference internal" href="#h5py.h5l.LinkProxy.create_external"><code class="docutils literal notranslate"><span class="pre">LinkProxy.create_external()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5l.LinkProxy.create_hard"><code class="docutils literal notranslate"><span class="pre">LinkProxy.create_hard()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5l.LinkProxy.create_soft"><code class="docutils literal notranslate"><span class="pre">LinkProxy.create_soft()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5l.LinkProxy.exists"><code class="docutils literal notranslate"><span class="pre">LinkProxy.exists()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5l.LinkProxy.get_info"><code class="docutils literal notranslate"><span class="pre">LinkProxy.get_info()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5l.LinkProxy.get_val"><code class="docutils literal notranslate"><span class="pre">LinkProxy.get_val()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5l.LinkProxy.iterate"><code class="docutils literal notranslate"><span class="pre">LinkProxy.iterate()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5l.LinkProxy.move"><code class="docutils literal notranslate"><span class="pre">LinkProxy.move()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5l.LinkProxy.visit"><code class="docutils literal notranslate"><span class="pre">LinkProxy.visit()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li><a class="reference internal" href="#module-constants">Module constants</a><ul>
-<li><a class="reference internal" href="#link-types">Link types</a></li>
+<li><a class="reference internal" href="#link-types">Link types</a><ul>
+<li><a class="reference internal" href="#h5py.h5l.TYPE_HARD"><code class="docutils literal notranslate"><span class="pre">TYPE_HARD</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5l.TYPE_SOFT"><code class="docutils literal notranslate"><span class="pre">TYPE_SOFT</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5l.TYPE_EXTERNAL"><code class="docutils literal notranslate"><span class="pre">TYPE_EXTERNAL</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -270,8 +290,8 @@ anything else aborts iteration and returns that value.</p>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2014, Andrew Collette and contributors.
-      Last updated on Sep 17, 2022.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.1.1.
+      Last updated on Oct 10, 2022.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.2.3.
     </div>
   </body>
 </html>

@@ -14,6 +14,7 @@
     <script src="_static/underscore.js"></script>
     <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Base object classes" href="objects.html" /> 
@@ -55,7 +56,10 @@ The docs here are specifically for the h5py low-level interface.</p>
 <h2>Contents<a class="headerlink" href="#contents" title="Permalink to this heading">¶</a></h2>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="objects.html">Base object classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="objects.html">Base object classes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="objects.html#h5py._objects.ObjectID"><code class="docutils literal notranslate"><span class="pre">ObjectID</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="h5.html">Module H5</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="h5.html#library-api">Library API</a></li>
 <li class="toctree-l2"><a class="reference internal" href="h5.html#configuration-class">Configuration class</a></li>
@@ -68,14 +72,29 @@ The docs here are specifically for the h5py low-level interface.</p>
 <li class="toctree-l2"><a class="reference internal" href="h5a.html#attribute-objects">Attribute objects</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="h5ac.html">Module H5AC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="h5ac.html">Module H5AC</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="h5ac.html#h5py.h5ac.CacheConfig"><code class="docutils literal notranslate"><span class="pre">CacheConfig</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="h5d.html">Module H5D</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="h5d.html#functional-api">Functional API</a></li>
 <li class="toctree-l2"><a class="reference internal" href="h5d.html#dataset-objects">Dataset Objects</a></li>
 <li class="toctree-l2"><a class="reference internal" href="h5d.html#module-constants">Module constants</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="h5ds.html">Module H5DS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="h5ds.html">Module H5DS</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="h5ds.html#h5py.h5ds.attach_scale"><code class="docutils literal notranslate"><span class="pre">attach_scale()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="h5ds.html#h5py.h5ds.detach_scale"><code class="docutils literal notranslate"><span class="pre">detach_scale()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="h5ds.html#h5py.h5ds.get_label"><code class="docutils literal notranslate"><span class="pre">get_label()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="h5ds.html#h5py.h5ds.get_num_scales"><code class="docutils literal notranslate"><span class="pre">get_num_scales()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="h5ds.html#h5py.h5ds.get_scale_name"><code class="docutils literal notranslate"><span class="pre">get_scale_name()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="h5ds.html#h5py.h5ds.is_attached"><code class="docutils literal notranslate"><span class="pre">is_attached()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="h5ds.html#h5py.h5ds.is_scale"><code class="docutils literal notranslate"><span class="pre">is_scale()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="h5ds.html#h5py.h5ds.iterate"><code class="docutils literal notranslate"><span class="pre">iterate()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="h5ds.html#h5py.h5ds.set_label"><code class="docutils literal notranslate"><span class="pre">set_label()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="h5ds.html#h5py.h5ds.set_scale"><code class="docutils literal notranslate"><span class="pre">set_scale()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="h5f.html">Module H5F</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="h5f.html#functional-api">Functional API</a></li>
 <li class="toctree-l2"><a class="reference internal" href="h5f.html#file-objects">File objects</a></li>
@@ -124,7 +143,16 @@ The docs here are specifically for the h5py low-level interface.</p>
 <li class="toctree-l2"><a class="reference internal" href="h5p.html#module-constants">Module constants</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="h5pl.html">Module H5PL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="h5pl.html">Module H5PL</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="h5pl.html#h5py.h5pl.append"><code class="docutils literal notranslate"><span class="pre">append()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="h5pl.html#h5py.h5pl.get"><code class="docutils literal notranslate"><span class="pre">get()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="h5pl.html#h5py.h5pl.insert"><code class="docutils literal notranslate"><span class="pre">insert()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="h5pl.html#h5py.h5pl.prepend"><code class="docutils literal notranslate"><span class="pre">prepend()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="h5pl.html#h5py.h5pl.remove"><code class="docutils literal notranslate"><span class="pre">remove()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="h5pl.html#h5py.h5pl.replace"><code class="docutils literal notranslate"><span class="pre">replace()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="h5pl.html#h5py.h5pl.size"><code class="docutils literal notranslate"><span class="pre">size()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="h5r.html">Module H5R</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="h5r.html#functional-api">Functional API</a></li>
 <li class="toctree-l2"><a class="reference internal" href="h5r.html#reference-classes">Reference classes</a></li>
@@ -146,6 +174,9 @@ The docs here are specifically for the h5py low-level interface.</p>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="h5z.html">Module H5Z</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="h5z.html#h5py.h5z.filter_avail"><code class="docutils literal notranslate"><span class="pre">filter_avail()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="h5z.html#h5py.h5z.get_filter_info"><code class="docutils literal notranslate"><span class="pre">get_filter_info()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="h5z.html#h5py.h5z.unregister_filter"><code class="docutils literal notranslate"><span class="pre">unregister_filter()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="h5z.html#module-constants">Module constants</a></li>
 </ul>
 </li>
@@ -215,8 +246,8 @@ The docs here are specifically for the h5py low-level interface.</p>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2014, Andrew Collette and contributors.
-      Last updated on Sep 17, 2022.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.1.1.
+      Last updated on Oct 10, 2022.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.2.3.
     </div>
   </body>
 </html>

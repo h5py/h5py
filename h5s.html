@@ -14,6 +14,7 @@
     <script src="_static/underscore.js"></script>
     <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Module H5T" href="h5t.html" />
@@ -414,12 +415,73 @@ an unlimited dimension.</p>
     <h3><a href="index.html">Table of Contents</a></h3>
     <ul>
 <li><a class="reference internal" href="#">Module H5S</a><ul>
-<li><a class="reference internal" href="#functional-api">Functional API</a></li>
-<li><a class="reference internal" href="#dataspace-objects">Dataspace objects</a></li>
+<li><a class="reference internal" href="#functional-api">Functional API</a><ul>
+<li><a class="reference internal" href="#h5py.h5s.create"><code class="docutils literal notranslate"><span class="pre">create()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5s.create_simple"><code class="docutils literal notranslate"><span class="pre">create_simple()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5s.decode"><code class="docutils literal notranslate"><span class="pre">decode()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#dataspace-objects">Dataspace objects</a><ul>
+<li><a class="reference internal" href="#h5py.h5s.SpaceID"><code class="docutils literal notranslate"><span class="pre">SpaceID</span></code></a><ul>
+<li><a class="reference internal" href="#h5py.h5s.SpaceID.copy"><code class="docutils literal notranslate"><span class="pre">SpaceID.copy()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5s.SpaceID.encode"><code class="docutils literal notranslate"><span class="pre">SpaceID.encode()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5s.SpaceID.extent_copy"><code class="docutils literal notranslate"><span class="pre">SpaceID.extent_copy()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5s.SpaceID.get_regular_hyperslab"><code class="docutils literal notranslate"><span class="pre">SpaceID.get_regular_hyperslab()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5s.SpaceID.get_select_bounds"><code class="docutils literal notranslate"><span class="pre">SpaceID.get_select_bounds()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5s.SpaceID.get_select_elem_npoints"><code class="docutils literal notranslate"><span class="pre">SpaceID.get_select_elem_npoints()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5s.SpaceID.get_select_elem_pointlist"><code class="docutils literal notranslate"><span class="pre">SpaceID.get_select_elem_pointlist()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5s.SpaceID.get_select_hyper_blocklist"><code class="docutils literal notranslate"><span class="pre">SpaceID.get_select_hyper_blocklist()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5s.SpaceID.get_select_hyper_nblocks"><code class="docutils literal notranslate"><span class="pre">SpaceID.get_select_hyper_nblocks()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5s.SpaceID.get_select_npoints"><code class="docutils literal notranslate"><span class="pre">SpaceID.get_select_npoints()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5s.SpaceID.get_select_type"><code class="docutils literal notranslate"><span class="pre">SpaceID.get_select_type()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5s.SpaceID.get_simple_extent_dims"><code class="docutils literal notranslate"><span class="pre">SpaceID.get_simple_extent_dims()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5s.SpaceID.get_simple_extent_ndims"><code class="docutils literal notranslate"><span class="pre">SpaceID.get_simple_extent_ndims()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5s.SpaceID.get_simple_extent_npoints"><code class="docutils literal notranslate"><span class="pre">SpaceID.get_simple_extent_npoints()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5s.SpaceID.get_simple_extent_type"><code class="docutils literal notranslate"><span class="pre">SpaceID.get_simple_extent_type()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5s.SpaceID.is_regular_hyperslab"><code class="docutils literal notranslate"><span class="pre">SpaceID.is_regular_hyperslab()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5s.SpaceID.is_simple"><code class="docutils literal notranslate"><span class="pre">SpaceID.is_simple()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5s.SpaceID.offset_simple"><code class="docutils literal notranslate"><span class="pre">SpaceID.offset_simple()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5s.SpaceID.select_all"><code class="docutils literal notranslate"><span class="pre">SpaceID.select_all()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5s.SpaceID.select_elements"><code class="docutils literal notranslate"><span class="pre">SpaceID.select_elements()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5s.SpaceID.select_hyperslab"><code class="docutils literal notranslate"><span class="pre">SpaceID.select_hyperslab()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5s.SpaceID.select_none"><code class="docutils literal notranslate"><span class="pre">SpaceID.select_none()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5s.SpaceID.select_valid"><code class="docutils literal notranslate"><span class="pre">SpaceID.select_valid()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5s.SpaceID.set_extent_none"><code class="docutils literal notranslate"><span class="pre">SpaceID.set_extent_none()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5s.SpaceID.set_extent_simple"><code class="docutils literal notranslate"><span class="pre">SpaceID.set_extent_simple()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5s.SpaceID.shape"><code class="docutils literal notranslate"><span class="pre">SpaceID.shape</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li><a class="reference internal" href="#module-constants">Module constants</a><ul>
-<li><a class="reference internal" href="#dataspace-class-codes">Dataspace class codes</a></li>
-<li><a class="reference internal" href="#selection-codes">Selection codes</a></li>
-<li><a class="reference internal" href="#existing-selection-type">Existing selection type</a></li>
+<li><a class="reference internal" href="#h5py.h5s.ALL"><code class="docutils literal notranslate"><span class="pre">ALL</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5s.UNLIMITED"><code class="docutils literal notranslate"><span class="pre">UNLIMITED</span></code></a></li>
+<li><a class="reference internal" href="#dataspace-class-codes">Dataspace class codes</a><ul>
+<li><a class="reference internal" href="#h5py.h5s.NO_CLASS"><code class="docutils literal notranslate"><span class="pre">NO_CLASS</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5s.SCALAR"><code class="docutils literal notranslate"><span class="pre">SCALAR</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5s.SIMPLE"><code class="docutils literal notranslate"><span class="pre">SIMPLE</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#selection-codes">Selection codes</a><ul>
+<li><a class="reference internal" href="#h5py.h5s.SELECT_NOOP"><code class="docutils literal notranslate"><span class="pre">SELECT_NOOP</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5s.SELECT_SET"><code class="docutils literal notranslate"><span class="pre">SELECT_SET</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5s.SELECT_OR"><code class="docutils literal notranslate"><span class="pre">SELECT_OR</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5s.SELECT_AND"><code class="docutils literal notranslate"><span class="pre">SELECT_AND</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5s.SELECT_XOR"><code class="docutils literal notranslate"><span class="pre">SELECT_XOR</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5s.SELECT_NOTB"><code class="docutils literal notranslate"><span class="pre">SELECT_NOTB</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5s.SELECT_NOTA"><code class="docutils literal notranslate"><span class="pre">SELECT_NOTA</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5s.SELECT_APPEND"><code class="docutils literal notranslate"><span class="pre">SELECT_APPEND</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5s.SELECT_PREPEND"><code class="docutils literal notranslate"><span class="pre">SELECT_PREPEND</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5s.SELECT_INVALID"><code class="docutils literal notranslate"><span class="pre">SELECT_INVALID</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#existing-selection-type">Existing selection type</a><ul>
+<li><a class="reference internal" href="#h5py.h5s.SEL_NONE"><code class="docutils literal notranslate"><span class="pre">SEL_NONE</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5s.SEL_POINTS"><code class="docutils literal notranslate"><span class="pre">SEL_POINTS</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5s.SEL_HYPERSLABS"><code class="docutils literal notranslate"><span class="pre">SEL_HYPERSLABS</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5s.SEL_ALL"><code class="docutils literal notranslate"><span class="pre">SEL_ALL</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -479,8 +541,8 @@ an unlimited dimension.</p>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2014, Andrew Collette and contributors.
-      Last updated on Sep 17, 2022.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.1.1.
+      Last updated on Oct 10, 2022.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.2.3.
     </div>
   </body>
 </html>

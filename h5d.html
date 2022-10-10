@@ -14,6 +14,7 @@
     <script src="_static/underscore.js"></script>
     <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Module H5DS" href="h5ds.html" />
@@ -419,14 +420,70 @@ been applied to the data before calling this function.</p>
     <h3><a href="index.html">Table of Contents</a></h3>
     <ul>
 <li><a class="reference internal" href="#">Module H5D</a><ul>
-<li><a class="reference internal" href="#functional-api">Functional API</a></li>
-<li><a class="reference internal" href="#dataset-objects">Dataset Objects</a></li>
+<li><a class="reference internal" href="#functional-api">Functional API</a><ul>
+<li><a class="reference internal" href="#h5py.h5d.open"><code class="docutils literal notranslate"><span class="pre">open()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5d.create"><code class="docutils literal notranslate"><span class="pre">create()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#dataset-objects">Dataset Objects</a><ul>
+<li><a class="reference internal" href="#h5py.h5d.DatasetID"><code class="docutils literal notranslate"><span class="pre">DatasetID</span></code></a><ul>
+<li><a class="reference internal" href="#h5py.h5d.DatasetID.dtype"><code class="docutils literal notranslate"><span class="pre">DatasetID.dtype</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5d.DatasetID.extend"><code class="docutils literal notranslate"><span class="pre">DatasetID.extend()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5d.DatasetID.flush"><code class="docutils literal notranslate"><span class="pre">DatasetID.flush()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5d.DatasetID.get_access_plist"><code class="docutils literal notranslate"><span class="pre">DatasetID.get_access_plist()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5d.DatasetID.get_chunk_info"><code class="docutils literal notranslate"><span class="pre">DatasetID.get_chunk_info()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5d.DatasetID.get_chunk_info_by_coord"><code class="docutils literal notranslate"><span class="pre">DatasetID.get_chunk_info_by_coord()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5d.DatasetID.get_create_plist"><code class="docutils literal notranslate"><span class="pre">DatasetID.get_create_plist()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5d.DatasetID.get_num_chunks"><code class="docutils literal notranslate"><span class="pre">DatasetID.get_num_chunks()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5d.DatasetID.get_offset"><code class="docutils literal notranslate"><span class="pre">DatasetID.get_offset()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5d.DatasetID.get_space"><code class="docutils literal notranslate"><span class="pre">DatasetID.get_space()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5d.DatasetID.get_space_status"><code class="docutils literal notranslate"><span class="pre">DatasetID.get_space_status()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5d.DatasetID.get_storage_size"><code class="docutils literal notranslate"><span class="pre">DatasetID.get_storage_size()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5d.DatasetID.get_type"><code class="docutils literal notranslate"><span class="pre">DatasetID.get_type()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5d.DatasetID.rank"><code class="docutils literal notranslate"><span class="pre">DatasetID.rank</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5d.DatasetID.read"><code class="docutils literal notranslate"><span class="pre">DatasetID.read()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5d.DatasetID.read_direct_chunk"><code class="docutils literal notranslate"><span class="pre">DatasetID.read_direct_chunk()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5d.DatasetID.refresh"><code class="docutils literal notranslate"><span class="pre">DatasetID.refresh()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5d.DatasetID.set_extent"><code class="docutils literal notranslate"><span class="pre">DatasetID.set_extent()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5d.DatasetID.shape"><code class="docutils literal notranslate"><span class="pre">DatasetID.shape</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5d.DatasetID.write"><code class="docutils literal notranslate"><span class="pre">DatasetID.write()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5d.DatasetID.write_direct_chunk"><code class="docutils literal notranslate"><span class="pre">DatasetID.write_direct_chunk()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li><a class="reference internal" href="#module-constants">Module constants</a><ul>
-<li><a class="reference internal" href="#storage-strategies">Storage strategies</a></li>
-<li><a class="reference internal" href="#allocation-times">Allocation times</a></li>
-<li><a class="reference internal" href="#allocation-status">Allocation status</a></li>
-<li><a class="reference internal" href="#fill-time">Fill time</a></li>
-<li><a class="reference internal" href="#fill-values">Fill values</a></li>
+<li><a class="reference internal" href="#storage-strategies">Storage strategies</a><ul>
+<li><a class="reference internal" href="#h5py.h5d.COMPACT"><code class="docutils literal notranslate"><span class="pre">COMPACT</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5d.CONTIGUOUS"><code class="docutils literal notranslate"><span class="pre">CONTIGUOUS</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5d.CHUNKED"><code class="docutils literal notranslate"><span class="pre">CHUNKED</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#allocation-times">Allocation times</a><ul>
+<li><a class="reference internal" href="#h5py.h5d.ALLOC_TIME_DEFAULT"><code class="docutils literal notranslate"><span class="pre">ALLOC_TIME_DEFAULT</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5d.ALLOC_TIME_LATE"><code class="docutils literal notranslate"><span class="pre">ALLOC_TIME_LATE</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5d.ALLOC_TIME_EARLY"><code class="docutils literal notranslate"><span class="pre">ALLOC_TIME_EARLY</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5d.ALLOC_TIME_INCR"><code class="docutils literal notranslate"><span class="pre">ALLOC_TIME_INCR</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#allocation-status">Allocation status</a><ul>
+<li><a class="reference internal" href="#h5py.h5d.SPACE_STATUS_NOT_ALLOCATED"><code class="docutils literal notranslate"><span class="pre">SPACE_STATUS_NOT_ALLOCATED</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5d.SPACE_STATUS_PART_ALLOCATED"><code class="docutils literal notranslate"><span class="pre">SPACE_STATUS_PART_ALLOCATED</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5d.SPACE_STATUS_ALLOCATED"><code class="docutils literal notranslate"><span class="pre">SPACE_STATUS_ALLOCATED</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#fill-time">Fill time</a><ul>
+<li><a class="reference internal" href="#h5py.h5d.FILL_TIME_ALLOC"><code class="docutils literal notranslate"><span class="pre">FILL_TIME_ALLOC</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5d.FILL_TIME_NEVER"><code class="docutils literal notranslate"><span class="pre">FILL_TIME_NEVER</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5d.FILL_TIME_IFSET"><code class="docutils literal notranslate"><span class="pre">FILL_TIME_IFSET</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#fill-values">Fill values</a><ul>
+<li><a class="reference internal" href="#h5py.h5d.FILL_VALUE_UNDEFINED"><code class="docutils literal notranslate"><span class="pre">FILL_VALUE_UNDEFINED</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5d.FILL_VALUE_DEFAULT"><code class="docutils literal notranslate"><span class="pre">FILL_VALUE_DEFAULT</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5d.FILL_VALUE_USER_DEFINED"><code class="docutils literal notranslate"><span class="pre">FILL_VALUE_USER_DEFINED</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -486,8 +543,8 @@ been applied to the data before calling this function.</p>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2014, Andrew Collette and contributors.
-      Last updated on Sep 17, 2022.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.1.1.
+      Last updated on Oct 10, 2022.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.2.3.
     </div>
   </body>
 </html>

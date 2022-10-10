@@ -14,6 +14,7 @@
     <script src="_static/underscore.js"></script>
     <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Module H5P" href="h5p.html" />
@@ -220,11 +221,35 @@ Otherwise ignored.</p>
     <h3><a href="index.html">Table of Contents</a></h3>
     <ul>
 <li><a class="reference internal" href="#">Module H5O</a><ul>
-<li><a class="reference internal" href="#functional-api">Functional API</a></li>
-<li><a class="reference internal" href="#info-classes">Info classes</a></li>
+<li><a class="reference internal" href="#functional-api">Functional API</a><ul>
+<li><a class="reference internal" href="#h5py.h5o.open"><code class="docutils literal notranslate"><span class="pre">open()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5o.link"><code class="docutils literal notranslate"><span class="pre">link()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5o.copy"><code class="docutils literal notranslate"><span class="pre">copy()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5o.set_comment"><code class="docutils literal notranslate"><span class="pre">set_comment()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5o.get_comment"><code class="docutils literal notranslate"><span class="pre">get_comment()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5o.visit"><code class="docutils literal notranslate"><span class="pre">visit()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5o.get_info"><code class="docutils literal notranslate"><span class="pre">get_info()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#info-classes">Info classes</a><ul>
+<li><a class="reference internal" href="#h5py.h5o.ObjInfo"><code class="docutils literal notranslate"><span class="pre">ObjInfo</span></code></a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#module-constants">Module constants</a><ul>
-<li><a class="reference internal" href="#object-types">Object types</a></li>
-<li><a class="reference internal" href="#copy-flags">Copy flags</a></li>
+<li><a class="reference internal" href="#object-types">Object types</a><ul>
+<li><a class="reference internal" href="#h5py.h5o.TYPE_GROUP"><code class="docutils literal notranslate"><span class="pre">TYPE_GROUP</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5o.TYPE_DATASET"><code class="docutils literal notranslate"><span class="pre">TYPE_DATASET</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5o.TYPE_NAMED_DATATYPE"><code class="docutils literal notranslate"><span class="pre">TYPE_NAMED_DATATYPE</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#copy-flags">Copy flags</a><ul>
+<li><a class="reference internal" href="#h5py.h5o.COPY_SHALLOW_HIERARCHY_FLAG"><code class="docutils literal notranslate"><span class="pre">COPY_SHALLOW_HIERARCHY_FLAG</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5o.COPY_EXPAND_SOFT_LINK_FLAG"><code class="docutils literal notranslate"><span class="pre">COPY_EXPAND_SOFT_LINK_FLAG</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5o.COPY_EXPAND_EXT_LINK_FLAG"><code class="docutils literal notranslate"><span class="pre">COPY_EXPAND_EXT_LINK_FLAG</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5o.COPY_EXPAND_REFERENCE_FLAG"><code class="docutils literal notranslate"><span class="pre">COPY_EXPAND_REFERENCE_FLAG</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5o.COPY_WITHOUT_ATTR_FLAG"><code class="docutils literal notranslate"><span class="pre">COPY_WITHOUT_ATTR_FLAG</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -284,8 +309,8 @@ Otherwise ignored.</p>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2014, Andrew Collette and contributors.
-      Last updated on Sep 17, 2022.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.1.1.
+      Last updated on Oct 10, 2022.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.2.3.
     </div>
   </body>
 </html>

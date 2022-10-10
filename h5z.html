@@ -14,6 +14,7 @@
     <script src="_static/underscore.js"></script>
     <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="prev" title="Module H5T" href="h5t.html" /> 
@@ -251,12 +252,53 @@ filter code should be one of:</p>
     <h3><a href="index.html">Table of Contents</a></h3>
     <ul>
 <li><a class="reference internal" href="#">Module H5Z</a><ul>
+<li><a class="reference internal" href="#h5py.h5z.filter_avail"><code class="docutils literal notranslate"><span class="pre">filter_avail()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5z.get_filter_info"><code class="docutils literal notranslate"><span class="pre">get_filter_info()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5z.unregister_filter"><code class="docutils literal notranslate"><span class="pre">unregister_filter()</span></code></a></li>
 <li><a class="reference internal" href="#module-constants">Module constants</a><ul>
-<li><a class="reference internal" href="#predefined-filters">Predefined filters</a></li>
-<li><a class="reference internal" href="#filter-flags">Filter flags</a></li>
-<li><a class="reference internal" href="#szip-specific-options">SZIP-specific options</a></li>
-<li><a class="reference internal" href="#scale-offset-specific-options">Scale/offset-specific options</a></li>
-<li><a class="reference internal" href="#other-flags">Other flags</a></li>
+<li><a class="reference internal" href="#predefined-filters">Predefined filters</a><ul>
+<li><a class="reference internal" href="#h5py.h5z.FILTER_NONE"><code class="docutils literal notranslate"><span class="pre">FILTER_NONE</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5z.FILTER_ALL"><code class="docutils literal notranslate"><span class="pre">FILTER_ALL</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5z.FILTER_DEFLATE"><code class="docutils literal notranslate"><span class="pre">FILTER_DEFLATE</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5z.FILTER_SHUFFLE"><code class="docutils literal notranslate"><span class="pre">FILTER_SHUFFLE</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5z.FILTER_FLETCHER32"><code class="docutils literal notranslate"><span class="pre">FILTER_FLETCHER32</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5z.FILTER_SZIP"><code class="docutils literal notranslate"><span class="pre">FILTER_SZIP</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5z.FILTER_SCALEOFFSET"><code class="docutils literal notranslate"><span class="pre">FILTER_SCALEOFFSET</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5z.FILTER_LZF"><code class="docutils literal notranslate"><span class="pre">FILTER_LZF</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#filter-flags">Filter flags</a><ul>
+<li><a class="reference internal" href="#h5py.h5z.FLAG_DEFMASK"><code class="docutils literal notranslate"><span class="pre">FLAG_DEFMASK</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5z.FLAG_MANDATORY"><code class="docutils literal notranslate"><span class="pre">FLAG_MANDATORY</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5z.FLAG_OPTIONAL"><code class="docutils literal notranslate"><span class="pre">FLAG_OPTIONAL</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5z.FLAG_INVMASK"><code class="docutils literal notranslate"><span class="pre">FLAG_INVMASK</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5z.FLAG_REVERSE"><code class="docutils literal notranslate"><span class="pre">FLAG_REVERSE</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5z.FLAG_SKIP_EDC"><code class="docutils literal notranslate"><span class="pre">FLAG_SKIP_EDC</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#szip-specific-options">SZIP-specific options</a><ul>
+<li><a class="reference internal" href="#h5py.h5z.SZIP_ALLOW_K13_OPTION_MASK"><code class="docutils literal notranslate"><span class="pre">SZIP_ALLOW_K13_OPTION_MASK</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5z.SZIP_CHIP_OPTION_MASK"><code class="docutils literal notranslate"><span class="pre">SZIP_CHIP_OPTION_MASK</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5z.SZIP_EC_OPTION_MASK"><code class="docutils literal notranslate"><span class="pre">SZIP_EC_OPTION_MASK</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5z.SZIP_NN_OPTION_MASK"><code class="docutils literal notranslate"><span class="pre">SZIP_NN_OPTION_MASK</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5z.SZIP_MAX_PIXELS_PER_BLOCK"><code class="docutils literal notranslate"><span class="pre">SZIP_MAX_PIXELS_PER_BLOCK</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#scale-offset-specific-options">Scale/offset-specific options</a><ul>
+<li><a class="reference internal" href="#h5py.h5z.SO_FLOAT_DSCALE"><code class="docutils literal notranslate"><span class="pre">SO_FLOAT_DSCALE</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5z.SO_FLOAT_ESCALE"><code class="docutils literal notranslate"><span class="pre">SO_FLOAT_ESCALE</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5z.SO_INT"><code class="docutils literal notranslate"><span class="pre">SO_INT</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5z.SO_INT_MINBITS_DEFAULT"><code class="docutils literal notranslate"><span class="pre">SO_INT_MINBITS_DEFAULT</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#other-flags">Other flags</a><ul>
+<li><a class="reference internal" href="#h5py.h5z.FILTER_CONFIG_ENCODE_ENABLED"><code class="docutils literal notranslate"><span class="pre">FILTER_CONFIG_ENCODE_ENABLED</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5z.FILTER_CONFIG_DECODE_ENABLED"><code class="docutils literal notranslate"><span class="pre">FILTER_CONFIG_DECODE_ENABLED</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5z.DISABLE_EDC"><code class="docutils literal notranslate"><span class="pre">DISABLE_EDC</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5z.ENABLE_EDC"><code class="docutils literal notranslate"><span class="pre">ENABLE_EDC</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5z.NO_EDC"><code class="docutils literal notranslate"><span class="pre">NO_EDC</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -308,8 +350,8 @@ filter code should be one of:</p>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2014, Andrew Collette and contributors.
-      Last updated on Sep 17, 2022.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.1.1.
+      Last updated on Oct 10, 2022.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.2.3.
     </div>
   </body>
 </html>

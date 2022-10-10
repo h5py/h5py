@@ -14,6 +14,7 @@
     <script src="_static/underscore.js"></script>
     <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Module H5PL" href="h5pl.html" />
@@ -1192,20 +1193,202 @@ virtual dataset’s creation property list.</p>
     <h3><a href="index.html">Table of Contents</a></h3>
     <ul>
 <li><a class="reference internal" href="#">Module H5P</a><ul>
-<li><a class="reference internal" href="#functional-api">Functional API</a></li>
-<li><a class="reference internal" href="#base-classes">Base classes</a></li>
-<li><a class="reference internal" href="#file-creation">File creation</a></li>
-<li><a class="reference internal" href="#file-access">File access</a></li>
-<li><a class="reference internal" href="#dataset-creation">Dataset creation</a></li>
-<li><a class="reference internal" href="#dataset-access">Dataset access</a></li>
-<li><a class="reference internal" href="#dataset-transfer">Dataset transfer</a></li>
-<li><a class="reference internal" href="#link-creation">Link creation</a></li>
-<li><a class="reference internal" href="#link-access">Link access</a></li>
-<li><a class="reference internal" href="#group-creation">Group creation</a></li>
-<li><a class="reference internal" href="#datatype-creation">Datatype creation</a></li>
+<li><a class="reference internal" href="#functional-api">Functional API</a><ul>
+<li><a class="reference internal" href="#h5py.h5p.create"><code class="docutils literal notranslate"><span class="pre">create()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#base-classes">Base classes</a><ul>
+<li><a class="reference internal" href="#h5py.h5p.PropID"><code class="docutils literal notranslate"><span class="pre">PropID</span></code></a><ul>
+<li><a class="reference internal" href="#h5py.h5p.PropID.equal"><code class="docutils literal notranslate"><span class="pre">PropID.equal()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#h5py.h5p.PropClassID"><code class="docutils literal notranslate"><span class="pre">PropClassID</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropInstanceID"><code class="docutils literal notranslate"><span class="pre">PropInstanceID</span></code></a><ul>
+<li><a class="reference internal" href="#h5py.h5p.PropInstanceID.copy"><code class="docutils literal notranslate"><span class="pre">PropInstanceID.copy()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropInstanceID.get_class"><code class="docutils literal notranslate"><span class="pre">PropInstanceID.get_class()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#h5py.h5p.PropCreateID"><code class="docutils literal notranslate"><span class="pre">PropCreateID</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropOCID"><code class="docutils literal notranslate"><span class="pre">PropOCID</span></code></a><ul>
+<li><a class="reference internal" href="#h5py.h5p.PropOCID.get_attr_creation_order"><code class="docutils literal notranslate"><span class="pre">PropOCID.get_attr_creation_order()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropOCID.get_attr_phase_change"><code class="docutils literal notranslate"><span class="pre">PropOCID.get_attr_phase_change()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropOCID.get_obj_track_times"><code class="docutils literal notranslate"><span class="pre">PropOCID.get_obj_track_times()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropOCID.set_attr_creation_order"><code class="docutils literal notranslate"><span class="pre">PropOCID.set_attr_creation_order()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropOCID.set_attr_phase_change"><code class="docutils literal notranslate"><span class="pre">PropOCID.set_attr_phase_change()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropOCID.set_obj_track_times"><code class="docutils literal notranslate"><span class="pre">PropOCID.set_obj_track_times()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#h5py.h5p.PropCopyID"><code class="docutils literal notranslate"><span class="pre">PropCopyID</span></code></a><ul>
+<li><a class="reference internal" href="#h5py.h5p.PropCopyID.get_copy_object"><code class="docutils literal notranslate"><span class="pre">PropCopyID.get_copy_object()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropCopyID.set_copy_object"><code class="docutils literal notranslate"><span class="pre">PropCopyID.set_copy_object()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#file-creation">File creation</a><ul>
+<li><a class="reference internal" href="#h5py.h5p.PropFCID"><code class="docutils literal notranslate"><span class="pre">PropFCID</span></code></a><ul>
+<li><a class="reference internal" href="#h5py.h5p.PropFCID.get_file_space_page_size"><code class="docutils literal notranslate"><span class="pre">PropFCID.get_file_space_page_size()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropFCID.get_file_space_strategy"><code class="docutils literal notranslate"><span class="pre">PropFCID.get_file_space_strategy()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropFCID.get_link_creation_order"><code class="docutils literal notranslate"><span class="pre">PropFCID.get_link_creation_order()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropFCID.get_sizes"><code class="docutils literal notranslate"><span class="pre">PropFCID.get_sizes()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropFCID.get_userblock"><code class="docutils literal notranslate"><span class="pre">PropFCID.get_userblock()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropFCID.get_version"><code class="docutils literal notranslate"><span class="pre">PropFCID.get_version()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropFCID.set_file_space_page_size"><code class="docutils literal notranslate"><span class="pre">PropFCID.set_file_space_page_size()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropFCID.set_file_space_strategy"><code class="docutils literal notranslate"><span class="pre">PropFCID.set_file_space_strategy()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropFCID.set_link_creation_order"><code class="docutils literal notranslate"><span class="pre">PropFCID.set_link_creation_order()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropFCID.set_sizes"><code class="docutils literal notranslate"><span class="pre">PropFCID.set_sizes()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropFCID.set_userblock"><code class="docutils literal notranslate"><span class="pre">PropFCID.set_userblock()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#file-access">File access</a><ul>
+<li><a class="reference internal" href="#h5py.h5p.PropFAID"><code class="docutils literal notranslate"><span class="pre">PropFAID</span></code></a><ul>
+<li><a class="reference internal" href="#h5py.h5p.PropFAID.get_alignment"><code class="docutils literal notranslate"><span class="pre">PropFAID.get_alignment()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropFAID.get_cache"><code class="docutils literal notranslate"><span class="pre">PropFAID.get_cache()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropFAID.get_driver"><code class="docutils literal notranslate"><span class="pre">PropFAID.get_driver()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropFAID.get_fapl_core"><code class="docutils literal notranslate"><span class="pre">PropFAID.get_fapl_core()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropFAID.get_fapl_direct"><code class="docutils literal notranslate"><span class="pre">PropFAID.get_fapl_direct()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropFAID.get_fapl_family"><code class="docutils literal notranslate"><span class="pre">PropFAID.get_fapl_family()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropFAID.get_fclose_degree"><code class="docutils literal notranslate"><span class="pre">PropFAID.get_fclose_degree()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropFAID.get_libver_bounds"><code class="docutils literal notranslate"><span class="pre">PropFAID.get_libver_bounds()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropFAID.get_mdc_config"><code class="docutils literal notranslate"><span class="pre">PropFAID.get_mdc_config()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropFAID.get_meta_block_size"><code class="docutils literal notranslate"><span class="pre">PropFAID.get_meta_block_size()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropFAID.get_page_buffer_size"><code class="docutils literal notranslate"><span class="pre">PropFAID.get_page_buffer_size()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropFAID.get_sieve_buf_size"><code class="docutils literal notranslate"><span class="pre">PropFAID.get_sieve_buf_size()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropFAID.set_alignment"><code class="docutils literal notranslate"><span class="pre">PropFAID.set_alignment()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropFAID.set_cache"><code class="docutils literal notranslate"><span class="pre">PropFAID.set_cache()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropFAID.set_driver"><code class="docutils literal notranslate"><span class="pre">PropFAID.set_driver()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropFAID.set_fapl_core"><code class="docutils literal notranslate"><span class="pre">PropFAID.set_fapl_core()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropFAID.set_fapl_direct"><code class="docutils literal notranslate"><span class="pre">PropFAID.set_fapl_direct()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropFAID.set_fapl_family"><code class="docutils literal notranslate"><span class="pre">PropFAID.set_fapl_family()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropFAID.set_fapl_log"><code class="docutils literal notranslate"><span class="pre">PropFAID.set_fapl_log()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropFAID.set_fapl_sec2"><code class="docutils literal notranslate"><span class="pre">PropFAID.set_fapl_sec2()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropFAID.set_fapl_split"><code class="docutils literal notranslate"><span class="pre">PropFAID.set_fapl_split()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropFAID.set_fapl_stdio"><code class="docutils literal notranslate"><span class="pre">PropFAID.set_fapl_stdio()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropFAID.set_fclose_degree"><code class="docutils literal notranslate"><span class="pre">PropFAID.set_fclose_degree()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropFAID.set_file_image"><code class="docutils literal notranslate"><span class="pre">PropFAID.set_file_image()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropFAID.set_fileobj_driver"><code class="docutils literal notranslate"><span class="pre">PropFAID.set_fileobj_driver()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropFAID.set_libver_bounds"><code class="docutils literal notranslate"><span class="pre">PropFAID.set_libver_bounds()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropFAID.set_mdc_config"><code class="docutils literal notranslate"><span class="pre">PropFAID.set_mdc_config()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropFAID.set_meta_block_size"><code class="docutils literal notranslate"><span class="pre">PropFAID.set_meta_block_size()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropFAID.set_page_buffer_size"><code class="docutils literal notranslate"><span class="pre">PropFAID.set_page_buffer_size()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropFAID.set_sieve_buf_size"><code class="docutils literal notranslate"><span class="pre">PropFAID.set_sieve_buf_size()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#dataset-creation">Dataset creation</a><ul>
+<li><a class="reference internal" href="#h5py.h5p.PropDCID"><code class="docutils literal notranslate"><span class="pre">PropDCID</span></code></a><ul>
+<li><a class="reference internal" href="#h5py.h5p.PropDCID.all_filters_avail"><code class="docutils literal notranslate"><span class="pre">PropDCID.all_filters_avail()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropDCID.fill_value_defined"><code class="docutils literal notranslate"><span class="pre">PropDCID.fill_value_defined()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropDCID.get_alloc_time"><code class="docutils literal notranslate"><span class="pre">PropDCID.get_alloc_time()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropDCID.get_chunk"><code class="docutils literal notranslate"><span class="pre">PropDCID.get_chunk()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropDCID.get_external"><code class="docutils literal notranslate"><span class="pre">PropDCID.get_external()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropDCID.get_external_count"><code class="docutils literal notranslate"><span class="pre">PropDCID.get_external_count()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropDCID.get_fill_time"><code class="docutils literal notranslate"><span class="pre">PropDCID.get_fill_time()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropDCID.get_fill_value"><code class="docutils literal notranslate"><span class="pre">PropDCID.get_fill_value()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropDCID.get_filter"><code class="docutils literal notranslate"><span class="pre">PropDCID.get_filter()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropDCID.get_filter_by_id"><code class="docutils literal notranslate"><span class="pre">PropDCID.get_filter_by_id()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropDCID.get_layout"><code class="docutils literal notranslate"><span class="pre">PropDCID.get_layout()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropDCID.get_nfilters"><code class="docutils literal notranslate"><span class="pre">PropDCID.get_nfilters()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropDCID.get_virtual_count"><code class="docutils literal notranslate"><span class="pre">PropDCID.get_virtual_count()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropDCID.get_virtual_dsetname"><code class="docutils literal notranslate"><span class="pre">PropDCID.get_virtual_dsetname()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropDCID.get_virtual_filename"><code class="docutils literal notranslate"><span class="pre">PropDCID.get_virtual_filename()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropDCID.get_virtual_srcspace"><code class="docutils literal notranslate"><span class="pre">PropDCID.get_virtual_srcspace()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropDCID.get_virtual_vspace"><code class="docutils literal notranslate"><span class="pre">PropDCID.get_virtual_vspace()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropDCID.remove_filter"><code class="docutils literal notranslate"><span class="pre">PropDCID.remove_filter()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropDCID.set_alloc_time"><code class="docutils literal notranslate"><span class="pre">PropDCID.set_alloc_time()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropDCID.set_chunk"><code class="docutils literal notranslate"><span class="pre">PropDCID.set_chunk()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropDCID.set_deflate"><code class="docutils literal notranslate"><span class="pre">PropDCID.set_deflate()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropDCID.set_external"><code class="docutils literal notranslate"><span class="pre">PropDCID.set_external()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropDCID.set_fill_time"><code class="docutils literal notranslate"><span class="pre">PropDCID.set_fill_time()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropDCID.set_fill_value"><code class="docutils literal notranslate"><span class="pre">PropDCID.set_fill_value()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropDCID.set_filter"><code class="docutils literal notranslate"><span class="pre">PropDCID.set_filter()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropDCID.set_fletcher32"><code class="docutils literal notranslate"><span class="pre">PropDCID.set_fletcher32()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropDCID.set_layout"><code class="docutils literal notranslate"><span class="pre">PropDCID.set_layout()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropDCID.set_scaleoffset"><code class="docutils literal notranslate"><span class="pre">PropDCID.set_scaleoffset()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropDCID.set_shuffle"><code class="docutils literal notranslate"><span class="pre">PropDCID.set_shuffle()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropDCID.set_szip"><code class="docutils literal notranslate"><span class="pre">PropDCID.set_szip()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropDCID.set_virtual"><code class="docutils literal notranslate"><span class="pre">PropDCID.set_virtual()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#dataset-access">Dataset access</a><ul>
+<li><a class="reference internal" href="#h5py.h5p.PropDAID"><code class="docutils literal notranslate"><span class="pre">PropDAID</span></code></a><ul>
+<li><a class="reference internal" href="#h5py.h5p.PropDAID.get_chunk_cache"><code class="docutils literal notranslate"><span class="pre">PropDAID.get_chunk_cache()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropDAID.get_efile_prefix"><code class="docutils literal notranslate"><span class="pre">PropDAID.get_efile_prefix()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropDAID.get_virtual_prefix"><code class="docutils literal notranslate"><span class="pre">PropDAID.get_virtual_prefix()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropDAID.get_virtual_printf_gap"><code class="docutils literal notranslate"><span class="pre">PropDAID.get_virtual_printf_gap()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropDAID.get_virtual_view"><code class="docutils literal notranslate"><span class="pre">PropDAID.get_virtual_view()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropDAID.set_chunk_cache"><code class="docutils literal notranslate"><span class="pre">PropDAID.set_chunk_cache()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropDAID.set_efile_prefix"><code class="docutils literal notranslate"><span class="pre">PropDAID.set_efile_prefix()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropDAID.set_virtual_prefix"><code class="docutils literal notranslate"><span class="pre">PropDAID.set_virtual_prefix()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropDAID.set_virtual_printf_gap"><code class="docutils literal notranslate"><span class="pre">PropDAID.set_virtual_printf_gap()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropDAID.set_virtual_view"><code class="docutils literal notranslate"><span class="pre">PropDAID.set_virtual_view()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#dataset-transfer">Dataset transfer</a><ul>
+<li><a class="reference internal" href="#h5py.h5p.PropDXID"><code class="docutils literal notranslate"><span class="pre">PropDXID</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#link-creation">Link creation</a><ul>
+<li><a class="reference internal" href="#h5py.h5p.PropLCID"><code class="docutils literal notranslate"><span class="pre">PropLCID</span></code></a><ul>
+<li><a class="reference internal" href="#h5py.h5p.PropLCID.get_char_encoding"><code class="docutils literal notranslate"><span class="pre">PropLCID.get_char_encoding()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropLCID.get_create_intermediate_group"><code class="docutils literal notranslate"><span class="pre">PropLCID.get_create_intermediate_group()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropLCID.set_char_encoding"><code class="docutils literal notranslate"><span class="pre">PropLCID.set_char_encoding()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropLCID.set_create_intermediate_group"><code class="docutils literal notranslate"><span class="pre">PropLCID.set_create_intermediate_group()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#link-access">Link access</a><ul>
+<li><a class="reference internal" href="#h5py.h5p.PropLAID"><code class="docutils literal notranslate"><span class="pre">PropLAID</span></code></a><ul>
+<li><a class="reference internal" href="#h5py.h5p.PropLAID.get_elink_fapl"><code class="docutils literal notranslate"><span class="pre">PropLAID.get_elink_fapl()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropLAID.get_elink_prefix"><code class="docutils literal notranslate"><span class="pre">PropLAID.get_elink_prefix()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropLAID.get_nlinks"><code class="docutils literal notranslate"><span class="pre">PropLAID.get_nlinks()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropLAID.set_elink_fapl"><code class="docutils literal notranslate"><span class="pre">PropLAID.set_elink_fapl()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropLAID.set_elink_prefix"><code class="docutils literal notranslate"><span class="pre">PropLAID.set_elink_prefix()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropLAID.set_nlinks"><code class="docutils literal notranslate"><span class="pre">PropLAID.set_nlinks()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#group-creation">Group creation</a><ul>
+<li><a class="reference internal" href="#h5py.h5p.PropGCID"><code class="docutils literal notranslate"><span class="pre">PropGCID</span></code></a><ul>
+<li><a class="reference internal" href="#h5py.h5p.PropGCID.get_link_creation_order"><code class="docutils literal notranslate"><span class="pre">PropGCID.get_link_creation_order()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropGCID.set_link_creation_order"><code class="docutils literal notranslate"><span class="pre">PropGCID.set_link_creation_order()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#datatype-creation">Datatype creation</a><ul>
+<li><a class="reference internal" href="#h5py.h5p.PropTCID"><code class="docutils literal notranslate"><span class="pre">PropTCID</span></code></a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#module-constants">Module constants</a><ul>
-<li><a class="reference internal" href="#predefined-classes">Predefined classes</a></li>
-<li><a class="reference internal" href="#order-tracking-flags">Order tracking flags</a></li>
+<li><a class="reference internal" href="#predefined-classes">Predefined classes</a><ul>
+<li><a class="reference internal" href="#h5py.h5p.DEFAULT"><code class="docutils literal notranslate"><span class="pre">DEFAULT</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.FILE_CREATE"><code class="docutils literal notranslate"><span class="pre">FILE_CREATE</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.FILE_ACCESS"><code class="docutils literal notranslate"><span class="pre">FILE_ACCESS</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.DATASET_CREATE"><code class="docutils literal notranslate"><span class="pre">DATASET_CREATE</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.DATASET_XFER"><code class="docutils literal notranslate"><span class="pre">DATASET_XFER</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.DATASET_ACCESS"><code class="docutils literal notranslate"><span class="pre">DATASET_ACCESS</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.OBJECT_COPY"><code class="docutils literal notranslate"><span class="pre">OBJECT_COPY</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.LINK_CREATE"><code class="docutils literal notranslate"><span class="pre">LINK_CREATE</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.LINK_ACCESS"><code class="docutils literal notranslate"><span class="pre">LINK_ACCESS</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.GROUP_CREATE"><code class="docutils literal notranslate"><span class="pre">GROUP_CREATE</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.OBJECT_CREATE"><code class="docutils literal notranslate"><span class="pre">OBJECT_CREATE</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#order-tracking-flags">Order tracking flags</a><ul>
+<li><a class="reference internal" href="#h5py.h5p.CRT_ORDER_TRACKED"><code class="docutils literal notranslate"><span class="pre">CRT_ORDER_TRACKED</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.CRT_ORDER_INDEXED"><code class="docutils literal notranslate"><span class="pre">CRT_ORDER_INDEXED</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -1265,8 +1448,8 @@ virtual dataset’s creation property list.</p>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2014, Andrew Collette and contributors.
-      Last updated on Sep 17, 2022.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.1.1.
+      Last updated on Oct 10, 2022.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.2.3.
     </div>
   </body>
 </html>

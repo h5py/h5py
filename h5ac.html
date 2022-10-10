@@ -14,6 +14,7 @@
     <script src="_static/underscore.js"></script>
     <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Module H5D" href="h5d.html" />
@@ -193,6 +194,44 @@
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
   <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Module H5AC</a><ul>
+<li><a class="reference internal" href="#h5py.h5ac.CacheConfig"><code class="docutils literal notranslate"><span class="pre">CacheConfig</span></code></a><ul>
+<li><a class="reference internal" href="#h5py.h5ac.CacheConfig.apply_empty_reserve"><code class="docutils literal notranslate"><span class="pre">CacheConfig.apply_empty_reserve</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5ac.CacheConfig.apply_max_decrement"><code class="docutils literal notranslate"><span class="pre">CacheConfig.apply_max_decrement</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5ac.CacheConfig.apply_max_increment"><code class="docutils literal notranslate"><span class="pre">CacheConfig.apply_max_increment</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5ac.CacheConfig.decr_mode"><code class="docutils literal notranslate"><span class="pre">CacheConfig.decr_mode</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5ac.CacheConfig.decrement"><code class="docutils literal notranslate"><span class="pre">CacheConfig.decrement</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5ac.CacheConfig.dirty_bytes_threshold"><code class="docutils literal notranslate"><span class="pre">CacheConfig.dirty_bytes_threshold</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5ac.CacheConfig.empty_reserve"><code class="docutils literal notranslate"><span class="pre">CacheConfig.empty_reserve</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5ac.CacheConfig.epoch_length"><code class="docutils literal notranslate"><span class="pre">CacheConfig.epoch_length</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5ac.CacheConfig.epochs_before_eviction"><code class="docutils literal notranslate"><span class="pre">CacheConfig.epochs_before_eviction</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5ac.CacheConfig.evictions_enabled"><code class="docutils literal notranslate"><span class="pre">CacheConfig.evictions_enabled</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5ac.CacheConfig.flash_incr_mode"><code class="docutils literal notranslate"><span class="pre">CacheConfig.flash_incr_mode</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5ac.CacheConfig.flash_multiple"><code class="docutils literal notranslate"><span class="pre">CacheConfig.flash_multiple</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5ac.CacheConfig.flash_threshold"><code class="docutils literal notranslate"><span class="pre">CacheConfig.flash_threshold</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5ac.CacheConfig.incr_mode"><code class="docutils literal notranslate"><span class="pre">CacheConfig.incr_mode</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5ac.CacheConfig.increment"><code class="docutils literal notranslate"><span class="pre">CacheConfig.increment</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5ac.CacheConfig.initial_size"><code class="docutils literal notranslate"><span class="pre">CacheConfig.initial_size</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5ac.CacheConfig.lower_hr_threshold"><code class="docutils literal notranslate"><span class="pre">CacheConfig.lower_hr_threshold</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5ac.CacheConfig.max_decrement"><code class="docutils literal notranslate"><span class="pre">CacheConfig.max_decrement</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5ac.CacheConfig.max_increment"><code class="docutils literal notranslate"><span class="pre">CacheConfig.max_increment</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5ac.CacheConfig.max_size"><code class="docutils literal notranslate"><span class="pre">CacheConfig.max_size</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5ac.CacheConfig.min_clean_fraction"><code class="docutils literal notranslate"><span class="pre">CacheConfig.min_clean_fraction</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5ac.CacheConfig.min_size"><code class="docutils literal notranslate"><span class="pre">CacheConfig.min_size</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5ac.CacheConfig.rpt_fcn_enabled"><code class="docutils literal notranslate"><span class="pre">CacheConfig.rpt_fcn_enabled</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5ac.CacheConfig.set_initial_size"><code class="docutils literal notranslate"><span class="pre">CacheConfig.set_initial_size</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5ac.CacheConfig.upper_hr_threshold"><code class="docutils literal notranslate"><span class="pre">CacheConfig.upper_hr_threshold</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5ac.CacheConfig.version"><code class="docutils literal notranslate"><span class="pre">CacheConfig.version</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
     <h4>Previous topic</h4>
     <p class="topless"><a href="h5a.html"
                           title="previous chapter">Module H5A</a></p>
@@ -244,8 +283,8 @@
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2014, Andrew Collette and contributors.
-      Last updated on Sep 17, 2022.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.1.1.
+      Last updated on Oct 10, 2022.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.2.3.
     </div>
   </body>
 </html>

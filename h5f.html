@@ -14,6 +14,7 @@
     <script src="_static/underscore.js"></script>
     <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Module H5FD" href="h5fd.html" />
@@ -472,14 +473,80 @@ attached to objects cannot remain open.</p>
     <h3><a href="index.html">Table of Contents</a></h3>
     <ul>
 <li><a class="reference internal" href="#">Module H5F</a><ul>
-<li><a class="reference internal" href="#functional-api">Functional API</a></li>
-<li><a class="reference internal" href="#file-objects">File objects</a></li>
+<li><a class="reference internal" href="#functional-api">Functional API</a><ul>
+<li><a class="reference internal" href="#h5py.h5f.open"><code class="docutils literal notranslate"><span class="pre">open()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5f.create"><code class="docutils literal notranslate"><span class="pre">create()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5f.flush"><code class="docutils literal notranslate"><span class="pre">flush()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5f.is_hdf5"><code class="docutils literal notranslate"><span class="pre">is_hdf5()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5f.mount"><code class="docutils literal notranslate"><span class="pre">mount()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5f.unmount"><code class="docutils literal notranslate"><span class="pre">unmount()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5f.open_file_image"><code class="docutils literal notranslate"><span class="pre">open_file_image()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5f.get_name"><code class="docutils literal notranslate"><span class="pre">get_name()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5f.get_obj_count"><code class="docutils literal notranslate"><span class="pre">get_obj_count()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5f.get_obj_ids"><code class="docutils literal notranslate"><span class="pre">get_obj_ids()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#file-objects">File objects</a><ul>
+<li><a class="reference internal" href="#h5py.h5f.FileID"><code class="docutils literal notranslate"><span class="pre">FileID</span></code></a><ul>
+<li><a class="reference internal" href="#h5py.h5f.FileID.close"><code class="docutils literal notranslate"><span class="pre">FileID.close()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5f.FileID.get_access_plist"><code class="docutils literal notranslate"><span class="pre">FileID.get_access_plist()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5f.FileID.get_create_plist"><code class="docutils literal notranslate"><span class="pre">FileID.get_create_plist()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5f.FileID.get_file_image"><code class="docutils literal notranslate"><span class="pre">FileID.get_file_image()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5f.FileID.get_filesize"><code class="docutils literal notranslate"><span class="pre">FileID.get_filesize()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5f.FileID.get_freespace"><code class="docutils literal notranslate"><span class="pre">FileID.get_freespace()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5f.FileID.get_intent"><code class="docutils literal notranslate"><span class="pre">FileID.get_intent()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5f.FileID.get_mdc_config"><code class="docutils literal notranslate"><span class="pre">FileID.get_mdc_config()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5f.FileID.get_mdc_hit_rate"><code class="docutils literal notranslate"><span class="pre">FileID.get_mdc_hit_rate()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5f.FileID.get_mdc_size"><code class="docutils literal notranslate"><span class="pre">FileID.get_mdc_size()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5f.FileID.get_page_buffering_stats"><code class="docutils literal notranslate"><span class="pre">FileID.get_page_buffering_stats()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5f.FileID.get_vfd_handle"><code class="docutils literal notranslate"><span class="pre">FileID.get_vfd_handle()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5f.FileID.name"><code class="docutils literal notranslate"><span class="pre">FileID.name</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5f.FileID.reopen"><code class="docutils literal notranslate"><span class="pre">FileID.reopen()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5f.FileID.reset_mdc_hit_rate_stats"><code class="docutils literal notranslate"><span class="pre">FileID.reset_mdc_hit_rate_stats()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5f.FileID.reset_page_buffering_stats"><code class="docutils literal notranslate"><span class="pre">FileID.reset_page_buffering_stats()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5f.FileID.set_mdc_config"><code class="docutils literal notranslate"><span class="pre">FileID.set_mdc_config()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5f.FileID.start_swmr_write"><code class="docutils literal notranslate"><span class="pre">FileID.start_swmr_write()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li><a class="reference internal" href="#module-constants">Module constants</a><ul>
-<li><a class="reference internal" href="#file-access-flags">File access flags</a></li>
-<li><a class="reference internal" href="#file-close-strength">File close strength</a></li>
-<li><a class="reference internal" href="#file-scope">File scope</a></li>
-<li><a class="reference internal" href="#object-types">Object types</a></li>
-<li><a class="reference internal" href="#library-version-bounding">Library version bounding</a></li>
+<li><a class="reference internal" href="#file-access-flags">File access flags</a><ul>
+<li><a class="reference internal" href="#h5py.h5f.ACC_TRUNC"><code class="docutils literal notranslate"><span class="pre">ACC_TRUNC</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5f.ACC_EXCL"><code class="docutils literal notranslate"><span class="pre">ACC_EXCL</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5f.ACC_RDWR"><code class="docutils literal notranslate"><span class="pre">ACC_RDWR</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5f.ACC_RDONLY"><code class="docutils literal notranslate"><span class="pre">ACC_RDONLY</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#file-close-strength">File close strength</a><ul>
+<li><a class="reference internal" href="#h5py.h5f.CLOSE_WEAK"><code class="docutils literal notranslate"><span class="pre">CLOSE_WEAK</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5f.CLOSE_SEMI"><code class="docutils literal notranslate"><span class="pre">CLOSE_SEMI</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5f.CLOSE_STRONG"><code class="docutils literal notranslate"><span class="pre">CLOSE_STRONG</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5f.CLOSE_DEFAULT"><code class="docutils literal notranslate"><span class="pre">CLOSE_DEFAULT</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#file-scope">File scope</a><ul>
+<li><a class="reference internal" href="#h5py.h5f.SCOPE_LOCAL"><code class="docutils literal notranslate"><span class="pre">SCOPE_LOCAL</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5f.SCOPE_GLOBAL"><code class="docutils literal notranslate"><span class="pre">SCOPE_GLOBAL</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#object-types">Object types</a><ul>
+<li><a class="reference internal" href="#h5py.h5f.OBJ_FILE"><code class="docutils literal notranslate"><span class="pre">OBJ_FILE</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5f.OBJ_DATASET"><code class="docutils literal notranslate"><span class="pre">OBJ_DATASET</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5f.OBJ_GROUP"><code class="docutils literal notranslate"><span class="pre">OBJ_GROUP</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5f.OBJ_DATATYPE"><code class="docutils literal notranslate"><span class="pre">OBJ_DATATYPE</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5f.OBJ_ATTR"><code class="docutils literal notranslate"><span class="pre">OBJ_ATTR</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5f.OBJ_ALL"><code class="docutils literal notranslate"><span class="pre">OBJ_ALL</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5f.OBJ_LOCAL"><code class="docutils literal notranslate"><span class="pre">OBJ_LOCAL</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#library-version-bounding">Library version bounding</a><ul>
+<li><a class="reference internal" href="#h5py.h5f.LIBVER_EARLIEST"><code class="docutils literal notranslate"><span class="pre">LIBVER_EARLIEST</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5f.LIBVER_V18"><code class="docutils literal notranslate"><span class="pre">LIBVER_V18</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5f.LIBVER_V110"><code class="docutils literal notranslate"><span class="pre">LIBVER_V110</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5f.LIBVER_LATEST"><code class="docutils literal notranslate"><span class="pre">LIBVER_LATEST</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -539,8 +606,8 @@ attached to objects cannot remain open.</p>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2014, Andrew Collette and contributors.
-      Last updated on Sep 17, 2022.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.1.1.
+      Last updated on Oct 10, 2022.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.2.3.
     </div>
   </body>
 </html>
