@@ -1223,7 +1223,8 @@ cdef class TypeCompoundID(TypeCompositeID):
         if len(field_names) == 2                                and \
             tuple(field_names) == (cfg._r_name, cfg._i_name)    and \
             field_types[0] == field_types[1]                    and \
-            field_types[0].kind == 'f':
+            field_types[0].kind == 'f'                          and \
+            field_types[0].itemsize in (4, 8, 16):
 
             bstring = field_types[0].str
             blen = int(bstring[2:])

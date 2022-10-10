@@ -1037,6 +1037,13 @@ class TestDtype(BaseDataset):
         dset = self.f.create_dataset('foo', (5,), '|S10')
         self.assertEqual(dset.dtype, np.dtype('|S10'))
 
+    def test_dtype_complex32(self):
+        """ Retrieve dtype from complex float16 dataset (gh-2156) """
+        # No native support in numpy as of v1.23.3, so expect compound type.
+        complex32 = np.dtype([('r', np.float16), ('i', np.float16)])
+        dset = self.f.create_dataset('foo', (5,), complex32)
+        self.assertEqual(dset.dtype, complex32)
+
 
 class TestLen(BaseDataset):
 
