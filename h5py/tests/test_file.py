@@ -1009,22 +1009,6 @@ f = h5py.File({str(filename)!r}, mode={mode!r}, locking={locking})
             assert open_in_subprocess(fname, mode="w", locking=True)
 
 
-# unittest doesn't work with pytest fixtures (and possibly other features),
-# hence no subclassing TestCase
-class TestROS3:
-    @pytest.mark.skipif(h5py.version.hdf5_version_tuple < (1, 10, 6)
-                        or not h5.get_config().ros3,
-                        reason="ros3 file operations were added in HDF5 1.10.6+")
-    def test_ros3(self):
-        """ ROS3 driver and options """
-
-        with File("https://dandiarchive.s3.amazonaws.com/ros3test.hdf5", 'r',
-                  driver='ros3') as f:
-            assert f
-            assert 'mydataset' in f.keys()
-            assert f["mydataset"].shape == (100,)
-
-
 def test_close_gc(writable_file):
     # https://github.com/h5py/h5py/issues/1852
     for i in range(100):

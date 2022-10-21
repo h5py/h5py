@@ -150,7 +150,7 @@ def make_fapl(driver, libver, rdcc_nslots, rdcc_nbytes, rdcc_w0, locking,
     if locking is not None:
         if hdf5_version < (1, 12, 1) and (hdf5_version[:2] != (1, 10) or hdf5_version[2] < 7):
             raise ValueError(
-                "HDF version >= 1.12.1 or 1.10.x >= 1.10.7 required for file locking.")
+                "HDF5 version >= 1.12.1 or 1.10.x >= 1.10.7 required for file locking.")
 
         if locking in ("false", False):
             plist.set_file_locking(False, ignore_when_disabled=False)
@@ -492,18 +492,30 @@ class File(Group):
             Passed on to the selected file driver.
         """
         if (fs_strategy or page_buf_size) and hdf5_version < (1, 10, 1):
-            raise ValueError("HDF version 1.10.1 or greater required for file space strategy or page buffering support.")
+            raise ValueError("HDF5 version 1.10.1 or greater required for file space strategy or page buffering support.")
 
         if swmr and not swmr_support:
             raise ValueError("The SWMR feature is not available in this version of the HDF5 library")
 
-        if driver == 'ros3' and not ros3:
-            raise ValueError(
-                "h5py was built without ROS3 support, can't use ros3 driver")
+        if driver == 'ros3':
+            if ros3:
+                from urllib.parse import urlparse
+                url = urlparse(name)
+                if url.scheme == 's3':
+                    aws_region = kwds.get('aws_region', b'').decode('ascii')
+                    if len(aws_region) == 0:
+                        raise ValueError('AWS region required for s3:// location')
+                    name = f'https://s3.{aws_region}.amazonaws.com/{url.netloc}{url.path}'
+                elif url.scheme not in ('https', 'http'):
+                    raise ValueError(f'{name}: S3 location must begin with '
+                                     'either "https://", "http://", or "s3://"')
+            else:
+                raise ValueError(
+                    "h5py was built without ROS3 support, can't use ros3 driver")
 
         if locking is not None and hdf5_version < (1, 12, 1) and (
                 hdf5_version[:2] != (1, 10) or hdf5_version[2] < 7):
-            raise ValueError("HDF version >= 1.12.1 or 1.10.x >= 1.10.7 required for file locking options.")
+            raise ValueError("HDF5 version >= 1.12.1 or 1.10.x >= 1.10.7 required for file locking options.")
 
         if isinstance(name, _objects.ObjectID):
             if fs_strategy:
