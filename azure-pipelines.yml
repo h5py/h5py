@@ -27,7 +27,7 @@ jobs:
   pool:
     vmImage: ubuntu-20.04
   variables:
-    CIBW_BUILD: cp3{7,8,9,10}-manylinux_x86_64
+    CIBW_BUILD: cp3{7,8,9,10,11}-manylinux_x86_64
     CIBW_MANYLINUX_X86_64_IMAGE: ghcr.io/h5py/manylinux2010_x86_64-hdf5
     # Include less debugging info for smaller wheels (default is -g2)
     CIBW_ENVIRONMENT: "CFLAGS=-g1"
@@ -43,7 +43,7 @@ jobs:
     HDF5_VERSION: 1.12.2
     HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
     HDF5_VSVERSION: "16-64"
-    CIBW_BUILD: cp3{7,8,9,10}-win_amd64
+    CIBW_BUILD: cp3{7,8,9,10,11}-win_amd64
   steps:
     - template: ci/azure-pipelines-wheels.yml
       parameters:
@@ -60,7 +60,7 @@ jobs:
     HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
     CIBW_BUILD_VERBOSITY_MACOS: 3
     CIBW_ARCHS_MACOS: $(arch)
-    CIBW_BUILD: cp3{7,8,9,10}-macosx_*
+    CIBW_BUILD: cp3{7,8,9,10,11}-macosx_*
     CIBW_ENVIRONMENT_MACOS: LD_LIBRARY_PATH="$(HDF5_CACHE_DIR)/$(HDF5_VERSION)/lib:${LD_LIBRARY_PATH}" PKG_CONFIG_PATH="$(HDF5_CACHE_DIR)/$(HDF5_VERSION)/lib/pkgconfig:${PKG_CONFIG_PATH}"
     CIBW_REPAIR_WHEEL_COMMAND_MACOS: >
       DYLD_FALLBACK_LIBRARY_PATH=$(HDF5_CACHE_DIR)/$(HDF5_VERSION)/lib delocate-listdeps {wheel} &&
@@ -171,6 +171,10 @@ jobs:
         python.version: '3.10'
         TOXENV: py310-test-deps,py310-test-mindeps,py310-test-deps-pre
         WHL_FILE: h5py*-cp310-*manylinux2010_x86_64.whl
+      py311:
+        python.version: '3.11'
+        TOXENV: py311-test-deps,py311-test-mindeps,py311-test-deps-pre
+        WHL_FILE: h5py*-cp311-*manylinux2010_x86_64.whl
 
   steps:
     - template: ci/azure-pipelines-test-wheels.yml
@@ -253,6 +257,10 @@ jobs:
         python.version: '3.10'
         TOXENV: py310-test-deps,py310-test-mindeps,py310-test-deps-pre
         WHL_FILE: h5py*-cp310-*.whl
+      py311:
+        python.version: '3.11'
+        TOXENV: py311-test-deps,py311-test-mindeps,py311-test-deps-pre
+        WHL_FILE: h5py*-cp311-*.whl
 
   steps:
     - template: ci/azure-pipelines-test-wheels.yml
@@ -329,6 +337,10 @@ jobs:
         python.version: '3.10'
         TOXENV: py310-test-deps,py310-test-mindeps,py310-test-deps-pre
         WHL_FILE: h5py*-cp310-*.whl
+      py311:
+        python.version: '3.11'
+        TOXENV: py311-test-deps,py311-test-mindeps,py311-test-deps-pre
+        WHL_FILE: h5py*-cp311-*.whl
 
   steps:
     - template: ci/azure-pipelines-test-wheels.yml
