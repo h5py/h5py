@@ -97,9 +97,9 @@ of supported drivers and their options:
 
     'ros3'
         Allows read-only access to HDF5 files in AWS S3 or S3 compatible object
-        stores. HDF5 file name must be one of http://, https://, or s3://
+        stores. HDF5 file name must be one of \http://, \https://, or s3://
         resource location. An s3:// location will be translated into an AWS
-        <path-style https://docs.aws.amazon.com/AmazonS3/latest/userguide/VirtualHosting.html#path-style-access>_
+        `path-style <https://docs.aws.amazon.com/AmazonS3/latest/userguide/VirtualHosting.html#path-style-access>`_
         location. Keywords:
 
         aws_region:
