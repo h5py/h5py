@@ -94,7 +94,7 @@ cdef struct err_data_t:
     H5E_error_t err
     int n
 
-cdef herr_t walk_cb(int n, H5E_error_t *desc, void *e) nogil:
+cdef herr_t walk_cb(unsigned int n, const H5E_error_t *desc, void *e) nogil:
 
     cdef err_data_t *ee = <err_data_t*>e
 
