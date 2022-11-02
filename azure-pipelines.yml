@@ -158,23 +158,23 @@ jobs:
       py37:
         python.version: '3.7'
         TOXENV: py37-test-deps,py37-test-mindeps,py37-test-deps-pre,py37-test-deps-tables
-        WHL_FILE: h5py*-cp37-*manylinux2010_x86_64.whl
+        WHL_FILE: h5py*-cp37-*manylinux2014_x86_64.whl
       py38:
         python.version: '3.8'
         TOXENV: py38-test-deps,py38-test-mindeps,py38-test-deps-pre
-        WHL_FILE: h5py*-cp38-*manylinux2010_x86_64.whl
+        WHL_FILE: h5py*-cp38-*manylinux2014_x86_64.whl
       py39:
         python.version: '3.9'
         TOXENV: py39-test-deps,py39-test-mindeps,py39-test-deps-pre
-        WHL_FILE: h5py*-cp39-*manylinux2010_x86_64.whl
+        WHL_FILE: h5py*-cp39-*manylinux2014_x86_64.whl
       py310:
         python.version: '3.10'
         TOXENV: py310-test-deps,py310-test-mindeps,py310-test-deps-pre
-        WHL_FILE: h5py*-cp310-*manylinux2010_x86_64.whl
+        WHL_FILE: h5py*-cp310-*manylinux2014_x86_64.whl
       py311:
         python.version: '3.11'
         TOXENV: py311-test-deps,py311-test-mindeps,py311-test-deps-pre
-        WHL_FILE: h5py*-cp311-*manylinux2010_x86_64.whl
+        WHL_FILE: h5py*-cp311-*manylinux2014_x86_64.whl
 
   steps:
     - template: ci/azure-pipelines-test-wheels.yml
