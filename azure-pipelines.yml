@@ -28,7 +28,7 @@ jobs:
     vmImage: ubuntu-20.04
   variables:
     CIBW_BUILD: cp3{7,8,9,10,11}-manylinux_x86_64
-    CIBW_MANYLINUX_X86_64_IMAGE: ghcr.io/h5py/manylinux2010_x86_64-hdf5
+    CIBW_MANYLINUX_X86_64_IMAGE: ghcr.io/h5py/manylinux2014_x86_64-hdf5
     # Include less debugging info for smaller wheels (default is -g2)
     CIBW_ENVIRONMENT: "CFLAGS=-g1"
   steps:
