@@ -464,12 +464,17 @@ class File(Group):
             page_buf_size is set. Default value is zero.
         locking
             The file locking behavior. Defined as:
-            False (or "false")  Disable file locking
-            True (or "true")    Enable file locking
-            "best-effort"       Enable file locking but ignore some errors
-            None                Use HDF5 defaults
-            Warning: The HDF5_USE_FILE_LOCKING environment variable can override
-            this parameter.
+
+            - False (or "false") --  Disable file locking
+            - True (or "true")   --  Enable file locking
+            - "best-effort"      --  Enable file locking but ignore some errors
+            - None               --  Use HDF5 defaults
+
+            .. warning::
+
+                The HDF5_USE_FILE_LOCKING environment variable can override
+                this parameter.
+
             Only available with HDF5 >= 1.12.1 or 1.10.x >= 1.10.7.
 
         alignment_threshold
