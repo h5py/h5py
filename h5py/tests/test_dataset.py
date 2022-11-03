@@ -476,6 +476,25 @@ class TestCreateFillvalue(BaseDataset):
                     dtype=[('a', 'i'), ('b', 'f')], fillvalue=42)
 
 
+@pytest.mark.parametrize('dt,expected', [
+    (int, 0),
+    (np.int32, 0),
+    (np.int64, 0),
+    (float, 0.0),
+    (np.float32, 0.0),
+    (np.float64, 0.0),
+    (h5py.string_dtype(encoding='utf-8', length=5), b''),
+    (h5py.string_dtype(encoding='ascii', length=5), b''),
+    (h5py.string_dtype(encoding='utf-8'), b''),
+    (h5py.string_dtype(encoding='ascii'), b''),
+    (h5py.string_dtype(), b''),
+
+])
+def test_get_unset_fill_value(dt, expected, writable_file):
+    dset = writable_file.create_dataset('foo', (10,), dtype=dt)
+    assert dset.fillvalue == expected
+
+
 class TestCreateNamedType(BaseDataset):
 
     """

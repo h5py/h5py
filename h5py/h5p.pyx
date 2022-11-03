@@ -547,6 +547,14 @@ cdef class PropDCID(PropOCID):
         if string_info is not None and string_info.length is None:
             tid = py_create(value.dtype, logical=1)
             ret = H5Pget_fill_value(self.id, tid.id, &c_ptr)
+            if c_ptr == NULL:
+                # If the pointer is NULL (either the value did not get changed,
+                # or maybe the 0 length string, it's unclear currently), if
+                # PyBytes_FromString is called on the pointer, we get a
+                # segfault. If we set the value to empty bytes, then we
+                # shouldn't segfault.
+                value[0] = b""
+                return
             fill_value = c_ptr
             value[0] = fill_value
             return
