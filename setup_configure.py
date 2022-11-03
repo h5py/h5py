@@ -64,6 +64,21 @@ class BuildConfig:
         self.ros3 = ros3
         self.direct_vfd = direct_vfd
 
+        if self.mpi and os.environ.get('H5PY_MSMPI') == 'ON':
+            self.msmpi = True
+            self.msmpi_inc_dirs = os.environ.get('MSMPI_INC').split(';')
+            import platform
+            bitness, _ = platform.architecture()
+            if bitness == '64bit':
+                mpi_lib_envvar = 'MSMPI_LIB64'
+            else:
+                mpi_lib_envvar = 'MSMPI_LIB32'
+            self.msmpi_lib_dirs = os.environ.get(mpi_lib_envvar).split(';')
+        else:
+            self.msmpi = False
+            self.msmpi_inc_dirs = []
+            self.msmpi_lib_dirs = []
+
     @classmethod
     def from_env(cls):
         mpi = mpi_enabled()
@@ -175,6 +190,9 @@ class BuildConfig:
             'mpi': self.mpi,
             'ros3': self.ros3,
             'direct_vfd': self.direct_vfd,
+            'msmpi': self.msmpi,
+            'msmpi_inc_dirs': self.msmpi_inc_dirs,
+            'msmpi_lib_dirs': self.msmpi_lib_dirs,
         }
 
     def changed(self):
@@ -192,13 +210,16 @@ class BuildConfig:
         print('*' * 80)
         print(' ' * 23 + "Summary of the h5py configuration")
         print('')
-        print("HDF5 include dirs:", fmt_dirs(self.hdf5_includedirs))
-        print("HDF5 library dirs:", fmt_dirs(self.hdf5_libdirs))
-        print("     HDF5 Version:", repr(self.hdf5_version))
-        print("      MPI Enabled:", self.mpi)
-        print(" ROS3 VFD Enabled:", self.ros3)
-        print("DIRECT VFD Enabled:", self.direct_vfd)
-        print(" Rebuild Required:", self.changed())
+        print("  HDF5 include dirs:", fmt_dirs(self.hdf5_includedirs))
+        print("  HDF5 library dirs:", fmt_dirs(self.hdf5_libdirs))
+        print("       HDF5 Version:", repr(self.hdf5_version))
+        print("        MPI Enabled:", self.mpi)
+        print("   ROS3 VFD Enabled:", self.ros3)
+        print(" DIRECT VFD Enabled:", self.direct_vfd)
+        print("   Rebuild Required:", self.changed())
+        print("     MS-MPI Enabled:", self.msmpi)
+        print("MS-MPI include dirs:", self.msmpi_inc_dirs)
+        print("MS-MPI library dirs:", self.msmpi_lib_dirs)
         print('')
         print('*' * 80)
 

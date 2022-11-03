@@ -243,3 +243,7 @@ by setting the ``HDF5_MPI`` environment variable::
 
 You will need a shared-library build of Parallel HDF5 as well, i.e. built with
 ``./configure --enable-shared --enable-parallel``.
+
+On Windows, MS-MPI is usually used which does not have an ``mpicc`` wrapper.
+Instead, you may use the ``H5PY_MSMPI`` environment variable to ``ON`` in
+order to query the system for MS-MPI's information.

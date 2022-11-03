@@ -91,6 +91,11 @@ class h5py_build_ext(build_ext):
         settings['library_dirs'][:0] = config.hdf5_libdirs
         settings['define_macros'].extend(config.hdf5_define_macros)
 
+        if config.msmpi:
+            settings['include_dirs'].extend(config.msmpi_inc_dirs)
+            settings['library_dirs'].extend(config.msmpi_lib_dirs)
+            settings['libraries'].append('msmpi')
+
         try:
             numpy_includes = numpy.get_include()
         except AttributeError:
