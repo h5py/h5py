@@ -1167,6 +1167,15 @@ class TestStrings(BaseDataset):
         self.assertEqual(string_info.encoding, 'ascii')
         self.assertEqual(string_info.length, 10)
 
+    def test_fixed_bytes_fillvalue(self):
+        """ Vlen bytes dataset handles fillvalue """
+        dt = h5py.string_dtype(encoding='ascii', length=10)
+        fill_value = b'bar'
+        ds = self.f.create_dataset('x', (100,), dtype=dt, fillvalue=fill_value)
+        self.assertEqual(self.f['x'][0], fill_value)
+        self.assertEqual(self.f['x'].asstr()[0], fill_value.decode())
+        self.assertEqual(self.f['x'].fillvalue, fill_value)
+
     def test_fixed_utf8(self):
         dt = h5py.string_dtype(encoding='utf-8', length=5)
         ds = self.f.create_dataset('x', (100,), dtype=dt)
@@ -1182,6 +1191,15 @@ class TestStrings(BaseDataset):
             ds[8:10] = np.array([s, s], dtype='U')
 
         np.testing.assert_array_equal(ds[:8], np.array([s.encode('utf-8')] * 8, dtype='S'))
+
+    def test_fixed_utf_8_fillvalue(self):
+        """ Vlen unicode dataset handles fillvalue """
+        dt = h5py.string_dtype(encoding='utf-8', length=10)
+        fill_value = 'bár'.encode("utf-8")
+        ds = self.f.create_dataset('x', (100,), dtype=dt, fillvalue=fill_value)
+        self.assertEqual(self.f['x'][0], fill_value)
+        self.assertEqual(self.f['x'].asstr()[0], fill_value.decode("utf-8"))
+        self.assertEqual(self.f['x'].fillvalue, fill_value)
 
     def test_fixed_unicode(self):
         """ Fixed-length unicode datasets are unsupported (raise TypeError) """
