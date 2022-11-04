@@ -1141,3 +1141,11 @@ class Dataset(HLObject):
         You can optionally pass a name to associate with this scale.
         """
         h5ds.set_scale(self._id, self._e(name))
+
+    @with_phil
+    def is_scale(self):
+        """Return ``True`` if this dataset is also a dimension scale.
+
+        Return ``False`` otherwise.
+        """
+        return h5ds.is_scale(self._id)
