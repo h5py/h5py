@@ -574,11 +574,6 @@ Reference
 
        You can optionally pass a name to associate with this scale.
 
-    .. method:: is_scale()
-
-        Return ``True`` if the dataset is also a :ref:`dimension scale <dimension_scales>`,
-        ``False`` otherwise.
-
     .. method:: virtual_sources
 
        If this dataset is a :doc:`virtual dataset </vds>`, return a list of
@@ -666,6 +661,11 @@ Reference
     .. attribute:: dims
 
         Access to :ref:`dimension_scales`.
+
+    .. attribute:: is_scale
+
+        Return ``True`` if the dataset is also a :ref:`dimension scale <dimension_scales>`,
+        ``False`` otherwise.
 
     .. attribute:: attrs
 

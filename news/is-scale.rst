@@ -1,7 +1,7 @@
 New features
 ------------
 
-* New method :meth:`Dataset.is_scale` to check if the dataset is a dimension
+* New property :attribute:`Dataset.is_scale` for checking if the dataset is a dimension
   scale.
 
 Deprecations
