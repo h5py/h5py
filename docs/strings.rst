@@ -17,7 +17,8 @@ for variable-length strings, or numpy bytes arrays (``'S'`` dtypes) for
 fixed-length strings. Use :meth:`.Dataset.asstr` to retrieve ``str`` objects.
 
 Variable-length strings in attributes are read as ``str`` objects. These are
-decoded as UTF-8 with surrogate escaping for unrecognised bytes.
+decoded as UTF-8 with surrogate escaping for unrecognised bytes. Fixed-length
+strings are read as numpy bytes arrays, the same as for datasets.
 
 Storing strings
 ---------------
