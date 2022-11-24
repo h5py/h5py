@@ -1,4 +1,5 @@
 language: python
+os: linux
 dist: xenial
 
 notifications:
@@ -19,12 +20,13 @@ env:
   global:
     - HDF5_CACHE_DIR=$HOME/.cache/hdf5
 
-matrix:
+jobs:
   include:
     # needed to work around https://github.com/travis-ci/travis-ci/issues/4794
     # TODO: We should see if we can replace this with installing python via pyenv # based on toxenv
     # Test on ppc64le
-    - python: 3.7
+    - arch: ppc64le
+      python: 3.7
       env:
       - TOXENV=py37-test-deps
       # NumPy 1.21.5 fails to compile: https://github.com/numpy/numpy/issues/20761
@@ -32,13 +34,10 @@ matrix:
       - HDF5_VERSION=1.10.5
       - HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION
       - H5PY_ENFORCE_COVERAGE=yes
-      os: linux-ppc64le
-    - os: linux
+    - arch: arm64
       services: docker
       python: 3.7
       virt: vm
-      group: edge
-      arch: arm64
       env:
         - TOXENV=py37-test-deps
         - TOX_OPTS=""
