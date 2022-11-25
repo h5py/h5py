@@ -685,6 +685,21 @@ Reference
 
         Whether Fletcher32 checksumming is enabled (T/F).  See :ref:`dataset_fletcher32`.
 
+    .. attribute:: filter_ids
+                   filter_names
+
+        The numeric filter IDs and the string names (as stored in the file) of
+        the filters in use. Each attribute is a tuple.
+
+        Filters are mostly used to compress data, but can also do things like
+        checksumming (see :ref:`dataset_compression`). Other attributes listed
+        above provide convenient shortcuts to check on common filters.
+        IDs for filters built into h5py can be found in the :mod:`h5py.h5z`
+        module, while filter IDs from plugins are listed in `HDF Group's registry
+        <https://portal.hdfgroup.org/display/support/Registered+Filter+Plugins>`_.
+
+        .. versionadded:: 3.8
+
     .. attribute:: fillvalue
 
         Value used when reading uninitialized portions of the dataset, or None

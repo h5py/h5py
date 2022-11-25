@@ -635,6 +635,21 @@ class Dataset(HLObject):
 
     @property
     @with_phil
+    def filter_ids(self):
+        """Numeric IDs of HDF5 filters used for this dataset"""
+        pl = self._dcpl
+        return tuple([pl.get_filter(i)[0] for i in range(pl.get_nfilters())])
+
+    @property
+    @with_phil
+    def filter_names(self):
+        """Names, as stored in the file, of the filters used for this dataset"""
+        pl = self._dcpl
+        return tuple([pl.get_filter(i)[3].decode('utf-8', 'surrogateescape')
+                for i in range(pl.get_nfilters())])
+
+    @property
+    @with_phil
     def shuffle(self):
         """Shuffle filter present (T/F)"""
         return 'shuffle' in self._filters

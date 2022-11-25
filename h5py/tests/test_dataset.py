@@ -2313,3 +2313,14 @@ def test_concurrent_dataset_creation(writable_file):
     [f.result() for f in futures]
     expected = set(f'concurrent_{i:02d}_{j:02d}' for i in range(N_THREADS) for j in range(N_DATASETS_PER_THREAD))
     assert set(writable_file) == expected
+
+
+def test_filter_properties(writable_file):
+    ds = writable_file.create_dataset(
+        'foo', shape=1000, dtype=np.float32,
+        fletcher32=True, shuffle=True, compression='lzf'
+    )
+    assert ds.filter_ids == (
+        h5py.h5z.FILTER_SHUFFLE, h5py.h5z.FILTER_LZF, h5py.h5z.FILTER_FLETCHER32
+    )
+    assert ds.filter_names == ('shuffle', 'lzf', 'fletcher32')
