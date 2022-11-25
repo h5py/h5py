@@ -667,6 +667,11 @@ Reference
         String with the currently applied compression filter, or None if
         compression is not enabled for this dataset.  See :ref:`dataset_compression`.
 
+        This only recognises the built-in compression options ``'gzip'``,
+        ``'lzf'`` and ``'szip'``. Other compression mechanisms will show as
+        ``'unknown'`` from h5py 3.8. Use :attr:`filter_ids` and
+        :attr:`filter_names` to get more complete information.
+
     .. attribute:: compression_opts
 
         Options for the compression filter.  See :ref:`dataset_compression`.

@@ -625,6 +625,8 @@ class Dataset(HLObject):
         for x in ('gzip','lzf','szip'):
             if x in self._filters:
                 return x
+        if any(f not in filters._COMP_FILTERS for f in self._filters):
+            return 'unknown'  # Filter from a plugin
         return None
 
     @property

@@ -2115,6 +2115,7 @@ def test_allow_unknown_filter(writable_file):
         allow_unknown_filter=True
     )
     assert str(fake_filter_id) in ds._filters
+    assert ds.compression == 'unknown'
 
 
 def test_dset_chunk_cache():
