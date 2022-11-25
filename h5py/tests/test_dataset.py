@@ -1112,6 +1112,34 @@ class TestCreateLike(BaseDataset):
         self.assertEqual(similar.shape, (10,))
         self.assertEqual(similar.maxshape, (20,))
 
+    def test_chunking_compression(self):
+        foo = self.f.create_dataset(
+            'foo', dtype=np.uint16, shape=(100,), chunks=(21,), compression='gzip'
+        )
+        bar = self.f.create_dataset_like('bar', foo)
+        self.assertEqual(bar.shape, (100,))
+        self.assertEqual(bar.chunks, (21,))
+        self.assertEqual(bar.filter_ids, (h5py.h5z.FILTER_DEFLATE,))
+
+    def test_remove_compression(self):
+        foo = self.f.create_dataset(
+            'foo', dtype=np.uint16, shape=(100,), chunks=(21,), compression='gzip'
+        )
+        baz = self.f.create_dataset_like('baz', foo, compression=None)
+        self.assertEqual(baz.filter_ids, ())
+        self.assertEqual(baz.chunks, (21,))
+
+    def test_replace_compression(self):
+        foo = self.f.create_dataset(
+            'foo', dtype=np.uint16, shape=(100,), chunks=(21,), compression='gzip',
+            shuffle=True, fletcher32=True,
+        )
+        baz = self.f.create_dataset_like('baz', foo, compression='lzf')
+        self.assertEqual(baz.filter_ids, (
+            h5py.h5z.FILTER_SHUFFLE, h5py.h5z.FILTER_LZF, h5py.h5z.FILTER_FLETCHER32
+        ))
+        self.assertEqual(baz.chunks, (21,))
+
 class TestChunkIterator(BaseDataset):
     def test_no_chunks(self):
         dset = self.f.create_dataset(make_name(), ())
