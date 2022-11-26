@@ -100,7 +100,7 @@ def make_new_dset(parent, shape=None, dtype=None, data=None, name=None,
         compression = 'gzip'
 
     # Legacy
-    if compression in _LEGACY_GZIP_COMPRESSION_VALS:
+    if compression in _LEGACY_GZIP_COMPRESSION_VALS and (compression is not False):
         if compression_opts is not None:
             raise TypeError("Conflict in compression options")
         compression_opts = compression

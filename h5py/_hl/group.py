@@ -336,16 +336,11 @@ class Group(HLObject, MutableMappingHDF5):
         if other.maxshape != other.shape:
             kwargs.setdefault('maxshape', other.maxshape)
 
-        # If compression is not specified, copy the filter pipeline as is,
-        # including any filters we don't recognise.
-        # New compression arg should replace existing filters, not chain.
-        if 'compression' in kwargs:
-            for filter_id in other.filter_ids:
-                dcpl.remove_filter(filter_id)
-
-            # Copy the filters which are separate from the compression kwarg
-            for k in ('shuffle', 'fletcher32', 'scaleoffset'):
-                kwargs.setdefault(k, getattr(other, k))
+        # For these keywords, passing None means turning something off.
+        # We use False to distinguish this from 'no change'.
+        for k in ('compression', 'scaleoffset'):
+            if kwargs.get(k, ...) is None:
+                kwargs[k] = False
 
         return self.create_dataset(name, dcpl=dcpl, **kwargs)
 

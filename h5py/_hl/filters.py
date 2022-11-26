@@ -148,6 +148,113 @@ class Gzip(FilterRefBase):
     def __init__(self, level=DEFAULT_GZIP):
         self.filter_options = (level,)
 
+
+class FilterPipeline:
+    def __init__(self, filters: list):
+        self.filters = filters
+
+    @classmethod
+    def from_plist(cls, plist):
+        return cls([plist.get_filter(i) for i in range(plist.get_nfilters())])
+
+    def apply_to_plist(self, plist):
+        # Remove all existing filters
+        nf = plist.get_nfilters()
+        while nf:
+            fid = plist.get_filter(0)[0]
+            plist.remove_filter(fid)
+            nf_new = plist.get_nfilters()
+            assert nf_new < nf  # Protect against infinite loops
+            nf = nf_new
+
+        # Add filters
+        for fid, flags, opts, _ in self.filters:
+            plist.set_filter(fid, flags, opts)
+
+    def copy(self):
+        return type(self)(self.filters.copy())
+
+    def __eq__(self, other):
+        return [f[:3] for f in self.filters] == [f[:3] for f in other.filters]
+
+    def find(self, filter_id):
+        for i, row in enumerate(self.filters):
+            if row[0] == filter_id:
+                return i
+
+    def drop(self, filter_id):
+        i = self.find(filter_id)
+        if i is not None:
+            del self.filters[i]
+
+    def add_or_replace(self, filter_id, insert_at, options=(), flags=1):
+        i = self.find(filter_id)
+        if i is None:
+            self.filters.insert(insert_at, (filter_id, flags, options, b''))
+        else:
+            self.filters[i] = (filter_id, flags, options, self.filters[i][3])
+
+    def set_scaleoffset(self, scaleoffset, dtype):
+        if scaleoffset is False:
+            self.drop(h5z.FILTER_SCALEOFFSET)
+        if dtype.kind in ('u', 'i'):
+            so_opts = (h5z.SO_INT, scaleoffset)
+        else: # dtype.kind == 'f'
+            so_opts = (h5z.SO_FLOAT_DSCALE, scaleoffset)
+        self.add_or_replace(h5z.FILTER_SCALEOFFSET, 0, options=so_opts)
+
+    def set_shuffle(self, shuffle):
+        if shuffle:
+            # Shuffle goes after scaleoffset, but before any compression
+            insert_at = 0
+            if self.filters and (self.filters[0][0] == h5z.FILTER_SCALEOFFSET):
+                insert_at = 1
+            self.add_or_replace(h5z.FILTER_SHUFFLE, insert_at)
+        else:
+            self.drop(h5z.FILTER_SHUFFLE)
+
+    def clear_compression(self):
+        # Wipe out any filters already in the pipeline, except those that are
+        # separate from h5py's compression keyword arg
+        non_compression_filters = {
+            h5z.FILTER_SCALEOFFSET, h5z.FILTER_SHUFFLE, h5z.FILTER_FLETCHER32
+        }
+        self.filters = [f for f in self.filters if f[0] in non_compression_filters]
+
+    def set_compression_filter(self, filter_id: int, opts=(), allow_unknown=False):
+        if not allow_unknown and not h5z.filter_avail(filter_id):
+            raise ValueError("Unknown compression filter number: %s" % filter_id)
+
+        self.clear_compression()
+        insert_at = 0
+        while insert_at < len(self.filters) and (self.filters[insert_at][0] in {
+            h5z.FILTER_SCALEOFFSET, h5z.FILTER_SHUFFLE
+        }):
+            insert_at += 1
+
+        self.filters.insert(insert_at, (filter_id, h5z.FLAG_OPTIONAL, opts, b''))
+
+    def set_deflate(self, level=5):
+        self.set_compression_filter(h5z.FILTER_DEFLATE, (level,))
+
+    def set_lzf(self):
+        self.set_compression_filter(h5z.FILTER_LZF)
+
+    def set_szip(self, szmethod, szpix):
+        opts = {'ec': h5z.SZIP_EC_OPTION_MASK, 'nn': h5z.SZIP_NN_OPTION_MASK}
+        self.set_compression_filter(h5z.FILTER_SZIP, (opts[szmethod], szpix))
+
+    def set_fletcher32(self, enabled):
+        # `fletcher32` must come after `compression`, otherwise, if `compression`
+        # is "szip" and the data is 64bit, the fletcher32 checksum will be wrong
+        # (see GitHub issue #953).
+        if enabled:
+            insert_at = len(self.filters)
+            # flags=0 means not optional (matching dcpl.set_fletcher32() )
+            self.add_or_replace(h5z.FILTER_FLETCHER32, insert_at, flags=0)
+        else:
+            self.drop(h5z.FILTER_FLETCHER32)
+
 def fill_dcpl(plist, shape, dtype, chunks, compression, compression_opts,
               shuffle, fletcher32, maxshape, scaleoffset, external,
               allow_unknown_filter=False, *, fill_time=None):
@@ -249,6 +356,9 @@ def fill_dcpl(plist, shape, dtype, chunks, compression, compression_opts,
     external = _normalize_external(external)
     # End argument validation
 
+    for item in external:
+        plist.set_external(*item)
+
     if chunks is None and any((
             shuffle,
             fletcher32,
@@ -263,9 +373,6 @@ def fill_dcpl(plist, shape, dtype, chunks, compression, compression_opts,
         # Guess chunk shape unless a passed-in property list already has chunks
         chunks = None if pre_chunked else guess_chunk(shape, maxshape, dtype.itemsize)
 
-    if maxshape is True:
-        maxshape = (None,)*len(shape)
-
     if chunks is not None:
         plist.set_chunk(chunks)
 
@@ -277,37 +384,33 @@ def fill_dcpl(plist, shape, dtype, chunks, compression, compression_opts,
                    f"'never' or 'ifset', but it is {fill_time}.")
             raise ValueError(msg)
 
-    # scale-offset must come before shuffle and compression
+    filters = FilterPipeline.from_plist(plist)
+    prior_filters = filters.copy()
+
     if scaleoffset is not None:
-        if dtype.kind in ('u', 'i'):
-            plist.set_scaleoffset(h5z.SO_INT, scaleoffset)
-        else: # dtype.kind == 'f'
-            plist.set_scaleoffset(h5z.SO_FLOAT_DSCALE, scaleoffset)
+        filters.set_scaleoffset(scaleoffset, dtype)
 
-    for item in external:
-        plist.set_external(*item)
+    if shuffle is not None:
+        filters.set_shuffle(shuffle)
 
-    if shuffle:
-        plist.set_shuffle()
-
-    if compression == 'gzip':
-        plist.set_deflate(gzip_level)
+    if compression is False:
+        filters.clear_compression()
+    elif compression == 'gzip':
+        filters.set_deflate(gzip_level)
     elif compression == 'lzf':
-        plist.set_filter(h5z.FILTER_LZF, h5z.FLAG_OPTIONAL)
+        filters.set_lzf()
     elif compression == 'szip':
-        opts = {'ec': h5z.SZIP_EC_OPTION_MASK, 'nn': h5z.SZIP_NN_OPTION_MASK}
-        plist.set_szip(opts[szmethod], szpix)
+        filters.set_szip(szmethod, szpix)
     elif isinstance(compression, int):
-        if not allow_unknown_filter and not h5z.filter_avail(compression):
-            raise ValueError("Unknown compression filter number: %s" % compression)
+        filters.set_compression_filter(
+            compression, compression_opts, allow_unknown_filter
+        )
 
-        plist.set_filter(compression, h5z.FLAG_OPTIONAL, compression_opts)
+    if fletcher32 is not None:
+        filters.set_fletcher32(fletcher32)
 
-    # `fletcher32` must come after `compression`, otherwise, if `compression`
-    # is "szip" and the data is 64bit, the fletcher32 checksum will be wrong
-    # (see GitHub issue #953).
-    if fletcher32:
-        plist.set_fletcher32()
+    if filters != prior_filters:
+        filters.apply_to_plist(plist)
 
     return plist
 
