@@ -162,7 +162,7 @@ class DimensionManager(base.CommonStateObject):
     @with_phil
     def __len__(self):
         """ Number of dimensions associated with the dataset. """
-        return len(Dataset(self._id).shape)
+        return len(self._id.shape)
 
     @with_phil
     def __iter__(self):
