@@ -83,7 +83,7 @@ class AttributeManager(base.MutableMappingHDF5, base.CommonStateObject):
                 b.decode('utf-8', 'surrogateescape') for b in arr.flat
             ], dtype=dtype).reshape(arr.shape)
 
-        if len(arr.shape) == 0:
+        if arr.ndim == 0:
             return arr[()]
         return arr
 
