@@ -54,12 +54,13 @@ class AttributeManager(base.MutableMappingHDF5, base.CommonStateObject):
         """ Read the value of an attribute.
         """
         attr = h5a.open(self._id, self._e(name))
+        shape = attr.shape
 
-        if is_empty_dataspace(attr):
+        # shape is None for empty dataspaces
+        if shape is None:
             return Empty(attr.dtype)
 
         dtype = attr.dtype
-        shape = attr.shape
 
         # Do this first, as we'll be fiddling with the dtype for top-level
         # array types
@@ -83,7 +84,7 @@ class AttributeManager(base.MutableMappingHDF5, base.CommonStateObject):
                 b.decode('utf-8', 'surrogateescape') for b in arr.flat
             ], dtype=dtype).reshape(arr.shape)
 
-        if len(arr.shape) == 0:
+        if arr.ndim == 0:
             return arr[()]
         return arr
 
