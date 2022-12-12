@@ -61,6 +61,7 @@ Advanced topics
     mpi
     swmr
     vds
+    benchmark
 
 
 Meta-info about the h5py project
