@@ -452,10 +452,12 @@ Reference
                     ``h5.get_config().track_order``.
     :param fs_strategy: The file space handling strategy to be used.
             Only allowed when creating a new file. One of "fsm", "page",
-            "aggregate", "none", or None (to use the HDF5 default).
+            "aggregate", "none", or ``None`` (to use the HDF5 default).
     :param fs_persist: A boolean to indicate whether free space should be
             persistent or not. Only allowed when creating a new file. The
             default is False.
+    :param fs_page_size: File space page size in bytes. Only use when
+            fs_strategy="page". If ``None`` use the HDF5 default (4096 bytes).
     :param fs_threshold: The smallest free-space section size that the free
             space manager will track. Only allowed when creating a new file.
             The default is 1.
