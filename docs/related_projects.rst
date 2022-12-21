@@ -43,7 +43,7 @@ file contains 3 groups, "foo", "bar", and "baz"::
 The easiest way to enable the custom completer is to do the following in an
 IPython session::
 
-   In  [1]: import h5py
+   In [1]: import h5py
 
    In [2]: h5py.enable_ipython_completer()
 
@@ -61,12 +61,12 @@ Exploring and Visualising HDF5 files
 h5py does not contain a tool for exploring or visualising HDF5 files, but tools
 that can display the structure of h5py include:
 
- * `h5glance <https://github.com/European-XFEL/h5glance>`_ shows the structure
-   of HDF5 files in IPython & Jupyter, as well as at the command line.
- * `HDFView <https://confluence.hdfgroup.org/display/HDFVIEW/HDFView>`_ is a
-   visual tool for browsing and editing HDF4 and HDF5 files.
- * `ViTables <https://vitables.org/>`_ is a GUI for browsing and editing files
-   in both PyTables and HDF5 formats, and is built on top of PyTables.
+* `h5glance <https://github.com/European-XFEL/h5glance>`_ shows the structure
+  of HDF5 files in IPython & Jupyter, as well as at the command line.
+* `HDFView <https://confluence.hdfgroup.org/display/HDFVIEW/HDFView>`_ is a
+  visual tool for browsing and editing HDF4 and HDF5 files.
+* `ViTables <https://vitables.org/>`_ is a GUI for browsing and editing files
+  in both PyTables and HDF5 formats, and is built on top of PyTables.
 
 PaNOSC also provides a list of
 `more tools <https://github.com/panosc-eu/panosc/blob/master/Work%20Packages/WP4%20Data%20analysis%20services/resources/hdf5-viewers.rst>`_.
@@ -78,9 +78,9 @@ Additional Filters
 Some projects providing additional HDF5 filter with integration into h5py
 include:
 
- * `hdf5plugin <https://github.com/silx-kit/hdf5plugin>`_: this provides several
-   plugins (currently blosc, bitshuffle, lz4, FCIDECOMP and ZFP), and newer
-   plugins should look to supporting h5py via inclusion into hdf5plugin.
+* `hdf5plugin <https://github.com/silx-kit/hdf5plugin>`_: this provides several
+  plugins (currently blosc, bitshuffle, lz4, FCIDECOMP and ZFP), and newer
+  plugins should look to supporting h5py via inclusion into hdf5plugin.
 
 Libraries extending h5py
 ------------------------
