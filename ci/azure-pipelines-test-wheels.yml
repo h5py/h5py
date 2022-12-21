@@ -13,6 +13,9 @@ steps:
   displayName: Install tox
 - bash: |
     ls $PIPELINE_WORKSPACE/${{ parameters.platform }}_wheels/
+    echo "PIPELINE_WORKSPACE=$PIPELINE_WORKSPACE"
+    echo "parameters.platform=${{ parameters.platform }}"
+    echo "Matching files" $PIPELINE_WORKSPACE/${{ parameters.platform }}_wheels/$WHL_FILE
     tox --installpkg $PIPELINE_WORKSPACE/${{ parameters.platform }}_wheels/$WHL_FILE
   displayName: Run tests
 - task: PythonScript@0
