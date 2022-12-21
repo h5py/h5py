@@ -82,6 +82,23 @@ include:
    plugins (currently blosc, bitshuffle, lz4, FCIDECOMP and ZFP), and newer
    plugins should look to supporting h5py via inclusion into hdf5plugin.
 
+Libraries extending h5py
+------------------------
+
+These libraries offer additional general functionality on top of h5py:
+
+* `Versioned HDF5 <https://deshaw.github.io/versioned-hdf5/>`_ offers a
+  versioned abstraction on top of h5py. It provides a wrapper around the h5py
+  API that allows storing different versions of groups and datasets within an
+  HDF5 file.
+* `h5preserve <https://github.com/h5preserve/h5preserve>`_ lets you define how
+  to save and load instances of a given class in HDF5 files, by writing dumper
+  and loader functions. These functions can also have multiple versions.
+* `Hickle <https://github.com/telegraphic/hickle>`_ provides an API like
+  :mod:`pickle` to dump & load arbitrary Python objects in HDF5 files.
+* `h5pickle <https://github.com/DaanVanVugt/h5pickle>`_ wraps h5py to allow
+  pickling objects such as :class:`.File` or :class:`.Dataset`. This relies on
+  the file being available at the same path when unpickling.
 
 Other projects/tools
 --------------------
