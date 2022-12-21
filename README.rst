@@ -7,14 +7,15 @@
 
 HDF5 for Python
 ===============
-`h5py` is a thin, pythonic wrapper around the `HDF5 <https://support.hdfgroup.org/HDF5/>`_, which runs on Python 3 (3.6+).
+`h5py` is a thin, pythonic wrapper around `HDF5 <https://portal.hdfgroup.org/display/HDF5/>`_,
+which runs on Python 3 (3.6+).
 
 Websites
 --------
 
 * Main website: https://www.h5py.org
 * Source code: https://github.com/h5py/h5py
-* Mailing list: https://groups.google.com/d/forum/h5py
+* Discussion forum: https://forum.hdfgroup.org/c/hdf-tools/h5py
 
 Installation
 ------------
@@ -33,7 +34,7 @@ Reporting bugs
 --------------
 
 Open a bug at https://github.com/h5py/h5py/issues.  For general questions, ask
-on the list (https://groups.google.com/d/forum/h5py).
+on the HDF forum (https://forum.hdfgroup.org/c/hdf-tools/h5py).
 
 .. _`Continuum Anaconda`: http://continuum.io/downloads
 .. _`Enthought Canopy`: https://www.enthought.com/products/canopy/

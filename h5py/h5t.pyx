@@ -22,23 +22,24 @@ cimport numpy as cnp
 from .h5r cimport Reference, RegionReference
 from .h5p cimport PropID, propwrap
 
+
 from .utils cimport  emalloc, efree, require_tuple, convert_dims,\
                      convert_tuple
 
 # Python imports
 import codecs
+import sys
 from collections import namedtuple
 import sys
 import numpy as np
 from .h5 import get_config
 
 from ._objects import phil, with_phil
-import platform
-
 
 cfg = get_config()
 
-MACHINE = platform.machine()
+DEF MACHINE = UNAME_MACHINE  # processor architecture, provided by Cython
+cdef char* H5PY_PYTHON_OPAQUE_TAG = "PYTHON:OBJECT"
 
 # === Custom C API ============================================================
 
@@ -158,6 +159,17 @@ STD_I16BE = lockid(H5T_STD_I16BE)
 STD_I32BE = lockid(H5T_STD_I32BE)
 STD_I64BE = lockid(H5T_STD_I64BE)
 
+# Bitfields
+STD_B8LE = lockid(H5T_STD_B8LE)
+STD_B16LE = lockid(H5T_STD_B16LE)
+STD_B32LE = lockid(H5T_STD_B32LE)
+STD_B64LE = lockid(H5T_STD_B64LE)
+
+STD_B8BE = lockid(H5T_STD_B8BE)
+STD_B16BE = lockid(H5T_STD_B16BE)
+STD_B32BE = lockid(H5T_STD_B32BE)
+STD_B64BE = lockid(H5T_STD_B64BE)
+
 # Unsigned integers
 STD_U8LE  = lockid(H5T_STD_U8LE)
 STD_U16LE = lockid(H5T_STD_U16LE)
@@ -170,12 +182,16 @@ STD_U32BE = lockid(H5T_STD_U32BE)
 STD_U64BE = lockid(H5T_STD_U64BE)
 
 # Native types by bytesize
+NATIVE_B8 = lockid(H5T_NATIVE_B8)
 NATIVE_INT8 = lockid(H5T_NATIVE_INT8)
 NATIVE_UINT8 = lockid(H5T_NATIVE_UINT8)
+NATIVE_B16 = lockid(H5T_NATIVE_B16)
 NATIVE_INT16 = lockid(H5T_NATIVE_INT16)
 NATIVE_UINT16 = lockid(H5T_NATIVE_UINT16)
+NATIVE_B32 = lockid(H5T_NATIVE_B32)
 NATIVE_INT32 = lockid(H5T_NATIVE_INT32)
 NATIVE_UINT32 = lockid(H5T_NATIVE_UINT32)
+NATIVE_B64 = lockid(H5T_NATIVE_B64)
 NATIVE_INT64 = lockid(H5T_NATIVE_INT64)
 NATIVE_UINT64 = lockid(H5T_NATIVE_UINT64)
 NATIVE_FLOAT = lockid(H5T_NATIVE_FLOAT)
@@ -234,7 +250,7 @@ LDOUBLE_BE.lock()
 
 # Custom Python object pointer type
 cdef hid_t H5PY_OBJ = H5Tcreate(H5T_OPAQUE, sizeof(PyObject*))
-H5Tset_tag(H5PY_OBJ, "PYTHON:OBJECT")
+H5Tset_tag(H5PY_OBJ, H5PY_PYTHON_OPAQUE_TAG)
 H5Tlock(H5PY_OBJ)
 
 PYTHON_OBJECT = lockid(H5PY_OBJ)
@@ -765,7 +781,24 @@ cdef class TypeBitfieldID(TypeID):
     """
         HDF5 bitfield type
     """
-    pass
+
+    @with_phil
+    def get_order(self):
+        """() => INT order
+
+        Obtain the byte order of the datatype; one of:
+
+        - ORDER_LE
+        - ORDER_BE
+        """
+        return <int>H5Tget_order(self.id)
+
+    cdef object py_dtype(self):
+
+        # Translation function for bitfield types
+        return np.dtype( _order_map[self.get_order()] +
+                         'u' + str(self.get_size()) )
+
 
 cdef class TypeReferenceID(TypeID):
 
@@ -1190,7 +1223,8 @@ cdef class TypeCompoundID(TypeCompositeID):
         if len(field_names) == 2                                and \
             tuple(field_names) == (cfg._r_name, cfg._i_name)    and \
             field_types[0] == field_types[1]                    and \
-            field_types[0].kind == 'f':
+            field_types[0].kind == 'f'                          and \
+            field_types[0].itemsize in (4, 8, 16):
 
             bstring = field_types[0].str
             blen = int(bstring[2:])

@@ -77,11 +77,9 @@ class TestEmpty(TestCase):
         self.assertEqual(self.dset.nbytes, 0)
 
     def test_ellipsis(self):
-        """ Ellipsis -> ValueError """
         self.assertEqual(self.dset[...], self.empty_obj)
 
     def test_tuple(self):
-        """ () -> IOError """
         self.assertEqual(self.dset[()], self.empty_obj)
 
     def test_slice(self):
@@ -368,7 +366,13 @@ class Test1DZeroFloat(TestCase):
     def test_mask(self):
         """ mask -> ndarray of matching shape """
         mask = np.ones((0,), dtype='bool')
-        self.assertNumpyBehavior(self.dset, self.data, np.s_[mask])
+        self.assertNumpyBehavior(
+            self.dset,
+            self.data,
+            np.s_[mask],
+            # Fast reader doesn't work with boolean masks
+            skip_fast_reader=True,
+        )
 
     def test_fieldnames(self):
         """ field name -> ValueError (no fields) """
@@ -483,13 +487,31 @@ class Test1DFloat(TestCase):
             self.dset[[1,1,2]]
 
     def test_mask_true(self):
-        self.assertNumpyBehavior(self.dset, self.data, np.s_[self.data > -100])
+        self.assertNumpyBehavior(
+            self.dset,
+            self.data,
+            np.s_[self.data > -100],
+            # Fast reader doesn't work with boolean masks
+            skip_fast_reader=True,
+        )
 
     def test_mask_false(self):
-        self.assertNumpyBehavior(self.dset, self.data, np.s_[self.data > 100])
+        self.assertNumpyBehavior(
+            self.dset,
+            self.data,
+            np.s_[self.data > 100],
+            # Fast reader doesn't work with boolean masks
+            skip_fast_reader=True,
+        )
 
     def test_mask_partial(self):
-        self.assertNumpyBehavior(self.dset, self.data, np.s_[self.data > 5])
+        self.assertNumpyBehavior(
+            self.dset,
+            self.data,
+            np.s_[self.data > 5],
+            # Fast reader doesn't work with boolean masks
+            skip_fast_reader=True,
+        )
 
     def test_mask_wrongsize(self):
         """ we require the boolean mask shape to match exactly """
@@ -564,3 +586,35 @@ class TestVeryLargeArray(TestCase):
     @ut.skipIf(sys.maxsize < 2**31, 'Maximum integer size >= 2**31 required')
     def test_size(self):
         self.assertEqual(self.dset.size, 2**31)
+
+
+def test_read_no_fill_value(writable_file):
+    # With FILL_TIME_NEVER, HDF5 doesn't write zeros in the output array for
+    # unallocated chunks. If we read into uninitialized memory, it can appear
+    # to read random values. https://github.com/h5py/h5py/issues/2069
+    dcpl = h5py.h5p.create(h5py.h5p.DATASET_CREATE)
+    dcpl.set_chunk((1,))
+    dcpl.set_fill_time(h5py.h5d.FILL_TIME_NEVER)
+    ds = h5py.Dataset(h5py.h5d.create(
+        writable_file.id, b'a', h5py.h5t.IEEE_F64LE, h5py.h5s.create_simple((5,)), dcpl
+    ))
+    np.testing.assert_array_equal(ds[:3], np.zeros(3, np.float64))
+
+
+class TestBoolIndex(TestCase):
+    """
+    Tests for indexing with Boolean arrays
+    """
+    def setUp(self):
+        super().setUp()
+        self.arr = np.arange(9).reshape(3,-1)
+        self.dset = self.f.create_dataset('x', data=self.arr)
+
+    def test_select_first_axis(self):
+        sel = np.s_[[False, True, False],:]
+        self.assertNumpyBehavior(self.dset, self.arr, sel)
+
+    def test_wrong_size(self):
+        sel = np.s_[[False, True, False, False],:]
+        with self.assertRaises(TypeError):
+            self.dset[sel]

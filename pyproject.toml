@@ -1,0 +1,13 @@
+[build-system]
+# Further build requirements - like numpy & cython - come from setup.py via
+# the PEP 517 interface.
+requires = [
+    "setuptools",
+    "wheel",
+    "oldest-supported-numpy",
+    "pkgconfig",
+    "Cython >=0.29; python_version<'3.8'",
+    "Cython >=0.29.14; python_version=='3.8'",
+    "Cython >=0.29.15; python_version>='3.9'",
+]
+build-backend = "setuptools.build_meta"

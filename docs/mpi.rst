@@ -61,12 +61,13 @@ program ``h5cc``::
     $ h5cc -showconfig
 
 Once you've got a Parallel-enabled build of HDF5, h5py has to be compiled in
-"MPI mode".  This is simple; set your default compiler to the ``mpicc`` wrapper
-and build h5py with the ``--mpi`` option::
+"MPI mode".  Set your default compiler to the ``mpicc`` wrapper
+and build h5py with the ``HDF5_MPI`` environment variable::
 
     $ export CC=mpicc
-    $ python setup.py configure --mpi [--hdf5=/path/to/parallel/hdf5]
-    $ python setup.py build
+    $ export HDF5_MPI="ON"
+    $ export HDF5_DIR="/path/to/parallel/hdf5"  # If this isn't found by default
+    $ pip install .
 
 
 Using Parallel HDF5 from h5py

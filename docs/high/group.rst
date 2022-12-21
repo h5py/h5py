@@ -106,7 +106,7 @@ made to the object::
 Note that this is `not` a copy of the dataset!  Like hard links in a UNIX file
 system, objects in an HDF5 file can be stored in multiple groups::
 
-    >>> f["other name"] == f["name"]
+    >>> grp["other name"] == grp["name"]
     True
 
 
@@ -158,11 +158,11 @@ link resides.
 
 .. note::
 
-    How the filename is processed is operating system dependent, it is
-    recommended to read :ref:`file_filenames` to understand potential limitations on
-    filenames on your operating system. Note especially that Windows is
-    particularly susceptible to problems with external links, due to possible
-    encoding errors and how filenames are structured.
+    The filename is stored in the file as bytes, normally UTF-8 encoded.
+    In most cases, this should work reliably, but problems are possible if a
+    file created on one platform is accessed on another. Older versions of HDF5
+    may have problems on Windows in particular. See :ref:`file_filenames` for
+    more details.
 
 Reference
 ---------
@@ -292,9 +292,16 @@ Reference
 
     .. method:: copy(source, dest, name=None, shallow=False, expand_soft=False, expand_external=False, expand_refs=False, without_attrs=False)
 
-        Copy an object or group.  The source and destination need not be in
-        the same file.  If the source is a Group object, by default all objects
-        within that group will be copied recursively.
+        Copy an object or group.  The source can be a path, Group, Dataset, or
+        Datatype object.  The destination can be either a path or a Group
+        object.  The source and destination need not be in the same file.
+
+        If the source is a Group object, by default all objects within that
+        group will be copied recursively.
+
+        When the destination is a Group object, by default the target will be
+        created in that group with its current name (basename of obj.name). You
+        can override that by setting "name" to a string.
 
         :param source:  What to copy.  May be a path in the file or a Group/Dataset object.
         :param dest:    Where to copy it.  May be a path or Group object.
@@ -378,7 +385,36 @@ Reference
             of tuples, it is equivalent to
             ``[(name, 0, h5py.h5f.UNLIMITED)]``.
 
-    .. method:: require_dataset(name, shape=None, dtype=None, exact=None, **kwds)
+        :keyword allow_unknown_filter: Do not check that the requested filter is
+            available for use (T/F). This should only be set if you will
+            write any data with ``write_direct_chunk``, compressing the
+            data before passing it to h5py.
+
+        :keyword rdcc_nbytes: Total size of the dataset's chunk cache in bytes.
+            The default size is 1024**2 (1 MiB).
+
+        :keyword rdcc_w0: The chunk preemption policy for this dataset. This
+            must be between 0 and 1 inclusive and indicates the weighting
+            according to which chunks which have been fully read or written are
+            penalized when determining which chunks to flush from cache. A value
+            of 0 means fully read or written chunks are treated no differently
+            than other chunks (the preemption is strictly LRU) while a value of
+            1 means fully read or written chunks are always preempted before
+            other chunks. If your application only reads or writes data once,
+            this can be safely set to 1. Otherwise, this should be set lower
+            depending on how often you re-read or re-write the same data. The
+            default value is 0.75.
+
+        :keyword rdcc_nslots: The number of chunk slots in the dataset's chunk
+            cache. Increasing this value reduces the number of cache collisions,
+            but slightly increases the memory used. Due to the hashing strategy,
+            this value should ideally be a prime number. As a rule of thumb,
+            this value should be at least 10 times the number of chunks that can
+            fit in rdcc_nbytes bytes. For maximum performance, this value should
+            be set approximately 100 times that number of chunks. The default
+            value is 521.
+
+    .. method:: require_dataset(name, shape, dtype, exact=False, **kwds)
 
         Open a dataset, creating it if it doesn't exist.
 
@@ -386,11 +422,17 @@ Reference
         the same shape and a conversion-compatible dtype to be returned.  If
         True, the shape and dtype must match exactly.
 
+        If keyword "maxshape" is given, the maxshape and dtype must match
+        instead.
+
+        If any of the keywords "rdcc_nslots", "rdcc_nbytes", or "rdcc_w0" are
+        given, they will be used to configure the dataset's chunk cache.
+
         Other dataset keywords (see create_dataset) may be provided, but are
         only used if a new dataset is to be created.
 
         Raises TypeError if an incompatible object already exists, or if the
-        shape or dtype don't match according to the above rules.
+        shape, maxshape or dtype don't match according to the above rules.
 
         :keyword exact:     Require shape and type to match exactly (T/**F**)
 
@@ -422,6 +464,26 @@ Reference
            Defines what source data fills which parts of the virtual dataset.
        :param fillvalue:
            The value to use where there is no data.
+
+    .. method:: build_virtual_dataset()
+
+       Assemble a virtual dataset in this group.
+
+       This is used as a context manager::
+
+           with f.build_virtual_dataset('virt', (10, 1000), np.uint32) as layout:
+               layout[0] = h5py.VirtualSource('foo.h5', 'data', (1000,))
+
+       Inside the context, you populate a :class:`VirtualLayout` object.
+       The file is only modified when you leave the context, and if there's
+       no error.
+
+       :param str name: Name of the dataset (absolute or relative)
+       :param tuple shape: Shape of the dataset
+       :param dtype: A numpy dtype for data read from the virtual dataset
+       :param tuple maxshape: Maximum dimensions if the dataset can grow
+           (optional). Use None for unlimited dimensions.
+       :param fillvalue: The value used where no data is available.
 
     .. attribute:: attrs
 
@@ -489,7 +551,7 @@ Link classes
 
     .. attribute:: filename
 
-        Name of the external file
+        Name of the external file as a Unicode string
 
     .. attribute::  path
 

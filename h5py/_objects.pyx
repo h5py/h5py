@@ -54,7 +54,7 @@ def with_phil(func):
         with _phil:
             return func(*args, **kwds)
 
-    functools.update_wrapper(wrapper, func, ('__name__', '__doc__'))
+    functools.update_wrapper(wrapper, func)
     return wrapper
 
 # --- End locking code --------------------------------------------------------
@@ -119,11 +119,13 @@ def nonlocal_close():
 
     # create a cached list of ids whilst the gc is disabled to avoid hitting
     # the cyclic gc while iterating through the registry dict
+    gc_was_enabled = gc.isenabled()
     gc.disable()
     try:
         reg_ids = list(registry)
     finally:
-        gc.enable()
+        if gc_was_enabled:
+            gc.enable()
 
     for python_id in reg_ids:
         ref = registry.get(python_id)

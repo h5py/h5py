@@ -20,7 +20,7 @@ Other resources
 ---------------
 
 * `Python and HDF5 O'Reilly book <https://shop.oreilly.com/product/0636920030249.do>`_
-* `Ask questions on the mailing list at Google Groups <http://groups.google.com/d/forum/h5py>`_
+* `Ask questions on the HDF forum <https://forum.hdfgroup.org/c/hdf-tools/h5py>`_
 * `GitHub project <https://github.com/h5py/h5py>`_
 
 
@@ -45,6 +45,7 @@ High-level API reference
     high/dataset
     high/attr
     high/dims
+    high/lowlevel
 
 
 Advanced topics

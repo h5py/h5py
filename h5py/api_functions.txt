@@ -21,7 +21,9 @@
 # for example, functions from "hdf5.h" are under the "hdf5" declaration.
 #
 # Function lines are C function signatures, optionally preceded by:
-#   MPI     If present, function requires an MPI-aware build of h5py
+#   MPI     If present, function requires an MPI-aware build of hdf5
+#   ROS3    If present, function requires a ROS3 enabled build of hdf5
+#   DIRECT_VFD If present, function requires an DIRECT VFD enabled build of hdf5
 #   ERROR   Explicit error checks are needed (HDF5 does not use error stack)
 #   X.Y.Z   Minimum version of HDF5 required for this function
 #
@@ -166,6 +168,10 @@ hdf5:
   # SWMR functions
   1.9.178   herr_t H5Fstart_swmr_write(hid_t file_id)
 
+  # Page Buffering functions
+  1.10.1 herr_t    H5Freset_page_buffering_stats(hid_t file_id)
+  1.10.1 herr_t    H5Fget_page_buffering_stats(hid_t file_id, unsigned *accesses, unsigned *hits, unsigned *misses, unsigned *evictions, unsigned *bypasses)
+
   # === H5FD - Virtual File Layer =========================================================
 
   hid_t     H5FDregister(H5FD_class_t *cls_ptr)
@@ -283,6 +289,8 @@ hdf5:
   herr_t    H5Pget_istore_k(hid_t plist, unsigned int *ik)
   1.10.1 herr_t    H5Pset_file_space_strategy(hid_t fcpl, H5F_fspace_strategy_t strategy, hbool_t persist, hsize_t threshold)
   1.10.1 herr_t    H5Pget_file_space_strategy(hid_t fcpl, H5F_fspace_strategy_t *strategy, hbool_t *persist, hsize_t *threshold)
+  1.10.1 herr_t    H5Pset_file_space_page_size(hid_t plist_id, hsize_t fsp_size)
+  1.10.1 herr_t    H5Pget_file_space_page_size(hid_t plist_id, hsize_t *fsp_size)
 
   # File access
   herr_t    H5Pset_fclose_degree(hid_t fapl_id, H5F_close_degree_t fc_degree)
@@ -293,6 +301,10 @@ hdf5:
   herr_t    H5Pget_fapl_family ( hid_t fapl_id, hsize_t *memb_size, hid_t *memb_fapl_id )
   herr_t    H5Pset_family_offset ( hid_t fapl_id, hsize_t offset)
   herr_t    H5Pget_family_offset ( hid_t fapl_id, hsize_t *offset)
+  ROS3 herr_t    H5Pget_fapl_ros3(hid_t fapl_id, H5FD_ros3_fapl_t *fa_out);
+  ROS3 herr_t    H5Pset_fapl_ros3(hid_t fapl_id, H5FD_ros3_fapl_t *fa);
+  DIRECT_VFD 1.8.0 herr_t H5Pget_fapl_direct(hid_t fapl_id, size_t *boundary, size_t *block_size, size_t *cbuf_size);
+  DIRECT_VFD 1.8.0 herr_t H5Pset_fapl_direct(hid_t fapl_id, size_t alignment, size_t block_size, size_t cbuf_size);
   herr_t    H5Pset_fapl_log(hid_t fapl_id, char *logfile, unsigned int flags, size_t buf_size)
   herr_t    H5Pset_fapl_multi(hid_t fapl_id, H5FD_mem_t *memb_map, hid_t *memb_fapl, const char * const *memb_name, haddr_t *memb_addr, hbool_t relax)
   herr_t    H5Pset_cache(hid_t plist_id, int mdc_nelmts, int rdcc_nelmts,  size_t rdcc_nbytes, double rdcc_w0)
@@ -305,7 +317,16 @@ hdf5:
   void*     H5Pget_driver_info(hid_t plist_id)
   herr_t    H5Pget_mdc_config(hid_t plist_id, H5AC_cache_config_t *config_ptr)
   herr_t    H5Pset_mdc_config(hid_t plist_id, H5AC_cache_config_t *config_ptr)
+  herr_t    H5Pset_meta_block_size(hid_t fapl_id, hsize_t size)
+  herr_t    H5Pget_meta_block_size(hid_t fapl_id, hsize_t * size)
   1.8.9 herr_t H5Pset_file_image(hid_t plist_id, void *buf_ptr, size_t buf_len)
+  1.10.1 herr_t H5Pset_page_buffer_size(hid_t plist_id, size_t buf_size, unsigned min_meta_per, unsigned min_raw_per)
+  1.10.1 herr_t H5Pget_page_buffer_size(hid_t plist_id, size_t *buf_size, unsigned *min_meta_per, unsigned *min_raw_per)
+  1.10.7-1.10.99 herr_t H5Pget_file_locking(hid_t fapl_id, hbool_t *use_file_locking, hbool_t *ignore_when_disabled)
+  1.12.1 herr_t H5Pget_file_locking(hid_t fapl_id, hbool_t *use_file_locking, hbool_t *ignore_when_disabled)
+  1.10.7-1.10.99 herr_t H5Pset_file_locking(hid_t fapl_id, hbool_t use_file_locking, hbool_t ignore_when_disabled)
+  1.12.1 herr_t H5Pset_file_locking(hid_t fapl_id, hbool_t use_file_locking, hbool_t ignore_when_disabled)
+
 
   # Dataset creation
   herr_t        H5Pset_layout(hid_t plist, int layout)
@@ -346,6 +367,8 @@ hdf5:
   H5Z_EDC_t H5Pget_edc_check(hid_t plist)
   herr_t    H5Pset_chunk_cache( hid_t dapl_id, size_t rdcc_nslots, size_t rdcc_nbytes, double rdcc_w0 )
   herr_t    H5Pget_chunk_cache( hid_t dapl_id, size_t *rdcc_nslots, size_t *rdcc_nbytes, double *rdcc_w0 )
+  1.8.17  herr_t H5Pget_efile_prefix(hid_t dapl_id, char *prefix, ssize_t size)
+  1.8.17  herr_t H5Pset_efile_prefix(hid_t dapl_id, char *prefix)
   1.9.233 herr_t H5Pset_virtual_view(hid_t plist_id, H5D_vds_view_t view)
   1.9.233 herr_t H5Pget_virtual_view(hid_t plist_id, H5D_vds_view_t *view)
   1.9.233 herr_t H5Pset_virtual_printf_gap(hid_t plist_id, hsize_t gap_size)
@@ -385,6 +408,8 @@ hdf5:
   herr_t    H5Pget_local_heap_size_hint(hid_t plist_id, size_t *size_hint)
   herr_t    H5Pset_link_phase_change(hid_t plist_id, unsigned max_compact, unsigned min_dense)
   herr_t    H5Pget_link_phase_change(hid_t plist_id, unsigned *max_compact , unsigned *min_dense)
+  herr_t    H5Pset_attr_phase_change(hid_t ocpl_id, unsigned max_compact, unsigned min_dense)
+  herr_t    H5Pget_attr_phase_change(hid_t ocpl_id, unsigned *max_compact , unsigned *min_dense)
   herr_t    H5Pset_est_link_info(hid_t plist_id, unsigned est_num_entries, unsigned est_name_len)
   herr_t    H5Pget_est_link_info(hid_t plist_id, unsigned *est_num_entries , unsigned *est_name_len)
   herr_t    H5Pset_link_creation_order(hid_t plist_id, unsigned crt_order_flags)

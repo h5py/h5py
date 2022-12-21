@@ -1,0 +1,23 @@
+steps:
+- download: current
+  artifact: ${{ parameters.platform }}_wheels
+  displayName: Download wheels
+- task: UsePythonVersion@0
+  inputs:
+    versionSpec: '$(python.version)'
+    architecture: 'x64'
+  displayName: 'Use Python $(python.version)'
+- script: |
+    python -m pip install --upgrade pip
+    pip install tox codecov
+  displayName: Install tox
+- bash: |
+    ls $PIPELINE_WORKSPACE/${{ parameters.platform }}_wheels/
+    tox --installpkg $PIPELINE_WORKSPACE/${{ parameters.platform }}_wheels/$WHL_FILE
+  displayName: Run tests
+- task: PythonScript@0
+  inputs:
+    scriptSource: 'filePath'
+    scriptPath: 'ci/upload_coverage.py'
+    arguments: --codecov-token 813fb6da-087d-4b36-a185-5a530cab3455
+  displayName: 'Upload codecov data'

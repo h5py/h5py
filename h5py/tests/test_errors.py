@@ -69,7 +69,7 @@ def test_thread_hdf5_silence_error_attr(tmp_path, capfd):
     """
     def test():
         with h5py.File(tmp_path/'test.h5', 'w') as newfile:
-            newfile['newdata'] = [1,2,3]
+            newfile['newdata'] = [1, 2, 3]
             try:
                 nonexistent_attr = newfile['newdata'].attrs['nonexistent_attr']
             except KeyError:

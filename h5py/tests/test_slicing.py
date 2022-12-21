@@ -238,7 +238,7 @@ class TestZeroLengthSlicing(BaseSlicing):
         """ Slice a dataset with a zero in its shape vector
             along the zero-length dimension """
         for i, shape in enumerate([(0,), (0, 3), (0, 2, 1)]):
-            dset = self.f.create_dataset('x%d'%i, shape, dtype=np.int, maxshape=(None,)*len(shape))
+            dset = self.f.create_dataset('x%d'%i, shape, dtype=int, maxshape=(None,)*len(shape))
             self.assertEqual(dset.shape, shape)
             out = dset[...]
             self.assertIsInstance(out, np.ndarray)
@@ -255,7 +255,7 @@ class TestZeroLengthSlicing(BaseSlicing):
         """ Slice a dataset with a zero in its shape vector
             along a non-zero-length dimension """
         for i, shape in enumerate([(3, 0), (1, 2, 0), (2, 0, 1)]):
-            dset = self.f.create_dataset('x%d'%i, shape, dtype=np.int, maxshape=(None,)*len(shape))
+            dset = self.f.create_dataset('x%d'%i, shape, dtype=int, maxshape=(None,)*len(shape))
             self.assertEqual(dset.shape, shape)
             out = dset[:1]
             self.assertIsInstance(out, np.ndarray)
@@ -264,7 +264,7 @@ class TestZeroLengthSlicing(BaseSlicing):
     def test_slice_of_length_zero(self):
         """ Get a slice of length zero from a non-empty dataset """
         for i, shape in enumerate([(3,), (2, 2,), (2,  1, 5)]):
-            dset = self.f.create_dataset('x%d'%i, data=np.zeros(shape, np.int), maxshape=(None,)*len(shape))
+            dset = self.f.create_dataset('x%d'%i, data=np.zeros(shape, int), maxshape=(None,)*len(shape))
             self.assertEqual(dset.shape, shape)
             out = dset[1:1]
             self.assertIsInstance(out, np.ndarray)
@@ -321,7 +321,7 @@ class TestFieldNames(BaseSlicing):
 class TestMultiBlockSlice(BaseSlicing):
 
     def setUp(self):
-        super(TestMultiBlockSlice, self).setUp()
+        super().setUp()
         self.arr = np.arange(10)
         self.dset = self.f.create_dataset('x', data=self.arr)
 

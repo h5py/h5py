@@ -14,6 +14,7 @@ h5config.json
 h5py/defs.*
 build/
 *.pyc
+*.pyd
 dist/
 MANIFEST
 .DS_Store
@@ -26,10 +27,14 @@ MANIFEST
 .eggs/
 *.so
 *~
+*.swp
 .pytest_cache
 .coverage
 .coverage_dir
 coverage.xml
+.vscode/
+.mypy_cache/
 
 # Rever
 rever/
+.idea/

@@ -10,8 +10,10 @@
 
 include "config.pxi"
 
+from warnings import warn
 from .defs cimport *
 from ._objects import phil, with_phil
+from .h5py_warnings import H5pyDeprecationWarning
 
 ITER_INC    = H5_ITER_INC     # Increasing order
 ITER_DEC    = H5_ITER_DEC     # Decreasing order
@@ -21,9 +23,11 @@ INDEX_NAME      = H5_INDEX_NAME       # Index on names
 INDEX_CRT_ORDER = H5_INDEX_CRT_ORDER  # Index on creation order
 
 HDF5_VERSION_COMPILED_AGAINST = HDF5_VERSION
+NUMPY_VERSION_COMPILED_AGAINST = NUMPY_BUILD_VERSION
+CYTHON_VERSION_COMPILED_WITH = CYTHON_BUILD_VERSION
 
 
-class ByteStringContext(object):
+class ByteStringContext:
 
     def __init__(self):
         self._readbytes = False
@@ -63,7 +67,6 @@ cdef class H5PYConfig:
         self._t_name = b'TRUE'
         self._bytestrings = ByteStringContext()
         self._track_order = False
-        self._default_file_mode = 'r'
 
     property complex_names:
         """ Settable 2-tuple controlling how complex numbers are saved.
@@ -133,6 +136,22 @@ cdef class H5PYConfig:
             ELSE:
                 return False
 
+    property ros3:
+        """ Boolean indicating if ROS3 VDS is available """
+        def __get__(self):
+            IF ROS3:
+                return True
+            ELSE:
+                return False
+
+    property direct_vfd:
+        """ Boolean indicating if DIRECT VFD is available """
+        def __get__(self):
+            IF DIRECT_VFD:
+                return True
+            ELSE:
+                return False
+
     property swmr_min_hdf5_version:
         """ Tuple indicating the minimum HDF5 version required for SWMR features"""
         def __get__(self):
@@ -154,11 +173,26 @@ cdef class H5PYConfig:
     property default_file_mode:
         """Default mode for h5py.File()"""
         def __get__(self):
-            return self._default_file_mode
+            warn(
+                "h5py.get_config().default_file_mode is deprecated. "
+                "The default mode is now always 'r' (read-only).",
+                category=H5pyDeprecationWarning,
+            )
+            return 'r'
 
         def __set__(self, val):
-            if val in {'r', 'r+', 'x', 'w-', 'w', 'a'}:
-                self._default_file_mode = val
+            if val == 'r':
+                warn(
+                    "Setting h5py.default_file_mode is deprecated. "
+                    "'r' (read-only) is the default from h5py 3.0.",
+                    category=H5pyDeprecationWarning,
+                )
+            elif val in {'r+', 'x', 'w-', 'w', 'a'}:
+                raise ValueError(
+                    "Using default_file_mode other than 'r' is no longer "
+                    "supported. Pass the mode to h5py.File() instead."
+
+                )
             else:
                 raise ValueError("Invalid mode; must be one of r, r+, w, w-, x, a")
 

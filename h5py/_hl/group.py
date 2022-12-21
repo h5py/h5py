@@ -11,13 +11,14 @@
     Implements support for high-level access to HDF5 groups.
 """
 
+from contextlib import contextmanager
 import posixpath as pp
 import numpy
 
 
 from .compat import filename_decode, filename_encode
 
-from .. import h5, h5g, h5i, h5o, h5r, h5t, h5l, h5p, h5s, h5d
+from .. import h5, h5g, h5i, h5o, h5r, h5t, h5l, h5p
 from . import base
 from .base import HLObject, MutableMappingHDF5, phil, with_phil
 from . import dataset
@@ -36,15 +37,13 @@ class Group(HLObject, MutableMappingHDF5):
         with phil:
             if not isinstance(bind, h5g.GroupID):
                 raise ValueError("%s is not a GroupID" % bind)
-            super(Group, self).__init__(bind)
-
+            super().__init__(bind)
 
     _gcpl_crt_order = h5p.create(h5p.GROUP_CREATE)
     _gcpl_crt_order.set_link_creation_order(
         h5p.CRT_ORDER_TRACKED | h5p.CRT_ORDER_INDEXED)
     _gcpl_crt_order.set_attr_creation_order(
         h5p.CRT_ORDER_TRACKED | h5p.CRT_ORDER_INDEXED)
-
 
     def create_group(self, name, track_order=None):
         """ Create and return a new subgroup.
@@ -129,22 +128,57 @@ class Group(HLObject, MutableMappingHDF5):
             Each name must be a str, bytes, or os.PathLike; each offset and
             size, an integer.  If only a name is given instead of an iterable
             of tuples, it is equivalent to [(name, 0, h5py.h5f.UNLIMITED)].
+        efile_prefix
+            (String) External dataset file prefix for dataset access property
+            list. Does not persist in the file.
+        virtual_prefix
+            (String) Virtual dataset file prefix for dataset access property
+            list. Does not persist in the file.
+        allow_unknown_filter
+            (T/F) Do not check that the requested filter is available for use.
+            This should only be used with ``write_direct_chunk``, where the caller
+            compresses the data before handing it to h5py.
+        rdcc_nbytes
+            Total size of the dataset's chunk cache in bytes. The default size
+            is 1024**2 (1 MiB).
+        rdcc_w0
+            The chunk preemption policy for this dataset.  This must be
+            between 0 and 1 inclusive and indicates the weighting according to
+            which chunks which have been fully read or written are penalized
+            when determining which chunks to flush from cache.  A value of 0
+            means fully read or written chunks are treated no differently than
+            other chunks (the preemption is strictly LRU) while a value of 1
+            means fully read or written chunks are always preempted before
+            other chunks.  If your application only reads or writes data once,
+            this can be safely set to 1.  Otherwise, this should be set lower
+            depending on how often you re-read or re-write the same data.  The
+            default value is 0.75.
+        rdcc_nslots
+            The number of chunk slots in the dataset's chunk cache. Increasing
+            this value reduces the number of cache collisions, but slightly
+            increases the memory used. Due to the hashing strategy, this value
+            should ideally be a prime number. As a rule of thumb, this value
+            should be at least 10 times the number of chunks that can fit in
+            rdcc_nbytes bytes. For maximum performance, this value should be set
+            approximately 100 times that number of chunks. The default value is
+            521.
         """
         if 'track_order' not in kwds:
             kwds['track_order'] = h5.get_config().track_order
 
+        if 'efile_prefix' in kwds:
+            kwds['efile_prefix'] = self._e(kwds['efile_prefix'])
+
+        if 'virtual_prefix' in kwds:
+            kwds['virtual_prefix'] = self._e(kwds['virtual_prefix'])
+
         with phil:
             group = self
             if name:
-                if '/' in name:
-                    h5objects = [obj for obj in name.split('/') if len(obj)]
-                    name = h5objects[-1]
-                    h5objects = h5objects[:-1]
-
-                    for new_group in h5objects:
-                        group = group.get(new_group) or group.create_group(new_group)
-
                 name = self._e(name)
+                if b'/' in name.lstrip(b'/'):
+                    parent_path, name = name.rsplit(b'/', 1)
+                    group = self.require_group(parent_path)
 
             dsid = dataset.make_new_dset(group, shape, dtype, data, name, **kwds)
             dset = dataset.Dataset(dsid)
@@ -166,39 +200,50 @@ class Group(HLObject, MutableMappingHDF5):
                 The value to use where there is no data.
 
             """
-            from .vds import VDSmap
-            # Encode filenames and dataset names appropriately.
-            sources = []
-            for vspace, file_name, dset_name, src_space in layout.sources:
-                if file_name == self.file.filename:
-                    # use relative path if the source dataset is in the same
-                    # file, in order to keep the virtual dataset valid in case
-                    # the file is renamed.
-                    file_name = '.'
-                sources.append(VDSmap(vspace, filename_encode(file_name),
-                                      self._e(dset_name), src_space))
-
             with phil:
                 group = self
 
                 if name:
-                    if '/' in name:
-                        h5objects = [obj for obj in name.split('/') if len(obj)]
-                        name = h5objects[-1]
-                        h5objects = h5objects[:-1]
-
-                        for new_group in h5objects:
-                            group = group.get(new_group) or group.create_group(new_group)
-
                     name = self._e(name)
+                    if b'/' in name.lstrip(b'/'):
+                        parent_path, name = name.rsplit(b'/', 1)
+                        group = self.require_group(parent_path)
 
-                dsid = dataset.make_new_virtual_dset(group, layout.shape,
-                         sources=sources, dtype=layout.dtype, name=name,
-                         maxshape=layout.maxshape, fillvalue=fillvalue)
-
+                dsid = layout.make_dataset(
+                    group, name=name, fillvalue=fillvalue,
+                )
                 dset = dataset.Dataset(dsid)
 
             return dset
+
+        @contextmanager
+        def build_virtual_dataset(
+                self, name, shape, dtype, maxshape=None, fillvalue=None
+        ):
+            """Assemble a virtual dataset in this group.
+
+            This is used as a context manager::
+
+                with f.build_virtual_dataset('virt', (10, 1000), np.uint32) as layout:
+                    layout[0] = h5py.VirtualSource('foo.h5', 'data', (1000,))
+
+            name
+                (str) Name of the new dataset
+            shape
+                (tuple) Shape of the dataset
+            dtype
+                A numpy dtype for data read from the virtual dataset
+            maxshape
+                (tuple, optional) Maximum dimensions if the dataset can grow.
+                Use None for unlimited dimensions.
+            fillvalue
+                The value used where no data is available.
+            """
+            from .vds import VirtualLayout
+            layout = VirtualLayout(shape, dtype, maxshape, self.file.filename)
+            yield layout
+
+            self.create_virtual_dataset(name, layout, fillvalue)
 
     def require_dataset(self, name, shape, dtype, exact=False, **kwds):
         """ Open a dataset, creating it if it doesn't exist.
@@ -207,28 +252,46 @@ class Group(HLObject, MutableMappingHDF5):
         the same shape and a conversion-compatible dtype to be returned.  If
         True, the shape and dtype must match exactly.
 
+        If keyword "maxshape" is given, the maxshape and dtype must match
+        instead.
+
+        If any of the keywords "rdcc_nslots", "rdcc_nbytes", or "rdcc_w0" are
+        given, they will be used to configure the dataset's chunk cache.
+
         Other dataset keywords (see create_dataset) may be provided, but are
         only used if a new dataset is to be created.
 
         Raises TypeError if an incompatible object already exists, or if the
-        shape or dtype don't match according to the above rules.
+        shape, maxshape or dtype don't match according to the above rules.
         """
+        if 'efile_prefix' in kwds:
+            kwds['efile_prefix'] = self._e(kwds['efile_prefix'])
+
+        if 'virtual_prefix' in kwds:
+            kwds['virtual_prefix'] = self._e(kwds['virtual_prefix'])
+
         with phil:
-            if not name in self:
+            if name not in self:
                 return self.create_dataset(name, *(shape, dtype), **kwds)
 
             if isinstance(shape, int):
                 shape = (shape,)
 
-            dset = self[name]
-            if not isinstance(dset, dataset.Dataset):
+            try:
+                dsid = dataset.open_dset(self, self._e(name), **kwds)
+                dset = dataset.Dataset(dsid)
+            except KeyError:
+                dset = self[name]
                 raise TypeError("Incompatible object (%s) already exists" % dset.__class__.__name__)
 
-            if not shape == dset.shape:
-                raise TypeError("Shapes do not match (existing %s vs new %s)" % (dset.shape, shape))
+            if shape != dset.shape:
+                if "maxshape" not in kwds:
+                    raise TypeError("Shapes do not match (existing %s vs new %s)" % (dset.shape, shape))
+                elif kwds["maxshape"] != dset.maxshape:
+                    raise TypeError("Max shapes do not match (existing %s vs new %s)" % (dset.maxshape, kwds["maxshape"]))
 
             if exact:
-                if not dtype == dset.dtype:
+                if dtype != dset.dtype:
                     raise TypeError("Datatypes do not exactly match (existing %s vs new %s)" % (dset.dtype, dtype))
             elif not numpy.can_cast(dtype, dset.dtype):
                 raise TypeError("Datatypes cannot be safely cast (existing %s vs new %s)" % (dset.dtype, dtype))
@@ -275,7 +338,7 @@ class Group(HLObject, MutableMappingHDF5):
         isn't a group.
         """
         with phil:
-            if not name in self:
+            if name not in self:
                 return self.create_group(name)
             grp = self[name]
             if not isinstance(grp, Group):
@@ -290,8 +353,11 @@ class Group(HLObject, MutableMappingHDF5):
             oid = h5r.dereference(name, self.id)
             if oid is None:
                 raise ValueError("Invalid HDF5 object reference")
-        else:
+        elif isinstance(name, (bytes, str)):
             oid = h5o.open(self.id, self._e(name), lapl=self._lapl)
+        else:
+            raise TypeError("Accessing a group is done with bytes or str, "
+                            "not {}".format(type(name)))
 
         otype = h5i.get_type(oid)
         if otype == h5i.GROUP:
@@ -335,7 +401,7 @@ class Group(HLObject, MutableMappingHDF5):
                 except KeyError:
                     return default
 
-            if not name in self:
+            if name not in self:
                 return default
 
             elif getclass and not getlink:
@@ -395,7 +461,6 @@ class Group(HLObject, MutableMappingHDF5):
             values are stored as scalar datasets. Raise ValueError if we
             can't understand the resulting array dtype.
         """
-        do_link = False
         with phil:
             name, lcpl = self._e(name, lcpl=True)
 
@@ -403,11 +468,12 @@ class Group(HLObject, MutableMappingHDF5):
                 h5o.link(obj.id, self.id, name, lcpl=lcpl, lapl=self._lapl)
 
             elif isinstance(obj, SoftLink):
-                self.id.links.create_soft(name, self._e(obj.path),
-                              lcpl=lcpl, lapl=self._lapl)
+                self.id.links.create_soft(name, self._e(obj.path), lcpl=lcpl, lapl=self._lapl)
 
             elif isinstance(obj, ExternalLink):
-                do_link = True
+                fn = filename_encode(obj.filename)
+                self.id.links.create_external(name, fn, self._e(obj.path),
+                                              lcpl=lcpl, lapl=self._lapl)
 
             elif isinstance(obj, numpy.dtype):
                 htype = h5t.py_create(obj, logical=True)
@@ -416,12 +482,6 @@ class Group(HLObject, MutableMappingHDF5):
             else:
                 ds = self.create_dataset(None, data=obj)
                 h5o.link(ds.id, self.id, name, lcpl=lcpl)
-
-        if do_link:
-            fn = filename_encode(obj.filename)
-            with phil:
-                self.id.links.create_external(name, fn, self._e(obj.path),
-                                              lcpl=lcpl, lapl=self._lapl)
 
     @with_phil
     def __delitem__(self, name):
@@ -437,6 +497,12 @@ class Group(HLObject, MutableMappingHDF5):
     def __iter__(self):
         """ Iterate over member names """
         for x in self.id.__iter__():
+            yield self._d(x)
+
+    @with_phil
+    def __reversed__(self):
+        """ Iterate over member names in reverse order. """
+        for x in self.id.__reversed__():
             yield self._d(x)
 
     @with_phil
@@ -474,11 +540,12 @@ class Group(HLObject, MutableMappingHDF5):
 
        Example:
 
-        >>> f = File('myfile.hdf5')
-        >>> f.listnames()
+        >>> f = File('myfile.hdf5', 'w')
+        >>> f.create_group("MyGroup")
+        >>> list(f.keys())
         ['MyGroup']
         >>> f.copy('MyGroup', 'MyCopy')
-        >>> f.listnames()
+        >>> list(f.keys())
         ['MyGroup', 'MyCopy']
 
         """
@@ -493,6 +560,8 @@ class Group(HLObject, MutableMappingHDF5):
             if isinstance(dest, Group):
                 if name is not None:
                     dest_path = name
+                elif source_path == '.':
+                    dest_path = pp.basename(h5i.get_name(source.id))
                 else:
                     # copy source into dest group: dest_name/source_name
                     dest_path = pp.basename(h5i.get_name(source[source_path].id))
@@ -607,7 +676,7 @@ class Group(HLObject, MutableMappingHDF5):
         return r
 
 
-class HardLink(object):
+class HardLink:
 
     """
         Represents a hard link in an HDF5 file.  Provided only so that
@@ -617,7 +686,7 @@ class HardLink(object):
     pass
 
 
-class SoftLink(object):
+class SoftLink:
 
     """
         Represents a symbolic ("soft") link in an HDF5 file.  The path
@@ -637,7 +706,7 @@ class SoftLink(object):
         return '<SoftLink to "%s">' % self.path
 
 
-class ExternalLink(object):
+class ExternalLink:
 
     """
         Represents an HDF5 external link.  Paths may be absolute or relative.

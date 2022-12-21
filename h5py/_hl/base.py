@@ -152,7 +152,7 @@ def is_empty_dataspace(obj):
     return False
 
 
-class CommonStateObject(object):
+class CommonStateObject:
 
     """
         Mixin class that allows sharing information between objects which
@@ -225,7 +225,7 @@ class CommonStateObject(object):
         return name
 
 
-class _RegionProxy(object):
+class _RegionProxy:
 
     """
         Proxy object which handles region references.
@@ -348,11 +348,7 @@ class HLObject(CommonStateObject):
     def __eq__(self, other):
         if hasattr(other, 'id'):
             return self.id == other.id
-        return False
-
-    @with_phil
-    def __ne__(self, other):
-        return not self.__eq__(other)
+        return NotImplemented
 
     def __bool__(self):
         with phil:
@@ -389,6 +385,9 @@ class KeysViewHDF5(KeysView):
     def __str__(self):
         return "<KeysViewHDF5 {}>".format(list(self))
 
+    def __reversed__(self):
+        yield from reversed(self._mapping)
+
     __repr__ = __str__
 
 class ValuesViewHDF5(ValuesView):
@@ -412,6 +411,11 @@ class ValuesViewHDF5(ValuesView):
             for key in self._mapping:
                 yield self._mapping.get(key)
 
+    def __reversed__(self):
+        with phil:
+            for key in reversed(self._mapping):
+                yield self._mapping.get(key)
+
 
 class ItemsViewHDF5(ItemsView):
 
@@ -429,6 +433,11 @@ class ItemsViewHDF5(ItemsView):
     def __iter__(self):
         with phil:
             for key in self._mapping:
+                yield (key, self._mapping.get(key))
+
+    def __reversed__(self):
+        with phil:
+            for key in reversed(self._mapping):
                 yield (key, self._mapping.get(key))
 
 
@@ -469,7 +478,7 @@ class MutableMappingHDF5(MappingHDF5, MutableMapping):
     pass
 
 
-class Empty(object):
+class Empty:
 
     """
         Proxy object to represent empty/null dataspaces (a.k.a H5S_NULL).
@@ -502,3 +511,25 @@ def product(nums):
     for n in nums:
         prod *= n
     return prod
+
+
+# Simple variant of cached_property:
+# Unlike functools, this has no locking, so we don't have to worry about
+# deadlocks with phil (see issue gh-2064). Unlike cached-property on PyPI, it
+# doesn't try to import asyncio (which can be ~100 extra modules).
+# Many projects seem to have similar variants of this, often without attribution,
+# but to be cautious, this code comes from cached-property (Copyright (c) 2015,
+# Daniel Greenfeld, BSD license), where it is attributed to bottle (Copyright
+# (c) 2009-2022, Marcel Hellkamp, MIT license).
+
+class cached_property(object):
+    def __init__(self, func):
+        self.__doc__ = getattr(func, "__doc__")
+        self.func = func
+
+    def __get__(self, obj, cls):
+        if obj is None:
+            return self
+
+        value = obj.__dict__[self.func.__name__] = self.func(obj)
+        return value

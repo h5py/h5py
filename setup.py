@@ -8,16 +8,9 @@
     for h5py, and setup_build, which handles the actual compilation process.
 """
 
-try:
-    from setuptools import Extension, setup
-except ImportError:
-    from distutils.core import setup
-    from distutils.extension import Extension
-from distutils.cmd import Command
-from distutils.dist import Distribution
+from setuptools import Extension, setup
 import sys
 import os
-import os.path as op
 
 # Newer packaging standards may recommend removing the current dir from the
 # path, add it back if needed.
@@ -27,70 +20,42 @@ if '' not in sys.path:
 import setup_build, setup_configure
 
 
-VERSION = '2.10.0'
+VERSION = '3.7.0'
 
-NUMPY_DEP = 'numpy>=1.7'
 
 # these are required to use h5py
-RUN_REQUIRES = [NUMPY_DEP, "cached-property"]
+RUN_REQUIRES = [
+    # We only really aim to support NumPy & Python combinations for which
+    # there are wheels on PyPI (e.g. NumPy >=1.17.5 for Python 3.8).
+    # But we don't want to duplicate the information in oldest-supported-numpy
+    # here, and if you can build an older NumPy on a newer Python, h5py probably
+    # works (assuming you build it from source too).
+    # NumPy 1.14.5 is the first with wheels for Python 3.7, our minimum Python.
+    "numpy >=1.14.5",
+]
 
-# these are required to build h5py
-# RUN_REQUIRES is included as setup.py test needs RUN_REQUIRES for testing
-# RUN_REQUIRES can be removed when setup.py test is removed
-SETUP_REQUIRES = RUN_REQUIRES + [NUMPY_DEP, 'Cython>=0.29', 'pkgconfig']
+# Packages needed to build h5py (in addition to static list in pyproject.toml)
+# For packages we link to (numpy, mpi4py), we build against the oldest
+# supported version; h5py wheels should then work with newer versions of these.
+# Downstream packagers - e.g. Linux distros - can safely build with newer
+# versions.
+# TODO: setup_requires is deprecated in setuptools.
+SETUP_REQUIRES = []
 
-# Needed to avoid trying to install numpy/cython on pythons which the latest
-# versions don't support
-use_setup_requires = any(parameter in sys.argv for parameter in
-    ("bdist_wheel", "build", "configure", "install", "test"))
+if setup_configure.mpi_enabled():
+    RUN_REQUIRES.append('mpi4py >=3.0.2')
+    SETUP_REQUIRES.append("mpi4py ==3.0.2; python_version<'3.8'")
+    SETUP_REQUIRES.append("mpi4py ==3.0.3; python_version=='3.8.*'")
+    SETUP_REQUIRES.append("mpi4py ==3.1.0; python_version>='3.9'")
 
+# Set the environment variable H5PY_SETUP_REQUIRES=0 if we need to skip
+# setup_requires for any reason.
+if os.environ.get('H5PY_SETUP_REQUIRES', '1') == '0':
+    SETUP_REQUIRES = []
 
 # --- Custom Distutils commands -----------------------------------------------
 
-class test(Command):
-
-    """
-        Custom Distutils command to run the h5py test suite.
-
-        This command will invoke build/build_ext if the project has not
-        already been built.  It then patches in the build directory to
-        sys.path and runs the test suite directly.
-    """
-
-    description = "Run the test suite"
-
-    user_options = [('detail', 'd', 'Display additional test information')]
-
-    def initialize_options(self):
-        self.detail = False
-
-    def finalize_options(self):
-        self.detail = bool(self.detail)
-
-    def run(self):
-        """ Called by Distutils when this command is run """
-        import sys
-
-        buildobj = self.distribution.get_command_obj('build')
-        buildobj.run()
-
-        oldpath = sys.path
-        oldcwd = os.getcwd()
-        build_lib_dir = op.abspath(buildobj.build_lib)
-        try:
-            sys.path = [build_lib_dir] + oldpath
-            os.chdir(build_lib_dir)
-
-            import h5py
-            sys.exit(h5py.run_tests())
-        finally:
-            sys.path = oldpath
-            os.chdir(oldcwd)
-
-
-CMDCLASS = {'build_ext': setup_build.h5py_build_ext,
-            'configure': setup_configure.configure,
-            'test': test, }
+CMDCLASS = {'build_ext': setup_build.h5py_build_ext}
 
 
 # --- Distutils setup and metadata --------------------------------------------
@@ -105,8 +70,6 @@ License :: OSI Approved :: BSD License
 Programming Language :: Cython
 Programming Language :: Python
 Programming Language :: Python :: 3
-Programming Language :: Python :: 3.6
-Programming Language :: Python :: 3.7
 Programming Language :: Python :: Implementation :: CPython
 Topic :: Scientific/Engineering
 Topic :: Database
@@ -130,14 +93,20 @@ A strong emphasis on automatic conversion between Python (Numpy) datatypes and
 data structures and their HDF5 equivalents vastly simplifies the process of
 reading and writing data from Python.
 
-Supports HDF5 versions 1.8.4 and higher.  On Windows, HDF5 is included with
-the installer.
+Wheels are provided for several popular platforms, with an included copy of
+the HDF5 library (usually the latest version when h5py is released).
+
+You can also `build h5py from source
+<https://docs.h5py.org/en/stable/build.html#source-installation>`_
+with any HDF5 stable release from version 1.8.4 onwards, although naturally new
+HDF5 versions released after this version of h5py may not work.
+Odd-numbered minor versions of HDF5 (e.g. 1.13) are experimental, and may not
+be supported.
 """
 
+package_data = {'h5py': [], "h5py.tests.data_files": ["*.h5"]}
 if os.name == 'nt':
-    package_data = {'h5py': ['*.dll']}
-else:
-    package_data = {'h5py': []}
+    package_data['h5py'].append('*.dll')
 
 setup(
   name = 'h5py',
@@ -150,14 +119,23 @@ setup(
   maintainer = 'Andrew Collette',
   maintainer_email = 'andrew.collette@gmail.com',
   license = 'BSD',
-  url = 'http://www.h5py.org',
-  download_url = 'https://pypi.python.org/pypi/h5py',
-  packages = ['h5py', 'h5py._hl', 'h5py.tests',
-              'h5py.tests.test_vds'],
+  url = 'https://www.h5py.org',
+  project_urls = {
+      'Source': 'https://github.com/h5py/h5py',
+      'Documentation': 'https://docs.h5py.org/en/stable/',
+      'Release notes': 'https://docs.h5py.org/en/stable/whatsnew/index.html'
+  },
+  packages = [
+      'h5py',
+      'h5py._hl',
+      'h5py.tests',
+      'h5py.tests.data_files',
+      'h5py.tests.test_vds',
+  ],
   package_data = package_data,
   ext_modules = [Extension('h5py.x',['x.c'])],  # To trick build into running build_ext
   install_requires = RUN_REQUIRES,
-  setup_requires = SETUP_REQUIRES if use_setup_requires else [],
-  python_requires='>=3.6',
+  setup_requires = SETUP_REQUIRES,
+  python_requires='>=3.7',
   cmdclass = CMDCLASS,
 )

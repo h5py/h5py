@@ -1,0 +1,59 @@
+What's new in h5py 3.7
+======================
+
+New features
+------------
+
+* Both Apple Silicon (arm64) and Intel (x86_64) Mac wheels are now provided
+  (:pr:`2065`). Apple Silicon wheels are not automatically tested, however,
+  as we're not aware of any CI offerings that do this.
+* Provide the ability to use the Direct Virtual File Driver (VFD) from
+  HDF5 (Linux only).
+  If the Direct VFD driver is present at the time of compilation, users can use the
+  Direct VFD by passing the keyword argument ``driver="direct"`` to the
+  ``h5py.File`` constructor.
+
+  To use the Direct VFD, HDF5 and h5py must have both been compiled with
+  this enabled. Currently, pre-built h5py wheels on PyPI do not include the
+  Direct VFD. Other packages such as the conda package on conda-forge might
+  include it. Alternatively, you can :ref:`build h5py from source <source_install>`
+  against an HDF5 build with the direct driver enabled.
+* The :class:`.File` constructor contains two new parameters ``alignment_threshold``,
+  and ``alignment_interval`` controling the data alignment within the HDF5
+  file (:pr:`2040`).
+* :meth:`~.Group.create_dataset` and :meth:`~.Group.require_dataset` now accept
+  parameters ``efile_prefix`` and ``virtual_prefix`` to set a filesystem path
+  prefix to use to find files for external datasets and for virtual dataset
+  sources (:pr:`2092`). These only affect the current access; the prefix is
+  not stored in the file.
+* h5py wheels on PyPI now bundle HDF5 version 1.12.2 (:pr:`2099`).
+* h5py Mac wheels on PyPI now bundle zlib version 1.2.12 (:pr:`2082`).
+* Pre-built wheels are now available for Python 3.10 on Linux ARM64 (:pr:`2094`).
+
+Bug fixes
+---------
+
+* Fix a deadlock which was possible when the same dataset was accessed from
+  multiple threads (:issue:`2064`).
+* New attributes are created directly, instead of via a temporary
+  attribute with subsequent renaming. This fixes overwriting
+  attributes with ``track_order=True``.
+* Fix for building with mpi4py on Python 3.10 (:pr:`2101`).
+* Fixed fancy indexing with a boolean array for a single dimension (:pr:`2079`).
+* Avoid returning unitialised memory when reading from a chunked dataset with
+  missing chunks and no fill value (:pr:`2076`).
+* Enable setting of fillvalue for datasets with variable length string dtype
+  (:pr:`2044`).
+* Closing a file or calling ``get_obj_ids()`` no longer re-enables Python
+  garbage collection if it was previously disabled (:pr:`2020`).
+
+Exposing HDF5 functions
+-----------------------
+
+* ``H5Pset_efile_prefix`` and ``H5Pget_efile_prefix``
+
+Building h5py
+-------------
+
+* Fix for building h5py on Cygwin (:pr:`2038`).
+* More helpful error message when ``pkg-config`` is unavailable (:pr:`2053`).

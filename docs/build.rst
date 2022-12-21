@@ -75,40 +75,63 @@ when building from source.
 
 Source installation
 -------------------
-To install h5py from source, you need three things installed:
+To install h5py from source, you need:
 
 * A supported Python version with development headers
-* Cython >=0.29
 * HDF5 1.8.4 or newer with development headers
+
+  * HDF5 versions newer than the h5py version you're using might not work.
+  * Odd minor versions of HDF5 (e.g. 1.13) are experimental, and might not work.
+    Use a 'maintenance' version like 1.12.x if possible.
+
 * A C compiler
 
 On Unix platforms, you also need ``pkg-config`` unless you explicitly specify
 a path for HDF5 as described in :ref:`custom_install`.
 
-OS-specific instructions for installing HDF5, Python and a C compiler are in the next few
-sections.
+There are notes below on installing HDF5, Python and a C compiler on different
+platforms.
 
-Additional Python-level requirements should be installed automatically (which
-will require an internet connection).
+Building h5py also requires several Python packages, but in most cases pip will
+automatically install these in a build environment for you, so you don't need to
+deal with them manually. See :ref:`dev_install` for a list.
 
 The actual installation of h5py should be done via::
 
     $ pip install --no-binary=h5py h5py
 
-or, from a tarball or git :ref:`checkout <git_checkout>` ::
+or, from a tarball or git :ref:`checkout <git_checkout>`::
 
     $ pip install -v .
 
-or ::
+.. _dev_install:
 
-    $ python setup.py install
+Development installation
+........................
 
-If you are working on a development version and the underlying cython files change
-it may be necessary to force a full rebuild.  The easiest way to achieve this is ::
+When modifying h5py, you often want to reinstall it quickly to test your changes.
+To benefit from caching and use NumPy & Cython from your existing Python
+environment, run::
+
+    $ H5PY_SETUP_REQUIRES=0 python3 setup.py build
+    $ python3 -m pip install . --no-build-isolation
+
+For convenience, these commands are also in a script ``dev-install.sh`` in the
+h5py git repository.
+
+This skips setting up a build environment, so you should
+have already installed Cython, NumPy, pkgconfig (a Python interface to
+``pkg-config``) and mpi4py (if you want MPI integration - see :ref:`build_mpi`).
+See ``setup.py`` for minimum versions.
+
+This will normally rebuild Cython files automatically when they change, but
+sometimes it may be necessary to force a full rebuild. The easiest way to
+achieve this is to discard everything but the code committed to git. In the root
+of your git checkout, run::
 
     $ git clean -xfd
 
-from the top of your clone and then rebuilding.
+Then build h5py again as above.
 
 Source installation on OSX/MacOS
 ................................
@@ -124,7 +147,7 @@ Source installation on Linux/Other Unix
 .......................................
 HDF5 and Python are most likely in your package manager. A C compiler almost
 definitely is, usually there is some kind of metapackage to install the
-default build tools, e.g. `build-essential`, which should be sufficient for our
+default build tools, e.g. ``build-essential``, which should be sufficient for our
 needs. Make sure that that you have the development headers, as they are
 usually not installed by default. They can usually be found in ``python-dev`` or
 similar and ``libhdf5-dev`` or similar.
@@ -140,6 +163,26 @@ to work together.
 We recommend examining the appveyor build scripts, and using those to build and
 install HDF5 and h5py.
 
+Downstream packagers
+....................
+If you are building h5py for another packaging system - e.g. Linux distros or
+packaging aimed at HPC users - you probably want to satisfy build dependencies
+from your packaging system. To build without automatically fetching
+dependencies, use a command like::
+
+    H5PY_SETUP_REQUIRES=0 pip install . --no-deps --no-build-isolation
+
+Depending on your packaging system, you may need to use the ``--prefix`` or
+``--root`` options to control where files get installed.
+
+h5py's Python packaging has build dependencies on the oldest compatible
+versions of NumPy and mpi4py. You can build with newer versions of these,
+but the resulting h5py binaries will only work with the NumPy & mpi4py versions
+they were built with (or newer). Mpi4py is an optional dependency, only required
+for :ref:`parallel` features.
+
+You should also look at the build options under :ref:`custom_install`.
+
 .. _custom_install:
 
 Custom installation
@@ -152,40 +195,32 @@ Custom installation
     or build from a git checkout or downloaded tarball to avoid getting
     a pre-built version of h5py.
 
-You can specify build options for h5py with the ``configure`` option to
-setup.py.  Options may be given together or separately::
-
-    $ python setup.py configure --hdf5=/path/to/hdf5
-    $ python setup.py configure --hdf5-version=X.Y.Z
-    $ python setup.py configure --mpi
-
-Note the ``--hdf5-version`` option is generally not needed, as h5py
-auto-detects the installed version of HDF5 (even for custom locations).
-
-Once set, build options apply to all future builds in the source directory.
-You can reset to the defaults with the ``--reset`` option::
-
-    $ python setup.py configure --reset
-
-You can also configure h5py using environment variables.  This is handy
-when installing via ``pip``, as you don't have direct access to setup.py::
+You can specify build options for h5py as environment variables when you build
+it from source::
 
     $ HDF5_DIR=/path/to/hdf5 pip install --no-binary=h5py h5py
     $ HDF5_VERSION=X.Y.Z pip install --no-binary=h5py h5py
     $ CC="mpicc" HDF5_MPI="ON" HDF5_DIR=/path/to/parallel-hdf5 pip install --no-binary=h5py h5py
 
-Here's a list of all the configure options currently supported:
+The supported build options are:
 
-=========================== ====================================== ===========================
-Option                      Via setup.py                           Via environment variable
-=========================== ====================================== ===========================
-Custom path to HDF5         ``--hdf5=/path/to/hdf5``               ``HDF5_DIR=/path/to/hdf5``
-Force HDF5 version          ``--hdf5-version=X.Y.Z``               ``HDF5_VERSION=X.Y.Z``
-Enable MPI mode             ``--mpi``                              ``HDF5_MPI=ON``
-Custom HDF5 include path    ``--hdf5-includedir=/path/to/headers`` ``HDF5_INCLUDEDIR=/path/to/headers``
-Custom HDF5 library path    ``--hdf5-libdir=/path/to/lib``         ``HDF5_LIBDIR=/path/to/lib``
-Custom HDF5 pkg-config name ``--hdf5-pkgconfig-name=hdf5``         ``HDF5_PKGCONFIG_NAME=hdf5``
-=========================== ====================================== ===========================
+- To specify where to find HDF5, use one of these options:
+
+  - ``HDF5_LIBDIR`` and ``HDF5_INCLUDEDIR``: the directory containing the
+    compiled HDF5 libraries and the directory containing the C header files,
+    respectively.
+  - ``HDF5_DIR``: a shortcut for common installations, a directory with ``lib``
+    and ``include`` subdirectories containing compiled libraries and C headers.
+  - ``HDF5_PKGCONFIG_NAME``: A name to query ``pkg-config`` for.
+    If none of these options are specified, h5py will query ``pkg-config`` by
+    default for ``hdf5``, or ``hdf5-openmpi`` if building with MPI support.
+
+- ``HDF5_MPI=ON`` to build with MPI integration - see :ref:`build_mpi`.
+- ``HDF5_VERSION`` to force a specified HDF5 version. In most cases, you don't
+  need to set this; the version number will be detected from the HDF5 library.
+- ``H5PY_SYSTEM_LZF=1`` to build the bundled LZF compression filter
+  (see :ref:`dataset_compression`) against an external LZF library, rather than
+  using the bundled LZF C code.
 
 .. _build_mpi:
 
@@ -199,19 +234,16 @@ HDF5 features in h5py itself::
     $ pip install --no-binary=h5py h5py
 
 If you want access to the full Parallel HDF5 feature set in h5py
-(:ref:`parallel`), you will further have to build in MPI mode.  This can either
-be done with command-line options from the h5py tarball or by::
-
-    $ export HDF5_MPI="ON"
-
-**You will need a shared-library build of Parallel HDF5 (i.e. built with
-./configure --enable-shared --enable-parallel).**
-
-To build in MPI mode, use the ``--mpi`` option to ``setup.py configure`` or
-export ``HDF5_MPI="ON"`` beforehand::
+(:ref:`parallel`), you will further have to build in MPI mode. This can be done
+by setting the ``HDF5_MPI`` environment variable::
 
     $ export CC=mpicc
     $ export HDF5_MPI="ON"
     $ pip install --no-binary=h5py h5py
 
-See also :ref:`parallel`.
+You will need a shared-library build of Parallel HDF5 as well, i.e. built with
+``./configure --enable-shared --enable-parallel``.
+
+On Windows, MS-MPI is usually used which does not have an ``mpicc`` wrapper.
+Instead, you may use the ``H5PY_MSMPI`` environment variable to ``ON`` in
+order to query the system for MS-MPI's information.

@@ -7,14 +7,12 @@ scale-offset filter, came from user code contributions.
 
 Since we use GitHub, the workflow will be familiar to many people.
 If you have questions about the process or about the details of implementing
-your feature, always feel free to ask on the Google Groups list, either
-by emailing:
+your feature, feel free to ask on Github itself, or on the h5py section of the
+HDF5 forum:
 
-     h5py@googlegroups.com
+    https://forum.hdfgroup.org/c/hdf-tools/h5py
 
-or via the web interface at:
-
-    https://groups.google.com/forum/#!forum/h5py
+Posting on this forum requires registering for a free account with HDF group.
 
 Anyone can post to this list. Your first message will be approved by a
 moderator, so don't worry if there's a brief delay.
@@ -134,6 +132,8 @@ You can implement the feature as a number of small changes, or as one big
 commit; there's no project policy.  Double-check to make sure you've
 included all your files; run ``git status`` and check the output.
 
+.. _contrib-run-tests:
+
 Run the tests
 ~~~~~~~~~~~~~
 
@@ -149,28 +149,26 @@ The easiest way to run the tests is with
 Write a release note
 ~~~~~~~~~~~~~~~~~~~~
 
+Changes which could affect people building and using h5py after the next release
+should have a news entry. You don't need to do this if your changes don't affect
+usage, e.g. adding tests or correcting comments.
+
 In the ``news/`` folder, make a copy of ``TEMPLATE.rst`` named after your branch.
 Edit the new file, adding a sentence or two about what you've added or fixed.
-Commit this to git too. These files will be used to make the release notes.
+Commit this to git too.
 
-You don't need this if your change doesn't affect people building and using h5py,
-e.g. fixing a typo.
+News entries are merged into the :doc:`what's new documents <whatsnew/index>`
+for each release. They should allow someone to quickly understand what a new
+feature is, or whether a bug they care about has been fixed. E.g.::
 
-Add yourself to the author list
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    Bug fixes
+    ---------
 
-If it's your first time to contribute to this project, you should add yourself into
-`author list <https://github.com/h5py/h5py/blob/master/.authors.yml>`_  and follow the format below::
+    * Fix reading data for region references pointing to an empty selection.
 
-    - name: xxx                   # your name in Github, which can be found in your public profile if you set it up
-      aliases: (optional)
-        - xxx                     # your username alias in Github commits
-      email: xxx                  # your email address
-      alternate_emails: (optional)
-        - xxx                     # if you committed your code with another email address, you can put it there
-      num_commit: xxx             # the number of commits you have submitted to this project
-      first_commit: xxx           # your first commit time, run `git log` to see it
-      github: xxx                 # your username or account name in Github
+The *Building h5py* section is for changes which affect how people build h5py
+from source. It's not about how we make prebuilt wheels; changes to that which
+make a visible difference can go in *New features* or *Bug fixes*.
 
 Push your changes back and open a pull request
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

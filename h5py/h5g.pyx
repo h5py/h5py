@@ -18,7 +18,7 @@ include "config.pxi"
 from ._objects cimport pdefault
 from .utils cimport emalloc, efree
 from .h5p import CRT_ORDER_TRACKED
-from .h5p cimport PropID, PropGCID
+from .h5p cimport PropID, PropGCID, propwrap
 from . cimport _hdf5 # to implement container testing for 1.6
 from ._errors cimport set_error_handler, err_cookie
 
@@ -92,14 +92,16 @@ cdef class GroupIter:
     cdef unsigned long nobjs
     cdef GroupID grp
     cdef list names
+    cdef bint reversed
 
 
-    def __init__(self, GroupID grp not None):
+    def __init__(self, GroupID grp not None, bint reversed=False):
 
         self.idx = 0
         self.grp = grp
         self.nobjs = grp.get_num_objs()
         self.names = []
+        self.reversed = reversed
 
 
     def __iter__(self):
@@ -125,6 +127,8 @@ cdef class GroupIter:
 
             self.grp.links.iterate(self.names.append,
                                    idx_type=idx_type)
+            if self.reversed:
+                self.names.reverse()
 
         retval = self.names[self.idx]
         self.idx += 1
@@ -406,7 +410,7 @@ cdef class GroupID(ObjectID):
         Retrieve a copy of the group creation property list used to
         create this group.
         """
-        return PropGCID(H5Gget_create_plist(self.id))
+        return propwrap(H5Gget_create_plist(self.id))
 
 
     @with_phil
@@ -473,6 +477,10 @@ cdef class GroupID(ObjectID):
         with phil:
             return GroupIter(self)
 
+    def __reversed__(self):
+        """ Return an iterator over group member names in reverse order. """
+        with phil:
+            return GroupIter(self, reversed=True)
 
     def __len__(self):
         """ Number of group members """

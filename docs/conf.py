@@ -34,10 +34,13 @@ extensions = [
         'sphinx.ext.mathjax',
 ]
 
-intersphinx_mapping = {'low': ('http://api.h5py.org', None)}
+intersphinx_mapping = {'low': ('https://api.h5py.org', None)}
 
-extlinks = {'issue': ('https://github.com/h5py/h5py/issues/%s',
-                      'GH%s')}
+extlinks = {
+    'issue': ('https://github.com/h5py/h5py/issues/%s', 'GH%s'),
+    'pr': ('https://github.com/h5py/h5py/pull/%s', 'PR %s'),
+}
+
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 
@@ -59,7 +62,7 @@ copyright = '2014, Andrew Collette and contributors'
 # built documents.
 #
 # The full version, including alpha/beta/rc tags.
-release = '2.10.0'
+release = '3.7.0'
 # The short X.Y version.
 version = '.'.join(release.split('.')[:2])
 

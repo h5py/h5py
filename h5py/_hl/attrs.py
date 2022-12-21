@@ -54,12 +54,13 @@ class AttributeManager(base.MutableMappingHDF5, base.CommonStateObject):
         """ Read the value of an attribute.
         """
         attr = h5a.open(self._id, self._e(name))
+        shape = attr.shape
 
-        if is_empty_dataspace(attr):
+        # shape is None for empty dataspaces
+        if shape is None:
             return Empty(attr.dtype)
 
         dtype = attr.dtype
-        shape = attr.shape
 
         # Do this first, as we'll be fiddling with the dtype for top-level
         # array types
@@ -73,7 +74,7 @@ class AttributeManager(base.MutableMappingHDF5, base.CommonStateObject):
             shape = attr.shape + subshape   # (5, 3)
             dtype = subdtype                # 'f'
 
-        arr = numpy.ndarray(shape, dtype=dtype, order='C')
+        arr = numpy.zeros(shape, dtype=dtype, order='C')
         attr.read(arr, mtype=htype)
 
         string_info = h5t.check_string_dtype(dtype)
@@ -83,7 +84,7 @@ class AttributeManager(base.MutableMappingHDF5, base.CommonStateObject):
                 b.decode('utf-8', 'surrogateescape') for b in arr.flat
             ], dtype=dtype).reshape(arr.shape)
 
-        if len(arr.shape) == 0:
+        if arr.ndim == 0:
             return arr[()]
         return arr
 
@@ -190,31 +191,33 @@ class AttributeManager(base.MutableMappingHDF5, base.CommonStateObject):
 
             # This mess exists because you can't overwrite attributes in HDF5.
             # So we write to a temporary attribute first, and then rename.
-
-            tempname = uuid.uuid4().hex
-
-            try:
-                attr = h5a.create(self._id, self._e(tempname), htype, space)
-            except:
-                raise
+            # see issue 1385
+            # if track_order is enabled new attributes (which exceed the
+            # max_compact range, 8 is default) cannot be created as temporary
+            # attributes with subsequent rename, doing that would trigger
+            # the error discussed in the above issue
+            attr_exists = False
+            if h5a.exists(self._id, self._e(name)):
+                attr_exists = True
+                tempname = uuid.uuid4().hex
             else:
-                try:
-                    if not isinstance(data, Empty):
-                        attr.write(data, mtype=htype2)
-                except:
-                    attr.close()
-                    h5a.delete(self._id, self._e(tempname))
-                    raise
-                else:
-                    try:
-                        # No atomic rename in HDF5 :(
-                        if h5a.exists(self._id, self._e(name)):
-                            h5a.delete(self._id, self._e(name))
-                        h5a.rename(self._id, self._e(tempname), self._e(name))
-                    except:
-                        attr.close()
-                        h5a.delete(self._id, self._e(tempname))
-                        raise
+                tempname = name
+
+            attr = h5a.create(self._id, self._e(tempname), htype, space)
+            try:
+                if not isinstance(data, Empty):
+                    attr.write(data, mtype=htype2)
+                if attr_exists:
+                    # Rename temp attribute to proper name
+                    # No atomic rename in HDF5 :(
+                    h5a.delete(self._id, self._e(name))
+                    h5a.rename(self._id, self._e(tempname), self._e(name))
+            except:
+                attr.close()
+                h5a.delete(self._id, self._e(tempname))
+                raise
+            finally:
+                attr.close()
 
     def modify(self, name, value):
         """ Change the value of an attribute while preserving its type.
@@ -232,7 +235,7 @@ class AttributeManager(base.MutableMappingHDF5, base.CommonStateObject):
                 attr = h5a.open(self._id, self._e(name))
 
                 if is_empty_dataspace(attr):
-                    raise IOError("Empty attributes can't be modified")
+                    raise OSError("Empty attributes can't be modified")
 
                 # If the input data is already an array, let HDF5 do the conversion.
                 # If it's a list or similar, don't make numpy guess a dtype for it.

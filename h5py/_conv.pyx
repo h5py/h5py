@@ -14,10 +14,13 @@
 """
 include "config.pxi"
 
+from logging import getLogger
+
 from .h5 import get_config
 from .h5r cimport Reference, RegionReference, hobj_ref_t, hdset_reg_ref_t
-from .h5t cimport H5PY_OBJ, typewrap, py_create, TypeID
+from .h5t cimport H5PY_OBJ, typewrap, py_create, TypeID, H5PY_PYTHON_OPAQUE_TAG
 from libc.stdlib cimport realloc
+from libc.string cimport strcmp
 from .utils cimport emalloc, efree
 cfg = get_config()
 
@@ -25,9 +28,15 @@ cfg = get_config()
 cimport numpy as cnp
 from numpy cimport npy_intp, NPY_WRITEABLE, NPY_C_CONTIGUOUS, NPY_OWNDATA
 cnp._import_array()
+import numpy as np
 
+from cpython.buffer cimport (
+    PyObject_GetBuffer, PyBuffer_ToContiguous, PyBuffer_Release, PyBUF_INDIRECT
+)
 from cpython.object cimport PyObject
 from cpython.ref cimport Py_INCREF, Py_XDECREF, Py_XINCREF
+
+logger = getLogger(__name__)
 
 cdef PyObject* Py_None = <PyObject*> None
 
@@ -107,6 +116,13 @@ cdef herr_t generic_converter(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
     return 0
 
 # =============================================================================
+# Helper functions
+
+cdef void log_convert_registered(hid_t src, hid_t dst):
+    logger.debug("Creating converter from %s to %s", H5Tget_class(src), H5Tget_class(dst))
+
+
+# =============================================================================
 # Generic conversion
 
 ctypedef struct conv_size_t:
@@ -121,11 +137,69 @@ cdef herr_t init_generic(hid_t src, hid_t dst, void** priv) except -1:
     priv[0] = sizes
     sizes[0].src_size = H5Tget_size(src)
     sizes[0].dst_size = H5Tget_size(dst)
+    log_convert_registered(src, dst)
 
     return 0
 
 # =============================================================================
 # Vlen string conversion
+
+cdef bint _is_pyobject_opaque(hid_t obj):
+    # This complexity is needed to sure:
+    #   1) That ctag is freed
+    #   2) We don't segfault (for some reason a try-finally statement is needed,
+    #   even if we do (what I think are) the right steps in copying and freeing.
+    cdef char* ctag = NULL
+    try:
+        if H5Tget_class(obj) == H5T_OPAQUE:
+            ctag = H5Tget_tag(obj)
+            if ctag != NULL:
+                if strcmp(ctag, H5PY_PYTHON_OPAQUE_TAG) == 0:
+                    return True
+        return False
+    finally:
+        IF HDF5_VERSION >= (1, 8, 13):
+            H5free_memory(ctag)
+        ELSE:
+            free(ctag)
+
+cdef herr_t init_vlen2str(hid_t src_vlen, hid_t dst_str, void** priv) except -1:
+    # /!\ Untested
+    cdef conv_size_t *sizes
+
+    if not H5Tis_variable_str(src_vlen):
+        return -2
+
+    if not _is_pyobject_opaque(dst_str):
+        return -2
+
+    log_convert_registered(src_vlen, dst_str)
+
+    sizes = <conv_size_t*>emalloc(sizeof(conv_size_t))
+    priv[0] = sizes
+
+    sizes[0].src_size = H5Tget_size(src_vlen)
+    sizes[0].dst_size = H5Tget_size(dst_str)
+    return 0
+
+cdef herr_t init_str2vlen(hid_t src_str, hid_t dst_vlen, void** priv) except -1:
+    # /!\ untested !
+    cdef conv_size_t *sizes
+
+    if not H5Tis_variable_str(dst_vlen):
+        return -2
+
+    if not _is_pyobject_opaque(src_str):
+        return -2
+
+    log_convert_registered(src_str, dst_vlen)
+
+    sizes = <conv_size_t*>emalloc(sizeof(conv_size_t))
+    priv[0] = sizes
+    sizes[0].src_size = H5Tget_size(src_str)
+    sizes[0].dst_size = H5Tget_size(dst_vlen)
+
+    return 0
 
 cdef int conv_vlen2str(void* ipt, void* opt, void* bkg, void* priv) except -1:
     cdef:
@@ -196,6 +270,7 @@ cdef herr_t init_vlen2fixed(hid_t src, hid_t dst, void** priv) except -1:
 
     if not (H5Tis_variable_str(src) and (not H5Tis_variable_str(dst))):
         return -2
+    log_convert_registered(src, dst)
 
     sizes = <conv_size_t*>emalloc(sizeof(conv_size_t))
     priv[0] = sizes
@@ -209,6 +284,7 @@ cdef herr_t init_fixed2vlen(hid_t src, hid_t dst, void** priv) except -1:
     cdef conv_size_t *sizes
     if not (H5Tis_variable_str(dst) and (not H5Tis_variable_str(src))):
         return -2
+    log_convert_registered(src, dst)
 
     # /!\ untested !
 
@@ -360,13 +436,13 @@ cdef inline herr_t vlen2str(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
                     size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
                     void *bkg_i, hid_t dxpl) except -1 with gil:
     return generic_converter(src_id, dst_id, cdata, nl, buf_stride, bkg_stride,
-             buf_i, bkg_i, dxpl,  conv_vlen2str, init_generic, H5T_BKG_YES)
+             buf_i, bkg_i, dxpl,  conv_vlen2str, init_vlen2str, H5T_BKG_YES)
 
 cdef inline herr_t str2vlen(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
                     size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
                     void *bkg_i, hid_t dxpl)except -1 with gil:
     return generic_converter(src_id, dst_id, cdata, nl, buf_stride, bkg_stride,
-             buf_i, bkg_i, dxpl, conv_str2vlen, init_generic, H5T_BKG_NO)
+             buf_i, bkg_i, dxpl, conv_str2vlen, init_str2vlen, H5T_BKG_NO)
 
 cdef inline herr_t vlen2fixed(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
                     size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
@@ -624,6 +700,7 @@ cdef int conv_vlen2ndarray(void* ipt,
         int flags = NPY_WRITEABLE | NPY_C_CONTIGUOUS | NPY_OWNDATA
         npy_intp dims[1]
         void* data
+        cdef char[:] buf
         cnp.ndarray ndarray
         PyObject* ndarray_obj
         vlen_t in_vlen0
@@ -634,12 +711,21 @@ cdef int conv_vlen2ndarray(void* ipt,
     data = in_vlen0.ptr = in_vlen[0].ptr
 
     dims[0] = size
-    itemsize = outtype.get_size()
-    if itemsize > intype.get_size():
+    itemsize = H5Tget_size(outtype.id)
+    if itemsize > H5Tget_size(intype.id):
         data = realloc(data, itemsize * size)
     H5Tconvert(intype.id, outtype.id, size, data, NULL, H5P_DEFAULT)
 
-    ndarray = cnp.PyArray_SimpleNewFromData(1, dims, elem_dtype.num, data)
+    if elem_dtype.kind in b"biufcmMO":
+        # type_num is enough to create an array for these dtypes
+        ndarray = cnp.PyArray_SimpleNewFromData(1, dims, elem_dtype.type_num, data)
+    else:
+        # dtypes like string & void need a size specified, so can't be used with
+        # SimpleNewFromData. Cython doesn't expose NumPy C-API functions
+        # like NewFromDescr, so we'll construct this with a Python function.
+        buf = <char[:itemsize * size]> data
+        ndarray = np.frombuffer(buf, dtype=elem_dtype)
+
     PyArray_ENABLEFLAGS(ndarray, flags)
     ndarray_obj = <PyObject*>ndarray
 
@@ -682,6 +768,7 @@ cdef herr_t ndarray2vlen(hid_t src_id,
                 return -2
             if (<cnp.ndarray> pdata_elem).ndim != 1:
                 return -2
+        log_convert_registered(src_id, dst_id)
 
     elif command == H5T_CONV_FREE:
         pass
@@ -739,14 +826,19 @@ cdef int conv_ndarray2vlen(void* ipt,
         cnp.ndarray ndarray
         size_t len, nbytes
         PyObject* buf_obj0
+        Py_buffer view
 
     buf_obj0 = buf_obj[0]
     ndarray = <cnp.ndarray> buf_obj0
     len = ndarray.shape[0]
-    nbytes = len * max(outtype.get_size(), intype.get_size())
+    nbytes = len * max(H5Tget_size(outtype.id), H5Tget_size(intype.id))
 
     data = emalloc(nbytes)
-    memcpy(data, ndarray.data, intype.get_size() * len)
+
+    PyObject_GetBuffer(ndarray, &view, PyBUF_INDIRECT)
+    PyBuffer_ToContiguous(data, &view, view.len, b'C')
+    PyBuffer_Release(&view)
+
     H5Tconvert(intype.id, outtype.id, len, data, NULL, H5P_DEFAULT)
 
     in_vlen[0].len = len
@@ -768,14 +860,14 @@ cdef herr_t boolenum2b8(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
     return 0
 
 # =============================================================================
-# B8 to UINT8 routines
+# BITFIELD to UINT routines
 
-cdef herr_t b82uint8(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
+cdef herr_t bitfield2uint(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
                      size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
                      void *bkg_i, hid_t dxpl) except -1:
     return 0
 
-cdef herr_t uint82b8(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
+cdef herr_t uint2bitfield(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
                      size_t nl, size_t buf_stride, size_t bkg_stride, void *buf_i,
                      void *bkg_i, hid_t dxpl) except -1:
     return 0
@@ -805,9 +897,6 @@ cpdef int register_converters() except -1:
     H5Tenum_insert(boolenum, cfg._f_name, &f_value)
     H5Tenum_insert(boolenum, cfg._t_name, &t_value)
 
-    H5Tregister(H5T_PERS_HARD, "vlen2str", vlstring, pyobj, vlen2str)
-    H5Tregister(H5T_PERS_HARD, "str2vlen", pyobj, vlstring, str2vlen)
-
     H5Tregister(H5T_PERS_SOFT, "vlen2fixed", vlstring, H5T_C_S1, vlen2fixed)
     H5Tregister(H5T_PERS_SOFT, "fixed2vlen", H5T_C_S1, vlstring, fixed2vlen)
 
@@ -826,8 +915,32 @@ cpdef int register_converters() except -1:
     H5Tregister(H5T_PERS_HARD, "boolenum2b8", boolenum, H5T_NATIVE_B8, boolenum2b8)
     H5Tregister(H5T_PERS_HARD, "b82boolenum", H5T_NATIVE_B8, boolenum, b82boolenum)
 
-    H5Tregister(H5T_PERS_HARD, "uint82b8", H5T_NATIVE_UINT8, H5T_NATIVE_B8, uint82b8)
-    H5Tregister(H5T_PERS_HARD, "b82uint8", H5T_NATIVE_B8, H5T_NATIVE_UINT8, b82uint8)
+    H5Tregister(H5T_PERS_HARD, "uint82b8", H5T_STD_U8BE, H5T_STD_B8BE, uint2bitfield)
+    H5Tregister(H5T_PERS_HARD, "b82uint8", H5T_STD_B8BE, H5T_STD_U8BE, bitfield2uint)
+
+    H5Tregister(H5T_PERS_HARD, "uint82b8", H5T_STD_U8LE, H5T_STD_B8LE, uint2bitfield)
+    H5Tregister(H5T_PERS_HARD, "b82uint8", H5T_STD_B8LE, H5T_STD_U8LE, bitfield2uint)
+
+    H5Tregister(H5T_PERS_HARD, "uint162b16", H5T_STD_U16BE, H5T_STD_B16BE, uint2bitfield)
+    H5Tregister(H5T_PERS_HARD, "b162uint16", H5T_STD_B16BE, H5T_STD_U16BE, bitfield2uint)
+
+    H5Tregister(H5T_PERS_HARD, "uint162b16", H5T_STD_U16LE, H5T_STD_B16LE, uint2bitfield)
+    H5Tregister(H5T_PERS_HARD, "b162uint16", H5T_STD_B16LE, H5T_STD_U16LE, bitfield2uint)
+
+    H5Tregister(H5T_PERS_HARD, "uint322b32", H5T_STD_U32BE, H5T_STD_B32BE, uint2bitfield)
+    H5Tregister(H5T_PERS_HARD, "b322uint32", H5T_STD_B32BE, H5T_STD_U32BE, bitfield2uint)
+
+    H5Tregister(H5T_PERS_HARD, "uint322b32", H5T_STD_U32LE, H5T_STD_B32LE, uint2bitfield)
+    H5Tregister(H5T_PERS_HARD, "b322uint32", H5T_STD_B32LE, H5T_STD_U32LE, bitfield2uint)
+
+    H5Tregister(H5T_PERS_HARD, "uint642b64", H5T_STD_U64BE, H5T_STD_B64BE, uint2bitfield)
+    H5Tregister(H5T_PERS_HARD, "b642uint64", H5T_STD_B64BE, H5T_STD_U64BE, bitfield2uint)
+
+    H5Tregister(H5T_PERS_HARD, "uint642b64", H5T_STD_U64LE, H5T_STD_B64LE, uint2bitfield)
+    H5Tregister(H5T_PERS_HARD, "b642uint64", H5T_STD_B64LE, H5T_STD_U64LE, bitfield2uint)
+
+    H5Tregister(H5T_PERS_SOFT, "vlen2str", vlstring, pyobj, vlen2str)
+    H5Tregister(H5T_PERS_SOFT, "str2vlen", pyobj, vlstring, str2vlen)
 
     H5Tclose(vlstring)
     H5Tclose(vlentype)
@@ -838,8 +951,8 @@ cpdef int register_converters() except -1:
 
 cpdef int unregister_converters() except -1:
 
-    H5Tunregister(H5T_PERS_HARD, "vlen2str", -1, -1, vlen2str)
-    H5Tunregister(H5T_PERS_HARD, "str2vlen", -1, -1, str2vlen)
+    H5Tunregister(H5T_PERS_SOFT, "vlen2str", -1, -1, vlen2str)
+    H5Tunregister(H5T_PERS_SOFT, "str2vlen", -1, -1, str2vlen)
 
     H5Tunregister(H5T_PERS_SOFT, "vlen2fixed", -1, -1, vlen2fixed)
     H5Tunregister(H5T_PERS_SOFT, "fixed2vlen", -1, -1, fixed2vlen)
@@ -859,7 +972,8 @@ cpdef int unregister_converters() except -1:
     H5Tunregister(H5T_PERS_HARD, "boolenum2b8", -1, -1, boolenum2b8)
     H5Tunregister(H5T_PERS_HARD, "b82boolenum", -1, -1, b82boolenum)
 
-    H5Tunregister(H5T_PERS_HARD, "uint82b8", -1, -1, uint82b8)
-    H5Tunregister(H5T_PERS_HARD, "b82uint8", -1, -1, b82uint8)
+    # Pass an empty string to unregister all methods that use these functions
+    H5Tunregister(H5T_PERS_HARD, "", -1, -1, uint2bitfield)
+    H5Tunregister(H5T_PERS_HARD, "", -1, -1, bitfield2uint)
 
     return 0

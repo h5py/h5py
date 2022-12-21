@@ -399,6 +399,25 @@ cdef class PropFCID(PropOCID):
             H5Pget_file_space_strategy(self.id, &strategy, &persist, &threshold)
             return (strategy, persist, threshold)
 
+        @with_phil
+        def set_file_space_page_size(self, hsize_t fsp_size):
+            """ (LONG fsp_size)
+
+            Set the file space page size used in paged aggregation and paged
+            buffering. Minimum page size is 512 bytes. A value less than 512 will raise
+            an error. The size set may not be changed for the life of the file.
+            """
+            H5Pset_file_space_page_size(self.id, <hsize_t>fsp_size)
+
+        @with_phil
+        def get_file_space_page_size(self):
+            """ () -> LONG fsp_size
+
+            Retrieve the file space page size.
+            """
+            cdef hsize_t fsp_size
+            H5Pget_file_space_page_size(self.id, &fsp_size)
+            return fsp_size
 
 # Dataset creation
 cdef class PropDCID(PropOCID):
@@ -485,9 +504,25 @@ cdef class PropDCID(PropOCID):
         0-dimensional NumPy array; otherwise, the value will be read from
         the first element.
         """
+        from .h5t import check_string_dtype
         cdef TypeID tid
+        cdef char * c_ptr
 
         check_numpy_read(value, -1)
+
+        # check for strings
+        # create correct typeID and pointer to c_str
+        string_info = check_string_dtype(value.dtype)
+        if string_info is not None:
+            # if needed encode fill_value
+            fill_value = value.item()
+            if not isinstance(fill_value, bytes):
+                fill_value = fill_value.encode(string_info.encoding)
+            c_ptr = fill_value
+            tid = py_create(value.dtype, logical=1)
+            H5Pset_fill_value(self.id, tid.id, &c_ptr)
+            return
+
         tid = py_create(value.dtype)
         H5Pset_fill_value(self.id, tid.id, value.data)
 
@@ -500,12 +535,32 @@ cdef class PropDCID(PropOCID):
         converted to match the array dtype.  If the array has nonzero
         rank, only the first element will contain the value.
         """
+        from .h5t import check_string_dtype
         cdef TypeID tid
+        cdef char * c_ptr = NULL
 
         check_numpy_write(value, -1)
+
+        # check for vlen strings
+        # create correct typeID and convert from c_str pointer to string
+        string_info = check_string_dtype(value.dtype)
+        if string_info is not None and string_info.length is None:
+            tid = py_create(value.dtype, logical=1)
+            ret = H5Pget_fill_value(self.id, tid.id, &c_ptr)
+            if c_ptr == NULL:
+                # If the pointer is NULL (either the value did not get changed,
+                # or maybe the 0 length string, it's unclear currently), if
+                # PyBytes_FromString is called on the pointer, we get a
+                # segfault. If we set the value to empty bytes, then we
+                # shouldn't segfault.
+                value[0] = b""
+                return
+            fill_value = c_ptr
+            value[0] = fill_value
+            return
+
         tid = py_create(value.dtype)
         H5Pget_fill_value(self.id, tid.id, value.data)
-
 
     @with_phil
     def fill_value_defined(self):
@@ -1033,6 +1088,38 @@ cdef class PropFAID(PropInstanceID):
         return (msize, plist)
 
 
+    if ROS3:
+        @with_phil
+        def set_fapl_ros3(self, char* aws_region="", char* secret_id="",
+                          char* secret_key=""):
+            """(STRING aws_region, STRING secret_id, STRING secret_key)
+
+            Set up the ros3 driver.
+            """
+            cdef H5FD_ros3_fapl_t config
+            config.version = H5FD_CURR_ROS3_FAPL_T_VERSION
+            if len(aws_region) and len(secret_id) and len(secret_key):
+                config.authenticate = <hbool_t>1
+            else:
+                config.authenticate = <hbool_t>0
+            config.aws_region = aws_region
+            config.secret_id = secret_id
+            config.secret_key = secret_key
+            H5Pset_fapl_ros3(self.id, &config)
+
+
+        @with_phil
+        def get_fapl_ros3(self):
+            """ () => STRUCT config
+
+            Retrieve the ROS3 config
+            """
+            cdef H5FD_ros3_fapl_t config
+
+            H5Pget_fapl_ros3(self.id, &config)
+            return config
+
+
     @with_phil
     def set_fapl_log(self, char* logfile, unsigned int flags, size_t buf_size):
         """(STRING logfile, UINT flags, UINT buf_size)
@@ -1050,6 +1137,37 @@ cdef class PropFAID(PropInstanceID):
         Select the "section-2" driver (h5fd.SEC2).
         """
         H5Pset_fapl_sec2(self.id)
+
+    if DIRECT_VFD:
+        @with_phil
+        def set_fapl_direct(self, size_t alignment=0, size_t block_size=0, size_t cbuf_size=0):
+            """(size_t alignment, size_t block_size, size_t cbuf_size)
+
+            Select the "direct" driver (h5fd.DIRECT).
+
+            Parameters:
+                hid_t fapl_id       IN: File access property list identifier
+                size_t alignment    IN: Required memory alignment boundary
+                size_t block_size   IN: File system block size
+                size_t cbuf_size    IN: Copy buffer size
+
+            Properites with value of 0 indicate that the HDF5 library should
+            choose the value.
+            """
+            H5Pset_fapl_direct(self.id, alignment, block_size, cbuf_size)
+
+        @with_phil
+        def get_fapl_direct(self):
+            """ () => (alignment, block_size, cbuf_size)
+
+            Retrieve the DIRECT VFD config
+            """
+            cdef size_t alignment
+            cdef size_t block_size
+            cdef size_t cbuf_size
+
+            H5Pget_fapl_direct(self.id, &alignment, &block_size, &cbuf_size)
+            return alignment, block_size, cbuf_size
 
 
     @with_phil
@@ -1103,7 +1221,9 @@ cdef class PropFAID(PropInstanceID):
         - h5fd.MPIO
         - h5fd.MULTI
         - h5fd.SEC2
+        - h5fd.DIRECT  (if available)
         - h5fd.STDIO
+        - h5fd.ROS3    (if available)
         """
         return H5Pget_driver(self.id)
 
@@ -1164,15 +1284,34 @@ cdef class PropFAID(PropInstanceID):
     def set_libver_bounds(self, int low, int high):
         """ (INT low, INT high)
 
-        Set the compatibility level for file format.  Legal values are:
+        Set the compatibility level for file format. Legal values are:
 
         - h5f.LIBVER_EARLIEST
         - h5f.LIBVER_V18 (HDF5 1.10.2 or later)
         - h5f.LIBVER_V110 (HDF5 1.10.2 or later)
+        - h5f.LIBVER_V112 (HDF5 1.11.4 or later)
+        - h5f.LIBVER_V114 (HDF5 1.13.0 or later)
         - h5f.LIBVER_LATEST
         """
         H5Pset_libver_bounds(self.id, <H5F_libver_t>low, <H5F_libver_t>high)
 
+    @with_phil
+    def set_meta_block_size(self, size_t size):
+        """ (UINT size)
+
+        Set the current minimum size, in bytes, of new metadata block allocations.
+        """
+        H5Pset_meta_block_size(self.id, size)
+
+    @with_phil
+    def get_meta_block_size(self):
+        """ () => UINT size
+
+        Get the current minimum size, in bytes, of new metadata block allocations.
+        """
+        cdef hsize_t size
+        H5Pget_meta_block_size(self.id, &size)
+        return size
 
     @with_phil
     def get_libver_bounds(self):
@@ -1183,6 +1322,8 @@ cdef class PropFAID(PropInstanceID):
         - h5f.LIBVER_EARLIEST
         - h5f.LIBVER_V18 (HDF5 1.10.2 or later)
         - h5f.LIBVER_V110 (HDF5 1.10.2 or later)
+        - h5f.LIBVER_V112 (HDF5 1.11.4 or later)
+        - h5f.LIBVER_V114 (HDF5 1.13.0 or later)
         - h5f.LIBVER_LATEST
         """
         cdef H5F_libver_t low
@@ -1306,6 +1447,61 @@ cdef class PropFAID(PropInstanceID):
             finally:
                 PyBuffer_Release(&buf)
 
+    IF HDF5_VERSION >= (1, 10, 1):
+
+        @with_phil
+        def set_page_buffer_size(self, size_t buf_size, unsigned int min_meta_per=0,
+                                 unsigned int min_raw_per=0):
+            """ (LONG buf_size, UINT min_meta_per, UINT min_raw_per)
+
+            Set the maximum size in bytes of the page buffer. The default value is
+            zero, meaning that page buffering is disabled. When a non-zero page
+            buffer size is set, HDF5 library will enable page buffering if that size
+            is larger or equal than a single page size if a paged file space
+            strategy was set at file creation.
+
+            The function also allows setting the criteria for metadata and raw data
+            page eviction from the buffer. The default values for both are zero.
+            """
+            H5Pset_page_buffer_size(self.id, buf_size, min_meta_per, min_raw_per)
+
+        @with_phil
+        def get_page_buffer_size(self):
+            """ () -> (LONG buf_size, UINT min_meta_per, UINT min_raw_per)
+
+            Retrieves the maximum size for the page buffer and the minimum
+            percentage for metadata and raw data pages evicition criteria.
+            """
+            cdef size_t buf_size
+            cdef unsigned int min_meta_per, min_raw_per
+            H5Pget_page_buffer_size(self.id, &buf_size, &min_meta_per, &min_raw_per)
+            return (buf_size, min_meta_per, min_raw_per)
+
+    IF HDF5_VERSION >= (1, 12, 1) or (HDF5_VERSION[:2] == (1, 10) and HDF5_VERSION[2] >= 7):
+
+        @with_phil
+        def get_file_locking(self):
+            """ () => (BOOL, BOOL)
+
+            Return file locking information as a 2-tuple of boolean:
+            (use_file_locking, ignore_when_disabled)
+            """
+            cdef hbool_t use_file_locking = 0
+            cdef hbool_t ignore_when_disabled = 0
+
+            H5Pget_file_locking(self.id, &use_file_locking, &ignore_when_disabled)
+            return use_file_locking, ignore_when_disabled
+
+        @with_phil
+        def set_file_locking(self, bint use_file_locking, bint ignore_when_disabled):
+            """ (BOOL use_file_locking, BOOL ignore_when_disabled)
+
+            Set HDF5 file locking behavior.
+            Warning: This setting is overridden by the HDF5_USE_FILE_LOCKING environment variable.
+            """
+            H5Pset_file_locking(
+                self.id, <hbool_t>use_file_locking, <hbool_t>ignore_when_disabled)
+
 
 # Link creation
 cdef class PropLCID(PropCreateID):
@@ -1417,6 +1613,7 @@ cdef class PropLAID(PropInstanceID):
 
         size = H5Pget_elink_prefix(self.id, NULL, 0)
         buf = <char*>emalloc(size+1)
+        buf[0] = 0
         try:
             H5Pget_elink_prefix(self.id, buf, size+1)
             pstr = buf
@@ -1449,7 +1646,10 @@ cdef class PropLAID(PropInstanceID):
 
 # Datatype creation
 cdef class PropTCID(PropOCID):
-    """ Datatype creation property list """
+    """ Datatype creation property list
+
+    No methods yet.
+    """
 
     pass
 
@@ -1510,6 +1710,30 @@ cdef class PropOCID(PropCreateID):
         H5Pget_attr_creation_order(self.id, &flags)
         return flags
 
+    @with_phil
+    def set_attr_phase_change(self, max_compact=8, min_dense=6):
+        """ (UINT max_compact, UINT min_dense)
+
+        Set threshold value for attribute storage on an object
+
+        max_compact -- maximum number of attributes to be stored in compact storage(default:8)
+        must be greater than or equal to min_dense
+        min_dense  -- minmum number of attributes to be stored in dense storage(default:6)
+
+        """
+        H5Pset_attr_phase_change(self.id, max_compact, min_dense)
+
+    @with_phil
+    def get_attr_phase_change(self):
+        """ () -> (max_compact, min_dense)
+
+        Retrieves threshold values for attribute storage on an object.
+
+        """
+        cdef unsigned int max_compact
+        cdef unsigned int min_dense
+        H5Pget_attr_phase_change(self.id, &max_compact, &min_dense)
+        return (max_compact, min_dense)
 
     @with_phil
     def set_obj_track_times(self,track_times):
@@ -1536,9 +1760,11 @@ cdef class PropDAID(PropInstanceID):
     """ Dataset access property list """
 
     def __cinit__(self, *args):
+        self._efile_prefix_buf = NULL
         self._virtual_prefix_buf = NULL
 
     def __dealloc__(self):
+        efree(self._efile_prefix_buf)
         efree(self._virtual_prefix_buf)
 
     @with_phil
@@ -1567,6 +1793,46 @@ cdef class PropDAID(PropInstanceID):
 
         H5Pget_chunk_cache(self.id, &rdcc_nslots, &rdcc_nbytes, &rdcc_w0 )
         return (rdcc_nslots,rdcc_nbytes,rdcc_w0)
+
+    if HDF5_VERSION >= (1, 8, 17):
+        @with_phil
+        def get_efile_prefix(self):
+            """() => STR
+
+            Get the filesystem path prefix configured for accessing external
+            datasets.
+            """
+            cdef char* cprefix = NULL
+            cdef ssize_t size
+
+            size = H5Pget_efile_prefix(self.id, NULL, 0)
+            cprefix = <char*>emalloc(size+1)
+            cprefix[0] = 0
+            try:
+                # TODO check return size
+                H5Pget_efile_prefix(self.id, cprefix, <size_t>size+1)
+                prefix = bytes(cprefix)
+            finally:
+                efree(cprefix)
+
+            return prefix
+
+        @with_phil
+        def set_efile_prefix(self, char* prefix):
+            """(STR prefix)
+
+            Set a filesystem path prefix for looking up external datasets.
+            This is prepended to all filenames specified in the external dataset.
+            """
+            cdef size_t size
+
+            # HDF5 requires that we hang on to this buffer
+            efree(self._efile_prefix_buf)
+            size = strlen(prefix)
+            self._efile_prefix_buf = <char*>emalloc(size+1)
+            strcpy(self._efile_prefix_buf, prefix)
+
+            H5Pset_efile_prefix(self.id, self._efile_prefix_buf)
 
     # === Virtual dataset functions ===========================================
     IF HDF5_VERSION >= VDS_MIN_HDF5_VERSION:
@@ -1647,6 +1913,7 @@ cdef class PropDAID(PropInstanceID):
 
             size = H5Pget_virtual_prefix(self.id, NULL, 0)
             cprefix = <char*>emalloc(size+1)
+            cprefix[0] = 0
             try:
                 # TODO check return size
                 H5Pget_virtual_prefix(self.id, cprefix, <size_t>size+1)

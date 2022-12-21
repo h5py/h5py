@@ -23,7 +23,7 @@ _H5PY_VERSION_CLS = namedtuple("_H5PY_VERSION_CLS",
 
 hdf5_built_version_tuple = _h5.HDF5_VERSION_COMPILED_AGAINST
 
-version_tuple = _H5PY_VERSION_CLS(2, 10, 0, None, None, None)
+version_tuple = _H5PY_VERSION_CLS(3, 7, 0, None, None, None)
 
 version = "{0.major:d}.{0.minor:d}.{0.bugfix:d}".format(version_tuple)
 if version_tuple.pre is not None:
@@ -49,9 +49,17 @@ Python  %(python)s
 sys.platform    %(platform)s
 sys.maxsize     %(maxsize)s
 numpy   %(numpy)s
-""" % { 'h5py': version,
-        'hdf5': hdf5_version,
-        'python': sys.version,
-        'platform': sys.platform,
-        'maxsize': sys.maxsize,
-        'numpy': numpy.__version__ }
+cython (built with) %(cython_version)s
+numpy (built against) %(numpy_build_version)s
+HDF5 (built against) %(hdf5_build_version)s
+""" % {
+    'h5py': version,
+    'hdf5': hdf5_version,
+    'python': sys.version,
+    'platform': sys.platform,
+    'maxsize': sys.maxsize,
+    'numpy': numpy.__version__,
+    'cython_version': _h5.CYTHON_VERSION_COMPILED_WITH,
+    'numpy_build_version': _h5.NUMPY_VERSION_COMPILED_AGAINST,
+    'hdf5_build_version': "%d.%d.%d" % hdf5_built_version_tuple,
+}

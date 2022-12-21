@@ -1,0 +1,25 @@
+What's new in h5py 3.1
+======================
+
+Bug fixes
+---------
+
+* Fix reading numeric data which is not in the native endianness,
+  e.g. big-endian data on a little-endian system (:issue:`1729`).
+* Fix using bytes as names for :meth:`.Group.create_dataset` and
+  :meth:`.Group.create_virtual_dataset` (:issue:`1732`).
+* Fix writing data as a list to a dataset with a sub-array data type
+  (:issue:`1735`).
+
+Building h5py
+-------------
+
+* Allow building against system lzf library by setting ``H5PY_SYSTEM_LZF=1``.
+  See :ref:`custom_install`.
+
+Development
+-----------
+
+* If pytest is missing `pytest-mpi <https://pytest-mpi.readthedocs.io/en/latest/>`_
+  it will now fail with a clear error.
+* Fix a test which was failing on big-endian systems.

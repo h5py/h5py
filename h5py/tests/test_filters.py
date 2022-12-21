@@ -11,6 +11,7 @@
     Tests the h5py._hl.filters module.
 
 """
+import os
 import numpy as np
 import h5py
 import pytest
@@ -79,9 +80,24 @@ def test_filter_ref_obj(writable_file):
     assert ds.compression_opts == 8
 
 
+def test_filter_ref_obj_eq():
+    gzip8 = h5py.filters.Gzip(level=8)
+
+    assert gzip8 == h5py.filters.Gzip(level=8)
+    assert gzip8 != h5py.filters.Gzip(level=7)
+
+
 @pytest.mark.mpi_skip
 @insubprocess
 def test_unregister_filter(request):
     if h5py.h5z.filter_avail(h5py.h5z.FILTER_LZF):
         res = h5py.h5z.unregister_filter(h5py.h5z.FILTER_LZF)
         assert res
+
+
+@ut.skipIf(not os.getenv('H5PY_TEST_CHECK_FILTERS'),  "H5PY_TEST_CHECK_FILTERS not set")
+def test_filters_available():
+    assert 'gzip' in h5py.filters.decode
+    assert 'gzip' in h5py.filters.encode
+    assert 'lzf' in h5py.filters.decode
+    assert 'lzf' in h5py.filters.encode

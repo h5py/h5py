@@ -14,6 +14,8 @@ except ImportError:
 from .common import ut, TestCase
 
 UNSUPPORTED_LONG_DOUBLE = ('i386', 'i486', 'i586', 'i686', 'ppc64le')
+UNSUPPORTED_LONG_DOUBLE_TYPES = ('float96', 'float128', 'complex192',
+                                 'complex256')
 
 
 class TestVlen(TestCase):
@@ -47,7 +49,7 @@ class TestVlen(TestCase):
 
         dt_vb = np.dtype([
             ('foo', vidt),
-            ('logical', np.bool)])
+            ('logical', bool)])
         vb = f.create_dataset('dt_vb', shape=(4,), dtype=dt_vb)
         data = np.array([(a([1, 2, 3]), True),
                          (a([1    ]), False),
@@ -67,11 +69,11 @@ class TestVlen(TestCase):
         dt_vvb = np.dtype([
             ('foo', vidt),
             ('bar', vidt),
-            ('logical', np.bool)])
+            ('logical', bool)])
         vvb = f.create_dataset('dt_vvb', shape=(2,), dtype=dt_vvb)
 
         dt_bvv = np.dtype([
-            ('logical', np.bool),
+            ('logical', bool),
             ('foo', vidt),
             ('bar', vidt)])
         bvv = f.create_dataset('dt_bvv', shape=(2,), dtype=dt_bvv)
@@ -193,7 +195,7 @@ class TestOffsets(TestCase):
 
     def test_aligned_data(self):
         dt = np.dtype('i4,f8,i2', align=True)
-        data = np.empty(10, dtype=dt)
+        data = np.zeros(10, dtype=dt)
 
         data['f0'] = np.array(np.random.randint(-100, 100, size=data.size),
                               dtype='i4')
@@ -232,7 +234,7 @@ class TestOffsets(TestCase):
         })
 
         self.assertTrue(dt.itemsize == itemsize)
-        data = np.empty(10, dtype=dt)
+        data = np.zeros(10, dtype=dt)
 
         # don't trust numpy struct handling, keep fields out of band in case content insertion is erroneous
         # yes... this has also been known to happen.
@@ -271,7 +273,7 @@ class TestOffsets(TestCase):
             'formats' : ['<f4', '<i4', '<f8'],
             'offsets' : [0, 16, 8]
         })
-        data = np.empty(10, dtype=dt)
+        data = np.zeros(10, dtype=dt)
         data['f1'] = np.random.rand(data.size)
         data['f2'] = np.random.randint(-10, 11, data.size)
         data['f3'] = np.random.rand(data.size) * -1
@@ -285,24 +287,25 @@ class TestOffsets(TestCase):
             self.assertArrayEqual(fd['data'], data)
 
     def test_float_round_tripping(self):
-        dtypes = set(f for f in np.typeDict.values()
+        dtypes = set(f for f in np.sctypeDict.values()
                      if (np.issubdtype(f, np.floating) or
                          np.issubdtype(f, np.complexfloating)))
 
+        unsupported_types = []
         if platform.machine() in UNSUPPORTED_LONG_DOUBLE:
-            dtype_dset_map = {str(j): d
-                              for j, d in enumerate(dtypes)
-                              if d not in (np.float128, np.complex256)}
-        else:
-            dtype_dset_map = {str(j): d
-                              for j, d in enumerate(dtypes)}
+            for x in UNSUPPORTED_LONG_DOUBLE_TYPES:
+                if hasattr(np, x):
+                    unsupported_types.append(getattr(np, x))
+        dtype_dset_map = {str(j): d
+                          for j, d in enumerate(dtypes)
+                          if d not in unsupported_types}
 
         fname = self.mktemp()
 
         with h5py.File(fname, 'w') as f:
             for n, d in dtype_dset_map.items():
-                data = np.arange(10,
-                                 dtype=d)
+                data = np.zeros(10, dtype=d)
+                data[...] = np.arange(10)
 
                 f.create_dataset(n, data=data)
 
@@ -383,31 +386,67 @@ class TestDateTime(TestCase):
                     self.assertEqual(arr.dtype, dset.dtype)
 
 @ut.skipUnless(tables is not None, 'tables is required')
-class TestB8(TestCase):
+class TestBitfield(TestCase):
 
     """
     Test H5T_NATIVE_B8 reading
     """
 
     def test_b8_bool(self):
-        arr1 = np.array([False, True], dtype=np.bool)
-        self._test_b8(arr1)
-        self._test_b8(arr1, dtype=np.uint8)
+        arr1 = np.array([False, True], dtype=bool)
+        self._test_b8(
+            arr1,
+            expected_default_cast_dtype=np.uint8
+        )
+        self._test_b8(
+            arr1,
+            expected_default_cast_dtype=np.uint8,
+            cast_dtype=np.uint8
+        )
 
     def test_b8_bool_compound(self):
         arr1 = np.array([(False,), (True,)], dtype=np.dtype([('x', '?')]))
-        self._test_b8(arr1)
-        self._test_b8(arr1, dtype=np.dtype([('x', 'u1')]))
+        self._test_b8(
+            arr1,
+            expected_default_cast_dtype=np.dtype([('x', 'u1')])
+        )
+        self._test_b8(
+            arr1,
+            expected_default_cast_dtype=np.dtype([('x', 'u1')]),
+            cast_dtype=np.dtype([('x', 'u1')])
+        )
 
     def test_b8_bool_compound_nested(self):
         arr1 = np.array(
             [(True, (True, False)), (True, (False, True))],
             dtype=np.dtype([('x', '?'), ('y', [('a', '?'), ('b', '?')])]),
         )
-        self._test_b8(arr1)
         self._test_b8(
             arr1,
-            dtype=np.dtype([('x', 'u1'), ('y', [('a', 'u1'), ('b', 'u1')])]),
+            expected_default_cast_dtype=np.dtype(
+                [('x', 'u1'), ('y', [('a', 'u1'), ('b', 'u1')])]
+            )
+        )
+        self._test_b8(
+            arr1,
+            expected_default_cast_dtype=np.dtype(
+                [('x', 'u1'), ('y', [('a', 'u1'), ('b', 'u1')])]
+            ),
+            cast_dtype=np.dtype([('x', 'u1'), ('y', [('a', 'u1'), ('b', 'u1')])]),
+        )
+
+    def test_b8_bool_compound_mixed_types(self):
+        arr1 = np.array(
+            [(True, 0.5), (False, 0.2)], dtype=np.dtype([('x','?'), ('y', '<f8')])
+        )
+        self._test_b8(
+            arr1,
+            expected_default_cast_dtype=np.dtype([('x', 'u1'), ('y', '<f8')])
+        )
+        self._test_b8(
+            arr1,
+            expected_default_cast_dtype=np.dtype([('x', 'u1'), ('y', '<f8')]),
+            cast_dtype=np.dtype([('x', 'u1'), ('y', '<f8')])
         )
 
     def test_b8_bool_array(self):
@@ -415,14 +454,19 @@ class TestB8(TestCase):
             [((True, True, False),), ((True, False, True),)],
             dtype=np.dtype([('x', ('?', (3,)))]),
         )
-        self._test_b8(arr1)
         self._test_b8(
             arr1,
-            dtype=np.dtype([('x', ('?', (3,)))]),
+            expected_default_cast_dtype=np.dtype([('x', ('u1', (3,)))])
+        )
+        self._test_b8(
+            arr1,
+            expected_default_cast_dtype=np.dtype([('x', ('u1', (3,)))]),
+            cast_dtype=np.dtype([('x', ('?', (3,)))]),
         )
 
-    def _test_b8(self, arr1, dtype=None):
+    def _test_b8(self, arr1, expected_default_cast_dtype, cast_dtype=None):
         path = self.mktemp()
+
         with tables.open_file(path, 'w') as f:
             if arr1.dtype.names:
                 f.create_table('/', 'test', obj=arr1)
@@ -432,21 +476,39 @@ class TestB8(TestCase):
         with h5py.File(path, 'r') as f:
             dset = f['test']
 
-            # read uncast dset to make sure it raises as before
-            with self.assertRaises(
-                TypeError, msg='No NumPy equivalent for TypeBitfieldID exists'
-            ):
-                dset[:]
+            # This should do an implicit uint8 cast
+            # Expect that the "No NumPy equivalent for TypeBitfieldID exists"
+            # error is not thrown.
+            arr2 = dset[:]
+
+            self.assertArrayEqual(
+                arr2,
+                arr1.astype(expected_default_cast_dtype, copy=False)
+            )
 
             # read cast dset and make sure it's equal
-            if dtype is None:
-                dtype = arr1.dtype
-            with dset.astype(dtype):
-                arr2 = dset[:]
-            self.assertArrayEqual(arr2, arr1.astype(dtype, copy=False))
+            if cast_dtype is None:
+                cast_dtype = arr1.dtype
+            arr3 = dset.astype(cast_dtype)[:]
+            self.assertArrayEqual(arr3, arr1.astype(cast_dtype, copy=False))
 
-            # read uncast dataset again to ensure nothing changed permanently
-            with self.assertRaises(
-                TypeError, msg='No NumPy equivalent for TypeBitfieldID exists'
-            ):
-                dset[:]
+    def test_b16_uint16(self):
+        arr1 = np.arange(10, dtype=np.uint16)
+        path = self.mktemp()
+        with h5py.File(path, 'w') as f:
+            space = h5py.h5s.create_simple(arr1.shape)
+            dset_id = h5py.h5d.create(f.id, b'test', h5py.h5t.STD_B16LE, space)
+            dset = h5py.Dataset(dset_id)
+            dset[:] = arr1
+
+        with h5py.File(path, 'r') as f:
+            dset = f['test']
+            self.assertArrayEqual(dset[:], arr1)
+
+def test_opaque(writable_file):
+    # opaque without an h5py tag corresponds to numpy void dtypes
+    arr = np.zeros(3, dtype='V2')
+    ds = writable_file.create_dataset('v', data=arr)
+    assert isinstance(ds.id.get_type(), h5py.h5t.TypeOpaqueID)
+    assert ds.id.get_type().get_size() == 2
+    np.testing.assert_array_equal(ds[:], arr)

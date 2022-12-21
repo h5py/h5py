@@ -1,5 +1,6 @@
 include AUTHORS
 include api_gen.py
+include dev-install.sh
 include LICENSE
 include MANIFEST.in
 include pylintrc
@@ -8,6 +9,7 @@ include setup_build.py
 include setup_configure.py
 include tox.ini
 include pytest.ini
+include *.toml
 
 recursive-include docs *
 prune docs/_build
@@ -20,10 +22,10 @@ exclude h5py/config.pxi
 exclude h5py/defs.pxd
 exclude h5py/defs.pyx
 exclude h5py/_hdf5.pxd
+recursive-include h5py/tests *.h5
 
 recursive-include licenses *
 recursive-include lzf *
-recursive-include windows *
 
 recursive-exclude * .DS_Store
 
@@ -31,7 +33,6 @@ exclude ci other .github
 recursive-exclude ci *
 recursive-exclude other *
 recursive-exclude .github *
-exclude pavement.py
 exclude *.yml
 exclude *.yaml
 recursive-exclude * __pycache__

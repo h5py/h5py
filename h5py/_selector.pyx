@@ -9,7 +9,10 @@ Python & numpy distinguish indexing a[3] from slicing a single element a[3:4],
 but there is no equivalent to this when selecting data in HDF5. So we store a
 separate boolean ('scalar') for each dimension to distinguish these cases.
 """
-from numpy cimport ndarray, npy_intp, PyArray_SimpleNew, PyArray_DATA, import_array
+from numpy cimport (
+    ndarray, npy_intp, PyArray_ZEROS, PyArray_DATA, import_array,
+    PyArray_IsNativeByteOrder,
+)
 from cpython cimport PyNumber_Index
 
 import numpy as np
@@ -176,6 +179,10 @@ cdef class Selector:
                     a = np.asarray(a)
                 if a.ndim != 1:
                     raise TypeError("Only 1D arrays allowed for fancy indexing")
+                if a.dtype.kind == 'b':
+                    if a.size != l:
+                        raise TypeError("boolean index did not match indexed array")
+                    a = a.nonzero()[0]
                 if not np.issubdtype(a.dtype, np.integer):
                     raise TypeError("Indexing arrays must have integer dtypes")
                 if array_ix != -1:
@@ -293,6 +300,7 @@ cdef class Reader:
     cdef Selector selector
     cdef TypeID h5_memory_datatype
     cdef int np_typenum
+    cdef bint native_byteorder
 
     def __cinit__(self, DatasetID dsid):
         self.dataset = dsid.id
@@ -305,6 +313,7 @@ cdef class Reader:
         h5_stored_datatype = typewrap(H5Dget_type(self.dataset))
         np_dtype = h5_stored_datatype.py_dtype()
         self.np_typenum = np_dtype.num
+        self.native_byteorder = PyArray_IsNativeByteOrder(ord(np_dtype.byteorder))
         self.h5_memory_datatype = py_create(np_dtype)
 
     cdef ndarray make_array(self, hsize_t* mshape):
@@ -324,7 +333,9 @@ cdef class Reader:
                     arr_shape[arr_rank] = mshape[i]
                     arr_rank += 1
 
-            arr = PyArray_SimpleNew(arr_rank, arr_shape, self.np_typenum)
+            arr = PyArray_ZEROS(arr_rank, arr_shape, self.np_typenum, 0)
+            if not self.native_byteorder:
+                arr = arr.newbyteorder()
         finally:
             efree(arr_shape)
 
@@ -355,8 +366,11 @@ cdef class Reader:
         finally:
             efree(mshape)
 
-        H5Dread(self.dataset, self.h5_memory_datatype.id, mspace,
-                self.selector.space, H5P_DEFAULT, buf)
+        try:
+            H5Dread(self.dataset, self.h5_memory_datatype.id, mspace,
+                    self.selector.space, H5P_DEFAULT, buf)
+        finally:
+            H5Sclose(mspace)
 
         if arr.ndim == 0:
             return arr[()]
@@ -364,7 +378,7 @@ cdef class Reader:
             return arr
 
 
-class MultiBlockSlice(object):
+class MultiBlockSlice:
     """
         A conceptual extension of the built-in slice object to allow selections
         using start, stride, count and block.

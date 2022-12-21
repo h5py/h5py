@@ -1,5 +1,5 @@
 language: python
-
+os: linux
 dist: xenial
 
 notifications:
@@ -19,73 +19,56 @@ cache:
 env:
   global:
     - HDF5_CACHE_DIR=$HOME/.cache/hdf5
-    - secure: "PVgKiZwB5Kr7KFAmjoMYtsKsVGUhDdiYq0YoMMEk/COFHpnRt/3CUKYwW+4vTCSKcaai/1ZiPUrHruCwdnU7sUkJZZdKkh2C+Vqx+DnnfAFMbLPGqgaBG2UEMtDIinXHDtV4k9wSJB2X9KPchA+kkCeB1ZPsELo7J5y2R55AcOw="
 
-matrix:
+jobs:
   include:
     # needed to work around https://github.com/travis-ci/travis-ci/issues/4794
     # TODO: We should see if we can replace this with installing python via pyenv # based on toxenv
     # Test on ppc64le
-    - python: 3.7
+    - arch: ppc64le
+      python: 3.7
       env:
       - TOXENV=py37-test-deps
+      # NumPy 1.21.5 fails to compile: https://github.com/numpy/numpy/issues/20761
+      - TOX_OPTS="--force-dep numpy!=1.21.5"
       - HDF5_VERSION=1.10.5
       - HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION
       - H5PY_ENFORCE_COVERAGE=yes
-      os: linux-ppc64le
-
-    # Builds the API docs
-    - python: 3.8
+    - arch: arm64
+      services: docker
+      python: 3.7
+      virt: vm
       env:
-        - TOXENV=apidocs
+        - TOXENV=py37-test-deps
+        - TOX_OPTS=""
         - HDF5_VERSION=1.10.5
         - HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION
-      script:
-        - tox
-        - pip install doctr
-        - doctr deploy . --built-docs docs_api/_build/html
-
-    # MPI tests
-    # TODO: We should test with newer versions of HDF5
-    - python: 3.6
-      env:
-      - TOXENV=py36-test-mindeps-mpi4py
-      - CC="mpicc"
-      - HDF5_MPI="ON"
-      - H5PY_ENFORCE_COVERAGE=yes
-      addons:
-        apt:
-          packages:
-            - openmpi-bin         # 1.6.5 based on trusty
-            - libopenmpi-dev
-            - libhdf5-openmpi-dev # 1.8.11 based on trusty
-
-    # Additional python versions which are not officially supported
-    - python: "nightly"
-      env:
-      - TOXENV=nightly
-      - HDF5_VERSION=1.10.5
-      - HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION
-      - H5PY_ENFORCE_COVERAGE=yes
-
-    - python: pypy3
-      env:
-      - TOXENV=pypy3-test-deps
-      - H5PY_ENFORCE_COVERAGE=yes
-  allow_failures:
-    - python: pypy3
-    - python: 'nightly'
-
+        - H5PY_ENFORCE_COVERAGE=yes
+        - CIBW_BUILD: cp3*-manylinux*
+        - CIBW_MANYLINUX_AARCH64_IMAGE: ghcr.io/h5py/manylinux2014_aarch64-hdf5
+        - CIBW_ARCHS: aarch64
 before_install:
   # - export PATH=/usr/lib/ccache:$PATH
   - ccache -s
 
 install:
-  - pip install tox codecov
-  - ci/travis/get_hdf5_if_needed.sh
-  - ls -lRa $HDF5_CACHE_DIR
+    - pip install -U tox codecov virtualenv
+    - ci/get_hdf5_if_needed.sh
+    - ls -lRa $HDF5_CACHE_DIR
+    - if [[ $CIBW_ARCHS == aarch64 ]]; then python -m pip install cibuildwheel; fi
+
 script:
-  - tox
+    - if [[ $CIBW_ARCHS == aarch64 ]]; then python3 -m cibuildwheel --output-dir wheelhouse; fi
+    - tox $TOX_OPTS
 
 after_success:
-  - python ci/upload_coverage.py
+    - python ci/upload_coverage.py
+
+  # trigger an upload to the shared ecosystem
+  # infrastructure at: https://anaconda.org/scipy-wheels-nightly
+  # for cron jobs only (restricted to master branch once
+  # per week)
+  # ANACONDA_ORG_UPLOAD_TOKEN is a secret token
+  # used in Travis CI config, originally
+  # generated at anaconda.org for scipy-wheels-nightly (cron jobs).
+    - if [[ $CIBW_ARCHS == aarch64 ]]; then bash ci/upload_wheels.sh; fi

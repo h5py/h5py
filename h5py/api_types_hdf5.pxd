@@ -153,12 +153,22 @@ cdef extern from "hdf5.h":
       H5F_LIBVER_NBOUNDS
     int H5F_LIBVER_LATEST  # Use the latest possible format available for storing objects
 
-  IF HDF5_VERSION >= (1, 11, 4):
+  IF HDF5_VERSION >= (1, 11, 4) and HDF5_VERSION < (1, 13, 0):
     ctypedef enum H5F_libver_t:
       H5F_LIBVER_EARLIEST = 0,        # Use the earliest possible format for storing objects
       H5F_LIBVER_V18 = 1,
       H5F_LIBVER_V110 = 2,
       H5F_LIBVER_V112 = 3,
+      H5F_LIBVER_NBOUNDS
+    int H5F_LIBVER_LATEST  # Use the latest possible format available for storing objects
+
+  IF HDF5_VERSION >= (1, 13, 0):
+    ctypedef enum H5F_libver_t:
+      H5F_LIBVER_EARLIEST = 0,        # Use the earliest possible format for storing objects
+      H5F_LIBVER_V18 = 1,
+      H5F_LIBVER_V110 = 2,
+      H5F_LIBVER_V112 = 3,
+      H5F_LIBVER_V114 = 4,
       H5F_LIBVER_NBOUNDS
     int H5F_LIBVER_LATEST  # Use the latest possible format available for storing objects
 
@@ -184,9 +194,11 @@ cdef extern from "hdf5.h":
   hid_t H5FD_MPIO
   hid_t H5FD_MULTI
   hid_t H5FD_SEC2
+  hid_t H5FD_DIRECT
   hid_t H5FD_STDIO
   IF UNAME_SYSNAME == "Windows":
     hid_t H5FD_WINDOWS
+  hid_t H5FD_ROS3
 
   int H5FD_LOG_LOC_READ   # 0x0001
   int H5FD_LOG_LOC_WRITE  # 0x0002
@@ -273,7 +285,15 @@ cdef extern from "hdf5.h":
     hsize_t alignment           # Allocation alignment
     hbool_t paged_aggr          # Paged aggregation for file space is enabled or not
 
+  IF HDF5_VERSION >= (1, 10, 6):
+    ctypedef struct H5FD_ros3_fapl_t:
+      int32_t version
+      hbool_t authenticate
+      char    aws_region[33]
+      char    secret_id[129]
+      char    secret_key[129]
 
+    unsigned int H5FD_CURR_ROS3_FAPL_T_VERSION # version of struct
 # === H5G - Groups API ========================================================
 
   ctypedef enum H5G_link_t:
@@ -446,7 +466,7 @@ cdef extern from "hdf5.h":
     meta_size       meta_size
 
   ctypedef herr_t (*H5O_iterate_t)(hid_t obj, char *name, H5O_info_t *info,
-                    void *op_data) except 2
+                    void *op_data) except -1
 
 # === H5P - Property list API =================================================
 
@@ -585,6 +605,9 @@ cdef extern from "hdf5.h":
   # --- Predefined datatypes --------------------------------------------------
 
   cdef hid_t H5T_NATIVE_B8
+  cdef hid_t H5T_NATIVE_B16
+  cdef hid_t H5T_NATIVE_B32
+  cdef hid_t H5T_NATIVE_B64
   cdef hid_t H5T_NATIVE_CHAR
   cdef hid_t H5T_NATIVE_SCHAR
   cdef hid_t H5T_NATIVE_UCHAR

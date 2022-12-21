@@ -62,10 +62,16 @@ class TestCreate(BaseGroup):
         grp = self.f.create_group('foo')
         self.assertIsInstance(grp, Group)
 
+        grp2 = self.f.create_group(b'bar')
+        self.assertIsInstance(grp, Group)
+
     def test_create_intermediate(self):
         """ Intermediate groups can be created automatically """
         grp = self.f.create_group('foo/bar/baz')
         self.assertEqual(grp.name, '/foo/bar/baz')
+
+        grp2 = self.f.create_group(b'boo/bar/baz')
+        self.assertEqual(grp2.name, '/boo/bar/baz')
 
     def test_create_exception(self):
         """ Name conflict causes group creation to fail with ValueError """
@@ -107,6 +113,11 @@ class TestDatasetAssignment(BaseGroup):
         self.assertIsInstance(self.f['a'], Dataset)
         self.assertArrayEqual(self.f['a'][...], data)
 
+    def test_name_bytes(self):
+        data = np.ones((4, 4), dtype='f')
+        self.f[b'b'] = data
+        self.assertIsInstance(self.f[b'b'], Dataset)
+
 class TestDtypeAssignment(BaseGroup):
 
     """
@@ -120,6 +131,13 @@ class TestDtypeAssignment(BaseGroup):
         self.assertIsInstance(self.f['a'], Datatype)
         self.assertEqual(self.f['a'].dtype, dtype)
 
+    def test_name_bytes(self):
+        """ Named type creation """
+        dtype = np.dtype('|S10')
+        self.f[b'b'] = dtype
+        self.assertIsInstance(self.f[b'b'], Datatype)
+
+
 class TestRequire(BaseGroup):
 
     """
@@ -130,7 +148,10 @@ class TestRequire(BaseGroup):
         """ Existing group is opened and returned """
         grp = self.f.create_group('foo')
         grp2 = self.f.require_group('foo')
-        self.assertEqual(grp, grp2)
+        self.assertEqual(grp2, grp)
+
+        grp3 = self.f.require_group(b'foo')
+        self.assertEqual(grp3, grp)
 
     def test_create(self):
         """ Group is created if it doesn't exist """
@@ -162,6 +183,21 @@ class TestRequire(BaseGroup):
         assert isinstance(group, Group)
         group = self.f.get('foo/bar/baz')
         assert isinstance(group, Group)
+
+    def test_require_shape(self):
+        ds = self.f.require_dataset("foo/resizable", shape=(0, 3), maxshape=(None, 3), dtype=int)
+        ds.resize(20, axis=0)
+        self.f.require_dataset("foo/resizable", shape=(0, 3), maxshape=(None, 3), dtype=int)
+        self.f.require_dataset("foo/resizable", shape=(20, 3), dtype=int)
+        with self.assertRaises(TypeError):
+            self.f.require_dataset("foo/resizable", shape=(0, 0), maxshape=(3, None), dtype=int)
+        with self.assertRaises(TypeError):
+            self.f.require_dataset("foo/resizable", shape=(0, 0), maxshape=(None, 5), dtype=int)
+        with self.assertRaises(TypeError):
+            self.f.require_dataset("foo/resizable", shape=(0, 0), maxshape=(None, 5, 2), dtype=int)
+        with self.assertRaises(TypeError):
+            self.f.require_dataset("foo/resizable", shape=(10, 3), dtype=int)
+
 
 class TestDelete(BaseGroup):
 
@@ -252,6 +288,16 @@ class TestOpen(BaseGroup):
 
         with self.assertRaises(Exception):
             self.f[ref]
+
+    def test_path_type_validation(self):
+        """ Access with non bytes or str types should raise an exception """
+        self.f.create_group('group')
+
+        with self.assertRaises(TypeError):
+            self.f[0]
+
+        with self.assertRaises(TypeError):
+            self.f[...]
 
     # TODO: check that regionrefs also work with __getitem__
 
@@ -405,21 +451,28 @@ class TestTrackOrder(BaseGroup):
     def test_track_order(self):
         g = self.f.create_group('order', track_order=True)  # creation order
         self.populate(g)
-        self.assertEqual(list(g),
-                         [str(i) for i in range(100)])
+
+        ref = [str(i) for i in range(100)]
+        self.assertEqual(list(g), ref)
+        self.assertEqual(list(reversed(g)), list(reversed(ref)))
 
     def test_no_track_order(self):
         g = self.f.create_group('order', track_order=False)  # name alphanumeric
         self.populate(g)
-        self.assertEqual(list(g),
-                         sorted([str(i) for i in range(100)]))
+
+        ref = sorted([str(i) for i in range(100)])
+        self.assertEqual(list(g), ref)
+        self.assertEqual(list(reversed(g)), list(reversed(ref)))
 
 class TestPy3Dict(BaseMapping):
 
     def test_keys(self):
         """ .keys provides a key view """
         kv = getattr(self.f, 'keys')()
-        self.assertSameElements(list(kv), self.groups)
+        ref = self.groups
+        self.assertSameElements(list(kv), ref)
+        self.assertSameElements(list(reversed(kv)), list(reversed(ref)))
+
         for x in self.groups:
             self.assertIn(x, kv)
         self.assertEqual(len(kv), len(self.groups))
@@ -427,7 +480,10 @@ class TestPy3Dict(BaseMapping):
     def test_values(self):
         """ .values provides a value view """
         vv = getattr(self.f, 'values')()
-        self.assertSameElements(list(vv), [self.f.get(x) for x in self.groups])
+        ref = [self.f.get(x) for x in self.groups]
+        self.assertSameElements(list(vv), ref)
+        self.assertSameElements(list(reversed(vv)), list(reversed(ref)))
+
         self.assertEqual(len(vv), len(self.groups))
         for x in self.groups:
             self.assertIn(self.f.get(x), vv)
@@ -435,7 +491,10 @@ class TestPy3Dict(BaseMapping):
     def test_items(self):
         """ .items provides an item view """
         iv = getattr(self.f, 'items')()
-        self.assertSameElements(list(iv), [(x,self.f.get(x)) for x in self.groups])
+        ref = [(x,self.f.get(x)) for x in self.groups]
+        self.assertSameElements(list(iv), ref)
+        self.assertSameElements(list(reversed(iv)), list(reversed(ref)))
+
         self.assertEqual(len(iv), len(self.groups))
         for x in self.groups:
             self.assertIn((x, self.f.get(x)), iv)
@@ -538,7 +597,7 @@ class TestGet(BaseGroup):
         self.assertIs(out, default)
 
         grp = self.f.create_group('a')
-        out = self.f.get('a')
+        out = self.f.get(b'a')
         self.assertEqual(out, grp)
 
     def test_get_class(self):
@@ -877,12 +936,16 @@ class TestCopy(TestCase):
     def test_copy_dataset(self):
         self.f1['foo'] = [1,2,3]
         foo = self.f1['foo']
+        grp = self.f1.create_group("grp")
 
         self.f1.copy(foo, 'bar')
         self.assertArrayEqual(self.f1['bar'], np.array([1,2,3]))
 
         self.f1.copy('foo', 'baz')
         self.assertArrayEqual(self.f1['baz'], np.array([1,2,3]))
+
+        self.f1.copy(foo, grp)
+        self.assertArrayEqual(self.f1['/grp/foo'], np.array([1,2,3]))
 
         self.f1.copy('foo', self.f2)
         self.assertArrayEqual(self.f2['foo'], np.array([1,2,3]))
