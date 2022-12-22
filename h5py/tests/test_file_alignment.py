@@ -65,7 +65,7 @@ class TestFileAlignment(TestCase):
                         dataset_name(i), shape, dtype='uint8')
                     # Assign data so that the dataset is instantiated in
                     # the file
-                    dataset[...] = i
+                    dataset[...] = (i % 256)  # Truncate to uint8
                     assert is_aligned(dataset, offset=alignment_interval)
 
     def test_alignment_set_below_threshold(self):
