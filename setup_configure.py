@@ -279,11 +279,6 @@ class HDF5LibWrapper:
 
         print("Loading library to get build settings and version:", path)
 
-        print("CWD", os.getcwd())
-        print("libdirs", libdirs)
-        for k in ['TOXENV', 'HDF5_VERSION', 'HDF5_DIR', 'HDF5_VSVERSION']:
-            print(k, repr(os.environ.get(k)))
-
         self._lib_path = path
 
         if op.isabs(path) and not op.exists(path):

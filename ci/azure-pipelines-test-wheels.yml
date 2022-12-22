@@ -13,10 +13,11 @@ steps:
   displayName: Install tox
 - bash: |
     ls $PIPELINE_WORKSPACE/${{ parameters.platform }}_wheels/
-    echo "PIPELINE_WORKSPACE=$PIPELINE_WORKSPACE"
-    echo "parameters.platform=${{ parameters.platform }}"
-    echo "Matching files" $PIPELINE_WORKSPACE/${{ parameters.platform }}_wheels/$WHL_FILE
-    tox --installpkg $PIPELINE_WORKSPACE/${{ parameters.platform }}_wheels/$WHL_FILE
+    # Bash's own globbing doesn't like Windows-style paths, so expand it using Python
+    WHL_PATH=$(python3 -c "import glob, sys; print(glob.glob(sys.argv[1])[0])" \
+               "$PIPELINE_WORKSPACE/${{ parameters.platform }}_wheels/$WHL_FILE")
+    echo "Will install wheel from $WHL_PATH"
+    tox --installpkg $WHL_PATH
   displayName: Run tests
 - task: PythonScript@0
   inputs:
