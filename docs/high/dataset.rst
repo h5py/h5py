@@ -662,6 +662,11 @@ Reference
 
         Access to :ref:`dimension_scales`.
 
+    .. attribute:: is_scale
+
+        Return ``True`` if the dataset is also a :ref:`dimension scale <dimension_scales>`,
+        ``False`` otherwise.
+
     .. attribute:: attrs
 
         :ref:`attributes` for this dataset.
