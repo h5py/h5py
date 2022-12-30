@@ -66,6 +66,68 @@ IF HDF5_VERSION >= (1, 10, 5):
     StoreInfo = namedtuple('StoreInfo',
                            'chunk_offset, filter_mask, byte_offset, size')
 
+# === Dataset chunk iterator ==================================================
+
+IF HDF5_VERSION >= (1, 12, 3):
+
+    cdef class _ChunkVisitor:
+        cdef int rank
+        cdef object func
+        cdef object retval
+
+        def __init__(self, rank, func):
+            self.rank = rank
+            self.func = func
+            self.retval = None
+
+
+    cdef int cb_chunk_info(const hsize_t *offset, unsigned filter_mask, haddr_t addr, hsize_t size, void *op_data) except -1 with gil:
+        """Callback function for chunk iteration.
+
+        Feature requires: HDF5 1.12.3
+
+        .. versionadded:: 3.8
+        """
+        cdef _ChunkVisitor visit
+        cdef object chunk_info
+        cdef tuple cot
+
+        visit = <_ChunkVisitor>op_data
+        if addr != HADDR_UNDEF:
+            cot = convert_dims(offset, <hsize_t>visit.rank)
+            chunk_info = StoreInfo(cot, filter_mask, addr, size)
+        else:
+            chunk_info = StoreInfo(None, filter_mask, None, size)
+
+        visit.retval = visit.func(chunk_info)
+        if visit.retval is not None:
+            return 1
+        return 0
+
+
+    @with_phil
+    def chunk_visit(DatasetID dsid not None, object func, PropID dxpl=None):
+        """(DatasetID dsid, CALLABLE func, PropDXID dxpl=None) => <Return value from func>
+
+        Feature requires: HDF5 1.12.3
+
+        .. versionadded:: 3.8
+        """
+        cdef int rank
+        cdef hid_t space_id
+        cdef _ChunkVisitor visit
+
+        space_id = H5Dget_space(dsid.id)
+        rank = H5Sget_simple_extent_ndims(space_id)
+        H5Sclose(space_id)
+        visit = _ChunkVisitor(rank, func)
+        H5Dchunk_iter(dsid.id,
+                      pdefault(dxpl),
+                      <H5D_chunk_iter_op_t>cb_chunk_info,
+                      <void*>visit)
+
+        return visit.retval
+
 # === Dataset operations ======================================================
 
 @with_phil
