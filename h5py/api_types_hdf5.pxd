@@ -95,6 +95,10 @@ cdef extern from "hdf5.h":
   ctypedef  herr_t (*H5D_operator_t)(void *elem, hid_t type_id, unsigned ndim,
                     hsize_t *point, void *operator_data) except -1
 
+  IF HDF5_VERSION >= (1, 12, 3):
+    ctypedef int (*H5D_chunk_iter_op_t)(const hsize_t *offset, unsigned filter_mask,
+                                        haddr_t addr, hsize_t size, void *op_data) except -1
+
 # === H5F - File API ==========================================================
 
   # File constants
@@ -153,7 +157,7 @@ cdef extern from "hdf5.h":
       H5F_LIBVER_NBOUNDS
     int H5F_LIBVER_LATEST  # Use the latest possible format available for storing objects
 
-  IF HDF5_VERSION >= (1, 11, 4) and HDF5_VERSION < (1, 13, 0):
+  IF HDF5_VERSION >= (1, 11, 4) and HDF5_VERSION < (1, 14, 0):
     ctypedef enum H5F_libver_t:
       H5F_LIBVER_EARLIEST = 0,        # Use the earliest possible format for storing objects
       H5F_LIBVER_V18 = 1,
@@ -162,7 +166,7 @@ cdef extern from "hdf5.h":
       H5F_LIBVER_NBOUNDS
     int H5F_LIBVER_LATEST  # Use the latest possible format available for storing objects
 
-  IF HDF5_VERSION >= (1, 13, 0):
+  IF HDF5_VERSION >= (1, 14, 0):
     ctypedef enum H5F_libver_t:
       H5F_LIBVER_EARLIEST = 0,        # Use the earliest possible format for storing objects
       H5F_LIBVER_V18 = 1,
