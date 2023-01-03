@@ -1794,8 +1794,9 @@ def test_get_chunk_details():
         assert si.size > 0
 
 
-@ut.skipUnless(h5py.version.hdf5_version_tuple >= (1, 12, 3),
-               "chunk iteration requires  HDF5 >= 1.12.3")
+@ut.skipUnless(h5py.version.hdf5_version_tuple >= (1, 12, 3) or
+               (h5py.version.hdf5_version_tuple >= (1, 10, 10) and h5py.version.hdf5_version_tuple < (1, 10, 99)),
+               "chunk iteration requires  HDF5 1.10.10 and later 1.10, or 1.12.3 and later")
 def test_chunk_iter():
     """H5Dchunk_iter() for chunk information"""
     from io import BytesIO
@@ -1822,7 +1823,7 @@ def test_chunk_iter():
             assert chunk_info.byte_offset == known.byte_offset
             assert chunk_info.size == known.size
 
-        h5py.h5d.chunk_visit(dsid, callback)
+        h5py.h5d.visitchunks(dsid, callback)
 
 
 def test_empty_shape(writable_file):
