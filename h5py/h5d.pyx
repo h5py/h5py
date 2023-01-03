@@ -81,10 +81,20 @@ IF HDF5_VERSION >= (1, 12, 3):
             self.retval = None
 
 
-    cdef int cb_chunk_info(const hsize_t *offset, unsigned filter_mask, haddr_t addr, hsize_t size, void *op_data) except -1 with gil:
-        """Callback function for chunk iteration.
+    cdef int _cb_chunk_info(const hsize_t *offset, unsigned filter_mask, haddr_t addr, hsize_t size, void *op_data) except -1 with gil:
+        """Callback function for chunk iteration. (Not to be used directly.)
 
-        Feature requires: HDF5 1.12.3
+        This function is called for every chunk with the following information:
+            * offset - Logical position of the chunk’s first element in units of dataset elements
+            * filter_mask - Bitmask indicating the filters used when the chunk was written
+            * addr - Chunk file address
+            * size - Chunk size in bytes, 0 if the chunk does not exist
+
+        Chunk information is converted to a StoreInfo namedtuple and passed as input
+        to the user-supplied callback object in the "op_data".
+
+        Feature requires: HDF5 1.10.10 or any later 1.10
+                          HDF5 1.12.3 or later
 
         .. versionadded:: 3.8
         """
@@ -106,10 +116,15 @@ IF HDF5_VERSION >= (1, 12, 3):
 
 
     @with_phil
-    def chunk_visit(DatasetID dsid not None, object func, PropID dxpl=None):
+    def visitchunks(DatasetID dsid not None, object func, PropID dxpl=None):
         """(DatasetID dsid, CALLABLE func, PropDXID dxpl=None) => <Return value from func>
 
-        Feature requires: HDF5 1.12.3
+        Iterate over each chunk and invoke user-supplied "func" callable object.
+        The "func" receives chunk information: logical offset, filter mask,
+        file location, and size. Any not-None return value from "func" ends iteration.
+
+        Feature requires: HDF5 1.10.10 or any later 1.10
+                          HDF5 1.12.3 or later
 
         .. versionadded:: 3.8
         """
@@ -123,7 +138,7 @@ IF HDF5_VERSION >= (1, 12, 3):
         visit = _ChunkVisitor(rank, func)
         H5Dchunk_iter(dsid.id,
                       pdefault(dxpl),
-                      <H5D_chunk_iter_op_t>cb_chunk_info,
+                      <H5D_chunk_iter_op_t>_cb_chunk_info,
                       <void*>visit)
 
         return visit.retval

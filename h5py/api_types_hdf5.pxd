@@ -95,7 +95,8 @@ cdef extern from "hdf5.h":
   ctypedef  herr_t (*H5D_operator_t)(void *elem, hid_t type_id, unsigned ndim,
                     hsize_t *point, void *operator_data) except -1
 
-  IF HDF5_VERSION >= (1, 12, 3):
+
+  IF HDF5_VERSION >= (1, 12, 3) or (HDF5_VERSION >= (1, 10, 10) and HDF5_VERSION < (1, 10, 99)):
     ctypedef int (*H5D_chunk_iter_op_t)(const hsize_t *offset, unsigned filter_mask,
                                         haddr_t addr, hsize_t size, void *op_data) except -1
 
