@@ -68,7 +68,7 @@ IF HDF5_VERSION >= (1, 10, 5):
 
 # === Dataset chunk iterator ==================================================
 
-IF HDF5_VERSION >= (1, 12, 3):
+IF HDF5_VERSION >= (1, 12, 3) or (HDF5_VERSION >= (1, 10, 10) and HDF5_VERSION < (1, 10, 99)):
 
     cdef class _ChunkVisitor:
         cdef int rank
@@ -113,35 +113,6 @@ IF HDF5_VERSION >= (1, 12, 3):
         if visit.retval is not None:
             return 1
         return 0
-
-
-    @with_phil
-    def visitchunks(DatasetID dsid not None, object func, PropID dxpl=None):
-        """(DatasetID dsid, CALLABLE func, PropDXID dxpl=None) => <Return value from func>
-
-        Iterate over each chunk and invoke user-supplied "func" callable object.
-        The "func" receives chunk information: logical offset, filter mask,
-        file location, and size. Any not-None return value from "func" ends iteration.
-
-        Feature requires: HDF5 1.10.10 or any later 1.10
-                          HDF5 1.12.3 or later
-
-        .. versionadded:: 3.8
-        """
-        cdef int rank
-        cdef hid_t space_id
-        cdef _ChunkVisitor visit
-
-        space_id = H5Dget_space(dsid.id)
-        rank = H5Sget_simple_extent_ndims(space_id)
-        H5Sclose(space_id)
-        visit = _ChunkVisitor(rank, func)
-        H5Dchunk_iter(dsid.id,
-                      pdefault(dxpl),
-                      <H5D_chunk_iter_op_t>_cb_chunk_info,
-                      <void*>visit)
-
-        return visit.retval
 
 # === Dataset operations ======================================================
 
@@ -696,3 +667,30 @@ cdef class DatasetID(ObjectID):
                              filter_mask,
                              byte_offset if byte_offset != HADDR_UNDEF else None,
                              size)
+
+    IF HDF5_VERSION >= (1, 12, 3) or (HDF5_VERSION >= (1, 10, 10) and HDF5_VERSION < (1, 10, 99)):
+
+        @with_phil
+        def chunk_iter(self, object func, PropID dxpl=None):
+            """(CALLABLE func, PropDXID dxpl=None) => <Return value from func>
+
+            Iterate over each chunk and invoke user-supplied "func" callable object.
+            The "func" receives chunk information: logical offset, filter mask,
+            file location, and size. Any not-None return value from "func" ends iteration.
+
+            Feature requires: HDF5 1.10.10 or any later 1.10
+                            HDF5 1.12.3 or later
+
+            .. versionadded:: 3.8
+            """
+            cdef int rank
+            cdef hid_t space_id
+            cdef _ChunkVisitor visit
+
+            space_id = H5Dget_space(self.id)
+            rank = H5Sget_simple_extent_ndims(space_id)
+            H5Sclose(space_id)
+            visit = _ChunkVisitor(rank, func)
+            H5Dchunk_iter(self.id, pdefault(dxpl), <H5D_chunk_iter_op_t>_cb_chunk_info, <void*>visit)
+
+            return visit.retval
