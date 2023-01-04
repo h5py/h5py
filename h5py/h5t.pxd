@@ -10,7 +10,7 @@
 
 from .defs cimport *
 
-from ._objects cimport class ObjectID
+from ._objects cimport ObjectID
 
 cdef class TypeID(ObjectID):
 
