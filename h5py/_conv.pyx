@@ -718,9 +718,12 @@ cdef int conv_vlen2ndarray(void* ipt,
         data = realloc(data, itemsize * size)
 
     if needs_bkg_buffer(intype.id, outtype.id):
-        back_buf = malloc(H5Tget_size(outtype.id)*size)
+        back_buf = emalloc(H5Tget_size(outtype.id)*size)
 
-    H5Tconvert(intype.id, outtype.id, size, data, back_buf, H5P_DEFAULT)
+    try:
+        H5Tconvert(intype.id, outtype.id, size, data, back_buf, H5P_DEFAULT)
+    finally:
+        free(back_buf)
 
     # We need to use different approaches to creating the ndarray with the converted
     # data depending on the destination dtype.
@@ -861,7 +864,7 @@ cdef int conv_ndarray2vlen(void* ipt,
         PyBuffer_Release(&view)
 
         if needs_bkg_buffer(intype.id, outtype.id):
-            back_buf = malloc(H5Tget_size(outtype.id)*len)
+            back_buf = emalloc(H5Tget_size(outtype.id)*len)
 
         H5Tconvert(intype.id, outtype.id, len, data, back_buf, H5P_DEFAULT)
 
