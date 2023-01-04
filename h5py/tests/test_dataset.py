@@ -1823,7 +1823,7 @@ def test_chunk_iter():
             assert chunk_info.byte_offset == known.byte_offset
             assert chunk_info.size == known.size
 
-        h5py.h5d.visitchunks(dsid, callback)
+        dsid.chunk_iter(callback)
 
 
 def test_empty_shape(writable_file):
