@@ -8,16 +8,16 @@ on:
 
 jobs:
   api-docs:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     env:
       HDF5_VERSION: 1.12.0
       HDF5_DIR: ${{ github.workspace }}/cache/hdf5
       TOXENV: apidocs
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Cache HDF5
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ${{ env.HDF5_DIR }}
           key: ${{ runner.os }}-hdf5-${{ env.HDF5_VERSION }}
@@ -27,7 +27,7 @@ jobs:
           ./ci/get_hdf5_if_needed.sh
 
       - name: Setup Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: '3.8'
 
@@ -42,7 +42,7 @@ jobs:
           echo -n "api.h5py.org" > docs_api/_build/html/CNAME
 
       - name: Upload built docs
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: docs-html
           path: docs_api/_build/html
