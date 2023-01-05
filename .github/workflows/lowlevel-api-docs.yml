@@ -8,7 +8,7 @@ on:
 
 jobs:
   api-docs:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     env:
       HDF5_VERSION: 1.12.0
       HDF5_DIR: ${{ github.workspace }}/cache/hdf5
