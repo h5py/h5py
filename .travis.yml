@@ -54,7 +54,6 @@ before_install:
 install:
     - pip install -U tox codecov virtualenv
     - ci/get_hdf5_if_needed.sh
-    - ls -lRa $HDF5_CACHE_DIR
     - if [[ $CIBW_ARCHS == aarch64 ]]; then python -m pip install cibuildwheel; fi
 
 script:
