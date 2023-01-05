@@ -1,6 +1,6 @@
 language: python
 os: linux
-dist: xenial
+dist: bionic
 
 notifications:
   email: false
