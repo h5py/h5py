@@ -1,13 +1,80 @@
 [build-system]
-# Further build requirements - like numpy & cython - come from setup.py via
-# the PEP 517 interface.
 requires = [
-    "setuptools",
-    "wheel",
+    "Cython ~=0.29",
     "oldest-supported-numpy",
     "pkgconfig",
-    "Cython >=0.29; python_version<'3.8'",
-    "Cython >=0.29.14; python_version=='3.8'",
-    "Cython >=0.29.15; python_version>='3.9'",
+    "setuptools >=61",
 ]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "h5py"
+description = "Read and write HDF5 files from Python"
+authors = [
+    {name = "Andrew Collette", email = "andrew.collette@gmail.com"},
+]
+maintainers = [
+    {name = "Thomas Kluyver", email = "thomas@kluyver.me.uk"},
+]
+license = {text = "BSD-3-Clause"}
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Information Technology",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: BSD License",
+    "Operating System :: Unix",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: MacOS :: MacOS X",
+    "Operating System :: Microsoft :: Windows",
+    "Programming Language :: Cython",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Database",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+requires-python = ">=3.7"
+dynamic = ["dependencies", "version"]
+
+[project.readme]
+text = """\
+The h5py package provides both a high- and low-level interface to the HDF5
+library from Python. The low-level interface is intended to be a complete
+wrapping of the HDF5 API, while the high-level component supports  access to
+HDF5 files, datasets and groups using established Python and NumPy concepts.
+
+A strong emphasis on automatic conversion between Python (Numpy) datatypes and
+data structures and their HDF5 equivalents vastly simplifies the process of
+reading and writing data from Python.
+
+Wheels are provided for several popular platforms, with an included copy of
+the HDF5 library (usually the latest version when h5py is released).
+
+You can also `build h5py from source
+<https://docs.h5py.org/en/stable/build.html#source-installation>`_
+with any HDF5 stable release from version 1.8.4 onwards, although naturally new
+HDF5 versions released after this version of h5py may not work.
+Odd-numbered minor versions of HDF5 (e.g. 1.13) are experimental, and may not
+be supported.
+"""
+content-type = "text/x-rst"
+
+[project.urls]
+Homepage = "https://www.h5py.org/"
+Source = "https://github.com/h5py/h5py"
+Documentation = "https://docs.h5py.org/en/stable/"
+"Release notes" = "https://docs.h5py.org/en/stable/whatsnew/index.html"
+"Discussion forum" = "https://forum.hdfgroup.org/c/hdf-tools/h5py"
+
+[tool.setuptools]
+# to ignore .pxd and .pyx files in wheels
+include-package-data = false
+packages = [
+    "h5py",
+    "h5py._hl",
+    "h5py.tests",
+    "h5py.tests.data_files",
+    "h5py.tests.test_vds",
+]
