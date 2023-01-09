@@ -180,6 +180,11 @@ cdef class Selector:
                 if a.ndim != 1:
                     raise TypeError("Only 1D arrays allowed for fancy indexing")
                 if a.dtype.kind == 'b':
+                    if self.rank == 1:
+                        # The dataset machinery should fall back to a faster
+                        # alternative (using PointSelection) in this case.
+                        # https://github.com/h5py/h5py/issues/2189
+                        raise TypeError("Use other code for boolean selection on 1D dataset")
                     if a.size != l:
                         raise TypeError("boolean index did not match indexed array")
                     a = a.nonzero()[0]
