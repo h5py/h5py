@@ -76,7 +76,7 @@ jobs:
       parameters:
         platform: macos_$(arch)
 
-- job: 'ubuntu1604'
+- job: 'ubuntu'
   pool:
     vmImage: ubuntu-20.04
   strategy:
@@ -103,12 +103,6 @@ jobs:
         HDF5_VERSION: 1.10.3
         HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
         H5PY_ENFORCE_COVERAGE: yes
-      py37-deps-hdf51106:
-        python.version: '3.7'
-        TOXENV: py37-test-deps
-        HDF5_VERSION: 1.10.6
-        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
-        H5PY_ENFORCE_COVERAGE: yes
       py38-deps-hdf51107:
         python.version: '3.8'
         TOXENV: py38-test-deps
@@ -125,6 +119,12 @@ jobs:
         python.version: '3.9'
         TOXENV: py39-test-deps
         HDF5_VERSION: 1.12.2
+        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
+        H5PY_ENFORCE_COVERAGE: yes
+      py310-deps-hdf51140:
+        python.version: '3.10'
+        TOXENV: py310-test-deps
+        HDF5_VERSION: 1.14.0
         HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
         H5PY_ENFORCE_COVERAGE: yes
     # do mpi tests
@@ -200,13 +200,6 @@ jobs:
         HDF5_VSVERSION: "16-64"
         H5PY_ENFORCE_COVERAGE: yes
     # 64 bit - HDF5 1.10
-      py38-hdf5110:
-        python.version: '3.8'
-        TOXENV: py38-test-deps,py38-test-mindeps,py38-test-deps-pre
-        HDF5_VERSION: 1.10.6
-        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
-        HDF5_VSVERSION: "16-64"
-        H5PY_ENFORCE_COVERAGE: yes
       py39-hdf5110:
         python.version: '3.9'
         TOXENV: py39-test-deps,py39-test-mindeps,py39-test-deps-pre
@@ -220,6 +213,13 @@ jobs:
         python.version: '3.8'
         TOXENV: py38-test-deps
         HDF5_VERSION: 1.12.0
+        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
+        HDF5_VSVERSION: "16-64"
+        H5PY_ENFORCE_COVERAGE: yes
+      py310-hdf5114:
+        python.version: '3.10'
+        TOXENV: py310-test-deps
+        HDF5_VERSION: 1.14.0
         HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
         HDF5_VSVERSION: "16-64"
         H5PY_ENFORCE_COVERAGE: yes

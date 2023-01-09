@@ -216,5 +216,7 @@ info.fl_map = [H5FD_MEM_SUPER,  # default
                H5FD_MEM_SUPER,  # lheap
                H5FD_MEM_SUPER   # ohdr
 	       ]
+IF HDF5_VERSION >= (1, 14, 0):
+    info.version = H5FD_CLASS_VERSION
 
 fileobj_driver = H5FDregister(&info)
