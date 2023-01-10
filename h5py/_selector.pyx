@@ -15,6 +15,7 @@ from numpy cimport (
 )
 from cpython cimport PyNumber_Index
 
+import collections.abc
 import numpy as np
 from .defs cimport *
 from .h5d cimport DatasetID
@@ -172,8 +173,8 @@ cdef class Selector:
                 continue
 
             # [[0, 2, 10]] - list/array of indices ('fancy indexing')
-            if isinstance(a, (list, np.ndarray)):
-                if isinstance(a, list) and len(a) == 0:
+            if isinstance(a, (np.ndarray, collections.abc.Sequence)):
+                if not isinstance(a, np.ndarray) and len(a) == 0:
                     a = np.asarray(a, dtype=np.intp)
                 else:
                     a = np.asarray(a)
