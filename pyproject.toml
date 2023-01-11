@@ -15,6 +15,7 @@ authors = [
 ]
 maintainers = [
     {name = "Thomas Kluyver", email = "thomas@kluyver.me.uk"},
+    {name = "Thomas A Caswell", email = "tcaswell@bnl.gov"},
 ]
 license = {text = "BSD-3-Clause"}
 classifiers = [
