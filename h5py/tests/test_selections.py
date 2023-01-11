@@ -117,6 +117,10 @@ class TestSelection(BaseSelection):
         st2 = sel.select((10,), 1, dset)
         self.assertIsInstance(st2, sel.SimpleSelection)
 
+        # args is str, should be rejected
+        with self.assertRaises(TypeError):
+            sel.select((100,), "foo", dset)
+
         # args is RegionReference, return a Selection instance
         st3 = sel.select((100,100), regref, dset)
         self.assertIsInstance(st3, sel.Selection)
