@@ -15,7 +15,6 @@ from numpy cimport (
 )
 from cpython cimport PyNumber_Index
 
-import collections.abc
 import numpy as np
 from .defs cimport *
 from .h5d cimport DatasetID
