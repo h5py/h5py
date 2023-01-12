@@ -59,6 +59,7 @@ install:
 script:
     - if [[ $CIBW_ARCHS == aarch64 ]]; then python3 -m cibuildwheel --output-dir wheelhouse; fi
     - tox $TOX_OPTS
+    - sleep 5
 
 after_success:
     - python ci/upload_coverage.py
