@@ -37,10 +37,11 @@ class AttributeManager(base.MutableMappingHDF5, base.CommonStateObject):
 
         Attributes are automatically created on assignment with the
         syntax <obj>.attrs[name] = value, with the HDF5 type automatically
-        deduced from the value.  Existing attributes are overwritten.
+        deduced from the value. Existing attributes are modified if track_order
+        is True and type can be preserved, otherwise attributes get overwritten.
 
         To modify an existing attribute while preserving its type, use the
-        method modify().  To specify an attribute of a particular type and
+        method modify(). To specify an attribute of a particular type and
         shape, use create().
     """
 
@@ -95,13 +96,32 @@ class AttributeManager(base.MutableMappingHDF5, base.CommonStateObject):
 
     @with_phil
     def __setitem__(self, name, value):
-        """ Set a new attribute, overwriting any existing attribute.
+        """ Set a new attribute, overwriting or modifying any existing attribute.
+
+        Overwrite existing attributes if track_order is False, otherwise modify
+        attribute if type is preserved.
 
         The type and shape of the attribute are determined from the data.  To
         use a specific type or shape, or to preserve the type of an attribute,
         use the methods create() and modify().
         """
-        self.create(name, data=value)
+        with phil:
+            # see issue
+            # if attribute exists and track_order=True
+            if name in self and self._id.get_create_plist().get_attr_creation_order() > 0:
+                # extract type
+                if not isinstance(value, Empty):
+                    value = base.array_for_new_object(value, specified_dtype=None)
+                dtype = value.dtype
+                attr = h5a.open(self._id, self._e(name))
+                dt = attr.dtype
+                attr.close()
+                # if type is preserved -> modify
+                if dtype == dt:
+                    self.modify(name, value)
+                    return
+            # all other cases -> overwrite
+            self.create(name, value)
 
     @with_phil
     def __delitem__(self, name):
@@ -143,7 +163,7 @@ class AttributeManager(base.MutableMappingHDF5, base.CommonStateObject):
             elif dtype is None:
                 dtype = data.dtype
             else:
-                dtype = numpy.dtype(dtype) # In case a string, e.g. 'i8' is passed
+                dtype = numpy.dtype(dtype)  # In case a string, e.g. 'i8' is passed
 
             original_dtype = dtype  # We'll need this for top-level array types
 
@@ -223,14 +243,14 @@ class AttributeManager(base.MutableMappingHDF5, base.CommonStateObject):
         """ Change the value of an attribute while preserving its type.
 
         Differs from __setitem__ in that if the attribute already exists, its
-        type is preserved.  This can be very useful for interacting with
+        type is preserved. This can be very useful for interacting with
         externally generated files.
 
         If the attribute doesn't exist, it will be automatically created.
         """
         with phil:
             if not name in self:
-                self[name] = value
+                self.create(name, value)
             else:
                 attr = h5a.open(self._id, self._e(name))
 

@@ -79,7 +79,7 @@ class TestAccess(BaseAttrs):
 
     def test_modify_2(self):
         """ Attributes are modified by modify() method """
-        self.f.attrs.modify('a',3)
+        self.f.attrs.modify('a', 3)
         self.assertEqual(list(self.f.attrs.keys()), ['a'])
         self.assertEqual(self.f.attrs['a'], 3)
 
@@ -265,16 +265,39 @@ class TestTrackOrder(BaseAttrs):
 
     @ut.skipUnless(h5py.version.hdf5_version_tuple >= (1, 10, 6), 'HDF5 1.10.6 required')
     def test_track_order_overwrite_delete(self):
-        # issue 1385
+        # issue 1385, issue 2204
         group = self.fill_attrs2(track_order=True)  # creation order
         self.assertEqual(group.attrs["11"], 11)
-        # overwrite attribute
+        # overwrite attribute (with other dtype)
         group.attrs['11'] = 42.0
         self.assertEqual(group.attrs["11"], 42.0)
         # delete attribute
+        self.assertIn('11', group.attrs)
+        # renamed attribute cannot be deleted due to
+        # https://github.com/HDFGroup/hdf5/issues/1388
+        with self.assertRaises(KeyError):
+            del group.attrs['11']
+        self.assertIn('11', group.attrs)
+        # delete attribute
         self.assertIn('10', group.attrs)
+        # untouched attribute can be deleted
         del group.attrs['10']
         self.assertNotIn('10', group.attrs)
+
+    @ut.skipUnless(h5py.version.hdf5_version_tuple >= (1, 10, 6),
+                   'HDF5 1.10.6 required')
+    def test_track_order_overwrite_modify(self):
+        # issue 1385, issue 2204
+        group = self.fill_attrs2(track_order=True)  # creation order
+        self.assertEqual(group.attrs["11"], 11)
+        # modify attribute (same dtype)
+        group.attrs['11'] = 42
+        self.assertEqual(group.attrs["11"], 42)
+        # delete attribute
+        self.assertIn('11', group.attrs)
+        # modified attribute can be deleted
+        del group.attrs['11']
+        self.assertNotIn('11', group.attrs)
 
 
 class TestDatatype(BaseAttrs):
