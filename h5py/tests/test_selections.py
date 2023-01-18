@@ -105,6 +105,10 @@ class TestSelection(BaseSelection):
         st = sel.select((10,), list([1,2,3]), dset)
         self.assertIsInstance(st, sel.FancySelection)
 
+        # args[0] is tuple, return a FancySelection
+        st = sel.select((10,), ((1, 2, 3),), dset)
+        self.assertIsInstance(st, sel.FancySelection)
+
         # args is a Boolean mask, return a PointSelection
         st1 = sel.select((5,), np.array([True,False,False,False,True]), dset)
         self.assertIsInstance(st1, sel.PointSelection)
@@ -112,6 +116,10 @@ class TestSelection(BaseSelection):
         # args is int, return a SimpleSelection
         st2 = sel.select((10,), 1, dset)
         self.assertIsInstance(st2, sel.SimpleSelection)
+
+        # args is str, should be rejected
+        with self.assertRaises(TypeError):
+            sel.select((100,), "foo", dset)
 
         # args is RegionReference, return a Selection instance
         st3 = sel.select((100,100), regref, dset)

@@ -172,54 +172,55 @@ cdef class Selector:
                 continue
 
             # [[0, 2, 10]] - list/array of indices ('fancy indexing')
-            if isinstance(a, (list, np.ndarray)):
-                if isinstance(a, list) and len(a) == 0:
-                    a = np.asarray(a, dtype=np.intp)
-                else:
-                    a = np.asarray(a)
+            if isinstance(a, np.ndarray):
                 if a.ndim != 1:
                     raise TypeError("Only 1D arrays allowed for fancy indexing")
-                if a.dtype.kind == 'b':
-                    if self.rank == 1:
-                        # The dataset machinery should fall back to a faster
-                        # alternative (using PointSelection) in this case.
-                        # https://github.com/h5py/h5py/issues/2189
-                        raise TypeError("Use other code for boolean selection on 1D dataset")
-                    if a.size != l:
-                        raise TypeError("boolean index did not match indexed array")
-                    a = a.nonzero()[0]
-                if not np.issubdtype(a.dtype, np.integer):
-                    raise TypeError("Indexing arrays must have integer dtypes")
-                if array_ix != -1:
-                    raise TypeError("Only one indexing vector or array is currently allowed for fancy indexing")
+            else:
+                arr = np.asarray(a)
+                if arr.ndim != 1:
+                    raise TypeError("Selection can't process %r" % a)
+                a = arr
+                if a.size == 0:
+                    # asarray([]) gives float dtype by default
+                    a = a.astype(np.intp)
 
-                # Convert negative indices to positive
-                if np.any(a < 0):
-                    a = a.copy()
-                    a[a < 0] += l
+            if a.dtype.kind == 'b':
+                if self.rank == 1:
+                    # The dataset machinery should fall back to a faster
+                    # alternative (using PointSelection) in this case.
+                    # https://github.com/h5py/h5py/issues/2189
+                    raise TypeError("Use other code for boolean selection on 1D dataset")
+                if a.size != l:
+                    raise TypeError("boolean index did not match indexed array")
+                a = a.nonzero()[0]
+            if not np.issubdtype(a.dtype, np.integer):
+                raise TypeError("Indexing arrays must have integer dtypes")
+            if array_ix != -1:
+                raise TypeError("Only one indexing vector or array is currently allowed for fancy indexing")
 
-                # Bounds check
-                if np.any((a < 0) | (a > l)):
-                    if l == 0:
-                        msg = "Fancy indexing out of range for empty dimension"
-                    else:
-                        msg = f"Fancy indexing out of range for (0-{l-1})"
-                    raise IndexError(msg)
+            # Convert negative indices to positive
+            if np.any(a < 0):
+                a = a.copy()
+                a[a < 0] += l
 
-                if np.any(np.diff(a) <= 0):
-                    raise TypeError("Indexing elements must be in increasing order")
+            # Bounds check
+            if np.any((a < 0) | (a > l)):
+                if l == 0:
+                    msg = "Fancy indexing out of range for empty dimension"
+                else:
+                    msg = f"Fancy indexing out of range for (0-{l-1})"
+                raise IndexError(msg)
 
-                array_ix = dim_ix
-                array_arg = a
-                self.start[dim_ix] = 0
-                self.stride[dim_ix] = 1
-                self.count[dim_ix] = a.shape[0]
-                self.block[dim_ix] = 1
-                self.scalar[dim_ix] = False
+            if np.any(np.diff(a) <= 0):
+                raise TypeError("Indexing elements must be in increasing order")
 
-                continue
-
-            raise TypeError("Simple selection can't process %r" % a)
+            array_ix = dim_ix
+            array_arg = a
+            self.start[dim_ix] = 0
+            self.stride[dim_ix] = 1
+            self.count[dim_ix] = a.shape[0]
+            self.block[dim_ix] = 1
+            self.scalar[dim_ix] = False
 
         if nargs < self.rank:
             # Fill in ellipsis or trailing dimensions
