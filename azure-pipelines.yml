@@ -8,7 +8,7 @@ variables:
 jobs:
 - job: 'static_checks'
   pool:
-    vmImage: ubuntu-20.04
+    vmImage: ubuntu-22.04
   variables:
     TOXENV: docs,checkreadme,rever
   steps:
@@ -25,7 +25,7 @@ jobs:
 
 - job: 'linux_wheels'
   pool:
-    vmImage: ubuntu-20.04
+    vmImage: ubuntu-22.04
   variables:
     CIBW_BUILD: cp3{7,8,9,10,11}-manylinux_x86_64
     CIBW_MANYLINUX_X86_64_IMAGE: ghcr.io/h5py/manylinux2014_x86_64-hdf5
@@ -78,7 +78,7 @@ jobs:
 
 - job: 'ubuntu'
   pool:
-    vmImage: ubuntu-20.04
+    vmImage: ubuntu-22.04
   strategy:
     matrix:
       # -deps : test with default (latest) versions of dependencies
@@ -155,7 +155,7 @@ jobs:
 - job: 'test_linux_wheels'
   dependsOn: linux_wheels
   pool:
-    vmImage: ubuntu-20.04
+    vmImage: ubuntu-22.04
   variables:
     H5PY_TEST_CHECK_FILTERS: 1
 
@@ -229,6 +229,13 @@ jobs:
         HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
         HDF5_VSVERSION: "16-64"
         H5PY_ENFORCE_COVERAGE: yes
+      py311-hdf5114:
+        python.version: '3.11'
+        TOXENV: py311-test-deps
+        HDF5_VERSION: 1.14.0
+        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
+        HDF5_VSVERSION: "16-64"
+        H5PY_ENFORCE_COVERAGE: yes
     maxParallel: 4
 
   steps:
@@ -273,9 +280,9 @@ jobs:
       parameters:
         platform: windows
 
-- job: 'macOS11'
+- job: 'macOS12'
   pool:
-    vmImage: macOS-11
+    vmImage: macOS-12
   strategy:
     matrix:
       # -deps : test with default (latest) versions of dependencies
@@ -292,6 +299,10 @@ jobs:
       py39:
         python.version: '3.9'
         TOXENV: py39-test-deps,py39-test-mindeps,py39-test-deps-pre
+        H5PY_ENFORCE_COVERAGE: yes
+      py310:
+        python.version: '3.10'
+        TOXENV: py310-test-deps,py310-test-mindeps,py310-test-deps-pre
         H5PY_ENFORCE_COVERAGE: yes
     # test against newer HDF5
 #      py37-deps-hdf51103:
@@ -321,7 +332,7 @@ jobs:
 - job: 'test_macos_wheels'
   dependsOn: macos_wheels
   pool:
-    vmImage: macOS-11
+    vmImage: macOS-12
   variables:
     H5PY_TEST_CHECK_FILTERS: 1
 
