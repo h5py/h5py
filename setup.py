@@ -58,51 +58,7 @@ if os.environ.get('H5PY_SETUP_REQUIRES', '1') == '0':
 CMDCLASS = {'build_ext': setup_build.h5py_build_ext}
 
 
-# --- Distutils setup and metadata --------------------------------------------
-
-cls_txt = \
-"""
-Development Status :: 5 - Production/Stable
-Intended Audience :: Developers
-Intended Audience :: Information Technology
-Intended Audience :: Science/Research
-License :: OSI Approved :: BSD License
-Programming Language :: Cython
-Programming Language :: Python
-Programming Language :: Python :: 3
-Programming Language :: Python :: Implementation :: CPython
-Topic :: Scientific/Engineering
-Topic :: Database
-Topic :: Software Development :: Libraries :: Python Modules
-Operating System :: Unix
-Operating System :: POSIX :: Linux
-Operating System :: MacOS :: MacOS X
-Operating System :: Microsoft :: Windows
-"""
-
-short_desc = "Read and write HDF5 files from Python"
-
-long_desc = \
-"""
-The h5py package provides both a high- and low-level interface to the HDF5
-library from Python. The low-level interface is intended to be a complete
-wrapping of the HDF5 API, while the high-level component supports  access to
-HDF5 files, datasets and groups using established Python and NumPy concepts.
-
-A strong emphasis on automatic conversion between Python (Numpy) datatypes and
-data structures and their HDF5 equivalents vastly simplifies the process of
-reading and writing data from Python.
-
-Wheels are provided for several popular platforms, with an included copy of
-the HDF5 library (usually the latest version when h5py is released).
-
-You can also `build h5py from source
-<https://docs.h5py.org/en/stable/build.html#source-installation>`_
-with any HDF5 stable release from version 1.8.4 onwards, although naturally new
-HDF5 versions released after this version of h5py may not work.
-Odd-numbered minor versions of HDF5 (e.g. 1.13) are experimental, and may not
-be supported.
-"""
+# --- Dynamic metadata for setuptools -----------------------------------------
 
 package_data = {'h5py': [], "h5py.tests.data_files": ["*.h5"]}
 if os.name == 'nt':
@@ -111,31 +67,11 @@ if os.name == 'nt':
 setup(
   name = 'h5py',
   version = VERSION,
-  description = short_desc,
-  long_description = long_desc,
-  classifiers = [x for x in cls_txt.split("\n") if x],
-  author = 'Andrew Collette',
-  author_email = 'andrew.collette@gmail.com',
-  maintainer = 'Andrew Collette',
-  maintainer_email = 'andrew.collette@gmail.com',
-  license = 'BSD',
-  url = 'https://www.h5py.org',
-  project_urls = {
-      'Source': 'https://github.com/h5py/h5py',
-      'Documentation': 'https://docs.h5py.org/en/stable/',
-      'Release notes': 'https://docs.h5py.org/en/stable/whatsnew/index.html'
-  },
-  packages = [
-      'h5py',
-      'h5py._hl',
-      'h5py.tests',
-      'h5py.tests.data_files',
-      'h5py.tests.test_vds',
-  ],
   package_data = package_data,
   ext_modules = [Extension('h5py.x',['x.c'])],  # To trick build into running build_ext
   install_requires = RUN_REQUIRES,
   setup_requires = SETUP_REQUIRES,
-  python_requires='>=3.7',
   cmdclass = CMDCLASS,
 )
+
+# see pyproject.toml for static metadata
