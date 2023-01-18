@@ -8,7 +8,7 @@
 HDF5 for Python
 ===============
 `h5py` is a thin, pythonic wrapper around `HDF5 <https://portal.hdfgroup.org/display/HDF5/>`_,
-which runs on Python 3 (3.6+).
+which runs on Python 3 (3.7+).
 
 Websites
 --------
@@ -23,7 +23,7 @@ Installation
 Pre-build `h5py` can either be installed via your Python Distribution (e.g.
 `Continuum Anaconda`_, `Enthought Canopy`_) or from `PyPI`_ via `pip`_.
 `h5py` is also distributed in many Linux Distributions (e.g. Ubuntu, Fedora),
-and in the MacOS package managers `Homebrew <https://brew.sh/>`_,
+and in the macOS package managers `Homebrew <https://brew.sh/>`_,
 `Macports <https://www.macports.org/>`_, or `Fink <http://finkproject.org/>`_.
 
 More detailed installation instructions, including how to install `h5py` with
