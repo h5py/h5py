@@ -127,6 +127,12 @@ jobs:
         HDF5_VERSION: 1.14.0
         HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
         H5PY_ENFORCE_COVERAGE: yes
+      py311-deps-hdf51140:
+        python.version: '3.11'
+        TOXENV: py311-test-deps
+        HDF5_VERSION: 1.14.0
+        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
+        H5PY_ENFORCE_COVERAGE: yes
     # do mpi tests
       py37-deps-hdf51105-mpi:
         python.version: '3.7'

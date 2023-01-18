@@ -47,6 +47,8 @@ if setup_configure.mpi_enabled():
     SETUP_REQUIRES.append("mpi4py ==3.0.2; python_version<'3.8'")
     SETUP_REQUIRES.append("mpi4py ==3.0.3; python_version=='3.8.*'")
     SETUP_REQUIRES.append("mpi4py ==3.1.0; python_version>='3.9'")
+    SETUP_REQUIRES.append("mpi4py ==3.1.4; python_version>='3.10'")
+    SETUP_REQUIRES.append("mpi4py ==3.1.4; python_version>='3.11'")
 
 # Set the environment variable H5PY_SETUP_REQUIRES=0 if we need to skip
 # setup_requires for any reason.
