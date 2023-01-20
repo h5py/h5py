@@ -1,0 +1,38 @@
+New features
+------------
+
+* `FieldsWrapper` now implements the `__array__()` method. This speeds up accessing fields with functions that expect an `__array__()` method, like `np.asarray()`.
+* Low-level ``DatasetID.chunk_iter`` method that invokes a user-supplied callable
+  object on every written chunk of one dataset. It provides much better
+  performance when iterting over a large number of chunks.
+* Chunk cache can be configured per individual HDF5 dataset. Use
+  :meth:`Group.create_dataset` for new datasets or :meth:`Group.require_dataset`
+  for already existing datasets. Any combination of the ``rdcc_nbytes``,
+  ``rdcc_w0``, and ``rdcc_nslots`` arguments is allowed. The file defaults apply
+  to those omitted.
+* :ref:`dataset_fancy` now accepts tuples, or any other sequence type, rather
+  than only lists and NumPy arrays. This also includes ``range`` objects,
+  but this will normally be less efficient than the equivalent slice.
+* New property :attribute:`Dataset.is_scale` for checking if the dataset is a dimension
+  scale.
+* :meth:`Group.require_dataset` now validates ``maxshape`` for resizable datasets.
+* `File` now has an `meta_block_size` argument and `meta_block_size` property. This influences how the space for metadata, including the initial header, is allocated.
+* When using the ros3 driver, AWS authentication will be activated only if all
+  three driver arguments are provided. Previously AWS authentication was active
+  if any one of the arguments was set causing an error from the HDF5 library.
+* HDF5 file names for ros3 driver can now also be s3:// resource locations. H5py
+  will translate them into AWS path-style URLs for use by the driver.
+
+Exposing HDF5 functions
+-----------------------
+
+* ``H5Dchunk_iter``
+* [`H5Pset_meta_block_size`](https://portal.hdfgroup.org/display/HDF5/H5P_SET_META_BLOCK_SIZE)
+* [`H5Pget_meta_block_size`](https://portal.hdfgroup.org/display/HDF5/H5P_GET_META_BLOCK_SIZE)
+
+Bug fixes
+---------
+
+* Complex float16 data could cause a `TypeError` when trying to coerce to the
+  currently unavailable numpy.dtype('c4').  Now a compound type is used instead.
+
