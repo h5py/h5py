@@ -80,6 +80,7 @@ family                              Multi-file driver
 mpio                                Parallel HDF5 file access
 =================================== =========================================== ============================
 
+.. _h5py_pytable_cmp:
 
 What's the difference between h5py and PyTables?
 ------------------------------------------------
