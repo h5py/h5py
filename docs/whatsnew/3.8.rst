@@ -1,0 +1,64 @@
+What's new in h5py 3.8
+======================
+
+New features
+------------
+
+* h5py now has pre-built packages for Python 3.11.
+* h5py is compatible with HDF5 1.14 (:pr:`2187`). Pre-built packages on PyPI
+  still include HDF5 1.12 for now.
+* :ref:`dataset_fancy` now accepts tuples, or any other sequence type, rather
+  than only lists and NumPy arrays. This also includes ``range`` objects,
+  but this will normally be less efficient than the equivalent slice.
+* New property :attr:`.Dataset.is_scale` for checking if the dataset is a
+  dimension scale (:pr:`2168`).
+* :meth:`.Group.require_dataset` now validates ``maxshape`` for resizable
+  datasets (:pr:`2116`).
+* :class:`.File` now has a ``meta_block_size`` argument and property.
+  This influences how the space for metadata, including the initial header, is
+  allocated.
+* Chunk cache can be configured per individual HDF5 dataset (:pr:`2127`). Use
+  :meth:`.Group.create_dataset` for new datasets or :meth:`.Group.require_dataset`
+  for already existing datasets. Any combination of the ``rdcc_nbytes``,
+  ``rdcc_w0``, and ``rdcc_nslots`` arguments is allowed. The file defaults apply
+  to those omitted.
+* HDF5 file names for ros3 driver can now also be ``s3://`` resource locations
+  (:pr:`2140`). h5py will translate them into AWS path-style URLs for use by the
+  driver.
+* When using the ros3 driver, AWS authentication will be activated only if all
+  three driver arguments are provided. Previously AWS authentication was active
+  if any one of the arguments was set causing an error from the HDF5 library.
+* :meth:`.Dataset.fields` now implements the ``__array__()`` method (:pr:`2151`).
+  This speeds up accessing fields with functions that expect this, like
+  ``np.asarray()``.
+* Low-level :meth:`h5py.h5d.DatasetID.chunk_iter` method that invokes a user-supplied
+  callable object on every written chunk of one dataset (:pr:`2202`). It
+  provides much better performance when iterating over a large number of chunks.
+
+Exposing HDF5 functions
+-----------------------
+
+* ``H5Dchunk_iter`` as :meth:`h5py.h5d.DatasetID.chunk_iter`.
+* `H5Pset_meta_block_size <https://portal.hdfgroup.org/display/HDF5/H5P_SET_META_BLOCK_SIZE>`_
+  and `H5Pget_meta_block_size <https://portal.hdfgroup.org/display/HDF5/H5P_GET_META_BLOCK_SIZE>`_
+  (:pr:`2106`).
+
+Bug fixes
+---------
+
+* Fixed getting the default fill value (an empty string) for variable-length
+  string data (:pr:`2132`).
+* Complex float16 data could cause a ``TypeError`` when trying to coerce to the
+  currently unavailable numpy.dtype('c4'). Now a compound type is used instead
+  (:pr:`2157`).
+* h5py 3.7 contained a performance regression when using a boolean mask array
+  to index a 1D dataset, which is now fixed (:pr:`2193`).
+
+Building h5py
+-------------
+
+* Parallel HDF5 can be built with Microsoft MS-MPI (:pr:`2147`). See
+  :ref:`build_mpi` for details.
+* Some 'incompatible function pointer type' compile time warnings were fixed
+  (:pr:`2142`).
+* Fix for finding HDF5 DLL in mingw (:pr:`2105`).
