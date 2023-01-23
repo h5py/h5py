@@ -1,5 +1,12 @@
-ANACONDA_ORG="scipy-wheels-nightly";
-pip install git+https://github.com/Anaconda-Server/anaconda-client;
+set -e
+
+ANACONDA_ORG="scipy-wheels-nightly"
+
+# unclear why conda-package-handling is not on PyPI, but anaconda-client needs
+# it, and anaconda-client on PyPI is *really* old and the devs seem to no longer
+# upload it?
+pip install git+https://github.com/conda/conda-package-handling/
+pip install git+https://github.com/Anaconda-Server/anaconda-client
 
 if [[ "$TRAVIS_EVENT_TYPE" != "cron" && -z "$TRAVIS_TAG" ]] ; then
   echo "Not uploading wheels (build not for cron or git tag)"
@@ -25,5 +32,5 @@ fi
 
 # upload wheels
 if [[ -n "${ANACONDA_ORG_UPLOAD_TOKEN}" ]] ; then
-   anaconda -t ${ANACONDA_ORG_UPLOAD_TOKEN} upload -u ${ANACONDA_ORG} "${TRAVIS_BUILD_DIR}"/wheelhouse/h5py-*.whl;
+   anaconda -t ${ANACONDA_ORG_UPLOAD_TOKEN} upload -u ${ANACONDA_ORG} "${TRAVIS_BUILD_DIR}"/wheelhouse/h5py-*.whl
 fi;
