@@ -1,5 +1,5 @@
 ANACONDA_ORG="scipy-wheels-nightly";
-pip install git+https://github.com/Anaconda-Server/anaconda-client;
+pip install git+https://github.com/Anaconda-Server/anaconda-client@1.9.0;
 
 if [[ "$TRAVIS_EVENT_TYPE" != "cron" && -z "$TRAVIS_TAG" ]] ; then
   echo "Not uploading wheels (build not for cron or git tag)"
