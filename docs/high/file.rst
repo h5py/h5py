@@ -115,6 +115,13 @@ of supported drivers and their options:
         The argument values must be ``bytes`` objects. All three arguments are
         required to activate AWS authentication.
 
+        .. note::
+           Pre-built h5py packages on PyPI do not include this S3 support. If
+           you want this feature, you could use packages from conda-forge, or
+           :ref:`build h5py from source <source_install>` against an HDF5 build
+           with S3 support. Alternatively, use the :ref:`file-like object
+           <file_fileobj>` support with a package like s3fs.
+
 
 .. _file_fileobj:
 
