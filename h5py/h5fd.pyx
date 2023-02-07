@@ -220,3 +220,86 @@ IF HDF5_VERSION >= (1, 14, 0):
     info.version = H5FD_CLASS_VERSION
 
 fileobj_driver = H5FDregister(&info)
+
+
+
+
+# Subfiling configuration classes
+
+IF HDF5_VERSION >= (1, 14, 0):
+
+    """
+        Low-level HDF5 "H5FD" IO concentrator configuration interface.
+    """
+    cdef class IOCConfig:
+        """Represents H5FD_ioc_config_t objects
+
+        """
+
+        #cdef H5FD_ioc_config_t
+        #     /* general configuration fields: */
+        def __cinit__(self):
+            self.ioc_config.magic = H5FD_IOC_FAPL_MAGIC
+            self.ioc_config.version = H5FD_IOC_CURR_FAPL_VERSION
+
+        property magic:
+            def __get__(self):
+                return self.ioc_config.magic
+            def __set__(self, int val):
+                self.ioc_config.magic = val
+
+        property version:
+            def __get__(self):
+                return self.ioc_config.version
+            def __set__(self, int val):
+                self.ioc_config.version = val
+
+        property thread_pool_size:
+            def __get__(self):
+                return self.ioc_config.thread_pool_size
+            def __set__(self, int val):
+                self.ioc_config.thread_pool_size = val
+
+    """
+            Low-level HDF5 "H5FD" Subfiling configuration interface.
+        """
+    cdef class SubfilingConfig:
+        """Represents H5FD_subfiling_config_t  objects
+
+        """
+
+        #cdef H5FD_subfiling_config_t
+        #     /* general configuration fields: */
+        def __cinit__(self):
+            self.subf_config.magic = H5FD_SUBFILING_FAPL_MAGIC
+            self.subf_config.version = H5FD_SUBFILING_CURR_FAPL_VERSION
+
+        property magic:
+            def __get__(self):
+                return self.subf_config.magic
+            def __set__(self, int val):
+                self.subf_config.magic = val
+
+        property version:
+            def __get__(self):
+                return self.subf_config.version
+            def __set__(self, int val):
+                self.subf_config.version = val
+
+        property ioc_fapl_id:
+            def __get__(self):
+                return self.subf_config.ioc_fapl_id
+            def __set__(self, int val):
+                self.subf_config.ioc_fapl_id = val
+
+        property require_ioc:
+            def __get__(self):
+                return self.subf_config.require_ioc
+            def __set__(self, int val):
+                self.subf_config.require_ioc = val
+
+        property shared_cfg:
+            def __get__(self):
+                return self.subf_config.shared_cfg
+            def __set__(self, val):
+                self.subf_config.shared_cfg = val

@@ -359,6 +359,7 @@ cdef extern from "hdf5.h":
       char    secret_key[129]
 
     unsigned int H5FD_CURR_ROS3_FAPL_T_VERSION # version of struct
+
 # === H5G - Groups API ========================================================
 
   ctypedef enum H5G_link_t:
@@ -832,7 +833,41 @@ cdef extern from "hdf5.h":
   ctypedef herr_t (*H5A_operator2_t)(hid_t location_id, char *attr_name,
           H5A_info_t *ainfo, void *op_data) except 2
 
+# === H5FD - Subfiling ========================================================
 
+
+  IF HDF5_VERSION >= (1, 14, 0):
+    unsigned int H5FD_IOC_CURR_FAPL_VERSION
+    unsigned int H5FD_SUBFILING_CURR_FAPL_VERSION
+    unsigned int H5FD_IOC_FAPL_MAGIC
+    unsigned int H5FD_SUBFILING_FAPL_MAGIC
+
+    cdef extern from "H5FDioc.h":
+      # === H5FD - IO Concentrator configuration API ================================
+      cdef enum H5FD_subfiling_ioc_select_t:
+        SELECT_IOC_ONE_PER_NODE,
+        SELECT_IOC_EVERY_NTH_RANK,
+        SELECT_IOC_WITH_CONFIG,
+        SELECT_IOC_TOTAL
+
+      ctypedef struct H5FD_ioc_config_t:
+        uint32_t magic
+        uint32_t version
+        int32_t thread_pool_size
+
+    cdef extern from "H5FDsubfiling.h":
+      # === H5FD - Subfiling configuration API ================================
+      ctypedef struct H5FD_subfiling_params_t:
+        H5FD_subfiling_ioc_select_t ioc_selection
+        int64_t stripe_size
+        int32_t stripe_count
+
+      ctypedef struct H5FD_subfiling_config_t:
+        uint32_t magic
+        uint32_t version
+        hid_t ioc_fapl_id
+        hbool_t require_ioc
+        H5FD_subfiling_params_t shared_cfg
 
 #  === H5AC - Attribute Cache configuration API ================================
 

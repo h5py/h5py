@@ -12,3 +12,9 @@
 # licenses/hdf5.txt for the full HDF5 software license.
 
 from .defs cimport *
+
+cdef class IOCConfig:
+    cdef H5FD_ioc_config_t ioc_config
+
+cdef class SubfilingConfig:
+    cdef H5FD_subfiling_config_t subf_config
