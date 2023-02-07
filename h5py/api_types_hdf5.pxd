@@ -836,12 +836,12 @@ cdef extern from "hdf5.h":
 # === H5FD - Subfiling ========================================================
 
 
-  IF HDF5_VERSION >= (1, 14, 0):
+  IF MPI and HDF5_VERSION >= (1, 14, 0):
     unsigned int H5FD_IOC_CURR_FAPL_VERSION
     unsigned int H5FD_SUBFILING_CURR_FAPL_VERSION
     unsigned int H5FD_IOC_FAPL_MAGIC
     unsigned int H5FD_SUBFILING_FAPL_MAGIC
-    
+
     # === H5FD - IO Concentrator configuration API ================================
     cdef enum H5FD_subfiling_ioc_select_t:
       SELECT_IOC_ONE_PER_NODE,
