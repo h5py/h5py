@@ -28,7 +28,9 @@ from ._proxy cimport dset_rw
 from ._objects import phil, with_phil
 from cpython cimport PyObject_GetBuffer, \
                      PyBUF_ANY_CONTIGUOUS, \
+                     PyBUF_WRITABLE, \
                      PyBuffer_Release
+from cpython.mem cimport PyMem_Malloc, PyMem_Free
 
 
 # Initialization
@@ -515,6 +517,78 @@ cdef class DatasetID(ObjectID):
                     H5Sclose(space_id)
 
     IF HDF5_VERSION >= (1, 10, 2):
+
+        def read_direct_chunk_tobuffer(self, offsets, out, PropID dxpl=None):
+            """ (offsets, out, PropID dxpl=None)
+
+            Reads data directly to an output buffer from a chunk at position
+            specified by the `offsets` argument and bypasses any filters HDF5
+            would normally apply to the written data. However, the written data
+            may be compressed or not.
+
+            The `out` argument must support the Py_buffer interface (e.g.,
+            `bytearray` or `numpy.ndarray`) and be large enough to contain the
+            whole chunk.
+
+            Returns a tuple containing the `filter_mask` and the number of bytes
+            read into the `out` buffer.
+
+            `filter_mask` is a bit field of up to 32 values. It records which
+            filters have been applied to this chunk, of the filter pipeline
+            defined for that dataset. Each bit set to `1` means that the filter
+            in the corresponding position in the pipeline was not applied to
+            compute the raw data. So the default value of `0` means that all
+            defined filters have been applied to the raw data.
+
+            Feature requires: 1.10.2 HDF5
+            """
+
+            cdef hid_t dset_id
+            cdef hid_t dxpl_id
+            cdef hid_t space_id
+            cdef hsize_t *offset = NULL
+            cdef int rank
+            cdef uint32_t filters
+            cdef hsize_t chunk_bytes
+            cdef Py_buffer view
+            cdef int nb_offsets = len(offsets)
+
+            dset_id = self.id
+            dxpl_id = pdefault(dxpl)
+            space_id = H5Dget_space(dset_id)
+            if space_id == -1:  # H5I_INVALID_HID
+                raise RuntimeError("Cannot retrieve dataset space")
+            rank = H5Sget_simple_extent_ndims(space_id)
+            H5Sclose(space_id)
+
+            if nb_offsets != rank:
+                raise ValueError(
+                    f"offsets length ({nb_offsets}) must match dataset rank ({rank})"
+                )
+
+            PyObject_GetBuffer(out, &view, PyBUF_ANY_CONTIGUOUS | PyBUF_WRITABLE)
+            try:
+                offset = <hsize_t*> PyMem_Malloc(sizeof(hsize_t)*rank)
+                if not offset:
+                    raise MemoryError()
+                convert_tuple(offsets, offset, rank)
+                H5Dget_chunk_storage_size(dset_id, offset, &chunk_bytes)
+
+                if <hsize_t>view.len < chunk_bytes:
+                    raise ValueError(
+                        f"out buffer is not large enough: {view.len} bytes, requires {chunk_bytes} bytes"
+                    )
+
+                IF HDF5_VERSION >= (1, 10, 3):
+                    H5Dread_chunk(dset_id, dxpl_id, offset, &filters, <char *>view.buf)
+                ELSE:
+                    H5DOread_chunk(dset_id, dxpl_id, offset, &filters, <char *>view.buf)
+            finally:
+                if offset:
+                    PyMem_Free(offset)
+                PyBuffer_Release(&view)
+
+            return filters, chunk_bytes
 
         def read_direct_chunk(self, offsets, PropID dxpl=None):
             """ (offsets, PropID dxpl=None)
