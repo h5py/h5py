@@ -16,6 +16,8 @@ from ._objects import phil, with_phil
 
 # === Public constants and data structures ====================================
 
+CLASS_T_VERS = H5Z_CLASS_T_VERS
+
 FILTER_LZF = H5PY_FILTER_LZF
 
 FILTER_ERROR    = H5Z_FILTER_ERROR
