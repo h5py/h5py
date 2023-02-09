@@ -97,6 +97,16 @@ def get_filter_info(int filter_code):
 
 
 @with_phil
+def register_filter(Py_ssize_t cls_pointer_address):
+    '''(INT cls_pointer_address) => BOOL
+
+    Register a new filter from a memory address pointing a buffer containing a
+    `H5Z_class1_t` or `H5Z_class2_t` data structure describing the filter.
+    '''
+    return <int>H5Zregister(<const void *>cls_pointer_address) >= 0
+
+
+@with_phil
 def unregister_filter(int filter_code):
     '''(INT filter_code) => BOOL
 
