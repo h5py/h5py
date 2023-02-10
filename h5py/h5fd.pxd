@@ -12,9 +12,11 @@
 # licenses/hdf5.txt for the full HDF5 software license.
 
 from .defs cimport *
+include "config.pxi"
 
-cdef class IOCConfig:
-    cdef H5FD_ioc_config_t ioc_config
+IF MPI and HDF5_VERSION >= (1, 14, 0):
+    cdef class IOCConfig:
+        cdef H5FD_ioc_config_t ioc_config
 
-cdef class SubfilingConfig:
-    cdef H5FD_subfiling_config_t subf_config
+    cdef class SubfilingConfig:
+        cdef H5FD_subfiling_config_t subf_config

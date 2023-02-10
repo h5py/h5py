@@ -27,7 +27,8 @@ from numpy cimport ndarray, import_array
 from .h5t cimport TypeID, py_create
 from .h5s cimport SpaceID
 from .h5ac cimport CacheConfig
-from .h5fd cimport IOCConfig, SubfilingConfig
+IF MPI and HDF5_VERSION >= (1, 14, 0):
+    from .h5fd cimport IOCConfig, SubfilingConfig
 
 # Python level imports
 from ._objects import phil, with_phil
@@ -1536,7 +1537,7 @@ cdef class PropFAID(PropInstanceID):
             H5Pset_fapl_subfiling(self.id, &config.subf_config)
 
         @with_phil
-        def get_fapl_ioc(self):
+        def get_fapl_subfiling(self):
             cdef SubfilingConfig config = SubfilingConfig()
             H5Pget_fapl_subfiling(self.id, &config.subf_config)
 

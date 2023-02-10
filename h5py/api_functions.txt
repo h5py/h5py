@@ -330,10 +330,10 @@ hdf5:
   1.12.1 herr_t H5Pset_file_locking(hid_t fapl_id, hbool_t use_file_locking, hbool_t ignore_when_disabled)
 
   # Subfiling
-  MPI 1.14.0 herr_t H5Pset_fapl_subfiling(hid_t fapl_id, const H5FD_subfiling_config_t * vfd_config)
-  MPI 1.14.0 herr_t H5Pget_fapl_subfiling(hid_t fapl_id, H5FD_subfiling_config_t * config_out)
-  MPI 1.14.0 herr_t H5Pset_fapl_ioc(hid_t fapl_id, const H5FD_ioc_config_t * vfd_config)
-  MPI 1.14.0 herr_t H5Pget_fapl_ioc(hid_t fapl_id, H5FD_ioc_config_t * config_out)
+  MPI 1.14.0 herr_t H5Pset_fapl_subfiling(hid_t fapl_id, const H5FD_subfiling_config_t *vfd_config)
+  MPI 1.14.0 herr_t H5Pget_fapl_subfiling(hid_t fapl_id, H5FD_subfiling_config_t *config_out)
+  MPI 1.14.0 herr_t H5Pset_fapl_ioc(hid_t fapl_id, const H5FD_ioc_config_t *vfd_config)
+  MPI 1.14.0 herr_t H5Pget_fapl_ioc(hid_t fapl_id, H5FD_ioc_config_t *config_out)
 
 
 
