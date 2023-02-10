@@ -1503,7 +1503,7 @@ cdef class PropFAID(PropInstanceID):
             H5Pset_file_locking(
                 self.id, <hbool_t>use_file_locking, <hbool_t>ignore_when_disabled)
 
-    IF HDF5_VERSION >= (1, 14, 0):
+    IF MPI and HDF5_VERSION >= (1, 14, 0):
         @with_phil
         def set_fapl_ioc(self, thread_pool_size):
             cdef IOCConfig config = IOCConfig()
