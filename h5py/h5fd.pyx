@@ -226,7 +226,7 @@ fileobj_driver = H5FDregister(&info)
 
 # Subfiling configuration classes
 
-IF HDF5_VERSION >= (1, 14, 0):
+IF MPI and HDF5_VERSION >= (1, 14, 0):
 
     """
         Low-level HDF5 "H5FD" IO concentrator configuration interface.
