@@ -1506,11 +1506,8 @@ cdef class PropFAID(PropInstanceID):
 
     IF MPI and HDF5_VERSION >= (1, 14, 0):
         @with_phil
-        def set_fapl_ioc(self, thread_pool_size):
-            cdef IOCConfig config = IOCConfig()
-            config.ioc_config.thread_pool_size = thread_pool_size
-
-            H5Pset_fapl_ioc(self.id, &config.ioc_config)
+        def set_fapl_ioc(self, ioc_fapl_id, IOCConfig config not None):
+            H5Pset_fapl_ioc(ioc_fapl_id, &config.ioc_config)
 
         @with_phil
         def get_fapl_ioc(self):
@@ -1520,20 +1517,7 @@ cdef class PropFAID(PropInstanceID):
             return config
 
         @with_phil
-        def set_fapl_subfiling(self, ioc_fapl_id, ioc_selection, stripe_count, stripe_size):
-            cdef SubfilingConfig config = SubfilingConfig()
-            if ioc_selection == "one_per_node":
-                ioc_selection = H5FD_subfiling_ioc_select_t.SELECT_IOC_ONE_PER_NODE
-            elif ioc_selection == "every_nth_rank":
-                ioc_slection = H5FD_subfiling_ioc_select_t.SELECT_IOC_EVERY_NTH_RANK
-            elif ioc_selection == "total":
-                ioc_selection = H5FD_subfiling_ioc_select_t.SELECT_IOC_TOTAL
-            else:
-                raise NotImplementedError("Unsupported IO concentrator allocation mode.")
-            config.subf_config.ioc_selection = ioc_selection
-            config.subf_config.stripe_count = stripe_count
-            config.subf_config.stripe_size = stripe_size
-
+        def set_fapl_subfiling(self, SubfilingConfig config not None):
             H5Pset_fapl_subfiling(self.id, &config.subf_config)
 
         @with_phil

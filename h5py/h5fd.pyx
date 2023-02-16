@@ -227,7 +227,10 @@ fileobj_driver = H5FDregister(&info)
 # Subfiling configuration classes
 
 IF MPI and HDF5_VERSION >= (1, 14, 0):
-
+    IOC_ONE_PER_NODE = SELECT_IOC_ONE_PER_NODE
+    IOC_EVERY_NTH_RANK = SELECT_IOC_EVERY_NTH_RANK
+    IOC_WITH_CONFIG = SELECT_IOC_WITH_CONFIG
+    IOC_TOTAL = SELECT_IOC_TOTAL
     """
         Low-level HDF5 "H5FD" IO concentrator configuration interface.
     """
@@ -303,3 +306,29 @@ IF MPI and HDF5_VERSION >= (1, 14, 0):
                 return self.subf_config.shared_cfg
             def __set__(self, val):
                 self.subf_config.shared_cfg = val
+
+        property stripe_size:
+            def __get__(self):
+                cdef H5FD_subfiling_params_t * shared_cfg = &self.subf_config.shared_cfg
+                return shared_cfg.stripe_size
+            def __set__(self, int val):
+                cdef H5FD_subfiling_params_t * shared_cfg = &self.subf_config.shared_cfg
+                shared_cfg.stripe_size = val
+
+        property stripe_count:
+            def __get__(self):
+                cdef H5FD_subfiling_params_t * shared_cfg = &self.subf_config.shared_cfg
+                return shared_cfg.stripe_count
+            def __set__(self, int val):
+                cdef H5FD_subfiling_params_t * shared_cfg = &self.subf_config.shared_cfg
+                shared_cfg.stripe_count = val
+
+        property ioc_selection:
+            def __get__(self):
+                cdef H5FD_subfiling_params_t * shared_cfg = &self.subf_config.shared_cfg
+                return shared_cfg.ioc_selection
+            def __set__(self, val):
+                cdef H5FD_subfiling_params_t * shared_cfg = &self.subf_config.shared_cfg
+                shared_cfg.ioc_selection = val
+
+
