@@ -47,7 +47,7 @@ install:
   - "py -3.8 -m pip install --upgrade wheel pip setuptools virtualenv"
   - "py -3.8 -m pip install requests"
   - "py -3.8 ci\\get_hdf5_win.py"
-  - "py -3.8 -m pip install tox codecov tox-appveyor"
+  - "py -3.8 -m pip install tox codecov"
 
 build: off
 
