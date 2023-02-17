@@ -65,7 +65,7 @@ def run_with_python(args, timeout=30, **kwargs):
         raise CalledProcessError(retcode, cmd)
 
 
-def send_coverage(*, workdir, coverage_files, codecov_token):
+def send_coverage(*, workdir, coverage_files, codecov_token, commit=None):
     chdir(workdir)
     run_with_python(['coverage', 'combine'] + coverage_files)
     msg(f"Combined coverage")
@@ -77,13 +77,17 @@ def send_coverage(*, workdir, coverage_files, codecov_token):
     if codecov_token is not None:
         codecov_args.extend(['-t', codecov_token])
     codecov_args.extend(['--file', 'coverage.xml'])
+    if commit is not None:
+        codecov_args.extend(['--commit', commit])
     run_with_python(['codecov'] + codecov_args)
 
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--codecov-token", default=None)
+    parser.add_argument("--commit")
     args = parser.parse_args()
+
     msg(f"Working in {GIT_MAIN_DIR}, looking for coverage files...")
     coverage_files = [str(f) for f in COVERAGE_DIR.glob('coverage-*')]
     pmsg(sorted(coverage_files))
@@ -92,6 +96,7 @@ def main():
             workdir=GIT_MAIN_DIR,
             coverage_files=coverage_files,
             codecov_token=args.codecov_token,
+            commit=args.commit,
         )
     else:
         msg("No coverage files found")
