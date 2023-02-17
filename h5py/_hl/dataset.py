@@ -13,14 +13,10 @@
 
 import posixpath as pp
 import sys
-from warnings import warn
-
-from threading import local
 
 import numpy
 
 from .. import h5, h5s, h5t, h5r, h5d, h5p, h5fd, h5ds, _selector
-from ..h5py_warnings import H5pyDeprecationWarning
 from .base import HLObject, phil, with_phil, Empty, cached_property, find_item_type
 from . import filters
 from . import selections as sel
@@ -207,20 +203,6 @@ class AstypeWrapper:
 
     def __getitem__(self, args):
         return self._dset.__getitem__(args, new_dtype=self._dtype)
-
-    def __enter__(self):
-        # pylint: disable=protected-access
-        warn(
-            "Using astype() as a context manager is deprecated. "
-            "Slice the returned object instead, like: ds.astype(np.int32)[:10]",
-            category=H5pyDeprecationWarning, stacklevel=2,
-        )
-        self._dset._local.astype = self._dtype
-        return self
-
-    def __exit__(self, *args):
-        # pylint: disable=protected-access
-        self._dset._local.astype = None
 
     def __len__(self):
         """ Get the length of the underlying dataset
@@ -651,8 +633,6 @@ class Dataset(HLObject):
         self._filters = filters.get_filters(self._dcpl)
         self._readonly = readonly
         self._cache_props = {}
-        self._local = local()
-        self._local.astype = None
 
     def resize(self, size, axis=None):
         """ Resize the dataset, or the specified axis.
@@ -759,9 +739,6 @@ class Dataset(HLObject):
         * Boolean "mask" array indexing
         """
         args = args if isinstance(args, tuple) else (args,)
-
-        if new_dtype is None:
-            new_dtype = getattr(self._local, 'astype', None)
 
         if self._fast_read_ok and (new_dtype is None):
             try:
