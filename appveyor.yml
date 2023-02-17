@@ -56,7 +56,7 @@ test_script:
   # Note that you must use the environment variable %PYTHON% to refer to
   # the interpreter you're using - Appveyor does not do anything special
   # to put the Python evrsion you want to use on PATH.
-  - "py -3.8 -m tox -v"
+  - "py -3.8 -m tox run --discover %PYTHON%\\python.exe"
 
 # This is commented out as there's no easy way to deal with numpy dropping
 # older python versions without a recent pip/setuptools.
