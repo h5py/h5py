@@ -73,6 +73,4 @@ cache:
   - "C:\\hdf5"
 
 on_success:
-  # Specify the commit explicitly, otherwise codecov 'fixes' the merge commit on
-  # PR builds to the head commit, unlike the uploads on other services.
-  - "py -3.8 ci\\upload_coverage.py --commit %APPVEYOR_REPO_COMMIT%"
+  - "py -3.8 ci\\upload_coverage.py"
