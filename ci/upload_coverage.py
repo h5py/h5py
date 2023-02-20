@@ -4,6 +4,7 @@ Written in python to be cross-platform
 """
 
 import argparse
+import os
 from os import chdir, environ
 from pathlib import Path
 import platform
@@ -65,6 +66,16 @@ def run_with_python(args, timeout=30, **kwargs):
         raise CalledProcessError(retcode, cmd)
 
 
+def get_pr_azure_ci():
+    # Get pull request number on Azure Pipelines
+    # Return None if not on Azure or not a PR build.
+    return (
+        os.environ.get('SYSTEM_PULLREQUEST_PULLREQUESTNUMBER')
+        or os.environ.get('SYSTEM_PULLREQUEST_PULLREQUESTID')
+        or None
+    )
+
+
 def send_coverage(*, workdir, coverage_files, codecov_token):
     chdir(workdir)
     run_with_python(['coverage', 'combine'] + coverage_files)
@@ -77,6 +88,9 @@ def send_coverage(*, workdir, coverage_files, codecov_token):
     if codecov_token is not None:
         codecov_args.extend(['-t', codecov_token])
     codecov_args.extend(['--file', 'coverage.xml'])
+    pr_num = get_pr_azure_ci()
+    if pr_num is not None:
+        codecov_args.extend(['--pr', pr_num])
     run_with_python(['codecov'] + codecov_args)
 
 
@@ -84,6 +98,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--codecov-token", default=None)
     args = parser.parse_args()
+
     msg(f"Working in {GIT_MAIN_DIR}, looking for coverage files...")
     coverage_files = [str(f) for f in COVERAGE_DIR.glob('coverage-*')]
     pmsg(sorted(coverage_files))
