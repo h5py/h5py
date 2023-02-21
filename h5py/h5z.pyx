@@ -102,8 +102,19 @@ def get_filter_info(int filter_code):
 def register_filter(Py_ssize_t cls_pointer_address):
     '''(INT cls_pointer_address) => BOOL
 
-    Register a new filter from a memory address pointing a buffer containing a
-    `H5Z_class1_t` or `H5Z_class2_t` data structure describing the filter.
+    Register a new filter from the memory address of a buffer containing a
+    ``H5Z_class1_t`` or ``H5Z_class2_t`` data structure describing the filter.
+
+    `cls_pointer_address` can be retrieved from a HDF5 filter plugin dynamic
+    library::
+
+        import ctypes
+
+        filter_clib = ctypes.CDLL("/path/to/my_hdf5_filter_plugin.so")
+        filter_clib.H5PLget_plugin_info.restype = ctypes.c_void_p
+
+        h5py.h5z.register_filter(filter_clib.H5PLget_plugin_info())
+
     '''
     return <int>H5Zregister(<const void *>cls_pointer_address) >= 0
 
