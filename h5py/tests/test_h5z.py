@@ -61,13 +61,14 @@ def test_register_filter():
 
     h5z.register_filter(addressof(dummy_filter_class))
 
-    assert h5z.filter_avail(filter_id)
-    filter_flags = h5z.get_filter_info(filter_id)
-    assert (
-        filter_flags
-        == h5z.FILTER_CONFIG_ENCODE_ENABLED | h5z.FILTER_CONFIG_DECODE_ENABLED
-    )
-
-    h5z.unregister_filter(filter_id)
+    try:
+        assert h5z.filter_avail(filter_id)
+        filter_flags = h5z.get_filter_info(filter_id)
+        assert (
+            filter_flags
+            == h5z.FILTER_CONFIG_ENCODE_ENABLED | h5z.FILTER_CONFIG_DECODE_ENABLED
+        )
+    finally:
+        h5z.unregister_filter(filter_id)
 
     assert not h5z.filter_avail(filter_id)
