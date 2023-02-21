@@ -9,11 +9,14 @@ from ctypes import (
     POINTER,
     Structure,
 )
-
+import pytest
+import h5py
 from h5py import h5z
 
+from .common import insubprocess
 
-# Type of dilter callback function of H5Z_class2_t
+
+# Type of filter callback function of H5Z_class2_t
 H5ZFuncT = CFUNCTYPE(
     c_long,  # restype
     # argtypes
@@ -72,3 +75,11 @@ def test_register_filter():
         h5z.unregister_filter(filter_id)
 
     assert not h5z.filter_avail(filter_id)
+
+
+@pytest.mark.mpi_skip
+@insubprocess
+def test_unregister_filter(request):
+    if h5py.h5z.filter_avail(h5py.h5z.FILTER_LZF):
+        res = h5py.h5z.unregister_filter(h5py.h5z.FILTER_LZF)
+        assert res
