@@ -776,6 +776,7 @@ cdef extern from "hdf5.h":
 
   ctypedef int H5Z_filter_t
 
+  int H5Z_CLASS_T_VERS
   int H5Z_FILTER_ERROR
   int H5Z_FILTER_NONE
   int H5Z_FILTER_ALL
