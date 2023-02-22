@@ -16,6 +16,7 @@ include "config.pxi"
 # Compile-time imports
 
 from collections import namedtuple
+cimport cython
 from ._objects cimport pdefault
 from numpy cimport ndarray, import_array, PyArray_DATA
 from .utils cimport  check_numpy_read, check_numpy_write, \
@@ -26,10 +27,12 @@ from .h5p cimport PropID, propwrap
 from ._proxy cimport dset_rw
 
 from ._objects import phil, with_phil
-from cpython cimport PyObject_GetBuffer, \
-                     PyBUF_ANY_CONTIGUOUS, \
-                     PyBUF_WRITABLE, \
-                     PyBuffer_Release
+from cpython cimport PyBUF_ANY_CONTIGUOUS, \
+                     PyBuffer_Release, \
+                     PyBytes_AsString, \
+                     PyBytes_FromStringAndSize, \
+                     PyObject_GetBuffer
+
 from cpython.mem cimport PyMem_Malloc, PyMem_Free
 
 
@@ -518,20 +521,18 @@ cdef class DatasetID(ObjectID):
 
     IF HDF5_VERSION >= (1, 10, 2):
 
-        def read_direct_chunk_tobuffer(self, offsets, out, PropID dxpl=None):
-            """ (offsets, out, PropID dxpl=None)
+        @cython.boundscheck(False)
+        @cython.wraparound(False)
+        def read_direct_chunk(self, offsets, PropID dxpl=None, unsigned char[::1] out=None):
+            """ (offsets, PropID dxpl=None, out=None)
 
-            Reads data directly to an output buffer from a chunk at position
+            Reads data to a bytes array directly from a chunk at position
             specified by the `offsets` argument and bypasses any filters HDF5
             would normally apply to the written data. However, the written data
             may be compressed or not.
 
-            The `out` argument must support the Py_buffer interface (e.g.,
-            `bytearray` or `numpy.ndarray`) and be large enough to contain the
-            whole chunk.
-
-            Returns a tuple containing the `filter_mask` and the number of bytes
-            read into the `out` buffer.
+            Returns a tuple containing the `filter_mask` and the raw data
+            storing this chunk as bytes if `out` is None, else as a memoryview.
 
             `filter_mask` is a bit field of up to 32 values. It records which
             filters have been applied to this chunk, of the filter pipeline
@@ -540,18 +541,21 @@ cdef class DatasetID(ObjectID):
             compute the raw data. So the default value of `0` means that all
             defined filters have been applied to the raw data.
 
+            If the `out` argument is not None, it must be a writeable
+            contiguous 1D array-like of bytes (e.g., `bytearray` or
+            `numpy.ndarray`) and large enough to contain the whole chunk.
+
             Feature requires: 1.10.2 HDF5
             """
-
             cdef hid_t dset_id
             cdef hid_t dxpl_id
             cdef hid_t space_id
             cdef hsize_t *offset = NULL
             cdef int rank
             cdef uint32_t filters
-            cdef hsize_t chunk_bytes
-            cdef Py_buffer view
+            cdef hsize_t chunk_bytes, out_bytes
             cdef int nb_offsets = len(offsets)
+            cdef void * chunk_buffer
 
             dset_id = self.id
             dxpl_id = pdefault(dxpl)
@@ -566,89 +570,35 @@ cdef class DatasetID(ObjectID):
                     f"offsets length ({nb_offsets}) must match dataset rank ({rank})"
                 )
 
-            PyObject_GetBuffer(out, &view, PyBUF_ANY_CONTIGUOUS | PyBUF_WRITABLE)
+            offset = <hsize_t*> PyMem_Malloc(sizeof(hsize_t)*rank)
+            if not offset:
+                raise MemoryError()
+
             try:
-                offset = <hsize_t*> PyMem_Malloc(sizeof(hsize_t)*rank)
-                if not offset:
-                    raise MemoryError()
                 convert_tuple(offsets, offset, rank)
                 H5Dget_chunk_storage_size(dset_id, offset, &chunk_bytes)
 
-                if <hsize_t>view.len < chunk_bytes:
-                    raise ValueError(
-                        f"out buffer is not large enough: {view.len} bytes, requires {chunk_bytes} bytes"
-                    )
+                if out is None:
+                    retval = PyBytes_FromStringAndSize(NULL, chunk_bytes)
+                    chunk_buffer = PyBytes_AsString(retval)
+                else:
+                    out_bytes = out.shape[0]  # Fast way to get out length
+                    if out_bytes < chunk_bytes:
+                        raise ValueError(
+                            f"out buffer is only {out_bytes} bytes, {chunk_bytes} bytes required"
+                        )
+                    retval = memoryview(out[:chunk_bytes])
+                    chunk_buffer = &out[0]
 
                 IF HDF5_VERSION >= (1, 10, 3):
-                    H5Dread_chunk(dset_id, dxpl_id, offset, &filters, <char *>view.buf)
+                    H5Dread_chunk(dset_id, dxpl_id, offset, &filters, chunk_buffer)
                 ELSE:
-                    H5DOread_chunk(dset_id, dxpl_id, offset, &filters, <char *>view.buf)
+                    H5DOread_chunk(dset_id, dxpl_id, offset, &filters, chunk_buffer)
             finally:
-                if offset:
-                    PyMem_Free(offset)
-                PyBuffer_Release(&view)
+                PyMem_Free(offset)
 
-            return filters, chunk_bytes
+            return filters, retval
 
-        def read_direct_chunk(self, offsets, PropID dxpl=None):
-            """ (offsets, PropID dxpl=None)
-
-            Reads data to a bytes array directly from a chunk at position
-            specified by the `offsets` argument and bypasses any filters HDF5
-            would normally apply to the written data. However, the written data
-            may be compressed or not.
-
-            Returns a tuple containing the `filter_mask` and the bytes data
-            which are the raw data storing this chuck.
-
-            `filter_mask` is a bit field of up to 32 values. It records which
-            filters have been applied to this chunk, of the filter pipeline
-            defined for that dataset. Each bit set to `1` means that the filter
-            in the corresponding position in the pipeline was not applied to
-            compute the raw data. So the default value of `0` means that all
-            defined filters have been applied to the raw data.
-
-            Feature requires: 1.10.2 HDF5
-            """
-
-            cdef hid_t dset_id
-            cdef hid_t dxpl_id
-            cdef hid_t space_id = 0
-            cdef hsize_t *offset = NULL
-            cdef size_t data_size
-            cdef int rank
-            cdef uint32_t filters
-            cdef hsize_t read_chunk_nbytes
-            cdef char *data = NULL
-            cdef bytes ret
-
-            dset_id = self.id
-            dxpl_id = pdefault(dxpl)
-            space_id = H5Dget_space(self.id)
-            rank = H5Sget_simple_extent_ndims(space_id)
-
-            if len(offsets) != rank:
-                raise TypeError("offset length (%d) must match dataset rank (%d)" % (len(offsets), rank))
-
-            try:
-                offset = <hsize_t*>emalloc(sizeof(hsize_t)*rank)
-                convert_tuple(offsets, offset, rank)
-                H5Dget_chunk_storage_size(dset_id, offset, &read_chunk_nbytes)
-                data = <char *>emalloc(read_chunk_nbytes)
-
-                IF HDF5_VERSION >= (1, 10, 3):
-                    H5Dread_chunk(dset_id, dxpl_id, offset, &filters, data)
-                ELSE:
-                    H5DOread_chunk(dset_id, dxpl_id, offset, &filters, data)
-                ret = data[:read_chunk_nbytes]
-            finally:
-                efree(offset)
-                if data:
-                    efree(data)
-                if space_id:
-                    H5Sclose(space_id)
-
-            return filters, ret
 
     IF HDF5_VERSION >= (1, 10, 5):
 

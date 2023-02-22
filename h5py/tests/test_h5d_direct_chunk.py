@@ -120,31 +120,22 @@ class TestReadDirectChunk(TestCase):
     h5py.version.hdf5_version_tuple < (1, 10, 2),
     reason="Direct chunk read requires HDF5 >= 1.10.2"
 )
-class TestReadDirectChunkToBuffer:
+class TestReadDirectChunkToOut:
 
     def test_uncompressed_data(self, writable_file):
         ref_data = numpy.arange(16).reshape(4, 4)
         dataset = writable_file.create_dataset(
             "uncompressed", data=ref_data, chunks=ref_data.shape)
 
-        # Read to numpy array
-        out_ndarray = numpy.zeros_like(ref_data)
-        filter_mask, nbytes = dataset.id.read_direct_chunk_tobuffer((0, 0), out_ndarray)
-
-        assert numpy.array_equal(out_ndarray, ref_data)
-        assert filter_mask == 0
-        assert nbytes == ref_data.nbytes
-
-        # Read to bytearray
-        out_bytearray = bytearray(ref_data.nbytes)
-        filter_mask, nbytes = dataset.id.read_direct_chunk_tobuffer((0, 0), out_bytearray)
+        out = bytearray(ref_data.nbytes)
+        filter_mask, chunk = dataset.id.read_direct_chunk((0, 0), out=out)
 
         assert numpy.array_equal(
-            numpy.frombuffer(out_bytearray, dtype=ref_data.dtype).reshape(ref_data.shape),
+            numpy.frombuffer(out, dtype=ref_data.dtype).reshape(ref_data.shape),
             ref_data,
         )
         assert filter_mask == 0
-        assert nbytes == ref_data.nbytes
+        assert len(chunk) == ref_data.nbytes
 
     @pytest.mark.skipif(
         h5py.version.hdf5_version_tuple < (1, 10, 5),
@@ -161,14 +152,13 @@ class TestReadDirectChunkToBuffer:
         )
         chunk_info = dataset.id.get_chunk_info(0)
 
-        # read to bytearray
         out = bytearray(chunk_info.size)
-        filter_mask, nbytes = dataset.id.read_direct_chunk_tobuffer(
+        filter_mask, chunk = dataset.id.read_direct_chunk(
             chunk_info.chunk_offset,
-            out,
+            out=out,
         )
         assert filter_mask == chunk_info.filter_mask
-        assert nbytes == chunk_info.size
+        assert len(chunk) == chunk_info.size
         assert out == dataset.id.read_direct_chunk(chunk_info.chunk_offset)[1]
 
     def test_fail_buffer_too_small(self, writable_file):
@@ -178,16 +168,16 @@ class TestReadDirectChunkToBuffer:
 
         out = bytearray(ref_data.nbytes // 2)
         with pytest.raises(ValueError):
-            dataset.id.read_direct_chunk_tobuffer((0, 0), out)
+            dataset.id.read_direct_chunk((0, 0), out=out)
 
     def test_fail_buffer_readonly(self, writable_file):
         ref_data = numpy.arange(16).reshape(4, 4)
         dataset = writable_file.create_dataset(
             "uncompressed", data=ref_data, chunks=ref_data.shape)
 
-        out = bytes(ref_data.nbytes // 2)
+        out = bytes(ref_data.nbytes)
         with pytest.raises(BufferError):
-            dataset.id.read_direct_chunk_tobuffer((0, 0), out)
+            dataset.id.read_direct_chunk((0, 0), out=out)
 
     def test_fail_buffer_not_contiguous(self, writable_file):
         ref_data = numpy.arange(16).reshape(4, 4)
@@ -197,4 +187,4 @@ class TestReadDirectChunkToBuffer:
         array = numpy.empty(ref_data.shape + (2,), dtype=ref_data.dtype)
         out = array[:, :, ::2]  # Array is not contiguous
         with pytest.raises(ValueError):
-            dataset.id.read_direct_chunk_tobuffer((0, 0), out)
+            dataset.id.read_direct_chunk((0, 0), out=out)

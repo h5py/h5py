@@ -1,7 +1,7 @@
 New features
 ------------
 
-* <news item>
+* New ``out`` argument to :func:`h5d.read_direct_chunk` to allow passing the output buffer.
 
 Deprecations
 ------------
@@ -11,8 +11,7 @@ Deprecations
 Exposing HDF5 functions
 -----------------------
 
-* ``H5Dread_chunk`` exposed with a new wrapper :func:`h5d.read_direct_chunk_tobuffer`
-  to allow passing the output buffer.
+* <news item>
 
 Bug fixes
 ---------
