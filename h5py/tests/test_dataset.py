@@ -1569,21 +1569,6 @@ class TestRegionRefs(BaseDataset):
 class TestAstype(BaseDataset):
     """.astype() wrapper & context manager
     """
-    def test_astype_ctx(self):
-        dset = self.f.create_dataset('x', (100,), dtype='i2')
-        dset[...] = np.arange(100)
-
-        with warnings.catch_warnings(record=True) as warn_rec:
-            warnings.simplefilter("always")
-
-            with dset.astype('f8'):
-                self.assertArrayEqual(dset[...], np.arange(100, dtype='f8'))
-
-            with dset.astype('f4') as f4ds:
-                self.assertArrayEqual(f4ds[...], np.arange(100, dtype='f4'))
-
-        assert [w.category for w in warn_rec] == [H5pyDeprecationWarning] * 2
-
     def test_astype_wrapper(self):
         dset = self.f.create_dataset('x', (100,), dtype='i2')
         dset[...] = np.arange(100)
