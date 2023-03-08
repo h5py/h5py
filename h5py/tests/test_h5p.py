@@ -9,7 +9,7 @@
 
 import unittest as ut
 
-from h5py import h5p, h5f, version
+from h5py import h5p, h5f, version, get_config
 
 from .common import TestCase
 
@@ -199,3 +199,70 @@ class TestPL(TestCase):
         # for a single attribute in compact attribute storage.
         cid.set_attr_phase_change(0, 0)
         self.assertEqual((0,0), cid.get_attr_phase_change())
+
+class TestDACollectiveMetadata(TestCase):
+    '''
+    Feature: setting/getting collective metadata on a dataset access property list
+    '''
+
+    @ut.skipUnless(
+        version.hdf5_version_tuple >= (1, 10, 0) and get_config().mpi,
+        'Requires HDF5 1.10.0 or later and MPI')
+    def test_set_all_coll_metadata_ops(self):
+        """
+        Test get/set collective metadata read mode
+        """
+        dalist = h5p.create(h5p.DATASET_ACCESS)
+        dalist.set_all_coll_metadata_ops(True)
+        self.assertEqual(dalist.get_all_coll_metadata_ops(), True)
+        dalist.set_all_coll_metadata_ops(False)
+        self.assertEqual(dalist.get_all_coll_metadata_ops(), False)
+
+class TestLACollectiveMetadata(TestCase):
+    '''
+    Feature: setting/getting collective metadata on a link access property list
+    '''
+
+    @ut.skipUnless(
+        version.hdf5_version_tuple >= (1, 10, 0) and get_config().mpi,
+        'Requires HDF5 1.10.0 or later and MPI')
+    def test_set_all_coll_metadata_ops(self):
+        """
+        Test get/set collective metadata read mode
+        """
+        lalist = h5p.create(h5p.LINK_ACCESS)
+        lalist.set_all_coll_metadata_ops(True)
+        self.assertEqual(lalist.get_all_coll_metadata_ops(), True)
+        lalist.set_all_coll_metadata_ops(False)
+        self.assertEqual(lalist.get_all_coll_metadata_ops(), False)
+
+class TestFACollectiveMetadata(TestCase):
+    '''
+    Feature: setting/getting collective metadata on a file access property list
+    '''
+
+    @ut.skipUnless(
+        version.hdf5_version_tuple >= (1, 10, 0) and get_config().mpi,
+        'Requires HDF5 1.10.0 or later and MPI')
+    def test_set_all_coll_metadata_ops(self):
+        """
+        Test get/set collective metadata read mode
+        """
+        falist = h5p.create(h5p.FILE_ACCESS)
+        falist.set_all_coll_metadata_ops(True)
+        self.assertEqual(falist.get_all_coll_metadata_ops(), True)
+        falist.set_all_coll_metadata_ops(False)
+        self.assertEqual(falist.get_all_coll_metadata_ops(), False)
+
+    @ut.skipUnless(
+        version.hdf5_version_tuple >= (1, 10, 0) and get_config().mpi,
+        'Requires HDF5 1.10.0 or later and MPI')
+    def test_set_coll_metadata_write(self):
+        """
+        Test get/set collective metadata write mode
+        """
+        falist = h5p.create(h5p.FILE_ACCESS)
+        falist.set_coll_metadata_write(True)
+        self.assertEqual(falist.get_coll_metadata_write(), True)
+        falist.set_coll_metadata_write(False)
+        self.assertEqual(falist.get_coll_metadata_write(), False)
