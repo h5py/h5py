@@ -405,7 +405,7 @@ class Group(HLObject, MutableMappingHDF5):
                 return default
 
             elif getclass and not getlink:
-                typecode = h5o.get_info(self.id, self._e(name)).type
+                typecode = h5o.get_info(self.id, self._e(name), lapl=self._lapl).type
 
                 try:
                     return {h5o.TYPE_GROUP: Group,
@@ -415,18 +415,18 @@ class Group(HLObject, MutableMappingHDF5):
                     raise TypeError("Unknown object type")
 
             elif getlink:
-                typecode = self.id.links.get_info(self._e(name)).type
+                typecode = self.id.links.get_info(self._e(name), lapl=self._lapl).type
 
                 if typecode == h5l.TYPE_SOFT:
                     if getclass:
                         return SoftLink
-                    linkbytes = self.id.links.get_val(self._e(name))
+                    linkbytes = self.id.links.get_val(self._e(name), lapl=self._lapl)
                     return SoftLink(self._d(linkbytes))
 
                 elif typecode == h5l.TYPE_EXTERNAL:
                     if getclass:
                         return ExternalLink
-                    filebytes, linkbytes = self.id.links.get_val(self._e(name))
+                    filebytes, linkbytes = self.id.links.get_val(self._e(name), lapl=self._lapl)
                     return ExternalLink(
                         filename_decode(filebytes), self._d(linkbytes)
                     )
@@ -508,6 +508,8 @@ class Group(HLObject, MutableMappingHDF5):
     @with_phil
     def __contains__(self, name):
         """ Test if a member name exists """
+        if hasattr(h5g, "_path_valid"):
+            return h5g._path_valid(self.id, self._e(name), self._lapl)
         return self._e(name) in self.id
 
     def copy(self, source, dest, name=None,
