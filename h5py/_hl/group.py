@@ -509,6 +509,8 @@ class Group(HLObject, MutableMappingHDF5):
     def __contains__(self, name):
         """ Test if a member name exists """
         if hasattr(h5g, "_path_valid"):
+            if not self.id:
+                return False
             return h5g._path_valid(self.id, self._e(name), self._lapl)
         return self._e(name) in self.id
 
