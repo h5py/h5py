@@ -446,7 +446,7 @@ cdef class GroupID(ObjectID):
 
     # === Special methods =====================================================
 
-    def __contains__(self, name):
+    def __contains__(self, name, PropID lapl=None):
         """(STRING name)
 
         Determine if a group member of the given name is present
@@ -464,7 +464,7 @@ cdef class GroupID(ObjectID):
         IF HDF5_VERSION >= (1, 8, 5):
             # New system is more robust but requires H5Oexists_by_name
             with phil:
-                return _path_valid(self, name)
+                return _path_valid(self, name, lapl)
         ELSE:
             with phil:
                 old_handler = set_error_handler(new_handler)
