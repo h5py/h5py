@@ -1644,6 +1644,27 @@ cdef class PropLAID(PropInstanceID):
             H5Idec_ref(fid)
         return propwrap(fid)
 
+
+    @with_phil
+    def set_elink_acc_flags(self, unsigned int flags):
+        """ (UNIT flags)
+
+        Sets the external link traversal file access flag in a link access property list.
+        """
+        H5Pset_elink_acc_flags(self.id, flags)
+
+
+    @with_phil
+    def get_elink_acc_flags(self):
+        """() => UINT
+
+        Retrieves the external link traversal file access flag from the specified link access property list.
+        """
+        cdef unsigned int flags
+        H5Pget_elink_acc_flags(self.id, &flags)
+        return flags
+
+
 # Datatype creation
 cdef class PropTCID(PropOCID):
     """ Datatype creation property list
