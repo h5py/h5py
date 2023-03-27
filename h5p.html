@@ -1031,6 +1031,12 @@ virtual dataset’s creation property list.</p>
 <dd><p>Bases: <a class="reference internal" href="#h5py.h5p.PropInstanceID" title="h5py.h5p.PropInstanceID"><code class="xref py py-class docutils literal notranslate"><span class="pre">PropInstanceID</span></code></a></p>
 <p>Link access property list</p>
 <dl class="py method">
+<dt class="sig sig-object py" id="h5py.h5p.PropLAID.get_elink_acc_flags">
+<span class="sig-name descname"><span class="pre">get_elink_acc_flags</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">UINT</span></span></span><a class="headerlink" href="#h5py.h5p.PropLAID.get_elink_acc_flags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieves the external link traversal file access flag from the specified <a class="reference internal" href="#h5py.h5p.PropLAID" title="h5py.h5p.PropLAID"><code class="xref py py-class docutils literal notranslate"><span class="pre">link</span> <span class="pre">access</span> <span class="pre">property</span> <span class="pre">list</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropLAID.get_elink_fapl">
 <span class="sig-name descname"><span class="pre">get_elink_fapl</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">PropFAID</span> <span class="pre">fapl</span></span></span><a class="headerlink" href="#h5py.h5p.PropLAID.get_elink_fapl" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the <a class="reference internal" href="#h5py.h5p.PropFAID" title="h5py.h5p.PropFAID"><code class="xref py py-class docutils literal notranslate"><span class="pre">file</span> <span class="pre">access</span> <span class="pre">property</span> <span class="pre">list</span></code></a> used when opening external files.</p>
@@ -1046,6 +1052,12 @@ virtual dataset’s creation property list.</p>
 <dt class="sig sig-object py" id="h5py.h5p.PropLAID.get_nlinks">
 <span class="sig-name descname"><span class="pre">get_nlinks</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">UINT</span></span></span><a class="headerlink" href="#h5py.h5p.PropLAID.get_nlinks" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the maximum traversal depth for soft links</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="h5py.h5p.PropLAID.set_elink_acc_flags">
+<span class="sig-name descname"><span class="pre">set_elink_acc_flags</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">UNIT</span> <span class="pre">flags</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropLAID.set_elink_acc_flags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the external link traversal file access flag in a <a class="reference internal" href="#h5py.h5p.PropLAID" title="h5py.h5p.PropLAID"><code class="xref py py-class docutils literal notranslate"><span class="pre">link</span> <span class="pre">access</span> <span class="pre">property</span> <span class="pre">list</span></code></a>.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -1344,9 +1356,11 @@ virtual dataset’s creation property list.</p>
 </li>
 <li><a class="reference internal" href="#link-access">Link access</a><ul>
 <li><a class="reference internal" href="#h5py.h5p.PropLAID"><code class="docutils literal notranslate"><span class="pre">PropLAID</span></code></a><ul>
+<li><a class="reference internal" href="#h5py.h5p.PropLAID.get_elink_acc_flags"><code class="docutils literal notranslate"><span class="pre">PropLAID.get_elink_acc_flags()</span></code></a></li>
 <li><a class="reference internal" href="#h5py.h5p.PropLAID.get_elink_fapl"><code class="docutils literal notranslate"><span class="pre">PropLAID.get_elink_fapl()</span></code></a></li>
 <li><a class="reference internal" href="#h5py.h5p.PropLAID.get_elink_prefix"><code class="docutils literal notranslate"><span class="pre">PropLAID.get_elink_prefix()</span></code></a></li>
 <li><a class="reference internal" href="#h5py.h5p.PropLAID.get_nlinks"><code class="docutils literal notranslate"><span class="pre">PropLAID.get_nlinks()</span></code></a></li>
+<li><a class="reference internal" href="#h5py.h5p.PropLAID.set_elink_acc_flags"><code class="docutils literal notranslate"><span class="pre">PropLAID.set_elink_acc_flags()</span></code></a></li>
 <li><a class="reference internal" href="#h5py.h5p.PropLAID.set_elink_fapl"><code class="docutils literal notranslate"><span class="pre">PropLAID.set_elink_fapl()</span></code></a></li>
 <li><a class="reference internal" href="#h5py.h5p.PropLAID.set_elink_prefix"><code class="docutils literal notranslate"><span class="pre">PropLAID.set_elink_prefix()</span></code></a></li>
 <li><a class="reference internal" href="#h5py.h5p.PropLAID.set_nlinks"><code class="docutils literal notranslate"><span class="pre">PropLAID.set_nlinks()</span></code></a></li>
@@ -1445,7 +1459,7 @@ virtual dataset’s creation property list.</p>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2014, Andrew Collette and contributors.
-      Last updated on Mar 04, 2023.
+      Last updated on Mar 27, 2023.
       Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 6.1.3.
     </div>
   </body>
