@@ -141,6 +141,10 @@ class TestReadDirectChunkToOut:
         h5py.version.hdf5_version_tuple < (1, 10, 5),
         reason="chunk info requires HDF5 >= 1.10.5",
     )
+    @pytest.mark.skipif(
+        'gzip' not in h5py.filters.encode,
+        reason="DEFLATE is not installed",
+    )
     def test_compressed_data(self, writable_file):
         ref_data = numpy.arange(16).reshape(4, 4)
         dataset = writable_file.create_dataset(
