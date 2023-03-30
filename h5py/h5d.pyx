@@ -33,8 +33,6 @@ from cpython cimport PyBUF_ANY_CONTIGUOUS, \
                      PyBytes_FromStringAndSize, \
                      PyObject_GetBuffer
 
-from cpython.mem cimport PyMem_Malloc, PyMem_Free
-
 
 # Initialization
 import_array()
@@ -560,20 +558,15 @@ cdef class DatasetID(ObjectID):
             dset_id = self.id
             dxpl_id = pdefault(dxpl)
             space_id = H5Dget_space(dset_id)
-            if space_id == -1:  # H5I_INVALID_HID
-                raise RuntimeError("Cannot retrieve dataset space")
             rank = H5Sget_simple_extent_ndims(space_id)
             H5Sclose(space_id)
 
             if nb_offsets != rank:
-                raise ValueError(
+                raise TypeError(
                     f"offsets length ({nb_offsets}) must match dataset rank ({rank})"
                 )
 
-            offset = <hsize_t*> PyMem_Malloc(sizeof(hsize_t)*rank)
-            if not offset:
-                raise MemoryError()
-
+            offset = <hsize_t*>emalloc(sizeof(hsize_t)*rank)
             try:
                 convert_tuple(offsets, offset, rank)
                 H5Dget_chunk_storage_size(dset_id, offset, &chunk_bytes)
@@ -595,7 +588,7 @@ cdef class DatasetID(ObjectID):
                 ELSE:
                     H5DOread_chunk(dset_id, dxpl_id, offset, &filters, chunk_buffer)
             finally:
-                PyMem_Free(offset)
+                efree(offset)
 
             return filters, retval
 
