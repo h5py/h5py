@@ -224,19 +224,22 @@ fail.  Keyword dxpl may be a <a class="reference internal" href="h5p.html#h5py.h
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5d.DatasetID.read_direct_chunk">
-<span class="sig-name descname"><span class="pre">read_direct_chunk</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">offsets</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">PropID</span> <span class="pre">dxpl=None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5d.DatasetID.read_direct_chunk" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">read_direct_chunk</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">offsets</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">PropID</span> <span class="pre">dxpl=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out=None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5d.DatasetID.read_direct_chunk" title="Permalink to this definition">¶</a></dt>
 <dd><p>Reads data to a bytes array directly from a chunk at position
 specified by the <cite>offsets</cite> argument and bypasses any filters HDF5
 would normally apply to the written data. However, the written data
 may be compressed or not.</p>
-<p>Returns a tuple containing the <cite>filter_mask</cite> and the bytes data
-which are the raw data storing this chuck.</p>
+<p>Returns a tuple containing the <cite>filter_mask</cite> and the raw data
+storing this chunk as bytes if <cite>out</cite> is None, else as a memoryview.</p>
 <p><cite>filter_mask</cite> is a bit field of up to 32 values. It records which
 filters have been applied to this chunk, of the filter pipeline
 defined for that dataset. Each bit set to <cite>1</cite> means that the filter
 in the corresponding position in the pipeline was not applied to
 compute the raw data. So the default value of <cite>0</cite> means that all
 defined filters have been applied to the raw data.</p>
+<p>If the <cite>out</cite> argument is not None, it must be a writeable
+contiguous 1D array-like of bytes (e.g., <cite>bytearray</cite> or
+<cite>numpy.ndarray</cite>) and large enough to contain the whole chunk.</p>
 <p>Feature requires: 1.10.2 HDF5</p>
 </dd></dl>
 
@@ -540,7 +543,7 @@ been applied to the data before calling this function.</p>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2014, Andrew Collette and contributors.
-      Last updated on Mar 27, 2023.
+      Last updated on Mar 30, 2023.
       Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 6.1.3.
     </div>
   </body>
