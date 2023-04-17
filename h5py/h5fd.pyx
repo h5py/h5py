@@ -311,7 +311,7 @@ IF MPI and HDF5_VERSION >= (1, 14, 0):
             def __get__(self):
                 cdef H5FD_subfiling_params_t * shared_cfg = &self.subf_config.shared_cfg
                 return shared_cfg.stripe_size
-            def __set__(self, int val):
+            def __set__(self, long val):
                 cdef H5FD_subfiling_params_t * shared_cfg = &self.subf_config.shared_cfg
                 shared_cfg.stripe_size = val
 

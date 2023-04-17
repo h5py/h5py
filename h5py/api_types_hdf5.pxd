@@ -369,10 +369,11 @@ cdef extern from "hdf5.h":
 
     # IO Concentrator structs, the IO Concentrator is used by subfiling driver
     ctypedef enum H5FD_subfiling_ioc_select_t:
-      SELECT_IOC_ONE_PER_NODE,
+      SELECT_IOC_ONE_PER_NODE = 0,
       SELECT_IOC_EVERY_NTH_RANK,
       SELECT_IOC_WITH_CONFIG,
-      SELECT_IOC_TOTAL
+      SELECT_IOC_TOTAL,
+      ioc_selection_options
 
     ctypedef struct H5FD_ioc_config_t:
       uint32_t magic
