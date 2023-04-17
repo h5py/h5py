@@ -330,5 +330,3 @@ IF MPI and HDF5_VERSION >= (1, 14, 0):
             def __set__(self, val):
                 cdef H5FD_subfiling_params_t * shared_cfg = &self.subf_config.shared_cfg
                 shared_cfg.ioc_selection = val
-
-
