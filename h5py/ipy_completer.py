@@ -128,7 +128,12 @@ def h5py_completer(self, event):
     """ Completer function to be loaded into IPython """
     base = re_object_match.split(event.line)[1]
 
-    if not isinstance(self._ofind(base).get('obj'), (AttributeManager, HLObject)):
+    try:
+        obj = self._ofind(base).obj
+    except AttributeError:
+        obj = self._ofind(base).get('obj')
+
+    if not isinstance(obj, (AttributeManager, HLObject)):
         raise TryNext
 
     try:
