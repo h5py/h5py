@@ -376,7 +376,7 @@ class File(Group):
                  rdcc_nslots=None, rdcc_nbytes=None, rdcc_w0=None, track_order=None,
                  fs_strategy=None, fs_persist=False, fs_threshold=1, fs_page_size=None,
                  page_buf_size=None, min_meta_keep=0, min_raw_keep=0, locking=None,
-                 alignment_threshold=1, alignment_interval=1, meta_block_size=None, **kwds):
+                 alignment_threshold=1, alignment_interval=1, meta_block_size=None, lapl=None, lcpl=None, **kwds):
         """Create a new file object.
 
         See the h5py user guide for a detailed explanation of the options.
@@ -493,6 +493,12 @@ class File(Group):
             Set the current minimum size, in bytes, of new metadata block allocations.
             See https://portal.hdfgroup.org/display/HDF5/H5P_SET_META_BLOCK_SIZE
 
+        lapl
+            Set the link access property list
+        
+        lcpl
+            Set the link creation property list
+
         Additional keywords
             Passed on to the selected file driver.
         """
@@ -571,7 +577,7 @@ class File(Group):
             else:
                 self._libver = (libver, 'latest')
 
-        super().__init__(fid)
+        super().__init__(fid, lapl, lcpl)
 
     def close(self):
         """ Close the file.  All open objects become invalid """
