@@ -495,7 +495,7 @@ class File(Group):
 
         lapl
             Set the link access property list
-        
+
         lcpl
             Set the link creation property list
 
