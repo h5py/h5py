@@ -49,13 +49,13 @@ before_install:
   - ccache -s
 
 install:
-    - pip install -U tox codecov virtualenv
+    - pip install -U pip tox codecov virtualenv
     - ci/get_hdf5_if_needed.sh
     - if [[ $CIBW_ARCHS == aarch64 ]]; then python -m pip install cibuildwheel; fi
 
 script:
     - if [[ $CIBW_ARCHS == aarch64 ]]; then python3 -m cibuildwheel --output-dir wheelhouse; fi
-    - if [[ -z "$CIBW_ARCHS" ]]; then python3 -m pip install -vvv --upgrade numpy; fi
+    - if [[ -z "$CIBW_ARCHS" ]]; then python3 -m pip install -v --upgrade numpy; fi
     - tox run -v
     - sleep 5
 
