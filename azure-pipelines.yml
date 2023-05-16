@@ -27,7 +27,7 @@ jobs:
   pool:
     vmImage: ubuntu-20.04
   variables:
-    CIBW_BUILD: cp3{7,8,9,10,11}-manylinux_x86_64
+    CIBW_BUILD: cp3{8,9,10,11}-manylinux_x86_64
     CIBW_MANYLINUX_X86_64_IMAGE: ghcr.io/h5py/manylinux2014_x86_64-hdf5
     # Include less debugging info for smaller wheels (default is -g2)
     CIBW_ENVIRONMENT: "CFLAGS=-g1"
@@ -43,7 +43,7 @@ jobs:
     HDF5_VERSION: 1.12.2
     HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
     HDF5_VSVERSION: "16-64"
-    CIBW_BUILD: cp3{7,8,9,10,11}-win_amd64
+    CIBW_BUILD: cp3{8,9,10,11}-win_amd64
   steps:
     - template: ci/azure-pipelines-wheels.yml
       parameters:
@@ -60,7 +60,7 @@ jobs:
     HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
     CIBW_BUILD_VERBOSITY_MACOS: 3
     CIBW_ARCHS_MACOS: $(arch)
-    CIBW_BUILD: cp3{7,8,9,10,11}-macosx_*
+    CIBW_BUILD: cp3{8,9,10,11}-macosx_*
     CIBW_ENVIRONMENT_MACOS: LD_LIBRARY_PATH="$(HDF5_CACHE_DIR)/$(HDF5_VERSION)/lib:${LD_LIBRARY_PATH}" PKG_CONFIG_PATH="$(HDF5_CACHE_DIR)/$(HDF5_VERSION)/lib/pkgconfig:${PKG_CONFIG_PATH}"
     CIBW_REPAIR_WHEEL_COMMAND_MACOS: >
       DYLD_FALLBACK_LIBRARY_PATH=$(HDF5_CACHE_DIR)/$(HDF5_VERSION)/lib delocate-listdeps {wheel} &&
@@ -85,24 +85,16 @@ jobs:
       # -mindeps : test with oldest supported version of (python) dependencies
       # -deps-pre : test pre-release versions of (python) dependencies)
       # -tables : also check compatibility with pytables
-      py37:  # HDF5 1.8 installed from apt on Ubuntu
-        python.version: '3.7'
-        TOXENV: py37-test-deps,py37-test-mindeps,py37-test-deps-tables
+    # HDF5 installed from apt on Ubuntu
     # test when we're not in a unicode locale
       py37-Clocale:
-        python.version: '3.7'
-        TOXENV: py37-test-deps
+        python.version: '3.8'
+        TOXENV: py38-test-deps
         TOX_TESTENV_PASSENV: LANG LC_ALL
         LANG: C
         LC_ALL: C
         H5PY_ENFORCE_COVERAGE: yes
     # Build HDF5 1.10 or 1.12 in the test environment
-      py37-deps-hdf51103:
-        python.version: '3.7'
-        TOXENV: py37-test-deps
-        HDF5_VERSION: 1.10.3
-        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
-        H5PY_ENFORCE_COVERAGE: yes
       py38-deps-hdf51107:
         python.version: '3.8'
         TOXENV: py38-test-deps
@@ -128,10 +120,10 @@ jobs:
         HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
         H5PY_ENFORCE_COVERAGE: yes
     # do mpi tests
-      py37-deps-hdf51105-mpi:
-        python.version: '3.7'
-        TOXENV: py37-test-mindeps-mpi4py
-        HDF5_VERSION: 1.10.5
+      py39-deps-hdf51105-mpi:
+        python.version: '3.9'
+        TOXENV: py39-test-mindeps-mpi4py
+        HDF5_VERSION: 1.12.2
         HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
         HDF5_MPI: ON
         CC: mpicc
@@ -155,10 +147,6 @@ jobs:
 
   strategy:
     matrix:
-      py37:
-        python.version: '3.7'
-        TOXENV: py37-test-deps,py37-test-mindeps,py37-test-deps-pre,py37-test-deps-tables
-        WHL_FILE: h5py*-cp37-*manylinux2014_x86_64.whl
       py38:
         python.version: '3.8'
         TOXENV: py38-test-deps,py38-test-mindeps,py38-test-deps-pre
@@ -192,9 +180,9 @@ jobs:
     # -deps-pre : test pre-release versions of (python) dependencies)
     #
     # 64 bit - HDF5 1.8
-      py37-hdf518:
-        python.version: '3.7'
-        TOXENV: py37-test-deps,py37-test-deps-pre
+      py38-hdf518:
+        python.version: '3.8'
+        TOXENV: py38-test-deps
         HDF5_VERSION: 1.8.17
         HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
         HDF5_VSVERSION: "16-64"
@@ -241,10 +229,6 @@ jobs:
 
   strategy:
     matrix:
-      py37:
-        python.version: '3.7'
-        TOXENV: py37-test-deps,py37-test-mindeps,py37-test-deps-tables
-        WHL_FILE: h5py*-cp37-*.whl
       py38:
         python.version: '3.8'
         TOXENV: py38-test-deps,py38-test-mindeps,py38-test-deps-pre
@@ -275,34 +259,14 @@ jobs:
       # -deps : test with default (latest) versions of dependencies
       # -mindeps : test with oldest supported version of (python) dependencies
       # -deps-pre : test pre-release versions of (python) dependencies)
-      py37:
-        python.version: '3.7'
-        TOXENV: py37-test-deps,py37-test-mindeps
-        H5PY_ENFORCE_COVERAGE: yes
       py38:
         python.version: '3.8'
         TOXENV: py38-test-deps,py38-test-mindeps,py38-test-deps-pre
         H5PY_ENFORCE_COVERAGE: yes
       py39:
-        python.version: '3.9'
-        TOXENV: py39-test-deps,py39-test-mindeps,py39-test-deps-pre
+        python.version: '3.11'
+        TOXENV: py311-test-deps,py311-test-mindeps,py311-test-deps-pre
         H5PY_ENFORCE_COVERAGE: yes
-    # test against newer HDF5
-#      py37-deps-hdf51103:
-#        python.version: '3.7'
-#        TOXENV: py37-test-deps
-#        HDF5_VERSION: 1.10.3
-#        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
-#      py37-deps-hdf51104:
-#        python.version: '3.7'
-#        TOXENV: py37-test-deps
-#        HDF5_VERSION: 1.10.4
-#        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
-#      py37-deps-hdf51105:
-#        python.version: '3.7'
-#        TOXENV: py37-test-deps
-#        HDF5_VERSION: 1.10.5
-#        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
     maxParallel: 4
 
   steps:
@@ -321,10 +285,6 @@ jobs:
 
   strategy:
     matrix:
-      py37:
-        python.version: '3.7'
-        TOXENV: py37-test-deps,py37-test-mindeps,py37-test-deps-tables
-        WHL_FILE: h5py*-cp37-*.whl
       py38:
         python.version: '3.8'
         TOXENV: py38-test-deps,py38-test-mindeps,py38-test-deps-pre

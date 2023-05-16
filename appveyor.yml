@@ -8,18 +8,12 @@ environment:
 
     ### USING HDF5 1.8 ###
 
-    - PYTHON: "C:\\Python37"
-      TOXENV: "py37-test-deps"
+    - PYTHON: "C:\\Python38"
+      TOXENV: "py38-test-deps"
       HDF5_VSVERSION: "14"
       HDF5_DIR: "C:\\hdf5\\%HDF5_VERSION%\\%HDF5_VSVERSION%"
 
     ### USING HDF5 1.10 ###
-
-    - PYTHON: "C:\\Python37"
-      TOXENV: "py37-test-deps"
-      HDF5_VSVERSION: "14"
-      HDF5_DIR: "C:\\hdf5\\%HDF5_VERSION%\\%HDF5_VSVERSION%"
-      HDF5_VERSION: "1.10.6"
 
     - PYTHON: "C:\\Python38"
       TOXENV: "py38-test-deps"
@@ -29,17 +23,17 @@ environment:
 
     ### USING HDF5 1.12 ###
 
-    - PYTHON: "C:\\Python37"
-      TOXENV: "py37-test-deps"
+    - PYTHON: "C:\\Python39"
+      TOXENV: "py39-test-deps"
       HDF5_VSVERSION: "14"
       HDF5_DIR: "C:\\hdf5\\%HDF5_VERSION%\\%HDF5_VSVERSION%"
       HDF5_VERSION: "1.12.0"
 
-    - PYTHON: "C:\\Python38"
-      TOXENV: "py38-test-deps"
+    - PYTHON: "C:\\Python311"
+      TOXENV: "py311-test-deps"
       HDF5_VSVERSION: "14"
       HDF5_DIR: "C:\\hdf5\\%HDF5_VERSION%\\%HDF5_VSVERSION%"
-      HDF5_VERSION: "1.12.0"
+      HDF5_VERSION: "1.12.2"
 
 install:
   # We need wheel installed to build wheels
