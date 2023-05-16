@@ -56,6 +56,7 @@ install:
 
 script:
     - if [[ $CIBW_ARCHS == aarch64 ]]; then python3 -m cibuildwheel --output-dir wheelhouse; fi
+    - if [[ -z "$CIBW_ARCHS" ]]; then python3 -m pip install numpy; fi
     - tox $TOX_OPTS
     - sleep 5
 
