@@ -1,4 +1,5 @@
 # from https://packaging.python.org/en/latest/appveyor/
+image: Visual Studio 2019
 environment:
   HDF5_VERSION: "1.8.17"
   TOX_TESTENV_PASSENV: "HDF5_DIR"
