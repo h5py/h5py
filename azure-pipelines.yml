@@ -87,7 +87,7 @@ jobs:
       # -tables : also check compatibility with pytables
     # HDF5 installed from apt on Ubuntu
     # test when we're not in a unicode locale
-      py37-Clocale:
+      py38-Clocale:
         python.version: '3.8'
         TOXENV: py38-test-deps
         TOX_TESTENV_PASSENV: LANG LC_ALL
@@ -263,7 +263,7 @@ jobs:
         python.version: '3.8'
         TOXENV: py38-test-deps,py38-test-mindeps,py38-test-deps-pre
         H5PY_ENFORCE_COVERAGE: yes
-      py39:
+      py311:
         python.version: '3.11'
         TOXENV: py311-test-deps,py311-test-mindeps,py311-test-deps-pre
         H5PY_ENFORCE_COVERAGE: yes
