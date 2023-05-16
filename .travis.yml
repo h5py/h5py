@@ -38,7 +38,6 @@ jobs:
       virt: vm
       env:
         - TOXENV=py39-test-deps
-        - TOX_OPTS=""
         - HDF5_VERSION=1.10.5
         - HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION
         - H5PY_ENFORCE_COVERAGE=yes
@@ -56,8 +55,8 @@ install:
 
 script:
     - if [[ $CIBW_ARCHS == aarch64 ]]; then python3 -m cibuildwheel --output-dir wheelhouse; fi
-    - if [[ -z "$CIBW_ARCHS" ]]; then python3 -m pip install numpy; fi
-    - tox $TOX_OPTS
+    - if [[ -z "$CIBW_ARCHS" ]]; then python3 -m pip install --upgrade numpy; fi
+    - tox run -v
     - sleep 5
 
 after_success:
