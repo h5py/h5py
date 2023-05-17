@@ -26,12 +26,12 @@ VERSION = '3.8.0'
 # these are required to use h5py
 RUN_REQUIRES = [
     # We only really aim to support NumPy & Python combinations for which
-    # there are wheels on PyPI (e.g. NumPy >=1.17.5 for Python 3.8).
+    # there are wheels on PyPI (e.g. NumPy >=1.23.2 for Python 3.11).
     # But we don't want to duplicate the information in oldest-supported-numpy
     # here, and if you can build an older NumPy on a newer Python, h5py probably
     # works (assuming you build it from source too).
-    # NumPy 1.14.5 is the first with wheels for Python 3.7, our minimum Python.
-    "numpy >=1.14.5",
+    # NumPy 1.17.3 is the first with wheels for Python 3.8, our minimum Python.
+    "numpy >=1.17.3",
 ]
 
 # Packages needed to build h5py (in addition to static list in pyproject.toml)

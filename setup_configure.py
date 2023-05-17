@@ -288,6 +288,7 @@ class HDF5LibWrapper:
             lib = ctypes.CDLL(path, **load_kw)
         except Exception:
             print("error: Unable to load dependency HDF5, make sure HDF5 is installed properly")
+            print("Library dirs checked:", libdirs)
             raise
 
         self._lib = lib

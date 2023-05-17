@@ -36,7 +36,7 @@ classifiers = [
     "Topic :: Database",
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
-requires-python = ">=3.7"
+requires-python = ">=3.8"
 dynamic = ["dependencies", "version"]
 
 [project.readme]
