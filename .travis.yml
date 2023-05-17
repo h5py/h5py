@@ -8,7 +8,6 @@ notifications:
 addons:
   apt:
     packages:
-      - libhdf5-serial-dev
       - libopenblas-dev
 
 cache:
@@ -31,6 +30,7 @@ jobs:
       python: 3.9
       env:
       - TOXENV=py39-test-deps
+      - TOX_OPTS="force
       - HDF5_VERSION=1.10.5
       - HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION
       - H5PY_ENFORCE_COVERAGE=yes
@@ -40,6 +40,7 @@ jobs:
       virt: vm
       env:
         - TOXENV=py39-test-deps
+        - TOX_OPTS="--force-dep numpy<1.23"
         - HDF5_VERSION=1.10.5
         - HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION
         - H5PY_ENFORCE_COVERAGE=yes
@@ -51,16 +52,13 @@ before_install:
   - ccache -s
 
 install:
-    #- pip install -U pip tox codecov virtualenv
-    #- ci/get_hdf5_if_needed.sh
-    #- if [[ $CIBW_ARCHS == aarch64 ]]; then python -m pip install cibuildwheel; fi
+    - pip install -U pip tox codecov virtualenv
+    - ci/get_hdf5_if_needed.sh
+    - if [[ $CIBW_ARCHS == aarch64 ]]; then python -m pip install cibuildwheel; fi
 
 script:
-    #- if [[ $CIBW_ARCHS == aarch64 ]]; then python3 -m cibuildwheel --output-dir wheelhouse; fi
-    - if [[ -z "$CIBW_ARCHS" ]]; then python3 -m pip install setuptools==59.2.0 wheel==0.38.1 Cython; fi
-    - echo "$TERM"
-    - if [[ -z "$CIBW_ARCHS" ]]; then python3 -m pip install -v --no-color  --upgrade 'numpy<1.23' 2>&1; fi
-    #- tox run -v
+    - if [[ $CIBW_ARCHS == aarch64 ]]; then python3 -m cibuildwheel --output-dir wheelhouse; fi
+    - tox run -v $TOX_OPTS
     - sleep 5
 
 after_success:
