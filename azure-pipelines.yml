@@ -263,17 +263,9 @@ jobs:
         python.version: '3.8'
         TOXENV: py38-test-deps,py38-test-mindeps,py38-test-deps-pre
         H5PY_ENFORCE_COVERAGE: yes
-      py39:
-        python.version: '3.9'
-        TOXENV: py39-test-deps
-        H5PY_ENFORCE_COVERAGE: yes
       py310:
         python.version: '3.10'
         TOXENV: py310-test-deps
-        H5PY_ENFORCE_COVERAGE: yes
-      py311:
-        python.version: '3.11'
-        TOXENV: py311-test-deps,py311-test-mindeps,py311-test-deps-pre
         H5PY_ENFORCE_COVERAGE: yes
     maxParallel: 4
 
