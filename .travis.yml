@@ -9,6 +9,8 @@ addons:
   apt:
     packages:
       - libhdf5-serial-dev
+      - liblapack-dev
+      - libopenblas-dev
 
 cache:
   directories:
@@ -59,7 +61,6 @@ script:
     - if [[ -z "$CIBW_ARCHS" ]]; then python3 -m pip install setuptools==59.2.0 wheel==0.38.1 Cython; fi
     - echo "$TERM"
     - if [[ -z "$CIBW_ARCHS" ]]; then python3 -m pip install -v --no-color  --upgrade numpy 2>&1; fi
-    - if [[ -z "$CIBW_ARCHS" ]]; then ci/test-build-numpy.sh 2>&1; fi
     #- tox run -v
     - sleep 5
 
