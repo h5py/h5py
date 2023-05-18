@@ -20,7 +20,7 @@ Websites
 Installation
 ------------
 
-Pre-build `h5py` can either be installed via your Python Distribution (e.g.
+Pre-built `h5py` can either be installed via your Python Distribution (e.g.
 `Continuum Anaconda`_, `Enthought Canopy`_) or from `PyPI`_ via `pip`_.
 `h5py` is also distributed in many Linux Distributions (e.g. Ubuntu, Fedora),
 and in the macOS package managers `Homebrew <https://brew.sh/>`_,
