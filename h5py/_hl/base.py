@@ -195,13 +195,15 @@ class CommonStateObject:
 
         if isinstance(name, bytes):
             coding = h5t.CSET_ASCII
-        else:
+        elif isinstance(name, str):
             try:
                 name = name.encode('ascii')
                 coding = h5t.CSET_ASCII
             except UnicodeEncodeError:
                 name = name.encode('utf8')
                 coding = h5t.CSET_UTF8
+        else:
+            raise TypeError(f"A name should be string or bytes, not {type(name)}")
 
         if lcpl:
             return name, get_lcpl(coding)

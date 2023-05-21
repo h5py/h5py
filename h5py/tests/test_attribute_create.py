@@ -89,3 +89,7 @@ class TestArray(TestCase):
         dt = np.dtype('()i')
         with self.assertRaises(ValueError):
             self.f.attrs.create('x', data=array, shape=(5,), dtype=dt)
+
+    def test_key_type(self):
+        with self.assertRaises(TypeError):
+            self.f.attrs.create(1, data=('a', 'b'))
