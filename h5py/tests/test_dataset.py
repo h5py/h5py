@@ -1257,10 +1257,13 @@ class TestStrings(BaseDataset):
         # len of ds
         self.assertEqual(10, len(ds.asstr()))
 
-
         # Array output
         np.testing.assert_array_equal(
             ds.asstr()[:1], np.array([data], dtype=object)
+        )
+
+        np.testing.assert_array_equal(
+            np.asarray(ds.asstr())[:1], np.array([data], dtype=object)
         )
 
     def test_asstr_fixed(self):
@@ -1580,6 +1583,12 @@ class TestAstype(BaseDataset):
         dset = self.f.create_dataset('x', (100,), dtype='i2')
         dset[...] = np.arange(100)
         self.assertEqual(100, len(dset.astype('f4')))
+
+    def test_astype_wrapper_asarray(self):
+        dset = self.f.create_dataset('x', (100,), dtype='i2')
+        dset[...] = np.arange(100)
+        arr = np.asarray(dset.astype('f4'), dtype='i2')
+        self.assertArrayEqual(arr, np.arange(100, dtype='i2'))
 
 
 class TestScalarCompound(BaseDataset):

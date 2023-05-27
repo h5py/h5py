@@ -211,6 +211,12 @@ class AstypeWrapper:
         """
         return len(self._dset)
 
+    def __array__(self, dtype=None):
+        data = self[:]
+        if dtype is not None:
+            data = data.astype(dtype)
+        return data
+
 
 class AsStrWrapper:
     """Wrapper to decode strings on reading the dataset"""
@@ -242,6 +248,11 @@ class AsStrWrapper:
         >>> length = len(dataset.asstr())
         """
         return len(self._dset)
+
+    def __array__(self):
+        return numpy.array([
+            b.decode(self.encoding, self.errors) for b in self._dset
+        ], dtype=object).reshape(self._dset.shape)
 
 
 class FieldsWrapper:
