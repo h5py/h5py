@@ -748,7 +748,7 @@ cdef int conv_vlen2ndarray(void* ipt,
         # so we'll fall back to allocating a new array and copying the data in.
         ndarray = np.empty(size, dtype=elem_dtype)
         memcpy(PyArray_DATA(ndarray), data, itemsize * size)
-        
+
         # In this code path, `data`, allocated by hdf5 to hold the v-len data,
         # will no longer be used since have copied its contents to the ndarray.
         efree(data)
