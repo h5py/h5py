@@ -17,7 +17,7 @@ import sys
 import numpy
 
 from .. import h5, h5s, h5t, h5r, h5d, h5p, h5fd, h5ds, _selector
-from .base import HLObject, phil, with_phil, Empty, cached_property, find_item_type
+from .base import HLObject, phil, with_phil, Empty, cached_property, find_item_type, array_for_new_object
 from . import filters
 from . import selections as sel
 from . import selections2 as sel2
@@ -40,8 +40,7 @@ def make_new_dset(parent, shape=None, dtype=None, data=None, name=None,
 
     # Convert data to a C-contiguous ndarray
     if data is not None and not isinstance(data, Empty):
-        from . import base
-        data = base.array_for_new_object(data, specified_dtype=dtype)
+        data = array_for_new_object(data, specified_dtype=dtype)
 
     # Validate shape
     if shape is None:
