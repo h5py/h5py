@@ -17,7 +17,10 @@ import sys
 import numpy
 
 from .. import h5, h5s, h5t, h5r, h5d, h5p, h5fd, h5ds, _selector
-from .base import HLObject, phil, with_phil, Empty, cached_property, find_item_type, array_for_new_object
+from .base import (
+    array_for_new_object, cached_property, Empty, find_item_type, HLObject,
+    phil, product, with_phil,
+)
 from . import filters
 from . import selections as sel
 from . import selections2 as sel2
@@ -51,7 +54,7 @@ def make_new_dset(parent, shape=None, dtype=None, data=None, name=None,
         shape = data.shape
     else:
         shape = (shape,) if isinstance(shape, int) else tuple(shape)
-        if data is not None and (numpy.product(shape, dtype=numpy.ulonglong) != numpy.product(data.shape, dtype=numpy.ulonglong)):
+        if data is not None and (product(shape) != product(data.shape)):
             raise ValueError("Shape tuple is incompatible with data")
 
     if isinstance(maxshape, int):
@@ -486,7 +489,7 @@ class Dataset(HLObject):
         if self._is_empty:
             size = None
         else:
-            size = numpy.prod(self.shape, dtype=numpy.intp)
+            size = product(self.shape)
 
         # If the file is read-only, cache the size to speed-up future uses.
         # This cache is invalidated by .refresh() when using SWMR.
@@ -872,7 +875,8 @@ class Dataset(HLObject):
                 if val.ndim > 1:
                     tmp = numpy.empty(shape=val.shape[:-1], dtype=object)
                     tmp.ravel()[:] = [i for i in val.reshape(
-                        (numpy.product(val.shape[:-1], dtype=numpy.ulonglong), val.shape[-1]))]
+                        (product(val.shape[:-1]), val.shape[-1])
+                    )]
                 else:
                     tmp = numpy.array([None], dtype=object)
                     tmp[0] = val
@@ -981,8 +985,7 @@ class Dataset(HLObject):
         if mshape == () and selection.array_shape != ():
             if self.dtype.subdtype is not None:
                 raise TypeError("Scalar broadcasting is not supported for array dtypes")
-            if self.chunks and (numpy.prod(self.chunks, dtype=numpy.float64) >=
-                                numpy.prod(selection.array_shape, dtype=numpy.float64)):
+            if self.chunks and (product(self.chunks) >= product(selection.array_shape)):
                 val2 = numpy.empty(selection.array_shape, dtype=val.dtype)
             else:
                 val2 = numpy.empty(selection.array_shape[-1], dtype=val.dtype)
@@ -1054,7 +1057,7 @@ class Dataset(HLObject):
         arr = numpy.zeros(self.shape, dtype=self.dtype if dtype is None else dtype)
 
         # Special case for (0,)*-shape datasets
-        if numpy.product(self.shape, dtype=numpy.ulonglong) == 0:
+        if self.size == 0:
             return arr
 
         self.read_direct(arr)
