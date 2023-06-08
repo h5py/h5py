@@ -122,6 +122,7 @@ class AttributeManager(base.MutableMappingHDF5, base.CommonStateObject):
             Data type of the attribute.  Overrides data.dtype if both
             are given.
         """
+        name = self._e(name)
 
         with phil:
             # First, make sure we have a NumPy array.  We leave the data type
@@ -189,35 +190,24 @@ class AttributeManager(base.MutableMappingHDF5, base.CommonStateObject):
             else:
                 space = h5s.create_simple(shape)
 
-            # This mess exists because you can't overwrite attributes in HDF5.
-            # So we write to a temporary attribute first, and then rename.
-            # see issue 1385
-            # if track_order is enabled new attributes (which exceed the
-            # max_compact range, 8 is default) cannot be created as temporary
-            # attributes with subsequent rename, doing that would trigger
-            # the error discussed in the above issue
-            attr_exists = False
-            if h5a.exists(self._id, self._e(name)):
-                attr_exists = True
-                tempname = uuid.uuid4().hex
-            else:
-                tempname = name
+            # For a long time, h5py would create attributes with a random name
+            # and then rename them, imitating how you can atomically replace
+            # a file in a filesystem. But HDF5 does not offer atomic replacement
+            # (you have to delete the existing attribute first), and renaming
+            # exposes some bugs - see https://github.com/h5py/h5py/issues/1385
+            # So we've gone back to the simpler delete & recreate model.
+            if h5a.exists(self._id, name):
+                h5a.delete(self._id, name)
 
-            attr = h5a.create(self._id, self._e(tempname), htype, space)
+            attr = h5a.create(self._id, name, htype, space)
             try:
                 if not isinstance(data, Empty):
                     attr.write(data, mtype=htype2)
-                if attr_exists:
-                    # Rename temp attribute to proper name
-                    # No atomic rename in HDF5 :(
-                    h5a.delete(self._id, self._e(name))
-                    h5a.rename(self._id, self._e(tempname), self._e(name))
             except:
                 attr.close()
-                h5a.delete(self._id, self._e(tempname))
+                h5a.delete(self._id, name)
                 raise
-            finally:
-                attr.close()
+            attr.close()
 
     def modify(self, name, value):
         """ Change the value of an attribute while preserving its type.
