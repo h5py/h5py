@@ -166,7 +166,7 @@ class AttributeManager(base.MutableMappingHDF5, base.CommonStateObject):
             # is compatible, and reshape if needed.
             else:
 
-                if shape is not None and numpy.product(shape, dtype=numpy.ulonglong) != numpy.product(data.shape, dtype=numpy.ulonglong):
+                if shape is not None and product(shape) != product(data.shape):
                     raise ValueError("Shape of new attribute conflicts with shape of data")
 
                 if shape != data.shape:
