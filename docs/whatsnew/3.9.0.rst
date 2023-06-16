@@ -1,0 +1,28 @@
+New features
+------------
+
+* New ``out`` argument to :func:`h5d.read_direct_chunk` to allow passing the output buffer.
+* `AsStrWrapper` and `AstypeWrapper` now implement the `__array__()` method.
+  This speeds up access for functions that support it, such as `np.asarray()`.
+* Validate key types when creating groups and attributes
+* Low-level ``h5z.register_filter`` function that allows to register a HDF5 filter.
+
+Deprecations
+------------
+
+* Using :meth:Dataset.astype` as a context manager has been removed, after being
+  deprecated in h5py 3.6. Read data by slicing the returned object instead:
+  ``dset.astype('f4')[:]``.
+
+Exposing HDF5 functions
+-----------------------
+
+* ``H5Pset_elink_acc_flags``: function that allows to set the external link traversal file access flag in a link access property list.
+* ``H5Pget_elink_acc_flags``: function that retrieves the external link traversal file access flag from the specified link access property list.
+* ``H5Zregister``
+
+Bug fixes
+---------
+
+* ``Group.__contains__`` and ``Group.get`` now use the default link access property list systematically.
+
