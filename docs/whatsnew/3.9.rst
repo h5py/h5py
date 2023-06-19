@@ -1,0 +1,56 @@
+What's new in h5py 3.9
+======================
+
+This version of h5py requires Python 3.8 or above.
+
+New features
+------------
+
+* New ``out`` argument to :meth:`~h5py.h5d.DatasetID.read_direct_chunk` to allow passing
+  the output buffer (:pr:`2232`).
+* The objects from :meth:`.Dataset.asstr` and :meth:`.Dataset.astype` now
+  implement the ``__array__()`` method (:pr:`2269`).
+  This speeds up access for functions that support it, such as ``np.asarray()``.
+* Validate key types when creating groups and attributes, giving better error
+  messages when invalid types are used (:pr:`2266`).
+
+Deprecations & removals
+-----------------------
+
+* Using :meth:`.Dataset.astype` as a context manager has been removed, after
+  being deprecated in h5py 3.6. Read data by slicing the returned object instead:
+  ``dset.astype('f4')[:]``.
+
+Exposing HDF5 functions
+-----------------------
+
+* ``H5Pget_elink_acc_flags`` & ``H5Pset_elink_acc_flags`` as
+  :meth:`h5py.h5p.PropLAID.get_elink_acc_flags` & :meth:`h5py.h5p.PropLAID.set_elink_acc_flags`:
+  access the external link file access traversal flags in a link access property
+  list (:pr:`2244`).
+* ``H5Zregister`` as :func:`h5py.h5z.register_filter`: register an HDF5 filter
+  (:pr:`2229`).
+
+Bug fixes
+---------
+
+* ``Group.__contains__`` and ``Group.get`` now use the default link access
+  property list systematically (:pr:`2244`).
+* Removed various calls to the deprecated ``numpy.product`` function (:pr:`2242`
+  & :pr:`2273`).
+* Fix the IPython tab-completion integration in IPython 8.12 (:pr:2256`).
+* Replacing attributes with :meth:`.AttributeManager.create` now deletes the old
+  attributes before creating the new one, rather than using a temporary name
+  and renaming the new attribute (:pr:`2274`). This should avoid some confusing
+  bugs affecting attributes. However, failures creating an attribute are less
+  likely to leave an existing attribute of the same name in place. To change an
+  attribute value without changing its shape or dtype, use
+  :meth:`~.AttributeManager.modify` instead.
+
+Building h5py
+-------------
+
+* When building with :ref:`parallel` support, the version of mpi4py used on
+  various Python versions is increased to 3.1.1, fixing building with a newer
+  setuptools (:pr:`2225`).
+* Some fixes towards compatibility with the upcoming Cython 3 (:pr:`2247`).

@@ -8,6 +8,7 @@ These document the changes between minor (or major) versions of h5py.
 
 .. toctree::
 
+    3.9
     3.8
     3.7
     3.6
