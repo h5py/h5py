@@ -157,6 +157,11 @@ class TestVirtualSource(ut.TestCase):
             with self.assertRaises(TypeError):
                 h5.VirtualSource(a, dtype=int)
 
+    def test_repeated_slice(self):
+        dataset = h5.VirtualSource('test', 'test', (20, 30, 30))
+        sliced = dataset[5:10, :, :]
+        with self.assertRaises(RuntimeError):
+            sliced[:, :4]
 
 
 if __name__ == "__main__":

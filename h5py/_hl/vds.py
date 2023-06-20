@@ -132,15 +132,19 @@ class VirtualSource:
             self.maxshape = tuple([h5s.UNLIMITED if ix is None else ix
                                    for ix in maxshape])
         self.sel = SimpleSelection(shape)
+        self._all_selected = True
 
     @property
     def shape(self):
         return self.sel.array_shape
 
     def __getitem__(self, key):
+        if not self._all_selected:
+            raise RuntimeError("VirtualSource objects can only be sliced once.")
         tmp = copy(self)
         tmp.sel = select(self.shape, key, dataset=None)
         _convert_space_for_key(tmp.sel.id, key)
+        tmp._all_selected = False
         return tmp
 
 class VirtualLayout:
