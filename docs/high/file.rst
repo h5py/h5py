@@ -557,4 +557,4 @@ Reference
     .. attribute:: meta_block_size
 
         Minimum size, in bytes, of metadata block allocations. Default: 2048.
-        See :ref`file_meta_block_size`.
+        See :ref:`file_meta_block_size`.
