@@ -1,0 +1,209 @@
+--- configure.orig	2022-04-19 12:44:19.000000000 -0400
++++ configure	2022-05-18 14:54:28.621115700 -0400
+@@ -670,6 +670,7 @@
+ DEPRECATED_SYMBOLS
+ BUILD_ALL_CONDITIONAL_FALSE
+ BUILD_ALL_CONDITIONAL_TRUE
++cross_compiling
+ ROOT
+ JAVA_VERSION
+ CXX_VERSION
+@@ -6686,12 +6687,7 @@
+ }
+ 
+ _ACEOF
+-        if test "$cross_compiling" = yes; then :
+-  { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
+-$as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
+-as_fn_error $? "cannot run test program while cross compiling
+-See \`config.log' for more details" "$LINENO" 5; }
+-else
++if test "$cross_compiling" = no; then :
+   if ac_fn_c_try_run "$LINENO"; then :
+ 
+             LDBL_DIG=$(./conftest$EXEEXT 2>&1 | sed -n '1p')
+@@ -6710,13 +6706,15 @@
+ 
+ 
+ 
+-if test "$ac_cv_sizeof___float128" != 0 && test "$FLT128_DIG" != 0 ; then
++if [ -z "$PAC_C_MAX_REAL_PRECISION" ]; then
++  if test "$ac_cv_sizeof___float128" != 0 && test "$FLT128_DIG" != 0 ; then
+ 
+ $as_echo "#define HAVE_FLOAT128 1" >>confdefs.h
+ 
+-  PAC_C_MAX_REAL_PRECISION=$FLT128_DIG
+-else
+-  PAC_C_MAX_REAL_PRECISION=$LDBL_DIG
++    PAC_C_MAX_REAL_PRECISION=$FLT128_DIG
++  else
++    PAC_C_MAX_REAL_PRECISION=$LDBL_DIG
++  fi
+ fi
+ 
+ cat >>confdefs.h <<_ACEOF
+@@ -8177,10 +8175,32 @@
+ 
+ TEST_SRC="`sed -n '/PROGRAM FC_AVAIL_KINDS/,/END PROGRAM FC_AVAIL_KINDS/p' $srcdir/m4/aclocal_fc.f90`"
+ if test "$cross_compiling" = yes; then :
+-  { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
+-$as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
+-as_fn_error $? "cannot run test program while cross compiling
+-See \`config.log' for more details" "$LINENO" 5; }
++
++cat >>confdefs.h <<_ACEOF
++#define PAC_FC_MAX_REAL_PRECISION $PAC_FC_MAX_REAL_PRECISION
++_ACEOF
++
++
++cat >>confdefs.h <<_ACEOF
++#define H5CONFIG_F_NUM_RKIND $H5CONFIG_F_NUM_RKIND
++_ACEOF
++
++
++cat >>confdefs.h <<_ACEOF
++#define H5CONFIG_F_NUM_IKIND $H5CONFIG_F_NUM_IKIND
++_ACEOF
++
++
++cat >>confdefs.h <<_ACEOF
++#define H5CONFIG_F_RKIND $H5CONFIG_F_RKIND
++_ACEOF
++
++
++cat >>confdefs.h <<_ACEOF
++#define H5CONFIG_F_IKIND $H5CONFIG_F_IKIND
++_ACEOF
++
++
+ else
+   cat > conftest.$ac_ext <<_ACEOF
+ $TEST_SRC
+@@ -8332,92 +8352,6 @@
+ ac_link='$FC -o conftest$ac_exeext $FCFLAGS $LDFLAGS $ac_fcflags_srcext conftest.$ac_ext $LIBS >&5'
+ ac_compiler_gnu=$ac_cv_fc_compiler_gnu
+ 
+-TEST_SRC="`sed -n '/PROGRAM FC_AVAIL_KINDS/,/END PROGRAM FC_AVAIL_KINDS/p' $srcdir/m4/aclocal_fc.f90`"
+-if test "$cross_compiling" = yes; then :
+-  { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
+-$as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
+-as_fn_error $? "cannot run test program while cross compiling
+-See \`config.log' for more details" "$LINENO" 5; }
+-else
+-  cat > conftest.$ac_ext <<_ACEOF
+-$TEST_SRC
+-_ACEOF
+-if ac_fn_fc_try_run "$LINENO"; then :
+-
+-
+-        pac_validIntKinds=$(./conftest$EXEEXT 2>&1 | sed -n '1p')
+-        pac_validRealKinds=$(./conftest$EXEEXT 2>&1 | sed -n '2p')
+-        PAC_FC_MAX_REAL_PRECISION=$(./conftest$EXEEXT 2>&1 | sed -n '3p')
+-
+-cat >>confdefs.h <<_ACEOF
+-#define PAC_FC_MAX_REAL_PRECISION $PAC_FC_MAX_REAL_PRECISION
+-_ACEOF
+-
+-
+-        PAC_FC_ALL_INTEGER_KINDS="{`echo $pac_validIntKinds`}"
+-        PAC_FC_ALL_REAL_KINDS="{`echo $pac_validRealKinds`}"
+-
+-        PAC_FORTRAN_NUM_INTEGER_KINDS=$(./conftest$EXEEXT 2>&1 | sed -n '4p')
+-        H5CONFIG_F_NUM_IKIND="INTEGER, PARAMETER :: num_ikinds = `echo $PAC_FORTRAN_NUM_INTEGER_KINDS`"
+-        H5CONFIG_F_IKIND="INTEGER, DIMENSION(1:num_ikinds) :: ikind = (/`echo $pac_validIntKinds`/)"
+-        H5CONFIG_F_NUM_RKIND="INTEGER, PARAMETER :: num_rkinds = $(./conftest$EXEEXT 2>&1 | sed -n '5p')"
+-        H5CONFIG_F_RKIND="INTEGER, DIMENSION(1:num_rkinds) :: rkind = (/`echo $pac_validRealKinds`/)"
+-
+-
+-cat >>confdefs.h <<_ACEOF
+-#define H5CONFIG_F_NUM_RKIND $H5CONFIG_F_NUM_RKIND
+-_ACEOF
+-
+-
+-cat >>confdefs.h <<_ACEOF
+-#define H5CONFIG_F_NUM_IKIND $H5CONFIG_F_NUM_IKIND
+-_ACEOF
+-
+-
+-cat >>confdefs.h <<_ACEOF
+-#define H5CONFIG_F_RKIND $H5CONFIG_F_RKIND
+-_ACEOF
+-
+-
+-cat >>confdefs.h <<_ACEOF
+-#define H5CONFIG_F_IKIND $H5CONFIG_F_IKIND
+-_ACEOF
+-
+-
+-        { $as_echo "$as_me:${as_lineno-$LINENO}: checking for Number of Fortran INTEGER KINDs" >&5
+-$as_echo_n "checking for Number of Fortran INTEGER KINDs... " >&6; }
+-        { $as_echo "$as_me:${as_lineno-$LINENO}: result: $PAC_FORTRAN_NUM_INTEGER_KINDS" >&5
+-$as_echo "$PAC_FORTRAN_NUM_INTEGER_KINDS" >&6; }
+-        { $as_echo "$as_me:${as_lineno-$LINENO}: checking for Fortran INTEGER KINDs" >&5
+-$as_echo_n "checking for Fortran INTEGER KINDs... " >&6; }
+-        { $as_echo "$as_me:${as_lineno-$LINENO}: result: $PAC_FC_ALL_INTEGER_KINDS" >&5
+-$as_echo "$PAC_FC_ALL_INTEGER_KINDS" >&6; }
+-        { $as_echo "$as_me:${as_lineno-$LINENO}: checking for Fortran REAL KINDs" >&5
+-$as_echo_n "checking for Fortran REAL KINDs... " >&6; }
+-        { $as_echo "$as_me:${as_lineno-$LINENO}: result: $PAC_FC_ALL_REAL_KINDS" >&5
+-$as_echo "$PAC_FC_ALL_REAL_KINDS" >&6; }
+-        { $as_echo "$as_me:${as_lineno-$LINENO}: checking for Fortran REALs maximum decimal precision" >&5
+-$as_echo_n "checking for Fortran REALs maximum decimal precision... " >&6; }
+-        { $as_echo "$as_me:${as_lineno-$LINENO}: result: $PAC_FC_MAX_REAL_PRECISION" >&5
+-$as_echo "$PAC_FC_MAX_REAL_PRECISION" >&6; }
+-
+-else
+-
+-    { $as_echo "$as_me:${as_lineno-$LINENO}: result: Error" >&5
+-$as_echo "Error" >&6; }
+-    as_fn_error $? "Failed to run Fortran program to determine available KINDs" "$LINENO" 5
+-
+-fi
+-rm -f core *.core core.conftest.* gmon.out bb.out conftest$ac_exeext \
+-  conftest.$ac_objext conftest.beam conftest.$ac_ext
+-fi
+-
+-
+-ac_ext=${ac_fc_srcext-f}
+-ac_compile='$FC -c $FCFLAGS $ac_fcflags_srcext conftest.$ac_ext >&5'
+-ac_link='$FC -o conftest$ac_exeext $FCFLAGS $LDFLAGS $ac_fcflags_srcext conftest.$ac_ext $LIBS >&5'
+-ac_compiler_gnu=$ac_cv_fc_compiler_gnu
+-
+ 
+   ## Find all sizeofs for available KINDs
+ 
+@@ -8465,7 +8399,9 @@
+ fi
+ 
+ done
+-PAC_FC_ALL_INTEGER_KINDS_SIZEOF="{`echo $pack_int_sizeof | sed -e 's/,$//' | sed -e 's/ //g'`}"
++if [ -z "$PAC_FC_ALL_INTEGER_KINDS_SIZEOF" ]; then
++  PAC_FC_ALL_INTEGER_KINDS_SIZEOF="{`echo $pack_int_sizeof | sed -e 's/,$//' | sed -e 's/ //g'`}"
++fi
+ { $as_echo "$as_me:${as_lineno-$LINENO}: result: $PAC_FC_ALL_INTEGER_KINDS_SIZEOF" >&5
+ $as_echo "$PAC_FC_ALL_INTEGER_KINDS_SIZEOF" >&6; }
+ ac_ext=${ac_fc_srcext-f}
+@@ -8519,7 +8455,9 @@
+ fi
+ 
+ done
+-PAC_FC_ALL_REAL_KINDS_SIZEOF="{`echo $pack_real_sizeof | sed -e 's/,$//' | sed -e 's/ //g'`}"
++if [ -z "$PAC_FC_ALL_REAL_KINDS_SIZEOF" ]; then
++  PAC_FC_ALL_REAL_KINDS_SIZEOF="{`echo $pack_real_sizeof | sed -e 's/,$//' | sed -e 's/ //g'`}"
++fi
+ { $as_echo "$as_me:${as_lineno-$LINENO}: result: $PAC_FC_ALL_REAL_KINDS_SIZEOF" >&5
+ $as_echo "$PAC_FC_ALL_REAL_KINDS_SIZEOF" >&6; }
+ ac_ext=${ac_fc_srcext-f}
+@@ -33937,8 +33875,10 @@
+ 
+ if test "$cross_compiling" = yes; then :
+ 
+-    { $as_echo "$as_me:${as_lineno-$LINENO}: result: unknown, assuming yes" >&5
+-$as_echo "unknown, assuming yes" >&6; }
++    { $as_echo "$as_me:${as_lineno-$LINENO}: result: unknown, assuming no" >&5
++$as_echo "unknown, assuming no" >&6; }
++
++$as_echo "#define NO_ALIGNMENT_RESTRICTIONS 1" >>confdefs.h
+ 
+ else
+   cat confdefs.h - <<_ACEOF >conftest.$ac_ext

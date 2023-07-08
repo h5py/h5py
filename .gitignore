@@ -4,16 +4,17 @@ h5py/_conv.c
 h5py/_proxy.c
 h5py/_objects.c
 h5py/_errors.c
-h5py/_reader.c
+h5py/_selector.c
 h5py/config.pxi
 h5py/_hdf5.*
 h5py/*.dll
 h5py/*.so
 *.hdf5
-*.pkl
+h5config.json
 h5py/defs.*
 build/
 *.pyc
+*.pyd
 dist/
 MANIFEST
 .DS_Store
@@ -26,10 +27,14 @@ MANIFEST
 .eggs/
 *.so
 *~
+*.swp
 .pytest_cache
 .coverage
 .coverage_dir
 coverage.xml
+.vscode/
+.mypy_cache/
 
 # Rever
 rever/
+.idea/

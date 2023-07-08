@@ -71,7 +71,7 @@ def read_selections_scalar(dsid, args):
 
     return out_shape, source_space
 
-class ScalarReadSelection(object):
+class ScalarReadSelection:
 
     """
         Implements slicing for scalar datasets.

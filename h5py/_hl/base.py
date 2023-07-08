@@ -11,20 +11,21 @@
     Implements operations common to all high-level objects (File, etc.).
 """
 
-import posixpath
+from collections.abc import (
+    Mapping, MutableMapping, KeysView, ValuesView, ItemsView
+)
 import os
-from collections.abc import (Mapping, MutableMapping, KeysView,
-                             ValuesView, ItemsView)
+import posixpath
 
-from .compat import fspath, filename_encode
-
-from .. import h5d, h5i, h5r, h5p, h5f, h5t, h5s
+import numpy as np
 
 # The high-level interface is serialized; every public API function & method
 # is wrapped in a lock.  We re-use the low-level lock because (1) it's fast,
 # and (2) it eliminates the possibility of deadlocks due to out-of-order
 # lock acquisition.
 from .._objects import phil, with_phil
+from .. import h5d, h5i, h5r, h5p, h5f, h5t, h5s
+from .compat import fspath, filename_encode
 
 
 def is_hdf5(fname):
@@ -37,6 +38,38 @@ def is_hdf5(fname):
         return False
 
 
+def find_item_type(data):
+    """Find the item type of a simple object or collection of objects.
+
+    E.g. [[['a']]] -> str
+
+    The focus is on collections where all items have the same type; we'll return
+    None if that's not the case.
+
+    The aim is to treat numpy arrays of Python objects like normal Python
+    collections, while treating arrays with specific dtypes differently.
+    We're also only interested in array-like collections - lists and tuples,
+    possibly nested - not things like sets or dicts.
+    """
+    if isinstance(data, np.ndarray):
+        if (
+            data.dtype.kind == 'O'
+            and not h5t.check_string_dtype(data.dtype)
+            and not h5t.check_vlen_dtype(data.dtype)
+        ):
+            item_types = {type(e) for e in data.flat}
+        else:
+            return None
+    elif isinstance(data, (list, tuple)):
+        item_types = {find_item_type(e) for e in data}
+    else:
+        return type(data)
+
+    if len(item_types) != 1:
+        return None
+    return item_types.pop()
+
+
 def guess_dtype(data):
     """ Attempt to guess an appropriate dtype for the object, returning None
     if nothing is appropriate (or if it should be left up the the array
@@ -47,12 +80,50 @@ def guess_dtype(data):
             return h5t.regionref_dtype
         if isinstance(data, h5r.Reference):
             return h5t.ref_dtype
-        if type(data) == bytes:
+
+        item_type = find_item_type(data)
+
+        if item_type is bytes:
             return h5t.string_dtype(encoding='ascii')
-        if type(data) == str:
+        if item_type is str:
             return h5t.string_dtype()
 
         return None
+
+
+def is_float16_dtype(dt):
+    if dt is None:
+        return False
+
+    dt = np.dtype(dt)  # normalize strings -> np.dtype objects
+    return dt.kind == 'f' and dt.itemsize == 2
+
+
+def array_for_new_object(data, specified_dtype=None):
+    """Prepare an array from data used to create a new dataset or attribute"""
+
+    # We mostly let HDF5 convert data as necessary when it's written.
+    # But if we are going to a float16 datatype, pre-convert in python
+    # to workaround a bug in the conversion.
+    # https://github.com/h5py/h5py/issues/819
+    if is_float16_dtype(specified_dtype):
+        as_dtype = specified_dtype
+    elif not isinstance(data, np.ndarray) and (specified_dtype is not None):
+        # If we need to convert e.g. a list to an array, don't leave numpy
+        # to guess a dtype we already know.
+        as_dtype = specified_dtype
+    else:
+        as_dtype = guess_dtype(data)
+
+    data = np.asarray(data, order="C", dtype=as_dtype)
+
+    # In most cases, this does nothing. But if data was already an array,
+    # and as_dtype is a tagged h5py dtype (e.g. for an object array of strings),
+    # asarray() doesn't replace its dtype object. This gives it the tagged dtype:
+    if as_dtype is not None:
+        data = data.view(dtype=as_dtype)
+
+    return data
 
 
 def default_lapl():
@@ -81,7 +152,7 @@ def is_empty_dataspace(obj):
     return False
 
 
-class CommonStateObject(object):
+class CommonStateObject:
 
     """
         Mixin class that allows sharing information between objects which
@@ -124,13 +195,15 @@ class CommonStateObject(object):
 
         if isinstance(name, bytes):
             coding = h5t.CSET_ASCII
-        else:
+        elif isinstance(name, str):
             try:
                 name = name.encode('ascii')
                 coding = h5t.CSET_ASCII
             except UnicodeEncodeError:
                 name = name.encode('utf8')
                 coding = h5t.CSET_UTF8
+        else:
+            raise TypeError(f"A name should be string or bytes, not {type(name)}")
 
         if lcpl:
             return name, get_lcpl(coding)
@@ -154,7 +227,7 @@ class CommonStateObject(object):
         return name
 
 
-class _RegionProxy(object):
+class _RegionProxy:
 
     """
         Proxy object which handles region references.
@@ -174,6 +247,7 @@ class _RegionProxy(object):
     """
 
     def __init__(self, obj):
+        self.obj = obj
         self.id = obj.id
 
     def __getitem__(self, args):
@@ -181,7 +255,7 @@ class _RegionProxy(object):
             raise TypeError("Region references can only be made to datasets")
         from . import selections
         with phil:
-            selection = selections.select(self.id.shape, args, dsid=self.id)
+            selection = selections.select(self.id.shape, args, dataset=self.obj)
             return h5r.create(self.id, b'.', h5r.DATASET_REGION, selection.id)
 
     def shape(self, ref):
@@ -276,11 +350,7 @@ class HLObject(CommonStateObject):
     def __eq__(self, other):
         if hasattr(other, 'id'):
             return self.id == other.id
-        return False
-
-    @with_phil
-    def __ne__(self, other):
-        return not self.__eq__(other)
+        return NotImplemented
 
     def __bool__(self):
         with phil:
@@ -317,6 +387,9 @@ class KeysViewHDF5(KeysView):
     def __str__(self):
         return "<KeysViewHDF5 {}>".format(list(self))
 
+    def __reversed__(self):
+        yield from reversed(self._mapping)
+
     __repr__ = __str__
 
 class ValuesViewHDF5(ValuesView):
@@ -340,6 +413,11 @@ class ValuesViewHDF5(ValuesView):
             for key in self._mapping:
                 yield self._mapping.get(key)
 
+    def __reversed__(self):
+        with phil:
+            for key in reversed(self._mapping):
+                yield self._mapping.get(key)
+
 
 class ItemsViewHDF5(ItemsView):
 
@@ -357,6 +435,11 @@ class ItemsViewHDF5(ItemsView):
     def __iter__(self):
         with phil:
             for key in self._mapping:
+                yield (key, self._mapping.get(key))
+
+    def __reversed__(self):
+        with phil:
+            for key in reversed(self._mapping):
                 yield (key, self._mapping.get(key))
 
 
@@ -397,7 +480,7 @@ class MutableMappingHDF5(MappingHDF5, MutableMapping):
     pass
 
 
-class Empty(object):
+class Empty:
 
     """
         Proxy object to represent empty/null dataspaces (a.k.a H5S_NULL).
@@ -409,7 +492,7 @@ class Empty(object):
     size = None
 
     def __init__(self, dtype):
-        self.dtype = dtype
+        self.dtype = np.dtype(dtype)
 
     def __eq__(self, other):
         if isinstance(other, Empty) and self.dtype == other.dtype:
@@ -430,3 +513,25 @@ def product(nums):
     for n in nums:
         prod *= n
     return prod
+
+
+# Simple variant of cached_property:
+# Unlike functools, this has no locking, so we don't have to worry about
+# deadlocks with phil (see issue gh-2064). Unlike cached-property on PyPI, it
+# doesn't try to import asyncio (which can be ~100 extra modules).
+# Many projects seem to have similar variants of this, often without attribution,
+# but to be cautious, this code comes from cached-property (Copyright (c) 2015,
+# Daniel Greenfeld, BSD license), where it is attributed to bottle (Copyright
+# (c) 2009-2022, Marcel Hellkamp, MIT license).
+
+class cached_property(object):
+    def __init__(self, func):
+        self.__doc__ = getattr(func, "__doc__")
+        self.func = func
+
+    def __get__(self, obj, cls):
+        if obj is None:
+            return self
+
+        value = obj.__dict__[self.func.__name__] = self.func(obj)
+        return value

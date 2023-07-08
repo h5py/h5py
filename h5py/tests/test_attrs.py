@@ -36,6 +36,19 @@ class BaseAttrs(TestCase):
         if self.f:
             self.f.close()
 
+class TestRepr(TestCase):
+
+    """ Feature: AttributeManager provide a helpful
+        __repr__ string
+    """
+
+    def test_repr(self):
+        grp = self.f.create_group('grp')
+        grp.attrs.create('att', 1)
+        self.assertIsInstance(repr(grp.attrs), str)
+        grp.id.close()
+        self.assertIsInstance(repr(grp.attrs), str)
+
 
 class TestAccess(BaseAttrs):
 
@@ -48,6 +61,42 @@ class TestAccess(BaseAttrs):
         self.f.attrs['a'] = 4.0
         self.assertEqual(list(self.f.attrs.keys()), ['a'])
         self.assertEqual(self.f.attrs['a'], 4.0)
+
+    def test_create_2(self):
+        """ Attribute creation by create() method """
+        self.f.attrs.create('a', 4.0)
+        self.assertEqual(list(self.f.attrs.keys()), ['a'])
+        self.assertEqual(self.f.attrs['a'], 4.0)
+
+    def test_modify(self):
+        """ Attributes are modified by direct assignment"""
+        self.f.attrs['a'] = 3
+        self.assertEqual(list(self.f.attrs.keys()), ['a'])
+        self.assertEqual(self.f.attrs['a'], 3)
+        self.f.attrs['a'] = 4
+        self.assertEqual(list(self.f.attrs.keys()), ['a'])
+        self.assertEqual(self.f.attrs['a'], 4)
+
+    def test_modify_2(self):
+        """ Attributes are modified by modify() method """
+        self.f.attrs.modify('a',3)
+        self.assertEqual(list(self.f.attrs.keys()), ['a'])
+        self.assertEqual(self.f.attrs['a'], 3)
+
+        self.f.attrs.modify('a', 4)
+        self.assertEqual(list(self.f.attrs.keys()), ['a'])
+        self.assertEqual(self.f.attrs['a'], 4)
+
+        # If the attribute doesn't exist, create new
+        self.f.attrs.modify('b', 5)
+        self.assertEqual(list(self.f.attrs.keys()), ['a', 'b'])
+        self.assertEqual(self.f.attrs['a'], 4)
+        self.assertEqual(self.f.attrs['b'], 5)
+
+        # Shape of new value is incompatible with the previous
+        new_value = np.arange(5)
+        with self.assertRaises(TypeError):
+            self.f.attrs.modify('b', new_value)
 
     def test_overwrite(self):
         """ Attributes are silently overwritten """
@@ -145,6 +194,15 @@ class TestCreate(BaseAttrs):
         self.assertEqual(htype, htype2)
         self.assertTrue(htype.committed())
 
+    def test_empty(self):
+        # https://github.com/h5py/h5py/issues/1540
+        """ Create attribute with h5py.Empty value
+        """
+        self.f.attrs.create('empty', h5py.Empty('f'))
+        self.assertEqual(self.f.attrs['empty'], h5py.Empty('f'))
+
+        self.f.attrs.create('empty', h5py.Empty(None))
+        self.assertEqual(self.f.attrs['empty'], h5py.Empty(None))
 
 class TestMutableMapping(BaseAttrs):
     '''Tests if the registration of AttributeManager as a MutableMapping
@@ -171,6 +229,15 @@ class TestVlen(BaseAttrs):
         self.f.attrs['a'] = a
         self.assertArrayEqual(self.f.attrs['a'][0], a[0])
 
+    def test_vlen_s1(self):
+        dt = h5py.vlen_dtype(np.dtype('S1'))
+        a = np.empty((1,), dtype=dt)
+        a[0] = np.array([b'a', b'b'], dtype='S1')
+
+        self.f.attrs.create('test', a)
+        self.assertArrayEqual(self.f.attrs['test'][0], a[0])
+
+
 class TestTrackOrder(BaseAttrs):
     def fill_attrs(self, track_order):
         attrs = self.f.create_group('test', track_order=track_order).attrs
@@ -190,6 +257,25 @@ class TestTrackOrder(BaseAttrs):
         self.assertEqual(list(attrs),
                          sorted([str(i) for i in range(100)]))
 
+    def fill_attrs2(self, track_order):
+        group = self.f.create_group('test', track_order=track_order)
+        for i in range(12):
+            group.attrs[str(i)] = i
+        return group
+
+    @ut.skipUnless(h5py.version.hdf5_version_tuple >= (1, 10, 6), 'HDF5 1.10.6 required')
+    def test_track_order_overwrite_delete(self):
+        # issue 1385
+        group = self.fill_attrs2(track_order=True)  # creation order
+        self.assertEqual(group.attrs["11"], 11)
+        # overwrite attribute
+        group.attrs['11'] = 42.0
+        self.assertEqual(group.attrs["11"], 42.0)
+        # delete attribute
+        self.assertIn('10', group.attrs)
+        del group.attrs['10']
+        self.assertNotIn('10', group.attrs)
+
 
 class TestDatatype(BaseAttrs):
 
@@ -200,3 +286,16 @@ class TestDatatype(BaseAttrs):
         dt.attrs.create('a', 4.0)
         self.assertEqual(list(dt.attrs.keys()), ['a'])
         self.assertEqual(list(dt.attrs.values()), [4.0])
+
+def test_python_int_uint64(writable_file):
+    f = writable_file
+    data = [np.iinfo(np.int64).max, np.iinfo(np.int64).max + 1]
+
+    # Check creating a new attribute
+    f.attrs.create('a', data, dtype=np.uint64)
+    assert f.attrs['a'].dtype == np.dtype(np.uint64)
+    np.testing.assert_array_equal(f.attrs['a'], np.array(data, dtype=np.uint64))
+
+    # Check modifying an existing attribute
+    f.attrs.modify('a', data)
+    np.testing.assert_array_equal(f.attrs['a'], np.array(data, dtype=np.uint64))

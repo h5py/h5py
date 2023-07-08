@@ -59,10 +59,6 @@ Here's an example showing how to create a VL array of strings::
    :param length: ``None`` for variable-length, or an integer for fixed-length
                   string data, giving the length in bytes.
 
-If ``encoding`` is ``'utf-8'``, the variable length strings should be passed as
-Python ``str`` objects (``unicode`` in Python 2).
-For ``'ascii'``, they should be passed as bytes.
-
 .. function:: check_string_dtype(dt)
 
    Check if ``dt`` is a string dtype.
@@ -105,6 +101,13 @@ arrays::
 
     >>> dset[0:2]
     array([array([1, 2, 3], dtype=int32), array([1, 2, 3, 4, 5], dtype=int32)], dtype=object)
+
+.. note::
+
+   NumPy doesn't support ragged arrays, and the 'arrays of arrays' h5py uses
+   as a workaround are not as convenient or efficient as regular NumPy arrays.
+   If you're deciding how to store data, consider whether there's a sensible
+   way to do it without a variable-length type.
 
 .. function:: vlen_dtype(basetype)
 

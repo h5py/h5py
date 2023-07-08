@@ -35,7 +35,7 @@ class DimensionProxy(base.CommonStateObject):
         # Here is a workaround:
         try:
             dset = Dataset(self._id)
-            return self._d(dset.attrs['DIMENSION_LABELS'][self._dimension])
+            return dset.attrs['DIMENSION_LABELS'][self._dimension]
         except (KeyError, IndexError):
             return ''
     @label.setter
@@ -162,7 +162,7 @@ class DimensionManager(base.CommonStateObject):
     @with_phil
     def __len__(self):
         """ Number of dimensions associated with the dataset. """
-        return len(Dataset(self._id).shape)
+        return self._id.rank
 
     @with_phil
     def __iter__(self):

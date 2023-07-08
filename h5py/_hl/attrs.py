@@ -19,7 +19,7 @@ import uuid
 
 from .. import h5, h5s, h5t, h5a, h5p
 from . import base
-from .base import phil, with_phil, Empty, is_empty_dataspace
+from .base import phil, with_phil, Empty, is_empty_dataspace, product
 from .datatype import Datatype
 
 
@@ -54,12 +54,13 @@ class AttributeManager(base.MutableMappingHDF5, base.CommonStateObject):
         """ Read the value of an attribute.
         """
         attr = h5a.open(self._id, self._e(name))
+        shape = attr.shape
 
-        if is_empty_dataspace(attr):
+        # shape is None for empty dataspaces
+        if shape is None:
             return Empty(attr.dtype)
 
         dtype = attr.dtype
-        shape = attr.shape
 
         # Do this first, as we'll be fiddling with the dtype for top-level
         # array types
@@ -73,10 +74,17 @@ class AttributeManager(base.MutableMappingHDF5, base.CommonStateObject):
             shape = attr.shape + subshape   # (5, 3)
             dtype = subdtype                # 'f'
 
-        arr = numpy.ndarray(shape, dtype=dtype, order='C')
+        arr = numpy.zeros(shape, dtype=dtype, order='C')
         attr.read(arr, mtype=htype)
 
-        if len(arr.shape) == 0:
+        string_info = h5t.check_string_dtype(dtype)
+        if string_info and (string_info.length is None):
+            # Vlen strings: convert bytes to Python str
+            arr = numpy.array([
+                b.decode('utf-8', 'surrogateescape') for b in arr.flat
+            ], dtype=dtype).reshape(arr.shape)
+
+        if arr.ndim == 0:
             return arr[()]
         return arr
 
@@ -114,21 +122,13 @@ class AttributeManager(base.MutableMappingHDF5, base.CommonStateObject):
             Data type of the attribute.  Overrides data.dtype if both
             are given.
         """
+        name = self._e(name)
 
         with phil:
-            if dtype is None:  # Guess dtype before modifying data
-                dtype = base.guess_dtype(data)
-
             # First, make sure we have a NumPy array.  We leave the data type
-            # conversion for HDF5 to perform (other than the below exception).
+            # conversion for HDF5 to perform.
             if not isinstance(data, Empty):
-                is_list_or_tuple = isinstance(data, (list, tuple))
-                data = numpy.asarray(data, order='C')
-                # If we were passed a list or tuple, then we do not need to respect the
-                # datatype of the numpy array. If it is U type, convert to vlen unicode
-                # strings:
-                if is_list_or_tuple and data.dtype.type == numpy.unicode_:
-                    data = numpy.array(data, dtype=h5t.string_dtype())
+                data = base.array_for_new_object(data, specified_dtype=dtype)
 
             if shape is None:
                 shape = data.shape
@@ -167,7 +167,7 @@ class AttributeManager(base.MutableMappingHDF5, base.CommonStateObject):
             # is compatible, and reshape if needed.
             else:
 
-                if shape is not None and numpy.product(shape, dtype=numpy.ulonglong) != numpy.product(data.shape, dtype=numpy.ulonglong):
+                if shape is not None and product(shape) != product(data.shape):
                     raise ValueError("Shape of new attribute conflicts with shape of data")
 
                 if shape != data.shape:
@@ -190,33 +190,24 @@ class AttributeManager(base.MutableMappingHDF5, base.CommonStateObject):
             else:
                 space = h5s.create_simple(shape)
 
-            # This mess exists because you can't overwrite attributes in HDF5.
-            # So we write to a temporary attribute first, and then rename.
+            # For a long time, h5py would create attributes with a random name
+            # and then rename them, imitating how you can atomically replace
+            # a file in a filesystem. But HDF5 does not offer atomic replacement
+            # (you have to delete the existing attribute first), and renaming
+            # exposes some bugs - see https://github.com/h5py/h5py/issues/1385
+            # So we've gone back to the simpler delete & recreate model.
+            if h5a.exists(self._id, name):
+                h5a.delete(self._id, name)
 
-            tempname = uuid.uuid4().hex
-
+            attr = h5a.create(self._id, name, htype, space)
             try:
-                attr = h5a.create(self._id, self._e(tempname), htype, space)
+                if not isinstance(data, Empty):
+                    attr.write(data, mtype=htype2)
             except:
+                attr.close()
+                h5a.delete(self._id, name)
                 raise
-            else:
-                try:
-                    if not isinstance(data, Empty):
-                        attr.write(data, mtype=htype2)
-                except:
-                    attr.close()
-                    h5a.delete(self._id, self._e(tempname))
-                    raise
-                else:
-                    try:
-                        # No atomic rename in HDF5 :(
-                        if h5a.exists(self._id, self._e(name)):
-                            h5a.delete(self._id, self._e(name))
-                        h5a.rename(self._id, self._e(tempname), self._e(name))
-                    except:
-                        attr.close()
-                        h5a.delete(self._id, self._e(tempname))
-                        raise
+            attr.close()
 
     def modify(self, name, value):
         """ Change the value of an attribute while preserving its type.
@@ -231,16 +222,19 @@ class AttributeManager(base.MutableMappingHDF5, base.CommonStateObject):
             if not name in self:
                 self[name] = value
             else:
-                value = numpy.asarray(value, order='C')
-
                 attr = h5a.open(self._id, self._e(name))
 
                 if is_empty_dataspace(attr):
-                    raise IOError("Empty attributes can't be modified")
+                    raise OSError("Empty attributes can't be modified")
+
+                # If the input data is already an array, let HDF5 do the conversion.
+                # If it's a list or similar, don't make numpy guess a dtype for it.
+                dt = None if isinstance(value, numpy.ndarray) else attr.dtype
+                value = numpy.asarray(value, order='C', dtype=dt)
 
                 # Allow the case of () <-> (1,)
                 if (value.shape != attr.shape) and not \
-                   (numpy.product(value.shape, dtype=numpy.ulonglong) == 1 and numpy.product(attr.shape, dtype=numpy.ulonglong) == 1):
+                   (value.size == 1 and product(attr.shape) == 1):
                     raise TypeError("Shape of data is incompatible with existing attribute")
                 attr.write(value)
 

@@ -130,7 +130,7 @@ class TestCase(ut.TestCase):
             assert np.all(dset[...] == arr[...]), \
                 "Arrays are not equal (dtype %s) %s" % (arr.dtype.str, message)
 
-    def assertNumpyBehavior(self, dset, arr, s):
+    def assertNumpyBehavior(self, dset, arr, s, skip_fast_reader=False):
         """ Apply slicing arguments "s" to both dset and arr.
 
         Succeeds if the results of the slicing are identical, or the
@@ -144,11 +144,23 @@ class TestCase(ut.TestCase):
         except Exception as e:
             exc = type(e)
 
+        s_fast = s if isinstance(s, tuple) else (s,)
+
         if exc is None:
             self.assertArrayEqual(dset[s], arr_result)
+
+            if not skip_fast_reader:
+                self.assertArrayEqual(
+                    dset._fast_reader.read(s_fast),
+                    arr_result,
+                )
         else:
             with self.assertRaises(exc):
                 dset[s]
+
+            if not skip_fast_reader:
+                with self.assertRaises(exc):
+                    dset._fast_reader.read(s_fast)
 
 NUMPY_RELEASE_VERSION = tuple([int(i) for i in np.__version__.split(".")[0:2]])
 

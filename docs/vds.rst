@@ -31,6 +31,7 @@ HDF5 dataset.
 The HDF Group has documented the VDS features in detail on the website:
 `Virtual Datasets (VDS) Documentation <https://support.hdfgroup.org/HDF5/docNewFeatures/NewFeaturesVirtualDatasetDocs.html>`_.
 
+.. _creating_vds:
 
 Creating virtual datasets in h5py
 ---------------------------------
@@ -63,6 +64,19 @@ together four 1D datasets from separate files into a 2D dataset::
 
 This is an extract from the ``vds_simple.py`` example in the examples folder.
 
+.. note::
+
+   Slices up to ``h5py.h5s.UNLIMITED`` can be used to create an unlimited selection
+   along a single axis. Resizing the source data along this axis will cause the
+   virtual dataset to grow. E.g.::
+
+       layout[n - 1, :UNLIMITED] = vsource[:UNLIMITED]
+
+   A normal slice with no defined end point (``[:]``) is fixed based on the
+   shape when you define it.
+
+   .. versionadded:: 3.0
+
 Examples
 --------
 
@@ -85,7 +99,7 @@ found in the examples folder:
 Reference
 ---------
 
-.. class:: VirtualLayout(shape, dtype=None, maxshape=None)
+.. class:: VirtualLayout(shape, dtype, maxshape=None)
 
    Object for building a virtual dataset.
 
@@ -108,6 +122,11 @@ Reference
 
    Instantiate this class to represent an entire source dataset, and then
    slice it to indicate which regions should be used in the virtual dataset.
+
+   When `creating a virtual dataset <creating_vds_>`_, paths to sources present
+   in the same file are changed to a ".", refering to the current file (see
+   `H5Pset_virtual <https://portal.hdfgroup.org/display/HDF5/H5P_SET_VIRTUAL>`_).
+   This will keep such sources valid in case the file is renamed.
 
    :param path_or_dataset:
        The path to a file, or a :class:`Dataset` object. If a dataset is given,

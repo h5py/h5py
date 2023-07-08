@@ -2,7 +2,18 @@ Module H5D
 ==========
 
 .. automodule:: h5py.h5d
-    :members:
+
+Functional API
+--------------
+
+.. autofunction:: open
+.. autofunction:: create
+
+Dataset Objects
+---------------
+
+.. autoclass:: DatasetID
+   :members:
 
 Module constants
 ----------------

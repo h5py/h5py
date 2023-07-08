@@ -130,6 +130,12 @@ class TestDimensionManager(BaseDataset):
             [dims[0], dims[1], dims[2]]
             )
 
+    def test_repr(self):
+        ds = self.f.create_dataset('x', (2,3))
+        self.assertIsInstance(repr(ds.dims), str)
+        self.f.close()
+        self.assertIsInstance(repr(ds.dims), str)
+
 
 class TestDimensionsHighLevel(BaseDataset):
 
@@ -194,7 +200,10 @@ class TestDimensionsHighLevel(BaseDataset):
         self.assertEqual([i for i in self.f['data'].dims[2]], ['', 'x2 name'])
 
     def test_repr(self):
-        self.assertEqual(repr(self.f['data'].dims[2])[1:16], '"x" dimension 2')
+        ds = self.f["data"]
+        self.assertEqual(repr(ds.dims[2])[1:16], '"x" dimension 2')
+        self.f.close()
+        self.assertIsInstance(repr(ds.dims), str)
 
     def test_attributes(self):
         self.f["data2"].attrs["DIMENSION_LIST"] = self.f["data"].attrs[
@@ -202,3 +211,12 @@ class TestDimensionsHighLevel(BaseDataset):
         self.assertEqual(len(self.f['data2'].dims[0]), 0)
         self.assertEqual(len(self.f['data2'].dims[1]), 1)
         self.assertEqual(len(self.f['data2'].dims[2]), 2)
+
+    def test_is_scale(self):
+        """Test Dataset.is_scale property"""
+        self.assertTrue(self.f['x1'].is_scale)
+        self.assertTrue(self.f['x2'].is_scale)
+        self.assertTrue(self.f['y1'].is_scale)
+        self.assertFalse(self.f['z1'].is_scale)
+        self.assertFalse(self.f['data'].is_scale)
+        self.assertFalse(self.f['data2'].is_scale)

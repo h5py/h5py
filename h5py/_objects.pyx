@@ -54,7 +54,7 @@ def with_phil(func):
         with _phil:
             return func(*args, **kwds)
 
-    functools.update_wrapper(wrapper, func, ('__name__', '__doc__'))
+    functools.update_wrapper(wrapper, func)
     return wrapper
 
 # --- End locking code --------------------------------------------------------
@@ -64,7 +64,7 @@ def with_phil(func):
 #
 # With HDF5 1.8, when an identifier is closed its value may be immediately
 # re-used for a new object.  This leads to odd behavior when an ObjectID
-# with an old identifier is left hanging around... for example, a GroupID
+# with an old identifier is left hanging around... For example, a GroupID
 # belonging to a closed file could suddenly "mutate" into one from a
 # different file.
 #
@@ -79,7 +79,7 @@ def with_phil(func):
 # nonlocal_close() does.  We maintain an inventory of all live ObjectID
 # instances in the registry dict.  Then, when a nonlocal event occurs,
 # nonlocal_close() walks through the inventory and sets the stale identifiers
-# to 0.  It must be explictly called; currently, this happens in FileID.close()
+# to 0.  It must be explicitly called; currently, this happens in FileID.close()
 # as well as the high-level File.close().
 #
 # The entire low-level API is now explicitly locked, so only one thread at at
@@ -119,11 +119,13 @@ def nonlocal_close():
 
     # create a cached list of ids whilst the gc is disabled to avoid hitting
     # the cyclic gc while iterating through the registry dict
+    gc_was_enabled = gc.isenabled()
     gc.disable()
     try:
         reg_ids = list(registry)
     finally:
-        gc.enable()
+        if gc_was_enabled:
+            gc.enable()
 
     for python_id in reg_ids:
         ref = registry.get(python_id)

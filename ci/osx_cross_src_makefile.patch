@@ -1,0 +1,34 @@
+--- src/Makefile.in.orig	2020-12-29 22:15:29.000000000 -0800
++++ src/Makefile.in	2020-12-29 22:16:23.000000000 -0800
+@@ -108,6 +108,13 @@
+ host_triplet = @host@
+ noinst_PROGRAMS = H5detect$(EXEEXT) H5make_libsettings$(EXEEXT)
+ 
++cross_compiling = @cross_compiling@
++ifeq ($(cross_compiling),yes)
++  src_run = 
++else
++  src_run = ./
++endif
++
+ # Only compile parallel sources if necessary
+ @BUILD_PARALLEL_CONDITIONAL_TRUE@am__append_1 = H5mpi.c H5ACmpio.c H5Cmpio.c H5Dmpio.c H5Fmpi.c H5FDmpi.c H5FDmpio.c H5Smpio.c
+ 
+@@ -1937,7 +1944,7 @@
+ H5Tinit.c: H5detect$(EXEEXT)
+ 	LD_LIBRARY_PATH="$$LD_LIBRARY_PATH`echo $(LDFLAGS) |                  \
+ 		sed -e 's/-L/:/g' -e 's/ //g'`"                               \
+-	$(RUNSERIAL) ./H5detect$(EXEEXT)  $@  ||                               \
++	$(RUNSERIAL) $(src_run)H5detect$(EXEEXT)  $@  ||                               \
+ 	    (test $$HDF5_Make_Ignore && echo "*** Error ignored") ||          \
+ 	    ($(RM) $@ ; exit 1)
+ 
+@@ -1949,7 +1956,7 @@
+ H5lib_settings.c: H5make_libsettings$(EXEEXT) libhdf5.settings
+ 	LD_LIBRARY_PATH="$$LD_LIBRARY_PATH`echo $(LDFLAGS) |                  \
+ 		sed -e 's/-L/:/g' -e 's/ //g'`"                               \
+-	$(RUNSERIAL) ./H5make_libsettings$(EXEEXT)  $@  ||                               \
++	$(RUNSERIAL) $(src_run)H5make_libsettings$(EXEEXT)  $@  ||                               \
+ 	    (test $$HDF5_Make_Ignore && echo "*** Error ignored") ||          \
+ 	    ($(RM) $@ ; exit 1)
+ 

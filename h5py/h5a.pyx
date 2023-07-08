@@ -370,7 +370,7 @@ cdef class AttrID(ObjectID):
     def write(self, ndarray arr not None, TypeID mtype=None):
         """(NDARRAY arr)
 
-        Write the contents of a Numpy array too the attribute.  Note that
+        Write the contents of a Numpy array to the attribute.  Note that
         the Numpy array must have the same shape as the HDF5 attribute, and
         a conversion-compatible datatype.
 

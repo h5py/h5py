@@ -7,9 +7,6 @@
 # License:  Standard 3-clause BSD; see "license.txt" for full license terms
 #           and contributor agreement.
 
-# We use __getitem__ side effects, which pylint doesn't like.
-# pylint: disable=pointless-statement
-
 """
     High-level access to HDF5 dataspace selections
 """
@@ -17,10 +14,9 @@
 import numpy as np
 
 from .base import product
-from .. import h5s, h5r
+from .. import h5s, h5r, _selector
 
-
-def select(shape, args, dsid):
+def select(shape, args, dataset=None):
     """ High-level routine to generate a selection from arbitrary arguments
     to __getitem__.  The arguments should be the following:
 
@@ -31,8 +27,8 @@ def select(shape, args, dsid):
         Either a single argument or a tuple of arguments.  See below for
         supported classes of argument.
 
-    dsid
-        A h5py.h5d.DatasetID instance representing the source dataset.
+    dataset
+        A h5py.Dataset instance representing the source dataset.
 
     Argument classes:
 
@@ -45,7 +41,7 @@ def select(shape, args, dsid):
     RegionReference
         Returns a Selection instance.
 
-    Indices, slices, ellipses only
+    Indices, slices, ellipses, MultiBlockSlices only
         Returns a SimpleSelection instance
 
     Indices, slices, ellipses, lists or boolean index arrays
@@ -64,34 +60,29 @@ def select(shape, args, dsid):
             return arg
 
         elif isinstance(arg, np.ndarray) and arg.dtype.kind == 'b':
-            sel = PointSelection(shape)
-            sel[arg]
-            return sel
+            if arg.shape != shape:
+                raise TypeError("Boolean indexing array has incompatible shape")
+            return PointSelection.from_mask(arg)
 
         elif isinstance(arg, h5r.RegionReference):
-            sid = h5r.get_region(arg, dsid)
+            if dataset is None:
+                raise TypeError("Cannot apply a region reference without a dataset")
+            sid = h5r.get_region(arg, dataset.id)
             if shape != sid.shape:
                 raise TypeError("Reference shape does not match dataset shape")
 
             return Selection(shape, spaceid=sid)
 
-    for a in args:
-        if not isinstance(a, slice) and a is not Ellipsis:
-            try:
-                int(a)
-                if isinstance(a, np.ndarray) and a.shape == (1,):
-                    raise Exception()
-            except Exception:
-                sel = FancySelection(shape)
-                sel[args]
-                return sel
+    if dataset is not None:
+        selector = dataset._selector
+    else:
+        space = h5s.create_simple(shape)
+        selector = _selector.Selector(space)
 
-    sel = SimpleSelection(shape)
-    sel[args]
-    return sel
+    return selector.make_selection(args)
 
 
-class Selection(object):
+class Selection:
 
     """
         Base class for HDF5 dataspace selections.  Subclasses support the
@@ -173,9 +164,13 @@ class PointSelection(Selection):
 
     """
         Represents a point-wise selection.  You can supply sequences of
-        points to the three methods append(), prepend() and set(), or a
-        single boolean array to __getitem__.
+        points to the three methods append(), prepend() and set(), or
+        instantiate it with a single boolean array using from_mask().
     """
+    def __init__(self, shape, spaceid=None, points=None):
+        super().__init__(shape, spaceid)
+        if points is not None:
+            self._perform_selection(points, h5s.SELECT_SET)
 
     def _perform_selection(self, points, op):
         """ Internal method which actually performs the selection """
@@ -191,16 +186,14 @@ class PointSelection(Selection):
         else:
             self._id.select_elements(points, op)
 
-    def __getitem__(self, arg):
-        """ Perform point-wise selection from a NumPy boolean array """
-        if not (isinstance(arg, np.ndarray) and arg.dtype.kind == 'b'):
-            raise TypeError("PointSelection __getitem__ only works with bool arrays")
-        if not arg.shape == self.shape:
-            raise TypeError("Boolean indexing array has incompatible shape")
+    @classmethod
+    def from_mask(cls, mask, spaceid=None):
+        """Create a point-wise selection from a NumPy boolean array """
+        if not (isinstance(mask, np.ndarray) and mask.dtype.kind == 'b'):
+            raise TypeError("PointSelection.from_mask only works with bool arrays")
 
-        points = np.transpose(arg.nonzero())
-        self.set(points)
-        return self
+        points = np.transpose(mask.nonzero())
+        return cls(mask.shape, spaceid, points=points)
 
     def append(self, points):
         """ Add the sequence of points to the end of the current selection """
@@ -228,35 +221,17 @@ class SimpleSelection(Selection):
 
     @property
     def array_shape(self):
-        return self._array_shape
+        scalar = self._sel[3]
+        return tuple(x for x, s in zip(self.mshape, scalar) if not s)
 
-    def __init__(self, shape, *args, **kwds):
-        super(SimpleSelection, self).__init__(shape, *args, **kwds)
-        rank = len(self.shape)
-        self._sel = ((0,)*rank, self.shape, (1,)*rank, (False,)*rank)
-        self._array_shape = self.shape
-
-    def __getitem__(self, args):
-
-        if not isinstance(args, tuple):
-            args = (args,)
-
-        if self.shape == ():
-            if len(args) > 0 and args[0] not in (Ellipsis, ()):
-                raise TypeError("Invalid index for scalar dataset (only ..., () allowed)")
-            self._id.select_all()
-            return self
-
-        start, count, step, scalar = _handle_simple(self.shape,args)
-
-        self._id.select_hyperslab(start, count, step)
-
-        self._sel = (start, count, step, scalar)
-
-        # array shape drops dimensions where a scalar index was selected
-        self._array_shape = tuple(x for x, y in zip(count, scalar) if not y)
-
-        return self
+    def __init__(self, shape, spaceid=None, hyperslab=None):
+        super().__init__(shape, spaceid)
+        if hyperslab is not None:
+            self._sel = hyperslab
+        else:
+            # No hyperslab specified - select all
+            rank = len(self.shape)
+            self._sel = ((0,)*rank, self.shape, (1,)*rank, (False,)*rank)
 
     def expand_shape(self, source_shape):
         """Match the dimensions of an array to be broadcast to the selection
@@ -335,7 +310,7 @@ class FancySelection(Selection):
         Implements advanced NumPy-style selection operations in addition to
         the standard slice-and-int behavior.
 
-        Indexing arguments may be ints, slices, lists of indicies, or
+        Indexing arguments may be ints, slices, lists of indices, or
         per-axis (1D) boolean arrays.
 
         Broadcasting is not supported for these selections.
@@ -349,83 +324,14 @@ class FancySelection(Selection):
     def array_shape(self):
         return self._array_shape
 
-    def __init__(self, shape, *args, **kwds):
-        super(FancySelection, self).__init__(shape, *args, **kwds)
-        self._mshape = self._array_shape = self.shape
-
-    def __getitem__(self, args):
-
-        if not isinstance(args, tuple):
-            args = (args,)
-
-        args = _expand_ellipsis(args, len(self.shape))
-
-        # First build up a dictionary of (position:sequence) pairs
-
-        sequenceargs = {}
-        for idx, arg in enumerate(args):
-            if not isinstance(arg, slice):
-                if hasattr(arg, 'dtype') and arg.dtype == np.dtype('bool'):
-                    if len(arg.shape) != 1:
-                        raise TypeError("Boolean indexing arrays must be 1-D")
-                    arg = arg.nonzero()[0]
-                try:
-                    sequenceargs[idx] = list(arg)
-                except TypeError:
-                    pass
-                else:
-                    list_arg = list(arg)
-                    adjacent = zip(list_arg[:-1], list_arg[1:])
-                    if any(fst >= snd for fst, snd in adjacent):
-                        raise TypeError("Indexing elements must be in increasing order")
-
-        if len(sequenceargs) > 1:
-            raise TypeError("Only one indexing vector or array is currently allowed for advanced selection")
-        if len(sequenceargs) == 0:
-            raise TypeError("Advanced selection inappropriate")
-
-        vectorlength = len(list(sequenceargs.values())[0])
-        if not all(len(x) == vectorlength for x in sequenceargs.values()):
-            raise TypeError("All sequence arguments must have the same length %s" % sequenceargs)
-
-        # Now generate a vector of simple selection lists,
-        # consisting only of slices and ints
-        # e.g. [0:5, [1, 3]] is expanded to [[0:5, 1], [0:5, 3]]
-
-        if vectorlength > 0:
-            argvector = []
-            for idx in range(vectorlength):
-                entry = list(args)
-                for position, seq in sequenceargs.items():
-                    entry[position] = seq[idx]
-                argvector.append(entry)
-        else:
-            # Empty sequence: translate to empty slice to get the correct shape
-            # [0:5, []] -> [0:5, 0:0]
-            entry = list(args)
-            for position in sequenceargs:
-                entry[position] = slice(0, 0)
-            argvector = [entry]
-
-        # "OR" all these selection lists together to make the final selection
-
-        self._id.select_none()
-        for idx, vector in enumerate(argvector):
-            start, count, step, scalar = _handle_simple(self.shape, vector)
-            self._id.select_hyperslab(start, count, step, op=h5s.SELECT_OR)
-
-        # Final shape excludes scalars, except where
-        # they correspond to sequence entries
-
-        mshape = list(count)
-        for idx in range(len(mshape)):
-            if idx in sequenceargs:
-                mshape[idx] = len(sequenceargs[idx])
-            elif scalar[idx]:
-                mshape[idx] = -1
-
-        self._mshape = tuple(abs(x) for x in mshape)  # Convert -1 back to 1
-        self._array_shape = tuple(x for x in mshape if x >= 0)
+    def __init__(self, shape, spaceid=None, mshape=None, array_shape=None):
+        super().__init__(shape, spaceid)
+        if mshape is None:
+            mshape = self.shape
+        if array_shape is None:
+            array_shape = mshape
+        self._mshape = mshape
+        self._array_shape = array_shape
 
     def expand_shape(self, source_shape):
         if not source_shape == self.array_shape:
@@ -437,94 +343,6 @@ class FancySelection(Selection):
             raise TypeError("Broadcasting is not supported for complex selections")
         yield self._id
 
-def _expand_ellipsis(args, rank):
-    """ Expand ellipsis objects and fill in missing axes.
-    """
-    n_el = sum(1 for arg in args if arg is Ellipsis)
-    if n_el > 1:
-        raise ValueError("Only one ellipsis may be used.")
-    elif n_el == 0 and len(args) != rank:
-        args = args + (Ellipsis,)
-
-    final_args = []
-    n_args = len(args)
-    for arg in args:
-
-        if arg is Ellipsis:
-            final_args.extend( (slice(None,None,None),)*(rank-n_args+1) )
-        else:
-            final_args.append(arg)
-
-    if len(final_args) > rank:
-        raise TypeError("Argument sequence too long")
-
-    return final_args
-
-def _handle_simple(shape, args):
-    """ Process a "simple" selection tuple, containing only slices and
-        integer objects.  Return is a 4-tuple with tuples for start,
-        count, step, and a flag which tells if the axis is a "scalar"
-        selection (indexed by an integer).
-
-        If "args" is shorter than "shape", the remaining axes are fully
-        selected.
-    """
-    args = _expand_ellipsis(args, len(shape))
-
-    start = []
-    count = []
-    step  = []
-    scalar = []
-
-    for arg, length in zip(args, shape):
-        if isinstance(arg, slice):
-            x,y,z = _translate_slice(arg, length)
-            s = False
-        else:
-            try:
-                x,y,z = _translate_int(int(arg), length)
-                s = True
-            except TypeError:
-                raise TypeError('Illegal index "%s" (must be a slice or number)' % arg)
-        start.append(x)
-        count.append(y)
-        step.append(z)
-        scalar.append(s)
-
-    return tuple(start), tuple(count), tuple(step), tuple(scalar)
-
-def _translate_int(exp, length):
-    """ Given an integer index, return a 3-tuple
-        (start, count, step)
-        for hyperslab selection
-    """
-    if exp < 0:
-        exp = length+exp
-
-    if not 0<=exp<length:
-        raise ValueError("Index (%s) out of range (0-%s)" % (exp, length-1))
-
-    return exp, 1, 1
-
-def _translate_slice(exp, length):
-    """ Given a slice object, return a 3-tuple
-        (start, count, step)
-        for use with the hyperslab selection routines
-    """
-    start, stop, step = exp.indices(length)
-        # Now if step > 0, then start and stop are in [0, length];
-        # if step < 0, they are in [-1, length - 1] (Python 2.6b2 and later;
-        # Python issue 3004).
-
-    if step < 1:
-        raise ValueError("Step must be >= 1 (got %d)" % step)
-    if stop < start:
-        # list/tuple and numpy consider stop < start to be an empty selection
-        return 0, 0, 1
-
-    count = 1 + (stop - start - 1) // step
-
-    return start, count, step
 
 def guess_shape(sid):
     """ Given a dataspace, try to deduce the shape of the selection.
@@ -609,7 +427,7 @@ def guess_shape(sid):
 
     shape = tuple(get_n_axis(sid, x) for x in range(rank))
 
-    if np.product(shape) != N:
+    if product(shape) != N:
         # This means multiple hyperslab selections are in effect,
         # so we fall back to a 1D shape
         return (N,)

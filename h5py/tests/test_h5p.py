@@ -69,6 +69,35 @@ class TestDA(TestCase):
         self.assertEqual((nslots, nbytes, w0),
                          dalist.get_chunk_cache())
 
+    @ut.skipIf(version.hdf5_version_tuple < (1, 8, 17),
+               'Requires HDF5 1.8.17 or later')
+    def test_efile_prefix(self):
+        '''test get/set efile prefix '''
+        dalist = h5p.create(h5p.DATASET_ACCESS)
+        self.assertEqual(dalist.get_efile_prefix().decode(), '')
+
+        efile_prefix = "path/to/external/dataset"
+        dalist.set_efile_prefix(efile_prefix.encode('utf-8'))
+        self.assertEqual(dalist.get_efile_prefix().decode(),
+                         efile_prefix)
+
+        efile_prefix = "${ORIGIN}"
+        dalist.set_efile_prefix(efile_prefix.encode('utf-8'))
+        self.assertEqual(dalist.get_efile_prefix().decode(),
+                         efile_prefix)
+
+    @ut.skipIf(version.hdf5_version_tuple < (1, 10, 2),
+               'Requires HDF5 1.10.2 or later')
+    def test_virtual_prefix(self):
+        '''test get/set virtual prefix '''
+        dalist = h5p.create(h5p.DATASET_ACCESS)
+        self.assertEqual(dalist.get_virtual_prefix().decode(), '')
+
+        virtual_prefix = "path/to/virtual/dataset"
+        dalist.set_virtual_prefix(virtual_prefix.encode('utf-8'))
+        self.assertEqual(dalist.get_virtual_prefix().decode(),
+                         virtual_prefix)
+
 
 class TestFA(TestCase):
     '''
@@ -90,6 +119,20 @@ class TestFA(TestCase):
         falist.set_alignment(threshold, alignment)
         self.assertEqual((threshold, alignment),
                          falist.get_alignment())
+
+    @ut.skipUnless(
+        version.hdf5_version_tuple >= (1, 12, 1) or
+        (version.hdf5_version_tuple[:2] == (1, 10) and version.hdf5_version_tuple[2] >= 7),
+        'Requires HDF5 1.12.1 or later or 1.10.x >= 1.10.7')
+    def test_set_file_locking(self):
+        '''test get/set file locking'''
+        falist = h5p.create(h5p.FILE_ACCESS)
+        use_file_locking = False
+        ignore_when_disabled = False
+
+        falist.set_file_locking(use_file_locking, ignore_when_disabled)
+        self.assertEqual((use_file_locking, ignore_when_disabled),
+                         falist.get_file_locking())
 
 
 class TestPL(TestCase):
@@ -137,3 +180,22 @@ class TestPL(TestCase):
         fcpl = h5p.create(h5p.FILE_CREATE)
         fcpl.set_link_creation_order(flags)
         self.assertEqual(flags, fcpl.get_link_creation_order())
+
+    def test_attr_phase_change(self):
+        """
+        test the attribute phase change
+        """
+
+        cid = h5p.create(h5p.OBJECT_CREATE)
+        # test default value
+        ret = cid.get_attr_phase_change()
+        self.assertEqual((8,6), ret)
+
+        # max_compact must < 65536 (64kb)
+        with self.assertRaises(ValueError):
+            cid.set_attr_phase_change(65536, 6)
+
+        # Using dense attributes storage to avoid 64kb size limitation
+        # for a single attribute in compact attribute storage.
+        cid.set_attr_phase_change(0, 0)
+        self.assertEqual((0,0), cid.get_attr_phase_change())

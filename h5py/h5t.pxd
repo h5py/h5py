@@ -10,7 +10,7 @@
 
 from .defs cimport *
 
-from ._objects cimport class ObjectID
+from ._objects cimport ObjectID
 
 cdef class TypeID(ObjectID):
 
@@ -68,4 +68,5 @@ cdef class TypeCompoundID(TypeCompositeID):
 
 cpdef TypeID typewrap(hid_t id_)
 cdef hid_t H5PY_OBJ
+cdef char* H5PY_PYTHON_OPAQUE_TAG
 cpdef TypeID py_create(object dtype, bint logical=*, bint aligned=*)

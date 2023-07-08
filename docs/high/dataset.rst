@@ -17,6 +17,7 @@ NumPy operations like slicing, along with a variety of descriptive attributes:
   - **size** attribute
   - **ndim** attribute
   - **dtype** attribute
+  - **nbytes** attribute
 
 h5py supports most NumPy dtypes, and uses the same character codes (e.g.
 ``'f'``, ``'i8'``) and dtype machinery as
@@ -82,12 +83,14 @@ Here are a few examples (output omitted).
 
 There's more documentation on what parts of numpy's :ref:`fancy indexing <dataset_fancy>` are available in h5py.
 
-For compound data, you can specify multiple field names alongside the
-numeric slices:
+For compound data, it is advised to separate field names from the
+numeric slices::
 
-    >>> dset["FieldA"]
-    >>> dset[0,:,4:5, "FieldA", "FieldB"]
-    >>> dset[0, ..., "FieldC"]
+    >>> dset.fields("FieldA")[:10]   # Read a single field
+    >>> dset[:10]["FieldA"]          # Read all fields, select in NumPy
+
+It is also possible to mix indexing and field names (``dset[:10, "FieldA"]``),
+but this might be removed in a future version of h5py.
 
 To retrieve the contents of a `scalar` dataset, you can use the same
 syntax as in NumPy:  ``result = dset[()]``.  In other words, index into
@@ -182,10 +185,10 @@ shape for you::
 Auto-chunking is also enabled when using compression or ``maxshape``, etc.,
 if a chunk shape is not manually specified.
 
-The chunk_iter method returns an iterator that can be used to perform chunk by chunk
+The iter_chunks method returns an iterator that can be used to perform chunk by chunk
 reads or writes::
 
-    >>> for s in dset.chunk_iter():
+    >>> for s in dset.iter_chunks():
     >>>     arr = dset[s]  # get numpy array for chunk
 
 
@@ -258,6 +261,18 @@ dynamically loaded by the underlying HDF5 library. This is done by passing a
 filter number to :meth:`Group.create_dataset` as the ``compression`` parameter.
 The ``compression_opts`` parameter will then be passed to this filter.
 
+.. seealso::
+
+   `hdf5plugin <https://pypi.org/project/hdf5plugin/>`_
+     A Python package of several popular filters, including Blosc, LZ4 and ZFP,
+     for convenient use with h5py
+
+   `HDF5 Filter Plugins <https://portal.hdfgroup.org/display/support/HDF5+Filter+Plugins>`_
+     A collection of filters as a single download from The HDF Group
+
+   `Registered filter plugins <https://portal.hdfgroup.org/display/support/Filters>`_
+     The index of publicly announced filter plugins
+
 .. note:: The underlying implementation of the compression filter will have the
     ``H5Z_FLAG_OPTIONAL`` flag set. This indicates that if the compression
     filter doesn't compress a block while writing, no error will be thrown. The
@@ -285,7 +300,7 @@ the decimal point to retain.
 .. warning::
     Currently the scale-offset filter does not preserve special float values
     (i.e. NaN, inf), see
-    https://lists.hdfgroup.org/pipermail/hdf-forum_lists.hdfgroup.org/2015-January/008296.html
+    https://forum.hdfgroup.org/t/scale-offset-filter-and-special-float-values-nan-infinity/3379
     for more information and follow-up.
 
 
@@ -312,6 +327,31 @@ corrupted chunks will fail with an error.  No significant speed penalty.
 Obviously shouldn't be used with lossy compression filters.
 
 Enable by setting :meth:`Group.create_dataset` keyword ``fletcher32`` to True.
+
+.. _dataset_multi_block:
+
+Multi-Block Selection
+---------------------
+
+The full H5Sselect_hyperslab API is exposed via the MultiBlockSlice object.
+This takes four elements to define the selection (start, count, stride and
+block) in contrast to the built-in slice object, which takes three elements.
+A MultiBlockSlice can be used in place of a slice to select a number of (count)
+blocks of multiple elements separated by a stride, rather than a set of single
+elements separated by a step.
+
+For an explanation of how this slicing works, see the `HDF5 documentation <https://support.hdfgroup.org/HDF5/Tutor/selectsimple.html>`_.
+
+For example::
+
+    >>> dset[...]
+    array([ 0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10])
+    >>> dset[MultiBlockSlice(start=1, count=3, stride=4, block=2)]
+    array([ 1,  2,  5,  6,  9, 10])
+
+They can be used in multi-dimensional slices alongside any slicing object,
+including other MultiBlockSlices. For a more complete example of this,
+see the multiblockslice_interleave.py example script.
 
 .. _dataset_fancy:
 
@@ -387,14 +427,14 @@ or by ``data`` to an instance of ``h5py.Empty``::
 An empty dataset has shape defined as ``None``, which is the best way of
 determining whether a dataset is empty or not. An empty dataset can be "read" in
 a similar way to scalar datasets, i.e. if ``empty_dataset`` is an empty
-dataset,::
+dataset::
 
     >>> empty_dataset[()]
     h5py.Empty(dtype="f")
 
 The dtype of the dataset can be accessed via ``<dset>.dtype`` as per normal.
 As empty datasets cannot be sliced, some methods of datasets such as
-``read_direct`` will raise an exception if used on a empty dataset.
+``read_direct`` will raise a ``TypeError`` exception if used on a empty dataset.
 
 Reference
 ---------
@@ -426,8 +466,8 @@ Reference
         >>> if dset:
         ...     print("datset accessible")
         ... else:
-        ...     print("dataset is inaccessible")
-        dataset unaccessible
+        ...     print("dataset inaccessible")
+        dataset inaccessible
 
     .. method:: read_direct(array, source_sel=None, dest_sel=None)
 
@@ -463,12 +503,21 @@ Reference
             >>> out.dtype
             dtype('int16')
 
-        .. versionchanged:: 3.0
-           Allowed reading through the wrapper object. In earlier versions,
-           :meth:`astype` had to be used as a context manager:
+        .. versionchanged:: 3.9
+           :meth:`astype` can no longer be used as a context manager.
 
-               >>> with dset.astype('int16'):
-               ...     out = dset[:]
+    .. method:: asstr(encoding=None, errors='strict')
+
+       Only for string datasets. Returns a wrapper to read data as Python
+       string objects::
+
+           >>> s = dataset.asstr()[0]
+
+       encoding and errors work like ``bytes.decode()``, but the default
+       encoding is defined by the datatype - ASCII or UTF-8.
+       This is not guaranteed to be correct.
+
+       .. versionadded:: 3.0
 
     .. method:: fields(names)
 
@@ -541,13 +590,23 @@ Reference
 
         Integer giving the total number of elements in the dataset.
 
+    .. attribute:: nbytes
+
+        Integer giving the total number of bytes required to load the full dataset into RAM (i.e. `dset[()]`).
+        This may not be the amount of disk space occupied by the dataset,
+        as datasets may be compressed when written or only partly filled with data.
+        This value also does not include the array overhead, as it only describes the size of the data itself.
+        Thus the real amount of RAM occupied by this dataset may be slightly greater.
+
+        .. versionadded:: 3.0
+
     .. attribute:: ndim
 
         Integer giving the total number of dimensions in the dataset.
 
     .. attribute:: maxshape
 
-        NumPy-style shape tuple indicating the maxiumum dimensions up to which
+        NumPy-style shape tuple indicating the maximum dimensions up to which
         the dataset may be resized.  Axes with ``None`` are unlimited.
 
     .. attribute:: chunks
@@ -599,13 +658,18 @@ Reference
 
         Access to :ref:`dimension_scales`.
 
+    .. attribute:: is_scale
+
+        Return ``True`` if the dataset is also a :ref:`dimension scale <dimension_scales>`,
+        ``False`` otherwise.
+
     .. attribute:: attrs
 
         :ref:`attributes` for this dataset.
 
     .. attribute:: id
 
-        The dataset's low-level identifer; an instance of
+        The dataset's low-level identifier; an instance of
         :class:`DatasetID <low:h5py.h5d.DatasetID>`.
 
     .. attribute:: ref

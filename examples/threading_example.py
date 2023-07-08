@@ -106,7 +106,7 @@ class ComputeThread(threading.Thread):
 
         self.eventcall()
 
-class ComputeWidget(object):
+class ComputeWidget:
 
     """
         Responsible for input widgets, and starting new computation threads.
@@ -209,7 +209,7 @@ class ComputeWidget(object):
         self.suggest = (self.suggest+1)%len(suggestions)
 
 
-class ViewWidget(object):
+class ViewWidget:
 
     """
         Draws images using the datasets recorded in the HDF5 file.  Also

@@ -13,9 +13,11 @@
 
 import h5py
 from h5py._hl.files import _drivers
+from h5py import File
 
 from .common import ut, TestCase
 
+import pytest
 import io
 import tempfile
 import os
@@ -208,19 +210,39 @@ class TestFileObj(TestCase):
     def test_exception_write(self):
 
         class BrokenBytesIO(io.BytesIO):
+            allow_write = False
             def write(self, b):
-                raise Exception('I am broken')
+                if self.allow_write:
+                    return super().write(b)
+                else:
+                    raise Exception('I am broken')
 
-        f = h5py.File(BrokenBytesIO(), 'w')
-        self.assertRaises(Exception, f.create_dataset, 'test',
-                          data=list(range(12)))
-        self.assertRaises(Exception, f.close)
+        bio = BrokenBytesIO()
+        f = h5py.File(bio, 'w')
+        try:
+            self.assertRaises(Exception, f.create_dataset, 'test',
+                              data=list(range(12)))
+        finally:
+            # Un-break writing so we can close: errors while closing get messy.
+            bio.allow_write = True
+            f.close()
 
+    @ut.skip("Incompletely closed files can cause segfaults")
     def test_exception_close(self):
         fileobj = io.BytesIO()
         f = h5py.File(fileobj, 'w')
         fileobj.close()
         self.assertRaises(Exception, f.close)
+
+    def test_exception_writeonly(self):
+        # HDF5 expects read & write access to a file it's writing;
+        # check that we get the correct exception on a write-only file object.
+        fileobj = open(os.path.join(self.tempdir, 'a.h5'), 'wb')
+        with self.assertRaises(io.UnsupportedOperation):
+            f = h5py.File(fileobj, 'w')
+            group = f.create_group("group")
+            group.create_dataset("data", data='foo', dtype=h5py.string_dtype())
+
 
     def test_method_vanish(self):
         fileobj = io.BytesIO()
@@ -253,3 +275,41 @@ class TestTrackOrder(TestCase):
         self.populate(f)
         self.assertEqual(list(f),
                          sorted([str(i) for i in range(100)]))
+
+
+class TestFileMetaBlockSize(TestCase):
+
+    """
+        Feature: The meta block size can be manipulated, changing how metadata
+        is aggregated and the offset of the first dataset.
+    """
+
+    def test_file_create_with_meta_block_size_4096(self):
+        # Test a large meta block size of 4 kibibytes
+        meta_block_size = 4096
+        with File(
+            self.mktemp(), 'w',
+            meta_block_size=meta_block_size,
+            libver="latest"
+        ) as f:
+            f["test"] = 5
+            self.assertEqual(f.meta_block_size, meta_block_size)
+            # Equality is expected for HDF5 1.10
+            self.assertGreaterEqual(f["test"].id.get_offset(), meta_block_size)
+
+    def test_file_create_with_meta_block_size_512(self):
+        # Test a small meta block size of 512 bytes
+        # The smallest verifiable meta_block_size is 463
+        meta_block_size = 512
+        libver = "latest"
+        with File(
+            self.mktemp(), 'w',
+            meta_block_size=meta_block_size,
+            libver=libver
+        ) as f:
+            f["test"] = 3
+            self.assertEqual(f.meta_block_size, meta_block_size)
+            # Equality is expected for HDF5 1.10
+            self.assertGreaterEqual(f["test"].id.get_offset(), meta_block_size)
+            # Default meta_block_size is 2048. This should fail if meta_block_size is not set.
+            self.assertLess(f["test"].id.get_offset(), meta_block_size*2)

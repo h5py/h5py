@@ -3,17 +3,51 @@
 Strings in HDF5
 ===============
 
-The Most Important Thing
-------------------------
+.. note::
 
-If you remember nothing else, remember this:
+   The rules around reading & writing string data were redesigned for h5py
+   3.0. Refer to `the h5py 2.10 docs <https://docs.h5py.org/en/2.10.0/strings.html>`__
+   for how to store strings in older versions.
 
-    **All strings in HDF5 hold encoded text.**
+Reading strings
+---------------
 
-You *can't* store arbitrary binary data in HDF5 strings.  Not only will this
-break, it will break in odd, hard-to-discover ways that will leave
-you confused and cursing.
+String data in HDF5 datasets is read as bytes by default: ``bytes`` objects
+for variable-length strings, or numpy bytes arrays (``'S'`` dtypes) for
+fixed-length strings. Use :meth:`.Dataset.asstr` to retrieve ``str`` objects.
 
+Variable-length strings in attributes are read as ``str`` objects. These are
+decoded as UTF-8 with surrogate escaping for unrecognised bytes. Fixed-length
+strings are read as numpy bytes arrays, the same as for datasets.
+
+Storing strings
+---------------
+
+When creating a new dataset or attribute, Python ``str`` or ``bytes`` objects
+will be treated as variable-length strings, marked as UTF-8 and ASCII respectively.
+Numpy bytes arrays (``'S'`` dtypes) make fixed-length strings.
+You can use :func:`.string_dtype` to explicitly specify any HDF5 string datatype.
+
+When writing data to an existing dataset or attribute, data passed as bytes is
+written without checking the encoding. Data passed as Python ``str`` objects
+is encoded as either ASCII or UTF-8, based on the HDF5 datatype.
+In either case, null bytes (``'\x00'``) in the data will cause an error.
+
+.. warning::
+
+   Fixed-length string datasets will silently truncate longer strings which
+   are written to them. Numpy byte string arrays do the same thing.
+
+   Fixed-length strings in HDF5 hold a set number of bytes.
+   It may take multiple bytes to store one character.
+
+What about NumPy's ``U`` type?
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+NumPy also has a Unicode type, a UTF-32 fixed-width format (4-byte characters).
+HDF5 has no support for wide characters.  Rather than trying to hack around
+this and "pretend" to support it, h5py will raise an error if you try to store
+data of this type.
 
 .. _str_binary:
 
@@ -31,136 +65,7 @@ recover it::
     >>> binary_blob = b"Hello\x00Hello\x00"
     >>> dset.attrs["attribute_name"] = np.void(binary_blob)
     >>> out = dset.attrs["attribute_name"]
-    >>> binary_blob = out.tostring()
-
-
-
-How to store text strings
--------------------------
-
-At the high-level interface, h5py exposes three kinds of strings.  Each maps
-to a specific type within Python (but see :ref:`str_py3` below):
-
-* Fixed-length ASCII (NumPy ``S`` type)
-* Variable-length ASCII (``bytes``)
-* Variable-length UTF-8 (``str``)
-
-Note that h5py currently lacks support for fixed-length UTF-8.
-
-.. _str_py3:
-
-Compatibility
-^^^^^^^^^^^^^
-
-If you want to write maximally-compatible files and don't want to read the
-whole chapter:
-
-* Use ``numpy.string_`` for scalar attributes
-* Use the NumPy ``S`` dtype for datasets and array attributes
-
-
-Fixed-length ASCII
-^^^^^^^^^^^^^^^^^^
-
-These are created when you use ``numpy.string_``:
-
-    >>> dset.attrs["name"] = numpy.string_("Hello")
-
-or the ``S`` dtype::
-
-    >>> dset = f.create_dataset("string_ds", (100,), dtype="S10")
-
-In the file, these map to fixed-width ASCII strings.  One byte per character
-is used.  The representation is "null-padded", which is the internal
-representation used by NumPy (and the only one which round-trips through HDF5).
-
-Technically, these strings are supposed to store `only` ASCII-encoded text,
-although in practice anything you can store in NumPy will round-trip.  But
-for compatibility with other programs using HDF5 (IDL, MATLAB, etc.), you
-should use ASCII only.
-
-.. note::
-
-    This is the most-compatible way to store a string.  Everything else
-    can read it.
-
-Variable-length ASCII
-^^^^^^^^^^^^^^^^^^^^^
-
-These are created when you assign a byte string to an attribute::
-
-    >>> dset.attrs["attr"] = b"Hello"
-
-or when you create a dataset with an explicit ascii string dtype::
-
-    >>> dt = h5py.string_dtype(encoding='ascii')
-    >>> dset = f.create_dataset("name", (100,), dtype=dt)
-
-Note that they're `not` fully identical to Python byte strings.  You can
-only store ASCII-encoded text, without NULL bytes::
-
-    >>> dset.attrs["name"] = b"Hello\x00there"
-    ValueError: VLEN strings do not support embedded NULLs
-
-In the file, these are created as variable-length strings with character set
-H5T_CSET_ASCII.
-
-
-Variable-length UTF-8
-^^^^^^^^^^^^^^^^^^^^^
-
-These are created when you assign a unicode string to an attribute::
-
-    >>> dset.attrs["name"] = "Hello"
-
-or if you create a dataset with an explicit string dtype:
-
-    >>> dt = h5py.string_dtype()
-    >>> dset = f.create_dataset("name", (100,), dtype=dt)
-
-They can store any character a Python unicode string can store, with the
-exception of NULLs.  In the file these are created as variable-length strings
-with character set H5T_CSET_UTF8.
-
-
-Exceptions for Python 3
-^^^^^^^^^^^^^^^^^^^^^^^
-
-Most strings in the HDF5 world are stored in ASCII, which means they map to
-byte strings.  But in Python 3, there's a strict separation between `data` and
-`text`, which intentionally makes it painful to handle encoded strings
-directly.
-
-So, when reading or writing scalar string attributes, on Python 3 they will
-`always` be returned as type ``str``, regardless of the underlying storage
-mechanism.  The regular rules for writing apply; to get a fixed-width ASCII
-string, use ``numpy.string_``, and to get a variable-length ASCII string, use
-``bytes``.
-
-
-What about NumPy's ``U`` type?
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-NumPy also has a Unicode type, a UTF-32 fixed-width format (4-byte characters).
-HDF5 has no support for wide characters.  Rather than trying to hack around
-this and "pretend" to support it, h5py will raise an error when attempting
-to create datasets or attributes of this type.
-
-
-Handling of lists/tuples of strings as attributes
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-If you set an attribute equal to a Python list or tuple of unicode strings,
-such as the following:
-
-    >>> f.attrs['x'] = ('a', 'b')
-
-h5py will save these as arrays of variable-length strings with character set
-H5T_CSET_UTF8. When read back, the results will be numpy arrays of dtype
-``'object'``, as if the original data were written as:
-
-    >>> f['x'] = np.array(('a', 'b'), dtype=h5py.string_dtype(encoding='utf-8'))
-
+    >>> binary_blob = out.tobytes()
 
 Object names
 ------------
@@ -170,12 +75,77 @@ Unicode strings are used exclusively for object names in the file::
     >>> f.name
     '/'
 
-You can supply either byte or unicode strings (on both Python 2 and Python 3)
+You can supply either byte or unicode strings
 when creating or retrieving objects. If a byte string is supplied,
-it will be used as-is; Unicode strings will be encoded down to UTF-8.
+it will be used as-is; Unicode strings will be encoded as UTF-8.
 
 In the file, h5py uses the most-compatible representation; H5T_CSET_ASCII for
 characters in the ASCII range; H5T_CSET_UTF8 otherwise.
 
     >>> grp = f.create_dataset(b"name")
     >>> grp2 = f.create_dataset("name2")
+
+.. _str_encodings:
+
+Encodings
+---------
+
+HDF5 supports two string encodings: ASCII and UTF-8.
+We recommend using UTF-8 when creating HDF5 files, and this is what h5py does
+by default with Python ``str`` objects.
+If you need to write ASCII for compatibility reasons, you should ensure you only
+write pure ASCII characters (this can be done by
+``your_string.encode("ascii")``), as otherwise your text may turn into
+`mojibake <https://en.wikipedia.org/wiki/Mojibake>`_.
+You can use :func:`.string_dtype` to specify the encoding for string data.
+
+.. seealso::
+
+   `Joel Spolsky's introduction to Unicode & character sets <https://www.joelonsoftware.com/2003/10/08/the-absolute-minimum-every-software-developer-absolutely-positively-must-know-about-unicode-and-character-sets-no-excuses/>`_
+     If this section looks like gibberish, try this.
+
+For reading, as long as the encoding metadata is correct, the defaults for
+:meth:`.Dataset.asstr` will always work.
+However, HDF5 does not enforce the string encoding, and there are files where
+the encoding metadata doesn't match what's really stored.
+Most commonly, data marked as ASCII may be in one of the many "Extended ASCII"
+encodings such as Latin-1. If you know what encoding your data is in,
+you can specify this using :meth:`.Dataset.asstr`. If you have data
+in an unknown encoding, you can also use any of the `builtin python error
+handlers <https://docs.python.org/3/library/codecs.html#error-handlers>`_.
+
+Variable-length strings in attributes are read as ``str`` objects, decoded as
+UTF-8 with the ``'surrogateescape'`` error handler. If an attribute is
+incorrectly encoded, you'll see 'surrogate' characters such as ``'\udcb1'``
+when reading it::
+
+    >>> s = "2.0±0.1"
+    >>> f.attrs["string_good"] = s  # Good - h5py uses UTF-8
+    >>> f.attrs["string_bad"] = s.encode("latin-1")  # Bad!
+    >>> f.attrs["string_bad"]
+    '2.0\udcb10.1'
+
+To recover the original string, you'll need to *encode* it with UTF-8,
+and then decode it with the correct encoding::
+
+    >>> f.attrs["string_bad"].encode('utf-8', 'surrogateescape').decode('latin-1')
+    '2.0±0.1'
+
+Fixed length strings are different; h5py doesn't try to decode them::
+
+    >>> s = "2.0±0.1"
+    >>> utf8_type = h5py.string_dtype('utf-8', 30)
+    >>> ascii_type = h5py.string_dtype('ascii', 30)
+    >>> f.attrs["fixed_good"] = np.array(s.encode("utf-8"), dtype=utf8_type)
+    >>> f.attrs["fixed_bad"] = np.array(s.encode("latin-1"), dtype=ascii_type)
+    >>> f.attrs["fixed_bad"]
+    b'2.0\xb10.1'
+    >>> f.attrs["fixed_bad"].decode("utf-8")
+    Traceback (most recent call last):
+      File "<input>", line 1, in <module>
+        f.attrs["fixed_bad"].decode("utf-8")
+    UnicodeDecodeError: 'utf-8' codec can't decode byte 0xb1 in position 3: invalid start byte
+    >>> f.attrs["fixed_bad"].decode("latin-1")
+    '2.0±0.1'
+
+As we get bytes back, we only need to decode them with the correct encoding.

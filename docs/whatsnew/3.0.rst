@@ -1,0 +1,200 @@
+What's new in h5py 3.0
+======================
+
+New features
+------------
+
+* The interface for storing & reading strings has changed - see :doc:`/strings`.
+  The new rules are hopefully more consistent, but may well require some changes
+  in coding using h5py.
+* Reading & writing data now releases the GIL, so another Python thread can
+  continue while HDF5 accesses data. Where HDF5 can call back into Python, such
+  as for data conversion, h5py re-acquires the GIL. However, HDF5 has its own
+  global lock, so this won't speed up parallel data access using multithreading.
+* Numpy datetime and timedelta arrays can now be stored and read as HDF5
+  opaque data (:issue:`1339`), though other tools will not understand them.
+  See :ref:`opaque_dtypes` for more information.
+* New :meth:`.Dataset.iter_chunks` method, to iterate over chunks within the
+  given selection.
+* Compatibility with HDF5 1.12.
+* Methods which accept a shape tuple, e.g. to create a dataset, now also allow
+  an integer for a 1D shape (:pr:`1340`).
+* Casting data to a specified type on reading (:meth:`.Dataset.astype`) can now
+  be done without a with statement, like this::
+
+      data = dset.astype(np.int32)[:]
+
+* A new :meth:`.Dataset.fields` method lets you read only selected fields from
+  a dataset with a compound datatype.
+* Reading data has less overhead, as selection has been implemented in Cython.
+  Making many small reads from the same dataset can be as much as 10 times
+  faster, but there are many factors that can affect performance.
+* A new NumPy-style :attr:`.Dataset.nbytes` attribute to get the size of the
+  dataset's data in bytes.  This differs from the :attr:`~.Dataset.size`
+  attribute, which gives the number of elements.
+* The ``external`` argument of :meth:`.Group.create_dataset`, which
+  specifies any external storage for the dataset, accepts more types
+  (:issue:`1260`), as follows:
+
+  * The top-level container may be any iterable, not only a list.
+  * The names of external files may be not only ``str`` but also ``bytes`` or
+    ``os.PathLike`` objects.
+  * The offsets and sizes may be NumPy integers as well as Python integers.
+
+  See also the deprecation related to the ``external`` argument.
+* Support for setting file space strategy at file creation. Includes option to
+  persist empty space tracking between sessions. See :class:`.File` for details.
+* More efficient writing when assiging a scalar to a chunked dataset, when the
+  number of elements to write is no more than the size of one chunk.
+* Introduced support for the split :ref:`file driver <file_driver>`
+  (:pr:`1468`).
+* Allow making virtual datasets which can grow as the source data is resized
+  - see :doc:`/vds`.
+* New `allow_unknown_filter` option to :meth:`.Group.create_dataset`. This should
+  only be used if you will compress the data before writing it with the
+  low-level :meth:`~h5py.h5d.DatasetID.write_direct_chunk` method.
+* The low-level chunk query API provides information about dataset chunks in an
+  HDF5 file: :meth:`~h5py.h5d.DatasetID.get_num_chunks`,
+  :meth:`~h5py.h5d.DatasetID.get_chunk_info` and
+  :meth:`~h5py.h5d.DatasetID.get_chunk_info_by_coord`.
+* The low-level :meth:`h5py.h5f.FileID.get_vfd_handle` method now works for any
+  file driver that supports it, not only the sec2 driver.
+
+Breaking changes & deprecations
+-------------------------------
+
+* h5py now requires Python 3.6 or above; it is no longer compatible with Python
+  2.7.
+* The default mode for opening files is now 'r' (read-only).
+  See :ref:`file_open` for other possible modes if you need to write to a file.
+* In previous versions, creating a dataset from a list of bytes objects would
+  choose a fixed length string datatype to fit the biggest item. It will now
+  use a variable length string datatype. To store fixed length strings, use a
+  suitable dtype from :func:`h5py.string_dtype`.
+* Variable-length UTF-8 strings in datasets are now read as ``bytes`` objects
+  instead of ``str`` by default, for consistency with other kinds of strings.
+  See :doc:`/strings` for more details.
+* When making a virtual dataset, a dtype must be specified in
+  :class:`.VirtualLayout`. There is no longer a default dtype, as this was
+  surprising in some cases.
+* The ``external`` argument of :meth:`Group.create_dataset` no longer accepts
+  the following forms (:issue:`1260`):
+
+  * a list containing *name*, [*offset*, [*size*]];
+  * a list containing *name1*, *name2*, …; and
+  * a list containing tuples such as ``(name,)`` and ``(name, offset)`` that
+    lack the offset or size.
+
+  Furthermore, each *name*–*offset*–*size* triplet now must be a tuple rather
+  than an arbitrary iterable.  See also the new feature related to the
+  ``external`` argument.
+* The MPI mode no longer supports mpi4py 1.x.
+* The deprecated ``h5py.h5t.available_ftypes`` dictionary was removed.
+* The deprecated ``Dataset.value`` property was removed.
+  Use ``ds[()]`` to read all data from any dataset.
+* The deprecated functions ``new_vlen``, ``new_enum``, ``get_vlen`` and
+  ``get_enum`` have been removed. See :doc:`/special` for the newer APIs.
+* Removed deprecated File.fid attribute. Use :attr:`.File.id` instead.
+* Remove the deprecated ``h5py.highlevel`` module.
+  The high-level API is available directly in the ``h5py`` module.
+* The third argument of ``h5py._hl.selections.select()`` is now an optional
+  high-level :class:`.Dataset` object, rather than a ``DatasetID``.
+  This is not really a public API - it has to be imported through the private
+  ``_hl`` module - but probably some people are using it anyway.
+
+Exposing HDF5 functions
+-----------------------
+
+* H5Dget_num_chunks
+* H5Dget_chunk_info
+* H5Dget_chunk_info_by_coord
+* H5Oget_info1
+* H5Oget_info_by_name1
+* H5Oget_info_by_idx1
+* H5Ovisit1
+* H5Ovisit_by_name1
+* H5Pset_attr_phase_change
+* H5Pset_fapl_split
+* H5Pget_file_space_strategy
+* H5Pset_file_space_strategy
+* H5Sencode1
+* H5Tget_create_plist
+
+Bug fixes
+---------
+
+* Fix segmentation fault when accessing vlen of strings (:issue:`1336`).
+* Fix the storage of non-contiguous arrays, such as numpy slices, as HDF5 vlen
+  data (:issue:`1649`).
+* Fix pathologically slow reading/writing in certain conditions with integer
+  indexing (:issue:`492`).
+* Fix bug when :meth:`.Group.copy` source is a high-level object and destination
+  is a Group (:issue:`1005`).
+* Fix reading data for region references pointing to an empty selection.
+* Unregister converter functions at exit, preventing segfaults on exit in some
+  situations with threads (:pr:`1440`).
+* As HDF5 1.10.6 and later support UTF-8 paths on Windows, h5py built against
+  HDF5 1.10.6 will use UTF-8 for file names, allowing all filenames.
+* Fixed :meth:`h5py.h5d.DatasetID.get_storage_size` to report storage size of
+  zero bytes without raising an exception (:issue:`1475`).
+* Attribute Managers (``obj.attrs``) can now work on HDF5 stored
+  datatypes (:issue:`1476`).
+* Remove broken inherited ``ds.dims.values()`` and ``ds.dims.items()`` methods.
+  The dimensions interface behaves as a sequence, not a mapping (:issue:`744`).
+* Fix creating attribute with :class:`.Empty` by converting its dtype to a numpy
+  dtype object.
+* Fix getting :attr:`~.Dataset.maxshape` on empty/null datasets.
+* The :attr:`.File.swmr_mode` property is always available (:issue:`1580`).
+* The :attr:`.File.mode` property handles SWMR access modes in addition to plain
+  RDONLY/RDWR modes
+* Importing an MPI build of h5py no longer initialises MPI immediately,
+  which will hopefully avoid various strange behaviours.
+* Avoid launching a subprocess by using ``platform.machine()`` at import time.
+  This could trigger a warning in MPI.
+* Removed an equality comparison with an empty array, which will cause problems
+  with future versions of numpy.
+* Better error message if you try to use the mpio driver and h5py was not built
+  with MPI support.
+* Improved error messages when requesting chunked storage for an empty dataset.
+* Data conversion functions should fail more gracefully if no memory is
+  available.
+* Fix some errors for internal functions that were raising "TypeError:
+  expected bytes, str found" instead of the correct error.
+* Use relative path for virtual data sources if the source dataset is in the
+  same file as the virtual dataset.
+* Generic exception types used in tests' assertRaise (exception types changed in
+  new HDF5 version)
+* Use ``dtype=object`` in tests with ragged arrays
+
+Building h5py
+-------------
+
+* The ``setup.py configure`` command was removed. Configuration for the build
+  can be specified with environment variables instead. See :ref:`custom_install`
+  for details.
+* It is now possible to specify separate include and library directories for
+  HDF5 via environment variables. See :ref:`custom_install` for more details.
+* The pkg-config name to use when looking up the HDF5 library can now be
+  configured, this can assist with selecting the correct HDF5 library when using
+  MPI. See :ref:`custom_install` for more details.
+* Using bare ``char*`` instead of ``array.array`` in h5d.read_direct_chunk since
+  ``array.array`` is a private CPython C-API interface
+* Define ``NPY_NO_DEPRECATED_API`` to silence a warning.
+* Make the lzf filter build with HDF5 1.10 (:issue:`1219`).
+* If HDF5 is not loaded, an additional message is displayed to check HDF5
+  installation
+* Rely much more on the C-interface provided by Cython to call Python and NumPy.
+* Removed an old workaround which tried to run Cython in a subprocess if
+  cythonize() didn't work. This shouldn't be necessary for any recent version
+  of setuptools.
+* Migrate all Cython code base to Cython3 syntax
+
+    * The only noticeable change is in exception raising from cython which use bytes
+    * Massively use local imports everywhere as expected from Python3
+    * Explicitly mark several Cython functions as non-binding
+
+Development
+-----------
+
+* Unregistering converter functions on exit (:pr:`1440`) should allow profiling
+  and code coverage tools to work on Cython code.

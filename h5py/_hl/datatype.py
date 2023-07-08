@@ -40,7 +40,7 @@ class Datatype(HLObject):
         """
         if not isinstance(bind, TypeID):
             raise ValueError("%s is not a TypeID" % bind)
-        super(Datatype, self).__init__(bind)
+        super().__init__(bind)
 
     @with_phil
     def __repr__(self):

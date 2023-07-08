@@ -1,0 +1,32 @@
+What's new in h5py 3.6
+======================
+
+New features
+------------
+
+* Pre-built packages are now available for Python 3.10.
+
+Deprecations
+------------
+
+* Using :meth:`.Dataset.astype` as a context manager (``with dset.astype(t):``)
+  is deprecated. Slice the object returned by astype instead
+  (``data = dset.astype(t)[:10]``). This works from h5py 3.0 onwards.
+* Getting the value of ``h5py.get_config().default_file_mode`` now issues a
+  deprecation warning. This has been ``'r'`` by default from h5py 3.0, and
+  cannot be changed since 3.3.
+
+Building h5py
+-------------
+
+* h5py now requires the ``oldest-supported-numpy`` package at build time,
+  instead of maintaining its own list of the oldest supported NumPy versions.
+  The effect should be similar, but hopefully more reliable.
+
+Development
+-----------
+
+* The custom ``setup.py test`` has been removed.
+  `tox <https://tox.wiki/en/latest/>`_ should be used instead during
+  development (see :ref:`contrib-run-tests`), and ``pytest --pyargs h5py`` can
+  be used to test h5py after installation.

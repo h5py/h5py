@@ -3,8 +3,9 @@ Compatibility module for high-level h5py
 """
 import sys
 from os import fspath, fsencode, fsdecode
+from ..version import hdf5_built_version_tuple
 
-WINDOWS_ENCODING = "mbcs"
+WINDOWS_ENCODING = "utf-8" if hdf5_built_version_tuple >= (1, 10, 6) else "mbcs"
 
 
 def filename_encode(filename):
