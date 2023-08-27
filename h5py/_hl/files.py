@@ -176,6 +176,14 @@ def make_fapl(driver, libver, rdcc_nslots, rdcc_nbytes, rdcc_w0, locking,
     else:
         set_fapl(plist, **kwds)
 
+    if driver == 'ros3':
+        token = kwds.get('session_token')
+        if token:
+            if hdf5_version < (1, 14, 2):
+                raise ValueError('HDF5 >= 1.14.2 required for AWS session token')
+        else:
+            plist.set_fapl_ros3_token(token)
+
     return plist
 
 

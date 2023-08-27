@@ -96,11 +96,11 @@ of supported drivers and their options:
           Raw data filename extension. Default is '-r.h5'.
 
     'ros3'
-        Allows read-only access to HDF5 files in AWS S3 or S3 compatible object
+        Enables read-only access to HDF5 files in the AWS S3 or S3-compatible object
         stores. HDF5 file name must be one of \http://, \https://, or s3://
         resource location. An s3:// location will be translated into an AWS
         `path-style <https://docs.aws.amazon.com/AmazonS3/latest/userguide/VirtualHosting.html#path-style-access>`_
-        location. Keywords:
+        location by h5py. Keywords:
 
         aws_region:
           AWS region of the S3 bucket with the file, e.g. ``b"us-east-1"``.
@@ -112,14 +112,18 @@ of supported drivers and their options:
         secret_key:
           AWS secret access key. Default is ``b''``.
 
-        The argument values must be ``bytes`` objects. All three arguments are
-        required to activate AWS authentication.
+        session_token:
+          AWS temporary session token. Default is ``b''``.' Must be used
+          together with temporary secret_id and secret_key. Available from HDF5 1.14.2.
+
+        The argument values must be ``bytes`` objects. Arguments aws_region,
+        secret_id, and secret_key are required to activate AWS authentication.
 
         .. note::
-           Pre-built h5py packages on PyPI do not include this S3 support. If
+           Pre-built h5py packages on PyPI do not include ros3 driver support. If
            you want this feature, you could use packages from conda-forge, or
            :ref:`build h5py from source <source_install>` against an HDF5 build
-           with S3 support. Alternatively, use the :ref:`file-like object
+           with ros3. Alternatively, use the :ref:`file-like object
            <file_fileobj>` support with a package like s3fs.
 
 

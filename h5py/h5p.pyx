@@ -1119,6 +1119,36 @@ cdef class PropFAID(PropInstanceID):
             H5Pget_fapl_ros3(self.id, &config)
             return config
 
+        IF HDF5_VERSION >= (1, 14, 2):
+            @with_phil
+            def get_fapl_ros3_token(self):
+                """ () => BYTES token
+
+                Get session token from the file access property list.
+                """
+                cdef size_t size = 0
+                cdef char *token = NULL
+
+                size = H5FD_ROS3_MAX_SECRET_TOK_LEN + 1
+                try:
+                    token = <char*>emalloc(size)
+                    token[0] = 0
+                    H5Pget_fapl_ros3_token(self.id, size, token)
+                    pytoken = <bytes>token
+                finally:
+                    efree(token)
+
+                return pytoken
+
+
+            @with_phil
+            def set_fapl_ros3_token(self, char *token=""):
+                """ (BYTES token="")
+
+                Set session token in the file access property list.
+                """
+                H5Pset_fapl_ros3_token(self.id, token)
+
 
     @with_phil
     def set_fapl_log(self, char* logfile, unsigned int flags, size_t buf_size):

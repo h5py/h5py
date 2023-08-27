@@ -359,6 +359,9 @@ cdef extern from "hdf5.h":
       char    secret_key[129]
 
     unsigned int H5FD_CURR_ROS3_FAPL_T_VERSION # version of struct
+
+    IF HDF5_VERSION >= (1, 14, 2):
+      size_t H5FD_ROS3_MAX_SECRET_TOK_LEN
 # === H5G - Groups API ========================================================
 
   ctypedef enum H5G_link_t:
