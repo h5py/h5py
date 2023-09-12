@@ -54,7 +54,7 @@ before_install:
 install:
     - pip install -U pip tox codecov virtualenv
     - ci/get_hdf5_if_needed.sh
-    - if [[ $CIBW_ARCHS == aarch64 ]]; then python -m pip install cibuildwheel; fi
+    - if [[ $CIBW_ARCHS == aarch64 ]]; then python -m pip install 'cibuildwheel<2.15'; fi
 
 script:
     - if [[ $CIBW_ARCHS == aarch64 ]]; then python3 -m cibuildwheel --output-dir wheelhouse; fi
