@@ -54,7 +54,7 @@ jobs:
     vmImage: macOS-11
   variables:
     MACOSX_DEPLOYMENT_TARGET: 10.9
-    HDF5_VERSION: 1.14.2
+    HDF5_VERSION: 1.12.2
     H5PY_ROS3: '0'
     H5PY_DIRECT_VFD: '0'
     HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
