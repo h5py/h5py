@@ -52,7 +52,7 @@ def test_ros3_s3uri():
 
 
 @pytest.mark.skipif(h5py.version.hdf5_version_tuple < (1, 14, 2),
-                    reason='AWS S3 access token supported from HDF5 >= 1.14.2')
+                    reason='AWS S3 access token support in HDF5 >= 1.14.2')
 def test_ros3_temp_token():
     """Set and get S3 access token"""
     fapl = h5py.h5p.create(h5py.h5p.FILE_ACCESS)
