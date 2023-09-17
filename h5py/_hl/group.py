@@ -14,7 +14,7 @@
 from contextlib import contextmanager
 import posixpath as pp
 import numpy
-
+import warnings
 
 from .compat import filename_decode, filename_encode
 
@@ -45,7 +45,7 @@ class Group(HLObject, MutableMappingHDF5):
     _gcpl_crt_order.set_attr_creation_order(
         h5p.CRT_ORDER_TRACKED | h5p.CRT_ORDER_INDEXED)
 
-    def create_group(self, name, track_order=None):
+    def create_group(self, name, track_order=None, attrs_limit=True):
         """ Create and return a new subgroup.
 
         Name may be absolute or relative.  Fails if the target name already
@@ -57,10 +57,20 @@ class Group(HLObject, MutableMappingHDF5):
         """
         if track_order is None:
             track_order = h5.get_config().track_order
+        elif not attrs_limit:
+            warnings.warn("track_order != None and attrs_limit=True is known to cause 'record is not in B-tree' error when trying to store many attributes.")
 
         with phil:
             name, lcpl = self._e(name, lcpl=True)
-            gcpl = Group._gcpl_crt_order if track_order else None
+            gcpl = Group._gcpl_crt_order if track_order else h5p.create(h5p.GROUP_CREATE)
+            if not attrs_limit:
+                # copied from https://github.com/firedrakeproject/firedrake/pull/2432/files
+                # The following will remove the 64KiB limit for storing
+                # attributes, but it makes checkpointing very slow and
+                # actually seems not necessary to avoid the errors.
+                # >>> gcpl.set_attr_phase_change(0, 0)
+                gcpl.set_link_creation_order(h5p.CRT_ORDER_TRACKED)
+                gcpl.set_attr_creation_order(h5p.CRT_ORDER_TRACKED)
             gid = h5g.create(self.id, name, lcpl=lcpl, gcpl=gcpl)
             return Group(gid)
 
