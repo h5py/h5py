@@ -118,7 +118,7 @@ class TestScalarFloat(TestCase):
 
     def setUp(self):
         TestCase.setUp(self)
-        self.data = np.array(42.5, dtype='f')
+        self.data = np.array(42.5, dtype=np.double)
         self.dset = self.f.create_dataset('x', data=self.data)
 
     def test_ndim(self):

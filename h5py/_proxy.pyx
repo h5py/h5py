@@ -53,8 +53,9 @@ cdef herr_t attr_rw(hid_t attr, hid_t mtype, void *progbuf, int read) except -1:
             else:
                 need_bkg = needs_bkg_buffer(mtype, atype)
             if need_bkg:
-                back_buf = malloc(msize*npoints)
-                memcpy(back_buf, progbuf, msize*npoints)
+                back_buf = create_buffer(msize, asize, npoints)
+                if read:
+                    memcpy(back_buf, progbuf, msize*npoints)
 
             if read:
                 H5Aread(attr, atype, conv_buf)
@@ -134,7 +135,8 @@ cdef herr_t dset_rw(hid_t dset, hid_t mtype, hid_t mspace, hid_t fspace,
                 need_bkg = needs_bkg_buffer(mtype, dstype)
             if need_bkg:
                 back_buf = create_buffer(H5Tget_size(dstype), H5Tget_size(mtype), npoints)
-                h5py_copy(mtype, mspace, back_buf, progbuf, H5PY_GATHER)
+                if read:
+                    h5py_copy(mtype, mspace, back_buf, progbuf, H5PY_GATHER)
 
             if read:
                 H5Dread(dset, dstype, cspace, fspace, dxpl, conv_buf)
