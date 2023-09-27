@@ -481,8 +481,6 @@ cdef class DatasetID(ObjectID):
         in the corresponding position in the pipeline was not applied.
         So the default value of `0` means that all defined filters have
         been applied to the data before calling this function.
-
-        Feature requires: 1.8.11 HDF5
         """
 
         cdef hid_t dset_id

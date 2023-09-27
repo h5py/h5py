@@ -444,8 +444,6 @@ cdef class FileID(GroupID):
         """ () => BYTES
 
         Retrieves a copy of the image of an existing, open file.
-
-        Feature requires: 1.8.9
         """
 
         cdef ssize_t size
@@ -468,7 +466,7 @@ cdef class FileID(GroupID):
 
             Default is False.
 
-            Feature requires: 1.8.9 and Parallel HDF5
+            Feature requires: Parallel HDF5
             """
             H5Fset_mpi_atomicity(self.id, <hbool_t>atomicity)
 
@@ -479,7 +477,7 @@ cdef class FileID(GroupID):
 
             Return atomicity setting for MPI-IO driver.
 
-            Feature requires: 1.8.9 and Parallel HDF5
+            Feature requires: Parallel HDF5
             """
             cdef hbool_t atom
 

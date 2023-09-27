@@ -259,7 +259,7 @@ cdef class GroupID(ObjectID):
         __len__
             Number of members in this group; len(grpid) = N
 
-        If HDF5 1.8.X is used, the attribute "links" contains a proxy object
+        The attribute "links" contains a proxy object
         providing access to the H5L family of routines.  See the docs
         for h5py.h5l.LinkProxy for more information.
 
