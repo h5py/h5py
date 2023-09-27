@@ -140,6 +140,12 @@ class h5py_build_ext(build_ext):
         config = BuildConfig.from_env()
         config.summarise()
 
+        if config.hdf5_version < (1, 10, 4):
+            raise Exception(
+                f"This version of h5py requires HDF5 >= 1.10.4 (got version "
+                f"{config.hdf5_version} from environment variable or library)"
+            )
+
         defs_file = localpath('h5py', 'defs.pyx')
         func_file = localpath('h5py', 'api_functions.txt')
         config_file = localpath('h5py', 'config.pxi')
