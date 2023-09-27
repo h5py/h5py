@@ -10,8 +10,6 @@ import h5py as h5
 import tempfile
 
 
-@ut.skipUnless(h5.version.hdf5_version_tuple >= (1, 9, 233),
-               'VDS requires HDF5 >= 1.9.233')
 class TestEigerLowLevel(ut.TestCase):
     def setUp(self):
         self.working_dir = tempfile.mkdtemp()
@@ -117,8 +115,6 @@ class ExcaliburData:
         return dset
 
 
-@ut.skipUnless(h5.version.hdf5_version_tuple >= (1, 9, 233),
-               'VDS requires HDF5 >= 1.9.233')
 class TestExcaliburLowLevel(ut.TestCase):
     def create_excalibur_fem_stripe_datafile(self, fname, nframes, excalibur_data,scale):
         shape = (nframes,) + excalibur_data.fem_stripe_dimensions
@@ -206,8 +202,6 @@ https://support.hdfgroup.org/HDF5/docNewFeatures/VDS/HDF5-VDS-requirements-use-c
 '''
 
 
-@ut.skipUnless(h5.version.hdf5_version_tuple >= (1, 9, 233),
-               'VDS requires HDF5 >= 1.9.233')
 class TestPercivalLowLevel(ut.TestCase):
 
     def setUp(self):
@@ -276,8 +270,6 @@ class TestPercivalLowLevel(ut.TestCase):
         os.remove(self.outfile)
 
 
-@ut.skipUnless(h5.version.hdf5_version_tuple >= (1, 10, 2),
-               'get_ / set_virtual_prefix requires HDF5 >= 1.10.2')
 def test_virtual_prefix(tmp_path):
     (tmp_path / 'a').mkdir()
     (tmp_path / 'b').mkdir()
