@@ -158,10 +158,7 @@ cdef bint _is_pyobject_opaque(hid_t obj):
                     return True
         return False
     finally:
-        IF HDF5_VERSION >= (1, 8, 13):
-            H5free_memory(ctag)
-        ELSE:
-            free(ctag)
+        H5free_memory(ctag)
 
 cdef herr_t init_vlen2str(hid_t src_vlen, hid_t dst_str, void** priv) except -1:
     # /!\ Untested
