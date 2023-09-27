@@ -37,7 +37,7 @@ CMAKE_INSTALL_ARG = ["--target", "install", '--config', 'Release']
 CMAKE_INSTALL_PATH_ARG = "-DCMAKE_INSTALL_PREFIX={install_path}"
 CMAKE_HDF5_LIBRARY_PREFIX = ["-DHDF5_EXTERNAL_LIB_PREFIX=h5py_"]
 REL_PATH_TO_CMAKE_CFG = "hdf5-{version}"
-DEFAULT_VERSION = '1.8.17'
+DEFAULT_VERSION = '1.12.2'
 VSVERSION_TO_GENERATOR = {
     "9": "Visual Studio 9 2008",
     "10": "Visual Studio 10 2010",
