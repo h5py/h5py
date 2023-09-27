@@ -29,7 +29,6 @@ cdef extern from "hdf5.h":
 
   int HADDR_UNDEF
 
-  # New in 1.8.X
   ctypedef enum H5_iter_order_t:
     H5_ITER_UNKNOWN = -1,       # Unknown order
     H5_ITER_INC,                # Increasing order
@@ -575,8 +574,6 @@ cdef extern from "hdf5.h":
     H5S_SCALAR           = 0,   #/*scalar variable
     H5S_SIMPLE           = 1,   #/*simple data space
     H5S_NULL             = 2,   # NULL data space
-    # no longer defined in 1.8
-    #H5S_COMPLEX          = 2    #/*complex data space
 
   ctypedef enum H5S_sel_type:
     H5S_SEL_ERROR    = -1,         #Error
