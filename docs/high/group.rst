@@ -135,7 +135,7 @@ If the target is removed, they will "dangle":
 External links
 ~~~~~~~~~~~~~~
 
-New in HDF5 1.8, external links are "soft links plus", which allow you to
+External links are "soft links plus", which allow you to
 specify the name of the file as well as the path to the desired object.  You
 can refer to objects in any file you wish.  Use similar syntax as for soft
 links:

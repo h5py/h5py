@@ -47,13 +47,13 @@ class Line:
         sig:        String with raw function signature
         args:       String with sequence of arguments to call function
 
-        Example:    MPI 1.8.12 int foo(char* a, size_t b)
+        Example:    MPI 1.12.2 int foo(char* a, size_t b)
 
         .nogil:     ""
         .mpi:       True
         .ros3:      False
         .direct_vfd: False
-        .version:   (1, 8, 12)
+        .version:   (1, 12, 2)
         .code:      "int"
         .fname:     "foo"
         .sig:       "char* a, size_t b"

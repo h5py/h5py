@@ -55,7 +55,7 @@ the HDF5 library (usually the latest version when h5py is released).
 
 You can also `build h5py from source
 <https://docs.h5py.org/en/stable/build.html#source-installation>`_
-with any HDF5 stable release from version 1.8.4 onwards, although naturally new
+with any HDF5 stable release from version 1.10.4 onwards, although naturally new
 HDF5 versions released after this version of h5py may not work.
 Odd-numbered minor versions of HDF5 (e.g. 1.13) are experimental, and may not
 be supported.
