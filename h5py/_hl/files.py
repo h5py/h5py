@@ -27,16 +27,12 @@ ros3 = h5.get_config().ros3
 direct_vfd = h5.get_config().direct_vfd
 hdf5_version = version.hdf5_version_tuple[0:3]
 
-swmr_support = False
-if hdf5_version >= h5.get_config().swmr_min_hdf5_version:
-    swmr_support = True
+swmr_support = True
 
 
-libver_dict = {'earliest': h5f.LIBVER_EARLIEST, 'latest': h5f.LIBVER_LATEST}
+libver_dict = {'earliest': h5f.LIBVER_EARLIEST, 'latest': h5f.LIBVER_LATEST,
+               'v108': h5f.LIBVER_V18, 'v110': h5f.LIBVER_V110}
 libver_dict_r = dict((y, x) for x, y in libver_dict.items())
-if hdf5_version >= (1, 10, 2):
-    libver_dict.update({'v108': h5f.LIBVER_V18, 'v110': h5f.LIBVER_V110})
-    libver_dict_r.update({h5f.LIBVER_V18: 'v108', h5f.LIBVER_V110: 'v110'})
 
 if hdf5_version >= (1, 11, 4):
     libver_dict.update({'v112': h5f.LIBVER_V112})
@@ -339,7 +335,7 @@ class File(Group):
         fapl = self.id.get_access_plist()
         return fapl.get_meta_block_size()
 
-    if mpi and hdf5_version >= (1, 8, 9):
+    if mpi:
 
         @property
         @with_phil
@@ -364,13 +360,10 @@ class File(Group):
     @with_phil
     def swmr_mode(self, value):
         # pylint: disable=missing-docstring
-        if swmr_support:
-            if value:
-                self.id.start_swmr_write()
-            else:
-                raise ValueError("It is not possible to forcibly switch SWMR mode off.")
+        if value:
+            self.id.start_swmr_write()
         else:
-            raise RuntimeError('SWMR support is not available in HDF5 version {}.{}.{}.'.format(*hdf5_version))
+            raise ValueError("It is not possible to forcibly switch SWMR mode off.")
 
     def __init__(self, name, mode='r', driver=None, libver=None, userblock_size=None, swmr=False,
                  rdcc_nslots=None, rdcc_nbytes=None, rdcc_w0=None, track_order=None,
@@ -496,12 +489,6 @@ class File(Group):
         Additional keywords
             Passed on to the selected file driver.
         """
-        if (fs_strategy or page_buf_size) and hdf5_version < (1, 10, 1):
-            raise ValueError("HDF5 version 1.10.1 or greater required for file space strategy or page buffering support.")
-
-        if swmr and not swmr_support:
-            raise ValueError("The SWMR feature is not available in this version of the HDF5 library")
-
         if driver == 'ros3':
             if ros3:
                 from urllib.parse import urlparse

@@ -138,7 +138,7 @@ On the other hand, writing data to a dataset can be done independently::
 MPI atomic mode
 ---------------
 
-HDF5 versions 1.8.9+ support the MPI "atomic" file access mode, which trades
+HDF5 supports the MPI "atomic" file access mode, which trades
 speed for more stringent consistency requirements.  Once you've opened a
 file with the ``mpio`` driver, you can place it in atomic mode using the
 settable ``atomic`` property::

@@ -155,12 +155,22 @@ cdef class H5PYConfig:
     property swmr_min_hdf5_version:
         """ Tuple indicating the minimum HDF5 version required for SWMR features"""
         def __get__(self):
-            return SWMR_MIN_HDF5_VERSION
+            warn(
+                "h5py.get_config().swmr_min_hdf5_version is deprecated. "
+                "This version of h5py does not support older HDF5 without SWMR.",
+                category=H5pyDeprecationWarning,
+            )
+            return (1, 9, 178)
 
     property vds_min_hdf5_version:
         """Tuple indicating the minimum HDF5 version required for virtual dataset (VDS) features"""
         def __get__(self):
-            return VDS_MIN_HDF5_VERSION
+            warn(
+                "h5py.get_config().vds_min_hdf5_version is deprecated. "
+                "This version of h5py does not support older HDF5 without VDS.",
+                category=H5pyDeprecationWarning,
+            )
+            return (1, 9, 233)
 
     property track_order:
         """ Default value for track_order argument of

@@ -140,6 +140,12 @@ class h5py_build_ext(build_ext):
         config = BuildConfig.from_env()
         config.summarise()
 
+        if config.hdf5_version < (1, 10, 4):
+            raise Exception(
+                f"This version of h5py requires HDF5 >= 1.10.4 (got version "
+                f"{config.hdf5_version} from environment variable or library)"
+            )
+
         defs_file = localpath('h5py', 'defs.pyx')
         func_file = localpath('h5py', 'api_functions.txt')
         config_file = localpath('h5py', 'config.pxi')
@@ -157,8 +163,6 @@ DEF MPI = {bool(config.mpi)}
 DEF ROS3 = {bool(config.ros3)}
 DEF HDF5_VERSION = {config.hdf5_version}
 DEF DIRECT_VFD = {bool(config.direct_vfd)}
-DEF SWMR_MIN_HDF5_VERSION = (1,9,178)
-DEF VDS_MIN_HDF5_VERSION = (1,9,233)
 DEF VOL_MIN_HDF5_VERSION = (1,11,5)
 DEF COMPLEX256_SUPPORT = {complex256_support}
 DEF NUMPY_BUILD_VERSION = '{numpy.__version__}'

@@ -70,8 +70,6 @@ cdef class PropDAID(PropInstanceID):
     cdef char* _virtual_prefix_buf
     cdef char* _efile_prefix_buf
 
-# --- New in 1.8 ---
-
 cdef class PropLCID(PropCreateID):
     """ Link creation property list """
     pass

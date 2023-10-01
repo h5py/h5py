@@ -11,11 +11,10 @@
 include "config.pxi"
 from .defs cimport *
 
-IF HDF5_VERSION >= (1, 10, 1):
-    cpdef append(const char* search_path)
-    cpdef prepend(const char* search_path)
-    cpdef replace(const char* search_path, unsigned int index)
-    cpdef insert(const char* search_path, unsigned int index)
-    cpdef remove(unsigned int index)
-    cpdef get(unsigned int index)
-    cpdef size()
+cpdef append(const char* search_path)
+cpdef prepend(const char* search_path)
+cpdef replace(const char* search_path, unsigned int index)
+cpdef insert(const char* search_path, unsigned int index)
+cpdef remove(unsigned int index)
+cpdef get(unsigned int index)
+cpdef size()

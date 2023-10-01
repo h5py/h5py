@@ -130,7 +130,6 @@ def get_name(Reference ref not None, ObjectID loc not None):
     """(Reference ref, ObjectID loc) => STRING name
 
     Determine the name of the object pointed to by this reference.
-    Requires the HDF5 1.8 API.
     """
     cdef ssize_t namesize = 0
     cdef char* namebuf = NULL

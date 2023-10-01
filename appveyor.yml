@@ -1,18 +1,10 @@
 # from https://packaging.python.org/en/latest/appveyor/
 image: Visual Studio 2019
 environment:
-  HDF5_VERSION: "1.8.17"
   TOX_TESTENV_PASSENV: "HDF5_DIR"
   H5PY_ENFORCE_COVERAGE: "YES"
 
   matrix:
-
-    ### USING HDF5 1.8 ###
-
-    - PYTHON: "C:\\Python38"
-      TOXENV: "py38-test-deps"
-      HDF5_VSVERSION: "14"
-      HDF5_DIR: "C:\\hdf5\\%HDF5_VERSION%\\%HDF5_VSVERSION%"
 
     ### USING HDF5 1.10 ###
 

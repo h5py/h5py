@@ -27,8 +27,6 @@ class TestLibver(TestCase):
         self.assertEqual((h5f.LIBVER_EARLIEST, h5f.LIBVER_LATEST),
                          plist.get_libver_bounds())
 
-    @ut.skipIf(version.hdf5_version_tuple < (1, 10, 2),
-               'Requires HDF5 1.10.2 or later')
     def test_libver_v18(self):
         """ Test libver bounds set/get for H5F_LIBVER_V18"""
         plist = h5p.create(h5p.FILE_ACCESS)
@@ -36,8 +34,6 @@ class TestLibver(TestCase):
         self.assertEqual((h5f.LIBVER_EARLIEST, h5f.LIBVER_V18),
                          plist.get_libver_bounds())
 
-    @ut.skipIf(version.hdf5_version_tuple < (1, 10, 2),
-               'Requires HDF5 1.10.2 or later')
     def test_libver_v110(self):
         """ Test libver bounds set/get for H5F_LIBVER_V110"""
         plist = h5p.create(h5p.FILE_ACCESS)
@@ -69,8 +65,6 @@ class TestDA(TestCase):
         self.assertEqual((nslots, nbytes, w0),
                          dalist.get_chunk_cache())
 
-    @ut.skipIf(version.hdf5_version_tuple < (1, 8, 17),
-               'Requires HDF5 1.8.17 or later')
     def test_efile_prefix(self):
         '''test get/set efile prefix '''
         dalist = h5p.create(h5p.DATASET_ACCESS)
@@ -86,8 +80,6 @@ class TestDA(TestCase):
         self.assertEqual(dalist.get_efile_prefix().decode(),
                          efile_prefix)
 
-    @ut.skipIf(version.hdf5_version_tuple < (1, 10, 2),
-               'Requires HDF5 1.10.2 or later')
     def test_virtual_prefix(self):
         '''test get/set virtual prefix '''
         dalist = h5p.create(h5p.DATASET_ACCESS)

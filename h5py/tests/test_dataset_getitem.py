@@ -323,7 +323,6 @@ class TestScalarArray(TestCase):
             self.dset['field']
 
 
-@ut.skipUnless(h5py.version.hdf5_version_tuple >= (1, 8, 7), 'HDF5 1.8.7+ required')
 class Test1DZeroFloat(TestCase):
 
     def setUp(self):
@@ -524,7 +523,6 @@ class Test1DFloat(TestCase):
             self.dset['field']
 
 
-@ut.skipUnless(h5py.version.hdf5_version_tuple >= (1, 8, 7), 'HDF5 1.8.7+ required')
 class Test2DZeroFloat(TestCase):
 
     def setUp(self):

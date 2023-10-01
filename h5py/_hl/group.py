@@ -611,7 +611,7 @@ class Group(HLObject, MutableMappingHDF5):
                                lapl=self._lapl, lcpl=self._lcpl)
 
     def visit(self, func):
-        """ Recursively visit all names in this group and subgroups (HDF5 1.8).
+        """ Recursively visit all names in this group and subgroups.
 
         You supply a callable (function, method or callable object); it
         will be called exactly once for each link in this group and every
@@ -637,7 +637,7 @@ class Group(HLObject, MutableMappingHDF5):
             return h5o.visit(self.id, proxy)
 
     def visititems(self, func):
-        """ Recursively visit names and objects in this group (HDF5 1.8).
+        """ Recursively visit names and objects in this group.
 
         You supply a callable (function, method or callable object); it
         will be called exactly once for each link in this group and every

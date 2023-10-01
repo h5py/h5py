@@ -60,10 +60,9 @@ FILL_VALUE_UNDEFINED    = H5D_FILL_VALUE_UNDEFINED
 FILL_VALUE_DEFAULT      = H5D_FILL_VALUE_DEFAULT
 FILL_VALUE_USER_DEFINED = H5D_FILL_VALUE_USER_DEFINED
 
-IF HDF5_VERSION >= VDS_MIN_HDF5_VERSION:
-    VIRTUAL = H5D_VIRTUAL
-    VDS_FIRST_MISSING   = H5D_VDS_FIRST_MISSING
-    VDS_LAST_AVAILABLE  = H5D_VDS_LAST_AVAILABLE
+VIRTUAL = H5D_VIRTUAL
+VDS_FIRST_MISSING   = H5D_VDS_FIRST_MISSING
+VDS_LAST_AVAILABLE  = H5D_VDS_LAST_AVAILABLE
 
 IF HDF5_VERSION >= (1, 10, 5):
     StoreInfo = namedtuple('StoreInfo',
@@ -429,168 +428,158 @@ cdef class DatasetID(ObjectID):
         return H5Dget_storage_size(self.id)
 
 
-    IF HDF5_VERSION >= SWMR_MIN_HDF5_VERSION:
-        @with_phil
-        def flush(self):
-            """ no return
+    @with_phil
+    def flush(self):
+        """ no return
 
-            Flushes all buffers associated with a dataset to disk.
+        Flushes all buffers associated with a dataset to disk.
 
-            This function causes all buffers associated with a dataset to be
-            immediately flushed to disk without removing the data from the cache.
+        This function causes all buffers associated with a dataset to be
+        immediately flushed to disk without removing the data from the cache.
 
-            Use this in SWMR write mode to allow readers to be updated with the
-            dataset changes.
+        Use this in SWMR write mode to allow readers to be updated with the
+        dataset changes.
 
-            Feature requires: 1.9.178 HDF5
-            """
-            H5Dflush(self.id)
+        Feature requires: 1.9.178 HDF5
+        """
+        H5Dflush(self.id)
 
-        @with_phil
-        def refresh(self):
-            """ no return
+    @with_phil
+    def refresh(self):
+        """ no return
 
-            Refreshes all buffers associated with a dataset.
+        Refreshes all buffers associated with a dataset.
 
-            This function causes all buffers associated with a dataset to be
-            cleared and immediately re-loaded with updated contents from disk.
+        This function causes all buffers associated with a dataset to be
+        cleared and immediately re-loaded with updated contents from disk.
 
-            This function essentially closes the dataset, evicts all metadata
-            associated with it from the cache, and then re-opens the dataset.
-            The reopened dataset is automatically re-registered with the same ID.
+        This function essentially closes the dataset, evicts all metadata
+        associated with it from the cache, and then re-opens the dataset.
+        The reopened dataset is automatically re-registered with the same ID.
 
-            Use this in SWMR read mode to poll for dataset changes.
+        Use this in SWMR read mode to poll for dataset changes.
 
-            Feature requires: 1.9.178 HDF5
-            """
-            H5Drefresh(self.id)
+        Feature requires: 1.9.178 HDF5
+        """
+        H5Drefresh(self.id)
 
+    def write_direct_chunk(self, offsets, data, filter_mask=0x00000000, PropID dxpl=None):
+        """ (offsets, data, uint32_t filter_mask=0x00000000, PropID dxpl=None)
 
-    IF HDF5_VERSION >= (1, 8, 11):
+        This function bypasses any filters HDF5 would normally apply to
+        written data. However, calling code may apply filters (e.g. gzip
+        compression) itself before writing the data.
 
-        def write_direct_chunk(self, offsets, data, filter_mask=0x00000000, PropID dxpl=None):
-            """ (offsets, data, uint32_t filter_mask=0x00000000, PropID dxpl=None)
+        `data` is a Python object that implements the Py_buffer interface.
+        In case of a ndarray the shape and dtype are ignored. It's the
+        user's responsibility to make sure they are compatible with the
+        dataset.
 
-            This function bypasses any filters HDF5 would normally apply to
-            written data. However, calling code may apply filters (e.g. gzip
-            compression) itself before writing the data.
+        `filter_mask` is a bit field of up to 32 values. It records which
+        filters have been applied to this chunk, of the filter pipeline
+        defined for that dataset. Each bit set to `1` means that the filter
+        in the corresponding position in the pipeline was not applied.
+        So the default value of `0` means that all defined filters have
+        been applied to the data before calling this function.
+        """
 
-            `data` is a Python object that implements the Py_buffer interface.
-            In case of a ndarray the shape and dtype are ignored. It's the
-            user's responsibility to make sure they are compatible with the
-            dataset.
+        cdef hid_t dset_id
+        cdef hid_t dxpl_id
+        cdef hid_t space_id = 0
+        cdef hsize_t *offset = NULL
+        cdef size_t data_size
+        cdef int rank
+        cdef Py_buffer view
 
-            `filter_mask` is a bit field of up to 32 values. It records which
-            filters have been applied to this chunk, of the filter pipeline
-            defined for that dataset. Each bit set to `1` means that the filter
-            in the corresponding position in the pipeline was not applied.
-            So the default value of `0` means that all defined filters have
-            been applied to the data before calling this function.
+        dset_id = self.id
+        dxpl_id = pdefault(dxpl)
+        space_id = H5Dget_space(self.id)
+        rank = H5Sget_simple_extent_ndims(space_id)
 
-            Feature requires: 1.8.11 HDF5
-            """
+        if len(offsets) != rank:
+            raise TypeError("offset length (%d) must match dataset rank (%d)" % (len(offsets), rank))
 
-            cdef hid_t dset_id
-            cdef hid_t dxpl_id
-            cdef hid_t space_id = 0
-            cdef hsize_t *offset = NULL
-            cdef size_t data_size
-            cdef int rank
-            cdef Py_buffer view
-
-            dset_id = self.id
-            dxpl_id = pdefault(dxpl)
-            space_id = H5Dget_space(self.id)
-            rank = H5Sget_simple_extent_ndims(space_id)
-
-            if len(offsets) != rank:
-                raise TypeError("offset length (%d) must match dataset rank (%d)" % (len(offsets), rank))
-
-            try:
-                offset = <hsize_t*>emalloc(sizeof(hsize_t)*rank)
-                convert_tuple(offsets, offset, rank)
-                PyObject_GetBuffer(data, &view, PyBUF_ANY_CONTIGUOUS)
-                H5DOwrite_chunk(dset_id, dxpl_id, filter_mask, offset, view.len, view.buf)
-            finally:
-                efree(offset)
-                PyBuffer_Release(&view)
-                if space_id:
-                    H5Sclose(space_id)
-
-    IF HDF5_VERSION >= (1, 10, 2):
-
-        @cython.boundscheck(False)
-        @cython.wraparound(False)
-        def read_direct_chunk(self, offsets, PropID dxpl=None, unsigned char[::1] out=None):
-            """ (offsets, PropID dxpl=None, out=None)
-
-            Reads data to a bytes array directly from a chunk at position
-            specified by the `offsets` argument and bypasses any filters HDF5
-            would normally apply to the written data. However, the written data
-            may be compressed or not.
-
-            Returns a tuple containing the `filter_mask` and the raw data
-            storing this chunk as bytes if `out` is None, else as a memoryview.
-
-            `filter_mask` is a bit field of up to 32 values. It records which
-            filters have been applied to this chunk, of the filter pipeline
-            defined for that dataset. Each bit set to `1` means that the filter
-            in the corresponding position in the pipeline was not applied to
-            compute the raw data. So the default value of `0` means that all
-            defined filters have been applied to the raw data.
-
-            If the `out` argument is not None, it must be a writeable
-            contiguous 1D array-like of bytes (e.g., `bytearray` or
-            `numpy.ndarray`) and large enough to contain the whole chunk.
-
-            Feature requires: 1.10.2 HDF5
-            """
-            cdef hid_t dset_id
-            cdef hid_t dxpl_id
-            cdef hid_t space_id
-            cdef hsize_t *offset = NULL
-            cdef int rank
-            cdef uint32_t filters
-            cdef hsize_t chunk_bytes, out_bytes
-            cdef int nb_offsets = len(offsets)
-            cdef void * chunk_buffer
-
-            dset_id = self.id
-            dxpl_id = pdefault(dxpl)
-            space_id = H5Dget_space(dset_id)
-            rank = H5Sget_simple_extent_ndims(space_id)
-            H5Sclose(space_id)
-
-            if nb_offsets != rank:
-                raise TypeError(
-                    f"offsets length ({nb_offsets}) must match dataset rank ({rank})"
-                )
-
+        try:
             offset = <hsize_t*>emalloc(sizeof(hsize_t)*rank)
-            try:
-                convert_tuple(offsets, offset, rank)
-                H5Dget_chunk_storage_size(dset_id, offset, &chunk_bytes)
+            convert_tuple(offsets, offset, rank)
+            PyObject_GetBuffer(data, &view, PyBUF_ANY_CONTIGUOUS)
+            H5DOwrite_chunk(dset_id, dxpl_id, filter_mask, offset, view.len, view.buf)
+        finally:
+            efree(offset)
+            PyBuffer_Release(&view)
+            if space_id:
+                H5Sclose(space_id)
 
-                if out is None:
-                    retval = PyBytes_FromStringAndSize(NULL, chunk_bytes)
-                    chunk_buffer = PyBytes_AsString(retval)
-                else:
-                    out_bytes = out.shape[0]  # Fast way to get out length
-                    if out_bytes < chunk_bytes:
-                        raise ValueError(
-                            f"out buffer is only {out_bytes} bytes, {chunk_bytes} bytes required"
-                        )
-                    retval = memoryview(out[:chunk_bytes])
-                    chunk_buffer = &out[0]
 
-                IF HDF5_VERSION >= (1, 10, 3):
-                    H5Dread_chunk(dset_id, dxpl_id, offset, &filters, chunk_buffer)
-                ELSE:
-                    H5DOread_chunk(dset_id, dxpl_id, offset, &filters, chunk_buffer)
-            finally:
-                efree(offset)
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    def read_direct_chunk(self, offsets, PropID dxpl=None, unsigned char[::1] out=None):
+        """ (offsets, PropID dxpl=None, out=None)
 
-            return filters, retval
+        Reads data to a bytes array directly from a chunk at position
+        specified by the `offsets` argument and bypasses any filters HDF5
+        would normally apply to the written data. However, the written data
+        may be compressed or not.
+
+        Returns a tuple containing the `filter_mask` and the raw data
+        storing this chunk as bytes if `out` is None, else as a memoryview.
+
+        `filter_mask` is a bit field of up to 32 values. It records which
+        filters have been applied to this chunk, of the filter pipeline
+        defined for that dataset. Each bit set to `1` means that the filter
+        in the corresponding position in the pipeline was not applied to
+        compute the raw data. So the default value of `0` means that all
+        defined filters have been applied to the raw data.
+
+        If the `out` argument is not None, it must be a writeable
+        contiguous 1D array-like of bytes (e.g., `bytearray` or
+        `numpy.ndarray`) and large enough to contain the whole chunk.
+
+        Feature requires: 1.10.2 HDF5
+        """
+        cdef hid_t dset_id
+        cdef hid_t dxpl_id
+        cdef hid_t space_id
+        cdef hsize_t *offset = NULL
+        cdef int rank
+        cdef uint32_t filters
+        cdef hsize_t chunk_bytes, out_bytes
+        cdef int nb_offsets = len(offsets)
+        cdef void * chunk_buffer
+
+        dset_id = self.id
+        dxpl_id = pdefault(dxpl)
+        space_id = H5Dget_space(dset_id)
+        rank = H5Sget_simple_extent_ndims(space_id)
+        H5Sclose(space_id)
+
+        if nb_offsets != rank:
+            raise TypeError(
+                f"offsets length ({nb_offsets}) must match dataset rank ({rank})"
+            )
+
+        offset = <hsize_t*>emalloc(sizeof(hsize_t)*rank)
+        try:
+            convert_tuple(offsets, offset, rank)
+            H5Dget_chunk_storage_size(dset_id, offset, &chunk_bytes)
+
+            if out is None:
+                retval = PyBytes_FromStringAndSize(NULL, chunk_bytes)
+                chunk_buffer = PyBytes_AsString(retval)
+            else:
+                out_bytes = out.shape[0]  # Fast way to get out length
+                if out_bytes < chunk_bytes:
+                    raise ValueError(
+                        f"out buffer is only {out_bytes} bytes, {chunk_bytes} bytes required"
+                    )
+                retval = memoryview(out[:chunk_bytes])
+                chunk_buffer = &out[0]
+
+            H5Dread_chunk(dset_id, dxpl_id, offset, &filters, chunk_buffer)
+        finally:
+            efree(offset)
+
+        return filters, retval
 
 
     IF HDF5_VERSION >= (1, 10, 5):
