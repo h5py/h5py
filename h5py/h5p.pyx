@@ -27,6 +27,8 @@ from numpy cimport ndarray, import_array
 from .h5t cimport TypeID, py_create
 from .h5s cimport SpaceID
 from .h5ac cimport CacheConfig
+IF MPI and HDF5_VERSION >= (1, 14, 0):
+    from .h5fd cimport IOCConfig, SubfilingConfig
 
 # Python level imports
 from ._objects import phil, with_phil
@@ -1493,6 +1495,30 @@ cdef class PropFAID(PropInstanceID):
             """
             H5Pset_file_locking(
                 self.id, <hbool_t>use_file_locking, <hbool_t>ignore_when_disabled)
+
+    IF MPI and HDF5_VERSION >= (1, 14, 0):
+        @with_phil
+        def set_fapl_ioc(self, ioc_fapl_id, IOCConfig config not None):
+            H5Pset_fapl_ioc(ioc_fapl_id, &config.ioc_config)
+
+        @with_phil
+        def get_fapl_ioc(self):
+            cdef IOCConfig config = IOCConfig()
+            H5Pget_fapl_ioc(self.id, &config.ioc_config)
+
+            return config
+
+        @with_phil
+        def set_fapl_subfiling(self, SubfilingConfig config not None):
+            H5Pset_fapl_subfiling(self.id, &config.subf_config)
+
+        @with_phil
+        def get_fapl_subfiling(self):
+            cdef SubfilingConfig config = SubfilingConfig()
+            H5Pget_fapl_subfiling(self.id, &config.subf_config)
+
+            return config
+
 
 
 # Link creation

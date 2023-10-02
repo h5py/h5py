@@ -111,6 +111,7 @@ def registered_drivers():
 def make_fapl(driver, libver, rdcc_nslots, rdcc_nbytes, rdcc_w0, locking,
               page_buf_size, min_meta_keep, min_raw_keep,
               alignment_threshold, alignment_interval, meta_block_size,
+              ioc_selection, stripe_size, stripe_count, ioc_thread_pool_size,
               **kwds):
     """ Set up a file access property list """
     plist = h5p.create(h5p.FILE_ACCESS)
@@ -172,7 +173,34 @@ def make_fapl(driver, libver, rdcc_nslots, rdcc_nbytes, rdcc_w0, locking,
     else:
         set_fapl(plist, **kwds)
 
+    # Subfiling parameter setting must be done after calling H5Pset_mpi_params or H5P_set_fapl_mpio
+    if ioc_selection or stripe_size or stripe_count or ioc_thread_pool_size:
+        make_subfiling_fapl(plist, ioc_thread_pool_size, ioc_selection, stripe_count, stripe_size)
+
     return plist
+
+
+def make_subfiling_fapl(plist, ioc_thread_pool_size, ioc_selection, stripe_count, stripe_size):
+    ioc_config = plist.get_fapl_ioc()
+    subf_config = plist.get_fapl_subfiling()
+    if ioc_thread_pool_size:
+        ioc_config.thread_pool_size = ioc_thread_pool_size
+    if stripe_size:
+        subf_config.stripe_size = stripe_size * 1024 * 1024
+    if stripe_count:
+        subf_config.stripe_count = stripe_count
+    if ioc_selection:
+        if ioc_selection == "one_per_node":
+            ioc_selection_enum = h5fd.IOC_ONE_PER_NODE
+        elif ioc_selection == "every_nth_rank":
+            ioc_selection_enum = h5fd.IOC_EVERY_NTH_RANK
+        elif ioc_selection == "total":
+            ioc_selection_enum = h5fd.IOC_TOTAL
+        else:
+            raise NotImplementedError("Unsupported IO concentrator allocation mode.")
+        subf_config.ioc_selection = ioc_selection_enum
+    plist.set_fapl_ioc(subf_config.ioc_fapl_id, ioc_config)
+    plist.set_fapl_subfiling(subf_config)
 
 
 def make_fcpl(track_order=False, fs_strategy=None, fs_persist=False,
@@ -369,7 +397,8 @@ class File(Group):
                  rdcc_nslots=None, rdcc_nbytes=None, rdcc_w0=None, track_order=None,
                  fs_strategy=None, fs_persist=False, fs_threshold=1, fs_page_size=None,
                  page_buf_size=None, min_meta_keep=0, min_raw_keep=0, locking=None,
-                 alignment_threshold=1, alignment_interval=1, meta_block_size=None, **kwds):
+                 alignment_threshold=1, alignment_interval=1, meta_block_size=None,
+                 ioc_selection=None, stripe_size=None, stripe_count=None, ioc_thread_pool_size=None, **kwds):
         """Create a new file object.
 
         See the h5py user guide for a detailed explanation of the options.
@@ -486,6 +515,22 @@ class File(Group):
             Set the current minimum size, in bytes, of new metadata block allocations.
             See https://portal.hdfgroup.org/display/HDF5/H5P_SET_META_BLOCK_SIZE
 
+        ioc_selection
+            Set IO concentrator method for different allocations of MPI ranks as I/O concentrators. Can be set
+            to h5py.h5fd.IOC_<method> constants (e.g. IOC_ONE_PER_NODE)
+            See https://docs.hdfgroup.org/hdf5/develop/_h5_f_dsubfiling_8h.html#a2bcf2d531a0668895308692b0c1108d7
+
+        stripe_count
+            Set the parameter for Subfiling stripe count.
+            See https://docs.hdfgroup.org/hdf5/develop/struct_h5_f_d__subfiling__params__t.html
+
+        stripe_size
+            Set the parameter for Subfiling stripe size.
+            See https://docs.hdfgroup.org/hdf5/develop/struct_h5_f_d__subfiling__params__t.html
+
+        ioc_thread_pool_size
+            Set the parameter for the IOC.
+
         Additional keywords
             Passed on to the selected file driver.
         """
@@ -547,6 +592,8 @@ class File(Group):
                                  alignment_threshold=alignment_threshold,
                                  alignment_interval=alignment_interval,
                                  meta_block_size=meta_block_size,
+                                 ioc_selection=ioc_selection, stripe_size=stripe_size, stripe_count=stripe_count,
+                                 ioc_thread_pool_size=ioc_thread_pool_size,
                                  **kwds)
                 fcpl = make_fcpl(track_order=track_order, fs_strategy=fs_strategy,
                                  fs_persist=fs_persist, fs_threshold=fs_threshold,
