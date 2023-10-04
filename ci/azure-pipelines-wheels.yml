@@ -34,7 +34,7 @@ steps:
 - bash: |
     set -o errexit
     python -m pip install --upgrade pip
-    pip install cibuildwheel==2.11.1
+    pip install cibuildwheel==2.16.2
   displayName: 'Install cibuildwheel'
 
 - script: env
