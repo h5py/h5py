@@ -36,7 +36,7 @@ COMPILER_SETTINGS = {
    'libraries'      : ['hdf5', 'hdf5_hl'],
    'include_dirs'   : [localpath('lzf')],
    'library_dirs'   : [],
-   'define_macros'  : [('H5_USE_18_API', None),
+   'define_macros'  : [('H5_USE_110_API', None),
                        ('NPY_NO_DEPRECATED_API', 0),
                       ]
 }
