@@ -1,7 +1,0 @@
-Bug fixes
----------
-
-* Sequential slicing/indexing operations on a :class:`.VirtualSource` object
-  (e.g. ``source[:10][::2]``)  now raise an error, rather than giving incorrect
-  results.
-
