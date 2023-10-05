@@ -144,10 +144,10 @@ cdef herr_t H5FD_fileobj_close(H5FD_fileobj_t *f) except -1 with gil:
     stdlib_free(f)
     return 0
 
-cdef haddr_t H5FD_fileobj_get_eoa(const H5FD_fileobj_t *f, H5FD_mem_t type):
+cdef haddr_t H5FD_fileobj_get_eoa(const H5FD_fileobj_t *f, H5FD_mem_t type) noexcept nogil:
     return f.eoa
 
-cdef herr_t H5FD_fileobj_set_eoa(H5FD_fileobj_t *f, H5FD_mem_t type, haddr_t addr):
+cdef herr_t H5FD_fileobj_set_eoa(H5FD_fileobj_t *f, H5FD_mem_t type, haddr_t addr) noexcept nogil:
     f.eoa = addr
     return 0
 
