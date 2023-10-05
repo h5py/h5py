@@ -801,11 +801,9 @@ class TestExternal(BaseDataset):
             contents = fid.read()
         assert contents == testdata.tobytes()
 
-        # check efile_prefix, only for 1.10.0 due to HDFFV-9716
-        if h5py.version.hdf5_version_tuple >= (1,10,0):
-            efile_prefix = pathlib.Path(dset.id.get_access_plist().get_efile_prefix().decode()).as_posix()
-            parent = pathlib.Path(self.f.filename).parent.as_posix()
-            assert efile_prefix == parent
+        efile_prefix = pathlib.Path(dset.id.get_access_plist().get_efile_prefix().decode()).as_posix()
+        parent = pathlib.Path(self.f.filename).parent.as_posix()
+        assert efile_prefix == parent
 
     def test_contents_efile_prefix(self):
         """ Create and access an external dataset using an efile_prefix"""
@@ -1397,6 +1395,30 @@ class TestCompound(BaseDataset):
         # Check len() on fields wrapper
         assert len(self.f['test'].fields('x')) == 16
 
+    def test_nested_compound_vlen(self):
+        dt_inner = np.dtype([('a', h5py.vlen_dtype(np.int32)),
+                            ('b', h5py.vlen_dtype(np.int32))])
+
+        dt = np.dtype([('f1', h5py.vlen_dtype(dt_inner)),
+                       ('f2', np.int64)])
+
+        inner1 = (np.array(range(1, 3), dtype=np.int32),
+                  np.array(range(6, 9), dtype=np.int32))
+
+        inner2 = (np.array(range(10, 14), dtype=np.int32),
+                  np.array(range(16, 21), dtype=np.int32))
+
+        data = np.array([(np.array([inner1, inner2], dtype=dt_inner), 2),
+                        (np.array([inner1], dtype=dt_inner), 3)],
+                        dtype=dt)
+
+        self.f["ds"] = data
+        out = self.f["ds"]
+
+        # Specifying check_alignment=False because vlen fields have 8 bytes of padding
+        # because the vlen datatype in hdf5 occupies 16 bytes
+        self.assertArrayEqual(out, data, check_alignment=False)
+
 
 class TestSubarray(BaseDataset):
     def test_write_list(self):
@@ -1871,10 +1893,6 @@ def test_vlen_nullterm():
         assert f["ds1"][0] == b"2009-12-20T10:16:18.662409Z"
 
 
-@pytest.mark.skipif(
-    h5py.version.hdf5_version_tuple < (1, 10, 3),
-    reason="Appears you cannot pass an unknown filter id for HDF5 < 1.10.3"
-)
 def test_allow_unknown_filter(writable_file):
     # apparently 256-511 are reserved for testing purposes
     fake_filter_id = 256
@@ -1956,8 +1974,6 @@ class TestVirtualPrefix(BaseDataset):
     """
     Test setting virtual prefix
     """
-    @ut.skipIf(version.hdf5_version_tuple < (1, 10, 2),
-               reason = "Virtual prefix does not exist before HDF5 version 1.10.2")
     def test_virtual_prefix_create(self):
         shape = (100,1)
         virtual_prefix = "/path/to/virtual"
@@ -1968,8 +1984,6 @@ class TestVirtualPrefix(BaseDataset):
         virtual_prefix_readback = pathlib.Path(dset.id.get_access_plist().get_virtual_prefix().decode()).as_posix()
         assert virtual_prefix_readback == virtual_prefix
 
-    @ut.skipIf(version.hdf5_version_tuple < (1, 10, 2),
-               reason = "Virtual prefix does not exist before HDF5 version 1.10.2")
     def test_virtual_prefix_require(self):
         virtual_prefix = "/path/to/virtual"
         dset = self.f.require_dataset('foo', (10, 3), 'f', virtual_prefix = virtual_prefix)

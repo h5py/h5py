@@ -67,6 +67,7 @@ from ._hl.group import Group, SoftLink, ExternalLink, HardLink
 from ._hl.dataset import Dataset
 from ._hl.datatype import Datatype
 from ._hl.attrs import AttributeManager
+from ._hl.vds import VirtualSource, VirtualLayout
 
 from ._selector import MultiBlockSlice
 from .h5 import get_config
@@ -80,10 +81,6 @@ from .h5t import (special_dtype, check_dtype,
 from .h5s import UNLIMITED
 
 from .version import version as __version__
-
-
-if version.hdf5_version_tuple[:3] >= get_config().vds_min_hdf5_version:
-    from ._hl.vds import VirtualSource, VirtualLayout
 
 
 def run_tests(args=''):

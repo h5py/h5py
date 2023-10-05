@@ -118,7 +118,7 @@ class TestScalarFloat(TestCase):
 
     def setUp(self):
         TestCase.setUp(self)
-        self.data = np.array(42.5, dtype='f')
+        self.data = np.array(42.5, dtype=np.double)
         self.dset = self.f.create_dataset('x', data=self.data)
 
     def test_ndim(self):
@@ -323,7 +323,6 @@ class TestScalarArray(TestCase):
             self.dset['field']
 
 
-@ut.skipUnless(h5py.version.hdf5_version_tuple >= (1, 8, 7), 'HDF5 1.8.7+ required')
 class Test1DZeroFloat(TestCase):
 
     def setUp(self):
@@ -524,7 +523,6 @@ class Test1DFloat(TestCase):
             self.dset['field']
 
 
-@ut.skipUnless(h5py.version.hdf5_version_tuple >= (1, 8, 7), 'HDF5 1.8.7+ required')
 class Test2DZeroFloat(TestCase):
 
     def setUp(self):

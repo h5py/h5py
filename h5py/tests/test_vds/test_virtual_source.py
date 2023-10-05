@@ -3,8 +3,6 @@ import h5py as h5
 import numpy as np
 
 
-@ut.skipUnless(h5.version.hdf5_version_tuple >= (1, 9, 233),
-               'VDS requires HDF5 >= 1.9.233')
 class TestVirtualSource(ut.TestCase):
     def test_full_slice(self):
         dataset = h5.VirtualSource('test','test',(20,30,30))

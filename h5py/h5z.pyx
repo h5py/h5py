@@ -11,6 +11,7 @@
     Filter API and constants.
 """
 
+from libc.stdint cimport uintptr_t
 from ._objects import phil, with_phil
 
 
@@ -99,7 +100,7 @@ def get_filter_info(int filter_code):
 
 
 @with_phil
-def register_filter(Py_ssize_t cls_pointer_address):
+def register_filter(uintptr_t cls_pointer_address):
     '''(INT cls_pointer_address) => BOOL
 
     Register a new filter from the memory address of a buffer containing a

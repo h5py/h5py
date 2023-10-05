@@ -36,7 +36,10 @@ COMPILER_SETTINGS = {
    'libraries'      : ['hdf5', 'hdf5_hl'],
    'include_dirs'   : [localpath('lzf')],
    'library_dirs'   : [],
-   'define_macros'  : [('H5_USE_18_API', None),
+   'define_macros'  : [('H5_USE_110_API', None),
+                       # The definition should imply the one below, but CI on
+                       # Ubuntu 20.04 still gets H5Rdereference1 for some reason
+                       ('H5Rdereference_vers', 2),
                        ('NPY_NO_DEPRECATED_API', 0),
                       ]
 }
@@ -140,6 +143,12 @@ class h5py_build_ext(build_ext):
         config = BuildConfig.from_env()
         config.summarise()
 
+        if config.hdf5_version < (1, 10, 4):
+            raise Exception(
+                f"This version of h5py requires HDF5 >= 1.10.4 (got version "
+                f"{config.hdf5_version} from environment variable or library)"
+            )
+
         defs_file = localpath('h5py', 'defs.pyx')
         func_file = localpath('h5py', 'api_functions.txt')
         config_file = localpath('h5py', 'config.pxi')
@@ -157,8 +166,6 @@ DEF MPI = {bool(config.mpi)}
 DEF ROS3 = {bool(config.ros3)}
 DEF HDF5_VERSION = {config.hdf5_version}
 DEF DIRECT_VFD = {bool(config.direct_vfd)}
-DEF SWMR_MIN_HDF5_VERSION = (1,9,178)
-DEF VDS_MIN_HDF5_VERSION = (1,9,233)
 DEF VOL_MIN_HDF5_VERSION = (1,11,5)
 DEF COMPLEX256_SUPPORT = {complex256_support}
 DEF NUMPY_BUILD_VERSION = '{numpy.__version__}'

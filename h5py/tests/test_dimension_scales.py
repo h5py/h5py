@@ -84,11 +84,6 @@ class TestH5DSBindings(BaseDataset):
             )
         self.assertEqual(h5py.h5ds.get_num_scales(self.f['data'].id, 2), 1)
 
-    # TODO: update condition once the bug is fixed upstream
-    @ut.skipUnless(
-        h5py.version.hdf5_version_tuple > (2, 0, 0),
-        "Reading non-existent label segfaults"
-        )
     def test_label_dimensionscale(self):
         self.assertEqual(h5py.h5ds.get_label(self.f['data'].id, 0), b'z')
         self.assertEqual(h5py.h5ds.get_label(self.f['data'].id, 1), b'')

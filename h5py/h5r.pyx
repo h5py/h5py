@@ -13,7 +13,8 @@
 """
 
 # Cython C-level imports
-from ._objects cimport ObjectID
+from ._objects cimport ObjectID, pdefault
+from .h5p cimport PropID
 
 #Python level imports
 from ._objects import phil, with_phil
@@ -66,7 +67,7 @@ def create(ObjectID loc not None, char* name, int ref_type, ObjectID space=None)
 
 
 @with_phil
-def dereference(Reference ref not None, ObjectID id not None):
+def dereference(Reference ref not None, ObjectID id not None, PropID oapl=None):
     """(Reference ref, ObjectID id) => ObjectID or None
 
     Open the object pointed to by the reference and return its
@@ -79,7 +80,9 @@ def dereference(Reference ref not None, ObjectID id not None):
     from . import h5i
     if not ref:
         return None
-    return h5i.wrap_identifier(H5Rdereference(id.id, <H5R_type_t>ref.typecode, &ref.ref))
+    return h5i.wrap_identifier(H5Rdereference(
+        id.id, pdefault(oapl), <H5R_type_t>ref.typecode, &ref.ref
+    ))
 
 
 @with_phil
@@ -130,7 +133,6 @@ def get_name(Reference ref not None, ObjectID loc not None):
     """(Reference ref, ObjectID loc) => STRING name
 
     Determine the name of the object pointed to by this reference.
-    Requires the HDF5 1.8 API.
     """
     cdef ssize_t namesize = 0
     cdef char* namebuf = NULL

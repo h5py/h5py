@@ -3,7 +3,6 @@ from h5py import h5f, h5p
 
 from .common import ut, TestCase
 
-@ut.skipUnless(h5py.version.hdf5_version_tuple >= (1, 8, 9), 'file image operations require HDF5 >= 1.8.9')
 class TestFileImage(TestCase):
     def test_load_from_image(self):
         from binascii import a2b_base64

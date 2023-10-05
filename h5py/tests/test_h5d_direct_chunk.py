@@ -6,7 +6,6 @@ import pytest
 from .common import ut, TestCase
 
 
-@ut.skipUnless(h5py.version.hdf5_version_tuple >= (1, 8, 11), 'Direct Chunk Writing requires HDF5 >= 1.8.11')
 class TestWriteDirectChunk(TestCase):
     def test_write_direct_chunk(self):
 
@@ -33,7 +32,6 @@ class TestWriteDirectChunk(TestCase):
                 numpy.testing.assert_array_equal(array[i], read_data)
 
 
-@ut.skipUnless(h5py.version.hdf5_version_tuple >= (1, 10, 2), 'Direct Chunk Reading requires HDF5 >= 1.10.2')
 @ut.skipIf('gzip' not in h5py.filters.encode, "DEFLATE is not installed")
 class TestReadDirectChunk(TestCase):
     def test_read_compressed_offsets(self):
@@ -116,10 +114,6 @@ class TestReadDirectChunk(TestCase):
             numpy.testing.assert_array_equal(dataset, frame)
 
 
-@pytest.mark.skipif(
-    h5py.version.hdf5_version_tuple < (1, 10, 2),
-    reason="Direct chunk read requires HDF5 >= 1.10.2"
-)
 class TestReadDirectChunkToOut:
 
     def test_uncompressed_data(self, writable_file):
