@@ -37,6 +37,9 @@ COMPILER_SETTINGS = {
    'include_dirs'   : [localpath('lzf')],
    'library_dirs'   : [],
    'define_macros'  : [('H5_USE_110_API', None),
+                       # The definition should imply the one below, but CI on
+                       # Ubuntu 20.04 still gets H5Rdereference1 for some reason
+                       ('H5Rdereference_vers', 2),
                        ('NPY_NO_DEPRECATED_API', 0),
                       ]
 }
