@@ -302,8 +302,10 @@ hdf5:
   herr_t    H5Pget_fapl_family ( hid_t fapl_id, hsize_t *memb_size, hid_t *memb_fapl_id )
   herr_t    H5Pset_family_offset ( hid_t fapl_id, hsize_t offset)
   herr_t    H5Pget_family_offset ( hid_t fapl_id, hsize_t *offset)
-  ROS3 herr_t    H5Pget_fapl_ros3(hid_t fapl_id, H5FD_ros3_fapl_t *fa_out);
-  ROS3 herr_t    H5Pset_fapl_ros3(hid_t fapl_id, H5FD_ros3_fapl_t *fa);
+  ROS3 herr_t    H5Pget_fapl_ros3(hid_t fapl_id, H5FD_ros3_fapl_t *fa_out)
+  ROS3 herr_t    H5Pset_fapl_ros3(hid_t fapl_id, H5FD_ros3_fapl_t *fa)
+  ROS3 1.14.2 herr_t H5Pget_fapl_ros3_token(hid_t fapl_id, size_t size, char *token)
+  ROS3 1.14.2 herr_t H5Pset_fapl_ros3_token(hid_t fapl_id, const char *token)
   DIRECT_VFD herr_t H5Pget_fapl_direct(hid_t fapl_id, size_t *boundary, size_t *block_size, size_t *cbuf_size);
   DIRECT_VFD herr_t H5Pset_fapl_direct(hid_t fapl_id, size_t alignment, size_t block_size, size_t cbuf_size);
   herr_t    H5Pset_fapl_log(hid_t fapl_id, char *logfile, unsigned int flags, size_t buf_size)
