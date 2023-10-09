@@ -1,0 +1,43 @@
+What's new in h5py 3.10
+=======================
+
+New features
+------------
+
+* h5py now has pre-built packages for Python 3.12.
+* Pre-built packages on Linux & Windows now bundle HDF5 version 1.14.2.
+  Mac packages still contain HDF5 1.12.2 for now. You can still :ref:`build h5py
+  from source <source_install>` against a wider range of HDF5 versions.
+* The read-only S3 file driver ('ros3') now accepts an AWS session token
+  as part of the credentials (:pr:`2301`). Pass ``session_token`` when opening
+  a :class:`.File` (along with the other S3 parameters). This requires HDF5
+  1.14.2 or later, with the ROS3 feature built.
+
+Deprecations & removals
+-----------------------
+
+* Support for the HDF5 1.8 series was dropped, along with early 1.10 releases.
+  The minimum required HDF5 version is now 1.10.4.
+
+Exposing HDF5 functions
+-----------------------
+
+* ``H5Pget_fapl_ros3_token`` & ``H5Pset_fapl_ros3_token``
+
+Bug fixes
+---------
+
+* Various nasty bugs when using nested compound and vlen data types have been
+  fixed (:pr:`2134`).
+* Fixed an ``OverflowError`` in some cases when registering a filter with
+  :func:`h5z.register_filter`, especially on 32-bit architectures (:pr:`2318`).
+* Sequential slicing/indexing operations on a :class:`.VirtualSource` object
+  (e.g. ``source[:10][::2]``)  now raise an error, rather than giving incorrect
+  results (:pr:`2280`).
+
+Building h5py
+-------------
+
+* h5py now uses HDF5's 1.10 compatibility mode at compile time rather than the
+  1.8 compatibility mode (:pr:`2320`). This is normally transparent even if you're
+  building h5py from source.
