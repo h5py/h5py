@@ -32,7 +32,6 @@ extensions = [
         'sphinx.ext.intersphinx',
         'sphinx.ext.extlinks',
         'sphinx.ext.mathjax',
-        'sphinx_search.extension',
 ]
 
 intersphinx_mapping = {'low': ('https://api.h5py.org', None)}
