@@ -771,7 +771,7 @@ class TestExternalLinks(TestCase):
         with self.assertRaises(KeyError):
             self.f['ext']
 
-    # I would prefer IOError but there's no way to fix this as the exception
+    # I would prefer OSError but there's no way to fix this as the exception
     # class is determined by HDF5.
     def test_exc_missingfile(self):
         """ KeyError raised when attempting to open missing file """
@@ -844,7 +844,7 @@ class TestExtLinkBugs(TestCase):
                 try:
                     if x:
                         x.close()
-                except IOError:
+                except OSError:
                     pass
             return w
         orig_name = self.mktemp()
