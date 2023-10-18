@@ -392,7 +392,7 @@ Data alignment
 When creating datasets within files, it may be advantageous to align the offset
 within the file itself. This can help optimize read and write times if the data
 become aligned with the underlying hardware, or may help with parallelism with
-MPI. Unfortunately, aligning small variables to large blocks can leave alot of
+MPI. Unfortunately, aligning small variables to large blocks can leave a lot of
 empty space in a file. To this effect, application developers are left with two
 options to tune the alignment of data within their file.  The two variables
 ``alignment_threshold`` and ``alignment_interval``  in the :class:`File`
@@ -415,7 +415,7 @@ number of regions. Setting a small value can reduce the overall file size,
 especially in combination with the ``libver`` option. This controls how the
 overall data and metadata are laid out within the file.
 
-For more information, see the offical HDF5 documentation `H5P_SET_META_BLOCK_SIZE
+For more information, see the official HDF5 documentation `H5P_SET_META_BLOCK_SIZE
 <https://portal.hdfgroup.org/display/HDF5/H5P_SET_META_BLOCK_SIZE>`_.
 
 Reference
@@ -497,7 +497,7 @@ Reference
             Only available with HDF5 >= 1.12.1 or 1.10.x >= 1.10.7.
     :param alignment_threshold: Together with ``alignment_interval``, this
             property ensures that any file object greater than or equal
-            in size to the alignement threshold (in bytes) will be
+            in size to the alignment threshold (in bytes) will be
             aligned on an address which is a multiple of alignment interval.
     :param alignment_interval: This property should be used in conjunction with
             ``alignment_threshold``. See the description above. For more

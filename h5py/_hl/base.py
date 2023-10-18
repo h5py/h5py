@@ -20,7 +20,7 @@ import posixpath
 import numpy as np
 
 # The high-level interface is serialized; every public API function & method
-# is wrapped in a lock.  We re-use the low-level lock because (1) it's fast,
+# is wrapped in a lock.  We reuse the low-level lock because (1) it's fast,
 # and (2) it eliminates the possibility of deadlocks due to out-of-order
 # lock acquisition.
 from .._objects import phil, with_phil
