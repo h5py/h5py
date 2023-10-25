@@ -524,7 +524,7 @@ def product(nums):
 # Daniel Greenfeld, BSD license), where it is attributed to bottle (Copyright
 # (c) 2009-2022, Marcel Hellkamp, MIT license).
 
-class cached_property(object):
+class cached_property:
     def __init__(self, func):
         self.__doc__ = getattr(func, "__doc__")
         self.func = func
