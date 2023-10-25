@@ -19,7 +19,7 @@ New features
   include it. Alternatively, you can :ref:`build h5py from source <source_install>`
   against an HDF5 build with the direct driver enabled.
 * The :class:`.File` constructor contains two new parameters ``alignment_threshold``,
-  and ``alignment_interval`` controling the data alignment within the HDF5
+  and ``alignment_interval`` controlling the data alignment within the HDF5
   file (:pr:`2040`).
 * :meth:`~.Group.create_dataset` and :meth:`~.Group.require_dataset` now accept
   parameters ``efile_prefix`` and ``virtual_prefix`` to set a filesystem path
@@ -40,7 +40,7 @@ Bug fixes
   attributes with ``track_order=True``.
 * Fix for building with mpi4py on Python 3.10 (:pr:`2101`).
 * Fixed fancy indexing with a boolean array for a single dimension (:pr:`2079`).
-* Avoid returning unitialised memory when reading from a chunked dataset with
+* Avoid returning uninitialised memory when reading from a chunked dataset with
   missing chunks and no fill value (:pr:`2076`).
 * Enable setting of fillvalue for datasets with variable length string dtype
   (:pr:`2044`).

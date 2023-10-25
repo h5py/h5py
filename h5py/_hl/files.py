@@ -480,7 +480,7 @@ class File(Group):
 
         alignment_threshold
             Together with ``alignment_interval``, this property ensures that
-            any file object greater than or equal in size to the alignement
+            any file object greater than or equal in size to the alignment
             threshold (in bytes) will be aligned on an address which is a
             multiple of alignment interval.
 

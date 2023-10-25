@@ -1177,7 +1177,7 @@ cdef class PropFAID(PropInstanceID):
                 size_t block_size   IN: File system block size
                 size_t cbuf_size    IN: Copy buffer size
 
-            Properites with value of 0 indicate that the HDF5 library should
+            Properties with value of 0 indicate that the HDF5 library should
             choose the value.
             """
             H5Pset_fapl_direct(self.id, alignment, block_size, cbuf_size)
@@ -1761,7 +1761,7 @@ cdef class PropOCID(PropCreateID):
 
         max_compact -- maximum number of attributes to be stored in compact storage(default:8)
         must be greater than or equal to min_dense
-        min_dense  -- minmum number of attributes to be stored in dense storage(default:6)
+        min_dense  -- minimum number of attributes to be stored in dense storage(default:6)
 
         """
         H5Pset_attr_phase_change(self.id, max_compact, min_dense)

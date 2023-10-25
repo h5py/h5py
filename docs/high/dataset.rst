@@ -58,7 +58,7 @@ the requested ``dtype``.
 Reading & writing data
 ----------------------
 
-HDF5 datasets re-use the NumPy slicing syntax to read and write to the file.
+HDF5 datasets reuse the NumPy slicing syntax to read and write to the file.
 Slice specifications are translated directly to HDF5 "hyperslab"
 selections, and are a fast and efficient way to access data in the file. The
 following slicing arguments are recognized:
@@ -464,7 +464,7 @@ Reference
         >>> dset = f["MyDS"]
         >>> f.close()
         >>> if dset:
-        ...     print("datset accessible")
+        ...     print("dataset accessible")
         ... else:
         ...     print("dataset inaccessible")
         dataset inaccessible

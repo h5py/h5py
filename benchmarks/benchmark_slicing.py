@@ -7,7 +7,7 @@ import logging
 logger = logging.getLogger(__name__)
 import h5py
 
-#Needed for mutithreading:
+#Needed for multithreading:
 from queue import Queue
 from threading import Thread, Event
 import multiprocessing
@@ -173,8 +173,8 @@ class SlicingBenchmark:
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
-    benckmark = SlicingBenchmark()
-    benckmark.setup()
-    benckmark.time_sequential_reads()
-    benckmark.time_threaded_reads()
-    benckmark.teardown()
+    benchmark = SlicingBenchmark()
+    benchmark.setup()
+    benchmark.time_sequential_reads()
+    benchmark.time_threaded_reads()
+    benchmark.teardown()
