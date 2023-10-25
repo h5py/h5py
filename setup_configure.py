@@ -165,7 +165,7 @@ class BuildConfig:
         try:
             if pkgconfig.exists(pc_name):
                 pc = pkgconfig.parse(pc_name)
-        except EnvironmentError:
+        except OSError:
             if os.name != 'nt':
                 print(
                     "Building h5py requires pkg-config unless the HDF5 path "

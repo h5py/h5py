@@ -639,9 +639,9 @@ class TestUnicode(TestCase):
         Modes 'r' and 'r+' do not create files even when given unicode names
         """
         fname = self.mktemp(prefix=chr(0x201a))
-        with self.assertRaises(IOError):
+        with self.assertRaises(OSError):
             File(fname, 'r')
-        with self.assertRaises(IOError):
+        with self.assertRaises(OSError):
             File(fname, 'r+')
 
 
