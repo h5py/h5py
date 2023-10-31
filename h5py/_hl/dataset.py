@@ -11,6 +11,7 @@
     Implements support for high-level dataset access.
 """
 
+import os
 import platform
 import posixpath as pp
 import sys
@@ -768,8 +769,13 @@ class Dataset(HLObject):
         args = args if isinstance(args, tuple) else (args,)
 
         if self._fast_read_ok and (new_dtype is None):
-            # TODO: Take BLOSC2_FILTER environment variable into account?
-            if self._blosc2_opt_slicing_ok:
+            # The BLOSC2_FILTER environment variable set to a non-zero integer
+            # forces the use of the filter pipeline.
+            try:
+                force_b2filter = int(os.environ.get('BLOSC2_FILTER', '0'), 10)
+            except ValueError:
+                force_b2filter = 0
+            if self._blosc2_opt_slicing_ok and not force_b2filter:
                 selection = sel.select(self.shape, args, dataset=self)
                 if (isinstance(selection, sel.SimpleSelection)
                     and numpy.prod(selection._sel[2]) == 1  # all steps equal 1
