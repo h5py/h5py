@@ -11,8 +11,6 @@
     Implements support for high-level dataset access.
 """
 
-import os
-import platform
 import posixpath as pp
 import sys
 
@@ -23,6 +21,7 @@ from .base import (
     array_for_new_object, cached_property, Empty, find_item_type, HLObject,
     phil, product, with_phil,
 )
+from . import blosc2
 from . import filters
 from . import selections as sel
 from . import selections2 as sel2
@@ -744,33 +743,7 @@ class Dataset(HLObject):
     @cached_property
     def _blosc2_opt_slicing_ok(self):
         """Is this dataset suitable for Blosc2 optimized slicing"""
-        return (
-            self.chunks is not None
-            # '.compression' and '.compression_opts' don't work with plugins,
-            # see <https://forum.hdfgroup.org/t/registering-custom-filter-issues/9239>.
-            and '32026' in self._filters  # Blosc2's ID
-            and self.dtype.byteorder in ('=', '|')
-            and (self.file.mode == 'r'
-                 or platform.system().lower() != 'windows')
-        )
-
-    @property
-    def _blosc2_force_filter(self):
-        """Is Blosc2 optimized slicing disabled via the environment"""
-        # The BLOSC2_FILTER environment variable set to a non-zero integer
-        # forces the use of the filter pipeline.
-        try:
-            force_filter = int(os.environ.get('BLOSC2_FILTER', '0'), 10)
-        except ValueError:
-            force_filter = 0
-        return force_filter != 0
-
-    def _blosc2_opt_slice_read(self, selection):
-        start = selection._sel[0]
-        shape = selection.mshape
-        arr = numpy.empty(dtype=self.dtype, shape=shape)
-        # TODO: complete
-        return arr
+        return blosc2.opt_slicing_ok(self)
 
     @with_phil
     def __getitem__(self, args, new_dtype=None):
@@ -787,13 +760,13 @@ class Dataset(HLObject):
         args = args if isinstance(args, tuple) else (args,)
 
         if self._fast_read_ok and (new_dtype is None):
-            if self._blosc2_opt_slicing_ok and not self._blosc2_force_filter:
+            if self._blosc2_opt_slicing_ok and not blosc2.force_filter():
                 selection = sel.select(self.shape, args, dataset=self)
                 if (isinstance(selection, sel.SimpleSelection)
                     and numpy.prod(selection._sel[2]) == 1  # all steps equal 1
                 ):
                     print("XXXX B2NDopt: slice is candidate")  # TODO: remove
-                    return self._blosc2_opt_slice_read(selection)
+                    return blosc2.opt_slice_read(self, selection)
                 else:  # TODO: remove
                     print("XXXX B2NDopt: slice is not candidate")
             else:  # TODO: remove
