@@ -765,6 +765,13 @@ class Dataset(HLObject):
             force_filter = 0
         return force_filter != 0
 
+    def _blosc2_opt_slice_read(self, selection):
+        start = selection._sel[0]
+        shape = selection.mshape
+        arr = numpy.empty(dtype=self.dtype, shape=shape)
+        # TODO: complete
+        return arr
+
     @with_phil
     def __getitem__(self, args, new_dtype=None):
         """ Read a slice from the HDF5 dataset.
@@ -785,7 +792,8 @@ class Dataset(HLObject):
                 if (isinstance(selection, sel.SimpleSelection)
                     and numpy.prod(selection._sel[2]) == 1  # all steps equal 1
                 ):
-                    print("XXXX B2NDopt: slice is candidate")  # TODO: return read
+                    print("XXXX B2NDopt: slice is candidate")  # TODO: remove
+                    return self._blosc2_opt_slice_read(selection)
                 else:  # TODO: remove
                     print("XXXX B2NDopt: slice is not candidate")
             else:  # TODO: remove
