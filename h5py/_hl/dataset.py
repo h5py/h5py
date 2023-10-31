@@ -11,6 +11,7 @@
     Implements support for high-level dataset access.
 """
 
+import platform
 import posixpath as pp
 import sys
 
@@ -739,6 +740,19 @@ class Dataset(HLObject):
             and isinstance(self.id.get_type(), (h5t.TypeIntegerID, h5t.TypeFloatID))
         )
 
+    @cached_property
+    def _blosc2_opt_slicing_ok(self):
+        """Is this dataset suitable for Blosc2 optimized slicing"""
+        return (
+            self.chunks is not None
+            # '.compression' and '.compression_opts' don't work with plugins,
+            # see <https://forum.hdfgroup.org/t/registering-custom-filter-issues/9239>.
+            and '32026' in self._filters  # Blosc2's ID
+            and self.dtype.byteorder in ('=', '|')
+            and (self.file.mode == 'r'
+                 or platform.system().lower() != 'windows')
+        )
+
     @with_phil
     def __getitem__(self, args, new_dtype=None):
         """ Read a slice from the HDF5 dataset.
@@ -754,6 +768,17 @@ class Dataset(HLObject):
         args = args if isinstance(args, tuple) else (args,)
 
         if self._fast_read_ok and (new_dtype is None):
+            # TODO: Take BLOSC2_FILTER environment variable into account?
+            if self._blosc2_opt_slicing_ok:
+                selection = sel.select(self.shape, args, dataset=self)
+                if (isinstance(selection, sel.SimpleSelection)
+                    and numpy.prod(selection._sel[2]) == 1  # all steps equal 1
+                ):
+                    print("XXXX B2NDopt: slice is candidate")  # TODO: return read
+                else:  # TODO: remove
+                    print("XXXX B2NDopt: slice is not candidate")
+            else:  # TODO: remove
+                print("XXXX B2NDopt: array is not candidate")
             try:
                 return self._fast_reader.read(args)
             except TypeError:
