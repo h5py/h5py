@@ -754,6 +754,17 @@ class Dataset(HLObject):
                  or platform.system().lower() != 'windows')
         )
 
+    @property
+    def _blosc2_force_filter(self):
+        """Is Blosc2 optimized slicing disabled via the environment"""
+        # The BLOSC2_FILTER environment variable set to a non-zero integer
+        # forces the use of the filter pipeline.
+        try:
+            force_filter = int(os.environ.get('BLOSC2_FILTER', '0'), 10)
+        except ValueError:
+            force_filter = 0
+        return force_filter != 0
+
     @with_phil
     def __getitem__(self, args, new_dtype=None):
         """ Read a slice from the HDF5 dataset.
@@ -769,13 +780,7 @@ class Dataset(HLObject):
         args = args if isinstance(args, tuple) else (args,)
 
         if self._fast_read_ok and (new_dtype is None):
-            # The BLOSC2_FILTER environment variable set to a non-zero integer
-            # forces the use of the filter pipeline.
-            try:
-                force_b2filter = int(os.environ.get('BLOSC2_FILTER', '0'), 10)
-            except ValueError:
-                force_b2filter = 0
-            if self._blosc2_opt_slicing_ok and not force_b2filter:
+            if self._blosc2_opt_slicing_ok and not self._blosc2_force_filter:
                 selection = sel.select(self.shape, args, dataset=self)
                 if (isinstance(selection, sel.SimpleSelection)
                     and numpy.prod(selection._sel[2]) == 1  # all steps equal 1
