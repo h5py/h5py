@@ -9,6 +9,12 @@
 
 """
     Implements support for Blosc2 optimized slicing.
+
+    Please note that for a selection over a dataset to be suitable for Blosc2
+    optimized slicing, besides being amenable to fast reading, (i) such
+    slicing must be enabled globally (`opt_slicing_enabled()`), (ii) the
+    dataset must be amenable to it (`opt_slicing_dataset_ok()`), and (iii) the
+    selection must be amenable to it (`opt_slicing_selection_ok()`).
 """
 
 import os
