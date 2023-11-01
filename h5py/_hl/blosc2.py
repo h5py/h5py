@@ -60,6 +60,15 @@ def opt_slicing_enabled():
 def opt_slice_read(dataset, selection):
     start = selection._sel[0]
     shape = selection.mshape
+    slice_ = tuple(slice(st, st + sh) for (st, sh) in zip(start, shape))
+    print("XXXX B2NDopt slice:", slice_)  # TODO: remove
     arr = numpy.empty(dtype=dataset.dtype, shape=shape)
+
+    # TODO: consider using 'dataset.id.get_chunk_info' for performance
+    get_chunk_info = dataset.id.get_chunk_info_by_coord
+    for chunk_slice in dataset.iter_chunks(slice_):
+        chunk_slice_start = tuple(s.start for s in chunk_slice)
+        chunk_info = get_chunk_info(chunk_slice_start)
+        print("XXXX B2NDopt chunk_info:", chunk_info)  # TODO: remove
     # TODO: complete
     return arr
