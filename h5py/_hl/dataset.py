@@ -743,7 +743,7 @@ class Dataset(HLObject):
     @cached_property
     def _blosc2_opt_slicing_ok(self):
         """Is this dataset suitable for Blosc2 optimized slicing"""
-        return blosc2.opt_slicing_ok(self)
+        return blosc2.opt_slicing_dataset_ok(self)
 
     @with_phil
     def __getitem__(self, args, new_dtype=None):
@@ -760,7 +760,7 @@ class Dataset(HLObject):
         args = args if isinstance(args, tuple) else (args,)
 
         if self._fast_read_ok and (new_dtype is None):
-            if self._blosc2_opt_slicing_ok and not blosc2.force_filter():
+            if blosc2.opt_slicing_enabled() and self._blosc2_opt_slicing_ok:
                 selection = sel.select(self.shape, args, dataset=self)
                 if (isinstance(selection, sel.SimpleSelection)
                     and numpy.prod(selection._sel[2]) == 1  # all steps equal 1

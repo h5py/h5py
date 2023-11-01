@@ -17,7 +17,7 @@ import platform
 import numpy
 
 
-def opt_slicing_ok(dataset):
+def opt_slicing_dataset_ok(dataset):
     """Is the given dataset suitable for Blosc2 optimized slicing?
 
     It is assumed that the dataset is also ok for fast reading.  The result
@@ -33,15 +33,15 @@ def opt_slicing_ok(dataset):
              or platform.system().lower() != 'windows')
     )
 
-def force_filter():
-    """Is Blosc2 optimized slicing disabled via the environment?"""
+def opt_slicing_enabled():
+    """Is Blosc2 optimized slicing not disabled via the environment?"""
     # The BLOSC2_FILTER environment variable set to a non-zero integer
     # forces the use of the filter pipeline.
     try:
         force_filter = int(os.environ.get('BLOSC2_FILTER', '0'), 10)
     except ValueError:
         force_filter = 0
-    return force_filter != 0
+    return force_filter == 0
 
 def opt_slice_read(dataset, selection):
     start = selection._sel[0]
