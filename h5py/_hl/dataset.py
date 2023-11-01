@@ -762,9 +762,7 @@ class Dataset(HLObject):
         if self._fast_read_ok and (new_dtype is None):
             if blosc2.opt_slicing_enabled() and self._blosc2_opt_slicing_ok:
                 selection = sel.select(self.shape, args, dataset=self)
-                if (isinstance(selection, sel.SimpleSelection)
-                    and numpy.prod(selection._sel[2]) == 1  # all steps equal 1
-                ):
+                if blosc2.opt_slicing_selection_ok(selection):
                     print("XXXX B2NDopt: slice is candidate")  # TODO: remove
                     return blosc2.opt_slice_read(self, selection)
                 else:  # TODO: remove

@@ -16,6 +16,14 @@ import platform
 
 import numpy
 
+from . import selections as sel
+
+
+def opt_slicing_selection_ok(selection):
+    """Is the given selection suitable for Blosc2 optimized slicing?"""
+    return (isinstance(selection, sel.SimpleSelection)
+            and numpy.prod(selection._sel[2]) == 1  # all steps equal 1
+    )
 
 def opt_slicing_dataset_ok(dataset):
     """Is the given dataset suitable for Blosc2 optimized slicing?
