@@ -63,6 +63,14 @@ def _read_chunk_slice(path, offset, slice_, _dtype):  # TODO: drop _dtype
     return numpy.arange(numpy.product(shape), dtype=_dtype).reshape(shape)
 
 def opt_slice_read(dataset, selection):
+    """Read the specified selection from the given dataset.
+
+    Blosc2 optimized slice reading is used, but the caller must make sure
+    beforehand that both the dataset and the selection are suitable for such
+    operation.
+
+    A NumPy array is returned with the desired slice.
+    """
     slice_start = selection._sel[0]
     slice_shape = selection.mshape
     slice_ = tuple(slice(st, st + sh)
