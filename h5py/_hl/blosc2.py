@@ -57,6 +57,11 @@ def opt_slicing_enabled():
         force_filter = 0
     return force_filter == 0
 
+def _read_chunk_slice(path, offset, slice_, _dtype):  # TODO: drop _dtype
+    # TODO: implement
+    shape = tuple(s.stop - s.start for s in slice_)
+    return numpy.arange(numpy.product(shape), dtype=_dtype).reshape(shape)
+
 def opt_slice_read(dataset, selection):
     slice_start = selection._sel[0]
     slice_shape = selection.mshape
@@ -84,5 +89,8 @@ def opt_slice_read(dataset, selection):
         print(f"XXXX B2NDopt chunk slice: {chunk_slice} (<-{slice_as_chunk_slice}) -> {chunk_as_slice_slice}")  # TODO: remove
         chunk_info = get_chunk_info(chunk_slice_start)
         print("XXXX B2NDopt chunk_info:", chunk_info)  # TODO: remove
-    # TODO: complete
+        chunk_slice_arr = _read_chunk_slice(dataset.file.filename, chunk_info.byte_offset,
+                                            slice_as_chunk_slice, _dtype=dataset.dtype)
+        # TODO: check shape and dtype
+        slice_arr[chunk_as_slice_slice] = chunk_slice_arr
     return slice_arr
