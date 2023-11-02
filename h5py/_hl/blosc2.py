@@ -81,6 +81,7 @@ def opt_slice_read(dataset, selection):
     # TODO: consider using 'dataset.id.get_chunk_info' for performance
     get_chunk_info = dataset.id.get_chunk_info_by_coord
     for chunk_slice in dataset.iter_chunks(slice_):
+        # Compute different parameters for the slice/chunk combination.
         (
             slice_as_chunk_slice,
             chunk_as_slice_slice,
@@ -95,6 +96,8 @@ def opt_slice_read(dataset, selection):
             in zip(chunk_slice, dataset.chunks, slice_start)
         )))
         print(f"XXXX B2NDopt chunk slice: {chunk_slice} (<-{slice_as_chunk_slice}) -> {chunk_as_slice_slice}")  # TODO: remove
+
+        # Get the part of the slice that overlaps the current chunk.
         chunk_info = get_chunk_info(chunk_slice_start)
         print("XXXX B2NDopt chunk_info:", chunk_info)  # TODO: remove
         chunk_slice_arr = _read_chunk_slice(dataset.file.filename, chunk_info.byte_offset,
@@ -107,5 +110,7 @@ def opt_slice_read(dataset, selection):
                                f"expected <= {slice_shape}/{dataset.dtype}, "
                                f"got {chunk_slice_arr.shape}/{chunk_slice_arr.dtype}")
 
+        # Place the part in the final slice.
         slice_arr[chunk_as_slice_slice] = chunk_slice_arr
+
     return slice_arr
