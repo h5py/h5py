@@ -91,6 +91,13 @@ def opt_slice_read(dataset, selection):
         print("XXXX B2NDopt chunk_info:", chunk_info)  # TODO: remove
         chunk_slice_arr = _read_chunk_slice(dataset.file.filename, chunk_info.byte_offset,
                                             slice_as_chunk_slice, _dtype=dataset.dtype)
-        # TODO: check shape and dtype
+        if (chunk_slice_arr.dtype != dataset.dtype
+            or len(chunk_slice_arr.shape) != len(slice_shape)
+            or chunk_slice_arr.shape > slice_shape):
+            raise RuntimeError(f"Invalid shape/dtype of chunk covering coordinate {chunk_slice_start} "
+                               f"(offset {chunk_info.byte_offset}): "
+                               f"expected <= {slice_shape}/{dataset.dtype}, "
+                               f"got {chunk_slice_arr.shape}/{chunk_slice_arr.dtype}")
+
         slice_arr[chunk_as_slice_slice] = chunk_slice_arr
     return slice_arr
