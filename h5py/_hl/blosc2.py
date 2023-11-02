@@ -58,11 +58,12 @@ def opt_slicing_enabled():
     return force_filter == 0
 
 def opt_slice_read(dataset, selection):
-    start = selection._sel[0]
-    shape = selection.mshape
-    slice_ = tuple(slice(st, st + sh) for (st, sh) in zip(start, shape))
+    slice_start = selection._sel[0]
+    slice_shape = selection.mshape
+    slice_ = tuple(slice(st, st + sh)
+                   for (st, sh) in zip(slice_start, slice_shape))
     print("XXXX B2NDopt slice:", slice_)  # TODO: remove
-    arr = numpy.empty(dtype=dataset.dtype, shape=shape)
+    slice_arr = numpy.empty(dtype=dataset.dtype, shape=slice_shape)
 
     # TODO: consider using 'dataset.id.get_chunk_info' for performance
     get_chunk_info = dataset.id.get_chunk_info_by_coord
@@ -71,4 +72,4 @@ def opt_slice_read(dataset, selection):
         chunk_info = get_chunk_info(chunk_slice_start)
         print("XXXX B2NDopt chunk_info:", chunk_info)  # TODO: remove
     # TODO: complete
-    return arr
+    return slice_arr
