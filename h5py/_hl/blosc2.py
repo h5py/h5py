@@ -68,16 +68,20 @@ def opt_slice_read(dataset, selection):
     # TODO: consider using 'dataset.id.get_chunk_info' for performance
     get_chunk_info = dataset.id.get_chunk_info_by_coord
     for chunk_slice in dataset.iter_chunks(slice_):
-        slice_as_chunk_slice = tuple(
-            slice(csl.start % csh, (csl.start % csh) + (csl.stop - csl.start))
-            for (csl, csh) in zip(chunk_slice, dataset.chunks)
-        )
-        chunk_as_slice_slice = tuple(
-            slice(csl.start - cst, csl.stop - cst)
-            for (csl, cst) in zip(chunk_slice, slice_start)
-        )
+        (
+            slice_as_chunk_slice,
+            chunk_as_slice_slice,
+            chunk_slice_start,
+        ) = tuple(zip(*(
+            (  # nth value below gets added to nth tuple above
+                slice(csl.start % csh, (csl.start % csh) + (csl.stop - csl.start)),
+                slice(csl.start - sst, csl.stop - sst),
+                csl.start,
+            )
+            for (csl, csh, sst)
+            in zip(chunk_slice, dataset.chunks, slice_start)
+        )))
         print(f"XXXX B2NDopt chunk slice: {chunk_slice} (<-{slice_as_chunk_slice}) -> {chunk_as_slice_slice}")  # TODO: remove
-        chunk_slice_start = tuple(s.start for s in chunk_slice)
         chunk_info = get_chunk_info(chunk_slice_start)
         print("XXXX B2NDopt chunk_info:", chunk_info)  # TODO: remove
     # TODO: complete
