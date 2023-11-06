@@ -32,6 +32,8 @@ RUN_REQUIRES = [
     # works (assuming you build it from source too).
     # NumPy 1.17.3 is the first with wheels for Python 3.8, our minimum Python.
     "numpy >=1.17.3",
+    # This version allows an offset in blosc2.schunk.open.
+    "blosc2 >= 2.2.10.dev0",  # TODO: make optional, use released version
 ]
 
 # Packages needed to build h5py (in addition to static list in pyproject.toml)

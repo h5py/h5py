@@ -22,6 +22,8 @@ import platform
 
 import numpy
 
+from blosc2.schunk import open as blosc2_schunk_open  # TODO: support missing
+
 from . import selections as sel
 
 
@@ -49,6 +51,7 @@ def opt_slicing_dataset_ok(dataset):
 
 def opt_slicing_enabled():
     """Is Blosc2 optimized slicing not disabled via the environment?"""
+    # TODO: support missing Blosc2, return false
     # The BLOSC2_FILTER environment variable set to a non-zero integer
     # forces the use of the filter pipeline.
     try:
