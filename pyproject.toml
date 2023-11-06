@@ -39,6 +39,12 @@ classifiers = [
 requires-python = ">=3.8"
 dynamic = ["dependencies", "version"]
 
+[project.optional-dependencies]
+# This version allows an offset in blosc2.schunk.open.
+blosc2 = [
+    "blosc2 >=2.2.10.dev0",  # TODO: use released version
+]
+
 [project.readme]
 text = """\
 The h5py package provides both a high- and low-level interface to the HDF5

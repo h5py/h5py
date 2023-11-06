@@ -23,7 +23,10 @@ import sys
 
 import numpy
 
-from blosc2.schunk import open as blosc2_schunk_open  # TODO: support missing
+try:
+    from blosc2.schunk import open as blosc2_schunk_open
+except ImportError:
+    blosc2_schunk_open = None
 
 from . import selections as sel
 
@@ -52,10 +55,14 @@ def opt_slicing_dataset_ok(dataset):
     )
 
 def opt_slicing_enabled():
-    """Is Blosc2 optimized slicing not disabled via the environment?"""
-    # TODO: support missing Blosc2, return false
-    # The BLOSC2_FILTER environment variable set to a non-zero integer
-    # forces the use of the filter pipeline.
+    """Is Blosc2 optimized slicing not disabled via the environment?
+
+    This returns false if Blosc2 is not usable or if the BLOSC2_FILTER
+    environment variable is set to a non-zero integer (which forces the use of
+    the HDF5 filter pipeline).
+    """
+    if blosc2_schunk_open is None:
+        return False
     try:
         force_filter = int(os.environ.get('BLOSC2_FILTER', '0'), 10)
     except ValueError:
