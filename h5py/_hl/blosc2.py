@@ -71,7 +71,10 @@ def opt_slicing_enabled():
 
 def _read_chunk_slice(path, offset, slice_, dtype):
     schunk = blosc2_schunk_open(path, mode='r', offset=offset)
-    s = schunk[slice_]  # TODO: avoid conversion if dtype not opaque
+    s = schunk[slice_]
+    if s.dtype.kind != 'V':
+        return s
+    # hdf5-blosc2 always uses an opaque dtype, convert the array.
     return numpy.ndarray(s.shape, dtype=dtype, buffer=s.data)
 
 def opt_slice_read(dataset, selection):
