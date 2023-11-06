@@ -763,12 +763,7 @@ class Dataset(HLObject):
             if blosc2.opt_slicing_enabled() and self._blosc2_opt_slicing_ok:
                 selection = sel.select(self.shape, args, dataset=self)
                 if blosc2.opt_slicing_selection_ok(selection):
-                    print("XXXX B2NDopt: slice is candidate")  # TODO: remove
                     return blosc2.opt_slice_read(self, selection)
-                else:  # TODO: remove
-                    print("XXXX B2NDopt: slice is not candidate")
-            else:  # TODO: remove
-                print("XXXX B2NDopt: array is not candidate")
             try:
                 return self._fast_reader.read(args)
             except TypeError:

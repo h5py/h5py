@@ -78,7 +78,6 @@ def opt_slice_read(dataset, selection):
     slice_shape = selection.mshape
     slice_ = tuple(slice(st, st + sh)
                    for (st, sh) in zip(slice_start, slice_shape))
-    print("XXXX B2NDopt slice:", slice_)  # TODO: remove
     slice_arr = numpy.empty(dtype=dataset.dtype, shape=slice_shape)
 
     # TODO: consider using 'dataset.id.get_chunk_info' for performance
@@ -98,11 +97,9 @@ def opt_slice_read(dataset, selection):
             for (csl, csh, sst)
             in zip(chunk_slice, dataset.chunks, slice_start)
         )))
-        print(f"XXXX B2NDopt chunk slice: {chunk_slice} (<-{slice_as_chunk_slice}) -> {chunk_as_slice_slice}")  # TODO: remove
 
         # Get the part of the slice that overlaps the current chunk.
         chunk_info = get_chunk_info(chunk_slice_start)
-        print("XXXX B2NDopt chunk_info:", chunk_info)  # TODO: remove
         chunk_slice_arr = _read_chunk_slice(dataset.file.filename, chunk_info.byte_offset,
                                             slice_as_chunk_slice, dataset.dtype)
         if (chunk_slice_arr.dtype != dataset.dtype
