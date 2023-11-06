@@ -60,10 +60,10 @@ def opt_slicing_enabled():
         force_filter = 0
     return force_filter == 0
 
-def _read_chunk_slice(path, offset, slice_, _dtype):  # TODO: drop _dtype
-    # TODO: implement
-    shape = tuple(s.stop - s.start for s in slice_)
-    return numpy.arange(numpy.product(shape), dtype=_dtype).reshape(shape)
+def _read_chunk_slice(path, offset, slice_, dtype):
+    schunk = blosc2_schunk_open(path, mode='r', offset=offset)
+    s = schunk[slice_]  # TODO: avoid conversion if dtype not opaque
+    return numpy.ndarray(s.shape, dtype=dtype, buffer=s.data)
 
 def opt_slice_read(dataset, selection):
     """Read the specified selection from the given dataset.
@@ -104,7 +104,7 @@ def opt_slice_read(dataset, selection):
         chunk_info = get_chunk_info(chunk_slice_start)
         print("XXXX B2NDopt chunk_info:", chunk_info)  # TODO: remove
         chunk_slice_arr = _read_chunk_slice(dataset.file.filename, chunk_info.byte_offset,
-                                            slice_as_chunk_slice, _dtype=dataset.dtype)
+                                            slice_as_chunk_slice, dataset.dtype)
         if (chunk_slice_arr.dtype != dataset.dtype
             or len(chunk_slice_arr.shape) != len(slice_shape)
             or chunk_slice_arr.shape > slice_shape):
