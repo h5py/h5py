@@ -78,7 +78,7 @@ def _read_chunk_slice(path, offset, slice_, dtype):
     # (the wrapping below does not copy the data anyway).
     return numpy.ndarray(s.shape, dtype=dtype, buffer=s.data)
 
-def opt_slice_read(dataset, selection):
+def opt_selection_read(dataset, selection):
     """Read the specified selection from the given dataset.
 
     Blosc2 optimized slice reading is used, but the caller must make sure
@@ -127,3 +127,26 @@ def opt_slice_read(dataset, selection):
         slice_arr[chunk_as_slice_slice] = chunk_slice_arr
 
     return slice_arr
+
+def opt_slice_read(dataset, slice_):
+    """Read the specified slice from the given dataset.
+
+    The dataset must support a ``_blosc2_opt_slicing_ok`` property that calls
+    `opt_slicing_dataset_ok()`.
+
+    Blosc2 optimized slice reading is used if available and suitable,
+    otherwise a `TypeError` is raised.
+
+    A NumPy array is returned with the desired slice.
+    """
+    if not dataset._blosc2_opt_slicing_ok:
+        raise TypeError("Dataset is not suitable for Blosc2 optimized slicing")
+
+    if not opt_slicing_enabled():
+        raise TypeError("Blosc2 optimized slicing is unavailable or disabled")
+
+    selection = sel.select(dataset.shape, slice_, dataset=dataset)
+    if not opt_slicing_selection_ok(selection):
+        raise TypeError("Selection is not suitable for Blosc2 optimized slicing")
+
+    return opt_selection_read(dataset, selection)

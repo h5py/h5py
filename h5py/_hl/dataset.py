@@ -760,10 +760,10 @@ class Dataset(HLObject):
         args = args if isinstance(args, tuple) else (args,)
 
         if self._fast_read_ok and (new_dtype is None):
-            if self._blosc2_opt_slicing_ok and blosc2.opt_slicing_enabled():
-                selection = sel.select(self.shape, args, dataset=self)
-                if blosc2.opt_slicing_selection_ok(selection):
-                    return blosc2.opt_slice_read(self, selection)
+            try:
+                return blosc2.opt_slice_read(self, args)
+            except TypeError:
+                pass  # No Blosc2 optimized slicing, try other approaches
             try:
                 return self._fast_reader.read(args)
             except TypeError:
