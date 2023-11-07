@@ -762,7 +762,7 @@ class Dataset(HLObject):
         if self._fast_read_ok and (new_dtype is None):
             try:
                 return blosc2.opt_slice_read(self, args)
-            except TypeError:
+            except blosc2.NoOptSlicingError:
                 pass  # No Blosc2 optimized slicing, try other approaches
             try:
                 return self._fast_reader.read(args)

@@ -37,6 +37,11 @@ except ImportError:
 from . import selections as sel
 
 
+class NoOptSlicingError(TypeError):
+    """Blosc2 optimized slicing is not possible."""
+    pass
+
+
 def opt_slicing_selection_ok(selection):
     """Is the given selection suitable for Blosc2 optimized slicing?"""
     return (isinstance(selection, sel.SimpleSelection)
@@ -141,18 +146,18 @@ def opt_slice_read(dataset, slice_):
     `opt_slicing_dataset_ok()`.
 
     Blosc2 optimized slice reading is used if available and suitable,
-    otherwise a `TypeError` is raised.
+    otherwise a `NoOptSlicingError` is raised.
 
     A NumPy array is returned with the desired slice.
     """
     if not dataset._blosc2_opt_slicing_ok:
-        raise TypeError("Dataset is not suitable for Blosc2 optimized slicing")
+        raise NoOptSlicingError("Dataset is not suitable for Blosc2 optimized slicing")
 
     if not opt_slicing_enabled():
-        raise TypeError("Blosc2 optimized slicing is unavailable or disabled")
+        raise NoOptSlicingError("Blosc2 optimized slicing is unavailable or disabled")
 
     selection = sel.select(dataset.shape, slice_, dataset=dataset)
     if not opt_slicing_selection_ok(selection):
-        raise TypeError("Selection is not suitable for Blosc2 optimized slicing")
+        raise NoOptSlicingError("Selection is not suitable for Blosc2 optimized slicing")
 
     return opt_selection_read(dataset, selection)
