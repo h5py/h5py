@@ -760,7 +760,7 @@ class Dataset(HLObject):
         args = args if isinstance(args, tuple) else (args,)
 
         if self._fast_read_ok and (new_dtype is None):
-            if blosc2.opt_slicing_enabled() and self._blosc2_opt_slicing_ok:
+            if self._blosc2_opt_slicing_ok and blosc2.opt_slicing_enabled():
                 selection = sel.select(self.shape, args, dataset=self)
                 if blosc2.opt_slicing_selection_ok(selection):
                     return blosc2.opt_slice_read(self, selection)
