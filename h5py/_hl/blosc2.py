@@ -74,7 +74,8 @@ def _read_chunk_slice(path, offset, slice_, dtype):
     s = schunk[slice_]
     if s.dtype.kind != 'V':
         return s
-    # hdf5-blosc2 always uses an opaque dtype, convert the array.
+    # hdf5-blosc2 always uses an opaque dtype, convert the array
+    # (the wrapping below does not copy the data anyway).
     return numpy.ndarray(s.shape, dtype=dtype, buffer=s.data)
 
 def opt_slice_read(dataset, selection):
