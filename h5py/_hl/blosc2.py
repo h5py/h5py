@@ -15,6 +15,12 @@
     slicing must be enabled globally (`opt_slicing_enabled()`), (ii) the
     dataset must be amenable to it (`opt_slicing_dataset_ok()`), and (iii) the
     selection must be amenable to it (`opt_slicing_selection_ok()`).
+
+    If you have checked these conditions manually, you may use
+    `opt_selection_read()`.
+
+    If a dataset is adapted for Blosc2 optimized slicing, you may just use
+    `opt_slice_read()`, which takes care of the checks.
 """
 
 import os
