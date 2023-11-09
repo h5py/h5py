@@ -42,7 +42,7 @@ dynamic = ["dependencies", "version"]
 [project.optional-dependencies]
 # This version allows an offset in blosc2.schunk.open.
 blosc2 = [
-    "blosc2 >=2.2.10.dev0",  # TODO: use released version
+    "blosc2 >=2.3.0",
 ]
 
 [project.readme]
