@@ -66,7 +66,7 @@ class Blosc2OptSlicingTestCase(TestCase):
         self.assertArrayEqual(self.dset[slc], self.arr[slc])
 
     def test_last_chunk_ndim(self):
-        """ Reading a slice crossing chunk boundaries (n-dim) """
+        """ Reading a slice going past the last chunk (n-dim) """
         slc = (slice(self.dset.shape[0] - 5, self.dset.shape[0] + 5),
                slice(self.dset.shape[1] - 5, self.dset.shape[1] + 5))
         self.assertArrayEqual(self.dset[slc], self.arr[slc])
