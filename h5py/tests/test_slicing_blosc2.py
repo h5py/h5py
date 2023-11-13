@@ -14,6 +14,8 @@
     can be used.
 """
 
+import random
+
 try:
     import blosc2 as b2
     import hdf5plugin as h5p
@@ -45,6 +47,8 @@ class Blosc2OptSlicingTestCase(TestCase):
         if self.f:
             self.f.close()
 
+    # Test the data of the returned object.
+
     def test_whole_array(self):
         """ Reading a slice covering the whole array """
         self.assertArrayEqual(self.dset[:], self.arr)
@@ -70,3 +74,34 @@ class Blosc2OptSlicingTestCase(TestCase):
         slc = (slice(self.dset.shape[0] - 5, self.dset.shape[0] + 5),
                slice(self.dset.shape[1] - 5, self.dset.shape[1] + 5))
         self.assertArrayEqual(self.dset[slc], self.arr[slc])
+
+    # Test the attributes of the returned object.
+
+    def test_scalar_inside(self):
+        """ Reading a scalar inside of the array """
+        coord = tuple(random.randrange(0, c) for c in self.dset.shape)
+        self.assertEqual(self.dset[coord], self.arr[coord])
+
+    def test_scalar_outside(self):
+        """ Reading a scalar outside of the array """
+        shape = self.dset.shape
+        coords = [(shape[0] * 2, 0), (0, shape[1] * 2),
+                  tuple(c * 2 for c in shape)]
+        for coord in coords:
+            with self.assertRaises(IndexError):
+                self.dset[coord]
+
+    def test_slice_outside(self):
+        """ Reading a slice outside of the array (empty) """
+        shape = self.dset.shape
+        slcs = [(slice(shape[0] * 2, shape[0] * 3), ...),
+                (..., slice(shape[1] * 2, shape[1] * 3)),
+                tuple(slice(c * 2, c * 3) for c in shape)]
+        for slc in slcs:
+            self.assertArrayEqual(self.dset[slc], self.arr[slc])
+
+    def test_slice_1dimless(self):
+        """ Reading a slice with one dimension less than the array """
+        idxs = [random.randrange(0, dim) for dim in self.dset.shape]
+        for idx in idxs:
+            self.assertArrayEqual(self.dset[idx], self.arr[idx])
