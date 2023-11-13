@@ -40,9 +40,9 @@ requires-python = ">=3.8"
 dynamic = ["dependencies", "version"]
 
 [project.optional-dependencies]
-# This version allows an offset in blosc2.schunk.open.
 blosc2 = [
-    "blosc2 >=2.3.0",
+    "blosc2 >=2.3.0",  # allows an offset in blosc2.schunk.open
+    "hdf5plugin >=4.3.0",  # supports Blosc2 NDim (b2nd) chunks
 ]
 
 [project.readme]
