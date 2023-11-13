@@ -14,6 +14,7 @@
     can be used.
 """
 
+import os
 import random
 
 try:
@@ -27,14 +28,11 @@ from .common import ut, TestCase
 
 from h5py import File
 
-@ut.skipIf(b2 is None or h5p is None, 'Blosc2 support is required')
-class Blosc2OptSlicingTestCase(TestCase):
-
-    """
-        Feature: Blosc2 optimized slicing
-    """
+class Blosc2SlicingTestCaseBase:
 
     def setUp(self):
+        self.blosc2_filter_env = os.environ.get('BLOSC2_FILTER', '0')
+
         self.f = File(self.mktemp(), 'w')
         shape = (3500, 300)
         chunks = (1747, 150)
@@ -43,9 +41,12 @@ class Blosc2OptSlicingTestCase(TestCase):
         self.dset = self.f.create_dataset('x', data=self.arr, chunks=chunks,
                                           **comp)
 
+        os.environ['BLOSC2_FILTER'] = '1' if self.blosc2_force_filter else '0'
+
     def tearDown(self):
         if self.f:
             self.f.close()
+        os.environ['BLOSC2_FILTER'] = self.blosc2_filter_env
 
     # Test the data of the returned object.
 
@@ -105,6 +106,24 @@ class Blosc2OptSlicingTestCase(TestCase):
         idxs = [random.randrange(0, dim) for dim in self.dset.shape]
         for idx in idxs:
             self.assertArrayEqual(self.dset[idx], self.arr[idx])
+
+@ut.skipIf(b2 is None or h5p is None, 'Blosc2 support is required')
+class Blosc2OptSlicingTestCase(Blosc2SlicingTestCaseBase, TestCase):
+
+    """
+        Feature: Blosc2 optimized slicing
+    """
+
+    blosc2_force_filter = False
+
+@ut.skipIf(b2 is None or h5p is None, 'Blosc2 support is required')
+class Blosc2FiltSlicingTestCase(Blosc2SlicingTestCaseBase, TestCase):
+
+    """
+        Feature: Blosc2 filter slicing
+    """
+
+    blosc2_force_filter = True
 
 @ut.skipIf(b2 is None or h5p is None, 'Blosc2 support is required')
 class Blosc2OptSlicingMinTestCase(TestCase):
