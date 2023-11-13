@@ -105,3 +105,45 @@ class Blosc2OptSlicingTestCase(TestCase):
         idxs = [random.randrange(0, dim) for dim in self.dset.shape]
         for idx in idxs:
             self.assertArrayEqual(self.dset[idx], self.arr[idx])
+
+@ut.skipIf(b2 is None or h5p is None, 'Blosc2 support is required')
+class Blosc2OptSlicingMinTestCase(TestCase):
+
+    """
+        Feature: Blosc2 optimized slicing with chunks on inner dimension
+    """
+
+    # Minimal test which can be figured out manually::
+    #
+    #     z  Data: 1   Chunk0:   Chunk1: 1   Slice:
+    #    /        /|\                    |\
+    #   |\       0 5 3       0           5 3        5
+    #   x y      |X X|       |\           \|       / \
+    #            4 2 7       4 2           7      4   7
+    #             \|/         \|                   \ /
+    #              6           6                    6
+    #
+    #                  Chunk0 & Slice: 4   Chunk1 & Slice: 5
+    #                                   \                   \
+    #                                    6                   7
+    #
+    # This is mainly a test for the assemblage of the returned slice
+    # from its parts in different chunks.
+
+    def setUp(self):
+        self.f = File(self.mktemp(), 'w')
+        shape = (2, 2, 2)
+        chunks = (2, 2, 1)
+        comp = h5p.Blosc2(cname='lz4', clevel=5, filters=h5p.Blosc2.SHUFFLE)
+        self.arr = np.arange(np.prod(shape), dtype="u1").reshape(shape)
+        self.dset = self.f.create_dataset('x', data=self.arr, chunks=chunks,
+                                          **comp)
+
+    def tearDown(self):
+        if self.f:
+            self.f.close()
+
+    def test_slice(self):
+        """ Reading a slice perpendicular to chunks """
+        slc = (slice(1, 2), slice(0, 2), slice(0, 2))
+        self.assertArrayEqual(self.dset[slc], self.arr[slc])
