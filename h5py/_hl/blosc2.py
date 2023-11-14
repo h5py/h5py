@@ -137,7 +137,11 @@ def opt_selection_read(dataset, selection):
         # Place the part in the final slice.
         slice_arr[chunk_as_slice_slice] = chunk_slice_arr
 
-    return slice_arr
+    # Adjust result dimensions to those dictated by the input selection.
+    ret_shape = selection.array_shape
+    if ret_shape == ():  # scalar result
+        return slice_arr[()]
+    return slice_arr.reshape(ret_shape)
 
 def opt_slice_read(dataset, slice_):
     """Read the specified slice from the given dataset.
