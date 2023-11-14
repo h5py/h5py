@@ -44,9 +44,11 @@ class NoOptSlicingError(TypeError):
 
 def opt_slicing_selection_ok(selection):
     """Is the given selection suitable for Blosc2 optimized slicing?"""
-    return (isinstance(selection, sel.SimpleSelection)
-            and numpy.prod(selection._sel[2]) == 1  # all steps equal 1
+    return (
+        isinstance(selection, sel.SimpleSelection)
+        and numpy.prod(selection._sel[2]) == 1  # all steps equal 1
     )
+
 
 def opt_slicing_dataset_ok(dataset):
     """Is the given dataset suitable for Blosc2 optimized slicing?
@@ -56,14 +58,15 @@ def opt_slicing_dataset_ok(dataset):
     """
     return (
         dataset.chunks is not None
-        # '.compression' and '.compression_opts' don't work with plugins,
-        # see <https://forum.hdfgroup.org/t/registering-custom-filter-issues/9239>.
+        # '.compression' and '.compression_opts' don't work with plugins:
+        # <https://forum.hdfgroup.org/t/registering-custom-filter-issues/9239>
         and '32026' in dataset._filters  # Blosc2's ID
         and (dataset.dtype.byteorder
              in ('=', '|', dict(little='<', big='>')[sys.byteorder]))
         and (dataset.file.mode == 'r'
              or platform.system().lower() != 'windows')
     )
+
 
 def opt_slicing_enabled():
     """Is Blosc2 optimized slicing not disabled via the environment?
@@ -80,6 +83,7 @@ def opt_slicing_enabled():
         force_filter = 0
     return force_filter == 0
 
+
 def _read_chunk_slice(path, offset, slice_, dtype):
     schunk = blosc2_schunk_open(path, mode='r', offset=offset)
     s = schunk[slice_]
@@ -88,6 +92,7 @@ def _read_chunk_slice(path, offset, slice_, dtype):
     # hdf5-blosc2 always uses an opaque dtype, convert the array
     # (the wrapping below does not copy the data anyway).
     return numpy.ndarray(s.shape, dtype=dtype, buffer=s.data)
+
 
 def opt_selection_read(dataset, selection):
     """Read the specified selection from the given dataset.
@@ -116,7 +121,8 @@ def opt_selection_read(dataset, selection):
             chunk_slice_start,
         ) = tuple(zip(*(
             (  # nth value below gets added to nth tuple above
-                slice(csl.start % csh, (csl.start % csh) + (csl.stop - csl.start)),
+                slice(csl.start % csh, ((csl.start % csh)
+                                        + (csl.stop - csl.start))),
                 slice(csl.start - sst, csl.stop - sst),
                 csl.start,
             )
@@ -126,15 +132,21 @@ def opt_selection_read(dataset, selection):
 
         # Get the part of the slice that overlaps the current chunk.
         chunk_info = get_chunk_info(chunk_slice_start)
-        chunk_slice_arr = _read_chunk_slice(dataset.file.filename, chunk_info.byte_offset,
-                                            slice_as_chunk_slice, dataset.dtype)
-        if (chunk_slice_arr.dtype != dataset.dtype
-            or len(chunk_slice_arr.shape) != len(slice_shape)
-            or chunk_slice_arr.shape > slice_shape):
-            raise RuntimeError(f"Invalid shape/dtype of chunk covering coordinate {chunk_slice_start} "
-                               f"(offset {chunk_info.byte_offset}): "
-                               f"expected <= {slice_shape}/{dataset.dtype}, "
-                               f"got {chunk_slice_arr.shape}/{chunk_slice_arr.dtype}")
+        chunk_slice_arr = _read_chunk_slice(
+            dataset.file.filename, chunk_info.byte_offset,
+            slice_as_chunk_slice, dataset.dtype)
+        if (
+                chunk_slice_arr.dtype != dataset.dtype
+                or len(chunk_slice_arr.shape) != len(slice_shape)
+                or chunk_slice_arr.shape > slice_shape
+        ):
+            # The data in the Blosc2 super-chunk is bogus.
+            raise RuntimeError(
+                f"Invalid shape/dtype of "
+                f"chunk covering coordinate {chunk_slice_start} "
+                f"(offset {chunk_info.byte_offset}): "
+                f"expected <= {slice_shape}/{dataset.dtype}, "
+                f"got {chunk_slice_arr.shape}/{chunk_slice_arr.dtype}")
 
         # Place the part in the final slice.
         slice_arr[chunk_as_slice_slice] = chunk_slice_arr
@@ -144,6 +156,7 @@ def opt_selection_read(dataset, selection):
     if ret_shape == ():  # scalar result
         return slice_arr[()]
     return slice_arr.reshape(ret_shape)
+
 
 def opt_slice_read(dataset, slice_):
     """Read the specified slice from the given dataset.
@@ -157,13 +170,16 @@ def opt_slice_read(dataset, slice_):
     A NumPy array is returned with the desired slice.
     """
     if not dataset._blosc2_opt_slicing_ok:
-        raise NoOptSlicingError("Dataset is not suitable for Blosc2 optimized slicing")
+        raise NoOptSlicingError(
+            "Dataset is not suitable for Blosc2 optimized slicing")
 
     if not opt_slicing_enabled():
-        raise NoOptSlicingError("Blosc2 optimized slicing is unavailable or disabled")
+        raise NoOptSlicingError(
+            "Blosc2 optimized slicing is unavailable or disabled")
 
     selection = sel.select(dataset.shape, slice_, dataset=dataset)
     if not opt_slicing_selection_ok(selection):
-        raise NoOptSlicingError("Selection is not suitable for Blosc2 optimized slicing")
+        raise NoOptSlicingError(
+            "Selection is not suitable for Blosc2 optimized slicing")
 
     return opt_selection_read(dataset, selection)

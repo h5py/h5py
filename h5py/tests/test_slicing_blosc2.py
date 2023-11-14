@@ -28,6 +28,7 @@ from .common import ut, TestCase
 
 from h5py import File
 
+
 class Blosc2SlicingTestCaseBase:
 
     def setUp(self):
@@ -107,6 +108,7 @@ class Blosc2SlicingTestCaseBase:
         for idx in idxs:
             self.assertArrayEqual(self.dset[idx], self.arr[idx])
 
+
 @ut.skipIf(b2 is None or h5p is None, 'Blosc2 support is required')
 class Blosc2OptSlicingTestCase(Blosc2SlicingTestCaseBase, TestCase):
 
@@ -116,6 +118,7 @@ class Blosc2OptSlicingTestCase(Blosc2SlicingTestCaseBase, TestCase):
 
     blosc2_force_filter = False
 
+
 @ut.skipIf(b2 is None or h5p is None, 'Blosc2 support is required')
 class Blosc2FiltSlicingTestCase(Blosc2SlicingTestCaseBase, TestCase):
 
@@ -124,6 +127,7 @@ class Blosc2FiltSlicingTestCase(Blosc2SlicingTestCaseBase, TestCase):
     """
 
     blosc2_force_filter = True
+
 
 @ut.skipIf(b2 is None or h5p is None, 'Blosc2 support is required')
 class Blosc2OptSlicingMinTestCase(TestCase):
