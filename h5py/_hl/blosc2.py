@@ -103,6 +103,8 @@ def opt_selection_read(dataset, selection):
     slice_ = tuple(slice(st, st + sh)
                    for (st, sh) in zip(slice_start, slice_shape))
     slice_arr = numpy.empty(dtype=dataset.dtype, shape=slice_shape)
+    if 0 in slice_shape:  # empty slice
+        return slice_arr.reshape(selection.array_shape)
 
     # TODO: consider using 'dataset.id.get_chunk_info' for performance
     get_chunk_info = dataset.id.get_chunk_info_by_coord
