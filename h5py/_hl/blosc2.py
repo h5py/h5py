@@ -25,7 +25,6 @@
 
 import os
 import platform
-import sys
 
 import numpy
 
@@ -61,8 +60,7 @@ def opt_slicing_dataset_ok(dataset):
         # '.compression' and '.compression_opts' don't work with plugins:
         # <https://forum.hdfgroup.org/t/registering-custom-filter-issues/9239>
         and '32026' in dataset._filters  # Blosc2's ID
-        and (dataset.dtype.byteorder
-             in ('=', '|', dict(little='<', big='>')[sys.byteorder]))
+        and dataset.dtype.isnative
         and (dataset.file.mode == 'r'
              or platform.system().lower() != 'windows')
     )
