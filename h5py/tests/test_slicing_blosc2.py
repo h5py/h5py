@@ -29,12 +29,20 @@ from .common import ut, TestCase
 from h5py import File
 
 
-class Blosc2SlicingTestCaseBase:
+@ut.skipIf(b2 is None or h5p is None, 'Blosc2 support is required')
+class Blosc2OptSlicingTestCase(TestCase):
+
+    """
+        Feature: Blosc2 optimized slicing
+    """
+
+    blosc2_force_filter = False
 
     def setUp(self):
+        super().setUp()
+
         self.blosc2_filter_env = os.environ.get('BLOSC2_FILTER', '0')
 
-        self.f = File(self.mktemp(), 'w')
         shape = (3500, 300)
         chunks = (1747, 150)
         comp = h5p.Blosc2(cname='lz4', clevel=5, filters=h5p.Blosc2.SHUFFLE)
@@ -45,9 +53,8 @@ class Blosc2SlicingTestCaseBase:
         os.environ['BLOSC2_FILTER'] = '1' if self.blosc2_force_filter else '0'
 
     def tearDown(self):
-        if self.f:
-            self.f.close()
         os.environ['BLOSC2_FILTER'] = self.blosc2_filter_env
+        super().tearDown()
 
     # Test the data of the returned object.
 
@@ -117,18 +124,9 @@ class Blosc2SlicingTestCaseBase:
         slc = slice(10, 20)
         self.assertArrayEqual(alt_dset[slc], alt_arr[slc])
 
-@ut.skipIf(b2 is None or h5p is None, 'Blosc2 support is required')
-class Blosc2OptSlicingTestCase(Blosc2SlicingTestCaseBase, TestCase):
-
-    """
-        Feature: Blosc2 optimized slicing
-    """
-
-    blosc2_force_filter = False
-
 
 @ut.skipIf(b2 is None or h5p is None, 'Blosc2 support is required')
-class Blosc2FiltSlicingTestCase(Blosc2SlicingTestCaseBase, TestCase):
+class Blosc2FiltSlicingTestCase(Blosc2OptSlicingTestCase):
 
     """
         Feature: Blosc2 filter slicing
@@ -162,17 +160,14 @@ class Blosc2OptSlicingMinTestCase(TestCase):
     # from its parts in different chunks.
 
     def setUp(self):
-        self.f = File(self.mktemp(), 'w')
+        super().setUp()
+
         shape = (2, 2, 2)
         chunks = (2, 2, 1)
         comp = h5p.Blosc2(cname='lz4', clevel=5, filters=h5p.Blosc2.SHUFFLE)
         self.arr = np.arange(np.prod(shape), dtype="u1").reshape(shape)
         self.dset = self.f.create_dataset('x', data=self.arr, chunks=chunks,
                                           **comp)
-
-    def tearDown(self):
-        if self.f:
-            self.f.close()
 
     def test_slice(self):
         """ Reading a slice perpendicular to chunks """
@@ -188,7 +183,8 @@ class Blosc2OptSlicingCompTestCase(TestCase):
     """
 
     def setUp(self):
-        self.f = File(self.mktemp(), 'w')
+        super().setUp()
+
         dtype = np.dtype('i4,f8')
         shape = (5, 5)
         chunks = (2, 2)
@@ -206,10 +202,6 @@ class Blosc2OptSlicingCompTestCase(TestCase):
         self.arr = arr
         self.dset = self.f.create_dataset('x', data=self.arr, chunks=chunks,
                                           **comp)
-
-    def tearDown(self):
-        if self.f:
-            self.f.close()
 
     def test_whole_array(self):
         """ Reading a slice covering the whole array """
