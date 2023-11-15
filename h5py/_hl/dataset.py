@@ -762,11 +762,10 @@ class Dataset(HLObject):
         """
         args = args if isinstance(args, tuple) else (args,)
 
-        if new_dtype is None: # TODO: support this
-            try:
-                return blosc2.opt_slice_read(self, args)
-            except blosc2.NoOptSlicingError:
-                pass  # No Blosc2 optimized slicing, try other approaches
+        try:
+            return blosc2.opt_slice_read(self, args, new_dtype)
+        except blosc2.NoOptSlicingError:
+            pass  # No Blosc2 optimized slicing, try other approaches
 
         if self._fast_read_ok and (new_dtype is None):
             try:

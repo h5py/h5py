@@ -108,6 +108,14 @@ class Blosc2SlicingTestCaseBase:
         for idx in idxs:
             self.assertArrayEqual(self.dset[idx], self.arr[idx])
 
+    def test_astype(self):
+        """ Reading a slice converted to another type """
+        alt_dtype = np.dtype('u4')
+        self.assertTrue(self.dset.dtype < alt_dtype)
+        alt_arr = self.arr.astype(alt_dtype)
+        alt_dset = self.dset.astype(alt_dtype)
+        slc = slice(10, 20)
+        self.assertArrayEqual(alt_dset[slc], alt_arr[slc])
 
 @ut.skipIf(b2 is None or h5p is None, 'Blosc2 support is required')
 class Blosc2OptSlicingTestCase(Blosc2SlicingTestCaseBase, TestCase):

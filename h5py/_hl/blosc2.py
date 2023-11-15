@@ -92,20 +92,22 @@ def _read_chunk_slice(path, offset, slice_, dtype):
     return numpy.ndarray(s.shape, dtype=dtype, buffer=s.data)
 
 
-def opt_selection_read(dataset, selection):
+def opt_selection_read(dataset, selection, new_dtype=None):
     """Read the specified selection from the given dataset.
 
     Blosc2 optimized slice reading is used, but the caller must make sure
     beforehand that both the dataset and the selection are suitable for such
     operation.
 
-    A NumPy array is returned with the desired slice.
+    A NumPy array is returned with the desired slice.  The array will have the
+    given new dtype if specified.
     """
     slice_start = selection._sel[0]
     slice_shape = selection.mshape
     slice_ = tuple(slice(st, st + sh)
                    for (st, sh) in zip(slice_start, slice_shape))
-    slice_arr = numpy.empty(dtype=dataset.dtype, shape=slice_shape)
+    slice_arr = numpy.empty(dtype=new_dtype or dataset.dtype,
+                            shape=slice_shape)
     if 0 in slice_shape:  # empty slice
         return slice_arr.reshape(selection.array_shape)
 
@@ -160,7 +162,7 @@ def opt_selection_read(dataset, selection):
     return slice_arr.reshape(ret_shape)
 
 
-def opt_slice_read(dataset, slice_):
+def opt_slice_read(dataset, slice_, new_dtype=None):
     """Read the specified slice from the given dataset.
 
     The dataset must support a ``_blosc2_opt_slicing_ok`` property that calls
@@ -169,7 +171,8 @@ def opt_slice_read(dataset, slice_):
     Blosc2 optimized slice reading is used if available and suitable,
     otherwise a `NoOptSlicingError` is raised.
 
-    A NumPy array is returned with the desired slice.
+    A NumPy array is returned with the desired slice.  The array will have the
+    given new dtype if specified.
     """
     if not dataset._blosc2_opt_slicing_ok:
         raise NoOptSlicingError(
@@ -184,4 +187,4 @@ def opt_slice_read(dataset, slice_):
         raise NoOptSlicingError(
             "Selection is not suitable for Blosc2 optimized slicing")
 
-    return opt_selection_read(dataset, selection)
+    return opt_selection_read(dataset, selection, new_dtype)
