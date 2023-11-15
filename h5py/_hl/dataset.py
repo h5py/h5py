@@ -743,7 +743,10 @@ class Dataset(HLObject):
     @cached_property
     def _blosc2_opt_slicing_ok(self):
         """Is this dataset suitable for Blosc2 optimized slicing"""
-        return blosc2.opt_slicing_dataset_ok(self)
+        return (
+            self._extent_type == h5s.SIMPLE
+            and blosc2.opt_slicing_dataset_ok(self)
+        )
 
     @with_phil
     def __getitem__(self, args, new_dtype=None):
@@ -759,11 +762,13 @@ class Dataset(HLObject):
         """
         args = args if isinstance(args, tuple) else (args,)
 
-        if self._fast_read_ok and (new_dtype is None):
+        if new_dtype is None: # TODO: support this
             try:
                 return blosc2.opt_slice_read(self, args)
             except blosc2.NoOptSlicingError:
                 pass  # No Blosc2 optimized slicing, try other approaches
+
+        if self._fast_read_ok and (new_dtype is None):
             try:
                 return self._fast_reader.read(args)
             except TypeError:

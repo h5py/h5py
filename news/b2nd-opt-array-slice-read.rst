@@ -2,12 +2,11 @@ New features
 ------------
 
 * New optional support for Blosc2 NDim optimized slicing (:pr:`NNNN`). Common
-  simple slicing operations on homogeneous multi-dimensional datasets
-  compressed with Blosc2 are handled via direct chunk access and only the
-  affected blocks (a subdivision of chunks) are processed, avoiding HDF5
-  filter pipeline overhead and whole chunk decompression, and resulting in
-  2x-3x speedups (for the moment).  Other slice/read/write operations resort
-  to the filter pipeline.
+  simple slicing operations on multi-dimensional datasets compressed with
+  Blosc2 are handled via direct chunk access and only the affected blocks (a
+  subdivision of chunks) are processed, avoiding HDF5 filter pipeline overhead
+  and whole chunk decompression, and resulting in 2x-3x speedups (for the
+  moment).  Other slice/read/write operations resort to the filter pipeline.
 
 Building h5py
 -------------

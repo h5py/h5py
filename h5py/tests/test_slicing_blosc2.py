@@ -170,3 +170,64 @@ class Blosc2OptSlicingMinTestCase(TestCase):
         """ Reading a slice perpendicular to chunks """
         slc = (slice(1, 2), slice(0, 2), slice(0, 2))
         self.assertArrayEqual(self.dset[slc], self.arr[slc])
+
+
+@ut.skipIf(b2 is None or h5p is None, 'Blosc2 support is required')
+class Blosc2OptSlicingCompTestCase(TestCase):
+
+    """
+        Feature: Blosc2 optimized slicing with compound dtypes
+    """
+
+    def setUp(self):
+        self.f = File(self.mktemp(), 'w')
+        dtype = np.dtype('i4,f8')
+        shape = (5, 5)
+        chunks = (2, 2)
+        arr = np.zeros(dtype=dtype, shape=shape)
+        arr[0, 0] = (1, 1)
+        arr[0, 2] = (2, 2)
+        arr[0, 4] = (3, 3)
+        arr[2, 0] = (4, 4)
+        arr[2, 2] = (5, 5)
+        arr[2, 4] = (6, 6)
+        arr[4, 0] = (7, 7)
+        arr[4, 2] = (8, 8)
+        arr[4, 4] = (9, 9)
+        comp = h5p.Blosc2(cname='lz4', clevel=5, filters=h5p.Blosc2.SHUFFLE)
+        self.arr = arr
+        self.dset = self.f.create_dataset('x', data=self.arr, chunks=chunks,
+                                          **comp)
+
+    def tearDown(self):
+        if self.f:
+            self.f.close()
+
+    def test_whole_array(self):
+        """ Reading a slice covering the whole array """
+        self.assertArrayEqual(self.dset[:], self.arr)
+
+    def test_chunk(self):
+        """ Reading a slice matching a chunk """
+        slcs = [tuple(slice(mult * cl, (mult + 1) * cl)
+                      for cl in self.dset.chunks)
+                for mult in range(3)]
+        for slc in slcs:
+            self.assertArrayEqual(self.dset[slc], self.arr[slc])
+
+    def test_cross_chunk(self):
+        """ Reading a slice crossing chunk boundaries """
+        slc = (slice(1, 1), slice(3, 3))
+        self.assertArrayEqual(self.dset[slc], self.arr[slc])
+
+    def test_last_chunk(self):
+        """ Reading a slice going past the last chunk """
+        slc = (slice(-1, self.dset.shape[0] + 10),
+               slice(-1, self.dset.shape[1] + 10))
+        self.assertArrayEqual(self.dset[slc], self.arr[slc])
+
+    def test_cross_last_chunk(self):
+        """ Reading a slice crossing chunk boundaries past last chunk """
+        slc = (slice(-2, self.dset.shape[0] + 10),
+               slice(-2, self.dset.shape[1] + 10))
+        self.assertArrayEqual(self.dset[slc], self.arr[slc])
