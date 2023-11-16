@@ -29,7 +29,23 @@ import platform
 import numpy
 
 try:
+    # We only want to automatically enable
+    # both optimized and filter-based slicing
+    # if both Python-Blosc2 and hdf5plugin are available.
+    #
+    # If only Python-Blosc2 is available,
+    # enabling optimized slicing only would be quite confusing
+    # as some slice operations would work while others would fail.
+    # If only hdf5plugin is available,
+    # enabling filter-based slicing only would enable all the plugins
+    # without the user's knowledge, just because the package is available.
+    #
+    # In other words, the user needs to import hdf5plugin explicitly
+    # to read Blosc2-compressed data in the absence of Python-Blosc2.
+    #
+    # This means that the order of imports is relevant here.
     from blosc2.schunk import open as blosc2_schunk_open
+    import hdf5plugin
 except ImportError:
     blosc2_schunk_open = None
 
