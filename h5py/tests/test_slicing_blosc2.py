@@ -29,8 +29,17 @@ from .common import ut, TestCase
 from h5py import File
 
 
+class StoreArrayMixin:
+    # Requires: self.f (read/write), self.arr, self.chunks
+    # Provides: self.dset
+    def setUp(self):
+        comp = h5p.Blosc2(cname='lz4', clevel=5, filters=h5p.Blosc2.SHUFFLE)
+        self.f.create_dataset('x', data=self.arr, chunks=self.chunks, **comp)
+        self.dset = self.f['x']
+
+
 @ut.skipIf(b2 is None or h5p is None, 'Blosc2 support is required')
-class Blosc2OptSlicingTestCase(TestCase):
+class Blosc2OptSlicingTestCase(TestCase, StoreArrayMixin):
 
     """
         Feature: Blosc2 optimized slicing
@@ -39,17 +48,14 @@ class Blosc2OptSlicingTestCase(TestCase):
     blosc2_force_filter = False
 
     def setUp(self):
-        super().setUp()
-
-        self.blosc2_filter_env = os.environ.get('BLOSC2_FILTER', '0')
+        TestCase.setUp(self)
 
         shape = (3500, 300)
-        chunks = (1747, 150)
-        comp = h5p.Blosc2(cname='lz4', clevel=5, filters=h5p.Blosc2.SHUFFLE)
+        self.chunks = (1747, 150)
         self.arr = np.arange(np.prod(shape), dtype="u2").reshape(shape)
-        self.dset = self.f.create_dataset('x', data=self.arr, chunks=chunks,
-                                          **comp)
+        StoreArrayMixin.setUp(self)
 
+        self.blosc2_filter_env = os.environ.get('BLOSC2_FILTER', '0')
         os.environ['BLOSC2_FILTER'] = '1' if self.blosc2_force_filter else '0'
 
     def tearDown(self):
@@ -136,7 +142,7 @@ class Blosc2FiltSlicingTestCase(Blosc2OptSlicingTestCase):
 
 
 @ut.skipIf(b2 is None or h5p is None, 'Blosc2 support is required')
-class Blosc2OptSlicingMinTestCase(TestCase):
+class Blosc2OptSlicingMinTestCase(TestCase, StoreArrayMixin):
 
     """
         Feature: Blosc2 optimized slicing with chunks on inner dimension
@@ -160,14 +166,12 @@ class Blosc2OptSlicingMinTestCase(TestCase):
     # from its parts in different chunks.
 
     def setUp(self):
-        super().setUp()
+        TestCase.setUp(self)
 
         shape = (2, 2, 2)
-        chunks = (2, 2, 1)
-        comp = h5p.Blosc2(cname='lz4', clevel=5, filters=h5p.Blosc2.SHUFFLE)
+        self.chunks = (2, 2, 1)
         self.arr = np.arange(np.prod(shape), dtype="u1").reshape(shape)
-        self.dset = self.f.create_dataset('x', data=self.arr, chunks=chunks,
-                                          **comp)
+        StoreArrayMixin.setUp(self)
 
     def test_slice(self):
         """ Reading a slice perpendicular to chunks """
@@ -176,18 +180,18 @@ class Blosc2OptSlicingMinTestCase(TestCase):
 
 
 @ut.skipIf(b2 is None or h5p is None, 'Blosc2 support is required')
-class Blosc2OptSlicingCompTestCase(TestCase):
+class Blosc2OptSlicingCompTestCase(TestCase, StoreArrayMixin):
 
     """
         Feature: Blosc2 optimized slicing with compound dtypes
     """
 
     def setUp(self):
-        super().setUp()
+        TestCase.setUp(self)
 
         dtype = np.dtype('i4,f8')
         shape = (5, 5)
-        chunks = (2, 2)
+        self.chunks = (2, 2)
         arr = np.zeros(dtype=dtype, shape=shape)
         arr[0, 0] = (1, 1)
         arr[0, 2] = (2, 2)
@@ -198,10 +202,8 @@ class Blosc2OptSlicingCompTestCase(TestCase):
         arr[4, 0] = (7, 7)
         arr[4, 2] = (8, 8)
         arr[4, 4] = (9, 9)
-        comp = h5p.Blosc2(cname='lz4', clevel=5, filters=h5p.Blosc2.SHUFFLE)
         self.arr = arr
-        self.dset = self.f.create_dataset('x', data=self.arr, chunks=chunks,
-                                          **comp)
+        StoreArrayMixin.setUp(self)
 
     def test_whole_array(self):
         """ Reading a slice covering the whole array """
