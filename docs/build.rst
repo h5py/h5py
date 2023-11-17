@@ -249,3 +249,16 @@ You will need a shared-library build of Parallel HDF5 as well, i.e. built with
 On Windows, MS-MPI is usually used which does not have an ``mpicc`` wrapper.
 Instead, you may use the ``H5PY_MSMPI`` environment variable to ``ON`` in
 order to query the system for MS-MPI's information.
+
+.. _extra_blosc2:
+
+Extra support for Blosc2 optimizations
+--------------------------------------
+
+To enable automatic, optimized access to slices of Blosc2-compressed datasets
+(see :ref:`Custom filters <dataset_compression_custom>`), h5py requires
+additional dependencies.  To install them along with h5py, you may add the
+``blosc2`` extra to pip invocations::
+
+    $ pip install --no-binary=h5py h5py[blosc2]
+    $ pip install -v .[blosc2]

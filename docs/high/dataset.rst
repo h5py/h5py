@@ -253,6 +253,8 @@ SZIP filter (``"szip"``)
     installations of HDF5 due to legal reasons.  Consult the HDF5 docs for filter
     options.
 
+.. _dataset_compression_custom:
+
 Custom compression filters
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -278,6 +280,16 @@ The ``compression_opts`` parameter will then be passed to this filter.
     filter doesn't compress a block while writing, no error will be thrown. The
     filter will then be skipped when subsequently reading the block.
 
+.. note:: When the required dependencies are available
+    (see :ref:`Installation <extra_blosc2>`), h5py will automatically enable
+    some optimizations to speed-up the access to slices of datasets compressed
+    with Blosc2, bypassing the HDF5 filter pipeline and using 2-level
+    chunk/block partitioning to reduce the amount of uncompressed data (see
+    here__ for a similar technique in PyTables).  You can still disable the
+    optimizations by setting the ``BLOSC2_FILTER`` environment variable to
+    some non-zero integer (like ``1``).
+
+__ https://www.blosc.org/posts/pytables-b2nd-slicing/
 
 .. _dataset_scaleoffset:
 
