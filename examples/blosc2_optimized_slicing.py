@@ -73,16 +73,12 @@ with h5py.File(file_name, 'w') as f:
 
 # Benefitting from Blosc2 optimized slicing
 # -----------------------------------------
-# The feature is enabled by default if all the needed dependencies are installed,
+# Support for Blosc2 optimized slicing
+# depends on *both* Python-Blosc2 and hdf5plugin.
+# If they are available, the feature is enabled by default
 # unless disabled via the `BLOSC2_FILTER` environment variable.
-if os.environ.get('BLOSC2_FILTER', '0') != '0':
-    # (We may also set `os.environ['BLOSC2_FILTER'] = '0'` here,
-    # but we are just illustrating the default behavior.)
-    raise RuntimeError(
-        "Blosc2 optimized slicing disabled via the environment; "
-        "please unset BLOSC2_FILTER or set it to 0.")
 with h5py.File(file_name, 'r') as f:
-    # If all the dependecies for Blosc2 optimized slicing support are installed,
+    # If support for Blosc2 optimized slicing is available,
     # there is no need to import anything else explicitly for reading.
     # One just uses slicing as usual.
     dataset = f[dataset_name]
@@ -103,7 +99,7 @@ with h5py.File(file_name, 'r') as f:
 print("Disabling Blosc2 optimized slicing via the environment.")
 os.environ['BLOSC2_FILTER'] = '1'
 with h5py.File(file_name, 'r') as f:
-    # If all the dependecies for Blosc2 optimized slicing support are installed,
+    # If support for Blosc2 optimized slicing is available,
     # there is no need to import anything else explicitly for reading.
     # However, if Python-Blosc2 is not available on your system,
     # you need to import hdf5plugin to access Blosc2-compressed data
