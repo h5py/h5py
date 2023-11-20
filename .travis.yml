@@ -29,7 +29,9 @@ jobs:
     - arch: ppc64le
       python: 3.9
       env:
-      - TOXENV=py39-test-deps-blosc2-deps
+      # TODO: This should be py39-test-deps-blosc2-deps (as below),
+      # but C-Blosc2 (as of 2.11.2) doesn't build on ppc64le.
+      - TOXENV=py39-test-deps
       - TOX_OPTS="--force-dep numpy<1.23"
       - HDF5_VERSION=1.10.5
       - HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION
