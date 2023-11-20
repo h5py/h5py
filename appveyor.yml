@@ -9,7 +9,7 @@ environment:
     ### USING HDF5 1.10 ###
 
     - PYTHON: "C:\\Python38"
-      TOXENV: "py38-test-deps-blosc2-deps"
+      TOXENV: "py38-test-deps"
       HDF5_VSVERSION: "14"
       HDF5_DIR: "C:\\hdf5\\%HDF5_VERSION%\\%HDF5_VSVERSION%"
       HDF5_VERSION: "1.10.6"
@@ -17,13 +17,13 @@ environment:
     ### USING HDF5 1.12 ###
 
     - PYTHON: "C:\\Python39"
-      TOXENV: "py39-test-deps-blosc2-deps"
+      TOXENV: "py39-test-deps"
       HDF5_VSVERSION: "14"
       HDF5_DIR: "C:\\hdf5\\%HDF5_VERSION%\\%HDF5_VSVERSION%"
       HDF5_VERSION: "1.12.0"
 
     - PYTHON: "C:\\Python311"
-      TOXENV: "py311-test-deps-blosc2-deps"
+      TOXENV: "py311-test-deps"
       HDF5_VSVERSION: "14"
       HDF5_DIR: "C:\\hdf5\\%HDF5_VERSION%\\%HDF5_VSVERSION%"
       HDF5_VERSION: "1.12.2"
