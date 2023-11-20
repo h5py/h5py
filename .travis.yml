@@ -29,7 +29,7 @@ jobs:
     - arch: ppc64le
       python: 3.9
       env:
-      - TOXENV=py39-test-deps
+      - TOXENV=py39-test-deps-blosc2-deps
       - TOX_OPTS="--force-dep numpy<1.23"
       - HDF5_VERSION=1.10.5
       - HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION
@@ -39,7 +39,7 @@ jobs:
       python: 3.9
       virt: vm
       env:
-        - TOXENV=py39-test-deps
+        - TOXENV=py39-test-deps-blosc2-deps
         - TOX_OPTS=""
         - HDF5_VERSION=1.10.5
         - HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION

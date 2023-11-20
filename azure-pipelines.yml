@@ -85,6 +85,8 @@ jobs:
       # -mindeps : test with oldest supported version of (python) dependencies
       # -deps-pre : test pre-release versions of (python) dependencies)
       # -tables : also check compatibility with pytables
+      # -blosc2-deps: also check Blosc2 optimized slicing
+      # -blosc2-mindeps: also check Blosc2 optimized slicing (oldest supported deps)
     # HDF5 installed from apt on Ubuntu
     # test when we're not in a unicode locale
       py38-Clocale:
@@ -117,6 +119,13 @@ jobs:
         python.version: '3.10'
         TOXENV: py310-test-deps
         HDF5_VERSION: 1.14.2
+        HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
+        H5PY_ENFORCE_COVERAGE: yes
+    # do blosc2 tests
+      py39-deps-hdf51122-blosc2:
+        python.version: '3.9'
+        TOXENV: py39-test-deps-blosc2-deps
+        HDF5_VERSION: 1.12.2
         HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
         H5PY_ENFORCE_COVERAGE: yes
     # do mpi tests
@@ -182,11 +191,13 @@ jobs:
     # -deps : test with default (latest) versions of dependencies
     # -mindeps : test with oldest supported version of (python) dependencies
     # -deps-pre : test pre-release versions of (python) dependencies)
+    # -blosc2-deps: also check Blosc2 optimized slicing
+    # -blosc2-mindeps: also check Blosc2 optimized slicing (oldest supported deps)
     #
     # 64 bit - HDF5 1.10
       py39-hdf5110:
         python.version: '3.9'
-        TOXENV: py39-test-deps,py39-test-mindeps,py39-test-deps-pre
+        TOXENV: py39-test-deps,py39-test-mindeps,py39-test-deps-pre,py39-test-deps-blosc2-deps
         HDF5_VERSION: 1.10.6
         HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
         HDF5_VSVERSION: "16-64"
