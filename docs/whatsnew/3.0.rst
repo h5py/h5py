@@ -44,7 +44,7 @@ New features
   See also the deprecation related to the ``external`` argument.
 * Support for setting file space strategy at file creation. Includes option to
   persist empty space tracking between sessions. See :class:`.File` for details.
-* More efficient writing when assiging a scalar to a chunked dataset, when the
+* More efficient writing when assigning a scalar to a chunked dataset, when the
   number of elements to write is no more than the size of one chunk.
 * Introduced support for the split :ref:`file driver <file_driver>`
   (:pr:`1468`).

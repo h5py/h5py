@@ -326,7 +326,7 @@ class TestDrivers(TestCase):
         # could be an integer multiple of 512
         #
         # To allow HDF5 to do the heavy lifting for different platform,
-        # We didn't provide any argumnets to the first call
+        # We didn't provide any arguments to the first call
         # and obtained HDF5's default values there.
 
         # Testing creation with a few different property lists
@@ -639,9 +639,9 @@ class TestUnicode(TestCase):
         Modes 'r' and 'r+' do not create files even when given unicode names
         """
         fname = self.mktemp(prefix=chr(0x201a))
-        with self.assertRaises(IOError):
+        with self.assertRaises(OSError):
             File(fname, 'r')
-        with self.assertRaises(IOError):
+        with self.assertRaises(OSError):
             File(fname, 'r+')
 
 

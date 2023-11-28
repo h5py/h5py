@@ -50,7 +50,7 @@ class TestFileAlignment(TestCase):
         alignment_interval = 4096
 
         for shape in [
-            (1033,),  # A prime number above the thresold
+            (1033,),  # A prime number above the threshold
             (1000,),  # Exactly equal to the threshold
             (1001,),  # one above the threshold
         ]:
@@ -75,7 +75,7 @@ class TestFileAlignment(TestCase):
         alignment_interval = 1024
 
         for shape in [
-            (881,),  # A prime number below the thresold
+            (881,),  # A prime number below the threshold
             (999,),  # Exactly one below the threshold
         ]:
             fname = self.mktemp()

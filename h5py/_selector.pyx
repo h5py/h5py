@@ -341,7 +341,7 @@ cdef class Reader:
 
             arr = PyArray_ZEROS(arr_rank, arr_shape, self.np_typenum, 0)
             if not self.native_byteorder:
-                arr = arr.newbyteorder()
+                arr = arr.view(arr.dtype.newbyteorder())
         finally:
             efree(arr_shape)
 

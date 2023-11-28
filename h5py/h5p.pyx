@@ -1115,6 +1115,36 @@ cdef class PropFAID(PropInstanceID):
             H5Pget_fapl_ros3(self.id, &config)
             return config
 
+        IF HDF5_VERSION >= (1, 14, 2):
+            @with_phil
+            def get_fapl_ros3_token(self):
+                """ () => BYTES token
+
+                Get session token from the file access property list.
+                """
+                cdef size_t size = 0
+                cdef char *token = NULL
+
+                size = H5FD_ROS3_MAX_SECRET_TOK_LEN + 1
+                try:
+                    token = <char*>emalloc(size)
+                    token[0] = 0
+                    H5Pget_fapl_ros3_token(self.id, size, token)
+                    pytoken = <bytes>token
+                finally:
+                    efree(token)
+
+                return pytoken
+
+
+            @with_phil
+            def set_fapl_ros3_token(self, char *token=""):
+                """ (BYTES token="")
+
+                Set session token in the file access property list.
+                """
+                H5Pset_fapl_ros3_token(self.id, token)
+
 
     @with_phil
     def set_fapl_log(self, char* logfile, unsigned int flags, size_t buf_size):
@@ -1147,7 +1177,7 @@ cdef class PropFAID(PropInstanceID):
                 size_t block_size   IN: File system block size
                 size_t cbuf_size    IN: Copy buffer size
 
-            Properites with value of 0 indicate that the HDF5 library should
+            Properties with value of 0 indicate that the HDF5 library should
             choose the value.
             """
             H5Pset_fapl_direct(self.id, alignment, block_size, cbuf_size)
@@ -1731,7 +1761,7 @@ cdef class PropOCID(PropCreateID):
 
         max_compact -- maximum number of attributes to be stored in compact storage(default:8)
         must be greater than or equal to min_dense
-        min_dense  -- minmum number of attributes to be stored in dense storage(default:6)
+        min_dense  -- minimum number of attributes to be stored in dense storage(default:6)
 
         """
         H5Pset_attr_phase_change(self.id, max_compact, min_dense)

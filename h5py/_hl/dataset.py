@@ -334,10 +334,10 @@ class ChunkIterator:
         self._layout = dset.chunks
         if source_sel is None:
             # select over entire dataset
-            slices = []
-            for dim in range(rank):
-                slices.append(slice(0, self._shape[dim]))
-            self._sel = tuple(slices)
+            self._sel = tuple(
+                slice(0, self._shape[dim])
+                for dim in range(rank)
+            )
         else:
             if isinstance(source_sel, slice):
                 self._sel = (source_sel,)

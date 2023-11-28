@@ -23,7 +23,7 @@ cdef extern from "hdf5.h":
             H5E_ARGS,                   # invalid arguments to routine
             H5E_RESOURCE,               # resource unavailable
             H5E_INTERNAL,               # Internal error (too specific to document)
-            H5E_FILE,                   # file Accessability
+            H5E_FILE,                   # file Accessibility
             H5E_IO,                     # Low-level I/O
             H5E_FUNC,                   # function Entry/Exit
             H5E_ATOM,                   # object Atom
@@ -121,7 +121,7 @@ cdef extern from "hdf5.h":
             # No error
             H5E_NONE_MINOR     # No error
 
-            # File accessability errors
+            # File accessibility errors
             H5E_FILEEXISTS     # File already exists
             H5E_FILEOPEN       # File already open
             H5E_CANTCREATE     # Unable to create file
@@ -207,7 +207,7 @@ cdef extern from "hdf5.h":
             H5E_ARGS,                   # invalid arguments to routine
             H5E_RESOURCE,               # resource unavailable
             H5E_INTERNAL,               # Internal error (too specific to document)
-            H5E_FILE,                   # file Accessability
+            H5E_FILE,                   # file Accessibility
             H5E_IO,                     # Low-level I/O
             H5E_FUNC,                   # function Entry/Exit
             H5E_ID,                     # object ID
@@ -305,7 +305,7 @@ cdef extern from "hdf5.h":
             # No error
             H5E_NONE_MINOR     # No error
 
-            # File accessability errors
+            # File accessibility errors
             H5E_FILEEXISTS     # File already exists
             H5E_FILEOPEN       # File already open
             H5E_CANTCREATE     # Unable to create file

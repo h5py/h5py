@@ -20,7 +20,7 @@ import posixpath
 import numpy as np
 
 # The high-level interface is serialized; every public API function & method
-# is wrapped in a lock.  We re-use the low-level lock because (1) it's fast,
+# is wrapped in a lock.  We reuse the low-level lock because (1) it's fast,
 # and (2) it eliminates the possibility of deadlocks due to out-of-order
 # lock acquisition.
 from .._objects import phil, with_phil
@@ -524,7 +524,7 @@ def product(nums):
 # Daniel Greenfeld, BSD license), where it is attributed to bottle (Copyright
 # (c) 2009-2022, Marcel Hellkamp, MIT license).
 
-class cached_property(object):
+class cached_property:
     def __init__(self, func):
         self.__doc__ = getattr(func, "__doc__")
         self.func = func

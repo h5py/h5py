@@ -53,8 +53,7 @@ class DimensionProxy(base.CommonStateObject):
 
     @with_phil
     def __iter__(self):
-        for k in self.keys():
-            yield k
+        yield from self.keys()
 
     @with_phil
     def __len__(self):

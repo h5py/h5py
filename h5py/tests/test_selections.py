@@ -65,7 +65,7 @@ class TestTypeGeneration(BaseSelection):
         self.assertEqual(out, np.dtype('i'))
         self.assertEqual(format, np.dtype( [('a','i')] ))
 
-        # Field does not apear in named typed
+        # Field does not appear in named typed
         with self.assertRaises(ValueError):
             out, format = sel2.read_dtypes(dt, ('j', 'k'))
 

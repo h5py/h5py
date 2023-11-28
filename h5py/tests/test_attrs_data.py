@@ -262,7 +262,7 @@ class TestEmpty(BaseAttrs):
         self.assertTrue(is_empty_dataspace(h5a.open(self.f.id, b'y')))
 
     def test_modify(self):
-        with self.assertRaises(IOError):
+        with self.assertRaises(OSError):
             self.f.attrs.modify('x', 1)
 
     def test_values(self):
