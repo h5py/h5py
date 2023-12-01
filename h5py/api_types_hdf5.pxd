@@ -272,7 +272,7 @@ cdef extern from "hdf5.h":
       herr_t  (*free)(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id, haddr_t addr, hsize_t size)
       haddr_t (*get_eoa)(const H5FD_t *file, H5FD_mem_t type) noexcept
       herr_t  (*set_eoa)(H5FD_t *file, H5FD_mem_t type, haddr_t addr) noexcept
-      haddr_t (*get_eof)(const H5FD_t *file, H5FD_mem_t type) noexcept
+      haddr_t (*get_eof)(const H5FD_t *file, H5FD_mem_t type) except -1
       herr_t  (*get_handle)(H5FD_t *file, hid_t fapl, void**file_handle)
       herr_t  (*read)(H5FD_t *file, H5FD_mem_t type, hid_t dxpl, haddr_t addr, size_t size, void *buffer) except *
       herr_t  (*write)(H5FD_t *file, H5FD_mem_t type, hid_t dxpl, haddr_t addr, size_t size, const void *buffer) except *
@@ -310,7 +310,7 @@ cdef extern from "hdf5.h":
       herr_t  (*free)(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id, haddr_t addr, hsize_t size)
       haddr_t (*get_eoa)(const H5FD_t *file, H5FD_mem_t type) noexcept
       herr_t  (*set_eoa)(H5FD_t *file, H5FD_mem_t type, haddr_t addr) noexcept
-      haddr_t (*get_eof)(const H5FD_t *file, H5FD_mem_t type) noexcept
+      haddr_t (*get_eof)(const H5FD_t *file, H5FD_mem_t type) except -1
       herr_t  (*get_handle)(H5FD_t *file, hid_t fapl, void**file_handle)
       herr_t  (*read)(H5FD_t *file, H5FD_mem_t type, hid_t dxpl, haddr_t addr, size_t size, void *buffer) except *
       herr_t  (*write)(H5FD_t *file, H5FD_mem_t type, hid_t dxpl, haddr_t addr, size_t size, const void *buffer) except *

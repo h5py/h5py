@@ -151,7 +151,7 @@ cdef herr_t H5FD_fileobj_set_eoa(H5FD_fileobj_t *f, H5FD_mem_t type, haddr_t add
     f.eoa = addr
     return 0
 
-cdef haddr_t H5FD_fileobj_get_eof(const H5FD_fileobj_t *f, H5FD_mem_t type) noexcept with gil:  # HADDR_UNDEF
+cdef haddr_t H5FD_fileobj_get_eof(const H5FD_fileobj_t *f, H5FD_mem_t type) except -1 with gil:  # HADDR_UNDEF
     (<object>f.fileobj).seek(0, libc.stdio.SEEK_END)
     return (<object>f.fileobj).tell()
 
@@ -197,7 +197,7 @@ ctypedef herr_t (*file_free_func_ptr)(void *) except -1
 ctypedef herr_t (*file_close_func_ptr)(H5FD_t *) except -1
 ctypedef haddr_t (*file_get_eoa_func_ptr)(const H5FD_t *, H5FD_mem_t) noexcept
 ctypedef herr_t (*file_set_eof_func_ptr)(H5FD_t *, H5FD_mem_t, haddr_t) noexcept
-ctypedef haddr_t (*file_get_eof_func_ptr)(const H5FD_t *, H5FD_mem_t) noexcept
+ctypedef haddr_t (*file_get_eof_func_ptr)(const H5FD_t *, H5FD_mem_t) except -1
 ctypedef herr_t (*file_read_func_ptr)(H5FD_t *, H5FD_mem_t, hid_t, haddr_t, size_t, void*) except -1
 ctypedef herr_t (*file_write_func_ptr)(H5FD_t *, H5FD_mem_t, hid_t, haddr_t, size_t, const void*) except -1
 ctypedef herr_t (*file_truncate_func_ptr)(H5FD_t *, hid_t, hbool_t) except -1
