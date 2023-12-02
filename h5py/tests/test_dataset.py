@@ -1939,9 +1939,9 @@ class TestCommutative(BaseDataset):
         dset = self.f.create_dataset("test", shape, dtype=float,
                                      data=np.random.rand(*shape))
 
-        # grab a value from the elements, ie dset[0]
+        # grab a value from the elements, ie dset[0, 0]
         # check that mask arrays are commutative wrt ==, !=
-        val = np.float64(dset[0])
+        val = np.float64(dset[0, 0])
 
         assert np.all((val == dset) == (dset == val))
         assert np.all((val != dset) == (dset != val))
