@@ -99,6 +99,9 @@ hdf5:
   herr_t    H5Dread(hid_t dset_id, hid_t mem_type_id, hid_t mem_space_id, hid_t file_space_id, hid_t plist_id, void *buf) nogil
   herr_t    H5Dwrite(hid_t dset_id, hid_t mem_type, hid_t mem_space, hid_t file_space, hid_t xfer_plist, void* buf) nogil
 
+  1.14.0-1.16.99 herr_t H5Dread_multi(size_t count, hid_t *dset_id, hid_t *mem_type_id, hid_t *mem_space_id, hid_t *file_space_id, hid_t dxpl_id, void **buf)
+  1.14.0-1.16.99 herr_t H5Dwrite_multi(size_t count, hid_t *dset_id, hid_t *mem_type_id, hid_t *mem_space_id, hid_t *file_space_id, hid_t dxpl_id, const void **buf)
+
   herr_t    H5Dextend(hid_t dataset_id, hsize_t *size) nogil
 
   herr_t    H5Dfill(void *fill, hid_t fill_type_id, void *buf,  hid_t buf_type_id, hid_t space_id) nogil

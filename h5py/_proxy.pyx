@@ -81,85 +81,153 @@ cdef herr_t attr_rw(hid_t attr, hid_t mtype, void *progbuf, int read) except -1:
 # =============================================================================
 # Proxy for vlen buf workaround
 
+cdef herr_t dset_rw(size_t count, hid_t* dset, hid_t* mtype, hid_t* mspace, hid_t* _fspace,
+    hid_t dxpl, void **progbuf, int read) except -1:
 
-cdef herr_t dset_rw(hid_t dset, hid_t mtype, hid_t mspace, hid_t fspace,
-                    hid_t dxpl, void* progbuf, int read) except -1:
-
-    cdef htri_t need_bkg
-    cdef hid_t dstype = -1      # Dataset datatype
+    cdef hid_t plist_id = -1
     cdef hid_t rawdstype = -1
-    cdef hid_t dspace = -1      # Dataset dataspace
-    cdef hid_t cspace = -1      # Temporary contiguous dataspaces
 
-    cdef void* back_buf = NULL
-    cdef void* conv_buf = NULL
-    cdef hsize_t npoints
+    cdef hid_t* dstype = NULL # Dataset datatype
+    cdef hid_t* cspace = NULL # Temporary contiguous dataspaces
+    cdef hid_t* mspace_tmp = NULL
+    cdef hid_t* fspace_tmp = NULL
+
+    cdef htri_t* need_bkg = NULL
+
+    cdef void** back_buf = NULL
+    cdef void** conv_buf = NULL
+
+    cdef hsize_t* npoints = NULL
+
+    cdef bint rw_needs_proxy = False
 
     try:
+        # Make local list of mem/file spaces which may be freely modified
+        mspace_tmp = <hid_t*>malloc(sizeof(hid_t*) * count)
+        fspace_tmp = <hid_t*>malloc(sizeof(hid_t*) * count)
+        dstype = <hid_t*> malloc(sizeof(hid_t*) * count)
+
+        for i in range(count):
+            mspace_tmp[i] = mspace[i]
+            fspace_tmp[i] = _fspace[i]
+
         # Issue 372: when a compound type is involved, using the dataset type
         # may result in uninitialized data being sent to H5Tconvert for fields
         # not present in the memory type.  Limit the type used for the dataset
         # to only those fields present in the memory type.  We can't use the
         # memory type directly because of course that triggers HDFFV-1063.
-        if (H5Tget_class(mtype) == H5T_COMPOUND) and (not read):
-            rawdstype = H5Dget_type(dset)
-            dstype = make_reduced_type(mtype, rawdstype)
-            H5Tclose(rawdstype)
-        else:
-            dstype = H5Dget_type(dset)
-
-        if not (needs_proxy(dstype) or needs_proxy(mtype)):
-            if read:
-                H5Dread(dset, mtype, mspace, fspace, dxpl, progbuf)
+        for i in range(count):
+            if (H5Tget_class(mtype[i]) == H5T_COMPOUND) and (not read):
+                rawdstype = H5Dget_type(dset[i])
+                dstype[i] = make_reduced_type(mtype[i], rawdstype)
+                H5Tclose(rawdstype)
+                rawdstype = -1
             else:
-                H5Dwrite(dset, mtype, mspace, fspace, dxpl, progbuf)
-        else:
+                dstype[i] = H5Dget_type(dset[i])
 
-            if mspace == H5S_ALL and fspace != H5S_ALL:
-                mspace = fspace
-            elif mspace != H5S_ALL and fspace == H5S_ALL:
-                fspace = mspace
-            elif mspace == H5S_ALL and fspace == H5S_ALL:
-                fspace = mspace = dspace = H5Dget_space(dset)
+            rw_needs_proxy = rw_needs_proxy or (needs_proxy(dstype[i]) or needs_proxy(mtype[i]))
 
-            npoints = H5Sget_select_npoints(mspace)
-            cspace = H5Screate_simple(1, &npoints, NULL)
-
-            conv_buf = create_buffer(H5Tget_size(dstype), H5Tget_size(mtype), npoints)
-
-            # Only create a (contiguous) backing buffer if absolutely
-            # necessary. Note this buffer always has memory type.
+        if not rw_needs_proxy:
             if read:
-                need_bkg = needs_bkg_buffer(dstype, mtype)
+                if count > 1:
+                    H5Dread_multi(count, <hid_t*> dset, <hid_t*>mtype, <hid_t*> mspace_tmp, <hid_t*>fspace_tmp, dxpl, progbuf)
+                else:
+                    H5Dread(dset[0], mtype[0], mspace_tmp[0], fspace_tmp[0], dxpl, <void*>progbuf[0])
             else:
-                need_bkg = needs_bkg_buffer(mtype, dstype)
-            if need_bkg:
-                back_buf = create_buffer(H5Tget_size(dstype), H5Tget_size(mtype), npoints)
+                if count > 1:
+                    H5Dwrite_multi(count, <hid_t*> dset, <hid_t*>mtype, <hid_t*> mspace_tmp, <hid_t*>fspace_tmp, dxpl, <const void**> progbuf)
+                else:
+                    H5Dwrite(dset[0], mtype[0],mspace_tmp[0], fspace_tmp[0], dxpl, <void*>progbuf[0])
+        else:
+            cspace = <hid_t*> malloc(sizeof(hid_t*) * count)
+            need_bkg = <htri_t*> malloc(sizeof(htri_t) * count)
+            back_buf = <void**> malloc(sizeof(void*) * count)
+            conv_buf = <void**> malloc(sizeof(void*) * count)
+            npoints = <hsize_t*> malloc(sizeof(hsize_t) * count)
+
+            for i in range(count):
+                back_buf[i] = NULL
+                conv_buf[i] = NULL
+
+            for i in range(count):
+                if mspace_tmp[i] == H5S_ALL and fspace_tmp[i] != H5S_ALL:
+                   mspace_tmp[i] = fspace_tmp[i]
+                elif mspace_tmp[i] != H5S_ALL and fspace_tmp[i] == H5S_ALL:
+                    fspace_tmp[i] = mspace_tmp[i]
+                elif mspace_tmp[i] == H5S_ALL and fspace_tmp[i] == H5S_ALL:
+                   mspace_tmp[i] = fspace_tmp[i] = H5Dget_space(dset[i])
+
+                npoints[i] = H5Sget_select_npoints(mspace_tmp[i])
+                cspace[i] = H5Screate_simple(1, <hsize_t*> &npoints[i], NULL)
+
+                conv_buf[i] = create_buffer(H5Tget_size(dstype[i]), H5Tget_size(mtype[i]), npoints[i])
+
+                # Only create a (contiguous) backing buffer if absolutely
+                # necessary. Note this buffer always has memory type.
                 if read:
-                    h5py_copy(mtype, mspace, back_buf, progbuf, H5PY_GATHER)
+                    need_bkg[i] = needs_bkg_buffer(dstype[i], mtype[i])
+                else:
+                    need_bkg[i] = needs_bkg_buffer(mtype[i], dstype[i])
+
+                if need_bkg[i]:
+                    back_buf[i] = create_buffer(H5Tget_size(dstype[i]), H5Tget_size(mtype[i]), npoints[i])
+                    if read:
+                        h5py_copy(mtype[i], mspace_tmp[i], <void*> back_buf[i], <void*>progbuf[i], H5PY_GATHER)
 
             if read:
-                H5Dread(dset, dstype, cspace, fspace, dxpl, conv_buf)
-                H5Tconvert(dstype, mtype, npoints, conv_buf, back_buf, dxpl)
-                h5py_copy(mtype, mspace, conv_buf, progbuf, H5PY_SCATTER)
+                if count > 1:
+                    H5Dread_multi(count, <hid_t*> dset, <hid_t*>mtype, <hid_t*> mspace_tmp, <hid_t*>fspace_tmp, dxpl, conv_buf)
+                else:
+                    H5Dread(dset[0], dstype[0], cspace[0], fspace_tmp[0], dxpl, <void*> conv_buf[0])
+
+                for i in range(count):
+                    H5Tconvert(dstype[i], mtype[i], npoints[i], <void*> conv_buf[i], <void*> back_buf[i], dxpl)
+                    h5py_copy(mtype[i], mspace_tmp[i], <void*> conv_buf[i], <void*>progbuf[i], H5PY_SCATTER)
             else:
-                h5py_copy(mtype, mspace, conv_buf, progbuf, H5PY_GATHER)
-                H5Tconvert(mtype, dstype, npoints, conv_buf, back_buf, dxpl)
-                H5Dwrite(dset, dstype, cspace, fspace, dxpl, conv_buf)
-                H5Dvlen_reclaim(dstype, cspace, H5P_DEFAULT, conv_buf)
+                for i in range(count):
+                    h5py_copy(mtype[i], mspace_tmp[i], <void*> conv_buf[i], <void*>progbuf[i], H5PY_GATHER)
+                    H5Tconvert(mtype[i], dstype[i], npoints[i], <void*> conv_buf[i], <void*> back_buf[i], dxpl)
+
+                if count > 1:
+                    H5Dwrite_multi(count, <hid_t*>dset, <hid_t*>dstype, <hid_t*>cspace, <hid_t*>fspace_tmp, dxpl, <const void**> conv_buf)
+                else:
+                    H5Dwrite(dset[0], dstype[0], cspace[0], fspace_tmp[0], dxpl, <void*>  conv_buf[0])
+
+                for i in range(count):
+                    H5Dvlen_reclaim(dstype[i], cspace[i], H5P_DEFAULT, <void*>  conv_buf[i])
 
     finally:
-        free(back_buf)
-        free(conv_buf)
-        if dstype > 0:
-            H5Tclose(dstype)
-        if dspace > 0:
-            H5Sclose(dspace)
-        if cspace > 0:
-            H5Sclose(cspace)
 
-    return 0
+        for i in range(count):
+            if (back_buf != NULL) and (need_bkg[i]) and (back_buf[i] != NULL):
+                    free(back_buf[i])
 
+            if (conv_buf != NULL) and (conv_buf[i] != NULL):
+                    free(conv_buf[i])
+
+            if cspace and (cspace[i] > 0):
+                H5Sclose(cspace[i])
+            if dstype and (dstype[i] > 0):
+                H5Tclose(dstype[i])
+
+        if mspace_tmp != NULL:
+            free(mspace_tmp)
+        if fspace_tmp != NULL:
+            free(fspace_tmp)
+
+        if npoints != NULL:
+            free(npoints)
+        if need_bkg != NULL:
+            free(need_bkg)
+        if back_buf != NULL:
+            free(back_buf)
+        if conv_buf != NULL:
+            free(conv_buf)
+        if cspace != NULL:
+            free(cspace)
+
+        if rawdstype > 0:
+            H5Tclose(rawdstype)
 
 cdef hid_t make_reduced_type(hid_t mtype, hid_t dstype):
     # Go through dstype, pick out the fields which also appear in mtype, and

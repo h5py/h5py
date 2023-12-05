@@ -151,6 +151,55 @@ def open(ObjectID loc not None, char* name, PropID dapl=None):
     """
     return DatasetID(H5Dopen(loc.id, name, pdefault(dapl)))
 
+IF HDF5_VERSION >= (1, 14, 0):
+    @with_phil
+    def read_multi(count, list dataset_ids, list mspace_ids, list fspace_ids,
+        list type_ids, list bufs not None, PropID dxpl=None):
+        """ (int count, list dataset_ids, list mspace_ids, list fspace_ids,
+            list type_ids, list bufs not None, PropID dxpl=None)
+
+        Read raw data from a set of datasets into the provided buffers.
+
+        For each dataset that will be read, its id, the id of a corresponding memory
+        and file space, a type id, and a buffer should be provided. The dataset
+        transfer property list applies to all transfers.
+        """
+
+        cdef hid_t* type_hids
+        cdef hid_t* mspace_hids
+        cdef hid_t* fspace_hids
+        cdef hid_t* dataset_hids
+        cdef void** buffer_ptrs
+
+        cdef hid_t plist_id
+
+        try:
+            buffer_ptrs = <void**>malloc(count * sizeof(void*))
+            type_hids = <hid_t*>malloc(count * sizeof(hid_t*))
+            mspace_hids = <hid_t*>malloc(count * sizeof(hid_t*))
+            fspace_hids = <hid_t*>malloc(count * sizeof(hid_t*))
+            dataset_hids = <hid_t*>malloc(count * sizeof(hid_t*))
+
+            plist_id = pdefault(dxpl)
+
+            for i in range(count):
+                buffer_ptrs[i] = <void*> PyArray_DATA(bufs[i])
+                type_hids[i] = <hid_t> type_ids[i]
+                mspace_hids[i] = <hid_t> mspace_ids[i]
+                fspace_hids[i] = <hid_t> fspace_ids[i]
+                dataset_hids[i] = <hid_t> dataset_ids[i]
+
+            dset_rw(count, dataset_hids, type_hids, mspace_hids, fspace_hids, plist_id, buffer_ptrs, 1)
+
+        finally:
+            free(type_hids)
+            free(mspace_hids)
+            free(fspace_hids)
+            free(dataset_hids)
+            free(buffer_ptrs)
+
+
+
 # --- Proxy functions for safe(r) threading -----------------------------------
 
 
@@ -224,22 +273,29 @@ cdef class DatasetID(ObjectID):
             this is not the case, ValueError will be raised and the read will
             fail.  Keyword dxpl may be a dataset transfer property list.
         """
-        cdef hid_t self_id, mtype_id, mspace_id, fspace_id, plist_id
-        cdef void* data
+        cdef hid_t *self_id
+        cdef hid_t *mtype_id
+        cdef hid_t *mspace_id
+        cdef hid_t *fspace_id
+        cdef hid_t plist_id
+
+        cdef void** data
         cdef int oldflags
 
         if mtype is None:
             mtype = py_create(arr_obj.dtype)
         check_numpy_write(arr_obj, -1)
 
-        self_id = self.id
-        mtype_id = mtype.id
-        mspace_id = mspace.id
-        fspace_id = fspace.id
+        self_id = &self.id
+        mtype_id = &mtype.id
+        mspace_id = &mspace.id
+        fspace_id = &fspace.id
         plist_id = pdefault(dxpl)
-        data = PyArray_DATA(arr_obj)
 
-        dset_rw(self_id, mtype_id, mspace_id, fspace_id, plist_id, data, 1)
+        data_tmp = PyArray_DATA(arr_obj)
+        data =  &data_tmp
+
+        dset_rw(1, self_id, mtype_id, mspace_id, fspace_id, plist_id, data, 1)
 
 
     @with_phil
@@ -264,22 +320,29 @@ cdef class DatasetID(ObjectID):
             The provided Numpy array must be C-contiguous.  If this is not the
             case, ValueError will be raised and the read will fail.
         """
-        cdef hid_t self_id, mtype_id, mspace_id, fspace_id, plist_id
-        cdef void* data
+        cdef hid_t *self_id
+        cdef hid_t *mtype_id
+        cdef hid_t *mspace_id
+        cdef hid_t *fspace_id
+        cdef hid_t plist_id
+
+        cdef void** data
         cdef int oldflags
 
         if mtype is None:
             mtype = py_create(arr_obj.dtype)
         check_numpy_read(arr_obj, -1)
 
-        self_id = self.id
-        mtype_id = mtype.id
-        mspace_id = mspace.id
-        fspace_id = fspace.id
+        self_id = &(self.id)
+        mtype_id = &(mtype.id)
+        mspace_id = &(mspace.id)
+        fspace_id = &(fspace.id)
         plist_id = pdefault(dxpl)
-        data = PyArray_DATA(arr_obj)
 
-        dset_rw(self_id, mtype_id, mspace_id, fspace_id, plist_id, data, 0)
+        data_tmp = PyArray_DATA(arr_obj)
+        data = &data_tmp
+
+        dset_rw(1, self_id, mtype_id, mspace_id, fspace_id, plist_id, data, 0)
 
 
     @with_phil

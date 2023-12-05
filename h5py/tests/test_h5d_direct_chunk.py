@@ -186,3 +186,73 @@ class TestReadDirectChunkToOut:
         out = array[:, :, ::2]  # Array is not contiguous
         with pytest.raises(ValueError):
             dataset.id.read_direct_chunk((0, 0), out=out)
+
+
+class TestReadMulti(TestCase):
+    def test_read_multi_one_dataset(self):
+        filename = self.mktemp().encode()
+        with h5py.File(filename, "w") as filehandle:
+            shape = (10, 10, 10)
+            dt = numpy.int32
+
+            # Write data
+            data_in = numpy.reshape(numpy.arange(numpy.prod(shape)), shape)
+            dataset = filehandle.create_dataset("data", shape,
+                                                dtype=dt, data=data_in)
+
+            self.assertTrue(numpy.array_equal(data_in, dataset[...]))
+
+            mspace_id = h5py.h5s.create_simple(shape)
+            fspace_id = h5py.h5s.create_simple(shape)
+            type_id = dataset.id.get_type()
+            data_out = numpy.zeros(shape=shape, dtype=dt)
+
+            # Read back data and verify
+            h5py.h5d.read_multi(1, [dataset.id.id], [mspace_id.id],
+                                [fspace_id.id], [type_id.id], [data_out],
+                                None)
+
+            self.assertTrue(numpy.array_equal(data_in, data_out))
+
+    def test_read_multi_many_datasets(self):
+        filename = self.mktemp().encode()
+        with h5py.File(filename, "w") as filehandle:
+            shape = (2, 2, 2)
+            dt = numpy.int32
+            count = 3
+            data = numpy.reshape(numpy.arange(numpy.prod(shape)), shape)
+            data_in = []
+            data_out = []
+
+            datasets = []
+            mspaces = []
+            fspaces = []
+            types = []
+
+            for i in range(count):
+                # Write data
+                data_in.append(data + i)
+                dataset = filehandle.create_dataset("data" + str(i), shape,
+                                                    dtype=dt, data=data_in[i])
+
+                self.assertTrue(numpy.array_equal(data_in[i], dataset[...]))
+
+                datasets.append(dataset.id)
+                mspaces.append(h5py.h5s.create_simple(shape))
+                fspaces.append(h5py.h5s.create_simple(shape))
+                types.append(dataset.id.get_type())
+
+                data_out.append(numpy.zeros(shape=shape, dtype=dt))
+
+            dataset_ids = [d.id for d in datasets]
+            mspace_ids = [m.id for m in mspaces]
+            fspace_ids = [f.id for f in fspaces]
+            type_ids = [t.id for t in types]
+
+            # Read back data and verify
+            h5py.h5d.read_multi(count, dataset_ids, mspace_ids,
+                                fspace_ids, type_ids, data_out,
+                                None)
+
+            for i in range(count):
+                self.assertTrue(numpy.array_equal(data_in[i], data_out[i]))
