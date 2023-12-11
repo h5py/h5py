@@ -188,6 +188,8 @@ class TestReadDirectChunkToOut:
             dataset.id.read_direct_chunk((0, 0), out=out)
 
 
+@ut.skipIf(h5py.version.hdf5_version_tuple < (1, 14, 0),
+           "read_multi requires HDF5 >= 1.14.0")
 class TestReadMulti(TestCase):
     def test_read_multi_one_dataset(self):
         filename = self.mktemp().encode()

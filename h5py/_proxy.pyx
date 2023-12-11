@@ -130,12 +130,24 @@ cdef herr_t dset_rw(size_t count, hid_t* dset, hid_t* mtype, hid_t* mspace, hid_
         if not rw_needs_proxy:
             if read:
                 if count > 1:
-                    H5Dread_multi(count, <hid_t*> dset, <hid_t*>mtype, <hid_t*> mspace_tmp, <hid_t*>fspace_tmp, dxpl, progbuf)
+                    IF HDF5_VERSION >= (1,14,0):
+                        H5Dread_multi(count, <hid_t*> dset, <hid_t*>mtype, <hid_t*> mspace_tmp, <hid_t*>fspace_tmp, dxpl, progbuf)
+                    ELSE:
+                        raise Exception(
+                            f"read_multi requires HDF5 >= 1.14.0 (got version "
+                            f"{HDF5_VERSION} from environment variable or library)"
+                        )
                 else:
                     H5Dread(dset[0], mtype[0], mspace_tmp[0], fspace_tmp[0], dxpl, <void*>progbuf[0])
             else:
                 if count > 1:
-                    H5Dwrite_multi(count, <hid_t*> dset, <hid_t*>mtype, <hid_t*> mspace_tmp, <hid_t*>fspace_tmp, dxpl, <const void**> progbuf)
+                    IF HDF5_VERSION >= (1,14,0):
+                        H5Dwrite_multi(count, <hid_t*> dset, <hid_t*>mtype, <hid_t*> mspace_tmp, <hid_t*>fspace_tmp, dxpl, <const void**> progbuf)
+                    ELSE:
+                        raise Exception(
+                            f"write_multi requires HDF5 >= 1.14.0 (got version "
+                            f"{HDF5_VERSION} from environment variable or library)"
+                        )
                 else:
                     H5Dwrite(dset[0], mtype[0],mspace_tmp[0], fspace_tmp[0], dxpl, <void*>progbuf[0])
         else:
@@ -176,7 +188,13 @@ cdef herr_t dset_rw(size_t count, hid_t* dset, hid_t* mtype, hid_t* mspace, hid_
 
             if read:
                 if count > 1:
-                    H5Dread_multi(count, <hid_t*> dset, <hid_t*>mtype, <hid_t*> mspace_tmp, <hid_t*>fspace_tmp, dxpl, conv_buf)
+                    IF HDF5_VERSION >= (1,14,0):
+                        H5Dread_multi(count, <hid_t*> dset, <hid_t*>mtype, <hid_t*> mspace_tmp, <hid_t*>fspace_tmp, dxpl, conv_buf)
+                    ELSE:
+                        raise Exception(
+                            f"read_multi requires HDF5 >= 1.14.0 (got version "
+                            f"{HDF5_VERSION} from environment variable or library)"
+                        )
                 else:
                     H5Dread(dset[0], dstype[0], cspace[0], fspace_tmp[0], dxpl, <void*> conv_buf[0])
 
@@ -189,7 +207,13 @@ cdef herr_t dset_rw(size_t count, hid_t* dset, hid_t* mtype, hid_t* mspace, hid_
                     H5Tconvert(mtype[i], dstype[i], npoints[i], <void*> conv_buf[i], <void*> back_buf[i], dxpl)
 
                 if count > 1:
-                    H5Dwrite_multi(count, <hid_t*>dset, <hid_t*>dstype, <hid_t*>cspace, <hid_t*>fspace_tmp, dxpl, <const void**> conv_buf)
+                    IF HDF5_VERSION >= (1,14,0):
+                        H5Dwrite_multi(count, <hid_t*>dset, <hid_t*>dstype, <hid_t*>cspace, <hid_t*>fspace_tmp, dxpl, <const void**> conv_buf)
+                    ELSE:
+                        raise Exception(
+                            f"write_multi requires HDF5 >= 1.14.0 (got version "
+                            f"{HDF5_VERSION} from environment variable or library)"
+                        )
                 else:
                     H5Dwrite(dset[0], dstype[0], cspace[0], fspace_tmp[0], dxpl, <void*>  conv_buf[0])
 
