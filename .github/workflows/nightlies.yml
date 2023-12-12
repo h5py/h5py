@@ -9,10 +9,6 @@ on:
     - cron: '23 1 * * *'
   # Run on demand with workflow dispatch
   workflow_dispatch:
-  # TODO: this is just for testing, remove before merge
-  pull_request:
-    branches:
-      - '*'
 
 
 permissions:
@@ -25,8 +21,7 @@ jobs:
     defaults:
       run:
         shell: bash -el {0}
-    # TODO: Uncomment when working
-    #if: github.repository_owner == 'h5py'
+    if: github.repository_owner == 'h5py'
 
     steps:
       # https://github.com/git-for-windows/get-azure-pipelines-artifact
@@ -68,10 +63,10 @@ jobs:
           ls -alt
           ls -alt *_wheels
           mkdir dist
-          mv *wheels/*.whl dist/
+          mv *_wheels/*.whl dist/
           echo
           echo "Contents of dist/"
-          ls -l dist/
+          ls -alt dist/
 
       - name: Upload wheels to Anaconda Cloud as nightlies
         uses: scientific-python/upload-nightly-action@8f0394fd2aa0c85d7364a9958652e8994e06b23c # 0.1.0
