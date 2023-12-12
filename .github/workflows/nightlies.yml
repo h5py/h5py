@@ -41,24 +41,28 @@ jobs:
           definitionId: 1
           reasonFilter: individualCI
           artifact: linux_wheels
+          cache: false
       - uses: git-for-windows/get-azure-pipelines-artifact@v0.3.1
         with:
           repository: h5pyappveyor/h5py
           definitionId: 1
           reasonFilter: individualCI
           artifact: macos_arm64_wheels
+          cache: false
       - uses: git-for-windows/get-azure-pipelines-artifact@v0.3.1
         with:
           repository: h5pyappveyor/h5py
           definitionId: 1
           reasonFilter: individualCI
           artifact: macos_x86_64_wheels
+          cache: false
       - uses: git-for-windows/get-azure-pipelines-artifact@v0.3.1
         with:
           repository: h5pyappveyor/h5py
           definitionId: 1
           reasonFilter: individualCI
           artifact: windows_wheels
+          cache: false
       - name: Repackage wheel artifacts
         run: |
           ls -alt
