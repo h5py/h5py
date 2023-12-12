@@ -66,10 +66,7 @@ jobs:
       - name: Repackage wheel artifacts
         run: |
           ls -alt
-          unzip linux_wheels
-          unzip macos_arm64_wheels
-          unzip macos_x86_64_wheels
-          unzip windows_wheels
+          ls -alt *_wheels
           mkdir dist
           mv *wheels/*.whl dist/
           echo
