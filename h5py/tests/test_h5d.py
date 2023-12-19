@@ -210,11 +210,11 @@ class TestReadMulti(TestCase):
             data_out = numpy.zeros(shape=shape, dtype=dt)
 
             # Read back data and verify
-            h5py.h5d.read_multi(1, [dataset.id.id], [mspace_id.id],
+            h5py.h5d.read_multi([dataset.id.id], [mspace_id.id],
                                 [fspace_id.id], [type_id.id], [data_out],
                                 None)
 
-            self.assertTrue(numpy.array_equal(data_in, data_out))
+            numpy.testing.assert_array_equal(data_in, data_out)
 
     def test_read_multi_many_datasets(self):
         filename = self.mktemp().encode()
@@ -252,9 +252,9 @@ class TestReadMulti(TestCase):
             type_ids = [t.id for t in types]
 
             # Read back data and verify
-            h5py.h5d.read_multi(count, dataset_ids, mspace_ids,
+            h5py.h5d.read_multi(dataset_ids, mspace_ids,
                                 fspace_ids, type_ids, data_out,
                                 None)
 
             for i in range(count):
-                self.assertTrue(numpy.array_equal(data_in[i], data_out[i]))
+                numpy.testing.assert_array_equal(data_in[i], data_out[i])
