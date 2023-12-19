@@ -181,7 +181,7 @@ cdef herr_t dset_rw_multi(size_t count, hid_t* dset, hid_t* mtype, hid_t* mspace
 
     IF HDF5_VERSION < (1,14,0):
         raise Exception(
-            f"read_multi requires HDF5 >= 1.14.0 (got version "
+            f"rw_multi requires HDF5 >= 1.14.0 (got version "
             f"{HDF5_VERSION} from environment variable or library)"
         )
 

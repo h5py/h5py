@@ -189,8 +189,8 @@ class TestReadDirectChunkToOut:
 
 
 @ut.skipIf(h5py.version.hdf5_version_tuple < (1, 14, 0),
-           "read_multi requires HDF5 >= 1.14.0")
-class TestReadMulti(TestCase):
+           "rw_multi requires HDF5 >= 1.14.0")
+class TestRWMulti(TestCase):
     def test_read_multi_one_dataset(self):
         filename = self.mktemp().encode()
         with h5py.File(filename, "w") as filehandle:
@@ -202,7 +202,7 @@ class TestReadMulti(TestCase):
             dataset = filehandle.create_dataset("data", shape,
                                                 dtype=dt, data=data_in)
 
-            self.assertTrue(numpy.array_equal(data_in, dataset[...]))
+            numpy.testing.assert_array_equal(data_in, dataset[...])
 
             mspace_id = h5py.h5s.create_simple(shape)
             fspace_id = h5py.h5s.create_simple(shape)
@@ -210,9 +210,9 @@ class TestReadMulti(TestCase):
             data_out = numpy.zeros(shape=shape, dtype=dt)
 
             # Read back data and verify
-            h5py.h5d.read_multi([dataset.id.id], [mspace_id.id],
-                                [fspace_id.id], [type_id.id], [data_out],
-                                None)
+            h5py.h5d.rw_multi([dataset.id.id], [mspace_id.id],
+                              [fspace_id.id], [type_id.id], [data_out],
+                              1, None)
 
             numpy.testing.assert_array_equal(data_in, data_out)
 
@@ -234,17 +234,17 @@ class TestReadMulti(TestCase):
             for i in range(count):
                 # Write data
                 data_in.append(data + i)
+                data_out.append(numpy.zeros(shape=shape, dtype=dt))
+
                 dataset = filehandle.create_dataset("data" + str(i), shape,
                                                     dtype=dt, data=data_in[i])
 
-                self.assertTrue(numpy.array_equal(data_in[i], dataset[...]))
+                numpy.testing.assert_array_equal(data_in[i], dataset[...])
 
                 datasets.append(dataset.id)
                 mspaces.append(h5py.h5s.create_simple(shape))
                 fspaces.append(h5py.h5s.create_simple(shape))
                 types.append(dataset.id.get_type())
-
-                data_out.append(numpy.zeros(shape=shape, dtype=dt))
 
             dataset_ids = [d.id for d in datasets]
             mspace_ids = [m.id for m in mspaces]
@@ -252,9 +252,77 @@ class TestReadMulti(TestCase):
             type_ids = [t.id for t in types]
 
             # Read back data and verify
-            h5py.h5d.read_multi(dataset_ids, mspace_ids,
-                                fspace_ids, type_ids, data_out,
-                                None)
+            h5py.h5d.rw_multi(dataset_ids, mspace_ids,
+                              fspace_ids, type_ids, data_out,
+                              1, None)
 
             for i in range(count):
                 numpy.testing.assert_array_equal(data_in[i], data_out[i])
+
+    def test_write_multi_one_dataset(self):
+        filename = self.mktemp().encode()
+        with h5py.File(filename, "w") as filehandle:
+            shape = (10, 10, 10)
+            dt = numpy.int32
+            data_in = numpy.reshape(numpy.arange(numpy.prod(shape), dtype=dt),
+                                    shape)
+
+            # Create dataset
+            dataset = filehandle.create_dataset("data", shape,
+                                                dtype=dt,
+                                                data=numpy.zeros(shape))
+
+            # Write Data
+            mspace_id = h5py.h5s.create_simple(shape)
+            fspace_id = h5py.h5s.create_simple(shape)
+            type_id = dataset.id.get_type()
+
+            h5py.h5d.rw_multi([dataset.id.id], [mspace_id.id],
+                              [fspace_id.id], [type_id.id], [data_in],
+                              0, None)
+
+            # Read back data and verify
+            numpy.testing.assert_array_equal(data_in, dataset[...])
+
+    def test_write_multi_many_dataset(self):
+        filename = self.mktemp().encode()
+        with h5py.File(filename, "w") as filehandle:
+            shape = (10, 10, 10)
+            dt = numpy.int32
+            count = 3
+            data = numpy.reshape(numpy.arange(numpy.prod(shape), dtype=dt),
+                                 shape)
+            data_in = []
+            data_out = []
+
+            datasets = []
+            mspaces = []
+            fspaces = []
+            types = []
+
+            # Setup
+            for i in range(count):
+                data_in.append(data + i)
+                data_out.append(numpy.zeros(shape, dtype=dt))
+
+                dataset = filehandle.create_dataset("data" + str(i), shape,
+                                                    dtype=dt,
+                                                    data=numpy.zeros(shape))
+                datasets.append(dataset)
+                mspaces.append(h5py.h5s.create_simple(shape))
+                fspaces.append(h5py.h5s.create_simple(shape))
+                types.append(dataset.id.get_type())
+
+            dataset_ids = [d.id.id for d in datasets]
+            mspace_ids = [m.id for m in mspaces]
+            fspace_ids = [f.id for f in fspaces]
+            type_ids = [t.id for t in types]
+
+            # Write Data
+            h5py.h5d.rw_multi(dataset_ids, mspace_ids,
+                              fspace_ids, type_ids, data_in,
+                              0, None)
+
+            # Read back data and verify
+            for i in range(count):
+                numpy.testing.assert_array_equal(data_in[i], datasets[i][...])

@@ -153,16 +153,17 @@ def open(ObjectID loc not None, char* name, PropID dapl=None):
 
 IF HDF5_VERSION >= (1, 14, 0):
     @with_phil
-    def read_multi(list dataset_ids, list mspace_ids, list fspace_ids,
-        list type_ids, list bufs not None, PropID dxpl=None):
-        """ (int count, list dataset_ids, list mspace_ids, list fspace_ids,
-            list type_ids, list bufs not None, PropID dxpl=None)
+    def rw_multi(list dataset_ids, list mspace_ids, list fspace_ids,
+        list type_ids, list bufs not None, int read, PropID dxpl=None):
+        """ (list dataset_ids, list mspace_ids, list fspace_ids,
+            list type_ids, list bufs not None, int read, PropID dxpl=None)
 
-        Read raw data from a set of datasets into the provided buffers.
+        Read or write raw data between the provided buffers and a set of datasets.
 
-        For each dataset that will be read, its id, the id of a corresponding memory
+        For each dataset, its id, the id of a corresponding memory
         and file space, a type id, and a buffer should be provided. The dataset
-        transfer property list applies to all transfers.
+        transfer property list applies to all transfers. 'read' determines whether
+        the transfers are reads (1) or writes (0).
         """
 
         cdef hid_t* type_hids = NULL
@@ -178,7 +179,7 @@ IF HDF5_VERSION >= (1, 14, 0):
 
         if count == 0:
             raise ValueError("object id lists must be non-empty")
-        
+
         if not count == len(mspace_ids) == len(fspace_ids) == len(type_ids) == len(bufs):
             raise ValueError("object id lists must have matching length")
 
@@ -198,7 +199,7 @@ IF HDF5_VERSION >= (1, 14, 0):
                 fspace_hids[i] = <hid_t> fspace_ids[i]
                 dataset_hids[i] = <hid_t> dataset_ids[i]
 
-            dset_rw_multi(count, dataset_hids, type_hids, mspace_hids, fspace_hids, plist_id, buffer_ptrs, 1)
+            dset_rw_multi(count, dataset_hids, type_hids, mspace_hids, fspace_hids, plist_id, buffer_ptrs, read)
 
         finally:
             free(type_hids)
@@ -206,8 +207,6 @@ IF HDF5_VERSION >= (1, 14, 0):
             free(fspace_hids)
             free(dataset_hids)
             free(buffer_ptrs)
-
-
 
 # --- Proxy functions for safe(r) threading -----------------------------------
 
