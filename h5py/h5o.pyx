@@ -84,13 +84,55 @@ cdef class _OHdr(_ObjInfoBase):
     property nmesgs:
         def __get__(self):
             return self.istr[0].hdr.nmesgs
+    property nchunks:
+        def __get__(self):
+            return self.istr[0].hdr.nchunks
+    property flags:
+        def __get__(self):
+            return self.istr[0].hdr.flags
 
     def __init__(self):
         self.space = _OHdrSpace()
         self.mesg = _OHdrMesg()
 
     def _hash(self):
-        return hash((self.version, self.nmesgs, self.space, self.mesg))
+        return hash((self.version, self.nmesgs, self.nchunks, self.flags, self.space, self.mesg))
+
+cdef class _MetaSizeObj(_ObjInfoBase):
+
+    property index_size:
+        def __get__(self):
+            return self.istr[0].meta_size.obj.index_size
+    property heap_size:
+        def __get__(self):
+            return self.istr[0].meta_size.obj.heap_size
+
+    def _hash(self):
+        return hash((self.index_size, self.heap_size))
+
+cdef class _MetaSizeAttr(_ObjInfoBase):
+
+    property index_size:
+        def __get__(self):
+            return self.istr[0].meta_size.attr.index_size
+    property heap_size:
+        def __get__(self):
+            return self.istr[0].meta_size.attr.heap_size
+
+    def _hash(self):
+        return hash((self.index_size, self.heap_size))
+
+cdef class _OMetaSize(_ObjInfoBase):
+
+    cdef public _MetaSizeObj obj
+    cdef public _MetaSizeAttr attr
+
+    def __init__(self):
+        self.obj = _MetaSizeObj()
+        self.attr = _MetaSizeAttr()
+
+    def _hash(self):
+        return hash((self.obj, self.attr))
 
 cdef class _ObjInfo(_ObjInfoBase):
 
@@ -106,9 +148,24 @@ cdef class _ObjInfo(_ObjInfoBase):
     property rc:
         def __get__(self):
             return self.istr[0].rc
+    property atime:
+        def __get__(self):
+            return self.istr[0].atime
+    property mtime:
+        def __get__(self):
+            return self.istr[0].mtime
+    property ctime:
+        def __get__(self):
+            return self.istr[0].ctime
+    property btime:
+        def __get__(self):
+            return self.istr[0].btime
+    property num_attrs:
+        def __get__(self):
+            return self.istr[0].num_attrs
 
     def _hash(self):
-        return hash((self.fileno, self.addr, self.type, self.rc))
+        return hash((self.fileno, self.addr, self.type, self.rc, self.atime, self.mtime, self.ctime, self.btime, self.num_attrs))
 
 cdef class ObjInfo(_ObjInfo):
 
@@ -118,14 +175,19 @@ cdef class ObjInfo(_ObjInfo):
 
     cdef H5O_info_t infostruct
     cdef public _OHdr hdr
+    cdef public _OMetaSize meta_size
 
     def __init__(self):
         self.hdr = _OHdr()
+        self.meta_size = _OMetaSize()
 
         self.istr = &self.infostruct
         self.hdr.istr = &self.infostruct
         self.hdr.space.istr = &self.infostruct
         self.hdr.mesg.istr = &self.infostruct
+        self.meta_size.istr = &self.infostruct
+        self.meta_size.obj.istr = &self.infostruct
+        self.meta_size.attr.istr = &self.infostruct
 
     def __copy__(self):
         cdef ObjInfo newcopy
