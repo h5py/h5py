@@ -105,3 +105,6 @@ These libraries offer additional general functionality on top of h5py:
 * `h5pickle <https://github.com/DaanVanVugt/h5pickle>`_ wraps h5py to allow
   pickling objects such as :class:`.File` or :class:`.Dataset`. This relies on
   the file being available at the same path when unpickling.
+* `b2h5py <https://github.com/Blosc/b2h5py>`_ provides h5py with transparent,
+  automatic optimized reading of n-dimensional slices of Blosc2-compressed
+  datasets, using direct chunk access and 2-level partitioning.
