@@ -85,7 +85,7 @@ Some projects providing additional HDF5 filter with integration into h5py
 include:
 
 * `hdf5plugin <https://github.com/silx-kit/hdf5plugin>`_: this provides several
-  plugins (currently blosc, bitshuffle, lz4, FCIDECOMP and ZFP), and newer
+  plugins (currently Blosc, Blosc2, BitShuffle, BZip2, FciDecomp, LZ4, SZ, SZ3, Zfp, ZStd), and newer
   plugins should look to supporting h5py via inclusion into hdf5plugin.
 
 Libraries extending h5py
