@@ -98,38 +98,28 @@ cdef class _OHdr(_ObjInfoBase):
     def _hash(self):
         return hash((self.version, self.nmesgs, self.nchunks, self.flags, self.space, self.mesg))
 
-cdef class _MetaSizeObj(_ObjInfoBase):
+cdef class _ObjMetaInfo:
+
+    cdef H5_ih_info_t *istr
 
     property index_size:
         def __get__(self):
-            return self.istr[0].meta_size.obj.index_size
+            return self.istr[0].index_size
     property heap_size:
         def __get__(self):
-            return self.istr[0].meta_size.obj.heap_size
-
-    def _hash(self):
-        return hash((self.index_size, self.heap_size))
-
-cdef class _MetaSizeAttr(_ObjInfoBase):
-
-    property index_size:
-        def __get__(self):
-            return self.istr[0].meta_size.attr.index_size
-    property heap_size:
-        def __get__(self):
-            return self.istr[0].meta_size.attr.heap_size
+            return self.istr[0].heap_size
 
     def _hash(self):
         return hash((self.index_size, self.heap_size))
 
 cdef class _OMetaSize(_ObjInfoBase):
 
-    cdef public _MetaSizeObj obj
-    cdef public _MetaSizeAttr attr
+    cdef public _ObjMetaInfo obj
+    cdef public _ObjMetaInfo attr
 
     def __init__(self):
-        self.obj = _MetaSizeObj()
-        self.attr = _MetaSizeAttr()
+        self.obj = _ObjMetaInfo()
+        self.attr = _ObjMetaInfo()
 
     def _hash(self):
         return hash((self.obj, self.attr))
@@ -186,8 +176,8 @@ cdef class ObjInfo(_ObjInfo):
         self.hdr.space.istr = &self.infostruct
         self.hdr.mesg.istr = &self.infostruct
         self.meta_size.istr = &self.infostruct
-        self.meta_size.obj.istr = &self.infostruct
-        self.meta_size.attr.istr = &self.infostruct
+        self.meta_size.obj.istr = &(self.istr[0].meta_size.obj)
+        self.meta_size.attr.istr = &(self.istr[0].meta_size.attr)
 
     def __copy__(self):
         cdef ObjInfo newcopy
