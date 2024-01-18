@@ -674,7 +674,8 @@ class Group(HLObject, MutableMappingHDF5):
             return h5o.visit(self.id, proxy)
 
     def visit_links(self, func):
-        """ Recursively visit all names in this group and subgroups, including links.
+        """ Recursively visit all names in this group and subgroups.
+        Each link will be visited exactly once, regardless of its target.
 
         You supply a callable (function, method or callable object); it
         will be called exactly once for each link in this group and every
@@ -701,6 +702,7 @@ class Group(HLObject, MutableMappingHDF5):
 
     def visititems_links(self, func):
         """ Recursively visit links in this group.
+        Each link will be visited exactly once, regardless of its target.
 
         You supply a callable (function, method or callable object); it
         will be called exactly once for each link in this group and every
