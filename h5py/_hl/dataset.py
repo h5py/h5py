@@ -1166,3 +1166,292 @@ class Dataset(HLObject):
         Return ``False`` otherwise.
         """
         return h5ds.is_scale(self._id)
+
+
+class MultiManager():
+
+    """
+    High-level object to support slicing operations
+    that map to H5Dread_multi/H5Dwrite_multi
+    """
+    @with_phil
+    def __init__(self, datasets=None, dtypes=None, dxpl=None):
+        if (datasets is None) or (len(datasets) == 0):
+            raise ValueError("MultiManager requires non-empty list of datasets")
+
+        self.datasets = datasets
+        self.dxpl = dxpl
+
+    @with_phil
+    def __getitem__(self, args, new_dtypes=None):
+        """ Read the same slice from each of the datasets
+        managed by this MultiManager.
+
+        Takes slices. Obeys basic NumPy rules, including broadcasting.
+
+        Will throw an error if any of the managed datasets are
+        unreadable due to being empty or zero-sized.
+        """
+        count = len(self.datasets)
+        args = args if isinstance(args, tuple) else (args,)
+
+        if (new_dtypes is None):
+            new_dtypes = [d.dtype for d in self.datasets]
+
+        out = [numpy.empty(1)] * count
+
+        for i in range(count):
+            if self.datasets[i]._is_empty:
+                raise ValueError("Multi read requires non-empty datasets")
+
+        for i in range(count):
+            if self.datasets[i].size == 0:
+                raise ValueError("Multi read requires non-zero-sized datasets")
+
+        # Sort field names from the rest of the args.
+        names = tuple(x for x in args if isinstance(x, str))
+
+        if names:
+            raise ValueError("Field subsetting not supported with multi read")
+
+        # Standardize new_dtype to list
+        if new_dtypes is None:
+            new_dtypes = []
+            for i in range(count):
+                new_dtypes.append(self.datasets[i].dtype)
+        elif isinstance(new_dtypes, numpy.dtype):
+            _new_dtypes = []
+            for i in range(count):
+                _new_dtypes.append(new_dtypes)
+            new_dtypes = _new_dtypes
+
+        if len(args) == 1 and isinstance(args[0], h5r.RegionReference):
+            raise ValueError("Region references not supported with multi read")
+
+        fspaces = [None] * count
+        mspaces = [None] * count
+        selections = [None] * count
+        mtypes = [h5t.py_create(new_dtype) for new_dtype in new_dtypes]
+
+        for i in range(count):
+            if self.datasets[i].shape == ():
+                # Initialize output buffer for scalar dataspace
+                fspaces[i] = self.datasets[i].id.get_space()
+                selections[i] = sel2.select_read(fspaces[i], args)
+                mspaces[i] = selections[i].mspace
+
+                if selections[i].mshape is None:
+                    out[i] = numpy.zeros((), dtype=new_dtypes[i])
+                else:
+                    out[i] = numpy.zeros(selections[i].mshape, dtype=new_dtypes[i])
+            else:
+                # Initialize output buffer for non-scalar dataspace
+                selections[i] = sel.select(self.datasets[i].shape, args, self.datasets[i])
+                fspaces[i] = selections[i].id
+                mspaces[i] = h5s.create_simple(selections[i].mshape)
+
+                out[i] = numpy.zeros(selections[i].array_shape, dtype=new_dtypes[i], order='C')
+
+        # Perform the actual read_multi
+        fspace_ids = [f.id for f in fspaces]
+        mspace_ids = [m.id for m in mspaces]
+        type_ids = [t.id for t in mtypes]
+        dset_ids = [d.id.id for d in self.datasets]
+
+        h5d.rw_multi(dset_ids, mspace_ids, fspace_ids, type_ids, out, 1,
+                     dxpl=None)
+
+        # Patch up the output for NumPy
+        for i in range(count):
+            if (selections[i].mshape is None) or (out[i].shape == ()):
+                out[i] = out[i][()]  # 0 dim array -> numpy scalar
+
+        return out
+
+    @with_phil
+    def __setitem__(self, args, vals):
+        """ Write to the HDF5 datasets from a list of Numpy arrays.
+
+        NumPy's broadcasting rules are honored, for "simple" indexing
+        (slices and integers).  For advanced indexing, the shapes must
+        match.
+        """
+        args = args if isinstance(args, tuple) else (args,)
+
+        # Sort field indices from the slicing
+        names = tuple(x for x in args if isinstance(x, str))
+        args = tuple(x for x in args if not isinstance(x, str))
+        count = len(self.datasets)
+        mtypes = [None] * count
+        mshapes = [None] * count
+        mspaces = [None] * count
+
+        dtypes = [d.dtype for d in self.datasets]
+
+        for i in range(count):
+            # Generally we try to avoid converting the arrays on the Python
+            # side.  However, for compound literals this is unavoidable.
+            vlen = h5t.check_vlen_dtype(dtypes[i])
+            if vlen is not None and vlen not in (bytes, str):
+                try:
+                    vals[i] = numpy.asarray(vals[i], dtype=vlen)
+                except ValueError:
+                    try:
+                        vals[i] = numpy.array([numpy.array(x, dtype=vlen)
+                                               for x in vals[i]], dtype=dtypes[i])
+                    except ValueError:
+                        pass
+                if vlen == vals[i].dtype:
+                    if vals[i].ndim > 1:
+                        tmp = numpy.empty(shape=vals[i].shape[:-1], dtype=object)
+                        tmp.ravel()[:] = [i for i in vals[i].reshape(
+                            (product(vals[i].shape[:-1]), vals[i].shape[-1])
+                        )]
+                    else:
+                        tmp = numpy.array([None], dtype=object)
+                        tmp[0] = vals[i]
+                    vals[i] = tmp
+            elif dtypes[i].kind == "O" or \
+                (dtypes[i].kind == 'V' and \
+                 (not isinstance(vals[i], numpy.ndarray) or vals[i].dtype.kind != 'V') and \
+                 (dtypes[i].subdtype is None)):
+                if len(names) == 1 and dtypes[i].fields is not None:
+                    # Single field selected for write, from a non-array source
+                    if not names[0] in dtypes[i].fields:
+                        raise ValueError("No such field for indexing: %s" % names[0])
+                    dtype = dtypes[i].fields[names[0]][0]
+                    cast_compound = True
+                else:
+                    dtype = dtypes[i]
+                    cast_compound = False
+
+                vals[i] = numpy.asarray(vals[i], dtype=dtype.base, order='C')
+                if cast_compound:
+                    vals[i] = vals[i].view(numpy.dtype([(names[0], dtype)]))
+                    vals[i] = vals[i].reshape(vals[i].shape[:len(vals[i].shape) - len(dtype.shape)])
+            elif (dtypes[i].kind == 'S'
+                and (h5t.check_string_dtype(dtypes[i]).encoding == 'utf-8')
+                and (find_item_type(vals[i]) is str)
+            ):
+                # Writing str objects to a fixed-length UTF-8 string dataset.
+                # Numpy's normal conversion only handles ASCII characters, but
+                # when the destination is UTF-8, we want to allow any unicode.
+                # This *doesn't* handle numpy fixed-length unicode data ('U' dtype),
+                # as HDF5 has no equivalent, and converting fixed length UTF-32
+                # to variable length UTF-8 would obscure what's going on.
+                str_array = numpy.asarray(vals[i], order='C', dtype=object)
+                vals[i] = numpy.array([
+                    s.encode('utf-8') for s in str_array.flat
+                ], dtype=dtypes[i]).reshape(str_array.shape)
+            else:
+                # If the input data is already an array, let HDF5 do the conversion.
+                # If it's a list or similar, don't make numpy guess a dtype for it.
+                dt = None if isinstance(vals[i], numpy.ndarray) else dtypes[i].base
+                vals[i] = numpy.asarray(vals[i], order='C', dtype=dt)
+
+            # Check for array dtype compatibility and convert
+            if dtypes[i].subdtype is not None:
+                shp = dtypes[i].subdtype[1]
+                valshp = vals[i].shape[-len(shp):]
+                if valshp != shp:  # Last dimension has to match
+                    raise TypeError("When writing to array types, last N dimensions have to match (got %s, but should be %s)" % (valshp, shp,))
+                mtypes[i] = h5t.py_create(numpy.dtype((vals[i].dtype, shp)))
+                mshapes[i] = vals[i].shape[0:len(vals[i].shape)-len(shp)]
+
+            # Make a compound memory type if field-name slicing is required
+            elif len(names) != 0:
+                mshapes[i] = vals[i].shape
+
+                # Catch common errors
+                if dtypes[i].fields is None:
+                    raise TypeError("Illegal slicing argument (not a compound dataset)")
+                mismatch = [x for x in names if x not in dtypes[i].fields]
+                if len(mismatch) != 0:
+                    mismatch = ", ".join('"%s"'%x for x in mismatch)
+                    raise ValueError("Illegal slicing argument (fields %s not in dataset type)" % mismatch)
+
+                # Write non-compound source into a single dataset field
+                if len(names) == 1 and vals[i].dtype.fields is None:
+                    subtype = h5t.py_create(vals[i].dtype)
+                    mtypes[i] = h5t.create(h5t.COMPOUND, subtype.get_size())
+                    mtypes[i].insert(self._e(names[0]), 0, subtype)
+
+                # Make a new source type keeping only the requested fields
+                else:
+                    fieldnames = [x for x in vals[i].dtype.names if x in names] # Keep source order
+                    mtypes[i] = h5t.create(h5t.COMPOUND, vals[i].dtype.itemsize)
+                    for fieldname in fieldnames:
+                        subtype = h5t.py_create(vals[i].dtype.fields[fieldname][0])
+                        offset = vals[i].dtype.fields[fieldname][1]
+                        mtypes[i].insert(self.datasets[i]._e(fieldname), offset, subtype)
+
+            # Use mtype derived from array (let DatasetID.write figure it out)
+            else:
+                mshapes[i] = vals[i].shape
+                mtypes[i] = None
+
+        # Perform the dataspace selection once, since same selection is used for all dsets
+        selections = [sel.select(dset, args, dataset=dset) for dset in self.datasets]
+
+        if any((selection.nselect == 0) for selection in selections):
+            raise ValueError("All writes in write multi must be non-zero")
+
+        for i in range(count):
+            # Broadcast scalars if necessary.
+            # In order to avoid slow broadcasting filling the destination by
+            # the scalar value, we create an intermediate array of the same
+            # size as the destination buffer provided that size is reasonable.
+            # We assume as reasonable a size smaller or equal as the used dataset
+            # chunk size if any.
+            # In case of dealing with a non-chunked destination dataset or with
+            # a selection whose size is larger than the dataset chunk size we fall
+            # back to using an intermediate array of size equal to the last dimension
+            # of the destination buffer.
+            # The reasoning behind is that it makes sense to assume the creator of
+            # the dataset used an appropriate chunk size according the available
+            # memory. In any case, if we cannot afford to create an intermediate
+            # array of the same size as the dataset chunk size, the user program has
+            # little hope to go much further. Solves h5py issue #1067
+            if mshapes[i] == () and selections[i].array_shape != ():
+                if dtypes[i].subdtype is not None:
+                    raise TypeError("Scalar broadcasting is not supported for array dtypes")
+                if self.chunks and (product(self.chunks) >= product(selections[i].array_shape)):
+                    val2 = numpy.empty(selections[i].array_shape, dtype=vals[i].dtype)
+                else:
+                    val2 = numpy.empty(selections[i].array_shape[-1], dtype=vals[i].dtype)
+                val2[...] = vals[i]
+                vals[i] = val2
+                mshapes[i] = vals[i].shape
+
+            # Perform the write, with broadcasting
+            mspaces[i] = h5s.create_simple(selections[i].expand_shape(mshapes[i]))
+
+        # Each mshape may produce unique filespace selections.
+        # To sync the multi writes, require the total number 
+        # of filespace selections to be the same across all dsets
+        fspaces = [None] * count
+
+        for i in range(count):
+            fspaces[i] = []
+            for fspace in selections[i].broadcast(mshapes[i]):
+                fspaces[i].append(fspace)
+
+        if not all((len(fspaces[0]) == len(fs)) for fs in fspaces):
+            raise ValueError("Number of filespace selections must be same for all dsets")
+
+        dset_ids = [d.id.id for d in self.datasets]
+        if None in mtypes:
+            mtype_ids = [h5t.py_create(t) for t in dtypes]
+        else:
+            mtype_ids = [h5t.py_create(t) for t in mtypes]
+        mtype_hids = [t.id for t in mtype_ids]
+        mspace_ids = [ms.id for ms in mspaces]
+        fspace_ids = [[f.id for f in fs] for fs in fspaces]
+
+        # Transpose filespaces so that an element from first dimension
+        # Contains one filespace for each dataset
+        fspace_ids = [list(fs) for fs in numpy.array(fspace_ids).T]
+
+        for i in range(len(fspace_ids)):
+            # The n-th multi write will write every dset's n-th filespace selection
+            h5d.rw_multi(dset_ids, mspace_ids, fspace_ids[i], mtype_hids, vals, 0, dxpl=self.dxpl)

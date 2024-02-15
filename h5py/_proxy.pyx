@@ -251,7 +251,7 @@ cdef herr_t dset_rw_multi(size_t count, hid_t* dset, hid_t* mtype, hid_t* mspace
                         h5py_copy(mtype[i], mspace_tmp[i], <void*> back_buf[i], <void*>progbuf[i], H5PY_GATHER)
 
             if read:
-                H5Dread_multi(count, <hid_t*> dset, <hid_t*>mtype, <hid_t*> mspace_tmp, <hid_t*>fspace_tmp, dxpl, conv_buf)
+                H5Dread_multi(count, <hid_t*> dset, <hid_t*>dstype, <hid_t*> cspace, <hid_t*>fspace_tmp, dxpl, conv_buf)
 
                 for i in range(count):
                     H5Tconvert(dstype[i], mtype[i], npoints[i], <void*> conv_buf[i], <void*> back_buf[i], dxpl)
