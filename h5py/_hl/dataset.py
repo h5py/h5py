@@ -354,7 +354,7 @@ class ChunkIterator:
                 raise ValueError("Invalid selection - selection region must be within dataset space")
             index = s.start // self._layout[dim]
             self._chunk_index.append(index)
-        
+
 
     def __iter__(self):
         return self
@@ -381,7 +381,7 @@ class ChunkIterator:
                 for edge in (chunk_sel.start, chunk_sel.stop):
                     if not (s.start <= edge <= s.stop):
                         self._chunk_index[dim] = 1
-                        self._slices[dim] = self._calculate_next_chunk(dim) 
+                        self._slices[dim] = self._calculate_next_chunk(dim)
                         self._chunk_index[dim] += 1
                         break
                 # we still have room to extend along this dimensions
