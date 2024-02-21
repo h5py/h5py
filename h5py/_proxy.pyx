@@ -159,7 +159,7 @@ cdef herr_t dset_rw(hid_t dset, hid_t mtype, hid_t mspace, hid_t fspace,
 
     return 0
 
-cdef herr_t dset_rw_multi(size_t count, hid_t* dset, hid_t* mtype, hid_t* mspace, hid_t* _fspace,
+cdef herr_t dset_rw_multi(size_t count, hid_t* dset, hid_t* mtype, hid_t* mspace, hid_t* fspace,
     hid_t dxpl, void **progbuf, int read) except -1:
 
     cdef hid_t plist_id = -1
@@ -193,7 +193,7 @@ cdef herr_t dset_rw_multi(size_t count, hid_t* dset, hid_t* mtype, hid_t* mspace
 
         for i in range(count):
             mspace_tmp[i] = mspace[i]
-            fspace_tmp[i] = _fspace[i]
+            fspace_tmp[i] = fspace[i]
 
             # Issue 372: when a compound type is involved, using the dataset type
             # may result in uninitialized data being sent to H5Tconvert for fields

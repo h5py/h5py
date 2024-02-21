@@ -1197,6 +1197,8 @@ class MultiManager():
 
         if (new_dtypes is None):
             new_dtypes = [d.dtype for d in self.datasets]
+        elif new_dtypes and not isinstance(new_dtypes, list):
+            raise TypeError("Datatypes to read should be provided as a list")
 
         out = [numpy.empty(1)] * count
 
@@ -1213,17 +1215,6 @@ class MultiManager():
 
         if names:
             raise ValueError("Field subsetting not supported with multi read")
-
-        # Standardize new_dtype to list
-        if new_dtypes is None:
-            new_dtypes = []
-            for i in range(count):
-                new_dtypes.append(self.datasets[i].dtype)
-        elif isinstance(new_dtypes, numpy.dtype):
-            _new_dtypes = []
-            for i in range(count):
-                _new_dtypes.append(new_dtypes)
-            new_dtypes = _new_dtypes
 
         if len(args) == 1 and isinstance(args[0], h5r.RegionReference):
             raise ValueError("Region references not supported with multi read")
@@ -1249,7 +1240,6 @@ class MultiManager():
                 selections[i] = sel.select(self.datasets[i].shape, args, self.datasets[i])
                 fspaces[i] = selections[i].id
                 mspaces[i] = h5s.create_simple(selections[i].mshape)
-
                 out[i] = numpy.zeros(selections[i].array_shape, dtype=new_dtypes[i], order='C')
 
         # Perform the actual read_multi
@@ -1391,11 +1381,12 @@ class MultiManager():
                 mtypes[i] = None
 
         # Perform the dataspace selection once, since same selection is used for all dsets
-        selections = [sel.select(dset, args, dataset=dset) for dset in self.datasets]
+        selections = [sel.select(dset.shape, args, dataset=dset) for dset in self.datasets]
 
         if any((selection.nselect == 0) for selection in selections):
             raise ValueError("All writes in write multi must be non-zero")
 
+        val2_arr = [None] * count
         for i in range(count):
             # Broadcast scalars if necessary.
             # In order to avoid slow broadcasting filling the destination by
@@ -1415,29 +1406,29 @@ class MultiManager():
             if mshapes[i] == () and selections[i].array_shape != ():
                 if dtypes[i].subdtype is not None:
                     raise TypeError("Scalar broadcasting is not supported for array dtypes")
-                if self.chunks and (product(self.chunks) >= product(selections[i].array_shape)):
-                    val2 = numpy.empty(selections[i].array_shape, dtype=vals[i].dtype)
+                if (self.datasets[i].chunks) and \
+                    (product(self.datasets[i].chunks) >=
+                     product(selections[i].array_shape)):
+                    val2_arr[i] = numpy.empty(
+                        selections[i].array_shape, dtype=vals[i].dtype)
                 else:
-                    val2 = numpy.empty(selections[i].array_shape[-1], dtype=vals[i].dtype)
-                val2[...] = vals[i]
-                vals[i] = val2
+                    val2_arr[i] = numpy.empty(
+                        selections[i].array_shape[-1], dtype=vals[i].dtype)
+                (val2_arr[i])[...] = vals[i]
+                vals[i] = val2_arr[i]
                 mshapes[i] = vals[i].shape
 
             # Perform the write, with broadcasting
             mspaces[i] = h5s.create_simple(selections[i].expand_shape(mshapes[i]))
 
-        # Each mshape may produce unique filespace selections.
-        # To sync the multi writes, require the total number 
-        # of filespace selections to be the same across all dsets
-        fspaces = [None] * count
-
+        # Set up broadcast selection iterators
+        fspace_gens = [None] * count
         for i in range(count):
-            fspaces[i] = []
-            for fspace in selections[i].broadcast(mshapes[i]):
-                fspaces[i].append(fspace)
-
-        if not all((len(fspaces[0]) == len(fs)) for fs in fspaces):
-            raise ValueError("Number of filespace selections must be same for all dsets")
+            fspace_gens[i] = selections[i].broadcast(mshapes[i])
+        try:
+            fspace_ids = [next(f).id for f in fspace_gens]
+        except StopIteration:
+            raise ValueError("more than 0 regions must be selected on all datasets")
 
         dset_ids = [d.id.id for d in self.datasets]
         if None in mtypes:
@@ -1446,12 +1437,11 @@ class MultiManager():
             mtype_ids = [h5t.py_create(t) for t in mtypes]
         mtype_hids = [t.id for t in mtype_ids]
         mspace_ids = [ms.id for ms in mspaces]
-        fspace_ids = [[f.id for f in fs] for fs in fspaces]
 
-        # Transpose filespaces so that an element from first dimension
-        # Contains one filespace for each dataset
-        fspace_ids = [list(fs) for fs in numpy.array(fspace_ids).T]
+        while (fspace_ids[0] is not None):
+            h5d.rw_multi(dset_ids, mspace_ids, fspace_ids, mtype_hids, vals, 0, dxpl=self.dxpl)
 
-        for i in range(len(fspace_ids)):
-            # The n-th multi write will write every dset's n-th filespace selection
-            h5d.rw_multi(dset_ids, mspace_ids, fspace_ids[i], mtype_hids, vals, 0, dxpl=self.dxpl)
+            try:
+                fspace_ids = [next(f).id for f in fspace_gens]
+            except StopIteration:
+                break
