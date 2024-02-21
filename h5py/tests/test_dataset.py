@@ -2412,8 +2412,7 @@ class TestMultiManager(BaseDataset):
         # write to fixed length UTF-8 string
         dt = h5py.string_dtype(encoding='utf-8', length=5)
         s = 'cù'
-        s = s.encode('utf-8')
-        data = np.array([s, s, s, s], dtype=dt)
+        data = [s, s, s, s]
         shape = 4
         datasets = []
 
@@ -2426,7 +2425,20 @@ class TestMultiManager(BaseDataset):
 
         for i in range(count):
             out = np.array(self.f["vlen_utf8" + str(i)], dtype=dt)
-            np.testing.assert_array_equal(out, data)
+            np.testing.assert_array_equal([elem.decode('utf-8') for elem in out], data)
+
+    def test_multi_array_dtype(self):
+        dt = np.dtype('8i')
+        shape = (5,)
+        count = 3
+        data_in = np.full(fill_value=np.arange(8), shape=shape, dtype=dt)
+        datasets = [self.f.create_dataset("dset_array" + str(i), shape=shape, dtype=dt) for i in range(count)]
+        mm = MultiManager(datasets)
+        mm[...] = [data_in] * count
+
+        for i in range(count):
+            out = self.f["dset_array" + str(i)][...]
+            np.testing.assert_array_equal(out, data_in)
 
     def test_multi_write_mixed_shapes(self):
         """
@@ -2491,7 +2503,7 @@ class TestMultiManager(BaseDataset):
         """
         Test writing variable-length sequences
         """
-        dt = h5py.vlen_dtype(int)
+        dt = h5py.vlen_dtype(np.int32)
         count = 3
         shape = (5,)
         datasets = []
@@ -2512,29 +2524,39 @@ class TestMultiManager(BaseDataset):
             for j in range(out.shape[0]):
                 np.testing.assert_array_equal(out[j], data[j])
 
-        # If h5t.check_vlen_dtype returns real, non-bytes, non-str, and that dtype is the same as the np dtype of the values provided, and their dimension is > 1
-        # 2d seq write
-        shape = (5, 5)
+
+        # Write to vlen sequence dataset from array with > 1 dimension
+        dset_shape = (2, 2)
+        data_in_shape = (2, 2, 2)
         datasets = []
-        data = np.zeros(shape=shape, dtype=dt)
-        for i in range(shape[0]):
-            for j in range(shape[1]):
-                data[i, j] = np.arange(i + 1) + j
+        data_in = np.reshape(np.arange(np.prod(data_in_shape), dtype=np.int32), data_in_shape)
 
         for i in range(count):
-            ds = self.f.create_dataset('vlen2d' + str(i), shape=shape, dtype=dt)
+            ds = self.f.create_dataset('vlen2d' + str(i), shape=dset_shape, dtype=dt)
             datasets.append(ds)
 
         mm = MultiManager(datasets=datasets)
-        mm[...] = [data, data, data]
+        mm[...] = [data_in, data_in, data_in]
 
         for i in range(count):
-            out = np.array(self.f['vlen2d' + str(i)], dtype=dt)
-            self.assertEqual(out.shape, data.shape)
+            out = np.array(self.f['vlen2d' + str(i)])
 
-            for j in range(out.shape[0]):
-                for k in range(out.shape[1]):
-                    np.testing.assert_array_equal(out[j, k], data[j, k])
+            for x in range(out.shape[0]):
+                for y in range(out.shape[1]):
+                    for z in range(data_in_shape[2]):
+                        np.testing.assert_array_equal(out[x, y][z], data_in[x, y, z])
+
+        # Write to vlen sequence data from array with 1 dimension
+        data_in = np.reshape(data_in, np.prod(data_in_shape))
+        mm = MultiManager(datasets=datasets)
+        mm[...] = [data_in, data_in, data_in]
+
+        for i in range(count):
+            out = self.f['vlen2d' + str(i)][...]
+
+            for x in range(out.shape[0]):
+                for y in range(out.shape[1]):
+                    np.testing.assert_array_equal(out[x, y], data_in)
 
     def test_scalar_broadcast(self):
         """
@@ -2582,10 +2604,10 @@ class TestMultiManager(BaseDataset):
             del dsets[0]
             mm[...]
 
-        # zero-sized dataset in list
+        # empty dataset in list
         with self.assertRaises(ValueError):
             d_size_0 = self.f.create_dataset("dset_test_invalid_size_zero",
-                                             shape=(0,), dtype=np.int32)
+                                             dtype=np.int32)
             mm = MultiManager(datasets=[d_size_0])
             mm[...]
 
@@ -2596,8 +2618,9 @@ class TestMultiManager(BaseDataset):
 
         # attempt to read from region reference, not currently supported
         with self.assertRaises(ValueError):
+            d2 = self.f.create_dataset("dset_test_invalid2", shape=(10, 10), dtype=np.int32)
             slic = np.s_[1:5, 1:5:2]
-            ref = d.regionref[slic]
+            ref = d2.regionref[slic]
             mm = MultiManager([d])
             mm[ref]
 
@@ -2637,8 +2660,3 @@ class TestMultiManager(BaseDataset):
                                        dtype=np.int32)
             mm = MultiManager([d, d2])
             mm[0:] = np.zeros(shape=(10,), dtype=np.int32)
-
-        # attempt to read with invalid type for new_dtypes
-        with self.assertRaises(TypeError):
-            mm = MultiManager([d])
-            mm[..., np.int32]

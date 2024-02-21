@@ -1183,7 +1183,7 @@ class MultiManager():
         self.dxpl = dxpl
 
     @with_phil
-    def __getitem__(self, args, new_dtypes=None):
+    def __getitem__(self, args):
         """ Read the same slice from each of the datasets
         managed by this MultiManager.
 
@@ -1195,10 +1195,7 @@ class MultiManager():
         count = len(self.datasets)
         args = args if isinstance(args, tuple) else (args,)
 
-        if (new_dtypes is None):
-            new_dtypes = [d.dtype for d in self.datasets]
-        elif new_dtypes and not isinstance(new_dtypes, list):
-            raise TypeError("Datatypes to read should be provided as a list")
+        dtypes = [d.dtype for d in self.datasets]
 
         out = [numpy.empty(1)] * count
 
@@ -1222,7 +1219,7 @@ class MultiManager():
         fspaces = [None] * count
         mspaces = [None] * count
         selections = [None] * count
-        mtypes = [h5t.py_create(new_dtype) for new_dtype in new_dtypes]
+        mtypes = [h5t.py_create(new_dtype) for new_dtype in dtypes]
 
         for i in range(count):
             if self.datasets[i].shape == ():
@@ -1232,15 +1229,15 @@ class MultiManager():
                 mspaces[i] = selections[i].mspace
 
                 if selections[i].mshape is None:
-                    out[i] = numpy.zeros((), dtype=new_dtypes[i])
+                    out[i] = numpy.zeros((), dtype=dtypes[i])
                 else:
-                    out[i] = numpy.zeros(selections[i].mshape, dtype=new_dtypes[i])
+                    out[i] = numpy.zeros(selections[i].mshape, dtype=dtypes[i])
             else:
                 # Initialize output buffer for non-scalar dataspace
                 selections[i] = sel.select(self.datasets[i].shape, args, self.datasets[i])
                 fspaces[i] = selections[i].id
                 mspaces[i] = h5s.create_simple(selections[i].mshape)
-                out[i] = numpy.zeros(selections[i].array_shape, dtype=new_dtypes[i], order='C')
+                out[i] = numpy.zeros(selections[i].array_shape, dtype=dtypes[i], order='C')
 
         # Perform the actual read_multi
         fspace_ids = [f.id for f in fspaces]
