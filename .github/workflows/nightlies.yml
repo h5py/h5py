@@ -1,0 +1,75 @@
+---
+name: Upload nightly wheels to Anaconda Cloud
+
+# Adapted from https://github.com/matplotlib/matplotlib/blob/main/.github/workflows/nightlies.yml
+
+on:
+  # Run daily at 1:23 UTC to upload nightly wheels to Anaconda Cloud
+  schedule:
+    - cron: '23 1 * * *'
+  # Run on demand with workflow dispatch
+  workflow_dispatch:
+
+
+permissions:
+  actions: read
+
+jobs:
+  upload_nightly_wheels:
+    name: Upload nightly wheels to Anaconda Cloud
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -el {0}
+    if: github.repository_owner == 'h5py'
+
+    steps:
+      # https://github.com/git-for-windows/get-azure-pipelines-artifact
+      # looking at
+      #   curl "https://dev.azure.com/h5pyappveyor/h5py/_apis/build/builds?definitionId=1&repositoryFilter=1&branchFilter=4&statusFilter=succeeded"
+      # the "reason" for master runs is "individualCI" and the run ID, then
+      #   curl "https://dev.azure.com/h5pyappveyor/h5py/_apis/build/builds/1821/artifacts"
+      # for example has the artifact name and downloadUrl in case we ever want to do this ourselves
+      - uses: git-for-windows/get-azure-pipelines-artifact@v0.3.1
+        with:
+          repository: h5pyappveyor/h5py
+          definitionId: 1
+          reasonFilter: individualCI
+          artifact: linux_wheels
+          cache: false
+      - uses: git-for-windows/get-azure-pipelines-artifact@v0.3.1
+        with:
+          repository: h5pyappveyor/h5py
+          definitionId: 1
+          reasonFilter: individualCI
+          artifact: macos_arm64_wheels
+          cache: false
+      - uses: git-for-windows/get-azure-pipelines-artifact@v0.3.1
+        with:
+          repository: h5pyappveyor/h5py
+          definitionId: 1
+          reasonFilter: individualCI
+          artifact: macos_x86_64_wheels
+          cache: false
+      - uses: git-for-windows/get-azure-pipelines-artifact@v0.3.1
+        with:
+          repository: h5pyappveyor/h5py
+          definitionId: 1
+          reasonFilter: individualCI
+          artifact: windows_wheels
+          cache: false
+      - name: Repackage wheel artifacts
+        run: |
+          ls -alt
+          ls -alt *_wheels
+          mkdir dist
+          mv *_wheels/*.whl dist/
+          echo
+          echo "Contents of dist/"
+          ls -alt dist/
+
+      - name: Upload wheels to Anaconda Cloud as nightlies
+        uses: scientific-python/upload-nightly-action@8f0394fd2aa0c85d7364a9958652e8994e06b23c # 0.1.0
+        with:
+          artifacts_path: dist
+          anaconda_nightly_upload_token: ${{ secrets.ANACONDA_ORG_UPLOAD_TOKEN }}
