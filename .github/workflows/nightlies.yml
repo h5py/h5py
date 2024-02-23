@@ -9,7 +9,10 @@ on:
     - cron: '23 1 * * *'
   # Run on demand with workflow dispatch
   workflow_dispatch:
-
+  # TODO: this is just for testing, remove before merge
+  pull_request:
+    branches:
+      - '*'
 
 permissions:
   actions: read
@@ -68,8 +71,8 @@ jobs:
           echo "Contents of dist/"
           ls -alt dist/
 
-      - name: Upload wheels to Anaconda Cloud as nightlies
-        uses: scientific-python/upload-nightly-action@8f0394fd2aa0c85d7364a9958652e8994e06b23c # 0.1.0
-        with:
-          artifacts_path: dist
-          anaconda_nightly_upload_token: ${{ secrets.ANACONDA_ORG_UPLOAD_TOKEN }}
+      #- name: Upload wheels to Anaconda Cloud as nightlies
+      #  uses: scientific-python/upload-nightly-action@8f0394fd2aa0c85d7364a9958652e8994e06b23c # 0.1.0
+      #  with:
+      #    artifacts_path: dist
+      #    anaconda_nightly_upload_token: ${{ secrets.ANACONDA_ORG_UPLOAD_TOKEN }}
