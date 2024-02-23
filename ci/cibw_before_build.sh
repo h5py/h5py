@@ -2,7 +2,7 @@
 
 set -eo pipefail
 
-if ! python -c "import sys; exit(sys.version_info >= (3, 9))"; then
+if python -c "import sys; exit(sys.version_info < (3, 9))"; then
     NUMPY_ARGS="--pre --extra-index-url https://pypi.anaconda.org/scientific-python-nightly-wheels/simple numpy"
 else
     NUMPY_ARGS="oldest-supported-numpy"
