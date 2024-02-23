@@ -8,4 +8,5 @@ if python -c "import sys; exit(sys.version_info < (3, 9))"; then
 else
     NUMPY_ARGS="oldest-supported-numpy"
 fi
-pip install $NUMPY_ARGS "Cython>=0.29.31,<4" pkgconfig "setuptools>=61"
+pip install $NUMPY_ARGS
+pip install "Cython>=0.29.31,<4" pkgconfig "setuptools>=61"
