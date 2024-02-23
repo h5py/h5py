@@ -81,8 +81,5 @@ packages = [
 ]
 
 [tool.cibuildwheel]
-before-build = [
-    "pip install --pre --extra-index-url https://pypi.anaconda.org/scientific-python-nightly-wheels/simple numpy",
-    "pip install \"Cython>=0.29.31,<4\" pkgconfig \"setuptools>=61\""
-]
+before-build = "bash ci/cibw_before_build.sh"
 build-frontend = { name = "pip", args = ["--no-build-isolation"] }
