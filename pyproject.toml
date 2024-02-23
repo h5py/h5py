@@ -79,3 +79,7 @@ packages = [
     "h5py.tests.data_files",
     "h5py.tests.test_vds",
 ]
+
+[tool.cibuildwheel]
+before-build = "pip install --pre --extra-index-url https://pypi.anaconda.org/scientific-python-nightly-wheels/simple"
+build-frontend = "pip; args: --no-build-isolation"
