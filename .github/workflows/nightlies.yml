@@ -1,5 +1,8 @@
 ---
 name: Nightly NumPy testing
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.number }}-${{ github.event.ref }}
+  cancel-in-progress: true
 
 # Adapted from https://github.com/matplotlib/matplotlib/blob/main/.github/workflows/nightlies.yml
 
