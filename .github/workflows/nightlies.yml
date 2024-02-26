@@ -50,7 +50,7 @@ jobs:
           path: ./wheelhouse/*.whl
 
   test_wheels:
-    name: Test ${{ matrix.os }} ${{matrix.python}}
+    name: Test ${{ matrix.os }} ${{ matrix.python }}
     needs: build_wheels
     runs-on: ${{ matrix.os }}
     strategy:
@@ -67,15 +67,16 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python }}
-      - run: |
+      - name: Install tox
+        run: |
           python -m pip install --upgrade pip
           pip install tox
-        name: Install tox
+      - uses: actions/checkout@v4
       - name: Install wheel
         shell: bash
         run: |
           set -eo pipefail
-          export PYVER=$(python -c "import sys; print(\"\".join(map(str, sys.version_info[:2])))")
+          export PYVER=$(python -c "import sys; print(''.join(map(str, sys.version_info[:2])))")
           echo "Using tag $PYVER"
           export TOXENV="py$PYVER-test-deps,py$PYVER-test-mindeps,$PYVER-test-deps-pre"
           WHL_PATH=$(python -c "import glob, sys; print(glob.glob(f'dist/h5py-*-cp$PYVER-*.whl')[0])")
