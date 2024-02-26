@@ -21,7 +21,7 @@ permissions:
 
 jobs:
   build_wheels:
-    name: ${{ matrix.os }}
+    name: Build ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -49,9 +49,45 @@ jobs:
           name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
           path: ./wheelhouse/*.whl
 
+  test_wheels:
+    name: Test ${{ matrix.os }} ${{matrix.python}}
+    needs: build_wheels
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]  # , windows-latest, macos-13, macos-14]
+        python: ['3.12']
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: cibw-wheels-${{ matrix.os}}-*
+          merge-multiple: true
+          path: dist
+      - run: ls -alt dist
+      - uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python }}
+      - run: |
+          python -m pip install --upgrade pip
+          pip install tox
+        name: Install tox
+      - name: Install wheel
+        shell: bash
+        run: |
+          set -eo pipefail
+          export PYVER=$(python -c "import sys; print(\"\".join(map(str, sys.version_info[:2])))")
+          echo "Using tag $PYVER"
+          export TOXENV="py$PYVER-test-deps,py$PYVER-test-mindeps,$PYVER-test-deps-pre"
+          WHL_PATH=$(python -c "import glob, sys; print(glob.glob(f'dist/h5py-*-cp$PYVER-*.whl')[0])")
+          echo "Will install wheel from $WHL_PATH"
+          tox --installpkg $WHL_PATH
+      - uses: codecov/codecov-action@v4
+        with:
+          token: 813fb6da-087d-4b36-a185-5a530cab3455
+
   upload_nightly_wheels:
     name: Upload wheels
-    needs: build_wheels
+    needs: test_wheels
     runs-on: ubuntu-latest
     defaults:
       run:
