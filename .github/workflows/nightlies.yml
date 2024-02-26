@@ -61,7 +61,8 @@ jobs:
         with:
           pattern: cibw-wheels-*
           merge-multiple: true
-      - run: ls -alt dist/
+          path: dist
+      - run: pwd && ls -alt . && ls -alt dist/
       - name: Upload wheels to Anaconda Cloud as nightlies
         uses: scientific-python/upload-nightly-action@b67d7fcc0396e1128a474d1ab2b48aa94680f9fc # 0.5.0
         with:
