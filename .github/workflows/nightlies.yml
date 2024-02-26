@@ -16,10 +16,6 @@ on:
 permissions:
   actions: read
 
-name: Build
-
-on: [push, pull_request]
-
 jobs:
   build_wheels:
     name: Build wheels on ${{ matrix.os }}
@@ -44,12 +40,11 @@ jobs:
 
   upload_nightly_wheels:
     name: Upload wheels
+    needs:
     runs-on: ubuntu-latest
     defaults:
       run:
         shell: bash -el {0}
-    if: github.repository_owner == 'h5py'
-
     steps:
       - uses: actions/download-artifact@v4
         with:
@@ -60,3 +55,4 @@ jobs:
         with:
           artifacts_path: wheelhouse
           anaconda_nightly_upload_token: ${{ secrets.ANACONDA_ORG_UPLOAD_TOKEN }}
+        if: github.repository_owner == 'h5py'
