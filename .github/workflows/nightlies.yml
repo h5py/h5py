@@ -1,5 +1,5 @@
 ---
-name: Nightly NumPy testing
+name: Nightly NumPy wheels
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.number }}-${{ github.event.ref }}
   cancel-in-progress: true
