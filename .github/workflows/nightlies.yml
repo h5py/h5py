@@ -58,20 +58,20 @@ jobs:
         os: [ubuntu-latest]  # , windows-latest, macos-13, macos-14]
         python: ['3.12']
     steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python }}
       - uses: actions/download-artifact@v4
         with:
           pattern: cibw-wheels-${{ matrix.os}}-*
           merge-multiple: true
           path: dist
       - run: ls -alt dist
-      - uses: actions/setup-python@v4
-        with:
-          python-version: ${{ matrix.python }}
       - name: Install tox
         run: |
           python -m pip install --upgrade pip
           pip install tox
-      - uses: actions/checkout@v4
       - name: Install wheel
         shell: bash
         run: |
