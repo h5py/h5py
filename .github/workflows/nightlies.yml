@@ -1,5 +1,5 @@
 ---
-name: Nightly Anaconda Cloud wheels
+name: Nightly NumPy testing
 
 # Adapted from https://github.com/matplotlib/matplotlib/blob/main/.github/workflows/nightlies.yml
 
@@ -18,7 +18,7 @@ permissions:
 
 jobs:
   build_wheels:
-    name: Build wheels on ${{ matrix.os }}
+    name: ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
