@@ -79,7 +79,3 @@ packages = [
     "h5py.tests.data_files",
     "h5py.tests.test_vds",
 ]
-
-[tool.cibuildwheel]
-before-build = "bash ci/cibw_before_build.sh"
-build-frontend = { name = "pip", args = ["--no-build-isolation"] }
