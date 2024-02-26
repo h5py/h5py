@@ -40,7 +40,7 @@ jobs:
 
   upload_nightly_wheels:
     name: Upload wheels
-    needs:
+    needs: build_wheels
     runs-on: ubuntu-latest
     defaults:
       run:
