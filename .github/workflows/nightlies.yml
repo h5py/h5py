@@ -9,7 +9,7 @@ on:
     - cron: '23 1 * * *'
   # Run on demand with workflow dispatch
   workflow_dispatch:
-  # TODO: REVERT THIS CHANGE BEFORE MERGE
+  # Run on all PRs
   pull_request:
 
 
@@ -34,7 +34,7 @@ jobs:
       - name: Install cibuildwheel
         run: python -m pip install cibuildwheel==2.16.5
       - name: Build wheels
-        run: python -m cibuildwheel --output-dir wheelhouse
+        run: python -m cibuildwheel --output-dir dist
         env:
           CIBW_BEFORE_BUILD: "pip install --pre --extra-index-url https://pypi.anaconda.org/scientific-python-nightly-wheels/simple numpy && pip install \"Cython>=0.29.31,<4\" pkgconfig \"setuptools>=61\""
           CIBW_BUILD_FRONTEND: "pip; args: --no-build-isolation"
@@ -44,7 +44,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
-          path: ./wheelhouse/*.whl
+          path: ./dist/*.whl
 
   upload_nightly_wheels:
     name: Upload wheels
@@ -58,9 +58,10 @@ jobs:
         with:
           pattern: cibw-wheels-*
           merge-multiple: true
-      - run: ls -alt wheelhouse/
-      - uses: scientific-python/upload-nightly-action@b67d7fcc0396e1128a474d1ab2b48aa94680f9fc # 0.5.0
+      - run: ls -alt dist/
+      - name: Upload wheels to Anaconda Cloud as nightlies
+        uses: scientific-python/upload-nightly-action@b67d7fcc0396e1128a474d1ab2b48aa94680f9fc # 0.5.0
         with:
-          artifacts_path: wheelhouse
+          artifacts_path: dist
           anaconda_nightly_upload_token: ${{ secrets.ANACONDA_ORG_UPLOAD_TOKEN }}
-        if: github.repository_owner == 'h5py'
+        if: github.repository_owner == 'h5py' && github.event_name == 'schedule'
