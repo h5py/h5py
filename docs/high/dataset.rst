@@ -445,7 +445,7 @@ slice arguments for reading and writing like a typical Dataset.
 
 Performing operations through a MultiManager allows the library to in some cases
 improve performance by providing information about the entire I/O operation to the
-active file driver. 
+active file driver.
 
 Reading datasets through a MultiManager returns a list where each entry is an array containing
 the values read from the corresponding data.
