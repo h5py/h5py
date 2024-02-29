@@ -436,6 +436,41 @@ The dtype of the dataset can be accessed via ``<dset>.dtype`` as per normal.
 As empty datasets cannot be sliced, some methods of datasets such as
 ``read_direct`` will raise a ``TypeError`` exception if used on a empty dataset.
 
+Reading and Writing to Multiple Datasets
+------------------------------------------------------------
+The MultiManager interface enables reading and writing to multiple datasets
+through HDF5's ``H5Dread_multi/H5Dwrite_multi`` API using numpy operations.
+A MultiManager requires a list of datasets to operate on, and then accepts
+slice arguments for reading and writing like a typical Dataset.
+
+Performing operations through a MultiManager allows the library to in some cases
+improve performance by providing information about the entire I/O operation to the
+active file driver. 
+
+Reading datasets through a MultiManager returns a list where each entry is an array containing
+the values read from the corresponding data.
+
+    >>> mm = MultiManager(datasets=[dset1, dset2, dset3])
+    >>> data = mm[...]  # read all elements from each dataset
+    >>> data[0]  # data read from dset1
+    [0, 1, 2, 3]
+    >>> data[1]  # data read from dset2
+    [0, 2, 3, 4]
+
+Writing to datasets through a MultiManager requires a list where each entry is an array containing
+the values to be written to each dataset.
+
+    >>> mm[0] = [[1], [2], [3]]  # write a different element to index 0 in each dataset
+    >>> data = mm[...]
+    >>> data[0]
+    [1, 1, 2, 3]
+    >>> data[1]
+    [2, 2, 3, 4]
+
+It is required that the slicing arguments select the same number of regions
+on each Dataset in the MultiManager.
+
+
 Reference
 ---------
 
