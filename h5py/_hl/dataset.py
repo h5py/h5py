@@ -325,9 +325,7 @@ class ChunkIterator:
     """
     def __init__(self, dset, source_sel=None):
         self._shape = dset.shape
-        self._rank = len(dset.shape)
-        self._slices = [slice(None)]*self._rank
-
+        rank = len(dset.shape)
 
         if not dset.chunks:
             # can only use with chunked datasets
@@ -338,72 +336,61 @@ class ChunkIterator:
             # select over entire dataset
             self._sel = tuple(
                 slice(0, self._shape[dim])
-                for dim in range(self._rank)
+                for dim in range(rank)
             )
         else:
             if isinstance(source_sel, slice):
                 self._sel = (source_sel,)
             else:
                 self._sel = source_sel
-        if len(self._sel) != self._rank:
+        if len(self._sel) != rank:
             raise ValueError("Invalid selection - selection region must have same rank as dataset")
         self._chunk_index = []
-        for dim in range(self._rank):
+        for dim in range(rank):
             s = self._sel[dim]
             if s.start < 0 or s.stop > self._shape[dim] or s.stop <= s.start:
                 raise ValueError("Invalid selection - selection region must be within dataset space")
             index = s.start // self._layout[dim]
             self._chunk_index.append(index)
-        
 
     def __iter__(self):
         return self
 
     def __next__(self):
-        if self._rank == 0 or self._chunk_index[0] * self._layout[0] >= self._sel[0].stop:
+        rank = len(self._shape)
+        slices = []
+        if rank == 0 or self._chunk_index[0] * self._layout[0] >= self._sel[0].stop:
             # ran past the last chunk, end iteration
             raise StopIteration()
 
-        for rank in range(self._rank):
-            self._slices[rank] = self._calculate_next_chunk(rank)
+        for dim in range(rank):
+            s = self._sel[dim]
+            start = self._chunk_index[dim] * self._layout[dim]
+            stop = (self._chunk_index[dim] + 1) * self._layout[dim]
+            # adjust the start if this is an edge chunk
+            if start < s.start:
+                start = s.start
+            if stop > s.stop:
+                stop = s.stop  # trim to end of the selection
+            s = slice(start, stop, 1)
+            slices.append(s)
 
         # bump up the last index and carry forward if we run outside the selection
-        dim = self._rank - 1
+        dim = rank - 1
         while dim >= 0:
             s = self._sel[dim]
             self._chunk_index[dim] += 1
 
             chunk_end = self._chunk_index[dim] * self._layout[dim]
             if chunk_end < s.stop:
-                chunk_sel = self._slices[dim]
-                # there's a chance that our calculated chunk slice isn't a subset of
-                # the requested  slice. Check the bounds and increment further if so
-                for edge in (chunk_sel.start, chunk_sel.stop):
-                    if not (s.start <= edge <= s.stop):
-                        self._chunk_index[dim] = 1
-                        self._slices[dim] = self._calculate_next_chunk(dim) 
-                        self._chunk_index[dim] += 1
-                        break
                 # we still have room to extend along this dimensions
-                break
+                return tuple(slices)
 
             if dim > 0:
                 # reset to the start and continue iterating with higher dimension
-                self._chunk_index[dim] = 0
+                self._chunk_index[dim] = s.start // self._layout[dim] 
             dim -= 1
-
-        return tuple(self._slices)
-
-    def _calculate_next_chunk(self, dim):
-        s = self._sel[dim]
-        start = self._chunk_index[dim] * self._layout[dim]
-        stop = (self._chunk_index[dim] + 1) * self._layout[dim]
-        # adjust the start if this is an edge chunk
-        if start < s.start:
-            start = s.start
-        if stop > s.stop:
-            stop = s.stop  # trim to end of the selection
-        return slice(start, stop, 1)
+        return tuple(slices)
 
 
 class Dataset(HLObject):
