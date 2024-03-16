@@ -353,7 +353,6 @@ class ChunkIterator:
             index = s.start // self._layout[dim]
             self._chunk_index.append(index)
 
-
     def __iter__(self):
         return self
 
@@ -430,7 +429,7 @@ class Dataset(HLObject):
     def fields(self, names, *, _prior_dtype=None):
         """Get a wrapper to read a subset of fields from a compound data type:
 
-                            >>> 2d_coords = dataset.fields(['x', 'y'])[:]
+        >>> 2d_coords = dataset.fields(['x', 'y'])[:]
 
         If names is a string, a single field is extracted, and the resulting
         arrays will have that dtype. Otherwise, it should be an iterable,
