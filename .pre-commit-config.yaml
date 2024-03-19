@@ -1,6 +1,6 @@
 repos:
 -   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.1.0
+    rev: v4.5.0
     hooks:
     -   id: end-of-file-fixer
         exclude: .+\.patch
@@ -8,7 +8,7 @@ repos:
         exclude: .+\.patch
 
 -   repo: https://github.com/mgedmin/check-manifest
-    rev: "0.39"
+    rev: "0.49"
     hooks:
     -   id: check-manifest
 
