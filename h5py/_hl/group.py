@@ -613,6 +613,9 @@ class Group(HLObject, MutableMappingHDF5):
     def visit(self, func):
         """ Recursively visit all names in this group and subgroups.
 
+        Note: visit ignores soft and external links. To visit those, use
+        visit_links.
+
         You supply a callable (function, method or callable object); it
         will be called exactly once for each link in this group and every
         group below it. Your callable must conform to the signature:
@@ -638,6 +641,9 @@ class Group(HLObject, MutableMappingHDF5):
 
     def visititems(self, func):
         """ Recursively visit names and objects in this group.
+
+        Note: visititems ignores soft and external links. To visit those, use
+        visititems_links.
 
         You supply a callable (function, method or callable object); it
         will be called exactly once for each link in this group and every
@@ -666,6 +672,65 @@ class Group(HLObject, MutableMappingHDF5):
                 name = self._d(name)
                 return func(name, self[name])
             return h5o.visit(self.id, proxy)
+
+    def visit_links(self, func):
+        """ Recursively visit all names in this group and subgroups.
+        Each link will be visited exactly once, regardless of its target.
+
+        You supply a callable (function, method or callable object); it
+        will be called exactly once for each link in this group and every
+        group below it. Your callable must conform to the signature:
+
+            func(<member name>) => <None or return value>
+
+        Returning None continues iteration, returning anything else stops
+        and immediately returns that value from the visit method.  No
+        particular order of iteration within groups is guaranteed.
+
+        Example:
+
+        >>> # List the entire contents of the file
+        >>> f = File("foo.hdf5")
+        >>> list_of_names = []
+        >>> f.visit_links(list_of_names.append)
+        """
+        with phil:
+            def proxy(name):
+                """ Call the function with the text name, not bytes """
+                return func(self._d(name))
+            return self.id.links.visit(proxy)
+
+    def visititems_links(self, func):
+        """ Recursively visit links in this group.
+        Each link will be visited exactly once, regardless of its target.
+
+        You supply a callable (function, method or callable object); it
+        will be called exactly once for each link in this group and every
+        group below it. Your callable must conform to the signature:
+
+            func(<member name>, <link>) => <None or return value>
+
+        Returning None continues iteration, returning anything else stops
+        and immediately returns that value from the visit method.  No
+        particular order of iteration within groups is guaranteed.
+
+        Example:
+
+        # Get a list of all softlinks in the file
+        >>> mylist = []
+        >>> def func(name, link):
+        ...     if isinstance(link, SoftLink):
+        ...         mylist.append(name)
+        ...
+        >>> f = File('foo.hdf5')
+        >>> f.visititems_links(func)
+        """
+        with phil:
+            def proxy(name):
+                """ Use the text name of the object, not bytes """
+                name = self._d(name)
+                return func(name, self.get(name, getlink=True))
+            return self.id.links.visit(proxy)
 
     @with_phil
     def __repr__(self):
