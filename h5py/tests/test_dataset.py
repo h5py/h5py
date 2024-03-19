@@ -947,6 +947,38 @@ class TestCreateLike(BaseDataset):
         self.assertEqual(similar.shape, (10,))
         self.assertEqual(similar.maxshape, (20,))
 
+    @ut.skipIf('gzip' not in h5py.filters.encode, "DEFLATE is not installed")
+    def test_chunking_compression(self):
+        foo = self.f.create_dataset(
+            'foo', dtype=np.uint16, shape=(100,), chunks=(21,), compression='gzip'
+        )
+        bar = self.f.create_dataset_like('bar', foo)
+        self.assertEqual(bar.shape, (100,))
+        self.assertEqual(bar.chunks, (21,))
+        self.assertEqual(bar.filter_ids, (h5py.h5z.FILTER_DEFLATE,))
+
+    @ut.skipIf('gzip' not in h5py.filters.encode, "DEFLATE is not installed")
+    def test_remove_compression(self):
+        foo = self.f.create_dataset(
+            'foo', dtype=np.uint16, shape=(100,), chunks=(21,), compression='gzip'
+        )
+        baz = self.f.create_dataset_like('baz', foo, compression=None)
+        self.assertEqual(baz.filter_ids, ())
+        self.assertEqual(baz.chunks, (21,))
+
+    @ut.skipIf('gzip' not in h5py.filters.encode, "DEFLATE is not installed")
+    @ut.skipIf('lzf' not in h5py.filters.encode, "LZF is not installed")
+    def test_replace_compression(self):
+        foo = self.f.create_dataset(
+            'foo', dtype=np.uint16, shape=(100,), chunks=(21,), compression='gzip',
+            shuffle=True, fletcher32=True,
+        )
+        baz = self.f.create_dataset_like('baz', foo, compression='lzf')
+        self.assertEqual(baz.filter_ids, (
+            h5py.h5z.FILTER_SHUFFLE, h5py.h5z.FILTER_LZF, h5py.h5z.FILTER_FLETCHER32
+        ))
+        self.assertEqual(baz.chunks, (21,))
+
 class TestChunkIterator(BaseDataset):
     def test_no_chunks(self):
         dset = self.f.create_dataset("foo", ())
@@ -1901,6 +1933,7 @@ def test_allow_unknown_filter(writable_file):
         allow_unknown_filter=True
     )
     assert str(fake_filter_id) in ds._filters
+    assert ds.compression == 'unknown'
 
 
 def test_dset_chunk_cache():
@@ -1991,3 +2024,14 @@ class TestVirtualPrefix(BaseDataset):
         self.assertEqual(virtual_prefix, virtual_prefix_readback)
         self.assertIsInstance(dset, Dataset)
         self.assertEqual(dset.shape, (10, 3))
+
+
+def test_filter_properties(writable_file):
+    ds = writable_file.create_dataset(
+        'foo', shape=1000, dtype=np.float32,
+        fletcher32=True, shuffle=True, compression='lzf'
+    )
+    assert ds.filter_ids == (
+        h5py.h5z.FILTER_SHUFFLE, h5py.h5z.FILTER_LZF, h5py.h5z.FILTER_FLETCHER32
+    )
+    assert ds.filter_names == ('shuffle', 'lzf', 'fletcher32')

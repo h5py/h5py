@@ -298,7 +298,7 @@ class Group(HLObject, MutableMappingHDF5):
 
             return dset
 
-    def create_dataset_like(self, name, other, **kwupdate):
+    def create_dataset_like(self, name, other, **kwargs):
         """ Create a dataset similar to `other`.
 
         name
@@ -313,22 +313,26 @@ class Group(HLObject, MutableMappingHDF5):
         shape and dtype, in which case the provided values take precedence over
         those from `other`.
         """
-        for k in ('shape', 'dtype', 'chunks', 'compression',
-                  'compression_opts', 'scaleoffset', 'shuffle', 'fletcher32',
-                  'fillvalue'):
-            kwupdate.setdefault(k, getattr(other, k))
-        # TODO: more elegant way to pass these (dcpl to create_dataset?)
+        kwargs.setdefault('shape', other.shape)
+        kwargs.setdefault('dtype', other.dtype)
         dcpl = other.id.get_create_plist()
-        kwupdate.setdefault('track_times', dcpl.get_obj_track_times())
-        kwupdate.setdefault('track_order', dcpl.get_attr_creation_order() > 0)
+        # track_times needs to be passed specifically, because otherwise h5py
+        # applies its default (False) to override the HDF5 default.
+        kwargs.setdefault('track_times', dcpl.get_obj_track_times())
 
         # Special case: the maxshape property always exists, but if we pass it
         # to create_dataset, the new dataset will automatically get chunked
         # layout. So we copy it only if it is different from shape.
         if other.maxshape != other.shape:
-            kwupdate.setdefault('maxshape', other.maxshape)
+            kwargs.setdefault('maxshape', other.maxshape)
 
-        return self.create_dataset(name, **kwupdate)
+        # For these keywords, passing None means turning something off.
+        # We use False to distinguish this from 'no change'.
+        for k in ('compression', 'scaleoffset'):
+            if kwargs.get(k, ...) is None:
+                kwargs[k] = False
+
+        return self.create_dataset(name, dcpl=dcpl, **kwargs)
 
     def require_group(self, name):
         # TODO: support kwargs like require_dataset
