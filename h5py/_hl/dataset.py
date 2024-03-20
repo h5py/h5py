@@ -865,11 +865,11 @@ class Dataset(HLObject):
         if vlen is not None and vlen not in (bytes, str):
             try:
                 val = numpy.asarray(val, dtype=vlen)
-            except ValueError:
+            except (ValueError, TypeError):
                 try:
                     val = numpy.array([numpy.array(x, dtype=vlen)
                                        for x in val], dtype=self.dtype)
-                except ValueError:
+                except (ValueError, TypeError):
                     pass
             if vlen == val.dtype:
                 if val.ndim > 1:
