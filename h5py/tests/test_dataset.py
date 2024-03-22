@@ -912,7 +912,7 @@ class TestAutoCreate(BaseDataset):
     def test_string_fixed(self):
         """ Assignment of fixed-length byte string produces a fixed-length
         ascii dataset """
-        self.f['x'] = np.string_("Hello there")
+        self.f['x'] = np.bytes_("Hello there")
         ds = self.f['x']
         self.assert_string_type(ds, h5py.h5t.CSET_ASCII, variable=False)
         self.assertEqual(ds.id.get_type().get_size(), 11)
@@ -1224,7 +1224,7 @@ class TestStrings(BaseDataset):
         data = b"Hello\xef"
         ds[0] = data
         out = ds[0]
-        self.assertEqual(type(out), np.string_)
+        self.assertEqual(type(out), np.bytes_)
         self.assertEqual(out, data)
 
     def test_retrieve_vlen_unicode(self):
