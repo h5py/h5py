@@ -873,6 +873,18 @@ class TestExternal(BaseDataset):
             with self.assertRaises(exc_type):
                 self.f.create_dataset('foo', shape, external=external)
 
+    def test_create_expandable(self):
+        """ Create expandable external dataset """
+
+        ext_file = self.mktemp()
+        shape = (128, 64)
+        maxshape = (None, 64)
+        exp_dset = self.f.create_dataset('foo', shape=shape, maxshape=maxshape,
+                                         external=ext_file)
+        assert exp_dset.chunks is None
+        assert exp_dset.shape == shape
+        assert exp_dset.maxshape == maxshape
+
 
 class TestAutoCreate(BaseDataset):
 
