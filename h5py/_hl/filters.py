@@ -245,7 +245,6 @@ def fill_dcpl(plist, shape, dtype, chunks, compression, compression_opts,
     external = _normalize_external(external)
     # End argument validation
 
-    if (chunks is True) or \
     if (chunks is True) or (chunks is None and any((
             shuffle,
             fletcher32,
