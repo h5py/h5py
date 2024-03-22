@@ -246,8 +246,13 @@ def fill_dcpl(plist, shape, dtype, chunks, compression, compression_opts,
     # End argument validation
 
     if (chunks is True) or \
-    (chunks is None and any((shuffle, fletcher32, compression, maxshape and not len(external),
-                             scaleoffset is not None))):
+    if (chunks is True) or (chunks is None and any((
+            shuffle,
+            fletcher32,
+            compression,
+            (maxshape and not len(external)),
+            scaleoffset is not None,
+    ))):
         chunks = guess_chunk(shape, maxshape, dtype.itemsize)
 
     if maxshape is True:
