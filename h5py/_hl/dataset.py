@@ -388,7 +388,7 @@ class ChunkIterator:
 
             if dim > 0:
                 # reset to the start and continue iterating with higher dimension
-                self._chunk_index[dim] = 0
+                self._chunk_index[dim] = s.start // self._layout[dim]
             dim -= 1
         return tuple(slices)
 

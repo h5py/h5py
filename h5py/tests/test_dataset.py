@@ -986,6 +986,16 @@ class TestChunkIterator(BaseDataset):
         expected = ((slice(48, 52, 1), slice(40, 50, 1)),)
         self.assertEqual(list(dset.iter_chunks(np.s_[48:52,40:50])), list(expected))
 
+    def test_2d_partial_slice(self):
+        dset = self.f.create_dataset("foo", (5,5), chunks=(2,2))
+        expected = ((slice(3, 4, 1), slice(3, 4, 1)),
+                   (slice(3, 4, 1), slice(4, 5, 1)),
+                   (slice(4, 5, 1), slice(3, 4, 1)),
+                   (slice(4, 5, 1), slice(4, 5, 1)))
+        sel = slice(3,5)
+        self.assertEqual(list(dset.iter_chunks((sel, sel))), list(expected))
+
+
 
 class TestResize(BaseDataset):
 
