@@ -31,7 +31,7 @@ RUN_REQUIRES = [
     # here, and if you can build an older NumPy on a newer Python, h5py probably
     # works (assuming you build it from source too).
     # NumPy 1.17.3 is the first with wheels for Python 3.8, our minimum Python.
-    "numpy >=1.17.3",
+    "numpy >=1.17.3, <2.0",
 ]
 
 # Packages needed to build h5py (in addition to static list in pyproject.toml)
