@@ -695,7 +695,7 @@ class TestCreateScaleOffset(BaseDataset):
         range = 20 * 10 ** scalefac
         testdata = (np.random.rand(*shape) - 0.5) * range
 
-        dset = self.f.create_dataset('foo', shape, dtype=float, scaleoffset=scalefac)
+        dset = self.f.create_dataset('foo', shape, dtype=np.float64, scaleoffset=scalefac)
 
         # Dataset reports that scaleoffset is in use
         assert dset.scaleoffset is not None
@@ -718,10 +718,10 @@ class TestCreateScaleOffset(BaseDataset):
 
         nbits = 12
         shape = (100, 300)
-        testdata = np.random.randint(0, 2 ** nbits - 1, size=shape)
+        testdata = np.random.randint(0, 2 ** nbits - 1, size=shape, dtype=np.int64)
 
         # Create dataset; note omission of nbits (for library-determined precision)
-        dset = self.f.create_dataset('foo', shape, dtype=int, scaleoffset=True)
+        dset = self.f.create_dataset('foo', shape, dtype=np.int64, scaleoffset=True)
 
         # Dataset reports scaleoffset enabled
         assert dset.scaleoffset is not None
@@ -739,9 +739,9 @@ class TestCreateScaleOffset(BaseDataset):
 
         nbits = 12
         shape = (100, 300)
-        testdata = np.random.randint(0, 2 ** nbits, size=shape)
+        testdata = np.random.randint(0, 2 ** nbits, size=shape, dtype=np.int64)
 
-        dset = self.f.create_dataset('foo', shape, dtype=int, scaleoffset=nbits)
+        dset = self.f.create_dataset('foo', shape, dtype=np.int64, scaleoffset=nbits)
 
         # Dataset reports scaleoffset enabled with correct precision
         self.assertTrue(dset.scaleoffset == 12)
@@ -759,9 +759,9 @@ class TestCreateScaleOffset(BaseDataset):
 
         nbits = 12
         shape = (100, 300)
-        testdata = np.random.randint(0, 2 ** (nbits + 1) - 1, size=shape)
+        testdata = np.random.randint(0, 2 ** (nbits + 1) - 1, size=shape, dtype=np.int64)
 
-        dset = self.f.create_dataset('foo', shape, dtype=int, scaleoffset=nbits)
+        dset = self.f.create_dataset('foo', shape, dtype=np.int64, scaleoffset=nbits)
 
         # Dataset reports scaleoffset enabled with correct precision
         self.assertTrue(dset.scaleoffset == 12)
