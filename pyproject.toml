@@ -1,7 +1,8 @@
 [build-system]
 requires = [
     "Cython >=0.29.31,<4",
-    "oldest-supported-numpy",
+    "oldest-supported-numpy; python_version=='3.8'",
+    "numpy >=2.0.0rc1; python_version>='3.9'",
     "pkgconfig",
     "setuptools >=61",
 ]
