@@ -435,7 +435,10 @@ class TestDrivers(TestCase):
     # TODO: family driver tests
 
 
-
+@pytest.mark.skipif(
+    h5py.version.hdf5_version_tuple[1] % 2 != 0 ,
+    reason='Not HDF5 release version'
+)
 class TestNewLibver(TestCase):
 
     """
