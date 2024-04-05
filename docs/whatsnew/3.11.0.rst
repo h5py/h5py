@@ -1,3 +1,9 @@
+New features
+------------
+
+* h5py is now compatible with Numpy 2.0 (:pr:`2401`).
+* Add methods `visit_links` and `visititems_links` that include links when visiting groups.
+
 Exposing HDF5 functions
 -----------------------
 
@@ -9,3 +15,4 @@ two fields, `attr` which is the storage overhead of any attached attributes, and
 storage overhead required for chunk storage. The last two fields added can be useful for determining
 the storage overhead incurred from various data layout/chunked strategies, and for obtaining information
 such as that provided by `h5stat`.
+
