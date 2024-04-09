@@ -147,6 +147,31 @@ IEEE_F32LE = lockid(H5T_IEEE_F32LE)
 IEEE_F32BE = lockid(H5T_IEEE_F32BE)
 IEEE_F64LE = lockid(H5T_IEEE_F64LE)
 IEEE_F64BE = lockid(H5T_IEEE_F64BE)
+IF HDF5_VERSION < (1, 14, 4):
+    IEEE_F16BE = IEEE_F32BE.copy()
+    IEEE_F16BE.set_fields(15, 10, 5, 0, 10)
+    IEEE_F16BE.set_size(2)
+    IEEE_F16BE.set_ebias(15)
+    IEEE_F16BE.lock()
+
+    IEEE_F16LE = IEEE_F16BE.copy()
+    IEEE_F16LE.set_order(H5T_ORDER_LE)
+    IEEE_F16LE.lock()
+ELSE:
+    IEEE_F16BE = lockid(H5T_IEEE_F16BE)
+    IEEE_F16LE = lockid(H5T_IEEE_F16LE)
+
+# Quad floats
+IEEE_F128BE = IEEE_F64BE.copy()
+IEEE_F128BE.set_size(16)
+IEEE_F128BE.set_precision(128)
+IEEE_F128BE.set_fields(127, 112, 15, 0, 112)
+IEEE_F128BE.set_ebias(16383)
+IEEE_F128BE.lock()
+
+IEEE_F128LE = IEEE_F128BE.copy()
+IEEE_F128LE.set_order(H5T_ORDER_LE)
+IEEE_F128LE.lock()
 
 # Signed 2's complement integer types
 STD_I8LE  = lockid(H5T_STD_I8LE)
@@ -198,6 +223,17 @@ NATIVE_FLOAT = lockid(H5T_NATIVE_FLOAT)
 NATIVE_DOUBLE = lockid(H5T_NATIVE_DOUBLE)
 NATIVE_LDOUBLE = lockid(H5T_NATIVE_LDOUBLE)
 
+LDOUBLE_LE = NATIVE_LDOUBLE.copy()
+LDOUBLE_LE.set_order(H5T_ORDER_LE)
+LDOUBLE_LE.lock()
+
+LDOUBLE_BE = NATIVE_LDOUBLE.copy()
+LDOUBLE_BE.set_order(H5T_ORDER_BE)
+LDOUBLE_BE.lock()
+
+IF HDF5_VERSION > (1, 14, 3):
+    NATIVE_FLOAT16 = lockid(H5T_NATIVE_FLOAT16)
+
 # Unix time types
 UNIX_D32LE = lockid(H5T_UNIX_D32LE)
 UNIX_D64LE = lockid(H5T_UNIX_D64LE)
@@ -216,37 +252,6 @@ VARIABLE = H5T_VARIABLE
 # Character sets
 CSET_ASCII = H5T_CSET_ASCII
 CSET_UTF8 = H5T_CSET_UTF8
-
-# Mini (or short) floats
-IEEE_F16BE = IEEE_F32BE.copy()
-IEEE_F16BE.set_fields(15, 10, 5, 0, 10)
-IEEE_F16BE.set_size(2)
-IEEE_F16BE.set_ebias(15)
-IEEE_F16BE.lock()
-
-IEEE_F16LE = IEEE_F16BE.copy()
-IEEE_F16LE.set_order(H5T_ORDER_LE)
-IEEE_F16LE.lock()
-
-# Quad floats
-IEEE_F128BE = IEEE_F64BE.copy()
-IEEE_F128BE.set_size(16)
-IEEE_F128BE.set_precision(128)
-IEEE_F128BE.set_fields(127, 112, 15, 0, 112)
-IEEE_F128BE.set_ebias(16383)
-IEEE_F128BE.lock()
-
-IEEE_F128LE = IEEE_F128BE.copy()
-IEEE_F128LE.set_order(H5T_ORDER_LE)
-IEEE_F128LE.lock()
-
-LDOUBLE_LE = NATIVE_LDOUBLE.copy()
-LDOUBLE_LE.set_order(H5T_ORDER_LE)
-LDOUBLE_LE.lock()
-
-LDOUBLE_BE = NATIVE_LDOUBLE.copy()
-LDOUBLE_BE.set_order(H5T_ORDER_BE)
-LDOUBLE_BE.lock()
 
 # Custom Python object pointer type
 cdef hid_t H5PY_OBJ = H5Tcreate(H5T_OPAQUE, sizeof(PyObject*))

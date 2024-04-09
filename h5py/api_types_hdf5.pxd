@@ -673,6 +673,8 @@ cdef extern from "hdf5.h":
   cdef hid_t H5T_NATIVE_FLOAT
   cdef hid_t H5T_NATIVE_DOUBLE
   cdef hid_t H5T_NATIVE_LDOUBLE
+  IF HDF5_VERSION > (1, 14, 3):
+    cdef hid_t H5T_NATIVE_FLOAT16
 
   # "Standard" types
   cdef hid_t H5T_STD_I8LE
@@ -703,6 +705,10 @@ cdef extern from "hdf5.h":
   cdef hid_t H5T_STD_B64BE
   cdef hid_t H5T_IEEE_F32BE
   cdef hid_t H5T_IEEE_F64BE
+  IF HDF5_VERSION > (1, 14, 3):
+    cdef hid_t H5T_IEEE_F16BE
+    cdef hid_t H5T_IEEE_F16LE
+
 
   cdef hid_t H5T_NATIVE_INT8
   cdef hid_t H5T_NATIVE_UINT8
