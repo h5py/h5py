@@ -23,6 +23,8 @@ Exposing HDF5 functions
 Bug fixes
 ---------
 
+* h5py's tests pass with HDF5 1.14.4, which is due to be released shortly after
+  h5py 3.11 (:pr:`2406`).
 * :meth:`~.Dataset.iter_chunks()` now behaves correctly with a selection
   (:pr:`2381`).
 * HDF5 allows external datasets (with the data stored in a separate file) to be
