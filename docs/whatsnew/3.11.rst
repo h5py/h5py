@@ -1,0 +1,38 @@
+What's new in h5py 3.11
+=======================
+
+New features
+------------
+
+* h5py is now compatible with Numpy 2.0 (:pr:`2329`, :pr:`2401`).
+* New methods :meth:`.Group.visit_links` and :meth:`.Group.visititems_links`
+  that include links when visiting groups (:pr:`2360`).
+
+Exposing HDF5 functions
+-----------------------
+
+* Exposes remaining information from `H5O_info_t` struct such as access, modification, change, and
+  birth time (:pr:`2358`). Also exposes field providing number of attributes attached to an object. Expands object
+  header metadata struct `H5O_hdr_info_t`, `hdr` field of `H5O_info_t`, to provide number of chunks and
+  flags set for object header. Lastly, adds `meta_size` field from `H5O_info_t` struct that provides
+  two fields, `attr` which is the storage overhead of any attached attributes, and `obj` which is
+  storage overhead required for chunk storage. The last two fields added can be useful for determining
+  the storage overhead incurred from various data layout/chunked strategies, and for obtaining information
+  such as that provided by `h5stat`.
+
+Bug fixes
+---------
+
+* h5py's tests pass with HDF5 1.14.4, which is due to be released shortly after
+  h5py 3.11 (:pr:`2406`).
+* :meth:`~.Dataset.iter_chunks()` now behaves correctly with a selection
+  (:pr:`2381`).
+* HDF5 allows external datasets (with the data stored in a separate file) to be
+  expandable along the first dimension. Such datasets can now be created
+  through h5py by passing a ``maxshape=`` parameter (:pr:`2398`).
+
+Building h5py
+-------------
+
+* h5py can now be built with Cython 3.x (:pr:`2345`).
+* Fixed some errors compiling with GCC 14 (:pr:`2380`, :pr:`2382`).

@@ -277,6 +277,19 @@ Reference
         In this case `object` will be a :class:`Group` or :class:`Dataset`
         instance.
 
+    .. method:: visit_links(callable)
+                visititems_links(callable)
+
+       These methods are like :meth:`visit` and :meth:`visititems`, but work on
+       the links in groups, rather than the objects those links point to. So if
+       you have two links pointing to the same object, these will 'see' both.
+       They also see soft & external links, which :meth:`visit` and
+       :meth:`visititems` ignore.
+
+       The second argument to the callback for ``visititems_links`` is an
+       instance of one of the :ref:`link classes <group_link_classes>`.
+
+       .. versionadded:: 3.11
 
     .. method:: move(source, dest)
 
@@ -516,6 +529,7 @@ Reference
 
         :class:`Group` instance containing this group.
 
+.. _group_link_classes:
 
 Link classes
 ------------
