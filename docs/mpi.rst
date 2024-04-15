@@ -3,11 +3,11 @@
 Parallel HDF5
 =============
 
-Read-only parallel access to HDF5 files works with no special preparation:
-each process should open the file independently and read data normally
-(avoid opening the file and then forking).
+Parallel read access to HDF5 files is possible from separate processes (but not
+threads) with no special features. It's advised to open the file independently
+in each reader process; opening the file once and then forking may cause issues.
 
-`Parallel HDF5 <https://portal.hdfgroup.org/display/HDF5/Parallel+HDF5>`_ is a
+**Parallel HDF5** is a
 feature built on MPI which also supports *writing* an HDF5 file in parallel.
 To use this, both HDF5 and h5py must be compiled with MPI support turned on,
 as described below.
@@ -21,7 +21,7 @@ Passing Interface) standard for interprocess communication.  Consequently,
 when using Parallel HDF5 from Python, your application will also have to use
 the MPI library.
 
-This is accomplished through the `mpi4py <http://mpi4py.scipy.org/>`_ Python package, which provides
+This is accomplished through the `mpi4py <https://mpi4py.github.io/>`_ Python package, which provides
 excellent, complete Python bindings for MPI.  Here's an example
 "Hello World" using ``mpi4py``::
 
@@ -41,7 +41,7 @@ The ``mpi4py`` package includes all kinds of mechanisms to share data between
 processes, synchronize, etc.  It's a different flavor of parallelism than,
 say, threads or ``multiprocessing``, but easy to get used to.
 
-Check out the `mpi4py web site <http://mpi4py.scipy.org/>`_ for more information
+Check out the `mpi4py web site <https://mpi4py.github.io/>`_ for more information
 and a great tutorial.
 
 
