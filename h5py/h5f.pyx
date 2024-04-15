@@ -26,7 +26,7 @@ from .utils cimport emalloc, efree
 # Python level imports
 from collections import namedtuple
 import gc
-from . import _objects
+from . import _objects, h5o
 from ._objects import phil, with_phil
 
 from cpython.bytes cimport PyBytes_FromStringAndSize, PyBytes_AsString
@@ -611,3 +611,17 @@ cdef class FileID(GroupID):
                         int(evictions[1]), int(bypasses[1]))
 
         return PageBufStats(meta, raw)
+
+    # === Special methods =====================================================
+
+    # Redefine these methods to use the root group explicitly, because otherwise
+    # the setting for link order tracking can be missed.
+    @with_phil
+    def __iter__(self):
+        """ Return an iterator over the names of group members. """
+        return iter(h5o.open(self, b'/'))
+
+    @with_phil
+    def __reversed__(self):
+        """ Return an iterator over group member names in reverse order. """
+        return reversed(h5o.open(self, b'/'))
