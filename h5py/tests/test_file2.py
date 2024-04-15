@@ -266,8 +266,12 @@ class TestTrackOrder(TestCase):
         fname = self.mktemp()
         f = h5py.File(fname, 'w', track_order=True)  # creation order
         self.populate(f)
-        self.assertEqual(list(f),
-                         [str(i) for i in range(100)])
+        self.assertEqual(list(f), [str(i) for i in range(100)])
+        f.close()
+
+        # Check order tracking after reopening the file
+        f2 = h5py.File(fname)
+        self.assertEqual(list(f2), [str(i) for i in range(100)])
 
     def test_no_track_order(self):
         fname = self.mktemp()
