@@ -24,9 +24,19 @@ Storing strings
 ---------------
 
 When creating a new dataset or attribute, Python ``str`` or ``bytes`` objects
-will be treated as variable-length strings, marked as UTF-8 and ASCII respectively.
-Numpy bytes arrays (``'S'`` dtypes) make fixed-length strings.
-You can use :func:`.string_dtype` to explicitly specify any HDF5 string datatype.
+should be treated as variable-length strings, marked as UTF-8 and ASCII
+respectively.
+
+The most straight forward example would be storing a Python ``list`` of
+arbitrary strings into a dataset::
+
+    >>> myList = ["varying", "sizes" "of" "strings"]
+    >>> db.create_dataset("myList", data=myList, dtype=h5py.string_dtype()
+    >>> print(list(db["myList"]))
+
+:func:`.string_dtype` has an ``encoding`` and ``length`` argument which may
+help if you are storing non-standard strings. Alternatively, you can also use
+Numpy's bytes arrays (``'S'`` dtypes), which create fixed-length strings.
 
 When writing data to an existing dataset or attribute, data passed as bytes is
 written without checking the encoding. Data passed as Python ``str`` objects
