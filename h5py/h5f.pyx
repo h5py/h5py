@@ -616,10 +616,12 @@ cdef class FileID(GroupID):
 
     # Redefine these methods to use the root group explicitly, because otherwise
     # the setting for link order tracking can be missed.
+    @with_phil
     def __iter__(self):
         """ Return an iterator over the names of group members. """
         return iter(h5o.open(self, b'/'))
 
+    @with_phil
     def __reversed__(self):
         """ Return an iterator over group member names in reverse order. """
         return reversed(h5o.open(self, b'/'))
