@@ -31,6 +31,7 @@ from .vds import VDSmap, vds_support
 _LEGACY_GZIP_COMPRESSION_VALS = frozenset(range(10))
 MPI = h5.get_config().mpi
 
+_NUMPY_COPY_IF_NEEDED = False if numpy.__version__.startswith("1.") else None
 
 def make_new_dset(parent, shape=None, dtype=None, data=None, name=None,
                   chunks=None, compression=None, shuffle=None,
@@ -213,10 +214,16 @@ class AstypeWrapper:
         """
         return len(self._dset)
 
-    def __array__(self, dtype=None):
+    def __array__(self, dtype=None, copy=True):
+        if copy not in (True, _NUMPY_COPY_IF_NEEDED):
+            raise ValueError(
+                f"AstypeWrapper.__array__ received {copy=} "
+                f"but memory allocation cannot be avoided on read"
+            )
+
         data = self[:]
         if dtype is not None:
-            data = data.astype(dtype)
+            return data.astype(dtype, copy=_NUMPY_COPY_IF_NEEDED)
         return data
 
 
@@ -251,10 +258,19 @@ class AsStrWrapper:
         """
         return len(self._dset)
 
-    def __array__(self):
+    def __array__(self, dtype=None, copy=True):
+        if dtype not in (None, object):
+            raise TypeError(
+                "AsStrWrapper.__array__ doesn't support the dtype argument"
+            )
+        if copy not in (True, _NUMPY_COPY_IF_NEEDED):
+            raise ValueError(
+                f"AsStrWrapper.__array__ received {copy=} "
+                f"but memory allocation cannot be avoided on read"
+            )
         return numpy.array([
             b.decode(self.encoding, self.errors) for b in self._dset
-        ], dtype=object).reshape(self._dset.shape)
+        ], dtype=object, copy=_NUMPY_COPY_IF_NEEDED).reshape(self._dset.shape)
 
 
 class FieldsWrapper:
@@ -268,11 +284,17 @@ class FieldsWrapper:
             names = [names]
         self.read_dtype = readtime_dtype(prior_dtype, names)
 
-    def __array__(self, dtype=None):
+    def __array__(self, dtype=None, copy=True):
+        if copy not in (True, _NUMPY_COPY_IF_NEEDED):
+            raise ValueError(
+                f"FieldsWrapper.__array__ received {copy=} "
+                f"but memory allocation cannot be avoided on read"
+            )
         data = self[:]
         if dtype is not None:
-            data = data.astype(dtype)
-        return data
+            return data.astype(dtype, copy=_NUMPY_COPY_IF_NEEDED)
+        else:
+            return data
 
     def __getitem__(self, args):
         data = self._dset.__getitem__(args, new_dtype=self.read_dtype)
@@ -1049,11 +1071,16 @@ class Dataset(HLObject):
                 self.id.write(mspace, fspace, source, dxpl=self._dxpl)
 
     @with_phil
-    def __array__(self, dtype=None):
+    def __array__(self, dtype=None, copy=True):
         """ Create a Numpy array containing the whole dataset.  DON'T THINK
         THIS MEANS DATASETS ARE INTERCHANGEABLE WITH ARRAYS.  For one thing,
         you have to read the whole dataset every time this method is called.
         """
+        if copy not in (True, _NUMPY_COPY_IF_NEEDED):
+            raise ValueError(
+                f"Dataset.__array__ received {copy=} "
+                f"but memory allocation cannot be avoided on read"
+            )
         arr = numpy.zeros(self.shape, dtype=self.dtype if dtype is None else dtype)
 
         # Special case for (0,)*-shape datasets

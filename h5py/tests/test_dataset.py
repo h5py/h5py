@@ -1785,6 +1785,13 @@ class TestVlen(BaseDataset):
 
         assert all(self.f['nc2'][0] == y[::2]), f"{self.f['nc2'][0]} != {y[::2]}"
 
+    def test_asstr_array_dtype(self):
+        dt = h5py.string_dtype(encoding='ascii')
+        fill_value = b'bar'
+        ds = self.f.create_dataset('x', (100,), dtype=dt, fillvalue=fill_value)
+        with pytest.raises(TypeError):
+            np.array(ds.asstr(), dtype=int)
+
 
 class TestLowOpen(BaseDataset):
 
@@ -2013,3 +2020,34 @@ class TestVirtualPrefix(BaseDataset):
         self.assertEqual(virtual_prefix, virtual_prefix_readback)
         self.assertIsInstance(dset, Dataset)
         self.assertEqual(dset.shape, (10, 3))
+
+
+
+COPY_IF_NEEDED = False if np.__version__.startswith("1.") else None
+
+VIEW_GETTERS = {
+    "ds": lambda ds: ds,
+    "astype": lambda ds: ds.astype(dtype=object),
+    "asstr": lambda ds: ds.asstr(),
+}
+
+@pytest.mark.parametrize("copy", [True, COPY_IF_NEEDED])
+@pytest.mark.parametrize("view_getter", VIEW_GETTERS.values(), ids=VIEW_GETTERS.keys())
+def test_array_copy(view_getter, copy, writable_file):
+    dt = h5py.string_dtype(encoding='ascii')
+    fill_value = b'bar'
+    ds = writable_file.create_dataset('x', (10,), dtype=dt, fillvalue=fill_value)
+    np.array(view_getter(ds), copy=copy)
+
+@pytest.mark.skipif(
+    np.__version__.startswith("1."),
+    reason="forbidding copies requires numpy 2",
+)
+@pytest.mark.parametrize("view_getter", VIEW_GETTERS.values(), ids=VIEW_GETTERS.keys())
+def test_array_copy_false(view_getter, writable_file):
+    dt = h5py.string_dtype(encoding='ascii')
+    fill_value = b'bar'
+    ds = writable_file.create_dataset('x', (10,), dtype=dt, fillvalue=fill_value)
+    view = view_getter(ds)
+    with pytest.raises(ValueError):
+        np.array(view, copy=False)
