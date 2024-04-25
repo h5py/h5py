@@ -64,7 +64,7 @@ from ._hl.files import (
     registered_drivers,
 )
 from ._hl.group import Group, SoftLink, ExternalLink, HardLink
-from ._hl.dataset import Dataset
+from ._hl.dataset import Dataset, MultiManager
 from ._hl.datatype import Datatype
 from ._hl.attrs import AttributeManager
 from ._hl.vds import VirtualSource, VirtualLayout
