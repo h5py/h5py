@@ -2591,7 +2591,7 @@ class TestMultiManager(BaseDataset):
 
     def test_multi_write_single_selection(self):
         """
-        Test writing to the same selection 
+        Test writing to the same selection
         on each dataset in a MultiManager
         """
         shape = (10, 10, 10)
@@ -2621,7 +2621,7 @@ class TestMultiManager(BaseDataset):
 
     def test_multi_selection(self):
         """
-        Test using a different selection 
+        Test using a different selection
         for each dataset in a MultiManager
         """
         shape = (10, 10, 10)
