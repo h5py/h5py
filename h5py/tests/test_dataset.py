@@ -2589,6 +2589,100 @@ class TestMultiManager(BaseDataset):
             out = np.array(self.f["large_chunks" + str(i)], dtype=np.int32)
             np.testing.assert_array_equal(out, np.ones(shape, dtype=np.int32))
 
+    def test_multi_write_single_selection(self):
+        """
+        Test writing to the same selection 
+        on each dataset in a MultiManager
+        """
+        shape = (10, 10, 10)
+        count = 3
+        dt = np.int32
+
+        # Create datasets
+        data_in = np.reshape(np.arange(np.prod(shape), dtype=dt), shape)
+        datasets = []
+
+        for i in range(count):
+            dset = self.f.create_dataset("data" + str(i), shape=shape,
+                                            dtype=dt, data=np.zeros(shape, dtype=dt))
+            datasets.append(dset)
+
+        mm = h5py.MultiManager(datasets=datasets)
+        selection = np.s_[0:5, 0:5, 0:5]
+        mm[selection] = [data_in[selection]] * count
+
+        # Verify written region
+        for i in range(count):
+            np.testing.assert_array_equal(self.f["data" + str(i)][selection], data_in[selection])
+
+        # Verify unwritten region
+        for i in range(count):
+            np.testing.assert_array_equal(self.f["data" + str(i)][5:, 5:, 5:], np.zeros((5, 5, 5), dtype=dt))
+
+    def test_multi_selection(self):
+        """
+        Test using a different selection 
+        for each dataset in a MultiManager
+        """
+        shape = (10, 10, 10)
+        count = 3
+        dt = np.int32
+
+        # Create datasets
+        data_in = np.reshape(np.arange(np.prod(shape), dtype=dt), shape)
+        data_in_original = data_in.copy()
+        datasets = []
+
+        for i in range(count):
+            dset = self.f.create_dataset("data" + str(i), shape=shape,
+                                            dtype=dt, data=data_in)
+            datasets.append(dset)
+
+        mm = h5py.MultiManager(datasets=datasets)
+
+        # Selections to read from
+        sel = [np.s_[0:10, 0:10, 0:10], np.s_[0:5, 5:10, 1:4:2], np.s_[4, 5, 6]]
+        data_out = mm[sel]
+
+        for i in range(count):
+            np.testing.assert_array_equal(data_out[i], data_in[sel[i]])
+
+        # If selection list has only a single element, apply it to all dsets
+        sel = [np.s_[0:10, 0:10, 0:10]]
+        data_out = mm[sel]
+
+        for d in data_out:
+            np.testing.assert_array_equal(d, data_in[sel[0]])
+
+        # Selections to write to
+        sel = [np.s_[0:10, 0:10, 0:10], np.s_[0:5, 0:5, 0:5], np.s_[0, 0, 0]]
+        data_in = [np.zeros_like(data_in), np.ones_like(data_in), np.full_like(data_in, 2)]
+        mm[sel] = [data_in[i][sel[i]] for i in range(count)]
+
+        for i in range(count):
+            np.testing.assert_array_equal(self.f["data" + str(i)][sel[i]], data_in[i][sel[i]])
+
+        # Check that unselected regions are unmodified
+        np.testing.assert_array_equal(self.f["data1"][5:, 5:, 5:], data_in_original[5:, 5:, 5:])
+        np.testing.assert_array_equal(self.f["data2"][1:, 1:, 1:], data_in_original[1:, 1:, 1:])
+
+        # Save for later comparison
+        data_in_original = mm[...]
+
+        # If selection list has only a single element, apply it to all dsets
+        sel = [np.s_[0:6, 0:6, 0:6]]
+        data_in = np.full(shape, 3, dtype=dt)
+        mm[sel] = [data_in[sel[0]]] * count
+
+        for i in range(count):
+            np.testing.assert_array_equal(self.f["data" + str(i)][sel[0]], data_in[sel[0]])
+
+        # Check that unselected regions are unmodified
+        data_out = mm[...]
+
+        for i in range(count):
+            np.testing.assert_array_equal(data_out[i][6:, 6:, 6:], data_in_original[i][6:, 6:, 6:])
+
     def test_invalid_inputs(self):
         d = self.f.create_dataset("dset_test_invalid1", shape=(10),
                                   dtype=np.int32)

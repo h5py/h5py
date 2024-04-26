@@ -1193,6 +1193,25 @@ class MultiManager():
         unreadable due to being empty or zero-sized.
         """
         count = len(self.datasets)
+
+        # Get slice arguments from the input
+        if (isinstance(args, tuple)):
+            slices = [args] * len(self.datasets)
+        elif (isinstance(args, list) and len(args) == 1):
+            # Use this single slice for all dsets
+            slices = [args[0]] * len(self.datasets)
+        elif isinstance(args, list):
+            if len(args) != len(self.datasets):
+                raise ValueError("Multi read requires a slice for each dataset")
+            slices = args.copy()
+        else:
+            slices = [args] * len(self.datasets)
+
+        # Wrap any Ellipsis selections as tuples
+        for i in range(len(slices)):
+            if slices[i] == Ellipsis:
+                slices[i] = (Ellipsis,)
+
         args = args if isinstance(args, tuple) else (args,)
 
         dtypes = [d.dtype for d in self.datasets]
@@ -1213,8 +1232,9 @@ class MultiManager():
         if names:
             raise ValueError("Field subsetting not supported with multi read")
 
-        if len(args) == 1 and isinstance(args[0], h5r.RegionReference):
-            raise ValueError("Region references not supported with multi read")
+        for slice in slices:
+            if isinstance(slice, h5r.RegionReference):
+                raise ValueError("Region references not supported with multi read")
 
         fspaces = [None] * count
         mspaces = [None] * count
@@ -1225,7 +1245,7 @@ class MultiManager():
             if self.datasets[i].shape == ():
                 # Initialize output buffer for scalar dataspace
                 fspaces[i] = self.datasets[i].id.get_space()
-                selections[i] = sel2.select_read(fspaces[i], args)
+                selections[i] = sel2.select_read(fspaces[i], slices[i])
                 mspaces[i] = selections[i].mspace
 
                 if selections[i].mshape is None:
@@ -1234,7 +1254,7 @@ class MultiManager():
                     out[i] = numpy.zeros(selections[i].mshape, dtype=dtypes[i])
             else:
                 # Initialize output buffer for non-scalar dataspace
-                selections[i] = sel.select(self.datasets[i].shape, args, self.datasets[i])
+                selections[i] = sel.select(self.datasets[i].shape, slices[i], self.datasets[i])
                 fspaces[i] = selections[i].id
                 mspaces[i] = h5s.create_simple(selections[i].mshape)
                 out[i] = numpy.zeros(selections[i].array_shape, dtype=dtypes[i], order='C')
@@ -1272,6 +1292,27 @@ class MultiManager():
         mtypes = [None] * count
         mshapes = [None] * count
         mspaces = [None] * count
+
+        # Get slice arguments from the input
+        if (len(args) == 0):
+            # Use empty tuple for all selections
+            slices = [args] * len(self.datasets)
+        elif isinstance(args[0], list):
+            if len(args[0]) == 1:
+                # Use this single slice for all dsets
+                slices = [args[0][0]] * len(self.datasets)
+            elif len(args[0]) != len(self.datasets):
+                raise ValueError("Multi read requires a slice for each dataset")
+            else:
+                slices = args[0].copy()
+        else:
+            # Single selection given as non-list; broadcast to all dsets
+            slices = [args] * len(self.datasets)
+
+        # Wrap any Ellipsis selections as tuples
+        for i in range(len(slices)):
+            if slices[i] == Ellipsis:
+                slices[i] = (Ellipsis,)
 
         dtypes = [d.dtype for d in self.datasets]
 
@@ -1378,7 +1419,7 @@ class MultiManager():
                 mtypes[i] = None
 
         # Perform the dataspace selection once, since same selection is used for all dsets
-        selections = [sel.select(dset.shape, args, dataset=dset) for dset in self.datasets]
+        selections = [sel.select(dset.shape, slice, dataset=dset) for slice, dset in zip(slices, self.datasets)]
 
         if any((selection.nselect == 0) for selection in selections):
             raise ValueError("All writes in write multi must be non-zero")
@@ -1420,12 +1461,13 @@ class MultiManager():
 
         # Set up broadcast selection iterators
         fspace_gens = [None] * count
+
         for i in range(count):
             fspace_gens[i] = selections[i].broadcast(mshapes[i])
         try:
             fspace_ids = [next(f).id for f in fspace_gens]
         except StopIteration:
-            raise ValueError("more than 0 regions must be selected on all datasets")
+            raise ValueError("each dset needs at least 1 region selected")
 
         dset_ids = [d.id.id for d in self.datasets]
         if None in mtypes:
