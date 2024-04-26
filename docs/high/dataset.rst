@@ -470,6 +470,20 @@ the values to be written to each dataset.
 It is required that the slicing arguments select the same number of regions
 on each Dataset in the MultiManager.
 
+Multiple selections can be provided to read or write to a different region on each dataset in the MultiManager.
+
+    >>> selections = [np.s_[0:2], np.s_[1:4], np.s_[2:4]]
+    >>> data = mm[selections]
+    >>> data[0]
+    [1, 1]
+    >>> data[1]
+    [2, 3, 4]
+    >>> mm[selections] == [[0, 1], [4, 5, 6], [7, 8]]
+    >>> data = mm[...]
+    >>> data[0]
+    [0, 1, 2, 3]
+    >>> data[1]
+    [2, 4, 5, 6]
 
 Reference
 ---------
