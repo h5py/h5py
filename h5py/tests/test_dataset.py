@@ -2683,6 +2683,38 @@ class TestMultiManager(BaseDataset):
         for i in range(count):
             np.testing.assert_array_equal(data_out[i][6:, 6:, 6:], data_in_original[i][6:, 6:, 6:])
 
+    def test_multi_selection_with_field(self):
+        shape = (10, 10, 10)
+        count = 3
+        dt = np.dtype([('a', np.int32), ('b', np.float64)])
+
+        # Create datasets
+        data_in = np.zeros(shape, dtype=dt)
+        data_in['a'] = np.reshape(np.arange(np.prod(shape), dtype=np.int32), shape)
+        data_in['b'] = np.reshape(np.arange(np.prod(shape), dtype=np.float64), shape)
+        datasets = []
+
+        for i in range(count):
+            dset = self.f.create_dataset("data" + str(i), shape=shape,
+                                            dtype=dt, data=np.zeros(shape, dtype=dt))
+            datasets.append(dset)
+
+        mm = h5py.MultiManager(datasets=datasets)
+        selections = [np.s_[0:10, 0:10, 0:10], np.s_[0:5, 0:5, 0:5], np.s_[0:3, 0:3, 0:3]]
+        mm[selections, 'a'] = [data_in[selections[0]]['a'], data_in[selections[1]]['a'], data_in[selections[2]]['a']]
+
+        # Verify written region
+        for i in range(count):
+            np.testing.assert_array_equal(self.f["data" + str(i)]['a'][selections[i]], data_in['a'][selections[i]])
+
+        # Verify unwritten field
+        for i in range(count):
+            np.testing.assert_array_equal(self.f["data" + str(i)]['b'][...], np.zeros(shape, dtype=np.float64))
+
+        # Verify unwritten region
+        np.testing.assert_array_equal(self.f["data1"]['a'][5:, 5:, 5:], np.zeros((5, 5, 5), dtype=np.int32))
+        np.testing.assert_array_equal(self.f["data2"]['a'][3:, 3:, 3:], np.zeros((7, 7, 7), dtype=np.int32))
+
     def test_invalid_inputs(self):
         d = self.f.create_dataset("dset_test_invalid1", shape=(10),
                                   dtype=np.int32)
