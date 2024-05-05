@@ -18,6 +18,7 @@ from ._objects import phil, with_phil
 
 # === Public constants and data structures ====================================
 
+INVALID_HID = H5I_INVALID_HID
 BADID       = H5I_BADID
 FILE        = H5I_FILE
 GROUP       = H5I_GROUP
