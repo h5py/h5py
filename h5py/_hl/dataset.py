@@ -31,7 +31,6 @@ from .vds import VDSmap, vds_support
 _LEGACY_GZIP_COMPRESSION_VALS = frozenset(range(10))
 MPI = h5.get_config().mpi
 
-_NUMPY_COPY_IF_NEEDED = False if numpy.__version__.startswith("1.") else None
 
 def make_new_dset(parent, shape=None, dtype=None, data=None, name=None,
                   chunks=None, compression=None, shuffle=None,
