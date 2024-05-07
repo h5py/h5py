@@ -215,7 +215,7 @@ class AstypeWrapper:
         return len(self._dset)
 
     def __array__(self, dtype=None, copy=True):
-        if copy not in (True, _NUMPY_COPY_IF_NEEDED):
+        if copy is False:
             raise ValueError(
                 f"AstypeWrapper.__array__ received {copy=} "
                 f"but memory allocation cannot be avoided on read"
@@ -223,7 +223,7 @@ class AstypeWrapper:
 
         data = self[:]
         if dtype is not None:
-            return data.astype(dtype, copy=_NUMPY_COPY_IF_NEEDED)
+            return data.astype(dtype, copy=False)
         return data
 
 
@@ -263,14 +263,14 @@ class AsStrWrapper:
             raise TypeError(
                 "AsStrWrapper.__array__ doesn't support the dtype argument"
             )
-        if copy not in (True, _NUMPY_COPY_IF_NEEDED):
+        if copy is False:
             raise ValueError(
                 f"AsStrWrapper.__array__ received {copy=} "
                 f"but memory allocation cannot be avoided on read"
             )
         return numpy.array([
             b.decode(self.encoding, self.errors) for b in self._dset
-        ], dtype=object, copy=_NUMPY_COPY_IF_NEEDED).reshape(self._dset.shape)
+        ], dtype=object).reshape(self._dset.shape)
 
 
 class FieldsWrapper:
@@ -285,14 +285,14 @@ class FieldsWrapper:
         self.read_dtype = readtime_dtype(prior_dtype, names)
 
     def __array__(self, dtype=None, copy=True):
-        if copy not in (True, _NUMPY_COPY_IF_NEEDED):
+        if copy is False:
             raise ValueError(
                 f"FieldsWrapper.__array__ received {copy=} "
                 f"but memory allocation cannot be avoided on read"
             )
         data = self[:]
         if dtype is not None:
-            return data.astype(dtype, copy=_NUMPY_COPY_IF_NEEDED)
+            return data.astype(dtype, copy=False)
         else:
             return data
 
@@ -1076,7 +1076,7 @@ class Dataset(HLObject):
         THIS MEANS DATASETS ARE INTERCHANGEABLE WITH ARRAYS.  For one thing,
         you have to read the whole dataset every time this method is called.
         """
-        if copy not in (True, _NUMPY_COPY_IF_NEEDED):
+        if copy is False:
             raise ValueError(
                 f"Dataset.__array__ received {copy=} "
                 f"but memory allocation cannot be avoided on read"
