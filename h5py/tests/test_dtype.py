@@ -131,7 +131,7 @@ class TestEmptyVlen(TestCase):
     def test_write_empty_vlen(self):
         fname = self.mktemp()
         with h5py.File(fname, 'w') as f:
-            d = np.core.records.fromarrays([[], []], names='a,b', formats='|V16,O')
+            d = np.rec.fromarrays([[], []], names='a,b', formats='|V16,O')
             dset = f.create_dataset('test', data=d, dtype=[('a', '|V16'), ('b', h5py.special_dtype(vlen=np.float64))])
             self.assertEqual(dset.size, 0)
 
