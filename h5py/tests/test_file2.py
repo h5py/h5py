@@ -238,10 +238,12 @@ class TestFileObj(TestCase):
         # HDF5 expects read & write access to a file it's writing;
         # check that we get the correct exception on a write-only file object.
         fileobj = open(os.path.join(self.tempdir, 'a.h5'), 'wb')
+        f = h5py.File(fileobj, 'w')
+        group = f.create_group("group")
         with self.assertRaises(io.UnsupportedOperation):
-            f = h5py.File(fileobj, 'w')
-            group = f.create_group("group")
             group.create_dataset("data", data='foo', dtype=h5py.string_dtype())
+        f.close()
+        fileobj.close()
 
 
     def test_method_vanish(self):
