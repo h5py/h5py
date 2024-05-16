@@ -457,6 +457,7 @@ class TestDrivers(TestCase):
         # Driver must be 'fileobj' for file-like object if specified
         with self.assertRaises(ValueError):
             File(tf, 'w', driver='core')
+        tf.close()
 
     # TODO: family driver tests
 
