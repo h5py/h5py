@@ -172,6 +172,11 @@ class TestFileObj(TestCase):
         finally:
             os.remove(fname)
 
+    @pytest.mark.filterwarnings(
+        # on Windows, a resource warning may be emitted
+        # when this test returns
+        "ignore:unclosed file:ResourceWarning"
+    )
     def test_TemporaryFile(self):
         # in this test, we check explicitly that temp file gets
         # automatically deleted upon h5py.File.close()...
