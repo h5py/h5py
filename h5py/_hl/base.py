@@ -128,11 +128,7 @@ def array_for_new_object(data, specified_dtype=None):
 
 def default_lapl():
     """ Default link access property list """
-    lapl = h5p.create(h5p.LINK_ACCESS)
-    fapl = h5p.create(h5p.FILE_ACCESS)
-    fapl.set_fclose_degree(h5f.CLOSE_STRONG)
-    lapl.set_elink_fapl(fapl)
-    return lapl
+    return None
 
 
 def default_lcpl():
