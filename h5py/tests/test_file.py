@@ -1000,6 +1000,43 @@ f = h5py.File({str(filename)!r}, mode={mode!r}, locking={locking})
             assert open_in_subprocess(fname, mode="w", locking=True)
 
 
+@pytest.mark.skipif(
+    h5py.version.hdf5_version_tuple < (1, 14, 4),
+    reason="Requires HDF5 >= 1.14.4",
+)
+@pytest.mark.skipif(
+    "HDF5_USE_FILE_LOCKING" in os.environ,
+    reason="HDF5_USE_FILE_LOCKING env. var. is set",
+)
+@pytest.mark.parametrize(
+    'locking_arg,file_locking_props',
+    [
+        (False, (0, 0)),
+        (True, (1, 0)),
+        ('best-effort', (1, 1)),
+    ]
+)
+def test_file_locking_external_link(tmp_path, locking_arg, file_locking_props):
+    """Test that same file locking is used for external link"""
+    fname_main = tmp_path / "test_main.h5"
+    fname_elink = tmp_path / "test_linked.h5"
+
+    # Create test files
+    with h5py.File(fname_elink, "w") as f:
+        f["data"] = 1
+    with h5py.File(fname_main, "w") as f:
+        f["link"] = h5py.ExternalLink(fname_elink, "/data")
+
+    with h5py.File(fname_main, "r", locking=locking_arg) as f:
+        locking_info = f.id.get_access_plist().get_file_locking()
+        assert locking_info == file_locking_props
+
+        # Test that external link file is also opened without file locking
+        elink_dataset = f["link"]
+        elink_locking_info = elink_dataset.file.id.get_access_plist().get_file_locking()
+        assert elink_locking_info == file_locking_props
+
+
 def test_close_gc(writable_file):
     # https://github.com/h5py/h5py/issues/1852
     for i in range(100):
