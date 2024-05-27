@@ -47,7 +47,7 @@ jobs:
         env:
           CIBW_BEFORE_BUILD: "pip install --pre --extra-index-url https://pypi.anaconda.org/scientific-python-nightly-wheels/simple numpy && pip install \"Cython>=0.29.31,<4\" pkgconfig \"setuptools>=61\""
           CIBW_BUILD_FRONTEND: "pip; args: --no-build-isolation"
-          CIBW_BUILD: "cp3{9,10,11,12}-manylinux_x86_64"
+          CIBW_BUILD: "cp3{9,10,11,12}-manylinux_{x86_64,aarch64}"
           CIBW_MANYLINUX_X86_64_IMAGE: ghcr.io/h5py/manylinux2014_x86_64-hdf5
           CIBW_MANYLINUX_AARCH64_IMAGE: ghcr.io/h5py/manylinux2014_aarch64-hdf5
           CIBW_ENVIRONMENT: "CFLAGS=-g1"
