@@ -4,7 +4,7 @@ Thanks for contributing to h5py!
 Before opening a pull request, please:
 
 - Run simple static checks with `tox -e pre-commit`
-- Run the tests with e.g. `tox -e py37-test-deps`
+- Run the tests with e.g. `tox -e py312-test-deps`
 - If your change is visible to someone using or building h5py, add a release
   note in the news/ folder.
 

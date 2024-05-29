@@ -142,7 +142,7 @@ The easiest way to run the tests is with
 
     pip install tox  # Get tox
 
-    tox -e py37-test-deps  # Run tests in one environment
+    tox -e py312-test-deps  # Run tests in one environment
     tox                    # Run tests in all possible environments
     tox -a                 # List defined environments
 
@@ -393,7 +393,7 @@ To run these tests, you'll need to:
 
 Then running::
 
-   $ CC='mpicc' HDF5_MPI=ON tox -e py37-test-deps-mpi4py
+   $ CC='mpicc' HDF5_MPI=ON tox -e py312-test-deps-mpi4py
 
 should run the tests. You may need to pass ``HDF5_DIR`` depending on the
 location of the HDF5 with MPI support. You can choose which python version to
