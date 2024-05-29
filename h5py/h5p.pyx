@@ -986,10 +986,10 @@ cdef class PropFAID(PropInstanceID):
         Set the file-close degree, which determines library behavior when
         a file is closed when objects are still open.  Legal values:
 
+        * h5f.CLOSE_DEFAULT
         * h5f.CLOSE_WEAK
         * h5f.CLOSE_SEMI
         * h5f.CLOSE_STRONG
-        * h5f.CLOSE_DEFAULT
         """
         H5Pset_fclose_degree(self.id, <H5F_close_degree_t>close_degree)
 
@@ -1001,10 +1001,10 @@ cdef class PropFAID(PropInstanceID):
         Get the file-close degree, which determines library behavior when
         a file is closed when objects are still open.  Legal values:
 
+        * h5f.CLOSE_DEFAULT
         * h5f.CLOSE_WEAK
         * h5f.CLOSE_SEMI
         * h5f.CLOSE_STRONG
-        * h5f.CLOSE_DEFAULT
         """
         cdef H5F_close_degree_t deg
         H5Pget_fclose_degree(self.id, &deg)

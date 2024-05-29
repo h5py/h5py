@@ -54,10 +54,10 @@ File access flags
 File close strength
 ~~~~~~~~~~~~~~~~~~~
 
+.. data:: CLOSE_DEFAULT
 .. data:: CLOSE_WEAK
 .. data:: CLOSE_SEMI
 .. data:: CLOSE_STRONG
-.. data:: CLOSE_DEFAULT
 
 .. _ref.h5f.SCOPE:
 
