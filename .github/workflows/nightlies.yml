@@ -14,6 +14,9 @@ on:
   workflow_dispatch:
   # Run on all PRs
   pull_request:
+  push:
+    branches:
+      - master
 
 
 permissions:
@@ -42,12 +45,25 @@ jobs:
         if: runner.os == 'Linux'
       - name: Install cibuildwheel
         run: python -m pip install cibuildwheel==2.16.5
+      - name: Triage CIBW_BUILD
+        run: |
+          set -eo pipefail
+          MSG="$(git show -s --format=%s)"
+          if [[ "${{ github.event_name }}" == "scheduled" ]] || [[ "${{ github.event_name }}" == "push" ]]; then
+            echo "Building full nightly wheels due to event: ${{ github.event_name }}"
+            echo "CIBW_BUILD=cp3{9,10,11,12}-manylinux_{x86_64,aarch64}" >> $GITHUB_ENV
+          elif [[ "$MSG" == *'[actions nightlies]'* ]]; then
+            echo "Building full nightly wheels due to commit message: $MSG"
+            echo "CIBW_BUILD=cp3{9,10,11,12}-manylinux_{x86_64,aarch64}" >> $GITHUB_ENV
+          else
+            echo "Building limited wheels for PR or manual trigger"
+            echo "CIBW_BUILD=cp3{9,12}-manylinux_x86_64" >> $GITHUB_ENV
+          fi
       - name: Build wheels
         run: python -m cibuildwheel --output-dir wheelhouse
         env:
           CIBW_BEFORE_BUILD: "pip install --pre --extra-index-url https://pypi.anaconda.org/scientific-python-nightly-wheels/simple numpy && pip install \"Cython>=0.29.31,<4\" pkgconfig \"setuptools>=61\""
           CIBW_BUILD_FRONTEND: "pip; args: --no-build-isolation"
-          CIBW_BUILD: "cp3{9,10,11,12}-manylinux_{x86_64,aarch64}"
           CIBW_MANYLINUX_X86_64_IMAGE: ghcr.io/h5py/manylinux2014_x86_64-hdf5
           CIBW_MANYLINUX_AARCH64_IMAGE: ghcr.io/h5py/manylinux2014_aarch64-hdf5
           CIBW_ENVIRONMENT: "CFLAGS=-g1"
