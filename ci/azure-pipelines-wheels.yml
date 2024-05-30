@@ -52,16 +52,6 @@ steps:
         ci/get_hdf5_if_needed.sh
       displayName: 'Ensure HDF5'
 
-- ${{ if eq(parameters.platform, 'linux') }}:
-  - ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
-    - bash: |
-        git_log=`git log --format=oneline -n 1 --skip=1`
-        echo "##vso[task.setvariable variable=log]$git_log"
-    - ${{ if not(contains(variables.log, '[aarch64]')) }}:
-      - script: |
-          echo ##vso[task.setvariable variable=CIBW_BUILD]cp3{8,9,10,11,12}-manylinux_x86_64
-        displayName: 'Set to limited set of builds for PR'
-
 - bash: |
     set -o errexit
     cibuildwheel --print-build-identifiers
