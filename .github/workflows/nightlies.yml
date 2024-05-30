@@ -51,7 +51,7 @@ jobs:
         run: |
           set -eo pipefail
           MSG="$(git show -s --format=%s ${{ github.event.pull_request.head.sha || github.sha }})"
-          if [[ "${{ github.event_name }}" == "pull_request" ]] && [[ "$MSG" != *'[actions nightlies]'* ]]; then
+          if [[ "${{ github.event_name }}" == "pull_request" ]] && [[ "$MSG" != *'[aarch64]'* ]]; then
             echo "Building limited wheels for PR with commit message: $MSG"
             echo "CIBW_BUILD=cp3{9,12}-manylinux_x86_64" >> $GITHUB_ENV
           else
