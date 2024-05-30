@@ -48,16 +48,13 @@ jobs:
       - name: Triage CIBW_BUILD
         run: |
           set -eo pipefail
-          MSG="$(git show -s --format=%s)"
-          if [[ "${{ github.event_name }}" == "scheduled" ]] || [[ "${{ github.event_name }}" == "push" ]]; then
-            echo "Building full nightly wheels due to event: ${{ github.event_name }}"
-            echo "CIBW_BUILD=cp3{9,10,11,12}-manylinux_{x86_64,aarch64}" >> $GITHUB_ENV
-          elif [[ "$MSG" == *'[actions nightlies]'* ]]; then
-            echo "Building full nightly wheels due to commit message: $MSG"
-            echo "CIBW_BUILD=cp3{9,10,11,12}-manylinux_{x86_64,aarch64}" >> $GITHUB_ENV
-          else
-            echo "Building limited wheels for PR or manual trigger"
+          MSG="${{ github.event.head_commit.message }}"
+          if [[ "${{ github.event_name }}" == "pull_request" ]] && [[ "$MSG" != *'[actions nightlies]'* ]]; then
+            echo "Building limited wheels for PR with commit message: $MSG"
             echo "CIBW_BUILD=cp3{9,12}-manylinux_x86_64" >> $GITHUB_ENV
+          else
+            echo "Building full nightly wheels on event_name=${{ github.event_name }} with commit message: $MSG"
+            echo "CIBW_BUILD=cp3{9,10,11,12}-manylinux_{x86_64,aarch64}" >> $GITHUB_ENV
           fi
       - name: Build wheels
         run: python -m cibuildwheel --output-dir wheelhouse
