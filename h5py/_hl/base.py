@@ -25,13 +25,13 @@ import numpy as np
 # lock acquisition.
 from .._objects import phil, with_phil
 from .. import h5d, h5i, h5r, h5p, h5f, h5t, h5s
-from .compat import fspath, filename_encode
+from .compat import filename_encode
 
 
 def is_hdf5(fname):
     """ Determine if a file is valid HDF5 (False if it doesn't exist). """
     with phil:
-        fname = os.path.abspath(fspath(fname))
+        fname = os.path.abspath(os.fspath(fname))
 
         if os.path.isfile(fname):
             return h5f.is_hdf5(filename_encode(fname))
@@ -333,7 +333,7 @@ class HLObject(CommonStateObject):
         with phil:
             return attrs.AttributeManager(self)
 
-    @with_phil
+    @with_phil  # type: ignore [misc]
     def __init__(self, oid):
         """ Setup this object, given its low-level identifier """
         self._id = oid
