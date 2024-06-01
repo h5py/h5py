@@ -1,5 +1,6 @@
 import os
-from typing import Literal, TypeAlias
+from typing import Literal
+from typing_extensions import TypeAlias
 
 WINDOWS_ENCODING: Literal["utf-8", "mbcs"]
 
