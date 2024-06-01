@@ -385,6 +385,8 @@ cdef extern from "hdf5.h":
 
 # === H5I - Identifier and reflection interface ===============================
 
+  int H5I_INVALID_HID
+
   IF HDF5_VERSION < VOL_MIN_HDF5_VERSION:
     ctypedef enum H5I_type_t:
       H5I_UNINIT       = -2,  # uninitialized Group
