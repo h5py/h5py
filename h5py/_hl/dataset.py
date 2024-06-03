@@ -760,6 +760,40 @@ class Dataset(HLObject):
             and isinstance(self.id.get_type(), (h5t.TypeIntegerID, h5t.TypeFloatID))
         )
 
+    def process_getitem_params(self, args, new_dtype=None):
+        """Parse and construct arguments for a low-level Dataset read
+
+        This function returns a tuple of the form (mspace_id, fspace_id, 
+        arr, mtype_id, selection), where
+        - mspace_id: A SpaceID describing the memory selection
+        - fspace_id: A SpaceID describing the file dataspace
+        - arr: A numpy array that will should be populated with read data
+        - mtype_id: A TypeID describing the memory datatype
+        - selection: A Selector object that describes the selection
+        """
+        out_dtype = self.dtype if new_dtype is None else new_dtype
+
+        if self.shape == ():
+            # Initialize output buffer for scalar dataspace
+            fspace = self.id.get_space()
+            selection = sel2.select_read(fspace, args)
+            mspace = selection.mspace
+
+            if selection.mshape is None:
+                arr = numpy.zeros((), dtype=out_dtype)
+            else:
+                arr = numpy.zeros(selection.mshape, dtype=out_dtype)
+
+        else:
+            # Initialize output buffer for non-scalar dataspace
+            selection = sel.select(self.shape, args, dataset=self)
+            fspace = selection.id
+            mspace = h5s.create_simple(selection.mshape)
+            arr = numpy.zeros(selection.array_shape, out_dtype, order='C')
+
+        mtype = h5t.py_create(out_dtype)
+        return (mspace, fspace, arr, mtype, selection)
+
     @with_phil
     def __getitem__(self, args, new_dtype=None):
         """ Read a slice from the HDF5 dataset.
@@ -831,39 +865,23 @@ class Dataset(HLObject):
             if args == () or (len(args) == 1 and args[0] is Ellipsis):
                 return numpy.zeros(self.shape, dtype=new_dtype)
 
-        # === Scalar dataspaces =================
-
-        if self.shape == ():
-            fspace = self.id.get_space()
-            selection = sel2.select_read(fspace, args)
-            if selection.mshape is None:
-                arr = numpy.zeros((), dtype=new_dtype)
-            else:
-                arr = numpy.zeros(selection.mshape, dtype=new_dtype)
-            for mspace, fspace in selection:
-                self.id.read(mspace, fspace, arr, mtype)
-            if selection.mshape is None:
-                return arr[()]
-            return arr
-
         # === Everything else ===================
 
-        # Perform the dataspace selection.
-        selection = sel.select(self.shape, args, dataset=self)
+        # Perform the dataspace selection
+        mspace, fspace, arr, mtype, selection =\
+            self.process_getitem_params(args, new_dtype)
 
-        if selection.nselect == 0:
-            return numpy.zeros(selection.array_shape, dtype=new_dtype)
-
-        arr = numpy.zeros(selection.array_shape, new_dtype, order='C')
+        if self.shape != ():
+            if selection.nselect == 0:
+                return numpy.zeros(selection.array_shape, dtype=new_dtype)
 
         # Perform the actual read
-        mspace = h5s.create_simple(selection.mshape)
-        fspace = selection.id
         self.id.read(mspace, fspace, arr, mtype, dxpl=self._dxpl)
 
-        # Patch up the output for NumPy
-        if arr.shape == ():
-            return arr[()]   # 0 dim array -> numpy scalar
+        if (self.shape == () and selection.mshape is None)\
+           or (self.shape != () and arr.shape == ()):
+            return arr[()]
+
         return arr
 
     @with_phil
@@ -1216,7 +1234,7 @@ class MultiManager():
 
         dtypes = [d.dtype for d in self.datasets]
 
-        out = [numpy.empty(1)] * count
+        out = [None] * count
 
         for i in range(count):
             if self.datasets[i]._is_empty:
@@ -1242,22 +1260,8 @@ class MultiManager():
         mtypes = [h5t.py_create(new_dtype) for new_dtype in dtypes]
 
         for i in range(count):
-            if self.datasets[i].shape == ():
-                # Initialize output buffer for scalar dataspace
-                fspaces[i] = self.datasets[i].id.get_space()
-                selections[i] = sel2.select_read(fspaces[i], slices[i])
-                mspaces[i] = selections[i].mspace
-
-                if selections[i].mshape is None:
-                    out[i] = numpy.zeros((), dtype=dtypes[i])
-                else:
-                    out[i] = numpy.zeros(selections[i].mshape, dtype=dtypes[i])
-            else:
-                # Initialize output buffer for non-scalar dataspace
-                selections[i] = sel.select(self.datasets[i].shape, slices[i], self.datasets[i])
-                fspaces[i] = selections[i].id
-                mspaces[i] = h5s.create_simple(selections[i].mshape)
-                out[i] = numpy.zeros(selections[i].array_shape, dtype=dtypes[i], order='C')
+            mspaces[i], fspaces[i], out[i], mtypes[i], selections[i] =\
+                self.datasets[i].process_getitem_params(slices[i])
 
         # Perform the actual read_multi
         fspace_ids = [f.id for f in fspaces]
