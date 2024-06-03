@@ -763,7 +763,7 @@ class Dataset(HLObject):
     def process_getitem_params(self, args, new_dtype=None):
         """Parse and construct arguments for a low-level Dataset read
 
-        This function returns a tuple of the form (mspace_id, fspace_id, 
+        This function returns a tuple of the form (mspace_id, fspace_id,
         arr, mtype_id, selection), where
         - mspace_id: A SpaceID describing the memory selection
         - fspace_id: A SpaceID describing the file dataspace
