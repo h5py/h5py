@@ -96,13 +96,71 @@ To retrieve the contents of a `scalar` dataset, you can use the same
 syntax as in NumPy:  ``result = dset[()]``.  In other words, index into
 the dataset using an empty tuple.
 
-For simple slicing, broadcasting is supported:
+For simple slicing, broadcasting is supported::
 
     >>> dset[0,:,:] = np.arange(10)  # Broadcasts to (10,10)
 
 Broadcasting is implemented using repeated hyperslab selections, and is
 safe to use with very large target selections.  It is supported for the above
 "simple" (integer, slice and ellipsis) slicing only.
+
+Compound datasets
+~~~~~~~~~~~~~~~~~
+
+In some cases it may desirable to stored mixed types of data in a single dataset.  Compound
+datasets can be used for this purpose, provided that all of the data in a single column
+is homogenous.  This practice can be valuable when used in conjunction with attributes
+and mapping to generate linked datsets simulating a database structure.
+
+As with simple datasets, new compound datasets are created using either Group.create_dataset()
+or Group.require_dataset().  However, in compound datasets, dtype and shape assignment are not
+optional, and as stated above it is necessary to separate field names from the slices.
+
+Initializing the compound dataset follows the form::
+
+    >>> ds = fn.require_dataset(ds_path, data=HDFData, dtype=DataType, shape=rShape)
+
+where dtype is a list of tuples containing the field name, type, and array size (for lists) for
+each column in the dataset.  As an example, in order to create a compound dataset containing a
+string, integer, list of booleans, and floating point data::
+
+1)	Create the data from the your data source.  Data is entered row-by-row as a list of tuples::
+
+    >>> HDFData = [
+    >>>		(‘loc1’, 1, [True, False], 1.005),
+    >>>		(‘loc2’, 2, [True, True], 2.3),
+    >>>		(‘loc3’, 3, [False, False], 3.123),
+    >>>		(‘loc4’, 4, [False, True], 4.015),
+    >>>		(‘loc5’, 5, [True, False], 5.01),
+    >>>	   ]
+
+2)	Declare the datatype for each column by reference to the field name.  Datatype is entered
+row-by-row as a list of tuples, with array dimensions (beginning with length) given as the
+third entry in the tuple::
+
+    >>> DataType = [
+    >>>		(‘Location’, ‘S10’),
+    >>>		(‘LocInt’, ‘int’),
+    >>>		(‘LocList’, ‘bool’, 2),
+    >>>		(‘LocFloat’, ‘float’),
+    >>>	   ]
+
+3)	Define the shape as an integer, which is equal to the number of rows in the dataset::
+
+    >>> rShape = len(HDFData)
+
+String datatypes in compound datasets do not allow all types of variable-length declaration, and
+HDF does not recognise Nompy <U-type string datatypes.  A declared fixed-length datatype
+(as shown above) can be provided, or a variable-length datatype can be declared using
+string_dtype, as shown below:
+
+    >>> sdt = h5py.string_dtype(encoding='utf-8')
+    >>> DataType = [
+    >>>		(‘Location’, sdt),
+    >>>		... ,
+
+Note that fixed-length datatypes can truncate strings without notification.  Also note that this
+declaration can be used to override a given datatype (int to float, etc.).
 
 .. warning::
    Currently h5py does not support nested compound types, see :issue:`1197` for
