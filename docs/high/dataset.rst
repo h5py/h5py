@@ -96,7 +96,7 @@ To retrieve the contents of a `scalar` dataset, you can use the same
 syntax as in NumPy:  ``result = dset[()]``.  In other words, index into
 the dataset using an empty tuple.
 
-For simple slicing, broadcasting is supported::
+For simple slicing, broadcasting is supported:
 
     >>> dset[0,:,:] = np.arange(10)  # Broadcasts to (10,10)
 
@@ -116,15 +116,15 @@ As with simple datasets, new compound datasets are created using either Group.cr
 or Group.require_dataset().  However, in compound datasets, dtype and shape assignment are not
 optional, and as stated above it is necessary to separate field names from the slices.
 
-Initializing the compound dataset follows the form::
+Initializing the compound dataset follows the form:
 
     >>> ds = fn.require_dataset(ds_path, data=HDFData, dtype=DataType, shape=rShape)
 
 where dtype is a list of tuples containing the field name, type, and array size (for lists) for
 each column in the dataset.  As an example, in order to create a compound dataset containing a
-string, integer, list of booleans, and floating point data::
+string, integer, list of booleans, and floating point data:
 
-1)	Create the data from the your data source.  Data is entered row-by-row as a list of tuples::
+1)	Create the data from the your data source.  Data is entered row-by-row as a list of tuples:
 
     >>> HDFData = [
     >>>		(‘loc1’, 1, [True, False], 1.005),
@@ -157,7 +157,6 @@ string_dtype, as shown below:
     >>> sdt = h5py.string_dtype(encoding='utf-8')
     >>> DataType = [
     >>>		(‘Location’, sdt),
-    >>>		... ,
 
 Note that fixed-length datatypes can truncate strings without notification.  Also note that this
 declaration can be used to override a given datatype (int to float, etc.).
@@ -173,26 +172,26 @@ Indexing a dataset once loads a numpy array into memory.
 If you try to index it twice to write data, you may be surprised that nothing
 seems to have happened:
 
-   >>> f = h5py.File('my_hdf5_file.h5', 'w')
-   >>> dset = f.create_dataset("test", (2, 2))
-   >>> dset[0][1] = 3.0  # No effect!
-   >>> print(dset[0][1])
-   0.0
+    >>> f = h5py.File('my_hdf5_file.h5', 'w')
+    >>> dset = f.create_dataset("test", (2, 2))
+    >>> dset[0][1] = 3.0  # No effect!
+    >>> print(dset[0][1])
+    0.0
 
 The assignment above only modifies the loaded array. It's equivalent to this:
 
-   >>> new_array = dset[0]
-   >>> new_array[1] = 3.0
-   >>> print(new_array[1])
-   3.0
-   >>> print(dset[0][1])
-   0.0
+    >>> new_array = dset[0]
+    >>> new_array[1] = 3.0
+    >>> print(new_array[1])
+    3.0
+    >>> print(dset[0][1])
+    0.0
 
 To write to the dataset, combine the indexes in a single step:
 
-   >>> dset[0, 1] = 3.0
-   >>> print(dset[0, 1])
-   3.0
+    >>> dset[0, 1] = 3.0
+    >>> print(dset[0, 1])
+    3.0
 
 .. _dataset_iter:
 
