@@ -7,7 +7,7 @@
 
 HDF5 for Python
 ===============
-`h5py` is a thin, pythonic wrapper around `HDF5 <https://portal.hdfgroup.org/display/HDF5/>`_,
+`h5py` is a thin, pythonic wrapper around `HDF5 <https://portal.hdfgroup.org/hdf5/develop/index.html>`_,
 which runs on Python 3 (3.8+).
 
 Websites
@@ -15,7 +15,7 @@ Websites
 
 * Main website: https://www.h5py.org
 * Source code: https://github.com/h5py/h5py
-* Discussion forum: https://forum.hdfgroup.org/c/hdf-tools/h5py
+* Discussion forum: https://forum.hdfgroup.org/c/hdf5/h5py
 
 Installation
 ------------
