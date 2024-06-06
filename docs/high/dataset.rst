@@ -514,7 +514,7 @@ Reference
 
         Check that the dataset is accessible.
         A dataset could be inaccessible for several reasons. For instance, the
-        dataset, or the file it belongs to, may have been closed elsewhere.::
+        dataset, or the file it belongs to, may have been closed elsewhere.:
 
         >>> f = h5py.open(filename)
         >>> dset = f["MyDS"]
