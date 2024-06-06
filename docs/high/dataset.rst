@@ -126,26 +126,26 @@ string, integer, list of booleans, and floating point data:
 
 1.	Create the data from the your data source.  Data is entered row-by-row as a list of tuples::
 
-    >>> HDFData = [
-    >>>		(‘loc1’, 1, [True, False], 1.005),
-    >>>		(‘loc2’, 2, [True, True], 2.3),
-    >>>		(‘loc3’, 3, [False, False], 3.123),
-    >>>		(‘loc4’, 4, [False, True], 4.015),
-    >>>		(‘loc5’, 5, [True, False], 5.01),
-    >>>	   ]
+        >>> HDFData = [
+        >>>		(‘loc1’, 1, [True, False], 1.005),
+        >>>		(‘loc2’, 2, [True, True], 2.3),
+        >>>		(‘loc3’, 3, [False, False], 3.123),
+        >>>		(‘loc4’, 4, [False, True], 4.015),
+        >>>		(‘loc5’, 5, [True, False], 5.01),
+        >>>     ]
 
 2.	Declare the datatype for each column by reference to the field name.  Datatype is entered row-by-row as a list of tuples, with array dimensions (beginning with length) given as the third entry in the tuple::
 
-    >>> DataType = [
-    >>>		(‘Location’, ‘S10’),
-    >>>		(‘LocInt’, ‘int’),
-    >>>		(‘LocList’, ‘bool’, 2),
-    >>>		(‘LocFloat’, ‘float’),
-    >>>	   ]
+        >>> DataType = [
+        >>>		(‘Location’, ‘S10’),
+        >>>		(‘LocInt’, ‘int’),
+        >>>		(‘LocList’, ‘bool’, 2),
+        >>>		(‘LocFloat’, ‘float’),
+        >>>     ]
 
 3.	Define the shape as an integer, which is equal to the number of rows in the dataset::
 
-    >>> rShape = len(HDFData)
+        >>> rShape = len(HDFData)
 
 String datatypes in compound datasets do not allow all types of variable-length declaration, and
 HDF does not recognise Nompy <U-type string datatypes.  A declared fixed-length datatype
