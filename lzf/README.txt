@@ -76,7 +76,7 @@ filter by default.
 
 * Main web site and documentation:  http://h5py.org
 
-* Discussion forum: https://forum.hdfgroup.org/c/hdf-tools/h5py
+* Discussion forum: https://forum.hdfgroup.org/c/hdf5/h5py
 
 
 History of changes
