@@ -69,7 +69,7 @@ following slicing arguments are recognized:
     * At most one ``Ellipsis`` (``...``) object
     * An empty tuple (``()``) to retrieve all data or `scalar` data
 
-Here are a few examples (output omitted).
+Here are a few examples (output omitted).::
 
     >>> dset = f.create_dataset("MyDataset", (10,10,10), 'f')
     >>> dset[0,0,0]
@@ -96,7 +96,7 @@ To retrieve the contents of a `scalar` dataset, you can use the same
 syntax as in NumPy:  ``result = dset[()]``.  In other words, index into
 the dataset using an empty tuple.
 
-For simple slicing, broadcasting is supported:
+For simple slicing, broadcasting is supported::
 
     >>> dset[0,:,:] = np.arange(10)  # Broadcasts to (10,10)
 
@@ -116,7 +116,7 @@ As with simple datasets, new compound datasets are created using either Group.cr
 or Group.require_dataset().  However, in compound datasets, dtype and shape assignment are not
 optional, and as stated above it is necessary to separate field names from the slices.
 
-Initializing the compound dataset follows the form:
+Initializing the compound dataset follows the form::
 
     >>> ds = fn.require_dataset(ds_path, data=HDFData, dtype=DataType, shape=rShape)
 
@@ -124,7 +124,7 @@ where dtype is a list of tuples containing the field name, type, and array size 
 each column in the dataset.  As an example, in order to create a compound dataset containing a
 string, integer, list of booleans, and floating point data:
 
-1)	Create the data from the your data source.  Data is entered row-by-row as a list of tuples:
+1.	Create the data from the your data source.  Data is entered row-by-row as a list of tuples.::
 
     >>> HDFData = [
     >>>		(‘loc1’, 1, [True, False], 1.005),
@@ -134,9 +134,9 @@ string, integer, list of booleans, and floating point data:
     >>>		(‘loc5’, 5, [True, False], 5.01),
     >>>	   ]
 
-2)	Declare the datatype for each column by reference to the field name.  Datatype is entered
+2.	Declare the datatype for each column by reference to the field name.  Datatype is entered
 row-by-row as a list of tuples, with array dimensions (beginning with length) given as the
-third entry in the tuple::
+third entry in the tuple.::
 
     >>> DataType = [
     >>>		(‘Location’, ‘S10’),
@@ -145,14 +145,14 @@ third entry in the tuple::
     >>>		(‘LocFloat’, ‘float’),
     >>>	   ]
 
-3)	Define the shape as an integer, which is equal to the number of rows in the dataset::
+3.	Define the shape as an integer, which is equal to the number of rows in the dataset.::
 
     >>> rShape = len(HDFData)
 
 String datatypes in compound datasets do not allow all types of variable-length declaration, and
 HDF does not recognise Nompy <U-type string datatypes.  A declared fixed-length datatype
 (as shown above) can be provided, or a variable-length datatype can be declared using
-string_dtype, as shown below:
+string_dtype, as shown below::
 
     >>> sdt = h5py.string_dtype(encoding='utf-8')
     >>> DataType = [
@@ -170,7 +170,7 @@ Multiple indexing
 
 Indexing a dataset once loads a numpy array into memory.
 If you try to index it twice to write data, you may be surprised that nothing
-seems to have happened:
+seems to have happened::
 
     >>> f = h5py.File('my_hdf5_file.h5', 'w')
     >>> dset = f.create_dataset("test", (2, 2))
@@ -178,7 +178,7 @@ seems to have happened:
     >>> print(dset[0][1])
     0.0
 
-The assignment above only modifies the loaded array. It's equivalent to this:
+The assignment above only modifies the loaded array. It's equivalent to this::
 
     >>> new_array = dset[0]
     >>> new_array[1] = 3.0
@@ -187,7 +187,7 @@ The assignment above only modifies the loaded array. It's equivalent to this:
     >>> print(dset[0][1])
     0.0
 
-To write to the dataset, combine the indexes in a single step:
+To write to the dataset, combine the indexes in a single step::
 
     >>> dset[0, 1] = 3.0
     >>> print(dset[0, 1])
@@ -515,7 +515,7 @@ Reference
 
         Check that the dataset is accessible.
         A dataset could be inaccessible for several reasons. For instance, the
-        dataset, or the file it belongs to, may have been closed elsewhere.
+        dataset, or the file it belongs to, may have been closed elsewhere.::
 
         >>> f = h5py.open(filename)
         >>> dset = f["MyDS"]
