@@ -124,7 +124,7 @@ where dtype is a list of tuples containing the field name, type, and array size 
 each column in the dataset.  As an example, in order to create a compound dataset containing a
 string, integer, list of booleans, and floating point data:
 
-1.	Create the data from the your data source.  Data is entered row-by-row as a list of tuples.::
+1.	Create the data from the your data source.  Data is entered row-by-row as a list of tuples::
 
     >>> HDFData = [
     >>>		(‘loc1’, 1, [True, False], 1.005),
@@ -134,9 +134,7 @@ string, integer, list of booleans, and floating point data:
     >>>		(‘loc5’, 5, [True, False], 5.01),
     >>>	   ]
 
-2.	Declare the datatype for each column by reference to the field name.  Datatype is entered
-row-by-row as a list of tuples, with array dimensions (beginning with length) given as the
-third entry in the tuple.::
+2.	Declare the datatype for each column by reference to the field name.  Datatype is entered row-by-row as a list of tuples, with array dimensions (beginning with length) given as the third entry in the tuple::
 
     >>> DataType = [
     >>>		(‘Location’, ‘S10’),
@@ -145,7 +143,7 @@ third entry in the tuple.::
     >>>		(‘LocFloat’, ‘float’),
     >>>	   ]
 
-3.	Define the shape as an integer, which is equal to the number of rows in the dataset.::
+3.	Define the shape as an integer, which is equal to the number of rows in the dataset::
 
     >>> rShape = len(HDFData)
 
@@ -157,6 +155,7 @@ string_dtype, as shown below::
     >>> sdt = h5py.string_dtype(encoding='utf-8')
     >>> DataType = [
     >>>		(‘Location’, sdt),
+    >>>		... ,
 
 Note that fixed-length datatypes can truncate strings without notification.  Also note that this
 declaration can be used to override a given datatype (int to float, etc.).
