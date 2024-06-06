@@ -148,7 +148,7 @@ string, integer, list of booleans, and floating point data:
         >>> rShape = len(HDFData)
 
 String datatypes in compound datasets do not allow all types of variable-length declaration, and
-HDF does not recognise Nompy <U-type string datatypes.  A declared fixed-length datatype
+HDF does not recognise numpy <U-type string datatypes.  A declared fixed-length datatype
 (as shown above) can be provided, or a variable-length datatype can be declared using
 string_dtype, as shown below::
 
