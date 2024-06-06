@@ -10,7 +10,7 @@ If you have questions about the process or about the details of implementing
 your feature, feel free to ask on Github itself, or on the h5py section of the
 HDF5 forum:
 
-    https://forum.hdfgroup.org/c/hdf-tools/h5py
+    https://forum.hdfgroup.org/c/hdf5/h5py
 
 Posting on this forum requires registering for a free account with HDF group.
 
