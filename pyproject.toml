@@ -88,6 +88,7 @@ manylinux-aarch64-image = "ghcr.io/h5py/manylinux2014_aarch64-hdf5"
 test-requires = [
     "tox",
     "codecov",
+    "coverage",
 ]
 test-command = "bash {project}/ci/cibw_test_command.sh {project} {wheel}"
 skip = "pp* *musllinux*"
