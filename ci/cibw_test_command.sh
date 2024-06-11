@@ -15,8 +15,9 @@ export PYVER=$(python -c "import sys; print(''.join(map(str, sys.version_info[:2
 export TOXENV="py$PYVER-test-deps,py$PYVER-test-mindeps,py$PYVER-test-deps-pre"
 export H5PY_TEST_CHECK_FILTERS=1
 echo "TOXENV=$TOXENV"
+cd $PROJECT_PATH
 tox --installpkg $WHEEL_PATH
 if [[ "$GITHUB_ACTION" != "" ]]; then
     echo "Uploading coverage"
-    python $PROJECT_PATH/ci/upload_coverage.py --codecov-token 813fb6da-087d-4b36-a185-5a530cab3455
+    python ./ci/upload_coverage.py --codecov-token 813fb6da-087d-4b36-a185-5a530cab3455
 fi
