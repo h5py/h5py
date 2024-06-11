@@ -30,6 +30,7 @@ jobs:
   build_wheels:
     name: Build wheels on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    continue-on-error: true
     strategy:
       matrix:
         include:
@@ -50,10 +51,22 @@ jobs:
           echo "CIBW_BEFORE_BUILD=pip install --pre --extra-index-url https://pypi.anaconda.org/scientific-python-nightly-wheels/simple numpy \"Cython>=0.29.31,<4\" pkgconfig \"setuptools>=61\"" >> $GITHUB_ENV
           echo "CIBW_BUILD_FRONTEND=pip; args: --no-build-isolation" >> $GITHUB_ENV
         if: github.event_name == 'schedule'
+      - shell: bash -el {0}
+        run: |
+          HDF5_CACHE_DIR="$PWD/cache/hdf5"
+          if [[ "${{ runner.os }}" == "macOS" ]]; then
+            HDF5_VERSION = "1.12.2"
+          else  # Windows
+            HDF5_VERSION = "1.14.2"
+          fi
+          HDF5_DIR = "$HDF5_CACHE_DIR/$HDF5_VERSION"
+          echo "HDF5_CACHE_DIR=$HDF5_CACHE_DIR" >> $GITHUB_ENV
+          echo "HDF5_VERSION=$HDF5_VERSION" >> $GITHUB_ENV
+        if: runner.os != 'Linux'
       - uses: actions/cache@v4
         with:
           key: ${{ matrix.os }}-${{ matrix.arch }}  # -${{ hashFiles('**/pyproject.toml') }
-          path: ${{ env.HDF5_CACHE_DIR }}
+          path: cache/hdf5
         if: env.HDF5_CACHE_DIR != ''
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.19.0
@@ -62,7 +75,8 @@ jobs:
           name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
           path: ./wheelhouse/*.whl
         env:
-          CIBW_ARCHS: ${{ matrix.arch }}
+          # Note that skip in pyproject.toml also changes what gets built
+          CIBW_BUILD: build = "cp3*_${{ matrix.arch }}"
           CIBW_BEFORE_BUILD: ${{ env.CIBW_BEFORE_BUILD }}
           CIBW_BUILD_FRONTEND: ${{ env.CIBW_BUILD_FRONTEND }}
 

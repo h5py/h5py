@@ -83,8 +83,6 @@ packages = [
 
 [tool.cibuildwheel]
 build-verbosity = 3
-# build only CPython 3.x variants
-build = "cp3*"
 manylinux-x86_64-image = "ghcr.io/h5py/manylinux2014_x86_64-hdf5"
 manylinux-aarch64-image = "ghcr.io/h5py/manylinux2014_aarch64-hdf5"
 test-requires = [
@@ -92,6 +90,7 @@ test-requires = [
     "codecov",
 ]
 test-command = "bash {project}/ci/cibw_test_command.sh {project} {wheel}"
+skip = "pp* *musllinux*"
 
 [tool.cibuildwheel.linux]
 environment-pass = ["GITHUB_ACTIONS"]
@@ -100,15 +99,9 @@ environment-pass = ["GITHUB_ACTIONS"]
 CFLAGS = "-g1"
 
 [tool.cibuildwheel.windows.environment]
-HDF5_VERSION = "1.14.2"
 HDF5_VSVERSION = "16-64"
-HDF5_CACHE_DIR = "{project}/cache/hdf5"
-HDF5_DIR = "{project}/cache/hdf5/1.14.2"
 
 [tool.cibuildwheel.macos.environment]
 MACOSX_DEPLOYMENT_TARGET = "10.9"
-HDF5_VERSION = "1.12.2"
 H5PY_ROS3 = "0"
 H5PY_DIRECT_VFD = "0"
-HDF5_CACHE_DIR = "{project}/cache/hdf5"
-HDF5_DIR = "{project}/cache/hdf5/1.12.2"
