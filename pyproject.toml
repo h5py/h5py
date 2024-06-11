@@ -98,9 +98,6 @@ environment-pass = ["GITHUB_ACTIONS"]
 [tool.cibuildwheel.linux.environment]
 CFLAGS = "-g1"
 
-[tool.cibuildwheel.windows.environment]
-HDF5_VSVERSION = "16-64"
-
 [tool.cibuildwheel.macos]
 # https://cibuildwheel.pypa.io/en/stable/faq/#macos-passing-dyld_library_path-to-delocate
 repair-wheel-command = """\

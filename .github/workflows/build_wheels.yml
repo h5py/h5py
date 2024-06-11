@@ -47,27 +47,29 @@ jobs:
             arch: x86_64
     steps:
       - uses: actions/checkout@v4
-      - run: |
-          echo "CIBW_BEFORE_BUILD=pip install --pre --extra-index-url https://pypi.anaconda.org/scientific-python-nightly-wheels/simple numpy \"Cython>=0.29.31,<4\" pkgconfig \"setuptools>=61\"" >> $GITHUB_ENV
-          echo "CIBW_BUILD_FRONTEND=pip; args: --no-build-isolation" >> $GITHUB_ENV
-        if: github.event_name == 'schedule'
-      - shell: bash -el {0}
-        run: |
-          HDF5_CACHE_DIR="$PWD/cache/hdf5"
-          if [[ "${{ runner.os }}" == "macOS" ]]; then
-            HDF5_VERSION="1.12.2"
-          else  # Windows
-            HDF5_VERSION="1.14.2"
-          fi
-          echo "HDF5_CACHE_DIR=$HDF5_CACHE_DIR" >> $GITHUB_ENV
-          echo "HDF5_VERSION=$HDF5_VERSION" >> $GITHUB_ENV
-          echo "HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION" >> $GITHUB_ENV
-        if: runner.os != 'Linux'
-      - uses: actions/cache@v4
+      # Get HDF5 outside of cibuildwheel so that we can cache the result:
+      - uses: nuget/setup-nuget@v2
+        if: runner.os == 'Windows'
+      - uses: actions/setup-python@v5  # used by Windows but might as well for all platforms
+        with:
+          python-version: 3.12
+      - name: Get HDF5 on Windows
+        run: bash ./ci/cibw_before_all_windows.sh "${{ github.workspace }}"
+        if: runner.os == 'Windows'
+      - name: Get HDF5 on macOS
+        run: bash ./ci/cibw_before_all_macos.sh "${{ github.workspace }}"
+        if: runner.os == 'macOS'
+      - name: Cache built HDF5
+        uses: actions/cache@v4
         with:
           key: ${{ matrix.os }}-${{ matrix.arch }}  # -${{ hashFiles('**/pyproject.toml') }
           path: cache/hdf5
-        if: env.HDF5_CACHE_DIR != ''
+      # Now actually build the wheels
+      - name: Install scientific-python-nightly NumPy
+        run: |
+          echo "CIBW_BEFORE_BUILD=pip install --pre --extra-index-url https://pypi.anaconda.org/scientific-python-nightly-wheels/simple numpy \"Cython>=0.29.31,<4\" pkgconfig \"setuptools>=61\"" >> $GITHUB_ENV
+          echo "CIBW_BUILD_FRONTEND=pip; args: --no-build-isolation" >> $GITHUB_ENV
+        if: github.event_name == 'schedule'
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.19.0
         env:
