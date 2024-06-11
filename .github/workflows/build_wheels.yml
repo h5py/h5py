@@ -55,13 +55,13 @@ jobs:
         run: |
           HDF5_CACHE_DIR="$PWD/cache/hdf5"
           if [[ "${{ runner.os }}" == "macOS" ]]; then
-            HDF5_VERSION = "1.12.2"
+            HDF5_VERSION="1.12.2"
           else  # Windows
-            HDF5_VERSION = "1.14.2"
+            HDF5_VERSION="1.14.2"
           fi
-          HDF5_DIR = "$HDF5_CACHE_DIR/$HDF5_VERSION"
           echo "HDF5_CACHE_DIR=$HDF5_CACHE_DIR" >> $GITHUB_ENV
           echo "HDF5_VERSION=$HDF5_VERSION" >> $GITHUB_ENV
+          echo "HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION" >> $GITHUB_ENV
         if: runner.os != 'Linux'
       - uses: actions/cache@v4
         with:
@@ -71,8 +71,8 @@ jobs:
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.19.0
         env:
-          # Note that skip in pyproject.toml also changes what gets built
-          CIBW_BUILD: build = "cp3*_${{ matrix.arch }}"
+          # Note that tool.cibuildwheel "skip" in pyproject.toml also limits what gets built
+          CIBW_BUILD: "cp3*_${{ matrix.arch }}"
           CIBW_BEFORE_BUILD: ${{ env.CIBW_BEFORE_BUILD }}
           CIBW_BUILD_FRONTEND: ${{ env.CIBW_BUILD_FRONTEND }}
       - uses: actions/upload-artifact@v4
@@ -94,7 +94,7 @@ jobs:
           merge-multiple: true
           path: dist
       - run: pwd && ls -alt . && ls -alt dist/
-      # If it's a PR, do nothing.
+      # If it's a PR, do nothing else.
       # If it's a scheduled run, it was built with nightly NumPy, push to scientific-python:
       - name: Upload wheels to Anaconda Cloud as nightlies
         uses: scientific-python/upload-nightly-action@b67d7fcc0396e1128a474d1ab2b48aa94680f9fc # 0.5.0
@@ -102,8 +102,8 @@ jobs:
           artifacts_path: dist
           anaconda_nightly_upload_token: ${{ secrets.ANACONDA_ORG_UPLOAD_TOKEN }}
         if: github.repository_owner == 'h5py' && github.event_name == 'schedule'
-      # If it's a push to master, create a draft release.
-      # If it's a tag, publish it to the existing release.
+      # If it's a push to master, create a draft release;
+      # If it's a tag, publish it to the existing release:
       - name: Upload to GitHub releases
         uses: softprops/action-gh-release@v2
         with:
