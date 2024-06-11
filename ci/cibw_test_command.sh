@@ -2,7 +2,7 @@
 
 set -eo pipefail
 
-if [[ "$1" == "" || "$2" == ""]]; then
+if [[ "$1" == "" ]] || [[ "$2" == "" ]]; then
     echo "Usage: $0 <PROJECT_PATH> <WHEEL_PATH>"
     exit 1
 fi
