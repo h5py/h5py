@@ -72,6 +72,11 @@ jobs:
       - name: Get HDF5 on macOS
         run: bash ./ci/cibw_before_all_macos.sh "${{ github.workspace }}"
         if: runner.os == 'macOS'
+      # Hack for 3.8 bug (https://github.com/pypa/cibuildwheel/pull/1871#issuecomment-2161613619)
+      - uses: actions/setup-python@v5
+        with:
+          python-version: 3.8
+        if: runner.os == 'macOS' && matrix.arch == 'arm64'
 
       # Now actually build the wheels
       - name: Install scientific-python-nightly NumPy
@@ -79,9 +84,8 @@ jobs:
           echo "CIBW_BEFORE_BUILD=pip install --pre --extra-index-url https://pypi.anaconda.org/scientific-python-nightly-wheels/simple numpy \"Cython>=0.29.31,<4\" pkgconfig \"setuptools>=61\"" >> $GITHUB_ENV
           echo "CIBW_BUILD_FRONTEND=pip; args: --no-build-isolation" >> $GITHUB_ENV
         if: github.event_name == 'schedule'
-      # https://github.com/pypa/cibuildwheel/issues/1278#issuecomment-2052099631
       - name: Build wheels
-        uses: larsoner/cibuildwheel@checkmacarm38
+        uses: pypa/cibuildwheel@v2.19.0
         env:
           # Note that tool.cibuildwheel "skip" in pyproject.toml also limits what gets built
           CIBW_BUILD: "*_${{ matrix.arch }}"
