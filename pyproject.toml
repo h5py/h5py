@@ -91,7 +91,6 @@ test-requires = [
     "coverage",
 ]
 test-command = "bash {project}/ci/cibw_test_command.sh {project} {wheel}"
-skip = "pp* *musllinux*"
 
 [tool.cibuildwheel.linux]
 environment-pass = ["GITHUB_ACTIONS"]

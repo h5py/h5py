@@ -103,19 +103,25 @@ jobs:
             echo "Building full $KIND wheels on event_name=${{ github.event_name }} with commit message: $MSG"
             CIBW_BUILD="*_${{ matrix.arch }}"
           fi
-          echo $CIBW_BUILD
+          echo "CIBW_BUILD=$CIBW_BUILD"
           echo "CIBW_BUILD=$CIBW_BUILD" >> $GITHUB_ENV
+          CIBW_SKIP="pp* *musllinux*"
           # If it's a scheduled build or [pip-pre] in commit message, use pip-pre
           if [[ "${{ github.event_name}}" == "schedule" ]] || [[ "$MSG" = *'[pip-pre]'* ]]; then
             echo "Using NumPy pip-pre wheel for wheel building"
             echo "pip-pre=1" >> $GITHUB_OUTPUT
+            # No Python 3.9 or 3.10 on scientific-python-nightly-wheels
+            CIBW_SKIP="$CIBW_SKIP cp38-* cp39-*"
+          else
           fi
+          echo "CIBW_SKIP=$CIBW_SKIP"
+          echo "CIBW_SKIP=$CIBW_SKIP" >> $GITHUB_ENV
 
       - name: Install scientific-python-nightly NumPy
         shell: bash
         run: |
           set -eo pipefail
-          echo "CIBW_BEFORE_BUILD=pip install --pre --extra-index-url https://pypi.anaconda.org/scientific-python-nightly-wheels/simple numpy \"Cython>=0.29.31,<4\" pkgconfig \"setuptools>=61\" wheel" >> $GITHUB_ENV
+          echo "CIBW_BEFORE_BUILD=pip install --pre --only-binary numpy --extra-index-url https://pypi.anaconda.org/scientific-python-nightly-wheels/simple \"numpy>=2.1.0.dev0\" \"Cython>=0.29.31,<4\" pkgconfig \"setuptools>=61\" wheel" >> $GITHUB_ENV
           echo "CIBW_BUILD_FRONTEND=pip; args: --no-build-isolation" >> $GITHUB_ENV
         if: steps.triage.outputs.pip-pre == '1'
 
@@ -126,6 +132,7 @@ jobs:
           # Note that tool.cibuildwheel "skip" in pyproject.toml also limits what gets built
           CIBW_ARCHS: ${{ matrix.arch }}
           CIBW_BUILD: ${{ env.CIBW_BUILD }}
+          CIBW_SKIP: ${{ env.CIBW_SKIP }}
           CIBW_BEFORE_BUILD: ${{ env.CIBW_BEFORE_BUILD }}
           CIBW_BUILD_FRONTEND: ${{ env.CIBW_BUILD_FRONTEND }}
           TOX_TEST_LIMITED: ${{ env.TOX_TEST_LIMITED }}
