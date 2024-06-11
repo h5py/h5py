@@ -10,7 +10,8 @@ PROJECT_PATH="$1"
 
 # nuget
 nuget install zlib-msvc-x64 -ExcludeVersion -OutputDirectory "$PROJECT_PATH"
-export PATH="$PATH:$PROJECT_PATH\zlib-msvc-x64\build\native\bin_release"
+EXTRA_PATH="$PROJECT_PATH\zlib-msvc-x64\build\native\bin_release"
+export PATH="$PATH:$EXTRA_PATH"
 export CL="/I$PROJECT_PATH\zlib-msvc-x64\build\native\include"
 export LINK="/LIBPATH:$PROJECT_PATH\zlib-msvc-x64\build\native\lib_release"
 export ZLIB_ROOT="$PROJECT_PATH\zlib-msvc-x64\build\native"
@@ -24,7 +25,8 @@ pip install requests
 python $PROJECT_PATH/ci/get_hdf5_win.py
 
 if [[ "$GITHUB_ENV" != "" ]] ; then
-    echo "PATH=$PATH" >> $GITHUB_ENV
+    # PATH on windows is special
+    echo "$EXTRA_PATH" >> $GITHUB_PATH
     echo "CL=$CL" >> $GITHUB_ENV
     echo "LINK=$LINK" >> $GITHUB_ENV
     echo "ZLIB_ROOT=$ZLIB_ROOT" >> $GITHUB_ENV
