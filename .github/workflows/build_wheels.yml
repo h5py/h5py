@@ -50,6 +50,13 @@ jobs:
 
       # Get HDF5 outside of cibuildwheel so that we can cache the result
 
+      # Cache HDF5
+      - name: Cache built HDF5
+        uses: actions/cache@v4
+        with:
+          key: ${{ matrix.os }}-${{ matrix.arch }}-3  # -${{ hashFiles('**/pyproject.toml') }
+          path: cache/hdf5
+
       # Windows HDF5
       - uses: nuget/setup-nuget@v2
         if: runner.os == 'Windows'
@@ -65,13 +72,6 @@ jobs:
       - name: Get HDF5 on macOS
         run: bash ./ci/cibw_before_all_macos.sh "${{ github.workspace }}"
         if: runner.os == 'macOS'
-
-      # Cache HDF5
-      - name: Cache built HDF5
-        uses: actions/cache@v4
-        with:
-          key: ${{ matrix.os }}-${{ matrix.arch }}-3  # -${{ hashFiles('**/pyproject.toml') }
-          path: cache/hdf5
 
       # Now actually build the wheels
       - name: Install scientific-python-nightly NumPy
