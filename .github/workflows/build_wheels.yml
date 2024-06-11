@@ -65,10 +65,12 @@ jobs:
       - name: Get HDF5 on macOS
         run: bash ./ci/cibw_before_all_macos.sh "${{ github.workspace }}"
         if: runner.os == 'macOS'
+
+      # Cache HDF5
       - name: Cache built HDF5
         uses: actions/cache@v4
         with:
-          key: ${{ matrix.os }}-${{ matrix.arch }}-2  # -${{ hashFiles('**/pyproject.toml') }
+          key: ${{ matrix.os }}-${{ matrix.arch }}-3  # -${{ hashFiles('**/pyproject.toml') }
           path: cache/hdf5
 
       # Now actually build the wheels
