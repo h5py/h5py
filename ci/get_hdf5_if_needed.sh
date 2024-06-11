@@ -3,7 +3,6 @@
 set -e -x
 
 PROJECT_ROOT="$(pwd)"
-source "$PROJECT_ROOT/ci/configure_hdf5_mac.sh"
 
 if [ -z ${HDF5_DIR+x} ]; then
     echo "Using OS HDF5"
@@ -42,7 +41,18 @@ else
         fi
 
         if [[ "$OSTYPE" == "darwin"* ]]; then
-            build_zlib
+            export CC="/usr/bin/clang"
+            export CXX="/usr/bin/clang"
+            ZLIB_VERSION="1.2.13"
+
+            pushd /tmp
+            curl -sLO https://zlib.net/fossils/zlib-$ZLIB_VERSION.tar.gz
+            tar xzf zlib-$ZLIB_VERSION.tar.gz
+            cd zlib-$ZLIB_VERSION
+            ./configure --prefix="$HDF5_DIR"
+            make
+            make install
+            popd
 
             export LD_LIBRARY_PATH="$HDF5_DIR/lib:${LD_LIBRARY_PATH}"
             export PKG_CONFIG_PATH="$HDF5_DIR/lib/pkgconfig:${PKG_CONFIG_PATH}"

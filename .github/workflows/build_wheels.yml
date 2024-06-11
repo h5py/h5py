@@ -62,7 +62,7 @@ jobs:
       - name: Cache built HDF5
         uses: actions/cache@v4
         with:
-          key: ${{ matrix.os }}-${{ matrix.arch }}  # -${{ hashFiles('**/pyproject.toml') }
+          key: ${{ matrix.os }}-${{ matrix.arch }}-0  # -${{ hashFiles('**/pyproject.toml') }
           path: cache/hdf5
       # Now actually build the wheels
       - name: Install scientific-python-nightly NumPy
