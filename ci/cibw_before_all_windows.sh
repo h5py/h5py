@@ -19,6 +19,8 @@ export ZLIB_ROOT="$PROJECT_PATH\zlib-msvc-x64\build\native"
 export HDF5_VERSION="1.14.2"
 export HDF5_VSVERSION="16-64"
 export HDF5_DIR="$PROJECT_PATH/cache/hdf5/$HDF5_VERSION"
+
+pip install requests
 python $PROJECT_PATH/ci/get_hdf5_win.py
 
 if [[ "$GITHUB_ENV" != "" ]] ; then
