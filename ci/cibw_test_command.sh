@@ -18,6 +18,6 @@ echo "TOXENV=$TOXENV"
 cd $PROJECT_PATH
 tox --installpkg $WHEEL_PATH
 if [[ "$GITHUB_ACTION" != "" ]]; then
-    echo "Uploading coverage"
+    echo "Uploading coverage using python=$(which python)"
     python ./ci/upload_coverage.py --codecov-token 813fb6da-087d-4b36-a185-5a530cab3455
 fi
