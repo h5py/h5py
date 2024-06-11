@@ -36,9 +36,8 @@ jobs:
         include:
           - os: ubuntu-latest
             arch: x86_64
-          # Currently run on Travis, put back once native on GHA
-          # - os: ubuntu-latest
-          #   arch: aarch64
+          - os: ubuntu-latest
+            arch: aarch64
           - os: windows-latest
             arch: AMD64
           - os: macos-14
@@ -47,6 +46,8 @@ jobs:
             arch: x86_64
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # get the non-merge commit for PRs
 
       # Get HDF5 outside of cibuildwheel so that we can cache the result
 
@@ -78,19 +79,53 @@ jobs:
           python-version: 3.8
         if: runner.os == 'macOS' && matrix.arch == 'arm64'
 
-      # Now actually build the wheels
+      # Linux emulation for aarch64 support
+      # https://cibuildwheel.pypa.io/en/stable/faq/#emulation
+      - uses: docker/setup-qemu-action@v3
+        with:
+          platforms: all
+        if: runner.os == 'Linux' && matrix.arch == 'aarch64'
+
+      # Triage build
+      - name: Triage CIBW_BUILD and NumPy pip-pre
+        shell: bash
+        id: triage
+        run: |
+          set -eo pipefail
+          MSG="$(git show -s --format=%s ${{ github.event.pull_request.head.sha || github.sha }})"
+          KIND="${{ matrix.os }}_${{ matrix.arch }}"
+          # If it's a PR, and aarch64 architecture, and no [aarch64] in the commit message, just build and test one aarch64 wheel
+          if [[ "${{ matrix.arch }} == "aarch64" ]] && [[ "${{ github.event_name }}" == "pull_request" ]] && [[ "$MSG" != *'[aarch64]'* ]]; then
+            echo "Building limited $KIND wheels for PR with commit message: $MSG"
+            CIBW_BUILD="cp312-*_${{ matrix.arch }}"
+          else
+            echo "Building full $KIND wheels on event_name=${{ github.event_name }} with commit message: $MSG"
+            CIBW_BUILD="*_${{ matrix.arch }}"
+          fi
+          echo $CIBW_BUILD
+          echo "CIBW_BUILD=$CIBW_BUILD" >> $GITHUB_ENV
+          # If it's a scheduled build or [pip-pre] in commit message, use pip-pre
+          if [[ "${{ github.event_name}}" == "schedule" ]] || [[ "$MSG" = *'[pip-pre]'* ]]; then
+            echo "Using NumPy pip-pre wheel for wheel building"
+            echo "pip-pre=1" >> $GITHUB_OUTPUT
+          fi
+
       - name: Install scientific-python-nightly NumPy
         run: |
           echo "CIBW_BEFORE_BUILD=pip install --pre --extra-index-url https://pypi.anaconda.org/scientific-python-nightly-wheels/simple numpy \"Cython>=0.29.31,<4\" pkgconfig \"setuptools>=61\"" >> $GITHUB_ENV
           echo "CIBW_BUILD_FRONTEND=pip; args: --no-build-isolation" >> $GITHUB_ENV
-        if: github.event_name == 'schedule'
+        if: steps.triage.outputs.pip-pre == '1'
+
+      # Now actually build the wheels
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.19.0
         env:
           # Note that tool.cibuildwheel "skip" in pyproject.toml also limits what gets built
-          CIBW_BUILD: "*_${{ matrix.arch }}"
+          CIBW_BUILD: ${{ env.CIBW_BUILD }}
           CIBW_BEFORE_BUILD: ${{ env.CIBW_BEFORE_BUILD }}
           CIBW_BUILD_FRONTEND: ${{ env.CIBW_BUILD_FRONTEND }}
+
+      # And upload the results
       - uses: actions/upload-artifact@v4
         with:
           name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
