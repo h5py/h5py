@@ -47,15 +47,21 @@ jobs:
             arch: x86_64
     steps:
       - uses: actions/checkout@v4
-      # Get HDF5 outside of cibuildwheel so that we can cache the result:
+
+      # Get HDF5 outside of cibuildwheel so that we can cache the result
+
+      # Windows HDF5
       - uses: nuget/setup-nuget@v2
         if: runner.os == 'Windows'
-      - uses: actions/setup-python@v5  # used by Windows but might as well for all platforms
+      - uses: actions/setup-python@v5
         with:
           python-version: 3.12
+        if: runner.os == 'Windows'
       - name: Get HDF5 on Windows
         run: bash ./ci/cibw_before_all_windows.sh "${{ github.workspace }}"
         if: runner.os == 'Windows'
+
+      # macOS HDF5
       - name: Get HDF5 on macOS
         run: bash ./ci/cibw_before_all_macos.sh "${{ github.workspace }}"
         if: runner.os == 'macOS'
@@ -64,6 +70,7 @@ jobs:
         with:
           key: ${{ matrix.os }}-${{ matrix.arch }}-2  # -${{ hashFiles('**/pyproject.toml') }
           path: cache/hdf5
+
       # Now actually build the wheels
       - name: Install scientific-python-nightly NumPy
         run: |
@@ -74,10 +81,10 @@ jobs:
         uses: pypa/cibuildwheel@v2.19.0
         env:
           # Note that tool.cibuildwheel "skip" in pyproject.toml also limits what gets built
+          CIBW_ARCHS: ${{ matrix.arch }}
           CIBW_BUILD: "*_${{ matrix.arch }}"
           CIBW_BEFORE_BUILD: ${{ env.CIBW_BEFORE_BUILD }}
           CIBW_BUILD_FRONTEND: ${{ env.CIBW_BUILD_FRONTEND }}
-          MACOSX_DEPLOYMENT_TARGET: ${{ env.MACOSX_DEPLOYMENT_TARGET }}
       - uses: actions/upload-artifact@v4
         with:
           name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
