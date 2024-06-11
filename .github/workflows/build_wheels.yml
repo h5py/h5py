@@ -84,7 +84,6 @@ jobs:
         uses: larsoner/cibuildwheel@checkmacarm38
         env:
           # Note that tool.cibuildwheel "skip" in pyproject.toml also limits what gets built
-          CIBW_ARCHS: ${{ matrix.arch }}
           CIBW_BUILD: "*_${{ matrix.arch }}"
           CIBW_BEFORE_BUILD: ${{ env.CIBW_BEFORE_BUILD }}
           CIBW_BUILD_FRONTEND: ${{ env.CIBW_BUILD_FRONTEND }}
