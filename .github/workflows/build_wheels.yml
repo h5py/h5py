@@ -1,0 +1,99 @@
+---
+name: Build
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.number }}-${{ github.event.ref }}
+  cancel-in-progress: true
+
+# Adapted from https://github.com/matplotlib/matplotlib/blob/main/.github/workflows/nightlies.yml
+# and https://cibuildwheel.pypa.io/en/stable/setup/#github-actions
+
+on:
+  # Run daily at 1:23 UTC to upload nightly wheels to Anaconda Cloud
+  schedule:
+    - cron: '23 1 * * *'
+  # Run on demand with workflow dispatch
+  workflow_dispatch:
+  # Run on all PRs
+  pull_request:
+  # Run on tags
+  push:
+    branches:
+      - master
+    tags:
+      - '*'
+
+permissions:
+  actions: read
+  contents: write
+
+jobs:
+  build_wheels:
+    name: Build wheels on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            arch: x86_64
+          # Currently run on Travis, put back once native on GHA
+          # - os: ubuntu-latest
+          #   arch: aarch64
+          - os: windows-latest
+            arch: AMD64
+          - os: macos-14
+            arch: arm64
+          - os: macos-13
+            arch: x86_64
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          echo "CIBW_BEFORE_BUILD=pip install --pre --extra-index-url https://pypi.anaconda.org/scientific-python-nightly-wheels/simple numpy \"Cython>=0.29.31,<4\" pkgconfig \"setuptools>=61\"" >> $GITHUB_ENV
+          echo "CIBW_BUILD_FRONTEND=pip; args: --no-build-isolation" >> $GITHUB_ENV
+        if: github.event_name == 'schedule'
+      - uses: actions/cache@v4
+        with:
+          key: ${{ matrix.os }}-${{ matrix.arch }}  # -${{ hashFiles('**/pyproject.toml') }
+          path: ${{ env.HDF5_CACHE_DIR }}
+        if: env.HDF5_CACHE_DIR != ''
+      - name: Build wheels
+        uses: pypa/cibuildwheel@v2.19.0
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
+          path: ./wheelhouse/*.whl
+        env:
+          CIBW_ARCHS: ${{ matrix.arch }}
+          CIBW_BEFORE_BUILD: ${{ env.CIBW_BEFORE_BUILD }}
+          CIBW_BUILD_FRONTEND: ${{ env.CIBW_BUILD_FRONTEND }}
+
+  upload_wheels:
+    name: Upload wheels
+    needs: build_wheels
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -el {0}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: cibw-wheels-*
+          merge-multiple: true
+          path: dist
+      - run: pwd && ls -alt . && ls -alt dist/
+      # If it's a PR, do nothing.
+      # If it's a scheduled run, it was built with nightly NumPy, push to scientific-python:
+      - name: Upload wheels to Anaconda Cloud as nightlies
+        uses: scientific-python/upload-nightly-action@b67d7fcc0396e1128a474d1ab2b48aa94680f9fc # 0.5.0
+        with:
+          artifacts_path: dist
+          anaconda_nightly_upload_token: ${{ secrets.ANACONDA_ORG_UPLOAD_TOKEN }}
+        if: github.repository_owner == 'h5py' && github.event_name == 'schedule'
+      # If it's a push to master, create a draft release.
+      # If it's a tag, publish it to the existing release.
+      - name: Upload to GitHub releases
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: ${{ github.ref_type != 'tag' }}
+          files: |
+            dist/*.whl
+        if: github.repository_owner == 'h5py' && github.event_name == 'push'

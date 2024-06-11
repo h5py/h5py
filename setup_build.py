@@ -10,6 +10,7 @@ try:
 except ImportError:
     from distutils.extension import Extension
 from distutils.command.build_ext import build_ext
+import platform
 import sys
 import os
 import os.path as op
@@ -130,7 +131,7 @@ class h5py_build_ext(build_ext):
         import numpy
 
         complex256_support = hasattr(numpy, 'complex256') and \
-            os.environ.get('CIBW_ARCHS_MACOS') != 'arm64'
+            (sys.platform != "darwin" or platform.processor() != "arm")
 
         # This allows ccache to recognise the files when pip builds in a temp
         # directory. It speeds up repeatedly running tests through tox with

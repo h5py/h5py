@@ -42,15 +42,11 @@ else
         fi
 
         if [[ "$OSTYPE" == "darwin"* ]]; then
-            set_compiler_vars "$CIBW_ARCHS_MACOS"
             build_zlib
 
             export LD_LIBRARY_PATH="$HDF5_DIR/lib:${LD_LIBRARY_PATH}"
             export PKG_CONFIG_PATH="$HDF5_DIR/lib/pkgconfig:${PKG_CONFIG_PATH}"
             ZLIB_ARG="--with-zlib=$HDF5_DIR"
-            if [[ "$CIBW_ARCHS_MACOS" = "arm64"  ]]; then
-                HOST_ARG="--host=aarch64-apple-darwin"
-            fi
         fi
 
         pushd /tmp
@@ -59,21 +55,12 @@ else
         tar -xzvf hdf5-$HDF5_VERSION.tar.gz
         pushd hdf5-$HDF5_VERSION
 
-        if [[ "$OSTYPE" == "darwin"* && "$CIBW_ARCHS_MACOS" = "arm64"  ]]; then
-            patch_hdf5 "$PROJECT_ROOT"
-        fi
-
         ./configure --prefix="$HDF5_DIR" \
             ${ZLIB_ARG} \
             ${EXTRA_MPI_FLAGS} \
             ${BUILD_MODE} \
             ${ENABLE_DIRECT_VFD} \
-            ${HOST_ARG} \
             --enable-tests=no
-
-        if [[ "$OSTYPE" == "darwin"* && "$CIBW_ARCHS_MACOS" = "arm64"  ]]; then
-            build_h5detect
-        fi
 
         make -j "$NPROC"
         make install
