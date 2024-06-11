@@ -12,7 +12,8 @@ WHEEL_PATH=$2
 echo "WHEEL_PATH=$WHEEL_PATH"
 
 export PYVER=$(python -c "import sys; print(''.join(map(str, sys.version_info[:2])))")
-export TOXENV="py$PYVER-test-deps,py$PYVER-test-mindeps,$PYVER-test-deps-pre"
+export TOXENV="py$PYVER-test-deps,py$PYVER-test-mindeps,py$PYVER-test-deps-pre"
+export H5PY_TEST_CHECK_FILTERS=1
 echo "TOXENV=$TOXENV"
 tox --installpkg $WHEEL_PATH
 if [[ "$GITHUB_ACTION" != "" ]]; then

@@ -28,7 +28,7 @@ permissions:
 
 jobs:
   build_wheels:
-    name: Build wheels on ${{ matrix.os }}
+    name: 'Wheels: ${{ matrix.os }} ${{ matrix.arch }}'
     runs-on: ${{ matrix.os }}
     continue-on-error: true
     strategy:
@@ -74,7 +74,7 @@ jobs:
         uses: pypa/cibuildwheel@v2.19.0
         env:
           # Note that tool.cibuildwheel "skip" in pyproject.toml also limits what gets built
-          CIBW_BUILD: "cp3*_${{ matrix.arch }}"
+          CIBW_BUILD: "*_${{ matrix.arch }}"
           CIBW_BEFORE_BUILD: ${{ env.CIBW_BEFORE_BUILD }}
           CIBW_BUILD_FRONTEND: ${{ env.CIBW_BUILD_FRONTEND }}
       - uses: actions/upload-artifact@v4
