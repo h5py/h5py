@@ -70,15 +70,15 @@ jobs:
         if: env.HDF5_CACHE_DIR != ''
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.19.0
-      - uses: actions/upload-artifact@v4
-        with:
-          name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
-          path: ./wheelhouse/*.whl
         env:
           # Note that skip in pyproject.toml also changes what gets built
           CIBW_BUILD: build = "cp3*_${{ matrix.arch }}"
           CIBW_BEFORE_BUILD: ${{ env.CIBW_BEFORE_BUILD }}
           CIBW_BUILD_FRONTEND: ${{ env.CIBW_BUILD_FRONTEND }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
+          path: ./wheelhouse/*.whl
 
   upload_wheels:
     name: Upload wheels
