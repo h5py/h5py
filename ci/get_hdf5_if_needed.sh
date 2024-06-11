@@ -41,8 +41,7 @@ else
         fi
 
         if [[ "$OSTYPE" == "darwin"* ]]; then
-            export CC="/usr/bin/clang"
-            export CXX="/usr/bin/clang"
+            ARCH=$(uname -m)
             ZLIB_VERSION="1.2.13"
 
             pushd /tmp

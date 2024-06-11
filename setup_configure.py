@@ -18,6 +18,7 @@
 
 import os
 import os.path as op
+import platform
 import re
 import sys
 import json
@@ -288,6 +289,7 @@ class HDF5LibWrapper:
             lib = ctypes.CDLL(path, **load_kw)
         except Exception:
             print("error: Unable to load dependency HDF5, make sure HDF5 is installed properly")
+            print(f"on sys.platform={sys.platform} with platform.machine()={platform.machine()}")
             print("Library dirs checked:", libdirs)
             raise
 

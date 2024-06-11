@@ -62,7 +62,7 @@ jobs:
       - name: Cache built HDF5
         uses: actions/cache@v4
         with:
-          key: ${{ matrix.os }}-${{ matrix.arch }}-0  # -${{ hashFiles('**/pyproject.toml') }
+          key: ${{ matrix.os }}-${{ matrix.arch }}-2  # -${{ hashFiles('**/pyproject.toml') }
           path: cache/hdf5
       # Now actually build the wheels
       - name: Install scientific-python-nightly NumPy
@@ -77,6 +77,7 @@ jobs:
           CIBW_BUILD: "*_${{ matrix.arch }}"
           CIBW_BEFORE_BUILD: ${{ env.CIBW_BEFORE_BUILD }}
           CIBW_BUILD_FRONTEND: ${{ env.CIBW_BUILD_FRONTEND }}
+          MACOSX_DEPLOYMENT_TARGET: ${{ env.MACOSX_DEPLOYMENT_TARGET }}
       - uses: actions/upload-artifact@v4
         with:
           name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
