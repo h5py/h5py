@@ -14,7 +14,6 @@ echo "WHEEL_PATH=$WHEEL_PATH"
 export PYVER=$(python -c "import sys; print(''.join(map(str, sys.version_info[:2])))")
 export TOXENV="py$PYVER-test-deps,py$PYVER-test-mindeps,py$PYVER-test-deps-pre"
 export H5PY_TEST_CHECK_FILTERS=1
-export CIBUILDWHEEL=1  # should be passed through but maybe isn't
 echo "TOXENV=$TOXENV"
 cd $PROJECT_PATH
 tox --installpkg $WHEEL_PATH
