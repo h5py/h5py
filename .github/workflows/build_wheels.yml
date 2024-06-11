@@ -79,8 +79,9 @@ jobs:
           echo "CIBW_BEFORE_BUILD=pip install --pre --extra-index-url https://pypi.anaconda.org/scientific-python-nightly-wheels/simple numpy \"Cython>=0.29.31,<4\" pkgconfig \"setuptools>=61\"" >> $GITHUB_ENV
           echo "CIBW_BUILD_FRONTEND=pip; args: --no-build-isolation" >> $GITHUB_ENV
         if: github.event_name == 'schedule'
+      # https://github.com/pypa/cibuildwheel/issues/1278#issuecomment-2052099631
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.19.0
+        uses: larsoner/cibuildwheel@checkmacarm38
         env:
           # Note that tool.cibuildwheel "skip" in pyproject.toml also limits what gets built
           CIBW_ARCHS: ${{ matrix.arch }}
