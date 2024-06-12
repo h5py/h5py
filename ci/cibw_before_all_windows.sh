@@ -26,9 +26,9 @@ python $PROJECT_PATH/ci/get_hdf5_win.py
 
 if [[ "$GITHUB_ENV" != "" ]] ; then
     # PATH on windows is special
-    echo "$EXTRA_PATH" >> $GITHUB_PATH
-    echo "CL=$CL" >> $GITHUB_ENV
-    echo "LINK=$LINK" >> $GITHUB_ENV
-    echo "ZLIB_ROOT=$ZLIB_ROOT" >> $GITHUB_ENV
-    echo "HDF5_DIR=$HDF5_DIR" >> $GITHUB_ENV
+    echo "$EXTRA_PATH" | tee -a $GITHUB_PATH
+    echo "CL=$CL" | tee -a $GITHUB_ENV
+    echo "LINK=$LINK" | tee -a $GITHUB_ENV
+    echo "ZLIB_ROOT=$ZLIB_ROOT" | tee -a $GITHUB_ENV
+    echo "HDF5_DIR=$HDF5_DIR" | tee -a $GITHUB_ENV
 fi

@@ -21,7 +21,7 @@ fi
 source $PROJECT_PATH/ci/get_hdf5_if_needed.sh
 
 if [[ "$GITHUB_ENV" != "" ]]; then
-    echo "HDF5_DIR=$HDF5_DIR" >> $GITHUB_ENV
-    echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH" >> $GITHUB_ENV
-    echo "PKG_CONFIG_PATH=$PKG_CONFIG_PATH" >> $GITHUB_ENV
+    echo "HDF5_DIR=$HDF5_DIR" | tee -a $GITHUB_ENV
+    echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH" | tee -a $GITHUB_ENV
+    echo "PKG_CONFIG_PATH=$PKG_CONFIG_PATH" | tee -a $GITHUB_ENV
 fi

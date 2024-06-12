@@ -7,6 +7,16 @@ concurrency:
 # Adapted from https://github.com/matplotlib/matplotlib/blob/main/.github/workflows/nightlies.yml
 # and https://cibuildwheel.pypa.io/en/stable/setup/#github-actions
 
+# 1. Move as much as possible to pyproject.toml instead of using env vars
+# 2. Use native compiling for macos via -13 (Intel) and -14 (arm) runners
+# 3. On pushes, build and test all wheel variants and push as release artifacts (in
+#    draft mode for main branch pushes).
+# 4. On scheduled runs, build wheels against scientific-python-nightly-wheels NumPy dev,
+#    then upload the resulting wheels there.
+# 5. On PRs, only build and test one aarch64 wheel because emulation is slow.
+# 6. On PRs, build against NumPy dev if [pip-pre] is in the commit message.
+# 7. On PRs, build all aarch64 variants if [aarch64] is in the commit message.
+
 on:
   # Run daily at 1:23 UTC to upload nightly wheels to Anaconda Cloud
   schedule:
@@ -65,13 +75,11 @@ jobs:
         with:
           python-version: 3.12
         if: runner.os == 'Windows'
-      - name: Get HDF5 on Windows
-        run: bash ./ci/cibw_before_all_windows.sh "${{ github.workspace }}"
+      - run: bash ./ci/cibw_before_all_windows.sh "${{ github.workspace }}"
         if: runner.os == 'Windows'
 
       # macOS HDF5
-      - name: Get HDF5 on macOS
-        run: bash ./ci/cibw_before_all_macos.sh "${{ github.workspace }}"
+      - run: bash ./ci/cibw_before_all_macos.sh "${{ github.workspace }}"
         if: runner.os == 'macOS'
       # Hack for 3.8 bug (https://github.com/pypa/cibuildwheel/pull/1871#issuecomment-2161613619)
       - uses: actions/setup-python@v5
@@ -87,46 +95,13 @@ jobs:
         if: runner.os == 'Linux' && matrix.arch == 'aarch64'
 
       # Triage build
-      - name: Triage CIBW_BUILD and NumPy pip-pre
-        shell: bash
-        id: triage
-        run: |
-          set -eo pipefail
-          MSG="$(git show -s --format=%s ${{ github.event.pull_request.head.sha || github.sha }})"
-          KIND="${{ matrix.os }} ${{ matrix.arch }}"
-          # If it's a PR, and aarch64 architecture, and no [aarch64] in the commit message, just build and test one aarch64 wheel with one tox config
-          if [[ "${{ matrix.arch }}" == "aarch64" ]] && [[ "${{ github.event_name }}" == "pull_request" ]] && [[ "$MSG" != *'[aarch64]'* ]]; then
-            echo "Building limited $KIND wheels for PR with commit message: $MSG"
-            CIBW_BUILD="cp312-*_${{ matrix.arch }}"
-            echo "TOX_TEST_LIMITED=1" >> $GITHUB_ENV
-          else
-            echo "Building full $KIND wheels on event_name=${{ github.event_name }} with commit message: $MSG"
-            CIBW_BUILD="*_${{ matrix.arch }}"
-          fi
-          echo "CIBW_BUILD=$CIBW_BUILD"
-          echo "CIBW_BUILD=$CIBW_BUILD" >> $GITHUB_ENV
-          CIBW_SKIP="pp* *musllinux*"
-          # If it's a scheduled build or [pip-pre] in commit message, use pip-pre
-          if [[ "${{ github.event_name}}" == "schedule" ]] || [[ "$MSG" = *'[pip-pre]'* ]]; then
-            echo "Using NumPy pip-pre wheel for wheel building"
-            echo "pip-pre=1" >> $GITHUB_OUTPUT
-            # No Python 3.9 or 3.10 on scientific-python-nightly-wheels
-            CIBW_SKIP="$CIBW_SKIP cp38-* cp39-*"
-          fi
-          echo "CIBW_SKIP=$CIBW_SKIP"
-          echo "CIBW_SKIP=$CIBW_SKIP" >> $GITHUB_ENV
+      - run: bash ./ci/triage_build.sh "${{ matrix.arch }}" "${{ github.event.pull_request.head.sha || github.sha }}"
 
-      - name: Install scientific-python-nightly NumPy
+      - run: echo "TOX_TEST_LIMITED=$TOX_TEST_LIMITED"
         shell: bash
-        run: |
-          set -eo pipefail
-          echo "CIBW_BEFORE_BUILD=pip install --pre --only-binary numpy --extra-index-url https://pypi.anaconda.org/scientific-python-nightly-wheels/simple \"numpy>=2.1.0.dev0\" \"Cython>=0.29.31,<4\" pkgconfig \"setuptools>=61\" wheel" >> $GITHUB_ENV
-          echo "CIBW_BUILD_FRONTEND=pip; args: --no-build-isolation" >> $GITHUB_ENV
-        if: steps.triage.outputs.pip-pre == '1'
 
       # Now actually build the wheels
-      - name: Build wheels
-        uses: pypa/cibuildwheel@v2.19.0
+      - uses: pypa/cibuildwheel@v2.19.0
         env:
           # Note that tool.cibuildwheel "skip" in pyproject.toml also limits what gets built
           CIBW_ARCHS: ${{ matrix.arch }}
