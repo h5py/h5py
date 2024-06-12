@@ -129,6 +129,8 @@ class h5py_build_ext(build_ext):
         from Cython.Build import cythonize
         import numpy
 
+        complex256_support = hasattr(numpy, 'complex256')
+
         # This allows ccache to recognise the files when pip builds in a temp
         # directory. It speeds up repeatedly running tests through tox with
         # ccache configured (CC="ccache gcc"). It should have no effect if
@@ -164,6 +166,7 @@ DEF ROS3 = {bool(config.ros3)}
 DEF HDF5_VERSION = {config.hdf5_version}
 DEF DIRECT_VFD = {bool(config.direct_vfd)}
 DEF VOL_MIN_HDF5_VERSION = (1,11,5)
+DEF COMPLEX256_SUPPORT = {complex256_support}
 DEF NUMPY_BUILD_VERSION = '{numpy.__version__}'
 DEF CYTHON_BUILD_VERSION = '{cython_version}'
 """
