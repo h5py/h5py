@@ -112,7 +112,6 @@ jobs:
             echo "pip-pre=1" >> $GITHUB_OUTPUT
             # No Python 3.9 or 3.10 on scientific-python-nightly-wheels
             CIBW_SKIP="$CIBW_SKIP cp38-* cp39-*"
-          else
           fi
           echo "CIBW_SKIP=$CIBW_SKIP"
           echo "CIBW_SKIP=$CIBW_SKIP" >> $GITHUB_ENV
