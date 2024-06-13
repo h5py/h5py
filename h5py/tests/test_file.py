@@ -106,6 +106,8 @@ class TestFileOpen(TestCase):
     def test_append_permissions(self):
         """ Mode 'a' fails when file is read-only """
         fname = self.mktemp()
+        with File(fname, 'a') as fid:
+            fid.create_group('foo')
         os.chmod(fname, stat.S_IREAD)  # Make file read-only
         try:
             with pytest.raises(PermissionError):
