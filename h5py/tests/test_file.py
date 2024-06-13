@@ -99,11 +99,13 @@ class TestFileOpen(TestCase):
         finally:
             fid.close()
 
-        # TODO: Make this test more robust -- fails on Linux possibly due to the
-        # use of the container in the CI environment...?
-        if os.getenv("CIBUILDWHEEL") == "1" and sys.platform == "linux":
-            return
-
+    @pytest.mark.skipif(
+        os.getenv("CIBUILDWHEEL") == "1" and sys.platform == "linux",
+        reason="Linux docker cibuildwheel environment permissions issue",
+    )
+    def test_append_permissions(self):
+        """ Mode 'a' fails when file is read-only """
+        fname = self.mktemp()
         os.chmod(fname, stat.S_IREAD)  # Make file read-only
         try:
             with pytest.raises(PermissionError):
