@@ -148,10 +148,27 @@ jobs:
         if: github.repository_owner == 'h5py' && github.event_name == 'schedule'
       # If it's a push to master, create a draft release;
       # If it's a tag, publish it to the existing release:
+      - name: Set release variables
+        id: vars
+        run: |
+          set -eo pipefail
+          if [[ "${{ github.ref_type }}" == "tag" ]]; then
+            RELEASE_NAME=""  # use existing one
+            GENERATE=false
+          else
+            RELEASE_NAME=dev
+            GENERATE=true
+          fi
+          echo "release_name=$RELEASE_NAME" >> $GITHUB_OUTPUT
+          echo "generate=$GENERATE" >> $GITHUB_OUTPUT
+
       - name: Upload to GitHub releases
         uses: softprops/action-gh-release@v2
         with:
+          name: ${{ steps.vars.outputs.release_name }}
           draft: ${{ github.ref_type != 'tag' }}
+          prerelease: ${{ github.ref_type != 'tag' }}
+          generate_release_notes: ${{ steps.vars.outputs.generate }}
           files: |
             dist/*.whl
         if: github.repository_owner == 'h5py' && github.event_name == 'push'
