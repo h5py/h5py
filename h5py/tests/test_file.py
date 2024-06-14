@@ -99,16 +99,19 @@ class TestFileOpen(TestCase):
         finally:
             fid.close()
 
-    @pytest.mark.skipif(
-        os.getenv("CIBUILDWHEEL") == "1" and sys.platform == "linux",
-        reason="Linux docker cibuildwheel environment permissions issue",
-    )
+    # Observed on cibuildwheel v2.19.1
+    # @pytest.mark.skipif(
+    #     os.getenv("CIBUILDWHEEL") == "1" and sys.platform == "linux",
+    #     reason="Linux docker cibuildwheel environment permissions issue",
+    # )
     def test_append_permissions(self):
         """ Mode 'a' fails when file is read-only """
         fname = self.mktemp()
         with File(fname, 'a') as fid:
             fid.create_group('foo')
+        print(os.stat(fname).st_mode)
         os.chmod(fname, stat.S_IREAD)  # Make file read-only
+        print(os.stat(fname).st_mode)
         try:
             with pytest.raises(PermissionError):
                 File(fname, 'a')
