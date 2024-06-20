@@ -35,11 +35,14 @@ fi
 CIBW_SKIP="pp* *musllinux*"
 # If it's a scheduled build or [pip-pre] in commit message, use pip-pre
 if [[ "$GITHUB_EVENT_NAME" == "schedule" ]] || [[ "$MSG" = *'[pip-pre]'* ]]; then
-    echo "Using NumPy pip-pre wheel for wheel building, setting CIBW_BEFORE_BUILD and CIBW_BUILD_FRONTEND"
+    echo "Using NumPy pip-pre wheel and enabling Python 3.13 for wheel building, setting CIBW_BEFORE_BUILD, CIBW_BUILD_FRONTEND, and CIBW_PRERELEASE_PYTHONS"
     # No Python 3.9 or 3.10 on scientific-python-nightly-wheels
     CIBW_SKIP="$CIBW_SKIP cp38-* cp39-*"
     echo "CIBW_BEFORE_BUILD=pip install --pre --only-binary numpy --extra-index-url https://pypi.anaconda.org/scientific-python-nightly-wheels/simple \"numpy>=2.1.0.dev0\" \"Cython>=0.29.31,<4\" pkgconfig \"setuptools>=61\" wheel" | tee -a $GITHUB_ENV
     echo "CIBW_BUILD_FRONTEND=pip; args: --no-build-isolation" | tee -a $GITHUB_ENV
+    # Can't enable this until https://github.com/h5py/hdf5-manylinux/issues/11 is taken care of
+    # echo "CIBW_PRERELEASE_PYTHONS=True" | tee -a $GITHUB_ENV
+    echo "CIBW_BEFORE_TEST=pip install --pre --only-binary numpy --extra-index-url https://pypi.anaconda.org/scientific-python-nightly-wheels/simple \"numpy>=2.1.0.dev0\"" | tee -a $GITHUB_ENV
 fi
 # replace dots in PYTHON with nothing, e.g., 3.8->38
 CIBW_BUILD="cp${PYTHON//./}-*_$ARCH"

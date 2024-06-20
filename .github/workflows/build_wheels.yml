@@ -106,7 +106,7 @@ jobs:
         id: triage
 
       # Now actually build the wheels
-      - uses: pypa/cibuildwheel@v2.19.0
+      - uses: pypa/cibuildwheel@v2.19.1
         env:
           # Note that tool.cibuildwheel "skip" in pyproject.toml also limits what gets built
           CIBW_ARCHS: ${{ matrix.arch }}
@@ -115,6 +115,8 @@ jobs:
           CIBW_BEFORE_BUILD: ${{ env.CIBW_BEFORE_BUILD }}
           CIBW_BUILD_FRONTEND: ${{ env.CIBW_BUILD_FRONTEND }}
           TOX_TEST_LIMITED: ${{ env.TOX_TEST_LIMITED }}
+          CIBW_PRERELEASE_PYTHONS: ${{ env.CIBW_PRERELEASE_PYTHONS }}
+          CIBW_BEFORE_TEST: ${{ env.CIBW_BEFORE_TEST }}
         if: steps.triage.outputs.skip != '1'
 
       # And upload the results
