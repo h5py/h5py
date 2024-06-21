@@ -47,6 +47,11 @@ You may also initialize the dataset to an existing NumPy array by providing the 
     >>> arr = np.arange(100)
     >>> dset = f.create_dataset("init", data=arr)
 
+Assigning an array into a group works like specifying ``data`` and no other
+parameters::
+
+    >>> f["init"] = arr
+
 Keywords ``shape`` and ``dtype`` may be specified along with ``data``; if so,
 they will override ``data.shape`` and ``data.dtype``.  It's required that
 (1) the total number of points in ``shape`` match the total number of points
