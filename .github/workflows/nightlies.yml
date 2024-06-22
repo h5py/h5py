@@ -35,15 +35,16 @@ jobs:
         with:
           python-version: "3.11"
       - name: Install cibuildwheel
-        run: python -m pip install cibuildwheel==2.16.5
+        run: python -m pip install cibuildwheel==2.19.1
       - name: Build wheels
         run: python -m cibuildwheel --output-dir wheelhouse
         env:
           CIBW_BEFORE_BUILD: "pip install --pre --extra-index-url https://pypi.anaconda.org/scientific-python-nightly-wheels/simple numpy && pip install \"Cython>=0.29.31,<4\" pkgconfig \"setuptools>=61\""
           CIBW_BUILD_FRONTEND: "pip; args: --no-build-isolation"
-          CIBW_BUILD: "cp3{9,10,11,12}-manylinux_x86_64"
+          CIBW_BUILD: "cp3{9,10,11,12,13}-manylinux_x86_64"
           CIBW_MANYLINUX_X86_64_IMAGE: ghcr.io/h5py/manylinux2014_x86_64-hdf5
           CIBW_ENVIRONMENT: "CFLAGS=-g1"
+          CIBW_PRERELEASE_PYTHONS: true
       - uses: actions/upload-artifact@v4
         with:
           name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
