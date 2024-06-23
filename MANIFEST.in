@@ -9,6 +9,7 @@ include setup_build.py
 include setup_configure.py
 include tox.ini
 include pytest.ini
+include mypy.ini
 include *.toml
 
 recursive-include docs *

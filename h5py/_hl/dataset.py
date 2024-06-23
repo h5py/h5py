@@ -654,7 +654,7 @@ class Dataset(HLObject):
         """Check if extent type is empty"""
         return self._extent_type == h5s.NULL
 
-    @with_phil
+    @with_phil  # type: ignore [misc]
     def __init__(self, bind, *, readonly=False):
         """ Create a new Dataset object by binding to a low-level DatasetID.
         """

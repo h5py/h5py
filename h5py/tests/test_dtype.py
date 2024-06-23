@@ -7,7 +7,7 @@ import platform
 import numpy as np
 import h5py
 try:
-    import tables
+    import tables  # type: ignore [import-not-found]
 except ImportError:
     tables = None
 

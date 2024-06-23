@@ -34,7 +34,7 @@ class Datatype(HLObject):
         """Numpy dtype equivalent for this datatype"""
         return self.id.dtype
 
-    @with_phil
+    @with_phil  # type: ignore [misc]
     def __init__(self, bind):
         """ Create a new Datatype object by binding to a low-level TypeID.
         """

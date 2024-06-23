@@ -60,7 +60,7 @@ class TestCase(ut.TestCase):
 
     def mktemp_mpi(self, comm=None, suffix='.hdf5', prefix='', dir=None):
         if comm is None:
-            from mpi4py import MPI
+            from mpi4py import MPI  # type: ignore [import-not-found]
             comm = MPI.COMM_WORLD
         fname = None
         if comm.Get_rank() == 0:

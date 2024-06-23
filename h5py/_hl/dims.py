@@ -38,7 +38,7 @@ class DimensionProxy(base.CommonStateObject):
         # pylint: disable=missing-docstring
         h5ds.set_label(self._id, self._dimension, self._e(val))
 
-    @with_phil
+    @with_phil  # type: ignore [misc]
     def __init__(self, id_, dimension):
         self._id = id_
         self._dimension = dimension
@@ -138,7 +138,7 @@ class DimensionManager(base.CommonStateObject):
         accessing the ".dims" property on a Dataset.
     """
 
-    @with_phil
+    @with_phil  # type: ignore [misc]
     def __init__(self, parent):
         """ Private constructor.
         """

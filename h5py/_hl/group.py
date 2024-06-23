@@ -10,7 +10,7 @@
 """
     Implements support for high-level access to HDF5 groups.
 """
-
+from typing import cast
 from contextlib import contextmanager
 import posixpath as pp
 import numpy
@@ -39,7 +39,7 @@ class Group(HLObject, MutableMappingHDF5):
                 raise ValueError("%s is not a GroupID" % bind)
             super().__init__(bind)
 
-    _gcpl_crt_order = h5p.create(h5p.GROUP_CREATE)
+    _gcpl_crt_order = cast(h5p.PropGCID, h5p.create(h5p.GROUP_CREATE))
     _gcpl_crt_order.set_link_creation_order(
         h5p.CRT_ORDER_TRACKED | h5p.CRT_ORDER_INDEXED)
     _gcpl_crt_order.set_attr_creation_order(
