@@ -33,7 +33,7 @@ from h5py.h5py_warnings import H5pyDeprecationWarning
 from h5py import version
 import h5py
 import h5py._hl.selections as sel
-
+from h5py.tests.common import NUMPY_RELEASE_VERSION
 
 class BaseDataset(TestCase):
     def setUp(self):
@@ -2023,7 +2023,7 @@ class TestVirtualPrefix(BaseDataset):
 
 
 
-COPY_IF_NEEDED = False if np.__version__.startswith("1.") else None
+COPY_IF_NEEDED = False if NUMPY_RELEASE_VERSION < (2, 0) else None
 
 VIEW_GETTERS = {
     "ds": lambda ds: ds,
@@ -2040,7 +2040,7 @@ def test_array_copy(view_getter, copy, writable_file):
     np.array(view_getter(ds), copy=copy)
 
 @pytest.mark.skipif(
-    np.__version__.startswith("1."),
+    NUMPY_RELEASE_VERSION < (2, 0),
     reason="forbidding copies requires numpy 2",
 )
 @pytest.mark.parametrize("view_getter", VIEW_GETTERS.values(), ids=VIEW_GETTERS.keys())
