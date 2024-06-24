@@ -129,8 +129,7 @@ class h5py_build_ext(build_ext):
         from Cython.Build import cythonize
         import numpy
 
-        complex256_support = hasattr(numpy, 'complex256') and \
-            os.environ.get('CIBW_ARCHS_MACOS') != 'arm64'
+        complex256_support = hasattr(numpy, 'complex256')
 
         # This allows ccache to recognise the files when pip builds in a temp
         # directory. It speeds up repeatedly running tests through tox with

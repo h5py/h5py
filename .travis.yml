@@ -34,19 +34,6 @@ jobs:
       - HDF5_VERSION=1.10.5
       - HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION
       - H5PY_ENFORCE_COVERAGE=yes
-    - arch: arm64
-      services: docker
-      python: 3.9
-      virt: vm
-      env:
-        - TOXENV=py39-test-deps
-        - TOX_OPTS=""
-        - HDF5_VERSION=1.10.5
-        - HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION
-        - H5PY_ENFORCE_COVERAGE=yes
-        - CIBW_BUILD: cp3*-manylinux*
-        - CIBW_MANYLINUX_AARCH64_IMAGE: ghcr.io/h5py/manylinux2014_aarch64-hdf5
-        - CIBW_ARCHS: aarch64
 before_install:
   # - export PATH=/usr/lib/ccache:$PATH
   - ccache -s

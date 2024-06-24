@@ -12,7 +12,7 @@ steps:
     ${{ if eq(parameters.platform, 'windows') }}:
       key: 0 | HDF5 | "$(Agent.OS)" | "$(Agent.OSArchitecture)" | "$(HDF5_VERSION)" | "$(HDF5_VSVERSION)" | "$(HDF5_MPI)" | ci/get_hdf5_win.py
     ${{ if ne(parameters.platform, 'windows') }}:
-      key: 0 | HDF5 | "$(Agent.OS)" | "$(Agent.OSArchitecture)" | "$(HDF5_VERSION)" | "$(HDF5_MPI)" | ci/get_hdf5_if_needed.sh | ci/configure_hdf5_mac.sh
+      key: 0 | HDF5 | "$(Agent.OS)" | "$(Agent.OSArchitecture)" | "$(HDF5_VERSION)" | "$(HDF5_MPI)" | ci/get_hdf5_if_needed.sh
     path: $(HDF5_CACHE_DIR)
   condition: and(succeeded(), ne(variables['HDF5_VERSION'], ''))
 
