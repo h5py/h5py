@@ -148,14 +148,15 @@ jobs:
           artifacts_path: dist
           anaconda_nightly_upload_token: ${{ secrets.ANACONDA_ORG_UPLOAD_TOKEN }}
         if: github.repository_owner == 'h5py' && github.event_name == 'schedule'
-      # If it's a push to master, create a draft release;
-      # If it's a tag, publish it to the existing release:
+      # If it's a push to master, create a (private) draft release;
+      # If it's a tag, publish it to the existing public release, knowing that the tag name
+      # is the same as th release name:
       - name: Set release variables
         id: vars
         run: |
           set -eo pipefail
           if [[ "${{ github.ref_type }}" == "tag" ]]; then
-            RELEASE_NAME=""  # use existing one
+            RELEASE_NAME=""  # will use the tag name, which we always set to the release name
             GENERATE=false
           else
             RELEASE_NAME=dev
@@ -166,8 +167,10 @@ jobs:
 
       - name: Upload to GitHub releases
         uses: softprops/action-gh-release@v2
+        # https://github.com/softprops/action-gh-release?tab=readme-ov-file#inputs
         with:
           name: ${{ steps.vars.outputs.release_name }}
+          # Note that draft releases are not public
           draft: ${{ github.ref_type != 'tag' }}
           prerelease: ${{ github.ref_type != 'tag' }}
           generate_release_notes: ${{ steps.vars.outputs.generate }}
