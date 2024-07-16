@@ -66,13 +66,15 @@ jobs:
         with:
           fetch-depth: 0  # get the non-merge commit for PRs
 
-      # Get HDF5 outside of cibuildwheel so that we can cache the result
+      # Get HDF5 outside of cibuildwheel so that we can set env vars via GITHUB_ENV
+      # inside the HDF5-getting scripts and have them be in effect for the
+      # cibuildwheel step.
 
       # Cache HDF5
       - name: Cache built HDF5
         uses: actions/cache@v4
         with:
-          key: ${{ matrix.os }}-${{ matrix.arch }}-3
+          key: ${{ matrix.os }}-${{ matrix.arch }}-6
           path: cache/hdf5
 
       # Windows HDF5
