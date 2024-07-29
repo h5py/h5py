@@ -52,6 +52,10 @@ _COMP_FILTERS = {'gzip': h5z.FILTER_DEFLATE,
                 'shuffle': h5z.FILTER_SHUFFLE,
                 'fletcher32': h5z.FILTER_FLETCHER32,
                 'scaleoffset': h5z.FILTER_SCALEOFFSET }
+_FILL_TIME_ENUM = {'alloc': h5d.FILL_TIME_ALLOC,
+                   'never': h5d.FILL_TIME_NEVER,
+                   'ifset': h5d.FILL_TIME_IFSET,
+                   }
 
 DEFAULT_GZIP = 4
 DEFAULT_SZIP = ('nn', 8)
