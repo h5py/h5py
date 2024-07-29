@@ -105,7 +105,7 @@ def make_new_dset(parent, shape=None, dtype=None, data=None, name=None,
     dcpl = filters.fill_dcpl(
         dcpl or h5p.create(h5p.DATASET_CREATE), shape, dtype,
         chunks, compression, compression_opts, shuffle, fletcher32,
-        maxshape, scaleoffset, external, allow_unknown_filter)
+        maxshape, scaleoffset, external, allow_unknown_filter, write_fill)
 
     if fillvalue is not None:
         # prepare string-type dtypes for fillvalue

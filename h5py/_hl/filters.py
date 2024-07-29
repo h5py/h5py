@@ -146,7 +146,7 @@ class Gzip(FilterRefBase):
 
 def fill_dcpl(plist, shape, dtype, chunks, compression, compression_opts,
               shuffle, fletcher32, maxshape, scaleoffset, external,
-              allow_unknown_filter=False):
+              allow_unknown_filter=False, write_fill=None):
     """ Generate a dataset creation property list.
 
     Undocumented and subject to change without warning.
