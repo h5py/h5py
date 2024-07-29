@@ -150,7 +150,7 @@ class Gzip(FilterRefBase):
 
 def fill_dcpl(plist, shape, dtype, chunks, compression, compression_opts,
               shuffle, fletcher32, maxshape, scaleoffset, external,
-              allow_unknown_filter=False, write_fill=None):
+              allow_unknown_filter=False, fill_time=None):
     """ Generate a dataset creation property list.
 
     Undocumented and subject to change without warning.
@@ -264,22 +264,22 @@ def fill_dcpl(plist, shape, dtype, chunks, compression, compression_opts,
     if chunks is not None:
         plist.set_chunk(chunks)
 
-    if write_fill is None:
+    if fill_time is None:
         if chunks is None:
-            write_fill = 'ifset'
+            fill_time = 'ifset'
         else:
-            write_fill = 'alloc'  # prevent resize glitch
+            fill_time = 'alloc'  # prevent resize glitch
     else:
-        invalid_fill_time = (isinstance(write_fill, str) and
-                             write_fill.lower() not in
+        invalid_fill_time = (isinstance(fill_time, str) and
+                             fill_time.lower() not in
                              ('alloc', 'never', 'ifset'))
-        fill_time_not_str = not isinstance(write_fill, str)
+        fill_time_not_str = not isinstance(fill_time, str)
         if invalid_fill_time or fill_time_not_str:
-            msg = ("write_fill must be one of the following choices: 'alloc', "
-                   f"'never' or 'ifset', but it is {write_fill}.")
+            msg = ("fill_time must be one of the following choices: 'alloc', "
+                   f"'never' or 'ifset', but it is {fill_time}.")
             raise ValueError(msg)
 
-    plist.set_fill_time(_FILL_TIME_ENUM[write_fill.lower()])
+    plist.set_fill_time(_FILL_TIME_ENUM[fill_time.lower()])
 
     # scale-offset must come before shuffle and compression
     if scaleoffset is not None:
