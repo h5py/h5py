@@ -263,7 +263,6 @@ def fill_dcpl(plist, shape, dtype, chunks, compression, compression_opts,
 
     if chunks is not None:
         plist.set_chunk(chunks)
-        plist.set_fill_time(h5d.FILL_TIME_ALLOC)  # prevent resize glitch
 
     if write_fill is None:
         if chunks is None:
@@ -279,6 +278,8 @@ def fill_dcpl(plist, shape, dtype, chunks, compression, compression_opts,
             msg = ("write_fill must be one of the following choices: 'alloc', "
                    f"'never' or 'ifset', but it is {write_fill}.")
             raise ValueError(msg)
+
+    plist.set_fill_time(_FILL_TIME_ENUM[write_fill.lower()])
 
     # scale-offset must come before shuffle and compression
     if scaleoffset is not None:
