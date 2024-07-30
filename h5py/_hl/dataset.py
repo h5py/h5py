@@ -35,11 +35,10 @@ MPI = h5.get_config().mpi
 def make_new_dset(parent, shape=None, dtype=None, data=None, name=None,
                   chunks=None, compression=None, shuffle=None,
                   fletcher32=None, maxshape=None, compression_opts=None,
-                  fillvalue=None, fill_time=None, scaleoffset=None,
-                  track_times=False, external=None, track_order=None,
-                  dcpl=None, dapl=None, efile_prefix=None, virtual_prefix=None,
-                  allow_unknown_filter=False, rdcc_nslots=None,
-                  rdcc_nbytes=None, rdcc_w0=None):
+                  fillvalue=None, scaleoffset=None, track_times=False,
+                  external=None, track_order=None, dcpl=None, dapl=None,
+                  efile_prefix=None, virtual_prefix=None, allow_unknown_filter=False,
+                  rdcc_nslots=None, rdcc_nbytes=None, rdcc_w0=None):
     """ Return a new low-level dataset identifier """
 
     # Convert data to a C-contiguous ndarray
