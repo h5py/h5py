@@ -17,7 +17,7 @@ from subprocess import run
 from zipfile import ZipFile
 import requests
 
-HDF5_URL = "https://www.hdfgroup.org/ftp/HDF5/releases/hdf5-{series}/hdf5-{version}/src/hdf5-{version}.zip"
+HDF5_URL = "https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-{series}/hdf5-{version}/src/hdf5-{version}.zip"
 ZLIB_ROOT = environ.get('ZLIB_ROOT')
 
 CMAKE_CONFIGURE_CMD = [
