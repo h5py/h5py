@@ -51,7 +51,7 @@ jobs:
 
 - job: 'macos_wheels'
   pool:
-    vmImage: macOS-11
+    vmImage: macOS-12
   variables:
     MACOSX_DEPLOYMENT_TARGET: 10.9
     HDF5_VERSION: 1.12.2
@@ -254,7 +254,7 @@ jobs:
 
 - job: 'macOS11'
   pool:
-    vmImage: macOS-11
+    vmImage: macOS-12
   timeoutInMinutes: 70  # 60 is a little short for macOS sometimes
   strategy:
     matrix:
@@ -281,7 +281,7 @@ jobs:
 - job: 'test_macos_wheels'
   dependsOn: macos_wheels
   pool:
-    vmImage: macOS-11
+    vmImage: macOS-12
   variables:
     H5PY_TEST_CHECK_FILTERS: 1
 
