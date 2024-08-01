@@ -34,9 +34,16 @@ else
     else
         echo "building HDF5"
 
-        MINOR_V=${HDF5_VERSION#*.}
-        MINOR_V=${MINOR_V%.*}
-        MAJOR_V=${HDF5_VERSION/%.*.*}
+        IFS='.-' read MAJOR_V MINOR_V REL_V PATCH_V <<< "$HDF5_VERSION"
+        # the assets in GitHub (currently) has two naming conventions
+        if [[ -n "${PATCH_V}" ]]; then
+            ASSET_FMT1="hdf5-${MAJOR_V}_${MINOR_V}_${REL_V}-${PATCH_V}"
+            ASSET_FMT2="hdf5_${MAJOR_V}.${MINOR_V}.${REL_V}.${PATCH_V}"
+        else
+            ASSET_FMT1="hdf5-${MAJOR_V}_${MINOR_V}_${REL_V}"
+            ASSET_FMT2="hdf5_${MAJOR_V}.${MINOR_V}.${REL_V}"
+        fi
+
         if [[ $MAJOR_V -gt 1 || $MINOR_V -ge 12 ]]; then
             BUILD_MODE="--enable-build-mode=production"
         fi
@@ -54,9 +61,15 @@ else
         fi
 
         pushd /tmp
-        #                                   Remove trailing .*, to get e.g. '1.12' ↓
-        curl -fsSLO "https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-$MAJOR_V.$MINOR_V/hdf5-$HDF5_VERSION/src/hdf5-$HDF5_VERSION.tar.gz"
-        tar -xzvf hdf5-$HDF5_VERSION.tar.gz
+        # temporarily turn off -e option as curl will emit non-zero exit code
+        # as only one assert format is valid
+        # (curl exits with 22 with http code >400)
+        set +e
+        curl -fsSL -o "hdf5-$HDF5_VERSION.tar.gz" "https://github.com/HDFGroup/hdf5/archive/refs/tags/{${ASSET_FMT1},${ASSET_FMT2}}.tar.gz"
+        set -e
+
+        tar -xzvf hdf5-$HDF5_VERSION.tar.gz --one-top-level --strip-components=1
+
         pushd hdf5-$HDF5_VERSION
 
         if [[ "$OSTYPE" == "darwin"* && "$CIBW_ARCHS_MACOS" = "arm64"  ]]; then
