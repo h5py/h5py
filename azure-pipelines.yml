@@ -23,59 +23,6 @@ jobs:
         tox
       displayName: tox
 
-- job: 'linux_wheels'
-  pool:
-    vmImage: ubuntu-20.04
-  variables:
-    CIBW_BUILD: cp3{8,9,10,11,12}-manylinux_x86_64
-    CIBW_MANYLINUX_X86_64_IMAGE: ghcr.io/h5py/manylinux2014_x86_64-hdf5
-    # Include less debugging info for smaller wheels (default is -g2)
-    CIBW_ENVIRONMENT: "CFLAGS=-g1"
-  steps:
-    - template: ci/azure-pipelines-wheels.yml
-      parameters:
-        platform: linux
-
-- job: 'windows_wheels'
-  pool:
-    vmImage: windows-2019
-  variables:
-    HDF5_VERSION: 1.14.2
-    HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
-    HDF5_VSVERSION: "16-64"
-    CIBW_BUILD: cp3{8,9,10,11,12}-win_amd64
-  steps:
-    - template: ci/azure-pipelines-wheels.yml
-      parameters:
-        platform: windows
-
-- job: 'macos_wheels'
-  pool:
-    vmImage: macOS-11
-  variables:
-    MACOSX_DEPLOYMENT_TARGET: 10.9
-    HDF5_VERSION: 1.12.2
-    H5PY_ROS3: '0'
-    H5PY_DIRECT_VFD: '0'
-    HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
-    CIBW_BUILD_VERBOSITY_MACOS: 3
-    CIBW_ARCHS_MACOS: $(arch)
-    CIBW_BUILD: cp3{8,9,10,11,12}-macosx_*
-    CIBW_ENVIRONMENT_MACOS: LD_LIBRARY_PATH="$(HDF5_CACHE_DIR)/$(HDF5_VERSION)/lib:${LD_LIBRARY_PATH}" PKG_CONFIG_PATH="$(HDF5_CACHE_DIR)/$(HDF5_VERSION)/lib/pkgconfig:${PKG_CONFIG_PATH}"
-    CIBW_REPAIR_WHEEL_COMMAND_MACOS: >
-      DYLD_FALLBACK_LIBRARY_PATH=$(HDF5_CACHE_DIR)/$(HDF5_VERSION)/lib delocate-listdeps {wheel} &&
-      DYLD_FALLBACK_LIBRARY_PATH=$(HDF5_CACHE_DIR)/$(HDF5_VERSION)/lib delocate-wheel --require-archs {delocate_archs} -w {dest_dir} {wheel}
-  strategy:
-    matrix:
-      x86_64:
-        arch: 'x86_64'
-      arm64:
-        arch: 'arm64'
-  steps:
-    - template: ci/azure-pipelines-wheels.yml
-      parameters:
-        platform: macos_$(arch)
-
 - job: 'ubuntu'
   pool:
     vmImage: ubuntu-20.04
@@ -136,44 +83,6 @@ jobs:
         installer: apt
         shell: unix
 
-
-
-- job: 'test_linux_wheels'
-  dependsOn: linux_wheels
-  pool:
-    vmImage: ubuntu-20.04
-  variables:
-    H5PY_TEST_CHECK_FILTERS: 1
-
-  strategy:
-    matrix:
-      py38:
-        python.version: '3.8'
-        TOXENV: py38-test-deps,py38-test-mindeps,py38-test-deps-pre
-        WHL_FILE: h5py*-cp38-*manylinux2014_x86_64.whl
-      py39:
-        python.version: '3.9'
-        TOXENV: py39-test-deps,py39-test-mindeps,py39-test-deps-pre
-        WHL_FILE: h5py*-cp39-*manylinux2014_x86_64.whl
-      py310:
-        python.version: '3.10'
-        TOXENV: py310-test-deps,py310-test-mindeps,py310-test-deps-pre
-        WHL_FILE: h5py*-cp310-*manylinux2014_x86_64.whl
-      py311:
-        python.version: '3.11'
-        TOXENV: py311-test-deps,py311-test-mindeps,py311-test-deps-pre
-        WHL_FILE: h5py*-cp311-*manylinux2014_x86_64.whl
-      py312:
-        python.version: '3.12'
-        TOXENV: py312-test-deps,py312-test-mindeps,py312-test-deps-pre
-        WHL_FILE: h5py*-cp312-*manylinux2014_x86_64.whl
-
-  steps:
-    - template: ci/azure-pipelines-test-wheels.yml
-      parameters:
-        platform: linux
-
-
 - job: 'Windows'
   pool:
     vmImage: windows-2019
@@ -217,44 +126,9 @@ jobs:
         installer: nuget
         shell: cmd
 
-- job: 'test_windows_wheels'
-  dependsOn: windows_wheels
+- job: 'macOS12'
   pool:
-    vmImage: windows-2019
-  variables:
-    H5PY_TEST_CHECK_FILTERS: 1
-
-  strategy:
-    matrix:
-      py38:
-        python.version: '3.8'
-        TOXENV: py38-test-deps,py38-test-mindeps,py38-test-deps-pre
-        WHL_FILE: h5py*-cp38-*.whl
-      py39:
-        python.version: '3.9'
-        TOXENV: py39-test-deps,py39-test-mindeps,py39-test-deps-pre
-        WHL_FILE: h5py*-cp39-*.whl
-      py310:
-        python.version: '3.10'
-        TOXENV: py310-test-deps,py310-test-mindeps,py310-test-deps-pre
-        WHL_FILE: h5py*-cp310-*.whl
-      py311:
-        python.version: '3.11'
-        TOXENV: py311-test-deps,py311-test-mindeps,py311-test-deps-pre
-        WHL_FILE: h5py*-cp311-*.whl
-      py312:
-        python.version: '3.12'
-        TOXENV: py312-test-deps,py312-test-mindeps,py312-test-deps-pre
-        WHL_FILE: h5py*-cp312-*.whl
-
-  steps:
-    - template: ci/azure-pipelines-test-wheels.yml
-      parameters:
-        platform: windows
-
-- job: 'macOS11'
-  pool:
-    vmImage: macOS-11
+    vmImage: macOS-12
   timeoutInMinutes: 70  # 60 is a little short for macOS sometimes
   strategy:
     matrix:
@@ -277,38 +151,3 @@ jobs:
         platform: macos
         installer: brew
         shell: unix
-
-- job: 'test_macos_wheels'
-  dependsOn: macos_wheels
-  pool:
-    vmImage: macOS-11
-  variables:
-    H5PY_TEST_CHECK_FILTERS: 1
-
-  strategy:
-    matrix:
-      py38:
-        python.version: '3.8'
-        TOXENV: py38-test-deps,py38-test-mindeps,py38-test-deps-pre
-        WHL_FILE: h5py*-cp38-*.whl
-      py39:
-        python.version: '3.9'
-        TOXENV: py39-test-deps,py39-test-mindeps,py39-test-deps-pre
-        WHL_FILE: h5py*-cp39-*.whl
-      py310:
-        python.version: '3.10'
-        TOXENV: py310-test-deps,py310-test-mindeps,py310-test-deps-pre
-        WHL_FILE: h5py*-cp310-*.whl
-      py311:
-        python.version: '3.11'
-        TOXENV: py311-test-deps,py311-test-mindeps,py311-test-deps-pre
-        WHL_FILE: h5py*-cp311-*.whl
-      py312:
-        python.version: '3.12'
-        TOXENV: py312-test-deps,py312-test-mindeps,py312-test-deps-pre
-        WHL_FILE: h5py*-cp312-*.whl
-
-  steps:
-    - template: ci/azure-pipelines-test-wheels.yml
-      parameters:
-        platform: macos_x86_64

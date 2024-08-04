@@ -52,7 +52,7 @@ def _run(proc: Popen, timeout):
 
 def run_with_python(args, timeout=30, **kwargs):
     if platform.system() == 'Windows':
-        exe = ['py', '-' + PYVERSION, '-m']
+        exe = [sys.executable, "-m"]
     else:
         exe = []
     cmd = exe + args

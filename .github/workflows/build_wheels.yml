@@ -1,0 +1,181 @@
+---
+name: Build
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.number }}-${{ github.event.ref }}
+  cancel-in-progress: true
+
+# Adapted from https://github.com/matplotlib/matplotlib/blob/main/.github/workflows/nightlies.yml
+# and https://cibuildwheel.pypa.io/en/stable/setup/#github-actions
+
+# 1. Move as much as possible to pyproject.toml instead of using env vars
+# 2. Use native compiling for macOS via -13 (Intel) and -14 (arm) runners
+# 3. For aarch64, only ever test py312 and skip testing other python versions
+#    (for speed).
+# 4. Split aarch64 python version builds over jobs, for all other systems/archs build
+#    wheels for all Python versions in a single job (for speed).
+# 5. On pushes, build and test all wheels and push as release artifacts (in
+#    draft mode for main branch pushes).
+# 6. On scheduled runs, build and test all wheels against
+#    scientific-python-nightly-wheels NumPy dev, then upload the resulting wheels there.
+# 7. On PRs, only build one aarch64 wheel (for speed).
+# 8. On PRs, build against NumPy dev if [pip-pre] is in the commit message.
+# 9. On PRs, build all aarch64 variants if [aarch64] is in the commit message.
+
+on:
+  # Run daily at 1:23 UTC to upload nightly wheels to Anaconda Cloud
+  schedule:
+    - cron: '23 1 * * *'
+  # Run on demand with workflow dispatch
+  workflow_dispatch:
+  # Run on all PRs
+  pull_request:
+  # Run on tags
+  push:
+    branches:
+      - master
+    tags:
+      - '*'
+
+permissions:
+  actions: read
+  contents: write
+
+jobs:
+  build_wheels:
+    name: 'Wheels: ${{ matrix.os }} ${{ matrix.arch }} ${{ matrix.python }}'
+    runs-on: ${{ matrix.os }}
+    continue-on-error: true
+    strategy:
+      matrix:
+        # Wheel builds are fast except for aarch64, so split that into multiple jobs,
+        # one for each Python version
+        os: [ubuntu-latest]
+        arch: [aarch64]
+        python: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+        include:
+          - os: ubuntu-latest
+            arch: x86_64
+          - os: windows-latest
+            arch: AMD64
+          - os: macos-14
+            arch: arm64
+          - os: macos-13
+            arch: x86_64
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # get the non-merge commit for PRs
+
+      # Get HDF5 outside of cibuildwheel so that we can set env vars via GITHUB_ENV
+      # inside the HDF5-getting scripts and have them be in effect for the
+      # cibuildwheel step.
+
+      # Cache HDF5
+      - name: Cache built HDF5
+        uses: actions/cache@v4
+        with:
+          key: ${{ matrix.os }}-${{ matrix.arch }}-6
+          path: cache/hdf5
+
+      # Windows HDF5
+      - uses: nuget/setup-nuget@v2
+        if: runner.os == 'Windows'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: 3.12
+        if: runner.os == 'Windows'
+      - run: bash ./ci/cibw_before_all_windows.sh "${{ github.workspace }}"
+        if: runner.os == 'Windows'
+
+      # macOS HDF5
+      - run: bash ./ci/cibw_before_all_macos.sh "${{ github.workspace }}"
+        if: runner.os == 'macOS'
+      # Hack for 3.8 bug (https://github.com/pypa/cibuildwheel/pull/1871#issuecomment-2161613619)
+      - uses: actions/setup-python@v5
+        with:
+          python-version: 3.8
+        if: runner.os == 'macOS' && matrix.arch == 'arm64'
+
+      # Linux emulation for aarch64 support
+      # https://cibuildwheel.pypa.io/en/stable/faq/#emulation
+      - uses: docker/setup-qemu-action@v3
+        with:
+          platforms: all
+        if: runner.os == 'Linux' && matrix.arch == 'aarch64'
+
+      # Triage build, and set outputs.skip = 1 if on aarch64 and we don't want to build the wheel
+      - run: bash ./ci/triage_build.sh "${{ matrix.arch }}" "${{ github.event.pull_request.head.sha || github.sha }}" "${{ matrix.python }}"
+        id: triage
+
+      # Now actually build the wheels
+      - uses: pypa/cibuildwheel@v2.19.1
+        env:
+          # Note that tool.cibuildwheel "skip" in pyproject.toml also limits what gets built
+          CIBW_ARCHS: ${{ matrix.arch }}
+          CIBW_BUILD: ${{ env.CIBW_BUILD }}
+          CIBW_SKIP: ${{ env.CIBW_SKIP }}
+          CIBW_BEFORE_BUILD: ${{ env.CIBW_BEFORE_BUILD }}
+          CIBW_BUILD_FRONTEND: ${{ env.CIBW_BUILD_FRONTEND }}
+          TOX_TEST_LIMITED: ${{ env.TOX_TEST_LIMITED }}
+          CIBW_PRERELEASE_PYTHONS: ${{ env.CIBW_PRERELEASE_PYTHONS }}
+          CIBW_BEFORE_TEST: ${{ env.CIBW_BEFORE_TEST }}
+        if: steps.triage.outputs.skip != '1'
+
+      # And upload the results
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
+          path: ./wheelhouse/*.whl
+        if: steps.triage.outputs.skip != '1'
+
+  upload_wheels:
+    name: Upload wheels
+    needs: build_wheels
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -el {0}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: cibw-wheels-*
+          merge-multiple: true
+          path: dist
+      - run: pwd && ls -alt . && ls -alt dist/
+      # If it's a PR, do nothing else.
+      # If it's a scheduled run, it was built with nightly NumPy, push to scientific-python:
+      - name: Upload wheels to Anaconda Cloud as nightlies
+        uses: scientific-python/upload-nightly-action@b67d7fcc0396e1128a474d1ab2b48aa94680f9fc # 0.5.0
+        with:
+          artifacts_path: dist
+          anaconda_nightly_upload_token: ${{ secrets.ANACONDA_ORG_UPLOAD_TOKEN }}
+        if: github.repository_owner == 'h5py' && github.event_name == 'schedule'
+      # If it's a push to master, create a (private) draft release;
+      # If it's a tag, publish it to the existing public release, knowing that the tag name
+      # is the same as th release name:
+      - name: Set release variables
+        id: vars
+        run: |
+          set -eo pipefail
+          if [[ "${{ github.ref_type }}" == "tag" ]]; then
+            RELEASE_NAME=""  # will use the tag name, which we always set to the release name
+            GENERATE=false
+          else
+            RELEASE_NAME=dev
+            GENERATE=true
+          fi
+          echo "release_name=$RELEASE_NAME" >> $GITHUB_OUTPUT
+          echo "generate=$GENERATE" >> $GITHUB_OUTPUT
+
+      - name: Upload to GitHub releases
+        uses: softprops/action-gh-release@v2
+        # https://github.com/softprops/action-gh-release?tab=readme-ov-file#inputs
+        with:
+          name: ${{ steps.vars.outputs.release_name }}
+          # Note that draft releases are not public
+          draft: ${{ github.ref_type != 'tag' }}
+          prerelease: ${{ github.ref_type != 'tag' }}
+          generate_release_notes: ${{ steps.vars.outputs.generate }}
+          files: |
+            dist/*.whl
+        if: github.repository_owner == 'h5py' && github.event_name == 'push'
