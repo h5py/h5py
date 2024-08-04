@@ -878,7 +878,7 @@ class TestPickle(TestCase):
 class TestMPI:
     def test_mpio(self, mpi_file_name):
         """ MPIO driver and options """
-        from mpi4py import MPI
+        from mpi4py import MPI  # type: ignore [import-not-found]
 
         with File(mpi_file_name, 'w', driver='mpio', comm=MPI.COMM_WORLD) as f:
             assert f
