@@ -61,12 +61,8 @@ else
         fi
 
         pushd /tmp
-        # temporarily turn off -e option as curl will emit non-zero exit code
-        # as only one assert format is valid
-        # (curl exits with 22 with http code >400)
-        set +e
-        curl -fsSL -o "hdf5-$HDF5_VERSION.tar.gz" "https://github.com/HDFGroup/hdf5/archive/refs/tags/{${ASSET_FMT1},${ASSET_FMT2}}.tar.gz"
-        set -e
+        url_base="https://github.com/HDFGroup/hdf5/archive/refs/tags/"
+        curl -fsSL -o "hdf5-$HDF5_VERSION.tar.gz" "${url_base}${ASSET_FMT1}.tar.gz" || curl -fsSL -o "hdf5-$HDF5_VERSION.tar.gz" "${url_base}${ASSET_FMT2}.tar.gz"
 
         tar -xzvf hdf5-$HDF5_VERSION.tar.gz --one-top-level --strip-components=1
 
