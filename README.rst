@@ -8,7 +8,7 @@
 HDF5 for Python
 ===============
 `h5py` is a thin, pythonic wrapper around `HDF5 <https://portal.hdfgroup.org/hdf5/develop/index.html>`_,
-which runs on Python 3 (3.8+).
+which runs on Python 3 (3.9+).
 
 Websites
 --------

@@ -125,7 +125,7 @@ def build_hdf5(version, hdf5_file, install_path, cmake_generator, use_prefix,
 
 
 def get_cmake_config_path(extract_point, zip_file):
-    dir_suffix = basename(zip_file).replace(".zip", "")
+    dir_suffix = basename(zip_file).removesuffix(".zip")
     return pjoin(extract_point, REL_PATH_TO_CMAKE_CFG.format(dir_suffix=dir_suffix))
 
 

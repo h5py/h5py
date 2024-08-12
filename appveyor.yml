@@ -8,8 +8,8 @@ environment:
 
     ### USING HDF5 1.10 ###
 
-    - PYTHON: "C:\\Python38"
-      TOXENV: "py38-test-deps"
+    - PYTHON: "C:\\Python39"
+      TOXENV: "py39-test-deps"
       HDF5_VSVERSION: "14"
       HDF5_DIR: "C:\\hdf5\\%HDF5_VERSION%\\%HDF5_VSVERSION%"
       HDF5_VERSION: "1.10.6"
@@ -31,10 +31,10 @@ environment:
 install:
   # We need wheel installed to build wheels
   - "%PYTHON%\\python.exe -m pip install --upgrade wheel pip setuptools"
-  - "py -3.8 -m pip install --upgrade wheel pip setuptools virtualenv"
-  - "py -3.8 -m pip install requests"
-  - "py -3.8 ci\\get_hdf5_win.py"
-  - "py -3.8 -m pip install tox codecov"
+  - "py -3.9 -m pip install --upgrade wheel pip setuptools virtualenv"
+  - "py -3.9 -m pip install requests"
+  - "py -3.9 ci\\get_hdf5_win.py"
+  - "py -3.9 -m pip install tox codecov"
 
 build: off
 
@@ -43,7 +43,7 @@ test_script:
   # Note that you must use the environment variable %PYTHON% to refer to
   # the interpreter you're using - Appveyor does not do anything special
   # to put the Python evrsion you want to use on PATH.
-  - "py -3.8 -m tox run --discover %PYTHON%\\python.exe"
+  - "py -3.9 -m tox run --discover %PYTHON%\\python.exe"
 
 # This is commented out as there's no easy way to deal with numpy dropping
 # older python versions without a recent pip/setuptools.
@@ -60,4 +60,4 @@ cache:
   - "C:\\hdf5"
 
 on_success:
-  - "py -3.8 ci\\upload_coverage.py"
+  - "py -3.9 ci\\upload_coverage.py"

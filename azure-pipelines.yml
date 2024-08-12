@@ -34,23 +34,23 @@ jobs:
       # -tables : also check compatibility with pytables
     # HDF5 installed from apt on Ubuntu
     # test when we're not in a unicode locale
-      py38-Clocale:
-        python.version: '3.8'
-        TOXENV: py38-test-deps
+      py39-Clocale:
+        python.version: '3.9'
+        TOXENV: py39-test-deps
         TOX_TESTENV_PASSENV: LANG LC_ALL
         LANG: C
         LC_ALL: C
         H5PY_ENFORCE_COVERAGE: yes
     # Build HDF5 1.10 or 1.12 in the test environment
-      py38-deps-hdf51107:
-        python.version: '3.8'
-        TOXENV: py38-test-deps
+      py39-deps-hdf51107:
+        python.version: '3.9'
+        TOXENV: py39-test-deps
         HDF5_VERSION: 1.10.7
         HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
         H5PY_ENFORCE_COVERAGE: yes
-      py38-deps-hdf51120:
-        python.version: '3.8'
-        TOXENV: py38-test-deps
+      py39-deps-hdf51120:
+        python.version: '3.9'
+        TOXENV: py39-test-deps
         HDF5_VERSION: 1.12.0
         HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
         H5PY_ENFORCE_COVERAGE: yes
@@ -102,9 +102,9 @@ jobs:
         H5PY_ENFORCE_COVERAGE: yes
     # 64 bit - HDF5 1.12
     # Fewer combinations here; test_windows_wheels also tests HDF5 1.12
-      py38-hdf5112:
-        python.version: '3.8'
-        TOXENV: py38-test-deps
+      py39-hdf5112:
+        python.version: '3.9'
+        TOXENV: py39-test-deps
         HDF5_VERSION: 1.12.0
         HDF5_DIR: $(HDF5_CACHE_DIR)/$(HDF5_VERSION)
         HDF5_VSVERSION: "16-64"
@@ -135,9 +135,9 @@ jobs:
       # -deps : test with default (latest) versions of dependencies
       # -mindeps : test with oldest supported version of (python) dependencies
       # -deps-pre : test pre-release versions of (python) dependencies)
-      py38:
-        python.version: '3.8'
-        TOXENV: py38-test-deps,py38-test-mindeps,py38-test-deps-pre
+      py39:
+        python.version: '3.9'
+        TOXENV: py39-test-deps,py39-test-mindeps,py39-test-deps-pre
         H5PY_ENFORCE_COVERAGE: yes
       py310:
         python.version: '3.10'
