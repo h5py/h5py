@@ -33,9 +33,16 @@ else
     else
         echo "building HDF5"
 
-        MINOR_V=${HDF5_VERSION#*.}
-        MINOR_V=${MINOR_V%.*}
-        MAJOR_V=${HDF5_VERSION/%.*.*}
+        IFS='.-' read MAJOR_V MINOR_V REL_V PATCH_V <<< "$HDF5_VERSION"
+        # the assets in GitHub (currently) have two naming conventions
+        if [[ -n "${PATCH_V}" ]]; then
+            ASSET_FMT1="hdf5-${MAJOR_V}_${MINOR_V}_${REL_V}-${PATCH_V}"
+            ASSET_FMT2="hdf5_${MAJOR_V}.${MINOR_V}.${REL_V}.${PATCH_V}"
+        else
+            ASSET_FMT1="hdf5-${MAJOR_V}_${MINOR_V}_${REL_V}"
+            ASSET_FMT2="hdf5_${MAJOR_V}.${MINOR_V}.${REL_V}"
+        fi
+
         if [[ $MAJOR_V -gt 1 || $MINOR_V -ge 12 ]]; then
             BUILD_MODE="--enable-build-mode=production"
         fi
@@ -59,9 +66,11 @@ else
         fi
 
         pushd /tmp
-        #                                   Remove trailing .*, to get e.g. '1.12' ↓
-        curl -fsSLO "https://www.hdfgroup.org/ftp/HDF5/releases/hdf5-$MAJOR_V.$MINOR_V/hdf5-$HDF5_VERSION/src/hdf5-$HDF5_VERSION.tar.gz"
-        tar -xzvf hdf5-$HDF5_VERSION.tar.gz
+        url_base="https://github.com/HDFGroup/hdf5/archive/refs/tags/"
+        curl -fsSL -o "hdf5-$HDF5_VERSION.tar.gz" "${url_base}${ASSET_FMT1}.tar.gz" || curl -fsSL -o "hdf5-$HDF5_VERSION.tar.gz" "${url_base}${ASSET_FMT2}.tar.gz"
+
+        mkdir -p hdf5-$HDF5_VERSION && tar -xzvf hdf5-$HDF5_VERSION.tar.gz --strip-components=1 -C hdf5-$HDF5_VERSION
+
         pushd hdf5-$HDF5_VERSION
 
         ./configure --prefix="$HDF5_DIR" \
