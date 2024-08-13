@@ -35,7 +35,7 @@ else
         echo "building HDF5"
 
         IFS='.-' read MAJOR_V MINOR_V REL_V PATCH_V <<< "$HDF5_VERSION"
-        # the assets in GitHub (currently) has two naming conventions
+        # the assets in GitHub (currently) have two naming conventions
         if [[ -n "${PATCH_V}" ]]; then
             ASSET_FMT1="hdf5-${MAJOR_V}_${MINOR_V}_${REL_V}-${PATCH_V}"
             ASSET_FMT2="hdf5_${MAJOR_V}.${MINOR_V}.${REL_V}.${PATCH_V}"
