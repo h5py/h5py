@@ -1,0 +1,42 @@
+name: Type Checking
+on:
+  push:
+    branches:
+    - master
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  # auto-cancel any in-progress job *on the same branch*
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  typecheck:
+    strategy:
+      matrix:
+        python-version:
+        - '3.12'
+        - '3.8'
+    runs-on: ubuntu-latest
+    name: check
+
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install requirements
+      run: |
+        sudo apt-get install libhdf5-serial-dev
+        python -m pip install --upgrade pip
+        python -m pip install tox
+
+    - run: python -m pip list
+
+    - name: Typecheck
+      run: tox -e typecheck
