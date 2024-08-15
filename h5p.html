@@ -1,22 +1,22 @@
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="en" data-content_root="./">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <title>Module H5P &#8212; Low-level API for h5py (v3.11.0)</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
-    <link rel="stylesheet" type="text/css" href="_static/nature.css?v=8fc2db88" />
-    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=f1206781"></script>
-    <script src="_static/doctools.js?v=888ff710"></script>
-    <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+    <link rel="stylesheet" type="text/css" href="_static/nature.css?v=0f882399" />
+    <script src="_static/documentation_options.js?v=8905d4f5"></script>
+    <script src="_static/doctools.js?v=9a2dae69"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Module H5PL" href="h5pl.html" />
     <link rel="prev" title="Module H5O" href="h5o.html" /> 
   </head><body>
-    <div class="related" role="navigation" aria-label="related navigation">
+    <div class="related" role="navigation" aria-label="Related">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -42,13 +42,13 @@
           <div class="body" role="main">
             
   <section id="module-h5py.h5p">
-<span id="module-h5p"></span><h1>Module H5P<a class="headerlink" href="#module-h5py.h5p" title="Permalink to this heading">¶</a></h1>
+<span id="module-h5p"></span><h1>Module H5P<a class="headerlink" href="#module-h5py.h5p" title="Link to this heading">¶</a></h1>
 <p>HDF5 property list interface.</p>
 <section id="functional-api">
-<h2>Functional API<a class="headerlink" href="#functional-api" title="Permalink to this heading">¶</a></h2>
+<h2>Functional API<a class="headerlink" href="#functional-api" title="Link to this heading">¶</a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="h5py.h5p.create">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5p.</span></span><span class="sig-name descname"><span class="pre">create</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">PropClassID</span> <span class="pre">cls</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#h5py.h5p.PropID" title="h5py.h5p.PropID"><span class="pre">PropID</span></a></span></span><a class="headerlink" href="#h5py.h5p.create" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5p.</span></span><span class="sig-name descname"><span class="pre">create</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">PropClassID</span> <span class="pre">cls</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#h5py.h5p.PropID" title="h5py.h5p.PropID"><span class="pre">PropID</span></a></span></span><a class="headerlink" href="#h5py.h5p.create" title="Link to this definition">¶</a></dt>
 <dd><p>Create a new property list as an instance of a class; classes are:</p>
 <ul class="simple">
 <li><p><a class="reference internal" href="#h5py.h5p.FILE_CREATE" title="h5py.h5p.FILE_CREATE"><code class="xref py py-data docutils literal notranslate"><span class="pre">FILE_CREATE</span></code></a></p></li>
@@ -66,15 +66,15 @@
 
 </section>
 <section id="base-classes">
-<h2>Base classes<a class="headerlink" href="#base-classes" title="Permalink to this heading">¶</a></h2>
+<h2>Base classes<a class="headerlink" href="#base-classes" title="Link to this heading">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="h5py.h5p.PropID">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5p.</span></span><span class="sig-name descname"><span class="pre">PropID</span></span><a class="headerlink" href="#h5py.h5p.PropID" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5p.</span></span><span class="sig-name descname"><span class="pre">PropID</span></span><a class="headerlink" href="#h5py.h5p.PropID" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="objects.html#h5py._objects.ObjectID" title="h5py._objects.ObjectID"><code class="xref py py-class docutils literal notranslate"><span class="pre">ObjectID</span></code></a></p>
 <p>Base class for all property lists and classes</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropID.equal">
-<span class="sig-name descname"><span class="pre">equal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">PropID</span> <span class="pre">plist</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">BOOL</span></span></span><a class="headerlink" href="#h5py.h5p.PropID.equal" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">equal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">PropID</span> <span class="pre">plist</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">BOOL</span></span></span><a class="headerlink" href="#h5py.h5p.PropID.equal" title="Link to this definition">¶</a></dt>
 <dd><p>Compare this property list (or class) to another for equality.</p>
 </dd></dl>
 
@@ -82,7 +82,7 @@
 
 <dl class="py class">
 <dt class="sig sig-object py" id="h5py.h5p.PropClassID">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5p.</span></span><span class="sig-name descname"><span class="pre">PropClassID</span></span><a class="headerlink" href="#h5py.h5p.PropClassID" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5p.</span></span><span class="sig-name descname"><span class="pre">PropClassID</span></span><a class="headerlink" href="#h5py.h5p.PropClassID" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#h5py.h5p.PropID" title="h5py.h5p.PropID"><code class="xref py py-class docutils literal notranslate"><span class="pre">PropID</span></code></a></p>
 <p>An HDF5 property list class.</p>
 <ul class="simple">
@@ -93,7 +93,7 @@
 
 <dl class="py class">
 <dt class="sig sig-object py" id="h5py.h5p.PropInstanceID">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5p.</span></span><span class="sig-name descname"><span class="pre">PropInstanceID</span></span><a class="headerlink" href="#h5py.h5p.PropInstanceID" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5p.</span></span><span class="sig-name descname"><span class="pre">PropInstanceID</span></span><a class="headerlink" href="#h5py.h5p.PropInstanceID" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#h5py.h5p.PropID" title="h5py.h5p.PropID"><code class="xref py py-class docutils literal notranslate"><span class="pre">PropID</span></code></a></p>
 <p>Base class for property list instance objects.  Provides methods which
 are common across all HDF5 property list classes.</p>
@@ -103,13 +103,13 @@ are common across all HDF5 property list classes.</p>
 </ul>
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropInstanceID.copy">
-<span class="sig-name descname"><span class="pre">copy</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">PropList</span> <span class="pre">newid</span></span></span><a class="headerlink" href="#h5py.h5p.PropInstanceID.copy" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">copy</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">PropList</span> <span class="pre">newid</span></span></span><a class="headerlink" href="#h5py.h5p.PropInstanceID.copy" title="Link to this definition">¶</a></dt>
 <dd><p>Create a new copy of an existing property list object.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropInstanceID.get_class">
-<span class="sig-name descname"><span class="pre">get_class</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#h5py.h5p.PropClassID" title="h5py.h5p.PropClassID"><span class="pre">PropClassID</span></a></span></span><a class="headerlink" href="#h5py.h5p.PropInstanceID.get_class" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_class</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#h5py.h5p.PropClassID" title="h5py.h5p.PropClassID"><span class="pre">PropClassID</span></a></span></span><a class="headerlink" href="#h5py.h5p.PropInstanceID.get_class" title="Link to this definition">¶</a></dt>
 <dd><p>Determine the class of a property list object.</p>
 </dd></dl>
 
@@ -117,14 +117,14 @@ are common across all HDF5 property list classes.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="h5py.h5p.PropCreateID">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5p.</span></span><span class="sig-name descname"><span class="pre">PropCreateID</span></span><a class="headerlink" href="#h5py.h5p.PropCreateID" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5p.</span></span><span class="sig-name descname"><span class="pre">PropCreateID</span></span><a class="headerlink" href="#h5py.h5p.PropCreateID" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#h5py.h5p.PropInstanceID" title="h5py.h5p.PropInstanceID"><code class="xref py py-class docutils literal notranslate"><span class="pre">PropInstanceID</span></code></a></p>
 <p>Generic object creation property list.</p>
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="h5py.h5p.PropOCID">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5p.</span></span><span class="sig-name descname"><span class="pre">PropOCID</span></span><a class="headerlink" href="#h5py.h5p.PropOCID" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5p.</span></span><span class="sig-name descname"><span class="pre">PropOCID</span></span><a class="headerlink" href="#h5py.h5p.PropOCID" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#h5py.h5p.PropCreateID" title="h5py.h5p.PropCreateID"><code class="xref py py-class docutils literal notranslate"><span class="pre">PropCreateID</span></code></a></p>
 <p>Object creation property list</p>
 <p>This seems to be a super class for dataset creation property list
@@ -132,32 +132,32 @@ and <a class="reference internal" href="#h5py.h5p.PropGCID" title="h5py.h5p.Prop
 <p>The documentation is somewhat hazy</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropOCID.get_attr_creation_order">
-<span class="sig-name descname"><span class="pre">get_attr_creation_order</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">UINT</span> <span class="pre">flags</span></span></span><a class="headerlink" href="#h5py.h5p.PropOCID.get_attr_creation_order" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_attr_creation_order</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">UINT</span> <span class="pre">flags</span></span></span><a class="headerlink" href="#h5py.h5p.PropOCID.get_attr_creation_order" title="Link to this definition">¶</a></dt>
 <dd><p>Get tracking and indexing of creation order for object attributes</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropOCID.get_attr_phase_change">
-<span class="sig-name descname"><span class="pre">get_attr_phase_change</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropOCID.get_attr_phase_change" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_attr_phase_change</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropOCID.get_attr_phase_change" title="Link to this definition">¶</a></dt>
 <dd><p>Retrieves threshold values for attribute storage on an object.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropOCID.get_obj_track_times">
-<span class="sig-name descname"><span class="pre">get_obj_track_times</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropOCID.get_obj_track_times" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_obj_track_times</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropOCID.get_obj_track_times" title="Link to this definition">¶</a></dt>
 <dd><p>Determines whether times associated with an object are being recorded.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropOCID.set_attr_creation_order">
-<span class="sig-name descname"><span class="pre">set_attr_creation_order</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">UINT</span> <span class="pre">flags</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropOCID.set_attr_creation_order" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_attr_creation_order</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">UINT</span> <span class="pre">flags</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropOCID.set_attr_creation_order" title="Link to this definition">¶</a></dt>
 <dd><p>Set tracking and indexing of creation order for object attributes</p>
 <p>flags – <a class="reference internal" href="#h5py.h5p.CRT_ORDER_TRACKED" title="h5py.h5p.CRT_ORDER_TRACKED"><code class="xref py py-data docutils literal notranslate"><span class="pre">h5p.CRT_ORDER_TRACKED</span></code></a>, h5p.CRT_ORDER_INDEXED</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropOCID.set_attr_phase_change">
-<span class="sig-name descname"><span class="pre">set_attr_phase_change</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">UINT</span> <span class="pre">max_compact</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">UINT</span> <span class="pre">min_dense</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropOCID.set_attr_phase_change" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_attr_phase_change</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">UINT</span> <span class="pre">max_compact</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">UINT</span> <span class="pre">min_dense</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropOCID.set_attr_phase_change" title="Link to this definition">¶</a></dt>
 <dd><p>Set threshold value for attribute storage on an object</p>
 <p>max_compact – maximum number of attributes to be stored in compact storage(default:8)
 must be greater than or equal to min_dense
@@ -166,7 +166,7 @@ min_dense  – minimum number of attributes to be stored in dense storage(defaul
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropOCID.set_obj_track_times">
-<span class="sig-name descname"><span class="pre">set_obj_track_times</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">track_times</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropOCID.set_obj_track_times" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_obj_track_times</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">track_times</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropOCID.set_obj_track_times" title="Link to this definition">¶</a></dt>
 <dd><p>Sets the recording of times associated with an object.</p>
 </dd></dl>
 
@@ -174,18 +174,18 @@ min_dense  – minimum number of attributes to be stored in dense storage(defaul
 
 <dl class="py class">
 <dt class="sig sig-object py" id="h5py.h5p.PropCopyID">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5p.</span></span><span class="sig-name descname"><span class="pre">PropCopyID</span></span><a class="headerlink" href="#h5py.h5p.PropCopyID" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5p.</span></span><span class="sig-name descname"><span class="pre">PropCopyID</span></span><a class="headerlink" href="#h5py.h5p.PropCopyID" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#h5py.h5p.PropInstanceID" title="h5py.h5p.PropInstanceID"><code class="xref py py-class docutils literal notranslate"><span class="pre">PropInstanceID</span></code></a></p>
 <p>Generic object copy property list</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropCopyID.get_copy_object">
-<span class="sig-name descname"><span class="pre">get_copy_object</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">UINT</span> <span class="pre">flags</span></span></span><a class="headerlink" href="#h5py.h5p.PropCopyID.get_copy_object" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_copy_object</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">UINT</span> <span class="pre">flags</span></span></span><a class="headerlink" href="#h5py.h5p.PropCopyID.get_copy_object" title="Link to this definition">¶</a></dt>
 <dd><p>Get copy process flags. Legal flags are <a class="reference internal" href="h5o.html#ref-h5o-copy"><span class="std std-ref">h5o.COPY*</span></a>.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropCopyID.set_copy_object">
-<span class="sig-name descname"><span class="pre">set_copy_object</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">UINT</span> <span class="pre">flags</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropCopyID.set_copy_object" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_copy_object</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">UINT</span> <span class="pre">flags</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropCopyID.set_copy_object" title="Link to this definition">¶</a></dt>
 <dd><p>Set flags for object copying process.  Legal flags are
 from the <a class="reference internal" href="h5o.html#ref-h5o-copy"><span class="std std-ref">h5o.COPY*</span></a> family:</p>
 <dl class="simple">
@@ -206,34 +206,34 @@ from the <a class="reference internal" href="h5o.html#ref-h5o-copy"><span class=
 
 </section>
 <section id="file-creation">
-<h2>File creation<a class="headerlink" href="#file-creation" title="Permalink to this heading">¶</a></h2>
+<h2>File creation<a class="headerlink" href="#file-creation" title="Link to this heading">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="h5py.h5p.PropFCID">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5p.</span></span><span class="sig-name descname"><span class="pre">PropFCID</span></span><a class="headerlink" href="#h5py.h5p.PropFCID" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5p.</span></span><span class="sig-name descname"><span class="pre">PropFCID</span></span><a class="headerlink" href="#h5py.h5p.PropFCID" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#h5py.h5p.PropOCID" title="h5py.h5p.PropOCID"><code class="xref py py-class docutils literal notranslate"><span class="pre">PropOCID</span></code></a></p>
 <p>File creation property list.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropFCID.get_file_space_page_size">
-<span class="sig-name descname"><span class="pre">get_file_space_page_size</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">LONG</span> <span class="pre">fsp_size</span></span></span><a class="headerlink" href="#h5py.h5p.PropFCID.get_file_space_page_size" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_file_space_page_size</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">LONG</span> <span class="pre">fsp_size</span></span></span><a class="headerlink" href="#h5py.h5p.PropFCID.get_file_space_page_size" title="Link to this definition">¶</a></dt>
 <dd><p>Retrieve the file space page size.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropFCID.get_file_space_strategy">
-<span class="sig-name descname"><span class="pre">get_file_space_strategy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">)</span> <span class="pre">-&gt;</span> <span class="pre">TUPLE(UINT</span> <span class="pre">strategy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">BOOL</span> <span class="pre">persist</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ULONGLONG</span> <span class="pre">threshold</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropFCID.get_file_space_strategy" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_file_space_strategy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">)</span> <span class="pre">-&gt;</span> <span class="pre">TUPLE(UINT</span> <span class="pre">strategy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">BOOL</span> <span class="pre">persist</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ULONGLONG</span> <span class="pre">threshold</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropFCID.get_file_space_strategy" title="Link to this definition">¶</a></dt>
 <dd><p>Retrieve the file space handling strategy, persisting free-space
 condition and threshold value for a <a class="reference internal" href="#h5py.h5p.PropFCID" title="h5py.h5p.PropFCID"><code class="xref py py-class docutils literal notranslate"><span class="pre">file</span> <span class="pre">creation</span> <span class="pre">property</span> <span class="pre">list</span></code></a>.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropFCID.get_link_creation_order">
-<span class="sig-name descname"><span class="pre">get_link_creation_order</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">UINT</span> <span class="pre">flags</span></span></span><a class="headerlink" href="#h5py.h5p.PropFCID.get_link_creation_order" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_link_creation_order</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">UINT</span> <span class="pre">flags</span></span></span><a class="headerlink" href="#h5py.h5p.PropFCID.get_link_creation_order" title="Link to this definition">¶</a></dt>
 <dd><p>Get tracking and indexing of creation order for links added to this group</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropFCID.get_sizes">
-<span class="sig-name descname"><span class="pre">get_sizes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">TUPLE</span> <span class="pre">sizes</span></span></span><a class="headerlink" href="#h5py.h5p.PropFCID.get_sizes" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_sizes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">TUPLE</span> <span class="pre">sizes</span></span></span><a class="headerlink" href="#h5py.h5p.PropFCID.get_sizes" title="Link to this definition">¶</a></dt>
 <dd><p>Determine addressing offsets and lengths for objects in an
 HDF5 file, in bytes.  Return value is a 2-tuple with values:</p>
 <ol class="arabic simple" start="0">
@@ -244,13 +244,13 @@ HDF5 file, in bytes.  Return value is a 2-tuple with values:</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropFCID.get_userblock">
-<span class="sig-name descname"><span class="pre">get_userblock</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">LONG</span> <span class="pre">size</span></span></span><a class="headerlink" href="#h5py.h5p.PropFCID.get_userblock" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_userblock</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">LONG</span> <span class="pre">size</span></span></span><a class="headerlink" href="#h5py.h5p.PropFCID.get_userblock" title="Link to this definition">¶</a></dt>
 <dd><p>Determine the user block size, in bytes.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropFCID.get_version">
-<span class="sig-name descname"><span class="pre">get_version</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">TUPLE</span> <span class="pre">version_info</span></span></span><a class="headerlink" href="#h5py.h5p.PropFCID.get_version" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_version</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">TUPLE</span> <span class="pre">version_info</span></span></span><a class="headerlink" href="#h5py.h5p.PropFCID.get_version" title="Link to this definition">¶</a></dt>
 <dd><p>Determine version information of various file attributes.
 Elements are:</p>
 <ol class="arabic simple" start="0">
@@ -263,7 +263,7 @@ Elements are:</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropFCID.set_file_space_page_size">
-<span class="sig-name descname"><span class="pre">set_file_space_page_size</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">LONG</span> <span class="pre">fsp_size</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropFCID.set_file_space_page_size" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_file_space_page_size</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">LONG</span> <span class="pre">fsp_size</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropFCID.set_file_space_page_size" title="Link to this definition">¶</a></dt>
 <dd><p>Set the file space page size used in paged aggregation and paged
 buffering. Minimum page size is 512 bytes. A value less than 512 will raise
 an error. The size set may not be changed for the life of the file.</p>
@@ -271,27 +271,27 @@ an error. The size set may not be changed for the life of the file.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropFCID.set_file_space_strategy">
-<span class="sig-name descname"><span class="pre">set_file_space_strategy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">UINT</span> <span class="pre">strategy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">BOOL</span> <span class="pre">persist</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ULONGLONG</span> <span class="pre">threshold</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropFCID.set_file_space_strategy" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_file_space_strategy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">UINT</span> <span class="pre">strategy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">BOOL</span> <span class="pre">persist</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ULONGLONG</span> <span class="pre">threshold</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropFCID.set_file_space_strategy" title="Link to this definition">¶</a></dt>
 <dd><p>Set the file space handling strategy and persisting free-space values.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropFCID.set_link_creation_order">
-<span class="sig-name descname"><span class="pre">set_link_creation_order</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">UINT</span> <span class="pre">flags</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropFCID.set_link_creation_order" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_link_creation_order</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">UINT</span> <span class="pre">flags</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropFCID.set_link_creation_order" title="Link to this definition">¶</a></dt>
 <dd><p>Set tracking and indexing of creation order for links added to this group</p>
 <p>flags – <a class="reference internal" href="#h5py.h5p.CRT_ORDER_TRACKED" title="h5py.h5p.CRT_ORDER_TRACKED"><code class="xref py py-data docutils literal notranslate"><span class="pre">h5p.CRT_ORDER_TRACKED</span></code></a>, h5p.CRT_ORDER_INDEXED</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropFCID.set_sizes">
-<span class="sig-name descname"><span class="pre">set_sizes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">UINT</span> <span class="pre">addr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">UINT</span> <span class="pre">size</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropFCID.set_sizes" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_sizes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">UINT</span> <span class="pre">addr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">UINT</span> <span class="pre">size</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropFCID.set_sizes" title="Link to this definition">¶</a></dt>
 <dd><p>Set the addressing offsets and lengths for objects
 in an HDF5 file, in bytes.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropFCID.set_userblock">
-<span class="sig-name descname"><span class="pre">set_userblock</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">INT/LONG</span> <span class="pre">size</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropFCID.set_userblock" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_userblock</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">INT/LONG</span> <span class="pre">size</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropFCID.set_userblock" title="Link to this definition">¶</a></dt>
 <dd><p>Set the file user block size, in bytes.
 Must be a power of 2, and at least 512.</p>
 </dd></dl>
@@ -300,21 +300,21 @@ Must be a power of 2, and at least 512.</p>
 
 </section>
 <section id="file-access">
-<h2>File access<a class="headerlink" href="#file-access" title="Permalink to this heading">¶</a></h2>
+<h2>File access<a class="headerlink" href="#file-access" title="Link to this heading">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="h5py.h5p.PropFAID">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5p.</span></span><span class="sig-name descname"><span class="pre">PropFAID</span></span><a class="headerlink" href="#h5py.h5p.PropFAID" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5p.</span></span><span class="sig-name descname"><span class="pre">PropFAID</span></span><a class="headerlink" href="#h5py.h5p.PropFAID" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#h5py.h5p.PropInstanceID" title="h5py.h5p.PropInstanceID"><code class="xref py py-class docutils literal notranslate"><span class="pre">PropInstanceID</span></code></a></p>
 <p>File access property list</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropFAID.get_alignment">
-<span class="sig-name descname"><span class="pre">get_alignment</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropFAID.get_alignment" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_alignment</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropFAID.get_alignment" title="Link to this definition">¶</a></dt>
 <dd><p>Retrieves the current settings for alignment properties from a <a class="reference internal" href="#h5py.h5p.PropFAID" title="h5py.h5p.PropFAID"><code class="xref py py-class docutils literal notranslate"><span class="pre">file</span> <span class="pre">access</span> <span class="pre">property</span> <span class="pre">list</span></code></a>.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropFAID.get_cache">
-<span class="sig-name descname"><span class="pre">get_cache</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">TUPLE</span> <span class="pre">cache</span> <span class="pre">info</span></span></span><a class="headerlink" href="#h5py.h5p.PropFAID.get_cache" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_cache</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">TUPLE</span> <span class="pre">cache</span> <span class="pre">info</span></span></span><a class="headerlink" href="#h5py.h5p.PropFAID.get_cache" title="Link to this definition">¶</a></dt>
 <dd><p>Get the metadata and raw data chunk cache settings.  See the HDF5
 docs for element definitions.  Return is a 4-tuple with entries:</p>
 <ol class="arabic simple">
@@ -327,7 +327,7 @@ docs for element definitions.  Return is a 4-tuple with entries:</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropFAID.get_driver">
-<span class="sig-name descname"><span class="pre">get_driver</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">INT</span> <span class="pre">driver</span> <span class="pre">code</span></span></span><a class="headerlink" href="#h5py.h5p.PropFAID.get_driver" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_driver</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">INT</span> <span class="pre">driver</span> <span class="pre">code</span></span></span><a class="headerlink" href="#h5py.h5p.PropFAID.get_driver" title="Link to this definition">¶</a></dt>
 <dd><p>Return an integer identifier for the driver used by this list.
 Although HDF5 implements these as full-fledged objects, they are
 treated as integers by Python.  Built-in drivers identifiers are
@@ -347,7 +347,7 @@ listed in module <a class="reference internal" href="h5fd.html#module-h5py.h5fd"
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropFAID.get_fapl_core">
-<span class="sig-name descname"><span class="pre">get_fapl_core</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">TUPLE</span> <span class="pre">core_settings</span></span></span><a class="headerlink" href="#h5py.h5p.PropFAID.get_fapl_core" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_fapl_core</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">TUPLE</span> <span class="pre">core_settings</span></span></span><a class="headerlink" href="#h5py.h5p.PropFAID.get_fapl_core" title="Link to this definition">¶</a></dt>
 <dd><p>Determine settings for the <a class="reference internal" href="h5fd.html#h5py.h5fd.CORE" title="h5py.h5fd.CORE"><code class="xref py py-data docutils literal notranslate"><span class="pre">h5fd.CORE</span></code></a> (memory-resident) file driver.
 Tuple elements are:</p>
 <ol class="arabic simple" start="0">
@@ -359,13 +359,13 @@ disk when the file is closed.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropFAID.get_fapl_direct">
-<span class="sig-name descname"><span class="pre">get_fapl_direct</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropFAID.get_fapl_direct" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_fapl_direct</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropFAID.get_fapl_direct" title="Link to this definition">¶</a></dt>
 <dd><p>Retrieve the <code class="xref py py-data docutils literal notranslate"><span class="pre">DIRECT</span></code> VFD config</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropFAID.get_fapl_family">
-<span class="sig-name descname"><span class="pre">get_fapl_family</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">TUPLE</span> <span class="pre">info</span></span></span><a class="headerlink" href="#h5py.h5p.PropFAID.get_fapl_family" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_fapl_family</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">TUPLE</span> <span class="pre">info</span></span></span><a class="headerlink" href="#h5py.h5p.PropFAID.get_fapl_family" title="Link to this definition">¶</a></dt>
 <dd><p>Determine family driver settings. Tuple values are:</p>
 <ol class="arabic simple" start="0">
 <li><p>UINT memb_size</p></li>
@@ -375,7 +375,7 @@ disk when the file is closed.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropFAID.get_fclose_degree">
-<span class="sig-name descname"><span class="pre">get_fclose_degree</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">INT</span> <span class="pre">close_degree</span> <span class="pre">-</span> <span class="pre">h5fd.</span> <span class="pre">Get</span> <span class="pre">the</span> <span class="pre">file-close</span> <span class="pre">degree,</span> <span class="pre">which</span> <span class="pre">determines</span> <span class="pre">library</span> <span class="pre">behavior</span> <span class="pre">when</span> <span class="pre">a</span> <span class="pre">file</span> <span class="pre">is</span> <span class="pre">closed</span> <span class="pre">when</span> <span class="pre">objects</span> <span class="pre">are</span> <span class="pre">still</span> <span class="pre">open.</span>&#160; <span class="pre">Legal</span> <span class="pre">values:</span></span></span><a class="headerlink" href="#h5py.h5p.PropFAID.get_fclose_degree" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_fclose_degree</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">INT</span> <span class="pre">close_degree</span> <span class="pre">-</span> <span class="pre">h5fd.</span> <span class="pre">Get</span> <span class="pre">the</span> <span class="pre">file-close</span> <span class="pre">degree,</span> <span class="pre">which</span> <span class="pre">determines</span> <span class="pre">library</span> <span class="pre">behavior</span> <span class="pre">when</span> <span class="pre">a</span> <span class="pre">file</span> <span class="pre">is</span> <span class="pre">closed</span> <span class="pre">when</span> <span class="pre">objects</span> <span class="pre">are</span> <span class="pre">still</span> <span class="pre">open.</span>&#160; <span class="pre">Legal</span> <span class="pre">values:</span></span></span><a class="headerlink" href="#h5py.h5p.PropFAID.get_fclose_degree" title="Link to this definition">¶</a></dt>
 <dd><ul class="simple">
 <li><p><a class="reference internal" href="h5f.html#h5py.h5f.CLOSE_DEFAULT" title="h5py.h5f.CLOSE_DEFAULT"><code class="xref py py-data docutils literal notranslate"><span class="pre">h5f.CLOSE_DEFAULT</span></code></a></p></li>
 <li><p><a class="reference internal" href="h5f.html#h5py.h5f.CLOSE_WEAK" title="h5py.h5f.CLOSE_WEAK"><code class="xref py py-data docutils literal notranslate"><span class="pre">h5f.CLOSE_WEAK</span></code></a></p></li>
@@ -386,7 +386,7 @@ disk when the file is closed.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropFAID.get_libver_bounds">
-<span class="sig-name descname"><span class="pre">get_libver_bounds</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">)</span> <span class="pre">-&gt;</span> <span class="pre">(INT</span> <span class="pre">low</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">INT</span> <span class="pre">high</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropFAID.get_libver_bounds" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_libver_bounds</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">)</span> <span class="pre">-&gt;</span> <span class="pre">(INT</span> <span class="pre">low</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">INT</span> <span class="pre">high</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropFAID.get_libver_bounds" title="Link to this definition">¶</a></dt>
 <dd><p>Get the compatibility level for file format. Returned values are from:</p>
 <ul class="simple">
 <li><p><a class="reference internal" href="h5f.html#h5py.h5f.LIBVER_EARLIEST" title="h5py.h5f.LIBVER_EARLIEST"><code class="xref py py-data docutils literal notranslate"><span class="pre">h5f.LIBVER_EARLIEST</span></code></a></p></li>
@@ -400,51 +400,51 @@ disk when the file is closed.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropFAID.get_mdc_config">
-<span class="sig-name descname"><span class="pre">get_mdc_config</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">CacheConfig</span> <span class="pre">Returns</span> <span class="pre">an</span> <span class="pre">object</span> <span class="pre">that</span> <span class="pre">stores</span> <span class="pre">all</span> <span class="pre">the</span> <span class="pre">information</span> <span class="pre">about</span> <span class="pre">the</span> <span class="pre">meta-data</span> <span class="pre">cache</span> <span class="pre">configuration</span></span></span><a class="headerlink" href="#h5py.h5p.PropFAID.get_mdc_config" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_mdc_config</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">CacheConfig</span> <span class="pre">Returns</span> <span class="pre">an</span> <span class="pre">object</span> <span class="pre">that</span> <span class="pre">stores</span> <span class="pre">all</span> <span class="pre">the</span> <span class="pre">information</span> <span class="pre">about</span> <span class="pre">the</span> <span class="pre">meta-data</span> <span class="pre">cache</span> <span class="pre">configuration</span></span></span><a class="headerlink" href="#h5py.h5p.PropFAID.get_mdc_config" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropFAID.get_meta_block_size">
-<span class="sig-name descname"><span class="pre">get_meta_block_size</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">UINT</span> <span class="pre">size</span></span></span><a class="headerlink" href="#h5py.h5p.PropFAID.get_meta_block_size" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_meta_block_size</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">UINT</span> <span class="pre">size</span></span></span><a class="headerlink" href="#h5py.h5p.PropFAID.get_meta_block_size" title="Link to this definition">¶</a></dt>
 <dd><p>Get the current minimum size, in bytes, of new metadata block allocations.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropFAID.get_page_buffer_size">
-<span class="sig-name descname"><span class="pre">get_page_buffer_size</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">)</span> <span class="pre">-&gt;</span> <span class="pre">(LONG</span> <span class="pre">buf_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">UINT</span> <span class="pre">min_meta_per</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">UINT</span> <span class="pre">min_raw_per</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropFAID.get_page_buffer_size" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_page_buffer_size</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">)</span> <span class="pre">-&gt;</span> <span class="pre">(LONG</span> <span class="pre">buf_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">UINT</span> <span class="pre">min_meta_per</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">UINT</span> <span class="pre">min_raw_per</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropFAID.get_page_buffer_size" title="Link to this definition">¶</a></dt>
 <dd><p>Retrieves the maximum size for the page buffer and the minimum
 percentage for metadata and raw data pages evicition criteria.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropFAID.get_sieve_buf_size">
-<span class="sig-name descname"><span class="pre">get_sieve_buf_size</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">UINT</span> <span class="pre">size</span></span></span><a class="headerlink" href="#h5py.h5p.PropFAID.get_sieve_buf_size" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_sieve_buf_size</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">UINT</span> <span class="pre">size</span></span></span><a class="headerlink" href="#h5py.h5p.PropFAID.get_sieve_buf_size" title="Link to this definition">¶</a></dt>
 <dd><p>Get the current maximum size of the data sieve buffer (in bytes).</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropFAID.set_alignment">
-<span class="sig-name descname"><span class="pre">set_alignment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">threshold</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alignment</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropFAID.set_alignment" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_alignment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">threshold</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alignment</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropFAID.set_alignment" title="Link to this definition">¶</a></dt>
 <dd><p>Sets alignment properties of a <a class="reference internal" href="#h5py.h5p.PropFAID" title="h5py.h5p.PropFAID"><code class="xref py py-class docutils literal notranslate"><span class="pre">file</span> <span class="pre">access</span> <span class="pre">property</span> <span class="pre">list</span></code></a>.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropFAID.set_cache">
-<span class="sig-name descname"><span class="pre">set_cache</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">INT</span> <span class="pre">mdc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">INT</span> <span class="pre">rdcc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">UINT</span> <span class="pre">rdcc_nbytes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">DOUBLE</span> <span class="pre">rdcc_w0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropFAID.set_cache" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_cache</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">INT</span> <span class="pre">mdc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">INT</span> <span class="pre">rdcc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">UINT</span> <span class="pre">rdcc_nbytes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">DOUBLE</span> <span class="pre">rdcc_w0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropFAID.set_cache" title="Link to this definition">¶</a></dt>
 <dd><p>Set the metadata (mdc) and raw data chunk (rdcc) cache properties.
 See the HDF5 docs for a full explanation.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropFAID.set_driver">
-<span class="sig-name descname"><span class="pre">set_driver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">INT</span> <span class="pre">driver_id</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropFAID.set_driver" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_driver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">INT</span> <span class="pre">driver_id</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropFAID.set_driver" title="Link to this definition">¶</a></dt>
 <dd><p>Sets the file driver identifier for this file access or data
 transfer property list.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropFAID.set_fapl_core">
-<span class="sig-name descname"><span class="pre">set_fapl_core</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">UINT</span> <span class="pre">increment=64k</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">BOOL</span> <span class="pre">backing_store=True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropFAID.set_fapl_core" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_fapl_core</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">UINT</span> <span class="pre">increment=64k</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">BOOL</span> <span class="pre">backing_store=True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropFAID.set_fapl_core" title="Link to this definition">¶</a></dt>
 <dd><p>Use the <a class="reference internal" href="h5fd.html#h5py.h5fd.CORE" title="h5py.h5fd.CORE"><code class="xref py py-data docutils literal notranslate"><span class="pre">h5fd.CORE</span></code></a> (memory-resident) file driver.</p>
 <dl class="simple">
 <dt>increment</dt><dd><p>Chunk size for new memory requests (default 1 meg)</p>
@@ -458,7 +458,7 @@ Set to False for a purely in-memory file.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropFAID.set_fapl_direct">
-<span class="sig-name descname"><span class="pre">set_fapl_direct</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size_t</span> <span class="pre">alignment</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size_t</span> <span class="pre">block_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size_t</span> <span class="pre">cbuf_size</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropFAID.set_fapl_direct" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_fapl_direct</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size_t</span> <span class="pre">alignment</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size_t</span> <span class="pre">block_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size_t</span> <span class="pre">cbuf_size</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropFAID.set_fapl_direct" title="Link to this definition">¶</a></dt>
 <dd><p>Select the “direct” driver (h5fd.DIRECT).</p>
 <dl class="simple">
 <dt>Parameters:</dt><dd><p>hid_t fapl_id       <code class="xref py py-data docutils literal notranslate"><span class="pre">IN</span></code>: <a class="reference internal" href="#h5py.h5p.PropFAID" title="h5py.h5p.PropFAID"><code class="xref py py-class docutils literal notranslate"><span class="pre">File</span> <span class="pre">access</span> <span class="pre">property</span> <span class="pre">list</span></code></a> identifier
@@ -473,7 +473,7 @@ choose the value.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropFAID.set_fapl_family">
-<span class="sig-name descname"><span class="pre">set_fapl_family</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">UINT</span> <span class="pre">memb_size=2**31-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">PropFAID</span> <span class="pre">memb_fapl=None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropFAID.set_fapl_family" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_fapl_family</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">UINT</span> <span class="pre">memb_size=2**31-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">PropFAID</span> <span class="pre">memb_fapl=None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropFAID.set_fapl_family" title="Link to this definition">¶</a></dt>
 <dd><p>Set up the family driver.</p>
 <dl class="simple">
 <dt>memb_size</dt><dd><p>Member file size</p>
@@ -485,32 +485,32 @@ choose the value.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropFAID.set_fapl_log">
-<span class="sig-name descname"><span class="pre">set_fapl_log</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">STRING</span> <span class="pre">logfile</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">UINT</span> <span class="pre">flags</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">UINT</span> <span class="pre">buf_size</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropFAID.set_fapl_log" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_fapl_log</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">STRING</span> <span class="pre">logfile</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">UINT</span> <span class="pre">flags</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">UINT</span> <span class="pre">buf_size</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropFAID.set_fapl_log" title="Link to this definition">¶</a></dt>
 <dd><p>Enable the use of the logging driver.  See the HDF5 documentation
 for details.  Flag constants are stored in module <a class="reference internal" href="h5fd.html#module-h5py.h5fd" title="h5py.h5fd"><code class="xref py py-mod docutils literal notranslate"><span class="pre">h5fd</span></code></a>.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropFAID.set_fapl_sec2">
-<span class="sig-name descname"><span class="pre">set_fapl_sec2</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropFAID.set_fapl_sec2" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_fapl_sec2</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropFAID.set_fapl_sec2" title="Link to this definition">¶</a></dt>
 <dd><p>Select the “section-2” driver (h5fd.SEC2).</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropFAID.set_fapl_split">
-<span class="sig-name descname"><span class="pre">set_fapl_split</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropFAID.set_fapl_split" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_fapl_split</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropFAID.set_fapl_split" title="Link to this definition">¶</a></dt>
 <dd><p>Select the “split” driver (<code class="xref py py-data docutils literal notranslate"><span class="pre">h5fd.SPLIT</span></code>)</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropFAID.set_fapl_stdio">
-<span class="sig-name descname"><span class="pre">set_fapl_stdio</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropFAID.set_fapl_stdio" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_fapl_stdio</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropFAID.set_fapl_stdio" title="Link to this definition">¶</a></dt>
 <dd><p>Select the “stdio” driver (<a class="reference internal" href="h5fd.html#h5py.h5fd.STDIO" title="h5py.h5fd.STDIO"><code class="xref py py-data docutils literal notranslate"><span class="pre">h5fd.STDIO</span></code></a>)</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropFAID.set_fclose_degree">
-<span class="sig-name descname"><span class="pre">set_fclose_degree</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">INT</span> <span class="pre">close_degree</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropFAID.set_fclose_degree" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_fclose_degree</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">INT</span> <span class="pre">close_degree</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropFAID.set_fclose_degree" title="Link to this definition">¶</a></dt>
 <dd><p>Set the file-close degree, which determines library behavior when
 a file is closed when objects are still open.  Legal values:</p>
 <ul class="simple">
@@ -523,7 +523,7 @@ a file is closed when objects are still open.  Legal values:</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropFAID.set_file_image">
-<span class="sig-name descname"><span class="pre">set_file_image</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropFAID.set_file_image" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_file_image</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropFAID.set_file_image" title="Link to this definition">¶</a></dt>
 <dd><p>Copy a file image into the property list. Passing None releases
 any image currently loaded. The parameter image must either be
 None or support the buffer protocol.</p>
@@ -531,13 +531,13 @@ None or support the buffer protocol.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropFAID.set_fileobj_driver">
-<span class="sig-name descname"><span class="pre">set_fileobj_driver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">INT</span> <span class="pre">driver_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">OBJECT</span> <span class="pre">fileobj</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropFAID.set_fileobj_driver" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_fileobj_driver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">INT</span> <span class="pre">driver_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">OBJECT</span> <span class="pre">fileobj</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropFAID.set_fileobj_driver" title="Link to this definition">¶</a></dt>
 <dd><p>Select the “fileobj” file driver (h5py-specific).</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropFAID.set_libver_bounds">
-<span class="sig-name descname"><span class="pre">set_libver_bounds</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">INT</span> <span class="pre">low</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">INT</span> <span class="pre">high</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropFAID.set_libver_bounds" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_libver_bounds</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">INT</span> <span class="pre">low</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">INT</span> <span class="pre">high</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropFAID.set_libver_bounds" title="Link to this definition">¶</a></dt>
 <dd><p>Set the compatibility level for file format. Legal values are:</p>
 <ul class="simple">
 <li><p><a class="reference internal" href="h5f.html#h5py.h5f.LIBVER_EARLIEST" title="h5py.h5f.LIBVER_EARLIEST"><code class="xref py py-data docutils literal notranslate"><span class="pre">h5f.LIBVER_EARLIEST</span></code></a></p></li>
@@ -551,18 +551,18 @@ None or support the buffer protocol.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropFAID.set_mdc_config">
-<span class="sig-name descname"><span class="pre">set_mdc_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">CacheConfig</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span> <span class="pre">Returns</span> <span class="pre">an</span> <span class="pre">object</span> <span class="pre">that</span> <span class="pre">stores</span> <span class="pre">all</span> <span class="pre">the</span> <span class="pre">information</span> <span class="pre">about</span> <span class="pre">the</span> <span class="pre">meta-data</span> <span class="pre">cache</span> <span class="pre">configuration</span></span></span><a class="headerlink" href="#h5py.h5p.PropFAID.set_mdc_config" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_mdc_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">CacheConfig</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span> <span class="pre">Returns</span> <span class="pre">an</span> <span class="pre">object</span> <span class="pre">that</span> <span class="pre">stores</span> <span class="pre">all</span> <span class="pre">the</span> <span class="pre">information</span> <span class="pre">about</span> <span class="pre">the</span> <span class="pre">meta-data</span> <span class="pre">cache</span> <span class="pre">configuration</span></span></span><a class="headerlink" href="#h5py.h5p.PropFAID.set_mdc_config" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropFAID.set_meta_block_size">
-<span class="sig-name descname"><span class="pre">set_meta_block_size</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">UINT</span> <span class="pre">size</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropFAID.set_meta_block_size" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_meta_block_size</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">UINT</span> <span class="pre">size</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropFAID.set_meta_block_size" title="Link to this definition">¶</a></dt>
 <dd><p>Set the current minimum size, in bytes, of new metadata block allocations.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropFAID.set_page_buffer_size">
-<span class="sig-name descname"><span class="pre">set_page_buffer_size</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">LONG</span> <span class="pre">buf_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">UINT</span> <span class="pre">min_meta_per</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">UINT</span> <span class="pre">min_raw_per</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropFAID.set_page_buffer_size" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_page_buffer_size</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">LONG</span> <span class="pre">buf_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">UINT</span> <span class="pre">min_meta_per</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">UINT</span> <span class="pre">min_raw_per</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropFAID.set_page_buffer_size" title="Link to this definition">¶</a></dt>
 <dd><p>Set the maximum size in bytes of the page buffer. The default value is
 zero, meaning that page buffering is disabled. When a non-zero page
 buffer size is set, HDF5 library will enable page buffering if that size
@@ -574,7 +574,7 @@ page eviction from the buffer. The default values for both are zero.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropFAID.set_sieve_buf_size">
-<span class="sig-name descname"><span class="pre">set_sieve_buf_size</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">UINT</span> <span class="pre">size</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropFAID.set_sieve_buf_size" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_sieve_buf_size</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">UINT</span> <span class="pre">size</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropFAID.set_sieve_buf_size" title="Link to this definition">¶</a></dt>
 <dd><p>Set the maximum size of the data sieve buffer (in bytes).  This
 buffer can improve I/O performance for hyperslab I/O, by combining
 reads and writes into blocks of the given size.  The default is 64k.</p>
@@ -584,22 +584,22 @@ reads and writes into blocks of the given size.  The default is 64k.</p>
 
 </section>
 <section id="dataset-creation">
-<h2>Dataset creation<a class="headerlink" href="#dataset-creation" title="Permalink to this heading">¶</a></h2>
+<h2>Dataset creation<a class="headerlink" href="#dataset-creation" title="Link to this heading">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="h5py.h5p.PropDCID">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5p.</span></span><span class="sig-name descname"><span class="pre">PropDCID</span></span><a class="headerlink" href="#h5py.h5p.PropDCID" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5p.</span></span><span class="sig-name descname"><span class="pre">PropDCID</span></span><a class="headerlink" href="#h5py.h5p.PropDCID" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#h5py.h5p.PropOCID" title="h5py.h5p.PropOCID"><code class="xref py py-class docutils literal notranslate"><span class="pre">PropOCID</span></code></a></p>
 <p>Dataset creation property list.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropDCID.all_filters_avail">
-<span class="sig-name descname"><span class="pre">all_filters_avail</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">BOOL</span></span></span><a class="headerlink" href="#h5py.h5p.PropDCID.all_filters_avail" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">all_filters_avail</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">BOOL</span></span></span><a class="headerlink" href="#h5py.h5p.PropDCID.all_filters_avail" title="Link to this definition">¶</a></dt>
 <dd><p>Determine if all the filters in the pipelist are available to
 the library.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropDCID.fill_value_defined">
-<span class="sig-name descname"><span class="pre">fill_value_defined</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">INT</span> <span class="pre">fill_status</span></span></span><a class="headerlink" href="#h5py.h5p.PropDCID.fill_value_defined" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">fill_value_defined</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">INT</span> <span class="pre">fill_status</span></span></span><a class="headerlink" href="#h5py.h5p.PropDCID.fill_value_defined" title="Link to this definition">¶</a></dt>
 <dd><p>Determine the status of the dataset fill value.  Return values are:</p>
 <ul class="simple">
 <li><p><a class="reference internal" href="h5d.html#h5py.h5d.FILL_VALUE_UNDEFINED" title="h5py.h5d.FILL_VALUE_UNDEFINED"><code class="xref py py-data docutils literal notranslate"><span class="pre">h5d.FILL_VALUE_UNDEFINED</span></code></a></p></li>
@@ -610,19 +610,19 @@ the library.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropDCID.get_alloc_time">
-<span class="sig-name descname"><span class="pre">get_alloc_time</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">INT</span> <span class="pre">alloc_time</span></span></span><a class="headerlink" href="#h5py.h5p.PropDCID.get_alloc_time" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_alloc_time</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">INT</span> <span class="pre">alloc_time</span></span></span><a class="headerlink" href="#h5py.h5p.PropDCID.get_alloc_time" title="Link to this definition">¶</a></dt>
 <dd><p>Get the storage space allocation time.  One of <a class="reference internal" href="h5d.html#ref-h5d-alloc-time"><span class="std std-ref">h5d.ALLOC_TIME*</span></a>.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropDCID.get_chunk">
-<span class="sig-name descname"><span class="pre">get_chunk</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">TUPLE</span> <span class="pre">chunk_dimensions</span></span></span><a class="headerlink" href="#h5py.h5p.PropDCID.get_chunk" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_chunk</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">TUPLE</span> <span class="pre">chunk_dimensions</span></span></span><a class="headerlink" href="#h5py.h5p.PropDCID.get_chunk" title="Link to this definition">¶</a></dt>
 <dd><p>Obtain the dataset chunk size, as a tuple.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropDCID.get_external">
-<span class="sig-name descname"><span class="pre">get_external</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">UINT</span> <span class="pre">idx=0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">TUPLE</span> <span class="pre">external_file_info</span></span></span><a class="headerlink" href="#h5py.h5p.PropDCID.get_external" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_external</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">UINT</span> <span class="pre">idx=0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">TUPLE</span> <span class="pre">external_file_info</span></span></span><a class="headerlink" href="#h5py.h5p.PropDCID.get_external" title="Link to this definition">¶</a></dt>
 <dd><p>Returns information about the indexed external file.
 Tuple elements are:</p>
 <ol class="arabic simple" start="0">
@@ -634,13 +634,13 @@ Tuple elements are:</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropDCID.get_external_count">
-<span class="sig-name descname"><span class="pre">get_external_count</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">INT</span></span></span><a class="headerlink" href="#h5py.h5p.PropDCID.get_external_count" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_external_count</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">INT</span></span></span><a class="headerlink" href="#h5py.h5p.PropDCID.get_external_count" title="Link to this definition">¶</a></dt>
 <dd><p>Returns the number of external files for the dataset.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropDCID.get_fill_time">
-<span class="sig-name descname"><span class="pre">get_fill_time</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">INT</span></span></span><a class="headerlink" href="#h5py.h5p.PropDCID.get_fill_time" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_fill_time</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">INT</span></span></span><a class="headerlink" href="#h5py.h5p.PropDCID.get_fill_time" title="Link to this definition">¶</a></dt>
 <dd><p>Determine when fill values are written to the dataset.  Legal
 values (defined in module <a class="reference internal" href="h5d.html#module-h5py.h5d" title="h5py.h5d"><code class="xref py py-mod docutils literal notranslate"><span class="pre">h5d</span></code></a>) are:</p>
 <ul class="simple">
@@ -652,7 +652,7 @@ values (defined in module <a class="reference internal" href="h5d.html#module-h5
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropDCID.get_fill_value">
-<span class="sig-name descname"><span class="pre">get_fill_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">NDARRAY</span> <span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropDCID.get_fill_value" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_fill_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">NDARRAY</span> <span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropDCID.get_fill_value" title="Link to this definition">¶</a></dt>
 <dd><p>Read the dataset fill value into a NumPy array.  It will be
 converted to match the array dtype.  If the array has nonzero
 rank, only the first element will contain the value.</p>
@@ -660,7 +660,7 @@ rank, only the first element will contain the value.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropDCID.get_filter">
-<span class="sig-name descname"><span class="pre">get_filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">UINT</span> <span class="pre">filter_idx</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">TUPLE</span> <span class="pre">filter_info</span></span></span><a class="headerlink" href="#h5py.h5p.PropDCID.get_filter" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">UINT</span> <span class="pre">filter_idx</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">TUPLE</span> <span class="pre">filter_info</span></span></span><a class="headerlink" href="#h5py.h5p.PropDCID.get_filter" title="Link to this definition">¶</a></dt>
 <dd><p>Get information about a filter, identified by its index.  Tuple
 elements are:</p>
 <ol class="arabic simple" start="0">
@@ -673,7 +673,7 @@ elements are:</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropDCID.get_filter_by_id">
-<span class="sig-name descname"><span class="pre">get_filter_by_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">INT</span> <span class="pre">filter_code</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">TUPLE</span> <span class="pre">filter_info</span> <span class="pre">or</span> <span class="pre">None</span></span></span><a class="headerlink" href="#h5py.h5p.PropDCID.get_filter_by_id" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_filter_by_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">INT</span> <span class="pre">filter_code</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">TUPLE</span> <span class="pre">filter_info</span> <span class="pre">or</span> <span class="pre">None</span></span></span><a class="headerlink" href="#h5py.h5p.PropDCID.get_filter_by_id" title="Link to this definition">¶</a></dt>
 <dd><p>Get information about a filter, identified by its code (one
 of h5z.FILTER*).  If the filter doesn’t exist, returns None.
 Tuple elements are:</p>
@@ -686,7 +686,7 @@ Tuple elements are:</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropDCID.get_layout">
-<span class="sig-name descname"><span class="pre">get_layout</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">INT</span> <span class="pre">layout_code</span></span></span><a class="headerlink" href="#h5py.h5p.PropDCID.get_layout" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_layout</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">INT</span> <span class="pre">layout_code</span></span></span><a class="headerlink" href="#h5py.h5p.PropDCID.get_layout" title="Link to this definition">¶</a></dt>
 <dd><p>Determine the storage strategy of a dataset; legal values are:</p>
 <ul class="simple">
 <li><p><a class="reference internal" href="h5d.html#h5py.h5d.COMPACT" title="h5py.h5d.COMPACT"><code class="xref py py-data docutils literal notranslate"><span class="pre">h5d.COMPACT</span></code></a></p></li>
@@ -698,74 +698,74 @@ Tuple elements are:</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropDCID.get_nfilters">
-<span class="sig-name descname"><span class="pre">get_nfilters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">INT</span></span></span><a class="headerlink" href="#h5py.h5p.PropDCID.get_nfilters" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_nfilters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">INT</span></span></span><a class="headerlink" href="#h5py.h5p.PropDCID.get_nfilters" title="Link to this definition">¶</a></dt>
 <dd><p>Determine the number of filters in the pipeline.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropDCID.get_virtual_count">
-<span class="sig-name descname"><span class="pre">get_virtual_count</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">UINT</span></span></span><a class="headerlink" href="#h5py.h5p.PropDCID.get_virtual_count" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_virtual_count</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">UINT</span></span></span><a class="headerlink" href="#h5py.h5p.PropDCID.get_virtual_count" title="Link to this definition">¶</a></dt>
 <dd><p>Get the number of mappings for the virtual dataset.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropDCID.get_virtual_dsetname">
-<span class="sig-name descname"><span class="pre">get_virtual_dsetname</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">UINT</span> <span class="pre">index=0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">STR</span></span></span><a class="headerlink" href="#h5py.h5p.PropDCID.get_virtual_dsetname" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_virtual_dsetname</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">UINT</span> <span class="pre">index=0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">STR</span></span></span><a class="headerlink" href="#h5py.h5p.PropDCID.get_virtual_dsetname" title="Link to this definition">¶</a></dt>
 <dd><p>Get the name of a source dataset used in the mapping of the virtual
 dataset at the position index.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropDCID.get_virtual_filename">
-<span class="sig-name descname"><span class="pre">get_virtual_filename</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">UINT</span> <span class="pre">index=0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">STR</span></span></span><a class="headerlink" href="#h5py.h5p.PropDCID.get_virtual_filename" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_virtual_filename</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">UINT</span> <span class="pre">index=0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">STR</span></span></span><a class="headerlink" href="#h5py.h5p.PropDCID.get_virtual_filename" title="Link to this definition">¶</a></dt>
 <dd><p>Get the file name of a source dataset used in the mapping of the
 virtual dataset at the position index.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropDCID.get_virtual_srcspace">
-<span class="sig-name descname"><span class="pre">get_virtual_srcspace</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">UINT</span> <span class="pre">index=0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="h5s.html#h5py.h5s.SpaceID" title="h5py.h5s.SpaceID"><span class="pre">SpaceID</span></a></span></span><a class="headerlink" href="#h5py.h5p.PropDCID.get_virtual_srcspace" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_virtual_srcspace</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">UINT</span> <span class="pre">index=0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="h5s.html#h5py.h5s.SpaceID" title="h5py.h5s.SpaceID"><span class="pre">SpaceID</span></a></span></span><a class="headerlink" href="#h5py.h5p.PropDCID.get_virtual_srcspace" title="Link to this definition">¶</a></dt>
 <dd><p>Get a dataspace for the selection within the source dataset used
 in the mapping.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropDCID.get_virtual_vspace">
-<span class="sig-name descname"><span class="pre">get_virtual_vspace</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">UINT</span> <span class="pre">index=0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="h5s.html#h5py.h5s.SpaceID" title="h5py.h5s.SpaceID"><span class="pre">SpaceID</span></a></span></span><a class="headerlink" href="#h5py.h5p.PropDCID.get_virtual_vspace" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_virtual_vspace</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">UINT</span> <span class="pre">index=0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="h5s.html#h5py.h5s.SpaceID" title="h5py.h5s.SpaceID"><span class="pre">SpaceID</span></a></span></span><a class="headerlink" href="#h5py.h5p.PropDCID.get_virtual_vspace" title="Link to this definition">¶</a></dt>
 <dd><p>Get a dataspace for the selection within the virtual dataset used
 in the mapping.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropDCID.remove_filter">
-<span class="sig-name descname"><span class="pre">remove_filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">INT</span> <span class="pre">filter_class</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropDCID.remove_filter" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">remove_filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">INT</span> <span class="pre">filter_class</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropDCID.remove_filter" title="Link to this definition">¶</a></dt>
 <dd><p>Remove a filter from the pipeline.  The class code is one of
 <a class="reference internal" href="h5z.html#ref-h5z-filter"><span class="std std-ref">h5z.FILTER*</span></a>.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropDCID.set_alloc_time">
-<span class="sig-name descname"><span class="pre">set_alloc_time</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">INT</span> <span class="pre">alloc_time</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropDCID.set_alloc_time" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_alloc_time</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">INT</span> <span class="pre">alloc_time</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropDCID.set_alloc_time" title="Link to this definition">¶</a></dt>
 <dd><p>Set the storage space allocation time.  One of <a class="reference internal" href="h5d.html#ref-h5d-alloc-time"><span class="std std-ref">h5d.ALLOC_TIME*</span></a>.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropDCID.set_chunk">
-<span class="sig-name descname"><span class="pre">set_chunk</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">TUPLE</span> <span class="pre">chunksize</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropDCID.set_chunk" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_chunk</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">TUPLE</span> <span class="pre">chunksize</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropDCID.set_chunk" title="Link to this definition">¶</a></dt>
 <dd><p>Set the dataset chunk size.  It’s up to you to provide
 values which are compatible with your dataset.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropDCID.set_deflate">
-<span class="sig-name descname"><span class="pre">set_deflate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">UINT</span> <span class="pre">level=5</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropDCID.set_deflate" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_deflate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">UINT</span> <span class="pre">level=5</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropDCID.set_deflate" title="Link to this definition">¶</a></dt>
 <dd><p>Enable deflate (gzip) compression, at the given level.
 Valid levels are 0-9, default is 5.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropDCID.set_external">
-<span class="sig-name descname"><span class="pre">set_external</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">STR</span> <span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">UINT</span> <span class="pre">offset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">UINT</span> <span class="pre">size</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropDCID.set_external" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_external</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">STR</span> <span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">UINT</span> <span class="pre">offset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">UINT</span> <span class="pre">size</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropDCID.set_external" title="Link to this definition">¶</a></dt>
 <dd><p>Adds an external file to the list of external files for the dataset.</p>
 <p>The first call sets the external storage property in the property list,
 thus designating that the dataset will be stored in one or more non-HDF5
@@ -774,7 +774,7 @@ file(s) external to the HDF5 file.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropDCID.set_fill_time">
-<span class="sig-name descname"><span class="pre">set_fill_time</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">INT</span> <span class="pre">fill_time</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropDCID.set_fill_time" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_fill_time</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">INT</span> <span class="pre">fill_time</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropDCID.set_fill_time" title="Link to this definition">¶</a></dt>
 <dd><p>Define when fill values are written to the dataset.  Legal
 values (defined in module <a class="reference internal" href="h5d.html#module-h5py.h5d" title="h5py.h5d"><code class="xref py py-mod docutils literal notranslate"><span class="pre">h5d</span></code></a>) are:</p>
 <ul class="simple">
@@ -786,7 +786,7 @@ values (defined in module <a class="reference internal" href="h5d.html#module-h5
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropDCID.set_fill_value">
-<span class="sig-name descname"><span class="pre">set_fill_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">NDARRAY</span> <span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropDCID.set_fill_value" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_fill_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">NDARRAY</span> <span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropDCID.set_fill_value" title="Link to this definition">¶</a></dt>
 <dd><p>Set the dataset fill value.  The object provided should be an
 0-dimensional NumPy array; otherwise, the value will be read from
 the first element.</p>
@@ -794,7 +794,7 @@ the first element.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropDCID.set_filter">
-<span class="sig-name descname"><span class="pre">set_filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">INT</span> <span class="pre">filter_code</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">UINT</span> <span class="pre">flags=0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">TUPLE</span> <span class="pre">values=None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropDCID.set_filter" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">INT</span> <span class="pre">filter_code</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">UINT</span> <span class="pre">flags=0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">TUPLE</span> <span class="pre">values=None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropDCID.set_filter" title="Link to this definition">¶</a></dt>
 <dd><p>Set a filter in the pipeline.  Params are:</p>
 <dl class="simple">
 <dt>filter_code</dt><dd><p>One of the following:</p>
@@ -814,13 +814,13 @@ the first element.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropDCID.set_fletcher32">
-<span class="sig-name descname"><span class="pre">set_fletcher32</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropDCID.set_fletcher32" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_fletcher32</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropDCID.set_fletcher32" title="Link to this definition">¶</a></dt>
 <dd><p>Enable Fletcher32 error correction on this list.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropDCID.set_layout">
-<span class="sig-name descname"><span class="pre">set_layout</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">INT</span> <span class="pre">layout_code</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropDCID.set_layout" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_layout</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">INT</span> <span class="pre">layout_code</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropDCID.set_layout" title="Link to this definition">¶</a></dt>
 <dd><p>Set dataset storage strategy; legal values are:</p>
 <ul class="simple">
 <li><p><a class="reference internal" href="h5d.html#h5py.h5d.COMPACT" title="h5py.h5d.COMPACT"><code class="xref py py-data docutils literal notranslate"><span class="pre">h5d.COMPACT</span></code></a></p></li>
@@ -832,7 +832,7 @@ the first element.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropDCID.set_scaleoffset">
-<span class="sig-name descname"><span class="pre">set_scaleoffset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">H5Z_SO_scale_type_t</span> <span class="pre">scale_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">INT</span> <span class="pre">scale_factor</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropDCID.set_scaleoffset" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_scaleoffset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">H5Z_SO_scale_type_t</span> <span class="pre">scale_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">INT</span> <span class="pre">scale_factor</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropDCID.set_scaleoffset" title="Link to this definition">¶</a></dt>
 <dd><p>Enable scale/offset (usually lossy) compression; lossless (e.g. gzip)
 compression and other filters may be applied on top of this.</p>
 <p>Note that error detection (i.e. fletcher32) cannot precede this in
@@ -842,21 +842,21 @@ fail.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropDCID.set_shuffle">
-<span class="sig-name descname"><span class="pre">set_shuffle</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropDCID.set_shuffle" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_shuffle</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropDCID.set_shuffle" title="Link to this definition">¶</a></dt>
 <dd><p>Enable to use of the shuffle filter.  Use this immediately before
 the deflate filter to increase the compression ratio.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropDCID.set_szip">
-<span class="sig-name descname"><span class="pre">set_szip</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">UINT</span> <span class="pre">options</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">UINT</span> <span class="pre">pixels_per_block</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropDCID.set_szip" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_szip</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">UINT</span> <span class="pre">options</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">UINT</span> <span class="pre">pixels_per_block</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropDCID.set_szip" title="Link to this definition">¶</a></dt>
 <dd><p>Enable SZIP compression.  See the HDF5 docs for argument meanings,
 and general restrictions on use of the SZIP format.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropDCID.set_virtual">
-<span class="sig-name descname"><span class="pre">set_virtual</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">SpaceID</span> <span class="pre">vspace</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">STR</span> <span class="pre">src_file_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">STR</span> <span class="pre">src_dset_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">SpaceID</span> <span class="pre">src_space</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropDCID.set_virtual" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_virtual</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">SpaceID</span> <span class="pre">vspace</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">STR</span> <span class="pre">src_file_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">STR</span> <span class="pre">src_dset_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">SpaceID</span> <span class="pre">src_space</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropDCID.set_virtual" title="Link to this definition">¶</a></dt>
 <dd><p>Set the mapping between virtual and source datasets.</p>
 <p>The virtual dataset is described by its virtual dataspace (vspace)
 to the elements. The source dataset is described by the name of the
@@ -868,15 +868,15 @@ file where it is located (src_file_name), the name of the dataset
 
 </section>
 <section id="dataset-access">
-<h2>Dataset access<a class="headerlink" href="#dataset-access" title="Permalink to this heading">¶</a></h2>
+<h2>Dataset access<a class="headerlink" href="#dataset-access" title="Link to this heading">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="h5py.h5p.PropDAID">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5p.</span></span><span class="sig-name descname"><span class="pre">PropDAID</span></span><a class="headerlink" href="#h5py.h5p.PropDAID" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5p.</span></span><span class="sig-name descname"><span class="pre">PropDAID</span></span><a class="headerlink" href="#h5py.h5p.PropDAID" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#h5py.h5p.PropInstanceID" title="h5py.h5p.PropInstanceID"><code class="xref py py-class docutils literal notranslate"><span class="pre">PropInstanceID</span></code></a></p>
 <p>Dataset access property list</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropDAID.get_chunk_cache">
-<span class="sig-name descname"><span class="pre">get_chunk_cache</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">TUPLE</span> <span class="pre">chunk</span> <span class="pre">cache</span> <span class="pre">info</span></span></span><a class="headerlink" href="#h5py.h5p.PropDAID.get_chunk_cache" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_chunk_cache</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">TUPLE</span> <span class="pre">chunk</span> <span class="pre">cache</span> <span class="pre">info</span></span></span><a class="headerlink" href="#h5py.h5p.PropDAID.get_chunk_cache" title="Link to this definition">¶</a></dt>
 <dd><p>Get the metadata and raw data chunk cache settings.  See the HDF5
 docs for element definitions.  Return is a 3-tuple with entries:</p>
 <ol class="arabic simple" start="0">
@@ -888,21 +888,21 @@ docs for element definitions.  Return is a 3-tuple with entries:</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropDAID.get_efile_prefix">
-<span class="sig-name descname"><span class="pre">get_efile_prefix</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">STR</span></span></span><a class="headerlink" href="#h5py.h5p.PropDAID.get_efile_prefix" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_efile_prefix</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">STR</span></span></span><a class="headerlink" href="#h5py.h5p.PropDAID.get_efile_prefix" title="Link to this definition">¶</a></dt>
 <dd><p>Get the filesystem path prefix configured for accessing external
 datasets.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropDAID.get_virtual_prefix">
-<span class="sig-name descname"><span class="pre">get_virtual_prefix</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">STR</span></span></span><a class="headerlink" href="#h5py.h5p.PropDAID.get_virtual_prefix" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_virtual_prefix</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">STR</span></span></span><a class="headerlink" href="#h5py.h5p.PropDAID.get_virtual_prefix" title="Link to this definition">¶</a></dt>
 <dd><p>Get the filesystem path prefix configured for accessing virtual
 datasets.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropDAID.get_virtual_printf_gap">
-<span class="sig-name descname"><span class="pre">get_virtual_printf_gap</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">LONG</span> <span class="pre">gap_size</span></span></span><a class="headerlink" href="#h5py.h5p.PropDAID.get_virtual_printf_gap" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_virtual_printf_gap</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">LONG</span> <span class="pre">gap_size</span></span></span><a class="headerlink" href="#h5py.h5p.PropDAID.get_virtual_printf_gap" title="Link to this definition">¶</a></dt>
 <dd><p>Return the maximum number of missing source files and/or datasets
 with the printf-style names when getting the extent for an
 unlimited virtual dataset.</p>
@@ -910,7 +910,7 @@ unlimited virtual dataset.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropDAID.get_virtual_view">
-<span class="sig-name descname"><span class="pre">get_virtual_view</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">UINT</span> <span class="pre">view</span></span></span><a class="headerlink" href="#h5py.h5p.PropDAID.get_virtual_view" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_virtual_view</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">UINT</span> <span class="pre">view</span></span></span><a class="headerlink" href="#h5py.h5p.PropDAID.get_virtual_view" title="Link to this definition">¶</a></dt>
 <dd><p>Retrieve the view of the virtual dataset.</p>
 <p>Valid values are:</p>
 <ul class="simple">
@@ -921,27 +921,27 @@ unlimited virtual dataset.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropDAID.set_chunk_cache">
-<span class="sig-name descname"><span class="pre">set_chunk_cache</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size_t</span> <span class="pre">rdcc_nslots</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size_t</span> <span class="pre">rdcc_nbytes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">rdcc_w0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropDAID.set_chunk_cache" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_chunk_cache</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size_t</span> <span class="pre">rdcc_nslots</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size_t</span> <span class="pre">rdcc_nbytes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">rdcc_w0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropDAID.set_chunk_cache" title="Link to this definition">¶</a></dt>
 <dd><p>Sets the raw data chunk cache parameters.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropDAID.set_efile_prefix">
-<span class="sig-name descname"><span class="pre">set_efile_prefix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">STR</span> <span class="pre">prefix</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropDAID.set_efile_prefix" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_efile_prefix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">STR</span> <span class="pre">prefix</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropDAID.set_efile_prefix" title="Link to this definition">¶</a></dt>
 <dd><p>Set a filesystem path prefix for looking up external datasets.
 This is prepended to all filenames specified in the external dataset.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropDAID.set_virtual_prefix">
-<span class="sig-name descname"><span class="pre">set_virtual_prefix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">STR</span> <span class="pre">prefix</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropDAID.set_virtual_prefix" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_virtual_prefix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">STR</span> <span class="pre">prefix</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropDAID.set_virtual_prefix" title="Link to this definition">¶</a></dt>
 <dd><p>Set a filesystem path prefix for looking up virtual datasets.
 This is prepended to all filenames specified in the virtual dataset.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropDAID.set_virtual_printf_gap">
-<span class="sig-name descname"><span class="pre">set_virtual_printf_gap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">LONG</span> <span class="pre">gap_size=0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropDAID.set_virtual_printf_gap" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_virtual_printf_gap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">LONG</span> <span class="pre">gap_size=0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropDAID.set_virtual_printf_gap" title="Link to this definition">¶</a></dt>
 <dd><p>Set the maximum number of missing source files and/or datasets
 with the printf-style names when getting the extent of an unlimited
 virtual dataset.</p>
@@ -954,7 +954,7 @@ with the printf-style mappings. Default value: 0.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropDAID.set_virtual_view">
-<span class="sig-name descname"><span class="pre">set_virtual_view</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">UINT</span> <span class="pre">view</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropDAID.set_virtual_view" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_virtual_view</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">UINT</span> <span class="pre">view</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropDAID.set_virtual_view" title="Link to this definition">¶</a></dt>
 <dd><p>Set the view of the virtual dataset (<code class="xref py py-data docutils literal notranslate"><span class="pre">VDS</span></code>) to include or exclude
 missing mapped elements.</p>
 <p>If view is set to <code class="xref py py-data docutils literal notranslate"><span class="pre">h5d.VDS_FIRST_MISSING</span></code>, the view includes all data
@@ -971,25 +971,25 @@ virtual dataset’s creation property list.</p>
 
 </section>
 <section id="dataset-transfer">
-<h2>Dataset transfer<a class="headerlink" href="#dataset-transfer" title="Permalink to this heading">¶</a></h2>
+<h2>Dataset transfer<a class="headerlink" href="#dataset-transfer" title="Link to this heading">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="h5py.h5p.PropDXID">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5p.</span></span><span class="sig-name descname"><span class="pre">PropDXID</span></span><a class="headerlink" href="#h5py.h5p.PropDXID" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5p.</span></span><span class="sig-name descname"><span class="pre">PropDXID</span></span><a class="headerlink" href="#h5py.h5p.PropDXID" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#h5py.h5p.PropInstanceID" title="h5py.h5p.PropInstanceID"><code class="xref py py-class docutils literal notranslate"><span class="pre">PropInstanceID</span></code></a></p>
 <p>Data transfer property list</p>
 </dd></dl>
 
 </section>
 <section id="link-creation">
-<h2>Link creation<a class="headerlink" href="#link-creation" title="Permalink to this heading">¶</a></h2>
+<h2>Link creation<a class="headerlink" href="#link-creation" title="Link to this heading">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="h5py.h5p.PropLCID">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5p.</span></span><span class="sig-name descname"><span class="pre">PropLCID</span></span><a class="headerlink" href="#h5py.h5p.PropLCID" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5p.</span></span><span class="sig-name descname"><span class="pre">PropLCID</span></span><a class="headerlink" href="#h5py.h5p.PropLCID" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#h5py.h5p.PropCreateID" title="h5py.h5p.PropCreateID"><code class="xref py py-class docutils literal notranslate"><span class="pre">PropCreateID</span></code></a></p>
 <p>Link creation property list</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropLCID.get_char_encoding">
-<span class="sig-name descname"><span class="pre">get_char_encoding</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">INT</span> <span class="pre">encoding</span></span></span><a class="headerlink" href="#h5py.h5p.PropLCID.get_char_encoding" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_char_encoding</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">INT</span> <span class="pre">encoding</span></span></span><a class="headerlink" href="#h5py.h5p.PropLCID.get_char_encoding" title="Link to this definition">¶</a></dt>
 <dd><p>Get the character encoding for link names.  Legal values are:</p>
 <ul class="simple">
 <li><p><a class="reference internal" href="h5t.html#h5py.h5t.CSET_ASCII" title="h5py.h5t.CSET_ASCII"><code class="xref py py-data docutils literal notranslate"><span class="pre">h5t.CSET_ASCII</span></code></a></p></li>
@@ -999,13 +999,13 @@ virtual dataset’s creation property list.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropLCID.get_create_intermediate_group">
-<span class="sig-name descname"><span class="pre">get_create_intermediate_group</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">BOOL</span></span></span><a class="headerlink" href="#h5py.h5p.PropLCID.get_create_intermediate_group" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_create_intermediate_group</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">BOOL</span></span></span><a class="headerlink" href="#h5py.h5p.PropLCID.get_create_intermediate_group" title="Link to this definition">¶</a></dt>
 <dd><p>Determine if missing intermediate groups are automatically created.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropLCID.set_char_encoding">
-<span class="sig-name descname"><span class="pre">set_char_encoding</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">INT</span> <span class="pre">encoding</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropLCID.set_char_encoding" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_char_encoding</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">INT</span> <span class="pre">encoding</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropLCID.set_char_encoding" title="Link to this definition">¶</a></dt>
 <dd><p>Set the character encoding for link names.  Legal values are:</p>
 <ul class="simple">
 <li><p><a class="reference internal" href="h5t.html#h5py.h5t.CSET_ASCII" title="h5py.h5t.CSET_ASCII"><code class="xref py py-data docutils literal notranslate"><span class="pre">h5t.CSET_ASCII</span></code></a></p></li>
@@ -1015,7 +1015,7 @@ virtual dataset’s creation property list.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropLCID.set_create_intermediate_group">
-<span class="sig-name descname"><span class="pre">set_create_intermediate_group</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">BOOL</span> <span class="pre">create</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropLCID.set_create_intermediate_group" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_create_intermediate_group</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">BOOL</span> <span class="pre">create</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropLCID.set_create_intermediate_group" title="Link to this definition">¶</a></dt>
 <dd><p>Set whether missing intermediate groups are automatically created.</p>
 </dd></dl>
 
@@ -1023,57 +1023,57 @@ virtual dataset’s creation property list.</p>
 
 </section>
 <section id="link-access">
-<h2>Link access<a class="headerlink" href="#link-access" title="Permalink to this heading">¶</a></h2>
+<h2>Link access<a class="headerlink" href="#link-access" title="Link to this heading">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="h5py.h5p.PropLAID">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5p.</span></span><span class="sig-name descname"><span class="pre">PropLAID</span></span><a class="headerlink" href="#h5py.h5p.PropLAID" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5p.</span></span><span class="sig-name descname"><span class="pre">PropLAID</span></span><a class="headerlink" href="#h5py.h5p.PropLAID" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#h5py.h5p.PropInstanceID" title="h5py.h5p.PropInstanceID"><code class="xref py py-class docutils literal notranslate"><span class="pre">PropInstanceID</span></code></a></p>
 <p>Link access property list</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropLAID.get_elink_acc_flags">
-<span class="sig-name descname"><span class="pre">get_elink_acc_flags</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">UINT</span></span></span><a class="headerlink" href="#h5py.h5p.PropLAID.get_elink_acc_flags" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_elink_acc_flags</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">UINT</span></span></span><a class="headerlink" href="#h5py.h5p.PropLAID.get_elink_acc_flags" title="Link to this definition">¶</a></dt>
 <dd><p>Retrieves the external link traversal file access flag from the specified <a class="reference internal" href="#h5py.h5p.PropLAID" title="h5py.h5p.PropLAID"><code class="xref py py-class docutils literal notranslate"><span class="pre">link</span> <span class="pre">access</span> <span class="pre">property</span> <span class="pre">list</span></code></a>.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropLAID.get_elink_fapl">
-<span class="sig-name descname"><span class="pre">get_elink_fapl</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">PropFAID</span> <span class="pre">fapl</span></span></span><a class="headerlink" href="#h5py.h5p.PropLAID.get_elink_fapl" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_elink_fapl</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">PropFAID</span> <span class="pre">fapl</span></span></span><a class="headerlink" href="#h5py.h5p.PropLAID.get_elink_fapl" title="Link to this definition">¶</a></dt>
 <dd><p>Get the <a class="reference internal" href="#h5py.h5p.PropFAID" title="h5py.h5p.PropFAID"><code class="xref py py-class docutils literal notranslate"><span class="pre">file</span> <span class="pre">access</span> <span class="pre">property</span> <span class="pre">list</span></code></a> used when opening external files.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropLAID.get_elink_prefix">
-<span class="sig-name descname"><span class="pre">get_elink_prefix</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">STRING</span> <span class="pre">prefix</span></span></span><a class="headerlink" href="#h5py.h5p.PropLAID.get_elink_prefix" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_elink_prefix</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">STRING</span> <span class="pre">prefix</span></span></span><a class="headerlink" href="#h5py.h5p.PropLAID.get_elink_prefix" title="Link to this definition">¶</a></dt>
 <dd><p>Get the external link prefix</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropLAID.get_nlinks">
-<span class="sig-name descname"><span class="pre">get_nlinks</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">UINT</span></span></span><a class="headerlink" href="#h5py.h5p.PropLAID.get_nlinks" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_nlinks</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">UINT</span></span></span><a class="headerlink" href="#h5py.h5p.PropLAID.get_nlinks" title="Link to this definition">¶</a></dt>
 <dd><p>Get the maximum traversal depth for soft links</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropLAID.set_elink_acc_flags">
-<span class="sig-name descname"><span class="pre">set_elink_acc_flags</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">UNIT</span> <span class="pre">flags</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropLAID.set_elink_acc_flags" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_elink_acc_flags</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">UNIT</span> <span class="pre">flags</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropLAID.set_elink_acc_flags" title="Link to this definition">¶</a></dt>
 <dd><p>Sets the external link traversal file access flag in a <a class="reference internal" href="#h5py.h5p.PropLAID" title="h5py.h5p.PropLAID"><code class="xref py py-class docutils literal notranslate"><span class="pre">link</span> <span class="pre">access</span> <span class="pre">property</span> <span class="pre">list</span></code></a>.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropLAID.set_elink_fapl">
-<span class="sig-name descname"><span class="pre">set_elink_fapl</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">PropFAID</span> <span class="pre">fapl</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropLAID.set_elink_fapl" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_elink_fapl</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">PropFAID</span> <span class="pre">fapl</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropLAID.set_elink_fapl" title="Link to this definition">¶</a></dt>
 <dd><p>Set the <a class="reference internal" href="#h5py.h5p.PropFAID" title="h5py.h5p.PropFAID"><code class="xref py py-class docutils literal notranslate"><span class="pre">file</span> <span class="pre">access</span> <span class="pre">property</span> <span class="pre">list</span></code></a> used when opening external files.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropLAID.set_elink_prefix">
-<span class="sig-name descname"><span class="pre">set_elink_prefix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">STRING</span> <span class="pre">prefix</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropLAID.set_elink_prefix" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_elink_prefix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">STRING</span> <span class="pre">prefix</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropLAID.set_elink_prefix" title="Link to this definition">¶</a></dt>
 <dd><p>Set the external link prefix.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropLAID.set_nlinks">
-<span class="sig-name descname"><span class="pre">set_nlinks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">UINT</span> <span class="pre">nlinks</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropLAID.set_nlinks" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_nlinks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">UINT</span> <span class="pre">nlinks</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropLAID.set_nlinks" title="Link to this definition">¶</a></dt>
 <dd><p>Set the maximum traversal depth for soft links</p>
 </dd></dl>
 
@@ -1081,21 +1081,21 @@ virtual dataset’s creation property list.</p>
 
 </section>
 <section id="group-creation">
-<h2>Group creation<a class="headerlink" href="#group-creation" title="Permalink to this heading">¶</a></h2>
+<h2>Group creation<a class="headerlink" href="#group-creation" title="Link to this heading">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="h5py.h5p.PropGCID">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5p.</span></span><span class="sig-name descname"><span class="pre">PropGCID</span></span><a class="headerlink" href="#h5py.h5p.PropGCID" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5p.</span></span><span class="sig-name descname"><span class="pre">PropGCID</span></span><a class="headerlink" href="#h5py.h5p.PropGCID" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#h5py.h5p.PropOCID" title="h5py.h5p.PropOCID"><code class="xref py py-class docutils literal notranslate"><span class="pre">PropOCID</span></code></a></p>
 <p>Group creation property list</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropGCID.get_link_creation_order">
-<span class="sig-name descname"><span class="pre">get_link_creation_order</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">UINT</span> <span class="pre">flags</span></span></span><a class="headerlink" href="#h5py.h5p.PropGCID.get_link_creation_order" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_link_creation_order</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">UINT</span> <span class="pre">flags</span></span></span><a class="headerlink" href="#h5py.h5p.PropGCID.get_link_creation_order" title="Link to this definition">¶</a></dt>
 <dd><p>Get tracking and indexing of creation order for links added to this group</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="h5py.h5p.PropGCID.set_link_creation_order">
-<span class="sig-name descname"><span class="pre">set_link_creation_order</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">UINT</span> <span class="pre">flags</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropGCID.set_link_creation_order" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_link_creation_order</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">UINT</span> <span class="pre">flags</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5p.PropGCID.set_link_creation_order" title="Link to this definition">¶</a></dt>
 <dd><p>Set tracking and indexing of creation order for links added to this group</p>
 <p>flags – <a class="reference internal" href="#h5py.h5p.CRT_ORDER_TRACKED" title="h5py.h5p.CRT_ORDER_TRACKED"><code class="xref py py-data docutils literal notranslate"><span class="pre">h5p.CRT_ORDER_TRACKED</span></code></a>, h5p.CRT_ORDER_INDEXED</p>
 </dd></dl>
@@ -1104,10 +1104,10 @@ virtual dataset’s creation property list.</p>
 
 </section>
 <section id="datatype-creation">
-<h2>Datatype creation<a class="headerlink" href="#datatype-creation" title="Permalink to this heading">¶</a></h2>
+<h2>Datatype creation<a class="headerlink" href="#datatype-creation" title="Link to this heading">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="h5py.h5p.PropTCID">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5p.</span></span><span class="sig-name descname"><span class="pre">PropTCID</span></span><a class="headerlink" href="#h5py.h5p.PropTCID" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5p.</span></span><span class="sig-name descname"><span class="pre">PropTCID</span></span><a class="headerlink" href="#h5py.h5p.PropTCID" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#h5py.h5p.PropOCID" title="h5py.h5p.PropOCID"><code class="xref py py-class docutils literal notranslate"><span class="pre">PropOCID</span></code></a></p>
 <p>Datatype creation property list</p>
 <p>No methods yet.</p>
@@ -1115,75 +1115,75 @@ virtual dataset’s creation property list.</p>
 
 </section>
 <section id="module-constants">
-<h2>Module constants<a class="headerlink" href="#module-constants" title="Permalink to this heading">¶</a></h2>
+<h2>Module constants<a class="headerlink" href="#module-constants" title="Link to this heading">¶</a></h2>
 <section id="predefined-classes">
-<h3>Predefined classes<a class="headerlink" href="#predefined-classes" title="Permalink to this heading">¶</a></h3>
+<h3>Predefined classes<a class="headerlink" href="#predefined-classes" title="Link to this heading">¶</a></h3>
 <dl class="py data">
 <dt class="sig sig-object py" id="h5py.h5p.DEFAULT">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5p.</span></span><span class="sig-name descname"><span class="pre">DEFAULT</span></span><a class="headerlink" href="#h5py.h5p.DEFAULT" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5p.</span></span><span class="sig-name descname"><span class="pre">DEFAULT</span></span><a class="headerlink" href="#h5py.h5p.DEFAULT" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
 <dt class="sig sig-object py" id="h5py.h5p.FILE_CREATE">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5p.</span></span><span class="sig-name descname"><span class="pre">FILE_CREATE</span></span><a class="headerlink" href="#h5py.h5p.FILE_CREATE" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5p.</span></span><span class="sig-name descname"><span class="pre">FILE_CREATE</span></span><a class="headerlink" href="#h5py.h5p.FILE_CREATE" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
 <dt class="sig sig-object py" id="h5py.h5p.FILE_ACCESS">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5p.</span></span><span class="sig-name descname"><span class="pre">FILE_ACCESS</span></span><a class="headerlink" href="#h5py.h5p.FILE_ACCESS" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5p.</span></span><span class="sig-name descname"><span class="pre">FILE_ACCESS</span></span><a class="headerlink" href="#h5py.h5p.FILE_ACCESS" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
 <dt class="sig sig-object py" id="h5py.h5p.DATASET_CREATE">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5p.</span></span><span class="sig-name descname"><span class="pre">DATASET_CREATE</span></span><a class="headerlink" href="#h5py.h5p.DATASET_CREATE" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5p.</span></span><span class="sig-name descname"><span class="pre">DATASET_CREATE</span></span><a class="headerlink" href="#h5py.h5p.DATASET_CREATE" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
 <dt class="sig sig-object py" id="h5py.h5p.DATASET_XFER">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5p.</span></span><span class="sig-name descname"><span class="pre">DATASET_XFER</span></span><a class="headerlink" href="#h5py.h5p.DATASET_XFER" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5p.</span></span><span class="sig-name descname"><span class="pre">DATASET_XFER</span></span><a class="headerlink" href="#h5py.h5p.DATASET_XFER" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
 <dt class="sig sig-object py" id="h5py.h5p.DATASET_ACCESS">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5p.</span></span><span class="sig-name descname"><span class="pre">DATASET_ACCESS</span></span><a class="headerlink" href="#h5py.h5p.DATASET_ACCESS" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5p.</span></span><span class="sig-name descname"><span class="pre">DATASET_ACCESS</span></span><a class="headerlink" href="#h5py.h5p.DATASET_ACCESS" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
 <dt class="sig sig-object py" id="h5py.h5p.OBJECT_COPY">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5p.</span></span><span class="sig-name descname"><span class="pre">OBJECT_COPY</span></span><a class="headerlink" href="#h5py.h5p.OBJECT_COPY" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5p.</span></span><span class="sig-name descname"><span class="pre">OBJECT_COPY</span></span><a class="headerlink" href="#h5py.h5p.OBJECT_COPY" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
 <dt class="sig sig-object py" id="h5py.h5p.LINK_CREATE">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5p.</span></span><span class="sig-name descname"><span class="pre">LINK_CREATE</span></span><a class="headerlink" href="#h5py.h5p.LINK_CREATE" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5p.</span></span><span class="sig-name descname"><span class="pre">LINK_CREATE</span></span><a class="headerlink" href="#h5py.h5p.LINK_CREATE" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
 <dt class="sig sig-object py" id="h5py.h5p.LINK_ACCESS">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5p.</span></span><span class="sig-name descname"><span class="pre">LINK_ACCESS</span></span><a class="headerlink" href="#h5py.h5p.LINK_ACCESS" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5p.</span></span><span class="sig-name descname"><span class="pre">LINK_ACCESS</span></span><a class="headerlink" href="#h5py.h5p.LINK_ACCESS" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
 <dt class="sig sig-object py" id="h5py.h5p.GROUP_CREATE">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5p.</span></span><span class="sig-name descname"><span class="pre">GROUP_CREATE</span></span><a class="headerlink" href="#h5py.h5p.GROUP_CREATE" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5p.</span></span><span class="sig-name descname"><span class="pre">GROUP_CREATE</span></span><a class="headerlink" href="#h5py.h5p.GROUP_CREATE" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
 <dt class="sig sig-object py" id="h5py.h5p.OBJECT_CREATE">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5p.</span></span><span class="sig-name descname"><span class="pre">OBJECT_CREATE</span></span><a class="headerlink" href="#h5py.h5p.OBJECT_CREATE" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5p.</span></span><span class="sig-name descname"><span class="pre">OBJECT_CREATE</span></span><a class="headerlink" href="#h5py.h5p.OBJECT_CREATE" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </section>
 <section id="order-tracking-flags">
-<h3>Order tracking flags<a class="headerlink" href="#order-tracking-flags" title="Permalink to this heading">¶</a></h3>
+<h3>Order tracking flags<a class="headerlink" href="#order-tracking-flags" title="Link to this heading">¶</a></h3>
 <dl class="py data">
 <dt class="sig sig-object py" id="h5py.h5p.CRT_ORDER_TRACKED">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5p.</span></span><span class="sig-name descname"><span class="pre">CRT_ORDER_TRACKED</span></span><a class="headerlink" href="#h5py.h5p.CRT_ORDER_TRACKED" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5p.</span></span><span class="sig-name descname"><span class="pre">CRT_ORDER_TRACKED</span></span><a class="headerlink" href="#h5py.h5p.CRT_ORDER_TRACKED" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
 <dt class="sig sig-object py" id="h5py.h5p.CRT_ORDER_INDEXED">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5p.</span></span><span class="sig-name descname"><span class="pre">CRT_ORDER_INDEXED</span></span><a class="headerlink" href="#h5py.h5p.CRT_ORDER_INDEXED" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5p.</span></span><span class="sig-name descname"><span class="pre">CRT_ORDER_INDEXED</span></span><a class="headerlink" href="#h5py.h5p.CRT_ORDER_INDEXED" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </section>
@@ -1195,7 +1195,7 @@ virtual dataset’s creation property list.</p>
           </div>
         </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper">
   <div>
     <h3><a href="index.html">Table of Contents</a></h3>
@@ -1423,7 +1423,7 @@ virtual dataset’s creation property list.</p>
             rel="nofollow">Show Source</a></li>
     </ul>
    </div>
-<div id="searchbox" style="display: none" role="search">
+<search id="searchbox" style="display: none" role="search">
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
@@ -1431,13 +1431,13 @@ virtual dataset’s creation property list.</p>
       <input type="submit" value="Go" />
     </form>
     </div>
-</div>
+</search>
 <script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
       <div class="clearer"></div>
     </div>
-    <div class="related" role="navigation" aria-label="related navigation">
+    <div class="related" role="navigation" aria-label="Related">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -1459,7 +1459,7 @@ virtual dataset’s creation property list.</p>
     <div class="footer" role="contentinfo">
     &#169; Copyright 2014, Andrew Collette and contributors.
       Last updated on Aug 15, 2024.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
     </div>
   </body>
 </html>

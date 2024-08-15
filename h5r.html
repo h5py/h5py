@@ -1,22 +1,22 @@
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="en" data-content_root="./">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <title>Module H5R &#8212; Low-level API for h5py (v3.11.0)</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
-    <link rel="stylesheet" type="text/css" href="_static/nature.css?v=8fc2db88" />
-    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=f1206781"></script>
-    <script src="_static/doctools.js?v=888ff710"></script>
-    <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+    <link rel="stylesheet" type="text/css" href="_static/nature.css?v=0f882399" />
+    <script src="_static/documentation_options.js?v=8905d4f5"></script>
+    <script src="_static/doctools.js?v=9a2dae69"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Module H5S" href="h5s.html" />
     <link rel="prev" title="Module H5PL" href="h5pl.html" /> 
   </head><body>
-    <div class="related" role="navigation" aria-label="related navigation">
+    <div class="related" role="navigation" aria-label="Related">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -42,13 +42,13 @@
           <div class="body" role="main">
             
   <section id="module-h5py.h5r">
-<span id="module-h5r"></span><h1>Module H5R<a class="headerlink" href="#module-h5py.h5r" title="Permalink to this heading">¶</a></h1>
+<span id="module-h5r"></span><h1>Module H5R<a class="headerlink" href="#module-h5py.h5r" title="Link to this heading">¶</a></h1>
 <p><code class="xref py py-data docutils literal notranslate"><span class="pre">H5R</span></code> API for object and region references.</p>
 <section id="functional-api">
-<h2>Functional API<a class="headerlink" href="#functional-api" title="Permalink to this heading">¶</a></h2>
+<h2>Functional API<a class="headerlink" href="#functional-api" title="Link to this heading">¶</a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="h5py.h5r.create">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5r.</span></span><span class="sig-name descname"><span class="pre">create</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ObjectID</span> <span class="pre">loc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">STRING</span> <span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">INT</span> <span class="pre">ref_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">SpaceID</span> <span class="pre">space=None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ReferenceObject</span> <span class="pre">ref</span></span></span><a class="headerlink" href="#h5py.h5r.create" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5r.</span></span><span class="sig-name descname"><span class="pre">create</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ObjectID</span> <span class="pre">loc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">STRING</span> <span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">INT</span> <span class="pre">ref_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">SpaceID</span> <span class="pre">space=None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ReferenceObject</span> <span class="pre">ref</span></span></span><a class="headerlink" href="#h5py.h5r.create" title="Link to this definition">¶</a></dt>
 <dd><p>Create a new reference. The value of ref_type determines the kind
 of reference created:</p>
 <dl class="simple">
@@ -64,7 +64,7 @@ identifies the region.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="h5py.h5r.dereference">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5r.</span></span><span class="sig-name descname"><span class="pre">dereference</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Reference</span> <span class="pre">ref</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ObjectID</span> <span class="pre">id</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ObjectID</span> <span class="pre">or</span> <span class="pre">None</span></span></span><a class="headerlink" href="#h5py.h5r.dereference" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5r.</span></span><span class="sig-name descname"><span class="pre">dereference</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Reference</span> <span class="pre">ref</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ObjectID</span> <span class="pre">id</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ObjectID</span> <span class="pre">or</span> <span class="pre">None</span></span></span><a class="headerlink" href="#h5py.h5r.dereference" title="Link to this definition">¶</a></dt>
 <dd><p>Open the object pointed to by the reference and return its
 identifier.  The file identifier (or the identifier for any object
 in the file) must also be provided.  Returns None if the reference
@@ -74,7 +74,7 @@ is zero-filled.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="h5py.h5r.get_region">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5r.</span></span><span class="sig-name descname"><span class="pre">get_region</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Reference</span> <span class="pre">ref</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ObjectID</span> <span class="pre">id</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">SpaceID</span> <span class="pre">or</span> <span class="pre">None</span></span></span><a class="headerlink" href="#h5py.h5r.get_region" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5r.</span></span><span class="sig-name descname"><span class="pre">get_region</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Reference</span> <span class="pre">ref</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ObjectID</span> <span class="pre">id</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">SpaceID</span> <span class="pre">or</span> <span class="pre">None</span></span></span><a class="headerlink" href="#h5py.h5r.get_region" title="Link to this definition">¶</a></dt>
 <dd><p>Retrieve the dataspace selection pointed to by the reference.
 Returns a copy of the dataset’s dataspace, with the appropriate
 elements selected.  The file identifier or the identifier of any
@@ -86,7 +86,7 @@ returns None.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="h5py.h5r.get_obj_type">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5r.</span></span><span class="sig-name descname"><span class="pre">get_obj_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Reference</span> <span class="pre">ref</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ObjectID</span> <span class="pre">id</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">INT</span> <span class="pre">obj_code</span> <span class="pre">or</span> <span class="pre">None</span></span></span><a class="headerlink" href="#h5py.h5r.get_obj_type" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5r.</span></span><span class="sig-name descname"><span class="pre">get_obj_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Reference</span> <span class="pre">ref</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ObjectID</span> <span class="pre">id</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">INT</span> <span class="pre">obj_code</span> <span class="pre">or</span> <span class="pre">None</span></span></span><a class="headerlink" href="#h5py.h5r.get_obj_type" title="Link to this definition">¶</a></dt>
 <dd><p>Determine what type of object the reference points to.  The
 reference may be a Reference or RegionReference.  The file
 identifier or the identifier of any object in the file must also
@@ -102,16 +102,16 @@ be provided.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="h5py.h5r.get_name">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5r.</span></span><span class="sig-name descname"><span class="pre">get_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Reference</span> <span class="pre">ref</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ObjectID</span> <span class="pre">loc</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">STRING</span> <span class="pre">name</span></span></span><a class="headerlink" href="#h5py.h5r.get_name" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5r.</span></span><span class="sig-name descname"><span class="pre">get_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Reference</span> <span class="pre">ref</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ObjectID</span> <span class="pre">loc</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">STRING</span> <span class="pre">name</span></span></span><a class="headerlink" href="#h5py.h5r.get_name" title="Link to this definition">¶</a></dt>
 <dd><p>Determine the name of the object pointed to by this reference.</p>
 </dd></dl>
 
 </section>
 <section id="reference-classes">
-<h2>Reference classes<a class="headerlink" href="#reference-classes" title="Permalink to this heading">¶</a></h2>
+<h2>Reference classes<a class="headerlink" href="#reference-classes" title="Link to this heading">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="h5py.h5r.Reference">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5r.</span></span><span class="sig-name descname"><span class="pre">Reference</span></span><a class="headerlink" href="#h5py.h5r.Reference" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5r.</span></span><span class="sig-name descname"><span class="pre">Reference</span></span><a class="headerlink" href="#h5py.h5r.Reference" title="Link to this definition">¶</a></dt>
 <dd><p>Opaque representation of an HDF5 reference.</p>
 <p>Objects of this class are created exclusively by the library and
 cannot be modified.  The read-only attribute “typecode” determines
@@ -130,7 +130,7 @@ cdef readonly size_t typesize</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="h5py.h5r.RegionReference">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5r.</span></span><span class="sig-name descname"><span class="pre">RegionReference</span></span><a class="headerlink" href="#h5py.h5r.RegionReference" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5r.</span></span><span class="sig-name descname"><span class="pre">RegionReference</span></span><a class="headerlink" href="#h5py.h5r.RegionReference" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#h5py.h5r.Reference" title="h5py.h5r.Reference"><code class="xref py py-class docutils literal notranslate"><span class="pre">Reference</span></code></a></p>
 <p>Opaque representation of an HDF5 region reference.</p>
 <p>This is a subclass of Reference which exists mainly for programming
@@ -139,16 +139,16 @@ convenience.</p>
 
 </section>
 <section id="api-constants">
-<h2>API constants<a class="headerlink" href="#api-constants" title="Permalink to this heading">¶</a></h2>
+<h2>API constants<a class="headerlink" href="#api-constants" title="Link to this heading">¶</a></h2>
 <dl class="py data">
 <dt class="sig sig-object py" id="h5py.h5r.OBJECT">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5r.</span></span><span class="sig-name descname"><span class="pre">OBJECT</span></span><a class="headerlink" href="#h5py.h5r.OBJECT" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5r.</span></span><span class="sig-name descname"><span class="pre">OBJECT</span></span><a class="headerlink" href="#h5py.h5r.OBJECT" title="Link to this definition">¶</a></dt>
 <dd><p>Typecode for object references</p>
 </dd></dl>
 
 <dl class="py data">
 <dt class="sig sig-object py" id="h5py.h5r.DATASET_REGION">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5r.</span></span><span class="sig-name descname"><span class="pre">DATASET_REGION</span></span><a class="headerlink" href="#h5py.h5r.DATASET_REGION" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5r.</span></span><span class="sig-name descname"><span class="pre">DATASET_REGION</span></span><a class="headerlink" href="#h5py.h5r.DATASET_REGION" title="Link to this definition">¶</a></dt>
 <dd><p>Typecode for dataset region references</p>
 </dd></dl>
 
@@ -160,7 +160,7 @@ convenience.</p>
           </div>
         </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper">
   <div>
     <h3><a href="index.html">Table of Contents</a></h3>
@@ -206,7 +206,7 @@ convenience.</p>
             rel="nofollow">Show Source</a></li>
     </ul>
    </div>
-<div id="searchbox" style="display: none" role="search">
+<search id="searchbox" style="display: none" role="search">
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
@@ -214,13 +214,13 @@ convenience.</p>
       <input type="submit" value="Go" />
     </form>
     </div>
-</div>
+</search>
 <script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
       <div class="clearer"></div>
     </div>
-    <div class="related" role="navigation" aria-label="related navigation">
+    <div class="related" role="navigation" aria-label="Related">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -242,7 +242,7 @@ convenience.</p>
     <div class="footer" role="contentinfo">
     &#169; Copyright 2014, Andrew Collette and contributors.
       Last updated on Aug 15, 2024.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
     </div>
   </body>
 </html>

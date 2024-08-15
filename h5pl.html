@@ -1,22 +1,22 @@
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="en" data-content_root="./">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <title>Module H5PL &#8212; Low-level API for h5py (v3.11.0)</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
-    <link rel="stylesheet" type="text/css" href="_static/nature.css?v=8fc2db88" />
-    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=f1206781"></script>
-    <script src="_static/doctools.js?v=888ff710"></script>
-    <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+    <link rel="stylesheet" type="text/css" href="_static/nature.css?v=0f882399" />
+    <script src="_static/documentation_options.js?v=8905d4f5"></script>
+    <script src="_static/doctools.js?v=9a2dae69"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Module H5R" href="h5r.html" />
     <link rel="prev" title="Module H5P" href="h5p.html" /> 
   </head><body>
-    <div class="related" role="navigation" aria-label="related navigation">
+    <div class="related" role="navigation" aria-label="Related">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -42,50 +42,50 @@
           <div class="body" role="main">
             
   <section id="module-h5py.h5pl">
-<span id="module-h5pl"></span><h1>Module H5PL<a class="headerlink" href="#module-h5py.h5pl" title="Permalink to this heading">¶</a></h1>
+<span id="module-h5pl"></span><h1>Module H5PL<a class="headerlink" href="#module-h5py.h5pl" title="Link to this heading">¶</a></h1>
 <p>Provides access to the low-level HDF5 “<code class="xref py py-data docutils literal notranslate"><span class="pre">H5PL</span></code>” plugins interface.</p>
 <p>These functions are only available with HDF5 1.10.1 or later.
 They are probably not thread safe.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="h5py.h5pl.append">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5pl.</span></span><span class="sig-name descname"><span class="pre">append</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">STRING</span> <span class="pre">search_path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5pl.append" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5pl.</span></span><span class="sig-name descname"><span class="pre">append</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">STRING</span> <span class="pre">search_path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5pl.append" title="Link to this definition">¶</a></dt>
 <dd><p>Add a directory to the end of the plugin search path.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="h5py.h5pl.get">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5pl.</span></span><span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">UINT</span> <span class="pre">index</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">STRING</span></span></span><a class="headerlink" href="#h5py.h5pl.get" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5pl.</span></span><span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">UINT</span> <span class="pre">index</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">STRING</span></span></span><a class="headerlink" href="#h5py.h5pl.get" title="Link to this definition">¶</a></dt>
 <dd><p>Get the directory path at the given index (starting from 0) in the
 plugin search path. Returns a Python bytes object.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="h5py.h5pl.insert">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5pl.</span></span><span class="sig-name descname"><span class="pre">insert</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">STRING</span> <span class="pre">search_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">UINT</span> <span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5pl.insert" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5pl.</span></span><span class="sig-name descname"><span class="pre">insert</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">STRING</span> <span class="pre">search_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">UINT</span> <span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5pl.insert" title="Link to this definition">¶</a></dt>
 <dd><p>Insert a directory at the given index in the plugin search path.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="h5py.h5pl.prepend">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5pl.</span></span><span class="sig-name descname"><span class="pre">prepend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">STRING</span> <span class="pre">search_path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5pl.prepend" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5pl.</span></span><span class="sig-name descname"><span class="pre">prepend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">STRING</span> <span class="pre">search_path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5pl.prepend" title="Link to this definition">¶</a></dt>
 <dd><p>Add a directory to the start of the plugin search path.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="h5py.h5pl.remove">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5pl.</span></span><span class="sig-name descname"><span class="pre">remove</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">UINT</span> <span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5pl.remove" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5pl.</span></span><span class="sig-name descname"><span class="pre">remove</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">UINT</span> <span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5pl.remove" title="Link to this definition">¶</a></dt>
 <dd><p>Remove the specified entry from the plugin search path.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="h5py.h5pl.replace">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5pl.</span></span><span class="sig-name descname"><span class="pre">replace</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">STRING</span> <span class="pre">search_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">UINT</span> <span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5pl.replace" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5pl.</span></span><span class="sig-name descname"><span class="pre">replace</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">STRING</span> <span class="pre">search_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">UINT</span> <span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5pl.replace" title="Link to this definition">¶</a></dt>
 <dd><p>Replace the directory at the given index in the plugin search path.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="h5py.h5pl.size">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5pl.</span></span><span class="sig-name descname"><span class="pre">size</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">UINT</span></span></span><a class="headerlink" href="#h5py.h5pl.size" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5pl.</span></span><span class="sig-name descname"><span class="pre">size</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">UINT</span></span></span><a class="headerlink" href="#h5py.h5pl.size" title="Link to this definition">¶</a></dt>
 <dd><p>Get the number of directories currently in the plugin search path.</p>
 </dd></dl>
 
@@ -96,7 +96,7 @@ plugin search path. Returns a Python bytes object.</p>
           </div>
         </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper">
   <div>
     <h3><a href="index.html">Table of Contents</a></h3>
@@ -131,7 +131,7 @@ plugin search path. Returns a Python bytes object.</p>
             rel="nofollow">Show Source</a></li>
     </ul>
    </div>
-<div id="searchbox" style="display: none" role="search">
+<search id="searchbox" style="display: none" role="search">
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
@@ -139,13 +139,13 @@ plugin search path. Returns a Python bytes object.</p>
       <input type="submit" value="Go" />
     </form>
     </div>
-</div>
+</search>
 <script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
       <div class="clearer"></div>
     </div>
-    <div class="related" role="navigation" aria-label="related navigation">
+    <div class="related" role="navigation" aria-label="Related">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -167,7 +167,7 @@ plugin search path. Returns a Python bytes object.</p>
     <div class="footer" role="contentinfo">
     &#169; Copyright 2014, Andrew Collette and contributors.
       Last updated on Aug 15, 2024.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
     </div>
   </body>
 </html>

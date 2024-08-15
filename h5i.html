@@ -1,22 +1,22 @@
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="en" data-content_root="./">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <title>Module H5I &#8212; Low-level API for h5py (v3.11.0)</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
-    <link rel="stylesheet" type="text/css" href="_static/nature.css?v=8fc2db88" />
-    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=f1206781"></script>
-    <script src="_static/doctools.js?v=888ff710"></script>
-    <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+    <link rel="stylesheet" type="text/css" href="_static/nature.css?v=0f882399" />
+    <script src="_static/documentation_options.js?v=8905d4f5"></script>
+    <script src="_static/doctools.js?v=9a2dae69"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Module H5L" href="h5l.html" />
     <link rel="prev" title="Module H5G" href="h5g.html" /> 
   </head><body>
-    <div class="related" role="navigation" aria-label="related navigation">
+    <div class="related" role="navigation" aria-label="Related">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -42,12 +42,12 @@
           <div class="body" role="main">
             
   <section id="module-h5i">
-<h1>Module H5I<a class="headerlink" href="#module-h5i" title="Permalink to this heading">¶</a></h1>
+<h1>Module H5I<a class="headerlink" href="#module-h5i" title="Link to this heading">¶</a></h1>
 <section id="module-h5py.h5i">
-<span id="functional-api"></span><h2>Functional API<a class="headerlink" href="#module-h5py.h5i" title="Permalink to this heading">¶</a></h2>
+<span id="functional-api"></span><h2>Functional API<a class="headerlink" href="#module-h5py.h5i" title="Link to this heading">¶</a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="h5py.h5i.dec_ref">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5i.</span></span><span class="sig-name descname"><span class="pre">dec_ref</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ObjectID</span> <span class="pre">obj</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5i.dec_ref" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5i.</span></span><span class="sig-name descname"><span class="pre">dec_ref</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ObjectID</span> <span class="pre">obj</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5i.dec_ref" title="Link to this definition">¶</a></dt>
 <dd><p>Decrement the reference count for the given object.</p>
 <p>This function is provided for debugging only.  Reference counting
 is automatically synchronized with Python, and you can easily break
@@ -56,13 +56,13 @@ ObjectID instances by abusing this function.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="h5py.h5i.get_file_id">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5i.</span></span><span class="sig-name descname"><span class="pre">get_file_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ObjectID</span> <span class="pre">obj</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="h5f.html#h5py.h5f.FileID" title="h5py.h5f.FileID"><span class="pre">FileID</span></a></span></span><a class="headerlink" href="#h5py.h5i.get_file_id" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5i.</span></span><span class="sig-name descname"><span class="pre">get_file_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ObjectID</span> <span class="pre">obj</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="h5f.html#h5py.h5f.FileID" title="h5py.h5f.FileID"><span class="pre">FileID</span></a></span></span><a class="headerlink" href="#h5py.h5i.get_file_id" title="Link to this definition">¶</a></dt>
 <dd><p>Obtain an identifier for the file in which this object resides.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="h5py.h5i.get_name">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5i.</span></span><span class="sig-name descname"><span class="pre">get_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ObjectID</span> <span class="pre">obj</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">STRING</span> <span class="pre">name,</span> <span class="pre">or</span> <span class="pre">None</span></span></span><a class="headerlink" href="#h5py.h5i.get_name" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5i.</span></span><span class="sig-name descname"><span class="pre">get_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ObjectID</span> <span class="pre">obj</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">STRING</span> <span class="pre">name,</span> <span class="pre">or</span> <span class="pre">None</span></span></span><a class="headerlink" href="#h5py.h5i.get_name" title="Link to this definition">¶</a></dt>
 <dd><p>Determine (a) name of an HDF5 object.  Because an object has as many
 names as there are hard links to it, this may not be unique.</p>
 <p>If the identifier is invalid or is not associated with a name
@@ -72,13 +72,13 @@ names as there are hard links to it, this may not be unique.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="h5py.h5i.get_ref">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5i.</span></span><span class="sig-name descname"><span class="pre">get_ref</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ObjectID</span> <span class="pre">obj</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">INT</span></span></span><a class="headerlink" href="#h5py.h5i.get_ref" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5i.</span></span><span class="sig-name descname"><span class="pre">get_ref</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ObjectID</span> <span class="pre">obj</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">INT</span></span></span><a class="headerlink" href="#h5py.h5i.get_ref" title="Link to this definition">¶</a></dt>
 <dd><p>Retrieve the reference count for the given object.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="h5py.h5i.get_type">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5i.</span></span><span class="sig-name descname"><span class="pre">get_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ObjectID</span> <span class="pre">obj</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">INT</span> <span class="pre">type_code</span></span></span><a class="headerlink" href="#h5py.h5i.get_type" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5i.</span></span><span class="sig-name descname"><span class="pre">get_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ObjectID</span> <span class="pre">obj</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">INT</span> <span class="pre">type_code</span></span></span><a class="headerlink" href="#h5py.h5i.get_type" title="Link to this definition">¶</a></dt>
 <dd><p>Determine the HDF5 typecode of an arbitrary HDF5 object.  The return
 value is always one of the type constants defined in this module; if
 the <code class="xref py py-data docutils literal notranslate"><span class="pre">ID</span></code> is invalid, <a class="reference internal" href="#h5py.h5i.BADID" title="h5py.h5i.BADID"><code class="xref py py-data docutils literal notranslate"><span class="pre">BADID</span></code></a> is returned.</p>
@@ -86,7 +86,7 @@ the <code class="xref py py-data docutils literal notranslate"><span class="pre"
 
 <dl class="py function">
 <dt class="sig sig-object py" id="h5py.h5i.inc_ref">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5i.</span></span><span class="sig-name descname"><span class="pre">inc_ref</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ObjectID</span> <span class="pre">obj</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5i.inc_ref" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5i.</span></span><span class="sig-name descname"><span class="pre">inc_ref</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ObjectID</span> <span class="pre">obj</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5i.inc_ref" title="Link to this definition">¶</a></dt>
 <dd><p>Increment the reference count for the given object.</p>
 <p>This function is provided for debugging only.  Reference counting
 is automatically synchronized with Python, and you can easily break
@@ -95,57 +95,57 @@ ObjectID instances by abusing this function.</p>
 
 </section>
 <section id="module-constants">
-<h2>Module constants<a class="headerlink" href="#module-constants" title="Permalink to this heading">¶</a></h2>
+<h2>Module constants<a class="headerlink" href="#module-constants" title="Link to this heading">¶</a></h2>
 <section id="identifier-classes">
-<h3>Identifier classes<a class="headerlink" href="#identifier-classes" title="Permalink to this heading">¶</a></h3>
+<h3>Identifier classes<a class="headerlink" href="#identifier-classes" title="Link to this heading">¶</a></h3>
 <dl class="py data">
 <dt class="sig sig-object py" id="h5py.h5i.BADID">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5i.</span></span><span class="sig-name descname"><span class="pre">BADID</span></span><a class="headerlink" href="#h5py.h5i.BADID" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5i.</span></span><span class="sig-name descname"><span class="pre">BADID</span></span><a class="headerlink" href="#h5py.h5i.BADID" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
 <dt class="sig sig-object py" id="h5py.h5i.FILE">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5i.</span></span><span class="sig-name descname"><span class="pre">FILE</span></span><a class="headerlink" href="#h5py.h5i.FILE" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5i.</span></span><span class="sig-name descname"><span class="pre">FILE</span></span><a class="headerlink" href="#h5py.h5i.FILE" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
 <dt class="sig sig-object py" id="h5py.h5i.GROUP">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5i.</span></span><span class="sig-name descname"><span class="pre">GROUP</span></span><a class="headerlink" href="#h5py.h5i.GROUP" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5i.</span></span><span class="sig-name descname"><span class="pre">GROUP</span></span><a class="headerlink" href="#h5py.h5i.GROUP" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
 <dt class="sig sig-object py" id="h5py.h5i.DATASPACE">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5i.</span></span><span class="sig-name descname"><span class="pre">DATASPACE</span></span><a class="headerlink" href="#h5py.h5i.DATASPACE" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5i.</span></span><span class="sig-name descname"><span class="pre">DATASPACE</span></span><a class="headerlink" href="#h5py.h5i.DATASPACE" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
 <dt class="sig sig-object py" id="h5py.h5i.DATASET">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5i.</span></span><span class="sig-name descname"><span class="pre">DATASET</span></span><a class="headerlink" href="#h5py.h5i.DATASET" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5i.</span></span><span class="sig-name descname"><span class="pre">DATASET</span></span><a class="headerlink" href="#h5py.h5i.DATASET" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
 <dt class="sig sig-object py" id="h5py.h5i.ATTR">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5i.</span></span><span class="sig-name descname"><span class="pre">ATTR</span></span><a class="headerlink" href="#h5py.h5i.ATTR" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5i.</span></span><span class="sig-name descname"><span class="pre">ATTR</span></span><a class="headerlink" href="#h5py.h5i.ATTR" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
 <dt class="sig sig-object py" id="h5py.h5i.REFERENCE">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5i.</span></span><span class="sig-name descname"><span class="pre">REFERENCE</span></span><a class="headerlink" href="#h5py.h5i.REFERENCE" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5i.</span></span><span class="sig-name descname"><span class="pre">REFERENCE</span></span><a class="headerlink" href="#h5py.h5i.REFERENCE" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
 <dt class="sig sig-object py" id="h5py.h5i.GENPROP_CLS">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5i.</span></span><span class="sig-name descname"><span class="pre">GENPROP_CLS</span></span><a class="headerlink" href="#h5py.h5i.GENPROP_CLS" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5i.</span></span><span class="sig-name descname"><span class="pre">GENPROP_CLS</span></span><a class="headerlink" href="#h5py.h5i.GENPROP_CLS" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
 <dt class="sig sig-object py" id="h5py.h5i.GENPROP_LST">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5i.</span></span><span class="sig-name descname"><span class="pre">GENPROP_LST</span></span><a class="headerlink" href="#h5py.h5i.GENPROP_LST" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5i.</span></span><span class="sig-name descname"><span class="pre">GENPROP_LST</span></span><a class="headerlink" href="#h5py.h5i.GENPROP_LST" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
 <dt class="sig sig-object py" id="h5py.h5i.DATATYPE">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5i.</span></span><span class="sig-name descname"><span class="pre">DATATYPE</span></span><a class="headerlink" href="#h5py.h5i.DATATYPE" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5i.</span></span><span class="sig-name descname"><span class="pre">DATATYPE</span></span><a class="headerlink" href="#h5py.h5i.DATATYPE" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </section>
@@ -157,7 +157,7 @@ ObjectID instances by abusing this function.</p>
           </div>
         </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper">
   <div>
     <h3><a href="index.html">Table of Contents</a></h3>
@@ -210,7 +210,7 @@ ObjectID instances by abusing this function.</p>
             rel="nofollow">Show Source</a></li>
     </ul>
    </div>
-<div id="searchbox" style="display: none" role="search">
+<search id="searchbox" style="display: none" role="search">
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
@@ -218,13 +218,13 @@ ObjectID instances by abusing this function.</p>
       <input type="submit" value="Go" />
     </form>
     </div>
-</div>
+</search>
 <script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
       <div class="clearer"></div>
     </div>
-    <div class="related" role="navigation" aria-label="related navigation">
+    <div class="related" role="navigation" aria-label="Related">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -246,7 +246,7 @@ ObjectID instances by abusing this function.</p>
     <div class="footer" role="contentinfo">
     &#169; Copyright 2014, Andrew Collette and contributors.
       Last updated on Aug 15, 2024.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
     </div>
   </body>
 </html>

@@ -1,22 +1,22 @@
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="en" data-content_root="./">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <title>Module H5 &#8212; Low-level API for h5py (v3.11.0)</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
-    <link rel="stylesheet" type="text/css" href="_static/nature.css?v=8fc2db88" />
-    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=f1206781"></script>
-    <script src="_static/doctools.js?v=888ff710"></script>
-    <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+    <link rel="stylesheet" type="text/css" href="_static/nature.css?v=0f882399" />
+    <script src="_static/documentation_options.js?v=8905d4f5"></script>
+    <script src="_static/doctools.js?v=9a2dae69"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Module H5A" href="h5a.html" />
     <link rel="prev" title="Base object classes" href="objects.html" /> 
   </head><body>
-    <div class="related" role="navigation" aria-label="related navigation">
+    <div class="related" role="navigation" aria-label="Related">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -42,27 +42,27 @@
           <div class="body" role="main">
             
   <section id="module-h5py.h5">
-<span id="module-h5"></span><h1>Module H5<a class="headerlink" href="#module-h5py.h5" title="Permalink to this heading">¶</a></h1>
+<span id="module-h5"></span><h1>Module H5<a class="headerlink" href="#module-h5py.h5" title="Link to this heading">¶</a></h1>
 <section id="library-api">
-<h2>Library API<a class="headerlink" href="#library-api" title="Permalink to this heading">¶</a></h2>
+<h2>Library API<a class="headerlink" href="#library-api" title="Link to this heading">¶</a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="h5py.h5.get_config">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5.</span></span><span class="sig-name descname"><span class="pre">get_config</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#h5py.h5.H5PYConfig" title="h5py.h5.H5PYConfig"><span class="pre">H5PYConfig</span></a></span></span><a class="headerlink" href="#h5py.h5.get_config" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5.</span></span><span class="sig-name descname"><span class="pre">get_config</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#h5py.h5.H5PYConfig" title="h5py.h5.H5PYConfig"><span class="pre">H5PYConfig</span></a></span></span><a class="headerlink" href="#h5py.h5.get_config" title="Link to this definition">¶</a></dt>
 <dd><p>Get a reference to the global library configuration object.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="h5py.h5.get_libversion">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5.</span></span><span class="sig-name descname"><span class="pre">get_libversion</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5.get_libversion" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5.</span></span><span class="sig-name descname"><span class="pre">get_libversion</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#h5py.h5.get_libversion" title="Link to this definition">¶</a></dt>
 <dd><p>Retrieve the HDF5 library version as a 3-tuple.</p>
 </dd></dl>
 
 </section>
 <section id="configuration-class">
-<h2>Configuration class<a class="headerlink" href="#configuration-class" title="Permalink to this heading">¶</a></h2>
+<h2>Configuration class<a class="headerlink" href="#configuration-class" title="Link to this heading">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="h5py.h5.H5PYConfig">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5.</span></span><span class="sig-name descname"><span class="pre">H5PYConfig</span></span><a class="headerlink" href="#h5py.h5.H5PYConfig" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5.</span></span><span class="sig-name descname"><span class="pre">H5PYConfig</span></span><a class="headerlink" href="#h5py.h5.H5PYConfig" title="Link to this definition">¶</a></dt>
 <dd><p>Provides runtime access to global library settings.  You retrieve the
 master copy of this object by calling h5py.get_config().</p>
 <dl class="simple">
@@ -77,35 +77,35 @@ values.  Defaults to (‘FALSE’, ‘TRUE’) for values 0 and 1.</p>
 
 </section>
 <section id="module-constants">
-<h2>Module constants<a class="headerlink" href="#module-constants" title="Permalink to this heading">¶</a></h2>
+<h2>Module constants<a class="headerlink" href="#module-constants" title="Link to this heading">¶</a></h2>
 <dl class="py data">
 <dt class="sig sig-object py" id="h5py.h5.INDEX_NAME">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5.</span></span><span class="sig-name descname"><span class="pre">INDEX_NAME</span></span><a class="headerlink" href="#h5py.h5.INDEX_NAME" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5.</span></span><span class="sig-name descname"><span class="pre">INDEX_NAME</span></span><a class="headerlink" href="#h5py.h5.INDEX_NAME" title="Link to this definition">¶</a></dt>
 <dd><p>Resolve indices in alphanumeric order</p>
 </dd></dl>
 
 <dl class="py data">
 <dt class="sig sig-object py" id="h5py.h5.INDEX_CRT_ORDER">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5.</span></span><span class="sig-name descname"><span class="pre">INDEX_CRT_ORDER</span></span><a class="headerlink" href="#h5py.h5.INDEX_CRT_ORDER" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5.</span></span><span class="sig-name descname"><span class="pre">INDEX_CRT_ORDER</span></span><a class="headerlink" href="#h5py.h5.INDEX_CRT_ORDER" title="Link to this definition">¶</a></dt>
 <dd><p>Resolve indices in order of object creation.  Not always available.</p>
 </dd></dl>
 
 <dl class="py data">
 <dt class="sig sig-object py" id="h5py.h5.ITER_NATIVE">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5.</span></span><span class="sig-name descname"><span class="pre">ITER_NATIVE</span></span><a class="headerlink" href="#h5py.h5.ITER_NATIVE" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5.</span></span><span class="sig-name descname"><span class="pre">ITER_NATIVE</span></span><a class="headerlink" href="#h5py.h5.ITER_NATIVE" title="Link to this definition">¶</a></dt>
 <dd><p>Traverse index in the fastest possible order.  No particular pattern is
 guaranteed.</p>
 </dd></dl>
 
 <dl class="py data">
 <dt class="sig sig-object py" id="h5py.h5.ITER_INC">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5.</span></span><span class="sig-name descname"><span class="pre">ITER_INC</span></span><a class="headerlink" href="#h5py.h5.ITER_INC" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5.</span></span><span class="sig-name descname"><span class="pre">ITER_INC</span></span><a class="headerlink" href="#h5py.h5.ITER_INC" title="Link to this definition">¶</a></dt>
 <dd><p>Traverse index in increasing order</p>
 </dd></dl>
 
 <dl class="py data">
 <dt class="sig sig-object py" id="h5py.h5.ITER_DEC">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5.</span></span><span class="sig-name descname"><span class="pre">ITER_DEC</span></span><a class="headerlink" href="#h5py.h5.ITER_DEC" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5.</span></span><span class="sig-name descname"><span class="pre">ITER_DEC</span></span><a class="headerlink" href="#h5py.h5.ITER_DEC" title="Link to this definition">¶</a></dt>
 <dd><p>Traverse index in decreasing order</p>
 </dd></dl>
 
@@ -117,7 +117,7 @@ guaranteed.</p>
           </div>
         </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper">
   <div>
     <h3><a href="index.html">Table of Contents</a></h3>
@@ -162,7 +162,7 @@ guaranteed.</p>
             rel="nofollow">Show Source</a></li>
     </ul>
    </div>
-<div id="searchbox" style="display: none" role="search">
+<search id="searchbox" style="display: none" role="search">
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
@@ -170,13 +170,13 @@ guaranteed.</p>
       <input type="submit" value="Go" />
     </form>
     </div>
-</div>
+</search>
 <script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
       <div class="clearer"></div>
     </div>
-    <div class="related" role="navigation" aria-label="related navigation">
+    <div class="related" role="navigation" aria-label="Related">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -198,7 +198,7 @@ guaranteed.</p>
     <div class="footer" role="contentinfo">
     &#169; Copyright 2014, Andrew Collette and contributors.
       Last updated on Aug 15, 2024.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
     </div>
   </body>
 </html>

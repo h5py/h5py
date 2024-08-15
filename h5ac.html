@@ -1,22 +1,22 @@
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="en" data-content_root="./">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <title>Module H5AC &#8212; Low-level API for h5py (v3.11.0)</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
-    <link rel="stylesheet" type="text/css" href="_static/nature.css?v=8fc2db88" />
-    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=f1206781"></script>
-    <script src="_static/doctools.js?v=888ff710"></script>
-    <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+    <link rel="stylesheet" type="text/css" href="_static/nature.css?v=0f882399" />
+    <script src="_static/documentation_options.js?v=8905d4f5"></script>
+    <script src="_static/doctools.js?v=9a2dae69"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Module H5D" href="h5d.html" />
     <link rel="prev" title="Module H5A" href="h5a.html" /> 
   </head><body>
-    <div class="related" role="navigation" aria-label="related navigation">
+    <div class="related" role="navigation" aria-label="Related">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -42,140 +42,140 @@
           <div class="body" role="main">
             
   <section id="module-h5py.h5ac">
-<span id="module-h5ac"></span><h1>Module H5AC<a class="headerlink" href="#module-h5py.h5ac" title="Permalink to this heading">¶</a></h1>
+<span id="module-h5ac"></span><h1>Module H5AC<a class="headerlink" href="#module-h5py.h5ac" title="Link to this heading">¶</a></h1>
 <p>Low-level HDF5 “<code class="xref py py-data docutils literal notranslate"><span class="pre">H5AC</span></code>” cache configuration interface.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="h5py.h5ac.CacheConfig">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5ac.</span></span><span class="sig-name descname"><span class="pre">CacheConfig</span></span><a class="headerlink" href="#h5py.h5ac.CacheConfig" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">h5py.h5ac.</span></span><span class="sig-name descname"><span class="pre">CacheConfig</span></span><a class="headerlink" href="#h5py.h5ac.CacheConfig" title="Link to this definition">¶</a></dt>
 <dd><p>Represents H5AC_cache_config_t objects</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="h5py.h5ac.CacheConfig.apply_empty_reserve">
-<span class="sig-name descname"><span class="pre">apply_empty_reserve</span></span><a class="headerlink" href="#h5py.h5ac.CacheConfig.apply_empty_reserve" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">apply_empty_reserve</span></span><a class="headerlink" href="#h5py.h5ac.CacheConfig.apply_empty_reserve" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="h5py.h5ac.CacheConfig.apply_max_decrement">
-<span class="sig-name descname"><span class="pre">apply_max_decrement</span></span><a class="headerlink" href="#h5py.h5ac.CacheConfig.apply_max_decrement" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">apply_max_decrement</span></span><a class="headerlink" href="#h5py.h5ac.CacheConfig.apply_max_decrement" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="h5py.h5ac.CacheConfig.apply_max_increment">
-<span class="sig-name descname"><span class="pre">apply_max_increment</span></span><a class="headerlink" href="#h5py.h5ac.CacheConfig.apply_max_increment" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">apply_max_increment</span></span><a class="headerlink" href="#h5py.h5ac.CacheConfig.apply_max_increment" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="h5py.h5ac.CacheConfig.decr_mode">
-<span class="sig-name descname"><span class="pre">decr_mode</span></span><a class="headerlink" href="#h5py.h5ac.CacheConfig.decr_mode" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">decr_mode</span></span><a class="headerlink" href="#h5py.h5ac.CacheConfig.decr_mode" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="h5py.h5ac.CacheConfig.decrement">
-<span class="sig-name descname"><span class="pre">decrement</span></span><a class="headerlink" href="#h5py.h5ac.CacheConfig.decrement" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">decrement</span></span><a class="headerlink" href="#h5py.h5ac.CacheConfig.decrement" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="h5py.h5ac.CacheConfig.dirty_bytes_threshold">
-<span class="sig-name descname"><span class="pre">dirty_bytes_threshold</span></span><a class="headerlink" href="#h5py.h5ac.CacheConfig.dirty_bytes_threshold" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">dirty_bytes_threshold</span></span><a class="headerlink" href="#h5py.h5ac.CacheConfig.dirty_bytes_threshold" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="h5py.h5ac.CacheConfig.empty_reserve">
-<span class="sig-name descname"><span class="pre">empty_reserve</span></span><a class="headerlink" href="#h5py.h5ac.CacheConfig.empty_reserve" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">empty_reserve</span></span><a class="headerlink" href="#h5py.h5ac.CacheConfig.empty_reserve" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="h5py.h5ac.CacheConfig.epoch_length">
-<span class="sig-name descname"><span class="pre">epoch_length</span></span><a class="headerlink" href="#h5py.h5ac.CacheConfig.epoch_length" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">epoch_length</span></span><a class="headerlink" href="#h5py.h5ac.CacheConfig.epoch_length" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="h5py.h5ac.CacheConfig.epochs_before_eviction">
-<span class="sig-name descname"><span class="pre">epochs_before_eviction</span></span><a class="headerlink" href="#h5py.h5ac.CacheConfig.epochs_before_eviction" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">epochs_before_eviction</span></span><a class="headerlink" href="#h5py.h5ac.CacheConfig.epochs_before_eviction" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="h5py.h5ac.CacheConfig.evictions_enabled">
-<span class="sig-name descname"><span class="pre">evictions_enabled</span></span><a class="headerlink" href="#h5py.h5ac.CacheConfig.evictions_enabled" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">evictions_enabled</span></span><a class="headerlink" href="#h5py.h5ac.CacheConfig.evictions_enabled" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="h5py.h5ac.CacheConfig.flash_incr_mode">
-<span class="sig-name descname"><span class="pre">flash_incr_mode</span></span><a class="headerlink" href="#h5py.h5ac.CacheConfig.flash_incr_mode" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">flash_incr_mode</span></span><a class="headerlink" href="#h5py.h5ac.CacheConfig.flash_incr_mode" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="h5py.h5ac.CacheConfig.flash_multiple">
-<span class="sig-name descname"><span class="pre">flash_multiple</span></span><a class="headerlink" href="#h5py.h5ac.CacheConfig.flash_multiple" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">flash_multiple</span></span><a class="headerlink" href="#h5py.h5ac.CacheConfig.flash_multiple" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="h5py.h5ac.CacheConfig.flash_threshold">
-<span class="sig-name descname"><span class="pre">flash_threshold</span></span><a class="headerlink" href="#h5py.h5ac.CacheConfig.flash_threshold" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">flash_threshold</span></span><a class="headerlink" href="#h5py.h5ac.CacheConfig.flash_threshold" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="h5py.h5ac.CacheConfig.incr_mode">
-<span class="sig-name descname"><span class="pre">incr_mode</span></span><a class="headerlink" href="#h5py.h5ac.CacheConfig.incr_mode" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">incr_mode</span></span><a class="headerlink" href="#h5py.h5ac.CacheConfig.incr_mode" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="h5py.h5ac.CacheConfig.increment">
-<span class="sig-name descname"><span class="pre">increment</span></span><a class="headerlink" href="#h5py.h5ac.CacheConfig.increment" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">increment</span></span><a class="headerlink" href="#h5py.h5ac.CacheConfig.increment" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="h5py.h5ac.CacheConfig.initial_size">
-<span class="sig-name descname"><span class="pre">initial_size</span></span><a class="headerlink" href="#h5py.h5ac.CacheConfig.initial_size" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">initial_size</span></span><a class="headerlink" href="#h5py.h5ac.CacheConfig.initial_size" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="h5py.h5ac.CacheConfig.lower_hr_threshold">
-<span class="sig-name descname"><span class="pre">lower_hr_threshold</span></span><a class="headerlink" href="#h5py.h5ac.CacheConfig.lower_hr_threshold" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">lower_hr_threshold</span></span><a class="headerlink" href="#h5py.h5ac.CacheConfig.lower_hr_threshold" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="h5py.h5ac.CacheConfig.max_decrement">
-<span class="sig-name descname"><span class="pre">max_decrement</span></span><a class="headerlink" href="#h5py.h5ac.CacheConfig.max_decrement" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">max_decrement</span></span><a class="headerlink" href="#h5py.h5ac.CacheConfig.max_decrement" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="h5py.h5ac.CacheConfig.max_increment">
-<span class="sig-name descname"><span class="pre">max_increment</span></span><a class="headerlink" href="#h5py.h5ac.CacheConfig.max_increment" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">max_increment</span></span><a class="headerlink" href="#h5py.h5ac.CacheConfig.max_increment" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="h5py.h5ac.CacheConfig.max_size">
-<span class="sig-name descname"><span class="pre">max_size</span></span><a class="headerlink" href="#h5py.h5ac.CacheConfig.max_size" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">max_size</span></span><a class="headerlink" href="#h5py.h5ac.CacheConfig.max_size" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="h5py.h5ac.CacheConfig.min_clean_fraction">
-<span class="sig-name descname"><span class="pre">min_clean_fraction</span></span><a class="headerlink" href="#h5py.h5ac.CacheConfig.min_clean_fraction" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">min_clean_fraction</span></span><a class="headerlink" href="#h5py.h5ac.CacheConfig.min_clean_fraction" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="h5py.h5ac.CacheConfig.min_size">
-<span class="sig-name descname"><span class="pre">min_size</span></span><a class="headerlink" href="#h5py.h5ac.CacheConfig.min_size" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">min_size</span></span><a class="headerlink" href="#h5py.h5ac.CacheConfig.min_size" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="h5py.h5ac.CacheConfig.rpt_fcn_enabled">
-<span class="sig-name descname"><span class="pre">rpt_fcn_enabled</span></span><a class="headerlink" href="#h5py.h5ac.CacheConfig.rpt_fcn_enabled" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">rpt_fcn_enabled</span></span><a class="headerlink" href="#h5py.h5ac.CacheConfig.rpt_fcn_enabled" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="h5py.h5ac.CacheConfig.set_initial_size">
-<span class="sig-name descname"><span class="pre">set_initial_size</span></span><a class="headerlink" href="#h5py.h5ac.CacheConfig.set_initial_size" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_initial_size</span></span><a class="headerlink" href="#h5py.h5ac.CacheConfig.set_initial_size" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="h5py.h5ac.CacheConfig.upper_hr_threshold">
-<span class="sig-name descname"><span class="pre">upper_hr_threshold</span></span><a class="headerlink" href="#h5py.h5ac.CacheConfig.upper_hr_threshold" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">upper_hr_threshold</span></span><a class="headerlink" href="#h5py.h5ac.CacheConfig.upper_hr_threshold" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="h5py.h5ac.CacheConfig.version">
-<span class="sig-name descname"><span class="pre">version</span></span><a class="headerlink" href="#h5py.h5ac.CacheConfig.version" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">version</span></span><a class="headerlink" href="#h5py.h5ac.CacheConfig.version" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -187,7 +187,7 @@
           </div>
         </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper">
   <div>
     <h3><a href="index.html">Table of Contents</a></h3>
@@ -244,7 +244,7 @@
             rel="nofollow">Show Source</a></li>
     </ul>
    </div>
-<div id="searchbox" style="display: none" role="search">
+<search id="searchbox" style="display: none" role="search">
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
@@ -252,13 +252,13 @@
       <input type="submit" value="Go" />
     </form>
     </div>
-</div>
+</search>
 <script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
       <div class="clearer"></div>
     </div>
-    <div class="related" role="navigation" aria-label="related navigation">
+    <div class="related" role="navigation" aria-label="Related">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -280,7 +280,7 @@
     <div class="footer" role="contentinfo">
     &#169; Copyright 2014, Andrew Collette and contributors.
       Last updated on Aug 15, 2024.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
     </div>
   </body>
 </html>

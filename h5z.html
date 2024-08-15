@@ -1,21 +1,21 @@
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="en" data-content_root="./">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <title>Module H5Z &#8212; Low-level API for h5py (v3.11.0)</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
-    <link rel="stylesheet" type="text/css" href="_static/nature.css?v=8fc2db88" />
-    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=f1206781"></script>
-    <script src="_static/doctools.js?v=888ff710"></script>
-    <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+    <link rel="stylesheet" type="text/css" href="_static/nature.css?v=0f882399" />
+    <script src="_static/documentation_options.js?v=8905d4f5"></script>
+    <script src="_static/doctools.js?v=9a2dae69"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="prev" title="Module H5T" href="h5t.html" /> 
   </head><body>
-    <div class="related" role="navigation" aria-label="related navigation">
+    <div class="related" role="navigation" aria-label="Related">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -38,11 +38,11 @@
           <div class="body" role="main">
             
   <section id="module-h5py.h5z">
-<span id="module-h5z"></span><h1>Module H5Z<a class="headerlink" href="#module-h5py.h5z" title="Permalink to this heading">¶</a></h1>
+<span id="module-h5z"></span><h1>Module H5Z<a class="headerlink" href="#module-h5py.h5z" title="Link to this heading">¶</a></h1>
 <p>Filter API and constants.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="h5py.h5z.filter_avail">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5z.</span></span><span class="sig-name descname"><span class="pre">filter_avail</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">INT</span> <span class="pre">filter_code</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">BOOL</span></span></span><a class="headerlink" href="#h5py.h5z.filter_avail" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5z.</span></span><span class="sig-name descname"><span class="pre">filter_avail</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">INT</span> <span class="pre">filter_code</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">BOOL</span></span></span><a class="headerlink" href="#h5py.h5z.filter_avail" title="Link to this definition">¶</a></dt>
 <dd><p>Determine if the given filter is available to the library. The
 filter code should be one of:</p>
 <ul class="simple">
@@ -55,7 +55,7 @@ filter code should be one of:</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="h5py.h5z.get_filter_info">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5z.</span></span><span class="sig-name descname"><span class="pre">get_filter_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">INT</span> <span class="pre">filter_code</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">INT</span> <span class="pre">filter_flags</span></span></span><a class="headerlink" href="#h5py.h5z.get_filter_info" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5z.</span></span><span class="sig-name descname"><span class="pre">get_filter_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">INT</span> <span class="pre">filter_code</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">INT</span> <span class="pre">filter_flags</span></span></span><a class="headerlink" href="#h5py.h5z.get_filter_info" title="Link to this definition">¶</a></dt>
 <dd><p>Retrieve a bitfield with information about the given filter. The
 filter code should be one of:</p>
 <ul class="simple">
@@ -73,7 +73,7 @@ filter code should be one of:</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="h5py.h5z.register_filter">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5z.</span></span><span class="sig-name descname"><span class="pre">register_filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">INT</span> <span class="pre">cls_pointer_address</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">BOOL</span></span></span><a class="headerlink" href="#h5py.h5z.register_filter" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5z.</span></span><span class="sig-name descname"><span class="pre">register_filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">INT</span> <span class="pre">cls_pointer_address</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">BOOL</span></span></span><a class="headerlink" href="#h5py.h5z.register_filter" title="Link to this definition">¶</a></dt>
 <dd><p>Register a new filter from the memory address of a buffer containing a
 <code class="docutils literal notranslate"><span class="pre">H5Z_class1_t</span></code> or <code class="docutils literal notranslate"><span class="pre">H5Z_class2_t</span></code> data structure describing the filter.</p>
 <p><cite>cls_pointer_address</cite> can be retrieved from a HDF5 filter plugin dynamic
@@ -90,164 +90,164 @@ library:</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="h5py.h5z.unregister_filter">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5z.</span></span><span class="sig-name descname"><span class="pre">unregister_filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">INT</span> <span class="pre">filter_code</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">BOOL</span></span></span><a class="headerlink" href="#h5py.h5z.unregister_filter" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5z.</span></span><span class="sig-name descname"><span class="pre">unregister_filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">INT</span> <span class="pre">filter_code</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">BOOL</span></span></span><a class="headerlink" href="#h5py.h5z.unregister_filter" title="Link to this definition">¶</a></dt>
 <dd><p>Unregister a filter</p>
 </dd></dl>
 
 <section id="module-constants">
-<h2>Module constants<a class="headerlink" href="#module-constants" title="Permalink to this heading">¶</a></h2>
+<h2>Module constants<a class="headerlink" href="#module-constants" title="Link to this heading">¶</a></h2>
 <section id="predefined-filters">
-<span id="ref-h5z-filter"></span><h3>Predefined filters<a class="headerlink" href="#predefined-filters" title="Permalink to this heading">¶</a></h3>
+<span id="ref-h5z-filter"></span><h3>Predefined filters<a class="headerlink" href="#predefined-filters" title="Link to this heading">¶</a></h3>
 <dl class="py data">
 <dt class="sig sig-object py" id="h5py.h5z.FILTER_NONE">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5z.</span></span><span class="sig-name descname"><span class="pre">FILTER_NONE</span></span><a class="headerlink" href="#h5py.h5z.FILTER_NONE" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5z.</span></span><span class="sig-name descname"><span class="pre">FILTER_NONE</span></span><a class="headerlink" href="#h5py.h5z.FILTER_NONE" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
 <dt class="sig sig-object py" id="h5py.h5z.FILTER_ALL">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5z.</span></span><span class="sig-name descname"><span class="pre">FILTER_ALL</span></span><a class="headerlink" href="#h5py.h5z.FILTER_ALL" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5z.</span></span><span class="sig-name descname"><span class="pre">FILTER_ALL</span></span><a class="headerlink" href="#h5py.h5z.FILTER_ALL" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
 <dt class="sig sig-object py" id="h5py.h5z.FILTER_DEFLATE">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5z.</span></span><span class="sig-name descname"><span class="pre">FILTER_DEFLATE</span></span><a class="headerlink" href="#h5py.h5z.FILTER_DEFLATE" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5z.</span></span><span class="sig-name descname"><span class="pre">FILTER_DEFLATE</span></span><a class="headerlink" href="#h5py.h5z.FILTER_DEFLATE" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
 <dt class="sig sig-object py" id="h5py.h5z.FILTER_SHUFFLE">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5z.</span></span><span class="sig-name descname"><span class="pre">FILTER_SHUFFLE</span></span><a class="headerlink" href="#h5py.h5z.FILTER_SHUFFLE" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5z.</span></span><span class="sig-name descname"><span class="pre">FILTER_SHUFFLE</span></span><a class="headerlink" href="#h5py.h5z.FILTER_SHUFFLE" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
 <dt class="sig sig-object py" id="h5py.h5z.FILTER_FLETCHER32">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5z.</span></span><span class="sig-name descname"><span class="pre">FILTER_FLETCHER32</span></span><a class="headerlink" href="#h5py.h5z.FILTER_FLETCHER32" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5z.</span></span><span class="sig-name descname"><span class="pre">FILTER_FLETCHER32</span></span><a class="headerlink" href="#h5py.h5z.FILTER_FLETCHER32" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
 <dt class="sig sig-object py" id="h5py.h5z.FILTER_SZIP">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5z.</span></span><span class="sig-name descname"><span class="pre">FILTER_SZIP</span></span><a class="headerlink" href="#h5py.h5z.FILTER_SZIP" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5z.</span></span><span class="sig-name descname"><span class="pre">FILTER_SZIP</span></span><a class="headerlink" href="#h5py.h5z.FILTER_SZIP" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
 <dt class="sig sig-object py" id="h5py.h5z.FILTER_SCALEOFFSET">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5z.</span></span><span class="sig-name descname"><span class="pre">FILTER_SCALEOFFSET</span></span><a class="headerlink" href="#h5py.h5z.FILTER_SCALEOFFSET" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5z.</span></span><span class="sig-name descname"><span class="pre">FILTER_SCALEOFFSET</span></span><a class="headerlink" href="#h5py.h5z.FILTER_SCALEOFFSET" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
 <dt class="sig sig-object py" id="h5py.h5z.FILTER_LZF">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5z.</span></span><span class="sig-name descname"><span class="pre">FILTER_LZF</span></span><a class="headerlink" href="#h5py.h5z.FILTER_LZF" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5z.</span></span><span class="sig-name descname"><span class="pre">FILTER_LZF</span></span><a class="headerlink" href="#h5py.h5z.FILTER_LZF" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </section>
 <section id="filter-flags">
-<span id="ref-h5z-flag"></span><h3>Filter flags<a class="headerlink" href="#filter-flags" title="Permalink to this heading">¶</a></h3>
+<span id="ref-h5z-flag"></span><h3>Filter flags<a class="headerlink" href="#filter-flags" title="Link to this heading">¶</a></h3>
 <dl class="py data">
 <dt class="sig sig-object py" id="h5py.h5z.FLAG_DEFMASK">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5z.</span></span><span class="sig-name descname"><span class="pre">FLAG_DEFMASK</span></span><a class="headerlink" href="#h5py.h5z.FLAG_DEFMASK" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5z.</span></span><span class="sig-name descname"><span class="pre">FLAG_DEFMASK</span></span><a class="headerlink" href="#h5py.h5z.FLAG_DEFMASK" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
 <dt class="sig sig-object py" id="h5py.h5z.FLAG_MANDATORY">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5z.</span></span><span class="sig-name descname"><span class="pre">FLAG_MANDATORY</span></span><a class="headerlink" href="#h5py.h5z.FLAG_MANDATORY" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5z.</span></span><span class="sig-name descname"><span class="pre">FLAG_MANDATORY</span></span><a class="headerlink" href="#h5py.h5z.FLAG_MANDATORY" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
 <dt class="sig sig-object py" id="h5py.h5z.FLAG_OPTIONAL">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5z.</span></span><span class="sig-name descname"><span class="pre">FLAG_OPTIONAL</span></span><a class="headerlink" href="#h5py.h5z.FLAG_OPTIONAL" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5z.</span></span><span class="sig-name descname"><span class="pre">FLAG_OPTIONAL</span></span><a class="headerlink" href="#h5py.h5z.FLAG_OPTIONAL" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
 <dt class="sig sig-object py" id="h5py.h5z.FLAG_INVMASK">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5z.</span></span><span class="sig-name descname"><span class="pre">FLAG_INVMASK</span></span><a class="headerlink" href="#h5py.h5z.FLAG_INVMASK" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5z.</span></span><span class="sig-name descname"><span class="pre">FLAG_INVMASK</span></span><a class="headerlink" href="#h5py.h5z.FLAG_INVMASK" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
 <dt class="sig sig-object py" id="h5py.h5z.FLAG_REVERSE">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5z.</span></span><span class="sig-name descname"><span class="pre">FLAG_REVERSE</span></span><a class="headerlink" href="#h5py.h5z.FLAG_REVERSE" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5z.</span></span><span class="sig-name descname"><span class="pre">FLAG_REVERSE</span></span><a class="headerlink" href="#h5py.h5z.FLAG_REVERSE" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
 <dt class="sig sig-object py" id="h5py.h5z.FLAG_SKIP_EDC">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5z.</span></span><span class="sig-name descname"><span class="pre">FLAG_SKIP_EDC</span></span><a class="headerlink" href="#h5py.h5z.FLAG_SKIP_EDC" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5z.</span></span><span class="sig-name descname"><span class="pre">FLAG_SKIP_EDC</span></span><a class="headerlink" href="#h5py.h5z.FLAG_SKIP_EDC" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </section>
 <section id="szip-specific-options">
-<span id="ref-h5z-szip"></span><h3>SZIP-specific options<a class="headerlink" href="#szip-specific-options" title="Permalink to this heading">¶</a></h3>
+<span id="ref-h5z-szip"></span><h3>SZIP-specific options<a class="headerlink" href="#szip-specific-options" title="Link to this heading">¶</a></h3>
 <dl class="py data">
 <dt class="sig sig-object py" id="h5py.h5z.SZIP_ALLOW_K13_OPTION_MASK">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5z.</span></span><span class="sig-name descname"><span class="pre">SZIP_ALLOW_K13_OPTION_MASK</span></span><a class="headerlink" href="#h5py.h5z.SZIP_ALLOW_K13_OPTION_MASK" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5z.</span></span><span class="sig-name descname"><span class="pre">SZIP_ALLOW_K13_OPTION_MASK</span></span><a class="headerlink" href="#h5py.h5z.SZIP_ALLOW_K13_OPTION_MASK" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
 <dt class="sig sig-object py" id="h5py.h5z.SZIP_CHIP_OPTION_MASK">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5z.</span></span><span class="sig-name descname"><span class="pre">SZIP_CHIP_OPTION_MASK</span></span><a class="headerlink" href="#h5py.h5z.SZIP_CHIP_OPTION_MASK" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5z.</span></span><span class="sig-name descname"><span class="pre">SZIP_CHIP_OPTION_MASK</span></span><a class="headerlink" href="#h5py.h5z.SZIP_CHIP_OPTION_MASK" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
 <dt class="sig sig-object py" id="h5py.h5z.SZIP_EC_OPTION_MASK">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5z.</span></span><span class="sig-name descname"><span class="pre">SZIP_EC_OPTION_MASK</span></span><a class="headerlink" href="#h5py.h5z.SZIP_EC_OPTION_MASK" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5z.</span></span><span class="sig-name descname"><span class="pre">SZIP_EC_OPTION_MASK</span></span><a class="headerlink" href="#h5py.h5z.SZIP_EC_OPTION_MASK" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
 <dt class="sig sig-object py" id="h5py.h5z.SZIP_NN_OPTION_MASK">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5z.</span></span><span class="sig-name descname"><span class="pre">SZIP_NN_OPTION_MASK</span></span><a class="headerlink" href="#h5py.h5z.SZIP_NN_OPTION_MASK" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5z.</span></span><span class="sig-name descname"><span class="pre">SZIP_NN_OPTION_MASK</span></span><a class="headerlink" href="#h5py.h5z.SZIP_NN_OPTION_MASK" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
 <dt class="sig sig-object py" id="h5py.h5z.SZIP_MAX_PIXELS_PER_BLOCK">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5z.</span></span><span class="sig-name descname"><span class="pre">SZIP_MAX_PIXELS_PER_BLOCK</span></span><a class="headerlink" href="#h5py.h5z.SZIP_MAX_PIXELS_PER_BLOCK" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5z.</span></span><span class="sig-name descname"><span class="pre">SZIP_MAX_PIXELS_PER_BLOCK</span></span><a class="headerlink" href="#h5py.h5z.SZIP_MAX_PIXELS_PER_BLOCK" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </section>
 <section id="scale-offset-specific-options">
-<h3>Scale/offset-specific options<a class="headerlink" href="#scale-offset-specific-options" title="Permalink to this heading">¶</a></h3>
+<h3>Scale/offset-specific options<a class="headerlink" href="#scale-offset-specific-options" title="Link to this heading">¶</a></h3>
 <dl class="py data">
 <dt class="sig sig-object py" id="h5py.h5z.SO_FLOAT_DSCALE">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5z.</span></span><span class="sig-name descname"><span class="pre">SO_FLOAT_DSCALE</span></span><a class="headerlink" href="#h5py.h5z.SO_FLOAT_DSCALE" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5z.</span></span><span class="sig-name descname"><span class="pre">SO_FLOAT_DSCALE</span></span><a class="headerlink" href="#h5py.h5z.SO_FLOAT_DSCALE" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
 <dt class="sig sig-object py" id="h5py.h5z.SO_FLOAT_ESCALE">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5z.</span></span><span class="sig-name descname"><span class="pre">SO_FLOAT_ESCALE</span></span><a class="headerlink" href="#h5py.h5z.SO_FLOAT_ESCALE" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5z.</span></span><span class="sig-name descname"><span class="pre">SO_FLOAT_ESCALE</span></span><a class="headerlink" href="#h5py.h5z.SO_FLOAT_ESCALE" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
 <dt class="sig sig-object py" id="h5py.h5z.SO_INT">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5z.</span></span><span class="sig-name descname"><span class="pre">SO_INT</span></span><a class="headerlink" href="#h5py.h5z.SO_INT" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5z.</span></span><span class="sig-name descname"><span class="pre">SO_INT</span></span><a class="headerlink" href="#h5py.h5z.SO_INT" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
 <dt class="sig sig-object py" id="h5py.h5z.SO_INT_MINBITS_DEFAULT">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5z.</span></span><span class="sig-name descname"><span class="pre">SO_INT_MINBITS_DEFAULT</span></span><a class="headerlink" href="#h5py.h5z.SO_INT_MINBITS_DEFAULT" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5z.</span></span><span class="sig-name descname"><span class="pre">SO_INT_MINBITS_DEFAULT</span></span><a class="headerlink" href="#h5py.h5z.SO_INT_MINBITS_DEFAULT" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </section>
 <section id="other-flags">
-<h3>Other flags<a class="headerlink" href="#other-flags" title="Permalink to this heading">¶</a></h3>
+<h3>Other flags<a class="headerlink" href="#other-flags" title="Link to this heading">¶</a></h3>
 <dl class="py data">
 <dt class="sig sig-object py" id="h5py.h5z.FILTER_CONFIG_ENCODE_ENABLED">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5z.</span></span><span class="sig-name descname"><span class="pre">FILTER_CONFIG_ENCODE_ENABLED</span></span><a class="headerlink" href="#h5py.h5z.FILTER_CONFIG_ENCODE_ENABLED" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5z.</span></span><span class="sig-name descname"><span class="pre">FILTER_CONFIG_ENCODE_ENABLED</span></span><a class="headerlink" href="#h5py.h5z.FILTER_CONFIG_ENCODE_ENABLED" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
 <dt class="sig sig-object py" id="h5py.h5z.FILTER_CONFIG_DECODE_ENABLED">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5z.</span></span><span class="sig-name descname"><span class="pre">FILTER_CONFIG_DECODE_ENABLED</span></span><a class="headerlink" href="#h5py.h5z.FILTER_CONFIG_DECODE_ENABLED" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5z.</span></span><span class="sig-name descname"><span class="pre">FILTER_CONFIG_DECODE_ENABLED</span></span><a class="headerlink" href="#h5py.h5z.FILTER_CONFIG_DECODE_ENABLED" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
 <dt class="sig sig-object py" id="h5py.h5z.DISABLE_EDC">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5z.</span></span><span class="sig-name descname"><span class="pre">DISABLE_EDC</span></span><a class="headerlink" href="#h5py.h5z.DISABLE_EDC" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5z.</span></span><span class="sig-name descname"><span class="pre">DISABLE_EDC</span></span><a class="headerlink" href="#h5py.h5z.DISABLE_EDC" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
 <dt class="sig sig-object py" id="h5py.h5z.ENABLE_EDC">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5z.</span></span><span class="sig-name descname"><span class="pre">ENABLE_EDC</span></span><a class="headerlink" href="#h5py.h5z.ENABLE_EDC" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5z.</span></span><span class="sig-name descname"><span class="pre">ENABLE_EDC</span></span><a class="headerlink" href="#h5py.h5z.ENABLE_EDC" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py data">
 <dt class="sig sig-object py" id="h5py.h5z.NO_EDC">
-<span class="sig-prename descclassname"><span class="pre">h5py.h5z.</span></span><span class="sig-name descname"><span class="pre">NO_EDC</span></span><a class="headerlink" href="#h5py.h5z.NO_EDC" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">h5py.h5z.</span></span><span class="sig-name descname"><span class="pre">NO_EDC</span></span><a class="headerlink" href="#h5py.h5z.NO_EDC" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </section>
@@ -259,7 +259,7 @@ library:</p>
           </div>
         </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper">
   <div>
     <h3><a href="index.html">Table of Contents</a></h3>
@@ -332,7 +332,7 @@ library:</p>
             rel="nofollow">Show Source</a></li>
     </ul>
    </div>
-<div id="searchbox" style="display: none" role="search">
+<search id="searchbox" style="display: none" role="search">
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
@@ -340,13 +340,13 @@ library:</p>
       <input type="submit" value="Go" />
     </form>
     </div>
-</div>
+</search>
 <script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
       <div class="clearer"></div>
     </div>
-    <div class="related" role="navigation" aria-label="related navigation">
+    <div class="related" role="navigation" aria-label="Related">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -365,7 +365,7 @@ library:</p>
     <div class="footer" role="contentinfo">
     &#169; Copyright 2014, Andrew Collette and contributors.
       Last updated on Aug 15, 2024.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
     </div>
   </body>
 </html>
