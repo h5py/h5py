@@ -75,8 +75,8 @@ steps:
       displayName: 'ensure HDF5'
 - ${{ if eq(parameters.shell, 'cmd') }}:
     - script: |
-        py -3.7 -m pip install requests
-        py -3.7 ci\\get_hdf5_win.py
+        py -3.9 -m pip install requests
+        py -3.9 ci\\get_hdf5_win.py
       displayName: 'ensure HDF5'
 
 - script: env
