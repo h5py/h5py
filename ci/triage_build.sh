@@ -47,6 +47,10 @@ if [[ "$GITHUB_EVENT_NAME" == "schedule" ]] || [[ "$MSG" = *'[pip-pre]'* ]]; the
     fi
     echo "CIBW_BEFORE_TEST=pip install --pre --only-binary numpy --extra-index-url https://pypi.anaconda.org/scientific-python-nightly-wheels/simple \"numpy>=2.1.0.dev0\"" | tee -a $GITHUB_ENV
 fi
+if [[ "$ARCH" == "AMD64" ]]; then
+    CIBW_SKIP="$CIBW_SKIP cp313-*"
+fi
+
 # replace dots in PYTHON with nothing, e.g., 3.8->38
 CIBW_BUILD="cp${PYTHON//./}-*_$ARCH"
 echo "CIBW_BUILD=$CIBW_BUILD" | tee -a $GITHUB_ENV
