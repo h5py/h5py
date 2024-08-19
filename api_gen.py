@@ -128,6 +128,7 @@ class Line:
 
 raw_preamble = """\
 # cython: language_level=3
+# cython: freethreading_compatible=True
 #
 # Warning: this file is auto-generated from api_gen.py. DO NOT EDIT!
 #
@@ -140,6 +141,7 @@ from .api_types_ext cimport *
 
 def_preamble = """\
 # cython: language_level=3
+# cython: freethreading_compatible=True
 #
 # Warning: this file is auto-generated from api_gen.py. DO NOT EDIT!
 #
@@ -153,6 +155,7 @@ from .api_types_ext cimport *
 
 imp_preamble = """\
 # cython: language_level=3
+# cython: freethreading_compatible=True
 #
 # Warning: this file is auto-generated from api_gen.py. DO NOT EDIT!
 #
