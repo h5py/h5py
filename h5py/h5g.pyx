@@ -14,6 +14,8 @@
 
 include "config.pxi"
 
+import sys
+
 # C-level imports
 from ._objects cimport pdefault
 from .utils cimport emalloc, efree
@@ -24,6 +26,9 @@ from ._errors cimport set_error_handler, err_cookie
 
 # Python level imports
 from ._objects import phil, with_phil
+
+
+_IS_WINDOWS = sys.platform.startswith("win")
 
 # === Public constants and data structures ====================================
 
@@ -389,9 +394,9 @@ cdef class GroupID(ObjectID):
         if statbuf.type != H5G_LINK:
             raise ValueError('"%s" is not a symbolic link.' % name)
 
-        IF UNAME_SYSNAME == "Windows":
+        if _IS_WINDOWS:
             linklen = 2049  # Windows statbuf.linklen seems broken
-        ELSE:
+        else:
             linklen = statbuf.linklen+1
         value = <char*>emalloc(sizeof(char)*linklen)
         try:
