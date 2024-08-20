@@ -31,6 +31,7 @@ from h5py._hl.base import is_empty_dataspace, product
 from h5py import h5f, h5t
 from h5py.h5py_warnings import H5pyDeprecationWarning
 from h5py import version
+from h5py._hl.dataset import MultiManager
 import h5py
 import h5py._hl.selections as sel
 from h5py.tests.common import NUMPY_RELEASE_VERSION
@@ -2051,3 +2052,737 @@ def test_array_copy_false(view_getter, writable_file):
     view = view_getter(ds)
     with pytest.raises(ValueError):
         np.array(view, copy=False)
+@ut.skipIf(h5py.version.hdf5_version_tuple < (1, 14, 0),
+           "MultiManager requires HDF5 >= 1.14.0")
+class TestMultiManager(BaseDataset):
+    def test_multi_read_scalar_dataspaces(self):
+        """
+        Test reading from multiple datasets with scalar dataspaces
+        """
+        shape = ()
+        count = 3
+        dt = np.int32
+
+        # Create datasets
+        data_in = np.array(1, dtype=dt)
+        datasets = []
+
+        for i in range(count):
+            dset = self.f.create_dataset("data" + str(i), shape,
+                                         dtype=dt, data=(data_in + i))
+            datasets.append(dset)
+
+        mm = MultiManager(datasets)
+
+        # Select via empty tuple
+        data_out = mm[()]
+
+        self.assertEqual(len(data_out), count)
+
+        for i in range(count):
+            np.testing.assert_array_equal(data_out[i], data_in + i)
+
+        # Select via Ellipsis
+        data_out = mm[...]
+
+        self.assertEqual(len(data_out), count)
+
+        for i in range(count):
+            np.testing.assert_array_equal(data_out[i], data_in + i)
+
+    def test_multi_read_non_scalar_dataspaces(self):
+        """
+        Test reading from multiple datasets with non-scalar dataspaces
+        """
+        shape = (10, 10, 10)
+        count = 3
+        dt = np.int32
+
+        # Create datasets
+        data_in = np.reshape(np.arange(np.prod(shape)), shape)
+        datasets = []
+
+        for i in range(count):
+            dset = self.f.create_dataset("data" + str(i), shape,
+                                         dtype=dt, data=(data_in + i))
+            datasets.append(dset)
+
+        mm = MultiManager(datasets)
+        data_out = mm[...]
+
+        self.assertEqual(len(data_out), count)
+
+        for i in range(count):
+            np.testing.assert_array_equal(data_out[i], data_in + i)
+
+        # Partial Read
+        data_out = mm[:, :, 0]
+
+        self.assertEqual(len(data_out), count)
+
+        for i in range(count):
+            np.testing.assert_array_equal(data_out[i], (data_in + i)[:, :, 0])
+
+    def test_multi_read_mixed_dataspaces(self):
+        """
+        Test reading from multiple datasets with scalar and
+        non-scalar dataspaces
+        """
+        scalar_shape = ()
+        shape = (10, 10, 10)
+        count = 3
+        dt = np.int32
+
+        # Create datasets
+        data_scalar_in = np.array(1)
+        data_nonscalar_in = np.reshape(np.arange(np.prod(shape)), shape)
+        data_in = [data_scalar_in, data_nonscalar_in,
+                   data_nonscalar_in, data_nonscalar_in]
+        datasets = []
+
+        for i in range(count):
+            if i == 0:
+                dset = self.f.create_dataset("data" + str(0), scalar_shape,
+                                             dtype=dt, data=data_scalar_in)
+            else:
+                dset = self.f.create_dataset("data" + str(i), shape,
+                                             dtype=dt, data=(data_nonscalar_in + i))
+            datasets.append(dset)
+
+        # Set up MultiManager for read
+        mm = MultiManager(datasets=datasets)
+
+        # Select via empty tuple
+        data_out = mm[()]
+
+        self.assertEqual(len(data_out), count)
+
+        for i in range(count):
+            if i == 0:
+                np.testing.assert_array_equal(data_out[i], data_in[i])
+            else:
+                np.testing.assert_array_equal(data_out[i], data_in[i] + i)
+
+        # Select via Ellipsis
+        data_out = mm[...]
+
+        self.assertEqual(len(data_out), count)
+
+        for i in range(count):
+            if i == 0:
+                np.testing.assert_array_equal(data_out[i], data_in[i])
+            else:
+                np.testing.assert_array_equal(data_out[i], data_in[i] + i)
+
+    def test_multi_read_mixed_types(self):
+        """
+        Test reading from multiple datasets with different types
+        """
+        shape = (10, 10, 10)
+        count = 4
+        dts = [np.int32, np.int64, np.float64, np.dtype("S10")]
+
+        # Create datasets
+        data_in = np.reshape(np.arange(np.prod(shape)), shape)
+        data_in_fixed_str = np.full(shape, "abcdefghij", dtype=dts[3])
+        datasets = []
+
+        for i in range(count):
+            if i < 3:
+                dset = self.f.create_dataset("data" + str(i), shape,
+                                             dtype=dts[i], data=(data_in + i))
+            else:
+                dset = self.f.create_dataset("data" + str(i), shape,
+                                                        dtype=dts[i], data=data_in_fixed_str)
+
+            datasets.append(dset)
+
+        # Set up MultiManager for read
+        mm = MultiManager(datasets=datasets)
+
+        # Perform read
+        data_out = mm[...]
+
+        self.assertEqual(len(data_out), count)
+
+        for i in range(count):
+            if i < 3:
+                np.testing.assert_array_equal(data_out[i], np.array(data_in + i, dtype=dts[i]))
+            else:
+                np.testing.assert_array_equal(data_out[i], data_in_fixed_str)
+
+            self.assertEqual(data_out[i].dtype, dts[i])
+
+    def test_multi_read_vlen_str(self):
+        """
+        Test reading from multiple datasets with a vlen string type
+        """
+        shape = (10, 10, 10)
+        count = 3
+        dt = h5py.string_dtype(encoding='utf-8')
+        data_in = np.full(shape, "abcdefghij", dt)
+        datasets = []
+
+        for i in range(count):
+            dset = self.f.create_dataset("data" + str(i), shape=shape,
+                                         data=data_in, dtype=dt)
+            datasets.append(dset)
+
+        mm = MultiManager(datasets=datasets)
+        out = mm[...]
+
+        self.assertEqual(len(out), count)
+
+        for i in range(count):
+            self.assertEqual(out[i].dtype, dt)
+            out[i] = np.reshape(out[i], newshape=np.prod(shape))
+            out[i] = np.reshape(np.array([s.decode() for s in out[i]], dtype=dt),
+                            newshape=shape)
+            np.testing.assert_array_equal(out[i], data_in)
+
+    def test_multi_read_mixed_shapes(self):
+        """
+        Test reading a selection from multiple datasets with different shapes
+        """
+        shapes = [(150), (10, 15), (5, 5, 6)]
+        count = 3
+        dt = np.int32
+        data = np.arange(150, dtype=dt)
+        data_in = [np.reshape(data, newshape=s) for s in shapes]
+        datasets = []
+        sel_idx = 2
+
+        for i in range(count):
+            dset = self.f.create_dataset("data" + str(i), shape=shapes[i],
+                                  dtype=dt, data=data_in[i])
+            datasets.append(dset)
+
+        mm = MultiManager(datasets=datasets)
+        # Perform multi read with selection
+        out = mm[sel_idx]
+
+        # Verify
+        for i in range(count):
+            np.testing.assert_array_equal(out[i], data_in[i][sel_idx])
+
+    def test_multi_write_scalar_dataspaces(self):
+        """
+        Test writing to multiple scalar datasets
+        """
+        shape = ()
+        count = 3
+        dt = np.int32
+
+        # Create datasets
+        zeros = np.zeros(shape, dtype=dt)
+        data_in = []
+        datasets = []
+
+        for i in range(count):
+            dset = self.f.create_dataset("data" + str(i), shape,
+                                         dtype=dt, data=zeros)
+            datasets.append(dset)
+
+            data_in.append(np.array([i]))
+
+        mm = MultiManager(datasets)
+        # Perform write
+        mm[...] = data_in
+
+        # Read back and check
+        for i in range(count):
+            data_out = self.f["data" + str(i)][...]
+            np.testing.assert_array_equal(data_out, data_in[i])
+
+    def test_multi_write_non_scalar_dataspaces(self):
+        """
+        Test writing to multiple non-scalar datasets
+        """
+        shape = (10, 10, 10)
+        count = 3
+        dt = np.int32
+
+        # Create datasets
+        zeros = np.zeros(shape, dtype=dt)
+        data_in = []
+        datasets = []
+
+        for i in range(count):
+            dset = self.f.create_dataset("data" + str(i), shape,
+                                         dtype=dt, data=zeros)
+            datasets.append(dset)
+
+            d_in = np.array(np.reshape(np.arange(np.prod(shape)), shape) + i, dtype=dt)
+            data_in.append(d_in)
+
+        mm = MultiManager(datasets)
+        # Perform write
+        mm[...] = data_in
+
+        # Read back and check
+        for i in range(count):
+            data_out = np.array(self.f["data" + str(i)][...], dtype=dt)
+            np.testing.assert_array_equal(data_out, data_in[i])
+
+    def test_multi_write_mixed_dataspaces(self):
+        """
+        Test writing to multiple scalar and non-scalar datasets
+        """
+        scalar_shape = ()
+        shape = (10, 10, 10)
+        count = 3
+        dt = np.int32
+
+        # Create datasets
+        data_in = []
+        data_scalar_in = np.array(1, dtype=dt)
+        data_nonscalar_in = np.array(np.reshape(np.arange(np.prod(shape)), shape), dtype=dt)
+        datasets = []
+
+        for i in range(count):
+            if i == 0:
+                dset = self.f.create_dataset("data" + str(0), scalar_shape,
+                                             dtype=dt, data=np.array(0, dtype=dt))
+                data_in.append(data_scalar_in)
+            else:
+                dset = self.f.create_dataset("data" + str(i), shape,
+                                             dtype=dt, data=np.zeros(shape))
+                data_in.append(data_nonscalar_in)
+            datasets.append(dset)
+
+        # Set up MultiManager for write
+        mm = MultiManager(datasets=datasets)
+
+        # Select via empty tuple
+        mm[()] = data_in
+
+        for i in range(count):
+            data_out = self.f["data" + str(i)][...]
+            np.testing.assert_array_equal(data_out, data_in[i])
+
+        # Reset datasets
+        for i in range(count):
+            if i == 0:
+                zeros = np.array([0])
+            else:
+                zeros = np.zeros(shape)
+            self.f["data" + str(i)][...] = zeros
+
+        # Select via Ellipsis
+        mm[...] = data_in
+
+        for i in range(count):
+            data_out = self.f["data" + str(i)][...]
+
+            if i == 0:
+                np.testing.assert_array_equal(data_out, data_in[i])
+            else:
+                np.testing.assert_array_equal(data_out, data_in[i])
+
+    def test_multi_write_vlen_str(self):
+        """
+        Test writing to multiple datasets with a vlen string type
+        """
+        shape = (10, 10, 10)
+        count = 3
+        dt = h5py.string_dtype(encoding='utf-8')
+        data_initial_vlen = np.full(shape, "aaaabbbbcc", dtype=dt)
+        data_in_vlen = np.full(shape, "abcdefghij", dtype=dt)
+        datasets = []
+
+        for i in range(count):
+            dset = self.f.create_dataset("data" + str(i), shape=shape,
+                                         data=data_initial_vlen, dtype=dt)
+            datasets.append(dset)
+
+        mm = MultiManager(datasets=datasets)
+        # Perform write
+        mm[...] = [data_in_vlen, data_in_vlen, data_in_vlen]
+
+        # Verify
+        for i in range(count):
+            out = self.f["data" + str(i)][...]
+            self.assertEqual(out.dtype, dt)
+
+            out = np.reshape(out, newshape=np.prod(shape))
+            out = np.reshape(np.array([s.decode() for s in out], dtype=dt),
+                            newshape=shape)
+            np.testing.assert_array_equal(out, data_in_vlen)
+
+        # write to fixed length UTF-8 string
+        dt = h5py.string_dtype(encoding='utf-8', length=5)
+        s = 'cù'
+        data = [s, s, s, s]
+        shape = 4
+        datasets = []
+
+        for i in range(count):
+            ds = self.f.create_dataset('vlen_utf8' + str(i), shape, dtype=dt)
+            datasets.append(ds)
+
+        mm = MultiManager(datasets=datasets)
+        mm[...] = [data, data, data]
+
+        for i in range(count):
+            out = np.array(self.f["vlen_utf8" + str(i)], dtype=dt)
+            np.testing.assert_array_equal([elem.decode('utf-8') for elem in out], data)
+
+    def test_multi_array_dtype(self):
+        dt = np.dtype('8i')
+        shape = (5,)
+        count = 3
+        data_in = np.full(fill_value=np.arange(8), shape=shape, dtype=dt)
+        datasets = [self.f.create_dataset("dset_array" + str(i), shape=shape, dtype=dt) for i in range(count)]
+        mm = MultiManager(datasets)
+        mm[...] = [data_in] * count
+
+        for i in range(count):
+            out = self.f["dset_array" + str(i)][...]
+            np.testing.assert_array_equal(out, data_in)
+
+    def test_multi_write_mixed_shapes(self):
+        """
+        Test writing to a selection in multiple datasets with different shapes
+        """
+        shapes = [(50, 5), (15, 10), (20, 15)]
+        count = 3
+        dt = np.int32
+        data_in = 99
+        datasets = []
+        sel_idx = 2
+
+        for i in range(count):
+            dset = self.f.create_dataset("data" + str(i), shape=shapes[i],
+                                  dtype=dt, data=np.zeros(shapes[i], dtype=dt))
+            datasets.append(dset)
+
+        mm = MultiManager(datasets=datasets)
+        # Perform multi write with selection
+        mm[sel_idx, sel_idx] = [data_in, data_in + 1, data_in + 2]
+
+        # Verify
+        for i in range(count):
+            out = self.f["data" + str(i)][...]
+            np.testing.assert_array_equal(out[sel_idx, sel_idx], data_in + i)
+
+    def test_multi_write_field_selection(self):
+        """
+        Testing writing to a field selection on multiple datasets
+        """
+        dt = np.dtype([('a', np.float32), ('b', np.float32), ('c', np.float32)])
+        shape = (100,)
+        data = np.ones(shape, dtype=dt)
+        count = 3
+        datasets = []
+
+        for i in range(count):
+            dset = self.f.create_dataset("data" + str(i), shape=shape,
+                                        data=np.zeros(shape, dtype=dt),
+                                        dtype=dt)
+            datasets.append(dset)
+
+        # Perform write to field 'b'
+        mm = MultiManager(datasets=datasets)
+        mm[..., 'b'] = [data['b'], data['b'], data['b']]
+
+        for i in range(count):
+            out = np.array(self.f["data" + str(i)], dtype=dt)
+            np.testing.assert_array_equal(out['a'], np.zeros(shape, dtype=dt['a']))
+            np.testing.assert_array_equal(out['b'], np.ones(shape, dtype=dt['b']))
+            np.testing.assert_array_equal(out['c'], np.zeros(shape, dtype=dt['c']))
+
+        # Test writing to entire compound type
+        data = np.zeros(shape, dtype=dt)
+        mm[...] = [data, data, data]
+
+        for i in range(count):
+           out = np.array(self.f["data" + str(i)], dtype=dt)
+           np.testing.assert_array_equal(out, data)
+
+    def test_multi_write_vlen_seq(self):
+        """
+        Test writing variable-length sequences
+        """
+        dt = h5py.vlen_dtype(np.int32)
+        count = 3
+        shape = (5,)
+        datasets = []
+
+        data = np.array([np.arange(i + 1) for i in range(shape[0])], dtype=dt)
+
+        for i in range(count):
+            ds = self.f.create_dataset('vlen' + str(i), shape=shape, dtype=dt)
+            datasets.append(ds)
+
+        mm = MultiManager(datasets=datasets)
+        mm[...] = [data, data, data]
+
+        for i in range(count):
+            out = np.array(self.f['vlen' + str(i)], dtype=dt)
+            self.assertEqual(out.shape, data.shape)
+
+            for j in range(out.shape[0]):
+                np.testing.assert_array_equal(out[j], data[j])
+
+
+        # Write to vlen sequence dataset from array with > 1 dimension
+        dset_shape = (2, 2)
+        data_in_shape = (2, 2, 2)
+        datasets = []
+        data_in = np.reshape(np.arange(np.prod(data_in_shape), dtype=np.int32), data_in_shape)
+
+        for i in range(count):
+            ds = self.f.create_dataset('vlen2d' + str(i), shape=dset_shape, dtype=dt)
+            datasets.append(ds)
+
+        mm = MultiManager(datasets=datasets)
+        mm[...] = [data_in, data_in, data_in]
+
+        for i in range(count):
+            out = np.array(self.f['vlen2d' + str(i)])
+
+            for x in range(out.shape[0]):
+                for y in range(out.shape[1]):
+                    for z in range(data_in_shape[2]):
+                        np.testing.assert_array_equal(out[x, y][z], data_in[x, y, z])
+
+        # Write to vlen sequence data from array with 1 dimension
+        data_in = np.reshape(data_in, np.prod(data_in_shape))
+        mm = MultiManager(datasets=datasets)
+        mm[...] = [data_in, data_in, data_in]
+
+        for i in range(count):
+            out = self.f['vlen2d' + str(i)][...]
+
+            for x in range(out.shape[0]):
+                for y in range(out.shape[1]):
+                    np.testing.assert_array_equal(out[x, y], data_in)
+
+    def test_scalar_broadcast(self):
+        """
+        Test scalar broadcasting with chunked datasets
+        """
+        shape = (1000, 1000)
+        count = 3
+        data = np.array(1, dtype=np.int32)
+        datasets = []
+
+        for i in range(count):
+            dset = self.f.create_dataset('small_chunks' + str(i), shape=shape, chunks=(100,100), dtype=np.int32)
+            datasets.append(dset)
+        mm = MultiManager(datasets=datasets)
+        mm[...] = [data, data, data]
+
+        for i in range(count):
+            out = np.array(self.f["small_chunks" + str(i)], dtype=np.int32)
+            np.testing.assert_array_equal(out, np.ones(shape, dtype=np.int32))
+
+        datasets = []
+        for i in range(count):
+            dset = self.f.create_dataset('large_chunks' + str(i), shape=shape, chunks=(1000,1000), dtype=np.int32)
+            datasets.append(dset)
+
+        mm = MultiManager(datasets=datasets)
+        mm[...] = [data, data, data]
+
+        for i in range(count):
+            out = np.array(self.f["large_chunks" + str(i)], dtype=np.int32)
+            np.testing.assert_array_equal(out, np.ones(shape, dtype=np.int32))
+
+    def test_multi_write_single_selection(self):
+        """
+        Test writing to the same selection
+        on each dataset in a MultiManager
+        """
+        shape = (10, 10, 10)
+        count = 3
+        dt = np.int32
+
+        # Create datasets
+        data_in = np.reshape(np.arange(np.prod(shape), dtype=dt), shape)
+        datasets = []
+
+        for i in range(count):
+            dset = self.f.create_dataset("data" + str(i), shape=shape,
+                                            dtype=dt, data=np.zeros(shape, dtype=dt))
+            datasets.append(dset)
+
+        mm = h5py.MultiManager(datasets=datasets)
+        selection = np.s_[0:5, 0:5, 0:5]
+        mm[selection] = [data_in[selection]] * count
+
+        # Verify written region
+        for i in range(count):
+            np.testing.assert_array_equal(self.f["data" + str(i)][selection], data_in[selection])
+
+        # Verify unwritten region
+        for i in range(count):
+            np.testing.assert_array_equal(self.f["data" + str(i)][5:, 5:, 5:], np.zeros((5, 5, 5), dtype=dt))
+
+    def test_multi_selection(self):
+        """
+        Test using a different selection
+        for each dataset in a MultiManager
+        """
+        shape = (10, 10, 10)
+        count = 3
+        dt = np.int32
+
+        # Create datasets
+        data_in = np.reshape(np.arange(np.prod(shape), dtype=dt), shape)
+        data_in_original = data_in.copy()
+        datasets = []
+
+        for i in range(count):
+            dset = self.f.create_dataset("data" + str(i), shape=shape,
+                                            dtype=dt, data=data_in)
+            datasets.append(dset)
+
+        mm = h5py.MultiManager(datasets=datasets)
+
+        # Selections to read from
+        sel = [np.s_[0:10, 0:10, 0:10], np.s_[0:5, 5:10, 1:4:2], np.s_[4, 5, 6]]
+        data_out = mm[sel]
+
+        for i in range(count):
+            np.testing.assert_array_equal(data_out[i], data_in[sel[i]])
+
+        # If selection list has only a single element, apply it to all dsets
+        sel = [np.s_[0:10, 0:10, 0:10]]
+        data_out = mm[sel]
+
+        for d in data_out:
+            np.testing.assert_array_equal(d, data_in[sel[0]])
+
+        # Selections to write to
+        sel = [np.s_[0:10, 0:10, 0:10], np.s_[0:5, 0:5, 0:5], np.s_[0, 0, 0]]
+        data_in = [np.zeros_like(data_in), np.ones_like(data_in), np.full_like(data_in, 2)]
+        mm[sel] = [data_in[i][sel[i]] for i in range(count)]
+
+        for i in range(count):
+            np.testing.assert_array_equal(self.f["data" + str(i)][sel[i]], data_in[i][sel[i]])
+
+        # Check that unselected regions are unmodified
+        np.testing.assert_array_equal(self.f["data1"][5:, 5:, 5:], data_in_original[5:, 5:, 5:])
+        np.testing.assert_array_equal(self.f["data2"][1:, 1:, 1:], data_in_original[1:, 1:, 1:])
+
+        # Save for later comparison
+        data_in_original = mm[...]
+
+        # If selection list has only a single element, apply it to all dsets
+        sel = [np.s_[0:6, 0:6, 0:6]]
+        data_in = np.full(shape, 3, dtype=dt)
+        mm[sel] = [data_in[sel[0]]] * count
+
+        for i in range(count):
+            np.testing.assert_array_equal(self.f["data" + str(i)][sel[0]], data_in[sel[0]])
+
+        # Check that unselected regions are unmodified
+        data_out = mm[...]
+
+        for i in range(count):
+            np.testing.assert_array_equal(data_out[i][6:, 6:, 6:], data_in_original[i][6:, 6:, 6:])
+
+    def test_multi_selection_with_field(self):
+        shape = (10, 10, 10)
+        count = 3
+        dt = np.dtype([('a', np.int32), ('b', np.float64)])
+
+        # Create datasets
+        data_in = np.zeros(shape, dtype=dt)
+        data_in['a'] = np.reshape(np.arange(np.prod(shape), dtype=np.int32), shape)
+        data_in['b'] = np.reshape(np.arange(np.prod(shape), dtype=np.float64), shape)
+        datasets = []
+
+        for i in range(count):
+            dset = self.f.create_dataset("data" + str(i), shape=shape,
+                                            dtype=dt, data=np.zeros(shape, dtype=dt))
+            datasets.append(dset)
+
+        mm = h5py.MultiManager(datasets=datasets)
+        selections = [np.s_[0:10, 0:10, 0:10], np.s_[0:5, 0:5, 0:5], np.s_[0:3, 0:3, 0:3]]
+        mm[selections, 'a'] = [data_in[selections[0]]['a'], data_in[selections[1]]['a'], data_in[selections[2]]['a']]
+
+        # Verify written region
+        for i in range(count):
+            np.testing.assert_array_equal(self.f["data" + str(i)]['a'][selections[i]], data_in['a'][selections[i]])
+
+        # Verify unwritten field
+        for i in range(count):
+            np.testing.assert_array_equal(self.f["data" + str(i)]['b'][...], np.zeros(shape, dtype=np.float64))
+
+        # Verify unwritten region
+        np.testing.assert_array_equal(self.f["data1"]['a'][5:, 5:, 5:], np.zeros((5, 5, 5), dtype=np.int32))
+        np.testing.assert_array_equal(self.f["data2"]['a'][3:, 3:, 3:], np.zeros((7, 7, 7), dtype=np.int32))
+
+    def test_invalid_inputs(self):
+        d = self.f.create_dataset("dset_test_invalid1", shape=(10),
+                                  dtype=np.int32)
+
+        # empty dataset list
+        with self.assertRaises(ValueError):
+            mm = MultiManager(datasets=[])
+
+        # empty dataset list at read time
+        with self.assertRaises(ValueError):
+            dsets = [d]
+            mm = MultiManager(dsets)
+            del dsets[0]
+            mm[...]
+
+        # empty dataset in list
+        with self.assertRaises(ValueError):
+            d_size_0 = self.f.create_dataset("dset_test_invalid_size_zero",
+                                             dtype=np.int32)
+            mm = MultiManager(datasets=[d_size_0])
+            mm[...]
+
+        # field subsetting on read not currently supported
+        with self.assertRaises(ValueError):
+            mm = MultiManager(datasets=[d])
+            mm[..., "field_name"]
+
+        # attempt to read from region reference, not currently supported
+        with self.assertRaises(ValueError):
+            d2 = self.f.create_dataset("dset_test_invalid2", shape=(10, 10), dtype=np.int32)
+            slic = np.s_[1:5, 1:5:2]
+            ref = d2.regionref[slic]
+            mm = MultiManager([d])
+            mm[ref]
+
+        # attempt to write to nonexistent field in compound
+        with self.assertRaises(ValueError):
+            dt = np.dtype([('a', np.float32), ('b', np.int32),
+                           ('c', np.float32)])
+            values = np.zeros(shape=(10,), dtype=np.int32)
+            d_cmpd = self.f.create_dataset("dset_test_invalid_cmpd",
+                                           shape=(10,), dtype=dt)
+            mm = MultiManager([d_cmpd])
+            mm[..., 'd'] = [values]
+
+        # attempt to write to multiple nonexistent fields in compound
+        with self.assertRaises(ValueError):
+            dt = np.dtype([('a', np.float32), ('b', np.int32),
+                           ('c', np.float32)])
+            values = np.zeros(shape=(10,), dtype=np.int32)
+            d_cmpd = self.f.create_dataset("dset_test_invalid_cmpd2",
+                                           shape=(10,), dtype=dt)
+            mm = MultiManager([d_cmpd])
+            mm[..., 'd', 'f'] = [values]
+
+        # attempt to write to field in non-compound dataset
+        with self.assertRaises(TypeError):
+            mm = MultiManager([d])
+            mm[..., 'd'] = np.zeros(shape=(10,), dtype=np.int32)
+
+        # attempt to write to a zero selection
+        with self.assertRaises(ValueError):
+            mm = MultiManager([d])
+            mm[0:0] = np.zeros(shape=(10,), dtype=np.int32)
+
+        # attempt write with non-equal filespace selections in each dataset
+        with self.assertRaises(ValueError):
+            d2 = self.f.create_dataset("dset_test_invalid2", shape=(100),
+                                       dtype=np.int32)
+            mm = MultiManager([d, d2])
+            mm[0:] = np.zeros(shape=(10,), dtype=np.int32)

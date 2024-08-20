@@ -24,7 +24,7 @@ from .utils cimport  check_numpy_read, check_numpy_write, \
 from .h5t cimport TypeID, typewrap, py_create
 from .h5s cimport SpaceID
 from .h5p cimport PropID, propwrap
-from ._proxy cimport dset_rw
+from ._proxy cimport dset_rw, dset_rw_multi
 
 from ._objects import phil, with_phil
 from cpython cimport PyBUF_ANY_CONTIGUOUS, \
@@ -150,6 +150,63 @@ def open(ObjectID loc not None, char* name, PropID dapl=None):
     If specified, dapl may be a dataset access property list.
     """
     return DatasetID(H5Dopen(loc.id, name, pdefault(dapl)))
+
+IF HDF5_VERSION >= (1, 14, 0):
+    @with_phil
+    def rw_multi(list dataset_ids, list mspace_ids, list fspace_ids,
+        list type_ids, list bufs not None, int read, PropID dxpl=None):
+        """ (list dataset_ids, list mspace_ids, list fspace_ids,
+            list type_ids, list bufs not None, int read, PropID dxpl=None)
+
+        Read or write raw data between the provided buffers and a set of datasets.
+
+        For each dataset, its id, the id of a corresponding memory
+        and file space, a type id, and a buffer should be provided. The dataset
+        transfer property list applies to all transfers. 'read' determines whether
+        the transfers are reads (1) or writes (0).
+        """
+
+        cdef hid_t* type_hids = NULL
+        cdef hid_t* mspace_hids = NULL
+        cdef hid_t* fspace_hids = NULL
+        cdef hid_t* dataset_hids = NULL
+        cdef void** buffer_ptrs = NULL
+
+        cdef hid_t plist_id = -1
+        cdef size_t count = 0
+
+        count = <size_t> len(dataset_ids)
+
+        if count == 0:
+            raise ValueError("object id lists must be non-empty")
+
+        if not count == len(mspace_ids) == len(fspace_ids) == len(type_ids) == len(bufs):
+            raise ValueError("object id lists must have matching length")
+
+        try:
+            buffer_ptrs = <void**>malloc(count * sizeof(void*))
+            type_hids = <hid_t*>malloc(count * sizeof(hid_t*))
+            mspace_hids = <hid_t*>malloc(count * sizeof(hid_t*))
+            fspace_hids = <hid_t*>malloc(count * sizeof(hid_t*))
+            dataset_hids = <hid_t*>malloc(count * sizeof(hid_t*))
+
+            plist_id = pdefault(dxpl)
+
+            for i in range(count):
+                buffer_ptrs[i] = <void*> PyArray_DATA(bufs[i])
+                type_hids[i] = <hid_t> type_ids[i]
+                mspace_hids[i] = <hid_t> mspace_ids[i]
+                fspace_hids[i] = <hid_t> fspace_ids[i]
+                dataset_hids[i] = <hid_t> dataset_ids[i]
+
+            dset_rw_multi(count, dataset_hids, type_hids, mspace_hids, fspace_hids, plist_id, buffer_ptrs, read)
+
+        finally:
+            free(type_hids)
+            free(mspace_hids)
+            free(fspace_hids)
+            free(dataset_hids)
+            free(buffer_ptrs)
 
 # --- Proxy functions for safe(r) threading -----------------------------------
 
