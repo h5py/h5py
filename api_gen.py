@@ -25,7 +25,22 @@
 """
 
 import re
-import os.path as op
+import os
+from hashlib import md5
+from pathlib import Path
+
+
+def replace_or_remove(new: Path) -> None:
+    assert new.is_file()
+    assert new.suffix == '.new'
+    old = new.with_suffix('')
+    def get_hash(p: Path) -> str:
+        return md5(p.read_bytes()).hexdigest()
+
+    if not old.exists() or get_hash(new) != get_hash(old):
+        os.replace(new, old)
+    else:
+        os.remove(new)
 
 
 class Line:
@@ -173,12 +188,15 @@ class LineProcessor:
     def run(self):
 
         # Function definitions file
-        self.functions = open(op.join('h5py', 'api_functions.txt'), 'r')
+        self.functions = Path('h5py', 'api_functions.txt').open('r')
 
         # Create output files
-        self.raw_defs = open(op.join('h5py', '_hdf5.pxd'), 'w')
-        self.cython_defs = open(op.join('h5py', 'defs.pxd'), 'w')
-        self.cython_imp = open(op.join('h5py', 'defs.pyx'), 'w')
+        path_raw_defs = Path('h5py', '_hdf5.pxd.new')
+        path_cython_defs = Path('h5py', 'defs.pxd.new')
+        path_cython_imp = Path('h5py', 'defs.pyx.new')
+        self.raw_defs = path_raw_defs.open('w')
+        self.cython_defs = path_cython_defs.open('w')
+        self.cython_imp = path_cython_imp.open('w')
 
         self.raw_defs.write(raw_preamble)
         self.cython_defs.write(def_preamble)
@@ -209,6 +227,10 @@ class LineProcessor:
         self.cython_imp.close()
         self.cython_defs.close()
         self.raw_defs.close()
+
+        replace_or_remove(path_cython_imp)
+        replace_or_remove(path_cython_defs)
+        replace_or_remove(path_raw_defs)
 
     def add_cython_if(self, block):
         """ Wrap a block of code in the required "IF" checks """

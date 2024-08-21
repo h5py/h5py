@@ -148,14 +148,11 @@ class h5py_build_ext(build_ext):
                 f"{config.hdf5_version} from environment variable or library)"
             )
 
-        defs_file = localpath('h5py', 'defs.pyx')
-        func_file = localpath('h5py', 'api_functions.txt')
         config_file = localpath('h5py', 'config.pxi')
 
-        # Rebuild low-level defs if missing or stale
-        if not op.isfile(defs_file) or os.stat(func_file).st_mtime > os.stat(defs_file).st_mtime:
-            print("Executing api_gen rebuild of defs")
-            api_gen.run()
+        # Refresh low-level defs if missing or stale
+        print("Executing api_gen rebuild of defs")
+        api_gen.run()
 
         # Rewrite config.pxi file if needed
         s = f"""\
