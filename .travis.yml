@@ -2,7 +2,7 @@ language: python
 os: linux
 dist: jammy
 arch: ppc64le
-python: 3.9
+python: 3.10
 
 notifications:
   email: false
@@ -22,8 +22,7 @@ env:
   global:
     - HDF5_CACHE_DIR=$HOME/.cache/hdf5
     - TERM=dumb
-    - TOXENV=py39-test-deps
-    - TOX_OPTS="--force-dep numpy<1.23"
+    - TOXENV=py310-test-deps
     - HDF5_VERSION=1.10.5
     - HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION
     - H5PY_ENFORCE_COVERAGE=yes
