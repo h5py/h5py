@@ -1,6 +1,6 @@
 language: python
 os: linux
-dist: focal
+dist: jammy
 arch: ppc64le
 python: 3.9
 
