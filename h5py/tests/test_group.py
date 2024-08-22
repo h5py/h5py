@@ -692,10 +692,15 @@ class TestVisit(TestCase):
 
     def test_bailout(self):
         """ Returning a non-None value immediately aborts iteration """
-        x = self.f.visit(lambda x: x)
-        self.assertEqual(x, self.groups[0])
-        x = self.f.visititems(lambda x, y: (x,y))
-        self.assertEqual(x, (self.groups[0], self.f[self.groups[0]]))
+        # do not make assumption on iteration order
+        l = []
+        x = self.f.visit(lambda x: l.append(x) or -1)
+        assert x == -1 and len(l) == 1 and l[0] in self.groups
+
+        l = []
+        comp = [(x, self.f[x]) for x in self.groups]
+        x = self.f.visititems(lambda x, y: l.append((x,y)) or -1)
+        assert x == -1 and len(l) == 1 and l[0] in comp
 
 class TestVisitLinks(TestCase):
     """
@@ -733,10 +738,14 @@ class TestVisitLinks(TestCase):
 
     def test_bailout(self):
         """ Returning a non-None value immediately aborts iteration """
-        x = self.f.visit_links(lambda x: x)
-        self.assertEqual(x, self.groups[0])
-        x = self.f.visititems_links(lambda x, y: (x,type(y)))
-        self.assertEqual(x, (self.groups[0], type(self.f.get(self.groups[0], getlink=True))))
+        # do not make assumption on iteration order
+        l = []
+        x = self.f.visit_links(lambda x: l.append(x) or -1)
+        assert x == -1 and len(l) == 1
+
+        l = []
+        x = self.f.visititems_links(lambda x, y: l.append((x,y)) or -1)
+        assert x == -1 and len(l) == 1
 
 
 class TestSoftLinks(BaseGroup):
