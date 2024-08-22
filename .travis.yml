@@ -1,6 +1,8 @@
 language: python
 os: linux
-dist: focal
+dist: jammy
+arch: ppc64le
+python: 3.11
 
 notifications:
   email: false
@@ -20,20 +22,11 @@ env:
   global:
     - HDF5_CACHE_DIR=$HOME/.cache/hdf5
     - TERM=dumb
+    - TOXENV=py311-test-deps
+    - HDF5_VERSION=1.10.5
+    - HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION
+    - H5PY_ENFORCE_COVERAGE=yes
 
-jobs:
-  include:
-    # needed to work around https://github.com/travis-ci/travis-ci/issues/4794
-    # TODO: We should see if we can replace this with installing python via pyenv # based on toxenv
-    # Test on ppc64le
-    - arch: ppc64le
-      python: 3.9
-      env:
-      - TOXENV=py39-test-deps
-      - TOX_OPTS="--force-dep numpy<1.23"
-      - HDF5_VERSION=1.10.5
-      - HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION
-      - H5PY_ENFORCE_COVERAGE=yes
 before_install:
   # - export PATH=/usr/lib/ccache:$PATH
   - ccache -s
@@ -41,10 +34,8 @@ before_install:
 install:
     - pip install -U pip tox codecov virtualenv
     - ci/get_hdf5_if_needed.sh
-    - if [[ $CIBW_ARCHS == aarch64 ]]; then python -m pip install 'cibuildwheel<2.16.2'; fi
 
 script:
-    - if [[ $CIBW_ARCHS == aarch64 ]]; then python3 -m cibuildwheel --output-dir wheelhouse; fi
     - tox legacy -v $TOX_OPTS 2>&1
     - sleep 5
 
