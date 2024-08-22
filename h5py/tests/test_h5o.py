@@ -21,7 +21,7 @@ class TestVisit(TestCase):
         fid.close()
 
 class Visitor:
-    """class for excersize 'visit' and 'visititems'"""
+    """ Class for exercise 'visit' and 'visititems' methods """
 
     def __init__(self):
         self._names = []
@@ -34,8 +34,15 @@ class Visitor:
         return self._names
 
 class TestLexicographic(TestCase):
+    """ Test ascending lexicographic order traversal of the 'visit*' methods.
+
+        This semantics is set by the following default args in
+        h5py.h5o.visit(..., idx_type=H5_INDEX_NAME, order=H5_ITER_INC, ...)
+        h5py.h5l.visit(..., idx_type=H5_INDEX_NAME, order=H5_ITER_INC, ...)
+    """
+
     def setUp(self):
-        """populate example hdf5 file, with track_order=True"""
+        """ Populate example hdf5 file, with track_order=True """
 
         self.f = File(self.mktemp(), 'w-', track_order=True)
         self.f.create_dataset('b', (10,))
