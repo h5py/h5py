@@ -2,7 +2,7 @@ language: python
 os: linux
 dist: jammy
 arch: ppc64le
-python: 3.10
+python: 3.11
 
 notifications:
   email: false
