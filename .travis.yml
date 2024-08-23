@@ -23,7 +23,7 @@ env:
     - HDF5_CACHE_DIR=$HOME/.cache/hdf5
     - TERM=dumb
     - TOXENV=py311-test-deps
-    - HDF5_VERSION=1.10.5
+    - HDF5_VERSION=1.10.6
     - HDF5_DIR=$HDF5_CACHE_DIR/$HDF5_VERSION
     - H5PY_ENFORCE_COVERAGE=yes
 
