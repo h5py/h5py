@@ -498,6 +498,7 @@ class TestFillTime(BaseDataset):
         self.assertEqual(dset[0], 4.0)
         self.assertEqual(dset[7], 4.0)
 
+    @ut.skipIf('gzip' not in h5py.filters.encode, "DEFLATE is not installed")
     def test_compressed_default(self):
         """ Fill time is ALLOC for compressed dataset (chunked) """
         dset = self.f.create_dataset('foo', (10,), compression='gzip',
