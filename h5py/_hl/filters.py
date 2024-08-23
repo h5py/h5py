@@ -275,7 +275,7 @@ def fill_dcpl(plist, shape, dtype, chunks, compression, compression_opts,
                    f"'never' or 'ifset', but it is {fill_time}.")
             raise ValueError(msg)
 
-    plist.set_fill_time(_FILL_TIME_ENUM[fill_time.lower()])
+    plist.set_fill_time(_FILL_TIME_ENUM[fill_time])
 
     # scale-offset must come before shuffle and compression
     if scaleoffset is not None:
