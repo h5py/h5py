@@ -8,7 +8,7 @@ variables:
 jobs:
 - job: 'static_checks'
   pool:
-    vmImage: ubuntu-20.04
+    vmImage: ubuntu-22.04
   variables:
     TOXENV: docs,checkreadme,rever
   steps:
@@ -25,7 +25,7 @@ jobs:
 
 - job: 'ubuntu'
   pool:
-    vmImage: ubuntu-20.04
+    vmImage: ubuntu-22.04
   strategy:
     matrix:
       # -deps : test with default (latest) versions of dependencies
