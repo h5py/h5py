@@ -132,10 +132,6 @@ class TestReadDirectChunkToOut:
         assert len(chunk) == ref_data.nbytes
 
     @pytest.mark.skipif(
-        h5py.version.hdf5_version_tuple < (1, 10, 5),
-        reason="chunk info requires HDF5 >= 1.10.5",
-    )
-    @pytest.mark.skipif(
         'gzip' not in h5py.filters.encode,
         reason="DEFLATE is not installed",
     )
